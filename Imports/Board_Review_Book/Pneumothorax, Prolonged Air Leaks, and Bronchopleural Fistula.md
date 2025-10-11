@@ -1,0 +1,556 @@
+Pneumothorax, Prolonged Air Leaks, and Bronchopleural Fistula
+Exam Mapping & Scope
+
+This chapter covers recognition and management of pneumothorax (primary, secondary, iatrogenic, traumatic), persistent/prolonged air leaks (PAL), alveolar‑pleural fistula (APF), and bronchopleural fistula (BPF). It emphasizes guideline‑concordant triage, procedural steps (needle aspiration, chest drains, ambulatory systems), bronchoscopic therapies (valves, spigots, sealants, stents, occluders), surgical options, and complication prevention. Domains: pleural disease, interventional pulmonology (diagnostic and therapeutic bronchoscopy), peri‑procedural management.
+
+Learning Objectives
+
+Distinguish PSP vs SSP, APF vs BPF, and define PAL; recognize when “size” alone should not dictate management.
+
+Select initial management (conservative, needle aspiration, ambulatory device, chest tube) based on stability, risk, and setting.
+
+Execute a stepwise approach to localizing and treating PAL using balloon occlusion, methylene blue, capnography, and/or Chartis.
+
+Choose and perform bronchoscopic therapies (valves, spigots, sealants, stents, occluders) for PAL/BPF, including indications and pitfalls.
+
+Optimize chest tube strategy (water‑seal vs suction), outpatient options (Heimlich valve), and post‑episode counseling (recurrence prevention, air travel).
+
+Anticipate complications and tailor approaches in special populations (COPD, post‑resection, ventilated patients, empyema).
+
+High‑Yield One‑Pager
+
+Terminology: APF = parenchymal air leak distal to segmental bronchus; BPF = communication between central airway (main/lobar/segmental) and pleural space. PAL = air leak persisting >5 days after drainage.
+
+PSP epidemiology: young, tall, thin smokers; recurrence common; size alone does not define instability.
+
+SSP: older patients with underlying lung disease (e.g., COPD); higher morbidity; tension more common.
+
+Ultrasound pearls: lung sliding and B‑lines exclude PTX; “barcode/stratosphere” suggests PTX; lung point is diagnostic.
+
+Initial PSP approach: if minimally symptomatic and stable, conservative management is reasonable; otherwise needle aspiration preferred over routine large‑bore drains.
+
+Ambulatory management: small‑bore catheter + one‑way valve can shorten hospitalization in selected PSP but has more device‑related events; not recommended for SSP.
+
+Chest tube strategy: favor small‑bore; water‑seal over routine suction; consider Heimlich valve for outpatient drainage.
+
+PAL localization: sequential balloon occlusion from lobe→segment; watch drainage system for bubbling changes; consider methylene blue, capnography, or Chartis if subtle.
+
+Valves: Zephyr® and Spiration® one‑way valves allow egress without inflow; helpful for PALs and selected BPFs when surgery is high risk; reassess for removal ≈6 weeks after leak resolution.
+
+Spigots: silicone plugs (EWS) sized to the airway; dislocation is common—cough suppression helps.
+
+Sealants: fibrin/cyanoacrylate glue; great for small/visible defects; avoid suction during curing; mind the bronchoscope!
+
+Stents/occluders: covered stents for central defects; Amplatzer® devices close select BPFs; reserve for specialized centers.
+
+BPF timing post‑resection: early (≤7 d), intermediate (8–30 d), late (>30 d); right pneumonectomy risk > left.
+
+Infection/empyema: drain first; treat sepsis; don’t rush to close a fistula through infection.
+
+Ventilated patients: minimize PEEP/tidal volume; consider selective contralateral intubation for large BPF.
+
+Core Concepts
+Pathophysiology & Epidemiology
+
+Pneumothorax: air in pleural space collapses lung; in PSP, subpleural blebs/bullae and pleural porosity are implicated; risk heightened by tobacco and cannabis use. SSP arises from underlying disease (e.g., COPD, cystic lung disorders), necrotizing infections, or barotrauma.
+
+APF vs BPF: APF arises from alveolar/pleural disruption; usually peripheral and not directly visualized. BPF is a central airway defect; common after resection (lobectomy/pneumonectomy) and in necrotizing infection or malignancy.
+
+PAL: persistence >5 days; common after lung volume reduction, lobectomy, or severe parenchymal disease.
+
+Indications & Contraindications
+
+Conservative PSP: stable, minimally symptomatic adults regardless of size.
+Needle aspiration: hemodynamically stable PSP with symptomatic or larger PTX.
+Ambulatory device: selected PSP with reliable follow‑up; avoid in SSP.
+Chest tube: unstable patients; SSP; failed aspiration; significant physiologic compromise; ventilated patients.
+Bronchoscopic PAL/BPF therapy: failure or non‑candidacy for surgery; small to moderate defects; localized leak.
+Surgery: early post‑resection BPF; failed bronchoscopic therapy; large central defects; recurrence prevention when feasible.
+
+Pre‑procedure Evaluation
+
+Imaging: Upright CXR for PTX; CT for complex/recurrent cases or underlying pathology; ultrasound at bedside for rapid triage. For suspected BPF: look for new air–fluid levels, pleural space volume changes, subcutaneous emphysema.
+
+Bronchoscopy: inspect stump/central airways; saline bubbling test; methylene blue (endobronchial or retrograde via drain); balloon occlusion for localization; capnography and/or airway pressure tracings; Chartis catheter for distal pressure/flow.
+
+Risk stratification: post‑resection timing; infection/empyema; nutritional status; immunosuppression; guideline “high‑risk” features (e.g., bilateral PTX, age ≥50 with smoking, hypoxemia, hemopneumothorax).
+
+Consent: discuss recurrence prevention (pleurodesis, surgery), device removal (valves/spigots), potential need for staged procedures.
+
+Equipment & Setup
+
+Needle aspiration: small‑bore catheter; mid‑clavicular 2nd ICS.
+
+Ambulatory device: 6–8 Fr catheter with in‑line one‑way valve.
+
+Chest drains: small‑bore favored; connect to water‑seal; digital drainage systems help quantify leak.
+
+Bronchoscopy: therapeutic scope (≥2.8‑mm channel), occlusion balloons (Fogarty/balloon catheter), methylene blue, capnography line, Chartis (where available), valve delivery system, Watanabe spigots (5, 6, 7 mm), sealant catheters, stent/occluder kits, graspers/forceps, suction traps.
+
+Sealant delivery: dual‑lumen catheters for fibrin components; externalize catheter with scope during curing to protect the working channel.
+
+Step‑by‑Step Technique / Procedural Checklist
+
+Needle Aspiration (PSP)
+
+Confirm stability; analgesia and sterile prep.
+
+Insert small‑bore catheter at 2nd ICS mid‑clavicular; aspirate air manually.
+
+Re‑image for expansion; observe several hours; repeat aspiration if needed.
+
+Chest Tube Placement
+
+Indication confirmed; ultrasound guidance if fluid/loculations.
+
+4th–5th ICS mid‑axillary; Seldinger technique for small‑bore.
+
+Connect to water‑seal; avoid routine suction; assess leak on inspiration/expiration; consider digital systems.
+
+Balloon‑Occlusion Mapping of PAL
+
+Deep sedation or GA with closed‑circuit ventilation to stabilize flows.
+
+Begin at lobar orifice → sequentially occlude segments; observe leak changes (≥1 minute per site).
+
+Address collateral ventilation; if localization equivocal, augment with low‑flow O₂ insufflation via bronchoscope suction port in short bursts to highlight culprit segment; or instill methylene blue.
+
+Endobronchial Valve Placement
+
+Size and number determined by mapping; place proximally to encompass culprit segments with least valves.
+
+Confirm immediate effect on leak and radiographic improvement.
+
+Reassess for removal ~6 weeks after leak resolves to minimize infection/granulation.
+
+Sealant/Glue Application (central, small defects)
+
+Dry field; gently apply fibrin or cyanoacrylate via catheter positioned away from the scope tip.
+
+Avoid suction during curing; remove excess congealed material to preserve lumen.
+
+Consider scaffolds (e.g., polyglycolic acid mesh) to anchor sealant in select cases.
+
+Watanabe Spigot Placement
+
+Size to airway; advance with forceps to wedge; verify cessation/reduction of leak.
+
+Counsel on cough suppression; monitor for migration; remove when leak closes.
+
+Stents and Occluders (selected central BPFs)
+
+Covered stents to bridge central defects and protect against contamination.
+
+Amplatzer devices sized to fistula waist; ensure retrievability before release.
+
+Troubleshooting & Intra‑procedure Management
+
+No leak reduction on occlusion: evaluate for collateral ventilation; expand occlusion field proximally; reassess tube position/obstruction.
+
+Tiny central defects: dye instillation and targeted sealant may outperform valves.
+
+Sealant pitfalls: avoid suction and scope contact; remove catheter/scope en bloc if glue near tip; never force clogged glue through a catheter.
+
+Valves: if persistent leak, re‑map for additional contributing segments; watch for secretion impaction; plan surveillance bronchoscopy if mucus plugging suspected.
+
+Post‑procedure Care & Follow‑up
+
+Keep drains on water‑seal unless clinical reason for suction emerges.
+
+Consider ambulatory Heimlich valve for persistent but controlled leaks in selected patients.
+
+Flight: advise to delay commercial air travel until CXR confirms resolution, then wait ~7 days; persistent closed pneumothorax should not fly.
+
+Recurrence prevention: smoking cessation; counsel on triggers; discuss pleurodesis or surgery after recurrent PSP, first SSP, bilateral events, or high‑risk occupations.
+
+Complications (Prevention, Recognition, Management)
+
+Valves/spigots/stents: mucus plugging, infection, granulation, migration; mitigate with airway clearance, scheduled follow‑up, and device removal when feasible.
+
+Sealants: foreign‑body granuloma, airway obstruction; remove excess material promptly.
+
+Surgery‑related BPF: empyema and sepsis; consider staged drainage (e.g., Eloesser) with nutrition/rehab prior to definitive closure.
+
+Ventilator management: avoid high PEEP/pressures; consider single‑lung ventilation to protect large BPFs.
+
+Special Populations
+
+Post‑resection: early BPF (≤4–7 days) often requires prompt surgical re‑exploration and stump closure; late BPF frequently occurs with infection/ischemia—drain and treat infection before closure.
+
+Severe COPD or diffuse emphysema: PALs common; fissure integrity predicts valve success; incomplete fissures lower efficacy.
+
+Malignancy: rapid tumor response may unmask fistulas; stenting/occluders often palliative.
+
+Empyema: prioritize continuous drainage; antibiotics; delay fistula closure until controlled.
+
+Evidence & Outcomes (selected data points)
+
+Needle aspiration shortens hospital stay vs chest tube in PSP (also seen in SSP subsets in pragmatic trials).
+
+Conservative PSP management is non‑inferior for radiographic re‑expansion in selected patients and reduces serious adverse events and recurrences, with careful selection.
+
+Ambulatory PSP devices reduce length of stay but increase device‑related adverse events; not recommended for SSP.
+
+Endobronchial valves for PAL: resolution rates across series range widely; fissure completeness and absence of collateral ventilation predict success.
+
+Endoscopic closure success is highest for small BPFs (<6–8 mm); larger central defects often require surgery or custom solutions.
+
+Watanabe spigots can reduce leaks and permit tube removal in most series; dislocation is common; national datasets show meaningful failure and mortality in frail cohorts, underscoring careful selection.
+
+Diagnostic & Therapeutic Algorithms
+Algorithm 1: Adult Spontaneous Pneumothorax — Initial Management
+flowchart TD
+A[Adult with suspected pneumothorax] --> B{Hemodynamic compromise or severe hypoxemia?}
+B -- Yes --> C[Immediate needle decompression + chest tube; admit]
+B -- No --> D[Classify PSP vs SSP; assess symptoms & stability]
+D --> E{PSP, minimally symptomatic, stable}
+E -- Yes --> F[Conservative management + close follow-up]
+E -- No --> G[Needle aspiration preferred]
+G --> H{Failure or recurrence during observation?}
+H -- Yes --> I[Small-bore chest tube + admit]
+H -- No --> J[Discharge with safety net]
+D --> K{SSP or significant symptoms/physiology}
+K -- Yes --> L[Chest tube (small-bore), admit; water-seal]
+L --> M{PAL or deterioration?}
+M -- Yes --> N[Consider ABP, bronchoscopic therapy, or surgery]
+M -- No --> O[Clamp trial → remove tube when no leak]
+
+
+Bulleted Walk‑through
+
+If unstable/tension → immediate decompression + tube.
+
+PSP & minimally symptomatic/stable → consider conservative pathway.
+
+PSP & symptomatic/larger → attempt needle aspiration; if failure → small‑bore drain.
+
+SSP → small‑bore chest tube with water‑seal; avoid routine suction.
+
+PAL/deterioration → escalate (ABP, bronchoscopic options, surgical consult).
+
+Algorithm 2: Persistent Air Leak (APF/BPF) — Localization and Closure
+flowchart TD
+A[Persistent air leak >5 days] --> B[Confirm drain patency; switch to water-seal]
+B --> C{Evidence of infection/empyema?}
+C -- Yes --> D[Drain thoroughly; antibiotics; optimize nutrition]
+C -- No --> E[Bronchoscopy for localization]
+E --> F{Central defect visible?}
+F -- Yes --> G[Targeted closure: sealant ± covered stent/occluder]
+F -- No --> H[Balloon occlusion mapping +/- methylene blue/capnography/Chartis]
+H --> I{Leak localizes to limited segments?}
+I -- Yes --> J[Endobronchial valves or spigots in culprit segments]
+I -- No --> K[Reassess for collateral ventilation; broaden level; consider imaging adjuncts]
+J --> L[Leak resolves?]
+L -- Yes --> M[Monitor; plan device removal (~6 weeks after resolution)]
+L -- No --> N[Repeat mapping; combine modalities; surgical consult]
+D --> O[After control, re-evaluate for closure strategy]
+
+
+Bulleted Walk‑through
+
+Start with drain optimization and infection control.
+
+Bronchoscopically identify central vs peripheral leaks.
+
+Central, small → sealants ± stent/occluder; larger central often need surgery.
+
+Peripheral → map; if localized, place valves/spigots; if diffuse/collateral ventilation prominent, reconsider strategy or escalate.
+
+Plan device removal after healing and monitor for complications.
+
+Tables & Quick‑Reference Boxes
+
+Table 1. Lung Ultrasound Signs for Pneumothorax
+
+Category	Finding	Interpretation/Use
+Excludes PTX	Lung sliding; B‑lines; seashore sign (M‑mode)	If present, PTX is unlikely at that probe position.
+Suggests PTX	“Barcode/stratosphere” sign (M‑mode); absent B‑lines	Suggestive but not specific. Consider emphysema, mainstem intubation, pleurodesis.
+Diagnostic of PTX	Lung point	Transition between sliding and no‑sliding; indicates PTX margin.
+Abbreviations	PTX = pneumothorax.	
+
+Table 2. Distinguishing APF vs BPF and Implications
+
+Feature	APF (Alveolar‑Pleural Fistula)	BPF (Bronchopleural Fistula)	Management Implications
+Anatomic level	Distal parenchyma/visceral pleura	Central airway (main/lobar/segmental) to pleura	BPF more likely to need targeted endoscopic or surgical closure.
+Bronchoscopic visibility	Not directly seen	Often visible (stump dehiscence, central defect)	Sealant/stent/occluder feasible if central and small/moderate.
+Localization	Balloon occlusion mapping; collateral ventilation complicates	Direct visualization or stump saline bubbling/dye	Central tests (saline/methylene blue) helpful.
+Typical etiologies	Post‑op PAL, emphysema, necrotizing pneumonia	Post‑resection, radiation/chemo, infection, malignancy	Treat infection/empyema first; consider staged procedures.
+Abbreviations	APF, PAL	BPF	
+
+Table 3. Bronchoscopic Options for PAL/BPF
+
+Modality	Best for	Practical Notes
+One‑way valves (Zephyr®, Spiration®)	Localized PAL; select BPF; when surgery high risk	Map carefully; collateral ventilation predicts failure; reassess for removal ≈6 weeks after leak resolution.
+Watanabe spigots (EWS)	Segmental/subsegmental leaks; when valves unsuitable	Tapered silicone plugs; dislocation common; antitussives may help; remove after closure.
+Sealants (fibrin, cyanoacrylate)	Small, central visible defects	Avoid suction during curing; keep glue off scope; may require scaffold/mesh.
+Covered airway stents	Central fistulas, aspiration risk, palliation	Foreign‑body complications (granulation, mucus); plan maintenance and timely removal in benign disease.
+Amplatzer® occluders	Selected central BPFs	Self‑centering; sized to defect; retrievable prior to release; off‑label airway use.
+Abbreviations	PAL, BPF	
+Imaging & Figure Callouts (Placeholders)
+
+Figure A. Chest CT demonstrating right upper lobe postoperative air–fluid level with subcutaneous emphysema. Alt text: axial chest CT with hydropneumothorax and chest tube in situ.
+
+Figure B. Bronchoscopic image of left upper stump with continuous bubbling after saline instillation, consistent with central BPF. Alt text: endobronchial view with bubbling at stump dehiscence.
+
+Cases & Applied Learning
+
+Case 1 (Next‑Best Step).
+A 24‑year‑old man (tall, thin smoker) presents with pleuritic chest pain and dyspnea. Vitals stable, SpO₂ 97% RA. CXR shows a moderate PSP. Lung ultrasound shows absent sliding anteriorly with a visible lung point.
+What is the next best step?
+A. Large‑bore chest tube with suction
+B. Needle aspiration
+C. Ambulatory small‑bore catheter with one‑way valve (SSP)
+D. Immediate VATS
+E. Non‑contrast CT
+
+Answer: B. For stable, symptomatic PSP, needle aspiration is preferred over routine chest tubes. Ambulatory management may be reasonable in centers with pathways, but the question asks for the next best step; SSP wording in option C is incorrect for this patient.
+
+Case 2 (Troubleshooting).
+A 68‑year‑old with COPD and SSP has a persistent grade‑3 air leak on day 5 despite a well‑positioned small‑bore drain on water‑seal. You plan bronchoscopic therapy. Under GA, balloon occlusion of the presumed lobe does not change the air leak.
+Which maneuver is most helpful to localize the leak?
+A. Increase PEEP to 12 cm H₂O to exaggerate the leak
+B. Endobronchial oxygen insufflation via the bronchoscope suction port
+C. Add continuous suction to the chest drain
+D. Place a covered tracheal stent
+E. Instill talc via the bronchoscope
+
+Answer: B. Low‑flow endobronchial O₂ insufflation in short bursts can augment flow in culprit segments when mapping under GA is equivocal. Avoid increasing ventilator pressures that may worsen the leak.
+
+Case 3 (Strategy Selection).
+A 62‑year‑old man 10 days after right pneumonectomy develops fever and productive cough. CXR shows a change in the air–fluid level; bronchoscopy reveals stump dehiscence with bubbling on saline instillation.
+Best initial strategy?
+A. Immediate stump glue
+B. Covered stent across carina
+C. Start antibiotics and ensure wide pleural drainage; consider staged closure
+D. High‑frequency oscillatory ventilation
+E. Autologous blood patch via chest tube as sole therapy
+
+Answer: C. Post‑pneumonectomy BPF with infection requires source control with broad drainage and antibiotics before definitive closure (surgical or combined staged approaches).
+
+Question Bank (MCQs)
+
+1. A 30‑year‑old with PSP is minimally symptomatic and stable. CXR shows a large PTX by ATS criteria. Which statement is most accurate?
+A. Size mandates chest tube insertion
+B. Conservative management can be considered
+C. Ambulatory SSP protocol should be used
+D. Immediate VATS is required
+E. Thoracic suction reduces recurrence
+
+Answer: B. In stable, minimally symptomatic PSP, conservative care is reasonable regardless of size. Size alone no longer drives invasive management.
+
+2. In SSP with a persistent air leak on day 5, which chest tube strategy is preferred initially?
+A. Continuous wall suction for all
+B. Water‑seal, avoid routine suction
+C. Remove the tube to encourage closure
+D. Replace with large‑bore tube immediately
+E. Clamp continuously for 24 h
+
+Answer: B. Water‑seal is favored; suction can splint the fistula open and is not recommended routinely.
+
+3. Which ultrasound finding is diagnostic of pneumothorax?
+A. Absent lung sliding
+B. Barcode/stratosphere sign
+C. Lung point
+D. Absence of B‑lines
+E. Lung pulse
+
+Answer: C. Lung point is diagnostic; absent sliding and barcode are suggestive but not specific.
+
+4. A 66‑year‑old after lobectomy has a central airway defect visible on bronchoscopy ~4 mm in size without purulence. Best bronchoscopic option?
+A. One‑way valves in all lobar segments
+B. Fibrin/cyanoacrylate sealant applied directly
+C. Uncovered metal stent
+D. Amplatzer occluder (40 mm)
+E. Endobronchial spigot in the trachea
+
+Answer: B. Small, central defects respond well to targeted sealant; stents/occluders are reserved for selected larger central fistulas.
+
+5. During fibrin glue application to a BPF, which is most important to prevent equipment damage?
+A. Suction immediately to clear excess glue
+B. Advance the catheter so its tip is flush with the scope
+C. Keep glue away from scope; avoid suction; remove catheter/scope together if needed
+D. Increase oxygen flows
+E. Use single‑lumen catheter to inject components sequentially
+
+Answer: C. Glue contacting the scope or entering the working channel can permanently damage it; avoid suction during curing.
+
+6. Which factor predicts better success with endobronchial valves for PAL?
+A. Extensive interlobar collateral ventilation
+B. Complete fissures without collateral ventilation
+C. Large, diffuse emphysema
+D. Bilateral leaks
+E. Current empyema
+
+Answer: B. Absence of collateral ventilation (complete fissure) improves valve success.
+
+7. Which is a recognized risk factor for postoperative BPF after pneumonectomy?
+A. Left‑sided surgery
+B. Short stump
+C. Preoperative neoadjuvant radiation
+D. Female sex
+E. Low secretion pooling on the right
+
+Answer: C. Neoadjuvant radiotherapy and right‑sided operations increase BPF risk; right stumps pool secretions more.
+
+8. A 74‑year‑old with COPD and SSP is ambulatory and requests outpatient care. Which is true?
+A. Ambulatory management with small‑bore one‑way valve is guideline‑endorsed for SSP
+B. Ambulatory PSP data show reduced LOS but more device events; not recommended for SSP
+C. Ambulatory devices eliminate recurrence risk
+D. Ambulatory management requires large‑bore tubes
+E. Ambulatory management requires routine suction
+
+Answer: B. Ambulatory devices in PSP shorten stay but increase adverse events; not recommended for SSP.
+
+9. After mapping, two valves are placed in RB6 and RB9 for PAL; leak decreases but persists. Next step?
+A. Remove both valves immediately
+B. Add suction to the drain
+C. Re‑map for additional contributing segments and place additional valve(s) as needed
+D. Place tracheal stent
+E. Start talc via the chest tube
+
+Answer: C. PALs often involve multiple segments; re‑map and extend occlusion judiciously.
+
+10. Which statement about Watanabe spigots is correct?
+A. They are metal coils that expand and embed
+B. They are silicone plugs; migration is common; antitussives may be used
+C. They are permanent devices not intended to be removed
+D. They require balloon activation
+E. They are contraindicated in segmental airways
+
+Answer: B. EWS are silicone, radiopaque plugs; dislocation is a known issue; remove when leak closes.
+
+11. A 58‑year‑old post‑pneumonectomy patient with empyema and BPF. Best immediate plan:
+A. Sealant and stent during the same bronchoscopy
+B. Eloesser/open drainage with antibiotics and nutrition, then consider closure
+C. ABP alone via chest tube
+D. High PEEP to tamponade the fistula
+E. Start anticoagulation to improve flow
+
+Answer: B. Continuous drainage with infection control and rehabilitation precedes definitive closure.
+
+12. Post‑PSP, the CXR today shows full resolution. When is it reasonable to clear for commercial flight if asymptomatic?
+A. Immediately
+B. 24 hours
+C. ~7 days after radiographic resolution
+D. After pleurodesis
+E. After CT confirms normal lung
+
+Answer: C. Waiting about a week after radiographic resolution reduces early recurrence risk during flight.
+
+Controversies, Variability, and Evolving Evidence
+
+Conservative PSP management: Growing support for selected patients; careful selection is essential.
+
+Ambulatory PSP: Shorter hospital stay but higher device events; practice varies by center and patient preference.
+
+Suction: Evidence is insufficient to recommend routine suction for PSP/SSP; many favor water‑seal initially.
+
+Endobronchial valves for PAL/BPF: Heterogeneous cohorts and variable definitions limit comparability; expert consensus supports use in high‑risk patients with localized leaks.
+
+Spigots and occluders: Adoption varies; national outcomes highlight the importance of patient selection and center expertise.
+
+Regulatory note: Endobronchial valves for PAL have been used under special regulatory pathways in some regions; device selection and indications evolve.
+
+Take‑Home Checklist
+
+Confirm APF vs BPF and PAL (>5 days)—the label guides therapy.
+
+PSP stable/minimally symptomatic? Consider conservative pathway; otherwise needle aspiration before drains.
+
+Prefer small‑bore chest tubes and water‑seal; avoid routine suction.
+
+For SSP, inpatient management with chest drain and close monitoring.
+
+Map before you treat PAL: sequential balloon occlusion; augment with dye/capnography/Chartis as needed.
+
+Valves/spigots: target the smallest set of segments that abolishes the leak; plan timely removal.
+
+Central, small BPFs: sealant or occluder; large/complex BPFs: likely surgical ± staged drainage.
+
+Infection control first in empyema‑associated BPF.
+
+On a ventilator: minimize PEEP/tidal volume; consider selective ventilation.
+
+Counsel on recurrence prevention (smoking cessation) and air travel timing.
+
+Use digital drainage systems when available to quantify and follow leak.
+
+Document a clear follow‑up plan for device checks and removal.
+
+Abbreviations & Glossary
+
+ABP: Autologous blood patch.
+
+APF: Alveolar‑pleural fistula (parenchymal).
+
+BPF: Bronchopleural fistula (central airway‑pleural).
+
+BTS: British Thoracic Society.
+
+Chartis: Balloon catheter system measuring distal airway pressure/flow.
+
+CXR: Chest radiograph.
+
+EBV: Endobronchial valve.
+
+EWS: Endobronchial Watanabe spigot.
+
+GA: General anesthesia.
+
+PAL: Persistent/prolonged air leak (>5 days after drainage).
+
+PSP/SSP: Primary/secondary spontaneous pneumothorax.
+
+References (AMA Style; drawn from cited works within the provided materials; ordered by first appearance)
+
+Lichtenstein D, Mezière G, Biderman P, Gepner A, Barré O. The comet‑tail artifact: an ultrasound sign of alveolar‑interstitial syndrome. Chest. 1997;112(6):1655‑1660.
+
+Lichtenstein DA, Lascols N, Mezière G, Gepner A. Ultrasound diagnosis of alveolar consolidation in the critically ill. Intensive Care Med. 2004;30(2):276‑281.
+
+Brown SGA, Ball EL, Perrin K, et al. Conservative versus interventional treatment for spontaneous pneumothorax. N Engl J Med. 2020;382(5):405‑415.
+
+Thelle A, Gjerdevik M, Abdelnoor M, et al. Randomized comparison of needle aspiration and chest tube drainage in spontaneous pneumothorax. Eur Respir J. 2017;49(4):1601296.
+
+Hallifax RJ, McKeown E, Sivakumar P, et al. Ambulatory management of primary spontaneous pneumothorax: an open‑label, randomized controlled trial. Lancet. 2020;396(10243):39‑49.
+
+Roberts ME, Arnold DT, Maskell NA, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):1‑42.
+
+Walker S, Hallifax R, Ricciardi S, et al. Joint ERS/EACTS/ESTS clinical practice guidelines on adults with spontaneous pneumothorax. Eur Respir J. 2024;63(5):2300797.
+
+Dugan KC, Laxmanan B, Murgu S, Hogarth DK. Management of persistent air leaks. Chest. 2017;152(2):417‑423.
+
+Duron G, Backer E, Feller‑Kopman D. Evaluation and management of persistent air leak. Expert Rev Respir Med. 2023;17(10):865‑872.
+
+Vial MR, Bilal H, McCormack D, et al. Endobronchial oxygen insufflation: a technique for localization of occult bronchopleural fistulas. Ann Am Thorac Soc. 2013;10(2):157‑159.
+
+Lois M, Noppen M. Bronchopleural fistulas: an overview with special focus on endoscopic management. Chest. 2005;128(6):3955‑3965.
+
+Hollaus PH, Lax F, el‑Nashef BB, et al. Natural history of bronchopleural fistula after pneumonectomy: a review of 96 cases. Ann Thorac Surg. 1997;63(5):1391‑1396.
+
+Cardillo G, Carbone L, Carleo F, et al. Rationale for treatment of postresectional bronchopleural fistula: analysis of 52 patients. Ann Thorac Surg. 2015;100(1):251‑257.
+
+Low SW, Cartin‑Ceba R, Vaszar LT, Swanson KL, Sakata KK. Trends in intrabronchial valve implantation for persistent air leak: U.S. database analysis over 10 years. Ann Am Thorac Soc. 2020;17(12):1642‑1645.
+
+Travaline JM, McKenna RJ Jr, De Giacomo T, et al. Treatment of persistent pulmonary air leaks using endobronchial valves. Chest. 2009;136(2):355‑360.
+
+Majid A, Kheir F, Sierra‑Ruiz M, et al. Assessment of fissure integrity in patients with intrabronchial valves for treatment of prolonged air leak. Ann Thorac Surg. 2019;107(2):407‑411.
+
+Smesseim I, Morin‑Thibault LV, Herth FJF, et al. Endobronchial valves in treatment of persistent air leak: European case‑series and best practice recommendations. Respiration. 2024;103(9):544‑562.
+
+Huh JY, Jeong BH, Yoon HI, et al. Endobronchial valves for emphysema and persistent air leak: 10‑year experience in an Asian country. BMC Pulm Med. 2024;24(1):162.
+
+Watanabe Y, Matsuo K, Tamaoki A, Komoto R, Hiraki S. Bronchial occlusion with endobronchial Watanabe spigot. J Bronchol. 2003;10(4):264‑267.
+
+Taniguchi J, Aso S, Matsui H, et al. Endobronchial silicone spigot in prolonged air leaks: nationwide outcomes and risk factors for failure. Respir Investig. 2024;62(3):449‑454.
+
+Fruchter O, Kramer MR, Dagan T, et al. Endobronchial closure of bronchopleural fistulae using Amplatzer devices: experience and literature review. Chest. 2011;139(3):682‑687.
+
+Fruchter O, El Raouf BA, Abdel‑Rahman N, et al. Efficacy of bronchoscopic closure of bronchopleural fistula with Amplatzer devices: long‑term follow‑up. Respiration. 2014;87(3):227‑233.
+
+Takaoka K, Inoue S, Ohira S. Central bronchopleural fistulas closed by bronchoscopic injection of absolute ethanol. Chest. 2002;122(1):374‑378.
+
+Cao GQ, He ZY, Wu Y, Liu L, Zhao H. Autologous blood patch pleurodesis for persistent air leak in spontaneous pneumothorax. Ann Thorac Surg. 2012;93(5):1652‑1657.
+
+Ibrahim IM, Elkhayat H, Abdelsadek A, et al. Early autologous blood patch vs conservative treatment in persistent air leak. Thorac Cardiovasc Surg. 2019;67(3):222‑226.
+
+Thourani VH, Lancaster RT, Mansour KA, Miller JI Jr. Twenty‑six years of experience with the modified Eloesser flap. Ann Thorac Surg. 2003;76(2):401‑405.
