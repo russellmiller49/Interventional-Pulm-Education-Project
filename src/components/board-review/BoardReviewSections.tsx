@@ -182,7 +182,7 @@ function parseQuestionBank(content: string): ParsedQuestionBank {
   }
 
   const optionRegex = /^[A-E]\.\s*(.*)$/
-  const answerRegex = /^Answer:\s*([A-E])(?:\.\s*)?(.*)$/i
+  const answerRegex = /^Answer:\s*([A-E])\.?\s*(.*)$/i
 
   for (let i = 0; i <= lines.length; i++) {
     const line = i === lines.length ? '' : lines[i]
