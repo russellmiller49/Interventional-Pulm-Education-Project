@@ -15,7 +15,7 @@ SSH_KEY="$HOME/.ssh/id_ed25519_new"
 
 # Node & app
 NODE_VERSION="20"           # LTS recommended
-APP_PORT="3001"             # internal port Next.js listens on (matches package.json)
+APP_PORT="3000"             # internal port Next.js listens on (matches start:prod script)
 REMOTE_DIR="/home/u572533996/${APP_NAME}"  # app directory on server
 
 # Optional: environment for Next.js on server
@@ -121,15 +121,15 @@ EENV
 fi
 
 # ----- Dependencies & build -----
-pnpm install --frozen-lockfile
-# If you built locally and pushed .next, you can skip; otherwise build here:
-pnpm run build
+pnpm install --frozen-lockfile || pnpm install --force
+# Skip server-side build since we built locally - just use the uploaded .next folder
+echo "Using locally built .next folder"
 
 # ----- PM2 start (ecosystem-free, simple) -----
 # Ensure PM2 is installed globally for this Node
 pnpm dlx pm2@latest stop ${APP_NAME} >/dev/null 2>&1 || true
 pnpm dlx pm2@latest delete ${APP_NAME} >/dev/null 2>&1 || true
-pnpm dlx pm2@latest start "pnpm start -- -p ${APP_PORT}" --name "${APP_NAME}" --cwd "${REMOTE_DIR}"
+pnpm dlx pm2@latest start "pnpm start:prod" --name "${APP_NAME}" --cwd "${REMOTE_DIR}"
 pnpm dlx pm2@latest save
 
 # ----- PM2 autostart on reboot -----
