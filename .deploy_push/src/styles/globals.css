@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 224 71% 4%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71% 4%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --primary: 204 94% 40%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 182 72% 36%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 34 100% 50%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 204 94% 40%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 222 47% 9%;
+  --foreground: 210 40% 98%;
+  --muted: 215 27% 16%;
+  --muted-foreground: 217 15% 65%;
+  --popover: 222 47% 11%;
+  --popover-foreground: 210 40% 98%;
+  --card: 222 49% 12%;
+  --card-foreground: 210 40% 98%;
+  --border: 217 19% 27%;
+  --input: 217 19% 27%;
+  --primary: 200 98% 39%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 183 74% 40%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 34 100% 50%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 63% 45%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 200 98% 39%;
+}
+
+* {
+  @apply border-border;
+}
+
+html:focus-within {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
+
+a.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground;
+}

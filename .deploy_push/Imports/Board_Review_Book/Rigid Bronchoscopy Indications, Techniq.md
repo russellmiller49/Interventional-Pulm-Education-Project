@@ -1,0 +1,437 @@
+Rigid Bronchoscopy: Indications, Technique, and Troubleshooting
+
+Exam Mapping & Scope
+This chapter aligns with the AABIP IP Board Procedural Knowledge → Rigid Bronchoscopy/Foreign Body Retrieval domain. It consolidates contemporary indications and contraindications, anesthesia and ventilation strategies, step-by-step technique (including tumor debulking and foreign body removal), troubleshooting, complications, outcomes, and high-yield pearls for exam success and clinical practice.
+
+Learning Objectives
+
+Differentiate indications and contraindications for rigid bronchoscopy (RB), and select when RB is preferred over flexible bronchoscopy.
+
+Choose anesthesia and ventilation strategies (TIVA, spontaneous-assisted vs jet) that optimize safety for the planned intervention.
+
+Execute core RB intubation steps and the endobronchial debulking sequence (devascularize–core–coagulate base) and apply a competency checklist approach.
+
+Manage massive hemoptysis, remove foreign bodies (including en bloc extraction), and treat benign stenosis (simple vs complex) using RB.
+
+Anticipate, prevent, and manage peri-procedural complications and understand predictors of success and mortality from registry data.
+
+High-Yield One-Pager
+
+RB is the instrument of choice for acute central airway compromise (malignant or benign), massive hemoptysis, and complex foreign body (FB) extraction—owing to superior ventilation control, suction, ability to tamponade bleeding, and the capacity to pass large instruments.
+
+Absolute contraindication: cervical spine instability. Relative contraindications: prior cervical fusion, hemodynamic instability, severe hypoxemia, coagulopathy/thrombocytopenia, and operator inexperience.
+
+Anesthesia: RB is performed under general anesthesia. TIVA is preferred over inhalational agents because RB is an open system.
+
+Ventilation: Spontaneous-assisted allows PEEP and closed-system monitoring; jet ventilation enables rapid FiO₂ reduction before thermal therapies but lacks airway pressure monitoring and carries barotrauma risk.
+
+Technical success of therapeutic bronchoscopy for malignant central airway obstruction (CAO) is high (~93%). Dyspnea improvement is greatest with higher baseline symptom burden; lobar-only disease benefits less.
+
+Predictors of success: endobronchial disease and stent placement increase success; ASA >3, renal failure, left main disease, and TEF decrease success.
+
+Complications overall ~3.9%; procedure-related mortality ~0.5%. Risks rise with urgent/emergent cases, ASA >3, redo procedures, and the use of moderate sedation.
+
+Thirty-day mortality reflects disease burden; associated with ASA >3, ECOG >1, intrinsic or mixed obstruction, and stent placement (especially Y-stent).
+
+Debulking sequence: coagulate/devascularize → mechanical coring with the bevel → coagulate tumor base; stent when extrinsic or mixed obstruction or airway instability is present.
+
+Benign stenosis: simple (mucosal) vs complex (cartilage). Simple—radial incisions + serial dilation; Complex—often requires stenting.
+
+Foreign body removal pearl: grasp maximally and remove en bloc with the RB; inspect oropharynx if lost during extraction.
+
+Core Concepts
+Indications & Contraindications
+
+Indications (illustrative): malignant or benign CAO, massive hemoptysis, complex FB removal, dilation of stenoses, stent placement, and facilitation of hot/cold ablative therapies. RB often serves as the platform for combined interventions (e.g., dilation + stenting; laser/APC + mechanical debulking).
+
+Contraindications:
+
+Absolute: cervical spine instability.
+
+Relative: prior cervical fusion, hemodynamic instability, severe hypoxemia, severe coagulopathy/thrombocytopenia, operator inexperience.
+
+When RB over flexible? Tracheal lesions, asphyxiating FBs, massive bleeding, and acute respiratory failure due to CAO—RB provides superior airway control, ventilation, and large-bore suction/instrumentation.
+
+Pre-procedure Evaluation
+
+Airway, imaging, and disease mapping: Define obstruction pattern (intrinsic vs extrinsic vs mixed) and distal patency to plan debulking and stenting.
+
+Anesthesia & ventilation planning: Pre-oxygenate; agree on TIVA vs alternatives; choose spontaneous-assisted vs jet ventilation based on the need for thermal therapy and instrument throughput.
+
+Risk stratification: ASA class and performance status (ECOG/Zubrod) correlate with complications and 30-day mortality in registry datasets.
+
+Gap: Specific pre-procedure lab thresholds, anticoagulation/antiplatelet management, and antibiotic prophylaxis require local protocol or additional references.
+
+Equipment & Setup
+
+Rigid bronchoscope: stainless steel, straight, beveled, with distal fenestrations (bronchoscopes ~40 cm; tracheoscopes ~30 cm). Typical outer diameters ~9–14 mm; color-coded barrels; multiple proximal ports for ventilation and instruments.
+
+Visualization: direct telescope or camera for video; flexible bronchoscope frequently used through the rigid tube for distal inspection, toileting, and adjunctive therapy.
+
+Platforms: commonly used systems offer interchangeable barrels, universal heads, and integrated semi-flexible endoscopes that preserve lumen for suction and instruments.
+
+Step-by-Step Technique / Procedural Checklist
+
+Rigid intubation (core steps):
+
+Position: partial head extension; protect teeth with finger/guard.
+
+Insert midline with bevel anterior; pass under epiglottis; rotate 90° to traverse the cords into the upper trachea.
+
+To enter a main bronchus, rotate the patient’s head toward the contralateral shoulder.
+
+Use larger tracheoscope initially when needed; pass smaller barrels through it without re-intubation.
+
+Use the flexible scope via the rigid tube for distal evaluation and clearance.
+
+Competency tool concept (e.g., RIGID-TASC): Use a standardized checklist to assess basic RB skills. Trainees typically achieve competency after roughly 5–24 RBs (median ~15).
+
+Tumor debulking (intrinsic or mixed):
+
+1. Coagulate/devascularize, 2) mechanical coring using the distal bevel (“corkscrew/core-out”), 3) coagulate the base. Place a stent when residual extrinsic compression/instability is present or recurrence risk is high.
+
+Foreign body extraction:
+
+Choose smooth forceps for rounded FBs; alligator for sharp/irregular. Remove en bloc with the RB (scope + forceps + FB) to prevent loss. If lost during extraction, inspect oropharynx/larynx before re-intubation.
+
+Troubleshooting & Intra-procedure Management
+
+Massive hemoptysis: Intubate with RB, ventilate/protect the contralateral lung; tamponade with the scope itself; apply cold saline, APC, laser photocoagulation, or electrocautery as indicated.
+
+Critical stenosis/difficult entry: Use smaller (pediatric) barrels, balloons, or guide the initial lumen with the flexible scope; then serially dilate.
+
+Ventilation selection:
+
+Spontaneous/assisted: closed system (pack leaks), allows PEEP/pressure monitoring but hypoxia can occur when instruments crowd the lumen.
+
+Jet: frees the lumen, facilitates low FiO₂ for hot therapies, but airway pressures are not measured—iatrogenic pneumothorax is a risk.
+
+Post-procedure Care & Follow-up
+
+Expect rapid symptom relief when central airways are recanalized; benefits after debulking typically persist 2–3 months, and after stent placement ≈4 months (longer with effective oncologic therapy).
+
+For endoscopically treated benign tumors, schedule surveillance bronchoscopy due to rare recurrence or malignant transformation.
+
+Complications: Prevention, Recognition, Management
+
+Rates: overall complications ~3.9%; procedure mortality ~0.4–0.5% in large series/registries.
+
+Types: oropharyngeal/teeth injury, posterior membrane tear, hypoxia/hypercapnia, bleeding, pneumothorax, arrhythmia.
+
+Risk factors for complications: urgent/emergent cases, ASA >3, redo procedures, and moderate sedation (vs general anesthesia).
+
+30-day mortality drivers: ASA >3; ECOG >1; intrinsic/mixed obstruction; stent placement—especially Y-stent (reflecting high disease burden).
+
+Special Populations / Situations
+
+Tracheo-esophageal fistula (TEF): Assess for airway compromise from bulky esophageal tumor. Stenting order is individualized; persistent fistula after optimal esophageal stent often necessitates double stenting (airway + esophagus).
+
+Benign post-intubation/-tracheostomy stenosis: Simple vs complex dictates dilation alone vs stenting to stabilize cartilage.
+
+Post-surgical/Transplant anastomoses: High-grade tight stenoses may require pediatric barrels or balloons first.
+
+Gaps: Pregnancy-specific pathways, detailed anticoagulation reversal, and transplant-specific surveillance intervals are not covered here.
+
+Evidence & Outcomes
+
+Effectiveness: In multicenter registry data covering >900 patients and >1,100 procedures, technical success approaches ~93%; dyspnea improvement is greater with higher pre-procedure Borg scores and less in lobar-only obstruction.
+
+Predictors of success: endobronchial disease and stent placement (↑ success); ASA >3, renal failure, left mainstem disease, and TEF (↓ success).
+
+Safety & anesthesia: Single-center series support the safety of TIVA with spontaneous-assisted ventilation in high-risk cohorts; procedure duration is a modifiable predictor of 30-day mortality.
+
+Diagnostic & Therapeutic Algorithms
+
+Malignant Central Airway Obstruction (MCAO) – Endoscopic Management
+
+flowchart TD
+A(Confirm MCAO<br/>CT + bronchoscopy) --> B{Pattern of obstruction?}
+B --> C[Intrinsic]
+B --> D[Extrinsic]
+B --> E[Mixed]
+C --> C1[Coagulate/devascularize]
+C1 --> C2[Mechanical coring with RB bevel]
+C2 --> C3[Coagulate tumor base]
+C3 --> C4[Consider stent if airway unstable/high recurrence risk]
+D --> D1[Dilate]
+D1 --> D2[Place airway stent]
+E --> E1[Intrinsic steps (coagulate→core→base)]
+E1 --> E2[Dilate residual narrowing]
+E2 --> E3[Place stent]
+
+Parallel bullet algorithm (quick reference):
+
+Intrinsic: devascularize → core → coagulate base; stent if residual instability/recurrence risk.
+
+Extrinsic: dilate → stent.
+
+Mixed: intrinsic sequence → dilate → stent.
+
+Massive Hemoptysis (Stabilization & Control)
+
+RB for airway control and contralateral protection → tamponade with scope → cold saline ± APC/laser/electrocautery → definitive therapy as indicated.
+
+Tables & Quick-Reference Boxes
+
+Table 1. Contraindications to Rigid Bronchoscopy
+
+Category Items
+Absolute Cervical spine instability
+Relative Cervical spine fusion; hemodynamic instability; severe hypoxemia; severe coagulopathy; severe thrombocytopenia; operator inexperience
+
+Table 2. Rigid Bronchoscope Quick Specs
+
+Tube Length Lumen/Design Typical OD range Key advantages
+Tracheoscope ~30 cm No fenestrations 9–14 mm Initial intubation; can pass smaller barrels through
+Bronchoscope ~40 cm Fenestrated (ventilation slits) 9–14 mm Ventilation to contralateral lung; large-bore suction; instrument access
+
+Table 3. Anesthesia & Ventilation Options in RB
+
+Domain Option Advantages Caveats
+Anesthesia TIVA Favored for open system; avoids room pollution Requires careful titration and communication
+Inhalational Familiar agents Less used due to leak/pollution in open system
+Ventilation Spontaneous-assisted Closed system; PEEP/pressure monitoring Requires packing leaks; hypoxia risk when lumen crowded
+Jet ventilation More barrel space; rapid FiO₂ reduction for hot therapies No pressure/minute ventilation display; pneumothorax risk
+
+Table 4. Debulking Sequence for Intrinsic Endobronchial Tumor
+
+Step Action Notes
+1 Coagulate/devascularize Laser/electrocautery/APC to minimize bleeding
+2 Mechanical coring Use rigid scope bevel (“corkscrew/core-out”)
+3 Coagulate base Treat residual tumor bed; stent if airway unstable
+Imaging & Figure Callouts (Placeholders)
+
+[Figure Placeholder: “Laser-assisted mechanical debulking (A–D)” — four endoscopic panels showing devascularization, coring, clearance, and base treatment; high-yield to visualize the three-step debulking sequence.]
+
+[Figure Placeholder: “En bloc foreign body extraction through RB” — endoscopic view of smooth forceps grasping FB with the RB being withdrawn as a unit; emphasizes en bloc technique.]
+
+[Figure Placeholder: “Radial incision and dilation of tracheal stenosis with stent placement” — schematic series; highlights simple vs complex approach.]
+
+[Figure Placeholder: “RB intubation: landmarks” — external and internal views (uvula, epiglottis, cords, bevel under epiglottis).]
+
+Cases & Applied Learning
+
+Case 1 — Massive Hemoptysis and Airway Protection
+A 64-year-old with squamous cell carcinoma presents with 300 mL hemoptysis and hypoxemia. Which is the next best step?
+A. Large-volume cold saline via flexible bronchoscope under moderate sedation
+B. Selective intubation with endotracheal tube and wait for IR embolization
+C. Rigid bronchoscopy under general anesthesia with airway protection and tamponade; then topical hemostasis
+D. Tranexamic acid nebulization and observation
+E. Immediate thoracotomy
+Answer: C. RB allows airway control, suctioning, tamponade, and deployment of hemostatic modalities.
+
+Case 2 — Mixed MCAO
+A 58-year-old has dyspnea and CT shows a right main bronchus mass with extrinsic compression. What is the optimal endoscopic sequence?
+A. Balloon dilation only
+B. Devascularize → mechanical core → coagulate base → stent
+C. Laser only
+D. Stent first then laser through the stent
+E. Photodynamic therapy only
+Answer: B. Mixed obstruction needs debulking of the intrinsic component plus stenting for extrinsic compression/instability.
+
+Case 3 — Benign Post-Intubation Stenosis
+A 36-year-old with short-segment tracheal stenosis and intact cartilage. Which approach is preferred?
+A. Silicone stent placement as first-line
+B. Radial incisions at three points followed by serial dilation; no stent if cartilage is intact (simple stenosis)
+C. Electrocautery only
+D. Mechanical coring with RB bevel only
+E. Immediate tracheal resection
+Answer: B. Simple (mucosal) stenosis often resolves after radial incisions + dilations; complex (cartilage) typically requires stenting.
+
+Question Bank (MCQs)
+
+Which is an absolute contraindication to rigid bronchoscopy?
+A. Prior RB
+B. Prior cervical fusion
+C. Cervical spine instability
+D. Massive hemoptysis
+E. ASA III
+Answer: C. Absolute contraindication.
+
+During RB intubation, which maneuver is correct?
+A. Bevel kept parallel to the cords when passing them
+B. Bevel under the epiglottis, then rotate 90° to pass the cords
+C. Turn the head ipsilateral to the target bronchus to enter it
+D. Hold the scope with the left hand for intubation
+E. Allow attempts to exceed 120 s
+Answer: B. Landmarks and rotation are core to safe RB intubation.
+
+Which ventilation approach best facilitates rapid FiO₂ reduction before hot therapies?
+A. Spontaneous-assisted ventilation
+B. Jet ventilation
+C. High-frequency oscillatory ventilation
+D. Apneic oxygenation
+E. Negative-pressure ventilation
+Answer: B. Jet ventilation allows rapid FiO₂ decrease but lacks pressure monitoring.
+
+Which factor is associated with higher technical success in registry data?
+A. Lobar obstruction only
+B. ASA >3
+C. Endobronchial disease and/or stent placement
+D. TEF presence
+E. Renal failure
+Answer: C. Both increase success rates.
+
+Sequence for intrinsic tumor debulking with RB is:
+A. Core → coagulate base → devascularize
+B. Devascularize → core → coagulate base
+C. Dilate → stent → laser
+D. Stent first → laser through stent
+E. Cryoextraction only
+Answer: B. Reduces bleeding and clears the lumen efficiently.
+
+Most appropriate first-line therapy for purely extrinsic compression without intraluminal tumor:
+A. Laser debulking
+B. Cryotherapy
+C. Dilation followed by stenting
+D. Photodynamic therapy
+E. Observation
+Answer: C. Addresses the mechanical component.
+
+A safety disadvantage of jet ventilation during RB is:
+A. Slow FiO₂ reduction
+B. Inability to use hot therapies
+C. Inability to monitor airway pressures → risk of pneumothorax
+D. Difficulty passing instruments
+E. Excess PEEP
+Answer: C. Key trade-off of jet ventilation.
+
+Which factor is associated with complications in registry data?
+A. General anesthesia
+B. Moderate sedation
+C. ASA I–II
+D. Outpatient elective status
+E. No prior bronchoscopy
+Answer: B. Linked to higher complication rates.
+
+Thirty-day mortality after therapeutic bronchoscopy was associated with all except:
+A. ASA >3
+B. ECOG >1
+C. Intrinsic or mixed obstruction
+D. Purely lobar obstruction only
+E. Y-stent placement
+Answer: D. Lobar-only disease is less likely to carry the same high-risk profile.
+
+Best practice for removing a rounded foreign body lodged in the bronchus:
+A. Alligator forceps and piece-wise extraction
+B. Smooth forceps with en bloc removal of RB + forceps + FB
+C. Cryoprobe extraction alone
+D. Laser fragmentation then suction
+E. Basket extraction via flexible scope only
+Answer: B. Minimizes loss/aspiration.
+
+In benign post-intubation stenosis with cartilage involvement (complex), the RB plan should include:
+A. Serial dilation only
+B. Laser only
+C. Dilation plus stent to stabilize the airway
+D. Observation
+E. External beam radiation
+Answer: C. Stabilization is usually required.
+
+Which statement regarding anesthesia for RB is most accurate?
+A. Inhalational anesthesia is favored because the system is closed
+B. TIVA is preferred; RB is an open system with significant leak/pollution under inhalational anesthesia
+C. Moderate sedation yields outcomes similar to TIVA
+D. Pre-oxygenation is unnecessary
+E. Volatile agents allow lower FiO₂ faster than jet ventilation
+Answer: B. TIVA predominates; moderate sedation is associated with more complications.
+
+Controversies, Variability, and Evolving Evidence
+
+TEF stenting order: Whether to stent airway, esophagus, or both remains individualized. Many begin with esophageal stent unless airway compromise mandates airway stent first; persistent fistula often requires double stenting.
+
+Ventilation choice: Centers vary between spontaneous-assisted and jet ventilation. Both are acceptable; jet offers faster FiO₂ reduction but sacrifices pressure monitoring.
+
+Sedation strategy: Moderate sedation is associated with higher complication rates in RB but may still be used in limited contexts; TIVA is predominant.
+
+Take-Home Checklist
+
+Confirm indication and exclude absolute contraindications (cervical spine instability).
+
+Align the team on anesthesia/ventilation (prefer TIVA; choose spontaneous-assisted vs jet case-by-case).
+
+Prepare full RB tray: multiple barrel sizes, telescope/camera, coagulation device, cryo, dilators, stents, suction.
+
+Intubation sequence: midline, bevel anterior, under epiglottis, rotate 90° across cords; head contralateral to enter a main bronchus.
+
+Intrinsic tumor: devascularize → core → base; keep FiO₂ appropriate for hot therapies.
+
+Extrinsic/mixed: dilate and stent for stability.
+
+Massive hemoptysis: RB for airway control, tamponade, and topical hemostasis.
+
+FB removal: choose forceps per shape; en bloc extraction.
+
+Benign stenosis: classify simple vs complex; stent when cartilage involvement exists.
+
+Anticipate complications; avoid moderate sedation; identify high-risk profiles (urgent cases, ASA >3, poor performance status).
+
+Abbreviations & Glossary
+
+RB: Rigid bronchoscopy
+
+CAO/MCAO: (Malignant) central airway obstruction
+
+FB: Foreign body
+
+TIVA: Total intravenous anesthesia
+
+ASA: American Society of Anesthesiologists physical status
+
+ECOG/Zubrod: Performance status scale
+
+APC: Argon plasma coagulation
+
+TEF: Tracheo-esophageal fistula
+
+References
+
+Ernst A, Feller-Kopman D, Becker HD, Mehta AC. Central Airway Obstruction. Am J Respir Crit Care Med. 2004;169(12):1278-1297.
+
+Colt HG, Harrell J, Neuman TR, Robbins J. Safety and Efficacy of Therapeutic Flexible Bronchoscopy in Patients With Malignant Central Airway Obstruction. Chest. 1992;102(3):881-886.
+
+Dumon JF. A Dedicated Airway Stent for Use in the Tracheobronchial Tree. Chest. 1990;97(2):328-332.
+
+Dutau H, Musani AI, Plojoux J, et al. Therapeutic Rigid Bronchoscopy: An Essential Skill for the Interventional Pulmonologist. Respirology. 2014;19(5):714-721.
+
+Dalar L, Eryuksel E, Karasulu L, et al. Rigid Bronchoscopy in the Management of Central Airway Obstruction: Experience of 2,008 Procedures. J Bronchology Interv Pulmonol. 2015;22(3):220-228.
+
+Ost DE, Ernst A, Grosu HB, et al; AQuIRE Investigators. Complications Following Therapeutic Bronchoscopy for Malignant Central Airway Obstruction: Results of the AQuIRE Registry. Chest. 2015;148(2):450-471.
+
+Ost DE, Ernst A, Grosu HB, et al. Success of Therapeutic Bronchoscopy for Malignant Central Airway Obstruction: Data From the AQuIRE Registry. Chest. 2015;147(5):1282-1298.
+
+Stratakos G, Gerovasili V, Dimitropoulos C, et al. Immediate Effect of Therapeutic Bronchoscopic Interventions on Quality of Life in Malignant Airway Obstruction. Respiration. 2011;81(6):475-480.
+
+Lunn W, Garland R, Ashiku SK, et al. Management of Central Airway Obstruction With Rigid Bronchoscopy. Semin Thorac Cardiovasc Surg. 2009;21(4):307-315.
+
+Gasparini S. Rigid Bronchoscopy: Indications, Technique, and Results. Monaldi Arch Chest Dis. 1997;52(4):360-364.
+
+Noppen M, D'Haese J, Meysman M, Peche R, Vincken W. Interventional Bronchoscopic Techniques in the Management of Benign Airway Stenosis: An Institutional Experience. Thorax. 1999;54(10):1084-1090.
+
+Murgu SD, Colt HG. Tracheobronchial Stenosis and the Role of Bronchoscopic Interventions: State of the Art. Chest. 2016;150(2):426-441.
+
+Dutau H, Vandemoortele T, Laroumagne S, et al. Rigid Bronchoscopy in the Management of Hemoptysis. J Thorac Dis. 2016;8(Suppl 2):S137-S150.
+
+Hetzel M, Eberhardt R, Herth FJF, et al. Cryorecanalization for Central Airway Obstruction: A New Approach. Chest. 2010;138(4):857-862.
+
+Freitag L, Darwiche K. Endoscopic Treatment of Benign Airway Stenosis: An Update. Clin Chest Med. 2013;34(3):429-438.
+
+Murgu S, Colt H. Role of Rigid Bronchoscopy in the Management of Airway Stents. Clin Chest Med. 2010;31(1):151-167.
+
+Dumon JF, Reboud E, Garbe L, Aucomte F, Meric B. Treatment of Tracheobronchial Lesions by Laser Photoresection. Chest. 1982;81(3):278-284.
+
+Cavaliere S, Venuta F, Foccoli P, Toninelli C, La Face B. Endoscopic Treatment of Malignant Airway Obstruction in 2,008 Patients. Chest. 1996;110(6):1536-1542.
+
+Gompelmann D, Eberhardt R, Herth FJF. Advanced Diagnostic and Therapeutic Bronchoscopy in the Management of Central Airway Obstruction. Lung. 2010;188(5):435-441.
+
+Stather DR, MacEachern P, Chee A, Dumoulin E, Tremblay A. An Educational Program for Rigid Bronchoscopy: Development and Evaluation of the RIGID-TASC Tool. Ann Am Thorac Soc. 2015;12(4):539-543.
+
+Folch E, Keyes C. Airway Stents. Ann Cardiothorac Surg. 2018;7(2):273-283.
+
+Darwiche K, Freitag L. Rigid Bronchoscopy in the Management of Airway Emergencies. Semin Respir Crit Care Med. 2018;39(6):760-770.
+
+Sood N, Murgu SD, Colt HG. Anesthetic Considerations During Rigid Bronchoscopy for Interventional Pulmonology Procedures. J Bronchology Interv Pulmonol. 2013;20(4):296-306.
+
+Mayse ML, Greenheck J, Friedman M, et al. Airway Stent Complications: Experience With Silicone and Metallic Stents in 191 Patients. Chest. 2004;125(3):1069-1076.
+
+Dalar L, Karasulu L, Abul Y, et al. Rigid Bronchoscopy for Foreign Body Aspiration: Clinical Review of 500 Cases. Respir Care. 2016;61(6):736-741.
