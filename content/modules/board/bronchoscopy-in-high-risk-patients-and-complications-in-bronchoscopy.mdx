@@ -167,8 +167,8 @@ A. Intra‑Procedural Bleeding Control (Flexible Bronchoscopy)
 
 ```mermaid
 flowchart TD
-A Bleeding observed --> B Keep scope in; suction/visualize
-B --> C Position bleeding lung down; wedge if peripheral
+A[Bleeding observed] --> B[Keep scope in; suction/visualize]
+B --> C[Position bleeding lung down; wedge if peripheral]
 C --> D[Cold 4 °C saline aliquots]
 D --> E{Controlled?}
 E -->|Yes| Z[Proceed and observe]
@@ -190,7 +190,7 @@ B. Pre‑Bronchoscopy Triage in High‑Risk Patients
 
 ```mermaid
 flowchart TD
-A Patient scheduled --> B{Pregnant?}
+A[Patient scheduled] --> B{Pregnant?}
 B -->|Yes| B1[Avoid nasal route; wedge right hip; minimize hypercarbia; lowest effective lidocaine; multidisciplinary planning]
 B -->|No| C{Pulmonary hypertension?}
 C -->|Yes| C1[Continue PAH meds; avoid ↑PVR; gentle technique; maintain preload]
