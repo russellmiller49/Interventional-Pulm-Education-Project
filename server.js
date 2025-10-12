@@ -10,20 +10,33 @@ const port = process.env.PORT || 3000
 const app = next({ dev, hostname, port: dev ? 3002 : port })
 const handle = app.getRequestHandler()
 
-app.prepare().then(() => {
-  const server = express()
+app
+  .prepare()
+  .then(() => {
+    console.log('Next.js app prepared successfully')
+    const server = express()
 
-  // Serve static files from the public directory
-  server.use('/public', express.static(path.join(__dirname, 'public')))
-  server.use('/models', express.static(path.join(__dirname, 'public', 'models')))
-  server.use('/draco', express.static(path.join(__dirname, 'public', 'draco')))
+    // Serve static files from the public directory
+    server.use('/public', express.static(path.join(__dirname, 'public')))
+    server.use('/models', express.static(path.join(__dirname, 'public', 'models')))
+    server.use('/draco', express.static(path.join(__dirname, 'public', 'draco')))
 
-  server.all('*', (req, res) => {
-    return handle(req, res)
+    server.use((req, res) => {
+      return handle(req, res)
+    })
+
+    server.listen(port, hostname, (err) => {
+      if (err) {
+        console.error('Failed to start server:', err)
+        throw err
+      }
+      console.log(`> Ready on http://${hostname}:${port}`)
+      console.log(`> Environment: ${process.env.NODE_ENV}`)
+      console.log(`> Port: ${port}`)
+      console.log(`> Hostname: ${hostname}`)
+    })
   })
-
-  server.listen(port, hostname, (err) => {
-    if (err) throw err
-    console.log(`> Ready on http://${hostname}:${port}`)
+  .catch((err) => {
+    console.error('Failed to prepare Next.js app:', err)
+    process.exit(1)
   })
-})

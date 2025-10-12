@@ -1,8 +1,8 @@
 [phases.install]
-cmds = ["npm install --legacy-peer-deps"]
+cmds = ["pnpm install"]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["pnpm run build"]
 
 [start]
-cmd = "npm run start:prod"
+cmd = "pnpm run start:prod"
