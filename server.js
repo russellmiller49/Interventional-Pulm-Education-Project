@@ -1,62 +1,28 @@
-const { createServer } = require('http')
-const { parse } = require('url')
 const next = require('next')
+const express = require('express')
 const path = require('path')
-const fs = require('fs')
 
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = 'localhost'
 const port = process.env.PORT || 3000
-
-const app = next({ dev, hostname, port })
+// When using `pnpm dev`, we already have a Next.js server running on 3001
+// so we need to use a different port for the custom server.
+const app = next({ dev, hostname, port: dev ? 3002 : port })
 const handle = app.getRequestHandler()
 
 app.prepare().then(() => {
-  createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true)
-      const { pathname } = parsedUrl
+  const server = express()
 
-      // Handle static files from public directory
-      if (
-        pathname.startsWith('/models/') ||
-        pathname.startsWith('/window.svg') ||
-        pathname.startsWith('/favicon.ico')
-      ) {
-        const filePath = path.join(__dirname, 'public', pathname)
+  // Serve static files from the public directory
+  server.use('/public', express.static(path.join(__dirname, 'public')))
+  server.use('/models', express.static(path.join(__dirname, 'public', 'models')))
+  server.use('/draco', express.static(path.join(__dirname, 'public', 'draco')))
 
-        try {
-          const stat = fs.statSync(filePath)
-          if (stat.isFile()) {
-            // Set appropriate content type
-            if (pathname.endsWith('.glb')) {
-              res.setHeader('Content-Type', 'model/gltf-binary')
-            } else if (pathname.endsWith('.svg')) {
-              res.setHeader('Content-Type', 'image/svg+xml')
-            } else if (pathname.endsWith('.ico')) {
-              res.setHeader('Content-Type', 'image/x-icon')
-            }
+  server.all('*', (req, res) => {
+    return handle(req, res)
+  })
 
-            res.setHeader('Content-Length', stat.size)
-            res.setHeader('Cache-Control', 'public, max-age=31536000')
-
-            const fileStream = fs.createReadStream(filePath)
-            fileStream.pipe(res)
-            return
-          }
-        } catch (err) {
-          // File not found, continue to Next.js
-        }
-      }
-
-      // Handle all other requests with Next.js
-      await handle(req, res, parsedUrl)
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err)
-      res.statusCode = 500
-      res.end('internal server error')
-    }
-  }).listen(port, (err) => {
+  server.listen(port, (err) => {
     if (err) throw err
     console.log(`> Ready on http://${hostname}:${port}`)
   })

@@ -48,6 +48,7 @@
     "@react-three/fiber": "^8.15.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "express": "^5.1.0",
     "framer-motion": "^12.23.22",
     "fuse.js": "^6.6.2",
     "lucide-react": "^0.545.0",
