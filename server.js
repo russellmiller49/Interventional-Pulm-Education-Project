@@ -3,7 +3,7 @@ const express = require('express')
 const path = require('path')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+const hostname = dev ? 'localhost' : '0.0.0.0'
 const port = process.env.PORT || 3000
 // When using `pnpm dev`, we already have a Next.js server running on 3001
 // so we need to use a different port for the custom server.
@@ -22,7 +22,7 @@ app.prepare().then(() => {
     return handle(req, res)
   })
 
-  server.listen(port, (err) => {
+  server.listen(port, hostname, (err) => {
     if (err) throw err
     console.log(`> Ready on http://${hostname}:${port}`)
   })
