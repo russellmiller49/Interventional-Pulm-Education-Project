@@ -371,7 +371,7 @@ export function AnatomyViewer({
         dpr={[1, isMobile ? 1 : 1.5]}
         onCreated={({ gl }) => {
           glRef.current = gl
-          gl.outputEncoding = SRGBColorSpace
+          gl.outputColorSpace = SRGBColorSpace
           gl.toneMappingExposure = 1.2
           gl.setClearColor('#0b172b')
           // Handle context loss
