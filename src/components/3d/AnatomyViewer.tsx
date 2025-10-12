@@ -392,7 +392,7 @@ export function AnatomyViewer({
         <AdaptiveDpr pixelated />
         <PerspectiveCamera position={cameraPosition} fov={45} />
         <ambientLight intensity={0.85} />
-        <hemisphereLight skyColor="#f8fafc" groundColor="#111827" intensity={0.85} />
+        <hemisphereLight color="#f8fafc" groundColor="#111827" intensity={0.85} />
         <directionalLight position={[6, 7, 6]} intensity={1.0} castShadow />
         <directionalLight position={[-5, -3, -6]} intensity={0.5} />
         <spotLight position={[0, 9, 5]} intensity={0.75} angle={0.8} penumbra={0.55} castShadow />
