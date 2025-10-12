@@ -263,6 +263,10 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [{ format: 'glb', url: '/models/airway-y-stent.glb', sizeMB: 4.42 }],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
+    defaultCamera: {
+      position: [0, 1.8, 3.6],
+      target: [0, 0.6, 0],
+    },
     segments: [
       {
         id: 'airway',
@@ -407,6 +411,10 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [{ format: 'glb', url: '/models/te-fistula.glb', sizeMB: 4.84 }],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
+    defaultCamera: {
+      position: [0, 1.8, 3.6],
+      target: [0, 0.6, 0],
+    },
     orientation: {
       rotation: [0, 0, 0],
     },
