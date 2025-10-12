@@ -4,9 +4,9 @@ import { Canvas } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { usePathname } from 'next/navigation'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import type { AnatomyModel } from '@/lib/types'
+import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 import { applySegmentColors, computePlaneConstant, useAnatomyAsset } from '@/lib/3d-utils'
-import { AxesHelper, Box3, MeshStandardMaterial, Plane, Vector3 } from 'three'
+import { AxesHelper, Box3, MeshStandardMaterial, Plane, SRGBColorSpace, Vector3 } from 'three'
 import type { WebGLRenderer } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
@@ -20,6 +20,7 @@ interface AnatomyViewerProps {
   rotation?: { x: number; y: number; z: number }
   onScreenshot?: (dataUrl: string) => void
   onError?: (message: string) => void
+  onSegmentsChanged?: (segments: AnatomySegment[]) => void
 }
 
 export function AnatomyViewer({
@@ -32,6 +33,7 @@ export function AnatomyViewer({
   rotation = { x: 0, y: 0, z: 0 },
   onScreenshot,
   onError,
+  onSegmentsChanged,
 }: AnatomyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const glRef = useRef<WebGLRenderer | null>(null)
@@ -44,6 +46,7 @@ export function AnatomyViewer({
     target: [0, 0, 0] as [number, number, number],
   })
   const pathname = usePathname()
+  const prevSegmentsRef = useRef<AnatomySegment[] | null>(null)
 
   useEffect(() => {
     const handler = () => {
@@ -79,10 +82,47 @@ export function AnatomyViewer({
     groupClone.rotation.y += rotationRadians.y
     groupClone.rotation.z += rotationRadians.z
     groupClone.updateMatrixWorld(true)
-    const segmentMeshes = applySegmentColors(groupClone, model)
+    const segmentSeed =
+      assetState.segments && assetState.segments.length ? assetState.segments : model.segments
+    const effectiveModel: AnatomyModel =
+      segmentSeed === model.segments ? model : { ...model, segments: segmentSeed }
+    const { meshesBySegment, segments: hydratedSegments } = applySegmentColors(
+      groupClone,
+      effectiveModel,
+    )
     const boundingBox = new Box3().setFromObject(groupClone)
-    return { group: groupClone, segmentMeshes, boundingBox }
+    return {
+      group: groupClone,
+      segmentMeshes: meshesBySegment,
+      boundingBox,
+      segments: hydratedSegments,
+    }
   }, [assetState, model, rotation])
+
+  useEffect(() => {
+    if (!preparedScene || !onSegmentsChanged) {
+      return
+    }
+    const prev = prevSegmentsRef.current
+    const next = preparedScene.segments
+    const hasChanged =
+      !prev ||
+      prev.length !== next.length ||
+      prev.some((prevSegment, index) => {
+        const segment = next[index]
+        return (
+          !segment ||
+          prevSegment.id !== segment.id ||
+          prevSegment.color !== segment.color ||
+          prevSegment.visibleByDefault !== segment.visibleByDefault
+        )
+      })
+
+    if (hasChanged) {
+      prevSegmentsRef.current = next.map((segment) => ({ ...segment }))
+      onSegmentsChanged(next.map((segment) => ({ ...segment })))
+    }
+  }, [preparedScene, onSegmentsChanged])
 
   const boundingSize = useMemo(() => {
     if (!preparedScene) {
@@ -118,9 +158,21 @@ export function AnatomyViewer({
     return [0, boundingSize.y * 0.1, radius * 2.8]
   }, [model.defaultCamera, boundingSize, radius])
 
-  const maxDistance = useMemo(() => Math.max(radius * 3.5, 10), [radius])
+  const maxDistance = useMemo(() => {
+    // For GLB models, use larger max distance
+    if (model.downloads.some((d) => d.format === 'glb')) {
+      return Math.max(radius * 10, 20)
+    }
+    return Math.max(radius * 3.5, 10)
+  }, [radius, model.downloads])
 
-  const minDistance = useMemo(() => Math.max(Math.min(radius * 0.25, 2.5), 1.2), [radius])
+  const minDistance = useMemo(() => {
+    // For GLB models, allow much closer viewing
+    if (model.downloads.some((d) => d.format === 'glb')) {
+      return Math.max(radius * 0.1, 0.1)
+    }
+    return Math.max(Math.min(radius * 0.25, 2.5), 1.2)
+  }, [radius, model.downloads])
 
   const axesHelper = useMemo(() => new AxesHelper(2.5), [])
 
@@ -143,21 +195,39 @@ export function AnatomyViewer({
       }, 100)
       return () => clearTimeout(timer)
     }
-  }, [model.defaultCamera, preparedScene])
+  }, [model.defaultCamera, model.downloads, preparedScene])
 
   // Force camera position on initial load
   useEffect(() => {
     if (controlsRef.current && model.defaultCamera?.position && preparedScene) {
       const timer = setTimeout(() => {
         if (controlsRef.current) {
-          controlsRef.current.object.position.set(...model.defaultCamera.position)
-          controlsRef.current.target.set(...model.defaultCamera.target)
+          // For GLB models, auto-fit to bounding box
+          if (model.downloads.some((d) => d.format === 'glb') && preparedScene.boundingBox) {
+            const size = preparedScene.boundingBox.getSize(new Vector3())
+            const center = preparedScene.boundingBox.getCenter(new Vector3())
+            const maxDim = Math.max(size.x, size.y, size.z)
+            const distance = Math.max(maxDim * 4.5, maxDim + 1.5)
+
+            controlsRef.current.object.position.set(distance, distance, distance)
+            controlsRef.current.target.set(center.x, center.y, center.z)
+
+            console.log('Auto-positioned camera for GLB:', {
+              position: [distance, distance, distance],
+              target: center,
+              modelSize: size,
+              maxDim: maxDim,
+            })
+          } else {
+            controlsRef.current.object.position.set(...model.defaultCamera.position)
+            controlsRef.current.target.set(...model.defaultCamera.target)
+          }
           controlsRef.current.update()
         }
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [preparedScene, model.defaultCamera])
+  }, [preparedScene, model.defaultCamera, model.downloads])
 
   useEffect(() => {
     if (!showDebugHelpers) {
@@ -287,7 +357,10 @@ export function AnatomyViewer({
   }
 
   return (
-    <div ref={containerRef} className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border/60 bg-background/60">
+    <div
+      ref={containerRef}
+      className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border/60 bg-background/60"
+    >
       {assetState.status === 'loading' ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
           <span className="text-sm text-muted-foreground">Loading 3D anatomy…</span>
@@ -295,21 +368,46 @@ export function AnatomyViewer({
       ) : null}
       <Canvas
         shadows
-        dpr={[1, isMobile ? 1.5 : 2]}
+        dpr={[1, isMobile ? 1 : 1.5]}
         onCreated={({ gl }) => {
           glRef.current = gl
-          gl.setClearColor('#030711')
+          gl.physicallyCorrectLights = true
+          gl.outputEncoding = SRGBColorSpace
+          gl.toneMappingExposure = 1.2
+          gl.setClearColor('#0b172b')
+          // Handle context loss
+          gl.domElement.addEventListener('webglcontextlost', (event) => {
+            console.warn('WebGL context lost')
+            event.preventDefault()
+          })
+          gl.domElement.addEventListener('webglcontextrestored', () => {
+            console.log('WebGL context restored')
+            // Force re-render
+            if (preparedScene) {
+              // Trigger re-render
+            }
+          })
         }}
       >
-        <color attach="background" args={['#030711']} />
+        <color attach="background" args={['#0b172b']} />
         <AdaptiveDpr pixelated />
         <PerspectiveCamera position={cameraPosition} fov={45} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 5, 5]} intensity={0.9} castShadow />
-        <directionalLight position={[-5, -2, -5]} intensity={0.4} />
+        <ambientLight intensity={0.85} />
+        <hemisphereLight skyColor="#f8fafc" groundColor="#111827" intensity={0.85} />
+        <directionalLight position={[6, 7, 6]} intensity={1.0} castShadow />
+        <directionalLight position={[-5, -3, -6]} intensity={0.5} />
+        <spotLight position={[0, 9, 5]} intensity={0.75} angle={0.8} penumbra={0.55} castShadow />
         {showDebugHelpers ? <primitive object={axesHelper} /> : null}
+        {/* Always show debug helpers for GLB models */}
+        {model.downloads.some((d) => d.format === 'glb') ? <primitive object={axesHelper} /> : null}
         {preparedScene ? (
-          <Suspense fallback={<Html center className="text-xs text-muted-foreground">Preparing anatomy…</Html>}>
+          <Suspense
+            fallback={
+              <Html center className="text-xs text-muted-foreground">
+                Preparing anatomy…
+              </Html>
+            }
+          >
             <primitive object={preparedScene.group} />
           </Suspense>
         ) : null}
@@ -331,7 +429,10 @@ export function AnatomyViewer({
             {showAnnotations
               ? model.segments.slice(0, 8).map((segment) => (
                   <span key={segment.id} className="inline-flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: segment.color }} />
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: segment.color }}
+                    />
                     {segment.name}
                   </span>
                 ))
@@ -366,13 +467,11 @@ export function AnatomyViewer({
         </div>
         {showDebugHelpers ? (
           <div className="pointer-events-auto mt-3 inline-flex max-w-xs flex-col gap-1 self-start rounded-lg bg-background/85 px-3 py-2 text-[11px] text-muted-foreground backdrop-blur">
-            <span className="font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">Camera</span>
-            <span>
-              Pos: {debugCoords.position.map((value) => value.toFixed(2)).join(', ')}
+            <span className="font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
+              Camera
             </span>
-            <span>
-              Target: {debugCoords.target.map((value) => value.toFixed(2)).join(', ')}
-            </span>
+            <span>Pos: {debugCoords.position.map((value) => value.toFixed(2)).join(', ')}</span>
+            <span>Target: {debugCoords.target.map((value) => value.toFixed(2)).join(', ')}</span>
           </div>
         ) : null}
       </div>

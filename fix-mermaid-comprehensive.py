@@ -46,3 +46,4 @@ for filepath in glob.glob('content/modules/board/*.mdx'):
     fix_mermaid_comprehensive(filepath)
 
 print("\n✓ All Mermaid diagrams comprehensively fixed!")
+

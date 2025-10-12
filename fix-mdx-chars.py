@@ -64,3 +64,4 @@ for filepath in glob.glob('content/modules/board/*.mdx'):
     fix_mdx_file(filepath)
 
 print("\n✓ All files processed!")
+

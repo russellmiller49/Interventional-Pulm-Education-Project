@@ -1,18 +1,23 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { AnatomyViewer } from '@/components/3d/AnatomyViewer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { anatomyModels } from '@/data/printable-models'
-import type { AnatomyModel } from '@/lib/types'
+import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 
 export default function AnatomyLearnPage() {
   const models = anatomyModels
   const [selectedModel, setSelectedModel] = useState<AnatomyModel>(models[0])
+  const [displaySegments, setDisplaySegments] = useState<AnatomySegment[]>(() =>
+    models[0].segments.map((segment) => ({ ...segment })),
+  )
   const [visibleSegments, setVisibleSegments] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(models[0].segments.map((segment) => [segment.id, true]))
+    Object.fromEntries(
+      models[0].segments.map((segment) => [segment.id, segment.visibleByDefault !== false]),
+    ),
   )
   const [crossSection, setCrossSection] = useState(0)
   const [showAnnotations, setShowAnnotations] = useState(true)
@@ -20,11 +25,24 @@ export default function AnatomyLearnPage() {
   const [showDebugHelpers, setShowDebugHelpers] = useState(false)
   const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 })
 
-  const segmentList = useMemo(() => selectedModel.segments, [selectedModel])
+  const segmentList = useMemo(() => displaySegments, [displaySegments])
+  const viewerModel = useMemo<AnatomyModel>(
+    () => ({
+      ...selectedModel,
+      segments: displaySegments,
+    }),
+    [selectedModel, displaySegments],
+  )
 
   const handleModelChange = (model: AnatomyModel) => {
     setSelectedModel(model)
-    setVisibleSegments(Object.fromEntries(model.segments.map((segment) => [segment.id, true])))
+    const nextSegments = model.segments.map((segment) => ({ ...segment }))
+    setDisplaySegments(nextSegments)
+    setVisibleSegments(
+      Object.fromEntries(
+        nextSegments.map((segment) => [segment.id, segment.visibleByDefault !== false]),
+      ),
+    )
     setCrossSection(0)
     setShowAnnotations(true)
     setResetSignal((signal) => signal + 1)
@@ -39,17 +57,43 @@ export default function AnatomyLearnPage() {
 
   const downloads = selectedModel.downloads
 
+  useEffect(() => {
+    setVisibleSegments((prev) => {
+      const next: Record<string, boolean> = {}
+      let changed = false
+      displaySegments.forEach((segment) => {
+        const current = segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
+        next[segment.id] = current
+        if (prev[segment.id] !== current) {
+          changed = true
+        }
+      })
+      Object.keys(prev).forEach((id) => {
+        if (!displaySegments.some((segment) => segment.id === id)) {
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [displaySegments])
+
   return (
     <div className="space-y-16 py-16">
       <section className="container space-y-4">
         <div className="space-y-2">
-          <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+          <Badge
+            variant="info"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+          >
             Learn · Anatomy
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Interactive 3D Anatomy Viewer</h1>
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+            Interactive 3D Anatomy Viewer
+          </h1>
           <p className="max-w-3xl text-muted-foreground">
-            Explore airway structures, vasculature, and lobar relationships with orbit controls, cross-sectional slicing,
-            and annotated segments. Built for fellows and faculty running rehearsal labs or patient consults.
+            Explore airway structures, vasculature, and lobar relationships with orbit controls,
+            cross-sectional slicing, and annotated segments. Built for fellows and faculty running
+            rehearsal labs or patient consults.
           </p>
         </div>
       </section>
@@ -58,7 +102,7 @@ export default function AnatomyLearnPage() {
         <div className="space-y-6">
           <AnatomyViewer
             key={selectedModel.id}
-            model={selectedModel}
+            model={viewerModel}
             visibleSegments={visibleSegments}
             crossSection={crossSection}
             showAnnotations={showAnnotations}
@@ -72,6 +116,45 @@ export default function AnatomyLearnPage() {
               document.body.appendChild(link)
               link.click()
               document.body.removeChild(link)
+            }}
+            onSegmentsChanged={(segments) => {
+              setDisplaySegments((prev) => {
+                const sameLength = prev.length === segments.length
+                const identical =
+                  sameLength &&
+                  prev.every((segment, index) => {
+                    const next = segments[index]
+                    return (
+                      next &&
+                      segment.id === next.id &&
+                      segment.color === next.color &&
+                      (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
+                    )
+                  })
+                if (identical) {
+                  return prev
+                }
+                return segments
+              })
+              setVisibleSegments((prev) => {
+                const next: Record<string, boolean> = {}
+                let changed = false
+
+                segments.forEach((segment) => {
+                  const current =
+                    segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
+                  next[segment.id] = current
+                  if (prev[segment.id] !== current) {
+                    changed = true
+                  }
+                })
+
+                if (Object.keys(prev).length !== Object.keys(next).length) {
+                  changed = true
+                }
+
+                return changed ? next : prev
+              })
             }}
           />
           <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
@@ -102,7 +185,14 @@ export default function AnatomyLearnPage() {
                 type="button"
                 onClick={() => {
                   setCrossSection(0)
-                  setVisibleSegments(Object.fromEntries(segmentList.map((segment) => [segment.id, true])))
+                  setVisibleSegments(
+                    Object.fromEntries(
+                      segmentList.map((segment) => [
+                        segment.id,
+                        segment.visibleByDefault !== false,
+                      ]),
+                    ),
+                  )
                   setShowAnnotations(true)
                   setResetSignal((signal) => signal + 1)
                   setRotation({ x: 0, y: 0, z: 0 })
@@ -162,7 +252,9 @@ export default function AnatomyLearnPage() {
                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
                   Clinical relevance
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground/90">{selectedModel.clinicalRelevance}</p>
+                <p className="mt-1 text-sm text-muted-foreground/90">
+                  {selectedModel.clinicalRelevance}
+                </p>
               </div>
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
@@ -174,12 +266,20 @@ export default function AnatomyLearnPage() {
               </div>
             </div>
             <div className="space-y-3 text-sm text-muted-foreground/90">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">Segments</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+                Segments
+              </h3>
               <ul className="space-y-2">
                 {segmentList.map((segment) => (
-                  <li key={segment.id} className="flex items-center justify-between gap-2 rounded-2xl bg-background/60 px-3 py-2">
+                  <li
+                    key={segment.id}
+                    className="flex items-center justify-between gap-2 rounded-2xl bg-background/60 px-3 py-2"
+                  >
                     <div className="flex items-center gap-2">
-                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: segment.color }} />
+                      <span
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: segment.color }}
+                      />
                       <span className="text-sm font-medium text-foreground">{segment.name}</span>
                     </div>
                     <button
@@ -187,7 +287,7 @@ export default function AnatomyLearnPage() {
                       onClick={() => handleToggleSegment(segment.id)}
                       className="text-xs font-semibold text-primary transition hover:text-primary/80"
                     >
-                      {visibleSegments[segment.id] ?? true ? 'Hide' : 'Show'}
+                      {(visibleSegments[segment.id] ?? true) ? 'Hide' : 'Show'}
                     </button>
                   </li>
                 ))}
@@ -198,13 +298,15 @@ export default function AnatomyLearnPage() {
           <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
             <h2 className="text-lg font-semibold">Download model</h2>
             <p className="text-sm text-muted-foreground">
-              Export the optimized STL or GLB to incorporate in your rehearsal lab, print farm, or teaching decks.
+              Export the optimized STL or GLB to incorporate in your rehearsal lab, print farm, or
+              teaching decks.
             </p>
             <div className="flex flex-wrap gap-2">
               {downloads.map((download) => (
                 <Button key={download.url} asChild variant="outline">
                   <a href={download.url} download>
-                    {download.format.toUpperCase()} · {download.sizeMB ? `${download.sizeMB} MB` : 'N/A'}
+                    {download.format.toUpperCase()} ·{' '}
+                    {download.sizeMB ? `${download.sizeMB} MB` : 'N/A'}
                   </a>
                 </Button>
               ))}

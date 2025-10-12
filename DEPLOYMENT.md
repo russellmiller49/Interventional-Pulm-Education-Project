@@ -12,6 +12,7 @@ This guide covers deploying your Next.js 14 project to Hostinger hosting.
 #### Steps:
 
 1. **Configure for Static Export**
+
    ```bash
    # Edit next.config.ts and uncomment these lines:
    output: 'export',
@@ -22,6 +23,7 @@ This guide covers deploying your Next.js 14 project to Hostinger hosting.
    ```
 
 2. **Build Static Files**
+
    ```bash
    npm run deploy:static
    ```
@@ -35,23 +37,27 @@ This guide covers deploying your Next.js 14 project to Hostinger hosting.
 **Best for**: Full-featured applications with API routes and server-side rendering
 
 #### Prerequisites:
+
 - Hostinger VPS plan
 - SSH access to your VPS
 
 #### Steps:
 
 1. **Build for Production**
+
    ```bash
    npm run deploy:vps
    ```
 
 2. **Transfer Files to VPS**
+
    ```bash
    # From your local machine
    scp -r . user@your-vps-ip:/var/www/your-domain
    ```
 
 3. **SSH into VPS and Setup**
+
    ```bash
    # Install Node.js (if not already installed)
    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -71,11 +77,13 @@ This guide covers deploying your Next.js 14 project to Hostinger hosting.
    ```
 
 4. **Configure Nginx (Reverse Proxy)**
+
    ```bash
    sudo nano /etc/nginx/sites-available/interventionalpulm
    ```
 
    Add this configuration:
+
    ```nginx
    server {
        listen 80;
@@ -96,6 +104,7 @@ This guide covers deploying your Next.js 14 project to Hostinger hosting.
    ```
 
    Enable the site:
+
    ```bash
    sudo ln -s /etc/nginx/sites-available/interventionalpulm /etc/nginx/sites-enabled/
    sudo nginx -t
@@ -130,6 +139,7 @@ NEXT_PUBLIC_APP_URL=https://interventionalpulm.org
 ## Monitoring and Maintenance
 
 ### For VPS Deployment:
+
 ```bash
 # Check application status
 pm2 status
@@ -178,7 +188,3 @@ pm2 restart interventionalpulm
 2. **Use Environment Variables** for sensitive data
 3. **Enable Security Headers** (already configured in next.config.ts)
 4. **Regular Backups** of your application and database
-
-
-
-

@@ -92,15 +92,12 @@ export function Navigation() {
         </div>
         <Button
           asChild
-          variant='ghost'
-          className='hidden items-center gap-2 px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none lg:inline-flex'
+          variant="ghost"
+          className="hidden items-center gap-2 px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none lg:inline-flex"
         >
-          <a href='https://github.com/interventional-pulm' target='_blank' rel='noreferrer'>
+          <a href="https://github.com/interventional-pulm" target="_blank" rel="noreferrer">
             <GitHubLogoIcon className="h-4 w-4" aria-hidden />
             <span>GitHub</span>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              1.2k ★
-            </span>
           </a>
         </Button>
         <ModeToggle size="sm" />

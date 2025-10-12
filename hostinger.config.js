@@ -4,10 +4,10 @@
 const hostingerConfig = {
   // Deployment type: 'static' for shared hosting, 'vps' for VPS hosting
   deploymentType: 'static', // Change to 'vps' if using VPS hosting
-  
+
   // Domain configuration
   domain: 'interventionalpulm.org',
-  
+
   // Build settings
   build: {
     // For static export (shared hosting)
@@ -27,15 +27,11 @@ const hostingerConfig = {
       },
     },
   },
-  
+
   // Environment variables for production
   env: {
     NEXT_PUBLIC_APP_URL: 'https://interventionalpulm.org',
   },
-};
+}
 
-module.exports = hostingerConfig;
-
-
-
-
+module.exports = hostingerConfig

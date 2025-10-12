@@ -5,7 +5,14 @@ import { useMemo } from 'react'
 import { GitHubLogoIcon, HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { cn } from '@/lib/cn'
 
 import type { NavItem } from './DesktopNav'
@@ -66,12 +73,14 @@ export function MobileNav({ items, activePath }: MobileNavProps) {
                     href={item.href}
                     className={cn(
                       'rounded-md px-3 py-2 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none',
-                      isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'
+                      isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted',
                     )}
                   >
                     <span className="block">{item.title}</span>
                     {item.description ? (
-                      <span className="mt-0.5 block text-sm text-muted-foreground">{item.description}</span>
+                      <span className="mt-0.5 block text-sm text-muted-foreground">
+                        {item.description}
+                      </span>
                     ) : null}
                   </Link>
                 )
@@ -92,17 +101,19 @@ export function MobileNav({ items, activePath }: MobileNavProps) {
               </Button>
               <Button
                 asChild
-                variant='secondary'
-                className='justify-center gap-2'
-                aria-label='Visit the GitHub organization'
+                variant="secondary"
+                className="justify-center gap-2"
+                aria-label="Visit the GitHub organization"
               >
-                <a href='https://github.com/interventional-pulm' target='_blank' rel='noreferrer'>
-                  <GitHubLogoIcon className='h-4 w-4' aria-hidden />
-                  GitHub · 1.2k stars
+                <a href="https://github.com/interventional-pulm" target="_blank" rel="noreferrer">
+                  <GitHubLogoIcon className="h-4 w-4" aria-hidden />
+                  GitHub
                 </a>
               </Button>
               <div className="space-y-3 rounded-lg border p-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Display</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Display
+                </p>
                 <ModeToggle className="w-full justify-center" />
               </div>
             </div>

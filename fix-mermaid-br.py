@@ -34,3 +34,4 @@ for filepath in glob.glob('content/modules/board/*.mdx'):
     fix_mermaid_br_tags(filepath)
 
 print("\n✓ All Mermaid <br/> tags removed!")
+
