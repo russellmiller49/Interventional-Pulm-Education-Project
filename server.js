@@ -10,9 +10,16 @@ const port = process.env.PORT || 3000
 const app = next({ dev, hostname, port: dev ? 3002 : port })
 const handle = app.getRequestHandler()
 
+// Add startup timeout for Railway
+const startupTimeout = setTimeout(() => {
+  console.error('Startup timeout reached - forcing exit')
+  process.exit(1)
+}, 30000) // 30 seconds
+
 app
   .prepare()
   .then(() => {
+    clearTimeout(startupTimeout)
     console.log('Next.js app prepared successfully')
     const server = express()
 
@@ -49,5 +56,6 @@ app
   })
   .catch((err) => {
     console.error('Failed to prepare Next.js app:', err)
+    clearTimeout(startupTimeout)
     process.exit(1)
   })
