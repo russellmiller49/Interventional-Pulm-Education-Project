@@ -16,6 +16,17 @@ app
     console.log('Next.js app prepared successfully')
     const server = express()
 
+    // Health check endpoint
+    server.get('/health', (req, res) => {
+      res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        port: port,
+        hostname: hostname,
+      })
+    })
+
     // Serve static files from the public directory
     server.use('/public', express.static(path.join(__dirname, 'public')))
     server.use('/models', express.static(path.join(__dirname, 'public', 'models')))
