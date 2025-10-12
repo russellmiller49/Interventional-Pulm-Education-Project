@@ -90,13 +90,16 @@ async function loadModel(model: AnatomyModel): Promise<AnatomyAssetSuccess> {
       // Debug: log scene structure
       console.log('GLB scene structure:', group)
       let meshCount = 0
-      group.traverse((child) => {
-        if ((child as Mesh).isMesh) {
-          meshCount++
-          console.log(`Mesh ${meshCount}:`, child.name, child.material)
-        }
-      })
-      console.log(`Total meshes found: ${meshCount}`)
+      if (process.env.NODE_ENV !== 'production') {
+        group.traverse((child) => {
+          if ((child as Mesh).isMesh) {
+            meshCount++
+            const mesh = child as Mesh
+            console.log(`Mesh ${meshCount}:`, mesh.name, mesh.material)
+          }
+        })
+        console.log(`Total meshes found: ${meshCount}`)
+      }
 
       // Preserve original GLB materials and map to segments
       const segments = buildDefaultSegments()
