@@ -64,14 +64,6 @@ const nextConfig = {
       },
     ]
   },
-  async rewrites() {
-    return [
-      {
-        source: '/models/:path*',
-        destination: '/models/:path*',
-      },
-    ]
-  },
   // Ensure static files are served correctly
   trailingSlash: false,
   generateEtags: false,
