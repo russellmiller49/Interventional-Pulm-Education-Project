@@ -27,8 +27,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Airway',
         description: 'Trachea and bronchial tree context for lymph node localization.',
         color: '#0ea5e9',
-        assetUrl: '/lymph-model/airway.obj',
-        materialUrl: '/lymph-model/airway.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/airway.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/airway.mtl',
         visibleByDefault: true,
       },
       {
@@ -36,8 +38,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Lymph Nodes',
         description: 'Station markers with volumetric node approximations.',
         color: '#facc15',
-        assetUrl: '/lymph-model/lymphn-nodes.obj',
-        materialUrl: '/lymph-model/lymphn-nodes.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/lymphn-nodes.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/lymphn-nodes.mtl',
         visibleByDefault: true,
       },
       {
@@ -45,8 +49,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Node Labels',
         description: 'Station IDs with floating labels for quick reference.',
         color: '#fde68a',
-        assetUrl: '/lymph-model/node-labels.obj',
-        materialUrl: '/lymph-model/node-labels.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/node-labels.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/node-labels.mtl',
         visibleByDefault: true,
       },
       {
@@ -54,8 +60,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Arteries',
         description: 'Segmented systemic arterial tree for bleeding risk assessment.',
         color: '#f97316',
-        assetUrl: '/lymph-model/arteries.obj',
-        materialUrl: '/lymph-model/arteries.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/arteries.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/arteries.mtl',
         visibleByDefault: true,
       },
       {
@@ -63,8 +71,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Pulmonary Veins',
         description: 'Pulmonary venous system for orientation near station 9 and 10 nodes.',
         color: '#22d3ee',
-        assetUrl: '/lymph-model/veins.obj',
-        materialUrl: '/lymph-model/veins.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/veins.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/veins.mtl',
         visibleByDefault: false,
       },
       {
@@ -72,8 +82,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Aorta',
         description: 'Mediastinal aorta and arch to contextualize station 4L and 5 nodes.',
         color: '#ef4444',
-        assetUrl: '/lymph-model/aorta.obj',
-        materialUrl: '/lymph-model/aorta.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/aorta.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/aorta.mtl',
         visibleByDefault: false,
       },
       {
@@ -81,8 +93,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Esophagus',
         description: 'Soft-tissue reference posterior to airway and mediastinum.',
         color: '#a855f7',
-        assetUrl: '/lymph-model/esophagus.obj',
-        materialUrl: '/lymph-model/esophagus.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/esophagus.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/esophagus.mtl',
         visibleByDefault: false,
       },
       {
@@ -90,8 +104,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Heart',
         description: 'Cardiac silhouette for endobronchial ultrasound orientation.',
         color: '#fb7185',
-        assetUrl: '/lymph-model/heart.obj',
-        materialUrl: '/lymph-model/heart.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/heart.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/heart.mtl',
         visibleByDefault: false,
       },
       {
@@ -99,8 +115,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Main Pulmonary Artery',
         description: 'Proximal pulmonary artery with branching detail.',
         color: '#f97316',
-        assetUrl: '/lymph-model/pulmonary-artery.obj',
-        materialUrl: '/lymph-model/pulmonary-artery.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/pulmonary-artery.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/pulmonary-artery.mtl',
         visibleByDefault: false,
       },
       {
@@ -108,8 +126,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Pulmonary Venous System',
         description: 'Venous drainage pathways to pair with arterial map.',
         color: '#0ea5e9',
-        assetUrl: '/lymph-model/pulmonary-venous-system.obj',
-        materialUrl: '/lymph-model/pulmonary-venous-system.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/pulmonary-venous-system.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/pulmonary-venous-system.mtl',
         visibleByDefault: false,
       },
       {
@@ -117,8 +137,10 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'Thyroid',
         description: 'Upper mediastinal reference structure.',
         color: '#fbbf24',
-        assetUrl: '/lymph-model/thyroid.obj',
-        materialUrl: '/lymph-model/thyroid.mtl',
+        assetUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/thyroid.obj',
+        materialUrl:
+          'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/thyroid.mtl',
         visibleByDefault: false,
       },
     ],
@@ -136,7 +158,13 @@ export const anatomyModels: AnatomyModel[] = [
     clinicalRelevance:
       'Maintains the same anatomic relationships for EBUS staging practice while improving load time on lower-powered devices.',
     relatedProcedures: ['EBUS staging', 'Robotic bronchoscopy', 'Thoracic surgery planning'],
-    downloads: [{ format: 'glb', url: '/models/lymph-node-education.glb', sizeMB: 12.96 }],
+    downloads: [
+      {
+        format: 'glb',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/lymph-node-education.glb',
+        sizeMB: 12.96,
+      },
+    ],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
     defaultCamera: {
@@ -260,7 +288,13 @@ export const anatomyModels: AnatomyModel[] = [
     clinicalRelevance:
       'Useful for rigid bronchoscopy rehearsal, stent sizing discussions, and explaining complex airway interventions.',
     relatedProcedures: ['Rigid bronchoscopy', 'Airway stent placement'],
-    downloads: [{ format: 'glb', url: '/models/airway-y-stent.glb', sizeMB: 4.42 }],
+    downloads: [
+      {
+        format: 'glb',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/airway-y-stent.glb',
+        sizeMB: 4.42,
+      },
+    ],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
     defaultCamera: {
@@ -408,7 +442,13 @@ export const anatomyModels: AnatomyModel[] = [
     clinicalRelevance:
       'Supports counseling and planning for fistula closure, stent positioning, and surgical consultation.',
     relatedProcedures: ['Rigid bronchoscopy', 'Fistula stenting', 'Esophageal interventions'],
-    downloads: [{ format: 'glb', url: '/models/te-fistula.glb', sizeMB: 4.84 }],
+    downloads: [
+      {
+        format: 'glb',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/te-fistula.glb',
+        sizeMB: 4.84,
+      },
+    ],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
     defaultCamera: {
@@ -554,8 +594,16 @@ export const anatomyModels: AnatomyModel[] = [
       'Used for orientation during navigation bronchoscopy and to teach branching nomenclature to trainees.',
     relatedProcedures: ['Rigid bronchoscopy', 'Robotic navigation', 'EBUS staging'],
     downloads: [
-      { format: 'glb', url: '/models/airway-full-tree.glb', sizeMB: 12.4 },
-      { format: 'stl', url: '/models/airway-full-tree.stl', sizeMB: 58.1 },
+      {
+        format: 'glb',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/airway-full-tree.glb',
+        sizeMB: 12.4,
+      },
+      {
+        format: 'stl',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/airway-full-tree.stl',
+        sizeMB: 58.1,
+      },
     ],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
@@ -599,8 +647,16 @@ export const anatomyModels: AnatomyModel[] = [
       'Ideal for pre-procedural planning of segmental resections and targeted navigation biopsies.',
     relatedProcedures: ['Segmental resection planning', 'Navigation bronchoscopy'],
     downloads: [
-      { format: 'glb', url: '/models/segmental-right-upper.glb', sizeMB: 7.1 },
-      { format: 'stl', url: '/models/segmental-right-upper.stl', sizeMB: 26.5 },
+      {
+        format: 'glb',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/segmental-right-upper.glb',
+        sizeMB: 7.1,
+      },
+      {
+        format: 'stl',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/segmental-right-upper.stl',
+        sizeMB: 26.5,
+      },
     ],
     thumbnail: '/globe.svg',
     gallery: ['/globe.svg'],
@@ -641,8 +697,16 @@ export const anatomyModels: AnatomyModel[] = [
       'Supports planning for bronchial artery embolization and complex airway interventions.',
     relatedProcedures: ['Bronchial artery embolization', 'Robotic navigation', 'Tumor debulking'],
     downloads: [
-      { format: 'glb', url: '/models/pulmonary-artery-tree.glb', sizeMB: 15.3 },
-      { format: 'stl', url: '/models/pulmonary-artery-tree.stl', sizeMB: 64.9 },
+      {
+        format: 'glb',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/pulmonary-artery-tree.glb',
+        sizeMB: 15.3,
+      },
+      {
+        format: 'stl',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/pulmonary-artery-tree.stl',
+        sizeMB: 64.9,
+      },
     ],
     thumbnail: '/file.svg',
     gallery: ['/file.svg'],
@@ -683,7 +747,13 @@ export const anatomyModels: AnatomyModel[] = [
     clinicalRelevance:
       'Great for onboarding fellows and running patient education sessions before major interventions.',
     relatedProcedures: ['Patient education', 'Anatomy teaching', 'Simulation labs'],
-    downloads: [{ format: 'zip', url: '/models/lobes-education-pack.zip', sizeMB: 88.2 }],
+    downloads: [
+      {
+        format: 'zip',
+        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/lobes-education-pack.zip',
+        sizeMB: 88.2,
+      },
+    ],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
     defaultCamera: {
