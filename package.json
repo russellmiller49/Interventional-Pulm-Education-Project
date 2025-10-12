@@ -7,7 +7,7 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "build:static": "next build && next export",
-    "start": "node server.js",
+    "start": "next start",
     "start:prod": "node server.js",
     "lint": "next lint",
     "test": "jest",
