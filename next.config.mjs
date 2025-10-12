@@ -56,12 +56,17 @@ const nextConfig = {
   images: {
     remotePatterns: [],
   },
-  headers: async () => [
-    {
-      source: '/:path*',
-      headers: securityHeaders,
-    },
-  ],
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ]
+  },
+  // Ensure static files are served correctly
+  trailingSlash: false,
+  generateEtags: false,
 }
 
 export default withContentlayer(nextConfig)
