@@ -2,10 +2,11 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "npm start"
+startCommand = "npx next start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
 [environment]
 NODE_ENV = "production"
 PORT = "3000"
+NODE_VERSION = "18.18.0"
