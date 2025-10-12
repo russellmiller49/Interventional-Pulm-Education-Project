@@ -371,7 +371,6 @@ export function AnatomyViewer({
         dpr={[1, isMobile ? 1 : 1.5]}
         onCreated={({ gl }) => {
           glRef.current = gl
-          gl.physicallyCorrectLights = true
           gl.outputEncoding = SRGBColorSpace
           gl.toneMappingExposure = 1.2
           gl.setClearColor('#0b172b')
