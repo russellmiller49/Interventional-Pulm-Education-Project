@@ -1,8 +1,8 @@
 [phases.install]
-cmds = ["pnpm install"]
+cmds = ["npm install"]
 
 [phases.build]
-cmds = ["pnpm run build"]
+cmds = ["npm run build"]
 
 [start]
-cmd = "pnpm run start:prod"
+cmd = "npm run start"

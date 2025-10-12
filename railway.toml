@@ -2,11 +2,10 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "pnpm start:prod"
+startCommand = "npm run start"
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
+restartPolicyMaxRetries = 3
 
 [environment]
 NODE_ENV = "production"
 NODE_VERSION = "18.18.0"
-NPM_CONFIG_PRODUCTION = "false"
