@@ -2,6 +2,115 @@ import type { AnatomyModel } from '@/lib/types'
 
 export const anatomyModels: AnatomyModel[] = [
   {
+    id: 'mediastinal-lymph-map-glb',
+    slug: 'mediastinal-lymph-map-glb',
+    name: 'Mediastinal Lymph Node Atlas (Optimized GLB)',
+    category: 'lymph-nodes',
+    description:
+      'Compressed GLB version of the mediastinal lymph node atlas for faster streaming and lower memory use.',
+    clinicalRelevance:
+      'Maintains the same anatomic relationships for EBUS staging practice while improving load time on lower-powered devices.',
+    relatedProcedures: ['EBUS staging', 'Robotic bronchoscopy', 'Thoracic surgery planning'],
+    downloads: [
+      {
+        format: 'glb',
+        url: '/models/lymph-node-education.glb',
+        sizeMB: 12.96,
+      },
+    ],
+    thumbnail: '/window.svg',
+    gallery: ['/window.svg'],
+    defaultCamera: {
+      position: [5, 5, 5],
+      target: [0, 0, 0],
+    },
+    orientation: {
+      rotation: [0, 0, 0],
+    },
+    segments: [
+      {
+        id: 'airway',
+        name: 'Airway',
+        description: 'Trachea and bronchial tree context for lymph node localization.',
+        color: '#0ea5e9',
+        visibleByDefault: true,
+      },
+      {
+        id: 'lymph-nodes',
+        name: 'Lymph Nodes',
+        description: 'Station markers with volumetric node approximations.',
+        color: '#facc15',
+        visibleByDefault: true,
+      },
+      {
+        id: 'node-labels',
+        name: 'Node Labels',
+        description: 'Station IDs with floating labels for quick reference.',
+        color: '#fde68a',
+        visibleByDefault: true,
+      },
+      {
+        id: 'arteries',
+        name: 'Arteries',
+        description: 'Segmented systemic arterial tree for bleeding risk assessment.',
+        color: '#f97316',
+        visibleByDefault: false,
+      },
+      {
+        id: 'veins',
+        name: 'Pulmonary Veins',
+        description: 'Pulmonary venous system for orientation near station 9 and 10 nodes.',
+        color: '#22d3ee',
+        visibleByDefault: false,
+      },
+      {
+        id: 'aorta',
+        name: 'Aorta',
+        description: 'Mediastinal aorta and arch to contextualize station 4L and 5 nodes.',
+        color: '#ef4444',
+        visibleByDefault: false,
+      },
+      {
+        id: 'esophagus',
+        name: 'Esophagus',
+        description: 'Soft-tissue reference posterior to airway and mediastinum.',
+        color: '#a855f7',
+        visibleByDefault: false,
+      },
+      {
+        id: 'heart',
+        name: 'Heart',
+        description: 'Cardiac silhouette for endobronchial ultrasound orientation.',
+        color: '#fb7185',
+        visibleByDefault: false,
+      },
+      {
+        id: 'pulmonary-artery',
+        name: 'Main Pulmonary Artery',
+        description: 'Proximal pulmonary artery with branching detail.',
+        color: '#f97316',
+        visibleByDefault: false,
+      },
+      {
+        id: 'pulmonary-venous-system',
+        name: 'Pulmonary Venous System',
+        description: 'Complete pulmonary venous drainage pattern.',
+        color: '#0ea5e9',
+        visibleByDefault: false,
+      },
+      {
+        id: 'thyroid',
+        name: 'Thyroid',
+        description: 'Thyroid gland for orientation during upper mediastinal procedures.',
+        color: '#fbbf24',
+        visibleByDefault: false,
+      },
+    ],
+    source: 'Shared by thoracic surgery collaborators for education use.',
+    notes:
+      'Optimized GLB format for faster loading and better performance on lower-powered devices.',
+  },
+  {
     id: 'mediastinal-lymph-map',
     slug: 'mediastinal-lymph-map',
     name: 'Mediastinal Lymph Node Atlas',
@@ -161,7 +270,7 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/lymph-node-education.glb',
+        url: '/models/lymph-node-education.glb',
         sizeMB: 12.96,
       },
     ],
@@ -291,7 +400,7 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/airway-y-stent.glb',
+        url: '/models/airway-y-stent.glb',
         sizeMB: 4.42,
       },
     ],
@@ -445,7 +554,7 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: 'https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/te-fistula.glb',
+        url: '/models/te-fistula.glb',
         sizeMB: 4.84,
       },
     ],
