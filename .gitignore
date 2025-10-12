@@ -116,7 +116,7 @@ Thumbs.db
 *.ply
 *.stl
 *.gltf
-*.glb
+# *.glb (commented out to allow essential 3D models)
 *.usd
 *.usda
 *.usdc
