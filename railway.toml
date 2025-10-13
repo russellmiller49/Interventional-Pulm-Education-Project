@@ -8,5 +8,6 @@ restartPolicyMaxRetries = 3
 
 [environment]
 NODE_ENV = "production"
-NODE_VERSION = "18.20.4"
-NIXPACKS_NODE_VERSION = "18.20.4"
+NODE_VERSION = "20.12.2"
+NIXPACKS_NODE_VERSION = "20.12.2"
+NPM_CONFIG_PRODUCTION = "false"
