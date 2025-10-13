@@ -1,6 +1,6 @@
 'use client'
 
-import { useMDXComponent } from 'next-contentlayer/hooks'
+import { useMDXComponent } from 'next-contentlayer2/hooks'
 
 import { mdxComponents } from './mdx-components'
 
@@ -13,4 +13,3 @@ export function MDXRenderer({ code }: MDXRendererProps) {
 
   return <Component components={mdxComponents} />
 }
-

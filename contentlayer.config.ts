@@ -1,4 +1,4 @@
-import { defineDocumentType, makeSource } from 'contentlayer/source-files'
+import { defineDocumentType, makeSource } from 'contentlayer2/source-files'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypeSlug from 'rehype-slug'
 
@@ -15,7 +15,8 @@ const BoardModule = defineDocumentType(() => ({
     },
     slug: {
       type: 'string',
-      resolve: (doc) => boardReviewChapterBySourceFile[doc._raw.sourceFileName]?.slug ?? getSlug(doc),
+      resolve: (doc) =>
+        boardReviewChapterBySourceFile[doc._raw.sourceFileName]?.slug ?? getSlug(doc),
     },
     title: {
       type: 'string',
@@ -34,11 +35,13 @@ const BoardModule = defineDocumentType(() => ({
     },
     category: {
       type: 'string',
-      resolve: (doc) => boardReviewChapterBySourceFile[doc._raw.sourceFileName]?.category ?? 'airway',
+      resolve: (doc) =>
+        boardReviewChapterBySourceFile[doc._raw.sourceFileName]?.category ?? 'airway',
     },
     estimatedMinutes: {
       type: 'number',
-      resolve: (doc) => boardReviewChapterBySourceFile[doc._raw.sourceFileName]?.estimatedMinutes ?? 0,
+      resolve: (doc) =>
+        boardReviewChapterBySourceFile[doc._raw.sourceFileName]?.estimatedMinutes ?? 0,
     },
     examDomains: {
       type: 'list',
