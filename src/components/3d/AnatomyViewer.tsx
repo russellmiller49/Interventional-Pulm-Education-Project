@@ -437,9 +437,10 @@ export function AnatomyViewer({
   }, [volumeState, volumeSlice, volumeAxis])
 
   useEffect(() => {
+    const container = ctContainerRef.current
     return () => {
-      if (ctContainerRef.current) {
-        ctContainerRef.current.replaceChildren()
+      if (container) {
+        container.replaceChildren()
       }
       ctSliceRef.current = null
     }

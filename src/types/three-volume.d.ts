@@ -1,5 +1,6 @@
 declare module 'three/examples/jsm/loaders/NRRDLoader.js' {
-  import { Loader, LoadingManager } from 'three'
+  import { Loader } from 'three'
+  import type { LoadingManager } from 'three'
   import type Volume from 'three/examples/jsm/misc/Volume.js'
 
   export class NRRDLoader extends Loader {

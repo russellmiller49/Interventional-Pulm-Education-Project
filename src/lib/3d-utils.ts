@@ -201,6 +201,7 @@ export function useAnatomyAsset(model: AnatomyModel): AnatomyAssetState {
     const orientationKey = model.orientation?.rotation?.join(',') ?? ''
     return `${model.id}|${downloadsKey}|${orientationKey}`
   }, [model.id, model.downloads, model.orientation])
+  const assetModel = useMemo(() => model, [assetKey])
 
   useEffect(() => {
     let cancelled = false
@@ -208,7 +209,7 @@ export function useAnatomyAsset(model: AnatomyModel): AnatomyAssetState {
     async function load() {
       setState({ status: 'loading' })
       try {
-        const asset = await loadModel(model)
+        const asset = await loadModel(assetModel)
         if (!cancelled) {
           setState(asset)
         }
@@ -224,7 +225,7 @@ export function useAnatomyAsset(model: AnatomyModel): AnatomyAssetState {
     return () => {
       cancelled = true
     }
-  }, [assetKey])
+  }, [assetKey, assetModel])
 
   return state
 }
