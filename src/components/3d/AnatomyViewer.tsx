@@ -3,7 +3,7 @@
 import { Canvas } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { usePathname } from 'next/navigation'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 import {
   applySegmentColors,
@@ -20,6 +20,28 @@ const AXIS_LABELS: Record<'x' | 'y' | 'z', string> = {
   x: 'Sagittal',
   y: 'Coronal',
   z: 'Axial',
+}
+
+type WindowPresetKey = 'default' | 'soft-tissue' | 'lung' | 'bone' | 'custom'
+
+const WINDOW_PRESET_MAP: Record<
+  Exclude<WindowPresetKey, 'default' | 'custom'>,
+  { low: number; high: number; label: string }
+> = {
+  'soft-tissue': { label: 'Soft Tissue', low: -160, high: 240 },
+  lung: { label: 'Lung', low: -1000, high: -300 },
+  bone: { label: 'Bone', low: 200, high: 2000 },
+}
+
+function getSliceTransform(axis: 'x' | 'y' | 'z'): string {
+  if (axis === 'y') {
+    return 'rotate(180deg)'
+  }
+  if (axis === 'x') {
+    return 'rotate(90deg)'
+  }
+  // Axial slices: flip left/right
+  return 'scaleX(-1)'
 }
 
 interface AnatomyViewerProps {
@@ -70,6 +92,29 @@ export function AnatomyViewer({
     () => (volumeInfo.total > 1 ? 100 / (volumeInfo.total - 1) : 100),
     [volumeInfo.total],
   )
+  const initialWindow = useMemo(
+    () => ({
+      low: model.volume?.window?.low ?? -1000,
+      high: model.volume?.window?.high ?? 500,
+    }),
+    [model.volume?.window?.high, model.volume?.window?.low],
+  )
+  const [windowPreset, setWindowPreset] = useState<WindowPresetKey>('default')
+  const [windowValues, setWindowValues] = useState(initialWindow)
+  const appliedWindow = useMemo(() => {
+    if (windowPreset === 'default') {
+      return initialWindow
+    }
+    if (windowPreset === 'custom') {
+      return windowValues
+    }
+    const preset = WINDOW_PRESET_MAP[windowPreset]
+    return { low: preset.low, high: preset.high }
+  }, [initialWindow, windowPreset, windowValues])
+  const presetButtons = useMemo<WindowPresetKey[]>(
+    () => ['default', 'soft-tissue', 'lung', 'bone', 'custom'],
+    [],
+  )
   const pathname = usePathname()
   const prevSegmentsRef = useRef<AnatomySegment[] | null>(null)
 
@@ -78,6 +123,35 @@ export function AnatomyViewer({
     setVolumeInfo({ index: 0, total: 0 })
     ctSliceRef.current = null
   }, [model.id, model.volume?.axis])
+
+  useEffect(() => {
+    setWindowPreset('default')
+    setWindowValues(initialWindow)
+  }, [initialWindow])
+
+  const handleWindowPresetChange = useCallback(
+    (key: WindowPresetKey) => {
+      setWindowPreset(key)
+      if (key === 'custom') {
+        return
+      }
+      if (key === 'default') {
+        setWindowValues(initialWindow)
+        return
+      }
+      const preset = WINDOW_PRESET_MAP[key]
+      setWindowValues({ low: preset.low, high: preset.high })
+    },
+    [initialWindow],
+  )
+
+  const handleCustomWindowChange = useCallback((field: 'low' | 'high', value: number) => {
+    if (!Number.isFinite(value)) {
+      return
+    }
+    setWindowPreset('custom')
+    setWindowValues((prev) => ({ ...prev, [field]: value }))
+  }, [])
 
   useEffect(() => {
     const handler = () => {
@@ -368,6 +442,25 @@ export function AnatomyViewer({
     const axisIndex = axis === 'x' ? 0 : axis === 'y' ? 1 : 2
     const { volume, dimensions } = volumeState
 
+    let windowLow = appliedWindow.low
+    let windowHigh = appliedWindow.high
+    if (!Number.isFinite(windowLow)) {
+      windowLow = -1000
+    }
+    if (!Number.isFinite(windowHigh)) {
+      windowHigh = 500
+    }
+    if (windowHigh <= windowLow) {
+      const midpoint = (windowHigh + windowLow) / 2
+      windowLow = midpoint - 1
+      windowHigh = midpoint + 1
+    }
+
+    volume.windowLow = windowLow
+    volume.windowHigh = windowHigh
+    volume.lowerThreshold = Number.NEGATIVE_INFINITY
+    volume.upperThreshold = Number.POSITIVE_INFINITY
+
     // Validate dimensions before proceeding
     if (!dimensions || dimensions.some((dim) => !dim || dim <= 0)) {
       console.warn('Invalid volume dimensions:', dimensions)
@@ -404,8 +497,7 @@ export function AnatomyViewer({
         slice.canvas.style.maxHeight = '100%'
         slice.canvas.style.background = '#000'
         slice.canvas.style.transformOrigin = 'center center'
-        slice.canvas.style.transform =
-          axis === 'y' ? 'rotate(180deg)' : axis === 'x' ? 'rotate(90deg)' : 'rotate(0deg)'
+        slice.canvas.style.transform = getSliceTransform(axis)
         ctContainerRef.current.replaceChildren(slice.canvas)
         ctSliceRef.current = slice
       } catch (error) {
@@ -425,8 +517,7 @@ export function AnatomyViewer({
         ctSliceRef.current.repaint()
         if (ctSliceRef.current.canvas) {
           ctSliceRef.current.canvas.style.transformOrigin = 'center center'
-          ctSliceRef.current.canvas.style.transform =
-            axis === 'y' ? 'rotate(180deg)' : axis === 'x' ? 'rotate(90deg)' : 'rotate(0deg)'
+          ctSliceRef.current.canvas.style.transform = getSliceTransform(axis)
         }
       } catch (error) {
         console.error('Error repainting volume slice:', error)
@@ -434,7 +525,7 @@ export function AnatomyViewer({
     }
 
     setVolumeInfo({ index: targetIndex, total: totalSlices })
-  }, [volumeState, volumeSlice, volumeAxis])
+  }, [volumeState, volumeSlice, volumeAxis, appliedWindow])
 
   useEffect(() => {
     const container = ctContainerRef.current
@@ -651,6 +742,62 @@ export function AnatomyViewer({
               aria-label="CT slice position"
               disabled={!onVolumeSliceChange}
             />
+            <div className="flex flex-wrap gap-1 text-xs">
+              {presetButtons.map((key) => {
+                const isActive = windowPreset === key
+                const label =
+                  key === 'default'
+                    ? `Default (${initialWindow.low.toFixed(0)}/${initialWindow.high.toFixed(0)})`
+                    : key === 'custom'
+                      ? 'Custom'
+                      : WINDOW_PRESET_MAP[key].label
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleWindowPresetChange(key)}
+                    className={`rounded-full px-3 py-1 font-medium transition ${
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            {windowPreset === 'custom' ? (
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <label className="flex flex-col gap-1">
+                  <span className="uppercase tracking-[0.3em]">Low (HU)</span>
+                  <input
+                    type="number"
+                    value={windowValues.low}
+                    step={25}
+                    onChange={(event) =>
+                      handleCustomWindowChange('low', Number(event.target.value))
+                    }
+                    className="rounded-md border border-border/60 bg-background/80 px-2 py-1 text-xs text-foreground"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="uppercase tracking-[0.3em]">High (HU)</span>
+                  <input
+                    type="number"
+                    value={windowValues.high}
+                    step={25}
+                    onChange={(event) =>
+                      handleCustomWindowChange('high', Number(event.target.value))
+                    }
+                    className="rounded-md border border-border/60 bg-background/80 px-2 py-1 text-xs text-foreground"
+                  />
+                </label>
+              </div>
+            ) : null}
+            <div className="text-xs text-muted-foreground">
+              Window: {appliedWindow.low.toFixed(0)} / {appliedWindow.high.toFixed(0)} HU
+            </div>
             <div className="inline-flex gap-1 rounded-full border border-border/60 bg-background/80 p-1 text-xs">
               {(['z', 'y', 'x'] as Array<'x' | 'y' | 'z'>).map((axis) => (
                 <button
