@@ -80,8 +80,14 @@ export function AnatomyViewer({
   const volumeState = useVolumeAsset(model)
   const ctContainerRef = useRef<HTMLDivElement | null>(null)
   const ctSliceRef = useRef<VolumeSlice | null>(null)
+  const xrSessionRef = useRef<XRSession | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [xrSupported, setXrSupported] = useState(false)
+  const [xrSessionActive, setXrSessionActive] = useState(false)
+  const [xrSessionMode, setXrSessionMode] = useState<'immersive-ar' | 'immersive-vr'>(
+    'immersive-vr',
+  )
   const [debugCoords, setDebugCoords] = useState({
     position: [0, 0, 0] as [number, number, number],
     target: [0, 0, 0] as [number, number, number],
@@ -129,6 +135,42 @@ export function AnatomyViewer({
     setWindowValues(initialWindow)
   }, [initialWindow])
 
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('xr' in navigator)) {
+      return
+    }
+
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const xrSystem = (navigator as any).xr as XRSystem
+        if (!xrSystem?.isSessionSupported) {
+          if (!cancelled) setXrSupported(false)
+          return
+        }
+        const [arSupported, vrSupported] = await Promise.all([
+          xrSystem.isSessionSupported('immersive-ar').catch(() => false),
+          xrSystem.isSessionSupported('immersive-vr').catch(() => false),
+        ])
+        if (cancelled) return
+        if (arSupported) {
+          setXrSessionMode('immersive-ar')
+        } else if (vrSupported) {
+          setXrSessionMode('immersive-vr')
+        }
+        setXrSupported(arSupported || vrSupported)
+      } catch (error) {
+        console.warn('WebXR session support check failed', error)
+        if (!cancelled) setXrSupported(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const handleWindowPresetChange = useCallback(
     (key: WindowPresetKey) => {
       setWindowPreset(key)
@@ -151,6 +193,69 @@ export function AnatomyViewer({
     }
     setWindowPreset('custom')
     setWindowValues((prev) => ({ ...prev, [field]: value }))
+  }, [])
+
+  const handleEnterXR = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !('xr' in navigator)) {
+      return
+    }
+    if (!glRef.current) {
+      return
+    }
+
+    try {
+      const xrSystem = (navigator as any).xr as XRSystem
+      if (!xrSystem?.requestSession) {
+        return
+      }
+
+      glRef.current.xr.enabled = true
+      glRef.current.xr.setReferenceSpaceType?.('local-floor')
+
+      const sessionInit: XRSessionInit = {
+        optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'anchors', 'hit-test'],
+      }
+
+      const session = await xrSystem
+        .requestSession(xrSessionMode, sessionInit)
+        .catch(async (error) => {
+          console.warn('Preferred XR session failed, retrying with immersive-vr', error)
+          if (xrSessionMode !== 'immersive-vr') {
+            setXrSessionMode('immersive-vr')
+            return xrSystem.requestSession('immersive-vr', sessionInit)
+          }
+          throw error
+        })
+
+      if (!session) {
+        return
+      }
+
+      xrSessionRef.current = session
+      session.addEventListener('end', () => {
+        xrSessionRef.current = null
+        setXrSessionActive(false)
+      })
+
+      await glRef.current.xr.setSession(session)
+      setXrSessionActive(true)
+    } catch (error) {
+      console.error('Failed to start WebXR session', error)
+      onError?.('Unable to start immersive session. Please check browser settings and permissions.')
+    }
+  }, [onError, xrSessionMode])
+
+  const handleExitXR = useCallback(async () => {
+    try {
+      if (xrSessionRef.current) {
+        await xrSessionRef.current.end()
+      }
+    } catch (error) {
+      console.warn('Failed to end XR session', error)
+    } finally {
+      xrSessionRef.current = null
+      setXrSessionActive(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -534,6 +639,11 @@ export function AnatomyViewer({
         container.replaceChildren()
       }
       ctSliceRef.current = null
+      if (xrSessionRef.current) {
+        xrSessionRef.current.end().catch(() => {})
+        xrSessionRef.current = null
+      }
+      setXrSessionActive(false)
     }
   }, [])
 
@@ -592,6 +702,7 @@ export function AnatomyViewer({
             gl.outputColorSpace = SRGBColorSpace
             gl.toneMappingExposure = 1.2
             gl.setClearColor('#0b172b')
+            gl.xr.enabled = true
             gl.domElement.addEventListener('webglcontextlost', (event) => {
               console.warn('WebGL context lost')
               event.preventDefault()
@@ -652,6 +763,19 @@ export function AnatomyViewer({
                 : 'Annotations hidden'}
             </div>
             <div className="pointer-events-auto flex items-center gap-2">
+              {xrSupported ? (
+                <button
+                  type="button"
+                  onClick={xrSessionActive ? handleExitXR : handleEnterXR}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    xrSessionActive
+                      ? 'bg-emerald-500/90 text-white hover:bg-emerald-500'
+                      : 'bg-primary/80 text-primary-foreground hover:bg-primary'
+                  }`}
+                >
+                  {xrSessionActive ? 'Exit spatial view' : 'Enter spatial view'}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => controlsRef.current?.reset()}
