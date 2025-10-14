@@ -68,7 +68,18 @@ export interface GitHubProject {
   stats?: GitHubRepoStats
 }
 
-export type DownloadFormat = 'stl' | 'glb' | 'gltf' | 'obj' | 'zip' | 'pdf' | 'usdz' | 'tar.gz'
+export type DownloadFormat =
+  | 'stl'
+  | 'glb'
+  | 'gltf'
+  | 'obj'
+  | 'zip'
+  | 'pdf'
+  | 'usdz'
+  | 'tar.gz'
+  | 'nrrd'
+  | 'nii'
+  | 'nii.gz'
 
 export type DownloadCategory = 'anatomy-model' | 'guide' | 'dataset' | 'curriculum'
 
@@ -93,12 +104,7 @@ export interface DownloadFile {
   tags: string[]
 }
 
-export type TrainingCategory =
-  | 'rigid-bronchoscopy'
-  | 'ebus'
-  | 'navigation'
-  | 'ablation'
-  | 'stents'
+export type TrainingCategory = 'rigid-bronchoscopy' | 'ebus' | 'navigation' | 'ablation' | 'stents'
 
 export type ModuleFormat = 'theory' | 'video' | 'hands-on' | 'simulation' | 'assessment'
 
@@ -154,6 +160,27 @@ export interface AnatomyModelAsset {
   sizeMB?: number
 }
 
+export type VolumeFormat = 'nrrd' | 'nii' | 'nii.gz'
+
+export interface AnatomySupabaseVolumeSource {
+  bucket: string
+  path: string
+  public?: boolean
+  projectRef?: string
+}
+
+export interface AnatomyVolumeAsset {
+  format: VolumeFormat
+  url?: string
+  description?: string
+  window?: {
+    low: number
+    high: number
+  }
+  axis?: 'x' | 'y' | 'z'
+  supabase?: AnatomySupabaseVolumeSource
+}
+
 export interface AnatomyModel {
   id: string
   slug: string
@@ -168,10 +195,12 @@ export interface AnatomyModel {
   defaultCamera: {
     position: [number, number, number]
     target: [number, number, number]
+    autoFit?: boolean
   }
   orientation?: {
     rotation?: [number, number, number]
   }
+  volume?: AnatomyVolumeAsset
   segments: AnatomySegment[]
   source?: string
   notes?: string

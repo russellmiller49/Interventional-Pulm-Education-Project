@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Box3, Color, Group, Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
+import { NRRDLoader } from 'three/examples/jsm/loaders/NRRDLoader.js'
+import type Volume from 'three/examples/jsm/misc/Volume.js'
 
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 
@@ -26,8 +28,179 @@ export interface AnatomyAssetSuccess {
 
 export type AnatomyAssetState = LoadingState | ErrorState | AnatomyAssetSuccess
 
+interface SegmentIndex {
+  byOriginalId: Map<string, AnatomySegment>
+  byNormalizedId: Map<string, AnatomySegment>
+  byNormalizedName: Map<string, AnatomySegment>
+}
+
+function normalizeSegmentKey(input: string | undefined | null): string {
+  if (!input) {
+    return ''
+  }
+  return input
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+function createSegmentIndex(segments: AnatomySegment[]): SegmentIndex {
+  const index: SegmentIndex = {
+    byOriginalId: new Map(),
+    byNormalizedId: new Map(),
+    byNormalizedName: new Map(),
+  }
+  segments.forEach((segment) => registerSegment(index, segment))
+  return index
+}
+
+function registerSegment(index: SegmentIndex, segment: AnatomySegment) {
+  index.byOriginalId.set(segment.id, segment)
+  index.byNormalizedId.set(normalizeSegmentKey(segment.id), segment)
+  index.byNormalizedName.set(normalizeSegmentKey(segment.name), segment)
+}
+
+function resolveSegmentFromCandidates(
+  index: SegmentIndex,
+  candidates: string[],
+): AnatomySegment | null {
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue
+    }
+    const normalized = normalizeSegmentKey(candidate)
+    if (index.byOriginalId.has(candidate)) {
+      return index.byOriginalId.get(candidate)!
+    }
+    if (normalized) {
+      if (index.byNormalizedId.has(normalized)) {
+        return index.byNormalizedId.get(normalized)!
+      }
+      if (index.byNormalizedName.has(normalized)) {
+        return index.byNormalizedName.get(normalized)!
+      }
+    }
+  }
+  return null
+}
+
+function ensureUniqueSegmentId(index: SegmentIndex, base: string): string {
+  const normalizedBase = normalizeSegmentKey(base) || 'segment'
+  if (!index.byOriginalId.has(normalizedBase) && !index.byNormalizedId.has(normalizedBase)) {
+    return normalizedBase
+  }
+  let counter = 1
+  let candidate = `${normalizedBase}-${counter}`
+  while (index.byOriginalId.has(candidate) || index.byNormalizedId.has(candidate)) {
+    counter += 1
+    candidate = `${normalizedBase}-${counter}`
+  }
+  return candidate
+}
+
+function encodeSupabasePath(path: string): string {
+  return path
+    .split('/')
+    .filter((segment) => segment.length > 0)
+    .map((segment) => encodeURIComponent(segment))
+    .join('/')
+}
+
+function getSupabaseBaseUrl(projectRef?: string): string | null {
+  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (envUrl && envUrl.length > 0) {
+    return envUrl.replace(/\/$/, '')
+  }
+  const ref =
+    projectRef ||
+    process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF ||
+    process.env.SUPABASE_PROJECT_REF ||
+    ''
+  if (!ref) {
+    return null
+  }
+  return `https://${ref}.supabase.co`
+}
+
+async function resolveVolumeUrl(volume: AnatomyModel['volume']): Promise<string> {
+  if (!volume) {
+    throw new Error('Volume metadata not provided.')
+  }
+
+  if (volume.url && volume.url.length > 0) {
+    return volume.url
+  }
+
+  if (volume.supabase) {
+    const { bucket, path, public: isPublic = true, projectRef } = volume.supabase
+    if (!bucket || !path) {
+      throw new Error('Supabase storage configuration is incomplete.')
+    }
+
+    const baseUrl = getSupabaseBaseUrl(projectRef)
+    if (!baseUrl) {
+      throw new Error(
+        'NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PROJECT_REF must be configured to load Supabase volumes.',
+      )
+    }
+
+    const normalizedPath = encodeSupabasePath(path)
+
+    if (isPublic) {
+      return `${baseUrl}/storage/v1/object/public/${bucket}/${normalizedPath}`
+    }
+
+    const search = new URLSearchParams({
+      bucket,
+      path,
+    })
+    if (projectRef) {
+      search.set('projectRef', projectRef)
+    }
+    const response = await fetch(`/api/storage/signed-url?${search.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      let message = `Unable to establish signed Supabase URL (status ${response.status}).`
+      try {
+        const payload = await response.json()
+        if (payload?.error) {
+          message = payload.error
+        }
+      } catch {
+        // ignore
+      }
+      throw new Error(message)
+    }
+
+    const payload = (await response.json()) as { url?: string }
+    if (!payload?.url) {
+      throw new Error('Signed Supabase URL response did not include a URL.')
+    }
+    return payload.url
+  }
+
+  throw new Error('Volume URL is not defined.')
+}
+
 export function useAnatomyAsset(model: AnatomyModel): AnatomyAssetState {
   const [state, setState] = useState<AnatomyAssetState>({ status: 'loading' })
+  const assetKey = useMemo(() => {
+    const downloadsKey = model.downloads
+      .map((download) => `${download.format}:${download.url}`)
+      .sort()
+      .join('|')
+    const orientationKey = model.orientation?.rotation?.join(',') ?? ''
+    return `${model.id}|${downloadsKey}|${orientationKey}`
+  }, [model.id, model.downloads, model.orientation])
 
   useEffect(() => {
     let cancelled = false
@@ -51,7 +224,7 @@ export function useAnatomyAsset(model: AnatomyModel): AnatomyAssetState {
     return () => {
       cancelled = true
     }
-  }, [model])
+  }, [assetKey])
 
   return state
 }
@@ -103,120 +276,98 @@ async function loadModel(model: AnatomyModel): Promise<AnatomyAssetSuccess> {
 
       // Preserve original GLB materials and map to segments
       const segments = buildDefaultSegments()
-      const segmentMap = new Map<string, AnatomySegment>()
-      segments.forEach((segment) => {
-        segmentMap.set(segment.id, segment)
-      })
+      const segmentIndex = createSegmentIndex(segments)
+      const palette = [
+        '#ff6b6b',
+        '#4ecdc4',
+        '#45b7d1',
+        '#96ceb4',
+        '#feca57',
+        '#ff9ff3',
+        '#54a0ff',
+        '#5f27cd',
+        '#00d2d3',
+        '#ff9f43',
+        '#a55eea',
+        '#26de81',
+        '#fd79a8',
+        '#fdcb6e',
+        '#6c5ce7',
+      ]
+      let paletteIndex = segments.length % palette.length
 
       group.traverse((child) => {
-        if ((child as Mesh).isMesh) {
-          const mesh = child as Mesh
+        if (!(child as Mesh).isMesh) {
+          return
+        }
+        const mesh = child as Mesh
+        mesh.castShadow = true
+        mesh.receiveShadow = true
 
-          // Map mesh name to segment ID
-          let segmentId = segments[0].id
-          const nameParts = [mesh.name, mesh.parent?.name, mesh.parent?.parent?.name]
-            .filter((value): value is string => Boolean(value))
-            .join(' ')
-            .toLowerCase()
-
-          const meshName = nameParts || mesh.name.toLowerCase()
-
-          if (meshName.includes('airway') || meshName.includes('trachea')) segmentId = 'airway'
-          else if (meshName.includes('aorta')) segmentId = 'aorta'
-          else if (meshName.includes('arteries')) segmentId = 'arteries'
-          else if (meshName.includes('central_pulmonary_artery'))
-            segmentId = 'central_pulmonary_artery'
-          else if (meshName.includes('esophagus')) segmentId = 'esophagus'
-          else if (meshName.includes('heart')) segmentId = 'heart'
-          else if (meshName.includes('left upper lobe')) segmentId = 'left_upper_lobe'
-          else if (meshName.includes('left lower lobe')) segmentId = 'left_lower_lobe'
-          else if (meshName.includes('right upper lobe')) segmentId = 'right_upper_lobe'
-          else if (meshName.includes('right middle lobe')) segmentId = 'right_middle_lobe'
-          else if (meshName.includes('right lower lobe')) segmentId = 'right_lower_lobe'
-          else if (meshName.includes('lungs') || meshName.includes('lung')) segmentId = 'lungs'
-          else if (meshName.includes('lymphn_nodes') || meshName.includes('lymph nodes'))
-            segmentId = 'lymphn_nodes'
-          else if (meshName.includes('node_labels') || meshName.includes('node labels'))
-            segmentId = 'node_labels'
-          else if (
-            meshName.includes('peripheral blood vessels') ||
-            meshName.includes('peripheral_blood_vessels')
-          )
-            segmentId = 'peripheral_blood_vessels'
-          else if (meshName.includes('pulmonary artery') || meshName.includes('pulmonary_artery'))
-            segmentId = 'pulmonary_artery'
-          else if (
-            meshName.includes('pulmonary venous system') ||
-            meshName.includes('pulmonary_venous_system')
-          )
-            segmentId = 'pulmonary_venous_system'
-          else if (meshName.includes('thyroid')) segmentId = 'thyroid'
-          else if (meshName.includes('veins')) segmentId = 'veins'
-          else if (meshName.includes('stent')) segmentId = 'stent'
-          else if (meshName.includes('stenosis')) segmentId = 'stenosis'
-          else if (meshName.includes('fistula')) segmentId = 'fistula'
-          else if (meshName.includes('airway_stent')) segmentId = 'airway_stent'
-          else if (meshName.includes('airway_fistula')) segmentId = 'airway_fistula'
-
-          if (segmentId === segments[0].id && !segmentMap.has(segmentId)) {
-            const newSegmentId = meshName.replace(/[^a-z0-9]/g, '_')
-            if (!segmentMap.has(newSegmentId)) {
-              const colors = [
-                '#ff6b6b',
-                '#4ecdc4',
-                '#45b7d1',
-                '#96ceb4',
-                '#feca57',
-                '#ff9ff3',
-                '#54a0ff',
-                '#5f27cd',
-                '#00d2d3',
-                '#ff9f43',
-                '#a55eea',
-                '#26de81',
-                '#fd79a8',
-                '#fdcb6e',
-                '#6c5ce7',
-              ]
-              const colorIndex = Array.from(segmentMap.keys()).length % colors.length
-              const newSegment = {
-                id: newSegmentId,
-                name: mesh.name,
-                description: `Mesh: ${mesh.name}`,
-                color: colors[colorIndex],
-                visibleByDefault: true,
-              }
-              segmentMap.set(newSegmentId, newSegment)
-              segments.push(newSegment)
-              console.log(`Created new segment for unmapped mesh: ${mesh.name} -> ${newSegmentId}`)
-            }
-            segmentId = newSegmentId
+        const candidates = new Set<string>()
+        if (typeof mesh.userData.segmentId === 'string') {
+          candidates.add(mesh.userData.segmentId)
+        }
+        if (typeof mesh.userData.segmentLabel === 'string') {
+          candidates.add(mesh.userData.segmentLabel)
+        }
+        if (mesh.name) {
+          candidates.add(mesh.name)
+        }
+        let parent = mesh.parent
+        while (parent) {
+          if (parent.name) {
+            candidates.add(parent.name)
           }
+          parent = parent.parent
+        }
 
-          console.log(`Mapped mesh "${mesh.name}" to segment "${segmentId}"`)
+        let segment = resolveSegmentFromCandidates(segmentIndex, Array.from(candidates))
 
-          mesh.userData.segmentId = segmentId
-          mesh.castShadow = true
-          mesh.receiveShadow = true
-
-          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-          const segment = segmentMap.get(segmentId) || segments[0]
-
-          let baseColorHex: string | undefined
-          materials.forEach((mat) => {
-            if (mat instanceof MeshStandardMaterial) {
-              baseColorHex = `#${mat.color.getHexString()}`
-            }
-          })
-
-          if (!baseColorHex) {
-            baseColorHex = segment.color ?? '#22d3ee'
+        if (!segment) {
+          const preferredName =
+            Array.from(candidates).find((candidate) => normalizeSegmentKey(candidate).length > 0) ??
+            mesh.name ??
+            `${model.name} segment`
+          const newId = ensureUniqueSegmentId(segmentIndex, preferredName)
+          const paletteColor = palette[paletteIndex % palette.length]
+          paletteIndex += 1
+          segment = {
+            id: newId,
+            name: preferredName,
+            description: `Derived from mesh "${mesh.name || preferredName}"`,
+            color: paletteColor,
+            visibleByDefault: true,
           }
+          segments.push(segment)
+          registerSegment(segmentIndex, segment)
+        }
 
-          mesh.userData.baseColor = baseColorHex
-          if (!segment.color || segment.color.length === 0) {
-            segment.color = baseColorHex
+        mesh.userData.segmentId = segment.id
+        mesh.userData.segmentLabel = segment.name
+
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        let baseColorHex: string | undefined
+
+        materials.forEach((mat) => {
+          if (mat instanceof MeshStandardMaterial) {
+            baseColorHex = `#${mat.color.getHexString()}`
           }
+        })
+
+        if (!baseColorHex) {
+          if (segment.color && segment.color.length > 0) {
+            baseColorHex = segment.color
+          } else {
+            const paletteColor = palette[paletteIndex % palette.length]
+            paletteIndex += 1
+            baseColorHex = paletteColor
+          }
+        }
+
+        mesh.userData.baseColor = baseColorHex
+        if (!segment.color || segment.color.length === 0) {
+          segment.color = baseColorHex
         }
       })
 
@@ -356,26 +507,76 @@ export function applySegmentColors(
           } satisfies AnatomySegment,
         ]
   ).map((segment) => ({ ...segment }))
-  const byId = new Map(baseSegments.map((segment) => [segment.id, segment]))
+  const segmentIndex = createSegmentIndex(baseSegments)
   const segmentMeshes: Record<string, Mesh[]> = {}
   const resolvedColors = new Map<string, string>()
-  const ensureSegment = (segment: AnatomySegment) => {
-    if (!byId.has(segment.id)) {
-      byId.set(segment.id, segment)
-      baseSegments.push(segment)
-    }
-  }
+  const palette = [
+    '#ff6b6b',
+    '#4ecdc4',
+    '#45b7d1',
+    '#96ceb4',
+    '#feca57',
+    '#ff9ff3',
+    '#54a0ff',
+    '#5f27cd',
+    '#00d2d3',
+    '#ff9f43',
+    '#a55eea',
+    '#26de81',
+    '#fd79a8',
+    '#fdcb6e',
+    '#6c5ce7',
+  ]
+  let paletteIndex = baseSegments.length % palette.length
 
   group.traverse((child) => {
     if ((child as Mesh).isMesh) {
       const mesh = child as Mesh
-      let segmentId =
-        typeof mesh.userData.segmentId === 'string' ? mesh.userData.segmentId : baseSegments[0].id
-      if (!byId.has(segmentId)) {
-        segmentId = baseSegments[0].id
+      const candidateIds: string[] = []
+      if (typeof mesh.userData.segmentId === 'string') {
+        candidateIds.push(mesh.userData.segmentId)
       }
-      const segment = byId.get(segmentId) ?? baseSegments[0]
+      if (typeof mesh.userData.segmentLabel === 'string') {
+        candidateIds.push(mesh.userData.segmentLabel)
+      }
+      const nameCandidates: string[] = []
+      if (mesh.name) {
+        nameCandidates.push(mesh.name)
+      }
+      let parent = mesh.parent
+      while (parent) {
+        if (parent.name) {
+          nameCandidates.push(parent.name)
+        }
+        parent = parent.parent
+      }
+
+      let segment =
+        resolveSegmentFromCandidates(segmentIndex, candidateIds) ??
+        resolveSegmentFromCandidates(segmentIndex, nameCandidates)
+
+      if (!segment) {
+        const preferredName =
+          candidateIds.find((candidate) => normalizeSegmentKey(candidate).length > 0) ??
+          nameCandidates.find((candidate) => normalizeSegmentKey(candidate).length > 0) ??
+          mesh.name ??
+          `${model.name} segment`
+        const newId = ensureUniqueSegmentId(segmentIndex, preferredName)
+        const paletteColor = palette[paletteIndex % palette.length]
+        paletteIndex += 1
+        segment = {
+          id: newId,
+          name: preferredName,
+          description: `Derived from mesh "${mesh.name || preferredName}"`,
+          color: paletteColor,
+          visibleByDefault: true,
+        }
+        baseSegments.push(segment)
+        registerSegment(segmentIndex, segment)
+      }
+
       mesh.userData.segmentId = segment.id
+      mesh.userData.segmentLabel = segment.name
       mesh.castShadow = true
       mesh.receiveShadow = true
 
@@ -434,9 +635,140 @@ export function applySegmentColors(
       color: normalized,
     }
   })
-  hydratedSegments.forEach((segment) => ensureSegment(segment))
 
   return { meshesBySegment: segmentMeshes, segments: hydratedSegments }
+}
+
+export type VolumeAssetState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'error'; error: string }
+  | {
+      status: 'success'
+      volume: Volume
+      dimensions: [number, number, number]
+      spacing: [number, number, number]
+      axis: 'x' | 'y' | 'z'
+    }
+
+export function useVolumeAsset(model: AnatomyModel): VolumeAssetState {
+  const [state, setState] = useState<VolumeAssetState>(() =>
+    model.volume ? { status: 'loading' } : { status: 'idle' },
+  )
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!model.volume) {
+      setState({ status: 'idle' })
+      return () => {
+        cancelled = true
+      }
+    }
+
+    if (model.volume.format !== 'nrrd') {
+      setState({
+        status: 'error',
+        error: `Unsupported volume format "${model.volume.format}".`,
+      })
+      return () => {
+        cancelled = true
+      }
+    }
+
+    const loader = new NRRDLoader()
+    setState({ status: 'loading' })
+
+    async function loadVolume() {
+      try {
+        const sourceUrl = await resolveVolumeUrl(model.volume!)
+        if (cancelled) {
+          return
+        }
+
+        const volume = await loader.loadAsync(sourceUrl)
+        if (cancelled) {
+          return
+        }
+
+        const dims = (volume.RASDimensions as [number, number, number]) ??
+          (volume.dimensions as [number, number, number]) ?? [
+            volume.xLength,
+            volume.yLength,
+            volume.zLength,
+          ]
+        const spacing = (volume.RASSpacing as [number, number, number]) ??
+          (volume.spacing as [number, number, number]) ?? [1, 1, 1]
+
+        // Validate dimensions
+        if (!dims || dims.some((dim) => !dim || dim <= 0 || !Number.isFinite(dim))) {
+          throw new Error(
+            `Invalid volume dimensions: ${JSON.stringify(dims)}. Volume may be corrupted or incomplete.`,
+          )
+        }
+
+        if (model.volume?.window) {
+          volume.windowLow = model.volume.window.low
+          volume.windowHigh = model.volume.window.high
+        } else if (volume.data && 'length' in volume.data && volume.data.length > 0) {
+          const data = volume.data as ArrayLike<number>
+          let min = Number.POSITIVE_INFINITY
+          let max = Number.NEGATIVE_INFINITY
+          const sampleStep = Math.max(1, Math.floor(data.length / 75000))
+          for (let index = 0; index < data.length; index += sampleStep) {
+            const value = Number(data[index])
+            if (value < min) {
+              min = value
+            }
+            if (value > max) {
+              max = value
+            }
+          }
+          volume.windowLow = min
+          volume.windowHigh = max
+        }
+
+        volume.lowerThreshold = Number.NEGATIVE_INFINITY
+        volume.upperThreshold = Number.POSITIVE_INFINITY
+
+        setState({
+          status: 'success',
+          volume,
+          dimensions: dims,
+          spacing,
+          axis: model.volume?.axis ?? 'z',
+        })
+      } catch (error) {
+        if (!cancelled) {
+          setState({
+            status: 'error',
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Unable to load CT volume. Please verify the storage configuration.',
+          })
+        }
+      }
+    }
+
+    loadVolume().catch((error) => {
+      if (!cancelled) {
+        setState({
+          status: 'error',
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unable to load CT volume. Please verify the storage configuration.',
+        })
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [model])
+
+  return state
 }
 
 export function computePlaneConstant(boundingBox: Box3, percentage: number) {

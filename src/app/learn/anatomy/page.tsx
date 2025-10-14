@@ -20,6 +20,7 @@ export default function AnatomyLearnPage() {
     ),
   )
   const [crossSection, setCrossSection] = useState(0)
+  const [volumeSlice, setVolumeSlice] = useState(0)
   const [showAnnotations, setShowAnnotations] = useState(true)
   const [resetSignal, setResetSignal] = useState(0)
   const [showDebugHelpers, setShowDebugHelpers] = useState(false)
@@ -44,6 +45,7 @@ export default function AnatomyLearnPage() {
       ),
     )
     setCrossSection(0)
+    setVolumeSlice(0)
     setShowAnnotations(true)
     setResetSignal((signal) => signal + 1)
   }
@@ -105,6 +107,7 @@ export default function AnatomyLearnPage() {
             model={viewerModel}
             visibleSegments={visibleSegments}
             crossSection={crossSection}
+            volumeSlice={volumeSlice}
             showAnnotations={showAnnotations}
             resetSignal={resetSignal}
             showDebugHelpers={showDebugHelpers}
@@ -117,6 +120,7 @@ export default function AnatomyLearnPage() {
               link.click()
               document.body.removeChild(link)
             }}
+            onVolumeSliceChange={setVolumeSlice}
             onSegmentsChanged={(segments) => {
               setDisplaySegments((prev) => {
                 const sameLength = prev.length === segments.length
@@ -194,6 +198,7 @@ export default function AnatomyLearnPage() {
                     ),
                   )
                   setShowAnnotations(true)
+                  setVolumeSlice(0)
                   setResetSignal((signal) => signal + 1)
                   setRotation({ x: 0, y: 0, z: 0 })
                 }}
