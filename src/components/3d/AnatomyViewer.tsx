@@ -144,7 +144,7 @@ export function AnatomyViewer({
 
     ;(async () => {
       try {
-        const xrSystem = (navigator as any).xr as XRSystem
+        const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
         if (!xrSystem?.isSessionSupported) {
           if (!cancelled) setXrSupported(false)
           return
@@ -204,7 +204,7 @@ export function AnatomyViewer({
     }
 
     try {
-      const xrSystem = (navigator as any).xr as XRSystem
+      const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
       if (!xrSystem?.requestSession) {
         return
       }
