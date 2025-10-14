@@ -145,10 +145,19 @@ export function AnatomyViewer({
     ;(async () => {
       try {
         const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
-        if (!xrSystem?.isSessionSupported) {
+        if (!xrSystem) {
           if (!cancelled) setXrSupported(false)
           return
         }
+
+        if (!cancelled) {
+          setXrSupported(true)
+        }
+
+        if (!xrSystem.isSessionSupported) {
+          return
+        }
+
         const [arSupported, vrSupported] = await Promise.all([
           xrSystem.isSessionSupported('immersive-ar').catch(() => false),
           xrSystem.isSessionSupported('immersive-vr').catch(() => false),
@@ -159,7 +168,12 @@ export function AnatomyViewer({
         } else if (vrSupported) {
           setXrSessionMode('immersive-vr')
         }
-        setXrSupported(arSupported || vrSupported)
+        if (!arSupported && !vrSupported) {
+          // Keep button visible even if explicit support check fails
+          console.warn(
+            'WebXR session types not reported as supported; falling back to manual attempt',
+          )
+        }
       } catch (error) {
         console.warn('WebXR session support check failed', error)
         if (!cancelled) setXrSupported(false)
@@ -212,8 +226,15 @@ export function AnatomyViewer({
       glRef.current.xr.enabled = true
       glRef.current.xr.setReferenceSpaceType?.('local-floor')
 
+      const optionalFeatures: XRSessionInit['optionalFeatures'] = ['local-floor']
+      if (xrSessionMode === 'immersive-ar') {
+        optionalFeatures.push('hand-tracking', 'hit-test')
+      } else {
+        optionalFeatures.push('bounded-floor')
+      }
+
       const sessionInit: XRSessionInit = {
-        optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'anchors', 'hit-test'],
+        optionalFeatures,
       }
 
       const session = await xrSystem
@@ -775,7 +796,11 @@ export function AnatomyViewer({
                 >
                   {xrSessionActive ? 'Exit spatial view' : 'Enter spatial view'}
                 </button>
-              ) : null}
+              ) : (
+                <span className="text-[11px] text-muted-foreground">
+                  Enable WebXR in Safari settings on Vision Pro to enter spatial view.
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => controlsRef.current?.reset()}
