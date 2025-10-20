@@ -1,0 +1,101 @@
+{
+  "Trachea": {
+    "medianRadiusMm": 8.2786
+  },
+  "Left Mainstem": {
+    "medianRadiusMm": 5.9106
+  },
+  "Left Lower Lobe": {
+    "medianRadiusMm": 4.3027
+  },
+  "LB10": {
+    "medianRadiusMm": 2.1667
+  },
+  "LB9": {
+    "medianRadiusMm": 2.397
+  },
+  "LB78": {
+    "medianRadiusMm": 3.2837
+  },
+  "LB7": {
+    "medianRadiusMm": 2.1246
+  },
+  "LB8": {
+    "medianRadiusMm": 2.2221
+  },
+  "LB6": {
+    "medianRadiusMm": 2.1971
+  },
+  "Left Upper Lobe": {
+    "medianRadiusMm": 4.5066
+  },
+  "Lingula": {
+    "medianRadiusMm": 4.0517
+  },
+  "LB4": {
+    "medianRadiusMm": 2.1866
+  },
+  "LB5": {
+    "medianRadiusMm": 2.5613
+  },
+  "Left Upper Lobe Upper Division": {
+    "medianRadiusMm": 4.1919
+  },
+  "LB12": {
+    "medianRadiusMm": 3.5654
+  },
+  "LB2": {
+    "medianRadiusMm": 2.324
+  },
+  "LB3": {
+    "medianRadiusMm": 2.2958
+  },
+  "LB1": {
+    "medianRadiusMm": 2.3056
+  },
+  "Right Mainstem": {
+    "medianRadiusMm": 6.9798
+  },
+  "Right Upper Lobe": {
+    "medianRadiusMm": 5.3924
+  },
+  "RB2": {
+    "medianRadiusMm": 2.2647
+  },
+  "Bronchus Intermedius": {
+    "medianRadiusMm": 5.8963
+  },
+  "Right Middle Lobe": {
+    "medianRadiusMm": 3.9531
+  },
+  "RB4": {
+    "medianRadiusMm": 2.4178
+  },
+  "RB5": {
+    "medianRadiusMm": 2.6342
+  },
+  "RB1": {
+    "medianRadiusMm": 2.2827
+  },
+  "RB3": {
+    "medianRadiusMm": 2.3386
+  },
+  "Right Lower Lobe": {
+    "medianRadiusMm": 4.6254
+  },
+  "RB6": {
+    "medianRadiusMm": 2.2722
+  },
+  "RB7": {
+    "medianRadiusMm": 2.2348
+  },
+  "RB8": {
+    "medianRadiusMm": 2.3645
+  },
+  "RB9": {
+    "medianRadiusMm": 2.1808
+  },
+  "RB10": {
+    "medianRadiusMm": 2.3797
+  }
+}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tracheobronchial Fluoro Viewer</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="viewer">
+        <canvas id="viewport" width="1024" height="1024"></canvas>
+        <div class="hud" id="stats">Loading…</div>
+      </div>
+      <aside class="panel">
+        <div>
+          <h1>Fluoro / DTS Viewer</h1>
+          <p>Rotate the C-arm and explore bronchial anatomy in AP projection.</p>
+        </div>
+        <div class="controls">
+          <div class="section-title">Angles</div>
+          <label class="slider-row">
+            <span>RAO / LAO</span>
+            <input id="control-rao" type="range" min="-60" max="60" value="0" step="1" />
+            <span id="rao-value">0°</span>
+          </label>
+          <label class="slider-row">
+            <span>Cranial / Caudal</span>
+            <input id="control-cran" type="range" min="-45" max="45" value="0" step="1" />
+            <span id="cran-value">0°</span>
+          </label>
+          <div class="section-title">Display</div>
+          <label class="toggle-row">
+            <span>DTS depth emphasis</span>
+            <input id="toggle-dts" type="checkbox" />
+          </label>
+          <label class="toggle-row">
+            <span>Radius-based widths</span>
+            <input id="toggle-radius" type="checkbox" />
+          </label>
+          <label class="toggle-row">
+            <span>Show labels</span>
+            <input id="toggle-labels" type="checkbox" checked />
+          </label>
+          <div class="section-title">Lobar Filters</div>
+          <div id="group-toggles" class="group-toggles"></div>
+        </div>
+        <div>
+          <div class="section-title">Legend</div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </aside>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
