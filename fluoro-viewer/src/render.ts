@@ -148,7 +148,11 @@ export class FluoroRenderer {
         object: child,
       }
 
-      const interactive = !/tree[_\s]?full/i.test(label.toLowerCase())
+      // Don't create labels for full tree, full lobes, or generic lobe labels
+      const interactive =
+        !/tree[_\s]?full|lobe[_\s]?\(full\)|lobe[_\s]?full|^(left|right)[_\s]+(upper|middle|lower)[_\s]+lobe[_\s]*$/i.test(
+          label.toLowerCase(),
+        )
       const labelEl = interactive ? document.createElement('div') : null
       if (labelEl) {
         labelEl.className = 'fluoro-segment-label'

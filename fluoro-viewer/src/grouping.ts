@@ -76,7 +76,7 @@ export const BRANCH_GROUPS: BranchGroup[] = [
 ]
 
 export function normalizeLabel(label: string): string {
-  return label.replace(/\s+/g, ' ').trim().toLowerCase()
+  return label.replace(/_/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
 export function groupKeyForLabel(label: string): string {

@@ -65,6 +65,7 @@ function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
 }
 
 export function FluoroViewApp() {
+  console.log('[FluoroView] Component mounting')
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const labelLayerRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<FluoroRenderer | null>(null)
@@ -87,17 +88,20 @@ export function FluoroViewApp() {
   useEffect(() => {
     const canvasEl = canvasRef.current
     const labelLayerEl = labelLayerRef.current
+    console.log('[FluoroView] useEffect - canvasEl:', !!canvasEl, 'labelLayerEl:', !!labelLayerEl)
     if (!canvasEl || !labelLayerEl) return
 
     let cancelled = false
 
     async function boot(canvas: HTMLCanvasElement, labelLayer: HTMLDivElement) {
       try {
+        console.log('[FluoroView] fetch config start')
         const res = await fetch('/fluoroview/fluoro_config.json')
         if (!res.ok) {
           throw new Error(`Failed to load configuration (${res.status})`)
         }
         const cfg = (await res.json()) as FluoroConfig
+        console.log('[FluoroView] config loaded', cfg)
         if (cfg.units !== 'mm' || cfg.coordinateSystem !== 'LPS') {
           throw new Error('Configuration mismatch: FluoroView expects mm / LPS coordinates.')
         }
@@ -109,8 +113,10 @@ export function FluoroViewApp() {
         const assetBase = cfg.asset_base_url
         const glbPath = resolveAsset(assetBase, 'airway_segments.glb')
         const dracoBase = resolveAsset(assetBase, 'draco')
+        console.log('[FluoroView] loading GLB', { glbPath, dracoBase })
         const loadedSegments = await renderer.loadGlb(glbPath, { dracoBaseUrl: dracoBase })
         if (cancelled) return
+        console.log('[FluoroView] GLB loaded', loadedSegments.length)
 
         setSegments(loadedSegments)
         setLegendEntries(buildLegendEntries(loadedSegments))
@@ -262,14 +268,7 @@ export function FluoroViewApp() {
     return `FPS ${renderStats.fps.toFixed(1)} · segments ${renderStats.visibleSegments}`
   }, [renderStats])
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-border/70 bg-card/80">
-        <span className="text-sm text-muted-foreground">Loading FluoroView…</span>
-      </div>
-    )
-  }
-
+  // Show error if loading failed
   if (error) {
     return (
       <div className="rounded-3xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
@@ -279,10 +278,8 @@ export function FluoroViewApp() {
     )
   }
 
-  if (!config || !appState) {
-    return null
-  }
-
+  // Render canvas immediately (even during loading) so refs can attach
+  // The loading overlay will cover it until ready
   return (
     <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
       <div className="space-y-5">
@@ -295,90 +292,104 @@ export function FluoroViewApp() {
               className="aspect-square w-full rounded-2xl border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-2xl"
             />
             <div ref={labelLayerRef} className="pointer-events-none absolute inset-0" />
-            <div className="absolute left-4 top-4 text-xs font-medium text-slate-300/80">
-              {statsText}
-            </div>
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/80 backdrop-blur-sm">
+                <span className="text-sm text-slate-300">Loading FluoroView…</span>
+              </div>
+            )}
+            {!loading && (
+              <div className="absolute left-4 top-4 text-xs font-medium text-slate-300/80">
+                {statsText}
+              </div>
+            )}
           </div>
         </div>
         <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
           <h3 className="text-base font-semibold text-foreground">Controls</h3>
-          <div className="mt-4 grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>RAO / LAO</span>
-                  <span className="font-semibold text-foreground">
-                    {appState.raoLao.toFixed(0)}°
-                  </span>
-                </label>
-                <input
-                  type="range"
-                  min={-90}
-                  max={90}
-                  step={1}
-                  value={appState.raoLao}
-                  onChange={(event) =>
-                    updateState((prev) => ({ ...prev, raoLao: Number(event.target.value) }))
-                  }
-                  className="w-full accent-primary"
-                />
+          {!appState ? (
+            <div className="mt-4 text-sm text-muted-foreground">Loading controls…</div>
+          ) : (
+            <div className="mt-4 grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>RAO / LAO</span>
+                    <span className="font-semibold text-foreground">
+                      {appState.raoLao.toFixed(0)}°
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min={-90}
+                    max={90}
+                    step={1}
+                    value={appState.raoLao}
+                    onChange={(event) =>
+                      updateState((prev) => ({ ...prev, raoLao: Number(event.target.value) }))
+                    }
+                    className="w-full accent-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Cranial / Caudal</span>
+                    <span className="font-semibold text-foreground">
+                      {appState.cranialCaudal.toFixed(0)}°
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min={-45}
+                    max={45}
+                    step={1}
+                    value={appState.cranialCaudal}
+                    onChange={(event) =>
+                      updateState((prev) => ({
+                        ...prev,
+                        cranialCaudal: Number(event.target.value),
+                      }))
+                    }
+                    className="w-full accent-primary"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Cranial / Caudal</span>
-                  <span className="font-semibold text-foreground">
-                    {appState.cranialCaudal.toFixed(0)}°
-                  </span>
+              <div className="space-y-3">
+                <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
+                  <span className="text-muted-foreground">DTS depth emphasis</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={appState.useDts}
+                    onChange={(event) =>
+                      updateState((prev) => ({ ...prev, useDts: event.target.checked }))
+                    }
+                  />
                 </label>
-                <input
-                  type="range"
-                  min={-45}
-                  max={45}
-                  step={1}
-                  value={appState.cranialCaudal}
-                  onChange={(event) =>
-                    updateState((prev) => ({ ...prev, cranialCaudal: Number(event.target.value) }))
-                  }
-                  className="w-full accent-primary"
-                />
+                <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
+                  <span className="text-muted-foreground">Surface wireframe overlay</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={appState.useWireframe}
+                    onChange={(event) =>
+                      updateState((prev) => ({ ...prev, useWireframe: event.target.checked }))
+                    }
+                  />
+                </label>
+                <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
+                  <span className="text-muted-foreground">Show labels</span>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-primary"
+                    checked={appState.showLabels}
+                    onChange={(event) =>
+                      updateState((prev) => ({ ...prev, showLabels: event.target.checked }))
+                    }
+                  />
+                </label>
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
-                <span className="text-muted-foreground">DTS depth emphasis</span>
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-primary"
-                  checked={appState.useDts}
-                  onChange={(event) =>
-                    updateState((prev) => ({ ...prev, useDts: event.target.checked }))
-                  }
-                />
-              </label>
-              <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
-                <span className="text-muted-foreground">Surface wireframe overlay</span>
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-primary"
-                  checked={appState.useWireframe}
-                  onChange={(event) =>
-                    updateState((prev) => ({ ...prev, useWireframe: event.target.checked }))
-                  }
-                />
-              </label>
-              <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
-                <span className="text-muted-foreground">Show labels</span>
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-primary"
-                  checked={appState.showLabels}
-                  onChange={(event) =>
-                    updateState((prev) => ({ ...prev, showLabels: event.target.checked }))
-                  }
-                />
-              </label>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -386,37 +397,43 @@ export function FluoroViewApp() {
         <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-foreground">Lobar filters</h3>
-            <Badge variant="outline" className="rounded-full border-primary/40 text-xs">
-              {appState.activeGroups.size} active
-            </Badge>
+            {appState && (
+              <Badge variant="outline" className="rounded-full border-primary/40 text-xs">
+                {appState.activeGroups.size} active
+              </Badge>
+            )}
           </div>
-          <div className="mt-4 space-y-3">
-            {legendEntries.map((group) => (
-              <div key={group.groupKey} className="space-y-2">
-                <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
-                  <span className="font-medium text-foreground">{group.groupLabel}</span>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-primary"
-                    checked={appState.activeGroups.has(group.groupKey)}
-                    onChange={(event) => handleGroupToggle(group.groupKey, event.target.checked)}
-                  />
-                </label>
-                <div className="grid gap-1 pl-2 text-xs text-muted-foreground">
-                  {group.items.map((item) => (
-                    <div key={item.label} className="flex items-center gap-2">
-                      <span
-                        className="h-3 w-3 rounded-sm border border-border/40"
-                        style={{ backgroundColor: item.color }}
-                        aria-hidden
-                      />
-                      <span>{item.label}</span>
-                    </div>
-                  ))}
+          {!appState ? (
+            <div className="mt-4 text-sm text-muted-foreground">Loading filters…</div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {legendEntries.map((group) => (
+                <div key={group.groupKey} className="space-y-2">
+                  <label className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-4 py-3 text-sm shadow-sm">
+                    <span className="font-medium text-foreground">{group.groupLabel}</span>
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-primary"
+                      checked={appState.activeGroups.has(group.groupKey)}
+                      onChange={(event) => handleGroupToggle(group.groupKey, event.target.checked)}
+                    />
+                  </label>
+                  <div className="grid gap-1 pl-2 text-xs text-muted-foreground">
+                    {group.items.map((item) => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        <span
+                          className="h-3 w-3 rounded-sm border border-border/40"
+                          style={{ backgroundColor: item.color }}
+                          aria-hidden
+                        />
+                        <span>{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </aside>
     </div>
