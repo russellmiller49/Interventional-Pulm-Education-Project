@@ -201,7 +201,7 @@ export function useAnatomyAsset(model: AnatomyModel): AnatomyAssetState {
     const orientationKey = model.orientation?.rotation?.join(',') ?? ''
     return `${model.id}|${downloadsKey}|${orientationKey}`
   }, [model.id, model.downloads, model.orientation])
-  const assetModel = useMemo(() => model, [assetKey, model])
+  const assetModel = useMemo(() => model, [model])
 
   useEffect(() => {
     let cancelled = false
