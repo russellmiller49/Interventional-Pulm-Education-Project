@@ -9,6 +9,14 @@ import { Button } from '@/components/ui/button'
 export default function HomePage() {
   const featureHighlights = [
     {
+      badge: 'Simulation',
+      title: 'FluoroView',
+      description:
+        'Rotate a labeled tracheobronchial tree under simulated fluoroscopy to drill RAO/LAO and cranial/caudal projections before lab day.',
+      href: '/fluoroview',
+      cta: 'Launch FluoroView',
+    },
+    {
       badge: '3D Models',
       title: 'Interactive Anatomy Viewer',
       description:
@@ -149,7 +157,7 @@ export default function HomePage() {
             models, and simulation-ready curricula.
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {featureHighlights.map((link) => (
             <Link
               key={link.href}

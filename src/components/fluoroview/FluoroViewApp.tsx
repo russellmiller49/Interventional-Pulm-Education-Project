@@ -1,14 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import clsx from 'clsx'
 
 import { BRANCH_GROUPS } from '@fluoroview/grouping'
 import { FluoroRenderer } from '@fluoroview/render'
 import type { AppState, FluoroConfig, PreparedSegment } from '@fluoroview/types'
 
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/cn'
 
 const ORIGIN_GROUP = 'other'
 const GOLDEN_ORDER = BRANCH_GROUPS.map((group) => group.key)
@@ -87,13 +85,13 @@ export function FluoroViewApp() {
   }, [])
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    const labelLayer = labelLayerRef.current
-    if (!canvas || !labelLayer) return
+    const canvasEl = canvasRef.current
+    const labelLayerEl = labelLayerRef.current
+    if (!canvasEl || !labelLayerEl) return
 
     let cancelled = false
 
-    async function boot() {
+    async function boot(canvas: HTMLCanvasElement, labelLayer: HTMLDivElement) {
       try {
         const res = await fetch('/fluoroview/fluoro_config.json')
         if (!res.ok) {
@@ -139,7 +137,7 @@ export function FluoroViewApp() {
       }
     }
 
-    boot()
+    boot(canvasEl, labelLayerEl)
 
     return () => {
       cancelled = true
@@ -266,7 +264,7 @@ export function FluoroViewApp() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center rounded-3XL border border-border/70 bg-card/80">
+      <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-border/70 bg-card/80">
         <span className="text-sm text-muted-foreground">Loading FluoroView…</span>
       </div>
     )

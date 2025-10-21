@@ -6,6 +6,7 @@ type InternalFooterHref =
   | '/tools'
   | '/make'
   | '/board-prep'
+  | '/fluoroview'
   | '/learn/anatomy'
   | '/training'
   | '/community/contributors'
@@ -41,6 +42,7 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     title: 'Learning',
     links: [
       { label: '3D Anatomy Viewer', href: '/learn/anatomy', route: '/learn/anatomy' },
+      { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
       { label: 'Training Modules', href: '/training', route: '/training' },
       { label: 'Guides', href: '/tools', route: '/tools' },
     ],
@@ -50,7 +52,11 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     links: [
       { label: 'Contributors', href: '/community/contributors', route: '/community/contributors' },
       { label: 'GitHub', href: 'https://github.com/interventional-pulm', external: true },
-      { label: 'Discussions', href: 'https://github.com/orgs/interventional-pulm/discussions', external: true },
+      {
+        label: 'Discussions',
+        href: 'https://github.com/orgs/interventional-pulm/discussions',
+        external: true,
+      },
     ],
   },
 ]
@@ -67,11 +73,12 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Open source tools, printable models, and modern curricula advancing airway care around the
-              globe. Built by clinicians, educators, and engineers.
+              Open source tools, printable models, and modern curricula advancing airway care around
+              the globe. Built by clinicians, educators, and engineers.
             </p>
             <div className="text-xs text-muted-foreground">
-              Prefer a low motion experience? Enable it in your operating system preferences and we&apos;ll match it.
+              Prefer a low motion experience? Enable it in your operating system preferences and
+              we&apos;ll match it.
             </div>
           </div>
           <div className="grid flex-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -107,7 +114,10 @@ export function Footer() {
         </div>
         <div className="border-t pt-6 text-xs text-muted-foreground">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} Interventional Pulmonology Collaborative. Educational use only.</p>
+            <p>
+              © {new Date().getFullYear()} Interventional Pulmonology Collaborative. Educational
+              use only.
+            </p>
             <div className="flex flex-wrap gap-4">
               <Link
                 href={'/privacy' as Route}
