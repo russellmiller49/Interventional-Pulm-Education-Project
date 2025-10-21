@@ -13,6 +13,7 @@ export interface UIHandles {
   groupToggles: Map<string, HTMLInputElement>
   raoValueEl: HTMLElement
   cranValueEl: HTMLElement
+  labelLayer: HTMLElement
 }
 
 export function initUI(): UIHandles {
@@ -27,6 +28,7 @@ export function initUI(): UIHandles {
   const groupContainer = getElement<HTMLElement>('group-toggles')
   const raoValueEl = getElement<HTMLElement>('rao-value')
   const cranValueEl = getElement<HTMLElement>('cran-value')
+  const labelLayer = getElement<HTMLElement>('label-layer')
 
   const groupToggles = buildGroupToggles(groupContainer, BRANCH_GROUPS)
 
@@ -43,6 +45,7 @@ export function initUI(): UIHandles {
     groupToggles,
     raoValueEl,
     cranValueEl,
+    labelLayer,
   }
 }
 

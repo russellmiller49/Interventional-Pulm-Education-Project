@@ -1,0 +1,14 @@
+{
+  "units": "mm",
+  "coordinateSystem": "LPS",
+  "isocenter_mm": [-8, -134.8, -1153.2],
+  "source_to_isocenter_mm": 600,
+  "source_to_detector_mm": 1200,
+  "detector_pixels": [1024, 1024],
+  "pixel_pitch_mm": 0.3,
+  "asset_base_url": "/fluoroview",
+  "default_view": {
+    "rao_lao_deg": 0,
+    "cranial_caudal_deg": 0
+  }
+}

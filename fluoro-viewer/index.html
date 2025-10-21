@@ -8,7 +8,10 @@
   <body>
     <div id="app">
       <div class="viewer">
-        <canvas id="viewport" width="1024" height="1024"></canvas>
+        <div class="viewport-frame">
+          <canvas id="viewport" width="1024" height="1024"></canvas>
+          <div class="label-layer" id="label-layer"></div>
+        </div>
         <div class="hud" id="stats">Loading…</div>
       </div>
       <aside class="panel">
@@ -20,7 +23,7 @@
           <div class="section-title">Angles</div>
           <label class="slider-row">
             <span>RAO / LAO</span>
-            <input id="control-rao" type="range" min="-60" max="60" value="0" step="1" />
+            <input id="control-rao" type="range" min="-90" max="90" value="0" step="1" />
             <span id="rao-value">0°</span>
           </label>
           <label class="slider-row">
@@ -34,7 +37,7 @@
             <input id="toggle-dts" type="checkbox" />
           </label>
           <label class="toggle-row">
-            <span>Radius-based widths</span>
+            <span>Surface wireframe overlay</span>
             <input id="toggle-radius" type="checkbox" />
           </label>
           <label class="toggle-row">

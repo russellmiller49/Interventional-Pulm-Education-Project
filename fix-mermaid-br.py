@@ -36,3 +36,6 @@ for filepath in glob.glob('content/modules/board/*.mdx'):
 print("\n✓ All Mermaid <br/> tags removed!")
 
 
+
+
+

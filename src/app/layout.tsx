@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/layout/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/cn'
 import '@/styles/globals.css'
+import '@/styles/fluoroview.css'
 
 const inter = Inter({
   subsets: ['latin'],

@@ -1,6 +1,5 @@
-import type { FrameContext, Mat3, Vec2, Vec3 } from './types'
+import type { Mat3, Vec3 } from './types'
 
-export const DETECTOR_NORMAL: Vec3 = [0, 1, 0]
 const EPS = 1e-6
 
 export function degToRad(deg: number): number {
@@ -69,53 +68,6 @@ export function normalize(v: Vec3): Vec3 {
   return [v[0] / len, v[1] / len, v[2] / len]
 }
 
-export function dot(a: Vec3, b: Vec3): number {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-export interface ProjectedPoint {
-  screen: Vec2
-  rayDir: Vec3
-  t: number
-}
-
-export function projectPoint(frame: FrameContext, point: Vec3): ProjectedPoint | null {
-  const { sid, odd, pixelPitch, pxPerMm, canvasSize } = frame
-  const source: Vec3 = [0, -sid, 0]
-  const targetY = odd
-
-  const denom = point[1] - source[1]
-  if (Math.abs(denom) < EPS) {
-    return null
-  }
-
-  const t = (targetY - source[1]) / denom
-  if (t <= 0) {
-    return null
-  }
-
-  const uMm = source[0] + t * (point[0] - source[0])
-  const vMm = source[2] + t * (point[2] - source[2])
-
-  const cx = canvasSize[0] / 2
-  const cy = canvasSize[1] / 2
-
-  const uPx = cx + uMm * pxPerMm
-  const vPx = cy - vMm * pxPerMm
-
-  const rayDir = normalize(subtract(point, source))
-
-  return {
-    screen: [uPx, vPx],
-    rayDir,
-    t,
-  }
-}
-
-export function applyRotation(matrix: Mat3, centered: Vec3): Vec3 {
-  return rotateVec(matrix, centered)
-}
-
 export function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = clamp01((x - edge0) / (edge1 - edge0))
   return t * t * (3 - 2 * t)
@@ -125,46 +77,4 @@ export function clamp01(value: number): number {
   if (value <= 0) return 0
   if (value >= 1) return 1
   return value
-}
-
-export function prepareFrameContext(params: {
-  config: {
-    sid: number
-    sdd: number
-    pixelPitch: number
-    detectorPixels: [number, number]
-    isocenter: Vec3
-  }
-  angles: {
-    raoLao: number
-    cranialCaudal: number
-  }
-  canvasSize: [number, number]
-}): FrameContext {
-  const { config, angles, canvasSize } = params
-  const rotation = createRotationMatrix(angles.raoLao, angles.cranialCaudal)
-  const odd = config.sdd - config.sid
-  const pxPerMm = 1 / config.pixelPitch
-  return {
-    rotation,
-    sid: config.sid,
-    sdd: config.sdd,
-    odd,
-    isocenter: config.isocenter,
-    pixelPitch: config.pixelPitch,
-    pxPerMm,
-    detectorSize: config.detectorPixels,
-    canvasSize,
-    smoothstepRange: [0.4, 0.95],
-    maxT: 6,
-  }
-}
-
-export function rotatePointIntoFrame(frame: FrameContext, worldPoint: Vec3): Vec3 {
-  const centered: Vec3 = [
-    worldPoint[0] - frame.isocenter[0],
-    worldPoint[1] - frame.isocenter[1],
-    worldPoint[2] - frame.isocenter[2],
-  ]
-  return applyRotation(frame.rotation, centered)
 }
