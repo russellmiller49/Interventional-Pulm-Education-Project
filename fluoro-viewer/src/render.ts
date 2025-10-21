@@ -468,5 +468,14 @@ function getAnchor(object: Object3D): Vector3 {
 }
 
 function formatDisplayLabel(raw: string): string {
-  return raw.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
+  const normalized = raw.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // Override specific labels for correct anatomical terminology
+  const labelOverrides: Record<string, string> = {
+    'lingula lateral segment (lb4)': 'Lingula Superior Segment (LB4)',
+    'lingula medial segment (lb5)': 'Lingula Inferior Segment (LB5)',
+  }
+
+  const lowerKey = normalized.toLowerCase()
+  return labelOverrides[lowerKey] || normalized
 }
