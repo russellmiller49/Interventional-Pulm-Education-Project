@@ -6,7 +6,7 @@
   "source_to_detector_mm": 1200,
   "detector_pixels": [1024, 1024],
   "pixel_pitch_mm": 0.3,
-  "asset_base_url": "/fluoroview",
+  "asset_base_url": "https://tqnhxlwvkkswuckszlee.supabase.co/storage/v1/object/public/3d-models/fluoroview",
   "default_view": {
     "rao_lao_deg": 0,
     "cranial_caudal_deg": 0
