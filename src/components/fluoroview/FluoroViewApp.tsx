@@ -73,7 +73,6 @@ export function FluoroViewApp() {
   const needsRenderRef = useRef(false)
   const stateRef = useRef<AppState | null>(null)
 
-  const [config, setConfig] = useState<FluoroConfig | null>(null)
   const [segments, setSegments] = useState<PreparedSegment[]>([])
   const [legendEntries, setLegendEntries] = useState<LegendEntry[]>([])
   const [appState, setAppState] = useState<AppState | null>(null)
@@ -105,7 +104,6 @@ export function FluoroViewApp() {
         if (cfg.units !== 'mm' || cfg.coordinateSystem !== 'LPS') {
           throw new Error('Configuration mismatch: FluoroView expects mm / LPS coordinates.')
         }
-        setConfig(cfg)
 
         const renderer = new FluoroRenderer({ canvas, labelLayer, config: cfg })
         rendererRef.current = renderer
