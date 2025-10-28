@@ -12,8 +12,16 @@ import { NextResponse } from 'next/server'
  * - Demo: https://demo.interventionalpulm.org/api/auth/callback
  */
 export async function GET(request: Request) {
-  const url = new URL(request.url)
-  const searchParams = url.searchParams
+  const requestUrl = new URL(request.url)
+  const searchParams = requestUrl.searchParams
+
+  // Get the base URL from environment or fall back to the request origin
+  // This ensures we redirect to the correct production domain, not localhost
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || requestUrl.origin
+
+  // Filter out localhost to prevent redirecting to it in production
+  const redirectUrl = baseUrl.includes('localhost') ? 'https://interventionalpulm.org' : baseUrl
 
   // Extract the tokens from the URL
   const accessToken = searchParams.get('access_token')
@@ -26,7 +34,7 @@ export async function GET(request: Request) {
     console.error('OAuth error:', error, errorDescription)
     // Redirect to home page with error (you can customize this)
     return NextResponse.redirect(
-      `${url.origin}?error=${encodeURIComponent(error || 'Authentication failed')}`,
+      `${redirectUrl}?error=${encodeURIComponent(error || 'Authentication failed')}`,
       {
         status: 302,
         headers: {
@@ -42,7 +50,7 @@ export async function GET(request: Request) {
     // and redirect to the appropriate page
 
     // For now, redirect to home page
-    return NextResponse.redirect(url.origin, {
+    return NextResponse.redirect(redirectUrl, {
       status: 302,
       headers: {
         'X-Robots-Tag': 'noindex, nofollow',
@@ -51,7 +59,7 @@ export async function GET(request: Request) {
   }
 
   // No tokens or error - redirect to home
-  return NextResponse.redirect(url.origin, {
+  return NextResponse.redirect(redirectUrl, {
     status: 302,
     headers: {
       'X-Robots-Tag': 'noindex, nofollow',
