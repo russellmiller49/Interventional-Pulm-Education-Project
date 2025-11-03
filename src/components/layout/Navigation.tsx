@@ -8,6 +8,8 @@ import { GitHubLogoIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+import SignInModal from '@/components/auth/SignInModal'
+
 import { DesktopNav, type NavItem } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
@@ -20,6 +22,11 @@ const navigationItems: NavItem[] = [
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },
   { title: 'Training', href: '/training', description: 'Modules and curricula' },
+  {
+    title: 'Resources',
+    href: '/resources/creative-commons',
+    description: 'Medical images & resources',
+  },
   { title: 'Community', href: '/community/contributors', description: 'Contributors and events' },
 ]
 
@@ -27,6 +34,7 @@ export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
+  const [isSignInOpen, setIsSignInOpen] = useState(false)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,9 +109,22 @@ export function Navigation() {
             <span>GitHub</span>
           </a>
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setIsSignInOpen(true)}
+          className="hidden lg:inline-flex"
+        >
+          Sign in
+        </Button>
         <ModeToggle size="sm" />
       </div>
-      <MobileNav items={navigationItems} activePath={pathname} />
+      <MobileNav
+        items={navigationItems}
+        activePath={pathname}
+        onRequestSignIn={() => setIsSignInOpen(true)}
+      />
+      {isSignInOpen ? <SignInModal onClose={() => setIsSignInOpen(false)} /> : null}
     </div>
   )
 }

@@ -33,6 +33,14 @@ export default function HomePage() {
       cta: 'Start Board Prep',
     },
     {
+      badge: 'Medical Images',
+      title: 'Creative Commons Library',
+      description:
+        '680+ curated medical images from peer-reviewed publications for educational presentations and manuscripts.',
+      href: '/resources/creative-commons',
+      cta: 'Browse Images',
+    },
+    {
       badge: 'Training Lab',
       title: 'Rigid Bronchoscopy Foundations',
       description:
@@ -157,7 +165,7 @@ export default function HomePage() {
             models, and simulation-ready curricula.
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {featureHighlights.map((link) => (
             <Link
               key={link.href}

@@ -11,7 +11,7 @@ export function Hero() {
       <section
         className={cn(
           'relative isolate flex flex-col gap-8 overflow-hidden rounded-[calc(1.5rem-1px)] bg-gradient-to-br from-sky-950/80 via-sky-900/70 to-teal-900/70 px-8 py-16 text-white shadow-[0_20px_60px_-40px_rgba(14,165,233,0.8)]',
-          'md:px-16 md:py-24'
+          'md:px-16 md:py-24',
         )}
       >
         <div className="absolute inset-0 -z-10">
@@ -26,11 +26,15 @@ export function Hero() {
             Open Source Education &amp; Innovation in Interventional Pulmonology
           </h1>
           <p className="text-base text-sky-100 md:text-lg">
-            Explore simulation labs, printable anatomy, and data-driven training modules built by clinicians and
-            engineers advancing airway care worldwide.
+            Explore simulation labs, printable anatomy, and data-driven training modules built by
+            clinicians and engineers advancing airway care worldwide.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button asChild size="lg" className="h-11 rounded-full bg-white text-sky-900 hover:bg-sky-100">
+            <Button
+              asChild
+              size="lg"
+              className="h-11 rounded-full bg-white text-sky-900 hover:bg-sky-100"
+            >
               <Link href="/tools">Explore Tools</Link>
             </Button>
             <Button
@@ -43,10 +47,37 @@ export function Hero() {
             </Button>
           </div>
         </div>
-        <div className="grid gap-4 text-xs uppercase tracking-[0.4em] text-sky-200/80 md:grid-cols-3 md:text-right">
-          <p>Simulation Labs</p>
-          <p>3D Anatomy</p>
-          <p>Clinical Training</p>
+        <div className="flex flex-wrap gap-3 mt-8">
+          <Link
+            href="/tools"
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            Tools & Software
+          </Link>
+          <Link
+            href="/learn/anatomy"
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            3D Anatomy
+          </Link>
+          <Link
+            href="/board-prep"
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            Board Prep
+          </Link>
+          <Link
+            href="/resources/creative-commons"
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            Medical Images
+          </Link>
+          <Link
+            href="/training"
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            Training Modules
+          </Link>
         </div>
       </section>
     </div>

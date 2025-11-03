@@ -22,9 +22,10 @@ import { SearchShortcut } from './SearchShortcut'
 interface MobileNavProps {
   items: NavItem[]
   activePath?: string | null
+  onRequestSignIn?: () => void
 }
 
-export function MobileNav({ items, activePath }: MobileNavProps) {
+export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps) {
   const normalizedPath = useMemo(() => {
     if (!activePath) {
       return '/'
@@ -87,6 +88,16 @@ export function MobileNav({ items, activePath }: MobileNavProps) {
               })}
             </nav>
             <div className="flex flex-col gap-3">
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => {
+                  onRequestSignIn?.()
+                }}
+                className="justify-center"
+              >
+                Sign in
+              </Button>
               <Button
                 type="button"
                 variant="outline"

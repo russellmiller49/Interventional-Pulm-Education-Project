@@ -1,10 +1,13 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import type { Route } from 'next'
 
 import { AnatomyViewer } from '@/components/3d/AnatomyViewer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { getModel } from '@/data/models'
 import { anatomyModels } from '@/data/printable-models'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 
@@ -58,6 +61,7 @@ export default function AnatomyLearnPage() {
   }
 
   const downloads = selectedModel.downloads
+  const xrModel = getModel(selectedModel.slug)
 
   useEffect(() => {
     setVisibleSegments((prev) => {
@@ -316,6 +320,20 @@ export default function AnatomyLearnPage() {
                 </Button>
               ))}
             </div>
+            {xrModel ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button asChild>
+                  <Link href={`/xr/${xrModel.slug}` as Route}>Enter Spatial (Vision Pro)</Link>
+                </Button>
+                {xrModel.usdzSrc ? (
+                  <Button asChild variant="outline">
+                    <a href={xrModel.usdzSrc} rel="ar">
+                      View in AR (iPhone/iPad)
+                    </a>
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
             {selectedModel.notes ? (
               <p className="text-xs text-muted-foreground/80">{selectedModel.notes}</p>
             ) : null}

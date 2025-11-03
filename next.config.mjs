@@ -6,7 +6,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov",
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self'",
@@ -36,7 +36,7 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()',
+    value: 'camera=(), microphone=(), geolocation=(), xr-spatial-tracking=(self)',
   },
   {
     key: 'Strict-Transport-Security',
@@ -56,7 +56,18 @@ const nextConfig = {
     ],
   },
   images: {
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.ncbi.nlm.nih.gov',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pmc.ncbi.nlm.nih.gov',
+        pathname: '/**',
+      },
+    ],
   },
   async headers() {
     return [
@@ -73,6 +84,16 @@ const nextConfig = {
           {
             key: 'Content-Type',
             value: 'text/html; charset=utf-8',
+          },
+        ],
+      },
+      {
+        // Serve proper USDZ MIME for Quick Look
+        source: '/:all*(usdz)',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'model/vnd.usdz+zip',
           },
         ],
       },
