@@ -15,7 +15,7 @@ export async function GET(request: Request) {
       cookies: {
         get(name: string) {
           void name
-          return null as string | undefined
+          return undefined
         },
         set(name: string, value: string, options?: CookieOptions) {
           response.cookies.set(name, value, options)

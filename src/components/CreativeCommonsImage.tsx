@@ -16,13 +16,12 @@ export default function CreativeCommonsImage({
 }: CreativeCommonsImageProps) {
   const [hasError, setHasError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [useProxy, setUseProxy] = useState(true) // Start with proxy for NCBI images
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const imgRef = useRef<HTMLImageElement | null>(null)
 
   // Always use proxy for NCBI images
   const getImageUrl = (url: string) => {
-    if (url.includes('ncbi.nlm.nih.gov') && useProxy) {
+    if (url.includes('ncbi.nlm.nih.gov')) {
       const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(url)}`
       console.log('Using proxy for image:', { original: url, proxy: proxyUrl })
       return proxyUrl

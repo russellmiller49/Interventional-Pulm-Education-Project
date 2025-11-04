@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { Search, Image, FileText, BookOpen, AlertCircle } from 'lucide-react'
+import { Search, BookOpen, AlertCircle } from 'lucide-react'
 
 const categories = [
   { name: '3D Reconstructions', slug: '3d-reconstructions', count: 8, icon: '🔬' },
