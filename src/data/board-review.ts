@@ -371,6 +371,21 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     sourceFile: 'thermal-ablatitive-therapies.mdx',
     order: 23,
   },
+  {
+    slug: 'delayed-ablative-therapies',
+    title: 'Delayed Ablative Therapies: PDT, Cryotherapy, and Endobronchial Brachytherapy',
+    description:
+      'Comparative roadmap for photodynamic therapy, cryotherapy (ablation and adhesion), and HDR endobronchial brachytherapy across indications, setup, and follow-up.',
+    summary:
+      'Details pre-procedure evaluation, scheduling logistics, technique sequencing, complication mitigation, evidence tables, and algorithms that guide selection between PDT, cryoablation/cryoadhesion, and HDR brachytherapy.',
+    category: 'ablation',
+    estimatedMinutes: 31,
+    examDomains: ['Photodynamic therapy', 'Cryotherapy', 'Endobronchial brachytherapy'],
+    tags: ['PDT', 'cryotherapy', 'brachytherapy'],
+    focus: ['Modality selection', 'Complication prevention', 'Delayed ablation logistics'],
+    sourceFile: 'delayed-ablative-therapies.mdx',
+    order: 24,
+  },
 ]
 
 export const boardReviewCategoryLabels: Record<BoardReviewCategory, string> = {

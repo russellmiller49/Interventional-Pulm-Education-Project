@@ -1,4 +1,4 @@
-ndwelling Pleural Catheters and Pleurodesis
+Indwelling Pleural Catheters and Pleurodesis
 Exam Mapping & Scope
 
 This chapter targets the AABIP IP Board domains on pleural disease: malignant and non‑malignant pleural effusions, tunneled/indwelling pleural catheters (IPCs), medical pleurodesis (talc slurry and poudrage), outpatient pathways, infection recognition/management, intrapleural enzyme therapy, and complications.
@@ -222,7 +222,6 @@ G -->|Yes| H[Consider talc via IPC (IPC-PLUS pathway)]
 G -->|No (autopleurodesis)| I[Remove IPC]
 F --> J[Assess for success; if failure or recurrence → IPC or combined strategies]
 
-
 Bullet algorithm notes
 
 Choose IPC when lung is non‑expandable, life expectancy is short, or outpatient management is prioritized.
@@ -247,29 +246,29 @@ Avoid: Treating colonization (positive culture alone) with antibiotics; prophyla
 
 Tables & Quick‑Reference Boxes
 Table 1. Choosing IPC vs Pleurodesis in MPE
-Scenario	Preferred strategy	Rationale	Practical notes
-Trapped lung / non‑expandable	IPC	Pleurodesis unlikely to succeed	Daily drainage accelerates autopleurodesis
-Limited survival, outpatient goal	IPC ± talc via IPC	Fewer hospital days; home control	Educate caregivers; infection precautions
-Strong preference for device‑free chest; fit for procedure	Talc pleurodesis (slurry or poudrage)	Similar efficacy of slurry vs poudrage	Use graded talc; small‑bore tube acceptable
-Pleurodesis failure/recurrence	IPC or combined	Increases success while preserving outpatient care	Consider poudrage + IPC (“rapid pleurodesis”)
+Scenario Preferred strategy Rationale Practical notes
+Trapped lung / non‑expandable IPC Pleurodesis unlikely to succeed Daily drainage accelerates autopleurodesis
+Limited survival, outpatient goal IPC ± talc via IPC Fewer hospital days; home control Educate caregivers; infection precautions
+Strong preference for device‑free chest; fit for procedure Talc pleurodesis (slurry or poudrage) Similar efficacy of slurry vs poudrage Use graded talc; small‑bore tube acceptable
+Pleurodesis failure/recurrence IPC or combined Increases success while preserving outpatient care Consider poudrage + IPC (“rapid pleurodesis”)
 
 Abbreviations: IPC, indwelling pleural catheter; MPE, malignant pleural effusion.
 
 Table 2. IPC Infection—At‑a‑Glance Management
-Clinical picture	Typical organisms	First steps	Duration	When to remove IPC
-Superficial (cellulitis/exit‑site/tunnel)	S. aureus common	Oral anti‑staph regimen; swab; do not delay antibiotics	7–10 days	Only if persistent or progressive despite therapy
-Deep (pleural space)	S. aureus predominates; polymicrobial possible; culture‑negative ~10%	Broad empiric per pleural infection pathway; drain via IPC; send fluid	4–6 weeks (tailored to response)	Rare; consider if poor drainage, tract infection, or failure
-Colonization	Coagulase‑negative staph common	No antibiotics; correlate clinically	—	—
+Clinical picture Typical organisms First steps Duration When to remove IPC
+Superficial (cellulitis/exit‑site/tunnel) S. aureus common Oral anti‑staph regimen; swab; do not delay antibiotics 7–10 days Only if persistent or progressive despite therapy
+Deep (pleural space) S. aureus predominates; polymicrobial possible; culture‑negative ~10% Broad empiric per pleural infection pathway; drain via IPC; send fluid 4–6 weeks (tailored to response) Rare; consider if poor drainage, tract infection, or failure
+Colonization Coagulase‑negative staph common No antibiotics; correlate clinically — —
 
 Abbreviations: IPC, indwelling pleural catheter.
 
 Table 3. Talc Pleurodesis—Technique Tips
-Step	Key points
-Analgesia	Intrapleural lidocaine (2–3 mg/kg total); NSAIDs acceptable; avoid systemic steroids if possible
-Talc choice	Graded/large‑particle talc to minimize systemic effects
-Chest tube	Small‑bore (≤14F) acceptable; larger (24F) can reduce failure in selected settings but increases pain
-Suction	−10 to −20 cm H₂O to maintain apposition; avoid over‑suction
-Tube removal	Consider removal at 24–48 h if clinically stable; early removal shortens LOS
+Step Key points
+Analgesia Intrapleural lidocaine (2–3 mg/kg total); NSAIDs acceptable; avoid systemic steroids if possible
+Talc choice Graded/large‑particle talc to minimize systemic effects
+Chest tube Small‑bore (≤14F) acceptable; larger (24F) can reduce failure in selected settings but increases pain
+Suction −10 to −20 cm H₂O to maintain apposition; avoid over‑suction
+Tube removal Consider removal at 24–48 h if clinically stable; early removal shortens LOS
 Imaging & Figure Callouts (Placeholders)
 
 Figure 1. Thoracoscopic view during talc poudrage with even dusting of parietal pleura. Caption: Even distribution promotes uniform pleural symphysis.
@@ -307,112 +306,112 @@ Explanation: Contemporary RCTs show no significant difference in 90‑day failur
 Question Bank (12 MCQs)
 
 1. A 67‑year‑old with symptomatic MPE and non‑expandable lung after drainage. What is the most appropriate management?
-A. Talc slurry via 24F tube
-B. Thoracoscopic talc poudrage
-C. IPC with daily drainage
-D. Repeat thoracentesis as needed
-E. VATS pleurectomy
-Answer: C.
-Explanation: Trapped lung predicts pleurodesis failure; IPC enables outpatient control and potential autopleurodesis.
+   A. Talc slurry via 24F tube
+   B. Thoracoscopic talc poudrage
+   C. IPC with daily drainage
+   D. Repeat thoracentesis as needed
+   E. VATS pleurectomy
+   Answer: C.
+   Explanation: Trapped lung predicts pleurodesis failure; IPC enables outpatient control and potential autopleurodesis.
 
 2. After IPC placement, which drainage schedule most reliably increases autopleurodesis rate and shortens time to pleurodesis?
-A. PRN symptom‑guided
-B. Every third day
-C. Alternate days
-D. Daily drainage
-E. Continuous wall suction
-Answer: D.
-Explanation: Daily drainage is superior to alternate‑day schedules for autopleurodesis.
+   A. PRN symptom‑guided
+   B. Every third day
+   C. Alternate days
+   D. Daily drainage
+   E. Continuous wall suction
+   Answer: D.
+   Explanation: Daily drainage is superior to alternate‑day schedules for autopleurodesis.
 
 3. Which statement about talc slurry vs thoracoscopic poudrage in MPE is most accurate?
-A. Poudrage has dramatically lower failure at 90 days
-B. Slurry has much higher complication rates
-C. Failure and adverse event rates are similar
-D. Poudrage always requires ICU stay
-E. Slurry cannot be done outpatient
-Answer: C.
-Explanation: Contemporary randomized data show comparable 90‑day failure and adverse event rates.
+   A. Poudrage has dramatically lower failure at 90 days
+   B. Slurry has much higher complication rates
+   C. Failure and adverse event rates are similar
+   D. Poudrage always requires ICU stay
+   E. Slurry cannot be done outpatient
+   Answer: C.
+   Explanation: Contemporary randomized data show comparable 90‑day failure and adverse event rates.
 
 4. A 60‑year‑old with IPC develops erythema and tenderness limited to the exit site, no fever, clear drainage. Best initial therapy?
-A. Remove IPC immediately
-B. Start broad‑spectrum IV antibiotics for 4–6 weeks
-C. Oral anti‑staph antibiotics 7–10 days and reassess
-D. Intrapleural tPA/DNase
-E. Observe without treatment
-Answer: C.
-Explanation: Superficial infection is treated with a short oral course; catheter removal rarely needed acutely.
+   A. Remove IPC immediately
+   B. Start broad‑spectrum IV antibiotics for 4–6 weeks
+   C. Oral anti‑staph antibiotics 7–10 days and reassess
+   D. Intrapleural tPA/DNase
+   E. Observe without treatment
+   Answer: C.
+   Explanation: Superficial infection is treated with a short oral course; catheter removal rarely needed acutely.
 
 5. Which factor is most strongly associated with higher IPC infection risk?
-A. Concurrent chemotherapy
-B. Use in hepatic hydrothorax
-C. Prior talc pleurodesis
-D. Female sex
-E. Small catheter size
-Answer: B.
-Explanation: Hepatic hydrothorax has a higher infection rate; chemotherapy does not clearly increase risk.
+   A. Concurrent chemotherapy
+   B. Use in hepatic hydrothorax
+   C. Prior talc pleurodesis
+   D. Female sex
+   E. Small catheter size
+   Answer: B.
+   Explanation: Hepatic hydrothorax has a higher infection rate; chemotherapy does not clearly increase risk.
 
 6. Appropriate empiric management for deep IPC infection includes:
-A. Observation only
-B. Antibiotics plus drainage via the IPC
-C. Antibiotics and immediate IPC removal
-D. Intrapleural steroids
-E. Talc instillation via IPC
-Answer: B.
-Explanation: Combine prolonged antibiotics with active drainage; reserve removal for failure/poor drainage.
+   A. Observation only
+   B. Antibiotics plus drainage via the IPC
+   C. Antibiotics and immediate IPC removal
+   D. Intrapleural steroids
+   E. Talc instillation via IPC
+   Answer: B.
+   Explanation: Combine prolonged antibiotics with active drainage; reserve removal for failure/poor drainage.
 
 7. Best way to reduce risk of systemic talc complications during pleurodesis:
-A. Use larger total dose of talc
-B. Use graded/large‑particle talc
-C. Clamp chest tube for 24 hours
-D. Inject talc rapidly under pressure
-E. Give prophylactic steroids
-Answer: B.
-Explanation: Graded talc reduces systemic absorption and fever/gas‑exchange impairment.
+   A. Use larger total dose of talc
+   B. Use graded/large‑particle talc
+   C. Clamp chest tube for 24 hours
+   D. Inject talc rapidly under pressure
+   E. Give prophylactic steroids
+   Answer: B.
+   Explanation: Graded talc reduces systemic absorption and fever/gas‑exchange impairment.
 
 8. Which practice does not reduce IPC infection rates and should not be routine?
-A. Full sterile prep and drape
-B. Aseptic non‑touch technique for home drainage
-C. Prophylactic systemic antibiotics at insertion
-D. Patient/caregiver education on signs of infection
-E. Keeping site clean and dry, avoiding swimming for several weeks
-Answer: C.
-Explanation: Prophylactic antibiotics at insertion do not reduce IPC infection.
+   A. Full sterile prep and drape
+   B. Aseptic non‑touch technique for home drainage
+   C. Prophylactic systemic antibiotics at insertion
+   D. Patient/caregiver education on signs of infection
+   E. Keeping site clean and dry, avoiding swimming for several weeks
+   Answer: C.
+   Explanation: Prophylactic antibiotics at insertion do not reduce IPC infection.
 
 9. A 74‑year‑old with IPC has cloudy fluid, fever, ultrasound shows loculations. Which adjunct improves drainage?
-A. Double the suction
-B. Intrapleural tPA + DNase via IPC
-C. Heparin instillation
-D. Replace IPC with 28F tube
-E. Immediate VATS decortication in all cases
-Answer: B.
-Explanation: IET breaks down fibrin and improves drainage; many cases avoid surgery.
+   A. Double the suction
+   B. Intrapleural tPA + DNase via IPC
+   C. Heparin instillation
+   D. Replace IPC with 28F tube
+   E. Immediate VATS decortication in all cases
+   Answer: B.
+   Explanation: IET breaks down fibrin and improves drainage; many cases avoid surgery.
 
 10. A patient with MPE desires fewer hospital days and outpatient management. Which approach best aligns?
-A. Inpatient thoracoscopic poudrage in all cases
-B. IPC pathway ± talc via IPC
-C. Large‑bore tube talc with 5‑day stay
-D. Repeated thoracenteses indefinitely
-E. VATS pleurectomy by default
-Answer: B.
-Explanation: IPC allows outpatient care; talc via IPC increases pleurodesis success without added obstruction.
+    A. Inpatient thoracoscopic poudrage in all cases
+    B. IPC pathway ± talc via IPC
+    C. Large‑bore tube talc with 5‑day stay
+    D. Repeated thoracenteses indefinitely
+    E. VATS pleurectomy by default
+    Answer: B.
+    Explanation: IPC allows outpatient care; talc via IPC increases pleurodesis success without added obstruction.
 
 11. Which statement about chest tube size for talc slurry is correct?
-A. Only 24F tubes are effective
-B. Small‑bore tubes (≤14F) are generally effective and reduce pain
-C. Smaller tubes invariably increase pleurodesis failure ten‑fold
-D. Larger tubes are painless
-E. Tube size does not affect pain
-Answer: B.
-Explanation: Small‑bore tubes are acceptable and better tolerated; trade‑offs depend on context.
+    A. Only 24F tubes are effective
+    B. Small‑bore tubes (≤14F) are generally effective and reduce pain
+    C. Smaller tubes invariably increase pleurodesis failure ten‑fold
+    D. Larger tubes are painless
+    E. Tube size does not affect pain
+    Answer: B.
+    Explanation: Small‑bore tubes are acceptable and better tolerated; trade‑offs depend on context.
 
 12. An IPC patient’s fluid culture via the catheter grows coagulase‑negative staphylococci, the patient is asymptomatic with clear fluid. Next step?
-A. No antibiotics; observe
-B. Start oral antibiotics 7–10 days
-C. Start IV antibiotics 4–6 weeks
-D. Remove IPC
-E. Instill talc via IPC
-Answer: A.
-Explanation: Likely colonization; treat the patient, not the culture.
+    A. No antibiotics; observe
+    B. Start oral antibiotics 7–10 days
+    C. Start IV antibiotics 4–6 weeks
+    D. Remove IPC
+    E. Instill talc via IPC
+    Answer: A.
+    Explanation: Likely colonization; treat the patient, not the culture.
 
 Controversies, Variability, and Evolving Evidence
 
