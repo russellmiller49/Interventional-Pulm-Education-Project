@@ -21,11 +21,16 @@ const formatter = Intl.NumberFormat('en', {
 })
 
 export function ProjectCard({ project, stats, href, className }: ProjectCardProps) {
-  const projectHref = href ?? (`/tools/${project.slug}` as Route)
+  const projectHref = href ?? ('/coming-soon' as Route)
   const hasStats = Boolean(stats)
 
   return (
-    <Card className={cn('flex h-full flex-col justify-between border-border/70 bg-card/80 backdrop-blur', className)}>
+    <Card
+      className={cn(
+        'flex h-full flex-col justify-between border-border/70 bg-card/80 backdrop-blur',
+        className,
+      )}
+    >
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-semibold">
@@ -54,7 +59,11 @@ export function ProjectCard({ project, stats, href, className }: ProjectCardProp
         <div className="h-px w-full bg-border/70" />
         <div className="flex flex-wrap gap-2">
           {project.techStack.slice(0, 4).map((tech) => (
-            <Badge key={tech} variant="outline" className="rounded-full border-border/70 px-3 py-1 text-xs">
+            <Badge
+              key={tech}
+              variant="outline"
+              className="rounded-full border-border/70 px-3 py-1 text-xs"
+            >
               {tech}
             </Badge>
           ))}
@@ -69,9 +78,21 @@ export function ProjectCard({ project, stats, href, className }: ProjectCardProp
         <CardFooter className="flex flex-col gap-4 border-t border-border/60 bg-muted/20 p-4">
           <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
             <div className="flex items-center gap-2">
-              <StatPill icon={<StarFilledIcon className="h-4 w-4" />} label="Stars" value={formatter.format(stats!.stars)} />
-              <StatPill icon={<ForkIcon className="h-4 w-4" />} label="Forks" value={formatter.format(stats!.forks)} />
-              <StatPill icon={<IssueIcon className="h-4 w-4" />} label="Issues" value={formatter.format(stats!.openIssues)} />
+              <StatPill
+                icon={<StarFilledIcon className="h-4 w-4" />}
+                label="Stars"
+                value={formatter.format(stats!.stars)}
+              />
+              <StatPill
+                icon={<ForkIcon className="h-4 w-4" />}
+                label="Forks"
+                value={formatter.format(stats!.forks)}
+              />
+              <StatPill
+                icon={<IssueIcon className="h-4 w-4" />}
+                label="Issues"
+                value={formatter.format(stats!.openIssues)}
+              />
             </div>
             <a
               href={project.repository.url}
@@ -101,7 +122,15 @@ function StatPill({ icon, label, value }: { icon: ReactNode; label: string; valu
 
 function ForkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <circle cx="6" cy="4" r="2" />
       <circle cx="18" cy="4" r="2" />
       <circle cx="12" cy="20" r="2" />
@@ -114,7 +143,15 @@ function ForkIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function IssueIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5" />
       <circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none" />

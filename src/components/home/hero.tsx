@@ -35,7 +35,7 @@ export function Hero() {
               size="lg"
               className="h-11 rounded-full bg-white text-sky-900 hover:bg-sky-100"
             >
-              <Link href="/tools">Explore Tools</Link>
+              <Link href="/board-prep">Explore Board Prep</Link>
             </Button>
             <Button
               asChild
@@ -49,10 +49,10 @@ export function Hero() {
         </div>
         <div className="flex flex-wrap gap-3 mt-8">
           <Link
-            href="/tools"
+            href="/coming-soon"
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Tools & Software
+            Tools (coming soon)
           </Link>
           <Link
             href="/learn/anatomy"
@@ -73,10 +73,10 @@ export function Hero() {
             Medical Images
           </Link>
           <Link
-            href="/training"
+            href="/coming-soon"
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Training Modules
+            Training paths (coming soon)
           </Link>
         </div>
       </section>

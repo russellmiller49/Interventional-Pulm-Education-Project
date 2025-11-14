@@ -87,14 +87,22 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
 
   return (
     <div className="space-y-16 py-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdCourse) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdCourse) }}
+      />
       <section className="container grid gap-10 overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-8 md:grid-cols-[1.2fr_0.8fr] md:p-12">
         <div className="space-y-6">
-          <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
+          <Badge
+            variant="info"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]"
+          >
             {categoryLabels[trainingModule.category]}
           </Badge>
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{trainingModule.title}</h1>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+              {trainingModule.title}
+            </h1>
             <p className="text-lg text-muted-foreground md:text-xl">{trainingModule.summary}</p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -115,12 +123,19 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
               Launch module flow
             </Button>
             {checklistItems.length ? (
-              <ChecklistButton moduleTitle={trainingModule.title} items={checklistItems} />
+              <ChecklistButton
+                moduleTitle={trainingModule.title}
+                items={checklistItems}
+                downloadUrl={trainingModule.checklistDownloadUrl}
+                label={trainingModule.checklistDownloadLabel}
+              />
             ) : null}
           </div>
         </div>
         <div className="space-y-4 rounded-3xl border border-border/60 bg-background/70 p-6 text-sm text-muted-foreground">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">Prerequisites</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+            Prerequisites
+          </h2>
           <ul className="space-y-2">
             {trainingModule.prerequisites.map((item) => (
               <li key={item} className="flex items-start gap-2">
@@ -130,7 +145,9 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
             ))}
           </ul>
           <div className="rounded-2xl border border-dashed border-border/60 bg-muted/30 p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">Equipment</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+              Equipment
+            </h3>
             <ul className="mt-2 space-y-1">
               {trainingModule.equipment.map((item) => (
                 <li key={item} className="text-xs text-muted-foreground/90">
@@ -147,7 +164,11 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
         <Tabs defaultValue={defaultTab} className="space-y-6">
           <TabsList className="flex flex-wrap gap-2">
             {uniqueFormats.map((format) => (
-              <TabsTrigger key={format} value={format} className="rounded-full px-4 py-2 text-sm font-medium">
+              <TabsTrigger
+                key={format}
+                value={format}
+                className="rounded-full px-4 py-2 text-sm font-medium"
+              >
                 {formatLabels[format]}
               </TabsTrigger>
             ))}
@@ -161,13 +182,19 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
                     <CardContent className="space-y-4 p-5 text-sm text-muted-foreground">
                       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground/80">
                         <span className="font-semibold text-foreground">{section.title}</span>
-                        {section.durationMinutes ? <span>{section.durationMinutes} min</span> : null}
+                        {section.durationMinutes ? (
+                          <span>{section.durationMinutes} min</span>
+                        ) : null}
                       </div>
                       <p>{section.description}</p>
-                      {section.videoUrl ? <VideoPlayer src={section.videoUrl} title={section.title} /> : null}
+                      {section.videoUrl ? (
+                        <VideoPlayer src={section.videoUrl} title={section.title} />
+                      ) : null}
                       {section.checklistItems && section.checklistItems.length ? (
                         <div className="space-y-2 rounded-2xl border border-border/60 bg-background/60 p-4">
-                          <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">Checklist focus</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
+                            Checklist focus
+                          </h4>
                           <ul className="space-y-1">
                             {section.checklistItems.map((item) => (
                               <li key={item} className="text-xs text-muted-foreground/90">
@@ -179,11 +206,16 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
                       ) : null}
                       {section.resources && section.resources.length ? (
                         <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">Resources</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
+                            Resources
+                          </h4>
                           <ul className="space-y-1 text-xs">
                             {section.resources.map((resource) => (
                               <li key={resource.href}>
-                                <a className="text-primary hover:text-primary/80" href={resource.href}>
+                                <a
+                                  className="text-primary hover:text-primary/80"
+                                  href={resource.href}
+                                >
                                   {resource.label}
                                 </a>
                               </li>
@@ -207,7 +239,9 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
 
       <section className="container grid gap-8 md:grid-cols-2">
         <div className="space-y-4 rounded-3xl border border-border/60 bg-card/70 p-6">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">Learning outcomes</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+            Learning outcomes
+          </h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
             {trainingModule.outcomes.map((outcome) => (
               <li key={outcome} className="flex items-start gap-2">
@@ -217,7 +251,9 @@ export default function TrainingModulePage({ params }: TrainingModulePageProps) 
             ))}
           </ul>
         </div>
-        {trainingModule.quiz ? <Quiz title={trainingModule.quiz.title} questions={trainingModule.quiz.questions} /> : null}
+        {trainingModule.quiz ? (
+          <Quiz title={trainingModule.quiz.title} questions={trainingModule.quiz.questions} />
+        ) : null}
       </section>
     </div>
   )

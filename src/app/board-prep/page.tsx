@@ -22,7 +22,10 @@ export default function BoardPrepPage() {
     <div className="space-y-16 py-16">
       <section className="container grid gap-10 overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-8 md:grid-cols-[1.3fr_0.7fr] md:p-12">
         <div className="space-y-6">
-          <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
+          <Badge
+            variant="info"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]"
+          >
             IP board prep
           </Badge>
           <div className="space-y-4">
@@ -30,8 +33,8 @@ export default function BoardPrepPage() {
               Interactive board review for interventional pulmonology
             </h1>
             <p className="text-lg text-muted-foreground md:text-xl">
-              Accelerate exam readiness with modular chapters that blend high-yield pearls, exam mapping,
-              collapsible study sections, and locally-tracked progress.
+              Accelerate exam readiness with modular chapters that blend high-yield pearls, exam
+              mapping, collapsible study sections, and locally-tracked progress.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -46,7 +49,7 @@ export default function BoardPrepPage() {
               <Link href={`/board-prep/${chapters[0]?.slug ?? ''}`}>Start with first chapter</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/training">Visit simulation modules</Link>
+              <Link href="/coming-soon">Preview simulation roadmap</Link>
             </Button>
           </div>
         </div>
@@ -55,8 +58,8 @@ export default function BoardPrepPage() {
             Study system snapshot
           </h2>
           <p className="text-xs text-muted-foreground/80">
-            Progress syncs locally for now. Contentlayer integration and analytics arrive with the next milestone,
-            so you can expand this library without migrations.
+            Progress syncs locally for now. Contentlayer integration and analytics arrive with the
+            next milestone, so you can expand this library without migrations.
           </p>
           <dl className="grid grid-cols-2 gap-3 text-xs">
             <div className="rounded-2xl border border-border/60 bg-card/70 p-3">
@@ -87,8 +90,9 @@ export default function BoardPrepPage() {
         <div className="space-y-3">
           <h2 className="text-2xl font-semibold tracking-tight">Choose your board review path</h2>
           <p className="text-sm text-muted-foreground">
-            Filter by domain or search for anatomy, procedural, pleural, oncology, and practice-management topics. Each
-            module supports collapsible study notes, high-yield summaries, and local progress tracking.
+            Filter by domain or search for anatomy, procedural, pleural, oncology, and
+            practice-management topics. Each module supports collapsible study notes, high-yield
+            summaries, and local progress tracking.
           </p>
         </div>
         <BoardReviewCatalog chapters={chapters} />
@@ -119,4 +123,3 @@ export default function BoardPrepPage() {
     </div>
   )
 }
-

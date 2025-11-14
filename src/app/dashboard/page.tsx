@@ -19,16 +19,16 @@ export default async function DashboardPage() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/tools"
+            href="/resources/creative-commons"
             className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Explore tools
+            Explore resources
           </Link>
           <Link
-            href="/training"
+            href="/coming-soon"
             className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Find training modules
+            See what’s coming
           </Link>
         </div>
       </div>

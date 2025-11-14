@@ -21,6 +21,8 @@ export const trainingModules: TrainingModule[] = [
       'Learner demonstrates safe insertion and removal technique with coordinated assistant communication',
       'Learner completes post-case debrief using the standardized team checklist',
     ],
+    checklistDownloadUrl: '/downloads/rigid-bronch-checklist.pdf',
+    checklistDownloadLabel: 'Download checklist (PDF)',
     sections: [
       {
         title: 'Introductory Brief & Anatomy Review',
@@ -28,7 +30,9 @@ export const trainingModules: TrainingModule[] = [
         description:
           'Facilitated slide deck reviewing equipment setup, topographical airway anatomy, and shared mental models for the procedure.',
         durationMinutes: 30,
-        resources: [{ label: 'Equipment checklist', href: '/downloads/rigid-bronch-checklist.pdf' }],
+        resources: [
+          { label: 'Equipment checklist', href: '/downloads/rigid-bronch-checklist.pdf' },
+        ],
       },
       {
         title: 'Simulation Lab: Scope Handling',
@@ -53,7 +57,8 @@ export const trainingModules: TrainingModule[] = [
       {
         title: 'Assessment & Reflection',
         format: 'assessment',
-        description: 'Competency checklist followed by written reflection and faculty feedback summary.',
+        description:
+          'Competency checklist followed by written reflection and faculty feedback summary.',
         durationMinutes: 10,
       },
     ],
@@ -73,7 +78,8 @@ export const trainingModules: TrainingModule[] = [
             'Maintaining a jaw thrust preserves airway patency, allowing the assistant to support ventilation during advancement.',
         },
         {
-          prompt: 'What is the recommended first step when encountering mild bleeding during rigid bronchoscopy?',
+          prompt:
+            'What is the recommended first step when encountering mild bleeding during rigid bronchoscopy?',
           options: [
             'Abort the procedure immediately',
             'Switch to jet ventilation',
@@ -133,7 +139,9 @@ export const trainingModules: TrainingModule[] = [
         description:
           'Learners rotate through biopsy pods receiving feedback on needle angulation, suction technique, and sample handling.',
         durationMinutes: 50,
-        resources: [{ label: 'Needle troubleshooting guide', href: '/downloads/ebus-needle-guide.pdf' }],
+        resources: [
+          { label: 'Needle troubleshooting guide', href: '/downloads/ebus-needle-guide.pdf' },
+        ],
         videoUrl: 'https://www.youtube.com/embed/ExampleEBUSLab',
       },
       {
@@ -149,14 +157,25 @@ export const trainingModules: TrainingModule[] = [
       questions: [
         {
           prompt: 'Station 11L is best accessed from which bronchial segment during EBUS?',
-          options: ['Left upper lobe bronchus', 'Left lower lobe bronchus', 'Interlobar region between lobes', 'Distal trachea'],
+          options: [
+            'Left upper lobe bronchus',
+            'Left lower lobe bronchus',
+            'Interlobar region between lobes',
+            'Distal trachea',
+          ],
           answerIndex: 2,
           explanation:
             'Station 11 nodes are approached from the interlobar region between the upper and lower lobe bronchi.',
         },
         {
-          prompt: 'Which Doppler setting adjustment most improves differentiation of vascular structures adjacent to a lymph node?',
-          options: ['Increase pulse repetition frequency', 'Decrease probe frequency', 'Increase color gain until noise appears', 'Disable Doppler entirely'],
+          prompt:
+            'Which Doppler setting adjustment most improves differentiation of vascular structures adjacent to a lymph node?',
+          options: [
+            'Increase pulse repetition frequency',
+            'Decrease probe frequency',
+            'Increase color gain until noise appears',
+            'Disable Doppler entirely',
+          ],
           answerIndex: 1,
           explanation:
             'Lower probe frequency improves penetration and better differentiates vascular structures without introducing noise.',
@@ -178,7 +197,12 @@ export const trainingModules: TrainingModule[] = [
       'Audit navigation metrics and convert insights into quality improvement actions',
     ],
     prerequisites: ['EBUS Station Mapping Lab', 'Intermediate CT interpretation skills'],
-    equipment: ['Navigation workstations', 'CBCT simulator', '3D anatomy datasets', 'QA dashboard access'],
+    equipment: [
+      'Navigation workstations',
+      'CBCT simulator',
+      '3D anatomy datasets',
+      'QA dashboard access',
+    ],
     tags: ['navigation', 'robotics', 'analytics'],
     outcomes: [
       'Learner produces annotated navigation plans with lesion-to-path distance under 2 cm',
@@ -191,7 +215,9 @@ export const trainingModules: TrainingModule[] = [
         description:
           'Compare electromagnetic, robotic, and cone-beam assisted workflows with decision frameworks for modality selection.',
         durationMinutes: 40,
-        resources: [{ label: 'Modality selection matrix', href: '/downloads/navigation-modality-matrix.pdf' }],
+        resources: [
+          { label: 'Modality selection matrix', href: '/downloads/navigation-modality-matrix.pdf' },
+        ],
       },
       {
         title: 'Planning Sprint',
@@ -236,7 +262,8 @@ export const trainingModules: TrainingModule[] = [
             'Cone-beam CT verification provides real-time confirmation of lesion position and pathway alignment, reducing divergence.',
         },
         {
-          prompt: 'Which metric most reliably predicts navigation success in small peripheral lesions?',
+          prompt:
+            'Which metric most reliably predicts navigation success in small peripheral lesions?',
           options: [
             'Total anesthesia time',
             'Distance from the lesion to the planned pathway',
@@ -274,7 +301,8 @@ export const trainingModules: TrainingModule[] = [
       {
         title: 'Sizing Workshop',
         format: 'hands-on',
-        description: 'Use calipers and digital imaging to size stents on printed airway models and review sizing pitfalls.',
+        description:
+          'Use calipers and digital imaging to size stents on printed airway models and review sizing pitfalls.',
         durationMinutes: 45,
         resources: [{ label: 'Sizing worksheet', href: '/downloads/stent-sizing-sheet.pdf' }],
       },
@@ -294,13 +322,15 @@ export const trainingModules: TrainingModule[] = [
       {
         title: 'Complication Roundtable',
         format: 'theory',
-        description: 'Case-based discussion on granulation tissue management, migration prevention, and mucus plugging.',
+        description:
+          'Case-based discussion on granulation tissue management, migration prevention, and mucus plugging.',
         durationMinutes: 25,
       },
       {
         title: 'Assessment & Action Plan',
         format: 'assessment',
-        description: 'Learners submit a stent follow-up protocol with key quality metrics for their institution.',
+        description:
+          'Learners submit a stent follow-up protocol with key quality metrics for their institution.',
         durationMinutes: 10,
       },
     ],
@@ -308,7 +338,8 @@ export const trainingModules: TrainingModule[] = [
       title: 'Stent Management Quiz',
       questions: [
         {
-          prompt: 'What is the first step when encountering granulation tissue obstructing a silicone stent?',
+          prompt:
+            'What is the first step when encountering granulation tissue obstructing a silicone stent?',
           options: [
             'Remove the stent immediately',
             'Perform argon plasma coagulation before removal',
@@ -320,7 +351,8 @@ export const trainingModules: TrainingModule[] = [
             'Ablating granulation tissue prior to removal reduces bleeding risk and facilitates controlled extraction of the stent.',
         },
         {
-          prompt: 'Which follow-up interval is most appropriate after deploying a new silicone airway stent in a benign stricture?',
+          prompt:
+            'Which follow-up interval is most appropriate after deploying a new silicone airway stent in a benign stricture?',
           options: ['24 hours', '1 week', '4–6 weeks', '6 months'],
           answerIndex: 2,
           explanation:
@@ -332,4 +364,3 @@ export const trainingModules: TrainingModule[] = [
 ]
 
 export const trainingModuleSlugs = trainingModules.map((module) => module.slug)
-

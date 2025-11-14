@@ -6,15 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { trainingModules } from '@/data/training-modules'
 
-const categoryOrder = [
-  'rigid-bronchoscopy',
-  'ebus',
-  'navigation',
-  'ablation',
-  'stents',
-] as const
+const categoryOrder = ['rigid-bronchoscopy', 'ebus', 'navigation', 'ablation', 'stents'] as const
 
-const categoryLabels: Record<typeof categoryOrder[number], string> = {
+const categoryLabels: Record<(typeof categoryOrder)[number], string> = {
   'rigid-bronchoscopy': 'Rigid Bronchoscopy',
   ebus: 'EBUS',
   navigation: 'Navigation',
@@ -33,13 +27,19 @@ export default function TrainingPage() {
     <div className="space-y-16 py-16">
       <section className="container grid gap-10 overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-8 md:grid-cols-[1.2fr_0.8fr] md:p-12">
         <div className="space-y-6">
-          <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
+          <Badge
+            variant="info"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]"
+          >
             Training platform
           </Badge>
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Simulation-driven curricula for the IP lab</h1>
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+              Simulation-driven curricula for the IP lab
+            </h1>
             <p className="text-lg text-muted-foreground md:text-xl">
-              Cohesive training pathways spanning rigid bronchoscopy, EBUS, navigation, and airway stenting—complete with checklists, quizzes, and downloadable teaching aids.
+              Cohesive training pathways spanning rigid bronchoscopy, EBUS, navigation, and airway
+              stenting—complete with checklists, quizzes, and downloadable teaching aids.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -59,9 +59,12 @@ export default function TrainingPage() {
           </div>
         </div>
         <div className="space-y-4 rounded-3xl border border-border/60 bg-background/70 p-6 text-sm text-muted-foreground">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">Progress snapshot</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+            Progress snapshot
+          </h2>
           <p className="text-xs text-muted-foreground/80">
-            Progress and credentialing dashboards will connect once learner accounts go live. Until then, track cohorts manually using the exported checklists.
+            Progress and credentialing dashboards will connect once learner accounts go live. Until
+            then, track cohorts manually using the exported checklists.
           </p>
           <div className="space-y-3">
             {progressPlaceholders.map((item) => (
@@ -71,7 +74,10 @@ export default function TrainingPage() {
                   <span>{item.value}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted">
-                  <div style={{ width: `${item.value}%` }} className="h-full rounded-full bg-primary" />
+                  <div
+                    style={{ width: `${item.value}%` }}
+                    className="h-full rounded-full bg-primary"
+                  />
                 </div>
               </div>
             ))}
@@ -89,9 +95,12 @@ export default function TrainingPage() {
             <div key={category} className="space-y-4">
               <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold tracking-tight">{categoryLabels[category]}</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    {categoryLabels[category]}
+                  </h2>
                   <p className="text-sm text-muted-foreground">
-                    {modules.length} module{modules.length === 1 ? '' : 's'} covering core skills and assessment checklists.
+                    {modules.length} module{modules.length === 1 ? '' : 's'} covering core skills
+                    and assessment checklists.
                   </p>
                 </div>
                 <Button asChild variant="ghost">

@@ -45,10 +45,15 @@ export default async function ToolDetailPage({ params }: ToolPageProps) {
   const repoResponse = await getRepo(project.repository.owner, project.repository.name, {
     revalidate: 300,
   })
-  const issuesResponse = await getIssuesByLabel(project.repository.owner, project.repository.name, 'good first issue', {
-    perPage: 5,
-    revalidate: 600,
-  })
+  const issuesResponse = await getIssuesByLabel(
+    project.repository.owner,
+    project.repository.name,
+    'good first issue',
+    {
+      perPage: 5,
+      revalidate: 600,
+    },
+  )
 
   const jsonLd = buildSoftwareApplicationJsonLd(project)
 
@@ -165,7 +170,10 @@ function ToolHero({
         <Stat label="Stars" value={stats?.stars} />
         <Stat label="Forks" value={stats?.forks} />
         <Stat label="Open issues" value={stats?.openIssues} />
-        <Stat label="Last updated" value={stats?.updatedAt ? new Date(stats.updatedAt).toLocaleDateString() : undefined} />
+        <Stat
+          label="Last updated"
+          value={stats?.updatedAt ? new Date(stats.updatedAt).toLocaleDateString() : undefined}
+        />
       </div>
     </div>
   )
@@ -181,7 +189,10 @@ function Stat({ label, value }: { label: string; value?: number | string }) {
     )
   }
 
-  const formatted = typeof value === 'number' ? Intl.NumberFormat('en', { notation: 'compact' }).format(value) : value
+  const formatted =
+    typeof value === 'number'
+      ? Intl.NumberFormat('en', { notation: 'compact' }).format(value)
+      : value
   return (
     <span className="inline-flex items-center gap-2 text-xs font-semibold text-foreground">
       <span className="inline-flex h-2 w-2 rounded-full bg-primary/70" />
@@ -209,7 +220,8 @@ function ToolScreenshot({ project }: { project: (typeof projects)[number] }) {
             Preview coming soon
           </span>
           <p className="max-w-sm text-sm">
-            We&apos;re working on production screenshots for this tool. Explore the demo or documentation for a deeper look.
+            We&apos;re working on production screenshots for this tool. Explore the demo or
+            documentation for a deeper look.
           </p>
         </div>
       )}
@@ -226,7 +238,10 @@ function ToolKeyFeatures({ projectSlug }: { projectSlug: string }) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+        <Badge
+          variant="info"
+          className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+        >
           Key features
         </Badge>
         <h2 className="text-3xl font-semibold tracking-tight">Why teams rely on it</h2>
@@ -257,17 +272,35 @@ function ToolHighlights({ detailSlug }: { detailSlug: string }) {
       <h3 className="text-lg font-semibold">Quick links</h3>
       <div className="space-y-3 text-sm text-muted-foreground">
         {detail.demoLinks?.map((link) => (
-          <ExternalLinkCard key={link.href} label={link.label} href={link.href} description={link.description} />
+          <ExternalLinkCard
+            key={link.href}
+            label={link.label}
+            href={link.href}
+            description={link.description}
+          />
         ))}
         {detail.documentationLinks?.map((link) => (
-          <ExternalLinkCard key={link.href} label={link.label} href={link.href} description={link.description} />
+          <ExternalLinkCard
+            key={link.href}
+            label={link.label}
+            href={link.href}
+            description={link.description}
+          />
         ))}
       </div>
     </div>
   )
 }
 
-function ExternalLinkCard({ label, href, description }: { label: string; href: string; description?: string }) {
+function ExternalLinkCard({
+  label,
+  href,
+  description,
+}: {
+  label: string
+  href: string
+  description?: string
+}) {
   return (
     <a
       href={href}
@@ -290,12 +323,16 @@ function ToolHowItWorks({ detailSlug }: { detailSlug: string }) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+        <Badge
+          variant="secondary"
+          className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+        >
           How it works
         </Badge>
         <h2 className="text-2xl font-semibold tracking-tight">From install to impact</h2>
         <p className="text-sm text-muted-foreground">
-          A proven implementation path that teams use to deploy, govern, and grow the project inside their institutions.
+          A proven implementation path that teams use to deploy, govern, and grow the project inside
+          their institutions.
         </p>
       </div>
       <ol className="space-y-4 border-l border-border/70 pl-6 text-sm text-muted-foreground">
@@ -319,7 +356,10 @@ function ToolUseCases({ detailSlug }: { detailSlug: string }) {
   return (
     <div className="space-y-6 rounded-3xl border border-border/60 bg-card/70 p-6">
       <div className="space-y-1">
-        <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+        <Badge
+          variant="outline"
+          className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+        >
           Use cases
         </Badge>
         <h3 className="text-xl font-semibold text-foreground">Where it shines</h3>
@@ -347,7 +387,10 @@ function ToolGettingStarted({ detailSlug }: { detailSlug: string }) {
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <Badge variant="success" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+        <Badge
+          variant="success"
+          className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+        >
           Getting started
         </Badge>
         <h2 className="text-2xl font-semibold tracking-tight">Deploy in under an hour</h2>
@@ -356,7 +399,9 @@ function ToolGettingStarted({ detailSlug }: { detailSlug: string }) {
         </p>
       </div>
       <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Requirements</h3>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Requirements
+        </h3>
         <ul className="mt-3 space-y-2 text-sm text-foreground">
           {detail.gettingStarted.requirements.map((requirement) => (
             <li key={requirement} className="flex items-start gap-2">
@@ -376,14 +421,20 @@ function ToolTechStack({ project }: { project: (typeof projects)[number] }) {
       <h3 className="text-lg font-semibold">Technology stack</h3>
       <div className="flex flex-wrap gap-2">
         {project.techStack.map((tech) => (
-          <Badge key={tech} variant="outline" className="rounded-full border-border/70 px-3 py-1 text-xs">
+          <Badge
+            key={tech}
+            variant="outline"
+            className="rounded-full border-border/70 px-3 py-1 text-xs"
+          >
             {tech}
           </Badge>
         ))}
       </div>
       {project.keywords?.length ? (
         <div className="space-y-2 text-xs text-muted-foreground">
-          <p className="font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">Keywords</p>
+          <p className="font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+            Keywords
+          </p>
           <p>{project.keywords.join(', ')}</p>
         </div>
       ) : null}
@@ -403,22 +454,27 @@ function ToolContributing({
   return (
     <div className="space-y-6 rounded-3xl border border-border/70 bg-card/70 p-8">
       <div className="space-y-2">
-        <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+        <Badge
+          variant="outline"
+          className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+        >
           Contributing
         </Badge>
         <h2 className="text-3xl font-semibold tracking-tight">Join the build</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Pitch in on new features, triage issues, or share implementation feedback. The maintainers are active on
-          GitHub and welcome co-builders.
+          Pitch in on new features, triage issues, or share implementation feedback. The maintainers
+          are active on GitHub and welcome co-builders.
         </p>
       </div>
       <div className="space-y-4">
         <div className="rounded-2xl border border-dashed border-border/70 bg-background/60 p-4 text-sm text-muted-foreground">
-          Start with the contributor guide in the repository README and review the project&apos;s code of conduct. All
-          discussions happen in the GitHub Discussions board linked below.
+          Start with the contributor guide in the repository README and review the project&apos;s
+          code of conduct. All discussions happen in the GitHub Discussions board linked below.
         </div>
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground">Open issues</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Open issues
+          </h3>
           {isRateLimited ? (
             <p className="text-sm text-muted-foreground">
               GitHub rate limit reached. Try again in a few minutes or check the repo directly.
@@ -426,7 +482,10 @@ function ToolContributing({
           ) : issues && issues.length > 0 ? (
             <ul className="space-y-3">
               {issues.map((issue) => (
-                <li key={issue.id} className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm">
+                <li
+                  key={issue.id}
+                  className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm"
+                >
                   <div className="flex items-center justify-between gap-3">
                     <a
                       href={issue.htmlUrl}
@@ -457,7 +516,8 @@ function ToolContributing({
             </ul>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No issues tagged &ldquo;good first issue&rdquo; right now. Check the backlog on GitHub for other opportunities.
+              No issues tagged &ldquo;good first issue&rdquo; right now. Check the backlog on GitHub
+              for other opportunities.
             </p>
           )}
         </div>

@@ -44,9 +44,9 @@ export default function HomePage() {
       badge: 'Training Lab',
       title: 'Rigid Bronchoscopy Foundations',
       description:
-        'Simulation-forward curriculum with checklists, video briefs, and competency tracking for scope rehearsal.',
-      href: '/training/rigid-bronchoscopy-foundations',
-      cta: 'Launch Module',
+        'Simulation-forward curriculum with checklists, video briefs, and competency tracking for scope rehearsal. Returning soon with expanded facilitator support.',
+      href: '/coming-soon',
+      cta: 'Preview updates',
     },
   ] as const
 
@@ -96,7 +96,7 @@ export default function HomePage() {
                   <Link href="/board-prep">Board Review Library</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-full px-6">
-                  <Link href="/training/rigid-bronchoscopy-foundations">Rigid Bronch Lab</Link>
+                  <Link href="/coming-soon">Rigid Bronch Lab (coming soon)</Link>
                 </Button>
               </div>
             </div>
@@ -143,12 +143,12 @@ export default function HomePage() {
                   </h3>
                   <p className="text-sm text-slate-200/80">
                     Downloadable checklists, video walk-throughs, and analytics-ready competency
-                    tracking for your next scope rehearsal.
+                    tracking are being rebuilt into a dedicated facilitator experience.
                   </p>
                 </div>
               </div>
               <Button asChild variant="secondary" className="mt-6 w-fit">
-                <Link href="/training/rigid-bronchoscopy-foundations">Open training module</Link>
+                <Link href="/coming-soon">Follow progress</Link>
               </Button>
             </div>
           </div>

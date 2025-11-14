@@ -3,13 +3,11 @@ import type { Route } from 'next'
 
 type InternalFooterHref =
   | '/'
-  | '/tools'
-  | '/make'
   | '/board-prep'
   | '/fluoroview'
   | '/learn/anatomy'
-  | '/training'
-  | '/community/contributors'
+  | '/resources/creative-commons'
+  | '/coming-soon'
   | '/privacy'
   | '/terms'
   | '/community/code-of-conduct'
@@ -33,9 +31,13 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     title: 'Explore',
     links: [
       { label: 'Home', href: '/', route: '/' },
-      { label: 'Tools', href: '/tools', route: '/tools' },
-      { label: 'DIY Lab', href: '/make', route: '/make' },
       { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
+      {
+        label: 'Resources',
+        href: '/resources/creative-commons',
+        route: '/resources/creative-commons',
+      },
+      { label: 'Coming Soon', href: '/coming-soon', route: '/coming-soon' },
     ],
   },
   {
@@ -43,20 +45,21 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     links: [
       { label: '3D Anatomy Viewer', href: '/learn/anatomy', route: '/learn/anatomy' },
       { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
-      { label: 'Training Modules', href: '/training', route: '/training' },
-      { label: 'Guides', href: '/tools', route: '/tools' },
+      { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
+      {
+        label: 'Resources',
+        href: '/resources/creative-commons',
+        route: '/resources/creative-commons',
+      },
     ],
   },
   {
-    title: 'Community',
+    title: 'Coming Soon',
     links: [
-      { label: 'Contributors', href: '/community/contributors', route: '/community/contributors' },
-      { label: 'GitHub', href: 'https://github.com/interventional-pulm', external: true },
-      {
-        label: 'Discussions',
-        href: 'https://github.com/orgs/interventional-pulm/discussions',
-        external: true,
-      },
+      { label: 'Tools suite', href: '/coming-soon', route: '/coming-soon' },
+      { label: 'DIY Lab guides', href: '/coming-soon', route: '/coming-soon' },
+      { label: 'Simulation training', href: '/coming-soon', route: '/coming-soon' },
+      { label: 'Community hub', href: '/coming-soon', route: '/coming-soon' },
     ],
   },
 ]

@@ -16,18 +16,19 @@ import { ModeToggle } from './mode-toggle'
 import { SearchShortcut } from './SearchShortcut'
 
 const navigationItems: NavItem[] = [
-  { title: 'Tools', href: '/tools', description: 'Explore open-source software' },
-  { title: 'Make', href: '/make', description: 'DIY simulators and hardware' },
   { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },
-  { title: 'Training', href: '/training', description: 'Modules and curricula' },
   {
     title: 'Resources',
     href: '/resources/creative-commons',
-    description: 'Medical images & resources',
+    description: 'Creative Commons assets & study aids',
   },
-  { title: 'Community', href: '/community/contributors', description: 'Contributors and events' },
+  {
+    title: 'Coming Soon',
+    href: '/coming-soon',
+    description: 'Tools, DIY Lab, training modules, and community features in progress',
+  },
 ]
 
 export function Navigation() {
@@ -39,7 +40,7 @@ export function Navigation() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/tools?q=${encodeURIComponent(searchQuery.trim())}`)
+      router.push(`/resources/creative-commons?q=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
     }
   }
@@ -90,10 +91,10 @@ export function Navigation() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search tools, guides, and modules"
+            placeholder="Search resources and guides"
             leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
             className="w-64 text-sm"
-            aria-label="Search tools, guides, and modules"
+            aria-label="Search resources and guides"
           />
         </form>
         <div className="hidden lg:flex items-center">

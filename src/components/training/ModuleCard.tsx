@@ -28,7 +28,10 @@ export function ModuleCard({ module }: ModuleCardProps) {
     <Card className="flex h-full flex-col justify-between border-border/70 bg-card/80">
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
+          <Badge
+            variant="secondary"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]"
+          >
             {categoryLabels[module.category]}
           </Badge>
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
@@ -61,12 +64,14 @@ export function ModuleCard({ module }: ModuleCardProps) {
         </ul>
       </CardContent>
       <CardFooter className="flex items-center justify-between border-t border-border/60 bg-muted/20 p-4">
-        <span className="text-xs text-muted-foreground">Prereqs: {module.prerequisites.length}</span>
+        <span className="text-xs text-muted-foreground">
+          Prereqs: {module.prerequisites.length}
+        </span>
         <Link
-          href={`/training/${module.slug}`}
+          href="/coming-soon"
           className="text-sm font-semibold text-primary transition hover:text-primary/80"
         >
-          View module →
+          Coming soon →
         </Link>
       </CardFooter>
     </Card>

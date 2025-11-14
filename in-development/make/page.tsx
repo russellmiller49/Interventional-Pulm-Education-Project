@@ -14,7 +14,10 @@ export default function MakePage() {
     <div className="space-y-16 py-16">
       <section className="container grid gap-10 overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-8 md:grid-cols-[1.2fr_0.8fr] md:p-12">
         <div className="space-y-6">
-          <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
+          <Badge
+            variant="info"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]"
+          >
             Featured project
           </Badge>
           <div className="space-y-4">
@@ -24,9 +27,7 @@ export default function MakePage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <a href={`/api/download/${project.downloads[0].id}`}>
-                Download STL pack
-              </a>
+              <a href={`/api/download/${project.downloads[0].id}`}>Download STL pack</a>
             </Button>
             <Button asChild size="lg" variant="outline">
               <a href="#build-guide">Jump to build guide</a>
@@ -43,11 +44,18 @@ export default function MakePage() {
         </div>
         <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-primary/20 to-amber-500/20">
           {project.heroImage ? (
-            <Image src={project.heroImage} alt={project.title} fill className="object-cover mix-blend-screen" sizes="(min-width: 768px) 480px, 100vw" />
+            <Image
+              src={project.heroImage}
+              alt={project.title}
+              fill
+              className="object-cover mix-blend-screen"
+              sizes="(min-width: 768px) 480px, 100vw"
+            />
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-br from-background/20 via-transparent to-background/40" />
           <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-border/60 bg-background/70 p-4 text-xs text-muted-foreground">
-            Built for: FDM printers ≥200 mm bed, Arduino Nano, peristaltic pump, modular airway cartridges.
+            Built for: FDM printers ≥200 mm bed, Arduino Nano, peristaltic pump, modular airway
+            cartridges.
           </div>
         </div>
       </section>
@@ -56,7 +64,8 @@ export default function MakePage() {
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl font-semibold tracking-tight">Download kit</h2>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Each download routes through the future analytics-enabled API. Re-print, remix, and share improvements with the community.
+            Each download routes through the future analytics-enabled API. Re-print, remix, and
+            share improvements with the community.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -78,7 +87,12 @@ export default function MakePage() {
             {project.resources.map((resource) => (
               <Card key={resource.href} className="border-border/60 bg-card/80">
                 <CardContent className="space-y-2 p-4 text-sm text-muted-foreground">
-                  <a href={resource.href} target="_blank" rel="noreferrer" className="text-base font-semibold text-foreground transition hover:text-primary">
+                  <a
+                    href={resource.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-base font-semibold text-foreground transition hover:text-primary"
+                  >
                     {resource.label}
                   </a>
                   {resource.description ? <p>{resource.description}</p> : null}
@@ -98,7 +112,8 @@ export default function MakePage() {
             </p>
           ))}
           <p className="text-xs text-muted-foreground/80">
-            Downloads will route through /api/download/[fileId] once the M11 analytics backend is online. Until then, files are served directly.
+            Downloads will route through /api/download/[fileId] once the M11 analytics backend is
+            online. Until then, files are served directly.
           </p>
         </div>
       </section>

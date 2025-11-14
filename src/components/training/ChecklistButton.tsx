@@ -7,11 +7,28 @@ import { Button } from '@/components/ui/button'
 interface ChecklistButtonProps {
   moduleTitle: string
   items: string[]
+  downloadUrl?: string
+  label?: string
 }
 
-export function ChecklistButton({ moduleTitle, items }: ChecklistButtonProps) {
+export function ChecklistButton({
+  moduleTitle,
+  items,
+  downloadUrl,
+  label = 'Download checklist (PDF)',
+}: ChecklistButtonProps) {
   const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  if (downloadUrl) {
+    return (
+      <Button asChild variant="outline">
+        <a href={downloadUrl} download target="_blank" rel="noopener noreferrer">
+          {label}
+        </a>
+      </Button>
+    )
+  }
 
   const handleGenerate = async () => {
     try {
@@ -60,7 +77,7 @@ export function ChecklistButton({ moduleTitle, items }: ChecklistButtonProps) {
   return (
     <div className="space-y-2">
       <Button onClick={handleGenerate} disabled={!items.length || downloading} variant="outline">
-        {downloading ? 'Generating…' : 'Download checklist (PDF)'}
+        {downloading ? 'Generating…' : label}
       </Button>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>

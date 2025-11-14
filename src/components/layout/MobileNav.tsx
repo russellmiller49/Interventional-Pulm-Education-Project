@@ -58,7 +58,7 @@ export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps
           <SheetHeader className="space-y-1">
             <SheetTitle className="text-lg">Navigate</SheetTitle>
             <SheetDescription>
-              Explore tools, board prep modules, and community updates.
+              Explore board prep chapters, anatomy resources, and see what&apos;s coming next.
             </SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-6 overflow-y-auto">

@@ -130,6 +130,8 @@ export interface TrainingModule {
   equipment: string[]
   tags: string[]
   outcomes: string[]
+  checklistDownloadUrl?: string
+  checklistDownloadLabel?: string
   sections: TrainingModuleSection[]
   quiz?: {
     title: string
