@@ -218,7 +218,6 @@ H --> M{Expandable lung?}
 M -- Yes --> N[Talc pleurodesis (slurry or poudrage) or IPC per goals]
 M -- No (trapped) --> O[IPC]
 
-
 Parallel bulleted algorithm
 
 Confirm clinical context; if classic transudate (e.g., CHF) and improves with therapy, thoracentesis may be deferred.
@@ -250,7 +249,6 @@ K & L --> M{Ready for removal?}
 M -- Pneumothorax: no air leak + expansion --> N[Remove]
 M -- Effusion: output ≤100–200 mL/24 h + expansion --> N[Remove]
 
-
 Parallel bulleted algorithm
 
 Air: primary SP → aspiration or small‑bore tube; ambulatory device in selected, reliable patients. Secondary SP/trauma → small‑bore for most; large‑bore if massive leak/vent/instability.
@@ -263,54 +261,46 @@ Removal: with expansion and appropriate thresholds (no air leak; or output ≤10
 
 Tables & Quick‑Reference Boxes
 Table 1. Pleural Fluid Classification & Frequent Etiologies (High‑Yield)
-Category	Key Tests/Clues	Common Etiologies
-Transudate	Meets none of Light’s criteria; often bilateral	CHF, cirrhosis (± ascites), nephrotic syndrome, peritoneal dialysis, hypoalbuminemia, atelectasis, constrictive pericarditis, urinothorax
-Exudate	Any Light criterion positive (protein or LDH based)	Parapneumonic/empyema, malignancy (lung, breast, lymphoma, mesothelioma), TB, rheumatoid/lupus pleuritis, pancreatitis, PE/infarction, chylothorax, drug-induced, post‑cardiac injury
-Clues	Very low pH/glucose → complicated infection; high ADA → TB (contextual); high amylase → esophageal rupture/pancreas; milky + high TG → chylothorax	Use clinical context to refine differential; proceed to image‑guided biopsy/MT if needed
+Category Key Tests/Clues Common Etiologies
+Transudate Meets none of Light’s criteria; often bilateral CHF, cirrhosis (± ascites), nephrotic syndrome, peritoneal dialysis, hypoalbuminemia, atelectasis, constrictive pericarditis, urinothorax
+Exudate Any Light criterion positive (protein or LDH based) Parapneumonic/empyema, malignancy (lung, breast, lymphoma, mesothelioma), TB, rheumatoid/lupus pleuritis, pancreatitis, PE/infarction, chylothorax, drug-induced, post‑cardiac injury
+Clues Very low pH/glucose → complicated infection; high ADA → TB (contextual); high amylase → esophageal rupture/pancreas; milky + high TG → chylothorax Use clinical context to refine differential; proceed to image‑guided biopsy/MT if needed
 
 Abbreviations: ADA, adenosine deaminase; CHF, congestive heart failure; LDH, lactate dehydrogenase; PE, pulmonary embolism; TG, triglyceride.
 
 Table 2. Thoracentesis Safety & Technique Checklist
-Phase	Checklist Items
-Pre‑procedure	Review imaging & labs; anticoagulants/antiplatelets plan; consent/time‑out; monitor & oxygen available; position patient; resuscitation equipment ready
-Ultrasound mapping	Confirm fluid pocket depth, diaphragmatic motion, spleen/liver position; avoid posterior “danger zone”; mark interspace
-Sterile set‑up	Hand hygiene; full barrier; chlorhexidine prep; drape
-Anesthesia & entry	Create wheal; infiltrate along tract; needle just above rib; continuous aspiration into pleura
-Drainage	Gentle manual aspiration or controlled vacuum; consider manometry; stop for chest pain/relentless cough or Ppl ≤ −20 cm H₂O
-Completion	Remove on end‑expiration; occlusive dressing; post‑procedure ultrasound; no routine CXR unless concern
-Complication watch	Symptoms/signs of pneumothorax, bleeding, vasovagal, RPE; manage promptly
+Phase Checklist Items
+Pre‑procedure Review imaging & labs; anticoagulants/antiplatelets plan; consent/time‑out; monitor & oxygen available; position patient; resuscitation equipment ready
+Ultrasound mapping Confirm fluid pocket depth, diaphragmatic motion, spleen/liver position; avoid posterior “danger zone”; mark interspace
+Sterile set‑up Hand hygiene; full barrier; chlorhexidine prep; drape
+Anesthesia & entry Create wheal; infiltrate along tract; needle just above rib; continuous aspiration into pleura
+Drainage Gentle manual aspiration or controlled vacuum; consider manometry; stop for chest pain/relentless cough or Ppl ≤ −20 cm H₂O
+Completion Remove on end‑expiration; occlusive dressing; post‑procedure ultrasound; no routine CXR unless concern
+Complication watch Symptoms/signs of pneumothorax, bleeding, vasovagal, RPE; manage promptly
 
 Abbreviations: Ppl, pleural pressure; RPE, re‑expansion pulmonary edema.
 
 Table 3. Small‑Bore vs Large‑Bore Chest Tubes: How to Choose
-Scenario	Recommended Bore	Rationale/Evidence Pearls
-Pleural infection	Small‑bore (≤14 F)	Similar outcomes; less pain; early antibiotics + drainage key; tPA/DNase if needed
-MPE – inpatient drainage or talc slurry	Small‑bore	Efficient drainage; equivalent pleurodesis success to larger tubes
-MPE – outpatient palliation	IPC	Reduces hospital days; effective dyspnea control; compatible with non‑expandable lung
-Primary SP (symptomatic)	Small‑bore	Appropriate for most; aspiration alternative; ambulatory devices for select primary SP
-Secondary SP or ventilated, traumatic, massive leak	Consider large‑bore	Flow & clogging concerns; tailor to leak magnitude
-Hemothorax – unstable/massive	Large‑bore	Rapid evacuation; lower clogging risk
-Hemothorax – stable/non‑emergent	14 F acceptable	Comparable evacuation success with less pain in selected settings
+Scenario Recommended Bore Rationale/Evidence Pearls
+Pleural infection Small‑bore (≤14 F) Similar outcomes; less pain; early antibiotics + drainage key; tPA/DNase if needed
+MPE – inpatient drainage or talc slurry Small‑bore Efficient drainage; equivalent pleurodesis success to larger tubes
+MPE – outpatient palliation IPC Reduces hospital days; effective dyspnea control; compatible with non‑expandable lung
+Primary SP (symptomatic) Small‑bore Appropriate for most; aspiration alternative; ambulatory devices for select primary SP
+Secondary SP or ventilated, traumatic, massive leak Consider large‑bore Flow & clogging concerns; tailor to leak magnitude
+Hemothorax – unstable/massive Large‑bore Rapid evacuation; lower clogging risk
+Hemothorax – stable/non‑emergent 14 F acceptable Comparable evacuation success with less pain in selected settings
 
 Abbreviations: IPC, indwelling pleural catheter; MPE, malignant pleural effusion; SP, spontaneous pneumothorax.
 
 Table 4. Pleural Drainage Systems & Suction: Practical Points
-Component	What It Does	Practical Notes
-Collection chamber	Captures air/fluid	Monitor volume/character; trend outputs
-Water‑seal	One‑way valve	Continuous bubbling = active air leak
-Suction control (wet/dry or digital)	Applies negative pressure	Use selectively; −10 to −20 cm H₂O typical; digital systems quantify leak & regulate suction
-High‑negativity vent / positive‑pressure relief	Safety features	Prevents excessive negative pressure; avoids tension with disconnection
-Water seal vs suction	Default vs escalation	No routine suction for pneumothorax; consider water seal first; suction may hasten drainage but carries trade‑offs
+Component What It Does Practical Notes
+Collection chamber Captures air/fluid Monitor volume/character; trend outputs
+Water‑seal One‑way valve Continuous bubbling = active air leak
+Suction control (wet/dry or digital) Applies negative pressure Use selectively; −10 to −20 cm H₂O typical; digital systems quantify leak & regulate suction
+High‑negativity vent / positive‑pressure relief Safety features Prevents excessive negative pressure; avoids tension with disconnection
+Water seal vs suction Default vs escalation No routine suction for pneumothorax; consider water seal first; suction may hasten drainage but carries trade‑offs
 
 Abbreviations: cm H₂O, centimeters of water.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure A. Thoracic ultrasound of right pleural effusion. Caption: Anechoic space above diaphragm with dynamic lung movement; pre‑tap survey defines depth and safe window. Alt text: Ultrasound clip of pleural effusion with diaphragm and spleen.
-
-Figure B. Seldinger small‑bore catheter kit and 3‑chamber system. Caption: Typical contents and system components (collection, water‑seal, suction control). Alt text: Photo of pigtail kit and drainage unit.
-
-Figure C. Pleural manometry tracing patterns. Caption: Normal elastance (minimal pressure change), lung entrapment (late steep drop), trapped lung (negative baseline). Alt text: Three overlaid pressure–volume curves.
 
 Cases & Applied Learning
 
@@ -332,100 +322,100 @@ Why: Non‑expandable lung favors IPC for outpatient palliation and fewer hospit
 Question Bank (12 MCQs)
 
 1. A 67‑year‑old with a new unilateral effusion and no clear systemic cause. Best initial diagnostic step?
-A. CT pulmonary angiography
-B. Blind thoracentesis at the posterior axillary line
-C. Ultrasound‑guided diagnostic thoracentesis
-D. Immediate IPC placement
-E. PET‑CT
-Answer: C. Ultrasound guidance is standard, increases success, and reduces pneumothorax; diagnostic sampling directs further care.
+   A. CT pulmonary angiography
+   B. Blind thoracentesis at the posterior axillary line
+   C. Ultrasound‑guided diagnostic thoracentesis
+   D. Immediate IPC placement
+   E. PET‑CT
+   Answer: C. Ultrasound guidance is standard, increases success, and reduces pneumothorax; diagnostic sampling directs further care.
 
 2. During therapeutic thoracentesis, the patient develops pleuritic chest pain and persistent cough after 1.3 L removed; manometry shows Ppl −22 cm H₂O. Next best step?
-A. Continue drainage to dryness
-B. Stop drainage; supportive care; consider staged drainage
-C. Start suction to speed drainage
-D. Give loop diuretic and proceed
-E. Convert to chest tube
-Answer: B. Pain + very negative pressure suggests risk for RPE—stop/clamp and support.
+   A. Continue drainage to dryness
+   B. Stop drainage; supportive care; consider staged drainage
+   C. Start suction to speed drainage
+   D. Give loop diuretic and proceed
+   E. Convert to chest tube
+   Answer: B. Pain + very negative pressure suggests risk for RPE—stop/clamp and support.
 
 3. Which post‑thoracentesis patient needs a chest radiograph?
-A. Uneventful single‑pass tap with good symptom relief
-B. Aspiration of air bubbles during the procedure
-C. Small vasovagal episode resolved with Trendelenburg
-D. None; always omit CXR
-E. All patients
-Answer: B. Imaging is reserved for concern such as air aspiration, difficult tap, symptoms, or specific risk factors.
+   A. Uneventful single‑pass tap with good symptom relief
+   B. Aspiration of air bubbles during the procedure
+   C. Small vasovagal episode resolved with Trendelenburg
+   D. None; always omit CXR
+   E. All patients
+   Answer: B. Imaging is reserved for concern such as air aspiration, difficult tap, symptoms, or specific risk factors.
 
 4. Procedural troubleshooting. You cannot aspirate fluid despite ultrasound‑confirmed effusion at 4 cm depth. Best next action?
-A. Convert to large‑bore chest tube
-B. Re‑scan to confirm window; check catheter for kinking; ensure entry just above rib; consider a more posterior/lateral site
-C. Apply wall suction
-D. Ask the patient to cough
-E. Immediate CT
-Answer: B. Trouble‑shoot the tract and device; ultrasound rescues most “dry taps.”
+   A. Convert to large‑bore chest tube
+   B. Re‑scan to confirm window; check catheter for kinking; ensure entry just above rib; consider a more posterior/lateral site
+   C. Apply wall suction
+   D. Ask the patient to cough
+   E. Immediate CT
+   Answer: B. Trouble‑shoot the tract and device; ultrasound rescues most “dry taps.”
 
 5. A 60‑year‑old with complicated parapneumonic effusion has persistent sepsis and multiloculations after 48 h of small‑bore drainage. Best escalation?
-A. Replace with 28 F tube
-B. Intrapleural tPA/DNase
-C. Start routine suction at −40 cm H₂O
-D. Remove tube; repeat thoracentesis
-E. Observe another 72 h
-Answer: B. Fibrinolytics enhance drainage; routine large‑bore replacement alone does not improve outcomes.
+   A. Replace with 28 F tube
+   B. Intrapleural tPA/DNase
+   C. Start routine suction at −40 cm H₂O
+   D. Remove tube; repeat thoracentesis
+   E. Observe another 72 h
+   Answer: B. Fibrinolytics enhance drainage; routine large‑bore replacement alone does not improve outcomes.
 
 6. In MPE with expandable lung, which option best minimizes inpatient days while maintaining symptom control?
-A. Serial thoracenteses only
-B. Indwelling pleural catheter
-C. Talc poudrage via thoracoscopy only
-D. Large‑bore chest tube on suction
-E. NSAIDs and observation
-Answer: B. IPCs reduce hospital days; pleurodesis is reasonable when inpatient and expandable lung, but IPC is often superior for outpatient burden.
+   A. Serial thoracenteses only
+   B. Indwelling pleural catheter
+   C. Talc poudrage via thoracoscopy only
+   D. Large‑bore chest tube on suction
+   E. NSAIDs and observation
+   Answer: B. IPCs reduce hospital days; pleurodesis is reasonable when inpatient and expandable lung, but IPC is often superior for outpatient burden.
 
 7. Chest drain management for secondary SP on the ward with steady air leak and no distress. Which is preferred?
-A. Water seal without routine suction, monitor air leak
-B. Immediate −40 cm H₂O suction
-C. Clamp the tube
-D. Remove the tube
-E. Switch to a Heimlich valve for discharge
-Answer: A. Suction is not routinely recommended; water seal is often adequate.
+   A. Water seal without routine suction, monitor air leak
+   B. Immediate −40 cm H₂O suction
+   C. Clamp the tube
+   D. Remove the tube
+   E. Switch to a Heimlich valve for discharge
+   Answer: A. Suction is not routinely recommended; water seal is often adequate.
 
 8. Stable hemothorax after blunt trauma in a monitored setting. Best initial drain choice?
-A. 14 F small‑bore catheter
-B. 28–32 F chest tube mandatory
-C. IPC
-D. Thoracentesis
-E. Observe only
-Answer: A. In stable, non‑emergent hemothorax, 14 F shows comparable evacuation with less pain; unstable/massive → large‑bore.
+   A. 14 F small‑bore catheter
+   B. 28–32 F chest tube mandatory
+   C. IPC
+   D. Thoracentesis
+   E. Observe only
+   Answer: A. In stable, non‑emergent hemothorax, 14 F shows comparable evacuation with less pain; unstable/massive → large‑bore.
 
 9. Which finding most strongly suggests trapped lung during thoracentesis?
-A. Late precipitous pressure drop after initial normal pressure
-B. Negative baseline pleural pressure with minimal change despite drainage
-C. Pleural pressure remains slightly positive after 2 L removed
-D. High ADA level
-E. Cloudy fluid with high LDH
-Answer: B. Negative starting Ppl with little change indicates trapped lung.
+   A. Late precipitous pressure drop after initial normal pressure
+   B. Negative baseline pleural pressure with minimal change despite drainage
+   C. Pleural pressure remains slightly positive after 2 L removed
+   D. High ADA level
+   E. Cloudy fluid with high LDH
+   Answer: B. Negative starting Ppl with little change indicates trapped lung.
 
 10. Best next step for a patient with recurrent MPE, poor performance status, and non‑expandable lung after a complete tap?
-A. Talc slurry pleurodesis via small‑bore tube
-B. Talc poudrage via thoracoscopy
-C. IPC placement
-D. Repeat thoracentesis every few days
-E. Pleurectomy
-Answer: C. IPC is preferred for trapped/non‑expandable lung.
+    A. Talc slurry pleurodesis via small‑bore tube
+    B. Talc poudrage via thoracoscopy
+    C. IPC placement
+    D. Repeat thoracentesis every few days
+    E. Pleurectomy
+    Answer: C. IPC is preferred for trapped/non‑expandable lung.
 
 11. After small‑bore tube placement for empyema, drainage suddenly stops; the patient develops subcutaneous emphysema. First action?
-A. Clamp the tube
-B. Apply high suction
-C. Check for kinks/malposition; flush the catheter; verify that side ports are intrapleural
-D. Remove the tube immediately
-E. Place a second large‑bore tube
-Answer: C. Troubleshoot system and tube position first.
+    A. Clamp the tube
+    B. Apply high suction
+    C. Check for kinks/malposition; flush the catheter; verify that side ports are intrapleural
+    D. Remove the tube immediately
+    E. Place a second large‑bore tube
+    Answer: C. Troubleshoot system and tube position first.
 
 12. Which statement about pleurodesis in MPE is most accurate?
-A. Talc poudrage is clearly superior to talc slurry
-B. Talc slurry via small‑bore tube and talc poudrage have similar success when properly selected
-C. Large‑bore tubes improve pleurodesis rates
-D. Pleurodesis is preferred for non‑expandable lung
-E. Suction is required for all pleurodeses
-Answer: B. Both strategies are acceptable; tube size does not determine success, and trapped lung favors IPC rather than pleurodesis.
+    A. Talc poudrage is clearly superior to talc slurry
+    B. Talc slurry via small‑bore tube and talc poudrage have similar success when properly selected
+    C. Large‑bore tubes improve pleurodesis rates
+    D. Pleurodesis is preferred for non‑expandable lung
+    E. Suction is required for all pleurodeses
+    Answer: B. Both strategies are acceptable; tube size does not determine success, and trapped lung favors IPC rather than pleurodesis.
 
 Controversies, Variability, and Evolving Evidence
 

@@ -206,7 +206,6 @@ J --> L[Adjuvant IO if peri-adjuvant regimen used per protocol]
 E --> M[No PORT unless positive margin (R1)]
 D --> M
 
-
 Parallel bullets (Algorithm 1)
 
 Confirm stage with CT/PET; evaluate mediastinum.
@@ -240,7 +239,6 @@ H --> I{VO2peak acceptable?}
 I -- Yes (borderline) --> J[Consider limited resection/SBRT/ablation]
 I -- No --> K[Non‑surgical local therapy (SBRT; ablation)]
 
-
 Parallel bullets (Algorithm 2)
 
 Obtain FEV₁ & DLCO in all; if either <80%, compute ppo (segment counting or perfusion).
@@ -253,50 +251,43 @@ Tables & Quick‑Reference Boxes
 
 Table 1. Choosing the Surgical Approach in Early‑Stage NSCLC
 
-Clinical Setting	Preferred Procedure	Key Requirements	Notes
-≤2 cm, peripheral, cT1N0	Segmentectomy	Frozen‑section confirmation of N0; lobe‑specific nodal sampling	Similar survival to lobectomy in modern RCTs; slightly higher loco‑regional relapse; preserves lung.
->2 cm or central; N1 identified	Lobectomy	Systematic lobe‑specific nodal assessment	Sleeve resection preferred over pneumonectomy when feasible.
-Frail/limited reserve	Sublobar or SBRT	Individualized; discuss trade‑offs	Comparable disease control for select small lesions with functional gains.
+Clinical Setting Preferred Procedure Key Requirements Notes
+≤2 cm, peripheral, cT1N0 Segmentectomy Frozen‑section confirmation of N0; lobe‑specific nodal sampling Similar survival to lobectomy in modern RCTs; slightly higher loco‑regional relapse; preserves lung.
+
+> 2 cm or central; N1 identified Lobectomy Systematic lobe‑specific nodal assessment Sleeve resection preferred over pneumonectomy when feasible.
+> Frail/limited reserve Sublobar or SBRT Individualized; discuss trade‑offs Comparable disease control for select small lesions with functional gains.
 
 Abbreviations: cT, clinical tumor; N, nodes; RCT, randomized controlled trial; SBRT, stereotactic body radiation therapy.
 
 Table 2. Perioperative Systemic Therapy—Board‑Style Summary
 
-Strategy	Eligible Stages	Backbone	Key Outcomes (directionality)
-Neoadjuvant chemo‑IO (e.g., nivolumab + platinum doublet)	Resectable IB (≥4 cm)–IIIA (no EGFR/ALK)	3–4 cycles platinum doublet + anti–PD‑1	↑ pCR (~five‑ to ten‑fold vs chemo alone); ↑ EFS; acceptable surgical safety.
-Peri‑adjuvant regimens (e.g., pembrolizumab or durvalumab with neo + adjuvant IO)	Resectable stage II–III (no EGFR/ALK)	Neo chemo‑IO → surgery → 1 yr IO	Further ↑ EFS vs neo alone; pCR ~17–25%.
-Adjuvant IO after chemo (e.g., atezolizumab; pembrolizumab)	Resected IB–IIIA (benefit enriched in II–IIIA; variable by PD‑L1)	1 yr IO after standard chemo	↑ DFS in ITT or PD‑L1‑selected cohorts; OS maturing.
-Adjuvant targeted (osimertinib; alectinib)	Resected IB–IIIA EGFR 19del/L858R; ALK+	2–3 yr TKI after surgery ± chemo	Marked ↑ DFS; CNS protection with EGFR‑TKI.
+Strategy Eligible Stages Backbone Key Outcomes (directionality)
+Neoadjuvant chemo‑IO (e.g., nivolumab + platinum doublet) Resectable IB (≥4 cm)–IIIA (no EGFR/ALK) 3–4 cycles platinum doublet + anti–PD‑1 ↑ pCR (~five‑ to ten‑fold vs chemo alone); ↑ EFS; acceptable surgical safety.
+Peri‑adjuvant regimens (e.g., pembrolizumab or durvalumab with neo + adjuvant IO) Resectable stage II–III (no EGFR/ALK) Neo chemo‑IO → surgery → 1 yr IO Further ↑ EFS vs neo alone; pCR ~17–25%.
+Adjuvant IO after chemo (e.g., atezolizumab; pembrolizumab) Resected IB–IIIA (benefit enriched in II–IIIA; variable by PD‑L1) 1 yr IO after standard chemo ↑ DFS in ITT or PD‑L1‑selected cohorts; OS maturing.
+Adjuvant targeted (osimertinib; alectinib) Resected IB–IIIA EGFR 19del/L858R; ALK+ 2–3 yr TKI after surgery ± chemo Marked ↑ DFS; CNS protection with EGFR‑TKI.
 
 Abbreviations: IO, immunotherapy; EFS, event‑free survival; pCR, pathologic complete response; ITT, intention‑to‑treat; TKI, tyrosine kinase inhibitor.
 
 Table 3. Surgery vs SBRT vs Ablation—At‑a‑Glance
 
-Feature	Surgery	SBRT	Ablation (RFA/MWA/Cryo)
-Ideal candidate	Operable stage I–II	Medically inoperable peripheral stage I	High‑risk patients, prior RT field, oligometastatic/oligoprogressive disease
-Local control	Excellent; depends on margins & nodal status	~90–95% for small peripheral tumors	Good for ≤3 cm; cryo favored near critical structures
-Morbidity	Procedural risks (air leak, pneumonia, arrhythmia)	Low acute; risk of pneumonitis/esophagitis (central)	Pneumothorax common; hemorrhage; BPF (lower with cryo)
-Recovery	Longer initial recovery; durable	Outpatient/short course (1–5 fractions)	Outpatient; rapid recovery
-Role in drivers	Enables path staging & tissue for molecular tests	No	Can pair with biopsy at time of ablation
+Feature Surgery SBRT Ablation (RFA/MWA/Cryo)
+Ideal candidate Operable stage I–II Medically inoperable peripheral stage I High‑risk patients, prior RT field, oligometastatic/oligoprogressive disease
+Local control Excellent; depends on margins & nodal status ~90–95% for small peripheral tumors Good for ≤3 cm; cryo favored near critical structures
+Morbidity Procedural risks (air leak, pneumonia, arrhythmia) Low acute; risk of pneumonitis/esophagitis (central) Pneumothorax common; hemorrhage; BPF (lower with cryo)
+Recovery Longer initial recovery; durable Outpatient/short course (1–5 fractions) Outpatient; rapid recovery
+Role in drivers Enables path staging & tissue for molecular tests No Can pair with biopsy at time of ablation
 
 Abbreviations: RFA, radiofrequency ablation; MWA, microwave ablation; Cryo, cryoablation; BPF, bronchopleural fistula.
 
 Table 4. Thermal Ablation—Technique Pearls
 
-Modality	Best Uses	Technical Tips	Caveats
-RFA	≤3 cm lesions	Central → peripheral overlapping ablations; cooled tips	Heat‑sink near vessels can limit efficacy
-MWA	3–5 cm lesions; need larger zone	Multiple antennas; shorter time; less impacted by charring	Greater collateral heat; device variability
-Cryo	Lesions near airway/vessels	Multiple probes ≤2 cm apart; triple‑freeze; visualize ice‑ball	Longer procedure; general anesthesia for central targets
+Modality Best Uses Technical Tips Caveats
+RFA ≤3 cm lesions Central → peripheral overlapping ablations; cooled tips Heat‑sink near vessels can limit efficacy
+MWA 3–5 cm lesions; need larger zone Multiple antennas; shorter time; less impacted by charring Greater collateral heat; device variability
+Cryo Lesions near airway/vessels Multiple probes ≤2 cm apart; triple‑freeze; visualize ice‑ball Longer procedure; general anesthesia for central targets
 
 Abbreviations: RFA, radiofrequency ablation; MWA, microwave ablation.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Pre‑operative CT of a 1.6 cm peripheral RUL nodule with no nodal enlargement. Alt text: Axial CT showing small subpleural solid nodule suitable for segmentectomy or SBRT.
-
-Figure 2. SBRT planning isodose lines for a peripheral lower‑lobe tumor. Alt text: 3D conformal dose distribution around ITV/PTV with lung sparing.
-
-Figure 3. CT‑guided cryoablation—ice‑ball encapsulating a medial lower‑lobe lesion. Alt text: Low‑attenuation ice‑ball encompassing lesion with safe margins from bronchus intermedius.
 
 Cases & Applied Learning
 

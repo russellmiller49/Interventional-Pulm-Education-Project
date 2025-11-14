@@ -235,31 +235,31 @@ B. Positive Screen (bullet pathway)
 
 Tables & Quick‑Reference Boxes
 Table 1. Who to Screen and When to Stop (Snapshot)
-Guideline	Start Age	Smoking Exposure	Quit Limit	Stop
-USPSTF	50–80	≥20 pack‑years	<15 years	After 15 smoke‑free years or if not a candidate for curative therapy
-CMS/Medicare (coverage)	50–77	≥20 pack‑years	<15 years	Coverage policies apply; same clinical stop rules as USPSTF
-NCCN	≥50	≥20 pack‑years; clinical risk considered	Not fixed	Individualized if fit for curative therapy
-ACS 2023	50+	≥20 pack‑years	None	Individualized; continue if life expectancy ≥5 years and patient is fit
+Guideline Start Age Smoking Exposure Quit Limit Stop
+USPSTF 50–80 ≥20 pack‑years <15 years After 15 smoke‑free years or if not a candidate for curative therapy
+CMS/Medicare (coverage) 50–77 ≥20 pack‑years <15 years Coverage policies apply; same clinical stop rules as USPSTF
+NCCN ≥50 ≥20 pack‑years; clinical risk considered Not fixed Individualized if fit for curative therapy
+ACS 2023 50+ ≥20 pack‑years None Individualized; continue if life expectancy ≥5 years and patient is fit
 
 Abbreviations: ACS, American Cancer Society; CMS, Centers for Medicare & Medicaid Services; NCCN, National Comprehensive Cancer Network; USPSTF, U.S. Preventive Services Task Force.
 
 Table 2. Lung‑RADS v2022 (Condensed)
-Category	Typical Findings (examples)	Management
-1 Negative	No nodules; definitively benign (fat, classic calcification)	Annual LDCT
-2 Benign/indolent	Solid <6 mm; new solid <4 mm; part‑solid <6 mm; GGN <30 mm or ≥30 mm stable/slow‑growing; perifissural/juxtapleural nodules; subsegmental airway nodules; resolved category 3/4A; 4B proven benign	Annual LDCT
-3 Probably benign	Solid 6–<8 mm; part‑solid ≥6 mm with solid <6 mm; non‑solid ≥30 mm; new solid 4–<6 mm; new subsolid <6 mm	6‑month LDCT; if stable/decreased → category 2
-4A Suspicious	Solid 8–<15 mm; growing <8 mm; new solid 6–<8 mm; part‑solid ≥6 mm with solid 6–<8 mm; new/growing solid component <4 mm; segmental/proximal airway nodule; atypical cyst becoming multilocular	3‑month LDCT; consider PET/CT if solid ≥8 mm
-4B Very suspicious	Solid ≥15 mm or new/growing solid ≥8 mm; part‑solid with solid ≥8 mm; slow‑growing solid/part‑solid; persistent/growing proximal airway nodule; atypical cyst with growing wall/nodularity or complexity	Diagnostic chest CT ± contrast; PET/CT if ≥8 mm solid component; tissue sampling and/or surgical evaluation
-4X 3/4 with added high‑risk features	Spiculation, suspicious nodes, pleural nodularity, metastatic pattern, rapidly doubling GGN	Expedite MDT; PET/CT and tissue diagnosis
+Category Typical Findings (examples) Management
+1 Negative No nodules; definitively benign (fat, classic calcification) Annual LDCT
+2 Benign/indolent Solid <6 mm; new solid <4 mm; part‑solid <6 mm; GGN <30 mm or ≥30 mm stable/slow‑growing; perifissural/juxtapleural nodules; subsegmental airway nodules; resolved category 3/4A; 4B proven benign Annual LDCT
+3 Probably benign Solid 6–<8 mm; part‑solid ≥6 mm with solid <6 mm; non‑solid ≥30 mm; new solid 4–<6 mm; new subsolid <6 mm 6‑month LDCT; if stable/decreased → category 2
+4A Suspicious Solid 8–<15 mm; growing <8 mm; new solid 6–<8 mm; part‑solid ≥6 mm with solid 6–<8 mm; new/growing solid component <4 mm; segmental/proximal airway nodule; atypical cyst becoming multilocular 3‑month LDCT; consider PET/CT if solid ≥8 mm
+4B Very suspicious Solid ≥15 mm or new/growing solid ≥8 mm; part‑solid with solid ≥8 mm; slow‑growing solid/part‑solid; persistent/growing proximal airway nodule; atypical cyst with growing wall/nodularity or complexity Diagnostic chest CT ± contrast; PET/CT if ≥8 mm solid component; tissue sampling and/or surgical evaluation
+4X 3/4 with added high‑risk features Spiculation, suspicious nodes, pleural nodularity, metastatic pattern, rapidly doubling GGN Expedite MDT; PET/CT and tissue diagnosis
 
 Key definitions: Growth = >1.5 mm (mean) over 12 months. Slow growth across multiple rounds in solid/part‑solid lesions is suspicious even without 12‑month threshold change.
 
 Table 3. CTLS Dose Benchmarks
-Exam	Typical Effective Dose
-LDCT screening	~1–1.5 mSv
-Standard diagnostic chest CT	~7–8 mSv
-Two‑view CXR	~0.1 mSv
-Average annual background (U.S.)	~3.1 mSv
+Exam Typical Effective Dose
+LDCT screening ~1–1.5 mSv
+Standard diagnostic chest CT ~7–8 mSv
+Two‑view CXR ~0.1 mSv
+Average annual background (U.S.) ~3.1 mSv
 Quick Checklist: Shared Decision‑Making Talking Points
 
 Your eligibility and why you qualify.
@@ -273,14 +273,6 @@ What to expect: annual scans; short‑interval follow‑ups if something looks i
 Smoking cessation: the most powerful step you can take—support and medications are available.
 
 Next steps: how we’ll communicate results and coordinate follow‑ups.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Example CTLS axial image demonstrating a 7 mm smooth, solid, perifissural nodule consistent with category 2. Alt text: Axial noncontrast thin‑slice CT with a small lentiform nodule abutting the fissure.
-
-Figure 2. Part‑solid nodule (14 mm total, 5 mm solid core), category 3 at baseline. Alt text: Subsolid lesion with a central denser component on lung windows.
-
-Figure 3. Persistent segmental endobronchial nodule at carina of a segmental bronchus—category 4B. Alt text: Rounded soft‑tissue density within a segmental airway lumen.
 
 Cases & Applied Learning
 
@@ -307,104 +299,104 @@ Explanation: Segmental/proximal airway nodules persistent at 3 months are upgrad
 Question Bank (12 MCQs)
 
 1. The primary mortality outcome demonstrated by large LDCT trials in high‑risk adults was:
-A. No change in lung cancer mortality
-B. Reduction in lung cancer mortality with no stage shift
-C. Reduction in lung cancer mortality with stage shift toward early disease
-D. Reduction only in all‑cause mortality
-E. Increased lung cancer incidence without mortality effect
-Answer: C.
-Explanation: LDCT reduces lung cancer deaths and shifts detection to earlier stages; some trials also showed all‑cause mortality reduction.
+   A. No change in lung cancer mortality
+   B. Reduction in lung cancer mortality with no stage shift
+   C. Reduction in lung cancer mortality with stage shift toward early disease
+   D. Reduction only in all‑cause mortality
+   E. Increased lung cancer incidence without mortality effect
+   Answer: C.
+   Explanation: LDCT reduces lung cancer deaths and shifts detection to earlier stages; some trials also showed all‑cause mortality reduction.
 
 2. According to USPSTF 2021, which patient qualifies for screening?
-A. 47‑year‑old, 30 pack‑years, quit 5 years ago
-B. 55‑year‑old, 25 pack‑years, still smoking
-C. 70‑year‑old, 15 pack‑years, quit 10 years ago
-D. 82‑year‑old, 40 pack‑years, still smoking but fit
-E. 60‑year‑old, 20 pack‑years, quit 20 years ago
-Answer: B.
-Explanation: Age 50–80 with ≥20 pack‑years and current or quit <15 years ago.
+   A. 47‑year‑old, 30 pack‑years, quit 5 years ago
+   B. 55‑year‑old, 25 pack‑years, still smoking
+   C. 70‑year‑old, 15 pack‑years, quit 10 years ago
+   D. 82‑year‑old, 40 pack‑years, still smoking but fit
+   E. 60‑year‑old, 20 pack‑years, quit 20 years ago
+   Answer: B.
+   Explanation: Age 50–80 with ≥20 pack‑years and current or quit <15 years ago.
 
 3. A 65‑year‑old with 40 pack‑years (quit 18 years ago) asks about screening. He is otherwise fit. Best answer?
-A. Under USPSTF, he is not eligible due to quit‑time >15 years.
-B. He qualifies for Medicare coverage.
-C. He qualifies for screening under all guidelines.
-D. Screening is contraindicated due to age.
-E. He should undergo chest radiograph screening.
-Answer: A.
-Explanation: USPSTF/CMS include a 15‑year quit limit; some societies (ACS) differ but payer coverage may not.
+   A. Under USPSTF, he is not eligible due to quit‑time >15 years.
+   B. He qualifies for Medicare coverage.
+   C. He qualifies for screening under all guidelines.
+   D. Screening is contraindicated due to age.
+   E. He should undergo chest radiograph screening.
+   Answer: A.
+   Explanation: USPSTF/CMS include a 15‑year quit limit; some societies (ACS) differ but payer coverage may not.
 
 4. Baseline LDCT shows a new 7 mm solid nodule without worrisome features. Lung‑RADS category and next step:
-A. 2 → annual LDCT
-B. 4A → 3‑month LDCT; consider PET if ≥8 mm
-C. 3 → 6‑month LDCT
-D. 4B → PET/CT and biopsy
-E. 0 → repeat LDCT immediately
-Answer: B.
-Explanation: New solid 6–<8 mm is 4A.
+   A. 2 → annual LDCT
+   B. 4A → 3‑month LDCT; consider PET if ≥8 mm
+   C. 3 → 6‑month LDCT
+   D. 4B → PET/CT and biopsy
+   E. 0 → repeat LDCT immediately
+   Answer: B.
+   Explanation: New solid 6–<8 mm is 4A.
 
 5. Which is true about airway nodules in CTLS?
-A. Subsegmental airway nodules are always 4A.
-B. Persistent segmental/proximal airway nodules at 3 months are upgraded to 4B.
-C. Presence of air within the lesion always indicates cancer.
-D. Airway findings are excluded from Lung‑RADS.
-E. Any airway abnormality mandates immediate bronchoscopy.
-Answer: B.
+   A. Subsegmental airway nodules are always 4A.
+   B. Persistent segmental/proximal airway nodules at 3 months are upgraded to 4B.
+   C. Presence of air within the lesion always indicates cancer.
+   D. Airway findings are excluded from Lung‑RADS.
+   E. Any airway abnormality mandates immediate bronchoscopy.
+   Answer: B.
 
 6. Growth under Lung‑RADS v2022 is defined as:
-A. Any visual increase
-B. >1.5 mm increase (mean diameter) within 12 months
-C. >2.5 mm increase in longest axis
-D. Doubling time <600 days
-E. New attenuation change alone
-Answer: B.
+   A. Any visual increase
+   B. >1.5 mm increase (mean diameter) within 12 months
+   C. >2.5 mm increase in longest axis
+   D. Doubling time <600 days
+   E. New attenuation change alone
+   Answer: B.
 
 7. Which nodule is 4B at baseline?
-A. Part‑solid 14 mm with 6 mm solid core
-B. New solid 7 mm nodule
-C. Solid 16 mm nodule
-D. Non‑solid 32 mm nodule stable for 2 years
-E. Perifissural 9 mm triangular solid nodule
-Answer: C.
+   A. Part‑solid 14 mm with 6 mm solid core
+   B. New solid 7 mm nodule
+   C. Solid 16 mm nodule
+   D. Non‑solid 32 mm nodule stable for 2 years
+   E. Perifissural 9 mm triangular solid nodule
+   Answer: C.
 
 8. Appropriate use of PET/CT in CTLS includes:
-A. Any non‑solid nodule ≥20 mm
-B. Solid nodule or solid component ≥8 mm
-C. New solid nodule 4–5 mm
-D. Subsegmental airway nodules
-E. All category 3 nodules
-Answer: B.
+   A. Any non‑solid nodule ≥20 mm
+   B. Solid nodule or solid component ≥8 mm
+   C. New solid nodule 4–5 mm
+   D. Subsegmental airway nodules
+   E. All category 3 nodules
+   Answer: B.
 
 9. Typical effective dose of an LDCT screening exam:
-A. 0.05 mSv
-B. 0.3 mSv
-C. ~1–1.5 mSv
-D. 5–6 mSv
-E. 10–12 mSv
-Answer: C.
+   A. 0.05 mSv
+   B. 0.3 mSv
+   C. ~1–1.5 mSv
+   D. 5–6 mSv
+   E. 10–12 mSv
+   Answer: C.
 
 10. Overdiagnosis in lung cancer screening refers to:
-A. False‑positive imaging results
-B. Detection of cancers that would not cause symptoms/death during a patient’s lifetime
-C. Misclassification due to motion artifact
-D. Overcalling incidental findings
-E. Double‑counting nodules
-Answer: B.
+    A. False‑positive imaging results
+    B. Detection of cancers that would not cause symptoms/death during a patient’s lifetime
+    C. Misclassification due to motion artifact
+    D. Overcalling incidental findings
+    E. Double‑counting nodules
+    Answer: B.
 
 11. Which is not recommended for lung cancer screening?
-A. Annual LDCT in eligible high‑risk adults
-B. Shared decision‑making and cessation support
-C. Routine chest radiograph ± sputum cytology
-D. Lung‑RADS‑based reporting
-E. Registry‑based QA and adherence tracking
-Answer: C.
+    A. Annual LDCT in eligible high‑risk adults
+    B. Shared decision‑making and cessation support
+    C. Routine chest radiograph ± sputum cytology
+    D. Lung‑RADS‑based reporting
+    E. Registry‑based QA and adherence tracking
+    Answer: C.
 
 12. A 70‑year‑old with fibrotic ILD and 30 pack‑years (still smoking) is eligible and fit. LDCT shows a thick‑walled cyst with new internal nodularity. Best management?
-A. Annual LDCT only
-B. 6‑month LDCT
-C. Treat as 4B: diagnostic chest CT ± contrast; PET/CT if ≥8 mm solid component; tissue diagnosis
-D. PET/CT only if prior growth >1.5 mm
-E. No escalation because cysts are benign
-Answer: C.
+    A. Annual LDCT only
+    B. 6‑month LDCT
+    C. Treat as 4B: diagnostic chest CT ± contrast; PET/CT if ≥8 mm solid component; tissue diagnosis
+    D. PET/CT only if prior growth >1.5 mm
+    E. No escalation because cysts are benign
+    Answer: C.
 
 Controversies, Variability, and Evolving Evidence
 

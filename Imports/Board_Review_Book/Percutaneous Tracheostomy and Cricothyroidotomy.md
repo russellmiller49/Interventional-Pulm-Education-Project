@@ -151,7 +151,6 @@ E -- Stable or optimizable --> F{Operator & team experience + bronchoscopy avail
 F -- No --> C
 F -- Yes --> G[Proceed with PT (bronch ± US)]
 
-
 Bulleted algorithm (parallel):
 
 Assess indication and bedside feasibility (palpable rings, neck extension).
@@ -174,7 +173,6 @@ E --> F[Hyperinflate cuff; apply digital pressure at sternal notch (anterior wal
 F --> G[Activate massive transfusion; emergent surgical consult]
 G --> H[Definitive surgical repair]
 
-
 Bulleted algorithm (parallel):
 
 For minor oozing: pressure, packing (adrenaline/antifibrinolytic), correct coagulopathy.
@@ -191,7 +189,6 @@ C --> D[Ventilate; confirm CO2; secure; consider conversion if prolonged need]
 B -- No --> E[Needle cricothyroidotomy + transtracheal ventilation]
 E --> F[Urgent definitive airway (tracheostomy) when feasible]
 
-
 Bulleted algorithm (parallel):
 
 Declare CICO early; call for help, prepare surgical airway set.
@@ -204,48 +201,40 @@ After stabilization, assess need/timing for conversion to tracheostomy based on 
 
 Tables & Quick‑Reference Boxes
 Table 1. PT vs ST: What’s Better, What’s Equivalent
-Dimension	PT vs ST
-Overall complications	Similar
-Wound infection	Lower with PT
-Procedure time	Shorter with PT
-Cost	Lower with PT
-Bleeding	Comparable
-Tracheal stenosis (long‑term)	Similar
-Risk of posterior/anterior wall injury	Variable (technique‑dependent)
+Dimension PT vs ST
+Overall complications Similar
+Wound infection Lower with PT
+Procedure time Shorter with PT
+Cost Lower with PT
+Bleeding Comparable
+Tracheal stenosis (long‑term) Similar
+Risk of posterior/anterior wall injury Variable (technique‑dependent)
 
 Abbreviations: PT—percutaneous tracheostomy; ST—surgical tracheostomy.
 
 Table 2. PDT Contraindications—Practical View
-Category	Examples / Notes
-Absolute (pragmatic)	No experienced operator; inability to identify landmarks safely
-Often managed (relative)	Obesity (use XLT, US mapping); high PEEP (optimize and coordinate); prior trach (use scar tract); coagulopathy (optimize INR/platelets); antiplatelets/anticoagulants (hold if able; proceed with caution if not)
-Avoid/Defer	Active infection at site; severe hemodynamic instability requiring multiple/high‑dose pressors
+Category Examples / Notes
+Absolute (pragmatic) No experienced operator; inability to identify landmarks safely
+Often managed (relative) Obesity (use XLT, US mapping); high PEEP (optimize and coordinate); prior trach (use scar tract); coagulopathy (optimize INR/platelets); antiplatelets/anticoagulants (hold if able; proceed with caution if not)
+Avoid/Defer Active infection at site; severe hemodynamic instability requiring multiple/high‑dose pressors
 
 Abbreviations: PDT—percutaneous dilational tracheostomy; US—ultrasound; XLT—extra‑long tube.
 
 Table 3. Anticoagulation & Antiplatelet Playbook (PT)
-Medication/Status	Suggested peri‑PT approach
-INR / Platelets	Aim INR <1.5, platelets >50 × 10⁹/L (transfuse if needed)
-Heparin infusion	Hold ≈3 h pre, resume ≈2 h post
-SC heparin/enoxaparin	Hold 12 h (BID dosing) or 24 h (daily dosing)
-Clopidogrel / DAPT	Prefer ≥5 days hold if feasible (3–5 days for dual therapy); PT can be performed on therapy with informed consent and bleeding‑mitigation plan
-ECMO	Brief heparin interruption; major bleeding reported low (~1–2%); minor bleeding more common
+Medication/Status Suggested peri‑PT approach
+INR / Platelets Aim INR <1.5, platelets >50 × 10⁹/L (transfuse if needed)
+Heparin infusion Hold ≈3 h pre, resume ≈2 h post
+SC heparin/enoxaparin Hold 12 h (BID dosing) or 24 h (daily dosing)
+Clopidogrel / DAPT Prefer ≥5 days hold if feasible (3–5 days for dual therapy); PT can be performed on therapy with informed consent and bleeding‑mitigation plan
+ECMO Brief heparin interruption; major bleeding reported low (~1–2%); minor bleeding more common
 
 Abbreviations: DAPT—dual antiplatelet therapy; ECMO—extracorporeal membrane oxygenation; SC—subcutaneous.
 
 Table 4. Tracheostomy Complications—Timing & Signals
-Early (hours–days)	Late (weeks–months)
-Bleeding; subcutaneous emphysema (~1.4%); pneumothorax (~0.8%); malposition/false tract	Tracheal stenosis (3–12% clinically significant); tracheomalacia; TIF <1%; TEF; stomal infection
+Early (hours–days) Late (weeks–months)
+Bleeding; subcutaneous emphysema (~1.4%); pneumothorax (~0.8%); malposition/false tract Tracheal stenosis (3–12% clinically significant); tracheomalacia; TIF <1%; TEF; stomal infection
 
 Abbreviations: TIF—tracheo‑innominate fistula; TEF—tracheoesophageal fistula.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Anterior neck landmarks for PT and cricothyroidotomy. Neutral schematic highlighting thyroid cartilage, cricoid, and cricothyroid membrane. Alt text: “Anterior neck with labeled cartilage landmarks and CT membrane.”
-
-Figure 2. Common PT kits and dilators (tapered/forceps/balloon). Neutral kit layout with introducer, dilator(s), guidewire, trach tube. Alt text: “PT kit components arranged on sterile field.”
-
-Figure 3. Bronchoscopic view of midline puncture between tracheal rings. Neutral endoluminal image showing anterior wall indentation at target interspace. Alt text: “Bronchoscopic view confirming puncture site between rings.”
 
 Cases & Applied Learning
 Case 1

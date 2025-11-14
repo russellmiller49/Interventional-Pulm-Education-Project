@@ -170,7 +170,6 @@ E1 -->|Yes| F
 E1 -->|No| D
 F --> G[Stage with PET/CT if malignancy confirmed]
 
-
 Parallel bulleted algorithm
 
 Estimate pCA using a model matched to setting (incidentals vs screening vs specialty clinic).
@@ -190,7 +189,6 @@ B -->|Part-solid <8 mm| E[CT at 3, 12, 24 mo then annually]
 B -->|Part-solid ≥8 mm| F[CT at 3 mo → if persistent/growing → PET/biopsy/resection]
 B -->|Any with enlarging solid core or ≥15 mm| G[PET/biopsy/resection]
 
-
 Parallel bulleted algorithm
 
 Pure GGN ≤5 mm: often no follow‑up or annual surveillance; >5 mm: annual CT for ≥3 y (some extend to 5 y).
@@ -203,35 +201,35 @@ Part‑solid ≥8 mm: repeat CT at 3 mo; if persistent or the solid componen
 
 Tables & Quick‑Reference Boxes
 Table 1. Clinical and Imaging Predictors of Malignancy
-Feature	Higher risk	Notes
-Size	Increases with diameter	>2 cm confers higher risk
-Morphology	Part‑solid > solid > pure GGN	Subsolids often indolent but risk rises with solid core
-Spiculation	Higher than smooth margins	Odds ratio ~2.2–2.5 in cohort data
-Location	Upper lobe > lower lobe	—
-Multiplicity	1–4 nodules higher than single; risk may decrease when >5	Population dependent
-Emphysema/IPF	Increased risk	—
-Growth	VDT ~100–400 days typical for cancer	~26% diameter increase ≈ volume doubling
-Calcification	Eccentric/punctate → suspicious; central/laminated/popcorn → benign	—
-Ancillary signs	Pleural retraction, vascular convergence, pseudocavitation → suspicious	—
-Abbreviations: GGN, ground‑glass nodule; OR, odds ratio; VDT, volume‑doubling time; IPF, idiopathic pulmonary fibrosis.		
+Feature Higher risk Notes
+Size Increases with diameter >2 cm confers higher risk
+Morphology Part‑solid > solid > pure GGN Subsolids often indolent but risk rises with solid core
+Spiculation Higher than smooth margins Odds ratio ~2.2–2.5 in cohort data
+Location Upper lobe > lower lobe —
+Multiplicity 1–4 nodules higher than single; risk may decrease when >5 Population dependent
+Emphysema/IPF Increased risk —
+Growth VDT ~100–400 days typical for cancer ~26% diameter increase ≈ volume doubling
+Calcification Eccentric/punctate → suspicious; central/laminated/popcorn → benign —
+Ancillary signs Pleural retraction, vascular convergence, pseudocavitation → suspicious —
+Abbreviations: GGN, ground‑glass nodule; OR, odds ratio; VDT, volume‑doubling time; IPF, idiopathic pulmonary fibrosis.
 Table 2. Guideline‑Directed Follow‑up (Selected)
-Scenario	Recommendation
-Fleischner (incidentals—solid <6 mm)	Low risk: often no follow‑up; high risk: consider 12‑mo CT
-Solid 6–8 mm	CT at 6–12 mo (± second at 18–24 mo if high risk)
-Solid >8 mm	Short‑interval CT (~3 mo), PET/CT, or tissue sampling
-Subsolid (ACCP)	Pure GGN ≤5 mm: no follow‑up or annual x ≥3 y; >5 mm: annual x ≥3 y; Part‑solid <8 mm: 3, 12, 24 mo then annually; ≥8 mm or enlarging solid core: PET/biopsy/resection; ≥15 mm: escalate
-Abbreviations: ACCP, American College of Chest Physicians; PET, positron emission tomography.	
+Scenario Recommendation
+Fleischner (incidentals—solid <6 mm) Low risk: often no follow‑up; high risk: consider 12‑mo CT
+Solid 6–8 mm CT at 6–12 mo (± second at 18–24 mo if high risk)
+Solid >8 mm Short‑interval CT (~3 mo), PET/CT, or tissue sampling
+Subsolid (ACCP) Pure GGN ≤5 mm: no follow‑up or annual x ≥3 y; >5 mm: annual x ≥3 y; Part‑solid <8 mm: 3, 12, 24 mo then annually; ≥8 mm or enlarging solid core: PET/biopsy/resection; ≥15 mm: escalate
+Abbreviations: ACCP, American College of Chest Physicians; PET, positron emission tomography.
 Table 3. Diagnostic Performance & Complications (Representative Data)
-Modality	Diagnostic performance	Key complications
-CT‑guided TTNB	Yield often ~85–90%	Pneumothorax ~15–25%
-Conventional bronch tools (multicenter registry)	BAL ~19%, brush ~38%, forceps ~43%, TBNA ~47%	Low pneumothorax
-rEBUS alone	~57% yield	—
-EMN alone	~39% yield	—
-EMN + rEBUS	~47% yield	—
-EMN (large multicenter prospective)	~73% yield at 12 mo	Low pneumothorax
-Robotic bronchoscopy (series)	~80–94% yield; pneumothorax usually ≤~4%	Low overall
-EMN vs TTNB (randomized)	Noninferior diagnostic accuracy; pneumothorax far lower with EMN	—
-Abbreviations: TTNB, transthoracic needle biopsy; BAL, bronchoalveolar lavage; TBNA, transbronchial needle aspiration; rEBUS, radial endobronchial ultrasound; EMN, electromagnetic navigation.		
+Modality Diagnostic performance Key complications
+CT‑guided TTNB Yield often ~85–90% Pneumothorax ~15–25%
+Conventional bronch tools (multicenter registry) BAL ~19%, brush ~38%, forceps ~43%, TBNA ~47% Low pneumothorax
+rEBUS alone ~57% yield —
+EMN alone ~39% yield —
+EMN + rEBUS ~47% yield —
+EMN (large multicenter prospective) ~73% yield at 12 mo Low pneumothorax
+Robotic bronchoscopy (series) ~80–94% yield; pneumothorax usually ≤~4% Low overall
+EMN vs TTNB (randomized) Noninferior diagnostic accuracy; pneumothorax far lower with EMN —
+Abbreviations: TTNB, transthoracic needle biopsy; BAL, bronchoalveolar lavage; TBNA, transbronchial needle aspiration; rEBUS, radial endobronchial ultrasound; EMN, electromagnetic navigation.
 Quick Box — PET/CT Interpretation
 
 Don’t rely on a single SUV cutoff; report uptake pattern and clinical context.
@@ -242,14 +240,6 @@ False positives: infection, granulomatous disease, sarcoid, post‑therapy chang
 
 False negatives: small size, carcinoid, mucinous/indolent adenocarcinoma, pure GGNs.
 Abbreviations: AIS, adenocarcinoma in situ; MIA, minimally invasive adenocarcinoma.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Axial CT of a spiculated 20 mm upper‑lobe solid nodule. Alt text: Irregular spiculated margins in the peripheral upper lobe.
-
-Figure 2. Subsolid nodule with enlarging solid component. Alt text: Part‑solid lesion with an increasing dense core despite stable overall size.
-
-Figure 3. rEBUS views. Alt text: Concentric (device centered within lesion) versus eccentric (device at lesion margin) radial ultrasound patterns.
 
 Cases & Applied Learning
 Case 1

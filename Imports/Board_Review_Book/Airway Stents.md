@@ -213,7 +213,6 @@ I -->|Durable malignant compression| K[Covered SEMS or silicone]
 J --> L[Humidification + Follow-up]
 K --> L
 
-
 Bulleted companion algorithm
 
 Confirm CAO, define intrinsic/extrinsic/mixed.
@@ -237,7 +236,6 @@ E -->|No| G[Standard straight silicone]
 G --> H[Dwell 6–18 mo based on recurrence risk]
 H --> I[Trial removal + reassess]
 
-
 Bulleted companion algorithm
 
 Simple web → incise/dilate; usually no stent.
@@ -257,7 +255,6 @@ E --> F
 F -->|Yes| G[Consider esophageal stent (double stent) with caution]
 F -->|No| H[Supportive care + nutrition plan]
 
-
 Bulleted companion algorithm
 
 Secure airway; airway stent before esophageal when double stenting is needed.
@@ -266,44 +263,37 @@ Avoid excess pressure between stents; reassess aspiration, pneumonia control, an
 
 Tables & Quick‑Reference Boxes
 Table 1. Choosing a Stent: Features at a Glance
-Feature	Silicone	Covered SEMS (nitinol)	Uncovered/Partially Covered SEMS
-Deployability	Requires rigid bronchoscopy; general anesthesia	Easier deployment; flexible or rigid	Easier to deploy
-Removability	Excellent; customizable	Variable; usually removable but more challenging	Problematic; embed/ingrowth
-Best use cases	Benign disease; reversible malignant CAO; carinal Y	Malignant CAO, especially when quick deployment needed	Avoid in benign (fracture/ingrowth)
-Common risks	Migration, mucus, granulation	Mucus, granulation, fracture with time	Tumor ingrowth, fracture, difficult removal
-Cost	Lower (often ~1.5–2× less than metal)	Higher	Variable
-Abbreviations: SEMS—self‑expanding metallic stent; CAO—central airway obstruction.			
+Feature Silicone Covered SEMS (nitinol) Uncovered/Partially Covered SEMS
+Deployability Requires rigid bronchoscopy; general anesthesia Easier deployment; flexible or rigid Easier to deploy
+Removability Excellent; customizable Variable; usually removable but more challenging Problematic; embed/ingrowth
+Best use cases Benign disease; reversible malignant CAO; carinal Y Malignant CAO, especially when quick deployment needed Avoid in benign (fracture/ingrowth)
+Common risks Migration, mucus, granulation Mucus, granulation, fracture with time Tumor ingrowth, fracture, difficult removal
+Cost Lower (often ~1.5–2× less than metal) Higher Variable
+Abbreviations: SEMS—self‑expanding metallic stent; CAO—central airway obstruction.
 Table 2. Practical Sizing & Margins (Silicone Stents)
-Segment	Typical diameter (outer)	Notes
-Trachea	14–16 mm	Extend ~5 mm beyond both lesion ends
-Mainstem bronchus	12–13 mm	Consider Y/Oki for carinal/right carina disease
-Bronchus intermedius	10–11 mm	
-Fistula/malacia	Slight oversize	Improves seal and reduces migration
-Abbreviations: Oki—primary right carina‑adapted bifurcated silicone stent.		
+Segment Typical diameter (outer) Notes
+Trachea 14–16 mm Extend ~5 mm beyond both lesion ends
+Mainstem bronchus 12–13 mm Consider Y/Oki for carinal/right carina disease
+Bronchus intermedius 10–11 mm
+Fistula/malacia Slight oversize Improves seal and reduces migration
+Abbreviations: Oki—primary right carina‑adapted bifurcated silicone stent.
 Table 3. Complications & How to Handle Them
-Complication	Prevention	Management
-Migration (≈10%)	Correct sizing; hourglass/Y; fixation when needed	Rigid extraction; upsize or change design
-Granulation (≈8%)	Smooth landing zones; avoid excessive motion	Mechanical/thermal debulking; stent exchange
-Mucus impaction (≈3–4%)	Humidification; saline nebulization; early toilet	Bronchoscopic clearance; stent removal/exchange if infected
-Bacterial colonization	Humidification; minimize mucus stasis	Treat infection; consider exchange if persistent
-Abbreviations: none.		
+Complication Prevention Management
+Migration (≈10%) Correct sizing; hourglass/Y; fixation when needed Rigid extraction; upsize or change design
+Granulation (≈8%) Smooth landing zones; avoid excessive motion Mechanical/thermal debulking; stent exchange
+Mucus impaction (≈3–4%) Humidification; saline nebulization; early toilet Bronchoscopic clearance; stent removal/exchange if infected
+Bacterial colonization Humidification; minimize mucus stasis Treat infection; consider exchange if persistent
+Abbreviations: none.
 Table 4. Indications—Device Strategy Snapshot
-Indication	Preferred approach
-Extrinsic malignant compression	Dilate + stent (silicone or covered SEMS)
-Mixed malignant CAO	Debulk then stent
-Simple post‑intubation web	Endoscopic incision/dilation (no stent)
-Complex benign/tracheal	Silicone (consider hourglass/fixation near cords)
-Transplant anastomosis	Removable stent; often bifurcated silicone
-TEF/BEF	Airway stent first; consider esophageal stent next
-Tracheobronchomalacia	Trial silicone; proceed to surgical stabilization if responder
-Abbreviations: TEF—tracheoesophageal fistula; BEF—bronchoesophageal fistula.	
-Imaging & Figure Callouts (Placeholders)
-
-Figure A. Tracheal tumor causing near‑critical stenosis before and after silicone stent placement. Alt text: Endoscopic view of nearly occlusive tracheal mass, followed by restored lumen with a visible silicone stent.
-
-Figure B. Hourglass silicone stent bridging a short, high‑grade subglottic stenosis. Alt text: Endoscopic image showing a waist at the lesion with wider ends anchoring above and below.
-
-Figure C. Bifurcated Y silicone stent across the main carina preserving lobar ventilation via fenestration. Alt text: Trifurcated stent limbs visible in trachea and main bronchi with a small fenestration for RUL.
+Indication Preferred approach
+Extrinsic malignant compression Dilate + stent (silicone or covered SEMS)
+Mixed malignant CAO Debulk then stent
+Simple post‑intubation web Endoscopic incision/dilation (no stent)
+Complex benign/tracheal Silicone (consider hourglass/fixation near cords)
+Transplant anastomosis Removable stent; often bifurcated silicone
+TEF/BEF Airway stent first; consider esophageal stent next
+Tracheobronchomalacia Trial silicone; proceed to surgical stabilization if responder
+Abbreviations: TEF—tracheoesophageal fistula; BEF—bronchoesophageal fistula.
 
 Cases & Applied Learning
 

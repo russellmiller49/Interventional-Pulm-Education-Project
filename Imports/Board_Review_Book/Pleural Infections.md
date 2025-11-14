@@ -146,7 +146,6 @@ H -- High-risk --> E
 H -- Low-risk --> I[Antibiotics; close follow-up]
 G -- No (≥7.40) --> I
 
-
 Bulleted algorithm (parallel):
 
 Suspect infection → TUS to confirm/drain map.
@@ -174,7 +173,6 @@ R & S --> T{Cleared?}
 T -- Yes --> U[Continue antibiotics; plan tube removal]
 T -- No --> P
 
-
 Bulleted algorithm (parallel):
 
 48‑hour checkpoint: if residual collection plus inadequate inflammatory response → CT and escalate.
@@ -191,47 +189,40 @@ Tables & Quick‑Reference Boxes
 
 Table 1. Spectrum of Pleural Infection—Defining Features
 
-Feature	Simple parapneumonic	Complicated parapneumonic (CPPE)	Empyema
-Ultrasound/CT	Anechoic, free‑flowing	Septations, loculations, pleural thickening (±split pleura)	As CPPE; often thick rind
-Pleural pH	>7.20	≤7.20 or 7.21–7.39 with high‑risk features	Variable; often ≤7.20
-Glucose	>60 mg/dL	≤60 mg/dL (or ≤4 mmol/L/72 mg/dL)	Often low
-Microbiology	Negative	Negative or positive	Purulent and/or +Gram/culture
-Typical action	Antibiotics alone	Tube drainage (≤14F) ± IET	Tube drainage ± IET; surgical evaluation as needed
-Abbreviations	IET: intrapleural enzyme therapy; CT: computed tomography; TUS: thoracic ultrasound		
+Feature Simple parapneumonic Complicated parapneumonic (CPPE) Empyema
+Ultrasound/CT Anechoic, free‑flowing Septations, loculations, pleural thickening (±split pleura) As CPPE; often thick rind
+Pleural pH >7.20 ≤7.20 or 7.21–7.39 with high‑risk features Variable; often ≤7.20
+Glucose >60 mg/dL ≤60 mg/dL (or ≤4 mmol/L/72 mg/dL) Often low
+Microbiology Negative Negative or positive Purulent and/or +Gram/culture
+Typical action Antibiotics alone Tube drainage (≤14F) ± IET Tube drainage ± IET; surgical evaluation as needed
+Abbreviations IET: intrapleural enzyme therapy; CT: computed tomography; TUS: thoracic ultrasound
 
 Table 2. Empiric Antibiotic Approach
 
-Setting	Organisms to cover	Example empiric options	Step‑down & notes
-Community‑acquired	Gram‑positive aerobes + anaerobes	Aminopenicillin/β‑lactamase inhibitor (e.g., amoxicillin‑clavulanate) ± metronidazole or clindamycin; alternatives for penicillin allergy include clindamycin ± cefalosporin/fluoroquinolone	Continue anaerobic coverage even when cultures are negative for anaerobes; tailor to results and response
-Hospital‑acquired / post‑procedure	Gram‑positive, Gram‑negative (±Pseudomonas), anaerobes; consider MRSA	Piperacillin‑tazobactam, cefepime + metronidazole, or a carbapenem plus vancomycin/linezolid when MRSA risk	Early de‑escalation if monomicrobial streptococcal disease and improving
-Abbreviations	MRSA: methicillin‑resistant Staphylococcus aureus		
+Setting Organisms to cover Example empiric options Step‑down & notes
+Community‑acquired Gram‑positive aerobes + anaerobes Aminopenicillin/β‑lactamase inhibitor (e.g., amoxicillin‑clavulanate) ± metronidazole or clindamycin; alternatives for penicillin allergy include clindamycin ± cefalosporin/fluoroquinolone Continue anaerobic coverage even when cultures are negative for anaerobes; tailor to results and response
+Hospital‑acquired / post‑procedure Gram‑positive, Gram‑negative (±Pseudomonas), anaerobes; consider MRSA Piperacillin‑tazobactam, cefepime + metronidazole, or a carbapenem plus vancomycin/linezolid when MRSA risk Early de‑escalation if monomicrobial streptococcal disease and improving
+Abbreviations MRSA: methicillin‑resistant Staphylococcus aureus
 
 Table 3. Intrapleural Enzyme Therapy (IET) at a Glance
 
-Element	Practical points
-Standard dosing	tPA 10 mg + DNase 5 mg, BID for up to 3 days (maximum 6 doses); clamp ~1 hour each dose
-Reduced dose	Consider tPA 5 mg + DNase 5 mg with high bleeding risk or unavoidable anticoagulation
-Sequencing	Concurrent administration is acceptable; avoid monotherapy (tPA‑only or DNase‑only)
-Anticoagulation	Hold if possible; if not, use reduced tPA and close monitoring
-Failure	If significant residual collection persists after a complete course, refer for surgery
-Abbreviations	tPA: tissue plasminogen activator; DNase: dornase alfa
+Element Practical points
+Standard dosing tPA 10 mg + DNase 5 mg, BID for up to 3 days (maximum 6 doses); clamp ~1 hour each dose
+Reduced dose Consider tPA 5 mg + DNase 5 mg with high bleeding risk or unavoidable anticoagulation
+Sequencing Concurrent administration is acceptable; avoid monotherapy (tPA‑only or DNase‑only)
+Anticoagulation Hold if possible; if not, use reduced tPA and close monitoring
+Failure If significant residual collection persists after a complete course, refer for surgery
+Abbreviations tPA: tissue plasminogen activator; DNase: dornase alfa
 
 Table 4. RAPID Score (Predicts 90‑day Mortality)
 
-Component	0 points	1 point	2 points
-Renal (urea, mmol/L)	<5	5–8	>8
-Age (years)	<50	50–70	>70
-Purulence of fluid	Purulent (0)	Non‑purulent (1)	—
-Infection source	Community	Hospital	—
-Albumin (g/L)	≥27	<27	—
-Risk categories	0–2 low, 3–4 moderate, 5–7 high	Abbreviations: RAPID components as above	
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Thoracic ultrasound of a complex effusion. Caption: Echogenic, multi‑septated effusion with pleural thickening—typical of CPPE. Alt text: Ultrasound image showing septations.
-
-Figure 2. CT with split‑pleura sign. Caption: Enhancing parietal and visceral pleura surrounding loculated fluid. Alt text: Axial CT demonstrating pleural enhancement.
-
-Figure 3. Organized stage 3 disease. Caption: Thick visceral rind and non‑expandable lung, suggesting need for decortication. Alt text: CT image of rind‑encased lung.
+Component 0 points 1 point 2 points
+Renal (urea, mmol/L) <5 5–8 >8
+Age (years) <50 50–70 >70
+Purulence of fluid Purulent (0) Non‑purulent (1) —
+Infection source Community Hospital —
+Albumin (g/L) ≥27 <27 —
+Risk categories 0–2 low, 3–4 moderate, 5–7 high Abbreviations: RAPID components as above
 
 Cases & Applied Learning
 
@@ -250,100 +241,100 @@ Best answer: Reduced‑dose tPA 5 mg + DNase 5 mg with careful monitoring, or sa
 Question Bank (MCQs)
 
 1. Which statement is accurate regarding pleural infections?
-A. Incidence is declining in older adults.
-B. Progression from simple to complicated typically takes weeks.
-C. Pleural infection rarely occurs without ipsilateral pneumonia.
-D. Recent datasets show notable inpatient mortality.
-E. Most cases are eosinophilic exudates.
-Answer: D. Mortality remains substantial in contemporary cohorts; incidence has increased, particularly in older adults, and non‑pneumonic mechanisms (hematogenous, subdiaphragmatic, iatrogenic) are not rare. Rapid progression can occur within 24 hours.
+   A. Incidence is declining in older adults.
+   B. Progression from simple to complicated typically takes weeks.
+   C. Pleural infection rarely occurs without ipsilateral pneumonia.
+   D. Recent datasets show notable inpatient mortality.
+   E. Most cases are eosinophilic exudates.
+   Answer: D. Mortality remains substantial in contemporary cohorts; incidence has increased, particularly in older adults, and non‑pneumonic mechanisms (hematogenous, subdiaphragmatic, iatrogenic) are not rare. Rapid progression can occur within 24 hours.
 
 2. A patient with right‑sided pneumonia has an anechoic effusion. Immediate pleural fluid pH is 7.18. Next best step?
-A. Begin antibiotics only.
-B. Insert a ≤14F chest tube now.
-C. Send glucose and await results.
-D. Plan VATS drainage.
-E. Repeat thoracentesis tomorrow.
-Answer: B. pH ≤7.20 warrants chest drain placement when safe; delaying drainage risks deterioration.
+   A. Begin antibiotics only.
+   B. Insert a ≤14F chest tube now.
+   C. Send glucose and await results.
+   D. Plan VATS drainage.
+   E. Repeat thoracentesis tomorrow.
+   Answer: B. pH ≤7.20 warrants chest drain placement when safe; delaying drainage risks deterioration.
 
 3. After 48 h of tube drainage, CT shows a sizeable residual collection and CRP has fallen by only 20%. Patient is stable. Best next step?
-A. Remove the tube.
-B. Start tPA/DNase BID for up to 3 days.
-C. Switch to larger‑bore tube.
-D. Immediate thoracotomy.
-E. Repeat diagnostic tap.
-Answer: B. Poor progress at ~48 h triggers escalation; IET is appropriate in stable patients with fibrinopurulent disease, while surgery is typically reserved for failure or organized stage 3.
+   A. Remove the tube.
+   B. Start tPA/DNase BID for up to 3 days.
+   C. Switch to larger‑bore tube.
+   D. Immediate thoracotomy.
+   E. Repeat diagnostic tap.
+   Answer: B. Poor progress at ~48 h triggers escalation; IET is appropriate in stable patients with fibrinopurulent disease, while surgery is typically reserved for failure or organized stage 3.
 
 4. A patient on non‑interrupible anticoagulation has a residual empyema after tube placement. Which regimen is acceptable?
-A. DNase alone.
-B. Streptokinase + DNase.
-C. tPA 5 mg + DNase 5 mg BID.
-D. tPA 10 mg alone.
-E. No further therapy possible.
-Answer: C. Reduced‑dose tPA with standard DNase maintains efficacy with lower bleeding risk; streptokinase and monotherapy are discouraged.
+   A. DNase alone.
+   B. Streptokinase + DNase.
+   C. tPA 5 mg + DNase 5 mg BID.
+   D. tPA 10 mg alone.
+   E. No further therapy possible.
+   Answer: C. Reduced‑dose tPA with standard DNase maintains efficacy with lower bleeding risk; streptokinase and monotherapy are discouraged.
 
 5. During IET, drainage turns pink but the patient is stable. Best action?
-A. Stop therapy and transfuse.
-B. Measure pleural fluid hematocrit to confirm bleed.
-C. Increase tPA dose.
-D. Switch to DNase alone.
-E. Proceed to VATS immediately.
-Answer: B. Pink discoloration is expected; confirm true bleeding with pleural hematocrit before changing therapy.
+   A. Stop therapy and transfuse.
+   B. Measure pleural fluid hematocrit to confirm bleed.
+   C. Increase tPA dose.
+   D. Switch to DNase alone.
+   E. Proceed to VATS immediately.
+   Answer: B. Pink discoloration is expected; confirm true bleeding with pleural hematocrit before changing therapy.
 
 6. Best empiric regimen for hospital‑acquired pleural infection with MRSA and Pseudomonas risk?
-A. Amoxicillin alone.
-B. Piperacillin‑tazobactam plus vancomycin.
-C. Metronidazole monotherapy.
-D. Aminoglycoside monotherapy.
-E. Co‑trimoxazole alone.
-Answer: B. Broad Gram‑negative (including Pseudomonas) plus MRSA coverage is recommended initially; aminoglycosides have poor pleural penetration and co‑trimoxazole may not achieve adequate pleural levels.
+   A. Amoxicillin alone.
+   B. Piperacillin‑tazobactam plus vancomycin.
+   C. Metronidazole monotherapy.
+   D. Aminoglycoside monotherapy.
+   E. Co‑trimoxazole alone.
+   Answer: B. Broad Gram‑negative (including Pseudomonas) plus MRSA coverage is recommended initially; aminoglycosides have poor pleural penetration and co‑trimoxazole may not achieve adequate pleural levels.
 
 7. Which statement about chest tubes in pleural infection is correct?
-A. Larger tubes reduce mortality.
-B. Small‑bore (≤14F) tubes are associated with less pain and similar outcomes.
-C. Tubes should not be flushed.
-D. Image guidance is optional.
-E. Tubes should be routinely upsized after 24 h.
-Answer: B. Prospective data indicate small‑bore tubes achieve similar key outcomes with less pain; regular flushing helps maintain patency.
+   A. Larger tubes reduce mortality.
+   B. Small‑bore (≤14F) tubes are associated with less pain and similar outcomes.
+   C. Tubes should not be flushed.
+   D. Image guidance is optional.
+   E. Tubes should be routinely upsized after 24 h.
+   Answer: B. Prospective data indicate small‑bore tubes achieve similar key outcomes with less pain; regular flushing helps maintain patency.
 
 8. Which finding most strongly favors early surgical referral?
-A. pH 7.25 with free‑flowing effusion.
-B. Stage 2 fibrinopurulent disease with rapid improvement on IET.
-C. Persistent sepsis with organized rind and trapped lung.
-D. Single locule drained completely.
-E. Falling inflammatory markers at 48 h.
-Answer: C. Organized stage 3 with thick visceral rind and non‑expandable lung is a classic indication for earlier surgical management, often by VATS decortication.
+   A. pH 7.25 with free‑flowing effusion.
+   B. Stage 2 fibrinopurulent disease with rapid improvement on IET.
+   C. Persistent sepsis with organized rind and trapped lung.
+   D. Single locule drained completely.
+   E. Falling inflammatory markers at 48 h.
+   Answer: C. Organized stage 3 with thick visceral rind and non‑expandable lung is a classic indication for earlier surgical management, often by VATS decortication.
 
 9. TB empyema truths include:
-A. Responds well to fibrinolytic monotherapy.
-B. Often requires decortication plus anti‑TB therapy for optimal outcomes.
-C. DNase is contraindicated in TB.
-D. Surgery is usually avoided due to bleeding risk alone.
-E. Always managed with open thoracotomy.
-Answer: B. Thick rind and high organism burden limit medical therapy; decortication with anti‑TB therapy is often needed; VATS is feasible in selected cases.
+   A. Responds well to fibrinolytic monotherapy.
+   B. Often requires decortication plus anti‑TB therapy for optimal outcomes.
+   C. DNase is contraindicated in TB.
+   D. Surgery is usually avoided due to bleeding risk alone.
+   E. Always managed with open thoracotomy.
+   Answer: B. Thick rind and high organism burden limit medical therapy; decortication with anti‑TB therapy is often needed; VATS is feasible in selected cases.
 
 10. Lung transplant recipient with early pleural space infection—most appropriate principle?
-A. Liberal use of intrapleural tPA at full dose.
-B. Early aggressive drainage; cautious escalation with limited IET due to anastomotic concerns.
-C. Avoid surgery at all costs.
-D. No role for tunneled catheters.
-E. Prefer open thoracotomy up front.
-Answer: B. Early source control is critical; IET is used sparingly given airway/vascular anastomoses; decortication is performed cautiously, and tunneled catheters may facilitate gradual expansion.
+    A. Liberal use of intrapleural tPA at full dose.
+    B. Early aggressive drainage; cautious escalation with limited IET due to anastomotic concerns.
+    C. Avoid surgery at all costs.
+    D. No role for tunneled catheters.
+    E. Prefer open thoracotomy up front.
+    Answer: B. Early source control is critical; IET is used sparingly given airway/vascular anastomoses; decortication is performed cautiously, and tunneled catheters may facilitate gradual expansion.
 
 11. Regarding imaging, which is correct?
-A. Chest X‑ray reliably detects effusions <50 mL.
-B. Ultrasound is superior to CT at demonstrating septations and guides safe access.
-C. CT is not useful in escalation decisions.
-D. Ultrasound cannot identify locules.
-E. Imaging is optional if pH is low.
-Answer: B. TUS detects septations and locules and guides interventions; CT helps delineate anatomy and is used before escalation.
+    A. Chest X‑ray reliably detects effusions <50 mL.
+    B. Ultrasound is superior to CT at demonstrating septations and guides safe access.
+    C. CT is not useful in escalation decisions.
+    D. Ultrasound cannot identify locules.
+    E. Imaging is optional if pH is low.
+    Answer: B. TUS detects septations and locules and guides interventions; CT helps delineate anatomy and is used before escalation.
 
 12. Which IET practice is evidence‑consistent?
-A. DNase alone if bleeding risk is high.
-B. tPA 10 mg + DNase 5 mg, BID, clamp 1 hour; consider tPA 5 mg if anticoagulation cannot be paused.
-C. Routine 7‑day IET.
-D. Streptokinase plus DNase preferred.
-E. Start IET only after 7 days of tube drainage.
-Answer: B. Combination therapy is recommended with standard dosing; reduced‑dose tPA is acceptable in high bleeding risk. Monotherapy and streptokinase are discouraged.
+    A. DNase alone if bleeding risk is high.
+    B. tPA 10 mg + DNase 5 mg, BID, clamp 1 hour; consider tPA 5 mg if anticoagulation cannot be paused.
+    C. Routine 7‑day IET.
+    D. Streptokinase plus DNase preferred.
+    E. Start IET only after 7 days of tube drainage.
+    Answer: B. Combination therapy is recommended with standard dosing; reduced‑dose tPA is acceptable in high bleeding risk. Monotherapy and streptokinase are discouraged.
 
 Controversies, Variability, and Evolving Evidence
 

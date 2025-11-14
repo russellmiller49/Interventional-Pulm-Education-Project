@@ -1,6 +1,5 @@
 Anesthesia for IP
 
-
 Exam Mapping & Scope
 
 This chapter covers anesthetic and airway strategies for interventional pulmonology (IP) procedures with emphasis on endobronchial ultrasound (EBUS), peripheral bronchoscopy (including robotic platforms), rigid bronchoscopy for central airway obstruction, and bronchoscopic lung volume reduction (BLVR). Domains include sedation strategy and monitoring, airway device selection, ventilatory approaches to minimize atelectasis, oxygen management during thermal and non‑thermal therapies, mediastinal mass considerations, pleuroscopy/MAC anesthesia, and complication prevention and rescue.
@@ -204,7 +203,6 @@ H -- No --> J[LMA or natural airway + bite block]
 F -- No --> K[Simple diagnostic FB]
 K --> L[Moderate sedation +/- LMA]
 
-
 Bulleted parallel algorithm
 
 Central therapeutic work (debulking/thermal/stent): rigid bronchoscopy; GA (TIVA); jet or mechanical ventilation; keep FiO₂ <0.40 for thermal.
@@ -229,7 +227,6 @@ G -- Yes --> I[Proceed to navigation/biopsy]
 I --> J[Re-recruit if circuit opened or cuff deflated]
 J --> K[Minimize wedging; suction plugs]
 
-
 Bulleted parallel algorithm
 
 After ETT, perform recruitment.
@@ -252,32 +249,25 @@ D -- If absent --> F[Proceed; consider Vt reduction post-valve]
 
 Tables & Quick‑Reference Boxes
 Table 1. Sedation Continuum & What You Must Provide
-Depth	Responsiveness	Ventilation	Airway	Cardiovascular
-Minimal	Normal response to verbal	Unaffected	Unaffected	Unaffected
-Moderate	Purposeful response to verbal/tactile	Adequate	No intervention	Usually maintained
-Deep	Purposeful response to painful	May be inadequate	Intervention may be needed	Usually maintained
-General anesthesia	Unarousable	Frequently inadequate	Intervention often required	May be impaired
-Abbreviations: None.				
+Depth Responsiveness Ventilation Airway Cardiovascular
+Minimal Normal response to verbal Unaffected Unaffected Unaffected
+Moderate Purposeful response to verbal/tactile Adequate No intervention Usually maintained
+Deep Purposeful response to painful May be inadequate Intervention may be needed Usually maintained
+General anesthesia Unarousable Frequently inadequate Intervention often required May be impaired
+Abbreviations: None.
 Table 2. Airway Device Selection in Bronchoscopy
-Device	Advantages	Limitations	Typical Uses
-Natural airway (bite block)	No extra equipment; quick	Limited sedation depth; no control if bleeding	Brief diagnostic scopes
-LMA (2nd gen)	GA possible; adjustable ventilation; excellent access to upper trachea	Aspiration risk; less secure in major bleeding	EBUS, foreign body removal, BLVR (select centers)
-ETT (≥8–8.5 mm)	Most secure; full ventilator control; better for bleeding	Limited access to proximal trachea; tube may obstruct upper stations	Therapeutic bronchoscopy; EBUS when risk is high
-Rigid bronchoscope	Airway stabilization, tamponade; deploy silicone stents; pass large instruments	Requires expertise; unique ventilation setup	Central airway obstruction, massive hemoptysis
-Abbreviations: BLVR—bronchoscopic lung volume reduction; EBUS—endobronchial ultrasound; GA—general anesthesia; LMA—laryngeal mask airway; ETT—endotracheal tube.			
+Device Advantages Limitations Typical Uses
+Natural airway (bite block) No extra equipment; quick Limited sedation depth; no control if bleeding Brief diagnostic scopes
+LMA (2nd gen) GA possible; adjustable ventilation; excellent access to upper trachea Aspiration risk; less secure in major bleeding EBUS, foreign body removal, BLVR (select centers)
+ETT (≥8–8.5 mm) Most secure; full ventilator control; better for bleeding Limited access to proximal trachea; tube may obstruct upper stations Therapeutic bronchoscopy; EBUS when risk is high
+Rigid bronchoscope Airway stabilization, tamponade; deploy silicone stents; pass large instruments Requires expertise; unique ventilation setup Central airway obstruction, massive hemoptysis
+Abbreviations: BLVR—bronchoscopic lung volume reduction; EBUS—endobronchial ultrasound; GA—general anesthesia; LMA—laryngeal mask airway; ETT—endotracheal tube.
 Table 3. Ventilation Protocols to Reduce Atelectasis
-Protocol	Airway	Vt (mL/kg IBW)	PEEP (cmH₂O)	FiO₂	Recruitment	Notes
-Conventional	Often LMA	Variable	0–5	Often 1.0	None/variable	Higher atelectasis; target obscuration more frequent
-VESPA	ETT	6–8	8–10	<100%	Immediate post‑intubation	Major reduction in uni/bilateral atelectasis without extra complications
-LNVP	ETT	10–12	10–15 (upper/middle); 15–20 (lower)	Lowest tolerable	Four post‑intubation maneuvers; breath‑holds	Lower atelectasis; hemodynamic vigilance (vasopressor use not uncommon)
-Abbreviations: IBW—ideal body weight; LMA—laryngeal mask airway; ETT—endotracheal tube; PEEP—positive end‑expiratory pressure; Vt—tidal volume.						
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Dependent Atelectasis Patterns on Radial EBUS. Alt text: Four representative radial EBUS frames illustrating normal lung versus concentric patterns consistent with atelectasis.
-
-Figure 2. Intraprocedural Atelectasis Obscuring a Lower Lobe Target. Alt text: Pre‑procedure CT shows a peripheral nodule; intraprocedural imaging demonstrates new dependent collapse obscuring the lesion.
-
-Figure 3. Rigid Bronchoscope Ventilation Ports. Alt text: Photograph of proximal rigid bronchoscope with jet and circuit adapters.
+Protocol Airway Vt (mL/kg IBW) PEEP (cmH₂O) FiO₂ Recruitment Notes
+Conventional Often LMA Variable 0–5 Often 1.0 None/variable Higher atelectasis; target obscuration more frequent
+VESPA ETT 6–8 8–10 <100% Immediate post‑intubation Major reduction in uni/bilateral atelectasis without extra complications
+LNVP ETT 10–12 10–15 (upper/middle); 15–20 (lower) Lowest tolerable Four post‑intubation maneuvers; breath‑holds Lower atelectasis; hemodynamic vigilance (vasopressor use not uncommon)
+Abbreviations: IBW—ideal body weight; LMA—laryngeal mask airway; ETT—endotracheal tube; PEEP—positive end‑expiratory pressure; Vt—tidal volume.
 
 Cases & Applied Learning
 

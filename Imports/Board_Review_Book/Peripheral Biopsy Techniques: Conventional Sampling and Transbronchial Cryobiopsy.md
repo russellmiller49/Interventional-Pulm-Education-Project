@@ -180,7 +180,6 @@ G --> H
 H -- Yes --> I[Stage/Tx per diagnosis]
 H -- No --> J[Reassess trajectory; repeat with adjunct tool or alternative modality]
 
-
 Bulleted parallel algorithm
 
 Confirm lesion–airway relationship (bronchus sign).
@@ -202,7 +201,6 @@ F -- Yes --> G[MDD: finalize diagnosis and plan]
 F -- No/Low confidence --> H[Consider SLB if risk acceptable]
 H --> G
 
-
 Bulleted parallel algorithm
 
 Perform multidisciplinary pre‑test assessment (history/exposures, HRCT pattern, BAL as indicated).
@@ -215,47 +213,39 @@ Tables & Quick‑Reference Boxes
 
 Table 1. Conventional Central Airway Sampling—What to Use and When
 
-Tool	Best Use	Strengths	Limitations	Typical Yield
-Forceps biopsy	Visible mucosal lesions	Histology; high sensitivity with 3–4 bites	Submucosal disease; necrosis	~88%
-Brushing	Adjunct cytology	Samples broader surface	Superficial only; limited for submucosal	~59%; adds ~8% with biopsy
-Washing	Adjunct only	Easy; can hold for reflex analysis	Minimal exclusive positives	~48%; 2–4% exclusive
-TBNA	Submucosal/peribronchial; nodal	Deep layers; low bleeding; necrosis bypass	Cost; learning curve	68–91%; uniquely diagnostic subset
+Tool Best Use Strengths Limitations Typical Yield
+Forceps biopsy Visible mucosal lesions Histology; high sensitivity with 3–4 bites Submucosal disease; necrosis ~88%
+Brushing Adjunct cytology Samples broader surface Superficial only; limited for submucosal ~59%; adds ~8% with biopsy
+Washing Adjunct only Easy; can hold for reflex analysis Minimal exclusive positives ~48%; 2–4% exclusive
+TBNA Submucosal/peribronchial; nodal Deep layers; low bleeding; necrosis bypass Cost; learning curve 68–91%; uniquely diagnostic subset
 
 Abbreviations: TBNA, transbronchial needle aspiration.
 
 Table 2. PPL Yield Drivers and Tool Selection
 
-Factor	Effect on Yield	Practical Moves
-Lesion size	↑ yield ≥2 cm; masses >4 cm >80%	Increase passes; use combined tools
-Bronchus sign	Strong predictor	Choose bronchus‑leading segment; fluoroscopy AP + lateral
-Tool pairing	TBNA > forceps/brush for malignancy; forceps better for benign	Use TBNA first, then forceps; brushing selectively
-Sample number	More is better to a point	Aim ≥6 total specimens
-Bleeding	Reduces subsequent tool yield	Order tools to minimize blood contamination
+Factor Effect on Yield Practical Moves
+Lesion size ↑ yield ≥2 cm; masses >4 cm >80% Increase passes; use combined tools
+Bronchus sign Strong predictor Choose bronchus‑leading segment; fluoroscopy AP + lateral
+Tool pairing TBNA > forceps/brush for malignancy; forceps better for benign Use TBNA first, then forceps; brushing selectively
+Sample number More is better to a point Aim ≥6 total specimens
+Bleeding Reduces subsequent tool yield Order tools to minimize blood contamination
 
 Abbreviations: PPL, peripheral pulmonary lesion.
 
 Table 3. TBLC at a Glance—Parameters, Safety, and Pitfalls
 
-Domain	Key Points
-Airway/anesthesia	General anesthesia with rigid tracheoscope or large ETT; spontaneous ventilation support common
-Blockers	Routine pre‑placement (Fogarty or bronchial blocker) to prevent/manage bleeding
-Guidance	Fluoroscopy standard; CBCT/radial EBUS/CLE optional
-Probe & freeze	2.4 mm ~6 s; 1.7 mm ~8 s; 1.1 mm longer; position ~1 cm off pleura
-Samples	Target largest diameter ≥5 mm; consider 3–4 samples from ≥2 segments
-Yield	~80% overall; higher with near‑pleural sampling and pleura/septa present
-Complications	Pneumothorax pooled ~5% (range <1–~30%); bleeding mitigated with blockers
-Risk factors	Low FVC, cystic/UIP CT, multi‑lobe sampling, general anesthesia (pneumothorax); central sampling/vascular proximity (bleeding)
-Contraindications	Absolute: coagulopathy/instability. Relative: FVC<50%, DLCO<35%, PH, PaO₂<55–60, emphysema, rapid deterioration
+Domain Key Points
+Airway/anesthesia General anesthesia with rigid tracheoscope or large ETT; spontaneous ventilation support common
+Blockers Routine pre‑placement (Fogarty or bronchial blocker) to prevent/manage bleeding
+Guidance Fluoroscopy standard; CBCT/radial EBUS/CLE optional
+Probe & freeze 2.4 mm ~6 s; 1.7 mm ~8 s; 1.1 mm longer; position ~1 cm off pleura
+Samples Target largest diameter ≥5 mm; consider 3–4 samples from ≥2 segments
+Yield ~80% overall; higher with near‑pleural sampling and pleura/septa present
+Complications Pneumothorax pooled ~5% (range <1–~30%); bleeding mitigated with blockers
+Risk factors Low FVC, cystic/UIP CT, multi‑lobe sampling, general anesthesia (pneumothorax); central sampling/vascular proximity (bleeding)
+Contraindications Absolute: coagulopathy/instability. Relative: FVC<50%, DLCO<35%, PH, PaO₂<55–60, emphysema, rapid deterioration
 
 Abbreviations: CBCT, cone-beam CT; CLE, confocal laser endomicroscopy; ETT, endotracheal tube; PH, pulmonary hypertension; UIP, usual interstitial pneumonia.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Fluoroscopy for PPL. Caption: Proper AP and lateral views confirm tool–lesion alignment before sampling. Alt text: Four-panel fluoroscopic series showing AP then lateral confirmation, TBNA first, then forceps.*
-
-Figure 2. TBLC Probe Positioning. Caption: Under fluoroscopy, the probe tip rests ~1 cm from pleura before freezing. Alt text: Schematic showing cryoprobe to pleura distance and blocker balloon at segmental orifice.*
-
-Figure 3. TBLC Specimen Adequacy. Caption: Representative cryobiopsy cores with largest diameter ≥5 mm suitable for histologic pattern analysis. Alt text: Macroscopic photo of three formalin‑fixed cores with scale.*
 
 Cases & Applied Learning
 
@@ -274,112 +264,108 @@ Answer: TBLC with pre‑placed bronchial blocker. Explanation: TBLC provides lar
 Question Bank (12 MCQs)
 
 1. (Next best step)
-A 72‑year‑old with a 3 cm right upper lobe mass and obvious endobronchial tumor undergoes forceps biopsy ×2 yielding necrosis. What is the next best step to maximize diagnosis?
-A. Switch to washing only
-B. Increase forceps bites until surface bleeding is seen
-C. Perform brushing then stop
-D. Abort and reschedule with EBUS
-E. Proceed to percutaneous biopsy
-Answer: B. Explanation: Necrotic tumors require deeper bites; sampling until surface bleeding often indicates viable tissue has been reached.
+   A 72‑year‑old with a 3 cm right upper lobe mass and obvious endobronchial tumor undergoes forceps biopsy ×2 yielding necrosis. What is the next best step to maximize diagnosis?
+   A. Switch to washing only
+   B. Increase forceps bites until surface bleeding is seen
+   C. Perform brushing then stop
+   D. Abort and reschedule with EBUS
+   E. Proceed to percutaneous biopsy
+   Answer: B. Explanation: Necrotic tumors require deeper bites; sampling until surface bleeding often indicates viable tissue has been reached.
 
 2. (Procedural troubleshooting)
-During central forceps biopsy, moderate bleeding obscures the field. Which immediate maneuver most effectively prevents contralateral soiling?
-A. Instill room‑temperature saline
-B. Rotate to bleeding side down and keep suction at the lesion
-C. Remove scope to re‑oxygenate
-D. Inflate blocker in the opposite lung
-E. Start vasopressors
-Answer: B. Explanation: Lateral decubitus with the bleeding lung down plus continuous suction helps protect the non‑bleeding lung.
+   During central forceps biopsy, moderate bleeding obscures the field. Which immediate maneuver most effectively prevents contralateral soiling?
+   A. Instill room‑temperature saline
+   B. Rotate to bleeding side down and keep suction at the lesion
+   C. Remove scope to re‑oxygenate
+   D. Inflate blocker in the opposite lung
+   E. Start vasopressors
+   Answer: B. Explanation: Lateral decubitus with the bleeding lung down plus continuous suction helps protect the non‑bleeding lung.
 
-3.
-For bronchoscopic staging of right paratracheal nodes, which factor most improves TBNA yield?
-A. Using brushing first
-B. Seven or more aspirates per station
-C. Four aspirates per station
-D. Avoiding suction to limit blood
-E. Sampling tumor before nodes
-Answer: C. Explanation: Yield improves up to about four passes per target; more than that offers marginal gains.
+3. For bronchoscopic staging of right paratracheal nodes, which factor most improves TBNA yield?
+   A. Using brushing first
+   B. Seven or more aspirates per station
+   C. Four aspirates per station
+   D. Avoiding suction to limit blood
+   E. Sampling tumor before nodes
+   Answer: C. Explanation: Yield improves up to about four passes per target; more than that offers marginal gains.
 
 4. (Indications)
-Which scenario most strongly favors TBNA over forceps biopsy as the primary tool?
-A. Friable exophytic tumor with mucosal ulceration
-B. Smooth submucosal bulge causing extrinsic compression
-C. Diffuse endobronchial papillomatosis
-D. Granulation tissue at stent edge
-E. Suspected endobronchial infection
-Answer: B. Explanation: TBNA penetrates submucosa/peribronchial regions and is ideal for extrinsic compression lesions.
+   Which scenario most strongly favors TBNA over forceps biopsy as the primary tool?
+   A. Friable exophytic tumor with mucosal ulceration
+   B. Smooth submucosal bulge causing extrinsic compression
+   C. Diffuse endobronchial papillomatosis
+   D. Granulation tissue at stent edge
+   E. Suspected endobronchial infection
+   Answer: B. Explanation: TBNA penetrates submucosa/peribronchial regions and is ideal for extrinsic compression lesions.
 
-5.
-In fluoroscopy‑guided sampling of a 2.5 cm PPL with a clear bronchus sign, which tool sequence best preserves yield?
-A. Forceps → TBNA → brushing
-B. TBNA → forceps → brushing
-C. Brushing → forceps → TBNA
-D. Washing → forceps only
-E. Forceps only
-Answer: B. Explanation: TBNA first minimizes adverse effects of bleeding on subsequent cytology/histology.
+5. In fluoroscopy‑guided sampling of a 2.5 cm PPL with a clear bronchus sign, which tool sequence best preserves yield?
+   A. Forceps → TBNA → brushing
+   B. TBNA → forceps → brushing
+   C. Brushing → forceps → TBNA
+   D. Washing → forceps only
+   E. Forceps only
+   Answer: B. Explanation: TBNA first minimizes adverse effects of bleeding on subsequent cytology/histology.
 
 6. (Complications)
-Which TBLC maneuver most reduces major bleeding risk?
-A. Taking central biopsies to avoid pleura
-B. Prolonging freeze time to >12 s with large probes
-C. Routine pre‑placement and inflation of a bronchial blocker
-D. Avoiding fluoroscopy to shorten procedure time
-E. Using washing to clear blood before removing probe
-Answer: C. Explanation: Prophylactic blockers permit immediate occlusion of the target airway during and after specimen extraction.
+   Which TBLC maneuver most reduces major bleeding risk?
+   A. Taking central biopsies to avoid pleura
+   B. Prolonging freeze time to >12 s with large probes
+   C. Routine pre‑placement and inflation of a bronchial blocker
+   D. Avoiding fluoroscopy to shorten procedure time
+   E. Using washing to clear blood before removing probe
+   Answer: C. Explanation: Prophylactic blockers permit immediate occlusion of the target airway during and after specimen extraction.
 
 7. (Contraindications)
-Which patient characteristic most strongly argues caution or alternative to TBLC due to pneumothorax risk?
-A. Normal FVC, cystic CT pattern
-B. FVC <50% predicted without cysts
-C. DLCO 40% predicted
-D. Elevated BNP
-E. Age >80 years
-Answer: B. Explanation: Low FVC is associated with higher pneumothorax risk; cystic patterns also raise risk, but low FVC is a consistent red flag.
+   Which patient characteristic most strongly argues caution or alternative to TBLC due to pneumothorax risk?
+   A. Normal FVC, cystic CT pattern
+   B. FVC <50% predicted without cysts
+   C. DLCO 40% predicted
+   D. Elevated BNP
+   E. Age >80 years
+   Answer: B. Explanation: Low FVC is associated with higher pneumothorax risk; cystic patterns also raise risk, but low FVC is a consistent red flag.
 
 8. (Next best step)
-A 64‑year‑old with suspected HP remains unclassified after HRCT and BAL. You plan TBLC. Which is the most appropriate procedural plan?
-A. Conscious sedation, no blockers, single central biopsy
-B. General anesthesia, near‑pleural sampling, 3–4 cores from ≥2 segments with blocker in place
-C. Conscious sedation with washing only
-D. One biopsy far from pleura to avoid pneumothorax
-E. Percutaneous core biopsy of the lung
-Answer: B. Explanation: Standardized TBLC emphasizes blockers, near‑pleural positioning, multiple adequately sized cores, often sampling two segments.
+   A 64‑year‑old with suspected HP remains unclassified after HRCT and BAL. You plan TBLC. Which is the most appropriate procedural plan?
+   A. Conscious sedation, no blockers, single central biopsy
+   B. General anesthesia, near‑pleural sampling, 3–4 cores from ≥2 segments with blocker in place
+   C. Conscious sedation with washing only
+   D. One biopsy far from pleura to avoid pneumothorax
+   E. Percutaneous core biopsy of the lung
+   Answer: B. Explanation: Standardized TBLC emphasizes blockers, near‑pleural positioning, multiple adequately sized cores, often sampling two segments.
 
-9.
-For central airway biopsy in a patient on antithrombotics, which statement is most accurate?
-A. Platelets 40,000/µL are sufficient if epinephrine is available
-B. Warfarin need not be interrupted if INR <3.5
-C. Clopidogrel should be stopped about 7 days pre‑procedure
-D. All DOACs require a 7‑day hold
-E. Aspirin must be held for 5 days
-Answer: C. Explanation: Clopidogrel is typically held for ~7 days; many centers continue low‑dose aspirin; DOAC holds are generally 48–72 h.
+9. For central airway biopsy in a patient on antithrombotics, which statement is most accurate?
+   A. Platelets 40,000/µL are sufficient if epinephrine is available
+   B. Warfarin need not be interrupted if INR <3.5
+   C. Clopidogrel should be stopped about 7 days pre‑procedure
+   D. All DOACs require a 7‑day hold
+   E. Aspirin must be held for 5 days
+   Answer: C. Explanation: Clopidogrel is typically held for ~7 days; many centers continue low‑dose aspirin; DOAC holds are generally 48–72 h.
 
 10. (Procedural troubleshooting)
-While performing TBLC, the probe repeatedly catches at a lobar carina and cannot reach the periphery. Best next step?
-A. Take the biopsy at that level
-B. Increase freezing time by 50%
-C. Switch to another segment/lobe to obtain near‑pleural cores
-D. Abort and schedule SLB
-E. Inflate blocker and retry the same position
-Answer: C. Explanation: Central biopsies risk bleeding and low alveolar content; reposition to obtain near‑pleural samples.
+    While performing TBLC, the probe repeatedly catches at a lobar carina and cannot reach the periphery. Best next step?
+    A. Take the biopsy at that level
+    B. Increase freezing time by 50%
+    C. Switch to another segment/lobe to obtain near‑pleural cores
+    D. Abort and schedule SLB
+    E. Inflate blocker and retry the same position
+    Answer: C. Explanation: Central biopsies risk bleeding and low alveolar content; reposition to obtain near‑pleural samples.
 
-11.
-Which factor most strongly predicts success of the conventional bronchoscopy approach to a small PPL?
-A. Lesion SUV on PET
-B. Bronchus sign on thin‑section CT
-C. Presence of calcification
-D. Patient age
-E. Lesion density (ground‑glass vs solid) only
-Answer: B. Explanation: A bronchus leading to/within the lesion is a key predictor of transbronchial diagnostic success.
+11. Which factor most strongly predicts success of the conventional bronchoscopy approach to a small PPL?
+    A. Lesion SUV on PET
+    B. Bronchus sign on thin‑section CT
+    C. Presence of calcification
+    D. Patient age
+    E. Lesion density (ground‑glass vs solid) only
+    Answer: B. Explanation: A bronchus leading to/within the lesion is a key predictor of transbronchial diagnostic success.
 
 12. (Complications)
-Which statement about TBLC complications is most accurate?
-A. Pneumothorax is rare and uniformly <1%
-B. Major bleeding is common without blockers but uncommon with routine blocker use
-C. Mortality is similar to surgical lung biopsy
-D. TBLC cannot be done in an outpatient setting
-E. Bleeding risk is lower when sampling far from pleura
-Answer: B. Explanation: Major bleeding risk falls substantially with routine blocker use; pneumothorax rates vary across studies (pooled ~5%); outpatient performance is feasible in many centers.
+    Which statement about TBLC complications is most accurate?
+    A. Pneumothorax is rare and uniformly <1%
+    B. Major bleeding is common without blockers but uncommon with routine blocker use
+    C. Mortality is similar to surgical lung biopsy
+    D. TBLC cannot be done in an outpatient setting
+    E. Bleeding risk is lower when sampling far from pleura
+    Answer: B. Explanation: Major bleeding risk falls substantially with routine blocker use; pneumothorax rates vary across studies (pooled ~5%); outpatient performance is feasible in many centers.
 
 Controversies, Variability, and Evolving Evidence
 

@@ -19,6 +19,7 @@ export interface BoardReviewChapterMeta {
   tags: string[]
   focus: string[]
   sourceFile: string
+  audioFile?: string
   order: number
   published?: boolean
 }
@@ -37,6 +38,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['central airway obstruction', 'therapeutic bronchoscopy', 'stents'],
     focus: ['Debulking sequence', 'Foreign body extraction', 'Complication mitigation'],
     sourceFile: 'rigid-bronchoscopy-indications-technique.mdx',
+    audioFile: 'Rigid Bronchoscopy Indications, Technique, and Troubleshooting_complete.mp3',
     order: 1,
   },
   {
@@ -52,6 +54,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['EBUS', 'BLVR', 'airway fire prevention'],
     focus: ['Ventilation bundles', 'Airway device matching', 'Hypoxemia algorithms'],
     sourceFile: 'anesthesia-for-ip.mdx',
+    audioFile: 'Anesthesia for Interventional Pulmonology_complete.mp3',
     order: 2,
   },
   {
@@ -67,6 +70,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['pregnancy', 'pulmonary hypertension', 'antithrombotics'],
     focus: ['Bleeding control', 'Hypoxemia rescue', 'Scenario algorithms'],
     sourceFile: 'bronchoscopy-in-high-risk-patients-and-complications-in-bronchoscopy.mdx',
+    audioFile: 'bronchoscopy in high-risk patients and complications_complete.mp3',
     order: 3,
   },
   {
@@ -83,6 +87,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     focus: ['Tool sequencing', 'Complication prevention', 'Quality metrics'],
     sourceFile:
       'peripheral-biopsy-techniques-conventional-sampling-and-transbronchial-cryobiopsy.mdx',
+    audioFile: 'Peripheral Biopsy Techniques Conventional and Cryobiopsy_complete.mp3',
     order: 4,
   },
   {
@@ -98,6 +103,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['mediastinal staging', 'systematic sampling', 'TNM-9'],
     focus: ['Station mapping', 'Sampling order', 'Negative EBUS interpretation'],
     sourceFile: 'lung-cancer-staging-and-linear-ebus.mdx',
+    audioFile: 'Lung Cancer Staging and Linear EBUS_complete.mp3',
     order: 5,
   },
   {
@@ -113,6 +119,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['lung-rads', 'shared decision-making', 'incidental nodules'],
     focus: ['Eligibility pathways', 'Algorithm memorization', 'Quality requirements'],
     sourceFile: 'lung-cancer-screening.mdx',
+    audioFile: 'Lung cancer Sscreening & Nodule Pathways_complete.mp3',
     order: 6,
   },
   {
@@ -128,6 +135,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['thoracentesis', 'IPC', 'pleurodesis'],
     focus: ['Safety thresholds', 'Algorithmic management', 'Complication rescue'],
     sourceFile: 'pleural-effusions-and-pleural-interventions.mdx',
+    audioFile: 'Pleural Effusions & Pleural Interventions_complete.mp3',
     order: 7,
   },
   {
@@ -143,6 +151,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['intrapleural therapy', 'empyema', 'small-bore drains'],
     focus: ['RAPID score use', 'Drain troubleshooting', 'Escalation criteria'],
     sourceFile: 'pleural-infections.mdx',
+    audioFile: 'Pleural Infections_complete.mp3',
     order: 8,
   },
   {
@@ -158,6 +167,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['air leak', 'endobronchial valves', 'thoracic surgery interface'],
     focus: ['Chest tube strategy', 'Valve selection', 'Weaning pathways'],
     sourceFile: 'pneumothorax-prolonged-air-leaks-and-bronchopleural-fistula.mdx',
+    audioFile: 'Pneumothorax, Prolonged Air Leaks, and Bronchopleural Fistula_complete.mp3',
     order: 9,
   },
   {
@@ -173,6 +183,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['IPC', 'talc', 'malignant pleural effusion'],
     focus: ['Autopleurodesis', 'Infection management', 'Program logistics'],
     sourceFile: 'indwelling-pleural-catheters-and-pleurodesis.mdx',
+    audioFile: 'Indwelling pleural catheters and pleurodesis_complete.mp3',
     order: 10,
   },
   {
@@ -188,6 +199,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['percutaneous trach', 'cricothyroidotomy', 'critical care'],
     focus: ['Patient selection', 'Bleeding control', 'Emergency rescue'],
     sourceFile: 'percutaneous-tracheostomy-and-cricothyroidotomy.mdx',
+    audioFile: 'percutaneous tracheostomy and cricothyroidotomy_complete.mp3',
     order: 11,
   },
   {
@@ -203,6 +215,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['revenue cycle', 'compliance', 'CPT updates'],
     focus: ['High-yield codes', 'Modifiers', 'Payer language'],
     sourceFile: 'coding-and-billing.mdx',
+    audioFile: 'Coding, Billing, & Documentation for IP_complete.mp3',
     order: 12,
   },
   {
@@ -218,6 +231,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['silicone stents', 'metallic stents', 'granulation tissue'],
     focus: ['Sizing pearls', 'Deployment pitfalls', 'Rescue algorithms'],
     sourceFile: 'airway-stents.mdx',
+    audioFile: 'Airway Stent Selection & Troubleshooting_complete.mp3',
     order: 13,
   },
   {
@@ -233,6 +247,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['benign stenosis', 'dilation', 'spray cryotherapy'],
     focus: ['Etiology-specific algorithms', 'Scar modulation', 'Surveillance planning'],
     sourceFile: 'non-malignant-cao.mdx',
+    audioFile: 'Management of Non-Malignant Central Airway Obstruction_complete.mp3',
     order: 14,
   },
   {
@@ -248,6 +263,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['SBRT', 'segmentectomy', 'bronchoscopic ablation'],
     focus: ['Shared decision making', 'Ablative pathways', 'Perioperative optimization'],
     sourceFile: 'treatment-options-for-early-stage-lung-cancer.mdx',
+    audioFile: 'Treatment Options for Early Stage Lung Cancer_complete.mp3',
     order: 15,
   },
   {
@@ -264,6 +280,8 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     focus: ['Target planning', 'Navigation workflow', 'Complication mitigation'],
     sourceFile:
       'advanced-peripheral-bronchoscopy-radial-probe-electromagnetic-navigation-and-robotic-bronchoscopy.mdx',
+    audioFile:
+      'Advanced Peripheral Bronchoscopy Radial Probe, Electromagnetic Navigation, and Robotic Bronchoscopy_complete_1.mp3',
     order: 16,
   },
   {
@@ -279,6 +297,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['COPD', 'lung volume reduction', 'valves'],
     focus: ['Selection criteria', 'Valve deployment', 'Complication rescue'],
     sourceFile: 'bronchoscopic-and-surgical-treatment-for-copd-and-chronic-bronchitis.mdx',
+    audioFile: 'Bronchoscopic and Surgical Treatment for COPD and Chronic Bronchitis_completed.mp3',
     order: 17,
   },
   {
@@ -294,6 +313,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['nodule', 'risk assessment', 'imaging follow-up'],
     focus: ['Risk calculators', 'Follow-up intervals', 'Biopsy decisions'],
     sourceFile: 'diagnostic-approach-to-pulmonary-nodules.mdx',
+    audioFile: 'Diagnostic Approach to Pulmonary Nodules_complete.mp3',
     order: 18,
   },
   {
@@ -309,6 +329,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['malignant obstruction', 'stenting', 'debulking'],
     focus: ['Modality selection', 'Team coordination', 'Post-procedure care'],
     sourceFile: 'management-of-malignant-central-airway-obstruction.mdx',
+    audioFile: 'Malignant Central Airway Obstruction_complete.mp3',
     order: 19,
   },
   {
@@ -324,6 +345,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['mechanical debridement', 'balloon dilation', 'benign stenosis'],
     focus: ['Tool selection', 'Technique steps', 'Complication mitigation'],
     sourceFile: 'mechanical-debridement-and-balloon-dilitation.mdx',
+    audioFile: 'Mechanical Debridement and Balloon Dilatation_complete.mp3',
     order: 20,
   },
   {
@@ -339,6 +361,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['pathology', 'ROSE', 'molecular markers'],
     focus: ['Specimen triage', 'Testing pathways', 'Communication with pathology'],
     sourceFile: 'pathology-histology-cytology-rose-and-molecular-markers.mdx',
+    audioFile: 'Pathology Histology, Cytology, ROSE and Molecular Markers_complete.mp3',
     order: 21,
   },
   {
@@ -354,6 +377,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['imaging guidance', 'peripheral lung', 'cone-beam CT'],
     focus: ['Workflow integration', 'Radiation considerations', 'Target visualization'],
     sourceFile: 'real-time-peripheral-imaging-techniques.mdx',
+    audioFile: 'Real_Time_Peripheral_Imaging_Techniques_complete.mp3',
     order: 22,
   },
   {
@@ -369,6 +393,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['thermal ablation', 'APC', 'laser'],
     focus: ['Energy selection', 'Safety protocols', 'Technique pearls'],
     sourceFile: 'thermal-ablatitive-therapies.mdx',
+    audioFile: 'Thermal Ablative Therapies_complete.mp3',
     order: 23,
   },
   {
@@ -384,6 +409,7 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     tags: ['PDT', 'cryotherapy', 'brachytherapy'],
     focus: ['Modality selection', 'Complication prevention', 'Delayed ablation logistics'],
     sourceFile: 'delayed-ablative-therapies.mdx',
+    audioFile: 'Delayed Ablative Therapies_complete.mp3',
     order: 24,
   },
 ]

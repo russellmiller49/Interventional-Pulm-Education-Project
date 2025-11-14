@@ -226,7 +226,6 @@ K --> M[Adjuncts: Forceps/cryoprobe • Balloon • Stent if mixed]
 L --> M
 M --> N[Post‑procedure: airway toileting • plan oncologic therapy • schedule review]
 
-
 Parallel bullet algorithm
 
 Stabilize airway/ventilation; FiO₂/FeO₂ ≤ 0.40 before energy.
@@ -256,7 +255,6 @@ I --> J{Persistent bleeding?}
 J -- Yes --> K[Repeat coagulation • Consider stent/tamponade • IR embolization]
 J -- No --> L[Airway toileting • Observe • Treat underlying cause]
 
-
 Parallel bullet algorithm
 
 Airway control and clot evacuation first.
@@ -271,53 +269,42 @@ Refractory cases → IR embolization/surgery per institution.
 
 Tables & Quick‑Reference Boxes
 Table 1. Medical Lasers for Airway Use — Physics and Typical Settings
-Laser type	Wavelength (nm)	Dominant tissue effect	Approximate penetration	Typical airway power
-Nd:YAG	~1064	Coagulation + vaporization	~5–15 mm	~20–40 W
-Nd:YAP	~1340	Coagulation	~3–10 mm	~20 W
-Ho:YAG	~2100	Precise cutting + shallow coagulation	<1 mm	~10 W
-KTP	532	Superficial cutting; hemostasis of small vessels	<1 mm	~15–35 W
-Diode (e.g., 980/1470)	980 / 1470	Mixed coagulation/cutting; device‑dependent	~2–4 mm (device‑dependent)	~10–20 W*
-CO₂	10,600	Very precise cutting; limited hemostasis	<1 mm	~4–8 W
+Laser type Wavelength (nm) Dominant tissue effect Approximate penetration Typical airway power
+Nd:YAG ~1064 Coagulation + vaporization ~5–15 mm ~20–40 W
+Nd:YAP ~1340 Coagulation ~3–10 mm ~20 W
+Ho:YAG ~2100 Precise cutting + shallow coagulation <1 mm ~10 W
+KTP 532 Superficial cutting; hemostasis of small vessels <1 mm ~15–35 W
+Diode (e.g., 980/1470) 980 / 1470 Mixed coagulation/cutting; device‑dependent ~2–4 mm (device‑dependent) ~10–20 W\*
+CO₂ 10,600 Very precise cutting; limited hemostasis <1 mm ~4–8 W
 
-*Some sources list lower diode wattages for specific platforms; settings vary by device and clinical goal.
+\*Some sources list lower diode wattages for specific platforms; settings vary by device and clinical goal.
 
 Abbreviations: mm, millimeters; W, watts; nm, nanometers.
 
 Table 2. Thermal Modalities at a Glance
-Feature	Laser	Electrocautery (EC)	Argon Plasma Coagulation (APC)
-Contact vs noncontact	Both (bare fiber vs air‑cooled catheter)	Contact	Noncontact
-Depth of effect	Variable; deepest (Nd:YAG)	Moderate, contact‑limited	Shallow (~1–2 mm)
-Best uses	Rapid debulking; focal hemostasis	Web incisions; pedunculated lesions; cost‑efficient debulking	Diffuse oozing, mucosal coagulation; prime for debulking
-Key settings	Watts, pulse, fiber distance	Watts; cut/coag modes	Watts; gas flow (≤1.0 L/min); tip‑to‑tissue 1–3 mm
-Device/implant issues	Light (safe with pacers)	Electrical (manage CIEDs)	Electrical + gas (manage CIEDs; gas safety)
-Fire risk	Yes (FiO₂/FeO₂ ≤ 0.40)	Yes (FiO₂/FeO₂ ≤ 0.40)	Yes (FiO₂/FeO₂ ≤ 0.40)
-Limitations	Risk of deep injury; cost	Wet fields blunt effect; posterior wall risk	Limited depth; gas embolism risk if misused
+Feature Laser Electrocautery (EC) Argon Plasma Coagulation (APC)
+Contact vs noncontact Both (bare fiber vs air‑cooled catheter) Contact Noncontact
+Depth of effect Variable; deepest (Nd:YAG) Moderate, contact‑limited Shallow (~1–2 mm)
+Best uses Rapid debulking; focal hemostasis Web incisions; pedunculated lesions; cost‑efficient debulking Diffuse oozing, mucosal coagulation; prime for debulking
+Key settings Watts, pulse, fiber distance Watts; cut/coag modes Watts; gas flow (≤1.0 L/min); tip‑to‑tissue 1–3 mm
+Device/implant issues Light (safe with pacers) Electrical (manage CIEDs) Electrical + gas (manage CIEDs; gas safety)
+Fire risk Yes (FiO₂/FeO₂ ≤ 0.40) Yes (FiO₂/FeO₂ ≤ 0.40) Yes (FiO₂/FeO₂ ≤ 0.40)
+Limitations Risk of deep injury; cost Wet fields blunt effect; posterior wall risk Limited depth; gas embolism risk if misused
 
 Abbreviations: CIEDs, cardiac implantable electronic devices; L/min, liters per minute.
 
 Table 3. Airway Fire & Procedure Safety Checklist (Thermal Modalities)
-Checklist item	Action
-Oxygen control	Confirm FiO₂/FeO₂ ≤ 0.40 before firing; use closed‑loop confirmation.
-Airway device	Prefer laser‑resistant ETT when lasing near tubes; protect scope optics (extend active tips).
-Field preparation	Avoid alcohol preps; place wet drapes; have saline/water within arm’s reach.
-Team PPE	Laser‑specific eyewear; plume evacuation; UV face shield/gloves/gown for laser rooms.
-Pacers/ICDs (EC/APC)	Magnet/asynchronous mode; post‑procedure interrogation.
-APC specifics	Gas flow ≤1.0 L/min; avoid firing while advancing; keep tip off tissue.
-Laser technique	Coaxial alignment; short pulses; move beam every 1–3 pulses.
-Bleeding backup	Rigid tube for tamponade; hemostatic agents; IR backup for embolization.
+Checklist item Action
+Oxygen control Confirm FiO₂/FeO₂ ≤ 0.40 before firing; use closed‑loop confirmation.
+Airway device Prefer laser‑resistant ETT when lasing near tubes; protect scope optics (extend active tips).
+Field preparation Avoid alcohol preps; place wet drapes; have saline/water within arm’s reach.
+Team PPE Laser‑specific eyewear; plume evacuation; UV face shield/gloves/gown for laser rooms.
+Pacers/ICDs (EC/APC) Magnet/asynchronous mode; post‑procedure interrogation.
+APC specifics Gas flow ≤1.0 L/min; avoid firing while advancing; keep tip off tissue.
+Laser technique Coaxial alignment; short pulses; move beam every 1–3 pulses.
+Bleeding backup Rigid tube for tamponade; hemostatic agents; IR backup for embolization.
 
 Abbreviations: ETT, endotracheal tube; PPE, personal protective equipment; IR, interventional radiology.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Laser‑assisted mechanical debulking of intrinsic CAO.
-Alt text: Sequential images showing devascularization (paler tumor surface) followed by mechanical coring and luminal restoration.
-
-Figure 2. EC needle‑knife radial incisions in web‑like subglottic stenosis.
-Alt text: Endoscopic views of three radial cuts avoiding posterior membranous wall, followed by dilation.
-
-Figure 3. APC for diffuse endobronchial oozing.
-Alt text: Noncontact spray pattern creating superficial white coagulum with cessation of bleeding.
 
 Cases & Applied Learning
 
@@ -354,100 +341,100 @@ Best answer: B. APC provides superficial coagulation for diffuse oozing and prim
 Question Bank (MCQs)
 
 1. During laser debulking of an endoluminal tumor, the most effective way to reduce the risk of deep tissue perforation is to:
-A. Increase power density and dwell time
-B. Use continuous high‑power application at close range
-C. Deliver short pulses, keep the beam moving (“paint”), and maintain coaxial alignment
-D. Switch to 100% oxygen to prevent fire
-E. Aim perpendicular to the airway wall
-Answer: C. Short pulses with constant movement and coaxial alignment minimize deep thermal injury.
+   A. Increase power density and dwell time
+   B. Use continuous high‑power application at close range
+   C. Deliver short pulses, keep the beam moving (“paint”), and maintain coaxial alignment
+   D. Switch to 100% oxygen to prevent fire
+   E. Aim perpendicular to the airway wall
+   Answer: C. Short pulses with constant movement and coaxial alignment minimize deep thermal injury.
 
 2. Which pairing is most accurate regarding depth of effect?
-A. APC: 5–15 mm
-B. KTP laser: <1 mm
-C. Nd:YAG laser: <1 mm
-D. EC: exactly 1 mm
-E. CO₂ laser: 5–15 mm
-Answer: B. KTP is superficial (<1 mm). Nd:YAG penetrates deeper (~5–15 mm). APC is ~1–2 mm.
+   A. APC: 5–15 mm
+   B. KTP laser: <1 mm
+   C. Nd:YAG laser: <1 mm
+   D. EC: exactly 1 mm
+   E. CO₂ laser: 5–15 mm
+   Answer: B. KTP is superficial (<1 mm). Nd:YAG penetrates deeper (~5–15 mm). APC is ~1–2 mm.
 
 3. (Next best step) A patient with malignant CAO develops significant oozing during debulking. The FiO₂ is 0.30. Best immediate step:
-A. Increase FiO₂ to 1.0
-B. Use APC with short bursts and gas flow ≤1.0 L/min to obtain hemostasis
-C. Switch to cut mode EC at 60 W
-D. Prolonged laser exposure at a fixed point
-E. Abort procedure
-Answer: B.
+   A. Increase FiO₂ to 1.0
+   B. Use APC with short bursts and gas flow ≤1.0 L/min to obtain hemostasis
+   C. Switch to cut mode EC at 60 W
+   D. Prolonged laser exposure at a fixed point
+   E. Abort procedure
+   Answer: B.
 
 4. (Troubleshooting) During EC needle‑knife treatment of a tracheal web, the operator repeatedly incises at 6 o’clock. The major risk is:
-A. Stent migration
-B. Esophageal injury/perforation
-C. Gas embolism
-D. Device interference with pacer
-E. Lack of hemostasis
-Answer: B. Avoid membranous posterior wall.
+   A. Stent migration
+   B. Esophageal injury/perforation
+   C. Gas embolism
+   D. Device interference with pacer
+   E. Lack of hemostasis
+   Answer: B. Avoid membranous posterior wall.
 
 5. Which statement about APC is true?
-A. It is a contact modality.
-B. It requires gas flows ≥2 L/min for efficacy.
-C. It provides superficial coagulation and is ideal for diffuse oozing.
-D. It is safer than laser in high FiO₂ environments.
-E. It has deeper penetration than Nd:YAG.
-Answer: C.
+   A. It is a contact modality.
+   B. It requires gas flows ≥2 L/min for efficacy.
+   C. It provides superficial coagulation and is ideal for diffuse oozing.
+   D. It is safer than laser in high FiO₂ environments.
+   E. It has deeper penetration than Nd:YAG.
+   Answer: C.
 
 6. For patients with pacemakers/ICDs undergoing thermal ablation:
-A. Lasers are contraindicated.
-B. EC/APC require no device planning.
-C. Lasers avoid electrical current; EC/APC require magnet/asynchronous mode and post‑procedure interrogation.
-D. Only APC is safe.
-E. Suspend anticoagulation for 2 weeks.
-Answer: C.
+   A. Lasers are contraindicated.
+   B. EC/APC require no device planning.
+   C. Lasers avoid electrical current; EC/APC require magnet/asynchronous mode and post‑procedure interrogation.
+   D. Only APC is safe.
+   E. Suspend anticoagulation for 2 weeks.
+   Answer: C.
 
 7. (Next best step) You plan laser therapy near a tracheostomy tube. Optimal step to reduce fire risk:
-A. Raise FiO₂ to prevent desaturation
-B. Leave standard PVC tube in place
-C. Use a laser‑resistant ETT and maintain FiO₂/FeO₂ ≤ 0.40
-D. Instill epinephrine
-E. Use APC instead of laser to eliminate fire risk
-Answer: C.
+   A. Raise FiO₂ to prevent desaturation
+   B. Leave standard PVC tube in place
+   C. Use a laser‑resistant ETT and maintain FiO₂/FeO₂ ≤ 0.40
+   D. Instill epinephrine
+   E. Use APC instead of laser to eliminate fire risk
+   Answer: C.
 
 8. A practical strategy to optimize laser hemostasis prior to debulking is to:
-A. Start at high power in contact mode
-B. Begin at lower power density with fiber offset (~1 cm) to devascularize, then debulk mechanically
-C. Use continuous long pulses at the same spot
-D. Switch to cut mode EC immediately
-E. Use high gas flows
-Answer: B.
+   A. Start at high power in contact mode
+   B. Begin at lower power density with fiber offset (~1 cm) to devascularize, then debulk mechanically
+   C. Use continuous long pulses at the same spot
+   D. Switch to cut mode EC immediately
+   E. Use high gas flows
+   Answer: B.
 
 9. (Troubleshooting) APC seems ineffective in a pooled, bloody field. Best maneuver:
-A. Increase gas to 2 L/min
-B. Decrease distance to contact the tissue
-C. Suction blood/mucus, then reattempt APC with short bursts
-D. Fire while advancing the catheter
-E. Switch to cut mode EC
-Answer: C.
+   A. Increase gas to 2 L/min
+   B. Decrease distance to contact the tissue
+   C. Suction blood/mucus, then reattempt APC with short bursts
+   D. Fire while advancing the catheter
+   E. Switch to cut mode EC
+   Answer: C.
 
 10. Which of the following is most associated with risk of gas embolism?
-A. Short APC bursts at 0.6 L/min
-B. Firing APC while advancing or impaling tissue
-C. Laser pulses at 20 W
-D. EC needle‑knife brief incisions
-E. Balloon dilation
-Answer: B.
+    A. Short APC bursts at 0.6 L/min
+    B. Firing APC while advancing or impaling tissue
+    C. Laser pulses at 20 W
+    D. EC needle‑knife brief incisions
+    E. Balloon dilation
+    Answer: B.
 
 11. In malignant CAO, registry data show that therapeutic bronchoscopy is associated with:
-A. Universal symptom improvement
-B. High technical success and clinically meaningful dyspnea improvement in a substantial subset; low per‑procedure complication rates in experienced centers
-C. Prohibitive mortality
-D. No role prior to oncologic therapy
-E. Higher safety with moderate sedation than general anesthesia
-Answer: B.
+    A. Universal symptom improvement
+    B. High technical success and clinically meaningful dyspnea improvement in a substantial subset; low per‑procedure complication rates in experienced centers
+    C. Prohibitive mortality
+    D. No role prior to oncologic therapy
+    E. Higher safety with moderate sedation than general anesthesia
+    Answer: B.
 
 12. For benign subglottic stenosis due to a thin web, the most appropriate sequence is:
-A. Circumferential EC ablation → no dilation
-B. Radial EC incisions → gentle dilation (rigid or balloon)
-C. APC at high gas flow alone
-D. Stent first
-E. Photodynamic therapy
-Answer: B.
+    A. Circumferential EC ablation → no dilation
+    B. Radial EC incisions → gentle dilation (rigid or balloon)
+    C. APC at high gas flow alone
+    D. Stent first
+    E. Photodynamic therapy
+    Answer: B.
 
 Controversies, Variability, and Evolving Evidence
 

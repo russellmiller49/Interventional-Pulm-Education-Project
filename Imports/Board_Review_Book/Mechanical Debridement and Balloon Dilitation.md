@@ -252,7 +252,6 @@ J --> K
 K -- No --> L[Adjunct: stent placement; repeat sessions; multidisciplinary review]
 K -- Yes --> M[Post‑procedure monitoring & follow‑up]
 
-
 Parallel bullet algorithm
 
 Secure airway and oxygenation first; default to rigid bronchoscopy if unstable.
@@ -282,7 +281,6 @@ H --> I{Recurrence frequency}
 I -- High (e.g., >2/mo) --> J[Stent consideration]
 I -- Low/moderate --> K[Staged repeat dilatations; manage inflammation; reassess]
 
-
 Parallel bullet algorithm
 
 Confirm benign etiology and morphology.
@@ -299,45 +297,38 @@ Plan surveillance and symptom‑guided reassessment.
 
 Tables & Quick‑Reference Boxes
 Table 1. Mechanical Debridement Modalities—Roles, Strengths, Limitations
-Modality	Primary role	Key strengths	Limitations / cautions
-Rigid coring	Rapid removal of exophytic tumors	Immediate debulking, tamponade with scope, works at high FiO₂	Risk of perforation/vascular injury; requires skill and direct visualization
-Rigid forceps	Tissue extraction, debulking	Strong grasp, many jaw options	Mucosal tears in tight lumens; not hemostatic
-Flexible forceps (large/jumbo)	Debris removal, small/angulated segments	Maneuverable, adjunct to thermal	Small bites; bleeding with “cold” forceps; limited primary debulking role
-Microdebrider	Rapid debulking of long infiltrative tumors (trachea/mainstem)	Continuous suction + cutting; fast	Not hemostatic; bulky/rigid; catastrophic injury if misused
-Cryorecanalization	En bloc removal of cryosensitive tissue when thermal is contraindicated	Works at high FiO₂; large fragments	Not hemostatic; avoid near vascular invasion/membranous wall
-Balloon dilatation	Expand stenosis; facilitate stenting	Minimizes shearing; simple, quick	Occludes airway during inflation; laceration/perforation risk if over‑dilated
-Abbreviations	FiO₂, fractional inspired oxygen		
+Modality Primary role Key strengths Limitations / cautions
+Rigid coring Rapid removal of exophytic tumors Immediate debulking, tamponade with scope, works at high FiO₂ Risk of perforation/vascular injury; requires skill and direct visualization
+Rigid forceps Tissue extraction, debulking Strong grasp, many jaw options Mucosal tears in tight lumens; not hemostatic
+Flexible forceps (large/jumbo) Debris removal, small/angulated segments Maneuverable, adjunct to thermal Small bites; bleeding with “cold” forceps; limited primary debulking role
+Microdebrider Rapid debulking of long infiltrative tumors (trachea/mainstem) Continuous suction + cutting; fast Not hemostatic; bulky/rigid; catastrophic injury if misused
+Cryorecanalization En bloc removal of cryosensitive tissue when thermal is contraindicated Works at high FiO₂; large fragments Not hemostatic; avoid near vascular invasion/membranous wall
+Balloon dilatation Expand stenosis; facilitate stenting Minimizes shearing; simple, quick Occludes airway during inflation; laceration/perforation risk if over‑dilated
+Abbreviations FiO₂, fractional inspired oxygen
 Table 2. Balloon Bronchoplasty—Practical Parameters
-Parameter	Practical point
-Balloon design	High‑pressure, low‑compliance, nonconformal; single‑ or multi‑diameter by pressure
-Positioning	Center across stenosis with slight overlap on both sides; entirely distal to scope tip before inflation
-Inflation cycles	Commonly 30–90 s ×2–3 per stage or ~1 min ×3 per stage; interrupt if intolerance
-Escalation	Incremental up‑sizing; stop if deep laceration suspected
-Visualization	Gentle suction on fluid‑filled balloon yields a 360° view to detect tears
-Adjunct uses	Tamponade bleeding; help seat stents; temporary occlusion
-Abbreviations	s, seconds
+Parameter Practical point
+Balloon design High‑pressure, low‑compliance, nonconformal; single‑ or multi‑diameter by pressure
+Positioning Center across stenosis with slight overlap on both sides; entirely distal to scope tip before inflation
+Inflation cycles Commonly 30–90 s ×2–3 per stage or ~1 min ×3 per stage; interrupt if intolerance
+Escalation Incremental up‑sizing; stop if deep laceration suspected
+Visualization Gentle suction on fluid‑filled balloon yields a 360° view to detect tears
+Adjunct uses Tamponade bleeding; help seat stents; temporary occlusion
+Abbreviations s, seconds
 Table 3. Anticipated Complications and Management
-Complication	Prevention	Recognition	Management
-Airway laceration	Incremental sizing; visualize through balloon	Sudden linear mucosal split	Usually conservative; monitor; avoid further over‑dilatation
-Bleeding	Devascularize when feasible; gentle technique	Oozing vs brisk hemorrhage	Tamponade (scope/balloon), cold saline, dilute epinephrine, topical TXA; blockers/Fogarty
-Pneumothorax/mediastinum	Avoid over‑dilatation; respect planes	Chest pain, emphysema	Imaging, oxygen, chest drainage if indicated
-Barotrauma/air‑trapping	Avoid occluding expiratory ports; pause ventilation	Rising pressures, hypoxia	Remove instruments, vent; treat barotrauma
-Negative‑pressure pulmonary edema	Avoid prolonged occlusion in spontaneous breathing	Acute hypoxemia post‑dilation	Supportive care; consider GA for future sessions
-Abbreviations	TXA, tranexamic acid; GA, general anesthesia		
+Complication Prevention Recognition Management
+Airway laceration Incremental sizing; visualize through balloon Sudden linear mucosal split Usually conservative; monitor; avoid further over‑dilatation
+Bleeding Devascularize when feasible; gentle technique Oozing vs brisk hemorrhage Tamponade (scope/balloon), cold saline, dilute epinephrine, topical TXA; blockers/Fogarty
+Pneumothorax/mediastinum Avoid over‑dilatation; respect planes Chest pain, emphysema Imaging, oxygen, chest drainage if indicated
+Barotrauma/air‑trapping Avoid occluding expiratory ports; pause ventilation Rising pressures, hypoxia Remove instruments, vent; treat barotrauma
+Negative‑pressure pulmonary edema Avoid prolonged occlusion in spontaneous breathing Acute hypoxemia post‑dilation Supportive care; consider GA for future sessions
+Abbreviations TXA, tranexamic acid; GA, general anesthesia
 Table 4. Indications and Expected Durability—Balloon Dilatation
-Scenario	Expected effect	Notes
-Malignant intraluminal narrowing	Immediate relief; often bridge to stent	Improves diameter in a majority with one procedure
-Benign web stenosis	Good initial response; repeat sessions common	Combine with radial incisions; diminishing benefit beyond multiple sessions in some series
-Complex benign stenosis	Variable; often transient	Consider adjuncts and earlier stenting
-Post‑transplant anastomotic stenosis	Transient relief; repeated procedures frequent	Stenting improves outcomes in selected patients
-Abbreviations	—	
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Tracheal stenosis before and after balloon dilatation. Neutral endoscopic images showing near-occlusive web pre‑dilatation and widely patent lumen post‑dilatation.
-
-Figure 2. Balloon visualization technique. Endoscopic view through a fluid‑filled balloon demonstrating mucosal microtears during inflation.
-
-Figure 3. Microdebrider debulking sequence. Serial images showing approach, suction capture, and cleared airway.
+Scenario Expected effect Notes
+Malignant intraluminal narrowing Immediate relief; often bridge to stent Improves diameter in a majority with one procedure
+Benign web stenosis Good initial response; repeat sessions common Combine with radial incisions; diminishing benefit beyond multiple sessions in some series
+Complex benign stenosis Variable; often transient Consider adjuncts and earlier stenting
+Post‑transplant anastomotic stenosis Transient relief; repeated procedures frequent Stenting improves outcomes in selected patients
+Abbreviations —
 
 Cases & Applied Learning
 

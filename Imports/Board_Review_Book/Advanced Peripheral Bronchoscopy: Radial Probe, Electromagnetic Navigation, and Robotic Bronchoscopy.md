@@ -182,7 +182,6 @@ K --> L{Adequate diagnosis?}
 L -- Yes --> M[Manage hemostasis; post-procedure monitoring]
 L -- No --> N[Reassess: re-register, adjust ventilation, re-image; consider alternate tool or approach]
 
-
 Parallel bullet algorithm
 
 Obtain thin‑slice CT → identify bronchus or vessel sign → choose rEBUS/EMN/RAB.
@@ -205,7 +204,6 @@ F -- No --> H[Micro-adjust trajectory; air injection to stent distal airway]
 H --> I[Re-image to confirm]
 I --> F
 
-
 Parallel bullet algorithm
 
 If divergence suspected: re‑recruit → ensure PEEP/FiO₂ targets → maintain consistent ventilator settings.
@@ -216,40 +214,32 @@ Reconfirm tool‑in‑lesion before sampling.
 
 Tables & Quick‑Reference Boxes
 Table 1. Robotic and Navigation Platforms—At‑a‑Glance
-Feature	Monarch™	Ion™	Galaxy™
-Guidance	EMN hybrid with optical cues	Shape‑sensing	EMN + integrated tomosynthesis
-Visualization during sampling	Continuous	Vision probe removed for tools	Continuous
-Dimensions	Sheath 6.0 mm OD; scope 4.2 mm OD; 2.1 mm channel	Catheter 3.5 mm OD; 2.0 mm channel	Scope 4.0 mm OD; 2.1 mm channel
-Distal maneuvering	Telescoping “leapfrog” over sheath	Fine articulation; endoluminal compass	EMN + real‑time target updates
-Notes	Sheath parking reduces PTX/bleeding spill	Not affected by EM interference	Single‑cart, single‑use scope
+Feature Monarch™ Ion™ Galaxy™
+Guidance EMN hybrid with optical cues Shape‑sensing EMN + integrated tomosynthesis
+Visualization during sampling Continuous Vision probe removed for tools Continuous
+Dimensions Sheath 6.0 mm OD; scope 4.2 mm OD; 2.1 mm channel Catheter 3.5 mm OD; 2.0 mm channel Scope 4.0 mm OD; 2.1 mm channel
+Distal maneuvering Telescoping “leapfrog” over sheath Fine articulation; endoluminal compass EMN + real‑time target updates
+Notes Sheath parking reduces PTX/bleeding spill Not affected by EM interference Single‑cart, single‑use scope
 
 Abbreviations: EMN, electromagnetic navigation; OD, outer diameter; PTX, pneumothorax.
 
 Table 2. rEBUS Patterns and What To Do
-rEBUS pattern	Interpretation	Action
-Concentric hypoechoic ring around probe	Tool centered within lesion	Sample—highest yield
-Eccentric interface with partial contact	Adjacent to lesion	Micro‑adjust trajectory; consider air injection; confirm with imaging
-Homogeneous pattern with hyperechoic dots (air bronchograms)	Atelectasis mimic	Recruit; adjust PEEP/FiO₂; avoid misclassification; re‑image
+rEBUS pattern Interpretation Action
+Concentric hypoechoic ring around probe Tool centered within lesion Sample—highest yield
+Eccentric interface with partial contact Adjacent to lesion Micro‑adjust trajectory; consider air injection; confirm with imaging
+Homogeneous pattern with hyperechoic dots (air bronchograms) Atelectasis mimic Recruit; adjust PEEP/FiO₂; avoid misclassification; re‑image
 
 Abbreviations: rEBUS, radial endobronchial ultrasound; FiO₂, fraction of inspired oxygen; PEEP, positive end‑expiratory pressure.
 
 Table 3. Anesthesia & Ventilator Settings That Help Navigation
-Phase	Practical tip
-Pre‑intubation	Avoid prolonged 100% FiO₂ preoxygenation when safe; plan ETT size ≥8.0 mm for RAB tools
-After intubation	Recruitment maneuver (e.g., pressure > 20 cmH₂O for > 20 s)
-Maintenance	PEEP 8–12 cmH₂O (hemodynamics permitting); low Vt with higher rate; minimize FiO₂ to maintain SpO₂ safely; keep parameters constant during imaging/sampling
-Imaging	Breath‑hold at target pressure during tomosynthesis/CBCT; avoid moving the C‑arm/table without re‑registration
-Hemostasis readiness	Have cold saline, epinephrine 0.1 mg/mL, tranexamic acid 250–500 mg, and tamponade balloon available
+Phase Practical tip
+Pre‑intubation Avoid prolonged 100% FiO₂ preoxygenation when safe; plan ETT size ≥8.0 mm for RAB tools
+After intubation Recruitment maneuver (e.g., pressure > 20 cmH₂O for > 20 s)
+Maintenance PEEP 8–12 cmH₂O (hemodynamics permitting); low Vt with higher rate; minimize FiO₂ to maintain SpO₂ safely; keep parameters constant during imaging/sampling
+Imaging Breath‑hold at target pressure during tomosynthesis/CBCT; avoid moving the C‑arm/table without re‑registration
+Hemostasis readiness Have cold saline, epinephrine 0.1 mg/mL, tranexamic acid 250–500 mg, and tamponade balloon available
 
 Abbreviations: CBCT, cone‑beam CT; ETT, endotracheal tube; Vt, tidal volume; SpO₂, oxygen saturation.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. rEBUS Concentric vs Eccentric Views. Alt text: Side‑by‑side ultrasound frames illustrating classic concentric and eccentric patterns and an atelectasis mimic with air bronchograms.
-
-Figure 2. Augmented Fluoroscopy Workflow. Alt text: Tomosynthesis spin with iso‑centered lesion and overlaid tool trajectory during final adjustments.
-
-Figure 3. Telescoping Technique in Robotics. Alt text: Sequence showing parking the sheath segmentally and advancing the inner scope/tools over it.
 
 Cases & Applied Learning
 

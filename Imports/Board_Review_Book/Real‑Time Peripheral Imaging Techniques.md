@@ -204,7 +204,6 @@ K -->|No| M[Re-register target; correct trajectory; repeat quick spin/sweep]
 L --> N[Assess for complications; plan follow-up]
 M --> K
 
-
 Bulleted algorithm (parallel):
 
 Confirm imaging resources (fixed CBCT with AF > mobile CBCT > DTS > none).
@@ -234,7 +233,6 @@ I --> J{Tool-in-lesion?}
 J -->|Yes| K[Proceed to sampling]
 J -->|No| L[Repeat quick imaging; consider trans-parenchymal route if no airway]
 
-
 Bulleted algorithm (parallel):
 
 Elevate PEEP; maintain high tidal volume; time inspiratory breath‑holds.
@@ -251,39 +249,29 @@ Iterate imaging → adjustment until tool‑in‑lesion, then biopsy.
 
 Tables & Quick‑Reference Boxes
 Table 1. Typical Radiation Doses Relevant to Peripheral Imaging
-Diagnostic Procedure	Typical Effective Dose (mSv)	Notes
-Chest X‑ray (PA)	0.02	Baseline comparison
-Chest X‑ray (lateral)	0.15	—
-Chest DTS	0.1–0.2	Limited‑angle reconstruction
-Low‑dose CT chest	1.5	Screening CT
-CBCT (bronchoscopy use)	~2–2.5	Typical range
-Diagnostic CT chest	4–8	—
-Abbreviations	PA: posteroanterior; DTS: digital tomosynthesis; CBCT: cone‑beam CT	
+Diagnostic Procedure Typical Effective Dose (mSv) Notes
+Chest X‑ray (PA) 0.02 Baseline comparison
+Chest X‑ray (lateral) 0.15 —
+Chest DTS 0.1–0.2 Limited‑angle reconstruction
+Low‑dose CT chest 1.5 Screening CT
+CBCT (bronchoscopy use) ~2–2.5 Typical range
+Diagnostic CT chest 4–8 —
+Abbreviations PA: posteroanterior; DTS: digital tomosynthesis; CBCT: cone‑beam CT
 Table 2. Real‑Time Imaging Platforms for Peripheral Bronchoscopy (Selected Features)
-Platform	Imaging Method	Key Spin/Sweep	Endoscope/Channel	Visualization	Typical Use Case
-Illumisite™	DTS‑assisted ENB	~LAO 25° → RAO 25°, breath‑hold (~8–30 s)	Through therapeutic scope (2.8‑mm WC)	Updates lesion/tool registration; fluoroscopic augmentation	Re‑registration to correct divergence; tool‑in‑lesion confirmation
-LungVision™	DTS with multimodal fusion	Main carina spin; isocenter spin	Disposable mechanical catheter via scope	Augmented fluoroscopy overlay; multimodal alignment	Broad compatibility (scopes/robots); overlay guidance
-Galaxy System™	Robotic + integrated DTS (TiLT+)	~–30° to +30° DTS spin	Single‑use scope (4.0‑mm OD, 2.1‑mm WC)	Cross‑hair targeting of lesion relative to tip	Stable robotic targeting with built‑in tool‑in‑lesion
-Abbreviations	ENB: electromagnetic navigation bronchoscopy; WC: working channel; OD: outer diameter; DTS: digital tomosynthesis				
+Platform Imaging Method Key Spin/Sweep Endoscope/Channel Visualization Typical Use Case
+Illumisite™ DTS‑assisted ENB ~LAO 25° → RAO 25°, breath‑hold (~8–30 s) Through therapeutic scope (2.8‑mm WC) Updates lesion/tool registration; fluoroscopic augmentation Re‑registration to correct divergence; tool‑in‑lesion confirmation
+LungVision™ DTS with multimodal fusion Main carina spin; isocenter spin Disposable mechanical catheter via scope Augmented fluoroscopy overlay; multimodal alignment Broad compatibility (scopes/robots); overlay guidance
+Galaxy System™ Robotic + integrated DTS (TiLT+) ~–30° to +30° DTS spin Single‑use scope (4.0‑mm OD, 2.1‑mm WC) Cross‑hair targeting of lesion relative to tip Stable robotic targeting with built‑in tool‑in‑lesion
+Abbreviations ENB: electromagnetic navigation bronchoscopy; WC: working channel; OD: outer diameter; DTS: digital tomosynthesis
 Table 3. DTS vs CBCT: Practical Differences
-Attribute	DTS	CBCT
-Geometry	Limited‑angle sweep; slice stack	Full rotational cone‑beam; 3D volume
-Dose	Lower (typically 0.1–0.2 mSv for chest DTS)	Typically ~2–2.5 mSv per acquisition (procedure totals vary)
-Hardware	Works with conventional C‑arm	Fixed or mobile 3D‑capable C‑arm
-Augmented Fluoro	Platform‑dependent; re‑registers target	Fixed systems support robust AF overlays
-Motion/Atelectasis Sensitivity	Moderate; shorter sweeps	Sensitive to motion; optimize breath‑hold timing
-Best Fit	Cost‑/dose‑sensitive suites; rapid re‑registration	Full 3D planning, AF‑guided navigation, therapy planning
-Abbreviations	AF: augmented fluoroscopy	
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Limited‑angle DTS sweep and lesion re‑registration.
-Alt‑text: Fluoroscopic frames reconstructed into slices; nodule and catheter tip are updated for navigation.
-
-Figure 2. CBCT‑derived augmented fluoroscopy overlay.
-Alt‑text: Segmented nodule and airway path displayed on live fluoro; distal EWC tip marked to translate breath‑hold imaging to ventilated lung.
-
-Figure 3. Atelectasis altering intraprocedural anatomy.
-Alt‑text: Pre‑procedure CT vs intraprocedural CBCT highlighting atelectasis that shifts or obscures the target.
+Attribute DTS CBCT
+Geometry Limited‑angle sweep; slice stack Full rotational cone‑beam; 3D volume
+Dose Lower (typically 0.1–0.2 mSv for chest DTS) Typically ~2–2.5 mSv per acquisition (procedure totals vary)
+Hardware Works with conventional C‑arm Fixed or mobile 3D‑capable C‑arm
+Augmented Fluoro Platform‑dependent; re‑registers target Fixed systems support robust AF overlays
+Motion/Atelectasis Sensitivity Moderate; shorter sweeps Sensitive to motion; optimize breath‑hold timing
+Best Fit Cost‑/dose‑sensitive suites; rapid re‑registration Full 3D planning, AF‑guided navigation, therapy planning
+Abbreviations AF: augmented fluoroscopy
 
 Cases & Applied Learning
 

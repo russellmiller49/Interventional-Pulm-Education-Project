@@ -1,7 +1,11 @@
 import { allBoardModules } from 'contentlayer/generated'
 
 import type { BoardModule } from 'contentlayer/generated'
-import { boardReviewCategoryLabels, type BoardReviewChapterMeta } from '@/data/board-review'
+import {
+  boardReviewCategoryLabels,
+  boardReviewChapterMap,
+  type BoardReviewChapterMeta,
+} from '@/data/board-review'
 import { slugify } from '@/lib/slugify'
 
 export interface BoardReviewSection {
@@ -32,6 +36,7 @@ export function listBoardReviewChapters(): BoardReviewChapterMeta[] {
       tags: module.tags,
       focus: module.focus,
       sourceFile: module._raw.sourceFileName,
+      audioFile: boardReviewChapterMap[module.slug]?.audioFile,
       order: module.order,
       published: true as const,
     }))
@@ -77,7 +82,9 @@ export function loadBoardReviewChapter(slug: string): BoardReviewChapter | null 
 export function groupBoardModulesByCategory() {
   const modules = allBoardModules.slice().sort((a, b) => a.order - b.order)
   return modules.reduce<Record<string, BoardModule[]>>((acc, module) => {
-    const label = boardReviewCategoryLabels[module.category as keyof typeof boardReviewCategoryLabels] ?? module.category
+    const label =
+      boardReviewCategoryLabels[module.category as keyof typeof boardReviewCategoryLabels] ??
+      module.category
     if (!acc[label]) {
       acc[label] = []
     }
@@ -233,10 +240,7 @@ function extractExamScope(sections: BoardReviewSection[]) {
 }
 
 function countWords(content: string) {
-  return content
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length
+  return content.trim().split(/\s+/).filter(Boolean).length
 }
 
 function formatTabSeparatedTables(content: string) {

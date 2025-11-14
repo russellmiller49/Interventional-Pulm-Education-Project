@@ -181,7 +181,6 @@ J --> K{Controlled?}
 K -- Yes --> Z
 K -- No --> L[Intubate; consider rigid bronchoscopy and bronchial artery embolization]
 
-
 Parallel quick steps: Don’t remove the scope → suction + lateralize → cold saline → topical vasoconstrictor → balloon blockade → sealant/plug → secure airway → rigid/BAE.
 
 B. Pre‑Bronchoscopy Triage in High‑Risk Patients
@@ -201,53 +200,47 @@ G --> H[Consent covers bleeding, ptx, hypoxemia, infection; recovery plan establ
 
 Tables & Quick‑Reference Boxes
 Table 1. Intervention‑Based Bleeding Severity
-Category	Operational definition
-No bleeding	Blood traces that are self‑limited; no continuous suction needed
-Mild	Requires continuous suction; self‑limited
-Moderate	Requires wedge, cold saline, and/or topical vasoconstrictor to stop
-Severe	Requires balloon blocker and/or sealant/plug; resuscitation, transfusion or ICU
+Category Operational definition
+No bleeding Blood traces that are self‑limited; no continuous suction needed
+Mild Requires continuous suction; self‑limited
+Moderate Requires wedge, cold saline, and/or topical vasoconstrictor to stop
+Severe Requires balloon blocker and/or sealant/plug; resuscitation, transfusion or ICU
 
 Abbreviations: ICU, intensive care unit.
 
 Table 2. Peri‑Bronchoscopy Antithrombotic Management (Typical Windows)
-Drug	Stop before	Restart after
-Unfractionated heparin	6 h	4–12 h
-LMWH	12 h	4–12 h
-Fondaparinux	36–42 h	4–12 h
-Aspirin	Do not stop	—
-Clopidogrel	5–7 d	5–7 d
-Ticagrelor	5 d	4–12 h
-Prasugrel	7–10 d	4–12 h
-Warfarin	5 d (goal INR <1.5)	4–12 h
-Dabigatran	2–3 d (longer if renal dysfunction)	4–12 h
-Rivaroxaban/Apixaban/Edoxaban	1–2 d	4–12 h
+Drug Stop before Restart after
+Unfractionated heparin 6 h 4–12 h
+LMWH 12 h 4–12 h
+Fondaparinux 36–42 h 4–12 h
+Aspirin Do not stop —
+Clopidogrel 5–7 d 5–7 d
+Ticagrelor 5 d 4–12 h
+Prasugrel 7–10 d 4–12 h
+Warfarin 5 d (goal INR <1.5) 4–12 h
+Dabigatran 2–3 d (longer if renal dysfunction) 4–12 h
+Rivaroxaban/Apixaban/Edoxaban 1–2 d 4–12 h
 
 Abbreviations: INR, international normalized ratio; LMWH, low‑molecular‑weight heparin.
 
 Table 3. Sedation & Reversal: Quick Doses
-Agent	Typical starting dose/titration	Key caveats
-Midazolam	1–2 mg IV, then 0.5–1 mg titration (≤5 mg if <70 y; ≤2 mg if ≥70 y)	Prepare 1 mg/mL to avoid overdose; flumazenil 0.2 mg then 0.1 mg/min to 1 mg (watch re‑sedation)
-Fentanyl	25–50 µg IV, titrate	Watch for bradycardia/hypotension; rare chest‑wall rigidity → naloxone starting 0.04 mg and ventilatory support
-Propofol	Per anesthesiologist	Narrow window; risk of apnea/hypotension; institutional policies apply
+Agent Typical starting dose/titration Key caveats
+Midazolam 1–2 mg IV, then 0.5–1 mg titration (≤5 mg if <70 y; ≤2 mg if ≥70 y) Prepare 1 mg/mL to avoid overdose; flumazenil 0.2 mg then 0.1 mg/min to 1 mg (watch re‑sedation)
+Fentanyl 25–50 µg IV, titrate Watch for bradycardia/hypotension; rare chest‑wall rigidity → naloxone starting 0.04 mg and ventilatory support
+Propofol Per anesthesiologist Narrow window; risk of apnea/hypotension; institutional policies apply
 
 Abbreviations: IV, intravenous.
 
 Table 4. Post‑Procedure Monitoring (First 2–4 Hours)
-Domain	What to watch	Suggests	Action
-SpO₂	Return to baseline	Persistent desaturation	Evaluate for bronchospasm, retained secretions, or pneumothorax
-Chest pain	New/worsening	Possible pneumothorax	CXR or lung ultrasound
-Temperature	Transient low‑grade fever	PBF	Antipyretics; reassess if persistent/systemic features
-Swallow	Cough reflex absent (~2 h)	Aspiration risk	Keep NPO until reflex returns
-Consciousness	Delayed awakening (e.g., COPD/OSA)	Hypercapnia	Consider NIV or intubation
-Respiratory pattern	Tachypnea/wheeze/use of accessory muscles	Bronchospasm	Bronchodilators, systemic steroids, oxygen; escalate as needed
+Domain What to watch Suggests Action
+SpO₂ Return to baseline Persistent desaturation Evaluate for bronchospasm, retained secretions, or pneumothorax
+Chest pain New/worsening Possible pneumothorax CXR or lung ultrasound
+Temperature Transient low‑grade fever PBF Antipyretics; reassess if persistent/systemic features
+Swallow Cough reflex absent (~2 h) Aspiration risk Keep NPO until reflex returns
+Consciousness Delayed awakening (e.g., COPD/OSA) Hypercapnia Consider NIV or intubation
+Respiratory pattern Tachypnea/wheeze/use of accessory muscles Bronchospasm Bronchodilators, systemic steroids, oxygen; escalate as needed
 
 Abbreviations: CXR, chest radiograph; PBF, post‑bronchoscopy fever; NIV, noninvasive ventilation; OSA, obstructive sleep apnea.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure A. Physiologic changes of pregnancy relevant to bronchoscopy (airway edema, increased reflux risk, IVC compression).
-
-Figure B. Forest plot illustrating no clear increase in TBLB bleeding with PH.
 
 Cases & Applied Learning
 
@@ -269,100 +262,100 @@ Teaching point: Routine post‑TBLB CXR is unnecessary in asymptomatic patients,
 Question Bank (12 MCQs)
 
 1. During TBLB, brisk bleeding obscures the view. After suction and lateralizing the patient, the next best step is:
-A. Remove the scope and sit the patient up
-B. Instill room‑temperature saline
-C. Instill cold 4 °C saline aliquots
-D. Proceed directly to fibrin glue
-E. Place a double‑lumen tube
-Correct: C. Cold saline is first‑line after suction/positioning, before topical vasoconstrictors and mechanical tamponade.
+   A. Remove the scope and sit the patient up
+   B. Instill room‑temperature saline
+   C. Instill cold 4 °C saline aliquots
+   D. Proceed directly to fibrin glue
+   E. Place a double‑lumen tube
+   Correct: C. Cold saline is first‑line after suction/positioning, before topical vasoconstrictors and mechanical tamponade.
 
 2. Which antithrombotic can generally be continued for diagnostic bronchoscopy including TBLB?
-A. Warfarin
-B. Apixaban
-C. Aspirin
-D. Clopidogrel
-E. Fondaparinux
-Correct: C. Aspirin is usually continued; clopidogrel and anticoagulants require holds for biopsies.
+   A. Warfarin
+   B. Apixaban
+   C. Aspirin
+   D. Clopidogrel
+   E. Fondaparinux
+   Correct: C. Aspirin is usually continued; clopidogrel and anticoagulants require holds for biopsies.
 
 3. A patient on warfarin is scheduled for EBUS‑TBNA with low thrombotic risk. Optimal plan?
-A. Continue warfarin
-B. Stop ~5 days before; day‑of INR <1.5; restart evening after
-C. Stop 24 h before
-D. Bridge all patients with LMWH
-E. Delay until INR <1.0
-Correct: B. Standard approach for low‑risk patients.
+   A. Continue warfarin
+   B. Stop ~5 days before; day‑of INR <1.5; restart evening after
+   C. Stop 24 h before
+   D. Bridge all patients with LMWH
+   E. Delay until INR <1.0
+   Correct: B. Standard approach for low‑risk patients.
 
 4. Which statement about PH and bronchoscopy is most accurate?
-A. Absolute contraindication to TBLB
-B. No clear increase in TBLB bleeding, but higher hypoxemia risk
-C. PH always causes massive hemoptysis
-D. Bronchoscopy must be under general anesthesia
-E. Routine ICU post‑op is mandatory
-Correct: B.
+   A. Absolute contraindication to TBLB
+   B. No clear increase in TBLB bleeding, but higher hypoxemia risk
+   C. PH always causes massive hemoptysis
+   D. Bronchoscopy must be under general anesthesia
+   E. Routine ICU post‑op is mandatory
+   Correct: B.
 
 5. During bronchoscopy under midazolam/fentanyl, the patient develops chest‑wall rigidity with hypoventilation. Best immediate action?
-A. Succinylcholine IV
-B. Naloxone (start 0.04 mg) and ventilatory support
-C. Flumazenil 0.2 mg
-D. Propofol bolus
-E. Atropine 0.5 mg
-Correct: B.
+   A. Succinylcholine IV
+   B. Naloxone (start 0.04 mg) and ventilatory support
+   C. Flumazenil 0.2 mg
+   D. Propofol bolus
+   E. Atropine 0.5 mg
+   Correct: B.
 
 6. A patient develops fever to 38.4 °C four hours after BAL but looks well. Which lab best helps distinguish PBF from bacterial infection?
-A. CRP
-B. ESR
-C. WBC
-D. Procalcitonin
-E. LDH
-Correct: D.
+   A. CRP
+   B. ESR
+   C. WBC
+   D. Procalcitonin
+   E. LDH
+   Correct: D.
 
 7. Which maneuver reduces laryngospasm risk when passing the cords?
-A. Deep inhalational anesthesia
-B. Adequate topical lidocaine before cord passage
-C. Routine paralytic use
-D. Avoid oxygen supplementation
-E. Nasal route
-Correct: B.
+   A. Deep inhalational anesthesia
+   B. Adequate topical lidocaine before cord passage
+   C. Routine paralytic use
+   D. Avoid oxygen supplementation
+   E. Nasal route
+   Correct: B.
 
 8. A 30‑week pregnant patient with subglottic stenosis becomes hypotensive at induction. What preventive strategy should have been in place?
-A. Large IV epinephrine bolus ready
-B. Right‑hip wedge (left uterine displacement) and preload optimization
-C. Head‑down tilt
-D. Nitroglycerin infusion
-E. Routine nasal intubation
-Correct: B.
+   A. Large IV epinephrine bolus ready
+   B. Right‑hip wedge (left uterine displacement) and preload optimization
+   C. Head‑down tilt
+   D. Nitroglycerin infusion
+   E. Routine nasal intubation
+   Correct: B.
 
 9. Post‑TBLB, the patient has mild pleuritic pain and stable vitals. Next step?
-A. Routine immediate CXR for all patients
-B. Admit for 24 h observation
-C. Observe ≥2 h; image only if symptomatic/worsening
-D. CT chest
-E. Discharge immediately
-Correct: C.
+   A. Routine immediate CXR for all patients
+   B. Admit for 24 h observation
+   C. Observe ≥2 h; image only if symptomatic/worsening
+   D. CT chest
+   E. Discharge immediately
+   Correct: C.
 
 10. Which oxygen strategy reduces desaturation events during sedated bronchoscopy?
-A. Simple nasal cannula
-B. Non‑rebreather mask
-C. NIV for all patients
-D. High‑flow nasal cannula
-E. Room air
-Correct: D.
+    A. Simple nasal cannula
+    B. Non‑rebreather mask
+    C. NIV for all patients
+    D. High‑flow nasal cannula
+    E. Room air
+    Correct: D.
 
 11. Maximum recommended topical lidocaine dose during bronchoscopy is:
-A. 2 mg/kg
-B. 4 mg/kg
-C. 6 mg/kg
-D. 10 mg/kg
-E. No maximum
-Correct: B.
+    A. 2 mg/kg
+    B. 4 mg/kg
+    C. 6 mg/kg
+    D. 10 mg/kg
+    E. No maximum
+    Correct: B.
 
 12. Which statement about prophylactic antibiotics for PBF is correct?
-A. Should be given to all BAL patients
-B. Only in transplant recipients
-C. Do not reduce PBF and are not routinely recommended
-D. Mandatory if CRP is elevated pre‑procedure
-E. Necessary if BAL volume >200 mL
-Correct: C.
+    A. Should be given to all BAL patients
+    B. Only in transplant recipients
+    C. Do not reduce PBF and are not routinely recommended
+    D. Mandatory if CRP is elevated pre‑procedure
+    E. Necessary if BAL volume >200 mL
+    Correct: C.
 
 Controversies & Evolving Evidence
 
@@ -479,4 +472,3 @@ Tang SJ, et al. ERCP in pregnancy: safety of sphincterotomy. Gastrointest Endo
 Price LC, et al. Peri‑operative management of pulmonary hypertension. Br J Anaesth. 2021;126(4):774‑790.
 
 Broker T, et al. Anaesthesia for pulmonary hypertension. Ann Transl Med. 2019;7(15):355.
-

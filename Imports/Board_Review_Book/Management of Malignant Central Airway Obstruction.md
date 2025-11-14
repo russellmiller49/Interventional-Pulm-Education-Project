@@ -206,7 +206,6 @@ K -- No --> H
 L --> M[Bridge to EBRT/systemic ± surgery]
 M --> N[Follow-up: clinic 2–4 wk, CT ~1 mo; symptom-driven bronchoscopy]
 
-
 Parallel bullet algorithm
 
 Assess stability → secure airway if unstable (avoid paralytics until airway secured for proximal lesions).
@@ -240,7 +239,6 @@ K --> L{Persistent bleeding?}
 L -- Yes --> M[APC/electrocautery, tamponade, cryo for clots]
 L -- No --> N[Reassess patency and stop when risk>benefit]
 
-
 Parallel bullet algorithm
 
 Intrinsic: pick a thermal energy modality you know well, then mechanically remove devitalized tissue; repeat.
@@ -255,35 +253,28 @@ Safety overlays: FiO₂ ≤0.40; coordinated energy delivery; bleeding control p
 
 Tables & Quick‑Reference Boxes
 Table 1. Obstruction Pattern and First‑Line Interventions
-Pattern	Typical Findings	First‑Line Approach	Alternatives/Adjuncts	Key Caveat
-Intrinsic (endoluminal)	Polypoid/fungating tumor; visible distal lumen	Thermal coagulation (laser/APC/electrocautery) → mechanical resection (rigid coring, microdebrider, forceps, cryo‑extraction)	Balloon dilation for fibrotic rings; delayed‑effect therapies (PDT)	Maintain FiO₂ ≤0.40 during thermal ablation
-Extrinsic (compression)	Normal mucosa; airway narrowed by external mass	Airway stent (silicone Y at carina; silicone/covered metal tube for mainstem/BI)	Radiation/systemic therapy; occasional dilation as bridge	Ablative energy alone will not sustain patency
-Mixed	Endoluminal with wall distortion/compression	Debulk intrinsic component → stent if residual extrinsic narrowing	Combine with radiation/systemic therapy	Avoid premature stent if treatment‑naïve and likely to respond
-Abbreviations: APC, argon plasma coagulation; BI, bronchus intermedius; PDT, photodynamic therapy.				
+Pattern Typical Findings First‑Line Approach Alternatives/Adjuncts Key Caveat
+Intrinsic (endoluminal) Polypoid/fungating tumor; visible distal lumen Thermal coagulation (laser/APC/electrocautery) → mechanical resection (rigid coring, microdebrider, forceps, cryo‑extraction) Balloon dilation for fibrotic rings; delayed‑effect therapies (PDT) Maintain FiO₂ ≤0.40 during thermal ablation
+Extrinsic (compression) Normal mucosa; airway narrowed by external mass Airway stent (silicone Y at carina; silicone/covered metal tube for mainstem/BI) Radiation/systemic therapy; occasional dilation as bridge Ablative energy alone will not sustain patency
+Mixed Endoluminal with wall distortion/compression Debulk intrinsic component → stent if residual extrinsic narrowing Combine with radiation/systemic therapy Avoid premature stent if treatment‑naïve and likely to respond
+Abbreviations: APC, argon plasma coagulation; BI, bronchus intermedius; PDT, photodynamic therapy.
 Table 2. Thermal vs Non‑thermal Modalities—Essentials at a Glance
-Modality	Depth/Effect	Typical Settings/Notes	Advantages	Complications/Limitations
-Laser (Nd:YAG/YAP)	Coagulation + vaporization; deeper penetration (Nd:YAG)	Contact vs non‑contact; obey laser safety; FiO₂ ≤0.40	Rapid debulking, strong hemostasis; effective in central lesions	Fire risk, perforation, air embolism (rare)
-APC	Superficial (≈1–3 mm); non‑contact	~40–60 W; 2–5 s pulses; useful for hemostasis & broad surfaces	Low cost, rapid, great for oozing & diffuse lesions	Fire risk, perforation if excessive energy; less effective for bulky cores
-Electrocautery	Contact coagulation/vaporization	~20–40 W; snares/knife/probes; device precautions with pacers/ICDs	Accessible, versatile	Device interference; requires direct contact
-Microdebrider	Non‑thermal mechanical shaving with suction	Used through rigid scope	Fast tissue removal with good visualization; no FiO₂ limits	Operator learning curve; bleeding control often still needed
-Balloon dilation	Radial expansion	30–60 s inflations; may require radial cuts	Rapid lumen gain; bridge to stent	Tears, pneumomediastinum/pneumothorax
-Cryo (extraction)	Immediate tissue adhesion/removal	Repeat freeze‑pull cycles	Useful for friable tumors/clots; no fire risk	Bleeding; slower than thermal for large bulk
-Cryo (spray/delayed)	Delayed necrosis	Ventilation planning critical	Treats broad surfaces; avoids heat	Air trapping risk; delayed slough/edema
-PDT (delayed)	Photosensitizer + light (delayed effect)	Photosensitivity precautions	Decreases regrowth; reaches distal bronchi	Delayed obstruction from slough; edema; photosensitivity
-Abbreviations: FiO₂, fraction of inspired oxygen; ICD, implantable cardioverter‑defibrillator; PDT, photodynamic therapy.				
+Modality Depth/Effect Typical Settings/Notes Advantages Complications/Limitations
+Laser (Nd:YAG/YAP) Coagulation + vaporization; deeper penetration (Nd:YAG) Contact vs non‑contact; obey laser safety; FiO₂ ≤0.40 Rapid debulking, strong hemostasis; effective in central lesions Fire risk, perforation, air embolism (rare)
+APC Superficial (≈1–3 mm); non‑contact ~40–60 W; 2–5 s pulses; useful for hemostasis & broad surfaces Low cost, rapid, great for oozing & diffuse lesions Fire risk, perforation if excessive energy; less effective for bulky cores
+Electrocautery Contact coagulation/vaporization ~20–40 W; snares/knife/probes; device precautions with pacers/ICDs Accessible, versatile Device interference; requires direct contact
+Microdebrider Non‑thermal mechanical shaving with suction Used through rigid scope Fast tissue removal with good visualization; no FiO₂ limits Operator learning curve; bleeding control often still needed
+Balloon dilation Radial expansion 30–60 s inflations; may require radial cuts Rapid lumen gain; bridge to stent Tears, pneumomediastinum/pneumothorax
+Cryo (extraction) Immediate tissue adhesion/removal Repeat freeze‑pull cycles Useful for friable tumors/clots; no fire risk Bleeding; slower than thermal for large bulk
+Cryo (spray/delayed) Delayed necrosis Ventilation planning critical Treats broad surfaces; avoids heat Air trapping risk; delayed slough/edema
+PDT (delayed) Photosensitizer + light (delayed effect) Photosensitivity precautions Decreases regrowth; reaches distal bronchi Delayed obstruction from slough; edema; photosensitivity
+Abbreviations: FiO₂, fraction of inspired oxygen; ICD, implantable cardioverter‑defibrillator; PDT, photodynamic therapy.
 Table 3. Anesthesia & Ventilation—Practical Choices
-Decision Point	Preferred Choice	When to Choose	Other Options	Notes
-Sedation depth	General anesthesia with neuromuscular blockade	Most therapeutic cases; reduces complications and re‑interventions	Deep sedation (select centers)	Pre‑intubation proximal obstruction: avoid paralytics until airway secured
-Airway device	Rigid bronchoscope	Bulky/proximal lesions; need for large‑bore suction & stenting	ETT or LMA as bridge	Keep rigid setup within arm’s reach even if starting flexible
-Ventilation	Volume‑cycled or jet ventilation	Either acceptable; team experience drives choice	ECMO (bridge)	Maintain FiO₂ ≤0.40 for thermal tools; watch CO₂ with volume‑cycled ventilation
-Abbreviations: ETT, endotracheal tube; LMA, laryngeal mask airway; ECMO, extracorporeal membrane oxygenation.				
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Schematic of intrinsic, extrinsic, and mixed MCAO patterns. Alt‑text: Three panels depict endoluminal tumor, extrinsic compression, and mixed invasion across the airway wall.
-
-Figure 2. Ablation–resection cycle with rigid coring. Alt‑text: Sequential frames show coagulation, mechanical removal, and tamponade with the rigid barrel.
-
-Figure 3. Examples of stent selection (silicone Y at carina, covered tube in mainstem/BI). Alt‑text: Diagrammatic comparison of deployment techniques and profiles.
+Decision Point Preferred Choice When to Choose Other Options Notes
+Sedation depth General anesthesia with neuromuscular blockade Most therapeutic cases; reduces complications and re‑interventions Deep sedation (select centers) Pre‑intubation proximal obstruction: avoid paralytics until airway secured
+Airway device Rigid bronchoscope Bulky/proximal lesions; need for large‑bore suction & stenting ETT or LMA as bridge Keep rigid setup within arm’s reach even if starting flexible
+Ventilation Volume‑cycled or jet ventilation Either acceptable; team experience drives choice ECMO (bridge) Maintain FiO₂ ≤0.40 for thermal tools; watch CO₂ with volume‑cycled ventilation
+Abbreviations: ETT, endotracheal tube; LMA, laryngeal mask airway; ECMO, extracorporeal membrane oxygenation.
 
 Cases & Applied Learning
 

@@ -3,7 +3,7 @@ Rigid Bronchoscopy: Indications, Technique, and Troubleshooting
 Exam Mapping & Scope
 This chapter aligns with the AABIP IP Board Procedural Knowledge → Rigid Bronchoscopy/Foreign Body Retrieval domain. It consolidates contemporary indications and contraindications, anesthesia and ventilation strategies, step-by-step technique (including tumor debulking and foreign body removal), troubleshooting, complications, outcomes, and high-yield pearls for exam success and clinical practice.
 
-Learning Objectives 
+Learning Objectives
 
 Differentiate indications and contraindications for rigid bronchoscopy (RB), and select when RB is preferred over flexible bronchoscopy.
 
@@ -88,7 +88,7 @@ Competency tool concept (e.g., RIGID-TASC): Use a standardized checklist to asse
 
 Tumor debulking (intrinsic or mixed):
 
-1) Coagulate/devascularize, 2) mechanical coring using the distal bevel (“corkscrew/core-out”), 3) coagulate the base. Place a stent when residual extrinsic compression/instability is present or recurrence risk is high.
+1. Coagulate/devascularize, 2) mechanical coring using the distal bevel (“corkscrew/core-out”), 3) coagulate the base. Place a stent when residual extrinsic compression/instability is present or recurrence risk is high.
 
 Foreign body extraction:
 
@@ -159,7 +159,6 @@ E --> E1[Intrinsic steps (coagulate→core→base)]
 E1 --> E2[Dilate residual narrowing]
 E2 --> E3[Place stent]
 
-
 Parallel bullet algorithm (quick reference):
 
 Intrinsic: devascularize → core → coagulate base; stent if residual instability/recurrence risk.
@@ -176,39 +175,30 @@ Tables & Quick-Reference Boxes
 
 Table 1. Contraindications to Rigid Bronchoscopy
 
-Category	Items
-Absolute	Cervical spine instability
-Relative	Cervical spine fusion; hemodynamic instability; severe hypoxemia; severe coagulopathy; severe thrombocytopenia; operator inexperience
+Category Items
+Absolute Cervical spine instability
+Relative Cervical spine fusion; hemodynamic instability; severe hypoxemia; severe coagulopathy; severe thrombocytopenia; operator inexperience
 
 Table 2. Rigid Bronchoscope Quick Specs
 
-Tube	Length	Lumen/Design	Typical OD range	Key advantages
-Tracheoscope	~30 cm	No fenestrations	9–14 mm	Initial intubation; can pass smaller barrels through
-Bronchoscope	~40 cm	Fenestrated (ventilation slits)	9–14 mm	Ventilation to contralateral lung; large-bore suction; instrument access
+Tube Length Lumen/Design Typical OD range Key advantages
+Tracheoscope ~30 cm No fenestrations 9–14 mm Initial intubation; can pass smaller barrels through
+Bronchoscope ~40 cm Fenestrated (ventilation slits) 9–14 mm Ventilation to contralateral lung; large-bore suction; instrument access
 
 Table 3. Anesthesia & Ventilation Options in RB
 
-Domain	Option	Advantages	Caveats
-Anesthesia	TIVA	Favored for open system; avoids room pollution	Requires careful titration and communication
-	Inhalational	Familiar agents	Less used due to leak/pollution in open system
-Ventilation	Spontaneous-assisted	Closed system; PEEP/pressure monitoring	Requires packing leaks; hypoxia risk when lumen crowded
-	Jet ventilation	More barrel space; rapid FiO₂ reduction for hot therapies	No pressure/minute ventilation display; pneumothorax risk
+Domain Option Advantages Caveats
+Anesthesia TIVA Favored for open system; avoids room pollution Requires careful titration and communication
+Inhalational Familiar agents Less used due to leak/pollution in open system
+Ventilation Spontaneous-assisted Closed system; PEEP/pressure monitoring Requires packing leaks; hypoxia risk when lumen crowded
+Jet ventilation More barrel space; rapid FiO₂ reduction for hot therapies No pressure/minute ventilation display; pneumothorax risk
 
 Table 4. Debulking Sequence for Intrinsic Endobronchial Tumor
 
-Step	Action	Notes
-1	Coagulate/devascularize	Laser/electrocautery/APC to minimize bleeding
-2	Mechanical coring	Use rigid scope bevel (“corkscrew/core-out”)
-3	Coagulate base	Treat residual tumor bed; stent if airway unstable
-Imaging & Figure Callouts (Placeholders)
-
-[Figure Placeholder: “Laser-assisted mechanical debulking (A–D)” — four endoscopic panels showing devascularization, coring, clearance, and base treatment; high-yield to visualize the three-step debulking sequence.]
-
-[Figure Placeholder: “En bloc foreign body extraction through RB” — endoscopic view of smooth forceps grasping FB with the RB being withdrawn as a unit; emphasizes en bloc technique.]
-
-[Figure Placeholder: “Radial incision and dilation of tracheal stenosis with stent placement” — schematic series; highlights simple vs complex approach.]
-
-[Figure Placeholder: “RB intubation: landmarks” — external and internal views (uvula, epiglottis, cords, bevel under epiglottis).]
+Step Action Notes
+1 Coagulate/devascularize Laser/electrocautery/APC to minimize bleeding
+2 Mechanical coring Use rigid scope bevel (“corkscrew/core-out”)
+3 Coagulate base Treat residual tumor bed; stent if airway unstable
 
 Cases & Applied Learning
 

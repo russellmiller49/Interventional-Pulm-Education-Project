@@ -188,7 +188,6 @@ I --> J{STRUCTURAL vs FUNCTIONAL}
 J -- Structural --> K[See Algorithm 2]
 J -- Functional (EDAC/TBM) --> L[See Algorithm 3]
 
-
 Parallel bullet algorithm
 
 Assess severity (distress/stridor; gas exchange).
@@ -216,7 +215,6 @@ H --> K[Observe; avoid stent if stable]
 K --> L[Recur? → Re-dilate or stent; evaluate for surgery]
 J --> M[Multidisciplinary review for surgery once stabilized]
 
-
 Parallel bullet algorithm
 
 Mass → mechanical + energy ablation; stage if needed; protect from fire.
@@ -240,7 +238,6 @@ F --> G{Symptom improvement?}
 G -- Yes --> H[Candidate for tracheobronchoplasty (diffuse) or focal resection (localized malacia)]
 G -- No --> I[Reassess diagnosis; alternative treatments (airway clearance, PT)]
 
-
 Parallel bullet algorithm
 
 Treat co‑existing airway disease and reflux; pulmonary rehab.
@@ -253,50 +250,42 @@ Surgical tracheobronchoplasty for diffuse TBM responders; focal resection for lo
 
 Tables & Quick‑Reference Boxes
 Table 1. Structural vs Functional Non‑Malignant CAO: Mechanisms, Examples, First‑line Therapy
-Category	Mechanism	Prototypical Examples	First‑line Therapy	Abbreviations
-Structural – Intraluminal	Endoluminal lesions	Hamartoma, lipoma, papillomatosis, amyloid nodules	Mechanical debulking ± laser/APC/cryo; staged approach	APC = argon plasma coagulation
-Structural – Extrinsic	External compression/angulation	Goiter, mediastinal cyst, lymphadenopathy, vascular sling; post‑pneumonectomy rotation	Surgical correction when feasible; stent selectively	
-Structural – Stricture/Scar	Fibrotic cicatrix ± cartilage damage	PITS/PTTS, post‑TB, GPA, RP, idiopathic subglottic	Simple: radial cuts + balloon. Complex: dilation + silicone stent ± surgery	PITS/PTTS = post‑intubation/‑tracheostomy stenosis; GPA/RP as below
-Functional – EDAC/TBM	Expiratory collapse; posterior membrane bowing vs cartilage weakness	EDAC in COPD/asthma/obesity; TBM in RP, Mounier‑Kuhn	CPAP → short stent trial → consider tracheobronchoplasty	TBM = tracheobronchomalacia
+Category Mechanism Prototypical Examples First‑line Therapy Abbreviations
+Structural – Intraluminal Endoluminal lesions Hamartoma, lipoma, papillomatosis, amyloid nodules Mechanical debulking ± laser/APC/cryo; staged approach APC = argon plasma coagulation
+Structural – Extrinsic External compression/angulation Goiter, mediastinal cyst, lymphadenopathy, vascular sling; post‑pneumonectomy rotation Surgical correction when feasible; stent selectively
+Structural – Stricture/Scar Fibrotic cicatrix ± cartilage damage PITS/PTTS, post‑TB, GPA, RP, idiopathic subglottic Simple: radial cuts + balloon. Complex: dilation + silicone stent ± surgery PITS/PTTS = post‑intubation/‑tracheostomy stenosis; GPA/RP as below
+Functional – EDAC/TBM Expiratory collapse; posterior membrane bowing vs cartilage weakness EDAC in COPD/asthma/obesity; TBM in RP, Mounier‑Kuhn CPAP → short stent trial → consider tracheobronchoplasty TBM = tracheobronchomalacia
 
 Abbreviations: See glossary.
 
 Table 2. Simple vs Complex Benign Strictures — Features & Approach
-Feature	Simple	Complex	Abbreviations
-Morphology/length	Concentric, weblike; <10 mm	≥10 mm, eccentric/triangular/hourglass; ± malacia	
-First‑line	3 radial cuts (scar bands only) → gentle balloon	Targeted cuts → graded dilation → silicone stent	
-Stent need	Rare	Common (consider external fixation for high/subglottic)	
-Surgery	Often not needed	Consider once stabilized; avoid lesion lengthening	
+Feature Simple Complex Abbreviations
+Morphology/length Concentric, weblike; <10 mm ≥10 mm, eccentric/triangular/hourglass; ± malacia
+First‑line 3 radial cuts (scar bands only) → gentle balloon Targeted cuts → graded dilation → silicone stent
+Stent need Rare Common (consider external fixation for high/subglottic)
+Surgery Often not needed Consider once stabilized; avoid lesion lengthening
 
 Abbreviations: As above.
 
 Table 3. Bronchoscopic Modalities — Practical Settings & Pitfalls
-Modality	Typical Use	Essentials	Key Risks	Abbreviations
-Balloon dilation	Webs/strictures	30–120 s inflations; progressive sizing; stop if high resistance	Mucosal laceration, rupture, barotrauma	
-Electrocautery	Radial cuts before dilation	FiO₂ ≤30%; contact technique	Fire, perforation, bleeding	
-Laser (Nd:YAG/KTP/CO₂/diode)	Radial cuts, tumor debulking	FiO₂ ≤40%; short bursts; suction plume	Fire, air embolism, perforation	
-APC	Coagulation/hemostasis; granulation	Superficial effect; non‑contact	Fire, airway drying, limited depth	APC = argon plasma coagulation
-Cryoprobe	Recanalization; delayed cryotherapy	Freeze–thaw; remove devitalized tissue later	Bleeding, bronchospasm	
-Cryospray (LN₂)	Non‑contact large‑area ablation	Open circuit/deflated cuff for gas egress	Barotrauma, pneumothorax	LN₂ = liquid nitrogen
+Modality Typical Use Essentials Key Risks Abbreviations
+Balloon dilation Webs/strictures 30–120 s inflations; progressive sizing; stop if high resistance Mucosal laceration, rupture, barotrauma
+Electrocautery Radial cuts before dilation FiO₂ ≤30%; contact technique Fire, perforation, bleeding
+Laser (Nd:YAG/KTP/CO₂/diode) Radial cuts, tumor debulking FiO₂ ≤40%; short bursts; suction plume Fire, air embolism, perforation
+APC Coagulation/hemostasis; granulation Superficial effect; non‑contact Fire, airway drying, limited depth APC = argon plasma coagulation
+Cryoprobe Recanalization; delayed cryotherapy Freeze–thaw; remove devitalized tissue later Bleeding, bronchospasm
+Cryospray (LN₂) Non‑contact large‑area ablation Open circuit/deflated cuff for gas egress Barotrauma, pneumothorax LN₂ = liquid nitrogen
 
 Abbreviations: See glossary.
 
 Table 4. Stents in Benign Disease — What to Know
-Stent	Best Use	Pros	Cons/Complications	Abbreviations
-Silicone (straight/Y/hourglass)	Complex scars, malacia; reversible needs	Removable, repositionable; customizable	Granulation, mucostasis, migration; needs rigid placement	
-Montgomery T‑tube	Subglottic/high trachea; surgery not feasible	Prevents caudal migration; customizable limbs	Voice changes, care needs; granulation if distal limb too long	
-Uncovered SEMS	Avoid in benign disease	Easy deployment	Embedded, fracture, erosion, difficult removal; serious removal complications	SEMS = self‑expanding metallic stent
-Covered SEMS/hybrid	Select situations only	Larger IE diameter	Still removal risks; reserve for experts/bridging	IE = internal–external
+Stent Best Use Pros Cons/Complications Abbreviations
+Silicone (straight/Y/hourglass) Complex scars, malacia; reversible needs Removable, repositionable; customizable Granulation, mucostasis, migration; needs rigid placement
+Montgomery T‑tube Subglottic/high trachea; surgery not feasible Prevents caudal migration; customizable limbs Voice changes, care needs; granulation if distal limb too long
+Uncovered SEMS Avoid in benign disease Easy deployment Embedded, fracture, erosion, difficult removal; serious removal complications SEMS = self‑expanding metallic stent
+Covered SEMS/hybrid Select situations only Larger IE diameter Still removal risks; reserve for experts/bridging IE = internal–external
 
 Abbreviations: As above.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Dynamic expiratory CT with >70% tracheal collapse. Alt text: Axial images show crescentic airway during forced exhalation consistent with EDAC/TBM.
-
-Figure 2. Flow–volume loops in fixed vs variable obstruction. Alt text: Three tracings depicting plateaus of inspiratory/expiratory limbs distinguishing fixed, variable intra‑, and extrathoracic obstruction.
-
-Figure 3. Simple subglottic web before and after radial cuts + balloon dilation. Alt text: Endoscopic views demonstrate mucosa‑sparing incisions and post‑dilation lumen restoration.
 
 Cases & Applied Learning
 

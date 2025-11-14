@@ -179,7 +179,6 @@ M --> N{Progression later?}
 N -- Yes --> O[Plasma ctDNA ± tissue re-biopsy]
 N -- No --> P[Track turnaround times & adequacy KPIs]
 
-
 Parallel bullets (Algorithm 1):
 
 Confirm lesional sampling with ROSE; if nondiagnostic, immediately redirect.
@@ -205,7 +204,6 @@ F -- No --> H[Chemo-IO or IO per PD-L1 & comorbidities]
 H --> I{Progression?}
 I -- Yes --> J[Re-biopsy ± liquid biopsy; evaluate resistance (e.g., T790M, METamp, histologic transformation)]
 
-
 Parallel bullets (Algorithm 2):
 
 Adenocarcinoma/NSCC‑NOS: Comprehensive NGS (with fusion detection) + PD‑L1 up front.
@@ -220,44 +218,36 @@ Tables & Quick‑Reference Boxes
 
 Table 1. WHO/IASLC‑Oriented NSCLC Quick Classifier
 
-Major Type	Key Morphology	Lineage IHC	Notes
-Adenocarcinoma	Lepidic, acinar, papillary, micropapillary, solid; mucinous variant	TTF‑1, napsin A; mucin stains	AIS (≤3 cm lepidic, non‑invasive); MIA (≤0.5 cm invasion)
-Squamous cell carcinoma	Keratinization, intercellular bridges; non‑keratinizing; basaloid	p40 (preferred), p63	Strong smoking association
-SCLC	Small cells, scant cytoplasm, nuclear molding, high mitoses	Neuroendocrine markers, TTF‑1, high Ki‑67	Aggressive; consider transformation at TKI resistance
-LCNEC	Neuroendocrine architecture with large cells, high mitoses	Neuroendocrine markers	High‑grade; molecularly heterogeneous
-Sarcomatoid	Spindle/giant cell component ≥10%	Variable	Enriched for MET exon‑14 skipping
-Salivary‑type tumors	Mucoepidermoid, adenoid cystic	Diagnosis‑specific	Usually central/endobronchial
+Major Type Key Morphology Lineage IHC Notes
+Adenocarcinoma Lepidic, acinar, papillary, micropapillary, solid; mucinous variant TTF‑1, napsin A; mucin stains AIS (≤3 cm lepidic, non‑invasive); MIA (≤0.5 cm invasion)
+Squamous cell carcinoma Keratinization, intercellular bridges; non‑keratinizing; basaloid p40 (preferred), p63 Strong smoking association
+SCLC Small cells, scant cytoplasm, nuclear molding, high mitoses Neuroendocrine markers, TTF‑1, high Ki‑67 Aggressive; consider transformation at TKI resistance
+LCNEC Neuroendocrine architecture with large cells, high mitoses Neuroendocrine markers High‑grade; molecularly heterogeneous
+Sarcomatoid Spindle/giant cell component ≥10% Variable Enriched for MET exon‑14 skipping
+Salivary‑type tumors Mucoepidermoid, adenoid cystic Diagnosis‑specific Usually central/endobronchial
 
 Abbreviations: AIS, adenocarcinoma in situ; IHC, immunohistochemistry; LCNEC, large cell neuroendocrine carcinoma; MIA, minimally invasive adenocarcinoma; NSCLC, non–small cell lung cancer; SCLC, small cell lung carcinoma.
 
 Table 2. Biomarker–Assay Fit and Typical Sample Needs
 
-Biomarker goal	Preferred first‑line assay(s)	Typical FFPE needs (approximate)	Comments
-PD‑L1 expression	Validated IHC clone/assay	1–2 slides (4–5 µm)	Report tumor‑cell membrane %; know assay‑therapy link
-ALK/ROS1 fusions	IHC screen ± break‑apart FISH; RNA‑NGS for fusion panel	1–2 slides for IHC; 1–2 for FISH; RNA input for NGS	FISH is agnostic to partner; RNA‑NGS detects partners
-RET/NTRK fusions	RNA‑NGS ± FISH; pan‑TRK IHC as screen	≥8–10 slides (7 µm) if NGS; fewer for targeted tests	Confirm pan‑TRK IHC positives with molecular test
-EGFR/BRAF/KRAS/MET exon‑14	DNA‑NGS or targeted PCR	50 ng–2 µg DNA (panel‑dependent)	DNA‑NGS captures breadth; PCR for hotspots
-MET amplification	FISH ± NGS copy number	1–2 slides for FISH	Standardized cutoffs vary by assay
+Biomarker goal Preferred first‑line assay(s) Typical FFPE needs (approximate) Comments
+PD‑L1 expression Validated IHC clone/assay 1–2 slides (4–5 µm) Report tumor‑cell membrane %; know assay‑therapy link
+ALK/ROS1 fusions IHC screen ± break‑apart FISH; RNA‑NGS for fusion panel 1–2 slides for IHC; 1–2 for FISH; RNA input for NGS FISH is agnostic to partner; RNA‑NGS detects partners
+RET/NTRK fusions RNA‑NGS ± FISH; pan‑TRK IHC as screen ≥8–10 slides (7 µm) if NGS; fewer for targeted tests Confirm pan‑TRK IHC positives with molecular test
+EGFR/BRAF/KRAS/MET exon‑14 DNA‑NGS or targeted PCR 50 ng–2 µg DNA (panel‑dependent) DNA‑NGS captures breadth; PCR for hotspots
+MET amplification FISH ± NGS copy number 1–2 slides for FISH Standardized cutoffs vary by assay
 
 Abbreviations: FFPE, formalin‑fixed paraffin‑embedded; FISH, fluorescence in situ hybridization; IHC, immunohistochemistry; NGS, next‑generation sequencing; RNA‑NGS, fusion‑oriented RNA sequencing.
 
 Table 3. PD‑L1 IHC Assays—What to Order and Report
 
-Therapy context	Common PD‑L1 assay clone	Scoring focus	Practical tip
-Anti‑PD‑1 (e.g., pembrolizumab)	22C3	Tumor proportion score (%)	Match assay to intended label when specified
-Anti‑PD‑1 (e.g., nivolumab)	28‑8	Tumor proportion score (%)	Analytical behavior similar to 22C3 in many labs
-Anti‑PD‑L1 (e.g., atezolizumab)	SP142	Tumor cells and immune‑cell scoring	Lower tumor‑cell sensitivity; adhere to lab SOPs
-Anti‑PD‑L1 (e.g., durvalumab)	SP263	Tumor proportion score (%)	Widely implemented on automated platforms
+Therapy context Common PD‑L1 assay clone Scoring focus Practical tip
+Anti‑PD‑1 (e.g., pembrolizumab) 22C3 Tumor proportion score (%) Match assay to intended label when specified
+Anti‑PD‑1 (e.g., nivolumab) 28‑8 Tumor proportion score (%) Analytical behavior similar to 22C3 in many labs
+Anti‑PD‑L1 (e.g., atezolizumab) SP142 Tumor cells and immune‑cell scoring Lower tumor‑cell sensitivity; adhere to lab SOPs
+Anti‑PD‑L1 (e.g., durvalumab) SP263 Tumor proportion score (%) Widely implemented on automated platforms
 
 Abbreviations: IHC, immunohistochemistry; PD‑1, programmed death‑1; PD‑L1, programmed death‑ligand 1; SOPs, standard operating procedures.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Adenocarcinoma patterns. Alt text: Representative lepidic, acinar, papillary, micropapillary, and solid growth patterns; note lepidic non‑invasive architecture and high‑grade micropapillary/solid features.
-
-Figure 2. SCLC and LCNEC features. Alt text: SCLC with nuclear molding and crush artifact; LCNEC with organoid nesting and high mitotic rate; corresponding neuroendocrine marker stains.
-
-Figure 3. PD‑L1 staining patterns. Alt text: Tumor‑cell membranous PD‑L1 staining highlighting variability in intensity and distribution; example immune‑cell staining for assays that incorporate IC scoring.
 
 Cases & Applied Learning
 

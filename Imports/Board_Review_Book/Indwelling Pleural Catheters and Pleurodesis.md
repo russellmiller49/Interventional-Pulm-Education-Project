@@ -269,13 +269,6 @@ Talc choice Graded/large‑particle talc to minimize systemic effects
 Chest tube Small‑bore (≤14F) acceptable; larger (24F) can reduce failure in selected settings but increases pain
 Suction −10 to −20 cm H₂O to maintain apposition; avoid over‑suction
 Tube removal Consider removal at 24–48 h if clinically stable; early removal shortens LOS
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Thoracoscopic view during talc poudrage with even dusting of parietal pleura. Caption: Even distribution promotes uniform pleural symphysis.
-
-Figure 2. IPC tunneling path with subcutaneous cuff 2–3 cm from exit site. Caption: Cuff location reduces infection and stabilizes catheter.
-
-Figure 3. Ultrasound of loculated effusion post‑IPC with septations. Caption: Consider IET to restore drainage.
 
 Cases & Applied Learning
 

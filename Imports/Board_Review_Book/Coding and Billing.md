@@ -125,7 +125,6 @@ K --> N[Add-ons paid in full]
 M --> O[Document lobes/segments; images saved]
 N --> O
 
-
 Bulleted algorithm (parallel):
 
 Confirm navigation actually initiated; if yes, report +31627.
@@ -155,7 +154,6 @@ I -- Separate airway --> K[31630-59 (expect edits)]
 K --> L[Document distinct airways; save diagrams/images]
 J --> L
 
-
 Bulleted algorithm (parallel):
 
 At a single site, do not report 31640 and 31641 together.
@@ -172,56 +170,45 @@ Tables & Quick‑Reference Boxes
 
 Table 1. Diagnostic Bronchoscopy Codes Commonly Used in IP (wRVUs shown when available)
 
-CPT	Descriptor	wRVU	Notes
-31622	Diagnostic bronchoscopy (includes fluoroscopy), with cell washing when performed	2.53	MER base code
-31623	Brushing	2.63	Non‑add‑on (MER applies)
-31624	BAL	2.63	Non‑add‑on (MER applies)
-31628	TBLB, single lobe	3.55	Non‑add‑on (MER applies)
-+31632	TBLB, each additional lobe	1.03	Add‑on
-31629	TBNA (trachea/main/lobar)	3.75	Non‑add‑on (MER applies)
-+31633	TBNA, each additional lobe	1.32	Add‑on
-+31654	Radial probe EBUS	1.40	Add‑on (peripheral localization)
-+31627	Navigation (VB/EMN/robotic)	2.00	Add‑on
-31645	Therapeutic aspiration, initial	2.88	Non‑add‑on
-31646	Therapeutic aspiration, subsequent (same hospital stay)	2.78	Non‑add‑on
+CPT Descriptor wRVU Notes
+31622 Diagnostic bronchoscopy (includes fluoroscopy), with cell washing when performed 2.53 MER base code
+31623 Brushing 2.63 Non‑add‑on (MER applies)
+31624 BAL 2.63 Non‑add‑on (MER applies)
+31628 TBLB, single lobe 3.55 Non‑add‑on (MER applies)
++31632 TBLB, each additional lobe 1.03 Add‑on
+31629 TBNA (trachea/main/lobar) 3.75 Non‑add‑on (MER applies)
++31633 TBNA, each additional lobe 1.32 Add‑on
++31654 Radial probe EBUS 1.40 Add‑on (peripheral localization)
++31627 Navigation (VB/EMN/robotic) 2.00 Add‑on
+31645 Therapeutic aspiration, initial 2.88 Non‑add‑on
+31646 Therapeutic aspiration, subsequent (same hospital stay) 2.78 Non‑add‑on
 
 Abbreviations: BAL, bronchoalveolar lavage; EBUS, endobronchial ultrasound; EMN, electromagnetic navigation; MER, Multiple Endoscopy Rule; TBNA, transbronchial needle aspiration; TBLB, transbronchial lung biopsy; VB, virtual bronchoscopy.
 
 Table 2. BLVR & Airway Stent Coding—At a Glance
 
-Clinical Action	CPT(s)	Notes
-Chartis collateral ventilation assessment	31634	Document lobe tested
-Valve placement	31647 (initial lobe) + +31651 (each additional lobe)	Track valves and lobes
-Valve removal	31648 (initial) + +31649 (each additional lobe)	—
-Tracheal stent	31631	—
-Bronchial stent	31636 (first bronchus) + +31637 (each additional)	—
-Balloon dilation	31630	Bundled with stent in same segment; use ‑59 if separate airway
+Clinical Action CPT(s) Notes
+Chartis collateral ventilation assessment 31634 Document lobe tested
+Valve placement 31647 (initial lobe) + +31651 (each additional lobe) Track valves and lobes
+Valve removal 31648 (initial) + +31649 (each additional lobe) —
+Tracheal stent 31631 —
+Bronchial stent 31636 (first bronchus) + +31637 (each additional) —
+Balloon dilation 31630 Bundled with stent in same segment; use ‑59 if separate airway
 
 Abbreviations: BLVR, bronchoscopic lung volume reduction.
 
 Table 3. Modifiers You Will Actually Use (with Payer‑Friendly Language)
 
-Modifier	When to Use	Example Documentation Language
-‑25	Significant, separately identifiable E/M on the same day as a 0‑day global procedure	“Separate evaluation for new effusion leading to thoracentesis; issues addressed beyond typical pre/post procedure.”
-‑50	Bilateral pleural procedure (e.g., bilateral thoracentesis/chest tubes)	“Bilateral thoracenteses performed: right and left pleural spaces accessed.”
-‑51	Multiple distinct procedures same day (e.g., thoracentesis + bronchoscopy)	“Distinct procedure notes created for thoracentesis and bronchoscopy.”
-‑53	Discontinued procedure for patient safety after initiation	“Procedure aborted after induction and scope insertion due to hypoxemia.”
-‑59	Distinct procedural service at a different site	“Dilation performed in LUL; stent placed RMB—separate airways.”
-‑22	Increased procedural services (rare)	“Case >2× typical time due to friable tumor; quantified additional work.”
-‑26	Professional component for facility‑owned imaging	“Interpreted facility US; billed professional component.”
+Modifier When to Use Example Documentation Language
+‑25 Significant, separately identifiable E/M on the same day as a 0‑day global procedure “Separate evaluation for new effusion leading to thoracentesis; issues addressed beyond typical pre/post procedure.”
+‑50 Bilateral pleural procedure (e.g., bilateral thoracentesis/chest tubes) “Bilateral thoracenteses performed: right and left pleural spaces accessed.”
+‑51 Multiple distinct procedures same day (e.g., thoracentesis + bronchoscopy) “Distinct procedure notes created for thoracentesis and bronchoscopy.”
+‑53 Discontinued procedure for patient safety after initiation “Procedure aborted after induction and scope insertion due to hypoxemia.”
+‑59 Distinct procedural service at a different site “Dilation performed in LUL; stent placed RMB—separate airways.”
+‑22 Increased procedural services (rare) “Case >2× typical time due to friable tumor; quantified additional work.”
+‑26 Professional component for facility‑owned imaging “Interpreted facility US; billed professional component.”
 
 Abbreviations: E/M, evaluation & management; LUL, left upper lobe; RMB, right main bronchus.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Coding map for Y‑stent placement.
-Alt text: Schematic showing tracheal limb and bilateral mainstem limbs, with corresponding CPTs (31631, 31636, +31637).
-
-Figure 2. MER computation example for a peripheral lesion case.
-Alt text: Flow diagram showing primary 31653 at 100%, partial credit for 31628 and 31629 after subtracting 31622, and full credit for add‑ons 31627 and 31654.
-
-Figure 3. BLVR session planner.
-Alt text: Table‑style schematic listing Chartis 31634 followed by valve placement for one or two lobes (31647, +31651).
 
 Cases & Applied Learning
 
@@ -247,100 +234,100 @@ Answer: B. Do not report ablation and excision at the same site; choose the most
 Question Bank (MCQs)
 
 1. During a single bronchoscopy, you perform EBUS‑TBNA of 4R, 7, and 11L; radial EBUS localization; and RUL TBLB. Which codes receive full payment (not reduced under MER)?
-A. 31628 and 31653
-B. +31654 and +31627
-C. 31653 and 31628 only
-D. 31624 and 31623
-E. All codes are reduced under MER
-Answer: B. Add‑on codes (+31627, +31654) are paid in full; non‑add‑ons are subject to MER with 31653 typically the highest‑valued base code.
+   A. 31628 and 31653
+   B. +31654 and +31627
+   C. 31653 and 31628 only
+   D. 31624 and 31623
+   E. All codes are reduced under MER
+   Answer: B. Add‑on codes (+31627, +31654) are paid in full; non‑add‑ons are subject to MER with 31653 typically the highest‑valued base code.
 
 2. (Next best step) A candidate for BLVR has negative collateral ventilation on Chartis in RUL and RML; you place valves in the RUL, then decide to treat RML in the same session. What should you add?
-A. 31647 only
-B. 31648 + 31649
-C. 31647 + +31651
-D. 31647 + 31636
-E. 31651 only
-Answer: C. Valve placement uses 31647 for the first lobe and +31651 for each additional lobe in the same session.
+   A. 31647 only
+   B. 31648 + 31649
+   C. 31647 + +31651
+   D. 31647 + 31636
+   E. 31651 only
+   Answer: C. Valve placement uses 31647 for the first lobe and +31651 for each additional lobe in the same session.
 
 3. Which statement about moderate sedation is correct when provided by the bronchoscopist?
-A. 99153 credits physician wRVUs for every 15 minutes.
-B. 99152 can be reported for the first 15 minutes; 99153 thereafter is practice expense only.
-C. Sedation remains bundled into all bronchoscopy codes.
-D. Only anesthesia providers may bill sedation.
-E. Sedation cannot be billed in patients ≥5 years.
-Answer: B. CMS decoupled moderate sedation; 99152 applies to the first 15 minutes by the bronchoscopist, with 99153 as practice expense only.
+   A. 99153 credits physician wRVUs for every 15 minutes.
+   B. 99152 can be reported for the first 15 minutes; 99153 thereafter is practice expense only.
+   C. Sedation remains bundled into all bronchoscopy codes.
+   D. Only anesthesia providers may bill sedation.
+   E. Sedation cannot be billed in patients ≥5 years.
+   Answer: B. CMS decoupled moderate sedation; 99152 applies to the first 15 minutes by the bronchoscopist, with 99153 as practice expense only.
 
 4. Which pairing correctly applies modifier ‑50?
-A. Bilateral EBUS‑TBNA
-B. Bilateral mainstem bronchial stents
-C. Bilateral thoracenteses
-D. RUL TBLB + LLL TBLB
-E. Bilateral BAL
-Answer: C. Bilateral pleural procedures use ‑50; this is not a bronchoscopy modifier.
+   A. Bilateral EBUS‑TBNA
+   B. Bilateral mainstem bronchial stents
+   C. Bilateral thoracenteses
+   D. RUL TBLB + LLL TBLB
+   E. Bilateral BAL
+   Answer: C. Bilateral pleural procedures use ‑50; this is not a bronchoscopy modifier.
 
 5. (Procedural troubleshooting) You intended EMN navigation but aborted before any navigation steps due to hypoxemia after induction. How should 31627 be handled?
-A. Bill 31627 normally
-B. Bill 31627‑52
-C. Do not report 31627
-D. Bill 31627‑59
-E. Bill 31627‑76
-Answer: C. Do not bill navigation if it was never initiated. Consider ‑53 only for services begun and stopped for safety; reduced services (‑52) apply only if part of the service was actually performed.
+   A. Bill 31627 normally
+   B. Bill 31627‑52
+   C. Do not report 31627
+   D. Bill 31627‑59
+   E. Bill 31627‑76
+   Answer: C. Do not bill navigation if it was never initiated. Consider ‑53 only for services begun and stopped for safety; reduced services (‑52) apply only if part of the service was actually performed.
 
 6. (Next best step) During rigid bronchoscopy for Y‑stent, you also perform ultrasound‑guided thoracentesis earlier that day. How should you report the thoracentesis relative to the bronchoscopic stent work?
-A. No modifier needed
-B. Append ‑51 to the thoracentesis CPT
-C. Append ‑59 to the thoracentesis CPT
-D. Append ‑25 to the thoracentesis CPT
-E. Thoracentesis is bundled into bronchoscopy
-Answer: B. Thoracentesis is a separate procedure from bronchoscopy; use ‑51 when performed the same day. Separate notes strengthen the claim.
+   A. No modifier needed
+   B. Append ‑51 to the thoracentesis CPT
+   C. Append ‑59 to the thoracentesis CPT
+   D. Append ‑25 to the thoracentesis CPT
+   E. Thoracentesis is bundled into bronchoscopy
+   Answer: B. Thoracentesis is a separate procedure from bronchoscopy; use ‑51 when performed the same day. Separate notes strengthen the claim.
 
 7. For US‑guided IJ line placement during a bronchoscopy day, when is 76937 appropriately reported?
-A. When the line was placed using landmark technique
-B. When an ultrasound machine was present in the room
-C. When real‑time guidance was used and a permanent image was archived
-D. Only when the physician interprets images later
-E. Only for arterial lines
-Answer: C. Payer policy requires real‑time US guidance and an archived image. Document this explicitly.
+   A. When the line was placed using landmark technique
+   B. When an ultrasound machine was present in the room
+   C. When real‑time guidance was used and a permanent image was archived
+   D. Only when the physician interprets images later
+   E. Only for arterial lines
+   Answer: C. Payer policy requires real‑time US guidance and an archived image. Document this explicitly.
 
 8. (Procedural troubleshooting) You perform ablation and excision on the same obstructing LMB lesion. What is correct?
-A. Report 31640 and 31641
-B. Choose either 31640 or 31641
-C. Always add ‑59 to 31641
-D. Bill 31630 instead
-E. Both codes can be reported if done first with rigid and then flexible scopes
-Answer: B. Excision and ablation at the same site bundle—report only one. Use ‑59 only for truly distinct anatomic sites.
+   A. Report 31640 and 31641
+   B. Choose either 31640 or 31641
+   C. Always add ‑59 to 31641
+   D. Bill 31630 instead
+   E. Both codes can be reported if done first with rigid and then flexible scopes
+   Answer: B. Excision and ablation at the same site bundle—report only one. Use ‑59 only for truly distinct anatomic sites.
 
 9. A patient has therapeutic aspiration for mucous plugging in the ICU on Monday and again on Wednesday of the same hospitalization by your group. Which codes?
-A. 31645 for both
-B. 31645, then 31646
-C. 31646 for both
-D. 31645‑76 for Wednesday
-E. 31645 on Monday, no code on Wednesday
-Answer: B. Initial therapeutic aspiration uses 31645; repeat aspiration during the same hospital stay by the same provider/group is 31646.
+   A. 31645 for both
+   B. 31645, then 31646
+   C. 31646 for both
+   D. 31645‑76 for Wednesday
+   E. 31645 on Monday, no code on Wednesday
+   Answer: B. Initial therapeutic aspiration uses 31645; repeat aspiration during the same hospital stay by the same provider/group is 31646.
 
 10. Which combination is incorrect because of bundling?
-A. 31636 with 31630 in the same airway segment
-B. 31631 + 31636 + +31637 for a Y‑stent
-C. 31647 + +31651 for BLVR in two lobes
-D. 31640 + 31641 at one site
-E. +31654 added when radial probe EBUS is used
-Answer: D. Excision and ablation at one site bundle; report one. Dilation bundles with stent in the same segment, and the Y‑stent and BLVR combinations shown are correct.
+    A. 31636 with 31630 in the same airway segment
+    B. 31631 + 31636 + +31637 for a Y‑stent
+    C. 31647 + +31651 for BLVR in two lobes
+    D. 31640 + 31641 at one site
+    E. +31654 added when radial probe EBUS is used
+    Answer: D. Excision and ablation at one site bundle; report one. Dilation bundles with stent in the same segment, and the Y‑stent and BLVR combinations shown are correct.
 
 11. (Next best step) You plan clinic E/M for nodule surveillance with medication optimization and care coordination, no procedure that day. How can you reflect longitudinal complexity?
-A. Add 99153
-B. Add G2211 to the E/M
-C. Add 31622
-D. Add 25 to the E/M
-E. Use 59 on the E/M
-Answer: B. G2211 recognizes ongoing, complex care in office/outpatient E/M; it is not billed on the same day as procedures.
+    A. Add 99153
+    B. Add G2211 to the E/M
+    C. Add 31622
+    D. Add 25 to the E/M
+    E. Use 59 on the E/M
+    Answer: B. G2211 recognizes ongoing, complex care in office/outpatient E/M; it is not billed on the same day as procedures.
 
 12. (Procedural troubleshooting) You stent the RMB and dilate the LUL. The claim denies 31630 as bundled. Best appeal focus?
-A. Ask for a peer‑to‑peer only
-B. Clarify distinct airways (RMB vs LUL), append ‑59, and include annotated images/diagram
-C. Remove 31630
-D. Resubmit with 51
-E. Add 50
-Answer: B. Dilation bundles with stent in the same segment; successful appeal hinges on clear documentation of distinct sites and use of ‑59.
+    A. Ask for a peer‑to‑peer only
+    B. Clarify distinct airways (RMB vs LUL), append ‑59, and include annotated images/diagram
+    C. Remove 31630
+    D. Resubmit with 51
+    E. Add 50
+    Answer: B. Dilation bundles with stent in the same segment; successful appeal hinges on clear documentation of distinct sites and use of ‑59.
 
 Controversies, Variability, and Evolving Evidence
 
@@ -564,7 +551,6 @@ K --> N[Add-ons paid in full]
 M --> O[Document lobes/segments; images saved]
 N --> O
 
-
 Parallel bullets:
 
 Confirm navigation actually initiated; if yes, report +31627.
@@ -594,7 +580,6 @@ I -- Separate airway --> K[31630-59 (expect edits)]
 K --> L[Document distinct airways; save diagrams/images]
 J --> L
 
-
 Parallel bullets:
 
 At a single site, do not report 31640 and 31641 together; select the dominant therapy.
@@ -611,56 +596,45 @@ Tables & Quick‑Reference Boxes
 
 Table 1. Diagnostic Bronchoscopy Codes Commonly Used in IP (wRVUs shown when available)
 
-CPT	Descriptor	wRVU	Notes
-31622	Diagnostic bronchoscopy (includes fluoroscopy), with cell washing when performed	2.53	MER base code
-31623	Brushing	2.63	Non‑add‑on (MER applies)
-31624	BAL	2.63	Non‑add‑on (MER applies)
-31628	TBLB, single lobe	3.55	Non‑add‑on (MER applies)
-+31632	TBLB, each additional lobe	1.03	Add‑on
-31629	TBNA (trachea/main/lobar)	3.75	Non‑add‑on (MER applies)
-+31633	TBNA, each additional lobe	1.32	Add‑on
-+31654	Radial probe EBUS	1.40	Add‑on (peripheral localization)
-+31627	Navigation (VB/EMN/robotic)	2.00	Add‑on
-31645	Therapeutic aspiration, initial	2.88	Non‑add‑on
-31646	Therapeutic aspiration, subsequent (same hospital stay)	2.78	Non‑add‑on
+CPT Descriptor wRVU Notes
+31622 Diagnostic bronchoscopy (includes fluoroscopy), with cell washing when performed 2.53 MER base code
+31623 Brushing 2.63 Non‑add‑on (MER applies)
+31624 BAL 2.63 Non‑add‑on (MER applies)
+31628 TBLB, single lobe 3.55 Non‑add‑on (MER applies)
++31632 TBLB, each additional lobe 1.03 Add‑on
+31629 TBNA (trachea/main/lobar) 3.75 Non‑add‑on (MER applies)
++31633 TBNA, each additional lobe 1.32 Add‑on
++31654 Radial probe EBUS 1.40 Add‑on (peripheral localization)
++31627 Navigation (VB/EMN/robotic) 2.00 Add‑on
+31645 Therapeutic aspiration, initial 2.88 Non‑add‑on
+31646 Therapeutic aspiration, subsequent (same hospital stay) 2.78 Non‑add‑on
 
 Abbreviations: BAL, bronchoalveolar lavage; EBUS, endobronchial ultrasound; EMN, electromagnetic navigation; MER, Multiple Endoscopy Rule; TBNA, transbronchial needle aspiration; TBLB, transbronchial lung biopsy; VB, virtual bronchoscopy.
 
 Table 2. BLVR & Airway Stent Coding—At a Glance
 
-Clinical Action	CPT(s)	Notes
-Chartis collateral ventilation assessment	31634	Document lobe tested
-Valve placement	31647 (initial lobe) + +31651 (each additional lobe)	Track lobes and valves
-Valve removal	31648 (initial) + +31649 (each additional lobe)	—
-Tracheal stent	31631	—
-Bronchial stent	31636 (first bronchus) + +31637 (each additional)	—
-Balloon dilation	31630	Bundled with stent in same segment; use ‑59 if separate airway
+Clinical Action CPT(s) Notes
+Chartis collateral ventilation assessment 31634 Document lobe tested
+Valve placement 31647 (initial lobe) + +31651 (each additional lobe) Track lobes and valves
+Valve removal 31648 (initial) + +31649 (each additional lobe) —
+Tracheal stent 31631 —
+Bronchial stent 31636 (first bronchus) + +31637 (each additional) —
+Balloon dilation 31630 Bundled with stent in same segment; use ‑59 if separate airway
 
 Abbreviations: BLVR, bronchoscopic lung volume reduction.
 
 Table 3. Modifiers You Will Actually Use (with Payer‑Friendly Language)
 
-Modifier	When to Use	Example Documentation Language
-‑25	Significant, separately identifiable E/M on the same day as a 0‑day global procedure	“Separate evaluation for new effusion leading to thoracentesis; issues addressed beyond typical pre/post procedure.”
-‑50	Bilateral pleural procedure (e.g., bilateral thoracentesis/chest tubes)	“Bilateral thoracenteses performed: right and left pleural spaces accessed.”
-‑51	Multiple distinct procedures same day (e.g., thoracentesis + bronchoscopy)	“Distinct procedure notes created for thoracentesis and bronchoscopy.”
-‑53	Discontinued procedure for patient safety after initiation	“Procedure aborted after induction and scope insertion due to hypoxemia.”
-‑59	Distinct procedural service at a different site	“Dilation performed in LUL; stent placed RMB—separate airways.”
-‑22	Increased procedural services (rare)	“Case >2× typical time due to friable tumor; quantified additional work.”
-‑26	Professional component for facility‑owned imaging	“Interpreted facility US; billed professional component.”
+Modifier When to Use Example Documentation Language
+‑25 Significant, separately identifiable E/M on the same day as a 0‑day global procedure “Separate evaluation for new effusion leading to thoracentesis; issues addressed beyond typical pre/post procedure.”
+‑50 Bilateral pleural procedure (e.g., bilateral thoracentesis/chest tubes) “Bilateral thoracenteses performed: right and left pleural spaces accessed.”
+‑51 Multiple distinct procedures same day (e.g., thoracentesis + bronchoscopy) “Distinct procedure notes created for thoracentesis and bronchoscopy.”
+‑53 Discontinued procedure for patient safety after initiation “Procedure aborted after induction and scope insertion due to hypoxemia.”
+‑59 Distinct procedural service at a different site “Dilation performed in LUL; stent placed RMB—separate airways.”
+‑22 Increased procedural services (rare) “Case >2× typical time due to friable tumor; quantified additional work.”
+‑26 Professional component for facility‑owned imaging “Interpreted facility US; billed professional component.”
 
 Abbreviations: E/M, evaluation & management; LUL, left upper lobe; RMB, right main bronchus.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Coding map for Y‑stent placement.
-Alt text: Schematic showing tracheal limb and bilateral mainstem limbs, with corresponding CPTs (31631, 31636, +31637).
-
-Figure 2. MER computation example for a peripheral lesion case.
-Alt text: Flow diagram showing a high‑valued base code paid at 100%, partial credit for 31628 and 31629 after subtracting 31622, and full credit for add‑ons 31627 and 31654.
-
-Figure 3. BLVR session planner.
-Alt text: Table‑style schematic listing Chartis (31634) followed by valve placement for one or two lobes (31647, +31651).
 
 Cases & Applied Learning
 
@@ -686,100 +660,100 @@ Answer: B. Do not report ablation and excision at the same site; choose the most
 Question Bank (MCQs)
 
 1. During a single bronchoscopy, you perform EBUS‑TBNA of 4R, 7, and 11L; radial EBUS localization; and RUL TBLB. Which codes receive full payment (not reduced under MER)?
-A. 31628 and 31653
-B. +31654 and +31627
-C. 31653 and 31628 only
-D. 31624 and 31623
-E. All codes are reduced under MER
-Answer: B. Add‑on codes (+31627, +31654) are paid in full; non‑add‑ons are subject to MER with the highest‑valued base code paid at 100%.
+   A. 31628 and 31653
+   B. +31654 and +31627
+   C. 31653 and 31628 only
+   D. 31624 and 31623
+   E. All codes are reduced under MER
+   Answer: B. Add‑on codes (+31627, +31654) are paid in full; non‑add‑ons are subject to MER with the highest‑valued base code paid at 100%.
 
 2. (Next best step) A candidate for BLVR has negative collateral ventilation on Chartis in RUL and RML; you place valves in the RUL, then decide to treat RML in the same session. What should you add?
-A. 31647 only
-B. 31648 + 31649
-C. 31647 + +31651
-D. 31647 + 31636
-E. 31651 only
-Answer: C. Valve placement uses 31647 for the first lobe and +31651 for each additional lobe treated in the same session.
+   A. 31647 only
+   B. 31648 + 31649
+   C. 31647 + +31651
+   D. 31647 + 31636
+   E. 31651 only
+   Answer: C. Valve placement uses 31647 for the first lobe and +31651 for each additional lobe treated in the same session.
 
 3. Which statement about moderate sedation is correct when provided by the bronchoscopist?
-A. 99153 credits physician wRVUs for every 15 minutes.
-B. 99152 can be reported for the first 15 minutes; 99153 thereafter is practice expense only.
-C. Sedation remains bundled into all bronchoscopy codes.
-D. Only anesthesia providers may bill sedation.
-E. Sedation cannot be billed in patients ≥5 years.
-Answer: B. Moderate sedation is decoupled from bronchoscopy codes; 99152 applies to the first 15 minutes by the bronchoscopist, with 99153 as practice expense only.
+   A. 99153 credits physician wRVUs for every 15 minutes.
+   B. 99152 can be reported for the first 15 minutes; 99153 thereafter is practice expense only.
+   C. Sedation remains bundled into all bronchoscopy codes.
+   D. Only anesthesia providers may bill sedation.
+   E. Sedation cannot be billed in patients ≥5 years.
+   Answer: B. Moderate sedation is decoupled from bronchoscopy codes; 99152 applies to the first 15 minutes by the bronchoscopist, with 99153 as practice expense only.
 
 4. Which pairing correctly applies modifier ‑50?
-A. Bilateral EBUS‑TBNA
-B. Bilateral mainstem bronchial stents
-C. Bilateral thoracenteses
-D. RUL TBLB + LLL TBLB
-E. Bilateral BAL
-Answer: C. Bilateral pleural procedures use ‑50; this is not a bronchoscopy modifier.
+   A. Bilateral EBUS‑TBNA
+   B. Bilateral mainstem bronchial stents
+   C. Bilateral thoracenteses
+   D. RUL TBLB + LLL TBLB
+   E. Bilateral BAL
+   Answer: C. Bilateral pleural procedures use ‑50; this is not a bronchoscopy modifier.
 
 5. (Procedural troubleshooting) You intended EMN navigation but aborted before any navigation steps due to hypoxemia after induction. How should 31627 be handled?
-A. Bill 31627 normally
-B. Bill 31627‑52
-C. Do not report 31627
-D. Bill 31627‑59
-E. Bill 31627‑76
-Answer: C. Do not bill navigation if it was never initiated. Use ‑53 only for services begun and stopped for safety; reduced services (‑52) apply only if part of the service was actually performed.
+   A. Bill 31627 normally
+   B. Bill 31627‑52
+   C. Do not report 31627
+   D. Bill 31627‑59
+   E. Bill 31627‑76
+   Answer: C. Do not bill navigation if it was never initiated. Use ‑53 only for services begun and stopped for safety; reduced services (‑52) apply only if part of the service was actually performed.
 
 6. (Next best step) During rigid bronchoscopy for Y‑stent, you also perform ultrasound‑guided thoracentesis earlier that day. How should you report the thoracentesis relative to the bronchoscopic stent work?
-A. No modifier needed
-B. Append ‑51 to the thoracentesis CPT
-C. Append ‑59 to the thoracentesis CPT
-D. Append ‑25 to the thoracentesis CPT
-E. Thoracentesis is bundled into bronchoscopy
-Answer: B. Thoracentesis is a separate procedure from bronchoscopy; use ‑51 when performed the same day. Separate procedure notes strengthen the claim.
+   A. No modifier needed
+   B. Append ‑51 to the thoracentesis CPT
+   C. Append ‑59 to the thoracentesis CPT
+   D. Append ‑25 to the thoracentesis CPT
+   E. Thoracentesis is bundled into bronchoscopy
+   Answer: B. Thoracentesis is a separate procedure from bronchoscopy; use ‑51 when performed the same day. Separate procedure notes strengthen the claim.
 
 7. For US‑guided IJ line placement during a bronchoscopy day, when is 76937 appropriately reported?
-A. When the line was placed using landmark technique
-B. When an ultrasound machine was present in the room
-C. When real‑time guidance was used and a permanent image was archived
-D. Only when the physician interprets images later
-E. Only for arterial lines
-Answer: C. Payer policy requires real‑time US guidance and an archived image. Document this explicitly.
+   A. When the line was placed using landmark technique
+   B. When an ultrasound machine was present in the room
+   C. When real‑time guidance was used and a permanent image was archived
+   D. Only when the physician interprets images later
+   E. Only for arterial lines
+   Answer: C. Payer policy requires real‑time US guidance and an archived image. Document this explicitly.
 
 8. (Procedural troubleshooting) You perform ablation and excision on the same obstructing LMB lesion. What is correct?
-A. Report 31640 and 31641
-B. Choose either 31640 or 31641
-C. Always add ‑59 to 31641
-D. Bill 31630 instead
-E. Both codes can be reported if done first with rigid and then flexible scopes
-Answer: B. Excision and ablation at the same site bundle—report only one. Use ‑59 only for truly distinct anatomic sites.
+   A. Report 31640 and 31641
+   B. Choose either 31640 or 31641
+   C. Always add ‑59 to 31641
+   D. Bill 31630 instead
+   E. Both codes can be reported if done first with rigid and then flexible scopes
+   Answer: B. Excision and ablation at the same site bundle—report only one. Use ‑59 only for truly distinct anatomic sites.
 
 9. A patient has therapeutic aspiration for mucous plugging in the ICU on Monday and again on Wednesday of the same hospitalization by your group. Which codes?
-A. 31645 for both
-B. 31645, then 31646
-C. 31646 for both
-D. 31645‑76 for Wednesday
-E. 31645 on Monday, no code on Wednesday
-Answer: B. Initial therapeutic aspiration uses 31645; repeat aspiration during the same hospital stay by the same provider/group is 31646.
+   A. 31645 for both
+   B. 31645, then 31646
+   C. 31646 for both
+   D. 31645‑76 for Wednesday
+   E. 31645 on Monday, no code on Wednesday
+   Answer: B. Initial therapeutic aspiration uses 31645; repeat aspiration during the same hospital stay by the same provider/group is 31646.
 
 10. Which combination is incorrect because of bundling?
-A. 31636 with 31630 in the same airway segment
-B. 31631 + 31636 + +31637 for a Y‑stent
-C. 31647 + +31651 for BLVR in two lobes
-D. 31640 + 31641 at one site
-E. +31654 added when radial probe EBUS is used
-Answer: D. Excision and ablation at one site bundle; report one. Dilation bundles with stent in the same segment, and the Y‑stent and BLVR combinations shown are correct.
+    A. 31636 with 31630 in the same airway segment
+    B. 31631 + 31636 + +31637 for a Y‑stent
+    C. 31647 + +31651 for BLVR in two lobes
+    D. 31640 + 31641 at one site
+    E. +31654 added when radial probe EBUS is used
+    Answer: D. Excision and ablation at one site bundle; report one. Dilation bundles with stent in the same segment, and the Y‑stent and BLVR combinations shown are correct.
 
 11. (Next best step) You plan clinic E/M for nodule surveillance with medication optimization and care coordination, no procedure that day. How can you reflect longitudinal complexity?
-A. Add 99153
-B. Add G2211 to the E/M
-C. Add 31622
-D. Add 25 to the E/M
-E. Use 59 on the E/M
-Answer: B. G2211 recognizes ongoing, complex care in office/outpatient E/M; it is not billed on the same day as procedures.
+    A. Add 99153
+    B. Add G2211 to the E/M
+    C. Add 31622
+    D. Add 25 to the E/M
+    E. Use 59 on the E/M
+    Answer: B. G2211 recognizes ongoing, complex care in office/outpatient E/M; it is not billed on the same day as procedures.
 
 12. (Procedural troubleshooting) You stent the RMB and dilate the LUL. The claim denies 31630 as bundled. Best appeal focus?
-A. Ask for a peer‑to‑peer only
-B. Clarify distinct airways (RMB vs LUL), append ‑59, and include annotated images/diagram
-C. Remove 31630
-D. Resubmit with 51
-E. Add 50
-Answer: B. Dilation bundles with stent in the same segment; successful appeal hinges on clear documentation of distinct sites and use of ‑59.
+    A. Ask for a peer‑to‑peer only
+    B. Clarify distinct airways (RMB vs LUL), append ‑59, and include annotated images/diagram
+    C. Remove 31630
+    D. Resubmit with 51
+    E. Add 50
+    Answer: B. Dilation bundles with stent in the same segment; successful appeal hinges on clear documentation of distinct sites and use of ‑59.
 
 Controversies, Variability, and Evolving Evidence
 

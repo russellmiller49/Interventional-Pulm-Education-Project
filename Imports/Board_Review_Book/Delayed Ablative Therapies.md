@@ -266,13 +266,6 @@ Radiation bronchitis/stenosis EBB Dose planning; grade and manage with debrideme
 Airway edema/secretions Cryo Anticipate; suction; consider short steroids (practice‑based)
 Barotrauma/desaturation Spray cryo Ensure venting; large airway access; apnea bursts only
 Abbreviations: EBRT, external beam radiation therapy.
-Imaging & Figure Callouts (Placeholders)
-
-Figure 1. Cylindrical diffuser delivering red light during PDT activation. Alt text: Bronchoscopic view of diffuser fiber emitting uniform 360° illumination within airway lumen.
-
-Figure 2. Cryoprobe attached to an organized clot during cryoadhesion. Alt text: Flexible probe tip with adherent clot being withdrawn en bloc through the scope.
-
-Figure 3. HDR brachytherapy catheter positioned distal to an endobronchial lesion. Alt text: Endobronchial view of catheter exiting beyond tumor with external fixation in place.
 
 Cases & Applied Learning
 

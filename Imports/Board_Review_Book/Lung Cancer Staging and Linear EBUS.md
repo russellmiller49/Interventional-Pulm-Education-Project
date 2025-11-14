@@ -197,7 +197,6 @@ K --> L{High suspicion persists?}
 L -->|Yes| M[Selective confirmatory mediastinoscopy]
 L -->|No| N[Proceed with surgery/RT]
 
-
 Bulleted companion algorithm
 
 Perform CT and PET/CT first; add brain MRI selectively (e.g., curative intent with neurologic symptoms or high risk).
@@ -221,7 +220,6 @@ H --> I[Add EUS-B for 7/8/9/left adrenal as needed]
 I --> J[Hemostasis check and recovery]
 J --> K[Structured report & plan next steps]
 
-
 Bulleted companion checklist
 
 Confirm station boundaries (e.g., azygos = inferior 4R; superior LPA = inferior 4L).
@@ -234,55 +232,45 @@ Document stations sampled, gauge/passes, and any limitations.
 
 Tables & Quick‑Reference Boxes
 Table 1. TNM‑9 High‑Yield Updates
-Item	Key Point	Practical Impact
-N2 subcategories	N2a: single ipsilateral mediastinal/subcarinal station; N2b: multiple stations	Multistation N2 confers worse prognosis; influences surgical candidacy and adjuvant decisions
-M1c subcategories	M1c1: multiple mets in one organ system; M1c2: multiple organ systems	Clarifies metastatic burden; supports MDT planning
-Stage groups	Several T/N combos reassigned (e.g., T1N2aM0 → IIB)	Avoid “legacy bias” from 8th edition when counseling/treating
-T coding reminders	Size = solid/invasive component; lepidic not counted	Prevent T overestimation
-VPI, STAS	VPI upstages (T2 when small); STAS recorded but does not change T	Don’t count STAS toward T size
+Item Key Point Practical Impact
+N2 subcategories N2a: single ipsilateral mediastinal/subcarinal station; N2b: multiple stations Multistation N2 confers worse prognosis; influences surgical candidacy and adjuvant decisions
+M1c subcategories M1c1: multiple mets in one organ system; M1c2: multiple organ systems Clarifies metastatic burden; supports MDT planning
+Stage groups Several T/N combos reassigned (e.g., T1N2aM0 → IIB) Avoid “legacy bias” from 8th edition when counseling/treating
+T coding reminders Size = solid/invasive component; lepidic not counted Prevent T overestimation
+VPI, STAS VPI upstages (T2 when small); STAS recorded but does not change T Don’t count STAS toward T size
 
 Abbreviations: MDT, multidisciplinary team; mets, metastases; VPI, visceral pleural invasion; STAS, spread through air spaces.
 
 Table 2. Node Stations: Access & Landmarks (EBUS vs EUS‑B)
-Station	Typical Access	Landmark Tips (US)	Notes
-2R/2L	EBUS (±EUS‑B)	2R: right carotid/subclavian; 2L: above aortic arch	Defining borders on US is challenging; use aortic arch level for 2L then rotate
-4R	EBUS	SVC and azygos; lower rim of azygos = inferior 4R	Azygos distinguishes 4R vs 10R; pleura is close—avoid pneumothorax
-4L	EBUS (±EUS‑B)	“Mickey Mouse” (aorta‑PA‑node); superior LPA = inferior 4L	EUS‑B can help difficult angles
-5–6	Usually EUS‑B or surgery	Aortopulmonary window/para‑aortic	Often not reachable by EBUS
-7	EBUS or EUS‑B	Subcarinal; esophagus posterior	Approach via either main bronchus wall
-8–9	EUS‑B only	Paraesophageal/pulmonary ligament	Not accessible by EBUS
-10–11	EBUS	10R: inferior to azygos; 10L: above LPA; 11 between lobar bronchi	Hilar/interlobar nodes
+Station Typical Access Landmark Tips (US) Notes
+2R/2L EBUS (±EUS‑B) 2R: right carotid/subclavian; 2L: above aortic arch Defining borders on US is challenging; use aortic arch level for 2L then rotate
+4R EBUS SVC and azygos; lower rim of azygos = inferior 4R Azygos distinguishes 4R vs 10R; pleura is close—avoid pneumothorax
+4L EBUS (±EUS‑B) “Mickey Mouse” (aorta‑PA‑node); superior LPA = inferior 4L EUS‑B can help difficult angles
+5–6 Usually EUS‑B or surgery Aortopulmonary window/para‑aortic Often not reachable by EBUS
+7 EBUS or EUS‑B Subcarinal; esophagus posterior Approach via either main bronchus wall
+8–9 EUS‑B only Paraesophageal/pulmonary ligament Not accessible by EBUS
+10–11 EBUS 10R: inferior to azygos; 10L: above LPA; 11 between lobar bronchi Hilar/interlobar nodes
 
 Abbreviations: SVC, superior vena cava; PA, pulmonary artery; US, ultrasound; LPA, left pulmonary artery.
 
 Table 3. EBUS‑TBNA Quick Protocol
-Domain	Best Practice
-Strategy	Systematic evaluation; sample ≥3 stations (commonly 4R, 4L, 7) in N3→N2→N1 order
-Passes	≥3 passes per node; more if molecular testing is needed or ROSE is unavailable
-Needle	19/21/22/25G; stiffer needles aid calcified nodes; 25G sometimes advantageous for tight angles
-Sedation	Moderate or deep sedation acceptable; GA improves stability; HFNC lowers desaturation risk in moderate sedation
-Safety	Doppler vessel check; keep pleura in view at high right paratracheal; avoid necrotic centers; maintain sterile technique
-Report	Stations sampled, gauge/passes, adequacy/ROSE, complications, and limitations
+Domain Best Practice
+Strategy Systematic evaluation; sample ≥3 stations (commonly 4R, 4L, 7) in N3→N2→N1 order
+Passes ≥3 passes per node; more if molecular testing is needed or ROSE is unavailable
+Needle 19/21/22/25G; stiffer needles aid calcified nodes; 25G sometimes advantageous for tight angles
+Sedation Moderate or deep sedation acceptable; GA improves stability; HFNC lowers desaturation risk in moderate sedation
+Safety Doppler vessel check; keep pleura in view at high right paratracheal; avoid necrotic centers; maintain sterile technique
+Report Stations sampled, gauge/passes, adequacy/ROSE, complications, and limitations
 
 Abbreviations: GA, general anesthesia; HFNC, high‑flow nasal cannula; ROSE, rapid on‑site evaluation.
 
 Table 4. Imaging for Staging—Strengths & Caveats
-Modality	Advantages	Limitations
-PET/CT	High sensitivity for distant disease and mediastinal nodes	Poor for small brain mets; false positives with infection/inflammation; less effective in low‑FDG cancers
-MRI (brain; chest for apex)	Best for CNS mets; excellent soft‑tissue contrast for Pancoast invasion	Availability, contraindications, longer exam, patient cooperation
-CT (contrast)	Baseline anatomic map; surgical planning	Inferior to PET/CT for nodal metastases; underestimates invasion in some scenarios
+Modality Advantages Limitations
+PET/CT High sensitivity for distant disease and mediastinal nodes Poor for small brain mets; false positives with infection/inflammation; less effective in low‑FDG cancers
+MRI (brain; chest for apex) Best for CNS mets; excellent soft‑tissue contrast for Pancoast invasion Availability, contraindications, longer exam, patient cooperation
+CT (contrast) Baseline anatomic map; surgical planning Inferior to PET/CT for nodal metastases; underestimates invasion in some scenarios
 
 Abbreviations: CNS, central nervous system; FDG, fluorodeoxyglucose.
-
-Imaging & Figure Callouts (Placeholders)
-
-Figure A. Linear EBUS view of 4R with SVC and azygos arch. Alt text: “Ultrasound image showing 4R node bordered by SVC and azygos vein.”
-
-Figure B. Linear EBUS view of 4L demonstrating the aorta–PA–node “Mickey Mouse” window. Alt text: “Ultrasound image at the aortopulmonary level highlighting 4L node.”
-
-Figure C. Subcarinal (7) node on EBUS with posterior esophagus. Alt text: “Subcarinal node with esophagus seen posteriorly.”
-
-Figure D. Paraesophageal (8) node via EUS‑B. Alt text: “EUS‑B visualization of station 8 adjacent to esophageal wall.”
 
 Cases & Applied Learning
 
@@ -316,100 +304,100 @@ Answer: B. High‑quality negative endosonography often obviates routine confirm
 Question Bank (MCQs)
 
 1. A 3.5‑cm central RUL mass with normal mediastinum on CT/PET. Best next step for mediastinal evaluation?
-A. PET/CT repeat in 3 months
-B. EBUS‑TBNA (systematic)
-C. Direct to lobectomy
-D. Chest MRI
-E. Bone scan
-Answer: B. Central tumors >3 cm are “intermediate risk” despite normal imaging and warrant invasive mediastinal staging.
+   A. PET/CT repeat in 3 months
+   B. EBUS‑TBNA (systematic)
+   C. Direct to lobectomy
+   D. Chest MRI
+   E. Bone scan
+   Answer: B. Central tumors >3 cm are “intermediate risk” despite normal imaging and warrant invasive mediastinal staging.
 
 2. During EBUS of 4R, which landmark best defines the inferior border of 4R and helps distinguish it from 10R?
-A. Left pulmonary artery
-B. Aortic arch
-C. Azygos vein (lower rim)
-D. Right atrium
-E. Carina
-Answer: C. The lower rim of the azygos marks the inferior border of 4R; below this is 10R.
+   A. Left pulmonary artery
+   B. Aortic arch
+   C. Azygos vein (lower rim)
+   D. Right atrium
+   E. Carina
+   Answer: C. The lower rim of the azygos marks the inferior border of 4R; below this is 10R.
 
 3. In TNM‑9, which change is correct?
-A. M1a subdivided into M1a1/M1a2
-B. N2 subdivided into N2a (single station) and N2b (multistation)
-C. T categories now count lepidic component
-D. STAS increases T category
-E. VPI no longer affects T
-Answer: B. N2 is now split into N2a and N2b; lepidic isn’t counted in T size; STAS does not change T; VPI retains impact.
+   A. M1a subdivided into M1a1/M1a2
+   B. N2 subdivided into N2a (single station) and N2b (multistation)
+   C. T categories now count lepidic component
+   D. STAS increases T category
+   E. VPI no longer affects T
+   Answer: B. N2 is now split into N2a and N2b; lepidic isn’t counted in T size; STAS does not change T; VPI retains impact.
 
 4. Which station is not typically reachable with linear EBUS and often requires EUS‑B or surgery?
-A. 4L
-B. 7
-C. 10L
-D. 5
-E. 11R
-Answer: D. Station 5 (aortopulmonary window) is rarely accessible with EBUS.
+   A. 4L
+   B. 7
+   C. 10L
+   D. 5
+   E. 11R
+   Answer: D. Station 5 (aortopulmonary window) is rarely accessible with EBUS.
 
 5. Preferred sampling order during lung cancer staging by EBUS?
-A. N1 → N2 → N3
-B. N2 → N3 → N1
-C. N3 → N2 → N1
-D. Any order is acceptable
-E. N2 only
-Answer: C. Sample N3 → N2 → N1 to avoid contamination/upstaging.
+   A. N1 → N2 → N3
+   B. N2 → N3 → N1
+   C. N3 → N2 → N1
+   D. Any order is acceptable
+   E. N2 only
+   Answer: C. Sample N3 → N2 → N1 to avoid contamination/upstaging.
 
 6. Which is true regarding sedation for EBUS‑TBNA?
-A. Deep sedation is contraindicated
-B. Moderate and deep sedation are acceptable; deep sedation may reduce intraprocedural instability
-C. Only general anesthesia yields diagnostic samples
-D. HFNC worsens desaturation under moderate sedation
-E. ROSE is mandatory under deep sedation
-Answer: B. Both strategies are acceptable; deep sedation/GA can stabilize the procedure; HFNC decreases desaturation risk during moderate sedation.
+   A. Deep sedation is contraindicated
+   B. Moderate and deep sedation are acceptable; deep sedation may reduce intraprocedural instability
+   C. Only general anesthesia yields diagnostic samples
+   D. HFNC worsens desaturation under moderate sedation
+   E. ROSE is mandatory under deep sedation
+   Answer: B. Both strategies are acceptable; deep sedation/GA can stabilize the procedure; HFNC decreases desaturation risk during moderate sedation.
 
 7. A posterior subcarinal node is difficult to visualize by EBUS. Best complementary strategy?
-A. Higher suction only
-B. Switch to EUS‑B for posterior view
-C. Reduce balloon coupling
-D. Sample N1 first
-E. Abort procedure
-Answer: B. EUS‑B often improves visualization and access to posterior subcarinal nodes.
+   A. Higher suction only
+   B. Switch to EUS‑B for posterior view
+   C. Reduce balloon coupling
+   D. Sample N1 first
+   E. Abort procedure
+   Answer: B. EUS‑B often improves visualization and access to posterior subcarinal nodes.
 
 8. Adequacy strategy when ROSE is unavailable and molecular tests are anticipated:
-A. One pass per node is sufficient
-B. Two passes per node with no cell block
-C. ≥3 passes per node and ensure cell block/clot core
-D. Forego nodal sampling; biopsy primary only
-E. Use 25G only
-Answer: C. Multiple passes plus cell block optimize yield for histology and molecular profiling.
+   A. One pass per node is sufficient
+   B. Two passes per node with no cell block
+   C. ≥3 passes per node and ensure cell block/clot core
+   D. Forego nodal sampling; biopsy primary only
+   E. Use 25G only
+   Answer: C. Multiple passes plus cell block optimize yield for histology and molecular profiling.
 
 9. Which scenario most strongly supports systematic rather than targeted staging?
-A. Multiple bulky PET‑avid mediastinal nodes in a poor surgical candidate
-B. Small peripheral tumor <3 cm with negative mediastinum
-C. Central tumor with otherwise normal mediastinum
-D. Isolated adrenal metastasis on PET/CT
-E. Post‑neoadjuvant restaging for known multistation N2
-Answer: C. “Intermediate‑risk” (e.g., central tumor) benefits from systematic staging to detect occult N2/N3.
+   A. Multiple bulky PET‑avid mediastinal nodes in a poor surgical candidate
+   B. Small peripheral tumor <3 cm with negative mediastinum
+   C. Central tumor with otherwise normal mediastinum
+   D. Isolated adrenal metastasis on PET/CT
+   E. Post‑neoadjuvant restaging for known multistation N2
+   Answer: C. “Intermediate‑risk” (e.g., central tumor) benefits from systematic staging to detect occult N2/N3.
 
 10. Most appropriate management after a high‑quality negative systematic EBUS/EUS‑B for a patient with initially PET‑avid 4R and 7 nodes?
-A. Treat as N2b
-B. Immediate mediastinoscopy for all
-C. Proceed with planned local therapy; consider confirmation only if discordance persists
-D. Start induction chemo by default
-E. Repeat EBUS next week
-Answer: C. Routine confirmatory mediastinoscopy is not mandatory; individualize based on residual risk and MDT discussion.
+    A. Treat as N2b
+    B. Immediate mediastinoscopy for all
+    C. Proceed with planned local therapy; consider confirmation only if discordance persists
+    D. Start induction chemo by default
+    E. Repeat EBUS next week
+    Answer: C. Routine confirmatory mediastinoscopy is not mandatory; individualize based on residual risk and MDT discussion.
 
 11. Which statement about PET/CT is correct?
-A. It reliably detects small brain metastases
-B. It is superior to CT for nodal staging but can be false‑positive with inflammation
-C. It outperforms MRI for Pancoast tumor invasion
-D. It is ideal for low‑FDG tumors
-E. A negative PET/CT rules out mediastinal disease definitively
-Answer: B. PET/CT has better nodal performance than CT but limited brain sensitivity and false positives.
+    A. It reliably detects small brain metastases
+    B. It is superior to CT for nodal staging but can be false‑positive with inflammation
+    C. It outperforms MRI for Pancoast tumor invasion
+    D. It is ideal for low‑FDG tumors
+    E. A negative PET/CT rules out mediastinal disease definitively
+    Answer: B. PET/CT has better nodal performance than CT but limited brain sensitivity and false positives.
 
 12. During 4R sampling, you encounter a hyperechoic center with anechoic peripheral vessels. Best next step?
-A. Sample the hyperechoic center only
-B. Use Doppler and redirect to viable rim, avoiding vessels
-C. Increase suction and continue
-D. Abort staging
-E. Switch immediately to mediastinoscopy
-Answer: B. Avoid vascular structures; necrotic centers are low yield—sample viable peripheral rim.
+    A. Sample the hyperechoic center only
+    B. Use Doppler and redirect to viable rim, avoiding vessels
+    C. Increase suction and continue
+    D. Abort staging
+    E. Switch immediately to mediastinoscopy
+    Answer: B. Avoid vascular structures; necrotic centers are low yield—sample viable peripheral rim.
 
 Controversies, Variability, and Evolving Evidence
 
