@@ -290,9 +290,6 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
       })
   }
 
-  // Check if a category has any data
-  const categoryHasData = (fields: string[]) => getCategoryFields(fields).length > 0
-
   // Render a value appropriately based on type
   const renderValue = (value: unknown): string => {
     if (typeof value === 'boolean') return value ? 'Yes' : 'No'
@@ -305,9 +302,6 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
     if (typeof value === 'object' && value !== null) return JSON.stringify(value)
     return String(value)
   }
-
-  // Check for EBUS stations (special rendering)
-  const ebusStations = record.linear_ebus_stations as Array<Record<string, unknown>> | undefined
 
   return (
     <div className="space-y-6">
