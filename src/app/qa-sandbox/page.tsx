@@ -477,9 +477,9 @@ function CoderOutputDisplay({ data }: { data: Record<string, unknown> }) {
                   {' bundled into '}
                   <span className="font-mono font-medium">{String(bundle.dominant_cpt || '')}</span>
                 </p>
-                {bundle.reason && (
+                {bundle.reason ? (
                   <p className="mt-1 text-xs text-muted-foreground">{String(bundle.reason)}</p>
-                )}
+                ) : null}
               </div>
             ))}
           </div>
