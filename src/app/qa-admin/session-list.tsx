@@ -199,7 +199,6 @@ export function SessionList({ sessions: initialSessions }: { sessions: Session[]
   }
 
   const allSelected = sessions.length > 0 && selectedIds.size === sessions.length
-  const someSelected = selectedIds.size > 0 && selectedIds.size < sessions.length
 
   return (
     <>
