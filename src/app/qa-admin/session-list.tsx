@@ -223,16 +223,7 @@ export function SessionList({ sessions: initialSessions }: { sessions: Session[]
         <CardContent>
           {sessions.length > 0 && (
             <div className="mb-4 flex items-center space-x-2 border-b pb-4">
-              <Checkbox
-                id="select-all"
-                checked={allSelected}
-                onCheckedChange={handleSelectAll}
-                ref={(el) => {
-                  if (el) {
-                    el.indeterminate = someSelected
-                  }
-                }}
-              />
+              <Checkbox id="select-all" checked={allSelected} onCheckedChange={handleSelectAll} />
               <label
                 htmlFor="select-all"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
