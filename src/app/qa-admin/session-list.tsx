@@ -175,6 +175,121 @@ export function SessionList({
     setSelectedIds(newSelected)
   }
 
+  // Format registry output for CSV
+  const formatRegistryOutput = (data: Record<string, unknown> | null): string => {
+    if (!data || typeof data !== 'object') return ''
+    const record = (data.record as Record<string, unknown>) || {}
+    const lines: string[] = []
+
+    // Format field name
+    const formatFieldName = (field: string): string => {
+      return field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    }
+
+    // Format value
+    const formatValue = (value: unknown): string => {
+      if (value === null || value === undefined) return ''
+      if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+      if (Array.isArray(value)) {
+        if (value.length === 0) return ''
+        // Handle EBUS stations array
+        if (value.length > 0 && typeof value[0] === 'object') {
+          return value
+            .map(
+              (station: Record<string, unknown>) =>
+                `Station: ${station.station || ''}, Size: ${station.size_mm || ''}mm, Passes: ${station.passes || ''}, ROSE: ${station.rose_result || ''}`,
+            )
+            .join('; ')
+        }
+        return value.join(', ')
+      }
+      if (typeof value === 'object') return JSON.stringify(value)
+      return String(value)
+    }
+
+    // Get all fields with values
+    Object.entries(record).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        if (Array.isArray(value) && value.length === 0) return
+        lines.push(`${formatFieldName(key)}: ${formatValue(value)}`)
+      }
+    })
+
+    return lines.join('\n')
+  }
+
+  // Format coder output for CSV
+  const formatCoderOutput = (data: Record<string, unknown> | null): string => {
+    if (!data || typeof data !== 'object') return ''
+    const lines: string[] = []
+
+    const codes = (data.codes as Array<Record<string, unknown>>) || []
+    const totalRvu = data.total_work_rvu as number | undefined
+    const estimatedPayment = data.estimated_payment as number | undefined
+    const bundledCodes = (data.bundled_codes as Array<Record<string, unknown>>) || []
+
+    if (totalRvu !== undefined) {
+      lines.push(`Total Work RVU: ${totalRvu.toFixed(2)}`)
+    }
+    if (estimatedPayment !== undefined) {
+      lines.push(`Estimated Payment: $${estimatedPayment.toFixed(2)}`)
+    }
+
+    if (codes.length > 0) {
+      lines.push('\nCPT Codes:')
+      codes.forEach((code) => {
+        const codeStr = String(code.cpt || '')
+        const desc = String(code.description || '')
+        const modifiers =
+          Array.isArray(code.modifiers) && code.modifiers.length > 0
+            ? code.modifiers.join(', ')
+            : ''
+        const rvu = (code.rvu_data as Record<string, unknown>)?.work_rvu?.toString() || ''
+        lines.push(
+          `  ${codeStr} - ${desc}${modifiers ? ` (Modifiers: ${modifiers})` : ''}${rvu ? ` [RVU: ${rvu}]` : ''}`,
+        )
+      })
+    }
+
+    if (bundledCodes.length > 0) {
+      lines.push('\nBundled Codes:')
+      bundledCodes.forEach((bundle) => {
+        const bundled = String(bundle.bundled_cpt || '')
+        const dominant = String(bundle.dominant_cpt || '')
+        const reason = bundle.reason ? ` (${bundle.reason})` : ''
+        lines.push(`  ${bundled} bundled into ${dominant}${reason}`)
+      })
+    }
+
+    return lines.join('\n')
+  }
+
+  // Format reporter output for CSV
+  const formatReporterOutput = (data: Record<string, unknown> | null): string => {
+    if (!data || typeof data !== 'object') return ''
+    const lines: string[] = []
+
+    // If it's a markdown report, include it
+    if (data.markdown && typeof data.markdown === 'string') {
+      lines.push('Report (Markdown):')
+      lines.push(data.markdown)
+    }
+
+    // Include other fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'markdown') return // Already included
+      if (value !== null && value !== undefined && value !== '') {
+        if (typeof value === 'object') {
+          lines.push(`${key}: ${JSON.stringify(value)}`)
+        } else {
+          lines.push(`${key}: ${value}`)
+        }
+      }
+    })
+
+    return lines.join('\n')
+  }
+
   const handleExportCSV = () => {
     if (selectedIds.size === 0) {
       alert('Please select at least one session to export')
@@ -205,8 +320,11 @@ export function SessionList({
       'Modules Run',
       'Procedure Type',
       'Note Text',
+      'Reporter Output (Formatted)',
       'Reporter Output (JSON)',
+      'Coder Output (Formatted)',
       'Coder Output (JSON)',
+      'Registry Output (Formatted)',
       'Registry Output (JSON)',
       'Quality Rating',
       'Safe to Use',
@@ -226,8 +344,11 @@ export function SessionList({
       session.modules_run,
       session.procedure_type || '',
       session.note_text || '',
+      formatReporterOutput(session.reporter_output),
       session.reporter_output ? JSON.stringify(session.reporter_output) : '',
+      formatCoderOutput(session.coder_output),
       session.coder_output ? JSON.stringify(session.coder_output) : '',
+      formatRegistryOutput(session.registry_output),
       session.registry_output ? JSON.stringify(session.registry_output) : '',
       session.quality_rating?.toString() || '',
       session.safe_to_use?.toString() || '',
