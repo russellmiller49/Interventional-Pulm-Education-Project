@@ -9,6 +9,7 @@ type RunRequest = {
   modulesRun: 'reporter' | 'coder' | 'registry'
   procedureType?: string
   testerName: string
+  includeMLAdvisor?: boolean // New: Enable ML advisor for hybrid coding
 }
 
 type RunResponse = {
@@ -16,6 +17,7 @@ type RunResponse = {
   reporterOutput?: Record<string, unknown>
   coderOutput?: Record<string, unknown>
   registryOutput?: Record<string, unknown>
+  mlAdvisorOutput?: Record<string, unknown> // New: ML advisor suggestions
   error?: string
 }
 
@@ -35,7 +37,7 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { noteText, modulesRun, procedureType, testerName } = body
+  const { noteText, modulesRun, procedureType, testerName, includeMLAdvisor } = body
 
   if (!noteText || !modulesRun || !testerName) {
     return NextResponse.json(
@@ -95,6 +97,32 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
       repo_commit_sha,
     } = await apiRes.json()
 
+    // 2b) If ML advisor is requested and coder was run, get ML suggestions
+    let ml_advisor_output = null
+    if (includeMLAdvisor && (modulesRun === 'coder' || coder_output)) {
+      try {
+        const mlRes = await fetch(`${PROC_API_URL}/api/v1/ml-advisor/code_with_advisor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            report_text: noteText,
+            procedure_category: procedureType || null,
+            include_advisor: true,
+          }),
+          signal: controller.signal,
+        })
+
+        if (mlRes.ok) {
+          ml_advisor_output = await mlRes.json()
+        } else {
+          console.warn('ML advisor call failed:', await mlRes.text())
+        }
+      } catch (mlError) {
+        console.warn('ML advisor error:', mlError)
+        // Continue without ML advisor output
+      }
+    }
+
     // 3) Update session with outputs
     const { error: updateError } = await supabaseAdmin
       .from('proc_qa_sessions')
@@ -106,6 +134,7 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
         coder_version,
         repo_branch,
         repo_commit_sha,
+        ml_advisor_output, // Store ML advisor results
       })
       .eq('id', session.id)
 
@@ -120,6 +149,7 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
       reporterOutput: reporter_output,
       coderOutput: coder_output,
       registryOutput: registry_output,
+      mlAdvisorOutput: ml_advisor_output,
     })
   } catch (error) {
     clearTimeout(timeout)

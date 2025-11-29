@@ -388,11 +388,25 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
 }
 
 // Coder Output Component
-function CoderOutputDisplay({ data }: { data: Record<string, unknown> }) {
+function CoderOutputDisplay({
+  data,
+  mlAdvisorData,
+}: {
+  data: Record<string, unknown>
+  mlAdvisorData?: Record<string, unknown> | null
+}) {
   const codes = (data?.codes as Array<Record<string, unknown>>) || []
   const totalRvu = data?.total_work_rvu as number | undefined
   const estimatedPayment = data?.estimated_payment as number | undefined
   const bundledCodes = (data?.bundled_codes as Array<Record<string, unknown>>) || []
+
+  // ML Advisor data
+  const advisorSuggestions = mlAdvisorData?.advisor_suggestions as
+    | Record<string, number>
+    | undefined
+  const advisorExplanation = mlAdvisorData?.advisor_explanation as string | undefined
+  const disagreements = (mlAdvisorData?.disagreements as string[]) || []
+  const finalCodes = (mlAdvisorData?.final_codes as string[]) || []
 
   return (
     <div className="space-y-6">
@@ -486,13 +500,81 @@ function CoderOutputDisplay({ data }: { data: Record<string, unknown> }) {
         </div>
       )}
 
+      {/* ML Advisor Suggestions */}
+      {mlAdvisorData && (advisorSuggestions || disagreements.length > 0) && (
+        <div>
+          <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <span>ML Advisor Analysis</span>
+            <Badge variant="secondary" className="text-xs font-normal normal-case">
+              Beta
+            </Badge>
+          </h4>
+
+          {/* Advisor Explanation */}
+          {advisorExplanation && (
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+              <p className="text-sm text-blue-800 dark:text-blue-200">{advisorExplanation}</p>
+            </div>
+          )}
+
+          {/* Disagreements / Suggestions */}
+          {disagreements.length > 0 && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+              <p className="mb-2 font-medium text-amber-800 dark:text-amber-200">
+                ML Advisor suggests reviewing:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {disagreements.map((code, idx) => (
+                  <Badge key={idx} variant="outline" className="border-amber-400 font-mono">
+                    {code}
+                  </Badge>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                These codes were suggested by the ML advisor but differ from the rule engine output.
+                Review documentation to determine if they should be included.
+              </p>
+            </div>
+          )}
+
+          {/* Advisor Confidence Scores */}
+          {advisorSuggestions && Object.keys(advisorSuggestions).length > 0 && (
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-2 text-sm font-medium text-muted-foreground">
+                Advisor Confidence Scores
+              </p>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                {Object.entries(advisorSuggestions).map(([code, confidence]) => (
+                  <div key={code} className="flex items-center justify-between rounded border p-2">
+                    <Badge variant="outline" className="font-mono">
+                      {code}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {(confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Final codes from hybrid result */}
+          {finalCodes.length > 0 && (
+            <div className="mt-4 text-xs text-muted-foreground">
+              <span className="font-medium">Final codes (rules authoritative): </span>
+              {finalCodes.join(', ')}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Raw JSON */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
           View Raw JSON
         </summary>
         <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
-          {JSON.stringify(data, null, 2)}
+          {JSON.stringify({ coder: data, mlAdvisor: mlAdvisorData }, null, 2)}
         </pre>
       </details>
     </div>
@@ -552,12 +634,14 @@ export default function QASandbox() {
   const [procedureType, setProcedureType] = useState('')
   const [testerName, setTesterName] = useState('')
   const [phiConfirmed, setPhiConfirmed] = useState(false)
+  const [includeMLAdvisor, setIncludeMLAdvisor] = useState(false) // New: ML Advisor toggle
 
   // Output state
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [reporterOutput, setReporterOutput] = useState<Record<string, unknown> | null>(null)
   const [coderOutput, setCoderOutput] = useState<Record<string, unknown> | null>(null)
   const [registryOutput, setRegistryOutput] = useState<Record<string, unknown> | null>(null)
+  const [mlAdvisorOutput, setMLAdvisorOutput] = useState<Record<string, unknown> | null>(null) // New: ML Advisor output
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -580,6 +664,7 @@ export default function QASandbox() {
     setReporterOutput(null)
     setCoderOutput(null)
     setRegistryOutput(null)
+    setMLAdvisorOutput(null)
     setFeedbackSubmitted(false)
 
     try {
@@ -591,6 +676,7 @@ export default function QASandbox() {
           modulesRun,
           procedureType: procedureType || undefined,
           testerName: testerName.trim(),
+          includeMLAdvisor: includeMLAdvisor && modulesRun === 'coder', // Only for coder
         }),
       })
 
@@ -604,6 +690,7 @@ export default function QASandbox() {
       setReporterOutput(data.reporterOutput)
       setCoderOutput(data.coderOutput)
       setRegistryOutput(data.registryOutput)
+      setMLAdvisorOutput(data.mlAdvisorOutput)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
@@ -728,6 +815,26 @@ export default function QASandbox() {
             </label>
           </div>
 
+          {/* ML Advisor toggle - only show when Coder is selected */}
+          {modulesRun === 'coder' && (
+            <div className="flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
+              <Checkbox
+                id="ml-advisor"
+                checked={includeMLAdvisor}
+                onCheckedChange={(checked) => setIncludeMLAdvisor(checked === true)}
+              />
+              <label htmlFor="ml-advisor" className="cursor-pointer">
+                <span className="font-medium">Include ML Advisor</span>
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  Beta
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  Get AI-powered suggestions to review alongside rule-based coding
+                </p>
+              </label>
+            </div>
+          )}
+
           <Button
             onClick={handleRun}
             disabled={loading || !noteText || !phiConfirmed || !testerName.trim()}
@@ -770,7 +877,7 @@ export default function QASandbox() {
 
               {coderOutput && (
                 <TabsContent value="coder" className="mt-0">
-                  <CoderOutputDisplay data={coderOutput} />
+                  <CoderOutputDisplay data={coderOutput} mlAdvisorData={mlAdvisorOutput} />
                 </TabsContent>
               )}
             </Tabs>
