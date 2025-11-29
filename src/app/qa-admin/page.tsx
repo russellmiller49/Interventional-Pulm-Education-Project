@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { SessionList } from './session-list'
+import { revalidatePath } from 'next/cache'
+
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 type Session = {
   id: string
@@ -78,7 +83,27 @@ export default async function QAAdmin() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
-      <h1 className="mb-6 text-2xl font-bold">QA Sessions Dashboard</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">QA Sessions Dashboard</h1>
+        <form
+          action={async () => {
+            'use server'
+            revalidatePath('/qa-admin')
+          }}
+        >
+          <button
+            type="submit"
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+          >
+            Refresh
+          </button>
+        </form>
+      </div>
+
+      {/* Last Updated Timestamp */}
+      <p className="mb-4 text-sm text-muted-foreground">
+        Last updated: {new Date().toLocaleString()}
+      </p>
 
       {/* Statistics Cards */}
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
