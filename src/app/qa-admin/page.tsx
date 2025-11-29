@@ -1,11 +1,9 @@
-import { supabaseAdmin } from '@/lib/supabase/admin'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { SessionList } from './session-list'
-import { revalidatePath } from 'next/cache'
+'use client'
 
-// Force dynamic rendering to always fetch fresh data
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import { useEffect, useState } from 'react'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { SessionList } from './session-list'
 
 type Session = {
   id: string
@@ -25,49 +23,54 @@ type Session = {
   free_text_feedback: string | null
 }
 
-async function getSessions(): Promise<{ sessions: Session[]; error?: string }> {
-  if (!supabaseAdmin) {
-    return { sessions: [], error: 'Supabase admin client not configured' }
+export default function QAAdmin() {
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+
+  const fetchSessions = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/qa/sessions', {
+        cache: 'no-store', // Always fetch fresh data
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch sessions')
+      }
+      setSessions(data.sessions || [])
+      setLastUpdated(new Date())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const { data: sessions, error } = await supabaseAdmin
-    .from('proc_qa_sessions')
-    .select(
-      `
-      id,
-      created_at,
-      modules_run,
-      quality_rating,
-      safe_to_use,
-      error_categories,
-      tester_name,
-      reporter_version,
-      coder_version,
-      procedure_type,
-      note_text,
-      reporter_output,
-      coder_output,
-      registry_output,
-      free_text_feedback
-    `,
+  useEffect(() => {
+    fetchSessions()
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchSessions, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (loading && sessions.length === 0) {
+    return (
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <p className="text-muted-foreground">Loading sessions...</p>
+      </div>
     )
-    .order('created_at', { ascending: false })
-    .limit(100)
-
-  if (error) {
-    return { sessions: [], error: error.message }
   }
-
-  return { sessions: sessions || [] }
-}
-
-export default async function QAAdmin() {
-  const { sessions, error } = await getSessions()
 
   if (error) {
     return (
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <p className="text-red-600">Error loading sessions: {error}</p>
+        <Button onClick={fetchSessions} className="mt-4">
+          Retry
+        </Button>
       </div>
     )
   }
@@ -85,24 +88,15 @@ export default async function QAAdmin() {
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">QA Sessions Dashboard</h1>
-        <form
-          action={async () => {
-            'use server'
-            revalidatePath('/qa-admin')
-          }}
-        >
-          <button
-            type="submit"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-          >
-            Refresh
-          </button>
-        </form>
+        <Button onClick={fetchSessions} disabled={loading} variant="outline">
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
 
       {/* Last Updated Timestamp */}
       <p className="mb-4 text-sm text-muted-foreground">
-        Last updated: {new Date().toLocaleString()}
+        Last updated: {lastUpdated.toLocaleString()}
+        {loading && ' (refreshing...)'}
       </p>
 
       {/* Statistics Cards */}
@@ -134,7 +128,7 @@ export default async function QAAdmin() {
       </div>
 
       {/* Sessions List */}
-      <SessionList sessions={sessions} />
+      <SessionList sessions={sessions} onDelete={fetchSessions} />
     </div>
   )
 }

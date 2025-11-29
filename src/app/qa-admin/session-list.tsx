@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -138,11 +138,22 @@ function SessionDetail({ session }: { session: Session }) {
   )
 }
 
-export function SessionList({ sessions: initialSessions }: { sessions: Session[] }) {
+export function SessionList({
+  sessions: initialSessions,
+  onDelete,
+}: {
+  sessions: Session[]
+  onDelete?: () => void
+}) {
   const router = useRouter()
   const [sessions, setSessions] = useState(initialSessions)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Update sessions when parent passes new data
+  useEffect(() => {
+    setSessions(initialSessions)
+  }, [initialSessions])
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -188,8 +199,12 @@ export function SessionList({ sessions: initialSessions }: { sessions: Session[]
       setSessions(sessions.filter((s) => !selectedIds.has(s.id)))
       setSelectedIds(new Set())
 
-      // Refresh the page to update statistics
-      router.refresh()
+      // Call parent's refresh callback if provided, otherwise use router
+      if (onDelete) {
+        onDelete()
+      } else {
+        router.refresh()
+      }
     } catch (error) {
       console.error('Delete error:', error)
       alert(error instanceof Error ? error.message : 'Failed to delete sessions')
