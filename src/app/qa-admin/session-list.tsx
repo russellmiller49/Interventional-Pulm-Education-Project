@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Trash2, Download } from 'lucide-react'
 
 type Session = {
   id: string
@@ -23,6 +23,8 @@ type Session = {
   coder_output: Record<string, unknown> | null
   registry_output: Record<string, unknown> | null
   free_text_feedback: string | null
+  repo_branch: string | null
+  repo_commit_sha: string | null
 }
 
 function SessionDetail({ session }: { session: Session }) {
@@ -173,6 +175,88 @@ export function SessionList({
     setSelectedIds(newSelected)
   }
 
+  const handleExportCSV = () => {
+    if (selectedIds.size === 0) {
+      alert('Please select at least one session to export')
+      return
+    }
+
+    const selectedSessions = sessions.filter((s) => selectedIds.has(s.id))
+
+    // Helper to convert value to CSV-safe string
+    const csvEscape = (value: unknown): string => {
+      if (value === null || value === undefined) return ''
+      if (typeof value === 'object') {
+        return JSON.stringify(value).replace(/"/g, '""')
+      }
+      const str = String(value)
+      // Escape quotes and wrap in quotes if contains comma, newline, or quote
+      if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+        return `"${str.replace(/"/g, '""')}"`
+      }
+      return str
+    }
+
+    // Define CSV columns
+    const headers = [
+      'ID',
+      'Created At',
+      'Tester Name',
+      'Modules Run',
+      'Procedure Type',
+      'Note Text',
+      'Reporter Output (JSON)',
+      'Coder Output (JSON)',
+      'Registry Output (JSON)',
+      'Quality Rating',
+      'Safe to Use',
+      'Error Categories',
+      'Free Text Feedback',
+      'Reporter Version',
+      'Coder Version',
+      'Repo Branch',
+      'Repo Commit SHA',
+    ]
+
+    // Build CSV rows
+    const rows = selectedSessions.map((session) => [
+      session.id,
+      session.created_at,
+      session.tester_name || '',
+      session.modules_run,
+      session.procedure_type || '',
+      session.note_text || '',
+      session.reporter_output ? JSON.stringify(session.reporter_output) : '',
+      session.coder_output ? JSON.stringify(session.coder_output) : '',
+      session.registry_output ? JSON.stringify(session.registry_output) : '',
+      session.quality_rating?.toString() || '',
+      session.safe_to_use?.toString() || '',
+      session.error_categories?.join('; ') || '',
+      session.free_text_feedback || '',
+      session.reporter_version || '',
+      session.coder_version || '',
+      session.repo_branch || '',
+      session.repo_commit_sha || '',
+    ])
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.map(csvEscape).join(','),
+      ...rows.map((row) => row.map(csvEscape).join(',')),
+    ].join('\n')
+
+    // Create download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `qa-sessions-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const handleDelete = async () => {
     if (selectedIds.size === 0) return
 
@@ -223,14 +307,21 @@ export function SessionList({
             <div>
               <CardTitle>Recent Sessions</CardTitle>
               <CardDescription>
-                Latest 100 QA test sessions - Select sessions to delete after pipeline updates
+                Latest 100 QA test sessions - Select sessions to export or delete after pipeline
+                updates
               </CardDescription>
             </div>
             {selectedIds.size > 0 && (
-              <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Selected ({selectedIds.size})
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleExportCSV}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV ({selectedIds.size})
+                </Button>
+                <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected ({selectedIds.size})
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>

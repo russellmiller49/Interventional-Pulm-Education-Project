@@ -28,7 +28,9 @@ export async function GET() {
       reporter_output,
       coder_output,
       registry_output,
-      free_text_feedback
+      free_text_feedback,
+      repo_branch,
+      repo_commit_sha
     `,
     )
     .order('created_at', { ascending: false })
