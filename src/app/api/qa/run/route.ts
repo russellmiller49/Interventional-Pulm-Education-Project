@@ -75,6 +75,7 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
         note_text: noteText,
         modules_run: modulesRun,
         procedure_type: procedureType ?? null,
+        include_ml_advisor: includeMLAdvisor ?? false,
       }),
       signal: controller.signal,
     })
@@ -97,17 +98,28 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
       repo_commit_sha,
     } = await apiRes.json()
 
-    // 2b) If ML advisor is requested and coder was run, get ML suggestions
+    // 2b) If ML advisor is requested, get ML suggestions for the relevant module
     let ml_advisor_output = null
-    if (includeMLAdvisor && (modulesRun === 'coder' || coder_output)) {
+    if (includeMLAdvisor) {
       try {
-        const mlRes = await fetch(`${PROC_API_URL}/api/v1/ml-advisor/code_with_advisor`, {
+        // Different ML advisor endpoint based on module type
+        const mlEndpoint =
+          modulesRun === 'coder'
+            ? `${PROC_API_URL}/api/v1/ml-advisor/code_with_advisor`
+            : modulesRun === 'reporter'
+              ? `${PROC_API_URL}/api/v1/ml-advisor/reporter_assist`
+              : `${PROC_API_URL}/api/v1/ml-advisor/registry_validate`
+
+        const mlRes = await fetch(mlEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             report_text: noteText,
             procedure_category: procedureType || null,
             include_advisor: true,
+            // Pass module-specific context
+            registry_output: modulesRun === 'registry' ? registry_output : undefined,
+            reporter_output: modulesRun === 'reporter' ? reporter_output : undefined,
           }),
           signal: controller.signal,
         })

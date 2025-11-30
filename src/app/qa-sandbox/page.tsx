@@ -676,7 +676,7 @@ export default function QASandbox() {
           modulesRun,
           procedureType: procedureType || undefined,
           testerName: testerName.trim(),
-          includeMLAdvisor: includeMLAdvisor && modulesRun === 'coder', // Only for coder
+          includeMLAdvisor, // Available for all modules
         }),
       })
 
@@ -770,16 +770,7 @@ export default function QASandbox() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-2 block font-medium">Modules to Run</label>
-              <Select
-                value={modulesRun}
-                onValueChange={(v) => {
-                  setModulesRun(v as ModulesRun)
-                  // Reset ML Advisor when switching away from coder
-                  if (v !== 'coder') {
-                    setIncludeMLAdvisor(false)
-                  }
-                }}
-              >
+              <Select value={modulesRun} onValueChange={(v) => setModulesRun(v as ModulesRun)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -824,25 +815,27 @@ export default function QASandbox() {
             </label>
           </div>
 
-          {/* ML Advisor toggle - only show when Coder is selected */}
-          {modulesRun === 'coder' && (
-            <div className="flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
-              <Checkbox
-                id="ml-advisor"
-                checked={includeMLAdvisor}
-                onCheckedChange={(checked) => setIncludeMLAdvisor(checked === true)}
-              />
-              <label htmlFor="ml-advisor" className="cursor-pointer">
-                <span className="font-medium">Include ML Advisor</span>
-                <Badge variant="secondary" className="ml-2 text-xs">
-                  Beta
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  Get AI-powered suggestions to review alongside rule-based coding
-                </p>
-              </label>
-            </div>
-          )}
+          {/* ML Advisor toggle - available for all modules */}
+          <div className="flex items-center space-x-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
+            <Checkbox
+              id="ml-advisor"
+              checked={includeMLAdvisor}
+              onCheckedChange={(checked) => setIncludeMLAdvisor(checked === true)}
+            />
+            <label htmlFor="ml-advisor" className="cursor-pointer">
+              <span className="font-medium">Include ML Advisor</span>
+              <Badge variant="secondary" className="ml-2 text-xs">
+                Beta
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                {modulesRun === 'coder'
+                  ? 'Get AI-powered code suggestions to review alongside rule-based coding'
+                  : modulesRun === 'reporter'
+                    ? 'Get AI-powered extraction suggestions to improve field completeness'
+                    : 'Get AI-powered validation to check registry data quality'}
+              </p>
+            </label>
+          </div>
 
           <Button
             onClick={handleRun}
