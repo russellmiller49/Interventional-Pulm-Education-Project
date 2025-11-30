@@ -39,7 +39,7 @@ const ERROR_CATEGORIES = {
 }
 
 // Helper to render a key-value row
-function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
+function DataRow({ label, value }: { label: string; value: ReactNode }) {
   if (value === null || value === undefined || value === '') return null
 
   return (
@@ -225,55 +225,8 @@ const REGISTRY_FIELD_CATEGORIES: Record<string, { label: string; fields: string[
   },
 }
 
-// Helper to render EBUS station data
-function EBUSStationRow({ stations }: { stations: Array<Record<string, unknown>> }) {
-  if (!stations || stations.length === 0) return null
-
-  return (
-    <div className="space-y-2">
-      <span className="text-sm font-medium text-muted-foreground">EBUS Stations Sampled</span>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="px-3 py-2 text-left font-medium">Station</th>
-              <th className="px-3 py-2 text-left font-medium">Size (mm)</th>
-              <th className="px-3 py-2 text-left font-medium">Passes</th>
-              <th className="px-3 py-2 text-left font-medium">ROSE Result</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {stations.map((station, idx) => (
-              <tr key={idx}>
-                <td className="px-3 py-2 font-medium">{String(station.station || '—')}</td>
-                <td className="px-3 py-2">
-                  {station.size_mm != null ? String(station.size_mm) : '—'}
-                </td>
-                <td className="px-3 py-2">
-                  {station.passes != null ? String(station.passes) : '—'}
-                </td>
-                <td className="px-3 py-2">
-                  {station.rose_result ? (
-                    <Badge
-                      variant={station.rose_result === 'Malignant' ? 'destructive' : 'secondary'}
-                    >
-                      {String(station.rose_result)}
-                    </Badge>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
 // Registry Output Component
-function formatEbusStationDetails(stations: Array<Record<string, unknown>>): React.ReactNode {
+function formatEbusStationDetails(stations: Array<Record<string, unknown>>): ReactNode {
   if (!stations.length) return '—'
 
   return (
@@ -304,7 +257,7 @@ function formatEbusStationDetails(stations: Array<Record<string, unknown>>): Rea
 function deriveRoseSummary(
   stations: Array<Record<string, unknown>> | undefined,
   globalRose: unknown,
-): string | React.ReactNode {
+): string | ReactNode {
   const withRose = (stations || []).filter((s) => s.rose_result)
   if (!withRose.length) return typeof globalRose === 'string' ? globalRose : '—'
   const unique = Array.from(new Set(withRose.map((s) => String(s.rose_result))))
@@ -330,7 +283,7 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
   }
 
   // Render a value appropriately based on type
-  const renderValue = (field: string, value: unknown): React.ReactNode => {
+  const renderValue = (field: string, value: unknown): ReactNode => {
     if (typeof value === 'boolean') return value ? 'Yes' : 'No'
     if (Array.isArray(value)) {
       if (value.length === 0) return '—'
