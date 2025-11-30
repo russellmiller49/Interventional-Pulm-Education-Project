@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -39,22 +39,13 @@ const ERROR_CATEGORIES = {
 }
 
 // Helper to render a key-value row
-function DataRow({ label, value }: { label: string; value: unknown }) {
+function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
   if (value === null || value === undefined || value === '') return null
-
-  const displayValue =
-    typeof value === 'boolean'
-      ? value
-        ? 'Yes'
-        : 'No'
-      : Array.isArray(value)
-        ? value.join(', ')
-        : String(value)
 
   return (
     <div className="flex border-b border-border py-2 last:border-0">
       <span className="w-1/3 shrink-0 text-sm font-medium text-muted-foreground">{label}</span>
-      <span className="text-sm">{displayValue}</span>
+      <span className="text-sm">{value}</span>
     </div>
   )
 }
@@ -107,7 +98,14 @@ const REGISTRY_FIELD_CATEGORIES: Record<string, { label: string; fields: string[
   },
   ebus: {
     label: 'EBUS Details',
-    fields: ['linear_ebus_performed', 'linear_ebus_stations', 'ebus_photodocumentation_complete'],
+    fields: [
+      'linear_ebus_performed',
+      'linear_ebus_stations',
+      'ebus_stations_sampled',
+      'ebus_stations_detail',
+      'ebus_rose_result',
+      'ebus_photodocumentation_complete',
+    ],
   },
   bronchoscopy: {
     label: 'Bronchoscopy Details',
@@ -275,6 +273,47 @@ function EBUSStationRow({ stations }: { stations: Array<Record<string, unknown>>
 }
 
 // Registry Output Component
+function formatEbusStationDetails(stations: Array<Record<string, unknown>>): React.ReactNode {
+  if (!stations.length) return '—'
+
+  return (
+    <ul className="space-y-1">
+      {stations.map((s, idx) => {
+        const station = s.station ?? '—'
+        const parts: string[] = []
+        if (s.size_mm !== null && s.size_mm !== undefined) parts.push(`size ${s.size_mm} mm`)
+        if (s.passes !== null && s.passes !== undefined) parts.push(`${s.passes} passes`)
+        if (s.rose_result) parts.push(`ROSE: ${s.rose_result}`)
+        if (s.shape) parts.push(`shape: ${s.shape}`)
+        if (s.margin) parts.push(`margin: ${s.margin}`)
+        if (s.echogenicity) parts.push(`echo: ${s.echogenicity}`)
+        if (s.chs_present !== null && s.chs_present !== undefined) {
+          parts.push(`CHS: ${s.chs_present ? 'present' : 'absent'}`)
+        }
+        const detail = parts.length ? parts.join('; ') : 'no details'
+        return (
+          <li key={`${station}-${idx}`}>
+            <span className="font-medium">{String(station)}</span>: {detail}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+function deriveRoseSummary(
+  stations: Array<Record<string, unknown>> | undefined,
+  globalRose: unknown,
+): string | React.ReactNode {
+  const withRose = (stations || []).filter((s) => s.rose_result)
+  if (!withRose.length) return typeof globalRose === 'string' ? globalRose : '—'
+  const unique = Array.from(new Set(withRose.map((s) => String(s.rose_result))))
+  if (unique.length === 1) return unique[0]
+  return (
+    <span>Mixed ({withRose.map((s) => `${s.station || '?'}: ${s.rose_result}`).join(', ')})</span>
+  )
+}
+
 function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
   const record = (data?.record as Record<string, unknown>) || {}
 
@@ -291,13 +330,14 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
   }
 
   // Render a value appropriately based on type
-  const renderValue = (value: unknown): string => {
+  const renderValue = (field: string, value: unknown): React.ReactNode => {
     if (typeof value === 'boolean') return value ? 'Yes' : 'No'
     if (Array.isArray(value)) {
       if (value.length === 0) return '—'
-      // Check if array contains objects (like EBUS stations)
-      if (typeof value[0] === 'object') return `${value.length} item(s)`
-      return value.join(', ')
+      if (field === 'ebus_stations_detail' && typeof value[0] === 'object') {
+        return formatEbusStationDetails(value as Array<Record<string, unknown>>)
+      }
+      return value.map((v) => String(v)).join(', ')
     }
     if (typeof value === 'object' && value !== null) return JSON.stringify(value)
     return String(value)
@@ -320,22 +360,35 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
             </h4>
             <div className="rounded-lg border bg-card p-4">
               {categoryFields.map(({ field, value }) => {
-                // Special handling for EBUS stations
-                if (
-                  field === 'linear_ebus_stations' &&
-                  Array.isArray(value) &&
-                  value.length > 0 &&
-                  typeof value[0] === 'object'
-                ) {
+                // Special handling for EBUS station detail rendering
+                if (field === 'ebus_stations_detail' && Array.isArray(value)) {
                   return (
-                    <EBUSStationRow
+                    <DataRow
                       key={field}
-                      stations={value as Array<Record<string, unknown>>}
+                      label={formatFieldName(field)}
+                      value={renderValue(field, value)}
+                    />
+                  )
+                }
+                // Derive safer ROSE summary if station-level data exists
+                if (field === 'ebus_rose_result') {
+                  const stations = record['ebus_stations_detail'] as
+                    | Array<Record<string, unknown>>
+                    | undefined
+                  return (
+                    <DataRow
+                      key={field}
+                      label={formatFieldName(field)}
+                      value={deriveRoseSummary(stations, value)}
                     />
                   )
                 }
                 return (
-                  <DataRow key={field} label={formatFieldName(field)} value={renderValue(value)} />
+                  <DataRow
+                    key={field}
+                    label={formatFieldName(field)}
+                    value={renderValue(field, value)}
+                  />
                 )
               })}
             </div>
@@ -367,7 +420,11 @@ function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
             </h4>
             <div className="rounded-lg border bg-card p-4">
               {uncategorizedFields.map(([field, value]) => (
-                <DataRow key={field} label={formatFieldName(field)} value={renderValue(value)} />
+                <DataRow
+                  key={field}
+                  label={formatFieldName(field)}
+                  value={renderValue(field, value)}
+                />
               ))}
             </div>
           </div>
