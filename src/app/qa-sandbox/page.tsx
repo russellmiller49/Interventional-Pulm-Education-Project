@@ -770,7 +770,16 @@ export default function QASandbox() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-2 block font-medium">Modules to Run</label>
-              <Select value={modulesRun} onValueChange={(v) => setModulesRun(v as ModulesRun)}>
+              <Select
+                value={modulesRun}
+                onValueChange={(v) => {
+                  setModulesRun(v as ModulesRun)
+                  // Reset ML Advisor when switching away from coder
+                  if (v !== 'coder') {
+                    setIncludeMLAdvisor(false)
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

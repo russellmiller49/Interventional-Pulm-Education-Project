@@ -22,6 +22,7 @@ type Session = {
   reporter_output: Record<string, unknown> | null
   coder_output: Record<string, unknown> | null
   registry_output: Record<string, unknown> | null
+  ml_advisor_output: Record<string, unknown> | null
   free_text_feedback: string | null
   repo_branch: string | null
   repo_commit_sha: string | null
@@ -99,6 +100,81 @@ function SessionDetail({ session }: { session: Session }) {
                 <pre className="max-h-96 overflow-auto rounded bg-muted p-4 text-xs">
                   {JSON.stringify(session.registry_output, null, 2)}
                 </pre>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ML Advisor Output */}
+          {session.ml_advisor_output && (
+            <Card className="border-blue-200 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  ML Advisor Output
+                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-normal text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                    Beta
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Explanation */}
+                {session.ml_advisor_output.advisor_explanation && (
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Explanation
+                    </p>
+                    <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                      {String(session.ml_advisor_output.advisor_explanation)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Disagreements */}
+                {Array.isArray(session.ml_advisor_output.disagreements) &&
+                  session.ml_advisor_output.disagreements.length > 0 && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        Disagreements
+                      </p>
+                      <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                        {(session.ml_advisor_output.disagreements as string[]).join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                {/* Confidence Scores */}
+                {session.ml_advisor_output.advisor_suggestions &&
+                  typeof session.ml_advisor_output.advisor_suggestions === 'object' && (
+                    <div>
+                      <p className="mb-2 text-sm font-medium text-muted-foreground">
+                        Confidence Scores
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(
+                          session.ml_advisor_output.advisor_suggestions as Record<string, number>,
+                        ).map(([code, confidence]) => (
+                          <span
+                            key={code}
+                            className="inline-flex items-center gap-1 rounded border px-2 py-1 text-sm"
+                          >
+                            <span className="font-mono font-medium">{code}</span>
+                            <span className="text-muted-foreground">
+                              {(confidence * 100).toFixed(0)}%
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Raw JSON */}
+                <details>
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                    View Raw JSON
+                  </summary>
+                  <pre className="mt-2 max-h-64 overflow-auto rounded bg-muted p-4 text-xs">
+                    {JSON.stringify(session.ml_advisor_output, null, 2)}
+                  </pre>
+                </details>
               </CardContent>
             </Card>
           )}
@@ -326,6 +402,10 @@ export function SessionList({
       'Coder Output (JSON)',
       'Registry Output (Formatted)',
       'Registry Output (JSON)',
+      'ML Advisor Final Codes',
+      'ML Advisor Disagreements',
+      'ML Advisor Explanation',
+      'ML Advisor Output (JSON)',
       'Quality Rating',
       'Safe to Use',
       'Error Categories',
@@ -350,6 +430,17 @@ export function SessionList({
       session.coder_output ? JSON.stringify(session.coder_output) : '',
       formatRegistryOutput(session.registry_output),
       session.registry_output ? JSON.stringify(session.registry_output) : '',
+      // ML Advisor columns
+      session.ml_advisor_output?.final_codes
+        ? (session.ml_advisor_output.final_codes as string[]).join(', ')
+        : '',
+      session.ml_advisor_output?.disagreements
+        ? (session.ml_advisor_output.disagreements as string[]).join(', ')
+        : '',
+      session.ml_advisor_output?.advisor_explanation
+        ? String(session.ml_advisor_output.advisor_explanation)
+        : '',
+      session.ml_advisor_output ? JSON.stringify(session.ml_advisor_output) : '',
       session.quality_rating?.toString() || '',
       session.safe_to_use?.toString() || '',
       session.error_categories?.join('; ') || '',

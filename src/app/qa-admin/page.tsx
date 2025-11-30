@@ -20,6 +20,7 @@ type Session = {
   reporter_output: Record<string, unknown> | null
   coder_output: Record<string, unknown> | null
   registry_output: Record<string, unknown> | null
+  ml_advisor_output: Record<string, unknown> | null
   free_text_feedback: string | null
   repo_branch: string | null
   repo_commit_sha: string | null
