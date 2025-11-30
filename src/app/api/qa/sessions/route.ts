@@ -31,7 +31,13 @@ export async function GET() {
       ml_advisor_output,
       free_text_feedback,
       repo_branch,
-      repo_commit_sha
+      repo_commit_sha,
+      reporter_trace,
+      registry_trace,
+      unified_trace,
+      extraction_confidence,
+      field_completeness,
+      quality_scores
     `,
     )
     .order('created_at', { ascending: false })

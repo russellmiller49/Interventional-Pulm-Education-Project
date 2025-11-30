@@ -26,6 +26,13 @@ type Session = {
   free_text_feedback: string | null
   repo_branch: string | null
   repo_commit_sha: string | null
+  // New trace fields for ML feedback loop
+  reporter_trace: Record<string, unknown> | null
+  registry_trace: Record<string, unknown> | null
+  unified_trace: Record<string, unknown> | null
+  extraction_confidence: Record<string, number> | null
+  field_completeness: number | null
+  quality_scores: Record<string, number> | null
 }
 
 function SessionDetail({ session }: { session: Session }) {
@@ -175,6 +182,135 @@ function SessionDetail({ session }: { session: Session }) {
                     {JSON.stringify(session.ml_advisor_output, null, 2)}
                   </pre>
                 </details>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quality Metrics (from unified trace) */}
+          {(session.quality_scores ||
+            session.field_completeness !== null ||
+            session.extraction_confidence) && (
+            <Card className="border-purple-200 dark:border-purple-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  Quality Metrics
+                  <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-normal text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                    ML Feedback Loop
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Field Completeness */}
+                {session.field_completeness !== null && (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">
+                      Field Completeness
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 flex-1 rounded-full bg-muted">
+                        <div
+                          className={`h-2 rounded-full ${
+                            session.field_completeness >= 0.8
+                              ? 'bg-green-500'
+                              : session.field_completeness >= 0.5
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
+                          }`}
+                          style={{ width: `${session.field_completeness * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">
+                        {(session.field_completeness * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Quality Scores by Module */}
+                {session.quality_scores && Object.keys(session.quality_scores).length > 0 && (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">
+                      Module Quality Scores
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                      {Object.entries(session.quality_scores).map(([module, score]) => (
+                        <div key={module} className="rounded-lg border p-3 text-center">
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {module.replace(/_/g, ' ')}
+                          </p>
+                          <p
+                            className={`text-lg font-bold ${
+                              score >= 0.8
+                                ? 'text-green-600'
+                                : score >= 0.5
+                                  ? 'text-yellow-600'
+                                  : 'text-red-600'
+                            }`}
+                          >
+                            {(score * 100).toFixed(0)}%
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Extraction Confidence */}
+                {session.extraction_confidence &&
+                  Object.keys(session.extraction_confidence).length > 0 && (
+                    <div>
+                      <p className="mb-2 text-sm font-medium text-muted-foreground">
+                        Extraction Confidence by Field
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(session.extraction_confidence).map(
+                          ([field, confidence]) => (
+                            <span
+                              key={field}
+                              className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs ${
+                                confidence >= 0.8
+                                  ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950'
+                                  : confidence >= 0.5
+                                    ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-950'
+                                    : 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950'
+                              }`}
+                            >
+                              <span className="font-medium">{field.replace(/_/g, ' ')}</span>
+                              <span className="text-muted-foreground">
+                                {(confidence * 100).toFixed(0)}%
+                              </span>
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Unified Trace Details */}
+                {session.unified_trace && (
+                  <details>
+                    <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                      View Trace Details
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      {session.unified_trace.error_attribution && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
+                          <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                            Error Attribution: {String(session.unified_trace.error_attribution)}
+                          </p>
+                          {session.unified_trace.root_cause && (
+                            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                              {String(session.unified_trace.root_cause)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      <pre className="max-h-64 overflow-auto rounded bg-muted p-4 text-xs">
+                        {JSON.stringify(session.unified_trace, null, 2)}
+                      </pre>
+                    </div>
+                  </details>
+                )}
               </CardContent>
             </Card>
           )}

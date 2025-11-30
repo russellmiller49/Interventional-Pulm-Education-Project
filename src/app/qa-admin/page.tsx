@@ -24,6 +24,13 @@ type Session = {
   free_text_feedback: string | null
   repo_branch: string | null
   repo_commit_sha: string | null
+  // New trace fields for ML feedback loop
+  reporter_trace: Record<string, unknown> | null
+  registry_trace: Record<string, unknown> | null
+  unified_trace: Record<string, unknown> | null
+  extraction_confidence: Record<string, number> | null
+  field_completeness: number | null
+  quality_scores: Record<string, number> | null
 }
 
 export default function QAAdmin() {
