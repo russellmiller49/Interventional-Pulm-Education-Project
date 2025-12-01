@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -619,7 +618,7 @@ function ReporterOutputDisplay({ data }: { data: Record<string, unknown> }) {
           </h4>
           <div className="rounded-lg border bg-card p-4">
             {Object.entries(procedureCore).map(([key, value]) => (
-              <DataRow key={key} label={formatFieldName(key)} value={value as ReactNode} />
+              <DataRow key={key} label={formatFieldName(key)} value={value} />
             ))}
           </div>
         </div>
