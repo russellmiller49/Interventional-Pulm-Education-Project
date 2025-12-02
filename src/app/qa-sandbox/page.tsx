@@ -794,7 +794,7 @@ export default function QASandbox() {
               <label className="mb-2 block font-medium">Modules to Run</label>
               <Select value={modulesRun} onValueChange={(v) => setModulesRun(v as ModulesRun)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select a module" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="registry">Registry</SelectItem>
