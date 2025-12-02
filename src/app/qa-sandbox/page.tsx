@@ -596,6 +596,18 @@ function ReporterOutputDisplay({ data }: { data: Record<string, unknown> }) {
   const markdown = data?.markdown as string | undefined
   const procedureCore = data?.procedure_core as Record<string, unknown> | undefined
 
+  // Helper to convert unknown value to ReactNode
+  const renderValue = (value: unknown): ReactNode => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '—'
+      return value.map((v) => String(v)).join(', ')
+    }
+    if (typeof value === 'object') return JSON.stringify(value)
+    return String(value)
+  }
+
   return (
     <div className="space-y-6">
       {/* Rendered Report */}
@@ -618,7 +630,7 @@ function ReporterOutputDisplay({ data }: { data: Record<string, unknown> }) {
           </h4>
           <div className="rounded-lg border bg-card p-4">
             {Object.entries(procedureCore).map(([key, value]) => (
-              <DataRow key={key} label={formatFieldName(key)} value={value} />
+              <DataRow key={key} label={formatFieldName(key)} value={renderValue(value)} />
             ))}
           </div>
         </div>
