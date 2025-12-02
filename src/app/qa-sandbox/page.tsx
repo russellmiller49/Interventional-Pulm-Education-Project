@@ -55,7 +55,23 @@ function formatFieldName(field: string): string {
   return field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-// Registry field categories - organized by clinical domain
+// Nested schema field mapping - maps nested object keys to display labels
+const NESTED_SCHEMA_CATEGORIES: Record<string, { label: string; excludeFields?: string[] }> = {
+  patient_demographics: { label: 'Patient Information' },
+  providers: { label: 'Providers' },
+  clinical_context: { label: 'Clinical Context' },
+  sedation: { label: 'Sedation' },
+  equipment: { label: 'Equipment' },
+  procedures_performed: { label: 'Procedures Performed' },
+  pleural_procedures: { label: 'Pleural Procedures' },
+  specimens: { label: 'Specimens' },
+  complications: { label: 'Complications' },
+  outcomes: { label: 'Outcomes' },
+  billing: { label: 'Billing' },
+  metadata: { label: 'Metadata', excludeFields: ['version'] },
+}
+
+// Registry field categories - organized by clinical domain (for flat fields)
 const REGISTRY_FIELD_CATEGORIES: Record<string, { label: string; fields: string[] }> = {
   patient: {
     label: 'Patient Information',
@@ -270,119 +286,233 @@ function deriveRoseSummary(
 function RegistryOutputDisplay({ data }: { data: Record<string, unknown> }) {
   const record = (data?.record as Record<string, unknown>) || {}
 
-  // Get all non-null fields from a category
-  const getCategoryFields = (fields: string[]) => {
-    return fields
-      .map((f) => ({ field: f, value: record[f] }))
-      .filter(({ value }) => {
-        if (value === null || value === undefined) return false
-        if (value === '') return false
-        if (Array.isArray(value) && value.length === 0) return false
-        return true
-      })
+  // Check if record uses nested schema (has nested object keys)
+  const isNestedSchema = Object.keys(NESTED_SCHEMA_CATEGORIES).some(
+    (key) => record[key] && typeof record[key] === 'object' && !Array.isArray(record[key]),
+  )
+
+  // Helper to check if a value is meaningful (not null/empty)
+  const isNonEmpty = (value: unknown): boolean => {
+    if (value === null || value === undefined) return false
+    if (value === '') return false
+    if (Array.isArray(value) && value.length === 0) return false
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      return Object.values(value).some((v) => isNonEmpty(v))
+    }
+    return true
   }
 
-  // Render a value appropriately based on type
-  const renderValue = (field: string, value: unknown): ReactNode => {
+  // Render a value appropriately based on type - handles nested objects
+  const renderValue = (field: string, value: unknown, depth = 0): ReactNode => {
+    if (value === null || value === undefined) return null
     if (typeof value === 'boolean') return value ? 'Yes' : 'No'
     if (Array.isArray(value)) {
       if (value.length === 0) return '—'
-      if (field === 'ebus_stations_detail' && typeof value[0] === 'object') {
-        return formatEbusStationDetails(value as Array<Record<string, unknown>>)
+      // Special handling for EBUS station details
+      if (field === 'ebus_stations_detail' || field === 'stations_detail') {
+        if (typeof value[0] === 'object') {
+          return formatEbusStationDetails(value as Array<Record<string, unknown>>)
+        }
       }
-      return value.map((v) => String(v)).join(', ')
+      // Arrays of primitives
+      if (value.every((v) => typeof v !== 'object')) {
+        return value.map((v) => String(v)).join(', ')
+      }
+      // Arrays of objects - render each object
+      return (
+        <div className="space-y-2">
+          {value.map((item, idx) => (
+            <div key={idx} className="rounded border bg-muted/30 p-2 text-sm">
+              {typeof item === 'object' && item !== null
+                ? Object.entries(item)
+                    .filter(([, v]) => isNonEmpty(v))
+                    .map(([k, v]) => (
+                      <div key={k} className="flex gap-2">
+                        <span className="font-medium text-muted-foreground">
+                          {formatFieldName(k)}:
+                        </span>
+                        <span>{renderValue(k, v, depth + 1)}</span>
+                      </div>
+                    ))
+                : String(item)}
+            </div>
+          ))}
+        </div>
+      )
     }
-    if (typeof value === 'object' && value !== null) return JSON.stringify(value)
+    // Nested object - render as sub-fields if not too deep
+    if (typeof value === 'object' && value !== null) {
+      const entries = Object.entries(value).filter(([, v]) => isNonEmpty(v))
+      if (entries.length === 0) return null
+      if (depth > 1) return JSON.stringify(value) // Prevent too deep nesting
+      return (
+        <div className="space-y-1">
+          {entries.map(([k, v]) => (
+            <div key={k} className="flex gap-2 text-sm">
+              <span className="font-medium text-muted-foreground">{formatFieldName(k)}:</span>
+              <span>{renderValue(k, v, depth + 1)}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
     return String(value)
+  }
+
+  // Render a nested category section
+  const renderNestedCategory = (
+    categoryKey: string,
+    label: string,
+    excludeFields: string[] = [],
+  ) => {
+    const categoryData = record[categoryKey] as Record<string, unknown> | undefined
+    if (!categoryData || typeof categoryData !== 'object') return null
+
+    const entries = Object.entries(categoryData).filter(
+      ([key, value]) => !excludeFields.includes(key) && isNonEmpty(value),
+    )
+    if (entries.length === 0) return null
+
+    return (
+      <div key={categoryKey}>
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          {label}
+          <Badge variant="outline" className="text-xs font-normal normal-case">
+            {entries.length} field{entries.length > 1 ? 's' : ''}
+          </Badge>
+        </h4>
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          {entries.map(([field, value]) => (
+            <DataRow key={field} label={formatFieldName(field)} value={renderValue(field, value)} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Get all non-null fields from a flat category
+  const getCategoryFields = (fields: string[]) => {
+    return fields
+      .map((f) => ({ field: f, value: record[f] }))
+      .filter(({ value }) => isNonEmpty(value))
   }
 
   return (
     <div className="space-y-6">
-      {/* Render each category that has data */}
-      {Object.entries(REGISTRY_FIELD_CATEGORIES).map(([key, { label, fields }]) => {
-        const categoryFields = getCategoryFields(fields)
-        if (categoryFields.length === 0) return null
+      {isNestedSchema ? (
+        <>
+          {/* Render top-level flat fields first (procedure_families, etc.) */}
+          {(() => {
+            const topLevelFields = Object.entries(record).filter(([key, value]) => {
+              if (Object.keys(NESTED_SCHEMA_CATEGORIES).includes(key)) return false
+              if (key === 'evidence' || key === 'version') return false
+              return isNonEmpty(value) && typeof value !== 'object'
+            })
+            if (topLevelFields.length === 0) return null
 
-        return (
-          <div key={key}>
-            <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              {label}
-              <Badge variant="outline" className="text-xs font-normal normal-case">
-                {categoryFields.length} field{categoryFields.length > 1 ? 's' : ''}
-              </Badge>
-            </h4>
-            <div className="rounded-lg border bg-card p-4">
-              {categoryFields.map(({ field, value }) => {
-                // Special handling for EBUS station detail rendering
-                if (field === 'ebus_stations_detail' && Array.isArray(value)) {
-                  return (
+            return (
+              <div>
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Indication & Diagnosis
+                  <Badge variant="outline" className="text-xs font-normal normal-case">
+                    {topLevelFields.length} field{topLevelFields.length > 1 ? 's' : ''}
+                  </Badge>
+                </h4>
+                <div className="rounded-lg border bg-card p-4 space-y-3">
+                  {topLevelFields.map(([field, value]) => (
                     <DataRow
                       key={field}
                       label={formatFieldName(field)}
                       value={renderValue(field, value)}
                     />
-                  )
-                }
-                // Derive safer ROSE summary if station-level data exists
-                if (field === 'ebus_rose_result') {
-                  const stations = record['ebus_stations_detail'] as
-                    | Array<Record<string, unknown>>
-                    | undefined
-                  return (
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* Render nested schema categories */}
+          {Object.entries(NESTED_SCHEMA_CATEGORIES).map(([key, { label, excludeFields }]) =>
+            renderNestedCategory(key, label, excludeFields),
+          )}
+        </>
+      ) : (
+        <>
+          {/* Legacy flat field rendering */}
+          {Object.entries(REGISTRY_FIELD_CATEGORIES).map(([key, { label, fields }]) => {
+            const categoryFields = getCategoryFields(fields)
+            if (categoryFields.length === 0) return null
+
+            return (
+              <div key={key}>
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  {label}
+                  <Badge variant="outline" className="text-xs font-normal normal-case">
+                    {categoryFields.length} field{categoryFields.length > 1 ? 's' : ''}
+                  </Badge>
+                </h4>
+                <div className="rounded-lg border bg-card p-4">
+                  {categoryFields.map(({ field, value }) => {
+                    if (field === 'ebus_rose_result') {
+                      const stations = record['ebus_stations_detail'] as
+                        | Array<Record<string, unknown>>
+                        | undefined
+                      return (
+                        <DataRow
+                          key={field}
+                          label={formatFieldName(field)}
+                          value={deriveRoseSummary(stations, value)}
+                        />
+                      )
+                    }
+                    return (
+                      <DataRow
+                        key={field}
+                        label={formatFieldName(field)}
+                        value={renderValue(field, value)}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Show uncategorized flat fields */}
+          {(() => {
+            const allCategoryFields = Object.values(REGISTRY_FIELD_CATEGORIES).flatMap(
+              (c) => c.fields,
+            )
+            const uncategorizedFields = Object.entries(record).filter(([key, value]) => {
+              if (allCategoryFields.includes(key)) return false
+              if (key === 'evidence' || key === 'version') return false
+              return isNonEmpty(value)
+            })
+
+            if (uncategorizedFields.length === 0) return null
+
+            return (
+              <div>
+                <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Other Extracted Data
+                  <Badge variant="outline" className="text-xs font-normal normal-case">
+                    {uncategorizedFields.length} field{uncategorizedFields.length > 1 ? 's' : ''}
+                  </Badge>
+                </h4>
+                <div className="rounded-lg border bg-card p-4">
+                  {uncategorizedFields.map(([field, value]) => (
                     <DataRow
                       key={field}
                       label={formatFieldName(field)}
-                      value={deriveRoseSummary(stations, value)}
+                      value={renderValue(field, value)}
                     />
-                  )
-                }
-                return (
-                  <DataRow
-                    key={field}
-                    label={formatFieldName(field)}
-                    value={renderValue(field, value)}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
-
-      {/* Show fields that weren't in any category */}
-      {(() => {
-        const allCategoryFields = Object.values(REGISTRY_FIELD_CATEGORIES).flatMap((c) => c.fields)
-        const uncategorizedFields = Object.entries(record).filter(([key, value]) => {
-          if (allCategoryFields.includes(key)) return false
-          if (key === 'evidence' || key === 'version') return false // Skip metadata
-          if (value === null || value === undefined) return false
-          if (value === '') return false
-          if (Array.isArray(value) && value.length === 0) return false
-          return true
-        })
-
-        if (uncategorizedFields.length === 0) return null
-
-        return (
-          <div>
-            <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Other Extracted Data
-              <Badge variant="outline" className="text-xs font-normal normal-case">
-                {uncategorizedFields.length} field{uncategorizedFields.length > 1 ? 's' : ''}
-              </Badge>
-            </h4>
-            <div className="rounded-lg border bg-card p-4">
-              {uncategorizedFields.map(([field, value]) => (
-                <DataRow
-                  key={field}
-                  label={formatFieldName(field)}
-                  value={renderValue(field, value)}
-                />
-              ))}
-            </div>
-          </div>
-        )
-      })()}
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+        </>
+      )}
 
       {/* Raw JSON toggle */}
       <details className="group">
