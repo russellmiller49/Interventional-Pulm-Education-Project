@@ -13,24 +13,35 @@ type Session = {
   safe_to_use: boolean | null
   error_categories: string[] | null
   tester_name: string | null
-  reporter_version: string | null
-  coder_version: string | null
+  model_backend: string | null
+  model_version: string | null
   procedure_type: string | null
   note_text: string | null
-  reporter_output: Record<string, unknown> | null
-  coder_output: Record<string, unknown> | null
-  registry_output: Record<string, unknown> | null
-  ml_advisor_output: Record<string, unknown> | null
+  unified_output: {
+    registry: Record<string, unknown>
+    cpt_codes: string[]
+    suggestions: Array<{
+      code: string
+      description: string
+      confidence: number
+      rationale: string
+      review_flag: string
+    }>
+    total_work_rvu?: number
+    estimated_payment?: number
+    coder_difficulty: string
+    needs_manual_review: boolean
+    audit_warnings: string[]
+    validation_errors: string[]
+    pipeline_mode: string
+    kb_version: string
+    processing_time_ms: number
+  } | null
   free_text_feedback: string | null
-  repo_branch: string | null
-  repo_commit_sha: string | null
-  // New trace fields for ML feedback loop
-  reporter_trace: Record<string, unknown> | null
-  registry_trace: Record<string, unknown> | null
-  unified_trace: Record<string, unknown> | null
-  extraction_confidence: Record<string, number> | null
-  field_completeness: number | null
-  quality_scores: Record<string, number> | null
+  // Legacy fields for backward compatibility
+  reporter_output?: Record<string, unknown> | null
+  coder_output?: Record<string, unknown> | null
+  registry_output?: Record<string, unknown> | null
 }
 
 export default function QAAdmin() {
