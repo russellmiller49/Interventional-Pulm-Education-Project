@@ -1,33 +1,57 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { randomUUID } from 'node:crypto'
 
 const PROC_API_URL = process.env.PROC_API_URL
 const PROC_API_TIMEOUT = 60000 // 60 seconds
 
+type CodeSuggestion = {
+  code: string
+  description: string
+  confidence: number
+  rationale: string
+  review_flag: string
+}
+
+type UnifiedOutput = {
+  registry: Record<string, unknown>
+  cpt_codes: string[]
+  suggestions: CodeSuggestion[]
+  total_work_rvu?: number
+  estimated_payment?: number
+  per_code_billing?: Array<{
+    cpt_code: string
+    description: string
+    work_rvu: number
+    total_facility_rvu: number
+    facility_payment: number
+  }>
+  coder_difficulty: string
+  needs_manual_review: boolean
+  audit_warnings: string[]
+  validation_errors: string[]
+  pipeline_mode: string
+  kb_version: string
+  processing_time_ms: number
+}
+
 type RunRequest = {
   noteText: string
-  modulesRun: 'reporter' | 'coder' | 'registry'
   procedureType?: string
   testerName: string
-  includeMLAdvisor?: boolean // New: Enable ML advisor for hybrid coding
 }
 
 type RunResponse = {
   sessionId?: string
-  reporterOutput?: Record<string, unknown>
-  coderOutput?: Record<string, unknown>
-  registryOutput?: Record<string, unknown>
-  mlAdvisorOutput?: Record<string, unknown> // New: ML advisor suggestions
+  unifiedOutput?: UnifiedOutput
+  modelBackend?: string
+  modelVersion?: string
   error?: string
 }
 
 export async function POST(request: Request): Promise<NextResponse<RunResponse>> {
   if (!PROC_API_URL) {
     return NextResponse.json({ error: 'PROC_API_URL not configured' }, { status: 500 })
-  }
-
-  if (!supabaseAdmin) {
-    return NextResponse.json({ error: 'Supabase admin client not configured' }, { status: 500 })
   }
 
   let body: RunRequest
@@ -37,50 +61,50 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const { noteText, modulesRun, procedureType, testerName, includeMLAdvisor } = body
+  const { noteText, procedureType, testerName } = body
 
-  if (!noteText || !modulesRun || !testerName) {
-    return NextResponse.json(
-      { error: 'noteText, modulesRun, and testerName are required' },
-      { status: 400 },
-    )
+  if (!noteText || !testerName) {
+    return NextResponse.json({ error: 'noteText and testerName are required' }, { status: 400 })
   }
 
-  // 1) Create initial session row
-  const { data: session, error: insertError } = await supabaseAdmin
-    .from('proc_qa_sessions')
-    .insert({
-      note_text: noteText,
-      modules_run: modulesRun,
-      procedure_type: procedureType || null,
-      tester_name: testerName,
-    })
-    .select()
-    .single()
+  // 1) Optional: create initial session row (skip if Supabase not configured)
+  const supabaseEnabled = Boolean(supabaseAdmin)
+  let sessionId = randomUUID()
 
-  if (insertError || !session) {
-    console.error('Failed to create session:', insertError)
-    return NextResponse.json({ error: 'Failed to create QA session' }, { status: 500 })
+  if (supabaseEnabled && supabaseAdmin) {
+    const { data: session, error: insertError } = await supabaseAdmin
+      .from('proc_qa_sessions')
+      .insert({
+        note_text: noteText,
+        modules_run: 'unified',
+        procedure_type: procedureType || null,
+        tester_name: testerName,
+      })
+      .select()
+      .single()
+
+    if (insertError || !session) {
+      console.warn('Failed to create Supabase session; continuing without logging:', insertError)
+    } else {
+      sessionId = session.id
+    }
   }
 
-  // 2) Call Python service with timeout
+  // 2) Call Python unified endpoint with timeout
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), PROC_API_TIMEOUT)
 
   try {
-    const apiRes = await fetch(`${PROC_API_URL}/qa/run`, {
+    const apiRes = await fetch(`${PROC_API_URL}/api/v1/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        note_text: noteText,
-        modules_run: modulesRun,
-        procedure_type: procedureType ?? null,
-        include_ml_advisor: includeMLAdvisor ?? false,
+        note: noteText,
+        include_financials: true,
+        explain: true,
       }),
       signal: controller.signal,
     })
-
-    clearTimeout(timeout)
 
     if (!apiRes.ok) {
       const errorText = await apiRes.text()
@@ -88,80 +112,47 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
       return NextResponse.json({ error: 'Python service failed' }, { status: 502 })
     }
 
-    const {
-      reporter_output,
-      coder_output,
-      registry_output,
-      reporter_version,
-      coder_version,
-      repo_branch,
-      repo_commit_sha,
-    } = await apiRes.json()
+    const data = await apiRes.json()
 
-    // 2b) If ML advisor is requested, get ML suggestions for the relevant module
-    let ml_advisor_output = null
-    if (includeMLAdvisor) {
-      try {
-        // Different ML advisor endpoint based on module type
-        const mlEndpoint =
-          modulesRun === 'coder'
-            ? `${PROC_API_URL}/api/v1/ml-advisor/code_with_advisor`
-            : modulesRun === 'reporter'
-              ? `${PROC_API_URL}/api/v1/ml-advisor/reporter_assist`
-              : `${PROC_API_URL}/api/v1/ml-advisor/registry_validate`
-
-        const mlRes = await fetch(mlEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            report_text: noteText,
-            procedure_category: procedureType || null,
-            include_advisor: true,
-            // Pass module-specific context
-            registry_output: modulesRun === 'registry' ? registry_output : undefined,
-            reporter_output: modulesRun === 'reporter' ? reporter_output : undefined,
-          }),
-          signal: controller.signal,
-        })
-
-        if (mlRes.ok) {
-          ml_advisor_output = await mlRes.json()
-        } else {
-          console.warn('ML advisor call failed:', await mlRes.text())
-        }
-      } catch (mlError) {
-        console.warn('ML advisor error:', mlError)
-        // Continue without ML advisor output
-      }
+    // Transform response to frontend format
+    const unifiedOutput: UnifiedOutput = {
+      registry: data.registry || {},
+      cpt_codes: data.cpt_codes || [],
+      suggestions: data.suggestions || [],
+      total_work_rvu: data.total_work_rvu,
+      estimated_payment: data.estimated_payment,
+      per_code_billing: data.per_code_billing,
+      coder_difficulty: data.coder_difficulty || '',
+      needs_manual_review: data.needs_manual_review || false,
+      audit_warnings: data.audit_warnings || [],
+      validation_errors: data.validation_errors || [],
+      pipeline_mode: data.pipeline_mode || 'extraction_first',
+      kb_version: data.kb_version || '',
+      processing_time_ms: data.processing_time_ms || 0,
     }
 
-    // 3) Update session with outputs
-    const { error: updateError } = await supabaseAdmin
-      .from('proc_qa_sessions')
-      .update({
-        reporter_output,
-        coder_output,
-        registry_output,
-        reporter_version,
-        coder_version,
-        repo_branch,
-        repo_commit_sha,
-        ml_advisor_output, // Store ML advisor results
-      })
-      .eq('id', session.id)
+    // 3) Update session with unified output
+    if (supabaseEnabled && supabaseAdmin) {
+      const { error: updateError } = await supabaseAdmin
+        .from('proc_qa_sessions')
+        .update({
+          unified_output: unifiedOutput,
+          model_backend: 'onnx',
+          model_version: data.kb_version,
+        })
+        .eq('id', sessionId)
 
-    if (updateError) {
-      console.error('Failed to update session:', updateError)
-      // Continue anyway - outputs were generated
+      if (updateError) {
+        console.warn('Failed to update Supabase session; continuing without logging:', updateError)
+      }
     }
 
     // 4) Return to frontend
     return NextResponse.json({
-      sessionId: session.id,
-      reporterOutput: reporter_output,
-      coderOutput: coder_output,
-      registryOutput: registry_output,
-      mlAdvisorOutput: ml_advisor_output,
+      sessionId,
+      unifiedOutput,
+      modelBackend: 'onnx',
+      modelVersion: data.kb_version,
     })
   } catch (error) {
     clearTimeout(timeout)
@@ -170,5 +161,7 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
     }
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } finally {
+    clearTimeout(timeout)
   }
 }

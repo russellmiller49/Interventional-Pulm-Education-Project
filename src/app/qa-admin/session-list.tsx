@@ -5,7 +5,38 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import { ChevronDown, ChevronRight, Trash2, Download } from 'lucide-react'
+
+type CodeSuggestion = {
+  code: string
+  description: string
+  confidence: number
+  rationale: string
+  review_flag: string
+}
+
+type UnifiedOutput = {
+  registry: Record<string, unknown>
+  cpt_codes: string[]
+  suggestions: CodeSuggestion[]
+  total_work_rvu?: number
+  estimated_payment?: number
+  per_code_billing?: Array<{
+    cpt_code: string
+    description: string
+    work_rvu: number
+    total_facility_rvu: number
+    facility_payment: number
+  }>
+  coder_difficulty: string
+  needs_manual_review: boolean
+  audit_warnings: string[]
+  validation_errors: string[]
+  pipeline_mode: string
+  kb_version: string
+  processing_time_ms: number
+}
 
 type Session = {
   id: string
@@ -15,24 +46,16 @@ type Session = {
   safe_to_use: boolean | null
   error_categories: string[] | null
   tester_name: string | null
-  reporter_version: string | null
-  coder_version: string | null
+  model_backend: string | null
+  model_version: string | null
   procedure_type: string | null
   note_text: string | null
-  reporter_output: Record<string, unknown> | null
-  coder_output: Record<string, unknown> | null
-  registry_output: Record<string, unknown> | null
-  ml_advisor_output: Record<string, unknown> | null
+  unified_output: UnifiedOutput | null
   free_text_feedback: string | null
-  repo_branch: string | null
-  repo_commit_sha: string | null
-  // New trace fields for ML feedback loop
-  reporter_trace: Record<string, unknown> | null
-  registry_trace: Record<string, unknown> | null
-  unified_trace: Record<string, unknown> | null
-  extraction_confidence: Record<string, number> | null
-  field_completeness: number | null
-  quality_scores: Record<string, number> | null
+  // Legacy fields for backward compatibility
+  reporter_output?: Record<string, unknown> | null
+  coder_output?: Record<string, unknown> | null
+  registry_output?: Record<string, unknown> | null
 }
 
 function SessionDetail({ session }: { session: Session }) {
@@ -69,39 +92,107 @@ function SessionDetail({ session }: { session: Session }) {
             </Card>
           )}
 
-          {/* Reporter Output */}
-          {session.reporter_output && (
-            <Card>
+          {/* Unified Output */}
+          {session.unified_output && (
+            <Card className="border-blue-200 dark:border-blue-800">
               <CardHeader>
-                <CardTitle className="text-lg">Reporter Output</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  Unified Output
+                  <Badge variant="outline">{session.unified_output.pipeline_mode}</Badge>
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <pre className="max-h-96 overflow-auto rounded bg-muted p-4 text-xs">
-                  {JSON.stringify(session.reporter_output, null, 2)}
-                </pre>
+              <CardContent className="space-y-4">
+                {/* Quality Indicators */}
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={
+                      session.unified_output.coder_difficulty === 'HIGH_CONF'
+                        ? 'default'
+                        : 'secondary'
+                    }
+                  >
+                    {session.unified_output.coder_difficulty || 'Unknown'} Confidence
+                  </Badge>
+                  {session.unified_output.needs_manual_review && (
+                    <Badge variant="destructive">Manual Review Required</Badge>
+                  )}
+                  {session.unified_output.total_work_rvu && (
+                    <Badge variant="outline">
+                      {session.unified_output.total_work_rvu.toFixed(2)} RVU
+                    </Badge>
+                  )}
+                  {session.unified_output.estimated_payment && (
+                    <Badge variant="outline" className="bg-green-50 dark:bg-green-950">
+                      ${session.unified_output.estimated_payment.toFixed(2)}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* CPT Codes */}
+                {session.unified_output.suggestions.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">
+                      Derived CPT Codes
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {session.unified_output.suggestions.map((suggestion, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 rounded border px-2 py-1 text-sm"
+                        >
+                          <span className="font-mono font-medium">{suggestion.code}</span>
+                          <span className="text-muted-foreground text-xs">
+                            {suggestion.description.slice(0, 30)}...
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Audit Warnings */}
+                {session.unified_output.audit_warnings.length > 0 && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Audit Warnings
+                    </p>
+                    <ul className="mt-1 list-disc list-inside text-sm text-amber-700 dark:text-amber-300">
+                      {session.unified_output.audit_warnings.map((warning, idx) => (
+                        <li key={idx}>{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Registry Summary */}
+                <details>
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                    View Registry Fields ({Object.keys(session.unified_output.registry).length}{' '}
+                    fields)
+                  </summary>
+                  <pre className="mt-2 max-h-64 overflow-auto rounded bg-muted p-4 text-xs">
+                    {JSON.stringify(session.unified_output.registry, null, 2)}
+                  </pre>
+                </details>
+
+                {/* Full JSON */}
+                <details>
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                    View Full JSON
+                  </summary>
+                  <pre className="mt-2 max-h-64 overflow-auto rounded bg-muted p-4 text-xs">
+                    {JSON.stringify(session.unified_output, null, 2)}
+                  </pre>
+                </details>
               </CardContent>
             </Card>
           )}
 
-          {/* Coder Output */}
-          {session.coder_output && (
+          {/* Legacy outputs for backward compatibility */}
+          {!session.unified_output && session.registry_output && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Coder Output</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="max-h-96 overflow-auto rounded bg-muted p-4 text-xs">
-                  {JSON.stringify(session.coder_output, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Registry Output */}
-          {session.registry_output && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Registry Output</CardTitle>
+                <CardTitle className="text-lg">Registry Output (Legacy)</CardTitle>
               </CardHeader>
               <CardContent>
                 <pre className="max-h-96 overflow-auto rounded bg-muted p-4 text-xs">
@@ -111,196 +202,15 @@ function SessionDetail({ session }: { session: Session }) {
             </Card>
           )}
 
-          {/* ML Advisor Output */}
-          {session.ml_advisor_output && (
-            <Card className="border-blue-200 dark:border-blue-800">
+          {!session.unified_output && session.coder_output && (
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  ML Advisor Output
-                  <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-normal text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                    Beta
-                  </span>
-                </CardTitle>
+                <CardTitle className="text-lg">Coder Output (Legacy)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {session.ml_advisor_output.advisor_explanation ? (
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      Explanation
-                    </p>
-                    <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
-                      {String(session.ml_advisor_output.advisor_explanation)}
-                    </p>
-                  </div>
-                ) : null}
-
-                {Array.isArray(session.ml_advisor_output.disagreements) &&
-                session.ml_advisor_output.disagreements.length > 0 ? (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                      Disagreements
-                    </p>
-                    <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                      {(session.ml_advisor_output.disagreements as string[]).join(', ')}
-                    </p>
-                  </div>
-                ) : null}
-
-                {session.ml_advisor_output.advisor_suggestions &&
-                typeof session.ml_advisor_output.advisor_suggestions === 'object' ? (
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">
-                      Confidence Scores
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(
-                        session.ml_advisor_output.advisor_suggestions as Record<string, number>,
-                      ).map(([code, confidence]) => (
-                        <span
-                          key={code}
-                          className="inline-flex items-center gap-1 rounded border px-2 py-1 text-sm"
-                        >
-                          <span className="font-mono font-medium">{code}</span>
-                          <span className="text-muted-foreground">
-                            {(confidence * 100).toFixed(0)}%
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                <details>
-                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                    View Raw JSON
-                  </summary>
-                  <pre className="mt-2 max-h-64 overflow-auto rounded bg-muted p-4 text-xs">
-                    {JSON.stringify(session.ml_advisor_output, null, 2)}
-                  </pre>
-                </details>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Quality Metrics (from unified trace) */}
-          {(session.quality_scores ||
-            session.field_completeness !== null ||
-            session.extraction_confidence) && (
-            <Card className="border-purple-200 dark:border-purple-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  Quality Metrics
-                  <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-normal text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                    ML Feedback Loop
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {session.field_completeness !== null ? (
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">
-                      Field Completeness
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="h-2 flex-1 rounded-full bg-muted">
-                        <div
-                          className={`h-2 rounded-full ${
-                            session.field_completeness >= 0.8
-                              ? 'bg-green-500'
-                              : session.field_completeness >= 0.5
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                          }`}
-                          style={{ width: `${session.field_completeness * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium">
-                        {(session.field_completeness * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                  </div>
-                ) : null}
-
-                {session.quality_scores && Object.keys(session.quality_scores).length > 0 ? (
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">
-                      Module Quality Scores
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                      {Object.entries(session.quality_scores).map(([module, score]) => (
-                        <div key={module} className="rounded-lg border p-3 text-center">
-                          <p className="text-xs text-muted-foreground capitalize">
-                            {module.replace(/_/g, ' ')}
-                          </p>
-                          <p
-                            className={`text-lg font-bold ${
-                              score >= 0.8
-                                ? 'text-green-600'
-                                : score >= 0.5
-                                  ? 'text-yellow-600'
-                                  : 'text-red-600'
-                            }`}
-                          >
-                            {(score * 100).toFixed(0)}%
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {session.extraction_confidence &&
-                Object.keys(session.extraction_confidence).length > 0 ? (
-                  <div>
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">
-                      Extraction Confidence by Field
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(session.extraction_confidence).map(([field, confidence]) => (
-                        <span
-                          key={field}
-                          className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs ${
-                            confidence >= 0.8
-                              ? 'border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-950'
-                              : confidence >= 0.5
-                                ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-950'
-                                : 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950'
-                          }`}
-                        >
-                          <span className="font-medium">{field.replace(/_/g, ' ')}</span>
-                          <span className="text-muted-foreground">
-                            {(confidence * 100).toFixed(0)}%
-                          </span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                {session.unified_trace ? (
-                  <details>
-                    <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                      View Trace Details
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      {session.unified_trace.error_attribution ? (
-                        <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-                          <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                            Error Attribution: {String(session.unified_trace.error_attribution)}
-                          </p>
-                          {session.unified_trace.root_cause ? (
-                            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                              {String(session.unified_trace.root_cause)}
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : null}
-                      <pre className="max-h-64 overflow-auto rounded bg-muted p-4 text-xs">
-                        {JSON.stringify(session.unified_trace, null, 2)}
-                      </pre>
-                    </div>
-                  </details>
-                ) : null}
+              <CardContent>
+                <pre className="max-h-96 overflow-auto rounded bg-muted p-4 text-xs">
+                  {JSON.stringify(session.coder_output, null, 2)}
+                </pre>
               </CardContent>
             </Card>
           )}
@@ -377,117 +287,33 @@ export function SessionList({
     setSelectedIds(newSelected)
   }
 
-  // Format registry output for CSV
-  const formatRegistryOutput = (data: Record<string, unknown> | null): string => {
-    if (!data || typeof data !== 'object') return ''
-    const record = (data.record as Record<string, unknown>) || {}
+  // Format unified output for CSV
+  const formatUnifiedOutput = (data: UnifiedOutput | null): string => {
+    if (!data) return ''
     const lines: string[] = []
 
-    // Format field name
-    const formatFieldName = (field: string): string => {
-      return field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-    }
+    // Summary
+    lines.push(`Pipeline: ${data.pipeline_mode}`)
+    lines.push(`Coder Difficulty: ${data.coder_difficulty}`)
+    lines.push(`Needs Manual Review: ${data.needs_manual_review ? 'Yes' : 'No'}`)
+    if (data.total_work_rvu) lines.push(`Total Work RVU: ${data.total_work_rvu.toFixed(2)}`)
+    if (data.estimated_payment)
+      lines.push(`Estimated Payment: $${data.estimated_payment.toFixed(2)}`)
 
-    // Format value
-    const formatValue = (value: unknown): string => {
-      if (value === null || value === undefined) return ''
-      if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-      if (Array.isArray(value)) {
-        if (value.length === 0) return ''
-        // Handle EBUS stations array
-        if (value.length > 0 && typeof value[0] === 'object') {
-          return value
-            .map(
-              (station: Record<string, unknown>) =>
-                `Station: ${station.station || ''}, Size: ${station.size_mm || ''}mm, Passes: ${station.passes || ''}, ROSE: ${station.rose_result || ''}`,
-            )
-            .join('; ')
-        }
-        return value.join(', ')
-      }
-      if (typeof value === 'object') return JSON.stringify(value)
-      return String(value)
-    }
-
-    // Get all fields with values
-    Object.entries(record).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '') {
-        if (Array.isArray(value) && value.length === 0) return
-        lines.push(`${formatFieldName(key)}: ${formatValue(value)}`)
-      }
-    })
-
-    return lines.join('\n')
-  }
-
-  // Format coder output for CSV
-  const formatCoderOutput = (data: Record<string, unknown> | null): string => {
-    if (!data || typeof data !== 'object') return ''
-    const lines: string[] = []
-
-    const codes = (data.codes as Array<Record<string, unknown>>) || []
-    const totalRvu = data.total_work_rvu as number | undefined
-    const estimatedPayment = data.estimated_payment as number | undefined
-    const bundledCodes = (data.bundled_codes as Array<Record<string, unknown>>) || []
-
-    if (totalRvu !== undefined) {
-      lines.push(`Total Work RVU: ${totalRvu.toFixed(2)}`)
-    }
-    if (estimatedPayment !== undefined) {
-      lines.push(`Estimated Payment: $${estimatedPayment.toFixed(2)}`)
-    }
-
-    if (codes.length > 0) {
-      lines.push('\nCPT Codes:')
-      codes.forEach((code) => {
-        const codeStr = String(code.cpt || '')
-        const desc = String(code.description || '')
-        const modifiers =
-          Array.isArray(code.modifiers) && code.modifiers.length > 0
-            ? code.modifiers.join(', ')
-            : ''
-        const rvu = (code.rvu_data as Record<string, unknown>)?.work_rvu?.toString() || ''
-        lines.push(
-          `  ${codeStr} - ${desc}${modifiers ? ` (Modifiers: ${modifiers})` : ''}${rvu ? ` [RVU: ${rvu}]` : ''}`,
-        )
+    // CPT Codes
+    if (data.suggestions.length > 0) {
+      lines.push('\nDerived CPT Codes:')
+      data.suggestions.forEach((s) => {
+        lines.push(`  ${s.code} - ${s.description} (${s.review_flag})`)
+        if (s.rationale) lines.push(`    Rationale: ${s.rationale}`)
       })
     }
 
-    if (bundledCodes.length > 0) {
-      lines.push('\nBundled Codes:')
-      bundledCodes.forEach((bundle) => {
-        const bundled = String(bundle.bundled_cpt || '')
-        const dominant = String(bundle.dominant_cpt || '')
-        const reason = bundle.reason ? ` (${bundle.reason})` : ''
-        lines.push(`  ${bundled} bundled into ${dominant}${reason}`)
-      })
+    // Audit Warnings
+    if (data.audit_warnings.length > 0) {
+      lines.push('\nAudit Warnings:')
+      data.audit_warnings.forEach((w) => lines.push(`  - ${w}`))
     }
-
-    return lines.join('\n')
-  }
-
-  // Format reporter output for CSV
-  const formatReporterOutput = (data: Record<string, unknown> | null): string => {
-    if (!data || typeof data !== 'object') return ''
-    const lines: string[] = []
-
-    // If it's a markdown report, include it
-    if (data.markdown && typeof data.markdown === 'string') {
-      lines.push('Report (Markdown):')
-      lines.push(data.markdown)
-    }
-
-    // Include other fields
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === 'markdown') return // Already included
-      if (value !== null && value !== undefined && value !== '') {
-        if (typeof value === 'object') {
-          lines.push(`${key}: ${JSON.stringify(value)}`)
-        } else {
-          lines.push(`${key}: ${value}`)
-        }
-      }
-    })
 
     return lines.join('\n')
   }
@@ -507,7 +333,6 @@ export function SessionList({
         return JSON.stringify(value).replace(/"/g, '""')
       }
       const str = String(value)
-      // Escape quotes and wrap in quotes if contains comma, newline, or quote
       if (str.includes(',') || str.includes('\n') || str.includes('"')) {
         return `"${str.replace(/"/g, '""')}"`
       }
@@ -522,24 +347,20 @@ export function SessionList({
       'Modules Run',
       'Procedure Type',
       'Note Text',
-      'Reporter Output (Formatted)',
-      'Reporter Output (JSON)',
-      'Coder Output (Formatted)',
-      'Coder Output (JSON)',
-      'Registry Output (Formatted)',
-      'Registry Output (JSON)',
-      'ML Advisor Final Codes',
-      'ML Advisor Disagreements',
-      'ML Advisor Explanation',
-      'ML Advisor Output (JSON)',
+      'Unified Output (Formatted)',
+      'Unified Output (JSON)',
+      'CPT Codes',
+      'Total Work RVU',
+      'Estimated Payment',
+      'Coder Difficulty',
+      'Needs Manual Review',
+      'Audit Warnings',
       'Quality Rating',
       'Safe to Use',
       'Error Categories',
       'Free Text Feedback',
-      'Reporter Version',
-      'Coder Version',
-      'Repo Branch',
-      'Repo Commit SHA',
+      'Model Backend',
+      'Model Version',
     ]
 
     // Build CSV rows
@@ -550,31 +371,20 @@ export function SessionList({
       session.modules_run,
       session.procedure_type || '',
       session.note_text || '',
-      formatReporterOutput(session.reporter_output),
-      session.reporter_output ? JSON.stringify(session.reporter_output) : '',
-      formatCoderOutput(session.coder_output),
-      session.coder_output ? JSON.stringify(session.coder_output) : '',
-      formatRegistryOutput(session.registry_output),
-      session.registry_output ? JSON.stringify(session.registry_output) : '',
-      // ML Advisor columns
-      session.ml_advisor_output?.final_codes
-        ? (session.ml_advisor_output.final_codes as string[]).join(', ')
-        : '',
-      session.ml_advisor_output?.disagreements
-        ? (session.ml_advisor_output.disagreements as string[]).join(', ')
-        : '',
-      session.ml_advisor_output?.advisor_explanation
-        ? String(session.ml_advisor_output.advisor_explanation)
-        : '',
-      session.ml_advisor_output ? JSON.stringify(session.ml_advisor_output) : '',
+      formatUnifiedOutput(session.unified_output),
+      session.unified_output ? JSON.stringify(session.unified_output) : '',
+      session.unified_output?.cpt_codes?.join(', ') || '',
+      session.unified_output?.total_work_rvu?.toString() || '',
+      session.unified_output?.estimated_payment?.toString() || '',
+      session.unified_output?.coder_difficulty || '',
+      session.unified_output?.needs_manual_review ? 'Yes' : 'No',
+      session.unified_output?.audit_warnings?.join('; ') || '',
       session.quality_rating?.toString() || '',
       session.safe_to_use?.toString() || '',
       session.error_categories?.join('; ') || '',
       session.free_text_feedback || '',
-      session.reporter_version || '',
-      session.coder_version || '',
-      session.repo_branch || '',
-      session.repo_commit_sha || '',
+      session.model_backend || '',
+      session.model_version || '',
     ])
 
     // Combine headers and rows
@@ -599,7 +409,7 @@ export function SessionList({
     if (selectedIds.size === 0) return
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedIds.size} session(s)? This action cannot be undone. This is useful for cleaning up old test data after pipeline updates.`,
+      `Are you sure you want to delete ${selectedIds.size} session(s)? This action cannot be undone.`,
     )
 
     if (!confirmed) return
@@ -617,11 +427,9 @@ export function SessionList({
         throw new Error(error.error || 'Failed to delete sessions')
       }
 
-      // Remove deleted sessions from state
       setSessions(sessions.filter((s) => !selectedIds.has(s.id)))
       setSelectedIds(new Set())
 
-      // Call parent's refresh callback if provided, otherwise use router
       if (onDelete) {
         onDelete()
       } else {
@@ -645,8 +453,7 @@ export function SessionList({
             <div>
               <CardTitle>Recent Sessions</CardTitle>
               <CardDescription>
-                Latest 100 QA test sessions - Select sessions to export or delete after pipeline
-                updates
+                Latest 100 QA test sessions - Select sessions to export or delete
               </CardDescription>
             </div>
             {selectedIds.size > 0 && (
@@ -690,7 +497,7 @@ export function SessionList({
                       className="mt-1"
                     />
                     <div className="flex-1">
-                      <div className="grid grid-cols-2 gap-4 md:grid-cols-8">
+                      <div className="grid grid-cols-2 gap-4 md:grid-cols-7">
                         <div>
                           <p className="text-xs text-muted-foreground">Date</p>
                           <p className="text-sm font-medium">
@@ -698,12 +505,14 @@ export function SessionList({
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Modules</p>
-                          <p className="text-sm font-medium">{session.modules_run}</p>
-                        </div>
-                        <div>
                           <p className="text-xs text-muted-foreground">Type</p>
                           <p className="text-sm font-medium">{session.procedure_type || '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">CPT Codes</p>
+                          <p className="text-sm font-medium">
+                            {session.unified_output?.cpt_codes?.length || 0}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Rating</p>
@@ -738,25 +547,13 @@ export function SessionList({
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Errors</p>
-                          <p className="text-sm font-medium">
-                            {session.error_categories?.length ? (
-                              <span className="text-orange-600">
-                                {session.error_categories.length}
-                              </span>
-                            ) : (
-                              '—'
-                            )}
-                          </p>
-                        </div>
-                        <div>
                           <p className="text-xs text-muted-foreground">Tester</p>
                           <p className="text-sm font-medium">{session.tester_name || '—'}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Version</p>
-                          <p className="text-xs font-medium">
-                            {session.reporter_version || session.coder_version || '—'}
+                          <p className="text-xs text-muted-foreground">Confidence</p>
+                          <p className="text-sm font-medium">
+                            {session.unified_output?.coder_difficulty || '—'}
                           </p>
                         </div>
                       </div>

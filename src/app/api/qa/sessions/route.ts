@@ -7,7 +7,8 @@ export const revalidate = 0
 
 export async function GET() {
   if (!supabaseAdmin) {
-    return NextResponse.json({ error: 'Supabase admin client not configured' }, { status: 500 })
+    // Demo mode: allow QA admin UI to load even if Supabase isn't configured.
+    return NextResponse.json({ sessions: [] })
   }
 
   const { data: sessions, error } = await supabaseAdmin
@@ -21,23 +22,15 @@ export async function GET() {
       safe_to_use,
       error_categories,
       tester_name,
-      reporter_version,
-      coder_version,
+      model_backend,
+      model_version,
       procedure_type,
       note_text,
+      unified_output,
+      free_text_feedback,
       reporter_output,
       coder_output,
-      registry_output,
-      ml_advisor_output,
-      free_text_feedback,
-      repo_branch,
-      repo_commit_sha,
-      reporter_trace,
-      registry_trace,
-      unified_trace,
-      extraction_confidence,
-      field_completeness,
-      quality_scores
+      registry_output
     `,
     )
     .order('created_at', { ascending: false })

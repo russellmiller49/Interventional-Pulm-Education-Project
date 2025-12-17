@@ -7,8 +7,7 @@ type FeedbackRequest = {
   safeToUse?: boolean
   errorCategories?: string[]
   freeTextFeedback?: string
-  reporterCorrected?: unknown
-  coderCorrected?: unknown
+  unifiedCorrected?: unknown
 }
 
 type FeedbackResponse = {
@@ -17,10 +16,6 @@ type FeedbackResponse = {
 }
 
 export async function POST(request: Request): Promise<NextResponse<FeedbackResponse>> {
-  if (!supabaseAdmin) {
-    return NextResponse.json({ error: 'Supabase admin client not configured' }, { status: 500 })
-  }
-
   let body: FeedbackRequest
   try {
     body = await request.json()
@@ -34,12 +29,16 @@ export async function POST(request: Request): Promise<NextResponse<FeedbackRespo
     safeToUse,
     errorCategories,
     freeTextFeedback,
-    reporterCorrected,
-    coderCorrected,
+    unifiedCorrected,
   } = body
 
   if (!sessionId) {
     return NextResponse.json({ error: 'sessionId is required' }, { status: 400 })
+  }
+
+  // Demo mode: allow QA demo without Supabase configured.
+  if (!supabaseAdmin) {
+    return NextResponse.json({ ok: true })
   }
 
   const { error } = await supabaseAdmin
@@ -49,8 +48,7 @@ export async function POST(request: Request): Promise<NextResponse<FeedbackRespo
       safe_to_use: safeToUse ?? null,
       error_categories: errorCategories ?? null,
       free_text_feedback: freeTextFeedback ?? null,
-      reporter_corrected: reporterCorrected ?? null,
-      coder_corrected: coderCorrected ?? null,
+      unified_corrected: unifiedCorrected ?? null,
       feedback_at: new Date().toISOString(),
     })
     .eq('id', sessionId)
