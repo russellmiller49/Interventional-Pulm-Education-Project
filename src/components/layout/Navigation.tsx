@@ -19,6 +19,7 @@ const navigationItems: NavItem[] = [
   { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },
+  { title: 'IP Registry', href: '/ip-registry', description: 'Launch the Procedure Suite IU' },
   {
     title: 'Resources',
     href: '/resources/creative-commons',
