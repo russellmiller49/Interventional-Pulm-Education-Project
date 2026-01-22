@@ -108,8 +108,22 @@ export async function POST(request: Request): Promise<NextResponse<RunResponse>>
 
     if (!apiRes.ok) {
       const errorText = await apiRes.text()
+      let errorMessage = 'Python service failed'
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText) as { detail?: string; error?: string } | null
+          const detail = parsed?.detail ?? parsed?.error
+          if (detail && typeof detail === 'string') {
+            errorMessage = detail
+          }
+        } catch {
+          // Keep the generic message if the upstream error isn't JSON.
+        }
+      }
+
       console.error('Python service failed:', errorText)
-      return NextResponse.json({ error: 'Python service failed' }, { status: 502 })
+      return NextResponse.json({ error: errorMessage }, { status: apiRes.status })
     }
 
     const data = await apiRes.json()

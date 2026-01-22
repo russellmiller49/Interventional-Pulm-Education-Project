@@ -40,6 +40,12 @@ type UnifiedOutput = {
   processing_time_ms: number
 }
 
+type RunResponse = {
+  sessionId?: string
+  unifiedOutput?: UnifiedOutput
+  error?: string
+}
+
 const ERROR_CATEGORIES = [
   { id: 'missing_field', label: 'Missing Registry Field' },
   { id: 'wrong_extraction', label: 'Wrong Extraction' },
@@ -460,10 +466,21 @@ export default function QASandbox() {
         }),
       })
 
-      const data = await res.json()
+      let data: RunResponse | null = null
+      try {
+        data = await res.json()
+      } catch {
+        data = null
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to run')
+        const baseMessage = data?.error || 'Failed to run'
+        const hint = res.status >= 500 ? ' Retry extraction or switch to manual mode.' : ''
+        throw new Error(`${baseMessage}${hint}`)
+      }
+
+      if (!data) {
+        throw new Error('Failed to parse response')
       }
 
       setSessionId(data.sessionId)
