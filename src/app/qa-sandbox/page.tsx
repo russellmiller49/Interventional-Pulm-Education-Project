@@ -483,8 +483,8 @@ export default function QASandbox() {
         throw new Error('Failed to parse response')
       }
 
-      setSessionId(data.sessionId)
-      setUnifiedOutput(data.unifiedOutput)
+      setSessionId(data.sessionId ?? null)
+      setUnifiedOutput(data.unifiedOutput ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
