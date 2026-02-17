@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Peripheral Imaging Techniques</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        /* MCQ Styling */
+        .mcq-options { list-style-type: none; padding-left: 0; margin: 10px 0 15px 0; }
+        .mcq-options li { margin-bottom: 4px; color: #444; }
+        .answer-block { margin-top: 10px; font-style: italic; color: #2c3e50; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Real-Time Peripheral Imaging Techniques</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers real-time imaging used to localize and biopsy peripheral pulmonary lesions during bronchoscopy, focusing on digital tomosynthesis (DTS), cone-beam CT (CBCT), and augmented fluoroscopy workflows. It maps to AABIP domains on diagnostic bronchoscopy for peripheral nodules, image-guided navigation, radiation awareness, and intraprocedural troubleshooting.</p>
+
+    <hr>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Explain how DTS and CBCT generate near-real-time 3D information from limited-angle X-ray acquisitions and the practical differences between them.</li>
+        <li>Describe CT-to-body divergence, its causes, and how real-time imaging mitigates it.</li>
+        <li>Select an imaging platform (DTS vs. CBCT; fixed vs. mobile) based on lesion, patient, and resource factors.</li>
+        <li>Implement anesthesia and ventilation strategies that reduce atelectasis and improve image quality.</li>
+        <li>Execute step-by-step workflows for DTS-assisted navigation and CBCT-guided navigation bronchoscopy.</li>
+        <li>Recognize, prevent, and manage common intraprocedural problems (e.g., atelectasis, motion artifact, tool-to-lesion misalignment).</li>
+        <li>Summarize evidence on diagnostic yield, radiation exposure, safety, and emerging therapeutic uses.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High-Yield One-Pager (Pearls, Pitfalls, Traps)</h3>
+    <p>Why real-time imaging? The major limiter of peripheral bronchoscopy yield is CT-to-body divergence—the intraprocedural target often isn’t where the pre-op CT predicted. Real-time updates correct the plan before sampling.</p>
+
+    <div class="algorithm-note">
+        <p><strong>DTS vs. CBCT:</strong></p>
+        <ul>
+            <li><strong>DTS:</strong> Uses a short fluoroscopic sweep (limited angles) to reconstruct slice stacks with low dose and conventional C-arm compatibility.</li>
+            <li><strong>CBCT:</strong> Rotates a cone beam around the patient to create a 3D volume that can be overlaid on live fluoro (augmented fluoroscopy).</li>
+        </ul>
+
+        <p><strong>Ventilation matters:</strong> Atelectasis shifts or obscures targets. Use general anesthesia with neuromuscular blockade when appropriate, PEEP &ge;10 cm H<sub>2</sub>O, high tidal volumes, and inspiratory breath-holds for image acquisition.</p>
+
+        <p><strong>Timing breath-hold:</strong> Start CBCT scanning 5–7 seconds after initiating breath-hold to outlast initial lung motion.</p>
+
+        <p><strong>Tool-in-lesion confirmation:</strong> Combine rEBUS (when available) with the imaging system’s tool/lesion overlay or a quick confirmatory spin/sweep before sampling.</p>
+
+        <p><strong>Platforms in practice:</strong></p>
+        <ul>
+            <li><strong>Illumisite™ (DTS-assisted ENB):</strong> Fluoroscopic sweep ~&plusmn;25&deg;; updates target registration.</li>
+            <li><strong>LungVision™:</strong> Multimodal image fusion; “main carina spin” and isocenter spin with overlay; compatible with multiple scopes and robots.</li>
+            <li><strong>Galaxy System™:</strong> Robotic bronchoscopy with integrated DTS (TiLT+), single-use scope, cross-hair targeting.</li>
+        </ul>
+
+        <p><strong>Evidence signals:</strong> DTS-assisted ENB improves yield vs. ENB alone; CBCT-guided navigation shows high yields and can outperform older techniques; combining CBCT with robotic systems reports yields commonly in the mid-70s to low-90s.</p>
+
+        <p><strong>Radiation safety:</strong> CBCT-guided navigation typically has a median effective dose of &approx;5–6 mSv, comparable to diagnostic chest CT when optimized.</p>
+    </div>
+
+    <h3>Common Traps</h3>
+    <ul>
+        <li><strong>Resorption Atelectasis:</strong> Caused by high FiO<sub>2</sub> combined with prolonged ventilation.</li>
+        <li><strong>Deformation Errors:</strong> Imaging performed before instruments are positioned leads to misleading overlays due to device-induced deformation.</li>
+        <li><strong>Positional Neglect:</strong> Ignoring lower-lobe/posterior dependence leads to missed targets.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Peripheral pulmonary nodules are frequently identified on CT screening or incidentally. Conventional 2D fluoroscopy is limited for 3D navigation. Real-time limited-angle tomography (DTS) and cone-beam 3D reconstructions (CBCT) bridge this gap by updating target position and tool-to-lesion relationships during the case.</p>
+
+    <h4>CT-to-Body Divergence</h4>
+    <p>Causes include: lower intraprocedural lung volumes vs. inspiratory CT, atelectasis (airway occlusion, secretions, FiO<sub>2</sub>-related resorption), and instrument-induced deformation. Mitigation requires ventilation protocols, breath-holds, and imaging updates that re-register the target to current anatomy.</p>
+
+    <h4>Indications</h4>
+    <p>Image-guided bronchoscopy for peripheral nodules, confirmation of tool-in-lesion before sampling, compensation for CT-to-body divergence, planning and verification for fiducial/marker placement, and support of local therapies (CBCT).</p>
+
+    <hr>
+
+    <h3>Pre-procedure Evaluation</h3>
+    <h4>Planning CT</h4>
+    <ul>
+        <li><strong>For Illumisite-assisted workflows:</strong> Obtain CT within 4 weeks, slice thickness 1.0–1.25 mm, 0.8–1.0 mm interval with 20–50% overlap.</li>
+        <li><strong>For LungVision workflows:</strong> Chest CT slice thickness &lt;1.5 mm.</li>
+    </ul>
+    <h4>Anesthesia & Ventilation</h4>
+    <p>Use general anesthesia with neuromuscular blockade when appropriate; PEEP &ge;10 cm H<sub>2</sub>O reduces atelectasis; coordinate inspiratory breath-holds for imaging.</p>
+
+    <hr>
+
+    <h3>Equipment & Setup</h3>
+    <h4>DTS</h4>
+    <p>Conventional C-arm performs a limited-angle sweep (e.g., ~&plusmn;25&deg; for Illumisite; ~&plusmn;30&deg; DTS spin for Galaxy). Reconstruction yields stacked slices; systems display nodule and catheter tip alignment for re-registration.</p>
+    <h4>CBCT</h4>
+    <p>Fixed or mobile 3D-capable C-arm rotates around the patient to reconstruct a 3D volume. Fixed systems support augmented fluoroscopy (overlay of segmented nodules/airways/tools on live fluoro). Mobile systems provide 3D confirmation but typically lack native AF.</p>
+    <h4>Scopes & Channels</h4>
+    <ul>
+        <li><strong>Galaxy:</strong> Disposable bronchoscope 4.0-mm OD, 2.1-mm working channel.</li>
+        <li><strong>Illumisite:</strong> Catheter used through a therapeutic scope with 2.8-mm working channel.</li>
+        <li><strong>LungVision:</strong> Disposable mechanical catheter inserted into the bronchoscope working channel; integrates with most C-arms and navigation platforms.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+
+    <h4>A. DTS-assisted navigation (Illumisite-style)</h4>
+    <ol>
+        <li>Load planning CT and create navigation path.</li>
+        <li>Intubate; apply neuromuscular blockade; set PEEP &ge;10 cm H<sub>2</sub>O.</li>
+        <li>Register airways; advance locatable guide/extended working channel (EWC) toward target—keep the “target marker” in plane.</li>
+        <li>Within ~25 mm of target, position C-arm (e.g., LAO 25&deg; start).</li>
+        <li>Perform inspiratory breath-hold; execute high-level, continuous fluoroscopy sweep ~LAO 25&deg; &rarr; RAO 25&deg; (~8–30 s).</li>
+        <li>System reconstructs DTS; mark nodule and catheter tip; update registration.</li>
+        <li>Correct alignment; confirm with rEBUS when available; sample.</li>
+    </ol>
+
+    <h4>B. DTS-based augmented fluoroscopy (LungVision-style)</h4>
+    <ol>
+        <li>Plan with thin-slice CT (&lt;1.5 mm).</li>
+        <li>After sedation, perform “main carina spin” (narrow-angle) and register carina on reconstructed imaging and the planning CT.</li>
+        <li>Use isocenter spin to update target location; overlay navigation plan.</li>
+        <li>Insert mechanical catheter via bronchoscope; steer along system display; confirm tool-lesion relationship on multiplanar/3D views; sample.</li>
+    </ol>
+
+    <h4>C. Robotic bronchoscopy with integrated DTS (Galaxy-style)</h4>
+    <ol>
+        <li>Navigate robotically near lesion (electromagnetic navigation).</li>
+        <li>Engage TiLT+ (tool-in-lesion tomosynthesis) and perform a –30&deg; to +30&deg; spin near isocenter.</li>
+        <li>Identify target; update target location; use cross-hair view to center lesion relative to the tip; sample with robot’s stable platform.</li>
+    </ol>
+
+    <h4>D. CBCT-guided navigation bronchoscopy (with augmented fluoroscopy when available)</h4>
+    <ol>
+        <li>Pre-plan airway path; wedge bronchoscope/EWC into target subsegment.</li>
+        <li>Breath-hold and first CBCT spin; segment target and (optionally) the distal EWC tip; choose optimal AF angles.</li>
+        <li>Use AF to guide EWC/tool to the lesion, correlating overlay with the visible distal tip under live ventilation.</li>
+        <li>Confirm position by rEBUS and/or a quick confirmatory CBCT (needle seen within lesion).</li>
+        <li>Sample adequately (needle &plusmn; forceps; multiple passes/locations), with ROSE if available.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Troubleshooting & Intra-procedure Management</h3>
+    <ul>
+        <li><strong>Atelectasis obscuring the target:</strong> Increase PEEP, use high tidal volumes, shorten case time to imaging/sampling, limit FiO<sub>2</sub> when feasible, and time spins to inspiratory breath-hold. Posterior and lower-lobe lesions and obesity are higher risk.</li>
+        <li><strong>Overlay mismatch (CBCT-to-body divergence):</strong> Ensure instruments are already near target before first spin; mark the distal EWC tip on the 3D volume; correlate overlay with the visible tip under live fluoro; repeat spin if uncertainty persists.</li>
+        <li><strong>Motion artifact (DTS/CBCT):</strong> Minimize sweep/spin time; avoid moving cables/objects in the field; wait 5–7 s after initiating breath-hold before starting CBCT.</li>
+        <li><strong>No rEBUS signal:</strong> Rely on reconstructed DTS/CBCT with tool visualization; adjust trajectory or consider a trans-parenchymal path if no airway leads to the lesion (CBCT helps define exit/entry points).</li>
+    </ul>
+
+    <hr>
+
+    <h3>Post-procedure Care & Follow-up</h3>
+    <p>Assess for immediate complications; pneumothorax is uncommon with navigational bronchoscopy but should be excluded when indicated.</p>
+
+    <h3>Complications (prevention, recognition, management)</h3>
+    <p>Navigational bronchoscopy with DTS or CBCT has low pneumothorax rates; chest tube requirement is uncommon.</p>
+    <ul>
+        <li>In one randomized comparison of navigational bronchoscopy and transthoracic biopsy, pneumothorax occurred less often with bronchoscopy, and chest tube placement was rare.</li>
+        <li>In early Galaxy experience, pneumothorax occurred infrequently (occasionally requiring drainage).</li>
+    </ul>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Obesity and posterior lower-lobe lesions:</strong> Higher atelectasis risk—prioritize ventilation strategies and early imaging.</li>
+        <li><strong>ICU/limited resources:</strong> DTS offers low dose and compatibility with standard C-arm systems.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes</h3>
+    <ul>
+        <li><strong>DTS-assisted ENB:</strong> Diagnostic yield improved from ~mid-50s to ~high-70s when tomosynthesis correction was added; typical divergence corrections ~12–15 mm.</li>
+        <li><strong>Comparative yield:</strong> DTS-corrected ENB and shape-sensing robotic bronchoscopy show similar yields in some cohorts (~77–80%).</li>
+        <li><strong>CBCT-guided navigation:</strong> Meta-analytic yield approx. ~78% (intermediate definition). CBCT integrated with modern platforms frequently reports yields ~75–93%.</li>
+        <li><strong>Randomized comparison to TTNB (initial results):</strong> Diagnostic yield similar between navigational bronchoscopy and CT-guided transthoracic biopsy, with fewer complications for bronchoscopy.</li>
+        <li><strong>Radiation:</strong> Optimized CBCT navigation procedures have median effective doses around ~5.5 mSv, similar to diagnostic chest CT.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Selecting Real-Time Imaging for Peripheral Nodule Biopsy</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Peripheral pulmonary nodule planned for bronchoscopy"] --> B{"Resources available?"}
+        B -->|Fixed CBCT with AF| C["Plan CBCT-AF workflow"]
+        B -->|Mobile CBCT only| D["Use CBCT for 3D confirmation; integrate with navigation/robot"]
+        B -->|No CBCT; C-arm available| E["Use DTS-assisted navigation platform"]
+        B -->|None| F["Reassess: consider non-bronchoscopic pathway"]
+
+        C --> G{"Bronchus sign present?"}
+        D --> G
+        E --> G
+        G -->|Yes| H["Airway-based navigation to lesion"]
+        G -->|No| I["Consider trans-parenchymal path with CBCT planning"]
+
+        H --> J["Optimize ventilation/PEEP; inspiratory breath-hold for imaging"]
+        I --> J
+        J --> K{"Tool-in-lesion confirmed (rEBUS and/or CBCT/DTS)?"}
+        K -->|Yes| L["Biopsy with multiple passes/sites; consider ROSE"]
+        K -->|No| M["Re-register target; correct trajectory; repeat quick spin/sweep"]
+
+        L --> N["Assess for complications; plan follow-up"]
+        M --> K
+    </div>
+
+    <div class="algorithm-note">
+        <p><strong>Bulleted Algorithm:</strong></p>
+        <ul>
+            <li>Confirm imaging resources (fixed CBCT with AF &gt; mobile CBCT &gt; DTS &gt; none).</li>
+            <li>Determine airway route; if absent, use CBCT to plan a trans-parenchymal path.</li>
+            <li>Apply ventilation protocol (PEEP &ge;10 cm H<sub>2</sub>O; inspiratory breath-holds).</li>
+            <li>Confirm tool-in-lesion (rEBUS &plusmn; DTS/CBCT).</li>
+            <li>If misaligned, re-register and adjust; repeat brief spin/sweep.</li>
+            <li>Sample adequately; monitor for complications.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm 2 — Managing CT-to-Body Divergence and Atelectasis Intra-procedure</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Unexpected miss or poor rEBUS signal"] --> B["Check ventilation: increase PEEP; ensure high tidal volumes"]
+        B --> C["Limit FiO2 when appropriate; suction secretions; minimize occlusion"]
+        C --> D["Instrument position near target? Move EWC/tool close first"]
+        D --> E["Perform inspiratory breath-hold"]
+        E --> F{"Imaging modality"}
+        F -->|CBCT| G["Quick spin; segment lesion + mark tool tip; update AF angles"]
+        F -->|DTS| H["Limited-angle sweep; re-register lesion/tool"]
+        G --> I["Translate overlay to live ventilation; adjust trajectory"]
+        H --> I
+        I --> J{"Tool-in-lesion?"}
+        J -->|Yes| K["Proceed to sampling"]
+        J -->|No| L["Repeat quick imaging; consider trans-parenchymal route if no airway"]
+    </div>
+
+    <div class="algorithm-note">
+        <p><strong>Bulleted Algorithm:</strong></p>
+        <ul>
+            <li>Elevate PEEP; maintain high tidal volume; time inspiratory breath-holds.</li>
+            <li>Reduce sources of atelectasis (FiO<sub>2</sub> if safe, remove occlusions/secretions).</li>
+            <li>Move instruments close before imaging (reduces post-spin deformation).</li>
+            <li><strong>CBCT:</strong> Mark distal EWC tip; choose optimal AF angles; correlate overlay with live fluoro.</li>
+            <li><strong>DTS:</strong> Perform recalibration sweep and update registration.</li>
+            <li>Iterate imaging &rarr; adjustment until tool-in-lesion, then biopsy.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <p><strong>Table 1. Typical Radiation Doses Relevant to Peripheral Imaging</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Diagnostic Procedure</th>
+                <th>Typical Effective Dose (mSv)</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Chest X-ray (PA)</td>
+                <td>0.02</td>
+                <td>Baseline comparison</td>
+            </tr>
+            <tr>
+                <td>Chest X-ray (lateral)</td>
+                <td>0.15</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Chest DTS</td>
+                <td>0.1–0.2</td>
+                <td>Limited-angle reconstruction</td>
+            </tr>
+            <tr>
+                <td>Low-dose CT chest</td>
+                <td>1.5</td>
+                <td>Screening CT</td>
+            </tr>
+            <tr>
+                <td>CBCT (bronchoscopy)</td>
+                <td>~2–2.5</td>
+                <td>Typical range</td>
+            </tr>
+            <tr>
+                <td>Diagnostic CT chest</td>
+                <td>4–8</td>
+                <td>—</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>Table 2. Real-Time Imaging Platforms for Peripheral Bronchoscopy (Selected Features)</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Platform</th>
+                <th>Imaging Method</th>
+                <th>Key Spin/Sweep</th>
+                <th>Endoscope/Channel</th>
+                <th>Visualization</th>
+                <th>Typical Use Case</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Illumisite™</strong></td>
+                <td>DTS-assisted ENB</td>
+                <td>~LAO 25&deg; &rarr; RAO 25&deg;, breath-hold (~8–30 s)</td>
+                <td>Through therapeutic scope (2.8-mm WC)</td>
+                <td>Updates lesion/tool registration; fluoroscopic augmentation</td>
+                <td>Re-registration to correct divergence; tool-in-lesion confirmation</td>
+            </tr>
+            <tr>
+                <td><strong>LungVision™</strong></td>
+                <td>DTS with multimodal fusion</td>
+                <td>Main carina spin; isocenter spin</td>
+                <td>Disposable mechanical catheter via scope</td>
+                <td>Augmented fluoroscopy overlay; multimodal alignment</td>
+                <td>Broad compatibility (scopes/robots); overlay guidance</td>
+            </tr>
+            <tr>
+                <td><strong>Galaxy System™</strong></td>
+                <td>Robotic + integrated DTS (TiLT+)</td>
+                <td>~–30&deg; to +30&deg; DTS spin</td>
+                <td>Single-use scope (4.0-mm OD, 2.1-mm WC)</td>
+                <td>Cross-hair targeting of lesion relative to tip</td>
+                <td>Stable robotic targeting with built-in tool-in-lesion</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>Table 3. DTS vs. CBCT: Practical Differences</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th>DTS</th>
+                <th>CBCT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Geometry</strong></td>
+                <td>Limited-angle sweep; slice stack</td>
+                <td>Full rotational cone-beam; 3D volume</td>
+            </tr>
+            <tr>
+                <td><strong>Dose</strong></td>
+                <td>Lower (typically 0.1–0.2 mSv for chest DTS)</td>
+                <td>Typically ~2–2.5 mSv per acquisition (procedure totals vary)</td>
+            </tr>
+            <tr>
+                <td><strong>Hardware</strong></td>
+                <td>Works with conventional C-arm</td>
+                <td>Fixed or mobile 3D-capable C-arm</td>
+            </tr>
+            <tr>
+                <td><strong>Augmented Fluoro</strong></td>
+                <td>Platform-dependent; re-registers target</td>
+                <td>Fixed systems support robust AF overlays</td>
+            </tr>
+            <tr>
+                <td><strong>Motion/Atelectasis</strong></td>
+                <td>Moderate sensitivity; shorter sweeps</td>
+                <td>Sensitive to motion; optimize breath-hold timing</td>
+            </tr>
+            <tr>
+                <td><strong>Best Fit</strong></td>
+                <td>Cost-/dose-sensitive suites; rapid re-registration</td>
+                <td>Full 3D planning, AF-guided navigation, therapy planning</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <p><strong>Case 1</strong></p>
+        <p>A 2-cm posterior lower-lobe nodule is planned for ENB. After airway registration, you see no rEBUS signal; fluoroscopy suggests under-inflation. The center lacks CBCT but has an Illumisite-enabled C-arm. Next best step?</p>
+        <ul class="mcq-options">
+            <li>A. Increase FiO<sub>2</sub> to 100% and proceed without imaging update</li>
+            <li>B. Obtain a repeat planning CT</li>
+            <li>C. Perform an inspiratory breath-hold limited-angle DTS sweep and re-register target/tool, with higher PEEP</li>
+            <li>D. Convert to transthoracic biopsy immediately</li>
+            <li>E. Abort and reschedule</li>
+        </ul>
+        <p class="answer-block"><strong>Answer: C.</strong> Atelectasis and low lung volumes are common causes of divergence. A DTS sweep with re-registration plus optimized ventilation improves alignment before sampling.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Case 2</strong></p>
+        <p>A thin-slice CT shows no bronchus sign to a 15-mm lateral segment RUL nodule. Fixed CBCT with AF is available. After positioning the EWC near the pleural side, what optimizes success?</p>
+        <ul class="mcq-options">
+            <li>A. Spin before instruments are advanced into the subsegment</li>
+            <li>B. Mark the distal EWC tip on the CBCT volume and use AF angles to correlate with live fluoro</li>
+            <li>C. Avoid breath-hold to simulate normal ventilation</li>
+            <li>D. Increase suction to collapse the segment</li>
+            <li>E. Proceed without imaging because rEBUS is negative</li>
+        </ul>
+        <p class="answer-block"><strong>Answer: B.</strong> Marking the tip and using AF views translates breath-hold 3D data to ventilated lungs and guides trans-parenchymal trajectories if needed.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Case 3</strong></p>
+        <p>A center with shape-sensing robotic bronchoscopy and mobile CBCT plans biopsy of an 18-mm GGO-predominant nodule. rEBUS is equivocal. What is the most appropriate intra-procedural imaging step?</p>
+        <ul class="mcq-options">
+            <li>A. Skip imaging and take more forceps bites</li>
+            <li>B. Mobile CBCT spin to verify tool-in-lesion and adjust navigation plan</li>
+            <li>C. Switch to lateral CXR</li>
+            <li>D. Increase FiO<sub>2</sub> and wait</li>
+            <li>E. Abort</li>
+        </ul>
+        <p class="answer-block"><strong>Answer: B.</strong> Mobile CBCT integrates with robotic platforms to verify tool-in-lesion and update guidance in real time when rEBUS is nondiagnostic.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank (MCQs)</h3>
+    <ol>
+        <li>
+            A 20-mm peripheral nodule is targeted with ENB alone. After 30 minutes, rEBUS remains eccentric and sampling is nondiagnostic. The suite has a DTS-assisted platform. Next best step?
+            <ul class="mcq-options">
+                <li>A. Continue sampling blindly</li>
+                <li>B. Perform a limited-angle DTS sweep to update target registration</li>
+                <li>C. Increase FiO₂ to 100% and repeat rEBUS</li>
+                <li>D. Abort and schedule TTNB</li>
+                <li>E. Start steroids and observe</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> DTS enables rapid re-registration to correct divergence before further sampling.</p>
+        </li>
+        <li>
+            Which statement best distinguishes DTS from CBCT in bronchoscopy?
+            <ul class="mcq-options">
+                <li>A. DTS delivers higher dose than CBCT</li>
+                <li>B. CBCT cannot display 3D volumes</li>
+                <li>C. DTS uses a limited-angle sweep and commonly leverages conventional C-arms</li>
+                <li>D. CBCT cannot be integrated with robotic platforms</li>
+                <li>E. DTS requires a fixed hybrid suite</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: C.</strong> DTS is a limited-angle reconstruction often performed with standard C-arms; CBCT provides full 3D volumes and can be fixed or mobile.</p>
+        </li>
+        <li>
+            During CBCT-AF navigation, the overlaid nodule appears offset from the visible catheter tip on live fluoro. Most appropriate first action?
+            <ul class="mcq-options">
+                <li>A. Reduce PEEP to minimize lung overdistension</li>
+                <li>B. Mark the distal EWC tip on the CBCT volume and adjust to AF angles</li>
+                <li>C. Increase sweep time</li>
+                <li>D. Switch to lateral CXR</li>
+                <li>E. Proceed with biopsy</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Marking the tip and selecting optimal AF views help translate breath-hold acquisition to ventilated conditions.</p>
+        </li>
+        <li>
+            Which ventilation maneuver best reduces atelectasis-related divergence?
+            <ul class="mcq-options">
+                <li>A. Low tidal volume with zero PEEP</li>
+                <li>B. High tidal volume with PEEP ≥10 cm H₂O and inspiratory breath-holds for imaging</li>
+                <li>C. Hyperventilation with low FiO₂ only</li>
+                <li>D. Apneic oxygenation without breath-hold</li>
+                <li>E. Extubation between spins</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Higher volumes and adequate PEEP keep lungs open; breath-hold stabilizes the target.</p>
+        </li>
+        <li>
+            Radiation awareness: Approximate typical effective dose for chest DTS?
+            <ul class="mcq-options">
+                <li>A. 0.02 mSv</li>
+                <li>B. 0.1–0.2 mSv</li>
+                <li>C. 1.5 mSv</li>
+                <li>D. 2–2.5 mSv</li>
+                <li>E. 4–8 mSv</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Chest DTS is typically ~0.1–0.2 mSv.</p>
+        </li>
+        <li>
+            A center has mobile CBCT and robotic bronchoscopy. Which is true?
+            <ul class="mcq-options">
+                <li>A. Mobile CBCT cannot generate 3D volumes</li>
+                <li>B. Mobile CBCT currently lacks native AF but can verify tool-in-lesion and update the navigation plan</li>
+                <li>C. Mobile CBCT always has lower motion artifact than fixed CBCT</li>
+                <li>D. Mobile CBCT requires 360° spins ≥60 s in all systems</li>
+                <li>E. Mobile CBCT precludes integration with rEBUS</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Mobile systems provide 3D confirmation and increasingly integrate into robotic workflows despite lacking native AF.</p>
+        </li>
+        <li>
+            Troubleshooting: rEBUS is absent; target in lower lobe; obesity present. Best integrated action set?
+            <ul class="mcq-options">
+                <li>A. Increase FiO₂ and wait</li>
+                <li>B. Reduce PEEP; use lateral CXR</li>
+                <li>C. Raise PEEP, perform inspiratory breath-hold, repeat DTS/CBCT to re-register, and consider quick confirmatory spin</li>
+                <li>D. Abort procedure</li>
+                <li>E. Proceed with transbronchial cryobiopsy without imaging</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: C.</strong> Optimize ventilation and re-image to correct divergence; lower lobes and obesity are high-risk for atelectasis.</p>
+        </li>
+        <li>
+            Which feature is characteristic of the Galaxy system’s integrated imaging?
+            <ul class="mcq-options">
+                <li>A. No real-time imaging capability</li>
+                <li>B. Tool-in-Lesion Tomosynthesis (TiLT+) with cross-hair targeting</li>
+                <li>C. Requires a 6-mm working channel</li>
+                <li>D. Only works with fixed CBCT</li>
+                <li>E. Prohibits breath-hold maneuvers</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Galaxy integrates DTS (TiLT+) to visualize lesion relative to the scope tip.</p>
+        </li>
+        <li>
+            Evidence signal: In comparative cohorts, yields for DTS-corrected ENB vs. shape-sensing robotic bronchoscopy were approximately:
+            <ul class="mcq-options">
+                <li>A. 50% vs 55%</li>
+                <li>B. 70% vs 55%</li>
+                <li>C. 80% vs 77% with no significant difference</li>
+                <li>D. 93% vs 70% favoring DTS</li>
+                <li>E. 60% vs 90% favoring robotic</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: C.</strong> Similar yields (~80% vs ~77%) without statistically significant difference in some cohorts.</p>
+        </li>
+        <li>
+            Randomized data comparing navigational bronchoscopy and CT-guided TTNB (initial results) suggest:
+            <ul class="mcq-options">
+                <li>A. TTNB has higher yield and fewer complications</li>
+                <li>B. Navigational bronchoscopy has higher yield but more complications</li>
+                <li>C. Similar diagnostic yield, with fewer complications for navigational bronchoscopy</li>
+                <li>D. Bronchoscopy is inferior and riskier</li>
+                <li>E. No data exist</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: C.</strong> Early randomized results show comparable yield and lower complication rates with bronchoscopy.</p>
+        </li>
+        <li>
+            Workflow sequencing for CBCT-AF navigation:
+            <ul class="mcq-options">
+                <li>A. Spin after sampling to confirm yield</li>
+                <li>B. Spin first with bronchoscope in or near target subsegment, segment lesion and tool, then use AF to guide positioning and confirm with rEBUS/second spin</li>
+                <li>C. Avoid marking tools due to overlay confusion</li>
+                <li>D. Prefer exhalation breath-holds</li>
+                <li>E. Spin only if rEBUS is central</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Position instruments near the target before the first spin; segment lesion and tool; use AF and confirm.</p>
+        </li>
+        <li>
+            Dose comparison pitfall: Which pairing is correct?
+            <ul class="mcq-options">
+                <li>A. DTS ≈ 4–8 mSv; CBCT ≈ 0.02 mSv</li>
+                <li>B. DTS ≈ 0.1–0.2 mSv; CBCT ≈ 2–2.5 mSv</li>
+                <li>C. DTS ≈ 1.5 mSv; CBCT ≈ 0.15 mSv</li>
+                <li>D. DTS ≈ 2–2.5 mSv; CBCT ≈ 0.1–0.2 mSv</li>
+                <li>E. Both exceed 8 mSv routinely</li>
+            </ul>
+            <p class="answer-block"><strong>Answer: B.</strong> Typical chest DTS is ~0.1–0.2 mSv; CBCT commonly ~2–2.5 mSv per acquisition.</p>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>DTS vs. CBCT:</strong> DTS offers speed, low dose, and broad C-arm compatibility but has limited depth resolution and susceptibility to motion; CBCT provides robust 3D and AF (fixed systems) at higher dose and cost. Head-to-head studies and standardized definitions of yield continue to evolve.</li>
+        <li><strong>Fixed vs. Mobile CBCT:</strong> Fixed systems provide AF and shorter spins; mobile systems increase access and integration with robotics but currently lack native AF and may have longer spin times.</li>
+        <li><strong>What counts as “diagnostic yield”?</strong> Strict vs. intermediate definitions (e.g., how nonspecific benign results are adjudicated) influence reported yields; interpretation varies across studies.</li>
+        <li><strong>Optimal ventilation strategy:</strong> Protocols supporting high PEEP/tidal volumes and breath-holds reduce atelectasis; institutional adoption varies but strongly affects image quality and yield.</li>
+        <li><strong>Therapies beyond diagnosis:</strong> CBCT guidance is essential for precise local treatments; standardized pathways and comparative outcomes are being defined.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Take-Home Checklist</h3>
+    <ul>
+        <li>Confirm resource stack (fixed CBCT/AF &rarr; mobile CBCT &rarr; DTS) before scheduling.</li>
+        <li>Acquire thin-slice planning CT (per platform recommendations).</li>
+        <li>Use general anesthesia, neuromuscular blockade as needed, PEEP &ge;10 cm H<sub>2</sub>O, and plan inspiratory breath-holds for imaging.</li>
+        <li>Position instruments near the target before first spin/sweep.</li>
+        <li>For CBCT-AF: segment the lesion and mark the tool tip; pick progression/angulation AF views.</li>
+        <li>For DTS: perform the limited-angle sweep and re-register the target/tool.</li>
+        <li>Always confirm tool-in-lesion (rEBUS &plusmn; imaging) before sampling.</li>
+        <li>Sample multiple locations within the lesion; use ROSE when available.</li>
+        <li>If misaligned: re-image quickly, correct trajectory, and repeat.</li>
+        <li>Minimize motion and clutter; remove scattering objects from the field.</li>
+        <li>Monitor for complications; pneumothorax is uncommon but must be recognized early.</li>
+        <li>Document dose metrics and imaging steps for quality improvement.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <dl>
+            <dt>AF</dt> <dd>Augmented fluoroscopy (3D overlay on live fluoro)</dd>
+            <dt>CBCT</dt> <dd>Cone-beam computed tomography (3D imaging from a rotational cone-beam)</dd>
+            <dt>CT-to-body divergence</dt> <dd>Mismatch between planning CT target position and intraprocedural anatomy</dd>
+            <dt>DTS</dt> <dd>Digital tomosynthesis (limited-angle sweep reconstruction)</dd>
+            <dt>EWC</dt> <dd>Extended working channel</dd>
+            <dt>ENB</dt> <dd>Electromagnetic navigation bronchoscopy</dd>
+            <dt>rEBUS</dt> <dd>Radial endobronchial ultrasound</dd>
+            <dt>ROSE</dt> <dd>Rapid on-site evaluation</dd>
+            <dt>TiLT+</dt> <dd>Tool-in-Lesion Tomosynthesis (Galaxy system)</dd>
+            <dt>TTNB</dt> <dd>Transthoracic needle biopsy</dd>
+            <dt>WC</dt> <dd>Working channel (bronchoscope)</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <ol>
+            <li>Dobbins JT, Godfrey DJ. Digital x-ray tomosynthesis: current state of the art and clinical potential. Phys Med Biol. 2003;48(19):R65-106.</li>
+            <li>Brenner DJ, Hall EJ. Computed tomography—an increasing source of radiation exposure. N Engl J Med. 2007;357(22):2277-2284.</li>
+            <li>Dobbins JT, McAdams HP, Godfrey DJ, Li CM. Digital tomosynthesis of the chest. J Thorac Imaging. 2008;23(2):86-92.</li>
+            <li>Aboudara M, Roller L, Rickman O, et al. Improved diagnostic yield for lung nodules with digital tomosynthesis-corrected navigational bronchoscopy: initial experience with a novel adjunct. Respirology. 2020;25(2):206-213.</li>
+            <li>Avasarala SK, Roller L, Katsis J, et al. Sight unseen: diagnostic yield and safety outcomes of a novel multimodality navigation bronchoscopy platform with real-time target acquisition. Respiration. 2022;101(2):166-173.</li>
+            <li>Dunn BK, Blaj M, Stahl J, et al. Evaluation of electromagnetic navigational bronchoscopy using tomosynthesis-assisted visualization, intraprocedural positional correction and continuous guidance for evaluation of peripheral pulmonary nodules. J Bronchol Interv Pulmonol. 2023;30(1):16-23.</li>
+            <li>Low SW, Lentz RJ, Chen H, et al. Shape-sensing robotic-assisted bronchoscopy vs digital tomosynthesis-corrected electromagnetic navigation bronchoscopy: a comparative cohort study of diagnostic performance. Chest. 2023;163(4):977-984.</li>
+            <li>Lentz RJ, Frederick-Dyer K, Planz VB, et al. Navigational bronchoscopy or transthoracic needle biopsy for lung nodules. N Engl J Med. 2025;392(21):2100-2112.</li>
+            <li>Pritchett MA, Schampaert S, de Groot JAH, Schirmer CC, van der Bom I. Cone-beam CT with augmented fluoroscopy combined with electromagnetic navigation bronchoscopy for biopsy of pulmonary nodules. J Bronchol Interv Pulmonol. 2018;25(4):274-282.</li>
+            <li>Casal RF, Sarkiss M, Jones AK, et al. Cone-beam computed tomography-guided thin/ultrathin bronchoscopy for diagnosis of peripheral lung nodules: a prospective pilot study. J Thorac Dis. 2018;10(12):6950-6959.</li>
+            <li>Verhoeven RLJ, Futterer JJ, Hoefsloot W, van der Heijden E. Cone-beam CT image guidance with and without electromagnetic navigation bronchoscopy for biopsy of peripheral pulmonary lesions. J Bronchol Interv Pulmonol. 2021;28(1):60-69.</li>
+            <li>Verhoeven RLJ, van der Sterren W, Kong W, et al. Cone-beam CT and augmented fluoroscopy-guided navigation bronchoscopy: radiation exposure and diagnostic accuracy learning curves. J Bronchol Interv Pulmonol. 2021;28(4):262-271.</li>
+            <li>Yu KL, Yang SM, Ko HJ, et al. Efficacy and safety of cone-beam computed tomography-derived augmented fluoroscopy combined with endobronchial ultrasound in peripheral pulmonary lesions. Respiration. 2021;100(6):538-546.</li>
+            <li>Lin CK, Fan HJ, Yao ZH, et al. Cone-beam computed tomography-derived augmented fluoroscopy improves the diagnostic yield of endobronchial ultrasound-guided transbronchial biopsy for peripheral pulmonary lesions. Diagnostics. 2021;12(1):41.</li>
+            <li>Kops SEP, Heus P, Korevaar DA, et al. Diagnostic yield and safety of navigation bronchoscopy: a systematic review and meta-analysis. Lung Cancer. 2023;180:107196.</li>
+            <li>Wijma IN, Casal RF, Cheng GZ, et al. Radiation principles, protection and reporting for interventional pulmonology: a WABIP White Paper. Respiration. 2024;103(11):707-722.</li>
+            <li>Bhadra K, Rickman OB, Mahajan AK, Hogarth DK. “Tool-in-lesion” accuracy of Galaxy System—a robotic electromagnetic navigation bronchoscopy with integrated tool-in-lesion tomosynthesis technology: the MATCH study. J Bronchol Interv Pulmonol. 2024;31(1):23-29.</li>
+            <li>Saghaie T, Williamson JP, Phillips M, et al. First-in-human use of a new robotic electromagnetic navigation bronchoscopic platform with integrated Tool-in-Lesion Tomosynthesis (TiLT) technology for peripheral pulmonary lesions: the FRONTIER study. Respirology. 2024;29:969-975.</li>
+            <li>Salahuddin M, Sarkiss M, Sagar A-ES, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia: a multicenter randomized controlled trial. Chest. 2022;162(6):1393-1401.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

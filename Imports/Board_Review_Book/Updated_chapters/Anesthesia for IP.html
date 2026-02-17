@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anesthesia for IP</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Anesthesia for IP</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers anesthetic and airway strategies for Interventional Pulmonology (IP) procedures, with an emphasis on endobronchial ultrasound (EBUS), peripheral bronchoscopy (including robotic platforms), rigid bronchoscopy for central airway obstruction, and bronchoscopic lung volume reduction (BLVR). Domains include sedation strategy and monitoring, airway device selection, ventilatory approaches to minimize atelectasis, oxygen management during thermal and non-thermal therapies, mediastinal mass considerations, pleuroscopy/MAC anesthesia, and complication prevention and rescue.</p>
+
+    <hr>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Choose an anesthetic plan and airway device tailored to EBUS, peripheral navigation/biopsy, therapeutic rigid bronchoscopy, and BLVR.</li>
+        <li>Apply ventilatory strategies (PEEP, FiO₂ titration, recruitment maneuvers) that reduce atelectasis and improve peripheral bronchoscopy performance.</li>
+        <li>Integrate oxygen safety rules for thermal ablation and newer modalities and mitigate pneumothorax risk during BLVR.</li>
+        <li>Anticipate and manage challenges in mediastinal mass, severe COPD/hyperinflation, and high aspiration risk.</li>
+        <li>Execute crisis responses for hypoxemia, air-trapping, airway fire risk, and massive hemoptysis.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High-Yield One-Pager</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Sedation continuum</strong> is defined by responsiveness, not drug choice. Use MOAA/S, RASS, or Ramsay scales to target depth.</li>
+            <li><strong>Topical lidocaine</strong> reduces cough and sedation requirements; avoid benzocaine/tetracaine due to methemoglobinemia risk.</li>
+            <li><strong>Midazolam</strong> (preferred benzodiazepine) + fentanyl provides synergistic sedation/analgesia when moderate sedation is appropriate.</li>
+            <li>Routine anticholinergics (atropine/glycopyrrolate) are not recommended for routine secretion management or lung function in bronchoscopy.</li>
+            <li><strong>Airway device selection matters:</strong>
+                <ul>
+                    <li><strong>LMA:</strong> Excellent access to the upper trachea, but less secure if there is a risk of bleeding or aspiration.</li>
+                    <li><strong>ETT:</strong> Most secure and best for high bleeding risk; use ≥8.0–8.5 mm ID for EBUS to preserve ventilation space around the scope.</li>
+                    <li><strong>Rigid Bronchoscope:</strong> The therapeutic workhorse for central obstruction and bleeding control.</li>
+                </ul>
+            </li>
+            <li><strong>EBUS Sedation:</strong> Moderate or deep sedation is acceptable; there is no universal mandate for an artificial airway.</li>
+            <li><strong>Atelectasis</strong> is common under General Anesthesia (GA) and degrades peripheral yield. Risk rises with time and BMI; prevention is a key testable concept.</li>
+            <li>Two validated strategies to reduce intraprocedural atelectasis:
+                <ul>
+                    <li><strong>VESPA:</strong> ETT, immediate recruitment, PEEP 8–10 cmH₂O, FiO₂ &lt;100%.</li>
+                    <li><strong>LNVP:</strong> ETT, post-intubation recruitment, higher PEEP targets (up to 15–20 cmH₂O by lobe), tidal volumes 10–12 mL/kg IBW, brief breath-holds for imaging.</li>
+                </ul>
+            </li>
+            <li><strong>Thermal modalities</strong> (laser/electrocautery/APC): Keep FiO₂ &lt;0.40 to prevent airway fire.</li>
+            <li><strong>Spray Cryotherapy:</strong> Disconnect the circuit to allow gas egress; pre-oxygenate before each spray; watch for barotrauma/gas embolism.</li>
+            <li><strong>BLVR:</strong> Most centers use GA with ETT. Use low tidal volumes, long expiratory times, and the lowest tolerable FiO₂ during valve deployment to lower pneumothorax risk.</li>
+            <li><strong>Mediastinal Mass:</strong> Positive-pressure ventilation with neuromuscular blockade can be safe; avoid hyperinflation by strictly prolonging expiration.</li>
+            <li><strong>Massive Hemoptysis Algorithm:</strong> Bleeding side down → isolate lung (large ETT + blocker or DLT) → rigid bronchoscopy for stabilization → definitive therapy (e.g., embolization).</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Atelectasis under GA develops quickly, especially in dependent segments. It blurs targets, causes CT-to-body divergence, and reduces navigation accuracy. In a prospective cohort, most patients developed dependent segment atelectasis within ~30 minutes of induction; higher BMI and longer duration increased risk.</p>
+    <p>COPD/Hyperinflation complicates BLVR and central airway procedures: incomplete exhalation increases auto-PEEP, causes hypotension, and raises barotrauma risk.</p>
+    <p>Mediastinal masses can compress airway and vascular structures; dynamic changes during ventilation require vigilant planning and titration.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <ul>
+        <li><strong>Moderate Sedation:</strong> Suitable for simple diagnostic bronchoscopy and selected EBUS in stable patients without high aspiration/bleeding risk.</li>
+        <li><strong>Deep Sedation/GA:</strong> Required for advanced peripheral navigation (including robotic), therapeutic debulking/stenting, rigid bronchoscopy, BLVR, high bleeding risk, challenging airways, or prolonged procedures.</li>
+        <li><strong>Relative Contraindications to LMA:</strong> High aspiration risk, anticipated major bleeding, or the need to access subglottic/proximal tracheal pathology securely.</li>
+    </ul>
+
+    <h4>Pre-procedure Evaluation</h4>
+    <ul>
+        <li><strong>Airway & Aspiration Risk:</strong> NPO optimization; identify reflux, gastroparesis, or "full stomach" risk factors.</li>
+        <li><strong>Review Chest CT:</strong> Scrutinize carefully for EBUS and central lesions. Note that an ETT can obscure upper tracheal targets and high mediastinal stations; transoral approaches without an artificial airway require a bite block.</li>
+        <li><strong>Sedation Targets:</strong> Choose and document a MOAA/S or RASS target.</li>
+        <li><strong>Adjuncts:</strong> Apply topical lidocaine to the airway; avoid benzocaine/tetracaine.</li>
+        <li><strong>Mediastinal Mass:</strong> Assess airway caliber and hemodynamic risk; plan rescue (rigid scope, ECMO readiness depending on center capabilities).</li>
+    </ul>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>Airway Devices:</strong>
+            <ul>
+                <li><strong>LMA (2nd generation preferred):</strong> For advanced diagnostic work where good tracheal access is needed.</li>
+                <li><strong>ETT:</strong> ≥8.0–8.5 mm ID when using EBUS scopes to maintain a ventilation lumen; ≥8.5–9.0 mm improves the margin for gas exchange.</li>
+                <li><strong>Rigid Bronchoscope:</strong> Enables simultaneous ventilation and passage of rigid tools; essential for silicone stent deployment and bleeding control.</li>
+            </ul>
+        </li>
+        <li><strong>Ventilation:</strong> Modern anesthesia ventilators; jet ventilator available for rigid bronchoscopy.</li>
+        <li><strong>Thermal/Cryotherapy Safety:</strong> Oxygen blender at the field; suction; saline; airway fire plan.</li>
+    </ul>
+
+    <h4>Step-by-Step Technique / Procedural Checklist</h4>
+    <ol>
+        <li><strong>Team Brief:</strong> Confirm procedure goals, expected depth of sedation, airway device, ventilation plan, and fire/bleeding contingency.</li>
+        <li><strong>Sedation Plan:</strong>
+            <ul>
+                <li><em>Moderate:</em> Midazolam + fentanyl; titrate to scale.</li>
+                <li><em>Deep/GA:</em> TIVA is favored (stable depth despite suction/open circuits); use neuromuscular blockade when a motion-free field is essential.</li>
+            </ul>
+        </li>
+        <li><strong>Airway Device Placement:</strong> Select based on procedure type and bleeding/aspiration risk.</li>
+        <li><strong>Ventilation Setup:</strong>
+            <ul>
+                <li><em>Peripheral Bronchoscopy:</em> Choose VESPA or LNVP-style settings (see algorithms).</li>
+                <li><em>Rigid Bronchoscopy:</em> Set jet or mechanical ventilation and manage leak mitigation (packing, caps).</li>
+            </ul>
+        </li>
+        <li><strong>Oxygen Policy:</strong>
+            <ul>
+                <li><em>Thermal Ablation:</em> FiO₂ &lt;0.40 during energy delivery.</li>
+                <li><em>BLVR:</em> Use lowest tolerable FiO₂ during valve deployment.</li>
+            </ul>
+        </li>
+        <li><strong>Intra-procedure:</strong> Minimize wedging; monitor for rising airway pressures; repeat recruitment if the circuit is opened (where protocolized).</li>
+        <li><strong>Extubation & Recovery:</strong> Treat cough (topical lidocaine, short-acting opioids as needed); monitor for pneumothorax or hypoventilation.</li>
+    </ol>
+
+    <h4>Troubleshooting & Intra-procedure Management</h4>
+    <ul>
+        <li><strong>Hypoxemia during peripheral bronchoscopy:</strong> Confirm FiO₂/PEEP settings, perform recruitment maneuver, suction mucous plugs, avoid over-wedging, and consider repositioning.</li>
+        <li><strong>Hypotension during high PEEP strategies (LNVP):</strong> Reduce PEEP to improve venous return; exclude pneumothorax or pneumomediastinum; administer fluids/vasopressors as needed.</li>
+        <li><strong>Bronchospasm:</strong> Administer volatile bronchodilator (brief sevoflurane run) or bronchodilator via the bronchoscope; deepen anesthesia.</li>
+        <li><strong>Airway Fire Prevention:</strong> Maintain FiO₂ &lt;0.40, communicate clearly before energy activation, and pause oxygen briefly if needed.</li>
+        <li><strong>Air-trapping in central obstruction:</strong> Lengthen expiratory time (I:E 1:3 or longer), consider brief disconnection, and suction distal to the lesion to deflate trapped gas.</li>
+        <li><strong>Spray Cryotherapy:</strong> Disconnect ventilator (cuff down or LMA/rigid port open) to allow gas egress; resume oxygenation between cycles.</li>
+        <li><strong>Massive Hemoptysis:</strong> Place patient bleeding-side-down; secure and isolate airway (large ETT + blocker or DLT); transition to rigid bronchoscopy; plan definitive hemostasis (e.g., embolization).</li>
+    </ul>
+
+    <h4>Post-procedure Care & Follow-up</h4>
+    <ul>
+        <li><strong>Peripheral/BLVR:</strong> Observe for pneumothorax (especially after BLVR), hypoventilation, and delayed desaturation.</li>
+        <li><strong>Thermal Therapy:</strong> Reassess for delayed airway edema or secretions; ensure safe FiO₂ in PACU if re-instrumentation is likely.</li>
+        <li><strong>High-PEEP Cases:</strong> Continue hemodynamic surveillance until PEEP is normalized.</li>
+    </ul>
+
+    <h4>Complications (Prevention, Recognition, Management)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Complication</th>
+                <th>Prevention/Management</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Atelectasis</strong></td>
+                <td>Prevent with PEEP and recruitment; minimize FiO₂; shorten time under GA before navigation.</td>
+            </tr>
+            <tr>
+                <td><strong>Pneumothorax / Pneumomediastinum</strong></td>
+                <td>More likely with high PEEP or aggressive breath-holds; treat promptly with decompression when indicated.</td>
+            </tr>
+            <tr>
+                <td><strong>Airway Fire</strong></td>
+                <td>Strict FiO₂ control during thermal energy use.</td>
+            </tr>
+            <tr>
+                <td><strong>Bleeding</strong></td>
+                <td>Prepare topical agents; tamponade with rigid scope; isolate lung if massive; escalate to IR/surgery.</td>
+            </tr>
+            <tr>
+                <td><strong>Hypercapnia / Air-trapping</strong></td>
+                <td>Adjust I:E ratio, reduce respiratory rate, suction beyond lesion.</td>
+            </tr>
+            <tr>
+                <td><strong>Aspiration</strong></td>
+                <td>Mitigate with NPO status, semi-upright induction, rapid sequence when indicated, gastric suction via SGA with drain channel.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Special Populations</h4>
+    <ul>
+        <li><strong>Mediastinal Mass:</strong> GA with neuromuscular blockade and positive pressure can widen the airway; the key is to prevent hyperinflation—use low rates and prolonged exhalation. Have a rigid bronchoscope available; discuss rescue options (including ECMO in select centers).</li>
+        <li><strong>Severe COPD / BLVR Candidates:</strong> Favor low tidal volumes (≈6–8 mL/kg), long expiratory times (I:E ≈1:3), and volume-controlled ventilation; anticipate hypoxemia during collateral ventilation assessment.</li>
+        <li><strong>Obesity:</strong> Higher PEEP may be needed to prevent airway closure; watch for hemodynamic effects.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Evidence & Outcomes (Key Data You Should Know)</h3>
+    <ul>
+        <li><strong>EBUS Sedation:</strong> Both moderate and deep sedation are acceptable; there is no universal airway mandate.</li>
+        <li><strong>Atelectasis Incidence under GA:</strong> High in dependent segments within ~30–40 minutes; risk increases with BMI and time.</li>
+        <li><strong>VESPA (Randomized Trial):</strong> ETT with immediate recruitment + PEEP 8–10 + FiO₂ &lt;100% markedly reduces atelectasis vs. LMA with 100% FiO₂ and 0 PEEP, without increasing complications.</li>
+        <li><strong>LNVP (Retrospective/Series):</strong> ETT, recruitment, higher PEEP (10–20 cmH₂O by lobe), Vt 10–12 mL/kg IBW, and imaging breath-holds reduce dependent and lobar atelectasis; hemodynamic vigilance is needed (vasopressor use was common in a larger series).</li>
+        <li><strong>BLVR Anesthesia Patterns:</strong> GA with ETT predominates; low Vt and long expiratory times are typical. Lower FiO₂ during valve deployment was associated with lower pneumothorax rates and delayed onset when it occurred.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Choosing the Airway & Anesthetic Plan for Advanced Bronchoscopy</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Planned procedure"] --> B{"Therapeutic central airway?"}
+        B -- "Yes" --> C["Rigid bronchoscopy"]
+        C --> C1["GA + TIVA"]
+        C --> C2["Jet or mechanical ventilation"]
+        C --> C3["FiO2 < 0.40 for thermal"]
+        B -- "No" --> D{"Peripheral navigation/biopsy?"}
+        D -- "Yes" --> E["GA + ETT ≥8–8.5 mm"]
+        E --> E1["Choose VESPA or LNVP settings"]
+        E --> E2["Recruitment + PEEP + low FiO2"]
+        D -- "No" --> F{"EBUS?"}
+        F -- "Yes" --> G["Moderate or deep sedation"]
+        G --> H{"Bleeding/aspiration risk high?"}
+        H -- "Yes" --> I["GA + ETT ≥8–8.5 mm"]
+        H -- "No" --> J["LMA or natural airway + bite block"]
+        F -- "No" --> K["Simple diagnostic FB"]
+        K --> L["Moderate sedation +/- LMA"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Summary:</strong></p>
+        <ul>
+            <li><strong>Central therapeutic work</strong> (debulking/thermal/stent): Rigid bronchoscopy; GA (TIVA); jet or mechanical ventilation; keep FiO₂ &lt;0.40 for thermal.</li>
+            <li><strong>Peripheral navigation/biopsy:</strong> GA; ETT ≥8.0–8.5 mm; adopt VESPA or LNVP; recruitment and PEEP; FiO₂ as low as tolerable.</li>
+            <li><strong>EBUS:</strong> Moderate or deep sedation acceptable; select LMA/natural airway for upper tracheal access if low risk; choose ETT when aspiration/bleeding risk is high or when stability is essential.</li>
+            <li><strong>Simple flexible bronchoscopy:</strong> Moderate sedation, topical lidocaine, consider LMA for comfort and access.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm 2 — Ventilation to Minimize Atelectasis in Peripheral Bronchoscopy</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Induction & ETT placement"] --> B["Immediate recruitment"]
+        B --> C{"Strategy"}
+        C -- "VESPA" --> D["PEEP 8–10; Vt 6–8 mL/kg IBW; FiO2 <100%"]
+        C -- "LNVP" --> E["PEEP 10–15 (upper/mid), 15–20 (lower); Vt 10–12 mL/kg IBW"]
+        E --> F["Breath-holds with APL≈PEEP for imaging"]
+        D --> G{"Hemodynamics stable?"}
+        E --> G
+        G -- "No" --> H["Lower PEEP; fluids; vasopressors; rule out PTX/PM"]
+        G -- "Yes" --> I["Proceed to navigation/biopsy"]
+        I --> J["Re-recruit if circuit opened or cuff deflated"]
+        J --> K["Minimize wedging; suction plugs"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Summary:</strong></p>
+        <ul>
+            <li>After ETT, perform recruitment.</li>
+            <li><strong>VESPA option:</strong> Vt 6–8 mL/kg IBW; PEEP 8–10; titrate FiO₂ below 1.0.</li>
+            <li><strong>LNVP option:</strong> Vt 10–12 mL/kg IBW; PEEP 10–15 cmH₂O (upper/middle) and 15–20 (lower); brief imaging breath-holds with APL ≈ PEEP.</li>
+            <li><strong>If hypotension occurs:</strong> Reduce PEEP; give fluids/vasopressors; exclude pneumothorax/pneumomediastinum.</li>
+            <li><strong>During procedure:</strong> Minimize scope wedging; suction selectively; re-recruit after any disconnection.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm 3 — BLVR Oxygen & Ventilation</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["GA + large ETT"] --> B["Volume control; Vt 6–8 mL/kg; I:E≈1:3"]
+        B --> C["Set FiO2 to lowest tolerable for valve deployment"]
+        C --> D["Monitor for hypotension/auto-PEEP"]
+        D -- "If present" --> E["Lower RR; lengthen expiratory time; reassess"]
+        D -- "If absent" --> F["Proceed; consider Vt reduction post-valve"]
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. Sedation Continuum & What You Must Provide</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Depth</th>
+                <th>Responsiveness</th>
+                <th>Ventilation</th>
+                <th>Airway</th>
+                <th>Cardiovascular</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Minimal</td>
+                <td>Normal response to verbal</td>
+                <td>Unaffected</td>
+                <td>Unaffected</td>
+                <td>Unaffected</td>
+            </tr>
+            <tr>
+                <td>Moderate</td>
+                <td>Purposeful response to verbal/tactile</td>
+                <td>Adequate</td>
+                <td>No intervention</td>
+                <td>Usually maintained</td>
+            </tr>
+            <tr>
+                <td>Deep</td>
+                <td>Purposeful response to painful</td>
+                <td>May be inadequate</td>
+                <td>Intervention may be needed</td>
+                <td>Usually maintained</td>
+            </tr>
+            <tr>
+                <td>General Anesthesia</td>
+                <td>Unarousable</td>
+                <td>Frequently inadequate</td>
+                <td>Intervention often required</td>
+                <td>May be impaired</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. Airway Device Selection in Bronchoscopy</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Device</th>
+                <th>Advantages</th>
+                <th>Limitations</th>
+                <th>Typical Uses</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Natural airway (bite block)</td>
+                <td>No extra equipment; quick</td>
+                <td>Limited sedation depth; no control if bleeding</td>
+                <td>Brief diagnostic scopes</td>
+            </tr>
+            <tr>
+                <td>LMA (2nd gen)</td>
+                <td>GA possible; adjustable ventilation; excellent access to upper trachea</td>
+                <td>Aspiration risk; less secure in major bleeding</td>
+                <td>EBUS, foreign body removal, BLVR (select centers)</td>
+            </tr>
+            <tr>
+                <td>ETT (≥8–8.5 mm)</td>
+                <td>Most secure; full ventilator control; better for bleeding</td>
+                <td>Limited access to proximal trachea; tube may obstruct upper stations</td>
+                <td>Therapeutic bronchoscopy; EBUS when risk is high</td>
+            </tr>
+            <tr>
+                <td>Rigid Bronchoscope</td>
+                <td>Airway stabilization, tamponade; deploy silicone stents; pass large instruments</td>
+                <td>Requires expertise; unique ventilation setup</td>
+                <td>Central airway obstruction, massive hemoptysis</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Ventilation Protocols to Reduce Atelectasis</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Protocol</th>
+                <th>Airway</th>
+                <th>Vt (mL/kg IBW)</th>
+                <th>PEEP (cmH₂O)</th>
+                <th>FiO₂</th>
+                <th>Recruitment</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Conventional</td>
+                <td>Often LMA</td>
+                <td>Variable</td>
+                <td>0–5</td>
+                <td>Often 1.0</td>
+                <td>None/variable</td>
+                <td>Higher atelectasis; target obscuration more frequent</td>
+            </tr>
+            <tr>
+                <td>VESPA</td>
+                <td>ETT</td>
+                <td>6–8</td>
+                <td>8–10</td>
+                <td>&lt;100%</td>
+                <td>Immediate post-intubation</td>
+                <td>Major reduction in uni/bilateral atelectasis without extra complications</td>
+            </tr>
+            <tr>
+                <td>LNVP</td>
+                <td>ETT</td>
+                <td>10–12</td>
+                <td>10–15 (upper/mid); 15–20 (lower)</td>
+                <td>Lowest tolerable</td>
+                <td>Four post-intubation maneuvers; breath-holds</td>
+                <td>Lower atelectasis; hemodynamic vigilance (vasopressor use not uncommon)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <p><strong>Case 1:</strong> A 68-year-old with a 15-mm RLL nodule undergoes robotic bronchoscopy under GA. Thirty minutes in, the nodule is no longer visible on imaging; BMI is 36. Which single change best restores visibility?</p>
+        <p>A. Increase FiO₂ to 1.0<br>
+        B. Add PEEP to 10 cmH₂O and perform a recruitment maneuver<br>
+        C. Increase Vt to 15 mL/kg<br>
+        D. Switch to an LMA<br>
+        E. Stop paralysis</p>
+        <p><strong>Answer: B.</strong> Dependent atelectasis is common under GA, especially with higher BMI and prolonged duration. Recruitment and adequate PEEP improve aeration and target visualization.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Case 2:</strong> A 60-year-old with central airway obstruction requires thermal debulking. During activation, a brief flame appears at the tip. The next best step?</p>
+        <p>A. Increase FiO₂ to 1.0<br>
+        B. Continue energy to finish quickly<br>
+        C. Stop gas flow and suction; ensure FiO₂ &lt;0.40 before resuming<br>
+        D. Instill epinephrine solution<br>
+        E. Abort the case</p>
+        <p><strong>Answer: C.</strong> Airway fire prevention requires FiO₂ restriction. Stop energy, ensure low inspired oxygen, and re-establish a safe field before resuming.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank (MCQs)</h3>
+    <p><strong>A patient is scheduled for diagnostic bronchoscopy with moderate sedation. What defines the sedation level?</strong><br>
+    A. Use of propofol<br>
+    B. Use of midazolam and fentanyl together<br>
+    C. Patient responsiveness to stimuli<br>
+    D. End-tidal CO₂ value<br>
+    E. Location of care (OR vs suite)<br>
+    <strong>Answer: C.</strong> Sedation levels are defined by patient responsiveness (e.g., MOAA/S, RASS), not the specific drugs.</p>
+
+    <p><strong>For EBUS-TBNA targeting upper mediastinal stations, which airway approach most preserves access?</strong><br>
+    A. 7.0-mm ETT<br>
+    B. 8.5-mm ETT<br>
+    C. LMA<br>
+    D. Double-lumen tube<br>
+    E. 6.0-mm nasal ETT<br>
+    <strong>Answer: C.</strong> An LMA allows superior access to the proximal trachea and upper stations; small ETTs impede scope mobility and ventilation.</p>
+
+    <p><strong>During peripheral bronchoscopy under GA, what factor most strongly correlates with atelectasis development?</strong><br>
+    A. Age<br>
+    B. History of smoking<br>
+    C. BMI and time since induction<br>
+    D. Prior lobectomy<br>
+    E. Gender<br>
+    <strong>Answer: C.</strong> Higher BMI and longer intraoperative time are associated with increased odds of atelectasis.</p>
+
+    <p><strong>In VESPA-style ventilation, the most appropriate immediate step after intubation is:</strong><br>
+    A. Set PEEP to 0 to avoid hypotension<br>
+    B. Recruitment maneuver followed by PEEP 8–10 cmH₂O<br>
+    C. Switch to LMA<br>
+    D. Increase FiO₂ to 1.0 for the entire case<br>
+    E. Set I:E to 1:1<br>
+    <strong>Answer: B.</strong> VESPA uses immediate recruitment, moderate PEEP, and FiO₂ titration (&lt;100%).</p>
+
+    <p><strong>In LNVP, which PEEP target is most appropriate for a right lower lobe lesion?</strong><br>
+    A. 0–5 cmH₂O<br>
+    B. 5–8 cmH₂O<br>
+    C. 8–10 cmH₂O<br>
+    D. 15–20 cmH₂O<br>
+    E. 20–25 cmH₂O<br>
+    <strong>Answer: D.</strong> Lower lobe targets receive higher PEEP (15–20 cmH₂O) to counter dependence.</p>
+
+    <p><strong>You plan thermal ablation for a central airway tumor. Which oxygen target is safest during energy delivery?</strong><br>
+    A. FiO₂ 1.0<br>
+    B. FiO₂ 0.8<br>
+    C. FiO₂ 0.6<br>
+    D. FiO₂ ≤0.40<br>
+    E. Room air is unsafe and should be avoided<br>
+    <strong>Answer: D.</strong> Keep FiO₂ ≤0.40 to reduce airway fire risk during thermal therapy.</p>
+
+    <p><strong>For BLVR with endobronchial valves, which intraoperative adjustment is associated with lower post-procedure pneumothorax rates?</strong><br>
+    A. High FiO₂ during deployment<br>
+    B. Lowest tolerable FiO₂ during deployment<br>
+    C. Tidal volumes >10 mL/kg<br>
+    D. Elimination of PEEP<br>
+    E. High respiratory rates<br>
+    <strong>Answer: B.</strong> Lower FiO₂ during valve deployment correlates with reduced pneumothorax incidence and delayed onset when it occurs.</p>
+
+    <p><strong>In rigid bronchoscopy with jet ventilation, which parameter adjustment helps avoid air-trapping in a ball-valve lesion?</strong><br>
+    A. Increase inspiratory time percentage<br>
+    B. Increase frequency to 600/min without other changes<br>
+    C. Decrease inspiratory time and allow longer expiration<br>
+    D. Switch to 100% humidification<br>
+    E. Increase driving pressure<br>
+    <strong>Answer: C.</strong> Shorter inspiratory time and longer expiration facilitate egress through a narrowed airway, reducing hyperinflation.</p>
+
+    <p><strong>A patient with a large anterior mediastinal mass is anesthetized for rigid bronchoscopy. Which strategy best mitigates hemodynamic collapse from hyperinflation?</strong><br>
+    A. High respiratory rate, short expiratory time<br>
+    B. Maintain spontaneous breathing at all costs<br>
+    C. Positive-pressure ventilation with prolonged expiration and low rate<br>
+    D. Use only volatile anesthetics<br>
+    E. Avoid neuromuscular blockade<br>
+    <strong>Answer: C.</strong> Positive pressure can widen the airway; avoid hyperinflation by prolonging expiration and lowering rates. NMB is acceptable.</p>
+
+    <p><strong>During peripheral navigation with LNVP settings, the patient becomes hypotensive. Best next step?</strong><br>
+    A. Increase PEEP to 20 cmH₂O<br>
+    B. Decrease PEEP and assess for pneumothorax/pneumomediastinum<br>
+    C. Increase FiO₂ to 1.0 for the remainder of the case<br>
+    D. Administer esmolol<br>
+    E. Increase tidal volume<br>
+    <strong>Answer: B.</strong> Lower PEEP to improve venous return; rule out barotrauma; support hemodynamics as needed.</p>
+
+    <p><strong>In EBUS using an 8.0-mm ETT, ventilation becomes inadequate when the EBUS scope is inserted. Most practical preventive measure?</strong><br>
+    A. Use a 7.0-mm ETT to reduce friction<br>
+    B. Use LMA instead<br>
+    C. Use ≥8.5–9.0-mm ETT to preserve a larger ventilation lumen<br>
+    D. Switch to awake fiberoptic intubation<br>
+    E. Add atropine<br>
+    <strong>Answer: C.</strong> The large scope occupies much of the tube; a larger ETT preserves the cross-sectional area for gas exchange.</p>
+
+    <p><strong>Massive hemoptysis during flexible bronchoscopy—first two steps?</strong><br>
+    A. Trendelenburg and remove scope<br>
+    B. Bleeding-side-up and positive pressure<br>
+    C. Bleeding-side-down and isolate the airway (large ETT + blocker or DLT)<br>
+    D. Immediate epinephrine nebulization only<br>
+    E. Proceed to chest CT<br>
+    <strong>Answer: C.</strong> Positioning prevents flooding of the healthy lung; isolate the airway and transition to rigid bronchoscopy as needed.</p>
+
+    <hr>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>EBUS Sedation:</strong> Practices vary from moderate to deep sedation to GA; both moderate and deep sedation are acceptable approaches, and no single airway device is mandated.</li>
+        <li><strong>Atelectasis Prevention Strategies (VESPA vs LNVP):</strong> Both reduce atelectasis. LNVP employs higher PEEP and larger tidal volumes with potential hemodynamic trade-offs; VESPA uses lower Vt with moderate PEEP. Choice depends on local expertise, imaging workflow, and hemodynamic tolerance.</li>
+        <li><strong>Mediastinal Mass:</strong> Traditional avoidance of neuromuscular blockade is being challenged; carefully managed positive pressure with prolonged exhalation can be safe and effective.</li>
+        <li><strong>Sedation Agents:</strong> Remimazolam and dexmedetomidine are promising in pleuroscopy and bronchoscopy, but adoption and logistics vary by institution.</li>
+        <li><strong>Emerging Therapies:</strong> Pulsed electrical field ablation and microwave ablation applications are expanding; oxygen management principles (reduce FiO₂ during energy delivery) remain critical.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Take-Home Checklist</h3>
+    <ul>
+        <li>Define the target sedation depth with an objective scale and choose drugs accordingly.</li>
+        <li>Topical lidocaine for cough suppression; avoid benzocaine/tetracaine.</li>
+        <li>Match airway device to procedure and risk (LMA for access; ETT for security; rigid for therapy).</li>
+        <li>For peripheral bronchoscopy, plan recruitment + PEEP and low FiO₂ strategy to prevent atelectasis.</li>
+        <li>Use ≥8.0–8.5 mm ETT for EBUS; consider LMA for proximal tracheal access.</li>
+        <li>During thermal therapy, keep FiO₂ ≤0.40 and communicate before energy activation.</li>
+        <li>For BLVR, use low Vt, long expiratory times, and lowest tolerable FiO₂ during valve deployment.</li>
+        <li>In mediastinal mass, positive pressure with prolonged exhalation and NMB can be safe; prepare rigid scope and rescue pathways.</li>
+        <li>Watch for hemodynamic effects of high PEEP strategies; lower PEEP and evaluate for barotrauma if hypotension occurs.</li>
+        <li>For massive hemoptysis, bleeding-side-down, isolate lung, rigid bronchoscopy, and coordinate definitive therapy.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Abbreviations & Glossary</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>APL</dt><dd>Adjustable pressure-limiting valve</dd>
+            <dt>APC</dt><dd>Argon plasma coagulation</dd>
+            <dt>BLVR</dt><dd>Bronchoscopic lung volume reduction</dd>
+            <dt>CBCT</dt><dd>Cone-beam computed tomography</dd>
+            <dt>DLT</dt><dd>Double-lumen tube</dd>
+            <dt>EBUS</dt><dd>Endobronchial ultrasound</dd>
+            <dt>ETT</dt><dd>Endotracheal tube</dd>
+            <dt>FiO₂</dt><dd>Fraction of inspired oxygen</dd>
+            <dt>GA</dt><dd>General anesthesia</dd>
+            <dt>IBW</dt><dd>Ideal body weight</dd>
+            <dt>IP</dt><dd>Interventional Pulmonology</dd>
+            <dt>LMA</dt><dd>Laryngeal mask airway</dd>
+            <dt>LNVP</dt><dd>Lung navigation ventilation protocol</dd>
+            <dt>MOAA/S</dt><dd>Modified Observer’s Assessment of Alertness/Sedation</dd>
+            <dt>PEEP</dt><dd>Positive end-expiratory pressure</dd>
+            <dt>PEF</dt><dd>Pulsed electrical field</dd>
+            <dt>PM</dt><dd>Pneumomediastinum</dd>
+            <dt>PTX</dt><dd>Pneumothorax</dd>
+            <dt>RASS</dt><dd>Richmond Agitation-Sedation Scale</dd>
+            <dt>rEBUS</dt><dd>Radial endobronchial ultrasound</dd>
+            <dt>TIVA</dt><dd>Total intravenous anesthesia</dd>
+            <dt>Vt</dt><dd>Tidal volume</dd>
+            <dt>VESPA</dt><dd>Ventilatory strategy to prevent atelectasis</dd>
+        </dl>
+    </div>
+
+    <hr>
+
+    <h3>References</h3>
+    <div class="references">
+        <ol>
+            <li>Wahidi MM, Jain P, Jantz M, et al. American College of Chest Physicians consensus statement on the use of topical anesthesia, analgesia, and sedation during flexible bronchoscopy in adult patients. Chest. 2011;140(5):1342-1350.</li>
+            <li>Wahidi MM, Herth F, Yasufuku K, et al. Technical aspects of endobronchial ultrasound-guided transbronchial needle aspiration. Chest. 2016;149(3):816-835.</li>
+            <li>Sagar AS, Sabath BF, Eapen GA, et al. Incidence and location of atelectasis developed during bronchoscopy under general anesthesia: the I-LOCATE trial. Chest. 2020;158(6):2658-2666.</li>
+            <li>Salahuddin M, Sarkiss M, Sagar AS, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia (VESPA). Chest. 2022;162(6):1393-1401.</li>
+            <li>Bhadra K, Setser RM, Condra W, Pritchett MA. Lung navigation ventilation protocol to optimize biopsy of peripheral lung lesions. J Bronchology Interv Pulmonol. 2022;29(1):7-17.</li>
+            <li>Bhadra K, Baleeiro C, Patel S, et al. High tidal volume, high positive end-expiratory pressure and apneic breath-hold strategies (Lung Navigation Ventilation Protocol): results in 100 patients. J Bronchology Interv Pulmonol. 2024;31:105-116.</li>
+            <li>Khan A, Bashour SI, Casal RF. Preventing atelectasis during bronchoscopy under general anesthesia. J Thorac Dis. 2023;15(6):3443-3452.</li>
+            <li>Roodenburg SA, Barends CRM, Krenz G, et al. Safety and considerations of the anaesthetic management during bronchoscopic lung volume reduction treatments. Respiration. 2023;102:55-63.</li>
+            <li>Lentz RJ, Low S-W, Saettele T, et al. Association between inspired oxygen fraction and pneumothorax after endobronchial valve placement for emphysema. Ann Am Thorac Soc. 2023;20(6).</li>
+            <li>Sarkiss M, Eapen GA. Airway management for central airway and transbronchial lung procedures. Curr Anesthesiol Rep. 2022;12:390-397.</li>
+            <li>Sikachi RR, Mishra KL, Anders M. Anesthetic considerations in interventional pulmonology. Curr Opin Pulm Med. 2024;30:99-106.</li>
+            <li>Putz L, Mayné A, Dincq AS. Jet ventilation during rigid bronchoscopy in adults: a focused review. Biomed Res Int. 2016;2016:4234861.</li>
+            <li>Mahajan AK, Patel PP, Garg R, Manley C, Ibrahim O, Mehta AC. Safety of laser and thermal therapy during rigid bronchoscopy using manual hand jet ventilation. Surg Technol Int. 2021;39:103-106.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

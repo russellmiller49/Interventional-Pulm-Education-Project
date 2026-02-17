@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Percutaneous Tracheostomy and Cricothyroidotomy</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <h1>Percutaneous Tracheostomy and Cricothyroidotomy</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers indications, contraindications, patient selection, pre-procedure evaluation, technique, troubleshooting, complications, and post-procedure care for percutaneous dilational tracheostomy (PDT/PT) and cricothyroidotomy. Emphasis is placed on bedside decision-making in the ICU, device options and steps, guidance modalities (bronchoscopy and ultrasound), anticoagulation/antiplatelet management, special populations (obesity, high ventilatory support, coagulopathy, ECMO/COVID), and emergency “can’t intubate, can’t oxygenate” (CICO) rescue with needle, surgical, or percutaneous cricothyroidotomy.</p>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Distinguish PT vs. surgical tracheostomy (ST) regarding setting, outcomes, and complication profiles, and select the best approach for a given ICU patient.</li>
+        <li>Perform a structured pre-procedure evaluation (anatomy, coagulopathy, ventilatory support, hemodynamics) and plan guidance (bronchoscopy ± ultrasound).</li>
+        <li>Execute a step-by-step PT with bronchoscopic confirmation, and manage common intra-procedure issues (posterior wall contact, loss of airway, bleeding).</li>
+        <li>Recognize, prevent, and treat early and late complications of tracheostomy, including tracheo-innominate fistula (TIF) and tracheal stenosis.</li>
+        <li>Choose and perform the appropriate cricothyroidotomy technique for CICO; know age-specific considerations and when to convert to tracheostomy.</li>
+        <li>Apply evidence on timing of tracheostomy, sedation/weaning implications, and decannulation workflows.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h4>High-Yield One-Pager</h4>
+        <ul>
+            <li><strong>PT vs. ST:</strong> Overall complication rates are similar. PT has lower wound infection rates, shorter procedure times, and lower costs. Bleeding risk is generally comparable.</li>
+            <li><strong>Guidance:</strong> Bronchoscopic guidance improves first-pass success and reduces complications. Ultrasound adds value for anatomy/vascular mapping and may reduce major bleeding.</li>
+            <li><strong>Puncture site:</strong> Midline between the 1st–2nd or 2nd–3rd tracheal rings under bronchoscopy; keep the endotracheal tube (ETT) just below the cricoid during puncture.</li>
+            <li><strong>Coagulopathy:</strong> Aim for INR &lt;1.5 and platelets &gt;50 × 10⁹/L (transfuse if needed). If able, hold clopidogrel ≥5 days; PT can still be done with antiplatelet/anticoagulants in select settings with informed consent.</li>
+            <li><strong>Ventilator settings:</strong> PT is feasible even with higher PEEP; coordinate ETT retraction and minimize disconnections to preserve PEEP.</li>
+            <li><strong>Obesity:</strong> Not a contraindication in expert hands; anticipate a deeper trachea and consider extra-long tracheostomy tubes (XLT).</li>
+            <li><strong>Early complications:</strong> Subcutaneous emphysema (~1.4%), pneumothorax (~0.8%), bleeding, malposition. Manage with bronchoscopy, tube exchange over a guide, and hemostasis.</li>
+            <li><strong>Late complications:</strong> Tracheal stenosis (clinically significant 3–12%), tracheomalacia, tracheo-innominate fistula (TIF &lt;1%—a surgical emergency).</li>
+            <li><strong>Aspiration:</strong> Risk does not fall immediately post-trach; cuff inflation does not prevent micro-aspiration.</li>
+            <li><strong>Weaning benefits:</strong> Tracheostomy reduces work of breathing and airway resistance; it may shorten ICU stay and decrease sedation needs.</li>
+            <li><strong>Timing:</strong> Evidence is mixed. Some analyses show no outcome difference; others favor earlier tracheostomy for more ventilator-free days and shorter ICU stays—individualize based on patient trajectory.</li>
+            <li><strong>CICO rescue:</strong> The adult default is surgical or percutaneous cricothyroidotomy. In children &lt;10–12y, prefer needle cricothyroidotomy with transtracheal ventilation.</li>
+            <li><strong>Decannulation:</strong> Proceed after ventilator liberation with strong cough and secretion clearance: downsize → speaking valve → cap 48–72h → remove. Scope if intolerance occurs.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Tracheostomy decreases upper airway dead space and resistance, lowering the work of breathing. Many patients tolerate reduced sedation and more aggressive weaning trials post-procedure. These physiologic benefits, alongside improved comfort and communication potential, underpin its role in prolonged ventilation.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>Indications (PT ≈ ST):</strong> Bypass upper airway obstruction; anticipated prolonged ventilation; secretion management/aspiration reduction (supportive but not immediate).</p>
+    <p><strong>Contraindications (contextual):</strong></p>
+    <ul>
+        <li><strong>PT:</strong> True absolute contraindications are limited—safety depends on an experienced operator and appropriate technique. Many “relative” risks can be managed with preparation (e.g., obesity, high PEEP, prior trach, coagulopathy).</li>
+        <li><strong>Practical red flags:</strong> Active infection at the site, unfavorable anatomy with unidentifiable landmarks, severe hemodynamic instability—consider deferral or ST.</li>
+        <li><strong>Cricothyroidotomy:</strong> Primary CICO rescue in adults. Avoid surgical cricothyroidotomy in children &lt;~10y—use needle technique with transtracheal ventilation. Elective cricothyroidotomy is selective and generally avoided after prolonged intubation or with laryngeal pathology due to subglottic injury risk.</li>
+    </ul>
+
+    <h3>Pre-procedure Evaluation</h3>
+    <p><strong>Airway/Anatomy:</strong> Palpate laryngeal landmarks; anticipate depth. Consider ultrasound to locate the thyroid isthmus, anterior jugular veins, and pre-tracheal vessels, and to measure skin-to-trachea distance.</p>
+    <p><strong>Ventilation/Hemodynamics:</strong> Note FiO₂/PEEP and hypotension/vasopressors. PT can be performed at higher PEEP with caution; avoid in patients requiring multiple/high-dose pressors.</p>
+    <p><strong>Coagulation/Medications:</strong> Target INR &lt;1.5 and platelets &gt;50 × 10⁹/L.</p>
+    <ul>
+        <li>Hold heparin infusion ~3h pre and resume ~2h post.</li>
+        <li>Hold SC heparin/enoxaparin 12h (BID) or 24h (daily).</li>
+        <li>Hold clopidogrel ≥5 days if feasible (3–5 days for dual therapy). PT has been performed safely on antiplatelet/anticoagulants with higher minor bleeding but low major bleeding rates.</li>
+    </ul>
+    <p><strong>Consent/Team:</strong> Clarify goals and alternatives. Coordinate operator, bronchoscopist, RT, nurse, and bronch tech. Complete safety checklist and maintain a sterile field.</p>
+
+    <h3>Equipment & Setup</h3>
+    <ul>
+        <li>Common kits include Ciaglia Blue Rhino (single tapered dilator), Griggs (GWDF) forceps dilatation, PercuTwist, and Blue Dolphin balloon.</li>
+        <li>Prepare appropriately sized standard and extra-long tubes.</li>
+        <li>Select a bronchoscope compatible with the ETT inner diameter.</li>
+        <li>Infiltrate local anesthetic (e.g., lidocaine with epinephrine).</li>
+    </ul>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+    <ol>
+        <li><strong>Position:</strong> Supine, shoulder roll, neck extended as tolerated; prep/drape.</li>
+        <li><strong>Airway Control:</strong> Sedate/analgesia/paralysis as needed; suction airway. Withdraw ETT cuff under bronchoscopy to just below the cricoid; reinflate cuff.</li>
+        <li><strong>Incision:</strong> 1–1.5 cm vertical midline skin incision; blunt dissect to pre-tracheal fascia; identify tracheal rings.</li>
+        <li><strong>Needle Puncture:</strong> Midline between 1st–2nd or 2nd–3rd rings under bronchoscopy; guidewire into trachea directed caudally.</li>
+        <li><strong>Dilatation:</strong> Perform serial/single dilatation (e.g., punch dilator → single tapered dilator with sheath) or forceps dilation (Griggs).</li>
+        <li><strong>Insertion:</strong> Insert trach tube over dilator/sheath; advance into lumen.</li>
+        <li><strong>Confirmation:</strong> Bronchoscopically confirm lumen and carina; keep distal tip ≥~1 inch above carina.</li>
+        <li><strong>Secure:</strong> Ventilate and confirm with ventilator tidal volume and capnography; secure with ties/sutures.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Troubleshooting & Intra-procedure Management</h3>
+    <ul>
+        <li><strong>Posterior wall contact/false tract:</strong> Keep wire midline, caudad, and always under vision. If resistance or desaturation occurs, re-scope and re-establish ETT ventilation before reattempting.</li>
+        <li><strong>Loss of airway in deep neck/obesity:</strong> Use an extra-long tube. Consider an airway exchange catheter and bronchoscopy for difficult re-entries.</li>
+        <li><strong>Bleeding:</strong> Apply local pressure/vasoconstrictor packing. If persistent, explore stoma. For sentinel hemorrhage or brisk bleeding days–weeks later, suspect TIF—hyperinflate cuff, apply digital anterior wall pressure, and consult surgery emergently.</li>
+        <li><strong>High PEEP dependence:</strong> Coordinate brief ETT withdrawal with minimal circuit breaks. Consider a “PEEP-dependency trial” if uncertain.</li>
+    </ul>
+
+    <h3>Post-procedure Care & Follow-up</h3>
+    <p>Humidification, suctioning, inner cannula care, cuff pressure monitoring, and securement checks.</p>
+    <p><strong>Decannulation:</strong> Proceed after ventilator liberation, strong cough, manageable secretions: downsize → speaking valve → cap 48–72h → remove. Perform bronchoscopic assessment if capping failure occurs.</p>
+
+    <h3>Complications (Prevention, Recognition, Management)</h3>
+    <h4>Early (hours–days)</h4>
+    <p>Bleeding, subcutaneous emphysema (~1.4%), pneumothorax (~0.8%), malposition/obstruction (especially with posterior wall apposition).</p>
+    <ul>
+        <li><strong>Prevention:</strong> Midline puncture, bronchoscopy, appropriate tube length.</li>
+        <li><strong>Treatment:</strong> Hemostasis, bronchoscopy, reposition/exchange.</li>
+    </ul>
+    <h4>Late (weeks–months)</h4>
+    <p>Tracheal stenosis (clinically significant 3–12%), tracheomalacia (cuff-related), TIF (&lt;1%), TEF (rare), stomal infection.</p>
+    <ul>
+        <li><strong>Prevention:</strong> Correct ring level (between 1–3), cuff pressure control, and hygiene.</li>
+        <li><strong>Treatment:</strong> TIF is a surgical emergency.</li>
+    </ul>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Obesity:</strong> Evidence supports safety with skilled operators. Anticipate higher malposition risk; choose XLT tubes when skin-to-trachea distance is increased.</li>
+        <li><strong>High ventilatory support/ARDS:</strong> PT is feasible with higher PEEP; there is no consistent oxygenation deterioration when performed carefully.</li>
+        <li><strong>Coagulopathy/antithrombotics:</strong> PT has been performed safely with elevated bleeding risk but low major hemorrhage. Follow periprocedural hold/transfusion strategies. ECMO series report low major bleeding when heparin is paused.</li>
+        <li><strong>COVID-19:</strong> PT adopted widely with closed-circuit modifications, associated with faster weaning and shorter ICU stay in series.</li>
+        <li><strong>Cricothyroidotomy—pediatrics:</strong> Use needle cricothyroidotomy (&lt;~10–12y); avoid surgical techniques given small CT membrane and risk of laryngeal injury.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes</h3>
+    <ul>
+        <li><strong>PT vs ST:</strong> Meta-analyses show similar overall complication rates, fewer wound infections, shorter procedural time, and lower cost with PT. Bleeding risk is comparable; tracheal stenosis risk is similar long-term.</li>
+        <li><strong>Timing of tracheostomy:</strong> Mixed data—some RCT meta-analyses show no major outcome differences. More recent analyses favor earlier trach for ventilator-free days, shorter ICU stay, and less sedation. Timing should be individualized.</li>
+        <li><strong>Bronchoscopy vs Ultrasound:</strong> Bronchoscopy improves accuracy and reduces complications. Ultrasound helps identify safe entry and may reduce major bleeding. Randomized data suggest similar overall complication rates between bronchoscopy-guided and ultrasound-guided approaches in experienced hands.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Choosing PT vs. ST (or Deferral)</h4>
+    <div class="mermaid">
+    graph TD
+        A["Patient needs tracheostomy"] --> B{"Landmarks & Anatomy favorable?"}
+        B -- No --> C["Consider ST, Adjuncts (US, rigid bronch), or Defer"]
+        B -- Yes --> D{"Coagulopathy/Antithrombotics?"}
+        D -- "Uncorrectable & high risk" --> E["Consider ST"]
+        D -- "Correctable or acceptable risk" --> F{"Vent/PEEP acceptable & Hemodynamics stable?"}
+        F -- "Severe instability / multiple pressors" --> G["Consider ST or Defer"]
+        F -- "Stable or optimizable" --> H{"Operator experience + Bronchoscopy available?"}
+        H -- No --> I["Consider ST"]
+        H -- Yes --> J["Proceed with PT (Bronch +/- US)"]
+    </div>
+
+    <h4>Algorithm 2 — Bleeding After PT (including TIF)</h4>
+    <div class="mermaid">
+    graph TD
+        A["Post-PT Bleeding"] --> B{"Assess Timing & Severity"}
+        B --> C["Scenario A: Immediate/Oozing"]
+        C --> C1["Local pressure, vasoconstrictor packing"]
+        C --> C2["Correct coagulopathy"]
+        B --> D["Scenario B: Persistent/Brisk"]
+        D --> D1["Explore stoma, cautery/suture"]
+        D --> D2["Bronchoscopy to assess lumen"]
+        B --> E["Scenario C: Delayed (days-weeks) or Sentinel Bleed"]
+        E --> E1["Suspect TIF"]
+        E1 --> E2["Hyperinflate cuff"]
+        E1 --> E3["Apply digital pressure at sternal notch (anterior wall)"]
+        E1 --> E4["Activate massive transfusion & emergent surgical consult"]
+        E4 --> E5["Definitive surgical repair"]
+    </div>
+
+    <h4>Algorithm 3 — CICO: Emergency Surgical Airway</h4>
+    <div class="mermaid">
+    graph TD
+        A["CICO: Can't Intubate, Can't Oxygenate"] --> B{"Age >= 10-12 years?"}
+        B -- Yes (Adult) --> C["Surgical or percutaneous cricothyroidotomy"]
+        C --> C1["Ventilate, confirm CO2, secure"]
+        B -- "No (Pediatric < 10-12y)" --> D["Needle cricothyroidotomy + transtracheal ventilation"]
+        D --> D1["Urgent definitive airway (tracheostomy) when feasible"]
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. PT vs. ST: What’s Better, What’s Equivalent</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Dimension</th>
+                <th>PT vs ST</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Overall complications</td>
+                <td>Similar</td>
+            </tr>
+            <tr>
+                <td>Wound infection</td>
+                <td>Lower with PT</td>
+            </tr>
+            <tr>
+                <td>Procedure time</td>
+                <td>Shorter with PT</td>
+            </tr>
+            <tr>
+                <td>Cost</td>
+                <td>Lower with PT</td>
+            </tr>
+            <tr>
+                <td>Bleeding</td>
+                <td>Comparable</td>
+            </tr>
+            <tr>
+                <td>Tracheal stenosis (long-term)</td>
+                <td>Similar</td>
+            </tr>
+            <tr>
+                <td>Risk of posterior/anterior wall injury</td>
+                <td>Variable (technique-dependent)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. PDT Contraindications—Practical View</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Examples / Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Absolute (pragmatic)</td>
+                <td>No experienced operator; inability to identify landmarks safely</td>
+            </tr>
+            <tr>
+                <td>Often managed (relative)</td>
+                <td>Obesity (use XLT, US mapping); high PEEP (optimize and coordinate); prior trach (use scar tract); coagulopathy (optimize INR/platelets); antiplatelets/anticoagulants (hold if able; proceed with caution if not)</td>
+            </tr>
+            <tr>
+                <td>Avoid/Defer</td>
+                <td>Active infection at site; severe hemodynamic instability requiring multiple/high-dose pressors</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Anticoagulation & Antiplatelet Playbook (PT)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Medication/Status</th>
+                <th>Suggested peri-PT approach</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>INR / Platelets</td>
+                <td>Aim INR &lt;1.5, platelets &gt;50 × 10⁹/L (transfuse if needed)</td>
+            </tr>
+            <tr>
+                <td>Heparin infusion</td>
+                <td>Hold ≈3h pre, resume ≈2h post</td>
+            </tr>
+            <tr>
+                <td>SC heparin/enoxaparin</td>
+                <td>Hold 12h (BID dosing) or 24h (daily dosing)</td>
+            </tr>
+            <tr>
+                <td>Clopidogrel / DAPT</td>
+                <td>Prefer ≥5 days hold if feasible (3–5 days for dual therapy); PT can be performed on therapy with informed consent and bleeding-mitigation plan</td>
+            </tr>
+            <tr>
+                <td>ECMO</td>
+                <td>Brief heparin interruption; major bleeding reported low (~1–2%); minor bleeding more common</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 4. Tracheostomy Complications—Timing & Signals</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Timing</th>
+                <th>Complications</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Early (hours–days)</td>
+                <td>Bleeding; subcutaneous emphysema (~1.4%); pneumothorax (~0.8%); malposition/false tract</td>
+            </tr>
+            <tr>
+                <td>Late (weeks–months)</td>
+                <td>Tracheal stenosis (3–12% clinically significant); tracheomalacia; TIF &lt;1%; TEF; stomal infection</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1</h4>
+        <p>A 55-year-old with COPD is intubated (day 11). PEEP 8, FiO₂ 0.4. Platelets 58 × 10⁹/L, INR 1.4. On clopidogrel for a stent placed 18 months ago. Neck anatomy palpable. Best approach?</p>
+        <p>A. Proceed with ST in OR for lower bleeding risk<br>
+        B. Proceed with PT now under bronchoscopy, transfuse platelets<br>
+        C. Defer trach; extubate then re-intubate as needed<br>
+        D. PT now without bronchoscopy</p>
+        <p><strong>Answer: B.</strong> Anatomy and physiology are favorable; correct coagulopathy (platelets >50) and proceed with PT under bronchoscopy. Clopidogrel is ideally held ≥5 days but can proceed with precautions if non-deferrable. Wound infection and time/cost favor PT.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2</h4>
+        <p>A 62-year-old with ARDS on PEEP 14 requires tracheostomy for prolonged ventilation. Hemodynamically stable on low-dose vasopressor. Next step?</p>
+        <p>A. Defer until PEEP ≤8<br>
+        B. PT feasible with careful ventilator strategy and bronchoscopy<br>
+        C. Must do ST because of high PEEP<br>
+        D. Extubate to HFNC and avoid trach</p>
+        <p><strong>Answer: B.</strong> PT is feasible at higher PEEP with meticulous ETT manipulation and circuit management; there is no consistent oxygenation decline when performed carefully.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3</h4>
+        <p>A 70-year-old day 21 post-PT has a small “sentinel” bleed from the stoma that stops spontaneously. Immediate action?</p>
+        <p>A. Schedule tube change tomorrow<br>
+        B. Hyperinflate cuff and apply digital pressure; activate surgical pathway<br>
+        C. Start antibiotics only<br>
+        D. Deflate cuff to relieve pressure on mucosa</p>
+        <p><strong>Answer: B.</strong> Treat as TIF until proven otherwise—cuff hyperinflation and anterior wall digital pressure are temporizing measures pending emergent surgical control.</p>
+    </div>
+
+    <h3>Question Bank (MCQs)</h3>
+
+    <p><strong>1. A 60‑year‑old on day 7 of ventilation (FiO₂ 0.5, PEEP 5) fails SBT (RSBI 130). What is the next best step?</strong><br>
+    A. Schedule ST now to reduce wound infection<br>
+    B. Switch to SIMV to accelerate weaning<br>
+    C. Schedule early trach solely to reduce mortality<br>
+    D. Continue ICU care with daily SBT and reassess trach need<br>
+    <strong>Answer: D.</strong> Early trach timing remains individualized; daily SBT with optimization is appropriate at day 7; evidence for mortality benefit is mixed.</p>
+
+    <p><strong>2. Which statement is most accurate?</strong><br>
+    A. PT has higher overall complication rates than ST<br>
+    B. PT reduces wound infection and procedure time vs ST<br>
+    C. ST consistently has lower bleeding than PT<br>
+    D. PT is more expensive than ST<br>
+    <strong>Answer: B.</strong> Meta‑analyses show lower wound infection, shorter time, and lower cost with PT; overall complications and bleeding are similar.</p>
+
+    <p><strong>3. Regarding clopidogrel and PT, the best statement is:</strong><br>
+    A. Must be stopped ≥3 days<br>
+    B. Must be stopped ≥10 days<br>
+    C. Prefer ≥5 days hold if feasible; PT can proceed with precautions if not<br>
+    D. No need to consider antiplatelets<br>
+    <strong>Answer: C.</strong> Aim for ≥5 days when possible; real‑world series show PT can proceed with informed consent and bleeding mitigation.</p>
+
+    <p><strong>4. For PT, a reasonable pre‑procedure target is:</strong><br>
+    A. INR ≤2.0 and platelets ≥20 × 10⁹/L<br>
+    B. INR &lt;1.5 and platelets &gt;50 × 10⁹/L<br>
+    C. INR &lt;1.0 only<br>
+    D. Platelets &gt;100 × 10⁹/L mandatory<br>
+    <strong>Answer: B.</strong> These pragmatic thresholds balance safety with feasibility.</p>
+
+    <p><strong>5. Which is true about bronchoscopic guidance?</strong><br>
+    A. Increases posterior wall injuries<br>
+    B. Decreases first‑pass success vs landmark technique<br>
+    C. Helps confirm midline ring interspace and reduces complications<br>
+    D. Contraindicated in obesity<br>
+    <strong>Answer: C.</strong> Bronchoscopy confirms entry site and guidewire direction; trials show improved success and fewer complications.</p>
+
+    <p><strong>6. The strongest utility of ultrasound in PT is to:</strong><br>
+    A. Visualize the posterior tracheal wall<br>
+    B. Map anterior vessels and measure skin‑to‑trachea depth<br>
+    C. Replace bronchoscopy in all cases<br>
+    D. Reduce total procedure time consistently<br>
+    <strong>Answer: B.</strong> US maps vascular structures and depth; posterior wall is not seen; duration benefits are inconsistent.</p>
+
+    <p><strong>7. During PT on PEEP 16 and FiO₂ 0.6, oxygen saturation falls when the ETT cuff is deflated and retracted for puncture. Next best step?</strong><br>
+    A. Continue retracting—this is expected<br>
+    B. Disconnect from ventilator and bag through the stoma<br>
+    C. Re‑inflate the ETT cuff, re‑advance to re‑establish ventilation, then reattempt with minimal circuit breaks under bronchoscopy<br>
+    D. Convert immediately to ST<br>
+    <strong>Answer: C.</strong> Prioritize oxygenation; resecure the airway, then proceed with careful circuit management and bronchoscopy.</p>
+
+    <p><strong>8. In morbid obesity, a key preventive measure is:</strong><br>
+    A. Choose a smaller standard‑length tube<br>
+    B. Avoid bronchoscopy<br>
+    C. Use extra‑long trach tubes and consider US mapping<br>
+    D. Always choose ST<br>
+    <strong>Answer: C.</strong> Greater skin‑to‑trachea distance predisposes to malposition; XLT reduces cuff leak and malposition.</p>
+
+    <p><strong>9. Which statement is true after tracheostomy?</strong><br>
+    A. Aspiration risk immediately disappears<br>
+    B. Cuff inflation prevents micro‑aspiration<br>
+    C. Aspiration risk may decrease only after several weeks<br>
+    D. VAP risk is eliminated<br>
+    <strong>Answer: C.</strong> Aspiration risk may diminish later; cuff inflation does not prevent micro‑aspiration.</p>
+
+    <p><strong>10. While dilating, the team suspects posterior wall tenting. Best action?</strong><br>
+    A. Advance quickly to minimize mucosal contact<br>
+    B. Remove wire and blindly re‑pass<br>
+    C. Re‑establish ETT ventilation, re‑scope, and reattempt with correct angle<br>
+    D. Convert immediately to ST in the OR<br>
+    <strong>Answer: C.</strong> Safety priority is to re‑secure ventilation and reorient the attempt under direct vision.</p>
+
+    <p><strong>11. During CICO in a 7‑year‑old, best initial invasive airway is:</strong><br>
+    A. Surgical cricothyroidotomy<br>
+    B. Percutaneous cricothyroidotomy<br>
+    C. Needle cricothyroidotomy with transtracheal ventilation<br>
+    D. Emergency tracheostomy by non‑surgeon<br>
+    <strong>Answer: C.</strong> The pediatric CT membrane is small; surgical techniques risk laryngeal injury—needle technique is preferred.</p>
+
+    <p><strong>12. A day‑28 post‑trach ICU patient has sudden pulsatile bleeding from stoma. First move?</strong><br>
+    A. Deflate cuff to inspect<br>
+    B. Hyperinflate cuff and compress anteriorly; activate surgical pathway<br>
+    C. Replace the trach tube with smaller size<br>
+    D. Observe; likely granulation<br>
+    <strong>Answer: B.</strong> Treat as TIF—life‑saving temporization while mobilizing definitive surgical control.</p>
+
+    <div class="algorithm-note">
+        <h3>Take-Home Checklist</h3>
+        <ul>
+            <li>Confirm indication, anatomy, team, plan (bronchoscopy ± US).</li>
+            <li>Optimize INR/platelets; coordinate anticoagulant holds as feasible.</li>
+            <li>Pre-brief ventilator strategy; minimize circuit breaks; plan ETT retraction under vision.</li>
+            <li>Puncture midline between rings; keep wire caudad under bronchoscopy.</li>
+            <li>Choose tube length (XLT for deep trachea).</li>
+            <li>Confirm lumen and carina bronchoscopically after placement; verify ventilation.</li>
+            <li>Secure device and set up humidification/suction; monitor cuff pressure.</li>
+            <li>Watch for early bleeding/air-leak; have a bleeding algorithm ready.</li>
+            <li>Educate bedside staff on TIF signs and immediate response.</li>
+            <li>Start a structured decannulation pathway once ventilator goals are met.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Abbreviations & Glossary</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>PT/PDT</dt> <dd>Percutaneous (dilational) tracheostomy</dd>
+            <dt>ST</dt> <dd>Surgical tracheostomy</dd>
+            <dt>CICO</dt> <dd>Can’t intubate, can’t oxygenate</dd>
+            <dt>CT membrane</dt> <dd>Cricothyroid membrane</dd>
+            <dt>ETT</dt> <dd>Endotracheal tube</dd>
+            <dt>XLT</dt> <dd>Extra-long tracheostomy tube</dd>
+            <dt>VAP</dt> <dd>Ventilator-associated pneumonia</dd>
+            <dt>TIF</dt> <dd>Tracheo-innominate fistula</dd>
+            <dt>TEF</dt> <dd>Tracheoesophageal fistula</dd>
+            <dt>ECMO</dt> <dd>Extracorporeal membrane oxygenation</dd>
+            <dt>RSBI</dt> <dd>Rapid shallow breathing index</dd>
+        </dl>
+    </div>
+
+    <h3>References</h3>
+    <div class="references">
+        <ol>
+            <li>Delaney A, Bagshaw SM, Nalos M. Percutaneous dilatational tracheostomy versus surgical tracheostomy in critically ill patients: a systematic review and meta-analysis. Crit Care. 2006;10(2):R55.</li>
+            <li>Higgins KM, Punthakee X. Meta-analysis comparison of open versus percutaneous tracheostomy. Laryngoscope. 2007;117(3):447-454.</li>
+            <li>Johnson-Obaseki S, et al. Laryngoscope. 2016;126:2459-67.</li>
+            <li>Ghattas C, Alsunaid S, Pickering EM, Holden VK. J Thorac Dis. 2021.</li>
+            <li>Diehl JL, El Atrous S, Touchard D, Lemaire F, Brochard L. Changes in the work of breathing induced by tracheotomy in ventilator-dependent patients. Am J Respir Crit Care Med. 1999;159(2):383-388.</li>
+            <li>Law AC. Benefits of tracheostomy. Ann Am Thorac Soc. 2022;19(3):424-432.</li>
+            <li>Beiderlinden M, Groeben H, Peters J. Safety of PDT in patients ventilated with high PEEP. Intensive Care Med. 2003;29(6):944-948.</li>
+            <li>Shah S, Morgan P. PDT during high-frequency oscillatory ventilation. Crit Care Med. 2002;30(8):1762-1764.</li>
+            <li>Roy CF, Silver JA, Turkdogan S, et al. PDT in obesity: systematic review and meta-analysis. JAMA Otolaryngol Head Neck Surg. 2023;149(4):334-343.</li>
+            <li>Majid A, et al. Rigid bronchoscopy-guided PDT: pilot study. Ann Am Thorac Soc. 2014;11(5):789-794.</li>
+            <li>Douketis JD, Spyropoulos AC, Murad MH, et al. Perioperative management of antithrombotic therapy. Chest. 2022;162(5):e207-e243.</li>
+            <li>Huang Y-H, Tseng C-H, Chan M-C, et al. Antiplatelets/anticoagulants increased bleeding risk in bedside PDT. J Formos Med Assoc. 2020;119(7):1193-1200.</li>
+            <li>Braune S, Kienast S, Hadem J, et al. PDT on extracorporeal lung support. Intensive Care Med. 2013;39(10):1792-1799.</li>
+            <li>Deppe AC, Kuhn E, Scherner M, et al. Coagulation disorders do not increase PDT bleeding risk. Thorac Cardiovasc Surg. 2013;61:234-239.</li>
+            <li>Abouzgheib W, Meena N, Jagtap P, et al. PDT in patients receiving antiplatelet therapy: is it safe? J Bronchology Interv Pulmonol. 2013;20(4):322-325.</li>
+            <li>Lüsebrink E, Stark K, Bertlich M, et al. PDT safety on dual antiplatelet therapy/anticoagulation. Crit Care Explor. 2019;1(10):e0050.</li>
+            <li>Lamb CR, Desai NR, Angel L, et al. Use of tracheostomy during COVID-19: Expert Panel Report. Chest. 2020;158(4):1499-1514.</li>
+            <li>Rudas M, Seppelt I, Herkes R, et al. Ultrasound- vs landmark-guided puncture in PDT: RCT. Crit Care. 2014;18(5):514.</li>
+            <li>Gobatto ALN, Besen BAMP, Tierno PFGMM, et al. Ultrasound-guided vs bronchoscopy-guided PDT: noninferiority RCT (TRACHUS). Intensive Care Med. 2016;42(3):342-351.</li>
+            <li>Simon M, Metschke M, Braune SA, et al. Death after PDT: systematic review. Crit Care. 2013;17(5):R258.</li>
+            <li>Goldenberg D, Ari EG, Golz A, et al. Tracheotomy complications: 1,130 cases. Otolaryngol Head Neck Surg. 2000;123(4):495-500.</li>
+            <li>Mitchell RB, Hussey HM, Setzen G, et al. Clinical consensus statement: tracheostomy care. Otolaryngol Head Neck Surg. 2013;148(1):6-20.</li>
+            <li>Epstein SK. Late complications of tracheostomy. Respir Care. 2005;50(4):542-549.</li>
+            <li>Reed MF, Mathisen DJ. Tracheoesophageal fistula. Chest Surg Clin. 2003;13(2):271-289.</li>
+            <li>Wen D, et al. Ultrasound-guided vs landmark-guided PDT: systematic review/meta-analysis. BMC Anesthesiol. 2025;25(1):211.</li>
+            <li>Esteban A, et al. International study; median time to trach 11 days. Am J Respir Crit Care Med. 2000;161(5):1450-1458.</li>
+            <li>Hosokawa K, et al. Early vs late trach meta-analysis. Crit Care. 2015;19:424.</li>
+            <li>Mehta AB, et al. Early trach and outcomes. Crit Care Med. 2016;44(8):1506-1514.</li>
+            <li>McGrath BA, et al. Tracheostomy window framework. Lancet Respir Med. 2020;8(7):717-725.</li>
+            <li>Chorath K, et al. JAMA Otolaryngol Head Neck Surg. 2021.</li>
+            <li>Merola R, et al. Life (Basel). 2024.</li>
+            <li>Shen G, Yin H, Cao Y, et al. Fiberoptic bronchoscopy-guided vs standard PDT: RCT. Ir J Med Sci. 2019;188(2):675-681.</li>
+            <li>Lim CK. Tracheostomy effects on mechanics. PLoS One. 2015;10(9):e0138294.</li>
+            <li>Leder SB. Aspiration and cuff inflation. Chest. 2002;122(5):1721.</li>
+            <li>Gadkaree SK. Risk with PDT without bronchoscopy. JAMA Otolaryngol Head Neck Surg. 2016.</li>
+            <li>American Society of Anesthesiologists Task Force. Difficult airway guidelines. Anesthesiology. 2003;98(5):1269-1277.</li>
+            <li>Brofeldt BT, Panacek EA, Richards JR. Rapid four-step cricothyroidotomy. Acad Emerg Med. 1996;3(11):1060-1063.</li>
+            <li>Schober P, Hegemann MC, Schwarte LA, et al. Emergency cricothyroidotomy—comparative cadaver study. Resuscitation. 2009;80(2):204-209.</li>
+        </ol>
+    </div>
+</body>
+</html>

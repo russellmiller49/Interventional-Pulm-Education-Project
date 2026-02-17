@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bronchoscopy in High‑Risk Patients and Complications</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+p, ul, ol { margin-bottom: 16px; }
+ul, ol { padding-left: 25px; }
+li { margin-bottom: 8px; }
+strong { color: #2c3e50; font-weight: 700; }
+hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+tr:nth-child(even) { background-color: #fbfbfb; }
+/* Callout Boxes */
+.algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+.case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+/* Mermaid */
+.mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+/* Footer Sections */
+.abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+.abbreviations dt { font-weight: bold; color: #2c3e50; }
+.abbreviations dd { margin: 0; }
+.references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+@media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Bronchoscopy in High‑Risk Patients and Complications in Bronchoscopy</h1>
+
+<h3>Exam Mapping & Scope</h3>
+<p>Mapped domains include: Peri‑procedural risk assessment, sedation and monitoring, special populations (pregnancy and pulmonary hypertension), and recognition/management of bronchoscopy complications (bleeding, hypoxemia, arrhythmias, pneumothorax, fever/infection, bronchospasm).</p>
+
+<hr>
+
+<h3>Learning Objectives</h3>
+<ul>
+    <li>Differentiate minor versus major bronchoscopy complications and quote realistic event rates for board questions.</li>
+    <li>Stratify bleeding risk by patient, procedure, hemostasis, and tissue factors; apply practical antithrombotic hold/restart windows.</li>
+    <li>Execute a stepwise algorithm for intra‑procedural bleeding control and identify when to escalate to rigid bronchoscopy or embolization.</li>
+    <li>Prevent, detect, and treat hypoxemia, laryngospasm/bronchospasm, sedation‑related events, pneumothorax, and post‑bronchoscopy fever/infection.</li>
+    <li>Adapt practice for pregnancy and pulmonary hypertension (PH), including airway, hemodynamic, and medication considerations.</li>
+</ul>
+
+<hr>
+
+<h3>High‑Yield One‑Pager</h3>
+
+<h4>Numbers to Know</h4>
+<ul>
+    <li><strong>Overall complication rate:</strong> ~1% across large bronchoscopy cohorts; mortality ~0.02%.</li>
+    <li><strong>Bleeding:</strong> Overall ≈0.3–5%; “severe” bleeding is rare (~0.3%).</li>
+    <li><strong>Pneumothorax risk:</strong> ~0.1–0.8% overall; increases to ~11% after forceps transbronchial lung biopsy (TBLB) and ~5% with interstitial lung disease (ILD) cryobiopsy.</li>
+    <li><strong>Post‑bronchoscopy fever (PBF):</strong> Occurs in ~5–16% after BAL; usually a sterile cytokine response.</li>
+</ul>
+
+<h4>Pearls & Pitfalls</h4>
+<ul>
+    <li><strong>Bleeding classification:</strong> Classify by the intervention required, not the estimated volume.</li>
+    <li><strong>Antithrombotics:</strong> Aspirin can usually be continued; clopidogrel increases bleeding risk for biopsies. EBUS‑TBNA under clopidogrel has not consistently shown excess bleeding.</li>
+    <li><strong>Hypoxemia mitigation:</strong> Continuous SpO₂; oxygen if SpO₂ falls >4% for >1 min or &lt;90%. High‑flow nasal cannula (HFNC) reduces desaturation events during sedated bronchoscopy.</li>
+    <li><strong>Sedation (conscious/moderate):</strong> Midazolam 1–2 mg IV then 0.5–1 mg; fentanyl 25–50 µg IV titrated. Reversal: Flumazenil 0.2 mg then 0.1 mg/min to 1 mg; naloxone start 0.04 mg, repeat q2–5 min (up to ~0.01 mg/kg).</li>
+    <li><strong>Pregnancy:</strong> Anticipate difficult airway; avoid the nasal route; wedge the right hip (left uterine displacement); minimize hypercarbia; use lowest effective lidocaine dose; multidisciplinary planning.</li>
+    <li><strong>Pulmonary hypertension:</strong> TBLB bleeding risk is not clearly increased, but hypoxemia and prolonged mechanical ventilation are more likely. Avoid triggers of increased PVR (hypoxemia, hypercarbia, pain/anxiety) and maintain preload.</li>
+</ul>
+
+<div class="algorithm-note">
+    <strong>Bleeding Sequence Pearl:</strong> Keep the scope in → suction/visualize → lateralize bleeding lung down → cold saline → topical vasoconstrictor (epinephrine or tranexamic acid) → balloon blockade → sealants/plugs → secure airway early → escalate to rigid bronchoscopy/embolization when indicated.
+</div>
+
+<hr>
+
+<h3>Core Concepts</h3>
+
+<h4>Pathophysiology / Epidemiology</h4>
+<p>Complications range from minor (epistaxis, fever, mild arrhythmias, limited bleeding) to major (pneumonia, significant pneumothorax, respiratory failure, life‑threatening hemorrhage). Hypoxemia arises from airway caliber reduction by the scope, ventilation–perfusion mismatch with topical anesthetic/saline/BAL, transient atelectasis, and bronchoconstriction. Arrhythmias are usually benign and related to hypoxemia, vagal tone, or stimulant drugs; major tachyarrhythmias are uncommon.</p>
+<p>In pregnancy, mucosal edema, glandular hyperplasia, and increased reflux elevate aspiration and airway difficulty risks. Hemodynamic adaptations (increased blood volume and cardiac output) and IVC compression later in gestation predispose to supine hypotension. In PH, decompensation is driven by increased PVR due to hypoxemia, hypercarbia, pain/anxiety, or reduced preload from induction vasodilation/blood loss.</p>
+
+<h4>Indications & Contraindications</h4>
+<p>Age alone is not a contraindication. Bronchoscopy is permissible in pregnancy and PH when benefits outweigh risks and appropriate safeguards are in place. In PH, available data do not show a consistent increase in TBLB bleeding, but oxygenation and ventilatory risks are higher. In pregnancy, decisions should be multidisciplinary and tailored to urgency, alternatives, and airway strategy.</p>
+
+<hr>
+
+<h3>Pre‑Procedure Evaluation</h3>
+
+<h4>Bleeding Risk Stratification</h4>
+<ul>
+    <li><strong>Patient factors:</strong> Lung cancer, transplant, immunosuppression; controversial/variable risk with PH.</li>
+    <li><strong>Procedure factors:</strong> TBLB and cryobiopsy carry higher bleeding risk than EBUS/BAL/brushings.</li>
+    <li><strong>Hemostasis factors:</strong> Uremia, liver disease, antithrombotics; coagulation tests alone are poor predictors.</li>
+    <li><strong>Tissue factors:</strong> Carcinoid, renal/thyroid metastases, amyloid, anthracosis, and bronchial Dieulafoy lesions are highly vascular.</li>
+</ul>
+
+<h4>Pragmatic Laboratory Thresholds</h4>
+<ul>
+    <li><strong>BAL:</strong> Typically acceptable with platelets ≥20 × 10³/µL.</li>
+    <li><strong>Endobronchial/TBLB:</strong> Generally acceptable with platelets ≥50 × 10³/µL.</li>
+</ul>
+
+<h4>Antithrombotics (Typical Diagnostic Bronchoscopy Windows)</h4>
+<ul>
+    <li><strong>Warfarin:</strong> Stop ~5 d (goal INR &lt;1.5 day‑of); restart same evening if safe.</li>
+    <li><strong>DOACs:</strong> Hold ~24–48 h; extend for renal dysfunction (especially dabigatran).</li>
+    <li><strong>Clopidogrel:</strong> Hold ~5–7 d for biopsies; EBUS‑TBNA may be performed in select scenarios.</li>
+    <li><strong>Aspirin:</strong> Usually continued.</li>
+    <li><strong>LMWH/fondaparinux:</strong> Shorter holds (see Table 2).</li>
+</ul>
+
+<h4>Pregnancy Planning</h4>
+<p>Avoid the nasal route; NPO and aspiration precautions; wedge the right hip or consider a semi‑upright position; lowest effective lidocaine dose; discuss fetal monitoring and emergency plans.</p>
+
+<h4>PH Planning</h4>
+<p>Continue PAH therapies (e.g., sildenafil, inhaled prostacyclin analogs). Avoid hypoxemia/hypercarbia, pain/anxiety, and abrupt preload reduction. Favor gentle technique with adequate topical anesthesia.</p>
+
+<hr>
+
+<h3>Equipment & Setup</h3>
+<ul>
+    <li><strong>Tools:</strong> Large‑channel bronchoscope; robust suction; cold saline; topical vasoconstrictors (epinephrine, tranexamic acid); vasopressin analogs where appropriate; balloon blockers; fibrin sealant or silicone plugs; thermal tools (APC, laser, monopolar electrocautery) for select bleeding scenarios.</li>
+    <li><strong>Monitoring:</strong> Continuous SpO₂ and ECG during and after the procedure; consider HFNC for high‑risk desaturation.</li>
+</ul>
+
+<hr>
+
+<h3>Step‑by‑Step Technique / Procedural Checklist</h3>
+<ul>
+    <li><strong>Team Brief:</strong> Indication, alternatives, anticoagulant plan, airway strategy, and backup (rigid, ICU, BAE).</li>
+    <li><strong>Sedation:</strong> Midazolam + fentanyl titration; avoid large boluses. If using propofol, anesthesia support is recommended. Ensure reversal agents are drawn up.</li>
+    <li><strong>Oxygenation:</strong> Start supplemental O₂ in high‑risk patients; HFNC for those prone to desaturation.</li>
+    <li><strong>Pregnancy Specifics:</strong> Avoid nasal route; wedge right hip; minimize hypercarbia; plan for aspiration risk and difficult airway.</li>
+    <li><strong>PH Specifics:</strong> Continue PAH meds; avoid maneuvers that increase PVR; maintain preload; ensure gentle instrumentation.</li>
+</ul>
+
+<hr>
+
+<h3>Troubleshooting & Intra‑Procedure Management</h3>
+<ul>
+    <li><strong>Bleeding:</strong> Keep the scope in; suction for visibility; position bleeding lung down; instill cold 4 °C saline aliquots; apply topical epinephrine (typical diluted range 1:10,000–1:100,000; many operators keep cumulative endobronchial epinephrine ≤~0.6 mg) or tranexamic acid (e.g., 250 mg diluted, 1–3 aliquots). Escalate to balloon tamponade, fibrin sealant/silicone plugs, and rigid bronchoscopy/BAE as needed.</li>
+    <li><strong>Hypoxemia:</strong> Increase FiO₂; pause instillations; suction secretions/blood; HFNC or NIV if needed.</li>
+    <li><strong>Arrhythmias:</strong> Usually benign; treat triggers (hypoxemia, pain). Maintain ECG monitoring.</li>
+    <li><strong>Laryngospasm:</strong> Prevent with adequate topical lidocaine before passing the cords; treat with oxygenation, jaw thrust, positive pressure; deepen anesthesia if necessary.</li>
+    <li><strong>Sedation mishaps:</strong> Keep flumazenil and naloxone immediately available; recognize fentanyl‑induced chest‑wall rigidity ("wooden chest") and support ventilation while reversing.</li>
+</ul>
+
+<hr>
+
+<h3>Post‑Procedure Care & Follow‑Up</h3>
+<ul>
+    <li><strong>Recovery:</strong> Monitor in a staffed recovery area for 2–4 hours: SpO₂ (return to baseline), chest pain/desaturation (consider pneumothorax), temperature (self‑limited fever common after BAL), airway patency/bronchospasm, and level of consciousness. Keep NPO until cough reflex returns (~2 h).</li>
+    <li><strong>Imaging:</strong> Symptomatic pneumothorax warrants imaging (CXR or lung ultrasound). Small (&lt;20%) pneumothoraces can often be observed; larger or unstable cases require drainage.</li>
+</ul>
+
+<hr>
+
+<h3>Complications: Prevention, Recognition, Management</h3>
+
+<h4>Bleeding</h4>
+<p>Highest risk with vascular tumors and TBLB/cryobiopsy. Prophylactic epinephrine prior to TBLB in select transplant populations reduces severe bleeding. Consider rigid bronchoscopy first in centrally vascular endobronchial tumors; thermal modalities can assist hemostasis.</p>
+
+<h4>Pneumothorax</h4>
+<p>Avoid bilateral same‑session TBLB; prefer alligator over cup forceps in sarcoidosis; fluoroscopy improves localization yield but doesn’t clearly reduce pneumothorax risk. Routine immediate CXR isn’t required; observe ≥2 h due to possible delayed onset.</p>
+
+<h4>Infection/PBF</h4>
+<p>PBF is common after BAL and typically sterile. Prophylactic antibiotics do not reduce PBF. Procalcitonin can help distinguish bacterial infection from PBF. True bacteremia occurs in a minority; typical organisms include staphylococci and streptococci.</p>
+
+<h4>Bronchospasm</h4>
+<p>The most common life‑threatening airway event in older surveys. Routine pre‑procedure bronchodilators (short‑acting β‑agonists) have not shown clear benefit in COPD/asthma; optimize baseline disease control instead.</p>
+
+<hr>
+
+<h3>Special Populations</h3>
+
+<h4>Pregnancy</h4>
+<ul>
+    <li>Expect difficult airway and increased aspiration risk; avoid the nasal route; wedge the right hip for left uterine displacement; minimize hypercarbia; lowest effective lidocaine dose.</li>
+    <li>Use of topical endobronchial epinephrine is a theoretical concern for uterine blood‑flow reduction—try safer measures first and weigh risk–benefit if considering its use.</li>
+    <li>Thermal tools have not been studied in pregnancy but may be used when necessary for life‑threatening airway obstruction; ensure appropriate dispersive electrode placement and obstetric input.</li>
+    <li>Multidisciplinary coordination (IP, anesthesia, obstetrics, referring team) is essential.</li>
+</ul>
+
+<h4>Pulmonary Hypertension</h4>
+<ul>
+    <li>No consistent increase in TBLB bleeding risk; however, there is a higher risk of peri‑procedural hypoxemia and prolonged mechanical ventilation.</li>
+    <li>Avoid PH decompensation by preventing hypoxemia/hypercarbia, treating pain/anxiety, minimizing airway trauma, and maintaining preload. Continue PAH therapies unless specific contraindications exist.</li>
+</ul>
+
+<hr>
+
+<h3>Evidence & Outcomes</h3>
+<p>Bleeding classification schemes based on interventions provide reliable triggers for escalation. HFNC reduces hypoxemia episodes during bronchoscopy. In PH, bleeding risk from TBLB is not clearly elevated, but oxygenation/ventilation complications are more common and should shape peri‑procedural planning.</p>
+
+<hr>
+
+<h3>Diagnostic & Therapeutic Algorithms</h3>
+
+<h4>A. Intra‑Procedural Bleeding Control (Flexible Bronchoscopy)</h4>
+<div class="mermaid">
+graph TD
+    A["Bleeding observed"] --> B["Keep scope in; suction/visualize"]
+    B --> C["Position bleeding lung down; wedge if peripheral"]
+    C --> D["Cold 4°C saline aliquots"]
+    D --> E{"Controlled?"}
+    E -- Yes --> Z["Proceed and observe"]
+    E -- No --> F["Topical vasoconstrictor: epinephrine 1:10,000–1:100,000 or TXA 250 mg diluted"]
+    F --> G{"Controlled?"}
+    G -- Yes --> Z
+    G -- No --> H["Balloon tamponade/isolate segment"]
+    H --> I{"Controlled?"}
+    I -- Yes --> Z
+    I -- No --> J["Fibrin sealant or silicone plug"]
+    J --> K{"Controlled?"}
+    K -- Yes --> Z
+    K -- No --> L["Intubate; consider rigid bronchoscopy and bronchial artery embolization"]
+</div>
+
+<div class="algorithm-note">
+    <strong>Parallel quick steps:</strong> Don’t remove the scope → suction + lateralize → cold saline → topical vasoconstrictor → balloon blockade → sealant/plug → secure airway → rigid/BAE.
+</div>
+
+<h4>B. Pre‑Bronchoscopy Triage in High‑Risk Patients</h4>
+<div class="mermaid">
+graph TD
+    A["Patient scheduled"] --> B{"Pregnant?"}
+    B -- Yes --> B1["Avoid nasal route; wedge right hip; minimize hypercarbia; lowest effective lidocaine; multidisciplinary planning"]
+    B -- No --> C{"Pulmonary hypertension?"}
+    C -- Yes --> C1["Continue PAH meds; avoid increased PVR; gentle technique; maintain preload"]
+    C -- No --> D["Standard pathway"]
+    B1 --> E{"Antithrombotics?"}
+    C1 --> E
+    D --> E
+    E -- Yes --> F["Hold per local protocol; INR < 1.5 if on warfarin; tailor for renal function with DOACs"]
+    E -- No --> G["Conscious sedation with midazolam + fentanyl; reversal agents ready; consider HFNC"]
+    F --> G
+    G --> H["Consent covers bleeding, ptx, hypoxemia, infection; recovery plan established"]
+</div>
+
+<hr>
+
+<h3>Tables & Quick‑Reference Boxes</h3>
+
+<h4>Table 1. Intervention‑Based Bleeding Severity</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Operational Definition</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>No bleeding</td>
+            <td>Blood traces that are self‑limited; no continuous suction needed.</td>
+        </tr>
+        <tr>
+            <td>Mild</td>
+            <td>Requires continuous suction; self‑limited.</td>
+        </tr>
+        <tr>
+            <td>Moderate</td>
+            <td>Requires wedge, cold saline, and/or topical vasoconstrictor to stop.</td>
+        </tr>
+        <tr>
+            <td>Severe</td>
+            <td>Requires balloon blocker and/or sealant/plug; resuscitation, transfusion, or ICU.</td>
+        </tr>
+    </tbody>
+</table>
+<p><em>Abbreviations: ICU, intensive care unit.</em></p>
+
+<h4>Table 2. Peri‑Bronchoscopy Antithrombotic Management (Typical Windows)</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Drug</th>
+            <th>Stop before</th>
+            <th>Restart after</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Unfractionated heparin</td>
+            <td>6 h</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>LMWH</td>
+            <td>12 h</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>Fondaparinux</td>
+            <td>36–42 h</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>Aspirin</td>
+            <td>Do not stop</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>Clopidogrel</td>
+            <td>5–7 d</td>
+            <td>5–7 d</td>
+        </tr>
+        <tr>
+            <td>Ticagrelor</td>
+            <td>5 d</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>Prasugrel</td>
+            <td>7–10 d</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>Warfarin</td>
+            <td>5 d (goal INR &lt;1.5)</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>Dabigatran</td>
+            <td>2–3 d (longer if renal dysfunction)</td>
+            <td>4–12 h</td>
+        </tr>
+        <tr>
+            <td>Rivaroxaban/Apixaban/Edoxaban</td>
+            <td>1–2 d</td>
+            <td>4–12 h</td>
+        </tr>
+    </tbody>
+</table>
+<p><em>Abbreviations: INR, international normalized ratio; LMWH, low‑molecular‑weight heparin.</em></p>
+
+<h4>Table 3. Sedation & Reversal: Quick Doses</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Agent</th>
+            <th>Typical starting dose/titration</th>
+            <th>Key caveats</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Midazolam</td>
+            <td>1–2 mg IV, then 0.5–1 mg titration (≤5 mg if &lt;70 y; ≤2 mg if ≥70 y)</td>
+            <td>Prepare 1 mg/mL to avoid overdose; flumazenil 0.2 mg then 0.1 mg/min to 1 mg (watch re‑sedation).</td>
+        </tr>
+        <tr>
+            <td>Fentanyl</td>
+            <td>25–50 µg IV, titrate</td>
+            <td>Watch for bradycardia/hypotension; rare chest‑wall rigidity → naloxone starting 0.04 mg and ventilatory support.</td>
+        </tr>
+        <tr>
+            <td>Propofol</td>
+            <td>Per anesthesiologist</td>
+            <td>Narrow window; risk of apnea/hypotension; institutional policies apply.</td>
+        </tr>
+    </tbody>
+</table>
+<p><em>Abbreviations: IV, intravenous.</em></p>
+
+<h4>Table 4. Post‑Procedure Monitoring (First 2–4 Hours)</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Domain</th>
+            <th>What to watch</th>
+            <th>Suggests</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>SpO₂</td>
+            <td>Return to baseline</td>
+            <td>Persistent desaturation</td>
+            <td>Evaluate for bronchospasm, retained secretions, or pneumothorax.</td>
+        </tr>
+        <tr>
+            <td>Chest pain</td>
+            <td>New/worsening</td>
+            <td>Possible pneumothorax</td>
+            <td>CXR or lung ultrasound.</td>
+        </tr>
+        <tr>
+            <td>Temperature</td>
+            <td>Transient low‑grade fever</td>
+            <td>PBF</td>
+            <td>Antipyretics; reassess if persistent/systemic features.</td>
+        </tr>
+        <tr>
+            <td>Swallow</td>
+            <td>Cough reflex absent (~2 h)</td>
+            <td>Aspiration risk</td>
+            <td>Keep NPO until reflex returns.</td>
+        </tr>
+        <tr>
+            <td>Consciousness</td>
+            <td>Delayed awakening (e.g., COPD/OSA)</td>
+            <td>Hypercapnia</td>
+            <td>Consider NIV or intubation.</td>
+        </tr>
+        <tr>
+            <td>Respiratory pattern</td>
+            <td>Tachypnea/wheeze/accessory muscle use</td>
+            <td>Bronchospasm</td>
+            <td>Bronchodilators, systemic steroids, oxygen; escalate as needed.</td>
+        </tr>
+    </tbody>
+</table>
+<p><em>Abbreviations: CXR, chest radiograph; PBF, post‑bronchoscopy fever; NIV, noninvasive ventilation; OSA, obstructive sleep apnea.</em></p>
+
+<hr>
+
+<h3>Cases & Applied Learning</h3>
+
+<div class="case-study">
+    <strong>Case 1 – PH and ILD Workup</strong>
+    <p><strong>Scenario:</strong> A 62‑year‑old with scleroderma‑ILD and mean PAP 40 mmHg is referred for BAL/TBLB for new ground‑glass opacities. Which statement best reflects risk?</p>
+    <p><strong>Answer:</strong> PH increases the risk of peri‑procedural hypoxemia and prolonged ventilation; bleeding risk with TBLB is not clearly increased.</p>
+    <p><strong>Teaching point:</strong> Optimize oxygenation/ventilation, avoid triggers of increased PVR, and coordinate with anesthesia.</p>
+</div>
+
+<div class="case-study">
+    <strong>Case 2 – EBUS in Pregnancy</strong>
+    <p><strong>Scenario:</strong> A 29‑year‑old at 22 weeks with suspected mediastinal involvement from breast cancer is scheduled for EBUS. What are the key priorities?</p>
+    <p><strong>Answer:</strong> Anticipate difficult airway; avoid nasal route; wedge the right hip for left uterine displacement; minimize hypercarbia; coordinate with anesthesia and obstetrics.</p>
+    <p><strong>Teaching point:</strong> Two‑patient physiology; focus on airway protection and hemodynamic stability.</p>
+</div>
+
+<div class="case-study">
+    <strong>Case 3 – Post‑TBLB Dyspnea</strong>
+    <p><strong>Scenario:</strong> Two hours post‑TBLB, a patient reports pleuritic chest pain and desaturates to 89%.</p>
+    <p><strong>Answer:</strong> Evaluate for pneumothorax with CXR or lung ultrasound; small pneumothoraces may be observed, larger/unstable require drainage.</p>
+    <p><strong>Teaching point:</strong> Routine post‑TBLB CXR is unnecessary in asymptomatic patients, but delayed pneumothorax can occur.</p>
+</div>
+
+<hr>
+
+<h3>Question Bank</h3>
+
+<p><strong>1. During TBLB, brisk bleeding obscures the view. After suction and lateralizing the patient, the next best step is:</strong></p>
+<ul>
+    <li>A. Remove the scope and sit the patient up</li>
+    <li>B. Instill room‑temperature saline</li>
+    <li>C. Instill cold 4 °C saline aliquots</li>
+    <li>D. Proceed directly to fibrin glue</li>
+    <li>E. Place a double‑lumen tube</li>
+</ul>
+<p><strong>Correct: C.</strong> Cold saline is first‑line after suction/positioning, before topical vasoconstrictors and mechanical tamponade.</p>
+
+<p><strong>2. Which antithrombotic can generally be continued for diagnostic bronchoscopy including TBLB?</strong></p>
+<ul>
+    <li>A. Warfarin</li>
+    <li>B. Apixaban</li>
+    <li>C. Aspirin</li>
+    <li>D. Clopidogrel</li>
+    <li>E. Fondaparinux</li>
+</ul>
+<p><strong>Correct: C.</strong> Aspirin is usually continued; clopidogrel and anticoagulants require holds for biopsies.</p>
+
+<p><strong>3. A patient on warfarin is scheduled for EBUS‑TBNA with low thrombotic risk. Optimal plan?</strong></p>
+<ul>
+    <li>A. Continue warfarin</li>
+    <li>B. Stop ~5 days before; day‑of INR &lt;1.5; restart evening after</li>
+    <li>C. Stop 24 h before</li>
+    <li>D. Bridge all patients with LMWH</li>
+    <li>E. Delay until INR &lt;1.0</li>
+</ul>
+<p><strong>Correct: B.</strong> Standard approach for low‑risk patients.</p>
+
+<p><strong>4. Which statement about PH and bronchoscopy is most accurate?</strong></p>
+<ul>
+    <li>A. Absolute contraindication to TBLB</li>
+    <li>B. No clear increase in TBLB bleeding, but higher hypoxemia risk</li>
+    <li>C. PH always causes massive hemoptysis</li>
+    <li>D. Bronchoscopy must be under general anesthesia</li>
+    <li>E. Routine ICU post‑op is mandatory</li>
+</ul>
+<p><strong>Correct: B.</strong></p>
+
+<p><strong>5. During bronchoscopy under midazolam/fentanyl, the patient develops chest‑wall rigidity with hypoventilation. Best immediate action?</strong></p>
+<ul>
+    <li>A. Succinylcholine IV</li>
+    <li>B. Naloxone (start 0.04 mg) and ventilatory support</li>
+    <li>C. Flumazenil 0.2 mg</li>
+    <li>D. Propofol bolus</li>
+    <li>E. Atropine 0.5 mg</li>
+</ul>
+<p><strong>Correct: B.</strong></p>
+
+<p><strong>6. A patient develops fever to 38.4 °C four hours after BAL but looks well. Which lab best helps distinguish PBF from bacterial infection?</strong></p>
+<ul>
+    <li>A. CRP</li>
+    <li>B. ESR</li>
+    <li>C. WBC</li>
+    <li>D. Procalcitonin</li>
+    <li>E. LDH</li>
+</ul>
+<p><strong>Correct: D.</strong></p>
+
+<p><strong>7. Which maneuver reduces laryngospasm risk when passing the cords?</strong></p>
+<ul>
+    <li>A. Deep inhalational anesthesia</li>
+    <li>B. Adequate topical lidocaine before cord passage</li>
+    <li>C. Routine paralytic use</li>
+    <li>D. Avoid oxygen supplementation</li>
+    <li>E. Nasal route</li>
+</ul>
+<p><strong>Correct: B.</strong></p>
+
+<p><strong>8. A 30‑week pregnant patient with subglottic stenosis becomes hypotensive at induction. What preventive strategy should have been in place?</strong></p>
+<ul>
+    <li>A. Large IV epinephrine bolus ready</li>
+    <li>B. Right‑hip wedge (left uterine displacement) and preload optimization</li>
+    <li>C. Head‑down tilt</li>
+    <li>D. Nitroglycerin infusion</li>
+    <li>E. Routine nasal intubation</li>
+</ul>
+<p><strong>Correct: B.</strong></p>
+
+<p><strong>9. Post‑TBLB, the patient has mild pleuritic pain and stable vitals. Next step?</strong></p>
+<ul>
+    <li>A. Routine immediate CXR for all patients</li>
+    <li>B. Admit for 24 h observation</li>
+    <li>C. Observe ≥2 h; image only if symptomatic/worsening</li>
+    <li>D. CT chest</li>
+    <li>E. Discharge immediately</li>
+</ul>
+<p><strong>Correct: C.</strong></p>
+
+<p><strong>10. Which oxygen strategy reduces desaturation events during sedated bronchoscopy?</strong></p>
+<ul>
+    <li>A. Simple nasal cannula</li>
+    <li>B. Non‑rebreather mask</li>
+    <li>C. NIV for all patients</li>
+    <li>D. High‑flow nasal cannula</li>
+    <li>E. Room air</li>
+</ul>
+<p><strong>Correct: D.</strong></p>
+
+<p><strong>11. Maximum recommended topical lidocaine dose during bronchoscopy is:</strong></p>
+<ul>
+    <li>A. 2 mg/kg</li>
+    <li>B. 4 mg/kg</li>
+    <li>C. 6 mg/kg</li>
+    <li>D. 10 mg/kg</li>
+    <li>E. No maximum</li>
+</ul>
+<p><strong>Correct: B.</strong></p>
+
+<p><strong>12. Which statement about prophylactic antibiotics for PBF is correct?</strong></p>
+<ul>
+    <li>A. Should be given to all BAL patients</li>
+    <li>B. Only in transplant recipients</li>
+    <li>C. Do not reduce PBF and are not routinely recommended</li>
+    <li>D. Mandatory if CRP is elevated pre‑procedure</li>
+    <li>E. Necessary if BAL volume >200 mL</li>
+</ul>
+<p><strong>Correct: C.</strong></p>
+
+<hr>
+
+<h3>Take‑Home Checklist</h3>
+<ul>
+    <li>[ ] Communicate real‑world risks (overall complications ~1%, mortality ~0.02%) during consent.</li>
+    <li>[ ] Prepare for bleeding: Cold saline, vasoconstrictor, balloon blocker, sealants, rigid backup.</li>
+    <li>[ ] Apply antithrombotic holds pragmatically; aspirin is usually continued; verify INR for warfarin.</li>
+    <li>[ ] Use HFNC in desaturation‑prone patients; treat hypoxemia immediately.</li>
+    <li>[ ] Keep reversal agents (flumazenil, naloxone) drawn up; recognize chest‑wall rigidity.</li>
+    <li>[ ] Suspect pneumothorax if new chest pain/desaturation post‑TBLB; observe ≥2 h; image if symptomatic.</li>
+    <li>[ ] Distinguish PBF from infection; procalcitonin can help; prophylactic antibiotics are not routine.</li>
+    <li>[ ] Pregnancy: Avoid nasal route, wedge right hip, minimize hypercarbia, lowest effective lidocaine, multidisciplinary team.</li>
+    <li>[ ] PH: Continue PAH meds; avoid increased PVR; anticipate hypoxemia risk more than bleeding.</li>
+</ul>
+
+<hr>
+
+<div class="references">
+    <h3>References</h3>
+    <ol>
+        <li>Facciolongo N, Patelli M, Gasparini S, et al. Incidence of complications in bronchoscopy: multicentre prospective study of 20,986 bronchoscopies. Monaldi Arch Chest Dis. 2009;71(1):8‑14.</li>
+        <li>Du Rand IA, Blaikley J, Booton R, et al. British Thoracic Society guideline for diagnostic flexible bronchoscopy in adults. Thorax. 2013;68:i1‑i44.</li>
+        <li>Muthu V, Ram B, Sehgal IS, et al. Major complications during 9,979 flexible bronchoscopies under local anesthesia. Lung India. 2022;39(4):384‑387.</li>
+        <li>Bernasconi M, Koegelenberg CFN, Koutsokera A, et al. Iatrogenic bleeding during flexible bronchoscopy: risk factors, prophylaxis and management. ERJ Open Res. 2017;3(2):00084‑2016.</li>
+        <li>Gil HI, Ko RE, Lee K, et al. Effects of antithrombotic treatment on bleeding complications of EBUS‑TBNA. Medicina (Kaunas). 2021;57(2):142.</li>
+        <li>Meena N, Abouzgheib W, Patolia S, et al. EBUS‑TBNA and EUS‑FNA: risk assessment for patients receiving clopidogrel. J Bronchology Interv Pulmonol. 2016;23(4):303‑307.</li>
+        <li>Márquez‑Martín E, Vergara DG, Martín‑Juan J, et al. Endobronchial tranexamic acid for controlling pulmonary bleeding: a pilot study. J Bronchology Interv Pulmonol. 2010;17(2):122‑125.</li>
+        <li>Khoo KL, Lee P, Mehta AC. Endobronchial epinephrine: confusion is in the air. Am J Respir Crit Care Med. 2013;187(10):1137‑1138.</li>
+        <li>Tüller C, Tüller D, Tamm M, Brutsche MH. Hemodynamic effects of endobronchial ornipressin vs terlipressin. Respiration. 2004;71(4):397‑401.</li>
+        <li>Kalchiem‑Dekel O, Tran BC, Glick DR, et al. Prophylactic epinephrine attenuates severe bleeding in lung transplantation patients undergoing TBLB (PROPHET). J Heart Lung Transplant. 2023;42(9):1205‑1213.</li>
+        <li>Radchenko C, Alraiyes AH, Shojaee S. Systematic approach to massive hemoptysis. J Thorac Dis. 2017;9:S1069‑S1086.</li>
+        <li>Roy A, Khanna P, Chowdhury SR, et al. HFNC vs other devices during bronchoscopy under sedation: systematic review and meta‑analyses. Indian J Crit Care Med. 2022;26(10):1131‑1140.</li>
+        <li>Pirozyński M, Śliwiński P, Zieliński J. Effect of different BAL volumes on oxygen saturation. Eur Respir J. 1988;1(10):943‑947.</li>
+        <li>van Zwam JP, Kapteijns EF, Lahey S, Smit HJ. Bronchoscopy in supine or sitting position: randomized prospective analysis. J Bronchology Interv Pulmonol. 2010;17(1):29‑32.</li>
+        <li>Jones AM, O’Driscoll R. Do all patients require supplemental oxygen during flexible bronchoscopy? Chest. 2001;119(6):1906‑1909.</li>
+        <li>Dreher M, Ekkernkamp E, Storre JH, et al. Sedation during flexible bronchoscopy in respiratory failure: midazolam vs midazolam+alfentanil. Respiration. 2010;79(4):307‑314.</li>
+        <li>Williamson BH, Nolan PJ, Tribe AE, Thompson PJ. Flumazenil in bronchoscopic procedures: a placebo‑controlled study. Br J Clin Pharmacol. 1997;43(1):77‑83.</li>
+        <li>Çoruh B, Tonelli MR, Park DR. Fentanyl‑induced chest wall rigidity. Chest. 2013;143(4):1145‑1146.</li>
+        <li>Rosal NR, Thelmo FL Jr, Tzarnas S, et al. Wooden chest syndrome: fentanyl‑induced chest wall rigidity. J Investig Med High Impact Case Rep. 2021;9:23247096211034036.</li>
+        <li>Izbicki G, Shitrit D, Yarmolovsky A, et al. Is routine chest radiography after TBLB necessary? Prospective study of 350 cases. Chest. 2006;129(6):1561‑1564.</li>
+        <li>Sehgal IS, Bal A, Dhooria S, et al. Cup vs alligator forceps for TBLB in sarcoidosis: randomized trial. Chest. 2016;149(6):1584‑1586.</li>
+        <li>Lachowicz JA, Smallwood NE, Prasad JD, et al. Procedural and sampling techniques for TBCB in ILD: systematic review. Eur Respir Rev. 2024;33(173):240035.</li>
+        <li>DeMasi S, Parker MS, Joyce M, et al. Thoracic point‑of‑care ultrasound for clinically significant traumatic pneumothorax. Acad Emerg Med. 2023;30(6):653‑661.</li>
+        <li>Park JS, Lee CH, Yim JJ, et al. Antibiotic prophylaxis and PBF: randomized controlled study. Int J Tuberc Lung Dis. 2011;15(4):528‑535.</li>
+        <li>Um SW, Choi CM, Lee CT, et al. Clinical characteristics and risk factors of PBF: prospective analysis. Chest. 2004;125(3):945‑952.</li>
+        <li>Yigla M, Oren I, Bentur L, et al. Incidence of bacteremia after fiberoptic bronchoscopy. Eur Respir J. 1999;14(4):789‑791.</li>
+        <li>Sharif‑Kashani B, Shahabi P, Behzadnia N, et al. Incidence of fever and bacteremia after flexible bronchoscopy: prospective study. Acta Med Iran. 2010;48(6):385‑388.</li>
+        <li>Hackner K, Riegler W, Handzhiev S, et al. Procalcitonin enables early diagnosis of post‑interventional bacterial infection. BMC Pulm Med. 2017;17(1):156.</li>
+        <li>Suratt PM, Smiddy JF, Gruber B. Deaths and complications associated with fiberoptic bronchoscopy. Chest. 1976;69(6):747‑751.</li>
+        <li>Stolz D, Pollak V, Chhajed PN, et al. Bronchodilators for bronchoscopy in COPD: randomized, placebo‑controlled trial. Chest. 2007;131(3):765‑772.</li>
+        <li>Humbert M, Robinson DS, Assoufi B, et al. Safety of fibreoptic bronchoscopy in asthmatic and control subjects. Thorax. 1996;51(7):664‑669.</li>
+        <li>Wahidi MM, Rocha AT, Hollingsworth JW, et al. Bronchoscopy in pulmonary hypertension: physician survey on perceived risk. Respiration. 2005;72:285‑295.</li>
+        <li>Ali J, et al. Bronchoscopy in pulmonary hypertension: meta‑analysis. Ann Am Thorac Soc. 20(6):898‑905.</li>
+        <li>Bahhady I, Ernst A. Bronchoscopy in pregnancy. Chest. 2004;126.</li>
+        <li>Morgan R, Ernst A. Bronchoscopy during pregnancy. Clin Chest Med. 2011;32.</li>
+        <li>Tang SJ, et al. ERCP in pregnancy: safety of sphincterotomy. Gastrointest Endosc. 2009;69.</li>
+        <li>Price LC, et al. Peri‑operative management of pulmonary hypertension. Br J Anaesth. 2021;126(4):774‑790.</li>
+        <li>Broker T, et al. Anaesthesia for pulmonary hypertension. Ann Transl Med. 2019;7(15):355.</li>
+    </ol>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.3.0/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({ startOnLoad: true });
+</script>
+
+</body>
+</html>

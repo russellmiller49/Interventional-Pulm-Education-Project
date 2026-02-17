@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanical Debridement and Balloon Dilatation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <h1>Mechanical Debridement and Balloon Dilatation</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers the interventional bronchoscopy management of central airway obstruction (CAO) with a focus on non-thermal mechanical modalities (rigid coring, rigid and flexible forceps, microdebrider, cryorecanalization) and airway balloon dilatation (bronchoplasty). Content maps to AABIP blueprint domains in therapeutic bronchoscopy for malignant and benign airway stenosis, peri-procedural management, device selection, complication recognition/management, and post-transplant airway complications.</p>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Select appropriate mechanical debridement and balloon dilatation strategies for malignant and benign CAO.</li>
+        <li>Prepare patients for safe, effective dilatation or mechanical debulking, including oxygenation/ventilation planning and anesthesia choice.</li>
+        <li>Execute step-by-step techniques for rigid coring, forceps debulking, microdebrider use, cryorecanalization, and balloon dilatation.</li>
+        <li>Anticipate, prevent, and manage complications such as airway laceration, bleeding, barotrauma, and pneumomediastinum.</li>
+        <li>Apply algorithms for CAO triage and benign stenosis management, including when to add radial incisions, stents, or repeat sessions.</li>
+        <li>Interpret outcome data to counsel patients on expected durability and the role of adjunct therapies, especially after lung transplantation.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h3>High-Yield One-Pager</h3>
+        <ul>
+            <li><strong>First priorities in CAO:</strong> Airway control, oxygenation/ventilation, and hemodynamics; then choose the safest effective debulking/dilation modality.</li>
+            <li><strong>FiO₂ Considerations:</strong> Mechanical tools are indicated when FiO₂ is high, as thermal devices are contraindicated due to fire risk.</li>
+            <li><strong>Devascularize before you debulk</strong> (when feasible). Coagulate with laser or electrocautery before using mechanical coring, forceps, or microdebrider to reduce bleeding. Exception: Refractory hypoxemia or scenarios precluding thermal use.</li>
+            <li><strong>Balloon vs. Rigid Dilatation:</strong> Balloons minimize longitudinal shearing and mucosal injury; rigid dilatation preserves ventilation and provides tactile feedback in low-reserve patients.</li>
+            <li><strong>Benign “Simple” Web Stenosis:</strong> Best results are achieved with radial incisions (e.g., 12, 4, and 8 o’clock) followed by incremental balloon dilatation.</li>
+            <li><strong>Complex Stenosis:</strong> Lesions with cartilage involvement, inflammation, or calcification are less responsive to dilatation alone; plan for adjuncts or stenting.</li>
+            <li><strong>Balloon Timing:</strong> Commonly 30–90 second inflations × 2–3 per stage (mechanical perspective) or ~1 minute inflations repeated three times (bronchoplasty perspective); escalate diameter stepwise.</li>
+            <li><strong>Positioning Matters:</strong> Center the noncompliant balloon with slight overlap on each side of the stenosis; keep the balloon entirely distal to the scope tip before inflation.</li>
+            <li><strong>Watch Through the Balloon:</strong> Gentle suction on the fluid-filled balloon gives a 360° view to detect developing tears.</li>
+            <li><strong>Communication Saves Airways:</strong> Never confuse millimeters with atmospheres when instructing inflation targets. Closed-loop communication is vital.</li>
+            <li><strong>Complications:</strong> usually self-limited. Superficial lacerations are common and can correlate with longer patency in some benign stenoses; manage conservatively unless instability arises.</li>
+            <li><strong>Transplant Airway Complications:</strong> Repeated dilatations are common; consider stenting if dilatations are required more than twice monthly.</li>
+            <li><strong>Microdebrider:</strong> Rapid debulking plus continuous suction; powerful but unforgiving—requires strict visualization and respect for airway planes.</li>
+            <li><strong>Cryorecanalization:</strong> Fast, effective for loosely adherent, water-rich tissue; it is not hemostatic and should be avoided near vascular invasion.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Central airway stenosis arises from post-intubation injury, surgical anastomoses (transplant, sleeve resection), infections (e.g., tuberculosis), inflammatory diseases (sarcoidosis, EGPA, relapsing polychondritis), malignancy, idiopathic etiologies, radiation, inhalational injury, and trauma. Patients often present with exertional dyspnea and focal monophonic wheeze and may be misdiagnosed with asthma until bronchoscopy confirms a discrete obstruction or stricture. Bronchoscopic visualization remains the gold standard for defining location, length, morphology (exophytic vs. web vs. circumferential), and etiology while permitting immediate therapy.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>Indications</strong></p>
+    <ul>
+        <li>Symptomatic malignant or benign endoluminal obstruction causing dyspnea, wheeze, post-obstructive infection, or failure to wean ventilation.</li>
+        <li>Benign focal “web-like” stenosis amenable to dilatation ± radial incisions.</li>
+        <li>Malignant narrowing requiring temporary expansion to allow stent placement or passage of debulking tools.</li>
+        <li>Post-transplant anastomotic stenosis.</li>
+    </ul>
+
+    <p><strong>Relative Contraindications / Caution</strong></p>
+    <ul>
+        <li>Poor visualization or inability to control the airway/ventilation.</li>
+        <li>Highly vascular tumors or lesions invading adjacent vasculature (cryorecanalization and aggressive dilation increase hemorrhage risk).</li>
+        <li>Complex benign strictures with cartilage involvement, inflammation, or calcification—consider combined approaches or stenting.</li>
+        <li>Balloon inflation in patients who cannot tolerate brief occlusion; prefer rigid dilatation with continuous ventilation.</li>
+        <li>Distal procedures via small ETTs/little reserve—consider fluoroscopic wire-guided techniques.</li>
+    </ul>
+
+    <h4>Pre-procedure Evaluation</h4>
+    <ul>
+        <li><strong>Airway Plan:</strong> Determine need for LMA, endotracheal tube, or rigid bronchoscope. Rigid bronchoscopy is preferred for life-threatening CAO, heavy bleeding risk, or when ventilation must be maintained throughout.</li>
+        <li><strong>Oxygenation/Ventilation:</strong> Assess ability to momentarily tolerate balloon occlusion; if not, use rigid dilatation or mechanical debulking while ventilating.</li>
+        <li><strong>Imaging/Physiology:</strong> Review CT (preferably with reconstruction) and flow-volume loops; however, bronchoscopy directs real-time decisions.</li>
+        <li><strong>Sedation/Anesthesia:</strong> Deep sedation or general anesthesia is typical; tracheal dilatation often requires GA due to distress from the sensation of asphyxiation during occlusion.</li>
+        <li><strong>Consent/Risk Discussion:</strong> Bleeding, mucosal tears/laceration, pneumothorax, pneumomediastinum, mediastinitis, chest pain; need for repeat sessions or stent placement.</li>
+        <li><strong>Adjunct Preparedness:</strong> Thermal devices for devascularization (if FiO₂ allows), hemostatic agents (epinephrine, topical tranexamic acid, cold saline), Fogarty balloon or endobronchial blocker, stent kits, and suction.</li>
+    </ul>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>Balloons:</strong> High-pressure, low-compliance, nonconformal balloons sized to straddle the stenosis with modest overlap on both sides. Single- or multi-diameter designs (diameter achieved by inflation pressure) connect to a manometer-equipped inflation syringe filled with saline (or diluted contrast when fluoroscopic guidance is used).</li>
+        <li><strong>Rigid Bronchoscope System:</strong> Ventilating tracheoscope and bronchoscopes (modular system preferred for serial dilatation), optical telescope(s), large-bore suction.</li>
+        <li><strong>Mechanical Tools:</strong>
+            <ul>
+                <li><strong>Rigid Coring:</strong> Beveled rigid scope tip used for exophytic lesions.</li>
+                <li><strong>Rigid and Flexible Forceps:</strong> Including large/jumbo forceps through therapeutic channels for tissue extraction.</li>
+                <li><strong>Microdebrider:</strong> 4 mm, serrated, angulated “hockey-stick” blade, console with suction/irrigation, and 500–1200 rpm settings.</li>
+                <li><strong>Cryoprobes:</strong> Flexible, console-driven; nitrous oxide or CO₂ coolant; ~−89°C tip.</li>
+                <li><strong>Fogarty Balloons:</strong> For tamponade or retrograde compression/extraction in small/distal airways.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+
+    <h4>Balloon Dilatation (Bronchoplasty)</h4>
+    <ul>
+        <li><strong>Airway & Oxygenation:</strong> Secure airway (LMA/ETT/rigid) and pre-oxygenate.</li>
+        <li><strong>Lesion Assessment:</strong> Define stenosis length, tightness, and morphology.</li>
+        <li><strong>Balloon Selection:</strong> Choose a balloon that centers across the stenosis with slight proximal/distal overlap; start slightly larger than the native lumen and escalate serially.</li>
+        <li><strong>Positioning:</strong> Advance the deflated balloon beyond the scope tip into the stenosis; ensure the balloon is entirely out of the working channel before inflation.</li>
+        <li><strong>Stabilization:</strong> Retract gently until the balloon contacts the scope tip for stability.</li>
+        <li><strong>Inflation Cycles:</strong> Inflate to target diameter for ~1 minute × 3 at a given size or 30–90 seconds × 2–3 per stage (institutional practice varies); interrupt early if desaturation occurs.</li>
+        <li><strong>Visualization Trick:</strong> Apply gentle suction to the fluid-filled balloon to obtain a 360° view for mucosal tears; deflate immediately if a deep laceration is suspected.</li>
+        <li><strong>Escalation:</strong> If minimal resistance is encountered, progress to the next diameter.</li>
+        <li><strong>Adjuncts:</strong> Use balloons to help seat stents, tamponade bleeding, or deliberately occlude an airway if needed transiently.</li>
+        <li><strong>Exit:</strong> Deflate fully, withdraw, re-inspect for tears/bleeding; consider stent if recoil or persistent malacia is observed.</li>
+    </ul>
+
+    <h4>Rigid Dilatation</h4>
+    <ul>
+        <li>Establish general anesthesia and rigid tracheoscopy.</li>
+        <li>Insert a large tracheoscope, detach base, then pass longer, smaller-diameter ventilating bronchoscopes serially using a gentle twisting (“apple-coring”) motion through the stenosis while maintaining ventilation.</li>
+        <li>Monitor for barotrauma if jet ventilation is used; avoid occluding proximal ports with multiple instruments.</li>
+    </ul>
+
+    <h4>Radial Incisions (for Web Stenosis)</h4>
+    <ul>
+        <li>Using an electrocautery knife or cutting laser, create three 1–2 mm radial incisions at 12, 4, and 8 o’clock to create controlled tear points.</li>
+        <li>Follow with incremental balloon dilatation.</li>
+    </ul>
+
+    <h4>Rigid Coring</h4>
+    <ul>
+        <li>Under direct telescope visualization, keep the bronchoscope parallel to the airway axis.</li>
+        <li>Corkscrew the beveled tip along the lesion–mucosa plane to detach exophytic tumors.</li>
+        <li>Use in-line large-bore suction; tamponade the base for several minutes if bleeding occurs.</li>
+    </ul>
+
+    <h4>Rigid & Flexible Forceps</h4>
+    <ul>
+        <li><strong>Rigid:</strong> Insert alongside telescope; grasp and remove tissue en bloc, moving telescope and forceps together.</li>
+        <li><strong>Flexible:</strong> Useful for debris removal and small/angulated segments; large/jumbo forceps through therapeutic channels can accelerate cleanup.</li>
+    </ul>
+
+    <h4>Microdebrider</h4>
+    <ul>
+        <li>Connect console and set 500–1200 rpm.</li>
+        <li>Under constant visualization, bring the angulated tip into light contact.</li>
+        <li>Suction draws tissue into the port, which the rotating blade morselizes and aspirates.</li>
+        <li>Use minimal pressure; strictly respect airway planes.</li>
+    </ul>
+
+    <h4>Cryorecanalization</h4>
+    <ul>
+        <li>Apply probe tip directly to tumor.</li>
+        <li>Freeze 3–6 seconds with gentle traction to avulse tissue en bloc (scope and probe removed together).</li>
+        <li>Avoid wide freezing radii or contact with normal mucosa.</li>
+        <li>Have non-thermal hemostatic adjuncts ready; cryo is not hemostatic.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Troubleshooting & Intra-procedure Management</h3>
+    <ul>
+        <li><strong>Hypoxemia during balloon inflation:</strong> Shorten inflation to 20–30 seconds; pre-oxygenate; use rigid dilatation to maintain ventilation; consider staged partial dilations.</li>
+        <li><strong>Balloon migration:</strong> Ensure 0.5 cm overlap proximal to stenosis; stabilize against the scope tip; avoid partial in-channel inflation.</li>
+        <li><strong>Developing mucosal tears:</strong> Use the 360° view; downsize or stop; most superficial tears heal conservatively.</li>
+        <li><strong>Bleeding:</strong> Tamponade with rigid scope or balloon; instill cold saline, dilute epinephrine, or topical tranexamic acid; consider Fogarty occlusion or endobronchial blocker for distal bleeding.</li>
+        <li><strong>Barotrauma risk:</strong> Pause ventilation during balloon inflations if tolerated; avoid simultaneous multiple instruments occluding expiratory ports.</li>
+        <li><strong>Communication error (mm vs. atm):</strong> Use closed-loop communication for inflation targets.</li>
+        <li><strong>Device fatigue:</strong> Multiple passes may weaken some balloon catheters; replace if reinsertion becomes difficult.</li>
+    </ul>
+
+    <h3>Post-procedure Care & Follow-up</h3>
+    <ul>
+        <li>Observe for chest pain, blood-tinged sputum, subcutaneous emphysema, or respiratory distress; obtain imaging if pneumothorax/pneumomediastinum is suspected.</li>
+        <li>In benign stenosis, prepare for reassessment and possible repeat dilations; discuss long-term plan (adjunct incisions, stent if repeated sessions are frequent).</li>
+        <li>After transplant or complex lesions, anticipate multiple sessions and earlier adjunctive stenting when recurrences are frequent.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1: Central Airway Obstruction—Tool Selection</h4>
+    <div class="mermaid">
+    graph TD
+        Start["Suspected/Known CAO"] --> Stable{"Is the airway stable?"}
+        Stable -- "No" --> Secure["Secure airway (rigid bronch ± jet vent); restore oxygenation"]
+        Stable -- "Yes" --> Assess["Assess lesion (proximal vs. distal; intra- vs. extraluminal; vascularity)"]
+        Secure --> Assess
+        Assess --> FiO2{"Can FiO₂ be lowered safely?"}
+        FiO2 -- "No" --> NonThermal["Use non-thermal tools: rigid coring, microdebrider, forceps, cryo, ± balloon"]
+        FiO2 -- "Yes" --> Thermal["Devascularize (laser/electrocautery/APC) then mechanical debulking"]
+        NonThermal --> Extra{"Extraluminal Component?"}
+        Thermal --> Extra
+        Extra -- "Yes" --> Dilate["Dilatation ± stent (prefer rigid dilatation if poor reserve)"]
+        Extra -- "No (Intraluminal)" --> Debulk["Debulk mechanically; consider balloon to expand lumen or seat stent"]
+        Dilate --> Result{"Is lumen adequate?"}
+        Debulk --> Result
+        Result -- "No" --> Adjunct["Adjunct: stent placement; repeat sessions; multidisciplinary review"]
+        Result -- "Yes" --> Monitor["Post-procedure monitoring & follow-up"]
+    </div>
+
+    <h4>Algorithm 2: Benign Tracheobronchial Stenosis—Endoscopic Management</h4>
+    <div class="mermaid">
+    graph TD
+        Start["Benign Stenosis Confirmed"] --> Type{"Simple web vs. Complex?"}
+        Type -- "Simple Web" --> SimpleTx["Radial incisions (12, 4, 8 o'clock) --> Incremental balloon dilatation"]
+        Type -- "Complex" --> ComplexTx["Combined therapy: incisions + balloon ± stent"]
+        SimpleTx --> Lumen{"Adequate Lumen?"}
+        Lumen -- "Yes" --> Surveil["Surveillance & symptom-guided follow-up"]
+        Lumen -- "No" --> Repeat["Repeat dilatation session at interval"]
+        ComplexTx --> Recur{"Recurrence Frequency"}
+        Repeat --> Recur
+        Recur -- "High (e.g., >2/mo)" --> Stent["Consideration for stent"]
+        Recur -- "Low/Moderate" --> Staged["Staged repeat dilatations; manage inflammation; reassess"]
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. Mechanical Debridement Modalities—Roles, Strengths, Limitations</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Modality</th>
+                <th>Primary Role</th>
+                <th>Key Strengths</th>
+                <th>Limitations / Cautions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Rigid coring</td>
+                <td>Rapid removal of exophytic tumors</td>
+                <td>Immediate debulking, tamponade with scope, works at high FiO₂</td>
+                <td>Risk of perforation/vascular injury; requires skill and direct visualization</td>
+            </tr>
+            <tr>
+                <td>Rigid forceps</td>
+                <td>Tissue extraction, debulking</td>
+                <td>Strong grasp, many jaw options</td>
+                <td>Mucosal tears in tight lumens; not hemostatic</td>
+            </tr>
+            <tr>
+                <td>Flexible forceps (large/jumbo)</td>
+                <td>Debris removal, small/angulated segments</td>
+                <td>Maneuverable, adjunct to thermal</td>
+                <td>Small bites; bleeding with “cold” forceps; limited primary debulking role</td>
+            </tr>
+            <tr>
+                <td>Microdebrider</td>
+                <td>Rapid debulking of long infiltrative tumors</td>
+                <td>Continuous suction + cutting; fast</td>
+                <td>Not hemostatic; bulky/rigid; catastrophic injury if misused</td>
+            </tr>
+            <tr>
+                <td>Cryorecanalization</td>
+                <td>En bloc removal of cryosensitive tissue when thermal is contraindicated</td>
+                <td>Works at high FiO₂; large fragments</td>
+                <td>Not hemostatic; avoid near vascular invasion/membranous wall</td>
+            </tr>
+            <tr>
+                <td>Balloon dilatation</td>
+                <td>Expand stenosis; facilitate stenting</td>
+                <td>Minimizes shearing; simple, quick</td>
+                <td>Occludes airway during inflation; laceration/perforation risk if over-dilated</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. Balloon Bronchoplasty—Practical Parameters</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Parameter</th>
+                <th>Practical Point</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Balloon design</td>
+                <td>High-pressure, low-compliance, nonconformal; single- or multi-diameter by pressure</td>
+            </tr>
+            <tr>
+                <td>Positioning</td>
+                <td>Center across stenosis with slight overlap on both sides; entirely distal to scope tip before inflation</td>
+            </tr>
+            <tr>
+                <td>Inflation cycles</td>
+                <td>Commonly 30–90 s × 2–3 per stage or ~1 min × 3 per stage; interrupt if intolerance</td>
+            </tr>
+            <tr>
+                <td>Escalation</td>
+                <td>Incremental up-sizing; stop if deep laceration suspected</td>
+            </tr>
+            <tr>
+                <td>Visualization</td>
+                <td>Gentle suction on fluid-filled balloon yields a 360° view to detect tears</td>
+            </tr>
+            <tr>
+                <td>Adjunct uses</td>
+                <td>Tamponade bleeding; help seat stents; temporary occlusion</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Anticipated Complications and Management</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Complication</th>
+                <th>Prevention</th>
+                <th>Recognition</th>
+                <th>Management</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Airway laceration</td>
+                <td>Incremental sizing; visualize through balloon</td>
+                <td>Sudden linear mucosal split</td>
+                <td>Usually conservative; monitor; avoid further over-dilatation</td>
+            </tr>
+            <tr>
+                <td>Bleeding</td>
+                <td>Devascularize when feasible; gentle technique</td>
+                <td>Oozing vs. brisk hemorrhage</td>
+                <td>Tamponade (scope/balloon), cold saline, dilute epinephrine, topical TXA; blockers/Fogarty</td>
+            </tr>
+            <tr>
+                <td>Pneumothorax/ mediastinum</td>
+                <td>Avoid over-dilatation; respect planes</td>
+                <td>Chest pain, emphysema</td>
+                <td>Imaging, oxygen, chest drainage if indicated</td>
+            </tr>
+            <tr>
+                <td>Barotrauma/ air-trapping</td>
+                <td>Avoid occluding expiratory ports; pause ventilation</td>
+                <td>Rising pressures, hypoxia</td>
+                <td>Remove instruments, vent; treat barotrauma</td>
+            </tr>
+            <tr>
+                <td>Negative-pressure pulmonary edema</td>
+                <td>Avoid prolonged occlusion in spontaneous breathing</td>
+                <td>Acute hypoxemia post-dilation</td>
+                <td>Supportive care; consider GA for future sessions</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 4. Indications and Expected Durability—Balloon Dilatation</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Scenario</th>
+                <th>Expected Effect</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Malignant intraluminal narrowing</td>
+                <td>Immediate relief; often bridge to stent</td>
+                <td>Improves diameter in a majority with one procedure</td>
+            </tr>
+            <tr>
+                <td>Benign web stenosis</td>
+                <td>Good initial response; repeat sessions common</td>
+                <td>Combine with radial incisions; diminishing benefit beyond multiple sessions in some series</td>
+            </tr>
+            <tr>
+                <td>Complex benign stenosis</td>
+                <td>Variable; often transient</td>
+                <td>Consider adjuncts and earlier stenting</td>
+            </tr>
+            <tr>
+                <td>Post-transplant anastomotic stenosis</td>
+                <td>Transient relief; repeated procedures frequent</td>
+                <td>Stenting improves outcomes in selected patients</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1</h4>
+        <p>A 62-year-old with squamous cell carcinoma presents with near-critical tracheal obstruction and FiO₂ 0.9 on arrival. Attempts to lower FiO₂ provoke desaturation.</p>
+        <p><strong>What is the best immediate strategy?</strong></p>
+        <ul>
+            <li>A. Argon plasma coagulation followed by balloon dilatation</li>
+            <li>B. Rigid coring with the beveled tip under GA with suction ready</li>
+            <li>C. CO₂ laser radial incisions followed by rigid bougie dilatation</li>
+            <li>D. Cryorecanalization followed by APC</li>
+            <li>E. Wire-guided balloon dilatation under fluoroscopy</li>
+        </ul>
+        <p><strong>Answer: B.</strong></p>
+        <p><strong>Explanation:</strong> High FiO₂ precludes thermal tools due to fire risk. Rigid coring under GA enables rapid airway recanalization with tamponade and suction.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2</h4>
+        <p>A 34-year-old with a short, web-like post-intubation subglottic stenosis is scheduled for endoscopic therapy.</p>
+        <p><strong>Which sequence minimizes uncontrolled mucosal tearing?</strong></p>
+        <ul>
+            <li>A. Balloon dilatation alone with largest balloon first</li>
+            <li>B. Microdebrider debulking then balloon</li>
+            <li>C. Radial incisions (12, 4, and 8 o’clock) followed by incremental balloon dilatation</li>
+            <li>D. Cryorecanalization followed by stent</li>
+            <li>E. Rigid bougie dilatation alone</li>
+        </ul>
+        <p><strong>Answer: C.</strong></p>
+        <p><strong>Explanation:</strong> Controlled radial incisions reduce longitudinal shearing and scarring; incremental ballooning follows.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3</h4>
+        <p>A 58-year-old lung transplant recipient has recurrent anastomotic stenosis requiring three dilatations in the past month.</p>
+        <p><strong>Next best step?</strong></p>
+        <ul>
+            <li>A. Schedule monthly balloon dilatation indefinitely</li>
+            <li>B. Place a stent</li>
+            <li>C. Switch to microdebrider</li>
+            <li>D. Attempt laser resection only</li>
+            <li>E. No further intervention; observe</li>
+        </ul>
+        <p><strong>Answer: B.</strong></p>
+        <p><strong>Explanation:</strong> Frequent recurrences (e.g., >2 per month) support stent consideration in post-transplant stenosis.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank (MCQs)</h3>
+
+    <p><strong>1. A patient with CAO on 100% FiO₂ requires urgent debulking. Which modality is most appropriate initially?</strong></p>
+    <p>A. APC<br>
+    B. Nd:YAG laser<br>
+    C. Cryorecanalization<br>
+    D. Electrocautery snare<br>
+    E. Photodynamic therapy</p>
+    <p><strong>Answer: C.</strong> Non‑thermal and effective at high FiO₂; however, not hemostatic—prepare adjuncts.</p>
+
+    <p><strong>2. During balloon dilatation, the endoscopist instructs the technician to “inflate to 12.” The technician interprets this as 12 atm instead of 12 mm target diameter. What complication is most likely?</strong></p>
+    <p>A. Hypotension<br>
+    B. Perforation/laceration from over‑inflation<br>
+    C. Stent migration<br>
+    D. CO₂ embolism<br>
+    E. Anaphylaxis</p>
+    <p><strong>Answer: B.</strong> Closed‑loop communication avoids confusion between pressure and diameter.</p>
+
+    <p><strong>3. The best way to monitor for impending mucosal tears during balloon inflation is to:</strong></p>
+    <p>A. Inject methylene blue into the balloon<br>
+    B. Apply suction to the fluid‑filled balloon to see through it<br>
+    C. Use jet ventilation at higher rates<br>
+    D. Place the balloon partly inside the working channel<br>
+    E. Use air to inflate the balloon</p>
+    <p><strong>Answer: B.</strong> Suction creates a 360° view through the balloon for real‑time monitoring.</p>
+
+    <p><strong>4. Which statement about rigid dilatation is true?</strong></p>
+    <p>A. It invariably causes more mucosal shearing than balloons<br>
+    B. It cannot be performed under GA<br>
+    C. It allows maintenance of ventilation during dilatation<br>
+    D. It requires fluoroscopy<br>
+    E. It is preferred for distal lobar stenoses in children</p>
+    <p><strong>Answer: C.</strong> Rigid dilatation enables continuous ventilation—useful in low‑reserve patients.</p>
+
+    <p><strong>5. A patient develops blood‑tinged sputum and chest pain after balloon dilatation; vitals stable. Best management?</strong></p>
+    <p>A. Immediate thoracotomy<br>
+    B. Place a covered stent emergently<br>
+    C. Conservative observation and reassessment<br>
+    D. Bronchial artery embolization<br>
+    E. Systemic thrombolysis</p>
+    <p><strong>Answer: C.</strong> Most superficial lacerations are self‑limited and heal conservatively.</p>
+
+    <div class="algorithm-note">
+        <h3>Take-Home Checklist</h3>
+        <ul>
+            <li>Confirm airway stability; secure rigid access early for unstable CAO.</li>
+            <li>Choose non-thermal tools when FiO₂ is high; devascularize before mechanical when feasible.</li>
+            <li>For simple webs: Radial incisions → Incremental balloon dilatation.</li>
+            <li>For complex stenosis: Plan combined therapy and earlier stenting if recurrences are frequent.</li>
+            <li>Balloon: Center it, keep out of the scope channel, use short staged inflations, watch for tears through the balloon.</li>
+            <li>Maintain ventilation during rigid dilatation; pause ventilation during balloon inflations when safe.</li>
+            <li>Use closed-loop communication for balloon targets (mm vs. atm).</li>
+            <li>Prepare hemostasis toolkit (tamponade, cold saline, dilute epinephrine, topical TXA, Fogarty/blocker).</li>
+            <li>Microdebrider: Light touch, continuous visualization, respect planes.</li>
+            <li>Cryorecanalization: Short freezes (3–6 s), avoid vascular invasion, remember it is not hemostatic.</li>
+            <li>Transplant stenosis: Anticipate repeat sessions; stent when dilatations are frequent (e.g., >2 per month).</li>
+            <li>Plan surveillance and functional reassessment (symptoms, spirometry) post-procedure.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abbreviations & Glossary</h3>
+        <dl>
+            <dt>APC</dt><dd>Argon plasma coagulation</dd>
+            <dt>CAO</dt><dd>Central airway obstruction</dd>
+            <dt>FiO₂</dt><dd>Fraction of inspired oxygen</dd>
+            <dt>GA</dt><dd>General anesthesia</dd>
+            <dt>LMA</dt><dd>Laryngeal mask airway</dd>
+            <dt>Microdebrider</dt><dd>Powered rotational cutting device with suction for tissue morselization</dd>
+            <dt>Nonconformal balloon</dt><dd>High-pressure/low-compliance balloon that expands to a specified diameter without molding to irregular stenosis</dd>
+            <dt>Radial incisions</dt><dd>Short, controlled cuts in web stenosis (commonly at 12, 4, and 8 o’clock) before dilatation</dd>
+            <dt>TXA</dt><dd>Tranexamic acid</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>References</h3>
+        <ol>
+            <li>Mayse ML, Greenheck J, Friedman M, Kovitz KL. Successful bronchoscopic balloon dilation of nonmalignant tracheobronchial obstruction without fluoroscopy. Chest. 2004;126(2):634-637.</li>
+            <li>Sheski FD, Mathur PN. Long-term results of fiberoptic bronchoscopic balloon dilation in the management of benign tracheobronchial stenosis. Chest. 1998;114(3):796-800.</li>
+            <li>Hebra A, Powell DD, Smith CD, Othersen HB. Balloon tracheoplasty in children: results of a 15-year experience. J Pediatr Surg. 1991;26(8):957-961.</li>
+            <li>Ferretti G, Jouvan FB, Thony F, Pison C, Coulomb M. Benign noninflammatory bronchial stenosis: treatment with balloon dilation. Radiology. 1995;196(3):831-834.</li>
+            <li>Liang W, Hu P, Guo W, et al. Appropriate treatment sessions of bronchoscopic balloon dilation for patients with nonmalignant central airway stenosis. Ther Adv Respir Dis. 2019;13:1-13.</li>
+            <li>Hautmann H, Gamarra F, Pfeifer KJ, Huber RM. Fiberoptic bronchoscopic balloon dilation in malignant tracheobronchial disease: indications and results. Chest. 2001;120(1):43-49.</li>
+            <li>Shitrit D, Kuchuk M, Zismanov V, Abdel Rhman N, Amital A, Kramer MR. Bronchoscopic balloon dilatation of tracheobronchial stenosis: long-term follow-up. Eur J Cardiothorac Surg. 2010;38(2):198-202.</li>
+            <li>Kim JH, Shin JH, Song HY, et al. Tracheobronchial laceration after balloon dilation for benign strictures: incidence and clinical significance. Chest. 2007;131(4):1114-1117.</li>
+            <li>Abi-Jaoudeh N, Francois RJ, Oliva VL, et al. Endobronchial dilation for the management of bronchial stenosis in patients after lung transplantation: effect of stent placement on survival. J Vasc Interv Radiol. 2009;20(7):912-920.</li>
+            <li>De Gracia J, Culebras M, Alvarez A, et al. Bronchoscopic balloon dilation in the management of bronchial stenosis following lung transplantation. Respir Med. 2007;101(1):27-33.</li>
+            <li>Crespo MM, McCarhy DP, Hopkins PM, et al. ISHLT Consensus Statement on adult and pediatric airway complications after lung transplantation: definitions, grading system, and therapeutics. J Heart Lung Transplant. 2018;37:548-563.</li>
+            <li>McArdle JR, Gildea TR, Mehta AC. Balloon bronchoplasty: its indications, benefits, and complications. J Bronchol Interv Pulmonol. 2005;12(2):123-127.</li>
+            <li>Liberman M. Bronchoscopic evaluation of the trachea and dilation of the trachea. Semin Thorac Cardiovasc Surg. 2009;21(3):255-262.</li>
+            <li>Shapshay SM, Beamis JF Jr, Hybels RL, Bohigian RK. Endoscopic treatment of subglottic and tracheal stenosis by radial laser incision and dilation. Ann Otol Rhinol Laryngol. 1987;96(6):661-664.</li>
+            <li>Tremblay A, Coulter TD, Mehta AC. Modification of a mucosal-sparing technique using electrocautery and balloon dilatation in the endoscopic management of web-like benign airway stenosis. J Bronchol. 2003;10(4):268-271.</li>
+            <li>Kim JH, Shin JH, Song H-Y. Cutting balloon treatment for resistant benign bronchial strictures: report of eleven patients. J Vasc Interv Radiol. 2010;21(5):748-752.</li>
+            <li>Sakata KK, Midthun DE. Cutting balloon dilation for central airway stricture. J Bronchol Interv Pulmonol. 2018;25(3):e29-e30.</li>
+            <li>Stephens KE Jr, Wood DE. Bronchoscopic management of central airway obstruction. J Thorac Cardiovasc Surg. 2000;119(2):289-296.</li>
+            <li>Casal RF, Iribarren J, Eapen G, et al. Safety and effectiveness of microdebrider bronchoscopy for the management of central airway obstruction. Respirology. 2013;18(6):1011-1015.</li>
+            <li>Hetzel M, Hetzel J, Schumann C, Marx N, Babiak A. Cryorecanalization: a new approach for the immediate management of acute airway obstruction. J Thorac Cardiovasc Surg. 2004;127(5):1427-1431.</li>
+            <li>Schumann C, Hetzel M, Babiak AJ, et al. Endobronchial tumor debulking with a flexible cryoprobe for immediate treatment of malignant stenosis. J Thorac Cardiovasc Surg. 2010;139(4):997-1000.</li>
+            <li>Yılmaz A, Aktaş Z, Alici IO, Çağlar A, Sazak H, Ulus F. Cryorecanalization: keys to success. Surg Endosc. 2012;26(10):2969-2974.</li>
+            <li>Morales-Estrella JL, Machuzak M, Pichurko B, Inaty H, Mehta AC. Suffocation from balloon bronchoplasty. J Bronchol Interv Pulmonol. 2018;25(2):156-160.</li>
+            <li>Kim YH, Sung DJ, Cho SB, et al. Deep tracheal laceration after balloon dilation for benign tracheobronchial stenosis: case reports of two patients. Br J Radiol. 2006;79(942):529-535.</li>
+            <li>Alraiyes AH, Kumar A, Gildea TR. Peering beyond an occluded airway. Ann Am Thorac Soc. 2015;12(1):124-127.</li>
+        </ol>
+    </div>
+</body>
+</html>

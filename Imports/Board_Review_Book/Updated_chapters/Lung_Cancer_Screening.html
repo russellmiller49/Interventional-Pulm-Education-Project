@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lung Cancer Screening</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        .references li { margin-bottom: 10px; }
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Lung Cancer Screening</h1>
+
+<h3>Exam Mapping & Scope</h3>
+<p><strong>Mapped to:</strong> AABIP/CAQ IP domains on oncologic diagnostics and programmatic screening.</p>
+<p><strong>Key Topics:</strong> Eligibility, shared decision-making, CTLS technical standards, Lung-RADS v2022, nodule management and escalation (PET/CT, biopsy, bronchoscopy, surgery), benefits/harms (mortality, false positives, complications, radiation), special populations (COPD/ILD, cancer survivors), and evolving tools (risk models, biomarkers).</p>
+
+<h3>Learning Objectives</h3>
+<ul>
+    <li>Differentiate current screening eligibility frameworks (USPSTF, CMS/Medicare coverage, NCCN, ACS) and identify when to discontinue screening.</li>
+    <li>Conduct high-quality shared decision-making and embed smoking-cessation interventions within a screening program.</li>
+    <li>Apply CT lung screening (CTLS) technical parameters and radiation benchmarks and interpret reports using Lung-RADS v2022.</li>
+    <li>Select the next best step for positive screens (e.g., 3-month LDCT vs. PET/CT vs. tissue sampling) using nodule type, size, growth, and patient risk.</li>
+    <li>Anticipate and mitigate harms: false positives, downstream procedures, incidental findings, overdiagnosis, and cumulative radiation.</li>
+    <li>Adapt management for special populations (older adults, COPD/ILD, prior cancer, limited life expectancy).</li>
+    <li>Recognize areas of controversy and emerging evidence (risk models, volumetric thresholds, biomarkers, AI).</li>
+</ul>
+
+<hr>
+
+<h3>High-Yield One-Pager</h3>
+<div class="algorithm-note">
+    <p><strong>Benefit:</strong> Annual LDCT reduces lung cancer mortality (absolute and relative benefit) in high-risk adults; most screen-detected cancers are earlier stage.</p>
+    <p><strong>Key eligibility (USPSTF 2021):</strong> Ages 50–80, ≥20 pack-years, currently smoke or quit <15 years ago; stop after 15 smoke-free years or if life expectancy/fitness precludes curative therapy.</p>
+    <p><strong>Coverage nuance (CMS):</strong> Typically ages 50–77 with the same pack-year and quit-time requirements and documented shared decision-making; always confirm local payer rules.</p>
+    <p><strong>NCCN/ACS differences:</strong> NCCN endorses ≥20 pack-years; ACS (2023) removes the 15-year quit-time limit and upper age cutoff, emphasizing individualized continuation in fit patients.</p>
+    <p><strong>CTLS protocol:</strong> Noncontrast, ≤2.5 mm slices, volumetric CT dose index (CTDIvol) around 3 mGy for standard-sized patients; effective dose ~1–1.5 mSv per exam.</p>
+    <p><strong>Lung-RADS v2022:</strong> Size/growth thresholds drive management.</p>
+    <ul>
+        <li><strong>Growth:</strong> >1.5 mm (mean) over 12 months.</li>
+        <li><strong>4A:</strong> New solid 6–&lt;8 mm or growing &lt;8 mm → 3-mo LDCT (consider PET if solid ≥8 mm).</li>
+        <li><strong>4B:</strong> Persistent proximal/segmental airway nodule at 3 months → Diagnostic evaluation (often bronchoscopy).</li>
+        <li><strong>Atypical cystic lesions:</strong> Thick-walled/multilocular cysts and cyst+solid nodules are suspicious; growing wall thickness/nodularity → 4B.</li>
+    </ul>
+    <p><strong>Harms to discuss:</strong> False positives (and follow-on imaging), small but real risks from invasive work-ups, anxiety, overdiagnosis, and cumulative radiation.</p>
+    <p><strong>Program design:</strong> Centralized coordination improves adherence; use a registry, QA metrics, and a multidisciplinary review for Category 4 lesions.</p>
+    <p><strong>Common exam traps:</strong> Ordering chest radiographs for screening, using “diagnostic-dose” CT instead of LDCT, skipping shared decision-making, ordering PET for sub-8 mm solid nodules, and misclassifying airway/cystic lesions.</p>
+</div>
+
+<hr>
+
+<h3>Core Concepts</h3>
+
+<h4>Pathophysiology / Epidemiology</h4>
+<p>Lung cancer remains the leading cause of cancer death. Survival is tightly linked to stage at diagnosis; screening shifts detection toward curable stages. LDCT in high-risk populations reduces disease-specific mortality, with consistent signal across large trials.</p>
+
+<h4>Indications & Contraindications</h4>
+<p><strong>Who to screen (know the frameworks):</strong></p>
+<ul>
+    <li><strong>USPSTF (2021):</strong> 50–80 years, ≥20 pack-years, current smoker or quit &lt;15 years; stop after 15 smoke-free years or if not a candidate for curative therapy.</li>
+    <li><strong>CMS/Medicare (coverage):</strong> Commonly 50–77 years with the same pack-year/quit criteria; documented shared decision-making (SDM) visit required.</li>
+    <li><strong>NCCN (current version):</strong> ≥50 years with ≥20 pack-years; assess competing risks; no absolute upper age if curative therapy is reasonable.</li>
+    <li><strong>ACS (2023 update):</strong> Start at 50 with ≥20 pack-years; removes the quit-time limit and upper age cutoff; continue if life expectancy ≥5 years and patient can tolerate treatment.</li>
+</ul>
+
+<p><strong>Do not screen (typical exclusions):</strong></p>
+<ul>
+    <li>Symptoms suggestive of cancer (e.g., hemoptysis, unexplained weight loss >15 lb).</li>
+    <li>Chest CT within 12 months that already addresses screening intent.</li>
+    <li>Prior lung cancer under active surveillance/staging (screening ceases once cancer is diagnosed).</li>
+    <li>Severe comorbidity limiting life expectancy or precluding curative-intent therapy.</li>
+</ul>
+
+<h3>Pre-Procedure Evaluation</h3>
+
+<h4>Shared Decision-Making (Required by CMS and Best Practice)</h4>
+<p><strong>Cover eligibility:</strong> Review potential benefits (stage shift, mortality reduction) and harms (false positives, downstream procedures, incidentalomas, radiation, overdiagnosis, anxiety).</p>
+<p><strong>Commitment:</strong> Emphasize annual commitment; a single negative LDCT does not “clear” future risk.</p>
+<p><strong>Documentation:</strong> Document the use of at least one decision aid and offer cessation resources.</p>
+
+<h4>Smoking Cessation</h4>
+<p>The most effective mortality-reducing intervention. Integrate brief counseling plus pharmacotherapy (NRT, varenicline, bupropion) and proactive follow-up. Screening participation can increase quit rates; use the "teachable moment".</p>
+
+<h4>Risk Models (When to consider)</h4>
+<p>PLCOm2012, LCRAT/LCDRAT, and LLPv models refine individual risk beyond pack-years, potentially improving efficiency and equity (e.g., women and Black adults). Not yet universally embedded in U.S. payer criteria; use for nuanced decisions at the margins.</p>
+
+<h4>Special Histories and Comorbidities</h4>
+<ul>
+    <li><strong>COPD and fibrotic ILD:</strong> Elevate risk significantly. If otherwise eligible and fit, screening is appropriate; anticipate higher rates of indeterminate findings and tailor follow-up.</li>
+    <li><strong>Cancer survivors:</strong> Thoracic oncology patients (e.g., prior lung cancer ≥5 years) often face elevated second-primary risk; follow NCCN disease-specific surveillance or consider individualized screening.</li>
+</ul>
+
+<h3>Equipment & Setup (CTLS Technical Standards)</h3>
+<ul>
+    <li><strong>Scanner:</strong> Multidetector helical CT with ≥4 detector rows.</li>
+    <li><strong>Acquisition:</strong> Noncontrast, full-chest coverage in a single end-inspiratory breath-hold; ≤2.5 mm reconstructions; lung kernel and soft-tissue series available.</li>
+    <li><strong>Dose:</strong> Dose modulation by patient size; typical CTDIvol around 3 mGy; effective dose ~1–1.5 mSv/exam.</li>
+    <li><strong>QA:</strong> Track dose in a registry and benchmark locally/nationally.</li>
+    <li><strong>Program infrastructure:</strong> Accredited site processes, radiation QA, standardized reporting (Lung-RADS), coordinator-led navigation, and a screening registry for quality reporting and callbacks.</li>
+</ul>
+
+<h3>Step-by-Step Technique / Procedural Checklist</h3>
+<ol>
+    <li>Identify eligible candidates (EHR query, clinic prompts).</li>
+    <li>Shared decision-making visit with cessation counseling; verify willingness for annual LDCT and downstream evaluation if positive.</li>
+    <li>Order CTLS (LDCT protocol explicitly—not “CT chest with contrast”).</li>
+    <li>Acquire scan per technical specs; ensure artifact-free full lung coverage.</li>
+    <li>Standardized interpretation with Lung-RADS v2022; include S-modifier for significant incidental findings and explicit next-step timing.</li>
+    <li>Result communication: Plain-language summary to patient and ordering clinician; smoking-cessation reinforcement for every result letter.</li>
+    <li>Navigation: Schedule follow-ups (3 or 6 months) before patient leaves; coordinate PET/CT, bronchoscopy, or surgical consults for 4B/4X.</li>
+    <li>Multidisciplinary review for Category 4 findings.</li>
+    <li>Registry/QI: Track adherence, callback timeliness, positive predictive value, benign resection rate, and radiation metrics.</li>
+</ol>
+
+<h3>Troubleshooting & Intra-procedure Management</h3>
+
+<h4>Lung-RADS 0 (Incomplete)</h4>
+<p>Motion, limited coverage, or suspected acute infection/inflammation. Remedy by retrieving priors or repeating LDCT in 1–3 months (then re-categorize).</p>
+
+<h4>Infection/inflammation</h4>
+<p>Segmental/lobar consolidation, multiple new nodules (>6), or large solid nodules appearing over short intervals—consider Category 0 with 1–3 month LDCT; reassign at follow-up.</p>
+
+<h4>Airway nodules</h4>
+<ul>
+    <li>Subsegmental/multifocal tubular opacities favor secretions → typically benign/Category 0–2.</li>
+    <li>Segmental or more proximal abnormalities → classify 4A initially; if persistent at 3 months, upgrade to 4B and refer for bronchoscopy.</li>
+</ul>
+
+<h4>Atypical cystic lesions</h4>
+<ul>
+    <li>Thin-walled unilocular cysts are benign (not classified).</li>
+    <li>Thick-walled/multilocular cysts, growth in wall thickness or cystic component, or a cyst with an adjacent nodule → manage as atypical cyst (often 4A/4B).</li>
+</ul>
+
+<h4>Slow-growing nodules</h4>
+<ul>
+    <li><strong>Ground-glass:</strong> May remain Category 2 despite slow enlargement until they reach criteria for another category (e.g., develop a solid component).</li>
+    <li><strong>Solid/part-solid:</strong> Slow growth over multiple screens is suspicious; consider 4B even if 12-month interval growth is ≤1.5 mm. PET can be falsely negative; biopsy/surgical evaluation may be appropriate.</li>
+</ul>
+
+<h3>Post-Procedure Care & Follow-up (Lung-RADS v2022 Essentials)</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Finding</th>
+            <th>Management</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>1 (Negative)</strong></td>
+            <td>No nodules or clearly benign nodules (e.g., fat or classic calcification).</td>
+            <td>Repeat annual LDCT.</td>
+        </tr>
+        <tr>
+            <td><strong>2 (Benign or indolent)</strong></td>
+            <td>Solid &lt;6 mm; new solid &lt;4 mm; part-solid &lt;6 mm; GGN &lt;30 mm or ≥30 mm stable/slow-growing; typical perifissural/juxtapleural nodules; subsegmental airway nodules; 3/4A lesions that resolved or stabilized appropriately.</td>
+            <td>Annual LDCT.</td>
+        </tr>
+        <tr>
+            <td><strong>3 (Probably benign)</strong></td>
+            <td>Solid 6–&lt;8 mm; part-solid ≥6 mm with solid &lt;6 mm; non-solid ≥30 mm; new solid 4–&lt;6 mm; new subsolid &lt;6 mm.</td>
+            <td>6-month LDCT; if stable/decreased, step-down to 2 and resume annual.</td>
+        </tr>
+        <tr>
+            <td><strong>4A (Suspicious)</strong></td>
+            <td>Solid 8–&lt;15 mm; growing &lt;8 mm; new solid 6–&lt;8 mm; part-solid ≥6 mm with solid 6–&lt;8 mm; new/growing solid component &lt;4 mm; segmental/proximal airway nodule; certain atypical cysts.</td>
+            <td>3-month LDCT; consider PET/CT if a solid component ≥8 mm.</td>
+        </tr>
+        <tr>
+            <td><strong>4B (Very suspicious)</strong></td>
+            <td>Solid ≥15 mm or new/growing solid ≥8 mm; part-solid with solid ≥8 mm; slow-growing solid/part-solid over multiple exams; persistent/growing proximal/segmental airway nodule; atypical cyst with growing wall/nodularity or increasing complexity.</td>
+            <td>Diagnostic chest CT ± contrast, PET/CT if ≥8 mm solid component, tissue sampling and/or specialty referral.</td>
+        </tr>
+        <tr>
+            <td><strong>4X</strong></td>
+            <td>Category 3 or 4 nodules with additional high-risk features (e.g., spiculation, suspicious lymphadenopathy, pleural nodularity, frank metastases, rapidly doubling GGN).</td>
+            <td>Urgent multidisciplinary evaluation; proceed to PET/CT and tissue diagnosis as appropriate.</td>
+        </tr>
+        <tr>
+            <td><strong>S-modifier</strong></td>
+            <td>Significant incidental findings unrelated to lung cancer (e.g., adrenal mass, renal lesion, aortic aneurysm).</td>
+            <td>Manage per relevant incidental findings guidance.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Complications & Harms</h3>
+<ul>
+    <li><strong>False positives:</strong> Common; most positive screens resolve with surveillance rather than invasive procedures when standardized pathways (Lung-RADS) are used.</li>
+    <li><strong>Invasive work-ups:</strong> Needle biopsy and surgery entail small but real risks; benign resections should be minimized via MDT triage and PET for the right lesions (solid ≥8 mm).</li>
+    <li><strong>Incidental findings:</strong> Emphysema and CAD calcification are frequent and require contextual counseling and targeted referrals.</li>
+    <li><strong>Radiation:</strong> Approx. 1–1.5 mSv per LDCT; cumulative doses over a decade are generally <15 mSv; estimated radiation-induced cancer risk is low relative to benefits in appropriately selected high-risk adults.</li>
+    <li><strong>Anxiety/Quality-of-Life:</strong> Short-term distress may follow false positives; clear communication and consistent follow-up mitigate this.</li>
+    <li><strong>Overdiagnosis:</strong> A fraction of screen-detected cancers (particularly indolent subsolid adenocarcinomas) might never have caused symptoms; emphasize risk-adapted, multidisciplinary decisions.</li>
+</ul>
+
+<h3>Special Populations</h3>
+<ul>
+    <li><strong>Older adults (>75–80):</strong> Balance benefit vs. competing mortality. If fit for curative therapy and within a guideline that permits screening (e.g., NCCN/ACS individualized), continue with shared decision-making; otherwise discontinue.</li>
+    <li><strong>High comorbidity/limited life expectancy:</strong> Do not screen if curative therapy is not feasible.</li>
+    <li><strong>COPD/Emphysema:</strong> Increased cancer risk and incidental CT emphysema—counsel on pulmonary optimization and cessation.</li>
+    <li><strong>Fibrotic ILD:</strong> Higher baseline risk and unique patterns (lower lobes, peripheral); weigh benefits vs. potential surgical risks; ensure MDT involvement.</li>
+    <li><strong>Prior thoracic oncology:</strong> Adhere to disease-specific surveillance; screening may be individualized for second primaries.</li>
+    <li><strong>Immunocompromised:</strong> New multiple nodules often infectious—use short-interval follow-up, and classify accordingly (often Category 0 with 1–3 month LDCT).</li>
+</ul>
+
+<h3>Evidence & Outcomes (Key Data Points)</h3>
+<ul>
+    <li><strong>NLST:</strong> Annual LDCT vs. chest radiograph for three years in high-risk adults showed a ~20% reduction in lung cancer mortality and ~6–7% reduction in all-cause mortality; positive screens were common, with most false positive.</li>
+    <li><strong>NELSON:</strong> LDCT vs. no screening using volumetric thresholds and extended intervals showed a ~24% male mortality reduction at 10 years and substantial stage shift.</li>
+    <li><strong>Cost-effectiveness:</strong> Modeled U.S. cost per QALY is acceptable within common thresholds, especially among groups with higher baseline risk (e.g., current smokers, women).</li>
+    <li><strong>Program performance:</strong> Centralized programs improve adherence and reduce unnecessary invasive procedures; benign resection rates are a critical quality metric.</li>
+</ul>
+
+<hr>
+
+<h3>Diagnostic & Therapeutic Algorithms</h3>
+<h4>A. Eligibility & Enrollment Flowchart</h4>
+<div class="mermaid">
+    flowchart TD
+        A["Identify candidate in clinic/EHR"] --> B{"Age & Smoking?"}
+        B -->|"Meets USPSTF (50–80, ≥20 PY, current or quit &lt;15y)"| C["Assess fitness for curative therapy"]
+        B -->|"Does not meet"| Z["No CTLS; reinforce cessation and risk reduction"]
+        C --> D{"Comorbidity limits benefit?"}
+        D -->|"Yes"| Z
+        D -->|"No"| E["Shared decision-making + decision aid"]
+        E --> F["Order LDCT (screening protocol)"]
+        F --> G["CT acquisition (noncontrast, ≤2.5 mm, low dose)"]
+        G --> H["Lung-RADS v2022 interpretation"]
+        H --> I{"Category 1–2?"}
+        I -->|"Yes"| J["Annual LDCT in 12 mo"]
+        I -->|"No"| K{"Category 3?"}
+        K -->|"Yes"| L["6-mo LDCT; if stable↓ step-down to 2"]
+        K -->|"No"| M{"Category 4A?"}
+        M -->|"Yes"| N["3-mo LDCT; consider PET if solid ≥8 mm"]
+        M -->|"No"| O["4B/4X → Diagnostic CT ± contrast, PET/CT, tissue sampling"]
+        O --> P["MDT discussion and definitive management"]
+</div>
+
+<h4>B. Positive Screen (Bullet Pathway)</h4>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>Category 3:</strong> 6-month LDCT, then step-down if stable.</li>
+        <li><strong>Category 4A:</strong> 3-month LDCT; PET/CT if solid component ≥8 mm; escalate if growth.</li>
+        <li><strong>Category 4B/4X:</strong> Diagnostic CT ± contrast, PET/CT, tissue diagnosis (bronchoscopy, percutaneous, or upfront surgery) based on pretest probability and patient fitness.</li>
+    </ul>
+</div>
+
+<h3>Tables & Quick-Reference Boxes</h3>
+
+<h4>Table 1. Who to Screen and When to Stop (Snapshot)</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Guideline</th>
+            <th>Start Age</th>
+            <th>Smoking Exposure</th>
+            <th>Quit Limit</th>
+            <th>Stop</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>USPSTF</strong></td>
+            <td>50–80</td>
+            <td>≥20 pack-years</td>
+            <td>&lt;15 years</td>
+            <td>After 15 smoke-free years or if not a candidate for curative therapy</td>
+        </tr>
+        <tr>
+            <td><strong>CMS</strong></td>
+            <td>50–77</td>
+            <td>≥20 pack-years</td>
+            <td>&lt;15 years</td>
+            <td>Coverage policies apply; same clinical stop rules as USPSTF</td>
+        </tr>
+        <tr>
+            <td><strong>NCCN</strong></td>
+            <td>≥50</td>
+            <td>≥20 pack-years; clinical risk considered</td>
+            <td>Not fixed</td>
+            <td>Individualized if fit for curative therapy</td>
+        </tr>
+        <tr>
+            <td><strong>ACS 2023</strong></td>
+            <td>50+</td>
+            <td>≥20 pack-years</td>
+            <td>None</td>
+            <td>Individualized; continue if life expectancy ≥5 years and patient is fit</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Table 2. Lung-RADS v2022 (Condensed Definitions)</h4>
+<div class="algorithm-note">
+    <p><strong>Key definitions:</strong></p>
+    <ul>
+        <li><strong>Growth:</strong> >1.5 mm (mean) over 12 months.</li>
+        <li>Slow growth across multiple rounds in solid/part-solid lesions is suspicious even without 12-month threshold change.</li>
+        <li>See <em>Post-Procedure Care</em> section for full Category logic.</li>
+    </ul>
+</div>
+
+<h4>Table 3. CTLS Dose Benchmarks</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Exam</th>
+            <th>Typical Effective Dose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>LDCT screening</td>
+            <td>~1–1.5 mSv</td>
+        </tr>
+        <tr>
+            <td>Standard diagnostic chest CT</td>
+            <td>~7–8 mSv</td>
+        </tr>
+        <tr>
+            <td>Two-view CXR</td>
+            <td>~0.1 mSv</td>
+        </tr>
+        <tr>
+            <td>Average annual background (U.S.)</td>
+            <td>~3.1 mSv</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Quick Checklist: Shared Decision-Making Talking Points</h4>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>Eligibility:</strong> Why you qualify.</li>
+        <li><strong>Benefits:</strong> Earlier detection; lower chance of dying from lung cancer.</li>
+        <li><strong>Harms:</strong> False alarms, extra scans, occasional procedures, small radiation doses, rare overdiagnosis.</li>
+        <li><strong>Expectations:</strong> Annual scans; short-interval follow-ups if something looks indeterminate.</li>
+        <li><strong>Cessation:</strong> The most powerful step you can take—support and medications are available.</li>
+        <li><strong>Next steps:</strong> How we’ll communicate results and coordinate follow-ups.</li>
+    </ul>
+</div>
+
+<h3>Cases & Applied Learning</h3>
+
+<div class="case-study">
+    <p><strong>Case 1:</strong> A 62-year-old current smoker (45 pack-years) undergoes baseline LDCT. A 7 mm smooth, solid nodule in the right upper lobe; no prior imaging.</p>
+    <p><strong>Question:</strong> Best next step?</p>
+    <p><strong>Answer:</strong> 6-month LDCT.</p>
+    <p><strong>Explanation:</strong> Solid 6–&lt;8 mm baseline nodules are Category 3 → 6-month surveillance; escalation only if growth or other suspicious features emerge.</p>
+</div>
+
+<div class="case-study">
+    <p><strong>Case 2:</strong> A 68-year-old former smoker (30 pack-years; quit 10 years ago) has a 1.2 cm (12 mm) part-solid nodule with an 8 mm solid core.</p>
+    <p><strong>Question:</strong> Best next step?</p>
+    <p><strong>Answer:</strong> Diagnostic evaluation with PET/CT and tissue sampling.</p>
+    <p><strong>Explanation:</strong> Solid component ≥8 mm meets Category 4B; proceed to PET/CT (recognizing false negatives can occur in some subsolid cancers) and plan biopsy or surgical evaluation.</p>
+</div>
+
+<div class="case-study">
+    <p><strong>Case 3:</strong> A 59-year-old current smoker’s LDCT shows a new 7 mm solid nodule and multifocal tree-in-bud opacities; mild fever last week.</p>
+    <p><strong>Question:</strong> How to categorize and manage?</p>
+    <p><strong>Answer:</strong> Lung-RADS 0 with 1–3 month LDCT to reassess.</p>
+    <p><strong>Explanation:</strong> Features suggest infectious bronchiolitis; repeat short-interval LDCT, then re-categorize based on the most suspicious residual finding.</p>
+</div>
+
+<div class="case-study">
+    <p><strong>Case 4:</strong> A 71-year-old with a segmental endobronchial nodule at baseline undergoes 3-month follow-up LDCT showing persistence.</p>
+    <p><strong>Question:</strong> Category and next step?</p>
+    <p><strong>Answer:</strong> 4B, refer for bronchoscopy (± PET/CT if a substantial solid component).</p>
+    <p><strong>Explanation:</strong> Segmental/proximal airway nodules persistent at 3 months are upgraded to 4B.</p>
+</div>
+
+<h3>Question Bank (12 MCQs)</h3>
+<ol>
+    <li>
+        <p>The primary mortality outcome demonstrated by large LDCT trials in high-risk adults was:</p>
+        <ul>
+            <li>A. No change in lung cancer mortality</li>
+            <li>B. Reduction in lung cancer mortality with no stage shift</li>
+            <li>C. Reduction in lung cancer mortality with stage shift toward early disease (Correct)</li>
+            <li>D. Reduction only in all-cause mortality</li>
+            <li>E. Increased lung cancer incidence without mortality effect</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: C.</strong><br>
+            <strong>Explanation:</strong> LDCT reduces lung cancer deaths and shifts detection to earlier stages; some trials also showed all-cause mortality reduction.
+        </blockquote>
+    </li>
+    <li>
+        <p>According to USPSTF 2021, which patient qualifies for screening?</p>
+        <ul>
+            <li>A. 47-year-old, 30 pack-years, quit 5 years ago</li>
+            <li>B. 55-year-old, 25 pack-years, still smoking (Correct)</li>
+            <li>C. 70-year-old, 15 pack-years, quit 10 years ago</li>
+            <li>D. 82-year-old, 40 pack-years, still smoking but fit</li>
+            <li>E. 60-year-old, 20 pack-years, quit 20 years ago</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: B.</strong><br>
+            <strong>Explanation:</strong> Age 50–80 with ≥20 pack-years and current or quit &lt;15 years ago.
+        </blockquote>
+    </li>
+    <li>
+        <p>A 65-year-old with 40 pack-years (quit 18 years ago) asks about screening. He is otherwise fit. Best answer?</p>
+        <ul>
+            <li>A. Under USPSTF, he is not eligible due to quit-time >15 years. (Correct)</li>
+            <li>B. He qualifies for Medicare coverage.</li>
+            <li>C. He qualifies for screening under all guidelines.</li>
+            <li>D. Screening is contraindicated due to age.</li>
+            <li>E. He should undergo chest radiograph screening.</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: A.</strong><br>
+            <strong>Explanation:</strong> USPSTF/CMS include a 15-year quit limit; some societies (ACS) differ but payer coverage may not.
+        </blockquote>
+    </li>
+    <li>
+        <p>Baseline LDCT shows a new 7 mm solid nodule without worrisome features. Lung-RADS category and next step:</p>
+        <ul>
+            <li>A. 2 → annual LDCT</li>
+            <li>B. 4A → 3-month LDCT; consider PET if ≥8 mm (Correct)</li>
+            <li>C. 3 → 6-month LDCT</li>
+            <li>D. 4B → PET/CT and biopsy</li>
+            <li>E. 0 → repeat LDCT immediately</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: B.</strong><br>
+            <strong>Explanation:</strong> New solid 6–&lt;8 mm is 4A.
+        </blockquote>
+    </li>
+    <li>
+        <p>Which is true about airway nodules in CTLS?</p>
+        <ul>
+            <li>A. Subsegmental airway nodules are always 4A.</li>
+            <li>B. Persistent segmental/proximal airway nodules at 3 months are upgraded to 4B. (Correct)</li>
+            <li>C. Presence of air within the lesion always indicates cancer.</li>
+            <li>D. Airway findings are excluded from Lung-RADS.</li>
+            <li>E. Any airway abnormality mandates immediate bronchoscopy.</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: B.</strong><br>
+            <strong>Explanation:</strong> Segmental/proximal airway nodules persistent at 3 months are upgraded from 4A to 4B.
+        </blockquote>
+    </li>
+    <li>
+        <p>Growth under Lung-RADS v2022 is defined as:</p>
+        <ul>
+            <li>A. Any visual increase</li>
+            <li>B. >1.5 mm increase (mean diameter) within 12 months (Correct)</li>
+            <li>C. >2.5 mm increase in longest axis</li>
+            <li>D. Doubling time &lt;600 days</li>
+            <li>E. New attenuation change alone</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: B.</strong><br>
+            <strong>Explanation:</strong> Growth is defined as >1.5 mm increase in mean diameter over 12 months.
+        </blockquote>
+    </li>
+    <li>
+        <p>Which nodule is 4B at baseline?</p>
+        <ul>
+            <li>A. Part-solid 14 mm with 6 mm solid core</li>
+            <li>B. New solid 7 mm nodule</li>
+            <li>C. Solid 16 mm nodule (Correct)</li>
+            <li>D. Non-solid 32 mm nodule stable for 2 years</li>
+            <li>E. Perifissural 9 mm triangular solid nodule</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: C.</strong><br>
+            <strong>Explanation:</strong> Solid nodules ≥15 mm are Category 4B.
+        </blockquote>
+    </li>
+    <li>
+        <p>Appropriate use of PET/CT in CTLS includes:</p>
+        <ul>
+            <li>A. Any non-solid nodule ≥20 mm</li>
+            <li>B. Solid nodule or solid component ≥8 mm (Correct)</li>
+            <li>C. New solid nodule 4–5 mm</li>
+            <li>D. Subsegmental airway nodules</li>
+            <li>E. All category 3 nodules</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: B.</strong><br>
+            <strong>Explanation:</strong> PET/CT is indicated for solid nodules or solid components ≥8 mm.
+        </blockquote>
+    </li>
+    <li>
+        <p>Typical effective dose of an LDCT screening exam:</p>
+        <ul>
+            <li>A. 0.05 mSv</li>
+            <li>B. 0.3 mSv</li>
+            <li>C. ~1–1.5 mSv (Correct)</li>
+            <li>D. 5–6 mSv</li>
+            <li>E. 10–12 mSv</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: C.</strong><br>
+            <strong>Explanation:</strong> The effective dose for LDCT screening is typically ~1–1.5 mSv.
+        </blockquote>
+    </li>
+    <li>
+        <p>Overdiagnosis in lung cancer screening refers to:</p>
+        <ul>
+            <li>A. False-positive imaging results</li>
+            <li>B. Detection of cancers that would not cause symptoms/death during a patient’s lifetime (Correct)</li>
+            <li>C. Misclassification due to motion artifact</li>
+            <li>D. Overcalling incidental findings</li>
+            <li>E. Double-counting nodules</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: B.</strong><br>
+            <strong>Explanation:</strong> Overdiagnosis is the detection of indolent cancers that would not have become clinically apparent.
+        </blockquote>
+    </li>
+    <li>
+        <p>Which is not recommended for lung cancer screening?</p>
+        <ul>
+            <li>A. Annual LDCT in eligible high-risk adults</li>
+            <li>B. Shared decision-making and cessation support</li>
+            <li>C. Routine chest radiograph ± sputum cytology (Correct)</li>
+            <li>D. Lung-RADS-based reporting</li>
+            <li>E. Registry-based QA and adherence tracking</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: C.</strong><br>
+            <strong>Explanation:</strong> Routine chest radiographs and sputum cytology are not recommended screening modalities.
+        </blockquote>
+    </li>
+    <li>
+        <p>A 70-year-old with fibrotic ILD and 30 pack-years (still smoking) is eligible and fit. LDCT shows a thick-walled cyst with new internal nodularity. Best management?</p>
+        <ul>
+            <li>A. Annual LDCT only</li>
+            <li>B. 6-month LDCT</li>
+            <li>C. Treat as 4B: diagnostic chest CT ± contrast; PET/CT if ≥8 mm solid component; tissue diagnosis (Correct)</li>
+            <li>D. PET/CT only if prior growth >1.5 mm</li>
+            <li>E. No escalation because cysts are benign</li>
+        </ul>
+        <blockquote>
+            <strong>Answer: C.</strong><br>
+            <strong>Explanation:</strong> Atypical cysts with growing nodularity or complexity are treated as suspicious (4B) requiring diagnostic evaluation.
+        </blockquote>
+    </li>
+</ol>
+
+<h3>Controversies, Variability, and Evolving Evidence</h3>
+<ul>
+    <li><strong>Eligibility thresholds:</strong> USPSTF/CMS vs. NCCN vs. ACS (quit-time and age limits differ). Expect payer-guideline mismatches; document rationale and confirm coverage.</li>
+    <li><strong>Risk models vs. pack-years:</strong> Risk prediction improves targeting and equity, but operational integration and reimbursement remain variable.</li>
+    <li><strong>Volumetrics vs. linear size:</strong> Volumetric strategies (as in NELSON) reduce positive screens with higher PPV; U.S. Lung-RADS remains diameter-based with optional volumetrics.</li>
+    <li><strong>Slow-growing subsolid lesions:</strong> Balance avoidance of overtreatment with timely resection when a solid component emerges or grows.</li>
+    <li><strong>Use of PET/CT:</strong> Valuable for solid components ≥8 mm; false negatives occur in indolent adenocarcinomas and pure GGNs.</li>
+    <li><strong>Biomarkers and AI:</strong> cfDNA fragmentomics and AI-assisted CT analysis are promising adjuncts; clinical utility and cost-effective integration are under active study.</li>
+    <li><strong>Program delivery:</strong> Centralized vs. decentralized programs show different adherence and benign resection rates; navigation resources matter.</li>
+</ul>
+
+<h3>Take-Home Checklist</h3>
+<div class="algorithm-note">
+    <ul>
+        <li>Screen only eligible, fit adults and stop when curative therapy is no longer appropriate or quit-time exceeds policy (per framework).</li>
+        <li>Perform shared decision-making and smoking-cessation counseling at every touchpoint.</li>
+        <li>Order LDCT (screening protocol)—not diagnostic CT.</li>
+        <li>Use Lung-RADS v2022 for every report; schedule follow-ups before the patient leaves.</li>
+        <li><strong>4A:</strong> 3-month LDCT; add PET/CT if solid ≥8 mm.</li>
+        <li><strong>4B/4X:</strong> Diagnostic CT ± contrast, PET/CT, and tissue diagnosis via MDT.</li>
+        <li>Handle airway nodules and atypical cysts according to v2022 rules—don’t miss upgrades.</li>
+        <li>Track adherence, benign resection rate, dose, and time-to-diagnosis in a registry.</li>
+        <li>Communicate results clearly; reduce anxiety with predictable follow-up plans.</li>
+        <li>Re-assess eligibility annually; align with payer policies.</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>Abbreviations</h3>
+    <dl>
+        <dt>ACS</dt><dd>American Cancer Society</dd>
+        <dt>CMS</dt><dd>Centers for Medicare & Medicaid Services</dd>
+        <dt>CTDIvol</dt><dd>Volumetric CT Dose Index</dd>
+        <dt>CTLS</dt><dd>Computed Tomography Lung Screening</dd>
+        <dt>EHR</dt><dd>Electronic Health Record</dd>
+        <dt>GGN</dt><dd>Ground-Glass Nodule</dd>
+        <dt>ILD</dt><dd>Interstitial Lung Disease</dd>
+        <dt>LDCT</dt><dd>Low-Dose Computed Tomography</dd>
+        <dt>Lung-RADS</dt><dd>Lung CT Screening Reporting and Data System</dd>
+        <dt>MDT</dt><dd>Multidisciplinary Team</dd>
+        <dt>NCCN</dt><dd>National Comprehensive Cancer Network</dd>
+        <dt>NRT</dt><dd>Nicotine Replacement Therapy</dd>
+        <dt>PET/CT</dt><dd>Positron Emission Tomography/Computed Tomography</dd>
+        <dt>QA</dt><dd>Quality Assurance</dd>
+        <dt>SDM</dt><dd>Shared Decision-Making</dd>
+        <dt>USPSTF</dt><dd>U.S. Preventive Services Task Force</dd>
+    </dl>
+</div>
+
+<hr>
+
+<div class="references">
+    <h3>References</h3>
+    <ol>
+        <li>Aberle DR, Adams AM, Berg CD, et al. Reduced lung‑cancer mortality with low‑dose computed tomographic screening. N Engl J Med. 2011;365:395‑409.</li>
+        <li>de Koning HJ, van der Aalst CM, de Jong PA, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382:503‑513.</li>
+        <li>Krist AH, Davidson KW, Mangione CM, et al. Screening for Lung Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325:962‑970.</li>
+        <li>Wood DE, Kazerooni EA, Baum SL, et al. NCCN Guidelines® Insights: Lung Cancer Screening (current version). J Natl Compr Canc Netw. 2022–2025.</li>
+        <li>Wolf AMD, Shih Y‑CT, Fontham ETH, et al. Screening for lung cancer: 2023 guideline update from the American Cancer Society. CA Cancer J Clin. 2024;74:50‑81.</li>
+        <li>Mazzone PJ, Silvestri GA, Patel S, et al. Screening for Lung Cancer: CHEST Guideline and Expert Panel Report. Chest. 2021;160:e427‑e494.</li>
+        <li>Christensen J, Prosper AE, Wu CC, et al. ACR Lung‑RADS v2022: Assessment Categories and Management Recommendations. J Am Coll Radiol. 2024;21:473‑486.</li>
+        <li>Black WC, Gareen IF, Soneji SS, et al. Cost‑effectiveness of CT screening in the National Lung Screening Trial. N Engl J Med. 2014;371:1793‑1802.</li>
+        <li>Larke FJ, Kruger RL, Cagnon CH, et al. Estimated radiation dose associated with LDCT of NLST participants. AJR Am J Roentgenol. 2011;197:1165‑1169.</li>
+        <li>Pinsky PF, Gierada DS, Black W, et al. Performance of Lung‑RADS in the National Lung Screening Trial: a retrospective assessment. Ann Intern Med. 2015;162:485‑491.</li>
+        <li>Silvestri GA, Goldman L, Tanner NT, et al. Outcomes from more than 1 million people screened for lung cancer with low‑dose CT. Chest. 2023;164:241‑251.</li>
+        <li>McKee BJ, Regis SM, McKee AB, et al. Performance of ACR Lung‑RADS in a clinical CT lung screening program. J Am Coll Radiol. 2016;13:R25‑R29.</li>
+        <li>Kinsinger LS, Anderson C, Kim J, et al. Implementation of Lung Cancer Screening in the Veterans Health Administration. JAMA Intern Med. 2017;177:399‑406.</li>
+        <li>Rampinelli C, De Marco P, Origgi D, et al. Exposure to low‑dose CT for screening and risk‑benefit analysis. BMJ. 2017;356:j347.</li>
+        <li>Tammemägi MC, Katki HA, Hocking WG, et al. Selection criteria for lung‑cancer screening. N Engl J Med. 2013;368:728‑736.</li>
+        <li>Katki HA, Kovalchik SA, Berg CD, et al. Development and Validation of Risk Models to Select Ever‑Smokers for CT Lung Cancer Screening. JAMA. 2016;315:2300‑2311.</li>
+        <li>Robbins HA, Berg CD, Cheung LC, et al. Comparative performance of lung cancer risk models in the United Kingdom. Br J Cancer. 2021;124:2026‑2034.</li>
+        <li>Raghu G, Remy‑Jardin M, Myers JL, et al. Idiopathic pulmonary fibrosis and progressive pulmonary fibrosis in adults: clinical practice guideline. Am J Respir Crit Care Med. 2022;205:e18‑e47.</li>
+        <li>Mazzone PJ, Bach PB, Carey J, et al. Clinical validation of a cfDNA fragmentome assay for early detection of lung cancer. Cancer Discov. 2024;14:2224‑2238.</li>
+        <li>Geppert J, Kothari J, Karia R, et al. AI for nodule and cancer detection in CT lung cancer screening: systematic review. Thorax. 2024;79:1040‑1049.</li>
+    </ol>
+</div>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+</body> </html>

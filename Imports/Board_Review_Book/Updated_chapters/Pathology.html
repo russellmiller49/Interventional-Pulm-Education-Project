@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathology: Histology, Cytology, ROSE, and Molecular Markers</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Pathology: Histology, Cytology, ROSE, and Molecular Markers</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter maps to core diagnostic domains for interventional pulmonology board review: lung cancer histology and classification; cytology fundamentals; rapid on‑site evaluation (ROSE) workflow and decision‑making; tissue and cell‑block triage for immunohistochemistry (IHC), fluorescence in situ hybridization (FISH), polymerase chain reaction (PCR), next‑generation sequencing (NGS), and circulating tumor DNA (ctDNA) testing; PD‑L1 assessment and immune‑response evaluation criteria; and practical algorithms linking specimen type to molecular testing and treatment selection across adenocarcinoma, squamous, and neuroendocrine carcinomas.</p>
+
+    <h3>Learning Objectives</h3>
+    <p>By the end of this chapter, learners will be able to:</p>
+    <ul>
+        <li>Distinguish key histologic subtypes of lung cancer and recognize high‑risk architectural patterns in adenocarcinoma.</li>
+        <li>Apply a specimen‑first approach to cytology and ROSE that preserves diagnostic yield and enables downstream molecular testing.</li>
+        <li>Select and sequence appropriate biomarker assays (IHC, FISH, PCR, NGS, liquid biopsy) based on the clinical question and specimen constraints.</li>
+        <li>Implement a pragmatic testing algorithm for advanced NSCLC, including PD‑L1 assessment and retesting at progression.</li>
+        <li>Anticipate pre‑analytic pitfalls (fixatives, decalcifiers, tumor fraction) that degrade assay performance and interpretability.</li>
+        <li>Integrate immune‑response assessment concepts (RECIST 1.1 vs immune‑modified frameworks) into multidisciplinary decision‑making.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High‑Yield One‑Pager</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>NSCLC landscape:</strong> Adenocarcinoma is the most common lung cancer (~50% of lung cancers; ~60% of NSCLC). Classification follows WHO/IASLC principles with lineage‑defining IHC (TTF‑1/napsin A for adenocarcinoma; p40/p63 for squamous).</li>
+            <li><strong>Adenocarcinoma patterns:</strong> AIS (≤3 cm pure lepidic, non‑invasive), MIA (≤0.5 cm invasion), and invasive patterns (acinar, papillary, micropapillary, solid). Micropapillary and solid patterns correlate with aggressive behavior; cribriform architecture is adverse and enriched in ALK/ROS1‑rearranged tumors.</li>
+            <li><strong>Squamous cell carcinoma:</strong> Smoking‑associated; keratinizing vs non‑keratinizing vs basaloid. Use p40/p63 to secure lineage when morphology is limited.</li>
+            <li><strong>Neuroendocrine spectrum:</strong> Typical/atypical carcinoid (lower‑to‑intermediate grade) versus high‑grade small cell carcinoma (SCLC) and large cell neuroendocrine carcinoma (LCNEC). SCLC shows nuclear molding and very high Ki‑67; LCNEC has neuroendocrine morphology with a high mitotic index.</li>
+            <li><strong>Staging pearls (AJCC 8th):</strong> T descriptors refined by invasive size for part‑solid tumors; AIS/MIA as Tis; updated handling of multifocal ground‑glass/lepidic lesions and pneumonic‑type adenocarcinoma.</li>
+            <li><strong>ROSE goals:</strong> Confirm lesional sampling, optimize smearing/rapid stain quality, reduce non‑diagnostic passes, and triage material in real time for cell block and molecular testing.</li>
+            <li><strong>Sample triage:</strong> Reserve cores or dedicated FNA passes for cell block/NGS; avoid heavy metal fixatives and acid decalcifiers; document tumor fraction and necrosis.</li>
+            <li><strong>Platform fit:</strong> IHC for proteins (ALK, ROS1, PD‑L1, BRAF V600E, NTRK); FISH for gene rearrangements or amplification (ALK, ROS1, RET, METamp); PCR/NGS for mutations, fusions, copy number changes; plasma ctDNA for selected contexts (e.g., EGFR T790M at progression).</li>
+            <li><strong>Driver alterations:</strong> EGFR exon 18–21 sensitizing variants (~15% Western, up to ~50% East Asian); ALK 3–5%; ROS1 ~1–2%; BRAF ~2–4% (V600E ~50% of BRAF); MET exon‑14 skipping ~5%; RET ~1–2%; NTRK ~1–2%; KRAS the most frequent oncogenic driver overall (notably G12C subset).</li>
+            <li><strong>PD‑L1 testing:</strong> Multiple validated IHC clones/assays exist; report tumor‑cell membrane staining as percentage (and immune‑cell score where applicable). Use the assay linked to the intended therapy when specified.</li>
+            <li><strong>Liquid biopsy:</strong> Useful when tissue is unsafe or exhausted and for certain resistance questions; negative plasma must trigger tissue biopsy if the result would alter management.</li>
+            <li><strong>Immune‑response assessment:</strong> Responses can be delayed; pseudoprogression is uncommon. iRECIST introduces “iUPD” with mandatory confirmation, but RECIST 1.1 remains the standard for most trials and clinical decisions.</li>
+            <li><strong>Common exam trap:</strong> Reporting PD‑L1 on a crushed, necrotic, or scant sample without pathologist comment on adequacy—this can mislead therapy selection.</li>
+            <li><strong>Pearl:</strong> For poorly differentiated NSCLC on small biopsy/cytology, never overcall subtype without lineage‑defining IHC—write “NSCC, favor adeno/squamous.”</li>
+            <li><strong>Pitfall:</strong> Using decalcified bone biopsies for NGS—acid decalcification degrades nucleic acid and increases test failure.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Lung cancers divide broadly into NSCLC (adenocarcinoma, squamous, large cell variants) and SCLC. Adenocarcinoma predominates and now commonly presents in peripheral and central locations. Histologic subclassification matters because growth patterns carry prognostic information and may correlate with molecular alterations.</p>
+    <p>Neuroendocrine neoplasms form a biologic spectrum; SCLC and LCNEC are high‑grade with high mitotic rates and Ki‑67, whereas carcinoids are lower grade.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>Indications for ROSE and cytology‑driven workflows:</strong></p>
+    <ul>
+        <li>Peripheral or mediastinal lesions sampled by EBUS‑TBNA, EUS‑FNA, navigational bronchoscopy, transthoracic FNA.</li>
+        <li>Patients with limited fitness for repeated procedures or with lesions in locations where adequacy is challenging.</li>
+        <li>Situations in which real‑time triage is critical (anticipated need for IHC, FISH, NGS, PD‑L1).</li>
+    </ul>
+    <p><strong>Relative contraindications / limits:</strong></p>
+    <ul>
+        <li>Inability to obtain representative cellular material due to necrosis or hemorrhage.</li>
+        <li>Bony metastases requiring decalcification (prefer alternative sites or EDTA decalcification).</li>
+    </ul>
+
+    <h4>Pre‑procedure Evaluation (Pathology‑Centered)</h4>
+    <p><strong>Pre‑brief with cytopathology:</strong> Clarify the primary clinical question (diagnosis vs staging vs molecular profiling), tests likely needed, and preferred fixatives.</p>
+    <p><strong>Specimen planning:</strong> Allocate dedicated passes for cell block (for IHC/PD‑L1), for nucleic acid extraction (NGS), and optional passes for on‑site smears (Diff‑Quik/rapid H&E) to assess adequacy.</p>
+    <p><strong>Fixative strategy:</strong> FFPE is the standard for IHC/FISH/NGS; alcohol‑based fixatives are acceptable for cytology; avoid heavy metal fixatives and acid decalcifiers which degrade DNA/RNA and protein epitopes.</p>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>ROSE cart:</strong> Clean labeled slides, Diff‑Quik (or equivalent rapid stain kit), alcohol jars for Pap‑fixed slides, glass containers for cell‑block fixative, sterile saline for needle rinses, and documentation tools.</li>
+        <li><strong>For EBUS/EUS:</strong> Coordinate needle gauge and number of passes with bronchoscopist/interventionalist; ensure immediate transfer of material for smears and cell block.</li>
+    </ul>
+
+    <h4>Step‑by‑Step Technique / Procedural Checklist</h4>
+    <ol>
+        <li><strong>Target confirmation:</strong> (ultrasound/fluoroscopy/CT‑navigation) and needle pass.</li>
+        <li><strong>Smear preparation:</strong>
+            <ul>
+                <li>Expel a tiny droplet; make thin smears with gentle “pull‑apart” or “feathering.”</li>
+                <li>Prepare at least one air‑dried smear for rapid staining and one alcohol‑fixed smear for Pap.</li>
+                <li>Avoid thick, crushed smears; label immediately.</li>
+            </ul>
+        </li>
+        <li><strong>Rapid stain & adequacy call:</strong>
+            <ul>
+                <li>Evaluate cellularity, tumor cells vs benign elements, necrosis, lymph node sampling (e.g., lymphoid background for station nodes), and lesional confirmation.</li>
+            </ul>
+        </li>
+        <li><strong>Triage in real time:</strong>
+            <ul>
+                <li>If malignant cells present: prioritize cell block and a dedicated nucleic‑acid tube (e.g., needle rinse) before additional smears.</li>
+                <li>Reserve tissue for PD‑L1, ALK/ROS1 IHC/FISH, and NGS panel; limit unnecessary stains on scant material.</li>
+            </ul>
+        </li>
+        <li><strong>Iterate passes:</strong>
+            <ul>
+                <li>If scant cellularity or necrosis, request additional passes and adjust sampling angle/needle position.</li>
+            </ul>
+        </li>
+        <li><strong>Documentation:</strong>
+            <ul>
+                <li>Record adequacy, suspected lineage (“favor adeno/squamous”), and whether material has been reserved for molecular testing.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4>Troubleshooting & Intra‑procedure Management</h4>
+    <ul>
+        <li><strong>Bloody smears:</strong> Use minimal pressure, favor cell‑block capture (clot‑trap) and rinse technique.</li>
+        <li><strong>Air‑drying artifact:</strong> Ensure prompt fixation of Pap slides; keep air‑dried slides for Diff‑Quik only.</li>
+        <li><strong>Crush artifact:</strong> Gentle spreading; avoid grinding.</li>
+        <li><strong>Necrosis‑only cores:</strong> Redirect sampling; target viable rim.</li>
+        <li><strong>Inadequate tumor fraction for NGS:</strong> Request additional lesional passes; consider plasma ctDNA as an adjunct if tissue is unobtainable and the clinical question is actionable.</li>
+    </ul>
+
+    <h4>Post‑procedure Care & Follow‑up</h4>
+    <p><strong>Integrated report:</strong> Provide final subtype with lineage‑defining IHC when needed; explicitly state adequacy for PD‑L1 and NGS.</p>
+    <p><strong>Reflex testing policy:</strong> Many centers reflexively test advanced NSCLC for key drivers (EGFR, ALK, ROS1, BRAF, RET, MET exon 14 skipping, KRAS) and PD‑L1 at diagnosis.</p>
+    <p><strong>At progression:</strong> Re‑biopsy or plasma testing to evaluate resistance mechanisms (e.g., EGFR T790M; small‑cell transformation).</p>
+
+    <h4>Complications (from a Diagnostic Perspective)</h4>
+    <ul>
+        <li><strong>False‑negative risk:</strong> Scant cellularity, excessive necrosis, or unrecognized mucinous tumors (TTF‑1 can be negative in invasive mucinous adenocarcinoma).</li>
+        <li><strong>Analytical failure:</strong> Acid decalcification, heavy metal fixatives, prolonged cold ischemia.</li>
+        <li><strong>Interpretive pitfalls:</strong> PD‑L1 scoring on crushed tissue; misclassification of solid adenocarcinoma as squamous without IHC.</li>
+    </ul>
+
+    <h4>Special Populations and Patterns</h4>
+    <ul>
+        <li><strong>Invasive mucinous adenocarcinoma:</strong> Often KRAS‑mutated; TTF‑1 frequently negative; can mimic metastatic GI mucinous tumors on morphology and IHC.</li>
+        <li><strong>High‑grade patterns (solid/micropapillary):</strong> Higher recurrence risk; vigilance for lymphovascular invasion and spread through air spaces.</li>
+        <li><strong>Sarcomatoid carcinoma:</strong> Enriched for MET exon‑14 skipping; prioritize comprehensive NGS.</li>
+    </ul>
+
+    <h4>Evidence & Outcomes (Selected)</h4>
+    <p>Predictive biomarker testing has transformed NSCLC management; sensitizing EGFR mutations (exons 18–21) predict benefit from EGFR TKIs. Resistance commonly involves T790M.</p>
+    <p>Targetable fusions (ALK, ROS1, RET, NTRK) and MET exon‑14 skipping respond to matched TKIs.</p>
+    <p>PD‑L1 expression by validated assays informs immune checkpoint inhibitor use; response can occur across PD‑L1 strata with regimen‑specific nuances.</p>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Specimen‑First ROSE‑Guided Molecular Testing (EBUS/EUS/FNA)</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Targeted FNA/EBUS/EUS pass"] --> B{"ROSE: lesional cells present?"}
+        B -- "No" --> C["Redirect pass / adjust needle / new target"]
+        C --> A
+        B -- "Yes" --> D["Prepare cell block & nucleic-acid rinse"]
+        D --> E{"Estimated tumor fraction adequate?"}
+        E -- "No" --> F["Additional lesional passes for cell block"]
+        F --> D
+        E -- "Yes" --> G["Reflex testing order set"]
+        G --> H["PD-L1 IHC on cell block"]
+        G --> I["Driver panel by NGS (DNA±RNA)"]
+        I --> J{"Specific fusion suspected (ALK/ROS1/RET/NTRK)?"}
+        J -- "Yes, limited tissue" --> K["Orthogonal IHC±FISH prioritized"]
+        J -- "No" --> L["NGS-first strategy"]
+        H & K & L --> M["Integrated report → Tumor board"]
+        M --> N{"Progression later?"}
+        N -- "Yes" --> O["Plasma ctDNA ± tissue re-biopsy"]
+        N -- "No" --> P["Track turnaround times & adequacy KPIs"]
+    </div>
+
+    <div class="algorithm-note">
+        <strong>Key Steps (Algorithm 1):</strong>
+        <ul>
+            <li>Confirm lesional sampling with ROSE; if nondiagnostic, immediately redirect.</li>
+            <li>Reserve cell block early; avoid exhausting material on nonessential smears.</li>
+            <li>Use NGS‑first when feasible for multiplex detection; deploy IHC/FISH as orthogonal or triage tools when tissue is limited or a specific fusion is suspected.</li>
+            <li>Perform PD‑L1 on cell block with a validated assay.</li>
+            <li>At progression, use plasma ctDNA to rapidly screen for actionable resistance; negative plasma (when management would change) should prompt tissue re‑biopsy.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm 2 — Testing Roadmap for Newly Diagnosed Advanced NSCLC</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Histology or NSCC favor adeno/squamous"] --> B{"Adenocarcinoma or NSCC NOS?"}
+        B -- "Yes" --> C["Order PD-L1 + broad NGS (DNA±RNA)"]
+        B -- "Squamous" --> D{"Non/light smoker or small sample?"}
+        D -- "Yes" --> C
+        D -- "No" --> E["PD-L1; add NGS if clinical factors warrant"]
+        C --> F{"NGS result actionable?"}
+        F -- "Yes" --> G["Matched targeted therapy"]
+        F -- "No" --> H["Chemo-IO or IO per PD-L1 & comorbidities"]
+        H --> I{"Progression?"}
+        I -- "Yes" --> J["Re-biopsy ± liquid biopsy; evaluate resistance (e.g., T790M, METamp, histologic transformation)"]
+    </div>
+
+    <div class="algorithm-note">
+        <strong>Key Steps (Algorithm 2):</strong>
+        <ul>
+            <li>Adenocarcinoma/NSCC‑NOS: Comprehensive NGS (with fusion detection) + PD‑L1 up front.</li>
+            <li>Squamous: PD‑L1 for all; consider NGS in never/light smokers, young patients, or small biopsies where misclassification risk exists.</li>
+            <li>Negative plasma assays are not definitive—confirm with tissue if actionable change is expected.</li>
+            <li>Re‑testing at progression should include consideration of histologic transformation (e.g., to SCLC).</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick‑Reference Boxes</h3>
+
+    <h4>Table 1. WHO/IASLC‑Oriented NSCLC Quick Classifier</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Major Type</th>
+                <th>Key Morphology</th>
+                <th>Lineage IHC</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Adenocarcinoma</td>
+                <td>Lepidic, acinar, papillary, micropapillary, solid; mucinous variant</td>
+                <td>TTF‑1, napsin A; mucin stains</td>
+                <td>AIS (≤3 cm lepidic, non‑invasive); MIA (≤0.5 cm invasion)</td>
+            </tr>
+            <tr>
+                <td>Squamous cell carcinoma</td>
+                <td>Keratinization, intercellular bridges; non‑keratinizing; basaloid</td>
+                <td>p40 (preferred), p63</td>
+                <td>Strong smoking association</td>
+            </tr>
+            <tr>
+                <td>SCLC</td>
+                <td>Small cells, scant cytoplasm, nuclear molding, high mitoses</td>
+                <td>Neuroendocrine markers, TTF‑1, high Ki‑67</td>
+                <td>Aggressive; consider transformation at TKI resistance</td>
+            </tr>
+            <tr>
+                <td>LCNEC</td>
+                <td>Neuroendocrine architecture with large cells, high mitoses</td>
+                <td>Neuroendocrine markers</td>
+                <td>High‑grade; molecularly heterogeneous</td>
+            </tr>
+            <tr>
+                <td>Sarcomatoid</td>
+                <td>Spindle/giant cell component ≥10%</td>
+                <td>Variable</td>
+                <td>Enriched for MET exon‑14 skipping</td>
+            </tr>
+            <tr>
+                <td>Salivary‑type tumors</td>
+                <td>Mucoepidermoid, adenoid cystic</td>
+                <td>Diagnosis‑specific</td>
+                <td>Usually central/endobronchial</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. Biomarker–Assay Fit and Typical Sample Needs</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Biomarker goal</th>
+                <th>Preferred first‑line assay(s)</th>
+                <th>Typical FFPE needs (approximate)</th>
+                <th>Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PD‑L1 expression</td>
+                <td>Validated IHC clone/assay</td>
+                <td>1–2 slides (4–5 µm)</td>
+                <td>Report tumor‑cell membrane %; know assay‑therapy link</td>
+            </tr>
+            <tr>
+                <td>ALK/ROS1 fusions</td>
+                <td>IHC screen ± break‑apart FISH; RNA‑NGS for fusion panel</td>
+                <td>1–2 slides for IHC; 1–2 for FISH; RNA input for NGS</td>
+                <td>FISH is agnostic to partner; RNA‑NGS detects partners</td>
+            </tr>
+            <tr>
+                <td>RET/NTRK fusions</td>
+                <td>RNA‑NGS ± FISH; pan‑TRK IHC as screen</td>
+                <td>≥8–10 slides (7 µm) if NGS; fewer for targeted tests</td>
+                <td>Confirm pan‑TRK IHC positives with molecular test</td>
+            </tr>
+            <tr>
+                <td>EGFR/BRAF/KRAS/MET exon‑14</td>
+                <td>DNA‑NGS or targeted PCR</td>
+                <td>50 ng–2 µg DNA (panel‑dependent)</td>
+                <td>DNA‑NGS captures breadth; PCR for hotspots</td>
+            </tr>
+            <tr>
+                <td>MET amplification</td>
+                <td>FISH ± NGS copy number</td>
+                <td>1–2 slides for FISH</td>
+                <td>Standardized cutoffs vary by assay</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. PD‑L1 IHC Assays—What to Order and Report</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Therapy context</th>
+                <th>Common PD‑L1 assay clone</th>
+                <th>Scoring focus</th>
+                <th>Practical tip</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Anti‑PD‑1 (e.g., pembrolizumab)</td>
+                <td>22C3</td>
+                <td>Tumor proportion score (%)</td>
+                <td>Match assay to intended label when specified</td>
+            </tr>
+            <tr>
+                <td>Anti‑PD‑1 (e.g., nivolumab)</td>
+                <td>28‑8</td>
+                <td>Tumor proportion score (%)</td>
+                <td>Analytical behavior similar to 22C3 in many labs</td>
+            </tr>
+            <tr>
+                <td>Anti‑PD‑L1 (e.g., atezolizumab)</td>
+                <td>SP142</td>
+                <td>Tumor cells and immune‑cell scoring</td>
+                <td>Lower tumor‑cell sensitivity; adhere to lab SOPs</td>
+            </tr>
+            <tr>
+                <td>Anti‑PD‑L1 (e.g., durvalumab)</td>
+                <td>SP263</td>
+                <td>Tumor proportion score (%)</td>
+                <td>Widely implemented on automated platforms</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Imaging & Figure Callouts</h3>
+    <p><strong>Figure 1. Adenocarcinoma patterns.</strong> Alt text: Representative lepidic, acinar, papillary, micropapillary, and solid growth patterns; note lepidic non‑invasive architecture and high‑grade micropapillary/solid features.</p>
+    <p><strong>Figure 2. SCLC and LCNEC features.</strong> Alt text: SCLC with nuclear molding and crush artifact; LCNEC with organoid nesting and high mitotic rate; corresponding neuroendocrine marker stains.</p>
+    <p><strong>Figure 3. PD‑L1 staining patterns.</strong> Alt text: Tumor‑cell membranous PD‑L1 staining highlighting variability in intensity and distribution; example immune‑cell staining for assays that incorporate IC scoring.</p>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1</h4>
+        <p>A 67‑year‑old former smoker undergoes EBUS‑TBNA of a 4R node. ROSE shows malignant cells in cohesive clusters without keratinization. TTF‑1 is positive; p40 is negative on cell block. What is the next best step to enable optimal therapy selection?</p>
+        <ol type="A">
+            <li>Order PD‑L1 only</li>
+            <li>Order ALK FISH only</li>
+            <li>Order comprehensive DNA±RNA NGS panel and PD‑L1 on the same cell block</li>
+            <li>Repeat EBUS for more tissue before any testing</li>
+            <li>Order pan‑TRK IHC only</li>
+        </ol>
+        <p><strong>Answer: C.</strong> In advanced NSCLC with adenocarcinoma lineage, reflex comprehensive NGS (including fusions) and PD‑L1 on the available cell block maximizes yield and turnaround while preserving tissue.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2</h4>
+        <p>A patient with EGFR‑mutated lung adenocarcinoma progresses after first‑generation EGFR TKI. Plasma ctDNA is negative for T790M. What is the next best step?</p>
+        <ol type="A">
+            <li>Switch to immunotherapy monotherapy</li>
+            <li>Tissue re‑biopsy of progressing site for resistance testing</li>
+            <li>Start chemotherapy without further testing</li>
+            <li>Order ALK IHC</li>
+            <li>Repeat plasma in 6 months</li>
+        </ol>
+        <p><strong>Answer: B.</strong> Negative plasma does not exclude T790M; tissue biopsy is recommended when a positive result would alter management.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3</h4>
+        <p>A 58‑year‑old never‑smoker with metastatic NSCLC has limited tissue showing "NSCC favor adenocarcinoma." Pan‑TRK IHC is diffusely positive; no RNA‑NGS was performed. What is the most appropriate troubleshooting step?</p>
+        <ol type="A">
+            <li>Report NTRK fusion and start TRK inhibitor</li>
+            <li>Treat as wild‑type</li>
+            <li>Confirm with RNA‑based fusion testing (or FISH) using reserved material or a new sample</li>
+            <li>Disregard IHC due to low specificity</li>
+            <li>Repeat pan‑TRK IHC with a different clone</li>
+        </ol>
+        <p><strong>Answer: C.</strong> Pan‑TRK IHC is a screening tool; confirmatory molecular testing is required.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 4</h4>
+        <p>Bone metastasis core is decalcified in strong acid and submitted for NGS. The laboratory reports assay failure. What is the best corrective action?</p>
+        <ol type="A">
+            <li>Request deeper levels from the same block</li>
+            <li>Repeat NGS on the same sample</li>
+            <li>Obtain an alternative site biopsy using non‑acid decalcification or a soft‑tissue target</li>
+            <li>Substitute PD‑L1 IHC for NGS</li>
+            <li>Rely on plasma alone for all future testing</li>
+        </ol>
+        <p><strong>Answer: C.</strong> Acid decalcification degrades nucleic acids; select an alternative site or EDTA‑based approach.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank</h3>
+
+    <p><strong>1. Next best step:</strong> ROSE shows scant atypical cells and extensive necrosis from a mediastinal node; the patient is not a candidate for repeat procedures. Which action best preserves treatment options?</p>
+    <ol type="A">
+        <li>Use all remaining material for PD‑L1 only</li>
+        <li>Prioritize cell block creation and a limited, hotspot PCR panel</li>
+        <li>Exhaust material on lineage IHC before cell block</li>
+        <li>Discard bloody rinses</li>
+        <li>Delay all testing until radiographic progression</li>
+    </ol>
+    <p><strong>Answer: B.</strong> With scant material, prioritize cell block for IHC plus a focused, high‑yield molecular panel to retain actionability.</p>
+
+    <p><strong>2. Procedural troubleshooting:</strong> Thick, heaped smears with crush artifact repeatedly prevent cytologic interpretation during ROSE. What is the most effective immediate correction?</p>
+    <ol type="A">
+        <li>Increase pressure on the spreader slide</li>
+        <li>Air‑dry all slides before staining</li>
+        <li>Use a feathering technique with minimal pressure and prepare more cell‑block material</li>
+        <li>Switch to acid decalcification</li>
+        <li>Proceed without ROSE</li>
+    </ol>
+    <p><strong>Answer: C.</strong> Gentle feathering reduces crush; capturing more in cell block safeguards downstream studies.</p>
+
+    <p><strong>3. In invasive mucinous adenocarcinoma of the lung, which feature is most typical?</strong></p>
+    <ol type="A">
+        <li>Strong, diffuse TTF‑1 positivity in nearly all cases</li>
+        <li>Frequent KRAS mutations and potential TTF‑1 negativity</li>
+        <li>Pathognomonic p40 positivity</li>
+        <li>Exclusive central airway origin</li>
+        <li>Universal EGFR exon 19 deletions</li>
+    </ol>
+    <p><strong>Answer: B.</strong></p>
+
+    <p><strong>4. Which pair of lineage‑defining markers most reliably separates adenocarcinoma from squamous cell carcinoma in small biopsy/cytology?</strong></p>
+    <ol type="A">
+        <li>CK7 and CK20</li>
+        <li>TTF‑1 (±napsin A) and p40 (±p63)</li>
+        <li>GATA3 and SOX10</li>
+        <li>INSM1 and chromogranin A</li>
+        <li>Desmin and SMA</li>
+    </ol>
+    <p><strong>Answer: B.</strong></p>
+
+    <p><strong>5. Which statement about PD‑L1 testing is most accurate?</strong></p>
+    <ol type="A">
+        <li>All clones are analytically identical and interchangeable in every context</li>
+        <li>Scoring requires cytoplasmic intensity only</li>
+        <li>Use a validated assay; report membranous tumor‑cell percentage and follow therapy‑linked assay conventions</li>
+        <li>PD‑L1 cannot be performed on cell blocks</li>
+        <li>Necrosis and crush artifact do not affect interpretation</li>
+    </ol>
+    <p><strong>Answer: C.</strong></p>
+
+    <p><strong>6. An ALK IHC is equivocal on a small cell block with limited material. What is the most appropriate confirmation strategy?</strong></p>
+    <ol type="A">
+        <li>Repeat ALK IHC only</li>
+        <li>Break‑apart FISH or RNA‑based fusion testing using conserved material</li>
+        <li>Ignore ALK due to low pretest probability</li>
+        <li>Order EGFR PCR first</li>
+        <li>PD‑L1 testing supplants ALK testing</li>
+    </ol>
+    <p><strong>Answer: B.</strong></p>
+
+    <p><strong>7. Regarding NGS on FFPE, which pre‑analytic condition most threatens assay success?</strong></p>
+    <ol type="A">
+        <li>Standard 10% neutral buffered formalin fixation</li>
+        <li>Air‑dried ROSE slide in parallel</li>
+        <li>Heavy metal fixatives or acid decalcification</li>
+        <li>Separate passes for cell block</li>
+        <li>H&E‑stained slide review before macro‑dissection</li>
+    </ol>
+    <p><strong>Answer: C.</strong></p>
+
+    <p><strong>8. Next best step after progression on first‑/second‑generation EGFR TKI with radiologic growth: plasma ctDNA is positive for EGFR T790M.</strong></p>
+    <ol type="A">
+        <li>Continue current TKI and reimage later</li>
+        <li>Switch to appropriate third‑generation EGFR inhibitor</li>
+        <li>Start dual immune checkpoint blockade</li>
+        <li>Treat with platinum doublet immediately</li>
+        <li>Perform ALK FISH</li>
+    </ol>
+    <p><strong>Answer: B.</strong></p>
+
+    <p><strong>9. Which association is correct for SCLC?</strong></p>
+    <ol type="A">
+        <li>Low Ki‑67 and rare mitoses</li>
+        <li>Frequent nuclear molding and high mitotic activity</li>
+        <li>Common ALK fusion</li>
+        <li>Strong p40 positivity</li>
+        <li>Indolent course comparable to typical carcinoid</li>
+    </ol>
+    <p><strong>Answer: B.</strong></p>
+
+    <p><strong>10. PD‑L1 IHC is ordered on a scant, crushed cell block with marked necrosis. What is the best interpretive practice?</strong></p>
+    <ol type="A">
+        <li>Report PD‑L1 high without comment</li>
+        <li>Cancel PD‑L1 and rely on plasma</li>
+        <li>Report with an adequacy caveat and, if discordant clinically, consider repeat sampling</li>
+        <li>Convert to FISH</li>
+        <li>Assume low expression due to poor preservation</li>
+    </ol>
+    <p><strong>Answer: C.</strong></p>
+
+    <p><strong>11. Which biomarker–assay pairing is most appropriate when tissue is limited and a specific fusion is suspected?</strong></p>
+    <ol type="A">
+        <li>BRAF—FISH only</li>
+        <li>NTRK—RNA‑based NGS or confirmatory FISH after pan‑TRK IHC screen</li>
+        <li>KRAS—ALK IHC</li>
+        <li>PD‑L1—PCR</li>
+        <li>EGFR—Break‑apart FISH</li>
+    </ol>
+    <p><strong>Answer: B.</strong></p>
+
+    <p><strong>12. When using immune‑modified response frameworks, which statement is most accurate?</strong></p>
+    <ol type="A">
+        <li>iRECIST replaces RECIST 1.1 in all practice</li>
+        <li>Pseudoprogression is common in NSCLC</li>
+        <li>iRECIST introduces iUPD with required confirmation before labeling iCPD</li>
+        <li>New lesions always equal confirmed progression</li>
+        <li>Best overall response cannot occur after initial progression</li>
+    </ol>
+    <p><strong>Answer: C.</strong></p>
+
+    <hr>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>PD‑L1 assay comparability:</strong> While several assays show broad concordance, analytical differences exist; follow validated, therapy‑linked workflows within your laboratory’s quality system.</li>
+        <li><strong>TMB and blood‑based biomarkers:</strong> Blood TMB may enrich for benefit in select settings, but clinical utility and cutoffs vary; not a routine substitute for established markers.</li>
+        <li><strong>NGS‑first vs serial single‑gene testing:</strong> NGS‑first conserves tissue and time as the number of actionable targets grows; serial testing risks tissue exhaustion and delays.</li>
+        <li><strong>Liquid biopsy scope:</strong> Powerful for certain resistance mechanisms and when tissue is unsafe; negative results require tissue confirmation if management hinges on the finding.</li>
+        <li><strong>Immune‑response criteria:</strong> iRECIST and other immune‑modified criteria refine interpretation, but RECIST 1.1 still anchors most trial endpoints and clinical decisions.</li>
+    </ul>
+
+    <h3>Take‑Home Checklist</h3>
+    <ul>
+        <li>Confirm lineage on small samples with TTF‑1/napsin A vs p40/p63 rather than relying on morphology alone.</li>
+        <li>During ROSE, triage early: secure a cell block and nucleic‑acid material before additional smears.</li>
+        <li>Avoid acid decalcification and heavy metal fixatives for specimens destined for IHC/FISH/NGS.</li>
+        <li>Use NGS‑first for adenocarcinoma/NSCC‑NOS and selected squamous cases; include fusion detection.</li>
+        <li>Order PD‑L1 on cell block using a validated clone/assay and report adequacy.</li>
+        <li>Re‑biopsy or use plasma ctDNA at progression; negative plasma does not rule out actionable resistance.</li>
+        <li>Flag high‑risk adenocarcinoma patterns (micropapillary/solid; cribriform).</li>
+        <li>Document tumor fraction and necrosis; request additional passes when needed.</li>
+        <li>Communicate specimen limitations and caveats (e.g., crush, necrosis) in PD‑L1 and molecular interpretations.</li>
+        <li>Coordinate with the multidisciplinary team to align testing strategy, turnaround, and therapy decisions.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Abbreviations & Glossary</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>AIS/MIA</dt><dd>Adenocarcinoma in situ / minimally invasive adenocarcinoma</dd>
+            <dt>CAP/IASLC/AMP</dt><dd>College of American Pathologists / International Association for the Study of Lung Cancer / Association for Molecular Pathology</dd>
+            <dt>ctDNA</dt><dd>Circulating tumor DNA</dd>
+            <dt>FISH</dt><dd>Fluorescence in situ hybridization (break‑apart probes detect rearrangements; copy‑number probes detect amplification)</dd>
+            <dt>IHC</dt><dd>Immunohistochemistry</dd>
+            <dt>iRECIST/iUPD/iCPD</dt><dd>Immune‑modified RECIST; immune unconfirmed/confirmed progressive disease</dd>
+            <dt>NGS</dt><dd>Next‑generation sequencing (DNA panels for mutations/CNV; RNA panels for fusions)</dd>
+            <dt>PD‑1/PD‑L1</dt><dd>Programmed death‑1/ligand‑1 checkpoint proteins</dd>
+            <dt>ROSE</dt><dd>Rapid on‑site evaluation (real‑time cytologic assessment and triage)</dd>
+            <dt>SCLC/LCNEC</dt><dd>Small cell lung carcinoma / large cell neuroendocrine carcinoma</dd>
+        </dl>
+    </div>
+
+    <h3>References</h3>
+    <div class="references">
+        <ol>
+            <li>Travis WD, Brambilla E, Nicholson AG, et al. The 2015 World Health Organization Classification of Lung Tumors: impact of genetic, clinical and radiologic advances since the 2004 classification. J Thorac Oncol. 2015;10(9):1243‑1260.</li>
+            <li>Travis WD, Brambilla E, Noguchi M, et al. International multidisciplinary classification of lung adenocarcinoma. J Thorac Oncol. 2011;6(2):244‑285.</li>
+            <li>Yoshizawa A, Motoi N, Riely GJ, et al. Impact of proposed IASLC/ATS/ERS classification of lung adenocarcinoma: prognostic subgroups and implications for further revision of staging based on analysis of 514 stage I cases. Mod Pathol. 2011;24(5):653‑664.</li>
+            <li>Tsao MS, Marguet S, Le Teuff G, et al. Subtype classification of lung adenocarcinoma predicts benefit from adjuvant chemotherapy. J Clin Oncol. 2015;33(30):3439‑3446.</li>
+            <li>Rami‑Porta R, Bolejack V, Crowley J, et al. Proposals for revisions of the T descriptors in the 8th edition TNM classification for lung cancer. J Thorac Oncol. 2015;10(7):990‑1003.</li>
+            <li>Detterbeck FC, Franklin WA, Nicholson AG, et al. Criteria to distinguish separate primary lung cancers from metastatic foci in patients with two lung tumors. J Thorac Oncol. 2016;11(5):651‑665.</li>
+            <li>Paez JG, Jänne PA, Lee JC, et al. EGFR mutations in lung cancer: correlation with clinical response to gefitinib therapy. Science. 2004;304(5676):1497‑1500.</li>
+            <li>Lynch TJ, Bell DW, Sordella R, et al. Activating mutations in EGFR underlying responsiveness to gefitinib. N Engl J Med. 2004;350(21):2129‑2139.</li>
+            <li>Soria JC, Ohe Y, Vansteenkiste J, et al. Osimertinib in untreated EGFR‑mutated advanced NSCLC. N Engl J Med. 2018;378(2):113‑125.</li>
+            <li>Lin JJ, Shaw AT. Recent advances in targeting ROS1 in lung cancer. J Thorac Oncol. 2017;12(11):1611‑1625.</li>
+            <li>Planchard D, Smit EF, Groen HJM, et al. Dabrafenib plus trametinib in untreated BRAF V600E–mutant metastatic NSCLC: phase 2 trial. Lancet Oncol. 2017;18(10):1307‑1316.</li>
+            <li>Liu X, Jia Y, Stoopler MB, et al. High frequency of actionable MET gene mutations in pulmonary sarcomatoid carcinoma. J Clin Oncol. 2016;34(8):794‑802.</li>
+            <li>Drilon A, Hu ZI, Lai GGY, Tan DSW. Targeting RET‑driven cancers: evolving landscapes. Nat Rev Clin Oncol. 2018;15(3):151‑167.</li>
+            <li>Cocco E, Scaltriti M, Drilon A. NTRK fusion‑positive cancers and TRK inhibitor therapy. Nat Rev Clin Oncol. 2018;15(12):731‑747.</li>
+            <li>Jordan EJ, Kim HR, Arcila ME, et al. Prospective molecular characterization of lung adenocarcinomas. Cancer Discov. 2017;7(6):596‑609.</li>
+            <li>Lindeman NI, Cagle PT, Aisner DL, et al. Updated molecular testing guideline for the selection of lung cancer patients for treatment with targeted tyrosine kinase inhibitors: guideline from the College of American Pathologists, the International Association for the Study of Lung Cancer, and the Association for Molecular Pathology. Arch Pathol Lab Med. 2018;142(3):321-346.</li>
+            <li>Rittmeyer A, Barlesi F, Waterkamp D, et al. Atezolizumab versus docetaxel in previously treated NSCLC (OAK). Lancet. 2017;389(10066):255‑265.</li>
+            <li>Fehrenbacher L, Spira A, Ballinger M, et al. Atezolizumab vs docetaxel (POPLAR). Lancet. 2016;387(10030):1837‑1846.</li>
+            <li>Garon EB, Rizvi NA, Hui R, et al. Pembrolizumab for NSCLC (KEYNOTE‑001). N Engl J Med. 2015;372(21):2018‑2028.</li>
+            <li>Borghaei H, Paz‑Ares L, Horn L, et al. Nivolumab vs docetaxel in nonsquamous NSCLC (CheckMate 057). N Engl J Med. 2015;373(17):1627‑1639.</li>
+            <li>Seymour L, Bogaerts J, Perrone A, et al. iRECIST: guidelines for response criteria for use in trials testing immunotherapeutics. Lancet Oncol. 2017;18(3):e143‑e152.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

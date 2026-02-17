@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatment Options for Early-Stage Lung Cancer</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Treatment Options for Early-Stage Lung Cancer</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers the contemporary management of resectable and medically inoperable stage I–II non-small cell lung cancer (NSCLC), aligned to AABIP board domains:</p>
+    <ul>
+        <li>Patient selection and pre-operative evaluation</li>
+        <li>Surgical options (lobectomy, segmentectomy, wedge; minimally invasive approaches; nodal assessment)</li>
+        <li>Stereotactic body radiation therapy (SBRT)</li>
+        <li>Perioperative systemic therapy (neoadjuvant, adjuvant, peri-adjuvant immunotherapy; adjuvant targeted therapy)</li>
+        <li>Image-guided ablation</li>
+        <li>Complications and surveillance</li>
+    </ul>
+
+    <h3>Learning Objectives</h3>
+    <p>By the end of this chapter, learners will be able to:</p>
+    <ul>
+        <li>Select surgery, SBRT, or ablation for stage I–II NSCLC based on tumor and patient factors.</li>
+        <li>Apply physiologic algorithms (FEV₁/DLCO and predicted postoperative values) to determine operability and the need for additional testing.</li>
+        <li>Choose between lobectomy and sublobar resection for small peripheral tumors and describe nodal staging strategies.</li>
+        <li>Integrate perioperative immunotherapy and adjuvant targeted therapy in appropriate molecularly defined subgroups.</li>
+        <li>Anticipate, prevent, and manage key complications of surgery, SBRT, and thermal ablation.</li>
+        <li>Construct surveillance plans after definitive local therapy and recognize patterns of failure and salvage options.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High-Yield One-Pager (Pearls, Pitfalls, Traps)</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Staging drives therapy.</strong> Stage I–II NSCLC is potentially curable; ensure accurate mediastinal assessment before definitive treatment.</li>
+            <li><strong>Operability is two-part:</strong> (1) Oncologic resectability; (2) Physiologic candidacy by FEV₁/DLCO and predicted postoperative (ppo) values; borderline results trigger exercise testing.</li>
+            <li><strong>Surgery is standard for operable patients.</strong> Lobectomy remains the default; segmentectomy is acceptable for carefully selected ≤2 cm peripheral cT1N0 lesions with thorough nodal assessment.</li>
+            <li><strong>Central tumors:</strong> Consider sleeve resection to avoid pneumonectomy when feasible.</li>
+            <li><strong>Nodal management:</strong> Perform at least lobe-specific systematic sampling; routine complete mediastinal dissection has not consistently improved OS when prior sampling is negative.</li>
+            <li><strong>SBRT:</strong> Preferred definitive therapy for medically inoperable peripheral stage I tumors; offers excellent local control; pneumonitis risk rises with central lesions.</li>
+            <li><strong>PORT (postoperative radiation):</strong> Not indicated after complete (R0) resection of stage I–II; indicated for positive margins (R1).</li>
+            <li><strong>Perioperative immunotherapy:</strong> Neoadjuvant chemo-IO improves event-free survival (EFS) and pathologic complete response (pCR); peri-adjuvant (neo + adjuvant) strategies further improve EFS in resectable stage II–III patients without targetable drivers.</li>
+            <li><strong>Adjuvant IO after chemo:</strong> Benefits resected stage II–IIIA (PD-L1–enriched benefit varies by regimen).</li>
+            <li><strong>Adjuvant targeted therapy:</strong> Osimertinib (EGFR 19del/L858R) and alectinib (ALK) improve DFS after resection.</li>
+            <li><strong>Ablation (RFA/MWA/cryo):</strong> An option for high-risk or oligometastatic settings; cryoablation is favored near critical structures; pneumothorax is common and manageable.</li>
+            <li><strong>Elderly/frail patients:</strong> Sublobar resection or SBRT are reasonable; decisions should be individualized.</li>
+            <li><strong>Common traps:</strong> Overtreating indolent ground-glass lesions, under-staging the mediastinum, giving PORT after R0 stage I–II, and missing EGFR/ALK testing before committing to immunotherapy plans.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Early-stage NSCLC comprises about one-third of new NSCLC cases, largely adenocarcinoma and squamous subtypes. Five-year survival declines with stage; accurate TNM staging (current IASLC/AJCC edition) is essential for selecting curative modalities.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <ul>
+        <li><strong>Surgery:</strong> Operable cT1–2N0–1 disease. Contraindications include prohibitive cardiopulmonary risk or diffuse metastatic disease.</li>
+        <li><strong>SBRT:</strong> Medically inoperable or surgery-declining patients with peripheral lesions; use caution for central tumors.</li>
+        <li><strong>Ablation:</strong> High surgical risk, prior high-dose RT field, or oligometastatic/oligoprogressive settings when complete local control of all sites is feasible.</li>
+        <li><strong>Perioperative systemic therapy:</strong>
+            <ul>
+                <li>Neoadjuvant chemo-IO: Resectable stage II–III (and select IB ≥4 cm) without EGFR/ALK alterations.</li>
+                <li>Adjuvant IO: Resected stage II–IIIA (PD-L1-dependent benefit varies).</li>
+                <li>Adjuvant targeted: EGFR 19del/L858R (osimertinib), ALK (alectinib).</li>
+            </ul>
+        </li>
+        <li><strong>PORT:</strong> R1 resections; not for routine R0 stage I–II.</li>
+    </ul>
+
+    <h4>Pre-procedure Evaluation (Imaging, Labs, Risk, Consent)</h4>
+    <ul>
+        <li><strong>Imaging:</strong> Thin-slice CT chest; PET-CT for staging; consider brain MRI in ≥Stage II.</li>
+        <li><strong>Mediastinal evaluation:</strong> EBUS-TBNA for suspicious nodes or tumors >3 cm/central; surgical staging as needed.</li>
+        <li><strong>Pulmonary physiology:</strong> Obtain FEV₁ and DLCO in all surgical candidates. If either is <80% predicted, calculate predicted postoperative (ppo) FEV₁/DLCO using segment counting or split-function perfusion; borderline results prompt cardiopulmonary exercise testing (CPET).</li>
+        <li><strong>Antithrombotics:</strong> Follow institutional bridging for neuraxial anesthesia and VATS; coordinate with cardiology for stents.</li>
+        <li><strong>Consent:</strong> Include risks specific to chosen modality (air leak, atrial arrhythmia, pneumonitis, pneumothorax, BPF, hemoptysis).</li>
+    </ul>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>Surgery:</strong> VATS or RATS platforms with endoscopic staplers, energy devices; availability for sleeve resection; mediastinal nodal instruments.</li>
+        <li><strong>SBRT:</strong> Immobilization devices, 4D-CT simulation, image guidance (cone-beam); motion management (breath-hold, gating).</li>
+        <li><strong>Ablation:</strong>
+            <ul>
+                <li>RFA: Single/cluster electrodes (2–5 cm ablation zones), temperature monitoring; saline infusion or cooled tips for larger lesions.</li>
+                <li>MWA: 900–2500 MHz antennas; allows larger, faster ablations; multiple antennas for ≥3 cm.</li>
+                <li>Cryoablation: Multiple cryoprobes spaced ≤2 cm, typical triple-freeze cycles; clear ice-ball visualization; general anesthesia recommended for central lesions to ensure airway control.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+
+    <h4>Lobectomy/Segmentectomy (VATS/RATS)</h4>
+    <ul>
+        <li>Confirm side, stage, and plan; ensure complete pre-op nodal workup.</li>
+        <li>Port placement; adhesiolysis.</li>
+        <li>Fissure-last or fissure-first strategy per anatomy; isolate vein, artery, bronchus.</li>
+        <li>Parenchymal division with staplers; oncologic margins confirmed.</li>
+        <li>Nodal assessment: Hilar and mediastinal (lobe-specific systematic); submit for pathology.</li>
+        <li>Air-leak test; hemostasis; chest tube placement.</li>
+    </ul>
+
+    <h4>SBRT</h4>
+    <ul>
+        <li>Simulation (4D-CT); define ITV/PTV with motion margins.</li>
+        <li>Dose/fractionation per site, size, and proximity to Organs at Risk (OARs); verify constraints.</li>
+        <li>Daily image guidance; manage cough and respiration.</li>
+        <li>Post-therapy toxicities counseling (cough, fatigue, radiation pneumonitis).</li>
+    </ul>
+
+    <h4>Percutaneous Ablation</h4>
+    <ul>
+        <li>Planning CT, trajectory avoiding bullae and vessels; consent includes pneumothorax risk.</li>
+        <li>Analgesia: Moderate sedation for peripheral lesions; general anesthesia for central/bleeding risk; consider double-lumen ventilation for airway protection.</li>
+        <li>Device placement:
+            <ul>
+                <li>RFA/MWA: Position electrode/antenna centrally first, then peripheral passes for coverage.</li>
+                <li>Cryo: Position multiple probes; perform freeze-thaw cycles; monitor ice-ball margins (≥5–10 mm beyond tumor).</li>
+            </ul>
+        </li>
+        <li>Post-ablation CT; track cautery if needed; observe for pneumothorax; plan chest tube if symptomatic or large.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Troubleshooting & Intra-procedure Management</h3>
+    <ul>
+        <li><strong>Dense hilar fibrosis (post-neoadjuvant IO):</strong> Convert to thoracotomy early; obtain proximal control; be prepared for sleeve reconstruction.</li>
+        <li><strong>Persistent air leak:</strong> Buttress staple lines; pleural tent; consider autologous blood patch post-op.</li>
+        <li><strong>SBRT motion:</strong> Escalate motion control (gating/abdominal compression); re-plan if motion >1 cm.</li>
+        <li><strong>Ablation near critical structures:</strong> Prefer cryo; use intentional small pneumothorax/hydrodissection to displace OARs; watch for hemoptysis.</li>
+    </ul>
+
+    <h3>Post-procedure Care & Follow-up</h3>
+    <ul>
+        <li><strong>Surgery:</strong> Early ambulation, pulmonary hygiene; remove chest tube when no air leak and drainage is acceptable; pathology-driven adjuvant decisions.</li>
+        <li><strong>SBRT/Ablation:</strong> Short-term imaging for pneumonitis or inflammatory change; serial CT at 3, 6, and 12 months, then per surveillance schedule.</li>
+        <li><strong>Surveillance (after curative therapy):</strong> History/physical and chest CT every 6 months for 2 years, then annually; counsel smoking cessation.</li>
+    </ul>
+
+    <h3>Complications (Prevention, Recognition, Management)</h3>
+    <ul>
+        <li><strong>Surgery:</strong> Prolonged air leak, pneumonia, atrial arrhythmias, VTE; mitigate via enhanced recovery, pain control, early mobilization.</li>
+        <li><strong>SBRT:</strong> Fatigue, dermatitis, esophagitis (central lesions), radiation pneumonitis—treat with corticosteroids and supportive care.</li>
+        <li><strong>Ablation:</strong> Pneumothorax (frequent; drain if symptomatic/large), perilesional hemorrhage, bronchopleural fistula (lower risk with cryo than heat-based), hemoptysis, rare systemic air embolism, pulmonary artery pseudoaneurysm (urgent IR/surgical management).</li>
+    </ul>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Severe COPD/poor reserve:</strong> Prefer SBRT or sublobar resection; ablation for select lesions.</li>
+        <li><strong>Elderly/frail:</strong> Individualize; segmentectomy or SBRT is often appropriate with comparable disease control for small peripherally located tumors.</li>
+        <li><strong>Driver-positive tumors (EGFR/ALK):</strong> Favor adjuvant targeted therapy after resection; perioperative immunotherapy is generally avoided in these subgroups.</li>
+        <li><strong>Anticoagulation/antiplatelet therapy:</strong> Coordinate per procedure; manage bleeding risk for ablation and neuraxial anesthesia.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes (Key Trials/Effects)</h3>
+    <ul>
+        <li><strong>Surgery vs. Sublobar:</strong> Contemporary randomized data support segmentectomy equivalence to lobectomy for ≤2 cm peripheral cT1N0 lesions, with small increases in locoregional relapse but preserved lung function.</li>
+        <li><strong>SBRT:</strong> Phase II/III data show ~90% local control for small peripheral tumors; improved quality of life versus conventional RT; pooled randomized data suggest comparable OS to surgery in selected operable patients but are limited by small accrual.</li>
+        <li><strong>Neoadjuvant chemo-immunotherapy (CheckMate 816):</strong> Improved event-free survival and pCR (~24% vs. ~2%), without excess surgical morbidity; peri-adjuvant strategies (KEYNOTE-671, AEGEAN, CheckMate 77T) further increase EFS and pCR.</li>
+        <li><strong>Adjuvant immunotherapy (IMpower010, PEARLS/KEYNOTE-091):</strong> DFS benefit after platinum-based chemotherapy; magnitude varies by PD-L1 status and regimen.</li>
+        <li><strong>Adjuvant targeted therapy:</strong> Osimertinib (EGFR 19del/L858R) and alectinib (ALK) demonstrate substantial DFS benefits in resected stage IB–IIIA disease.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Resectable Early-Stage NSCLC (Therapy Selection)</h4>
+    <div class="mermaid">
+    graph TD
+        A["Confirmed Stage I–II NSCLC"] --> B{"Operable?"}
+        B -- No --> C["Definitive SBRT / Ablation"]
+        B -- Yes --> D{"Assess Size & Location"}
+        D -- "≤2 cm, Peripheral, cN0" --> E["Anatomic Segmentectomy"]
+        D -- ">2 cm or Central / N1" --> F["Lobectomy (Sleeve if needed)"]
+        E --> G{"Driver Mutations?"}
+        F --> G
+        G -- "EGFR 19del/L858R" --> H["Adjuvant Osimertinib"]
+        G -- "ALK Fusion" --> I["Adjuvant Alectinib"]
+        G -- "Neither" --> J{"Assess Stage/Risk"}
+        J -- "Stage II–III or IB ≥4 cm" --> K["Neoadjuvant Chemo-IO<br>or Peri-adjuvant"]
+        J -- "Stage IA" --> L["Observation"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Note:</strong> Thorough nodal assessment is mandatory for segmentectomy. Adjuvant TKI therapy is typically administered after adjuvant chemotherapy if indicated.</p>
+    </div>
+
+    <h4>Algorithm 2 — Physiologic Operability for Lung Resection</h4>
+    <div class="mermaid">
+    graph TD
+        A["Measure FEV1 & DLCO"] --> B{"Both ≥80% Predicted?"}
+        B -- Yes --> C["Proceed to Lobectomy/Segmentectomy"]
+        B -- No --> D["Calculate ppo FEV1 & DLCO"]
+        D --> E{"ppo Value"}
+        E -- "≥40%" --> C
+        E -- "<40%" --> F["Perform CPET"]
+        F --> G{"VO2 Peak"}
+        G -- Acceptable --> H["Consider Limited Resection or SBRT"]
+        G -- Unacceptable --> I["Non-Surgical (SBRT/Ablation)"]
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. Choosing the Surgical Approach in Early-Stage NSCLC</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Clinical Setting</th>
+                <th>Preferred Procedure</th>
+                <th>Key Requirements</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>≤2 cm, peripheral, cT1N0</td>
+                <td>Segmentectomy</td>
+                <td>Frozen-section confirmation of N0; lobe-specific nodal sampling</td>
+                <td>Similar survival to lobectomy in modern RCTs; slightly higher loco-regional relapse; preserves lung.</td>
+            </tr>
+            <tr>
+                <td>> 2 cm or central; N1 identified</td>
+                <td>Lobectomy</td>
+                <td>Systematic lobe-specific nodal assessment</td>
+                <td>Sleeve resection preferred over pneumonectomy when feasible.</td>
+            </tr>
+            <tr>
+                <td>Frail/limited reserve</td>
+                <td>Sublobar or SBRT</td>
+                <td>Individualized; discuss trade-offs</td>
+                <td>Comparable disease control for select small lesions with functional gains.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. Perioperative Systemic Therapy—Board-Style Summary</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Strategy</th>
+                <th>Eligible Stages</th>
+                <th>Backbone</th>
+                <th>Key Outcomes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Neoadjuvant chemo-IO<br>(e.g., nivolumab + platinum doublet)</td>
+                <td>Resectable IB (≥4 cm)–IIIA (no EGFR/ALK)</td>
+                <td>3–4 cycles platinum doublet + anti–PD-1</td>
+                <td>↑ pCR (~5–10x vs. chemo alone); ↑ EFS; acceptable surgical safety.</td>
+            </tr>
+            <tr>
+                <td>Peri-adjuvant regimens<br>(e.g., pembrolizumab or durvalumab)</td>
+                <td>Resectable Stage II–III (no EGFR/ALK)</td>
+                <td>Neo chemo-IO → surgery → 1 yr IO</td>
+                <td>Further ↑ EFS vs. neo alone; pCR ~17–25%.</td>
+            </tr>
+            <tr>
+                <td>Adjuvant IO after chemo<br>(e.g., atezolizumab, pembrolizumab)</td>
+                <td>Resected IB–IIIA (benefit enriched in II–IIIA; variable by PD-L1)</td>
+                <td>1 yr IO after standard chemo</td>
+                <td>↑ DFS in ITT or PD-L1-selected cohorts; OS maturing.</td>
+            </tr>
+            <tr>
+                <td>Adjuvant targeted<br>(osimertinib; alectinib)</td>
+                <td>Resected IB–IIIA EGFR 19del/L858R; ALK+</td>
+                <td>2–3 yr TKI after surgery ± chemo</td>
+                <td>Marked ↑ DFS; CNS protection with EGFR-TKI.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Surgery vs. SBRT vs. Ablation—At-a-Glance</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Surgery</th>
+                <th>SBRT</th>
+                <th>Ablation (RFA/MWA/Cryo)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Ideal candidate</td>
+                <td>Operable stage I–II</td>
+                <td>Medically inoperable peripheral stage I</td>
+                <td>High-risk patients, prior RT field, oligometastatic/oligoprogressive</td>
+            </tr>
+            <tr>
+                <td>Local control</td>
+                <td>Excellent; depends on margins & nodal status</td>
+                <td>~90–95% for small peripheral tumors</td>
+                <td>Good for ≤3 cm; cryo favored near critical structures</td>
+            </tr>
+            <tr>
+                <td>Morbidity</td>
+                <td>Procedural risks (air leak, pneumonia, arrhythmia)</td>
+                <td>Low acute; risk of pneumonitis/esophagitis (central)</td>
+                <td>Pneumothorax common; hemorrhage; BPF (lower with cryo)</td>
+            </tr>
+            <tr>
+                <td>Recovery</td>
+                <td>Longer initial recovery; durable</td>
+                <td>Outpatient/short course (1–5 fractions)</td>
+                <td>Outpatient; rapid recovery</td>
+            </tr>
+            <tr>
+                <td>Role in drivers</td>
+                <td>Enables path staging & tissue for molecular tests</td>
+                <td>No</td>
+                <td>Can pair with biopsy at time of ablation</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 4. Thermal Ablation—Technique Pearls</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Modality</th>
+                <th>Best Uses</th>
+                <th>Technical Tips</th>
+                <th>Caveats</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>RFA</td>
+                <td>≤3 cm lesions</td>
+                <td>Central → peripheral overlapping ablations; cooled tips</td>
+                <td>Heat-sink near vessels can limit efficacy</td>
+            </tr>
+            <tr>
+                <td>MWA</td>
+                <td>3–5 cm lesions; need larger zone</td>
+                <td>Multiple antennas; shorter time; less impacted by charring</td>
+                <td>Greater collateral heat; device variability</td>
+            </tr>
+            <tr>
+                <td>Cryo</td>
+                <td>Lesions near airway/vessels</td>
+                <td>Multiple probes ≤2 cm apart; triple-freeze; visualize ice-ball</td>
+                <td>Longer procedure; general anesthesia for central targets</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <p><strong>Case 1 (Next Best Step)</strong><br>
+        A 68-year-old with 35-pack-years has a 1.8 cm peripheral LLL adenocarcinoma (cT1bN0), FEV₁ 82%, DLCO 78%, PET-negative mediastinum. EGFR/ALK negative.</p>
+        <p><strong>Answer: C (Anatomic segmentectomy).</strong> For ≤2 cm peripheral cT1N0 with adequate reserve, segmentectomy with rigorous nodal assessment offers oncologic equivalence to lobectomy while preserving lung function.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Case 2 (Troubleshooting)</strong><br>
+        During VATS right upper lobectomy after neoadjuvant chemo-IO for cN1 disease, dense hilar fibrosis obscures the pulmonary artery.</p>
+        <p><strong>Answer: B (Convert to thoracotomy and obtain proximal PA control).</strong> Early conversion with proximal control mitigates vascular risk in treatment-related fibrosis; sleeve or standard lobectomy can still achieve R0.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Case 3 (Complication Recognition)</strong><br>
+        A 76-year-old medically inoperable patient receives SBRT to a peripheral RLL lesion. Four weeks later presents with dry cough, low-grade fever, and new ground-glass opacity within the high-dose region.</p>
+        <p><strong>Answer: B (Radiation pneumonitis).</strong> Timing and imaging confined to the irradiated field are classic for radiation pneumonitis. Start oral steroids and supportive care.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Case 4 (Next Best Step)</strong><br>
+        A 62-year-old with resected pT2aN0 (3.5 cm) adenocarcinoma, R0 VATS lobectomy, PD-L1 10%, EGFR exon 19 deletion. Completed 4 cycles cisplatin-based chemotherapy.</p>
+        <p><strong>Answer: D (Adjuvant osimertinib).</strong> Adjuvant osimertinib improves DFS in EGFR 19del/L858R resected disease. PORT is not indicated after R0 margins in stage II without other indications.</p>
+    </div>
+
+    <h3>Question Bank (MCQs)</h3>
+    <ol>
+        <li><strong>A 70‑year‑old with 1.2 cm peripheral cT1aN0 squamous lesion, FEV₁ 88%, DLCO 84%. Best definitive option?</strong><br>
+            A. SBRT<br>
+            B. Wedge resection alone<br>
+            C. Segmentectomy with nodal sampling<br>
+            D. Lobectomy<br>
+            E. Neoadjuvant chemo‑IO<br>
+            <strong>Answer: C.</strong> Anatomic segmentectomy with nodal assessment is appropriate for ≤2 cm peripheral cN0 lesions; preserves function.
+        </li>
+        <li><strong>Key reason segmentectomy can match lobectomy in ≤2 cm peripheral tumors:</strong><br>
+            A. Less bleeding<br>
+            B. Better tolerance of adjuvant therapy<br>
+            C. Thorough anatomic resection plus rigorous nodal assessment<br>
+            D. Reduced operative time<br>
+            E. Lower recurrence in central tumors<br>
+            <strong>Answer: C.</strong> Anatomic segmental planes and nodal evaluation maintain oncologic principles.
+        </li>
+        <li><strong>Most appropriate role for PORT after resected stage I–II NSCLC:</strong><br>
+            A. All pT2 tumors<br>
+            B. Close margins<br>
+            C. Positive microscopic margin (R1)<br>
+            D. PD‑L1 ≥50%<br>
+            E. Any N1 disease<br>
+            <strong>Answer: C.</strong> PORT is generally reserved for R1 resections at this stage.
+        </li>
+        <li><strong>Physiology: In pre‑op assessment, FEV₁ 62% and DLCO 58%. Next step?</strong><br>
+            A. Proceed to lobectomy<br>
+            B. Calculate ppo FEV₁/DLCO<br>
+            C. CPET immediately<br>
+            D. SBRT mandatory<br>
+            E. PORT<br>
+            <strong>Answer: B.</strong> When either FEV₁ or DLCO <80%, calculate ppo to refine risk; CPET follows if ppo low.
+        </li>
+        <li><strong>SBRT vs conventional RT: A major advantage of SBRT in early‑stage NSCLC is:</strong><br>
+            A. Lower local control<br>
+            B. More fractions<br>
+            C. Less esophagitis and pneumonitis and improved quality of life in trials<br>
+            D. Requires anesthesia<br>
+            E. Mandatory chemotherapy<br>
+            <strong>Answer: C.</strong> SBRT provides excellent control with fewer toxicity events vs conventional fractionation in suitable lesions.
+        </li>
+        <li><strong>Neoadjuvant chemo‑IO in resectable stage II–III increases:</strong><br>
+            A. Post‑op mortality<br>
+            B. pCR and event‑free survival<br>
+            C. Need for pneumonectomy<br>
+            D. PORT use<br>
+            E. EGFR mutation rates<br>
+            <strong>Answer: B.</strong> Trials show higher pCR and improved EFS without excess surgical mortality.
+        </li>
+        <li><strong>Driver‑positive disease: After R0 resection of ALK+ stage II adenocarcinoma s/p adjuvant chemo, next step:</strong><br>
+            A. Adjuvant alectinib<br>
+            B. Adjuvant pembrolizumab<br>
+            C. Observation<br>
+            D. PORT<br>
+            E. Neoadjuvant nivolumab<br>
+            <strong>Answer: A.</strong> Adjuvant ALK TKI improves DFS.
+        </li>
+        <li><strong>Ablation modality near bronchus intermedius:</strong><br>
+            A. RFA<br>
+            B. MWA<br>
+            C. Cryoablation<br>
+            D. Laser ablation<br>
+            E. Irreversible electroporation is always preferred<br>
+            <strong>Answer: C.</strong> Cryo is favored near critical structures due to lower risk of BPF and precise ice‑ball control.
+        </li>
+        <li><strong>Troubleshooting intra‑op dense hilar scarring after neoadjuvant IO: most appropriate move is to:</strong><br>
+            A. Persist endoscopically to avoid bigger incision<br>
+            B. Convert early for vascular control<br>
+            C. Abort and give PORT<br>
+            D. Use vessel loops and continue VATS<br>
+            E. Proceed directly to pneumonectomy<br>
+            <strong>Answer: B.</strong> Early conversion reduces vascular risk and permits safe resection.
+        </li>
+        <li><strong>SBRT toxicity timing: Radiation pneumonitis most commonly presents:</strong><br>
+            A. Within 24–48 h<br>
+            B. 2–12 weeks post‑therapy<br>
+            C. 2 years later<br>
+            D. Only in central lesions<br>
+            E. Only with chemotherapy<br>
+            <strong>Answer: B.</strong> Subacute onset with field‑concordant imaging.
+        </li>
+        <li><strong>Next best step: 1.9 cm peripheral adenocarcinoma, cN0, poor surgical candidate (ppoFEV₁ 36%, ppoDLCO 34%).</strong><br>
+            A. Neoadjuvant chemo‑IO then lobectomy<br>
+            B. SBRT<br>
+            C. Wedge resection under epidural only<br>
+            D. PORT<br>
+            E. Observation<br>
+            <strong>Answer: B.</strong> SBRT is preferred for medically inoperable peripheral stage I.
+        </li>
+        <li><strong>Which statement about segmentectomy is TRUE for ≤2 cm peripheral cT1N0?</strong><br>
+            A. Always inferior OS vs lobectomy<br>
+            B. Improves OS but doubles local recurrence<br>
+            C. Non‑inferior disease‑free survival, small increase in locoregional relapse, preserves function<br>
+            D. Requires no nodal sampling<br>
+            E. Only for GGO‑predominant lesions<br>
+            <strong>Answer: C.</strong> Modern randomized data show equivalence with careful nodal assessment; function is better preserved.
+        </li>
+    </ol>
+
+    <h3>Take-Home Checklist</h3>
+    <ul>
+        <li>[ ] Confirm stage and mediastinal status before definitive therapy.</li>
+        <li>[ ] Measure FEV₁/DLCO for all surgical candidates; compute ppo if <80%.</li>
+        <li>[ ] For ≤2 cm peripheral cT1N0, consider segmentectomy with thorough nodal assessment.</li>
+        <li>[ ] Use SBRT for medically inoperable peripheral stage I; mind central constraints.</li>
+        <li>[ ] Do not give PORT after R0 stage I–II resection; do give for R1.</li>
+        <li>[ ] Test for EGFR/ALK in resectable disease; integrate osimertinib/alectinib when indicated.</li>
+        <li>[ ] Consider neoadjuvant chemo-IO (and peri-adjuvant platforms) for stage II–III without targetable drivers.</li>
+        <li>[ ] Anticipate fibrosis with neoadjuvant IO; convert early for safe vascular control.</li>
+        <li>[ ] Recognize SBRT pneumonitis; treat promptly with steroids.</li>
+        <li>[ ] In ablation, plan for pneumothorax; use cryo near critical structures.</li>
+        <li>[ ] Surveillance CT every 6 months × 2 years, then annually; reinforce smoking cessation.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abbreviations</h3>
+        <dl>
+            <dt>NSCLC</dt><dd>Non-Small Cell Lung Cancer</dd>
+            <dt>SBRT</dt><dd>Stereotactic Body Radiation Therapy</dd>
+            <dt>VATS</dt><dd>Video-Assisted Thoracoscopic Surgery</dd>
+            <dt>RATS</dt><dd>Robotic-Assisted Thoracoscopic Surgery</dd>
+            <dt>DLCO</dt><dd>Diffusing Capacity of the Lungs for Carbon Monoxide</dd>
+            <dt>FEV₁</dt><dd>Forced Expiratory Volume in 1 Second</dd>
+            <dt>CPET</dt><dd>Cardiopulmonary Exercise Testing</dd>
+            <dt>PORT</dt><dd>Postoperative Radiation Therapy</dd>
+            <dt>pCR</dt><dd>Pathologic Complete Response</dd>
+            <dt>EFS</dt><dd>Event-Free Survival</dd>
+            <dt>DFS</dt><dd>Disease-Free Survival</dd>
+            <dt>OAR</dt><dd>Organ at Risk</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>References</h3>
+        <ol>
+            <li>Saji H, Okada M, Tsuboi M, et al. Segmentectomy versus lobectomy in small‑sized peripheral non‑small‑cell lung cancer (JCOG0802/WJOG4607L). <em>Lancet</em>. 2022;399:1607‑1617.</li>
+            <li>Altorki N, Wang X, Kozono D, et al. Lobar or Sublobar Resection for Peripheral Stage IA Non–Small‑Cell Lung Cancer. <em>N Engl J Med</em>. 2023;388:489‑498.</li>
+            <li>Darling GE, Allen MS, Decker PA, et al. Mediastinal lymph node sampling versus complete lymphadenectomy (ACOSOG Z0030). <em>J Thorac Cardiovasc Surg</em>. 2011;141:662‑670.</li>
+            <li>Ball D, Mai GT, Vinod S, et al. SABR versus standard radiotherapy in stage I NSCLC (CHISEL). <em>Lancet Oncol</em>. 2019;20:494‑503.</li>
+            <li>Nyman J, Hallqvist A, Lund JÅ, et al. SPACE—SBRT vs conventional RT in inoperable stage I NSCLC. <em>Radiother Oncol</em>. 2016;121:1‑8.</li>
+            <li>Chang JY, Senan S, Paul MA, et al. SABR versus lobectomy in operable stage I NSCLC: pooled randomized analysis. <em>Lancet Oncol</em>. 2015;16:630‑637.</li>
+            <li>Schneider BJ, Daly ME, Kennedy EB, et al. ASCO Endorsement of ASTRO SBRT guideline for early‑stage NSCLC. <em>J Clin Oncol</em>. 2018;36:710‑719.</li>
+            <li>Wang EH, Corso CD, Rutter CE, et al. PORT and survival in incompletely resected NSCLC. <em>J Clin Oncol</em>. 2015;33:2727‑2734.</li>
+            <li>Forde PM, Spicer J, Lu S, et al. Neoadjuvant Nivolumab plus Chemotherapy in Resectable NSCLC (CheckMate 816). <em>N Engl J Med</em>. 2022;386:1973‑1985.</li>
+            <li>KEYNOTE‑671 Investigators. Perioperative Pembrolizumab for Resectable NSCLC (KEYNOTE‑671). <em>N Engl J Med</em>. 2023.</li>
+            <li>AEGEAN Investigators. Perioperative Durvalumab for Resectable NSCLC (AEGEAN). <em>N Engl J Med</em>. 2023/2024.</li>
+            <li>IMpower010 Investigators. Adjuvant Atezolizumab after Resection and Chemotherapy in NSCLC. <em>J Clin Oncol</em>. 2021/2024 update.</li>
+            <li>PEARLS/KEYNOTE‑091 Investigators. Adjuvant Pembrolizumab after Resection. <em>Lancet/J Clin Oncol</em>. 2022–2023.</li>
+            <li>ADAURA Investigators. Osimertinib in Resected EGFR‑Mutated NSCLC. <em>N Engl J Med</em>. 2020/2023 update.</li>
+            <li>ALINA Investigators. Alectinib vs platinum‑based chemotherapy in ALK‑positive resected NSCLC. <em>N Engl J Med</em>. 2023.</li>
+            <li>Choi R, Liddell RP. Minimally Invasive Image‑Guided Ablation for Lung Cancer. In: <em>Principles and Practice of Interventional Pulmonology</em>. Springer; 2025.</li>
+            <li>Jeon H, Wang S, Song J, Gill H, Cheng H. Update 2025: Management of Non–Small‑Cell Lung Cancer. <em>Lung</em>. 2025;203:53‑xx.</li>
+            <li>Gillaspie EA. The evolving treatment for early‑stage lung cancer: Immunotherapy. <em>Surgical Oncology Insight</em>. 2025;2:100128.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

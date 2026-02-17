@@ -1,0 +1,568 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Peripheral Bronchoscopy: Radial Probe, Electromagnetic Navigation, and Robotic Bronchoscopy</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style></head><body>
+
+    <h1>Advanced Peripheral Bronchoscopy: Radial Probe, Electromagnetic Navigation, and Robotic Bronchoscopy</h1>
+
+    <p>This chapter covers diagnostic approaches to peripheral pulmonary lesions (PPLs) using radial endobronchial ultrasound (rEBUS), electromagnetic navigation (EMN), and robotic‑assisted bronchoscopy (RAB). It aligns with AABIP IP Board domains regarding peripheral bronchoscopy indications, imaging/navigation, anesthesia/ventilation strategies, complications, radiation safety, and evidence interpretation.</p>
+
+    <h3>Learning Objectives</h3>
+    <p>By the end of this chapter, learners will be able to:</p>
+    <ul>
+        <li>Select among rEBUS, EMN, ultrathin bronchoscopy, and RAB for specific PPL presentations.</li>
+        <li>Plan navigation using thin‑slice CT, interpret the “bronchus sign” and “vessel sign,” and mitigate CT‑to‑body divergence (CTBD).</li>
+        <li>Execute stepwise registration, navigation, lesion confirmation, and sampling across platforms.</li>
+        <li>Interpret rEBUS patterns (concentric vs. eccentric) and adjust tools/trajectory accordingly.</li>
+        <li>Apply anesthesia and ventilator strategies that reduce atelectasis and improve tool‑in‑lesion confirmation.</li>
+        <li>Anticipate, prevent, and manage bleeding, pneumothorax, and radiation exposure.</li>
+        <li>Critically appraise yield data and definitions, identifying scenarios where adjunct imaging (augmented fluoroscopy, cone‑beam CT) adds value.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High‑Yield One‑Pager</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Why bronchoscopy for PPLs?</strong> Lower pneumothorax risk compared to transthoracic routes and the ability to combine diagnosis with mediastinal staging in a single anesthetic event.</li>
+            <li><strong>Pre‑planning wins cases:</strong> Use thin‑slice (&lt;1 mm) CT at near‑TLC; map the target’s airway generation; note the presence of a bronchus sign. If absent, follow the vessel sign (bronchovascular bundle).</li>
+            <li><strong>CT‑to‑body divergence (CTBD) is the enemy:</strong> Expect greater divergence in lower lobes and under general anesthesia (GA). Use recruitment maneuvers, PEEP 8–12 cmH₂O (as tolerated), and avoid high FiO₂ when safe to minimize atelectasis.</li>
+            <li><strong>Registration matters:</strong> Center the scope, avoid wall contact or buckling, confirm main carina alignment, and complete platform‑specific sequences before navigating.</li>
+            <li><strong>rEBUS patterns predict success:</strong>
+                <ul>
+                    <li>Concentric: Tool centered in lesion.</li>
+                    <li>Eccentric: Tool adjacent to lesion.</li>
+                    <li>Atelectasis: Watch for mimics (e.g., air bronchograms in collapsed tissue).</li>
+                </ul>
+            </li>
+            <li><strong>Adjunct imaging fixes misalignment:</strong> Augmented fluoroscopy/tomosynthesis or Cone-Beam CT (CBCT) can correct for CTBD and confirm tool‑in‑lesion.</li>
+            <li><strong>Robotics extends reach and stability:</strong>
+                <ul>
+                    <li>Monarch and Galaxy: EMN‑based; allow continuous vision during sampling.</li>
+                    <li>Ion: Shape‑sensing; requires removal of the vision probe during sampling.</li>
+                </ul>
+            </li>
+            <li><strong>Ultrathin scopes go distal:</strong> ~3.0 mm OD / 1.7 mm channel scopes reach ~5th‑generation bronchi and accommodate rEBUS and mini‑tools.</li>
+            <li><strong>Sampling strategy:</strong> Start with a needle (to create a tract if no bronchus sign exists), then add forceps/brush; consider cryobiopsy when larger architecture is required.</li>
+            <li><strong>Complication profile:</strong> Pneumothorax rates with RAB are generally low. Bleeding is usually mild–moderate and managed with wedging, cold saline, topical epinephrine, tranexamic acid, or tamponade balloons.</li>
+            <li><strong>Radiation safety:</strong> Adhere to ALARA. Use pulsed fluoro and collimation; increase distance from the X‑ray source; wear eye, thyroid, and torso protection.</li>
+            <li><strong>Yield definitions vary widely:</strong> “Diagnostic yield” can appear inflated when liberal definitions or follow‑up outcomes are included. Always identify the trial’s specific definition.</li>
+            <li><strong>Common exam traps:</strong> Misreading atelectasis on rEBUS as tumor; trusting the virtual path over live endoscopic anatomy; failing to re‑register after major ventilator or patient position changes.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Pulmonary nodules are common on chest CT (appearing in approximately one in five scans). Screening trials report high positive rates and demonstrated mortality benefits of CT screening, which drives an increase in incident and screen‑detected nodules—and the subsequent need for safe, accurate bronchoscopic diagnosis.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>Indications:</strong> Diagnosis of solid/subsolid PPLs; integration with same‑session mediastinal staging; access to lesions beyond the reach of standard scopes; need to minimize pneumothorax risk relative to transthoracic biopsy; targeting for potential therapeutic interventions (e.g., ablation).</p>
+    <p><strong>Contraindications:</strong> Generally relative rather than absolute (similar to standard bronchoscopy); severe hypoxemia (e.g., P/F &lt;70 or FiO₂ &gt;0.9); uncorrectable coagulopathy or thrombocytopenia (Plt &lt;20k); unstable CV status (shock, active ischemia, recent MI, severe PH); elevated ICP or acute asthma. Note: ENB is generally safe with CIEDs (minimal EMI risk).</p>
+
+    <h4>Pre‑procedure Evaluation</h4>
+    <p><strong>CT planning:</strong> Thin‑slice (&lt;1 mm) inspiratory breath‑hold near TLC is essential for optimal airway segmentation and pathway generation. Identify the bronchus sign (airway leading directly to the lesion) or vessel sign (paired artery indicating a likely accompanying airway when the bronchus is not visible).</p>
+    <p><strong>Mental map:</strong> Document sequential airway branches and lesion position, anticipating software inaccuracies and CTBD.</p>
+    <p><strong>Room setup:</strong> Ensure a fluoroscopy‑compatible bed; position robotic tower, bronchoscopy tower, anesthesia machine, and C‑arm/CBCT; plan ROSE/specimen workflow. For EMN, clear metal from the field generator’s vicinity during registration.</p>
+    <p><strong>Anesthesia/ventilation:</strong> GA with TIVA is preferred for guided peripheral procedures and robotics. Use recruitment maneuvers and PEEP 8–12 cmH₂O (hemodynamics permitting). Titrate FiO₂ to the minimum needed to maintain safe saturations to reduce absorption atelectasis. Lower tidal volume (Vt) with an increased respiratory rate helps minimize airway motion.</p>
+
+    <h4>Equipment & Setup (Selected Sizes/Features)</h4>
+    <ul>
+        <li><strong>rEBUS:</strong> ~1.4 mm probe; 360° imaging; operator must distinguish concentric vs. eccentric vs. atelectasis patterns.</li>
+        <li><strong>Ultrathin bronchoscopy:</strong> ~3.0 mm OD with 1.7 mm channel; accommodates rEBUS and mini‑cryoprobe/needle; reaches more distal bronchi than thin scopes.</li>
+        <li><strong>EMN platforms:</strong> Preplan pathway on thin‑slice CT; register with patient; use steerable catheters/guide sheaths. Modern systems integrate augmented fluoroscopy (e.g., tomosynthesis) to update lesion position intra‑operatively.</li>
+        <li><strong>RAB platforms:</strong>
+            <ul>
+                <li><strong>Monarch™:</strong> Telescoping sheath (6.0 mm OD) and inner scope (4.2 mm OD; 2.1 mm channel); continuous vision during sampling; EMN‑based hybrid tracking.</li>
+                <li><strong>Ion™:</strong> 3.5 mm OD catheter with 2.0 mm channel; shape‑sensing; requires removal of vision probe for sampling; endoluminal compass for orientation.</li>
+                <li><strong>Galaxy™:</strong> 4.0 mm single‑use scope with 2.1 mm channel; EMN‑based; integrated augmented fluoroscopy (TiLT) for real‑time CTBD correction.</li>
+            </ul>
+        </li>
+        <li><strong>Adjunct imaging:</strong>
+            <ul>
+                <li><strong>Augmented fluoroscopy/tomosynthesis:</strong> Updates target location; supports “tool‑in‑lesion” confirmation.</li>
+                <li><strong>CBCT (mobile or ceiling‑mounted) / O‑arm:</strong> Provides 3D intra‑op imaging; confirms tool–target relationship; dose similar to low‑dose CT per spin in many protocols.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Step‑by‑Step Technique / Procedural Checklist</h3>
+    <ol>
+        <li><strong>Pre‑op planning:</strong> Review CT; mark target; choose a route favoring gradual branching; anticipate sharp turns and respiratory motion in the lower lobes.</li>
+        <li><strong>Anesthesia & ventilation:</strong> Intubate with appropriately sized ETT (≥8.0 mm when possible for robotics). Apply recruitment; set PEEP 8–12 cmH₂O; minimize FiO₂ while maintaining safety.</li>
+        <li><strong>Airway inspection & clearance:</strong> Use a conventional bronchoscope to suction secretions judiciously (avoid inducing atelectasis).</li>
+        <li><strong>Registration:</strong> Perform platform‑specific registration (carina alignment, contralateral bronchus passes, lobar/segmental mapping).</li>
+        <li><strong>Navigation:</strong> Advance under live endoscopic view; keep scope centered; avoid buckling or airway wall trauma; use preview‑path features (where available).</li>
+        <li><strong>Lesion confirmation:</strong>
+            <ul>
+                <li>Assess rEBUS pattern (concentric > eccentric) and depth; beware of atelectasis mimics (air bronchograms).</li>
+                <li>Use augmented fluoroscopy or CBCT to correct CTBD and confirm tool‑in‑lesion.</li>
+            </ul>
+        </li>
+        <li><strong>Sampling:</strong> Start with a needle (creates a tract when no bronchus sign is present), then forceps ± brush; consider cryobiopsy for architecture, especially in subsolid lesions. Use ROSE to guide passes (often 3–4 needle passes before switching tools).</li>
+        <li><strong>Troubleshooting:</strong> If collapse blocks progress, inject small aliquots of air via the working channel to stent distal airways; re‑recruit and re‑register after major changes.</li>
+        <li><strong>Hemostasis/readiness:</strong> Keep epinephrine, tranexamic acid, and tamponade balloons available; wedge the sheath in the most distal airway to confine any bleeding.</li>
+        <li><strong>Post‑procedure:</strong> Return ventilator parameters to baseline; monitor for pneumothorax/bleeding; adhere to radiation‑safety doffing and dose recording.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Troubleshooting & Intra‑procedure Management</h3>
+    <ul>
+        <li><strong>CTBD:</strong> Expect larger divergence in lower lobes. Re‑acquire tomosynthesis or CBCT; adjust scope trajectory; repeat recruitment; ensure consistent ventilator settings throughout imaging and sampling.</li>
+        <li><strong>Atelectasis misreads on rEBUS:</strong> Look for hyperechoic air bronchograms and uniform patterns that suggest collapse rather than tumor.</li>
+        <li><strong>Distal airway collapse:</strong> Use small air injections (e.g., ~20 mL) via the working channel to splint open airways; avoid saline if image quality for rEBUS/CBCT is critical.</li>
+        <li><strong>Scope instability during sampling:</strong> For telescoping systems, “park” the sheath segmentally; advance the inner scope or tools over a visible guide.</li>
+        <li><strong>EMN interference:</strong> Remove metal from the field; verify sensor integrity; consider re‑registration if the C‑arm or table position has changed substantially.</li>
+    </ul>
+
+    <h3>Complications (Prevention, Recognition, Management)</h3>
+    <ul>
+        <li><strong>Bleeding:</strong> Wedge position; cold saline; topical epinephrine (0.1 mg/mL × 4 mL); tranexamic acid (250–500 mg); endoballoon tamponade when needed. Escalate to a therapeutic bronchoscope if necessary while preserving airway control.</li>
+        <li><strong>Pneumothorax:</strong> Low incidence with RAB; wedge sheath distally; maintain PEEP prudently; consider small saline instillation at the end to reduce air leak risk.</li>
+        <li><strong>Radiation:</strong> Follow ALARA; use pulsed fluoro and tight collimation; maximize distance from the source; wear protective aprons, thyroid shields, and lead glasses.</li>
+    </ul>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Lower lobe lesions / high BMI / long cases:</strong> Anticipate increased CTBD and atelectasis; consider lateral decubitus positioning (target side up) when mobile CT is used to mitigate dependent collapse.</li>
+        <li><strong>Altered anatomy (post‑resection):</strong> Some systems allow partial registration limited to remaining lobes.</li>
+        <li><strong>Emphysema with collapsible airways:</strong> Airway stenting with air injections and careful PEEP titration can facilitate distal navigation.</li>
+        <li><strong>Subsolid/ground‑glass lesions:</strong> Often not visible on fluoro; rely on CBCT confirmation and consider cryobiopsy for histoarchitecture.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes</h3>
+    <ul>
+        <li><strong>rEBUS:</strong> Overall yield is ~70%, with higher yields for concentric versus eccentric views; robotic visualization may mitigate this gap in some series.</li>
+        <li><strong>EMN:</strong> Large cohorts show improved yields when combined with rEBUS and augmented imaging. Modern EMN with tomosynthesis has achieved non‑inferior diagnostic yield to CT‑guided transthoracic biopsy in randomized data, with far lower pneumothorax rates.</li>
+        <li><strong>RAB:</strong> Platforms demonstrate high navigational success with low complication rates; prospective and multicenter data show yields commonly in the mid‑70s to mid‑80s range when paired with rEBUS and/or 3D imaging.</li>
+        <li><strong>Definitions matter:</strong> Strict vs. liberal yield definitions can shift reported yield by &gt;20 percentage points; recent consensus statements standardize reporting.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Workup of a Peripheral Pulmonary Lesion for Bronchoscopic Sampling</h4>
+    <div class="mermaid">
+graph TD
+    A["Obtain Thin-Slice CT"] --> B["Identify Bronchus or Vessel Sign"]
+    B --> C["Choose rEBUS / EMN / RAB"]
+    C --> D["Optimize Ventilation (Recruitment, PEEP, FiO2)"]
+    D --> E["Register & Navigate"]
+    E --> F["Confirm with rEBUS (Concentric) +/- Augmented Fluoro/CBCT"]
+    F --> G["Sample (Needle First)"]
+    G --> H["ROSE Evaluation"]
+    H -->|Diagnostic| I["Finish & Monitor"]
+    H -->|Non-Diagnostic| J["Re-image (CBCT/Tomo) & Adjust Plan"]
+    J --> F
+    </div>
+
+    <h4>Algorithm 2 — CT‑to‑Body Divergence and Atelectasis Mitigation</h4>
+    <div class="mermaid">
+graph TD
+    A["CT-to-Body Divergence Suspected"] --> B["Re-recruit & Check PEEP/FiO2"]
+    B --> C["Ensure Consistent Vent Settings"]
+    C --> D["Acquire Augmented Imaging / Tomosynthesis"]
+    D --> E["Adjust Scope Trajectory"]
+    E --> F["Optional: Air Injection for Distal Bronchi"]
+    F --> G["Reconfirm Tool-in-Lesion"]
+    G --> H["Proceed to Sampling"]
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick‑Reference Boxes</h3>
+
+    <h4>Table 1. Robotic and Navigation Platforms—At‑a‑Glance</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Monarch™</th>
+                <th>Ion™</th>
+                <th>Galaxy™</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Guidance</strong></td>
+                <td>EMN hybrid with optical cues</td>
+                <td>Shape‑sensing</td>
+                <td>EMN + integrated tomosynthesis</td>
+            </tr>
+            <tr>
+                <td><strong>Visualization during sampling</strong></td>
+                <td>Continuous</td>
+                <td>Vision probe removed for tools</td>
+                <td>Continuous</td>
+            </tr>
+            <tr>
+                <td><strong>Dimensions</strong></td>
+                <td>Sheath 6.0 mm OD; scope 4.2 mm OD; 2.1 mm channel</td>
+                <td>Catheter 3.5 mm OD; 2.0 mm channel</td>
+                <td>Scope 4.0 mm OD; 2.1 mm channel</td>
+            </tr>
+            <tr>
+                <td><strong>Distal maneuvering</strong></td>
+                <td>Telescoping “leapfrog” over sheath</td>
+                <td>Fine articulation; endoluminal compass</td>
+                <td>EMN + real‑time target updates</td>
+            </tr>
+            <tr>
+                <td><strong>Notes</strong></td>
+                <td>Sheath parking reduces PTX/bleeding spill</td>
+                <td>Not affected by EM interference</td>
+                <td>Single‑cart, single‑use scope</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="algorithm-note">
+        <p><strong>Abbreviations:</strong> EMN, electromagnetic navigation; OD, outer diameter; PTX, pneumothorax.</p>
+    </div>
+
+    <h4>Table 2. rEBUS Patterns and What To Do</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>rEBUS pattern</th>
+                <th>Interpretation</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Concentric</strong> (hypoechoic ring around probe)</td>
+                <td>Tool centered within lesion</td>
+                <td>Sample—highest yield</td>
+            </tr>
+            <tr>
+                <td><strong>Eccentric</strong> (interface with partial contact)</td>
+                <td>Adjacent to lesion</td>
+                <td>Micro‑adjust trajectory; consider air injection; confirm with imaging</td>
+            </tr>
+            <tr>
+                <td><strong>Homogeneous pattern with hyperechoic dots</strong></td>
+                <td>Atelectasis mimic (air bronchograms)</td>
+                <td>Recruit; adjust PEEP/FiO₂; avoid misclassification; re‑image</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Anesthesia & Ventilator Settings That Help Navigation</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Phase</th>
+                <th>Practical Tip</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Pre‑intubation</strong></td>
+                <td>Avoid prolonged 100% FiO₂ preoxygenation when safe; plan ETT size ≥8.0 mm for RAB tools</td>
+            </tr>
+            <tr>
+                <td><strong>After intubation</strong></td>
+                <td>Recruitment maneuver (e.g., pressure &gt; 20 cmH₂O for &gt; 20 s)</td>
+            </tr>
+            <tr>
+                <td><strong>Maintenance</strong></td>
+                <td>PEEP 8–12 cmH₂O (hemodynamics permitting); low Vt with higher rate; minimize FiO₂ to maintain SpO₂ safely; keep parameters constant during imaging/sampling</td>
+            </tr>
+            <tr>
+                <td><strong>Imaging</strong></td>
+                <td>Breath‑hold at target pressure during tomosynthesis/CBCT; avoid moving the C‑arm/table without re‑registration</td>
+            </tr>
+            <tr>
+                <td><strong>Hemostasis readiness</strong></td>
+                <td>Have cold saline, epinephrine 0.1 mg/mL, tranexamic acid 250–500 mg, and tamponade balloon available</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1</h4>
+        <p>A 64‑year‑old woman with a 14 mm RLL nodule and no bronchus sign is scheduled for RAB. Under GA, rEBUS shows no signal at the virtual target.</p>
+        <p><strong>What’s the next best step?</strong></p>
+        <p><strong>Answer: C. Perform recruitment and PEEP optimization, then tomosynthesis to update target.</strong></p>
+        <p><strong>Rationale:</strong> CTBD and atelectasis are common in lower lobes under GA. Recruitment/PEEP and tomosynthesis can realign the target and confirm tool‑in‑lesion before sampling.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2</h4>
+        <p>A 53‑year‑old man with a 10 mm mixed GGO in RUL undergoes Ion‑based RAB. Lesion not seen on fluoro; rEBUS is equivocal.</p>
+        <p><strong>Best way to confirm tool‑in‑lesion?</strong></p>
+        <p><strong>Answer: B. CBCT with breath‑hold and then cryobiopsy.</strong></p>
+        <p><strong>Rationale:</strong> Subsolid lesions are often fluoro‑invisible; CBCT provides 3D confirmation and supports cryobiopsy for architecture.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3</h4>
+        <p>During forceps biopsy of a peripheral lesion with Monarch, oozing obscures the field.</p>
+        <p><strong>Immediate management?</strong></p>
+        <p><strong>Answer: B. Wedge the sheath distally, apply cold saline and suction; consider topical epinephrine.</strong></p>
+        <p><strong>Rationale:</strong> Wedging confines bleeding; topical agents and suction are first‑line.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank (MCQs)</h3>
+    <ol>
+        <li>
+            <strong>Next best step (navigation).</strong> During EMN bronchoscopy, registration completes but live endoscopy shows misaligned virtual anatomy at subsegmental branches.
+            <ol type="A">
+                <li>Trust the software and proceed</li>
+                <li>Re‑register only at the main carina</li>
+                <li>Reorient using the live bronchoscopic view and “preview path”; avoid wall contact</li>
+                <li>Increase FiO₂ to 1.0</li>
+                <li>Abort and reschedule</li>
+            </ol>
+            <p><strong>Answer: C.</strong> Live visualization guides navigation; use preview‑path features and avoid buckling.</p>
+        </li>
+        <li>
+            <strong>Troubleshooting (CTBD).</strong> While using RAB for a lower‑lobe lesion, rEBUS is negative despite “on‑target” navigation.
+            <ol type="A">
+                <li>Add more suction</li>
+                <li>Perform recruitment, confirm PEEP, and acquire tomosynthesis/CBCT</li>
+                <li>Proceed to blind forceps biopsy</li>
+                <li>Switch to rigid bronchoscopy</li>
+                <li>Extubate and retry under moderate sedation</li>
+            </ol>
+            <p><strong>Answer: B.</strong></p>
+        </li>
+        <li>
+            <strong>Indications.</strong> Which scenario most favors bronchoscopic over transthoracic biopsy?
+            <ol type="A">
+                <li>14 mm pleural‑based posterior lesion in a normal lung</li>
+                <li>28 mm upper‑lobe lesion with bulky mediastinal nodes needing staging</li>
+                <li>8 mm deep lower‑lobe nodule in an emphysematous lung with bullae</li>
+                <li>Diffuse interstitial changes without discrete nodules</li>
+                <li>Large cavitary lesion adjacent to chest wall</li>
+            </ol>
+            <p><strong>Answer: B.</strong> Bronchoscopy can diagnose and stage in one session.</p>
+        </li>
+        <li>
+            <strong>rEBUS interpretation.</strong> Concentric rEBUS is obtained; what is the most appropriate immediate action?
+            <ol type="A">
+                <li>Switch to cryobiopsy only</li>
+                <li>Proceed with needle, then forceps, maintaining alignment</li>
+                <li>Re‑register before sampling</li>
+                <li>Assume atelectasis and relocate</li>
+                <li>Inject saline to improve the image</li>
+            </ol>
+            <p><strong>Answer: B.</strong></p>
+        </li>
+        <li>
+            <strong>Anesthesia/ventilation.</strong> To reduce atelectasis during RAB, the most evidence‑based approach is:
+            <ol type="A">
+                <li>High Vt with low rate and FiO₂ 1.0</li>
+                <li>Recruitment maneuver and PEEP 8–12 cmH₂O with minimal FiO₂ needed</li>
+                <li>Zero PEEP and apneic periods</li>
+                <li>Nitrous oxide anesthesia</li>
+                <li>Prolonged preoxygenation at FiO₂ 1.0</li>
+            </ol>
+            <p><strong>Answer: B.</strong></p>
+        </li>
+        <li>
+            <strong>Platform nuance.</strong> Which statement is correct?
+            <ol type="A">
+                <li>Ion provides continuous endoscopic visualization during sampling</li>
+                <li>Monarch requires vision probe removal for sampling</li>
+                <li>Galaxy integrates augmented fluoroscopy to correct CTBD intra‑op</li>
+                <li>All platforms are self‑driving once registered</li>
+                <li>None allow rEBUS use</li>
+            </ol>
+            <p><strong>Answer: C.</strong></p>
+        </li>
+        <li>
+            <strong>Bleeding control.</strong> Moderate bleeding after transbronchial sampling is best managed initially by:
+            <ol type="A">
+                <li>Positive pressure only</li>
+                <li>Nebulized vasopressin</li>
+                <li>Wedge the sheath distally, cold saline, suction; consider topical epinephrine or tranexamic acid</li>
+                <li>Immediate chest tube placement</li>
+                <li>Trendelenburg positioning</li>
+            </ol>
+            <p><strong>Answer: C.</strong></p>
+        </li>
+        <li>
+            <strong>Radiation safety.</strong> Which reduces operator dose most effectively?
+            <ol type="A">
+                <li>Longer continuous fluoro runs</li>
+                <li>Standing closer to the X‑ray tube</li>
+                <li>Collimation, pulsed fluoro, and maximizing distance from the source</li>
+                <li>Removing the thyroid shield to improve comfort</li>
+                <li>Switching to analog image intensifier</li>
+            </ol>
+            <p><strong>Answer: C.</strong></p>
+        </li>
+        <li>
+            <strong>Sampling sequence.</strong> With no bronchus sign, initial tool of choice often is:
+            <ol type="A">
+                <li>Forceps biopsy</li>
+                <li>Needle to create a tract, then forceps/brush</li>
+                <li>Brush alone</li>
+                <li>BAL only</li>
+                <li>Cryobiopsy only</li>
+            </ol>
+            <p><strong>Answer: B.</strong></p>
+        </li>
+        <li>
+            <strong>Special situation.</strong> Emphysematous patient with distal airway collapse on navigation—most helpful maneuver:
+            <ol type="A">
+                <li>High‑flow suction</li>
+                <li>Small air injection via working channel to stent airway</li>
+                <li>Instill 20–30 mL saline to opacify lung</li>
+                <li>Eliminate PEEP</li>
+                <li>Immediate conversion to percutaneous biopsy</li>
+            </ol>
+            <p><strong>Answer: B.</strong></p>
+        </li>
+        <li>
+            <strong>Yield definitions.</strong> Liberal yield definitions can:
+            <ol type="A">
+                <li>Lower reported yields by excluding follow‑up outcomes</li>
+                <li>Raise reported yields by counting follow‑up as diagnostic</li>
+                <li>Have no effect on reported yields</li>
+                <li>Only apply to robotic studies</li>
+                <li>Only apply to ground‑glass nodules</li>
+            </ol>
+            <p><strong>Answer: B.</strong></p>
+        </li>
+        <li>
+            <strong>Complication rates (RAB).</strong> Which is most accurate?
+            <ol type="A">
+                <li>Pneumothorax is common (&gt;10%) in all RAB cohorts</li>
+                <li>Bleeding requiring thoracotomy is frequent</li>
+                <li>Pneumothorax rates are generally low; wedging and stable platforms may reduce risk</li>
+                <li>Radiation is negligible, so shielding is optional</li>
+                <li>RAB cannot be used with CBCT</li>
+            </ol>
+            <p><strong>Answer: C.</strong></p>
+        </li>
+    </ol>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>Does robotics improve yield over state‑of‑the‑art EMN?</strong> Comparative data suggest similar diagnostic yields when EMN is combined with tomosynthesis, though robotics may confer advantages in reach, stability, and tool control.</li>
+        <li><strong>How much do adjunct imaging modalities improve outcomes?</strong> They reliably correct CTBD and confirm tool‑in‑lesion, but the incremental effect on diagnostic yield varies across studies and depends on definitions and case mix.</li>
+        <li><strong>What is the optimal sampling toolset?</strong> Needles and forceps remain foundational; cryobiopsy is promising for subsolid lesions but adds cost and bleeding considerations.</li>
+        <li><strong>Yield definitions:</strong> Without standardized definitions, headline numbers are not comparable; recent consensus aims to harmonize reporting across studies.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Take‑Home Checklist</h3>
+    <ul>
+        <li>[ ] Thin‑slice CT at near‑TLC; mark bronchus or vessel sign; build a mental map.</li>
+        <li>[ ] Choose rEBUS/EMN/RAB based on lesion size, location, access, and local resources.</li>
+        <li>[ ] GA with TIVA; recruitment and PEEP 8–12 cmH₂O; minimize FiO₂ safely.</li>
+        <li>[ ] Complete robust registration; center the scope; avoid wall contact/buckling.</li>
+        <li>[ ] Confirm lesion with rEBUS (seek concentric) and/or augmented fluoro/CBCT.</li>
+        <li>[ ] Start with needle in no‑bronchus‑sign cases; add forceps/brush; consider cryobiopsy.</li>
+        <li>[ ] Use ROSE to guide passes; re‑image if non‑diagnostic before abandoning.</li>
+        <li>[ ] Wedge sheath for hemostasis; have cold saline, epinephrine, TXA, and balloon ready.</li>
+        <li>[ ] Practice radiation discipline: pulsed fluoro, collimation, distance, shielding.</li>
+        <li>[ ] Document ventilator settings and keep them constant during imaging/sampling.</li>
+        <li>[ ] Understand how yield is defined in your reports and the trials you quote.</li>
+        <li>[ ] Plan room ergonomics and team roles before the patient enters the suite.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abbreviations & Glossary</h3>
+        <dl>
+            <dt>AABIP</dt><dd>American Association for Bronchology and Interventional Pulmonology</dd>
+            <dt>ALARA</dt><dd>As Low As Reasonably Achievable (radiation safety)</dd>
+            <dt>CBCT</dt><dd>Cone‑beam computed tomography</dd>
+            <dt>CTBD</dt><dd>CT‑to‑body divergence</dd>
+            <dt>EMN/ENB</dt><dd>Electromagnetic navigation bronchoscopy</dd>
+            <dt>GA</dt><dd>General anesthesia</dd>
+            <dt>GGO</dt><dd>Ground‑glass opacity</dd>
+            <dt>PEEP</dt><dd>Positive end‑expiratory pressure</dd>
+            <dt>PPL</dt><dd>Peripheral pulmonary lesion</dd>
+            <dt>RAB</dt><dd>Robotic‑assisted bronchoscopy</dd>
+            <dt>rEBUS</dt><dd>Radial endobronchial ultrasound</dd>
+            <dt>ROSE</dt><dd>Rapid on‑site evaluation</dd>
+            <dt>TIVA</dt><dd>Total intravenous anesthesia</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>References</h3>
+        <ol>
+            <li>Gould MK, Tang T, et al. Recent trends in the identification of incidental pulmonary nodules. Am J Respir Crit Care Med. 2015;192(10):1208‑1214.</li>
+            <li>National Lung Screening Trial Research Team; Church TR, Black WC, et al. Results of initial low‑dose computed tomographic screening for lung cancer. N Engl J Med. 2013;368(21):1980‑1991.</li>
+            <li>de Koning HJ, van der Aalst CM, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382(6):503‑513.</li>
+            <li>Ali MS, Sethi J, et al. Computed tomography bronchus sign and the diagnostic yield of guided bronchoscopy for peripheral pulmonary lesions: a systematic review and meta‑analysis. Ann Am Thorac Soc. 2018;15(8):978‑987.</li>
+            <li>Ho E, Cho RJ, et al. The feasibility of using the “artery sign” for pre‑procedural planning in navigational bronchoscopy for parenchymal pulmonary lesion sampling. Diagnostics (Basel). 2022;12(12):3059.</li>
+            <li>Sagar AS, Sabath BF, et al. Incidence and location of atelectasis developed during bronchoscopy under general anesthesia: the I‑LOCATE trial. Chest. 2020;158(6):2658‑2666.</li>
+            <li>Salahuddin M, Sarkiss M, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia (VESPA). Chest. 2022;162(6):1393‑1401.</li>
+            <li>Akulian JA, Molena D, et al. A direct comparative study of bronchoscopic navigation planning platforms for peripheral lung navigation (ATLAS). J Bronchol Interv Pulmonol. 2022;29(3):171‑178.</li>
+            <li>Ali MS, Trick W, et al. Radial endobronchial ultrasound for the diagnosis of peripheral pulmonary lesions: a systematic review and meta‑analysis. Respirology. 2017;22(3):443‑453.</li>
+            <li>Steinfort DP, Khor YH, et al. Radial probe endobronchial ultrasound for the diagnosis of peripheral lung cancer: systematic review and meta‑analysis. Eur Respir J. 2011;37(4):902‑910.</li>
+            <li>Tanner NT, Yarmus L, et al. Standard bronchoscopy with fluoroscopy vs thin bronchoscopy and rEBUS for biopsy of pulmonary lesions: a multicenter randomized trial. Chest. 2018;154(5):1035‑1043.</li>
+            <li>Chen A, Pastis NJ Jr, et al. Robotic bronchoscopy for peripheral pulmonary lesions: the BENEFIT study. Chest. 2021;159(2):845‑852.</li>
+            <li>Murgu S, Chen AC, et al. A prospective, multicenter evaluation of safety and diagnostic outcomes with robotic‑assisted bronchoscopy (TARGET). Chest. 2025;166(4):A5268‑A5270.</li>
+            <li>Kalchiem‑Dekel O, Fuentes P, et al. Multiplanar 3D fluoroscopy redefines tool‑lesion relationship during robotic‑assisted bronchoscopy. Respirology. 2021;26(1):120‑123.</li>
+            <li>Pritchett MA. Prospective analysis of an endobronchial augmented fluoroscopic navigation system for PPLs. J Bronchol Interv Pulmonol. 2021;28(2):107‑115.</li>
+            <li>Dunn BK, Blaj M, et al. Tomosynthesis‑assisted visualization and intraprocedural positional correction with EMN. J Bronchol Interv Pulmonol. 2023;30(1):16‑23.</li>
+            <li>Reisenauer J, Duke JD, et al. Combining shape‑sensing robotic bronchoscopy with mobile 3D imaging to verify tool‑in‑lesion. Mayo Clin Proc Innov Qual Outcomes. 2022;6(3):177‑185.</li>
+            <li>Saghaie T, Williamson JP, et al. First‑in‑human use of a robotic EMN platform with integrated tomosynthesis (FRONTIER). Respirology. 2024;29(11):969‑975.</li>
+            <li>Lentz RJ, Frederick‑Dyer K, et al. Navigational bronchoscopy or transthoracic needle biopsy for lung nodules (VERITAS). N Engl J Med. 2025;392(21):2100‑2112.</li>
+            <li>Ost DE, Ernst A, et al. Diagnostic yield and complications of bronchoscopy for peripheral lung lesions (AQuIRE). Am J Respir Crit Care Med. 2016;193(1):68‑77.</li>
+            <li>Folch EE, Pritchett MA, et al. Electromagnetic navigation bronchoscopy for PPLs: NAVIGATE 1‑year results. J Thorac Oncol. 2019;14(3):445‑458.</li>
+            <li>Oki M, Saka H, et al. Ultrathin bronchoscopy with multimodal devices for PPLs: randomized trial. Am J Respir Crit Care Med. 2015;192:468‑476.</li>
+            <li>Oki M, Saka H, et al. Use of an ultrathin vs thin bronchoscope for PPLs: randomized trial. Chest. 2019;156:954‑964.</li>
+            <li>Oberg CL, Lau RP, et al. Robotic‑assisted cryobiopsy for PPLs. Lung. 2022;200(6):737‑745.</li>
+            <li>Kops SEP, Heus P, Korevaar DA, et al. Diagnostic yield and safety of navigation bronchoscopy: systematic review and meta‑analysis. Lung Cancer. 2023;180:107196.</li>
+            <li>Nadig TR, Thomas N, et al. Guided bronchoscopy for pulmonary lesions: updated meta‑analysis. Chest. 2023;163(6):1589‑1598.</li>
+            <li>Pyarali FF, Hakami‑Majd N, et al. Robotic‑assisted navigation bronchoscopy: meta‑analysis of yield and complications. J Bronchol Interv Pulmonol. 2024;31(1):70‑81.</li>
+            <li>Vachani A, Maldonado F, et al. Alternative approaches to diagnostic yield calculation in bronchoscopy. Chest. 2022;161(5):1426‑1428.</li>
+            <li>Gonzalez AV, Silvestri GA, et al. Advanced diagnostic bronchoscopy outcomes for PPLs: research statement on yield and study design. Am J Respir Crit Care Med. 2024;209(6):634‑646.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body></html>

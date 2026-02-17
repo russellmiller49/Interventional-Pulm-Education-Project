@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pleural Infections</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Pleural Infections</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers the evaluation and management of pleural space infections across the spectrum from complicated parapneumonic effusions to empyema. It emphasizes risk stratification (RAPID), chest tube selection, intrapleural enzyme therapy, saline irrigation, surgical escalation, and special populations. Guidance reflects contemporary society statements and pragmatic pathways tested in trials summarized in the provided materials.</p>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Distinguish simple vs. complicated parapneumonic effusion and empyema using ultrasound, CT features, and pleural fluid chemistry.</li>
+        <li>Apply a stepwise, time-bounded pathway for source control (tube drainage → intrapleural therapy or irrigation → surgery) with reassessment at ~48 hours.</li>
+        <li>Choose appropriate drain size and placement strategy, and implement best-practice intrapleural tissue plasminogen activator (tPA) and DNase dosing—including dose reduction when bleeding risk is high.</li>
+        <li>Initiate empiric, setting-appropriate antibiotics and transition to targeted therapy; understand when shorter antibiotic durations may be reasonable.</li>
+        <li>Use the RAPID score to communicate risk, guide intensity of care, and anticipate outcomes.</li>
+        <li>Recognize when early surgical consultation is indicated and tailor management for trauma, tuberculosis, fungal infection, and transplant recipients.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High-Yield One-Pager</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Terminology:</strong> "Pleural infection" encompasses complicated parapneumonic effusion (CPPE) and empyema; management principles are aligned.</li>
+            <li><strong>Epidemiology:</strong> Incidence and hospitalizations have increased; older adults bear a disproportionate rise and higher mortality.</li>
+            <li><strong>Don’t delay:</strong> Progression from "simple" to "complicated" can occur rapidly—act decisively.</li>
+            <li><strong>Imaging:</strong> Thoracic ultrasound (TUS) reliably identifies septations/loculations and guides safe access; CT helps delineate anatomy and demonstrates the "split pleura" sign.</li>
+            <li><strong>Chemistry that matters:</strong> pH ≤7.20 (obtained correctly) → place a chest tube if safe. If pH 7.21–7.39, integrate LDH (>900 IU/L), glucose (≤4 mmol/L ≈ 72 mg/dL), and imaging to decide. Purulence, positive Gram stain/culture, or glucose <60 mg/dL also strengthen the case for drainage.</li>
+            <li><strong>Drain choice:</strong> Small-bore (≤14F) tubes are preferred (less pain, similar efficacy). Flush regularly to maintain patency.</li>
+            <li><strong>Reassess at ~48 h:</strong> If persistent collection plus systemic inflammation → escalate (CT, intrapleural therapy, or surgery).</li>
+            <li><strong>Intrapleural enzyme therapy (IET):</strong> Use tPA 10 mg + DNase 5 mg twice daily for up to 3 days; clamp ~1 hour each dose. Consider tPA 5 mg with standard DNase in high bleeding risk. Avoid fibrinolytic monotherapy.</li>
+            <li><strong>Anticoagulation:</strong> Hold if possible before IET; if not feasible, use reduced-dose tPA with DNase or consider saline irrigation.</li>
+            <li><strong>Saline irrigation:</strong> 250 mL normal saline TID for 3 days can reduce radiographic burden and surgical referral when IET/surgery are contraindicated.</li>
+            <li><strong>When to call surgery early:</strong> Unstable/septic patients, organized stage 3 with thick rind/non-expandable lung, or failure after an adequate IET course. Prefer VATS over open thoracotomy when feasible.</li>
+            <li><strong>Antibiotics:</strong> Start promptly; cover Gram-positives and anaerobes in community-acquired cases; add Gram-negatives (± Pseudomonas) in hospital-acquired cases. Tailor to culture and clinical progress.</li>
+            <li><strong>RAPID score:</strong> Predicts 90-day mortality and helps goal-setting and escalation planning.</li>
+            <li><strong>Common traps:</strong> Misinterpreting pH due to sampling errors; relying on chest X-ray alone; waiting for cultures before draining; placing a large-bore tube by default; using streptokinase or DNase monotherapy.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+    
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Pleural infection arises when an exudative effusion becomes infected, typically with neutrophil-predominant fluid. Routes include contiguous pneumonia, transdiaphragmatic spread from abdominal infection, mediastinal extension, hematogenous seeding, and direct inoculation (surgery, trauma). Anaerobes are frequent—consider dental disease and aspiration risks. Incidence has climbed over the past decade, with male predominance and higher mortality in older adults; pleural infection is resource-intensive (length of stay commonly 12–15 days or more).</p>
+
+    <h4>Indications & Contraindications</h4>
+    <p>Drainage is indicated for: purulent fluid; positive Gram stain/culture; pH ≤7.20; or intermediate pH with high-risk features (LDH >900 IU/L, glucose ≤4 mmol/L [72 mg/dL] or <60 mg/dL, complex ultrasound, large effusion, pleural enhancement). Avoid delays; bedside pH testing during the same procedure enables immediate conversion from diagnostic tap to small-bore tube. Upfront VATS is not generally first-line in stable adults, but early surgical consultation is warranted for instability, organized stage 3 disease, or tube failure.</p>
+
+    <h4>Pre-procedure Evaluation</h4>
+    <ul>
+        <li><strong>Imaging:</strong> TUS to confirm and map pockets and septations; CT (venous "pleural" phase) to define anatomy, detect split-pleura sign, and plan access/escalation when needed.</li>
+        <li><strong>Labs:</strong> CBC, renal function (RAPID), coagulation profile if IET/surgery anticipated.</li>
+        <li><strong>Pleural sampling:</strong> Correct technique for pH (heparin-free ABG syringe, no lidocaine contamination, air expelled, timely analysis).</li>
+        <li><strong>Consent:</strong> Discuss staged pathway (tube → IET/irrigation → surgery) and potential complications (bleeding with IET, air leak after decortication).</li>
+    </ul>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>Drain:</strong> Image-guided ≤14F pigtail catheter preferred; place to suction and flush regularly to prevent occlusion.</li>
+        <li><strong>Adjuncts:</strong> Three-way stopcock, sterile normal saline for flushes, securement sutures/dressing to prevent dislodgement.</li>
+        <li><strong>IET:</strong> tPA and DNase available at bedside with clamps; plan for 1-hour dwell.</li>
+    </ul>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+    <ol>
+        <li>Confirm target with TUS; mark safe window.</li>
+        <li>Asepsis & anesthesia; small skin nick; Seldinger placement of ≤14F tube into largest or most septated pocket.</li>
+        <li>Secure & connect to drainage; flush with saline to maintain patency.</li>
+        <li>Send fluid for pH (immediate), glucose, protein/LDH (±Light’s criteria), Gram stain/culture (include blood culture bottles), and cytology.</li>
+        <li>Start antibiotics promptly (see Table 2).</li>
+        <li>Assess at ~48 h: If residual collection plus systemic inflammation (e.g., <50% CRP fall or persistent SIRS), obtain CT and escalate (IET/irrigation or surgery).</li>
+        <li>IET regimen (typical): tPA 10 mg then DNase 5 mg, both twice daily for up to 3 days, clamp ~1 hour after each instillation; consider tPA 5 mg + DNase 5 mg when bleeding risk is high. Avoid monotherapy.</li>
+    </ol>
+
+    <div class="algorithm-note">
+        <strong>Troubleshooting & Intra-procedure Management</strong>
+        <ul>
+            <li><strong>Poor drainage:</strong> Confirm tube position with TUS/CT; flush; consider additional catheter into separate locule; if still inadequate, proceed to IET or irrigation depending on bleeding risk.</li>
+            <li><strong>Bleeding suspicion during IET:</strong> Don’t confuse pink drainage with true bleed—check pleural fluid hematocrit; pause/adjust dosing if needed.</li>
+            <li><strong>Unstable patient post-tube:</strong> Early surgical consultation; many will benefit from timely VATS for debridement/decortication.</li>
+        </ul>
+    </div>
+
+    <h3>Post-procedure Care & Follow-up</h3>
+    <p><strong>Antibiotics:</strong> Start empirically, tailor as cultures return; transition IV→PO when clinically improving and inflammatory markers fall; typical total duration ≈ 4 weeks after adequate source control, though shorter courses are under study.</p>
+    <p><strong>Monitoring:</strong> Daily clinical exam, drain output, inflammatory markers; imaging to assess clearance.</p>
+    <p><strong>Discharge planning:</strong> Ensure clinical response before tube removal; arrange follow-up at 2–4 weeks and again at 8–12 weeks for radiographic resolution and to detect recurrence.</p>
+
+    <h4>Complications (Prevention, Recognition, Management)</h4>
+    <ul>
+        <li><strong>IET-related pain/bleeding:</strong> Pain impacts ~15%; pleural bleeding ~3–5%—most managed with transfusion alone. Mitigate by dose reduction (tPA 5 mg) when anticoagulation cannot be safely paused; avoid in systemic coagulopathy.</li>
+        <li><strong>Tube issues:</strong> Dislodgement (securement), blockage (regular flushes), infection at insertion site (asepsis).</li>
+        <li><strong>Surgical complications:</strong> Prolonged air leak, atrial fibrillation, residual space; risk rises with longer symptom duration and advanced stage.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Trauma/retained hemothorax:</strong> Higher risk for empyema; management includes redrainage, IET (non-streptokinase options), and early VATS when indicated.</li>
+        <li><strong>Tuberculous empyema (stage 3):</strong> Thick pleural rind limits drug penetration; optimal care often requires decortication plus anti-TB therapy; VATS feasible in selected cases, with longer operative time and blood loss than pyogenic disease.</li>
+        <li><strong>Fungal empyema:</strong> Rare but severe (higher ICU needs and mortality); requires antifungals with good pleural penetration and often surgical source control.</li>
+        <li><strong>Lung transplant:</strong> Early, aggressive drainage; IET used sparingly due to anastomosis concerns; surgery less aggressive with tolerance for residual spaces; indwelling tunneled catheter may help gradual expansion.</li>
+        <li><strong>High bleeding risk / mandatory anticoagulation:</strong> Prefer reduced-dose tPA with DNase, or use saline irrigation if lytics contraindicated; consider early VATS if operative risk acceptable.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes</h3>
+    <p>Key points include: equivalence of small vs. larger tubes for major outcomes but less pain with ≤14F; IET (tPA+DNase) improves radiographic clearance and reduces surgery and length of stay compared with standard care; pleural irrigation reduces radiographic burden and surgical referral in pilot data; VATS is preferred to open thoracotomy when surgery is needed; upfront VATS as initial drainage lacks robust evidence in stable adults; feasibility work comparing early VATS to IET shows equipoise, with definitive trials ongoing.</p>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Initial Evaluation and Drainage Decision</h4>
+    <div class="mermaid">
+    graph TD
+        A["Suspected Pleural Infection"] --> B{"Perform TUS: Drainable?"}
+        B -- "No" --> C["Antibiotics & Monitor"]
+        B -- "Yes" --> D["Diagnostic Tap (Immediate pH)"]
+        D --> E{"Purulent OR +Gram/Cx?"}
+        E -- "Yes" --> F["Insert ≤14F Tube + Abx"]
+        E -- "No" --> G{"Check pH"}
+        G -- "≤ 7.20" --> F
+        G -- "7.21–7.39" --> H{"High Risk Features? (LDH>900, Low Gluc, Cmplx TUS)"}
+        H -- "Yes" --> F
+        H -- "No" --> I["Antibiotics & Close Follow-up"]
+        G -- "≥ 7.40" --> I
+    </div>
+
+    <h4>Algorithm 2 — Escalation After Tube Placement</h4>
+    <div class="mermaid">
+    graph TD
+        A["Baseline: ≤14F Tube + Abx"] --> B["Reassess at ~48 Hours"]
+        B --> C{"Residual Collection + Persistent Inflammation?"}
+        C -- "No" --> D["Continue Care / Plan Tube Removal"]
+        C -- "Yes" --> E["CT Scan (Contrast)"]
+        E --> F{"Unstable OR Thick Rind/Stage 3?"}
+        F -- "Yes" --> G["Early Surgical Consult (VATS)"]
+        F -- "No" --> H{"IET Contraindicated/High Bleed Risk?"}
+        H -- "No" --> I["Start IET (tPA 10mg + DNase 5mg)"]
+        H -- "Yes" --> J["Saline Irrigation"]
+        I --> K{"Outcome: Cleared?"}
+        J --> K
+        K -- "Yes" --> L["Continue Abx / Plan Removal"]
+        K -- "No" --> M["Surgical Consult (VATS)"]
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. Spectrum of Pleural Infection—Defining Features</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Simple Parapneumonic</th>
+                <th>Complicated Parapneumonic (CPPE)</th>
+                <th>Empyema</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Ultrasound/CT</strong></td>
+                <td>Anechoic, free-flowing</td>
+                <td>Septations, loculations, pleural thickening (±split pleura)</td>
+                <td>As CPPE; often thick rind</td>
+            </tr>
+            <tr>
+                <td><strong>Pleural pH</strong></td>
+                <td>>7.20</td>
+                <td>≤7.20 or 7.21–7.39 with high-risk features</td>
+                <td>Variable; often ≤7.20</td>
+            </tr>
+            <tr>
+                <td><strong>Glucose</strong></td>
+                <td>>60 mg/dL</td>
+                <td>≤60 mg/dL (or ≤4 mmol/L)</td>
+                <td>Often low</td>
+            </tr>
+            <tr>
+                <td><strong>Microbiology</strong></td>
+                <td>Negative</td>
+                <td>Negative or positive</td>
+                <td>Purulent and/or +Gram/culture</td>
+            </tr>
+            <tr>
+                <td><strong>Typical Action</strong></td>
+                <td>Antibiotics alone</td>
+                <td>Tube drainage (≤14F) ± IET</td>
+                <td>Tube drainage ± IET; surgical evaluation</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. Empiric Antibiotic Approach</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Setting</th>
+                <th>Organisms to Cover</th>
+                <th>Example Empiric Options</th>
+                <th>Step-down & Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Community-acquired</strong></td>
+                <td>Gram-positive aerobes + anaerobes</td>
+                <td>Amoxicillin-clavulanate ± metronidazole/clindamycin; (Penicillin allergy: clindamycin ± cephalosporin)</td>
+                <td>Continue anaerobic coverage even if cultures negative; tailor to results</td>
+            </tr>
+            <tr>
+                <td><strong>Hospital-acquired / Post-procedure</strong></td>
+                <td>G+, G- (± Pseudomonas), anaerobes; consider MRSA</td>
+                <td>Piperacillin-tazobactam, cefepime + metronidazole, or carbapenem + vancomycin/linezolid</td>
+                <td>Early de-escalation if monomicrobial streptococcal disease and improving</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Intrapleural Enzyme Therapy (IET) at a Glance</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Element</th>
+                <th>Practical Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Standard Dosing</strong></td>
+                <td>tPA 10 mg + DNase 5 mg, BID for up to 3 days (max 6 doses); clamp ~1 hour each dose</td>
+            </tr>
+            <tr>
+                <td><strong>Reduced Dose</strong></td>
+                <td>Consider tPA 5 mg + DNase 5 mg with high bleeding risk or unavoidable anticoagulation</td>
+            </tr>
+            <tr>
+                <td><strong>Sequencing</strong></td>
+                <td>Concurrent administration is acceptable; avoid monotherapy (tPA-only or DNase-only)</td>
+            </tr>
+            <tr>
+                <td><strong>Anticoagulation</strong></td>
+                <td>Hold if possible; if not, use reduced tPA and close monitoring</td>
+            </tr>
+            <tr>
+                <td><strong>Failure</strong></td>
+                <td>If significant residual collection persists after a complete course, refer for surgery</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 4. RAPID Score (Predicts 90-day Mortality)</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>0 Points</th>
+                <th>1 Point</th>
+                <th>2 Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Renal (urea, mmol/L)</strong></td>
+                <td><5</td>
+                <td>5–8</td>
+                <td>>8</td>
+            </tr>
+            <tr>
+                <td><strong>Age (years)</strong></td>
+                <td><50</td>
+                <td>50–70</td>
+                <td>>70</td>
+            </tr>
+            <tr>
+                <td><strong>Purulence of fluid</strong></td>
+                <td>Purulent (0)</td>
+                <td>Non-purulent (1)</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><strong>Infection source</strong></td>
+                <td>Community</td>
+                <td>Hospital</td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><strong>Albumin (g/L)</strong></td>
+                <td>≥27</td>
+                <td><27</td>
+                <td>—</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>Risk categories: 0–2 low, 3–4 moderate, 5–7 high</em></p>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1 — Early decision-making</h4>
+        <p>A 66-year-old with right-sided pneumonia has fever and pleuritic pain. TUS: moderate effusion; anechoic. Diagnostic tap performed with immediate pH measurement shows pH 7.18.</p>
+        <p><strong>Best answer:</strong> Insert a ≤14F chest tube during the same session and start antibiotics.</p>
+        <p><strong>Explanation:</strong> pH ≤7.20 is a high-risk biochemical feature mandating drainage when safe to do so. Immediate pH testing enables conversion from tap to tube and avoids delay.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2 — 48-hour checkpoint</h4>
+        <p>A 58-year-old with a 12F pigtail for CPPE shows persistent fever, CRP down by only 20%, and CT reveals sizeable residual locule.</p>
+        <p><strong>Best answer:</strong> Start tPA 10 mg + DNase 5 mg BID for up to 3 days (consider tPA 5 mg if bleeding risk) and reassess.</p>
+        <p><strong>Explanation:</strong> At ~48 h, residual collection plus inadequate inflammatory improvement triggers escalation. IET is preferred in fibrinopurulent disease; proceed to surgery if IET fails or stage 3 features dominate.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3 — Anticoagulation constraint</h4>
+        <p>A 72-year-old on therapeutic anticoagulation for acute VTE cannot pause treatment. Residual CPPE persists despite tube drainage.</p>
+        <p><strong>Best answer:</strong> Reduced-dose tPA 5 mg + DNase 5 mg with careful monitoring, or saline irrigation if bleeding risk is unacceptable.</p>
+        <p><strong>Explanation:</strong> Dose reduction mitigates bleeding risk when anticoagulation cannot be interrupted; irrigation is an alternative where IET is contraindicated.</p>
+    </div>
+
+    <h3>Question Bank (MCQs)</h3>
+    
+    <p><strong>1. Which statement is accurate regarding pleural infections?</strong></p>
+    <blockquote>Answer: <strong>D.</strong> Mortality remains substantial in contemporary cohorts; incidence has increased, particularly in older adults, and non-pneumonic mechanisms (hematogenous, subdiaphragmatic, iatrogenic) are not rare. Rapid progression can occur within 24 hours.</blockquote>
+
+    <p><strong>2. A patient with right-sided pneumonia has an anechoic effusion. Immediate pleural fluid pH is 7.18. Next best step?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> pH ≤7.20 warrants chest drain placement when safe; delaying drainage risks deterioration.</blockquote>
+
+    <p><strong>3. After 48 h of tube drainage, CT shows a sizeable residual collection and CRP has fallen by only 20%. Patient is stable. Best next step?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Poor progress at ~48 h triggers escalation; IET is appropriate in stable patients with fibrinopurulent disease, while surgery is typically reserved for failure or organized stage 3.</blockquote>
+
+    <p><strong>4. A patient on non-interrupible anticoagulation has a residual empyema after tube placement. Which regimen is acceptable?</strong></p>
+    <blockquote>Answer: <strong>C.</strong> Reduced-dose tPA with standard DNase maintains efficacy with lower bleeding risk; streptokinase and monotherapy are discouraged.</blockquote>
+
+    <p><strong>5. During IET, drainage turns pink but the patient is stable. Best action?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Pink discoloration is expected; confirm true bleeding with pleural hematocrit before changing therapy.</blockquote>
+
+    <p><strong>6. Best empiric regimen for hospital-acquired pleural infection with MRSA and Pseudomonas risk?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Broad Gram-negative (including Pseudomonas) plus MRSA coverage is recommended initially; aminoglycosides have poor pleural penetration and co-trimoxazole may not achieve adequate pleural levels.</blockquote>
+
+    <p><strong>7. Which statement about chest tubes in pleural infection is correct?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Prospective data indicate small-bore tubes achieve similar key outcomes with less pain; regular flushing helps maintain patency.</blockquote>
+
+    <p><strong>8. Which finding most strongly favors early surgical referral?</strong></p>
+    <blockquote>Answer: <strong>C.</strong> Organized stage 3 with thick visceral rind and non-expandable lung is a classic indication for earlier surgical management, often by VATS decortication.</blockquote>
+
+    <p><strong>9. TB empyema truths include:</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Thick rind and high organism burden limit medical therapy; decortication with anti-TB therapy is often needed; VATS is feasible in selected cases.</blockquote>
+
+    <p><strong>10. Lung transplant recipient with early pleural space infection—most appropriate principle?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Early source control is critical; IET is used sparingly given airway/vascular anastomoses; decortication is performed cautiously, and tunneled catheters may facilitate gradual expansion.</blockquote>
+
+    <p><strong>11. Regarding imaging, which is correct?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> TUS detects septations and locules and guides interventions; CT helps delineate anatomy and is used before escalation.</blockquote>
+
+    <p><strong>12. Which IET practice is evidence-consistent?</strong></p>
+    <blockquote>Answer: <strong>B.</strong> Combination therapy is recommended with standard dosing; reduced-dose tPA is acceptable in high bleeding risk. Monotherapy and streptokinase are discouraged.</blockquote>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>Upfront VATS vs initial tube drainage/IET:</strong> Evidence is limited by small trials and retrospective bias; consensus favors small-bore tube first in stable adults, with early surgery for unstable patients or organized disease. Feasibility trials comparing early VATS with IET suggest equipoise; definitive studies are ongoing.</li>
+        <li><strong>Antibiotic duration:</strong> Traditional ~4-week courses are common; emerging trials suggest shorter durations may be reasonable after adequate source control, but evidence remains underpowered.</li>
+        <li><strong>Pleural irrigation:</strong> Pilot data support radiographic improvement and fewer surgical referrals, but mortality benefit is unproven and larger trials are needed.</li>
+        <li><strong>Medical thoracoscopy:</strong> Early data show shorter post-procedure stays vs IET in small RCTs; larger studies are required before routine adoption.</li>
+    </ul>
+
+    <h3>Take-Home Checklist</h3>
+    <ul>
+        <li>[ ] Confirm effusion with TUS; plan the safest access point.</li>
+        <li>[ ] Measure pH immediately at first tap; convert to tube if pH ≤7.20 or if purulent/+Gram stain/+culture.</li>
+        <li>[ ] Use ≤14F image-guided tubes; flush regularly.</li>
+        <li>[ ] Start appropriate empiric antibiotics without waiting for cultures; tailor promptly.</li>
+        <li>[ ] Reassess at ~48 h using clinical status, inflammatory markers, and CT if needed.</li>
+        <li>[ ] In stable stage 2 disease with residual collection, use tPA 10 mg + DNase 5 mg BID (consider tPA 5 mg if bleeding risk).</li>
+        <li>[ ] If IET contraindicated, consider saline irrigation.</li>
+        <li>[ ] Call surgery early for unstable patients, organized stage 3/rind, or IET failure; VATS preferred when possible.</li>
+        <li>[ ] Apply RAPID score at baseline to frame risk and intensity of care.</li>
+        <li>[ ] Plan follow-up at 2–4 weeks and 8–12 weeks; focus on clinical recovery over complete radiographic resolution alone.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abbreviations & Glossary</h3>
+        <dl>
+            <dt>CPPE</dt><dd>Complicated parapneumonic effusion.</dd>
+            <dt>DNase</dt><dd>Dornase alfa administered intrapleurally with tPA.</dd>
+            <dt>IET</dt><dd>Intrapleural enzyme therapy (tPA + DNase).</dd>
+            <dt>IPC</dt><dd>Indwelling pleural catheter.</dd>
+            <dt>LDH</dt><dd>Lactate dehydrogenase.</dd>
+            <dt>RAPID</dt><dd>Renal (urea), Age, Purulence, Infection source, Dietary (albumin) score.</dd>
+            <dt>TUS</dt><dd>Thoracic ultrasound.</dd>
+            <dt>VATS</dt><dd>Video-assisted thoracoscopic surgery.</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>References</h3>
+        <ol>
+            <li>Roberts ME, Rahman NM, Maskell NA, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):s1-s42.</li>
+            <li>Mummadi SR, Stoller JK, Lopez R, Kailasam K, Gillespie CT, Hahn PY. Epidemiology of adult pleural disease in the United States. Chest. 2021;160(4):1534-1551.</li>
+            <li>Arnold DT, Hamilton FW, Morris TT, et al. Epidemiology of pleural empyema in English hospitals and the impact of influenza. Eur Respir J. 2021;57(6):2003546.</li>
+            <li>Rahman NM, Kahan BC, Miller RF, et al. A clinical score (RAPID) to identify those at risk for poor outcome at presentation in patients with pleural infection. Chest. 2014;145(4):848-855.</li>
+            <li>Maskell NA, Davies CWH, Nunn AJ, et al. U.K. controlled trial of intrapleural streptokinase for pleural infection. N Engl J Med. 2005;352(9):865-874.</li>
+            <li>Rahman NM, Maskell NA, West A, et al. Intrapleural use of tissue plasminogen activator and DNase in pleural infection. N Engl J Med. 2011;365(6):518-526.</li>
+            <li>Chaddha U, Agrawal A, Davidoff F, et al. Use of fibrinolytics and deoxyribonuclease in adult patients with pleural empyema: a consensus statement. Lancet Respir Med. 2021.</li>
+            <li>Akulian J, Bedawi EO, Abbas H, et al. Bleeding risk with combination intrapleural fibrinolytic and enzyme therapy in pleural infection. Chest. 2022;162(6):1384-1392.</li>
+            <li>Hooper CE, Edey AJ, Wallis A, et al. Pleural irrigation trial (PIT): a randomized controlled pilot of pleural irrigation with normal saline versus standard care in pleural infection. Eur Respir J. 2015;46(2):456-463.</li>
+            <li>Bedawi EO, Stavroulias D, Hedley E, et al. Early video-assisted thoracoscopic surgery or intrapleural enzyme therapy in pleural infection: a feasibility randomized controlled trial (MIST-3). Am J Respir Crit Care Med. 2023;208(12):1305-1315.</li>
+            <li>Pan H, He J, Shen J, et al. Video-assisted thoracoscopic decortication versus open thoracotomy decortication for empyema: a meta-analysis. J Thorac Dis. 2017;9(7):2006-2014.</li>
+            <li>Shen KR, Bribriesco A, Crabtree T, et al. The American Association for Thoracic Surgery consensus guidelines for the management of empyema. J Thorac Cardiovasc Surg. 2017;153(6):e129-e146.</li>
+            <li>Menzies SM, Rahman NM, Wrightson JM, et al. Blood culture bottle culture of pleural fluid in pleural infection. Thorax. 2011;66(8):658-662.</li>
+            <li>Heffner JE, Klein JS, Hampson C. Diagnostic utility and clinical application of imaging for pleural space infections. Chest. 2010;137(2):467-479.</li>
+            <li>Kheir F, Thakore S, Mehta H, et al. Intrapleural fibrinolytic therapy versus early medical thoracoscopy for treatment of pleural infection: randomized controlled trial. Ann Am Thorac Soc. 2020;17(8):958-964.</li>
+            <li>Bedawi EO, Ricciardi S, Hassan M, et al. ERS/ESTS statement on the management of pleural infection in adults. Eur Respir J. 2023;61(2):2201062.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

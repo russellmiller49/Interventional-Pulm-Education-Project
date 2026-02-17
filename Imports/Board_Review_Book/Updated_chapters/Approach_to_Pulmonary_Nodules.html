@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Approach to Pulmonary Nodules</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fdfdfd;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 10px;
+            margin-top: 50px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 40px;
+            font-weight: 600;
+        }
+        h4 {
+            color: #555;
+            margin-top: 25px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+        }
+        p, ul, ol {
+            margin-bottom: 16px;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e1e4e8;
+            margin: 50px 0;
+        }
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.95em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #e1e4e8;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f8ff;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        tr:nth-child(even) {
+            background-color: #fbfbfb;
+        }
+        /* Callout Boxes */
+        .algorithm-note {
+            background-color: #eef6fc;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #3498db;
+            margin: 25px 0;
+        }
+        .case-study {
+            background-color: #fff8e1;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #ffc107;
+            margin: 20px 0;
+        }
+        /* MCQ Styling */
+        .mcq-container {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #eee;
+        }
+        .mcq-options {
+            list-style-type: none;
+            padding-left: 15px;
+            margin: 10px 0;
+        }
+        .mcq-options li {
+            margin-bottom: 4px;
+        }
+        .mcq-answer {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border-left: 3px solid #2ecc71;
+        }
+        /* Mermaid */
+        .mermaid {
+            background: white;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+        }
+        /* Footer Sections */
+        .abbreviations dl {
+            display: grid;
+            grid-template-columns: max-content auto;
+            gap: 10px 20px;
+            font-size: 0.95em;
+        }
+        .abbreviations dt {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .abbreviations dd {
+            margin: 0;
+        }
+        .references ol {
+            padding-left: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Diagnostic Approach to Pulmonary Nodules</h1>
+
+<h3>Exam Mapping & Scope</h3>
+<p>This chapter maps to the incidental and screen‑detected pulmonary nodule domain for interventional pulmonology. Core competencies include:</p>
+<ul>
+    <li><strong>Malignancy risk prediction:</strong> Mayo, Herder, Brock, TREAT 2.0.</li>
+    <li><strong>Guideline‑directed follow‑up:</strong> Fleischner (incidental), ACCP, BTS, and Lung‑RADS (screening).</li>
+    <li><strong>Imaging:</strong> PET/CT interpretation and biomarker integration.</li>
+    <li><strong>Procedure selection:</strong> Bronchoscopic (conventional, navigational, robotic) versus transthoracic (TTNB).</li>
+    <li><strong>Technique:</strong> Anesthesia/ventilation strategies to reduce atelectasis, intra‑procedural imaging (cone‑beam CT), complication mitigation, and outcome interpretation.</li>
+</ul>
+
+<h3>Learning Objectives</h3>
+<ul>
+    <li>Apply validated malignancy risk models to stratify solitary and multiple pulmonary nodules and select an evidence‑based pathway.</li>
+    <li>Distinguish management of solid versus subsolid nodules using guideline frameworks for incidental and screen‑detected findings.</li>
+    <li>Interpret PET/CT for nodules, recognizing common causes of false positives and false negatives.</li>
+    <li>Choose a tissue acquisition modality that maximizes diagnostic yield and minimizes complications, utilizing strategies to mitigate CT‑to‑body divergence.</li>
+    <li>Optimize bronchoscopic sampling (tool sequence and yield factors) and troubleshoot nondiagnostic results.</li>
+    <li>Incorporate noninvasive biomarkers appropriately to reduce unnecessary procedures in intermediate‑risk nodules.</li>
+</ul>
+
+<hr>
+
+<h3>High‑Yield One‑Pager</h3>
+<div class="algorithm-note">
+    <p><strong>Pick the right risk model:</strong> Mayo (incidentals), Herder (incidentals + PET), Brock (screening), TREAT 2.0 (specialty/high‑risk clinics). Match the model to the population prevalence.</p>
+    <p><strong>Risk thresholds (ACCP):</strong> Low &lt;5%; Intermediate 5–65%; High &gt;65%. Management hinges on these cut points.</p>
+    <ul>
+        <li><strong>Fleischner (incidentals—solid):</strong>
+            <ul>
+                <li>&lt;6 mm: Often no follow‑up (low risk).</li>
+                <li>6–8 mm: CT at 6–12 months (± additional scan at 18–24 months if high risk).</li>
+                <li>&gt;8 mm: Consider CT at ~3 months, PET/CT, or tissue sampling.</li>
+            </ul>
+        </li>
+        <li><strong>Subsolid nodules (ACCP/Fleischner):</strong>
+            <ul>
+                <li>Pure GGN ≤5 mm: No follow‑up or annual surveillance.</li>
+                <li>Pure GGN &gt;5 mm: Annual CT for ≥3 years (some extend to 5 years).</li>
+                <li>Part‑solid &lt;8 mm: CT at 3, 12, 24 months, then annually.</li>
+                <li>Part‑solid ≥8 mm or enlarging solid core: PET/biopsy/resection.</li>
+                <li>≥15 mm: Escalate to PET/biopsy/resection.</li>
+            </ul>
+        </li>
+        <li><strong>Lung‑RADS (Screening):</strong>
+            <ul>
+                <li>Category 3: 6‑month LDCT.</li>
+                <li>Category 4A: 3‑month LDCT (PET if solid ≥8 mm).</li>
+                <li>Category 4B/4X: Diagnostic CT ± PET ± tissue sampling.</li>
+            </ul>
+        </li>
+    </ul>
+    <p><strong>Imaging predictors of malignancy:</strong> Larger size; part‑solid > solid > pure GGN; spiculation; upper‑lobe location; pleural retraction; vascular convergence; pseudocavitation.</p>
+    <p><strong>Benign clues:</strong> Central/laminated/popcorn calcification.</p>
+    <p><strong>Growth kinetics:</strong> Typical cancer volume‑doubling time (VDT) is ~100–400 days. Very rapid (&lt;30–40 days) or very slow (&gt;400 days) is often benign. Note: ~26% diameter increase ≈ volume doubling.</p>
+    <p><strong>PET/CT in nodules:</strong> SUV ≥2–2.5 is concerning. Sensitivity is generally high; specificity is limited. False negatives: &lt;8 mm lesions, subsolids, carcinoid, indolent adenocarcinoma. False positives: Infection/inflammation.</p>
+    <p><strong>Biomarkers (Intermediate risk):</strong> Plasma proteomic “rule‑out” classifier (high sensitivity/NPV); bronchial genomic classifier supports surveillance after a nondiagnostic bronchoscopy.</p>
+    <p><strong>Bronchoscopy yields:</strong> Conventional tools: BAL ~20%, brush ~38%, forceps ~43%, TBNA ~47%. Guided: rEBUS ~57%; EMN alone ~39%; EMN+rEBUS ~47%; large prospective navigation study ~73% at 12 months.</p>
+    <p><strong>Robotic bronchoscopy:</strong> Contemporary series often report ~80–94% yield with low pneumothorax rates. Randomized/cluster trials show noninferior diagnostic performance versus TTNB/advanced EMN with fewer pneumothoraces.</p>
+    <p><strong>TTNB vs Bronchoscopy:</strong> TTNB has high yield but pneumothorax rates of ~15–25%. Navigational/robotic bronchoscopy offers competitive accuracy with substantially lower pneumothorax risk.</p>
+    <p><strong>Anesthesia/Ventilation:</strong> Atelectasis under GA is common and lowers yield. A strategy of recruitment maneuvers, PEEP 8–10 cm H₂O, and FiO₂ down‑titration reduces atelectasis.</p>
+</div>
+
+<hr>
+
+<h3>Core Concepts</h3>
+
+<h4>Pathophysiology / Epidemiology</h4>
+<p>Indeterminate pulmonary nodules (IPNs) are increasingly detected due to widespread chest CT and lung cancer screening. The clinical challenge is maximizing timely cancer diagnosis while avoiding unnecessary invasive testing and associated harms in benign disease.</p>
+
+<h4>Indications & Contraindications</h4>
+<p><strong>Observation vs. Diagnostic Action:</strong></p>
+<ul>
+    <li><strong>Low risk (&lt;5%):</strong> CT surveillance.</li>
+    <li><strong>Intermediate (5–65%):</strong> PET/CT and/or nonsurgical biopsy.</li>
+    <li><strong>High (&gt;65%):</strong> Surgical diagnosis; nonsurgical biopsy if molecular results will influence neoadjuvant/adjuvant therapy.</li>
+</ul>
+<p><strong>Modality Selection:</strong></p>
+<ul>
+    <li><strong>Bronchoscopy:</strong> Favored for lesions with airway proximity/bronchus sign, central to mid‑peripheral location, or when nodal staging is needed in the same setting.</li>
+    <li><strong>TTNB:</strong> Favored for small, pleural‑adjacent targets or poor airway access.</li>
+    <li><strong>Electromagnetic Navigation (EMN) Caveats:</strong> Electromagnetic interference and CT‑to‑body divergence reduce accuracy; atelectasis and ventilation changes are key drivers of divergence.</li>
+</ul>
+
+<h4>Pre‑procedure Evaluation</h4>
+<ul>
+    <li><strong>Risk stratification:</strong> Use Mayo/Herder/Brock/TREAT 2.0 as appropriate to estimate pretest probability (pCA) and align with ACCP/BTS thresholds.</li>
+    <li><strong>Imaging review:</strong> Assess nodule size, density (solid vs. subsolid), spiculation, upper‑lobe location, calcification pattern, multiplicity, and prior imaging for growth/VDT.</li>
+    <li><strong>PET/CT:</strong> Best for intermediate‑risk nodules ≥8 mm and staging; anticipate false positives and false negatives.</li>
+    <li><strong>Biomarkers:</strong> In intermediate‑risk populations, a validated plasma proteomic classifier can reduce benign procedures. After a nondiagnostic bronchoscopy, a negative bronchial genomic classifier supports conservative follow‑up.</li>
+    <li><strong>Consent/Labs/Comorbidities:</strong> Standard bronchoscopy/TTNB labs; weigh anticoagulation, cardiopulmonary reserve, and patient values.</li>
+</ul>
+
+<h4>Equipment & Setup</h4>
+<p><strong>Bronchoscopic Platforms:</strong> Conventional flexible bronchoscopy ± fluoroscopy, rEBUS (catheter‑based ultrasound), EMN bronchoscopy, and robotic bronchoscopy (commercial platforms vary in scope diameter/working channel and visualization).</p>
+<p><strong>Intra‑procedural Imaging:</strong> Mobile/fixed cone‑beam CT (CBCT) for 3D tool‑in‑lesion (TIL) confirmation.</p>
+<p><strong>Sampling Tools:</strong> Needle (highest sensitivity for malignancy), Forceps (best for benign disease), Brush. Strategy: Combining tools increases yield; aim for ≥6 biopsies.</p>
+<p><strong>Anesthesia & Ventilation:</strong> Minimize anesthesia duration. Use recruitment maneuvers, PEEP 8–10 cm H₂O, and controlled FiO₂ to mitigate atelectasis.</p>
+
+<h4>Step‑by‑Step Technique / Procedural Checklist</h4>
+<ol>
+    <li><strong>Plan:</strong> Review thin‑slice CT; select airway route; confirm bronchus sign; anticipate CT‑to‑body divergence (on the order of ~10 mm in upper lobes and ~20 mm in lower lobes).</li>
+    <li><strong>Navigate:</strong> Use EMN/robotic guidance as indicated; confirm target with rEBUS (concentric view preferred).</li>
+    <li><strong>Stabilize & Image:</strong> Use CBCT when available to confirm TIL and correct for divergence; CBCT can convert many non‑TIL scenarios to TIL and reduce needle‑to‑center distance.</li>
+    <li><strong>Sample:</strong> Sequence: Needle → Forceps → Brush. Obtain ≥6 biopsies. Consider adjuncts per local protocol; use ROSE if available to reduce nondiagnostic sampling.</li>
+    <li><strong>Reassess:</strong> If rEBUS is eccentric or negative, or if ROSE is nondiagnostic, re‑image and re‑target; adjust ventilation if atelectasis is present.</li>
+    <li><strong>Integrate Biomarkers:</strong> After nondiagnostic tissue sampling in intermediate risk, consider biomarker testing before repeating invasive diagnostics.</li>
+</ol>
+
+<h4>Troubleshooting & Intra‑procedure Management</h4>
+<ul>
+    <li><strong>Negative or eccentric rEBUS view:</strong> Re‑orient, adjust catheter depth, or re‑plan with CBCT. Yield is lower with eccentric views, small size (&lt;20 mm), absence of bronchus sign, and lower‑lobe location.</li>
+    <li><strong>Atelectasis under GA:</strong> Use recruitment maneuvers + PEEP 8–10 cm H₂O and down‑titrate FiO₂. Atelectasis accrues with longer anesthesia, higher BMI, and basilar targeting.</li>
+    <li><strong>Electromagnetic interference:</strong> Identify and mitigate metal sources that can disturb EMN fields.</li>
+    <li><strong>CT‑to‑body divergence:</strong> Minimize time from planning CT to sampling; use intra‑procedural imaging to adjust trajectory.</li>
+</ul>
+
+<h4>Post‑procedure Care & Follow‑up</h4>
+<p><strong>Immediate:</strong> Monitor for bleeding or pneumothorax; post‑procedure chest radiography per institutional protocol (bronchoscopic pneumothorax rates are much lower than TTNB).</p>
+<p><strong>Downstream:</strong> Integrate pathology, PET/CT (for staging when malignancy confirmed), and biomarker results in multidisciplinary decision‑making. Resume surveillance when benign and stable per guideline intervals.</p>
+
+<h4>Complications (Prevention, Recognition, Management)</h4>
+<p><strong>TTNB:</strong> Pneumothorax ~15–25% (some require chest tube). Weigh benefits versus bronchoscopy when airway-contiguous.</p>
+<p><strong>Bronchoscopy:</strong> Generally low pneumothorax rates (often ≤2–4% with guided/robotic techniques); bleeding usually minor and controllable. CBCT adds radiation exposure but improves targeting accuracy.</p>
+<p><strong>Comparative Trials:</strong> Navigational bronchoscopy demonstrates diagnostic performance noninferior to TTNB with markedly fewer pneumothoraces; robotic plus CBCT is noninferior to advanced EMN in cluster randomization.</p>
+
+<h4>Special Populations</h4>
+<ul>
+    <li><strong>Screen‑detected nodules:</strong> Use Lung‑RADS for categorization and Brock for risk estimation; escalate per category.</li>
+    <li><strong>Fibrotic lung disease/IPF:</strong> Malignancy risk is higher; PET/CT interpretation may be less specific; tissue diagnosis is often needed earlier.</li>
+    <li><strong>Anticoagulation/Pregnancy/ICU:</strong> Follow institutional pathways; choose the least invasive modality that answers the clinical question.</li>
+</ul>
+
+<h4>Evidence & Outcomes</h4>
+<p>Conventional tools vary by target and histology; combining tools and obtaining ≥6 cores improves yield. Adjunct guidance like rEBUS outperforms EMN alone; a large multicenter navigation study showed ~73% diagnostic yield at 12 months. Robotic platforms report high yields (often ≥80–90%) with low pneumothorax rates. Meta‑analysis shows that despite technological advances, pooled yields across guided bronchoscopy hover around ~69% over two decades; case selection, imaging, and ventilation strategies drive incremental gains.</p>
+
+<hr>
+
+<h3>Diagnostic & Therapeutic Algorithms</h3>
+
+<h4>Algorithm 1 — Solid Pulmonary Nodule (8–30 mm) Management</h4>
+<div class="mermaid">
+graph TD
+    A["Solid Nodule (8–30 mm)"] --> B["Estimate pCA (Mayo/Brock/Herder)"]
+    B --> C["Low Risk (&lt;5%)"]
+    B --> D["Intermediate Risk (5–65%)"]
+    B --> E["High Risk (&gt;65%)"]
+    
+    C --> F["CT Surveillance (3, 9, 24 mo)"]
+    
+    D --> G["PET/CT and/or Nonsurgical Biopsy"]
+    G --> H{"Result?"}
+    H -- "PET (-) or Benign/Nondiagnostic Biopsy (Low Suspicion)" --> F
+    H -- "Suspicious/Positive" --> I["Surgical Diagnosis"]
+    
+    E --> J{Molecular Data Needed?}
+    J -- Yes --> G
+    J -- No --> I
+</div>
+<div class="algorithm-note">
+    <p><strong>Solid Nodule Management:</strong></p>
+    <ul>
+        <li><strong>Low (&lt;5%):</strong> CT surveillance at 3–6, 9–12, 18–24 months; stop if stable at 2 years.</li>
+        <li><strong>Intermediate (5–65%):</strong> PET/CT and/or nonsurgical biopsy (bronchoscopic or TTNB).</li>
+        <li><strong>If PET negative and pCA &lt;30–40% OR if biopsy is benign/nondiagnostic with low risk:</strong> Continue surveillance.</li>
+        <li><strong>High (&gt;65%):</strong> Surgical diagnosis. <em>Exception:</em> Consider nonsurgical biopsy first if molecular data may alter neoadjuvant/adjuvant therapy.</li>
+        <li><strong>Staging:</strong> Stage with PET/CT once cancer is established.</li>
+    </ul>
+</div>
+
+<h4>Algorithm 2 — Subsolid Nodules</h4>
+<div class="mermaid">
+graph TD
+    A["Subsolid Nodule"] --> B{Nodule Type}
+    
+    B --> C["Pure GGN &lt;=5mm"]
+    B --> D["Pure GGN &gt;5mm"]
+    B --> E["Part-solid &lt;8mm"]
+    B --> F["Part-solid &gt;=8mm"]
+    
+    C --> G["No Follow-up OR Annual Surveillance"]
+    D --> H["Annual CT for &gt;= 3 years"]
+    E --> I["CT at 3, 12, 24 mo then Annually"]
+    F --> J["Repeat CT at 3 months"]
+    
+    J --> K{Outcome?}
+    K -- "Persistent OR Solid Core Grows" --> L["PET / Biopsy / Resection"]
+    K -- "Stable" --> I
+    
+    L -- "&gt;=15mm or Enlarging Core" --> M["Immediate Escalation (PET unreliable if solid &lt;8mm)"]
+</div>
+<div class="algorithm-note">
+    <p><strong>Subsolid Nodule Management:</strong></p>
+    <ul>
+        <li><strong>Pure GGN ≤5 mm:</strong> Often no follow‑up or annual surveillance.</li>
+        <li><strong>Pure GGN &gt;5 mm:</strong> Annual CT for ≥3 years (some extend to 5 years).</li>
+        <li><strong>Part‑solid &lt;8 mm:</strong> CT at 3, 12, 24 months, then annually.</li>
+        <li><strong>Part‑solid ≥8 mm:</strong> Repeat CT at 3 months. If persistent or solid component grows: Proceed to PET/biopsy/resection.</li>
+        <li><strong>≥15 mm or enlarging solid core:</strong> Escalate to PET/biopsy/resection. (Note: PET is unreliable if the solid component is &lt;8 mm).</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>Tables & Quick‑Reference Boxes</h3>
+
+<h4>Table 1. Clinical and Imaging Predictors of Malignancy</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Feature</th>
+            <th>Higher Risk</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Size</td>
+            <td>Increases with diameter</td>
+            <td>&gt;2 cm confers higher risk</td>
+        </tr>
+        <tr>
+            <td>Morphology</td>
+            <td>Part‑solid &gt; solid &gt; pure GGN</td>
+            <td>Subsolids often indolent but risk rises with solid core</td>
+        </tr>
+        <tr>
+            <td>Spiculation</td>
+            <td>Higher than smooth margins</td>
+            <td>Odds ratio ~2.2–2.5 in cohort data</td>
+        </tr>
+        <tr>
+            <td>Location</td>
+            <td>Upper lobe &gt; lower lobe</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>Multiplicity</td>
+            <td>1–4 nodules higher than single</td>
+            <td>Risk may decrease when &gt;5 (population dependent)</td>
+        </tr>
+        <tr>
+            <td>Emphysema/IPF</td>
+            <td>Increased risk</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>Growth</td>
+            <td>VDT ~100–400 days typical for cancer</td>
+            <td>~26% diameter increase ≈ volume doubling</td>
+        </tr>
+        <tr>
+            <td>Calcification</td>
+            <td>Eccentric/punctate → suspicious</td>
+            <td>Central/laminated/popcorn → benign</td>
+        </tr>
+        <tr>
+            <td>Ancillary signs</td>
+            <td>Pleural retraction, vascular convergence, pseudocavitation → suspicious</td>
+            <td>—</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Table 2. Guideline‑Directed Follow‑up (Selected)</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Scenario</th>
+            <th>Recommendation</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Fleischner (solid &lt;6 mm)</td>
+            <td>Low risk: often no follow‑up. High risk: consider 12‑mo CT.</td>
+        </tr>
+        <tr>
+            <td>Solid 6–8 mm</td>
+            <td>CT at 6–12 mo (± second at 18–24 mo if high risk).</td>
+        </tr>
+        <tr>
+            <td>Solid &gt;8 mm</td>
+            <td>Short‑interval CT (~3 mo), PET/CT, or tissue sampling.</td>
+        </tr>
+        <tr>
+            <td>Subsolid (ACCP)</td>
+            <td>
+                <ul>
+                    <li>Pure GGN ≤5 mm: no follow‑up or annual x ≥3 y.</li>
+                    <li>&gt;5 mm: annual x ≥3 y.</li>
+                    <li>Part‑solid &lt;8 mm: 3, 12, 24 mo then annually.</li>
+                    <li>≥8 mm or enlarging solid core: PET/biopsy/resection.</li>
+                    <li>≥15 mm: escalate.</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>Table 3. Diagnostic Performance & Complications (Representative Data)</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Modality</th>
+            <th>Diagnostic Performance</th>
+            <th>Key Complications</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>CT‑guided TTNB</td>
+            <td>Yield often ~85–90%</td>
+            <td>Pneumothorax ~15–25%</td>
+        </tr>
+        <tr>
+            <td>Conventional Bronch (registry)</td>
+            <td>BAL ~19%, brush ~38%, forceps ~43%, TBNA ~47%</td>
+            <td>Low pneumothorax</td>
+        </tr>
+        <tr>
+            <td>rEBUS alone</td>
+            <td>~57% yield</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>EMN alone</td>
+            <td>~39% yield</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>EMN + rEBUS</td>
+            <td>~47% yield</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>EMN (NAVIGATE)</td>
+            <td>~73% yield at 12 mo</td>
+            <td>Low pneumothorax</td>
+        </tr>
+        <tr>
+            <td>Robotic Bronchoscopy</td>
+            <td>~80–94% yield</td>
+            <td>Pneumothorax usually ≤~4%</td>
+        </tr>
+        <tr>
+            <td>EMN vs TTNB (Randomized)</td>
+            <td>Noninferior diagnostic accuracy</td>
+            <td>Pneumothorax far lower with EMN</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="algorithm-note">
+    <h4>Quick Box — PET/CT Interpretation</h4>
+    <p><strong>Thresholds:</strong> Don’t rely on a single SUV cutoff; report uptake pattern and clinical context.</p>
+    <p><strong>Accuracy:</strong> Sensitivity is high overall but decreases for small (&lt;1 cm) or indolent lesions; specificity drops in granulomatous/inflammatory settings.</p>
+    <p><strong>False Positives:</strong> Infection, granulomatous disease, sarcoid, post‑therapy changes.</p>
+    <p><strong>False Negatives:</strong> Small size, carcinoid, mucinous/indolent adenocarcinoma, pure GGNs (AIS/MIA).</p>
+</div>
+
+<hr>
+
+<h3>Cases & Applied Learning</h3>
+
+<div class="case-study">
+    <h4>Case 1</h4>
+    <p>A 70‑year‑old woman with a new incidental 9 mm RUL solid nodule and 40 pack‑years is asymptomatic. Best next step?</p>
+    <p>A. No follow‑up<br>
+    B. CT in 3 months<br>
+    C. CT in 6 months<br>
+    D. CT in 12 months<br>
+    E. PET/CT only</p>
+    <p><strong>Answer: B.</strong> For incidentally detected solid nodules &gt;8 mm, an acceptable pathway includes short‑interval CT (~3 mo), PET/CT, or tissue sampling. Short‑interval CT is a common first step to assess stability before escalation.</p>
+</div>
+
+<div class="case-study">
+    <h4>Case 2</h4>
+    <p>Which scenario is most consistent with a benign process?</p>
+    <p>A. 20 mm spiculated upper‑lobe nodule<br>
+    B. 17 mm nodule with strong FDG uptake and fibrosis<br>
+    C. 35 mm mass with VDT ~40 days<br>
+    D. 22 mm nodule with eccentric calcification in a smoker<br>
+    E. 14 mm solid nodule with pleural retraction</p>
+    <p><strong>Answer: C.</strong> Very rapid growth (VDT &lt;30–40 days) often points to infection/inflammation; typical malignant VDTs cluster around 100–400 days.</p>
+</div>
+
+<div class="case-study">
+    <h4>Case 3</h4>
+    <p>A 16 mm LLL nodule has an eccentric rEBUS view and no bronchus sign during bronchoscopy. What should you do?</p>
+    <p>A. Proceed with sampling—yield will be high<br>
+    B. Abort and schedule TTNB<br>
+    C. Re‑orient, adjust position, and/or use CBCT to achieve TIL before sampling<br>
+    D. Switch to BAL only<br>
+    E. Increase FiO₂ to 100% and continue</p>
+    <p><strong>Answer: C.</strong> Eccentric view, lower‑lobe location, and absent bronchus sign predict lower yield; reposition to confirm TIL (Tool-in-Lesion), and correct any atelectasis/divergence before sampling.</p>
+</div>
+
+<h3>Question Bank (MCQs)</h3>
+
+<div class="mcq-container">
+    <p><strong>1. Next best step (screen‑detected):</strong> A 72‑year‑old active smoker has a new 7 mm nodule reported on a coronary calcium CT.</p>
+    <ul class="mcq-options">
+        <li>A. Schedule PET/CT</li>
+        <li>B. Low‑dose screening CT (LDCT)</li>
+        <li>C. CT‑guided biopsy</li>
+        <li>D. Repeat CT in 12 months</li>
+        <li>E. Bronchoscopic biopsy</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Use screening‑protocol LDCT to categorize per Lung‑RADS before deciding on PET or biopsy.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>2. Calcification pattern:</strong> Which suggests benign disease?</p>
+    <ul class="mcq-options">
+        <li>A. Eccentric</li>
+        <li>B. Punctate</li>
+        <li>C. Central or laminated</li>
+        <li>D. Amorphous</li>
+        <li>E. Peripheral rim</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: C.</strong> Central/laminated/popcorn calcifications are classic benign patterns.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>3. Intra‑procedure troubleshooting:</strong> During robotic bronchoscopy, rEBUS is negative and CBCT shows basilar atelectasis. What now?</p>
+    <ul class="mcq-options">
+        <li>A. Increase FiO₂ to 100%</li>
+        <li>B. Recruitment + PEEP 8–10 cm H₂O and down‑titrate FiO₂, then re‑image</li>
+        <li>C. Abort and schedule TTNB</li>
+        <li>D. Continue sampling blindly</li>
+        <li>E. Give furosemide</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Atelectasis degrades targeting; a recruitment/PEEP strategy reduces atelectasis and improves access.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>4. Indications:</strong> An intermediate‑risk (pCA ~25%) 12 mm RUL nodule abuts a segmental airway with a bronchus sign. Best initial diagnostic approach?</p>
+    <ul class="mcq-options">
+        <li>A. Immediate surgical resection</li>
+        <li>B. Bronchoscopy with rEBUS/EMN ± CBCT</li>
+        <li>C. Empiric antibiotics and no follow‑up</li>
+        <li>D. TTNB regardless of airway proximity</li>
+        <li>E. SBRT without tissue</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Airway‑contiguous targets favor bronchoscopic sampling with adjunct imaging.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>5. PET pitfalls:</strong> Which scenario most risks a false‑negative PET?</p>
+    <ul class="mcq-options">
+        <li>A. 2.5 cm spiculated solid nodule</li>
+        <li>B. 1.0 cm typical carcinoid</li>
+        <li>C. Active pneumonia</li>
+        <li>D. Sarcoidosis</li>
+        <li>E. Radiation pneumonitis</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Small carcinoids and indolent adenocarcinomas may be PET‑negative.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>6. Tool selection for benign disease:</strong> Suspected granulomatous infection in a 20 mm peripheral nodule. Which strategy yields the most specific diagnosis?</p>
+    <ul class="mcq-options">
+        <li>A. Needle alone</li>
+        <li>B. Forceps biopsies (≥6) ± ancillary sampling</li>
+        <li>C. Brush only</li>
+        <li>D. BAL only</li>
+        <li>E. Repeat CT rather than sampling</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Forceps are best for benign disease; multiple cores and combined tools increase yield.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>7. Next best step (subsolid):</strong> A persistent 18 mm part‑solid nodule has a growing 7 mm solid core.</p>
+    <ul class="mcq-options">
+        <li>A. Annual CT only</li>
+        <li>B. PET/CT not helpful—observe</li>
+        <li>C. PET/CT and proceed to biopsy or resection</li>
+        <li>D. Ignore growth if overall size is stable</li>
+        <li>E. Immediate SBRT without tissue</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: C.</strong> Growth of the solid component elevates risk and warrants escalation.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>8. Yield factors:</strong> Which constellation predicts the lowest bronchoscopic diagnostic yield?</p>
+    <ul class="mcq-options">
+        <li>A. Concentric rEBUS view; upper‑lobe location</li>
+        <li>B. Eccentric rEBUS view; lower‑lobe location; no bronchus sign</li>
+        <li>C. Concentric rEBUS view; lower lobe</li>
+        <li>D. Eccentric rEBUS view; upper lobe</li>
+        <li>E. Concentric rEBUS view; bronchus sign present</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Eccentric view, lower‑lobe location, and absence of a bronchus sign each reduce yield.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>9. Comparative safety:</strong> In randomized/cluster trials, the complication most reduced with navigational/robotic bronchoscopy versus TTNB is:</p>
+    <ul class="mcq-options">
+        <li>A. Hemoptysis</li>
+        <li>B. Pneumothorax requiring chest tube</li>
+        <li>C. Post‑procedure fever</li>
+        <li>D. Air embolism</li>
+        <li>E. Hypoxemia</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> Bronchoscopic approaches markedly lower pneumothorax risk compared with TTNB while maintaining diagnostic performance.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>10. High‑risk management:</strong> A fit patient has a spiculated 2.6 cm upper‑lobe nodule (pCA ~75%). Best first step?</p>
+    <ul class="mcq-options">
+        <li>A. Serial CT only</li>
+        <li>B. PET/CT solely to decide benign vs malignant</li>
+        <li>C. Surgical diagnosis; consider nonsurgical biopsy if molecular data will alter therapy</li>
+        <li>D. Empiric SBRT</li>
+        <li>E. Antibiotics and re‑imaging in 6 weeks</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: C.</strong> High‑risk nodules usually proceed to surgical diagnosis; nonsurgical biopsy is reasonable if molecular profiling will influence neoadjuvant/adjuvant plans.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>11. Screening framework:</strong> A 6 mm solid nodule on LDCT is categorized as:</p>
+    <ul class="mcq-options">
+        <li>A. Lung‑RADS 1</li>
+        <li>B. Lung‑RADS 2</li>
+        <li>C. Lung‑RADS 3</li>
+        <li>D. Lung‑RADS 4A</li>
+        <li>E. Lung‑RADS 4X</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: C.</strong> Probably benign; typically repeat LDCT in 6 months.</div>
+</div>
+
+<div class="mcq-container">
+    <p><strong>12. Intra‑procedural imaging value:</strong> The key benefit of CBCT during bronchoscopic biopsy is:</p>
+    <ul class="mcq-options">
+        <li>A. Replaces PET/CT in staging</li>
+        <li>B. Converts many non‑TIL situations to TIL and reduces needle‑to‑center distance</li>
+        <li>C. Eliminates the need for rEBUS</li>
+        <li>D. Lowers bleeding risk directly</li>
+        <li>E. Shortens anesthesia time automatically</li>
+    </ul>
+    <div class="mcq-answer"><strong>Answer: B.</strong> CBCT directly visualizes the tool–lesion relationship, correcting divergence and improving targeting.</div>
+</div>
+
+<hr>
+
+<h3>Controversies, Variability, and Evolving Evidence</h3>
+<ul>
+    <li>PET performance varies with local granulomatous disease prevalence; reliance on a single SUV threshold is unreliable.</li>
+    <li>Subsolid surveillance intervals differ by guideline (≥3 years vs 5 years for some pure GGNs).</li>
+    <li>Guided bronchoscopy yields have been relatively stable overall despite new tech; operator selection, ventilation, and intra‑procedural imaging are major levers for improvement.</li>
+    <li>Robotics vs TTNB/EMN: Noninferiority and safety advantages are demonstrated, but long‑term data on molecular adequacy and time‑to‑therapy are still accruing.</li>
+    <li>Cryobiopsy for nodules (1.1 mm probe): Not FDA‑approved; limited data—insufficient to endorse or refute routine use.</li>
+</ul>
+
+<h3>Take‑Home Checklist</h3>
+<ul>
+    <li>Identify the clinical context (incidental vs screening) and choose the appropriate risk model.</li>
+    <li>Apply ACCP/Fleischner/Lung‑RADS thresholds to decide surveillance versus diagnostic action.</li>
+    <li>Order PET/CT selectively (≥8 mm, intermediate risk); anticipate false‑positive and false‑negative scenarios.</li>
+    <li>Use biomarkers to down‑classify intermediate‑risk nodules and reduce procedures in benign disease.</li>
+    <li>For bronchoscopy: seek a bronchus sign, target a concentric rEBUS view, and obtain ≥6 biopsies using multiple tools.</li>
+    <li>Mitigate atelectasis (recruitment, PEEP 8–10 cm H₂O, lower FiO₂), especially for basilar targets, higher BMI, and longer cases.</li>
+    <li>Use CBCT when available to confirm TIL and correct CT‑to‑body divergence.</li>
+    <li>Match biopsy modality to lesion: pleural‑adjacent favors TTNB; airway‑contiguous or need for nodal staging favors bronchoscopy.</li>
+    <li>After a nondiagnostic result, reassess pCA and imaging; don’t repeat low‑yield procedures without changing the plan.</li>
+</ul>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>Abbreviations & Glossary</h3>
+    <dl>
+        <dt>ACS</dt> <dd>American Cancer Society</dd>
+        <dt>CTDIvol</dt> <dd>Volume CT dose index (mGy)</dd>
+        <dt>CTLS</dt> <dd>CT lung screening</dd>
+        <dt>GGN</dt> <dd>Ground‑glass nodule (non‑solid)</dd>
+        <dt>ILC/ILD</dt> <dd>Interstitial lung disease</dd>
+        <dt>LDCT</dt> <dd>Low‑dose computed tomography</dd>
+        <dt>MDT</dt> <dd>Multidisciplinary team</dd>
+        <dt>NCCN</dt> <dd>National Comprehensive Cancer Network</dd>
+        <dt>NLST/NELSON</dt> <dd>Landmark LDCT screening trials</dd>
+        <dt>PET/CT</dt> <dd>Positron emission tomography with CT</dd>
+        <dt>PLCOm2012</dt> <dd>Prostate, Lung, Colorectal, and Ovarian screening trial risk model (2012)</dd>
+        <dt>QALY</dt> <dd>Quality‑adjusted life‑year</dd>
+        <dt>USPSTF</dt> <dd>U.S. Preventive Services Task Force</dd>
+    </dl>
+</div>
+
+<div class="references">
+    <h3>References</h3>
+    <ol>
+        <li>Aberle DR, Adams AM, Berg CD, et al. Reduced lung‑cancer mortality with low‑dose computed tomographic screening. N Engl J Med. 2011;365:395‑409.</li>
+        <li>de Koning HJ, van der Aalst CM, de Jong PA, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382:503‑513.</li>
+        <li>Krist AH, Davidson KW, Mangione CM, et al. Screening for Lung Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325:962‑970.</li>
+        <li>Wood DE, Kazerooni EA, Baum SL, et al. NCCN Guidelines® Insights: Lung Cancer Screening (current version). J Natl Compr Canc Netw. 2022–2025.</li>
+        <li>Wolf AMD, Shih Y‑CT, Fontham ETH, et al. Screening for lung cancer: 2023 guideline update from the American Cancer Society. CA Cancer J Clin. 2024;74:50‑81.</li>
+        <li>Mazzone PJ, Silvestri GA, Patel S, et al. Screening for Lung Cancer: CHEST Guideline and Expert Panel Report. Chest. 2021;160:e427‑e494.</li>
+        <li>Christensen J, Prosper AE, Wu CC, et al. ACR Lung‑RADS v2022: Assessment Categories and Management Recommendations. J Am Coll Radiol. 2024;21:473‑486.</li>
+        <li>Black WC, Gareen IF, Soneji SS, et al. Cost‑effectiveness of CT screening in the National Lung Screening Trial. N Engl J Med. 2014;371:1793‑1802.</li>
+        <li>Larke FJ, Kruger RL, Cagnon CH, et al. Estimated radiation dose associated with LDCT of NLST participants. AJR Am J Roentgenol. 2011;197:1165‑1169.</li>
+        <li>Pinsky PF, Gierada DS, Black W, et al. Performance of Lung‑RADS in the National Lung Screening Trial: a retrospective assessment. Ann Intern Med. 2015;162:485‑491.</li>
+        <li>Silvestri GA, Goldman L, Tanner NT, et al. Outcomes from more than 1 million people screened for lung cancer with low‑dose CT. Chest. 2023;164:241‑251.</li>
+        <li>McKee BJ, Regis SM, McKee AB, et al. Performance of ACR Lung‑RADS in a clinical CT lung screening program. J Am Coll Radiol. 2016;13:R25‑R29.</li>
+        <li>Kinsinger LS, Anderson C, Kim J, et al. Implementation of Lung Cancer Screening in the Veterans Health Administration. JAMA Intern Med. 2017;177:399‑406.</li>
+        <li>Rampinelli C, De Marco P, Origgi D, et al. Exposure to low‑dose CT for screening and risk‑benefit analysis. BMJ. 2017;356:j347.</li>
+        <li>Tammemägi MC, Katki HA, Hocking WG, et al. Selection criteria for lung‑cancer screening. N Engl J Med. 2013;368:728‑736.</li>
+        <li>Katki HA, Kovalchik SA, Berg CD, et al. Development and Validation of Risk Models to Select Ever‑Smokers for CT Lung Cancer Screening. JAMA. 2016;315:2300‑2311.</li>
+        <li>Robbins HA, Berg CD, Cheung LC, et al. Comparative performance of lung cancer risk models in the United Kingdom. Br J Cancer. 2021;124:2026‑2034.</li>
+        <li>Raghu G, Remy‑Jardin M, Myers JL, et al. Idiopathic pulmonary fibrosis and progressive pulmonary fibrosis in adults: clinical practice guideline. Am J Respir Crit Care Med. 2022;205:e18‑e47.</li>
+        <li>Mazzone PJ, Bach PB, Carey J, et al. Clinical validation of a cfDNA fragmentome assay for early detection of lung cancer. Cancer Discov. 2024;14:2224‑2238.</li>
+        <li>Geppert J, Kothari J, Karia R, et al. AI for nodule and cancer detection in CT lung cancer screening: systematic review. Thorax. 2024;79:1040‑1049.</li>
+    </ol>
+</div>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+</body>
+</html>

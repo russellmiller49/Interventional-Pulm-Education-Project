@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indwelling Pleural Catheters and Pleurodesis</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Indwelling Pleural Catheters and Pleurodesis</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter targets the AABIP IP Board domains on pleural disease: malignant and non-malignant pleural effusions, tunneled/indwelling pleural catheters (IPCs), medical pleurodesis (talc slurry and poudrage), outpatient pathways, infection recognition/management, intrapleural enzyme therapy, and complications.</p>
+
+    <h3>Learning Objectives</h3>
+    <p>By the end of this chapter, IP fellows and practicing pulmonologists will be able to:</p>
+    <ul>
+        <li>Differentiate indications for IPC, talc pleurodesis, combined strategies, and surgical approaches in malignant pleural effusion (MPE) and selected non-malignant pleural effusions (NMPE).</li>
+        <li>Select the next best step for patients with trapped lung, high symptom burden, limited life expectancy, or prior pleurodesis failure.</li>
+        <li>Recognize, diagnose, and manage IPC infections and distinguish infection from colonization.</li>
+        <li>Execute step-by-step techniques for IPC insertion and talc pleurodesis, including periprocedural analgesia and chest tube management.</li>
+        <li>Troubleshoot non-draining IPCs, loculations, and post-pleurodesis pain; deploy intrapleural enzyme therapy (IET) when appropriate.</li>
+        <li>Anticipate, prevent, and manage complications (empyema, ARDS with non-graded talc, catheter-tract metastasis, loculations).</li>
+        <li>Apply high-yield trial evidence (e.g., TIME2, AMPLE, IPC-PLUS, TAPPS, ASAP, OPTIMUM) to exam cases.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High-Yield One-Pager</h3>
+    <ul>
+        <li><strong>IPC vs Talc Pleurodesis for MPE:</strong> Both improve dyspnea similarly early; IPC pathways reduce hospital days and reinterventions. At ~6 months, some studies show a dyspnea advantage with IPC and fewer inpatient days overall.</li>
+        <li><strong>Talc Delivery:</strong> Talc slurry via tube and talc poudrage via thoracoscopy have comparable pleurodesis failure at 90 days; complication rates are similar. The long-held superiority of poudrage is not supported by contemporary RCTs.</li>
+        <li><strong>Combined Strategies:</strong> Talc instilled through an IPC increases pleurodesis success versus IPC alone; ambulatory “rapid pleurodesis” protocols (thoracoscopic poudrage + IPC) achieve high success in case series.</li>
+        <li><strong>Aggressive IPC Drainage:</strong> Daily drainage accelerates autopleurodesis and increases its rate versus alternate-day schedules.</li>
+        <li><strong>IPC Infection Basics:</strong> Overall IPC infection risk is ~5–6%. <em>Staphylococcus aureus</em> predominates in deep infections; coagulase-negative staphylococci often indicate colonization. Culture-negative infections occur.</li>
+        <li><strong>Diagnosing IPC Infection:</strong> New fever, pain, cellulitis/tunnel erythema, purulent drainage, or cloudy/purulent pleural fluid with low pH/glucose or high LDH raise suspicion. Consider direct thoracentesis to clarify colonization vs infection.</li>
+        <li><strong>Treating IPC Infection:</strong>
+            <ul>
+                <li><em>Superficial:</em> 7–10 days oral anti-staphylococcal regimen.</li>
+                <li><em>Deep:</em> 4–6 weeks antibiotics plus drainage through the IPC; add IET (tPA 10 mg + DNase 5 mg up to 3 days) for loculated infected fluid. Avoid routine catheter removal if draining and the patient improves.</li>
+            </ul>
+        </li>
+        <li><strong>Risk Modifiers:</strong> Infection risk increases with hepatic hydrothorax and dwell time. Concurrent systemic cancer therapy does not clearly increase IPC infection risk.</li>
+        <li><strong>Talc Quality Matters:</strong> Use graded / larger-particle talc to minimize systemic absorption and ARDS risk; non-graded/small-particle talc is associated with more fever and gas-exchange impairment.</li>
+        <li><strong>Chest Tube Size & Pain:</strong> Smaller tubes (≤14F) reduce pain. Some data suggest slightly higher failure with 12F vs 24F in mixed cohorts; overall, small-bore tubes are acceptable for slurry with careful patient selection.</li>
+        <li><strong>Catheter-Tract Metastasis:</strong> Occurs in mesothelioma (≈5–10%). Warn patients and plan prophylaxis/monitoring as locally preferred.</li>
+        <li><strong>When Pleurodesis Fails:</strong> Look for trapped lung or incomplete drainage/loculations. IPCs are preferred when lung does not re-expand.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h4>Pearls & Pitfalls</h4>
+        <ul>
+            <li><strong>Pearl:</strong> Deep IPC infection often leads to spontaneous pleurodesis—a common exam pivot.</li>
+            <li><strong>Pitfall:</strong> Treating colonization as infection—positive cultures alone (especially coagulase-negative staph) don’t mandate antibiotics.</li>
+            <li><strong>Pitfall:</strong> Relying on prophylactic antibiotics at insertion—they do not reduce IPC infection risk.</li>
+            <li><strong>Pearl:</strong> Outpatient IPC pathways with structured drainage (± talc via IPC) are safe, effective, and board-relevant.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <ul>
+        <li><strong>Pleurodesis:</strong> Creates inflammatory symphysis between parietal and visceral pleura, dependent on apposition; mediators include TGF-β, VEGF, and bFGF.</li>
+        <li><strong>IPCs:</strong> Tunneled, cuffed silicone catheters with a one-way valve to enable intermittent outpatient drainage and autopleurodesis through pleural apposition and catheter friction.</li>
+        <li><strong>MPE:</strong> Signals advanced malignancy; objectives are symptom palliation, minimizing hospital days, and avoiding repeated interventions.</li>
+    </ul>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>Indications</strong></p>
+    <ul>
+        <li><em>MPE with expected expandable lung:</em> Either IPC or talc pleurodesis is appropriate; consider IPC for limited life expectancy or desire for outpatient management.</li>
+        <li><em>Trapped lung / non-expandable lung:</em> IPC favored.</li>
+        <li><em>Pleurodesis failure or recurrence:</em> IPC or combined strategies (thoracoscopic poudrage + IPC; talc via IPC).</li>
+        <li><em>NMPE (selected):</em> Consider in refractory cases (e.g., CHF after maximal therapy; selected hepatic hydrothorax cases with caution). Evidence is weaker than for MPE.</li>
+    </ul>
+    <p><strong>Relative Contraindications</strong></p>
+    <ul>
+        <li>Critically ill patients with high oxygen needs may not tolerate the inflammatory response of chemical pleurodesis.</li>
+        <li>Severe coagulopathy without correction for interventions; local infection at insertion site.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Pre-procedure Evaluation & Setup</h3>
+    <h4>Pre-procedure Evaluation</h4>
+    <ul>
+        <li>Confirm diagnosis and lung expandability (imaging ± ultrasound).</li>
+        <li>Baseline labs (CBC, coagulation, renal/liver tests if relevant); optimize anticoagulation management per local protocols.</li>
+        <li>Discuss goals (hospital-free days vs device-free chest), home support for drainage, and infection risks (including tract metastasis risk in mesothelioma).</li>
+    </ul>
+
+    <h4>Equipment</h4>
+    <ul>
+        <li><strong>IPC kits:</strong> 15–16F tunneled catheter, insertion sheath, peel-away dilator, cuff, and drainage bottles.</li>
+        <li><strong>Talc:</strong> Use graded/large-particle talc; avoid non-graded/small-particle talc due to systemic effects.</li>
+        <li><strong>Chest tubes for slurry:</strong> Small-bore (≤14F) acceptable; larger (24F) may slightly reduce failure in some contexts but at the cost of pain.</li>
+        <li><strong>Thoracoscopy:</strong> Rigid or flex-rigid thoracoscope for poudrage ± biopsies.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+
+    <h4>1. IPC Insertion (Ultrasound-guided, Outpatient)</h4>
+    <ol>
+        <li>Time-out; full sterile prep/drape; local anesthesia.</li>
+        <li>Select entry site at mid- to anterior axillary line over fluid pocket.</li>
+        <li>Create tunneled tract with subcutaneous cuff 2–3 cm from exit site.</li>
+        <li>Seldinger entry, serial dilation, peel-away sheath; advance catheter into pleural space.</li>
+        <li>Confirm flow; secure catheter; apply sterile dressing.</li>
+        <li>Initial drainage: Up to 1 L; prescribe home drainage schedule (daily for “aggressive” protocol vs alternate days).</li>
+    </ol>
+
+    <h4>2. Talc Slurry through Chest Tube (Inpatient or Short Stay)</h4>
+    <ol>
+        <li>Drain effusion to appose pleura.</li>
+        <li>Premedicate/analgesia (local lidocaine into pleura ± systemic opioid/NSAID).</li>
+        <li>Instill talc slurry (dose per local protocol) via tube; do not rely on patient rotation—not beneficial.</li>
+        <li>Gentle suction may be applied (-10 to -20 cm H₂O) to maintain apposition.</li>
+        <li>Remove tube when drainage is low and patient is comfortable; early removal within 24–48 h is reasonable if clinically stable.</li>
+    </ol>
+
+    <h4>3. Thoracoscopic Talc Poudrage (Medical Thoracoscopy)</h4>
+    <ol>
+        <li>Conscious sedation or GA per institutional practice.</li>
+        <li>Complete diagnostic evaluation/biopsies; evacuate fluid; inspect pleura.</li>
+        <li>Evenly insufflate dry talc across parietal pleura.</li>
+        <li>Place drain; typical LOS is short with good efficacy.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Troubleshooting & Intra-procedure Management</h3>
+    <ul>
+        <li><strong>Pain:</strong> Intrathoracic lidocaine (2–3 mg/kg total) reduces pleurodesis pain; NSAIDs do not impair pleurodesis success; avoid systemic steroids if possible.</li>
+        <li><strong>Non-draining IPC:</strong> Check kinks, ensure valve function, flush; suspect loculations—ultrasound guidance helps.</li>
+        <li><strong>Loculations/septations:</strong> Consider IET (e.g., tPA 10 mg + DNase 5 mg daily up to 3 days). Use imaging to monitor clearance.</li>
+        <li><strong>Air leak / re-expansion symptoms:</strong> Clamp or reduce suction; manage conservatively; avoid rapid large-volume drainage in frail patients.</li>
+    </ul>
+
+    <h3>Post-procedure Care & Follow-up</h3>
+    <ul>
+        <li><strong>IPC Drainage Prescriptions:</strong>
+            <ul>
+                <li><em>Aggressive:</em> Daily (up to ~1 L) to accelerate autopleurodesis.</li>
+                <li><em>Standard:</em> Alternate days or symptom-guided.</li>
+            </ul>
+        </li>
+        <li><strong>Site Care:</strong> Dressing care; ensure clean, dry site; educate on warning signs (fever, new pain, cloudy fluid).</li>
+        <li><strong>Chest Tube Removal:</strong> Reassess for tube removal within 24–72 h; early removal shortens LOS without hurting success in selected patients.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Complications—Prevention, Recognition, Management</h3>
+
+    <h4>Infection (≈5–6% overall)</h4>
+    <ul>
+        <li><strong>Superficial (cellulitis/tunnel/exit-site):</strong> 7–10 days oral anti-staph therapy; remove IPC only if non-resolving.</li>
+        <li><strong>Deep (pleural space):</strong> 4–6 weeks antibiotics + drainage via IPC; add IET if loculated; most can be treated without catheter removal.</li>
+        <li><strong>Colonization:</strong> Positive cultures without clinical infection (often coagulase-negative staph) → no antibiotics.</li>
+    </ul>
+
+    <h4>Other Complications</h4>
+    <ul>
+        <li><strong>Catheter-tract metastasis:</strong> Especially in mesothelioma (~5–10%). Discuss risks; local measures (e.g., radiotherapy practices vary).</li>
+        <li><strong>Loculated non-draining effusion after IPC:</strong> IET can restore drainage; prior talc does not increase septation risk when IPC is later placed.</li>
+        <li><strong>Empyema after talc:</strong> Risk increases with prolonged drainage/antecedent antibiotics; use graded talc and minimize dwell time.</li>
+        <li><strong>Systemic talc effects:</strong> Prefer graded talc to reduce fever and gas-exchange impairment; avoid non-graded/small-particle talc.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Hepatic Hydrothorax:</strong> IPC infection risk is higher; pleurodesis success is modest and complications are significant—proceed cautiously, ideally in MDT with hepatology.</li>
+        <li><strong>Heart Failure:</strong> IPC may help refractory cases; adding poudrage in selected patients increases pleurodesis success.</li>
+        <li><strong>Immunosuppressed/Chemotherapy:</strong> Systemic therapy does not clearly increase IPC infection risk; pause during active deep infection and resume once controlled.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes (Select Trials and Themes)</h3>
+    <ul>
+        <li><strong>TIME2:</strong> IPC vs talc slurry—similar early dyspnea relief; IPC shorter hospital stay; possible symptom advantage at 6 months.</li>
+        <li><strong>AMPLE:</strong> IPC fewer hospital days and reinterventions than talc pleurodesis; similar quality-of-life outcomes.</li>
+        <li><strong>TAPPS:</strong> Thoracoscopic poudrage vs slurry—no difference in 90-day failure; adverse events similar.</li>
+        <li><strong>IPC-PLUS:</strong> Talc via IPC improves pleurodesis vs IPC alone without excess catheter obstruction.</li>
+        <li><strong>ASAP:</strong> Daily IPC drainage increases autopleurodesis (and shortens time to it) vs alternate-day drainage.</li>
+        <li><strong>OPTIMUM:</strong> Outpatient IPC pathways vs inpatient chest tube talc—similar short-term health-related quality of life; pleurodesis “failure” higher in IPC arm as defined in the trial (methodologic nuances apply).</li>
+        <li><strong>IPC Infection Outcomes:</strong> Mortality is low; deep infection frequently followed by pleurodesis.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm A: Recurrent Effusion (suspected MPE)</h4>
+    <div class="mermaid">
+    graph TD;
+        A["Symptomatic pleural effusion"] --> B["Confirm diagnosis, assess lung expandability (imaging/US)"];
+        B -- "Expandable" --> C["Goals and prognosis"];
+        B -- "Trapped lung / non-expandable" --> D["Offer IPC pathway +/- daily drainage; consider talc via IPC later"];
+        C -- "Limited survival, outpatient priority" --> E["IPC pathway (daily vs alternate-day drainage)"];
+        C -- "Device-free goal, fit for procedure" --> F["Talc pleurodesis: slurry via tube or poudrage via thoracoscopy"];
+        E --> G{"Persistent drainage?"};
+        G -- "Yes" --> H["Consider talc via IPC (IPC-PLUS pathway)"];
+        G -- "No (autopleurodesis)" --> I["Remove IPC"];
+        F --> J["Assess for success; if failure or recurrence then IPC or combined strategies"];
+    </div>
+    
+    <div class="algorithm-note">
+        <strong>Algorithm Notes:</strong>
+        <ul>
+            <li>Choose IPC when lung is non-expandable, life expectancy is short, or outpatient management is prioritized.</li>
+            <li>Choose talc pleurodesis when patients prefer device-free chest and can tolerate a short inpatient/ambulatory procedure.</li>
+            <li>Combination approaches (talc via IPC or poudrage + IPC) increase pleurodesis rates while preserving outpatient care.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm B: Suspected IPC Infection Management</h4>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Look:</strong> Erythema, warmth, tenderness (superficial) vs new cloudy/purulent drainage, fever, pain (deep).</li>
+            <li><strong>Sample:</strong> Swab any exit-site drainage; send pleural fluid for cell count, pH, glucose, LDH, Gram stain/culture; consider direct thoracentesis if colonization is suspected.</li>
+            <li><strong>Treat:</strong>
+                <ul>
+                    <li><em>Superficial:</em> Oral anti-staph therapy 7–10 days; retain catheter unless persistent cellulitis.</li>
+                    <li><em>Deep:</em> 4–6 weeks antibiotics; drain via IPC; add IET if loculated; retain IPC if draining and improving.</li>
+                </ul>
+            </li>
+            <li><strong>Avoid:</strong> Treating colonization (positive culture alone) with antibiotics; prophylactic antibiotics at insertion.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. Choosing IPC vs Pleurodesis in MPE</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Scenario</th>
+                <th>Preferred Strategy</th>
+                <th>Rationale</th>
+                <th>Practical Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Trapped lung / non-expandable</td>
+                <td>IPC</td>
+                <td>Pleurodesis unlikely to succeed</td>
+                <td>Daily drainage accelerates autopleurodesis</td>
+            </tr>
+            <tr>
+                <td>Limited survival, outpatient goal</td>
+                <td>IPC ± talc via IPC</td>
+                <td>Fewer hospital days; home control</td>
+                <td>Educate caregivers; infection precautions</td>
+            </tr>
+            <tr>
+                <td>Strong preference for device-free chest; fit for procedure</td>
+                <td>Talc pleurodesis (slurry or poudrage)</td>
+                <td>Similar efficacy of slurry vs poudrage</td>
+                <td>Use graded talc; small-bore tube acceptable</td>
+            </tr>
+            <tr>
+                <td>Pleurodesis failure/recurrence</td>
+                <td>IPC or combined</td>
+                <td>Increases success while preserving outpatient care</td>
+                <td>Consider poudrage + IPC (“rapid pleurodesis”)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. IPC Infection—At-a-Glance Management</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Clinical Picture</th>
+                <th>Typical Organisms</th>
+                <th>First Steps</th>
+                <th>Duration</th>
+                <th>When to remove IPC</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Superficial (cellulitis/exit-site/tunnel)</td>
+                <td><em>S. aureus</em> common</td>
+                <td>Oral anti-staph regimen; swab; do not delay antibiotics</td>
+                <td>7–10 days</td>
+                <td>Only if persistent or progressive despite therapy</td>
+            </tr>
+            <tr>
+                <td>Deep (pleural space)</td>
+                <td><em>S. aureus</em> predominates; polymicrobial possible; culture-negative ~10%</td>
+                <td>Broad empiric per pleural infection pathway; drain via IPC; send fluid</td>
+                <td>4–6 weeks (tailored to response)</td>
+                <td>Rare; consider if poor drainage, tract infection, or failure</td>
+            </tr>
+            <tr>
+                <td>Colonization</td>
+                <td>Coagulase-negative staph common</td>
+                <td>No antibiotics; correlate clinically</td>
+                <td>—</td>
+                <td>—</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Talc Pleurodesis—Technique Tips</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Step</th>
+                <th>Key Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Analgesia</td>
+                <td>Intrapleural lidocaine (2–3 mg/kg total); NSAIDs acceptable; avoid systemic steroids if possible</td>
+            </tr>
+            <tr>
+                <td>Talc choice</td>
+                <td>Graded/large-particle talc to minimize systemic effects</td>
+            </tr>
+            <tr>
+                <td>Chest tube</td>
+                <td>Small-bore (≤14F) acceptable; larger (24F) can reduce failure in selected settings but increases pain</td>
+            </tr>
+            <tr>
+                <td>Suction</td>
+                <td>-10 to -20 cm H₂O to maintain apposition; avoid over-suction</td>
+            </tr>
+            <tr>
+                <td>Tube removal</td>
+                <td>Consider removal at 24–48 h if clinically stable; early removal shortens LOS</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1 — Trapped lung, symptomatic MPE</h4>
+        <p><strong>Scenario:</strong> A 68-year-old with metastatic lung adenocarcinoma has recurrent dyspnea. Ultrasound shows moderate effusion; post-thoracentesis chest radiograph reveals persistent basal pneumothorax ex-vacuo and pleural rind.</p>
+        <p><strong>Question:</strong> Best next step?</p>
+        <p><strong>Answer:</strong> IPC placement with daily drainage protocol.</p>
+        <p><strong>Explanation:</strong> Trapped lung predicts poor pleurodesis success; IPC allows outpatient control and potential autopleurodesis.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2 — IPC with fever and cloudy output</h4>
+        <p><strong>Scenario:</strong> A 59-year-old with breast cancer and IPC develops fevers, pleuritic pain, and new turbid drainage. Pleural fluid shows low pH and glucose; culture pending.</p>
+        <p><strong>Question:</strong> Initial management?</p>
+        <p><strong>Answer:</strong> Start empiric antibiotics for pleural infection and drain via the IPC; plan 4–6 weeks total, tailored to response; consider IET if loculated.</p>
+        <p><strong>Explanation:</strong> Deep infection requires drainage plus prolonged antibiotics; removal is not routine if drainage is adequate.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3 — Positive culture, no symptoms</h4>
+        <p><strong>Scenario:</strong> A 72-year-old with IPC for MPE feels well. Routine sample through the IPC grows coagulase-negative staphylococci; fluid is clear, no fever.</p>
+        <p><strong>Question:</strong> Best management?</p>
+        <p><strong>Answer:</strong> Observation without antibiotics.</p>
+        <p><strong>Explanation:</strong> Colonization does not require antibiotics; avoid over-treating culture results in isolation.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 4 — Choosing slurry vs poudrage</h4>
+        <p><strong>Scenario:</strong> A fit 64-year-old with good performance status and expandable lung wants a device-free chest.</p>
+        <p><strong>Question:</strong> Slurry or poudrage?</p>
+        <p><strong>Answer:</strong> Either is acceptable—similar failure and adverse event rates; choose based on logistics and local expertise.</p>
+        <p><strong>Explanation:</strong> Contemporary RCTs show no significant difference in 90-day failure.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank (MCQs)</h3>
+
+    <p><strong>1. A 67-year-old with symptomatic MPE and non-expandable lung after drainage. What is the most appropriate management?</strong></p>
+    <ul>
+        <li>A. Talc slurry via 24F tube</li>
+        <li>B. Thoracoscopic talc poudrage</li>
+        <li>C. IPC with daily drainage</li>
+        <li>D. Repeat thoracentesis as needed</li>
+        <li>E. VATS pleurectomy</li>
+    </ul>
+    <p><strong>Answer: C.</strong> Trapped lung predicts pleurodesis failure; IPC enables outpatient control and potential autopleurodesis.</p>
+
+    <p><strong>2. After IPC placement, which drainage schedule most reliably increases autopleurodesis rate and shortens time to pleurodesis?</strong></p>
+    <ul>
+        <li>A. PRN symptom-guided</li>
+        <li>B. Every third day</li>
+        <li>C. Alternate days</li>
+        <li>D. Daily drainage</li>
+        <li>E. Continuous wall suction</li>
+    </ul>
+    <p><strong>Answer: D.</strong> Daily drainage is superior to alternate-day schedules for autopleurodesis.</p>
+
+    <p><strong>3. Which statement about talc slurry vs thoracoscopic poudrage in MPE is most accurate?</strong></p>
+    <ul>
+        <li>A. Poudrage has dramatically lower failure at 90 days</li>
+        <li>B. Slurry has much higher complication rates</li>
+        <li>C. Failure and adverse event rates are similar</li>
+        <li>D. Poudrage always requires ICU stay</li>
+        <li>E. Slurry cannot be done outpatient</li>
+    </ul>
+    <p><strong>Answer: C.</strong> Contemporary randomized data show comparable 90-day failure and adverse event rates.</p>
+
+    <p><strong>4. A 60-year-old with IPC develops erythema and tenderness limited to the exit site, no fever, clear drainage. Best initial therapy?</strong></p>
+    <ul>
+        <li>A. Remove IPC immediately</li>
+        <li>B. Start broad-spectrum IV antibiotics for 4–6 weeks</li>
+        <li>C. Oral anti-staph antibiotics 7–10 days and reassess</li>
+        <li>D. Intrapleural tPA/DNase</li>
+        <li>E. Observe without treatment</li>
+    </ul>
+    <p><strong>Answer: C.</strong> Superficial infection is treated with a short oral course; catheter removal rarely needed acutely.</p>
+
+    <p><strong>5. Which factor is most strongly associated with higher IPC infection risk?</strong></p>
+    <ul>
+        <li>A. Concurrent chemotherapy</li>
+        <li>B. Use in hepatic hydrothorax</li>
+        <li>C. Prior talc pleurodesis</li>
+        <li>D. Female sex</li>
+        <li>E. Small catheter size</li>
+    </ul>
+    <p><strong>Answer: B.</strong> Hepatic hydrothorax has a higher infection rate; chemotherapy does not clearly increase risk.</p>
+
+    <p><strong>6. Appropriate empiric management for deep IPC infection includes:</strong></p>
+    <ul>
+        <li>A. Observation only</li>
+        <li>B. Antibiotics plus drainage via the IPC</li>
+        <li>C. Antibiotics and immediate IPC removal</li>
+        <li>D. Intrapleural steroids</li>
+        <li>E. Talc instillation via IPC</li>
+    </ul>
+    <p><strong>Explanation: B.</strong> Combine prolonged antibiotics with active drainage; reserve removal for failure/poor drainage.</p>
+
+    <p><strong>7. Best way to reduce risk of systemic talc complications during pleurodesis:</strong></p>
+    <ul>
+        <li>A. Use larger total dose of talc</li>
+        <li>B. Use graded/large-particle talc</li>
+        <li>C. Clamp chest tube for 24 hours</li>
+        <li>D. Inject talc rapidly under pressure</li>
+        <li>E. Give prophylactic steroids</li>
+    </ul>
+    <p><strong>Answer: B.</strong> Graded talc reduces systemic absorption and fever/gas-exchange impairment.</p>
+
+    <p><strong>8. Which practice does not reduce IPC infection rates and should not be routine?</strong></p>
+    <ul>
+        <li>A. Full sterile prep and drape</li>
+        <li>B. Aseptic non-touch technique for home drainage</li>
+        <li>C. Prophylactic systemic antibiotics at insertion</li>
+        <li>D. Patient/caregiver education on signs of infection</li>
+        <li>E. Keeping site clean and dry, avoiding swimming for several weeks</li>
+    </ul>
+    <p><strong>Answer: C.</strong> Prophylactic antibiotics at insertion do not reduce IPC infection.</p>
+
+    <p><strong>9. A 74-year-old with IPC has cloudy fluid, fever, ultrasound shows loculations. Which adjunct improves drainage?</strong></p>
+    <ul>
+        <li>A. Double the suction</li>
+        <li>B. Intrapleural tPA + DNase via IPC</li>
+        <li>C. Heparin instillation</li>
+        <li>D. Replace IPC with 28F tube</li>
+        <li>E. Immediate VATS decortication in all cases</li>
+    </ul>
+    <p><strong>Answer: B.</strong> IET breaks down fibrin and improves drainage; many cases avoid surgery.</p>
+
+    <p><strong>10. A patient with MPE desires fewer hospital days and outpatient management. Which approach best aligns?</strong></p>
+    <ul>
+        <li>A. Inpatient thoracoscopic poudrage in all cases</li>
+        <li>B. IPC pathway ± talc via IPC</li>
+        <li>C. Large-bore tube talc with 5-day stay</li>
+        <li>D. Repeated thoracenteses indefinitely</li>
+        <li>E. VATS pleurectomy by default</li>
+    </ul>
+    <p><strong>Answer: B.</strong> IPC allows outpatient care; talc via IPC increases pleurodesis success without added obstruction.</p>
+
+    <p><strong>11. Which statement about chest tube size for talc slurry is correct?</strong></p>
+    <ul>
+        <li>A. Only 24F tubes are effective</li>
+        <li>B. Small-bore tubes (≤14F) are generally effective and reduce pain</li>
+        <li>C. Smaller tubes invariably increase pleurodesis failure ten-fold</li>
+        <li>D. Larger tubes are painless</li>
+        <li>E. Tube size does not affect pain</li>
+    </ul>
+    <p><strong>Answer: B.</strong> Small-bore tubes are acceptable and better tolerated; trade-offs depend on context.</p>
+
+    <p><strong>12. An IPC patient’s fluid culture via the catheter grows coagulase-negative staphylococci, the patient is asymptomatic with clear fluid. Next step?</strong></p>
+    <ul>
+        <li>A. No antibiotics; observe</li>
+        <li>B. Start oral antibiotics 7–10 days</li>
+        <li>C. Start IV antibiotics 4–6 weeks</li>
+        <li>D. Remove IPC</li>
+        <li>E. Instill talc via IPC</li>
+    </ul>
+    <p><strong>Answer: B.</strong> Likely colonization; treat the patient, not the culture.</p>
+
+    <hr>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>Slurry vs Poudrage:</strong> Modern trials show no clear superiority; choice should reflect local expertise, logistics, and patient preference.</li>
+        <li><strong>Outpatient IPC with talc via catheter:</strong> Demonstrates higher pleurodesis vs IPC alone; adoption varies by program and supply of graded talc.</li>
+        <li><strong>OPTIMUM findings:</strong> Trial-specific definitions influenced “pleurodesis failure” rates; interpret in context.</li>
+        <li><strong>Preventing IPC infection:</strong> Trials are ongoing (e.g., topical measures such as mupirocin) to determine whether exit-site strategies reduce infections.</li>
+        <li><strong>Drug-eluting IPCs (e.g., silver nitrate coatings):</strong> Early human data are encouraging for rapid pleurodesis; broader validation is pending.</li>
+        <li><strong>NMPE:</strong> Evidence base remains limited; individualized decisions with shared decision-making are essential, particularly in hepatic hydrothorax.</li>
+    </ul>
+
+    <h3>Take-Home Checklist</h3>
+    <ul>
+        <li>[ ] Confirm lung expandability before committing to pleurodesis.</li>
+        <li>[ ] Align plan to patient goals: device-free vs outpatient care vs hospital-free days.</li>
+        <li>[ ] For trapped lung or short prognosis, start with IPC; consider daily drainage.</li>
+        <li>[ ] If IPC alone is insufficient, add talc via IPC to increase pleurodesis rates.</li>
+        <li>[ ] Use graded talc; provide adequate analgesia (intrapleural lidocaine ± NSAIDs).</li>
+        <li>[ ] Small-bore tubes are acceptable for slurry; don’t rely on patient rotation.</li>
+        <li>[ ] Diagnose IPC infection clinically; don’t treat colonization.</li>
+        <li>[ ] Superficial infection → short oral course; deep infection → prolonged antibiotics plus drainage; use IET for loculations.</li>
+        <li>[ ] Avoid routine catheter removal in deep infection if draining and improving.</li>
+        <li>[ ] Counsel mesothelioma patients on tract metastasis risk.</li>
+        <li>[ ] In hepatic hydrothorax, weigh higher infection risk carefully; involve hepatology.</li>
+        <li>[ ] Educate patients/caregivers on home drainage, infection signs, and site care.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abbreviations & Glossary</h3>
+        <dl>
+            <dt>IPC</dt>
+            <dd>Indwelling pleural catheter (tunneled pleural catheter with one-way valve).</dd>
+            <dt>MPE / NMPE</dt>
+            <dd>Malignant / Non-malignant pleural effusion.</dd>
+            <dt>IET</dt>
+            <dd>Intrapleural enzyme therapy (tPA + DNase).</dd>
+            <dt>Poudrage</dt>
+            <dd>Talc insufflation under thoracoscopic visualization.</dd>
+            <dt>Autopleurodesis</dt>
+            <dd>Spontaneous pleurodesis achieved without sclerosant, often with structured IPC drainage.</dd>
+            <dt>Graded talc</dt>
+            <dd>Talc preparation enriched for larger particles to reduce systemic effects.</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>References</h3>
+        <ol>
+            <li>Davies HE, Mishra EK, Kahan BC, et al. Effect of an indwelling pleural catheter vs chest tube and talc pleurodesis for relieving dyspnea in patients with malignant pleural effusion: the TIME2 randomized controlled trial. JAMA. 2012;307:2383-2389.</li>
+            <li>Thomas R, Fysh ETH, Smith NA, et al. Effect of an indwelling pleural catheter vs talc pleurodesis on hospitalization days in patients with malignant pleural effusion: the AMPLE randomized clinical trial. JAMA. 2017;318:1903-1912.</li>
+            <li>Bhatnagar R, Keenan EK, Morley AJ, et al. Outpatient talc administration by indwelling pleural catheter for malignant effusion. N Engl J Med. 2018;378:1313-1322.</li>
+            <li>Bhatnagar R, Luengo-Fernandez R, Kahan BC, et al. Thoracoscopy and talc poudrage compared with intercostal drainage and talc slurry infusion to manage malignant pleural effusion (TAPPS RCT). Health Technol Assess. 2020;24:1-90.</li>
+            <li>Wahidi MM, Reddy C, Yarmus L, et al. Randomized trial of pleural fluid drainage frequency in patients with malignant pleural effusions (ASAP). Am J Respir Crit Care Med. 2017;195:1050-1057.</li>
+            <li>Feller-Kopman DJ, Reddy CB, DeCamp MM, et al. Management of malignant pleural effusions: an official ATS/STS/STR clinical practice guideline. Am J Respir Crit Care Med. 2018;198:839-849.</li>
+            <li>Roberts ME, Rahman NM, Maskell NA, et al. British Thoracic Society Guideline for pleural disease. Thorax. 2023;78(Suppl 3):s1-s42.</li>
+            <li>Dipper A, Jones HE, Bhatnagar R, et al. Interventions for the management of malignant pleural effusions: a network meta-analysis. Cochrane Database Syst Rev. 2020;4:CD010529.</li>
+            <li>Maskell NA, Lee YCG, Gleeson FV, et al. Randomized trials describing lung inflammation after pleurodesis with talc of varying particle size. Am J Respir Crit Care Med. 2004;170:377-382.</li>
+            <li>Janssen JP, Collier G, Astoul P, et al. Safety of pleurodesis with talc poudrage in malignant pleural effusion: a prospective cohort study. Lancet. 2007;369:1535-1539.</li>
+            <li>Rahman NM, Pepperell J, Rehal S, et al. Effect of opioids vs NSAIDs and larger vs smaller chest tube size on pain control and pleurodesis efficacy among patients with malignant pleural effusion (TIME1). JAMA. 2015;314:2641-2653.</li>
+            <li>Fitzgerald DB, Muruganandan S, Tsim S, et al. Intrapleural fibrinolytics and deoxyribonuclease for treatment of indwelling pleural catheter-related pleural infection: a multi-center observational study. Respiration. 2021;100:452-460.</li>
+            <li>Fysh ETH, Tremblay A, Feller-Kopman D, et al. Clinical outcomes of indwelling pleural catheter-related pleural infections: an international multicenter study. Chest. 2013;144:1597-1602.</li>
+            <li>Bedawi EO, Ricciardi S, Hassan M, et al. ERS/ESTS statement on the management of pleural infection in adults. Eur Respir J. 2023;61:2201062.</li>
+            <li>Rahman NM, Maskell NA, West A, et al. Intrapleural use of tissue plasminogen activator and DNase in pleural infection. N Engl J Med. 2011;365:518-526.</li>
+            <li>Putnam JB Jr, Light RW, Rodriguez RM, et al. A randomized comparison of indwelling pleural catheter and doxycycline pleurodesis in the management of malignant pleural effusions. Cancer. 1999;86:1992-1999.</li>
+            <li>Diacon AH, Wyser C, Bolliger CT, et al. Thoracoscopic talc poudrage vs bleomycin instillation for pleurodesis in malignant pleural effusions. Am J Respir Crit Care Med. 2000;162:1445-1449.</li>
+            <li>Xia H, Wang XJ, Zhou Q, et al. Efficacy and safety of talc pleurodesis for malignant pleural effusion: a meta-analysis. PLoS One. 2014;9:e87060.</li>
+            <li>Thomas R, Budgeon CA, Kuok YJ, et al. Catheter tract metastasis associated with indwelling pleural catheters. Chest. 2014;146:557-562.</li>
+            <li>Thomas R, Piccolo F, Miller D, et al. Intrapleural fibrinolysis for the treatment of indwelling pleural catheter-related symptomatic loculations: a multicenter observational study. Chest. 2015;148:746-751.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

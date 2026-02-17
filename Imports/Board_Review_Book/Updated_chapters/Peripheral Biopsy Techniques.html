@@ -1,0 +1,601 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peripheral Biopsy Techniques: Conventional Sampling and Transbronchial Cryobiopsy</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style></head><body>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <h1>Peripheral Biopsy Techniques: Conventional Sampling and Transbronchial Cryobiopsy</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter maps to the AABIP/IP board domains covering diagnostic bronchoscopy for central and peripheral pulmonary lesions and diffuse parenchymal lung disease (DPLD/ILD). We synthesize technique selection, step-by-step performance, troubleshooting, safety, and evidence for: (1) conventional bronchoscopic sampling (forceps biopsy, brushing, washing, transbronchial needle aspiration [TBNA]) and (2) transbronchial lung cryobiopsy (TBLC) in ILD.</p>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Choose the optimal sampling modality for central endobronchial, peripheral pulmonary, and hilar–mediastinal targets.</li>
+        <li>Prepare and perform forceps biopsy, brushing/washing, TBNA, and TBLC with attention to equipment, positioning, and specimen handling.</li>
+        <li>Anticipate and manage bleeding, pneumothorax, and oxygenation challenges; institute preventive measures (e.g., balloon blockers).</li>
+        <li>Apply anticoagulation/antiplatelet management and physiologic risk stratification for safe procedures.</li>
+        <li>Interpret factors that drive diagnostic yield (lesion size, bronchus sign, probe size and freezing time, number of samples).</li>
+        <li>Integrate TBLC into the ILD diagnostic pathway and recognize when to escalate to surgical lung biopsy (SLB).</li>
+    </ul>
+
+    <hr>
+
+    <h3>High‑Yield One‑Pager</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Central airway lesions:</strong> Forceps biopsy offers the highest single-tool sensitivity (~88%); brushing adds modest incremental yield (~8%) but is rarely diagnostic alone; washing adds little; TBNA excels for submucosal/peribronchial and necrotic targets.</li>
+            <li><strong>Bleeding prevention & control:</strong> Pre‑identify risk (hypervascular lesions, anticoagulants). Keep epinephrine available (1:10,000, 2–3 mL aliquots, up to three doses), wedge the scope, and have a Fogarty balloon (4–7 Fr) ready for tamponade.</li>
+            <li><strong>Anticoagulation:</strong> Platelets &lt;50,000/µL—avoid biopsy; hold warfarin ~5 days or reverse to INR &lt;2.5; stop clopidogrel 7 days; typical DOAC hold 48–72 h; aspirin can usually be continued.</li>
+            <li><strong>Peripheral pulmonary lesions (PPLs):</strong> Fluoroscopy is the conventional guidance; TBNA often outperforms forceps/brush for malignancy, while forceps is stronger for benign disease; yield rises with lesion size and bronchus sign.</li>
+            <li><strong>Sampling strategy (PPLs):</strong> Combine TBNA + forceps when feasible; target ≥6 specimens total across tools for best odds of diagnosis.</li>
+            <li><strong>TBLC basics:</strong> Perform under general anesthesia via rigid bronchoscope or endotracheal tube; pre‑deploy bronchial blockers; fluoroscopy guidance is standard. Freeze times typically ~6 s (2.4 mm probe) or ~8 s (1.7 mm). Aim for samples with largest diameter ≥5 mm.</li>
+            <li><strong>TBLC yield & safety:</strong> Diagnostic yield ~80%; outpatient feasibility in ~80% of cases. Pneumothorax is the most frequent complication (reported 1–30%, pooled ~5%); major bleeding risk falls with routine blocker use.</li>
+            <li><strong>TBLC risk factors:</strong> Higher pneumothorax risk with lower FVC, cystic/UIP patterns, multi‑lobe sampling, and general anesthesia; bleeding risk rises when sampling too central/far from pleura or near bronchiectasis/large veins.</li>
+            <li><strong>Learning curve:</strong> Yield and efficiency plateau after ~50–70 TBLC cases; center volume matters.</li>
+            <li><strong>When TBLC, when SLB:</strong> After noninvasive workup (including BAL) fails; TBLC first, SLB reserved when TBLC is non‑diagnostic or discordant.</li>
+            <li><strong>Specimen handling:</strong> TBNA cell block and TBLC cores can support histology, immunohistochemistry, and molecular testing (including PD‑L1 for malignancy; pattern recognition for ILD).</li>
+        </ul>
+    </div>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>Conventional Techniques</strong></p>
+    <ul>
+        <li><strong>Forceps biopsy (central lesions):</strong> Visible mucosal tumors, inflammatory endobronchial disease. Limitations: submucosal disease, necrosis.</li>
+        <li><strong>Brushing/washing:</strong> Adjunctive cytology; brushing sometimes detects cancer when biopsy is suboptimal; washing adds minimal unique yield.</li>
+        <li><strong>TBNA (central + hilar/mediastinal + some PPLs):</strong> Submucosal or extrinsic compression, peribronchial disease, necrotic lesions, nodal disease. <em>Contraindications:</em> Mirror general bronchoscopy; avoid vascular puncture sites and mucosa involved by tumor when staging to limit contamination.</li>
+    </ul>
+
+    <p><strong>TBLC</strong></p>
+    <ul>
+        <li><strong>Indications:</strong> ILD/DPLD when CT + clinical + BAL are insufficient for confident diagnosis; transplant surveillance or selected critical‑care scenarios by experienced teams.</li>
+        <li><strong>Absolute contraindications:</strong> Coagulopathy/thrombocytopenia and hemodynamic instability.</li>
+        <li><strong>Relative contraindications:</strong> FVC &lt;50% predicted, DLCO &lt;35% predicted, pulmonary hypertension (sPAP &gt;40 mmHg), PaO₂ &lt;55–60 mmHg, significant emphysema, rapid clinical/radiographic deterioration suggestive of AE‑ILD.</li>
+    </ul>
+
+    <h4>Pre‑procedure Evaluation</h4>
+    <ul>
+        <li><strong>All techniques:</strong> History/physical, CT review (identify bronchus sign, vessels, emphysema/cysts), oxygenation and PFTs, coagulation profile if risk factors present, consent addressing bleeding/pneumothorax and escalation (rigid bronchoscopy, SLB).</li>
+        <li><strong>Antithrombotic management:</strong> Platelets ≥50,000/µL; hold warfarin (or reverse) to INR &lt;2.5; clopidogrel stop 7 days; DOACs hold 48–72 h; aspirin often continued.</li>
+        <li><strong>TBLC‑specific:</strong> Balloon blocker availability and placement plan; anesthetic plan (general anesthesia commonly with spontaneous ventilation support), fluoroscopy, rescue equipment, and post‑procedure imaging protocol (CXR or US if symptomatic or per institutional protocol).</li>
+    </ul>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>Forceps:</strong> Alligator or fenestrated; size choice by operator comfort; target 3–4 bites in central lesions (more rarely improves yield).</li>
+        <li><strong>Brushes/washing:</strong> Disposable brushes; smear or saline agitation for cytology; microbiology when infection suspected.</li>
+        <li><strong>TBNA:</strong> 21–22 G cytology needles; 19 G histology needles for cores; 4+ passes per nodal station improve yield; metallic sheath for peripheral reach; plastic sheath aids visualization of blood.</li>
+        <li><strong>TBLC:</strong> Cryounit (CO₂ commonly used), disposable cryoprobes (1.1/1.7/2.4 mm); bronchial blockers (Fogarty 4–6 Fr or blockers through ET tube external channel); rigid tracheoscope or large ETT; fluoroscopy (CBCT/radial EBUS/other guidance optional).</li>
+    </ul>
+
+    <hr>
+
+    <h3>Step‑by‑Step Technique / Procedural Checklist</h3>
+
+    <h4>Central Forceps Biopsy</h4>
+    <ol>
+        <li>Inspect; position scope close to lesion.</li>
+        <li>Open forceps just at lesion, advance, close firmly, withdraw; repeat for 3–4 samples.</li>
+        <li>If necrotic, sample until surface bleeding suggests viable tissue.</li>
+    </ol>
+
+    <h4>Brushing/Washing</h4>
+    <ol>
+        <li>Brush lesion before biopsy to avoid blood contamination when possible.</li>
+        <li>Prepare direct smears and/or saline rinse.</li>
+        <li>Washing (20 mL saline) before or after biopsy has similar yield; reserve for nondiagnostic cases (cost‑effective triage).</li>
+    </ol>
+
+    <h4>TBNA (Central/Submucosal/Peribronchial and Mediastinal)</h4>
+    <ol>
+        <li>Select puncture site from CT; anchor needle between cartilaginous rings.</li>
+        <li>“Pushing” method to enter perpendicularly; apply suction, perform to‑and‑fro motions ≤10 s.</li>
+        <li>4 passes per target; prioritize subcarinal/right paratracheal when applicable.</li>
+    </ol>
+
+    <h4>PPL Sampling</h4>
+    <ol>
+        <li>Wedge into suspected segment; switch eyes to fluoroscopy.</li>
+        <li>Use TBNA first (less affected by bleeding), then forceps; consider brushing.</li>
+        <li>Aim for ≥6 total specimens across tools.</li>
+    </ol>
+
+    <h4>TBLC</h4>
+    <ol>
+        <li>Intubate; place blockers (pre‑position Fogarty in target lobar/segmental bronchus).</li>
+        <li>Advance probe under fluoroscopy to pleura, then withdraw ~1 cm.</li>
+        <li>Freeze (typical: ~6 s with 2.4 mm, ~8 s with 1.7 mm; longer for 1.1 mm); remove bronchoscope + probe en bloc; immediately inflate blocker for tamponade.</li>
+        <li>Gently thaw sample off probe into formalin; repeat for 3–4 specimens (consider sampling two segments of the most affected lobe).</li>
+    </ol>
+
+    <h3>Troubleshooting & Intra‑procedure Management</h3>
+    <ul>
+        <li><strong>Bleeding (central/PPL):</strong> Lateral decubitus bleeding side down; suction; cold saline; epinephrine (1:10,000) in 2–3 mL aliquots (≤3 doses); inflate Fogarty; escalate to APC/laser through rigid bronchoscope if ongoing.</li>
+        <li><strong>Bleeding (TBLC):</strong> Blocker inflation for 3–10 min; re‑check occlusion every 2–3 min; extend to 5–20 min if needed; consider diluted epinephrine; plan for rigid bronchoscopy if uncontrolled.</li>
+        <li><strong>Can’t reach periphery (TBLC):</strong> Avoid taking central biopsies (risks bleeding, low alveolar tissue). Re‑approach another segment or lobe.</li>
+        <li><strong>Low PPL yield:</strong> Re‑evaluate bronchus sign; reposition for true AP/lateral views; alternate tool order (TBNA first), and increase specimen count.</li>
+    </ul>
+
+    <h3>Post‑procedure Care & Follow‑up</h3>
+    <ul>
+        <li><strong>All techniques:</strong> Observe for hypoxemia/bleeding; provide instructions for hemoptysis and pneumothorax symptoms.</li>
+        <li><strong>TBLC:</strong> Post‑procedure imaging based on symptoms/local protocol (many centers image ~2–3 h if outpatient). Manage pneumothorax per standard algorithms.</li>
+    </ul>
+
+    <h3>Complications (Prevention, Recognition, Management)</h3>
+    <ul>
+        <li><strong>Bleeding:</strong> Most common in central biopsy; prevention via risk review and blocker readiness; management as above.</li>
+        <li><strong>Pneumothorax:</strong> ~0.2% after fluoroscopy‑guided TBLB for localized lesions; ~3% in diffuse disease sampling; TBLC pooled ~5% (range &lt;1–~30%). Risk rises with more peripheral, near‑pleural TBLC—and with lower FVC, cystic/UIP patterns, multi‑lobe sampling.</li>
+        <li><strong>Hypoxemia/bronchospasm:</strong> Optimize oxygenation; consider bronchodilators, brief procedure pauses.</li>
+        <li><strong>Rare TBLC events:</strong> Tension pneumothorax, airway injury, pseudoaneurysm, transient opacities post‑transplant; acute exacerbation risk in fibrotic ILD underscores careful selection.</li>
+    </ul>
+
+    <h3>Special Populations</h3>
+    <ul>
+        <li><strong>Ventilated/ICU:</strong> TBLC feasible in select centers with blockers and experienced teams; some series report acceptable safety without fluoroscopy in highly controlled settings.</li>
+        <li><strong>Transplant recipients:</strong> Expect transient new opacities post‑TBLC; most resolve.</li>
+        <li><strong>High bleeding risk:</strong> Prefer TBNA over forceps; for TBLC, use blockers routinely, avoid central/vascular areas; reassess indication if antithrombotics cannot be held.</li>
+        <li><strong>Marked physiologic impairment:</strong> FVC &lt;50%—heightened pneumothorax risk with TBLC; individualize approach.</li>
+    </ul>
+
+    <h3>Evidence & Outcomes</h3>
+    <ul>
+        <li><strong>Conventional central sampling:</strong> Forceps ~88% sensitivity; brushing ~59% (adds ~8% when combined); washing ~48% with minimal exclusive positives; TBNA 68–91% and uniquely diagnostic in up to ~20% of submucosal/peribronchial cases.</li>
+        <li><strong>PPLs:</strong> Conventional fluoroscopy‑guided approach overall ~78% sensitivity; size and bronchus sign are key predictors; TBNA excels for malignancy, forceps for benign disease; ≥6 specimens recommended.</li>
+        <li><strong>TBLC in ILD:</strong> Diagnostic yield ~80%; good agreement with SLB for high‑confidence multidisciplinary diagnoses in rigorous studies; RCT strategy (TBLC‑first, SLB only if needed) reduces patient burden with similar overall diagnostic yield. Learning curves and center volume strongly influence both yield and safety.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Selecting a Sampling Technique for Peripheral Pulmonary Lesions</h4>
+    <div class="mermaid">
+    flowchart TD
+    A["Suspected PPL on CT"] --> B{"Bronchus sign present?"}
+    B -- "Yes" --> C["Bronchoscopy with fluoroscopy"]
+    B -- "No/Equivocal" --> D["Consider alternative guidance (radial EBUS/CBCT) or percutaneous approach"]
+    C --> E{"Lesion size ≥2 cm?"}
+    E -- "Yes" --> F["TBNA first, then forceps ± brushing; aim ≥6 samples"]
+    E -- "<2 cm" --> G["Optimize AP/lateral views; TBNA first; consider ultrathin scope/needle if available"]
+    F --> H{"Diagnosis?"}
+    G --> H
+    H -- "Yes" --> I["Stage/Tx per diagnosis"]
+    H -- "No" --> J["Reassess trajectory; repeat with adjunct tool or alternative modality"]
+    </div>
+    
+    <div class="algorithm-note">
+        <strong>Description:</strong>
+        <ul>
+            <li>Confirm lesion–airway relationship (bronchus sign).</li>
+            <li>If present: fluoroscopy‑guided bronchoscopy. Use TBNA first (less bleeding), then forceps; add brushing selectively.</li>
+            <li>Target ≥6 total specimens; increase sample count for smaller lesions.</li>
+            <li>If bronchus sign absent or nondiagnostic: escalate guidance (radial EBUS/CBCT) or consider transthoracic approaches.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm 2 — ILD Tissue Sampling Pathway (TBLC‑First Strategy)</h4>
+    <div class="mermaid">
+    flowchart TD
+    A["ILD suspected"] --> B["Clinical + HRCT + Labs ± BAL"]
+    B --> C{"Confident diagnosis?"}
+    C -- "Yes" --> D["Treat/monitor"]
+    C -- "No" --> E["TBLC (balloon blocker, fluoroscopy)"]
+    E --> F{"Adequate diagnostic pattern?"}
+    F -- "Yes" --> G["MDD: finalize diagnosis and plan"]
+    F -- "No/Low confidence" --> H["Consider SLB if risk acceptable"]
+    H --> G
+    </div>
+
+    <div class="algorithm-note">
+        <strong>Description:</strong>
+        <ul>
+            <li>Perform multidisciplinary pre‑test assessment (history/exposures, HRCT pattern, BAL as indicated).</li>
+            <li>If uncertainty persists: TBLC with blockers, near‑pleural positioning, 3–4 samples from the most affected regions (consider ≥2 segments).</li>
+            <li>If TBLC non‑diagnostic/discordant: SLB based on risk–benefit.</li>
+        </ul>
+    </div>
+
+    <h3>Tables & Quick‑Reference Boxes</h3>
+
+    <h4>Table 1. Conventional Central Airway Sampling—What to Use and When</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Tool</th>
+                <th>Best Use</th>
+                <th>Strengths</th>
+                <th>Limitations</th>
+                <th>Typical Yield</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Forceps biopsy</td>
+                <td>Visible mucosal lesions</td>
+                <td>Histology; high sensitivity with 3–4 bites</td>
+                <td>Submucosal disease; necrosis</td>
+                <td>~88%</td>
+            </tr>
+            <tr>
+                <td>Brushing</td>
+                <td>Adjunct cytology</td>
+                <td>Samples broader surface</td>
+                <td>Superficial only; limited for submucosal</td>
+                <td>~59%; adds ~8% with biopsy</td>
+            </tr>
+            <tr>
+                <td>Washing</td>
+                <td>Adjunct only</td>
+                <td>Easy; can hold for reflex analysis</td>
+                <td>Minimal exclusive positives</td>
+                <td>~48%; 2–4% exclusive</td>
+            </tr>
+            <tr>
+                <td>TBNA</td>
+                <td>Submucosal/peribronchial; nodal</td>
+                <td>Deep layers; low bleeding; necrosis bypass</td>
+                <td>Cost; learning curve</td>
+                <td>68–91%; uniquely diagnostic subset</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>Abbreviations: TBNA, transbronchial needle aspiration.</em></p>
+
+    <h4>Table 2. PPL Yield Drivers and Tool Selection</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Factor</th>
+                <th>Effect on Yield</th>
+                <th>Practical Moves</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Lesion size</td>
+                <td>↑ yield ≥2 cm; masses &gt;4 cm &gt;80%</td>
+                <td>Increase passes; use combined tools</td>
+            </tr>
+            <tr>
+                <td>Bronchus sign</td>
+                <td>Strong predictor</td>
+                <td>Choose bronchus‑leading segment; fluoroscopy AP + lateral</td>
+            </tr>
+            <tr>
+                <td>Tool pairing</td>
+                <td>TBNA &gt; forceps/brush for malignancy; forceps better for benign</td>
+                <td>Use TBNA first, then forceps; brushing selectively</td>
+            </tr>
+            <tr>
+                <td>Sample number</td>
+                <td>More is better to a point</td>
+                <td>Aim ≥6 total specimens</td>
+            </tr>
+            <tr>
+                <td>Bleeding</td>
+                <td>Reduces subsequent tool yield</td>
+                <td>Order tools to minimize blood contamination</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>Abbreviations: PPL, peripheral pulmonary lesion.</em></p>
+
+    <h4>Table 3. TBLC at a Glance—Parameters, Safety, and Pitfalls</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Domain</th>
+                <th>Key Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Airway/anesthesia</td>
+                <td>General anesthesia with rigid tracheoscope or large ETT; spontaneous ventilation support common</td>
+            </tr>
+            <tr>
+                <td>Blockers</td>
+                <td>Routine pre‑placement (Fogarty or bronchial blocker) to prevent/manage bleeding</td>
+            </tr>
+            <tr>
+                <td>Guidance</td>
+                <td>Fluoroscopy standard; CBCT/radial EBUS/CLE optional</td>
+            </tr>
+            <tr>
+                <td>Probe & freeze</td>
+                <td>2.4 mm ~6 s; 1.7 mm ~8 s; 1.1 mm longer; position ~1 cm off pleura</td>
+            </tr>
+            <tr>
+                <td>Samples</td>
+                <td>Target largest diameter ≥5 mm; consider 3–4 samples from ≥2 segments</td>
+            </tr>
+            <tr>
+                <td>Yield</td>
+                <td>~80% overall; higher with near‑pleural sampling and pleura/septa present</td>
+            </tr>
+            <tr>
+                <td>Complications</td>
+                <td>Pneumothorax pooled ~5% (range &lt;1–~30%); bleeding mitigated with blockers</td>
+            </tr>
+            <tr>
+                <td>Risk factors</td>
+                <td>Low FVC, cystic/UIP CT, multi‑lobe sampling, general anesthesia (pneumothorax); central sampling/vascular proximity (bleeding)</td>
+            </tr>
+            <tr>
+                <td>Contraindications</td>
+                <td>Absolute: coagulopathy/instability. Relative: FVC &lt;50%, DLCO &lt;35%, PH, PaO₂ &lt;55–60, emphysema, rapid deterioration</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>Abbreviations: CBCT, cone-beam CT; CLE, confocal laser endomicroscopy; ETT, endotracheal tube; PH, pulmonary hypertension; UIP, usual interstitial pneumonia.</em></p>
+
+    <h3>Imaging & Figure Callouts (Placeholders)</h3>
+    <p><strong>Figure 1. Fluoroscopy for PPL.</strong> Caption: Proper AP and lateral views confirm tool–lesion alignment before sampling. <em>Alt text: Four-panel fluoroscopic series showing AP then lateral confirmation, TBNA first, then forceps.</em></p>
+    <p><strong>Figure 2. TBLC Probe Positioning.</strong> Caption: Under fluoroscopy, the probe tip rests ~1 cm from pleura before freezing. <em>Alt text: Schematic showing cryoprobe to pleura distance and blocker balloon at segmental orifice.</em></p>
+    <p><strong>Figure 3. TBLC Specimen Adequacy.</strong> Caption: Representative cryobiopsy cores with largest diameter ≥5 mm suitable for histologic pattern analysis. <em>Alt text: Macroscopic photo of three formalin‑fixed cores with scale.</em></p>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1 — Submucosal Right Main Bronchus Bulge</h4>
+        <p>A 69‑year‑old with hemoptysis has a smooth bulge without mucosal ulceration, CT showing a 2.5 cm right paratracheal node compressing the bronchus. Best initial bronchoscopic sampling strategy?</p>
+        <p><strong>Answer: TBNA of the submucosal lesion.</strong></p>
+        <p><strong>Explanation:</strong> TBNA penetrates deep layers/peribronchial tissue and provides high yield with less bleeding than forceps.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2 — 1.7 cm Peripheral Nodule, Bronchus Sign Present</h4>
+        <p>A 63‑year‑old smoker has a 17 mm LUL nodule with bronchus sign. After wedging and AP view alignment, your first tool?</p>
+        <p><strong>Answer: TBNA.</strong></p>
+        <p><strong>Explanation:</strong> Using TBNA first minimizes the impact of blood on cytology and is less affected by superficial bleeding; then add forceps.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3 — Indeterminate ILD After HRCT + BAL</h4>
+        <p>A 58‑year‑old with subpleural reticulation and no honeycombing remains unclassifiable after MDD. Next diagnostic step?</p>
+        <p><strong>Answer: TBLC with pre‑placed bronchial blocker.</strong></p>
+        <p><strong>Explanation:</strong> TBLC provides large, artifact‑sparing tissue samples with ~80% yield; blockers reduce major bleeding risk.</p>
+    </div>
+
+    <h3>Question Bank</h3>
+    <ol>
+        <li>
+            <p>A 72‑year‑old with a 3 cm right upper lobe mass and obvious endobronchial tumor undergoes forceps biopsy ×2 yielding necrosis. What is the next best step to maximize diagnosis?</p>
+            <ul>
+                <li>A. Switch to washing only</li>
+                <li>B. Increase forceps bites until surface bleeding is seen</li>
+                <li>C. Perform brushing then stop</li>
+                <li>D. Abort and reschedule with EBUS</li>
+                <li>E. Proceed to percutaneous biopsy</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: Necrotic tumors require deeper bites; sampling until surface bleeding often indicates viable tissue has been reached.</p>
+        </li>
+        <li>
+            <p>During central forceps biopsy, moderate bleeding obscures the field. Which immediate maneuver most effectively prevents contralateral soiling?</p>
+            <ul>
+                <li>A. Instill room‑temperature saline</li>
+                <li>B. Rotate to bleeding side down and keep suction at the lesion</li>
+                <li>C. Remove scope to re‑oxygenate</li>
+                <li>D. Inflate blocker in the opposite lung</li>
+                <li>E. Start vasopressors</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: Lateral decubitus with the bleeding lung down plus continuous suction helps protect the non‑bleeding lung.</p>
+        </li>
+        <li>
+            <p>For bronchoscopic staging of right paratracheal nodes, which factor most improves TBNA yield?</p>
+            <ul>
+                <li>A. Using brushing first</li>
+                <li>B. Seven or more aspirates per station</li>
+                <li>C. Four aspirates per station</li>
+                <li>D. Avoiding suction to limit blood</li>
+                <li>E. Sampling tumor before nodes</li>
+            </ul>
+            <p><strong>Answer: C.</strong> Explanation: Yield improves up to about four passes per target; more than that offers marginal gains.</p>
+        </li>
+        <li>
+            <p>Which scenario most strongly favors TBNA over forceps biopsy as the primary tool?</p>
+            <ul>
+                <li>A. Friable exophytic tumor with mucosal ulceration</li>
+                <li>B. Smooth submucosal bulge causing extrinsic compression</li>
+                <li>C. Diffuse endobronchial papillomatosis</li>
+                <li>D. Granulation tissue at stent edge</li>
+                <li>E. Suspected endobronchial infection</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: TBNA penetrates submucosa/peribronchial regions and is ideal for extrinsic compression lesions.</p>
+        </li>
+        <li>
+            <p>In fluoroscopy‑guided sampling of a 2.5 cm PPL with a clear bronchus sign, which tool sequence best preserves yield?</p>
+            <ul>
+                <li>A. Forceps → TBNA → brushing</li>
+                <li>B. TBNA → forceps → brushing</li>
+                <li>C. Brushing → forceps → TBNA</li>
+                <li>D. Washing → forceps only</li>
+                <li>E. Forceps only</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: TBNA first minimizes adverse effects of bleeding on subsequent cytology/histology.</p>
+        </li>
+        <li>
+            <p>Which TBLC maneuver most reduces major bleeding risk?</p>
+            <ul>
+                <li>A. Taking central biopsies to avoid pleura</li>
+                <li>B. Prolonging freeze time to &gt;12 s with large probes</li>
+                <li>C. Routine pre‑placement and inflation of a bronchial blocker</li>
+                <li>D. Avoiding fluoroscopy to shorten procedure time</li>
+                <li>E. Using washing to clear blood before removing probe</li>
+            </ul>
+            <p><strong>Answer: C.</strong> Explanation: Prophylactic blockers permit immediate occlusion of the target airway during and after specimen extraction.</p>
+        </li>
+        <li>
+            <p>Which patient characteristic most strongly argues caution or alternative to TBLC due to pneumothorax risk?</p>
+            <ul>
+                <li>A. Normal FVC, cystic CT pattern</li>
+                <li>B. FVC &lt;50% predicted without cysts</li>
+                <li>C. DLCO 40% predicted</li>
+                <li>D. Elevated BNP</li>
+                <li>E. Age &gt;80 years</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: Low FVC is associated with higher pneumothorax risk; cystic patterns also raise risk, but low FVC is a consistent red flag.</p>
+        </li>
+        <li>
+            <p>A 64‑year‑old with suspected HP remains unclassified after HRCT and BAL. You plan TBLC. Which is the most appropriate procedural plan?</p>
+            <ul>
+                <li>A. Conscious sedation, no blockers, single central biopsy</li>
+                <li>B. General anesthesia, near‑pleural sampling, 3–4 cores from ≥2 segments with blocker in place</li>
+                <li>C. Conscious sedation with washing only</li>
+                <li>D. One biopsy far from pleura to avoid pneumothorax</li>
+                <li>E. Percutaneous core biopsy of the lung</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: Standardized TBLC emphasizes blockers, near‑pleural positioning, multiple adequately sized cores, often sampling two segments.</p>
+        </li>
+        <li>
+            <p>For central airway biopsy in a patient on antithrombotics, which statement is most accurate?</p>
+            <ul>
+                <li>A. Platelets 40,000/µL are sufficient if epinephrine is available</li>
+                <li>B. Warfarin need not be interrupted if INR &lt;3.5</li>
+                <li>C. Clopidogrel should be stopped about 7 days pre‑procedure</li>
+                <li>D. All DOACs require a 7‑day hold</li>
+                <li>E. Aspirin must be held for 5 days</li>
+            </ul>
+            <p><strong>Answer: C.</strong> Explanation: Clopidogrel is typically held for ~7 days; many centers continue low‑dose aspirin; DOAC holds are generally 48–72 h.</p>
+        </li>
+        <li>
+            <p>While performing TBLC, the probe repeatedly catches at a lobar carina and cannot reach the periphery. Best next step?</p>
+            <ul>
+                <li>A. Take the biopsy at that level</li>
+                <li>B. Increase freezing time by 50%</li>
+                <li>C. Switch to another segment/lobe to obtain near‑pleural cores</li>
+                <li>D. Abort and schedule SLB</li>
+                <li>E. Inflate blocker and retry the same position</li>
+            </ul>
+            <p><strong>Answer: C.</strong> Explanation: Central biopsies risk bleeding and low alveolar content; reposition to obtain near‑pleural samples.</p>
+        </li>
+        <li>
+            <p>Which factor most strongly predicts success of the conventional bronchoscopy approach to a small PPL?</p>
+            <ul>
+                <li>A. Lesion SUV on PET</li>
+                <li>B. Bronchus sign on thin‑section CT</li>
+                <li>C. Presence of calcification</li>
+                <li>D. Patient age</li>
+                <li>E. Lesion density (ground‑glass vs solid) only</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: A bronchus leading to/within the lesion is a key predictor of transbronchial diagnostic success.</p>
+        </li>
+        <li>
+            <p>Which statement about TBLC complications is most accurate?</p>
+            <ul>
+                <li>A. Pneumothorax is rare and uniformly &lt;1%</li>
+                <li>B. Major bleeding is common without blockers but uncommon with routine blocker use</li>
+                <li>C. Mortality is similar to surgical lung biopsy</li>
+                <li>D. TBLC cannot be done in an outpatient setting</li>
+                <li>E. Bleeding risk is lower when sampling far from pleura</li>
+            </ul>
+            <p><strong>Answer: B.</strong> Explanation: Major bleeding risk falls substantially with routine blocker use; pneumothorax rates vary across studies (pooled ~5%); outpatient performance is feasible in many centers.</p>
+        </li>
+    </ol>
+
+    <h3>Controversies, Variability, and Evolving Evidence</h3>
+    <ul>
+        <li><strong>TBLC vs SLB concordance:</strong> High concordance for high‑confidence MDD diagnoses in rigorous frameworks, but variability persists across centers with lower volumes/experience.</li>
+        <li><strong>Guidance for TBLC:</strong> Fluoroscopy is standard; some data support safe performance without guidance in select ICU settings, while advanced guidance (CBCT, CLE, radial EBUS) may improve targeting.</li>
+        <li><strong>Probe size and freeze time:</strong> Larger probes increase sample size but may raise pneumothorax/bleeding risk if sampling too central; 1.1 mm probes are promising for discrete lesions, with evolving data in ILD.</li>
+        <li><strong>Antithrombotic management nuances:</strong> Practices vary; general trends favor continued aspirin, time‑limited interruption of DOACs, and standardized thresholds for warfarin/platelets.</li>
+    </ul>
+
+    <h3>Take‑Home Checklist</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li>Confirm lesion–airway relationship and plan the tool sequence (TBNA first for PPLs).</li>
+            <li>For central lesions, target 3–4 forceps bites; add brushing selectively; washing rarely diagnostic alone.</li>
+            <li>Pre‑position a balloon blocker for TBLC—and consider one even for high‑risk central work.</li>
+            <li>For TBLC, get near‑pleural cores (≥5 mm largest diameter) and consider sampling ≥2 segments.</li>
+            <li>Aim for ≥6 total samples in PPLs across tools.</li>
+            <li>Manage antithrombotics proactively (platelets ≥50k; hold clopidogrel; DOAC 48–72 h; warfarin to INR &lt;2.5).</li>
+            <li>Control bleeding with position, suction, cold saline, epinephrine, and balloons; escalate early to rigid bronchoscopy if needed.</li>
+            <li>Monitor for pneumothorax post‑TBLC; have imaging strategy.</li>
+            <li>Use MDD to integrate histology with clinical–radiologic data.</li>
+            <li>Build experience: outcomes improve sharply after ~50–70 TBLC cases.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abbreviations & Glossary</h3>
+        <dl>
+            <dt>AP</dt><dd>Anteroposterior</dd>
+            <dt>BAL</dt><dd>Bronchoalveolar lavage</dd>
+            <dt>CBCT</dt><dd>Cone‑beam computed tomography</dd>
+            <dt>CLE</dt><dd>Confocal laser endomicroscopy</dd>
+            <dt>DLCO</dt><dd>Diffusing capacity for carbon monoxide</dd>
+            <dt>DOAC</dt><dd>Direct oral anticoagulant</dd>
+            <dt>ETT</dt><dd>Endotracheal tube</dd>
+            <dt>HP</dt><dd>Hypersensitivity pneumonitis</dd>
+            <dt>ILD/DPLD</dt><dd>(Diffuse) interstitial lung disease</dd>
+            <dt>MDD</dt><dd>Multidisciplinary discussion</dd>
+            <dt>sPAP</dt><dd>Systolic pulmonary artery pressure</dd>
+            <dt>PPL</dt><dd>Peripheral pulmonary lesion</dd>
+            <dt>SLB</dt><dd>Surgical lung biopsy</dd>
+            <dt>TBLC</dt><dd>Transbronchial lung cryobiopsy</dd>
+            <dt>TBNA</dt><dd>Transbronchial needle aspiration</dd>
+            <dt>UIP</dt><dd>Usual interstitial pneumonia</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>References</h3>
+        <ol>
+            <li>Rivera MP, Mehta AC, Wahidi MM. Establishing the diagnosis of lung cancer: Diagnosis and management of lung cancer—ACCP evidence‑based clinical practice guidelines (2nd ed). Chest. 2013;143(5 Suppl):e142S‑e165S.</li>
+            <li>Du Rand IA, Blaikley J, Chaudhuri N, et al. British Thoracic Society guideline for diagnostic flexible bronchoscopy in adults. Thorax. 2013;68(Suppl 1):i1‑i44.</li>
+            <li>Douketis JD, Spyropoulos AC, Murad MH, et al. Perioperative management of antithrombotic therapy: An ACCP clinical practice guideline. Chest. 2022;162:e207‑e243.</li>
+            <li>Holty JE, Kuschner WG, Gould MK. Accuracy of TBNA for mediastinal staging of NSCLC: meta‑analysis. Thorax. 2005;60:949‑955.</li>
+            <li>Mondoni M, Sotgiu G, Bonifazi M, et al. Transbronchial needle aspiration in peripheral pulmonary lesions: systematic review and meta‑analysis. Eur Respir J. 2016;48:196‑204.</li>
+            <li>Mazzone P, Jain P, Arroliga AC, et al. Bronchoscopy and needle biopsy techniques for diagnosis and staging of lung cancer. Clin Chest Med. 2002;23:137‑158.</li>
+            <li>Mak VHF, Johnston IDA, Hetzel MR, et al. Value of washing and brushings at bronchoscopy in lung cancer. Thorax. 1990;45:373‑376.</li>
+            <li>Hetzel J, Maldonado F, Ravaglia C, et al. Transbronchial cryobiopsies for DPLD: expert statement on safety, utility, and standardization. Respiration. 2018;95:188‑200.</li>
+            <li>Ravaglia C, Bonifazi M, Wells AU, et al. Safety and yield of TBLC vs VATS lung biopsy in DPLD: comparative study and systematic review. Respiration. 2016;91:215‑227.</li>
+            <li>Iftikhar IH, Alghothani L, Sardi A, et al. TBLC vs VATS for DPLD: meta‑analysis of diagnostic test accuracy. Ann Am Thorac Soc. 2017;14:1197‑1211.</li>
+            <li>Troy LK, Grainge C, Corte TJ, et al. COLDICE: Diagnostic accuracy of TBLC for ILD. Lancet Respir Med. 2020;8:171‑181.</li>
+            <li>Maldonado F, Danoff SK, Wells AU, et al. Transbronchial cryobiopsy for ILD. Chest. 2020;157:1030‑1042.</li>
+            <li>Korevaar DA, Colella S, Fally M, et al. ERS guidelines on TBLC in ILD. Eur Respir J. 2022;60:2200425.</li>
+            <li>Ravaglia C, Wells AU, Tomassetti S, et al. TBLC in 699 patients: yield and risk–benefit. BMC Pulm Med. 2019;19:16.</li>
+            <li>Kalverda KA, Ninaber MK, Wijmans L, et al. TBLC‑first versus immediate SLB for ILD diagnosis (COLD trial). Lancet Respir Med. 2024;12:513‑522.</li>
+            <li>Chen X, Ye Y, Han Q, et al. Optimizing initial freezing time for TBLC. Respiration. 2022;101:299‑306.</li>
+            <li>Zuccatosta L, Latini L, Belleggia B, et al. Suitability of TBNA for genotyping peripheral pulmonary tumors. Front Med. 2023;9:1087028.</li>
+        </ol>
+    </div>
+
+</body></html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bronchoscopic and Surgical Treatment for COPD and Chronic Bronchitis</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <h1>Bronchoscopic and Surgical Treatment for COPD and Chronic Bronchitis</h1>
+
+    <h3>Exam Mapping & Scope</h3>
+    <p>This chapter covers interventional approaches to advanced COPD—including emphysema‐predominant and chronic bronchitis phenotypes—with emphasis on bronchoscopic lung volume reduction (BLVR), lung volume reduction surgery (LVRS), peri-procedural management, complication recognition/management, and selection algorithms. It maps to AABIP blueprint domains: patient selection, imaging and physiology, therapeutic bronchoscopy, anesthesia/sedation, complications, and post-procedure follow-up.</p>
+
+    <hr>
+
+    <h3>Learning Objectives</h3>
+    <ul>
+        <li>Identify candidates and contraindications for BLVR versus LVRS using physiologic, radiographic, and clinical criteria.</li>
+        <li>Apply a stepwise algorithm to evaluate fissure integrity and collateral ventilation and to choose the target lobe.</li>
+        <li>Execute a reproducible procedural checklist for EBV/IBV placement and peri-procedural anesthesia strategies that mitigate pneumothorax risk.</li>
+        <li>Diagnose and manage common complications—especially pneumothorax—using evidence-based pathways.</li>
+        <li>Counsel patients with special conditions (very low FEV₁/DLCO, pulmonary hypertension, alpha-1 antitrypsin deficiency, transplant candidacy) about risks, benefits, and sequencing with surgery.</li>
+        <li>Recognize emerging bronchoscopic therapies for chronic bronchitis (e.g., cryospray, targeted lung denervation) and their current evidence status.</li>
+        <li>Demonstrate exam-level proficiency with high-yield trials (NETT, VENT, STELVIO, TRANSFORM, LIBERATE, EMPROVE) and their implications for practice.</li>
+    </ul>
+
+    <hr>
+
+    <h3>High-Yield One-Pager</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Mechanism:</strong> Lobar occlusion → target lobe atelectasis → reduced static/dynamic hyperinflation → improved elastic recoil, diaphragm curvature, V/Q matching, and cardiac preload.</li>
+            <li><strong>Valves:</strong> Zephyr® EBV (duckbill) and Spiration® IBV (umbrella); both are one-way valves allowing egress of air/secretions; multiple sizes; removable.</li>
+            <li><strong>Selection (typical BLVR window):</strong> FEV₁ ~20–50% predicted; marked hyperinflation (e.g., RV ≥175% predicted; ≥200% if homogeneous); RV/TLC elevated; suitable target lobe with absent interlobar collateral ventilation and adequate fissure integrity.</li>
+            <li><strong>Collateral Ventilation (CV):</strong> Assess with high-resolution CT fissure analysis and/or Chartis® catheter; both are imperfect—use a complementary approach.</li>
+            <li><strong>Trial Signals:</strong> In CV-negative severe emphysema, valves improve FEV₁, symptoms (SGRQ), and 6MWD in RCTs; pneumothorax is the dominant early adverse event.</li>
+            <li><strong>LVRS:</strong> Benefits select patients (upper-lobe–predominant emphysema, low baseline exercise capacity) with improvements in symptoms and exercise; higher perioperative risk than BLVR.</li>
+            <li><strong>Pneumothorax Facts:</strong> Typically occurs within 72 hours post-valve; risk higher with upper-lobe targets and very complete fissures; stable patients generally receive tube thoracostomy without suction initially; valve removal reserved for persistent leak/instability.</li>
+            <li><strong>Anesthesia Pearl:</strong> Low inspired oxygen strategy (keep SpO₂ ≥ 89% using the lowest feasible FiO₂ and wait for end-tidal O₂ equilibration) is associated with lower pneumothorax rates.</li>
+            <li><strong>Post-op COPD Exacerbations:</strong> Prophylaxis (antibiotics ± steroids) lowers early AECOPD; many centers favor antibiotics alone.</li>
+            <li><strong>Referral Reality:</strong> Only a minority of referred patients are ultimately eligible for BLVR; most common disqualifiers include no suitable target lobe, chronic bronchitis–predominant phenotype with frequent exacerbations, and insufficient hyperinflation.</li>
+            <li><strong>Special Populations:</strong> Very low FEV₁ (<20%) or DLCO (<20%) can still benefit in experienced centers; pulmonary hypertension data are limited but early feasibility is encouraging.</li>
+            <li><strong>Bridging Strategy:</strong> BLVR can bridge to transplant or LVRS; sequential/bilateral BLVR may restore lost benefit in selected patients.</li>
+            <li><strong>Chronic Bronchitis Therapies:</strong> Airway cryospray (liquid nitrogen) aims to remodel mucosa; targeted lung denervation ablates parasympathetic input—both promising but investigational for routine boards-level decisions.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Core Concepts</h3>
+
+    <h4>Pathophysiology / Epidemiology</h4>
+    <p>Advanced emphysema produces alveolar destruction, loss of elastic recoil, and hyperinflation that flattens the diaphragm and worsens expiratory flow limitation. Hyperinflation also reduces venous return and cardiac chamber volumes; volume reduction improves mechanics and can augment cardiac preload and output. Chronic bronchitis features mucous gland hyperplasia and goblet cell prominence driving cough, sputum, and exacerbations; it is generally not the ideal phenotype for valve-based BLVR, prompting the development of bronchoscopic airway-directed therapies.</p>
+
+    <h4>Indications & Contraindications</h4>
+    <p><strong>BLVR—Typical Indications</strong></p>
+    <ul>
+        <li>Severe COPD with symptomatic hyperinflation despite optimal inhaled therapy, oxygen (as needed), and pulmonary rehabilitation.</li>
+        <li>Suitable target lobe with evident destruction and low perfusion.</li>
+        <li>Fissure integrity sufficient to suggest absent interlobar CV (confirmed if needed with Chartis).</li>
+        <li>Physiologic impairment within studied ranges (e.g., FEV₁ ~20–50% pred; RV elevated).</li>
+    </ul>
+
+    <p><strong>BLVR—Common Contraindications / Reasons for Ineligibility</strong></p>
+    <ul>
+        <li>No suitable target lobe (~18%).</li>
+        <li>Unsuitable phenotype (chronic bronchitis with frequent exacerbations, asthma) (~18%).</li>
+        <li>Insufficient hyperinflation (~16%).</li>
+        <li>Homogeneous emphysema without clear target (~10%).</li>
+        <li>Incomplete fissures (~9%).</li>
+        <li>Other: Current smoking, lack of pulmonary rehab completion, high anticoagulation needs, large bullae, very fragile condition, suspicious nodules, or severe comorbidity.</li>
+    </ul>
+
+    <p><strong>LVRS—Key Selection Principles (NETT)</strong></p>
+    <ul>
+        <li>Bilateral emphysema with marked hyperinflation; exclude high-risk group (FEV₁ ≤20% with homogeneous emphysema or DLCO ≤20%).</li>
+        <li>Greatest benefit: Upper-lobe–predominant emphysema with low baseline exercise tolerance.</li>
+        <li>Higher perioperative morbidity/mortality than BLVR; careful center selection is crucial.</li>
+    </ul>
+
+    <h4>Pre-procedure Evaluation</h4>
+    <ul>
+        <li><strong>Pulmonary Physiology:</strong> Spirometry, plethysmography (RV/TLC), DLCO, 6MWD; confirm recent pulmonary rehab.</li>
+        <li><strong>Imaging:</strong> Thin-slice HRCT with lobar emphysema quantification and fissure analysis; note distribution (heterogeneous vs. homogeneous), bullae, paraseptal disease, pleural adhesions, nodules.</li>
+        <li><strong>CV Assessment:</strong> Quantitative fissure analysis (platform-dependent thresholds) and/or in-procedure Chartis.</li>
+        <li><strong>Perfusion:</strong> Nuclear perfusion may help adjudicate target lobe when anatomy is equivocal.</li>
+        <li><strong>Comorbidities:</strong> Cardiac risk, pulmonary hypertension, OSA, osteoporosis, prior thoracic surgery, anticoagulation; optimize before intervention.</li>
+        <li><strong>Smoking Status:</strong> Abstinence required (commonly ≥4–6 months).</li>
+        <li><strong>Consent:</strong> Discuss benefits vs. pneumothorax risk, potential need for revision bronchoscopy or valve removal, and hospital observation.</li>
+    </ul>
+
+    <h4>Equipment & Setup</h4>
+    <ul>
+        <li><strong>Bronchoscope:</strong> Working channel ≥2.6 mm.</li>
+        <li><strong>Valves:</strong>
+            <ul>
+                <li><em>Spiration® IBV:</em> Umbrella design; nitinol frame with distal anchors; polyurethane membrane; sizes 5, 6, 7, 9 mm; sized with dedicated balloon/calibration kit.</li>
+                <li><em>Zephyr® EBV:</em> Duckbill silicone valve on nitinol retainer; sizes 4.0, 4.0-LP, 5.5, 5.5-LP; sized with depth/diameter catheter (straight or J).</li>
+            </ul>
+        </li>
+        <li><strong>Chartis® System:</strong> Balloon catheter and console for functional CV testing.</li>
+        <li><strong>Ancillaries:</strong> Valve loader/delivery catheters, fluoroscopy (optional), airway sizing tools, standard bronchoscopy accessories.</li>
+        <li><strong>Anesthesia:</strong> General anesthesia (ETT or LMA) or monitored anesthesia care with topicalization; many centers favor ETT plus total IV anesthesia for stability.</li>
+        <li><strong>Low-FiO₂ Protocol:</strong> Maintain SpO₂ ≥ 89% using lowest viable FiO₂; delay valve deployment until exhaled O₂ approximates inspired O₂.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Step-by-Step Technique / Procedural Checklist</h3>
+    <ul>
+        <li><strong>Final Plan Review:</strong> Confirm target lobe, fissure status, and anesthesia plan; ensure antibiotic prophylaxis strategy if used.</li>
+        <li><strong>Airway Access:</strong> Secure airway; apply low-FiO₂ strategy and low respiratory rate with prolonged expiratory time (e.g., I:E 1:3–1:4).</li>
+        <li><strong>Chartis (if needed):</strong> Isolate target lobar bronchus; verify CV-negative flow/volume pattern (recognize low-flow/collapse phenomenon).</li>
+        <li><strong>Airway Mapping & Sizing:</strong> Sequentially size segmental/subsegmental bronchi.</li>
+        <li><strong>Valve Deployment:</strong> Place most proximal valve last; confirm position and occlusion; reassess airflow and ensure egress of secretions.</li>
+        <li><strong>Hemostasis & Clearance:</strong> Suction secretions; minimize suction pressure at the treated lobe.</li>
+        <li><strong>Post-procedure:</strong> Immediate CXR and structured observation (typically inpatient 2–3 days) with serial CXRs and symptom checks.</li>
+        <li><strong>Discharge Plan:</strong> Education about pneumothorax symptoms; 24/7 contact; follow-up imaging and PFT plans.</li>
+    </ul>
+
+    <h4>Troubleshooting & Intra-procedure Management</h4>
+    <ul>
+        <li><strong>No target lobe or equivocal heterogeneity:</strong> Consider perfusion imaging; if homogeneous disease, strict hyperinflation thresholds matter; LVRS or non-valve bronchoscopic options may be preferable.</li>
+        <li><strong>Chartis indeterminate:</strong> Reposition balloon, optimize ventilation (reduce RR, prolong expiration), and confirm seal; correlate with CT fissure score.</li>
+        <li><strong>Valve migration or incomplete occlusion:</strong> Upsize valve or add subsegmental valves; ensure correct orientation and full expansion.</li>
+        <li><strong>Hypoxemia during deployment:</strong> Briefly increase FiO₂; correct quickly to low-FiO₂ once stable.</li>
+    </ul>
+
+    <h4>Post-procedure Care & Follow-up</h4>
+    <ul>
+        <li><strong>Monitoring:</strong> Highest pneumothorax risk within 72 hours; low threshold for repeat CXR if dyspnea/pleurisy occurs.</li>
+        <li><strong>AECOPD Prophylaxis:</strong> Center-specific; antibiotic prophylaxis alone is associated with the lowest early AECOPD rates in retrospective cohorts.</li>
+        <li><strong>Rehabilitation:</strong> Resume/continue pulmonary rehab after discharge.</li>
+        <li><strong>Revision Bronchoscopy:</strong> Consider if no meaningful clinical/radiographic response by 6–12 weeks or if benefit wanes; common reasons include granulation tissue, migration, or unrecognized CV.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Complications (Prevention, Recognition, Management)</h3>
+    <h4>Pneumothorax</h4>
+    <p><strong>Risk Enhancers:</strong> Upper-lobe targets (especially left upper lobe), very complete fissures, large/hyperinflated target lobe; immediate rapid atelectasis; pleural adhesions; bullous/paraseptal emphysema.</p>
+    <p><strong>Timing:</strong> Most occur days 0–3; later events possible with revisions or staged completion.</p>
+    <p><strong>Initial Management (Stable Patient):</strong> Tube thoracostomy without suction; observe.</p>
+    <p><strong>Persistent Leak (>~72 h) or Incomplete Expansion:</strong> Apply suction, remove 1–2 valves; CT to identify culprit segment; consider Heimlich valve for discharge.</p>
+    <p><strong>Unstable/Large Air Leak:</strong> Early valve removal (partial or complete) and definitive air leak management; surgical repair in refractory cases.</p>
+    <p><strong>Re-implantation:</strong> Possible after removal but carries substantial recurrence risk; discuss carefully.</p>
+
+    <h4>Other Complications</h4>
+    <p>AECOPD (reduced with prophylaxis); post-obstructive pneumonia; hemoptysis; valve migration or granulation tissue requiring revision; rare death in context of severe pneumothorax or comorbidity.</p>
+
+    <hr>
+
+    <h3>Special Populations & Evidence</h3>
+    <h4>Special Populations</h4>
+    <ul>
+        <li><strong>Very low FEV₁ (<20%) or DLCO (<20%):</strong> Small series show feasibility and clinically meaningful improvements with similar pneumothorax rates; counsel about higher fragility and prolonged leaks.</li>
+        <li><strong>Pulmonary Hypertension (Group 3):</strong> Limited feasibility data suggest improvements in hemodynamics/6MWD without PH-specific complications in carefully selected patients.</li>
+        <li><strong>Alpha-1 Antitrypsin Deficiency:</strong> No longer an automatic exclusion if other criteria are favorable.</li>
+        <li><strong>Bridging Strategies:</strong> BLVR can delay the need for transplant; does not appear to worsen post-transplant outcomes; LVRS after failed BLVR is feasible in rescue settings.</li>
+        <li><strong>Staged/Sequential BLVR:</strong> Two-stage lobar completion may reduce pneumothorax risk while preserving efficacy.</li>
+        <li><strong>Bilateral Repeat BLVR:</strong> Can recapture benefits after early decline in selected patients.</li>
+    </ul>
+
+    <h4>Evidence & Outcomes (Key Trials/Signals)</h4>
+    <ul>
+        <li><strong>LVRS (NETT):</strong> After excluding the high-risk subgroup, LVRS improved exercise capacity and quality of life; benefits strongest in upper-lobe–predominant disease with low exercise capacity; perioperative risk remained significant (e.g., ~8% 90-day mortality vs. ~1% with medical therapy).</li>
+        <li><strong>Early Valves (VENT):</strong> Modest average benefit overall; signal concentrated in patients with complete fissures.</li>
+        <li><strong>Modern EBV RCTs (STELVIO, TRANSFORM, LIBERATE):</strong> In CV-negative heterogeneous emphysema, clinically meaningful improvements in FEV₁, 6MWD, and SGRQ; pneumothorax ≈ 18–30% within first 45 days (study-dependent).</li>
+        <li><strong>IBV RCT (EMPROVE):</strong> Improvements in FEV₁ and health status; TLVR achieved in most treated lobes; 6MWD signal smaller; sustained benefits out to 24 months with low late pneumothorax rates.</li>
+        <li><strong>Cardiac/Hemodynamics:</strong> Post-BLVR increases in cardiac preload/output without raising pulmonary artery pressures.</li>
+        <li><strong>Exacerbations & Survival:</strong> AECOPD frequency decreases (largest reduction with complete lobar atelectasis); selection for BLVR and achievement of lobar collapse associate with longer survival.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Diagnostic & Therapeutic Algorithms</h3>
+
+    <h4>Algorithm 1 — Selecting BLVR vs. LVRS vs. Medical Care</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Severe COPD on optimal therapy + rehab"] --> B["HRCT: emphysema pattern & fissures"]
+        B -->|Heterogeneous targetable lobe| C["Physiology: FEV1 ~20–50%, RV high"]
+        B -->|Homogeneous or diffuse| H["Consider LVRS criteria or non-valve options"]
+        C --> D["Assess CV: Quant CT fissure +/− Chartis"]
+        D -->|"Absent CV & adequate fissure"| E["BLVR candidate"]
+        D -->|"Likely CV or inadequate fissure"| F["Non-valve bronchoscopic options / LVRS"]
+        E --> G["Anesthesia plan (low FiO2), valve sizing & deployment"]
+        H --> I["LVRS if NETT-favorable; otherwise best medical + rehab"]
+        F --> J["Consider chronic bronchitis therapies if phenotype matches"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Workflow Summary (Algorithm 1)</strong>
+        <ul>
+            <li>Confirm symptom burden despite optimized inhaled therapy, oxygen, and rehab.</li>
+            <li>Use HRCT to localize a damaged, low-perfusion lobe; quantify fissure integrity.</li>
+            <li>Ensure hyperinflation and functional reserve within studied windows.</li>
+            <li>If fissures adequate, confirm CV-negative status (Chartis if needed).</li>
+            <li>Proceed to BLVR if target lobe, physiology, and CV status align; otherwise pivot to LVRS (if NETT-favorable) or investigational bronchoscopic options for chronic bronchitis.</li>
+        </ul>
+    </div>
+
+    <h4>Algorithm 2 — Post-Valve Pneumothorax Management</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Post-BLVR dyspnea/pleuritic pain"] --> B["CXR ± bedside US"]
+        B -->|"No PTX"| C["Observe; repeat imaging if symptoms persist"]
+        B -->|"Pneumothorax"| D["Assess stability"]
+        D -->|"Stable"| E["Chest tube to water seal (no suction)"]
+        E --> F["Reassess in 24–72 h"]
+        F -->|"Lung re-expands, no leak"| G["Remove tube; continue routine follow-up"]
+        F -->|"Persistent leak or poor expansion"| H["Apply suction + CT"]
+        H -->|"Improves"| G
+        H -->|"No improvement"| I["Remove 1–2 valves; consider Heimlich valve"]
+        D -->|"Unstable/large PTX"| J["Immediate tube + early partial/complete valve removal ± ICU"]
+        I --> K["Re-evaluate in 5–6 weeks for possible re-implantation (caution: recurrence risk)"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Workflow Summary (Algorithm 2)</strong>
+        <ul>
+            <li>Most events occur within 72 hours; keep low threshold for imaging.</li>
+            <li>Initial chest drainage without suction in stable patients; escalate only if needed.</li>
+            <li>Early valve removal for hemodynamic compromise or refractory leak; recognize that re-implantation carries meaningful recurrence risk.</li>
+            <li>Educate patients on symptoms and ensure rapid re-access to care.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tables & Quick-Reference Boxes</h3>
+
+    <h4>Table 1. BLVR vs. LVRS—Selection & Outcomes</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Domain</th>
+                <th>BLVR (Valves)</th>
+                <th>LVRS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Ideal Anatomy</strong></td>
+                <td>Target lobe with marked destruction, absent CV, adequate fissures</td>
+                <td>Upper-lobe–predominant emphysema (NETT-favorable)</td>
+            </tr>
+            <tr>
+                <td><strong>Physiology (typical)</strong></td>
+                <td>FEV₁ ~20–50% pred; RV ≥175% pred (≥200% if homogeneous)</td>
+                <td>Avoid FEV₁ ≤20% with homogeneous pattern or DLCO ≤20%</td>
+            </tr>
+            <tr>
+                <td><strong>Setting</strong></td>
+                <td>Bronchoscopy; reversible</td>
+                <td>Thoracic surgery; irreversible</td>
+            </tr>
+            <tr>
+                <td><strong>Benefits in RCTs</strong></td>
+                <td>↑FEV₁, ↓SGRQ, ↑6MWD (CV-negative)</td>
+                <td>↑Exercise capacity, QoL; survival benefit in select subgroup</td>
+            </tr>
+            <tr>
+                <td><strong>Dominant Early Risk</strong></td>
+                <td>Pneumothorax (≈ 18–30% early)</td>
+                <td>90-day mortality ~8%; high complication burden</td>
+            </tr>
+            <tr>
+                <td><strong>Hospital Stay</strong></td>
+                <td>Short (observation 2–3 days typical)</td>
+                <td>Longer; ICU and rehab common</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 2. Endobronchial Valves at a Glance</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Zephyr® EBV</th>
+                <th>Spiration® IBV</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Valve Design</strong></td>
+                <td>Duckbill silicone in nitinol retainer</td>
+                <td>Umbrella nitinol frame with polyurethane membrane</td>
+            </tr>
+            <tr>
+                <td><strong>Sizes</strong></td>
+                <td>4.0, 4.0-LP, 5.5, 5.5-LP</td>
+                <td>5, 6, 7, 9 mm</td>
+            </tr>
+            <tr>
+                <td><strong>Sizing Tool</strong></td>
+                <td>Depth/diameter catheter (straight or J)</td>
+                <td>Balloon + calibration kit</td>
+            </tr>
+            <tr>
+                <td><strong>Reversibility</strong></td>
+                <td>Removable</td>
+                <td>Removable</td>
+            </tr>
+            <tr>
+                <td><strong>Typical Use</strong></td>
+                <td>CV-negative lobar occlusion</td>
+                <td>CV-negative lobar occlusion</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 3. Why BLVR Candidates Are Commonly Ineligible</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Reason</th>
+                <th>Practical Meaning</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>No suitable target lobe (~18%)</strong></td>
+                <td>Heterogeneous destruction absent, perfusion relatively preserved, or distribution unfavorable</td>
+            </tr>
+            <tr>
+                <td><strong>Unsuitable phenotype (~18%)</strong></td>
+                <td>Chronic bronchitis with frequent exacerbations, asthma-overlap</td>
+            </tr>
+            <tr>
+                <td><strong>Insufficient hyperinflation (~16%)</strong></td>
+                <td>RV/TLC not elevated enough for benefit</td>
+            </tr>
+            <tr>
+                <td><strong>Homogeneous distribution (~10%)</strong></td>
+                <td>No dominant target; consider LVRS criteria</td>
+            </tr>
+            <tr>
+                <td><strong>Incomplete fissures (~9%)</strong></td>
+                <td>Collateral ventilation likely; valves unlikely to succeed</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Table 4. CV Assessment—Chartis vs. CT Fissure Analysis</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th>Chartis® (Functional)</th>
+                <th>HRCT Fissure Analysis (Anatomic)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>What it measures</strong></td>
+                <td>Real-time airflow/pressure distal to balloon occlusion</td>
+                <td>Visual/quantitative fissure completeness</td>
+            </tr>
+            <tr>
+                <td><strong>Strengths</strong></td>
+                <td>Functional proof of absent CV; useful when fissure incomplete</td>
+                <td>Widely available; non-invasive; pre-plans targets</td>
+            </tr>
+            <tr>
+                <td><strong>Limitations</strong></td>
+                <td>Collapse/low-flow artifact; ventilation-dependent</td>
+                <td>Reader/platform variability; predicts CV indirectly</td>
+            </tr>
+            <tr>
+                <td><strong>Diagnostic Performance</strong></td>
+                <td>Sensitivity high; overall accuracy ≈ mid-70%</td>
+                <td>Specificity higher; overall accuracy ≈ mid-70%</td>
+            </tr>
+            <tr>
+                <td><strong>Practical Use</strong></td>
+                <td>Confirm before EBV when fissure < high-90s or equivocal</td>
+                <td>First-pass screening and planning for target lobe</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Cases & Applied Learning</h3>
+
+    <div class="case-study">
+        <h4>Case 1</h4>
+        <p>A 64-year-old former smoker with severe dyspnea despite triple inhalers and rehab: FEV₁ 28% pred, RV 235% pred, DLCO 32% pred, 6MWD 260 m. HRCT shows heterogeneous emphysema with nearly complete left major fissure. What is the next best step?</p>
+        <p><strong>Answer:</strong> Proceed with functional assessment of CV (Chartis) if any doubt remains about fissure integrity; if CV-negative, plan EBV/IBV with low-FiO₂ anesthesia strategy.</p>
+        <p><strong>Explanation:</strong> Even with very complete fissures, a confirmatory functional test is reasonable when clinical risk–benefit hinges on success. Absence of CV predicts lobar collapse and clinical response.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 2</h4>
+        <p>A 71-year-old with CV-negative EBV to LUL develops acute pleuritic chest pain 18 hours later. CXR: large left pneumothorax; vitals stable.</p>
+        <p><strong>Answer:</strong> Insert chest tube to water seal (no suction initially), close observation, and reassess for expansion and air leak over 24–72 hours.</p>
+        <p><strong>Explanation:</strong> Most early post-valve pneumothoraces can be managed with drainage without suction. Escalation (suction/valve removal) is reserved for persistent leak, poor expansion, or instability.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Case 3</h4>
+        <p>A 58-year-old with homogeneous emphysema, RV 210% pred, fissures borderline, frequent exacerbations. Considering LVR pathway.</p>
+        <p><strong>Answer:</strong> LVRS candidacy should be discussed if NETT-favorable; valve-based BLVR is less likely to succeed; consider investigational chronic bronchitis therapies if symptoms are cough/sputum-predominant.</p>
+        <p><strong>Explanation:</strong> Homogeneous disease and exacerbation-prone chronic bronchitis phenotype are less suitable for EBV/IBV; LVRS may still benefit selected patients.</p>
+    </div>
+
+    <hr>
+
+    <h3>Question Bank (12 MCQs)</h3>
+    <ol>
+        <li>
+            <strong>A 66-year-old with severe heterogeneous emphysema has left upper lobe destruction, RV 240% pred, and left major fissure visually ~90%. What optimizes response prediction before EBV?</strong>
+            <ul>
+                <li>A. Proceed directly—fissure is enough</li>
+                <li>B. Chartis assessment of the LUL</li>
+                <li>C. Perfusion scan only</li>
+                <li>D. Bronchial thermoplasty</li>
+                <li>E. Target the contralateral lung</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> When fissure completeness is not unequivocally very high, functional confirmation of absent CV with Chartis improves prediction of TLVR and response.</p>
+        </li>
+        <li>
+            <strong>After EBV to the RUL, a patient’s day-2 CXR shows a moderate pneumothorax. He is stable on room air. Best immediate management?</strong>
+            <ul>
+                <li>A. Observation only</li>
+                <li>B. Tube thoracostomy to water seal</li>
+                <li>C. Immediate suction at −20 cmH₂O</li>
+                <li>D. Remove all valves now</li>
+                <li>E. Administer high-dose steroids only</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> Stable post-EBV pneumothorax is initially managed with chest tube to water seal; suction and valve removal are reserved for refractory leak or instability.</p>
+        </li>
+        <li>
+            <strong>Which intra-operative strategy is associated with lower pneumothorax incidence after EBV?</strong>
+            <ul>
+                <li>A. 100% FiO₂ throughout</li>
+                <li>B. High respiratory rate with short expiratory time</li>
+                <li>C. Low FiO₂ targeting SpO₂ ≥ 89% and waiting for end-tidal O₂ equilibration before deployment</li>
+                <li>D. Positive end-expiratory pressure of 15 cmH₂O</li>
+                <li>E. Intermittent apnea with recruitment maneuvers</li>
+            </ul>
+            <p><strong>Answer: C.</strong></p>
+            <p><strong>Explanation:</strong> A low-FiO₂ protocol reduces nitrogen washout and rapid atelectasis, mitigating early pneumothorax risk.</p>
+        </li>
+        <li>
+            <strong>A patient has EBV placed without TLVR at 8 weeks. CT shows well-seated valves; fissure completeness underestimated initially. Next step?</strong>
+            <ul>
+                <li>A. Remove all valves—failure</li>
+                <li>B. Revision bronchoscopy to address granulation/malposition and reassess for occult CV</li>
+                <li>C. LVRS immediately</li>
+                <li>D. Begin long-term macrolide therapy</li>
+                <li>E. Observe for 1 year</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> Loss or lack of effect often reflects malposition, incomplete occlusion, or granulation; revision bronchoscopy frequently restores benefit.</p>
+        </li>
+        <li>
+            <strong>Which NETT subgroup derived the clearest overall benefit from LVRS?</strong>
+            <ul>
+                <li>A. Homogeneous emphysema with high exercise capacity</li>
+                <li>B. Upper-lobe–predominant emphysema with low exercise capacity</li>
+                <li>C. Lower-lobe–predominant emphysema with high exercise capacity</li>
+                <li>D. FEV₁ ≤20% and DLCO ≤20%</li>
+                <li>E. Any emphysema pattern with high DLCO</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> NETT demonstrated reduced mortality and improved function in upper-lobe–predominant disease with low baseline exercise tolerance.</p>
+        </li>
+        <li>
+            <strong>A 63-year-old with emphysema and DLCO 18% asks about BLVR risk. Which is most accurate?</strong>
+            <ul>
+                <li>A. Absolute contraindication—no data</li>
+                <li>B. Feasible in experienced centers with meaningful improvements; pneumothorax risk similar but leaks may persist longer</li>
+                <li>C. Only LVRS is safe</li>
+                <li>D. BLVR benefits are limited to DLCO >60%</li>
+                <li>E. BLVR invariably worsens gas exchange</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> Small cohorts show safety/efficacy in very low DLCO when carefully selected, though prolonged air leaks are more common.</p>
+        </li>
+        <li>
+            <strong>For a chronic bronchitis-predominant COPD patient with frequent exacerbations and minimal hyperinflation, which bronchoscopic option is most aligned with pathophysiology?</strong>
+            <ul>
+                <li>A. EBV to the most destroyed lobe</li>
+                <li>B. IBV to both lower lobes</li>
+                <li>C. Airway cryospray therapy</li>
+                <li>D. LVRS</li>
+                <li>E. Endobronchial coils</li>
+            </ul>
+            <p><strong>Answer: C.</strong></p>
+            <p><strong>Explanation:</strong> Airway cryospray targets mucosal remodeling for chronic bronchitis; valve-based BLVR suits emphysema with hyperinflation.</p>
+        </li>
+        <li>
+            <strong>Which statement about valve re-implantation after removal for pneumothorax is correct?</strong>
+            <ul>
+                <li>A. It eliminates recurrence risk</li>
+                <li>B. Recurrence risk can be substantial and should be discussed before attempting re-implantation</li>
+                <li>C. It must be done within 48 hours</li>
+                <li>D. It is contraindicated if the initial leak resolved</li>
+                <li>E. It requires contralateral targeting</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> Recurrence after re-implantation is meaningfully frequent; timing and candidacy are individualized.</p>
+        </li>
+        <li>
+            <strong>A candidate has RV 150% pred, FEV₁ 40% pred, and heterogeneous emphysema. Why is BLVR less likely to help?</strong>
+            <ul>
+                <li>A. RV too high</li>
+                <li>B. RV too low (hyperinflation insufficient)</li>
+                <li>C. FEV₁ too low</li>
+                <li>D. Heterogeneity precludes benefit</li>
+                <li>E. Need pulmonary rehab first</li>
+            </ul>
+            <p><strong>Answer: B.</strong></p>
+            <p><strong>Explanation:</strong> Insufficient static hyperinflation is a common reason for ineligibility and predicts limited mechanical gain.</p>
+        </li>
+        <li>
+            <strong>Which prophylactic approach is most associated with fewer early AECOPD events after BLVR in retrospective series?</strong>
+            <ul>
+                <li>A. Steroids alone</li>
+                <li>B. No prophylaxis</li>
+                <li>C. Antibiotics alone</li>
+                <li>D. Dual antiplatelet therapy</li>
+                <li>E. Inhaled hypertonic saline</li>
+            </ul>
+            <p><strong>Answer: C.</strong></p>
+            <p><strong>Explanation:</strong> Antibiotic-only prophylaxis was associated with the lowest early exacerbation rates compared with other strategies.</p>
+        </li>
+        <li>
+            <strong>Which device-to-feature pairing is correct?</strong>
+            <ul>
+                <li>A. Zephyr—umbrella membrane with 5 anchors</li>
+                <li>B. Spiration—duckbill silicone valve</li>
+                <li>C. Spiration—balloon-based sizing kit (5–9 mm valves)</li>
+                <li>D. Zephyr—cannot be removed once placed</li>
+                <li>E. Either device—requires rigid bronchoscopy</li>
+            </ul>
+            <p><strong>Answer: C.</strong></p>
+            <p><strong>Explanation:</strong> Spiration uses balloon/calibration sizing and offers 5–9 mm; Zephyr uses depth/diameter catheter; both are removable via flexible bronchoscopy.</p>
+        </li>
+        <li>
+            <strong>A 70-year-old with LUL EBV develops a large, symptomatic pneumothorax with persistent air leak after 72 hours of drainage and suction. Best next step?</strong>
+            <ul>
+                <li>A. Discharge with observation</li>
+                <li>B. Begin antibiotics only</li>
+                <li>C. Remove 1–2 valves and reassess; consider full removal if leak persists</li>
+                <li>D. Immediate LVRS</li>
+                <li>E. Place IBV in adjacent lobes</li>
+            </ul>
+            <p><strong>Answer: C.</strong></p>
+            <p><strong>Explanation:</strong> Persistent leak warrants valve removal (partial first) and targeted management; aggressive surgery is reserved for selected refractory cases.</p>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h3>Take-Home Checklist</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li>Confirm symptomatic hyperinflation and completion of pulmonary rehab before LVR.</li>
+            <li>Use HRCT to map emphysema and fissures; add Chartis if fissures are not unequivocally complete.</li>
+            <li>Prioritize absent CV and a clearly targetable lobe for valves.</li>
+            <li>Plan low-FiO₂ anesthesia and deliberate ventilator settings to reduce pneumothorax risk.</li>
+            <li>Observe in hospital 2–3 days post-valve; most pneumothoraces occur by day 3.</li>
+            <li>Manage stable pneumothorax with tube to water seal first; escalate stepwise.</li>
+            <li>Schedule revision bronchoscopy if there is no benefit at 6–12 weeks or if response wanes.</li>
+            <li>Consider staged completion or bilateral BLVR in selected patients; discuss bridging to transplant/LVRS.</li>
+            <li>Re-evaluate the pathway (LVRS or investigational airway therapies) in homogeneous or bronchitis-predominant disease.</li>
+            <li>Provide realistic counseling: not all referred patients are eligible; discuss risks, re-interventions, and expected magnitude of benefit.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Abbreviations & Glossary</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>AECOPD</dt>
+            <dd>Acute exacerbation of COPD</dd>
+            <dt>BLVR</dt>
+            <dd>Bronchoscopic lung volume reduction</dd>
+            <dt>Chartis</dt>
+            <dd>In-procedure balloon catheter system measuring collateral ventilation</dd>
+            <dt>CV</dt>
+            <dd>Collateral ventilation</dd>
+            <dt>DLCO</dt>
+            <dd>Diffusing capacity for carbon monoxide</dd>
+            <dt>EBV/IBV</dt>
+            <dd>Endobronchial/Intra-bronchial valve</dd>
+            <dt>HRCT</dt>
+            <dd>High-resolution computed tomography</dd>
+            <dt>LVRS</dt>
+            <dd>Lung volume reduction surgery</dd>
+            <dt>NETT</dt>
+            <dd>National Emphysema Treatment Trial</dd>
+            <dt>RV/TLC</dt>
+            <dd>Residual volume/Total lung capacity</dd>
+            <dt>SGRQ</dt>
+            <dd>St. George’s Respiratory Questionnaire</dd>
+            <dt>TLVR</dt>
+            <dd>Target lobe volume reduction</dd>
+            <dt>V/Q</dt>
+            <dd>Ventilation/perfusion</dd>
+            <dt>VENT/STELVIO/TRANSFORM/LIBERATE/EMPROVE</dt>
+            <dd>Key valve RCTs</dd>
+        </dl>
+    </div>
+
+    <h3>References</h3>
+    <div class="references">
+        <ol>
+            <li>Fishman A, Martinez F, Naunheim K, et al. A randomized trial comparing lung-volume-reduction surgery with medical therapy for severe emphysema. N Engl J Med. 2003;348(21):2059-2073.</li>
+            <li>Klooster K, Ten Hacken NHT, Hartman JE, Kerstjens HAM, van Rikxoort EM, Slebos DJ. Endobronchial valves for emphysema without interlobar collateral ventilation. N Engl J Med. 2015;373(24):2325-2335.</li>
+            <li>Kemp SV, Slebos DJ, Kirk A, et al. A multicenter randomized controlled trial of Zephyr endobronchial valve treatment in heterogeneous emphysema (TRANSFORM). Am J Respir Crit Care Med. 2017;196(12):1535-1543.</li>
+            <li>Criner GJ, Sue R, Wright S, et al. Zephyr endobronchial valve treatment in heterogeneous emphysema (LIBERATE). Am J Respir Crit Care Med. 2018;198(9):1151-1164.</li>
+            <li>Criner GJ, Delage A, Voelker K, et al. Improving lung function in severe heterogeneous emphysema with the Spiration Valve System (EMPROVE). Am J Respir Crit Care Med. 2019;200(11):1354-1362.</li>
+            <li>Valipour A, Slebos DJ, Herth FJF, et al. Endobronchial valve therapy in patients with homogeneous emphysema (IMPACT). Am J Respir Crit Care Med. 2016;194(9):1073-1082.</li>
+            <li>Herth FJF, Eberhardt R, Gompelmann D, et al. Radiological and clinical outcomes of using Chartis™ to plan endobronchial valve treatment. Eur Respir J. 2013;41(2):302-308.</li>
+            <li>Welling JBA, Hartman JE, Augustijn SWS, et al. Patient selection for bronchoscopic lung volume reduction. Int J Chron Obstruct Pulmon Dis. 2020;15:871-881.</li>
+            <li>van der Molen MC, Hartman JE, Vanfleteren LEGW, et al. Reduction of lung hyperinflation improves cardiac preload, contractility, and output in emphysema after endobronchial valves. Am J Respir Crit Care Med. 2022;206(6):704-711.</li>
+            <li>Abia-Trujillo D, Lee-Mateus AY, Garcia-Saucedo JC, et al. Prevention of acute exacerbation of COPD after BLVR with endobronchial valves. Clin Respir J. 2022;16(1):43-48.</li>
+            <li>Roodenburg SA, Klooster K, Hartman JE, et al. Revision bronchoscopy after endobronchial valve treatment: indications, findings and outcomes. Int J Chron Obstruct Pulmon Dis. 2021;16:1127-1136.</li>
+            <li>van Dijk M, Sue R, Criner GJ, et al. Expert statement: pneumothorax associated with one-way valve therapy for emphysema—2020 update. Respiration. 2021;100(10):969-978.</li>
+            <li>Lentz RJ, Low SW, Saettele T, et al. Association between inspired oxygen fraction and pneumothorax after endobronchial valve placement. Ann Am Thorac Soc. 2023;20(6):926-933.</li>
+            <li>Hartman JE, Welling JBA, et al. Survival in COPD patients treated with bronchoscopic lung volume reduction. Respir Med. 2022;196:106825.</li>
+            <li>Egenod T, Tricard J, Fumat R, et al. Two-stage bronchoscopic endobronchial valve treatment can lead to progressive lung volume reduction and may decrease pneumothorax risk. Int J Chron Obstruct Pulmon Dis. 2021;16:1957-1965.</li>
+            <li>Gompelmann D, Benjamin N, Bischoff E, et al. Survival after endoscopic valve therapy in severe emphysema. Respiration. 2019;97(2):145-152.</li>
+            <li>Brock JM, Dittrich SA, Eichhorn F, et al. Risk factors and clinical impact of severe pneumothorax after endoscopic lung volume reduction with endobronchial valves. Chest. 2025;167(4):1012-1023.</li>
+            <li>Slebos DJ, Breen D, Coad J, et al. Safety and histological effect of liquid nitrogen metered spray cryotherapy in the lung. Am J Respir Crit Care Med. 2017;196(10):1351-1352.</li>
+            <li>Slebos DJ, Shah PL, Herth FJ, et al. Safety and adverse events after targeted lung denervation for symptomatic COPD (AIRFLOW). Am J Respir Crit Care Med. 2019;200(2):201-205.</li>
+        </ol>
+    </div>
+</body>
+</html>
