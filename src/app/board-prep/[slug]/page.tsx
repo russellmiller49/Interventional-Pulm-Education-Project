@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { BoardReviewProgressToggle } from '@/components/board-review/BoardReviewProgressToggle'
 import { BoardReviewSections } from '@/components/board-review/BoardReviewSections'
+import { BoardReviewHtmlFrame } from '@/components/board-review/BoardReviewHtmlFrame'
 import { MarkdownContent } from '@/components/board-review/MarkdownContent'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -42,13 +43,18 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
 
   const categoryLabel = boardReviewCategoryLabels[chapter.category]
   const allChapters = listBoardReviewChapters()
-  const peerChapters = allChapters.filter((item) => item.category === chapter.category && item.slug !== chapter.slug)
+  const peerChapters = allChapters.filter(
+    (item) => item.category === chapter.category && item.slug !== chapter.slug,
+  )
 
   return (
     <div className="space-y-16 py-16">
       <section className="container grid gap-10 overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-8 md:grid-cols-[1.2fr_0.8fr] md:p-12">
         <div className="space-y-6">
-          <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]">
+          <Badge
+            variant="info"
+            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]"
+          >
             {categoryLabel}
           </Badge>
           <div className="space-y-4">
@@ -74,7 +80,9 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
           </h2>
           <p className="text-sm leading-6 text-muted-foreground">{chapter.examScope}</p>
           <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">Focus this round</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
+              Focus this round
+            </h3>
             <ul className="mt-2 space-y-1 text-xs text-muted-foreground/90">
               {chapter.focus.map((item) => (
                 <li key={item} className="flex items-start gap-2">
@@ -89,17 +97,23 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
 
       <section className="container grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-8">
-          {chapter.intro ? (
-            <Card className="border-border/60 bg-card/80">
-              <CardContent className="space-y-4 p-6">
-                <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
-                  Orientation
-                </h2>
-                <MarkdownContent content={chapter.intro} />
-              </CardContent>
-            </Card>
-          ) : null}
-          <BoardReviewSections sections={chapter.sections} />
+          {chapter.formattedHtml ? (
+            <BoardReviewHtmlFrame html={chapter.formattedHtml} title={chapter.title} />
+          ) : (
+            <>
+              {chapter.intro ? (
+                <Card className="border-border/60 bg-card/80">
+                  <CardContent className="space-y-4 p-6">
+                    <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
+                      Orientation
+                    </h2>
+                    <MarkdownContent content={chapter.intro} />
+                  </CardContent>
+                </Card>
+              ) : null}
+              <BoardReviewSections sections={chapter.sections} />
+            </>
+          )}
         </div>
         <aside className="space-y-6">
           <Card className="border-emerald-500/40 bg-emerald-500/10">
@@ -134,7 +148,10 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
                   {peerChapters.slice(0, 4).map((peer) => (
                     <li key={peer.slug} className="flex items-start gap-2">
                       <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-                      <a className="text-primary hover:text-primary/80" href={`/board-prep/${peer.slug}`}>
+                      <a
+                        className="text-primary hover:text-primary/80"
+                        href={`/board-prep/${peer.slug}`}
+                      >
                         {peer.title}
                       </a>
                     </li>
@@ -154,8 +171,8 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
                 Study notes
               </h2>
               <p>
-                Coming soon: embed flashcards, attach question banks, and export PDF summaries once MDX components land
-                in the content system.
+                Coming soon: embed flashcards, attach question banks, and export PDF summaries once
+                MDX components land in the content system.
               </p>
             </CardContent>
           </Card>
