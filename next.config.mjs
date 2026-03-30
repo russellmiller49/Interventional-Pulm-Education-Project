@@ -49,6 +49,10 @@ const embeddedCourseSecurityHeaders = securityHeaders.map((header) => {
     return {
       key: header.key,
       value: csp
+        .replace(
+          "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
+          "connect-src 'self' data: https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
+        )
         .replace("style-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com")
         .replace("font-src 'self' https://cdn.scite.ai", "font-src 'self' https://cdn.scite.ai https://fonts.gstatic.com data:"),
     }

@@ -332,11 +332,15 @@ Possible causes:
 - Wrong iframe URL
 - `X-Frame-Options` too strict
 - CSP blocking fonts or scripts
+- CSP blocking `data:` WebAssembly fetches used by the 3D viewer
+- `.gitignore` excluding synced `.mp4` files so Railway deploys without videos
 
 Checks:
 
 - Confirm the iframe points to `/socal-ebus-course/app/index.html`
 - Check `next.config.mjs`
+- If the 3D viewer says `Failed to fetch`, confirm the embedded app CSP allows `data:` in `connect-src`
+- If videos fail only after deployment, confirm `public/socal-ebus-course/app/**/*.mp4` is not being ignored
 - Restart the dev server after config changes
 
 ### Gotcha 5: Type-check fails with `contentlayer/generated` missing
@@ -402,6 +406,7 @@ npm run type-check
 - The iframe loads
 - The dedicated view opens
 - Course images, videos, and 3D assets load
+- Synced `.mp4` files are present in the main repo before you push
 
 ## Commit Strategy
 

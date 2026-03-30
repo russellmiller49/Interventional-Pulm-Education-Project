@@ -129,6 +129,7 @@ Thumbs.db
 
 # Large video files
 *.mp4
+!public/socal-ebus-course/app/**/*.mp4
 *.avi
 *.mov
 *.wmv
