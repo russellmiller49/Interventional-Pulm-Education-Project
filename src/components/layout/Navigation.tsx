@@ -16,6 +16,11 @@ import { ModeToggle } from './mode-toggle'
 import { SearchShortcut } from './SearchShortcut'
 
 const navigationItems: NavItem[] = [
+  {
+    title: 'SoCal EBUS Course',
+    href: '/socal-ebus-course',
+    description: 'Fellow prep with lectures, stations, knobology, and 3D anatomy',
+  },
   { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },

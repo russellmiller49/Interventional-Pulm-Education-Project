@@ -44,6 +44,26 @@ const securityHeaders = [
   },
 ]
 
+const embeddedCourseSecurityHeaders = securityHeaders.map((header) => {
+  if (header.key === 'Content-Security-Policy') {
+    return {
+      key: header.key,
+      value: csp
+        .replace("style-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com")
+        .replace("font-src 'self' https://cdn.scite.ai", "font-src 'self' https://cdn.scite.ai https://fonts.gstatic.com data:"),
+    }
+  }
+
+  if (header.key === 'X-Frame-Options') {
+    return {
+      key: header.key,
+      value: 'SAMEORIGIN',
+    }
+  }
+
+  return header
+})
+
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
@@ -73,8 +93,13 @@ const nextConfig = {
     return [
       {
         // Apply security headers to HTML pages only, not static assets
-        source: '/((?!fluoroview).*)',
+        source: '/((?!fluoroview|socal-ebus-course/app).*)',
         headers: securityHeaders,
+      },
+      {
+        // Allow the bundled SoCal EBUS app to render inside the same-site iframe.
+        source: '/socal-ebus-course/app/:path*',
+        headers: embeddedCourseSecurityHeaders,
       },
       {
         // Apply relaxed CSP to fluoroview pages for WebGL/WebAssembly
@@ -122,6 +147,20 @@ const nextConfig = {
             value: 'public, max-age=31536000, immutable',
           },
         ],
+      },
+    ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/socal-ebus-course/app',
+        destination: '/socal-ebus-course/app/index.html',
+        permanent: false,
+      },
+      {
+        source: '/socal-ebus-course/app/',
+        destination: '/socal-ebus-course/app/index.html',
+        permanent: false,
       },
     ]
   },

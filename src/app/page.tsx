@@ -93,6 +93,9 @@ export default function HomePage() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild variant="secondary" className="rounded-full px-6">
+                  <Link href="/socal-ebus-course">SoCal EBUS Course</Link>
+                </Button>
+                <Button asChild variant="secondary" className="rounded-full px-6">
                   <Link href="/board-prep">Board Review Library</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-full px-6">
