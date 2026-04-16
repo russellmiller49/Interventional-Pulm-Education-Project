@@ -1,20 +1,11 @@
-import type { StorybookConfig } from '@storybook/nextjs'
+import type { StorybookConfig } from '@storybook/nextjs-vite'
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.stories.@(ts|tsx)', '../stories/**/*.stories.@(ts|tsx)'],
-  addons: [
-    '@storybook/addon-essentials',
-    '@storybook/addon-links',
-    '@storybook/addon-a11y',
-    '@storybook/addon-interactions',
-  ],
+  addons: ['@storybook/addon-docs', '@storybook/addon-links', '@storybook/addon-a11y'],
   framework: {
-    name: '@storybook/nextjs',
-    options: {
-      builder: {
-        useSWC: true,
-      },
-    },
+    name: '@storybook/nextjs-vite',
+    options: {},
   },
   docs: {
     autodocs: 'tag',

@@ -1,16 +1,15 @@
-import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 
+import { XRViewerDynamic } from '@/components/XRViewerDynamic'
 import { getModel } from '@/data/models'
 
-const XRViewer = dynamic(() => import('@/components/XRViewer'), { ssr: false })
-
 type XRPageProps = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
-export default function XRPage({ params }: XRPageProps) {
-  const model = getModel(params.slug)
+export default async function XRPage({ params }: XRPageProps) {
+  const { slug } = await params
+  const model = getModel(slug)
 
   if (!model) {
     return notFound()
@@ -18,7 +17,7 @@ export default function XRPage({ params }: XRPageProps) {
 
   return (
     <main className="min-h-dvh bg-black text-white">
-      <XRViewer
+      <XRViewerDynamic
         glbSrc={model.glbSrc}
         usdzSrc={model.usdzSrc}
         title={`Enter Spatial: ${model.name}`}

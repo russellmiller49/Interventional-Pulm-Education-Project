@@ -12,7 +12,7 @@ import { formatDuration } from '@/lib/format-duration'
 import { loadBoardReviewChapter, listBoardReviewChapters } from '@/lib/board-review-loader'
 
 interface BoardPrepModulePageProps {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export function generateStaticParams() {
@@ -20,7 +20,8 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: BoardPrepModulePageProps): Promise<Metadata> {
-  const chapter = await loadBoardReviewChapter(params.slug)
+  const { slug } = await params
+  const chapter = await loadBoardReviewChapter(slug)
 
   if (!chapter) {
     return {
@@ -35,7 +36,8 @@ export async function generateMetadata({ params }: BoardPrepModulePageProps): Pr
 }
 
 export default async function BoardPrepModulePage({ params }: BoardPrepModulePageProps) {
-  const chapter = await loadBoardReviewChapter(params.slug)
+  const { slug } = await params
+  const chapter = await loadBoardReviewChapter(slug)
 
   if (!chapter) {
     notFound()

@@ -1,4 +1,4 @@
-reatment Options for Early‑Stage Lung Cancer
+Treatment Options for Early‑Stage Lung Cancer
 
 Target audience: IP fellows and practicing pulmonologists
 

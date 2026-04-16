@@ -136,7 +136,7 @@ IMPORTANT_FILES = [
     "tsconfig.json",
     "tailwind.config.ts",
     "contentlayer.config.ts",
-    "jest.config.ts",
+    "jest.config.cjs",
     "jest.setup.ts",
     "server.js",
     ".gitignore",

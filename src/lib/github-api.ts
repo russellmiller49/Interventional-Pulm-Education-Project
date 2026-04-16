@@ -2,12 +2,7 @@ import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
 import { env } from '@/lib/env'
-import type {
-  GitHubContributor,
-  GitHubIssue,
-  GitHubRelease,
-  GitHubRepoStats,
-} from '@/lib/types'
+import type { GitHubContributor, GitHubIssue, GitHubRelease, GitHubRepoStats } from '@/lib/types'
 
 type RepoKey = `${string}/${string}`
 
@@ -60,7 +55,7 @@ const contributorSchema = z.array(
     avatar_url: z.string().url(),
     html_url: z.string().url(),
     type: z.string(),
-  })
+  }),
 )
 
 const issueSchema = z.array(
@@ -85,9 +80,9 @@ const issueSchema = z.array(
         name: z.string(),
         color: z.string(),
         description: z.string().nullable(),
-      })
+      }),
     ),
-  })
+  }),
 )
 
 const releaseSchema = z.object({
@@ -319,7 +314,7 @@ interface RepoOptions {
 export async function getRepo(
   owner: string,
   repo: string,
-  options?: RepoOptions
+  options?: RepoOptions,
 ): Promise<GitHubApiResult<GitHubRepoStats>> {
   const tag: FetchTag = `github:repo:${owner}/${repo}`
   const result = await githubFetch({
@@ -366,7 +361,7 @@ interface ContributorsOptions {
 export async function getContributors(
   owner: string,
   repo: string,
-  options?: ContributorsOptions
+  options?: ContributorsOptions,
 ): Promise<GitHubApiResult<GitHubContributor[]>> {
   const tag: FetchTag = `github:contributors:${owner}/${repo}`
   const perPage = Math.max(1, Math.min(options?.perPage ?? 30, 100))
@@ -414,7 +409,7 @@ export async function getIssuesByLabel(
   owner: string,
   repo: string,
   label: string,
-  options?: IssuesOptions
+  options?: IssuesOptions,
 ): Promise<GitHubApiResult<GitHubIssue[]>> {
   const tag: FetchTag = `github:issues:${owner}/${repo}`
   const perPage = Math.max(1, Math.min(options?.perPage ?? 20, 100))
@@ -462,7 +457,7 @@ interface ReleaseOptions {
 export async function getLatestRelease(
   owner: string,
   repo: string,
-  options?: ReleaseOptions
+  options?: ReleaseOptions,
 ): Promise<GitHubApiResult<GitHubRelease | null>> {
   const tag: FetchTag = `github:release:${owner}/${repo}`
   const result = await githubFetch({
@@ -498,8 +493,9 @@ export async function getLatestRelease(
 }
 
 export function revalidateRepoData(owner: string, repo: string) {
-  revalidateTag(`github:repo:${owner}/${repo}`)
-  revalidateTag(`github:contributors:${owner}/${repo}`)
-  revalidateTag(`github:issues:${owner}/${repo}`)
-  revalidateTag(`github:release:${owner}/${repo}`)
+  const profile = 'default' as const
+  revalidateTag(`github:repo:${owner}/${repo}`, profile)
+  revalidateTag(`github:contributors:${owner}/${repo}`, profile)
+  revalidateTag(`github:issues:${owner}/${repo}`, profile)
+  revalidateTag(`github:release:${owner}/${repo}`, profile)
 }

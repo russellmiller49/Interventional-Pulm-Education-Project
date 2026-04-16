@@ -1,7 +1,6 @@
 'use client'
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { Fragment } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -50,16 +49,16 @@ export const CalloutVariants: Story = {
   render: () => (
     <div className="space-y-4">
       <Callout title="Open education license">
-        All simulation assets are shared under CC-BY so you can remix and translate for your own training
-        programs.
+        All simulation assets are shared under CC-BY so you can remix and translate for your own
+        training programs.
       </Callout>
       <Callout variant="success" title="Contributors matched">
         12 clinicians have volunteered for the upcoming navigation lab. Coordinate scheduling in the
         contributors area.
       </Callout>
       <Callout variant="warning" title="Checklist update pending">
-        Review the new sedation protocol before your next case. The workflow has been updated to include
-        bedside ultrasound verification.
+        Review the new sedation protocol before your next case. The workflow has been updated to
+        include bedside ultrasound verification.
       </Callout>
     </div>
   ),
