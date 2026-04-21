@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { CourseEmbedShell } from '@/components/socal-ebus/CourseEmbedShell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
@@ -65,13 +66,7 @@ export default function SoCalEbusCoursePage() {
       </section>
 
       <section className="container">
-        <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-sm">
-          <iframe
-            title="SoCal EBUS Course"
-            src={embeddedCourseAppPath}
-            className="h-[calc(100vh-12rem)] min-h-[780px] w-full bg-white"
-          />
-        </div>
+        <CourseEmbedShell />
       </section>
     </div>
   )

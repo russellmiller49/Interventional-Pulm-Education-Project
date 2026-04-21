@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
+import { resolvePostAuthRedirectPath } from '@/lib/supabase/auth-redirect'
+
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
-  const redirectTarget = new URL('/dashboard', url.origin)
+  const redirectTarget = new URL(
+    resolvePostAuthRedirectPath(url.searchParams.get('next')),
+    url.origin,
+  )
   const response = NextResponse.redirect(redirectTarget)
   type CookieOptions = Parameters<typeof response.cookies.set>[2]
 
