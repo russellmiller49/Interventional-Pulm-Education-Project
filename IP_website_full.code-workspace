@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../proc_suite"
+		},
+		{
+			"path": "../EBUS_course"
+		},
+		{
+			"path": "../POCUS-review"
+		}
+	],
+	"settings": {}
+}

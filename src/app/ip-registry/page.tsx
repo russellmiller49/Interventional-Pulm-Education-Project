@@ -1,3 +1,4 @@
+import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
@@ -40,6 +41,6 @@ export default function IpRegistryPage() {
     )
   }
 
-  const target = `${stripTrailingSlash(baseUrl)}/ui/`
+  const target = `${stripTrailingSlash(baseUrl)}/ui/` as Route
   redirect(target)
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import type { Meta, StoryObj } from '@storybook/react'
-import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,7 +42,8 @@ export const DialogExample: Story = {
         <DialogHeader>
           <DialogTitle>Request a wet lab slot</DialogTitle>
           <DialogDescription>
-            Choose preferred dates and include required equipment so the operations team can prepare.
+            Choose preferred dates and include required equipment so the operations team can
+            prepare.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -83,7 +83,9 @@ export const SheetExample: Story = {
         <div className="mt-4 space-y-4 text-sm">
           <div>
             <p className="font-semibold text-foreground">Next milestone</p>
-            <p className="text-muted-foreground">Complete 3 supervised therapeutic interventions.</p>
+            <p className="text-muted-foreground">
+              Complete 3 supervised therapeutic interventions.
+            </p>
           </div>
           <div>
             <p className="font-semibold text-foreground">Recommended resources</p>

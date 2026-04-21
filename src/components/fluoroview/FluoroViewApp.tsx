@@ -69,7 +69,7 @@ export function FluoroViewApp() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const labelLayerRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<FluoroRenderer | null>(null)
-  const animationFrameRef = useRef<number>()
+  const animationFrameRef = useRef<number | undefined>(undefined)
   const needsRenderRef = useRef(false)
   const stateRef = useRef<AppState | null>(null)
 

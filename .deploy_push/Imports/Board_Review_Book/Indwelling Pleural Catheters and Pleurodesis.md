@@ -1,4 +1,4 @@
-ndwelling Pleural Catheters and Pleurodesis
+Indwelling Pleural Catheters and Pleurodesis
 Exam Mapping & Scope
 
 This chapter targets the AABIP IP Board domains on pleural disease: malignant and non‑malignant pleural effusions, tunneled/indwelling pleural catheters (IPCs), medical pleurodesis (talc slurry and poudrage), outpatient pathways, infection recognition/management, intrapleural enzyme therapy, and complications.

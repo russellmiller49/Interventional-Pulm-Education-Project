@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { HTMLAttributes, ReactNode } from 'react'
+import type { HTMLAttributes, ReactElement, ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -24,7 +24,7 @@ interface MarkdownCodeProps extends HTMLAttributes<HTMLElement> {
 const markdownComponents: Components = {
   pre: (props) => {
     // Check if this pre contains a code block with mermaid
-    const code = props.children as React.ReactElement
+    const code = props.children as ReactElement<{ className?: string; children?: ReactNode }>
     if (code?.props?.className?.includes('language-mermaid')) {
       // Extract raw text content, handling both string and array of strings
       let content = code.props.children

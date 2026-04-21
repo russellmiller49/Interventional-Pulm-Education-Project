@@ -70,8 +70,8 @@ const embeddedCourseSecurityHeaders = securityHeaders.map((header) => {
 
 const nextConfig = {
   reactStrictMode: true,
+  typedRoutes: true,
   experimental: {
-    typedRoutes: true,
     optimizePackageImports: [
       '@react-three/drei',
       '@react-three/fiber',
@@ -79,7 +79,14 @@ const nextConfig = {
       'lucide-react',
     ],
   },
+  turbopack: {
+    resolveAlias: {
+      '@fluoroview': path.resolve(process.cwd(), 'fluoro-viewer/src'),
+    },
+    resolveExtensions: ['.js', '.ts', '.tsx', '.json'],
+  },
   images: {
+    maximumDiskCacheSize: 50 * 1024 * 1024,
     remotePatterns: [
       {
         protocol: 'https',

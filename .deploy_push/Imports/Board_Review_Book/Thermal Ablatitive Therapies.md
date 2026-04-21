@@ -1,4 +1,4 @@
-Thermal Ablatitive Therapies
+Thermal Ablative Therapies
 
 Target audience: IP fellows and practicing pulmonologists
 

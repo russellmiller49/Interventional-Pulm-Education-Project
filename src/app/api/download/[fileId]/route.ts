@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 
-interface DownloadRouteParams {
-  params: { fileId: string }
-}
-
-export async function GET(_: Request, { params }: DownloadRouteParams) {
+export async function GET(_: Request, context: { params: Promise<{ fileId: string }> }) {
+  const params = await context.params
   return NextResponse.json({
     status: 'pending',
     fileId: params.fileId,

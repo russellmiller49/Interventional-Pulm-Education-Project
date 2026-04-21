@@ -8,7 +8,16 @@ const { loadEnvConfig } = nextEnv
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(scriptDir, '..')
-const sourceAppDir = resolve(projectRoot, '../EBUS-course/apps/web')
+const sourceAppCandidates = [
+  resolve(projectRoot, '../EBUS_course/apps/web'),
+  resolve(projectRoot, '../EBUS-course/apps/web'),
+]
+const sourceAppDir = sourceAppCandidates.find((candidate) => existsSync(candidate))
+
+if (!sourceAppDir) {
+  throw new Error(`Source app not found. Checked: ${sourceAppCandidates.join(', ')}`)
+}
+
 const sourceDistDir = resolve(sourceAppDir, 'dist')
 const destinationDir = resolve(projectRoot, 'public/socal-ebus-course/app')
 

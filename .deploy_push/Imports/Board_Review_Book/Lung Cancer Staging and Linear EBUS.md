@@ -401,8 +401,8 @@ Question Bank (MCQs)
     E. A negative PET/CT rules out mediastinal disease definitively
     Answer: B. PET/CT has better nodal performance than CT but limited brain sensitivity and false positives.
 
-12. During 4R sampling, you encounter a hyperechoic center with anechoic peripheral vessels. Best next step?
-    A. Sample the hyperechoic center only
+12. During 4R sampling, you encounter a hypeoechoic center with anechoic peripheral vessels. Best next step?
+    A. Sample the hyperochoic center only
     B. Use Doppler and redirect to viable rim, avoiding vessels
     C. Increase suction and continue
     D. Abort staging
@@ -471,7 +471,7 @@ TBNA: Transbronchial needle aspiration
 
 VPI: Visceral pleural invasion
 
-References (AMA Style; from provided materials only)
+References
 
 Detterbeck FC, Woodard GA, Bader AS, et al. The proposed ninth edition TNM classification of lung cancer. Chest. 2024;166(4):882‑895.
 

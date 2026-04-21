@@ -13,10 +13,8 @@ interface BoardReviewCatalogProps {
   chapters: BoardReviewChapterMeta[]
 }
 
-const allOption = { value: 'all', label: 'All domains' } as const
-
 export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
-  const [category, setCategory] = useState<typeof allOption.value | BoardReviewChapterMeta['category']>('all')
+  const [category, setCategory] = useState<'all' | BoardReviewChapterMeta['category']>('all')
   const [query, setQuery] = useState('')
 
   const categories = useMemo(() => {
@@ -72,7 +70,7 @@ export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
             variant={category === 'all' ? 'default' : 'outline'}
             className={cn(
               'rounded-full px-4 py-1 text-sm',
-              category === 'all' ? 'shadow-sm' : 'border-border/60'
+              category === 'all' ? 'shadow-sm' : 'border-border/60',
             )}
             onClick={() => setCategory('all')}
           >
@@ -85,7 +83,7 @@ export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
               variant={category === item.value ? 'default' : 'outline'}
               className={cn(
                 'rounded-full px-4 py-1 text-sm',
-                category === item.value ? 'shadow-sm' : 'border-border/60'
+                category === item.value ? 'shadow-sm' : 'border-border/60',
               )}
               onClick={() => setCategory(item.value as BoardReviewChapterMeta['category'])}
             >
@@ -119,4 +117,3 @@ export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
     </div>
   )
 }
-

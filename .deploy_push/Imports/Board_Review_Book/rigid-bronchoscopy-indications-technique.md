@@ -246,7 +246,7 @@ B. Prior cervical fusion
 C. Cervical spine instability
 D. Massive hemoptysis
 E. ASA III
-Answer: C. Absolute contraindication.
+Answer: C. Cervical spine instability is an absolute contraindication.
 
 During RB intubation, which maneuver is correct?
 A. Bevel kept parallel to the cords when passing them
