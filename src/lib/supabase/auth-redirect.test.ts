@@ -1,4 +1,8 @@
-import { buildSignInRedirectUrl, resolvePostAuthRedirectPath } from './auth-redirect'
+import {
+  buildSignInRedirectUrl,
+  resolvePostAuthRedirectPath,
+  resolveSharedAuthCallbackRedirect,
+} from './auth-redirect'
 
 describe('resolvePostAuthRedirectPath', () => {
   it('returns the provided internal path when it is safe', () => {
@@ -19,5 +23,60 @@ describe('buildSignInRedirectUrl', () => {
     expect(
       buildSignInRedirectUrl('https://interventionalpulm.org', '/socal-ebus-course?mode=sync'),
     ).toBe('https://interventionalpulm.org/auth/callback?next=%2Fsocal-ebus-course%3Fmode%3Dsync')
+  })
+})
+
+describe('resolveSharedAuthCallbackRedirect', () => {
+  it('routes the SoCal EBUS recovery hash to the embedded app and infers reset mode', () => {
+    expect(
+      resolveSharedAuthCallbackRedirect(
+        '?app=socal-ebus-course',
+        '#access_token=token.value&refresh_token=refresh.value&type=recovery',
+      ),
+    ).toEqual({
+      status: 'ok',
+      app: 'socal-ebus-course',
+      destination:
+        '/socal-ebus-course/app/?authMode=reset-password#access_token=token.value&refresh_token=refresh.value&type=recovery',
+    })
+  })
+
+  it('preserves query token segments without forwarding the central app parameter', () => {
+    expect(
+      resolveSharedAuthCallbackRedirect(
+        '?app=socal-ebus-course&access_token=abc%2F123&refresh_token=def%2B456&type=recovery',
+        '',
+      ),
+    ).toEqual({
+      status: 'ok',
+      app: 'socal-ebus-course',
+      destination:
+        '/socal-ebus-course/app/?access_token=abc%2F123&refresh_token=def%2B456&type=recovery&authMode=reset-password',
+    })
+  })
+
+  it('preserves an explicit authMode parameter', () => {
+    expect(
+      resolveSharedAuthCallbackRedirect(
+        '?authMode=reset-password&app=socal-ebus-course',
+        '#type=recovery&access_token=token',
+      ),
+    ).toEqual({
+      status: 'ok',
+      app: 'socal-ebus-course',
+      destination:
+        '/socal-ebus-course/app/?authMode=reset-password#type=recovery&access_token=token',
+    })
+  })
+
+  it('rejects missing or unknown application targets', () => {
+    expect(resolveSharedAuthCallbackRedirect('', '#type=recovery')).toEqual({
+      status: 'error',
+      reason: 'missing-app',
+    })
+    expect(resolveSharedAuthCallbackRedirect('?app=unknown', '#type=recovery')).toEqual({
+      status: 'error',
+      reason: 'unknown-app',
+    })
   })
 })

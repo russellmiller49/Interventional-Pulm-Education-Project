@@ -272,6 +272,44 @@ These changes help with:
 - Correct pipeline paths
 - Embedded routing behavior
 
+### 7. Shared Supabase auth callbacks are routed through the main site
+
+The shared Supabase project should keep its Site URL set to:
+
+```text
+https://interventionalpulm.org
+```
+
+For SoCal EBUS password recovery, use this redirect URL:
+
+```text
+https://interventionalpulm.org/auth/callback?app=socal-ebus-course&authMode=reset-password
+```
+
+The main site owns the central callback at:
+
+```text
+src/app/auth/callback/route.ts
+```
+
+That callback only routes to apps listed in:
+
+```text
+src/lib/supabase/auth-redirect.ts
+```
+
+It preserves Supabase hash and query tokens in the browser and forwards recovery links to:
+
+```text
+/socal-ebus-course/app/?authMode=reset-password#access_token=...
+```
+
+If Supabase requires a wildcard allow-list entry for query-bearing callbacks, allow:
+
+```text
+https://interventionalpulm.org/auth/callback**
+```
+
 ## Common Gotchas
 
 ### Gotcha 1: Editing generated files

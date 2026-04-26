@@ -161,17 +161,15 @@ const nextConfig = {
       },
     ]
   },
-  async redirects() {
+  async rewrites() {
     return [
       {
         source: '/socal-ebus-course/app',
         destination: '/socal-ebus-course/app/index.html',
-        permanent: false,
       },
       {
         source: '/socal-ebus-course/app/',
         destination: '/socal-ebus-course/app/index.html',
-        permanent: false,
       },
     ]
   },
