@@ -52,7 +52,19 @@ export default function SignInModal({ onClose }: SignInModalProps) {
     setError(undefined)
     setInfoMessage(undefined)
 
-    const supabase = supabaseCookieBrowser()
+    let supabase: ReturnType<typeof supabaseCookieBrowser>
+
+    try {
+      supabase = supabaseCookieBrowser()
+    } catch (configError) {
+      setStatus('error')
+      setError(
+        configError instanceof Error
+          ? configError.message
+          : 'Sign-in is not available because Supabase public config is missing.',
+      )
+      return
+    }
 
     if (mode === 'sign-in') {
       const { error: signInError } = await supabase.auth.signInWithPassword({

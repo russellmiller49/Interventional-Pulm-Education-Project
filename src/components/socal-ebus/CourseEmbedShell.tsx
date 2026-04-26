@@ -7,13 +7,21 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   hasSupabaseBrowserConfig,
+  resetSupabaseBrowserClients,
   supabaseBrowser,
   supabaseCookieBrowser,
 } from '@/lib/supabase/browser'
+import { getSupabasePublicConfig, setSupabasePublicConfig } from '@/lib/supabase/config'
 
 const embeddedCourseAppPath = '/socal-ebus-course/app/index.html'
 
 type EmbedStatus = 'checking' | 'signed-in' | 'signed-out' | 'local-only' | 'error'
+
+interface RuntimeSupabaseConfigResponse {
+  anonKey: string | null
+  configured: boolean
+  url: string | null
+}
 
 function formatErrorMessage(error: unknown) {
   if (error instanceof Error) {
@@ -24,11 +32,10 @@ function formatErrorMessage(error: unknown) {
 }
 
 export function CourseEmbedShell() {
-  const [status, setStatus] = useState<EmbedStatus>(
-    hasSupabaseBrowserConfig() ? 'checking' : 'local-only',
-  )
+  const [status, setStatus] = useState<EmbedStatus>('checking')
   const [allowLocalOnly, setAllowLocalOnly] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
+  const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(hasSupabaseBrowserConfig())
   const [sessionEmail, setSessionEmail] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -102,25 +109,71 @@ export function CourseEmbedShell() {
   }, [])
 
   useEffect(() => {
-    if (!hasSupabaseBrowserConfig()) {
-      setStatus('local-only')
-      return
+    let isActive = true
+    let unsubscribe: (() => void) | undefined
+
+    async function initializeEmbeddedSessionBridge() {
+      let resolvedConfig = hasSupabaseBrowserConfig() ? getSupabasePublicConfig() : null
+
+      try {
+        const response = await fetch('/api/public/supabase-config', {
+          cache: 'no-store',
+        })
+
+        if (!response.ok) {
+          throw new Error(`Unable to load public Supabase config (${response.status}).`)
+        }
+
+        const runtimeConfig = (await response.json()) as RuntimeSupabaseConfigResponse
+
+        if (runtimeConfig.configured && runtimeConfig.url && runtimeConfig.anonKey) {
+          resolvedConfig = {
+            url: runtimeConfig.url,
+            anonKey: runtimeConfig.anonKey,
+          }
+        }
+      } catch (error) {
+        if (!resolvedConfig && isActive) {
+          setErrorMessage(formatErrorMessage(error))
+        }
+      }
+
+      if (!isActive) {
+        return
+      }
+
+      if (!resolvedConfig) {
+        setSupabasePublicConfig(null)
+        resetSupabaseBrowserClients()
+        setIsSupabaseConfigured(false)
+        setSessionEmail(null)
+        setStatus('local-only')
+        return
+      }
+
+      setSupabasePublicConfig(resolvedConfig)
+      resetSupabaseBrowserClients()
+      setIsSupabaseConfigured(true)
+      setStatus('checking')
+      setErrorMessage(null)
+
+      const cookieClient = supabaseCookieBrowser()
+      void bridgeEmbeddedSession(isActive)
+
+      const {
+        data: { subscription },
+      } = cookieClient.auth.onAuthStateChange(() => {
+        void bridgeEmbeddedSession(isActive)
+      })
+
+      unsubscribe = () => subscription.unsubscribe()
     }
 
-    let isActive = true
-    const cookieClient = supabaseCookieBrowser()
-
-    void bridgeEmbeddedSession()
-
-    const {
-      data: { subscription },
-    } = cookieClient.auth.onAuthStateChange(() => {
-      void bridgeEmbeddedSession(isActive)
-    })
+    void initializeEmbeddedSessionBridge()
 
     return () => {
       isActive = false
-      subscription.unsubscribe()
+      unsubscribe?.()
     }
   }, [bridgeEmbeddedSession])
 
@@ -203,16 +256,21 @@ export function CourseEmbedShell() {
         </div>
       ) : null}
 
-      {!hasSupabaseBrowserConfig() ? (
+      {!isSupabaseConfigured ? (
         <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs uppercase">
-              Offline-first mode
-            </Badge>
-            <p className="text-sm text-muted-foreground">
-              The embedded course is available, but the public Supabase env is not configured in
-              this deployment so learner activity will remain local-only.
-            </p>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs uppercase">
+                Offline-first mode
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                The embedded course is available, but the public Supabase env is not configured in
+                this deployment so learner activity will remain local-only.
+              </p>
+            </div>
+            {errorMessage ? (
+              <p className="text-sm text-amber-700 dark:text-amber-300">{errorMessage}</p>
+            ) : null}
           </div>
         </div>
       ) : null}
