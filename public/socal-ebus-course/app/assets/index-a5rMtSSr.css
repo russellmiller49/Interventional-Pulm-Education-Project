@@ -1354,8 +1354,7 @@ iframe {
   height: 100%;
   z-index: 1;
 }
-.station-map__quiz-scrim,
-.station-map__quiz-masks {
+.station-map__quiz-scrim {
   position: absolute;
   top: 0;
   right: 0;
@@ -1367,20 +1366,6 @@ iframe {
   background:
     radial-gradient(circle at center, #07111d14, #07111d38),
     linear-gradient(180deg, #07111d14, #07111d29);
-}
-.station-map__quiz-masks {
-  z-index: 2;
-}
-.station-map__quiz-mask {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-  background: #07111d2e;
-  -webkit-backdrop-filter: blur(7px) brightness(0.66);
-  backdrop-filter: blur(7px) brightness(0.66);
-  box-shadow:
-    0 0 0 1px #ffffff0a,
-    0 8px 18px #0000002e;
 }
 .station-map__connections line {
   stroke: #ebf1f547;
