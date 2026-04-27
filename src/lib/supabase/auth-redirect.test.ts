@@ -37,7 +37,7 @@ describe('resolveSharedAuthCallbackRedirect', () => {
       status: 'ok',
       app: 'socal-ebus-course',
       destination:
-        '/socal-ebus-course/app/#/auth?mode=reset-password&authMode=reset-password&access_token=token.value&refresh_token=refresh.value&type=recovery',
+        '/socal-ebus-course/app?authCallback=1#/auth?mode=reset-password&authMode=reset-password&access_token=token.value&refresh_token=refresh.value&type=recovery',
     })
   })
 
@@ -51,7 +51,7 @@ describe('resolveSharedAuthCallbackRedirect', () => {
       status: 'ok',
       app: 'socal-ebus-course',
       destination:
-        '/socal-ebus-course/app/#/auth?mode=reset-password&authMode=reset-password&access_token=abc%2F123&refresh_token=def%2B456&type=recovery',
+        '/socal-ebus-course/app?authCallback=1#/auth?mode=reset-password&authMode=reset-password&access_token=abc%2F123&refresh_token=def%2B456&type=recovery',
     })
   })
 
@@ -65,7 +65,7 @@ describe('resolveSharedAuthCallbackRedirect', () => {
       status: 'ok',
       app: 'socal-ebus-course',
       destination:
-        '/socal-ebus-course/app/#/auth?mode=reset-password&authMode=reset-password&type=recovery&access_token=token',
+        '/socal-ebus-course/app?authCallback=1#/auth?mode=reset-password&authMode=reset-password&type=recovery&access_token=token',
     })
   })
 

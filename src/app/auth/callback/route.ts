@@ -163,8 +163,12 @@ function renderSharedAuthCallbackPage() {
 
         hashRouteSegments.push(...forwardedSegments);
 
+        const authTargetPath = hashRouteSegments.length
+          ? targetPath + (targetPath.includes('?') ? '&' : '?') + 'authCallback=1'
+          : targetPath;
+
         window.location.replace(
-          hashRouteSegments.length ? targetPath + '#/auth?' + hashRouteSegments.join('&') : targetPath,
+          hashRouteSegments.length ? authTargetPath + '#/auth?' + hashRouteSegments.join('&') : targetPath,
         );
       })();
     </script>

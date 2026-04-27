@@ -1,7 +1,7 @@
 const DEFAULT_SIGN_IN_REDIRECT_PATH = '/dashboard'
 
 export const SHARED_AUTH_CALLBACK_TARGETS = {
-  'socal-ebus-course': '/socal-ebus-course/app/',
+  'socal-ebus-course': '/socal-ebus-course/app',
 } as const
 
 type SharedAuthCallbackApp = keyof typeof SHARED_AUTH_CALLBACK_TARGETS
@@ -134,8 +134,11 @@ export function resolveSharedAuthCallbackRedirect(
     ...forwardedSegments,
   ]
 
+  const authDestinationPath = hashRouteSegments.length
+    ? `${destinationPath}${destinationPath.includes('?') ? '&' : '?'}authCallback=1`
+    : destinationPath
   const destination = hashRouteSegments.length
-    ? `${destinationPath}#/auth?${hashRouteSegments.join('&')}`
+    ? `${authDestinationPath}#/auth?${hashRouteSegments.join('&')}`
     : destinationPath
 
   return {
