@@ -18210,7 +18210,7 @@ class GW {
         },
       })),
         nf(async () => {
-          const { default: e } = await import('./browser-9HWbnziZ.js').then((n) => n.b)
+          const { default: e } = await import('./browser-BNT2Ay2Z.js').then((n) => n.b)
           return { default: e }
         }, []).then(({ default: e }) => {
           ;((this.conn = new e(this.endpointURL(), void 0, { headers: this.headers })),
@@ -21623,7 +21623,7 @@ function Kr() {
     ? null
     : tm ||
         ((tm = tQ(Lk(), Dk(), {
-          auth: { autoRefreshToken: !0, detectSessionInUrl: !0, persistSession: !0 },
+          auth: { autoRefreshToken: !0, detectSessionInUrl: !1, persistSession: !0 },
         })),
         tm)
 }
