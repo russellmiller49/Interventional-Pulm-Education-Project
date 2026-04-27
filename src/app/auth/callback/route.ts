@@ -108,6 +108,19 @@ function renderSharedAuthCallbackPage() {
           }
         }
 
+        function getHashSegments(rawHash) {
+          const hashBody = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
+
+          if (!hashBody) {
+            return [];
+          }
+
+          const queryStart = hashBody.indexOf('?');
+          const hashParams = queryStart === -1 ? hashBody : hashBody.slice(queryStart + 1);
+
+          return hashParams.split('&').filter(Boolean);
+        }
+
         const rawSearch = window.location.search.startsWith('?')
           ? window.location.search.slice(1)
           : window.location.search;
@@ -126,32 +139,32 @@ function renderSharedAuthCallbackPage() {
           return;
         }
 
+        const rawHash = window.location.hash.startsWith('#')
+          ? window.location.hash.slice(1)
+          : window.location.hash;
+        const isRecovery =
+          getParamValue(rawHash, 'type') === 'recovery' ||
+          getParamValue(rawSearch, 'type') === 'recovery';
+        const authMode = searchParams.get('authMode') || (isRecovery ? 'reset-password' : null);
         const segments = rawSearch ? rawSearch.split('&').filter(Boolean) : [];
-        const authModeSegment = segments.find((segment) => getSegmentKey(segment) === 'authMode');
-        const forwardedSegments = segments.filter((segment) => {
+        const forwardedSegments = segments.concat(getHashSegments(rawHash)).filter((segment) => {
           const key = getSegmentKey(segment);
           return key !== 'app' && key !== 'authMode';
         });
+        const hashRouteSegments = [];
 
-        if (authModeSegment) {
-          forwardedSegments.push(authModeSegment);
-        } else {
-          const rawHash = window.location.hash.startsWith('#')
-            ? window.location.hash.slice(1)
-            : window.location.hash;
-          const isRecovery =
-            getParamValue(rawHash, 'type') === 'recovery' ||
-            getParamValue(rawSearch, 'type') === 'recovery';
-
-          if (isRecovery) {
-            forwardedSegments.push('authMode=reset-password');
-          }
+        if (authMode === 'reset-password' || authMode === 'sign-in') {
+          hashRouteSegments.push('mode=' + authMode);
         }
 
+        if (authMode) {
+          hashRouteSegments.push('authMode=' + authMode);
+        }
+
+        hashRouteSegments.push(...forwardedSegments);
+
         window.location.replace(
-          targetPath +
-            (forwardedSegments.length ? '?' + forwardedSegments.join('&') : '') +
-            window.location.hash,
+          hashRouteSegments.length ? targetPath + '#/auth?' + hashRouteSegments.join('&') : targetPath,
         );
       })();
     </script>

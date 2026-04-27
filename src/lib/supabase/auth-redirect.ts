@@ -58,6 +58,20 @@ function getRawSearchSegments(rawSearch: string) {
   return normalizedSearch.split('&').filter(Boolean)
 }
 
+function getRawHashSegments(rawHash: string) {
+  const normalizedHash = normalizeRawHash(rawHash)
+  const hashBody = normalizedHash.startsWith('#') ? normalizedHash.slice(1) : normalizedHash
+
+  if (!hashBody) {
+    return []
+  }
+
+  const queryStart = hashBody.indexOf('?')
+  const hashParams = queryStart === -1 ? hashBody : hashBody.slice(queryStart + 1)
+
+  return hashParams.split('&').filter(Boolean)
+}
+
 function getRawSearchSegmentKey(segment: string) {
   const separatorIndex = segment.indexOf('=')
   const rawKey = separatorIndex === -1 ? segment : segment.slice(0, separatorIndex)
@@ -106,21 +120,27 @@ export function resolveSharedAuthCallbackRedirect(
   }
 
   const segments = getRawSearchSegments(rawSearch)
-  const authModeSegment = segments.find((segment) => getRawSearchSegmentKey(segment) === 'authMode')
-  const forwardedSegments = segments.filter((segment) => {
+  const hashSegments = getRawHashSegments(rawHash)
+  const authMode =
+    getSearchParam(rawSearch, 'authMode') ??
+    (hasRecoveryType(rawSearch, rawHash) ? 'reset-password' : null)
+  const forwardedSegments = [...segments, ...hashSegments].filter((segment) => {
     const key = getRawSearchSegmentKey(segment)
     return key !== 'app' && key !== 'authMode'
   })
+  const hashRouteSegments = [
+    ...(authMode === 'reset-password' || authMode === 'sign-in' ? [`mode=${authMode}`] : []),
+    ...(authMode ? [`authMode=${authMode}`] : []),
+    ...forwardedSegments,
+  ]
 
-  if (authModeSegment) {
-    forwardedSegments.push(authModeSegment)
-  } else if (hasRecoveryType(rawSearch, rawHash)) {
-    forwardedSegments.push('authMode=reset-password')
-  }
+  const destination = hashRouteSegments.length
+    ? `${destinationPath}#/auth?${hashRouteSegments.join('&')}`
+    : destinationPath
 
   return {
     status: 'ok',
     app: sharedApp,
-    destination: `${destinationPath}${forwardedSegments.length ? `?${forwardedSegments.join('&')}` : ''}${normalizeRawHash(rawHash)}`,
+    destination,
   }
 }
