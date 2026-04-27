@@ -10,7 +10,7 @@ const csp = [
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self'",
-  "media-src 'self' https://*.supabase.co https://*.storage.supabase.co blob:",
+  "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
