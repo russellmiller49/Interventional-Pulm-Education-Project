@@ -108,7 +108,7 @@
     "centerlines": "geometry/centerlines.json",
     "clean_models": [
       {
-        "asset": "models/simplified_sim_model.gltf",
+        "asset": "models/simplified_sim_model.glb",
         "coordinate_frame": "slicer_gltf_scene_units_aligned_to_web_axes",
         "key": "simplified_sim_model",
         "label": "Simplified simulator model",
@@ -384,7 +384,7 @@
     "mask_assets": "translucent point-cloud fallbacks for v1 browser performance",
     "navigation": "guided along exported centerline polylines with curated station snaps",
     "scope_model": "GLB bronchoscope tip presentation model aligned to the active probe pose.",
-    "simplified_model_trial": "Uses Simplified _sim_model.gltf for anatomy and mesh-derived point clouds. Station snap targets are updated from Simplified_point_list when markers are available."
+    "simplified_model_trial": "Uses Simplified _sim_model.gltf converted to GLB for anatomy and mesh-derived point clouds. Station snap targets are updated from Simplified_point_list when markers are available."
   },
   "presets": [
     {

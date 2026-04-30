@@ -18382,7 +18382,7 @@ class QH {
         },
       })),
         af(async () => {
-          const { default: e } = await import('./browser-_Z90j9v0.js').then((n) => n.b)
+          const { default: e } = await import('./browser-DumSdeO_.js').then((n) => n.b)
           return { default: e }
         }, []).then(({ default: e }) => {
           ;((this.conn = new e(this.endpointURL(), void 0, { headers: this.headers })),
@@ -22104,27 +22104,28 @@ function b$({ children: t }) {
       d(!1)
     }, []),
     g = H.useCallback(
-      async (C, b) => {
-        var I
-        const w = Yr()
-        if (!w) throw new Error('Supabase is not configured for this environment.')
-        const T = $M(C),
-          E = T.institutional_email,
-          { data: _, error: R } = await w.auth.signUp({
-            email: E,
-            password: b,
-            options: {
-              data: { ...T, must_set_password: !1, approval_status: 'pending' },
-              emailRedirectTo: WM('sign-in'),
-            },
-          })
-        if (R) throw R
-        ;(I = _.session) != null &&
-          I.user &&
+      async (C, b, w) => {
+        var N
+        const T = Yr()
+        if (!T) throw new Error('Supabase is not configured for this environment.')
+        const E = $M(b),
+          _ = C.trim().toLowerCase()
+        if (!_) throw new Error('Enter your login email.')
+        const { data: R, error: I } = await T.auth.signUp({
+          email: _,
+          password: w,
+          options: {
+            data: { ...E, must_set_password: !1, approval_status: 'pending' },
+            emailRedirectTo: WM('sign-in'),
+          },
+        })
+        if (I) throw I
+        ;(N = R.session) != null &&
+          N.user &&
           (await lm({
-            id: _.session.user.id,
-            email: _.session.user.email ?? E,
-            ...T,
+            id: R.session.user.id,
+            email: R.session.user.email ?? _,
+            ...E,
             last_sign_in_at: new Date().toISOString(),
             must_set_password: !1,
             onboarding_completed_at: new Date().toISOString(),
@@ -23950,6 +23951,10 @@ function v4({ onChange: t, values: e }) {
             type: 'email',
             value: e.institutionalEmail,
           }),
+          A.jsx('small', {
+            className: 'field__help',
+            children: 'Used for program records. It can match your login email.',
+          }),
         ],
       }),
       A.jsxs('label', {
@@ -24085,9 +24090,14 @@ function Q$() {
   }
   async function fe($) {
     $.preventDefault()
-    const Fe = y4(_)
-    if (Fe) {
-      F(Fe)
+    const Fe = m.trim(),
+      Se = y4(_)
+    if (!Fe) {
+      F('Enter your login email.')
+      return
+    }
+    if (Se) {
+      F(Se)
       return
     }
     if (x.length < 10) {
@@ -24096,11 +24106,11 @@ function Q$() {
     }
     ;(N(!0), F(null), U(null))
     try {
-      ;(await l(_, x),
+      ;(await l(Fe, _, x),
         U('Account created. Course leadership will approve access before the modules open.'),
         v(''))
-    } catch (Se) {
-      F(Se instanceof Error ? Se.message : 'Unable to create the learner account.')
+    } catch (ne) {
+      F(ne instanceof Error ? ne.message : 'Unable to create the learner account.')
     } finally {
       N(!1)
     }
@@ -24279,10 +24289,10 @@ function Q$() {
                       children: V
                         ? 'Use a new password for your learner account, then continue into the course workspace.'
                         : g === 'sign-up'
-                          ? 'Use your institutional email so course participation and progress stay tied to the correct training program.'
+                          ? 'Choose the email you will use to log in, then add the institutional email tied to your training program.'
                           : g === 'recover'
-                            ? 'Enter your account email and Supabase will send a recovery link.'
-                            : 'Use the email and password from your invite or the account you created for the course.',
+                            ? 'Enter your login email and Supabase will send a recovery link.'
+                            : 'Use the login email and password from your invite or the account you created for the course.',
                     }),
                     L ? A.jsx('p', { className: 'auth-card__message', children: L }) : null,
                     D ? A.jsx('p', { className: 'auth-card__error', children: D }) : null,
@@ -24322,7 +24332,7 @@ function Q$() {
                               A.jsxs('label', {
                                 className: 'field',
                                 children: [
-                                  A.jsx('span', { children: 'Account email' }),
+                                  A.jsx('span', { children: 'Login email' }),
                                   A.jsx('input', {
                                     disabled: !0,
                                     type: 'email',
@@ -24382,6 +24392,24 @@ function Q$() {
                             className: 'auth-form',
                             onSubmit: fe,
                             children: [
+                              A.jsxs('label', {
+                                className: 'field',
+                                children: [
+                                  A.jsx('span', { children: 'Login email' }),
+                                  A.jsx('input', {
+                                    autoComplete: 'email',
+                                    onChange: ($) => p($.target.value),
+                                    required: !0,
+                                    type: 'email',
+                                    value: m,
+                                  }),
+                                  A.jsx('small', {
+                                    className: 'field__help',
+                                    children:
+                                      'This can be the same as your institutional email, or a different address you prefer for sign in.',
+                                  }),
+                                ],
+                              }),
                               A.jsx(v4, { onChange: R, values: _ }),
                               A.jsxs('label', {
                                 className: 'field',
@@ -24423,7 +24451,7 @@ function Q$() {
                                 A.jsxs('label', {
                                   className: 'field',
                                   children: [
-                                    A.jsx('span', { children: 'Email' }),
+                                    A.jsx('span', { children: 'Login email' }),
                                     A.jsx('input', {
                                       autoComplete: 'email',
                                       onChange: ($) => p($.target.value),
@@ -24459,7 +24487,7 @@ function Q$() {
                                 A.jsxs('label', {
                                   className: 'field',
                                   children: [
-                                    A.jsx('span', { children: 'Email' }),
+                                    A.jsx('span', { children: 'Login email' }),
                                     A.jsx('input', {
                                       autoComplete: 'email',
                                       onChange: ($) => p($.target.value),
@@ -24882,9 +24910,15 @@ function sq() {
                                 children: [
                                   A.jsxs('div', {
                                     children: [
-                                      A.jsx('dt', { children: 'Email' }),
+                                      A.jsx('dt', { children: 'Login email' }),
+                                      A.jsx('dd', { children: w.email ?? 'Not provided' }),
+                                    ],
+                                  }),
+                                  A.jsxs('div', {
+                                    children: [
+                                      A.jsx('dt', { children: 'Institutional email' }),
                                       A.jsx('dd', {
-                                        children: w.email ?? w.institutionalEmail ?? 'Not provided',
+                                        children: w.institutionalEmail ?? 'Not provided',
                                       }),
                                     ],
                                   }),
@@ -25061,13 +25095,12 @@ function sq() {
         }),
       })
 }
-function oq(t, e) {
+function oq(t) {
   return {
     fullName: (t == null ? void 0 : t.fullName) ?? '',
     degree: (t == null ? void 0 : t.degree) ?? 'MD',
     institution: (t == null ? void 0 : t.institution) ?? '',
-    institutionalEmail:
-      (t == null ? void 0 : t.institutionalEmail) ?? (t == null ? void 0 : t.email) ?? e,
+    institutionalEmail: (t == null ? void 0 : t.institutionalEmail) ?? '',
     fellowshipYear: (t == null ? void 0 : t.fellowshipYear) ?? 'first',
     flexibleBronchoscopyCount: (t == null ? void 0 : t.flexibleBronchoscopyCount) ?? 0,
     ebusCount: (t == null ? void 0 : t.ebusCount) ?? 0,
@@ -25081,8 +25114,8 @@ function cq() {
     [l, d] = H.useState(null),
     [u, f] = H.useState(null)
   H.useEffect(() => {
-    s(oq(n, (a == null ? void 0 : a.email) ?? ''))
-  }, [n, a == null ? void 0 : a.email])
+    s(oq(n))
+  }, [n])
   async function h(g) {
     g.preventDefault()
     const y = y4(i)
@@ -25120,7 +25153,7 @@ function cq() {
               A.jsx('h2', { children: 'Learner profile' }),
               A.jsxs('p', {
                 children: [
-                  'Update your training profile for course tracking. Your sign-in email is managed by Supabase and remains',
+                  'Update your training profile for course tracking. Your login email is managed by Supabase and remains',
                   ' ',
                   (a == null ? void 0 : a.email) ?? 'your account email',
                   '.',
