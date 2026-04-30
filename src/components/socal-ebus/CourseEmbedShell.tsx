@@ -60,13 +60,14 @@ export function CourseEmbedShell() {
 
       if (!cookieSession) {
         if (localSession) {
-          const { error: signOutError } = await localStorageClient.auth.signOut({
-            scope: 'local',
-          })
-
-          if (signOutError) {
-            throw signOutError
+          if (!isActive) {
+            return
           }
+
+          setSessionEmail(localSession.user.email ?? null)
+          setStatus('signed-in')
+          setErrorMessage(null)
+          return
         }
 
         if (!isActive) {

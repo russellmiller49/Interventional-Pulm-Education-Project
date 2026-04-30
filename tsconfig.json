@@ -36,5 +36,5 @@
     ".contentlayer/generated",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "in-development", "fluoro-viewer/scripts"]
+  "exclude": ["node_modules", "in-development", "fluoro-viewer/scripts", "supabase/functions"]
 }
