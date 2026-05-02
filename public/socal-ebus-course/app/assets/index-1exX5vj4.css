@@ -158,9 +158,14 @@
 }
 .education-option-rationale--correct {
   border-color: #4ade8047;
+  background: #114a376b;
+}
+.education-option-rationale--incorrect {
+  border-color: #f472b642;
+  background: #5b1c2761;
 }
 .education-option-rationale--selected {
-  border-color: #f472b638;
+  border-color: #f472b65c;
 }
 @media (min-width: 900px) {
   .education-module {
