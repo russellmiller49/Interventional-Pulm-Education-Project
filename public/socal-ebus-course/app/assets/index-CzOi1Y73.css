@@ -167,6 +167,40 @@
 .education-option-rationale--selected {
   border-color: #f472b65c;
 }
+html[data-theme='light'] .education-card,
+html[data-theme='light'] .quiz-explanation-panel {
+  border-color: #46637e33;
+  border-left-color: var(--accent-cyan);
+  background: #ffffffe0;
+  color: var(--text);
+}
+html[data-theme='light'] .quiz-explanation-panel {
+  box-shadow: 0 16px 40px #4a66821f;
+}
+html[data-theme='light'] .quiz-explanation-panel--success {
+  border-color: #207a5b5c;
+  border-left-color: var(--accent-green);
+  background: #eef9f4f0;
+}
+html[data-theme='light'] .quiz-explanation-panel__answer {
+  border: 1px solid rgba(18, 110, 172, 0.14);
+  background: #126eac14;
+}
+html[data-theme='light'] .education-option-rationale {
+  border-color: #46637e2e;
+  background: #ffffffb8;
+}
+html[data-theme='light'] .education-option-rationale--correct {
+  border-color: #207a5b57;
+  background: #207a5b1a;
+}
+html[data-theme='light'] .education-option-rationale--incorrect {
+  border-color: #a7445552;
+  background: #a7445517;
+}
+html[data-theme='light'] .education-option-rationale--selected {
+  border-color: #a744557a;
+}
 @media (min-width: 900px) {
   .education-module {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -176,6 +210,7 @@
   }
 }
 .knobology-lab-notes {
+  align-self: stretch;
   display: grid;
   gap: 16px;
   max-height: clamp(250px, 36svh, 400px);
@@ -234,6 +269,13 @@
 }
 .knobology-rescue-panel .button-row {
   flex-wrap: wrap;
+}
+@media (min-width: 760px) {
+  .knobology-frame > .knobology-lab-notes {
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+  }
 }
 @media (max-width: 560px) {
   .knobology-lab-notes {
@@ -2904,6 +2946,10 @@ html[data-theme='light'] .flashcard {
   font-size: 1.02rem;
   line-height: 1.42;
 }
+.quiz-card--large-stem .quiz-card__header h2 {
+  font-size: clamp(1.22rem, 1.08rem + 0.55vw, 1.55rem);
+  line-height: 1.36;
+}
 .section-card--locked {
   opacity: 0.72;
 }
@@ -2956,10 +3002,47 @@ html[data-theme='light'] .choice-card--incorrect {
   background: linear-gradient(180deg, #08111d, #111b2b);
   aspect-ratio: 16 / 9;
 }
-.aabip-video-library__frame iframe {
+.aabip-video-library__preview,
+.aabip-video-library__thumbnail {
   width: 100%;
   height: 100%;
-  border: 0;
+}
+.aabip-video-library__preview {
+  position: relative;
+  display: block;
+  color: var(--text);
+}
+.aabip-video-library__preview:hover .aabip-video-library__thumbnail {
+  transform: scale(1.02);
+}
+.aabip-video-library__thumbnail {
+  display: block;
+  object-fit: cover;
+  transition:
+    filter 0.18s ease,
+    transform 0.18s ease;
+}
+.aabip-video-library__preview-overlay {
+  position: absolute;
+  inset: auto 18px 18px;
+  display: grid;
+  gap: 6px;
+  max-width: min(440px, calc(100% - 36px));
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(127, 189, 242, 0.24);
+  background: #08111dd6;
+  box-shadow: 0 18px 42px #00000047;
+}
+.aabip-video-library__preview-overlay strong {
+  font-family:
+    Space Mono,
+    monospace;
+  font-size: 0.82rem;
+  color: var(--accent-cyan);
+}
+.aabip-video-library__preview-overlay span {
+  color: var(--text);
 }
 .aabip-video-library__playlist-header {
   display: flex;
@@ -4485,11 +4568,17 @@ html[data-theme='light'] .choice-card--incorrect {
   }
   .knobology-workbench {
     grid-template-columns: minmax(300px, 1.02fr) minmax(320px, 0.98fr);
-    align-items: start;
+    align-items: stretch;
   }
   .knobology-frame,
   .knobology-console {
     min-height: 100%;
+  }
+  .knobology-frame {
+    align-content: stretch;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .knobology-console {
     align-content: start;
   }
   .case3d-layout {
