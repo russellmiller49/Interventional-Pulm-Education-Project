@@ -3423,7 +3423,8 @@ html[data-theme='light'] .choice-card--incorrect {
 .admin-answer-stack,
 .admin-answer-list,
 .admin-answer-row,
-.admin-answer-row dl {
+.admin-answer-row dl,
+.admin-survey-row {
   display: grid;
   gap: 10px;
 }
@@ -3453,18 +3454,24 @@ html[data-theme='light'] .choice-card--incorrect {
   color: var(--text-muted);
 }
 .admin-answer-panel p,
-.admin-answer-row p {
+.admin-answer-row p,
+.admin-survey-row p {
   margin: 0;
   color: var(--text-soft);
 }
 .admin-answer-list {
   margin-top: 12px;
 }
-.admin-answer-row {
+.admin-answer-row,
+.admin-survey-row {
   padding: 12px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(123, 163, 200, 0.12);
   background: #ffffff06;
+}
+.admin-survey-row strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
 }
 .admin-answer-row--correct {
   border-color: #8fe0c038;
@@ -3881,6 +3888,49 @@ html[data-theme='light'] .choice-card--incorrect {
     radial-gradient(circle at 78% 18%, rgba(127, 189, 242, 0.24), transparent 34%),
     linear-gradient(135deg, #0b1421fa, #07111df0);
   border-bottom: 1px solid rgba(123, 163, 200, 0.12);
+}
+.course-endorsement {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  width: min(100%, 760px);
+  overflow: hidden;
+  padding: 10px 20px 10px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(123, 163, 200, 0.2);
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 18px 46px #00000029;
+}
+.course-endorsement__seal {
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+.course-endorsement__seal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+}
+.course-endorsement p {
+  margin: 0;
+  color: #111827;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    sans-serif;
+  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.2rem);
+  line-height: 1.45;
+}
+html[data-theme='light'] .course-endorsement {
+  border-color: #46637e2e;
+  box-shadow: 0 16px 38px #4a668224;
 }
 .course-hero:before,
 .course-hero:after {
@@ -4375,6 +4425,62 @@ html[data-theme='light'] .choice-card--incorrect {
   color: var(--text);
   font-weight: 700;
 }
+.survey-fieldset__help,
+.survey-fieldset__error {
+  margin: -2px 0 4px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.survey-fieldset__error {
+  color: #ffb4a8;
+}
+.survey-scale {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(40px, 1fr));
+  gap: 8px;
+}
+.survey-scale__option {
+  min-width: 0;
+  padding: 0 8px;
+}
+.survey-scale__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.survey-rank-grid {
+  display: grid;
+  gap: 10px;
+}
+.survey-rank-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(92px, 112px);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(123, 163, 200, 0.12);
+  background: #ffffff09;
+}
+.survey-rank-row span {
+  line-height: 1.4;
+}
+.survey-rank-row select {
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(123, 163, 200, 0.18);
+  background: #ffffff0f;
+  color: var(--text);
+}
+.survey-inline-field,
+.survey-text-field {
+  margin-top: 4px;
+}
 .certificate-card {
   background:
     radial-gradient(circle at top right, rgba(143, 224, 192, 0.12), transparent 24%), #0c141fe6;
@@ -4612,6 +4718,10 @@ html[data-theme='light'] .choice-card--incorrect {
   .top-nav {
     display: none;
   }
+  .survey-scale {
+    grid-template-columns: repeat(6, minmax(40px, 1fr));
+  }
+  .survey-rank-row,
   .detail-card__ebus-facts-row {
     grid-template-columns: 1fr;
   }
@@ -4666,6 +4776,17 @@ html[data-theme='light'] .choice-card--incorrect {
   }
   .course-hero__logo {
     width: min(220px, 56vw);
+  }
+  .course-endorsement {
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
+  }
+  .course-endorsement__seal {
+    width: 72px;
+    height: 72px;
+  }
+  .course-endorsement p {
+    font-size: 0.94rem;
   }
   .course-hero__media-primary {
     min-height: 280px;
