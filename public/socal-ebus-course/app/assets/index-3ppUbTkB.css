@@ -3161,9 +3161,70 @@ html[data-theme='light'] .choice-card--incorrect {
 .auth-card {
   max-width: 720px;
 }
+.learner-access-box,
 .auth-form {
   display: grid;
   gap: 14px;
+}
+.learner-access-box > p {
+  margin: 0;
+}
+.learner-access-box__tabs,
+.learner-access-box__status,
+.welcome-step__heading {
+  display: flex;
+  gap: 14px;
+}
+.learner-access-box__tabs {
+  flex-wrap: wrap;
+}
+.learner-access-box__status {
+  align-items: center;
+  justify-content: space-between;
+}
+.learner-access-box__status strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.learner-access-box__status p {
+  margin: 0;
+}
+.welcome-step {
+  display: grid;
+  gap: 16px;
+}
+.welcome-step__heading {
+  align-items: flex-start;
+}
+.welcome-step__heading--standalone {
+  padding: 0 2px;
+}
+.welcome-step__heading h2 {
+  margin: 0;
+}
+.welcome-step__heading p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+}
+.welcome-step__number {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(127, 189, 242, 0.3);
+  background: #2d6ca338;
+  color: var(--accent-cyan);
+  font-family:
+    Space Mono,
+    monospace;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.welcome-step__actions {
+  padding: 0 2px;
 }
 .support-contact-list {
   display: flex;
@@ -4769,6 +4830,7 @@ html[data-theme='light'] .course-endorsement {
   .top-header__meta,
   .admin-dashboard__header,
   .admin-learner-card__header,
+  .learner-access-box__status,
   .lecture-card__actions,
   .course-assessment-card__heading,
   .section-card__heading,
