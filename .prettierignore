@@ -6,7 +6,7 @@ build
 *.log
 .env*
 .DS_Store
-
+public/socal-ebus-course/app
 
 
 
