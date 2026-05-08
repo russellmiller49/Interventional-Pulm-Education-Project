@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useState } from 'react'
 
+import { cn } from '@/lib/cn'
+
 type MermaidInstance = (typeof import('mermaid'))['default']
 
 let mermaidLoader: Promise<MermaidInstance> | null = null
@@ -12,37 +14,7 @@ async function getMermaid(): Promise<MermaidInstance> {
   }
 
   if (!mermaidLoader) {
-    mermaidLoader = import('mermaid').then(async ({ default: mermaid }) => {
-      const win = window as typeof window & { __mermaidInitialized?: boolean }
-
-      if (!win.__mermaidInitialized) {
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: 'loose',
-          theme: 'dark',
-          themeVariables: {
-            primaryColor: '#1d4ed8',
-            primaryTextColor: '#0f172a',
-            primaryBorderColor: '#2563eb',
-            lineColor: '#94a3b8',
-            secondaryColor: '#0f172a',
-            tertiaryColor: '#111827',
-            background: 'transparent',
-            clusterBkg: '#0f172a',
-            clusterBorder: '#1f2937',
-            nodeTextColor: '#e2e8f0',
-          },
-          flowchart: {
-            curve: 'basis',
-            htmlLabels: true,
-          },
-        })
-
-        win.__mermaidInitialized = true
-      }
-
-      return mermaid as unknown as MermaidInstance
-    })
+    mermaidLoader = import('mermaid').then(({ default: mermaid }) => mermaid as MermaidInstance)
   }
 
   return mermaidLoader
@@ -50,9 +22,10 @@ async function getMermaid(): Promise<MermaidInstance> {
 
 interface MermaidDiagramProps {
   chart: string
+  variant?: 'dark' | 'light'
 }
 
-export function MermaidDiagram({ chart }: MermaidDiagramProps) {
+export function MermaidDiagram({ chart, variant = 'dark' }: MermaidDiagramProps) {
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const id = useId().replace(/[:]/g, '')
@@ -69,6 +42,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
         // Remove <br/> and <br> tags that break Mermaid parsing
         normalizedChart = normalizedChart.replace(/<br\s*\/?>/gi, ' ')
 
+        mermaid.initialize(getMermaidConfig(variant))
         await mermaid.parse(normalizedChart)
         const { svg } = await mermaid.render(`mermaid-${id}`, normalizedChart)
 
@@ -89,10 +63,17 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
     return () => {
       cancelled = true
     }
-  }, [chart, id])
+  }, [chart, id, variant])
 
   return (
-    <div className="my-6 overflow-x-auto rounded-3xl border border-border/60 bg-background/90 p-5 text-sm text-muted-foreground shadow-sm">
+    <div
+      className={cn(
+        'my-6 overflow-x-auto rounded-2xl border p-5 text-sm shadow-sm',
+        variant === 'light'
+          ? 'border-slate-200 bg-white text-slate-600'
+          : 'border-border/60 bg-background/90 text-muted-foreground',
+      )}
+    >
       {error ? (
         <div>{error}</div>
       ) : svg ? (
@@ -102,6 +83,56 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
       )}
     </div>
   )
+}
+
+function getMermaidConfig(variant: 'dark' | 'light') {
+  if (variant === 'light') {
+    return {
+      startOnLoad: false,
+      securityLevel: 'loose',
+      theme: 'base',
+      themeVariables: {
+        primaryColor: '#e0f2fe',
+        primaryTextColor: '#0f172a',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#64748b',
+        secondaryColor: '#ecfdf5',
+        tertiaryColor: '#f8fafc',
+        background: 'transparent',
+        clusterBkg: '#f8fafc',
+        clusterBorder: '#cbd5e1',
+        nodeTextColor: '#0f172a',
+        fontFamily:
+          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      },
+      flowchart: {
+        curve: 'basis',
+        htmlLabels: true,
+      },
+    } as const
+  }
+
+  return {
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1d4ed8',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#2563eb',
+      lineColor: '#94a3b8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#111827',
+      background: 'transparent',
+      clusterBkg: '#0f172a',
+      clusterBorder: '#1f2937',
+      nodeTextColor: '#e2e8f0',
+    },
+    flowchart: {
+      curve: 'basis',
+      htmlLabels: true,
+    },
+  } as const
 }
 
 function decodeEntities(value: string) {

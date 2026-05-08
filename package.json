@@ -15,6 +15,7 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch --passWithNoTests",
     "type-check": "tsc --noEmit",
+    "sync:bronch-navigation-trainer": "node scripts/sync-bronch-navigation-trainer.mjs",
     "sync:socal-ebus-course": "node scripts/sync-socal-ebus-course.mjs",
     "analyze": "ANALYZE=true next build --webpack",
     "prepare": "husky install",

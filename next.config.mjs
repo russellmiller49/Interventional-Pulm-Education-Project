@@ -44,7 +44,7 @@ const securityHeaders = [
   },
 ]
 
-const embeddedCourseSecurityHeaders = securityHeaders.map((header) => {
+const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
   if (header.key === 'Content-Security-Policy') {
     return {
       key: header.key,
@@ -53,8 +53,14 @@ const embeddedCourseSecurityHeaders = securityHeaders.map((header) => {
           "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
           "connect-src 'self' data: https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
         )
-        .replace("style-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com")
-        .replace("font-src 'self' https://cdn.scite.ai", "font-src 'self' https://cdn.scite.ai https://fonts.gstatic.com data:"),
+        .replace(
+          "style-src 'self' 'unsafe-inline'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        )
+        .replace(
+          "font-src 'self' https://cdn.scite.ai",
+          "font-src 'self' https://cdn.scite.ai https://fonts.gstatic.com data:",
+        ),
     }
   }
 
@@ -103,14 +109,19 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Apply security headers to HTML pages only, not static assets
-        source: '/((?!fluoroview|socal-ebus-course/app).*)',
+        // Apply security headers to HTML pages only, not static app assets.
+        source: '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app).*)',
         headers: securityHeaders,
       },
       {
         // Allow the bundled SoCal EBUS app to render inside the same-site iframe.
         source: '/socal-ebus-course/app/:path*',
-        headers: embeddedCourseSecurityHeaders,
+        headers: embeddedAppSecurityHeaders,
+      },
+      {
+        // Allow the bundled Bronch Navigation Trainer to render inside the same-site iframe.
+        source: '/bronch-navigation-trainer/app/:path*',
+        headers: embeddedAppSecurityHeaders,
       },
       {
         // Apply relaxed CSP to fluoroview pages for WebGL/WebAssembly
@@ -170,6 +181,14 @@ const nextConfig = {
       {
         source: '/socal-ebus-course/app/',
         destination: '/socal-ebus-course/app/index.html',
+      },
+      {
+        source: '/bronch-navigation-trainer/app',
+        destination: '/bronch-navigation-trainer/app/index.html',
+      },
+      {
+        source: '/bronch-navigation-trainer/app/',
+        destination: '/bronch-navigation-trainer/app/index.html',
       },
     ]
   },

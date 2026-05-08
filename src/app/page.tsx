@@ -17,6 +17,14 @@ export default function HomePage() {
       cta: 'Launch FluoroView',
     },
     {
+      badge: 'Navigation',
+      title: 'Bronch Navigation Trainer',
+      description:
+        'Drive a virtual bronchoscope through branch choices while correlating CT planes, airway views, and target paths.',
+      href: '/bronch-navigation-trainer',
+      cta: 'Start Navigation',
+    },
+    {
       badge: '3D Models',
       title: 'Interactive Anatomy Viewer',
       description:
@@ -94,6 +102,11 @@ export default function HomePage() {
                   <Link href="/socal-ebus-course">SoCal EBUS Course</Link>
                 </Button>
                 <Button asChild variant="secondary" className="rounded-full px-6">
+                  <Link href={'/bronch-navigation-trainer' as Route}>
+                    Bronch Navigation Trainer
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" className="rounded-full px-6">
                   <Link href="/board-prep">Board Review Library</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-full px-6">
@@ -166,7 +179,7 @@ export default function HomePage() {
             models, and simulation-ready curricula.
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {featureHighlights.map((link) => (
             <Link
               key={link.href}

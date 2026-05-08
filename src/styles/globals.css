@@ -62,3 +62,284 @@ body {
 a.skip-link {
   @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground;
 }
+
+@layer components {
+  .board-review-html {
+    color: #1e293b;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 42%, #f8fafc 100%);
+    border: 1px solid #dbe4ee;
+    border-radius: 1.5rem;
+    box-shadow: 0 18px 45px rgb(15 23 42 / 0.12);
+    padding: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .board-review-html-content {
+    min-width: 0;
+  }
+
+  .board-review-html :where(h1, h2, h3, h4, p, ul, ol, table, blockquote) {
+    letter-spacing: 0;
+  }
+
+  .board-review-html :where(h1, h2, h3, h4, p, li, th, td) {
+    overflow-wrap: anywhere;
+  }
+
+  .board-review-html :where(h1) {
+    color: #0f172a;
+    font-size: clamp(1.9rem, 3vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin: 0 0 2.5rem;
+    max-width: 100%;
+    padding-bottom: 1.15rem;
+    position: relative;
+  }
+
+  .board-review-html :where(h1)::after {
+    background: linear-gradient(90deg, #0ea5e9, #14b8a6 72%, transparent);
+    border-radius: 999px;
+    bottom: 0;
+    content: '';
+    height: 4px;
+    left: 0;
+    position: absolute;
+    width: min(100%, 18rem);
+  }
+
+  .board-review-html :where(h2, h3) {
+    color: #075985;
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    font-weight: 750;
+    line-height: 1.25;
+    margin: 2.8rem 0 1rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid #dbeafe;
+  }
+
+  .board-review-html :where(h4) {
+    align-items: center;
+    color: #475569;
+    display: flex;
+    font-size: 0.82rem;
+    font-weight: 800;
+    gap: 0.6rem;
+    line-height: 1.35;
+    margin: 2rem 0 0.8rem;
+    text-transform: uppercase;
+  }
+
+  .board-review-html :where(h4)::before {
+    background: #0d9488;
+    border-radius: 999px;
+    content: '';
+    flex: 0 0 auto;
+    height: 0.55rem;
+    width: 0.55rem;
+  }
+
+  .board-review-html :where(p) {
+    color: #334155;
+    font-size: 1rem;
+    line-height: 1.75;
+    margin: 0 0 1.05rem;
+    max-width: 78ch;
+  }
+
+  .board-review-html :where(ul, ol) {
+    color: #334155;
+    line-height: 1.7;
+    margin: 0.85rem 0 1.35rem;
+    padding-left: 1.4rem;
+  }
+
+  .board-review-html :where(ul) {
+    list-style-type: disc;
+  }
+
+  .board-review-html :where(ol) {
+    list-style-type: decimal;
+  }
+
+  .board-review-html :where(li) {
+    margin: 0.5rem 0;
+    padding-left: 0.2rem;
+  }
+
+  .board-review-html :where(li)::marker {
+    color: #0d9488;
+    font-weight: 800;
+  }
+
+  .board-review-html :where(strong) {
+    color: #1e293b;
+    font-weight: 800;
+  }
+
+  .board-review-html :where(em) {
+    color: #475569;
+  }
+
+  .board-review-html :where(hr) {
+    background: linear-gradient(90deg, transparent, #cbd5e1, transparent);
+    border: 0;
+    height: 1px;
+    margin: 2.6rem 0;
+  }
+
+  .board-review-html :where(.algorithm-note, .case-study, .mcq-container) {
+    border-radius: 1rem;
+    margin: 1.4rem 0;
+    padding: 1rem 1.15rem;
+  }
+
+  .board-review-html :where(.algorithm-note) {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-left: 5px solid #10b981;
+  }
+
+  .board-review-html :where(.case-study, .mcq-container) {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-left: 5px solid #f97316;
+  }
+
+  .board-review-html :where(.algorithm-note, .case-study, .mcq-container) :where(ul, ol) {
+    margin-bottom: 0;
+  }
+
+  .board-review-html :where(.mcq-options) {
+    display: grid;
+    gap: 0.55rem;
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .board-review-html :where(.mcq-options li) {
+    background: rgb(255 255 255 / 0.8);
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    margin: 0;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .board-review-html :where(.mcq-answer) {
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    border-radius: 0.75rem;
+    color: #115e59;
+    margin-top: 0.8rem;
+    padding: 0.75rem 0.9rem;
+  }
+
+  .board-review-table-scroll {
+    background: #ffffff;
+    border: 1px solid #dbe4ee;
+    border-radius: 1rem;
+    box-shadow: 0 10px 28px rgb(15 23 42 / 0.08);
+    margin: 1.6rem 0 2rem;
+    overflow-x: auto;
+  }
+
+  .board-review-html :where(table) {
+    border: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    box-shadow: none;
+    font-size: 0.92rem;
+    margin: 0;
+    min-width: 720px;
+    width: 100%;
+  }
+
+  .board-review-html :where(th, td) {
+    border: 0;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+    padding: 0.85rem 1rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .board-review-html :where(th) {
+    background: #e0f2fe;
+    color: #0f172a;
+    font-size: 0.75rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .board-review-html :where(tr:nth-child(even) td) {
+    background: #f8fafc;
+  }
+
+  .board-review-html :where(tr:last-child td) {
+    border-bottom: 0;
+  }
+
+  .board-review-html :where(.abbreviations) {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    margin-top: 2rem;
+    padding: 1rem 1.15rem;
+  }
+
+  .board-review-html :where(.abbreviations dl) {
+    display: grid;
+    gap: 0.6rem 1.2rem;
+    grid-template-columns: max-content minmax(0, 1fr);
+    margin: 0;
+  }
+
+  .board-review-html :where(.abbreviations dt) {
+    color: #0f172a;
+    font-weight: 800;
+  }
+
+  .board-review-html :where(.abbreviations dd) {
+    color: #475569;
+    margin: 0;
+  }
+
+  .board-review-html :where(.references) {
+    border-top: 1px solid #dbe4ee;
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+  }
+
+  .board-review-html :where(.references ol) {
+    color: #475569;
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 700px) {
+    .board-review-html {
+      border-radius: 1rem;
+      padding: 1.25rem;
+    }
+
+    .board-review-html :where(h1) {
+      font-size: 2rem;
+      max-width: none;
+    }
+
+    .board-review-html :where(table) {
+      min-width: 640px;
+    }
+
+    .board-review-html :where(tr) {
+      display: table-row;
+    }
+
+    .board-review-html :where(th, td) {
+      display: table-cell;
+      width: auto;
+    }
+
+    .board-review-html :where(.abbreviations dl) {
+      grid-template-columns: 1fr;
+    }
+  }
+}

@@ -22,6 +22,11 @@ const navigationItems: NavItem[] = [
     href: '/socal-ebus-course',
     description: 'Fellow prep with lectures, stations, knobology, and 3D anatomy',
   },
+  {
+    title: 'Bronch Navigation',
+    href: '/bronch-navigation-trainer' as Route,
+    description: 'CT-to-bronchoscope navigation simulator',
+  },
   { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },

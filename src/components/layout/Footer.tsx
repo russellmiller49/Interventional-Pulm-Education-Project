@@ -4,6 +4,7 @@ import type { Route } from 'next'
 type InternalFooterHref =
   | '/'
   | '/board-prep'
+  | '/bronch-navigation-trainer'
   | '/fluoroview'
   | '/learn/anatomy'
   | '/resources'
@@ -45,6 +46,11 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     title: 'Learning',
     links: [
       { label: '3D Anatomy Viewer', href: '/learn/anatomy', route: '/learn/anatomy' },
+      {
+        label: 'Bronch Navigation Trainer',
+        href: '/bronch-navigation-trainer',
+        route: '/bronch-navigation-trainer',
+      },
       { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
       { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
       {

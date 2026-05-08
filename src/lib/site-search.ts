@@ -85,6 +85,15 @@ const staticResults: SiteSearchResult[] = [
     keywords: ['ebus', 'course', 'stations', 'fellows', 'knobology'],
   },
   {
+    title: 'Bronch Navigation Trainer',
+    description:
+      'CT-to-bronchoscope navigation simulator with branch decisions, target paths, and virtual scope views.',
+    href: '/bronch-navigation-trainer',
+    section: 'Simulation',
+    type: 'page',
+    keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
+  },
+  {
     title: 'Interactive 3D Anatomy Viewer',
     description:
       'Explore airway structures, vasculature, and lobar relationships with interactive anatomy tools.',

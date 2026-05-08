@@ -98,7 +98,7 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
       </section>
 
       <section className="container grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
           {chapter.formattedHtml ? (
             <BoardReviewHtmlFrame html={chapter.formattedHtml} title={chapter.title} />
           ) : (
@@ -117,7 +117,7 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
             </>
           )}
         </div>
-        <aside className="space-y-6">
+        <aside className="min-w-0 space-y-6">
           <Card className="border-emerald-500/40 bg-emerald-500/10">
             <CardContent className="space-y-3 p-6">
               <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600">
