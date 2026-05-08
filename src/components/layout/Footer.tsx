@@ -73,12 +73,12 @@ export function Footer() {
           <div className="max-w-sm space-y-4">
             <div>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                Interventional Pulmonology Collaborative
+                Interventional Pulmonology Education
               </span>
             </div>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Open source tools, printable models, and modern curricula advancing airway care around
-              the globe. Built by clinicians, educators, and engineers.
+              Practical learning tools, printable models, and modern curricula advancing airway
+              education around the globe. Built for clinicians, educators, and trainees.
             </p>
             <div className="text-xs text-muted-foreground">
               Prefer a low motion experience? Enable it in your operating system preferences and
@@ -119,7 +119,7 @@ export function Footer() {
         <div className="border-t pt-6 text-xs text-muted-foreground">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              © {new Date().getFullYear()} Interventional Pulmonology Collaborative. Educational use
+              © {new Date().getFullYear()} Interventional Pulmonology Education. Educational use
               only.
             </p>
             <div className="flex flex-wrap gap-4">

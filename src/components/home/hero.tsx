@@ -21,10 +21,10 @@ export function Hero() {
         </div>
         <div className="max-w-xl space-y-6">
           <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
-            Interventional Pulmonology Collaborative
+            Interventional Pulmonology Education
           </span>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:text-5xl">
-            Open Source Education &amp; Innovation in Interventional Pulmonology
+            Education &amp; Innovation in Interventional Pulmonology
           </h1>
           <p className="text-base text-sky-100 md:text-lg">
             Explore simulation labs, printable anatomy, and data-driven training modules built by

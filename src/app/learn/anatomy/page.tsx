@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { Route } from 'next'
 
 import { AnatomyViewer } from '@/components/3d/AnatomyViewer'
@@ -63,26 +63,6 @@ export default function AnatomyLearnPage() {
   const downloads = selectedModel.downloads
   const xrModel = getModel(selectedModel.slug)
 
-  useEffect(() => {
-    setVisibleSegments((prev) => {
-      const next: Record<string, boolean> = {}
-      let changed = false
-      displaySegments.forEach((segment) => {
-        const current = segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
-        next[segment.id] = current
-        if (prev[segment.id] !== current) {
-          changed = true
-        }
-      })
-      Object.keys(prev).forEach((id) => {
-        if (!displaySegments.some((segment) => segment.id === id)) {
-          changed = true
-        }
-      })
-      return changed ? next : prev
-    })
-  }, [displaySegments])
-
   return (
     <div className="space-y-16 py-16">
       <section className="container space-y-4">
@@ -98,8 +78,8 @@ export default function AnatomyLearnPage() {
           </h1>
           <p className="max-w-3xl text-muted-foreground">
             Explore airway structures, vasculature, and lobar relationships with orbit controls,
-            cross-sectional slicing, and annotated segments. Built for fellows and faculty running
-            rehearsal labs or patient consults.
+            cross-sectional slicing, annotated segments, and WebXR spatial viewing for supported
+            headsets. Built for fellows and faculty running rehearsal labs or patient consults.
           </p>
         </div>
       </section>
@@ -321,17 +301,28 @@ export default function AnatomyLearnPage() {
               ))}
             </div>
             {xrModel ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link href={`/xr/${xrModel.slug}` as Route}>Enter Spatial (Vision Pro)</Link>
-                </Button>
-                {xrModel.usdzSrc ? (
-                  <Button asChild variant="outline">
-                    <a href={xrModel.usdzSrc} rel="ar">
-                      View in AR (iPhone/iPad)
-                    </a>
+              <div className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-background/60 p-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Spatial headset mode</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Open the viewer in a WebXR-capable headset browser to inspect the model at room
+                    scale. Select or pinch a visible segment to move it; squeeze recenters it.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild>
+                    <Link href={`/xr/${xrModel.slug}` as Route}>
+                      Open fullscreen spatial viewer
+                    </Link>
                   </Button>
-                ) : null}
+                  {xrModel.usdzSrc ? (
+                    <Button asChild variant="outline">
+                      <a href={xrModel.usdzSrc} rel="ar">
+                        View in AR
+                      </a>
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             ) : null}
             {selectedModel.notes ? (

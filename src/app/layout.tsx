@@ -17,11 +17,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Interventional Pulmonology Collaborative',
-    template: '%s | Interventional Pulmonology Collaborative',
+    default: 'Interventional Pulmonology Education',
+    template: '%s | Interventional Pulmonology Education',
   },
-  description:
-    'Open-source education and innovation hub for the interventional pulmonology community.',
+  description: 'Education and innovation hub for the interventional pulmonology community.',
 }
 
 export const viewport: Viewport = {

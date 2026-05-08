@@ -1,9 +1,10 @@
 'use client'
 
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { usePathname } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 import {
   applySegmentColors,
@@ -11,7 +12,21 @@ import {
   useAnatomyAsset,
   useVolumeAsset,
 } from '@/lib/3d-utils'
-import { AxesHelper, Box3, MeshStandardMaterial, Plane, SRGBColorSpace, Vector3 } from 'three'
+import {
+  AxesHelper,
+  Box3,
+  BufferGeometry,
+  Line,
+  LineBasicMaterial,
+  Matrix4,
+  MeshStandardMaterial,
+  Plane,
+  Quaternion,
+  Raycaster,
+  SRGBColorSpace,
+  Vector3,
+} from 'three'
+import type { Group, Mesh, Object3D } from 'three'
 import type { WebGLRenderer } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type VolumeSlice from 'three/examples/jsm/misc/VolumeSlice.js'
@@ -23,6 +38,26 @@ const AXIS_LABELS: Record<'x' | 'y' | 'z', string> = {
 }
 
 type WindowPresetKey = 'default' | 'soft-tissue' | 'lung' | 'bone' | 'custom'
+type ImmersiveXRMode = 'immersive-ar' | 'immersive-vr'
+
+interface XRCapabilities {
+  checked: boolean
+  hasWebXR: boolean
+  immersiveAR: boolean
+  immersiveVR: boolean
+}
+
+interface SpatialPlacement {
+  position: [number, number, number]
+  scale: number
+}
+
+interface ActiveGrab {
+  controller: Group
+  offset: Vector3
+  inverseStartControllerQuaternion: Quaternion
+  startModelQuaternion: Quaternion
+}
 
 const WINDOW_PRESET_MAP: Record<
   Exclude<WindowPresetKey, 'default' | 'custom'>,
@@ -42,6 +77,203 @@ function getSliceTransform(axis: 'x' | 'y' | 'z'): string {
   }
   // Axial slices: flip left/right
   return 'scaleX(-1)'
+}
+
+function isRenderableVolumeSlice(slice: VolumeSlice | null): slice is VolumeSlice {
+  const candidate = slice as (VolumeSlice & { iLength?: number; jLength?: number }) | null
+  return Boolean(
+    candidate?.canvas &&
+    candidate.canvas.width > 0 &&
+    candidate.canvas.height > 0 &&
+    (candidate.iLength ?? 0) > 0 &&
+    (candidate.jLength ?? 0) > 0,
+  )
+}
+
+function computeSpatialPlacement(boundingBox: Box3): SpatialPlacement {
+  const size = boundingBox.getSize(new Vector3())
+  const center = boundingBox.getCenter(new Vector3())
+  const maxDimension = Math.max(size.x, size.y, size.z, 0.001)
+  const scale = Math.min(Math.max(1.05 / maxDimension, 0.001), 12)
+
+  return {
+    position: [-center.x * scale, 1.28 - center.y * scale, -1.35 - center.z * scale],
+    scale,
+  }
+}
+
+function applySpatialPlacement(group: Group, placement: SpatialPlacement) {
+  group.position.set(...placement.position)
+  group.scale.setScalar(placement.scale)
+  group.quaternion.identity()
+}
+
+function resetDesktopPlacement(group: Group) {
+  group.position.set(0, 0, 0)
+  group.scale.setScalar(1)
+  group.quaternion.identity()
+}
+
+function createControllerRay() {
+  const geometry = new BufferGeometry().setFromPoints([new Vector3(0, 0, 0), new Vector3(0, 0, -1)])
+  const material = new LineBasicMaterial({
+    color: 0x38bdf8,
+    transparent: true,
+    opacity: 0.85,
+  })
+  const ray = new Line(geometry, material)
+  ray.name = 'XR select ray'
+  ray.scale.z = 1.6
+  return ray
+}
+
+function getControllerTransform(controller: Group) {
+  controller.updateMatrixWorld(true)
+  const position = new Vector3().setFromMatrixPosition(controller.matrixWorld)
+  const rotation = new Matrix4().extractRotation(controller.matrixWorld)
+  const quaternion = new Quaternion().setFromRotationMatrix(rotation)
+  return { position, quaternion, rotation }
+}
+
+function collectVisibleMeshes(root: Group) {
+  const meshes: Mesh[] = []
+  root.traverse((object) => {
+    if ((object as Mesh).isMesh && object.visible) {
+      meshes.push(object as Mesh)
+    }
+  })
+  return meshes
+}
+
+function getSegmentLabel(object: Object3D) {
+  let current: Object3D | null = object
+  while (current) {
+    if (typeof current.userData.segmentLabel === 'string') {
+      return current.userData.segmentLabel
+    }
+    if (typeof current.userData.segmentId === 'string') {
+      return current.userData.segmentId
+    }
+    current = current.parent
+  }
+  return object.name || 'Anatomy segment'
+}
+
+function XRSpatialControllers({
+  enabled,
+  targetRef,
+  placement,
+  onSelectSegment,
+}: {
+  enabled: boolean
+  targetRef: RefObject<Group | null>
+  placement: SpatialPlacement | null
+  onSelectSegment: (label: string | null) => void
+}) {
+  const { gl, scene } = useThree()
+  const activeGrabRef = useRef<ActiveGrab | null>(null)
+  const raycasterRef = useRef(new Raycaster())
+
+  useEffect(() => {
+    if (!enabled) {
+      activeGrabRef.current = null
+      return
+    }
+
+    const controllers = [gl.xr.getController(0), gl.xr.getController(1)]
+    const rays = controllers.map(() => createControllerRay())
+
+    const beginGrab = (controller: Group) => {
+      const target = targetRef.current
+      if (!target) {
+        return
+      }
+
+      const { position, quaternion, rotation } = getControllerTransform(controller)
+      const raycaster = raycasterRef.current
+      raycaster.ray.origin.copy(position)
+      raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotation)
+
+      const intersections = raycaster.intersectObjects(collectVisibleMeshes(target), false)
+      if (!intersections.length) {
+        return
+      }
+
+      onSelectSegment(getSegmentLabel(intersections[0].object))
+      activeGrabRef.current = {
+        controller,
+        offset: target.position.clone().sub(position),
+        inverseStartControllerQuaternion: quaternion.clone().invert(),
+        startModelQuaternion: target.quaternion.clone(),
+      }
+    }
+
+    const endGrab = (controller: Group) => {
+      if (activeGrabRef.current?.controller === controller) {
+        activeGrabRef.current = null
+      }
+    }
+
+    const resetPlacement = () => {
+      const target = targetRef.current
+      if (!target || !placement) {
+        return
+      }
+      applySpatialPlacement(target, placement)
+      activeGrabRef.current = null
+      onSelectSegment('Spatial placement reset')
+    }
+
+    const cleanupHandlers: Array<() => void> = []
+
+    controllers.forEach((controller, index) => {
+      const ray = rays[index]
+      controller.add(ray)
+      scene.add(controller)
+
+      const handleSelectStart = () => beginGrab(controller)
+      const handleSelectEnd = () => endGrab(controller)
+      const handleSqueezeStart = () => resetPlacement()
+
+      controller.addEventListener('selectstart', handleSelectStart)
+      controller.addEventListener('selectend', handleSelectEnd)
+      controller.addEventListener('squeezestart', handleSqueezeStart)
+
+      cleanupHandlers.push(() => {
+        controller.removeEventListener('selectstart', handleSelectStart)
+        controller.removeEventListener('selectend', handleSelectEnd)
+        controller.removeEventListener('squeezestart', handleSqueezeStart)
+        controller.remove(ray)
+        scene.remove(controller)
+        ray.geometry.dispose()
+        ;(ray.material as LineBasicMaterial).dispose()
+      })
+    })
+
+    return () => {
+      activeGrabRef.current = null
+      cleanupHandlers.forEach((cleanup) => cleanup())
+    }
+  }, [enabled, gl, onSelectSegment, placement, scene, targetRef])
+
+  useFrame(() => {
+    if (!enabled) {
+      return
+    }
+
+    const grab = activeGrabRef.current
+    const target = targetRef.current
+    if (!grab || !target) {
+      return
+    }
+
+    const { position, quaternion } = getControllerTransform(grab.controller)
+    target.position.copy(position).add(grab.offset)
+    const controllerDelta = quaternion.multiply(grab.inverseStartControllerQuaternion)
+    target.quaternion.copy(controllerDelta.multiply(grab.startModelQuaternion))
+  })
+
+  return null
 }
 
 interface AnatomyViewerProps {
@@ -76,6 +308,7 @@ export function AnatomyViewer({
   const containerRef = useRef<HTMLDivElement>(null)
   const glRef = useRef<WebGLRenderer | null>(null)
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
+  const spatialRootRef = useRef<Group | null>(null)
   const assetState = useAnatomyAsset(model)
   const volumeState = useVolumeAsset(model)
   const ctContainerRef = useRef<HTMLDivElement | null>(null)
@@ -83,11 +316,15 @@ export function AnatomyViewer({
   const xrSessionRef = useRef<XRSession | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [xrSupported, setXrSupported] = useState(false)
+  const [xrCapabilities, setXrCapabilities] = useState<XRCapabilities>({
+    checked: false,
+    hasWebXR: false,
+    immersiveAR: false,
+    immersiveVR: false,
+  })
   const [xrSessionActive, setXrSessionActive] = useState(false)
-  const [xrSessionMode, setXrSessionMode] = useState<'immersive-ar' | 'immersive-vr'>(
-    'immersive-vr',
-  )
+  const [xrSessionMode, setXrSessionMode] = useState<ImmersiveXRMode>('immersive-vr')
+  const [spatialSelection, setSpatialSelection] = useState<string | null>(null)
   const [debugCoords, setDebugCoords] = useState({
     position: [0, 0, 0] as [number, number, number],
     target: [0, 0, 0] as [number, number, number],
@@ -137,6 +374,12 @@ export function AnatomyViewer({
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('xr' in navigator)) {
+      setXrCapabilities({
+        checked: true,
+        hasWebXR: false,
+        immersiveAR: false,
+        immersiveVR: false,
+      })
       return
     }
 
@@ -146,15 +389,26 @@ export function AnatomyViewer({
       try {
         const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
         if (!xrSystem) {
-          if (!cancelled) setXrSupported(false)
+          if (!cancelled) {
+            setXrCapabilities({
+              checked: true,
+              hasWebXR: false,
+              immersiveAR: false,
+              immersiveVR: false,
+            })
+          }
           return
         }
 
-        if (!cancelled) {
-          setXrSupported(true)
-        }
-
         if (!xrSystem.isSessionSupported) {
+          if (!cancelled) {
+            setXrCapabilities({
+              checked: true,
+              hasWebXR: true,
+              immersiveAR: false,
+              immersiveVR: false,
+            })
+          }
           return
         }
 
@@ -163,20 +417,23 @@ export function AnatomyViewer({
           xrSystem.isSessionSupported('immersive-vr').catch(() => false),
         ])
         if (cancelled) return
-        if (arSupported) {
-          setXrSessionMode('immersive-ar')
-        } else if (vrSupported) {
-          setXrSessionMode('immersive-vr')
-        }
-        if (!arSupported && !vrSupported) {
-          // Keep button visible even if explicit support check fails
-          console.warn(
-            'WebXR session types not reported as supported; falling back to manual attempt',
-          )
-        }
+        setXrCapabilities({
+          checked: true,
+          hasWebXR: true,
+          immersiveAR: arSupported,
+          immersiveVR: vrSupported,
+        })
+        setXrSessionMode(arSupported ? 'immersive-ar' : 'immersive-vr')
       } catch (error) {
         console.warn('WebXR session support check failed', error)
-        if (!cancelled) setXrSupported(false)
+        if (!cancelled) {
+          setXrCapabilities({
+            checked: true,
+            hasWebXR: false,
+            immersiveAR: false,
+            immersiveVR: false,
+          })
+        }
       }
     })()
 
@@ -209,62 +466,68 @@ export function AnatomyViewer({
     setWindowValues((prev) => ({ ...prev, [field]: value }))
   }, [])
 
-  const handleEnterXR = useCallback(async () => {
-    if (typeof navigator === 'undefined' || !('xr' in navigator)) {
-      return
-    }
-    if (!glRef.current) {
-      return
-    }
-
-    try {
-      const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
-      if (!xrSystem?.requestSession) {
+  const handleEnterXR = useCallback(
+    async (mode: ImmersiveXRMode) => {
+      if (typeof navigator === 'undefined' || !('xr' in navigator)) {
+        return
+      }
+      if (!glRef.current) {
         return
       }
 
-      glRef.current.xr.enabled = true
-      glRef.current.xr.setReferenceSpaceType?.('local-floor')
+      try {
+        const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
+        if (!xrSystem?.requestSession) {
+          return
+        }
 
-      const optionalFeatures: XRSessionInit['optionalFeatures'] = ['local-floor']
-      if (xrSessionMode === 'immersive-ar') {
-        optionalFeatures.push('hand-tracking', 'hit-test')
-      } else {
-        optionalFeatures.push('bounded-floor')
-      }
+        glRef.current.xr.enabled = true
+        glRef.current.xr.setReferenceSpaceType?.('local-floor')
+        glRef.current.setClearAlpha(mode === 'immersive-ar' ? 0 : 1)
 
-      const sessionInit: XRSessionInit = {
-        optionalFeatures,
-      }
+        const optionalFeatures: XRSessionInit['optionalFeatures'] = ['local-floor', 'hand-tracking']
+        if (mode === 'immersive-ar') {
+          optionalFeatures.push('hit-test')
+        } else {
+          optionalFeatures.push('bounded-floor')
+        }
 
-      const session = await xrSystem
-        .requestSession(xrSessionMode, sessionInit)
-        .catch(async (error) => {
-          console.warn('Preferred XR session failed, retrying with immersive-vr', error)
-          if (xrSessionMode !== 'immersive-vr') {
-            setXrSessionMode('immersive-vr')
-            return xrSystem.requestSession('immersive-vr', sessionInit)
-          }
-          throw error
+        const sessionInit: XRSessionInit = {
+          optionalFeatures,
+        }
+
+        const session = await xrSystem.requestSession(mode, sessionInit)
+
+        if (!session) {
+          return
+        }
+
+        setXrSessionMode(mode)
+        xrSessionRef.current = session
+        session.addEventListener('end', () => {
+          xrSessionRef.current = null
+          setXrSessionActive(false)
+          setSpatialSelection(null)
+          glRef.current?.setClearAlpha(1)
         })
 
-      if (!session) {
-        return
+        await glRef.current.xr.setSession(session)
+        setXrSessionActive(true)
+        setSpatialSelection(
+          mode === 'immersive-ar'
+            ? 'Pinch/select a visible segment to move it in space.'
+            : 'Select and hold a visible segment to move it. Squeeze to recenter.',
+        )
+      } catch (error) {
+        console.error('Failed to start WebXR session', error)
+        onError?.(
+          'Unable to start immersive session. Please check browser settings and permissions.',
+        )
+        glRef.current?.setClearAlpha(1)
       }
-
-      xrSessionRef.current = session
-      session.addEventListener('end', () => {
-        xrSessionRef.current = null
-        setXrSessionActive(false)
-      })
-
-      await glRef.current.xr.setSession(session)
-      setXrSessionActive(true)
-    } catch (error) {
-      console.error('Failed to start WebXR session', error)
-      onError?.('Unable to start immersive session. Please check browser settings and permissions.')
-    }
-  }, [onError, xrSessionMode])
+    },
+    [onError],
+  )
 
   const handleExitXR = useCallback(async () => {
     try {
@@ -276,6 +539,8 @@ export function AnatomyViewer({
     } finally {
       xrSessionRef.current = null
       setXrSessionActive(false)
+      setSpatialSelection(null)
+      glRef.current?.setClearAlpha(1)
     }
   }, [])
 
@@ -361,6 +626,27 @@ export function AnatomyViewer({
     }
     return preparedScene.boundingBox.getSize(new Vector3())
   }, [preparedScene])
+
+  const spatialPlacement = useMemo(() => {
+    if (!preparedScene) {
+      return null
+    }
+    return computeSpatialPlacement(preparedScene.boundingBox)
+  }, [preparedScene])
+
+  useEffect(() => {
+    const root = spatialRootRef.current
+    if (!root) {
+      return
+    }
+
+    if (xrSessionActive && spatialPlacement) {
+      applySpatialPlacement(root, spatialPlacement)
+      return
+    }
+
+    resetDesktopPlacement(root)
+  }, [preparedScene, spatialPlacement, xrSessionActive])
 
   const radius = useMemo(() => {
     if (!boundingSize) {
@@ -634,11 +920,7 @@ export function AnatomyViewer({
       slice.index = targetIndex
     }
 
-    if (
-      ctSliceRef.current &&
-      ctSliceRef.current.canvas.width > 0 &&
-      ctSliceRef.current.canvas.height > 0
-    ) {
+    if (isRenderableVolumeSlice(ctSliceRef.current)) {
       try {
         ctSliceRef.current.repaint()
         if (ctSliceRef.current.canvas) {
@@ -694,6 +976,19 @@ export function AnatomyViewer({
     document.body.removeChild(a)
   }
 
+  const xrStatusMessage = useMemo(() => {
+    if (!xrCapabilities.checked) {
+      return 'Checking headset support...'
+    }
+    if (!xrCapabilities.hasWebXR) {
+      return 'Open in a WebXR headset browser to enter spatial view.'
+    }
+    if (!xrCapabilities.immersiveAR && !xrCapabilities.immersiveVR) {
+      return 'WebXR is present, but no immersive headset session is available here.'
+    }
+    return null
+  }, [xrCapabilities])
+
   if (assetState.status === 'error') {
     return (
       <div className="flex h-[480px] items-center justify-center rounded-3xl border border-border/60 bg-muted/40 p-8 text-center">
@@ -718,18 +1013,19 @@ export function AnatomyViewer({
         <Canvas
           shadows
           dpr={[1, isMobile ? 1 : 1.5]}
+          gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
           onCreated={({ gl }) => {
             glRef.current = gl
             gl.outputColorSpace = SRGBColorSpace
             gl.toneMappingExposure = 1.2
-            gl.setClearColor('#0b172b')
+            gl.setClearColor('#0b172b', 1)
             gl.xr.enabled = true
             gl.domElement.addEventListener('webglcontextlost', (event) => {
-              console.warn('WebGL context lost')
+              console.debug('WebGL context lost')
               event.preventDefault()
             })
             gl.domElement.addEventListener('webglcontextrestored', () => {
-              console.log('WebGL context restored')
+              console.debug('WebGL context restored')
             })
           }}
         >
@@ -742,8 +1038,8 @@ export function AnatomyViewer({
           <directionalLight position={[-5, -3, -6]} intensity={0.5} />
           <spotLight position={[0, 9, 5]} intensity={0.75} angle={0.8} penumbra={0.55} castShadow />
           {showDebugHelpers ? <primitive object={axesHelper} /> : null}
-          {model.downloads.some((d) => d.format === 'glb') ? (
-            <primitive object={axesHelper} />
+          {xrSessionActive && xrSessionMode === 'immersive-vr' ? (
+            <gridHelper args={[4, 8, '#38bdf8', '#1e293b']} position={[0, 0.02, -1.35]} />
           ) : null}
           {preparedScene ? (
             <Suspense
@@ -753,12 +1049,21 @@ export function AnatomyViewer({
                 </Html>
               }
             >
-              <primitive object={preparedScene.group} />
+              <group ref={spatialRootRef}>
+                <primitive object={preparedScene.group} />
+              </group>
+              <XRSpatialControllers
+                enabled={xrSessionActive}
+                targetRef={spatialRootRef}
+                placement={spatialPlacement}
+                onSelectSegment={setSpatialSelection}
+              />
             </Suspense>
           ) : null}
           <OrbitControls
             ref={controlsRef}
             makeDefault
+            enabled={!xrSessionActive}
             enablePan={!isMobile}
             minDistance={minDistance}
             maxDistance={maxDistance}
@@ -769,8 +1074,8 @@ export function AnatomyViewer({
         </Canvas>
 
         <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">
-          <div className="flex items-center justify-between">
-            <div className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+          <div className="flex items-start justify-between gap-3">
+            <div className="pointer-events-auto inline-flex max-w-[58%] flex-wrap items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
               {showAnnotations
                 ? model.segments.slice(0, 8).map((segment) => (
                     <span key={segment.id} className="inline-flex items-center gap-1">
@@ -783,24 +1088,39 @@ export function AnatomyViewer({
                   ))
                 : 'Annotations hidden'}
             </div>
-            <div className="pointer-events-auto flex items-center gap-2">
-              {xrSupported ? (
+            <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+              {xrSessionActive ? (
                 <button
                   type="button"
-                  onClick={xrSessionActive ? handleExitXR : handleEnterXR}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                    xrSessionActive
-                      ? 'bg-emerald-500/90 text-white hover:bg-emerald-500'
-                      : 'bg-primary/80 text-primary-foreground hover:bg-primary'
-                  }`}
+                  onClick={handleExitXR}
+                  className="rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-medium text-white transition hover:bg-emerald-500"
                 >
-                  {xrSessionActive ? 'Exit spatial view' : 'Enter spatial view'}
+                  Exit spatial view
                 </button>
-              ) : (
-                <span className="text-[11px] text-muted-foreground">
-                  Enable WebXR in Safari settings on Vision Pro to enter spatial view.
+              ) : null}
+              {!xrSessionActive && xrCapabilities.immersiveVR ? (
+                <button
+                  type="button"
+                  onClick={() => handleEnterXR('immersive-vr')}
+                  className="rounded-full bg-primary/85 px-3 py-1 text-xs font-medium text-primary-foreground transition hover:bg-primary"
+                >
+                  Enter VR
+                </button>
+              ) : null}
+              {!xrSessionActive && xrCapabilities.immersiveAR ? (
+                <button
+                  type="button"
+                  onClick={() => handleEnterXR('immersive-ar')}
+                  className="rounded-full bg-cyan-500/85 px-3 py-1 text-xs font-medium text-white transition hover:bg-cyan-500"
+                >
+                  Enter AR
+                </button>
+              ) : null}
+              {xrStatusMessage ? (
+                <span className="max-w-40 text-right text-[11px] text-muted-foreground">
+                  {xrStatusMessage}
                 </span>
-              )}
+              ) : null}
               <button
                 type="button"
                 onClick={() => controlsRef.current?.reset()}
@@ -827,6 +1147,12 @@ export function AnatomyViewer({
           <div className="pointer-events-auto ml-auto inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground">
             <span>{crossSection}% cross-section</span>
           </div>
+          {xrSessionActive && spatialSelection ? (
+            <div className="pointer-events-auto max-w-sm rounded-2xl border border-cyan-400/30 bg-background/85 px-3 py-2 text-xs text-muted-foreground shadow-lg backdrop-blur">
+              <span className="font-semibold text-foreground">Spatial mode: </span>
+              {spatialSelection}
+            </div>
+          ) : null}
           {showDebugHelpers ? (
             <div className="pointer-events-auto mt-3 inline-flex max-w-xs flex-col gap-1 self-start rounded-lg bg-background/85 px-3 py-2 text-[11px] text-muted-foreground backdrop-blur">
               <span className="font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">

@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useMemo } from 'react'
-import { GitHubLogoIcon, HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
+import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Sheet,
   SheetContent,
@@ -98,29 +99,19 @@ export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps
               >
                 Sign in
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="justify-between gap-3"
-                aria-label="Search (placeholder)"
-              >
-                <span className="flex items-center gap-2 text-base">
-                  <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
-                  Search coming soon
-                </span>
-                <SearchShortcut />
-              </Button>
-              <Button
-                asChild
-                variant="secondary"
-                className="justify-center gap-2"
-                aria-label="Visit the GitHub organization"
-              >
-                <a href="https://github.com/interventional-pulm" target="_blank" rel="noreferrer">
-                  <GitHubLogoIcon className="h-4 w-4" aria-hidden />
-                  GitHub
-                </a>
-              </Button>
+              <form action="/search" className="space-y-2" role="search">
+                <Input
+                  type="search"
+                  name="q"
+                  placeholder="Search resources"
+                  leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />}
+                  aria-label="Search resources and guides"
+                />
+                <Button type="submit" variant="outline" className="w-full justify-between gap-3">
+                  <span>Search resources</span>
+                  <SearchShortcut />
+                </Button>
+              </form>
               <div className="space-y-3 rounded-lg border p-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Display

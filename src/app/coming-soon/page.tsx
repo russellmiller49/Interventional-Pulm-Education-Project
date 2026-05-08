@@ -7,9 +7,9 @@ const roadmapSections = [
   {
     id: 'tools',
     label: 'Tools',
-    title: 'Open-source procedure planning tools',
+    title: 'Procedure planning tools',
     description:
-      'Re-launching the tooling catalog with search, release notes, and direct GitHub deploys so you can run navigation planners, segmentation pipelines, and QA calculators without hunting through repositories.',
+      'Re-launching the tooling catalog with search, release notes, and guided deployments so you can run navigation planners, segmentation pipelines, and QA calculators without hunting through repositories.',
     bullets: [
       'One-click deploys to hosted sandboxes',
       'Detailed changelogs and compatibility notes',

@@ -5,7 +5,6 @@ import type { Route } from 'next'
 import { Hero } from '@/components/home/hero'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-// GitHub integrations are prepared in `src/lib/home/github-data.ts` for future rollout.
 
 export default function HomePage() {
   const featureHighlights = [
@@ -56,8 +55,6 @@ export default function HomePage() {
       <div className="container">
         <Hero />
       </div>
-
-      {/* Featured projects temporarily hidden until GitHub integrations return */}
 
       <section aria-labelledby="mission" className="container">
         <div className="grid gap-12 overflow-hidden rounded-3xl border border-border/70 bg-muted/30 p-8 md:grid-cols-[1.1fr_0.9fr] md:p-12">
@@ -207,21 +204,16 @@ export default function HomePage() {
               id="cta"
               className="text-3xl font-semibold tracking-tight text-primary-foreground md:text-4xl"
             >
-              Contribute, collaborate, and get the latest drops
+              Get the latest learning tools as they launch
             </h2>
             <p className="text-base text-primary-foreground/80 md:text-lg">
               We&apos;re shipping new board review chapters and lab kits every quarter. Join the
-              list and we&apos;ll reach out when fresh anatomy drops or contributor calls open.
+              list and we&apos;ll reach out when fresh anatomy, simulation, and course resources go
+              live.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild elevated>
-                <Link
-                  href="https://github.com/interventional-pulm"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Visit GitHub
-                </Link>
+                <Link href={'/resources' as Route}>Explore resources</Link>
               </Button>
               <Button
                 variant="outline"
@@ -254,8 +246,8 @@ export default function HomePage() {
               Notify me (soon)
             </Button>
             <p className="text-xs text-primary-foreground/70">
-              We&apos;re finalizing the community newsletter. No spam—just release notes and
-              collaboration invites.
+              We&apos;re finalizing subscriptions and updates. No spam, just release notes and new
+              learning resources.
             </p>
           </form>
         </div>

@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import type { Route } from 'next'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { GitHubLogoIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,19 +40,10 @@ const navigationItems: NavItem[] = [
 
 export function Navigation() {
   const pathname = usePathname()
-  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [isSignInOpen, setIsSignInOpen] = useState(false)
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/resources/creative-commons/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      setSearchQuery('')
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault()
       const input = e.target as HTMLInputElement
@@ -86,15 +77,16 @@ export function Navigation() {
             IP Lab
           </span>
           <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
-            Open Source Education
+            Clinical Education
           </span>
         </Link>
       </div>
       <DesktopNav items={navigationItems} activePath={pathname} />
       <div className="hidden items-center gap-2 md:flex">
-        <form onSubmit={handleSearch} className="hidden lg:block">
+        <form action="/search" className="hidden items-center gap-1 lg:flex" role="search">
           <Input
             type="search"
+            name="q"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -103,20 +95,13 @@ export function Navigation() {
             className="w-64 text-sm"
             aria-label="Search resources and guides"
           />
+          <Button type="submit" variant="ghost" size="icon" aria-label="Search resources">
+            <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+          </Button>
         </form>
         <div className="hidden lg:flex items-center">
           <SearchShortcut className="text-xs" />
         </div>
-        <Button
-          asChild
-          variant="ghost"
-          className="hidden items-center gap-2 px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none lg:inline-flex"
-        >
-          <a href="https://github.com/interventional-pulm" target="_blank" rel="noreferrer">
-            <GitHubLogoIcon className="h-4 w-4" aria-hidden />
-            <span>GitHub</span>
-          </a>
-        </Button>
         <Button
           type="button"
           variant="outline"
