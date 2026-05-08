@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Route } from 'next'
 
 import { Hero } from '@/components/home/hero'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +38,7 @@ export default function HomePage() {
       title: 'Creative Commons Library',
       description:
         '680+ curated medical images from peer-reviewed publications for educational presentations and manuscripts.',
-      href: '/resources/creative-commons',
+      href: '/resources',
       cta: 'Browse Images',
     },
     {
@@ -172,7 +173,7 @@ export default function HomePage() {
           {featureHighlights.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href as Route}
               className="group relative flex h-full flex-col justify-between rounded-2xl border border-border/70 bg-card/60 p-6 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:-translate-y-1 hover:border-primary/50"
             >
               <div className="space-y-3">

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Download, Search } from 'lucide-react'
@@ -36,32 +36,25 @@ interface ImageData {
 export default function CategoryPage() {
   const params = useParams()
   const category = params?.category as string
-  const [images, setImages] = useState<ImageData[]>([])
-  const [filteredImages, setFilteredImages] = useState<ImageData[]>([])
   const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
+  const images = useMemo(() => {
     if (category && categoryMapping[category]) {
       const categoryName = categoryMapping[category]
-      const categoryImages = (imagesData as ImageData[]).filter(
-        (img) => img.Category === categoryName,
-      )
-      setImages(categoryImages)
-      setFilteredImages(categoryImages)
+      return (imagesData as ImageData[]).filter((img) => img.Category === categoryName)
     }
+    return []
   }, [category])
 
-  useEffect(() => {
+  const filteredImages = useMemo(() => {
     if (searchTerm) {
-      const filtered = images.filter(
+      return images.filter(
         (img) =>
           img['Image Description'].toLowerCase().includes(searchTerm.toLowerCase()) ||
           img.article_title.toLowerCase().includes(searchTerm.toLowerCase()),
       )
-      setFilteredImages(filtered)
-    } else {
-      setFilteredImages(images)
     }
+    return images
   }, [searchTerm, images])
 
   const categoryName = categoryMapping[category] || category

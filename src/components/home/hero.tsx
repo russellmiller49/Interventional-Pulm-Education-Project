@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { Route } from 'next'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
@@ -67,7 +68,7 @@ export function Hero() {
             Board Prep
           </Link>
           <Link
-            href="/resources/creative-commons"
+            href={'/resources' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
             Medical Images

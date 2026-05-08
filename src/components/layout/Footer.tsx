@@ -6,6 +6,7 @@ type InternalFooterHref =
   | '/board-prep'
   | '/fluoroview'
   | '/learn/anatomy'
+  | '/resources'
   | '/resources/creative-commons'
   | '/coming-soon'
   | '/privacy'
@@ -34,8 +35,8 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
       { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
       {
         label: 'Resources',
-        href: '/resources/creative-commons',
-        route: '/resources/creative-commons',
+        href: '/resources',
+        route: '/resources',
       },
       { label: 'Coming Soon', href: '/coming-soon', route: '/coming-soon' },
     ],
@@ -48,8 +49,8 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
       { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
       {
         label: 'Resources',
-        href: '/resources/creative-commons',
-        route: '/resources/creative-commons',
+        href: '/resources',
+        route: '/resources',
       },
     ],
   },
@@ -118,8 +119,8 @@ export function Footer() {
         <div className="border-t pt-6 text-xs text-muted-foreground">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              © {new Date().getFullYear()} Interventional Pulmonology Collaborative. Educational
-              use only.
+              © {new Date().getFullYear()} Interventional Pulmonology Collaborative. Educational use
+              only.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link

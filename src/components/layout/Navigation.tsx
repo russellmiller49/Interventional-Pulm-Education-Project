@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { GitHubLogoIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
@@ -27,7 +28,7 @@ const navigationItems: NavItem[] = [
   { title: 'IP Registry', href: '/ip-registry', description: 'Launch the Procedure Suite IU' },
   {
     title: 'Resources',
-    href: '/resources/creative-commons',
+    href: '/resources' as Route,
     description: 'Creative Commons assets & study aids',
   },
   {
@@ -46,7 +47,7 @@ export function Navigation() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/resources/creative-commons?q=${encodeURIComponent(searchQuery.trim())}`)
+      router.push(`/resources/creative-commons/search?q=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
     }
   }
