@@ -115,6 +115,7 @@ Thumbs.db
 *.lws
 *.ply
 *.stl
+!public/bronch-navigation-trainer/app/**/*.stl
 *.gltf
 # *.glb (commented out to allow essential 3D models)
 *.usd
@@ -151,6 +152,7 @@ Thumbs.db
 *.ai
 *.eps
 *.raw
+!public/bronch-navigation-trainer/app/**/*.raw
 *.cr2
 *.nef
 *.arw
