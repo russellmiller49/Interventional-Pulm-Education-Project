@@ -23,9 +23,11 @@ VITE_BASE_PATH=/bronch-navigation-trainer/app/
 vite build
 ```
 
-That keeps the public embedded version free of the Scope debug controls while
-preserving the default debug-enabled, root-hosted workflow in the source repo
-for calibration and local development.
+That keeps the public embedded version free of authoring-only tools: Scope
+debug controls, candidate-label loading and overlays, and the central airway
+review panel. The sync script also prunes generated candidate sidecar JSON from
+the public app folder. The source repo keeps the default debug-enabled,
+root-hosted workflow for calibration and local development.
 
 ## Standard Update Workflow
 

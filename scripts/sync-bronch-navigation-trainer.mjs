@@ -20,7 +20,7 @@ const destinationDir = resolve(projectRoot, 'public/bronch-navigation-trainer/ap
 const embeddedBasePath = '/bronch-navigation-trainer/app/'
 
 console.log('Building Bronch Navigation Trainer app...')
-console.log(`Embed build config: base ${embeddedBasePath}, scope debug disabled`)
+console.log(`Embed build config: base ${embeddedBasePath}, authoring tools disabled`)
 
 execFileSync('npm', ['run', 'build'], {
   cwd: sourceAppDir,
@@ -39,5 +39,12 @@ cpSync(sourceDistDir, destinationDir, {
   recursive: true,
   filter: (source) => basename(source) !== '.DS_Store',
 })
+
+for (const authoringAsset of [
+  resolve(destinationDir, 'cases/default/book_candidates.json'),
+  resolve(destinationDir, 'cases/default/manual_inferred_candidates.json'),
+]) {
+  rmSync(authoringAsset, { force: true })
+}
 
 console.log(`Bronch Navigation Trainer synced to ${destinationDir}`)
