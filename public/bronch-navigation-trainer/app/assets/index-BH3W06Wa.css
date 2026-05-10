@@ -747,6 +747,13 @@ input[type='range'] {
   overflow: hidden;
   background: #000;
 }
+.ct-canvas-wrap-pannable {
+  cursor: grab;
+  touch-action: none;
+}
+.ct-canvas-wrap-panning {
+  cursor: grabbing;
+}
 .ct-canvas {
   position: absolute;
   inset: 0;
