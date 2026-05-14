@@ -27,6 +27,11 @@ const navigationItems: NavItem[] = [
     href: '/bronch-navigation-trainer' as Route,
     description: 'CT-to-bronchoscope navigation simulator',
   },
+  {
+    title: 'Intro Bronchoscopy',
+    href: '/intro-bronchoscopy' as Route,
+    description: 'Foundational scope sizing, reach, and tool fit modules',
+  },
   { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },

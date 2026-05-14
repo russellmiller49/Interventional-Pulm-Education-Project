@@ -25,6 +25,14 @@ export default function HomePage() {
       cta: 'Start Navigation',
     },
     {
+      badge: 'Intro Bronchoscopy',
+      title: 'Bronchoscope Size Explorer',
+      description:
+        'Compare scope outer diameter, working channel area, estimated airway reach, and instrument compatibility.',
+      href: '/intro-bronchoscopy',
+      cta: 'Open Explorer',
+    },
+    {
       badge: '3D Models',
       title: 'Interactive Anatomy Viewer',
       description:
@@ -105,6 +113,9 @@ export default function HomePage() {
                   <Link href={'/bronch-navigation-trainer' as Route}>
                     Bronch Navigation Trainer
                   </Link>
+                </Button>
+                <Button asChild variant="secondary" className="rounded-full px-6">
+                  <Link href={'/intro-bronchoscopy' as Route}>Intro Bronchoscopy</Link>
                 </Button>
                 <Button asChild variant="secondary" className="rounded-full px-6">
                   <Link href="/board-prep">Board Review Library</Link>
