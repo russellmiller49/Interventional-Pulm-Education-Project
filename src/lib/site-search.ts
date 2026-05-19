@@ -94,6 +94,27 @@ const staticResults: SiteSearchResult[] = [
     keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
   },
   {
+    title: 'Pleural Fluid Analysis',
+    description:
+      'Advanced module for interpreting pleural fluid results with ranked differentials, quiz mode, clinical context, Light criteria, pseudoexudates, rare diseases, and targeted testing.',
+    href: '/pleural-procedures/pleural-fluid-analysis',
+    section: 'Pleural Procedures',
+    type: 'page',
+    keywords: [
+      'pleural fluid',
+      'pleural effusion',
+      'lights criteria',
+      'pseudoexudate',
+      'thoracentesis',
+      'pfa',
+      'chylothorax',
+      'empyema',
+      'yellow nail syndrome',
+      'urinothorax',
+      'bilothorax',
+    ],
+  },
+  {
     title: 'Interactive 3D Anatomy Viewer',
     description:
       'Explore airway structures, vasculature, and lobar relationships with interactive anatomy tools.',

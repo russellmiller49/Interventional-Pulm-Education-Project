@@ -1,0 +1,350 @@
+{
+  "id": "patient-4-derived-demo",
+  "title": "Patient 4 Educational FluoroView Case",
+  "version": "0.1.0",
+  "safetyLabel": "Educational simulation only \u2014 not for diagnosis, treatment, or procedure guidance.",
+  "description": "Derived educational case generated from local CT source data with a VM-generated tigre-placeholder DRR atlas. Raw source files remain local and untracked.",
+  "sourcePolicy": "Raw DICOM, NIfTI, and segmentation volumes remain local and untracked. This manifest references derived educational web assets only.",
+  "assetBaseUrl": "/fluoroview/cases/patient-4",
+  "geometry": {
+    "units": "mm",
+    "coordinateSystem": "LPS",
+    "isocenter_mm": [-8, -134.8, -1153.2],
+    "source_to_isocenter_mm": 600,
+    "source_to_detector_mm": 1200,
+    "detector_pixels": [1024, 1024],
+    "pixel_pitch_mm": 0.3,
+    "asset_base_url": "/fluoroview",
+    "default_view": {
+      "rao_lao_deg": 0,
+      "cranial_caudal_deg": 0
+    },
+    "overlay_calibration": {
+      "method": "centerline-carina",
+      "carina_lps_mm": [-7.689563751220703, -134.31544494628906, -1157.5181884765625],
+      "target_detector_percent": [50, 45],
+      "source_curves": ["Network curve (0)", "Network curve (1)", "Network curve (2)"],
+      "reference_translation_mm": [-0.3104362487792969, 0, 19.67818847656245],
+      "note": "Carina anchor from Network curve (0) endpoint and Network curve (1)/(2) origins; target detector point matches the derived centerline overlay carina."
+    }
+  },
+  "assets": {
+    "airwayGlb": "/fluoroview/airway_segments.glb",
+    "dracoBaseUrl": "/fluoroview/draco",
+    "centerlineJson": "/fluoroview/cases/patient-4/metadata/centerline_overlay.json",
+    "segmentMetadataJson": "/fluoroview/cases/patient-4/metadata/segments.json"
+  },
+  "ctSlices": {
+    "windowPresets": [
+      {
+        "id": "lung",
+        "label": "Lung",
+        "low": -1000,
+        "high": -300
+      },
+      {
+        "id": "softTissue",
+        "label": "Soft tissue",
+        "low": -160,
+        "high": 240
+      },
+      {
+        "id": "bone",
+        "label": "Bone",
+        "low": 200,
+        "high": 2000
+      }
+    ],
+    "axes": {
+      "axial": {
+        "label": "Axial",
+        "defaultIndex": 2,
+        "frames": [
+          {
+            "index": 0,
+            "positionMm": -16.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/axial_00.png"
+          },
+          {
+            "index": 1,
+            "positionMm": -8.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/axial_01.png"
+          },
+          {
+            "index": 2,
+            "positionMm": 0.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/axial_02.png"
+          },
+          {
+            "index": 3,
+            "positionMm": 8.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/axial_03.png"
+          },
+          {
+            "index": 4,
+            "positionMm": 16.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/axial_04.png"
+          }
+        ]
+      },
+      "coronal": {
+        "label": "Coronal",
+        "defaultIndex": 2,
+        "frames": [
+          {
+            "index": 0,
+            "positionMm": -16.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/coronal_00.png"
+          },
+          {
+            "index": 1,
+            "positionMm": -8.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/coronal_01.png"
+          },
+          {
+            "index": 2,
+            "positionMm": 0.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/coronal_02.png"
+          },
+          {
+            "index": 3,
+            "positionMm": 8.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/coronal_03.png"
+          },
+          {
+            "index": 4,
+            "positionMm": 16.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/coronal_04.png"
+          }
+        ]
+      },
+      "sagittal": {
+        "label": "Sagittal",
+        "defaultIndex": 2,
+        "frames": [
+          {
+            "index": 0,
+            "positionMm": -16.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/sagittal_00.png"
+          },
+          {
+            "index": 1,
+            "positionMm": -8.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/sagittal_01.png"
+          },
+          {
+            "index": 2,
+            "positionMm": 0.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/sagittal_02.png"
+          },
+          {
+            "index": 3,
+            "positionMm": 8.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/sagittal_03.png"
+          },
+          {
+            "index": 4,
+            "positionMm": 16.0,
+            "imageUrl": "/fluoroview/cases/patient-4/ct/sagittal_04.png"
+          }
+        ]
+      }
+    }
+  },
+  "drrAtlas": {
+    "grid": {
+      "raoLaoAngles": [-60.0, -30.0, 0.0, 30.0, 60.0],
+      "cranialCaudalAngles": [-20.0, 0.0, 20.0]
+    },
+    "frames": [
+      {
+        "id": "drr_rao_m60_cran_m20",
+        "raoLaoDeg": -60,
+        "cranialCaudalDeg": -20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_m60_cran_m20.png",
+        "thicknessProxy": 1.5,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_m60_cran_p0",
+        "raoLaoDeg": -60,
+        "cranialCaudalDeg": 0,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_m60_cran_p0.png",
+        "thicknessProxy": 1.333,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_m60_cran_p20",
+        "raoLaoDeg": -60,
+        "cranialCaudalDeg": 20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_m60_cran_p20.png",
+        "thicknessProxy": 1.5,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_m30_cran_m20",
+        "raoLaoDeg": -30,
+        "cranialCaudalDeg": -20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_m30_cran_m20.png",
+        "thicknessProxy": 1.333,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_m30_cran_p0",
+        "raoLaoDeg": -30,
+        "cranialCaudalDeg": 0,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_m30_cran_p0.png",
+        "thicknessProxy": 1.167,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_m30_cran_p20",
+        "raoLaoDeg": -30,
+        "cranialCaudalDeg": 20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_m30_cran_p20.png",
+        "thicknessProxy": 1.333,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p0_cran_m20",
+        "raoLaoDeg": 0,
+        "cranialCaudalDeg": -20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p0_cran_m20.png",
+        "thicknessProxy": 1.167,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p0_cran_p0",
+        "raoLaoDeg": 0,
+        "cranialCaudalDeg": 0,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p0_cran_p0.png",
+        "thicknessProxy": 1.0,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p0_cran_p20",
+        "raoLaoDeg": 0,
+        "cranialCaudalDeg": 20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p0_cran_p20.png",
+        "thicknessProxy": 1.167,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p30_cran_m20",
+        "raoLaoDeg": 30,
+        "cranialCaudalDeg": -20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p30_cran_m20.png",
+        "thicknessProxy": 1.333,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p30_cran_p0",
+        "raoLaoDeg": 30,
+        "cranialCaudalDeg": 0,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p30_cran_p0.png",
+        "thicknessProxy": 1.167,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p30_cran_p20",
+        "raoLaoDeg": 30,
+        "cranialCaudalDeg": 20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p30_cran_p20.png",
+        "thicknessProxy": 1.333,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p60_cran_m20",
+        "raoLaoDeg": 60,
+        "cranialCaudalDeg": -20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p60_cran_m20.png",
+        "thicknessProxy": 1.5,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p60_cran_p0",
+        "raoLaoDeg": 60,
+        "cranialCaudalDeg": 0,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p60_cran_p0.png",
+        "thicknessProxy": 1.333,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      },
+      {
+        "id": "drr_rao_p60_cran_p20",
+        "raoLaoDeg": 60,
+        "cranialCaudalDeg": 20,
+        "imageUrl": "/fluoroview/cases/patient-4/drr/drr_rao_p60_cran_p20.png",
+        "thicknessProxy": 1.5,
+        "backend": "tigre-placeholder",
+        "imageOrientation": "vertical-flip-applied",
+        "toneMap": "fluoro"
+      }
+    ],
+    "provenance": {
+      "backend": "tigre-placeholder",
+      "sourceBackendReported": "tigre",
+      "detectorPixels": [1024, 1024],
+      "pixelValueRange": [0.0, 1.0],
+      "imageOrientation": "vertical-flip-applied",
+      "toneMap": "fluoro",
+      "ingestManifest": "/fluoroview/cases/patient-4/metadata/drr_atlas_ingest_manifest.json",
+      "publicPngChecksums": "/fluoroview/cases/patient-4/metadata/drr_atlas_public_sha256.txt",
+      "vmExportChecksums": "/fluoroview/cases/patient-4/metadata/drr_atlas_vm_sha256.txt",
+      "note": "Generated on a GPU VM path with TIGRE installed, but this repo revision's TigreProjector delegates projection math to the CPU ray-sum placeholder. Treat this atlas as tigre-placeholder until true TIGRE projection geometry is implemented and rerun."
+    }
+  },
+  "lessons": [
+    {
+      "id": "projection-basics",
+      "title": "CT-to-fluoroscopy projection basics",
+      "objective": "Compare a CT slice with a projection image and identify overlapping structures.",
+      "task": "Sweep from AP to RAO/LAO and watch ribs, spine, and airway labels overlap."
+    },
+    {
+      "id": "angle-separation",
+      "title": "RAO/LAO target separation",
+      "objective": "Recognize that changing C-arm angle can separate an airway target from dense anatomy.",
+      "task": "Use the nearest-frame indicator while moving the RAO/LAO slider."
+    },
+    {
+      "id": "collimation-dose",
+      "title": "Collimation and relative KAP",
+      "objective": "Relate field size to educational relative KAP/DAP.",
+      "task": "Reduce collimation and compare dose rate with relative KAP."
+    },
+    {
+      "id": "abc-surprise",
+      "title": "ABC/AERC surprise",
+      "objective": "See that brightness can remain stable while relative exposure rises.",
+      "task": "Enable ABC and move to a thicker oblique projection."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "source": "Derived educational metadata scaffold from supplied airway segmentation labels.",
+  "segments": [
+    {
+      "id": "trachea",
+      "label": "Trachea",
+      "groupKey": "trachea",
+      "medianRadiusMm": 8.6
+    },
+    {
+      "id": "right-mainstem",
+      "label": "Right Mainstem",
+      "groupKey": "rmb",
+      "medianRadiusMm": 6.9
+    },
+    {
+      "id": "left-mainstem",
+      "label": "Left Mainstem",
+      "groupKey": "lmb",
+      "medianRadiusMm": 6.4
+    },
+    {
+      "id": "rul",
+      "label": "Right Upper Lobe",
+      "groupKey": "rul",
+      "medianRadiusMm": 3.8
+    },
+    {
+      "id": "rml",
+      "label": "Right Middle Lobe",
+      "groupKey": "rml",
+      "medianRadiusMm": 3.4
+    },
+    {
+      "id": "rll",
+      "label": "Right Lower Lobe",
+      "groupKey": "rll",
+      "medianRadiusMm": 3.7
+    },
+    {
+      "id": "lul",
+      "label": "Left Upper Lobe",
+      "groupKey": "lul",
+      "medianRadiusMm": 3.6
+    },
+    {
+      "id": "lll",
+      "label": "Left Lower Lobe",
+      "groupKey": "lll",
+      "medianRadiusMm": 3.5
+    }
+  ]
+}

@@ -126,13 +126,7 @@ const nextConfig = {
       {
         // Apply relaxed CSP to fluoroview pages for WebGL/WebAssembly
         source: '/fluoroview/:path*',
-        headers: [
-          ...securityHeaders,
-          {
-            key: 'Content-Type',
-            value: 'text/html; charset=utf-8',
-          },
-        ],
+        headers: securityHeaders,
       },
       {
         // Serve proper USDZ MIME for Quick Look
@@ -167,6 +161,32 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/fluoroview/:path*.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300',
+          },
+        ],
+      },
+      {
+        source: '/fluoroview/:path*.svg',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'image/svg+xml; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300',
           },
         ],
       },

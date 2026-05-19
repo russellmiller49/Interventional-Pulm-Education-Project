@@ -10,7 +10,6 @@ import {
   LineSegments,
   MathUtils,
   Matrix4,
-  Mesh,
   PerspectiveCamera,
   Scene,
   Vector2,
@@ -18,12 +17,13 @@ import {
   WebGLRenderer,
   Raycaster,
   type Material,
+  type Mesh,
   type Object3D,
 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
-import { createRotationMatrix, smoothstep } from './geometry'
+import { computeOverlayCalibrationTranslation, createRotationMatrix, smoothstep } from './geometry'
 import { ensureGroupAssignment, groupKeyForLabel } from './grouping'
 import type { AppState, FluoroConfig, Mat3, PreparedSegment, RenderStats } from './types'
 
@@ -47,6 +47,7 @@ export class FluoroRenderer {
   private readonly root: Group
   private readonly sourcePosition = new Vector3()
   private readonly renderMatrix = new Matrix4()
+  private readonly overlayCalibrationOffset = new Vector3()
   private readonly pointer = new Vector2()
   private pointerActive = false
   private readonly tmpVec = new Vector3()
@@ -192,11 +193,17 @@ export class FluoroRenderer {
 
   render(state: AppState): RenderStats {
     this.updateRendererSize()
-    applyRotationToGroup(
-      this.root,
-      createRotationMatrix(-state.raoLao, -state.cranialCaudal),
-      this.renderMatrix,
+    const overlayMode = state.overlayMode ?? 'surface'
+    const overlayOpacity = MathUtils.clamp(state.overlayOpacity ?? 0.7, 0, 1)
+    const rotationMatrix = createRotationMatrix(-state.raoLao, -state.cranialCaudal)
+    applyRotationToGroup(this.root, rotationMatrix, this.renderMatrix)
+    const calibrationOffset = computeOverlayCalibrationTranslation(this.config, rotationMatrix)
+    this.overlayCalibrationOffset.set(
+      calibrationOffset[0],
+      calibrationOffset[1],
+      calibrationOffset[2],
     )
+    this.root.position.copy(this.overlayCalibrationOffset)
     this.root.updateMatrixWorld(true)
 
     let hovered: SegmentInstance | null = null
@@ -216,13 +223,16 @@ export class FluoroRenderer {
     for (const instance of this.instances) {
       const { segment, labelEl, materials, edgeHelpers } = instance
       const isActive = state.activeGroups.has(segment.groupKey)
-      segment.object.visible = isActive
+      segment.object.visible = isActive && overlayMode !== 'off'
 
       for (const helper of edgeHelpers) {
-        const showWire = state.useWireframe && isActive
+        const showWire =
+          (state.useWireframe || overlayMode === 'wireframe' || overlayMode === 'centerline') &&
+          isActive &&
+          overlayMode !== 'off'
         helper.visible = showWire
         const lineMat = helper.material as LineBasicMaterial
-        const targetEdgeOpacity = showWire ? 0.55 : 0
+        const targetEdgeOpacity = showWire ? 0.65 * overlayOpacity : 0
         if (lineMat.opacity !== targetEdgeOpacity) {
           lineMat.opacity = targetEdgeOpacity
           lineMat.needsUpdate = true
@@ -235,17 +245,17 @@ export class FluoroRenderer {
       const depthWeight = smoothstep(0.35, 0.95, rayDir.dot(DETECTOR_NORMAL))
 
       for (const material of materials) {
-        if ('opacity' in material && 'transparent' in material) {
-          const solidOpacity = 0.82
-          const minOpacity = state.useWireframe ? 0.2 : 0.35
-          const targetOpacity = state.useDts
-            ? MathUtils.lerp(minOpacity, solidOpacity, depthWeight)
-            : solidOpacity
-          if ((material as any).opacity !== targetOpacity) {
-            ;(material as any).opacity = targetOpacity
-            ;(material as any).transparent = true
-            material.needsUpdate = true
-          }
+        const solidOpacity = 0.82
+        const minOpacity = state.useWireframe || overlayMode === 'wireframe' ? 0.12 : 0.35
+        const surfaceOpacity =
+          overlayMode === 'wireframe' || overlayMode === 'centerline' ? 0.12 : solidOpacity
+        const targetOpacity =
+          (state.useDts ? MathUtils.lerp(minOpacity, solidOpacity, depthWeight) : surfaceOpacity) *
+          overlayOpacity
+        if (material.opacity !== targetOpacity) {
+          material.opacity = targetOpacity
+          material.transparent = true
+          material.needsUpdate = true
         }
         if ('depthWrite' in material && material.depthWrite !== false) {
           material.depthWrite = false
@@ -261,7 +271,7 @@ export class FluoroRenderer {
       }
     }
 
-    if (hovered && hovered.labelEl && state.showLabels) {
+    if (hovered && hovered.labelEl && state.showLabels && overlayMode !== 'off') {
       const { segment, labelEl } = hovered
       const anchor = this.tmpVec.set(segment.anchor[0], segment.anchor[1], segment.anchor[2])
       const world = this.tmpWorld.copy(anchor).applyMatrix4(this.root.matrixWorld)
@@ -397,14 +407,18 @@ function extractColor(mesh: Mesh): Color {
   const material = mesh.material
   if (Array.isArray(material)) {
     for (const mat of material) {
-      if ((mat as any).color) {
-        return ((mat as any).color as Color).clone()
+      if (hasMaterialColor(mat)) {
+        return mat.color.clone()
       }
     }
-  } else if ((material as any).color) {
-    return ((material as any).color as Color).clone()
+  } else if (hasMaterialColor(material)) {
+    return material.color.clone()
   }
   return new Color(0x4ba1ff)
+}
+
+function hasMaterialColor(material: Material): material is Material & { color: Color } {
+  return 'color' in material && material.color instanceof Color
 }
 
 function configureMaterials(object: Object3D) {
@@ -413,11 +427,11 @@ function configureMaterials(object: Object3D) {
       const mesh = child as Mesh
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       for (const mat of materials) {
-        if ('side' in mat) (mat as any).side = DoubleSide
-        if ('transparent' in mat) (mat as any).transparent = true
-        if ('opacity' in mat) (mat as any).opacity = 0.68
-        if ('depthWrite' in mat) (mat as any).depthWrite = false
-        if ('toneMapped' in mat) (mat as any).toneMapped = false
+        mat.side = DoubleSide
+        mat.transparent = true
+        mat.opacity = 0.68
+        mat.depthWrite = false
+        mat.toneMapped = false
       }
     }
   })

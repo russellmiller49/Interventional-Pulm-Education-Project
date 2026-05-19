@@ -10,5 +10,13 @@
   "default_view": {
     "rao_lao_deg": 0,
     "cranial_caudal_deg": 0
+  },
+  "overlay_calibration": {
+    "method": "centerline-carina",
+    "carina_lps_mm": [-7.689563751220703, -134.31544494628906, -1157.5181884765625],
+    "target_detector_percent": [50, 45],
+    "source_curves": ["Network curve (0)", "Network curve (1)", "Network curve (2)"],
+    "reference_translation_mm": [-0.3104362487792969, 0, 19.67818847656245],
+    "note": "Carina anchor from Network curve (0) endpoint and Network curve (1)/(2) origins; target detector point matches the derived centerline overlay carina."
   }
 }

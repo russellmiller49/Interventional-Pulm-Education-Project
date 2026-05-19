@@ -37,7 +37,7 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
   return (
     <nav
       aria-label="Primary"
-      className="hidden flex-1 items-center justify-center gap-6 md:flex xl:gap-8"
+      className="hidden min-w-0 flex-1 items-center justify-center gap-3 md:flex xl:gap-4"
     >
       {items.map((item) => {
         const isActive =
@@ -49,8 +49,8 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              'rounded-md px-1 py-1 text-sm font-medium text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none',
-              isActive && 'text-foreground'
+              'rounded-md px-1 py-1 text-xs font-medium text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none xl:text-sm',
+              isActive && 'text-foreground',
             )}
           >
             {item.title}

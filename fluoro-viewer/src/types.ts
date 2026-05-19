@@ -17,6 +17,16 @@ export interface FluoroConfig {
     rao_lao_deg: number
     cranial_caudal_deg: number
   }
+  overlay_calibration?: OverlayCalibration
+}
+
+export interface OverlayCalibration {
+  method: 'centerline-carina'
+  carina_lps_mm: Vec3
+  target_detector_percent: Vec2
+  source_curves?: string[]
+  reference_translation_mm?: Vec3
+  note?: string
 }
 
 export interface PreparedSegment {
@@ -35,9 +45,124 @@ export interface AppState {
   useDts: boolean
   useWireframe: boolean
   showLabels: boolean
+  overlayMode: OverlayMode
+  overlayOpacity: number
   activeGroups: Set<string>
 }
 
 export interface RenderStats {
   visibleSegments: number
+}
+
+export type OverlayMode = 'off' | 'surface' | 'wireframe' | 'centerline' | 'labels'
+
+export type CtAxis = 'axial' | 'coronal' | 'sagittal'
+
+export interface DrrAtlasFrame {
+  id: string
+  raoLaoDeg: number
+  cranialCaudalDeg: number
+  imageUrl: string
+  thicknessProxy: number
+  backend?: string
+  imageOrientation?: string
+  toneMap?: string
+}
+
+export interface DrrBlendFrame {
+  frame: DrrAtlasFrame
+  weight: number
+}
+
+export interface DrrAtlasProvenance {
+  backend: string
+  sourceBackendReported?: string
+  detectorPixels: [number, number]
+  pixelValueRange?: [number, number]
+  imageOrientation?: string
+  toneMap?: string
+  ingestManifest?: string
+  publicPngChecksums?: string
+  vmExportChecksums?: string | null
+  note?: string
+}
+
+export interface CtSliceFrame {
+  index: number
+  positionMm: number
+  imageUrl: string
+}
+
+export interface CtSliceAxisConfig {
+  label: string
+  defaultIndex: number
+  frames: CtSliceFrame[]
+}
+
+export interface CtWindowPreset {
+  id: string
+  label: string
+  low: number
+  high: number
+}
+
+export interface FluoroLesson {
+  id: string
+  title: string
+  objective: string
+  task: string
+}
+
+export interface FluoroCaseManifest {
+  id: string
+  title: string
+  version: string
+  safetyLabel: string
+  description: string
+  sourcePolicy: string
+  assetBaseUrl: string
+  geometry: FluoroConfig
+  assets: {
+    airwayGlb: string
+    dracoBaseUrl: string
+    centerlineJson: string
+    segmentMetadataJson: string
+  }
+  ctSlices: {
+    windowPresets: CtWindowPreset[]
+    axes: Record<CtAxis, CtSliceAxisConfig>
+  }
+  drrAtlas: {
+    grid: {
+      raoLaoAngles: number[]
+      cranialCaudalAngles: number[]
+    }
+    provenance: DrrAtlasProvenance
+    frames: DrrAtlasFrame[]
+  }
+  lessons: FluoroLesson[]
+}
+
+export interface CenterlineOverlayPolyline {
+  id: string
+  label: string
+  points: Vec2[]
+}
+
+export interface CenterlineOverlay {
+  units: string
+  coordinateSystem: string
+  polylines: CenterlineOverlayPolyline[]
+}
+
+export interface SegmentMetadataEntry {
+  id: string
+  label: string
+  groupKey: string
+  medianRadiusMm: number
+}
+
+export interface SegmentMetadata {
+  source: string
+  segments: SegmentMetadataEntry[]
 }

@@ -1,0 +1,35 @@
+{
+  "units": "normalized-detector-percent",
+  "coordinateSystem": "screen",
+  "polylines": [
+    {
+      "id": "trachea-main",
+      "label": "Trachea to carina",
+      "points": [
+        [50, 18],
+        [50, 31],
+        [50, 45]
+      ]
+    },
+    {
+      "id": "right-main",
+      "label": "Right-sided airway route",
+      "points": [
+        [50, 45],
+        [59, 52],
+        [66, 66],
+        [74, 79]
+      ]
+    },
+    {
+      "id": "left-main",
+      "label": "Left-sided airway route",
+      "points": [
+        [50, 45],
+        [42, 52],
+        [36, 65],
+        [30, 78]
+      ]
+    }
+  ]
+}
