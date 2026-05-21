@@ -23,6 +23,7 @@ SAFE_METADATA_KEYS = {
     "PixelSpacing",
     "SliceThickness",
     "SpacingBetweenSlices",
+    "ImagePositionPatient",
     "ImageOrientationPatient",
     "RescaleSlope",
     "RescaleIntercept",
@@ -64,4 +65,3 @@ def _is_number_like(value: object) -> bool:
         return True
     except (TypeError, ValueError):
         return False
-

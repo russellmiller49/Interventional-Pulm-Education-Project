@@ -167,6 +167,7 @@ Thumbs.db
 *.eps
 *.raw
 !public/bronch-navigation-trainer/app/**/*.raw
+!public/fluoroview/cases/**/ct/ct_preview_uint8.raw
 *.cr2
 *.nef
 *.arw

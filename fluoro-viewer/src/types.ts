@@ -124,10 +124,20 @@ export interface FluoroCaseManifest {
   geometry: FluoroConfig
   assets: {
     airwayGlb: string
+    airwayFullGlb?: string
+    airwaySegmentsGlb?: string
+    airwayGraphJson?: string
+    scopePathGlb?: string
+    ctVolumePreview?: string
+    assetTransforms?: {
+      airway?: AssetTransform
+    }
     dracoBaseUrl: string
     centerlineJson: string
     segmentMetadataJson: string
   }
+  ctVolume?: CtVolumePreview
+  interaction?: FluoroInteractionDefaults
   ctSlices: {
     windowPresets: CtWindowPreset[]
     axes: Record<CtAxis, CtSliceAxisConfig>
@@ -141,6 +151,68 @@ export interface FluoroCaseManifest {
     frames: DrrAtlasFrame[]
   }
   lessons: FluoroLesson[]
+}
+
+export interface AssetTransform {
+  sceneScale?: number
+  rotationDeg?: Vec3
+  positionOffsetMm?: Vec3
+  note?: string
+}
+
+export interface CtVolumePreview {
+  raw?: string
+  rawUrl: string
+  sizeXyz: [number, number, number]
+  originalSizeXyz: [number, number, number]
+  stride: number | [number, number, number]
+  spacingXyzMm: Vec3
+  originLps: Vec3
+  directionLps: number[]
+  windowHu: [number, number]
+  source?: string
+}
+
+export interface FluoroInteractionDefaults {
+  noduleRadiusMm: number
+  snapRadiusMm: number
+  defaultScopeProgress: number
+  defaultRouteTerminalNodeId: number
+  source?: string
+}
+
+export interface AirwayGraphNode {
+  id: number
+  lps: Vec3
+  kind: 'root' | 'carina' | 'bifurcation' | 'terminal' | 'internal' | string
+  degree: number
+  rootDistanceMm: number
+  parentNodeId: number | null
+  parentEdgeId: number | null
+  childEdgeIds: number[]
+}
+
+export interface AirwayGraphEdge {
+  id: number
+  sourceCurve: string
+  startNodeId: number
+  endNodeId: number
+  lengthMm: number
+  radiusMm: number | null
+  pointsLps: Vec3[]
+}
+
+export interface AirwayGraph {
+  schema: 'fluoroview_airway_graph/v1' | string
+  units: 'mm' | string
+  coordinateSystem: 'LPS' | string
+  source?: Record<string, unknown>
+  rootNodeId: number
+  carinaNodeId: number
+  carinaLpsMm: Vec3
+  terminalNodeIds: number[]
+  nodes: AirwayGraphNode[]
+  edges: AirwayGraphEdge[]
 }
 
 export interface CenterlineOverlayPolyline {

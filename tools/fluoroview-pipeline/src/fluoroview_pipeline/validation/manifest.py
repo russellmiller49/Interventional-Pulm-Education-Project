@@ -36,6 +36,12 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     provenance = manifest.get("drrAtlas", {}).get("provenance", {})
     if not provenance.get("backend"):
         errors.append("Manifest DRR atlas must include a provenance backend.")
+    assets = manifest.get("assets", {})
+    if assets.get("airwayGraphJson") and not manifest.get("interaction"):
+        errors.append("Interaction defaults are required when airwayGraphJson is present.")
+    ct_volume = manifest.get("ctVolume")
+    if ct_volume and not ct_volume.get("rawUrl"):
+        errors.append("CT preview volume metadata must include rawUrl.")
     for frame in frames:
         if "imageUrl" not in frame or "raoLaoDeg" not in frame or "cranialCaudalDeg" not in frame:
             errors.append("Every DRR frame must include imageUrl, raoLaoDeg, and cranialCaudalDeg.")

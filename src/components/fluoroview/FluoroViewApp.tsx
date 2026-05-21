@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type MouseEvent as ReactMouseEvent,
 } from 'react'
 import Image from 'next/image'
 
@@ -17,6 +18,17 @@ import {
   validateFluoroCaseManifest,
 } from '@fluoroview/case'
 import { BRANCH_GROUPS } from '@fluoroview/grouping'
+import {
+  buildRoutePath,
+  canvasPointToLps,
+  findNearestAirwayPoint,
+  lpsToCtIndex,
+  projectLpsToCanvas,
+  projectLpsToDetector,
+  routeOptions,
+  sampleRoutePath,
+  type RoutePath,
+} from '@fluoroview/interaction'
 import {
   DEFAULT_FLUORO_SETTINGS,
   EMPTY_DOSE_STATE,
@@ -34,13 +46,16 @@ import {
 } from '@fluoroview/knobology'
 import { FluoroRenderer } from '@fluoroview/render'
 import type {
+  AirwayGraph,
   AppState,
   CenterlineOverlay,
   CtAxis,
+  CtVolumePreview,
   FluoroCaseManifest,
   OverlayMode,
   PreparedSegment,
   SegmentMetadata,
+  Vec3,
 } from '@fluoroview/types'
 
 import { Badge } from '@/components/ui/badge'
@@ -76,12 +91,19 @@ type RenderStats = {
 
 type CtIndexByAxis = Record<CtAxis, number>
 
+interface NoduleState {
+  lps: Vec3
+  distanceMm: number
+  edgeId: number
+  routeTerminalNodeId: number
+}
+
 function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
   const entries = BRANCH_GROUPS.map((group) => ({
     groupKey: group.key,
     groupLabel: group.label,
     items: segments
-      .filter((segment) => segment.groupKey === group.key)
+      .filter((segment) => segment.groupKey === group.key && isLegendSegment(segment.label))
       .sort((a, b) => a.displayLabel.localeCompare(b.displayLabel))
       .map((segment) => ({
         label: segment.displayLabel,
@@ -90,8 +112,7 @@ function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
   })).filter((entry) => entry.items.length > 0)
 
   const otherSegments = segments.filter(
-    (segment) =>
-      segment.groupKey === ORIGIN_GROUP && !segment.label.includes('Tracheobronchial_tree_full'),
+    (segment) => segment.groupKey === ORIGIN_GROUP && isLegendSegment(segment.label),
   )
 
   if (otherSegments.length) {
@@ -110,12 +131,31 @@ function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
   return entries
 }
 
+function isLegendSegment(label: string): boolean {
+  return !/tracheobronchial[_\s]?tree[_\s]?full|tree[_\s]?full/i.test(label)
+}
+
 function defaultCtIndices(manifest: FluoroCaseManifest): CtIndexByAxis {
+  if (manifest.ctVolume && manifest.geometry.overlay_calibration?.carina_lps_mm) {
+    const [i, j, k] = lpsToCtIndex(
+      manifest.geometry.overlay_calibration.carina_lps_mm,
+      manifest.ctVolume,
+    )
+    return {
+      axial: clampIndex(Math.round(k), manifest.ctVolume.sizeXyz[2]),
+      coronal: clampIndex(Math.round(j), manifest.ctVolume.sizeXyz[1]),
+      sagittal: clampIndex(Math.round(i), manifest.ctVolume.sizeXyz[0]),
+    }
+  }
   return {
     axial: manifest.ctSlices.axes.axial.defaultIndex,
     coronal: manifest.ctSlices.axes.coronal.defaultIndex,
     sagittal: manifest.ctSlices.axes.sagittal.defaultIndex,
   }
+}
+
+function clampIndex(value: number, length: number): number {
+  return Math.min(Math.max(value, 0), Math.max(length - 1, 0))
 }
 
 export function FluoroViewApp() {
@@ -128,6 +168,8 @@ export function FluoroViewApp() {
 
   const [manifest, setManifest] = useState<FluoroCaseManifest | null>(null)
   const [centerline, setCenterline] = useState<CenterlineOverlay | null>(null)
+  const [airwayGraph, setAirwayGraph] = useState<AirwayGraph | null>(null)
+  const [ctVolumeData, setCtVolumeData] = useState<Uint8Array | null>(null)
   const [segmentMetadata, setSegmentMetadata] = useState<SegmentMetadata | null>(null)
   const [legendEntries, setLegendEntries] = useState<LegendEntry[]>([])
   const [appState, setAppState] = useState<AppState | null>(null)
@@ -137,6 +179,12 @@ export function FluoroViewApp() {
   const [ctIndices, setCtIndices] = useState<CtIndexByAxis>({ axial: 0, coronal: 0, sagittal: 0 })
   const [ctWindowPreset, setCtWindowPreset] = useState('lung')
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
+  const [nodule, setNodule] = useState<NoduleState | null>(null)
+  const [snapStatus, setSnapStatus] = useState('Click the CT to place a synthetic nodule.')
+  const [scopeRouteTerminalId, setScopeRouteTerminalId] = useState<number | null>(null)
+  const [scopeProgress, setScopeProgress] = useState(0.45)
+  const [showScope, setShowScope] = useState(true)
+  const [showScopeTrace, setShowScopeTrace] = useState(true)
   const [renderStats, setRenderStats] = useState<RenderStats>({ fps: 0, visibleSegments: 0 })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -177,13 +225,27 @@ export function FluoroViewApp() {
         })
         rendererRef.current = renderer
 
-        const [loadedSegments, centerlineRes, segmentRes] = await Promise.all([
-          renderer.loadGlb(loadedManifest.assets.airwayGlb, {
-            dracoBaseUrl: loadedManifest.assets.dracoBaseUrl,
-          }),
-          fetch(loadedManifest.assets.centerlineJson),
-          fetch(loadedManifest.assets.segmentMetadataJson),
-        ])
+        const airwayGlb = loadedManifest.assets.airwaySegmentsGlb ?? loadedManifest.assets.airwayGlb
+        const [loadedSegments, centerlineRes, segmentRes, graphRes, ctVolumeBuffer] =
+          await Promise.all([
+            renderer.loadGlb(airwayGlb, {
+              dracoBaseUrl: loadedManifest.assets.dracoBaseUrl,
+              transform: loadedManifest.assets.assetTransforms?.airway,
+            }),
+            fetch(loadedManifest.assets.centerlineJson),
+            fetch(loadedManifest.assets.segmentMetadataJson),
+            loadedManifest.assets.airwayGraphJson
+              ? fetch(loadedManifest.assets.airwayGraphJson)
+              : Promise.resolve(null),
+            loadedManifest.ctVolume?.rawUrl
+              ? fetch(loadedManifest.ctVolume.rawUrl).then((response) => {
+                  if (!response.ok) {
+                    throw new Error(`Failed to load CT preview volume (${response.status})`)
+                  }
+                  return response.arrayBuffer()
+                })
+              : Promise.resolve(null),
+          ])
 
         if (cancelled) return
 
@@ -192,6 +254,17 @@ export function FluoroViewApp() {
         }
         if (segmentRes.ok) {
           setSegmentMetadata((await segmentRes.json()) as SegmentMetadata)
+        }
+        let loadedGraph: AirwayGraph | null = null
+        if (graphRes) {
+          if (!graphRes.ok) {
+            throw new Error(`Failed to load airway graph (${graphRes.status})`)
+          }
+          loadedGraph = (await graphRes.json()) as AirwayGraph
+          setAirwayGraph(loadedGraph)
+        }
+        if (ctVolumeBuffer) {
+          setCtVolumeData(new Uint8Array(ctVolumeBuffer))
         }
 
         const baseState: AppState = {
@@ -211,6 +284,12 @@ export function FluoroViewApp() {
         setManifest(loadedManifest)
         setSelectedLessonId(loadedManifest.lessons[0]?.id ?? null)
         setCtIndices(defaultCtIndices(loadedManifest))
+        setScopeRouteTerminalId(
+          loadedManifest.interaction?.defaultRouteTerminalNodeId ??
+            loadedGraph?.terminalNodeIds[0] ??
+            null,
+        )
+        setScopeProgress(loadedManifest.interaction?.defaultScopeProgress ?? 0.45)
         setLegendEntries(buildLegendEntries(loadedSegments))
         setAppState(baseState)
         setLoading(false)
@@ -334,6 +413,15 @@ export function FluoroViewApp() {
     requestRender()
   }, [appState, requestRender])
 
+  useEffect(() => {
+    if (!manifest?.ctVolume) return
+    setCtIndices((prev) => ({
+      axial: clampIndex(prev.axial, manifest.ctVolume!.sizeXyz[2]),
+      coronal: clampIndex(prev.coronal, manifest.ctVolume!.sizeXyz[1]),
+      sagittal: clampIndex(prev.sagittal, manifest.ctVolume!.sizeXyz[0]),
+    }))
+  }, [manifest?.ctVolume])
+
   const nearestFrame = useMemo(() => {
     if (!manifest || !appState) return null
     return findNearestDrrFrame(manifest.drrAtlas.frames, appState.raoLao, appState.cranialCaudal)
@@ -356,6 +444,69 @@ export function FluoroViewApp() {
     const index = ctIndices[ctAxis] ?? axisConfig.defaultIndex
     return axisConfig.frames[Math.min(Math.max(index, 0), axisConfig.frames.length - 1)]
   }, [ctAxis, ctIndices, manifest])
+
+  const scopeRouteOptions = useMemo(() => {
+    if (!airwayGraph) return []
+    const options = routeOptions(airwayGraph, 24)
+    if (nodule && !options.some((option) => option.id === nodule.routeTerminalNodeId)) {
+      return [
+        {
+          id: nodule.routeTerminalNodeId,
+          label: `Nodule route (${airwayGraph.nodes[nodule.routeTerminalNodeId]?.rootDistanceMm.toFixed(0) ?? 'distal'} mm)`,
+        },
+        ...options,
+      ]
+    }
+    return options
+  }, [airwayGraph, nodule])
+
+  const activeRoute = useMemo<RoutePath | null>(() => {
+    if (!airwayGraph || scopeRouteTerminalId == null) return null
+    return buildRoutePath(airwayGraph, scopeRouteTerminalId)
+  }, [airwayGraph, scopeRouteTerminalId])
+
+  const scopeSample = useMemo(() => {
+    return activeRoute ? sampleRoutePath(activeRoute, scopeProgress) : null
+  }, [activeRoute, scopeProgress])
+
+  const projectedNodule = useMemo(() => {
+    if (!manifest || !appState || !nodule) return null
+    return projectLpsToDetector(
+      nodule.lps,
+      manifest.geometry,
+      appState.raoLao,
+      appState.cranialCaudal,
+    )
+  }, [appState, manifest, nodule])
+
+  const projectedScope = useMemo(() => {
+    if (!manifest || !appState || !scopeSample) return null
+    return projectLpsToDetector(
+      scopeSample.point,
+      manifest.geometry,
+      appState.raoLao,
+      appState.cranialCaudal,
+    )
+  }, [appState, manifest, scopeSample])
+
+  const projectedScopeTrace = useMemo(() => {
+    if (!manifest || !appState || !activeRoute || !showScopeTrace) return []
+    const maxIndex = Math.max(1, Math.floor(activeRoute.points.length * scopeProgress))
+    return activeRoute.points
+      .slice(0, maxIndex + 1)
+      .map((point) =>
+        projectLpsToDetector(point, manifest.geometry, appState.raoLao, appState.cranialCaudal),
+      )
+  }, [activeRoute, appState, manifest, scopeProgress, showScopeTrace])
+
+  const noduleScopeDistance = useMemo(() => {
+    if (!nodule || !scopeSample) return null
+    return Math.hypot(
+      nodule.lps[0] - scopeSample.point[0],
+      nodule.lps[1] - scopeSample.point[1],
+      nodule.lps[2] - scopeSample.point[2],
+    )
+  }, [nodule, scopeSample])
 
   const thicknessProxy = drrBlendFrames.length
     ? drrBlendFrames.reduce((total, item) => total + item.frame.thicknessProxy * item.weight, 0)
@@ -398,6 +549,34 @@ export function FluoroViewApp() {
       setDoseState((prev) => updateDoseState(prev, settings, frameCount, thicknessProxy))
     },
     [settings, thicknessProxy],
+  )
+
+  const handleCtNodulePlacement = useCallback(
+    (lps: Vec3) => {
+      if (!airwayGraph || !manifest?.interaction) {
+        setSnapStatus('Airway graph is still loading; try again in a moment.')
+        return
+      }
+      const snap = findNearestAirwayPoint(airwayGraph, lps, manifest.interaction.snapRadiusMm)
+      if (!snap) {
+        setSnapStatus(
+          `No airway centerline within ${manifest.interaction.snapRadiusMm} mm. Try closer to the airway.`,
+        )
+        return
+      }
+      setNodule({
+        lps: snap.lps,
+        distanceMm: snap.distanceMm,
+        edgeId: snap.edgeId,
+        routeTerminalNodeId: snap.routeTerminalNodeId,
+      })
+      setScopeRouteTerminalId(snap.routeTerminalNodeId)
+      setScopeProgress(Math.max(scopeProgress, 0.35))
+      setSnapStatus(
+        `Nodule snapped ${snap.distanceMm.toFixed(1)} mm to Network edge ${snap.edgeId}. Scope route updated.`,
+      )
+    },
+    [airwayGraph, manifest?.interaction, scopeProgress],
   )
 
   if (error) {
@@ -501,6 +680,66 @@ export function FluoroViewApp() {
               }}
             />
             <div ref={labelLayerRef} className="pointer-events-none absolute inset-0" />
+            {projectedNodule || (showScope && projectedScope) || projectedScopeTrace.length ? (
+              <svg
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                viewBox="0 0 100 100"
+                aria-hidden
+              >
+                {projectedScopeTrace.length > 1 ? (
+                  <polyline
+                    points={projectedScopeTrace
+                      .filter((projection) => projection.inFrame)
+                      .map((projection) => projection.point.join(','))
+                      .join(' ')}
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="0.9"
+                    opacity="0.85"
+                  />
+                ) : null}
+                {projectedNodule ? (
+                  <g
+                    transform={`translate(${projectedNodule.point[0]} ${projectedNodule.point[1]})`}
+                  >
+                    <circle
+                      r="3.2"
+                      fill="rgba(244,63,94,0.25)"
+                      stroke="#fb7185"
+                      strokeWidth="0.7"
+                    />
+                    <line x1="-4.5" x2="4.5" y1="0" y2="0" stroke="#fb7185" strokeWidth="0.45" />
+                    <line x1="0" x2="0" y1="-4.5" y2="4.5" stroke="#fb7185" strokeWidth="0.45" />
+                  </g>
+                ) : null}
+                {showScope && projectedScope ? (
+                  <g transform={`translate(${projectedScope.point[0]} ${projectedScope.point[1]})`}>
+                    <circle r="2.2" fill="#22c55e" stroke="#052e16" strokeWidth="0.7" />
+                    <circle
+                      r="4.2"
+                      fill="none"
+                      stroke="#bbf7d0"
+                      strokeWidth="0.45"
+                      opacity="0.85"
+                    />
+                  </g>
+                ) : null}
+                {projectedNodule && showScope && projectedScope ? (
+                  <line
+                    x1={projectedScope.point[0]}
+                    y1={projectedScope.point[1]}
+                    x2={projectedNodule.point[0]}
+                    y2={projectedNodule.point[1]}
+                    stroke="#fbbf24"
+                    strokeDasharray="1.2 1.2"
+                    strokeWidth="0.45"
+                    opacity="0.9"
+                  />
+                ) : null}
+              </svg>
+            ) : null}
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 text-sm text-slate-300">
                 Loading FluoroView...
@@ -743,6 +982,68 @@ export function FluoroViewApp() {
               </div>
             </ControlPanel>
 
+            <ControlPanel title="Scope And Target">
+              <div className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
+                <div className="font-medium text-foreground">Nodule placement</div>
+                <p className="mt-1">{snapStatus}</p>
+                {nodule ? (
+                  <div className="mt-2 grid grid-cols-2 gap-1">
+                    <span>Route edge</span>
+                    <span className="text-right text-foreground">{nodule.edgeId}</span>
+                    <span>Scope to nodule</span>
+                    <span className="text-right text-foreground">
+                      {noduleScopeDistance ? `${noduleScopeDistance.toFixed(1)} mm` : 'Pending'}
+                    </span>
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  className="mt-3 rounded-md border border-border px-3 py-2 text-xs font-semibold text-foreground"
+                  onClick={() => {
+                    setNodule(null)
+                    setSnapStatus('Click the CT to place a synthetic nodule.')
+                  }}
+                >
+                  Reset nodule
+                </button>
+              </div>
+              <label className="grid gap-1 text-sm">
+                <span className="text-muted-foreground">Scope route</span>
+                <select
+                  className="rounded-md border border-border bg-background px-3 py-2"
+                  value={scopeRouteTerminalId ?? ''}
+                  onChange={(event) => setScopeRouteTerminalId(Number(event.target.value))}
+                  disabled={!scopeRouteOptions.length}
+                >
+                  {scopeRouteOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <RangeControl
+                label="Scope progress"
+                value={scopeProgress}
+                min={0}
+                max={1}
+                step={0.01}
+                onChange={setScopeProgress}
+              />
+              <ToggleControl label="Show scope tip" checked={showScope} onChange={setShowScope} />
+              <ToggleControl
+                label="Show scope trace"
+                checked={showScopeTrace}
+                onChange={setShowScopeTrace}
+              />
+              {activeRoute && scopeSample ? (
+                <p className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
+                  Scope {scopeSample.distanceMm.toFixed(1)} / {activeRoute.lengthMm.toFixed(1)} mm
+                  along selected centerline route.
+                </p>
+              ) : null}
+            </ControlPanel>
+
             <ControlPanel title="Field And Image">
               <RangeControl
                 label="Collimation width"
@@ -851,16 +1152,28 @@ export function FluoroViewApp() {
             <div>
               <h2 className="text-base font-semibold text-foreground">CT Correlation</h2>
               <p className="text-xs text-muted-foreground">
-                Derived slice tiles for educational projection correlation.
+                Click the CT to place a synthetic nodule near an airway route.
               </p>
             </div>
             <Badge variant="secondary" className="rounded-full text-xs">
               {ctAxis}
             </Badge>
           </div>
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="grid items-start gap-4">
             <div className="relative aspect-square overflow-hidden rounded-lg border border-border/60 bg-slate-950">
-              {ctFrame ? (
+              {manifest?.ctVolume && ctVolumeData ? (
+                <CtVolumeCanvas
+                  axis={ctAxis}
+                  ctVolume={manifest.ctVolume}
+                  volume={ctVolumeData}
+                  sliceIndex={ctIndices[ctAxis] ?? 0}
+                  windowPreset={ctWindowPreset}
+                  nodule={nodule}
+                  noduleRadiusMm={manifest.interaction?.noduleRadiusMm ?? 10}
+                  scopePoint={scopeSample?.point ?? null}
+                  onPlaceNodule={handleCtNodulePlacement}
+                />
+              ) : ctFrame ? (
                 <Image
                   src={ctFrame.imageUrl}
                   alt={`${ctAxis} CT slice ${ctFrame.index + 1}`}
@@ -877,7 +1190,7 @@ export function FluoroViewApp() {
               )}
             </div>
             {manifest ? (
-              <div className="grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-1 text-sm">
                   <span className="text-muted-foreground">Axis</span>
                   <select
@@ -900,7 +1213,11 @@ export function FluoroViewApp() {
                   <input
                     type="range"
                     min={0}
-                    max={manifest.ctSlices.axes[ctAxis].frames.length - 1}
+                    max={
+                      manifest.ctVolume
+                        ? ctAxisLength(manifest.ctVolume, ctAxis) - 1
+                        : manifest.ctSlices.axes[ctAxis].frames.length - 1
+                    }
                     step={1}
                     value={ctIndices[ctAxis] ?? 0}
                     onChange={(event) =>
@@ -909,6 +1226,10 @@ export function FluoroViewApp() {
                     className="w-full accent-primary"
                   />
                 </label>
+                <div className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground sm:col-span-2">
+                  <div className="font-medium text-foreground">Target status</div>
+                  <p className="mt-1">{snapStatus}</p>
+                </div>
                 <label className="grid gap-1 text-sm">
                   <span className="text-muted-foreground">Window</span>
                   <select
@@ -987,6 +1308,22 @@ export function FluoroViewApp() {
             <div className="flex justify-between gap-3">
               <dt>Segment metadata</dt>
               <dd className="text-foreground">{segmentMetadata?.segments.length ?? 0}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt>Airway graph</dt>
+              <dd className="text-foreground">
+                {airwayGraph ? `${airwayGraph.edges.length} edges` : 'Loading'}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt>CT preview</dt>
+              <dd className="text-right text-foreground">
+                {manifest?.ctVolume ? manifest.ctVolume.sizeXyz.join(' x ') : 'Loading'}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt>Nodule</dt>
+              <dd className="text-right text-foreground">{nodule ? 'Placed' : 'Not placed'}</dd>
             </div>
           </dl>
           <p className="mt-3 text-xs text-muted-foreground">
@@ -1077,6 +1414,191 @@ function ToggleControl({
       />
     </label>
   )
+}
+
+function CtVolumeCanvas({
+  axis,
+  ctVolume,
+  volume,
+  sliceIndex,
+  windowPreset,
+  nodule,
+  noduleRadiusMm,
+  scopePoint,
+  onPlaceNodule,
+}: {
+  axis: CtAxis
+  ctVolume: CtVolumePreview
+  volume: Uint8Array
+  sliceIndex: number
+  windowPreset: string
+  nodule: NoduleState | null
+  noduleRadiusMm: number
+  scopePoint: Vec3 | null
+  onPlaceNodule: (lps: Vec3) => void
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const { width, height } = ctCanvasDimensions(ctVolume, axis)
+    const clampedSlice = clampIndex(sliceIndex, ctAxisLength(ctVolume, axis))
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const image = ctx.createImageData(width, height)
+    const [sx, sy] = ctVolume.sizeXyz
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const [i, j, k] = ctCanvasPixelToIndex(x, y, axis, clampedSlice, ctVolume)
+        const offset = k * sx * sy + j * sx + i
+        const value = applyCtWindowPreset(volume[offset] ?? 0, windowPreset)
+        const pixel = (y * width + x) * 4
+        image.data[pixel] = value
+        image.data[pixel + 1] = value
+        image.data[pixel + 2] = value
+        image.data[pixel + 3] = 255
+      }
+    }
+    ctx.putImageData(image, 0, 0)
+    if (nodule) {
+      drawCtMarker(ctx, ctVolume, axis, clampedSlice, nodule.lps, noduleRadiusMm, '#fb7185', 'N')
+    }
+    if (scopePoint) {
+      drawCtMarker(ctx, ctVolume, axis, clampedSlice, scopePoint, 4, '#22c55e', 'S')
+    }
+  }, [axis, ctVolume, nodule, noduleRadiusMm, scopePoint, sliceIndex, volume, windowPreset])
+
+  const handleClick = useCallback(
+    (event: ReactMouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * canvas.width
+      const y = ((event.clientY - rect.top) / Math.max(rect.height, 1)) * canvas.height
+      const lps = canvasPointToLps(
+        x,
+        y,
+        canvas.width,
+        canvas.height,
+        axis,
+        clampIndex(sliceIndex, ctAxisLength(ctVolume, axis)),
+        ctVolume,
+      )
+      onPlaceNodule(lps)
+    },
+    [axis, ctVolume, onPlaceNodule, sliceIndex],
+  )
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="h-full w-full cursor-crosshair"
+      aria-label="CT preview. Click to place a synthetic educational nodule."
+      onClick={handleClick}
+    />
+  )
+}
+
+function ctAxisLength(ctVolume: CtVolumePreview, axis: CtAxis): number {
+  if (axis === 'axial') return ctVolume.sizeXyz[2]
+  if (axis === 'coronal') return ctVolume.sizeXyz[1]
+  return ctVolume.sizeXyz[0]
+}
+
+function ctCanvasDimensions(ctVolume: CtVolumePreview, axis: CtAxis) {
+  const [sx, sy, sz] = ctVolume.sizeXyz
+  if (axis === 'axial') return { width: sx, height: sy }
+  if (axis === 'coronal') return { width: sx, height: sz }
+  return { width: sy, height: sz }
+}
+
+function ctCanvasPixelToIndex(
+  x: number,
+  y: number,
+  axis: CtAxis,
+  sliceIndex: number,
+  ctVolume: CtVolumePreview,
+): [number, number, number] {
+  const [sx, sy, sz] = ctVolume.sizeXyz
+  if (axis === 'axial') {
+    return [
+      clampIndex(Math.round(x), sx),
+      clampIndex(Math.round(y), sy),
+      clampIndex(sliceIndex, sz),
+    ]
+  }
+  if (axis === 'coronal') {
+    return [
+      clampIndex(Math.round(x), sx),
+      clampIndex(sliceIndex, sy),
+      clampIndex(Math.round(sz - 1 - y), sz),
+    ]
+  }
+  return [
+    clampIndex(sliceIndex, sx),
+    clampIndex(Math.round(x), sy),
+    clampIndex(Math.round(sz - 1 - y), sz),
+  ]
+}
+
+function applyCtWindowPreset(value: number, preset: string): number {
+  if (preset === 'bone') return Math.min(255, Math.round(value * 1.22 + 8))
+  if (preset === 'softTissue') return Math.min(255, Math.round(value * 0.92 + 18))
+  return value
+}
+
+function drawCtMarker(
+  ctx: CanvasRenderingContext2D,
+  ctVolume: CtVolumePreview,
+  axis: CtAxis,
+  sliceIndex: number,
+  lps: Vec3,
+  radiusMm: number,
+  color: string,
+  label: string,
+) {
+  const projected = projectLpsToCanvas(
+    lps,
+    axis,
+    sliceIndex,
+    ctVolume,
+    ctx.canvas.width,
+    ctx.canvas.height,
+  )
+  const tolerance = radiusMm / Math.max(axisSpacingMm(ctVolume, axis), 0.001) + 1.5
+  if (!projected.inFrame || projected.distanceFromSlice > tolerance) return
+  const radiusPx = Math.max(
+    4,
+    Math.min(26, radiusMm / Math.max(inPlaneSpacingMm(ctVolume, axis), 0.001)),
+  )
+  ctx.save()
+  ctx.globalAlpha = label === 'N' ? 0.9 : 0.82
+  ctx.strokeStyle = color
+  ctx.fillStyle = label === 'N' ? 'rgba(251,113,133,0.18)' : 'rgba(34,197,94,0.28)'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(projected.x, projected.y, radiusPx, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = color
+  ctx.font = '12px Inter, system-ui, sans-serif'
+  ctx.fillText(label, projected.x + radiusPx + 4, projected.y - radiusPx)
+  ctx.restore()
+}
+
+function axisSpacingMm(ctVolume: CtVolumePreview, axis: CtAxis): number {
+  if (axis === 'axial') return ctVolume.spacingXyzMm[2]
+  if (axis === 'coronal') return ctVolume.spacingXyzMm[1]
+  return ctVolume.spacingXyzMm[0]
+}
+
+function inPlaneSpacingMm(ctVolume: CtVolumePreview, axis: CtAxis): number {
+  if (axis === 'axial') return (ctVolume.spacingXyzMm[0] + ctVolume.spacingXyzMm[1]) / 2
+  if (axis === 'coronal') return (ctVolume.spacingXyzMm[0] + ctVolume.spacingXyzMm[2]) / 2
+  return (ctVolume.spacingXyzMm[1] + ctVolume.spacingXyzMm[2]) / 2
 }
 
 function PresetButtons({

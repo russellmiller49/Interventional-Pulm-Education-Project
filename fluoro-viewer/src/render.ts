@@ -25,7 +25,14 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 import { computeOverlayCalibrationTranslation, createRotationMatrix, smoothstep } from './geometry'
 import { ensureGroupAssignment, groupKeyForLabel } from './grouping'
-import type { AppState, FluoroConfig, Mat3, PreparedSegment, RenderStats } from './types'
+import type {
+  AppState,
+  AssetTransform,
+  FluoroConfig,
+  Mat3,
+  PreparedSegment,
+  RenderStats,
+} from './types'
 
 const DETECTOR_NORMAL = new Vector3(0, 1, 0)
 const SOURCE_COLOR = 0xffffff
@@ -95,8 +102,11 @@ export class FluoroRenderer {
     this.sourcePosition.set(0, -options.config.source_to_isocenter_mm, 0)
   }
 
-  async loadGlb(path: string, options?: { dracoBaseUrl?: string }): Promise<PreparedSegment[]> {
-    const { dracoBaseUrl = '/draco/' } = options ?? {}
+  async loadGlb(
+    path: string,
+    options?: { dracoBaseUrl?: string; transform?: AssetTransform },
+  ): Promise<PreparedSegment[]> {
+    const { dracoBaseUrl = '/draco/', transform } = options ?? {}
     const loader = new GLTFLoader()
     const draco = new DRACOLoader()
     draco.setDecoderPath(ensureTrailingSlash(dracoBaseUrl))
@@ -110,11 +120,19 @@ export class FluoroRenderer {
     this.pickables = []
     this.objectToInstance = new Map<Object3D, SegmentInstance>()
 
-    gltf.scene.scale.setScalar(1000)
+    gltf.scene.scale.setScalar(transform?.sceneScale ?? 1000)
+    if (transform?.rotationDeg) {
+      gltf.scene.rotation.set(
+        MathUtils.degToRad(transform.rotationDeg[0]),
+        MathUtils.degToRad(transform.rotationDeg[1]),
+        MathUtils.degToRad(transform.rotationDeg[2]),
+      )
+    }
+    const positionOffset = transform?.positionOffsetMm ?? [0, 0, 0]
     gltf.scene.position.set(
-      -this.config.isocenter_mm[0],
-      -this.config.isocenter_mm[1],
-      -this.config.isocenter_mm[2],
+      -this.config.isocenter_mm[0] + positionOffset[0],
+      -this.config.isocenter_mm[1] + positionOffset[1],
+      -this.config.isocenter_mm[2] + positionOffset[2],
     )
     gltf.scene.updateMatrixWorld(true)
 
@@ -482,7 +500,11 @@ function getAnchor(object: Object3D): Vector3 {
 }
 
 function formatDisplayLabel(raw: string): string {
-  const normalized = raw.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
+  const normalized = raw
+    .replace(/\.\d+$/g, '')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 
   // Override specific labels for correct anatomical terminology
   const labelOverrides: Record<string, string> = {

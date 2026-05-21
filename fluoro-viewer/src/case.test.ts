@@ -68,3 +68,20 @@ test('validateFluoroCaseManifest requires safety wording and assets', () => {
     }),
   ).toEqual([])
 })
+
+test('validateFluoroCaseManifest checks interaction assets when present', () => {
+  expect(
+    validateFluoroCaseManifest({
+      id: 'case',
+      title: 'Case',
+      safetyLabel: 'Educational simulation only - not for diagnosis.',
+      geometry: {},
+      assets: { airwayGlb: '/model.glb', airwayGraphJson: '/graph.json' },
+      ctSlices: { axes: { axial: {} } },
+      drrAtlas: {
+        provenance: { backend: 'cpu-ray-sum', detectorPixels: [512, 512] },
+        frames: frames.slice(0, 1),
+      },
+    }),
+  ).toContain('Interaction defaults are required when an airway graph is provided.')
+})

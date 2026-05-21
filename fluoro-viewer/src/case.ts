@@ -92,6 +92,12 @@ export function validateFluoroCaseManifest(candidate: unknown): string[] {
   }
   if (!manifest.geometry) errors.push('Geometry config is required.')
   if (!manifest.assets?.airwayGlb) errors.push('Airway GLB asset is required.')
+  if (manifest.assets?.airwayGraphJson && !manifest.interaction) {
+    errors.push('Interaction defaults are required when an airway graph is provided.')
+  }
+  if (manifest.ctVolume && !manifest.ctVolume.rawUrl) {
+    errors.push('CT preview volume rawUrl is required.')
+  }
   if (!manifest.ctSlices?.axes?.axial) errors.push('Axial CT slice axis is required.')
   if (!manifest.drrAtlas?.frames?.length) errors.push('At least one DRR atlas frame is required.')
   if (!manifest.drrAtlas?.provenance?.backend) {

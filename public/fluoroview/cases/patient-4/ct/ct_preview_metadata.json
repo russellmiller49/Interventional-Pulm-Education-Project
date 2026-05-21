@@ -1,0 +1,11 @@
+{
+  "raw": "ct_preview_uint8.raw",
+  "sizeXyz": [244, 244, 299],
+  "originalSizeXyz": [487, 487, 598],
+  "stride": [2, 2, 2],
+  "spacingXyzMm": [1.35199999809265, 1.35199999809265, 1.0],
+  "originLps": [-170.553, -336.377, -1340.5],
+  "directionLps": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+  "windowHu": [-1050.0, 350.0],
+  "source": "Derived low-resolution uint8 preview from local CT DICOM; not diagnostic."
+}
