@@ -129,6 +129,9 @@ export interface FluoroCaseManifest {
     airwayGraphJson?: string
     scopePathGlb?: string
     ctVolumePreview?: string
+    virtualCathLabManifest?: string
+    virtualCathLabSceneManifest?: string
+    virtualCathLabFrontalImage?: string | null
     assetTransforms?: {
       airway?: AssetTransform
     }
@@ -138,6 +141,7 @@ export interface FluoroCaseManifest {
   }
   ctVolume?: CtVolumePreview
   interaction?: FluoroInteractionDefaults
+  virtualCathLab?: VirtualCathLabReference
   ctSlices: {
     windowPresets: CtWindowPreset[]
     axes: Record<CtAxis, CtSliceAxisConfig>
@@ -151,6 +155,56 @@ export interface FluoroCaseManifest {
     frames: DrrAtlasFrame[]
   }
   lessons: FluoroLesson[]
+}
+
+export interface VirtualCathLabReference {
+  source: string
+  status: 'reference-export' | string
+  manifestUrl: string
+  sceneManifestUrl?: string
+  frontalImageUrl?: string | null
+  frontalDetectorPixels?: [number, number] | null
+  frontalDetectorSizeMm?: Vec2 | null
+  frontalPixelSpacingMm?: Vec2 | null
+  coordinateSystem?: 'RAS' | string
+  sourceImageIncludesModel?: boolean
+  cArm?: VirtualCathLabCArm
+  frontalProjection?: SlicerFrontalProjection
+  renderingPreset?: {
+    sourceFileName?: string
+    effectiveRange?: Vec2
+    scalarOpacity?: unknown[]
+    rgbTransferFunction?: unknown[]
+  } | null
+  note?: string
+}
+
+export interface VirtualCathLabCArm {
+  deviceClassId?: string
+  detectorPixelSizeMm?: number
+  sourceToImageDistanceMm?: number
+  frontalArmAngleLDeg?: number
+  frontalArmAnglePDeg?: number
+  frontalArmAngleCDeg?: number
+  frontalArmDetectorRotationDeg?: number
+  patientSpinDeg?: number
+  tableShiftLateralMm?: number
+  tableShiftLongitudinalMm?: number
+  tableShiftVerticalMm?: number
+  volumeRenderingPreset?: string
+}
+
+export interface SlicerFrontalProjection {
+  coordinateSystem: 'RAS' | string
+  positionRasMm: Vec3
+  focalPointRasMm: Vec3
+  viewUpRas: Vec3
+  sourceToImageDistanceMm: number
+  detectorPixels: [number, number]
+  detectorSizeMm: Vec2
+  pixelSpacingMm?: Vec2
+  viewAngleDeg?: number | null
+  imageOrientation?: string
 }
 
 export interface AssetTransform {

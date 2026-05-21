@@ -1,0 +1,683 @@
+{
+  "schemaVersion": 1,
+  "source": "SlicerHeart Virtual Cath Lab",
+  "sourceSchema": "fluoroview_virtual_cath_lab_bundle/v1",
+  "ingestedUtc": "2026-05-21T04:15:50.607844+00:00",
+  "sourceCreatedUtc": "2026-05-21T04:00:48.489918+00:00",
+  "coordinateSystem": "RAS",
+  "units": "mm",
+  "frames": [
+    {
+      "id": "carmfrontalxray",
+      "nodeName": "CArmFrontalXRay",
+      "imageUrl": "/fluoroview/cases/patient-4/virtual-cath-lab/CArmFrontalXRay.png",
+      "dimensionsIJK": [587, 800, 1],
+      "spacingIJKMm": [0.5, 0.5, 1.0],
+      "detectorSizeMm": [293.5, 400.0],
+      "scalarRange": [0.0, 255.0],
+      "sha256": "a44875074d65083be6fd0aabfdb2bfeba38f6e0e9d01dfa250afb5890d249816",
+      "relativePath": "virtual-cath-lab/CArmFrontalXRay.png"
+    }
+  ],
+  "geometry": {
+    "parameterNodes": [
+      {
+        "id": "vtkMRMLScriptedModuleNodeVirtualCathLab",
+        "name": "VirtualCathLab",
+        "moduleName": null,
+        "parameters": {},
+        "nodeReferences": {
+          "CArmFrontalXRay": [
+            {
+              "id": "vtkMRMLScalarVolumeNode2",
+              "name": "CArmFrontalXRay",
+              "className": "vtkMRMLScalarVolumeNode"
+            }
+          ],
+          "CArmLateralXRay": [
+            {
+              "id": "vtkMRMLScalarVolumeNode3",
+              "name": "CArmLateralXRay",
+              "className": "vtkMRMLScalarVolumeNode"
+            }
+          ],
+          "CenterlineCurve": [],
+          "DeformedHandles": [
+            {
+              "id": "vtkMRMLMarkupsFiducialNode2",
+              "name": "DeformedHandles",
+              "className": "vtkMRMLMarkupsFiducialNode"
+            }
+          ],
+          "DeformedModel": [
+            {
+              "id": "vtkMRMLModelNode5",
+              "name": "GenericFluoro deformed model",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "DeformingTransform": [
+            {
+              "id": "vtkMRMLTransformNode1",
+              "name": "DeformingTransform",
+              "className": "vtkMRMLTransformNode"
+            }
+          ],
+          "DisplacementToColorNode": [
+            {
+              "id": "vtkMRMLProceduralColorNode1",
+              "name": "Radial compression (mm)",
+              "className": "vtkMRMLProceduralColorNode"
+            }
+          ],
+          "FiducialRegistrationNode": [
+            {
+              "id": "vtkMRMLFiducialRegistrationWizardNode1",
+              "name": "FiducialRegistrationWizard",
+              "className": "vtkMRMLFiducialRegistrationWizardNode"
+            }
+          ],
+          "InputDeviceModel": [],
+          "InputVolume": [
+            {
+              "id": "vtkMRMLScalarVolumeNode1",
+              "name": "Patient_4_CT",
+              "className": "vtkMRMLScalarVolumeNode"
+            }
+          ],
+          "ModifiedVolume": [],
+          "OriginalHandles": [
+            {
+              "id": "vtkMRMLMarkupsFiducialNode1",
+              "name": "OriginalHandles",
+              "className": "vtkMRMLMarkupsFiducialNode"
+            }
+          ],
+          "OriginalModel": [
+            {
+              "id": "vtkMRMLModelNode4",
+              "name": "GenericFluoro model",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "PositioningTransform": [
+            {
+              "id": "vtkMRMLLinearTransformNode4",
+              "name": "PositioningTransform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "TableCenterPoint": [
+            {
+              "id": "vtkMRMLMarkupsFiducialNode3",
+              "name": "TableCenterPoint",
+              "className": "vtkMRMLMarkupsFiducialNode"
+            }
+          ],
+          "VesselLumenSegmentation": [],
+          "frontal-arm-c": [
+            {
+              "id": "vtkMRMLModelNode8",
+              "name": "frontal-arm-c",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "frontal-arm-c-rotation-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode7",
+              "name": "frontal-arm-c-rotation-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "frontal-arm-detector-rotation-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode9",
+              "name": "frontal-arm-detector-rotation-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "frontal-arm-detector-translation-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode8",
+              "name": "frontal-arm-detector-translation-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "frontal-arm-l": [
+            {
+              "id": "vtkMRMLModelNode6",
+              "name": "frontal-arm-l",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "frontal-arm-l-rotation-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode5",
+              "name": "frontal-arm-l-rotation-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "frontal-arm-p": [
+            {
+              "id": "vtkMRMLModelNode7",
+              "name": "frontal-arm-p",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "frontal-arm-p-rotation-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode6",
+              "name": "frontal-arm-p-rotation-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "frontal-beam": [
+            {
+              "id": "vtkMRMLModelNode11",
+              "name": "frontal-beam",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "frontal-camera-to-frontal-detector": [
+            {
+              "id": "vtkMRMLTransformNode2",
+              "name": "frontal-camera-to-frontal-detector",
+              "className": "vtkMRMLTransformNode"
+            }
+          ],
+          "frontal-detector": [
+            {
+              "id": "vtkMRMLModelNode10",
+              "name": "frontal-detector",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "frontal-detector-base": [
+            {
+              "id": "vtkMRMLModelNode9",
+              "name": "frontal-detector-base",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "gantry-to-ras": [
+            {
+              "id": "vtkMRMLTransformNode4",
+              "name": "gantry-to-ras",
+              "className": "vtkMRMLTransformNode"
+            }
+          ],
+          "lateral-arm-c": [],
+          "lateral-arm-c-rotation-transform": [],
+          "lateral-arm-detector-rotation-transform": [],
+          "lateral-arm-detector-translation-transform": [],
+          "lateral-arm-offset-transform": [],
+          "lateral-arm-p": [],
+          "lateral-arm-p-rotation-transform": [],
+          "lateral-beam": [],
+          "lateral-camera-to-lateral-detector": [
+            {
+              "id": "vtkMRMLTransformNode3",
+              "name": "lateral-camera-to-lateral-detector",
+              "className": "vtkMRMLTransformNode"
+            }
+          ],
+          "lateral-detector": [],
+          "lateral-detector-base": [],
+          "table-base": [
+            {
+              "id": "vtkMRMLModelNode12",
+              "name": "table-base",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "table-lateral-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode11",
+              "name": "table-lateral-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "table-longitudinal-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode12",
+              "name": "table-longitudinal-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ],
+          "table-middle": [
+            {
+              "id": "vtkMRMLModelNode13",
+              "name": "table-middle",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "table-top": [
+            {
+              "id": "vtkMRMLModelNode14",
+              "name": "table-top",
+              "className": "vtkMRMLModelNode"
+            }
+          ],
+          "table-vertical-transform": [
+            {
+              "id": "vtkMRMLLinearTransformNode10",
+              "name": "table-vertical-transform",
+              "className": "vtkMRMLLinearTransformNode"
+            }
+          ]
+        }
+      }
+    ],
+    "frontalCamera": {
+      "id": "vtkMRMLCameraNodeCArmFrontal",
+      "name": "Camera_1",
+      "activeTag": "vtkMRMLViewNodeCArmFrontal",
+      "positionRASMm": [-173.41142338262972, -637.0628136676025, -1102.6341288013741],
+      "focalPointRASMm": [-23.71500599384308, 63.34541453123093, -1176.25],
+      "viewUpRAS": [3.63582378303642e-18, 0.10452846326765354, 0.9945218953682734],
+      "viewAngleDeg": 25.493218500602847,
+      "parallelProjection": false,
+      "clippingRangeMm": [408.90877074365204, 1370.153081483242]
+    },
+    "frontalDetectorTransform": {
+      "id": "vtkMRMLLinearTransformNode9",
+      "name": "frontal-arm-detector-rotation-transform",
+      "className": "vtkMRMLLinearTransformNode",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode8",
+      "matrixToWorldRAS": [
+        [0.9781476007338055, 0.20791169081775926, 3.6358237830364184e-18, 10.590422991087195],
+        [-0.20677272882130038, 0.9727892058317132, 0.1045284632676535, 223.85563349346364],
+        [0.021732689536559883, -0.10224426555364702, 0.9945218953682731, -1193.1203038163517],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "isLinear": 1
+    },
+    "frontalCameraTransform": {
+      "id": "vtkMRMLTransformNode2",
+      "name": "frontal-camera-to-frontal-detector",
+      "className": "vtkMRMLTransformNode",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode9",
+      "matrixToWorldRAS": [
+        [-0.9781476007338055, 3.6358237830364184e-18, 0.20791169081775926, -173.41142338262972],
+        [0.20677272882130038, 0.1045284632676535, 0.9727892058317132, -637.0628136676025],
+        [-0.021732689536559883, 0.9945218953682731, -0.10224426555364702, -1102.6341288013741],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "isLinear": 1
+    },
+    "gantryToRas": {
+      "id": "vtkMRMLTransformNode4",
+      "name": "gantry-to-ras",
+      "className": "vtkMRMLTransformNode",
+      "parentTransformNodeId": null,
+      "matrixToWorldRAS": [
+        [1.0, 0.0, 0.0, -23.71500599384308],
+        [0.0, 1.0, 0.0, 63.34541453123093],
+        [0.0, 0.0, 1.0, -1176.25],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "isLinear": 1
+    },
+    "positioningTransform": {
+      "id": "vtkMRMLLinearTransformNode4",
+      "name": "PositioningTransform",
+      "className": "vtkMRMLLinearTransformNode",
+      "parentTransformNodeId": "vtkMRMLTransformNode4",
+      "matrixToWorldRAS": [
+        [1.0, 0.0, 0.0, -23.71500599384308],
+        [0.0, 1.0, 0.0, 63.34541453123093],
+        [0.0, 0.0, 1.0, -1176.25],
+        [0.0, 0.0, 0.0, 1.0]
+      ],
+      "isLinear": 1
+    },
+    "tableTransforms": [
+      {
+        "id": "vtkMRMLLinearTransformNode10",
+        "name": "table-vertical-transform",
+        "className": "vtkMRMLLinearTransformNode",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode4",
+        "matrixToWorldRAS": [
+          [1.0, 0.0, 0.0, -23.71500599384308],
+          [0.0, 1.0, 0.0, 73.34541453123093],
+          [0.0, 0.0, 1.0, -1176.25],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "isLinear": 1
+      },
+      {
+        "id": "vtkMRMLLinearTransformNode11",
+        "name": "table-lateral-transform",
+        "className": "vtkMRMLLinearTransformNode",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode10",
+        "matrixToWorldRAS": [
+          [1.0, 0.0, 0.0, 6.284994006156921],
+          [0.0, 1.0, 0.0, 73.34541453123093],
+          [0.0, 0.0, 1.0, -1176.25],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "isLinear": 1
+      },
+      {
+        "id": "vtkMRMLLinearTransformNode12",
+        "name": "table-longitudinal-transform",
+        "className": "vtkMRMLLinearTransformNode",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode11",
+        "matrixToWorldRAS": [
+          [1.0, 0.0, 0.0, 6.284994006156921],
+          [0.0, 1.0, 0.0, 73.34541453123093],
+          [0.0, 0.0, 1.0, -1191.25],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "isLinear": 1
+      }
+    ]
+  },
+  "anatomy": {
+    "segmentations": [
+      {
+        "id": "vtkMRMLSegmentationNode1",
+        "name": "Full_airway_5_19",
+        "parentTransformNodeId": null,
+        "rasBoundsMm": [
+          -119.78900581598279, 116.13499385118493, 73.07501453161251, 223.9110870361328,
+          -1288.2500000000002, -1044.7500000000002
+        ],
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "segmentCount": 4,
+        "segments": [
+          {
+            "id": "2.25.328305932253460493339160962013917218681",
+            "name": "Filled tapered airway",
+            "color": [0.2, 0.501961, 0.8],
+            "localBoundsMm": [
+              -119.66161346435547, 115.6620864868164, 73.07992553710938, 223.9110870361328,
+              -1288.090087890625, -1048.6766357421875
+            ],
+            "numberOfPoints": 365658,
+            "numberOfCells": 731236,
+            "samplePointsRAS": [
+              [52.01353073120117, 93.4249496459961, -1288.041259765625],
+              [108.6252212524414, 154.0542755126953, -1260.8660888671875],
+              [76.99298858642578, 124.82090759277344, -1250.7698974609375],
+              [-82.82308197021484, 118.3060531616211, -1243.4486083984375],
+              [73.75855255126953, 138.632568359375, -1236.208740234375],
+              [51.134132385253906, 92.63497161865234, -1229.8309326171875],
+              [70.39139556884766, 172.55873107910156, -1222.060546875],
+              [-97.09565734863281, 156.3675537109375, -1214.4315185546875],
+              [37.11090850830078, 117.09149169921875, -1208.0372314453125],
+              [28.70444679260254, 126.66036987304688, -1201.9921875],
+              [-84.82327270507812, 150.02041625976562, -1195.0718994140625],
+              [-80.32508850097656, 152.57591247558594, -1187.7855224609375],
+              [-102.44981384277344, 148.14346313476562, -1181.8204345703125],
+              [-32.28746032714844, 130.26922607421875, -1174.65625],
+              [-50.03578186035156, 128.78778076171875, -1168.428466796875],
+              [-49.512115478515625, 92.30037689208984, -1161.553955078125],
+              [52.59907913208008, 126.85968017578125, -1155.4024658203125],
+              [48.69527816772461, 147.3594207763672, -1145.735595703125],
+              [-56.901180267333984, 190.1952362060547, -1132.9730224609375],
+              [62.98176193237305, 125.0474624633789, -1111.870849609375]
+            ]
+          },
+          {
+            "id": "2.25.298401360609807281739764225346472403840",
+            "name": "Segment_1",
+            "color": [0.501961, 0.682353, 0.501961],
+            "localBoundsMm": [
+              -109.31108856201172, 115.05602264404297, 76.96607971191406, 220.169189453125,
+              -1274.9996337890625, -1044.765869140625
+            ],
+            "numberOfPoints": 81320,
+            "numberOfCells": 158232,
+            "samplePointsRAS": [
+              [27.24091148376465, 137.633056640625, -1274.9996337890625],
+              [-56.58436584472656, 117.03836822509766, -1225.8031005859375],
+              [70.50476837158203, 160.61697387695312, -1211.9998779296875],
+              [96.16771697998047, 166.62496948242188, -1201.533935546875],
+              [18.33009147644043, 133.0071563720703, -1188.0811767578125],
+              [24.707612991333008, 139.3622283935547, -1180.0797119140625],
+              [-1.8842642307281494, 135.39906311035156, -1171.7374267578125],
+              [-11.135250091552734, 137.52139282226562, -1165.5308837890625],
+              [0.8770043253898621, 141.01303100585938, -1156.0013427734375],
+              [4.567102432250977, 125.99268341064453, -1147.6510009765625],
+              [65.23456573486328, 174.59344482421875, -1138.9696044921875],
+              [76.47119903564453, 141.90631103515625, -1133.0921630859375],
+              [17.381385803222656, 146.31326293945312, -1126.6298828125],
+              [-0.46689844131469727, 145.3848114013672, -1118.186767578125],
+              [13.952193260192871, 135.71612548828125, -1109.1817626953125],
+              [22.660459518432617, 146.1743621826172, -1099.6622314453125],
+              [6.352484703063965, 156.8363037109375, -1090.9619140625],
+              [7.868306636810303, 162.06845092773438, -1082.0472412109375],
+              [20.941173553466797, 155.80357360839844, -1071.5030517578125],
+              [11.711458206176758, 171.74325561523438, -1061.089599609375]
+            ]
+          },
+          {
+            "id": "2.25.188217653637773726607595627231969056204",
+            "name": "Segment_2",
+            "color": [0.945098, 0.839216, 0.568627],
+            "localBoundsMm": [
+              -119.66161346435547, 115.6620864868164, 73.1208724975586, 223.8643341064453,
+              -1288.090087890625, -1048.6766357421875
+            ],
+            "numberOfPoints": 376876,
+            "numberOfCells": 753736,
+            "samplePointsRAS": [
+              [52.01353073120117, 93.4249496459961, -1288.041259765625],
+              [43.93506622314453, 106.88961791992188, -1260.888671875],
+              [-46.605464935302734, 108.12301635742188, -1251.097900390625],
+              [103.4104995727539, 127.28050231933594, -1242.9105224609375],
+              [95.37957000732422, 126.85646057128906, -1235.1654052734375],
+              [-59.69401168823242, 124.79737091064453, -1228.9200439453125],
+              [40.64241409301758, 122.91185760498047, -1221.39111328125],
+              [-93.76876068115234, 154.68392944335938, -1213.5517578125],
+              [73.57880401611328, 164.64695739746094, -1207.85205078125],
+              [73.04181671142578, 122.18675994873047, -1202.8006591796875],
+              [-73.30453491210938, 147.59121704101562, -1195.525146484375],
+              [30.50457000732422, 107.80443572998047, -1188.2691650390625],
+              [-97.12518310546875, 147.0381622314453, -1181.793212890625],
+              [46.20351791381836, 151.05555725097656, -1174.3594970703125],
+              [25.80010986328125, 137.55136108398438, -1167.6304931640625],
+              [63.78483200073242, 84.48554992675781, -1160.969970703125],
+              [77.35210418701172, 124.38458251953125, -1154.9891357421875],
+              [-63.633514404296875, 162.55799865722656, -1145.0703125],
+              [-58.4184684753418, 171.0164031982422, -1132.963623046875],
+              [-44.41447067260742, 94.03592681884766, -1112.9388427734375]
+            ]
+          },
+          {
+            "id": "2.25.260286125780444280473689735509909747961",
+            "name": "Clean_airway",
+            "color": [0.694118, 0.478431, 0.396078],
+            "localBoundsMm": [
+              -119.6615982055664, 112.0506820678711, 73.1208724975586, 223.86431884765625,
+              -1288.090087890625, -1048.6767578125
+            ],
+            "numberOfPoints": 376440,
+            "numberOfCells": 752872,
+            "samplePointsRAS": [
+              [52.013553619384766, 93.42498779296875, -1288.041259765625],
+              [51.5762825012207, 104.64669799804688, -1260.8079833984375],
+              [43.74885940551758, 107.69414520263672, -1251.011962890625],
+              [104.4792251586914, 127.53728485107422, -1242.7430419921875],
+              [89.7708511352539, 126.8762435913086, -1235.3646240234375],
+              [49.05854797363281, 120.59790802001953, -1229.20654296875],
+              [41.53152084350586, 122.00350952148438, -1221.2637939453125],
+              [31.095182418823242, 129.73355102539062, -1213.8687744140625],
+              [69.77062225341797, 160.24266052246094, -1208.107666015625],
+              [70.50706481933594, 119.92455291748047, -1202.0968017578125],
+              [-74.64086151123047, 145.7408447265625, -1195.2940673828125],
+              [-46.873470306396484, 106.55783081054688, -1188.3157958984375],
+              [-96.81212615966797, 147.9816436767578, -1182.035400390625],
+              [35.042762756347656, 142.38597106933594, -1174.3280029296875],
+              [53.00541687011719, 135.963134765625, -1168.0535888671875],
+              [-61.240966796875, 190.86810302734375, -1160.239013671875],
+              [63.66788864135742, 117.67277526855469, -1154.947265625],
+              [5.364034652709961, 144.96205139160156, -1144.9840087890625],
+              [10.658178329467773, 147.75753784179688, -1133.082275390625],
+              [15.419926643371582, 147.59547424316406, -1112.651611328125]
+            ]
+          }
+        ]
+      }
+    ],
+    "models": [
+      {
+        "id": "vtkMRMLModelNode1",
+        "name": "Red Volume Slice",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode1",
+        "rasBoundsMm": [
+          -183.3148651123047, 196.3897705078125, 7.250551223754883, 336.4625549316406, -1191.0,
+          -1191.0
+        ],
+        "localBoundsMm": [
+          -183.3148651123047, 196.3897705078125, 7.250551223754883, 336.4625549316406, -1191.0,
+          -1191.0
+        ],
+        "numberOfPoints": 4,
+        "numberOfCells": 1,
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "samplePointsRAS": [
+          [196.3897705078125, 7.250551223754883, -1191.0],
+          [-183.3148651123047, 7.250551223754883, -1191.0],
+          [196.3897705078125, 336.4625549316406, -1191.0],
+          [-183.3148651123047, 336.4625549316406, -1191.0]
+        ]
+      },
+      {
+        "id": "vtkMRMLModelNode2",
+        "name": "Green Volume Slice",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode2",
+        "rasBoundsMm": [
+          -165.45657348632812, 178.4851531982422, 172.1090087890625, 172.1090087890625, -1340.75,
+          -1041.75
+        ],
+        "localBoundsMm": [
+          -165.45657348632812, 178.4851531982422, 172.1090087890625, 172.1090087890625, -1340.75,
+          -1041.75
+        ],
+        "numberOfPoints": 4,
+        "numberOfCells": 1,
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "samplePointsRAS": [
+          [178.4851531982422, 172.1090087890625, -1340.75],
+          [-165.45657348632812, 172.1090087890625, -1340.75],
+          [178.4851531982422, 172.1090087890625, -1041.75],
+          [-165.45657348632812, 172.1090087890625, -1041.75]
+        ]
+      },
+      {
+        "id": "vtkMRMLModelNode3",
+        "name": "Yellow Volume Slice",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode3",
+        "rasBoundsMm": [
+          6.284994125366211, 6.284994125366211, -0.09113898128271103, 344.76776123046875, -1340.75,
+          -1041.75
+        ],
+        "localBoundsMm": [
+          6.284994125366211, 6.284994125366211, -0.09113898128271103, 344.76776123046875, -1340.75,
+          -1041.75
+        ],
+        "numberOfPoints": 4,
+        "numberOfCells": 1,
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "samplePointsRAS": [
+          [6.284994125366211, 344.76776123046875, -1340.75],
+          [6.284994125366211, -0.09113898128271103, -1340.75],
+          [6.284994125366211, 344.76776123046875, -1041.75],
+          [6.284994125366211, -0.09113898128271103, -1041.75]
+        ]
+      },
+      {
+        "id": "vtkMRMLModelNode15",
+        "name": "CArmFrontalSlice Volume Slice",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode13",
+        "rasBoundsMm": [
+          -397.0284118652344, 138.65284729003906, -422.408935546875, 32.54023361206055, 0.0, 0.0
+        ],
+        "localBoundsMm": [
+          -397.0284118652344, 138.65284729003906, -422.408935546875, 32.54023361206055, 0.0, 0.0
+        ],
+        "numberOfPoints": 4,
+        "numberOfCells": 1,
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "samplePointsRAS": [
+          [-397.0284118652344, -422.408935546875, 0.0],
+          [138.65284729003906, -422.408935546875, 0.0],
+          [-397.0284118652344, 32.54023361206055, 0.0],
+          [138.65284729003906, 32.54023361206055, 0.0]
+        ]
+      }
+    ],
+    "markups": [
+      {
+        "id": "vtkMRMLMarkupsFiducialNode1",
+        "name": "OriginalHandles",
+        "className": "vtkMRMLMarkupsFiducialNode",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode4",
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, -23.71500599384308],
+          [0.0, 1.0, 0.0, 63.34541453123093],
+          [0.0, 0.0, 1.0, -1176.25],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "controlPoints": []
+      },
+      {
+        "id": "vtkMRMLMarkupsFiducialNode2",
+        "name": "DeformedHandles",
+        "className": "vtkMRMLMarkupsFiducialNode",
+        "parentTransformNodeId": "vtkMRMLLinearTransformNode4",
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, -23.71500599384308],
+          [0.0, 1.0, 0.0, 63.34541453123093],
+          [0.0, 0.0, 1.0, -1176.25],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "controlPoints": []
+      },
+      {
+        "id": "vtkMRMLMarkupsFiducialNode3",
+        "name": "TableCenterPoint",
+        "className": "vtkMRMLMarkupsFiducialNode",
+        "parentTransformNodeId": null,
+        "worldTransformFromParent": [
+          [1.0, 0.0, 0.0, 0.0],
+          [0.0, 1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0, 0.0],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "controlPoints": []
+      }
+    ]
+  },
+  "notes": [
+    "Derived metadata only; raw volume/model storage paths are intentionally omitted.",
+    "The current frontal reference frame may include the airway model baked into the rendered X-ray."
+  ]
+}

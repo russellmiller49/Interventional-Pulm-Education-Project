@@ -1,6 +1,7 @@
 import {
   computeOverlayCalibrationTranslation,
   createRotationMatrix,
+  normalize,
   rotateVec,
   subtract,
 } from './geometry'
@@ -11,6 +12,7 @@ import type {
   CtAxis,
   CtVolumePreview,
   FluoroConfig,
+  SlicerFrontalProjection,
   Vec2,
   Vec3,
 } from './types'
@@ -214,6 +216,38 @@ export function projectLpsToDetector(
   }
 }
 
+export function projectLpsToSlicerFrontalDetector(
+  point: Vec3,
+  projection: SlicerFrontalProjection,
+): DetectorProjection {
+  const pointRas = lpsToRas(point)
+  const source = projection.positionRasMm
+  const focal = projection.focalPointRasMm
+  const forward = normalize(subtract(focal, source))
+  const up = normalize(projection.viewUpRas)
+  const right = normalize(cross(forward, up))
+  const sourceToPoint = subtract(pointRas, source)
+  const depth = dot(sourceToPoint, forward)
+
+  if (depth <= 1e-6) {
+    return { point: [50, 50], inFrame: false, depthMm: depth }
+  }
+
+  const sourceToImage = projection.sourceToImageDistanceMm
+  const detectorWidthMm = projection.detectorSizeMm[0]
+  const detectorHeightMm = projection.detectorSizeMm[1]
+  const detectorX = (dot(sourceToPoint, right) * sourceToImage) / depth
+  const detectorY = (dot(sourceToPoint, up) * sourceToImage) / depth
+  const x = 50 + (detectorX / detectorWidthMm) * 100
+  const y = 50 - (detectorY / detectorHeightMm) * 100
+
+  return {
+    point: [x, y],
+    inFrame: x >= -5 && x <= 105 && y >= -5 && y <= 105,
+    depthMm: depth,
+  }
+}
+
 export function routeOptions(graph: AirwayGraph, limit = 24): Array<{ id: number; label: string }> {
   return graph.terminalNodeIds
     .map((nodeId) => graph.nodes[nodeId])
@@ -272,6 +306,18 @@ function distance(a: Vec3, b: Vec3): number {
 
 function lerpVec(a: Vec3, b: Vec3, t: number): Vec3 {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
+}
+
+function lpsToRas(point: Vec3): Vec3 {
+  return [-point[0], -point[1], point[2]]
+}
+
+function dot(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+function cross(a: Vec3, b: Vec3): Vec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
 function clamp(value: number, min: number, max: number): number {

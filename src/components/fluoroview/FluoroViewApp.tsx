@@ -25,8 +25,10 @@ import {
   lpsToCtIndex,
   projectLpsToCanvas,
   projectLpsToDetector,
+  projectLpsToSlicerFrontalDetector,
   routeOptions,
   sampleRoutePath,
+  type DetectorProjection,
   type RoutePath,
 } from '@fluoroview/interaction'
 import {
@@ -97,6 +99,8 @@ interface NoduleState {
   edgeId: number
   routeTerminalNodeId: number
 }
+
+type FluoroImageSource = 'atlas' | 'slicerheart'
 
 function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
   const entries = BRANCH_GROUPS.map((group) => ({
@@ -188,6 +192,7 @@ export function FluoroViewApp() {
   const [renderStats, setRenderStats] = useState<RenderStats>({ fps: 0, visibleSegments: 0 })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [fluoroImageSource, setFluoroImageSource] = useState<FluoroImageSource>('atlas')
 
   const requestRender = useCallback(() => {
     needsRenderRef.current = true
@@ -432,6 +437,11 @@ export function FluoroViewApp() {
     return findDrrBlendFrames(manifest.drrAtlas.frames, appState.raoLao, appState.cranialCaudal)
   }, [appState, manifest])
 
+  const slicerReferenceAvailable = Boolean(
+    manifest?.virtualCathLab?.frontalImageUrl && manifest.virtualCathLab.frontalProjection,
+  )
+  const isSlicerReferenceMode = fluoroImageSource === 'slicerheart' && slicerReferenceAvailable
+
   const selectedLesson = useMemo(() => {
     return (
       manifest?.lessons.find((lesson) => lesson.id === selectedLessonId) ?? manifest?.lessons[0]
@@ -469,35 +479,35 @@ export function FluoroViewApp() {
     return activeRoute ? sampleRoutePath(activeRoute, scopeProgress) : null
   }, [activeRoute, scopeProgress])
 
+  const projectFluoroPoint = useCallback(
+    (point: Vec3): DetectorProjection | null => {
+      if (!manifest || !appState) return null
+      if (isSlicerReferenceMode && manifest.virtualCathLab?.frontalProjection) {
+        return projectLpsToSlicerFrontalDetector(point, manifest.virtualCathLab.frontalProjection)
+      }
+      return projectLpsToDetector(point, manifest.geometry, appState.raoLao, appState.cranialCaudal)
+    },
+    [appState, isSlicerReferenceMode, manifest],
+  )
+
   const projectedNodule = useMemo(() => {
     if (!manifest || !appState || !nodule) return null
-    return projectLpsToDetector(
-      nodule.lps,
-      manifest.geometry,
-      appState.raoLao,
-      appState.cranialCaudal,
-    )
-  }, [appState, manifest, nodule])
+    return projectFluoroPoint(nodule.lps)
+  }, [appState, manifest, nodule, projectFluoroPoint])
 
   const projectedScope = useMemo(() => {
     if (!manifest || !appState || !scopeSample) return null
-    return projectLpsToDetector(
-      scopeSample.point,
-      manifest.geometry,
-      appState.raoLao,
-      appState.cranialCaudal,
-    )
-  }, [appState, manifest, scopeSample])
+    return projectFluoroPoint(scopeSample.point)
+  }, [appState, manifest, projectFluoroPoint, scopeSample])
 
   const projectedScopeTrace = useMemo(() => {
     if (!manifest || !appState || !activeRoute || !showScopeTrace) return []
     const maxIndex = Math.max(1, Math.floor(activeRoute.points.length * scopeProgress))
     return activeRoute.points
       .slice(0, maxIndex + 1)
-      .map((point) =>
-        projectLpsToDetector(point, manifest.geometry, appState.raoLao, appState.cranialCaudal),
-      )
-  }, [activeRoute, appState, manifest, scopeProgress, showScopeTrace])
+      .map((point) => projectFluoroPoint(point))
+      .filter((projection): projection is DetectorProjection => projection !== null)
+  }, [activeRoute, appState, manifest, projectFluoroPoint, scopeProgress, showScopeTrace])
 
   const noduleScopeDistance = useMemo(() => {
     if (!nodule || !scopeSample) return null
@@ -596,19 +606,37 @@ export function FluoroViewApp() {
             <div>
               <h2 className="text-base font-semibold text-foreground">Simulated Fluoro</h2>
               <p className="text-xs text-muted-foreground">
-                Relative educational DRR atlas with browser-side knobology.
+                {isSlicerReferenceMode
+                  ? 'SlicerHeart frontal reference from the exported C-arm scene.'
+                  : 'Relative educational DRR atlas with browser-side knobology.'}
               </p>
             </div>
             <Badge variant="outline" className="rounded-full text-xs">
-              {drrBlendFrames.length > 1
-                ? `${drrBlendFrames.length}-frame blend`
-                : nearestFrame
-                  ? nearestFrame.id
-                  : 'Loading'}
+              {isSlicerReferenceMode
+                ? 'SlicerHeart ref'
+                : drrBlendFrames.length > 1
+                  ? `${drrBlendFrames.length}-frame blend`
+                  : nearestFrame
+                    ? nearestFrame.id
+                    : 'Loading'}
             </Badge>
           </div>
-          <div className="relative aspect-square overflow-hidden rounded-lg border border-white/10 bg-slate-950">
-            {drrBlendFrames.length ? (
+          <div
+            className={`relative overflow-hidden rounded-lg border border-white/10 bg-slate-950 ${
+              isSlicerReferenceMode ? 'aspect-[587/800]' : 'aspect-square'
+            }`}
+          >
+            {isSlicerReferenceMode && manifest?.virtualCathLab?.frontalImageUrl ? (
+              <Image
+                src={manifest.virtualCathLab.frontalImageUrl}
+                alt="SlicerHeart Virtual Cath Lab frontal reference frame"
+                fill
+                unoptimized
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-contain"
+                style={fluoroImageStyle}
+              />
+            ) : drrBlendFrames.length ? (
               drrBlendFrames.map((blendFrame, index) => (
                 <Image
                   key={blendFrame.frame.id}
@@ -649,7 +677,7 @@ export function FluoroViewApp() {
                 backgroundSize: '7px 7px, 11px 11px',
               }}
             />
-            {centerline && appState?.overlayMode === 'centerline' ? (
+            {centerline && appState?.overlayMode === 'centerline' && !isSlicerReferenceMode ? (
               <svg
                 className="pointer-events-none absolute inset-0 h-full w-full"
                 viewBox="0 0 100 100"
@@ -675,8 +703,9 @@ export function FluoroViewApp() {
               height={1024}
               className="absolute inset-0 h-full w-full"
               style={{
-                opacity: appState?.overlayMode === 'off' ? 0 : 1,
-                pointerEvents: appState?.overlayMode === 'off' ? 'none' : 'auto',
+                opacity: appState?.overlayMode === 'off' || isSlicerReferenceMode ? 0 : 1,
+                pointerEvents:
+                  appState?.overlayMode === 'off' || isSlicerReferenceMode ? 'none' : 'auto',
               }}
             />
             <div ref={labelLayerRef} className="pointer-events-none absolute inset-0" />
@@ -751,8 +780,13 @@ export function FluoroViewApp() {
           </div>
           {atlasDelta ? (
             <p className="mt-3 text-xs text-muted-foreground">
-              Continuous atlas blend: {atlasBlendDescription || 'Loading'}. Nearest delta{' '}
-              {atlasDelta.rao.toFixed(1)} / {atlasDelta.cranial.toFixed(1)} deg.
+              {isSlicerReferenceMode
+                ? `SlicerHeart reference uses exported detector geometry${
+                    manifest?.virtualCathLab?.cArm?.sourceToImageDistanceMm
+                      ? `, SID ${manifest.virtualCathLab.cArm.sourceToImageDistanceMm} mm`
+                      : ''
+                  }. Mesh overlay is hidden because this frame already contains Slicer's airway render.`
+                : `Continuous atlas blend: ${atlasBlendDescription || 'Loading'}. Nearest delta ${atlasDelta.rao.toFixed(1)} / ${atlasDelta.cranial.toFixed(1)} deg.`}
             </p>
           ) : null}
         </section>
@@ -846,8 +880,9 @@ export function FluoroViewApp() {
               ) : null}
               {atlasDelta ? (
                 <p className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
-                  Continuous blend delta {atlasDelta.rao.toFixed(1)} /{' '}
-                  {atlasDelta.cranial.toFixed(1)} deg.
+                  {isSlicerReferenceMode && manifest?.virtualCathLab?.cArm
+                    ? `Slicer export L/P/C ${manifest.virtualCathLab.cArm.frontalArmAngleLDeg ?? 'n/a'} / ${manifest.virtualCathLab.cArm.frontalArmAnglePDeg ?? 'n/a'} / ${manifest.virtualCathLab.cArm.frontalArmAngleCDeg ?? 'n/a'} deg.`
+                    : `Continuous blend delta ${atlasDelta.rao.toFixed(1)} / ${atlasDelta.cranial.toFixed(1)} deg.`}
                 </p>
               ) : null}
             </ControlPanel>
@@ -1045,6 +1080,21 @@ export function FluoroViewApp() {
             </ControlPanel>
 
             <ControlPanel title="Field And Image">
+              {slicerReferenceAvailable ? (
+                <label className="grid gap-1 text-sm">
+                  <span className="text-muted-foreground">Fluoro source</span>
+                  <select
+                    className="rounded-md border border-border bg-background px-3 py-2"
+                    value={fluoroImageSource}
+                    onChange={(event) =>
+                      setFluoroImageSource(event.target.value as FluoroImageSource)
+                    }
+                  >
+                    <option value="atlas">TIGRE continuous atlas</option>
+                    <option value="slicerheart">SlicerHeart reference</option>
+                  </select>
+                </label>
+              ) : null}
               <RangeControl
                 label="Collimation width"
                 value={settings.collimationX}
@@ -1325,11 +1375,59 @@ export function FluoroViewApp() {
               <dt>Nodule</dt>
               <dd className="text-right text-foreground">{nodule ? 'Placed' : 'Not placed'}</dd>
             </div>
+            <div className="flex justify-between gap-3">
+              <dt>SlicerHeart ref</dt>
+              <dd className="text-right text-foreground">
+                {manifest?.virtualCathLab ? 'Available' : 'Not loaded'}
+              </dd>
+            </div>
+            {manifest?.virtualCathLab?.frontalDetectorPixels ? (
+              <div className="flex justify-between gap-3">
+                <dt>SlicerHeart detector</dt>
+                <dd className="text-right text-foreground">
+                  {manifest.virtualCathLab.frontalDetectorPixels.join(' x ')}
+                </dd>
+              </div>
+            ) : null}
+            {manifest?.virtualCathLab?.cArm?.sourceToImageDistanceMm ? (
+              <div className="flex justify-between gap-3">
+                <dt>SlicerHeart SID</dt>
+                <dd className="text-right text-foreground">
+                  {manifest.virtualCathLab.cArm.sourceToImageDistanceMm} mm
+                </dd>
+              </div>
+            ) : null}
+            {manifest?.virtualCathLab?.cArm ? (
+              <div className="flex justify-between gap-3">
+                <dt>SlicerHeart L/P/C</dt>
+                <dd className="text-right text-foreground">
+                  {manifest.virtualCathLab.cArm.frontalArmAngleLDeg ?? 'n/a'} /{' '}
+                  {manifest.virtualCathLab.cArm.frontalArmAnglePDeg ?? 'n/a'} /{' '}
+                  {manifest.virtualCathLab.cArm.frontalArmAngleCDeg ?? 'n/a'} deg
+                </dd>
+              </div>
+            ) : null}
           </dl>
+          {manifest?.virtualCathLab?.frontalImageUrl ? (
+            <div className="mt-3 overflow-hidden rounded-md border border-border/70 bg-background">
+              <Image
+                src={manifest.virtualCathLab.frontalImageUrl}
+                alt="SlicerHeart Virtual Cath Lab frontal reference frame"
+                width={587}
+                height={800}
+                className="h-auto w-full"
+              />
+            </div>
+          ) : null}
           <p className="mt-3 text-xs text-muted-foreground">
             {manifest?.sourcePolicy ??
               'Raw source imaging remains local; the browser loads derived educational assets.'}
           </p>
+          {manifest?.virtualCathLab?.note ? (
+            <p className="mt-2 text-xs text-sky-700 dark:text-sky-200">
+              {manifest.virtualCathLab.note}
+            </p>
+          ) : null}
           {manifest?.drrAtlas.provenance.note ? (
             <p className="mt-2 text-xs text-amber-700 dark:text-amber-200">
               {manifest.drrAtlas.provenance.note}

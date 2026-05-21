@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 2,
+  "source": "SlicerHeart Virtual Cath Lab scene export",
+  "ingestedUtc": "2026-05-21T04:27:00.311709+00:00",
+  "sourceFiles": {
+    "mrml": "2026-05-20-Scene.mrml",
+    "frontalNrrd": "CArmFrontalXRay.nrrd",
+    "renderingPreset": "FluoroRenderingPreset_01.vp.json"
+  },
+  "coordinateSystems": {
+    "slicerScene": "RAS",
+    "fluoroView": "LPS",
+    "cArmImageSpace": "left-posterior-superior"
+  },
+  "frames": [
+    {
+      "id": "slicerheart-frontal-reference",
+      "view": "frontal",
+      "imageUrl": "/fluoroview/cases/patient-4/virtual-cath-lab/slicerheart_frontal_reference.png",
+      "relativePath": "virtual-cath-lab/slicerheart_frontal_reference.png",
+      "sourceFileName": "CArmFrontalXRay.nrrd",
+      "sourceSha256": "594db890c3991d5dcc7fcb9e649f64295e55cd9c9873f8dccc34e5cae94af717",
+      "sha256": "62a00981c92e353de9a5def56ea0c12612b38fba14f45fea6c73c95bc8b7a1d1",
+      "dimensionsIJK": [587, 800, 1],
+      "spacingIJKMm": [0.5, 0.5, 1.0],
+      "detectorSizeMm": [293.5, 400.0],
+      "encoding": "gzip",
+      "space": "left-posterior-superior",
+      "content": "SlicerHeart rendered frontal C-arm frame"
+    }
+  ],
+  "virtualCathLab": {
+    "parameters": {
+      "ColorTableRangeMm": 10,
+      "DetectorPixelSize": 0.5,
+      "GenericFluoro_tableShiftLongitudinal": -15,
+      "GenericFluoro_tableShiftVertical": 10,
+      "HandlesPerSlice": 8,
+      "HandlesSpacingMm": 5,
+      "NumberOfModelPointsPerSlice": 60,
+      "NumberOfProfilePoints": 50,
+      "SoftEdgeMm": 0,
+      "UpdateDeformedModelsEnabled": "",
+      "VolumeRenderingPreset": "FluoroRenderingPreset_01",
+      "patientSpin": 0,
+      "DeviceClassId": "GenericFluoro",
+      "GenericFluoro_frontalArmAngleC": -12,
+      "GenericFluoro_frontalArmAngleL": -90,
+      "GenericFluoro_frontalArmAngleP": 6,
+      "GenericFluoro_frontalArmDetectorRotationAngle": 90,
+      "GenericFluoro_frontalArmSourceToImageDistance": 885,
+      "GenericFluoro_patientSpin": 0,
+      "GenericFluoro_tableShiftLateral": 30
+    },
+    "nodeReferences": {
+      "CArmFrontalXRay": "vtkMRMLScalarVolumeNode2",
+      "CArmLateralXRay": "vtkMRMLScalarVolumeNode3",
+      "DeformedHandles": "vtkMRMLMarkupsFiducialNode2",
+      "DeformedModel": "vtkMRMLModelNode5",
+      "DeformingTransform": "vtkMRMLTransformNode1",
+      "DisplacementToColorNode": "vtkMRMLProceduralColorNode1",
+      "FiducialRegistrationNode": "vtkMRMLFiducialRegistrationWizardNode1",
+      "InputVolume": "vtkMRMLScalarVolumeNode1",
+      "OriginalHandles": "vtkMRMLMarkupsFiducialNode1",
+      "OriginalModel": "vtkMRMLModelNode4",
+      "PositioningTransform": "vtkMRMLLinearTransformNode4",
+      "TableCenterPoint": "vtkMRMLMarkupsFiducialNode3",
+      "frontal-arm-c": "vtkMRMLModelNode8",
+      "frontal-arm-c-rotation-transform": "vtkMRMLLinearTransformNode7",
+      "frontal-arm-detector-rotation-transform": "vtkMRMLLinearTransformNode9",
+      "frontal-arm-detector-translation-transform": "vtkMRMLLinearTransformNode8",
+      "frontal-arm-l": "vtkMRMLModelNode6",
+      "frontal-arm-l-rotation-transform": "vtkMRMLLinearTransformNode5",
+      "frontal-arm-p": "vtkMRMLModelNode7",
+      "frontal-arm-p-rotation-transform": "vtkMRMLLinearTransformNode6",
+      "frontal-beam": "vtkMRMLModelNode11",
+      "frontal-camera-to-frontal-detector": "vtkMRMLTransformNode2",
+      "frontal-detector": "vtkMRMLModelNode10",
+      "frontal-detector-base": "vtkMRMLModelNode9",
+      "gantry-to-ras": "vtkMRMLTransformNode4",
+      "lateral-camera-to-lateral-detector": "vtkMRMLTransformNode3",
+      "table-base": "vtkMRMLModelNode12",
+      "table-lateral-transform": "vtkMRMLLinearTransformNode11",
+      "table-longitudinal-transform": "vtkMRMLLinearTransformNode12",
+      "table-middle": "vtkMRMLModelNode13",
+      "table-top": "vtkMRMLModelNode14",
+      "table-vertical-transform": "vtkMRMLLinearTransformNode10"
+    }
+  },
+  "frontalProjection": {
+    "coordinateSystem": "RAS",
+    "positionRasMm": [-173.41142338262972, -637.0628136676025, -1102.6341288013741],
+    "focalPointRasMm": [-23.71500599384308, 63.34541453123093, -1176.25],
+    "viewUpRas": [3.63582378303642e-18, 0.10452846326765354, 0.9945218953682734],
+    "sourceToImageDistanceMm": 885,
+    "detectorPixels": [587, 800],
+    "detectorSizeMm": [293.7, 400.4],
+    "pixelSpacingMm": [0.5, 0.5],
+    "viewAngleDeg": 25.4932,
+    "imageOrientation": "slicer-nrrd-lps"
+  },
+  "patientVolume": {
+    "id": "vtkMRMLScalarVolumeNode1",
+    "name": "Patient_4_CT",
+    "spacingMm": [0.676, 0.676, 0.5],
+    "originRasMm": [170.553, 336.377, -1340.5],
+    "ijkToRASDirections": [-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0],
+    "references": {
+      "display": "vtkMRMLScalarVolumeDisplayNode1 vtkMRMLGPURayCastVolumeRenderingDisplayNode1 vtkMRMLGPURayCastVolumeRenderingDisplayNode2",
+      "storage": "vtkMRMLVolumeArchetypeStorageNode4"
+    }
+  },
+  "transforms": [
+    {
+      "id": "vtkMRMLLinearTransformNode4",
+      "name": "PositioningTransform",
+      "parentTransformNodeId": "vtkMRMLTransformNode4",
+      "matrixTransformToParent": [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode5",
+      "name": "frontal-arm-l-rotation-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode4",
+      "matrixTransformToParent": [
+        [2.22045e-16, 0.0, -1.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [1.0, 0.0, 2.22045e-16, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode6",
+      "name": "frontal-arm-p-rotation-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode5",
+      "matrixTransformToParent": [
+        [0.994522, -0.104528, 0.0, 0.0],
+        [0.104528, 0.994522, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode7",
+      "name": "frontal-arm-c-rotation-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode6",
+      "matrixTransformToParent": [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.978148, 0.207912, 0.0],
+        [0.0, -0.207912, 0.978148, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode8",
+      "name": "frontal-arm-detector-translation-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode7",
+      "matrixTransformToParent": [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 165.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode9",
+      "name": "frontal-arm-detector-rotation-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode8",
+      "matrixTransformToParent": [
+        [2.22045e-16, 0.0, 1.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [-1.0, 0.0, 2.22045e-16, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode10",
+      "name": "table-vertical-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode4",
+      "matrixTransformToParent": [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 10.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode11",
+      "name": "table-lateral-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode10",
+      "matrixTransformToParent": [
+        [1.0, 0.0, 0.0, 30.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLLinearTransformNode12",
+      "name": "table-longitudinal-transform",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode11",
+      "matrixTransformToParent": [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, -15.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    {
+      "id": "vtkMRMLTransformNode2",
+      "name": "frontal-camera-to-frontal-detector",
+      "parentTransformNodeId": "vtkMRMLLinearTransformNode9",
+      "matrixTransformToParent": null
+    },
+    {
+      "id": "vtkMRMLTransformNode4",
+      "name": "gantry-to-ras",
+      "parentTransformNodeId": null,
+      "matrixTransformToParent": null
+    }
+  ],
+  "models": [
+    {
+      "id": "vtkMRMLModelNode4",
+      "name": "GenericFluoro model",
+      "storageFileName": "GenericFluoro%20model.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode4",
+      "sizeBytes": null
+    },
+    {
+      "id": "vtkMRMLModelNode5",
+      "name": "GenericFluoro deformed model",
+      "storageFileName": "GenericFluoro%20deformed%20model.vtk",
+      "transformNodeId": "vtkMRMLTransformNode1",
+      "sizeBytes": null
+    },
+    {
+      "id": "vtkMRMLModelNode6",
+      "name": "frontal-arm-l",
+      "storageFileName": "frontal-arm-l.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode5",
+      "sizeBytes": 671487
+    },
+    {
+      "id": "vtkMRMLModelNode7",
+      "name": "frontal-arm-p",
+      "storageFileName": "frontal-arm-p.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode6",
+      "sizeBytes": 593997
+    },
+    {
+      "id": "vtkMRMLModelNode8",
+      "name": "frontal-arm-c",
+      "storageFileName": "frontal-arm-c.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode7",
+      "sizeBytes": 702239
+    },
+    {
+      "id": "vtkMRMLModelNode9",
+      "name": "frontal-detector-base",
+      "storageFileName": "frontal-detector-base.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode8",
+      "sizeBytes": 376244
+    },
+    {
+      "id": "vtkMRMLModelNode10",
+      "name": "frontal-detector",
+      "storageFileName": "frontal-detector.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode9",
+      "sizeBytes": 431413
+    },
+    {
+      "id": "vtkMRMLModelNode11",
+      "name": "frontal-beam",
+      "storageFileName": "frontal-beam.vtk",
+      "transformNodeId": "vtkMRMLTransformNode2",
+      "sizeBytes": 254
+    },
+    {
+      "id": "vtkMRMLModelNode12",
+      "name": "table-base",
+      "storageFileName": "table-base.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode4",
+      "sizeBytes": 248400
+    },
+    {
+      "id": "vtkMRMLModelNode13",
+      "name": "table-middle",
+      "storageFileName": "table-middle.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode11",
+      "sizeBytes": 963632
+    },
+    {
+      "id": "vtkMRMLModelNode14",
+      "name": "table-top",
+      "storageFileName": "table-top.vtk",
+      "transformNodeId": "vtkMRMLLinearTransformNode12",
+      "sizeBytes": 155820
+    }
+  ],
+  "renderingPreset": {
+    "sourceFileName": "FluoroRenderingPreset_01.vp.json",
+    "sha256": "be0b0dfc1f5570b74e3147db41de08d5a43b467712921ad4118dac579d5de35b",
+    "effectiveRange": [-1024.0, 3071.0],
+    "interpolationType": "linear",
+    "lighting": {
+      "diffuse": 0.0,
+      "ambient": 1.0,
+      "specular": 0.0,
+      "specularPower": 1.0
+    },
+    "scalarOpacity": [
+      {
+        "x": -1024.0,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": -1023.9999999999999,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 112.576698303223,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 1500.0,
+        "y": 0.03,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 3071.0,
+        "y": 0.1,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      }
+    ],
+    "rgbTransferFunction": [
+      {
+        "x": -1024.0,
+        "color": [0.0, 0.0, 0.0],
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": -1023.9999999999999,
+        "color": [0.0, 0.0, 0.0],
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 3071.0,
+        "color": [0.0, 0.0, 0.0],
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      }
+    ]
+  },
+  "qualityNotes": [
+    "This is a derived SlicerHeart C-arm reference frame, not raw CT data.",
+    "The exported frame may include the airway model rendered into the X-ray if the model was visible in Slicer.",
+    "Use this as projection/calibration evidence and as an optional reference image source."
+  ]
+}

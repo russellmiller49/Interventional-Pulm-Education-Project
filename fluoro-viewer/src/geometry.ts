@@ -37,6 +37,10 @@ export function computeOverlayCalibrationTranslation(
     return [0, 0, 0]
   }
 
+  if (calibration.reference_translation_mm) {
+    return calibration.reference_translation_mm
+  }
+
   const localCarina = subtract(calibration.carina_lps_mm, config.isocenter_mm)
   const rotatedCarina = rotateVec(rotationMatrix, localCarina)
   const target = detectorPercentToLocalMm(config, calibration.target_detector_percent)

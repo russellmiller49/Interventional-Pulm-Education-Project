@@ -13,6 +13,7 @@ from fluoroview_pipeline.ct_preview import export_ct_preview
 
 
 SAFETY_NOTE = "Derived educational interaction assets; raw source imaging remains local."
+ZERO_TRANSLATION_MM = [0, 0, 0]
 
 
 def parse_args() -> argparse.Namespace:
@@ -93,6 +94,8 @@ def update_manifest(manifest_path: Path, graph: dict[str, Any], ct_metadata: dic
         **ct_metadata,
         "rawUrl": "/fluoroview/cases/patient-4/ct/ct_preview_uint8.raw",
     }
+    ct_isocenter = ct_volume_center_lps(ct_metadata)
+    manifest["geometry"]["isocenter_mm"] = ct_isocenter
     terminal_node_id = max(
         graph["terminalNodeIds"],
         key=lambda node_id: graph["nodes"][node_id]["rootDistanceMm"],
@@ -104,17 +107,57 @@ def update_manifest(manifest_path: Path, graph: dict[str, Any], ct_metadata: dic
         "defaultRouteTerminalNodeId": terminal_node_id,
         "source": SAFETY_NOTE,
     }
+    target_detector_percent = detector_percent_for_lps_point(
+        graph["carinaLpsMm"],
+        ct_isocenter,
+        manifest["geometry"],
+    )
     manifest["geometry"]["overlay_calibration"] = {
         **manifest["geometry"].get("overlay_calibration", {}),
         "method": "centerline-carina",
         "carina_lps_mm": graph["carinaLpsMm"],
+        "target_detector_percent": target_detector_percent,
+        "reference_translation_mm": ZERO_TRANSLATION_MM,
         "source_curves": ["Network curve (0)", "Network curve (1)", "Network curve (2)"],
         "note": (
-            "Carina anchor from the updated centerline network curves; used to align the "
-            "airway, nodule, and scope overlays to the DRR detector."
+            "C-arm pivot is the CT volume center used by TIGRE and confirmed against a "
+            "3D Slicer volume export. The centerline carina is projected from its LPS "
+            "coordinate without an artificial detector-plane translation."
         ),
     }
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+
+def ct_volume_center_lps(ct_metadata: dict[str, Any]) -> list[float]:
+    origin = [float(value) for value in ct_metadata["originLps"]]
+    size = [float(value) for value in ct_metadata["originalSizeXyz"]]
+    stride_value = ct_metadata.get("stride", [1, 1, 1])
+    if isinstance(stride_value, (int, float)):
+        stride = [float(stride_value)] * 3
+    else:
+        stride = [float(value) for value in stride_value]
+    preview_spacing = [float(value) for value in ct_metadata["spacingXyzMm"]]
+    spacing = [preview_spacing[index] / stride[index] for index in range(3)]
+    return [origin[index] + spacing[index] * (size[index] - 1) / 2 for index in range(3)]
+
+
+def detector_percent_for_lps_point(
+    point_lps: list[float],
+    isocenter_lps: list[float],
+    geometry: dict[str, Any],
+) -> list[float]:
+    detector_width_mm = float(geometry["detector_pixels"][0]) * float(geometry["pixel_pitch_mm"])
+    detector_height_mm = float(geometry["detector_pixels"][1]) * float(geometry["pixel_pitch_mm"])
+    source_to_isocenter_mm = float(geometry["source_to_isocenter_mm"])
+    local_point = [point_lps[index] - isocenter_lps[index] for index in range(3)]
+    magnification = source_to_isocenter_mm / max(
+        source_to_isocenter_mm + local_point[1],
+        1.0,
+    )
+    return [
+        50 + ((local_point[0] * magnification) / detector_width_mm) * 100,
+        50 - ((local_point[2] * magnification) / detector_height_mm) * 100,
+    ]
 
 
 if __name__ == "__main__":

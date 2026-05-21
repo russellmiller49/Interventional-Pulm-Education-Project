@@ -4,9 +4,10 @@ import {
   findNearestAirwayPoint,
   lpsToCtIndex,
   projectLpsToDetector,
+  projectLpsToSlicerFrontalDetector,
   sampleRoutePath,
 } from './interaction'
-import type { AirwayGraph, CtVolumePreview, FluoroConfig } from './types'
+import type { AirwayGraph, CtVolumePreview, FluoroConfig, SlicerFrontalProjection } from './types'
 
 const ct: CtVolumePreview = {
   rawUrl: '/ct.raw',
@@ -150,4 +151,51 @@ test('projectLpsToDetector keeps the calibrated carina near the target detector 
     },
   }
   expect(projectLpsToDetector([0, 0, -10], config, 0, 0).point).toEqual([50, 45])
+})
+
+test('projectLpsToDetector uses a fixed TIGRE isocenter reference across oblique views', () => {
+  const config: FluoroConfig = {
+    units: 'mm',
+    coordinateSystem: 'LPS',
+    isocenter_mm: [-6.285000231743027, -172.10900023174304, -1191.25],
+    source_to_isocenter_mm: 600,
+    source_to_detector_mm: 1200,
+    detector_pixels: [1024, 1024],
+    pixel_pitch_mm: 0.3,
+    default_view: { rao_lao_deg: 0, cranial_caudal_deg: 0 },
+    overlay_calibration: {
+      method: 'centerline-carina',
+      carina_lps_mm: [-7.776358604431152, -134.74790954589844, -1156.4952392578125],
+      target_detector_percent: [49.54298915258192, 39.34977470909921],
+      reference_translation_mm: [0, 0, 0],
+    },
+  }
+  const ap = projectLpsToDetector(config.overlay_calibration!.carina_lps_mm, config, 0, 0).point
+  const oblique = projectLpsToDetector(
+    config.overlay_calibration!.carina_lps_mm,
+    config,
+    -30,
+    20,
+  ).point
+
+  expect(ap[0]).toBeCloseTo(49.54298915258192, 6)
+  expect(ap[1]).toBeCloseTo(39.34977470909921, 6)
+  expect(oblique[0]).not.toBeCloseTo(50, 1)
+  expect(oblique[1]).not.toBeCloseTo(45, 1)
+})
+
+test('projectLpsToSlicerFrontalDetector projects through exported Slicer camera geometry', () => {
+  const projection: SlicerFrontalProjection = {
+    coordinateSystem: 'RAS',
+    positionRasMm: [0, -100, 0],
+    focalPointRasMm: [0, 0, 0],
+    viewUpRas: [0, 0, 1],
+    sourceToImageDistanceMm: 200,
+    detectorPixels: [400, 400],
+    detectorSizeMm: [200, 200],
+  }
+
+  expect(projectLpsToSlicerFrontalDetector([0, 0, 0], projection).point).toEqual([50, 50])
+  expect(projectLpsToSlicerFrontalDetector([-10, 0, 0], projection).point[0]).toBeGreaterThan(50)
+  expect(projectLpsToSlicerFrontalDetector([0, 0, 10], projection).point[1]).toBeLessThan(50)
 })

@@ -9,7 +9,7 @@
   "geometry": {
     "units": "mm",
     "coordinateSystem": "LPS",
-    "isocenter_mm": [-8, -134.8, -1153.2],
+    "isocenter_mm": [-6.285000231743027, -172.10900023174304, -1191.25],
     "source_to_isocenter_mm": 600,
     "source_to_detector_mm": 1200,
     "detector_pixels": [1024, 1024],
@@ -22,10 +22,10 @@
     "overlay_calibration": {
       "method": "centerline-carina",
       "carina_lps_mm": [-7.776358604431152, -134.74790954589844, -1156.4952392578125],
-      "target_detector_percent": [50, 45],
+      "target_detector_percent": [49.54298915258192, 39.34977470909921],
       "source_curves": ["Network curve (0)", "Network curve (1)", "Network curve (2)"],
-      "reference_translation_mm": [-0.3104362487792969, 0, 19.67818847656245],
-      "note": "Carina anchor from the updated centerline network curves; used to align the airway, nodule, and scope overlays to the DRR detector."
+      "reference_translation_mm": [0, 0, 0],
+      "note": "C-arm pivot is the CT volume center used by TIGRE and confirmed against a 3D Slicer volume export. The centerline carina is projected from its LPS coordinate without an artificial detector-plane translation."
     }
   },
   "assets": {
@@ -45,7 +45,10 @@
         "positionOffsetMm": [0, 0, 0],
         "note": "Updated Blender GLBs use local X, slice/Z, -Y axes; rotate +90 deg about X into LPS before isocenter calibration."
       }
-    }
+    },
+    "virtualCathLabManifest": "/fluoroview/cases/patient-4/metadata/slicer_c_arm_scene_manifest.json",
+    "virtualCathLabFrontalImage": "/fluoroview/cases/patient-4/virtual-cath-lab/slicerheart_frontal_reference.png",
+    "virtualCathLabSceneManifest": "/fluoroview/cases/patient-4/metadata/slicer_c_arm_scene_manifest.json"
   },
   "ctSlices": {
     "windowPresets": [
@@ -678,5 +681,108 @@
     "defaultScopeProgress": 0.45,
     "defaultRouteTerminalNodeId": 416,
     "source": "Derived educational interaction assets; raw source imaging remains local."
+  },
+  "virtualCathLab": {
+    "source": "SlicerHeart Virtual Cath Lab",
+    "status": "scene-export",
+    "manifestUrl": "/fluoroview/cases/patient-4/metadata/slicer_c_arm_scene_manifest.json",
+    "sceneManifestUrl": "/fluoroview/cases/patient-4/metadata/slicer_c_arm_scene_manifest.json",
+    "frontalImageUrl": "/fluoroview/cases/patient-4/virtual-cath-lab/slicerheart_frontal_reference.png",
+    "frontalDetectorPixels": [587, 800],
+    "frontalDetectorSizeMm": [293.7, 400.4],
+    "frontalPixelSpacingMm": [0.5, 0.5],
+    "coordinateSystem": "RAS",
+    "sourceImageIncludesModel": true,
+    "cArm": {
+      "deviceClassId": "GenericFluoro",
+      "detectorPixelSizeMm": 0.5,
+      "sourceToImageDistanceMm": 885,
+      "frontalArmAngleLDeg": -90,
+      "frontalArmAnglePDeg": 6,
+      "frontalArmAngleCDeg": -12,
+      "frontalArmDetectorRotationDeg": 90,
+      "patientSpinDeg": 0,
+      "tableShiftLateralMm": 30,
+      "tableShiftLongitudinalMm": -15,
+      "tableShiftVerticalMm": 10,
+      "volumeRenderingPreset": "FluoroRenderingPreset_01"
+    },
+    "frontalProjection": {
+      "coordinateSystem": "RAS",
+      "positionRasMm": [-173.41142338262972, -637.0628136676025, -1102.6341288013741],
+      "focalPointRasMm": [-23.71500599384308, 63.34541453123093, -1176.25],
+      "viewUpRas": [3.63582378303642e-18, 0.10452846326765354, 0.9945218953682734],
+      "sourceToImageDistanceMm": 885,
+      "detectorPixels": [587, 800],
+      "detectorSizeMm": [293.7, 400.4],
+      "pixelSpacingMm": [0.5, 0.5],
+      "viewAngleDeg": 25.4932,
+      "imageOrientation": "slicer-nrrd-lps"
+    },
+    "renderingPreset": {
+      "sourceFileName": "FluoroRenderingPreset_01.vp.json",
+      "sha256": "be0b0dfc1f5570b74e3147db41de08d5a43b467712921ad4118dac579d5de35b",
+      "effectiveRange": [-1024.0, 3071.0],
+      "interpolationType": "linear",
+      "lighting": {
+        "diffuse": 0.0,
+        "ambient": 1.0,
+        "specular": 0.0,
+        "specularPower": 1.0
+      },
+      "scalarOpacity": [
+        {
+          "x": -1024.0,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": -1023.9999999999999,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 112.576698303223,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 1500.0,
+          "y": 0.03,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 3071.0,
+          "y": 0.1,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        }
+      ],
+      "rgbTransferFunction": [
+        {
+          "x": -1024.0,
+          "color": [0.0, 0.0, 0.0],
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": -1023.9999999999999,
+          "color": [0.0, 0.0, 0.0],
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 3071.0,
+          "color": [0.0, 0.0, 0.0],
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        }
+      ]
+    },
+    "note": "SlicerHeart scene export is available as a high-fidelity frontal reference frame with detector/camera metadata. The current exported frame includes the airway model rendered into the X-ray, so it is best used as reference/calibration evidence while TIGRE remains the primary continuous atlas."
   }
 }
