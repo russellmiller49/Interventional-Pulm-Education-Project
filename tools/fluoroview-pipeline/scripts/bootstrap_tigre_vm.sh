@@ -14,12 +14,6 @@ command -v nvidia-smi >/dev/null || {
 }
 nvidia-smi
 
-command -v nvcc >/dev/null || {
-  echo "nvcc not found. Install the CUDA Toolkit matching your VM driver." >&2
-  exit 1
-}
-nvcc --version
-
 command -v gcc >/dev/null || {
   echo "gcc not found. Install build-essential." >&2
   exit 1
@@ -35,6 +29,13 @@ fi
 
 conda env update --name "${ENV_NAME}" --file environment-tigre.yml --prune
 
+if command -v nvcc >/dev/null; then
+  nvcc --version
+else
+  echo "System nvcc not found; using CUDA Toolkit from conda env ${ENV_NAME}."
+  conda run -n "${ENV_NAME}" nvcc --version
+fi
+
 if [ ! -d "${TIGRE_DIR}/.git" ]; then
   mkdir -p "$(dirname "${TIGRE_DIR}")"
   git clone https://github.com/CERN/TIGRE.git "${TIGRE_DIR}"
@@ -42,8 +43,7 @@ fi
 
 conda run -n "${ENV_NAME}" python -m pip install --upgrade pip
 conda run -n "${ENV_NAME}" python -m pip install -e .
-conda run -n "${ENV_NAME}" python -m pip install "${TIGRE_DIR}/Python"
+conda run -n "${ENV_NAME}" python -m pip install "${TIGRE_DIR}"
 conda run -n "${ENV_NAME}" python scripts/tigre_smoke_test.py
 
 echo "TIGRE VM bootstrap complete."
-

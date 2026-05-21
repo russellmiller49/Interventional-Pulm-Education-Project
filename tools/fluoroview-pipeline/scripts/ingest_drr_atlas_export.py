@@ -19,9 +19,8 @@ from PIL import Image, ImageOps
 RAW_EXTENSIONS = {".dcm", ".nii", ".nrrd", ".stl", ".obj"}
 RAW_SUFFIXES = {".nii.gz"}
 DEFAULT_NOTE = (
-    "Generated on a GPU VM path with TIGRE installed, but this repo revision's TigreProjector "
-    "delegates projection math to the CPU ray-sum placeholder. Treat this atlas as "
-    "tigre-placeholder until true TIGRE projection geometry is implemented and rerun."
+    "Generated with true TIGRE projection geometry on a local NVIDIA GPU. "
+    "Educational simulation only."
 )
 
 
@@ -31,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--case-dir", required=True, help="Public case folder to update")
     parser.add_argument(
         "--backend-label",
-        default="tigre-placeholder",
+        default="tigre",
         help="Corrected backend provenance label for the public case manifest",
     )
     parser.add_argument(
@@ -154,7 +153,12 @@ def validate_source_manifest(manifest: dict[str, Any], atlas_dir: Path) -> None:
         (int(round(frame["primaryAngleDeg"])), int(round(frame["secondaryAngleDeg"])))
         for frame in frames
     }
-    expected = {(rao, cran) for rao in [-60, -30, 0, 30, 60] for cran in [-20, 0, 20]}
+    angle_grid = manifest.get("angles", {})
+    primary_angles = [int(round(value)) for value in angle_grid.get("primaryAngleDeg", [])]
+    secondary_angles = [int(round(value)) for value in angle_grid.get("secondaryAngleDeg", [])]
+    if not primary_angles or not secondary_angles:
+        raise SystemExit("Atlas manifest does not contain a primary/secondary angle grid.")
+    expected = {(rao, cran) for rao in primary_angles for cran in secondary_angles}
     if pairs != expected:
         missing = sorted(expected.difference(pairs))
         extra = sorted(pairs.difference(expected))

@@ -20,8 +20,8 @@ from fluoroview_pipeline.geometry.carm import CArmGeometry
 from fluoroview_pipeline.io.dicom_loader import read_ct_series
 
 DEFAULT_PROVENANCE_NOTE = (
-    "Generated on a GPU VM path with TIGRE installed. Until TigreProjector maps project geometry "
-    "to true TIGRE projection calls, outputs from this repo backend are labeled tigre-placeholder."
+    "Generated with true TIGRE projection geometry on a local NVIDIA GPU. "
+    "Educational simulation only."
 )
 
 
@@ -50,6 +50,11 @@ def parse_args() -> argparse.Namespace:
         "--provenance-note",
         default=DEFAULT_PROVENANCE_NOTE,
         help="Non-PHI provenance note written to export manifests.",
+    )
+    parser.add_argument(
+        "--write-npy",
+        action="store_true",
+        help="Also write ignored float32 .npy arrays for local debugging. Public ingest never copies them.",
     )
     return parser.parse_args()
 
@@ -154,26 +159,29 @@ def main() -> None:
                     f"drr_rao_{_angle_token(primary_angle)}_"
                     f"cran_{_angle_token(secondary_angle)}"
                 )
-                npy_path = size_output_dir / f"{stem}.npy"
                 png_path = size_output_dir / f"{stem}.png"
-                np.save(npy_path, result.image.astype(np.float32))
+                array_path = None
+                if args.write_npy:
+                    npy_path = size_output_dir / f"{stem}.npy"
+                    np.save(npy_path, result.image.astype(np.float32))
+                    array_path = npy_path.name
                 _write_png(result.image, png_path)
-                frames.append(
-                    {
-                        "id": stem,
-                        "primaryAngleDeg": primary_angle,
-                        "secondaryAngleDeg": secondary_angle,
-                        "detectorSize": [detector_size, detector_size],
-                        "arrayPath": npy_path.name,
-                        "pngPath": png_path.name,
-                        "shape": list(result.image.shape),
-                        "dtype": "float32",
-                        "valueRange": [float(np.min(result.image)), float(np.max(result.image))],
-                        "backend": backend,
-                        "projectorMetadata": result.metadata,
-                    }
-                )
-                print(f"Wrote {npy_path} and {png_path}")
+                frame = {
+                    "id": stem,
+                    "primaryAngleDeg": primary_angle,
+                    "secondaryAngleDeg": secondary_angle,
+                    "detectorSize": [detector_size, detector_size],
+                    "pngPath": png_path.name,
+                    "shape": list(result.image.shape),
+                    "dtype": "float32",
+                    "valueRange": [float(np.min(result.image)), float(np.max(result.image))],
+                    "backend": backend,
+                    "projectorMetadata": result.metadata,
+                }
+                if array_path is not None:
+                    frame["arrayPath"] = array_path
+                frames.append(frame)
+                print(f"Wrote {png_path}")
 
         _write_manifest(
             size_output_dir,
