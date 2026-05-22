@@ -14,7 +14,6 @@ REQUIRED_TOP_LEVEL_KEYS = {
     "geometry",
     "assets",
     "ctSlices",
-    "drrAtlas",
     "lessons",
 }
 
@@ -31,11 +30,19 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     if "not for diagnosis" not in str(manifest.get("safetyLabel", "")).lower():
         errors.append("Manifest safety label must include non-diagnostic wording.")
     frames = manifest.get("drrAtlas", {}).get("frames", [])
-    if not frames:
-        errors.append("Manifest must include at least one DRR atlas frame.")
+    volume_drr = manifest.get("volumeDrr", {})
+    if not frames and not volume_drr.get("volumeUri"):
+        errors.append("Manifest must include at least one DRR atlas frame or a volumeDrr asset.")
     provenance = manifest.get("drrAtlas", {}).get("provenance", {})
-    if not provenance.get("backend"):
-        errors.append("Manifest DRR atlas must include a provenance backend.")
+    if frames and not provenance.get("backend"):
+        errors.append("Manifest DRR atlas must include a provenance backend when frames are present.")
+    if volume_drr:
+        if volume_drr.get("format") != "uint8-r8":
+            errors.append('volumeDrr.format must be "uint8-r8".')
+        if len(volume_drr.get("directionLps", [])) != 9:
+            errors.append("volumeDrr.directionLps must contain 9 values.")
+        if volume_drr.get("sampleDomain") != "normalized-r8":
+            errors.append('volumeDrr.sampleDomain must be "normalized-r8".')
     assets = manifest.get("assets", {})
     if assets.get("airwayGraphJson") and not manifest.get("interaction"):
         errors.append("Interaction defaults are required when airwayGraphJson is present.")

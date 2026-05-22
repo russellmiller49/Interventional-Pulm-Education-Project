@@ -15,11 +15,17 @@ dependencies = [
   "pydicom>=2.4",
   "SimpleITK>=2.3",
   "pillow>=10.0",
+  "pynrrd>=1.0",
+  "h5py>=3.10",
+  "trimesh[easy]>=4.0",
+  "pygltflib>=1.16",
+  "tqdm>=4.66",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.8"]
 tigre = []
+vtk = ["vtk>=9.3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -31,4 +37,3 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-

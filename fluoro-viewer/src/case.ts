@@ -99,9 +99,56 @@ export function validateFluoroCaseManifest(candidate: unknown): string[] {
     errors.push('CT preview volume rawUrl is required.')
   }
   if (!manifest.ctSlices?.axes?.axial) errors.push('Axial CT slice axis is required.')
-  if (!manifest.drrAtlas?.frames?.length) errors.push('At least one DRR atlas frame is required.')
-  if (!manifest.drrAtlas?.provenance?.backend) {
-    errors.push('DRR atlas provenance backend is required.')
+  const hasAtlas = !!manifest.drrAtlas?.frames?.length
+  const hasVolume = !!manifest.volumeDrr?.volumeUri
+  if (!hasAtlas && !hasVolume) {
+    errors.push('A DRR atlas (frames) or a volumeDrr asset is required.')
+  }
+  if (hasAtlas && !manifest.drrAtlas?.provenance?.backend) {
+    errors.push('DRR atlas provenance backend is required when frames are present.')
+  }
+  if (hasVolume) {
+    const v = manifest.volumeDrr
+    if (!v?.volumeUri) {
+      errors.push('volumeDrr.volumeUri is required.')
+    }
+    if (!v || !Array.isArray(v.sizeXyz) || v.sizeXyz.length !== 3) {
+      errors.push('volumeDrr.sizeXyz must be a 3-tuple.')
+    }
+    if (v?.format !== 'uint8-r8') {
+      errors.push('volumeDrr.format must be "uint8-r8".')
+    }
+    if (v?.sampleDomain !== 'normalized-r8') {
+      errors.push('volumeDrr.sampleDomain must be "normalized-r8".')
+    }
+    if (!Array.isArray(v?.directionLps) || v.directionLps.length !== 9) {
+      errors.push('volumeDrr.directionLps must contain 9 values.')
+    }
+    if (!Array.isArray(v?.huRange) || v.huRange.length !== 2) {
+      errors.push('volumeDrr.huRange must contain 2 values.')
+    }
+  }
+  if (manifest.scopeAnimation) {
+    if (!manifest.scopeAnimation.polylineJsonUri) {
+      errors.push('scopeAnimation.polylineJsonUri is required.')
+    }
+    if (manifest.scopeAnimation.defaultRouteId !== 'bezier-demo') {
+      errors.push('scopeAnimation.defaultRouteId must be "bezier-demo".')
+    }
+  }
+  if (manifest.cArm?.gantryGlbUri && typeof manifest.cArm.gantryGlbUri !== 'string') {
+    errors.push('cArm.gantryGlbUri must be a string when present.')
+  }
+  if (manifest.cArm?.transforms) {
+    for (const transform of manifest.cArm.transforms) {
+      if (
+        !Array.isArray(transform.matrixLpsFromParent) ||
+        transform.matrixLpsFromParent.length !== 16
+      ) {
+        errors.push('cArm transforms must contain 16-value matrixLpsFromParent arrays.')
+        break
+      }
+    }
   }
   return errors
 }

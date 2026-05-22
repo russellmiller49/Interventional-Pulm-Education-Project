@@ -1,0 +1,2987 @@
+{
+  "source": "fluoroview_pipeline.airway_graph",
+  "segments": [
+    {
+      "id": "edge-0",
+      "label": "Network curve_1 (0).mrk",
+      "groupKey": "trachea",
+      "medianRadiusMm": 6.11008
+    },
+    {
+      "id": "edge-1",
+      "label": "Network curve_1 (1).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 7.58649
+    },
+    {
+      "id": "edge-2",
+      "label": "Network curve_1 (2).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 5.73326
+    },
+    {
+      "id": "edge-3",
+      "label": "Network curve_1 (3).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.96761
+    },
+    {
+      "id": "edge-4",
+      "label": "Network curve_1 (4).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 5.55836
+    },
+    {
+      "id": "edge-5",
+      "label": "Network curve_1 (5).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 4.31846
+    },
+    {
+      "id": "edge-6",
+      "label": "Network curve_1 (6).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.7367
+    },
+    {
+      "id": "edge-7",
+      "label": "Network curve_1 (7).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.74824
+    },
+    {
+      "id": "edge-8",
+      "label": "Network curve_1 (8).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 4.14474
+    },
+    {
+      "id": "edge-9",
+      "label": "Network curve_1 (9).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.84051
+    },
+    {
+      "id": "edge-10",
+      "label": "Network curve_1 (10).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.98471
+    },
+    {
+      "id": "edge-11",
+      "label": "Network curve_1 (11).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.16418
+    },
+    {
+      "id": "edge-12",
+      "label": "Network curve_1 (12).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.43635
+    },
+    {
+      "id": "edge-13",
+      "label": "Network curve_1 (13).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.11776
+    },
+    {
+      "id": "edge-14",
+      "label": "Network curve_1 (14).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.34178
+    },
+    {
+      "id": "edge-15",
+      "label": "Network curve_1 (15).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.87064
+    },
+    {
+      "id": "edge-16",
+      "label": "Network curve_1 (16).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.23169
+    },
+    {
+      "id": "edge-17",
+      "label": "Network curve_1 (17).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.3676
+    },
+    {
+      "id": "edge-18",
+      "label": "Network curve_1 (18).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.03475
+    },
+    {
+      "id": "edge-19",
+      "label": "Network curve_1 (19).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.56135
+    },
+    {
+      "id": "edge-20",
+      "label": "Network curve_1 (20).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.84591
+    },
+    {
+      "id": "edge-21",
+      "label": "Network curve_1 (21).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.00655
+    },
+    {
+      "id": "edge-22",
+      "label": "Network curve_1 (22).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.086
+    },
+    {
+      "id": "edge-23",
+      "label": "Network curve_1 (23).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.21743
+    },
+    {
+      "id": "edge-24",
+      "label": "Network curve_1 (24).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.47816
+    },
+    {
+      "id": "edge-25",
+      "label": "Network curve_1 (25).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.2428
+    },
+    {
+      "id": "edge-26",
+      "label": "Network curve_1 (26).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.98566
+    },
+    {
+      "id": "edge-27",
+      "label": "Network curve_1 (27).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.96302
+    },
+    {
+      "id": "edge-28",
+      "label": "Network curve_1 (28).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77394
+    },
+    {
+      "id": "edge-29",
+      "label": "Network curve_1 (29).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77547
+    },
+    {
+      "id": "edge-30",
+      "label": "Network curve_1 (30).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.44393
+    },
+    {
+      "id": "edge-31",
+      "label": "Network curve_1 (31).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.71693
+    },
+    {
+      "id": "edge-32",
+      "label": "Network curve_1 (32).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56652
+    },
+    {
+      "id": "edge-33",
+      "label": "Network curve_1 (33).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65715
+    },
+    {
+      "id": "edge-34",
+      "label": "Network curve_1 (34).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.10581
+    },
+    {
+      "id": "edge-35",
+      "label": "Network curve_1 (35).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.81123
+    },
+    {
+      "id": "edge-36",
+      "label": "Network curve_1 (36).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.05443
+    },
+    {
+      "id": "edge-37",
+      "label": "Network curve_1 (37).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.00662
+    },
+    {
+      "id": "edge-38",
+      "label": "Network curve_1 (38).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.76474
+    },
+    {
+      "id": "edge-39",
+      "label": "Network curve_1 (39).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.76073
+    },
+    {
+      "id": "edge-40",
+      "label": "Network curve_1 (40).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.89763
+    },
+    {
+      "id": "edge-41",
+      "label": "Network curve_1 (41).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.07592
+    },
+    {
+      "id": "edge-42",
+      "label": "Network curve_1 (42).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.47007
+    },
+    {
+      "id": "edge-43",
+      "label": "Network curve_1 (43).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.86193
+    },
+    {
+      "id": "edge-44",
+      "label": "Network curve_1 (44).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.44055
+    },
+    {
+      "id": "edge-45",
+      "label": "Network curve_1 (45).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.14857
+    },
+    {
+      "id": "edge-46",
+      "label": "Network curve_1 (46).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50136
+    },
+    {
+      "id": "edge-47",
+      "label": "Network curve_1 (47).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.76622
+    },
+    {
+      "id": "edge-48",
+      "label": "Network curve_1 (48).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.96072
+    },
+    {
+      "id": "edge-49",
+      "label": "Network curve_1 (49).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.79166
+    },
+    {
+      "id": "edge-50",
+      "label": "Network curve_1 (50).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.67005
+    },
+    {
+      "id": "edge-51",
+      "label": "Network curve_1 (51).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.97015
+    },
+    {
+      "id": "edge-52",
+      "label": "Network curve_1 (52).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.13903
+    },
+    {
+      "id": "edge-53",
+      "label": "Network curve_1 (53).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.71283
+    },
+    {
+      "id": "edge-54",
+      "label": "Network curve_1 (54).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.10163
+    },
+    {
+      "id": "edge-55",
+      "label": "Network curve_1 (55).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.78158
+    },
+    {
+      "id": "edge-56",
+      "label": "Network curve_1 (56).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51653
+    },
+    {
+      "id": "edge-57",
+      "label": "Network curve_1 (57).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.75112
+    },
+    {
+      "id": "edge-58",
+      "label": "Network curve_1 (58).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.62908
+    },
+    {
+      "id": "edge-59",
+      "label": "Network curve_1 (59).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.73884
+    },
+    {
+      "id": "edge-60",
+      "label": "Network curve_1 (60).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69661
+    },
+    {
+      "id": "edge-61",
+      "label": "Network curve_1 (61).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65255
+    },
+    {
+      "id": "edge-62",
+      "label": "Network curve_1 (62).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58678
+    },
+    {
+      "id": "edge-63",
+      "label": "Network curve_1 (63).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.20133
+    },
+    {
+      "id": "edge-64",
+      "label": "Network curve_1 (64).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65627
+    },
+    {
+      "id": "edge-65",
+      "label": "Network curve_1 (65).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.42859
+    },
+    {
+      "id": "edge-66",
+      "label": "Network curve_1 (66).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.66062
+    },
+    {
+      "id": "edge-67",
+      "label": "Network curve_1 (67).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55991
+    },
+    {
+      "id": "edge-68",
+      "label": "Network curve_1 (68).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52773
+    },
+    {
+      "id": "edge-69",
+      "label": "Network curve_1 (69).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.62016
+    },
+    {
+      "id": "edge-70",
+      "label": "Network curve_1 (70).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.80148
+    },
+    {
+      "id": "edge-71",
+      "label": "Network curve_1 (71).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.96348
+    },
+    {
+      "id": "edge-72",
+      "label": "Network curve_1 (72).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 3.11291
+    },
+    {
+      "id": "edge-73",
+      "label": "Network curve_1 (73).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70444
+    },
+    {
+      "id": "edge-74",
+      "label": "Network curve_1 (74).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.87615
+    },
+    {
+      "id": "edge-75",
+      "label": "Network curve_1 (75).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.76647
+    },
+    {
+      "id": "edge-76",
+      "label": "Network curve_1 (76).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.73687
+    },
+    {
+      "id": "edge-77",
+      "label": "Network curve_1 (77).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61332
+    },
+    {
+      "id": "edge-78",
+      "label": "Network curve_1 (78).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.92947
+    },
+    {
+      "id": "edge-79",
+      "label": "Network curve_1 (79).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58172
+    },
+    {
+      "id": "edge-80",
+      "label": "Network curve_1 (80).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.84614
+    },
+    {
+      "id": "edge-81",
+      "label": "Network curve_1 (81).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50167
+    },
+    {
+      "id": "edge-82",
+      "label": "Network curve_1 (82).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77078
+    },
+    {
+      "id": "edge-83",
+      "label": "Network curve_1 (83).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.87883
+    },
+    {
+      "id": "edge-84",
+      "label": "Network curve_1 (84).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.95982
+    },
+    {
+      "id": "edge-85",
+      "label": "Network curve_1 (85).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.80637
+    },
+    {
+      "id": "edge-86",
+      "label": "Network curve_1 (86).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 0.110886
+    },
+    {
+      "id": "edge-87",
+      "label": "Network curve_1 (87).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.8184
+    },
+    {
+      "id": "edge-88",
+      "label": "Network curve_1 (88).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.08069
+    },
+    {
+      "id": "edge-89",
+      "label": "Network curve_1 (89).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.90994
+    },
+    {
+      "id": "edge-90",
+      "label": "Network curve_1 (90).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50908
+    },
+    {
+      "id": "edge-91",
+      "label": "Network curve_1 (91).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.73673
+    },
+    {
+      "id": "edge-92",
+      "label": "Network curve_1 (92).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.96069
+    },
+    {
+      "id": "edge-93",
+      "label": "Network curve_1 (93).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.68971
+    },
+    {
+      "id": "edge-94",
+      "label": "Network curve_1 (94).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.75498
+    },
+    {
+      "id": "edge-95",
+      "label": "Network curve_1 (95).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47917
+    },
+    {
+      "id": "edge-96",
+      "label": "Network curve_1 (96).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53266
+    },
+    {
+      "id": "edge-97",
+      "label": "Network curve_1 (97).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.68605
+    },
+    {
+      "id": "edge-98",
+      "label": "Network curve_1 (98).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.64381
+    },
+    {
+      "id": "edge-99",
+      "label": "Network curve_1 (99).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52294
+    },
+    {
+      "id": "edge-100",
+      "label": "Network curve_1 (100).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58385
+    },
+    {
+      "id": "edge-101",
+      "label": "Network curve_1 (101).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61406
+    },
+    {
+      "id": "edge-102",
+      "label": "Network curve_1 (102).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70125
+    },
+    {
+      "id": "edge-103",
+      "label": "Network curve_1 (103).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58045
+    },
+    {
+      "id": "edge-104",
+      "label": "Network curve_1 (104).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.9071
+    },
+    {
+      "id": "edge-105",
+      "label": "Network curve_1 (105).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.7547
+    },
+    {
+      "id": "edge-106",
+      "label": "Network curve_1 (106).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.20146
+    },
+    {
+      "id": "edge-107",
+      "label": "Network curve_1 (107).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59514
+    },
+    {
+      "id": "edge-108",
+      "label": "Network curve_1 (108).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53783
+    },
+    {
+      "id": "edge-109",
+      "label": "Network curve_1 (109).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57163
+    },
+    {
+      "id": "edge-110",
+      "label": "Network curve_1 (110).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.04384
+    },
+    {
+      "id": "edge-111",
+      "label": "Network curve_1 (111).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53636
+    },
+    {
+      "id": "edge-112",
+      "label": "Network curve_1 (112).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.60612
+    },
+    {
+      "id": "edge-113",
+      "label": "Network curve_1 (113).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69661
+    },
+    {
+      "id": "edge-114",
+      "label": "Network curve_1 (114).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.25211
+    },
+    {
+      "id": "edge-115",
+      "label": "Network curve_1 (115).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70329
+    },
+    {
+      "id": "edge-116",
+      "label": "Network curve_1 (116).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4574
+    },
+    {
+      "id": "edge-117",
+      "label": "Network curve_1 (117).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54252
+    },
+    {
+      "id": "edge-118",
+      "label": "Network curve_1 (118).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65906
+    },
+    {
+      "id": "edge-119",
+      "label": "Network curve_1 (119).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47507
+    },
+    {
+      "id": "edge-120",
+      "label": "Network curve_1 (120).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5111
+    },
+    {
+      "id": "edge-121",
+      "label": "Network curve_1 (121).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56807
+    },
+    {
+      "id": "edge-122",
+      "label": "Network curve_1 (122).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47653
+    },
+    {
+      "id": "edge-123",
+      "label": "Network curve_1 (123).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48471
+    },
+    {
+      "id": "edge-124",
+      "label": "Network curve_1 (124).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.40686
+    },
+    {
+      "id": "edge-125",
+      "label": "Network curve_1 (125).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69949
+    },
+    {
+      "id": "edge-126",
+      "label": "Network curve_1 (126).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.85504
+    },
+    {
+      "id": "edge-127",
+      "label": "Network curve_1 (127).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5529
+    },
+    {
+      "id": "edge-128",
+      "label": "Network curve_1 (128).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46715
+    },
+    {
+      "id": "edge-129",
+      "label": "Network curve_1 (129).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4603
+    },
+    {
+      "id": "edge-130",
+      "label": "Network curve_1 (130).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57914
+    },
+    {
+      "id": "edge-131",
+      "label": "Network curve_1 (131).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53688
+    },
+    {
+      "id": "edge-132",
+      "label": "Network curve_1 (132).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4918
+    },
+    {
+      "id": "edge-133",
+      "label": "Network curve_1 (133).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54457
+    },
+    {
+      "id": "edge-134",
+      "label": "Network curve_1 (134).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47635
+    },
+    {
+      "id": "edge-135",
+      "label": "Network curve_1 (135).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77537
+    },
+    {
+      "id": "edge-136",
+      "label": "Network curve_1 (136).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.7838
+    },
+    {
+      "id": "edge-137",
+      "label": "Network curve_1 (137).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.8954
+    },
+    {
+      "id": "edge-138",
+      "label": "Network curve_1 (138).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.09323
+    },
+    {
+      "id": "edge-139",
+      "label": "Network curve_1 (139).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58032
+    },
+    {
+      "id": "edge-140",
+      "label": "Network curve_1 (140).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5787
+    },
+    {
+      "id": "edge-141",
+      "label": "Network curve_1 (141).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59954
+    },
+    {
+      "id": "edge-142",
+      "label": "Network curve_1 (142).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52846
+    },
+    {
+      "id": "edge-143",
+      "label": "Network curve_1 (143).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.63278
+    },
+    {
+      "id": "edge-144",
+      "label": "Network curve_1 (144).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.64833
+    },
+    {
+      "id": "edge-145",
+      "label": "Network curve_1 (145).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.6479
+    },
+    {
+      "id": "edge-146",
+      "label": "Network curve_1 (146).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48032
+    },
+    {
+      "id": "edge-147",
+      "label": "Network curve_1 (147).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51066
+    },
+    {
+      "id": "edge-148",
+      "label": "Network curve_1 (148).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.66488
+    },
+    {
+      "id": "edge-149",
+      "label": "Network curve_1 (149).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.89885
+    },
+    {
+      "id": "edge-150",
+      "label": "Network curve_1 (150).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.60277
+    },
+    {
+      "id": "edge-151",
+      "label": "Network curve_1 (151).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50438
+    },
+    {
+      "id": "edge-152",
+      "label": "Network curve_1 (152).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77765
+    },
+    {
+      "id": "edge-153",
+      "label": "Network curve_1 (153).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44595
+    },
+    {
+      "id": "edge-154",
+      "label": "Network curve_1 (154).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.62537
+    },
+    {
+      "id": "edge-155",
+      "label": "Network curve_1 (155).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65724
+    },
+    {
+      "id": "edge-156",
+      "label": "Network curve_1 (156).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53821
+    },
+    {
+      "id": "edge-157",
+      "label": "Network curve_1 (157).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54109
+    },
+    {
+      "id": "edge-158",
+      "label": "Network curve_1 (158).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55538
+    },
+    {
+      "id": "edge-159",
+      "label": "Network curve_1 (159).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69708
+    },
+    {
+      "id": "edge-160",
+      "label": "Network curve_1 (160).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70991
+    },
+    {
+      "id": "edge-161",
+      "label": "Network curve_1 (161).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57708
+    },
+    {
+      "id": "edge-162",
+      "label": "Network curve_1 (162).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.60242
+    },
+    {
+      "id": "edge-163",
+      "label": "Network curve_1 (163).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.67383
+    },
+    {
+      "id": "edge-164",
+      "label": "Network curve_1 (164).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49621
+    },
+    {
+      "id": "edge-165",
+      "label": "Network curve_1 (165).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.83701
+    },
+    {
+      "id": "edge-166",
+      "label": "Network curve_1 (166).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70746
+    },
+    {
+      "id": "edge-167",
+      "label": "Network curve_1 (167).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77963
+    },
+    {
+      "id": "edge-168",
+      "label": "Network curve_1 (168).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.68569
+    },
+    {
+      "id": "edge-169",
+      "label": "Network curve_1 (169).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51409
+    },
+    {
+      "id": "edge-170",
+      "label": "Network curve_1 (170).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5959
+    },
+    {
+      "id": "edge-171",
+      "label": "Network curve_1 (171).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61525
+    },
+    {
+      "id": "edge-172",
+      "label": "Network curve_1 (172).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.79747
+    },
+    {
+      "id": "edge-173",
+      "label": "Network curve_1 (173).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52813
+    },
+    {
+      "id": "edge-174",
+      "label": "Network curve_1 (174).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.72375
+    },
+    {
+      "id": "edge-175",
+      "label": "Network curve_1 (175).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.6147
+    },
+    {
+      "id": "edge-176",
+      "label": "Network curve_1 (176).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69744
+    },
+    {
+      "id": "edge-177",
+      "label": "Network curve_1 (177).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53205
+    },
+    {
+      "id": "edge-178",
+      "label": "Network curve_1 (178).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48059
+    },
+    {
+      "id": "edge-179",
+      "label": "Network curve_1 (179).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47636
+    },
+    {
+      "id": "edge-180",
+      "label": "Network curve_1 (180).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53206
+    },
+    {
+      "id": "edge-181",
+      "label": "Network curve_1 (181).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46046
+    },
+    {
+      "id": "edge-182",
+      "label": "Network curve_1 (182).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4605
+    },
+    {
+      "id": "edge-183",
+      "label": "Network curve_1 (183).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48635
+    },
+    {
+      "id": "edge-184",
+      "label": "Network curve_1 (184).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.25942
+    },
+    {
+      "id": "edge-185",
+      "label": "Network curve_1 (185).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57013
+    },
+    {
+      "id": "edge-186",
+      "label": "Network curve_1 (186).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41745
+    },
+    {
+      "id": "edge-187",
+      "label": "Network curve_1 (187).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.67515
+    },
+    {
+      "id": "edge-188",
+      "label": "Network curve_1 (188).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.81124
+    },
+    {
+      "id": "edge-189",
+      "label": "Network curve_1 (189).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.68064
+    },
+    {
+      "id": "edge-190",
+      "label": "Network curve_1 (190).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.83128
+    },
+    {
+      "id": "edge-191",
+      "label": "Network curve_1 (191).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.68101
+    },
+    {
+      "id": "edge-192",
+      "label": "Network curve_1 (192).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.64214
+    },
+    {
+      "id": "edge-193",
+      "label": "Network curve_1 (193).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48902
+    },
+    {
+      "id": "edge-194",
+      "label": "Network curve_1 (194).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50372
+    },
+    {
+      "id": "edge-195",
+      "label": "Network curve_1 (195).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.80919
+    },
+    {
+      "id": "edge-196",
+      "label": "Network curve_1 (196).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.78237
+    },
+    {
+      "id": "edge-197",
+      "label": "Network curve_1 (197).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.67507
+    },
+    {
+      "id": "edge-198",
+      "label": "Network curve_1 (198).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.42849
+    },
+    {
+      "id": "edge-199",
+      "label": "Network curve_1 (199).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.09144
+    },
+    {
+      "id": "edge-200",
+      "label": "Network curve_1 (200).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56612
+    },
+    {
+      "id": "edge-201",
+      "label": "Network curve_1 (201).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.14964
+    },
+    {
+      "id": "edge-202",
+      "label": "Network curve_1 (202).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50813
+    },
+    {
+      "id": "edge-203",
+      "label": "Network curve_1 (203).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54702
+    },
+    {
+      "id": "edge-204",
+      "label": "Network curve_1 (204).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49463
+    },
+    {
+      "id": "edge-205",
+      "label": "Network curve_1 (205).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47208
+    },
+    {
+      "id": "edge-206",
+      "label": "Network curve_1 (206).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48172
+    },
+    {
+      "id": "edge-207",
+      "label": "Network curve_1 (207).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48508
+    },
+    {
+      "id": "edge-208",
+      "label": "Network curve_1 (208).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45984
+    },
+    {
+      "id": "edge-209",
+      "label": "Network curve_1 (209).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5387
+    },
+    {
+      "id": "edge-210",
+      "label": "Network curve_1 (210).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57767
+    },
+    {
+      "id": "edge-211",
+      "label": "Network curve_1 (211).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54927
+    },
+    {
+      "id": "edge-212",
+      "label": "Network curve_1 (212).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.67747
+    },
+    {
+      "id": "edge-213",
+      "label": "Network curve_1 (213).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77699
+    },
+    {
+      "id": "edge-214",
+      "label": "Network curve_1 (214).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45484
+    },
+    {
+      "id": "edge-215",
+      "label": "Network curve_1 (215).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50158
+    },
+    {
+      "id": "edge-216",
+      "label": "Network curve_1 (216).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47493
+    },
+    {
+      "id": "edge-217",
+      "label": "Network curve_1 (217).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45339
+    },
+    {
+      "id": "edge-218",
+      "label": "Network curve_1 (218).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70545
+    },
+    {
+      "id": "edge-219",
+      "label": "Network curve_1 (219).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.71506
+    },
+    {
+      "id": "edge-220",
+      "label": "Network curve_1 (220).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57013
+    },
+    {
+      "id": "edge-221",
+      "label": "Network curve_1 (221).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.6831
+    },
+    {
+      "id": "edge-222",
+      "label": "Network curve_1 (222).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.83948
+    },
+    {
+      "id": "edge-223",
+      "label": "Network curve_1 (223).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.79627
+    },
+    {
+      "id": "edge-224",
+      "label": "Network curve_1 (224).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65095
+    },
+    {
+      "id": "edge-225",
+      "label": "Network curve_1 (225).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5986
+    },
+    {
+      "id": "edge-226",
+      "label": "Network curve_1 (226).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.37588
+    },
+    {
+      "id": "edge-227",
+      "label": "Network curve_1 (227).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.42805
+    },
+    {
+      "id": "edge-228",
+      "label": "Network curve_1 (228).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50312
+    },
+    {
+      "id": "edge-229",
+      "label": "Network curve_1 (229).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54681
+    },
+    {
+      "id": "edge-230",
+      "label": "Network curve_1 (230).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49824
+    },
+    {
+      "id": "edge-231",
+      "label": "Network curve_1 (231).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47582
+    },
+    {
+      "id": "edge-232",
+      "label": "Network curve_1 (232).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58161
+    },
+    {
+      "id": "edge-233",
+      "label": "Network curve_1 (233).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57652
+    },
+    {
+      "id": "edge-234",
+      "label": "Network curve_1 (234).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51145
+    },
+    {
+      "id": "edge-235",
+      "label": "Network curve_1 (235).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.64673
+    },
+    {
+      "id": "edge-236",
+      "label": "Network curve_1 (236).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55304
+    },
+    {
+      "id": "edge-237",
+      "label": "Network curve_1 (237).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44148
+    },
+    {
+      "id": "edge-238",
+      "label": "Network curve_1 (238).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46449
+    },
+    {
+      "id": "edge-239",
+      "label": "Network curve_1 (239).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52458
+    },
+    {
+      "id": "edge-240",
+      "label": "Network curve_1 (240).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52248
+    },
+    {
+      "id": "edge-241",
+      "label": "Network curve_1 (241).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49236
+    },
+    {
+      "id": "edge-242",
+      "label": "Network curve_1 (242).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50861
+    },
+    {
+      "id": "edge-243",
+      "label": "Network curve_1 (243).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55657
+    },
+    {
+      "id": "edge-244",
+      "label": "Network curve_1 (244).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61245
+    },
+    {
+      "id": "edge-245",
+      "label": "Network curve_1 (245).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56159
+    },
+    {
+      "id": "edge-246",
+      "label": "Network curve_1 (246).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.60255
+    },
+    {
+      "id": "edge-247",
+      "label": "Network curve_1 (247).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56974
+    },
+    {
+      "id": "edge-248",
+      "label": "Network curve_1 (248).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43539
+    },
+    {
+      "id": "edge-249",
+      "label": "Network curve_1 (249).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45996
+    },
+    {
+      "id": "edge-250",
+      "label": "Network curve_1 (250).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41724
+    },
+    {
+      "id": "edge-251",
+      "label": "Network curve_1 (251).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54983
+    },
+    {
+      "id": "edge-252",
+      "label": "Network curve_1 (252).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59425
+    },
+    {
+      "id": "edge-253",
+      "label": "Network curve_1 (253).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45982
+    },
+    {
+      "id": "edge-254",
+      "label": "Network curve_1 (254).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50354
+    },
+    {
+      "id": "edge-255",
+      "label": "Network curve_1 (255).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51527
+    },
+    {
+      "id": "edge-256",
+      "label": "Network curve_1 (256).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.79791
+    },
+    {
+      "id": "edge-257",
+      "label": "Network curve_1 (257).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54235
+    },
+    {
+      "id": "edge-258",
+      "label": "Network curve_1 (258).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51381
+    },
+    {
+      "id": "edge-259",
+      "label": "Network curve_1 (259).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49845
+    },
+    {
+      "id": "edge-260",
+      "label": "Network curve_1 (260).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.62635
+    },
+    {
+      "id": "edge-261",
+      "label": "Network curve_1 (261).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56727
+    },
+    {
+      "id": "edge-262",
+      "label": "Network curve_1 (262).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.82744
+    },
+    {
+      "id": "edge-263",
+      "label": "Network curve_1 (263).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51259
+    },
+    {
+      "id": "edge-264",
+      "label": "Network curve_1 (264).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5557
+    },
+    {
+      "id": "edge-265",
+      "label": "Network curve_1 (265).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55018
+    },
+    {
+      "id": "edge-266",
+      "label": "Network curve_1 (266).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54081
+    },
+    {
+      "id": "edge-267",
+      "label": "Network curve_1 (267).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.88686
+    },
+    {
+      "id": "edge-268",
+      "label": "Network curve_1 (268).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.65194
+    },
+    {
+      "id": "edge-269",
+      "label": "Network curve_1 (269).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59217
+    },
+    {
+      "id": "edge-270",
+      "label": "Network curve_1 (270).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56216
+    },
+    {
+      "id": "edge-271",
+      "label": "Network curve_1 (271).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50335
+    },
+    {
+      "id": "edge-272",
+      "label": "Network curve_1 (272).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47532
+    },
+    {
+      "id": "edge-273",
+      "label": "Network curve_1 (273).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56301
+    },
+    {
+      "id": "edge-274",
+      "label": "Network curve_1 (274).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.92308
+    },
+    {
+      "id": "edge-275",
+      "label": "Network curve_1 (275).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56685
+    },
+    {
+      "id": "edge-276",
+      "label": "Network curve_1 (276).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52022
+    },
+    {
+      "id": "edge-277",
+      "label": "Network curve_1 (277).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52082
+    },
+    {
+      "id": "edge-278",
+      "label": "Network curve_1 (278).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50816
+    },
+    {
+      "id": "edge-279",
+      "label": "Network curve_1 (279).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41089
+    },
+    {
+      "id": "edge-280",
+      "label": "Network curve_1 (280).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52555
+    },
+    {
+      "id": "edge-281",
+      "label": "Network curve_1 (281).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47094
+    },
+    {
+      "id": "edge-282",
+      "label": "Network curve_1 (282).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58942
+    },
+    {
+      "id": "edge-283",
+      "label": "Network curve_1 (283).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45059
+    },
+    {
+      "id": "edge-284",
+      "label": "Network curve_1 (284).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49419
+    },
+    {
+      "id": "edge-285",
+      "label": "Network curve_1 (285).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50056
+    },
+    {
+      "id": "edge-286",
+      "label": "Network curve_1 (286).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53247
+    },
+    {
+      "id": "edge-287",
+      "label": "Network curve_1 (287).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61693
+    },
+    {
+      "id": "edge-288",
+      "label": "Network curve_1 (288).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.71983
+    },
+    {
+      "id": "edge-289",
+      "label": "Network curve_1 (289).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58615
+    },
+    {
+      "id": "edge-290",
+      "label": "Network curve_1 (290).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55396
+    },
+    {
+      "id": "edge-291",
+      "label": "Network curve_1 (291).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54081
+    },
+    {
+      "id": "edge-292",
+      "label": "Network curve_1 (292).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48292
+    },
+    {
+      "id": "edge-293",
+      "label": "Network curve_1 (293).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54506
+    },
+    {
+      "id": "edge-294",
+      "label": "Network curve_1 (294).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70557
+    },
+    {
+      "id": "edge-295",
+      "label": "Network curve_1 (295).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56434
+    },
+    {
+      "id": "edge-296",
+      "label": "Network curve_1 (296).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.79958
+    },
+    {
+      "id": "edge-297",
+      "label": "Network curve_1 (297).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53951
+    },
+    {
+      "id": "edge-298",
+      "label": "Network curve_1 (298).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.6289
+    },
+    {
+      "id": "edge-299",
+      "label": "Network curve_1 (299).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57368
+    },
+    {
+      "id": "edge-300",
+      "label": "Network curve_1 (300).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 2.00439
+    },
+    {
+      "id": "edge-301",
+      "label": "Network curve_1 (301).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70083
+    },
+    {
+      "id": "edge-302",
+      "label": "Network curve_1 (302).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55344
+    },
+    {
+      "id": "edge-303",
+      "label": "Network curve_1 (303).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41954
+    },
+    {
+      "id": "edge-304",
+      "label": "Network curve_1 (304).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46151
+    },
+    {
+      "id": "edge-305",
+      "label": "Network curve_1 (305).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50172
+    },
+    {
+      "id": "edge-306",
+      "label": "Network curve_1 (306).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49594
+    },
+    {
+      "id": "edge-307",
+      "label": "Network curve_1 (307).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56943
+    },
+    {
+      "id": "edge-308",
+      "label": "Network curve_1 (308).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46097
+    },
+    {
+      "id": "edge-309",
+      "label": "Network curve_1 (309).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51928
+    },
+    {
+      "id": "edge-310",
+      "label": "Network curve_1 (310).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54024
+    },
+    {
+      "id": "edge-311",
+      "label": "Network curve_1 (311).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45472
+    },
+    {
+      "id": "edge-312",
+      "label": "Network curve_1 (312).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50558
+    },
+    {
+      "id": "edge-313",
+      "label": "Network curve_1 (313).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50633
+    },
+    {
+      "id": "edge-314",
+      "label": "Network curve_1 (314).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4967
+    },
+    {
+      "id": "edge-315",
+      "label": "Network curve_1 (315).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54581
+    },
+    {
+      "id": "edge-316",
+      "label": "Network curve_1 (316).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4822
+    },
+    {
+      "id": "edge-317",
+      "label": "Network curve_1 (317).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53123
+    },
+    {
+      "id": "edge-318",
+      "label": "Network curve_1 (318).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.39869
+    },
+    {
+      "id": "edge-319",
+      "label": "Network curve_1 (319).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55276
+    },
+    {
+      "id": "edge-320",
+      "label": "Network curve_1 (320).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52936
+    },
+    {
+      "id": "edge-321",
+      "label": "Network curve_1 (321).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.72683
+    },
+    {
+      "id": "edge-322",
+      "label": "Network curve_1 (322).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4959
+    },
+    {
+      "id": "edge-323",
+      "label": "Network curve_1 (323).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.63111
+    },
+    {
+      "id": "edge-324",
+      "label": "Network curve_1 (324).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49073
+    },
+    {
+      "id": "edge-325",
+      "label": "Network curve_1 (325).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61142
+    },
+    {
+      "id": "edge-326",
+      "label": "Network curve_1 (326).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59742
+    },
+    {
+      "id": "edge-327",
+      "label": "Network curve_1 (327).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49062
+    },
+    {
+      "id": "edge-328",
+      "label": "Network curve_1 (328).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53973
+    },
+    {
+      "id": "edge-329",
+      "label": "Network curve_1 (329).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.76498
+    },
+    {
+      "id": "edge-330",
+      "label": "Network curve_1 (330).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.83115
+    },
+    {
+      "id": "edge-331",
+      "label": "Network curve_1 (331).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48547
+    },
+    {
+      "id": "edge-332",
+      "label": "Network curve_1 (332).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.42982
+    },
+    {
+      "id": "edge-333",
+      "label": "Network curve_1 (333).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53405
+    },
+    {
+      "id": "edge-334",
+      "label": "Network curve_1 (334).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53536
+    },
+    {
+      "id": "edge-335",
+      "label": "Network curve_1 (335).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52676
+    },
+    {
+      "id": "edge-336",
+      "label": "Network curve_1 (336).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48425
+    },
+    {
+      "id": "edge-337",
+      "label": "Network curve_1 (337).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.64179
+    },
+    {
+      "id": "edge-338",
+      "label": "Network curve_1 (338).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53811
+    },
+    {
+      "id": "edge-339",
+      "label": "Network curve_1 (339).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49717
+    },
+    {
+      "id": "edge-340",
+      "label": "Network curve_1 (340).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51254
+    },
+    {
+      "id": "edge-341",
+      "label": "Network curve_1 (341).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.38852
+    },
+    {
+      "id": "edge-342",
+      "label": "Network curve_1 (342).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.30437
+    },
+    {
+      "id": "edge-343",
+      "label": "Network curve_1 (343).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.3698
+    },
+    {
+      "id": "edge-344",
+      "label": "Network curve_1 (344).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58199
+    },
+    {
+      "id": "edge-345",
+      "label": "Network curve_1 (345).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57407
+    },
+    {
+      "id": "edge-346",
+      "label": "Network curve_1 (346).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.70786
+    },
+    {
+      "id": "edge-347",
+      "label": "Network curve_1 (347).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4926
+    },
+    {
+      "id": "edge-348",
+      "label": "Network curve_1 (348).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53062
+    },
+    {
+      "id": "edge-349",
+      "label": "Network curve_1 (349).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51805
+    },
+    {
+      "id": "edge-350",
+      "label": "Network curve_1 (350).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54017
+    },
+    {
+      "id": "edge-351",
+      "label": "Network curve_1 (351).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.36569
+    },
+    {
+      "id": "edge-352",
+      "label": "Network curve_1 (352).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4698
+    },
+    {
+      "id": "edge-353",
+      "label": "Network curve_1 (353).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59258
+    },
+    {
+      "id": "edge-354",
+      "label": "Network curve_1 (354).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.6077
+    },
+    {
+      "id": "edge-355",
+      "label": "Network curve_1 (355).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.441
+    },
+    {
+      "id": "edge-356",
+      "label": "Network curve_1 (356).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50606
+    },
+    {
+      "id": "edge-357",
+      "label": "Network curve_1 (357).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54615
+    },
+    {
+      "id": "edge-358",
+      "label": "Network curve_1 (358).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69116
+    },
+    {
+      "id": "edge-359",
+      "label": "Network curve_1 (359).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53325
+    },
+    {
+      "id": "edge-360",
+      "label": "Network curve_1 (360).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56235
+    },
+    {
+      "id": "edge-361",
+      "label": "Network curve_1 (361).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49124
+    },
+    {
+      "id": "edge-362",
+      "label": "Network curve_1 (362).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50374
+    },
+    {
+      "id": "edge-363",
+      "label": "Network curve_1 (363).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47832
+    },
+    {
+      "id": "edge-364",
+      "label": "Network curve_1 (364).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49645
+    },
+    {
+      "id": "edge-365",
+      "label": "Network curve_1 (365).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55406
+    },
+    {
+      "id": "edge-366",
+      "label": "Network curve_1 (366).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45996
+    },
+    {
+      "id": "edge-367",
+      "label": "Network curve_1 (367).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45547
+    },
+    {
+      "id": "edge-368",
+      "label": "Network curve_1 (368).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47765
+    },
+    {
+      "id": "edge-369",
+      "label": "Network curve_1 (369).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55307
+    },
+    {
+      "id": "edge-370",
+      "label": "Network curve_1 (370).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43873
+    },
+    {
+      "id": "edge-371",
+      "label": "Network curve_1 (371).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55374
+    },
+    {
+      "id": "edge-372",
+      "label": "Network curve_1 (372).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43992
+    },
+    {
+      "id": "edge-373",
+      "label": "Network curve_1 (373).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43661
+    },
+    {
+      "id": "edge-374",
+      "label": "Network curve_1 (374).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47292
+    },
+    {
+      "id": "edge-375",
+      "label": "Network curve_1 (375).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.42275
+    },
+    {
+      "id": "edge-376",
+      "label": "Network curve_1 (376).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48054
+    },
+    {
+      "id": "edge-377",
+      "label": "Network curve_1 (377).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49493
+    },
+    {
+      "id": "edge-378",
+      "label": "Network curve_1 (378).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44004
+    },
+    {
+      "id": "edge-379",
+      "label": "Network curve_1 (379).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54301
+    },
+    {
+      "id": "edge-380",
+      "label": "Network curve_1 (380).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53576
+    },
+    {
+      "id": "edge-381",
+      "label": "Network curve_1 (381).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48382
+    },
+    {
+      "id": "edge-382",
+      "label": "Network curve_1 (382).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.63039
+    },
+    {
+      "id": "edge-383",
+      "label": "Network curve_1 (383).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56342
+    },
+    {
+      "id": "edge-384",
+      "label": "Network curve_1 (384).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.42805
+    },
+    {
+      "id": "edge-385",
+      "label": "Network curve_1 (385).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50745
+    },
+    {
+      "id": "edge-386",
+      "label": "Network curve_1 (386).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57533
+    },
+    {
+      "id": "edge-387",
+      "label": "Network curve_1 (387).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.62903
+    },
+    {
+      "id": "edge-388",
+      "label": "Network curve_1 (388).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55257
+    },
+    {
+      "id": "edge-389",
+      "label": "Network curve_1 (389).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56136
+    },
+    {
+      "id": "edge-390",
+      "label": "Network curve_1 (390).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53367
+    },
+    {
+      "id": "edge-391",
+      "label": "Network curve_1 (391).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5499
+    },
+    {
+      "id": "edge-392",
+      "label": "Network curve_1 (392).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54246
+    },
+    {
+      "id": "edge-393",
+      "label": "Network curve_1 (393).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.67454
+    },
+    {
+      "id": "edge-394",
+      "label": "Network curve_1 (394).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56675
+    },
+    {
+      "id": "edge-395",
+      "label": "Network curve_1 (395).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54655
+    },
+    {
+      "id": "edge-396",
+      "label": "Network curve_1 (396).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57697
+    },
+    {
+      "id": "edge-397",
+      "label": "Network curve_1 (397).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5227
+    },
+    {
+      "id": "edge-398",
+      "label": "Network curve_1 (398).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49893
+    },
+    {
+      "id": "edge-399",
+      "label": "Network curve_1 (400).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.77653
+    },
+    {
+      "id": "edge-400",
+      "label": "Network curve_1 (401).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.59175
+    },
+    {
+      "id": "edge-401",
+      "label": "Network curve_1 (402).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.6755
+    },
+    {
+      "id": "edge-402",
+      "label": "Network curve_1 (403).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.71848
+    },
+    {
+      "id": "edge-403",
+      "label": "Network curve_1 (404).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48363
+    },
+    {
+      "id": "edge-404",
+      "label": "Network curve_1 (405).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.81528
+    },
+    {
+      "id": "edge-405",
+      "label": "Network curve_1 (406).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50495
+    },
+    {
+      "id": "edge-406",
+      "label": "Network curve_1 (407).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41587
+    },
+    {
+      "id": "edge-407",
+      "label": "Network curve_1 (408).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53523
+    },
+    {
+      "id": "edge-408",
+      "label": "Network curve_1 (409).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.508
+    },
+    {
+      "id": "edge-409",
+      "label": "Network curve_1 (410).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5238
+    },
+    {
+      "id": "edge-410",
+      "label": "Network curve_1 (411).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.39867
+    },
+    {
+      "id": "edge-411",
+      "label": "Network curve_1 (412).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53233
+    },
+    {
+      "id": "edge-412",
+      "label": "Network curve_1 (413).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.61388
+    },
+    {
+      "id": "edge-413",
+      "label": "Network curve_1 (414).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50122
+    },
+    {
+      "id": "edge-414",
+      "label": "Network curve_1 (415).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49794
+    },
+    {
+      "id": "edge-415",
+      "label": "Network curve_1 (416).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48928
+    },
+    {
+      "id": "edge-416",
+      "label": "Network curve_1 (417).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5
+    },
+    {
+      "id": "edge-417",
+      "label": "Network curve_1 (418).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51948
+    },
+    {
+      "id": "edge-418",
+      "label": "Network curve_1 (419).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46027
+    },
+    {
+      "id": "edge-419",
+      "label": "Network curve_1 (420).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52221
+    },
+    {
+      "id": "edge-420",
+      "label": "Network curve_1 (421).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44135
+    },
+    {
+      "id": "edge-421",
+      "label": "Network curve_1 (422).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47001
+    },
+    {
+      "id": "edge-422",
+      "label": "Network curve_1 (423).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49591
+    },
+    {
+      "id": "edge-423",
+      "label": "Network curve_1 (424).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51231
+    },
+    {
+      "id": "edge-424",
+      "label": "Network curve_1 (425).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46449
+    },
+    {
+      "id": "edge-425",
+      "label": "Network curve_1 (426).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44934
+    },
+    {
+      "id": "edge-426",
+      "label": "Network curve_1 (427).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44142
+    },
+    {
+      "id": "edge-427",
+      "label": "Network curve_1 (428).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.39202
+    },
+    {
+      "id": "edge-428",
+      "label": "Network curve_1 (429).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50874
+    },
+    {
+      "id": "edge-429",
+      "label": "Network curve_1 (430).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43329
+    },
+    {
+      "id": "edge-430",
+      "label": "Network curve_1 (431).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.99217
+    },
+    {
+      "id": "edge-431",
+      "label": "Network curve_1 (432).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.62197
+    },
+    {
+      "id": "edge-432",
+      "label": "Network curve_1 (434).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48062
+    },
+    {
+      "id": "edge-433",
+      "label": "Network curve_1 (435).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.37907
+    },
+    {
+      "id": "edge-434",
+      "label": "Network curve_1 (436).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.15451
+    },
+    {
+      "id": "edge-435",
+      "label": "Network curve_1 (437).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.53554
+    },
+    {
+      "id": "edge-436",
+      "label": "Network curve_1 (438).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.45701
+    },
+    {
+      "id": "edge-437",
+      "label": "Network curve_1 (439).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.3571
+    },
+    {
+      "id": "edge-438",
+      "label": "Network curve_1 (440).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49691
+    },
+    {
+      "id": "edge-439",
+      "label": "Network curve_1 (441).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.52993
+    },
+    {
+      "id": "edge-440",
+      "label": "Network curve_1 (442).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.35562
+    },
+    {
+      "id": "edge-441",
+      "label": "Network curve_1 (443).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51946
+    },
+    {
+      "id": "edge-442",
+      "label": "Network curve_1 (444).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58087
+    },
+    {
+      "id": "edge-443",
+      "label": "Network curve_1 (445).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49207
+    },
+    {
+      "id": "edge-444",
+      "label": "Network curve_1 (446).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.60449
+    },
+    {
+      "id": "edge-445",
+      "label": "Network curve_1 (447).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.69329
+    },
+    {
+      "id": "edge-446",
+      "label": "Network curve_1 (448).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.49527
+    },
+    {
+      "id": "edge-447",
+      "label": "Network curve_1 (449).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5246
+    },
+    {
+      "id": "edge-448",
+      "label": "Network curve_1 (450).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.58224
+    },
+    {
+      "id": "edge-449",
+      "label": "Network curve_1 (451).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57401
+    },
+    {
+      "id": "edge-450",
+      "label": "Network curve_1 (452).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.57668
+    },
+    {
+      "id": "edge-451",
+      "label": "Network curve_1 (453).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.60376
+    },
+    {
+      "id": "edge-452",
+      "label": "Network curve_1 (454).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46031
+    },
+    {
+      "id": "edge-453",
+      "label": "Network curve_1 (455).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50046
+    },
+    {
+      "id": "edge-454",
+      "label": "Network curve_1 (456).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5127
+    },
+    {
+      "id": "edge-455",
+      "label": "Network curve_1 (457).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56244
+    },
+    {
+      "id": "edge-456",
+      "label": "Network curve_1 (458).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43033
+    },
+    {
+      "id": "edge-457",
+      "label": "Network curve_1 (459).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54172
+    },
+    {
+      "id": "edge-458",
+      "label": "Network curve_1 (460).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43973
+    },
+    {
+      "id": "edge-459",
+      "label": "Network curve_1 (461).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55567
+    },
+    {
+      "id": "edge-460",
+      "label": "Network curve_1 (462).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51237
+    },
+    {
+      "id": "edge-461",
+      "label": "Network curve_1 (463).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50704
+    },
+    {
+      "id": "edge-462",
+      "label": "Network curve_1 (464).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4853
+    },
+    {
+      "id": "edge-463",
+      "label": "Network curve_1 (465).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41999
+    },
+    {
+      "id": "edge-464",
+      "label": "Network curve_1 (466).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50733
+    },
+    {
+      "id": "edge-465",
+      "label": "Network curve_1 (467).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.39892
+    },
+    {
+      "id": "edge-466",
+      "label": "Network curve_1 (468).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44732
+    },
+    {
+      "id": "edge-467",
+      "label": "Network curve_1 (469).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.38909
+    },
+    {
+      "id": "edge-468",
+      "label": "Network curve_1 (470).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47715
+    },
+    {
+      "id": "edge-469",
+      "label": "Network curve_1 (471).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47663
+    },
+    {
+      "id": "edge-470",
+      "label": "Network curve_1 (472).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51174
+    },
+    {
+      "id": "edge-471",
+      "label": "Network curve_1 (473).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48564
+    },
+    {
+      "id": "edge-472",
+      "label": "Network curve_1 (474).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4829
+    },
+    {
+      "id": "edge-473",
+      "label": "Network curve_1 (475).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41111
+    },
+    {
+      "id": "edge-474",
+      "label": "Network curve_1 (476).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54353
+    },
+    {
+      "id": "edge-475",
+      "label": "Network curve_1 (477).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 0.598727
+    },
+    {
+      "id": "edge-476",
+      "label": "Network curve_1 (478).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.55892
+    },
+    {
+      "id": "edge-477",
+      "label": "Network curve_1 (479).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50768
+    },
+    {
+      "id": "edge-478",
+      "label": "Network curve_1 (480).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41433
+    },
+    {
+      "id": "edge-479",
+      "label": "Network curve_1 (481).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47049
+    },
+    {
+      "id": "edge-480",
+      "label": "Network curve_1 (482).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.5295
+    },
+    {
+      "id": "edge-481",
+      "label": "Network curve_1 (483).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43359
+    },
+    {
+      "id": "edge-482",
+      "label": "Network curve_1 (484).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.43429
+    },
+    {
+      "id": "edge-483",
+      "label": "Network curve_1 (485).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47779
+    },
+    {
+      "id": "edge-484",
+      "label": "Network curve_1 (486).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.48501
+    },
+    {
+      "id": "edge-485",
+      "label": "Network curve_1 (487).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.46621
+    },
+    {
+      "id": "edge-486",
+      "label": "Network curve_1 (488).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.50905
+    },
+    {
+      "id": "edge-487",
+      "label": "Network curve_1 (489).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.54602
+    },
+    {
+      "id": "edge-488",
+      "label": "Network curve_1 (490).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.47089
+    },
+    {
+      "id": "edge-489",
+      "label": "Network curve_1 (491).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.41424
+    },
+    {
+      "id": "edge-490",
+      "label": "Network curve_1 (492).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.56657
+    },
+    {
+      "id": "edge-491",
+      "label": "Network curve_1 (493).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44275
+    },
+    {
+      "id": "edge-492",
+      "label": "Network curve_1 (494).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.51636
+    },
+    {
+      "id": "edge-493",
+      "label": "Network curve_1 (495).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.3388
+    },
+    {
+      "id": "edge-494",
+      "label": "Network curve_1 (496).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.4666
+    },
+    {
+      "id": "edge-495",
+      "label": "Network curve_1 (497).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 1.44976
+    },
+    {
+      "id": "edge-496",
+      "label": "Network curve_1 (498).mrk",
+      "groupKey": "other",
+      "medianRadiusMm": 4.07168
+    }
+  ]
+}

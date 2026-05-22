@@ -1,6 +1,7 @@
 import {
   computeOverlayCalibrationTranslation,
   createRotationMatrix,
+  detectorFrameForAngles,
   detectorPercentToLocalMm,
   rotateVec,
   subtract,
@@ -73,4 +74,23 @@ test('computeOverlayCalibrationTranslation dynamically anchors carina without re
   expect(rotatedCarina[0] + offset[0]).toBeCloseTo(target[0], 6)
   expect(offset[1]).toBe(0)
   expect(rotatedCarina[2] + offset[2]).toBeCloseTo(target[2], 6)
+})
+
+test('detectorFrameForAngles builds a physical source-detector frame', () => {
+  const frame = detectorFrameForAngles(config, 0, 0)
+
+  expect(frame.sourceLps).toEqual([
+    config.isocenter_mm[0],
+    config.isocenter_mm[1] - config.source_to_isocenter_mm,
+    config.isocenter_mm[2],
+  ])
+  expect(frame.detectorCenterLps).toEqual([
+    config.isocenter_mm[0],
+    config.isocenter_mm[1] + config.source_to_detector_mm - config.source_to_isocenter_mm,
+    config.isocenter_mm[2],
+  ])
+  expect(frame.detectorUAxisLps).toEqual([1, 0, 0])
+  expect(frame.detectorVAxisLps).toEqual([0, 0, 1])
+  expect(frame.detectorNormalLps).toEqual([0, 1, 0])
+  expect(frame.detectorSizeMm).toEqual([307.2, 307.2])
 })

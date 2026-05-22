@@ -1,10 +1,4 @@
-import {
-  computeOverlayCalibrationTranslation,
-  createRotationMatrix,
-  normalize,
-  rotateVec,
-  subtract,
-} from './geometry'
+import { add, detectorFrameForAngles, dot, normalize, scale, subtract } from './geometry'
 import type {
   AirwayGraph,
   AirwayGraphEdge,
@@ -13,6 +7,7 @@ import type {
   CtVolumePreview,
   FluoroConfig,
   SlicerFrontalProjection,
+  ScopePathPolyline,
   Vec2,
   Vec3,
 } from './types'
@@ -25,10 +20,12 @@ export interface AirwaySnapResult {
 }
 
 export interface RoutePath {
-  terminalNodeId: number
+  terminalNodeId: ScopeRouteId
   points: Vec3[]
   lengthMm: number
 }
+
+export type ScopeRouteId = number | 'bezier-demo'
 
 export interface RouteSample {
   point: Vec3
@@ -162,6 +159,30 @@ export function buildRoutePath(graph: AirwayGraph, terminalNodeId: number): Rout
   return { terminalNodeId, points, lengthMm: polylineLength(points) }
 }
 
+export function resolveScopeRoutePath({
+  graph,
+  animationPath,
+  routeId,
+}: {
+  graph: AirwayGraph | null
+  animationPath: ScopePathPolyline | null
+  routeId: ScopeRouteId | null
+}): RoutePath | null {
+  if (routeId === 'bezier-demo') {
+    const points = animationPath?.pointsLps ?? animationPath?.polyline ?? []
+    if (points.length < 2) return null
+    return {
+      terminalNodeId: 'bezier-demo',
+      points,
+      lengthMm: animationPath?.lengthMm ?? polylineLength(points),
+    }
+  }
+  if (typeof routeId === 'number' && graph) {
+    return buildRoutePath(graph, routeId)
+  }
+  return null
+}
+
 export function sampleRoutePath(route: RoutePath, progress: number): RouteSample {
   const targetDistance = clamp(progress, 0, 1) * route.lengthMm
   if (!route.points.length) {
@@ -194,25 +215,35 @@ export function projectLpsToDetector(
   raoLaoDeg: number,
   cranialCaudalDeg: number,
 ): DetectorProjection {
-  const rotationMatrix = createRotationMatrix(-raoLaoDeg, -cranialCaudalDeg)
-  const local = subtract(point, config.isocenter_mm)
-  const rotated = rotateVec(rotationMatrix, local)
-  const calibrationOffset = computeOverlayCalibrationTranslation(config, rotationMatrix)
-  const translated: Vec3 = [
-    rotated[0] + calibrationOffset[0],
-    rotated[1] + calibrationOffset[1],
-    rotated[2] + calibrationOffset[2],
-  ]
-  const sourceToPoint = config.source_to_isocenter_mm + translated[1]
-  const magnification = config.source_to_isocenter_mm / Math.max(sourceToPoint, 1)
-  const detectorWidthMm = config.detector_pixels[0] * config.pixel_pitch_mm
-  const detectorHeightMm = config.detector_pixels[1] * config.pixel_pitch_mm
-  const x = 50 + ((translated[0] * magnification) / detectorWidthMm) * 100
-  const y = 50 - ((translated[2] * magnification) / detectorHeightMm) * 100
+  const frame = detectorFrameForAngles(config, raoLaoDeg, cranialCaudalDeg)
+  const calibrationOffsetLps = add(
+    add(
+      scale(frame.detectorUAxisLps, frame.calibrationOffsetLocalMm[0]),
+      scale(frame.detectorNormalLps, frame.calibrationOffsetLocalMm[1]),
+    ),
+    scale(frame.detectorVAxisLps, frame.calibrationOffsetLocalMm[2]),
+  )
+  const calibratedPoint = add(point, calibrationOffsetLps)
+  const sourceToPoint = subtract(calibratedPoint, frame.sourceLps)
+  const depth = dot(sourceToPoint, frame.detectorNormalLps)
+  if (depth <= 1e-6) {
+    return { point: [50, 50], inFrame: false, depthMm: depth }
+  }
+
+  const detectorDistance = dot(
+    subtract(frame.detectorCenterLps, frame.sourceLps),
+    frame.detectorNormalLps,
+  )
+  const intersection = add(frame.sourceLps, scale(sourceToPoint, detectorDistance / depth))
+  const detectorDelta = subtract(intersection, frame.detectorCenterLps)
+  const detectorX = dot(detectorDelta, frame.detectorUAxisLps)
+  const detectorY = dot(detectorDelta, frame.detectorVAxisLps)
+  const x = 50 + (detectorX / frame.detectorSizeMm[0]) * 100
+  const y = 50 - (detectorY / frame.detectorSizeMm[1]) * 100
   return {
     point: [x, y],
     inFrame: x >= -5 && x <= 105 && y >= -5 && y <= 105,
-    depthMm: translated[1],
+    depthMm: depth,
   }
 }
 
@@ -310,10 +341,6 @@ function lerpVec(a: Vec3, b: Vec3, t: number): Vec3 {
 
 function lpsToRas(point: Vec3): Vec3 {
   return [-point[0], -point[1], point[2]]
-}
-
-function dot(a: Vec3, b: Vec3): number {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
 function cross(a: Vec3, b: Vec3): Vec3 {

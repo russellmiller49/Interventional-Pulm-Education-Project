@@ -146,7 +146,7 @@ export interface FluoroCaseManifest {
     windowPresets: CtWindowPreset[]
     axes: Record<CtAxis, CtSliceAxisConfig>
   }
-  drrAtlas: {
+  drrAtlas?: {
     grid: {
       raoLaoAngles: number[]
       cranialCaudalAngles: number[]
@@ -154,7 +154,77 @@ export interface FluoroCaseManifest {
     provenance: DrrAtlasProvenance
     frames: DrrAtlasFrame[]
   }
+  volumeDrr?: VolumeDrrAsset
+  cArm?: CArmManifest
+  scopeAnimation?: ScopeAnimationAsset
   lessons: FluoroLesson[]
+}
+
+export interface VolumeDrrAsset {
+  volumeUri: string
+  format: 'uint8-r8'
+  sizeXyz: [number, number, number]
+  spacingXyzMm: Vec3
+  originLps: Vec3
+  directionLps: number[]
+  huRange: [number, number]
+  sampleDomain: 'normalized-r8'
+  baselineMas?: number
+  recommendedSteps?: {
+    interactive: number
+    full: number
+  }
+  recommendedRenderScale?: {
+    interactive: number
+    full: number
+  }
+  huScale?: { slope: number; offset: number }
+  transferFunction?: {
+    scalarOpacity: Array<{ x: number; y: number }>
+    rgbTransferFunction: Array<{ x: number; color: [number, number, number] }>
+  }
+}
+
+export interface CArmManifest {
+  gantryGlbUri?: string
+  coordinateSystem: 'LPS' | string
+  sadMm?: number
+  sidMm?: number
+  detectorPixelPitchMm?: number
+  detectorPixels?: [number, number]
+  detectorSizeMm?: Vec2
+  rest?: {
+    armLDeg?: number
+    armPDeg?: number
+    armCDeg?: number
+    detectorRotationDeg?: number
+    tableShiftMm?: Vec3
+  }
+  transforms?: Array<{
+    id: string
+    parentId?: string
+    matrixLpsFromParent: number[]
+  }>
+  sad?: number
+  sid?: number
+}
+
+export interface ScopeAnimationAsset {
+  polylineJsonUri: string
+  defaultRouteId: 'bezier-demo'
+  tubeRadiusMm?: number
+  tubeColor?: string
+}
+
+export interface ScopePathPolyline {
+  schema: 'fluoroview_scope_path/v1' | string
+  coordinateSystem: 'LPS' | string
+  units: 'mm' | string
+  source: string
+  defaultRouteId: 'bezier-demo' | string
+  pointsLps: Vec3[]
+  lengthMm: number
+  polyline?: Vec3[]
 }
 
 export interface VirtualCathLabReference {
@@ -224,6 +294,7 @@ export interface CtVolumePreview {
   originLps: Vec3
   directionLps: number[]
   windowHu: [number, number]
+  huScale?: { slope: number; offset: number }
   source?: string
 }
 

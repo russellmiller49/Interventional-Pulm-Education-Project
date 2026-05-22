@@ -1,0 +1,342 @@
+{
+  "id": "patient-new-volume-drr",
+  "title": "New Patient Educational FluoroView Case",
+  "version": "0.3.0",
+  "safetyLabel": "Educational simulation only \u2014 not for diagnosis, treatment, or procedure guidance.",
+  "description": "Educational FluoroView case with browser-side WebGL2 volume DRR.",
+  "sourcePolicy": "Raw DICOM/NIfTI/NRRD/MRML/H5/VTK/segmentation files remain local and untracked. Only derived PNG, JSON, GLB, and uint8 RAW browser assets are published.",
+  "assetBaseUrl": "/fluoroview/cases/patient-new",
+  "geometry": {
+    "units": "mm",
+    "coordinateSystem": "LPS",
+    "isocenter_mm": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+    "source_to_isocenter_mm": 600.0,
+    "source_to_detector_mm": 800.0,
+    "detector_pixels": [1024, 1024],
+    "pixel_pitch_mm": 0.5,
+    "asset_base_url": "/fluoroview",
+    "default_view": {
+      "rao_lao_deg": 0,
+      "cranial_caudal_deg": 0
+    },
+    "overlay_calibration": {
+      "method": "centerline-carina",
+      "carina_lps_mm": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+      "target_detector_percent": [50, 50],
+      "note": "New-patient overlay anchored on the airway graph carina."
+    }
+  },
+  "assets": {
+    "airwayGlb": "/fluoroview/cases/patient-new/airway_segments.glb",
+    "airwaySegmentsGlb": "/fluoroview/cases/patient-new/airway_segments.glb",
+    "airwayGraphJson": "/fluoroview/cases/patient-new/metadata/airway_graph.json",
+    "ctVolumePreview": "/fluoroview/cases/patient-new/ct/ct_preview_uint8.raw",
+    "virtualCathLabManifest": "/fluoroview/cases/patient-new/metadata/slicer_c_arm_scene_manifest.json",
+    "virtualCathLabSceneManifest": "/fluoroview/cases/patient-new/metadata/slicer_c_arm_scene_manifest.json",
+    "virtualCathLabFrontalImage": "/fluoroview/cases/patient-new/virtual-cath-lab/slicerheart_frontal_reference.png",
+    "dracoBaseUrl": "/fluoroview/draco",
+    "centerlineJson": "/fluoroview/cases/patient-new/metadata/centerline_overlay.json",
+    "segmentMetadataJson": "/fluoroview/cases/patient-new/metadata/segments.json",
+    "assetTransforms": {
+      "airway": {
+        "sceneScale": 1.0,
+        "rotationDeg": [0, 0, 0],
+        "positionOffsetMm": [0, 0, 0],
+        "note": "Airway GLB exported in LPS millimeters."
+      }
+    }
+  },
+  "ctVolume": {
+    "raw": "ct_preview_uint8.raw",
+    "rawUrl": "/fluoroview/cases/patient-new/ct/ct_preview_uint8.raw",
+    "sizeXyz": [256, 256, 256],
+    "originalSizeXyz": [512, 512, 636],
+    "stride": [2, 2, 2],
+    "spacingXyzMm": [1.37890625, 1.37890625, 1.2421875],
+    "originLps": [-182.15527343749997, -374.1552734374999, -368.5],
+    "directionLps": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    "windowHu": [-1144, 2951],
+    "source": "Derived uint8 CT preview from local target_clean_ct.nrrd; not diagnostic."
+  },
+  "interaction": {
+    "noduleRadiusMm": 6.0,
+    "snapRadiusMm": 4.0,
+    "defaultScopeProgress": 0.45,
+    "defaultRouteTerminalNodeId": 51,
+    "source": "fluoroview-pipeline"
+  },
+  "volumeDrr": {
+    "volumeUri": "/fluoroview/cases/patient-new/ct/ct_volume_uint8.raw",
+    "format": "uint8-r8",
+    "sizeXyz": [256, 256, 256],
+    "originalSizeXyz": [512, 512, 636],
+    "spacingXyzMm": [1.37890625, 1.37890625, 1.2421875],
+    "originLps": [-182.15527343749997, -374.1552734374999, -368.5],
+    "directionLps": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    "huRange": [-1144, 2951],
+    "sampleDomain": "normalized-r8",
+    "baselineMas": 16,
+    "recommendedSteps": {
+      "interactive": 96,
+      "full": 224
+    },
+    "recommendedRenderScale": {
+      "interactive": 0.67,
+      "full": 1.0
+    }
+  },
+  "cArm": {
+    "coordinateSystem": "LPS",
+    "sadMm": 600.0,
+    "sidMm": 800.0,
+    "detectorPixelPitchMm": 0.5,
+    "detectorPixels": [1024, 1024],
+    "detectorSizeMm": [512.0, 512.0],
+    "rest": {
+      "armLDeg": -90.0,
+      "armPDeg": 0.0,
+      "armCDeg": 0.0,
+      "detectorRotationDeg": 90.0,
+      "tableShiftMm": [0.0, -15.0, 0.0]
+    },
+    "transforms": [
+      {
+        "id": "gantry-to-ras",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 5.999999999999972, 0.0, 1.0, 0.0, 107.09999999999988, 0.0, 0.0, 1.0,
+          209.75, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "positioning",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "frontal-arm-l-rotation",
+        "matrixLpsFromParent": [
+          2.220446049250313e-16, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0,
+          2.220446049250313e-16, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "frontal-arm-p-rotation",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "frontal-arm-c-rotation",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "frontal-detector-translation",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 80.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "frontal-detector-rotation",
+        "matrixLpsFromParent": [
+          2.220446049250313e-16, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0,
+          2.220446049250313e-16, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "frontal-camera-to-detector",
+        "matrixLpsFromParent": [
+          -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 800.0, 0.0, -1.0, 0.0, 1600.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "table-vertical",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -15.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "table-longitudinal",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      },
+      {
+        "id": "table-lateral",
+        "matrixLpsFromParent": [
+          1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+        ]
+      }
+    ],
+    "gantryGlbUri": "/fluoroview/cases/patient-new/carm/carm_gantry.glb"
+  },
+  "scopeAnimation": {
+    "polylineJsonUri": "/fluoroview/cases/patient-new/metadata/bronch_animation_path.json",
+    "defaultRouteId": "bezier-demo",
+    "tubeRadiusMm": 2.5,
+    "tubeColor": "#111111"
+  },
+  "virtualCathLab": {
+    "source": "SlicerHeart Virtual Cath Lab",
+    "status": "scene-export",
+    "manifestUrl": "/fluoroview/cases/patient-new/metadata/slicer_c_arm_scene_manifest.json",
+    "sceneManifestUrl": "/fluoroview/cases/patient-new/metadata/slicer_c_arm_scene_manifest.json",
+    "frontalImageUrl": "/fluoroview/cases/patient-new/virtual-cath-lab/slicerheart_frontal_reference.png",
+    "frontalDetectorPixels": [587, 800],
+    "frontalDetectorSizeMm": [293.5, 400.0],
+    "frontalPixelSpacingMm": [0.5, 0.5],
+    "coordinateSystem": "RAS",
+    "sourceImageIncludesModel": true,
+    "frontalProjection": {
+      "coordinateSystem": "RAS",
+      "positionRasMm": [6.0, -612.9, -209.75],
+      "focalPointRasMm": [6.0, 107.1, -209.75],
+      "viewUpRas": [0.0, 0.0, 1.0],
+      "sourceToImageDistanceMm": 800.0,
+      "detectorPixels": [587, 800],
+      "detectorSizeMm": [293.5, 400.0],
+      "pixelSpacingMm": [0.5, 0.5],
+      "viewAngleDeg": 28.0994
+    },
+    "renderingPreset": {
+      "sourceFileName": "FluoroRenderingPreset_02.vp.json",
+      "sha256": "094860e79bcaa8a8224d4b951ff3c85730cd3b1c6a37c1978e03c7a5ebea794b",
+      "effectiveRange": [0.0, -1.0],
+      "scalarOpacity": [
+        {
+          "x": -1144.0,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": -1143.9999999999998,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": -546.268432617188,
+          "y": 0.0034782609436661,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": -7.42329406738281,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 945.216552734375,
+          "y": 0.00913043506443501,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 1171.51086425781,
+          "y": 0.0,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 1634.38549804688,
+          "y": 0.0130434781312943,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 2951.0,
+          "y": 0.1,
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        }
+      ],
+      "rgbTransferFunction": [
+        {
+          "x": -1144.0,
+          "color": [0.0, 0.0, 0.0],
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": -1143.9999999999998,
+          "color": [0.0, 0.0, 0.0],
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        },
+        {
+          "x": 2951.0,
+          "color": [0.0, 0.0, 0.0],
+          "midpoint": 0.5,
+          "sharpness": 0.0
+        }
+      ]
+    },
+    "note": "SlicerHeart frontal reference is available for calibration comparison."
+  },
+  "ctSlices": {
+    "windowPresets": [
+      {
+        "id": "lung",
+        "label": "Lung",
+        "low": -1000,
+        "high": -300
+      },
+      {
+        "id": "softTissue",
+        "label": "Soft tissue",
+        "low": -160,
+        "high": 240
+      },
+      {
+        "id": "bone",
+        "label": "Bone",
+        "low": 200,
+        "high": 2000
+      }
+    ],
+    "axes": {
+      "axial": {
+        "label": "Axial",
+        "defaultIndex": 128,
+        "frames": []
+      },
+      "coronal": {
+        "label": "Coronal",
+        "defaultIndex": 128,
+        "frames": []
+      },
+      "sagittal": {
+        "label": "Sagittal",
+        "defaultIndex": 128,
+        "frames": []
+      }
+    }
+  },
+  "provenance": {
+    "ctSourceFile": "target_clean_ct.nrrd",
+    "ctSourceSha256": "572afc5bf6b2d80b28439e0397ad4e24e4eb6dfb2630780593259e081ae0a29b",
+    "windowHu": [-1144, 2951],
+    "airwayGlbSource": "Full_airway_segments.glb",
+    "airwayGlbCompression": "draco",
+    "scopePathSource": "fallback-airway-graph-route",
+    "generatedUtc": "2026-05-22T04:26:58.769432+00:00"
+  },
+  "lessons": [
+    {
+      "id": "new-patient-ap-review",
+      "title": "AP Fluoroscopy Review",
+      "objective": "Correlate the airway graph with the AP volumetric DRR.",
+      "task": "Set the C-arm to AP, toggle centerline and labels, and advance the scope route."
+    },
+    {
+      "id": "new-patient-oblique-review",
+      "title": "Oblique C-arm Exploration",
+      "objective": "Observe how airway projection changes as RAO/LAO and cranial/caudal angles move.",
+      "task": "Drag the C-arm sliders and compare the fluoro view with the 3D anatomy viewport."
+    }
+  ]
+}

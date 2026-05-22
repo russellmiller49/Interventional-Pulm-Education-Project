@@ -17,6 +17,54 @@ export function createRotationMatrix(raoLaoDeg: number, cranialCaudalDeg: number
   return multiplyMat3(rx, rz)
 }
 
+export interface DetectorFrame {
+  sourceLps: Vec3
+  detectorCenterLps: Vec3
+  detectorUAxisLps: Vec3
+  detectorVAxisLps: Vec3
+  detectorNormalLps: Vec3
+  detectorSizeMm: Vec2
+  worldToDetectorRotation: Mat3
+  calibrationOffsetLocalMm: Vec3
+}
+
+export function detectorFrameForAngles(
+  config: FluoroConfig,
+  raoLaoDeg: number,
+  cranialCaudalDeg: number,
+): DetectorFrame {
+  const worldToDetectorRotation = createRotationMatrix(-raoLaoDeg, -cranialCaudalDeg)
+  const detectorToWorldRotation = transposeMat3(worldToDetectorRotation)
+  const sad = config.source_to_isocenter_mm
+  const sid = config.source_to_detector_mm
+  const sourceLocal: Vec3 = [0, -sad, 0]
+  const detectorCenterLocal: Vec3 = [0, sid - sad, 0]
+  const detectorUAxisLps = normalize(rotateVec(detectorToWorldRotation, [1, 0, 0]))
+  const detectorVAxisLps = normalize(rotateVec(detectorToWorldRotation, [0, 0, 1]))
+  const detectorNormalLps = normalize(rotateVec(detectorToWorldRotation, [0, 1, 0]))
+  const calibrationOffsetLocalMm = computeOverlayCalibrationTranslation(
+    config,
+    worldToDetectorRotation,
+  )
+
+  return {
+    sourceLps: add(config.isocenter_mm, rotateVec(detectorToWorldRotation, sourceLocal)),
+    detectorCenterLps: add(
+      config.isocenter_mm,
+      rotateVec(detectorToWorldRotation, detectorCenterLocal),
+    ),
+    detectorUAxisLps,
+    detectorVAxisLps,
+    detectorNormalLps,
+    detectorSizeMm: [
+      config.detector_pixels[0] * config.pixel_pitch_mm,
+      config.detector_pixels[1] * config.pixel_pitch_mm,
+    ],
+    worldToDetectorRotation,
+    calibrationOffsetLocalMm,
+  }
+}
+
 export function detectorPercentToLocalMm(config: FluoroConfig, percent: Vec2): Vec3 {
   const detectorWidthMm = config.detector_pixels[0] * config.pixel_pitch_mm
   const detectorHeightMm = config.detector_pixels[1] * config.pixel_pitch_mm
@@ -82,6 +130,14 @@ export function multiplyMat3(a: Mat3, b: Mat3): Mat3 {
   return out
 }
 
+export function transposeMat3(matrix: Mat3): Mat3 {
+  return [
+    [matrix[0][0], matrix[1][0], matrix[2][0]],
+    [matrix[0][1], matrix[1][1], matrix[2][1]],
+    [matrix[0][2], matrix[1][2], matrix[2][2]],
+  ]
+}
+
 export function rotateVec(matrix: Mat3, v: Vec3): Vec3 {
   return [
     matrix[0][0] * v[0] + matrix[0][1] * v[1] + matrix[0][2] * v[2],
@@ -92,6 +148,18 @@ export function rotateVec(matrix: Mat3, v: Vec3): Vec3 {
 
 export function subtract(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+export function add(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+export function scale(v: Vec3, scalar: number): Vec3 {
+  return [v[0] * scalar, v[1] * scalar, v[2] * scalar]
+}
+
+export function dot(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
 export function length(v: Vec3): number {

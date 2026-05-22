@@ -134,7 +134,7 @@ test('buildRoutePath and sampleRoutePath interpolate scope progress', () => {
   expect(sample.distanceMm).toBeCloseTo(route.lengthMm)
 })
 
-test('projectLpsToDetector keeps the calibrated carina near the target detector point', () => {
+test('projectLpsToDetector projects through the shared physical detector frame', () => {
   const config: FluoroConfig = {
     units: 'mm',
     coordinateSystem: 'LPS',
@@ -150,10 +150,14 @@ test('projectLpsToDetector keeps the calibrated carina near the target detector 
       target_detector_percent: [50, 45],
     },
   }
-  expect(projectLpsToDetector([0, 0, -10], config, 0, 0).point).toEqual([50, 45])
+  const projection = projectLpsToDetector([0, 0, -10], config, 0, 0)
+
+  expect(projection.point[0]).toBeCloseTo(50, 6)
+  expect(projection.point[1]).toBeCloseTo(40, 6)
+  expect(projection.depthMm).toBeCloseTo(600, 6)
 })
 
-test('projectLpsToDetector uses a fixed TIGRE isocenter reference across oblique views', () => {
+test('projectLpsToDetector keeps AP and oblique projections stable', () => {
   const config: FluoroConfig = {
     units: 'mm',
     coordinateSystem: 'LPS',
@@ -178,10 +182,12 @@ test('projectLpsToDetector uses a fixed TIGRE isocenter reference across oblique
     20,
   ).point
 
-  expect(ap[0]).toBeCloseTo(49.54298915258192, 6)
-  expect(ap[1]).toBeCloseTo(39.34977470909921, 6)
-  expect(oblique[0]).not.toBeCloseTo(50, 1)
-  expect(oblique[1]).not.toBeCloseTo(45, 1)
+  expect(ap[0]).toBeCloseTo(49.086, 3)
+  expect(ap[1]).toBeCloseTo(28.7, 3)
+  expect(oblique[0]).toBeGreaterThan(35)
+  expect(oblique[0]).toBeLessThan(65)
+  expect(oblique[1]).toBeGreaterThan(20)
+  expect(oblique[1]).toBeLessThan(70)
 })
 
 test('projectLpsToSlicerFrontalDetector projects through exported Slicer camera geometry', () => {

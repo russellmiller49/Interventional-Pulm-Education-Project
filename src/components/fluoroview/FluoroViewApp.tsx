@@ -19,17 +19,18 @@ import {
 } from '@fluoroview/case'
 import { BRANCH_GROUPS } from '@fluoroview/grouping'
 import {
-  buildRoutePath,
   canvasPointToLps,
   findNearestAirwayPoint,
   lpsToCtIndex,
   projectLpsToCanvas,
   projectLpsToDetector,
   projectLpsToSlicerFrontalDetector,
+  resolveScopeRoutePath,
   routeOptions,
   sampleRoutePath,
   type DetectorProjection,
   type RoutePath,
+  type ScopeRouteId,
 } from '@fluoroview/interaction'
 import {
   DEFAULT_FLUORO_SETTINGS,
@@ -47,6 +48,7 @@ import {
   type MagnificationMode,
 } from '@fluoroview/knobology'
 import { FluoroRenderer } from '@fluoroview/render'
+import { VolumeDRRRenderer, type DrrFrameMetrics } from '@fluoroview/volume-drr'
 import type {
   AirwayGraph,
   AppState,
@@ -56,13 +58,17 @@ import type {
   FluoroCaseManifest,
   OverlayMode,
   PreparedSegment,
+  ScopePathPolyline,
   SegmentMetadata,
   Vec3,
 } from '@fluoroview/types'
 
 import { Badge } from '@/components/ui/badge'
+import { CarmInsetView } from './CarmInsetView'
+import { Anatomy3DView } from './Anatomy3DView'
 
-const CASE_MANIFEST_URL = '/fluoroview/cases/patient-4/case_manifest.json'
+const CASE_MANIFEST_URL = '/fluoroview/cases/patient-new/case_manifest.json'
+const FALLBACK_CASE_MANIFEST_URL = '/fluoroview/cases/patient-4/case_manifest.json'
 const ORIGIN_GROUP = 'other'
 const GOLDEN_ORDER = BRANCH_GROUPS.map((group) => group.key)
 const CT_AXES: CtAxis[] = ['axial', 'coronal', 'sagittal']
@@ -79,6 +85,7 @@ const MAGNIFICATION_MODES: Array<{ value: MagnificationMode; label: string }> = 
   { value: 'detector', label: 'Detector mag' },
   { value: 'geometric', label: 'Geometric mag' },
 ]
+const EMPTY_GROUPS = new Set<string>()
 
 interface LegendEntry {
   groupKey: string
@@ -164,15 +171,27 @@ function clampIndex(value: number, length: number): number {
 
 export function FluoroViewApp() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const volumeCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const labelLayerRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<FluoroRenderer | null>(null)
+  const volumeRendererRef = useRef<VolumeDRRRenderer | null>(null)
+  const interactingRef = useRef(false)
+  const lowResIdleTimerRef = useRef<number | undefined>(undefined)
   const animationFrameRef = useRef<number | undefined>(undefined)
   const needsRenderRef = useRef(false)
   const stateRef = useRef<AppState | null>(null)
+  const settingsRef = useRef<FluoroSettings>(DEFAULT_FLUORO_SETTINGS)
+  const drrMetricsRef = useRef<DrrFrameMetrics>({
+    thicknessProxy: 1,
+    renderMs: 0,
+    sampleSteps: 0,
+    renderScale: 1,
+  })
 
   const [manifest, setManifest] = useState<FluoroCaseManifest | null>(null)
   const [centerline, setCenterline] = useState<CenterlineOverlay | null>(null)
   const [airwayGraph, setAirwayGraph] = useState<AirwayGraph | null>(null)
+  const [scopeAnimationPath, setScopeAnimationPath] = useState<ScopePathPolyline | null>(null)
   const [ctVolumeData, setCtVolumeData] = useState<Uint8Array | null>(null)
   const [segmentMetadata, setSegmentMetadata] = useState<SegmentMetadata | null>(null)
   const [legendEntries, setLegendEntries] = useState<LegendEntry[]>([])
@@ -185,11 +204,12 @@ export function FluoroViewApp() {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
   const [nodule, setNodule] = useState<NoduleState | null>(null)
   const [snapStatus, setSnapStatus] = useState('Click the CT to place a synthetic nodule.')
-  const [scopeRouteTerminalId, setScopeRouteTerminalId] = useState<number | null>(null)
+  const [scopeRouteId, setScopeRouteId] = useState<ScopeRouteId | null>(null)
   const [scopeProgress, setScopeProgress] = useState(0.45)
   const [showScope, setShowScope] = useState(true)
   const [showScopeTrace, setShowScopeTrace] = useState(true)
   const [renderStats, setRenderStats] = useState<RenderStats>({ fps: 0, visibleSegments: 0 })
+  const [drrMetrics, setDrrMetrics] = useState<DrrFrameMetrics>(drrMetricsRef.current)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [fluoroImageSource, setFluoroImageSource] = useState<FluoroImageSource>('atlas')
@@ -206,15 +226,32 @@ export function FluoroViewApp() {
     let cancelled = false
 
     async function boot(canvas: HTMLCanvasElement, labelLayer: HTMLDivElement) {
+      const attempted: string[] = []
       try {
-        const manifestRes = await fetch(CASE_MANIFEST_URL)
-        if (!manifestRes.ok) {
-          throw new Error(`Failed to load case manifest (${manifestRes.status})`)
+        let loadedManifest: FluoroCaseManifest | null = null
+        for (const manifestUrl of [CASE_MANIFEST_URL, FALLBACK_CASE_MANIFEST_URL]) {
+          attempted.push(manifestUrl)
+          try {
+            const manifestRes = await fetch(manifestUrl)
+            if (!manifestRes.ok) {
+              throw new Error(`HTTP ${manifestRes.status}`)
+            }
+            const candidateManifest = (await manifestRes.json()) as FluoroCaseManifest
+            const manifestErrors = validateFluoroCaseManifest(candidateManifest)
+            if (manifestErrors.length) {
+              throw new Error(manifestErrors.join(' '))
+            }
+            loadedManifest = candidateManifest
+            break
+          } catch (manifestErr) {
+            console.warn(
+              `[FluoroView] Failed to load ${manifestUrl}; trying fallback if available.`,
+              manifestErr,
+            )
+          }
         }
-        const loadedManifest = (await manifestRes.json()) as FluoroCaseManifest
-        const manifestErrors = validateFluoroCaseManifest(loadedManifest)
-        if (manifestErrors.length) {
-          throw new Error(manifestErrors.join(' '))
+        if (!loadedManifest) {
+          throw new Error(`Failed to load case manifests: ${attempted.join(', ')}`)
         }
         if (
           loadedManifest.geometry.units !== 'mm' ||
@@ -231,7 +268,7 @@ export function FluoroViewApp() {
         rendererRef.current = renderer
 
         const airwayGlb = loadedManifest.assets.airwaySegmentsGlb ?? loadedManifest.assets.airwayGlb
-        const [loadedSegments, centerlineRes, segmentRes, graphRes, ctVolumeBuffer] =
+        const [loadedSegments, centerlineRes, segmentRes, graphRes, scopePathRes, ctVolumeBuffer] =
           await Promise.all([
             renderer.loadGlb(airwayGlb, {
               dracoBaseUrl: loadedManifest.assets.dracoBaseUrl,
@@ -241,6 +278,9 @@ export function FluoroViewApp() {
             fetch(loadedManifest.assets.segmentMetadataJson),
             loadedManifest.assets.airwayGraphJson
               ? fetch(loadedManifest.assets.airwayGraphJson)
+              : Promise.resolve(null),
+            loadedManifest.scopeAnimation?.polylineJsonUri
+              ? fetch(loadedManifest.scopeAnimation.polylineJsonUri)
               : Promise.resolve(null),
             loadedManifest.ctVolume?.rawUrl
               ? fetch(loadedManifest.ctVolume.rawUrl).then((response) => {
@@ -267,9 +307,21 @@ export function FluoroViewApp() {
           }
           loadedGraph = (await graphRes.json()) as AirwayGraph
           setAirwayGraph(loadedGraph)
+        } else {
+          setAirwayGraph(null)
+        }
+        if (scopePathRes) {
+          if (!scopePathRes.ok) {
+            throw new Error(`Failed to load scope animation path (${scopePathRes.status})`)
+          }
+          setScopeAnimationPath((await scopePathRes.json()) as ScopePathPolyline)
+        } else {
+          setScopeAnimationPath(null)
         }
         if (ctVolumeBuffer) {
           setCtVolumeData(new Uint8Array(ctVolumeBuffer))
+        } else {
+          setCtVolumeData(null)
         }
 
         const baseState: AppState = {
@@ -289,10 +341,12 @@ export function FluoroViewApp() {
         setManifest(loadedManifest)
         setSelectedLessonId(loadedManifest.lessons[0]?.id ?? null)
         setCtIndices(defaultCtIndices(loadedManifest))
-        setScopeRouteTerminalId(
-          loadedManifest.interaction?.defaultRouteTerminalNodeId ??
-            loadedGraph?.terminalNodeIds[0] ??
-            null,
+        setScopeRouteId(
+          loadedManifest.scopeAnimation
+            ? 'bezier-demo'
+            : (loadedManifest.interaction?.defaultRouteTerminalNodeId ??
+                loadedGraph?.terminalNodeIds[0] ??
+                null),
         )
         setScopeProgress(loadedManifest.interaction?.defaultScopeProgress ?? 0.45)
         setLegendEntries(buildLegendEntries(loadedSegments))
@@ -360,6 +414,17 @@ export function FluoroViewApp() {
       animationFrameRef.current = requestAnimationFrame(loop)
       if (!needsRenderRef.current || !stateRef.current) return
       const stats = renderer.render(stateRef.current)
+      const volume = volumeRendererRef.current
+      if (volume && volume.isReady()) {
+        const metrics = volume.render({
+          raoLaoDeg: stateRef.current.raoLao,
+          cranialCaudalDeg: stateRef.current.cranialCaudal,
+          settings: settingsRef.current,
+          lowRes: interactingRef.current,
+        })
+        drrMetricsRef.current = metrics
+        setDrrMetrics(metrics)
+      }
       const delta = now - lastTime
       lastTime = now
       const instantFps = delta > 0 ? 1000 / delta : 0
@@ -396,10 +461,107 @@ export function FluoroViewApp() {
 
   const updateSetting = useCallback(
     <K extends keyof FluoroSettings>(key: K, value: FluoroSettings[K]) => {
-      setSettings((prev) => ({ ...prev, [key]: value }))
+      setSettings((prev) => {
+        const next = { ...prev, [key]: value }
+        settingsRef.current = next
+        needsRenderRef.current = true
+        return next
+      })
     },
     [],
   )
+
+  useEffect(() => {
+    settingsRef.current = settings
+    needsRenderRef.current = true
+  }, [settings])
+
+  const beginInteraction = useCallback(() => {
+    interactingRef.current = true
+    needsRenderRef.current = true
+    if (lowResIdleTimerRef.current != null) {
+      window.clearTimeout(lowResIdleTimerRef.current)
+      lowResIdleTimerRef.current = undefined
+    }
+  }, [])
+
+  const endInteraction = useCallback(() => {
+    interactingRef.current = false
+    if (lowResIdleTimerRef.current != null) {
+      window.clearTimeout(lowResIdleTimerRef.current)
+    }
+    lowResIdleTimerRef.current = window.setTimeout(() => {
+      needsRenderRef.current = true
+    }, 140)
+  }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const isRange = (el: EventTarget | null) =>
+      el instanceof HTMLInputElement && el.type === 'range'
+    const onDown = (e: PointerEvent) => {
+      if (isRange(e.target)) beginInteraction()
+    }
+    const onUp = (e: PointerEvent) => {
+      if (isRange(e.target) || interactingRef.current) endInteraction()
+    }
+    document.addEventListener('pointerdown', onDown, true)
+    document.addEventListener('pointerup', onUp, true)
+    document.addEventListener('pointercancel', onUp, true)
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true)
+      document.removeEventListener('pointerup', onUp, true)
+      document.removeEventListener('pointercancel', onUp, true)
+    }
+  }, [beginInteraction, endInteraction])
+
+  useEffect(() => {
+    return () => {
+      volumeRendererRef.current?.dispose()
+      volumeRendererRef.current = null
+      if (lowResIdleTimerRef.current != null) {
+        window.clearTimeout(lowResIdleTimerRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!manifest?.volumeDrr) {
+      volumeRendererRef.current?.dispose()
+      volumeRendererRef.current = null
+      return
+    }
+    const canvasEl = volumeCanvasRef.current
+    if (!canvasEl) return
+    let cancelled = false
+    volumeRendererRef.current?.dispose()
+    const volume = new VolumeDRRRenderer({
+      canvas: canvasEl,
+      config: manifest.geometry,
+      asset: manifest.volumeDrr,
+    })
+    volumeRendererRef.current = volume
+    volume.load().then(
+      () => {
+        if (cancelled) {
+          volume.dispose()
+          volumeRendererRef.current = null
+          return
+        }
+        needsRenderRef.current = true
+      },
+      (err) => {
+        console.error('[FluoroView] VolumeDRRRenderer init failed:', err)
+      },
+    )
+    return () => {
+      cancelled = true
+      volume.dispose()
+      if (volumeRendererRef.current === volume) {
+        volumeRendererRef.current = null
+      }
+    }
+  }, [manifest])
 
   const handleGroupToggle = useCallback(
     (groupKey: string, checked: boolean) => {
@@ -429,13 +591,19 @@ export function FluoroViewApp() {
 
   const nearestFrame = useMemo(() => {
     if (!manifest || !appState) return null
-    return findNearestDrrFrame(manifest.drrAtlas.frames, appState.raoLao, appState.cranialCaudal)
+    const frames = manifest.drrAtlas?.frames
+    if (!frames?.length) return null
+    return findNearestDrrFrame(frames, appState.raoLao, appState.cranialCaudal)
   }, [appState, manifest])
 
   const drrBlendFrames = useMemo(() => {
     if (!manifest || !appState) return []
-    return findDrrBlendFrames(manifest.drrAtlas.frames, appState.raoLao, appState.cranialCaudal)
+    const frames = manifest.drrAtlas?.frames
+    if (!frames?.length) return []
+    return findDrrBlendFrames(frames, appState.raoLao, appState.cranialCaudal)
   }, [appState, manifest])
+
+  const volumeDrrActive = Boolean(manifest?.volumeDrr)
 
   const slicerReferenceAvailable = Boolean(
     manifest?.virtualCathLab?.frontalImageUrl && manifest.virtualCathLab.frontalProjection,
@@ -456,9 +624,15 @@ export function FluoroViewApp() {
   }, [ctAxis, ctIndices, manifest])
 
   const scopeRouteOptions = useMemo(() => {
-    if (!airwayGraph) return []
-    const options = routeOptions(airwayGraph, 24)
-    if (nodule && !options.some((option) => option.id === nodule.routeTerminalNodeId)) {
+    const terminalOptions = airwayGraph ? routeOptions(airwayGraph, 48) : []
+    const options: Array<{ id: ScopeRouteId; label: string }> = manifest?.scopeAnimation
+      ? [{ id: 'bezier-demo', label: 'Bronch animation demo' }, ...terminalOptions]
+      : terminalOptions
+    if (
+      nodule &&
+      airwayGraph &&
+      !options.some((option) => option.id === nodule.routeTerminalNodeId)
+    ) {
       return [
         {
           id: nodule.routeTerminalNodeId,
@@ -468,12 +642,15 @@ export function FluoroViewApp() {
       ]
     }
     return options
-  }, [airwayGraph, nodule])
+  }, [airwayGraph, manifest?.scopeAnimation, nodule])
 
   const activeRoute = useMemo<RoutePath | null>(() => {
-    if (!airwayGraph || scopeRouteTerminalId == null) return null
-    return buildRoutePath(airwayGraph, scopeRouteTerminalId)
-  }, [airwayGraph, scopeRouteTerminalId])
+    return resolveScopeRoutePath({
+      graph: airwayGraph,
+      animationPath: scopeAnimationPath,
+      routeId: scopeRouteId,
+    })
+  }, [airwayGraph, scopeAnimationPath, scopeRouteId])
 
   const scopeSample = useMemo(() => {
     return activeRoute ? sampleRoutePath(activeRoute, scopeProgress) : null
@@ -518,9 +695,11 @@ export function FluoroViewApp() {
     )
   }, [nodule, scopeSample])
 
-  const thicknessProxy = drrBlendFrames.length
-    ? drrBlendFrames.reduce((total, item) => total + item.frame.thicknessProxy * item.weight, 0)
-    : (nearestFrame?.thicknessProxy ?? 1)
+  const thicknessProxy = volumeDrrActive
+    ? drrMetrics.thicknessProxy
+    : drrBlendFrames.length
+      ? drrBlendFrames.reduce((total, item) => total + item.frame.thicknessProxy * item.weight, 0)
+      : (nearestFrame?.thicknessProxy ?? 1)
   const doseRate = estimateRelativeDoseRate(settings, thicknessProxy)
   const fieldArea = fieldAreaFraction(settings)
 
@@ -580,7 +759,7 @@ export function FluoroViewApp() {
         edgeId: snap.edgeId,
         routeTerminalNodeId: snap.routeTerminalNodeId,
       })
-      setScopeRouteTerminalId(snap.routeTerminalNodeId)
+      setScopeRouteId(snap.routeTerminalNodeId)
       setScopeProgress(Math.max(scopeProgress, 0.35))
       setSnapStatus(
         `Nodule snapped ${snap.distanceMm.toFixed(1)} mm to Network edge ${snap.edgeId}. Scope route updated.`,
@@ -608,17 +787,21 @@ export function FluoroViewApp() {
               <p className="text-xs text-muted-foreground">
                 {isSlicerReferenceMode
                   ? 'SlicerHeart frontal reference from the exported C-arm scene.'
-                  : 'Relative educational DRR atlas with browser-side knobology.'}
+                  : volumeDrrActive
+                    ? 'Real-time volumetric DRR rendered in WebGL2 from the source CT.'
+                    : 'Relative educational DRR atlas with browser-side knobology.'}
               </p>
             </div>
             <Badge variant="outline" className="rounded-full text-xs">
               {isSlicerReferenceMode
                 ? 'SlicerHeart ref'
-                : drrBlendFrames.length > 1
-                  ? `${drrBlendFrames.length}-frame blend`
-                  : nearestFrame
-                    ? nearestFrame.id
-                    : 'Loading'}
+                : volumeDrrActive
+                  ? 'Volume DRR'
+                  : drrBlendFrames.length > 1
+                    ? `${drrBlendFrames.length}-frame blend`
+                    : nearestFrame
+                      ? nearestFrame.id
+                      : 'Loading'}
             </Badge>
           </div>
           <div
@@ -634,6 +817,15 @@ export function FluoroViewApp() {
                 unoptimized
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-contain"
+                style={fluoroImageStyle}
+              />
+            ) : volumeDrrActive ? (
+              <canvas
+                ref={volumeCanvasRef}
+                width={1024}
+                height={1024}
+                aria-label={`Real-time volumetric DRR at RAO/LAO ${appState?.raoLao ?? 0} cranial/caudal ${appState?.cranialCaudal ?? 0}`}
+                className="absolute inset-0 h-full w-full"
                 style={fluoroImageStyle}
               />
             ) : drrBlendFrames.length ? (
@@ -661,7 +853,7 @@ export function FluoroViewApp() {
               ))
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-slate-300">
-                Loading DRR atlas...
+                Loading fluoroscopy renderer...
               </div>
             )}
             <div
@@ -776,7 +968,17 @@ export function FluoroViewApp() {
             ) : null}
             <div className="absolute left-3 top-3 rounded bg-slate-950/70 px-2 py-1 text-xs text-slate-200">
               FPS {renderStats.fps.toFixed(1)} | segments {renderStats.visibleSegments}
+              {volumeDrrActive ? ` | DRR ${drrMetrics.renderMs.toFixed(0)} ms` : ''}
             </div>
+            {manifest?.cArm && appState ? (
+              <CarmInsetView
+                raoLao={appState.raoLao}
+                cranialCaudal={appState.cranialCaudal}
+                cArm={manifest.cArm}
+                airwayGlbUri={manifest.assets.airwaySegmentsGlb ?? manifest.assets.airwayGlb}
+                dracoBaseUrl={manifest.assets.dracoBaseUrl}
+              />
+            ) : null}
           </div>
           {atlasDelta ? (
             <p className="mt-3 text-xs text-muted-foreground">
@@ -865,6 +1067,8 @@ export function FluoroViewApp() {
                     max={60}
                     step={0.5}
                     unit="deg"
+                    onInteractionStart={beginInteraction}
+                    onInteractionEnd={endInteraction}
                     onChange={(value) => updateState((prev) => ({ ...prev, raoLao: value }))}
                   />
                   <RangeControl
@@ -874,6 +1078,8 @@ export function FluoroViewApp() {
                     max={20}
                     step={0.5}
                     unit="deg"
+                    onInteractionStart={beginInteraction}
+                    onInteractionEnd={endInteraction}
                     onChange={(value) => updateState((prev) => ({ ...prev, cranialCaudal: value }))}
                   />
                 </>
@@ -1046,8 +1252,11 @@ export function FluoroViewApp() {
                 <span className="text-muted-foreground">Scope route</span>
                 <select
                   className="rounded-md border border-border bg-background px-3 py-2"
-                  value={scopeRouteTerminalId ?? ''}
-                  onChange={(event) => setScopeRouteTerminalId(Number(event.target.value))}
+                  value={scopeRouteId == null ? '' : String(scopeRouteId)}
+                  onChange={(event) => {
+                    const value = event.target.value
+                    setScopeRouteId(value === 'bezier-demo' ? 'bezier-demo' : Number(value))
+                  }}
                   disabled={!scopeRouteOptions.length}
                 >
                   {scopeRouteOptions.map((option) => (
@@ -1056,6 +1265,11 @@ export function FluoroViewApp() {
                     </option>
                   ))}
                 </select>
+                {airwayGraph && airwayGraph.terminalNodeIds.length > 48 ? (
+                  <span className="text-xs text-muted-foreground">
+                    Showing bronch animation plus the 48 deepest terminal routes.
+                  </span>
+                ) : null}
               </label>
               <RangeControl
                 label="Scope progress"
@@ -1090,7 +1304,9 @@ export function FluoroViewApp() {
                       setFluoroImageSource(event.target.value as FluoroImageSource)
                     }
                   >
-                    <option value="atlas">TIGRE continuous atlas</option>
+                    <option value="atlas">
+                      {volumeDrrActive ? 'Volume DRR' : 'TIGRE continuous atlas'}
+                    </option>
                     <option value="slicerheart">SlicerHeart reference</option>
                   </select>
                 </label>
@@ -1304,7 +1520,9 @@ export function FluoroViewApp() {
             <span className="ml-2 inline-flex items-center gap-3">
               <span>Case Data</span>
               <Badge variant="outline" className="rounded-full text-xs">
-                {manifest?.drrAtlas.provenance.backend ?? 'Loading'}
+                {volumeDrrActive
+                  ? 'volume-drr'
+                  : (manifest?.drrAtlas?.provenance.backend ?? 'Loading')}
               </Badge>
             </span>
           </summary>
@@ -1314,31 +1532,40 @@ export function FluoroViewApp() {
               <dd className="text-right text-foreground">{manifest?.title ?? 'Loading'}</dd>
             </div>
             <div className="flex justify-between gap-3">
+              <dt>Renderer</dt>
+              <dd className="text-right text-foreground">
+                {volumeDrrActive ? 'Real-time volumetric DRR' : 'Atlas-based DRR'}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
               <dt>Atlas frames</dt>
-              <dd className="text-foreground">{manifest?.drrAtlas.frames.length ?? 0}</dd>
+              <dd className="text-foreground">{manifest?.drrAtlas?.frames.length ?? 0}</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt>Atlas backend</dt>
               <dd className="text-right text-foreground">
-                {manifest?.drrAtlas.provenance.backend ?? 'Loading'}
+                {manifest?.drrAtlas?.provenance.backend ?? 'n/a'}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt>Detector</dt>
               <dd className="text-foreground">
-                {manifest ? manifest.drrAtlas.provenance.detectorPixels.join(' x ') : 'Loading'}
+                {manifest?.drrAtlas?.provenance.detectorPixels?.join(' x ') ??
+                  manifest?.geometry.detector_pixels.join(' x ') ??
+                  'Loading'}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt>Image orientation</dt>
               <dd className="text-right text-foreground">
-                {manifest?.drrAtlas.provenance.imageOrientation ?? 'Loading'}
+                {manifest?.drrAtlas?.provenance.imageOrientation ?? 'AP'}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt>DRR tone map</dt>
               <dd className="text-right text-foreground">
-                {manifest?.drrAtlas.provenance.toneMap ?? 'Loading'}
+                {manifest?.drrAtlas?.provenance.toneMap ??
+                  (volumeDrrActive ? 'shader-tonemap' : 'Loading')}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
@@ -1428,13 +1655,44 @@ export function FluoroViewApp() {
               {manifest.virtualCathLab.note}
             </p>
           ) : null}
-          {manifest?.drrAtlas.provenance.note ? (
+          {manifest?.drrAtlas?.provenance.note ? (
             <p className="mt-2 text-xs text-amber-700 dark:text-amber-200">
               {manifest.drrAtlas.provenance.note}
             </p>
           ) : null}
         </details>
       </div>
+
+      {manifest && airwayGraph ? (
+        <section className="rounded-lg border border-border/70 bg-card/70 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
+                3D Anatomy &amp; Bronchoscope
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Orbit, zoom, and pan the airway. The scope tube extends along the active route as
+                you slide scope progress.
+              </p>
+            </div>
+            <Badge variant="outline" className="rounded-full text-xs">
+              {activeRoute?.points.length
+                ? `${activeRoute.points.length} pts | ${activeRoute.lengthMm.toFixed(0)} mm`
+                : 'No route'}
+            </Badge>
+          </div>
+          <Anatomy3DView
+            airwayGlbUri={manifest.assets.airwaySegmentsGlb ?? manifest.assets.airwayGlb}
+            dracoBaseUrl={manifest.assets.dracoBaseUrl}
+            activeGroups={appState?.activeGroups ?? EMPTY_GROUPS}
+            route={activeRoute}
+            scopeProgress={scopeProgress}
+            noduleLps={nodule?.lps ?? null}
+            tubeRadiusMm={manifest.scopeAnimation?.tubeRadiusMm ?? 2.5}
+            tubeColor={manifest.scopeAnimation?.tubeColor ?? '#1a1a1a'}
+          />
+        </section>
+      ) : null}
 
       <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-950 dark:text-amber-100">
         {manifest?.safetyLabel ??
@@ -1461,6 +1719,8 @@ function RangeControl({
   step,
   unit,
   onChange,
+  onInteractionStart,
+  onInteractionEnd,
 }: {
   label: string
   value: number
@@ -1469,6 +1729,8 @@ function RangeControl({
   step: number
   unit?: string
   onChange: (value: number) => void
+  onInteractionStart?: () => void
+  onInteractionEnd?: () => void
 }) {
   return (
     <label className="grid gap-1 text-sm">
@@ -1485,6 +1747,9 @@ function RangeControl({
         max={max}
         step={step}
         value={value}
+        onPointerDown={onInteractionStart}
+        onPointerUp={onInteractionEnd}
+        onPointerCancel={onInteractionEnd}
         onChange={(event) => onChange(Number(event.target.value))}
         className="w-full accent-primary"
       />

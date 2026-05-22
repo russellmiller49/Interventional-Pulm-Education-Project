@@ -1,0 +1,22 @@
+{
+  "schema": "fluoroview_volume_drr/v1",
+  "volumeUri": "/fluoroview/cases/patient-new/ct/ct_volume_uint8.raw",
+  "format": "uint8-r8",
+  "sizeXyz": [256, 256, 256],
+  "originalSizeXyz": [512, 512, 636],
+  "spacingXyzMm": [1.37890625, 1.37890625, 1.2421875],
+  "originLps": [-182.15527343749997, -374.1552734374999, -368.5],
+  "directionLps": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+  "huRange": [-1144, 2951],
+  "sampleDomain": "normalized-r8",
+  "baselineMas": 16,
+  "recommendedSteps": {
+    "interactive": 96,
+    "full": 224
+  },
+  "recommendedRenderScale": {
+    "interactive": 0.67,
+    "full": 1.0
+  },
+  "source": "target_clean_ct.nrrd"
+}
