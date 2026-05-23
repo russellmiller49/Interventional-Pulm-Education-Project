@@ -128,6 +128,49 @@ const moduleManifestHeaderRules = moduleAssetPrefixes.map((prefix) => ({
   headers: shortAssetManifestHeaders,
 }))
 
+const moduleAssetOrigin = process.env.MODULE_ASSET_ORIGIN?.trim().replace(/\/+$/, '')
+
+const moduleAssetFallbackRewrites = moduleAssetOrigin
+  ? [
+      {
+        source: '/module-assets/v1/:path*',
+        destination: `${moduleAssetOrigin}/:path*`,
+      },
+      {
+        source: '/bronch-navigation-trainer/app/cases/:path*',
+        destination: `${moduleAssetOrigin}/bronch-navigation-trainer/app/cases/:path*`,
+      },
+      {
+        source: '/draco/:path*',
+        destination: `${moduleAssetOrigin}/draco/:path*`,
+      },
+      {
+        source: '/fluoroview/:path*',
+        destination: `${moduleAssetOrigin}/fluoroview/:path*`,
+      },
+      {
+        source: '/models/:path*',
+        destination: `${moduleAssetOrigin}/models/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/assets/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/assets/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/media/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/media/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/pipelines/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/pipelines/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/simulator/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/simulator/:path*`,
+      },
+    ]
+  : []
+
 const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
@@ -276,24 +319,27 @@ const nextConfig = {
     ]
   },
   async rewrites() {
-    return [
-      {
-        source: '/socal-ebus-course/app',
-        destination: '/socal-ebus-course/app/index.html',
-      },
-      {
-        source: '/socal-ebus-course/app/',
-        destination: '/socal-ebus-course/app/index.html',
-      },
-      {
-        source: '/bronch-navigation-trainer/app',
-        destination: '/bronch-navigation-trainer/app/index.html',
-      },
-      {
-        source: '/bronch-navigation-trainer/app/',
-        destination: '/bronch-navigation-trainer/app/index.html',
-      },
-    ]
+    return {
+      afterFiles: [
+        {
+          source: '/socal-ebus-course/app',
+          destination: '/socal-ebus-course/app/index.html',
+        },
+        {
+          source: '/socal-ebus-course/app/',
+          destination: '/socal-ebus-course/app/index.html',
+        },
+        {
+          source: '/bronch-navigation-trainer/app',
+          destination: '/bronch-navigation-trainer/app/index.html',
+        },
+        {
+          source: '/bronch-navigation-trainer/app/',
+          destination: '/bronch-navigation-trainer/app/index.html',
+        },
+      ],
+      fallback: moduleAssetFallbackRewrites,
+    }
   },
   // Ensure static files are served correctly
   trailingSlash: false,

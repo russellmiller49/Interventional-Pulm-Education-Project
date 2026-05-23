@@ -3,6 +3,7 @@ import {
   boardReviewChapters,
   type BoardReviewCategory,
 } from '@/data/board-review'
+import { isVisibleModulePath } from '@/lib/draft-modules'
 import { listCreativeCommonsCategories } from '@/lib/creative-commons'
 
 export interface SiteSearchResult {
@@ -14,7 +15,7 @@ export interface SiteSearchResult {
   keywords?: readonly string[]
 }
 
-const staticResults: SiteSearchResult[] = [
+const allStaticResults: SiteSearchResult[] = [
   {
     title: 'Resource Library',
     description:
@@ -118,6 +119,8 @@ const staticResults: SiteSearchResult[] = [
     keywords: ['registry', 'procedure', 'quality', 'documentation', 'analytics'],
   },
 ]
+
+const staticResults = allStaticResults.filter((item) => isVisibleModulePath(item.href))
 
 const vibeGuideSections: SiteSearchResult[] = [
   {

@@ -9,6 +9,7 @@ import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { isVisibleModulePath } from '@/lib/draft-modules'
 
 import { DesktopNav, type NavItem } from './DesktopNav'
 import { MobileNav } from './MobileNav'
@@ -19,7 +20,7 @@ const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
   ssr: false,
 })
 
-const navigationItems: NavItem[] = [
+const allNavigationItems: NavItem[] = [
   {
     title: 'SoCal EBUS Course',
     href: '/socal-ebus-course',
@@ -55,6 +56,8 @@ const navigationItems: NavItem[] = [
     description: 'Tools, DIY Lab, training modules, and community features in progress',
   },
 ]
+
+const navigationItems = allNavigationItems.filter((item) => isVisibleModulePath(item.href))
 
 export function Navigation() {
   const pathname = usePathname()
