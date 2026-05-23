@@ -64,6 +64,11 @@ SUPABASE_SERVICE_ROLE_KEY=... \
 npm run upload:module-assets -- --upsert
 ```
 
+The upload script also loads `.env.local`, so you can keep `NEXT_PUBLIC_SUPABASE_URL` and the
+server-only `SUPABASE_SERVICE_ROLE_KEY` there for local uploads. For this Storage upload workflow,
+use the legacy JWT-style `service_role` key from Supabase Project Settings > API Keys > Legacy API
+Keys. Do not prefix it with `NEXT_PUBLIC_`.
+
 The script creates `module-assets` if it does not exist and uploads the heavy asset prefixes under
 `v1/`.
 

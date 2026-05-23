@@ -1,13 +1,18 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
+import nextEnv from '@next/env'
 import { createClient } from '@supabase/supabase-js'
 
 const root = process.cwd()
+const { loadEnvConfig } = nextEnv
+loadEnvConfig(root)
+
 const publicDir = path.join(root, 'public')
 const bucket = process.env.MODULE_ASSET_BUCKET || 'module-assets'
 const prefix = (process.env.MODULE_ASSET_PREFIX || 'v1').replace(/^\/+|\/+$/g, '')
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const secretKey = process.env.SUPABASE_SECRET_KEY
 const dryRun = process.argv.includes('--dry-run')
 const upsert = process.argv.includes('--upsert')
 
@@ -130,6 +135,55 @@ async function ensureBucket(client) {
   }
 }
 
+function decodeJwtPayload(token) {
+  try {
+    const [, payload] = token.split('.')
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+  } catch {
+    return null
+  }
+}
+
+function getCredentialError() {
+  if (!serviceRoleKey && secretKey?.startsWith('sb_secret_')) {
+    return [
+      'SUPABASE_SECRET_KEY is set, but this Storage upload script needs the legacy JWT-style service_role key.',
+      'In Supabase, open Project Settings > API Keys > Legacy API Keys and copy the service_role key into SUPABASE_SERVICE_ROLE_KEY.',
+    ].join(' ')
+  }
+
+  if (!serviceRoleKey) {
+    return 'SUPABASE_SERVICE_ROLE_KEY is required for Storage uploads.'
+  }
+
+  if (!serviceRoleKey.startsWith('eyJ') || serviceRoleKey.split('.').length !== 3) {
+    return 'SUPABASE_SERVICE_ROLE_KEY must be the JWT-style service_role key, not an sb_secret/sb_publishable key or project URL.'
+  }
+
+  const payload = decodeJwtPayload(serviceRoleKey)
+  if (!payload) {
+    return 'SUPABASE_SERVICE_ROLE_KEY could not be decoded as a JWT.'
+  }
+
+  if (payload.role !== 'service_role') {
+    return `SUPABASE_SERVICE_ROLE_KEY decoded with role "${payload.role ?? 'unknown'}"; expected "service_role".`
+  }
+
+  return null
+}
+
+const credentialError = getCredentialError()
+if (!dryRun && (!supabaseUrl || credentialError)) {
+  throw new Error(
+    [
+      !supabaseUrl ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required.' : null,
+      credentialError,
+    ]
+      .filter(Boolean)
+      .join(' '),
+  )
+}
+
 const files = await collectFiles()
 const totalBytes = files.reduce((sum, file) => sum + file.size, 0)
 console.log(
@@ -148,12 +202,6 @@ if (dryRun) {
     console.log(`...and ${files.length - 100} more files`)
   }
   process.exit(0)
-}
-
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error(
-    'SUPABASE_URL/NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.',
-  )
 }
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
