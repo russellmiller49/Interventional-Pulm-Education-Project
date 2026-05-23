@@ -1,0 +1,121 @@
+{
+  "schema": "fluoroview_slicer_c_arm_scene/v1",
+  "source": "SlicerHeart Virtual Cath Lab scene export",
+  "ingestedUtc": "2026-05-22T22:36:10.553302+00:00",
+  "sourceFiles": {
+    "mrml": "2026-05-21-Scene.mrml",
+    "frontalNrrd": "CArmFrontalXRay.nrrd",
+    "lateralNrrd": "CArmLateralXRay.nrrd",
+    "renderingPreset": "FluoroRenderingPreset_02.vp.json"
+  },
+  "coordinateSystems": {
+    "slicerScene": "RAS",
+    "fluoroView": "LPS"
+  },
+  "frames": [
+    {
+      "id": "slicerheart-frontal-reference",
+      "view": "frontal",
+      "imageUrl": "/fluoroview/cases/patient-new/virtual-cath-lab/slicerheart_frontal_reference.png",
+      "relativePath": "virtual-cath-lab/slicerheart_frontal_reference.png",
+      "sourceFileName": "CArmFrontalXRay.nrrd",
+      "sourceSha256": "ee361517b7ad3036309284920543279f8f3c4aea1319469824648b881e87b968",
+      "sha256": "ef0f91bbd309276b514a4fc7f96358913dc652f9e852c216e090bf4dea257deb",
+      "dimensionsIJK": [587, 800, 1],
+      "spacingIJKMm": [0.5, 0.5, 1.0],
+      "detectorSizeMm": [293.5, 400.0],
+      "encoding": "gzip",
+      "space": "left-posterior-superior"
+    }
+  ],
+  "frontalProjection": {
+    "coordinateSystem": "RAS",
+    "positionRasMm": [6.0, -612.9, -209.75],
+    "focalPointRasMm": [6.0, 107.1, -209.75],
+    "viewUpRas": [0.0, 0.0, 1.0],
+    "sourceToImageDistanceMm": 800.0,
+    "detectorPixels": [587, 800],
+    "detectorSizeMm": [293.5, 400.0],
+    "pixelSpacingMm": [0.5, 0.5],
+    "viewAngleDeg": 28.0994
+  },
+  "renderingPreset": {
+    "sourceFileName": "FluoroRenderingPreset_02.vp.json",
+    "sha256": "094860e79bcaa8a8224d4b951ff3c85730cd3b1c6a37c1978e03c7a5ebea794b",
+    "effectiveRange": [0.0, -1.0],
+    "scalarOpacity": [
+      {
+        "x": -1144.0,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": -1143.9999999999998,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": -546.268432617188,
+        "y": 0.0034782609436661,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": -7.42329406738281,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 945.216552734375,
+        "y": 0.00913043506443501,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 1171.51086425781,
+        "y": 0.0,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 1634.38549804688,
+        "y": 0.0130434781312943,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 2951.0,
+        "y": 0.1,
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      }
+    ],
+    "rgbTransferFunction": [
+      {
+        "x": -1144.0,
+        "color": [0.0, 0.0, 0.0],
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": -1143.9999999999998,
+        "color": [0.0, 0.0, 0.0],
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      },
+      {
+        "x": 2951.0,
+        "color": [0.0, 0.0, 0.0],
+        "midpoint": 0.5,
+        "sharpness": 0.0
+      }
+    ]
+  },
+  "qualityNotes": [
+    "Derived SlicerHeart C-arm reference frame; raw NRRD/H5/VTK/MRML files remain local.",
+    "Use as calibration evidence and optional frontal reference, not diagnostic imaging."
+  ]
+}

@@ -1,0 +1,25 @@
+name: fluoroview-tigre
+channels:
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - setuptools
+  - wheel
+  - cython
+  - numpy
+  - scipy
+  - scikit-image
+  - pillow
+  - pydicom
+  - simpleitk
+  - pytest
+  - ruff
+  - cmake
+  - make
+  - git
+  - cuda-toolkit=12.9
+  - pip:
+      - -e .

@@ -6,7 +6,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov",
+  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://*.supabase.co https://*.storage.supabase.co",
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self'",
@@ -74,9 +74,107 @@ const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
   return header
 })
 
+const immutableAssetHeaders = [
+  {
+    key: 'Cache-Control',
+    value: 'public, max-age=31536000, immutable',
+  },
+]
+
+const shortAssetManifestHeaders = [
+  {
+    key: 'Cache-Control',
+    value: 'public, max-age=300',
+  },
+]
+
+const moduleAssetPrefixes = [
+  '/models',
+  '/draco',
+  '/socal-ebus-course/app',
+  '/bronch-navigation-trainer/app',
+  '/module-assets/v1',
+]
+
+const immutableModuleAssetExtensions = [
+  'bin',
+  'br',
+  'css',
+  'glb',
+  'gltf',
+  'gz',
+  'jpeg',
+  'jpg',
+  'js',
+  'mp4',
+  'nrrd',
+  'png',
+  'raw',
+  'stl',
+  'wasm',
+  'webp',
+  'zst',
+]
+
+const moduleAssetHeaderRules = moduleAssetPrefixes.flatMap((prefix) =>
+  immutableModuleAssetExtensions.map((extension) => ({
+    source: `${prefix}/:path*.${extension}`,
+    headers: immutableAssetHeaders,
+  })),
+)
+
+const moduleManifestHeaderRules = moduleAssetPrefixes.map((prefix) => ({
+  source: `${prefix}/:path*.json`,
+  headers: shortAssetManifestHeaders,
+}))
+
+const moduleAssetOrigin = process.env.MODULE_ASSET_ORIGIN?.trim().replace(/\/+$/, '')
+
+const moduleAssetFallbackRewrites = moduleAssetOrigin
+  ? [
+      {
+        source: '/module-assets/v1/:path*',
+        destination: `${moduleAssetOrigin}/:path*`,
+      },
+      {
+        source: '/bronch-navigation-trainer/app/cases/:path*',
+        destination: `${moduleAssetOrigin}/bronch-navigation-trainer/app/cases/:path*`,
+      },
+      {
+        source: '/draco/:path*',
+        destination: `${moduleAssetOrigin}/draco/:path*`,
+      },
+      {
+        source: '/fluoroview/:path*',
+        destination: `${moduleAssetOrigin}/fluoroview/:path*`,
+      },
+      {
+        source: '/models/:path*',
+        destination: `${moduleAssetOrigin}/models/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/assets/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/assets/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/media/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/media/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/pipelines/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/pipelines/:path*`,
+      },
+      {
+        source: '/socal-ebus-course/app/simulator/:path*',
+        destination: `${moduleAssetOrigin}/socal-ebus-course/app/simulator/:path*`,
+      },
+    ]
+  : []
+
 const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
+  output: 'standalone',
   experimental: {
     optimizePackageImports: [
       '@react-three/drei',
@@ -126,14 +224,10 @@ const nextConfig = {
       {
         // Apply relaxed CSP to fluoroview pages for WebGL/WebAssembly
         source: '/fluoroview/:path*',
-        headers: [
-          ...securityHeaders,
-          {
-            key: 'Content-Type',
-            value: 'text/html; charset=utf-8',
-          },
-        ],
+        headers: securityHeaders,
       },
+      ...moduleAssetHeaderRules,
+      ...moduleManifestHeaderRules,
       {
         // Serve proper USDZ MIME for Quick Look
         source: '/:all*(usdz)',
@@ -170,27 +264,82 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/fluoroview/:path*.raw',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/octet-stream',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/fluoroview/:path*.bin',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/octet-stream',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/fluoroview/:path*.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300',
+          },
+        ],
+      },
+      {
+        source: '/fluoroview/:path*.svg',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'image/svg+xml; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300',
+          },
+        ],
+      },
     ]
   },
   async rewrites() {
-    return [
-      {
-        source: '/socal-ebus-course/app',
-        destination: '/socal-ebus-course/app/index.html',
-      },
-      {
-        source: '/socal-ebus-course/app/',
-        destination: '/socal-ebus-course/app/index.html',
-      },
-      {
-        source: '/bronch-navigation-trainer/app',
-        destination: '/bronch-navigation-trainer/app/index.html',
-      },
-      {
-        source: '/bronch-navigation-trainer/app/',
-        destination: '/bronch-navigation-trainer/app/index.html',
-      },
-    ]
+    return {
+      afterFiles: [
+        {
+          source: '/socal-ebus-course/app',
+          destination: '/socal-ebus-course/app/index.html',
+        },
+        {
+          source: '/socal-ebus-course/app/',
+          destination: '/socal-ebus-course/app/index.html',
+        },
+        {
+          source: '/bronch-navigation-trainer/app',
+          destination: '/bronch-navigation-trainer/app/index.html',
+        },
+        {
+          source: '/bronch-navigation-trainer/app/',
+          destination: '/bronch-navigation-trainer/app/index.html',
+        },
+      ],
+      fallback: moduleAssetFallbackRewrites,
+    }
   },
   // Ensure static files are served correctly
   trailingSlash: false,

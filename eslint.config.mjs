@@ -50,6 +50,12 @@ const config = [
     },
   },
   {
+    files: ['server.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+  {
     files: ['**/*.stories.@(ts|tsx)'],
     rules: {
       'react-hooks/rules-of-hooks': 'off',

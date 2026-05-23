@@ -9,6 +9,7 @@ import { NRRDLoader } from 'three/examples/jsm/loaders/NRRDLoader.js'
 import type Volume from 'three/examples/jsm/misc/Volume.js'
 
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
+import { resolveModuleAssetUrl } from '@/lib/module-assets'
 
 interface LoadingState {
   status: 'loading'
@@ -132,7 +133,7 @@ async function resolveVolumeUrl(volume: AnatomyModel['volume']): Promise<string>
   }
 
   if (volume.url && volume.url.length > 0) {
-    return volume.url
+    return resolveModuleAssetUrl(volume.url)
   }
 
   if (volume.supabase) {
@@ -251,7 +252,7 @@ async function loadModel(model: AnatomyModel): Promise<AnatomyAssetSuccess> {
     console.log('Loading GLB model:', glbDownload.url)
     const loader = new GLTFLoader()
     const dracoLoader = new DRACOLoader()
-    dracoLoader.setDecoderPath('/draco/')
+    dracoLoader.setDecoderPath(resolveModuleAssetUrl('/draco/'))
     loader.setDRACOLoader(dracoLoader)
 
     try {

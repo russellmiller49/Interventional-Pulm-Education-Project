@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Bronchoscope shaft and distal tip vector asset</title>
+  <desc id="desc">Editable Illustrator-friendly vector drawing of a black bronchoscope shaft with a segmented bending section, distal face plate, camera lens, light guides, and working channel ports.</desc>
+  <defs>
+    <linearGradient id="shadowGradient" x1="430" y1="210" x2="1200" y2="980" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#050608" stop-opacity="0.42"/>
+      <stop offset="0.58" stop-color="#050608" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#050608" stop-opacity="0.05"/>
+    </linearGradient>
+
+    <linearGradient id="shaftBodyGradient" x1="466" y1="300" x2="1196" y2="946" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#333c43"/>
+      <stop offset="0.12" stop-color="#171d22"/>
+      <stop offset="0.38" stop-color="#0a0e12"/>
+      <stop offset="0.62" stop-color="#11171c"/>
+      <stop offset="0.84" stop-color="#05070a"/>
+      <stop offset="1" stop-color="#171d22"/>
+    </linearGradient>
+
+    <linearGradient id="highlightStroke" x1="570" y1="336" x2="1128" y2="912" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8dde0" stop-opacity="0"/>
+      <stop offset="0.38" stop-color="#e9eef0" stop-opacity="0.18"/>
+      <stop offset="0.68" stop-color="#ffffff" stop-opacity="0.92"/>
+      <stop offset="0.82" stop-color="#e7eef3" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <radialGradient id="tipRimGradient" cx="36%" cy="28%" r="72%">
+      <stop offset="0" stop-color="#edf1f4"/>
+      <stop offset="0.32" stop-color="#bfc7ce"/>
+      <stop offset="0.58" stop-color="#6a747e"/>
+      <stop offset="0.82" stop-color="#20282f"/>
+      <stop offset="1" stop-color="#080b0f"/>
+    </radialGradient>
+
+    <radialGradient id="tipFaceGradient" cx="37%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#f7f8f8"/>
+      <stop offset="0.46" stop-color="#d8dcde"/>
+      <stop offset="0.78" stop-color="#aab1b7"/>
+      <stop offset="1" stop-color="#69717a"/>
+    </radialGradient>
+
+    <radialGradient id="portInteriorGradient" cx="35%" cy="32%" r="72%">
+      <stop offset="0" stop-color="#1b2228"/>
+      <stop offset="0.48" stop-color="#06080b"/>
+      <stop offset="1" stop-color="#000000"/>
+    </radialGradient>
+
+    <radialGradient id="lensGradient" cx="38%" cy="32%" r="76%">
+      <stop offset="0" stop-color="#7f8fa1"/>
+      <stop offset="0.28" stop-color="#232b36"/>
+      <stop offset="0.62" stop-color="#090b11"/>
+      <stop offset="1" stop-color="#000000"/>
+    </radialGradient>
+
+    <radialGradient id="lightGuideGradient" cx="37%" cy="32%" r="73%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.28" stop-color="#dfe5e7"/>
+      <stop offset="0.64" stop-color="#88929a"/>
+      <stop offset="1" stop-color="#2d343a"/>
+    </radialGradient>
+
+    <clipPath id="shaftClip" clipPathUnits="userSpaceOnUse">
+      <path d="M 566 263 C 698 352 955 640 1173 913 C 1190 935 1180 960 1154 969 C 919 692 651 412 505 321 C 487 309 488 286 506 276 C 522 267 544 262 566 263 Z"/>
+    </clipPath>
+  </defs>
+
+  <g id="bronchoscope_asset">
+    <g id="shadow_soft_vector">
+      <path id="shaft_shadow" d="M 606 292 C 735 382 1000 667 1218 940 C 1233 958 1222 980 1196 988 C 961 711 687 435 544 347 C 526 336 529 313 548 303 C 565 295 587 291 606 292 Z" fill="url(#shadowGradient)"/>
+      <ellipse id="tip_shadow" cx="548" cy="290" rx="70" ry="42" transform="rotate(28 548 290)" fill="#050608" opacity="0.22"/>
+    </g>
+
+    <g id="shaft_group">
+      <path id="shaft_body" d="M 566 263 C 698 352 955 640 1173 913 C 1190 935 1180 960 1154 969 C 919 692 651 412 505 321 C 487 309 488 286 506 276 C 522 267 544 262 566 263 Z" fill="url(#shaftBodyGradient)" stroke="#030406" stroke-width="2.5" stroke-linejoin="round"/>
+
+      <g id="flexion_ring_group" clip-path="url(#shaftClip)">
+        <ellipse id="bend_ring_01" cx="556" cy="316" rx="49" ry="7.5" transform="rotate(137 556 316)" fill="none" stroke="#5b6670" stroke-width="6" opacity="0.28"/>
+        <ellipse id="bend_ring_02" cx="581" cy="344" rx="49" ry="7.5" transform="rotate(137 581 344)" fill="none" stroke="#050608" stroke-width="5" opacity="0.54"/>
+        <ellipse id="bend_ring_03" cx="606" cy="372" rx="48" ry="7.5" transform="rotate(137 606 372)" fill="none" stroke="#59646d" stroke-width="6" opacity="0.24"/>
+        <ellipse id="bend_ring_04" cx="631" cy="400" rx="48" ry="7.5" transform="rotate(137 631 400)" fill="none" stroke="#050608" stroke-width="5" opacity="0.52"/>
+        <ellipse id="bend_ring_05" cx="657" cy="429" rx="47" ry="7.5" transform="rotate(137 657 429)" fill="none" stroke="#59646d" stroke-width="6" opacity="0.22"/>
+        <ellipse id="bend_ring_06" cx="682" cy="457" rx="47" ry="7.5" transform="rotate(137 682 457)" fill="none" stroke="#050608" stroke-width="5" opacity="0.48"/>
+        <ellipse id="bend_ring_07" cx="708" cy="486" rx="46" ry="7.5" transform="rotate(137 708 486)" fill="none" stroke="#59646d" stroke-width="6" opacity="0.2"/>
+        <ellipse id="bend_ring_08" cx="734" cy="515" rx="45" ry="7.5" transform="rotate(137 734 515)" fill="none" stroke="#050608" stroke-width="4.5" opacity="0.42"/>
+      </g>
+
+      <g id="shaft_highlights" clip-path="url(#shaftClip)">
+        <path id="long_specular_highlight" d="M 602 349 C 724 478 907 678 1117 916" fill="none" stroke="url(#highlightStroke)" stroke-width="11" stroke-linecap="round" opacity="0.9"/>
+        <path id="thin_edge_highlight" d="M 637 366 C 770 507 944 693 1131 905" fill="none" stroke="#c8d1d7" stroke-width="3.5" stroke-linecap="round" opacity="0.32"/>
+        <path id="left_edge_rim" d="M 519 317 C 667 420 916 694 1148 957" fill="none" stroke="#222a31" stroke-width="7" stroke-linecap="round" opacity="0.42"/>
+      </g>
+    </g>
+
+    <g id="distal_tip_group">
+      <ellipse id="tip_back_collar" cx="511" cy="263" rx="70" ry="52" transform="rotate(28 511 263)" fill="#07090d"/>
+      <ellipse id="tip_outer_sidewall" cx="519" cy="270" rx="65" ry="48" transform="rotate(28 519 270)" fill="#161d24" opacity="0.95"/>
+
+      <g id="tip_face_plate" transform="translate(506 258) rotate(28) scale(1 0.78)">
+        <circle id="tip_metal_rim" cx="0" cy="0" r="62" fill="url(#tipRimGradient)" stroke="#050608" stroke-width="3.4"/>
+        <circle id="tip_face" cx="0" cy="0" r="50" fill="url(#tipFaceGradient)" stroke="#363e45" stroke-width="2.2"/>
+        <path id="face_lower_shadow" d="M -43 20 C -19 42 21 43 43 17 C 28 54 -28 56 -43 20 Z" fill="#6a7177" opacity="0.26"/>
+        <path id="face_top_glint" d="M -34 -28 C -11 -44 25 -40 39 -15 C 13 -27 -15 -30 -34 -28 Z" fill="#ffffff" opacity="0.32"/>
+
+        <g id="working_channel_port">
+          <circle id="working_channel_bevel" cx="21" cy="-19" r="17" fill="#5f6870"/>
+          <circle id="working_channel_opening" cx="21" cy="-19" r="13.5" fill="url(#portInteriorGradient)"/>
+          <path id="working_channel_glint" d="M 10 -23 C 16 -34 31 -31 35 -19" fill="none" stroke="#eef3f6" stroke-width="3" stroke-linecap="round" opacity="0.28"/>
+        </g>
+
+        <g id="camera_lens_port">
+          <circle id="camera_lens_bevel" cx="-23" cy="20" r="16.5" fill="#4e5861"/>
+          <circle id="camera_lens_glass" cx="-23" cy="20" r="12.7" fill="url(#lensGradient)"/>
+          <circle id="camera_lens_pupil" cx="-22" cy="21" r="6.8" fill="#020307"/>
+          <circle id="camera_lens_reflection" cx="-29" cy="15" r="3.4" fill="#eaf4fb" opacity="0.72"/>
+        </g>
+
+        <g id="light_guide_left">
+          <circle id="light_guide_left_bevel" cx="-27" cy="-20" r="13" fill="#626b73"/>
+          <circle id="light_guide_left_glass" cx="-27" cy="-20" r="8.8" fill="url(#lightGuideGradient)"/>
+          <circle id="light_guide_left_core" cx="-29" cy="-22" r="3.5" fill="#f8fbfc" opacity="0.72"/>
+        </g>
+
+        <g id="light_guide_lower_right">
+          <circle id="light_guide_right_bevel" cx="21" cy="21" r="12.5" fill="#626b73"/>
+          <circle id="light_guide_right_glass" cx="21" cy="21" r="8.4" fill="url(#lightGuideGradient)"/>
+          <circle id="light_guide_right_core" cx="18" cy="18" r="3.1" fill="#f8fbfc" opacity="0.66"/>
+        </g>
+
+        <g id="small_auxiliary_port">
+          <circle id="auxiliary_port_bevel" cx="-2" cy="3" r="10.8" fill="#737c84"/>
+          <circle id="auxiliary_port_opening" cx="-2" cy="3" r="7.4" fill="url(#portInteriorGradient)"/>
+          <circle id="auxiliary_port_reflection" cx="-5" cy="0" r="2.1" fill="#d9e2e8" opacity="0.45"/>
+        </g>
+      </g>
+
+      <path id="tip_lower_lip_shadow" d="M 450 279 C 472 329 545 345 589 298 C 560 338 481 337 450 279 Z" fill="#030406" opacity="0.28"/>
+    </g>
+
+    <g id="animation_reference_guides" opacity="0">
+      <path id="motion_axis_reference" d="M 506 258 C 676 430 903 670 1154 969" fill="none" stroke="#ff00ff" stroke-width="3"/>
+      <circle id="distal_tip_pivot_reference" cx="506" cy="258" r="8" fill="#ff00ff"/>
+    </g>
+  </g>
+</svg>

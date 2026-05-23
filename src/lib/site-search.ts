@@ -1,9 +1,10 @@
-import imagesData from '@/data/creative-commons-images.json'
 import {
   boardReviewCategoryLabels,
   boardReviewChapters,
   type BoardReviewCategory,
 } from '@/data/board-review'
+import { isVisibleModulePath } from '@/lib/draft-modules'
+import { listCreativeCommonsCategories } from '@/lib/creative-commons'
 
 export interface SiteSearchResult {
   title: string
@@ -14,31 +15,7 @@ export interface SiteSearchResult {
   keywords?: readonly string[]
 }
 
-interface CreativeCommonsImageData {
-  Category: string
-  Image_url: string
-  'Image Description': string
-  article_title: string
-  article_url: string
-}
-
-const creativeCommonsCategorySlugs: Record<string, string> = {
-  '3D reconstructions': '3d-reconstructions',
-  Imaging: 'imaging',
-  Pathology: 'pathology',
-  Miscellaneous: 'miscellaneous',
-  'Peripheral Bronchoscopy (Navigation/Robotic/Intraprocedual Imaging)': 'peripheral-bronchoscopy',
-  Surgery: 'surgery',
-  'Therapeutic Bronchoscopy': 'therapeutic-bronchoscopy',
-  Tracheostomy: 'tracheostomy',
-  'EBUS/EUS': 'ebus-eus',
-  Radiotherapy: 'radiotherapy',
-  'Bronchoscopic Lung Volume Reduction': 'bronchoscopic-lung-volume-reduction',
-  Equipment: 'equipment',
-  'Pleural Procedures': 'pleural-procedures',
-}
-
-const staticResults: SiteSearchResult[] = [
+const allStaticResults: SiteSearchResult[] = [
   {
     title: 'Resource Library',
     description:
@@ -94,6 +71,27 @@ const staticResults: SiteSearchResult[] = [
     keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
   },
   {
+    title: 'Pleural Fluid Analysis',
+    description:
+      'Advanced module for interpreting pleural fluid results with ranked differentials, quiz mode, clinical context, Light criteria, pseudoexudates, rare diseases, and targeted testing.',
+    href: '/pleural-procedures/pleural-fluid-analysis',
+    section: 'Pleural Procedures',
+    type: 'page',
+    keywords: [
+      'pleural fluid',
+      'pleural effusion',
+      'lights criteria',
+      'pseudoexudate',
+      'thoracentesis',
+      'pfa',
+      'chylothorax',
+      'empyema',
+      'yellow nail syndrome',
+      'urinothorax',
+      'bilothorax',
+    ],
+  },
+  {
     title: 'Interactive 3D Anatomy Viewer',
     description:
       'Explore airway structures, vasculature, and lobar relationships with interactive anatomy tools.',
@@ -121,6 +119,8 @@ const staticResults: SiteSearchResult[] = [
     keywords: ['registry', 'procedure', 'quality', 'documentation', 'analytics'],
   },
 ]
+
+const staticResults = allStaticResults.filter((item) => isVisibleModulePath(item.href))
 
 const vibeGuideSections: SiteSearchResult[] = [
   {
@@ -179,25 +179,16 @@ const boardReviewResults: SiteSearchResult[] = boardReviewChapters.map((chapter)
   keywords: [...chapter.tags, ...chapter.focus, ...chapter.examDomains],
 }))
 
-const imageCategoryResults: SiteSearchResult[] = Object.entries(
-  (imagesData as CreativeCommonsImageData[]).reduce<Record<string, CreativeCommonsImageData[]>>(
-    (acc, image) => {
-      acc[image.Category] = acc[image.Category] ?? []
-      acc[image.Category].push(image)
-      return acc
-    },
-    {},
-  ),
-).map(([category, images]) => ({
-  title: `${category} images`,
-  description: `${images.length} Creative Commons medical images in the ${category} collection.`,
-  href: `/resources/creative-commons/${creativeCommonsCategorySlugs[category] ?? 'search'}`,
-  section: 'Creative Commons Images',
-  type: 'image-category',
-  keywords: images
-    .slice(0, 12)
-    .flatMap((image) => [image['Image Description'], image.article_title, image.Category]),
-}))
+const imageCategoryResults: SiteSearchResult[] = listCreativeCommonsCategories().map(
+  (category) => ({
+    title: `${category.name} images`,
+    description: `${category.count} Creative Commons medical images in the ${category.name} collection.`,
+    href: `/resources/creative-commons/${category.slug}`,
+    section: 'Creative Commons Images',
+    type: 'image-category',
+    keywords: [category.name],
+  }),
+)
 
 const searchIndex: SiteSearchResult[] = [
   ...staticResults,

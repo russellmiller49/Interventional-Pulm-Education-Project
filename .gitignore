@@ -27,6 +27,20 @@ pids
 *.seed
 *.pid.lock
 
+# FluoroView raw source data and VM transfer bundles
+/fluoro_2/
+*.dcm
+*.nii
+*.nii.gz
+*.nrrd
+*.tar.zst
+
+# Python build/test caches
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
 # Coverage directory used by tools like istanbul
 coverage/
 *.lcov
@@ -153,6 +167,7 @@ Thumbs.db
 *.eps
 *.raw
 !public/bronch-navigation-trainer/app/**/*.raw
+!public/fluoroview/cases/**/ct/ct_preview_uint8.raw
 *.cr2
 *.nef
 *.arw

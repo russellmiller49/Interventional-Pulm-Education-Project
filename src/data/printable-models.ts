@@ -1,4 +1,5 @@
 import type { AnatomyModel } from '@/lib/types'
+import { resolveModuleAssetPath } from '@/lib/module-assets'
 
 export const anatomyModels: AnatomyModel[] = [
   {
@@ -14,7 +15,7 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: '/models/lymph-node-education.glb',
+        url: resolveModuleAssetPath('/models/lymph-node-education.glb'),
         sizeMB: 12.96,
       },
     ],
@@ -229,7 +230,7 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: '/models/airway-y-stent.glb',
+        url: resolveModuleAssetPath('/models/airway-y-stent.glb'),
         sizeMB: 4.42,
       },
     ],
@@ -377,7 +378,7 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: '/models/te-fistula.glb',
+        url: resolveModuleAssetPath('/models/te-fistula.glb'),
         sizeMB: 4.84,
       },
     ],

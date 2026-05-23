@@ -10,14 +10,6 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!supabaseUrl) {
-  console.warn('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is not set')
-}
-
-if (!serviceRoleKey) {
-  console.warn('SUPABASE_SERVICE_ROLE_KEY is not set - admin client will not work')
-}
-
 /**
  * Creates a Supabase admin client for server-side operations.
  * Returns null if the required environment variables are not set.

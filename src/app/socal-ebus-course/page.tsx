@@ -46,9 +46,7 @@ export default function SoCalEbusCoursePage() {
             </a>
           </Button>
           <Button asChild variant="secondary">
-            <Link href="/board-prep/lung-cancer-staging-and-linear-ebus">
-              Pair With Board Review
-            </Link>
+            <Link href="/board-prep/lung-cancer-staging">Pair With Board Review</Link>
           </Button>
         </div>
 

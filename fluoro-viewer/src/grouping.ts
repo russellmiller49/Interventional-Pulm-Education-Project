@@ -5,7 +5,11 @@ export interface BranchGroup {
 }
 
 export const BRANCH_GROUPS: BranchGroup[] = [
-  { key: 'trachea', label: 'Trachea', members: ['Trachea'] },
+  {
+    key: 'trachea',
+    label: 'Trachea',
+    members: ['Trachea', 'Tracheobronchial_tree_full', 'Complete_airway'],
+  },
   {
     key: 'rmb',
     label: 'Right Main Bronchus',
@@ -78,7 +82,12 @@ export const BRANCH_GROUPS: BranchGroup[] = [
 ]
 
 export function normalizeLabel(label: string): string {
-  return label.replace(/_/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
+  return label
+    .replace(/\.\d+$/g, '')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
 }
 
 export function groupKeyForLabel(label: string): string {

@@ -2,21 +2,25 @@
 
 import Link from 'next/link'
 import type { Route } from 'next'
+import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-import SignInModal from '@/components/auth/SignInModal'
+import { isVisibleModulePath } from '@/lib/draft-modules'
 
 import { DesktopNav, type NavItem } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
 import { SearchShortcut } from './SearchShortcut'
 
-const navigationItems: NavItem[] = [
+const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
+  ssr: false,
+})
+
+const allNavigationItems: NavItem[] = [
   {
     title: 'SoCal EBUS Course',
     href: '/socal-ebus-course',
@@ -26,6 +30,16 @@ const navigationItems: NavItem[] = [
     title: 'Bronch Navigation',
     href: '/bronch-navigation-trainer' as Route,
     description: 'CT-to-bronchoscope navigation simulator',
+  },
+  {
+    title: 'Intro Bronchoscopy',
+    href: '/intro-bronchoscopy' as Route,
+    description: 'Foundational scope sizing, reach, and tool fit modules',
+  },
+  {
+    title: 'Pleural Procedures',
+    href: '/pleural-procedures' as Route,
+    description: 'Chest drainage systems, knobology, and troubleshooting',
   },
   { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
   { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
@@ -42,6 +56,8 @@ const navigationItems: NavItem[] = [
     description: 'Tools, DIY Lab, training modules, and community features in progress',
   },
 ]
+
+const navigationItems = allNavigationItems.filter((item) => isVisibleModulePath(item.href))
 
 export function Navigation() {
   const pathname = usePathname()
@@ -88,7 +104,7 @@ export function Navigation() {
       </div>
       <DesktopNav items={navigationItems} activePath={pathname} />
       <div className="hidden items-center gap-2 md:flex">
-        <form action="/search" className="hidden items-center gap-1 lg:flex" role="search">
+        <form action="/search" className="hidden items-center gap-1 2xl:flex" role="search">
           <Input
             type="search"
             name="q"
@@ -104,14 +120,14 @@ export function Navigation() {
             <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
           </Button>
         </form>
-        <div className="hidden lg:flex items-center">
+        <div className="hidden 2xl:flex items-center">
           <SearchShortcut className="text-xs" />
         </div>
         <Button
           type="button"
           variant="outline"
           onClick={() => setIsSignInOpen(true)}
-          className="hidden lg:inline-flex"
+          className="hidden xl:inline-flex"
         >
           Sign in
         </Button>

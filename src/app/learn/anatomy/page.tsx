@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import type { Route } from 'next'
 
-import { AnatomyViewer } from '@/components/3d/AnatomyViewer'
+import { AnatomyViewerDynamic } from '@/components/3d/AnatomyViewerDynamic'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getModel } from '@/data/models'
@@ -51,6 +51,7 @@ export default function AnatomyLearnPage() {
     setVolumeSlice(0)
     setShowAnnotations(true)
     setResetSignal((signal) => signal + 1)
+    setRotation({ x: 0, y: 0, z: 0 })
   }
 
   const handleToggleSegment = (segmentId: string) => {
@@ -62,9 +63,164 @@ export default function AnatomyLearnPage() {
 
   const downloads = selectedModel.downloads
   const xrModel = getModel(selectedModel.slug)
+  const controlCardClassName =
+    'grid gap-4 rounded-2xl border border-slate-500/20 bg-white/[0.04] p-4'
+  const controlLabelClassName =
+    'text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400'
+
+  const viewerControlPanel = (
+    <div className="grid gap-4">
+      <div>
+        <div className={controlLabelClassName}>Scene Controls</div>
+        <h2 className="mt-1 text-lg font-semibold text-white">Anatomy workspace</h2>
+      </div>
+
+      <section className={controlCardClassName}>
+        <label className="grid gap-2">
+          <span className={controlLabelClassName}>Model</span>
+          <select
+            value={selectedModel.id}
+            onChange={(event) => {
+              const nextModel = models.find((model) => model.id === event.target.value)
+              if (nextModel) {
+                handleModelChange(nextModel)
+              }
+            }}
+            className="min-h-11 w-full rounded-xl border border-slate-500/25 bg-slate-950/80 px-3 text-sm text-white outline-none transition focus:border-cyan-300/70"
+          >
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      <section className={controlCardClassName}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className={controlLabelClassName}>Cross-section</div>
+            <h3 className="mt-1 text-base font-semibold text-white">Cut plane</h3>
+          </div>
+          <span className="rounded-full border border-slate-500/25 bg-slate-950/80 px-2.5 py-1 text-xs text-slate-300">
+            {crossSection}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={crossSection}
+          onChange={(event) => setCrossSection(Number(event.target.value))}
+          className="w-full accent-cyan-300"
+        />
+        <div className="grid gap-2">
+          <label className="flex min-h-9 items-center gap-2 rounded-xl border border-slate-500/20 bg-slate-950/50 px-3 text-sm text-slate-200">
+            <input
+              type="checkbox"
+              checked={showAnnotations}
+              onChange={(event) => setShowAnnotations(event.target.checked)}
+              className="h-4 w-4 accent-cyan-300"
+            />
+            <span>Show annotations</span>
+          </label>
+          <label className="flex min-h-9 items-center gap-2 rounded-xl border border-slate-500/20 bg-slate-950/50 px-3 text-sm text-slate-200">
+            <input
+              type="checkbox"
+              checked={showDebugHelpers}
+              onChange={(event) => setShowDebugHelpers(event.target.checked)}
+              className="h-4 w-4 accent-cyan-300"
+            />
+            <span>Show grid</span>
+          </label>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setCrossSection(0)
+            setVisibleSegments(
+              Object.fromEntries(
+                segmentList.map((segment) => [segment.id, segment.visibleByDefault !== false]),
+              ),
+            )
+            setShowAnnotations(true)
+            setVolumeSlice(0)
+            setResetSignal((signal) => signal + 1)
+            setRotation({ x: 0, y: 0, z: 0 })
+          }}
+          className="min-h-10 rounded-full border border-cyan-300/30 bg-cyan-300/15 px-4 text-sm font-semibold text-cyan-50 transition hover:bg-cyan-300/25"
+        >
+          Reset workspace
+        </button>
+      </section>
+
+      <section className={controlCardClassName}>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className={controlLabelClassName}>Rotation</div>
+            <h3 className="mt-1 text-base font-semibold text-white">Model orientation</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRotation({ x: 0, y: 0, z: 0 })}
+            className="text-xs font-semibold text-cyan-200 transition hover:text-white"
+          >
+            Reset
+          </button>
+        </div>
+        {(['x', 'y', 'z'] as const).map((axis) => (
+          <label key={axis} className="grid gap-2">
+            <span className="flex items-center justify-between text-xs text-slate-400">
+              <span className={controlLabelClassName}>{axis.toUpperCase()} axis</span>
+              <span className="text-white">{rotation[axis].toFixed(0)}°</span>
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={360}
+              step={1}
+              value={rotation[axis]}
+              onChange={(event) =>
+                setRotation((prev) => ({ ...prev, [axis]: Number(event.target.value) }))
+              }
+              className="w-full accent-cyan-300"
+            />
+          </label>
+        ))}
+      </section>
+
+      <section className={controlCardClassName}>
+        <div>
+          <div className={controlLabelClassName}>Visibility</div>
+          <h3 className="mt-1 text-base font-semibold text-white">Structures</h3>
+        </div>
+        <div className="grid max-h-72 gap-2 overflow-auto pr-1">
+          {segmentList.map((segment) => (
+            <label
+              key={segment.id}
+              className="flex min-h-9 items-center gap-2 rounded-xl border border-slate-500/20 bg-slate-950/50 px-3 text-sm text-slate-200"
+            >
+              <input
+                type="checkbox"
+                checked={visibleSegments[segment.id] ?? true}
+                onChange={() => handleToggleSegment(segment.id)}
+                className="h-4 w-4 accent-cyan-300"
+              />
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: segment.color }}
+              />
+              <span className="min-w-0 flex-1 truncate">{segment.name}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
 
   return (
-    <div className="space-y-16 py-16">
+    <div className="space-y-12 py-16">
       <section className="container space-y-4">
         <div className="space-y-2">
           <Badge
@@ -84,268 +240,135 @@ export default function AnatomyLearnPage() {
         </div>
       </section>
 
-      <section className="container grid gap-12 lg:grid-cols-[1.3fr_0.7fr]">
-        <div className="space-y-6">
-          <AnatomyViewer
-            key={selectedModel.id}
-            model={viewerModel}
-            visibleSegments={visibleSegments}
-            crossSection={crossSection}
-            volumeSlice={volumeSlice}
-            showAnnotations={showAnnotations}
-            resetSignal={resetSignal}
-            showDebugHelpers={showDebugHelpers}
-            rotation={rotation}
-            onScreenshot={(dataUrl) => {
-              const link = document.createElement('a')
-              link.href = dataUrl
-              link.download = `${selectedModel.slug}-anatomy.png`
-              document.body.appendChild(link)
-              link.click()
-              document.body.removeChild(link)
-            }}
-            onVolumeSliceChange={setVolumeSlice}
-            onSegmentsChanged={(segments) => {
-              setDisplaySegments((prev) => {
-                const sameLength = prev.length === segments.length
-                const identical =
-                  sameLength &&
-                  prev.every((segment, index) => {
-                    const next = segments[index]
-                    return (
-                      next &&
-                      segment.id === next.id &&
-                      segment.color === next.color &&
-                      (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
-                    )
-                  })
-                if (identical) {
-                  return prev
-                }
-                return segments
-              })
-              setVisibleSegments((prev) => {
-                const next: Record<string, boolean> = {}
-                let changed = false
-
-                segments.forEach((segment) => {
-                  const current =
-                    segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
-                  next[segment.id] = current
-                  if (prev[segment.id] !== current) {
-                    changed = true
-                  }
+      <section className="container">
+        <AnatomyViewerDynamic
+          key={selectedModel.id}
+          model={viewerModel}
+          visibleSegments={visibleSegments}
+          crossSection={crossSection}
+          volumeSlice={volumeSlice}
+          showAnnotations={showAnnotations}
+          resetSignal={resetSignal}
+          showDebugHelpers={showDebugHelpers}
+          rotation={rotation}
+          controlPanel={viewerControlPanel}
+          onScreenshot={(dataUrl) => {
+            const link = document.createElement('a')
+            link.href = dataUrl
+            link.download = `${selectedModel.slug}-anatomy.png`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+          }}
+          onVolumeSliceChange={setVolumeSlice}
+          onSegmentsChanged={(segments) => {
+            setDisplaySegments((prev) => {
+              const sameLength = prev.length === segments.length
+              const identical =
+                sameLength &&
+                prev.every((segment, index) => {
+                  const next = segments[index]
+                  return (
+                    next &&
+                    segment.id === next.id &&
+                    segment.color === next.color &&
+                    (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
+                  )
                 })
+              if (identical) {
+                return prev
+              }
+              return segments
+            })
+            setVisibleSegments((prev) => {
+              const next: Record<string, boolean> = {}
+              let changed = false
 
-                if (Object.keys(prev).length !== Object.keys(next).length) {
+              segments.forEach((segment) => {
+                const current =
+                  segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
+                next[segment.id] = current
+                if (prev[segment.id] !== current) {
                   changed = true
                 }
-
-                return changed ? next : prev
               })
-            }}
-          />
-          <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold">Viewer controls</h2>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Cross-section</span>
-                <span className="font-semibold text-foreground">{crossSection}%</span>
-              </div>
+
+              if (Object.keys(prev).length !== Object.keys(next).length) {
+                changed = true
+              }
+
+              return changed ? next : prev
+            })
+          }}
+        />
+      </section>
+
+      <section className="container grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.55fr)]">
+        <div className="space-y-4 rounded-3xl border border-border/70 bg-muted/30 p-6">
+          <h2 className="text-lg font-semibold">About this structure</h2>
+          <p className="text-sm text-muted-foreground">{selectedModel.description}</p>
+          <div className="grid gap-4 text-sm text-muted-foreground md:grid-cols-2">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+                Clinical relevance
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground/90">
+                {selectedModel.clinicalRelevance}
+              </p>
             </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={crossSection}
-              onChange={(event) => setCrossSection(Number(event.target.value))}
-              className="w-full accent-primary"
-            />
-            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-              <button
-                type="button"
-                onClick={() => setShowAnnotations((prev) => !prev)}
-                className="rounded-full border border-border/60 px-4 py-1.5 transition hover:border-primary hover:text-primary"
-              >
-                {showAnnotations ? 'Hide annotations' : 'Show annotations'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCrossSection(0)
-                  setVisibleSegments(
-                    Object.fromEntries(
-                      segmentList.map((segment) => [
-                        segment.id,
-                        segment.visibleByDefault !== false,
-                      ]),
-                    ),
-                  )
-                  setShowAnnotations(true)
-                  setVolumeSlice(0)
-                  setResetSignal((signal) => signal + 1)
-                  setRotation({ x: 0, y: 0, z: 0 })
-                }}
-                className="rounded-full border border-border/60 px-4 py-1.5 transition hover:border-primary hover:text-primary"
-              >
-                Reset all
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowDebugHelpers((prev) => !prev)}
-                className="rounded-full border border-border/60 px-4 py-1.5 transition hover:border-primary hover:text-primary"
-              >
-                {showDebugHelpers ? 'Hide grid' : 'Show grid'}
-              </button>
-            </div>
-            <div className="grid gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 text-sm text-muted-foreground">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-foreground">Rotation</span>
-                <button
-                  type="button"
-                  onClick={() => setRotation({ x: 0, y: 0, z: 0 })}
-                  className="text-xs font-semibold text-primary transition hover:text-primary/80"
-                >
-                  Reset rotation
-                </button>
-              </div>
-              {(['x', 'y', 'z'] as const).map((axis) => (
-                <label key={axis} className="flex flex-col gap-2">
-                  <span className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-muted-foreground/80">
-                    <span>{axis.toUpperCase()} axis</span>
-                    <span className="text-foreground">{rotation[axis].toFixed(0)}°</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={360}
-                    step={1}
-                    value={rotation[axis]}
-                    onChange={(event) =>
-                      setRotation((prev) => ({ ...prev, [axis]: Number(event.target.value) }))
-                    }
-                    className="w-full accent-primary"
-                  />
-                </label>
-              ))}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+                Related procedures
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground/90">
+                {selectedModel.relatedProcedures.join(', ')}
+              </p>
             </div>
           </div>
         </div>
 
-        <aside className="space-y-8">
-          <div className="space-y-4 rounded-3xl border border-border/70 bg-muted/30 p-6">
-            <h2 className="text-lg font-semibold">About this structure</h2>
-            <p className="text-sm text-muted-foreground">{selectedModel.description}</p>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
-                  Clinical relevance
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground/90">
-                  {selectedModel.clinicalRelevance}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
-                  Related procedures
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground/90">
-                  {selectedModel.relatedProcedures.join(', ')}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3 text-sm text-muted-foreground/90">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
-                Segments
-              </h3>
-              <ul className="space-y-2">
-                {segmentList.map((segment) => (
-                  <li
-                    key={segment.id}
-                    className="flex items-center justify-between gap-2 rounded-2xl bg-background/60 px-3 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: segment.color }}
-                      />
-                      <span className="text-sm font-medium text-foreground">{segment.name}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleSegment(segment.id)}
-                      className="text-xs font-semibold text-primary transition hover:text-primary/80"
-                    >
-                      {(visibleSegments[segment.id] ?? true) ? 'Hide' : 'Show'}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
+          <h2 className="text-lg font-semibold">Download model</h2>
+          <p className="text-sm text-muted-foreground">
+            Export the optimized STL or GLB to incorporate in your rehearsal lab, print farm, or
+            teaching decks.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {downloads.map((download) => (
+              <Button key={download.url} asChild variant="outline">
+                <a href={download.url} download>
+                  {download.format.toUpperCase()} ·{' '}
+                  {download.sizeMB ? `${download.sizeMB} MB` : 'N/A'}
+                </a>
+              </Button>
+            ))}
           </div>
-
-          <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
-            <h2 className="text-lg font-semibold">Download model</h2>
-            <p className="text-sm text-muted-foreground">
-              Export the optimized STL or GLB to incorporate in your rehearsal lab, print farm, or
-              teaching decks.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {downloads.map((download) => (
-                <Button key={download.url} asChild variant="outline">
-                  <a href={download.url} download>
-                    {download.format.toUpperCase()} ·{' '}
-                    {download.sizeMB ? `${download.sizeMB} MB` : 'N/A'}
-                  </a>
+          {xrModel ? (
+            <div className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-background/60 p-4">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Spatial headset mode</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Open the viewer in a WebXR-capable headset browser to inspect the model at room
+                  scale. Select or pinch a visible segment to move it; squeeze recenters it.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild>
+                  <Link href={`/xr/${xrModel.slug}` as Route}>Open fullscreen spatial viewer</Link>
                 </Button>
-              ))}
-            </div>
-            {xrModel ? (
-              <div className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-background/60 p-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">Spatial headset mode</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Open the viewer in a WebXR-capable headset browser to inspect the model at room
-                    scale. Select or pinch a visible segment to move it; squeeze recenters it.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild>
-                    <Link href={`/xr/${xrModel.slug}` as Route}>
-                      Open fullscreen spatial viewer
-                    </Link>
+                {xrModel.usdzSrc ? (
+                  <Button asChild variant="outline">
+                    <a href={xrModel.usdzSrc} rel="ar">
+                      View in AR
+                    </a>
                   </Button>
-                  {xrModel.usdzSrc ? (
-                    <Button asChild variant="outline">
-                      <a href={xrModel.usdzSrc} rel="ar">
-                        View in AR
-                      </a>
-                    </Button>
-                  ) : null}
-                </div>
+                ) : null}
               </div>
-            ) : null}
-            {selectedModel.notes ? (
-              <p className="text-xs text-muted-foreground/80">{selectedModel.notes}</p>
-            ) : null}
-          </div>
-        </aside>
-      </section>
-
-      <section className="container space-y-5">
-        <h2 className="text-xl font-semibold tracking-tight">Switch models</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {models.map((model) => (
-            <button
-              key={model.id}
-              type="button"
-              onClick={() => handleModelChange(model)}
-              className={`flex flex-col items-start gap-2 rounded-2xl border px-4 py-3 text-left transition hover:border-primary hover:text-primary ${selectedModel.id === model.id ? 'border-primary text-primary' : 'border-border/70'}`}
-            >
-              <span className="text-sm font-semibold">{model.name}</span>
-              <span className="text-xs text-muted-foreground">{model.description}</span>
-            </button>
-          ))}
+            </div>
+          ) : null}
+          {selectedModel.notes ? (
+            <p className="text-xs text-muted-foreground/80">{selectedModel.notes}</p>
+          ) : null}
         </div>
       </section>
     </div>

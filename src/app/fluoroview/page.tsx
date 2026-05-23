@@ -1,19 +1,19 @@
 import type { Metadata } from 'next'
 
-import { FluoroViewApp } from '@/components/fluoroview/FluoroViewApp'
+import { FluoroViewAppDynamic } from '@/components/fluoroview/FluoroViewAppDynamic'
 import { Badge } from '@/components/ui/badge'
 
 export const metadata: Metadata = {
-  title: 'FluoroView',
+  title: 'FluoroView CT-to-Fluoroscopy Simulator',
   description:
-    'Interact with a labeled tracheobronchial tree, practice fluoroscopic orientations, and drill segmental anatomy in a browser-based simulator.',
+    'Explore non-diagnostic CT-to-fluoroscopy correlation, C-arm angles, educational knobology, and transparent airway overlays.',
 }
 
 const learningObjectives = [
-  'Correlate tracheobronchial segment anatomy with fluoroscopic projections across RAO/LAO and cranial/caudal sweeps.',
-  'Recognize lobar and segmental silhouettes in simulated C-arm rotations to speed up airway navigation.',
-  'Build a mental model for depth by toggling DTS emphasis and wireframe overlays on the airway tree.',
-  'Use lobar filters to quiz yourself or trainees on regional anatomy during live teaching sessions.',
+  'Correlate CT slice position with a simulated fluoroscopic projection.',
+  'Practice RAO/LAO and cranial/caudal angle changes using a precomputed DRR atlas.',
+  'Explore how kVp, mA, pulse rate, collimation, magnification, ABC/AERC, noise, scatter, and blur affect an educational image.',
+  'Overlay airway surfaces, wireframe, labels, and centerlines while preserving non-diagnostic safety framing.',
 ]
 
 export default function FluoroViewPage() {
@@ -29,12 +29,12 @@ export default function FluoroViewPage() {
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">FluoroView</h1>
           <p className="max-w-3xl text-muted-foreground text-base md:text-lg">
-            Spin a detailed airway model under simulated fluoroscopy, label-check each segment, and
-            rehearse the C-arm sequences you use in rigid bronchoscopy, robotic navigation, and
-            peripheral interventions. Built to mirror real cath-lab geometry in the browser.
+            Compare derived CT slices with simulated fluoroscopy, rehearse C-arm orientation, and
+            use a transparent 3D airway overlay to teach anatomy and projection behavior. This is an
+            educational simulator only, not a clinical imaging or guidance tool.
           </p>
         </div>
-        <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
+        <div className="rounded-lg border border-border/70 bg-card/70 p-6">
           <h2 className="text-lg font-semibold text-foreground">Learning objectives</h2>
           <ul className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
             {learningObjectives.map((objective) => (
@@ -48,7 +48,7 @@ export default function FluoroViewPage() {
       </section>
 
       <section className="container space-y-8">
-        <FluoroViewApp />
+        <FluoroViewAppDynamic />
       </section>
     </div>
   )

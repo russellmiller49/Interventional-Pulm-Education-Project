@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import { Hero } from '@/components/home/hero'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { areDraftModulesEnabled, isVisibleModulePath } from '@/lib/draft-modules'
 
 export default function HomePage() {
   const featureHighlights = [
@@ -23,6 +24,14 @@ export default function HomePage() {
         'Drive a virtual bronchoscope through branch choices while correlating CT planes, airway views, and target paths.',
       href: '/bronch-navigation-trainer',
       cta: 'Start Navigation',
+    },
+    {
+      badge: 'Intro Bronchoscopy',
+      title: 'Bronchoscope Size Explorer',
+      description:
+        'Compare scope outer diameter, working channel area, estimated airway reach, and instrument compatibility.',
+      href: '/intro-bronchoscopy',
+      cta: 'Open Explorer',
     },
     {
       badge: '3D Models',
@@ -57,6 +66,9 @@ export default function HomePage() {
       cta: 'Preview updates',
     },
   ] as const
+  const visibleFeatureHighlights = featureHighlights.filter((link) =>
+    isVisibleModulePath(link.href),
+  )
 
   return (
     <div className="space-y-24 py-12 md:py-16">
@@ -106,6 +118,11 @@ export default function HomePage() {
                     Bronch Navigation Trainer
                   </Link>
                 </Button>
+                {areDraftModulesEnabled ? (
+                  <Button asChild variant="secondary" className="rounded-full px-6">
+                    <Link href={'/intro-bronchoscopy' as Route}>Intro Bronchoscopy</Link>
+                  </Button>
+                ) : null}
                 <Button asChild variant="secondary" className="rounded-full px-6">
                   <Link href="/board-prep">Board Review Library</Link>
                 </Button>
@@ -180,7 +197,7 @@ export default function HomePage() {
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {featureHighlights.map((link) => (
+          {visibleFeatureHighlights.map((link) => (
             <Link
               key={link.href}
               href={link.href as Route}

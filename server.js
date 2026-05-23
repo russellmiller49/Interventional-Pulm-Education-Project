@@ -1,47 +1,27 @@
-const next = require('next')
-const express = require('express')
-const path = require('path')
+const { spawn } = require('node:child_process')
+const fs = require('node:fs')
+const path = require('node:path')
 
-const dev = process.env.NODE_ENV !== 'production'
-const hostname = dev ? 'localhost' : '0.0.0.0'
-const port = process.env.PORT || 3000
-const app = next({ dev })
-const handle = app.getRequestHandler()
+const portArgIndex = process.argv.findIndex((arg) => arg === '-p' || arg === '--port')
+const port = process.env.PORT || (portArgIndex >= 0 ? process.argv[portArgIndex + 1] : '3000')
+const nextBin = require.resolve('next/dist/bin/next')
+const standaloneServer = path.join(__dirname, '.next', 'standalone', 'server.js')
+const command = fs.existsSync(standaloneServer) ? standaloneServer : nextBin
+const args = fs.existsSync(standaloneServer) ? [] : ['start', '-p', port]
 
-app
-  .prepare()
-  .then(() => {
-    const server = express()
+const child = spawn(process.execPath, [command, ...args], {
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    PORT: port,
+  },
+})
 
-    // Health check endpoint
-    server.get('/health', (req, res) => {
-      res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        port: port,
-        hostname: hostname,
-      })
-    })
+child.on('exit', (code, signal) => {
+  if (signal) {
+    process.kill(process.pid, signal)
+    return
+  }
 
-    // Serve static files from the public directory
-    server.use('/public', express.static(path.join(__dirname, 'public')))
-    server.use('/models', express.static(path.join(__dirname, 'public', 'models')))
-    server.use('/draco', express.static(path.join(__dirname, 'public', 'draco')))
-
-    server.use((req, res) => {
-      return handle(req, res)
-    })
-
-    server.listen(port, hostname, (err) => {
-      if (err) {
-        console.error('Failed to start server:', err)
-        throw err
-      }
-      console.log(`> Ready on http://${hostname}:${port}`)
-    })
-  })
-  .catch((err) => {
-    console.error('Failed to prepare Next.js app:', err)
-    process.exit(1)
-  })
+  process.exit(code ?? 0)
+})

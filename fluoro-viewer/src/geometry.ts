@@ -1,6 +1,11 @@
-import type { Mat3, Vec3 } from './types'
+import type { FluoroConfig, Mat3, SlicerFrontalProjection, Vec2, Vec3 } from './types'
 
 const EPS = 1e-6
+const IDENTITY_MAT3: Mat3 = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+]
 
 export function degToRad(deg: number): number {
   return (deg * Math.PI) / 180
@@ -10,6 +15,124 @@ export function createRotationMatrix(raoLaoDeg: number, cranialCaudalDeg: number
   const rz = createRz(degToRad(raoLaoDeg))
   const rx = createRx(degToRad(cranialCaudalDeg))
   return multiplyMat3(rx, rz)
+}
+
+export interface DetectorFrame {
+  sourceLps: Vec3
+  detectorCenterLps: Vec3
+  detectorUAxisLps: Vec3
+  detectorVAxisLps: Vec3
+  detectorNormalLps: Vec3
+  detectorSizeMm: Vec2
+  worldToDetectorRotation: Mat3
+  calibrationOffsetLocalMm: Vec3
+}
+
+export function detectorFrameForAngles(
+  config: FluoroConfig,
+  raoLaoDeg: number,
+  cranialCaudalDeg: number,
+): DetectorFrame {
+  const worldToDetectorRotation = createRotationMatrix(-raoLaoDeg, -cranialCaudalDeg)
+  const detectorToWorldRotation = transposeMat3(worldToDetectorRotation)
+  const sad = config.source_to_isocenter_mm
+  const sid = config.source_to_detector_mm
+  const sourceLocal: Vec3 = [0, -sad, 0]
+  const detectorCenterLocal: Vec3 = [0, sid - sad, 0]
+  const detectorUAxisLps = normalize(rotateVec(detectorToWorldRotation, [1, 0, 0]))
+  const detectorVAxisLps = normalize(rotateVec(detectorToWorldRotation, [0, 0, 1]))
+  const detectorNormalLps = normalize(rotateVec(detectorToWorldRotation, [0, 1, 0]))
+  const calibrationOffsetLocalMm = computeOverlayCalibrationTranslation(
+    config,
+    worldToDetectorRotation,
+  )
+
+  return {
+    sourceLps: add(config.isocenter_mm, rotateVec(detectorToWorldRotation, sourceLocal)),
+    detectorCenterLps: add(
+      config.isocenter_mm,
+      rotateVec(detectorToWorldRotation, detectorCenterLocal),
+    ),
+    detectorUAxisLps,
+    detectorVAxisLps,
+    detectorNormalLps,
+    detectorSizeMm: [
+      config.detector_pixels[0] * config.pixel_pitch_mm,
+      config.detector_pixels[1] * config.pixel_pitch_mm,
+    ],
+    worldToDetectorRotation,
+    calibrationOffsetLocalMm,
+  }
+}
+
+export function detectorFrameForSlicerProjection(
+  config: FluoroConfig,
+  projection: SlicerFrontalProjection,
+  raoLaoDeg: number,
+  cranialCaudalDeg: number,
+): DetectorFrame {
+  const sourceLpsBase = rasToLps(projection.positionRasMm)
+  const forwardRas = normalize(subtract(projection.focalPointRasMm, projection.positionRasMm))
+  const upRas = normalize(projection.viewUpRas)
+  const imageRightRas = normalize(cross(upRas, forwardRas))
+  const detectorUBase = normalize(rasVectorToLps(imageRightRas))
+  const detectorVBase = normalize(rasVectorToLps(upRas))
+  const detectorNormalBase = normalize(rasVectorToLps(forwardRas))
+  const detectorCenterBase = add(
+    sourceLpsBase,
+    scale(detectorNormalBase, projection.sourceToImageDistanceMm),
+  )
+
+  const deltaRao = raoLaoDeg - config.default_view.rao_lao_deg
+  const deltaCranial = cranialCaudalDeg - config.default_view.cranial_caudal_deg
+  const worldToDetectorRotation = createRotationMatrix(-deltaRao, -deltaCranial)
+  const detectorToWorldRotation = transposeMat3(worldToDetectorRotation)
+
+  return {
+    sourceLps: rotateAround(config.isocenter_mm, sourceLpsBase, detectorToWorldRotation),
+    detectorCenterLps: rotateAround(
+      config.isocenter_mm,
+      detectorCenterBase,
+      detectorToWorldRotation,
+    ),
+    detectorUAxisLps: normalize(rotateVec(detectorToWorldRotation, detectorUBase)),
+    detectorVAxisLps: normalize(rotateVec(detectorToWorldRotation, detectorVBase)),
+    detectorNormalLps: normalize(rotateVec(detectorToWorldRotation, detectorNormalBase)),
+    detectorSizeMm: projection.detectorSizeMm,
+    worldToDetectorRotation,
+    calibrationOffsetLocalMm: [0, 0, 0],
+  }
+}
+
+export function detectorPercentToLocalMm(config: FluoroConfig, percent: Vec2): Vec3 {
+  const detectorWidthMm = config.detector_pixels[0] * config.pixel_pitch_mm
+  const detectorHeightMm = config.detector_pixels[1] * config.pixel_pitch_mm
+
+  return [
+    (percent[0] / 100 - 0.5) * detectorWidthMm,
+    0,
+    (0.5 - percent[1] / 100) * detectorHeightMm,
+  ]
+}
+
+export function computeOverlayCalibrationTranslation(
+  config: FluoroConfig,
+  rotationMatrix: Mat3 = IDENTITY_MAT3,
+): Vec3 {
+  const calibration = config.overlay_calibration
+  if (!calibration) {
+    return [0, 0, 0]
+  }
+
+  if (calibration.reference_translation_mm) {
+    return calibration.reference_translation_mm
+  }
+
+  const localCarina = subtract(calibration.carina_lps_mm, config.isocenter_mm)
+  const rotatedCarina = rotateVec(rotationMatrix, localCarina)
+  const target = detectorPercentToLocalMm(config, calibration.target_detector_percent)
+
+  return [target[0] - rotatedCarina[0], 0, target[2] - rotatedCarina[2]]
 }
 
 export function createRz(theta: number): Mat3 {
@@ -46,6 +169,14 @@ export function multiplyMat3(a: Mat3, b: Mat3): Mat3 {
   return out
 }
 
+export function transposeMat3(matrix: Mat3): Mat3 {
+  return [
+    [matrix[0][0], matrix[1][0], matrix[2][0]],
+    [matrix[0][1], matrix[1][1], matrix[2][1]],
+    [matrix[0][2], matrix[1][2], matrix[2][2]],
+  ]
+}
+
 export function rotateVec(matrix: Mat3, v: Vec3): Vec3 {
   return [
     matrix[0][0] * v[0] + matrix[0][1] * v[1] + matrix[0][2] * v[2],
@@ -56,6 +187,22 @@ export function rotateVec(matrix: Mat3, v: Vec3): Vec3 {
 
 export function subtract(a: Vec3, b: Vec3): Vec3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+export function add(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+export function scale(v: Vec3, scalar: number): Vec3 {
+  return [v[0] * scalar, v[1] * scalar, v[2] * scalar]
+}
+
+export function dot(a: Vec3, b: Vec3): number {
+  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+export function cross(a: Vec3, b: Vec3): Vec3 {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
 export function length(v: Vec3): number {
@@ -77,4 +224,16 @@ export function clamp01(value: number): number {
   if (value <= 0) return 0
   if (value >= 1) return 1
   return value
+}
+
+function rasToLps(point: Vec3): Vec3 {
+  return [-point[0], -point[1], point[2]]
+}
+
+function rasVectorToLps(vector: Vec3): Vec3 {
+  return [-vector[0], -vector[1], vector[2]]
+}
+
+function rotateAround(center: Vec3, point: Vec3, rotation: Mat3): Vec3 {
+  return add(center, rotateVec(rotation, subtract(point, center)))
 }

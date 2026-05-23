@@ -66,6 +66,8 @@ async function bootstrap() {
     useDts: false,
     useWireframe: false,
     showLabels: true,
+    overlayMode: 'surface',
+    overlayOpacity: 0.7,
     activeGroups: new Set([...GOLDEN_ORDER, ORIGIN_GROUP]),
   }
 

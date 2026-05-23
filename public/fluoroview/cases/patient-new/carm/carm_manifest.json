@@ -1,0 +1,88 @@
+{
+  "coordinateSystem": "LPS",
+  "sadMm": 600.0,
+  "sidMm": 800.0,
+  "detectorPixelPitchMm": 0.5,
+  "detectorPixels": [1024, 1024],
+  "detectorSizeMm": [512.0, 512.0],
+  "rest": {
+    "armLDeg": -90.0,
+    "armPDeg": 0.0,
+    "armCDeg": 0.0,
+    "detectorRotationDeg": 90.0,
+    "tableShiftMm": [0.0, -15.0, 0.0]
+  },
+  "transforms": [
+    {
+      "id": "gantry-to-ras",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 5.999999999999972, 0.0, 1.0, 0.0, 107.09999999999988, 0.0, 0.0, 1.0, 209.75,
+        0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "positioning",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "frontal-arm-l-rotation",
+      "matrixLpsFromParent": [
+        2.220446049250313e-16, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 2.220446049250313e-16,
+        0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "frontal-arm-p-rotation",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "frontal-arm-c-rotation",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "frontal-detector-translation",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 80.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "frontal-detector-rotation",
+      "matrixLpsFromParent": [
+        2.220446049250313e-16, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 2.220446049250313e-16,
+        0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "frontal-camera-to-detector",
+      "matrixLpsFromParent": [
+        -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 800.0, 0.0, -1.0, 0.0, 1600.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "table-vertical",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -15.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "table-longitudinal",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    },
+    {
+      "id": "table-lateral",
+      "matrixLpsFromParent": [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      ]
+    }
+  ],
+  "gantryGlbUri": "/fluoroview/cases/patient-new/carm/carm_gantry.glb",
+  "animationGlbUri": "/fluoroview/cases/patient-new/carm/c_arm_animation.glb?v=untextured-1"
+}

@@ -1,8 +1,8 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useCallback, useEffect, useState } from 'react'
 
-import SignInModal from '@/components/auth/SignInModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +14,10 @@ import {
 import { getSupabasePublicConfig, setSupabasePublicConfig } from '@/lib/supabase/config'
 
 const embeddedCourseAppPath = '/socal-ebus-course/app/index.html'
+
+const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
+  ssr: false,
+})
 
 type EmbedStatus = 'checking' | 'signed-in' | 'signed-out' | 'local-only' | 'error'
 

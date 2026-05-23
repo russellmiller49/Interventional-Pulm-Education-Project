@@ -9,8 +9,6 @@ import {
   LineBasicMaterial,
   LineSegments,
   MathUtils,
-  Matrix4,
-  Mesh,
   PerspectiveCamera,
   Scene,
   Vector2,
@@ -18,16 +16,34 @@ import {
   WebGLRenderer,
   Raycaster,
   type Material,
+  type Mesh,
   type Object3D,
 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
-import { createRotationMatrix, smoothstep } from './geometry'
+import {
+  add,
+  cross,
+  detectorFrameForAngles,
+  detectorFrameForSlicerProjection,
+  dot,
+  scale,
+  smoothstep,
+  subtract,
+  type DetectorFrame,
+} from './geometry'
 import { ensureGroupAssignment, groupKeyForLabel } from './grouping'
-import type { AppState, FluoroConfig, Mat3, PreparedSegment, RenderStats } from './types'
+import type {
+  AppState,
+  AssetTransform,
+  FluoroConfig,
+  PreparedSegment,
+  RenderStats,
+  SlicerFrontalProjection,
+  Vec3,
+} from './types'
 
-const DETECTOR_NORMAL = new Vector3(0, 1, 0)
 const SOURCE_COLOR = 0xffffff
 
 interface SegmentInstance {
@@ -45,8 +61,10 @@ export class FluoroRenderer {
   private readonly scene: Scene
   private readonly camera: PerspectiveCamera
   private readonly root: Group
+  private readonly calibrationProjection?: SlicerFrontalProjection
   private readonly sourcePosition = new Vector3()
-  private readonly renderMatrix = new Matrix4()
+  private readonly overlayCalibrationOffset = new Vector3()
+  private readonly detectorNormal = new Vector3(0, 1, 0)
   private readonly pointer = new Vector2()
   private pointerActive = false
   private readonly tmpVec = new Vector3()
@@ -59,6 +77,9 @@ export class FluoroRenderer {
   private lastCanvasWidth = 0
   private lastCanvasHeight = 0
   private lastPixelRatio = 0
+  private assetScene: Object3D | null = null
+  private assetBaseScale = 1000
+  private assetBasePositionOffset: Vec3 = [0, 0, 0]
 
   private segments: PreparedSegment[] = []
   private instances: SegmentInstance[] = []
@@ -67,16 +88,20 @@ export class FluoroRenderer {
     canvas: HTMLCanvasElement
     labelLayer: HTMLElement
     config: FluoroConfig
+    calibrationProjection?: SlicerFrontalProjection
   }) {
     this.canvas = options.canvas
     this.labelLayer = options.labelLayer
     this.config = options.config
+    this.calibrationProjection = options.calibrationProjection
 
     const fov = computeVerticalFov(options.config)
-    this.camera = new PerspectiveCamera(fov, 1, 10, options.config.source_to_detector_mm * 1.2)
-    this.camera.position.set(0, -options.config.source_to_isocenter_mm, 0)
-    this.camera.up.set(0, 0, 1)
-    this.camera.lookAt(0, 0, 0)
+    this.camera = new PerspectiveCamera(
+      fov,
+      1,
+      1,
+      Math.max(4000, options.config.source_to_detector_mm * 4),
+    )
 
     this.scene = new Scene()
     this.root = new Group()
@@ -91,11 +116,14 @@ export class FluoroRenderer {
     })
     this.renderer.setClearColor(0x05070c, 0)
 
-    this.sourcePosition.set(0, -options.config.source_to_isocenter_mm, 0)
+    this.applyDetectorFrame(this.frameForAngles(0, 0))
   }
 
-  async loadGlb(path: string, options?: { dracoBaseUrl?: string }): Promise<PreparedSegment[]> {
-    const { dracoBaseUrl = '/draco/' } = options ?? {}
+  async loadGlb(
+    path: string,
+    options?: { dracoBaseUrl?: string; transform?: AssetTransform },
+  ): Promise<PreparedSegment[]> {
+    const { dracoBaseUrl = '/draco/', transform } = options ?? {}
     const loader = new GLTFLoader()
     const draco = new DRACOLoader()
     draco.setDecoderPath(ensureTrailingSlash(dracoBaseUrl))
@@ -108,13 +136,19 @@ export class FluoroRenderer {
     this.instances = []
     this.pickables = []
     this.objectToInstance = new Map<Object3D, SegmentInstance>()
+    this.assetScene = gltf.scene
+    this.assetBaseScale = transform?.sceneScale ?? 1000
+    this.assetBasePositionOffset = transform?.positionOffsetMm ?? [0, 0, 0]
 
-    gltf.scene.scale.setScalar(1000)
-    gltf.scene.position.set(
-      -this.config.isocenter_mm[0],
-      -this.config.isocenter_mm[1],
-      -this.config.isocenter_mm[2],
-    )
+    gltf.scene.scale.setScalar(this.assetBaseScale)
+    if (transform?.rotationDeg) {
+      gltf.scene.rotation.set(
+        MathUtils.degToRad(transform.rotationDeg[0]),
+        MathUtils.degToRad(transform.rotationDeg[1]),
+        MathUtils.degToRad(transform.rotationDeg[2]),
+      )
+    }
+    this.setModelAdjustment()
     gltf.scene.updateMatrixWorld(true)
 
     this.root.add(gltf.scene)
@@ -145,12 +179,18 @@ export class FluoroRenderer {
         colorRgb,
         groupKey: groupKeyForLabel(label),
         anchor: [anchor.x, anchor.y, anchor.z],
+        meshSamplePointsLps: sampleMeshSurfacePointsLps(
+          child,
+          this.config.isocenter_mm,
+          this.assetBasePositionOffset,
+          /complete[_\s]?airway/i.test(label) ? 24000 : 1200,
+        ),
         object: child,
       }
 
       // Don't create labels for full tree, full lobes, or generic lobe labels
       const interactive =
-        !/tree[_\s]?full|lobe[_\s]?\(full\)|lobe[_\s]?full|^(left|right)[_\s]+(upper|middle|lower)[_\s]+lobe[_\s]*$/i.test(
+        !/complete[_\s]?airway|tree[_\s]?full|lobe[_\s]?\(full\)|lobe[_\s]?full|^(left|right)[_\s]+(upper|middle|lower)[_\s]+lobe[_\s]*$/i.test(
           label.toLowerCase(),
         )
       const labelEl = interactive ? document.createElement('div') : null
@@ -190,13 +230,33 @@ export class FluoroRenderer {
     return this.segments
   }
 
+  setModelAdjustment(options?: { offsetMm?: Vec3; scale?: number }) {
+    if (!this.assetScene) return
+    const offset = options?.offsetMm ?? [0, 0, 0]
+    const scaleFactor = Number.isFinite(options?.scale) ? Math.max(0.1, options?.scale ?? 1) : 1
+    this.assetScene.scale.setScalar(this.assetBaseScale * scaleFactor)
+    this.assetScene.position.set(
+      -this.config.isocenter_mm[0] + this.assetBasePositionOffset[0] + offset[0],
+      -this.config.isocenter_mm[1] + this.assetBasePositionOffset[1] + offset[1],
+      -this.config.isocenter_mm[2] + this.assetBasePositionOffset[2] + offset[2],
+    )
+    this.assetScene.updateMatrixWorld(true)
+  }
+
   render(state: AppState): RenderStats {
     this.updateRendererSize()
-    applyRotationToGroup(
-      this.root,
-      createRotationMatrix(-state.raoLao, -state.cranialCaudal),
-      this.renderMatrix,
+    const overlayMode = state.overlayMode ?? 'surface'
+    const overlayOpacity = MathUtils.clamp(state.overlayOpacity ?? 0.7, 0, 1)
+    const frame = this.frameForAngles(state.raoLao, state.cranialCaudal)
+    this.applyDetectorFrame(frame)
+    const calibrationOffset = detectorLocalOffsetToLps(frame)
+    this.overlayCalibrationOffset.set(
+      calibrationOffset[0],
+      calibrationOffset[1],
+      calibrationOffset[2],
     )
+    this.root.position.copy(this.overlayCalibrationOffset)
+    this.root.rotation.set(0, 0, 0)
     this.root.updateMatrixWorld(true)
 
     let hovered: SegmentInstance | null = null
@@ -216,13 +276,16 @@ export class FluoroRenderer {
     for (const instance of this.instances) {
       const { segment, labelEl, materials, edgeHelpers } = instance
       const isActive = state.activeGroups.has(segment.groupKey)
-      segment.object.visible = isActive
+      segment.object.visible = isActive && overlayMode !== 'off'
 
       for (const helper of edgeHelpers) {
-        const showWire = state.useWireframe && isActive
+        const showWire =
+          (state.useWireframe || overlayMode === 'wireframe' || overlayMode === 'centerline') &&
+          isActive &&
+          overlayMode !== 'off'
         helper.visible = showWire
         const lineMat = helper.material as LineBasicMaterial
-        const targetEdgeOpacity = showWire ? 0.55 : 0
+        const targetEdgeOpacity = showWire ? 0.65 * overlayOpacity : 0
         if (lineMat.opacity !== targetEdgeOpacity) {
           lineMat.opacity = targetEdgeOpacity
           lineMat.needsUpdate = true
@@ -232,20 +295,20 @@ export class FluoroRenderer {
       const anchorLocal = this.tmpVec.set(segment.anchor[0], segment.anchor[1], segment.anchor[2])
       const worldAnchor = this.tmpWorld.copy(anchorLocal).applyMatrix4(this.root.matrixWorld)
       const rayDir = this.tmpRay.copy(worldAnchor).sub(this.sourcePosition).normalize()
-      const depthWeight = smoothstep(0.35, 0.95, rayDir.dot(DETECTOR_NORMAL))
+      const depthWeight = smoothstep(0.35, 0.95, rayDir.dot(this.detectorNormal))
 
       for (const material of materials) {
-        if ('opacity' in material && 'transparent' in material) {
-          const solidOpacity = 0.82
-          const minOpacity = state.useWireframe ? 0.2 : 0.35
-          const targetOpacity = state.useDts
-            ? MathUtils.lerp(minOpacity, solidOpacity, depthWeight)
-            : solidOpacity
-          if ((material as any).opacity !== targetOpacity) {
-            ;(material as any).opacity = targetOpacity
-            ;(material as any).transparent = true
-            material.needsUpdate = true
-          }
+        const solidOpacity = 0.82
+        const minOpacity = state.useWireframe || overlayMode === 'wireframe' ? 0.12 : 0.35
+        const surfaceOpacity =
+          overlayMode === 'wireframe' || overlayMode === 'centerline' ? 0.12 : solidOpacity
+        const targetOpacity =
+          (state.useDts ? MathUtils.lerp(minOpacity, solidOpacity, depthWeight) : surfaceOpacity) *
+          overlayOpacity
+        if (material.opacity !== targetOpacity) {
+          material.opacity = targetOpacity
+          material.transparent = true
+          material.needsUpdate = true
         }
         if ('depthWrite' in material && material.depthWrite !== false) {
           material.depthWrite = false
@@ -261,7 +324,7 @@ export class FluoroRenderer {
       }
     }
 
-    if (hovered && hovered.labelEl && state.showLabels) {
+    if (hovered && hovered.labelEl && state.showLabels && overlayMode !== 'off') {
       const { segment, labelEl } = hovered
       const anchor = this.tmpVec.set(segment.anchor[0], segment.anchor[1], segment.anchor[2])
       const world = this.tmpWorld.copy(anchor).applyMatrix4(this.root.matrixWorld)
@@ -280,7 +343,9 @@ export class FluoroRenderer {
         labelEl.style.top = `${top}px`
 
         const rayDir = this.tmpVec.copy(world).sub(this.sourcePosition).normalize()
-        const depthWeight = state.useDts ? smoothstep(0.4, 0.95, rayDir.dot(DETECTOR_NORMAL)) : 1
+        const depthWeight = state.useDts
+          ? smoothstep(0.4, 0.95, rayDir.dot(this.detectorNormal))
+          : 1
         labelEl.style.opacity = depthWeight > 0.05 ? depthWeight.toFixed(2) : '0'
       }
     }
@@ -314,6 +379,50 @@ export class FluoroRenderer {
     }
   }
 
+  private frameForAngles(raoLaoDeg: number, cranialCaudalDeg: number): DetectorFrame {
+    return this.calibrationProjection
+      ? detectorFrameForSlicerProjection(
+          this.config,
+          this.calibrationProjection,
+          raoLaoDeg,
+          cranialCaudalDeg,
+        )
+      : detectorFrameForAngles(this.config, raoLaoDeg, cranialCaudalDeg)
+  }
+
+  private applyDetectorFrame(frame: DetectorFrame) {
+    const sourceLocal = subtract(frame.sourceLps, this.config.isocenter_mm)
+    const detectorCenterLocal = subtract(frame.detectorCenterLps, this.config.isocenter_mm)
+    const sourceToDetectorMm = Math.max(
+      1,
+      dot(subtract(frame.detectorCenterLps, frame.sourceLps), frame.detectorNormalLps),
+    )
+    const nextFov =
+      (2 * Math.atan(frame.detectorSizeMm[1] / 2 / sourceToDetectorMm) * 180) / Math.PI
+    const cameraRight = cross(frame.detectorNormalLps, frame.detectorVAxisLps)
+    const mirrorX = dot(cameraRight, frame.detectorUAxisLps) < 0
+
+    this.camera.position.set(sourceLocal[0], sourceLocal[1], sourceLocal[2])
+    this.camera.up.set(
+      frame.detectorVAxisLps[0],
+      frame.detectorVAxisLps[1],
+      frame.detectorVAxisLps[2],
+    )
+    this.camera.lookAt(detectorCenterLocal[0], detectorCenterLocal[1], detectorCenterLocal[2])
+    this.camera.fov = nextFov
+    this.camera.updateProjectionMatrix()
+    if (mirrorX) {
+      this.camera.projectionMatrix.elements[0] *= -1
+      this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert()
+    }
+    this.sourcePosition.set(sourceLocal[0], sourceLocal[1], sourceLocal[2])
+    this.detectorNormal.set(
+      frame.detectorNormalLps[0],
+      frame.detectorNormalLps[1],
+      frame.detectorNormalLps[2],
+    )
+  }
+
   setPointer(x: number, y: number): boolean {
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
       return this.clearPointer()
@@ -339,34 +448,22 @@ function ensureTrailingSlash(path: string): string {
   return path.endsWith('/') ? path : `${path}/`
 }
 
-function applyRotationToGroup(group: Group, mat: Mat3, target: Matrix4) {
-  target.set(
-    mat[0][0],
-    mat[0][1],
-    mat[0][2],
-    0,
-    mat[1][0],
-    mat[1][1],
-    mat[1][2],
-    0,
-    mat[2][0],
-    mat[2][1],
-    mat[2][2],
-    0,
-    0,
-    0,
-    0,
-    1,
-  )
-  group.setRotationFromMatrix(target)
-}
-
 function computeVerticalFov(config: FluoroConfig): number {
-  const sid = config.source_to_isocenter_mm
+  const sid = config.source_to_detector_mm
   const detectorHeight = config.detector_pixels[1] * config.pixel_pitch_mm
   const halfHeight = detectorHeight / 2
   const fovRad = 2 * Math.atan(halfHeight / sid)
   return (fovRad * 180) / Math.PI
+}
+
+function detectorLocalOffsetToLps(frame: DetectorFrame): Vec3 {
+  return add(
+    add(
+      scale(frame.detectorUAxisLps, frame.calibrationOffsetLocalMm[0]),
+      scale(frame.detectorNormalLps, frame.calibrationOffsetLocalMm[1]),
+    ),
+    scale(frame.detectorVAxisLps, frame.calibrationOffsetLocalMm[2]),
+  )
 }
 
 function addLights(scene: Scene) {
@@ -397,14 +494,18 @@ function extractColor(mesh: Mesh): Color {
   const material = mesh.material
   if (Array.isArray(material)) {
     for (const mat of material) {
-      if ((mat as any).color) {
-        return ((mat as any).color as Color).clone()
+      if (hasMaterialColor(mat)) {
+        return mat.color.clone()
       }
     }
-  } else if ((material as any).color) {
-    return ((material as any).color as Color).clone()
+  } else if (hasMaterialColor(material)) {
+    return material.color.clone()
   }
   return new Color(0x4ba1ff)
+}
+
+function hasMaterialColor(material: Material): material is Material & { color: Color } {
+  return 'color' in material && material.color instanceof Color
 }
 
 function configureMaterials(object: Object3D) {
@@ -413,11 +514,11 @@ function configureMaterials(object: Object3D) {
       const mesh = child as Mesh
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       for (const mat of materials) {
-        if ('side' in mat) (mat as any).side = DoubleSide
-        if ('transparent' in mat) (mat as any).transparent = true
-        if ('opacity' in mat) (mat as any).opacity = 0.68
-        if ('depthWrite' in mat) (mat as any).depthWrite = false
-        if ('toneMapped' in mat) (mat as any).toneMapped = false
+        mat.side = DoubleSide
+        mat.transparent = true
+        mat.opacity = 0.68
+        mat.depthWrite = false
+        mat.toneMapped = false
       }
     }
   })
@@ -467,8 +568,57 @@ function getAnchor(object: Object3D): Vector3 {
   return center
 }
 
+function sampleMeshSurfacePointsLps(
+  object: Object3D,
+  isocenterMm: Vec3,
+  positionOffsetMm: Vec3,
+  maxPoints: number,
+): Float32Array | undefined {
+  const meshes: Mesh[] = []
+  object.traverse((child) => {
+    const mesh = child as Mesh
+    const geometry = mesh.geometry
+    if (geometry?.getAttribute?.('position')) {
+      meshes.push(mesh)
+    }
+  })
+
+  const totalVertices = meshes.reduce(
+    (total, mesh) => total + mesh.geometry.getAttribute('position').count,
+    0,
+  )
+  if (totalVertices === 0) return undefined
+
+  const stride = Math.max(1, Math.ceil(totalVertices / Math.max(1, maxPoints)))
+  const sampled: number[] = []
+  const point = new Vector3()
+  let ordinal = 0
+
+  for (const mesh of meshes) {
+    mesh.updateWorldMatrix(true, false)
+    const position = mesh.geometry.getAttribute('position')
+    for (let index = 0; index < position.count; index += 1) {
+      if (ordinal % stride === 0) {
+        point.fromBufferAttribute(position, index).applyMatrix4(mesh.matrixWorld)
+        sampled.push(
+          point.x + isocenterMm[0] - positionOffsetMm[0],
+          point.y + isocenterMm[1] - positionOffsetMm[1],
+          point.z + isocenterMm[2] - positionOffsetMm[2],
+        )
+      }
+      ordinal += 1
+    }
+  }
+
+  return sampled.length > 0 ? new Float32Array(sampled) : undefined
+}
+
 function formatDisplayLabel(raw: string): string {
-  const normalized = raw.replace(/_/g, ' ').replace(/\s+/g, ' ').trim()
+  const normalized = raw
+    .replace(/\.\d+$/g, '')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 
   // Override specific labels for correct anatomical terminology
   const labelOverrides: Record<string, string> = {

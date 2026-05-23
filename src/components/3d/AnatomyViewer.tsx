@@ -2,9 +2,10 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { Camera, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { RefObject } from 'react'
+import type { KeyboardEvent, ReactNode, RefObject, WheelEvent } from 'react'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 import {
   applySegmentColors,
@@ -68,6 +69,17 @@ const WINDOW_PRESET_MAP: Record<
   bone: { label: 'Bone', low: 200, high: 2000 },
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function sliceIndexToPercent(index: number, totalSlices: number): number {
+  if (totalSlices <= 1) {
+    return 0
+  }
+  return (clamp(index, 0, totalSlices - 1) / (totalSlices - 1)) * 100
+}
+
 function getSliceTransform(axis: 'x' | 'y' | 'z'): string {
   if (axis === 'y') {
     return 'rotate(180deg)'
@@ -77,6 +89,17 @@ function getSliceTransform(axis: 'x' | 'y' | 'z'): string {
   }
   // Axial slices: flip left/right
   return 'scaleX(-1)'
+}
+
+function styleVolumeSliceCanvas(slice: VolumeSlice, axis: 'x' | 'y' | 'z') {
+  slice.canvas.style.width = '100%'
+  slice.canvas.style.height = '100%'
+  slice.canvas.style.display = 'block'
+  slice.canvas.style.maxWidth = '100%'
+  slice.canvas.style.maxHeight = '100%'
+  slice.canvas.style.background = '#000'
+  slice.canvas.style.transformOrigin = 'center center'
+  slice.canvas.style.transform = getSliceTransform(axis)
 }
 
 function isRenderableVolumeSlice(slice: VolumeSlice | null): slice is VolumeSlice {
@@ -276,7 +299,7 @@ function XRSpatialControllers({
   return null
 }
 
-interface AnatomyViewerProps {
+export interface AnatomyViewerProps {
   model: AnatomyModel
   visibleSegments: Record<string, boolean>
   crossSection: number
@@ -285,6 +308,7 @@ interface AnatomyViewerProps {
   resetSignal: number
   showDebugHelpers?: boolean
   rotation?: { x: number; y: number; z: number }
+  controlPanel?: ReactNode
   onScreenshot?: (dataUrl: string) => void
   onError?: (message: string) => void
   onSegmentsChanged?: (segments: AnatomySegment[]) => void
@@ -300,6 +324,7 @@ export function AnatomyViewer({
   resetSignal,
   showDebugHelpers = false,
   rotation = { x: 0, y: 0, z: 0 },
+  controlPanel,
   onScreenshot,
   onError,
   onSegmentsChanged,
@@ -313,6 +338,8 @@ export function AnatomyViewer({
   const volumeState = useVolumeAsset(model)
   const ctContainerRef = useRef<HTMLDivElement | null>(null)
   const ctSliceRef = useRef<VolumeSlice | null>(null)
+  const volumeInfoRef = useRef({ index: 0, total: 0 })
+  const ctWheelRemainderRef = useRef(0)
   const xrSessionRef = useRef<XRSession | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -335,6 +362,11 @@ export function AnatomyViewer({
     () => (volumeInfo.total > 1 ? 100 / (volumeInfo.total - 1) : 100),
     [volumeInfo.total],
   )
+
+  useEffect(() => {
+    volumeInfoRef.current = volumeInfo
+  }, [volumeInfo])
+
   const initialWindow = useMemo(
     () => ({
       low: model.volume?.window?.low ?? -1000,
@@ -362,8 +394,11 @@ export function AnatomyViewer({
   const prevSegmentsRef = useRef<AnatomySegment[] | null>(null)
 
   useEffect(() => {
+    const resetInfo = { index: 0, total: 0 }
     setVolumeAxis(model.volume?.axis ?? 'z')
-    setVolumeInfo({ index: 0, total: 0 })
+    volumeInfoRef.current = resetInfo
+    ctWheelRemainderRef.current = 0
+    setVolumeInfo(resetInfo)
     ctSliceRef.current = null
   }, [model.id, model.volume?.axis])
 
@@ -465,6 +500,112 @@ export function AnatomyViewer({
     setWindowPreset('custom')
     setWindowValues((prev) => ({ ...prev, [field]: value }))
   }, [])
+
+  const handleVolumeSliceChange = useCallback(
+    (value: number) => {
+      if (!Number.isFinite(value)) {
+        return
+      }
+      onVolumeSliceChange?.(clamp(value, 0, 100))
+    },
+    [onVolumeSliceChange],
+  )
+
+  const stepVolumeSlice = useCallback(
+    (delta: number) => {
+      const currentInfo = volumeInfoRef.current
+      if (!onVolumeSliceChange || currentInfo.total <= 1) {
+        return
+      }
+
+      const nextIndex = clamp(currentInfo.index + delta, 0, currentInfo.total - 1)
+      if (nextIndex === currentInfo.index) {
+        return
+      }
+
+      const nextInfo = { index: nextIndex, total: currentInfo.total }
+      volumeInfoRef.current = nextInfo
+      setVolumeInfo(nextInfo)
+      onVolumeSliceChange(sliceIndexToPercent(nextIndex, currentInfo.total))
+    },
+    [onVolumeSliceChange],
+  )
+
+  const handleCtSliceWheel = useCallback(
+    (event: WheelEvent<HTMLElement>) => {
+      const currentInfo = volumeInfoRef.current
+      if (volumeState.status !== 'success' || !onVolumeSliceChange || currentInfo.total <= 1) {
+        return
+      }
+
+      const primaryDelta =
+        Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX
+      if (primaryDelta === 0) {
+        return
+      }
+
+      event.preventDefault()
+      const modeMultiplier = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 120 : 1
+      const normalizedDelta = primaryDelta * modeMultiplier
+
+      if (
+        ctWheelRemainderRef.current !== 0 &&
+        Math.sign(ctWheelRemainderRef.current) !== Math.sign(normalizedDelta)
+      ) {
+        ctWheelRemainderRef.current = 0
+      }
+
+      ctWheelRemainderRef.current += normalizedDelta
+      const rawSteps = Math.trunc(ctWheelRemainderRef.current / 24)
+      if (rawSteps === 0) {
+        return
+      }
+
+      ctWheelRemainderRef.current -= rawSteps * 24
+      const cappedSteps = clamp(rawSteps, -12, 12)
+      stepVolumeSlice(cappedSteps * (event.shiftKey ? 5 : 1))
+    },
+    [onVolumeSliceChange, stepVolumeSlice, volumeState.status],
+  )
+
+  const handleCtSliceKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const currentInfo = volumeInfoRef.current
+      if (volumeState.status !== 'success' || !onVolumeSliceChange || currentInfo.total <= 1) {
+        return
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault()
+        onVolumeSliceChange(0)
+        return
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault()
+        onVolumeSliceChange(100)
+        return
+      }
+
+      const largeStep = event.shiftKey ? 10 : 5
+      const keySteps: Record<string, number> = {
+        ArrowDown: 1,
+        ArrowRight: 1,
+        ArrowUp: -1,
+        ArrowLeft: -1,
+        PageDown: largeStep,
+        PageUp: -largeStep,
+      }
+      const delta = keySteps[event.key]
+      if (!delta) {
+        return
+      }
+
+      event.preventDefault()
+      stepVolumeSlice(delta)
+    },
+    [onVolumeSliceChange, stepVolumeSlice, volumeState.status],
+  )
 
   const handleEnterXR = useCallback(
     async (mode: ImmersiveXRMode) => {
@@ -847,6 +988,7 @@ export function AnatomyViewer({
         ctContainerRef.current.replaceChildren()
       }
       ctSliceRef.current = null
+      ctWheelRemainderRef.current = 0
       return
     }
 
@@ -880,9 +1022,10 @@ export function AnatomyViewer({
     }
 
     const totalSlices = Math.max(1, Math.floor(dimensions[axisIndex] ?? 1))
-    const targetIndex = Math.min(
+    const targetIndex = clamp(
+      Math.round((volumeSlice / 100) * (totalSlices - 1)),
+      0,
       totalSlices - 1,
-      Math.max(0, Math.round((volumeSlice / 100) * (totalSlices - 1))),
     )
 
     let slice = ctSliceRef.current
@@ -902,37 +1045,34 @@ export function AnatomyViewer({
           return
         }
 
-        slice.canvas.style.width = '100%'
-        slice.canvas.style.height = '100%'
-        slice.canvas.style.display = 'block'
-        slice.canvas.style.maxWidth = '100%'
-        slice.canvas.style.maxHeight = '100%'
-        slice.canvas.style.background = '#000'
-        slice.canvas.style.transformOrigin = 'center center'
-        slice.canvas.style.transform = getSliceTransform(axis)
+        styleVolumeSliceCanvas(slice, axis)
         ctContainerRef.current.replaceChildren(slice.canvas)
         ctSliceRef.current = slice
       } catch (error) {
         console.error('Error extracting volume slice:', error)
         return
       }
-    } else if (slice.index !== targetIndex) {
-      slice.index = targetIndex
     }
 
-    if (isRenderableVolumeSlice(ctSliceRef.current)) {
-      try {
-        ctSliceRef.current.repaint()
-        if (ctSliceRef.current.canvas) {
-          ctSliceRef.current.canvas.style.transformOrigin = 'center center'
-          ctSliceRef.current.canvas.style.transform = getSliceTransform(axis)
-        }
-      } catch (error) {
-        console.error('Error repainting volume slice:', error)
+    if (!slice) {
+      return
+    }
+
+    try {
+      if (slice.index !== targetIndex || !isRenderableVolumeSlice(slice)) {
+        slice.index = targetIndex
       }
+      slice.repaint()
+      styleVolumeSliceCanvas(slice, axis)
+    } catch (error) {
+      console.error('Error repainting volume slice:', error)
     }
 
-    setVolumeInfo({ index: targetIndex, total: totalSlices })
+    const nextInfo = { index: targetIndex, total: totalSlices }
+    volumeInfoRef.current = nextInfo
+    setVolumeInfo((current) =>
+      current.index === nextInfo.index && current.total === nextInfo.total ? current : nextInfo,
+    )
   }, [volumeState, volumeSlice, volumeAxis, appliedWindow])
 
   useEffect(() => {
@@ -967,6 +1107,7 @@ export function AnatomyViewer({
     const dataUrl = glRef.current.domElement.toDataURL('image/png')
     if (onScreenshot) {
       onScreenshot(dataUrl)
+      return
     }
     const a = document.createElement('a')
     a.href = dataUrl
@@ -999,193 +1140,277 @@ export function AnatomyViewer({
     )
   }
 
-  return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
-      <div
-        ref={containerRef}
-        className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border/60 bg-background/60"
-      >
-        {assetState.status === 'loading' ? (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80">
-            <span className="text-sm text-muted-foreground">Loading 3D anatomy…</span>
-          </div>
-        ) : null}
-        <Canvas
-          shadows
-          dpr={[1, isMobile ? 1 : 1.5]}
-          gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
-          onCreated={({ gl }) => {
-            glRef.current = gl
-            gl.outputColorSpace = SRGBColorSpace
-            gl.toneMappingExposure = 1.2
-            gl.setClearColor('#0b172b', 1)
-            gl.xr.enabled = true
-            gl.domElement.addEventListener('webglcontextlost', (event) => {
-              console.debug('WebGL context lost')
-              event.preventDefault()
-            })
-            gl.domElement.addEventListener('webglcontextrestored', () => {
-              console.debug('WebGL context restored')
-            })
-          }}
-        >
-          <color attach="background" args={['#0b172b']} />
-          <AdaptiveDpr pixelated />
-          <PerspectiveCamera position={cameraPosition} fov={45} />
-          <ambientLight intensity={0.85} />
-          <hemisphereLight color="#f8fafc" groundColor="#111827" intensity={0.85} />
-          <directionalLight position={[6, 7, 6]} intensity={1.0} castShadow />
-          <directionalLight position={[-5, -3, -6]} intensity={0.5} />
-          <spotLight position={[0, 9, 5]} intensity={0.75} angle={0.8} penumbra={0.55} castShadow />
-          {showDebugHelpers ? <primitive object={axesHelper} /> : null}
-          {xrSessionActive && xrSessionMode === 'immersive-vr' ? (
-            <gridHelper args={[4, 8, '#38bdf8', '#1e293b']} position={[0, 0.02, -1.35]} />
-          ) : null}
-          {preparedScene ? (
-            <Suspense
-              fallback={
-                <Html center className="text-xs text-muted-foreground">
-                  Preparing anatomy…
-                </Html>
-              }
-            >
-              <group ref={spatialRootRef}>
-                <primitive object={preparedScene.group} />
-              </group>
-              <XRSpatialControllers
-                enabled={xrSessionActive}
-                targetRef={spatialRootRef}
-                placement={spatialPlacement}
-                onSelectSegment={setSpatialSelection}
-              />
-            </Suspense>
-          ) : null}
-          <OrbitControls
-            ref={controlsRef}
-            makeDefault
-            enabled={!xrSessionActive}
-            enablePan={!isMobile}
-            minDistance={minDistance}
-            maxDistance={maxDistance}
-            target={cameraTarget}
-            autoRotate={false}
-            enableDamping={false}
-          />
-        </Canvas>
+  const workbenchColumns = controlPanel
+    ? 'xl:grid-cols-[minmax(280px,0.78fr)_minmax(460px,1.55fr)_minmax(300px,0.82fr)]'
+    : 'xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.82fr)]'
+  const legendSegments = model.segments.slice(0, 6)
+  const hiddenLegendCount = Math.max(0, model.segments.length - legendSegments.length)
 
-        <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="pointer-events-auto inline-flex max-w-[58%] flex-wrap items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-              {showAnnotations
-                ? model.segments.slice(0, 8).map((segment) => (
-                    <span key={segment.id} className="inline-flex items-center gap-1">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: segment.color }}
-                      />
-                      {segment.name}
-                    </span>
-                  ))
-                : 'Annotations hidden'}
+  return (
+    <div
+      data-testid="anatomy-workbench"
+      className={`relative grid gap-3 overflow-hidden rounded-3xl border border-border/70 bg-[linear-gradient(180deg,rgba(8,18,32,0.97),rgba(3,8,14,0.98))] p-3 shadow-sm ${workbenchColumns} xl:h-[clamp(720px,calc(100dvh_-_14rem),980px)]`}
+    >
+      {controlPanel ? (
+        <aside
+          data-testid="anatomy-control-panel"
+          className="min-h-0 overflow-auto rounded-2xl border border-slate-500/20 bg-slate-950/55 p-4 text-slate-100"
+          aria-label="Scene controls"
+        >
+          {controlPanel}
+        </aside>
+      ) : null}
+
+      <main
+        data-testid="anatomy-scene-panel"
+        className="grid min-h-[560px] grid-rows-[auto_minmax(0,1fr)] gap-3 rounded-2xl border border-slate-500/20 bg-slate-950/40 p-4 text-slate-100"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200/70">
+              Shared Scene
             </div>
-            <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
-              {xrSessionActive ? (
-                <button
-                  type="button"
-                  onClick={handleExitXR}
-                  className="rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-medium text-white transition hover:bg-emerald-500"
-                >
-                  Exit spatial view
-                </button>
-              ) : null}
-              {!xrSessionActive && xrCapabilities.immersiveVR ? (
-                <button
-                  type="button"
-                  onClick={() => handleEnterXR('immersive-vr')}
-                  className="rounded-full bg-primary/85 px-3 py-1 text-xs font-medium text-primary-foreground transition hover:bg-primary"
-                >
-                  Enter VR
-                </button>
-              ) : null}
-              {!xrSessionActive && xrCapabilities.immersiveAR ? (
-                <button
-                  type="button"
-                  onClick={() => handleEnterXR('immersive-ar')}
-                  className="rounded-full bg-cyan-500/85 px-3 py-1 text-xs font-medium text-white transition hover:bg-cyan-500"
-                >
-                  Enter AR
-                </button>
-              ) : null}
-              {xrStatusMessage ? (
-                <span className="max-w-40 text-right text-[11px] text-muted-foreground">
-                  {xrStatusMessage}
-                </span>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => controlsRef.current?.reset()}
-                className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-              >
-                Reset view
-              </button>
-              <button
-                type="button"
-                onClick={handleScreenshot}
-                className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-              >
-                Screenshot
-              </button>
-              <button
-                type="button"
-                onClick={handleFullscreenToggle}
-                className="rounded-full bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-              >
-                {isFullscreen ? 'Exit full screen' : 'Full screen'}
-              </button>
-            </div>
+            <h2 className="mt-1 text-lg font-semibold text-white">{model.name}</h2>
           </div>
-          <div className="pointer-events-auto ml-auto inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground">
-            <span>{crossSection}% cross-section</span>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {xrSessionActive ? (
+              <button
+                type="button"
+                onClick={handleExitXR}
+                className="inline-flex min-h-9 items-center rounded-full border border-emerald-300/40 bg-emerald-400/20 px-3 text-xs font-semibold text-emerald-50 transition hover:bg-emerald-400/30"
+              >
+                Exit spatial view
+              </button>
+            ) : null}
+            {!xrSessionActive && xrCapabilities.immersiveVR ? (
+              <button
+                type="button"
+                onClick={() => handleEnterXR('immersive-vr')}
+                className="inline-flex min-h-9 items-center rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-300/25"
+              >
+                Enter VR
+              </button>
+            ) : null}
+            {!xrSessionActive && xrCapabilities.immersiveAR ? (
+              <button
+                type="button"
+                onClick={() => handleEnterXR('immersive-ar')}
+                className="inline-flex min-h-9 items-center rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-300/25"
+              >
+                Enter AR
+              </button>
+            ) : null}
+            {xrStatusMessage ? (
+              <span className="max-w-44 text-right text-[11px] leading-snug text-slate-400">
+                {xrStatusMessage}
+              </span>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => controlsRef.current?.reset()}
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/80 px-3 text-xs font-semibold text-slate-200 transition hover:border-cyan-300/50 hover:text-white"
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={handleScreenshot}
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/80 px-3 text-xs font-semibold text-slate-200 transition hover:border-cyan-300/50 hover:text-white"
+            >
+              <Camera className="h-3.5 w-3.5" aria-hidden />
+              Capture
+            </button>
+            <button
+              type="button"
+              onClick={handleFullscreenToggle}
+              className="inline-flex min-h-9 items-center gap-2 rounded-full border border-slate-400/20 bg-slate-900/80 px-3 text-xs font-semibold text-slate-200 transition hover:border-cyan-300/50 hover:text-white"
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" aria-hidden />
+              )}
+              {isFullscreen ? 'Exit' : 'Full'}
+            </button>
           </div>
-          {xrSessionActive && spatialSelection ? (
-            <div className="pointer-events-auto max-w-sm rounded-2xl border border-cyan-400/30 bg-background/85 px-3 py-2 text-xs text-muted-foreground shadow-lg backdrop-blur">
-              <span className="font-semibold text-foreground">Spatial mode: </span>
-              {spatialSelection}
+        </div>
+
+        <div
+          data-testid="anatomy-scene-viewport"
+          ref={containerRef}
+          className="relative h-[clamp(480px,64vh,760px)] min-h-[480px] w-full overflow-hidden rounded-2xl border border-slate-500/20 bg-slate-950 xl:h-full xl:min-h-0"
+        >
+          {assetState.status === 'loading' ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/85">
+              <span className="text-sm text-slate-300">Loading 3D anatomy…</span>
             </div>
           ) : null}
-          {showDebugHelpers ? (
-            <div className="pointer-events-auto mt-3 inline-flex max-w-xs flex-col gap-1 self-start rounded-lg bg-background/85 px-3 py-2 text-[11px] text-muted-foreground backdrop-blur">
-              <span className="font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
-                Camera
-              </span>
-              <span>Pos: {debugCoords.position.map((value) => value.toFixed(2)).join(', ')}</span>
-              <span>Target: {debugCoords.target.map((value) => value.toFixed(2)).join(', ')}</span>
+          <Canvas
+            shadows
+            dpr={[1, isMobile ? 1 : 1.5]}
+            gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+            onCreated={({ gl }) => {
+              glRef.current = gl
+              gl.outputColorSpace = SRGBColorSpace
+              gl.toneMappingExposure = 1.2
+              gl.setClearColor('#0b172b', 1)
+              gl.xr.enabled = true
+              gl.domElement.addEventListener('webglcontextlost', (event) => {
+                console.debug('WebGL context lost')
+                event.preventDefault()
+              })
+              gl.domElement.addEventListener('webglcontextrestored', () => {
+                console.debug('WebGL context restored')
+              })
+            }}
+          >
+            <color attach="background" args={['#0b172b']} />
+            <AdaptiveDpr pixelated />
+            <PerspectiveCamera position={cameraPosition} fov={45} />
+            <ambientLight intensity={0.85} />
+            <hemisphereLight color="#f8fafc" groundColor="#111827" intensity={0.85} />
+            <directionalLight position={[6, 7, 6]} intensity={1.0} castShadow />
+            <directionalLight position={[-5, -3, -6]} intensity={0.5} />
+            <spotLight
+              position={[0, 9, 5]}
+              intensity={0.75}
+              angle={0.8}
+              penumbra={0.55}
+              castShadow
+            />
+            {showDebugHelpers ? <primitive object={axesHelper} /> : null}
+            {xrSessionActive && xrSessionMode === 'immersive-vr' ? (
+              <gridHelper args={[4, 8, '#38bdf8', '#1e293b']} position={[0, 0.02, -1.35]} />
+            ) : null}
+            {preparedScene ? (
+              <Suspense
+                fallback={
+                  <Html center className="text-xs text-slate-300">
+                    Preparing anatomy…
+                  </Html>
+                }
+              >
+                <group ref={spatialRootRef}>
+                  <primitive object={preparedScene.group} />
+                </group>
+                <XRSpatialControllers
+                  enabled={xrSessionActive}
+                  targetRef={spatialRootRef}
+                  placement={spatialPlacement}
+                  onSelectSegment={setSpatialSelection}
+                />
+              </Suspense>
+            ) : null}
+            <OrbitControls
+              ref={controlsRef}
+              makeDefault
+              enabled={!xrSessionActive}
+              enablePan={!isMobile}
+              minDistance={minDistance}
+              maxDistance={maxDistance}
+              target={cameraTarget}
+              autoRotate={false}
+              enableDamping={false}
+            />
+          </Canvas>
+
+          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">
+            <div className="pointer-events-auto w-fit max-w-[min(420px,calc(100%_-_1rem))] rounded-full border border-cyan-300/25 bg-slate-950/70 px-3 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur">
+              Drag rotates. Scroll zooms. Shift + drag pans.
             </div>
+            <div className="flex flex-col gap-3">
+              {xrSessionActive && spatialSelection ? (
+                <div className="pointer-events-auto max-w-sm rounded-2xl border border-cyan-400/30 bg-slate-950/85 px-3 py-2 text-xs text-slate-300 shadow-lg backdrop-blur">
+                  <span className="font-semibold text-white">Spatial mode: </span>
+                  {spatialSelection}
+                </div>
+              ) : null}
+              {showDebugHelpers ? (
+                <div className="pointer-events-auto inline-flex max-w-xs flex-col gap-1 self-start rounded-lg border border-slate-400/20 bg-slate-950/85 px-3 py-2 text-[11px] text-slate-300 backdrop-blur">
+                  <span className="font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    Camera
+                  </span>
+                  <span>
+                    Pos: {debugCoords.position.map((value) => value.toFixed(2)).join(', ')}
+                  </span>
+                  <span>
+                    Target: {debugCoords.target.map((value) => value.toFixed(2)).join(', ')}
+                  </span>
+                </div>
+              ) : null}
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div className="pointer-events-auto max-w-[min(560px,100%)] rounded-2xl border border-slate-400/20 bg-slate-950/75 px-3 py-2 text-xs text-slate-300 shadow-lg backdrop-blur">
+                  {showAnnotations ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {legendSegments.map((segment) => (
+                        <span key={segment.id} className="inline-flex items-center gap-1.5">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: segment.color }}
+                          />
+                          {segment.name}
+                        </span>
+                      ))}
+                      {hiddenLegendCount > 0 ? <span>+{hiddenLegendCount} more</span> : null}
+                    </div>
+                  ) : (
+                    'Annotations hidden'
+                  )}
+                </div>
+                <div className="pointer-events-auto ml-auto inline-flex items-center gap-2 rounded-full border border-slate-400/20 bg-slate-950/75 px-3 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur">
+                  <span>{crossSection}% cross-section</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <aside
+        data-testid="anatomy-ct-panel"
+        className="grid min-h-0 auto-rows-max gap-3 overflow-auto rounded-2xl border border-slate-500/20 bg-slate-950/55 p-4 text-slate-100"
+        aria-label="CT slice controls"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200/70">
+              Orthogonal CT
+            </div>
+            <h3 className="mt-1 text-base font-semibold text-white">Synced slice</h3>
+          </div>
+          {volumeState.status === 'success' ? (
+            <span className="rounded-full border border-slate-400/20 bg-slate-900/70 px-2.5 py-1 text-[11px] text-slate-300">
+              {AXIS_LABELS[volumeAxis]}
+            </span>
           ) : null}
         </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="relative aspect-square w-full">
+        <div
+          className="relative aspect-square w-full overscroll-contain rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+          onWheel={handleCtSliceWheel}
+          onKeyDown={handleCtSliceKeyDown}
+          tabIndex={volumeState.status === 'success' ? 0 : -1}
+          aria-label="CT slice viewport"
+        >
           <div
             ref={ctContainerRef}
-            className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-3xl border border-border/60 bg-black/80"
+            className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-2xl border border-slate-500/20 bg-black/80"
           />
           {volumeState.status === 'loading' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-background/80">
-              <span className="text-sm text-muted-foreground">Loading CT volume…</span>
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/85">
+              <span className="text-sm text-slate-300">Loading CT volume…</span>
             </div>
           ) : null}
           {volumeState.status === 'error' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-background/80 p-4 text-center">
-              <span className="text-xs text-muted-foreground">
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/85 p-4 text-center">
+              <span className="text-xs text-slate-300">
                 Unable to load CT volume: {volumeState.error}
               </span>
             </div>
           ) : null}
           {volumeState.status === 'idle' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-background/80 p-4 text-center">
-              <span className="text-xs text-muted-foreground">
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/85 p-4 text-center">
+              <span className="text-xs text-slate-300">
                 CT volume not available for this model.
               </span>
             </div>
@@ -1193,10 +1418,8 @@ export function AnatomyViewer({
         </div>
         {volumeState.status === 'success' ? (
           <>
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                {AXIS_LABELS[volumeAxis]} CT slice
-              </span>
+            <div className="flex items-center justify-between text-xs text-slate-400">
+              <span className="font-semibold text-white">{AXIS_LABELS[volumeAxis]} CT slice</span>
               <span>
                 Slice {volumeInfo.total > 0 ? volumeInfo.index + 1 : 0}/{volumeInfo.total}
               </span>
@@ -1208,12 +1431,10 @@ export function AnatomyViewer({
               step={Math.max(sliceStep, 0.01)}
               value={volumeSlice}
               onChange={(event) => {
-                const value = Number(event.target.value)
-                if (Number.isFinite(value) && onVolumeSliceChange) {
-                  onVolumeSliceChange(value)
-                }
+                handleVolumeSliceChange(Number(event.target.value))
               }}
-              className="w-full accent-primary"
+              onWheel={handleCtSliceWheel}
+              className="w-full accent-cyan-300"
               aria-label="CT slice position"
               disabled={!onVolumeSliceChange}
             />
@@ -1233,8 +1454,8 @@ export function AnatomyViewer({
                     onClick={() => handleWindowPresetChange(key)}
                     className={`rounded-full px-3 py-1 font-medium transition ${
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                        ? 'bg-cyan-200 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     {label}
@@ -1243,9 +1464,9 @@ export function AnatomyViewer({
               })}
             </div>
             {windowPreset === 'custom' ? (
-              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
                 <label className="flex flex-col gap-1">
-                  <span className="uppercase tracking-[0.3em]">Low (HU)</span>
+                  <span className="uppercase tracking-[0.3em] text-slate-500">Low (HU)</span>
                   <input
                     type="number"
                     value={windowValues.low}
@@ -1253,11 +1474,11 @@ export function AnatomyViewer({
                     onChange={(event) =>
                       handleCustomWindowChange('low', Number(event.target.value))
                     }
-                    className="rounded-md border border-border/60 bg-background/80 px-2 py-1 text-xs text-foreground"
+                    className="rounded-md border border-slate-500/25 bg-slate-900/80 px-2 py-1 text-xs text-white"
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="uppercase tracking-[0.3em]">High (HU)</span>
+                  <span className="uppercase tracking-[0.3em] text-slate-500">High (HU)</span>
                   <input
                     type="number"
                     value={windowValues.high}
@@ -1265,15 +1486,15 @@ export function AnatomyViewer({
                     onChange={(event) =>
                       handleCustomWindowChange('high', Number(event.target.value))
                     }
-                    className="rounded-md border border-border/60 bg-background/80 px-2 py-1 text-xs text-foreground"
+                    className="rounded-md border border-slate-500/25 bg-slate-900/80 px-2 py-1 text-xs text-white"
                   />
                 </label>
               </div>
             ) : null}
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-slate-400">
               Window: {appliedWindow.low.toFixed(0)} / {appliedWindow.high.toFixed(0)} HU
             </div>
-            <div className="inline-flex gap-1 rounded-full border border-border/60 bg-background/80 p-1 text-xs">
+            <div className="inline-flex gap-1 rounded-full border border-slate-500/25 bg-slate-900/80 p-1 text-xs">
               {(['z', 'y', 'x'] as Array<'x' | 'y' | 'z'>).map((axis) => (
                 <button
                   key={axis}
@@ -1281,8 +1502,8 @@ export function AnatomyViewer({
                   onClick={() => setVolumeAxis(axis)}
                   className={`rounded-full px-3 py-1 font-medium transition ${
                     volumeAxis === axis
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-cyan-200 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   {AXIS_LABELS[axis]}
@@ -1291,7 +1512,7 @@ export function AnatomyViewer({
             </div>
           </>
         ) : null}
-      </div>
+      </aside>
     </div>
   )
 }

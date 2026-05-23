@@ -1,0 +1,12 @@
+{
+  "raw": "ct_preview_uint8.raw",
+  "rawUrl": "/fluoroview/cases/patient-new/ct/ct_preview_uint8.raw",
+  "sizeXyz": [256, 256, 256],
+  "originalSizeXyz": [512, 512, 636],
+  "stride": [2, 2, 2],
+  "spacingXyzMm": [1.37890625, 1.37890625, 1.2421875],
+  "originLps": [-182.15527343749997, -374.1552734374999, -368.5],
+  "directionLps": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+  "windowHu": [-1144, 2951],
+  "source": "Derived uint8 CT preview from local target_clean_ct.nrrd; not diagnostic."
+}
