@@ -38,3 +38,15 @@ next-env.d.ts
 Imports
 .deploy_push
 tmp-*.bin
+
+# Remote module payloads are uploaded to Supabase Storage and served through rewrites.
+public/bronch-navigation-trainer/app/cases
+public/fluoroview/cases
+public/models
+public/socal-ebus-course/app/media
+public/socal-ebus-course/app/pipelines
+public/socal-ebus-course/app/simulator
+public/fluoroview/*.glb
+public/socal-ebus-course/app/assets/*.glb
+public/socal-ebus-course/app/assets/*.nrrd
+public/socal-ebus-course/app/assets/*.png
