@@ -1,17 +1,18 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
 import type { RoutePath } from '@fluoroview/interaction'
-import type { Vec3 } from '@fluoroview/types'
+import type { AssetTransform, Vec3 } from '@fluoroview/types'
 
 interface Anatomy3DViewProps {
   airwayGlbUri: string
   dracoBaseUrl?: string
   activeGroups: Set<string>
+  airwayTransform?: AssetTransform
   route: RoutePath | null
   scopeProgress: number
   noduleLps: Vec3 | null
@@ -23,9 +24,11 @@ interface Anatomy3DViewProps {
 function AirwayMesh({
   glbUrl,
   dracoBaseUrl = '/fluoroview/draco',
+  transform,
 }: {
   glbUrl: string
   dracoBaseUrl?: string
+  transform?: AssetTransform
 }) {
   // drei's useGLTF expects the DRACO decoder path with a trailing slash.
   const dracoPath = dracoBaseUrl.endsWith('/') ? dracoBaseUrl : `${dracoBaseUrl}/`
@@ -47,7 +50,17 @@ function AirwayMesh({
     })
   }, [gltf.scene])
 
-  return <primitive object={gltf.scene} />
+  const rotation = transform?.rotationDeg ?? [0, 0, 0]
+  const offset = transform?.positionOffsetMm ?? [0, 0, 0]
+
+  return (
+    <primitive
+      object={gltf.scene}
+      scale={transform?.sceneScale ?? 1}
+      rotation={rotation.map((deg) => THREE.MathUtils.degToRad(deg)) as [number, number, number]}
+      position={offset}
+    />
+  )
 }
 
 function ScopeTube({
@@ -136,6 +149,7 @@ export function Anatomy3DView({
   airwayGlbUri,
   dracoBaseUrl,
   activeGroups,
+  airwayTransform,
   route,
   scopeProgress,
   noduleLps,
@@ -143,14 +157,10 @@ export function Anatomy3DView({
   tubeColor,
   className,
 }: Anatomy3DViewProps) {
-  const [bounds, setBounds] = useState<{ center: Vec3; radius: number } | null>(null)
   void activeGroups
 
-  const center = bounds?.center ?? [0, 0, 0]
-  const radius = bounds?.radius ?? 220
-
-  useEffect(() => {
-    if (!route || !route.points.length) return
+  const bounds = useMemo(() => {
+    if (!route || !route.points.length) return null
     let cx = 0
     let cy = 0
     let cz = 0
@@ -166,8 +176,11 @@ export function Anatomy3DView({
       const d = Math.hypot(p[0] - ctr[0], p[1] - ctr[1], p[2] - ctr[2])
       if (d > maxD) maxD = d
     }
-    setBounds({ center: ctr, radius: Math.max(180, maxD * 1.4) })
+    return { center: ctr, radius: Math.max(180, maxD * 1.4) }
   }, [route])
+
+  const center = bounds?.center ?? [0, 0, 0]
+  const radius = bounds?.radius ?? 220
 
   const camPos: [number, number, number] = [
     center[0] + radius * 1.2,
@@ -197,7 +210,11 @@ export function Anatomy3DView({
           color={0x9bb8ff}
         />
         <Suspense fallback={null}>
-          <AirwayMesh glbUrl={airwayGlbUri} dracoBaseUrl={dracoBaseUrl} />
+          <AirwayMesh
+            glbUrl={airwayGlbUri}
+            dracoBaseUrl={dracoBaseUrl}
+            transform={airwayTransform}
+          />
           {route && route.points.length > 1 && (
             <ScopeTube
               points={route.points}

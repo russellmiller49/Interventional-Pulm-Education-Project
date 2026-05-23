@@ -1,8 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+  const pathname = req.nextUrl.pathname
+  const isProtected = pathname.startsWith('/dashboard') || pathname.startsWith('/pocus')
+
+  if (pathname.startsWith('/auth')) {
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  }
+
+  if (!isProtected) {
+    return res
+  }
+
   type CookieOptions = Parameters<typeof res.cookies.set>[2]
 
   const supabase = createServerClient(
@@ -27,10 +39,7 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const pathname = req.nextUrl.pathname
-  const isProtected = pathname.startsWith('/dashboard') || pathname.startsWith('/pocus')
-
-  if (isProtected && !user) {
+  if (!user) {
     const redirectUrl = req.nextUrl.clone()
     redirectUrl.pathname = '/'
     redirectUrl.search = ''
@@ -41,10 +50,6 @@ export async function middleware(req: NextRequest) {
       redirectResponse.cookies.set(cookie)
     }
     return redirectResponse
-  }
-
-  if (pathname.startsWith('/auth')) {
-    res.headers.set('X-Robots-Tag', 'noindex, nofollow')
   }
 
   return res

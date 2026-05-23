@@ -1,6 +1,7 @@
 'use client'
 
 import type { SimulationState } from '../engine/types'
+import { MIN_DRY_SUCTION_SOURCE_FLOW_LPM } from '../engine/constants'
 
 interface KnobPanelProps {
   state: SimulationState
@@ -40,10 +41,13 @@ export function KnobPanel({
           label="Source suction flow"
           value={state.device.sourceSuctionFlowLpm}
           min={0}
-          max={20}
+          max={25}
           step={1}
           suffix="L/min"
           onChange={(value) => onDeviceChange({ sourceSuctionFlowLpm: value })}
+          formatter={(value) =>
+            value >= MIN_DRY_SUCTION_SOURCE_FLOW_LPM ? `${value} L/min ok` : `${value} L/min low`
+          }
         />
         <RangeControl
           label="Water seal fill"

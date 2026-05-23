@@ -120,14 +120,14 @@ export function noiseOpacityForSettings(settings: FluoroSettings): number {
   if (!settings.noiseEnabled) {
     return 0
   }
-  return clamp(noiseSigma(settings) * 0.9, 0.02, 0.28)
+  return clamp(noiseSigma(settings) * 0.24, 0.005, 0.08)
 }
 
 export function scatterOpacityForSettings(settings: FluoroSettings, thicknessProxy = 1): number {
   if (!settings.scatterEnabled) {
     return 0
   }
-  return clamp(fieldAreaFraction(settings) * thicknessProxy * 0.18, 0.02, 0.26)
+  return clamp(fieldAreaFraction(settings) * thicknessProxy * 0.07, 0.01, 0.12)
 }
 
 export function collimationClipPath(settings: FluoroSettings): string {

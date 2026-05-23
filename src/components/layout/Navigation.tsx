@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { Route } from 'next'
+import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
@@ -9,12 +10,14 @@ import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import SignInModal from '@/components/auth/SignInModal'
-
 import { DesktopNav, type NavItem } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
 import { SearchShortcut } from './SearchShortcut'
+
+const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
+  ssr: false,
+})
 
 const navigationItems: NavItem[] = [
   {

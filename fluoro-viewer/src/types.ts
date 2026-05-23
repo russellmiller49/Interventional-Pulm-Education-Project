@@ -36,6 +36,7 @@ export interface PreparedSegment {
   colorRgb: [number, number, number]
   groupKey: string
   anchor: Vec3
+  meshSamplePointsLps?: Float32Array
   object: Object3D
 }
 
@@ -179,6 +180,7 @@ export interface VolumeDrrAsset {
     full: number
   }
   huScale?: { slope: number; offset: number }
+  calibrationProjection?: SlicerFrontalProjection
   transferFunction?: {
     scalarOpacity: Array<{ x: number; y: number }>
     rgbTransferFunction: Array<{ x: number; color: [number, number, number] }>
@@ -187,6 +189,7 @@ export interface VolumeDrrAsset {
 
 export interface CArmManifest {
   gantryGlbUri?: string
+  animationGlbUri?: string
   coordinateSystem: 'LPS' | string
   sadMm?: number
   sidMm?: number
@@ -343,12 +346,18 @@ export interface AirwayGraph {
 export interface CenterlineOverlayPolyline {
   id: string
   label: string
-  points: Vec2[]
+  points?: Vec2[]
+  pointsLps?: Vec3[]
+  lengthMm?: number
 }
 
 export interface CenterlineOverlay {
+  schema?: string
   units: string
   coordinateSystem: string
+  source?: string
+  sourceRole?: string
+  boundsLpsMm?: [Vec3, Vec3]
   polylines: CenterlineOverlayPolyline[]
 }
 

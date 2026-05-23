@@ -3,6 +3,7 @@ import {
   calculateEffectiveDrySuction,
   calculateExpiratoryAirExit,
   calculateTubeConductance,
+  isSuctionIndicatorPresent,
 } from '../engine/pleuralPhysics'
 import type { SimulationState } from '../engine/types'
 
@@ -91,5 +92,29 @@ describe('chest drainage pleural physics', () => {
 
     expect(Math.abs(weakSource)).toBeLessThan(40)
     expect(Math.abs(strongSource)).toBe(40)
+  })
+
+  it('does not confirm dry suction source below the modeled 16 L/min floor', () => {
+    const state = makeState({
+      device: {
+        ...defaultSimulationState.device,
+        suctionSettingCmH2O: -20,
+        sourceSuctionFlowLpm: 7,
+      },
+    })
+
+    expect(isSuctionIndicatorPresent(state)).toBe(false)
+  })
+
+  it('confirms dry suction source at the modeled 16 L/min floor', () => {
+    const state = makeState({
+      device: {
+        ...defaultSimulationState.device,
+        suctionSettingCmH2O: -20,
+        sourceSuctionFlowLpm: 16,
+      },
+    })
+
+    expect(isSuctionIndicatorPresent(state)).toBe(true)
   })
 })

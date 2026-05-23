@@ -5,7 +5,11 @@ export interface BranchGroup {
 }
 
 export const BRANCH_GROUPS: BranchGroup[] = [
-  { key: 'trachea', label: 'Trachea', members: ['Trachea', 'Tracheobronchial_tree_full'] },
+  {
+    key: 'trachea',
+    label: 'Trachea',
+    members: ['Trachea', 'Tracheobronchial_tree_full', 'Complete_airway'],
+  },
   {
     key: 'rmb',
     label: 'Right Main Bronchus',

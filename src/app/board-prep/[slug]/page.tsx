@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
+import { BoardReviewChapterContent } from '@/components/board-review/BoardReviewChapterContent'
 import { BoardReviewProgressToggle } from '@/components/board-review/BoardReviewProgressToggle'
-import { BoardReviewSections } from '@/components/board-review/BoardReviewSections'
-import { BoardReviewHtmlFrame } from '@/components/board-review/BoardReviewHtmlFrame'
-import { MarkdownContent } from '@/components/board-review/MarkdownContent'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { boardReviewCategoryLabels } from '@/data/board-review'
@@ -99,23 +97,12 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
 
       <section className="container grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-8">
-          {chapter.formattedHtml ? (
-            <BoardReviewHtmlFrame html={chapter.formattedHtml} title={chapter.title} />
-          ) : (
-            <>
-              {chapter.intro ? (
-                <Card className="border-border/60 bg-card/80">
-                  <CardContent className="space-y-4 p-6">
-                    <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-muted-foreground/80">
-                      Orientation
-                    </h2>
-                    <MarkdownContent content={chapter.intro} />
-                  </CardContent>
-                </Card>
-              ) : null}
-              <BoardReviewSections sections={chapter.sections} />
-            </>
-          )}
+          <BoardReviewChapterContent
+            formattedHtml={chapter.formattedHtml}
+            intro={chapter.intro}
+            sections={chapter.sections}
+            title={chapter.title}
+          />
         </div>
         <aside className="min-w-0 space-y-6">
           <Card className="border-emerald-500/40 bg-emerald-500/10">

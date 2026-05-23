@@ -8,9 +8,9 @@ import {
   useRef,
   useState,
   type ReactNode,
-  type MouseEvent as ReactMouseEvent,
 } from 'react'
 import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
 
 import {
   findDrrBlendFrames,
@@ -19,15 +19,15 @@ import {
 } from '@fluoroview/case'
 import { BRANCH_GROUPS } from '@fluoroview/grouping'
 import {
-  canvasPointToLps,
-  findNearestAirwayPoint,
+  buildRoutePath,
   lpsToCtIndex,
   projectLpsToCanvas,
   projectLpsToDetector,
+  projectLpsToSlicerCalibratedDetector,
   projectLpsToSlicerFrontalDetector,
   resolveScopeRoutePath,
-  routeOptions,
   sampleRoutePath,
+  type AirwaySnapResult,
   type DetectorProjection,
   type RoutePath,
   type ScopeRouteId,
@@ -107,7 +107,62 @@ interface NoduleState {
   routeTerminalNodeId: number
 }
 
+interface ProjectedAirwayPath {
+  id: string
+  d: string
+  groupKey: string
+  radiusMm: number
+}
+
+type RelativeLocationAnswer = 'anteromedial' | 'anterolateral' | 'posteromedial' | 'posterolateral'
+
+interface NoduleQuizState {
+  scopeRouteTerminalNodeId: number
+  scopeProgress: number
+  scopePoint: Vec3
+  correctAnswer: RelativeLocationAnswer
+  selectedAnswer: RelativeLocationAnswer | null
+  locked: boolean
+}
+
+interface RandomNoduleQuizTarget {
+  nodule: NoduleState
+  quiz: NoduleQuizState
+}
+
 type FluoroImageSource = 'atlas' | 'slicerheart'
+type FluoroWorkspaceTab = 'fluoro' | 'quiz'
+
+const RELATIVE_LOCATION_OPTIONS: Array<{ value: RelativeLocationAnswer; label: string }> = [
+  { value: 'anteromedial', label: 'Anteromedial' },
+  { value: 'anterolateral', label: 'Anterolateral' },
+  { value: 'posteromedial', label: 'Posteromedial' },
+  { value: 'posterolateral', label: 'Posterolateral' },
+]
+const RANDOM_NODULE_ATTEMPTS = 192
+const MIN_PERIPHERAL_ROUTE_LENGTH_MM = 95
+const NODULE_MIN_DISTANCE_FROM_TERMINAL_MM = 8
+const NODULE_MAX_DISTANCE_FROM_TERMINAL_MM = 34
+const PREFERRED_SCOPE_DISTANCE_MM = 34
+const PREFERRED_SCOPE_PROGRESS = 0.82
+const PREFERRED_SCOPE_DISTANCE_FROM_TERMINAL_MM = 22
+const FULL_RAO_LAO_LIMIT_DEG = 60
+const QUIZ_RAO_LAO_LIMIT_DEG = 30
+
+const SCOPE_PERIPHERAL_SEARCH_PASSES = [
+  {
+    minProgress: 0.66,
+    minDistanceFromTerminalMm: 6,
+    maxDistanceFromTerminalMm: 55,
+    maxNoduleDistanceMm: 95,
+  },
+  {
+    minProgress: 0.56,
+    minDistanceFromTerminalMm: 0,
+    maxDistanceFromTerminalMm: 80,
+    maxNoduleDistanceMm: 110,
+  },
+]
 
 function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
   const entries = BRANCH_GROUPS.map((group) => ({
@@ -143,7 +198,7 @@ function buildLegendEntries(segments: PreparedSegment[]): LegendEntry[] {
 }
 
 function isLegendSegment(label: string): boolean {
-  return !/tracheobronchial[_\s]?tree[_\s]?full|tree[_\s]?full/i.test(label)
+  return !/complete[_\s]?airway|tracheobronchial[_\s]?tree[_\s]?full|tree[_\s]?full/i.test(label)
 }
 
 function defaultCtIndices(manifest: FluoroCaseManifest): CtIndexByAxis {
@@ -169,6 +224,191 @@ function clampIndex(value: number, length: number): number {
   return Math.min(Math.max(value, 0), Math.max(length - 1, 0))
 }
 
+function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
+}
+
+function distanceVec3(a: Vec3, b: Vec3): number {
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+}
+
+function routePointsUntilProgress(route: RoutePath, progress: number): Vec3[] {
+  const targetDistance = clampNumber(progress, 0, 1) * route.lengthMm
+  if (!route.points.length) return []
+  const points: Vec3[] = [route.points[0]]
+  if (targetDistance <= 0) return points
+
+  let travelled = 0
+  for (let index = 1; index < route.points.length; index += 1) {
+    const prev = route.points[index - 1]
+    const next = route.points[index]
+    const segmentLength = distanceVec3(prev, next)
+    if (travelled + segmentLength >= targetDistance) {
+      const t = (targetDistance - travelled) / Math.max(segmentLength, 1e-6)
+      points.push([
+        prev[0] + (next[0] - prev[0]) * t,
+        prev[1] + (next[1] - prev[1]) * t,
+        prev[2] + (next[2] - prev[2]) * t,
+      ])
+      return points
+    }
+    points.push(next)
+    travelled += segmentLength
+  }
+  return points
+}
+
+function relativeLocationAnswer(
+  noduleLps: Vec3,
+  scopeLps: Vec3,
+  midlineXLps: number,
+): RelativeLocationAnswer {
+  const deltaY = noduleLps[1] - scopeLps[1]
+  const ap = deltaY < 0 ? 'antero' : 'postero'
+  const noduleDistanceFromMidline = Math.abs(noduleLps[0] - midlineXLps)
+  const scopeDistanceFromMidline = Math.abs(scopeLps[0] - midlineXLps)
+  const medial = noduleDistanceFromMidline < scopeDistanceFromMidline
+  return `${ap}${medial ? 'medial' : 'lateral'}` as RelativeLocationAnswer
+}
+
+function buildNoduleQuiz(
+  graph: AirwayGraph,
+  snap: AirwaySnapResult,
+  midlineXLps: number,
+): NoduleQuizState | null {
+  for (const pass of SCOPE_PERIPHERAL_SEARCH_PASSES) {
+    let best: {
+      terminalNodeId: number
+      point: Vec3
+      progress: number
+      distanceMm: number
+      score: number
+    } | null = null
+
+    for (const terminalNodeId of graph.terminalNodeIds) {
+      if (terminalNodeId === snap.routeTerminalNodeId) continue
+      const route = buildRoutePath(graph, terminalNodeId)
+      if (route.points.length < 2 || route.lengthMm <= 0) continue
+
+      let travelled = 0
+      for (let index = 1; index < route.points.length; index += 1) {
+        const prev = route.points[index - 1]
+        const point = route.points[index]
+        travelled += distanceVec3(prev, point)
+        const distanceMm = distanceVec3(point, snap.lps)
+        if (distanceMm < 10 || distanceMm > pass.maxNoduleDistanceMm) continue
+        const progress = clampNumber(travelled / Math.max(route.lengthMm, 1), 0, 1)
+        const distanceFromTerminalMm = Math.max(route.lengthMm - travelled, 0)
+        if (progress < pass.minProgress) continue
+        if (
+          distanceFromTerminalMm < pass.minDistanceFromTerminalMm ||
+          distanceFromTerminalMm > pass.maxDistanceFromTerminalMm
+        ) {
+          continue
+        }
+        const lateralSeparationMm = Math.abs(
+          Math.abs(snap.lps[0] - midlineXLps) - Math.abs(point[0] - midlineXLps),
+        )
+        const anteriorPosteriorSeparationMm = Math.abs(snap.lps[1] - point[1])
+        if (lateralSeparationMm < 6 || anteriorPosteriorSeparationMm < 6) continue
+        const score =
+          Math.abs(distanceMm - PREFERRED_SCOPE_DISTANCE_MM) +
+          Math.abs(progress - PREFERRED_SCOPE_PROGRESS) * 14 +
+          Math.abs(distanceFromTerminalMm - PREFERRED_SCOPE_DISTANCE_FROM_TERMINAL_MM) * 0.25
+        if (!best || score < best.score) {
+          best = { terminalNodeId, point, progress, distanceMm, score }
+        }
+      }
+    }
+
+    if (!best) continue
+
+    return {
+      scopeRouteTerminalNodeId: best.terminalNodeId,
+      scopeProgress: best.progress,
+      scopePoint: best.point,
+      correctAnswer: relativeLocationAnswer(snap.lps, best.point, midlineXLps),
+      selectedAnswer: null,
+      locked: false,
+    }
+  }
+
+  return null
+}
+
+function nearestSnapForRandomRoute(
+  graph: AirwayGraph,
+  lps: Vec3,
+  routeTerminalNodeId: number,
+): AirwaySnapResult | null {
+  let best: AirwaySnapResult | null = null
+  for (const edge of graph.edges) {
+    for (const point of edge.pointsLps) {
+      const distanceMm = distanceVec3(point, lps)
+      if (!best || distanceMm < best.distanceMm) {
+        best = {
+          lps: point,
+          distanceMm,
+          edgeId: edge.id,
+          routeTerminalNodeId,
+        }
+      }
+    }
+  }
+  return best
+}
+
+function buildRandomNoduleQuizTarget(
+  graph: AirwayGraph,
+  manifest: FluoroCaseManifest,
+  random = Math.random,
+): RandomNoduleQuizTarget | null {
+  const terminalNodeIds = graph.terminalNodeIds.filter((id) => Number.isFinite(id))
+  if (!terminalNodeIds.length) return null
+
+  for (let attempt = 0; attempt < RANDOM_NODULE_ATTEMPTS; attempt += 1) {
+    const terminalNodeId =
+      terminalNodeIds[Math.floor(random() * terminalNodeIds.length)] ?? terminalNodeIds[0]
+    const route = buildRoutePath(graph, terminalNodeId)
+    if (route.points.length < 8 || route.lengthMm < MIN_PERIPHERAL_ROUTE_LENGTH_MM) continue
+
+    const distanceFromTerminalMm =
+      NODULE_MIN_DISTANCE_FROM_TERMINAL_MM +
+      random() * (NODULE_MAX_DISTANCE_FROM_TERMINAL_MM - NODULE_MIN_DISTANCE_FROM_TERMINAL_MM)
+    const progress = clampNumber(
+      (route.lengthMm - distanceFromTerminalMm) / Math.max(route.lengthMm, 1),
+      0,
+      1,
+    )
+    const sample = sampleRoutePath(route, progress)
+    const snap = nearestSnapForRandomRoute(graph, sample.point, terminalNodeId)
+    if (!snap) continue
+    const targetSnap: AirwaySnapResult = {
+      ...snap,
+      lps: sample.point,
+    }
+
+    const quiz = buildNoduleQuiz(
+      graph,
+      targetSnap,
+      graph.carinaLpsMm?.[0] ?? manifest.geometry.isocenter_mm[0],
+    )
+    if (!quiz) continue
+
+    return {
+      nodule: {
+        lps: sample.point,
+        distanceMm: snap.distanceMm,
+        edgeId: snap.edgeId,
+        routeTerminalNodeId: snap.routeTerminalNodeId,
+      },
+      quiz,
+    }
+  }
+
+  return null
+}
+
 export function FluoroViewApp() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const volumeCanvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -181,6 +421,7 @@ export function FluoroViewApp() {
   const needsRenderRef = useRef(false)
   const stateRef = useRef<AppState | null>(null)
   const settingsRef = useRef<FluoroSettings>(DEFAULT_FLUORO_SETTINGS)
+  const lastOverlayModeRef = useRef<OverlayMode>('surface')
   const drrMetricsRef = useRef<DrrFrameMetrics>({
     thicknessProxy: 1,
     renderMs: 0,
@@ -203,11 +444,11 @@ export function FluoroViewApp() {
   const [ctWindowPreset, setCtWindowPreset] = useState('lung')
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null)
   const [nodule, setNodule] = useState<NoduleState | null>(null)
-  const [snapStatus, setSnapStatus] = useState('Click the CT to place a synthetic nodule.')
+  const [noduleQuiz, setNoduleQuiz] = useState<NoduleQuizState | null>(null)
+  const [snapStatus, setSnapStatus] = useState('Open quiz mode to generate a random nodule.')
   const [scopeRouteId, setScopeRouteId] = useState<ScopeRouteId | null>(null)
   const [scopeProgress, setScopeProgress] = useState(0.45)
-  const [showScope, setShowScope] = useState(true)
-  const [showScopeTrace, setShowScopeTrace] = useState(true)
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<FluoroWorkspaceTab>('fluoro')
   const [renderStats, setRenderStats] = useState<RenderStats>({ fps: 0, visibleSegments: 0 })
   const [drrMetrics, setDrrMetrics] = useState<DrrFrameMetrics>(drrMetricsRef.current)
   const [error, setError] = useState<string | null>(null)
@@ -232,7 +473,7 @@ export function FluoroViewApp() {
         for (const manifestUrl of [CASE_MANIFEST_URL, FALLBACK_CASE_MANIFEST_URL]) {
           attempted.push(manifestUrl)
           try {
-            const manifestRes = await fetch(manifestUrl)
+            const manifestRes = await fetch(manifestUrl, { cache: 'no-store' })
             if (!manifestRes.ok) {
               throw new Error(`HTTP ${manifestRes.status}`)
             }
@@ -264,6 +505,7 @@ export function FluoroViewApp() {
           canvas,
           labelLayer,
           config: loadedManifest.geometry,
+          calibrationProjection: loadedManifest.volumeDrr?.calibrationProjection,
         })
         rendererRef.current = renderer
 
@@ -340,7 +582,8 @@ export function FluoroViewApp() {
         }
         setManifest(loadedManifest)
         setSelectedLessonId(loadedManifest.lessons[0]?.id ?? null)
-        setCtIndices(defaultCtIndices(loadedManifest))
+        const initialCtIndices = defaultCtIndices(loadedManifest)
+        setCtIndices(initialCtIndices)
         setScopeRouteId(
           loadedManifest.scopeAnimation
             ? 'bezier-demo'
@@ -446,6 +689,9 @@ export function FluoroViewApp() {
     setAppState((prev) => {
       if (!prev) return prev
       const base = updater(prev)
+      if (base.overlayMode !== 'off') {
+        lastOverlayModeRef.current = base.overlayMode
+      }
       const next: AppState = {
         ...base,
         activeGroups: new Set(base.activeGroups),
@@ -458,6 +704,24 @@ export function FluoroViewApp() {
       return next
     })
   }, [])
+
+  const setOverlayHidden = useCallback(
+    (hidden: boolean) => {
+      updateState((prev) => {
+        if (hidden) {
+          if (prev.overlayMode !== 'off') {
+            lastOverlayModeRef.current = prev.overlayMode
+          }
+          return { ...prev, overlayMode: 'off' }
+        }
+        return {
+          ...prev,
+          overlayMode: prev.overlayMode === 'off' ? lastOverlayModeRef.current : prev.overlayMode,
+        }
+      })
+    },
+    [updateState],
+  )
 
   const updateSetting = useCallback(
     <K extends keyof FluoroSettings>(key: K, value: FluoroSettings[K]) => {
@@ -609,6 +873,13 @@ export function FluoroViewApp() {
     manifest?.virtualCathLab?.frontalImageUrl && manifest.virtualCathLab.frontalProjection,
   )
   const isSlicerReferenceMode = fluoroImageSource === 'slicerheart' && slicerReferenceAvailable
+  const fluoroAspectRatio = useMemo(() => {
+    const pixels =
+      isSlicerReferenceMode && manifest?.virtualCathLab?.frontalDetectorPixels
+        ? manifest.virtualCathLab.frontalDetectorPixels
+        : manifest?.geometry.detector_pixels
+    return pixels ? `${pixels[0]} / ${pixels[1]}` : '1 / 1'
+  }, [isSlicerReferenceMode, manifest])
 
   const selectedLesson = useMemo(() => {
     return (
@@ -622,27 +893,6 @@ export function FluoroViewApp() {
     const index = ctIndices[ctAxis] ?? axisConfig.defaultIndex
     return axisConfig.frames[Math.min(Math.max(index, 0), axisConfig.frames.length - 1)]
   }, [ctAxis, ctIndices, manifest])
-
-  const scopeRouteOptions = useMemo(() => {
-    const terminalOptions = airwayGraph ? routeOptions(airwayGraph, 48) : []
-    const options: Array<{ id: ScopeRouteId; label: string }> = manifest?.scopeAnimation
-      ? [{ id: 'bezier-demo', label: 'Bronch animation demo' }, ...terminalOptions]
-      : terminalOptions
-    if (
-      nodule &&
-      airwayGraph &&
-      !options.some((option) => option.id === nodule.routeTerminalNodeId)
-    ) {
-      return [
-        {
-          id: nodule.routeTerminalNodeId,
-          label: `Nodule route (${airwayGraph.nodes[nodule.routeTerminalNodeId]?.rootDistanceMm.toFixed(0) ?? 'distal'} mm)`,
-        },
-        ...options,
-      ]
-    }
-    return options
-  }, [airwayGraph, manifest?.scopeAnimation, nodule])
 
   const activeRoute = useMemo<RoutePath | null>(() => {
     return resolveScopeRoutePath({
@@ -662,29 +912,89 @@ export function FluoroViewApp() {
       if (isSlicerReferenceMode && manifest.virtualCathLab?.frontalProjection) {
         return projectLpsToSlicerFrontalDetector(point, manifest.virtualCathLab.frontalProjection)
       }
+      if (manifest.volumeDrr?.calibrationProjection) {
+        return projectLpsToSlicerCalibratedDetector(
+          point,
+          manifest.geometry,
+          manifest.volumeDrr.calibrationProjection,
+          appState.raoLao,
+          appState.cranialCaudal,
+        )
+      }
       return projectLpsToDetector(point, manifest.geometry, appState.raoLao, appState.cranialCaudal)
     },
     [appState, isSlicerReferenceMode, manifest],
   )
 
+  const projectRegisteredAirwayPoint = useCallback(
+    (point: Vec3): DetectorProjection | null => {
+      return projectFluoroPoint(point)
+    },
+    [projectFluoroPoint],
+  )
+
   const projectedNodule = useMemo(() => {
-    if (!manifest || !appState || !nodule) return null
+    if (!manifest || !appState || activeWorkspaceTab !== 'quiz' || !nodule) return null
     return projectFluoroPoint(nodule.lps)
-  }, [appState, manifest, nodule, projectFluoroPoint])
+  }, [activeWorkspaceTab, appState, manifest, nodule, projectFluoroPoint])
 
-  const projectedScope = useMemo(() => {
-    if (!manifest || !appState || !scopeSample) return null
-    return projectFluoroPoint(scopeSample.point)
-  }, [appState, manifest, projectFluoroPoint, scopeSample])
+  const quizScopePathPoints = useMemo(() => {
+    if (!noduleQuiz || !activeRoute) return []
+    return routePointsUntilProgress(activeRoute, scopeProgress)
+  }, [activeRoute, noduleQuiz, scopeProgress])
 
-  const projectedScopeTrace = useMemo(() => {
-    if (!manifest || !appState || !activeRoute || !showScopeTrace) return []
-    const maxIndex = Math.max(1, Math.floor(activeRoute.points.length * scopeProgress))
-    return activeRoute.points
-      .slice(0, maxIndex + 1)
-      .map((point) => projectFluoroPoint(point))
-      .filter((projection): projection is DetectorProjection => projection !== null)
-  }, [activeRoute, appState, manifest, projectFluoroPoint, scopeProgress, showScopeTrace])
+  const projectedQuizScopePath = useMemo(() => {
+    if (!manifest || !appState || activeWorkspaceTab !== 'quiz' || quizScopePathPoints.length < 2) {
+      return null
+    }
+    const projected = quizScopePathPoints
+      .map((point) => projectRegisteredAirwayPoint(point))
+      .filter(
+        (projection): projection is DetectorProjection => projection !== null && projection.inFrame,
+      )
+    if (projected.length < 2) return null
+    return projected
+      .map((projection, index) => {
+        const [x, y] = projection.point
+        return `${index === 0 ? 'M' : 'L'}${x.toFixed(3)} ${y.toFixed(3)}`
+      })
+      .join(' ')
+  }, [activeWorkspaceTab, appState, manifest, projectRegisteredAirwayPoint, quizScopePathPoints])
+
+  const projectedAirwayPaths = useMemo<ProjectedAirwayPath[]>(() => {
+    if (
+      !centerline ||
+      !appState ||
+      appState.overlayMode !== 'centerline' ||
+      isSlicerReferenceMode ||
+      centerline.coordinateSystem !== 'LPS'
+    ) {
+      return []
+    }
+    const paths: ProjectedAirwayPath[] = []
+    for (const polyline of centerline.polylines) {
+      const points = polyline.pointsLps ?? []
+      const projected = points
+        .map((point) => projectRegisteredAirwayPoint(point))
+        .filter((projection): projection is DetectorProjection => Boolean(projection))
+      if (projected.length < 2) continue
+
+      const d = projected
+        .map((projection, index) => {
+          const [x, y] = projection.point
+          const command = index === 0 ? 'M' : 'L'
+          return `${command}${x.toFixed(3)} ${y.toFixed(3)}`
+        })
+        .join(' ')
+      paths.push({
+        id: polyline.id,
+        d,
+        groupKey: 'centerline',
+        radiusMm: 1.35,
+      })
+    }
+    return paths
+  }, [appState, centerline, isSlicerReferenceMode, projectRegisteredAirwayPoint])
 
   const noduleScopeDistance = useMemo(() => {
     if (!nodule || !scopeSample) return null
@@ -703,13 +1013,20 @@ export function FluoroViewApp() {
   const doseRate = estimateRelativeDoseRate(settings, thicknessProxy)
   const fieldArea = fieldAreaFraction(settings)
 
-  const fluoroImageStyle = useMemo<CSSProperties>(
+  const fluoroFrameStyle = useMemo<CSSProperties>(
     () => ({
-      filter: imageFilterForSettings(settings, thicknessProxy),
       clipPath: collimationClipPath(settings),
       transform: `scale(${imageScaleForSettings(settings)})`,
     }),
-    [settings, thicknessProxy],
+    [settings],
+  )
+
+  const fluoroImageStyle = useMemo<CSSProperties>(
+    () => ({
+      ...fluoroFrameStyle,
+      filter: imageFilterForSettings(settings, thicknessProxy),
+    }),
+    [fluoroFrameStyle, settings, thicknessProxy],
   )
 
   const ctImageStyle = useMemo<CSSProperties>(() => {
@@ -740,33 +1057,79 @@ export function FluoroViewApp() {
     [settings, thicknessProxy],
   )
 
-  const handleCtNodulePlacement = useCallback(
-    (lps: Vec3) => {
-      if (!airwayGraph || !manifest?.interaction) {
-        setSnapStatus('Airway graph is still loading; try again in a moment.')
-        return
-      }
-      const snap = findNearestAirwayPoint(airwayGraph, lps, manifest.interaction.snapRadiusMm)
-      if (!snap) {
-        setSnapStatus(
-          `No airway centerline within ${manifest.interaction.snapRadiusMm} mm. Try closer to the airway.`,
-        )
-        return
-      }
-      setNodule({
-        lps: snap.lps,
-        distanceMm: snap.distanceMm,
-        edgeId: snap.edgeId,
-        routeTerminalNodeId: snap.routeTerminalNodeId,
-      })
-      setScopeRouteId(snap.routeTerminalNodeId)
-      setScopeProgress(Math.max(scopeProgress, 0.35))
-      setSnapStatus(
-        `Nodule snapped ${snap.distanceMm.toFixed(1)} mm to Network edge ${snap.edgeId}. Scope route updated.`,
-      )
-    },
-    [airwayGraph, manifest?.interaction, scopeProgress],
-  )
+  const generateRandomNoduleQuiz = useCallback(() => {
+    if (!airwayGraph || !manifest?.interaction) {
+      setSnapStatus('Airway graph is still loading; a random quiz nodule will appear shortly.')
+      return false
+    }
+
+    const target = buildRandomNoduleQuizTarget(airwayGraph, manifest)
+    if (!target) {
+      setNodule(null)
+      setNoduleQuiz(null)
+      setSnapStatus('Unable to generate a randomized nearby-branch quiz from this airway graph.')
+      return false
+    }
+
+    setNodule(target.nodule)
+    setNoduleQuiz(target.quiz)
+    setScopeRouteId(target.quiz.scopeRouteTerminalNodeId)
+    setScopeProgress(target.quiz.scopeProgress)
+    setOverlayHidden(true)
+    setSnapStatus(
+      'Random quiz nodule generated. The scope is intentionally parked in a nearby incorrect airway branch.',
+    )
+    return true
+  }, [airwayGraph, manifest, setOverlayHidden])
+
+  const overlayMode = appState?.overlayMode ?? 'off'
+  const quizOverlayLocked =
+    activeWorkspaceTab === 'quiz' && Boolean(noduleQuiz && !noduleQuiz.locked)
+  const quizAnglesLimited = activeWorkspaceTab === 'quiz' && !noduleQuiz?.locked
+  const raoLaoLimitDeg = quizAnglesLimited ? QUIZ_RAO_LAO_LIMIT_DEG : FULL_RAO_LAO_LIMIT_DEG
+  const overlayHidden = overlayMode === 'off' || quizOverlayLocked
+  const overlayOpacity = appState?.overlayOpacity ?? 0
+  const glbOverlayOpacity =
+    quizOverlayLocked || overlayMode === 'off' || isSlicerReferenceMode
+      ? 0
+      : overlayMode === 'centerline'
+        ? Math.min(overlayOpacity, 0.22)
+        : overlayOpacity
+
+  const selectQuizAnswer = useCallback((answer: RelativeLocationAnswer) => {
+    setNoduleQuiz((prev) => (prev && !prev.locked ? { ...prev, selectedAnswer: answer } : prev))
+  }, [])
+
+  const lockQuizAnswer = useCallback(() => {
+    setNoduleQuiz((prev) => {
+      if (!prev?.selectedAnswer) return prev
+      return { ...prev, locked: true }
+    })
+    setOverlayHidden(false)
+  }, [setOverlayHidden])
+
+  const resetNoduleQuiz = useCallback(() => {
+    generateRandomNoduleQuiz()
+  }, [generateRandomNoduleQuiz])
+
+  useEffect(() => {
+    if (activeWorkspaceTab !== 'quiz' || nodule || noduleQuiz || !airwayGraph || !manifest) return
+    generateRandomNoduleQuiz()
+  }, [activeWorkspaceTab, airwayGraph, generateRandomNoduleQuiz, manifest, nodule, noduleQuiz])
+
+  useEffect(() => {
+    if (!quizAnglesLimited || !appState) return
+    const clampedRaoLao = clampNumber(
+      appState.raoLao,
+      -QUIZ_RAO_LAO_LIMIT_DEG,
+      QUIZ_RAO_LAO_LIMIT_DEG,
+    )
+    if (clampedRaoLao === appState.raoLao) return
+    updateState((prev) => ({
+      ...prev,
+      raoLao: clampNumber(prev.raoLao, -QUIZ_RAO_LAO_LIMIT_DEG, QUIZ_RAO_LAO_LIMIT_DEG),
+    }))
+  }, [appState, quizAnglesLimited, updateState])
 
   if (error) {
     return (
@@ -805,9 +1168,8 @@ export function FluoroViewApp() {
             </Badge>
           </div>
           <div
-            className={`relative overflow-hidden rounded-lg border border-white/10 bg-slate-950 ${
-              isSlicerReferenceMode ? 'aspect-[587/800]' : 'aspect-square'
-            }`}
+            className="relative overflow-hidden rounded-lg border border-white/10 bg-slate-950"
+            style={{ aspectRatio: fluoroAspectRatio }}
           >
             {isSlicerReferenceMode && manifest?.virtualCathLab?.frontalImageUrl ? (
               <Image
@@ -863,13 +1225,17 @@ export function FluoroViewApp() {
             <div
               className="pointer-events-none absolute inset-0 opacity-20 mix-blend-screen"
               style={{
-                opacity: noiseOpacityForSettings(settings),
+                opacity: noiseOpacityForSettings(settings) * (volumeDrrActive ? 0.35 : 1),
                 backgroundImage:
                   'radial-gradient(circle at 20% 30%, white 0 1px, transparent 1px), radial-gradient(circle at 70% 60%, white 0 1px, transparent 1px)',
                 backgroundSize: '7px 7px, 11px 11px',
               }}
             />
-            {centerline && appState?.overlayMode === 'centerline' && !isSlicerReferenceMode ? (
+            {centerline &&
+            centerline.coordinateSystem !== 'LPS' &&
+            appState?.overlayMode === 'centerline' &&
+            !quizOverlayLocked &&
+            !isSlicerReferenceMode ? (
               <svg
                 className="pointer-events-none absolute inset-0 h-full w-full"
                 viewBox="0 0 100 100"
@@ -878,7 +1244,7 @@ export function FluoroViewApp() {
                 {centerline.polylines.map((polyline) => (
                   <polyline
                     key={polyline.id}
-                    points={polyline.points.map((point) => point.join(',')).join(' ')}
+                    points={(polyline.points ?? []).map((point) => point.join(',')).join(' ')}
                     fill="none"
                     stroke="#facc15"
                     strokeLinecap="round"
@@ -895,31 +1261,82 @@ export function FluoroViewApp() {
               height={1024}
               className="absolute inset-0 h-full w-full"
               style={{
-                opacity: appState?.overlayMode === 'off' || isSlicerReferenceMode ? 0 : 1,
+                ...fluoroFrameStyle,
+                opacity: glbOverlayOpacity,
                 pointerEvents:
                   appState?.overlayMode === 'off' || isSlicerReferenceMode ? 'none' : 'auto',
               }}
             />
-            <div ref={labelLayerRef} className="pointer-events-none absolute inset-0" />
-            {projectedNodule || (showScope && projectedScope) || projectedScopeTrace.length ? (
+            <div
+              ref={labelLayerRef}
+              className="pointer-events-none absolute inset-0"
+              style={{ opacity: quizOverlayLocked ? 0 : 1 }}
+            />
+            {projectedAirwayPaths.length > 0 && !overlayHidden ? (
               <svg
                 className="pointer-events-none absolute inset-0 h-full w-full"
                 viewBox="0 0 100 100"
                 aria-hidden
+                style={fluoroFrameStyle}
               >
-                {projectedScopeTrace.length > 1 ? (
-                  <polyline
-                    points={projectedScopeTrace
-                      .filter((projection) => projection.inFrame)
-                      .map((projection) => projection.point.join(','))
-                      .join(' ')}
-                    fill="none"
-                    stroke="#22c55e"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="0.9"
-                    opacity="0.85"
-                  />
+                {projectedAirwayPaths.map((path) => {
+                  const strokeWidth = airwayStrokeWidthPercent(path.radiusMm, manifest, overlayMode)
+                  const coreColor = overlayMode === 'centerline' ? '#facc15' : '#fff7d6'
+                  const coreOpacity =
+                    overlayMode === 'centerline' ? 0.92 : Math.max(0.28, overlayOpacity)
+                  return (
+                    <g key={path.id}>
+                      <path
+                        d={path.d}
+                        fill="none"
+                        stroke="#020617"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={strokeWidth + 0.34}
+                        opacity={overlayMode === 'centerline' ? 0.58 : 0.46}
+                      />
+                      <path
+                        d={path.d}
+                        fill="none"
+                        stroke={coreColor}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={strokeWidth}
+                        opacity={coreOpacity}
+                      />
+                    </g>
+                  )
+                })}
+              </svg>
+            ) : null}
+            {projectedNodule || projectedQuizScopePath ? (
+              <svg
+                className="pointer-events-none absolute inset-0 h-full w-full"
+                viewBox="0 0 100 100"
+                aria-hidden
+                style={fluoroFrameStyle}
+              >
+                {projectedQuizScopePath ? (
+                  <g>
+                    <path
+                      d={projectedQuizScopePath}
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.9"
+                      opacity="0.9"
+                    />
+                    <path
+                      d={projectedQuizScopePath}
+                      fill="none"
+                      stroke="#020617"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.05"
+                      opacity="0.96"
+                    />
+                  </g>
                 ) : null}
                 {projectedNodule ? (
                   <g
@@ -935,30 +1352,6 @@ export function FluoroViewApp() {
                     <line x1="0" x2="0" y1="-4.5" y2="4.5" stroke="#fb7185" strokeWidth="0.45" />
                   </g>
                 ) : null}
-                {showScope && projectedScope ? (
-                  <g transform={`translate(${projectedScope.point[0]} ${projectedScope.point[1]})`}>
-                    <circle r="2.2" fill="#22c55e" stroke="#052e16" strokeWidth="0.7" />
-                    <circle
-                      r="4.2"
-                      fill="none"
-                      stroke="#bbf7d0"
-                      strokeWidth="0.45"
-                      opacity="0.85"
-                    />
-                  </g>
-                ) : null}
-                {projectedNodule && showScope && projectedScope ? (
-                  <line
-                    x1={projectedScope.point[0]}
-                    y1={projectedScope.point[1]}
-                    x2={projectedNodule.point[0]}
-                    y2={projectedNodule.point[1]}
-                    stroke="#fbbf24"
-                    strokeDasharray="1.2 1.2"
-                    strokeWidth="0.45"
-                    opacity="0.9"
-                  />
-                ) : null}
               </svg>
             ) : null}
             {loading ? (
@@ -970,15 +1363,30 @@ export function FluoroViewApp() {
               FPS {renderStats.fps.toFixed(1)} | segments {renderStats.visibleSegments}
               {volumeDrrActive ? ` | DRR ${drrMetrics.renderMs.toFixed(0)} ms` : ''}
             </div>
-            {manifest?.cArm && appState ? (
-              <CarmInsetView
-                raoLao={appState.raoLao}
-                cranialCaudal={appState.cranialCaudal}
-                cArm={manifest.cArm}
-                airwayGlbUri={manifest.assets.airwaySegmentsGlb ?? manifest.assets.airwayGlb}
-                dracoBaseUrl={manifest.assets.dracoBaseUrl}
-              />
-            ) : null}
+            <button
+              type="button"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-slate-950/70 text-slate-100 shadow-sm backdrop-blur transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-70"
+              onClick={() => {
+                if (!quizOverlayLocked) setOverlayHidden(!overlayHidden)
+              }}
+              disabled={quizOverlayLocked}
+              aria-label={
+                quizOverlayLocked
+                  ? '3D overlay locked for quiz'
+                  : overlayHidden
+                    ? 'Show 3D overlay'
+                    : 'Hide 3D overlay'
+              }
+              title={
+                quizOverlayLocked
+                  ? '3D overlay locked for quiz'
+                  : overlayHidden
+                    ? 'Show 3D overlay'
+                    : 'Hide 3D overlay'
+              }
+            >
+              {overlayHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </button>
           </div>
           {atlasDelta ? (
             <p className="mt-3 text-xs text-muted-foreground">
@@ -1005,57 +1413,92 @@ export function FluoroViewApp() {
               Live
             </Badge>
           </div>
-          <details className="mb-5 rounded-md border border-border/70 bg-background/60 p-3">
-            <summary className="cursor-pointer text-sm font-semibold text-foreground">
-              <span className="ml-2 inline-flex items-center gap-3">
-                <span>Lobar Filters</span>
-                {appState ? (
-                  <Badge variant="outline" className="rounded-full border-primary/40 text-xs">
-                    {appState.activeGroups.size} active
-                  </Badge>
-                ) : null}
-              </span>
-            </summary>
-            {!appState ? (
-              <div className="mt-3 text-sm text-muted-foreground">Loading filters...</div>
-            ) : (
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {legendEntries.map((group) => (
-                  <div key={group.groupKey} className="space-y-2">
-                    <label className="flex items-center justify-between rounded-md border border-border/60 bg-background/70 px-3 py-2 text-sm">
-                      <span className="font-medium text-foreground">{group.groupLabel}</span>
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 accent-primary"
-                        checked={appState.activeGroups.has(group.groupKey)}
-                        onChange={(event) =>
-                          handleGroupToggle(group.groupKey, event.target.checked)
-                        }
-                      />
-                    </label>
-                    <div className="grid gap-1 pl-2 text-xs text-muted-foreground">
-                      {group.items.slice(0, 4).map((item) => (
-                        <div key={item.label} className="flex items-center gap-2">
-                          <span
-                            className="h-3 w-3 rounded-sm border border-border/40"
-                            style={{ backgroundColor: item.color }}
-                            aria-hidden
-                          />
-                          <span>{item.label}</span>
-                        </div>
-                      ))}
-                      {group.items.length > 4 ? <span>+ {group.items.length - 4} more</span> : null}
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-md border border-border/70 bg-background/60 p-1">
+            {[
+              { id: 'fluoro' as const, label: 'Fluoro controls' },
+              { id: 'quiz' as const, label: 'Quiz mode' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                className={`rounded px-3 py-2 text-sm font-semibold transition ${
+                  activeWorkspaceTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-accent'
+                }`}
+                onClick={() => setActiveWorkspaceTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {activeWorkspaceTab === 'fluoro' ? (
+            <details className="mb-5 rounded-md border border-border/70 bg-background/60 p-3">
+              <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                <span className="ml-2 inline-flex items-center gap-3">
+                  <span>Lobar Filters</span>
+                  {appState ? (
+                    <Badge variant="outline" className="rounded-full border-primary/40 text-xs">
+                      {appState.activeGroups.size} active
+                    </Badge>
+                  ) : null}
+                </span>
+              </summary>
+              {!appState ? (
+                <div className="mt-3 text-sm text-muted-foreground">Loading filters...</div>
+              ) : (
+                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {legendEntries.map((group) => (
+                    <div key={group.groupKey} className="space-y-2">
+                      <label className="flex items-center justify-between rounded-md border border-border/60 bg-background/70 px-3 py-2 text-sm">
+                        <span className="font-medium text-foreground">{group.groupLabel}</span>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-primary"
+                          checked={appState.activeGroups.has(group.groupKey)}
+                          onChange={(event) =>
+                            handleGroupToggle(group.groupKey, event.target.checked)
+                          }
+                        />
+                      </label>
+                      <div className="grid gap-1 pl-2 text-xs text-muted-foreground">
+                        {group.items.slice(0, 4).map((item) => (
+                          <div key={item.label} className="flex items-center gap-2">
+                            <span
+                              className="h-3 w-3 rounded-sm border border-border/40"
+                              style={{ backgroundColor: item.color }}
+                              aria-hidden
+                            />
+                            <span>{item.label}</span>
+                          </div>
+                        ))}
+                        {group.items.length > 4 ? (
+                          <span>+ {group.items.length - 4} more</span>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </details>
+                  ))}
+                </div>
+              )}
+            </details>
+          ) : (
+            <div className="mb-5 rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
+              A randomized nodule is selected from the airway graph. Choose its location relative to
+              the bronchoscope path, then lock your answer to reveal CT correlation. RAO/LAO
+              rotation is intentionally limited to 30 degrees during the quiz so localization
+              requires inference; the full 60-degree range unlocks after you lock an answer.
+            </div>
+          )}
           <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
             <ControlPanel title="C-arm">
               <PresetButtons
+                raoLaoLimitDeg={raoLaoLimitDeg}
                 onSelect={(raoLao, cranialCaudal) =>
-                  updateState((prev) => ({ ...prev, raoLao, cranialCaudal }))
+                  updateState((prev) => ({
+                    ...prev,
+                    raoLao: clampNumber(raoLao, -raoLaoLimitDeg, raoLaoLimitDeg),
+                    cranialCaudal,
+                  }))
                 }
               />
               {appState ? (
@@ -1063,8 +1506,8 @@ export function FluoroViewApp() {
                   <RangeControl
                     label="RAO / LAO"
                     value={appState.raoLao}
-                    min={-60}
-                    max={60}
+                    min={-raoLaoLimitDeg}
+                    max={raoLaoLimitDeg}
                     step={0.5}
                     unit="deg"
                     onInteractionStart={beginInteraction}
@@ -1082,6 +1525,13 @@ export function FluoroViewApp() {
                     onInteractionEnd={endInteraction}
                     onChange={(value) => updateState((prev) => ({ ...prev, cranialCaudal: value }))}
                   />
+                  {activeWorkspaceTab === 'quiz' ? (
+                    <p className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
+                      {quizAnglesLimited
+                        ? 'Quiz view limits RAO/LAO rotation to 30 degrees until you lock an answer.'
+                        : 'Answer locked. Full 60-degree RAO/LAO review is now available.'}
+                    </p>
+                  ) : null}
                 </>
               ) : null}
               {atlasDelta ? (
@@ -1091,429 +1541,486 @@ export function FluoroViewApp() {
                     : `Continuous blend delta ${atlasDelta.rao.toFixed(1)} / ${atlasDelta.cranial.toFixed(1)} deg.`}
                 </p>
               ) : null}
+              {manifest?.cArm && appState ? (
+                <CarmInsetView
+                  raoLao={appState.raoLao}
+                  cranialCaudal={appState.cranialCaudal}
+                  cArm={manifest.cArm}
+                  airwayGlbUri={manifest.assets.airwaySegmentsGlb ?? manifest.assets.airwayGlb}
+                  dracoBaseUrl={manifest.assets.dracoBaseUrl}
+                  className="pointer-events-none mt-3 h-44 w-full overflow-hidden rounded-lg border border-white/15 bg-slate-950/80 shadow-sm"
+                />
+              ) : null}
             </ControlPanel>
 
-            <ControlPanel title="Knobology">
-              <RangeControl
-                label="kVp"
-                value={settings.kvp}
-                min={60}
-                max={120}
-                step={1}
-                onChange={(value) => updateSetting('kvp', value)}
-              />
-              <RangeControl
-                label="mA"
-                value={settings.ma}
-                min={0.5}
-                max={8}
-                step={0.1}
-                onChange={(value) => updateSetting('ma', value)}
-              />
-              <RangeControl
-                label="Pulse width"
-                value={settings.pulseWidthMs}
-                min={2}
-                max={20}
-                step={0.5}
-                unit="ms"
-                onChange={(value) => updateSetting('pulseWidthMs', value)}
-              />
-              <RangeControl
-                label="Pulse rate"
-                value={settings.pulseRateFps}
-                min={1}
-                max={30}
-                step={0.5}
-                unit="fps"
-                onChange={(value) => updateSetting('pulseRateFps', value)}
-              />
-            </ControlPanel>
+            {activeWorkspaceTab === 'fluoro' ? (
+              <ControlPanel title="Knobology">
+                <RangeControl
+                  label="kVp"
+                  value={settings.kvp}
+                  min={60}
+                  max={120}
+                  step={1}
+                  onChange={(value) => updateSetting('kvp', value)}
+                />
+                <RangeControl
+                  label="mA"
+                  value={settings.ma}
+                  min={0.5}
+                  max={8}
+                  step={0.1}
+                  onChange={(value) => updateSetting('ma', value)}
+                />
+                <RangeControl
+                  label="Pulse width"
+                  value={settings.pulseWidthMs}
+                  min={2}
+                  max={20}
+                  step={0.5}
+                  unit="ms"
+                  onChange={(value) => updateSetting('pulseWidthMs', value)}
+                />
+                <RangeControl
+                  label="Pulse rate"
+                  value={settings.pulseRateFps}
+                  min={1}
+                  max={30}
+                  step={0.5}
+                  unit="fps"
+                  onChange={(value) => updateSetting('pulseRateFps', value)}
+                />
+              </ControlPanel>
+            ) : null}
 
-            <ControlPanel title="Overlay And Dose">
-              {appState ? (
-                <>
+            {activeWorkspaceTab === 'fluoro' ? (
+              <ControlPanel title="Overlay And Dose">
+                {appState ? (
+                  <>
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-muted-foreground">3D overlay</span>
+                      <select
+                        className="rounded-md border border-border bg-background px-3 py-2"
+                        value={appState.overlayMode}
+                        disabled={quizOverlayLocked}
+                        onChange={(event) =>
+                          updateState((prev) => ({
+                            ...prev,
+                            overlayMode: event.target.value as OverlayMode,
+                            showLabels: event.target.value === 'labels' || prev.showLabels,
+                            useWireframe:
+                              event.target.value === 'wireframe' ||
+                              event.target.value === 'centerline' ||
+                              prev.useWireframe,
+                          }))
+                        }
+                      >
+                        {OVERLAY_MODES.map((mode) => (
+                          <option key={mode.value} value={mode.value}>
+                            {mode.label}
+                          </option>
+                        ))}
+                      </select>
+                      {quizOverlayLocked ? (
+                        <span className="text-xs text-muted-foreground">
+                          Quiz mode keeps the 3D overlay hidden until the answer is locked.
+                        </span>
+                      ) : null}
+                    </label>
+                    <RangeControl
+                      label="Overlay opacity"
+                      value={appState.overlayOpacity}
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      onChange={(value) =>
+                        updateState((prev) => ({ ...prev, overlayOpacity: value }))
+                      }
+                    />
+                    <ToggleControl
+                      label="Labels"
+                      checked={appState.showLabels}
+                      onChange={(checked) =>
+                        updateState((prev) => ({ ...prev, showLabels: checked }))
+                      }
+                    />
+                    <ToggleControl
+                      label="Depth emphasis"
+                      checked={appState.useDts}
+                      onChange={(checked) => updateState((prev) => ({ ...prev, useDts: checked }))}
+                    />
+                  </>
+                ) : null}
+                <div className="rounded-md border border-border/70 bg-background/60 p-3 text-sm">
+                  <div className="font-medium">Relative educational dose estimate</div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                    <span>Dose rate</span>
+                    <span className="text-right">{doseRate.toFixed(2)}</span>
+                    <span>Cumulative air kerma</span>
+                    <span className="text-right">
+                      {doseState.cumulativeRelativeAirKerma.toFixed(2)}
+                    </span>
+                    <span>Relative KAP/DAP</span>
+                    <span className="text-right">{doseState.cumulativeRelativeKap.toFixed(2)}</span>
+                    <span>Frames</span>
+                    <span className="text-right">{doseState.cumulativeFrames}</span>
+                    <span>Fluoro time</span>
+                    <span className="text-right">
+                      {doseState.elapsedFluoroSeconds.toFixed(1)} s
+                    </span>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
+                      onClick={() => acquireFrames(1)}
+                    >
+                      Acquire frame
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-border px-3 py-2 text-xs font-semibold"
+                      onClick={() => acquireFrames(settings.pulseRateFps)}
+                    >
+                      Run 1 s
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-border px-3 py-2 text-xs font-semibold"
+                      onClick={() => setDoseState(EMPTY_DOSE_STATE)}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </ControlPanel>
+            ) : null}
+
+            {activeWorkspaceTab === 'quiz' ? (
+              <ControlPanel title="Scope And Target">
+                <div className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
+                  <div className="font-medium text-foreground">Randomized quiz target</div>
+                  <p className="mt-1">{snapStatus}</p>
+                  {nodule && noduleQuiz?.locked ? (
+                    <div className="mt-2 grid grid-cols-2 gap-1">
+                      <span>Quiz scope offset</span>
+                      <span className="text-right text-foreground">
+                        {noduleScopeDistance ? `${noduleScopeDistance.toFixed(1)} mm` : 'Pending'}
+                      </span>
+                    </div>
+                  ) : nodule ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      CT target markers stay hidden until the answer is locked.
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="mt-3 rounded-md border border-border px-3 py-2 text-xs font-semibold text-foreground"
+                    onClick={resetNoduleQuiz}
+                  >
+                    New random quiz
+                  </button>
+                </div>
+                {noduleQuiz ? (
+                  <div className="grid gap-3 rounded-md border border-border/70 bg-background/60 p-3">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">
+                        Relative location quiz
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        The scope tip is parked in a nearby incorrect airway. Where is the nodule
+                        relative to the scope tip?
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {RELATIVE_LOCATION_OPTIONS.map((option) => {
+                        const selected = noduleQuiz.selectedAnswer === option.value
+                        const correct = noduleQuiz.correctAnswer === option.value
+                        const reveal = noduleQuiz.locked
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                              reveal && correct
+                                ? 'border-emerald-400 bg-emerald-500/15 text-emerald-700 dark:text-emerald-200'
+                                : selected
+                                  ? 'border-primary bg-primary/10 text-primary'
+                                  : 'border-border bg-background hover:bg-accent'
+                            }`}
+                            onClick={() => selectQuizAnswer(option.value)}
+                            disabled={noduleQuiz.locked}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={lockQuizAnswer}
+                      disabled={!noduleQuiz.selectedAnswer || noduleQuiz.locked}
+                    >
+                      Lock answer and reveal 3D
+                    </button>
+                    {noduleQuiz.locked ? (
+                      <p className="rounded-md border border-border/70 bg-background/70 p-3 text-xs text-muted-foreground">
+                        Correct answer:{' '}
+                        {
+                          RELATIVE_LOCATION_OPTIONS.find(
+                            (option) => option.value === noduleQuiz.correctAnswer,
+                          )?.label
+                        }
+                        .
+                        {noduleQuiz.selectedAnswer === noduleQuiz.correctAnswer
+                          ? ' Nice localization.'
+                          : ' Compare the nodule and scope tip with the revealed airway overlay.'}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        The 3D overlay is hidden until the answer is locked.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
+                    A random quiz nodule will be generated as soon as the airway graph is ready.
+                  </p>
+                )}
+              </ControlPanel>
+            ) : null}
+
+            {activeWorkspaceTab === 'quiz' ? (
+              <ControlPanel title="Field And Image">
+                {slicerReferenceAvailable ? (
                   <label className="grid gap-1 text-sm">
-                    <span className="text-muted-foreground">3D overlay</span>
+                    <span className="text-muted-foreground">Fluoro source</span>
                     <select
                       className="rounded-md border border-border bg-background px-3 py-2"
-                      value={appState.overlayMode}
+                      value={fluoroImageSource}
                       onChange={(event) =>
-                        updateState((prev) => ({
-                          ...prev,
-                          overlayMode: event.target.value as OverlayMode,
-                          showLabels: event.target.value === 'labels' || prev.showLabels,
-                          useWireframe:
-                            event.target.value === 'wireframe' ||
-                            event.target.value === 'centerline' ||
-                            prev.useWireframe,
-                        }))
+                        setFluoroImageSource(event.target.value as FluoroImageSource)
                       }
                     >
-                      {OVERLAY_MODES.map((mode) => (
-                        <option key={mode.value} value={mode.value}>
-                          {mode.label}
+                      <option value="atlas">
+                        {volumeDrrActive ? 'Volume DRR' : 'TIGRE continuous atlas'}
+                      </option>
+                      {slicerReferenceAvailable ? (
+                        <option value="slicerheart">SlicerHeart reference</option>
+                      ) : null}
+                    </select>
+                  </label>
+                ) : null}
+                <RangeControl
+                  label="Collimation width"
+                  value={settings.collimationX}
+                  min={0.25}
+                  max={1}
+                  step={0.05}
+                  onChange={(value) => updateSetting('collimationX', value)}
+                />
+                <RangeControl
+                  label="Collimation height"
+                  value={settings.collimationY}
+                  min={0.25}
+                  max={1}
+                  step={0.05}
+                  onChange={(value) => updateSetting('collimationY', value)}
+                />
+                <label className="grid gap-1 text-sm">
+                  <span className="text-muted-foreground">Magnification</span>
+                  <select
+                    className="rounded-md border border-border bg-background px-3 py-2"
+                    value={settings.magnificationMode}
+                    onChange={(event) =>
+                      updateSetting('magnificationMode', event.target.value as MagnificationMode)
+                    }
+                  >
+                    {MAGNIFICATION_MODES.map((mode) => (
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <RangeControl
+                  label="Magnification factor"
+                  value={settings.magnificationFactor}
+                  min={1}
+                  max={2.5}
+                  step={0.1}
+                  onChange={(value) => updateSetting('magnificationFactor', value)}
+                />
+              </ControlPanel>
+            ) : null}
+
+            {activeWorkspaceTab === 'fluoro' ? (
+              <ControlPanel title="Physics Toggles">
+                <ToggleControl
+                  label="ABC / AERC"
+                  checked={settings.abcEnabled}
+                  onChange={(checked) => updateSetting('abcEnabled', checked)}
+                />
+                <ToggleControl
+                  label="Scatter"
+                  checked={settings.scatterEnabled}
+                  onChange={(checked) => updateSetting('scatterEnabled', checked)}
+                />
+                <ToggleControl
+                  label="Quantum noise"
+                  checked={settings.noiseEnabled}
+                  onChange={(checked) => updateSetting('noiseEnabled', checked)}
+                />
+                <ToggleControl
+                  label="High-dose mode"
+                  checked={settings.highDoseMode}
+                  onChange={(checked) => updateSetting('highDoseMode', checked)}
+                />
+                <RangeControl
+                  label="Detector blur"
+                  value={settings.detectorBlurPx}
+                  min={0}
+                  max={2}
+                  step={0.1}
+                  unit="px"
+                  onChange={(value) => updateSetting('detectorBlurPx', value)}
+                />
+              </ControlPanel>
+            ) : null}
+
+            {activeWorkspaceTab === 'fluoro' ? (
+              <ControlPanel title="Lesson">
+                {manifest ? (
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-muted-foreground">Exercise</span>
+                    <select
+                      className="rounded-md border border-border bg-background px-3 py-2"
+                      value={selectedLesson?.id ?? ''}
+                      onChange={(event) => setSelectedLessonId(event.target.value)}
+                    >
+                      {manifest.lessons.map((lesson) => (
+                        <option key={lesson.id} value={lesson.id}>
+                          {lesson.title}
                         </option>
                       ))}
                     </select>
                   </label>
-                  <RangeControl
-                    label="Overlay opacity"
-                    value={appState.overlayOpacity}
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    onChange={(value) =>
-                      updateState((prev) => ({ ...prev, overlayOpacity: value }))
-                    }
-                  />
-                  <ToggleControl
-                    label="Labels"
-                    checked={appState.showLabels}
-                    onChange={(checked) =>
-                      updateState((prev) => ({ ...prev, showLabels: checked }))
-                    }
-                  />
-                  <ToggleControl
-                    label="Depth emphasis"
-                    checked={appState.useDts}
-                    onChange={(checked) => updateState((prev) => ({ ...prev, useDts: checked }))}
-                  />
-                </>
-              ) : null}
-              <div className="rounded-md border border-border/70 bg-background/60 p-3 text-sm">
-                <div className="font-medium">Relative educational dose estimate</div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <span>Dose rate</span>
-                  <span className="text-right">{doseRate.toFixed(2)}</span>
-                  <span>Cumulative air kerma</span>
-                  <span className="text-right">
-                    {doseState.cumulativeRelativeAirKerma.toFixed(2)}
-                  </span>
-                  <span>Relative KAP/DAP</span>
-                  <span className="text-right">{doseState.cumulativeRelativeKap.toFixed(2)}</span>
-                  <span>Frames</span>
-                  <span className="text-right">{doseState.cumulativeFrames}</span>
-                  <span>Fluoro time</span>
-                  <span className="text-right">{doseState.elapsedFluoroSeconds.toFixed(1)} s</span>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
-                    onClick={() => acquireFrames(1)}
-                  >
-                    Acquire frame
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md border border-border px-3 py-2 text-xs font-semibold"
-                    onClick={() => acquireFrames(settings.pulseRateFps)}
-                  >
-                    Run 1 s
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md border border-border px-3 py-2 text-xs font-semibold"
-                    onClick={() => setDoseState(EMPTY_DOSE_STATE)}
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            </ControlPanel>
-
-            <ControlPanel title="Scope And Target">
-              <div className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
-                <div className="font-medium text-foreground">Nodule placement</div>
-                <p className="mt-1">{snapStatus}</p>
-                {nodule ? (
-                  <div className="mt-2 grid grid-cols-2 gap-1">
-                    <span>Route edge</span>
-                    <span className="text-right text-foreground">{nodule.edgeId}</span>
-                    <span>Scope to nodule</span>
-                    <span className="text-right text-foreground">
-                      {noduleScopeDistance ? `${noduleScopeDistance.toFixed(1)} mm` : 'Pending'}
-                    </span>
+                ) : null}
+                {selectedLesson ? (
+                  <div className="rounded-md border border-border/70 bg-background/60 p-3 text-sm">
+                    <div className="font-medium">{selectedLesson.title}</div>
+                    <p className="mt-2 text-xs text-muted-foreground">{selectedLesson.objective}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{selectedLesson.task}</p>
                   </div>
                 ) : null}
-                <button
-                  type="button"
-                  className="mt-3 rounded-md border border-border px-3 py-2 text-xs font-semibold text-foreground"
-                  onClick={() => {
-                    setNodule(null)
-                    setSnapStatus('Click the CT to place a synthetic nodule.')
-                  }}
-                >
-                  Reset nodule
-                </button>
-              </div>
-              <label className="grid gap-1 text-sm">
-                <span className="text-muted-foreground">Scope route</span>
-                <select
-                  className="rounded-md border border-border bg-background px-3 py-2"
-                  value={scopeRouteId == null ? '' : String(scopeRouteId)}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setScopeRouteId(value === 'bezier-demo' ? 'bezier-demo' : Number(value))
-                  }}
-                  disabled={!scopeRouteOptions.length}
-                >
-                  {scopeRouteOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {airwayGraph && airwayGraph.terminalNodeIds.length > 48 ? (
-                  <span className="text-xs text-muted-foreground">
-                    Showing bronch animation plus the 48 deepest terminal routes.
-                  </span>
-                ) : null}
-              </label>
-              <RangeControl
-                label="Scope progress"
-                value={scopeProgress}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={setScopeProgress}
-              />
-              <ToggleControl label="Show scope tip" checked={showScope} onChange={setShowScope} />
-              <ToggleControl
-                label="Show scope trace"
-                checked={showScopeTrace}
-                onChange={setShowScopeTrace}
-              />
-              {activeRoute && scopeSample ? (
-                <p className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground">
-                  Scope {scopeSample.distanceMm.toFixed(1)} / {activeRoute.lengthMm.toFixed(1)} mm
-                  along selected centerline route.
-                </p>
-              ) : null}
-            </ControlPanel>
-
-            <ControlPanel title="Field And Image">
-              {slicerReferenceAvailable ? (
-                <label className="grid gap-1 text-sm">
-                  <span className="text-muted-foreground">Fluoro source</span>
-                  <select
-                    className="rounded-md border border-border bg-background px-3 py-2"
-                    value={fluoroImageSource}
-                    onChange={(event) =>
-                      setFluoroImageSource(event.target.value as FluoroImageSource)
-                    }
-                  >
-                    <option value="atlas">
-                      {volumeDrrActive ? 'Volume DRR' : 'TIGRE continuous atlas'}
-                    </option>
-                    <option value="slicerheart">SlicerHeart reference</option>
-                  </select>
-                </label>
-              ) : null}
-              <RangeControl
-                label="Collimation width"
-                value={settings.collimationX}
-                min={0.25}
-                max={1}
-                step={0.05}
-                onChange={(value) => updateSetting('collimationX', value)}
-              />
-              <RangeControl
-                label="Collimation height"
-                value={settings.collimationY}
-                min={0.25}
-                max={1}
-                step={0.05}
-                onChange={(value) => updateSetting('collimationY', value)}
-              />
-              <label className="grid gap-1 text-sm">
-                <span className="text-muted-foreground">Magnification</span>
-                <select
-                  className="rounded-md border border-border bg-background px-3 py-2"
-                  value={settings.magnificationMode}
-                  onChange={(event) =>
-                    updateSetting('magnificationMode', event.target.value as MagnificationMode)
-                  }
-                >
-                  {MAGNIFICATION_MODES.map((mode) => (
-                    <option key={mode.value} value={mode.value}>
-                      {mode.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <RangeControl
-                label="Magnification factor"
-                value={settings.magnificationFactor}
-                min={1}
-                max={2.5}
-                step={0.1}
-                onChange={(value) => updateSetting('magnificationFactor', value)}
-              />
-            </ControlPanel>
-
-            <ControlPanel title="Physics Toggles">
-              <ToggleControl
-                label="ABC / AERC"
-                checked={settings.abcEnabled}
-                onChange={(checked) => updateSetting('abcEnabled', checked)}
-              />
-              <ToggleControl
-                label="Scatter"
-                checked={settings.scatterEnabled}
-                onChange={(checked) => updateSetting('scatterEnabled', checked)}
-              />
-              <ToggleControl
-                label="Quantum noise"
-                checked={settings.noiseEnabled}
-                onChange={(checked) => updateSetting('noiseEnabled', checked)}
-              />
-              <ToggleControl
-                label="High-dose mode"
-                checked={settings.highDoseMode}
-                onChange={(checked) => updateSetting('highDoseMode', checked)}
-              />
-              <RangeControl
-                label="Detector blur"
-                value={settings.detectorBlurPx}
-                min={0}
-                max={2}
-                step={0.1}
-                unit="px"
-                onChange={(value) => updateSetting('detectorBlurPx', value)}
-              />
-            </ControlPanel>
-
-            <ControlPanel title="Lesson">
-              {manifest ? (
-                <label className="grid gap-1 text-sm">
-                  <span className="text-muted-foreground">Exercise</span>
-                  <select
-                    className="rounded-md border border-border bg-background px-3 py-2"
-                    value={selectedLesson?.id ?? ''}
-                    onChange={(event) => setSelectedLessonId(event.target.value)}
-                  >
-                    {manifest.lessons.map((lesson) => (
-                      <option key={lesson.id} value={lesson.id}>
-                        {lesson.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : null}
-              {selectedLesson ? (
-                <div className="rounded-md border border-border/70 bg-background/60 p-3 text-sm">
-                  <div className="font-medium">{selectedLesson.title}</div>
-                  <p className="mt-2 text-xs text-muted-foreground">{selectedLesson.objective}</p>
-                  <p className="mt-2 text-xs text-muted-foreground">{selectedLesson.task}</p>
-                </div>
-              ) : null}
-            </ControlPanel>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-border/70 bg-card/70 p-4 xl:col-start-1">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">CT Correlation</h2>
-              <p className="text-xs text-muted-foreground">
-                Click the CT to place a synthetic nodule near an airway route.
-              </p>
-            </div>
-            <Badge variant="secondary" className="rounded-full text-xs">
-              {ctAxis}
-            </Badge>
-          </div>
-          <div className="grid items-start gap-4">
-            <div className="relative aspect-square overflow-hidden rounded-lg border border-border/60 bg-slate-950">
-              {manifest?.ctVolume && ctVolumeData ? (
-                <CtVolumeCanvas
-                  axis={ctAxis}
-                  ctVolume={manifest.ctVolume}
-                  volume={ctVolumeData}
-                  sliceIndex={ctIndices[ctAxis] ?? 0}
-                  windowPreset={ctWindowPreset}
-                  nodule={nodule}
-                  noduleRadiusMm={manifest.interaction?.noduleRadiusMm ?? 10}
-                  scopePoint={scopeSample?.point ?? null}
-                  onPlaceNodule={handleCtNodulePlacement}
-                />
-              ) : ctFrame ? (
-                <Image
-                  src={ctFrame.imageUrl}
-                  alt={`${ctAxis} CT slice ${ctFrame.index + 1}`}
-                  fill
-                  unoptimized
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                  className="object-cover"
-                  style={ctImageStyle}
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-slate-300">
-                  Loading CT slice...
-                </div>
-              )}
-            </div>
-            {manifest ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-1 text-sm">
-                  <span className="text-muted-foreground">Axis</span>
-                  <select
-                    className="rounded-md border border-border bg-background px-3 py-2"
-                    value={ctAxis}
-                    onChange={(event) => setCtAxis(event.target.value as CtAxis)}
-                  >
-                    {CT_AXES.map((axis) => (
-                      <option key={axis} value={axis}>
-                        {manifest.ctSlices.axes[axis].label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-1 text-sm">
-                  <span className="flex justify-between text-muted-foreground">
-                    <span>Slice</span>
-                    <span>{(ctIndices[ctAxis] ?? 0) + 1}</span>
-                  </span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={
-                      manifest.ctVolume
-                        ? ctAxisLength(manifest.ctVolume, ctAxis) - 1
-                        : manifest.ctSlices.axes[ctAxis].frames.length - 1
-                    }
-                    step={1}
-                    value={ctIndices[ctAxis] ?? 0}
-                    onChange={(event) =>
-                      setCtIndices((prev) => ({ ...prev, [ctAxis]: Number(event.target.value) }))
-                    }
-                    className="w-full accent-primary"
-                  />
-                </label>
-                <div className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground sm:col-span-2">
-                  <div className="font-medium text-foreground">Target status</div>
-                  <p className="mt-1">{snapStatus}</p>
-                </div>
-                <label className="grid gap-1 text-sm">
-                  <span className="text-muted-foreground">Window</span>
-                  <select
-                    className="rounded-md border border-border bg-background px-3 py-2"
-                    value={ctWindowPreset}
-                    onChange={(event) => setCtWindowPreset(event.target.value)}
-                  >
-                    {manifest.ctSlices.windowPresets.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              </ControlPanel>
             ) : null}
           </div>
         </section>
+
+        {activeWorkspaceTab === 'quiz' ? (
+          <section className="rounded-lg border border-border/70 bg-card/70 p-4 xl:col-start-1">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">CT Correlation</h2>
+                <p className="text-xs text-muted-foreground">
+                  Review the CT after locking your answer. The nodule and bronchoscope path are
+                  hidden here until then.
+                </p>
+              </div>
+              <Badge variant="secondary" className="rounded-full text-xs">
+                {ctAxis}
+              </Badge>
+            </div>
+            <div className="grid items-start gap-4">
+              <div className="relative aspect-square overflow-hidden rounded-lg border border-border/60 bg-slate-950">
+                {manifest?.ctVolume && ctVolumeData ? (
+                  <CtVolumeCanvas
+                    axis={ctAxis}
+                    ctVolume={manifest.ctVolume}
+                    volume={ctVolumeData}
+                    sliceIndex={ctIndices[ctAxis] ?? 0}
+                    windowPreset={ctWindowPreset}
+                    nodule={noduleQuiz?.locked ? nodule : null}
+                    noduleRadiusMm={manifest.interaction?.noduleRadiusMm ?? 10}
+                    scopePathPoints={noduleQuiz?.locked ? quizScopePathPoints : []}
+                  />
+                ) : ctFrame ? (
+                  <Image
+                    src={ctFrame.imageUrl}
+                    alt={`${ctAxis} CT slice ${ctFrame.index + 1}`}
+                    fill
+                    unoptimized
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    className="object-cover"
+                    style={ctImageStyle}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-slate-300">
+                    Loading CT slice...
+                  </div>
+                )}
+              </div>
+              {manifest ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-muted-foreground">Axis</span>
+                    <select
+                      className="rounded-md border border-border bg-background px-3 py-2"
+                      value={ctAxis}
+                      onChange={(event) => setCtAxis(event.target.value as CtAxis)}
+                    >
+                      {CT_AXES.map((axis) => (
+                        <option key={axis} value={axis}>
+                          {manifest.ctSlices.axes[axis].label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    <span className="flex justify-between text-muted-foreground">
+                      <span>Slice</span>
+                      <span>{(ctIndices[ctAxis] ?? 0) + 1}</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={
+                        manifest.ctVolume
+                          ? ctAxisLength(manifest.ctVolume, ctAxis) - 1
+                          : manifest.ctSlices.axes[ctAxis].frames.length - 1
+                      }
+                      step={1}
+                      value={ctIndices[ctAxis] ?? 0}
+                      onChange={(event) =>
+                        setCtIndices((prev) => ({ ...prev, [ctAxis]: Number(event.target.value) }))
+                      }
+                      className="w-full accent-primary"
+                    />
+                  </label>
+                  <div className="rounded-md border border-border/70 bg-background/60 p-3 text-xs text-muted-foreground sm:col-span-2">
+                    <div className="font-medium text-foreground">Quiz status</div>
+                    <p className="mt-1">{snapStatus}</p>
+                  </div>
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-muted-foreground">Window</span>
+                    <select
+                      className="rounded-md border border-border bg-background px-3 py-2"
+                      value={ctWindowPreset}
+                      onChange={(event) => setCtWindowPreset(event.target.value)}
+                    >
+                      {manifest.ctSlices.windowPresets.map((preset) => (
+                        <option key={preset.id} value={preset.id}>
+                          {preset.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
         <details className="rounded-lg border border-border/70 bg-card/70 p-4 xl:col-span-2">
           <summary className="cursor-pointer text-base font-semibold text-foreground">
@@ -1599,10 +2106,6 @@ export function FluoroViewApp() {
               </dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt>Nodule</dt>
-              <dd className="text-right text-foreground">{nodule ? 'Placed' : 'Not placed'}</dd>
-            </div>
-            <div className="flex justify-between gap-3">
               <dt>SlicerHeart ref</dt>
               <dd className="text-right text-foreground">
                 {manifest?.virtualCathLab ? 'Available' : 'Not loaded'}
@@ -1663,7 +2166,10 @@ export function FluoroViewApp() {
         </details>
       </div>
 
-      {manifest && airwayGraph ? (
+      {activeWorkspaceTab === 'quiz' &&
+      manifest &&
+      airwayGraph &&
+      (!noduleQuiz || noduleQuiz.locked) ? (
         <section className="rounded-lg border border-border/70 bg-card/70 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
@@ -1685,12 +2191,30 @@ export function FluoroViewApp() {
             airwayGlbUri={manifest.assets.airwaySegmentsGlb ?? manifest.assets.airwayGlb}
             dracoBaseUrl={manifest.assets.dracoBaseUrl}
             activeGroups={appState?.activeGroups ?? EMPTY_GROUPS}
+            airwayTransform={manifest.assets.assetTransforms?.airway}
             route={activeRoute}
             scopeProgress={scopeProgress}
             noduleLps={nodule?.lps ?? null}
             tubeRadiusMm={manifest.scopeAnimation?.tubeRadiusMm ?? 2.5}
             tubeColor={manifest.scopeAnimation?.tubeColor ?? '#1a1a1a'}
           />
+        </section>
+      ) : activeWorkspaceTab === 'quiz' && manifest && airwayGraph && noduleQuiz ? (
+        <section className="rounded-lg border border-dashed border-border/70 bg-card/60 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
+                3D Anatomy &amp; Bronchoscope
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Locked for the quiz. Choose a relative nodule location, then lock your answer to
+                reveal the airway model and scope position.
+              </p>
+            </div>
+            <Badge variant="outline" className="rounded-full text-xs">
+              Quiz hidden
+            </Badge>
+          </div>
         </section>
       ) : null}
 
@@ -1709,6 +2233,20 @@ function ControlPanel({ title, children }: { title: string; children: ReactNode 
       <div className="grid gap-3">{children}</div>
     </div>
   )
+}
+
+function airwayStrokeWidthPercent(
+  radiusMm: number,
+  manifest: FluoroCaseManifest | null,
+  mode: OverlayMode,
+): number {
+  const detectorHeightMm =
+    manifest?.volumeDrr?.calibrationProjection?.detectorSizeMm[1] ??
+    (manifest?.geometry.detector_pixels[1] ?? 1024) * (manifest?.geometry.pixel_pitch_mm ?? 0.5)
+  const diameterPercent = (Math.max(radiusMm, 0.5) * 2 * 100) / Math.max(detectorHeightMm, 1)
+  if (mode === 'centerline') return clampNumber(diameterPercent * 0.28, 0.16, 0.72)
+  if (mode === 'wireframe') return clampNumber(diameterPercent * 0.46, 0.2, 1.1)
+  return clampNumber(diameterPercent * 0.72, 0.28, 2.35)
 }
 
 function RangeControl({
@@ -1787,8 +2325,7 @@ function CtVolumeCanvas({
   windowPreset,
   nodule,
   noduleRadiusMm,
-  scopePoint,
-  onPlaceNodule,
+  scopePathPoints,
 }: {
   axis: CtAxis
   ctVolume: CtVolumePreview
@@ -1797,8 +2334,7 @@ function CtVolumeCanvas({
   windowPreset: string
   nodule: NoduleState | null
   noduleRadiusMm: number
-  scopePoint: Vec3 | null
-  onPlaceNodule: (lps: Vec3) => void
+  scopePathPoints: Vec3[]
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -1826,41 +2362,19 @@ function CtVolumeCanvas({
       }
     }
     ctx.putImageData(image, 0, 0)
+    if (scopePathPoints.length > 1) {
+      drawCtScopePath(ctx, ctVolume, axis, clampedSlice, scopePathPoints)
+    }
     if (nodule) {
       drawCtMarker(ctx, ctVolume, axis, clampedSlice, nodule.lps, noduleRadiusMm, '#fb7185', 'N')
     }
-    if (scopePoint) {
-      drawCtMarker(ctx, ctVolume, axis, clampedSlice, scopePoint, 4, '#22c55e', 'S')
-    }
-  }, [axis, ctVolume, nodule, noduleRadiusMm, scopePoint, sliceIndex, volume, windowPreset])
-
-  const handleClick = useCallback(
-    (event: ReactMouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current
-      if (!canvas) return
-      const rect = canvas.getBoundingClientRect()
-      const x = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * canvas.width
-      const y = ((event.clientY - rect.top) / Math.max(rect.height, 1)) * canvas.height
-      const lps = canvasPointToLps(
-        x,
-        y,
-        canvas.width,
-        canvas.height,
-        axis,
-        clampIndex(sliceIndex, ctAxisLength(ctVolume, axis)),
-        ctVolume,
-      )
-      onPlaceNodule(lps)
-    },
-    [axis, ctVolume, onPlaceNodule, sliceIndex],
-  )
+  }, [axis, ctVolume, nodule, noduleRadiusMm, scopePathPoints, sliceIndex, volume, windowPreset])
 
   return (
     <canvas
       ref={canvasRef}
-      className="h-full w-full cursor-crosshair"
-      aria-label="CT preview. Click to place a synthetic educational nodule."
-      onClick={handleClick}
+      className="h-full w-full"
+      aria-label="CT preview for quiz answer review."
     />
   )
 }
@@ -1952,6 +2466,43 @@ function drawCtMarker(
   ctx.restore()
 }
 
+function drawCtScopePath(
+  ctx: CanvasRenderingContext2D,
+  ctVolume: CtVolumePreview,
+  axis: CtAxis,
+  sliceIndex: number,
+  points: Vec3[],
+) {
+  const tolerancePx = Math.max(6, 12 / Math.max(axisSpacingMm(ctVolume, axis), 0.001))
+  const projected = points.map((point) =>
+    projectLpsToCanvas(point, axis, sliceIndex, ctVolume, ctx.canvas.width, ctx.canvas.height),
+  )
+
+  const drawPass = (strokeStyle: string, lineWidth: number, alphaScale: number) => {
+    ctx.save()
+    ctx.strokeStyle = strokeStyle
+    ctx.lineWidth = lineWidth
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    for (let index = 1; index < projected.length; index += 1) {
+      const prev = projected[index - 1]
+      const next = projected[index]
+      if (!prev.inFrame || !next.inFrame) continue
+      const distanceFromSlice = Math.min(prev.distanceFromSlice, next.distanceFromSlice)
+      if (distanceFromSlice > tolerancePx) continue
+      ctx.globalAlpha = clampNumber(1 - distanceFromSlice / tolerancePx, 0.2, 0.92) * alphaScale
+      ctx.beginPath()
+      ctx.moveTo(prev.x, prev.y)
+      ctx.lineTo(next.x, next.y)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
+  drawPass('#ffffff', 7, 0.95)
+  drawPass('#020617', 4, 1)
+}
+
 function axisSpacingMm(ctVolume: CtVolumePreview, axis: CtAxis): number {
   if (axis === 'axial') return ctVolume.spacingXyzMm[2]
   if (axis === 'coronal') return ctVolume.spacingXyzMm[1]
@@ -1965,8 +2516,10 @@ function inPlaneSpacingMm(ctVolume: CtVolumePreview, axis: CtAxis): number {
 }
 
 function PresetButtons({
+  raoLaoLimitDeg,
   onSelect,
 }: {
+  raoLaoLimitDeg: number
   onSelect: (raoLao: number, cranialCaudal: number) => void
 }) {
   const presets = [
@@ -1979,16 +2532,21 @@ function PresetButtons({
   ]
   return (
     <div className="grid grid-cols-3 gap-2">
-      {presets.map((preset) => (
-        <button
-          key={preset.label}
-          type="button"
-          className="rounded-md border border-border px-2 py-2 text-xs font-semibold hover:bg-accent"
-          onClick={() => onSelect(preset.rao, preset.cran)}
-        >
-          {preset.label}
-        </button>
-      ))}
+      {presets.map((preset) => {
+        const disabled = Math.abs(preset.rao) > raoLaoLimitDeg
+        return (
+          <button
+            key={preset.label}
+            type="button"
+            className="rounded-md border border-border px-2 py-2 text-xs font-semibold hover:bg-accent disabled:cursor-not-allowed disabled:opacity-45"
+            onClick={() => onSelect(preset.rao, preset.cran)}
+            disabled={disabled}
+            title={disabled ? `Available after the quiz answer is locked.` : undefined}
+          >
+            {preset.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

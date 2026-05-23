@@ -139,6 +139,9 @@ export function validateFluoroCaseManifest(candidate: unknown): string[] {
   if (manifest.cArm?.gantryGlbUri && typeof manifest.cArm.gantryGlbUri !== 'string') {
     errors.push('cArm.gantryGlbUri must be a string when present.')
   }
+  if (manifest.cArm?.animationGlbUri && typeof manifest.cArm.animationGlbUri !== 'string') {
+    errors.push('cArm.animationGlbUri must be a string when present.')
+  }
   if (manifest.cArm?.transforms) {
     for (const transform of manifest.cArm.transforms) {
       if (

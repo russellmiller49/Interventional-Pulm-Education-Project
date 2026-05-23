@@ -218,7 +218,10 @@ def build_and_write_airway_assets(source_dir: Path, case_dir: Path) -> dict[str,
     graph = build_airway_graph(source_dir / "Centerline")
     metadata_dir = case_dir / "metadata"
     write_json(metadata_dir / "airway_graph.json", graph)
-    write_json(metadata_dir / "centerline_overlay.json", build_centerline_overlay(graph))
+    write_json(
+        metadata_dir / "centerline_overlay.json",
+        build_centerline_model_overlay(source_dir) or build_centerline_overlay(graph),
+    )
     write_json(metadata_dir / "segments.json", build_segment_metadata(graph))
     print(
         f"[airway] graph nodes={len(graph['nodes'])} edges={len(graph['edges'])} "
@@ -442,8 +445,45 @@ def build_carm_assets(source_dir: Path, case_dir: Path, asset_base: str) -> dict
     }
     if gantry_uri:
         c_arm["gantryGlbUri"] = gantry_uri
+    animation_glb = source_dir / "C_arm_animation.glb"
+    if animation_glb.exists():
+        animation_output = carm_dir / "c_arm_animation.glb"
+        copy_untextured_carm_animation(animation_glb, animation_output)
+        c_arm["animationGlbUri"] = f"{asset_base}/carm/{animation_output.name}?v=untextured-1"
+        print(f"[carm] copied animated C-arm GLB -> {animation_output.name}")
     write_json(carm_dir / "carm_manifest.json", c_arm)
     return c_arm
+
+
+def copy_untextured_carm_animation(source_path: Path, output_path: Path) -> None:
+    """Strip embedded texture references while preserving mesh and animation tracks."""
+    if pygltflib is None:
+        shutil.copy2(source_path, output_path)
+        print("[carm] warning: pygltflib unavailable; copied animated C-arm with original textures.")
+        return
+
+    gltf = pygltflib.GLTF2().load_binary(str(source_path))
+    palette = (
+        (0.78, 0.78, 0.70, 1.0),
+        (0.66, 0.70, 0.70, 1.0),
+        (0.35, 0.50, 0.56, 1.0),
+    )
+    for index, material in enumerate(gltf.materials or []):
+        if material.pbrMetallicRoughness is None:
+            material.pbrMetallicRoughness = pygltflib.PbrMetallicRoughness()
+        material.pbrMetallicRoughness.baseColorTexture = None
+        material.pbrMetallicRoughness.metallicRoughnessTexture = None
+        material.pbrMetallicRoughness.baseColorFactor = list(palette[index % len(palette)])
+        material.pbrMetallicRoughness.metallicFactor = 0.25
+        material.pbrMetallicRoughness.roughnessFactor = 0.58
+        material.normalTexture = None
+        material.occlusionTexture = None
+        material.emissiveTexture = None
+        material.emissiveFactor = [0.0, 0.0, 0.0]
+    gltf.textures = []
+    gltf.images = []
+    gltf.samplers = []
+    gltf.save_binary(str(output_path))
 
 
 def convert_vtks_to_glb(scene_dir: Path, output_path: Path) -> None:
@@ -462,55 +502,153 @@ def convert_vtks_to_glb(scene_dir: Path, output_path: Path) -> None:
     print(f"[carm] converted {added} VTK meshes -> {output_path.name}")
 
 
+def build_centerline_model_overlay(source_dir: Path) -> dict[str, Any] | None:
+    vtk_path = source_dir / "Centerline" / "Centerline model_2.vtk"
+    if not vtk_path.exists():
+        return None
+    try:
+        raw_polylines = parse_legacy_vtk_lines(vtk_path)
+    except Exception as exc:
+        print(f"[airway] warning: could not parse {vtk_path.name}; using graph overlay: {exc}")
+        return None
+    polylines = []
+    all_points: list[list[float]] = []
+    for index, points in enumerate(raw_polylines):
+        length = polyline_length(points)
+        if length <= 1:
+            continue
+        target_count = int(max(24, min(180, math.ceil(length / 2.0) + 1)))
+        sampled = [
+            [round(float(value), 3) for value in point]
+            for point in resample_polyline(points, target_count)
+        ]
+        all_points.extend(sampled)
+        polylines.append(
+            {
+                "id": f"centerline-model-{index}",
+                "label": f"Centerline model route {index + 1}",
+                "pointsLps": sampled,
+                "lengthMm": round(length, 3),
+            }
+        )
+    if not polylines:
+        return None
+    points_array = np.asarray(all_points, dtype=np.float64)
+    print(
+        f"[airway] centerline overlay from {vtk_path.name}: "
+        f"{len(polylines)} routes, {len(all_points)} sampled points"
+    )
+    return {
+        "schema": "fluoroview_centerline_overlay/v2",
+        "units": "mm",
+        "coordinateSystem": "LPS",
+        "source": vtk_path.name,
+        "sourceRole": "patient-specific Slicer centerline model",
+        "boundsLpsMm": [
+            [round(float(value), 3) for value in points_array.min(axis=0)],
+            [round(float(value), 3) for value in points_array.max(axis=0)],
+        ],
+        "rawPolylineCount": len(raw_polylines),
+        "sampledPointCount": len(all_points),
+        "polylines": polylines,
+    }
+
+
 def parse_legacy_vtk_polydata(path: Path) -> trimesh.Trimesh:
     raw = path.read_bytes()
-    cursor = 0
-
-    def read_line() -> str:
-        nonlocal cursor
-        end = raw.index(b"\n", cursor)
-        line = raw[cursor:end].decode("ascii", errors="replace")
-        cursor = end + 1
-        return line
-
-    header = [read_line() for _ in range(4)]
-    if "BINARY" not in header[2] or "POLYDATA" not in header[3]:
+    header = raw.splitlines()[:4]
+    if b"BINARY" not in header[2] or b"POLYDATA" not in header[3]:
         raise ValueError(f"{path.name} is not binary POLYDATA.")
-    points = None
-    faces = None
-    while cursor < len(raw):
-        line = read_line().strip()
-        if not line:
-            continue
-        parts = line.split()
-        if parts[0] == "POINTS":
-            count = int(parts[1])
-            dtype = ">f4" if parts[2].lower() == "float" else ">f8"
-            byte_count = count * 3 * np.dtype(dtype).itemsize
-            points = np.frombuffer(raw[cursor:cursor + byte_count], dtype=dtype).astype(np.float32)
-            points = points.reshape(count, 3)
-            cursor += byte_count + (1 if raw[cursor + byte_count:cursor + byte_count + 1] == b"\n" else 0)
-        elif parts[0] in {"POLYGONS", "TRIANGLE_STRIPS"}:
-            face_count = int(parts[1])
-            int_count = int(parts[2])
-            data = np.frombuffer(raw[cursor:cursor + int_count * 4], dtype=">i4")
-            cursor += int_count * 4
-            if cursor < len(raw) and raw[cursor:cursor + 1] == b"\n":
-                cursor += 1
-            triangles = []
-            index = 0
-            for _ in range(face_count):
-                item_count = int(data[index])
-                item_indices = data[index + 1:index + 1 + item_count].astype(int).tolist()
-                index += item_count + 1
-                for tri_index in range(1, item_count - 1):
-                    triangles.append([item_indices[0], item_indices[tri_index], item_indices[tri_index + 1]])
-            faces = np.asarray(triangles, dtype=np.int64)
-        elif parts[0] in {"POINT_DATA", "CELL_DATA"}:
-            break
-    if points is None or faces is None or len(faces) == 0:
+    points, cursor = parse_vtk_points(raw, path)
+    section = first_vtk_section(raw, cursor, [b"POLYGONS", b"TRIANGLE_STRIPS"])
+    if section is None:
+        raise ValueError(f"No mesh topology parsed from {path.name}.")
+    section_name, section_cursor = section
+    line, cursor = read_vtk_line(raw, section_cursor)
+    parts = line.strip().split()
+    face_count = int(parts[1])
+    int_count = int(parts[2])
+    data = np.frombuffer(raw[cursor:cursor + int_count * 4], dtype=">i4")
+    triangles = []
+    index = 0
+    for _ in range(face_count):
+        item_count = int(data[index])
+        item_indices = data[index + 1:index + 1 + item_count].astype(int).tolist()
+        index += item_count + 1
+        for tri_index in range(1, item_count - 1):
+            if section_name == "TRIANGLE_STRIPS" and tri_index % 2 == 0:
+                triangles.append(
+                    [item_indices[0], item_indices[tri_index + 1], item_indices[tri_index]]
+                )
+            else:
+                triangles.append([item_indices[0], item_indices[tri_index], item_indices[tri_index + 1]])
+    faces = np.asarray(triangles, dtype=np.int64)
+    if len(faces) == 0:
         raise ValueError(f"No mesh geometry parsed from {path.name}.")
     return trimesh.Trimesh(vertices=points, faces=faces, process=False)
+
+
+def parse_legacy_vtk_lines(path: Path) -> list[list[list[float]]]:
+    raw = path.read_bytes()
+    header = raw.splitlines()[:4]
+    if b"BINARY" not in header[2] or b"POLYDATA" not in header[3]:
+        raise ValueError(f"{path.name} is not binary POLYDATA.")
+    points, cursor = parse_vtk_points(raw, path)
+    section = first_vtk_section(raw, cursor, [b"LINES"])
+    if section is None:
+        raise ValueError(f"No line topology parsed from {path.name}.")
+    _, section_cursor = section
+    line, cursor = read_vtk_line(raw, section_cursor)
+    parts = line.strip().split()
+    line_count = int(parts[1])
+    int_count = int(parts[2])
+    data = np.frombuffer(raw[cursor:cursor + int_count * 4], dtype=">i4").astype(np.int64)
+    polylines: list[list[list[float]]] = []
+    index = 0
+    for _ in range(line_count):
+        point_count = int(data[index])
+        indices = data[index + 1:index + 1 + point_count]
+        index += point_count + 1
+        if point_count >= 2:
+            polylines.append(points[indices].astype(float).tolist())
+    return polylines
+
+
+def parse_vtk_points(raw: bytes, path: Path) -> tuple[np.ndarray, int]:
+    token_index = raw.find(b"\nPOINTS ")
+    if token_index == -1:
+        raise ValueError(f"No POINTS section parsed from {path.name}.")
+    line, cursor = read_vtk_line(raw, token_index + 1)
+    parts = line.strip().split()
+    count = int(parts[1])
+    dtype = ">f4" if parts[2].lower() == "float" else ">f8"
+    byte_count = count * 3 * np.dtype(dtype).itemsize
+    points = np.frombuffer(raw[cursor:cursor + byte_count], dtype=dtype).astype(np.float32)
+    points = points.reshape(count, 3)
+    cursor += byte_count
+    if cursor < len(raw) and raw[cursor:cursor + 1] == b"\n":
+        cursor += 1
+    return points, cursor
+
+
+def first_vtk_section(raw: bytes, start: int, names: list[bytes]) -> tuple[str, int] | None:
+    matches: list[tuple[int, bytes]] = []
+    for name in names:
+        for prefix in [b"\n" + name + b" ", name + b" "]:
+            index = raw.find(prefix, start)
+            if index != -1:
+                matches.append((index + (1 if prefix.startswith(b"\n") else 0), name))
+                break
+    if not matches:
+        return None
+    cursor, name = min(matches, key=lambda item: item[0])
+    return name.decode("ascii"), cursor
+
+
+def read_vtk_line(raw: bytes, cursor: int) -> tuple[str, int]:
+    end = raw.index(b"\n", cursor)
+    line = raw[cursor:end].decode("ascii", errors="replace")
+    return line, end + 1
 
 
 def read_h5_transform(path: Path) -> tuple[np.ndarray, np.ndarray]:
@@ -705,6 +843,22 @@ def load_rendering_preset(path: Path) -> dict[str, Any] | None:
     }
 
 
+def source_depth_to_lps_point(projection: dict[str, Any], point_lps: list[float]) -> float | None:
+    try:
+        source_ras = np.asarray(projection["positionRasMm"], dtype=np.float64)
+        focal_ras = np.asarray(projection["focalPointRasMm"], dtype=np.float64)
+        point_ras = np.asarray([-point_lps[0], -point_lps[1], point_lps[2]], dtype=np.float64)
+        forward = focal_ras - source_ras
+        norm = np.linalg.norm(forward)
+        if norm < 1e-8:
+            return None
+        forward = forward / norm
+        depth = float(np.dot(point_ras - source_ras, forward))
+        return abs(depth) if math.isfinite(depth) and abs(depth) > 1e-6 else None
+    except (KeyError, TypeError, ValueError, IndexError):
+        return None
+
+
 def build_case_manifest(
     *,
     case_dir: Path,
@@ -724,6 +878,39 @@ def build_case_manifest(
     volume = dict(ct.volume_asset)
     volume.pop("schema", None)
     volume.pop("source", None)
+    if virtual_cath_lab and virtual_cath_lab.get("frontalProjection"):
+        projection = virtual_cath_lab["frontalProjection"]
+        detector_pixels = projection.get(
+            "detectorPixels",
+            virtual_cath_lab.get("frontalDetectorPixels", detector_pixels),
+        )
+        detector_size = projection.get("detectorSizeMm") or virtual_cath_lab.get(
+            "frontalDetectorSizeMm"
+        )
+        pixel_spacing = projection.get("pixelSpacingMm") or virtual_cath_lab.get(
+            "frontalPixelSpacingMm"
+        )
+        if pixel_spacing:
+            pixel_pitch = float(pixel_spacing[0])
+        elif detector_size and detector_pixels:
+            pixel_pitch = float(detector_size[0]) / max(float(detector_pixels[0]), 1.0)
+        sid = float(projection.get("sourceToImageDistanceMm", sid))
+        sad = source_depth_to_lps_point(projection, carina) or sad
+        volume["calibrationProjection"] = projection
+        if virtual_cath_lab.get("renderingPreset"):
+            preset = virtual_cath_lab["renderingPreset"]
+            volume["transferFunction"] = {
+                "scalarOpacity": [
+                    {"x": point["x"], "y": point["y"]}
+                    for point in preset.get("scalarOpacity", [])
+                    if "x" in point and "y" in point
+                ],
+                "rgbTransferFunction": [
+                    {"x": point["x"], "color": point["color"]}
+                    for point in preset.get("rgbTransferFunction", [])
+                    if "x" in point and "color" in point
+                ],
+            }
     manifest = {
         "id": "patient-new-volume-drr",
         "title": "New Patient Educational FluoroView Case",
@@ -753,8 +940,8 @@ def build_case_manifest(
             },
         },
         "assets": {
-            "airwayGlb": f"{asset_base}/airway_segments.glb",
-            "airwaySegmentsGlb": f"{asset_base}/airway_segments.glb",
+            "airwayGlb": f"{asset_base}/airway_segments.glb?v=untextured-1",
+            "airwaySegmentsGlb": f"{asset_base}/airway_segments.glb?v=untextured-1",
             "airwayGraphJson": f"{asset_base}/metadata/airway_graph.json",
             "ctVolumePreview": f"{asset_base}/ct/ct_preview_uint8.raw",
             "virtualCathLabManifest": f"{asset_base}/metadata/slicer_c_arm_scene_manifest.json"
@@ -771,10 +958,10 @@ def build_case_manifest(
             "segmentMetadataJson": f"{asset_base}/metadata/segments.json",
             "assetTransforms": {
                 "airway": {
-                    "sceneScale": 1.0,
-                    "rotationDeg": [0, 0, 0],
+                    "sceneScale": 1000,
+                    "rotationDeg": [90, 0, 0],
                     "positionOffsetMm": [0, 0, 0],
-                    "note": "Airway GLB exported in LPS millimeters.",
+                    "note": "Slicer GLB stores scene coordinates in meters with local X, slice/Z, -Y axes; rotate +90 deg about X and scale to LPS millimeters.",
                 }
             },
         },

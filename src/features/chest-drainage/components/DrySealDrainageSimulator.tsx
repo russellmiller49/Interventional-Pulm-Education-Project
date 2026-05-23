@@ -5,7 +5,12 @@ import Image from 'next/image'
 import { useMemo, useState } from 'react'
 
 import { drySealHotspots } from '../content/drySealHotspots'
-import { MAX_COLLECTION_VOLUME_ML, defaultSimulationState } from '../engine/constants'
+import {
+  MAX_COLLECTION_VOLUME_ML,
+  MIN_DRY_SUCTION_SOURCE_FLOW_LPM,
+  MIN_DRY_SUCTION_SOURCE_VACUUM_MMHG,
+  defaultSimulationState,
+} from '../engine/constants'
 import { getDrainageAlarms } from '../engine/alarms'
 import { buildTrendSeries, clamp, summarizePhysiology } from '../engine/pleuralPhysics'
 import type { SimulationState } from '../engine/types'
@@ -45,6 +50,7 @@ export function DrySealDrainageSimulator() {
   const suctionNeedleAngle = -58 + ((Math.abs(state.device.suctionSettingCmH2O) - 10) / 30) * 118
   const waterSealHeight = clamp((state.device.waterSealDepthCm / 5) * 100, 0, 100)
   const floatTop = 75.6 + summary.patientPressureFloatCmH2O * 1.25
+  const sourceVacuumLabel = `-${MIN_DRY_SUCTION_SOURCE_VACUUM_MMHG} mmHg`
 
   return (
     <section className="container space-y-8" aria-labelledby="dry-seal-simulator-title">
@@ -138,6 +144,12 @@ export function DrySealDrainageSimulator() {
                   label="Effective suction"
                   value={`${summary.effectiveSuctionCmH2O} cm H2O`}
                 />
+                <Reading
+                  label="Source suction"
+                  value={`${state.device.sourceSuctionFlowLpm} L/min ${
+                    summary.suctionIndicatorPresent ? 'adequate' : 'low'
+                  }`}
+                />
                 <Reading label="Air leak display" value={`${summary.digitalAirLeakMlMin} mL/min`} />
                 <Reading label="Bubbling level" value={`${summary.airLeakMeterLevel} / 5`} />
                 <Reading label="Fluid output" value={`${summary.drainageFlowMlPerHr} mL/hr`} />
@@ -152,7 +164,11 @@ export function DrySealDrainageSimulator() {
                 <h3 className="text-sm font-semibold text-foreground">Text equivalent</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground" aria-live="polite">
                   Water seal depth is {state.device.waterSealDepthCm} cm. Collection chamber is{' '}
-                  {Math.round(summary.fluidCollectionPercent)}% filled. Suction indicator is{' '}
+                  {Math.round(summary.fluidCollectionPercent)}% filled. Source suction is{' '}
+                  {state.device.sourceSuctionFlowLpm} L/min; this dry-suction model requires at
+                  least {MIN_DRY_SUCTION_SOURCE_FLOW_LPM} L/min in the source-flow control.
+                  Atrium-style IFUs also reference source vacuum near {sourceVacuumLabel} before the
+                  indicator is treated as adequate. Suction indicator is{' '}
                   {summary.suctionIndicatorPresent ? 'present' : 'absent'}. Patient tube is{' '}
                   {state.tube.clamped ? 'clamped' : 'open'}.
                 </p>

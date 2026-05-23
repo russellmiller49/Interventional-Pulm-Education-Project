@@ -10,9 +10,9 @@
     "units": "mm",
     "coordinateSystem": "LPS",
     "isocenter_mm": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
-    "source_to_isocenter_mm": 600.0,
+    "source_to_isocenter_mm": 768.8624328613281,
     "source_to_detector_mm": 800.0,
-    "detector_pixels": [1024, 1024],
+    "detector_pixels": [587, 800],
     "pixel_pitch_mm": 0.5,
     "asset_base_url": "/fluoroview",
     "default_view": {
@@ -27,8 +27,8 @@
     }
   },
   "assets": {
-    "airwayGlb": "/fluoroview/cases/patient-new/airway_segments.glb",
-    "airwaySegmentsGlb": "/fluoroview/cases/patient-new/airway_segments.glb",
+    "airwayGlb": "/fluoroview/cases/patient-new/airway_segments.glb?v=untextured-1",
+    "airwaySegmentsGlb": "/fluoroview/cases/patient-new/airway_segments.glb?v=untextured-1",
     "airwayGraphJson": "/fluoroview/cases/patient-new/metadata/airway_graph.json",
     "ctVolumePreview": "/fluoroview/cases/patient-new/ct/ct_preview_uint8.raw",
     "virtualCathLabManifest": "/fluoroview/cases/patient-new/metadata/slicer_c_arm_scene_manifest.json",
@@ -39,10 +39,10 @@
     "segmentMetadataJson": "/fluoroview/cases/patient-new/metadata/segments.json",
     "assetTransforms": {
       "airway": {
-        "sceneScale": 1.0,
-        "rotationDeg": [0, 0, 0],
+        "sceneScale": 1000,
+        "rotationDeg": [90, 0, 0],
         "positionOffsetMm": [0, 0, 0],
-        "note": "Airway GLB exported in LPS millimeters."
+        "note": "Slicer GLB stores scene coordinates in meters with local X, slice/Z, -Y axes; rotate +90 deg about X and scale to LPS millimeters."
       }
     }
   },
@@ -83,6 +83,67 @@
     "recommendedRenderScale": {
       "interactive": 0.67,
       "full": 1.0
+    },
+    "calibrationProjection": {
+      "coordinateSystem": "RAS",
+      "positionRasMm": [6.0, -612.9, -209.75],
+      "focalPointRasMm": [6.0, 107.1, -209.75],
+      "viewUpRas": [0.0, 0.0, 1.0],
+      "sourceToImageDistanceMm": 800.0,
+      "detectorPixels": [587, 800],
+      "detectorSizeMm": [293.5, 400.0],
+      "pixelSpacingMm": [0.5, 0.5],
+      "viewAngleDeg": 28.0994
+    },
+    "transferFunction": {
+      "scalarOpacity": [
+        {
+          "x": -1144.0,
+          "y": 0.0
+        },
+        {
+          "x": -1143.9999999999998,
+          "y": 0.0
+        },
+        {
+          "x": -546.268432617188,
+          "y": 0.0034782609436661
+        },
+        {
+          "x": -7.42329406738281,
+          "y": 0.0
+        },
+        {
+          "x": 945.216552734375,
+          "y": 0.00913043506443501
+        },
+        {
+          "x": 1171.51086425781,
+          "y": 0.0
+        },
+        {
+          "x": 1634.38549804688,
+          "y": 0.0130434781312943
+        },
+        {
+          "x": 2951.0,
+          "y": 0.1
+        }
+      ],
+      "rgbTransferFunction": [
+        {
+          "x": -1144.0,
+          "color": [0.0, 0.0, 0.0]
+        },
+        {
+          "x": -1143.9999999999998,
+          "color": [0.0, 0.0, 0.0]
+        },
+        {
+          "x": 2951.0,
+          "color": [0.0, 0.0, 0.0]
+        }
+      ]
     }
   },
   "cArm": {
@@ -170,7 +231,8 @@
         ]
       }
     ],
-    "gantryGlbUri": "/fluoroview/cases/patient-new/carm/carm_gantry.glb"
+    "gantryGlbUri": "/fluoroview/cases/patient-new/carm/carm_gantry.glb",
+    "animationGlbUri": "/fluoroview/cases/patient-new/carm/c_arm_animation.glb?v=untextured-1"
   },
   "scopeAnimation": {
     "polylineJsonUri": "/fluoroview/cases/patient-new/metadata/bronch_animation_path.json",
@@ -323,7 +385,7 @@
     "airwayGlbSource": "Full_airway_segments.glb",
     "airwayGlbCompression": "draco",
     "scopePathSource": "fallback-airway-graph-route",
-    "generatedUtc": "2026-05-22T04:26:58.769432+00:00"
+    "generatedUtc": "2026-05-22T22:36:10.553722+00:00"
   },
   "lessons": [
     {

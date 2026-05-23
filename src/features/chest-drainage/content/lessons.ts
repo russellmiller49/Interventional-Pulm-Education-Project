@@ -56,9 +56,9 @@ export const chestDrainageLessons: ChestDrainageLesson[] = [
       {
         id: 'dry-suction-source',
         statement:
-          'In a dry suction unit, the dial is the target setting, but a visible suction indicator depends on adequate source suction and correct setup.',
-        referenceIds: ['teleflex-ifu', 'sorino-2024'],
-        lastReviewed: '2026-05-17',
+          'In a dry suction unit, the dial is the target setting, but a visible suction indicator depends on adequate source suction and correct setup; this simulator uses 16 L/min as the source-flow adequacy floor and calls out the Atrium-style -80 mmHg source-vacuum check separately.',
+        referenceIds: ['zisis-2015', 'atrium-express-manual', 'sorino-2024'],
+        lastReviewed: '2026-05-23',
         reviewer: 'Pending clinical review',
       },
       {

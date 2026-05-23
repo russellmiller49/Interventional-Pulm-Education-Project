@@ -202,6 +202,7 @@ test('projectLpsToSlicerFrontalDetector projects through exported Slicer camera 
   }
 
   expect(projectLpsToSlicerFrontalDetector([0, 0, 0], projection).point).toEqual([50, 50])
-  expect(projectLpsToSlicerFrontalDetector([-10, 0, 0], projection).point[0]).toBeGreaterThan(50)
+  expect(projectLpsToSlicerFrontalDetector([10, 0, 0], projection).point[0]).toBeGreaterThan(50)
+  expect(projectLpsToSlicerFrontalDetector([-10, 0, 0], projection).point[0]).toBeLessThan(50)
   expect(projectLpsToSlicerFrontalDetector([0, 0, 10], projection).point[1]).toBeLessThan(50)
 })

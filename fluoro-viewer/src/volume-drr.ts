@@ -13,7 +13,7 @@ import {
   type Texture,
 } from 'three'
 
-import { detectorFrameForAngles } from './geometry'
+import { detectorFrameForAngles, detectorFrameForSlicerProjection } from './geometry'
 import type { FluoroSettings } from './knobology'
 import type { FluoroConfig, Vec3, VolumeDrrAsset } from './types'
 
@@ -71,10 +71,11 @@ vec2 intersectBox(vec3 ro, vec3 rd, vec3 boxMin, vec3 boxMax) {
 }
 
 float huToMu(float hu, float kvp) {
-  float waterAt80 = 0.000190;
-  float kvpFactor = pow(80.0 / max(kvp, 30.0), 2.0);
-  float density = max(0.0, 1.0 + hu * 0.001);
-  return waterAt80 * kvpFactor * density;
+  float kvpFactor = pow(80.0 / max(kvp, 30.0), 1.35);
+  float tissueDensity = max(0.0, (hu + 1000.0) / 1000.0);
+  float softTissue = smoothstep(-850.0, 80.0, hu);
+  float bone = smoothstep(160.0, 1250.0, hu);
+  return kvpFactor * (0.00013 * tissueDensity + 0.00009 * softTissue + 0.00038 * bone);
 }
 
 void main() {
@@ -97,7 +98,7 @@ void main() {
   float stepMm = pathLength / float(steps);
   float jitter = hash21(gl_FragCoord.xy + vec2(uTime, 0.0)) * stepMm;
   float t = tStart + jitter;
-  float transmittance = 1.0;
+  float lineIntegral = 0.0;
 
   for (int i = 0; i < 1024; i++) {
     if (i >= steps) break;
@@ -110,16 +111,14 @@ void main() {
     float normalizedSample = texture(uVolume, uvw).r;
     float hu = normalizedSample * (uHuHigh - uHuLow) + uHuLow;
     float mu = huToMu(hu, uKvp);
-    transmittance *= exp(-mu * stepMm * uMuScale);
-    if (transmittance < 0.001) break;
+    lineIntegral += mu * stepMm * uMuScale;
     t += stepMm;
   }
 
-  float absorption = 1.0 - transmittance;
-  float intensity = absorption * uMaTimeGain;
+  float intensity = smoothstep(0.035, 0.92, lineIntegral) * uMaTimeGain;
   float noise = (hash21(gl_FragCoord.xy * 0.917 + uTime) - 0.5) * uNoiseSigma;
   intensity = clamp(intensity + noise, 0.0, 1.0);
-  intensity = pow(intensity, max(0.5, uContrastBoost));
+  intensity = pow(intensity, max(0.45, uContrastBoost));
 
   outColor = vec4(vec3(intensity), 1.0);
 }
@@ -202,8 +201,10 @@ export class VolumeDRRRenderer {
     const origin = this.asset.originLps
     const sizeLps: Vec3 = [spacing[0] * sx, spacing[1] * sy, spacing[2] * sz]
     const maxLps: Vec3 = [origin[0] + sizeLps[0], origin[1] + sizeLps[1], origin[2] + sizeLps[2]]
-    const detectorHalfMmX = (this.config.detector_pixels[0] * this.config.pixel_pitch_mm) / 2
-    const detectorHalfMmY = (this.config.detector_pixels[1] * this.config.pixel_pitch_mm) / 2
+    const detectorSizeMm = this.asset.calibrationProjection?.detectorSizeMm ?? [
+      this.config.detector_pixels[0] * this.config.pixel_pitch_mm,
+      this.config.detector_pixels[1] * this.config.pixel_pitch_mm,
+    ]
 
     this.material = new ShaderMaterial({
       glslVersion: '300 es' as never,
@@ -218,7 +219,7 @@ export class VolumeDRRRenderer {
         uDetectorCenterLps: { value: new Vector3() },
         uDetectorRightLps: { value: new Vector3() },
         uDetectorUpLps: { value: new Vector3() },
-        uDetectorHalfMm: { value: { x: detectorHalfMmX, y: detectorHalfMmY } },
+        uDetectorHalfMm: { value: { x: detectorSizeMm[0] / 2, y: detectorSizeMm[1] / 2 } },
         uHuLow: { value: this.asset.huRange[0] },
         uHuHigh: { value: this.asset.huRange[1] },
         uKvp: { value: 80 },
@@ -253,7 +254,14 @@ export class VolumeDRRRenderer {
     const plan = resolveVolumeRenderPlan(this.asset, options.lowRes)
     this.resize(plan.renderScale)
 
-    const frame = detectorFrameForAngles(this.config, options.raoLaoDeg, options.cranialCaudalDeg)
+    const frame = this.asset.calibrationProjection
+      ? detectorFrameForSlicerProjection(
+          this.config,
+          this.asset.calibrationProjection,
+          options.raoLaoDeg,
+          options.cranialCaudalDeg,
+        )
+      : detectorFrameForAngles(this.config, options.raoLaoDeg, options.cranialCaudalDeg)
     this.material.uniforms.uSourceLps.value.set(
       frame.sourceLps[0],
       frame.sourceLps[1],
@@ -274,18 +282,23 @@ export class VolumeDRRRenderer {
       frame.detectorVAxisLps[1],
       frame.detectorVAxisLps[2],
     )
+    this.material.uniforms.uDetectorHalfMm.value.x = frame.detectorSizeMm[0] / 2
+    this.material.uniforms.uDetectorHalfMm.value.y = frame.detectorSizeMm[1] / 2
 
     const settings = options.settings
     const baselineMas = this.asset.baselineMas ?? 16
     const mas = Math.max(settings.ma * settings.pulseWidthMs, 0.1)
     const exposureGain = Math.pow(mas / baselineMas, 0.6)
     const noiseSigma = settings.noiseEnabled
-      ? Math.min(0.18, (1 / Math.sqrt(Math.max(mas, 0.5) * (settings.highDoseMode ? 2 : 1))) * 0.55)
+      ? Math.min(
+          0.045,
+          (1 / Math.sqrt(Math.max(mas, 0.5) * (settings.highDoseMode ? 2 : 1))) * 0.11,
+        )
       : 0
 
     this.material.uniforms.uKvp.value = settings.kvp
     this.material.uniforms.uMaTimeGain.value = exposureGain
-    this.material.uniforms.uMuScale.value = 6
+    this.material.uniforms.uMuScale.value = 7.5
     this.material.uniforms.uNoiseSigma.value = noiseSigma
     this.material.uniforms.uContrastBoost.value = settings.highDoseMode ? 1.08 : 1
     this.material.uniforms.uMaxSteps.value = plan.sampleSteps
@@ -362,7 +375,14 @@ export class VolumeDRRRenderer {
   }
 
   private computeThicknessProxy(raoLaoDeg: number, cranialCaudalDeg: number): number {
-    const frame = detectorFrameForAngles(this.config, raoLaoDeg, cranialCaudalDeg)
+    const frame = this.asset.calibrationProjection
+      ? detectorFrameForSlicerProjection(
+          this.config,
+          this.asset.calibrationProjection,
+          raoLaoDeg,
+          cranialCaudalDeg,
+        )
+      : detectorFrameForAngles(this.config, raoLaoDeg, cranialCaudalDeg)
     const spacing = this.asset.spacingXyzMm
     const sizeLps: Vec3 = [
       spacing[0] * this.asset.sizeXyz[0],

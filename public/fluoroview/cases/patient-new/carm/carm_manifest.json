@@ -83,5 +83,6 @@
       ]
     }
   ],
-  "gantryGlbUri": "/fluoroview/cases/patient-new/carm/carm_gantry.glb"
+  "gantryGlbUri": "/fluoroview/cases/patient-new/carm/carm_gantry.glb",
+  "animationGlbUri": "/fluoroview/cases/patient-new/carm/c_arm_animation.glb?v=untextured-1"
 }

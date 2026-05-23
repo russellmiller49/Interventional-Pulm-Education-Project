@@ -3,6 +3,7 @@ import {
   DRY_SUCTION_RESPONSE_LAG,
   MAX_COLLECTION_VOLUME_ML,
   MAX_DRY_SUCTION_CM_H2O,
+  MIN_DRY_SUCTION_SOURCE_FLOW_LPM,
   SOURCE_FLOW_TO_SUCTION_CM_H2O,
   TUBE_CONDUCTANCE_CONSTANT,
 } from './constants'
@@ -63,13 +64,9 @@ export function calculateEffectiveDrySuction(
   responseLag = DRY_SUCTION_RESPONSE_LAG,
 ): number {
   const target = clamp(Math.abs(targetSuctionCmH2O), 0, MAX_DRY_SUCTION_CM_H2O)
-  const sourceCapacity = clamp(
-    sourceSuctionFlowLpm * SOURCE_FLOW_TO_SUCTION_CM_H2O,
-    0,
-    MAX_DRY_SUCTION_CM_H2O,
-  )
+  const sourceAdequacy = clamp(sourceSuctionFlowLpm / MIN_DRY_SUCTION_SOURCE_FLOW_LPM, 0, 1)
 
-  return -Math.min(target, sourceCapacity) * clamp(responseLag, 0, 1)
+  return -target * sourceAdequacy * clamp(responseLag, 0, 1)
 }
 
 export function calculateEffectiveSuction(state: SimulationState): number {
@@ -182,10 +179,24 @@ export function calculateReExpansionRisk(state: SimulationState): number {
   )
 }
 
-export function isSuctionIndicatorPresent(state: SimulationState): boolean {
-  const sourceCapacity = state.device.sourceSuctionFlowLpm * SOURCE_FLOW_TO_SUCTION_CM_H2O
+export function usesDrySuctionIndicator(state: SimulationState): boolean {
+  return (
+    state.systemType === 'integratedDrySuction' ||
+    state.systemType === 'drySealDrySuction' ||
+    state.systemType === 'digitalDrainage'
+  )
+}
 
-  return sourceCapacity >= Math.abs(state.device.suctionSettingCmH2O) * 0.8
+export function isDrySuctionSourceFlowAdequate(sourceSuctionFlowLpm: number): boolean {
+  return sourceSuctionFlowLpm >= MIN_DRY_SUCTION_SOURCE_FLOW_LPM
+}
+
+export function isSuctionIndicatorPresent(state: SimulationState): boolean {
+  if (!usesDrySuctionIndicator(state)) {
+    return false
+  }
+
+  return isDrySuctionSourceFlowAdequate(state.device.sourceSuctionFlowLpm)
 }
 
 export function summarizePhysiology(state: SimulationState): PhysiologySummary {
@@ -205,8 +216,10 @@ export function summarizePhysiology(state: SimulationState): PhysiologySummary {
       'Drainage unit is not upright; chamber readings and seal integrity may be compromised.',
     )
   }
-  if (!isSuctionIndicatorPresent(state)) {
-    warnings.push('Source suction is insufficient for the selected dry suction target.')
+  if (usesDrySuctionIndicator(state) && !isSuctionIndicatorPresent(state)) {
+    warnings.push(
+      `Source suction is below the modeled dry-suction source threshold of ${MIN_DRY_SUCTION_SOURCE_FLOW_LPM} L/min.`,
+    )
   }
   if (state.tube.dependentLoop) {
     warnings.push('Dependent loop is modeled; fluid drainage is slowed.')

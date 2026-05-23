@@ -71,6 +71,14 @@ export const chestDrainageReferences: ChestDrainageReference[] = [
       'Device-specific setup must be checked against the current manufacturer IFU before clinical use.',
   },
   {
+    id: 'atrium-express-manual',
+    citation: 'Maquet/Getinge. Atrium Express Dry Seal Chest Drainage System user manual.',
+    sourceType: 'manufacturer',
+    url: 'https://manuals.plus/m/e2ad8c98c0633dbce3db6fe715b60caad9cfe6a66da4a464e8cdc8d9d3c14f6b',
+    useNote:
+      'Dry seal setup reference for suction source vacuum, airflow, and bellows confirmation.',
+  },
+  {
     id: 'wcag-22',
     citation: 'W3C. Web Content Accessibility Guidelines (WCAG) 2.2. W3C Recommendation.',
     sourceType: 'web-standard',

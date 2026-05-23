@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 
-import { FluoroViewApp } from '@/components/fluoroview/FluoroViewApp'
+import { FluoroViewAppDynamic } from '@/components/fluoroview/FluoroViewAppDynamic'
 import { Badge } from '@/components/ui/badge'
 
 export const metadata: Metadata = {
@@ -48,7 +48,7 @@ export default function FluoroViewPage() {
       </section>
 
       <section className="container space-y-8">
-        <FluoroViewApp />
+        <FluoroViewAppDynamic />
       </section>
     </div>
   )

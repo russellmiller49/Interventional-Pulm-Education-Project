@@ -1,4 +1,12 @@
-import { add, detectorFrameForAngles, dot, normalize, scale, subtract } from './geometry'
+import {
+  add,
+  detectorFrameForAngles,
+  detectorFrameForSlicerProjection,
+  dot,
+  normalize,
+  scale,
+  subtract,
+} from './geometry'
 import type {
   AirwayGraph,
   AirwayGraphEdge,
@@ -216,6 +224,24 @@ export function projectLpsToDetector(
   cranialCaudalDeg: number,
 ): DetectorProjection {
   const frame = detectorFrameForAngles(config, raoLaoDeg, cranialCaudalDeg)
+  return projectLpsWithDetectorFrame(point, frame)
+}
+
+export function projectLpsToSlicerCalibratedDetector(
+  point: Vec3,
+  config: FluoroConfig,
+  projection: SlicerFrontalProjection,
+  raoLaoDeg: number,
+  cranialCaudalDeg: number,
+): DetectorProjection {
+  const frame = detectorFrameForSlicerProjection(config, projection, raoLaoDeg, cranialCaudalDeg)
+  return projectLpsWithDetectorFrame(point, frame)
+}
+
+function projectLpsWithDetectorFrame(
+  point: Vec3,
+  frame: ReturnType<typeof detectorFrameForAngles>,
+): DetectorProjection {
   const calibrationOffsetLps = add(
     add(
       scale(frame.detectorUAxisLps, frame.calibrationOffsetLocalMm[0]),
@@ -256,7 +282,7 @@ export function projectLpsToSlicerFrontalDetector(
   const focal = projection.focalPointRasMm
   const forward = normalize(subtract(focal, source))
   const up = normalize(projection.viewUpRas)
-  const right = normalize(cross(forward, up))
+  const right = normalize(cross(up, forward))
   const sourceToPoint = subtract(pointRas, source)
   const depth = dot(sourceToPoint, forward)
 

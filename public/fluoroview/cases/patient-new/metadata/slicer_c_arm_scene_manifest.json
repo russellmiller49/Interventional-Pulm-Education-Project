@@ -1,7 +1,7 @@
 {
   "schema": "fluoroview_slicer_c_arm_scene/v1",
   "source": "SlicerHeart Virtual Cath Lab scene export",
-  "ingestedUtc": "2026-05-22T04:26:58.768976+00:00",
+  "ingestedUtc": "2026-05-22T22:36:10.553302+00:00",
   "sourceFiles": {
     "mrml": "2026-05-21-Scene.mrml",
     "frontalNrrd": "CArmFrontalXRay.nrrd",

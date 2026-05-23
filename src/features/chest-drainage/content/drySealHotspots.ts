@@ -29,9 +29,9 @@ export const drySealHotspots: DrySealHotspot[] = [
     control: 'sourceSuction',
     role: 'Connection point for wall/source suction in this dry suction model.',
     knobology:
-      'Increasing source flow makes the suction indicator more likely to appear, but the dial remains the target setting.',
+      'This model treats source flow below 16 L/min as inadequate for dry suction confirmation; the dial remains the target setting.',
     caution:
-      'Do not treat the wall regulator number as the same thing as patient pleural pressure.',
+      'Dry seal IFUs may also specify source vacuum around -80 mmHg; do not treat the wall regulator number as patient pleural pressure.',
   },
   {
     id: 'positive-pressure-release',
@@ -76,7 +76,7 @@ export const drySealHotspots: DrySealHotspot[] = [
     control: 'sourceSuction',
     role: 'Visual confirmation that source suction is sufficient for the dry suction regulator.',
     knobology:
-      'Raise source flow until the indicator appears in the simulator; if absent, troubleshoot source and tubing setup.',
+      'Raise source flow to at least 16 L/min in the simulator; if absent, troubleshoot source and tubing setup.',
     caution: 'An absent indicator means the set dial target may not be achieved.',
   },
   {

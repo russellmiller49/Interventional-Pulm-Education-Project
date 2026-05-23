@@ -1,5 +1,6 @@
 import type { SimulationState } from './types'
-import { isSuctionIndicatorPresent } from './pleuralPhysics'
+import { MIN_DRY_SUCTION_SOURCE_FLOW_LPM, MIN_DRY_SUCTION_SOURCE_VACUUM_MMHG } from './constants'
+import { isSuctionIndicatorPresent, usesDrySuctionIndicator } from './pleuralPhysics'
 
 export type DrainAlarmSeverity = 'info' | 'caution' | 'danger'
 
@@ -53,13 +54,12 @@ export function getDrainageAlarms(state: SimulationState): DrainAlarm[] {
     })
   }
 
-  if (!isSuctionIndicatorPresent(state)) {
+  if (usesDrySuctionIndicator(state) && !isSuctionIndicatorPresent(state)) {
     alarms.push({
       id: 'dry-suction-not-confirmed',
       severity: 'caution',
       title: 'Dry suction indicator absent',
-      message:
-        'The dry suction dial is set, but source flow is not enough for the modeled target. Check wall suction, tubing, and regulator setup.',
+      message: `The dry suction dial is set, but source flow is below ${MIN_DRY_SUCTION_SOURCE_FLOW_LPM} L/min. Many dry seal IFUs also specify a source vacuum of -${MIN_DRY_SUCTION_SOURCE_VACUUM_MMHG} mmHg or higher. Check wall suction, tubing, and regulator setup.`,
     })
   }
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { Suspense, useMemo } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -14,6 +14,172 @@ interface CarmInsetViewProps {
   airwayGlbUri?: string
   dracoBaseUrl?: string
   className?: string
+}
+
+const CARM_ANIMATION_TOTAL_FRAMES = 250
+type CarmAnimationSegment = 'lao' | 'rao' | 'cranial' | 'caudal'
+
+interface CarmAnimationPose {
+  segment: CarmAnimationSegment | null
+  frame: number
+}
+
+const CARM_SEGMENT_START_FRAME: Record<CarmAnimationSegment, number> = {
+  lao: 1,
+  rao: 91,
+  cranial: 177,
+  caudal: 221,
+}
+
+function poseForCarmAngles(raoLao: number, cranialCaudal: number): CarmAnimationPose {
+  const candidates = [
+    {
+      segment: 'lao' as const,
+      strength: Math.max(0, raoLao) / 90,
+      start: 1,
+      end: 45,
+    },
+    {
+      segment: 'rao' as const,
+      strength: Math.max(0, -raoLao) / 90,
+      start: 91,
+      end: 135,
+    },
+    {
+      segment: 'cranial' as const,
+      strength: Math.max(0, cranialCaudal) / 20,
+      start: 177,
+      end: 202,
+    },
+    {
+      segment: 'caudal' as const,
+      strength: Math.max(0, -cranialCaudal) / 20,
+      start: 221,
+      end: 236,
+    },
+  ]
+    .map((candidate) => ({
+      ...candidate,
+      strength: THREE.MathUtils.clamp(candidate.strength, 0, 1),
+    }))
+    .sort((a, b) => b.strength - a.strength)
+
+  const chosen = candidates[0]
+  if (!chosen || chosen.strength < 0.005) return { segment: null, frame: 1 }
+  return {
+    segment: chosen.segment,
+    frame: THREE.MathUtils.lerp(chosen.start, chosen.end, chosen.strength),
+  }
+}
+
+function frameForCarmAngles(raoLao: number, cranialCaudal: number): number {
+  return poseForCarmAngles(raoLao, cranialCaudal).frame
+}
+
+function timeForAnimationFrame(frame: number, durationSeconds: number): number {
+  const normalizedFrame = THREE.MathUtils.clamp(frame, 1, CARM_ANIMATION_TOTAL_FRAMES)
+  const normalizedTime = (normalizedFrame - 1) / (CARM_ANIMATION_TOTAL_FRAMES - 1)
+  return normalizedTime * Math.max(durationSeconds, 0.001)
+}
+
+function fitSceneToInset(scene: THREE.Object3D) {
+  const box = new THREE.Box3().setFromObject(scene)
+  const center = new THREE.Vector3()
+  const size = new THREE.Vector3()
+  box.getCenter(center)
+  box.getSize(size)
+  return {
+    center,
+    scale: 520 / Math.max(size.x, size.y, size.z, 1),
+  }
+}
+
+function AnimatedGantryGlb({
+  glbUri,
+  raoLao,
+  cranialCaudal,
+  dracoBaseUrl,
+}: {
+  glbUri: string
+  raoLao: number
+  cranialCaudal: number
+  dracoBaseUrl?: string
+}) {
+  const gltf = useGLTF(glbUri, dracoBaseUrl)
+  const { invalidate } = useThree()
+  const initialPose = useMemo(
+    () => poseForCarmAngles(raoLao, cranialCaudal),
+    [cranialCaudal, raoLao],
+  )
+  const initialSegment = initialPose.segment ?? 'lao'
+  const activeSegmentRef = useRef<CarmAnimationSegment>(initialSegment)
+  const currentFrameRef = useRef(
+    initialPose.segment ? initialPose.frame : CARM_SEGMENT_START_FRAME[initialSegment],
+  )
+  const targetPose = useMemo(
+    () => poseForCarmAngles(raoLao, cranialCaudal),
+    [cranialCaudal, raoLao],
+  )
+  const { scene, center, scale } = useMemo(() => {
+    const fit = fitSceneToInset(gltf.scene)
+    return { scene: gltf.scene, center: fit.center, scale: fit.scale }
+  }, [gltf.scene])
+  const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene])
+
+  useEffect(() => {
+    const clip = gltf.animations[0]
+    if (!clip) return undefined
+    const action = mixer.clipAction(clip)
+    action.reset()
+    action.play()
+    action.enabled = true
+    action.setEffectiveWeight(1)
+    mixer.setTime(timeForAnimationFrame(currentFrameRef.current, clip.duration))
+    scene.updateMatrixWorld(true)
+    invalidate()
+    return () => {
+      mixer.stopAllAction()
+      mixer.uncacheRoot(scene)
+    }
+  }, [gltf.animations, invalidate, mixer, scene])
+
+  useEffect(() => {
+    invalidate()
+  }, [invalidate, targetPose])
+
+  useFrame((_, deltaSeconds) => {
+    const clip = gltf.animations[0]
+    if (!clip) return
+
+    if (targetPose.segment && targetPose.segment !== activeSegmentRef.current) {
+      activeSegmentRef.current = targetPose.segment
+      currentFrameRef.current = CARM_SEGMENT_START_FRAME[targetPose.segment]
+      mixer.setTime(timeForAnimationFrame(currentFrameRef.current, clip.duration))
+      scene.updateMatrixWorld(true)
+    }
+
+    const targetFrame = targetPose.segment
+      ? targetPose.frame
+      : CARM_SEGMENT_START_FRAME[activeSegmentRef.current]
+    const currentFrame = currentFrameRef.current
+    const frameDelta = targetFrame - currentFrame
+    const maxStep = Math.max(1, Math.min(deltaSeconds, 1 / 30) * 180)
+    const nextFrame =
+      Math.abs(frameDelta) <= maxStep ? targetFrame : currentFrame + Math.sign(frameDelta) * maxStep
+
+    currentFrameRef.current = nextFrame
+    mixer.setTime(timeForAnimationFrame(nextFrame, clip.duration))
+    scene.updateMatrixWorld(true)
+    if (Math.abs(targetFrame - nextFrame) > 0.05) {
+      invalidate()
+    }
+  })
+
+  return (
+    <group scale={scale} position={[-center.x * scale, -center.y * scale, -center.z * scale]}>
+      <primitive object={scene} />
+    </group>
+  )
 }
 
 function GantryGlb({
@@ -30,13 +196,8 @@ function GantryGlb({
   const gltf = useGLTF(glbUri, dracoBaseUrl)
   const { scene, center, scale } = useMemo(() => {
     const cloned = gltf.scene.clone(true)
-    const box = new THREE.Box3().setFromObject(cloned)
-    const center = new THREE.Vector3()
-    const size = new THREE.Vector3()
-    box.getCenter(center)
-    box.getSize(size)
-    const scale = 520 / Math.max(size.x, size.y, size.z, 1)
-    return { scene: cloned, center, scale }
+    const fit = fitSceneToInset(cloned)
+    return { scene: cloned, center: fit.center, scale: fit.scale }
   }, [gltf.scene])
 
   return (
@@ -112,6 +273,8 @@ export function CarmInsetView({
         'pointer-events-none absolute bottom-3 right-3 h-48 w-48 overflow-hidden rounded-lg border border-white/15 bg-slate-950/70 shadow-lg backdrop-blur-sm'
       }
       aria-label="C-arm gantry orientation"
+      data-carm-animation={cArm.animationGlbUri ? 'animated' : 'static'}
+      data-carm-frame={Math.round(frameForCarmAngles(raoLao, cranialCaudal))}
     >
       <Canvas
         frameloop="demand"
@@ -124,7 +287,14 @@ export function CarmInsetView({
         <directionalLight position={[700, 900, 500]} intensity={1.05} />
         <directionalLight position={[-500, -400, 250]} intensity={0.38} color={0xcfe4ff} />
         <Suspense fallback={<SchematicGantry raoLao={raoLao} cranialCaudal={cranialCaudal} />}>
-          {cArm.gantryGlbUri ? (
+          {cArm.animationGlbUri ? (
+            <AnimatedGantryGlb
+              glbUri={cArm.animationGlbUri}
+              raoLao={raoLao}
+              cranialCaudal={cranialCaudal}
+              dracoBaseUrl={dracoBaseUrl}
+            />
+          ) : cArm.gantryGlbUri ? (
             <GantryGlb
               glbUri={cArm.gantryGlbUri}
               raoLao={raoLao}
@@ -134,7 +304,9 @@ export function CarmInsetView({
           ) : (
             <SchematicGantry raoLao={raoLao} cranialCaudal={cranialCaudal} />
           )}
-          <DetectorPlane raoLao={raoLao} cranialCaudal={cranialCaudal} />
+          {!cArm.animationGlbUri ? (
+            <DetectorPlane raoLao={raoLao} cranialCaudal={cranialCaudal} />
+          ) : null}
         </Suspense>
       </Canvas>
       <div className="pointer-events-none absolute left-2 top-2 rounded bg-slate-900/70 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-200">
