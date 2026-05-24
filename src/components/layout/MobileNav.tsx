@@ -38,7 +38,7 @@ export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps
   }, [activePath])
 
   return (
-    <div className="flex items-center gap-1 md:hidden">
+    <div className="flex items-center gap-1 lg:hidden">
       <Sheet>
         <SheetTrigger asChild>
           <Button

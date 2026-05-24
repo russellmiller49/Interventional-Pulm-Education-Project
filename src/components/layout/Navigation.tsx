@@ -23,11 +23,13 @@ const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
 const allNavigationItems: NavItem[] = [
   {
     title: 'SoCal EBUS Course',
+    shortTitle: 'EBUS Course',
     href: '/socal-ebus-course',
     description: 'Fellow prep with lectures, stations, knobology, and 3D anatomy',
   },
   {
     title: 'Bronch Navigation',
+    shortTitle: 'Bronch Nav',
     href: '/bronch-navigation-trainer' as Route,
     description: 'CT-to-bronchoscope navigation simulator',
   },
@@ -41,8 +43,18 @@ const allNavigationItems: NavItem[] = [
     href: '/pleural-procedures' as Route,
     description: 'Chest drainage systems, knobology, and troubleshooting',
   },
-  { title: 'IP Board Prep', href: '/board-prep', description: 'Interactive board review chapters' },
-  { title: '3D Anatomy', href: '/learn/anatomy', description: '3D & interactive anatomy viewer' },
+  {
+    title: 'IP Board Prep',
+    shortTitle: 'Board Prep',
+    href: '/board-prep',
+    description: 'Interactive board review chapters',
+  },
+  {
+    title: '3D Anatomy',
+    shortTitle: 'Anatomy',
+    href: '/learn/anatomy',
+    description: '3D & interactive anatomy viewer',
+  },
   { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },
   { title: 'IP Registry', href: '/ip-registry', description: 'Launch the Procedure Suite IU' },
   {
@@ -88,8 +100,8 @@ export function Navigation() {
   }, [])
 
   return (
-    <div className="flex w-full items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
+    <div className="flex w-full min-w-0 items-center justify-between gap-3 lg:gap-4">
+      <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/"
           className="flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -97,13 +109,13 @@ export function Navigation() {
           <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
             IP Lab
           </span>
-          <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+          <span className="hidden text-sm font-medium text-muted-foreground xl:inline 2xl:hidden">
             Clinical Education
           </span>
         </Link>
       </div>
       <DesktopNav items={navigationItems} activePath={pathname} />
-      <div className="hidden items-center gap-2 md:flex">
+      <div className="hidden shrink-0 items-center gap-2 lg:flex">
         <form action="/search" className="hidden items-center gap-1 2xl:flex" role="search">
           <Input
             type="search"
@@ -131,7 +143,10 @@ export function Navigation() {
         >
           Sign in
         </Button>
-        <ModeToggle size="sm" />
+        <ModeToggle
+          size="sm"
+          className="h-9 w-9 px-0 xl:w-auto xl:px-4 [&>span:last-child]:hidden xl:[&>span:last-child]:inline"
+        />
       </div>
       <MobileNav
         items={navigationItems}
