@@ -6,7 +6,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://*.supabase.co https://*.storage.supabase.co",
+  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://upload.wikimedia.org https://*.supabase.co https://*.storage.supabase.co",
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self'",
@@ -200,6 +200,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'pmc.ncbi.nlm.nih.gov',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
         pathname: '/**',
       },
     ],

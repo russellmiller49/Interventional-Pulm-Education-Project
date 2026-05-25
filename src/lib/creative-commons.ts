@@ -6,6 +6,9 @@ export interface CreativeCommonsImageRecord {
   'Image Description': string
   article_title: string
   article_url: string
+  attribution?: string
+  license?: string
+  license_url?: string
 }
 
 export interface CreativeCommonsCategory {
@@ -104,7 +107,9 @@ export function filterCreativeCommonsImages({
     }
 
     return normalizeSearchTerm(
-      `${image['Image Description']} ${image.article_title} ${image.Category}`,
+      `${image['Image Description']} ${image.article_title} ${image.Category} ${
+        image.license ?? ''
+      } ${image.attribution ?? ''}`,
     ).includes(normalizedQuery)
   })
 }

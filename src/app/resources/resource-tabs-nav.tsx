@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Images, Sparkles } from 'lucide-react'
+import { Images, Microscope, Sparkles } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/cn'
@@ -20,6 +20,12 @@ const resourceTabs = [
     description: 'A practical AI coding companion for physician-builders',
     icon: Sparkles,
   },
+  {
+    href: '/resources/rapid-onsite-cytology',
+    label: 'Rapid Onsite Cytology',
+    description: 'Interactive ROSE and Diff-Quik slide interpretation trainer',
+    icon: Microscope,
+  },
 ] as const
 
 export function ResourceTabsNav() {
@@ -27,7 +33,7 @@ export function ResourceTabsNav() {
 
   return (
     <nav aria-label="Resource collections" className="mt-8">
-      <div className="grid gap-3 rounded-2xl border border-border/80 bg-background/70 p-2 shadow-sm md:grid-cols-2">
+      <div className="grid gap-3 rounded-2xl border border-border/80 bg-background/70 p-2 shadow-sm md:grid-cols-3">
         {resourceTabs.map((tab) => {
           const Icon = tab.icon
           const isActive = pathname === tab.href || pathname.startsWith(`${tab.href}/`)
