@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Download, ExternalLink, Search } from 'lucide-react'
 
 import CreativeCommonsImageSimple from '@/components/CreativeCommonsImageSimple'
+import CreativeCommonsLicenseDetails from '@/components/CreativeCommonsLicenseDetails'
 import { Card } from '@/components/ui/card'
 import {
   filterCreativeCommonsImages,
@@ -145,6 +146,13 @@ function ImageGrid({ images }: { images: ReturnType<typeof filterCreativeCommons
                 <ExternalLink className="ml-1" size={14} />
               </a>
             </div>
+
+            <CreativeCommonsLicenseDetails
+              attribution={image.attribution}
+              className="mb-3"
+              license={image.license}
+              licenseUrl={image.license_url}
+            />
 
             <div className="flex gap-2">
               <a
