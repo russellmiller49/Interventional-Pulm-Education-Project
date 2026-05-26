@@ -37,7 +37,7 @@ const workflowLinks = [
     ? [
         {
           label: 'Offline hotspot workbench',
-          href: '/resources/rapid-onsite-cytology/annotate',
+          href: '/rapid-onsite-cytology/annotate',
         },
       ]
     : []),

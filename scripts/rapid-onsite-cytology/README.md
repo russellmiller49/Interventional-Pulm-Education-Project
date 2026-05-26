@@ -41,7 +41,7 @@ Use the natural image width and height shown in the browser workbench or QuPath 
 Open the dev-only workbench:
 
 ```text
-http://localhost:3001/resources/rapid-onsite-cytology/annotate
+http://localhost:3001/rapid-onsite-cytology/annotate
 ```
 
 Paste or manually apply candidate coordinates, then drag/resize/nudge hotspots until they match the intended cells. Copy the slide JSON and update `src/features/rapid-onsite-cytology/content/slides.ts`.

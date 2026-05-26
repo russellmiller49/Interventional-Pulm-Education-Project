@@ -57,6 +57,7 @@ export interface PleuralFluidInput {
   pleuralToBloodHematocritRatio?: number
   pleuralToSerumCreatinineRatio?: number
   pleuralToSerumBilirubinRatio?: number
+  negativeCytologyCount?: number
   cytologyPositive: boolean
   microbiologyPositive: boolean
   chylomicronsPresent: boolean

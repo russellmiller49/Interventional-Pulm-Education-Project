@@ -34,6 +34,14 @@ export default function HomePage() {
       cta: 'Open Explorer',
     },
     {
+      badge: 'Cytopathology',
+      title: 'Rapid Onsite Cytology',
+      description:
+        'Practice ROSE and Diff-Quik slide interpretation with curated hotspots, teaching explanations, and quiz mode.',
+      href: '/rapid-onsite-cytology',
+      cta: 'Open Cytology Trainer',
+    },
+    {
       badge: '3D Models',
       title: 'Interactive Anatomy Viewer',
       description:

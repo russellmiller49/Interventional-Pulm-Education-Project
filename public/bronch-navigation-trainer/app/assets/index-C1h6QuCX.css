@@ -877,6 +877,8 @@ input[type='range'] {
 .scope-label,
 .map-label {
   position: absolute;
+  border: 0;
+  background: transparent;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
@@ -890,6 +892,16 @@ input[type='range'] {
     0 1px 2px #000,
     0 0 7px #000;
   pointer-events: none;
+}
+.scope-label-selectable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.scope-label-selectable:hover,
+.scope-label-selectable:focus-visible {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.76));
+  outline: 1px solid rgba(255, 255, 255, 0.72);
+  outline-offset: 2px;
 }
 .scope-label-debug {
   pointer-events: auto;

@@ -1,0 +1,2 @@
+export const pleuralEducationDisclaimer =
+  'This module is for education and simulation only. It does not provide patient-specific medical advice. Actual pleural procedure decisions, device selection, drainage strategy, anticoagulation planning, biopsy or pleurodesis approach, and escalation depend on patient anatomy, imaging, local policy, current guidelines, device instructions, procedural conditions, and clinician judgment.'

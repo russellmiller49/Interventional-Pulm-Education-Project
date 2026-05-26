@@ -44,6 +44,12 @@ const allNavigationItems: NavItem[] = [
     description: 'Chest drainage systems, knobology, and troubleshooting',
   },
   {
+    title: 'Rapid Onsite Cytology',
+    shortTitle: 'Cytology',
+    href: '/rapid-onsite-cytology' as Route,
+    description: 'ROSE and Diff-Quik slide interpretation trainer',
+  },
+  {
     title: 'IP Board Prep',
     shortTitle: 'Board Prep',
     href: '/board-prep',

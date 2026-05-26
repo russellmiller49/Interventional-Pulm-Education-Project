@@ -13,6 +13,22 @@ export const metadata: Metadata = {
 
 const pleuralModules = [
   {
+    href: '/pleural-procedures/intro-course',
+    title: 'Intro Pleural Disease Course',
+    description:
+      'Adaptive pretest, section scoring, and ordered module prescription across the pleural curriculum.',
+    status: 'Live',
+    icon: Activity,
+  },
+  {
+    href: '/pleural-procedures/pleural-ultrasound',
+    title: 'Pleural Ultrasound Pattern Lab',
+    description:
+      'Classify simple, complex, septated, and echogenic effusion patterns with management implications.',
+    status: 'Live',
+    icon: Stethoscope,
+  },
+  {
     href: '/pleural-procedures/chest-drainage',
     title: 'Chest Drainage Systems',
     description:
@@ -29,18 +45,43 @@ const pleuralModules = [
     icon: FlaskConical,
   },
   {
-    href: '/coming-soon',
+    href: '/pleural-procedures/thoracentesis-planner',
     title: 'Thoracentesis and Pleural Access',
     description:
-      'Ultrasound-guided access, safety checklist, needle path planning, and complications.',
-    status: 'Planned',
+      'Triangle of safety, bleeding-risk framing, intercostal vessel risk, and manometry trainer.',
+    status: 'Live',
     icon: Stethoscope,
   },
   {
-    href: '/coming-soon',
+    href: '/pleural-procedures/pneumothorax-pathway',
+    title: 'Pneumothorax Pathway',
+    description:
+      'Physiology-first PSP/SSP pathway, persistent air leak timeline, and recurrence-prevention teaching.',
+    status: 'Live',
+    icon: Activity,
+  },
+  {
+    href: '/pleural-procedures/pleural-infection',
     title: 'Pleural Infection Pathways',
-    description: 'Drainage, loculation strategy, escalation logic, and source-control cases.',
-    status: 'Planned',
+    description:
+      'Stage parapneumonic effusions, choose drainage, evaluate tPA/DNase, and rehearse escalation.',
+    status: 'Live',
+    icon: Activity,
+  },
+  {
+    href: '/pleural-procedures/malignant-effusion',
+    title: 'Malignant Pleural Effusion',
+    description:
+      'Diagnostic escalation, lung expandability, IPC and pleurodesis tradeoffs, and patient-goals endpoints.',
+    status: 'Live',
+    icon: FlaskConical,
+  },
+  {
+    href: '/pleural-procedures/clinical-review',
+    title: 'Clinical Review Packet',
+    description:
+      'Reviewer-facing clinical statements, source IDs, citations, and review metadata across pleural modules.',
+    status: 'Live',
     icon: Activity,
   },
 ] as const

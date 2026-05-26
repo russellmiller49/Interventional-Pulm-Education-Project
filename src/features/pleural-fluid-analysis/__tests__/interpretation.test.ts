@@ -67,6 +67,24 @@ describe('pleural fluid analysis interpretation', () => {
     expect(interpretation.reconciliation).toContain('chemistry looks transudative')
   })
 
+  it('prompts tissue escalation after two negative cytology samples when malignancy remains likely', () => {
+    const interpretation = interpretPleuralFluid({
+      ...getCase('malignancy-transudate-trap').input,
+      negativeCytologyCount: 2,
+      cytologyPositive: false,
+    })
+
+    expect(interpretation.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          diagnosis: 'Repeated negative cytology',
+          strength: 'pitfall',
+        }),
+      ]),
+    )
+    expect(interpretation.nextActions[0]).toContain('Stop fluid-only cycling')
+  })
+
   it('detects chylothorax from triglycerides', () => {
     const interpretation = interpretPleuralFluid(getCase('milky-lymphatic').input)
 

@@ -248,6 +248,20 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
   }
 
   if (
+    contextSuggestsMalignancy(input) &&
+    !input.cytologyPositive &&
+    (input.negativeCytologyCount ?? 0) >= 2
+  ) {
+    pushFinding(
+      findings,
+      'pitfall',
+      'Repeated negative cytology',
+      'Two nondiagnostic cytology samples do not rule out malignant pleural disease when imaging or clinical probability remains high.',
+      'Stop fluid-only cycling and escalate toward pleural tissue diagnosis such as image-guided biopsy or pleuroscopy.',
+    )
+  }
+
+  if (
     input.clinicalContext === 'autoimmune' &&
     (hasPleuralAcidosis(input) || input.pleuralGlucose < 60 || input.pleuralLdh > 1000)
   ) {
@@ -411,6 +425,12 @@ function buildPitfalls(
     )
   }
 
+  if (contextSuggestsMalignancy(input) && (input.negativeCytologyCount ?? 0) >= 2) {
+    pitfalls.push(
+      'After two nondiagnostic cytology samples, repeated fluid-only testing can delay needed pleural tissue diagnosis.',
+    )
+  }
+
   if (contextSuggestsTb(input) && input.mesothelialCells > 5) {
     pitfalls.push(
       'Mesothelial cells above 5% make TB less likely, but they do not erase a high-risk exposure story.',
@@ -471,6 +491,13 @@ function buildNextActions(
   }
 
   if (contextSuggestsMalignancy(input)) {
+    if ((input.negativeCytologyCount ?? 0) >= 2 && !input.cytologyPositive) {
+      return [
+        'Stop fluid-only cycling and move toward pleural tissue diagnosis with image-guided biopsy or pleuroscopy.',
+        'Use lung expansion, symptoms, prognosis, and patient goals to choose IPC, pleurodesis, or combined strategy.',
+      ]
+    }
+
     return [
       'Send adequate cytology volume and review CT or ultrasound for pleural targets.',
       'If cytology is negative but pleural nodularity or cancer history remains convincing, move toward pleural biopsy.',
