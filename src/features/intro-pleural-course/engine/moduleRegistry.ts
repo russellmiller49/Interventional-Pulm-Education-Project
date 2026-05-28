@@ -10,6 +10,14 @@ export const introPleuralModules: readonly PleuralModule[] = [
     status: 'live',
   },
   {
+    id: 'pleural-ultrasound-simulator',
+    title: 'Pleural Ultrasound Simulator',
+    route: '/pleural-procedures/pleural-ultrasound-simulator',
+    section: 'ultrasound',
+    minutes: 20,
+    status: 'planned',
+  },
+  {
     id: 'pleural-fluid-analysis',
     title: 'Pleural Fluid Analysis',
     route: '/pleural-procedures/pleural-fluid-analysis',
