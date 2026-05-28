@@ -43,7 +43,7 @@ export function classifyBleedingRisk(input: BleedingRiskInput): BleedingRiskResu
 
   return {
     level,
-    reasons: reasons.length ? reasons : ['No modeled high-risk lab or medication flags.'],
+    reasons: reasons.length ? reasons : ['No high-risk lab or medication flags in this case.'],
     teachingPoint:
       'Pleural procedure bleeding decisions are individualized; ultrasound guidance, indication, urgency, local policy, and medication timing matter more than a single lab number.',
   }

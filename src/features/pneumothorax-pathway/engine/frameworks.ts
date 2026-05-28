@@ -1,36 +1,125 @@
-import type { PneumothoraxCase, PneumothoraxRecommendation } from './types'
+import type { PneumothoraxCase } from './types'
 
-export function isPhysiologicallyUnstable(clinicalCase: PneumothoraxCase) {
+export type Disposition =
+  | 'emergency'
+  | 'observation'
+  | 'aspiration'
+  | 'ambulatory'
+  | 'chest-drain'
+  | 'escalate'
+
+export interface FrameworkResult {
+  framework: 'ACCP 2001' | 'BTS 2023'
+  disposition: Disposition
+  headline: string
+  rationale: string[]
+}
+
+export interface DualFrameworkResult {
+  accp: FrameworkResult
+  bts: FrameworkResult
+  agreement: boolean
+  comparisonNote: string
+  recurrencePrevention: string
+}
+
+export function isPhysiologicallyUnstable(clinicalCase: PneumothoraxCase): boolean {
   return clinicalCase.hemodynamicCompromise || clinicalCase.severeHypoxemia
 }
 
-export function evaluatePneumothoraxPathway(
-  clinicalCase: PneumothoraxCase,
-): PneumothoraxRecommendation {
+function isStableByAccpVitals(clinicalCase: PneumothoraxCase): boolean {
+  const vitals = clinicalCase.accpVitals
+
+  return (
+    vitals.respiratoryRate < 24 &&
+    vitals.heartRate >= 60 &&
+    vitals.heartRate <= 120 &&
+    vitals.roomAirSpo2 > 90 &&
+    vitals.bloodPressureStable &&
+    vitals.speaksFullSentences
+  )
+}
+
+export function evaluateAccp(clinicalCase: PneumothoraxCase): FrameworkResult {
   const rationale: string[] = []
 
-  if (isPhysiologicallyUnstable(clinicalCase)) {
-    rationale.push('Hemodynamic compromise or severe hypoxemia overrides size-based reasoning.')
+  if (isPhysiologicallyUnstable(clinicalCase) || !isStableByAccpVitals(clinicalCase)) {
     return {
+      framework: 'ACCP 2001',
       disposition: 'emergency',
-      recommendation:
-        'Treat as urgent decompression and tube-drainage territory while stabilizing the patient.',
+      headline: 'Urgent decompression and drainage',
+      rationale: [
+        'American College of Chest Physicians stability criteria are not met, so physiology takes priority over size.',
+      ],
+    }
+  }
+
+  if (clinicalCase.persistentAirLeakDays >= 3) {
+    return {
+      framework: 'ACCP 2001',
+      disposition: 'escalate',
+      headline: 'Specialist escalation for persistent air leak',
+      rationale: [
+        'The 2001 framework escalates persistent air leak earlier, around days 3 to 5 after drainage and system checks.',
+      ],
+    }
+  }
+
+  if (clinicalCase.type === 'ssp' || clinicalCase.underlyingLungDisease) {
+    return {
+      framework: 'ACCP 2001',
+      disposition: 'chest-drain',
+      headline: 'Chest drain and admission',
+      rationale: [
+        'Secondary spontaneous pneumothorax has less respiratory reserve, so the historical framework favors drainage and monitoring.',
+      ],
+    }
+  }
+
+  rationale.push('The patient meets the historical stable-patient vital sign criteria.')
+
+  if (clinicalCase.sizeCategory === 'small' && clinicalCase.symptomBurden === 'minimal') {
+    rationale.push('Small primary spontaneous pneumothorax is observation territory in ACCP 2001.')
+    return {
+      framework: 'ACCP 2001',
+      disposition: 'observation',
+      headline: 'Observe with repeat assessment',
       rationale,
-      recurrencePrevention: recurrencePreventionText(clinicalCase),
+    }
+  }
+
+  rationale.push(
+    'Large size or meaningful symptoms move the historical pathway toward aspiration or drainage.',
+  )
+
+  return {
+    framework: 'ACCP 2001',
+    disposition: 'aspiration',
+    headline: 'Needle aspiration or catheter drainage',
+    rationale,
+  }
+}
+
+export function evaluateBts(clinicalCase: PneumothoraxCase): FrameworkResult {
+  if (isPhysiologicallyUnstable(clinicalCase)) {
+    return {
+      framework: 'BTS 2023',
+      disposition: 'emergency',
+      headline: 'Urgent decompression and drainage',
+      rationale: [
+        'British Thoracic Society guidance treats tension physiology or significant hypoxia as a high-risk emergency.',
+      ],
     }
   }
 
   if (clinicalCase.persistentAirLeakDays >= 5) {
-    rationale.push('Persistent air leak has reached the time-bounded escalation window.')
-    rationale.push(
-      'Confirm drain patency and position, avoid unnecessary suction, and escalate deliberately.',
-    )
     return {
+      framework: 'BTS 2023',
       disposition: 'escalate',
-      recommendation:
-        'Seek specialist escalation for persistent air leak: surgical, bronchoscopic, blood patch, or pleurodesis options depending on anatomy and fitness.',
-      rationale,
-      recurrencePrevention: recurrencePreventionText(clinicalCase),
+      headline: 'Specialist escalation for persistent air leak',
+      rationale: [
+        'The 2023 pathway uses time-bounded reassessment and escalation when an air leak persists around days 5 to 7.',
+      ],
     }
   }
 
@@ -40,48 +129,92 @@ export function evaluatePneumothoraxPathway(
     clinicalCase.ventilated ||
     clinicalCase.type === 'traumatic'
   ) {
-    rationale.push(
-      'Secondary, traumatic, ventilated, or physiologically fragile cases have less reserve.',
-    )
     return {
+      framework: 'BTS 2023',
       disposition: 'chest-drain',
-      recommendation:
-        'Use a monitored pathway with aspiration or small-bore drain selection based on patient state, local expertise, and imaging.',
-      rationale,
-      recurrencePrevention: recurrencePreventionText(clinicalCase),
+      headline: 'Monitored intervention pathway',
+      rationale: [
+        'High-risk characteristics, including underlying lung disease or ventilated/traumatic context, favor monitored intervention.',
+      ],
     }
   }
 
-  if (clinicalCase.type === 'psp' && clinicalCase.symptomBurden === 'minimal') {
-    rationale.push('Stable minimally symptomatic PSP can be considered for conservative care.')
-    rationale.push('Size alone should not force an invasive pathway in current teaching.')
+  if (clinicalCase.symptomBurden === 'minimal') {
     return {
-      disposition: 'conservative',
-      recommendation:
-        'Consider conservative management with safety-netting and follow-up if reliable and locally supported.',
-      rationale,
-      recurrencePrevention: recurrencePreventionText(clinicalCase),
+      framework: 'BTS 2023',
+      disposition: 'observation',
+      headline: 'Conservative management with safety-netting',
+      rationale: [
+        'The 2023 pathway de-emphasizes size for stable, minimally symptomatic primary spontaneous pneumothorax.',
+        'Procedure avoidance is reasonable when follow-up and return precautions are reliable.',
+      ],
     }
   }
 
-  rationale.push('Stable symptomatic PSP can be considered for aspiration or ambulatory pathway.')
+  if (clinicalCase.symptomBurden === 'severe') {
+    return {
+      framework: 'BTS 2023',
+      disposition: 'chest-drain',
+      headline: 'Short-term drainage for rapid symptom relief',
+      rationale: [
+        'Severe symptoms shift the patient-priority question toward rapid relief and monitored drainage.',
+      ],
+    }
+  }
+
   return {
-    disposition: 'aspiration-or-ambulatory',
-    recommendation:
-      'Consider needle aspiration or ambulatory device pathway where local systems, symptoms, and follow-up support it.',
-    rationale,
+    framework: 'BTS 2023',
+    disposition: 'ambulatory',
+    headline: 'Ambulatory device or aspiration pathway',
+    rationale: [
+      'For stable symptomatic primary spontaneous pneumothorax, the pathway weighs patient preference, local availability, and rapid symptom relief.',
+    ],
+  }
+}
+
+export function evaluateBothFrameworks(clinicalCase: PneumothoraxCase): DualFrameworkResult {
+  const accp = evaluateAccp(clinicalCase)
+  const bts = evaluateBts(clinicalCase)
+  const agreement = accp.disposition === bts.disposition
+
+  return {
+    accp,
+    bts,
+    agreement,
+    comparisonNote: comparisonNote(clinicalCase, accp.disposition, bts.disposition, agreement),
     recurrencePrevention: recurrencePreventionText(clinicalCase),
   }
 }
 
+function comparisonNote(
+  clinicalCase: PneumothoraxCase,
+  accpDisposition: Disposition,
+  btsDisposition: Disposition,
+  agreement: boolean,
+) {
+  if (agreement) {
+    return 'Both frameworks converge here, which usually means physiology, high-risk context, or persistent air leak timing is dominating the decision.'
+  }
+
+  if (accpDisposition === 'aspiration' && btsDisposition === 'observation') {
+    return 'Classic divergence: ACCP 2001 reacts to size, while BTS 2023 prioritizes symptoms, patient priorities, and follow-up reliability.'
+  }
+
+  if (clinicalCase.persistentAirLeakDays >= 3 && clinicalCase.persistentAirLeakDays < 5) {
+    return 'The divergence is timing: ACCP 2001 escalates persistent air leak before the BTS 2023 day-5 window.'
+  }
+
+  return 'The frameworks diverge; identify whether size, symptom burden, local ambulatory care, or risk context is driving the difference.'
+}
+
 function recurrencePreventionText(clinicalCase: PneumothoraxCase) {
   if (clinicalCase.highRiskOccupation) {
-    return 'Discuss definitive recurrence prevention because aviation/diving or similar exposure changes the risk tolerance.'
+    return 'High-risk occupation, such as aviation or diving, lowers the threshold for definitive recurrence-prevention discussion.'
   }
 
   if (clinicalCase.recurrence !== 'none' || clinicalCase.type === 'ssp') {
-    return 'Discuss recurrence prevention, pleurodesis or surgery, smoking cessation, and specialty follow-up.'
+    return 'Recurrence or secondary spontaneous pneumothorax should prompt prevention counseling, smoking cessation, pleurodesis or surgical options, and specialist follow-up.'
   }
 
-  return 'Counsel on recurrence risk, smoking cessation, follow-up, and return precautions.'
+  return 'For a first primary spontaneous pneumothorax, counsel about recurrence risk, smoking cessation, follow-up, and return precautions.'
 }

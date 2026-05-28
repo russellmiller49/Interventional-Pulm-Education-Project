@@ -56,7 +56,7 @@ const pleuralModules = [
     href: '/pleural-procedures/pneumothorax-pathway',
     title: 'Pneumothorax Pathway',
     description:
-      'Physiology-first PSP/SSP pathway, persistent air leak timeline, and recurrence-prevention teaching.',
+      'Physiology-first primary and secondary spontaneous pneumothorax pathway, persistent air leak timeline, and recurrence-prevention teaching.',
     status: 'Live',
     icon: Activity,
   },

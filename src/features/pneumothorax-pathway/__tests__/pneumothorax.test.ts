@@ -1,4 +1,4 @@
-import { evaluatePneumothoraxPathway } from '../engine/frameworks'
+import { evaluateAccp, evaluateBothFrameworks, evaluateBts } from '../engine/frameworks'
 import { pneumothoraxCases } from '../scenarios/pneumothoraxCases'
 
 const getCase = (id: string) => {
@@ -12,17 +12,27 @@ const getCase = (id: string) => {
 }
 
 describe('pneumothorax pathway engine', () => {
-  it('routes unstable physiology to emergency management', () => {
-    expect(evaluatePneumothoraxPathway(getCase('unstable-tension')).disposition).toBe('emergency')
+  it('routes unstable physiology to emergency management in both frameworks', () => {
+    const result = evaluateBothFrameworks(getCase('unstable-tension'))
+
+    expect(result.accp.disposition).toBe('emergency')
+    expect(result.bts.disposition).toBe('emergency')
+    expect(result.agreement).toBe(true)
   })
 
-  it('allows stable minimally symptomatic PSP to be conservative', () => {
-    expect(evaluatePneumothoraxPathway(getCase('stable-minimal-psp')).disposition).toBe(
-      'conservative',
-    )
+  it('shows the size-versus-symptom divergence for stable large primary pneumothorax', () => {
+    const result = evaluateBothFrameworks(getCase('stable-minimal-psp'))
+
+    expect(result.accp.disposition).toBe('aspiration')
+    expect(result.bts.disposition).toBe('observation')
+    expect(result.agreement).toBe(false)
+    expect(result.comparisonNote).toContain('size')
   })
 
-  it('escalates persistent air leak at day 5', () => {
-    expect(evaluatePneumothoraxPathway(getCase('persistent-air-leak')).disposition).toBe('escalate')
+  it('escalates persistent air leak earlier in ACCP than BTS', () => {
+    const dayFour = { ...getCase('persistent-air-leak'), persistentAirLeakDays: 4 }
+
+    expect(evaluateAccp(dayFour).disposition).toBe('escalate')
+    expect(evaluateBts(dayFour).disposition).toBe('chest-drain')
   })
 })

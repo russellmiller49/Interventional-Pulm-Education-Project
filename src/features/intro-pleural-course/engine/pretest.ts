@@ -21,6 +21,15 @@ export interface PretestResult {
   }[]
 }
 
+export interface SectionDelta {
+  section: PleuralSection
+  pretestPercent: number
+  posttestPercent: number | null
+  delta: number | null
+  posttestAnswered: number
+  total: number
+}
+
 export function scorePretest(
   answers: Record<string, string | undefined>,
   items: readonly PretestItem[],
@@ -63,4 +72,40 @@ export function scorePretest(
     sectionScores,
     prescription,
   }
+}
+
+export function comparePretestPosttest(
+  pretestAnswers: Record<string, string | undefined>,
+  posttestAnswers: Record<string, string | undefined>,
+  items: readonly PretestItem[],
+): SectionDelta[] {
+  const pretest = scorePretest(pretestAnswers, items)
+  const posttestBySection = new Map<PleuralSection, { correct: number; answered: number }>()
+
+  for (const item of items) {
+    const existing = posttestBySection.get(item.section) ?? { correct: 0, answered: 0 }
+    const answer = posttestAnswers[item.id]
+
+    posttestBySection.set(item.section, {
+      correct: existing.correct + (answer === item.correctId ? 1 : 0),
+      answered: existing.answered + (answer ? 1 : 0),
+    })
+  }
+
+  return pretest.sectionScores.map((sectionScore) => {
+    const posttest = posttestBySection.get(sectionScore.section) ?? { correct: 0, answered: 0 }
+    const posttestPercent =
+      posttest.answered === sectionScore.total
+        ? Math.round((posttest.correct / sectionScore.total) * 100)
+        : null
+
+    return {
+      section: sectionScore.section,
+      pretestPercent: sectionScore.percent,
+      posttestPercent,
+      delta: posttestPercent === null ? null : posttestPercent - sectionScore.percent,
+      posttestAnswered: posttest.answered,
+      total: sectionScore.total,
+    }
+  })
 }

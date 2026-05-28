@@ -37,6 +37,41 @@ export const anatomyModels: AnatomyModel[] = [
         low: -1000,
         high: 500,
       },
+      ctAlignment: {
+        translationMm: {
+          x: 0,
+          y: -52,
+          z: 390,
+        },
+        rotationDegrees: {
+          x: -89,
+          y: 0,
+          z: 0,
+        },
+        scale: 1,
+        flip: {
+          x: false,
+          y: false,
+          z: false,
+        },
+      },
+      ctSliceOrientation: {
+        x: {
+          rotationDegrees: 90,
+          flipHorizontal: false,
+          flipVertical: false,
+        },
+        y: {
+          rotationDegrees: 180,
+          flipHorizontal: false,
+          flipVertical: false,
+        },
+        z: {
+          rotationDegrees: 0,
+          flipHorizontal: true,
+          flipVertical: false,
+        },
+      },
       supabase: {
         bucket: '3d-models',
         path: 'Models/Lymphnode_education.nrrd',
@@ -249,6 +284,41 @@ export const anatomyModels: AnatomyModel[] = [
         low: -1000,
         high: 500,
       },
+      ctAlignment: {
+        translationMm: {
+          x: 0,
+          y: -166,
+          z: 163,
+        },
+        rotationDegrees: {
+          x: 90,
+          y: 0,
+          z: 0,
+        },
+        scale: 1,
+        flip: {
+          x: false,
+          y: true,
+          z: true,
+        },
+      },
+      ctSliceOrientation: {
+        x: {
+          rotationDegrees: 90,
+          flipHorizontal: false,
+          flipVertical: false,
+        },
+        y: {
+          rotationDegrees: 180,
+          flipHorizontal: false,
+          flipVertical: false,
+        },
+        z: {
+          rotationDegrees: 0,
+          flipHorizontal: true,
+          flipVertical: false,
+        },
+      },
       supabase: {
         bucket: '3d-models',
         path: 'Models/Y-stent.nrrd',
@@ -378,15 +448,15 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: resolveModuleAssetPath('/models/te-fistula.glb'),
-        sizeMB: 4.84,
+        url: resolveModuleAssetPath('/models/te-fistula-updated-2026-05-25.glb'),
+        sizeMB: 1.6,
       },
     ],
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
     defaultCamera: {
-      position: [-16.56, -327.59, 147.49],
-      target: [-1.89, 14.53, 51.51],
+      position: [0.38, 0.22, 0.48],
+      target: [0, 0, 0],
       autoFit: false,
     },
     orientation: {
@@ -405,6 +475,11 @@ export const anatomyModels: AnatomyModel[] = [
         path: 'Models/TE Fistula.nrrd',
         public: true,
       },
+      segmentation: {
+        format: 'nrrd',
+        description: 'Updated Slicer binary label map for the revised fistula surface model.',
+        url: resolveModuleAssetPath('/models/te-fistula-segmentation-2026-05-25.nrrd'),
+      },
     },
     segments: [
       {
@@ -419,13 +494,6 @@ export const anatomyModels: AnatomyModel[] = [
         name: 'inferior vena cava',
         description: 'Inferior vena cava.',
         color: '#22d3ee',
-        visibleByDefault: true,
-      },
-      {
-        id: 'left-atrial-appendage',
-        name: 'left atrial appendage',
-        description: 'Left atrial appendage anatomy.',
-        color: '#c084fc',
         visibleByDefault: true,
       },
       {
@@ -446,6 +514,13 @@ export const anatomyModels: AnatomyModel[] = [
         id: 'left-subclavian-artery',
         name: 'left subclavian artery',
         description: 'Left subclavian artery.',
+        color: '#f97316',
+        visibleByDefault: true,
+      },
+      {
+        id: 'pulmonary-artery',
+        name: 'pulmonary artery',
+        description: 'Pulmonary arterial system.',
         color: '#f97316',
         visibleByDefault: true,
       },
@@ -485,10 +560,17 @@ export const anatomyModels: AnatomyModel[] = [
         visibleByDefault: true,
       },
       {
-        id: 'trachea',
-        name: 'Trachea',
+        id: 'airway',
+        name: 'Airway',
         description: 'Central airway lumen.',
         color: '#0ea5e9',
+        visibleByDefault: true,
+      },
+      {
+        id: 'fistula',
+        name: 'Fistula',
+        description: 'Tracheoesophageal fistula tract.',
+        color: '#f43f5e',
         visibleByDefault: true,
       },
       {
@@ -513,8 +595,8 @@ export const anatomyModels: AnatomyModel[] = [
         visibleByDefault: true,
       },
     ],
-    source: 'Converted from anonymized surgical planning dataset provided for education.',
+    source: 'Updated anonymized fistula model and Slicer segmentation exported May 25, 2026.',
     notes:
-      'Evaluate rendering performance of the optimized GLB versus legacy multi-file OBJ workflows.',
+      'Updated GLB aligns the surface model with the associated CT volume and segmentation label map.',
   },
 ]

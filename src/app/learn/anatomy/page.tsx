@@ -5,11 +5,32 @@ import { useMemo, useState } from 'react'
 import type { Route } from 'next'
 
 import { AnatomyViewerDynamic } from '@/components/3d/AnatomyViewerDynamic'
+import type { AnatomyAxis, OrthogonalClipMode } from '@/components/3d/AnatomyViewer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getModel } from '@/data/models'
 import { anatomyModels } from '@/data/printable-models'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
+
+const axisLabels: Record<AnatomyAxis, string> = {
+  x: 'Sagittal',
+  y: 'Coronal',
+  z: 'Axial',
+}
+
+const anatomyAxes: AnatomyAxis[] = ['z', 'y', 'x']
+
+const defaultCtPlaneVisibility: Record<AnatomyAxis, boolean> = {
+  x: false,
+  y: false,
+  z: true,
+}
+
+const defaultCtPlaneSlices: Record<AnatomyAxis, number> = {
+  x: 50,
+  y: 50,
+  z: 50,
+}
 
 export default function AnatomyLearnPage() {
   const models = anatomyModels
@@ -24,6 +45,14 @@ export default function AnatomyLearnPage() {
   )
   const [crossSection, setCrossSection] = useState(0)
   const [volumeSlice, setVolumeSlice] = useState(0)
+  const [showCtPlanes, setShowCtPlanes] = useState(true)
+  const [ctPlaneVisibility, setCtPlaneVisibility] =
+    useState<Record<AnatomyAxis, boolean>>(defaultCtPlaneVisibility)
+  const [ctPlaneSlices, setCtPlaneSlices] =
+    useState<Record<AnatomyAxis, number>>(defaultCtPlaneSlices)
+  const [ctPlaneOpacity, setCtPlaneOpacity] = useState(0.3)
+  const [ctClipMode, setCtClipMode] = useState<OrthogonalClipMode>('none')
+  const [ctClipAxis, setCtClipAxis] = useState<AnatomyAxis>('z')
   const [showAnnotations, setShowAnnotations] = useState(true)
   const [resetSignal, setResetSignal] = useState(0)
   const [showDebugHelpers, setShowDebugHelpers] = useState(false)
@@ -49,6 +78,12 @@ export default function AnatomyLearnPage() {
     )
     setCrossSection(0)
     setVolumeSlice(0)
+    setShowCtPlanes(true)
+    setCtPlaneVisibility(defaultCtPlaneVisibility)
+    setCtPlaneSlices(defaultCtPlaneSlices)
+    setCtPlaneOpacity(0.3)
+    setCtClipMode('none')
+    setCtClipAxis('z')
     setShowAnnotations(true)
     setResetSignal((signal) => signal + 1)
     setRotation({ x: 0, y: 0, z: 0 })
@@ -58,6 +93,20 @@ export default function AnatomyLearnPage() {
     setVisibleSegments((prev) => ({
       ...prev,
       [segmentId]: !prev[segmentId],
+    }))
+  }
+
+  const handleCtPlaneVisibilityChange = (axis: AnatomyAxis, visible: boolean) => {
+    setCtPlaneVisibility((prev) => ({
+      ...prev,
+      [axis]: visible,
+    }))
+  }
+
+  const handleCtPlaneSliceChange = (axis: AnatomyAxis, value: number) => {
+    setCtPlaneSlices((prev) => ({
+      ...prev,
+      [axis]: value,
     }))
   }
 
@@ -146,6 +195,12 @@ export default function AnatomyLearnPage() {
             )
             setShowAnnotations(true)
             setVolumeSlice(0)
+            setShowCtPlanes(true)
+            setCtPlaneVisibility(defaultCtPlaneVisibility)
+            setCtPlaneSlices(defaultCtPlaneSlices)
+            setCtPlaneOpacity(0.3)
+            setCtClipMode('none')
+            setCtClipAxis('z')
             setResetSignal((signal) => signal + 1)
             setRotation({ x: 0, y: 0, z: 0 })
           }}
@@ -153,6 +208,102 @@ export default function AnatomyLearnPage() {
         >
           Reset workspace
         </button>
+      </section>
+
+      <section className={controlCardClassName}>
+        <div>
+          <div className={controlLabelClassName}>3D CT</div>
+          <h3 className="mt-1 text-base font-semibold text-white">Orthogonal planes</h3>
+        </div>
+        <label className="flex min-h-9 items-center gap-2 rounded-xl border border-slate-500/20 bg-slate-950/50 px-3 text-sm text-slate-200">
+          <input
+            type="checkbox"
+            checked={showCtPlanes}
+            onChange={(event) => setShowCtPlanes(event.target.checked)}
+            className="h-4 w-4 accent-cyan-300"
+          />
+          <span>Show 3D CT planes</span>
+        </label>
+        <div className="grid gap-2">
+          {anatomyAxes.map((axis) => (
+            <label
+              key={axis}
+              className="flex min-h-9 items-center gap-2 rounded-xl border border-slate-500/20 bg-slate-950/50 px-3 text-sm text-slate-200"
+            >
+              <input
+                type="checkbox"
+                checked={ctPlaneVisibility[axis]}
+                disabled={!showCtPlanes}
+                onChange={(event) => handleCtPlaneVisibilityChange(axis, event.target.checked)}
+                className="h-4 w-4 accent-cyan-300 disabled:opacity-40"
+              />
+              <span>{axisLabels[axis]}</span>
+            </label>
+          ))}
+        </div>
+        <div className="grid gap-3">
+          {anatomyAxes.map((axis) => (
+            <label key={axis} className="grid gap-2">
+              <span className="flex items-center justify-between text-xs text-slate-400">
+                <span className={controlLabelClassName}>{axisLabels[axis]}</span>
+                <span className="text-white">{ctPlaneSlices[axis].toFixed(0)}%</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={ctPlaneSlices[axis]}
+                disabled={!showCtPlanes}
+                onChange={(event) => handleCtPlaneSliceChange(axis, Number(event.target.value))}
+                className="w-full accent-cyan-300 disabled:opacity-40"
+              />
+            </label>
+          ))}
+        </div>
+        <label className="grid gap-2">
+          <span className="flex items-center justify-between text-xs text-slate-400">
+            <span className={controlLabelClassName}>3D CT plane opacity</span>
+            <span className="text-white">{Math.round(ctPlaneOpacity * 100)}%</span>
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={ctPlaneOpacity}
+            disabled={!showCtPlanes}
+            onChange={(event) => setCtPlaneOpacity(Number(event.target.value))}
+            className="w-full accent-cyan-300 disabled:opacity-40"
+          />
+        </label>
+        <label className="grid gap-2">
+          <span className={controlLabelClassName}>3D anatomy clipping</span>
+          <select
+            value={ctClipMode}
+            onChange={(event) => setCtClipMode(event.target.value as OrthogonalClipMode)}
+            className="min-h-11 w-full rounded-xl border border-slate-500/25 bg-slate-950/80 px-3 text-sm text-white outline-none transition focus:border-cyan-300/70"
+          >
+            <option value="none">No clipping</option>
+            <option value="hide-above">Hide above CT plane</option>
+            <option value="hide-below">Hide below CT plane</option>
+          </select>
+        </label>
+        <label className="grid gap-2">
+          <span className={controlLabelClassName}>Clipping plane</span>
+          <select
+            value={ctClipAxis}
+            disabled={ctClipMode === 'none'}
+            onChange={(event) => setCtClipAxis(event.target.value as AnatomyAxis)}
+            className="min-h-11 w-full rounded-xl border border-slate-500/25 bg-slate-950/80 px-3 text-sm text-white outline-none transition focus:border-cyan-300/70 disabled:opacity-50"
+          >
+            {anatomyAxes.map((axis) => (
+              <option key={axis} value={axis}>
+                {axisLabels[axis]}
+              </option>
+            ))}
+          </select>
+        </label>
       </section>
 
       <section className={controlCardClassName}>
@@ -237,6 +388,11 @@ export default function AnatomyLearnPage() {
             cross-sectional slicing, annotated segments, and WebXR spatial viewing for supported
             headsets. Built for fellows and faculty running rehearsal labs or patient consults.
           </p>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Button asChild variant="outline">
+              <Link href={'/learn/anatomy/ct-alignment' as Route}>Open CT alignment sandbox</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -247,6 +403,12 @@ export default function AnatomyLearnPage() {
           visibleSegments={visibleSegments}
           crossSection={crossSection}
           volumeSlice={volumeSlice}
+          showCtPlanes={showCtPlanes}
+          ctPlaneVisibility={ctPlaneVisibility}
+          ctPlaneSlices={ctPlaneSlices}
+          ctPlaneOpacity={ctPlaneOpacity}
+          ctClipMode={ctClipMode}
+          ctClipAxis={ctClipAxis}
           showAnnotations={showAnnotations}
           resetSignal={resetSignal}
           showDebugHelpers={showDebugHelpers}

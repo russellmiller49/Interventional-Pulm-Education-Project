@@ -15,6 +15,7 @@ export default function IntroPleuralCoursePage() {
       <PleuralModuleHeader
         title="Intro pleural disease course"
         description="A pretest-driven course wrapper that routes learners toward the pleural ultrasound, fluid analysis, thoracentesis, chest drainage, infection, pneumothorax, and malignant effusion modules."
+        showDisclaimer={false}
       />
       <IntroPleuralCourse />
     </div>

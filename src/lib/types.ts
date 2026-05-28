@@ -175,11 +175,31 @@ export interface AnatomyVolumeAsset {
   format: VolumeFormat
   url?: string
   description?: string
+  segmentation?: {
+    format: VolumeFormat
+    url?: string
+    description?: string
+    supabase?: AnatomySupabaseVolumeSource
+  }
   window?: {
     low: number
     high: number
   }
   axis?: 'x' | 'y' | 'z'
+  ctAlignment?: {
+    translationMm: Record<'x' | 'y' | 'z', number>
+    rotationDegrees: Record<'x' | 'y' | 'z', number>
+    scale: number
+    flip: Record<'x' | 'y' | 'z', boolean>
+  }
+  ctSliceOrientation?: Record<
+    'x' | 'y' | 'z',
+    {
+      rotationDegrees: number
+      flipHorizontal: boolean
+      flipVertical: boolean
+    }
+  >
   supabase?: AnatomySupabaseVolumeSource
 }
 

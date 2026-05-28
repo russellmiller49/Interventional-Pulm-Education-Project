@@ -6,7 +6,7 @@ import { PneumothoraxPathway } from '@/features/pneumothorax-pathway/components/
 export const metadata: Metadata = {
   title: 'Pneumothorax Pathway',
   description:
-    'Interactive pneumothorax pathway for stability, PSP/SSP decisions, persistent air leak escalation, and recurrence prevention.',
+    'Interactive pneumothorax pathway for stability, primary and secondary spontaneous pneumothorax decisions, persistent air leak escalation, and recurrence prevention.',
 }
 
 export default function PneumothoraxPathwayPage() {
@@ -15,6 +15,7 @@ export default function PneumothoraxPathwayPage() {
       <PleuralModuleHeader
         title="Pneumothorax pathway"
         description="A current, physiology-first pneumothorax trainer that avoids size-only reasoning and makes persistent-air-leak escalation explicit."
+        showDisclaimer={false}
       />
       <PneumothoraxPathway />
     </div>

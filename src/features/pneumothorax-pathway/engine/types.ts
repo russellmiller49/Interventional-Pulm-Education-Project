@@ -1,10 +1,21 @@
 export type PneumothoraxType = 'psp' | 'ssp' | 'iatrogenic' | 'traumatic'
 export type SymptomBurden = 'minimal' | 'moderate' | 'severe'
+export type PneumothoraxSizeCategory = 'small' | 'large'
+
+export interface AccpVitals {
+  respiratoryRate: number
+  heartRate: number
+  roomAirSpo2: number
+  bloodPressureStable: boolean
+  speaksFullSentences: boolean
+}
 
 export interface PneumothoraxCase {
   id: string
   title: string
   type: PneumothoraxType
+  sizeCategory: PneumothoraxSizeCategory
+  accpVitals: AccpVitals
   symptomBurden: SymptomBurden
   hemodynamicCompromise: boolean
   severeHypoxemia: boolean
@@ -14,16 +25,4 @@ export interface PneumothoraxCase {
   highRiskOccupation: boolean
   ventilated: boolean
   learningCue: string
-}
-
-export interface PneumothoraxRecommendation {
-  disposition:
-    | 'emergency'
-    | 'conservative'
-    | 'aspiration-or-ambulatory'
-    | 'chest-drain'
-    | 'escalate'
-  recommendation: string
-  rationale: string[]
-  recurrencePrevention: string
 }

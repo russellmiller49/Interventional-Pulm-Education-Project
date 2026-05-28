@@ -33,6 +33,7 @@ pids
 *.nii
 *.nii.gz
 *.nrrd
+!public/models/te-fistula-segmentation-2026-05-25.nrrd
 *.tar.zst
 
 # Python build/test caches

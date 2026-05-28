@@ -49,6 +49,17 @@ function normalizeSegmentKey(input: string | undefined | null): string {
     .replace(/^-|-$/g, '')
 }
 
+function isNearBlackHex(hexColor: string): boolean {
+  const normalized = hexColor.replace('#', '').trim()
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return false
+  }
+  const red = Number.parseInt(normalized.slice(0, 2), 16)
+  const green = Number.parseInt(normalized.slice(2, 4), 16)
+  const blue = Number.parseInt(normalized.slice(4, 6), 16)
+  return red + green + blue < 24
+}
+
 function createSegmentIndex(segments: AnatomySegment[]): SegmentIndex {
   const index: SegmentIndex = {
     byOriginalId: new Map(),
@@ -366,6 +377,9 @@ async function loadModel(model: AnatomyModel): Promise<AnatomyAssetSuccess> {
             baseColorHex = paletteColor
           }
         }
+        if (baseColorHex && segment.color && isNearBlackHex(baseColorHex)) {
+          baseColorHex = segment.color
+        }
 
         mesh.userData.baseColor = baseColorHex
         if (!segment.color || segment.color.length === 0) {
@@ -650,8 +664,24 @@ export type VolumeAssetState =
       volume: Volume
       dimensions: [number, number, number]
       spacing: [number, number, number]
+      origin: [number, number, number]
+      space?: string
       axis: 'x' | 'y' | 'z'
     }
+
+type NRRDHeaderMetadata = {
+  space?: string
+  space_origin?: Array<string | number>
+}
+
+function parseVolumeOrigin(volume: Volume): [number, number, number] {
+  const header = (volume as Volume & { header?: NRRDHeaderMetadata }).header
+  const origin = header?.space_origin?.map((value) => Number(value))
+  if (origin?.length === 3 && origin.every((value) => Number.isFinite(value))) {
+    return [origin[0], origin[1], origin[2]]
+  }
+  return [0, 0, 0]
+}
 
 export function useVolumeAsset(model: AnatomyModel): VolumeAssetState {
   const [state, setState] = useState<VolumeAssetState>(() =>
@@ -701,6 +731,7 @@ export function useVolumeAsset(model: AnatomyModel): VolumeAssetState {
           ]
         const spacing = (volume.RASSpacing as [number, number, number]) ??
           (volume.spacing as [number, number, number]) ?? [1, 1, 1]
+        const header = (volume as Volume & { header?: NRRDHeaderMetadata }).header
 
         // Validate dimensions
         if (!dims || dims.some((dim) => !dim || dim <= 0 || !Number.isFinite(dim))) {
@@ -738,6 +769,8 @@ export function useVolumeAsset(model: AnatomyModel): VolumeAssetState {
           volume,
           dimensions: dims,
           spacing,
+          origin: parseVolumeOrigin(volume),
+          space: header?.space,
           axis: model.volume?.axis ?? 'z',
         })
       } catch (error) {
