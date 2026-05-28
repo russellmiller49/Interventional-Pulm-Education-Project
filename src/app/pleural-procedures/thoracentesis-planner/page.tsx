@@ -15,6 +15,7 @@ export default function ThoracentesisPlannerPage() {
       <PleuralModuleHeader
         title="Thoracentesis planner"
         description="A procedural-safety trainer for access-window anatomy, bleeding-risk framing, intercostal-vessel risk, and symptom-limited large-volume drainage."
+        showDisclaimer={false}
       />
       <ThoracentesisPlanner />
     </div>

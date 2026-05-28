@@ -15,6 +15,7 @@ export default function PleuralUltrasoundPage() {
       <PleuralModuleHeader
         title="Pleural ultrasound pattern lab"
         description="Classify pleural effusion patterns, then connect the visual finding to sampling, drainage, and source-control thinking without treating ultrasound appearance as a diagnosis by itself."
+        showDisclaimer={false}
       />
       <PatternRecognitionLab />
     </div>

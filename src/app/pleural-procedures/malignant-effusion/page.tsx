@@ -15,6 +15,7 @@ export default function MalignantEffusionPage() {
       <PleuralModuleHeader
         title="Malignant pleural effusion pathway"
         description="A decision trainer for cytology escalation, lung re-expansion, IPC and pleurodesis tradeoffs, rapid pleurodesis strategies, and patient-centered endpoints."
+        showDisclaimer={false}
       />
       <MalignantEffusionPathway />
     </div>

@@ -65,7 +65,7 @@ export function classifyParapneumonic(input: ParapneumonicInput): ParapneumonicC
 
   return {
     stage: 'uncomplicated',
-    reasons: ['No modeled drainage-level chemistry, microbiology, pus, or complex imaging.'],
+    reasons: ['No drainage-level chemistry, microbiology, pus, or complex imaging in this case.'],
     action: 'Antibiotics with close clinical reassessment may be reasonable in the right context.',
   }
 }

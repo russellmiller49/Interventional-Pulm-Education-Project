@@ -66,6 +66,6 @@ export function postDrainageBranch(lungExpansion: LungExpansion): {
 
 export function diagnosticYieldLabel(strategy: 'thoracentesis' | 'pleuroscopy') {
   return strategy === 'thoracentesis'
-    ? 'Thoracentesis cytology sensitivity is modeled as 40-60%, so negative results require context.'
-    : 'Pleuroscopy/pleural biopsy is modeled as higher-yield tissue diagnosis, around 80-90% in this teaching frame.'
+    ? 'Thoracentesis cytology sensitivity is taught as roughly 40-60%, so negative results require context.'
+    : 'Pleuroscopy or pleural biopsy usually offers higher-yield tissue diagnosis, around 80-90% in this teaching context.'
 }

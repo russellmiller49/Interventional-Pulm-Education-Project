@@ -1,3 +1,4 @@
+import { pleuralUltrasoundAssets } from '../content/assets'
 import { patternToManagement, scoreClassification } from '../engine/patterns'
 
 describe('pleural ultrasound pattern engine', () => {
@@ -16,5 +17,17 @@ describe('pleural ultrasound pattern engine', () => {
       correct: false,
       teachingPoint: expect.stringContaining('Septations'),
     })
+  })
+
+  it('keeps learner-facing image prompts neutral until reveal', () => {
+    for (const asset of pleuralUltrasoundAssets) {
+      expect(asset.neutralVignette).toEqual(expect.any(String))
+      expect(asset.revealCaption).toEqual(expect.any(String))
+      expect(asset).not.toHaveProperty('clinicalLabel')
+      expect(asset.alt.toLowerCase()).not.toContain('septated')
+      expect(asset.alt.toLowerCase()).not.toContain('echogenic')
+      expect(asset.alt.toLowerCase()).not.toContain('anechoic')
+      expect(asset.alt.toLowerCase()).not.toContain('complex')
+    }
   })
 })

@@ -14,7 +14,7 @@ export interface LyticResult {
 export function evaluateLyticChoice(choice: LyticChoice): LyticResult {
   if (choice === 'alteplase10Dnase5') {
     return {
-      label: 'tPA 10 mg + DNase 5 mg',
+      label: 'Tissue plasminogen activator (tPA) 10 mg plus DNase 5 mg',
       effect:
         'Combination therapy improved radiographic clearance and reduced surgical referral and length of stay in MIST2 teaching.',
       caution:
@@ -61,7 +61,7 @@ export function bleedingRisk(anticoagulated: boolean) {
   return {
     percent: anticoagulated ? 8.2 : 4.1,
     note: anticoagulated
-      ? 'Modeled risk is more than doubled on therapeutic anticoagulation for teaching purposes.'
-      : 'Baseline modeled pleural bleeding risk for lytic teaching is 4.1%.',
+      ? 'Therapeutic anticoagulation increases bleeding concern and should trigger mitigation planning.'
+      : 'Baseline pleural bleeding signal for lytic teaching is 4.1%.',
   }
 }

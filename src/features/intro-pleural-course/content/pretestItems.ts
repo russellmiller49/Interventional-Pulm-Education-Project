@@ -304,7 +304,7 @@ export const pretestItems: readonly PretestItem[] = [
     ],
     correctId: 'a',
     explanation:
-      'Modern pneumothorax teaching emphasizes stability, symptoms, PSP/SSP, risk, and setting rather than size alone.',
+      'Modern pneumothorax teaching emphasizes stability, symptoms, primary versus secondary spontaneous pneumothorax, risk, and setting rather than size alone.',
     section: 'pneumothorax',
     difficulty: 1,
     referenceIds: ['bts-pleural-2023', 'ers-eacts-ests-2024'],

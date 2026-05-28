@@ -15,6 +15,7 @@ export default function PleuralInfectionPage() {
       <PleuralModuleHeader
         title="Pleural infection workflow"
         description="A source-control trainer for parapneumonic staging, drainage decisions, intrapleural therapy, bleeding-risk overlays, irrigation alternatives, and escalation."
+        showDisclaimer={false}
       />
       <PleuralInfectionWorkflow />
     </div>
