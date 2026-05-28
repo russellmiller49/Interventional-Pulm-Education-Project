@@ -29,6 +29,14 @@ const pleuralModules = [
     icon: Stethoscope,
   },
   {
+    href: '/pleural-procedures/pleural-ultrasound-simulator',
+    title: 'Pleural Ultrasound Simulator',
+    description:
+      'Move a virtual probe over a patient-specific effusion model, generate synthetic B-mode views, classify the pattern, and choose a safer access window.',
+    status: 'Prototype',
+    icon: Stethoscope,
+  },
+  {
     href: '/pleural-procedures/chest-drainage',
     title: 'Chest Drainage Systems',
     description:

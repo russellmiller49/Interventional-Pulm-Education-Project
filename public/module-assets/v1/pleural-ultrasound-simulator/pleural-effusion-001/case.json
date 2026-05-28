@@ -1,0 +1,117 @@
+{
+  "id": "pleural-effusion-001",
+  "name": "Patient-specific pleural effusion ultrasound simulator",
+  "description": "Derived educational case from a Slicer segmentation with skin, diaphragm, pleural effusion, lungs, chest wall, and upper abdominal structures.",
+  "safetyLabel": "Educational simulation only; not for diagnosis, treatment, or procedure guidance.",
+  "meshUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.glb",
+  "labelmapUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.labelmap.uint8.bin",
+  "labelmapFormat": "uint8-single-label",
+  "labels": {
+    "0": "background",
+    "1": "skin",
+    "2": "subcutaneousTissue",
+    "3": "intercostalMuscle",
+    "4": "rib",
+    "5": "lung",
+    "6": "atelectaticLung",
+    "7": "pleuralFluid",
+    "8": "septation",
+    "9": "debris",
+    "10": "diaphragm",
+    "11": "liver",
+    "12": "spleen"
+  },
+  "labelCounts": {
+    "0": 15406127,
+    "1": 1774415,
+    "2": 0,
+    "3": 323790,
+    "4": 408538,
+    "5": 2224363,
+    "6": 0,
+    "7": 588885,
+    "8": 0,
+    "9": 0,
+    "10": 288355,
+    "11": 836668,
+    "12": 103419
+  },
+  "labelBoundsLpsMm": {
+    "skin": {
+      "min": [-173.63099670410156, -327.8302500247955, -508.89999389648426],
+      "max": [202.89231920242304, -28.82644033432007, -176.89940139651293],
+      "voxels": 1774415
+    },
+    "intercostalMuscle": {
+      "min": [-79.86930823326112, -161.7170224189758, -509.3992429077624],
+      "max": [81.81423330307004, -39.16237449645996, -175.90090337395662],
+      "voxels": 323790
+    },
+    "rib": {
+      "min": [-162.55678153038025, -263.59980201721186, -509.3992429077624],
+      "max": [179.26732683181757, -43.592060565948486, -175.90090337395662],
+      "voxels": 408538
+    },
+    "lung": {
+      "min": [-137.45522713661194, -293.1310424804687, -442.99912440776814],
+      "max": [157.11889648437494, -93.79516935348511, -190.8783737123012],
+      "voxels": 2224363
+    },
+    "pleuralFluid": {
+      "min": [-150.0060043334961, -189.03341984748837, -470.4578200280665],
+      "max": [157.11889648437494, -67.21705293655396, -200.86335393786425],
+      "voxels": 588885
+    },
+    "diaphragm": {
+      "min": [-144.83803725242615, -313.06462979316706, -509.3992429077624],
+      "max": [157.11889648437494, -71.64673900604248, -389.5794802010058],
+      "voxels": 288355
+    },
+    "liver": {
+      "min": [-151.48256635665894, -309.37322473525995, -508.89999389648426],
+      "max": [47.85330677032468, -77.55298709869385, -404.5569505393504],
+      "voxels": 836668
+    },
+    "spleen": {
+      "min": [44.900182723998995, -187.55685782432553, -481.940547287464],
+      "max": [158.59545850753778, -102.65454149246216, -418.53592285513866],
+      "voxels": 103419
+    }
+  },
+  "source": {
+    "segmentationFileName": "19_CT_HR segmentation_final.seg.nrrd",
+    "meshFileName": "effusion_model.glb",
+    "originalSegmentationFormat": "Slicer 4D .seg.nrrd",
+    "sourceSizeXyz": [512, 512, 669],
+    "sourceLayerCount": 5,
+    "sourceSpace": "left-posterior-superior",
+    "sourcePolicy": "Raw CT and Slicer segmentation stay local. This manifest references only derived educational browser assets."
+  },
+  "volume": {
+    "sizeXyz": [256, 256, 335],
+    "sourceSizeXyz": [512, 512, 669],
+    "strideXyz": [2, 2, 2],
+    "spacingXyzMm": [1.4765620231628416, 1.4765620231628416, 0.9984980225563048],
+    "originLpsMm": [-173.63099670410156, -387.63101196289057, -509.3992429077624],
+    "coordinateSystem": "LPS"
+  },
+  "probeDefaults": {
+    "lateralMm": -88.58102416992188,
+    "posteriorMm": -20.82644033432007,
+    "craniocaudalMm": -454.2821520626544,
+    "tiltDeg": -2,
+    "rotationDeg": 0,
+    "depthCm": 12,
+    "gain": 1.05,
+    "dynamicRangeDb": 56,
+    "sectorAngleDeg": 62,
+    "needleAngleDeg": 0
+  },
+  "objectives": [
+    "Find the largest dependent pleural fluid pocket.",
+    "Avoid rib shadow, diaphragm, liver, and spleen in the access trajectory.",
+    "Identify lung, atelectatic lung behavior, and pleural fluid boundaries.",
+    "Classify the effusion pattern and connect the view to thoracentesis planning."
+  ],
+  "groundTruthPattern": "simpleAnechoic"
+}
