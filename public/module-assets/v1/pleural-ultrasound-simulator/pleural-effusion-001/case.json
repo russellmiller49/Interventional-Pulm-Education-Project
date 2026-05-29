@@ -4,6 +4,7 @@
   "description": "Derived educational case from a Slicer segmentation with skin, diaphragm, pleural effusion, lungs, chest wall, and upper abdominal structures.",
   "safetyLabel": "Educational simulation only; not for diagnosis, treatment, or procedure guidance.",
   "meshUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.glb",
+  "probeModelUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/ultrasound-probe.glb",
   "labelmapUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.labelmap.uint8.bin",
   "labelmapFormat": "uint8-single-label",
   "labels": {
@@ -77,6 +78,31 @@
       "max": [158.59545850753778, -102.65454149246216, -418.53592285513866],
       "voxels": 103419
     }
+  },
+  "plusToolkit": {
+    "status": "planned-offline-frame-generation",
+    "simulatorDevice": "UsSimulator",
+    "recommendedMode": "offline-frame-cache",
+    "sourceUrls": [
+      "https://pluslib.readthedocs.io/en/latest/devices/DeviceUsSimulatorVideo.html",
+      "https://pluslib.readthedocs.io/en/latest/getting-started/build-instructions.html",
+      "https://plustoolkit.github.io/features.html"
+    ],
+    "requiredSurfaceModels": [
+      "skin.stl",
+      "muscle.stl",
+      "rib.stl",
+      "lung.stl",
+      "pleural-fluid.stl",
+      "diaphragm.stl",
+      "liver.stl",
+      "spleen.stl"
+    ],
+    "notes": [
+      "PLUS is a native C++/PlusServer workflow, so this browser module should consume cached images or atlases generated offline rather than attempting to run PlusLib in Next.js.",
+      "The Plus UsSimulator device models B-mode from surface meshes with acoustic material parameters and scan conversion; export one STL per relevant Slicer segment for that pipeline.",
+      "Generated Plus frames can be indexed by the same probe pose fields used by this module and substituted ahead of the educational browser ray marcher."
+    ]
   },
   "source": {
     "segmentationFileName": "19_CT_HR segmentation_final.seg.nrrd",

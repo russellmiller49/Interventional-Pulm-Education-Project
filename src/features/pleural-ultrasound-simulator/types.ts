@@ -53,11 +53,13 @@ export interface PleuralSimulatorCase {
   description: string
   safetyLabel: string
   meshUrl: string
+  probeModelUrl?: string
   labelmapUrl: string
   labelmapFormat: 'uint8-single-label'
   labels: Record<string, PleuralTissueLabel>
   labelCounts: Record<string, number>
   labelBoundsLpsMm: Partial<Record<PleuralTissueLabel, LabelBounds>>
+  plusToolkit?: PlusToolkitIntegrationPlan
   source: {
     segmentationFileName: string
     meshFileName: string
@@ -71,6 +73,15 @@ export interface PleuralSimulatorCase {
   probeDefaults: PleuralProbeState
   objectives: string[]
   groundTruthPattern: EffusionPattern
+}
+
+export interface PlusToolkitIntegrationPlan {
+  status: 'planned-offline-frame-generation'
+  simulatorDevice: 'UsSimulator'
+  recommendedMode: 'offline-frame-cache'
+  sourceUrls: string[]
+  requiredSurfaceModels: string[]
+  notes: string[]
 }
 
 export interface PleuralVolume {

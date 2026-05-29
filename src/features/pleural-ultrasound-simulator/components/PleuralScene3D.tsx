@@ -1,12 +1,12 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useMemo } from 'react'
 import { Bounds, OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 
 import type { PleuralProbeState, PleuralSimulatorCase } from '../types'
-import { probeOrigin } from '../engine/sectorGeometry'
+import { beamDirection, probeOrigin } from '../engine/sectorGeometry'
 import { NeedlePathOverlay } from './NeedlePathOverlay'
 
 interface PleuralScene3DProps {
@@ -41,7 +41,7 @@ export function PleuralScene3D({ caseData, probe, needleUnsafe }: PleuralScene3D
             <Bounds fit clip observe margin={1.12}>
               <group>
                 <PleuralModel meshUrl={caseData.meshUrl} />
-                <ProbeMarker probe={probe} />
+                <ProbeMarker probe={probe} probeModelUrl={caseData.probeModelUrl} />
                 <NeedlePathOverlay probe={probe} unsafe={needleUnsafe} />
               </group>
             </Bounds>
@@ -127,7 +127,80 @@ function PleuralModel({ meshUrl }: { meshUrl: string }) {
   return <primitive object={gltf.scene} />
 }
 
-function ProbeMarker({ probe }: { probe: PleuralProbeState }) {
+function ProbeMarker({
+  probe,
+  probeModelUrl,
+}: {
+  probe: PleuralProbeState
+  probeModelUrl?: string
+}) {
+  if (probeModelUrl) {
+    return <UltrasoundProbeModel probe={probe} probeModelUrl={probeModelUrl} />
+  }
+
+  return <FallbackProbeMarker probe={probe} />
+}
+
+function UltrasoundProbeModel({
+  probe,
+  probeModelUrl,
+}: {
+  probe: PleuralProbeState
+  probeModelUrl: string
+}) {
+  const gltf = useGLTF(probeModelUrl)
+  const model = useMemo(() => gltf.scene.clone(true), [gltf.scene])
+  const origin = probeOrigin(probe)
+
+  const quaternion = useMemo(() => {
+    const centralBeam = beamDirection(probe, 0)
+    const displayAxis = new THREE.Vector3(
+      centralBeam[0],
+      centralBeam[1],
+      centralBeam[2],
+    ).normalize()
+
+    return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), displayAxis)
+  }, [probe])
+
+  useEffect(() => {
+    model.traverse((child) => {
+      const mesh = child as THREE.Mesh
+      if (!mesh.isMesh) {
+        return
+      }
+
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      mesh.renderOrder = 20
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      for (const material of materials) {
+        if (!(material instanceof THREE.MeshStandardMaterial)) {
+          continue
+        }
+
+        material.roughness = 0.58
+        material.metalness = 0.08
+        material.depthTest = false
+        material.color.lerp(new THREE.Color('#e5e7eb'), 0.32)
+      }
+    })
+  }, [model])
+
+  return (
+    <group position={origin} quaternion={quaternion}>
+      <mesh position={[0, -2.5, 0]}>
+        <boxGeometry args={[34, 4, 13]} />
+        <meshStandardMaterial color="#111827" roughness={0.4} depthTest={false} />
+      </mesh>
+      <group position={[0, -68, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={70}>
+        <primitive object={model} />
+      </group>
+    </group>
+  )
+}
+
+function FallbackProbeMarker({ probe }: { probe: PleuralProbeState }) {
   const origin = probeOrigin(probe)
   const unsafeColor = '#0f172a'
 
