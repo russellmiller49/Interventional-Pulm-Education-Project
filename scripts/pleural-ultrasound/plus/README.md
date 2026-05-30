@@ -234,6 +234,51 @@ an `Image` node embedded to `Reference` plus a companion `ProbeToReference`
 transform. If the Slicer connector was already active during an earlier failed
 run, turn `Active` off and back on after restarting PlusServer.
 
+### Adjusting the probe pose
+
+Do not hand-edit `ProbeToReference` in Slicer while PLUS is connected. It is an
+incoming transform, so the next OpenIGTLink frame will overwrite Slicer's local
+edit. Use the pose helper instead; the transform sender re-reads this JSON file
+while `run-plus-simulator.sh` is active:
+
+```bash
+python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --preset largest-pocket
+python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --nudge pa -5
+python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --nudge is 10
+python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --rotate rx 5
+```
+
+The axes match Slicer's transform labels:
+
+```text
+LR / x: left-right, mostly lateral chest-wall position
+PA / y: posterior-anterior, probe contact depth around the chest wall
+IS / z: inferior-superior, caudal-cranial level
+rx / ry / rz: rotation about those same Slicer axes, in degrees
+```
+
+Use small nudges, usually 5 to 10 mm, and watch the resliced anatomy in Slicer.
+Use smaller rotation nudges, usually 2 to 5 degrees.
+If PLUS is not running, the command still updates:
+
+```text
+Pleural_effusion_simulation/plus/current-probe-pose.json
+```
+
+Then restart `run-plus-simulator.sh` and reconnect Slicer's OpenIGTLinkIF
+connector.
+
+If changing one slice background changes all slice views, Slicer's linked-slice
+control is enabled. Turn off the chain/link icon in each slice controller, or
+run this in Slicer's Python Interactor:
+
+```python
+exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/scripts/pleural-ultrasound/plus/slicer-set-plus-view-layout.py").read())
+```
+
+That sets Red and Yellow to the CT, Green to `Image_Reference`, and unlinks the
+slice controls.
+
 ## 4a. Calibrate a patient-specific pleural window
 
 Before judging image realism, make sure the probe ray actually crosses the
@@ -252,12 +297,24 @@ window from the low-resolution surfaces:
 x=184.2 mm, y=110.4 mm, z=-382.9 mm
 ```
 
-To test another scored window, pass explicit transform-sender args:
+To test another scored window, update the live pose file:
 
 ```bash
-PLUS_BIN=/Users/russellmiller/Projects/PlusBuild-bin/bin \
-TRANSFORM_SENDER_ARGS="--x 184.2 --y 126.4 --z -358.9" \
-  scripts/pleural-ultrasound/plus/run-plus-simulator.sh
+python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --preset alternate-interspace
+```
+
+If markup landmarks have been saved under:
+
+```text
+Pleural_effusion_simulation/plus/markups/
+```
+
+derive a safer interspace pose from the rib, diaphragm, liver, and saved skin
+entry landmarks:
+
+```bash
+python3 scripts/pleural-ultrasound/plus/pose-from-markups.py
+python3 scripts/pleural-ultrasound/plus/pose-from-markups.py --apply
 ```
 
 ## 5. Generate frame cache for the web module

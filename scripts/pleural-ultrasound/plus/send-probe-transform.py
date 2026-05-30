@@ -10,11 +10,13 @@ ProbeToTracker and ReferenceToTracker internally.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import socket
 import struct
 import time
 from collections.abc import Sequence
+from pathlib import Path
 
 
 IGTL_HEADER_VERSION = 1
@@ -41,6 +43,82 @@ def _identity_transform(x_mm: float, y_mm: float, z_mm: float) -> Matrix3x4:
         (1.0, 0.0, 0.0, x_mm),
         (0.0, 1.0, 0.0, y_mm),
         (0.0, 0.0, 1.0, z_mm),
+    )
+
+
+def _multiply_3x3(
+    left: tuple[tuple[float, float, float], ...],
+    right: tuple[tuple[float, float, float], ...],
+) -> tuple[tuple[float, float, float], ...]:
+    return tuple(
+        tuple(sum(left[row][index] * right[index][col] for index in range(3)) for col in range(3))
+        for row in range(3)
+    )
+
+
+def _rotation_matrix(
+    rx_deg: float,
+    ry_deg: float,
+    rz_deg: float,
+) -> tuple[tuple[float, float, float], ...]:
+    rx = math.radians(rx_deg)
+    ry = math.radians(ry_deg)
+    rz = math.radians(rz_deg)
+
+    cx, sx = math.cos(rx), math.sin(rx)
+    cy, sy = math.cos(ry), math.sin(ry)
+    cz, sz = math.cos(rz), math.sin(rz)
+
+    rot_x = (
+        (1.0, 0.0, 0.0),
+        (0.0, cx, -sx),
+        (0.0, sx, cx),
+    )
+    rot_y = (
+        (cy, 0.0, sy),
+        (0.0, 1.0, 0.0),
+        (-sy, 0.0, cy),
+    )
+    rot_z = (
+        (cz, -sz, 0.0),
+        (sz, cz, 0.0),
+        (0.0, 0.0, 1.0),
+    )
+    return _multiply_3x3(rot_z, _multiply_3x3(rot_y, rot_x))
+
+
+def _pose_transform(
+    x_mm: float,
+    y_mm: float,
+    z_mm: float,
+    rx_deg: float,
+    ry_deg: float,
+    rz_deg: float,
+) -> Matrix3x4:
+    rotation = _rotation_matrix(rx_deg, ry_deg, rz_deg)
+    return (
+        (rotation[0][0], rotation[0][1], rotation[0][2], x_mm),
+        (rotation[1][0], rotation[1][1], rotation[1][2], y_mm),
+        (rotation[2][0], rotation[2][1], rotation[2][2], z_mm),
+    )
+
+
+def _read_pose(args: argparse.Namespace) -> tuple[float, float, float, float, float, float]:
+    if not args.pose_file:
+        return (args.x, args.y, args.z, args.rx, args.ry, args.rz)
+
+    try:
+        pose = json.loads(Path(args.pose_file).read_text())
+    except (OSError, json.JSONDecodeError):
+        return (args.x, args.y, args.z, args.rx, args.ry, args.rz)
+
+    return (
+        float(pose.get("x", pose.get("lr", args.x))),
+        float(pose.get("y", pose.get("pa", args.y))),
+        float(pose.get("z", pose.get("is", args.z))),
+        float(pose.get("rx", pose.get("lrRotation", args.rx))),
+        float(pose.get("ry", pose.get("paRotation", args.ry))),
+        float(pose.get("rz", pose.get("isRotation", args.rz))),
     )
 
 
@@ -103,14 +181,16 @@ def _pack_tdata_message(elements: Sequence[tuple[str, Matrix3x4]]) -> bytes:
 
 
 def _probe_transform(args: argparse.Namespace, frame_index: int) -> Matrix3x4:
+    x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg = _read_pose(args)
+
     if not args.sweep:
-        return _identity_transform(args.x, args.y, args.z)
+        return _pose_transform(x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg)
 
     phase = frame_index * args.sweep_step
-    x_mm = args.x + args.sweep_x * math.sin(phase)
-    y_mm = args.y + args.sweep_y * math.sin(phase * 0.7)
-    z_mm = args.z + args.sweep_z * math.cos(phase * 0.5)
-    return _identity_transform(x_mm, y_mm, z_mm)
+    x_mm = x_mm + args.sweep_x * math.sin(phase)
+    y_mm = y_mm + args.sweep_y * math.sin(phase * 0.7)
+    z_mm = z_mm + args.sweep_z * math.cos(phase * 0.5)
+    return _pose_transform(x_mm, y_mm, z_mm, rx_deg, ry_deg, rz_deg)
 
 
 def _send_loop(client: socket.socket, args: argparse.Namespace) -> None:
@@ -174,6 +254,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=-382.9,
         help="Probe z position in mm. Default targets a scored right effusion window.",
     )
+    parser.add_argument("--rx", type=float, default=0.0, help="Rotation about LR/x in degrees.")
+    parser.add_argument("--ry", type=float, default=0.0, help="Rotation about PA/y in degrees.")
+    parser.add_argument("--rz", type=float, default=0.0, help="Rotation about IS/z in degrees.")
     parser.add_argument(
         "--sweep",
         action="store_true",
@@ -183,6 +266,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--sweep-y", type=float, default=8.0)
     parser.add_argument("--sweep-z", type=float, default=18.0)
     parser.add_argument("--sweep-step", type=float, default=0.08)
+    parser.add_argument(
+        "--pose-file",
+        help="Optional JSON file with x/y/z or lr/pa/is values. Re-read every frame.",
+    )
     return parser.parse_args(argv)
 
 

@@ -5,6 +5,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 CASE_PLUS_DIR="$REPO_ROOT/Pleural_effusion_simulation/plus"
 CONFIG_FILE="$CASE_PLUS_DIR/PlusDeviceSet_PleuralEffusionSimulator.xml"
 TRANSFORM_SENDER="$REPO_ROOT/scripts/pleural-ultrasound/plus/send-probe-transform.py"
+POSE_FILE="${POSE_FILE:-$CASE_PLUS_DIR/current-probe-pose.json}"
 PLUS_VERBOSE="${PLUS_VERBOSE:-3}"
 
 if [[ -z "${PLUS_BIN:-}" ]]; then
@@ -48,6 +49,20 @@ if [[ "$missing" -ne 0 ]]; then
   exit 1
 fi
 
+if [[ ! -f "$POSE_FILE" ]]; then
+  cat > "$POSE_FILE" <<'JSON'
+{
+  "name": "largest-pocket",
+  "rx": 0.0,
+  "ry": 0.0,
+  "rz": 0.0,
+  "x": 184.2,
+  "y": 110.4,
+  "z": -382.9
+}
+JSON
+fi
+
 sender_pid=""
 cleanup() {
   if [[ -n "$sender_pid" ]]; then
@@ -57,7 +72,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 if [[ "${START_TRANSFORM_SENDER:-1}" != "0" ]]; then
-  python3 "$TRANSFORM_SENDER" --rate "${TRANSFORM_RATE:-30}" ${TRANSFORM_SENDER_ARGS:-} &
+  python3 "$TRANSFORM_SENDER" --rate "${TRANSFORM_RATE:-30}" --pose-file "$POSE_FILE" ${TRANSFORM_SENDER_ARGS:-} &
   sender_pid="$!"
   sleep 0.5
 fi
