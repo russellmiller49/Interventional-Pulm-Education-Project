@@ -30,9 +30,9 @@ def _lps_to_ras(position: Sequence[float]) -> tuple[float, float, float]:
 def _read_current_pose(path: Path) -> dict[str, float | str]:
     fallback: dict[str, float | str] = {
         "name": "largest-pocket",
-        "x": 184.2,
-        "y": 110.4,
-        "z": -382.9,
+        "x": 146.4,
+        "y": 130.0,
+        "z": -335.7,
         "rx": 0.0,
         "ry": 0.0,
         "rz": 0.0,

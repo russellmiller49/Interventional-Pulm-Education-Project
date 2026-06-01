@@ -239,20 +239,20 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--x",
         type=float,
-        default=184.2,
-        help="Probe x position in mm. Default is just lateral to the right chest wall.",
+        default=146.4,
+        help="Probe x (image apex) in mm, seated ~5 mm inside the lateral skin.",
     )
     parser.add_argument(
         "--y",
         type=float,
-        default=110.4,
-        help="Probe y position in mm. Default targets a scored right effusion window.",
+        default=130.0,
+        help="Probe y position in mm. Default is centered on the right effusion.",
     )
     parser.add_argument(
         "--z",
         type=float,
-        default=-382.9,
-        help="Probe z position in mm. Default targets a scored right effusion window.",
+        default=-335.7,
+        help="Probe z position in mm. Default is centered on the right effusion.",
     )
     parser.add_argument("--rx", type=float, default=0.0, help="Rotation about LR/x in degrees.")
     parser.add_argument("--ry", type=float, default=0.0, help="Rotation about PA/y in degrees.")

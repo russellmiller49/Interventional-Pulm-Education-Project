@@ -290,14 +290,41 @@ right-lateral central rays with:
   scripts/pleural-ultrasound/plus/probe-window-candidates.py
 ```
 
-The current default transform sender pose is the top-scored right effusion
-window from the low-resolution surfaces:
+The default transform sender pose seats the image apex ~5 mm inside the lateral
+skin and aims the beam medially through the right effusion:
 
 ```text
-x=184.2 mm, y=110.4 mm, z=-382.9 mm
+x=146.4 mm, y=130.0 mm, z=-335.7 mm
 ```
 
-To test another scored window, update the live pose file:
+This produces the verified view in `reference-frame-largest-pocket.png`: a bright
+pleural-line / chest-wall arc over a large anechoic effusion. The effusion is
+anechoic, so the fan is mostly dark by design. In Slicer it can look like a flat
+gray fan because the auto window/level stretches the dark speckle; set a manual
+window/level so the chest-wall arc and dark fluid show clearly, e.g. in the
+Python console:
+
+```python
+d = getNode('Image_Reference').GetDisplayNode()
+d.SetAutoWindowLevel(False); d.SetWindowLevel(120, 70)
+```
+
+Honest limitation: a clean diaphragm/lung "curtain" view (chest wall -> effusion
+-> bright diaphragm -> liver) was NOT achievable from these low-resolution
+surfaces with a fixed pose. Every pose aimed at the diaphragm/liver either left
+the deep field dark or saturated the near field. That needs interactive probe
+tuning in Slicer and probably higher-resolution diaphragm/liver meshes.
+
+IMPORTANT: x/y/z is the probe origin, which is the ultrasound image apex (the
+transducer face). It must sit a few millimetres INSIDE the skin. The lateral
+chest-wall skin on this dataset is near x ~151-167 mm (it changes with the z
+level). An earlier default of `x=184.2` placed the apex ~33 mm OUTSIDE the
+skin, in the PLUS `Air` model. Air is configured at 100 dB/cm/MHz, so the beam
+was fully attenuated before it reached any tissue and PLUS rendered a black
+fan. `set-probe-pose.py` now prints a warning when the apex lands outside the
+skin bounds. See "Troubleshooting: black or empty fan" below.
+
+To test another seated window, update the live pose file:
 
 ```bash
 python3 scripts/pleural-ultrasound/plus/set-probe-pose.py --preset alternate-interspace
@@ -328,6 +355,47 @@ The next implementation step is an image capture driver:
 5. Add the frame cache URL to `case.json`.
 
 The browser simulator can then prefer PLUS frames and fall back to its current educational ray-march image when no cached frame matches the current probe pose.
+
+## Troubleshooting: black or empty fan
+
+If Slicer shows the curvilinear sector but it is black (only faint speckle and
+a bright dot at the apex), the pipeline is working and the problem is almost
+always the probe pose, not OpenIGTLink. Check, in order:
+
+1. Is the apex inside the body? Run
+   `python3 set-probe-pose.py --preset largest-pocket`. The helper warns if the
+   apex is outside the skin bounds. The PLUS `Air` model attenuates at
+   100 dB/cm/MHz, so even a ~1 cm gap between the apex and the skin erases the
+   image. The apex must sit a few mm INSIDE the skin.
+2. Confirm the server is actually emitting pixels, independent of Slicer:
+
+   ```bash
+   python3 - <<'PY'
+   import socket, struct
+   H=">H12s20sQQQ"; HS=struct.calcsize(H)
+   def rx(s,n):
+       b=b""
+       while len(b)<n:
+           c=s.recv(n-len(b)); b+=c
+       return b
+   s=socket.create_connection(("127.0.0.1",18944),timeout=5)
+   for _ in range(40):
+       h=rx(s,HS); _v,t,d,_ts,bs,_c=struct.unpack(H,h); body=rx(s,bs)
+       if t.split(b'\0')[0]==b"IMAGE":
+           px=body[72:]
+           print("IMAGE mean", sum(px)/len(px), "max", max(px)); break
+   s.close()
+   PY
+   ```
+
+   `mean` near 17 with `max` ~255 in only a few stray pixels means the beam is
+   in air. A useful image has a brighter chest-wall band near the apex.
+
+3. The effusion itself is anechoic, so a correct view is mostly black with a
+   bright chest-wall arc on top and lung/diaphragm echoes deep. "Mostly dark"
+   is expected; "uniform empty fan" is the air-gap failure.
+4. Nudges accumulate. Repeated `--nudge`/`--rotate` calls can walk the probe
+   off the patient. Re-run `--preset largest-pocket` to recover.
 
 ## Recommended first milestone
 
