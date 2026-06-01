@@ -29,7 +29,7 @@ SEGMENTATION_NODE_NAME = "19_CT_HR segmentation_final"
 SURFACE_SEGMENTS = {
     "skin.stl": ["skin"],
     "muscle.stl": ["muscle"],
-    "rib.stl": ["bone", "spine"],
+    "rib.stl": ["thoracic cavity"],
     "lung.stl": [
         "upper lobe of left lung",
         "lower lobe of left lung",

@@ -85,7 +85,7 @@ liver.stl
 spleen.stl
 ```
 
-You can export from the Slicer UI, but the helper script is safer because it merges lung lobes, bone/spine, and bilateral effusions into the PLUS-facing files:
+You can export from the Slicer UI, but the helper script is safer because it maps this case's rib-containing `thoracic cavity` segment into `rib.stl`, merges lung lobes, and merges bilateral effusions into the PLUS-facing files:
 
 1. Open `Segmentations`.
 2. Select the pleural effusion segmentation.
@@ -377,6 +377,13 @@ exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/s
 This loads `PLUS_RAS_*` model nodes that should align with `19_CT_HR` and the
 segmentation. Use these for visual QA instead of Slicer's regular direct STL
 imports.
+
+If `Image_Reference` was loaded from a saved NRRD file instead of received from
+PLUS, delete it and reconnect so OpenIGTLink can create a fresh live node:
+
+```python
+exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/scripts/pleural-ultrasound/plus/slicer-reset-plus-live-image.py").read())
+```
 
 ## 5. Generate frame cache for the web module
 

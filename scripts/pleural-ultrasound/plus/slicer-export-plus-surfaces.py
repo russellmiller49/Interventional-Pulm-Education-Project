@@ -3,9 +3,10 @@ Export pleural simulator surfaces from 3D Slicer for PLUS Toolkit.
 
 How to use:
 1. Open 3D Slicer.
-2. Load the CT and segmentation.
+2. Load the CT and segmentation, or let the script load the default segmentation
+   from Pleural_effusion_simulation.
 3. Open View > Python Interactor.
-4. Adjust SEGMENTATION_NODE_NAME and OUTPUT_DIR below if needed.
+4. Adjust SEGMENTATION_NODE_NAME, SEGMENTATION_PATH, and OUTPUT_DIR below if needed.
 5. Run the file with:
    exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/scripts/pleural-ultrasound/plus/slicer-export-plus-surfaces.py").read())
 
@@ -25,6 +26,7 @@ import vtk
 
 
 SEGMENTATION_NODE_NAME = "19_CT_HR segmentation_final"
+SEGMENTATION_PATH = "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/Pleural_effusion_simulation/19_CT_HR segmentation_final.seg.nrrd"
 OUTPUT_DIR = "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/Pleural_effusion_simulation/plus/Models"
 
 LUNG_SEGMENTS = [
@@ -53,7 +55,10 @@ OUTPUT_SURFACES = [
     },
     {
         "filename": "rib.stl",
-        "segments": ["bone", "spine"],
+        # This case's rib cage is stored in the "thoracic cavity" segment.
+        # The generic "bone" and "spine" segments do not include the ribs
+        # needed for PLUS rib shadows.
+        "segments": ["thoracic cavity"],
         "required": True,
     },
     {
@@ -150,6 +155,12 @@ def find_segmentation_node():
     try:
         return slicer.util.getNode(SEGMENTATION_NODE_NAME)
     except slicer.util.MRMLNodeNotFoundException:
+        if os.path.exists(SEGMENTATION_PATH):
+            success, node = slicer.util.loadSegmentation(SEGMENTATION_PATH, returnNode=True)
+            if success:
+                node.SetName(SEGMENTATION_NODE_NAME)
+                return node
+
         nodes = slicer.util.getNodesByClass("vtkMRMLSegmentationNode")
         if len(nodes) == 1:
             return nodes[0]
