@@ -17,6 +17,7 @@ const outputDir =
 
 const sourceSegmentation = path.join(sourceDir, '19_CT_HR segmentation_final.seg.nrrd')
 const sourceMesh = path.join(sourceDir, 'effusion_model.glb')
+const sourceProbeModel = path.join(sourceDir, 'ultrasound probe.glb')
 
 const labelCodes = {
   background: 0,
@@ -305,9 +306,14 @@ function generateAssets() {
   }
 
   const meshOutputPath = path.join(outputDir, 'pleural-effusion-001.glb')
+  const probeModelOutputPath = path.join(outputDir, 'ultrasound-probe.glb')
   const labelmapOutputPath = path.join(outputDir, 'pleural-effusion-001.labelmap.uint8.bin')
   const manifestOutputPath = path.join(outputDir, 'case.json')
   fs.copyFileSync(sourceMesh, meshOutputPath)
+  const hasProbeModel = fs.existsSync(sourceProbeModel)
+  if (hasProbeModel) {
+    fs.copyFileSync(sourceProbeModel, probeModelOutputPath)
+  }
   fs.writeFileSync(labelmapOutputPath, output)
 
   const labels = Object.fromEntries(
@@ -344,12 +350,43 @@ function generateAssets() {
       'Educational simulation only; not for diagnosis, treatment, or procedure guidance.',
     meshUrl:
       '/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.glb',
+    ...(hasProbeModel
+      ? {
+          probeModelUrl:
+            '/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/ultrasound-probe.glb',
+        }
+      : {}),
     labelmapUrl:
       '/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.labelmap.uint8.bin',
     labelmapFormat: 'uint8-single-label',
     labels,
     labelCounts: counts,
     labelBoundsLpsMm: boundsByLabel,
+    plusToolkit: {
+      status: 'planned-offline-frame-generation',
+      simulatorDevice: 'UsSimulator',
+      recommendedMode: 'offline-frame-cache',
+      sourceUrls: [
+        'https://pluslib.readthedocs.io/en/latest/devices/DeviceUsSimulatorVideo.html',
+        'https://pluslib.readthedocs.io/en/latest/getting-started/build-instructions.html',
+        'https://plustoolkit.github.io/features.html',
+      ],
+      requiredSurfaceModels: [
+        'skin.stl',
+        'muscle.stl',
+        'rib.stl',
+        'lung.stl',
+        'pleural-fluid.stl',
+        'diaphragm.stl',
+        'liver.stl',
+        'spleen.stl',
+      ],
+      notes: [
+        'PLUS is a native C++/PlusServer workflow, so this browser module should consume cached images or atlases generated offline rather than attempting to run PlusLib in Next.js.',
+        'The Plus UsSimulator device models B-mode from surface meshes with acoustic material parameters and scan conversion; export one STL per relevant Slicer segment for that pipeline.',
+        'Generated Plus frames can be indexed by the same probe pose fields used by this module and substituted ahead of the educational browser ray marcher.',
+      ],
+    },
     source: {
       segmentationFileName: path.basename(sourceSegmentation),
       meshFileName: path.basename(sourceMesh),
@@ -382,6 +419,9 @@ function generateAssets() {
   console.log(`Wrote ${path.relative(repoRoot, manifestOutputPath)}`)
   console.log(`Wrote ${path.relative(repoRoot, labelmapOutputPath)} (${output.length} bytes)`)
   console.log(`Wrote ${path.relative(repoRoot, meshOutputPath)}`)
+  if (hasProbeModel) {
+    console.log(`Wrote ${path.relative(repoRoot, probeModelOutputPath)}`)
+  }
   console.log('Output labels:', counts)
 }
 

@@ -1,0 +1,164 @@
+Project Purpose
+Treat this repository as the source for interventionalpulm.com, an educational site for interventional pulmonology, bronchoscopy, airway anatomy, peripheral bronchoscopy, robotic bronchoscopy, and procedural education.
+
+When building modules, prioritize:
+
+High-yield clinical education.
+Clean visual design.
+Fast client-side interactions.
+Accurate device-size and airway-anatomy modeling.
+Clear separation between educational modeling and clinical decision-making.
+Reusable data structures so future bronchoscope, catheter, and instrument data can be updated without rewriting UI components.
+Medical Education Safety
+Add a visible educational disclaimer whenever device compatibility, airway reach, lesion access, biopsy tools, or procedural technique is discussed. Use language like:
+
+This module is for education and device-size comparison only. Actual airway reach and instrument compatibility depend on patient anatomy, airway caliber, device model, accessory compatibility, manufacturer instructions, procedural conditions, and operator judgment.
+
+Do not imply that a scope, catheter, robotic platform, or instrument is universally best. Do not provide patient-specific medical advice. Do not recommend a specific device for a real patient.
+
+Present tradeoffs such as reach, working channel size, suction capacity, visualization, tool compatibility, stability, and tissue acquisition.
+
+Engineering Preferences
+Prefer:
+
+React and TypeScript.
+Next.js-compatible components.
+SVG for interactive educational diagrams.
+Plain CSS modules, Tailwind, or the repository's existing styling system.
+No new heavy dependencies unless clearly justified.
+Avoid:
+
+Three.js or heavy 3D libraries for first-version educational modules.
+Hardcoding data inside React components.
+Device-specific promotional language.
+Uncited medical or device facts.
+Overly complex animations that reduce clarity or accessibility.
+Workflow
+Inspect the repository before editing. Mirror existing app, component, data, styling, test, and package-manager conventions.
+Keep data separate from UI code and calculations separate from components.
+Use cited or clearly labeled source fields for device and instrument facts.
+Build responsive, keyboard-accessible UI and provide text equivalents for visual results.
+Run the repo's standard validation commands from package.json, using the package manager already present.
+Document validation results and any unrelated failures.
+Bronchoscope Size Explorer
+When asked to build the Bronchoscope Size, Reach & Tool Fit Explorer, create an interactive educational module that lets learners compare therapeutic bronchoscopes, diagnostic/thin bronchoscopes, ultrathin bronchoscopes, and robotic bronchoscopy catheters by:
+
+Outer diameter.
+Working channel diameter.
+Approximate airway-generation reach.
+Instrument-channel compatibility.
+Remaining channel cross-sectional area.
+Practical clinical tradeoffs.
+Use existing tools/modules structure if present. Preferred paths, adapted to the repo:
+
+app/tools/bronchoscope-size-explorer/page.tsx
+components/bronchoscope-size-explorer/
+lib/bronchoscope-size-explorer/
+data/bronchoscope-size-explorer/
+Required components, with filenames adapted to local style:
+
+BronchoscopeSizeExplorer.tsx
+ScopeSelector.tsx
+ScopeCrossSection.tsx
+AirwayReachMap.tsx
+InstrumentFitPanel.tsx
+CompatibilityResult.tsx
+ScopeComparisonTable.tsx
+EducationalDisclaimer.tsx
+SourceNotes.tsx
+Required data files, separated from UI code:
+
+bronchoscopes.ts or bronchoscopes.json
+instruments.ts or instruments.json
+airwayGenerations.ts or airwayGenerations.json
+Each device or instrument entry must include:
+
+id
+displayName
+category
+outerDiameterMm, if applicable
+workingChannelMm, if applicable
+notes
+sourceUrl or sourceLabel
+evidenceGrade or sourceType when useful, such as manufacturer, review article, educational model, or literature calibration
+Include at least 8 bronchoscope/catheter presets and at least 8 instrument/accessory presets.
+
+Calculation Rules
+Create pure utility functions so they can be unit tested:
+
+circleAreaMm2(diameterMm)
+workingChannelAreaMm2(channelDiameterMm)
+remainingChannelAreaMm2(channelDiameterMm, instrumentDiameterMm)
+canInstrumentFit(channelDiameterMm, instrument)
+estimateReachGeneration(scopeOuterDiameterMm, airwayModel, clearanceMm)
+classifyFitResult(scope, instrument)
+For airway reach, use an educational size-limited model only. A scope can pass an airway generation when:
+
+airwayDiameterMm >= scopeOuterDiameterMm + clearanceMm
+Default airway clearance is 0.3 mm and must be exposed in code for later adjustment. Display reach approximately, for example:
+
+Central/lobar.
+Segmental.
+Subsegmental.
+More distal subsegmental.
+Never present reach as a procedural guarantee.
+
+For instrument compatibility, use two methods:
+
+If minimumWorkingChannelMm exists, compare the selected scope channel against that value.
+If only outerDiameterMm exists, require channelDiameterMm >= instrumentDiameterMm + clearanceMm.
+Default instrument clearance is 0.1 mm. Classify compatibility as:
+
+fits
+borderline
+does-not-fit
+unknown
+Show a note when an instrument may technically fit but leaves limited residual channel area.
+
+Visual And Accessibility Rules
+Use SVG for true-scale cross-sectional visuals. Show:
+
+Outer bronchoscope diameter as an outer circle.
+Working channel as an inner circle.
+Selected instrument as a smaller circle inside the working channel.
+Optional airway lumen ring behind the bronchoscope.
+Use proportional scaling so diameter differences are visually meaningful. Make the UI work on desktop and mobile.
+
+Accessibility requirements:
+
+Keyboard-accessible scope and instrument selection.
+ARIA labels for interactive controls.
+Do not rely on color alone.
+Provide text equivalents for visual results.
+Acceptance Criteria
+The module is complete only when:
+
+It renders without runtime errors.
+Users can select at least 8 bronchoscope/catheter presets.
+Users can select at least 8 instrument/accessory presets.
+The cross-section visual updates when selections change.
+The airway reach map updates when the selected scope changes.
+The compatibility result updates when the selected scope or instrument changes.
+Working channel area and remaining area are displayed.
+A source/evidence notes area is visible.
+The educational disclaimer is visible.
+TypeScript passes.
+Existing tests, linting, and build commands pass, or failures are documented if unrelated.
+Testing Expectations
+Before finishing, inspect package.json and run the appropriate available commands, usually some combination of:
+
+npm run lint
+npm run typecheck
+npm test
+npm run build
+Use pnpm or yarn if the repo already uses it. Add unit tests for pure calculation functions if the repo has a test framework.
+
+Final Summary
+When finished, summarize:
+
+Files created or changed.
+New UI behavior.
+Data model added.
+Calculation logic added.
+Test/build results.
+Assumptions or limitations.
