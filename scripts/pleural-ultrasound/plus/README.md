@@ -344,6 +344,40 @@ python3 scripts/pleural-ultrasound/plus/pose-from-markups.py
 python3 scripts/pleural-ultrasound/plus/pose-from-markups.py --apply
 ```
 
+## 4b. STL and CT Coordinate Alignment
+
+PLUS generates `Image_Reference` from the STL surfaces listed in the XML, not
+from the CT volume. The CT is only a Slicer reference display. If the STL
+surfaces are misaligned, PLUS will simulate from the misaligned surfaces.
+
+The current export writes raw Slicer RAS/world coordinates to STL for PLUS.
+STL files do not carry medical coordinate metadata, so Slicer's regular STL
+loader may warn:
+
+```text
+does not contain coordinate system information. Using LPS.
+```
+
+That regular import path can make these PLUS STLs appear mirrored or offset in
+Slicer even though their raw coordinates align with the segmentation and CT.
+Run this diagnostic to compare raw STL coordinates against segmentation
+surfaces:
+
+```bash
+/Applications/Slicer.app/Contents/MacOS/Slicer --no-main-window \
+  --python-script scripts/pleural-ultrasound/plus/slicer-diagnose-stl-alignment.py
+```
+
+To view the PLUS STL files in Slicer without the STL LPS/RAS auto-flip, run:
+
+```python
+exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/scripts/pleural-ultrasound/plus/slicer-load-plus-stls-ras.py").read())
+```
+
+This loads `PLUS_RAS_*` model nodes that should align with `19_CT_HR` and the
+segmentation. Use these for visual QA instead of Slicer's regular direct STL
+imports.
+
 ## 5. Generate frame cache for the web module
 
 The next implementation step is an image capture driver:
