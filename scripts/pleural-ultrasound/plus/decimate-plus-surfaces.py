@@ -26,7 +26,7 @@ DEFAULT_OUTPUT_DIR = REPO_ROOT / "Pleural_effusion_simulation" / "plus" / "Model
 TARGET_TRIANGLES = {
     "skin.stl": 60_000,
     "muscle.stl": 50_000,
-    "rib.stl": 90_000,
+    "rib.stl": 180_000,
     "lung.stl": 90_000,
     "right-pleural-effusion.stl": 60_000,
     "pleural-fluid.stl": 70_000,
