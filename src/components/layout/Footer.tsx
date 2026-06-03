@@ -5,10 +5,14 @@ type InternalFooterHref =
   | '/'
   | '/board-prep'
   | '/bronch-navigation-trainer'
+  | '/ebus-training'
   | '/fluoroview'
   | '/learn/anatomy'
+  | '/pleural-procedures'
   | '/resources'
   | '/resources/creative-commons'
+  | '/socal-ebus-course'
+  | '/tnm-9-staging'
   | '/coming-soon'
   | '/privacy'
   | '/terms'
@@ -33,7 +37,9 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     title: 'Explore',
     links: [
       { label: 'Home', href: '/', route: '/' },
-      { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
+      { label: 'EBUS Training', href: '/ebus-training', route: '/ebus-training' },
+      { label: 'TNM-9 Staging', href: '/tnm-9-staging', route: '/tnm-9-staging' },
+      { label: '3D Anatomy', href: '/learn/anatomy', route: '/learn/anatomy' },
       {
         label: 'Resources',
         href: '/resources',
@@ -45,28 +51,31 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
   {
     title: 'Learning',
     links: [
-      { label: '3D Anatomy Viewer', href: '/learn/anatomy', route: '/learn/anatomy' },
+      { label: 'Board Prep', href: '/board-prep', route: '/board-prep' },
+      { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
       {
         label: 'Bronch Navigation Trainer',
         href: '/bronch-navigation-trainer',
         route: '/bronch-navigation-trainer',
       },
-      { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
-      { label: 'IP Board Prep', href: '/board-prep', route: '/board-prep' },
       {
-        label: 'Resources',
-        href: '/resources',
-        route: '/resources',
+        label: 'Pleural Procedures',
+        href: '/pleural-procedures',
+        route: '/pleural-procedures',
+      },
+      {
+        label: 'SoCal EBUS Course',
+        href: '/socal-ebus-course',
+        route: '/socal-ebus-course',
       },
     ],
   },
   {
     title: 'Coming Soon',
     links: [
-      { label: 'Tools suite', href: '/coming-soon', route: '/coming-soon' },
-      { label: 'DIY Lab guides', href: '/coming-soon', route: '/coming-soon' },
-      { label: 'Simulation training', href: '/coming-soon', route: '/coming-soon' },
-      { label: 'Community hub', href: '/coming-soon', route: '/coming-soon' },
+      { label: 'Intro to Pleural Disease', href: '/coming-soon', route: '/coming-soon' },
+      { label: 'Rigid Bronchoscopy Foundations', href: '/coming-soon', route: '/coming-soon' },
+      { label: 'Intro to Bronchoscopy', href: '/coming-soon', route: '/coming-soon' },
     ],
   },
 ]

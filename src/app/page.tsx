@@ -1,222 +1,123 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import type { Route } from 'next'
 
 import { Hero } from '@/components/home/hero'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { areDraftModulesEnabled, isVisibleModulePath } from '@/lib/draft-modules'
+import { isVisibleModulePath } from '@/lib/draft-modules'
+
+const featureHighlights = [
+  {
+    badge: 'EBUS',
+    title: 'Public EBUS Training',
+    description:
+      'Open knobology, mediastinal station, and EBUS simulator modules without course-participant lockout.',
+    href: '/ebus-training',
+    cta: 'Open EBUS Training',
+  },
+  {
+    badge: 'Staging',
+    title: 'TNM-9 Staging',
+    description:
+      'Standalone lung cancer staging practice with descriptor reference, stage grouping, N map, and cases.',
+    href: '/tnm-9-staging',
+    cta: 'Open TNM-9',
+  },
+  {
+    badge: '3D Anatomy',
+    title: 'Interactive Anatomy Viewer',
+    description:
+      'Explore airway, mediastinal, pleural, and intervention-focused 3D anatomy with CT planes and segment controls.',
+    href: '/learn/anatomy',
+    cta: 'Browse Anatomy',
+  },
+  {
+    badge: 'Board Review',
+    title: 'IP Board Prep Chapters',
+    description:
+      'Case-based coverage of malignant, benign, and procedural domains mapped to interventional pulmonology review.',
+    href: '/board-prep',
+    cta: 'Start Board Prep',
+  },
+  {
+    badge: 'Simulation',
+    title: 'FluoroView',
+    description:
+      'Practice CT-to-fluoroscopy orientation, C-arm angles, airway overlays, and non-diagnostic image controls.',
+    href: '/fluoroview',
+    cta: 'Launch FluoroView',
+  },
+  {
+    badge: 'Navigation',
+    title: 'Bronch Navigation Trainer',
+    description:
+      'Drive a virtual bronchoscope through branch choices while correlating CT planes, airway views, and targets.',
+    href: '/bronch-navigation-trainer',
+    cta: 'Start Navigation',
+  },
+  {
+    badge: 'Pleural',
+    title: 'Pleural Procedures',
+    description:
+      'Learn pleural disease, ultrasound pattern recognition, fluid analysis, pneumothorax pathways, and drainage systems.',
+    href: '/pleural-procedures',
+    cta: 'Open Pleural Modules',
+  },
+  {
+    badge: 'Resources',
+    title: 'Resource Library',
+    description:
+      'Browse Creative Commons medical images and clinician-builder learning guides for teaching and development.',
+    href: '/resources',
+    cta: 'Browse Resources',
+  },
+] as const
+
+const visibleFeatureHighlights = featureHighlights.filter((link) => isVisibleModulePath(link.href))
 
 export default function HomePage() {
-  const featureHighlights = [
-    {
-      badge: 'Simulation',
-      title: 'FluoroView',
-      description:
-        'Rotate a labeled tracheobronchial tree under simulated fluoroscopy to drill RAO/LAO and cranial/caudal projections before lab day.',
-      href: '/fluoroview',
-      cta: 'Launch FluoroView',
-    },
-    {
-      badge: 'Navigation',
-      title: 'Bronch Navigation Trainer',
-      description:
-        'Drive a virtual bronchoscope through branch choices while correlating CT planes, airway views, and target paths.',
-      href: '/bronch-navigation-trainer',
-      cta: 'Start Navigation',
-    },
-    {
-      badge: 'Intro Bronchoscopy',
-      title: 'Bronchoscope Size Explorer',
-      description:
-        'Compare scope outer diameter, working channel area, estimated airway reach, and instrument compatibility.',
-      href: '/intro-bronchoscopy',
-      cta: 'Open Explorer',
-    },
-    {
-      badge: 'Cytopathology',
-      title: 'Rapid Onsite Cytology',
-      description:
-        'Practice ROSE and Diff-Quik slide interpretation with curated hotspots, teaching explanations, and quiz mode.',
-      href: '/rapid-onsite-cytology',
-      cta: 'Open Cytology Trainer',
-    },
-    {
-      badge: '3D Models',
-      title: 'Interactive Anatomy Viewer',
-      description:
-        'Stream GLB and STL assets with live segmentation toggles, cross-sectional slicing, and board-ready annotations.',
-      href: '/learn/anatomy',
-      cta: 'Browse 3D Models',
-    },
-    {
-      badge: 'Board Review',
-      title: 'IP Board Review Chapters',
-      description:
-        'Case-based coverage of malignant, benign, and procedural domains mapped to the interventional pulmonology exam blueprint.',
-      href: '/board-prep',
-      cta: 'Start Board Prep',
-    },
-    {
-      badge: 'Medical Images',
-      title: 'Creative Commons Library',
-      description:
-        '680+ curated medical images from peer-reviewed publications for educational presentations and manuscripts.',
-      href: '/resources',
-      cta: 'Browse Images',
-    },
-    {
-      badge: 'Training Lab',
-      title: 'Rigid Bronchoscopy Foundations',
-      description:
-        'Simulation-forward curriculum with checklists, video briefs, and competency tracking for scope rehearsal. Returning soon with expanded facilitator support.',
-      href: '/coming-soon',
-      cta: 'Preview updates',
-    },
-  ] as const
-  const visibleFeatureHighlights = featureHighlights.filter((link) =>
-    isVisibleModulePath(link.href),
-  )
-
   return (
-    <div className="space-y-24 py-12 md:py-16">
+    <div className="space-y-20 py-12 md:py-16">
       <div className="container">
         <Hero />
       </div>
 
-      <section aria-labelledby="mission" className="container">
-        <div className="grid gap-12 overflow-hidden rounded-3xl border border-border/70 bg-muted/30 p-8 md:grid-cols-[1.1fr_0.9fr] md:p-12">
-          <div className="space-y-6">
+      <section aria-labelledby="launch-catalog" className="container space-y-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl space-y-3">
             <Badge
               variant="success"
               className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
             >
-              Mission
+              Launch catalog
             </Badge>
-            <h2 id="mission" className="text-3xl font-semibold tracking-tight md:text-4xl">
-              Building the open education stack for airway innovators
+            <h2 id="launch-catalog" className="text-3xl font-semibold tracking-tight md:text-4xl">
+              Core learning modules
             </h2>
-            <p className="text-base text-muted-foreground md:text-lg">
-              From printable anatomy and hands-on labs to analytics-ready registries, we are
-              co-creating the infrastructure that accelerates training and research in
-              interventional pulmonology—no gatekeepers, no license fees.
+            <p className="text-base leading-7 text-muted-foreground md:text-lg">
+              Start with the public modules that are ready for learners now: EBUS training, TNM-9
+              staging, 3D anatomy, board review, procedural simulation, pleural education, and
+              teaching resources.
             </p>
-            <div className="grid gap-4">
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-primary/80">
-                  3D Anatomy
-                </p>
-                <h3 className="mt-2 text-xl font-semibold text-foreground">
-                  Launch the interactive model library
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Stream segmented GLB/OBJ anatomy with clipping planes, callouts, and case-aligned
-                  presets for lab prep and board review.
-                </p>
-                <Button asChild className="mt-4 w-fit">
-                  <Link href="/learn/anatomy">Explore 3D Models</Link>
-                </Button>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild variant="secondary" className="rounded-full px-6">
-                  <Link href="/socal-ebus-course">SoCal EBUS Course</Link>
-                </Button>
-                <Button asChild variant="secondary" className="rounded-full px-6">
-                  <Link href={'/bronch-navigation-trainer' as Route}>
-                    Bronch Navigation Trainer
-                  </Link>
-                </Button>
-                {areDraftModulesEnabled ? (
-                  <Button asChild variant="secondary" className="rounded-full px-6">
-                    <Link href={'/intro-bronchoscopy' as Route}>Intro Bronchoscopy</Link>
-                  </Button>
-                ) : null}
-                <Button asChild variant="secondary" className="rounded-full px-6">
-                  <Link href="/board-prep">Board Review Library</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-full px-6">
-                  <Link href="/coming-soon">Rigid Bronch Lab (coming soon)</Link>
-                </Button>
-              </div>
-            </div>
           </div>
-          <div className="space-y-6">
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600/30 via-violet-600/20 to-slate-900 p-8 text-slate-100 shadow-xl">
-              <div className="space-y-4">
-                <p className="text-sm uppercase tracking-[0.4em] text-slate-200/80">Board Review</p>
-                <h3 className="text-2xl font-semibold text-white">
-                  Interventional Pulmonology exam prep
-                </h3>
-                <p className="text-sm text-slate-100/80">
-                  Walk through malignant, benign, and procedural domains with curated question
-                  banks, image-rich cases, and competency checklists.
-                </p>
-                <ul className="space-y-2 text-xs text-slate-200/80">
-                  <li>• Organized by ABMS IP blueprint with cross-links to anatomy assets.</li>
-                  <li>
-                    • Impact-focused pearls, complication mitigations, and board-style questions.
-                  </li>
-                </ul>
-              </div>
-              <Button asChild className="mt-6 w-fit">
-                <Link href="/board-prep">Visit Board Review</Link>
-              </Button>
-            </div>
-            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 text-slate-100 shadow-xl">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-white/10">
-                  <Image
-                    src="/window.svg"
-                    alt="Simulation lab"
-                    fill
-                    sizes="56px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-sm uppercase tracking-[0.3em] text-slate-300/80">
-                    Simulation Lab 03
-                  </p>
-                  <h3 className="text-lg font-semibold text-white">
-                    Rigid Bronchoscopy Foundations
-                  </h3>
-                  <p className="text-sm text-slate-200/80">
-                    Downloadable checklists, video walk-throughs, and analytics-ready competency
-                    tracking are being rebuilt into a dedicated facilitator experience.
-                  </p>
-                </div>
-              </div>
-              <Button asChild variant="secondary" className="mt-6 w-fit">
-                <Link href="/coming-soon">Follow progress</Link>
-              </Button>
-            </div>
-          </div>
+          <Button asChild variant="secondary" className="w-fit rounded-full px-6">
+            <Link href={'/socal-ebus-course' as Route}>SoCal EBUS Course participants</Link>
+          </Button>
         </div>
-      </section>
 
-      <section aria-labelledby="featured-pathways" className="container space-y-6">
-        <div className="flex flex-col gap-2">
-          <h2 id="featured-pathways" className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Featured pathways
-          </h2>
-          <p className="max-w-2xl text-muted-foreground">
-            Dive straight into the experiences that are live today: board prep chapters, interactive
-            models, and simulation-ready curricula.
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {visibleFeatureHighlights.map((link) => (
             <Link
               key={link.href}
               href={link.href as Route}
-              className="group relative flex h-full flex-col justify-between rounded-2xl border border-border/70 bg-card/60 p-6 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background hover:-translate-y-1 hover:border-primary/50"
+              className="group flex h-full flex-col justify-between rounded-lg border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-sky-500/60 hover:bg-sky-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="space-y-3">
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                <span className="inline-flex w-fit items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
                   {link.badge}
                 </span>
                 <h3 className="text-lg font-semibold text-foreground">{link.title}</h3>
-                <p className="text-sm text-muted-foreground">{link.description}</p>
+                <p className="text-sm leading-6 text-muted-foreground">{link.description}</p>
               </div>
               <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-primary">
                 {link.cta}
@@ -229,65 +130,63 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="cta" className="container">
-        <div className="grid gap-8 overflow-hidden rounded-3xl border border-border/70 bg-primary/10 p-10 md:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
+      <section aria-labelledby="course-participants" className="container">
+        <div className="grid gap-8 rounded-3xl border border-border/70 bg-muted/30 p-8 md:grid-cols-[1fr_0.9fr] md:p-10">
+          <div className="space-y-4">
+            <Badge
+              variant="outline"
+              className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+            >
+              Participant course
+            </Badge>
+            <h2
+              id="course-participants"
+              className="text-2xl font-semibold tracking-tight md:text-3xl"
+            >
+              Southern California EBUS Course participants
+            </h2>
+            <p className="text-sm leading-6 text-muted-foreground md:text-base">
+              The full course portal remains available for registered participants who need the
+              lecture pathway, surveys, tests, progress tracking, and course-specific materials.
+              Public EBUS training assets are also available separately above.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center gap-3 sm:flex-row md:flex-col">
+            <Button asChild className="rounded-full px-6">
+              <Link href={'/socal-ebus-course' as Route}>Open Course Portal</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full px-6">
+              <Link href={'/ebus-training' as Route}>Open Public EBUS Training</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="upcoming" className="container">
+        <div className="grid gap-8 rounded-3xl border border-border/70 bg-primary/10 p-8 md:grid-cols-[1.2fr_0.8fr] md:p-10">
+          <div className="space-y-4">
             <Badge
               variant="info"
               className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-foreground"
             >
-              Stay in the loop
+              Roadmap
             </Badge>
             <h2
-              id="cta"
+              id="upcoming"
               className="text-3xl font-semibold tracking-tight text-primary-foreground md:text-4xl"
             >
-              Get the latest learning tools as they launch
+              Upcoming modules
             </h2>
-            <p className="text-base text-primary-foreground/80 md:text-lg">
-              We&apos;re shipping new board review chapters and lab kits every quarter. Join the
-              list and we&apos;ll reach out when fresh anatomy, simulation, and course resources go
-              live.
+            <p className="text-base leading-7 text-primary-foreground/80 md:text-lg">
+              The next public releases focus on intro pleural disease, rigid bronchoscopy
+              foundations, and intro bronchoscopy.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild elevated>
-                <Link href={'/resources' as Route}>Explore resources</Link>
-              </Button>
-              <Button
-                variant="outline"
-                className="border-white/60 bg-white/10 text-primary-foreground hover:bg-white/20"
-              >
-                Coming soon
-              </Button>
-            </div>
           </div>
-          <form
-            className="flex flex-col gap-4 rounded-2xl border border-white/40 bg-white/10 p-6 text-sm text-primary-foreground/90"
-            aria-label="Subscribe to newsletter"
-          >
-            <label htmlFor="email" className="text-sm font-medium">
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              className="h-11 rounded-full border border-white/50 bg-white/80 px-4 text-sm text-slate-900 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-              disabled
-            />
-            <Button
-              type="submit"
-              disabled
-              className="h-11 rounded-full bg-white text-primary hover:bg-white"
-            >
-              Notify me (soon)
+          <div className="flex items-center md:justify-end">
+            <Button asChild elevated>
+              <Link href={'/coming-soon' as Route}>View Coming Soon</Link>
             </Button>
-            <p className="text-xs text-primary-foreground/70">
-              We&apos;re finalizing subscriptions and updates. No spam, just release notes and new
-              learning resources.
-            </p>
-          </form>
+          </div>
         </div>
       </section>
     </div>

@@ -27,6 +27,14 @@ export const pleuralUltrasoundLessons: PleuralLesson[] = [
         lastReviewed: '2026-05-25',
         reviewer: 'Pending clinical review',
       },
+      {
+        id: 'no-drainable-effusion-frame',
+        statement:
+          'B-lines, A-lines, and subpleural consolidation images can be useful pleural-module distractors, but a view without a discrete pleural fluid pocket should not be framed as a thoracentesis target.',
+        referenceIds: ['bts-procedures-2023', 'creative-commons-catalog'],
+        lastReviewed: '2026-06-03',
+        reviewer: 'Pending clinical review',
+      },
     ],
   },
 ]

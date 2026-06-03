@@ -27,8 +27,8 @@ export function Hero() {
             Education &amp; Innovation in Interventional Pulmonology
           </h1>
           <p className="text-base text-sky-100 md:text-lg">
-            Explore simulation labs, printable anatomy, and data-driven training modules built by
-            clinicians and engineers advancing airway care worldwide.
+            Explore public EBUS training, TNM-9 staging, 3D anatomy, board review, and simulation
+            modules built for interventional pulmonology learners and educators.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
@@ -36,7 +36,7 @@ export function Hero() {
               size="lg"
               className="h-11 rounded-full bg-white text-sky-900 hover:bg-sky-100"
             >
-              <Link href="/board-prep">Explore Board Prep</Link>
+              <Link href={'/ebus-training' as Route}>Open EBUS Training</Link>
             </Button>
             <Button
               asChild
@@ -44,25 +44,31 @@ export function Hero() {
               variant="outline"
               className="h-11 rounded-full border-white/60 bg-transparent text-white hover:border-white hover:bg-white/10"
             >
-              <Link href="/learn/anatomy">Start Learning</Link>
+              <Link href={'/tnm-9-staging' as Route}>Open TNM-9</Link>
             </Button>
           </div>
         </div>
         <div className="flex flex-wrap gap-3 mt-8">
           <Link
-            href="/coming-soon"
+            href={'/ebus-training' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Tools (coming soon)
+            EBUS Training
           </Link>
           <Link
-            href="/learn/anatomy"
+            href={'/tnm-9-staging' as Route}
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            TNM-9
+          </Link>
+          <Link
+            href={'/learn/anatomy' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
             3D Anatomy
           </Link>
           <Link
-            href="/board-prep"
+            href={'/board-prep' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
             Board Prep
@@ -71,13 +77,7 @@ export function Hero() {
             href={'/resources' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Medical Images
-          </Link>
-          <Link
-            href="/coming-soon"
-            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-          >
-            Training paths (coming soon)
+            Resources
           </Link>
         </div>
       </section>

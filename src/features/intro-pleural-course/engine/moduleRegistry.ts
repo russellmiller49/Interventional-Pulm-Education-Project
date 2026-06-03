@@ -10,6 +10,14 @@ export const introPleuralModules: readonly PleuralModule[] = [
     status: 'live',
   },
   {
+    id: 'pleural-dataset-lab',
+    title: 'Pleural Dataset Source Lab',
+    route: '/pleural-procedures/dataset-lab',
+    section: 'ultrasound',
+    minutes: 16,
+    status: 'live',
+  },
+  {
     id: 'pleural-ultrasound-simulator',
     title: 'Pleural Ultrasound Simulator',
     route: '/pleural-procedures/pleural-ultrasound-simulator',

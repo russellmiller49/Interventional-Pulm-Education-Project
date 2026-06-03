@@ -26,6 +26,7 @@ const patternOptions: { id: EffusionPattern; label: string }[] = [
   { id: 'complexNonSeptated', label: 'Complex nonseptated' },
   { id: 'septatedLoculated', label: 'Septated or loculated' },
   { id: 'echogenic', label: 'Echogenic' },
+  { id: 'noDrainableEffusion', label: 'No drainable effusion' },
 ]
 
 export function PleuralUltrasoundSimulator() {

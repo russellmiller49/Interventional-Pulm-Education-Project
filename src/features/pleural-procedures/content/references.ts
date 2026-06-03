@@ -115,6 +115,23 @@ export const pleuralReferences: PleuralReference[] = [
     useNote:
       'Teaching image inventory used for pleural ultrasound, CT, pleuroscopy, and pathology visuals.',
   },
+  {
+    id: 'mendeley-lus-katumba-2025',
+    citation:
+      'Katumba A, Murindanyi S, Okila N, et al. A Dataset of Lung Ultrasound Images for Automated AI-based Lung Disease Classification. Mendeley Data, V2. 2025.',
+    sourceType: 'dataset',
+    url: 'https://doi.org/10.17632/hb3p34ytvx.2',
+    useNote:
+      'CC BY raw-image source for dataset-backed LUS label examples and image-quality variation.',
+  },
+  {
+    id: 'figshare-lung-ultrasound-2025',
+    citation:
+      'Yin M. Lung Ultrasound Dataset. figshare. Dataset. 2025. doi:10.6084/m9.figshare.30093577.v1.',
+    sourceType: 'dataset',
+    url: 'https://doi.org/10.6084/m9.figshare.30093577.v1',
+    useNote: 'CC BY raw-image source for benign and malignant lung-ultrasound context examples.',
+  },
 ]
 
 export function getPleuralReference(id: string) {

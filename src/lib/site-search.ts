@@ -3,6 +3,7 @@ import {
   boardReviewChapters,
   type BoardReviewCategory,
 } from '@/data/board-review'
+import { publicEbusTrainingModules } from '@/data/ebus-training'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 import { listCreativeCommonsCategories } from '@/lib/creative-commons'
 
@@ -53,13 +54,31 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['board review', 'exam', 'chapters', 'study', 'questions'],
   },
   {
-    title: 'SoCal EBUS Course',
+    title: 'Public EBUS Training',
     description:
-      'Fellow-prep course with lectures, station mapping, knobology, and 3D anatomy resources.',
+      'Open EBUS knobology, mediastinal station, and simulator modules without course participant lockout.',
+    href: '/ebus-training',
+    section: 'EBUS Training',
+    type: 'page',
+    keywords: ['ebus', 'knobology', 'stations', 'mediastinal', 'simulator', 'ultrasound'],
+  },
+  {
+    title: 'TNM-9 Staging',
+    description:
+      'Standalone lung cancer staging module with descriptor reference, stage grouping, N map, and cases.',
+    href: '/tnm-9-staging',
+    section: 'Staging',
+    type: 'page',
+    keywords: ['tnm', 'tnm 9', 'tnm-9', 'lung cancer staging', 'stage grouping', 'n map'],
+  },
+  {
+    title: 'Southern California EBUS Course Participant Portal',
+    description:
+      'Participant portal for the Southern California EBUS Course with lectures, surveys, tests, progress tracking, and course-specific materials.',
     href: '/socal-ebus-course',
     section: 'Training',
     type: 'page',
-    keywords: ['ebus', 'course', 'stations', 'fellows', 'knobology'],
+    keywords: ['socal ebus', 'southern california', 'course', 'participants', 'lectures'],
   },
   {
     title: 'Bronch Navigation Trainer',
@@ -121,6 +140,15 @@ const allStaticResults: SiteSearchResult[] = [
 ]
 
 const staticResults = allStaticResults.filter((item) => isVisibleModulePath(item.href))
+
+const ebusTrainingResults: SiteSearchResult[] = publicEbusTrainingModules.map((module) => ({
+  title: module.title,
+  description: module.description,
+  href: module.href,
+  section: 'EBUS Training',
+  type: 'page',
+  keywords: module.keywords,
+}))
 
 const vibeGuideSections: SiteSearchResult[] = [
   {
@@ -192,6 +220,7 @@ const imageCategoryResults: SiteSearchResult[] = listCreativeCommonsCategories()
 
 const searchIndex: SiteSearchResult[] = [
   ...staticResults,
+  ...ebusTrainingResults,
   ...vibeGuideSections,
   ...boardReviewResults,
   ...imageCategoryResults,

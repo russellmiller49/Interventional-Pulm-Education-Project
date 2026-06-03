@@ -34,6 +34,8 @@ pids
 *.nii.gz
 *.nrrd
 !public/models/te-fistula-segmentation-2026-05-25.nrrd
+!public/models/ebus-case-001-ct.nrrd
+!public/models/ebus-case-001-segmentation.nrrd
 *.tar.zst
 
 # Python build/test caches

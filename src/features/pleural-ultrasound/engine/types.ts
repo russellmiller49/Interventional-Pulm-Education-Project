@@ -3,8 +3,12 @@ export type EffusionPattern =
   | 'complexNonSeptated'
   | 'septatedLoculated'
   | 'echogenic'
+  | 'noDrainableEffusion'
 
-export type ManagementImplication = 'thoraReasonable' | 'considerTubeAndAdjuncts'
+export type ManagementImplication =
+  | 'thoraReasonable'
+  | 'considerTubeAndAdjuncts'
+  | 'noPleuralDrainageTarget'
 
 export interface PatternScore {
   correct: boolean

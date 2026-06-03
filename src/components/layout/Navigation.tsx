@@ -22,32 +22,22 @@ const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
 
 const allNavigationItems: NavItem[] = [
   {
-    title: 'SoCal EBUS Course',
-    shortTitle: 'EBUS Course',
-    href: '/socal-ebus-course',
-    description: 'Fellow prep with lectures, stations, knobology, and 3D anatomy',
+    title: 'EBUS Training',
+    shortTitle: 'EBUS',
+    href: '/ebus-training' as Route,
+    description: 'Public knobology, stations, and simulator modules',
   },
   {
-    title: 'Bronch Navigation',
-    shortTitle: 'Bronch Nav',
-    href: '/bronch-navigation-trainer' as Route,
-    description: 'CT-to-bronchoscope navigation simulator',
+    title: 'TNM-9 Staging',
+    shortTitle: 'TNM-9',
+    href: '/tnm-9-staging' as Route,
+    description: 'Standalone lung cancer staging module',
   },
   {
-    title: 'Intro Bronchoscopy',
-    href: '/intro-bronchoscopy' as Route,
-    description: 'Foundational scope sizing, reach, and tool fit modules',
-  },
-  {
-    title: 'Pleural Procedures',
-    href: '/pleural-procedures' as Route,
-    description: 'Chest drainage systems, knobology, and troubleshooting',
-  },
-  {
-    title: 'Rapid Onsite Cytology',
-    shortTitle: 'Cytology',
-    href: '/rapid-onsite-cytology' as Route,
-    description: 'ROSE and Diff-Quik slide interpretation trainer',
+    title: '3D Anatomy',
+    shortTitle: 'Anatomy',
+    href: '/learn/anatomy',
+    description: '3D and interactive anatomy viewer',
   },
   {
     title: 'IP Board Prep',
@@ -56,22 +46,48 @@ const allNavigationItems: NavItem[] = [
     description: 'Interactive board review chapters',
   },
   {
-    title: '3D Anatomy',
-    shortTitle: 'Anatomy',
-    href: '/learn/anatomy',
-    description: '3D & interactive anatomy viewer',
+    title: 'FluoroView',
+    href: '/fluoroview',
+    description: 'C-arm airway simulation lab',
   },
-  { title: 'FluoroView', href: '/fluoroview', description: 'C-arm airway simulation lab' },
-  { title: 'IP Registry', href: '/ip-registry', description: 'Launch the Procedure Suite IU' },
+  {
+    title: 'Bronch Navigation',
+    shortTitle: 'Bronch Nav',
+    href: '/bronch-navigation-trainer' as Route,
+    description: 'CT-to-bronchoscope navigation simulator',
+  },
+  {
+    title: 'Pleural Procedures',
+    href: '/pleural-procedures' as Route,
+    description: 'Pleural disease and procedure modules',
+  },
   {
     title: 'Resources',
     href: '/resources' as Route,
     description: 'Creative Commons assets & study aids',
   },
   {
+    title: 'SoCal EBUS Course',
+    shortTitle: 'EBUS Course',
+    href: '/socal-ebus-course',
+    description: 'For Southern California EBUS Course participants',
+  },
+  {
+    title: 'Rapid Onsite Cytology',
+    shortTitle: 'Cytology',
+    href: '/rapid-onsite-cytology' as Route,
+    description: 'ROSE and Diff-Quik slide interpretation trainer',
+  },
+  {
+    title: 'Intro Bronchoscopy',
+    href: '/intro-bronchoscopy' as Route,
+    description: 'Foundational scope sizing, reach, and tool fit modules',
+  },
+  { title: 'IP Registry', href: '/ip-registry', description: 'Launch the Procedure Suite UI' },
+  {
     title: 'Coming Soon',
     href: '/coming-soon',
-    description: 'Tools, DIY Lab, training modules, and community features in progress',
+    description: 'Upcoming pleural, bronchoscopy, and rigid bronchoscopy modules',
   },
 ]
 

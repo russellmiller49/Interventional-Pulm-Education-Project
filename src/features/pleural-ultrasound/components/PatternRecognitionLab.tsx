@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { LessonScaffold } from '@/components/learning/LessonScaffold'
 
-import { pleuralUltrasoundAssets } from '../content/assets'
+import { publicPleuralUltrasoundAssets } from '../content/assets'
 import { describeManagement, patternToManagement, scoreClassification } from '../engine/patterns'
 import type { EffusionPattern } from '../engine/types'
 
@@ -13,6 +13,7 @@ const patternOptions: { id: EffusionPattern; label: string }[] = [
   { id: 'complexNonSeptated', label: 'Complex nonseptated' },
   { id: 'septatedLoculated', label: 'Septated or loculated' },
   { id: 'echogenic', label: 'Echogenic' },
+  { id: 'noDrainableEffusion', label: 'No drainable effusion' },
 ]
 
 const neutralAlt = 'Pleural-space image for pattern classification.'
@@ -23,8 +24,8 @@ export function PatternRecognitionLab() {
   const [revealed, setRevealed] = useState(false)
   const [score, setScore] = useState({ correct: 0, attempted: 0 })
 
-  const asset = pleuralUltrasoundAssets[index]
-  const total = pleuralUltrasoundAssets.length
+  const asset = publicPleuralUltrasoundAssets[index]
+  const total = publicPleuralUltrasoundAssets.length
 
   const result = useMemo(
     () => (asset && answer ? scoreClassification(answer, asset.groundTruth) : null),
@@ -125,7 +126,19 @@ export function PatternRecognitionLab() {
           </div>
           {revealed ? (
             <div className="border-t border-border/80 p-4 text-xs leading-5 text-muted-foreground">
-              Attribution: {asset.attribution}
+              <p>Attribution: {asset.attribution}</p>
+              <p className="mt-1">
+                Source:{' '}
+                <a
+                  href={asset.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-sky-500 underline-offset-4"
+                >
+                  {asset.license}
+                </a>
+                {asset.attributionRequired ? ' with attribution required' : ''}
+              </p>
             </div>
           ) : null}
         </div>

@@ -4,6 +4,10 @@ import { malignantEffusionLessons } from '@/features/malignant-effusion/content/
 import { pleuralAnalysisLessons } from '@/features/pleural-fluid-analysis/content/lessons'
 import { pleuralInfectionLessons } from '@/features/pleural-infection/content/lessons'
 import { pleuralReferences } from '@/features/pleural-procedures/content/references'
+import {
+  getPleuralReusePolicyLabel,
+  pleuralModuleSourceRegistry,
+} from '@/features/pleural-procedures/content/sourceRegistry'
 import { pleuralUltrasoundLessons } from '@/features/pleural-ultrasound/content/lessons'
 import { pneumothoraxLessons } from '@/features/pneumothorax-pathway/content/lessons'
 import { thoracentesisPlannerLessons } from '@/features/thoracentesis-planner/content/lessons'
@@ -103,6 +107,70 @@ export function PleuralClinicalReviewTable() {
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{reference.useNote}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
+        <h2 className="text-xl font-semibold text-foreground">Dataset and media source policy</h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+          Source triage for pleural ultrasound media. Public modules should render only reviewed
+          embeddable assets; audit-required, reference-only, and permission-required sources stay
+          out of the learner-facing asset list until reviewed or explicitly permitted.
+        </p>
+        <div className="mt-5 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-muted/60 text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3">Source</th>
+                <th className="px-4 py-3">Policy</th>
+                <th className="px-4 py-3">License</th>
+                <th className="px-4 py-3">Use in module</th>
+                <th className="px-4 py-3">Review note</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/80">
+              {pleuralModuleSourceRegistry.map((source) => (
+                <tr key={source.id}>
+                  <td className="px-4 py-3">
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-foreground underline decoration-sky-500 underline-offset-4"
+                    >
+                      {source.name}
+                    </a>
+                    <div className="mt-1 text-xs text-muted-foreground">{source.id}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {getPleuralReusePolicyLabel(source.reusePolicy)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {source.licenseUrl ? (
+                      <a
+                        href={source.licenseUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline decoration-sky-500 underline-offset-4"
+                      >
+                        {source.license}
+                      </a>
+                    ) : (
+                      source.license
+                    )}
+                  </td>
+                  <td className="max-w-sm px-4 py-3 leading-6 text-muted-foreground">
+                    {source.useScope}
+                  </td>
+                  <td className="max-w-md px-4 py-3 leading-6 text-muted-foreground">
+                    {source.sourceNote}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
