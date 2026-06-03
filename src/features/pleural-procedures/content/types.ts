@@ -32,8 +32,42 @@ export type PleuralSourceType =
   | 'trial'
   | 'textbook'
   | 'web-standard'
+  | 'dataset'
   | 'asset-catalog'
   | 'educational-model'
+
+export type PleuralLicenseLabel =
+  | 'CC BY 4.0'
+  | 'CC BY-NC 4.0'
+  | 'CC BY-NC-SA 4.0'
+  | 'CC BY-NC-ND 4.0'
+  | 'AGPL-3.0'
+  | 'All rights reserved'
+  | 'Mixed or row-level'
+  | 'Unknown'
+  | 'Repository-derived educational asset'
+
+export type PleuralReusePolicy =
+  | 'embeddable'
+  | 'audit-required'
+  | 'reference-only'
+  | 'permission-required'
+
+export type PleuralTransformPolicy =
+  | 'derivatives-allowed'
+  | 'derivatives-restricted'
+  | 'no-derivatives'
+  | 'not-reviewed'
+  | 'not-applicable'
+
+export type PleuralPermissionStatus =
+  | 'granted-by-license'
+  | 'permission-granted'
+  | 'audit-required'
+  | 'permission-needed'
+  | 'reference-only'
+
+export type PleuralReviewStatus = 'reviewed' | 'pending-audit' | 'reference-only'
 
 export interface PleuralReference {
   id: string
@@ -48,8 +82,16 @@ export interface PleuralAsset {
   kind: 'image' | 'clip' | 'diagram'
   path: string
   alt: string
-  sourceType: 'repo' | 'creative-commons' | 'educational-diagram'
+  sourceType: 'repo' | 'creative-commons' | 'dataset' | 'educational-diagram'
   attribution: string
+  sourceUrl: string
+  license: PleuralLicenseLabel
+  licenseUrl?: string
+  reusePolicy: PleuralReusePolicy
+  transformPolicy: PleuralTransformPolicy
+  attributionRequired: boolean
+  permissionStatus: PleuralPermissionStatus
+  reviewStatus: PleuralReviewStatus
   referenceIds?: string[]
   tags: string[]
 }

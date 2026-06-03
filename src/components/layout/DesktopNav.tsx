@@ -20,8 +20,9 @@ interface DesktopNavProps {
 }
 
 const quickNavTitles = new Set([
-  'SoCal EBUS Course',
-  'Bronch Navigation',
+  'EBUS Training',
+  'TNM-9 Staging',
+  '3D Anatomy',
   'IP Board Prep',
   'FluoroView',
   'Resources',

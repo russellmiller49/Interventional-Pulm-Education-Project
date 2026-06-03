@@ -1,21 +1,22 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import type { Route } from 'next'
 
 import { CourseEmbedShell } from '@/components/socal-ebus/CourseEmbedShell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: 'SoCal EBUS Course',
+  title: 'Southern California EBUS Course Participant Portal',
   description:
-    'Launch the SoCal EBUS fellow-prep course with pretest, lectures, station mapping, knobology labs, and 3D anatomy inside the Interventional Pulmonology Collaborative.',
+    'Participant portal for the Southern California EBUS Course with lectures, surveys, tests, progress tracking, and course-specific materials.',
 }
 
 const courseHighlights = [
-  'Pre-course baseline testing, lecture review, and a structured prep pathway for fellows.',
-  'Station mapping, flashcards, and image-rich CT, bronchoscopy, and ultrasound correlation.',
-  'Interactive knobology drills that teach gain, depth, Doppler, and image optimization.',
-  'A linked 3D anatomy case viewer for airway, vessel, and nodal orientation practice.',
+  'Pre-course and post-course surveys and tests for registered course participants.',
+  'Lecture review and course-specific progress tracking for the Southern California EBUS cohort.',
+  'Participant access to the same EBUS training assets plus course-only sequencing.',
+  'Course logistics, faculty materials, and completion workflow in one embedded portal.',
 ]
 
 const embeddedCourseAppPath = '/socal-ebus-course/app/index.html'
@@ -29,13 +30,15 @@ export default function SoCalEbusCoursePage() {
             variant="success"
             className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
           >
-            Regional Training · EBUS
+            Participant portal · Southern California EBUS Course
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">SoCal EBUS Course</h1>
+          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+            Southern California EBUS Course
+          </h1>
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
-            A dedicated fellows course now lives inside the main site, with the full prep experience
-            available in one place: pretest, lecture review, knobology, station mapping, and a 3D
-            anatomy lab.
+            This portal is for Southern California EBUS Course participants who need the lecture
+            sequence, surveys, tests, progress tracking, and course-specific materials. General
+            learners can use the public EBUS Training and TNM-9 modules separately.
           </p>
         </div>
 
@@ -46,12 +49,15 @@ export default function SoCalEbusCoursePage() {
             </a>
           </Button>
           <Button asChild variant="secondary">
-            <Link href="/board-prep/lung-cancer-staging">Pair With Board Review</Link>
+            <Link href={'/ebus-training' as Route}>Public EBUS Training</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href={'/tnm-9-staging' as Route}>TNM-9 Staging</Link>
           </Button>
         </div>
 
         <div className="rounded-3xl border border-border/70 bg-card/70 p-6">
-          <h2 className="text-lg font-semibold text-foreground">What&apos;s inside</h2>
+          <h2 className="text-lg font-semibold text-foreground">Participant portal contents</h2>
           <ul className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
             {courseHighlights.map((highlight) => (
               <li key={highlight} className="flex items-start gap-3">

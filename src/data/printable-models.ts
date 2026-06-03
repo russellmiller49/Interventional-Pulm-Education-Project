@@ -253,6 +253,81 @@ export const anatomyModels: AnatomyModel[] = [
       'Use alongside the original atlas to compare performance differences between OBJ/MTL sets and GLB.',
   },
   {
+    id: 'ebus-case-001-mediastinal-anatomy',
+    slug: 'ebus-case-001-mediastinal-anatomy',
+    name: 'EBUS Case 001 Mediastinal Anatomy',
+    category: 'lymph-nodes',
+    description:
+      'Course-derived EBUS anatomy case with airway, vascular, nodal, and CT segmentation assets moved into the main 3D anatomy library.',
+    clinicalRelevance:
+      'Supports EBUS station orientation, mediastinal anatomy review, and CT-to-ultrasound spatial teaching outside the participant course.',
+    relatedProcedures: ['EBUS staging', 'Mediastinal lymph node mapping', 'Lung cancer staging'],
+    downloads: [
+      {
+        format: 'glb',
+        url: resolveModuleAssetPath('/models/ebus-case-001-anatomy.glb'),
+        sizeMB: 1.1,
+      },
+      {
+        format: 'glb',
+        url: resolveModuleAssetPath('/models/ebus-case-001-station-overlay.glb'),
+        sizeMB: 1.1,
+      },
+    ],
+    thumbnail: '/window.svg',
+    gallery: ['/window.svg'],
+    defaultCamera: {
+      position: [0, 0, 2.5],
+      target: [0, 0, 0],
+      autoFit: true,
+    },
+    orientation: {
+      rotation: [0, 0, 0],
+    },
+    volume: {
+      format: 'nrrd',
+      description:
+        'De-identified CT volume exported with the EBUS case anatomy and registered segmentation.',
+      url: resolveModuleAssetPath('/models/ebus-case-001-ct.nrrd'),
+      axis: 'z',
+      window: {
+        low: -1000,
+        high: 500,
+      },
+      segmentation: {
+        format: 'nrrd',
+        description: 'Segmentation label map exported with the EBUS case anatomy.',
+        url: resolveModuleAssetPath('/models/ebus-case-001-segmentation.nrrd'),
+      },
+    },
+    segments: [
+      {
+        id: 'airway',
+        name: 'Airway',
+        description: 'Central tracheobronchial airway anatomy.',
+        color: '#0ea5e9',
+        visibleByDefault: true,
+      },
+      {
+        id: 'mediastinal-lymph-nodes',
+        name: 'Mediastinal lymph nodes',
+        description: 'EBUS-relevant mediastinal nodal structures.',
+        color: '#22c55e',
+        visibleByDefault: true,
+      },
+      {
+        id: 'mediastinal-vessels',
+        name: 'Mediastinal vessels',
+        description: 'Vascular landmarks used for EBUS station orientation.',
+        color: '#ef4444',
+        visibleByDefault: true,
+      },
+    ],
+    source: 'Moved from the completed Southern California EBUS Course case 001 asset set.',
+    notes:
+      'The embedded EBUS course keeps its own generated copy; this registry entry exposes the same anatomy family in the main 3D viewer.',
+  },
+  {
     id: 'airway-y-stent-patient',
     slug: 'airway-y-stent-patient',
     name: 'Airway Stenosis with Y-Stent',

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Activity, FlaskConical, Gauge, Stethoscope } from 'lucide-react'
+import { Activity, Database, FlaskConical, Gauge, Stethoscope } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 
@@ -27,6 +27,14 @@ const pleuralModules = [
       'Classify simple, complex, septated, and echogenic effusion patterns with management implications.',
     status: 'Live',
     icon: Stethoscope,
+  },
+  {
+    href: '/pleural-procedures/dataset-lab',
+    title: 'Pleural Dataset Source Lab',
+    description:
+      'Inspect raw CC BY Mendeley and figshare ultrasound examples with source labels, provenance, checksums, and teaching-use limits.',
+    status: 'Live',
+    icon: Database,
   },
   {
     href: '/pleural-procedures/pleural-ultrasound-simulator',

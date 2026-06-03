@@ -1,5 +1,18 @@
 import type { PleuralAsset } from '@/features/pleural-procedures/content/types'
 
+function reviewedCcBySource(sourceUrl: string) {
+  return {
+    sourceUrl,
+    license: 'CC BY 4.0',
+    licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+    reusePolicy: 'embeddable',
+    transformPolicy: 'derivatives-allowed',
+    attributionRequired: true,
+    permissionStatus: 'granted-by-license',
+    reviewStatus: 'reviewed',
+  } as const
+}
+
 export const malignantEffusionAssets: readonly PleuralAsset[] = [
   {
     id: 'pleural-nodularity-ultrasound',
@@ -8,6 +21,7 @@ export const malignantEffusionAssets: readonly PleuralAsset[] = [
     alt: 'Ultrasound and CT correlation showing pleural thickening and nodularity.',
     sourceType: 'creative-commons',
     attribution: 'Diagnosis of malignant pleural disease: Ultrasound as a detective probe. 2022.',
+    ...reviewedCcBySource('https://pmc.ncbi.nlm.nih.gov/articles/PMC9870740/'),
     referenceIds: ['creative-commons-catalog'],
     tags: ['malignant', 'pleural-thickening', 'ultrasound'],
   },
@@ -18,6 +32,7 @@ export const malignantEffusionAssets: readonly PleuralAsset[] = [
     alt: 'Pleuroscopy images of malignant mesothelioma and lymphoma with narrow-band imaging vascular patterns.',
     sourceType: 'creative-commons',
     attribution: 'Evaluation of the efficacy and safety of a new flex-rigid pleuroscope. 2021.',
+    ...reviewedCcBySource('https://pmc.ncbi.nlm.nih.gov/articles/PMC7891332/'),
     referenceIds: ['creative-commons-catalog'],
     tags: ['pleuroscopy', 'malignant', 'biopsy'],
   },
@@ -28,6 +43,7 @@ export const malignantEffusionAssets: readonly PleuralAsset[] = [
     alt: 'Pleuroscopy equipment comparison with biopsy forceps positioning.',
     sourceType: 'creative-commons',
     attribution: 'Evaluation of the efficacy and safety of a new flex-rigid pleuroscope. 2021.',
+    ...reviewedCcBySource('https://pmc.ncbi.nlm.nih.gov/articles/PMC7891332/'),
     referenceIds: ['creative-commons-catalog'],
     tags: ['equipment', 'pleuroscopy', 'procedure'],
   },
