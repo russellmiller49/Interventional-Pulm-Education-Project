@@ -1,0 +1,54 @@
+import {
+  getRequiredEntitlement,
+  isPublicPath,
+  resolveLoginRedirectPath,
+  resolveSiteModuleId,
+} from './access'
+
+function params(query = '') {
+  return new URLSearchParams(query)
+}
+
+describe('main site auth access helpers', () => {
+  it('keeps auth and reset pages public', () => {
+    expect(isPublicPath('/login')).toBe(true)
+    expect(isPublicPath('/signup')).toBe(true)
+    expect(isPublicPath('/forgot-password')).toBe(true)
+    expect(isPublicPath('/auth/update-password')).toBe(true)
+    expect(isPublicPath('/verify-email')).toBe(true)
+  })
+
+  it('does not treat POCUS as a protected website module', () => {
+    expect(isPublicPath('/pocus/auth/callback')).toBe(true)
+    expect(resolveSiteModuleId('/pocus/cases')).toBeNull()
+  })
+
+  it('requires entitlements only for restricted website areas', () => {
+    expect(getRequiredEntitlement('/ip-registry', params())).toBe('ip_registry')
+    expect(getRequiredEntitlement('/socal-ebus-course', params())).toBe('socal_ebus_course')
+    expect(getRequiredEntitlement('/ebus-training', params())).toBeNull()
+    expect(getRequiredEntitlement('/tnm-9-staging', params())).toBeNull()
+  })
+
+  it('keeps public EBUS embeds open while gating the full generated app shell', () => {
+    expect(
+      getRequiredEntitlement(
+        '/socal-ebus-course/app/index.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBeNull()
+    expect(getRequiredEntitlement('/socal-ebus-course/app/index.html', params())).toBe(
+      'socal_ebus_course',
+    )
+  })
+
+  it('allows generated static assets without making generated html public', () => {
+    expect(isPublicPath('/socal-ebus-course/app/assets/module.js')).toBe(true)
+    expect(isPublicPath('/socal-ebus-course/app/index.html')).toBe(false)
+  })
+
+  it('normalizes unsafe login redirects', () => {
+    expect(resolveLoginRedirectPath('/resources', '?topic=rose')).toBe('/resources?topic=rose')
+    expect(resolveLoginRedirectPath('//evil.example', '')).toBe('/')
+  })
+})

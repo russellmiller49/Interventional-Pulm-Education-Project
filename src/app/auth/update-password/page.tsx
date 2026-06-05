@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
@@ -116,10 +117,10 @@ export default function UpdatePasswordPage() {
     }
 
     setStatus('success')
-    setMessage('Password updated. Redirecting back to the course...')
+    setMessage('Password updated. Redirecting to sign in...')
 
     window.setTimeout(() => {
-      router.replace('/socal-ebus-course')
+      router.replace('/login' as Route)
       router.refresh()
     }, 800)
   }
@@ -173,18 +174,17 @@ export default function UpdatePasswordPage() {
       {status === 'error' ? (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
           <p className="text-sm text-muted-foreground">
-            Request another reset email from the sign-in modal, then open the link from the same
-            browser.
+            Request another reset email, then open the link from the same browser.
           </p>
         </div>
       ) : null}
 
       <div>
         <Link
-          href="/socal-ebus-course"
+          href={'/login' as Route}
           className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          Back to the course
+          Back to sign in
         </Link>
       </div>
     </div>

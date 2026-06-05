@@ -1,5 +1,6 @@
 'use client'
 
+import type { Route } from 'next'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
@@ -23,10 +24,9 @@ import { SearchShortcut } from './SearchShortcut'
 interface MobileNavProps {
   items: NavItem[]
   activePath?: string | null
-  onRequestSignIn?: () => void
 }
 
-export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps) {
+export function MobileNav({ items, activePath }: MobileNavProps) {
   const normalizedPath = useMemo(() => {
     if (!activePath) {
       return '/'
@@ -89,15 +89,8 @@ export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps
               })}
             </nav>
             <div className="flex flex-col gap-3">
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => {
-                  onRequestSignIn?.()
-                }}
-                className="justify-center"
-              >
-                Sign in
+              <Button asChild variant="default" className="justify-center">
+                <Link href={'/login' as Route}>Sign in</Link>
               </Button>
               <form action="/search" className="space-y-2" role="search">
                 <Input

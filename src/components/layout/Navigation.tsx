@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import type { Route } from 'next'
-import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
@@ -14,10 +13,6 @@ import { isVisibleModulePath } from '@/lib/draft-modules'
 import { DesktopNav, type NavItem } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
-
-const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
-  ssr: false,
-})
 
 const allNavigationItems: NavItem[] = [
   {
@@ -95,7 +90,6 @@ const navigationItems = allNavigationItems.filter((item) => isVisibleModulePath(
 export function Navigation() {
   const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSignInOpen, setIsSignInOpen] = useState(false)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -153,25 +147,15 @@ export function Navigation() {
             <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
           </Button>
         </form>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setIsSignInOpen(true)}
-          className="hidden xl:inline-flex"
-        >
-          Sign in
+        <Button asChild variant="outline" className="hidden xl:inline-flex">
+          <Link href={'/login' as Route}>Sign in</Link>
         </Button>
         <ModeToggle
           size="sm"
           className="h-9 w-9 px-0 xl:w-auto xl:px-4 [&>span:last-child]:hidden xl:[&>span:last-child]:inline"
         />
       </div>
-      <MobileNav
-        items={navigationItems}
-        activePath={pathname}
-        onRequestSignIn={() => setIsSignInOpen(true)}
-      />
-      {isSignInOpen ? <SignInModal onClose={() => setIsSignInOpen(false)} /> : null}
+      <MobileNav items={navigationItems} activePath={pathname} />
     </div>
   )
 }

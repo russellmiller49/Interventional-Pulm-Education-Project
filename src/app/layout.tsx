@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 
 import { Layout as AppLayout } from '@/components/layout/Layout'
 import { ThemeProvider } from '@/components/layout/theme-provider'
+import { SiteUsageTracker } from '@/components/analytics/SiteUsageTracker'
 import { Toaster } from '@/components/ui/toaster'
 import { cn } from '@/lib/cn'
 import '@/styles/globals.css'
@@ -39,14 +40,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AppLayout>{children}</AppLayout>
+          <SiteUsageTracker />
           <Toaster />
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
   )
-}
-
-function Analytics() {
-  return null
 }
