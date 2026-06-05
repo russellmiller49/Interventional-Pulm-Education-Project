@@ -1,7 +1,6 @@
 export type SiteEntitlement = 'ip_registry' | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
-  '/',
   '/forgot-password',
   '/health',
   '/login',

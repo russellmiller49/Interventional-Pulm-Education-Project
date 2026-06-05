@@ -6,11 +6,12 @@ import {
   getRequiredEntitlement,
   isAuthPath,
   isPublicPath,
+  isPublicTrainingEmbed,
   resolveLoginRedirectPath,
   type SiteEntitlement,
 } from '@/lib/site-auth/access'
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
@@ -18,7 +19,11 @@ export async function middleware(req: NextRequest) {
     res.headers.set('X-Robots-Tag', 'noindex, nofollow')
   }
 
-  if (pathname.startsWith('/api/') || isPublicPath(pathname)) {
+  if (
+    pathname.startsWith('/api/') ||
+    isPublicPath(pathname) ||
+    isPublicTrainingEmbed(pathname, req.nextUrl.searchParams)
+  ) {
     return res
   }
 

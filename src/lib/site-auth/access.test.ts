@@ -11,6 +11,7 @@ function params(query = '') {
 
 describe('main site auth access helpers', () => {
   it('keeps auth and reset pages public', () => {
+    expect(isPublicPath('/')).toBe(false)
     expect(isPublicPath('/login')).toBe(true)
     expect(isPublicPath('/signup')).toBe(true)
     expect(isPublicPath('/forgot-password')).toBe(true)
