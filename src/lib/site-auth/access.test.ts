@@ -1,5 +1,7 @@
 import {
+  canUseLegacyEbusApproval,
   getRequiredEntitlement,
+  isLegacyEbusGatewayPath,
   isPublicPath,
   resolveLoginRedirectPath,
   resolveSiteModuleId,
@@ -38,14 +40,36 @@ describe('main site auth access helpers', () => {
         params('publicTraining=1&publicScope=ebus'),
       ),
     ).toBeNull()
-    expect(getRequiredEntitlement('/socal-ebus-course/app/index.html', params())).toBe(
+    expect(getRequiredEntitlement('/socal-ebus-course/app/index.html', params())).toBeNull()
+    expect(getRequiredEntitlement('/socal-ebus-course/app/private-route', params())).toBe(
       'socal_ebus_course',
     )
   })
 
+  it('keeps the legacy EBUS course gateway directly accessible', () => {
+    expect(isLegacyEbusGatewayPath('/socal-ebus-course/app')).toBe(true)
+    expect(isLegacyEbusGatewayPath('/socal-ebus-course/app/')).toBe(true)
+    expect(isLegacyEbusGatewayPath('/socal-ebus-course/app/index.html')).toBe(true)
+    expect(isPublicPath('/socal-ebus-course/app/index.html')).toBe(true)
+    expect(isPublicPath('/socal-ebus-course')).toBe(false)
+  })
+
+  it('uses legacy EBUS approval only for the restricted course area', () => {
+    expect(canUseLegacyEbusApproval('/socal-ebus-course', params())).toBe(true)
+    expect(canUseLegacyEbusApproval('/socal-ebus-course/app/index.html', params())).toBe(false)
+    expect(
+      canUseLegacyEbusApproval(
+        '/socal-ebus-course/app/index.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBe(false)
+    expect(canUseLegacyEbusApproval('/ip-registry', params())).toBe(false)
+    expect(canUseLegacyEbusApproval('/ebus-training', params())).toBe(false)
+  })
+
   it('allows generated static assets without making generated html public', () => {
     expect(isPublicPath('/socal-ebus-course/app/assets/module.js')).toBe(true)
-    expect(isPublicPath('/socal-ebus-course/app/index.html')).toBe(false)
+    expect(isPublicPath('/socal-ebus-course/app/other.html')).toBe(false)
   })
 
   it('normalizes unsafe login redirects', () => {

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 import {
+  canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isAuthPath,
   isPublicPath,
@@ -67,15 +68,19 @@ export async function proxy(req: NextRequest) {
     return redirectWithCookies(redirectUrl)
   }
 
-  if (!user.email_confirmed_at) {
+  const requiredEntitlement = getRequiredEntitlement(pathname, req.nextUrl.searchParams)
+  const hasLegacyEbusAccess =
+    canUseLegacyEbusApproval(pathname, req.nextUrl.searchParams) &&
+    (await hasApprovedLegacyEbusAccess(user.id))
+
+  if (!user.email_confirmed_at && !hasLegacyEbusAccess) {
     const redirectUrl = new URL('/verify-email', req.url)
     return redirectWithCookies(redirectUrl)
   }
 
-  const requiredEntitlement = getRequiredEntitlement(pathname, req.nextUrl.searchParams)
-
   if (requiredEntitlement) {
-    const hasAccess = await hasRequiredAccess(requiredEntitlement, user.id)
+    const hasAccess =
+      (await hasActiveSiteEntitlement(requiredEntitlement, user.id)) || hasLegacyEbusAccess
 
     if (!hasAccess) {
       const redirectUrl = new URL('/dashboard', req.url)
@@ -103,7 +108,7 @@ export async function proxy(req: NextRequest) {
 
   return res
 
-  async function hasRequiredAccess(entitlement: SiteEntitlement, userId: string) {
+  async function hasActiveSiteEntitlement(entitlement: SiteEntitlement, userId: string) {
     const { data: siteEntitlement } = await supabase
       .from('site_entitlements')
       .select('entitlement')
@@ -116,10 +121,10 @@ export async function proxy(req: NextRequest) {
       return true
     }
 
-    if (entitlement !== 'socal_ebus_course') {
-      return false
-    }
+    return false
+  }
 
+  async function hasApprovedLegacyEbusAccess(userId: string) {
     const { data: learnerProfile } = await supabase
       .from('learner_profiles')
       .select('approval_status')

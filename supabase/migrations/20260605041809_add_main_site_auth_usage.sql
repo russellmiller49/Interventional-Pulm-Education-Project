@@ -670,3 +670,5 @@ create policy site_module_events_insert_own
   for insert
   to authenticated
   with check (user_id = (select auth.uid()));
+
+notify pgrst, 'reload schema';

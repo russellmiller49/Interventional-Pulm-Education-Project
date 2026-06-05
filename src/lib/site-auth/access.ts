@@ -26,12 +26,24 @@ export function isStaticAssetPath(pathname: string) {
   return STATIC_FILE_PATTERN.test(pathname)
 }
 
+export function isLegacyEbusGatewayPath(pathname: string) {
+  return (
+    pathname === '/socal-ebus-course/app' ||
+    pathname === '/socal-ebus-course/app/' ||
+    pathname === '/socal-ebus-course/app/index.html'
+  )
+}
+
 export function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT_PATHS.has(pathname)) {
     return true
   }
 
   if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+    return true
+  }
+
+  if (isLegacyEbusGatewayPath(pathname)) {
     return true
   }
 
@@ -77,7 +89,9 @@ export function getRequiredEntitlement(
   }
 
   if (pathname.startsWith('/socal-ebus-course/app')) {
-    return isPublicTrainingEmbed(pathname, searchParams) ? null : 'socal_ebus_course'
+    return isLegacyEbusGatewayPath(pathname) || isPublicTrainingEmbed(pathname, searchParams)
+      ? null
+      : 'socal_ebus_course'
   }
 
   if (pathname.startsWith('/socal-ebus-course')) {
@@ -85,6 +99,10 @@ export function getRequiredEntitlement(
   }
 
   return null
+}
+
+export function canUseLegacyEbusApproval(pathname: string, searchParams: URLSearchParams) {
+  return getRequiredEntitlement(pathname, searchParams) === 'socal_ebus_course'
 }
 
 export function resolveLoginRedirectPath(pathname: string, search: string) {
