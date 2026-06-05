@@ -1,11 +1,16 @@
 import type { AnatomyModel } from '@/lib/types'
 import { resolveModuleAssetPath } from '@/lib/module-assets'
 
-export const anatomyModels: AnatomyModel[] = [
+const anatomyModelDisplayOrder = new Map<string, number>([
+  ['ebus-case-001-mediastinal-anatomy', 0],
+  ['mediastinal-lymph-map-glb', 1],
+])
+
+const anatomyModelRecords: AnatomyModel[] = [
   {
     id: 'mediastinal-lymph-map-glb',
     slug: 'mediastinal-lymph-map-glb',
-    name: 'Mediastinal Lymph Node Atlas (Optimized GLB)',
+    name: 'Thoracic Anatomy 2',
     category: 'lymph-nodes',
     description:
       'Compressed GLB version of the mediastinal lymph node atlas for faster streaming and lower memory use.',
@@ -255,7 +260,7 @@ export const anatomyModels: AnatomyModel[] = [
   {
     id: 'ebus-case-001-mediastinal-anatomy',
     slug: 'ebus-case-001-mediastinal-anatomy',
-    name: 'EBUS Case 001 Mediastinal Anatomy',
+    name: 'Thoracic Anatomy 1',
     category: 'lymph-nodes',
     description:
       'Course-derived EBUS anatomy case with airway, vascular, nodal, and CT segmentation assets moved into the main 3D anatomy library.',
@@ -265,12 +270,16 @@ export const anatomyModels: AnatomyModel[] = [
     downloads: [
       {
         format: 'glb',
-        url: resolveModuleAssetPath('/models/ebus-case-001-anatomy.glb'),
+        url: resolveModuleAssetPath(
+          '/socal-ebus-course/app/simulator/case-001/models/CT_segmentation_1.glb',
+        ),
         sizeMB: 1.1,
       },
       {
         format: 'glb',
-        url: resolveModuleAssetPath('/models/ebus-case-001-station-overlay.glb'),
+        url: resolveModuleAssetPath(
+          '/socal-ebus-course/app/simulator/case-001/models/CT_segmentation_2.glb',
+        ),
         sizeMB: 1.1,
       },
     ],
@@ -289,6 +298,8 @@ export const anatomyModels: AnatomyModel[] = [
       description:
         'De-identified CT volume exported with the EBUS case anatomy and registered segmentation.',
       url: resolveModuleAssetPath('/models/ebus-case-001-ct.nrrd'),
+      patientToModelMatrix: [0.001, 0, 0, 0, 0, 0, 0.001, 0, 0, -0.001, 0, 0, 0, 0, 0, 1],
+      volumeCenterPatientMm: [-17.73918914794919, -169.69223022460932, 1190.5999755859375],
       axis: 'z',
       window: {
         low: -1000,
@@ -675,3 +686,14 @@ export const anatomyModels: AnatomyModel[] = [
       'Updated GLB aligns the surface model with the associated CT volume and segmentation label map.',
   },
 ]
+
+export const anatomyModels: AnatomyModel[] = [...anatomyModelRecords].sort((a, b) => {
+  const orderA = anatomyModelDisplayOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER
+  const orderB = anatomyModelDisplayOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER
+
+  if (orderA !== orderB) {
+    return orderA - orderB
+  }
+
+  return anatomyModelRecords.indexOf(a) - anatomyModelRecords.indexOf(b)
+})

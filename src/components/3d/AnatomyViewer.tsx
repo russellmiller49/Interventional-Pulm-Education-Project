@@ -76,15 +76,9 @@ export interface AnatomySceneMetrics {
 }
 
 const DEFAULT_CT_PLANE_VISIBILITY: Record<AnatomyAxis, boolean> = {
-  x: false,
-  y: false,
+  x: true,
+  y: true,
   z: true,
-}
-
-const DEFAULT_CT_PLANE_SLICES: Record<AnatomyAxis, number> = {
-  x: 50,
-  y: 50,
-  z: 50,
 }
 
 export const DEFAULT_CT_ALIGNMENT: CtAlignmentConfig = {
@@ -144,6 +138,8 @@ interface SpatialPlacement {
   scale: number
 }
 
+type VolumeSliceInfo = Record<AnatomyAxis, { index: number; total: number }>
+
 interface ActiveGrab {
   controller: Group
   offset: Vector3
@@ -169,6 +165,22 @@ function sliceIndexToPercent(index: number, totalSlices: number): number {
     return 0
   }
   return (clamp(index, 0, totalSlices - 1) / (totalSlices - 1)) * 100
+}
+
+function createEmptyVolumeSliceInfo(): VolumeSliceInfo {
+  return {
+    x: { index: 0, total: 0 },
+    y: { index: 0, total: 0 },
+    z: { index: 0, total: 0 },
+  }
+}
+
+function createEmptyWheelRemainders(): Record<AnatomyAxis, number> {
+  return {
+    x: 0,
+    y: 0,
+    z: 0,
+  }
 }
 
 function degreesToRadians(degrees: number) {
@@ -204,6 +216,7 @@ function styleVolumeSliceCanvas(
   slice.canvas.style.display = 'block'
   slice.canvas.style.maxWidth = '100%'
   slice.canvas.style.maxHeight = '100%'
+  slice.canvas.style.objectFit = 'contain'
   slice.canvas.style.background = '#000'
   slice.canvas.style.transformOrigin = 'center center'
   slice.canvas.style.transform = getSliceTransform(axis, orientation)
@@ -244,9 +257,38 @@ function getSliceIndex(percentage: number, totalSlices: number) {
   )
 }
 
-function getPatientToModelMatrix(group: Group) {
-  let firstMesh: Mesh | null = null
+function matrixFromRowMajor(values: readonly number[] | undefined): Matrix4 | null {
+  if (!values || values.length !== 16 || values.some((value) => !Number.isFinite(value))) {
+    return null
+  }
+  return new Matrix4().set(
+    values[0],
+    values[1],
+    values[2],
+    values[3],
+    values[4],
+    values[5],
+    values[6],
+    values[7],
+    values[8],
+    values[9],
+    values[10],
+    values[11],
+    values[12],
+    values[13],
+    values[14],
+    values[15],
+  )
+}
+
+function getPatientToModelMatrix(group: Group, model: AnatomyModel) {
   group.updateMatrixWorld(true)
+  const configuredMatrix = matrixFromRowMajor(model.volume?.patientToModelMatrix)
+  if (configuredMatrix) {
+    return group.matrixWorld.clone().multiply(configuredMatrix)
+  }
+
+  let firstMesh: Mesh | null = null
   group.traverse((child) => {
     if (!firstMesh && (child as Mesh).isMesh) {
       firstMesh = child as Mesh
@@ -258,7 +300,12 @@ function getPatientToModelMatrix(group: Group) {
 
 function getVolumeCenterPatientPoint(
   volumeState: Extract<VolumeAssetState, { status: 'success' }>,
+  volumeCenterPatientMm?: readonly [number, number, number],
 ) {
+  if (volumeCenterPatientMm?.every((value) => Number.isFinite(value))) {
+    return new Vector3(volumeCenterPatientMm[0], volumeCenterPatientMm[1], volumeCenterPatientMm[2])
+  }
+
   return new Vector3(
     volumeState.origin[0] + (volumeState.dimensions[0] - 1) / 2,
     volumeState.origin[1] + (volumeState.dimensions[1] - 1) / 2,
@@ -293,8 +340,9 @@ function getCtAlignmentMatrix(ctAlignment: CtAlignmentConfig = DEFAULT_CT_ALIGNM
 function getCenteredVolumeToPatientMatrix(
   volumeState: Extract<VolumeAssetState, { status: 'success' }>,
   ctAlignment: CtAlignmentConfig = DEFAULT_CT_ALIGNMENT,
+  volumeCenterPatientMm?: readonly [number, number, number],
 ) {
-  const center = getVolumeCenterPatientPoint(volumeState)
+  const center = getVolumeCenterPatientPoint(volumeState, volumeCenterPatientMm)
   const centeredVolumeToPatient = new Matrix4().makeTranslation(center.x, center.y, center.z)
   const alignmentMatrix = getCtAlignmentMatrix(ctAlignment)
   const volumeSpaceToPatient =
@@ -309,10 +357,11 @@ function getVolumeToModelMatrix(
   patientToModelMatrix: Matrix4,
   volumeState: Extract<VolumeAssetState, { status: 'success' }>,
   ctAlignment: CtAlignmentConfig = DEFAULT_CT_ALIGNMENT,
+  volumeCenterPatientMm?: readonly [number, number, number],
 ) {
   return patientToModelMatrix
     .clone()
-    .multiply(getCenteredVolumeToPatientMatrix(volumeState, ctAlignment))
+    .multiply(getCenteredVolumeToPatientMatrix(volumeState, ctAlignment, volumeCenterPatientMm))
 }
 
 function getVolumePlanePoint(
@@ -356,7 +405,19 @@ function createVolumeClippingPlane({
   return new Plane().setFromNormalAndCoplanarPoint(clippingNormal, point)
 }
 
+function removeVolumeSliceFromList(slice: VolumeSlice) {
+  const sliceList = slice.volume.sliceList as VolumeSlice[] | undefined
+  if (!sliceList) {
+    return
+  }
+  const index = sliceList.indexOf(slice)
+  if (index >= 0) {
+    sliceList.splice(index, 1)
+  }
+}
+
 function disposeVolumeSlice(slice: VolumeSlice) {
+  removeVolumeSliceFromList(slice)
   slice.mesh.geometry.dispose()
   const materials = Array.isArray(slice.mesh.material) ? slice.mesh.material : [slice.mesh.material]
   materials.forEach((material) => {
@@ -383,6 +444,7 @@ function OrthogonalVolumePlane({
   opacity,
   patientToModelMatrix,
   percentage,
+  volumeCenterPatientMm,
   volumeState,
 }: {
   axis: AnatomyAxis
@@ -390,6 +452,7 @@ function OrthogonalVolumePlane({
   opacity: number
   patientToModelMatrix: Matrix4
   percentage: number
+  volumeCenterPatientMm?: [number, number, number]
   volumeState: Extract<VolumeAssetState, { status: 'success' }>
 }) {
   const axisIndex = getAxisIndex(axis)
@@ -409,20 +472,14 @@ function OrthogonalVolumePlane({
 
   useEffect(() => {
     return () => {
-      const sliceList = volumeState.volume.sliceList as VolumeSlice[] | undefined
-      if (sliceList) {
-        const index = sliceList.indexOf(slice)
-        if (index >= 0) {
-          sliceList.splice(index, 1)
-        }
-      }
       disposeVolumeSlice(slice)
     }
   }, [slice, volumeState.volume])
 
   const volumeToModelMatrix = useMemo(
-    () => getVolumeToModelMatrix(patientToModelMatrix, volumeState, ctAlignment),
-    [ctAlignment, patientToModelMatrix, volumeState],
+    () =>
+      getVolumeToModelMatrix(patientToModelMatrix, volumeState, ctAlignment, volumeCenterPatientMm),
+    [ctAlignment, patientToModelMatrix, volumeCenterPatientMm, volumeState],
   )
 
   return (
@@ -439,6 +496,7 @@ function OrthogonalVolumePlanes({
   planeSlices,
   planeVisibility,
   showPlanes,
+  volumeCenterPatientMm,
   volumeState,
   windowKey,
 }: {
@@ -448,6 +506,7 @@ function OrthogonalVolumePlanes({
   planeSlices: Record<AnatomyAxis, number>
   planeVisibility: Record<AnatomyAxis, boolean>
   showPlanes: boolean
+  volumeCenterPatientMm?: [number, number, number]
   volumeState: VolumeAssetState
   windowKey: string
 }) {
@@ -466,6 +525,7 @@ function OrthogonalVolumePlanes({
             opacity={opacity}
             patientToModelMatrix={patientToModelMatrix}
             percentage={planeSlices[axis]}
+            volumeCenterPatientMm={volumeCenterPatientMm}
             volumeState={volumeState}
           />
         ) : null,
@@ -670,6 +730,7 @@ export interface AnatomyViewerProps {
   onError?: (message: string) => void
   onSceneMetrics?: (metrics: AnatomySceneMetrics | null) => void
   onSegmentsChanged?: (segments: AnatomySegment[]) => void
+  onCtPlaneSliceChange?: (axis: AnatomyAxis, value: number) => void
   onVolumeSliceChange?: (value: number) => void
 }
 
@@ -680,7 +741,7 @@ export function AnatomyViewer({
   volumeSlice,
   showCtPlanes = false,
   ctPlaneVisibility = DEFAULT_CT_PLANE_VISIBILITY,
-  ctPlaneSlices = DEFAULT_CT_PLANE_SLICES,
+  ctPlaneSlices,
   ctPlaneOpacity = 0.3,
   ctClipMode = 'none',
   ctClipAxis = 'z',
@@ -695,6 +756,7 @@ export function AnatomyViewer({
   onError,
   onSceneMetrics,
   onSegmentsChanged,
+  onCtPlaneSliceChange,
   onVolumeSliceChange,
 }: AnatomyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -711,10 +773,14 @@ export function AnatomyViewer({
     () => normalizeCtSliceOrientation(ctSliceOrientation ?? model.volume?.ctSliceOrientation),
     [ctSliceOrientation, model.volume?.ctSliceOrientation],
   )
-  const ctContainerRef = useRef<HTMLDivElement | null>(null)
-  const ctSliceRef = useRef<VolumeSlice | null>(null)
-  const volumeInfoRef = useRef({ index: 0, total: 0 })
-  const ctWheelRemainderRef = useRef(0)
+  const ctContainerRefs = useRef<Record<AnatomyAxis, HTMLDivElement | null>>({
+    x: null,
+    y: null,
+    z: null,
+  })
+  const ctSliceRefs = useRef<Partial<Record<AnatomyAxis, VolumeSlice>>>({})
+  const volumeInfoRef = useRef<VolumeSliceInfo>(createEmptyVolumeSliceInfo())
+  const ctWheelRemainderRef = useRef<Record<AnatomyAxis, number>>(createEmptyWheelRemainders())
   const xrSessionRef = useRef<XRSession | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -731,11 +797,10 @@ export function AnatomyViewer({
     position: [0, 0, 0] as [number, number, number],
     target: [0, 0, 0] as [number, number, number],
   })
-  const [volumeAxis, setVolumeAxis] = useState<'x' | 'y' | 'z'>(model.volume?.axis ?? 'z')
-  const [volumeInfo, setVolumeInfo] = useState({ index: 0, total: 0 })
-  const sliceStep = useMemo(
-    () => (volumeInfo.total > 1 ? 100 / (volumeInfo.total - 1) : 100),
-    [volumeInfo.total],
+  const [volumeInfo, setVolumeInfo] = useState<VolumeSliceInfo>(() => createEmptyVolumeSliceInfo())
+  const effectiveCtPlaneSlices = useMemo(
+    () => ctPlaneSlices ?? { x: volumeSlice, y: volumeSlice, z: volumeSlice },
+    [ctPlaneSlices, volumeSlice],
   )
 
   useEffect(() => {
@@ -769,13 +834,12 @@ export function AnatomyViewer({
   const prevSegmentsRef = useRef<AnatomySegment[] | null>(null)
 
   useEffect(() => {
-    const resetInfo = { index: 0, total: 0 }
-    setVolumeAxis(model.volume?.axis ?? 'z')
+    const resetInfo = createEmptyVolumeSliceInfo()
     volumeInfoRef.current = resetInfo
-    ctWheelRemainderRef.current = 0
+    ctWheelRemainderRef.current = createEmptyWheelRemainders()
     setVolumeInfo(resetInfo)
-    ctSliceRef.current = null
-  }, [model.id, model.volume?.axis])
+    ctSliceRefs.current = {}
+  }, [model.id])
 
   useEffect(() => {
     setWindowPreset('default')
@@ -876,20 +940,22 @@ export function AnatomyViewer({
     setWindowValues((prev) => ({ ...prev, [field]: value }))
   }, [])
 
-  const handleVolumeSliceChange = useCallback(
-    (value: number) => {
+  const handleCtPlaneSliceChange = useCallback(
+    (axis: AnatomyAxis, value: number) => {
       if (!Number.isFinite(value)) {
         return
       }
-      onVolumeSliceChange?.(clamp(value, 0, 100))
+      const clamped = clamp(value, 0, 100)
+      onCtPlaneSliceChange?.(axis, clamped)
+      onVolumeSliceChange?.(clamped)
     },
-    [onVolumeSliceChange],
+    [onCtPlaneSliceChange, onVolumeSliceChange],
   )
 
-  const stepVolumeSlice = useCallback(
-    (delta: number) => {
-      const currentInfo = volumeInfoRef.current
-      if (!onVolumeSliceChange || currentInfo.total <= 1) {
+  const stepCtPlaneSlice = useCallback(
+    (axis: AnatomyAxis, delta: number) => {
+      const currentInfo = volumeInfoRef.current[axis]
+      if ((!onCtPlaneSliceChange && !onVolumeSliceChange) || currentInfo.total <= 1) {
         return
       }
 
@@ -899,17 +965,27 @@ export function AnatomyViewer({
       }
 
       const nextInfo = { index: nextIndex, total: currentInfo.total }
-      volumeInfoRef.current = nextInfo
-      setVolumeInfo(nextInfo)
-      onVolumeSliceChange(sliceIndexToPercent(nextIndex, currentInfo.total))
+      volumeInfoRef.current = {
+        ...volumeInfoRef.current,
+        [axis]: nextInfo,
+      }
+      setVolumeInfo((current) => ({
+        ...current,
+        [axis]: nextInfo,
+      }))
+      handleCtPlaneSliceChange(axis, sliceIndexToPercent(nextIndex, currentInfo.total))
     },
-    [onVolumeSliceChange],
+    [handleCtPlaneSliceChange, onCtPlaneSliceChange, onVolumeSliceChange],
   )
 
   const handleCtSliceWheel = useCallback(
-    (event: WheelEvent<HTMLElement>) => {
-      const currentInfo = volumeInfoRef.current
-      if (volumeState.status !== 'success' || !onVolumeSliceChange || currentInfo.total <= 1) {
+    (axis: AnatomyAxis, event: WheelEvent<HTMLElement>) => {
+      const currentInfo = volumeInfoRef.current[axis]
+      if (
+        volumeState.status !== 'success' ||
+        (!onCtPlaneSliceChange && !onVolumeSliceChange) ||
+        currentInfo.total <= 1
+      ) {
         return
       }
 
@@ -924,41 +1000,45 @@ export function AnatomyViewer({
       const normalizedDelta = primaryDelta * modeMultiplier
 
       if (
-        ctWheelRemainderRef.current !== 0 &&
-        Math.sign(ctWheelRemainderRef.current) !== Math.sign(normalizedDelta)
+        ctWheelRemainderRef.current[axis] !== 0 &&
+        Math.sign(ctWheelRemainderRef.current[axis]) !== Math.sign(normalizedDelta)
       ) {
-        ctWheelRemainderRef.current = 0
+        ctWheelRemainderRef.current[axis] = 0
       }
 
-      ctWheelRemainderRef.current += normalizedDelta
-      const rawSteps = Math.trunc(ctWheelRemainderRef.current / 24)
+      ctWheelRemainderRef.current[axis] += normalizedDelta
+      const rawSteps = Math.trunc(ctWheelRemainderRef.current[axis] / 24)
       if (rawSteps === 0) {
         return
       }
 
-      ctWheelRemainderRef.current -= rawSteps * 24
+      ctWheelRemainderRef.current[axis] -= rawSteps * 24
       const cappedSteps = clamp(rawSteps, -12, 12)
-      stepVolumeSlice(cappedSteps * (event.shiftKey ? 5 : 1))
+      stepCtPlaneSlice(axis, cappedSteps * (event.shiftKey ? 5 : 1))
     },
-    [onVolumeSliceChange, stepVolumeSlice, volumeState.status],
+    [onCtPlaneSliceChange, onVolumeSliceChange, stepCtPlaneSlice, volumeState.status],
   )
 
   const handleCtSliceKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      const currentInfo = volumeInfoRef.current
-      if (volumeState.status !== 'success' || !onVolumeSliceChange || currentInfo.total <= 1) {
+    (axis: AnatomyAxis, event: KeyboardEvent<HTMLDivElement>) => {
+      const currentInfo = volumeInfoRef.current[axis]
+      if (
+        volumeState.status !== 'success' ||
+        (!onCtPlaneSliceChange && !onVolumeSliceChange) ||
+        currentInfo.total <= 1
+      ) {
         return
       }
 
       if (event.key === 'Home') {
         event.preventDefault()
-        onVolumeSliceChange(0)
+        handleCtPlaneSliceChange(axis, 0)
         return
       }
 
       if (event.key === 'End') {
         event.preventDefault()
-        onVolumeSliceChange(100)
+        handleCtPlaneSliceChange(axis, 100)
         return
       }
 
@@ -977,9 +1057,15 @@ export function AnatomyViewer({
       }
 
       event.preventDefault()
-      stepVolumeSlice(delta)
+      stepCtPlaneSlice(axis, delta)
     },
-    [onVolumeSliceChange, stepVolumeSlice, volumeState.status],
+    [
+      handleCtPlaneSliceChange,
+      onCtPlaneSliceChange,
+      onVolumeSliceChange,
+      stepCtPlaneSlice,
+      volumeState.status,
+    ],
   )
 
   const handleEnterXR = useCallback(
@@ -1107,7 +1193,7 @@ export function AnatomyViewer({
       group: groupClone,
       segmentMeshes: meshesBySegment,
       boundingBox,
-      patientToModelMatrix: getPatientToModelMatrix(groupClone),
+      patientToModelMatrix: getPatientToModelMatrix(groupClone, model),
       segments: hydratedSegments,
     }
   }, [assetState, model, rotation])
@@ -1151,7 +1237,10 @@ export function AnatomyViewer({
     const patientAtModelCenter = modelCenter
       .clone()
       .applyMatrix4(preparedScene.patientToModelMatrix.clone().invert())
-    const volumeCenter = getVolumeCenterPatientPoint(volumeState)
+    const volumeCenter = getVolumeCenterPatientPoint(
+      volumeState,
+      model.volume?.volumeCenterPatientMm,
+    )
     const suggestedTranslation = patientAtModelCenter.sub(volumeCenter)
 
     onSceneMetrics({
@@ -1163,7 +1252,7 @@ export function AnatomyViewer({
         suggestedTranslation.z,
       ],
     })
-  }, [onSceneMetrics, preparedScene, volumeState])
+  }, [model.volume?.volumeCenterPatientMm, onSceneMetrics, preparedScene, volumeState])
 
   const boundingSize = useMemo(() => {
     if (!preparedScene) {
@@ -1382,6 +1471,7 @@ export function AnatomyViewer({
             preparedScene.patientToModelMatrix,
             volumeState,
             effectiveCtAlignment,
+            model.volume?.volumeCenterPatientMm,
           )
         : null
     const ctPlane =
@@ -1389,7 +1479,7 @@ export function AnatomyViewer({
         ? createVolumeClippingPlane({
             axis: ctClipAxis,
             mode: ctClipMode,
-            percentage: ctPlaneSlices[ctClipAxis],
+            percentage: effectiveCtPlaneSlices[ctClipAxis],
             volumeState,
             volumeToModelMatrix,
           })
@@ -1413,25 +1503,31 @@ export function AnatomyViewer({
   }, [
     ctClipAxis,
     ctClipMode,
-    ctPlaneSlices,
+    effectiveCtPlaneSlices,
     effectiveCtAlignment,
+    model.volume?.volumeCenterPatientMm,
     preparedScene,
     volumeState,
     crossSection,
   ])
 
   useEffect(() => {
-    if (volumeState.status !== 'success' || !ctContainerRef.current) {
-      if (ctContainerRef.current) {
-        ctContainerRef.current.replaceChildren()
-      }
-      ctSliceRef.current = null
-      ctWheelRemainderRef.current = 0
+    if (volumeState.status !== 'success') {
+      ORTHOGONAL_AXES.forEach((axis) => {
+        ctContainerRefs.current[axis]?.replaceChildren()
+        const slice = ctSliceRefs.current[axis]
+        if (slice) {
+          disposeVolumeSlice(slice)
+          delete ctSliceRefs.current[axis]
+        }
+      })
+      const resetInfo = createEmptyVolumeSliceInfo()
+      volumeInfoRef.current = resetInfo
+      ctWheelRemainderRef.current = createEmptyWheelRemainders()
+      setVolumeInfo(resetInfo)
       return
     }
 
-    const axis = volumeAxis
-    const axisIndex = axis === 'x' ? 0 : axis === 'y' ? 1 : 2
     const { volume, dimensions } = volumeState
 
     let windowLow = appliedWindow.low
@@ -1453,73 +1549,94 @@ export function AnatomyViewer({
     volume.lowerThreshold = Number.NEGATIVE_INFINITY
     volume.upperThreshold = Number.POSITIVE_INFINITY
 
-    // Validate dimensions before proceeding
     if (!dimensions || dimensions.some((dim) => !dim || dim <= 0)) {
       console.warn('Invalid volume dimensions:', dimensions)
       return
     }
 
-    const totalSlices = Math.max(1, Math.floor(dimensions[axisIndex] ?? 1))
-    const targetIndex = clamp(
-      Math.round((volumeSlice / 100) * (totalSlices - 1)),
-      0,
-      totalSlices - 1,
-    )
+    const nextVolumeInfo = createEmptyVolumeSliceInfo()
 
-    let slice = ctSliceRef.current
-    if (!slice || slice.volume !== volume || slice.axis !== axis) {
-      try {
-        slice = volume.extractSlice(axis, targetIndex)
-
-        // Validate the slice canvas before using it
-        if (!slice.canvas || slice.canvas.width === 0 || slice.canvas.height === 0) {
-          console.warn('Invalid slice canvas dimensions:', {
-            width: slice.canvas?.width,
-            height: slice.canvas?.height,
-            axis,
-            targetIndex,
-            totalSlices,
-          })
-          return
-        }
-
-        styleVolumeSliceCanvas(slice, axis, effectiveCtSliceOrientation[axis])
-        ctContainerRef.current.replaceChildren(slice.canvas)
-        ctSliceRef.current = slice
-      } catch (error) {
-        console.error('Error extracting volume slice:', error)
+    ORTHOGONAL_AXES.forEach((axis) => {
+      const container = ctContainerRefs.current[axis]
+      if (!container) {
         return
       }
-    }
 
-    if (!slice) {
-      return
-    }
+      const axisIndex = getAxisIndex(axis)
+      const totalSlices = Math.max(1, Math.floor(dimensions[axisIndex] ?? 1))
+      const targetIndex = getSliceIndex(effectiveCtPlaneSlices[axis], totalSlices)
 
-    try {
-      if (slice.index !== targetIndex || !isRenderableVolumeSlice(slice)) {
-        slice.index = targetIndex
+      let slice = ctSliceRefs.current[axis]
+      if (!slice || slice.volume !== volume || slice.axis !== axis) {
+        if (slice) {
+          disposeVolumeSlice(slice)
+          delete ctSliceRefs.current[axis]
+        }
+
+        try {
+          slice = volume.extractSlice(axis, targetIndex)
+
+          if (!slice.canvas || slice.canvas.width === 0 || slice.canvas.height === 0) {
+            console.warn('Invalid slice canvas dimensions:', {
+              width: slice.canvas?.width,
+              height: slice.canvas?.height,
+              axis,
+              targetIndex,
+              totalSlices,
+            })
+            return
+          }
+
+          styleVolumeSliceCanvas(slice, axis, effectiveCtSliceOrientation[axis])
+          container.replaceChildren(slice.canvas)
+          ctSliceRefs.current[axis] = slice
+        } catch (error) {
+          console.error(`Error extracting ${AXIS_LABELS[axis]} volume slice:`, error)
+          return
+        }
       }
-      slice.repaint()
-      styleVolumeSliceCanvas(slice, axis, effectiveCtSliceOrientation[axis])
-    } catch (error) {
-      console.error('Error repainting volume slice:', error)
-    }
 
-    const nextInfo = { index: targetIndex, total: totalSlices }
-    volumeInfoRef.current = nextInfo
-    setVolumeInfo((current) =>
-      current.index === nextInfo.index && current.total === nextInfo.total ? current : nextInfo,
-    )
-  }, [volumeState, volumeSlice, volumeAxis, appliedWindow, effectiveCtSliceOrientation])
+      if (!slice) {
+        return
+      }
+
+      try {
+        if (slice.index !== targetIndex || !isRenderableVolumeSlice(slice)) {
+          slice.index = targetIndex
+        }
+        slice.repaint()
+        styleVolumeSliceCanvas(slice, axis, effectiveCtSliceOrientation[axis])
+      } catch (error) {
+        console.error(`Error repainting ${AXIS_LABELS[axis]} volume slice:`, error)
+      }
+
+      nextVolumeInfo[axis] = { index: targetIndex, total: totalSlices }
+    })
+
+    volumeInfoRef.current = nextVolumeInfo
+    setVolumeInfo((current) => {
+      const unchanged = ORTHOGONAL_AXES.every(
+        (axis) =>
+          current[axis].index === nextVolumeInfo[axis].index &&
+          current[axis].total === nextVolumeInfo[axis].total,
+      )
+      return unchanged ? current : nextVolumeInfo
+    })
+  }, [volumeState, effectiveCtPlaneSlices, appliedWindow, effectiveCtSliceOrientation])
 
   useEffect(() => {
-    const container = ctContainerRef.current
+    const sliceContainers = ctContainerRefs.current
+    const slices = ctSliceRefs.current
+
     return () => {
-      if (container) {
-        container.replaceChildren()
-      }
-      ctSliceRef.current = null
+      ORTHOGONAL_AXES.forEach((axis) => {
+        sliceContainers[axis]?.replaceChildren()
+        const slice = slices[axis]
+        if (slice) {
+          disposeVolumeSlice(slice)
+          delete slices[axis]
+        }
+      })
       if (xrSessionRef.current) {
         xrSessionRef.current.end().catch(() => {})
         xrSessionRef.current = null
@@ -1735,9 +1852,10 @@ export function AnatomyViewer({
                     ctAlignment={effectiveCtAlignment}
                     opacity={ctPlaneOpacity}
                     patientToModelMatrix={preparedScene.patientToModelMatrix}
-                    planeSlices={ctPlaneSlices}
+                    planeSlices={effectiveCtPlaneSlices}
                     planeVisibility={ctPlaneVisibility}
                     showPlanes={showCtPlanes}
+                    volumeCenterPatientMm={model.volume?.volumeCenterPatientMm}
                     volumeState={volumeState}
                     windowKey={`${appliedWindow.low}:${appliedWindow.high}`}
                   />
@@ -1829,67 +1947,86 @@ export function AnatomyViewer({
             <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-200/70">
               Orthogonal CT
             </div>
-            <h3 className="mt-1 text-base font-semibold text-white">Synced slice</h3>
+            <h3 className="mt-1 text-base font-semibold text-white">Synced slices</h3>
           </div>
           {volumeState.status === 'success' ? (
             <span className="rounded-full border border-slate-400/20 bg-slate-900/70 px-2.5 py-1 text-[11px] text-slate-300">
-              {AXIS_LABELS[volumeAxis]}
+              {ORTHOGONAL_AXES.length} planes
             </span>
           ) : null}
         </div>
-        <div
-          className="relative aspect-square w-full overscroll-contain rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
-          onWheel={handleCtSliceWheel}
-          onKeyDown={handleCtSliceKeyDown}
-          tabIndex={volumeState.status === 'success' ? 0 : -1}
-          aria-label="CT slice viewport"
-        >
-          <div
-            ref={ctContainerRef}
-            className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-2xl border border-slate-500/20 bg-black/80"
-          />
-          {volumeState.status === 'loading' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/85">
-              <span className="text-sm text-slate-300">Loading CT volume…</span>
-            </div>
-          ) : null}
-          {volumeState.status === 'error' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/85 p-4 text-center">
-              <span className="text-xs text-slate-300">
-                Unable to load CT volume: {volumeState.error}
-              </span>
-            </div>
-          ) : null}
-          {volumeState.status === 'idle' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-950/85 p-4 text-center">
-              <span className="text-xs text-slate-300">
-                CT volume not available for this model.
-              </span>
-            </div>
-          ) : null}
+        <div className="grid gap-3">
+          {ORTHOGONAL_AXES.map((axis) => {
+            const info = volumeInfo[axis]
+            const sliceStep = info.total > 1 ? 100 / (info.total - 1) : 100
+
+            return (
+              <article
+                key={axis}
+                className="grid gap-2 rounded-2xl border border-slate-500/20 bg-slate-950/45 p-3"
+              >
+                <div className="flex items-center justify-between gap-3 text-xs text-slate-400">
+                  <span className="font-semibold text-white">{AXIS_LABELS[axis]}</span>
+                  <span>
+                    Slice {info.total > 0 ? info.index + 1 : 0}/{info.total}
+                  </span>
+                </div>
+                <div
+                  className="relative aspect-[4/3] w-full overscroll-contain rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+                  onWheel={(event) => handleCtSliceWheel(axis, event)}
+                  onKeyDown={(event) => handleCtSliceKeyDown(axis, event)}
+                  tabIndex={volumeState.status === 'success' ? 0 : -1}
+                  aria-label={`${AXIS_LABELS[axis]} CT slice viewport`}
+                >
+                  <div
+                    ref={(node) => {
+                      ctContainerRefs.current[axis] = node
+                    }}
+                    className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-xl border border-slate-500/20 bg-black/80"
+                  />
+                  {volumeState.status === 'loading' ? (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-950/85">
+                      <span className="text-sm text-slate-300">Loading CT volume…</span>
+                    </div>
+                  ) : null}
+                  {volumeState.status === 'error' ? (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-950/85 p-4 text-center">
+                      <span className="text-xs text-slate-300">
+                        Unable to load CT volume: {volumeState.error}
+                      </span>
+                    </div>
+                  ) : null}
+                  {volumeState.status === 'idle' ? (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-950/85 p-4 text-center">
+                      <span className="text-xs text-slate-300">
+                        CT volume not available for this model.
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+                {volumeState.status === 'success' ? (
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={Math.max(sliceStep, 0.01)}
+                    value={effectiveCtPlaneSlices[axis]}
+                    onChange={(event) => handleCtPlaneSliceChange(axis, Number(event.target.value))}
+                    onInput={(event) =>
+                      handleCtPlaneSliceChange(axis, Number(event.currentTarget.value))
+                    }
+                    onWheel={(event) => handleCtSliceWheel(axis, event)}
+                    className="w-full accent-cyan-300"
+                    aria-label={`${AXIS_LABELS[axis]} CT slice position`}
+                    disabled={!onCtPlaneSliceChange && !onVolumeSliceChange}
+                  />
+                ) : null}
+              </article>
+            )
+          })}
         </div>
         {volumeState.status === 'success' ? (
           <>
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span className="font-semibold text-white">{AXIS_LABELS[volumeAxis]} CT slice</span>
-              <span>
-                Slice {volumeInfo.total > 0 ? volumeInfo.index + 1 : 0}/{volumeInfo.total}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={Math.max(sliceStep, 0.01)}
-              value={volumeSlice}
-              onChange={(event) => {
-                handleVolumeSliceChange(Number(event.target.value))
-              }}
-              onWheel={handleCtSliceWheel}
-              className="w-full accent-cyan-300"
-              aria-label="CT slice position"
-              disabled={!onVolumeSliceChange}
-            />
             <div className="flex flex-wrap gap-1 text-xs">
               {presetButtons.map((key) => {
                 const isActive = windowPreset === key
@@ -1945,22 +2082,6 @@ export function AnatomyViewer({
             ) : null}
             <div className="text-xs text-slate-400">
               Window: {appliedWindow.low.toFixed(0)} / {appliedWindow.high.toFixed(0)} HU
-            </div>
-            <div className="inline-flex gap-1 rounded-full border border-slate-500/25 bg-slate-900/80 p-1 text-xs">
-              {(['z', 'y', 'x'] as Array<'x' | 'y' | 'z'>).map((axis) => (
-                <button
-                  key={axis}
-                  type="button"
-                  onClick={() => setVolumeAxis(axis)}
-                  className={`rounded-full px-3 py-1 font-medium transition ${
-                    volumeAxis === axis
-                      ? 'bg-cyan-200 text-slate-950 shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {AXIS_LABELS[axis]}
-                </button>
-              ))}
             </div>
           </>
         ) : null}

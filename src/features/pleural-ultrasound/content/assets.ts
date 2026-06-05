@@ -26,6 +26,7 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'simple-anechoic-reference',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/ff17/11127929/626d2921fbee/41598_2024_62807_Fig3_HTML.jpg',
+    localPath: '/module-assets/v1/pleural-ultrasound/source/simple-anechoic-reference.jpg',
     alt: 'Pleural-space image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution:
@@ -43,6 +44,7 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'complex-nonseptated-reference',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/ebf3/6398002/f40972c6f29f/PM2019-5628267.002.jpg',
+    localPath: '/module-assets/v1/pleural-ultrasound/source/complex-nonseptated-reference.jpg',
     alt: 'Pleural-space image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution:
@@ -60,6 +62,7 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'septated-reference',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/ebf3/6398002/5018901711c4/PM2019-5628267.001.jpg',
+    localPath: '/module-assets/v1/pleural-ultrasound/source/septated-reference.jpg',
     alt: 'Pleural-space image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution:
@@ -77,6 +80,7 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'echogenic-reference',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/91df/6264615/26c179cbed45/12890_2018_745_Fig2_HTML.jpg',
+    localPath: '/module-assets/v1/pleural-ultrasound/source/echogenic-reference.jpg',
     alt: 'Pleural-space image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution: 'Role of medical Thoracoscopy in the Management of Multiloculated Empyema. 2018.',
@@ -93,6 +97,7 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'ambiguous-simple-exudate',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/5d66/6837853/b796c0a971fd/RCR2-8-e00498-g001.jpg',
+    localPath: '/module-assets/v1/pleural-ultrasound/source/ambiguous-simple-exudate.jpg',
     alt: 'Pleural-space image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution:
@@ -110,6 +115,7 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'b-lines-no-effusion-distractor',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/3901/5234763/f5a7096c0f31/1679-4508-eins-14-03-0443-gf03.jpg',
+    localPath: '/module-assets/v1/pleural-ultrasound/source/b-lines-no-effusion-distractor.jpg',
     alt: 'Lung ultrasound image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution: 'Advances in lung ultrasound. Einstein (Sao Paulo). 2016.',
@@ -126,6 +132,8 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'subpleural-consolidation-distractor',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/3901/5234763/fc258bc6a417/1679-4508-eins-14-03-0443-gf04.jpg',
+    localPath:
+      '/module-assets/v1/pleural-ultrasound/source/subpleural-consolidation-distractor.jpg',
     alt: 'Lung ultrasound image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution: 'Advances in lung ultrasound. Einstein (Sao Paulo). 2016.',
@@ -142,6 +150,8 @@ export const pleuralUltrasoundAssets: readonly UltrasoundAsset[] = [
     id: 'atelectasis-with-effusion-reference',
     kind: 'image',
     path: 'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/ebf3/6398002/40f9ffb61505/PM2019-5628267.003.jpg',
+    localPath:
+      '/module-assets/v1/pleural-ultrasound/source/atelectasis-with-effusion-reference.jpg',
     alt: 'Pleural-space image used for pattern classification.',
     sourceType: 'creative-commons',
     attribution:

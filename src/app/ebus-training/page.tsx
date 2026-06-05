@@ -7,9 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { publicEbusTrainingModules } from '@/data/ebus-training'
 
 export const metadata: Metadata = {
-  title: 'Public EBUS Training',
+  title: 'EBUS Training',
   description:
-    'Public EBUS training assets for knobology, mediastinal stations, and EBUS simulation without course participant lockout requirements.',
+    'EBUS training assets for knobology, mediastinal stations, and EBUS simulation without course participant lockout requirements.',
 }
 
 const moduleIcons = {
@@ -27,13 +27,13 @@ export default function EbusTrainingPage() {
             variant="info"
             className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
           >
-            Public EBUS training
+            EBUS training
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">EBUS Training</h1>
           <p className="max-w-3xl text-base leading-7 text-muted-foreground md:text-lg">
             Standalone EBUS learning assets for ultrasound knobology, mediastinal stations, and
-            simulation practice. These public modules do not require the Southern California EBUS
-            Course lecture sequence, pretest, or sign-in.
+            simulation practice. These modules do not require the Southern California EBUS Course
+            lecture sequence, pretest, or sign-in.
           </p>
         </div>
       </section>
@@ -53,9 +53,6 @@ export default function EbusTrainingPage() {
               </span>
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-semibold text-foreground">{module.title}</h2>
-                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-                  Public
-                </span>
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">{module.description}</p>
               <span className="mt-5 inline-flex text-sm font-semibold text-primary">

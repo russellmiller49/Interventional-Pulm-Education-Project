@@ -9,7 +9,7 @@ import { isVisibleModulePath } from '@/lib/draft-modules'
 const featureHighlights = [
   {
     badge: 'EBUS',
-    title: 'Public EBUS Training',
+    title: 'EBUS Training',
     description:
       'Open knobology, mediastinal station, and EBUS simulator modules without course-participant lockout.',
     href: '/ebus-training',
@@ -95,9 +95,8 @@ export default function HomePage() {
               Core learning modules
             </h2>
             <p className="text-base leading-7 text-muted-foreground md:text-lg">
-              Start with the public modules that are ready for learners now: EBUS training, TNM-9
-              staging, 3D anatomy, board review, procedural simulation, pleural education, and
-              teaching resources.
+              Start with the modules that are ready for learners now: EBUS training, TNM-9 staging,
+              3D anatomy, board review, Nav Bronch, FluoroView, and teaching resources.
             </p>
           </div>
           <Button asChild variant="secondary" className="w-fit rounded-full px-6">
@@ -148,7 +147,7 @@ export default function HomePage() {
             <p className="text-sm leading-6 text-muted-foreground md:text-base">
               The full course portal remains available for registered participants who need the
               lecture pathway, surveys, tests, progress tracking, and course-specific materials.
-              Public EBUS training assets are also available separately above.
+              EBUS training assets are also available separately above.
             </p>
           </div>
           <div className="flex flex-col justify-center gap-3 sm:flex-row md:flex-col">
@@ -156,7 +155,7 @@ export default function HomePage() {
               <Link href={'/socal-ebus-course' as Route}>Open Course Portal</Link>
             </Button>
             <Button asChild variant="outline" className="rounded-full px-6">
-              <Link href={'/ebus-training' as Route}>Open Public EBUS Training</Link>
+              <Link href={'/ebus-training' as Route}>Open EBUS Training</Link>
             </Button>
           </div>
         </div>

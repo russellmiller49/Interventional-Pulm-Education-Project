@@ -38,8 +38,8 @@ const translationRanges: Record<TranslationRangeKey, { label: string; max: numbe
   }
 
 const defaultCtPlaneVisibility: Record<AnatomyAxis, boolean> = {
-  x: false,
-  y: false,
+  x: true,
+  y: true,
   z: true,
 }
 
@@ -261,6 +261,7 @@ export default function CtAlignmentSandboxPage() {
   }
 
   const updateCtPlaneSlice = (axis: AnatomyAxis, value: number) => {
+    setVolumeSlice(value)
     setCtPlaneSlices((prev) => ({ ...prev, [axis]: value }))
   }
 
@@ -419,6 +420,7 @@ export default function CtAlignmentSandboxPage() {
                 value={ctPlaneSlices[axis]}
                 disabled={!showCtPlanes}
                 onChange={(event) => updateCtPlaneSlice(axis, Number(event.target.value))}
+                onInput={(event) => updateCtPlaneSlice(axis, Number(event.currentTarget.value))}
                 className="w-full accent-cyan-300 disabled:opacity-40"
               />
             </label>
@@ -833,6 +835,7 @@ export default function CtAlignmentSandboxPage() {
           rotation={rotation}
           controlPanel={viewerControlPanel}
           onSceneMetrics={handleSceneMetrics}
+          onCtPlaneSliceChange={updateCtPlaneSlice}
           onVolumeSliceChange={setVolumeSlice}
           onSegmentsChanged={(segments) => {
             setDisplaySegments((prev) => {

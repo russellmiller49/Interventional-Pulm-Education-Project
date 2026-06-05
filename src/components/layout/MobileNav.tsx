@@ -59,8 +59,7 @@ export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps
           <SheetHeader className="space-y-1">
             <SheetTitle className="text-lg">Navigate</SheetTitle>
             <SheetDescription>
-              Explore EBUS training, TNM-9 staging, anatomy, simulation, pleural modules, and
-              resources.
+              Explore EBUS training, TNM-9 staging, anatomy, Nav Bronch, FluoroView, and resources.
             </SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-6 overflow-y-auto">

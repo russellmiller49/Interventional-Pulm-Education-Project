@@ -66,6 +66,7 @@ export function EmbeddedTrainingModuleFrame({
           <iframe
             title={module.title}
             src={embedSrc}
+            suppressHydrationWarning
             className="h-[calc(100vh-10rem)] min-h-[820px] w-full bg-slate-950"
           />
         </div>

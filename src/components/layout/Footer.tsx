@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 
+import { isVisibleModulePath } from '@/lib/draft-modules'
+
 type InternalFooterHref =
   | '/'
   | '/board-prep'
@@ -105,27 +107,29 @@ export function Footer() {
               <div key={column.title} className="space-y-3">
                 <h3 className="text-sm font-semibold tracking-tight">{column.title}</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  {column.links.map((link) => (
-                    <li key={link.label}>
-                      {link.external ? (
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                          {link.label}
-                        </a>
-                      ) : (
-                        <Link
-                          href={link.route as Route}
-                          className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                          {link.label}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
+                  {column.links
+                    .filter((link) => link.external || isVisibleModulePath(link.href))
+                    .map((link) => (
+                      <li key={link.label}>
+                        {link.external ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          >
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link
+                            href={link.route as Route}
+                            className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                          >
+                            {link.label}
+                          </Link>
+                        )}
+                      </li>
+                    ))}
                 </ul>
               </div>
             ))}

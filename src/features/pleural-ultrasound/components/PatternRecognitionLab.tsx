@@ -119,7 +119,7 @@ export function PatternRecognitionLab() {
         <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
           <div className="bg-muted/40 p-4">
             <img
-              src={asset.path}
+              src={asset.localPath ?? asset.path}
               alt={revealed ? asset.revealCaption : neutralAlt}
               className="max-h-[34rem] w-full rounded-lg border border-border bg-background object-contain"
             />

@@ -63,42 +63,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/pleural-procedures`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/pleural-procedures/intro-course`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/pleural-procedures/pleural-ultrasound`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/pleural-procedures/chest-drainage`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/pleural-procedures/pleural-fluid-analysis`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
-      url: `${baseUrl}/pleural-procedures/pneumothorax-pathway`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
       url: `${baseUrl}/resources`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -113,6 +77,42 @@ export default function sitemap(): MetadataRoute.Sitemap {
           lastModified: new Date(),
           changeFrequency: 'weekly',
           priority: 0.8,
+        },
+        {
+          url: `${baseUrl}/pleural-procedures`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.8,
+        },
+        {
+          url: `${baseUrl}/pleural-procedures/intro-course`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.75,
+        },
+        {
+          url: `${baseUrl}/pleural-procedures/pleural-ultrasound`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.75,
+        },
+        {
+          url: `${baseUrl}/pleural-procedures/chest-drainage`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.75,
+        },
+        {
+          url: `${baseUrl}/pleural-procedures/pleural-fluid-analysis`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.75,
+        },
+        {
+          url: `${baseUrl}/pleural-procedures/pneumothorax-pathway`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.75,
         },
       ]
     : []

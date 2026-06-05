@@ -27,8 +27,9 @@ export function Hero() {
             Education &amp; Innovation in Interventional Pulmonology
           </h1>
           <p className="text-base text-sky-100 md:text-lg">
-            Explore public EBUS training, TNM-9 staging, 3D anatomy, board review, and simulation
-            modules built for interventional pulmonology learners and educators.
+            Explore EBUS training, TNM-9 staging, 3D anatomy, Nav Bronch, board review, and
+            FluoroView simulation modules built for interventional pulmonology learners and
+            educators.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
@@ -66,6 +67,18 @@ export function Hero() {
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
             3D Anatomy
+          </Link>
+          <Link
+            href={'/bronch-navigation-trainer' as Route}
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            Nav Bronch
+          </Link>
+          <Link
+            href={'/fluoroview' as Route}
+            className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          >
+            FluoroView
           </Link>
           <Link
             href={'/board-prep' as Route}
