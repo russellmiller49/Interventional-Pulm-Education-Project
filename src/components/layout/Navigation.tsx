@@ -5,7 +5,7 @@ import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useState, useEffect } from 'react'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
-import { LogOut } from 'lucide-react'
+import { LogOut, ShieldCheck } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,7 @@ export type NavAuthStatus = 'checking' | 'signed-in' | 'signed-out' | 'signing-o
 export interface NavUserSummary {
   displayName: string
   email: string | null
+  isAdmin: boolean
 }
 
 interface SiteProfileName {
@@ -172,11 +173,20 @@ export function Navigation() {
         return
       }
 
-      const { data: profileData } = await supabase
-        .from('site_profiles')
-        .select('first_name,last_name')
-        .eq('id', user.id)
-        .maybeSingle()
+      const [{ data: profileData }, { data: adminEntitlement }] = await Promise.all([
+        supabase
+          .from('site_profiles')
+          .select('first_name,last_name')
+          .eq('id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('site_entitlements')
+          .select('entitlement')
+          .eq('user_id', user.id)
+          .eq('entitlement', 'site_admin')
+          .eq('status', 'active')
+          .maybeSingle(),
+      ])
 
       if (!isActive()) {
         return
@@ -187,6 +197,7 @@ export function Navigation() {
       setCurrentUser({
         displayName: getUserDisplayName(user, profile),
         email: user.email ?? null,
+        isAdmin: Boolean(adminEntitlement),
       })
       setAuthStatus('signed-in')
     } catch {
@@ -275,7 +286,7 @@ export function Navigation() {
   }, [])
 
   return (
-    <div className="flex w-full min-w-0 items-center justify-between gap-3 lg:gap-4">
+    <div className="flex w-full min-w-0 items-center justify-between gap-2 lg:gap-3">
       <div className="flex shrink-0 items-center gap-3">
         <Link
           href="/"
@@ -284,14 +295,20 @@ export function Navigation() {
           <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
             IP Lab
           </span>
-          <span className="hidden text-sm font-medium text-muted-foreground xl:inline 2xl:hidden">
-            Clinical Education
-          </span>
         </Link>
       </div>
       <DesktopNav items={navigationItems} activePath={pathname} />
-      <div className="hidden shrink-0 items-center gap-2 lg:flex">
-        <form action="/search" className="hidden items-center gap-1 2xl:flex" role="search">
+      <div className="hidden shrink-0 items-center justify-end gap-2 lg:flex">
+        <Button asChild variant="ghost" size="icon" className="h-9 w-9 min-[1700px]:hidden">
+          <Link href={'/search' as Route} aria-label="Search resources">
+            <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+          </Link>
+        </Button>
+        <form
+          action="/search"
+          className="hidden items-center gap-1 min-[1700px]:flex"
+          role="search"
+        >
           <Input
             type="search"
             name="q"
@@ -300,38 +317,61 @@ export function Navigation() {
             onKeyDown={handleKeyDown}
             placeholder="Search resources and guides"
             leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
-            className="w-64 text-sm"
+            className="w-48 text-sm min-[1850px]:w-52"
             aria-label="Search resources and guides"
           />
-          <Button type="submit" variant="ghost" size="icon" aria-label="Search resources">
+          <Button
+            type="submit"
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            aria-label="Search resources"
+          >
             <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
           </Button>
         </form>
         {currentUser ? (
-          <div className="hidden min-w-0 items-center gap-2 xl:flex">
-            <p className="max-w-44 truncate text-sm text-muted-foreground">
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="hidden max-w-36 truncate text-sm text-muted-foreground min-[1500px]:block min-[1850px]:max-w-44">
               Welcome,{' '}
               <span className="font-semibold text-foreground">{currentUser.displayName}</span>
             </p>
+            {currentUser.isAdmin ? (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
+              >
+                <Link href={'/admin' as Route}>
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  <span className="sr-only min-[1500px]:not-sr-only">Admin</span>
+                </Link>
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
               onClick={handleLogout}
               disabled={authStatus === 'signing-out'}
+              aria-label={authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
             >
               <LogOut className="h-4 w-4" aria-hidden />
-              {authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
+              <span className="sr-only min-[1500px]:not-sr-only">
+                {authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
+              </span>
             </Button>
           </div>
         ) : authStatus === 'checking' ? null : (
-          <Button asChild variant="outline" className="hidden xl:inline-flex">
+          <Button asChild variant="outline" size="sm" className="hidden xl:inline-flex">
             <Link href={'/login' as Route}>Sign in</Link>
           </Button>
         )}
         <ModeToggle
           size="sm"
-          className="h-9 w-9 px-0 xl:w-auto xl:px-4 [&>span:last-child]:hidden xl:[&>span:last-child]:inline"
+          className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4 [&>span:last-child]:hidden min-[1500px]:[&>span:last-child]:inline"
         />
       </div>
       <MobileNav

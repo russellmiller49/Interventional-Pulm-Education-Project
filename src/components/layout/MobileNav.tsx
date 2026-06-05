@@ -4,7 +4,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
-import { LogOut } from 'lucide-react'
+import { LogOut, ShieldCheck } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -110,6 +110,14 @@ export function MobileNav({
                       <p className="truncate text-xs text-muted-foreground">{currentUser.email}</p>
                     ) : null}
                   </div>
+                  {currentUser.isAdmin ? (
+                    <Button asChild variant="outline" className="w-full justify-center">
+                      <Link href={'/admin' as Route}>
+                        <ShieldCheck className="h-4 w-4" aria-hidden />
+                        Admin
+                      </Link>
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="outline"
