@@ -75,6 +75,16 @@ interface SiteModuleSessionRow {
   last_heartbeat_at: string | null
 }
 
+interface LegacyEbusProfileRow {
+  id: string
+  email: string | null
+  full_name: string | null
+  institution: string | null
+  approval_status: string | null
+  approved_at: string | null
+  onboarding_completed_at: string | null
+}
+
 interface UserUsageSummary {
   completedModules: number
   lastActivityAt: string | null
@@ -93,6 +103,7 @@ interface AdminUserRow {
   lastSignInAt: string | null
   emailConfirmedAt: string | null
   profile: SiteProfileRow | null
+  legacyEbusProfile: LegacyEbusProfileRow | null
   entitlements: SiteEntitlementRow[]
   usage: UserUsageSummary
 }
@@ -124,7 +135,11 @@ function normalizeQuery(value: string | undefined) {
   return value?.trim().toLowerCase() ?? ''
 }
 
-function getDisplayName(profile: SiteProfileRow | null, user: User | null) {
+function getDisplayName(
+  profile: SiteProfileRow | null,
+  user: User | null,
+  legacyEbusProfile: LegacyEbusProfileRow | null = null,
+) {
   const profileName = [profile?.first_name, profile?.last_name]
     .map((value) => value?.trim())
     .filter(Boolean)
@@ -137,7 +152,14 @@ function getDisplayName(profile: SiteProfileRow | null, user: User | null) {
   const metadataName =
     typeof user?.user_metadata?.full_name === 'string' ? user.user_metadata.full_name.trim() : ''
 
-  return metadataName || user?.email?.split('@')[0] || profile?.email || 'Unknown user'
+  return (
+    metadataName ||
+    legacyEbusProfile?.full_name?.trim() ||
+    user?.email?.split('@')[0] ||
+    profile?.email ||
+    legacyEbusProfile?.email ||
+    'Unknown user'
+  )
 }
 
 function getRoleLabel(role: string | null | undefined) {
@@ -294,6 +316,7 @@ async function loadAdminDashboardData(searchQuery: string) {
       users: [] as AdminUserRow[],
       summary: {
         activeAdminCount: 0,
+        activeEbusCourseCount: 0,
         activeRegistryCount: 0,
         totalHours: 0,
         totalUsers: 0,
@@ -301,30 +324,38 @@ async function loadAdminDashboardData(searchQuery: string) {
     }
   }
 
-  const [authUsersResult, profilesResult, entitlementsResult, progressResult, sessionsResult] =
-    await Promise.all([
-      supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
-      supabaseAdmin
-        .from('site_profiles')
-        .select(
-          'id,email,first_name,last_name,professional_role,institution,country,agreement_accepted_at,agreement_version,performance_research_consent,onboarding_completed_at,created_at',
-        )
-        .order('created_at', { ascending: false }),
-      supabaseAdmin
-        .from('site_entitlements')
-        .select('user_id,entitlement,status,granted_at,expires_at,notes')
-        .order('granted_at', { ascending: false }),
-      supabaseAdmin
-        .from('site_module_progress')
-        .select(
-          'user_id,module_id,percent_complete,total_time_seconds,completed_at,last_visited_at',
-        )
-        .limit(5000),
-      supabaseAdmin
-        .from('site_module_sessions')
-        .select('user_id,duration_seconds,started_at,last_heartbeat_at')
-        .limit(5000),
-    ])
+  const [
+    authUsersResult,
+    profilesResult,
+    legacyEbusProfilesResult,
+    entitlementsResult,
+    progressResult,
+    sessionsResult,
+  ] = await Promise.all([
+    supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
+    supabaseAdmin
+      .from('site_profiles')
+      .select(
+        'id,email,first_name,last_name,professional_role,institution,country,agreement_accepted_at,agreement_version,performance_research_consent,onboarding_completed_at,created_at',
+      )
+      .order('created_at', { ascending: false }),
+    supabaseAdmin
+      .from('learner_profiles')
+      .select('id,email,full_name,institution,approval_status,approved_at,onboarding_completed_at')
+      .order('updated_at', { ascending: false }),
+    supabaseAdmin
+      .from('site_entitlements')
+      .select('user_id,entitlement,status,granted_at,expires_at,notes')
+      .order('granted_at', { ascending: false }),
+    supabaseAdmin
+      .from('site_module_progress')
+      .select('user_id,module_id,percent_complete,total_time_seconds,completed_at,last_visited_at')
+      .limit(5000),
+    supabaseAdmin
+      .from('site_module_sessions')
+      .select('user_id,duration_seconds,started_at,last_heartbeat_at')
+      .limit(5000),
+  ])
 
   if (authUsersResult.error) {
     return {
@@ -332,6 +363,7 @@ async function loadAdminDashboardData(searchQuery: string) {
       users: [] as AdminUserRow[],
       summary: {
         activeAdminCount: 0,
+        activeEbusCourseCount: 0,
         activeRegistryCount: 0,
         totalHours: 0,
         totalUsers: 0,
@@ -341,11 +373,15 @@ async function loadAdminDashboardData(searchQuery: string) {
 
   const authUsers = authUsersResult.data.users
   const profiles = ((profilesResult.data ?? []) as SiteProfileRow[]).filter(Boolean)
+  const legacyEbusProfiles = (
+    (legacyEbusProfilesResult.data ?? []) as LegacyEbusProfileRow[]
+  ).filter(Boolean)
   const entitlements = ((entitlementsResult.data ?? []) as SiteEntitlementRow[]).filter(Boolean)
   const progressRows = ((progressResult.data ?? []) as SiteModuleProgressRow[]).filter(Boolean)
   const sessionRows = ((sessionsResult.data ?? []) as SiteModuleSessionRow[]).filter(Boolean)
 
   const profilesById = new Map(profiles.map((profile) => [profile.id, profile]))
+  const legacyEbusProfilesById = new Map(legacyEbusProfiles.map((profile) => [profile.id, profile]))
   const usersById = new Map(authUsers.map((user) => [user.id, user]))
   const entitlementsByUser = new Map<string, SiteEntitlementRow[]>()
   const usageByUser = new Map<string, UserUsageSummary>()
@@ -402,25 +438,29 @@ async function loadAdminDashboardData(searchQuery: string) {
   const allUserIds = new Set<string>([
     ...authUsers.map((user) => user.id),
     ...profiles.map((profile) => profile.id),
+    ...legacyEbusProfiles.map((profile) => profile.id),
   ])
 
   const users = Array.from(allUserIds)
     .map((userId): AdminUserRow => {
       const user = usersById.get(userId) ?? null
       const profile = profilesById.get(userId) ?? null
-      const email = user?.email ?? profile?.email ?? ''
+      const legacyEbusProfile = legacyEbusProfilesById.get(userId) ?? null
+      const email = user?.email ?? profile?.email ?? legacyEbusProfile?.email ?? ''
 
       return {
         id: userId,
         email,
-        displayName: getDisplayName(profile, user),
+        displayName: getDisplayName(profile, user, legacyEbusProfile),
         roleLabel: getRoleLabel(profile?.professional_role),
-        institution: profile?.institution?.trim() || 'Not recorded',
+        institution:
+          profile?.institution?.trim() || legacyEbusProfile?.institution?.trim() || 'Not recorded',
         country: profile?.country?.trim() || 'Not recorded',
         createdAt: user?.created_at ?? profile?.created_at ?? null,
         lastSignInAt: user?.last_sign_in_at ?? null,
         emailConfirmedAt: user?.email_confirmed_at ?? null,
         profile,
+        legacyEbusProfile,
         entitlements: entitlementsByUser.get(userId) ?? [],
         usage: usageByUser.get(userId) ?? {
           completedModules: 0,
@@ -464,11 +504,20 @@ async function loadAdminDashboardData(searchQuery: string) {
       (entitlement) => entitlement.entitlement === 'site_admin' && entitlementIsActive(entitlement),
     ),
   ).length
+  const activeEbusCourseCount = users.filter(
+    (user) =>
+      user.legacyEbusProfile?.approval_status === 'approved' ||
+      user.entitlements.some(
+        (entitlement) =>
+          entitlement.entitlement === 'socal_ebus_course' && entitlementIsActive(entitlement),
+      ),
+  ).length
   const totalSeconds = users.reduce((total, user) => total + user.usage.totalSeconds, 0)
 
   return {
     error: [
       profilesResult.error,
+      legacyEbusProfilesResult.error,
       entitlementsResult.error,
       progressResult.error,
       sessionsResult.error,
@@ -479,6 +528,7 @@ async function loadAdminDashboardData(searchQuery: string) {
     users,
     summary: {
       activeAdminCount,
+      activeEbusCourseCount,
       activeRegistryCount,
       totalHours: Math.round(totalSeconds / 3600),
       totalUsers: users.length,
@@ -489,18 +539,39 @@ async function loadAdminDashboardData(searchQuery: string) {
 function EntitlementBadge({
   entitlement,
   entitlements,
+  hasLegacyEbusAccess,
 }: {
   entitlement: AdminEntitlement
   entitlements: SiteEntitlementRow[]
+  hasLegacyEbusAccess?: boolean
 }) {
   const record = entitlements.find((row) => row.entitlement === entitlement)
   const active = record ? entitlementIsActive(record) : false
+  const effectiveActive = active || (entitlement === 'socal_ebus_course' && hasLegacyEbusAccess)
+  const suffix =
+    entitlement === 'socal_ebus_course' && hasLegacyEbusAccess && !active
+      ? ' active via course profile'
+      : effectiveActive
+        ? ''
+        : ' off'
 
   return (
-    <Badge variant={active ? 'success' : 'outline'} className="normal-case tracking-normal">
+    <Badge
+      variant={effectiveActive ? 'success' : 'outline'}
+      className="normal-case tracking-normal"
+    >
       {entitlementLabels[entitlement]}
-      {active ? '' : ' off'}
+      {suffix}
     </Badge>
+  )
+}
+
+function LegacyEbusAccessAction() {
+  return (
+    <Button type="button" variant="ghost" size="sm" disabled className="w-full justify-start">
+      <ShieldCheck className="h-4 w-4" aria-hidden />
+      EBUS course profile active
+    </Button>
   )
 }
 
@@ -579,7 +650,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         </div>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" aria-hidden />
@@ -593,6 +664,13 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             Registry access
           </div>
           <p className="mt-2 text-2xl font-semibold">{summary.activeRegistryCount}</p>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <ShieldCheck className="h-4 w-4" aria-hidden />
+            EBUS course access
+          </div>
+          <p className="mt-2 text-2xl font-semibold">{summary.activeEbusCourseCount}</p>
         </div>
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -649,6 +727,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             <tbody>
               {users.map((user) => {
                 const isCurrentUser = user.id === currentUser.id
+                const hasLegacyEbusAccess = user.legacyEbusProfile?.approval_status === 'approved'
 
                 return (
                   <tr key={user.id} className="border-b last:border-b-0">
@@ -669,6 +748,11 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                           {user.email.toLowerCase() === ADMIN_EMAIL ? (
                             <Badge variant="info" size="sm">
                               Primary admin
+                            </Badge>
+                          ) : null}
+                          {hasLegacyEbusAccess ? (
+                            <Badge variant="success" size="sm">
+                              EBUS course learner
                             </Badge>
                           ) : null}
                         </div>
@@ -707,6 +791,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                             key={entitlement}
                             entitlement={entitlement}
                             entitlements={user.entitlements}
+                            hasLegacyEbusAccess={hasLegacyEbusAccess}
                           />
                         ))}
                       </div>
@@ -728,6 +813,14 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                           const active = user.entitlements.some(
                             (row) => row.entitlement === entitlement && entitlementIsActive(row),
                           )
+
+                          if (
+                            entitlement === 'socal_ebus_course' &&
+                            hasLegacyEbusAccess &&
+                            !active
+                          ) {
+                            return <LegacyEbusAccessAction key={entitlement} />
+                          }
 
                           return (
                             <EntitlementAction
