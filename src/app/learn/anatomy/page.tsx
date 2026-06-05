@@ -21,8 +21,8 @@ const axisLabels: Record<AnatomyAxis, string> = {
 const anatomyAxes: AnatomyAxis[] = ['z', 'y', 'x']
 
 const defaultCtPlaneVisibility: Record<AnatomyAxis, boolean> = {
-  x: false,
-  y: false,
+  x: true,
+  y: true,
   z: true,
 }
 
@@ -44,7 +44,7 @@ export default function AnatomyLearnPage() {
     ),
   )
   const [crossSection, setCrossSection] = useState(0)
-  const [volumeSlice, setVolumeSlice] = useState(0)
+  const [volumeSlice, setVolumeSlice] = useState(50)
   const [showCtPlanes, setShowCtPlanes] = useState(true)
   const [ctPlaneVisibility, setCtPlaneVisibility] =
     useState<Record<AnatomyAxis, boolean>>(defaultCtPlaneVisibility)
@@ -77,7 +77,7 @@ export default function AnatomyLearnPage() {
       ),
     )
     setCrossSection(0)
-    setVolumeSlice(0)
+    setVolumeSlice(50)
     setShowCtPlanes(true)
     setCtPlaneVisibility(defaultCtPlaneVisibility)
     setCtPlaneSlices(defaultCtPlaneSlices)
@@ -104,6 +104,7 @@ export default function AnatomyLearnPage() {
   }
 
   const handleCtPlaneSliceChange = (axis: AnatomyAxis, value: number) => {
+    setVolumeSlice(value)
     setCtPlaneSlices((prev) => ({
       ...prev,
       [axis]: value,
@@ -194,7 +195,7 @@ export default function AnatomyLearnPage() {
               ),
             )
             setShowAnnotations(true)
-            setVolumeSlice(0)
+            setVolumeSlice(50)
             setShowCtPlanes(true)
             setCtPlaneVisibility(defaultCtPlaneVisibility)
             setCtPlaneSlices(defaultCtPlaneSlices)
@@ -256,6 +257,9 @@ export default function AnatomyLearnPage() {
                 value={ctPlaneSlices[axis]}
                 disabled={!showCtPlanes}
                 onChange={(event) => handleCtPlaneSliceChange(axis, Number(event.target.value))}
+                onInput={(event) =>
+                  handleCtPlaneSliceChange(axis, Number(event.currentTarget.value))
+                }
                 className="w-full accent-cyan-300 disabled:opacity-40"
               />
             </label>
@@ -423,6 +427,7 @@ export default function AnatomyLearnPage() {
             document.body.removeChild(link)
           }}
           onVolumeSliceChange={setVolumeSlice}
+          onCtPlaneSliceChange={handleCtPlaneSliceChange}
           onSegmentsChanged={(segments) => {
             setDisplaySegments((prev) => {
               const sameLength = prev.length === segments.length

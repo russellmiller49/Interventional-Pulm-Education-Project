@@ -228,7 +228,7 @@ export function MalignantEffusionPathway() {
             {malignantEffusionAssets.map((asset) => (
               <figure key={asset.id} className="overflow-hidden rounded-lg border border-border">
                 <img
-                  src={asset.path}
+                  src={asset.localPath ?? asset.path}
                   alt={asset.alt}
                   className="h-48 w-full bg-muted object-contain"
                 />

@@ -23,6 +23,7 @@ const quickNavTitles = new Set([
   'EBUS Training',
   'TNM-9 Staging',
   '3D Anatomy',
+  'Bronch Navigation',
   'IP Board Prep',
   'FluoroView',
   'Resources',

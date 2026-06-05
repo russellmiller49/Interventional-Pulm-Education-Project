@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: EbusTrainingModulePageProps):
   }
 
   return {
-    title: `${trainingModule.title} | Public EBUS Training`,
+    title: `${trainingModule.title} | EBUS Training`,
     description: trainingModule.description,
   }
 }

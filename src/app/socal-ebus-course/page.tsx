@@ -38,7 +38,7 @@ export default function SoCalEbusCoursePage() {
           <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
             This portal is for Southern California EBUS Course participants who need the lecture
             sequence, surveys, tests, progress tracking, and course-specific materials. General
-            learners can use the public EBUS Training and TNM-9 modules separately.
+            learners can use the EBUS Training and TNM-9 modules separately.
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default function SoCalEbusCoursePage() {
             </a>
           </Button>
           <Button asChild variant="secondary">
-            <Link href={'/ebus-training' as Route}>Public EBUS Training</Link>
+            <Link href={'/ebus-training' as Route}>EBUS Training</Link>
           </Button>
           <Button asChild variant="secondary">
             <Link href={'/tnm-9-staging' as Route}>TNM-9 Staging</Link>

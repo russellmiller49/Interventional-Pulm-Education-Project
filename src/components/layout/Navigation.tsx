@@ -14,7 +14,6 @@ import { isVisibleModulePath } from '@/lib/draft-modules'
 import { DesktopNav, type NavItem } from './DesktopNav'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
-import { SearchShortcut } from './SearchShortcut'
 
 const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
   ssr: false,
@@ -25,7 +24,7 @@ const allNavigationItems: NavItem[] = [
     title: 'EBUS Training',
     shortTitle: 'EBUS',
     href: '/ebus-training' as Route,
-    description: 'Public knobology, stations, and simulator modules',
+    description: 'Knobology, stations, and simulator modules',
   },
   {
     title: 'TNM-9 Staging',
@@ -52,7 +51,7 @@ const allNavigationItems: NavItem[] = [
   },
   {
     title: 'Bronch Navigation',
-    shortTitle: 'Bronch Nav',
+    shortTitle: 'Nav Bronch',
     href: '/bronch-navigation-trainer' as Route,
     description: 'CT-to-bronchoscope navigation simulator',
   },
@@ -154,9 +153,6 @@ export function Navigation() {
             <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
           </Button>
         </form>
-        <div className="hidden 2xl:flex items-center">
-          <SearchShortcut className="text-xs" />
-        </div>
         <Button
           type="button"
           variant="outline"

@@ -18,7 +18,7 @@ export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
     slug: 'knobology',
     title: 'EBUS Knobology',
     shortTitle: 'Knobology',
-    kicker: 'Public EBUS training',
+    kicker: 'EBUS training',
     description:
       'Practice EBUS ultrasound controls, image optimization, Doppler safety checks, and troubleshooting without the participant-course lecture sequence.',
     appHashPath: '/knobology',
@@ -35,7 +35,7 @@ export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
     slug: 'stations',
     title: 'Mediastinal Stations',
     shortTitle: 'Stations',
-    kicker: 'Public EBUS training',
+    kicker: 'EBUS training',
     description:
       'Explore mediastinal lymph node stations with station maps, CT correlation, bronchoscopy views, EBUS ultrasound images, flashcards, quizzes, and handbook material.',
     appHashPath: '/stations/explore',
@@ -52,7 +52,7 @@ export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
     slug: 'simulator',
     title: 'EBUS Simulator',
     shortTitle: 'Simulator',
-    kicker: 'Public EBUS training',
+    kicker: 'EBUS training',
     description:
       'Use the static anatomy-correlation simulator to rehearse guided centerline motion, airway orientation, and station snap targets.',
     appHashPath: '/simulator',

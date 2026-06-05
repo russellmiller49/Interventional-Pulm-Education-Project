@@ -54,7 +54,7 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['board review', 'exam', 'chapters', 'study', 'questions'],
   },
   {
-    title: 'Public EBUS Training',
+    title: 'EBUS Training',
     description:
       'Open EBUS knobology, mediastinal station, and simulator modules without course participant lockout.',
     href: '/ebus-training',

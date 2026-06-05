@@ -80,7 +80,12 @@ export interface PleuralReference {
 export interface PleuralAsset {
   id: string
   kind: 'image' | 'clip' | 'diagram'
+  /** Original (often remote) source URL. Kept for provenance/attribution and as a fallback. */
   path: string
+  /** Repo-local copy under /public, when the asset has been downloaded. Preferred at render time. */
+  localPath?: string
+  /** Optional repo-local annotated/overlay version used for teaching (Learn), never for Practice. */
+  annotatedPath?: string
   alt: string
   sourceType: 'repo' | 'creative-commons' | 'dataset' | 'educational-diagram'
   attribution: string
@@ -103,4 +108,10 @@ export interface PleuralModule {
   section: PleuralSection
   minutes: number
   status: 'live' | 'planned'
+  /** Position in the curriculum learning path (lower = earlier). */
+  order?: number
+  /** One-line description for the learning-path card. */
+  summary?: string
+  /** Experimental prototypes are shown outside the numbered path. */
+  experimental?: boolean
 }

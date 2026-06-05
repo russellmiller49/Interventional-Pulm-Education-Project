@@ -175,6 +175,8 @@ export interface AnatomyVolumeAsset {
   format: VolumeFormat
   url?: string
   description?: string
+  patientToModelMatrix?: number[]
+  volumeCenterPatientMm?: [number, number, number]
   segmentation?: {
     format: VolumeFormat
     url?: string
