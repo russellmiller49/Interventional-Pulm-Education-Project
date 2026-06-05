@@ -286,9 +286,9 @@ const anatomyModelRecords: AnatomyModel[] = [
     thumbnail: '/window.svg',
     gallery: ['/window.svg'],
     defaultCamera: {
-      position: [0, 0, 2.5],
+      position: [0, 0, 0.6],
       target: [0, 0, 0],
-      autoFit: true,
+      autoFit: false,
     },
     orientation: {
       rotation: [0, 0, 0],
@@ -297,7 +297,12 @@ const anatomyModelRecords: AnatomyModel[] = [
       format: 'nrrd',
       description:
         'De-identified CT volume exported with the EBUS case anatomy and registered segmentation.',
-      url: resolveModuleAssetPath('/models/ebus-case-001-ct.nrrd'),
+      supabase: {
+        bucket: 'module-assets',
+        path: 'v1/socal-ebus-course/app/assets/case_001_ct-DfmmuKIN.nrrd',
+        public: true,
+        projectRef: 'tqnhxlwvkkswuckszlee',
+      },
       patientToModelMatrix: [0.001, 0, 0, 0, 0, 0, 0.001, 0, 0, -0.001, 0, 0, 0, 0, 0, 1],
       volumeCenterPatientMm: [-17.73918914794919, -169.69223022460932, 1190.5999755859375],
       axis: 'z',
@@ -308,7 +313,12 @@ const anatomyModelRecords: AnatomyModel[] = [
       segmentation: {
         format: 'nrrd',
         description: 'Segmentation label map exported with the EBUS case anatomy.',
-        url: resolveModuleAssetPath('/models/ebus-case-001-segmentation.nrrd'),
+        supabase: {
+          bucket: 'module-assets',
+          path: 'v1/socal-ebus-course/app/assets/case_001_segmentation-ea6KUoFj.nrrd',
+          public: true,
+          projectRef: 'tqnhxlwvkkswuckszlee',
+        },
       },
     },
     segments: [

@@ -1,8 +1,10 @@
 'use client'
 
+import type { Route } from 'next'
 import Link from 'next/link'
 import { useMemo } from 'react'
 import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
+import { LogOut } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,15 +20,24 @@ import { cn } from '@/lib/cn'
 
 import type { NavItem } from './DesktopNav'
 import { ModeToggle } from './mode-toggle'
+import type { NavAuthStatus, NavUserSummary } from './Navigation'
 import { SearchShortcut } from './SearchShortcut'
 
 interface MobileNavProps {
   items: NavItem[]
   activePath?: string | null
-  onRequestSignIn?: () => void
+  authStatus: NavAuthStatus
+  currentUser: NavUserSummary | null
+  onLogout: () => void
 }
 
-export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps) {
+export function MobileNav({
+  items,
+  activePath,
+  authStatus,
+  currentUser,
+  onLogout,
+}: MobileNavProps) {
   const normalizedPath = useMemo(() => {
     if (!activePath) {
       return '/'
@@ -89,16 +100,32 @@ export function MobileNav({ items, activePath, onRequestSignIn }: MobileNavProps
               })}
             </nav>
             <div className="flex flex-col gap-3">
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => {
-                  onRequestSignIn?.()
-                }}
-                className="justify-center"
-              >
-                Sign in
-              </Button>
+              {currentUser ? (
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="min-w-0 space-y-1">
+                    <p className="truncate text-sm font-semibold">
+                      Welcome, {currentUser.displayName}
+                    </p>
+                    {currentUser.email ? (
+                      <p className="truncate text-xs text-muted-foreground">{currentUser.email}</p>
+                    ) : null}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-center"
+                    onClick={onLogout}
+                    disabled={authStatus === 'signing-out'}
+                  >
+                    <LogOut className="h-4 w-4" aria-hidden />
+                    {authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
+                  </Button>
+                </div>
+              ) : authStatus === 'checking' ? null : (
+                <Button asChild variant="default" className="justify-center">
+                  <Link href={'/login' as Route}>Sign in</Link>
+                </Button>
+              )}
               <form action="/search" className="space-y-2" role="search">
                 <Input
                   type="search"

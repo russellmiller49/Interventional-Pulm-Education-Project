@@ -4,9 +4,15 @@ import { useEffect, useState } from 'react'
 import { CheckIcon, CircleIcon } from '@radix-ui/react-icons'
 
 import { Button } from '@/components/ui/button'
+import { recordSiteModuleEvent } from '@/lib/analytics'
 
 import type { ModuleSectionKey } from '../types'
-import { markModuleSection, readModuleProgress } from '../engine/moduleProgress'
+import {
+  MODULE_SECTIONS,
+  countCompletedSections,
+  markModuleSection,
+  readModuleProgress,
+} from '../engine/moduleProgress'
 
 interface ModuleProgressToggleProps {
   moduleId: string
@@ -30,7 +36,19 @@ export function ModuleProgressToggle({ moduleId, section, label }: ModuleProgres
   function toggle() {
     const next = !complete
     setComplete(next)
-    markModuleSection(moduleId, section, next)
+    const progress = markModuleSection(moduleId, section, next)
+
+    if (next) {
+      recordSiteModuleEvent({
+        eventPayload: { section },
+        eventType: 'section_completed',
+        moduleId,
+        percentComplete: Math.round(
+          (countCompletedSections(progress[moduleId]) / MODULE_SECTIONS.length) * 100,
+        ),
+        section,
+      })
+    }
   }
 
   return (
