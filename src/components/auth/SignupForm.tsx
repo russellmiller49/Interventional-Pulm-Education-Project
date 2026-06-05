@@ -24,6 +24,10 @@ import {
   siteProfileSchema,
   type SiteProfileInput,
 } from '@/lib/site-auth/profile-schema'
+import {
+  SITE_USER_AGREEMENT_VERSION,
+  siteUserAgreementPoints,
+} from '@/lib/site-auth/user-agreement'
 
 type SubmitStatus = 'idle' | 'checking' | 'submitting' | 'sent' | 'error'
 
@@ -65,6 +69,7 @@ export function SignupForm() {
   const [yearsInPractice, setYearsInPractice] = useState('in_training')
   const [interests, setInterests] = useState<string[]>([])
   const [learningGoals, setLearningGoals] = useState<string[]>([])
+  const [agreementAccepted, setAgreementAccepted] = useState(false)
   const [status, setStatus] = useState<SubmitStatus>(completionMode ? 'checking' : 'idle')
   const [message, setMessage] = useState<string>()
 
@@ -150,13 +155,21 @@ export function SignupForm() {
     setRoleOther('')
   }
 
-  async function upsertSiteProfile(userId: string, userEmail: string, profile: SiteProfileInput) {
+  async function upsertSiteProfile(
+    userId: string,
+    userEmail: string,
+    profile: SiteProfileInput,
+    agreementAcceptedAt: string,
+  ) {
     const supabase = supabaseCookieBrowser()
     const { error } = await supabase.from('site_profiles').upsert(
       {
         id: userId,
         email: userEmail.toLowerCase(),
         ...profile,
+        agreement_accepted_at: agreementAcceptedAt,
+        agreement_version: SITE_USER_AGREEMENT_VERSION,
+        performance_research_consent: true,
         onboarding_completed_at: new Date().toISOString(),
       },
       { onConflict: 'id' },
@@ -189,6 +202,14 @@ export function SignupForm() {
       }
     }
 
+    if (!agreementAccepted) {
+      setStatus('error')
+      setMessage('Review and accept the user agreement before continuing.')
+      return
+    }
+
+    const agreementAcceptedAt = new Date().toISOString()
+
     try {
       const supabase = supabaseCookieBrowser()
 
@@ -199,7 +220,12 @@ export function SignupForm() {
           return
         }
 
-        const profileError = await upsertSiteProfile(currentUserId, email, profile)
+        const profileError = await upsertSiteProfile(
+          currentUserId,
+          email,
+          profile,
+          agreementAcceptedAt,
+        )
         if (profileError) {
           setStatus('error')
           setMessage(profileError.message)
@@ -228,6 +254,9 @@ export function SignupForm() {
           data: {
             app_scope: 'main_site',
             email: normalizedEmail,
+            agreement_accepted_at: agreementAcceptedAt,
+            agreement_version: SITE_USER_AGREEMENT_VERSION,
+            performance_research_consent: true,
             ...profile,
           },
         },
@@ -240,7 +269,12 @@ export function SignupForm() {
       }
 
       if (data.session && data.user) {
-        const profileError = await upsertSiteProfile(data.user.id, normalizedEmail, profile)
+        const profileError = await upsertSiteProfile(
+          data.user.id,
+          normalizedEmail,
+          profile,
+          agreementAcceptedAt,
+        )
         if (profileError) {
           setStatus('error')
           setMessage(profileError.message)
@@ -482,6 +516,34 @@ export function SignupForm() {
               <span>{option.label}</span>
             </label>
           ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="rounded-lg border border-border bg-muted/30 p-4">
+        <legend className="px-1 text-sm font-semibold">User agreement</legend>
+        <div className="space-y-3">
+          <ul className="list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
+            {siteUserAgreementPoints.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+          <label className="flex items-start gap-3 text-sm font-medium">
+            <input
+              required
+              type="checkbox"
+              checked={agreementAccepted}
+              onChange={(event) => setAgreementAccepted(event.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-border"
+            />
+            <span>
+              I have read and agree to these terms, including the tracking of educational usage and
+              performance data and the anonymous, de-identified, or aggregated research use
+              described above.
+            </span>
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Agreement version: {SITE_USER_AGREEMENT_VERSION}
+          </p>
         </div>
       </fieldset>
 

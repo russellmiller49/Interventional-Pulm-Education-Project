@@ -1,6 +1,7 @@
 import {
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
+  isCtAlignmentSandboxPath,
   isLegacyEbusGatewayPath,
   isPublicPath,
   resolveLoginRedirectPath,
@@ -52,6 +53,12 @@ describe('main site auth access helpers', () => {
     expect(isLegacyEbusGatewayPath('/socal-ebus-course/app/index.html')).toBe(true)
     expect(isPublicPath('/socal-ebus-course/app/index.html')).toBe(true)
     expect(isPublicPath('/socal-ebus-course')).toBe(false)
+  })
+
+  it('recognizes the dev-only CT alignment sandbox path', () => {
+    expect(isCtAlignmentSandboxPath('/learn/anatomy/ct-alignment')).toBe(true)
+    expect(isCtAlignmentSandboxPath('/learn/anatomy/ct-alignment/tools')).toBe(true)
+    expect(isCtAlignmentSandboxPath('/learn/anatomy')).toBe(false)
   })
 
   it('uses legacy EBUS approval only for the restricted course area', () => {

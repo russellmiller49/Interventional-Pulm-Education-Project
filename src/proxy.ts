@@ -6,6 +6,7 @@ import {
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isAuthPath,
+  isCtAlignmentSandboxPath,
   isPublicPath,
   isPublicTrainingEmbed,
   resolveLoginRedirectPath,
@@ -15,6 +16,10 @@ import {
 export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
+
+  if (process.env.NODE_ENV === 'production' && isCtAlignmentSandboxPath(pathname)) {
+    return new NextResponse(null, { status: 404 })
+  }
 
   if (pathname.startsWith('/auth')) {
     res.headers.set('X-Robots-Tag', 'noindex, nofollow')

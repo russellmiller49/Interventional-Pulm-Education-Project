@@ -32,6 +32,8 @@ const defaultCtPlaneSlices: Record<AnatomyAxis, number> = {
   z: 50,
 }
 
+const isCtAlignmentSandboxEnabled = process.env.NODE_ENV !== 'production'
+
 export default function AnatomyLearnPage() {
   const models = anatomyModels
   const [selectedModel, setSelectedModel] = useState<AnatomyModel>(models[0])
@@ -392,11 +394,13 @@ export default function AnatomyLearnPage() {
             cross-sectional slicing, annotated segments, and WebXR spatial viewing for supported
             headsets. Built for fellows and faculty running rehearsal labs or patient consults.
           </p>
-          <div className="flex flex-wrap gap-2 pt-2">
-            <Button asChild variant="outline">
-              <Link href={'/learn/anatomy/ct-alignment' as Route}>Open CT alignment sandbox</Link>
-            </Button>
-          </div>
+          {isCtAlignmentSandboxEnabled ? (
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button asChild variant="outline">
+                <Link href={'/learn/anatomy/ct-alignment' as Route}>Open CT alignment sandbox</Link>
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 

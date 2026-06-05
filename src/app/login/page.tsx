@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <AuthShell title="Sign in" description="Use your email and password to continue.">
+    <AuthShell title="Sign in" description="Use your email and password to continue." showPromo>
       <Suspense fallback={<p className="text-sm text-muted-foreground">Loading sign in...</p>}>
         <LoginForm />
       </Suspense>

@@ -34,6 +34,13 @@ export function isLegacyEbusGatewayPath(pathname: string) {
   )
 }
 
+export function isCtAlignmentSandboxPath(pathname: string) {
+  return (
+    pathname === '/learn/anatomy/ct-alignment' ||
+    pathname.startsWith('/learn/anatomy/ct-alignment/')
+  )
+}
+
 export function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT_PATHS.has(pathname)) {
     return true

@@ -17,6 +17,7 @@ export default function SignupPage() {
     <AuthShell
       title="Create your free account"
       description="Your profile helps tailor education modules and aggregate learning analytics."
+      showPromo
     >
       <Suspense fallback={<p className="text-sm text-muted-foreground">Loading signup form...</p>}>
         <SignupForm />
