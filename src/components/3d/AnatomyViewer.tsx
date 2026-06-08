@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
-import { XR, useXR } from '@react-three/xr'
+import { XR } from '@react-three/xr'
 import { Camera, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -52,6 +52,9 @@ export type OrthogonalClipMode = 'none' | 'hide-above' | 'hide-below'
 const XR_CONTROL_CLIP_MODES: OrthogonalClipMode[] = ['none', 'hide-above', 'hide-below']
 const XR_MIN_SPATIAL_SCALE = 0.001
 const XR_MAX_SPATIAL_SCALE = 80
+// World-space axes for the in-headset rotate controls (spin around vertical / tilt around horizontal).
+const XR_ROTATE_WORLD_UP = new Vector3(0, 1, 0)
+const XR_ROTATE_WORLD_RIGHT = new Vector3(1, 0, 0)
 
 interface CtAlignmentVector {
   x: number
@@ -657,6 +660,8 @@ function XRControlButton({
   disabled = false,
   label,
   onSelect,
+  onPressStart,
+  onPressEnd,
   position,
   selected = false,
   size = [0.26, 0.08],
@@ -664,17 +669,37 @@ function XRControlButton({
   disabled?: boolean
   label: string
   onSelect?: () => void
+  onPressStart?: () => void
+  onPressEnd?: () => void
   position: [number, number, number]
   selected?: boolean
   size?: [number, number]
 }) {
   // R3F pointer events dispatched by @react-three/xr cover controllers, hands, and Vision Pro pinch.
-  // Use pointer-down (not click) so a single trigger press / pinch activates immediately.
-  const handleSelect = (event: ThreeEvent<PointerEvent>) => {
+  // onSelect fires once on press (tap actions); onPressStart/onPressEnd drive press-and-hold actions
+  // (e.g. the Turn/Tilt rotate buttons) — pointer capture keeps the hold alive until release.
+  const handleDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation()
-    if (!disabled) {
-      onSelect?.()
+    if (disabled) {
+      return
     }
+    if (onPressStart) {
+      ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+        event.pointerId,
+      )
+      onPressStart()
+    }
+    onSelect?.()
+  }
+
+  const handleUp = (event: ThreeEvent<PointerEvent>) => {
+    if (!onPressEnd) {
+      return
+    }
+    onPressEnd()
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
   }
 
   const backgroundColor = disabled ? '#334155' : selected ? '#a5f3fc' : '#1e293b'
@@ -682,7 +707,12 @@ function XRControlButton({
   const textColor = disabled ? '#cbd5e1' : selected ? '#042f2e' : '#ffffff'
 
   return (
-    <group position={position} onPointerDown={handleSelect}>
+    <group
+      position={position}
+      onPointerDown={handleDown}
+      onPointerUp={handleUp}
+      onPointerCancel={handleUp}
+    >
       <mesh>
         <planeGeometry args={size} />
         <meshBasicMaterial
@@ -875,6 +905,7 @@ function XRControlPanel({
   onSliceChange,
   onToggleActivePlane,
   onToggleCtPlanes,
+  onRotateTarget,
 }: {
   activeAxis: AnatomyAxis
   crossSection: number
@@ -896,36 +927,50 @@ function XRControlPanel({
   onSliceChange?: (axis: AnatomyAxis, value: number) => void
   onToggleActivePlane?: (axis: AnatomyAxis) => void
   onToggleCtPlanes?: () => void
+  onRotateTarget?: (axis: 'x' | 'y', radians: number) => void
 }) {
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
-  // Temporary debug readout: number of XR input sources the store detects (controllers + hands).
-  const xrInputCount = useXR((s) => s.inputSourceStates.length)
   const { gl } = useThree()
-  const billboardQuat = useMemo(() => new Quaternion(), [])
+  const faceTmp = useMemo(() => new Vector3(), [])
   const placedRef = useRef(false)
   const panelDragRef = useRef<{ pointerId: number; distance: number; offset: Vector3 } | null>(null)
+  const heldRotateRef = useRef<{ axis: 'x' | 'y'; sign: number } | null>(null)
 
-  // The panel is parked off to the user's right on first frame, then it (a) always billboards to
-  // face the user and (b) can be dragged anywhere by its header bar. Position/rotation are managed
-  // imperatively so React never fights the drag; the model stays front-and-centre on its own.
+  // Yaw-only "face the user": turn the panel to face the viewer horizontally while staying upright.
+  // (The previous version copied the camera's full orientation every frame, so the panel pitched and
+  // rolled as the user turned their head — the "weird shifting angles".)
+  const facePanelAtUser = () => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    faceTmp.setFromMatrixPosition(gl.xr.getCamera().matrixWorld)
+    panel.rotation.set(0, Math.atan2(faceTmp.x - panel.position.x, faceTmp.z - panel.position.z), 0)
+  }
+
   useEffect(() => {
     if (!visible) {
       placedRef.current = false
     }
   }, [visible])
 
-  useFrame(() => {
+  // Place once (off to the user's right, facing them); afterwards the panel stays LOCKED in world
+  // space — it does NOT track the head, so it holds whatever spot/orientation it was dragged to.
+  // The only per-frame work is applying continuous rotation while a Turn/Tilt button is held.
+  useFrame((_, delta) => {
     const panel = panelRef.current
     if (!panel || !visible || !gl.xr.isPresenting) {
       return
     }
-    const camera = gl.xr.getCamera()
     if (!placedRef.current) {
       panel.position.set(0.95, 1.2, -1.0)
+      facePanelAtUser()
       placedRef.current = true
     }
-    camera.getWorldQuaternion(billboardQuat)
-    panel.quaternion.copy(billboardQuat)
+    const held = heldRotateRef.current
+    if (held && onRotateTarget) {
+      onRotateTarget(held.axis, held.sign * 1.6 * delta)
+    }
   })
 
   const beginPanelDrag = (event: ThreeEvent<PointerEvent>) => {
@@ -961,6 +1006,7 @@ function XRControlPanel({
       .clone()
       .addScaledVector(event.ray.direction.clone().normalize(), drag.distance)
     panel.position.copy(anchor).add(drag.offset)
+    facePanelAtUser()
   }
 
   const endPanelDrag = (event: ThreeEvent<PointerEvent>) => {
@@ -976,11 +1022,11 @@ function XRControlPanel({
   return (
     <group ref={panelRef} visible={visible}>
       <mesh position={[0, 0, -0.008]}>
-        <planeGeometry args={[1.22, 0.95]} />
+        <planeGeometry args={[1.22, 1.16]} />
         <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
       </mesh>
       <mesh position={[0, 0, -0.004]}>
-        <planeGeometry args={[1.26, 0.99]} />
+        <planeGeometry args={[1.26, 1.2]} />
         <meshBasicMaterial color="#22d3ee" opacity={0.1} side={DoubleSide} transparent />
       </mesh>
       {/* Header bar = drag handle. Grab anywhere on it (bar or title) to reposition the panel. */}
@@ -990,7 +1036,7 @@ function XRControlPanel({
         onPointerUp={endPanelDrag}
         onPointerCancel={endPanelDrag}
       >
-        <mesh position={[0, 0.42, 0.006]}>
+        <mesh position={[0, 0.5, 0.006]}>
           <planeGeometry args={[1.2, 0.13]} />
           <meshBasicMaterial
             color="#0e7490"
@@ -1000,20 +1046,20 @@ function XRControlPanel({
             transparent
           />
         </mesh>
-        <XRControlLabel position={[-0.56, 0.44, 0.012]} size={0.034}>
+        <XRControlLabel position={[-0.56, 0.52, 0.012]} size={0.034}>
           Spatial anatomy controls
         </XRControlLabel>
-        <XRControlLabel position={[-0.56, 0.37, 0.012]} size={0.02}>
-          {`Drag this bar to move · inputs: ${xrInputCount}`}
+        <XRControlLabel position={[-0.56, 0.45, 0.012]} size={0.02}>
+          Drag this bar to move
         </XRControlLabel>
       </group>
 
-      <XRControlLabel position={[-0.56, 0.25, 0.012]}>Model placement</XRControlLabel>
+      <XRControlLabel position={[-0.56, 0.37, 0.012]}>Model placement</XRControlLabel>
       <XRControlButton
         disabled={!onResetPlacement}
         label="Center"
         onSelect={onResetPlacement}
-        position={[0.04, 0.25, 0.014]}
+        position={[0.04, 0.37, 0.014]}
         selected
         size={[0.22, 0.085]}
       />
@@ -1021,15 +1067,65 @@ function XRControlPanel({
         disabled={!onScaleTarget}
         label="Size -"
         onSelect={() => onScaleTarget?.(0.82)}
-        position={[0.28, 0.25, 0.014]}
+        position={[0.28, 0.37, 0.014]}
         size={[0.2, 0.085]}
       />
       <XRControlButton
         disabled={!onScaleTarget}
         label="Size +"
         onSelect={() => onScaleTarget?.(1.22)}
-        position={[0.5, 0.25, 0.014]}
+        position={[0.5, 0.37, 0.014]}
         size={[0.2, 0.085]}
+      />
+
+      <XRControlLabel position={[-0.56, 0.25, 0.012]}>Rotate (press & hold)</XRControlLabel>
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Turn L"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'y', sign: 1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.02, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Turn R"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'y', sign: -1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.19, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Tilt U"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'x', sign: -1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.36, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Tilt D"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'x', sign: 1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.53, 0.25, 0.014]}
+        size={[0.16, 0.085]}
       />
 
       <XRControlLabel position={[-0.56, 0.13, 0.012]}>
@@ -1869,6 +1965,18 @@ export function AnatomyViewer({
     setSpatialSelection(factor > 1 ? 'Anatomy enlarged' : 'Anatomy reduced')
   }, [])
 
+  // Continuous rotate while a Turn/Tilt button is held. Called every frame by the panel with a small
+  // per-frame angle; rotates about WORLD axes so "turn" always spins around vertical regardless of
+  // the model's current orientation. No setState here — it runs every frame while a button is held.
+  const handleXrRotateTarget = useCallback((axis: 'x' | 'y', radians: number) => {
+    const root = spatialRootRef.current
+    if (!root || !Number.isFinite(radians)) {
+      return
+    }
+    root.rotateOnWorldAxis(axis === 'y' ? XR_ROTATE_WORLD_UP : XR_ROTATE_WORLD_RIGHT, radians)
+    root.updateMatrixWorld(true)
+  }, [])
+
   const radius = useMemo(() => {
     if (!boundingSize) {
       return 1
@@ -2476,6 +2584,7 @@ export function AnatomyViewer({
                       onCycleClipMode={onCtClipModeChange ? handleXrCycleClipMode : undefined}
                       onResetPlacement={spatialPlacement ? handleXrResetPlacement : undefined}
                       onScaleTarget={handleXrScaleTarget}
+                      onRotateTarget={handleXrRotateTarget}
                       onCrossSectionChange={onCrossSectionChange}
                       onCtPlaneOpacityChange={onCtPlaneOpacityChange}
                       onSliceChange={
