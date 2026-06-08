@@ -56,6 +56,7 @@
     "@react-pdf/renderer": "^4.4.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
+    "@react-three/xr": "^6.6.30",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
     "class-variance-authority": "^0.7.1",
