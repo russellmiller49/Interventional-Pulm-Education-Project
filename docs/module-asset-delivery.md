@@ -31,6 +31,7 @@ Use a public Supabase Storage bucket named `module-assets` with versioned paths:
 ```text
 module-assets/
   v1/
+    airway-anatomy/...
     bronch-navigation-trainer/app/cases/...
     draco/...
     fluoroview/...
@@ -96,7 +97,7 @@ the Hostinger Nginx snippet.
 
 `NEXT_PUBLIC_MODULE_ASSET_BASE_URL` makes updated module loaders request Supabase URLs directly.
 `MODULE_ASSET_ORIGIN` enables Next.js fallback rewrites for legacy embedded app paths such as
-`/fluoroview/...`, `/models/...`, `/draco/...`,
+`/airway-anatomy/...`, `/fluoroview/...`, `/models/...`, `/draco/...`,
 `/bronch-navigation-trainer/app/cases/...`, and
 `/socal-ebus-course/app/media/...`.
 

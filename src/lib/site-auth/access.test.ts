@@ -2,6 +2,7 @@ import {
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isCtAlignmentSandboxPath,
+  isDevOnlyAirwayAnatomyPath,
   isLegacyEbusGatewayPath,
   isPublicPath,
   resolveLoginRedirectPath,
@@ -67,6 +68,14 @@ describe('main site auth access helpers', () => {
     expect(isCtAlignmentSandboxPath('/learn/anatomy/ct-alignment')).toBe(true)
     expect(isCtAlignmentSandboxPath('/learn/anatomy/ct-alignment/tools')).toBe(true)
     expect(isCtAlignmentSandboxPath('/learn/anatomy')).toBe(false)
+  })
+
+  it('recognizes dev-only airway anatomy routes and assets', () => {
+    expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy/airway')).toBe(true)
+    expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy/airway/segmental')).toBe(true)
+    expect(isDevOnlyAirwayAnatomyPath('/airway-anatomy/case-001/case_manifest.json')).toBe(true)
+    expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy')).toBe(false)
+    expect(isDevOnlyAirwayAnatomyPath('/bronch-navigation-trainer')).toBe(false)
   })
 
   it('uses legacy EBUS approval only for the restricted course area', () => {

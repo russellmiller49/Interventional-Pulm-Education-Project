@@ -10,6 +10,7 @@ const copiedPublicDir = path.join(standaloneDir, 'public')
 const copiedStaticDir = path.join(standaloneDir, '.next', 'static')
 
 const remoteAssetPrefixes = [
+  'airway-anatomy',
   'bronch-navigation-trainer/app/cases',
   'fluoroview/cases',
   'models',

@@ -43,10 +43,13 @@ def load_network_curves(centerline_dir: str | Path) -> list[NetworkCurve]:
         )
     )
 
+    network_paths = [path for path in curve_dir.glob("*.mrk.json") if "Network curve" in path.name]
+    markup_paths = network_paths or [
+        path for path in curve_dir.glob("*.mrk.json") if "Centerline curve" in path.name
+    ]
+
     curves: list[NetworkCurve] = []
-    for path in sorted(curve_dir.glob("*.mrk.json"), key=_curve_sort_key):
-        if "Network curve" not in path.name and "Centerline curve" not in path.name:
-            continue
+    for path in sorted(markup_paths, key=_curve_sort_key):
         cell_id = _curve_id_from_path(path)
         if cell_id is None:
             continue

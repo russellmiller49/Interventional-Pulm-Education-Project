@@ -55,6 +55,7 @@ const XR_MAX_SPATIAL_SCALE = 80
 // World-space axes for the in-headset rotate controls (spin around vertical / tilt around horizontal).
 const XR_ROTATE_WORLD_UP = new Vector3(0, 1, 0)
 const XR_ROTATE_WORLD_RIGHT = new Vector3(1, 0, 0)
+const XR_ROTATE_WORLD_FORWARD = new Vector3(0, 0, 1)
 
 interface CtAlignmentVector {
   x: number
@@ -886,7 +887,6 @@ function XRSlider({
 
 function XRControlPanel({
   activeAxis,
-  crossSection,
   ctClipAxis,
   ctClipMode,
   ctPlaneOpacity,
@@ -900,15 +900,15 @@ function XRControlPanel({
   onCycleClipMode,
   onResetPlacement,
   onScaleTarget,
-  onCrossSectionChange,
   onCtPlaneOpacityChange,
   onSliceChange,
   onToggleActivePlane,
   onToggleCtPlanes,
   onRotateTarget,
+  onToggleStructures,
+  structuresOpen,
 }: {
   activeAxis: AnatomyAxis
-  crossSection: number
   ctClipAxis: AnatomyAxis
   ctClipMode: OrthogonalClipMode
   ctPlaneOpacity: number
@@ -922,19 +922,20 @@ function XRControlPanel({
   onCycleClipMode?: () => void
   onResetPlacement?: () => void
   onScaleTarget?: (factor: number) => void
-  onCrossSectionChange?: (value: number) => void
   onCtPlaneOpacityChange?: (value: number) => void
   onSliceChange?: (axis: AnatomyAxis, value: number) => void
   onToggleActivePlane?: (axis: AnatomyAxis) => void
   onToggleCtPlanes?: () => void
-  onRotateTarget?: (axis: 'x' | 'y', radians: number) => void
+  onRotateTarget?: (axis: 'x' | 'y' | 'z', radians: number) => void
+  onToggleStructures?: () => void
+  structuresOpen?: boolean
 }) {
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
   const { gl } = useThree()
   const faceTmp = useMemo(() => new Vector3(), [])
   const placedRef = useRef(false)
   const panelDragRef = useRef<{ pointerId: number; distance: number; offset: Vector3 } | null>(null)
-  const heldRotateRef = useRef<{ axis: 'x' | 'y'; sign: number } | null>(null)
+  const heldRotateRef = useRef<{ axis: 'x' | 'y' | 'z'; sign: number } | null>(null)
 
   // Yaw-only "face the user": turn the panel to face the viewer horizontally while staying upright.
   // (The previous version copied the camera's full orientation every frame, so the panel pitched and
@@ -1078,7 +1079,6 @@ function XRControlPanel({
         size={[0.2, 0.085]}
       />
 
-      <XRControlLabel position={[-0.56, 0.25, 0.012]}>Rotate (press & hold)</XRControlLabel>
       <XRControlButton
         disabled={!onRotateTarget}
         label="Turn L"
@@ -1088,7 +1088,7 @@ function XRControlPanel({
         onPressEnd={() => {
           heldRotateRef.current = null
         }}
-        position={[0.02, 0.25, 0.014]}
+        position={[-0.5, 0.25, 0.014]}
         size={[0.16, 0.085]}
       />
       <XRControlButton
@@ -1100,7 +1100,7 @@ function XRControlPanel({
         onPressEnd={() => {
           heldRotateRef.current = null
         }}
-        position={[0.19, 0.25, 0.014]}
+        position={[-0.31, 0.25, 0.014]}
         size={[0.16, 0.085]}
       />
       <XRControlButton
@@ -1112,7 +1112,7 @@ function XRControlPanel({
         onPressEnd={() => {
           heldRotateRef.current = null
         }}
-        position={[0.36, 0.25, 0.014]}
+        position={[-0.12, 0.25, 0.014]}
         size={[0.16, 0.085]}
       />
       <XRControlButton
@@ -1124,21 +1124,42 @@ function XRControlPanel({
         onPressEnd={() => {
           heldRotateRef.current = null
         }}
-        position={[0.53, 0.25, 0.014]}
+        position={[0.07, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Roll L"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'z', sign: 1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.26, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Roll R"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'z', sign: -1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.45, 0.25, 0.014]}
         size={[0.16, 0.085]}
       />
 
-      <XRControlLabel position={[-0.56, 0.13, 0.012]}>
-        Cut plane {formatXRPercent(crossSection)}
-      </XRControlLabel>
-      <XRSlider
-        disabled={!onCrossSectionChange}
-        max={100}
-        min={0}
-        onChange={onCrossSectionChange}
-        position={[0.18, 0.13, 0.014]}
-        value={crossSection}
-        width={0.6}
+      <XRControlLabel position={[-0.56, 0.13, 0.012]}>Structures menu</XRControlLabel>
+      <XRControlButton
+        disabled={!onToggleStructures}
+        label={structuresOpen ? 'Hide structures' : 'Show structures'}
+        onSelect={onToggleStructures}
+        position={[0.2, 0.13, 0.014]}
+        selected={structuresOpen}
+        size={[0.34, 0.085]}
       />
 
       <XRControlLabel position={[-0.56, 0.01, 0.012]}>
@@ -1211,6 +1232,272 @@ function XRControlPanel({
       <XRControlLabel position={[0.34, -0.38, 0.012]} size={0.022}>
         {ctClipMode === 'none' ? '' : AXIS_LABELS[ctClipAxis]}
       </XRControlLabel>
+    </group>
+  )
+}
+
+const STRUCTURES_PER_PAGE = 5
+
+// Group a segment for the Structures menu. Explicit `segment.group` wins; otherwise derive a sensible
+// bucket from the name so existing models (mostly named lymph nodes / vessels / heart) group sanely.
+function deriveSegmentGroup(segment: AnatomySegment): string {
+  if (segment.group) {
+    return segment.group
+  }
+  const text = `${segment.name} ${segment.id}`.toLowerCase()
+  if (/lymph|node/.test(text)) return 'Lymph nodes'
+  if (/aorta|arter|vein|venous|vena|cava|vessel|brachioceph|carotid|subclavian/.test(text)) {
+    return 'Vessels'
+  }
+  if (/heart|atri|ventric|cardiac/.test(text)) return 'Heart'
+  if (/airway|trachea|bronch|lung|lobe|carina|stent|fistula/.test(text)) return 'Airway & lungs'
+  return 'Other'
+}
+
+function groupSegments(
+  segments: AnatomySegment[],
+): Array<{ name: string; segments: AnatomySegment[] }> {
+  const order: string[] = []
+  const map = new Map<string, AnatomySegment[]>()
+  segments.forEach((segment) => {
+    const group = deriveSegmentGroup(segment)
+    if (!map.has(group)) {
+      map.set(group, [])
+      order.push(group)
+    }
+    map.get(group)!.push(segment)
+  })
+  return order.map((name) => ({ name, segments: map.get(name) ?? [] }))
+}
+
+/**
+ * Separate, draggable in-headset menu for showing/hiding individual structures and whole groups
+ * (lymph nodes, vessels, heart, …). Two levels: a group list with per-group "Show/Hide all", and a
+ * paginated per-structure list reached via "Open". Same lock/drag/face-the-user behaviour as the
+ * control panel (parked to the user's left); it does not track the head once placed.
+ */
+function XRStructuresPanel({
+  visible,
+  segments,
+  visibleSegments,
+  onToggleSegment,
+  onSetGroupVisibility,
+  onClose,
+}: {
+  visible: boolean
+  segments: AnatomySegment[]
+  visibleSegments: Record<string, boolean>
+  onToggleSegment: (id: string) => void
+  onSetGroupVisibility: (ids: string[], nextVisible: boolean) => void
+  onClose: () => void
+}) {
+  const { gl } = useThree()
+  const panelRef = useRef<Group | null>(null)
+  const faceTmp = useMemo(() => new Vector3(), [])
+  const placedRef = useRef(false)
+  const dragRef = useRef<{ pointerId: number; distance: number; offset: Vector3 } | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
+  const [page, setPage] = useState(0)
+
+  const groups = useMemo(() => groupSegments(segments), [segments])
+
+  // The panel unmounts when closed (gated render in AnatomyViewer), so group/page selection and
+  // placement reset naturally on the next open via fresh state — no reset effect needed.
+
+  const facePanelAtUser = () => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    faceTmp.setFromMatrixPosition(gl.xr.getCamera().matrixWorld)
+    panel.rotation.set(0, Math.atan2(faceTmp.x - panel.position.x, faceTmp.z - panel.position.z), 0)
+  }
+
+  useFrame(() => {
+    const panel = panelRef.current
+    if (!panel || !visible || !gl.xr.isPresenting || placedRef.current) {
+      return
+    }
+    panel.position.set(-0.95, 1.2, -1.0)
+    facePanelAtUser()
+    placedRef.current = true
+  })
+
+  const beginDrag = (event: ThreeEvent<PointerEvent>) => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    event.stopPropagation()
+    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+      event.pointerId,
+    )
+    const distance = Number.isFinite(event.distance)
+      ? event.distance
+      : event.ray.origin.distanceTo(event.point)
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), distance)
+    dragRef.current = {
+      pointerId: event.pointerId,
+      distance,
+      offset: panel.position.clone().sub(anchor),
+    }
+  }
+
+  const moveDrag = (event: ThreeEvent<PointerEvent>) => {
+    const drag = dragRef.current
+    const panel = panelRef.current
+    if (!drag || !panel || event.pointerId !== drag.pointerId) {
+      return
+    }
+    event.stopPropagation()
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), drag.distance)
+    panel.position.copy(anchor).add(drag.offset)
+    facePanelAtUser()
+  }
+
+  const endDrag = (event: ThreeEvent<PointerEvent>) => {
+    if (dragRef.current?.pointerId !== event.pointerId) {
+      return
+    }
+    dragRef.current = null
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
+
+  const activeGroup = selectedGroup ? (groups.find((g) => g.name === selectedGroup) ?? null) : null
+  const pageCount = activeGroup
+    ? Math.max(1, Math.ceil(activeGroup.segments.length / STRUCTURES_PER_PAGE))
+    : 1
+  const clampedPage = Math.min(page, pageCount - 1)
+  const pageSegments = activeGroup
+    ? activeGroup.segments.slice(
+        clampedPage * STRUCTURES_PER_PAGE,
+        clampedPage * STRUCTURES_PER_PAGE + STRUCTURES_PER_PAGE,
+      )
+    : []
+
+  return (
+    <group ref={panelRef} visible={visible}>
+      <mesh position={[0, 0, -0.008]}>
+        <planeGeometry args={[1.04, 1.16]} />
+        <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
+      </mesh>
+      <mesh position={[0, 0, -0.004]}>
+        <planeGeometry args={[1.08, 1.2]} />
+        <meshBasicMaterial color="#22d3ee" opacity={0.1} side={DoubleSide} transparent />
+      </mesh>
+      <group
+        onPointerDown={beginDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+      >
+        <mesh position={[0, 0.5, 0.006]}>
+          <planeGeometry args={[1.02, 0.13]} />
+          <meshBasicMaterial
+            color="#0e7490"
+            opacity={0.92}
+            side={DoubleSide}
+            toneMapped={false}
+            transparent
+          />
+        </mesh>
+        <XRControlLabel position={[-0.47, 0.5, 0.012]} size={0.03}>
+          {activeGroup ? activeGroup.name : 'Structures — drag to move'}
+        </XRControlLabel>
+      </group>
+      <XRControlButton
+        label="Close"
+        onSelect={onClose}
+        position={[0.36, 0.5, 0.014]}
+        size={[0.18, 0.085]}
+      />
+
+      {segments.length === 0 ? (
+        <XRControlLabel position={[-0.47, 0.3, 0.012]}>No structures in this model</XRControlLabel>
+      ) : !activeGroup ? (
+        groups.map((group, index) => {
+          const ids = group.segments.map((segment) => segment.id)
+          const allVisible = group.segments.every((segment) => visibleSegments[segment.id] ?? true)
+          const rowY = 0.34 - index * 0.13
+          return (
+            <group key={group.name}>
+              <XRControlLabel position={[-0.47, rowY, 0.012]} size={0.022}>
+                {`${group.name} (${group.segments.length})`}
+              </XRControlLabel>
+              <XRControlButton
+                label={allVisible ? 'Hide all' : 'Show all'}
+                onSelect={() => onSetGroupVisibility(ids, !allVisible)}
+                position={[0.16, rowY, 0.014]}
+                selected={allVisible}
+                size={[0.21, 0.085]}
+              />
+              <XRControlButton
+                label="Open"
+                onSelect={() => {
+                  setSelectedGroup(group.name)
+                  setPage(0)
+                }}
+                position={[0.41, rowY, 0.014]}
+                size={[0.15, 0.085]}
+              />
+            </group>
+          )
+        })
+      ) : (
+        <>
+          <XRControlButton
+            label="‹ Groups"
+            onSelect={() => setSelectedGroup(null)}
+            position={[-0.34, 0.34, 0.014]}
+            size={[0.26, 0.085]}
+          />
+          {pageSegments.map((segment, index) => {
+            const segmentVisible = visibleSegments[segment.id] ?? true
+            const rowY = 0.2 - index * 0.115
+            return (
+              <group key={segment.id}>
+                <XRControlLabel position={[-0.47, rowY, 0.012]} size={0.019}>
+                  {segment.name}
+                </XRControlLabel>
+                <XRControlButton
+                  label={segmentVisible ? 'Hide' : 'Show'}
+                  onSelect={() => onToggleSegment(segment.id)}
+                  position={[0.4, rowY, 0.014]}
+                  selected={segmentVisible}
+                  size={[0.18, 0.08]}
+                />
+              </group>
+            )
+          })}
+          {pageCount > 1 ? (
+            <>
+              <XRControlButton
+                disabled={clampedPage <= 0}
+                label="Prev"
+                onSelect={() => setPage((p) => Math.max(0, p - 1))}
+                position={[-0.22, -0.45, 0.014]}
+                size={[0.2, 0.085]}
+              />
+              <XRControlLabel position={[0.04, -0.45, 0.012]} size={0.02}>
+                {`Page ${clampedPage + 1}/${pageCount}`}
+              </XRControlLabel>
+              <XRControlButton
+                disabled={clampedPage >= pageCount - 1}
+                label="Next"
+                onSelect={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                position={[0.32, -0.45, 0.014]}
+                size={[0.2, 0.085]}
+              />
+            </>
+          ) : null}
+        </>
+      )}
     </group>
   )
 }
@@ -1402,6 +1689,8 @@ export interface AnatomyViewerProps {
   onCtClipModeChange?: (mode: OrthogonalClipMode) => void
   onCtClipAxisChange?: (axis: AnatomyAxis) => void
   onVolumeSliceChange?: (value: number) => void
+  onToggleSegmentVisibility?: (id: string) => void
+  onSetSegmentsVisibility?: (ids: string[], visible: boolean) => void
 }
 
 export function AnatomyViewer({
@@ -1426,7 +1715,6 @@ export function AnatomyViewer({
   onError,
   onSceneMetrics,
   onSegmentsChanged,
-  onCrossSectionChange,
   onShowCtPlanesChange,
   onCtPlaneVisibilityChange,
   onCtPlaneSliceChange,
@@ -1434,6 +1722,8 @@ export function AnatomyViewer({
   onCtClipModeChange,
   onCtClipAxisChange,
   onVolumeSliceChange,
+  onToggleSegmentVisibility,
+  onSetSegmentsVisibility,
 }: AnatomyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const glRef = useRef<WebGLRenderer | null>(null)
@@ -1468,6 +1758,7 @@ export function AnatomyViewer({
   })
   const [xrSessionActive, setXrSessionActive] = useState(false)
   const [spatialSelection, setSpatialSelection] = useState<string | null>(null)
+  const [showStructuresPanel, setShowStructuresPanel] = useState(false)
   const [xrControlAxis, setXrControlAxis] = useState<AnatomyAxis>(ctClipAxis)
   const [debugCoords, setDebugCoords] = useState({
     position: [0, 0, 0] as [number, number, number],
@@ -1968,12 +2259,18 @@ export function AnatomyViewer({
   // Continuous rotate while a Turn/Tilt button is held. Called every frame by the panel with a small
   // per-frame angle; rotates about WORLD axes so "turn" always spins around vertical regardless of
   // the model's current orientation. No setState here — it runs every frame while a button is held.
-  const handleXrRotateTarget = useCallback((axis: 'x' | 'y', radians: number) => {
+  const handleXrRotateTarget = useCallback((axis: 'x' | 'y' | 'z', radians: number) => {
     const root = spatialRootRef.current
     if (!root || !Number.isFinite(radians)) {
       return
     }
-    root.rotateOnWorldAxis(axis === 'y' ? XR_ROTATE_WORLD_UP : XR_ROTATE_WORLD_RIGHT, radians)
+    const worldAxis =
+      axis === 'y'
+        ? XR_ROTATE_WORLD_UP
+        : axis === 'z'
+          ? XR_ROTATE_WORLD_FORWARD
+          : XR_ROTATE_WORLD_RIGHT
+    root.rotateOnWorldAxis(worldAxis, radians)
     root.updateMatrixWorld(true)
   }, [])
 
@@ -2570,7 +2867,6 @@ export function AnatomyViewer({
                   {xrSessionActive ? (
                     <XRControlPanel
                       activeAxis={xrControlAxis}
-                      crossSection={crossSection}
                       ctClipAxis={ctClipAxis}
                       ctClipMode={ctClipMode}
                       ctPlaneOpacity={ctPlaneOpacity}
@@ -2585,7 +2881,6 @@ export function AnatomyViewer({
                       onResetPlacement={spatialPlacement ? handleXrResetPlacement : undefined}
                       onScaleTarget={handleXrScaleTarget}
                       onRotateTarget={handleXrRotateTarget}
-                      onCrossSectionChange={onCrossSectionChange}
                       onCtPlaneOpacityChange={onCtPlaneOpacityChange}
                       onSliceChange={
                         onCtPlaneSliceChange || onVolumeSliceChange
@@ -2596,6 +2891,22 @@ export function AnatomyViewer({
                         onCtPlaneVisibilityChange ? handleXrToggleActivePlane : undefined
                       }
                       onToggleCtPlanes={onShowCtPlanesChange ? handleXrToggleCtPlanes : undefined}
+                      onToggleStructures={
+                        onToggleSegmentVisibility
+                          ? () => setShowStructuresPanel((open) => !open)
+                          : undefined
+                      }
+                      structuresOpen={showStructuresPanel}
+                    />
+                  ) : null}
+                  {xrSessionActive && showStructuresPanel && onToggleSegmentVisibility ? (
+                    <XRStructuresPanel
+                      visible
+                      segments={model.segments}
+                      visibleSegments={visibleSegments}
+                      onToggleSegment={onToggleSegmentVisibility}
+                      onSetGroupVisibility={onSetSegmentsVisibility ?? (() => undefined)}
+                      onClose={() => setShowStructuresPanel(false)}
                     />
                   ) : null}
                 </Suspense>

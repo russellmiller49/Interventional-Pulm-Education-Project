@@ -43,6 +43,15 @@ export function isCtAlignmentSandboxPath(pathname: string) {
   )
 }
 
+export function isDevOnlyAirwayAnatomyPath(pathname: string) {
+  return (
+    pathname === '/learn/anatomy/airway' ||
+    pathname.startsWith('/learn/anatomy/airway/') ||
+    pathname === '/airway-anatomy' ||
+    pathname.startsWith('/airway-anatomy/')
+  )
+}
+
 export function isPublicPath(pathname: string) {
   if (PUBLIC_EXACT_PATHS.has(pathname)) {
     return true

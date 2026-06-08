@@ -17,6 +17,7 @@ const dryRun = process.argv.includes('--dry-run')
 const upsert = process.argv.includes('--upsert')
 
 const uploadPrefixes = [
+  'airway-anatomy',
   'bronch-navigation-trainer/app/cases',
   'draco',
   'fluoroview',

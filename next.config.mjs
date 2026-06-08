@@ -89,6 +89,7 @@ const shortAssetManifestHeaders = [
 ]
 
 const moduleAssetPrefixes = [
+  '/airway-anatomy',
   '/models',
   '/draco',
   '/socal-ebus-course/app',
@@ -135,6 +136,10 @@ const moduleAssetFallbackRewrites = moduleAssetOrigin
       {
         source: '/module-assets/v1/:path*',
         destination: `${moduleAssetOrigin}/:path*`,
+      },
+      {
+        source: '/airway-anatomy/:path*',
+        destination: `${moduleAssetOrigin}/airway-anatomy/:path*`,
       },
       {
         source: '/bronch-navigation-trainer/app/cases/:path*',
