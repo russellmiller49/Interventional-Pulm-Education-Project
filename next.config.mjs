@@ -7,7 +7,7 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://upload.wikimedia.org https://*.supabase.co https://*.storage.supabase.co",
-  "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
+  "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self'",
   "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com blob:",
@@ -50,7 +50,7 @@ const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
       key: header.key,
       value: csp
         .replace(
-          "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
+          "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net",
           "connect-src 'self' data: https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
         )
         .replace(

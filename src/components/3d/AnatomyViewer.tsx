@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
-import { XR } from '@react-three/xr'
+import { XR, useXR } from '@react-three/xr'
 import { Camera, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -891,6 +891,9 @@ function XRControlPanel({
 }) {
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
   const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
+  // Temporary debug readout: number of XR input sources the store detects (controllers + hands).
+  // 0 => no inputs detected at all; >=1 => detected, so a missing ray points to the asset/CSP fetch.
+  const xrInputCount = useXR((s) => s.inputSourceStates.length)
 
   // World-fixed control surface: sits below and in front of the model (which floats ahead at eye
   // level), tilted up toward the user like a lectern. Both the model and this panel live in the
@@ -910,7 +913,7 @@ function XRControlPanel({
         Spatial anatomy controls
       </XRControlLabel>
       <XRControlLabel position={[-0.56, 0.35, 0.012]} size={0.021}>
-        Aim at buttons. Menu stays fixed; hold select away to move anatomy.
+        {`Point & pull trigger to use. XR inputs detected: ${xrInputCount}`}
       </XRControlLabel>
 
       <XRControlLabel position={[-0.56, 0.25, 0.012]}>Model placement</XRControlLabel>

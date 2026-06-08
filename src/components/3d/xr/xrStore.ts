@@ -19,7 +19,12 @@ export function createAnatomyXRStore() {
     // Max foveation eases the standalone Quest GPU when rendering large meshes + clipping.
     foveation: 1,
     frameRate: 'high',
-    // controller / hand / transientPointer / gaze all default to `true`; hand-tracking is
-    // requested as an optional session feature automatically when hand input is enabled.
+    // Render Quest controllers as a ray only — `model: false` skips loading the controller GLB from
+    // the @webxr-input-profiles CDN. The ray pointer + pointer events come straight from the XR input
+    // source, so input no longer depends on that asset load (which was leaving Quest with no
+    // controllers/ray at all). rayPointer + grabPointer stay enabled by default.
+    controller: { model: false },
+    // hand / transientPointer / gaze stay default `true`; Vision Pro pinch (transient-pointer) and
+    // hand-tracking are unaffected by the controller option above.
   })
 }
