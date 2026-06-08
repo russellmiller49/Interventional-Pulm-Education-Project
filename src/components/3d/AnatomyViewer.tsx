@@ -53,9 +53,8 @@ export type OrthogonalClipMode = 'none' | 'hide-above' | 'hide-below'
 
 const XR_CONTROL_CLIP_MODES: OrthogonalClipMode[] = ['none', 'hide-above', 'hide-below']
 const XR_CONTROL_ACTION_KEY = 'xrControlAction'
-const XR_CONTROL_PANEL_DISTANCE = 1.08
-const XR_CONTROL_PANEL_RIGHT_OFFSET = 0.44
-const XR_CONTROL_PANEL_DOWN_OFFSET = 0.03
+const XR_CONTROL_PANEL_DISTANCE = 1.28
+const XR_CONTROL_PANEL_VERTICAL_OFFSET = -0.08
 const XR_MIN_SPATIAL_SCALE = 0.001
 const XR_MAX_SPATIAL_SCALE = 80
 
@@ -861,13 +860,13 @@ function XRControlPanel({
   onToggleActivePlane?: (axis: AnatomyAxis) => void
   onToggleCtPlanes?: () => void
 }) {
-  const { camera } = useThree()
+  const { gl } = useThree()
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
   const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
+  const hasPlacedPanelRef = useRef(false)
   const frameVectors = useMemo(
     () => ({
       forward: new Vector3(),
-      right: new Vector3(),
       up: new Vector3(),
       position: new Vector3(),
       quaternion: new Quaternion(),
@@ -875,25 +874,32 @@ function XRControlPanel({
     [],
   )
 
+  useEffect(() => {
+    if (!visible) {
+      hasPlacedPanelRef.current = false
+    }
+  }, [visible])
+
   useFrame(() => {
-    if (!visible || !panelRef.current) {
+    if (!visible || !panelRef.current || hasPlacedPanelRef.current || !gl.xr.isPresenting) {
       return
     }
-    camera.getWorldDirection(frameVectors.forward)
-    frameVectors.right.setFromMatrixColumn(camera.matrixWorld, 0).normalize()
-    frameVectors.up.setFromMatrixColumn(camera.matrixWorld, 1).normalize()
-    camera.getWorldPosition(frameVectors.position)
+    const xrCamera = gl.xr.getCamera()
+    xrCamera.updateMatrixWorld()
+    xrCamera.getWorldDirection(frameVectors.forward)
+    frameVectors.up.setFromMatrixColumn(xrCamera.matrixWorld, 1).normalize()
+    xrCamera.getWorldPosition(frameVectors.position)
     frameVectors.position
       .addScaledVector(frameVectors.forward, XR_CONTROL_PANEL_DISTANCE)
-      .addScaledVector(frameVectors.right, XR_CONTROL_PANEL_RIGHT_OFFSET)
-      .addScaledVector(frameVectors.up, -XR_CONTROL_PANEL_DOWN_OFFSET)
+      .addScaledVector(frameVectors.up, XR_CONTROL_PANEL_VERTICAL_OFFSET)
     panelRef.current.position.copy(frameVectors.position)
-    camera.getWorldQuaternion(frameVectors.quaternion)
+    xrCamera.getWorldQuaternion(frameVectors.quaternion)
     panelRef.current.quaternion.copy(frameVectors.quaternion)
+    hasPlacedPanelRef.current = true
   })
 
   return (
-    <group ref={panelRef} position={[0.44, 1.48, -1.08]} visible={visible}>
+    <group ref={panelRef} position={[0, 1.42, -1.28]} visible={visible}>
       <mesh position={[0, 0, -0.008]}>
         <planeGeometry args={[1.22, 0.95]} />
         <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
@@ -906,7 +912,7 @@ function XRControlPanel({
         Spatial anatomy controls
       </XRControlLabel>
       <XRControlLabel position={[-0.56, 0.35, 0.012]} size={0.021}>
-        Aim at buttons. Hold select away from panel to move anatomy.
+        Aim at buttons. Menu stays fixed; hold select away to move anatomy.
       </XRControlLabel>
 
       <XRControlLabel position={[-0.56, 0.25, 0.012]}>Model placement</XRControlLabel>
