@@ -640,7 +640,15 @@ function XRTextPlane({
   return (
     <mesh position={position}>
       <planeGeometry args={[width, height]} />
-      <meshBasicMaterial depthWrite={false} map={texture} side={DoubleSide} transparent />
+      {/* toneMapped={false} keeps the canvas text at full white — the scene's ACES tone mapping
+          was otherwise desaturating/darkening the labels, which is why they looked grey. */}
+      <meshBasicMaterial
+        depthWrite={false}
+        map={texture}
+        side={DoubleSide}
+        toneMapped={false}
+        transparent
+      />
     </mesh>
   )
 }
@@ -890,17 +898,83 @@ function XRControlPanel({
   onToggleCtPlanes?: () => void
 }) {
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
-  const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
   // Temporary debug readout: number of XR input sources the store detects (controllers + hands).
-  // 0 => no inputs detected at all; >=1 => detected, so a missing ray points to the asset/CSP fetch.
   const xrInputCount = useXR((s) => s.inputSourceStates.length)
+  const { gl } = useThree()
+  const billboardQuat = useMemo(() => new Quaternion(), [])
+  const placedRef = useRef(false)
+  const panelDragRef = useRef<{ pointerId: number; distance: number; offset: Vector3 } | null>(null)
 
-  // World-fixed control surface: sits below and in front of the model (which floats ahead at eye
-  // level), tilted up toward the user like a lectern. Both the model and this panel live in the
-  // same world frame so they stay separated regardless of head height — the previous billboard made
-  // the panel camera-relative while the model was world-fixed, so they collided on entry.
+  // The panel is parked off to the user's right on first frame, then it (a) always billboards to
+  // face the user and (b) can be dragged anywhere by its header bar. Position/rotation are managed
+  // imperatively so React never fights the drag; the model stays front-and-centre on its own.
+  useEffect(() => {
+    if (!visible) {
+      placedRef.current = false
+    }
+  }, [visible])
+
+  useFrame(() => {
+    const panel = panelRef.current
+    if (!panel || !visible || !gl.xr.isPresenting) {
+      return
+    }
+    const camera = gl.xr.getCamera()
+    if (!placedRef.current) {
+      panel.position.set(0.95, 1.2, -1.0)
+      placedRef.current = true
+    }
+    camera.getWorldQuaternion(billboardQuat)
+    panel.quaternion.copy(billboardQuat)
+  })
+
+  const beginPanelDrag = (event: ThreeEvent<PointerEvent>) => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    event.stopPropagation()
+    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+      event.pointerId,
+    )
+    const distance = Number.isFinite(event.distance)
+      ? event.distance
+      : event.ray.origin.distanceTo(event.point)
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), distance)
+    panelDragRef.current = {
+      pointerId: event.pointerId,
+      distance,
+      offset: panel.position.clone().sub(anchor),
+    }
+  }
+
+  const movePanelDrag = (event: ThreeEvent<PointerEvent>) => {
+    const drag = panelDragRef.current
+    const panel = panelRef.current
+    if (!drag || !panel || event.pointerId !== drag.pointerId) {
+      return
+    }
+    event.stopPropagation()
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), drag.distance)
+    panel.position.copy(anchor).add(drag.offset)
+  }
+
+  const endPanelDrag = (event: ThreeEvent<PointerEvent>) => {
+    if (panelDragRef.current?.pointerId !== event.pointerId) {
+      return
+    }
+    panelDragRef.current = null
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
+
   return (
-    <group ref={panelRef} position={[0, 0.85, -1.0]} rotation={[-0.35, 0, 0]} visible={visible}>
+    <group ref={panelRef} visible={visible}>
       <mesh position={[0, 0, -0.008]}>
         <planeGeometry args={[1.22, 0.95]} />
         <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
@@ -909,12 +983,30 @@ function XRControlPanel({
         <planeGeometry args={[1.26, 0.99]} />
         <meshBasicMaterial color="#22d3ee" opacity={0.1} side={DoubleSide} transparent />
       </mesh>
-      <XRControlLabel position={[-0.56, 0.42, 0.012]} size={0.036}>
-        Spatial anatomy controls
-      </XRControlLabel>
-      <XRControlLabel position={[-0.56, 0.35, 0.012]} size={0.021}>
-        {`Point & pull trigger to use. XR inputs detected: ${xrInputCount}`}
-      </XRControlLabel>
+      {/* Header bar = drag handle. Grab anywhere on it (bar or title) to reposition the panel. */}
+      <group
+        onPointerDown={beginPanelDrag}
+        onPointerMove={movePanelDrag}
+        onPointerUp={endPanelDrag}
+        onPointerCancel={endPanelDrag}
+      >
+        <mesh position={[0, 0.42, 0.006]}>
+          <planeGeometry args={[1.2, 0.13]} />
+          <meshBasicMaterial
+            color="#0e7490"
+            opacity={0.92}
+            side={DoubleSide}
+            toneMapped={false}
+            transparent
+          />
+        </mesh>
+        <XRControlLabel position={[-0.56, 0.44, 0.012]} size={0.034}>
+          Spatial anatomy controls
+        </XRControlLabel>
+        <XRControlLabel position={[-0.56, 0.37, 0.012]} size={0.02}>
+          {`Drag this bar to move · inputs: ${xrInputCount}`}
+        </XRControlLabel>
+      </group>
 
       <XRControlLabel position={[-0.56, 0.25, 0.012]}>Model placement</XRControlLabel>
       <XRControlButton
@@ -977,15 +1069,20 @@ function XRControlPanel({
         width={0.42}
       />
 
-      <XRControlLabel position={[-0.56, -0.12, 0.012]}>Plane axis</XRControlLabel>
+      <XRControlLabel position={[-0.56, -0.12, 0.012]}>CT planes — tap to show/hide</XRControlLabel>
       {ORTHOGONAL_AXES.map((axis, index) => (
         <XRControlButton
           key={axis}
-          disabled={!volumeAvailable || !onActiveAxisChange}
+          disabled={!volumeAvailable || !onToggleActivePlane}
           label={AXIS_LABELS[axis]}
-          onSelect={() => onActiveAxisChange?.(axis)}
+          onSelect={() => {
+            // Tapping a plane toggles its own visibility (independent show/hide of axial / coronal /
+            // sagittal) and makes it the axis the slice slider below controls.
+            onActiveAxisChange?.(axis)
+            onToggleActivePlane?.(axis)
+          }}
           position={[0.02 + index * 0.24, -0.12, 0.014]}
-          selected={axis === activeAxis}
+          selected={showCtPlanes && (ctPlaneVisibility[axis] ?? true)}
           size={[0.22, 0.085]}
         />
       ))}
@@ -998,18 +1095,10 @@ function XRControlPanel({
         max={100}
         min={0}
         onChange={(value) => onSliceChange?.(activeAxis, value)}
-        position={[0.14, -0.25, 0.014]}
+        position={[0.2, -0.25, 0.014]}
         throttleMs={80}
         value={activeSlice}
-        width={0.46}
-      />
-      <XRControlButton
-        disabled={!volumeAvailable || !onToggleActivePlane}
-        label={activePlaneVisible ? 'Axis on' : 'Axis off'}
-        onSelect={() => onToggleActivePlane?.(activeAxis)}
-        position={[0.53, -0.25, 0.014]}
-        selected={activePlaneVisible}
-        size={[0.21, 0.085]}
+        width={0.6}
       />
 
       <XRControlLabel position={[-0.56, -0.38, 0.012]}>
