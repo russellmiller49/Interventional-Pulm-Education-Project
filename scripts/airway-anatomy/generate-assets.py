@@ -31,6 +31,7 @@ CT_PREVIEW_NAME = "target_clean_ct_preview_i16.raw"
 AIRWAY_GLB_NAME = "airway.glb"
 AIRWAY_STL_SOURCE_NAME = "airway_large.stl"
 AIRWAY_STL_NAME = "airway_large.stl"
+LABEL_SOURCE_NAME = "labels_cleaned_names.xlsx"
 STRIDE_XYZ = (2, 2, 3)
 
 Vec3 = tuple[float, float, float]
@@ -63,7 +64,7 @@ def main() -> None:
     (output_dir / "ct").mkdir(parents=True, exist_ok=True)
 
     graph = build_airway_graph(centerline_dir)
-    labels = build_centerline_labels(centerline_dir, source_dir / "Centerline_labels.xlsx", graph)
+    labels = build_centerline_labels(centerline_dir, source_dir / LABEL_SOURCE_NAME, graph)
     ct_asset = build_ct_preview(ct_path, output_dir / "ct" / CT_PREVIEW_NAME, skip=args.skip_ct)
 
     shutil.copy2(source_dir / "Airway.glb", output_dir / AIRWAY_GLB_NAME)
@@ -318,25 +319,63 @@ def read_centerline_label_rows(path: Path) -> dict[int, dict[str, str]]:
         shared_strings = read_shared_strings(archive, ns)
         sheet_xml = archive.read("xl/worksheets/sheet1.xml")
     root = ElementTree.fromstring(sheet_xml)
-    rows: list[list[str]] = []
+    rows: list[dict[str, str]] = []
     for row in root.findall(".//main:sheetData/main:row", ns):
-        values: list[str] = []
+        values: dict[str, str] = {}
         for cell in row.findall("main:c", ns):
-            values.append(read_cell(cell, shared_strings, ns))
+            cell_ref = cell.attrib.get("r", "")
+            column = column_name_from_cell_ref(cell_ref)
+            if column:
+                values[column] = read_cell(cell, shared_strings, ns)
         rows.append(values)
+
+    if not rows:
+        return {}
+
+    header = {column: normalize_header(value) for column, value in rows[0].items()}
+    centerline_col = find_header_column(header, ("centerline", "curve")) or "A"
+    abbreviated_col = find_header_column(header, ("abbreviation",)) or "B"
+    full_col = (
+        find_header_column(header, ("full", "segment"))
+        or find_header_column(header, ("airway", "name"))
+        or "C"
+    )
 
     output: dict[int, dict[str, str]] = {}
     for row in rows[1:]:
-        if len(row) < 3:
+        cell_id = centerline_cell_id(row.get(centerline_col, ""))
+        if cell_id is None:
             continue
-        match = re.search(r"Centerline curve_(\d+)", row[0] or "")
-        if not match:
-            continue
-        output[int(match.group(1))] = {
-            "abbreviatedLabel": row[1].strip(),
-            "fullLabel": row[2].strip(),
+        output[cell_id] = {
+            "abbreviatedLabel": row.get(abbreviated_col, "").strip(),
+            "fullLabel": row.get(full_col, "").strip(),
         }
     return output
+
+
+def column_name_from_cell_ref(cell_ref: str) -> str:
+    match = re.match(r"([A-Z]+)", cell_ref.upper())
+    return match.group(1) if match else ""
+
+
+def normalize_header(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+def find_header_column(header: dict[str, str], required_terms: tuple[str, ...]) -> str | None:
+    normalized_terms = tuple(normalize_header(term) for term in required_terms)
+    for column, value in header.items():
+        if all(term in value for term in normalized_terms):
+            return column
+    return None
+
+
+def centerline_cell_id(value: str) -> int | None:
+    parenthesized = re.search(r"\((\d+)\)\s*$", value)
+    if parenthesized:
+        return int(parenthesized.group(1))
+    match = re.search(r"Centerline\s+curve_(\d+)", value, flags=re.IGNORECASE)
+    return int(match.group(1)) if match else None
 
 
 def read_shared_strings(archive: zipfile.ZipFile, ns: dict[str, str]) -> list[str]:

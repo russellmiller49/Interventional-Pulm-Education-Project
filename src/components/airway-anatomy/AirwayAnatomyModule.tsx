@@ -942,9 +942,9 @@ function ScopeCamera({ pose }: { pose: ScopePoseSnapshot }) {
     const position = new THREE.Vector3(...pose.tipLps)
     const forward = new THREE.Vector3(...pose.lookAtLps).sub(position).normalize()
     if (forward.lengthSq() < 1e-8) forward.set(...pose.tangentLps)
-    // Match the Nav Bronch patient-view camera basis so the on-image A/B
-    // markers project to the same branches described by the picker.
-    const upHint = new THREE.Vector3(0, 1, 0)
+    // Patient-view basis for this Slicer export: the right mainstem has
+    // negative LPS X coordinates, so it should project to screen-right.
+    const upHint = new THREE.Vector3(0, -1, 0)
     let right = new THREE.Vector3().crossVectors(forward, upHint).normalize()
     if (right.lengthSq() < 1e-8) right = new THREE.Vector3(1, 0, 0)
     const up = new THREE.Vector3().crossVectors(right, forward).normalize()
@@ -1013,7 +1013,7 @@ function ScopeBranchOverlay({
       }
     })
     .filter((placement): placement is NonNullable<typeof placement> => placement != null)
-    .sort((a, b) => a.lateral - b.lateral)
+    .sort((a, b) => b.lateral - a.lateral)
 
   if (!placements.length) return null
 
