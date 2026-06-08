@@ -22,6 +22,7 @@ import {
   DoubleSide,
   Euler,
   LinearFilter,
+  LinearMipmapLinearFilter,
   Matrix4,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -629,7 +630,11 @@ function XRTextPlane({
 
     const nextTexture = new CanvasTexture(canvas)
     nextTexture.colorSpace = SRGBColorSpace
-    nextTexture.minFilter = LinearFilter
+    // Anisotropy + mipmaps keep text sharp at the oblique angles the panels are usually viewed from.
+    // Plain LinearFilter (no mipmaps, no anisotropy) was the cause of the smeared/blurry text.
+    nextTexture.anisotropy = 16
+    nextTexture.generateMipmaps = true
+    nextTexture.minFilter = LinearMipmapLinearFilter
     nextTexture.magFilter = LinearFilter
     nextTexture.needsUpdate = true
     return nextTexture
@@ -1318,7 +1323,24 @@ function XRStructuresPanel({
     if (!panel || !visible || !gl.xr.isPresenting || placedRef.current) {
       return
     }
-    panel.position.set(-0.95, 1.2, -1.0)
+    const camera = gl.xr.getCamera()
+    camera.updateMatrixWorld()
+    const camPos = new Vector3().setFromMatrixPosition(camera.matrixWorld)
+    const forward = new Vector3()
+    camera.getWorldDirection(forward)
+    forward.y = 0
+    if (forward.lengthSq() < 1e-4) {
+      forward.set(0, 0, -1)
+    }
+    forward.normalize()
+    const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0)
+    right.y = 0
+    right.normalize()
+    // Open the menu in front of the user (and a little to their left so it doesn't land on top of
+    // the control panel), at eye level, then lock it. It was previously parked far to the left,
+    // out of view, so opening it appeared to do nothing.
+    panel.position.copy(camPos).addScaledVector(forward, 0.95).addScaledVector(right, -0.5)
+    panel.position.y = camPos.y - 0.05
     facePanelAtUser()
     placedRef.current = true
   })
