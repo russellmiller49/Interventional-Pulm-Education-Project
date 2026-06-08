@@ -1,0 +1,155 @@
+{
+  "@schema": "https://raw.githubusercontent.com/slicer/slicer/master/Modules/Loadable/Markups/Resources/Schema/markups-schema-v1.0.3.json#",
+  "markups": [
+    {
+      "type": "Curve",
+      "coordinateSystem": "LPS",
+      "coordinateUnits": "mm",
+      "locked": false,
+      "fixedNumberOfControlPoints": false,
+      "labelFormat": "%N-%d",
+      "lastUsedControlPointNumber": 6,
+      "controlPoints": [
+        {
+          "id": "1",
+          "label": "Centerline curve_1 (169)-1",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [-53.698768615722656, -168.13343811035156, -153.0259552001953],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "2",
+          "label": "Centerline curve_1 (169)-2",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [-52.973167419433594, -168.529052734375, -151.85520935058594],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "3",
+          "label": "Centerline curve_1 (169)-3",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [-52.5905876159668, -169.0267333984375, -150.84228515625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "4",
+          "label": "Centerline curve_1 (169)-4",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [-52.56940841674805, -169.65481567382813, -149.82261657714844],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "5",
+          "label": "Centerline curve_1 (169)-5",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [-52.55788803100586, -170.24636840820313, -148.824951171875],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "6",
+          "label": "Centerline curve_1 (169)-6",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [-52.50688934326172, -170.75668334960938, -148.3069610595703],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "length",
+          "enabled": false,
+          "units": "mm",
+          "printFormat": "%-#4.4g%s"
+        },
+        {
+          "name": "curvature mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "curvature max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "Radius",
+          "enabled": true,
+          "units": "mm",
+          "controlPointValues": [
+            1.7074958183479758, 1.7096927324023246, 1.7262837380059426, 1.8388197142681169,
+            1.8663271429751707, 1.8388197142681169
+          ]
+        }
+      ],
+      "display": {
+        "visibility": true,
+        "opacity": 1.0,
+        "color": [0.4, 1.0, 1.0],
+        "selectedColor": [0.21568627450980393, 0.6588235294117647, 0.5686274509803921],
+        "activeColor": [0.4, 1.0, 0.0],
+        "propertiesLabelVisibility": true,
+        "pointLabelsVisibility": false,
+        "textScale": 3.0,
+        "glyphType": "Sphere3D",
+        "glyphScale": 3.0,
+        "glyphSize": 5.0,
+        "useGlyphScale": true,
+        "sliceProjection": false,
+        "sliceProjectionUseFiducialColor": true,
+        "sliceProjectionOutlinedBehindSlicePlane": false,
+        "sliceProjectionColor": [1.0, 1.0, 1.0],
+        "sliceProjectionOpacity": 0.6,
+        "lineThickness": 0.2,
+        "lineColorFadingStart": 1.0,
+        "lineColorFadingEnd": 10.0,
+        "lineColorFadingSaturation": 1.0,
+        "lineColorFadingHueOffset": 0.0,
+        "handlesInteractive": false,
+        "translationHandleVisibility": true,
+        "rotationHandleVisibility": true,
+        "scaleHandleVisibility": false,
+        "interactionHandleScale": 3.0,
+        "snapMode": "toVisibleSurface"
+      }
+    }
+  ]
+}

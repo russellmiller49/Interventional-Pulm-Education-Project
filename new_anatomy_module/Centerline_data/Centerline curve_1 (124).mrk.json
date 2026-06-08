@@ -1,0 +1,167 @@
+{
+  "@schema": "https://raw.githubusercontent.com/slicer/slicer/master/Modules/Loadable/Markups/Resources/Schema/markups-schema-v1.0.3.json#",
+  "markups": [
+    {
+      "type": "Curve",
+      "coordinateSystem": "LPS",
+      "coordinateUnits": "mm",
+      "locked": false,
+      "fixedNumberOfControlPoints": false,
+      "labelFormat": "%N-%d",
+      "lastUsedControlPointNumber": 7,
+      "controlPoints": [
+        {
+          "id": "1",
+          "label": "Centerline curve_1 (124)-1",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [34.37236022949219, -114.86294555664063, -180.08975219726563],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "2",
+          "label": "Centerline curve_1 (124)-2",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [33.34233474731445, -114.56578063964844, -180.58499145507813],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "3",
+          "label": "Centerline curve_1 (124)-3",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [32.2770881652832, -114.46073913574219, -180.58905029296875],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "4",
+          "label": "Centerline curve_1 (124)-4",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [31.2618408203125, -114.27671813964844, -180.28489685058594],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "5",
+          "label": "Centerline curve_1 (124)-5",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [30.318632125854492, -113.85673522949219, -180.00787353515625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "6",
+          "label": "Centerline curve_1 (124)-6",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [29.447336196899414, -113.47825622558594, -179.560302734375],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "7",
+          "label": "Centerline curve_1 (124)-7",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [28.925548553466797, -113.2088394165039, -179.23487854003906],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "length",
+          "enabled": false,
+          "units": "mm",
+          "printFormat": "%-#4.4g%s"
+        },
+        {
+          "name": "curvature mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "curvature max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "Radius",
+          "enabled": true,
+          "units": "mm",
+          "controlPointValues": [
+            1.6813962346458668, 1.551581108675639, 1.3933660007531947, 1.4788774147459967,
+            1.5419619889641507, 1.5430383919173933, 1.5419619889641507
+          ]
+        }
+      ],
+      "display": {
+        "visibility": true,
+        "opacity": 1.0,
+        "color": [0.4, 1.0, 1.0],
+        "selectedColor": [0.3254901960784314, 0.2980392156862745, 0.596078431372549],
+        "activeColor": [0.4, 1.0, 0.0],
+        "propertiesLabelVisibility": true,
+        "pointLabelsVisibility": false,
+        "textScale": 3.0,
+        "glyphType": "Sphere3D",
+        "glyphScale": 3.0,
+        "glyphSize": 5.0,
+        "useGlyphScale": true,
+        "sliceProjection": false,
+        "sliceProjectionUseFiducialColor": true,
+        "sliceProjectionOutlinedBehindSlicePlane": false,
+        "sliceProjectionColor": [1.0, 1.0, 1.0],
+        "sliceProjectionOpacity": 0.6,
+        "lineThickness": 0.2,
+        "lineColorFadingStart": 1.0,
+        "lineColorFadingEnd": 10.0,
+        "lineColorFadingSaturation": 1.0,
+        "lineColorFadingHueOffset": 0.0,
+        "handlesInteractive": false,
+        "translationHandleVisibility": true,
+        "rotationHandleVisibility": true,
+        "scaleHandleVisibility": false,
+        "interactionHandleScale": 3.0,
+        "snapMode": "toVisibleSurface"
+      }
+    }
+  ]
+}

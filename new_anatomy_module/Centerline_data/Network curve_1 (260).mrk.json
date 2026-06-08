@@ -1,0 +1,412 @@
+{
+  "@schema": "https://raw.githubusercontent.com/slicer/slicer/master/Modules/Loadable/Markups/Resources/Schema/markups-schema-v1.0.3.json#",
+  "markups": [
+    {
+      "type": "Curve",
+      "coordinateSystem": "LPS",
+      "coordinateUnits": "mm",
+      "locked": false,
+      "fixedNumberOfControlPoints": false,
+      "labelFormat": "%N-%d",
+      "lastUsedControlPointNumber": 27,
+      "controlPoints": [
+        {
+          "id": "1",
+          "label": "Network curve_1 (260)-1",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [76.82532501220703, -196.3743438720703, -216.35496520996094],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "2",
+          "label": "Network curve_1 (260)-2",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [77.5426254272461, -198.5850067138672, -216.85447692871094],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "3",
+          "label": "Network curve_1 (260)-3",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [78.70934295654297, -199.29403686523438, -217.4164276123047],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "4",
+          "label": "Network curve_1 (260)-4",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [79.16716003417969, -199.70973205566406, -217.65646362304688],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "5",
+          "label": "Network curve_1 (260)-5",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [79.6214370727539, -200.0865020751953, -217.8551788330078],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "6",
+          "label": "Network curve_1 (260)-6",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [80.11141967773438, -200.48057556152344, -218.07330322265625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "7",
+          "label": "Network curve_1 (260)-7",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [80.58357238769531, -200.88937377929688, -218.2721405029297],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "8",
+          "label": "Network curve_1 (260)-8",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [81.17106628417969, -201.3088836669922, -218.49908447265625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "9",
+          "label": "Network curve_1 (260)-9",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [81.80741119384766, -201.80079650878906, -218.78366088867188],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "10",
+          "label": "Network curve_1 (260)-10",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [82.32325744628906, -202.19432067871094, -219.0953826904297],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "11",
+          "label": "Network curve_1 (260)-11",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [82.86589813232422, -202.60379028320313, -219.4534912109375],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "12",
+          "label": "Network curve_1 (260)-12",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [83.27727508544922, -202.87574768066406, -219.72683715820313],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "13",
+          "label": "Network curve_1 (260)-13",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [83.77262115478516, -203.2232208251953, -220.0608367919922],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "14",
+          "label": "Network curve_1 (260)-14",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [84.40960693359375, -203.75482177734375, -220.6719970703125],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "15",
+          "label": "Network curve_1 (260)-15",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [84.8169937133789, -204.15541076660156, -221.0408172607422],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "16",
+          "label": "Network curve_1 (260)-16",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [85.24182891845703, -204.59518432617188, -221.42149353027344],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "17",
+          "label": "Network curve_1 (260)-17",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [85.65811920166016, -205.07003784179688, -221.7524871826172],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "18",
+          "label": "Network curve_1 (260)-18",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [86.14070129394531, -205.57028198242188, -222.07278442382813],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "19",
+          "label": "Network curve_1 (260)-19",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [86.5800552368164, -206.0627899169922, -222.3487548828125],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "20",
+          "label": "Network curve_1 (260)-20",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [87.0151596069336, -206.57791137695313, -222.6332550048828],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "21",
+          "label": "Network curve_1 (260)-21",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [87.5439224243164, -207.0697021484375, -222.9597930908203],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "22",
+          "label": "Network curve_1 (260)-22",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [88.01844787597656, -207.5708770751953, -223.27711486816406],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "23",
+          "label": "Network curve_1 (260)-23",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [88.54449462890625, -208.10055541992188, -223.5680694580078],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "24",
+          "label": "Network curve_1 (260)-24",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [89.01215362548828, -208.57571411132813, -223.79940795898438],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "25",
+          "label": "Network curve_1 (260)-25",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [89.5050277709961, -208.94677734375, -223.9986572265625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "26",
+          "label": "Network curve_1 (260)-26",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [89.99665832519531, -209.3208770751953, -224.20553588867188],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "27",
+          "label": "Network curve_1 (260)-27",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [91.64334869384766, -210.62298583984375, -224.92678833007813],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "length",
+          "enabled": false,
+          "units": "mm",
+          "printFormat": "%-#4.4g%s"
+        },
+        {
+          "name": "curvature mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "curvature max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "Radius",
+          "enabled": true,
+          "units": "mm",
+          "controlPointValues": [
+            1.8113337310123814, 1.8113337310123814, 1.5599533786327724, 1.5658495431874917,
+            1.587728579758825, 1.6041265928583233, 1.6035824080539371, 1.617012449611409,
+            1.6021107123953064, 1.5570652011062731, 1.558970998759781, 1.5895101260060227,
+            1.6145957143480865, 1.584296939267442, 1.5310072964086363, 1.5372379291150986,
+            1.5488360490376778, 1.5527012466265258, 1.5524015319111033, 1.5701254089758554,
+            1.5856955117694773, 1.6119686482722921, 1.6406809876323825, 1.6985855223689807,
+            1.7634391534719, 1.8256873774637472, 1.8256873774637472
+          ]
+        }
+      ],
+      "display": {
+        "visibility": true,
+        "opacity": 1.0,
+        "color": [0.4, 1.0, 1.0],
+        "selectedColor": [0.5, 0.5, 0.5],
+        "activeColor": [0.4, 1.0, 0.0],
+        "propertiesLabelVisibility": true,
+        "pointLabelsVisibility": false,
+        "textScale": 3.0,
+        "glyphType": "Sphere3D",
+        "glyphScale": 3.0,
+        "glyphSize": 5.0,
+        "useGlyphScale": true,
+        "sliceProjection": false,
+        "sliceProjectionUseFiducialColor": true,
+        "sliceProjectionOutlinedBehindSlicePlane": false,
+        "sliceProjectionColor": [1.0, 1.0, 1.0],
+        "sliceProjectionOpacity": 0.6,
+        "lineThickness": 0.2,
+        "lineColorFadingStart": 1.0,
+        "lineColorFadingEnd": 10.0,
+        "lineColorFadingSaturation": 1.0,
+        "lineColorFadingHueOffset": 0.0,
+        "handlesInteractive": false,
+        "translationHandleVisibility": true,
+        "rotationHandleVisibility": true,
+        "scaleHandleVisibility": false,
+        "interactionHandleScale": 3.0,
+        "snapMode": "toVisibleSurface"
+      }
+    }
+  ]
+}

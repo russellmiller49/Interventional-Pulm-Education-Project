@@ -1,0 +1,412 @@
+{
+  "@schema": "https://raw.githubusercontent.com/slicer/slicer/master/Modules/Loadable/Markups/Resources/Schema/markups-schema-v1.0.3.json#",
+  "markups": [
+    {
+      "type": "Curve",
+      "coordinateSystem": "LPS",
+      "coordinateUnits": "mm",
+      "locked": false,
+      "fixedNumberOfControlPoints": false,
+      "labelFormat": "%N-%d",
+      "lastUsedControlPointNumber": 27,
+      "controlPoints": [
+        {
+          "id": "1",
+          "label": "Centerline curve_1 (200)-1",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [77.3146743774414, -190.67005920410156, -199.54855346679688],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "2",
+          "label": "Centerline curve_1 (200)-2",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [77.84003448486328, -191.03330993652344, -198.38160705566406],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "3",
+          "label": "Centerline curve_1 (200)-3",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [78.41963958740234, -191.38125610351563, -197.6311492919922],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "4",
+          "label": "Centerline curve_1 (200)-4",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [78.92314147949219, -191.72189331054688, -196.81600952148438],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "5",
+          "label": "Centerline curve_1 (200)-5",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [79.4443588256836, -191.95767211914063, -195.97955322265625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "6",
+          "label": "Centerline curve_1 (200)-6",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [79.99968719482422, -192.3653564453125, -195.23004150390625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "7",
+          "label": "Centerline curve_1 (200)-7",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [80.64598846435547, -192.69554138183594, -194.51931762695313],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "8",
+          "label": "Centerline curve_1 (200)-8",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [81.35044860839844, -193.10067749023438, -193.90606689453125],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "9",
+          "label": "Centerline curve_1 (200)-9",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [82.08202362060547, -193.34420776367188, -193.25180053710938],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "10",
+          "label": "Centerline curve_1 (200)-10",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [82.82493591308594, -193.6488800048828, -192.6336212158203],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "11",
+          "label": "Centerline curve_1 (200)-11",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [83.55928039550781, -193.9502716064453, -192.00157165527344],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "12",
+          "label": "Centerline curve_1 (200)-12",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [84.22212982177734, -194.27711486816406, -191.30165100097656],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "13",
+          "label": "Centerline curve_1 (200)-13",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [84.83505249023438, -194.5465087890625, -190.5462188720703],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "14",
+          "label": "Centerline curve_1 (200)-14",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [85.49290466308594, -194.87594604492188, -189.83924865722656],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "15",
+          "label": "Centerline curve_1 (200)-15",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [86.02409362792969, -195.25335693359375, -189.0686798095703],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "16",
+          "label": "Centerline curve_1 (200)-16",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [86.66034698486328, -195.63951110839844, -188.3778076171875],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "17",
+          "label": "Centerline curve_1 (200)-17",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [87.3614501953125, -196.14471435546875, -187.84425354003906],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "18",
+          "label": "Centerline curve_1 (200)-18",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [88.17273712158203, -196.54989624023438, -187.39462280273438],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "19",
+          "label": "Centerline curve_1 (200)-19",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [89.00502014160156, -196.92922973632813, -186.98214721679688],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "20",
+          "label": "Centerline curve_1 (200)-20",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [89.87740325927734, -197.10948181152344, -186.47305297851563],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "21",
+          "label": "Centerline curve_1 (200)-21",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [90.44577026367188, -197.31021118164063, -185.6759033203125],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "22",
+          "label": "Centerline curve_1 (200)-22",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [91.04055786132813, -197.32981872558594, -184.86749267578125],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "23",
+          "label": "Centerline curve_1 (200)-23",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [91.45195007324219, -197.3235321044922, -183.93951416015625],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "24",
+          "label": "Centerline curve_1 (200)-24",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [91.89908599853516, -197.3722686767578, -183.0294647216797],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "25",
+          "label": "Centerline curve_1 (200)-25",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [92.425048828125, -197.36412048339844, -182.16238403320313],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "26",
+          "label": "Centerline curve_1 (200)-26",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [92.8309326171875, -197.3614959716797, -181.23110961914063],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "27",
+          "label": "Centerline curve_1 (200)-27",
+          "description": "",
+          "associatedNodeID": "",
+          "position": [93.2801513671875, -197.3485107421875, -180.31683349609375],
+          "orientation": [-1.0, -0.0, -0.0, -0.0, -1.0, -0.0, 0.0, 0.0, 1.0],
+          "selected": true,
+          "locked": false,
+          "visibility": false,
+          "positionStatus": "defined"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "length",
+          "enabled": false,
+          "units": "mm",
+          "printFormat": "%-#4.4g%s"
+        },
+        {
+          "name": "curvature mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "curvature max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion mean",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "torsion max",
+          "enabled": false,
+          "printFormat": "%5.3f %s"
+        },
+        {
+          "name": "Radius",
+          "enabled": true,
+          "units": "mm",
+          "controlPointValues": [
+            1.6208260607824725, 1.5308715521533873, 1.5527689514900818, 1.5624758361227054,
+            1.6052166460292618, 1.6220373834120068, 1.5986845771666804, 1.5153189600729162,
+            1.5966762485422428, 1.5813008296240625, 1.5501549123173628, 1.579340704632319,
+            1.5155436534347477, 1.5008271750508468, 1.5103110622725309, 1.5245125175758383,
+            1.4914754422641372, 1.5054349319985887, 1.5051433561537397, 1.4802724831270635,
+            1.409719138127245, 1.4178829435043498, 1.4414989350055014, 1.469604610429244,
+            1.5114169719488506, 1.4574874962232718, 1.7394009842857976
+          ]
+        }
+      ],
+      "display": {
+        "visibility": true,
+        "opacity": 1.0,
+        "color": [0.4, 1.0, 1.0],
+        "selectedColor": [0.7568627450980392, 0.6862745098039216, 0.9647058823529412],
+        "activeColor": [0.4, 1.0, 0.0],
+        "propertiesLabelVisibility": true,
+        "pointLabelsVisibility": false,
+        "textScale": 3.0,
+        "glyphType": "Sphere3D",
+        "glyphScale": 3.0,
+        "glyphSize": 5.0,
+        "useGlyphScale": true,
+        "sliceProjection": false,
+        "sliceProjectionUseFiducialColor": true,
+        "sliceProjectionOutlinedBehindSlicePlane": false,
+        "sliceProjectionColor": [1.0, 1.0, 1.0],
+        "sliceProjectionOpacity": 0.6,
+        "lineThickness": 0.2,
+        "lineColorFadingStart": 1.0,
+        "lineColorFadingEnd": 10.0,
+        "lineColorFadingSaturation": 1.0,
+        "lineColorFadingHueOffset": 0.0,
+        "handlesInteractive": false,
+        "translationHandleVisibility": true,
+        "rotationHandleVisibility": true,
+        "scaleHandleVisibility": false,
+        "interactionHandleScale": 3.0,
+        "snapMode": "toVisibleSurface"
+      }
+    }
+  ]
+}
