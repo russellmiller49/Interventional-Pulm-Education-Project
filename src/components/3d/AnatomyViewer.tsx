@@ -53,6 +53,11 @@ export type OrthogonalClipMode = 'none' | 'hide-above' | 'hide-below'
 
 const XR_CONTROL_CLIP_MODES: OrthogonalClipMode[] = ['none', 'hide-above', 'hide-below']
 const XR_CONTROL_ACTION_KEY = 'xrControlAction'
+const XR_CONTROL_PANEL_DISTANCE = 1.08
+const XR_CONTROL_PANEL_RIGHT_OFFSET = 0.44
+const XR_CONTROL_PANEL_DOWN_OFFSET = 0.03
+const XR_MIN_SPATIAL_SCALE = 0.001
+const XR_MAX_SPATIAL_SCALE = 80
 
 interface CtAlignmentVector {
   x: number
@@ -684,6 +689,10 @@ function XRTextPlane({
       const padding = 32
       const x =
         align === 'left' ? padding : align === 'right' ? canvas.width - padding : canvas.width / 2
+      context.lineJoin = 'round'
+      context.lineWidth = Math.max(6, Math.round(fontSize * 0.14))
+      context.strokeStyle = 'rgba(2, 6, 23, 0.9)'
+      context.strokeText(text, x, canvas.height / 2, canvas.width - padding * 2)
       context.fillText(text, x, canvas.height / 2, canvas.width - padding * 2)
     }
 
@@ -746,9 +755,9 @@ function XRControlButton({
     }
   }, [disabled, label, onSelect])
 
-  const backgroundColor = disabled ? '#1e293b' : selected ? '#67e8f9' : '#0f172a'
-  const borderColor = disabled ? '#334155' : selected ? '#a5f3fc' : '#475569'
-  const textColor = disabled ? '#64748b' : selected ? '#082f49' : '#f8fafc'
+  const backgroundColor = disabled ? '#334155' : selected ? '#a5f3fc' : '#1e293b'
+  const borderColor = disabled ? '#64748b' : selected ? '#ecfeff' : '#93c5fd'
+  const textColor = disabled ? '#cbd5e1' : selected ? '#042f2e' : '#ffffff'
 
   return (
     <group ref={buttonRef} position={position}>
@@ -756,7 +765,7 @@ function XRControlButton({
         <planeGeometry args={size} />
         <meshBasicMaterial
           color={backgroundColor}
-          opacity={disabled ? 0.5 : 0.94}
+          opacity={disabled ? 0.72 : 0.98}
           side={DoubleSide}
           transparent
         />
@@ -765,15 +774,16 @@ function XRControlButton({
         <planeGeometry args={[size[0] + 0.006, size[1] + 0.006]} />
         <meshBasicMaterial
           color={borderColor}
-          opacity={selected ? 0.24 : 0.14}
+          opacity={selected ? 0.42 : 0.28}
           side={DoubleSide}
           transparent
         />
       </mesh>
       <XRTextPlane
         color={textColor}
-        fontSize={42}
-        height={size[1] * 0.58}
+        fontSize={50}
+        fontWeight={800}
+        height={size[1] * 0.64}
         position={[0, 0, 0.012]}
         text={label}
         width={size[0] * 0.88}
@@ -791,14 +801,14 @@ function XRControlLabel({
   position: [number, number, number]
   size?: number
 }) {
-  const width = 0.74
+  const width = 0.82
   const height = Math.max(size * 2.25, 0.044)
 
   return (
     <XRTextPlane
       align="left"
-      color="#cbd5e1"
-      fontSize={Math.max(Math.round(size * 1600), 30)}
+      color="#ffffff"
+      fontSize={Math.max(Math.round(size * 1800), 38)}
       fontWeight={size >= 0.03 ? 700 : 600}
       height={height}
       position={[position[0] + width / 2, position[1], position[2]]}
@@ -822,6 +832,8 @@ function XRControlPanel({
   volumeAvailable,
   onActiveAxisChange,
   onCycleClipMode,
+  onResetPlacement,
+  onScaleTarget,
   onStepCrossSection,
   onStepCtPlaneOpacity,
   onStepCtPlaneSlice,
@@ -841,6 +853,8 @@ function XRControlPanel({
   volumeAvailable: boolean
   onActiveAxisChange?: (axis: AnatomyAxis) => void
   onCycleClipMode?: () => void
+  onResetPlacement?: () => void
+  onScaleTarget?: (factor: number) => void
   onStepCrossSection?: (delta: number) => void
   onStepCtPlaneOpacity?: (delta: number) => void
   onStepCtPlaneSlice?: (axis: AnatomyAxis, delta: number) => void
@@ -850,46 +864,94 @@ function XRControlPanel({
   const { camera } = useThree()
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
   const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
+  const frameVectors = useMemo(
+    () => ({
+      forward: new Vector3(),
+      right: new Vector3(),
+      up: new Vector3(),
+      position: new Vector3(),
+      quaternion: new Quaternion(),
+    }),
+    [],
+  )
 
   useFrame(() => {
     if (!visible || !panelRef.current) {
       return
     }
-    panelRef.current.lookAt(camera.position)
+    camera.getWorldDirection(frameVectors.forward)
+    frameVectors.right.setFromMatrixColumn(camera.matrixWorld, 0).normalize()
+    frameVectors.up.setFromMatrixColumn(camera.matrixWorld, 1).normalize()
+    camera.getWorldPosition(frameVectors.position)
+    frameVectors.position
+      .addScaledVector(frameVectors.forward, XR_CONTROL_PANEL_DISTANCE)
+      .addScaledVector(frameVectors.right, XR_CONTROL_PANEL_RIGHT_OFFSET)
+      .addScaledVector(frameVectors.up, -XR_CONTROL_PANEL_DOWN_OFFSET)
+    panelRef.current.position.copy(frameVectors.position)
+    camera.getWorldQuaternion(frameVectors.quaternion)
+    panelRef.current.quaternion.copy(frameVectors.quaternion)
   })
 
   return (
-    <group ref={panelRef} position={[0.86, 1.42, -1.28]} visible={visible}>
+    <group ref={panelRef} position={[0.44, 1.48, -1.08]} visible={visible}>
       <mesh position={[0, 0, -0.008]}>
-        <planeGeometry args={[1.08, 0.92]} />
-        <meshBasicMaterial color="#020617" opacity={0.9} side={DoubleSide} transparent />
+        <planeGeometry args={[1.22, 0.95]} />
+        <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
       </mesh>
-      <XRControlLabel position={[-0.49, 0.39, 0.012]} size={0.032}>
-        VR anatomy controls
+      <mesh position={[0, 0, -0.004]}>
+        <planeGeometry args={[1.26, 0.99]} />
+        <meshBasicMaterial color="#22d3ee" opacity={0.1} side={DoubleSide} transparent />
+      </mesh>
+      <XRControlLabel position={[-0.56, 0.42, 0.012]} size={0.036}>
+        Spatial anatomy controls
       </XRControlLabel>
-      <XRControlLabel position={[-0.49, 0.33, 0.012]} size={0.019}>
-        Select a button with the controller ray
+      <XRControlLabel position={[-0.56, 0.35, 0.012]} size={0.021}>
+        Aim at buttons. Hold select away from panel to move anatomy.
       </XRControlLabel>
 
-      <XRControlLabel position={[-0.49, 0.23, 0.012]}>
+      <XRControlLabel position={[-0.56, 0.25, 0.012]}>Model placement</XRControlLabel>
+      <XRControlButton
+        disabled={!onResetPlacement}
+        label="Center"
+        onSelect={onResetPlacement}
+        position={[0.04, 0.25, 0.014]}
+        selected
+        size={[0.22, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onScaleTarget}
+        label="Size -"
+        onSelect={() => onScaleTarget?.(0.82)}
+        position={[0.28, 0.25, 0.014]}
+        size={[0.2, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onScaleTarget}
+        label="Size +"
+        onSelect={() => onScaleTarget?.(1.22)}
+        position={[0.5, 0.25, 0.014]}
+        size={[0.2, 0.085]}
+      />
+
+      <XRControlLabel position={[-0.56, 0.13, 0.012]}>
         Cut plane {formatXRPercent(crossSection)}
       </XRControlLabel>
       <XRControlButton
         disabled={!onStepCrossSection}
         label="-10"
         onSelect={() => onStepCrossSection?.(-10)}
-        position={[0.21, 0.23, 0.014]}
-        size={[0.17, 0.075]}
+        position={[0.26, 0.13, 0.014]}
+        size={[0.2, 0.085]}
       />
       <XRControlButton
         disabled={!onStepCrossSection}
         label="+10"
         onSelect={() => onStepCrossSection?.(10)}
-        position={[0.41, 0.23, 0.014]}
-        size={[0.17, 0.075]}
+        position={[0.5, 0.13, 0.014]}
+        size={[0.2, 0.085]}
       />
 
-      <XRControlLabel position={[-0.49, 0.11, 0.012]}>
+      <XRControlLabel position={[-0.56, 0.01, 0.012]}>
         CT planes{' '}
         {volumeAvailable
           ? `${showCtPlanes ? 'on' : 'off'} ${Math.round(ctPlaneOpacity * 100)}%`
@@ -899,81 +961,77 @@ function XRControlPanel({
         disabled={!volumeAvailable || !onToggleCtPlanes}
         label={showCtPlanes ? 'Hide' : 'Show'}
         onSelect={onToggleCtPlanes}
-        position={[0.12, 0.11, 0.014]}
+        position={[0.09, 0.01, 0.014]}
         selected={showCtPlanes}
-        size={[0.19, 0.075]}
+        size={[0.19, 0.085]}
       />
       <XRControlButton
         disabled={!volumeAvailable || !onStepCtPlaneOpacity}
         label="Opacity -"
         onSelect={() => onStepCtPlaneOpacity?.(-0.1)}
-        position={[0.32, 0.11, 0.014]}
-        size={[0.19, 0.075]}
+        position={[0.31, 0.01, 0.014]}
+        size={[0.2, 0.085]}
       />
       <XRControlButton
         disabled={!volumeAvailable || !onStepCtPlaneOpacity}
         label="Opacity +"
         onSelect={() => onStepCtPlaneOpacity?.(0.1)}
-        position={[0.52, 0.11, 0.014]}
-        size={[0.19, 0.075]}
+        position={[0.53, 0.01, 0.014]}
+        size={[0.2, 0.085]}
       />
 
-      <XRControlLabel position={[-0.49, -0.01, 0.012]}>Plane axis</XRControlLabel>
+      <XRControlLabel position={[-0.56, -0.12, 0.012]}>Plane axis</XRControlLabel>
       {ORTHOGONAL_AXES.map((axis, index) => (
         <XRControlButton
           key={axis}
           disabled={!volumeAvailable || !onActiveAxisChange}
           label={AXIS_LABELS[axis]}
           onSelect={() => onActiveAxisChange?.(axis)}
-          position={[-0.12 + index * 0.22, -0.01, 0.014]}
+          position={[0.02 + index * 0.24, -0.12, 0.014]}
           selected={axis === activeAxis}
-          size={[0.2, 0.075]}
+          size={[0.22, 0.085]}
         />
       ))}
 
-      <XRControlLabel position={[-0.49, -0.13, 0.012]}>
+      <XRControlLabel position={[-0.56, -0.25, 0.012]}>
         {AXIS_LABELS[activeAxis]} slice {formatXRPercent(activeSlice)}
       </XRControlLabel>
       <XRControlButton
         disabled={!volumeAvailable || !onStepCtPlaneSlice}
         label="-5"
         onSelect={() => onStepCtPlaneSlice?.(activeAxis, -5)}
-        position={[0.12, -0.13, 0.014]}
-        size={[0.15, 0.075]}
+        position={[0.09, -0.25, 0.014]}
+        size={[0.18, 0.085]}
       />
       <XRControlButton
         disabled={!volumeAvailable || !onStepCtPlaneSlice}
         label="+5"
         onSelect={() => onStepCtPlaneSlice?.(activeAxis, 5)}
-        position={[0.3, -0.13, 0.014]}
-        size={[0.15, 0.075]}
+        position={[0.31, -0.25, 0.014]}
+        size={[0.18, 0.085]}
       />
       <XRControlButton
         disabled={!volumeAvailable || !onToggleActivePlane}
         label={activePlaneVisible ? 'Axis on' : 'Axis off'}
         onSelect={() => onToggleActivePlane?.(activeAxis)}
-        position={[0.5, -0.13, 0.014]}
+        position={[0.53, -0.25, 0.014]}
         selected={activePlaneVisible}
-        size={[0.19, 0.075]}
+        size={[0.21, 0.085]}
       />
 
-      <XRControlLabel position={[-0.49, -0.25, 0.012]}>
+      <XRControlLabel position={[-0.56, -0.38, 0.012]}>
         Clipping {getClipModeLabel(ctClipMode)}
       </XRControlLabel>
       <XRControlButton
         disabled={!volumeAvailable || !onCycleClipMode}
         label="Cycle mode"
         onSelect={onCycleClipMode}
-        position={[0.17, -0.25, 0.014]}
+        position={[0.13, -0.38, 0.014]}
         selected={ctClipMode !== 'none'}
-        size={[0.27, 0.075]}
+        size={[0.28, 0.085]}
       />
-      <XRControlLabel position={[0.34, -0.25, 0.012]} size={0.02}>
+      <XRControlLabel position={[0.34, -0.38, 0.012]} size={0.022}>
         {ctClipMode === 'none' ? '' : AXIS_LABELS[ctClipAxis]}
-      </XRControlLabel>
-
-      <XRControlLabel position={[-0.49, -0.37, 0.012]} size={0.019}>
-        Squeeze still recenters the model
       </XRControlLabel>
     </group>
   )
@@ -1032,11 +1090,11 @@ function XRSpatialControllers({
       }
 
       const intersections = raycaster.intersectObjects(collectVisibleMeshes(target), false)
-      if (!intersections.length) {
-        return
-      }
-
-      onSelectSegment(getSegmentLabel(intersections[0].object))
+      onSelectSegment(
+        intersections.length
+          ? getSegmentLabel(intersections[0].object)
+          : 'Moving anatomy. Release select to place it.',
+      )
       activeGrabRef.current = {
         controller,
         offset: target.position.clone().sub(position),
@@ -1620,8 +1678,8 @@ export function AnatomyViewer({
         setXrSessionActive(true)
         setSpatialSelection(
           mode === 'immersive-ar'
-            ? 'Pinch/select a visible segment to move it in space.'
-            : 'Select and hold a visible segment to move it. Squeeze to recenter.',
+            ? 'Pinch controls, or pinch and hold away from the panel to move anatomy.'
+            : 'Select controls, or hold select away from the panel to move anatomy.',
         )
       } catch (error) {
         console.error('Failed to start WebXR session', error)
@@ -1784,6 +1842,26 @@ export function AnatomyViewer({
 
     resetDesktopPlacement(root)
   }, [preparedScene, spatialPlacement, xrSessionActive])
+
+  const handleXrResetPlacement = useCallback(() => {
+    const root = spatialRootRef.current
+    if (!root || !spatialPlacement) {
+      return
+    }
+    applySpatialPlacement(root, spatialPlacement)
+    setSpatialSelection('Anatomy centered')
+  }, [spatialPlacement])
+
+  const handleXrScaleTarget = useCallback((factor: number) => {
+    const root = spatialRootRef.current
+    if (!root || !Number.isFinite(factor)) {
+      return
+    }
+    const nextScale = clamp(root.scale.x * factor, XR_MIN_SPATIAL_SCALE, XR_MAX_SPATIAL_SCALE)
+    root.scale.setScalar(nextScale)
+    root.updateMatrixWorld(true)
+    setSpatialSelection(factor > 1 ? 'Anatomy enlarged' : 'Anatomy reduced')
+  }, [])
 
   const radius = useMemo(() => {
     if (!boundingSize) {
@@ -2371,7 +2449,7 @@ export function AnatomyViewer({
                   placement={spatialPlacement}
                   onSelectSegment={setSpatialSelection}
                 />
-                {xrSessionActive && xrSessionMode === 'immersive-vr' ? (
+                {xrSessionActive ? (
                   <XRControlPanel
                     activeAxis={xrControlAxis}
                     crossSection={crossSection}
@@ -2386,6 +2464,8 @@ export function AnatomyViewer({
                     volumeAvailable={volumeAvailable}
                     onActiveAxisChange={handleXrSetControlAxis}
                     onCycleClipMode={onCtClipModeChange ? handleXrCycleClipMode : undefined}
+                    onResetPlacement={spatialPlacement ? handleXrResetPlacement : undefined}
+                    onScaleTarget={handleXrScaleTarget}
                     onStepCrossSection={onCrossSectionChange ? handleXrStepCrossSection : undefined}
                     onStepCtPlaneOpacity={
                       onCtPlaneOpacityChange ? handleXrStepCtPlaneOpacity : undefined
