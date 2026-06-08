@@ -12,6 +12,10 @@ import {
   resolveLoginRedirectPath,
   type SiteEntitlement,
 } from '@/lib/site-auth/access'
+import {
+  hasValidLocalDevAuthCookie,
+  LOCAL_DEV_AUTH_COOKIE_NAME,
+} from '@/lib/site-auth/local-dev-auth'
 
 export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
@@ -30,6 +34,10 @@ export async function proxy(req: NextRequest) {
     isPublicPath(pathname) ||
     isPublicTrainingEmbed(pathname, req.nextUrl.searchParams)
   ) {
+    return res
+  }
+
+  if (hasValidLocalDevAuthCookie(req.nextUrl, req.cookies.get(LOCAL_DEV_AUTH_COOKIE_NAME)?.value)) {
     return res
   }
 

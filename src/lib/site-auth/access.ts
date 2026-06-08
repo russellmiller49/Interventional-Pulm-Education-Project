@@ -6,6 +6,7 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/api/scope-calibration',
   '/login',
   '/pocus',
+  '/pleural-procedures/pleural-ultrasound-simulator',
   '/signup',
   '/verify-email',
   '/auth/update-password',

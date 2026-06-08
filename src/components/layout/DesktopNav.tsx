@@ -25,6 +25,7 @@ const quickNavTitles = new Set([
   '3D Anatomy',
   'IP Board Prep',
   'FluoroView',
+  'Bronch Navigation',
 ])
 
 export function DesktopNav({ items, activePath }: DesktopNavProps) {

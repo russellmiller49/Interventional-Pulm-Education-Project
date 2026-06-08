@@ -9,7 +9,7 @@ export const pleuralUltrasoundNavItems: readonly ModuleNavItem[] = [
   {
     href: `${base}/practice`,
     title: 'Practice',
-    description: 'Commit-first pattern classification lab',
+    description: 'Commit-first image and video labs',
   },
   { href: `${base}/assessment`, title: 'Assessment', description: 'Check your reasoning' },
   {

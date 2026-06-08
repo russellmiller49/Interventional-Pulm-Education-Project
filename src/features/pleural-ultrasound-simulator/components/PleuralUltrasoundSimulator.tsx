@@ -13,6 +13,7 @@ import {
 import type { EffusionPattern } from '@/features/pleural-ultrasound/engine/types'
 
 import { pleuralSimulatorCases } from '../content/pleuralSimulatorCases'
+import { selectNearestReviewedAtlasFrame } from '../engine/frameAtlas'
 import { scoreProbeWindow } from '../engine/scoring'
 import { simulatePleuralBMode } from '../engine/simulateBMode'
 import type { PleuralProbeState, PleuralSimulatorCase, PleuralVolume, ProbeScore } from '../types'
@@ -48,6 +49,14 @@ export function PleuralUltrasoundSimulator() {
           throw new Error(`Could not load case manifest (${manifestResponse.status}).`)
         }
         const manifest = (await manifestResponse.json()) as PleuralSimulatorCase
+
+        if (cancelled) {
+          return
+        }
+
+        setCaseData(manifest)
+        setProbe(manifest.probeDefaults)
+
         const labelmapResponse = await fetch(manifest.labelmapUrl)
         if (!labelmapResponse.ok) {
           throw new Error(`Could not load labelmap (${labelmapResponse.status}).`)
@@ -58,13 +67,11 @@ export function PleuralUltrasoundSimulator() {
           return
         }
 
-        setCaseData(manifest)
         setVolume({
           data: labelmap,
           geometry: manifest.volume,
           labels: manifest.labels,
         })
-        setProbe(manifest.probeDefaults)
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -82,7 +89,16 @@ export function PleuralUltrasoundSimulator() {
   }, [])
 
   const frame = useMemo(() => {
-    if (!volume || !probe) {
+    if (!probe) {
+      return null
+    }
+
+    const atlasSelection = selectNearestReviewedAtlasFrame(caseData?.frameAtlas, probe)
+    if (atlasSelection) {
+      return null
+    }
+
+    if (!volume) {
       return null
     }
 
@@ -92,23 +108,34 @@ export function PleuralUltrasoundSimulator() {
       width: 520,
       height: 620,
     })
-  }, [probe, volume])
+  }, [caseData?.frameAtlas, probe, volume])
+
+  const atlasSelection = useMemo(() => {
+    if (!caseData || !probe) {
+      return null
+    }
+
+    return selectNearestReviewedAtlasFrame(caseData.frameAtlas, probe)
+  }, [caseData, probe])
+
+  const activeMetrics = atlasSelection?.entry.metrics ?? frame?.metrics ?? null
+  const activeGroundTruth = atlasSelection?.entry.groundTruthPattern ?? caseData?.groundTruthPattern
 
   const score: ProbeScore | null = useMemo(() => {
-    if (!caseData || !frame) {
+    if (!activeMetrics || !activeGroundTruth) {
       return null
     }
 
-    return scoreProbeWindow(frame.metrics, answer, caseData.groundTruthPattern)
-  }, [answer, caseData, frame])
+    return scoreProbeWindow(activeMetrics, answer, activeGroundTruth)
+  }, [activeGroundTruth, activeMetrics, answer])
 
   const classification = useMemo(() => {
-    if (!caseData || !answer || !revealed) {
+    if (!activeGroundTruth || !answer || !revealed) {
       return null
     }
 
-    return scoreClassification(answer, caseData.groundTruthPattern)
-  }, [answer, caseData, revealed])
+    return scoreClassification(answer, activeGroundTruth)
+  }, [activeGroundTruth, answer, revealed])
 
   if (error) {
     return (
@@ -120,7 +147,7 @@ export function PleuralUltrasoundSimulator() {
     )
   }
 
-  if (!caseData || !volume || !probe) {
+  if (!caseData || !probe) {
     return (
       <section className="container">
         <div className="flex min-h-[28rem] items-center justify-center rounded-lg border border-border/80 bg-card text-sm text-muted-foreground">
@@ -148,8 +175,12 @@ export function PleuralUltrasoundSimulator() {
         </div>
 
         <div className="space-y-6">
-          <UltrasoundCanvas frame={frame} depthCm={probe.depthCm} />
-          <CaseObjectives caseData={caseData} metrics={frame?.metrics ?? null} score={score} />
+          <UltrasoundCanvas
+            frame={frame}
+            atlasFrame={atlasSelection?.entry ?? null}
+            depthCm={probe.depthCm}
+          />
+          <CaseObjectives caseData={caseData} metrics={activeMetrics} score={score} />
           <PatternClassifier
             answer={answer}
             revealed={revealed}
@@ -159,7 +190,7 @@ export function PleuralUltrasoundSimulator() {
             }}
             onReveal={() => setRevealed(true)}
             classification={classification}
-            groundTruth={caseData.groundTruthPattern}
+            groundTruth={activeGroundTruth ?? caseData.groundTruthPattern}
             score={score}
           />
         </div>

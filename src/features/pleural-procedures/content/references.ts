@@ -132,6 +132,15 @@ export const pleuralReferences: PleuralReference[] = [
     url: 'https://doi.org/10.6084/m9.figshare.30093577.v1',
     useNote: 'CC BY raw-image source for benign and malignant lung-ultrasound context examples.',
   },
+  {
+    id: 'jannisborn-covid19-ultrasound',
+    citation:
+      'Born J, Wiedemann N, Cossio M, et al. COVID-19 Lung Ultrasound Dataset. GitHub dataset and row-level metadata.',
+    sourceType: 'dataset',
+    url: 'https://github.com/jannisborn/covid19_ultrasound',
+    useNote:
+      'Row-level Creative Commons video source for dynamic lung-ultrasound signs; individual licenses are verified before public embedding.',
+  },
 ]
 
 export function getPleuralReference(id: string) {

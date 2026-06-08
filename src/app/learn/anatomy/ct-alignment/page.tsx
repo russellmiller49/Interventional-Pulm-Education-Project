@@ -834,6 +834,12 @@ export default function CtAlignmentSandboxPage() {
           showDebugHelpers={showDebugHelpers}
           rotation={rotation}
           controlPanel={viewerControlPanel}
+          onCrossSectionChange={setCrossSection}
+          onShowCtPlanesChange={setShowCtPlanes}
+          onCtPlaneVisibilityChange={updateCtPlaneVisibility}
+          onCtPlaneOpacityChange={setCtPlaneOpacity}
+          onCtClipModeChange={setCtClipMode}
+          onCtClipAxisChange={setCtClipAxis}
           onSceneMetrics={handleSceneMetrics}
           onCtPlaneSliceChange={updateCtPlaneSlice}
           onVolumeSliceChange={setVolumeSlice}

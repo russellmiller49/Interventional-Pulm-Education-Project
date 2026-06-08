@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { PleuralUltrasoundNav } from '@/features/pleural-ultrasound/components/PleuralUltrasoundNav'
-import { PatternRecognitionLab } from '@/features/pleural-ultrasound/components/PatternRecognitionLab'
+import { PleuralUltrasoundPractice } from '@/features/pleural-ultrasound/components/PleuralUltrasoundPractice'
 
 export const metadata: Metadata = {
   title: 'Practice Pleural Ultrasound',
@@ -22,7 +22,7 @@ export default function PleuralUltrasoundPracticePage() {
       />
       <PleuralUltrasoundNav activeHref="/pleural-procedures/pleural-ultrasound/practice" />
 
-      <PatternRecognitionLab />
+      <PleuralUltrasoundPractice />
 
       <ModuleProgressToggle
         moduleId="pleural-ultrasound"

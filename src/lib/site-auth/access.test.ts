@@ -28,6 +28,11 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/pocus/cases')).toBeNull()
   })
 
+  it('keeps the experimental pleural ultrasound simulator publicly smoke-testable', () => {
+    expect(isPublicPath('/pleural-procedures/pleural-ultrasound-simulator')).toBe(true)
+    expect(isPublicPath('/pleural-procedures/pleural-ultrasound')).toBe(false)
+  })
+
   it('requires entitlements only for restricted website areas', () => {
     expect(getRequiredEntitlement('/admin', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/admin/analytics', params())).toBe('site_admin')

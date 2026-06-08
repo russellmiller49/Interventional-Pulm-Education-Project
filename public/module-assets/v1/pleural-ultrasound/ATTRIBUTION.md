@@ -2,6 +2,8 @@
 
 All images are licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and are redistributed here with attribution.
 
+Dynamic-sign video attributions are stored in [video/ATTRIBUTION.md](video/ATTRIBUTION.md).
+
 | Asset id                            | Local file                                     | Source                                                     | Attribution                                                                                                                     |
 | ----------------------------------- | ---------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | simple-anechoic-reference           | source/simple-anechoic-reference.jpg           | [link](https://pmc.ncbi.nlm.nih.gov/articles/PMC11127929/) | Chest ultrasound is better than CT in identifying septated effusion of patients with pleural disease. Scientific Reports. 2024. |

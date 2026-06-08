@@ -28,15 +28,22 @@ describe('pleural source registry', () => {
     ])
   })
 
-  it('embeds reviewed CC BY 4.0 assets by default', () => {
+  it('embeds reviewed CC BY and CC BY-NC 4.0 assets by default', () => {
     expect(canEmbedPleuralAsset(reviewedEmbeddableAsset)).toBe(true)
+    expect(
+      canEmbedPleuralAsset({
+        ...reviewedEmbeddableAsset,
+        license: 'CC BY-NC 4.0',
+      }),
+    ).toBe(true)
   })
 
-  it('blocks NC, ND, all-rights-reserved, mixed, and unknown assets by default', () => {
+  it('blocks ND, share-alike, emergency-license, all-rights-reserved, mixed, and unknown assets by default', () => {
     const blockedLicenses: TestPolicyAsset['license'][] = [
-      'CC BY-NC 4.0',
+      'CC BY-NC-SA 3.0',
       'CC BY-NC-SA 4.0',
       'CC BY-NC-ND 4.0',
+      'COVID-19 emergency license',
       'All rights reserved',
       'Mixed or row-level',
       'Unknown',

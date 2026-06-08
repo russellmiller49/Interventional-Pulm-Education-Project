@@ -47,6 +47,53 @@ export interface PleuralProbeState {
   needleAngleDeg: number
 }
 
+export type PleuralAtlasGeneratorSource =
+  | 'browser-raymarcher'
+  | 'plus-offline'
+  | 'must-inspired-offline'
+  | 'manual-curated'
+
+export type PleuralAtlasReviewStatus = 'reviewed' | 'needs-review'
+
+export interface PleuralFrameAtlasTolerance {
+  lateralMm: number
+  craniocaudalMm: number
+  tiltDeg: number
+  rotationDeg: number
+  depthCm: number
+  sectorAngleDeg: number
+}
+
+export interface PleuralFrameAtlasEntry {
+  id: string
+  label: string
+  description: string
+  imageUrl: string
+  maskUrl?: string
+  probe: PleuralProbeState
+  metrics: UltrasoundFrameMetrics
+  groundTruthPattern: EffusionPattern
+  generator: {
+    source: PleuralAtlasGeneratorSource
+    name: string
+    version?: string
+    createdAt?: string
+    sourceUrls?: string[]
+    notes?: string[]
+  }
+  reviewStatus: PleuralAtlasReviewStatus
+  reviewer?: string
+  reviewedAt?: string
+  educationalUse: string
+  tags: string[]
+}
+
+export interface PleuralFrameAtlas {
+  selectionTolerance: Partial<PleuralFrameAtlasTolerance>
+  entries: PleuralFrameAtlasEntry[]
+  notes?: string[]
+}
+
 export interface PleuralSimulatorCase {
   id: string
   name: string
@@ -71,6 +118,7 @@ export interface PleuralSimulatorCase {
   }
   volume: PleuralVolumeGeometry
   probeDefaults: PleuralProbeState
+  frameAtlas?: PleuralFrameAtlas
   objectives: string[]
   groundTruthPattern: EffusionPattern
 }

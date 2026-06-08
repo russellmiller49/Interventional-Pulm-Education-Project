@@ -18,7 +18,10 @@ import {
   AxesHelper,
   Box3,
   BufferGeometry,
+  CanvasTexture,
+  DoubleSide,
   Euler,
+  LinearFilter,
   Line,
   LineBasicMaterial,
   Matrix4,
@@ -47,6 +50,9 @@ type WindowPresetKey = 'default' | 'soft-tissue' | 'lung' | 'bone' | 'custom'
 type ImmersiveXRMode = 'immersive-ar' | 'immersive-vr'
 export type AnatomyAxis = (typeof ORTHOGONAL_AXES)[number]
 export type OrthogonalClipMode = 'none' | 'hide-above' | 'hide-below'
+
+const XR_CONTROL_CLIP_MODES: OrthogonalClipMode[] = ['none', 'hide-above', 'hide-below']
+const XR_CONTROL_ACTION_KEY = 'xrControlAction'
 
 interface CtAlignmentVector {
   x: number
@@ -145,6 +151,13 @@ interface ActiveGrab {
   offset: Vector3
   inverseStartControllerQuaternion: Quaternion
   startModelQuaternion: Quaternion
+}
+
+type XRControlAction = () => void
+
+type XRControlUserData = {
+  [XR_CONTROL_ACTION_KEY]?: XRControlAction
+  xrControlLabel?: string
 }
 
 const WINDOW_PRESET_MAP: Record<
@@ -567,14 +580,37 @@ function getControllerTransform(controller: Group) {
   return { position, quaternion, rotation }
 }
 
-function collectVisibleMeshes(root: Group) {
+function isObjectAndAncestorsVisible(object: Object3D) {
+  let current: Object3D | null = object
+  while (current) {
+    if (!current.visible) {
+      return false
+    }
+    current = current.parent
+  }
+  return true
+}
+
+function collectVisibleMeshes(root: Object3D) {
   const meshes: Mesh[] = []
   root.traverse((object) => {
-    if ((object as Mesh).isMesh && object.visible) {
+    if ((object as Mesh).isMesh && isObjectAndAncestorsVisible(object)) {
       meshes.push(object as Mesh)
     }
   })
   return meshes
+}
+
+function getXRControlAction(object: Object3D): XRControlAction | null {
+  let current: Object3D | null = object
+  while (current) {
+    const userData = current.userData as XRControlUserData
+    if (typeof userData[XR_CONTROL_ACTION_KEY] === 'function') {
+      return userData[XR_CONTROL_ACTION_KEY]!
+    }
+    current = current.parent
+  }
+  return null
 }
 
 function getSegmentLabel(object: Object3D) {
@@ -591,12 +627,366 @@ function getSegmentLabel(object: Object3D) {
   return object.name || 'Anatomy segment'
 }
 
+function formatXRPercent(value: number) {
+  return `${Math.round(clamp(value, 0, 100))}%`
+}
+
+function getClipModeLabel(mode: OrthogonalClipMode) {
+  if (mode === 'hide-above') {
+    return 'Hide above'
+  }
+  if (mode === 'hide-below') {
+    return 'Hide below'
+  }
+  return 'Clip off'
+}
+
+function reactTextToString(value: ReactNode): string {
+  if (Array.isArray(value)) {
+    return value.map(reactTextToString).join('')
+  }
+  if (value === null || value === undefined || typeof value === 'boolean') {
+    return ''
+  }
+  return String(value)
+}
+
+function XRTextPlane({
+  align = 'center',
+  color = '#f8fafc',
+  fontSize = 42,
+  fontWeight = 600,
+  height,
+  position,
+  text,
+  width,
+}: {
+  align?: CanvasTextAlign
+  color?: string
+  fontSize?: number
+  fontWeight?: number
+  height: number
+  position: [number, number, number]
+  text: string
+  width: number
+}) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1024
+    canvas.height = 256
+    const context = canvas.getContext('2d')
+    if (context) {
+      context.clearRect(0, 0, canvas.width, canvas.height)
+      context.fillStyle = color
+      context.font = `${fontWeight} ${fontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+      context.textAlign = align
+      context.textBaseline = 'middle'
+      const padding = 32
+      const x =
+        align === 'left' ? padding : align === 'right' ? canvas.width - padding : canvas.width / 2
+      context.fillText(text, x, canvas.height / 2, canvas.width - padding * 2)
+    }
+
+    const nextTexture = new CanvasTexture(canvas)
+    nextTexture.colorSpace = SRGBColorSpace
+    nextTexture.minFilter = LinearFilter
+    nextTexture.magFilter = LinearFilter
+    nextTexture.needsUpdate = true
+    return nextTexture
+  }, [align, color, fontSize, fontWeight, text])
+
+  useEffect(() => {
+    return () => {
+      texture.dispose()
+    }
+  }, [texture])
+
+  return (
+    <mesh position={position}>
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial depthWrite={false} map={texture} side={DoubleSide} transparent />
+    </mesh>
+  )
+}
+
+function XRControlButton({
+  disabled = false,
+  label,
+  onSelect,
+  position,
+  selected = false,
+  size = [0.26, 0.08],
+}: {
+  disabled?: boolean
+  label: string
+  onSelect?: XRControlAction
+  position: [number, number, number]
+  selected?: boolean
+  size?: [number, number]
+}) {
+  const buttonRef = useRef<Group | null>(null)
+
+  useEffect(() => {
+    const button = buttonRef.current
+    if (!button) {
+      return
+    }
+
+    const userData = button.userData as XRControlUserData
+    userData.xrControlLabel = label
+    if (disabled || !onSelect) {
+      delete userData[XR_CONTROL_ACTION_KEY]
+    } else {
+      userData[XR_CONTROL_ACTION_KEY] = onSelect
+    }
+
+    return () => {
+      delete userData[XR_CONTROL_ACTION_KEY]
+      delete userData.xrControlLabel
+    }
+  }, [disabled, label, onSelect])
+
+  const backgroundColor = disabled ? '#1e293b' : selected ? '#67e8f9' : '#0f172a'
+  const borderColor = disabled ? '#334155' : selected ? '#a5f3fc' : '#475569'
+  const textColor = disabled ? '#64748b' : selected ? '#082f49' : '#f8fafc'
+
+  return (
+    <group ref={buttonRef} position={position}>
+      <mesh>
+        <planeGeometry args={size} />
+        <meshBasicMaterial
+          color={backgroundColor}
+          opacity={disabled ? 0.5 : 0.94}
+          side={DoubleSide}
+          transparent
+        />
+      </mesh>
+      <mesh position={[0, 0, 0.006]}>
+        <planeGeometry args={[size[0] + 0.006, size[1] + 0.006]} />
+        <meshBasicMaterial
+          color={borderColor}
+          opacity={selected ? 0.24 : 0.14}
+          side={DoubleSide}
+          transparent
+        />
+      </mesh>
+      <XRTextPlane
+        color={textColor}
+        fontSize={42}
+        height={size[1] * 0.58}
+        position={[0, 0, 0.012]}
+        text={label}
+        width={size[0] * 0.88}
+      />
+    </group>
+  )
+}
+
+function XRControlLabel({
+  children,
+  position,
+  size = 0.024,
+}: {
+  children: ReactNode
+  position: [number, number, number]
+  size?: number
+}) {
+  const width = 0.74
+  const height = Math.max(size * 2.25, 0.044)
+
+  return (
+    <XRTextPlane
+      align="left"
+      color="#cbd5e1"
+      fontSize={Math.max(Math.round(size * 1600), 30)}
+      fontWeight={size >= 0.03 ? 700 : 600}
+      height={height}
+      position={[position[0] + width / 2, position[1], position[2]]}
+      text={reactTextToString(children)}
+      width={width}
+    />
+  )
+}
+
+function XRControlPanel({
+  activeAxis,
+  crossSection,
+  ctClipAxis,
+  ctClipMode,
+  ctPlaneOpacity,
+  ctPlaneSlices,
+  ctPlaneVisibility,
+  panelRef,
+  showCtPlanes,
+  visible,
+  volumeAvailable,
+  onActiveAxisChange,
+  onCycleClipMode,
+  onStepCrossSection,
+  onStepCtPlaneOpacity,
+  onStepCtPlaneSlice,
+  onToggleActivePlane,
+  onToggleCtPlanes,
+}: {
+  activeAxis: AnatomyAxis
+  crossSection: number
+  ctClipAxis: AnatomyAxis
+  ctClipMode: OrthogonalClipMode
+  ctPlaneOpacity: number
+  ctPlaneSlices: Record<AnatomyAxis, number>
+  ctPlaneVisibility: Record<AnatomyAxis, boolean>
+  panelRef: RefObject<Group | null>
+  showCtPlanes: boolean
+  visible: boolean
+  volumeAvailable: boolean
+  onActiveAxisChange?: (axis: AnatomyAxis) => void
+  onCycleClipMode?: () => void
+  onStepCrossSection?: (delta: number) => void
+  onStepCtPlaneOpacity?: (delta: number) => void
+  onStepCtPlaneSlice?: (axis: AnatomyAxis, delta: number) => void
+  onToggleActivePlane?: (axis: AnatomyAxis) => void
+  onToggleCtPlanes?: () => void
+}) {
+  const { camera } = useThree()
+  const activeSlice = ctPlaneSlices[activeAxis] ?? 0
+  const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
+
+  useFrame(() => {
+    if (!visible || !panelRef.current) {
+      return
+    }
+    panelRef.current.lookAt(camera.position)
+  })
+
+  return (
+    <group ref={panelRef} position={[0.86, 1.42, -1.28]} visible={visible}>
+      <mesh position={[0, 0, -0.008]}>
+        <planeGeometry args={[1.08, 0.92]} />
+        <meshBasicMaterial color="#020617" opacity={0.9} side={DoubleSide} transparent />
+      </mesh>
+      <XRControlLabel position={[-0.49, 0.39, 0.012]} size={0.032}>
+        VR anatomy controls
+      </XRControlLabel>
+      <XRControlLabel position={[-0.49, 0.33, 0.012]} size={0.019}>
+        Select a button with the controller ray
+      </XRControlLabel>
+
+      <XRControlLabel position={[-0.49, 0.23, 0.012]}>
+        Cut plane {formatXRPercent(crossSection)}
+      </XRControlLabel>
+      <XRControlButton
+        disabled={!onStepCrossSection}
+        label="-10"
+        onSelect={() => onStepCrossSection?.(-10)}
+        position={[0.21, 0.23, 0.014]}
+        size={[0.17, 0.075]}
+      />
+      <XRControlButton
+        disabled={!onStepCrossSection}
+        label="+10"
+        onSelect={() => onStepCrossSection?.(10)}
+        position={[0.41, 0.23, 0.014]}
+        size={[0.17, 0.075]}
+      />
+
+      <XRControlLabel position={[-0.49, 0.11, 0.012]}>
+        CT planes{' '}
+        {volumeAvailable
+          ? `${showCtPlanes ? 'on' : 'off'} ${Math.round(ctPlaneOpacity * 100)}%`
+          : 'unavailable'}
+      </XRControlLabel>
+      <XRControlButton
+        disabled={!volumeAvailable || !onToggleCtPlanes}
+        label={showCtPlanes ? 'Hide' : 'Show'}
+        onSelect={onToggleCtPlanes}
+        position={[0.12, 0.11, 0.014]}
+        selected={showCtPlanes}
+        size={[0.19, 0.075]}
+      />
+      <XRControlButton
+        disabled={!volumeAvailable || !onStepCtPlaneOpacity}
+        label="Opacity -"
+        onSelect={() => onStepCtPlaneOpacity?.(-0.1)}
+        position={[0.32, 0.11, 0.014]}
+        size={[0.19, 0.075]}
+      />
+      <XRControlButton
+        disabled={!volumeAvailable || !onStepCtPlaneOpacity}
+        label="Opacity +"
+        onSelect={() => onStepCtPlaneOpacity?.(0.1)}
+        position={[0.52, 0.11, 0.014]}
+        size={[0.19, 0.075]}
+      />
+
+      <XRControlLabel position={[-0.49, -0.01, 0.012]}>Plane axis</XRControlLabel>
+      {ORTHOGONAL_AXES.map((axis, index) => (
+        <XRControlButton
+          key={axis}
+          disabled={!volumeAvailable || !onActiveAxisChange}
+          label={AXIS_LABELS[axis]}
+          onSelect={() => onActiveAxisChange?.(axis)}
+          position={[-0.12 + index * 0.22, -0.01, 0.014]}
+          selected={axis === activeAxis}
+          size={[0.2, 0.075]}
+        />
+      ))}
+
+      <XRControlLabel position={[-0.49, -0.13, 0.012]}>
+        {AXIS_LABELS[activeAxis]} slice {formatXRPercent(activeSlice)}
+      </XRControlLabel>
+      <XRControlButton
+        disabled={!volumeAvailable || !onStepCtPlaneSlice}
+        label="-5"
+        onSelect={() => onStepCtPlaneSlice?.(activeAxis, -5)}
+        position={[0.12, -0.13, 0.014]}
+        size={[0.15, 0.075]}
+      />
+      <XRControlButton
+        disabled={!volumeAvailable || !onStepCtPlaneSlice}
+        label="+5"
+        onSelect={() => onStepCtPlaneSlice?.(activeAxis, 5)}
+        position={[0.3, -0.13, 0.014]}
+        size={[0.15, 0.075]}
+      />
+      <XRControlButton
+        disabled={!volumeAvailable || !onToggleActivePlane}
+        label={activePlaneVisible ? 'Axis on' : 'Axis off'}
+        onSelect={() => onToggleActivePlane?.(activeAxis)}
+        position={[0.5, -0.13, 0.014]}
+        selected={activePlaneVisible}
+        size={[0.19, 0.075]}
+      />
+
+      <XRControlLabel position={[-0.49, -0.25, 0.012]}>
+        Clipping {getClipModeLabel(ctClipMode)}
+      </XRControlLabel>
+      <XRControlButton
+        disabled={!volumeAvailable || !onCycleClipMode}
+        label="Cycle mode"
+        onSelect={onCycleClipMode}
+        position={[0.17, -0.25, 0.014]}
+        selected={ctClipMode !== 'none'}
+        size={[0.27, 0.075]}
+      />
+      <XRControlLabel position={[0.34, -0.25, 0.012]} size={0.02}>
+        {ctClipMode === 'none' ? '' : AXIS_LABELS[ctClipAxis]}
+      </XRControlLabel>
+
+      <XRControlLabel position={[-0.49, -0.37, 0.012]} size={0.019}>
+        Squeeze still recenters the model
+      </XRControlLabel>
+    </group>
+  )
+}
+
 function XRSpatialControllers({
+  controlRootRef,
   enabled,
   targetRef,
   placement,
   onSelectSegment,
 }: {
+  controlRootRef?: RefObject<Group | null>
   enabled: boolean
   targetRef: RefObject<Group | null>
   placement: SpatialPlacement | null
@@ -625,6 +1015,21 @@ function XRSpatialControllers({
       const raycaster = raycasterRef.current
       raycaster.ray.origin.copy(position)
       raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotation)
+
+      const controlRoot = controlRootRef?.current
+      if (controlRoot) {
+        const controlIntersections = raycaster.intersectObjects(
+          collectVisibleMeshes(controlRoot),
+          false,
+        )
+        const controlAction = controlIntersections.length
+          ? getXRControlAction(controlIntersections[0].object)
+          : null
+        if (controlIntersections.length) {
+          controlAction?.()
+          return
+        }
+      }
 
       const intersections = raycaster.intersectObjects(collectVisibleMeshes(target), false)
       if (!intersections.length) {
@@ -686,7 +1091,7 @@ function XRSpatialControllers({
       activeGrabRef.current = null
       cleanupHandlers.forEach((cleanup) => cleanup())
     }
-  }, [enabled, gl, onSelectSegment, placement, scene, targetRef])
+  }, [controlRootRef, enabled, gl, onSelectSegment, placement, scene, targetRef])
 
   useFrame(() => {
     if (!enabled) {
@@ -730,7 +1135,13 @@ export interface AnatomyViewerProps {
   onError?: (message: string) => void
   onSceneMetrics?: (metrics: AnatomySceneMetrics | null) => void
   onSegmentsChanged?: (segments: AnatomySegment[]) => void
+  onCrossSectionChange?: (value: number) => void
+  onShowCtPlanesChange?: (visible: boolean) => void
+  onCtPlaneVisibilityChange?: (axis: AnatomyAxis, visible: boolean) => void
   onCtPlaneSliceChange?: (axis: AnatomyAxis, value: number) => void
+  onCtPlaneOpacityChange?: (value: number) => void
+  onCtClipModeChange?: (mode: OrthogonalClipMode) => void
+  onCtClipAxisChange?: (axis: AnatomyAxis) => void
   onVolumeSliceChange?: (value: number) => void
 }
 
@@ -756,13 +1167,20 @@ export function AnatomyViewer({
   onError,
   onSceneMetrics,
   onSegmentsChanged,
+  onCrossSectionChange,
+  onShowCtPlanesChange,
+  onCtPlaneVisibilityChange,
   onCtPlaneSliceChange,
+  onCtPlaneOpacityChange,
+  onCtClipModeChange,
+  onCtClipAxisChange,
   onVolumeSliceChange,
 }: AnatomyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const glRef = useRef<WebGLRenderer | null>(null)
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
   const spatialRootRef = useRef<Group | null>(null)
+  const xrControlPanelRef = useRef<Group | null>(null)
   const assetState = useAnatomyAsset(model)
   const volumeState = useVolumeAsset(model)
   const effectiveCtAlignment = useMemo(
@@ -793,6 +1211,7 @@ export function AnatomyViewer({
   const [xrSessionActive, setXrSessionActive] = useState(false)
   const [xrSessionMode, setXrSessionMode] = useState<ImmersiveXRMode>('immersive-vr')
   const [spatialSelection, setSpatialSelection] = useState<string | null>(null)
+  const [xrControlAxis, setXrControlAxis] = useState<AnatomyAxis>(ctClipAxis)
   const [debugCoords, setDebugCoords] = useState({
     position: [0, 0, 0] as [number, number, number],
     target: [0, 0, 0] as [number, number, number],
@@ -802,6 +1221,10 @@ export function AnatomyViewer({
     () => ctPlaneSlices ?? { x: volumeSlice, y: volumeSlice, z: volumeSlice },
     [ctPlaneSlices, volumeSlice],
   )
+
+  useEffect(() => {
+    setXrControlAxis(ctClipAxis)
+  }, [ctClipAxis])
 
   useEffect(() => {
     volumeInfoRef.current = volumeInfo
@@ -951,6 +1374,86 @@ export function AnatomyViewer({
     },
     [onCtPlaneSliceChange, onVolumeSliceChange],
   )
+
+  const handleXrStepCrossSection = useCallback(
+    (delta: number) => {
+      if (!onCrossSectionChange) {
+        return
+      }
+      const nextValue = clamp(crossSection + delta, 0, 100)
+      onCrossSectionChange(nextValue)
+      setSpatialSelection(`Cut plane ${formatXRPercent(nextValue)}`)
+    },
+    [crossSection, onCrossSectionChange],
+  )
+
+  const handleXrToggleCtPlanes = useCallback(() => {
+    if (!onShowCtPlanesChange) {
+      return
+    }
+    const nextValue = !showCtPlanes
+    onShowCtPlanesChange(nextValue)
+    setSpatialSelection(nextValue ? 'CT planes visible' : 'CT planes hidden')
+  }, [onShowCtPlanesChange, showCtPlanes])
+
+  const handleXrSetControlAxis = useCallback(
+    (axis: AnatomyAxis) => {
+      setXrControlAxis(axis)
+      onCtClipAxisChange?.(axis)
+      setSpatialSelection(`${AXIS_LABELS[axis]} plane selected`)
+    },
+    [onCtClipAxisChange],
+  )
+
+  const handleXrToggleActivePlane = useCallback(
+    (axis: AnatomyAxis) => {
+      if (!onCtPlaneVisibilityChange) {
+        return
+      }
+      const nextValue = !(ctPlaneVisibility[axis] ?? true)
+      onCtPlaneVisibilityChange(axis, nextValue)
+      setSpatialSelection(`${AXIS_LABELS[axis]} plane ${nextValue ? 'visible' : 'hidden'}`)
+    },
+    [ctPlaneVisibility, onCtPlaneVisibilityChange],
+  )
+
+  const handleXrStepCtPlaneSlice = useCallback(
+    (axis: AnatomyAxis, delta: number) => {
+      const nextValue = clamp((effectiveCtPlaneSlices[axis] ?? 0) + delta, 0, 100)
+      handleCtPlaneSliceChange(axis, nextValue)
+      setSpatialSelection(`${AXIS_LABELS[axis]} slice ${formatXRPercent(nextValue)}`)
+    },
+    [effectiveCtPlaneSlices, handleCtPlaneSliceChange],
+  )
+
+  const handleXrStepCtPlaneOpacity = useCallback(
+    (delta: number) => {
+      if (!onCtPlaneOpacityChange) {
+        return
+      }
+      const nextValue = clamp(ctPlaneOpacity + delta, 0, 1)
+      onCtPlaneOpacityChange(nextValue)
+      setSpatialSelection(`CT plane opacity ${Math.round(nextValue * 100)}%`)
+    },
+    [ctPlaneOpacity, onCtPlaneOpacityChange],
+  )
+
+  const handleXrCycleClipMode = useCallback(() => {
+    if (!onCtClipModeChange) {
+      return
+    }
+    const currentIndex = Math.max(0, XR_CONTROL_CLIP_MODES.indexOf(ctClipMode))
+    const nextMode = XR_CONTROL_CLIP_MODES[(currentIndex + 1) % XR_CONTROL_CLIP_MODES.length]
+    onCtClipModeChange(nextMode)
+    if (nextMode !== 'none') {
+      onCtClipAxisChange?.(xrControlAxis)
+    }
+    setSpatialSelection(
+      nextMode === 'none'
+        ? 'CT clipping off'
+        : `${AXIS_LABELS[xrControlAxis]} clipping: ${getClipModeLabel(nextMode)}`,
+    )
+  }, [ctClipMode, onCtClipAxisChange, onCtClipModeChange, xrControlAxis])
 
   const stepCtPlaneSlice = useCallback(
     (axis: AnatomyAxis, delta: number) => {
@@ -1700,6 +2203,7 @@ export function AnatomyViewer({
     : 'xl:grid-cols-[minmax(0,1.55fr)_minmax(300px,0.82fr)]'
   const legendSegments = model.segments.slice(0, 6)
   const hiddenLegendCount = Math.max(0, model.segments.length - legendSegments.length)
+  const volumeAvailable = volumeState.status === 'success'
 
   return (
     <div
@@ -1861,11 +2365,42 @@ export function AnatomyViewer({
                   />
                 </group>
                 <XRSpatialControllers
+                  controlRootRef={xrControlPanelRef}
                   enabled={xrSessionActive}
                   targetRef={spatialRootRef}
                   placement={spatialPlacement}
                   onSelectSegment={setSpatialSelection}
                 />
+                {xrSessionActive && xrSessionMode === 'immersive-vr' ? (
+                  <XRControlPanel
+                    activeAxis={xrControlAxis}
+                    crossSection={crossSection}
+                    ctClipAxis={ctClipAxis}
+                    ctClipMode={ctClipMode}
+                    ctPlaneOpacity={ctPlaneOpacity}
+                    ctPlaneSlices={effectiveCtPlaneSlices}
+                    ctPlaneVisibility={ctPlaneVisibility}
+                    panelRef={xrControlPanelRef}
+                    showCtPlanes={showCtPlanes}
+                    visible
+                    volumeAvailable={volumeAvailable}
+                    onActiveAxisChange={handleXrSetControlAxis}
+                    onCycleClipMode={onCtClipModeChange ? handleXrCycleClipMode : undefined}
+                    onStepCrossSection={onCrossSectionChange ? handleXrStepCrossSection : undefined}
+                    onStepCtPlaneOpacity={
+                      onCtPlaneOpacityChange ? handleXrStepCtPlaneOpacity : undefined
+                    }
+                    onStepCtPlaneSlice={
+                      onCtPlaneSliceChange || onVolumeSliceChange
+                        ? handleXrStepCtPlaneSlice
+                        : undefined
+                    }
+                    onToggleActivePlane={
+                      onCtPlaneVisibilityChange ? handleXrToggleActivePlane : undefined
+                    }
+                    onToggleCtPlanes={onShowCtPlanesChange ? handleXrToggleCtPlanes : undefined}
+                  />
+                ) : null}
               </Suspense>
             ) : null}
             <OrbitControls

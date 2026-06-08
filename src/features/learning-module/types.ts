@@ -15,7 +15,8 @@ export interface ModuleNavItem {
 }
 
 /** A single image used to teach inside a Learn block. */
-export interface LearnFigure {
+export interface LearnImageMedia {
+  kind?: 'image'
   src: string
   /** Neutral alt text — never leak the diagnostic label here. */
   alt: string
@@ -26,6 +27,25 @@ export interface LearnFigure {
   license?: string
 }
 
+/** Backward-compatible name used by existing modules. */
+export type LearnFigure = LearnImageMedia
+
+export interface LearnVideoMedia {
+  kind: 'video'
+  src: string
+  type?: string
+  poster?: string
+  /** Neutral label — never leak the diagnostic label here. */
+  label: string
+  /** Teaching caption: what to look for in the clip. */
+  caption: string
+  attribution?: string
+  sourceUrl?: string
+  license?: string
+}
+
+export type LearnMedia = LearnImageMedia | LearnVideoMedia
+
 /**
  * One unit of didactic teaching. `level: 'advanced'` blocks render inside the
  * collapsible "Go deeper" area; everything else is core (always visible).
@@ -35,6 +55,7 @@ export interface LearnBlock {
   title: string
   paragraphs?: string[]
   bullets?: string[]
+  media?: LearnMedia
   figure?: LearnFigure
   level?: 'core' | 'advanced'
 }
