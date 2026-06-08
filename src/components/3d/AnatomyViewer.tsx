@@ -50,8 +50,6 @@ export type AnatomyAxis = (typeof ORTHOGONAL_AXES)[number]
 export type OrthogonalClipMode = 'none' | 'hide-above' | 'hide-below'
 
 const XR_CONTROL_CLIP_MODES: OrthogonalClipMode[] = ['none', 'hide-above', 'hide-below']
-const XR_CONTROL_PANEL_DISTANCE = 1.28
-const XR_CONTROL_PANEL_VERTICAL_OFFSET = -0.08
 const XR_MIN_SPATIAL_SCALE = 0.001
 const XR_MAX_SPATIAL_SCALE = 80
 
@@ -236,10 +234,12 @@ function computeSpatialPlacement(boundingBox: Box3): SpatialPlacement {
   const size = boundingBox.getSize(new Vector3())
   const center = boundingBox.getCenter(new Vector3())
   const maxDimension = Math.max(size.x, size.y, size.z, 0.001)
-  const scale = Math.min(Math.max(1.05 / maxDimension, 0.001), 12)
+  // ~0.55 m fits in front without dominating the view; the control panel sits lower (see
+  // XRControlPanel), so the model floats ahead at roughly eye level and behind the panel in depth.
+  const scale = Math.min(Math.max(0.55 / maxDimension, 0.001), 12)
 
   return {
-    position: [-center.x * scale, 1.28 - center.y * scale, -1.35 - center.z * scale],
+    position: [-center.x * scale, 1.5 - center.y * scale, -1.5 - center.z * scale],
     scale,
   }
 }
@@ -661,7 +661,8 @@ function XRControlButton({
   size?: [number, number]
 }) {
   // R3F pointer events dispatched by @react-three/xr cover controllers, hands, and Vision Pro pinch.
-  const handleSelect = (event: ThreeEvent<MouseEvent>) => {
+  // Use pointer-down (not click) so a single trigger press / pinch activates immediately.
+  const handleSelect = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation()
     if (!disabled) {
       onSelect?.()
@@ -673,7 +674,7 @@ function XRControlButton({
   const textColor = disabled ? '#cbd5e1' : selected ? '#042f2e' : '#ffffff'
 
   return (
-    <group position={position} onClick={handleSelect}>
+    <group position={position} onPointerDown={handleSelect}>
       <mesh>
         <planeGeometry args={size} />
         <meshBasicMaterial
@@ -888,46 +889,15 @@ function XRControlPanel({
   onToggleActivePlane?: (axis: AnatomyAxis) => void
   onToggleCtPlanes?: () => void
 }) {
-  const { gl } = useThree()
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
   const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
-  const hasPlacedPanelRef = useRef(false)
-  const frameVectors = useMemo(
-    () => ({
-      forward: new Vector3(),
-      up: new Vector3(),
-      position: new Vector3(),
-      quaternion: new Quaternion(),
-    }),
-    [],
-  )
 
-  useEffect(() => {
-    if (!visible) {
-      hasPlacedPanelRef.current = false
-    }
-  }, [visible])
-
-  useFrame(() => {
-    if (!visible || !panelRef.current || hasPlacedPanelRef.current || !gl.xr.isPresenting) {
-      return
-    }
-    const xrCamera = gl.xr.getCamera()
-    xrCamera.updateMatrixWorld()
-    xrCamera.getWorldDirection(frameVectors.forward)
-    frameVectors.up.setFromMatrixColumn(xrCamera.matrixWorld, 1).normalize()
-    xrCamera.getWorldPosition(frameVectors.position)
-    frameVectors.position
-      .addScaledVector(frameVectors.forward, XR_CONTROL_PANEL_DISTANCE)
-      .addScaledVector(frameVectors.up, XR_CONTROL_PANEL_VERTICAL_OFFSET)
-    panelRef.current.position.copy(frameVectors.position)
-    xrCamera.getWorldQuaternion(frameVectors.quaternion)
-    panelRef.current.quaternion.copy(frameVectors.quaternion)
-    hasPlacedPanelRef.current = true
-  })
-
+  // World-fixed control surface: sits below and in front of the model (which floats ahead at eye
+  // level), tilted up toward the user like a lectern. Both the model and this panel live in the
+  // same world frame so they stay separated regardless of head height — the previous billboard made
+  // the panel camera-relative while the model was world-fixed, so they collided on entry.
   return (
-    <group ref={panelRef} position={[0, 1.42, -1.28]} visible={visible}>
+    <group ref={panelRef} position={[0, 0.85, -1.0]} rotation={[-0.35, 0, 0]} visible={visible}>
       <mesh position={[0, 0, -0.008]}>
         <planeGeometry args={[1.22, 0.95]} />
         <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
