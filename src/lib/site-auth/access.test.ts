@@ -20,6 +20,7 @@ describe('main site auth access helpers', () => {
     expect(isPublicPath('/forgot-password')).toBe(true)
     expect(isPublicPath('/auth/update-password')).toBe(true)
     expect(isPublicPath('/verify-email')).toBe(true)
+    expect(isPublicPath('/api/scope-calibration')).toBe(true)
   })
 
   it('does not treat POCUS as a protected website module', () => {
@@ -27,7 +28,14 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/pocus/cases')).toBeNull()
   })
 
+  it('keeps the experimental pleural ultrasound simulator publicly smoke-testable', () => {
+    expect(isPublicPath('/pleural-procedures/pleural-ultrasound-simulator')).toBe(true)
+    expect(isPublicPath('/pleural-procedures/pleural-ultrasound')).toBe(false)
+  })
+
   it('requires entitlements only for restricted website areas', () => {
+    expect(getRequiredEntitlement('/admin', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/admin/analytics', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/ip-registry', params())).toBe('ip_registry')
     expect(getRequiredEntitlement('/socal-ebus-course', params())).toBe('socal_ebus_course')
     expect(getRequiredEntitlement('/ebus-training', params())).toBeNull()

@@ -20,7 +20,7 @@ const destinationDir = resolve(projectRoot, 'public/bronch-navigation-trainer/ap
 const embeddedBasePath = '/bronch-navigation-trainer/app/'
 
 console.log('Building Bronch Navigation Trainer app...')
-console.log(`Embed build config: base ${embeddedBasePath}, authoring tools disabled`)
+console.log(`Embed build config: base ${embeddedBasePath}, authoring tools enabled on loopback hosts only`)
 
 execFileSync('npm', ['run', 'build'], {
   cwd: sourceAppDir,

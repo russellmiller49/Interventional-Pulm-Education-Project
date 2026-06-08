@@ -37,10 +37,13 @@ export type PleuralSourceType =
   | 'educational-model'
 
 export type PleuralLicenseLabel =
+  | 'CC BY 2.0'
   | 'CC BY 4.0'
   | 'CC BY-NC 4.0'
+  | 'CC BY-NC-SA 3.0'
   | 'CC BY-NC-SA 4.0'
   | 'CC BY-NC-ND 4.0'
+  | 'COVID-19 emergency license'
   | 'AGPL-3.0'
   | 'All rights reserved'
   | 'Mixed or row-level'

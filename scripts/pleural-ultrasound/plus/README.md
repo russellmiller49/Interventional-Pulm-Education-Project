@@ -387,15 +387,34 @@ exec(open("/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/s
 
 ## 5. Generate frame cache for the web module
 
-The next implementation step is an image capture driver:
+The browser simulator should consume reviewed cached frames, not run PLUS at
+runtime. With the transform sender and PlusServer already streaming, capture a
+single settled frame with:
 
-1. Sweep probe transforms with `send-probe-transform.py`.
-2. Capture the simulated B-mode image stream from `localhost:18944`.
-3. Save frames as WebP/PNG.
-4. Write `frames.json` with probe pose metadata.
-5. Add the frame cache URL to `case.json`.
+```bash
+python3 scripts/pleural-ultrasound/plus/capture-plus-atlas-frame.py \
+  --atlas-id largest-pocket \
+  --output public/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/plus-largest-pocket.png
+```
 
-The browser simulator can then prefer PLUS frames and fall back to its current educational ray-march image when no cached frame matches the current probe pose.
+The helper connects to `localhost:18944`, skips the first few IMAGE messages,
+writes a PNG, and writes a JSON sidecar with the current pose from
+`Pleural_effusion_simulation/plus/current-probe-pose.json`. Review the image in
+Slicer/web before adding or replacing a `case.json` `frameAtlas.entries[]`
+record.
+
+For a useful atlas:
+
+1. Select or nudge a pose with `set-probe-pose.py`.
+2. Capture the frame with `capture-plus-atlas-frame.py`.
+3. Add the frame URL, exact probe pose, metrics, and review status to
+   `public/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/case.json`.
+4. Repeat for best window, rib shadow, diaphragm hazard, solid-organ hazard,
+   shallow/deep depth, and off-axis fluid miss.
+
+The browser simulator prefers reviewed PLUS/manual atlas frames and falls back
+to the educational ray-march image when no cached frame matches the current
+probe pose.
 
 ## Troubleshooting: black or empty fan
 

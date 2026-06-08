@@ -11,7 +11,13 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { MarkdownContent } from '@/components/board-review/MarkdownContent'
 
-import type { BoardDeepDiveSection, LearnBlock, LearnFigure } from '../types'
+import type {
+  BoardDeepDiveSection,
+  LearnBlock,
+  LearnImageMedia,
+  LearnMedia,
+  LearnVideoMedia,
+} from '../types'
 
 interface LearnSectionProps {
   intro?: ReactNode
@@ -131,12 +137,24 @@ function LearnBlockBody({ block }: { block: LearnBlock }) {
         </ul>
       ) : null}
 
-      {block.figure ? <Figure figure={block.figure} /> : null}
+      {block.media ? (
+        <Media media={block.media} />
+      ) : block.figure ? (
+        <Media media={block.figure} />
+      ) : null}
     </div>
   )
 }
 
-function Figure({ figure }: { figure: LearnFigure }) {
+function Media({ media }: { media: LearnMedia }) {
+  if (media.kind === 'video') {
+    return <VideoFigure video={media} />
+  }
+
+  return <ImageFigure figure={media} />
+}
+
+function ImageFigure({ figure }: { figure: LearnImageMedia }) {
   return (
     <figure className="overflow-hidden rounded-lg border border-border/80 bg-muted/30">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -160,6 +178,45 @@ function Figure({ figure }: { figure: LearnFigure }) {
                   className="underline decoration-sky-500 underline-offset-4"
                 >
                   {figure.license ?? 'Source'}
+                </a>
+              </>
+            ) : null}
+          </p>
+        ) : null}
+      </figcaption>
+    </figure>
+  )
+}
+
+function VideoFigure({ video }: { video: LearnVideoMedia }) {
+  return (
+    <figure className="overflow-hidden rounded-lg border border-border/80 bg-muted/30">
+      <video
+        controls
+        playsInline
+        preload="metadata"
+        poster={video.poster}
+        aria-label={video.label}
+        className="max-h-[28rem] w-full bg-black object-contain"
+      >
+        <source src={video.src} type={video.type ?? 'video/mp4'} />
+        Your browser does not support embedded video.
+      </video>
+      <figcaption className="space-y-1 border-t border-border/80 p-4 text-sm leading-6 text-muted-foreground">
+        <p className="text-foreground">{video.caption}</p>
+        {video.attribution ? (
+          <p className="text-xs">
+            Attribution: {video.attribution}
+            {video.sourceUrl ? (
+              <>
+                {' · '}
+                <a
+                  href={video.sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline decoration-sky-500 underline-offset-4"
+                >
+                  {video.license ?? 'Source'}
                 </a>
               </>
             ) : null}

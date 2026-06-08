@@ -422,6 +422,12 @@ export default function AnatomyLearnPage() {
           showDebugHelpers={showDebugHelpers}
           rotation={rotation}
           controlPanel={viewerControlPanel}
+          onCrossSectionChange={setCrossSection}
+          onShowCtPlanesChange={setShowCtPlanes}
+          onCtPlaneVisibilityChange={handleCtPlaneVisibilityChange}
+          onCtPlaneOpacityChange={setCtPlaneOpacity}
+          onCtClipModeChange={setCtClipMode}
+          onCtClipAxisChange={setCtClipAxis}
           onScreenshot={(dataUrl) => {
             const link = document.createElement('a')
             link.href = dataUrl

@@ -29,7 +29,7 @@ const pathSteps = [
     href: `${base}/practice`,
     step: '2',
     title: 'Practice',
-    description: 'Classify real ultrasound images in a commit-first lab with running feedback.',
+    description: 'Classify real ultrasound images and dynamic-sign videos in commit-first labs.',
   },
   {
     href: `${base}/assessment`,

@@ -147,7 +147,9 @@ Thumbs.db
 
 # Large video files
 *.mp4
+!public/videos/interventionalpulm-modules-promo.mp4
 !public/socal-ebus-course/app/**/*.mp4
+!public/module-assets/v1/pleural-ultrasound/video/*.mp4
 *.avi
 *.mov
 *.wmv

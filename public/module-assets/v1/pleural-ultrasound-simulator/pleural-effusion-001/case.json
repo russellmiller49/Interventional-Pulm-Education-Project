@@ -133,6 +133,610 @@
     "sectorAngleDeg": 62,
     "needleAngleDeg": 0
   },
+  "frameAtlas": {
+    "selectionTolerance": {
+      "lateralMm": 45,
+      "craniocaudalMm": 32,
+      "tiltDeg": 9,
+      "rotationDeg": 10,
+      "depthCm": 1.25,
+      "sectorAngleDeg": 8
+    },
+    "notes": [
+      "Synthetic educational frame atlas for scan-window reasoning only; not a diagnostic image set or clinical validation dataset.",
+      "The default centered window now uses a cached PLUS UsSimulator frame generated from local patient-derived surface models.",
+      "Remaining SVG atlas entries are physics-oriented placeholders: grayscale sector images with rib cortex/shadow, anechoic fluid, posterior enhancement, and subtle interface artifacts rather than colored anatomy.",
+      "PULSE COVID-19 lung ultrasound work informed the offline phantom/ground-truth design pattern, but no external code or data is copied here.",
+      "First practical high-fidelity route remains offline PLUS/MUST-inspired generation from local surface models, then expert review before core-curriculum use."
+    ],
+    "entries": [
+      {
+        "id": "best-window",
+        "label": "Centered dependent fluid pocket",
+        "description": "A centered interspace view with a long simple-appearing pleural fluid run and no projected solid-organ crossing.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/plus-largest-pocket.png",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 49,
+          "meanFluidPocketMm": 35,
+          "fluidBeamFraction": 0.58,
+          "ribShadowBeamFraction": 0.12,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 37,
+            "firstFluidDepthMm": 29,
+            "safeWindow": true
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "plus-offline",
+          "name": "PLUS UsSimulator cached reference frame",
+          "version": "2026-06-05-largest-pocket",
+          "createdAt": "2026-06-05",
+          "sourceUrls": [
+            "https://pluslib.readthedocs.io/en/latest/devices/DeviceUsSimulatorVideo.html",
+            "https://plustoolkit.github.io/features.html"
+          ],
+          "notes": [
+            "Generated from local patient-derived STL surfaces with Pleural_effusion_simulation/plus/PlusDeviceSet_PleuralEffusionSimulator.xml.",
+            "Original cached frame: Pleural_effusion_simulation/plus/reference-frame-largest-pocket.png.",
+            "No external PULSE code, trained model, or dataset artifact was imported."
+          ]
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "PLUS pipeline QA; expert clinical image-quality review still required",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "PLUS-generated synthetic frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["best-window", "simple-fluid", "plus-offline"]
+      },
+      {
+        "id": "shallow-depth",
+        "label": "Depth too shallow",
+        "description": "The fluid pocket is incompletely framed because the display depth is too shallow.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/shallow-depth.svg",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 8,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 36,
+          "meanFluidPocketMm": 23,
+          "fluidBeamFraction": 0.44,
+          "ribShadowBeamFraction": 0.1,
+          "diaphragmSeen": false,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 24,
+            "firstFluidDepthMm": 28,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["shallow-depth", "simple-fluid"]
+      },
+      {
+        "id": "deep-depth",
+        "label": "Deep display with preserved pocket",
+        "description": "The display depth is increased while the central fluid run remains usable for teaching window assessment.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/deep-depth.svg",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 16,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 52,
+          "meanFluidPocketMm": 36,
+          "fluidBeamFraction": 0.54,
+          "ribShadowBeamFraction": 0.14,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 35,
+            "firstFluidDepthMm": 29,
+            "safeWindow": true
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["deep-depth", "simple-fluid"]
+      },
+      {
+        "id": "rib-shadow",
+        "label": "Rib shadow obscures the pocket",
+        "description": "An off-center interspace view increases rib shadow and shortens the apparent drainable fluid run.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/rib-shadow.svg",
+        "probe": {
+          "lateralMm": -132,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 32,
+          "meanFluidPocketMm": 16,
+          "fluidBeamFraction": 0.3,
+          "ribShadowBeamFraction": 0.52,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": true,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 18,
+            "firstFluidDepthMm": 35,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["rib-shadow", "simple-fluid"]
+      },
+      {
+        "id": "diaphragm-hazard",
+        "label": "Diaphragm in the projected path",
+        "description": "The projected needle line crosses too close to the diaphragm boundary despite visible pleural fluid.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/diaphragm-hazard.svg",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -408,
+          "tiltDeg": 12,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 45,
+          "meanFluidPocketMm": 28,
+          "fluidBeamFraction": 0.42,
+          "ribShadowBeamFraction": 0.16,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": true,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 24,
+            "firstFluidDepthMm": 31,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["diaphragm-hazard", "simple-fluid"]
+      },
+      {
+        "id": "liver-hazard",
+        "label": "Right upper abdominal organ hazard",
+        "description": "The view includes a projected solid-organ crossing that should redirect access-window selection.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/liver-hazard.svg",
+        "probe": {
+          "lateralMm": -132,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -418,
+          "tiltDeg": 6,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 38,
+          "meanFluidPocketMm": 22,
+          "fluidBeamFraction": 0.36,
+          "ribShadowBeamFraction": 0.28,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": true,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": true,
+            "lungHit": false,
+            "fluidRunMm": 20,
+            "firstFluidDepthMm": 34,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["solid-organ-hazard", "liver-hazard", "simple-fluid"]
+      },
+      {
+        "id": "spleen-hazard",
+        "label": "Left upper abdominal organ hazard",
+        "description": "A lateral view shows pleural fluid but the projected line approaches upper abdominal solid-organ tissue.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/spleen-hazard.svg",
+        "probe": {
+          "lateralMm": 118,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -430,
+          "tiltDeg": 4,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 34,
+          "meanFluidPocketMm": 19,
+          "fluidBeamFraction": 0.32,
+          "ribShadowBeamFraction": 0.24,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": true,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": true,
+            "lungHit": false,
+            "fluidRunMm": 18,
+            "firstFluidDepthMm": 36,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["solid-organ-hazard", "spleen-hazard", "simple-fluid"]
+      },
+      {
+        "id": "off-axis-fluid-miss",
+        "label": "Off-axis fluid miss",
+        "description": "The fan is lateral to the main pocket, producing a poor drainage target despite nearby pleural fluid in the model.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/off-axis-fluid-miss.svg",
+        "probe": {
+          "lateralMm": 24,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 12,
+          "meanFluidPocketMm": 4,
+          "fluidBeamFraction": 0.08,
+          "ribShadowBeamFraction": 0.16,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 0,
+            "firstFluidDepthMm": null,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["fluid-miss", "simple-fluid"]
+      },
+      {
+        "id": "narrow-interspace",
+        "label": "Narrow but usable interspace",
+        "description": "A narrower window still preserves a safe central fluid run when the rib shadows are kept peripheral.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/narrow-interspace.svg",
+        "probe": {
+          "lateralMm": -68,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": -8,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": -4
+        },
+        "metrics": {
+          "maxFluidPocketMm": 43,
+          "meanFluidPocketMm": 29,
+          "fluidBeamFraction": 0.46,
+          "ribShadowBeamFraction": 0.26,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 31,
+            "firstFluidDepthMm": 31,
+            "safeWindow": true
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["narrow-interspace", "simple-fluid"]
+      },
+      {
+        "id": "cranial-fluid-edge",
+        "label": "Cranial edge of pocket",
+        "description": "A cranial edge view shows less continuous fluid and should prompt continued scanning for the largest dependent pocket.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/cranial-fluid-edge.svg",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -214,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 28,
+          "meanFluidPocketMm": 16,
+          "fluidBeamFraction": 0.24,
+          "ribShadowBeamFraction": 0.18,
+          "diaphragmSeen": false,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 16,
+            "firstFluidDepthMm": 38,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["cranial-edge", "simple-fluid"]
+      },
+      {
+        "id": "caudal-fluid-edge",
+        "label": "Caudal edge near diaphragm",
+        "description": "The caudal edge of the pocket shortens the fluid run and brings the diaphragm boundary closer to the projected path.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/caudal-fluid-edge.svg",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -468,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 62,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 31,
+          "meanFluidPocketMm": 18,
+          "fluidBeamFraction": 0.28,
+          "ribShadowBeamFraction": 0.16,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": true,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 19,
+            "firstFluidDepthMm": 34,
+            "safeWindow": false
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["caudal-edge", "diaphragm-hazard", "simple-fluid"]
+      },
+      {
+        "id": "wide-fan-window",
+        "label": "Wide fan with usable center",
+        "description": "A wider fan displays more surrounding anatomy while maintaining a safe centerline fluid run.",
+        "imageUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/frame-atlas/wide-fan-window.svg",
+        "probe": {
+          "lateralMm": -88.58102416992188,
+          "posteriorMm": -20.82644033432007,
+          "craniocaudalMm": -454.2821520626544,
+          "tiltDeg": -2,
+          "rotationDeg": 0,
+          "depthCm": 12,
+          "gain": 1.05,
+          "dynamicRangeDb": 56,
+          "sectorAngleDeg": 78,
+          "needleAngleDeg": 0
+        },
+        "metrics": {
+          "maxFluidPocketMm": 50,
+          "meanFluidPocketMm": 33,
+          "fluidBeamFraction": 0.5,
+          "ribShadowBeamFraction": 0.22,
+          "diaphragmSeen": true,
+          "lungSeen": true,
+          "solidOrganSeen": false,
+          "centralNeedle": {
+            "ribHit": false,
+            "diaphragmHit": false,
+            "solidOrganHit": false,
+            "lungHit": false,
+            "fluidRunMm": 34,
+            "firstFluidDepthMm": 29,
+            "safeWindow": true
+          }
+        },
+        "groundTruthPattern": "simpleAnechoic",
+        "generator": {
+          "source": "manual-curated",
+          "name": "Pleural simulator synthetic frame atlas",
+          "version": "2026-06-05",
+          "createdAt": "2026-06-05"
+        },
+        "reviewStatus": "reviewed",
+        "reviewer": "Synthetic atlas QA; clinical validation pending",
+        "reviewedAt": "2026-06-05",
+        "educationalUse": "Synthetic educational frame for scan-window reasoning only; not a diagnostic image or procedure guide.",
+        "tags": ["best-window", "wide-fan", "simple-fluid"]
+      }
+    ]
+  },
   "objectives": [
     "Find the largest dependent pleural fluid pocket.",
     "Avoid rib shadow, diaphragm, liver, and spleen in the access trajectory.",

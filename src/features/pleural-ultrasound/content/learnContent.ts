@@ -1,6 +1,7 @@
 import type { LearnBlock, LearnFigure } from '@/features/learning-module/types'
 
 import { getUltrasoundAsset } from './assets'
+import { getUltrasoundVideoAsset } from './videoAssets'
 
 /**
  * Didactic content for the Pleural Ultrasound "Learn" section.
@@ -34,6 +35,24 @@ function figureFromAsset(id: string, caption: string): LearnFigure | undefined {
   return {
     src: asset.localPath ?? asset.path,
     alt: 'Pleural ultrasound teaching image',
+    caption,
+    attribution: asset.attribution,
+    sourceUrl: asset.sourceUrl,
+    license: asset.license,
+  }
+}
+
+function videoFromAsset(id: string, caption: string): LearnBlock['media'] | undefined {
+  const asset = getUltrasoundVideoAsset(id)
+  if (!asset) {
+    return undefined
+  }
+
+  return {
+    kind: 'video',
+    src: asset.localPath ?? asset.path,
+    type: 'video/mp4',
+    label: 'Lung ultrasound teaching clip',
     caption,
     attribution: asset.attribution,
     sourceUrl: asset.sourceUrl,
@@ -142,5 +161,65 @@ export const ultrasoundGoDeeperBlocks: LearnBlock[] = [
       'Spine sign: seeing the thoracic vertebrae above the diaphragm (they normally fade as aerated lung scatters the beam) indicates fluid or consolidation has replaced aerated lung.',
       'Curtain sign: aerated lung sweeping down like a curtain over the costophrenic recess in inspiration — a normal finding that marks the lung edge and the limit of a safe window.',
     ],
+  },
+  {
+    id: 'normal-a-lines-video',
+    title: 'Video example — normal A-lines',
+    level: 'advanced',
+    paragraphs: [
+      'Use this clip to separate a normal aerated-lung pattern from a pleural-fluid target before committing to a procedure plan.',
+    ],
+    media: videoFromAsset(
+      'dynamic-normal-a-lines',
+      'Normal A-lines: horizontal reverberation artifacts beneath a sliding pleural line.',
+    ),
+  },
+  {
+    id: 'b-lines-pleural-irregularity-video',
+    title: 'Video example — B-lines and pleural irregularity',
+    level: 'advanced',
+    paragraphs: [
+      'This clip is a lung-pattern teaching example. It should steer the learner toward interstitial or pleural-line interpretation, not thoracentesis.',
+    ],
+    media: videoFromAsset(
+      'dynamic-b-lines-pleural-irregularity',
+      'B-lines with pleural-line irregularity: a dynamic lung finding rather than a drainable pocket.',
+    ),
+  },
+  {
+    id: 'subpleural-consolidation-video',
+    title: 'Video example — subpleural consolidation',
+    level: 'advanced',
+    paragraphs: [
+      'Subpleural consolidation can sit right against the pleural line; the teaching move is to verify whether there is a separate fluid window.',
+    ],
+    media: videoFromAsset(
+      'dynamic-subpleural-consolidation',
+      'Subpleural consolidation with pleural-line abnormality: keep scanning if the clinical question is drainage.',
+    ),
+  },
+  {
+    id: 'lung-curtain-video',
+    title: 'Video example — lung curtain / no target',
+    level: 'advanced',
+    paragraphs: [
+      'The lung curtain is a dynamic no-target sign near the diaphragm. It is especially useful when learners are deciding whether a lower-chest view is safe for access.',
+    ],
+    media: videoFromAsset(
+      'dynamic-lung-curtain-no-target',
+      'Lung curtain: aerated lung sweeps across the upper abdominal organ rather than revealing a pleural-fluid pocket.',
+    ),
+  },
+  {
+    id: 'effusion-adjacent-consolidation-video',
+    title: 'Video example — effusion with adjacent consolidation',
+    level: 'advanced',
+    paragraphs: [
+      'This is the bridge between lung-pathology clips and pleural-procedure planning: fluid may be present, but the surrounding context changes what the learner should think about next.',
+    ],
+    media: videoFromAsset(
+      'dynamic-effusion-adjacent-consolidation',
+      'Effusion with adjacent consolidation: confirm access-window adequacy and think infection/source control before defaulting to a simple tap.',
+    ),
   },
 ]

@@ -23,10 +23,9 @@ const quickNavTitles = new Set([
   'EBUS Training',
   'TNM-9 Staging',
   '3D Anatomy',
-  'Bronch Navigation',
   'IP Board Prep',
   'FluoroView',
-  'Resources',
+  'Bronch Navigation',
 ])
 
 export function DesktopNav({ items, activePath }: DesktopNavProps) {
@@ -87,12 +86,12 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
     <nav
       ref={navRef}
       aria-label="Primary"
-      className="relative hidden min-w-0 flex-1 items-center justify-center gap-1 lg:flex xl:gap-1.5"
+      className="relative hidden min-w-0 flex-1 items-center justify-start gap-0.5 lg:flex xl:gap-1"
     >
       <button
         type="button"
         className={cn(
-          'inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none',
+          'inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none xl:px-3',
           (isMenuOpen || hasActiveOverflowItem) && 'bg-primary/10 text-primary',
         )}
         aria-haspopup="menu"
@@ -113,7 +112,7 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              'inline-flex h-9 items-center whitespace-nowrap rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none',
+              'inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-reduce:transition-none xl:px-3',
               isActive && 'bg-primary/10 text-primary',
             )}
           >

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import type { ReactNode } from 'react'
 
+import { AuthPromoVideo } from '@/components/auth/AuthPromoVideo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface AuthShellProps {
@@ -18,20 +19,7 @@ function AuthPromoSplash() {
   return (
     <aside className="min-w-0 lg:sticky lg:top-24">
       <div className="w-full max-w-full overflow-hidden rounded-2xl border border-primary/20 bg-slate-950 shadow-2xl shadow-primary/10">
-        <video
-          aria-label="Preview of interventionalpulm.com interactive learning modules"
-          autoPlay
-          className="aspect-square w-full max-w-full bg-slate-950 object-cover"
-          controls
-          loop
-          muted
-          playsInline
-          poster={promoPosterSrc}
-          preload="metadata"
-          src={promoVideoSrc}
-        >
-          <p>Preview video for interventionalpulm.com interactive learning modules.</p>
-        </video>
+        <AuthPromoVideo posterSrc={promoPosterSrc} videoSrc={promoVideoSrc} />
       </div>
     </aside>
   )

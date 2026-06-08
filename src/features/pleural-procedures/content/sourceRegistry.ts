@@ -165,7 +165,7 @@ export const pleuralModuleSourceRegistry: readonly PleuralModuleSource[] = [
   },
 ]
 
-const defaultEmbeddableLicenses = new Set<PleuralLicenseLabel>(['CC BY 4.0'])
+const defaultEmbeddableLicenses = new Set<PleuralLicenseLabel>(['CC BY 4.0', 'CC BY-NC 4.0'])
 
 type PleuralAssetPolicyFields = Pick<
   PleuralAsset,

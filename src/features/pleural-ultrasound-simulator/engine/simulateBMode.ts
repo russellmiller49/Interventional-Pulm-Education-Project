@@ -64,7 +64,7 @@ function tissueBackscatter(label: PleuralTissueLabel) {
     case 'diaphragm':
       return 0.036
     case 'rib':
-      return 0.025
+      return 0.006
     case 'lung':
       return 0.032
     case 'atelectaticLung':
@@ -356,6 +356,7 @@ export function simulatePleuralBMode({
       const gray = logCompressToByte(rawEcho, probe.dynamicRangeDb)
       const fanHalfWidth = Math.max(8, maxFanHalfWidth * (0.08 + 0.92 * depthFraction))
       const displayX = Math.round(centerX + (beamFraction - 0.5) * fanHalfWidth * 2)
+      const ribCortex = label === 'rib' && (previousLabel !== 'rib' || boundaryEcho > 0.18)
       const fluidBoundary =
         label === 'pleuralFluid'
           ? boundaryEcho > 0.16 ||
@@ -367,7 +368,9 @@ export function simulatePleuralBMode({
             ? Math.min(Math.max(gray, 72), 148)
             : Math.min(gray, 16)
           : label === 'rib'
-            ? Math.max(gray, 178)
+            ? ribCortex
+              ? Math.max(gray, 212)
+              : Math.min(gray, 12)
             : label === 'diaphragm'
               ? Math.max(gray, 158)
               : (label === 'liver' || label === 'spleen') && boundaryEcho < 0.16
@@ -386,7 +389,7 @@ export function simulatePleuralBMode({
       if (material.castsShadow && depthMm < 52) {
         ribHitOnBeam = true
         if (!shallowBoneShadowed) {
-          shadow *= 0.38
+          shadow *= 0.1
           shallowBoneShadowed = true
         }
       }

@@ -1,34 +1,84 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { redirectToPostLoginPath } from '@/lib/site-auth/post-login-redirect'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 
 import { AuthFooterLink } from './AuthShell'
 
-type SubmitStatus = 'idle' | 'submitting' | 'error'
+type SubmitStatus = 'idle' | 'submitting' | 'redirecting' | 'error'
+
+const DEFAULT_NEXT_PATH = '/dashboard'
+const AUTH_DESTINATION_PATHS = new Set([
+  '/auth/update-password',
+  '/forgot-password',
+  '/login',
+  '/signup',
+  '/verify-email',
+])
 
 function normalizeNextPath(value: string | null) {
   if (!value || !value.startsWith('/') || value.startsWith('//')) {
-    return '/dashboard'
+    return DEFAULT_NEXT_PATH
   }
 
-  return value
+  try {
+    const target = new URL(value, 'https://interventionalpulm.local')
+
+    if (
+      AUTH_DESTINATION_PATHS.has(target.pathname) ||
+      target.pathname.startsWith('/auth/callback')
+    ) {
+      return DEFAULT_NEXT_PATH
+    }
+
+    return `${target.pathname}${target.search}${target.hash}`
+  } catch {
+    return DEFAULT_NEXT_PATH
+  }
 }
 
 export function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const nextPath = useMemo(() => normalizeNextPath(searchParams.get('next')), [searchParams])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<SubmitStatus>('idle')
   const [error, setError] = useState<string>()
+
+  useEffect(() => {
+    let active = true
+
+    async function redirectIfAlreadySignedIn() {
+      let supabase: ReturnType<typeof supabaseCookieBrowser>
+
+      try {
+        supabase = supabaseCookieBrowser()
+      } catch {
+        return
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (active && user) {
+        redirectToPostLoginPath(nextPath)
+      }
+    }
+
+    void redirectIfAlreadySignedIn()
+
+    return () => {
+      active = false
+    }
+  }, [nextPath])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -48,8 +98,8 @@ export function LoginForm() {
         return
       }
 
-      router.replace(nextPath as Route)
-      router.refresh()
+      setStatus('redirecting')
+      redirectToPostLoginPath(nextPath)
     } catch (configError) {
       setStatus('error')
       setError(
@@ -93,8 +143,16 @@ export function LoginForm() {
         </Link>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button type="submit" disabled={status === 'submitting'} className="w-full">
-        {status === 'submitting' ? 'Signing in...' : 'Sign in'}
+      <Button
+        type="submit"
+        disabled={status === 'submitting' || status === 'redirecting'}
+        className="w-full"
+      >
+        {status === 'submitting'
+          ? 'Signing in...'
+          : status === 'redirecting'
+            ? 'Redirecting...'
+            : 'Sign in'}
       </Button>
       <AuthFooterLink href={'/signup' as Route} text="Need an account?" label="Sign up for free" />
     </form>

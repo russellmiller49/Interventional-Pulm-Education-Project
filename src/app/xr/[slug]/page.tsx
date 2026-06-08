@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 
-import { XRViewerDynamic } from '@/components/XRViewerDynamic'
-import { getModel } from '@/data/models'
+import { AnatomySpatialRouteViewer } from '@/components/3d/AnatomySpatialRouteViewer'
+import { anatomyModels } from '@/data/printable-models'
 
 type XRPageProps = {
   params: Promise<{ slug: string }>
@@ -9,19 +9,11 @@ type XRPageProps = {
 
 export default async function XRPage({ params }: XRPageProps) {
   const { slug } = await params
-  const model = getModel(slug)
+  const model = anatomyModels.find((candidate) => candidate.slug === slug)
 
   if (!model) {
     return notFound()
   }
 
-  return (
-    <main className="min-h-dvh bg-black text-white">
-      <XRViewerDynamic
-        glbSrc={model.glbSrc}
-        usdzSrc={model.usdzSrc}
-        title={`Enter Spatial: ${model.name}`}
-      />
-    </main>
-  )
+  return <AnatomySpatialRouteViewer model={model} />
 }

@@ -1,10 +1,12 @@
-export type SiteEntitlement = 'ip_registry' | 'socal_ebus_course'
+export type SiteEntitlement = 'ip_registry' | 'site_admin' | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
   '/forgot-password',
   '/health',
+  '/api/scope-calibration',
   '/login',
   '/pocus',
+  '/pleural-procedures/pleural-ultrasound-simulator',
   '/signup',
   '/verify-email',
   '/auth/update-password',
@@ -91,6 +93,10 @@ export function getRequiredEntitlement(
   pathname: string,
   searchParams: URLSearchParams,
 ): SiteEntitlement | null {
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return 'site_admin'
+  }
+
   if (pathname.startsWith('/ip-registry')) {
     return 'ip_registry'
   }
