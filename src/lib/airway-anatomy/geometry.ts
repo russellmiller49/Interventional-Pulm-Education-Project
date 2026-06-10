@@ -38,6 +38,18 @@ export function lerpVec3(a: Vec3, b: Vec3, t: number): Vec3 {
   return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 }
 
+/** Rodrigues rotation of `v` around a (not necessarily unit) `axis` by `angleRad`. */
+export function rotateAroundAxis(v: Vec3, axis: Vec3, angleRad: number): Vec3 {
+  if (angleRad === 0) return v
+  const a = normalize(axis)
+  const cosA = Math.cos(angleRad)
+  const sinA = Math.sin(angleRad)
+  const term1 = scale(v, cosA)
+  const term2 = scale(cross(a, v), sinA)
+  const term3 = scale(a, dot(a, v) * (1 - cosA))
+  return add(add(term1, term2), term3)
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }

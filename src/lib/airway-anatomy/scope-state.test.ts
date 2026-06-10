@@ -1,8 +1,10 @@
 import {
+  alignViewToBranch,
+  buildScopePathLps,
   buildScopePoseSnapshot,
-  chooseBranch,
   createInitialScopeState,
   moveScope,
+  updateLookOffset,
 } from './scope-state'
 import type { AirwayGraph } from './types'
 
@@ -100,54 +102,66 @@ const graph: AirwayGraph = {
 }
 
 describe('airway anatomy scope state', () => {
-  it('moves forward along an edge and pauses at a bifurcation', () => {
+  it('moves forward along an edge without leaving it when there is room', () => {
     const initial = createInitialScopeState(graph)
-    const moved = moveScope(initial, graph, 25)
+    const moved = moveScope(initial, graph, 6)
     const snapshot = buildScopePoseSnapshot({ state: moved, graph, lookAheadMm: 5 })
 
     expect(snapshot.edgeId).toBe(0)
-    expect(snapshot.distanceMm).toBe(10)
-    expect(snapshot.branchNodeId).toBe(1)
-    expect(snapshot.branchOptions.map((option) => option.edgeId)).toEqual([1, 2])
+    expect(snapshot.distanceMm).toBe(6)
   })
 
   it('aims through the midpoint of visible child branches at a bifurcation', () => {
-    const atBranch = moveScope(createInitialScopeState(graph), graph, 25)
+    const atBranch = moveScope(createInitialScopeState(graph), graph, 10)
     const snapshot = buildScopePoseSnapshot({ state: atBranch, graph, lookAheadMm: 5 })
 
     expect(snapshot.lookAtLps[0]).toBeCloseTo(0)
     expect(snapshot.lookAtLps[2]).toBeLessThan(snapshot.tipLps[2])
   })
 
-  it('continues on a selected child branch and records a trail', () => {
-    const atBranch = moveScope(createInitialScopeState(graph), graph, 25)
-    const selected = chooseBranch(atBranch, graph, 2)
-    const advanced = moveScope(selected, graph, 5, { trailMaxPoints: 8 })
-    const snapshot = buildScopePoseSnapshot({ state: advanced, graph, lookAheadMm: 5 })
+  it('drives through a bifurcation into the branch the view is steered toward', () => {
+    const initial = createInitialScopeState(graph)
+    // Edge 2 heads toward negative X; positive yaw steers toward positive X.
+    const steeredLeft = updateLookOffset(initial, { yawDeg: -30 })
+    const movedLeft = moveScope(steeredLeft, graph, 20)
+    expect(movedLeft.edgeId).toBe(2)
+    expect(movedLeft.distanceMm).toBeCloseTo(10)
 
-    expect(snapshot.edgeId).toBe(2)
-    expect(snapshot.tipLps[0]).toBeLessThan(0)
-    expect(snapshot.trailLps.length).toBeGreaterThan(1)
+    const steeredRight = updateLookOffset(initial, { yawDeg: 30 })
+    const movedRight = moveScope(steeredRight, graph, 20)
+    expect(movedRight.edgeId).toBe(1)
   })
 
-  it('auto-follows a preferred route through a bifurcation', () => {
-    const initial = createInitialScopeState(graph)
-    const moved = moveScope(initial, graph, 15, { preferredEdgePath: [0, 2] })
-    const snapshot = buildScopePoseSnapshot({ state: moved, graph, lookAheadMm: 5 })
+  it('aligns the steered view toward a chosen branch ostium', () => {
+    const atBranch = moveScope(createInitialScopeState(graph), graph, 10)
+    const aligned = alignViewToBranch(atBranch, graph, 2, 5)
 
-    expect(snapshot.edgeId).toBe(2)
-    expect(snapshot.distanceMm).toBeCloseTo(5)
-    expect(snapshot.branchOptions).toEqual([])
+    expect(aligned.yawDeg).toBeLessThan(-10)
+    const advanced = moveScope(aligned, graph, 5)
+    expect(advanced.edgeId).toBe(2)
+  })
+
+  it('records a trail while advancing', () => {
+    const advanced = moveScope(createInitialScopeState(graph), graph, 15, { trailMaxPoints: 8 })
+    expect(advanced.trailLps.length).toBeGreaterThan(1)
   })
 
   it('moves backward across a parent edge', () => {
-    const atBranch = moveScope(createInitialScopeState(graph), graph, 25)
-    const selected = chooseBranch(atBranch, graph, 1)
-    const advanced = moveScope(selected, graph, 4)
+    const advanced = moveScope(createInitialScopeState(graph), graph, 14)
     const rewound = moveScope(advanced, graph, -8)
     const snapshot = buildScopePoseSnapshot({ state: rewound, graph, lookAheadMm: 5 })
 
     expect(snapshot.edgeId).toBe(0)
     expect(snapshot.distanceMm).toBeCloseTo(6)
+  })
+
+  it('builds the scope insertion path from the tree root to the tip', () => {
+    const advanced = moveScope(createInitialScopeState(graph), graph, 14)
+    const path = buildScopePathLps(graph, advanced.edgeId, advanced.distanceMm)
+
+    expect(path[0]).toEqual([0, 0, 0])
+    expect(path.length).toBeGreaterThanOrEqual(3)
+    const last = path[path.length - 1]
+    expect(last[2]).toBeLessThan(-10)
   })
 })
