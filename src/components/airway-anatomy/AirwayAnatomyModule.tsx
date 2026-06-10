@@ -3,10 +3,8 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
-import { ArrowDown, ArrowUp, Crosshair, Eye, EyeOff, RotateCcw } from 'lucide-react'
+import { ArrowDown, ArrowUp, Crosshair, Eye, EyeOff, Headset, RotateCcw } from 'lucide-react'
 import * as THREE from 'three'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
-import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,8 +13,6 @@ import {
   add,
   clamp,
   ctAxisLength,
-  ctCanvasDimensions,
-  ctCanvasPixelToIndex,
   ctIndexToLps,
   dot,
   lpsToCtIndex,
@@ -24,8 +20,13 @@ import {
   projectLpsToCanvas,
   scale,
   subtract,
-  windowHu,
 } from '@/lib/airway-anatomy/geometry'
+import {
+  createBronchoscopyMaterial,
+  loadAirwayStlGeometry,
+  paintCtSliceGrayscale,
+} from '@/lib/airway-anatomy/airway-render'
+import { AirwayXRSceneDynamic } from '@/components/airway-anatomy/AirwayXRSceneDynamic'
 import {
   alignViewToBranch,
   buildScopePathLps,
@@ -52,7 +53,6 @@ import type {
 const MANIFEST_URL = resolveModuleAssetPath('/airway-anatomy/case-001/case_manifest.json')
 const VIEWPORT_CLASS =
   'relative min-h-[360px] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950'
-const airwayGeometryCache = new Map<string, Promise<THREE.BufferGeometry>>()
 
 const BRONCH_FOV_DEG = 88
 const STEER_STEP_DEG = 3
@@ -95,6 +95,7 @@ export function AirwayAnatomyModule() {
   const [showAnatomyPins, setShowAnatomyPins] = useState(false)
   const [showBranchLabels, setShowBranchLabels] = useState(true)
   const [ctPlaneOpacity, setCtPlaneOpacity] = useState(0.28)
+  const [showXr, setShowXr] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -357,6 +358,15 @@ export function AirwayAnatomyModule() {
               )}
               {showAnatomyPins ? 'Hide 3D pins' : 'Show 3D pins'}
             </Button>
+            <Button
+              type="button"
+              variant={showXr ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => setShowXr((value) => !value)}
+            >
+              <Headset className="mr-2 h-4 w-4" />
+              {showXr ? 'Hide VR view' : 'VR view'}
+            </Button>
             <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
               <RotateCcw className="mr-2 h-4 w-4" />
               Reset
@@ -424,6 +434,24 @@ export function AirwayAnatomyModule() {
           />
         </div>
       </div>
+
+      {showXr ? (
+        <div className="border-t border-slate-800 p-3">
+          <AirwayXRSceneDynamic
+            manifest={loadedCase.manifest}
+            graph={loadedCase.graph}
+            pose={snapshot}
+            ctVolume={loadedCase.ctVolume}
+            windowLow={currentWindow.low}
+            windowHigh={currentWindow.high}
+            ctPlaneOpacity={ctPlaneOpacity}
+            stepMm={stepMm}
+            onMove={handleMove}
+            onSteer={handleSteer}
+            onRecenter={handleRecenter}
+          />
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -1106,95 +1134,6 @@ function AirwaySurface({
   )
 }
 
-function loadAirwayStlGeometry(stlUrl: string): Promise<THREE.BufferGeometry> {
-  const cached = airwayGeometryCache.get(stlUrl)
-  if (cached) return cached
-
-  const promise = new STLLoader().loadAsync(stlUrl).then((geometry) => {
-    geometry.deleteAttribute('normal')
-    const smoothedGeometry = mergeVertices(geometry, 0.001)
-    geometry.dispose()
-    smoothedGeometry.computeVertexNormals()
-    smoothedGeometry.computeBoundingBox()
-    smoothedGeometry.computeBoundingSphere()
-    return smoothedGeometry
-  })
-  airwayGeometryCache.set(stlUrl, promise)
-  return promise
-}
-
-function createBronchoscopyMaterial(): THREE.ShaderMaterial {
-  return new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    toneMapped: false,
-    vertexShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      void main() {
-        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-        vWorldPosition = worldPosition.xyz;
-        vNormalWorld = normalize(mat3(modelMatrix) * normal);
-        gl_Position = projectionMatrix * viewMatrix * worldPosition;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vWorldPosition;
-      varying vec3 vNormalWorld;
-
-      float hash(vec3 p) {
-        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453123);
-      }
-
-      void main() {
-        vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-        vec3 n = normalize(vNormalWorld);
-        if (dot(n, viewDir) < 0.0) {
-          n = -n;
-        }
-
-        float dist = length(cameraPosition - vWorldPosition);
-        float headlight = max(dot(n, viewDir), 0.0);
-        float falloff = mix(0.95, 0.4, smoothstep(30.0, 165.0, dist));
-
-        vec3 p = vWorldPosition * 0.055;
-        float broadFold = 0.5 + 0.5 * sin(p.z * 5.5 + p.y * 2.2 + sin(p.x * 2.6) * 1.4);
-        float fineFold = 0.5 + 0.5 * sin(p.x * 12.0 + p.y * 7.0 + p.z * 4.0);
-        float speckle = hash(floor(vWorldPosition * 0.95));
-        float mucosa = 0.76 + broadFold * 0.17 + fineFold * 0.05 + (speckle - 0.5) * 0.04;
-
-        // Pale pink mucosa with deeper shadow tones.
-        vec3 shadowTone = vec3(0.32, 0.10, 0.09);
-        vec3 midTone = vec3(0.85, 0.45, 0.40);
-        vec3 highTone = vec3(1.0, 0.80, 0.74);
-        vec3 base = mix(shadowTone, midTone, clamp(mucosa, 0.0, 1.0));
-        base = mix(base, highTone, pow(headlight, 2.4) * 0.30);
-
-        // Fine submucosal vessels.
-        float vesselA = sin(p.x * 9.0 + sin(p.z * 3.4) * 2.2 + p.y * 1.5);
-        float vesselB = sin(p.y * 11.0 + sin(p.x * 4.1) * 1.9 - p.z * 2.0);
-        float vessel = smoothstep(0.93, 0.99, max(vesselA, vesselB));
-        base = mix(base, vec3(0.58, 0.13, 0.12), vessel * 0.28);
-
-        // Wet specular sheen from the scope light.
-        float rimWet = pow(max(dot(reflect(-viewDir, n), viewDir), 0.0), 26.0);
-        float sparkleGate = smoothstep(0.982, 1.0, hash(floor(vWorldPosition * 2.15)));
-        float sparkle = sparkleGate * pow(headlight, 10.0) * 0.25;
-
-        float exposure = 0.68 + headlight * 0.7;
-        vec3 color = base * exposure * falloff;
-        color += vec3(1.0, 0.93, 0.88) * (rimWet * 0.26 + sparkle);
-
-        float depthDarken = smoothstep(105.0, 235.0, dist);
-        color = mix(color, vec3(0.06, 0.015, 0.012), depthDarken * 0.55);
-        color = pow(max(color, vec3(0.0)), vec3(0.92));
-
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `,
-  })
-}
-
 function ScopeCamera({ pose }: { pose: ScopePoseSnapshot }) {
   const { camera } = useThree()
   const lightRef = useRef<THREE.PointLight>(null)
@@ -1461,30 +1400,20 @@ function drawCtSlice({
   pose: ScopePoseSnapshot
   trail: Vec3[]
 }) {
-  const dimensions = ctCanvasDimensions(ct, axis)
-  const clampedSlice = clamp(Math.round(sliceIndex), 0, ctAxisLength(ct, axis) - 1)
-  canvas.width = dimensions.width
-  canvas.height = dimensions.height
+  const painted = paintCtSliceGrayscale({
+    canvas,
+    ct,
+    volume,
+    axis,
+    sliceIndex,
+    windowLow,
+    windowHigh,
+  })
+  if (!painted) return
   const context = canvas.getContext('2d')
   if (!context) return
-
-  const image = context.createImageData(dimensions.width, dimensions.height)
-  const [sx, sy] = ct.sizeXyz
-  for (let y = 0; y < dimensions.height; y += 1) {
-    for (let x = 0; x < dimensions.width; x += 1) {
-      const [i, j, k] = ctCanvasPixelToIndex(x, y, axis, clampedSlice, ct)
-      const value = volume[k * sx * sy + j * sx + i] ?? -1024
-      const gray = windowHu(value, windowLow, windowHigh)
-      const offset = (y * dimensions.width + x) * 4
-      image.data[offset] = gray
-      image.data[offset + 1] = gray
-      image.data[offset + 2] = gray
-      image.data[offset + 3] = 255
-    }
-  }
-  context.putImageData(image, 0, 0)
-  drawTrailOnCt(context, ct, axis, clampedSlice, trail)
-  drawScopeTipMarker(context, ct, axis, clampedSlice, pose)
+  drawTrailOnCt(context, ct, axis, painted.clampedSlice, trail)
+  drawScopeTipMarker(context, ct, axis, painted.clampedSlice, pose)
 }
 
 function drawScopeTipMarker(
