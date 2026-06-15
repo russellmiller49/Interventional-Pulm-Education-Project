@@ -1,6 +1,8 @@
 const draftModulePathPrefixes = [
+  '/ebus-training/virtual-bronchoscopy',
   '/education/chest-drainage',
   '/intro-bronchoscopy',
+  '/learn/anatomy/airway',
   '/pleural-procedures',
   '/rapid-onsite-cytology',
 ] as const

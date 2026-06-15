@@ -1,4 +1,5 @@
 import {
+  isAdminOnlyEbusTrainingAssetPath,
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isCtAlignmentSandboxPath,
@@ -76,6 +77,31 @@ describe('main site auth access helpers', () => {
     expect(isDevOnlyAirwayAnatomyPath('/airway-anatomy/case-001/case_manifest.json')).toBe(true)
     expect(isDevOnlyAirwayAnatomyPath('/learn/anatomy')).toBe(false)
     expect(isDevOnlyAirwayAnatomyPath('/bronch-navigation-trainer')).toBe(false)
+  })
+
+  it('requires site admin for synchronized airway anatomy routes and assets', () => {
+    expect(getRequiredEntitlement('/learn/anatomy/airway', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/airway-anatomy/case-001/case_manifest.json', params())).toBe(
+      'site_admin',
+    )
+    expect(isPublicPath('/airway-anatomy/case-001/case_manifest.json')).toBe(false)
+  })
+
+  it('keeps virtual EBUS simulator artifacts out of public static access', () => {
+    expect(
+      isAdminOnlyEbusTrainingAssetPath('/socal-ebus-course/app/assets/Case001Page-abc.js'),
+    ).toBe(true)
+    expect(
+      isAdminOnlyEbusTrainingAssetPath('/socal-ebus-course/app/assets/case_001_ct-abc.nrrd'),
+    ).toBe(true)
+    expect(isAdminOnlyEbusTrainingAssetPath('/socal-ebus-course/app/assets/index-abc.js')).toBe(
+      false,
+    )
+    expect(
+      getRequiredEntitlement('/socal-ebus-course/app/assets/Case001Page-abc.js', params()),
+    ).toBe('site_admin')
+    expect(isPublicPath('/socal-ebus-course/app/assets/Case001Page-abc.js')).toBe(false)
+    expect(isPublicPath('/socal-ebus-course/app/assets/index-abc.js')).toBe(true)
   })
 
   it('uses legacy EBUS approval only for the restricted course area', () => {

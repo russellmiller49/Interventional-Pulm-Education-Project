@@ -1,7 +1,8 @@
-import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 
-export default function AirwayAnatomyDraftLayout({ children }: { children: ReactNode }) {
-  notFound()
+import { assertDraftModulesEnabled } from '@/lib/draft-module-guard'
+
+export default async function AirwayAnatomyDraftLayout({ children }: { children: ReactNode }) {
+  await assertDraftModulesEnabled()
   return children
 }

@@ -52,7 +52,24 @@ export function isDevOnlyAirwayAnatomyPath(pathname: string) {
   )
 }
 
+export function isAdminOnlyEbusTrainingAssetPath(pathname: string) {
+  if (!pathname.startsWith('/socal-ebus-course/app/')) {
+    return false
+  }
+
+  return (
+    pathname.startsWith('/socal-ebus-course/app/pipelines/') ||
+    /\/assets\/(?:Case001Page-|CT_segmentation_[12]-|case_001_(?:ct|segmentation)-|itk-wasm-pipeline\.worker-)/.test(
+      pathname,
+    )
+  )
+}
+
 export function isPublicPath(pathname: string) {
+  if (isDevOnlyAirwayAnatomyPath(pathname) || isAdminOnlyEbusTrainingAssetPath(pathname)) {
+    return false
+  }
+
   if (PUBLIC_EXACT_PATHS.has(pathname)) {
     return true
   }
@@ -102,6 +119,10 @@ export function getRequiredEntitlement(
   pathname: string,
   searchParams: URLSearchParams,
 ): SiteEntitlement | null {
+  if (isDevOnlyAirwayAnatomyPath(pathname) || isAdminOnlyEbusTrainingAssetPath(pathname)) {
+    return 'site_admin'
+  }
+
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     return 'site_admin'
   }

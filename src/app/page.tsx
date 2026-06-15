@@ -17,6 +17,14 @@ const featureHighlights = [
     cta: 'Open EBUS Training',
   },
   {
+    badge: 'Admin preview',
+    title: 'EBUS Simulator + Virtual Bronchoscopy',
+    description:
+      'Review the synchronized virtual bronchoscopy pane alongside the EBUS simulator before it is production-ready.',
+    href: '/ebus-training/virtual-bronchoscopy',
+    cta: 'Open Admin Preview',
+  },
+  {
     badge: 'Staging',
     title: 'TNM-9 Staging',
     description:

@@ -3,7 +3,7 @@ import {
   boardReviewChapters,
   type BoardReviewCategory,
 } from '@/data/board-review'
-import { publicEbusTrainingModules } from '@/data/ebus-training'
+import { allEbusTrainingModules } from '@/data/ebus-training'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 import { listCreativeCommonsCategories } from '@/lib/creative-commons'
 
@@ -161,7 +161,7 @@ const allStaticResults: SiteSearchResult[] = [
   },
 ]
 
-const ebusTrainingResults: SiteSearchResult[] = publicEbusTrainingModules.map((module) => ({
+const ebusTrainingResults: SiteSearchResult[] = allEbusTrainingModules.map((module) => ({
   title: module.title,
   description: module.description,
   href: module.href,
@@ -244,10 +244,16 @@ function getStaticResults(options: SiteSearchOptions = {}) {
   )
 }
 
+function getEbusTrainingResults(options: SiteSearchOptions = {}) {
+  return ebusTrainingResults.filter((item) =>
+    isVisibleModulePath(item.href, { isAdmin: options.canViewDrafts === true }),
+  )
+}
+
 function getSearchIndex(options: SiteSearchOptions = {}) {
   return [
     ...getStaticResults(options),
-    ...ebusTrainingResults,
+    ...getEbusTrainingResults(options),
     ...vibeGuideSections,
     ...boardReviewResults,
     ...imageCategoryResults,

@@ -5,7 +5,6 @@ import { createServerClient } from '@supabase/ssr'
 import {
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
-  isDevOnlyAirwayAnatomyPath,
   isAuthPath,
   isCtAlignmentSandboxPath,
   isPublicPath,
@@ -22,10 +21,7 @@ export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const pathname = req.nextUrl.pathname
 
-  if (
-    process.env.NODE_ENV === 'production' &&
-    (isCtAlignmentSandboxPath(pathname) || isDevOnlyAirwayAnatomyPath(pathname))
-  ) {
+  if (process.env.NODE_ENV === 'production' && isCtAlignmentSandboxPath(pathname)) {
     return new NextResponse(null, { status: 404 })
   }
 
