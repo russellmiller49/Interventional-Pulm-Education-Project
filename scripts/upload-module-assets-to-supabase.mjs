@@ -16,6 +16,21 @@ const secretKey = process.env.SUPABASE_SECRET_KEY
 const dryRun = process.argv.includes('--dry-run')
 const upsert = process.argv.includes('--upsert')
 
+// `--only=airway-anatomy` (repeatable, or comma-separated) restricts the upload to one or more
+// public-relative path prefixes so you can push a single module without re-uploading everything.
+const onlyFilters = process.argv
+  .filter((arg) => arg.startsWith('--only='))
+  .flatMap((arg) => arg.slice('--only='.length).split(','))
+  .map((value) => value.trim().replace(/^\/+|\/+$/g, ''))
+  .filter(Boolean)
+
+function matchesOnlyFilter(relativePath) {
+  if (onlyFilters.length === 0) {
+    return true
+  }
+  return onlyFilters.some((only) => relativePath === only || relativePath.startsWith(`${only}/`))
+}
+
 const uploadPrefixes = [
   'airway-anatomy',
   'bronch-navigation-trainer/app/cases',
@@ -69,6 +84,10 @@ function shouldUpload(source) {
   const relativePath = toPublicRelativePath(source)
 
   if (!relativePath || relativePath.startsWith('..') || relativePath.endsWith('.DS_Store')) {
+    return false
+  }
+
+  if (!matchesOnlyFilter(relativePath)) {
     return false
   }
 
