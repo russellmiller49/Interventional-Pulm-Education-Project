@@ -8,7 +8,7 @@ import * as THREE from 'three'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { resolveModuleAssetPath } from '@/lib/module-assets'
+import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
 import {
   add,
   clamp,
@@ -50,7 +50,7 @@ import type {
   Vec3,
 } from '@/lib/airway-anatomy/types'
 
-const MANIFEST_URL = resolveModuleAssetPath('/airway-anatomy/case-001/case_manifest.json')
+const MANIFEST_URL = resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json')
 const VIEWPORT_CLASS =
   'relative min-h-[360px] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950'
 
@@ -108,9 +108,9 @@ export function AirwayAnatomyModule() {
         }
         const manifest = (await manifestResponse.json()) as AirwayAnatomyCaseManifest
         const [graphResponse, labelsResponse, ctResponse] = await Promise.all([
-          fetch(resolveModuleAssetPath(manifest.assets.airwayGraphJson)),
-          fetch(resolveModuleAssetPath(manifest.assets.centerlineLabelsJson)),
-          fetch(resolveModuleAssetPath(manifest.assets.ctPreviewRaw)),
+          fetch(resolveAdminAirwayAssetPath(manifest.assets.airwayGraphJson)),
+          fetch(resolveAdminAirwayAssetPath(manifest.assets.centerlineLabelsJson)),
+          fetch(resolveAdminAirwayAssetPath(manifest.assets.ctPreviewRaw)),
         ])
 
         if (!graphResponse.ok)
@@ -818,7 +818,9 @@ function VirtualBronchoscopyViewport({
           <Suspense fallback={null}>
             <AirwaySurface
               stlUrl={
-                manifest.assets.airwayStl ? resolveModuleAssetPath(manifest.assets.airwayStl) : null
+                manifest.assets.airwayStl
+                  ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
+                  : null
               }
               transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
               mode="bronch"
@@ -973,7 +975,9 @@ function AirwayTreeViewport({
         <Suspense fallback={null}>
           <AirwaySurface
             stlUrl={
-              manifest.assets.airwayStl ? resolveModuleAssetPath(manifest.assets.airwayStl) : null
+              manifest.assets.airwayStl
+                ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
+                : null
             }
             transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
             mode="tree"

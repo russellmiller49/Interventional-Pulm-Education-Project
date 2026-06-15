@@ -38,6 +38,12 @@ const allNavigationItems: NavItem[] = [
     description: 'Knobology, stations, and simulator modules',
   },
   {
+    title: 'EBUS Virtual Bronch',
+    shortTitle: 'EBUS VB',
+    href: '/ebus-training/virtual-bronchoscopy' as Route,
+    description: 'Admin preview of the synchronized virtual bronchoscopy simulator',
+  },
+  {
     title: 'TNM-9 Staging',
     shortTitle: 'TNM-9',
     href: '/tnm-9-staging' as Route,

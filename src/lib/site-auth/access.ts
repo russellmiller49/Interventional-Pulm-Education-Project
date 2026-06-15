@@ -109,10 +109,18 @@ export function isPublicTrainingEmbed(pathname: string, searchParams: URLSearchP
     return false
   }
 
+  if (searchParams.get('adminPreview') === '1') {
+    return false
+  }
+
   const publicScope = searchParams.get('publicScope')
   return (
     searchParams.get('publicTraining') === '1' && (publicScope === 'ebus' || publicScope === 'tnm')
   )
+}
+
+export function isAdminEbusPreviewEmbed(pathname: string, searchParams: URLSearchParams) {
+  return isLegacyEbusGatewayPath(pathname) && searchParams.get('adminPreview') === '1'
 }
 
 export function getRequiredEntitlement(
@@ -129,6 +137,10 @@ export function getRequiredEntitlement(
 
   if (pathname.startsWith('/ip-registry')) {
     return 'ip_registry'
+  }
+
+  if (isAdminEbusPreviewEmbed(pathname, searchParams)) {
+    return 'site_admin'
   }
 
   if (pathname.startsWith('/socal-ebus-course/app')) {

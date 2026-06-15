@@ -7,7 +7,7 @@ import * as THREE from 'three'
 import { XR } from '@react-three/xr'
 
 import { createAnatomyXRStore } from '@/components/3d/xr/xrStore'
-import { resolveModuleAssetPath } from '@/lib/module-assets'
+import { resolveAdminAirwayAssetPath } from '@/lib/airway-anatomy/admin-assets'
 import { ctIndexToLps, lpsToCtIndex, normalize, subtract } from '@/lib/airway-anatomy/geometry'
 import { buildScopePathLps, computeViewBasis } from '@/lib/airway-anatomy/scope-state'
 import {
@@ -209,7 +209,7 @@ function AirwayXRWorld({
   const bounds = useMemo(() => boundsForGraph(graph), [graph])
   const worldScale = TARGET_RADIUS_M / bounds.radius
   const stlUrl = manifest.assets.airwayStl
-    ? resolveModuleAssetPath(manifest.assets.airwayStl)
+    ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
     : null
 
   return (

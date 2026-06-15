@@ -111,7 +111,7 @@ export const tnm9TrainingModule: EmbeddedTrainingModule = {
 
 export function getEmbeddedCourseModuleSrc(module: EmbeddedTrainingModule) {
   if (module.requiresAdmin) {
-    return `${embeddedCourseAppPath}#${module.appHashPath}`
+    return `${embeddedCourseAppPath}?adminPreview=1#${module.appHashPath}`
   }
 
   return `${embeddedCourseAppPath}?publicTraining=1&publicScope=${module.publicScope}#${module.appHashPath}`

@@ -1,5 +1,6 @@
 import {
   isAdminOnlyEbusTrainingAssetPath,
+  isAdminEbusPreviewEmbed,
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
   isCtAlignmentSandboxPath,
@@ -55,6 +56,27 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/socal-ebus-course/app/private-route', params())).toBe(
       'socal_ebus_course',
     )
+  })
+
+  it('requires site admin for the virtual bronchoscopy EBUS preview embed', () => {
+    expect(
+      isAdminEbusPreviewEmbed('/socal-ebus-course/app/index.html', params('adminPreview=1')),
+    ).toBe(true)
+    expect(
+      getRequiredEntitlement('/socal-ebus-course/app/index.html', params('adminPreview=1')),
+    ).toBe('site_admin')
+    expect(
+      getRequiredEntitlement(
+        '/socal-ebus-course/app/index.html',
+        params('adminPreview=1&publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBe('site_admin')
+    expect(
+      isAdminEbusPreviewEmbed(
+        '/socal-ebus-course/app/index.html',
+        params('publicTraining=1&publicScope=ebus'),
+      ),
+    ).toBe(false)
   })
 
   it('keeps the legacy EBUS course gateway directly accessible', () => {
