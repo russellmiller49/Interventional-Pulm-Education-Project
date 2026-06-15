@@ -33,7 +33,6 @@ const defaultCtPlaneSlices: Record<AnatomyAxis, number> = {
 }
 
 const isCtAlignmentSandboxEnabled = process.env.NODE_ENV !== 'production'
-const isAirwayAnatomyModuleEnabled = process.env.NODE_ENV !== 'production'
 
 export default function AnatomyLearnPage() {
   const models = anatomyModels
@@ -396,11 +395,6 @@ export default function AnatomyLearnPage() {
             headsets. Built for fellows and faculty running rehearsal labs or patient consults.
           </p>
           <div className="flex flex-wrap gap-2 pt-2">
-            {isAirwayAnatomyModuleEnabled ? (
-              <Button asChild>
-                <Link href={'/learn/anatomy/airway' as Route}>Open synchronized airway module</Link>
-              </Button>
-            ) : null}
             {isCtAlignmentSandboxEnabled ? (
               <Button asChild variant="outline">
                 <Link href={'/learn/anatomy/ct-alignment' as Route}>Open CT alignment sandbox</Link>

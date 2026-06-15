@@ -16,6 +16,10 @@ export interface SiteSearchResult {
   keywords?: readonly string[]
 }
 
+interface SiteSearchOptions {
+  canViewDrafts?: boolean
+}
+
 const allStaticResults: SiteSearchResult[] = [
   {
     title: 'Resource Library',
@@ -90,6 +94,15 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
   },
   {
+    title: 'Pleural Procedures',
+    description:
+      'Pleural disease, ultrasound pattern recognition, fluid analysis, pneumothorax pathways, and drainage systems.',
+    href: '/pleural-procedures',
+    section: 'Pleural Procedures',
+    type: 'page',
+    keywords: ['pleural', 'effusion', 'thoracentesis', 'ultrasound', 'pneumothorax', 'drainage'],
+  },
+  {
     title: 'Pleural Fluid Analysis',
     description:
       'Advanced module for interpreting pleural fluid results with ranked differentials, quiz mode, clinical context, Light criteria, pseudoexudates, rare diseases, and targeted testing.',
@@ -109,6 +122,15 @@ const allStaticResults: SiteSearchResult[] = [
       'urinothorax',
       'bilothorax',
     ],
+  },
+  {
+    title: 'Intro Bronchoscopy',
+    description:
+      'Foundational bronchoscopy tools for scope sizing, airway reach concepts, and instrument compatibility.',
+    href: '/intro-bronchoscopy',
+    section: 'Bronchoscopy',
+    type: 'page',
+    keywords: ['intro bronchoscopy', 'scope sizing', 'working channel', 'airway reach'],
   },
   {
     title: 'Interactive 3D Anatomy Viewer',
@@ -138,8 +160,6 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['registry', 'procedure', 'quality', 'documentation', 'analytics'],
   },
 ]
-
-const staticResults = allStaticResults.filter((item) => isVisibleModulePath(item.href))
 
 const ebusTrainingResults: SiteSearchResult[] = publicEbusTrainingModules.map((module) => ({
   title: module.title,
@@ -218,27 +238,35 @@ const imageCategoryResults: SiteSearchResult[] = listCreativeCommonsCategories()
   }),
 )
 
-const searchIndex: SiteSearchResult[] = [
-  ...staticResults,
-  ...ebusTrainingResults,
-  ...vibeGuideSections,
-  ...boardReviewResults,
-  ...imageCategoryResults,
-]
-
-export function getFeaturedSearchResults() {
-  return staticResults.slice(0, 6)
+function getStaticResults(options: SiteSearchOptions = {}) {
+  return allStaticResults.filter((item) =>
+    isVisibleModulePath(item.href, { isAdmin: options.canViewDrafts === true }),
+  )
 }
 
-export function searchSite(rawQuery: string, limit = 60) {
+function getSearchIndex(options: SiteSearchOptions = {}) {
+  return [
+    ...getStaticResults(options),
+    ...ebusTrainingResults,
+    ...vibeGuideSections,
+    ...boardReviewResults,
+    ...imageCategoryResults,
+  ]
+}
+
+export function getFeaturedSearchResults(options: SiteSearchOptions = {}) {
+  return getStaticResults(options).slice(0, 6)
+}
+
+export function searchSite(rawQuery: string, limit = 60, options: SiteSearchOptions = {}) {
   const query = normalize(rawQuery)
   const terms = query.split(/\s+/).filter(Boolean)
 
   if (!terms.length) {
-    return getFeaturedSearchResults()
+    return getFeaturedSearchResults(options)
   }
 
-  return searchIndex
+  return getSearchIndex(options)
     .map((item) => ({ item, score: scoreItem(item, query, terms) }))
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))

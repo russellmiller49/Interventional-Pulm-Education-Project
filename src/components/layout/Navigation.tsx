@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import { LogOut, ShieldCheck } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
@@ -101,8 +101,6 @@ const allNavigationItems: NavItem[] = [
   },
 ]
 
-const navigationItems = allNavigationItems.filter((item) => isVisibleModulePath(item.href))
-
 function getMetadataString(user: User, keys: string[]) {
   for (const key of keys) {
     const value = user.user_metadata?.[key]
@@ -146,6 +144,13 @@ export function Navigation() {
   const [searchQuery, setSearchQuery] = useState('')
   const [authStatus, setAuthStatus] = useState<NavAuthStatus>('checking')
   const [currentUser, setCurrentUser] = useState<NavUserSummary | null>(null)
+  const navigationItems = useMemo(
+    () =>
+      allNavigationItems.filter((item) =>
+        isVisibleModulePath(item.href, { isAdmin: currentUser?.isAdmin === true }),
+      ),
+    [currentUser?.isAdmin],
+  )
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
