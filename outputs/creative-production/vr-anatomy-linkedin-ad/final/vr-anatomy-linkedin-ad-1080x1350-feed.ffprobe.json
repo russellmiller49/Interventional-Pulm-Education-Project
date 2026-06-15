@@ -10,7 +10,7 @@
       "height": 1350,
       "r_frame_rate": "30/1",
       "avg_frame_rate": "30/1",
-      "duration": "50.533333"
+      "duration": "50.500000"
     },
     {
       "index": 1,
@@ -23,6 +23,6 @@
   ],
   "format": {
     "duration": "50.600000",
-    "bit_rate": "1992214"
+    "bit_rate": "2009999"
   }
 }

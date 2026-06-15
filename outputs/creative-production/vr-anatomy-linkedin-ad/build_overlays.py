@@ -30,6 +30,7 @@ def font(size: int, index: int = 0) -> ImageFont.FreeTypeFont:
 
 
 FONT_HEAVY = font(72, 1)
+FONT_CTA_DOMAIN = font(58, 1)
 FONT_MEDIUM = font(43, 0)
 FONT_SMALL = font(30, 0)
 FONT_TINY = font(24, 0)
@@ -111,7 +112,9 @@ def add_bottom_gradient(img: Image.Image, strength: int = 190, height: int = 320
 def add_brand(draw: ImageDraw.ImageDraw, x: int = 92, y: int = 58):
     rounded_rect(draw, (x, y, x + 118, y + 46), 18, (4, 27, 40, 210), (72, 226, 238, 165), 2)
     draw.text((x + 22, y + 11), "IP LAB", font=FONT_TINY, fill=CYAN)
-    draw.text((x + 138, y + 11), "interventionalpulm.com", font=FONT_TINY, fill=MUTED)
+    rounded_rect(draw, (x + 138, y, x + 306, y + 46), 23, (121, 255, 196, 235), None)
+    draw.text((x + 162, y + 11), "FREE", font=FONT_TINY, fill=(3, 15, 24, 255))
+    draw.text((x + 330, y + 7), "interventionalpulm.com", font=FONT_SMALL, fill=WHITE)
 
 
 def pill(draw: ImageDraw.ImageDraw, text: str, x: int, y: int, color=CYAN):
@@ -190,9 +193,14 @@ def make_overlay(
         rounded_rect(draw, panel, 40, (3, 14, 24, 232), (121, 255, 196, 155), 2)
         draw.rectangle((132, 708, 142, 940), fill=MINT)
         add_shadowed_text(img, (176, 704), title, FONT_HEAVY, fill=WHITE, stroke=1)
-        add_shadowed_text(img, (180, 815), subtitle, FONT_SMALL, fill=MUTED)
-        rounded_rect(draw, (1300, 840, 1748, 900), 30, (79, 234, 246, 230), None)
-        draw.text((1338, 856), "Sign up today", font=FONT_SMALL, fill=(2, 15, 24, 255))
+        add_shadowed_text(img, (180, 805), subtitle, FONT_SMALL, fill=MUTED)
+        add_shadowed_text(img, (180, 852), "interventionalpulm.com", FONT_CTA_DOMAIN, fill=WHITE, stroke=1)
+        button = (1300, 842, 1748, 906)
+        rounded_rect(draw, button, 32, (79, 234, 246, 238), None)
+        button_text = "Completely free to use"
+        button_bbox = draw.textbbox((0, 0), button_text, font=FONT_SMALL)
+        button_text_x = button[0] + ((button[2] - button[0]) - (button_bbox[2] - button_bbox[0])) // 2
+        draw.text((button_text_x, 859), button_text, font=FONT_SMALL, fill=(2, 15, 24, 255))
     else:
         raise ValueError(layout)
 
@@ -227,9 +235,9 @@ overlays = [
             make_overlay(
                 "01_hook",
                 "Put thoracic anatomy\nin the room",
-                "Interactive 3D anatomy for interventional pulmonary training.",
+                "Free interactive 3D anatomy for interventional pulmonary training.",
                 layout="hero",
-                tags=["Browser", "3D anatomy", "VR-ready"],
+                tags=["Free signup", "3D anatomy", "VR-ready"],
                 hide_browser=True,
             )
         ),
@@ -294,10 +302,10 @@ overlays = [
         "path": str(
             make_overlay(
                 "06_stent",
-                "Airway stent anatomy,\nnow spatial",
-                "Bring procedural models into immersive review.",
+                "All models are\navailable in 3D",
+                "Bring the full model library\ninto immersive review.",
                 layout="hero",
-                tags=["Airway stents", "Thoracic CT", "VR review"],
+                tags=["All models", "3D anatomy", "VR review"],
             )
         ),
     },
@@ -308,8 +316,8 @@ overlays = [
         "path": str(
             make_overlay(
                 "07_cta",
-                "Train beyond the flat screen",
-                "Sign up at interventionalpulm.com for immersive anatomy,\nbronchoscopy, and procedure modules.",
+                "Free 3D anatomy training",
+                "Sign up free for immersive anatomy, bronchoscopy, and procedure modules at",
                 layout="cta",
             )
         ),
@@ -318,19 +326,20 @@ overlays = [
 
 manifest = {
     "campaign": "VR anatomy LinkedIn signup ad",
-    "source_video": "/Users/russellmiller/Movies/3D_Anatomy.mp4",
+    "source_video": "/Users/russellmiller/Movies/3D_Anatomy_1.mp4",
     "dimensions": {"width": W, "height": H, "fps": 30},
     "constant_polish": str(make_constant_polish()),
     "overlays": overlays,
     "copy": [
         "Put thoracic anatomy in the room",
+        "Free interactive 3D anatomy",
         "Start in the browser",
         "Then step inside it",
         "Works with VR headsets",
         "Walk around the relationships",
-        "Airway stent anatomy, now spatial",
-        "Train beyond the flat screen",
-        "Sign up at interventionalpulm.com",
+        "All models are available in 3D",
+        "Free 3D anatomy training",
+        "Sign up free at interventionalpulm.com",
     ],
     "provenance": "User-provided video with deterministic text, bars, and polish overlays. No generated claims or third-party media.",
 }

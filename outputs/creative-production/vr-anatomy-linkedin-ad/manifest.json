@@ -1,6 +1,6 @@
 {
   "campaign": "VR anatomy LinkedIn signup ad",
-  "source_video": "/Users/russellmiller/Movies/3D_Anatomy.mp4",
+  "source_video": "/Users/russellmiller/Movies/3D_Anatomy_1.mp4",
   "dimensions": {
     "width": 1920,
     "height": 1080,
@@ -53,13 +53,14 @@
   ],
   "copy": [
     "Put thoracic anatomy in the room",
+    "Free interactive 3D anatomy",
     "Start in the browser",
     "Then step inside it",
     "Works with VR headsets",
     "Walk around the relationships",
-    "Airway stent anatomy, now spatial",
-    "Train beyond the flat screen",
-    "Sign up at interventionalpulm.com"
+    "All models are available in 3D",
+    "Free 3D anatomy training",
+    "Sign up free at interventionalpulm.com"
   ],
   "provenance": "User-provided video with deterministic text, bars, and polish overlays. No generated claims or third-party media."
 }

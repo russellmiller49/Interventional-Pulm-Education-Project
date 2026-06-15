@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad"
-SRC="/Users/russellmiller/Movies/3D_Anatomy.mp4"
+SRC="/Users/russellmiller/Movies/3D_Anatomy_1.mp4"
 OUT="$ROOT/final/vr-anatomy-linkedin-ad-1920x1080.mp4"
 
 ffmpeg -hide_banner -y \
