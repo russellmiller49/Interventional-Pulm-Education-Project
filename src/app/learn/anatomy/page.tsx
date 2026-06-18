@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Route } from 'next'
 
 import { AnatomyViewerDynamic } from '@/components/3d/AnatomyViewerDynamic'
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getModel } from '@/data/models'
 import { anatomyModels } from '@/data/printable-models'
+import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
 
 const axisLabels: Record<AnatomyAxis, string> = {
@@ -36,6 +37,9 @@ const isCtAlignmentSandboxEnabled = process.env.NODE_ENV !== 'production'
 
 export default function AnatomyLearnPage() {
   const models = anatomyModels
+  const [canViewAdminModules, setCanViewAdminModules] = useState(
+    process.env.NODE_ENV !== 'production',
+  )
   const [selectedModel, setSelectedModel] = useState<AnatomyModel>(models[0])
   const [displaySegments, setDisplaySegments] = useState<AnatomySegment[]>(() =>
     models[0].segments.map((segment) => ({ ...segment })),
@@ -68,6 +72,55 @@ export default function AnatomyLearnPage() {
     }),
     [selectedModel, displaySegments],
   )
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      return
+    }
+
+    let active = true
+
+    async function loadAdminVisibility() {
+      try {
+        const supabase = supabaseCookieBrowser()
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser()
+
+        if (!active) {
+          return
+        }
+
+        if (error || !user) {
+          setCanViewAdminModules(false)
+          return
+        }
+
+        const { data: adminEntitlement } = await supabase
+          .from('site_entitlements')
+          .select('entitlement')
+          .eq('user_id', user.id)
+          .eq('entitlement', 'site_admin')
+          .eq('status', 'active')
+          .maybeSingle()
+
+        if (active) {
+          setCanViewAdminModules(Boolean(adminEntitlement))
+        }
+      } catch {
+        if (active) {
+          setCanViewAdminModules(false)
+        }
+      }
+    }
+
+    void loadAdminVisibility()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleModelChange = (model: AnatomyModel) => {
     setSelectedModel(model)
@@ -394,13 +447,18 @@ export default function AnatomyLearnPage() {
             cross-sectional slicing, annotated segments, and WebXR spatial viewing for supported
             headsets. Built for fellows and faculty running rehearsal labs or patient consults.
           </p>
-          {isCtAlignmentSandboxEnabled ? (
-            <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap gap-2 pt-2">
+            {canViewAdminModules ? (
+              <Button asChild variant="outline">
+                <Link href={'/learn/anatomy/airway' as Route}>Open synchronized airway module</Link>
+              </Button>
+            ) : null}
+            {isCtAlignmentSandboxEnabled ? (
               <Button asChild variant="outline">
                 <Link href={'/learn/anatomy/ct-alignment' as Route}>Open CT alignment sandbox</Link>
               </Button>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </section>
 

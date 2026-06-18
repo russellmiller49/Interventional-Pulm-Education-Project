@@ -2,6 +2,7 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { XR } from '@react-three/xr'
 import { Camera, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -17,19 +18,16 @@ import type { VolumeAssetState } from '@/lib/3d-utils'
 import {
   AxesHelper,
   Box3,
-  BufferGeometry,
   CanvasTexture,
   DoubleSide,
   Euler,
   LinearFilter,
-  Line,
-  LineBasicMaterial,
+  LinearMipmapLinearFilter,
   Matrix4,
   MeshBasicMaterial,
   MeshStandardMaterial,
   Plane,
   Quaternion,
-  Raycaster,
   SRGBColorSpace,
   Vector3,
 } from 'three'
@@ -37,6 +35,8 @@ import type { Group, Mesh, Object3D } from 'three'
 import type { WebGLRenderer } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type VolumeSlice from 'three/examples/jsm/misc/VolumeSlice.js'
+import type { ThreeEvent } from '@react-three/fiber'
+import { createAnatomyXRStore } from './xr/xrStore'
 
 const AXIS_LABELS: Record<'x' | 'y' | 'z', string> = {
   x: 'Sagittal',
@@ -47,16 +47,16 @@ const AXIS_LABELS: Record<'x' | 'y' | 'z', string> = {
 const ORTHOGONAL_AXES = ['z', 'y', 'x'] as const
 
 type WindowPresetKey = 'default' | 'soft-tissue' | 'lung' | 'bone' | 'custom'
-type ImmersiveXRMode = 'immersive-ar' | 'immersive-vr'
 export type AnatomyAxis = (typeof ORTHOGONAL_AXES)[number]
 export type OrthogonalClipMode = 'none' | 'hide-above' | 'hide-below'
 
 const XR_CONTROL_CLIP_MODES: OrthogonalClipMode[] = ['none', 'hide-above', 'hide-below']
-const XR_CONTROL_ACTION_KEY = 'xrControlAction'
-const XR_CONTROL_PANEL_DISTANCE = 1.28
-const XR_CONTROL_PANEL_VERTICAL_OFFSET = -0.08
 const XR_MIN_SPATIAL_SCALE = 0.001
 const XR_MAX_SPATIAL_SCALE = 80
+// World-space axes for the in-headset rotate controls (spin around vertical / tilt around horizontal).
+const XR_ROTATE_WORLD_UP = new Vector3(0, 1, 0)
+const XR_ROTATE_WORLD_RIGHT = new Vector3(1, 0, 0)
+const XR_ROTATE_WORLD_FORWARD = new Vector3(0, 0, 1)
 
 interface CtAlignmentVector {
   x: number
@@ -139,7 +139,6 @@ function normalizeCtSliceOrientation(
 interface XRCapabilities {
   checked: boolean
   hasWebXR: boolean
-  immersiveAR: boolean
   immersiveVR: boolean
 }
 
@@ -149,20 +148,6 @@ interface SpatialPlacement {
 }
 
 type VolumeSliceInfo = Record<AnatomyAxis, { index: number; total: number }>
-
-interface ActiveGrab {
-  controller: Group
-  offset: Vector3
-  inverseStartControllerQuaternion: Quaternion
-  startModelQuaternion: Quaternion
-}
-
-type XRControlAction = () => void
-
-type XRControlUserData = {
-  [XR_CONTROL_ACTION_KEY]?: XRControlAction
-  xrControlLabel?: string
-}
 
 const WINDOW_PRESET_MAP: Record<
   Exclude<WindowPresetKey, 'default' | 'custom'>,
@@ -254,10 +239,12 @@ function computeSpatialPlacement(boundingBox: Box3): SpatialPlacement {
   const size = boundingBox.getSize(new Vector3())
   const center = boundingBox.getCenter(new Vector3())
   const maxDimension = Math.max(size.x, size.y, size.z, 0.001)
-  const scale = Math.min(Math.max(1.05 / maxDimension, 0.001), 12)
+  // ~0.55 m fits in front without dominating the view; the control panel sits lower (see
+  // XRControlPanel), so the model floats ahead at roughly eye level and behind the panel in depth.
+  const scale = Math.min(Math.max(0.55 / maxDimension, 0.001), 12)
 
   return {
-    position: [-center.x * scale, 1.28 - center.y * scale, -1.35 - center.z * scale],
+    position: [-center.x * scale, 1.5 - center.y * scale, -1.5 - center.z * scale],
     scale,
   }
 }
@@ -563,60 +550,6 @@ function resetDesktopPlacement(group: Group) {
   group.quaternion.identity()
 }
 
-function createControllerRay() {
-  const geometry = new BufferGeometry().setFromPoints([new Vector3(0, 0, 0), new Vector3(0, 0, -1)])
-  const material = new LineBasicMaterial({
-    color: 0x38bdf8,
-    transparent: true,
-    opacity: 0.85,
-  })
-  const ray = new Line(geometry, material)
-  ray.name = 'XR select ray'
-  ray.scale.z = 1.6
-  return ray
-}
-
-function getControllerTransform(controller: Group) {
-  controller.updateMatrixWorld(true)
-  const position = new Vector3().setFromMatrixPosition(controller.matrixWorld)
-  const rotation = new Matrix4().extractRotation(controller.matrixWorld)
-  const quaternion = new Quaternion().setFromRotationMatrix(rotation)
-  return { position, quaternion, rotation }
-}
-
-function isObjectAndAncestorsVisible(object: Object3D) {
-  let current: Object3D | null = object
-  while (current) {
-    if (!current.visible) {
-      return false
-    }
-    current = current.parent
-  }
-  return true
-}
-
-function collectVisibleMeshes(root: Object3D) {
-  const meshes: Mesh[] = []
-  root.traverse((object) => {
-    if ((object as Mesh).isMesh && isObjectAndAncestorsVisible(object)) {
-      meshes.push(object as Mesh)
-    }
-  })
-  return meshes
-}
-
-function getXRControlAction(object: Object3D): XRControlAction | null {
-  let current: Object3D | null = object
-  while (current) {
-    const userData = current.userData as XRControlUserData
-    if (typeof userData[XR_CONTROL_ACTION_KEY] === 'function') {
-      return userData[XR_CONTROL_ACTION_KEY]!
-    }
-    current = current.parent
-  }
-  return null
-}
-
 function getSegmentLabel(object: Object3D) {
   let current: Object3D | null = object
   while (current) {
@@ -697,7 +630,11 @@ function XRTextPlane({
 
     const nextTexture = new CanvasTexture(canvas)
     nextTexture.colorSpace = SRGBColorSpace
-    nextTexture.minFilter = LinearFilter
+    // Anisotropy + mipmaps keep text sharp at the oblique angles the panels are usually viewed from.
+    // Plain LinearFilter (no mipmaps, no anisotropy) was the cause of the smeared/blurry text.
+    nextTexture.anisotropy = 16
+    nextTexture.generateMipmaps = true
+    nextTexture.minFilter = LinearMipmapLinearFilter
     nextTexture.magFilter = LinearFilter
     nextTexture.needsUpdate = true
     return nextTexture
@@ -712,7 +649,15 @@ function XRTextPlane({
   return (
     <mesh position={position}>
       <planeGeometry args={[width, height]} />
-      <meshBasicMaterial depthWrite={false} map={texture} side={DoubleSide} transparent />
+      {/* toneMapped={false} keeps the canvas text at full white — the scene's ACES tone mapping
+          was otherwise desaturating/darkening the labels, which is why they looked grey. */}
+      <meshBasicMaterial
+        depthWrite={false}
+        map={texture}
+        side={DoubleSide}
+        toneMapped={false}
+        transparent
+      />
     </mesh>
   )
 }
@@ -721,45 +666,59 @@ function XRControlButton({
   disabled = false,
   label,
   onSelect,
+  onPressStart,
+  onPressEnd,
   position,
   selected = false,
   size = [0.26, 0.08],
 }: {
   disabled?: boolean
   label: string
-  onSelect?: XRControlAction
+  onSelect?: () => void
+  onPressStart?: () => void
+  onPressEnd?: () => void
   position: [number, number, number]
   selected?: boolean
   size?: [number, number]
 }) {
-  const buttonRef = useRef<Group | null>(null)
-
-  useEffect(() => {
-    const button = buttonRef.current
-    if (!button) {
+  // R3F pointer events dispatched by @react-three/xr cover controllers, hands, and Vision Pro pinch.
+  // onSelect fires once on press (tap actions); onPressStart/onPressEnd drive press-and-hold actions
+  // (e.g. the Turn/Tilt rotate buttons) — pointer capture keeps the hold alive until release.
+  const handleDown = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation()
+    if (disabled) {
       return
     }
-
-    const userData = button.userData as XRControlUserData
-    userData.xrControlLabel = label
-    if (disabled || !onSelect) {
-      delete userData[XR_CONTROL_ACTION_KEY]
-    } else {
-      userData[XR_CONTROL_ACTION_KEY] = onSelect
+    if (onPressStart) {
+      ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+        event.pointerId,
+      )
+      onPressStart()
     }
+    onSelect?.()
+  }
 
-    return () => {
-      delete userData[XR_CONTROL_ACTION_KEY]
-      delete userData.xrControlLabel
+  const handleUp = (event: ThreeEvent<PointerEvent>) => {
+    if (!onPressEnd) {
+      return
     }
-  }, [disabled, label, onSelect])
+    onPressEnd()
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
 
   const backgroundColor = disabled ? '#334155' : selected ? '#a5f3fc' : '#1e293b'
   const borderColor = disabled ? '#64748b' : selected ? '#ecfeff' : '#93c5fd'
   const textColor = disabled ? '#cbd5e1' : selected ? '#042f2e' : '#ffffff'
 
   return (
-    <group ref={buttonRef} position={position}>
+    <group
+      position={position}
+      onPointerDown={handleDown}
+      onPointerUp={handleUp}
+      onPointerCancel={handleUp}
+    >
       <mesh>
         <planeGeometry args={size} />
         <meshBasicMaterial
@@ -817,9 +776,122 @@ function XRControlLabel({
   )
 }
 
+/**
+ * Continuous in-scene slider built from plain meshes + R3F pointer events (no external UI lib),
+ * so it works identically for Quest controllers, Quest hands, and Vision Pro pinch. Only the
+ * origin-centred track mesh is interactive; the fill/knob opt out of raycasting so worldToLocal on
+ * the track maps the hit point straight to a 0..1 fraction. Pointer capture keeps the drag smooth.
+ */
+function XRSlider({
+  disabled = false,
+  value,
+  min,
+  max,
+  width = 0.6,
+  position,
+  throttleMs = 0,
+  onChange,
+}: {
+  disabled?: boolean
+  value: number
+  min: number
+  max: number
+  width?: number
+  position: [number, number, number]
+  throttleMs?: number
+  onChange?: (value: number) => void
+}) {
+  const draggingRef = useRef(false)
+  const lastEmitRef = useRef(0)
+  const range = max - min || 1
+  const fraction = clamp((value - min) / range, 0, 1)
+  const filledWidth = Math.max(fraction * width, 0.0001)
+  const knobX = -width / 2 + fraction * width
+
+  const applyFromEvent = (event: ThreeEvent<PointerEvent>, force = false) => {
+    if (disabled || !onChange) {
+      return
+    }
+    // Throttle continuous emits — slice scrubbing rebuilds CPU volume textures, the main
+    // standalone-Quest cost. Press and release always force-emit so the final value is never dropped.
+    if (!force && throttleMs > 0) {
+      const now = Date.now()
+      if (now - lastEmitRef.current < throttleMs) {
+        return
+      }
+      lastEmitRef.current = now
+    }
+    const localX = event.object.worldToLocal(event.point.clone()).x
+    const nextFraction = clamp(localX / width + 0.5, 0, 1)
+    onChange(min + nextFraction * range)
+  }
+
+  const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
+    if (disabled || !onChange) {
+      return
+    }
+    event.stopPropagation()
+    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+      event.pointerId,
+    )
+    draggingRef.current = true
+    applyFromEvent(event, true)
+  }
+
+  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
+    if (!draggingRef.current) {
+      return
+    }
+    event.stopPropagation()
+    applyFromEvent(event)
+  }
+
+  const handlePointerUp = (event: ThreeEvent<PointerEvent>) => {
+    if (!draggingRef.current) {
+      return
+    }
+    draggingRef.current = false
+    applyFromEvent(event, true)
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
+
+  return (
+    <group position={position}>
+      <mesh
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <planeGeometry args={[width, 0.07]} />
+        <meshBasicMaterial
+          color={disabled ? '#1e293b' : '#0f172a'}
+          opacity={disabled ? 0.5 : 0.96}
+          side={DoubleSide}
+          transparent
+        />
+      </mesh>
+      <mesh position={[-width / 2 + filledWidth / 2, 0, 0.002]} raycast={() => null}>
+        <planeGeometry args={[filledWidth, 0.07]} />
+        <meshBasicMaterial
+          color={disabled ? '#475569' : '#38bdf8'}
+          opacity={0.9}
+          side={DoubleSide}
+          transparent
+        />
+      </mesh>
+      <mesh position={[knobX, 0, 0.004]} raycast={() => null}>
+        <planeGeometry args={[0.05, 0.1]} />
+        <meshBasicMaterial color={disabled ? '#64748b' : '#a5f3fc'} side={DoubleSide} transparent />
+      </mesh>
+    </group>
+  )
+}
+
 function XRControlPanel({
   activeAxis,
-  crossSection,
   ctClipAxis,
   ctClipMode,
   ctPlaneOpacity,
@@ -833,14 +905,15 @@ function XRControlPanel({
   onCycleClipMode,
   onResetPlacement,
   onScaleTarget,
-  onStepCrossSection,
-  onStepCtPlaneOpacity,
-  onStepCtPlaneSlice,
+  onCtPlaneOpacityChange,
+  onSliceChange,
   onToggleActivePlane,
   onToggleCtPlanes,
+  onRotateTarget,
+  onToggleStructures,
+  structuresOpen,
 }: {
   activeAxis: AnatomyAxis
-  crossSection: number
   ctClipAxis: AnatomyAxis
   ctClipMode: OrthogonalClipMode
   ctPlaneOpacity: number
@@ -854,73 +927,145 @@ function XRControlPanel({
   onCycleClipMode?: () => void
   onResetPlacement?: () => void
   onScaleTarget?: (factor: number) => void
-  onStepCrossSection?: (delta: number) => void
-  onStepCtPlaneOpacity?: (delta: number) => void
-  onStepCtPlaneSlice?: (axis: AnatomyAxis, delta: number) => void
+  onCtPlaneOpacityChange?: (value: number) => void
+  onSliceChange?: (axis: AnatomyAxis, value: number) => void
   onToggleActivePlane?: (axis: AnatomyAxis) => void
   onToggleCtPlanes?: () => void
+  onRotateTarget?: (axis: 'x' | 'y' | 'z', radians: number) => void
+  onToggleStructures?: () => void
+  structuresOpen?: boolean
 }) {
-  const { gl } = useThree()
   const activeSlice = ctPlaneSlices[activeAxis] ?? 0
-  const activePlaneVisible = ctPlaneVisibility[activeAxis] ?? true
-  const hasPlacedPanelRef = useRef(false)
-  const frameVectors = useMemo(
-    () => ({
-      forward: new Vector3(),
-      up: new Vector3(),
-      position: new Vector3(),
-      quaternion: new Quaternion(),
-    }),
-    [],
-  )
+  const { gl } = useThree()
+  const faceTmp = useMemo(() => new Vector3(), [])
+  const placedRef = useRef(false)
+  const panelDragRef = useRef<{ pointerId: number; distance: number; offset: Vector3 } | null>(null)
+  const heldRotateRef = useRef<{ axis: 'x' | 'y' | 'z'; sign: number } | null>(null)
+
+  // Yaw-only "face the user": turn the panel to face the viewer horizontally while staying upright.
+  // (The previous version copied the camera's full orientation every frame, so the panel pitched and
+  // rolled as the user turned their head — the "weird shifting angles".)
+  const facePanelAtUser = () => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    faceTmp.setFromMatrixPosition(gl.xr.getCamera().matrixWorld)
+    panel.rotation.set(0, Math.atan2(faceTmp.x - panel.position.x, faceTmp.z - panel.position.z), 0)
+  }
 
   useEffect(() => {
     if (!visible) {
-      hasPlacedPanelRef.current = false
+      placedRef.current = false
     }
   }, [visible])
 
-  useFrame(() => {
-    if (!visible || !panelRef.current || hasPlacedPanelRef.current || !gl.xr.isPresenting) {
+  // Place once (off to the user's right, facing them); afterwards the panel stays LOCKED in world
+  // space — it does NOT track the head, so it holds whatever spot/orientation it was dragged to.
+  // The only per-frame work is applying continuous rotation while a Turn/Tilt button is held.
+  useFrame((_, delta) => {
+    const panel = panelRef.current
+    if (!panel || !visible || !gl.xr.isPresenting) {
       return
     }
-    const xrCamera = gl.xr.getCamera()
-    xrCamera.updateMatrixWorld()
-    xrCamera.getWorldDirection(frameVectors.forward)
-    frameVectors.up.setFromMatrixColumn(xrCamera.matrixWorld, 1).normalize()
-    xrCamera.getWorldPosition(frameVectors.position)
-    frameVectors.position
-      .addScaledVector(frameVectors.forward, XR_CONTROL_PANEL_DISTANCE)
-      .addScaledVector(frameVectors.up, XR_CONTROL_PANEL_VERTICAL_OFFSET)
-    panelRef.current.position.copy(frameVectors.position)
-    xrCamera.getWorldQuaternion(frameVectors.quaternion)
-    panelRef.current.quaternion.copy(frameVectors.quaternion)
-    hasPlacedPanelRef.current = true
+    if (!placedRef.current) {
+      panel.position.set(0.95, 1.2, -1.0)
+      facePanelAtUser()
+      placedRef.current = true
+    }
+    const held = heldRotateRef.current
+    if (held && onRotateTarget) {
+      onRotateTarget(held.axis, held.sign * 1.6 * delta)
+    }
   })
 
+  const beginPanelDrag = (event: ThreeEvent<PointerEvent>) => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    event.stopPropagation()
+    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+      event.pointerId,
+    )
+    const distance = Number.isFinite(event.distance)
+      ? event.distance
+      : event.ray.origin.distanceTo(event.point)
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), distance)
+    panelDragRef.current = {
+      pointerId: event.pointerId,
+      distance,
+      offset: panel.position.clone().sub(anchor),
+    }
+  }
+
+  const movePanelDrag = (event: ThreeEvent<PointerEvent>) => {
+    const drag = panelDragRef.current
+    const panel = panelRef.current
+    if (!drag || !panel || event.pointerId !== drag.pointerId) {
+      return
+    }
+    event.stopPropagation()
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), drag.distance)
+    panel.position.copy(anchor).add(drag.offset)
+    facePanelAtUser()
+  }
+
+  const endPanelDrag = (event: ThreeEvent<PointerEvent>) => {
+    if (panelDragRef.current?.pointerId !== event.pointerId) {
+      return
+    }
+    panelDragRef.current = null
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
+
   return (
-    <group ref={panelRef} position={[0, 1.42, -1.28]} visible={visible}>
+    <group ref={panelRef} visible={visible}>
       <mesh position={[0, 0, -0.008]}>
-        <planeGeometry args={[1.22, 0.95]} />
+        <planeGeometry args={[1.22, 1.16]} />
         <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
       </mesh>
       <mesh position={[0, 0, -0.004]}>
-        <planeGeometry args={[1.26, 0.99]} />
+        <planeGeometry args={[1.26, 1.2]} />
         <meshBasicMaterial color="#22d3ee" opacity={0.1} side={DoubleSide} transparent />
       </mesh>
-      <XRControlLabel position={[-0.56, 0.42, 0.012]} size={0.036}>
-        Spatial anatomy controls
-      </XRControlLabel>
-      <XRControlLabel position={[-0.56, 0.35, 0.012]} size={0.021}>
-        Aim at buttons. Menu stays fixed; hold select away to move anatomy.
-      </XRControlLabel>
+      {/* Header bar = drag handle. Grab anywhere on it (bar or title) to reposition the panel. */}
+      <group
+        onPointerDown={beginPanelDrag}
+        onPointerMove={movePanelDrag}
+        onPointerUp={endPanelDrag}
+        onPointerCancel={endPanelDrag}
+      >
+        <mesh position={[0, 0.5, 0.006]}>
+          <planeGeometry args={[1.2, 0.13]} />
+          <meshBasicMaterial
+            color="#0e7490"
+            opacity={0.92}
+            side={DoubleSide}
+            toneMapped={false}
+            transparent
+          />
+        </mesh>
+        <XRControlLabel position={[-0.56, 0.52, 0.012]} size={0.034}>
+          Spatial anatomy controls
+        </XRControlLabel>
+        <XRControlLabel position={[-0.56, 0.45, 0.012]} size={0.02}>
+          Drag this bar to move
+        </XRControlLabel>
+      </group>
 
-      <XRControlLabel position={[-0.56, 0.25, 0.012]}>Model placement</XRControlLabel>
+      <XRControlLabel position={[-0.56, 0.37, 0.012]}>Model placement</XRControlLabel>
       <XRControlButton
         disabled={!onResetPlacement}
         label="Center"
         onSelect={onResetPlacement}
-        position={[0.04, 0.25, 0.014]}
+        position={[0.04, 0.37, 0.014]}
         selected
         size={[0.22, 0.085]}
       />
@@ -928,33 +1073,98 @@ function XRControlPanel({
         disabled={!onScaleTarget}
         label="Size -"
         onSelect={() => onScaleTarget?.(0.82)}
-        position={[0.28, 0.25, 0.014]}
+        position={[0.28, 0.37, 0.014]}
         size={[0.2, 0.085]}
       />
       <XRControlButton
         disabled={!onScaleTarget}
         label="Size +"
         onSelect={() => onScaleTarget?.(1.22)}
-        position={[0.5, 0.25, 0.014]}
+        position={[0.5, 0.37, 0.014]}
         size={[0.2, 0.085]}
       />
 
-      <XRControlLabel position={[-0.56, 0.13, 0.012]}>
-        Cut plane {formatXRPercent(crossSection)}
-      </XRControlLabel>
       <XRControlButton
-        disabled={!onStepCrossSection}
-        label="-10"
-        onSelect={() => onStepCrossSection?.(-10)}
-        position={[0.26, 0.13, 0.014]}
-        size={[0.2, 0.085]}
+        disabled={!onRotateTarget}
+        label="Turn L"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'y', sign: 1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[-0.5, 0.25, 0.014]}
+        size={[0.16, 0.085]}
       />
       <XRControlButton
-        disabled={!onStepCrossSection}
-        label="+10"
-        onSelect={() => onStepCrossSection?.(10)}
-        position={[0.5, 0.13, 0.014]}
-        size={[0.2, 0.085]}
+        disabled={!onRotateTarget}
+        label="Turn R"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'y', sign: -1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[-0.31, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Tilt U"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'x', sign: -1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[-0.12, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Tilt D"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'x', sign: 1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.07, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Roll L"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'z', sign: 1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.26, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+      <XRControlButton
+        disabled={!onRotateTarget}
+        label="Roll R"
+        onPressStart={() => {
+          heldRotateRef.current = { axis: 'z', sign: -1 }
+        }}
+        onPressEnd={() => {
+          heldRotateRef.current = null
+        }}
+        position={[0.45, 0.25, 0.014]}
+        size={[0.16, 0.085]}
+      />
+
+      <XRControlLabel position={[-0.56, 0.13, 0.012]}>Structures menu</XRControlLabel>
+      <XRControlButton
+        disabled={!onToggleStructures}
+        label={structuresOpen ? 'Hide structures' : 'Show structures'}
+        onSelect={onToggleStructures}
+        position={[0.2, 0.13, 0.014]}
+        selected={structuresOpen}
+        size={[0.34, 0.085]}
       />
 
       <XRControlLabel position={[-0.56, 0.01, 0.012]}>
@@ -971,30 +1181,30 @@ function XRControlPanel({
         selected={showCtPlanes}
         size={[0.19, 0.085]}
       />
-      <XRControlButton
-        disabled={!volumeAvailable || !onStepCtPlaneOpacity}
-        label="Opacity -"
-        onSelect={() => onStepCtPlaneOpacity?.(-0.1)}
-        position={[0.31, 0.01, 0.014]}
-        size={[0.2, 0.085]}
-      />
-      <XRControlButton
-        disabled={!volumeAvailable || !onStepCtPlaneOpacity}
-        label="Opacity +"
-        onSelect={() => onStepCtPlaneOpacity?.(0.1)}
-        position={[0.53, 0.01, 0.014]}
-        size={[0.2, 0.085]}
+      <XRSlider
+        disabled={!volumeAvailable || !onCtPlaneOpacityChange}
+        max={1}
+        min={0}
+        onChange={onCtPlaneOpacityChange}
+        position={[0.42, 0.01, 0.014]}
+        value={ctPlaneOpacity}
+        width={0.42}
       />
 
-      <XRControlLabel position={[-0.56, -0.12, 0.012]}>Plane axis</XRControlLabel>
+      <XRControlLabel position={[-0.56, -0.12, 0.012]}>CT planes — tap to show/hide</XRControlLabel>
       {ORTHOGONAL_AXES.map((axis, index) => (
         <XRControlButton
           key={axis}
-          disabled={!volumeAvailable || !onActiveAxisChange}
+          disabled={!volumeAvailable || !onToggleActivePlane}
           label={AXIS_LABELS[axis]}
-          onSelect={() => onActiveAxisChange?.(axis)}
+          onSelect={() => {
+            // Tapping a plane toggles its own visibility (independent show/hide of axial / coronal /
+            // sagittal) and makes it the axis the slice slider below controls.
+            onActiveAxisChange?.(axis)
+            onToggleActivePlane?.(axis)
+          }}
           position={[0.02 + index * 0.24, -0.12, 0.014]}
-          selected={axis === activeAxis}
+          selected={showCtPlanes && (ctPlaneVisibility[axis] ?? true)}
           size={[0.22, 0.085]}
         />
       ))}
@@ -1002,27 +1212,15 @@ function XRControlPanel({
       <XRControlLabel position={[-0.56, -0.25, 0.012]}>
         {AXIS_LABELS[activeAxis]} slice {formatXRPercent(activeSlice)}
       </XRControlLabel>
-      <XRControlButton
-        disabled={!volumeAvailable || !onStepCtPlaneSlice}
-        label="-5"
-        onSelect={() => onStepCtPlaneSlice?.(activeAxis, -5)}
-        position={[0.09, -0.25, 0.014]}
-        size={[0.18, 0.085]}
-      />
-      <XRControlButton
-        disabled={!volumeAvailable || !onStepCtPlaneSlice}
-        label="+5"
-        onSelect={() => onStepCtPlaneSlice?.(activeAxis, 5)}
-        position={[0.31, -0.25, 0.014]}
-        size={[0.18, 0.085]}
-      />
-      <XRControlButton
-        disabled={!volumeAvailable || !onToggleActivePlane}
-        label={activePlaneVisible ? 'Axis on' : 'Axis off'}
-        onSelect={() => onToggleActivePlane?.(activeAxis)}
-        position={[0.53, -0.25, 0.014]}
-        selected={activePlaneVisible}
-        size={[0.21, 0.085]}
+      <XRSlider
+        disabled={!volumeAvailable || !onSliceChange}
+        max={100}
+        min={0}
+        onChange={(value) => onSliceChange?.(activeAxis, value)}
+        position={[0.2, -0.25, 0.014]}
+        throttleMs={80}
+        value={activeSlice}
+        width={0.6}
       />
 
       <XRControlLabel position={[-0.56, -0.38, 0.012]}>
@@ -1043,135 +1241,441 @@ function XRControlPanel({
   )
 }
 
-function XRSpatialControllers({
-  controlRootRef,
-  enabled,
-  targetRef,
-  placement,
-  onSelectSegment,
-}: {
-  controlRootRef?: RefObject<Group | null>
-  enabled: boolean
-  targetRef: RefObject<Group | null>
-  placement: SpatialPlacement | null
-  onSelectSegment: (label: string | null) => void
-}) {
-  const { gl, scene } = useThree()
-  const activeGrabRef = useRef<ActiveGrab | null>(null)
-  const raycasterRef = useRef(new Raycaster())
+const STRUCTURES_PER_PAGE = 5
 
-  useEffect(() => {
-    if (!enabled) {
-      activeGrabRef.current = null
+// Group a segment for the Structures menu. Explicit `segment.group` wins; otherwise derive a sensible
+// bucket from the name so existing models (mostly named lymph nodes / vessels / heart) group sanely.
+function deriveSegmentGroup(segment: AnatomySegment): string {
+  if (segment.group) {
+    return segment.group
+  }
+  const text = `${segment.name} ${segment.id}`.toLowerCase()
+  if (/lymph|node/.test(text)) return 'Lymph nodes'
+  if (/aorta|arter|vein|venous|vena|cava|vessel|brachioceph|carotid|subclavian/.test(text)) {
+    return 'Vessels'
+  }
+  if (/heart|atri|ventric|cardiac/.test(text)) return 'Heart'
+  if (/airway|trachea|bronch|lung|lobe|carina|stent|fistula/.test(text)) return 'Airway & lungs'
+  return 'Other'
+}
+
+function groupSegments(
+  segments: AnatomySegment[],
+): Array<{ name: string; segments: AnatomySegment[] }> {
+  const order: string[] = []
+  const map = new Map<string, AnatomySegment[]>()
+  segments.forEach((segment) => {
+    const group = deriveSegmentGroup(segment)
+    if (!map.has(group)) {
+      map.set(group, [])
+      order.push(group)
+    }
+    map.get(group)!.push(segment)
+  })
+  return order.map((name) => ({ name, segments: map.get(name) ?? [] }))
+}
+
+/**
+ * Separate, draggable in-headset menu for showing/hiding individual structures and whole groups
+ * (lymph nodes, vessels, heart, …). Two levels: a group list with per-group "Show/Hide all", and a
+ * paginated per-structure list reached via "Open". Same lock/drag/face-the-user behaviour as the
+ * control panel (parked to the user's left); it does not track the head once placed.
+ */
+function XRStructuresPanel({
+  visible,
+  segments,
+  visibleSegments,
+  onToggleSegment,
+  onSetGroupVisibility,
+  onClose,
+}: {
+  visible: boolean
+  segments: AnatomySegment[]
+  visibleSegments: Record<string, boolean>
+  onToggleSegment: (id: string) => void
+  onSetGroupVisibility: (ids: string[], nextVisible: boolean) => void
+  onClose: () => void
+}) {
+  const { gl } = useThree()
+  const panelRef = useRef<Group | null>(null)
+  const faceTmp = useMemo(() => new Vector3(), [])
+  const placedRef = useRef(false)
+  const dragRef = useRef<{ pointerId: number; distance: number; offset: Vector3 } | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
+  const [page, setPage] = useState(0)
+
+  const groups = useMemo(() => groupSegments(segments), [segments])
+
+  // The panel unmounts when closed (gated render in AnatomyViewer), so group/page selection and
+  // placement reset naturally on the next open via fresh state — no reset effect needed.
+
+  const facePanelAtUser = () => {
+    const panel = panelRef.current
+    if (!panel) {
       return
     }
-
-    const controllers = [gl.xr.getController(0), gl.xr.getController(1)]
-    const rays = controllers.map(() => createControllerRay())
-
-    const beginGrab = (controller: Group) => {
-      const target = targetRef.current
-      if (!target) {
-        return
-      }
-
-      const { position, quaternion, rotation } = getControllerTransform(controller)
-      const raycaster = raycasterRef.current
-      raycaster.ray.origin.copy(position)
-      raycaster.ray.direction.set(0, 0, -1).applyMatrix4(rotation)
-
-      const controlRoot = controlRootRef?.current
-      if (controlRoot) {
-        const controlIntersections = raycaster.intersectObjects(
-          collectVisibleMeshes(controlRoot),
-          false,
-        )
-        const controlAction = controlIntersections.length
-          ? getXRControlAction(controlIntersections[0].object)
-          : null
-        if (controlIntersections.length) {
-          controlAction?.()
-          return
-        }
-      }
-
-      const intersections = raycaster.intersectObjects(collectVisibleMeshes(target), false)
-      onSelectSegment(
-        intersections.length
-          ? getSegmentLabel(intersections[0].object)
-          : 'Moving anatomy. Release select to place it.',
-      )
-      activeGrabRef.current = {
-        controller,
-        offset: target.position.clone().sub(position),
-        inverseStartControllerQuaternion: quaternion.clone().invert(),
-        startModelQuaternion: target.quaternion.clone(),
-      }
-    }
-
-    const endGrab = (controller: Group) => {
-      if (activeGrabRef.current?.controller === controller) {
-        activeGrabRef.current = null
-      }
-    }
-
-    const resetPlacement = () => {
-      const target = targetRef.current
-      if (!target || !placement) {
-        return
-      }
-      applySpatialPlacement(target, placement)
-      activeGrabRef.current = null
-      onSelectSegment('Spatial placement reset')
-    }
-
-    const cleanupHandlers: Array<() => void> = []
-
-    controllers.forEach((controller, index) => {
-      const ray = rays[index]
-      controller.add(ray)
-      scene.add(controller)
-
-      const handleSelectStart = () => beginGrab(controller)
-      const handleSelectEnd = () => endGrab(controller)
-      const handleSqueezeStart = () => resetPlacement()
-
-      controller.addEventListener('selectstart', handleSelectStart)
-      controller.addEventListener('selectend', handleSelectEnd)
-      controller.addEventListener('squeezestart', handleSqueezeStart)
-
-      cleanupHandlers.push(() => {
-        controller.removeEventListener('selectstart', handleSelectStart)
-        controller.removeEventListener('selectend', handleSelectEnd)
-        controller.removeEventListener('squeezestart', handleSqueezeStart)
-        controller.remove(ray)
-        scene.remove(controller)
-        ray.geometry.dispose()
-        ;(ray.material as LineBasicMaterial).dispose()
-      })
-    })
-
-    return () => {
-      activeGrabRef.current = null
-      cleanupHandlers.forEach((cleanup) => cleanup())
-    }
-  }, [controlRootRef, enabled, gl, onSelectSegment, placement, scene, targetRef])
+    faceTmp.setFromMatrixPosition(gl.xr.getCamera().matrixWorld)
+    panel.rotation.set(0, Math.atan2(faceTmp.x - panel.position.x, faceTmp.z - panel.position.z), 0)
+  }
 
   useFrame(() => {
-    if (!enabled) {
+    const panel = panelRef.current
+    if (!panel || !visible || !gl.xr.isPresenting || placedRef.current) {
       return
     }
+    const camera = gl.xr.getCamera()
+    camera.updateMatrixWorld()
+    const camPos = new Vector3().setFromMatrixPosition(camera.matrixWorld)
+    const forward = new Vector3()
+    camera.getWorldDirection(forward)
+    forward.y = 0
+    if (forward.lengthSq() < 1e-4) {
+      forward.set(0, 0, -1)
+    }
+    forward.normalize()
+    const right = new Vector3().setFromMatrixColumn(camera.matrixWorld, 0)
+    right.y = 0
+    right.normalize()
+    // Open the menu in front of the user (and a little to their left so it doesn't land on top of
+    // the control panel), at eye level, then lock it. It was previously parked far to the left,
+    // out of view, so opening it appeared to do nothing.
+    panel.position.copy(camPos).addScaledVector(forward, 0.95).addScaledVector(right, -0.5)
+    panel.position.y = camPos.y - 0.05
+    facePanelAtUser()
+    placedRef.current = true
+  })
 
-    const grab = activeGrabRef.current
+  const beginDrag = (event: ThreeEvent<PointerEvent>) => {
+    const panel = panelRef.current
+    if (!panel) {
+      return
+    }
+    event.stopPropagation()
+    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+      event.pointerId,
+    )
+    const distance = Number.isFinite(event.distance)
+      ? event.distance
+      : event.ray.origin.distanceTo(event.point)
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), distance)
+    dragRef.current = {
+      pointerId: event.pointerId,
+      distance,
+      offset: panel.position.clone().sub(anchor),
+    }
+  }
+
+  const moveDrag = (event: ThreeEvent<PointerEvent>) => {
+    const drag = dragRef.current
+    const panel = panelRef.current
+    if (!drag || !panel || event.pointerId !== drag.pointerId) {
+      return
+    }
+    event.stopPropagation()
+    const anchor = event.ray.origin
+      .clone()
+      .addScaledVector(event.ray.direction.clone().normalize(), drag.distance)
+    panel.position.copy(anchor).add(drag.offset)
+    facePanelAtUser()
+  }
+
+  const endDrag = (event: ThreeEvent<PointerEvent>) => {
+    if (dragRef.current?.pointerId !== event.pointerId) {
+      return
+    }
+    dragRef.current = null
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
+
+  const activeGroup = selectedGroup ? (groups.find((g) => g.name === selectedGroup) ?? null) : null
+  const pageCount = activeGroup
+    ? Math.max(1, Math.ceil(activeGroup.segments.length / STRUCTURES_PER_PAGE))
+    : 1
+  const clampedPage = Math.min(page, pageCount - 1)
+  const pageSegments = activeGroup
+    ? activeGroup.segments.slice(
+        clampedPage * STRUCTURES_PER_PAGE,
+        clampedPage * STRUCTURES_PER_PAGE + STRUCTURES_PER_PAGE,
+      )
+    : []
+
+  return (
+    <group ref={panelRef} visible={visible}>
+      <mesh position={[0, 0, -0.008]}>
+        <planeGeometry args={[1.04, 1.16]} />
+        <meshBasicMaterial color="#020617" opacity={0.97} side={DoubleSide} transparent />
+      </mesh>
+      <mesh position={[0, 0, -0.004]}>
+        <planeGeometry args={[1.08, 1.2]} />
+        <meshBasicMaterial color="#22d3ee" opacity={0.1} side={DoubleSide} transparent />
+      </mesh>
+      <group
+        onPointerDown={beginDrag}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+      >
+        <mesh position={[0, 0.5, 0.006]}>
+          <planeGeometry args={[1.02, 0.13]} />
+          <meshBasicMaterial
+            color="#0e7490"
+            opacity={0.92}
+            side={DoubleSide}
+            toneMapped={false}
+            transparent
+          />
+        </mesh>
+        <XRControlLabel position={[-0.47, 0.5, 0.012]} size={0.03}>
+          {activeGroup ? activeGroup.name : 'Structures — drag to move'}
+        </XRControlLabel>
+      </group>
+      <XRControlButton
+        label="Close"
+        onSelect={onClose}
+        position={[0.36, 0.5, 0.014]}
+        size={[0.18, 0.085]}
+      />
+
+      {segments.length === 0 ? (
+        <XRControlLabel position={[-0.47, 0.3, 0.012]}>No structures in this model</XRControlLabel>
+      ) : !activeGroup ? (
+        groups.map((group, index) => {
+          const ids = group.segments.map((segment) => segment.id)
+          const allVisible = group.segments.every((segment) => visibleSegments[segment.id] ?? true)
+          const rowY = 0.34 - index * 0.13
+          return (
+            <group key={group.name}>
+              <XRControlLabel position={[-0.47, rowY, 0.012]} size={0.022}>
+                {`${group.name} (${group.segments.length})`}
+              </XRControlLabel>
+              <XRControlButton
+                label={allVisible ? 'Hide all' : 'Show all'}
+                onSelect={() => onSetGroupVisibility(ids, !allVisible)}
+                position={[0.16, rowY, 0.014]}
+                selected={allVisible}
+                size={[0.21, 0.085]}
+              />
+              <XRControlButton
+                label="Open"
+                onSelect={() => {
+                  setSelectedGroup(group.name)
+                  setPage(0)
+                }}
+                position={[0.41, rowY, 0.014]}
+                size={[0.15, 0.085]}
+              />
+            </group>
+          )
+        })
+      ) : (
+        <>
+          <XRControlButton
+            label="‹ Groups"
+            onSelect={() => setSelectedGroup(null)}
+            position={[-0.34, 0.34, 0.014]}
+            size={[0.26, 0.085]}
+          />
+          {pageSegments.map((segment, index) => {
+            const segmentVisible = visibleSegments[segment.id] ?? true
+            const rowY = 0.2 - index * 0.115
+            return (
+              <group key={segment.id}>
+                <XRControlLabel position={[-0.47, rowY, 0.012]} size={0.019}>
+                  {segment.name}
+                </XRControlLabel>
+                <XRControlButton
+                  label={segmentVisible ? 'Hide' : 'Show'}
+                  onSelect={() => onToggleSegment(segment.id)}
+                  position={[0.4, rowY, 0.014]}
+                  selected={segmentVisible}
+                  size={[0.18, 0.08]}
+                />
+              </group>
+            )
+          })}
+          {pageCount > 1 ? (
+            <>
+              <XRControlButton
+                disabled={clampedPage <= 0}
+                label="Prev"
+                onSelect={() => setPage((p) => Math.max(0, p - 1))}
+                position={[-0.22, -0.45, 0.014]}
+                size={[0.2, 0.085]}
+              />
+              <XRControlLabel position={[0.04, -0.45, 0.012]} size={0.02}>
+                {`Page ${clampedPage + 1}/${pageCount}`}
+              </XRControlLabel>
+              <XRControlButton
+                disabled={clampedPage >= pageCount - 1}
+                label="Next"
+                onSelect={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                position={[0.32, -0.45, 0.014]}
+                size={[0.2, 0.085]}
+              />
+            </>
+          ) : null}
+        </>
+      )}
+    </group>
+  )
+}
+
+type ActivePointerGrab = {
+  pointerId: number
+  startDirection: Vector3
+  distance: number
+  anchorToModel: Vector3
+  startQuaternion: Quaternion
+}
+
+/**
+ * Grab/move/rotate the anatomy via R3F pointer events. @react-three/xr funnels Quest controllers,
+ * Quest hand-tracking, and Vision Pro transient-pointer pinch through the same pointer-event model,
+ * so this single implementation works on all of them — unlike the old getController(0/1) path that
+ * never received Vision Pro's pinch. The pointer ray is the grab proxy: the model follows the ray
+ * (translation) and rotates with the ray's direction change. Pointer capture keeps move events
+ * flowing even when the ray leaves the model mid-grab.
+ */
+function XRGrabbableModel({
+  enabled,
+  targetRef,
+  onSelectSegment,
+  children,
+}: {
+  enabled: boolean
+  targetRef: RefObject<Group | null>
+  onSelectSegment: (label: string | null) => void
+  children: ReactNode
+}) {
+  const grabRef = useRef<ActivePointerGrab | null>(null)
+
+  const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     const target = targetRef.current
-    if (!grab || !target) {
+    if (!target) {
       return
     }
+    event.stopPropagation()
+    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
+      event.pointerId,
+    )
+    const direction = event.ray.direction.clone().normalize()
+    const distance = Number.isFinite(event.distance)
+      ? event.distance
+      : event.ray.origin.distanceTo(event.point)
+    const anchor = event.ray.origin.clone().addScaledVector(direction, distance)
+    grabRef.current = {
+      pointerId: event.pointerId,
+      startDirection: direction,
+      distance,
+      anchorToModel: target.position.clone().sub(anchor),
+      startQuaternion: target.quaternion.clone(),
+    }
+    onSelectSegment(getSegmentLabel(event.object))
+  }
 
-    const { position, quaternion } = getControllerTransform(grab.controller)
-    target.position.copy(position).add(grab.offset)
-    const controllerDelta = quaternion.multiply(grab.inverseStartControllerQuaternion)
-    target.quaternion.copy(controllerDelta.multiply(grab.startModelQuaternion))
+  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
+    const grab = grabRef.current
+    const target = targetRef.current
+    if (!grab || !target || event.pointerId !== grab.pointerId) {
+      return
+    }
+    event.stopPropagation()
+    const direction = event.ray.direction.clone().normalize()
+    const anchor = event.ray.origin.clone().addScaledVector(direction, grab.distance)
+    const deltaQuaternion = new Quaternion().setFromUnitVectors(grab.startDirection, direction)
+    target.position.copy(anchor).add(grab.anchorToModel.clone().applyQuaternion(deltaQuaternion))
+    target.quaternion.copy(deltaQuaternion).multiply(grab.startQuaternion)
+    target.updateMatrixWorld()
+  }
+
+  const handlePointerUp = (event: ThreeEvent<PointerEvent>) => {
+    const grab = grabRef.current
+    if (!grab || event.pointerId !== grab.pointerId) {
+      return
+    }
+    grabRef.current = null
+    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
+      event.pointerId,
+    )
+  }
+
+  const interactionHandlers = enabled
+    ? {
+        onPointerDown: handlePointerDown,
+        onPointerMove: handlePointerMove,
+        onPointerUp: handlePointerUp,
+        onPointerCancel: handlePointerUp,
+      }
+    : {}
+
+  return (
+    <group ref={targetRef} {...interactionHandlers}>
+      {children}
+    </group>
+  )
+}
+
+/**
+ * three evaluates `material.clippingPlanes` in WORLD space, but the plane is authored in the model
+ * group's LOCAL frame. Each frame we re-project local→world from the group's live matrix, so the
+ * cut tracks the model through placement, scale, and grab. On desktop the group is at identity, so
+ * world === local and clipping behaves exactly as before.
+ */
+function XRClippingController({
+  enabled,
+  localPlane,
+  materials,
+  targetRef,
+}: {
+  enabled: boolean
+  localPlane: Plane | null
+  materials: MeshStandardMaterial[]
+  targetRef: RefObject<Group | null>
+}) {
+  const { gl } = useThree()
+  const worldPlaneRef = useRef(new Plane())
+
+  const projectToWorld = useCallback(() => {
+    if (!localPlane) {
+      return
+    }
+    const worldPlane = worldPlaneRef.current.copy(localPlane)
+    const target = targetRef.current
+    if (target) {
+      target.updateMatrixWorld()
+      worldPlane.applyMatrix4(target.matrixWorld)
+    }
+  }, [localPlane, targetRef])
+
+  useEffect(() => {
+    const active = enabled && localPlane != null
+    // Toggling local clipping on the renderer is a required side effect (mirrors the prior code).
+    // eslint-disable-next-line react-hooks/immutability
+    gl.localClippingEnabled = active
+    if (active) {
+      projectToWorld()
+    }
+    materials.forEach((material) => {
+      material.clippingPlanes = active ? [worldPlaneRef.current] : []
+      material.needsUpdate = true
+    })
+    return () => {
+      materials.forEach((material) => {
+        material.clippingPlanes = []
+        material.needsUpdate = true
+      })
+    }
+  }, [enabled, localPlane, materials, gl, projectToWorld])
+
+  useFrame(() => {
+    if (!enabled || !localPlane) {
+      return
+    }
+    projectToWorld()
   })
 
   return null
@@ -1207,6 +1711,8 @@ export interface AnatomyViewerProps {
   onCtClipModeChange?: (mode: OrthogonalClipMode) => void
   onCtClipAxisChange?: (axis: AnatomyAxis) => void
   onVolumeSliceChange?: (value: number) => void
+  onToggleSegmentVisibility?: (id: string) => void
+  onSetSegmentsVisibility?: (ids: string[], visible: boolean) => void
 }
 
 export function AnatomyViewer({
@@ -1231,7 +1737,6 @@ export function AnatomyViewer({
   onError,
   onSceneMetrics,
   onSegmentsChanged,
-  onCrossSectionChange,
   onShowCtPlanesChange,
   onCtPlaneVisibilityChange,
   onCtPlaneSliceChange,
@@ -1239,6 +1744,8 @@ export function AnatomyViewer({
   onCtClipModeChange,
   onCtClipAxisChange,
   onVolumeSliceChange,
+  onToggleSegmentVisibility,
+  onSetSegmentsVisibility,
 }: AnatomyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const glRef = useRef<WebGLRenderer | null>(null)
@@ -1263,18 +1770,17 @@ export function AnatomyViewer({
   const ctSliceRefs = useRef<Partial<Record<AnatomyAxis, VolumeSlice>>>({})
   const volumeInfoRef = useRef<VolumeSliceInfo>(createEmptyVolumeSliceInfo())
   const ctWheelRemainderRef = useRef<Record<AnatomyAxis, number>>(createEmptyWheelRemainders())
-  const xrSessionRef = useRef<XRSession | null>(null)
+  const xrStore = useMemo(() => createAnatomyXRStore(), [])
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [xrCapabilities, setXrCapabilities] = useState<XRCapabilities>({
     checked: false,
     hasWebXR: false,
-    immersiveAR: false,
     immersiveVR: false,
   })
   const [xrSessionActive, setXrSessionActive] = useState(false)
-  const [xrSessionMode, setXrSessionMode] = useState<ImmersiveXRMode>('immersive-vr')
   const [spatialSelection, setSpatialSelection] = useState<string | null>(null)
+  const [showStructuresPanel, setShowStructuresPanel] = useState(false)
   const [xrControlAxis, setXrControlAxis] = useState<AnatomyAxis>(ctClipAxis)
   const [debugCoords, setDebugCoords] = useState({
     position: [0, 0, 0] as [number, number, number],
@@ -1289,6 +1795,20 @@ export function AnatomyViewer({
   useEffect(() => {
     setXrControlAxis(ctClipAxis)
   }, [ctClipAxis])
+
+  // The XR store owns the session; mirror its presence into local state so the existing
+  // desktop/XR-gated logic (placement, OrbitControls toggle, control panel visibility) keeps working.
+  useEffect(() => {
+    const sync = (session: XRSession | undefined) => {
+      const active = Boolean(session)
+      setXrSessionActive(active)
+      if (!active) {
+        setSpatialSelection(null)
+      }
+    }
+    sync(xrStore.getState().session)
+    return xrStore.subscribe((state) => sync(state.session))
+  }, [xrStore])
 
   useEffect(() => {
     volumeInfoRef.current = volumeInfo
@@ -1335,12 +1855,7 @@ export function AnatomyViewer({
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('xr' in navigator)) {
-      setXrCapabilities({
-        checked: true,
-        hasWebXR: false,
-        immersiveAR: false,
-        immersiveVR: false,
-      })
+      setXrCapabilities({ checked: true, hasWebXR: false, immersiveVR: false })
       return
     }
 
@@ -1351,49 +1866,27 @@ export function AnatomyViewer({
         const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
         if (!xrSystem) {
           if (!cancelled) {
-            setXrCapabilities({
-              checked: true,
-              hasWebXR: false,
-              immersiveAR: false,
-              immersiveVR: false,
-            })
+            setXrCapabilities({ checked: true, hasWebXR: false, immersiveVR: false })
           }
           return
         }
 
         if (!xrSystem.isSessionSupported) {
           if (!cancelled) {
-            setXrCapabilities({
-              checked: true,
-              hasWebXR: true,
-              immersiveAR: false,
-              immersiveVR: false,
-            })
+            setXrCapabilities({ checked: true, hasWebXR: true, immersiveVR: false })
           }
           return
         }
 
-        const [arSupported, vrSupported] = await Promise.all([
-          xrSystem.isSessionSupported('immersive-ar').catch(() => false),
-          xrSystem.isSessionSupported('immersive-vr').catch(() => false),
-        ])
+        // VR is the single immersive mode we target: Vision Pro has no functional WebXR
+        // immersive-ar, and we don't need passthrough, so VR works on both headsets.
+        const vrSupported = await xrSystem.isSessionSupported('immersive-vr').catch(() => false)
         if (cancelled) return
-        setXrCapabilities({
-          checked: true,
-          hasWebXR: true,
-          immersiveAR: arSupported,
-          immersiveVR: vrSupported,
-        })
-        setXrSessionMode(arSupported ? 'immersive-ar' : 'immersive-vr')
+        setXrCapabilities({ checked: true, hasWebXR: true, immersiveVR: vrSupported })
       } catch (error) {
         console.warn('WebXR session support check failed', error)
         if (!cancelled) {
-          setXrCapabilities({
-            checked: true,
-            hasWebXR: false,
-            immersiveAR: false,
-            immersiveVR: false,
-          })
+          setXrCapabilities({ checked: true, hasWebXR: false, immersiveVR: false })
         }
       }
     })()
@@ -1439,18 +1932,6 @@ export function AnatomyViewer({
     [onCtPlaneSliceChange, onVolumeSliceChange],
   )
 
-  const handleXrStepCrossSection = useCallback(
-    (delta: number) => {
-      if (!onCrossSectionChange) {
-        return
-      }
-      const nextValue = clamp(crossSection + delta, 0, 100)
-      onCrossSectionChange(nextValue)
-      setSpatialSelection(`Cut plane ${formatXRPercent(nextValue)}`)
-    },
-    [crossSection, onCrossSectionChange],
-  )
-
   const handleXrToggleCtPlanes = useCallback(() => {
     if (!onShowCtPlanesChange) {
       return
@@ -1479,27 +1960,6 @@ export function AnatomyViewer({
       setSpatialSelection(`${AXIS_LABELS[axis]} plane ${nextValue ? 'visible' : 'hidden'}`)
     },
     [ctPlaneVisibility, onCtPlaneVisibilityChange],
-  )
-
-  const handleXrStepCtPlaneSlice = useCallback(
-    (axis: AnatomyAxis, delta: number) => {
-      const nextValue = clamp((effectiveCtPlaneSlices[axis] ?? 0) + delta, 0, 100)
-      handleCtPlaneSliceChange(axis, nextValue)
-      setSpatialSelection(`${AXIS_LABELS[axis]} slice ${formatXRPercent(nextValue)}`)
-    },
-    [effectiveCtPlaneSlices, handleCtPlaneSliceChange],
-  )
-
-  const handleXrStepCtPlaneOpacity = useCallback(
-    (delta: number) => {
-      if (!onCtPlaneOpacityChange) {
-        return
-      }
-      const nextValue = clamp(ctPlaneOpacity + delta, 0, 1)
-      onCtPlaneOpacityChange(nextValue)
-      setSpatialSelection(`CT plane opacity ${Math.round(nextValue * 100)}%`)
-    },
-    [ctPlaneOpacity, onCtPlaneOpacityChange],
   )
 
   const handleXrCycleClipMode = useCallback(() => {
@@ -1635,83 +2095,32 @@ export function AnatomyViewer({
     ],
   )
 
-  const handleEnterXR = useCallback(
-    async (mode: ImmersiveXRMode) => {
-      if (typeof navigator === 'undefined' || !('xr' in navigator)) {
-        return
-      }
-      if (!glRef.current) {
-        return
-      }
-
-      try {
-        const xrSystem = (navigator as Navigator & { xr?: XRSystem }).xr
-        if (!xrSystem?.requestSession) {
-          return
+  // The XR store owns session lifecycle (request, reference space, features, teardown).
+  // VR is the single mode; controllers, hands and Vision Pro transient-pointer are all wired by the store.
+  const handleEnterXR = useCallback(() => {
+    void xrStore.enterVR().then(
+      (session) => {
+        if (session) {
+          setSpatialSelection(
+            'Point at the anatomy and select to grab it. Use the panel to adjust.',
+          )
         }
-
-        glRef.current.xr.enabled = true
-        glRef.current.xr.setReferenceSpaceType?.('local-floor')
-        glRef.current.setClearAlpha(mode === 'immersive-ar' ? 0 : 1)
-
-        const optionalFeatures: XRSessionInit['optionalFeatures'] = ['local-floor', 'hand-tracking']
-        if (mode === 'immersive-ar') {
-          optionalFeatures.push('hit-test')
-        } else {
-          optionalFeatures.push('bounded-floor')
-        }
-
-        const sessionInit: XRSessionInit = {
-          optionalFeatures,
-        }
-
-        const session = await xrSystem.requestSession(mode, sessionInit)
-
-        if (!session) {
-          return
-        }
-
-        setXrSessionMode(mode)
-        xrSessionRef.current = session
-        session.addEventListener('end', () => {
-          xrSessionRef.current = null
-          setXrSessionActive(false)
-          setSpatialSelection(null)
-          glRef.current?.setClearAlpha(1)
-        })
-
-        await glRef.current.xr.setSession(session)
-        setXrSessionActive(true)
-        setSpatialSelection(
-          mode === 'immersive-ar'
-            ? 'Pinch controls, or pinch and hold away from the panel to move anatomy.'
-            : 'Select controls, or hold select away from the panel to move anatomy.',
-        )
-      } catch (error) {
+      },
+      (error) => {
         console.error('Failed to start WebXR session', error)
         onError?.(
           'Unable to start immersive session. Please check browser settings and permissions.',
         )
-        glRef.current?.setClearAlpha(1)
-      }
-    },
-    [onError],
-  )
+      },
+    )
+  }, [onError, xrStore])
 
-  const handleExitXR = useCallback(async () => {
-    try {
-      if (xrSessionRef.current) {
-        await xrSessionRef.current.end()
-      }
-    } catch (error) {
-      console.warn('Failed to end XR session', error)
-    } finally {
-      xrSessionRef.current = null
-      setXrSessionActive(false)
-      setSpatialSelection(null)
-      glRef.current?.setClearAlpha(1)
-    }
-  }, [])
+  const handleExitXR = useCallback(() => {
+    void xrStore
+      .getState()
+      .session?.end()
+      ?.catch(() => {})
+  }, [xrStore])
 
   useEffect(() => {
     const handler = () => {
@@ -1867,6 +2276,24 @@ export function AnatomyViewer({
     root.scale.setScalar(nextScale)
     root.updateMatrixWorld(true)
     setSpatialSelection(factor > 1 ? 'Anatomy enlarged' : 'Anatomy reduced')
+  }, [])
+
+  // Continuous rotate while a Turn/Tilt button is held. Called every frame by the panel with a small
+  // per-frame angle; rotates about WORLD axes so "turn" always spins around vertical regardless of
+  // the model's current orientation. No setState here — it runs every frame while a button is held.
+  const handleXrRotateTarget = useCallback((axis: 'x' | 'y' | 'z', radians: number) => {
+    const root = spatialRootRef.current
+    if (!root || !Number.isFinite(radians)) {
+      return
+    }
+    const worldAxis =
+      axis === 'y'
+        ? XR_ROTATE_WORLD_UP
+        : axis === 'z'
+          ? XR_ROTATE_WORLD_FORWARD
+          : XR_ROTATE_WORLD_RIGHT
+    root.rotateOnWorldAxis(worldAxis, radians)
+    root.updateMatrixWorld(true)
   }, [])
 
   const radius = useMemo(() => {
@@ -2044,49 +2471,53 @@ export function AnatomyViewer({
     })
   }, [preparedScene, visibleSegments])
 
-  useEffect(() => {
-    if (!preparedScene || !glRef.current) {
-      return
+  const clipMaterials = useMemo(() => {
+    if (!preparedScene) {
+      return [] as MeshStandardMaterial[]
+    }
+    return Object.values(preparedScene.segmentMeshes)
+      .flat()
+      .map((mesh) => mesh.material as MeshStandardMaterial)
+  }, [preparedScene])
+
+  // The clipping plane is computed here in the model group's LOCAL frame. XRClippingController
+  // re-projects it into world space from the group's live matrix every frame, so the cut tracks
+  // the model as it is placed, scaled, and grab-rotated in XR (three evaluates clippingPlanes in
+  // world space — the previous code applied a model-space plane directly, so it drifted in XR).
+  const localClipPlane = useMemo(() => {
+    if (!preparedScene) {
+      return null
     }
     const ctClippingEnabled =
       ctClipMode !== 'none' &&
       volumeState.status === 'success' &&
       Boolean(preparedScene.patientToModelMatrix)
-    const volumeToModelMatrix =
-      ctClippingEnabled && volumeState.status === 'success' && preparedScene.patientToModelMatrix
-        ? getVolumeToModelMatrix(
-            preparedScene.patientToModelMatrix,
-            volumeState,
-            effectiveCtAlignment,
-            model.volume?.volumeCenterPatientMm,
-          )
-        : null
-    const ctPlane =
-      ctClippingEnabled && volumeState.status === 'success' && volumeToModelMatrix
-        ? createVolumeClippingPlane({
-            axis: ctClipAxis,
-            mode: ctClipMode,
-            percentage: effectiveCtPlaneSlices[ctClipAxis],
-            volumeState,
-            volumeToModelMatrix,
-          })
-        : null
-    const clippingEnabled = Boolean(ctPlane) || crossSection > 0
-    const gl = glRef.current
-    gl.localClippingEnabled = clippingEnabled
-    const plane =
-      ctPlane ??
-      new Plane(
+    if (
+      ctClippingEnabled &&
+      volumeState.status === 'success' &&
+      preparedScene.patientToModelMatrix
+    ) {
+      const volumeToModelMatrix = getVolumeToModelMatrix(
+        preparedScene.patientToModelMatrix,
+        volumeState,
+        effectiveCtAlignment,
+        model.volume?.volumeCenterPatientMm,
+      )
+      return createVolumeClippingPlane({
+        axis: ctClipAxis,
+        mode: ctClipMode,
+        percentage: effectiveCtPlaneSlices[ctClipAxis],
+        volumeState,
+        volumeToModelMatrix,
+      })
+    }
+    if (crossSection > 0) {
+      return new Plane(
         new Vector3(0, -1, 0),
         computePlaneConstant(preparedScene.boundingBox, crossSection),
       )
-    Object.values(preparedScene.segmentMeshes).forEach((meshes) => {
-      meshes.forEach((mesh) => {
-        const material = mesh.material as MeshStandardMaterial
-        material.clippingPlanes = clippingEnabled ? [plane] : []
-        material.needsUpdate = true
-      })
-    })
+    }
+    return null
   }, [
     ctClipAxis,
     ctClipMode,
@@ -2097,6 +2528,8 @@ export function AnatomyViewer({
     volumeState,
     crossSection,
   ])
+
+  const clippingEnabled = localClipPlane != null
 
   useEffect(() => {
     if (volumeState.status !== 'success') {
@@ -2131,10 +2564,14 @@ export function AnatomyViewer({
       windowHigh = midpoint + 1
     }
 
+    // three.js Volume window/level are intentionally mutable runtime properties; the
+    // react-hooks/immutability rule false-positives on this three.js object mutation.
+    /* eslint-disable react-hooks/immutability */
     volume.windowLow = windowLow
     volume.windowHigh = windowHigh
     volume.lowerThreshold = Number.NEGATIVE_INFINITY
     volume.upperThreshold = Number.POSITIVE_INFINITY
+    /* eslint-enable react-hooks/immutability */
 
     if (!dimensions || dimensions.some((dim) => !dim || dim <= 0)) {
       console.warn('Invalid volume dimensions:', dimensions)
@@ -2224,13 +2661,12 @@ export function AnatomyViewer({
           delete slices[axis]
         }
       })
-      if (xrSessionRef.current) {
-        xrSessionRef.current.end().catch(() => {})
-        xrSessionRef.current = null
-      }
-      setXrSessionActive(false)
+      void xrStore
+        .getState()
+        .session?.end()
+        ?.catch(() => {})
     }
-  }, [])
+  }, [xrStore])
 
   const handleFullscreenToggle = () => {
     const element = containerRef.current
@@ -2266,8 +2702,8 @@ export function AnatomyViewer({
     if (!xrCapabilities.hasWebXR) {
       return 'Open in a WebXR headset browser to enter spatial view.'
     }
-    if (!xrCapabilities.immersiveAR && !xrCapabilities.immersiveVR) {
-      return 'WebXR is present, but no immersive headset session is available here.'
+    if (!xrCapabilities.immersiveVR) {
+      return 'WebXR is present, but no immersive VR session is available here.'
     }
     return null
   }, [xrCapabilities])
@@ -2328,19 +2764,10 @@ export function AnatomyViewer({
             {!xrSessionActive && xrCapabilities.immersiveVR ? (
               <button
                 type="button"
-                onClick={() => handleEnterXR('immersive-vr')}
+                onClick={handleEnterXR}
                 className="inline-flex min-h-9 items-center rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-300/25"
               >
                 Enter VR
-              </button>
-            ) : null}
-            {!xrSessionActive && xrCapabilities.immersiveAR ? (
-              <button
-                type="button"
-                onClick={() => handleEnterXR('immersive-ar')}
-                className="inline-flex min-h-9 items-center rounded-full border border-cyan-300/35 bg-cyan-300/15 px-3 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-300/25"
-              >
-                Enter AR
               </button>
             ) : null}
             {xrStatusMessage ? (
@@ -2408,98 +2835,116 @@ export function AnatomyViewer({
               })
             }}
           >
-            <color attach="background" args={['#0b172b']} />
-            <AdaptiveDpr pixelated />
-            <PerspectiveCamera makeDefault position={cameraPosition} fov={45} />
-            <ambientLight intensity={0.85} />
-            <hemisphereLight color="#f8fafc" groundColor="#111827" intensity={0.85} />
-            <directionalLight position={[6, 7, 6]} intensity={1.0} castShadow />
-            <directionalLight position={[-5, -3, -6]} intensity={0.5} />
-            <spotLight
-              position={[0, 9, 5]}
-              intensity={0.75}
-              angle={0.8}
-              penumbra={0.55}
-              castShadow
-            />
-            {showDebugHelpers ? <primitive object={axesHelper} /> : null}
-            {xrSessionActive && xrSessionMode === 'immersive-vr' ? (
-              <gridHelper args={[4, 8, '#38bdf8', '#1e293b']} position={[0, 0.02, -1.35]} />
-            ) : null}
-            {preparedScene ? (
-              <Suspense
-                fallback={
-                  <Html center className="text-xs text-slate-300">
-                    Preparing anatomy…
-                  </Html>
-                }
-              >
-                <group ref={spatialRootRef}>
-                  <primitive object={preparedScene.group} />
-                  <OrthogonalVolumePlanes
-                    ctAlignment={effectiveCtAlignment}
-                    opacity={ctPlaneOpacity}
-                    patientToModelMatrix={preparedScene.patientToModelMatrix}
-                    planeSlices={effectiveCtPlaneSlices}
-                    planeVisibility={ctPlaneVisibility}
-                    showPlanes={showCtPlanes}
-                    volumeCenterPatientMm={model.volume?.volumeCenterPatientMm}
-                    volumeState={volumeState}
-                    windowKey={`${appliedWindow.low}:${appliedWindow.high}`}
+            <XR store={xrStore}>
+              <color attach="background" args={['#0b172b']} />
+              <AdaptiveDpr pixelated />
+              <PerspectiveCamera makeDefault position={cameraPosition} fov={45} />
+              <ambientLight intensity={0.85} />
+              <hemisphereLight color="#f8fafc" groundColor="#111827" intensity={0.85} />
+              <directionalLight position={[6, 7, 6]} intensity={1.0} castShadow />
+              <directionalLight position={[-5, -3, -6]} intensity={0.5} />
+              <spotLight
+                position={[0, 9, 5]}
+                intensity={0.75}
+                angle={0.8}
+                penumbra={0.55}
+                castShadow
+              />
+              {showDebugHelpers ? <primitive object={axesHelper} /> : null}
+              {xrSessionActive ? (
+                <gridHelper args={[4, 8, '#38bdf8', '#1e293b']} position={[0, 0.02, -1.35]} />
+              ) : null}
+              {preparedScene ? (
+                <Suspense
+                  fallback={
+                    <Html center className="text-xs text-slate-300">
+                      Preparing anatomy…
+                    </Html>
+                  }
+                >
+                  <XRGrabbableModel
+                    enabled={xrSessionActive}
+                    targetRef={spatialRootRef}
+                    onSelectSegment={setSpatialSelection}
+                  >
+                    <primitive object={preparedScene.group} />
+                    <OrthogonalVolumePlanes
+                      ctAlignment={effectiveCtAlignment}
+                      opacity={ctPlaneOpacity}
+                      patientToModelMatrix={preparedScene.patientToModelMatrix}
+                      planeSlices={effectiveCtPlaneSlices}
+                      planeVisibility={ctPlaneVisibility}
+                      showPlanes={showCtPlanes}
+                      volumeCenterPatientMm={model.volume?.volumeCenterPatientMm}
+                      volumeState={volumeState}
+                      windowKey={`${appliedWindow.low}:${appliedWindow.high}`}
+                    />
+                  </XRGrabbableModel>
+                  <XRClippingController
+                    enabled={clippingEnabled}
+                    localPlane={localClipPlane}
+                    materials={clipMaterials}
+                    targetRef={spatialRootRef}
                   />
-                </group>
-                <XRSpatialControllers
-                  controlRootRef={xrControlPanelRef}
-                  enabled={xrSessionActive}
-                  targetRef={spatialRootRef}
-                  placement={spatialPlacement}
-                  onSelectSegment={setSpatialSelection}
-                />
-                {xrSessionActive ? (
-                  <XRControlPanel
-                    activeAxis={xrControlAxis}
-                    crossSection={crossSection}
-                    ctClipAxis={ctClipAxis}
-                    ctClipMode={ctClipMode}
-                    ctPlaneOpacity={ctPlaneOpacity}
-                    ctPlaneSlices={effectiveCtPlaneSlices}
-                    ctPlaneVisibility={ctPlaneVisibility}
-                    panelRef={xrControlPanelRef}
-                    showCtPlanes={showCtPlanes}
-                    visible
-                    volumeAvailable={volumeAvailable}
-                    onActiveAxisChange={handleXrSetControlAxis}
-                    onCycleClipMode={onCtClipModeChange ? handleXrCycleClipMode : undefined}
-                    onResetPlacement={spatialPlacement ? handleXrResetPlacement : undefined}
-                    onScaleTarget={handleXrScaleTarget}
-                    onStepCrossSection={onCrossSectionChange ? handleXrStepCrossSection : undefined}
-                    onStepCtPlaneOpacity={
-                      onCtPlaneOpacityChange ? handleXrStepCtPlaneOpacity : undefined
-                    }
-                    onStepCtPlaneSlice={
-                      onCtPlaneSliceChange || onVolumeSliceChange
-                        ? handleXrStepCtPlaneSlice
-                        : undefined
-                    }
-                    onToggleActivePlane={
-                      onCtPlaneVisibilityChange ? handleXrToggleActivePlane : undefined
-                    }
-                    onToggleCtPlanes={onShowCtPlanesChange ? handleXrToggleCtPlanes : undefined}
-                  />
-                ) : null}
-              </Suspense>
-            ) : null}
-            <OrbitControls
-              ref={controlsRef}
-              makeDefault
-              enabled={!xrSessionActive}
-              enablePan={!isMobile}
-              minDistance={minDistance}
-              maxDistance={maxDistance}
-              target={cameraTarget}
-              autoRotate={false}
-              enableDamping={false}
-            />
+                  {xrSessionActive ? (
+                    <XRControlPanel
+                      activeAxis={xrControlAxis}
+                      ctClipAxis={ctClipAxis}
+                      ctClipMode={ctClipMode}
+                      ctPlaneOpacity={ctPlaneOpacity}
+                      ctPlaneSlices={effectiveCtPlaneSlices}
+                      ctPlaneVisibility={ctPlaneVisibility}
+                      panelRef={xrControlPanelRef}
+                      showCtPlanes={showCtPlanes}
+                      visible
+                      volumeAvailable={volumeAvailable}
+                      onActiveAxisChange={handleXrSetControlAxis}
+                      onCycleClipMode={onCtClipModeChange ? handleXrCycleClipMode : undefined}
+                      onResetPlacement={spatialPlacement ? handleXrResetPlacement : undefined}
+                      onScaleTarget={handleXrScaleTarget}
+                      onRotateTarget={handleXrRotateTarget}
+                      onCtPlaneOpacityChange={onCtPlaneOpacityChange}
+                      onSliceChange={
+                        onCtPlaneSliceChange || onVolumeSliceChange
+                          ? handleCtPlaneSliceChange
+                          : undefined
+                      }
+                      onToggleActivePlane={
+                        onCtPlaneVisibilityChange ? handleXrToggleActivePlane : undefined
+                      }
+                      onToggleCtPlanes={onShowCtPlanesChange ? handleXrToggleCtPlanes : undefined}
+                      onToggleStructures={
+                        onToggleSegmentVisibility
+                          ? () => setShowStructuresPanel((open) => !open)
+                          : undefined
+                      }
+                      structuresOpen={showStructuresPanel}
+                    />
+                  ) : null}
+                  {xrSessionActive && showStructuresPanel && onToggleSegmentVisibility ? (
+                    <XRStructuresPanel
+                      visible
+                      segments={model.segments}
+                      visibleSegments={visibleSegments}
+                      onToggleSegment={onToggleSegmentVisibility}
+                      onSetGroupVisibility={onSetSegmentsVisibility ?? (() => undefined)}
+                      onClose={() => setShowStructuresPanel(false)}
+                    />
+                  ) : null}
+                </Suspense>
+              ) : null}
+              <OrbitControls
+                ref={controlsRef}
+                makeDefault
+                enabled={!xrSessionActive}
+                enablePan={!isMobile}
+                minDistance={minDistance}
+                maxDistance={maxDistance}
+                target={cameraTarget}
+                autoRotate={false}
+                enableDamping={false}
+              />
+            </XR>
           </Canvas>
 
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">

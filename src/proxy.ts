@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import {
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
+  isAdminEbusPreviewEmbed,
   isAuthPath,
   isCtAlignmentSandboxPath,
   isPublicPath,
@@ -31,7 +32,7 @@ export async function proxy(req: NextRequest) {
 
   if (
     pathname.startsWith('/api/') ||
-    isPublicPath(pathname) ||
+    (!isAdminEbusPreviewEmbed(pathname, req.nextUrl.searchParams) && isPublicPath(pathname)) ||
     isPublicTrainingEmbed(pathname, req.nextUrl.searchParams)
   ) {
     return res

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 
 type InternalFooterHref =
@@ -9,6 +10,7 @@ type InternalFooterHref =
   | '/bronch-navigation-trainer'
   | '/ebus-training'
   | '/fluoroview'
+  | '/intro-bronchoscopy'
   | '/learn/anatomy'
   | '/pleural-procedures'
   | '/resources'
@@ -61,6 +63,11 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
         route: '/bronch-navigation-trainer',
       },
       {
+        label: 'Intro Bronchoscopy',
+        href: '/intro-bronchoscopy',
+        route: '/intro-bronchoscopy',
+      },
+      {
         label: 'Pleural Procedures',
         href: '/pleural-procedures',
         route: '/pleural-procedures',
@@ -82,7 +89,9 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
   },
 ]
 
-export function Footer() {
+export async function Footer() {
+  const canViewDrafts = await canCurrentUserViewDraftModules()
+
   return (
     <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="container space-y-10 py-12">
@@ -108,7 +117,10 @@ export function Footer() {
                 <h3 className="text-sm font-semibold tracking-tight">{column.title}</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {column.links
-                    .filter((link) => link.external || isVisibleModulePath(link.href))
+                    .filter(
+                      (link) =>
+                        link.external || isVisibleModulePath(link.href, { isAdmin: canViewDrafts }),
+                    )
                     .map((link) => (
                       <li key={link.label}>
                         {link.external ? (

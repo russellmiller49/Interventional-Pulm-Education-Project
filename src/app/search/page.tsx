@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 import { getFeaturedSearchResults, searchSite } from '@/lib/site-search'
 
 export const metadata: Metadata = {
@@ -24,7 +25,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams
   const query = Array.isArray(params?.q) ? params?.q[0] : params?.q
   const normalizedQuery = query?.trim() ?? ''
-  const results = normalizedQuery ? searchSite(normalizedQuery) : getFeaturedSearchResults()
+  const canViewDrafts = await canCurrentUserViewDraftModules()
+  const searchOptions = { canViewDrafts }
+  const results = normalizedQuery
+    ? searchSite(normalizedQuery, 60, searchOptions)
+    : getFeaturedSearchResults(searchOptions)
 
   return (
     <div className="container space-y-8 py-12 md:py-16">

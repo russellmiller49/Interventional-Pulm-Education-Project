@@ -6,6 +6,7 @@ import { createBrotliCompress, createGzip, constants } from 'node:zlib'
 
 const root = process.cwd()
 const targets = [
+  'public/airway-anatomy',
   'public/bronch-navigation-trainer/app',
   'public/fluoroview',
   'public/models',

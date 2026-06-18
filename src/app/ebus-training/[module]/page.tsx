@@ -2,19 +2,24 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { EmbeddedTrainingModuleFrame } from '@/components/ebus-training/EmbeddedTrainingModuleFrame'
-import { getPublicEbusTrainingModule, publicEbusTrainingModules } from '@/data/ebus-training'
+import {
+  allEbusTrainingModules,
+  getAnyEbusTrainingModule,
+  getEbusTrainingModule,
+} from '@/data/ebus-training'
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 
 interface EbusTrainingModulePageProps {
   params: Promise<{ module: string }>
 }
 
 export function generateStaticParams() {
-  return publicEbusTrainingModules.map((module) => ({ module: module.slug }))
+  return allEbusTrainingModules.map((module) => ({ module: module.slug }))
 }
 
 export async function generateMetadata({ params }: EbusTrainingModulePageProps): Promise<Metadata> {
   const { module: moduleSlug } = await params
-  const trainingModule = getPublicEbusTrainingModule(moduleSlug)
+  const trainingModule = getAnyEbusTrainingModule(moduleSlug)
 
   if (!trainingModule) {
     return {
@@ -30,7 +35,8 @@ export async function generateMetadata({ params }: EbusTrainingModulePageProps):
 
 export default async function EbusTrainingModulePage({ params }: EbusTrainingModulePageProps) {
   const { module: moduleSlug } = await params
-  const trainingModule = getPublicEbusTrainingModule(moduleSlug)
+  const canViewAdminModules = await canCurrentUserViewDraftModules()
+  const trainingModule = getEbusTrainingModule(moduleSlug, { canViewAdminModules })
 
   if (!trainingModule) {
     notFound()

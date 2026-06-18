@@ -154,6 +154,9 @@ export interface AnatomySegment {
   visibleByDefault?: boolean
   assetUrl?: string
   materialUrl?: string
+  /** Optional grouping for the in-headset Structures menu (e.g. "Vessels", "Heart"). When absent,
+   *  a group is derived from the segment name. */
+  group?: string
 }
 
 export interface AnatomyModelAsset {

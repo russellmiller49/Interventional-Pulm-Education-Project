@@ -4,6 +4,7 @@ import type { Route } from 'next'
 import { Hero } from '@/components/home/hero'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 
 const featureHighlights = [
@@ -14,6 +15,14 @@ const featureHighlights = [
       'Open knobology, mediastinal station, and EBUS simulator modules without course-participant lockout.',
     href: '/ebus-training',
     cta: 'Open EBUS Training',
+  },
+  {
+    badge: 'Admin preview',
+    title: 'EBUS Simulator + Virtual Bronchoscopy',
+    description:
+      'Review the synchronized virtual bronchoscopy pane alongside the EBUS simulator before it is production-ready.',
+    href: '/ebus-training/virtual-bronchoscopy',
+    cta: 'Open Admin Preview',
   },
   {
     badge: 'Staging',
@@ -56,6 +65,14 @@ const featureHighlights = [
     cta: 'Start Navigation',
   },
   {
+    badge: 'Bronchoscopy',
+    title: 'Intro Bronchoscopy',
+    description:
+      'Foundational tools for scope sizing, airway reach concepts, and instrument compatibility.',
+    href: '/intro-bronchoscopy',
+    cta: 'Open Intro Module',
+  },
+  {
     badge: 'Pleural',
     title: 'Pleural Procedures',
     description:
@@ -73,9 +90,12 @@ const featureHighlights = [
   },
 ] as const
 
-const visibleFeatureHighlights = featureHighlights.filter((link) => isVisibleModulePath(link.href))
+export default async function HomePage() {
+  const canViewDrafts = await canCurrentUserViewDraftModules()
+  const visibleFeatureHighlights = featureHighlights.filter((link) =>
+    isVisibleModulePath(link.href, { isAdmin: canViewDrafts }),
+  )
 
-export default function HomePage() {
   return (
     <div className="space-y-20 py-12 md:py-16">
       <div className="container">

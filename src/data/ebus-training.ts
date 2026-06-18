@@ -7,6 +7,7 @@ export interface EmbeddedTrainingModule {
   appHashPath: string
   publicScope: 'ebus' | 'tnm'
   href: string
+  requiresAdmin?: boolean
   highlights: string[]
   keywords: string[]
 }
@@ -67,6 +68,29 @@ export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
   },
 ]
 
+export const adminEbusTrainingModules: EmbeddedTrainingModule[] = [
+  {
+    slug: 'virtual-bronchoscopy',
+    title: 'EBUS Simulator with Virtual Bronchoscopy',
+    shortTitle: 'Virtual Bronch',
+    kicker: 'Admin preview',
+    description:
+      'Review the simulator build that adds a synchronized first-person virtual bronchoscopy pane to the external anatomy and EBUS sector views.',
+    appHashPath: '/simulator',
+    publicScope: 'ebus',
+    href: '/ebus-training/virtual-bronchoscopy',
+    requiresAdmin: true,
+    highlights: [
+      'Keeps the public simulator pathway separate from the virtual-bronchoscopy preview.',
+      'Synchronizes the endoluminal camera with the same scope pose used by the anatomy and sector panes.',
+      'Available only to active site administrators while the feature remains under review.',
+    ],
+    keywords: ['ebus', 'simulator', 'virtual bronchoscopy', 'admin', 'airway', 'endoluminal'],
+  },
+]
+
+export const allEbusTrainingModules = [...publicEbusTrainingModules, ...adminEbusTrainingModules]
+
 export const tnm9TrainingModule: EmbeddedTrainingModule = {
   slug: 'tnm-9-staging',
   title: 'TNM-9 Staging',
@@ -86,9 +110,34 @@ export const tnm9TrainingModule: EmbeddedTrainingModule = {
 }
 
 export function getEmbeddedCourseModuleSrc(module: EmbeddedTrainingModule) {
+  if (module.requiresAdmin) {
+    return `${embeddedCourseAppPath}?adminPreview=1#${module.appHashPath}`
+  }
+
   return `${embeddedCourseAppPath}?publicTraining=1&publicScope=${module.publicScope}#${module.appHashPath}`
 }
 
 export function getPublicEbusTrainingModule(slug: string) {
   return publicEbusTrainingModules.find((module) => module.slug === slug)
+}
+
+export function getAnyEbusTrainingModule(slug: string) {
+  return allEbusTrainingModules.find((module) => module.slug === slug)
+}
+
+export function getEbusTrainingModule(
+  slug: string,
+  options: { canViewAdminModules?: boolean } = {},
+) {
+  const publicModule = getPublicEbusTrainingModule(slug)
+
+  if (publicModule) {
+    return publicModule
+  }
+
+  if (!options.canViewAdminModules) {
+    return undefined
+  }
+
+  return adminEbusTrainingModules.find((module) => module.slug === slug)
 }

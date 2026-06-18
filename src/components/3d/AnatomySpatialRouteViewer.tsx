@@ -258,6 +258,18 @@ export function AnatomySpatialRouteViewer({ model }: { model: AnatomyModel }) {
         onCtClipModeChange={setCtClipMode}
         onCtClipAxisChange={setCtClipAxis}
         onVolumeSliceChange={setVolumeSlice}
+        onToggleSegmentVisibility={(id) =>
+          setVisibleSegments((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }))
+        }
+        onSetSegmentsVisibility={(ids, visible) =>
+          setVisibleSegments((prev) => {
+            const next = { ...prev }
+            ids.forEach((id) => {
+              next[id] = visible
+            })
+            return next
+          })
+        }
         onSegmentsChanged={(segments) => {
           setDisplaySegments((prev) => {
             const sameLength = prev.length === segments.length

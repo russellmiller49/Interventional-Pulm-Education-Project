@@ -1,0 +1,66 @@
+{
+  "campaign": "VR anatomy LinkedIn signup ad",
+  "source_video": "/Users/russellmiller/Movies/3D_Anatomy_1.mp4",
+  "dimensions": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  },
+  "constant_polish": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/constant_polish.png",
+  "overlays": [
+    {
+      "name": "01_hook",
+      "start": 0.35,
+      "end": 4.55,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/01_hook.png"
+    },
+    {
+      "name": "02_browser",
+      "start": 4.55,
+      "end": 10.95,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/02_browser.png"
+    },
+    {
+      "name": "03_step_inside",
+      "start": 10.95,
+      "end": 14.35,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/03_step_inside.png"
+    },
+    {
+      "name": "04_headsets",
+      "start": 14.35,
+      "end": 23.8,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/04_headsets.png"
+    },
+    {
+      "name": "05_spatial",
+      "start": 23.8,
+      "end": 31.1,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/05_spatial.png"
+    },
+    {
+      "name": "06_stent",
+      "start": 31.1,
+      "end": 41.0,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/06_stent.png"
+    },
+    {
+      "name": "07_cta",
+      "start": 41.0,
+      "end": 50.5,
+      "path": "/Users/russellmiller/Projects/Interventional-Pulm-Education-Project/outputs/creative-production/vr-anatomy-linkedin-ad/overlays/07_cta.png"
+    }
+  ],
+  "copy": [
+    "Put thoracic anatomy in the room",
+    "Free interactive 3D anatomy",
+    "Start in the browser",
+    "Then step inside it",
+    "Works with VR headsets",
+    "Walk around the relationships",
+    "All models are available in 3D",
+    "Free 3D anatomy training",
+    "Sign up free at interventionalpulm.com"
+  ],
+  "provenance": "User-provided video with deterministic text, bars, and polish overlays. No generated claims or third-party media."
+}

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Gauge, Map, Radar } from 'lucide-react'
+import { Gauge, Map, Radar, ScanEye } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { publicEbusTrainingModules } from '@/data/ebus-training'
+import { adminEbusTrainingModules, publicEbusTrainingModules } from '@/data/ebus-training'
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 
 export const metadata: Metadata = {
   title: 'EBUS Training',
@@ -16,9 +17,15 @@ const moduleIcons = {
   knobology: Gauge,
   stations: Map,
   simulator: Radar,
+  'virtual-bronchoscopy': ScanEye,
 } as const
 
-export default function EbusTrainingPage() {
+export default async function EbusTrainingPage() {
+  const canViewAdminModules = await canCurrentUserViewDraftModules()
+  const modules = canViewAdminModules
+    ? [...publicEbusTrainingModules, ...adminEbusTrainingModules]
+    : publicEbusTrainingModules
+
   return (
     <div className="space-y-14 py-16">
       <section className="container space-y-6">
@@ -39,7 +46,7 @@ export default function EbusTrainingPage() {
       </section>
 
       <section className="container grid gap-4 md:grid-cols-3">
-        {publicEbusTrainingModules.map((module) => {
+        {modules.map((module) => {
           const Icon = moduleIcons[module.slug as keyof typeof moduleIcons]
 
           return (
