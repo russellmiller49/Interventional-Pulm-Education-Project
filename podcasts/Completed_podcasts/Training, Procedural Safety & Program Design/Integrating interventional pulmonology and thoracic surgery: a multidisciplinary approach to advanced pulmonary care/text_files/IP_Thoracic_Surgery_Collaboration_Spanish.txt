@@ -1,0 +1,92 @@
+Narrador:
+Bienvenidos a Interventional Pulm punto com IP Journal Review. En este episodio revisamos el artículo de Swenson y colaboradores, publicado en el Journal of Thoracic Disease en dos mil veintiséis, titulado “Integrating interventional pulmonology and thoracic surgery: a multidisciplinary approach to advanced pulmonary care”.
+
+Invitado:
+Este no es un ensayo aleatorizado ni un estudio de precisión diagnóstica. Es una revisión descriptiva y un modelo institucional, y eso cambia la forma en que debemos leerlo. El valor no está en un desenlace primario ni en una razón de riesgos. El valor está en cómo los autores enmarcan la superposición operativa entre la neumología intervencionista y la cirugía torácica en varios estados de enfermedad de alta complejidad.
+
+Narrador:
+Exactamente. El argumento central es que la neumología intervencionista y la cirugía torácica atienden cada vez más a los mismos pacientes, a menudo en diferentes momentos de la misma vía diagnóstica y terapéutica. Los autores describen un modelo unificado de neumología intervencionista y cirugía torácica, construido alrededor de vías compartidas de derivación, clínicas conjuntas, conferencias multidisciplinarias y revisión temprana por ambas especialidades.
+
+Invitado:
+Y eso importa porque muchos de estos pacientes no encajan de manera limpia en el carril de una sola especialidad. El colapso excesivo de la vía aérea central, o E C A C; el enfisema que requiere reducción de volumen pulmonar; el cáncer pulmonar temprano con nódulos periféricos; la infección pleural complicada; y la fuga aérea persistente, todos implican decisiones en las que el momento, la escalada terapéutica y la selección de pacientes lo son todo.
+
+Narrador:
+Comencemos con el E C A C. Los autores presentan el E C A C como una enfermedad clásicamente multidisciplinaria, porque los síntomas se superponen con E P O C, asma, reflujo gastroesofágico e infección recurrente. El diagnóstico requiere más que una impresión de consulta. Describen T C dinámica con secuencias inspiratorias y espiratorias, seguida de broncoscopia dinámica despierta con sedación consciente. En este artículo, el E C A C severo se define como más del noventa por ciento de colapso en el área transversal de la vía aérea.
+
+Invitado:
+El punto clave del flujo de trabajo es la prueba con estent. En su modelo, la neumología intervencionista realiza una prueba temporal de dos semanas con estent de vía aérea en casos de E C A C severo, para ayudar a predecir quién probablemente se beneficiará de una traqueobroncoplastia. Informan que hasta el setenta y cinco por ciento de los pacientes sometidos a una prueba con estent describen una mejoría sintomática significativa, y que el ochenta por ciento de los respondedores positivos luego reportan mejoría en calidad de vida después de la traqueobroncoplastia.
+
+Narrador:
+Eso es clínicamente convincente, pero también es el punto en el que debemos ser cuidadosos. Estos no son datos aleatorizados que demuestren que una prueba con estent mejora desenlaces duros. Una prueba con estent puede ayudar a seleccionar pacientes, pero también introduce sus propios problemas: obstrucción por moco, tos, tejido de granulación, migración, y el hecho de que un estent temporal de vía aérea es una simulación imperfecta de la estabilización quirúrgica de la membrana posterior.
+
+Invitado:
+Exacto. Aun así, la vía propuesta tiene sentido. La figura de la página cuatro lo presenta visualmente: la sospecha de E C A C pasa por evaluación de neumología intervencionista con participación temprana de cirugía torácica; los casos severos se someten a prueba con estent; los respondedores positivos pasan a evaluación conjunta de neumología intervencionista y cirugía torácica; los candidatos quirúrgicos avanzan a traqueobroncoplastia; y los pacientes con prueba negativa o no quirúrgicos se orientan hacia manejo médico, tratamiento del reflujo gastroesofágico o evaluación por laringología.
+
+Narrador:
+La sección de enfisema es otro ejemplo útil, porque la reducción broncoscópica de volumen pulmonar y la reducción quirúrgica de volumen pulmonar a menudo se discuten como enfoques competitivos, pero los autores las presentan como opciones complementarias dentro de una sola vía.
+
+Invitado:
+Revisan la tensión conocida. El ensayo N E T T mostró mayor mortalidad a noventa días con la reducción quirúrgica de volumen pulmonar en comparación con el tratamiento médico: siete punto nueve por ciento frente a uno punto tres por ciento. Pero centros de alto volumen han reportado menor mortalidad y beneficio funcional duradero en pacientes cuidadosamente seleccionados. Del lado broncoscópico, las válvulas endobronquiales son menos invasivas y reversibles, y el artículo señala que G O L D incluye las válvulas endobronquiales como una opción terapéutica con nivel de evidencia A para enfisema severo con hiperinsuflación.
+
+Narrador:
+La limitación, por supuesto, es la ventilación colateral. Los autores afirman que solo alrededor del sesenta y cinco por ciento de los pacientes que, por lo demás, serían elegibles, pueden someterse a reducción broncoscópica de volumen pulmonar con válvulas endobronquiales debido a la ventilación colateral. Ahí es precisamente donde la interfaz entre neumología intervencionista y cirugía se vuelve interesante.
+
+Invitado:
+Correcto. Su vía pregunta: ¿la cisura está completa? Si la respuesta es sí, se consideran las válvulas endobronquiales. Si el paciente responde, neumología intervencionista continúa el seguimiento. Si no responde, neumología intervencionista y cirugía torácica reevalúan en conjunto. Si la cisura está incompleta, los autores describen una estrategia combinada de completar la cisura por toracoscopia, seguida de colocación de válvulas endobronquiales. Y si el paciente es un candidato quirúrgico óptimo, la reducción quirúrgica de volumen pulmonar sigue siendo una opción.
+
+Narrador:
+La figura de la página cinco resume esto muy bien. No es un modelo de “broncoscopia primero y cirugía después si todo falla”. Es un modelo de evaluación paralela. El ángulo de investigación interesante es que los autores mencionan ensayos activos, incluidos COMPLETE uno, que compara el manejo médico con completar la cisura por toracoscopia seguido de colocación de válvulas endobronquiales, y SAVED uno, que evalúa completar la cisura con adhesiolisis en pacientes en quienes falló la reducción broncoscópica de volumen pulmonar.
+
+Invitado:
+Ese es un punto importante. Una clínica multidisciplinaria puede convertirse en más que una comodidad de agenda. Puede convertirse en la infraestructura para investigación procedimental pragmática. Pero la pregunta del abogado del diablo es si esto es factible de manera amplia. Completar una cisura por toracoscopia más la colocación de válvulas endobronquiales no es una intervención menor. Requiere compromiso quirúrgico, experiencia en neumología intervencionista, flujos de trabajo con T C cuantitativa, Chartis o una evaluación equivalente de ventilación colateral, coordinación anestésica y un centro dispuesto a manejar neumotórax y uso de recursos después del procedimiento.
+
+Narrador:
+Pasemos al cáncer de pulmón, donde el artículo probablemente se siente más inmediatamente relevante para muchos grupos de neumología intervencionista. Los autores revisan el papel ya conocido de E B U S para estadificación mediastínica y obtención de tejido para pruebas moleculares, broncoscopia navegacional para nódulos periféricos, colocación de marcadores fiduciales para S B R T, y broncoscopia robótica para biopsia o marcaje de lesiones difíciles de acceder con broncoscopia convencional.
+
+Invitado:
+La parte más provocadora es el concepto de un mismo evento anestésico. Los autores citan un estudio retrospectivo de casos y controles en cáncer de pulmón de células no pequeñas en etapa temprana, donde la combinación de broncoscopia asistida por robot y lobectomía quirúrgica redujo el tiempo hasta la intervención en un promedio de treinta y seis días y disminuyó las complicaciones en comparación con la biopsia convencional: cero por ciento frente a diez por ciento.
+
+Narrador:
+También describen más de quince casos en su centro usando marcaje de lesión y resección quirúrgica en un solo procedimiento combinado, especialmente para nódulos pequeños, de menos de un centímetro, profundos, subsólidos o en vidrio esmerilado, que podrían no verse ni palparse durante la cirugía.
+
+Invitado:
+Ese flujo de trabajo es atractivo porque la vía habitual puede ser dolorosamente lenta: detección en T C, derivación, visita en clínica, biopsia, patología, comité de tumores, consulta quirúrgica y luego resección. Diagnosticar y resecar el mismo día, o marcar y resecar el mismo día, comprime esa línea de tiempo. Pero comprimir no es automáticamente mejor para todos los pacientes. Las preguntas clave son: ¿qué tan alta es la probabilidad pretest? ¿Cuál es el plan si la evaluación rápida en el sitio, o R O S E, no es diagnóstica? ¿Hay suficiente tejido para pruebas moleculares si la vía final cambia? ¿Y cómo evitamos llevar enfermedad benigna a resección solo porque la logística resulta seductora?
+
+Narrador:
+La figura de la página siete muestra bien el contraste. La atención tradicional lleva al paciente por biopsia escalonada y conferencia multidisciplinaria antes de la resección. La vía optimizada incluye marcaje y resección, o diagnóstico y resección, bajo un solo evento anestésico, si se confirma malignidad. Para el paciente correcto, eso es elegante. Para el paciente equivocado, podría ser demasiado agresivo.
+
+Invitado:
+Ese es el tema central del artículo: la integración debe mejorar la selección, no saltarse el juicio clínico.
+
+Narrador:
+La sección pleural lleva la misma idea al cuidado hospitalario. Para infección pleural complicada, los autores destacan la incertidumbre persistente entre decorticación quirúrgica y terapia fibrinolítica intrapleural con t P A y D Nasa.
+
+Invitado:
+Señalan que las infecciones pleurales complicadas afectan aproximadamente a ochenta mil pacientes por año en Estados Unidos y el Reino Unido, y citan una mortalidad alta en pacientes de U C I. También enfatizan que la evidencia comparativa directa sigue siendo limitada. Un ensayo prospectivo de veintiséis pacientes que comparó t P A más D Nasa con decorticación quirúrgica encontró tasas de complicaciones comparables, duración similar del tubo torácico, cinco días frente a cuatro días, y una estancia hospitalaria mediana más larga en el grupo de fibrinolíticos, once frente a cinco días, aunque esa diferencia no fue estadísticamente significativa.
+
+Narrador:
+Su vía institucional es directa: neumología intervencionista y cirugía torácica evalúan temprano durante la hospitalización. Los candidatos quirúrgicos avanzan hacia intervención definitiva temprana. Los pacientes con riesgo operatorio prohibitivo reciben terapia fibrinolítica intrapleural bajo supervisión quirúrgica estrecha, con escalada rápida si no hay mejoría clínica.
+
+Invitado:
+Eso puede sonar obvio, pero no siempre es así como se desarrolla la infección pleural. En muchos hospitales, estos pacientes rebotan entre antibióticos, imágenes repetidas, drenajes adicionales, fibrinolíticos tardíos y consulta quirúrgica diferida. Los autores argumentan a favor de la planificación paralela en lugar de la decepción seriada; una frase que probablemente no debería aparecer en una guía, pero que desafortunadamente describe gran parte de la atención de la infección pleural.
+
+Narrador:
+La fuga aérea persistente es similar. Aquí, la fuga aérea persistente se define como un neumotórax no resuelto con fuga de aire que dura más de cinco a siete días. La cirugía sigue siendo el estándar de oro, pero muchos pacientes son malos candidatos. Los autores describen opciones broncoscópicas como despliegue de válvulas endobronquiales, sellantes, infusión de parche hemático autólogo y parche hemático pleural, coordinadas con cirugía torácica en torno al momento y la escalada terapéutica.
+
+Invitado:
+La crítica más amplia es que esta revisión es un modelo institucional, no una prueba de que el modelo mejore mortalidad, estancia hospitalaria, tasas de complicaciones, costo o desenlaces reportados por el paciente. Es altamente plausible, pero no definitivo. Una división unificada, oficinas cercanas, conferencias frecuentes y ensayos procedimentales integrados son más fáciles de describir que de reproducir. Los centros más pequeños pueden no tener el mismo personal, volumen procedimental o estructura administrativa.
+
+Narrador:
+Entonces, el mensaje práctico no es que cada centro deba duplicar esta arquitectura exacta. Es que los programas de neumología intervencionista deberían mapear dónde ocurren las demoras y las fallas de traspaso. ¿Existe una vía única de derivación para enfermedad compleja de la vía aérea? ¿Participa cirugía torácica antes del tercer tubo torácico fallido en infección pleural? ¿Los pacientes de reducción broncoscópica de volumen pulmonar se revisan considerando opciones quirúrgicas antes de etiquetarlos como no elegibles? ¿Los nódulos periféricos se trían con un plan para biopsia, marcaje, estadificación y posible resección desde el comienzo?
+
+Invitado:
+Y para los centros que están construyendo estos programas, los desenlaces medibles importan. Tiempo desde la derivación hasta la intervención definitiva. Tasa de procedimientos duplicados. Tasas de biopsia no diagnóstica. Tiempo hasta terapia oncológica. Estancia hospitalaria por infección pleural complicada y fuga aérea persistente. Tasas de complicaciones. Disnea y calidad de vida reportadas por el paciente. Esas métricas moverían esto desde un modelo reflexivo hacia evidencia de un modelo de prestación de atención.
+
+Narrador:
+Al final, Swenson y colaboradores nos ofrecen un marco conceptual útil. La revisión es más fuerte cuando muestra cómo neumología intervencionista y cirugía torácica pueden funcionar como socios procedimentales paralelos, en lugar de consultores secuenciales. Es más débil, inevitablemente, donde depende de experiencia institucional y extrapolación en lugar de desenlaces comparativos.
+
+Invitado:
+Esa es una síntesis justa. Este artículo no debe leerse como un mandato para reestructurar todos los programas. Debe leerse como una invitación a preguntar si los flujos de trabajo actuales coinciden con la complejidad de las enfermedades tratadas. Para E C A C, enfisema, cáncer pulmonar temprano, infección pleural complicada y fuga aérea persistente, el paciente a menudo necesita tanto experiencia mínimamente invasiva como juicio quirúrgico temprano, no después de que la vía ya se haya estancado.
+
+Narrador:
+Con eso cerramos este episodio de Interventional Pulm punto com IP Journal Review. El mensaje principal es este: la integración no se trata solo de colegialidad. Se trata de selección de pacientes, vías de escalada, tiempo oportuno y preservación de opciones a través de todo el espectro procedimental. Gracias por escuchar.

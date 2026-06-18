@@ -1,0 +1,110 @@
+VERSIÓN EN ESPAÑOL LISTA PARA TTS
+
+Narrador:
+Bienvenidos a InterventionalPulm punto com, Revisión de la Revista de Neumología Intervencionista. En este espacio tomamos un solo artículo relevante para la neumología intervencionista y analizamos qué aporta realmente, dónde los datos son sólidos y dónde todavía persiste la incertidumbre.
+
+Hoy hablaremos del estudio de Karcıoğlu y colegas, publicado en Respirology en 2025, titulado “Stents biodegradables: una nueva opción para la estenosis benigna de la vía aérea central”. Se trata de una experiencia retrospectiva de un centro terciario de neumología intervencionista que evaluó stents biodegradables de vía aérea en pacientes con estenosis benigna de la vía aérea central.
+
+Invitado:
+Y este es un tema muy apropiado para neumología intervencionista porque la estenosis benigna de la vía aérea central es precisamente una situación en la que los stents pueden ser útiles, pero también frustrantes. Estos pacientes pueden estar muy sintomáticos, muchos no son candidatos quirúrgicos, y los stents convencionales tienen desventajas reales. Los stents de silicona se pueden retirar, pero pueden migrar, obstruirse con moco y generar tejido de granulación. Los stents metálicos generalmente se evitan en enfermedad benigna porque su extracción puede ser difícil y las complicaciones pueden ser importantes.
+
+Narrador:
+Exactamente. Por lo tanto, la pregunta clínica aquí no es: “¿Son los stents biodegradables mejores que los stents de silicona o metálicos en un ensayo aleatorizado?” Este artículo no responde esa pregunta. La pregunta más realista es la siguiente: en una población compleja con estenosis benigna, muchas veces después de stents previos o de manejo broncoscópico fallido, ¿se pueden colocar stents biodegradables de manera segura, y qué complicaciones aparecen con el tiempo?
+
+Invitado:
+Exacto. Los autores revisaron pacientes sometidos a broncoscopia por estenosis benigna de la vía aérea entre enero de 2015 y febrero de 2023 en Ruhrlandklinik. Comenzaron con una gran base de procedimientos: 892 broncoscopias por estenosis de la vía aérea central en 387 pacientes. Después de excluir reportes repetidos y pacientes tratados solo con intervenciones mecánicas o con stents convencionales de silicona o metálicos, identificaron 18 pacientes que recibieron al menos un stent biodegradable.
+
+Narrador:
+Así que es una cohorte pequeña, pero con mucha densidad procedimental. En esos 18 pacientes, se implantaron 136 stents biodegradables en 22 localizaciones de la vía aérea. La mediana de edad fue de 56 años, con 10 pacientes masculinos y 8 pacientes femeninos. Las etiologías fueron heterogéneas, y eso importa. Las indicaciones más frecuentes fueron traqueomalacia en cinco pacientes, es decir, 27 punto 7 por ciento, y policondritis recidivante en cuatro pacientes, es decir, 22 punto 2 por ciento. Otras causas incluyeron estenosis relacionada con traqueostomía, intubación prolongada, granulomatosis con poliangitis, estrechamiento posterior a trasplante, cicatrización por stents previos y un caso relacionado con cuerpo extraño.
+
+Invitado:
+Y esa heterogeneidad tiene dos caras. Hace que la cohorte sea clínicamente real, porque la estenosis benigna de la vía aérea no es una sola enfermedad. Pero también hace que la interpretación sea más difícil. La traqueomalacia, la condritis inflamatoria, la enfermedad anastomótica postrasplante y el estrechamiento de la vía aérea relacionado con granulomatosis con poliangitis no se comportan de la misma manera desde el punto de vista biológico. Sus probabilidades de reestenosis, granulación, cicatrización y respuesta a la estabilización mecánica pueden ser muy diferentes.
+
+Narrador:
+Esa es una limitación importante. Antes de entrar en los resultados, hablemos del concepto del dispositivo. Estos stents biodegradables son autoexpandibles, están hechos de polidioxanona y están diseñados para degradarse en aproximadamente 3 a 4 meses. El atractivo es que pueden proporcionar un andamiaje temporal sin comprometer al paciente a material extraño a largo plazo ni a un procedimiento difícil de extracción.
+
+Invitado:
+Y, a diferencia de un stent de silicona, que queda en la vía aérea como un tubo removible, estos stents son descubiertos, más blandos y con menor fuerza radial. Los autores enfatizan la personalización, algo especialmente relevante en estenosis bronquiales o en estrechamientos benignos irregulares. En teoría, una menor fuerza radial debería significar menos presión sobre la mucosa y menos granulación, aunque los datos clínicos reales sobre granulación son más complejos.
+
+Narrador:
+Desde el punto de vista del procedimiento, todos los casos se realizaron bajo anestesia general con broncoscopio rígido. Los stents se colocaron usando un catéter de liberación dedicado, y la posición se verificó con un videobroncoscopio estándar. No usaron fluoroscopia. Los broncoscopistas eran experimentados, definidos como operadores con más de 300 intervenciones.
+
+Invitado:
+Ese detalle es fácil de pasar por alto, pero es central para la generalización. Esto no es una intervención ambulatoria con broncoscopia flexible que se pueda implementar de forma automática. Fueron casos con broncoscopia rígida en un centro terciario con mucha experiencia. Por lo tanto, cuando el artículo reporta éxito técnico y bajas tasas de complicaciones inmediatas, eso refleja en parte al dispositivo y en parte la experiencia del centro.
+
+Narrador:
+Pasemos a los resultados. La colocación fue técnicamente exitosa en todos los casos, y no hubo complicaciones procedimentales inmediatas. La distribución de los stents fue bastante equilibrada: 10 de 22 localizaciones, o 45 punto 4 por ciento, fueron traqueales, y 12 de 22, o 54 punto 5 por ciento, fueron bronquiales. De los stents bronquiales, la mayoría se ubicaron en el bronquio principal izquierdo, con números menores en el bronquio intermediario y en el bronquio del lóbulo superior izquierdo.
+
+Invitado:
+Ese uso bronquial es uno de los aspectos más interesantes. En muchas conversaciones sobre stents de vía aérea, la tráquea domina la discusión. Pero este artículo muestra uso frecuente en estenosis del bronquio principal y de bronquios más distales. Las figuras de las páginas 4 y 5 son útiles aquí: muestran una estenosis del bronquio intermediario después de un trasplante, la inserción cuidadosa del balón, la dilatación con balón, la vía aérea después de la dilatación y luego el stent biodegradable en su posición. Esa secuencia captura el flujo práctico de trabajo: primero recanalizar o dilatar la estenosis, y luego colocar el andamiaje.
+
+Narrador:
+La mediana de duración del uso de stents biodegradables fue de 10 punto 6 meses, con un rango muy amplio de 0 punto 1 a 72 meses. La mediana de stents por paciente fue de 3 punto 5, pero nuevamente el rango fue amplio: de 1 a 36 stents.
+
+Invitado:
+Eso es clave. Aunque cada stent es temporal, la estrategia de tratamiento puede no ser temporal. En algunos pacientes, esto se convierte en colocación seriada de stents biodegradables. Eso puede ser apropiado si la cirugía no es factible y los stents de silicona o metálicos son mal tolerados, pero también implica anestesias repetidas, broncoscopias repetidas y oportunidades repetidas para granulación, migración, retención de secreciones y acumulación de costos.
+
+Narrador:
+Se reportaron complicaciones tempranas en cuatro intervenciones, que afectaron a tres pacientes. Estas incluyeron dos desplazamientos que requirieron fijación, uno con clips y otro suturado a otro stent; un caso de retención de secreciones que requirió broncoscopia adicional; y un caso de granulación moderada que requirió crioterapia y recanalización.
+
+Invitado:
+Y es importante destacar que no reportaron muertes, necesidad de ventilación o cuidado en UCI, extracción prematura del stent en el período temprano, ni necesidad de convertir a un stent no biodegradable. Eso es tranquilizador, pero debemos mantener claro el denominador. Esta es una cohorte retrospectiva pequeña, y no se esperaría detectar de manera confiable eventos catastróficos raros en solo 18 pacientes.
+
+Narrador:
+El tejido de granulación es el tema recurrente. En el período subagudo, cuatro pacientes, o 23 punto 5 por ciento, desarrollaron formación de granulación, y un paciente requirió extracción del stent. En forma crónica, la formación de granulación ocurrió en cinco pacientes, o 29 punto 4 por ciento, en siete localizaciones, o 33 punto 3 por ciento.
+
+Invitado:
+También vale la pena mencionar el desglose de severidad de la granulación. Entre los eventos de granulación reportados, ocho casos, o 69 punto 2 por ciento, fueron leves, mientras que cuatro casos, o 30 punto 8 por ciento, fueron moderados y requirieron crioterapia. No se observaron casos de granulación severa. Eso suena favorable, pero aun así significa que la biodegradabilidad no resuelve el problema de la granulación. Sigue siendo uno de los principales problemas de manejo.
+
+Narrador:
+Y eso plantea la pregunta del abogado del diablo: ¿los stents biodegradables realmente reducen la granulación en comparación con los stents de silicona o metálicos, o simplemente cambian el tipo y el momento de la carga de seguimiento?
+
+Invitado:
+Ahí es exactamente donde haría falta un comparador. Los autores discuten literatura previa que sugiere que la migración es una limitación importante de los stents de silicona y metálicos, y que los stents biodegradables podrían adaptarse mejor a la anatomía de la vía aérea debido a su estructura descubierta. Pero dentro de este estudio no hay un grupo pareado con stent de silicona, no hay una comparación estandarizada de síntomas, no hay un desenlace espirométrico y no hay un protocolo prospectivo de tiempos de broncoscopia para todos los pacientes.
+
+Narrador:
+Otro punto es el stent previo. Trece de las 22 localizaciones tratadas con stent tenían uso previo de stents no biodegradables: 10 de silicona y 3 metálicos. Esto es clínicamente importante porque los stents previos pueden producir cicatrización, lesión mucosa y granulación, lo que puede influir en los resultados después del stent biodegradable.
+
+Invitado:
+Los autores sí abordan ese punto y señalan que la granulación ocurrió en pacientes con stents previos y sin stents previos, sin una diferencia significativa. Pero con este tamaño de muestra, es difícil excluir diferencias clínicamente relevantes. Además, “sin diferencia significativa” en una cohorte retrospectiva pequeña no debe interpretarse como equivalencia.
+
+Narrador:
+De acuerdo. La afirmación más fuerte del artículo es seguridad y factibilidad en manos expertas. La afirmación más débil sería superioridad frente a los stents convencionales. Los datos no están diseñados para demostrar eso.
+
+Invitado:
+Para la traducción clínica, el fenotipo del paciente parece importante. Probablemente esto sea más relevante para pacientes con estenosis benigna que son malos candidatos quirúrgicos, que han fallado o tolerado mal los stents de silicona, que no deberían recibir stents metálicos o que tienen estenosis anatómicamente complejas en las que la personalización es útil. Las estenosis bronquiales, especialmente las postrasplante o de bronquio principal, pueden ser un nicho particularmente interesante.
+
+Narrador:
+Pero las implicaciones del flujo de trabajo son sustanciales. Estos pacientes necesitan capacidad para broncoscopia rígida, anestesia general, medición cuidadosa de la vía aérea, acceso a stents personalizados y un sistema de seguimiento preparado para broncoscopias repetidas. El perfil de degradación del stent significa que los clínicos deben anticipar cuándo desaparecerá el soporte radial y decidir si reimplantar un stent, observar, dilatar o cambiar a otra estrategia.
+
+Invitado:
+Y la biología de la enfermedad sigue siendo importante. En granulomatosis con poliangitis, policondritis recidivante y estenosis postrasplante, el problema de la vía aérea no es solo mecánico. La actividad inmunológica, la isquemia, la infección y la cicatrización influyen en la reestenosis. Un stent puede sostener la luz, pero no trata el impulsor inflamatorio subyacente.
+
+Narrador:
+Los autores hacen un punto similar respecto de los pacientes con granulomatosis con poliangitis y estrechamiento postrasplante: el estrechamiento severo de la vía aérea puede reflejar actividad de la enfermedad subyacente y cicatrización, más que el stent en sí. Es un recordatorio útil. La mecánica broncoscópica y el control médico de la enfermedad no se sustituyen entre sí.
+
+Invitado:
+Desde el punto de vista metodológico, las limitaciones son directas pero importantes: diseño retrospectivo, un solo centro, muestra muy pequeña, etiologías heterogéneas, ausencia de grupo control, posibles lagunas en la historia de tratamientos previos de pacientes referidos, y desenlaces principalmente procedimentales más que centrados en el paciente. No obtenemos una respuesta clara sobre puntajes de disnea, calidad de vida, reducción de hospitalizaciones, reducción de infecciones, función pulmonar o durabilidad después de detener la colocación seriada de stents.
+
+Narrador:
+Otra limitación sutil es cómo se definió la duración del stent. Como el dispositivo se degrada en aproximadamente 3 meses, los autores usaron supuestos sobre la vida útil del stent cuando no había extracción o reemplazo exacto. Eso es razonable para un análisis retrospectivo, pero introduce cierta incertidumbre en la duración reportada de uso.
+
+Invitado:
+Aun así, estos son datos procedimentales valiosos del mundo real. No hay muchas series en adultos sobre stents biodegradables para vía aérea benigna, especialmente con este grado de implantación repetida y uso bronquial. El estudio sugiere que, en un entorno de alta experiencia, los stents biodegradables pueden desplegarse exitosamente, pueden repetirse con el tiempo y pueden evitar algunos de los problemas principales asociados con dispositivos permanentes o difíciles de retirar.
+
+Narrador:
+Entonces, la conclusión práctica para una audiencia de neumología intervencionista no es: “los stents biodegradables reemplazan a los stents de silicona”. Es más matizada: los stents biodegradables pueden ser una herramienta razonable en pacientes seleccionados con estenosis benigna de la vía aérea central, especialmente cuando el objetivo es un andamiaje temporal o seriado sin material de stent permanente a largo plazo.
+
+Invitado:
+Y las preguntas sin respuesta son exactamente las que guiarían una adopción más amplia. ¿Qué etiologías se benefician más? ¿Cuál es la estrategia óptima para seleccionar el diámetro? ¿Cómo debería programarse la broncoscopia de vigilancia? ¿Cuál es el costo comparado con stents de silicona y con dilatación repetida sola? Y, lo más importante, ¿los pacientes realmente experimentan mejores síntomas, menos intervenciones o menos complicaciones mayores en un horizonte más largo?
+
+Narrador:
+Ahí es donde ayudarían los registros prospectivos o las cohortes comparativas multicéntricas. La aleatorización puede ser difícil en esta población, pero los desenlaces estandarizados marcarían una gran diferencia: éxito técnico, migración, retención de secreciones, granulación que requiere intervención, número de broncoscopias repetidas, puntajes de síntomas, función pulmonar cuando corresponda y permeabilidad de la vía aérea a largo plazo.
+
+Invitado:
+Hasta entonces, este artículo añade una pieza útil a la caja de herramientas para la estenosis benigna de la vía aérea. Respalda la factibilidad, sugiere un perfil de seguridad aceptable en manos expertas y resalta la granulación como la complicación que hay que vigilar. Pero no debe interpretarse como evidencia definitiva de que los stents biodegradables sean ampliamente superiores a los enfoques establecidos.
+
+Narrador:
+Muy bien dicho. Para InterventionalPulm punto com, la conclusión final es esta: Karcıoğlu y colegas presentan una experiencia retrospectiva clínicamente relevante con stents biodegradables de vía aérea en estenosis benigna de la vía aérea central. La señal es alentadora, particularmente para pacientes muy seleccionados que no son candidatos quirúrgicos y tienen opciones limitadas con stents convencionales. Pero los datos siguen siendo observacionales, pequeños y dependientes del centro.
+
+Gracias por escuchar InterventionalPulm punto com, Revisión de la Revista de Neumología Intervencionista. Esta fue una discusión enfocada sobre stents biodegradables para la estenosis benigna de la vía aérea central: una opción prometedora, pero todavía en evolución, dentro de la intervención compleja de la vía aérea.

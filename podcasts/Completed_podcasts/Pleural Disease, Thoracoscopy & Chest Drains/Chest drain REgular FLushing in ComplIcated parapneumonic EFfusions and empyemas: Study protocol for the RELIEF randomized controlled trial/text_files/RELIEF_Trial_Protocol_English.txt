@@ -1,0 +1,63 @@
+InterventionalPulm.com IP Journal Review: Chest Drain Flushing in Pleural Infection and the RELIEF Trial
+
+Estimated duration: 9 minutes
+
+Article type: Original research - randomized controlled trial protocol
+
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. This episode looks at Boyle and colleagues, published in PLOS One in 2026, describing the RELIEF randomized controlled trial protocol. RELIEF asks a very practical pleural question: when managing pleural infection with a small-bore chest drain, should the catheter be flushed on a schedule, or only when it appears blocked?
+
+Guest: Right, and this is the kind of question that sounds mundane until you remember how much pleural infection care depends on execution. Antibiotics matter. Source control matters. Intrapleural enzyme therapy may matter in selected patients. Surgery matters when drainage fails. But the tube itself - whether it remains patent and whether the team manages it consistently - can drive the entire clinical trajectory.
+
+Narrator: The authors frame the gap clearly. Pleural infection is common, with an estimated sixty-five thousand cases per year across the United States and United Kingdom, and drainage is often required in addition to antimicrobial therapy. Small-bore drains are common for complicated parapneumonic effusion and empyema, but obstruction remains a persistent concern.
+
+Guest: And the guideline history is not as definitive as people sometimes imply. The 2010 British Thoracic Society guidance recommended regular flushing of small-bore drains with twenty to thirty milliliters of saline every six hours via a three-way stopcock, along with suction. But the 2023 BTS update does not really answer the optimal flush-management question. Many centers are therefore operating from local culture rather than randomized data.
+
+Narrator: The pre-RELIEF evidence is thin and mixed. One retrospective review of one hundred twelve-French drains, twenty percent placed for pleural infection, found a nine percent blockage rate. Regular twenty-milliliter flushing every six hours was associated with lower odds of blockage, with an odds ratio of 0.04 and a ninety-five percent confidence interval from 0.01 to 0.37. But that is retrospective, and blockage is not the same as patient-centered treatment success.
+
+Guest: Exactly. Horsley and colleagues prospectively evaluated fifty-two drains ranging from twelve to twenty French, and in the empyema subgroup, six of ten drains became blocked despite regular thirty-milliliter flushing. Cafarotti also reported substantial drainage failure in empyema drains, often attributed to fibrin or clot. So the biological rationale is plausible, but the clinical effect is unresolved.
+
+Narrator: RELIEF is designed to answer that in a pragmatic way. It is a prospective, multicenter, open-label randomized controlled trial in the United States. Eligible patients are adults with complicated parapneumonic effusion or empyema who require inpatient chest drain placement, with randomization occurring within twenty-four hours of drain placement.
+
+Guest: The intervention arm receives twenty milliliters of sterile saline flushed into the chest drain every six hours, with a two-hour window on either side. If intrapleural tPA DNase is administered at the same time, or in rapid sequence, that treatment counts as one flush. The control arm does not receive routine saline instillation. It gets a twenty-milliliter rescue flush only if obstruction is identified.
+
+Narrator: Obstruction is defined concretely: lack of tidaling, lack of fluid drainage, and persistent pleural fluid on ultrasound. That matters because a quiet drain may be blocked, outside the dominant locule, kinked, or simply no longer needed.
+
+Guest: Both arms get daily drain assessment by study personnel. Both arms are intended to remain on minus twenty centimeters of water suction at the atrium, continuously if tolerated, defined as at least seventy-five percent of the day. Interruptions for pain, mobility, transport, or other real-world reasons are documented.
+
+Narrator: The primary outcome is time, in hours, from randomization to chest drain removal because of intentional clinical decision-making that pleural infection treatment has succeeded. That is an important choice. The endpoint is not fluid volume alone, radiographic clearance alone, or catheter patency alone. It is the moment the team decides that pleural source control has been achieved and the tube can come out.
+
+Guest: That is both a strength and a vulnerability. Chest tube duration is patient-centered in a very practical sense. Tubes hurt, restrict mobility, and often anchor patients to inpatient care. But time to removal is also behavior-dependent. It can be influenced by rounding habits, weekend staffing, ultrasound use, surgical consultation patterns, and clinician comfort with residual fluid.
+
+Narrator: The authors try to mitigate that open-label issue with daily objective readiness criteria: absent or minimal free-flowing pleural fluid on ultrasound or chest X-ray, no ongoing concern for infection requiring continuous drainage, and clinical judgment that the drain is ready for removal. Chest X-rays are interpreted by radiologists blinded to treatment arm, and a blinded adjudication committee will review the clinical decision for drain removal and the categorization of drain status as successful, ongoing, or failed.
+
+Guest: That is thoughtful, although it cannot fully erase performance bias. The regular-flush arm gets more hands on the drain by design, which may mean faster detection of malfunction or faster recognition that the tube is ready to come out. But standardized assessment and blinded adjudication are reasonable safeguards for a trial embedded in actual inpatient care.
+
+Narrator: Secondary outcomes include hospital length of stay, radiographic improvement by chest X-ray, ultrasound, or CT, need for additional procedures such as VATS or additional drains, and complications. The study also collects follow-up data after discharge, including whether infection appears resolved, under surveillance, ongoing, lost to follow-up, or the patient is deceased.
+
+Guest: The sample size assumptions are worth noting. The investigators estimate a median of six days to chest tube removal in the control group and consider a twenty-four-hour earlier removal clinically meaningful. They calculate that thirty-eight patients per arm provides eighty percent power to detect that difference. After accounting for ten percent withdrawal and fifteen percent intrapleural enzyme therapy failure, they plan to enroll ninety-six participants, stratified by intrapleural enzyme therapy use.
+
+Narrator: The devil's advocate question is whether one day is the right effect size. For a patient with pain and limited mobility, one fewer tube day matters. For a hospital, it matters most if it translates into earlier discharge. Length of stay can still be driven by fever curve, oxygen needs, antibiotic plans, renal function, social disposition, or surgical decision-making. So the secondary outcomes are essential.
+
+Guest: The statistical plan goes beyond a simple time comparison. The primary endpoint uses a competing-risks time-to-event framework, with competing events such as death with a drain in place, dislodgement, malposition, or kinking. For time to drainage failure, they plan Cox regression adjusted for age, baseline effusion complexity, and intrapleural enzyme therapy use.
+
+Narrator: The exploratory analysis is especially interesting: a Markov ordinal longitudinal proportional odds state transition model. They define clinical states using three dimensions: whether tPA DNase was received in the last twenty-four hours, whether the drain is patent or clogged, and whether treatment is ongoing, successful, or failed. Success and failure are absorbing states. In other words, the trial asks not only which arm gets the tube out faster, but how patients move through recognizable drainage states over time.
+
+Guest: That could be useful even if the headline result is neutral. Regular flushing might not shorten overall time to removal, but it could reduce time spent in an ongoing-treatment clogged-drain state. Or the effect may disappear once tPA DNase is used. Or it may be concentrated in highly loculated effusions or particular catheter sizes. The multistate approach gives the investigators a way to look at process, not just destination.
+
+Narrator: Implementation is another key issue for interventional pulmonologists. A scheduled flush protocol is not just a checkbox in an order set. It requires a compatible catheter, a three-way stopcock, trained staff, nursing time every six hours, documentation, and a shared definition of a flush. The as-needed arm also requires discipline, because rescue flushing depends on recognizing absent tidaling, low output, and residual fluid on ultrasound.
+
+Guest: That affects generalizability. The trial is pragmatic because both arms reflect real practice variation, and it does not exclude patients who cannot tolerate suction. But it is still being conducted in academic tertiary care settings with protocolized pleural assessment. Centers without reliable daily pleural ultrasound or consistent drain-management workflows may have a harder time reproducing either arm exactly.
+
+Narrator: The exclusions define the scope. This is early management of a new chest drain for pleural infection. It does not address tunneled pleural catheters, pneumothorax drains, postoperative drains, or patients who already had another pleural procedure for the same infection.
+
+Guest: From a trial-design standpoint, this paper matters because flush practice can confound other pleural infection studies. If one study uses regular flushing, another uses inconsistent nursing-driven flushing, and another uses as-needed flushing without ultrasound criteria, then comparisons of tPA DNase, catheter size, suction, or early surgical escalation become harder to interpret.
+
+Narrator: So what should clinicians do with this article right now?
+
+Guest: The cautious answer is: do not treat it as an efficacy result. It should not be read as proof that every empyema drain needs scheduled flushing, or that as-needed flushing is equivalent. The more useful takeaway is to examine local chest drain care as a protocolized process. How is patency assessed? Who flushes? What volume is used? Is ultrasound part of daily assessment? When does low output mean success, and when does it mean failure?
+
+Narrator: And when RELIEF eventually reports outcomes, the key questions will be whether any reduction in drain dwell time is clinically meaningful, whether it changes length of stay or escalation procedures, and whether the workload of scheduled flushing is justified by patient benefit.
+
+Guest: Bottom line: RELIEF is a randomized trial protocol addressing a common, workflow-sensitive component of pleural infection management. It is methodologically interesting because of competing-risks analysis and multistate modeling, clinically relevant because tube patency and source control drive outcomes, and appropriately humble because it does not claim practice change before data exist.
+
+Narrator: Boyle and colleagues have put structure around a question that lives at the bedside, in the procedure suite, and in the nursing order set. For interventional pulmonologists, the reminder is simple: pleural infection care is not only about selecting tPA DNase versus surgery. It is also about making the first drain work as well as possible, knowing when it has succeeded, and knowing when it has failed. Thanks for listening to InterventionalPulm.com IP Journal Review.

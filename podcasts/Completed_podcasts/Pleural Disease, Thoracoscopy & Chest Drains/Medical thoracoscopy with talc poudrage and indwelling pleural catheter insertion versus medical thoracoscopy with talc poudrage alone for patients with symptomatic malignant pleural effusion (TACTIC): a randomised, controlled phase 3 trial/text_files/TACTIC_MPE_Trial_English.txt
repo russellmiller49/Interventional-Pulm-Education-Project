@@ -1,0 +1,73 @@
+Narrator: Welcome to Interventional Pulm dot com IP Journal Review. In this episode, we’re looking at Dipper, Sundaralingam, and colleagues, published in The Lancet Respiratory Medicine in 2026. The article reports the TACTIC trial: medical thoracoscopy with talc poudrage and indwelling pleural catheter insertion versus medical thoracoscopy with talc poudrage alone for symptomatic malignant pleural effusion.
+
+Guest: Right, and this is a very practical pleural question. These patients often need diagnosis, drainage, symptom control, and a plan that avoids repeated hospital visits. Medical thoracoscopy gives tissue and allows talc poudrage. An IPC gives ambulatory fluid control. So the combined strategy sounds attractive: biopsy, poudrage, and catheter safety net in one encounter.
+
+Narrator: And the rationale was strengthened by prior observational reports suggesting rapid pleurodesis and early IPC removal with this combined approach. But those data were mostly single-center, non-comparative, and selected. TACTIC is important because it randomized patients against thoracoscopic poudrage alone.
+
+Guest: Exactly. This was an unblinded, multicenter, phase 3 randomized controlled trial across 11 UK hospitals with established thoracoscopy and IPC services. Patients had symptomatic pleural effusion and confirmed malignant disease, either diagnosed beforehand or identified visually at thoracoscopy. They were randomized one-to-one to medical thoracoscopy, talc poudrage, and IPC insertion, or to standard care with medical thoracoscopy and talc poudrage alone.
+
+Narrator: All patients underwent thoracoscopy and poudrage with 3 to 4 grams of sterile graded talc. The intervention group had an IPC placed during the same procedure and could be assessed for same-day discharge using prespecified criteria. The standard-care group was intended to have admission with a large-bore chest tube, generally 48 to 72 hours, with discharge at clinician discretion.
+
+Guest: The co-primary outcomes were patient-centered and operationally meaningful. First, total days in hospital over 4 weeks, including the index admission and any readmissions. Second, average breathlessness over 4 weeks using a 100 millimeter visual analogue dyspnea scale, collected twice weekly. Secondary outcomes included chest pain, 12-week hospital days, pleurodesis success, need for repeat invasive pleural procedures, quality of life, health care utilization, cost-effectiveness, and adverse events.
+
+Narrator: The trial randomized 124 patients, 62 per arm. Most had good functional status, with 80 percent having WHO performance status zero or one. A notable feature is the case mix: final diagnoses were pleural mesothelioma in 46 percent, lung cancer in 28 percent, and breast cancer in 10 percent. Also, 60 percent were undergoing medical thoracoscopy for both diagnosis and effusion management.
+
+Guest: That matters. This was not just a population of already diagnosed metastatic MPE patients choosing between outpatient drainage options. This was a true thoracoscopy population, where the diagnostic and therapeutic pieces were happening together.
+
+Narrator: Now to the primary outcomes. Median time in hospital over 4 weeks was 1 day in the intervention group versus 2 days in standard care. That sounds directionally favorable, but it was not statistically significant, with p equals 0.26, and adjusted analyses also showed no difference.
+
+Guest: And breathlessness was also not different. Median VAS dyspnea score over 4 weeks was 14.0 millimeters with the combined procedure versus 19.6 millimeters with standard care, again p equals 0.26. The median difference was minus 3.5 millimeters, with a 95 percent confidence interval crossing zero.
+
+Narrator: But both groups improved meaningfully from baseline, exceeding the published minimal clinically important difference of 19 millimeters. So this is not a negative trial in the sense that patients did not improve. It’s a negative comparison for superiority of adding the IPC on those two co-primary endpoints.
+
+Guest: That distinction is key. For counseling, TACTIC does not show that adding an IPC to poudrage makes patients less breathless than poudrage alone. Both strategies appear to improve breathlessness. The IPC’s value, if present, is more about workflow resilience and avoiding future procedures than about superior dyspnea control.
+
+Narrator: There is an important protocol wrinkle. In the standard-care group, 26 of 62 patients were discharged less than 48 hours after thoracoscopy and poudrage, including 10 discharged the same day. That conflicted with the planned control pathway of at least 48 hours of chest tube drainage.
+
+Guest: The comparator became more ambulatory than expected. The authors suggest that post-COVID UK pleural practice likely influenced this, because admission avoidance had become more common. So the trial partly tested the combined procedure against a modernized, shorter-stay version of poudrage care, not just against traditional inpatient chest tube management.
+
+Narrator: In a post-hoc per-protocol analysis, excluding those early-discharge control patients, length of stay was shorter with the combined procedure: median 1 day versus 2 days, p equals 0.025 unadjusted and p equals 0.014 adjusted.
+
+Guest: But that analysis is post-hoc and much smaller, with only 24 control patients included. It’s hypothesis-generating. The fair interpretation is: if standard poudrage at a given center still requires a true 48-hour admission, adding an IPC may reduce length of stay. But the main intention-to-treat result did not prove that.
+
+Narrator: The secondary outcome that really stands out is repeat invasive pleural procedures. By 12 weeks, only 2 of 60 patients in the combined-procedure group required another invasive pleural procedure for fluid control, compared with 19 of 56 in standard care. That’s 3 percent versus 34 percent, with p less than zero point zero zero zero one.
+
+Guest: That is the strongest clinical signal in the paper. The IPC acts as insurance against pleurodesis failure. It may not improve average breathlessness scores, and it may not shorten hospital stay in the primary analysis, but it substantially reduces the chance that the patient returns for thoracentesis, chest drain, IPC placement, or another thoracoscopy.
+
+Narrator: Pleurodesis success itself was less impressive. At 4 weeks, success was 40 percent in both groups. At 12 weeks, it was 53 percent with the IPC strategy and 42 percent with standard care, p equals 0.27.
+
+Guest: Those rates are lower than many would expect from prior poudrage studies. The definitions were strict, and the mesothelioma-heavy population probably matters. Pleural mesothelioma can be a harder pleurodesis phenotype because of visceral pleural restriction, rind, and less predictable apposition. So generalizability to a non-mesothelioma dominant MPE population is not automatic.
+
+Narrator: And importantly, this trial pushes back against the idea of “rapid pleurodesis” with combined poudrage and IPC. By 12 weeks, 37 of 60 IPC patients had the device removed. Successful IPC removal without need for re-intervention occurred in 35 of 60, or 58 percent. Median time to IPC removal was 42 days, with a 95 percent confidence interval of 30 to 54 days.
+
+Guest: That’s very different from earlier case series reporting IPC removal within about a week. TACTIC suggests that, in a randomized multicenter setting, patients should not be told that the catheter is likely to come out quickly. Some will achieve pleurodesis, but a substantial fraction will still have the IPC for weeks, and some may have it indefinitely.
+
+Narrator: Safety was broadly similar. Trial-related adverse events occurred in 46 of 62 patients in the intervention group and 44 of 62 in standard care, 74 percent versus 71 percent, p equals 0.84. There were three related serious adverse events, all in the intervention group: one admission for IPC-related pain, and two admissions for empyema in the same patient. No deaths were attributed to trial procedures.
+
+Guest: So adding an IPC was not benign, but it was not associated with a major overall excess of adverse events. There was also no sustained increase in pain. In fact, day-one chest pain scores were higher in the standard-care arm, though that difference did not persist.
+
+Narrator: Cost is another important piece. The initial cost of the combined procedure exceeded standard care by 1,406 pounds. The authors found it was not cost-effective using current UK thresholds, with an incremental cost per quality-adjusted life year of 178,874 pounds. The cost drivers included district nurse follow-up time and IPC equipment and drainage supplies.
+
+Guest: That is system-specific, but the concept generalizes. IPCs move work from the hospital into the outpatient and home-care ecosystem. That only works if the drainage infrastructure exists. In TACTIC, 19 percent of IPC patients could not access the minimum of five drainages per week because of UK NHS resource limitations.
+
+Narrator: Which is a major implementation point. The intervention is not just “place a catheter.” It requires drainage bottles, nursing capacity, patient and caregiver education, reliable follow-up, troubleshooting for blockage or infection, and a clear plan for removal.
+
+Guest: And that affects patient selection. The ideal candidate may be a patient undergoing thoracoscopy for diagnosis and pleural control who strongly prioritizes avoiding further invasive pleural procedures or rehospitalization, and who accepts the tradeoff of living with an IPC. The less ideal candidate is someone for whom catheter care would be burdensome, home drainage support is unreliable, or the main goal is rapid catheter removal.
+
+Narrator: Methodologically, the strengths are substantial: randomized design, multicenter recruitment, patient-centered co-primary outcomes, and a comparator that reflects real pleural practice. But there are also limitations: unblinded design, missing co-primary outcome data, significant protocol deviations in discharge timing, and limited power for some secondary outcomes like pleurodesis success.
+
+Guest: Also, because the control arm became shorter-stay than planned, the trial may underestimate the effect of IPC insertion in systems where talc poudrage still means routine inpatient chest tube drainage. On the other hand, if a center already discharges poudrage patients early, the incremental length-of-stay benefit may be small or nonexistent.
+
+Narrator: So what should an IP audience take away?
+
+Guest: The combined procedure should not be viewed as automatically superior to thoracoscopic poudrage alone. It did not significantly reduce 4-week hospital days in the primary analysis, and it did not improve dyspnea compared with standard care. But it did markedly reduce repeat invasive pleural procedures by 12 weeks. That is clinically meaningful, especially for patients trying to avoid another trip through the pleural procedure pathway.
+
+Narrator: And the counseling should be balanced. Adding the IPC may reduce the chance of needing another invasive pleural intervention, but it may not shorten hospitalization depending on local practice, it does not appear to improve breathlessness beyond poudrage alone, it adds cost and home-care needs, and the catheter may remain in place for weeks or longer.
+
+Guest: Exactly. TACTIC gives a more sober, randomized estimate of what this combined strategy actually achieves. It is not a magic rapid-pleurodesis protocol. It is a reasonable individualized option for selected patients, especially when avoiding repeat pleural procedures is a dominant priority and the system can support ambulatory IPC care.
+
+Narrator: That’s a good place to close. TACTIC adds the first randomized evidence for combining medical thoracoscopy, talc poudrage, and IPC insertion in malignant pleural effusion. The headline is nuanced: similar dyspnea, no significant primary length-of-stay reduction, similar overall safety, fewer repeat invasive pleural procedures, higher cost, and a real need for outpatient drainage infrastructure.
+
+Guest: In other words, the question is not whether every thoracoscopic poudrage patient should leave with an IPC. The question is which patients value the safety net enough to accept the catheter burden.
+
+Narrator: Thanks for listening to Interventional Pulm dot com IP Journal Review.

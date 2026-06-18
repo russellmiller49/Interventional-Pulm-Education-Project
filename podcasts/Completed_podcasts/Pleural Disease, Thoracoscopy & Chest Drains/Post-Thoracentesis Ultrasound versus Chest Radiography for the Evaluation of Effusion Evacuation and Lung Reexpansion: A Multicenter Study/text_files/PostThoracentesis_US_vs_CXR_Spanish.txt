@@ -1,0 +1,57 @@
+﻿Narrador: Bienvenidos a InterventionalPulm.com IP Journal Review. En este episodio hablaremos del estudio de Ratwani y colegas, publicado en Annals of the American Thoracic Society en dos mil veinticinco, sobre la ecografía posterior a la toracocentesis frente a la radiografía de tórax para evaluar la evacuación del derrame y la re-expansión pulmonar. El autor senior es Shojaee, y el estudio se conoce como EVACUTE.
+
+Invitado: Esta es una pregunta pragmática sobre el flujo de trabajo. Después de una toracocentesis terapéutica, los clínicos suelen querer saber si el espacio pleural se evacuó adecuadamente, si el pulmón se re-expandió y si hay evidencia de alguna complicación. Las guías se han alejado de la radiografía de tórax rutinaria después del procedimiento en pacientes asintomáticos, pero muchos flujos de trabajo todavía la usan por defecto.
+
+Narrador: Los investigadores enrolaron a ciento cuarenta y siete pacientes y analizaron a ciento cuarenta y cinco pacientes sometidos a toracocentesis terapéutica por derrames grandes y no loculados en seis centros académicos. La mediana de edad fue de sesenta y cuatro años, y la neoplasia maligna fue la etiología conocida más frecuente, con alrededor del cincuenta por ciento.
+
+Invitado: La comparación primaria fue la concordancia entre la ecografía posterior a la toracocentesis y la radiografía de tórax para detectar evacuación completa del espacio pleural. La definición fue estricta: ausencia de líquido visible en las vistas ecográficas anterior, medio axilar y posterior, y ausencia de borramiento del ángulo costofrénico en la radiografía de tórax.
+
+Narrador: Y la concordancia fue muy alta. Usaron el A C uno de Gwet para abordar la paradoja de kappa, y el coeficiente para evacuación completa fue de cero coma noventa y tres, con un intervalo de confianza del noventa y cinco por ciento de cero coma ochenta y tres a uno coma cero cero.
+
+Invitado: Ese es un estadístico de concordancia sólido. También evaluaron el tamaño del derrame residual, clasificando el líquido residual como pequeño o grande. La concordancia allí siguió siendo sustancial, con un kappa de cero coma sesenta y cuatro.
+
+Narrador: También abordaron el pulmón atrapado, que siempre es más matizado clínicamente que la etiqueta de imagen por sí sola. Su definición pragmática combinó síntomas como dolor torácico o tos intratable con re-expansión pulmonar incompleta.
+
+Invitado: La concordancia entre la evaluación del operador usando ecografía y la evaluación usando radiografía de tórax fue fuerte, con un kappa de cero coma ochenta y nueve. El operador diagnosticó pulmón atrapado en el cuarenta y nueve coma siete por ciento de los casos según la ecografía y los signos clínicos, y eso cambió solo ligeramente, a cuarenta y siete coma seis por ciento, después de revisar la radiografía de tórax.
+
+Narrador: Eso sugiere que la radiografía de tórax puede añadir poco para esa pregunta específica al lado de la cama, al menos en esta población y en manos experimentadas. Pero hay un tema importante de sesgo.
+
+Invitado: Sí. El operador no estaba cegado. La evaluación se hizo primero con ecografía y después con radiografía de tórax. Eso refleja el flujo de trabajo clínico real, pero significa que la interpretación de la radiografía pudo haber sido influida por lo que el operador acababa de ver y experimentar durante el procedimiento.
+
+Narrador: Entonces, la concordancia para pulmón atrapado es pragmática, no una comparación pura entre modalidades independientes. Los autores fortalecieron otras partes del estudio usando revisores independientes cegados: dos neumólogos para la ecografía y dos radiólogos para la radiografía de tórax, con el fin de evaluar la confiabilidad interobservador.
+
+Invitado: Y la concordancia entre el operador y la revisión ecográfica cegada para evacuación completa fue fuerte, con un kappa de cero coma ochenta y uno. Eso respalda la confiabilidad de la evaluación ecográfica al lado de la cama para el desenlace de evacuación.
+
+Narrador: Ahora, la pregunta del abogado del diablo: ¿qué no evalúa tan bien la ecografía?
+
+Invitado: Las alteraciones del parénquima pulmonar. La concordancia fue mucho más débil para atelectasia, con un A C uno de Gwet de cero coma veintiuno, y para consolidación, con un A C uno de cero coma trece. El engrosamiento pleural tuvo una concordancia alta, de cero coma ochenta y nueve, lo cual tiene sentido, pero la radiografía de tórax aún puede ofrecer una visión más amplia del parénquima pulmonar.
+
+Narrador: Los hallazgos de neumotórax también fueron difíciles de interpretar. Solo hubo seis neumotórax en la cohorte, y ninguno requirió intervención. La concordancia entre ecografía y radiografía de tórax para detectar neumotórax fue de leve a moderada, con un kappa de cero coma treinta. Incluso los dos radiólogos tuvieron solo una concordancia moderada entre sí, con un kappa de cero coma cuarenta y siete.
+
+Invitado: Tres de los seis neumotórax se observaron en ecografía pero no en la radiografía de tórax inicial. Eso podría sugerir sensibilidad de la ecografía en manos expertas, pero con solo seis eventos, el estudio no tiene potencia suficiente para evaluar la detección de neumotórax. El mensaje principal realmente se refiere a la evacuación del derrame y la re-expansión pulmonar.
+
+Narrador: La generalización es el siguiente punto. Estos eran operadores experimentados en seis centros académicos. La mediana de tiempo para la ecografía posterior al procedimiento fue de poco más de dos minutos y medio. Eso es eficiente, pero asume habilidad con ecografía y un patrón de exploración estandarizado.
+
+Invitado: Exactamente. Los resultados no se traducen automáticamente a operadores de bajo volumen ni a entornos sin entrenamiento sólido en ecografía. Un tema clave de implementación es el almacenamiento de imágenes. La radiografía de tórax se archiva automáticamente en PACS. Las imágenes de ecografía pueden o no guardarse, etiquetarse y quedar recuperables en la historia clínica electrónica.
+
+Narrador: Sin archivo de imágenes, la ecografía se convierte en una impresión al lado de la cama, en lugar de un registro diagnóstico duradero. Si el campo quiere que la ecografía reemplace a la radiografía rutinaria después del procedimiento para este desenlace, los estándares de documentación importan.
+
+Invitado: Otra limitación es el momento de la evaluación. La ecografía fue inmediata, mientras que la radiografía de tórax podía obtenerse dentro de las cuatro horas. El líquido podía reacumularse en ese intervalo, lo que podría introducir discrepancias. Los autores reconocen esto como parte del diseño pragmático.
+
+Narrador: La selección de pacientes también importa. Excluyeron derrames loculados o complejos. Eso es importante porque los espacios pleurales complejos pueden ser precisamente aquellos en los que una visión radiográfica más amplia, o incluso una tomografía computarizada, resulta más útil.
+
+Invitado: Y la cohorte tuvo una alta proporción de derrames pleurales malignos, lo que probablemente contribuyó a la tasa alta de pulmón atrapado, alrededor del cincuenta por ciento. Los hallazgos podrían verse diferentes en una población dominada por derrames trasudativos, como los de insuficiencia cardíaca, donde el pulmón atrapado es menos frecuente.
+
+Narrador: Exploraron predictores de pulmón atrapado y encontraron que el sexo masculino y la etiología maligna fueron los predictores más fuertes, con odds ratios de dos coma treinta y dos y dos coma sesenta y uno, respectivamente. Eso es clínicamente intuitivo y apoya la idea de que la etiología importa al interpretar los hallazgos posteriores al drenaje.
+
+Invitado: Entonces, ¿cómo deberían aplicar esto los clínicos de neumología intervencionista?
+
+Narrador: Para derrames grandes y no loculados, en manos de operadores entrenados, la ecografía inmediata posterior a la toracocentesis parece ser una forma confiable de evaluar la evacuación del espacio pleural y la re-expansión pulmonar. Respalda alejarse de la radiografía de tórax rutinaria cuando la pregunta clínica es simplemente: “¿evacuamos el líquido y se re-expandió el pulmón?”
+
+Invitado: Pero no es un argumento absoluto de que la radiografía de tórax no tenga ningún papel. La radiografía de tórax aún puede ser útil cuando aparecen síntomas, cuando las ventanas ecográficas son malas, cuando preocupa una alteración del parénquima, cuando el derrame es complejo o loculado, cuando se requiere documentación y el archivo ecográfico no es confiable, o cuando la experiencia local del operador es limitada.
+
+Narrador: Las implicaciones para el flujo de trabajo son importantes: menor transporte de pacientes, menos radiación, disposición más rápida y toma de decisiones procedimentales más inmediata. Pero la implementación requiere entrenamiento, un protocolo de exploración estandarizado, almacenamiento de imágenes y documentación comparable a la de radiología.
+
+Invitado: Exactamente. Esto empuja a la ecografía a pasar de ser solo una herramienta de guía procedimental a ser una modalidad diagnóstica posterior al procedimiento. Eso es apropiado solo si el sistema la trata con rigor similar.
+
+Narrador: Con esto cerramos este episodio de InterventionalPulm.com IP Journal Review. EVACUTE respalda la ecografía posterior a la toracocentesis como una herramienta confiable para evaluar la evacuación de líquido y la re-expansión pulmonar después del drenaje de derrames grandes y no loculados, mientras deja preguntas no resueltas sobre la detección de neumotórax, los derrames complejos, los hallazgos del parénquima, la dependencia del operador y el archivo de imágenes ecográficas. Gracias por escucharnos.

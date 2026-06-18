@@ -1,0 +1,142 @@
+Narrador:
+Bienvenidos a InterventionalPulm.com IP Journal Review, donde revisamos los métodos, resultados e implicaciones clínicas de un artículo relevante para la neumología intervencionista.
+
+En este episodio revisamos el estudio de Kim y colaboradores, publicado en CHEST en 2025. El artículo se titula: “Rendimiento diagnóstico e impacto sinérgico de la aspiración con aguja y la biopsia con pinza mediante broncoscopia con navegación electromagnética para lesiones pulmonares periféricas.”
+
+La pregunta práctica es directa: durante una broncoscopia con navegación electromagnética, ¿usar tanto aguja como pinza mejora de manera significativa el rendimiento diagnóstico en comparación con usar cualquiera de los dos instrumentos por separado?
+
+Invitado:
+Y esa es una pregunta muy relevante, porque la navegación ayuda a llevar el broncoscopio o el canal de trabajo extendido hacia la lesión, pero la navegación es solo una parte de la cadena diagnóstica. Una vez que se llega al blanco, el éxito del procedimiento todavía depende de si el instrumento seleccionado puede entrar en la lesión y obtener material representativo.
+
+La pinza y la aguja interactúan con las lesiones periféricas de manera diferente. La pinza generalmente requiere una vía aérea que permita avanzar, abrir las mandíbulas y tomar tejido dentro del blanco. La aguja, en cambio, puede penetrar más allá de la pared bronquial o acceder a una lesión incluso cuando la alineación con la vía aérea no es perfecta.
+
+Pero la aguja también tiene limitaciones. Puede ser difícil avanzar una aguja a través de angulaciones marcadas, y la pinza puede aportar mejor arquitectura tisular para algunas neoplasias y diagnósticos benignos específicos.
+
+Así que la hipótesis de que estos instrumentos sean complementarios tiene sentido biológico y técnico. La pregunta es si el segundo instrumento aporta suficiente rendimiento incremental como para justificar más tiempo, más costo y mayor complejidad del procedimiento.
+
+Narrador:
+¿Cómo evaluaron esto los investigadores?
+
+Invitado:
+Realizaron un ensayo prospectivo, unicéntrico, con diseño cruzado y orden aleatorizado, en un hospital terciario de Corea del Sur.
+
+Incluyeron ciento cuarenta y dos participantes con lesiones pulmonares periféricas sometidos a ENB. Todos los participantes recibieron ambos métodos de muestreo: aspiración con aguja y biopsia con pinza. La parte aleatorizada determinó la secuencia: en la mitad se utilizó primero la aguja, y en la otra mitad se utilizó primero la pinza.
+
+Ese diseño dentro de la misma lesión es importante. Cada lesión funcionó, en la práctica, como su propio control. Eso reduce la confusión por tamaño, localización, signo del bronquio, patología, accesibilidad técnica y otros factores que suelen complicar la comparación entre instrumentos.
+
+Los procedimientos se hicieron bajo sedación moderada, usando una plataforma convencional de navegación electromagnética. Cada instrumento se utilizó al menos tres veces. No se empleó ultrasonido radial endobronquial, fluoroscopia, tomografía de haz cónico ni otras técnicas complementarias de localización. Tampoco hubo evaluación citológica rápida en sala, o ROSE.
+
+Narrador:
+O sea que fue un entorno de ENB deliberadamente bastante básico.
+
+Invitado:
+Exactamente. Eso facilita aislar la contribución del instrumento de muestreo, pero también afecta la generalización de los resultados a flujos de trabajo contemporáneos que usan broncoscopia robótica, tomografía de haz cónico, tomosíntesis digital, ultrasonido radial, o confirmación de herramienta dentro de la lesión.
+
+Las lesiones tenían un diámetro promedio de aproximadamente veintiún milímetros. Alrededor del sesenta y cuatro por ciento tenían un signo del bronquio positivo en la tomografía, y casi el sesenta por ciento estaban localizadas en el tercio externo del hemitórax. El ochenta y cuatro por ciento eran lesiones sólidas.
+
+Los investigadores también usaron una definición estricta de rendimiento diagnóstico. La malignidad contaba como diagnóstico. También contaba un diagnóstico benigno específico que representara adecuadamente la lesión y guiara el manejo. Inflamación inespecífica, pulmón normal, células atípicas y material insuficiente se consideraron no diagnósticos.
+
+Narrador:
+Esa distinción importa mucho, porque las estimaciones de rendimiento diagnóstico pueden aumentar bastante cuando hallazgos benignos inespecíficos se cuentan como procedimientos exitosos.
+
+Invitado:
+Correcto. Con esa definición estricta, la biopsia con pinza sola tuvo un rendimiento diagnóstico de cuarenta y cuatro punto cuatro por ciento. La aspiración con aguja sola tuvo un rendimiento de cincuenta y uno punto cuatro por ciento.
+
+Esa diferencia de siete puntos porcentuales entre aguja y pinza no fue estadísticamente significativa, con un valor de p de cero punto dos dos uno.
+
+Pero la estrategia combinada produjo un rendimiento diagnóstico de sesenta y seis punto nueve por ciento. Eso representó un aumento absoluto de veintidós punto cinco puntos porcentuales frente a la pinza sola, y de quince punto cinco puntos porcentuales frente a la aguja sola. Ambas comparaciones tuvieron valores de p menores de cero punto cero cero uno.
+
+Narrador:
+Y los resultados pareados ayudan a explicar esa mejoría.
+
+Invitado:
+Sí. Ambos instrumentos fueron diagnósticos en cuarenta y un participantes. Pero la aguja estableció el diagnóstico en treinta y dos casos en los que la pinza falló. Y, a la inversa, la pinza estableció el diagnóstico en veintidós casos en los que la aguja falló.
+
+La mayoría de los diagnósticos malignos obtenidos solo con aguja fueron cánceres pulmonares de células no pequeñas. La pinza también añadió varios diagnósticos malignos, pero aportó valor particular en algunas entidades benignas específicas, incluyendo enfermedad micobacteriana, neumonía eosinofílica y antracofibrosis densa.
+
+Esa discordancia es el hallazgo central. Los dos instrumentos no estaban simplemente generando muestras duplicadas. Cada uno accedía a información diagnóstica que el otro, en ocasiones, no lograba obtener.
+
+Narrador:
+¿Qué ocurrió cuando el análisis se restringió a malignidad?
+
+Invitado:
+De los ciento cuarenta participantes con seguimiento completo, ciento veinte terminaron teniendo lesiones malignas. Eso corresponde a una prevalencia de malignidad cercana al ochenta y seis por ciento.
+
+La sensibilidad para malignidad fue cuarenta y siete punto cinco por ciento con pinza, cincuenta y ocho punto tres por ciento con aguja, y setenta y uno punto siete por ciento con la combinación.
+
+Otra vez, el abordaje combinado fue significativamente mejor que cualquiera de los métodos individuales. La diferencia entre aguja y pinza sola no alcanzó significación estadística, aunque numéricamente favoreció a la aguja.
+
+Pero una sensibilidad de setenta y uno punto siete por ciento también significa que casi tres de cada diez lesiones malignas todavía no fueron diagnosticadas por el procedimiento índice combinado. En esta población, un resultado negativo seguía estando lejos de ser tranquilizador.
+
+Narrador:
+Eso es especialmente importante dado el riesgo pretest muy alto de esta cohorte.
+
+Invitado:
+Sí. Estas eran lesiones seleccionadas, suficientemente sospechosas como para requerir diagnóstico definitivo, y se eligió ENB porque se consideraban accesibles por vía broncoscópica. Los resultados no deben interpretarse como el desempeño de ENB en una población no seleccionada de nódulos incidentales.
+
+Los hallazgos fueron consistentes en varios subgrupos clínicamente relevantes. La estrategia combinada mejoró el rendimiento en lesiones de veinte milímetros o menores, lesiones sin signo del bronquio, lesiones periféricas y lesiones en pulmón enfisematoso.
+
+El orden del muestreo no influyó significativamente en el rendimiento ni en la sensibilidad. Eso reduce la preocupación de que el primer instrumento alterara el blanco o se beneficiara injustamente de tejido intacto.
+
+Narrador:
+¿Y qué hay de las complicaciones?
+
+Invitado:
+El neumotórax ocurrió en cinco de ciento cuarenta y dos participantes, o tres punto cinco por ciento. Dos participantes, es decir uno punto cuatro por ciento, requirieron drenaje pleural.
+
+Diez participantes tuvieron sangrado grado dos, pero no hubo sangrado grado tres o mayor. No hubo insuficiencia respiratoria ni mortalidad relacionada con el procedimiento.
+
+Así que el perfil de seguridad fue favorable, aunque el estudio no permite separar el riesgo atribuible a la aguja del riesgo atribuible a la pinza, porque todos los participantes recibieron ambos instrumentos.
+
+Narrador:
+La pregunta obvia, como abogado del diablo, es si el estudio demostró verdadera sinergia entre instrumentos o simplemente demostró que tomar más muestras mejora el rendimiento.
+
+Invitado:
+Esa es probablemente la cautela metodológica más importante.
+
+El brazo combinado tuvo al menos tres pases con aguja y al menos tres pases con pinza. Una estrategia con un solo instrumento implicó menos pases totales y menos tiempo de muestreo. El estudio no comparó, por ejemplo, seis pases con pinza frente a tres pases con pinza más tres con aguja.
+
+Por lo tanto, los resultados demuestran la efectividad de una estrategia con dos instrumentos, pero no separan por completo el efecto de la adquisición complementaria de tejido del efecto de una mayor intensidad de muestreo.
+
+El componente de aguja también requirió más tiempo. El tiempo promedio de biopsia con aguja fue de aproximadamente dieciocho punto seis minutos, frente a once punto siete minutos para la pinza. El tiempo total promedio del procedimiento ENB fue de unos treinta y siete minutos.
+
+Ese tiempo adicional puede estar plenamente justificado por un aumento de quince a veintidós puntos en el rendimiento, pero las implicaciones de flujo de trabajo y costo no fueron estudiadas formalmente.
+
+Narrador:
+¿Qué fortalezas metodológicas destacarías?
+
+Invitado:
+El diseño pareado es una fortaleza importante. La aleatorización del orden de los instrumentos fue bien pensada. Participaron nueve broncoscopistas, lo que reduce la posibilidad de que los resultados reflejen solo la técnica de un operador. Los patólogos estaban enmascarados a la secuencia de los dispositivos, y solo dos participantes no completaron seguimiento.
+
+Otra fortaleza es el desenlace conservador. El rendimiento diagnóstico del procedimiento índice combinado, de sesenta y seis punto nueve por ciento, fue casi idéntico a la exactitud diagnóstica conservadora a doce meses, de sesenta y siete punto nueve por ciento. Esa concordancia sugiere que la definición estricta inicial no estaba ocultando un gran número de clasificaciones benignas falsas negativas.
+
+Narrador:
+¿Y las limitaciones?
+
+Invitado:
+Primero, fue un estudio unicéntrico, realizado dentro de un sistema de salud y con una sola plataforma de navegación.
+
+Segundo, el entorno procedimental difiere de muchos programas actuales de neumología intervencionista con altos recursos. No hubo anestesia general, ultrasonido radial, tomografía de haz cónico, fluoroscopia aumentada, broncoscopia robótica ni ROSE. Esas tecnologías podrían aumentar el rendimiento absoluto de cualquiera de los instrumentos, reducir el beneficio incremental del segundo instrumento, o incluso hacer que el muestreo complementario sea más útil una vez confirmada la posición dentro de la lesión.
+
+Tercero, el estudio fue diseñado con potencia estadística para comparar la pinza sola frente al abordaje combinado. No tuvo potencia para establecer superioridad de la aguja sobre la pinza. La ventaja numérica de la aguja es interesante, pero no debería tratarse como una comparación cabeza a cabeza definitiva.
+
+Cuarto, solo veinte diagnósticos finales fueron benignos. Las conclusiones sobre enfermedad benigna son por lo tanto mucho menos estables que las conclusiones sobre malignidad.
+
+Finalmente, el estudio evaluó si se obtuvo un diagnóstico. No estableció si una estrategia produjo mejor adecuación de muestra para perfil molecular, PD-L1, secuenciación de nueva generación u otros requisitos tisulares posteriores. En oncología torácica contemporánea, el diagnóstico por sí solo no siempre es el desenlace procedimental completo.
+
+Narrador:
+Entonces, ¿cómo debería aplicar esto un equipo de neumología intervencionista?
+
+Invitado:
+Para ENB realizada bajo sedación moderada y sin técnicas avanzadas de confirmación por imagen, este ensayo aporta buena evidencia aleatorizada contra depender de manera refleja de un solo instrumento de muestreo. La aguja y la pinza parecen ser claramente complementarias, y el aumento en rendimiento diagnóstico se logró sin una señal importante de daño.
+
+Pero el artículo no demuestra que toda broncoscopia navegacional, en toda plataforma, requiera ambos instrumentos. En un flujo de trabajo con confirmación concéntrica de herramienta dentro de la lesión, ROSE extensa, o una herramienta primaria distinta como criobiopsia, el valor incremental podría ser diferente.
+
+La lección procedimental más amplia es que el éxito de la navegación no debe equipararse automáticamente con éxito diagnóstico. Incluso después de llegar al blanco, la estrategia de muestreo importa.
+
+Narrador:
+El mensaje final es que Kim y colaboradores presentan una demostración bien controlada de que combinar aspiración con aguja y biopsia con pinza mejora tanto el rendimiento diagnóstico como la sensibilidad durante ENB, en comparación con cualquiera de los instrumentos por separado.
+
+El estudio apoya el muestreo multimodal, especialmente en flujos de ENB sin tecnologías auxiliares de localización o confirmación. Al mismo tiempo, los pases adicionales y el mayor tiempo de procedimiento complican la afirmación de una sinergia pura entre dispositivos, y un procedimiento combinado negativo todavía deja un riesgo residual importante de malignidad.
+
+Esto fue InterventionalPulm.com IP Journal Review. Gracias por escuchar.

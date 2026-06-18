@@ -1,0 +1,63 @@
+InterventionalPulm.com IP Journal Review: High-Flow Nasal Cannula During High-Risk Bronchoscopy
+
+Estimated duration: 8 to 9 minutes
+
+Article type: Original research, multicenter randomized controlled trial
+
+Narrator: Welcome to the InterventionalPulm.com IP Journal Review, where we examine one article at a time through the lens of interventional pulmonology practice.
+
+Guest: This episode looks at Qin and colleagues, published in the Annals of the American Thoracic Society in 2025. The study compares high-flow nasal cannula with conventional oxygen therapy during nasal bronchoscopy in patients considered at high risk for desaturation.
+
+Narrator: The clinical question is immediately relevant. Hypoxemia during bronchoscopy is common, particularly when sedation, airway obstruction, suctioning, bleeding, and prolonged therapeutic work all converge. High-flow nasal cannula is increasingly used, but using it for every bronchoscopy has cost and workflow implications. The useful question is not simply whether high flow works. It is whether targeted use in a genuinely high-risk population produces a meaningful procedural benefit.
+
+Guest: Right. This was a randomized trial conducted at three hospitals in China. The investigators enrolled adults scheduled for bronchoscopy who had at least one prespecified risk factor: a P to F ratio below 300, hypercapnia with chronic lung disease, radiographically identified tracheal narrowing, or a body mass index above 30.
+
+Narrator: But the enrolled population needs careful attention. About 85 percent had airway stenosis, and roughly two-thirds underwent therapeutic bronchoscopy. So this was not a typical low-risk outpatient diagnostic bronchoscopy cohort, and it was not mainly an obesity or diffuse parenchymal lung disease study. It was predominantly an airway stenosis and therapeutic bronchoscopy study.
+
+Guest: The investigators also excluded several groups at the extreme end of risk. Patients needing general anesthesia or rigid bronchoscopy were excluded, as were those with more than 80 percent central airway narrowing, those requiring more than 3 liters per minute of oxygen at baseline, and critically ill patients considered unsuitable for the protocol. That means the study addresses high-risk, spontaneously breathing patients, but not the sickest patients or the most severe central airway obstruction cases.
+
+Narrator: A total of 148 patients were randomized. Six withdrew, leaving 72 in the high-flow group and 70 in the conventional oxygen group for the per-protocol analysis.
+
+Guest: High-flow nasal cannula was started at 50 liters per minute and could be increased to 60, with a fraction of inspired oxygen of 0.45 and a temperature of 37 degrees Celsius. Conventional oxygen was delivered through a standard nasal cannula at 6 liters per minute. Bronchoscopy was performed through the nasal route under sedation, with spontaneous ventilation and a targeted moderate-to-deep sedation level.
+
+Narrator: The primary outcome was protocol-defined desaturation, meaning an oxygen saturation below 90 percent for more than 10 seconds. That occurred in 34.7 percent of patients receiving high flow, compared with 61.4 percent receiving conventional oxygen. The reported P value was 0.016.
+
+Guest: In absolute terms, that is a reduction of about 27 percentage points. Using the observed per-protocol event rates, the number needed to treat is roughly four to prevent one episode of protocol-defined desaturation during a procedure. That is a substantial effect, although the endpoint is a brief physiologic event rather than a major patient-centered complication.
+
+Narrator: The secondary outcomes were directionally consistent. Jaw thrust maneuvers were required in 33.3 percent of the high-flow group versus 61.4 percent of the conventional oxygen group. Bronchoscopy interruption occurred in 26.4 percent versus 58.6 percent. Oxygen therapy escalation occurred in 30.6 percent versus 57.1 percent.
+
+Guest: The oxygen saturation nadir was also better with high flow. The median lowest saturation was 94 percent, compared with 87.5 percent using conventional oxygen. Peak transcutaneous carbon dioxide was modestly lower, 64.6 versus 68.3 millimeters of mercury.
+
+Narrator: That carbon dioxide finding is interesting, but it should not be oversold. A difference of less than 4 millimeters of mercury in peak transcutaneous carbon dioxide may reflect improved washout or reduced work of breathing, but the clinical importance is uncertain. Transcutaneous monitoring also has measurement lag and does not provide the same information as serial arterial blood gases.
+
+Guest: The rescue pathway is one of the most practical parts of the paper. When desaturation occurred, the team first used jaw thrust and bronchoscopy interruption. If hypoxemia persisted, conventional oxygen patients were switched to high flow, and high-flow patients had the fraction of inspired oxygen increased up to 1.0. Bronchoscope withdrawal and advanced airway maneuvers followed if needed.
+
+Narrator: Manual maneuvers alone corrected oxygenation in only three patients in each group. Among 40 conventional oxygen patients who needed escalation, switching to high flow at 60 liters per minute and a fraction of inspired oxygen of 0.45 corrected oxygenation in 14. Increasing the fraction of inspired oxygen to 1.0 helped another 15. That suggests that both flow and oxygen concentration contributed, and that high flow functioned as an effective rescue strategy for many patients after low-flow oxygen failed.
+
+Guest: Still, not every outcome favored high flow. There was no statistically significant difference in time to first desaturation, duration of desaturation, total bronchoscopy duration, bronchoscope withdrawal, or overall adverse events. Bronchoscope withdrawal was required in 9.7 percent of the high-flow group and 15.7 percent of the conventional oxygen group. No patient required intubation, and serious complications were uncommon.
+
+Narrator: So the benefit was primarily procedural: fewer hypoxemic episodes, fewer interruptions, fewer jaw thrusts, and less escalation. Those are clinically meaningful in complex airway work, but they are not the same as showing fewer intensive care admissions, fewer unplanned intubations, shorter hospitalization, or improved survival.
+
+Guest: Methodologically, randomization and a standardized rescue algorithm are strengths. Continuous oxygen saturation and transcutaneous carbon dioxide monitoring also provide a more granular physiologic picture than intermittent measurements.
+
+Narrator: There are important limitations. First, this was an unblinded trial. The primary oxygen saturation endpoint is objective, but decisions to interrupt bronchoscopy, perform jaw thrust, or escalate therapy could be influenced by knowledge of treatment assignment.
+
+Guest: Second, the escalation endpoint was not completely symmetric. In the conventional oxygen arm, escalation meant switching to high flow. In the high-flow arm, escalation generally meant increasing the fraction of inspired oxygen. That protocol structure makes the escalation comparison less clean than the primary desaturation comparison.
+
+Narrator: Third, the authors describe the initial fraction of inspired oxygen as approximately comparable between groups, but conventional nasal cannula does not deliver a fixed fraction of inspired oxygen. Actual inspired oxygen varies with minute ventilation, inspiratory flow, mouth opening, and cannula fit. Therefore, the study does not perfectly isolate the independent effect of flow from the effect of delivered oxygen concentration.
+
+Guest: Fourth, the primary analysis was per protocol rather than intention to treat. Only six patients withdrew, so this probably does not erase the signal, but intention-to-treat analysis would have better preserved the protection of randomization in a superiority trial.
+
+Narrator: And generalizability is narrow. The study mainly applies to flexible nasal bronchoscopy under sedation in patients with airway stenosis, many undergoing therapeutic procedures. It does not directly answer what to do during rigid bronchoscopy, general anesthesia, oral bronchoscopy, routine EBUS, robotic bronchoscopy, severe hypoxemic respiratory failure, or near-critical central airway obstruction.
+
+Guest: There is also no economic analysis. The paper supports targeted use more than universal use, but it does not establish the threshold at which reduced interruptions and rescue maneuvers offset the equipment and staffing costs of high flow.
+
+Narrator: From a practical standpoint, the most defensible application is selective. For a spontaneously breathing patient undergoing prolonged flexible nasal bronchoscopy, especially therapeutic work in the setting of airway stenosis, starting high-flow nasal cannula at 50 to 60 liters per minute with a moderate fraction of inspired oxygen appears reasonable when the goal is to reduce brief desaturation and procedural interruption.
+
+Guest: But high flow is not an airway plan. Severe stenosis, active bleeding, dynamic collapse, or rapidly worsening ventilation still requires immediate access to bronchoscope withdrawal, airway adjuncts, rigid bronchoscopy, and definitive airway rescue. A better oxygen device should not create false reassurance.
+
+Narrator: The bottom line is targeted rather than universal. This randomized trial provides credible evidence that high-flow nasal cannula reduces protocol-defined hypoxemia and improves procedural continuity during high-risk nasal bronchoscopy, predominantly in patients with airway stenosis. The magnitude of the physiologic benefit is meaningful, but the study does not prove fewer major complications, and its applicability outside this specific procedural setting remains uncertain.
+
+Guest: For interventional pulmonologists, the paper supports high flow as a planned oxygenation strategy for selected complex flexible bronchoscopy cases and as an effective rescue step when conventional nasal oxygen is inadequate. It does not eliminate the need for careful patient selection, anesthesia planning, or a definitive airway backup strategy.
+
+Narrator: This has been the InterventionalPulm.com IP Journal Review. Thank you for listening.

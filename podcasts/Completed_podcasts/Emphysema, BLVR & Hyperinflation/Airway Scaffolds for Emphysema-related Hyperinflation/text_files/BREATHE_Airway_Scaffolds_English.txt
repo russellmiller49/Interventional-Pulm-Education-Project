@@ -1,0 +1,98 @@
+InterventionalPulm.com IP Journal Review: Airway Scaffolds for Emphysema-related Hyperinflation
+
+Estimated duration: approximately 9 to 10 minutes
+
+Article type: Original research - pooled first-in-human, multicenter, single-arm device study.
+
+Narrator:
+Welcome to InterventionalPulm.com IP Journal Review. In this episode, we are looking at Tana and colleagues, published in the American Journal of Respiratory and Critical Care Medicine in 2025. The article reports six-month results from the BREATHE trial, evaluating airway scaffolds for emphysema-related hyperinflation.
+
+Guest:
+This sits in the bronchoscopic lung volume reduction universe, but it is not valve therapy and it is not just another way to create lobar atelectasis. The concept is airway bypass, or maybe more precisely airway reinforcement. A self-expanding nitinol scaffold is placed so that hyperinflated emphysematous lung can communicate with more central bronchi, allowing trapped gas to exit during exhalation.
+
+Narrator:
+The clinical rationale is familiar. Hyperinflation drives dyspnea, exercise limitation, and a large amount of COPD morbidity. Valves can work very well, but patient selection is constrained by target lobe anatomy, fissure completeness, and collateral ventilation. This study is interesting because it included homogeneous and heterogeneous emphysema, and patients with complete or incomplete fissures.
+
+Guest:
+It also revisits an older idea. The EASE trial used transbronchial passages supported by paclitaxel-eluting stents. EASE showed proof of principle, but durability was poor because patency was lost through mucus, granulation tissue, and stent dislodgment. This paper states that about 13 percent of EASE stents were lost by six months. So the key question is whether a different scaffold design can preserve the physiologic benefit.
+
+Narrator:
+BREATHE was a pooled analysis of two prospective first-in-human studies: BREATHE-1 in Australia and BREATHE-2 in Europe. The pooled analysis was retrospective and not prespecified. There was no randomized control group, no sham arm, and no formal statistical power calculation. That matters because the primary objective was safety and feasibility; efficacy was preliminary.
+
+Guest:
+The treated population had advanced disease. Sixty patients underwent treatment. Mean age was 66 years. Thirty-three were female and twenty-seven were male. Baseline F E V one was 0.70 liters, or 26 percent predicted. Mean residual volume was 5.3 liters, or 255 percent predicted. Mean six-minute walk distance was 299 meters, and the baseline S G R Q C score was 64.8.
+
+Narrator:
+Eligibility required substantial obstruction and hyperinflation: residual volume above 180 percent predicted, R V to T L C ratio above 0.55, M M R C dyspnea of at least 2, and C T evidence of emphysema destruction. Patients with D L C O below 20 percent, recent infection or COPD exacerbation, prior lung volume reduction surgery, giant bullae, or symptomatic bronchiectasis were excluded. So these were sick patients, but still carefully selected.
+
+Guest:
+The procedural workflow is important for an I P audience. Patients had inspiratory and expiratory C T scans with quantitative assessment of emphysema, volume, and air trapping. Up to three target segments per lung were chosen. Bilateral disease could be treated with up to six scaffolds, either in a single procedure or staged across two procedures. Implantation was performed under general anesthesia, using bronchoscopy and fluoroscopy, with the distal tip intended to sit about 10 to 20 millimeters from the pleural surface.
+
+Narrator:
+The device was a permanent self-expanding nitinol implant, precrimped to a 2.1 millimeter delivery profile, compatible with a therapeutic bronchoscope with a 2.8 millimeter working channel. It had a maximum unconstrained diameter of 10 millimeters and came in lengths from 55 to 100 millimeters. The figures are helpful: the paper shows the long helical scaffold, fluoroscopic views in situ, and bronchoscopic views of the proximal opening and distal emphysematous parenchyma.
+
+Guest:
+That visual is not just cosmetic. This is not a short airway-wall fenestration stent. The authors emphasize a flexible single-wire helical structure, low tissue contact density, and enough length to engage multiple airway generations. Mechanistically, that could reduce migration, reduce tissue stress, and preserve patency.
+
+Narrator:
+Now to the results. The investigators screened 89 patients, treated 60, and 59 completed six-month follow-up. Ninety-eight procedures were performed, and 328 airway scaffolds were placed. The median number of scaffolds per patient was six.
+
+Guest:
+Technical success was high: 328 successful deployments out of 355 attempts, or 92.4 percent. When deployment failed, the main issue was the scaffold being too proximal or too distal. In those cases, the scaffold was removed and another was successfully deployed in the same target airway. Index-procedure removal was generally rated as easy and did not cause significant injury.
+
+Narrator:
+For the primary safety outcome, 13 of 60 patients, or 21.7 percent, had at least one device- or procedure-related serious adverse event within six months. There were 21 total related serious adverse events. Pneumonia occurred in 6 patients, or 10 percent. COPD exacerbation occurred in 3 patients, or 5 percent. One patient died from respiratory failure 103 days after the initial procedure, but the death was not considered device related.
+
+Guest:
+The headline safety detail is no pneumothorax within six months. That is encouraging, and it is biologically plausible because this therapy is not designed to produce rapid lobar collapse. But the denominator is only 60 patients, so this should be read as a signal, not a settled comparison with valve therapy.
+
+Narrator:
+Another nuance: related serious adverse events were more common with staged bilateral procedures than with single bilateral procedures, 29.7 percent versus 7.1 percent. But this was not randomized, and the numbers are small. That could reflect selection, procedure burden, patient fragility, or chance.
+
+Guest:
+On efficacy, residual volume is the central signal. R V decreased by a mean of 866 milliliters at three months, with a 95 percent confidence interval of 626 to 1,106 milliliters. At six months, R V was still down by 753 milliliters, with a 95 percent confidence interval of 512 to 994 milliliters. The reported p value was less than 0.0001.
+
+Narrator:
+The study also reported improvements in R V to T L C ratio, F E V one, F V C, S G R Q C, C A T score, M M R C dyspnea, and six-minute walk distance at three and six months. Mean changes exceeded prespecified minimal clinically important differences where an M C I D was defined. But the waterfall plots are important. They show substantial responders, but also nonresponders and some worsening on particular measures.
+
+Guest:
+That is exactly where the next research questions live. Which patients respond? Which C T features matter? Is it emphysema distribution, degree of air trapping, airway anatomy, target segment selection, mucus burden, scaffold length, or deployment location? A mean R V reduction is clinically meaningful, but it does not replace a responder phenotype.
+
+Narrator:
+The patency data support the proposed mechanism. At six months, assessed implants remained present in the implanted airway. Investigator assessment found that proximal location had not changed relative to immediately postdeployment for 73.2 percent of scaffolds. Quantitative C T showed that 97.8 percent of implants were within 10 millimeters of their three-month distal position relative to the pleura.
+
+Guest:
+The bronchoscopic and C T figures are persuasive mechanistic evidence. The article shows the same airway immediately after implantation and at two and five months, still patent without obvious obstruction. It also shows C T airway tenting: a distal airway that was not measurable before implantation becomes measurable after implantation.
+
+Narrator:
+Still, patency was not perfect clinically. Six scaffolds in four patients were targeted for removal between 37 and 65 days after implantation. Reasons included airway kinking with dyspnea, lack of patency, and pneumonia. Five of six removals were successful without tissue injury or other complications. One partial removal was followed by a respiratory tract infection that resolved without sequelae.
+
+Guest:
+So what should an interventional pulmonologist do with this? The promising part is that airway scaffolding may eventually offer a treatment path for hyperinflated patients who do not meet valve-selection criteria, especially those with collateral ventilation or incomplete fissures. But this study does not prove that clinical niche yet. It shows feasibility, an early safety profile, and a strong six-month physiologic signal.
+
+Narrator:
+The limitations are substantial. Single-arm COPD device studies are vulnerable to placebo effect, regression to the mean, trial follow-up intensity, medication optimization, and procedure-context effects. Without a sham or medical-therapy control group, it is hard to attribute quality-of-life and exercise gains entirely to the device.
+
+Guest:
+There is also a sponsor consideration. The study was supported by Apreo Health, and the article states that the funder had a role in study design, data analysis, data interpretation, and writing. That does not invalidate the results, but it raises the bar for independent replication, transparent adjudication, and randomized data.
+
+Narrator:
+Implementation would not be trivial. This procedure requires quantitative inspiratory and expiratory C T, target airway planning, general anesthesia, fluoroscopy, therapeutic bronchoscopy, and a team comfortable managing permanent airway implants. Centers would need protocols for infection surveillance, mucus management, follow-up bronchoscopy, and retrieval when necessary.
+
+Guest:
+And patient selection will be everything. The exclusion criteria matter, as does the fact that this was performed in specialized centers. Generalizing to all severe emphysema patients would be premature. The comparison with valves is also tempting, especially because there were no pneumothoraces, but valves have randomized data and defined responder populations. This scaffold approach has early feasibility data and a compelling mechanism. Those are different evidence tiers.
+
+Narrator:
+The next step should be randomized evaluation with careful attention to sham effect, durability beyond six months, infection risk, retrieval strategy, target selection algorithms, and patient-centered outcomes. Subgroup data by homogeneous versus heterogeneous emphysema and complete versus incomplete fissures will be particularly important.
+
+Guest:
+Bottom line: Tana and colleagues report that bronchoscopically placed self-expanding nitinol airway scaffolds were technically feasible in severe emphysema with hyperinflation. The study showed a 92.4 percent deployment success rate, a 21.7 percent related serious adverse event rate, no pneumothoraces, and a sustained mean residual volume reduction of about three-quarters of a liter at six months.
+
+Narrator:
+That makes this a serious early signal, not definitive comparative effectiveness evidence. For now, the article adds cautious momentum to the idea that airway bypass may not be dead; it may just have needed a better scaffold.
+
+Guest:
+Agreed. For an I P audience, this belongs in the promising-device category: mechanistically plausible, technically feasible, physiologically interesting, and not ready for broad practice adoption without controlled trials.
+
+Narrator:
+That will do it for this episode of InterventionalPulm.com IP Journal Review. The key takeaway is cautious interest: strong rationale, encouraging six-month physiology, meaningful unanswered questions, and a clear need for randomized evidence before wide implementation.

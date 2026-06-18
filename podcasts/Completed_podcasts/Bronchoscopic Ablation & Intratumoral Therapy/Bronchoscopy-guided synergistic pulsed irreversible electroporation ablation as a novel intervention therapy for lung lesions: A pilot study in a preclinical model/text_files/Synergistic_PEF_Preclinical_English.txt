@@ -1,0 +1,116 @@
+Narrator:
+Welcome to InterventionalPulm.com IP Journal Review. Today we’re looking at a preclinical ablation paper from Zhang and colleagues, published in Translational Research in 2026. The article is titled, “Bronchoscopy-guided synergistic pulsed irreversible electroporation ablation as a novel intervention therapy for lung lesions: A pilot study in a preclinical model.”
+
+Guest:
+This one sits right in the growing space of bronchoscopic therapy for pulmonary nodules. Not diagnosis, not staging, but actual local treatment delivered through the airway. And specifically, the paper evaluates bronchoscopy-guided synergistic pulsed irreversible electroporation, or S I R E, in a porcine lung model.
+
+Narrator:
+Right. The clinical motivation is familiar. For patients with early-stage lung cancer or pulmonary metastases who are not ideal surgical candidates, we already think about SBRT, percutaneous thermal ablation, and in selected settings bronchoscopic ablation. But each approach has tradeoffs. Percutaneous ablation requires crossing pleura. Thermal approaches raise concerns about heat sink, collateral injury, and lesions near airways, vessels, or pleura.
+
+Guest:
+And that is the conceptual appeal of irreversible electroporation. It is a nonthermal pulsed electric field technique. Instead of cooking tissue, the pulse disrupts cell membranes and induces cell death while potentially preserving extracellular matrix and structural elements like vessels and ducts. In the lung, that theoretical preservation of bronchi and vessels is a big deal, especially for central or peribronchovascular lesions where thermal injury is exactly what worries everyone.
+
+Narrator:
+The twist here is the “synergistic” part. The authors are not simply testing conventional I R E. They use a microsecond and nanosecond composite pulse strategy. Their rationale is that lung tissue and tumor tissue are electrically heterogeneous, and S I R E may produce a more uniform local electric field than conventional pulse strategies.
+
+Guest:
+That is the hypothesis. But it is important to say upfront: this was not a tumor efficacy study. There were no malignant lung nodules in these animals. This was a safety, feasibility, and tissue-effect study in normal porcine lung.
+
+Narrator:
+The model included three male Bama pigs, 45 to 55 kilograms. The authors planned ablation targets in locations that matter clinically: adjacent to airways, adjacent to vasculature, adjacent to pleura, and within lung parenchyma. Across the design, they describe 30 repeated ablations in three animals.
+
+Guest:
+The procedural workflow is also worth highlighting. The animals underwent thin-section preoperative CT, then navigation path planning. Under general anesthesia, a flexible bronchoscope was advanced into the airways. A disposable pulse ablation catheter was positioned at predefined targets using a navigational bronchoscopy platform, and catheter position was confirmed with cone-beam CT both before and after ablation.
+
+Narrator:
+The figure on page 3 is useful because it visually lays out the setup: bronchoscope, ablation catheter, pulse generator, ECG monitoring, bronchoscopic image confirmation, and cone-beam CT projection of the delivered catheter. So although the paper frames this as bronchoscopy-guided therapy, it is really bronchoscopy plus navigation plus CBCT confirmation.
+
+Guest:
+Exactly. That matters for translation. This is not just “put a catheter through a scope and press ablate.” It is an advanced image-guided workflow. If this eventually moves toward clinical trials, the required imaging infrastructure and team workflow will be central to adoption.
+
+Narrator:
+In terms of procedural feasibility, all procedures were completed successfully. Catheter insertion under bronchoscopic navigation reportedly took about 1 to 3 minutes, and total pulse delivery after probe placement was around 5 to 8 minutes.
+
+Guest:
+And the acute safety signals were encouraging. They reported no obvious muscle twitching, bleeding, pneumothorax, or cardiac abnormalities. That is notable because pulsed electric field therapies can raise concerns about muscle contraction and arrhythmia, depending on pulse parameters and location.
+
+Narrator:
+Laboratory monitoring included CBC, blood biochemistry, CRP, coagulation parameters, and arterial blood gases. The authors report no statistically significant differences between preoperative and postoperative values. Pig A and Pig B were followed to postoperative day 3, and Pig C had serial evaluation through day 28.
+
+Guest:
+That said, the lab safety data should be interpreted very cautiously. With only three animals, statistical comparisons are not very informative. Also, some baseline values in the tables look unusual enough that the signal is better viewed qualitatively: there was no clear clinical deterioration, no severe systemic inflammatory response, and no sustained lab abnormality clearly attributable to the procedure.
+
+Narrator:
+The imaging evolution is one of the most interesting parts of the paper. Immediately after ablation, CT showed a high-density ablation zone with surrounding edema, peripheral exudation, and minimal pneumatosis. By postoperative day 3, the ablation area was more conspicuous and better demarcated. By day 7, edema and exudation decreased, and the ablation zone started to shrink. By day 14, the lesions showed contraction and fibrotic features. By day 28, the ablation zones had further decreased, with some showing near-complete resolution.
+
+Guest:
+The CT montage on page 5 makes that temporal pattern easy to see. The ablation zone starts as a discrete hyperdense injury and then progressively contracts. The key safety observation is that airways and vessels traversing or adjacent to the ablation regions remained patent, without filling defects or luminal stenosis on follow-up imaging.
+
+Narrator:
+Pathology supported that imaging pattern. On gross examination at day 3, the ablation zones were necrotic and well demarcated, with localized hemorrhage and mild surrounding edema. Visible bronchial and vascular structures were described as intact. By day 28, hemorrhage and edema had resolved, the ablation region was smaller, and the area was filled and organized by granulation tissue.
+
+Guest:
+Histologically, day 3 showed cellular atrophy, necrosis, interstitial edema, widened intercellular spaces, nuclear fragments, inflammatory infiltration, and fibroblast infiltration. By day 28, necrotic tissue had largely been replaced by granulation tissue with fibroblast proliferation, minimal inflammation, and no major abnormality in bronchial or vascular architecture.
+
+Narrator:
+So the study does demonstrate that bronchoscopically delivered S I R E can create a localized lung injury pattern in normal porcine lung, including near critical structures, without obvious short-term airway or vessel destruction.
+
+Guest:
+That is the fair positive interpretation. The technique appears feasible, the acute safety profile in this small model is reassuring, and the tissue response behaves in a biologically plausible way: sharply demarcated injury early, then organization and contraction over time.
+
+Narrator:
+Now the devil’s advocate question: how far can we take this?
+
+Guest:
+Not very far clinically yet. This is a platform-enabling study, not a clinical efficacy study. The most important limitation is that the targets were normal lung tissue, not lung tumors. Tumors have different conductivity, cellularity, necrosis, vascularity, stromal architecture, and sometimes adjacency to atelectasis or emphysema. The whole rationale for S I R E is that heterogeneous tissue may distort electric fields, but this study does not prove reliable tumor kill in heterogeneous malignant lung lesions.
+
+Narrator:
+And there is no comparator.
+
+Guest:
+Right. No comparison with microwave ablation, radiofrequency ablation, cryoablation, conventional I R E, or sham treatment. So we cannot say S I R E is safer or more effective than existing techniques. We can only say that in this small porcine model, it produced ablation zones without major observed complications.
+
+Narrator:
+Another issue is independence of observations. The authors describe 30 ablations, which sounds substantial, but those ablations occurred in only three animals.
+
+Guest:
+That is an important statistical point. Multiple ablation zones within the same pig do not equal 30 independent animals. For tissue appearance, repeated targets are useful. For safety, especially rare complications like pneumothorax, hemoptysis, arrhythmia, delayed airway stenosis, bronchopleural fistula, or infection, three animals and 28 days of follow-up are only a first look.
+
+Narrator:
+Also, the follow-up horizon is short. Day 28 is useful for early healing, but not enough to understand mature fibrosis, delayed airway narrowing, vessel remodeling, cavitation, chronic infection risk, or how ablation zones behave in emphysematous or fibrotic human lung.
+
+Guest:
+And clinically, the endpoint that matters is not just whether normal tissue can be ablated. It is whether a malignant lesion can be completely treated with an adequate margin while preserving the structures we care about. That means future studies need quantitative ablation geometry, dose-response mapping, temperature monitoring or thermal exclusion, margin reliability, and eventually local control.
+
+Narrator:
+There is also a practical workflow point. This paper used CBCT confirmation before and after ablation. That is a strength scientifically, because it confirms catheter position, but it also means this workflow may be most relevant to centers with advanced imaging in the bronchoscopy suite or hybrid OR.
+
+Guest:
+Yes. If clinical translation requires CBCT, navigation, dedicated ablation catheters, pulse generators, anesthesia, ECG monitoring, and potentially robotic or advanced bronchoscopic access, adoption will not be trivial. But that is not necessarily a flaw. Many advanced IP procedures already live in that space.
+
+Narrator:
+Where do you see the most plausible clinical niche?
+
+Guest:
+The most interesting niche is not necessarily every small peripheral nodule. It may be lesions where percutaneous thermal ablation is unattractive because of pleural risk, central location, proximity to vessels or airways, or limited pulmonary reserve. The nonthermal mechanism could be particularly appealing for peribronchovascular lesions if it truly preserves airway and vascular architecture. But that remains to be shown in tumor-bearing models and then in carefully selected human trials.
+
+Narrator:
+There is also the possibility of a combined bronchoscopic session: diagnosis, mediastinal staging, and eventually local ablation.
+
+Guest:
+That is the long-term vision. An IP clinician could theoretically confirm malignancy, stage the mediastinum, and treat a lesion in a single anesthetic event. But that future requires much more evidence: real-time confirmation of tool-in-lesion, reliable ablation margins, predictable safety near pleura and vessels, and a post-ablation surveillance algorithm.
+
+Narrator:
+The authors also discuss potential immune effects of nanosecond pulsed electric fields and possible synergy with drug delivery or immunotherapy.
+
+Guest:
+Interesting, but speculative for this paper. They did not test antitumor immunity, tumor rechallenge, immunotherapy combinations, or local drug delivery. It is reasonable background, but it should not drive clinical enthusiasm ahead of actual oncologic data.
+
+Narrator:
+So final synthesis: Zhang and colleagues provide an early preclinical demonstration that bronchoscopy-guided S I R E ablation can be delivered to multiple porcine lung targets, including sites near bronchi, vessels, pleura, and parenchyma. The procedures were completed without observed pneumothorax, bleeding, muscle twitching, or cardiac abnormalities. CT and pathology showed well-demarcated ablation zones that contracted and organized over 28 days, while adjacent airways and vessels remained structurally patent.
+
+Guest:
+And the caveat is just as important: this is normal porcine lung, three animals, short follow-up, no comparator, and no cancer efficacy endpoint. It is a promising technical feasibility study, not a practice-changing therapeutic trial. For IP audiences, the right takeaway is cautious interest. S I R E may become part of the bronchoscopic ablation conversation, especially for lesions near critical structures, but the field needs larger animal studies, tumor models, dose mapping, margin studies, and carefully designed early human trials before this can be considered a clinical treatment strategy.
+
+Narrator:
+That’s it for this episode of InterventionalPulm.com IP Journal Review. Thanks for listening. The key question moving forward is not simply whether a bronchoscopic electric field catheter can create an ablation zone. It is whether it can reproducibly eradicate tumor, preserve lung architecture, and do so safely in the patients who have the most to gain from a minimally invasive bronchoscopic therapy.

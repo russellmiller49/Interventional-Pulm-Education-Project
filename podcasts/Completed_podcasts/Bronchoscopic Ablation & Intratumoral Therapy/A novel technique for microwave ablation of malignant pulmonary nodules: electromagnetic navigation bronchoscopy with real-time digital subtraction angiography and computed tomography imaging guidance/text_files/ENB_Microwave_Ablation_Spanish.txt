@@ -1,0 +1,83 @@
+InterventionalPulm.com IP Journal Review: E N B, D S A y C B C T para ablación broncoscópica por microondas de nódulos pulmonares malignos
+
+Duración estimada: 9 minutos
+
+Tipo de artículo: Investigación original; estudio técnico de factibilidad de un solo centro y artículo de técnica
+
+Narrador: Bienvenidos a Interventional Pulm punto com I P Journal Review. Hoy comentamos el estudio de Xu y colegas, publicado en European Journal of Cardio-Thoracic Surgery en 2025, sobre broncoscopia de navegación electromagnética combinada con angiografía por sustracción digital en tiempo real y tomografía computarizada de haz cónico para ablación por microondas de nódulos pulmonares malignos.
+
+Invitado: Y este es un artículo muy procedimental. No intenta demostrar de manera definitiva la eficacia oncológica a largo plazo. Más bien plantea una pregunta práctica: ¿podemos hacer que la ablación broncoscópica sea más precisa si añadimos D S A bidimensional en tiempo real al flujo de trabajo habitual con E N B y C B C T?
+
+Narrador: Exacto. El problema clínico es familiar. La E N B puede acercarnos a una lesión periférica, pero “cerca” no siempre es suficiente cuando el objetivo terapéutico es cubrir toda la zona de ablación, y no simplemente obtener tejido. Una herramienta de biopsia a veces tolera cierto error de localización. Una antena de ablación, especialmente en nódulos pequeños, profundos, en vidrio esmerilado o parcialmente sólidos, realmente no lo tolera bien.
+
+Invitado: Así es. El artículo describe bien la limitación. La E N B puede verse afectada por error de registro, movimiento respiratorio, atelectasia y desplazamiento inducido por el broncoscopio. La C B C T ayuda porque permite confirmación tridimensional, pero no es una guía verdaderamente continua en tiempo real. Si cada ajuste requiere otro giro de C B C T, pueden aumentar el tiempo del procedimiento y la radiación.
+
+Narrador: Por eso los autores proponen un flujo de trabajo de fusión. La tomografía preoperatoria se carga en la plataforma de navegación SuperDimension. El paciente recibe anestesia general con una mascarilla laríngea. Luego se realiza una tomografía intraoperatoria, se segmenta el nódulo, se reconstruye en tres dimensiones, y esa reconstrucción se importa al sistema de D S A en tiempo real.
+
+Invitado: Después se avanza la guía localizable a través del broncoscopio bajo navegación E N B hacia el blanco. Cuando la guía está cerca, se utiliza D S A en tiempo real para confirmar si realmente está donde el operador desea. Si no está en una posición adecuada, la guía puede ajustarse dinámicamente con retroalimentación combinada de E N B y D S A, incluyendo una vista de 360 grados. Después se intercambia la guía localizable por la sonda de ablación, se confirma la posición de la sonda y se realiza la ablación por microondas.
+
+Narrador: La figura del flujo de trabajo del artículo es útil porque muestra el ritmo conceptual: E N B lleva al operador al vecindario, D S A permite el ajuste fino en tiempo real, C B C T confirma la posición antes de la ablación, se realiza la ablación y la C B C T posterior evalúa la zona de ablación y posibles complicaciones. La imagen más interesante es el esquema de ajuste con D S A, donde el blanco aparente de la E N B y el blanco real están desplazados, y la D S A permite redirigir la guía hacia anterior e inferior.
+
+Invitado: Ese es el núcleo técnico del artículo. No es simplemente “E N B más C B C T”. El valor adicional que se está evaluando es si la D S A en tiempo real puede cerrar la brecha entre la navegación y la imagen confirmatoria.
+
+Narrador: Entremos en la cohorte. Este fue un estudio de un solo centro con 39 pacientes tratados entre enero y noviembre de 2024. Se trataron 51 nódulos pulmonares malignos. Los criterios de inclusión fueron nódulos de 3 centímetros o menos, sospecha de malignidad por características de imagen, y pacientes que no eran candidatos médicos para cirugía, que rechazaban la cirugía, o que se manejaban con una estrategia híbrida: resección de algunos nódulos y ablación de otros.
+
+Invitado: La mediana de edad fue de 61 años, y la cohorte fue predominantemente femenina: 32 mujeres y 7 hombres. La mediana del diámetro nodular fue de 12 milímetros. Ese tamaño importa. Son lesiones pequeñas, y la mayoría no eran sólidas. Treinta nódulos eran de vidrio esmerilado puro, 16 eran parcialmente sólidos, y solo 5 eran sólidos.
+
+Narrador: Ese es un punto importante para la generalización. Una cohorte de nódulos predominantemente subsólidos de 12 milímetros es muy distinta de una cohorte de metástasis sólidas más grandes, o de tumores recurrentes centrales. El desafío técnico es real, pero la biología y las expectativas de seguimiento son diferentes.
+
+Invitado: También vale la pena señalar el perfil de función pulmonar. La mediana del volumen espiratorio forzado en un segundo fue de 2,14 litros, y la mediana del porcentaje predicho fue de 96,7 por ciento. Así que, aunque el estudio incluyó pacientes inoperables o que rechazaban cirugía, no fue exclusivamente una cohorte de pacientes con reserva pulmonar profundamente limitada.
+
+Narrador: En cuanto al procedimiento, el paso de guía por fusión E N B y C B C T fue exitoso en todos los casos. La mediana del tiempo de navegación, desde la guía localizable hasta la posición más cercana al nódulo, fue de 12 minutos, con un rango de 6 a 32 minutos. Se realizaron una mediana de 3 exploraciones de C B C T por procedimiento, con un rango de 2 a 7.
+
+Invitado: Uno de los números clínicamente más interesantes es el error inicial de localización. Después de la navegación inicial, la mediana de la distancia entre la punta de la guía localizable y el borde del nódulo fue de 10 milímetros, con un rango de hasta 25 milímetros. Eso no es trivial cuando la mediana del tamaño del nódulo era de solo 12 milímetros.
+
+Narrador: Correcto. Ese número casi resume el argumento del artículo. Si la E N B sola te deja a 10 milímetros del borde del nódulo, entonces la corrección en tiempo real no es un lujo. Puede ser la diferencia entre tratar la lesión y tratar pulmón perinodular.
+
+Invitado: Con la guía por fusión D S A y C B C T, los autores reportan que la antena de ablación se posicionó en el borde del nódulo en todos los casos, con una mediana de error de 1 milímetro y un rango de 0 a 5 milímetros. Es un resultado técnico llamativo, aunque debe interpretarse con cautela porque no hubo un brazo comparador.
+
+Narrador: La ablación por microondas se realizó a 40 a 65 watts durante 5 a 10 minutos, ajustada según el tamaño del nódulo y la posición de la sonda. Se usaron ablaciones superpuestas cuando fue necesario. La mediana del tiempo de ablación fue de 12 minutos, y el número de sesiones de ablación por nódulo varió de 1 a 4, con una mediana de 2.
+
+Invitado: La mediana del tiempo total del procedimiento, desde el inicio de la navegación hasta la confirmación final con C B C T, fue de 85 minutos. El rango fue amplio, de 36 a 146 minutos. La mediana de la dosis de radiación de las exploraciones de C B C T, reportada como kerma en aire en el punto de referencia, fue de 276 miligray, con un rango de 107 a 913 miligray.
+
+Narrador: Y esa métrica de radiación merece una formulación cuidadosa. Los autores señalan explícitamente que el R P A K no es lo mismo que la dosis absorbida por el paciente. Es una medida de referencia del sistema C B C T y no incorpora la atenuación ni la dispersión dentro del cuerpo. Por tanto, es útil para comparar protocolos de imagen, pero no debe traducirse de manera casual como dosis absorbida real.
+
+Invitado: En cuanto a los desenlaces, el resultado principal fue el éxito técnico en 47 de 51 nódulos, es decir, 92,2 por ciento. El éxito técnico se definió como cobertura del nódulo por la zona de ablación en la C B C T inmediata posterior a la ablación y en la tomografía de tórax del primer día posoperatorio. Cuatro nódulos tuvieron cobertura parcial, y los autores señalan posible cobertura completa en seguimientos posteriores.
+
+Narrador: La seguridad pareció favorable en esta serie inicial. No hubo complicaciones mayores. Las complicaciones menores incluyeron hemoptisis en 2 pacientes y fiebre posoperatoria en 3 pacientes, todas observadas en el primer día posoperatorio y resueltas espontáneamente sin intervención.
+
+Invitado: Eso es tranquilizador, especialmente porque el neumotórax es uno de los grandes diferenciadores entre las estrategias de ablación broncoscópica y percutánea. Pero aquí necesitamos la voz del abogado del diablo. Con 39 pacientes, la ausencia de complicaciones mayores no significa que la tasa de complicaciones mayores sea cero. Significa que no se observaron complicaciones mayores en esta cohorte inicial y seleccionada.
+
+Narrador: De acuerdo. Y el estudio es descriptivo. No realizaron análisis estadísticos inferenciales, y no hubo grupo control. Así que no podemos decir que esta técnica sea superior a la ablación por microondas percutánea guiada por tomografía, a E N B más C B C T sola, a broncoscopia robótica con C B C T, o a S B R T. Podemos decir que la técnica fue factible en este centro y produjo una alta tasa de éxito técnico inmediato.
+
+Invitado: La otra limitación clave es el seguimiento. Los autores no evaluaron desenlaces a largo plazo, como progresión tumoral local o supervivencia, debido a la naturaleza indolente del cáncer de pulmón en etapa temprana y al seguimiento limitado. Para la ablación, la cobertura inmediata es necesaria, pero no suficiente. El desenlace oncológico es el control local duradero.
+
+Narrador: Eso es especialmente relevante para lesiones en vidrio esmerilado y parcialmente sólidas. Si muchas lesiones son nódulos indolentes dentro del espectro de adenocarcinoma, el éxito radiológico a corto plazo puede verse excelente. La pregunta real es qué ocurre a 6 meses, 12 meses, 24 meses y más, usando definiciones estandarizadas de progresión local y falla del tratamiento.
+
+Invitado: También hay una pregunta sobre patología. El lenguaje de inclusión incluye nódulos sospechosos de malignidad por características de imagen. En decisiones multidisciplinarias reales, eso a veces es razonable, especialmente en patrones de múltiples cánceres pulmonares primarios. Pero para evaluar eficacia, importan la confirmación histológica y el diagnóstico a nivel de lesión.
+
+Narrador: Otro punto de implementación es la infraestructura. Este no es un flujo de trabajo de bajos recursos. Requiere E N B, tomografía intraoperatoria o capacidad de C B C T, integración de D S A en tiempo real, reconstrucción de imagen, apoyo anestésico y un equipo cómodo alternando entre broncoscopia, imagen avanzada y ablación. Eso es muy diferente de una broncoscopia estándar en una sala de endoscopia.
+
+Invitado: Y eso plantea la pregunta de adopción. ¿Es ampliamente adoptable, o debe verse como innovación de centros expertos? El artículo se inclina hacia el potencial futuro, pero las barreras prácticas son sustanciales: equipo capital, flujo de trabajo con radiación, disponibilidad de sala, entrenamiento, coordinación con radiología o equipos de quirófano híbrido, y credenciales para ablación broncoscópica.
+
+Narrador: La otra cara es que el nicho de selección de pacientes es muy real. Los casos representativos del artículo hacen concreta la justificación: pacientes con múltiples cánceres pulmonares primarios, lobectomía previa, reserva limitada, lesiones profundas, o estrategias híbridas en las que una lesión se reseca y otra lesión más profunda se ablaciona. Esos son exactamente los casos donde la preservación de parénquima y la localización precisa importan.
+
+Invitado: Ahí puede estar el mayor atractivo de esta técnica. No como reemplazo general de la cirugía o de la S B R T, sino como herramienta para pacientes cuidadosamente seleccionados: múltiples nódulos, blancos periféricos profundos, resecciones previas, reserva limitada, o pacientes que rechazan cirugía después de una discusión multidisciplinaria.
+
+Narrador: El artículo también coloca la ablación junto a la S B R T. Los autores señalan que la S B R T es una opción establecida para pacientes con cáncer de pulmón de células no pequeñas en etapa temprana que son médicamente inoperables o rechazan cirugía, y discuten la ablación como alternativa en pacientes seleccionados, en particular cuando las características individuales, la preferencia del paciente y la experiencia institucional la apoyan.
+
+Invitado: Ese es el encuadre correcto. La pregunta clínica no es: “¿esto reemplaza la S B R T?” La pregunta es: “¿para qué pacientes la terapia térmica broncoscópica ofrece un mejor equilibrio entre terapia local, preservación de tejido, posibilidad de repetición, riesgo procedimental y claridad del seguimiento?”
+
+Narrador: Para una audiencia de neumología intervencionista, este artículo aporta algunas ideas importantes. Primero, cuantifica la brecha entre la proximidad lograda por E N B y la posición real en el borde del blanco. Segundo, propone la D S A en tiempo real como una forma de corregir esa brecha sin giros repetidos de C B C T. Tercero, muestra que, en una cohorte seleccionada de un solo centro, la ablación broncoscópica por microondas con este enfoque de fusión puede lograr alta cobertura inmediata con baja morbilidad aguda observada.
+
+Invitado: Pero aún no responde las preguntas mayores. Todavía necesitamos reproducibilidad multicéntrica, datos de curva de aprendizaje, contabilidad estandarizada de radiación, comparación contra otras estrategias de guía, análisis de costos y flujo de trabajo, y, sobre todo, control local duradero.
+
+Narrador: Así que el mensaje final es equilibrado. Es un estudio técnico de factibilidad elegante, con un concepto procedimental muy relevante para la neumología intervencionista. Debería generar interés en centros que ya realizan broncoscopia avanzada guiada por imagen y terapia broncoscópica. Pero no debe leerse como evidencia definitiva de que este flujo de trabajo mejora desenlaces oncológicos a largo plazo o de que deba adoptarse ampliamente mañana.
+
+Invitado: Bien dicho. Por ahora, es un artículo para llevar a discusiones de comité de tumores, reuniones de innovación procedimental y planificación de programas de ablación. Afina la pregunta de cuánta precisión necesita la terapia broncoscópica y qué herramientas de imagen son necesarias para que esa precisión sea creíble.
+
+Narrador: Esto fue Interventional Pulm punto com I P Journal Review. Hoy discutimos el estudio de Xu y colegas sobre E N B combinada con D S A en tiempo real y C B C T para ablación broncoscópica por microondas de nódulos pulmonares malignos. El mensaje práctico es entusiasmo con disciplina: un flujo de trabajo prometedor, desempeño técnico inmediato impresionante, pero todavía evidencia temprana que requiere seguimiento más largo y validación más amplia.
+
+Invitado: Y como siempre en oncología procedimental, la imagen al final del caso no es lo mismo que el desenlace oncológico. Es el punto de partida para demostrar ese desenlace.
+
+Narrador: Gracias por escuchar Interventional Pulm punto com I P Journal Review.

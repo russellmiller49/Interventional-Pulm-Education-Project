@@ -1,0 +1,69 @@
+InterventionalPulm.com IP Journal Review: Pediatric Therapeutic Bronchoscopy Beyond Foreign Body Removal
+
+Estimated duration: Approximately 8 to 9 minutes
+
+Article type: Original research, multicenter retrospective chart review
+
+Narrator: Welcome to InterventionalPulm dot com I P Journal Review. In this episode, we are looking at Madan and colleagues, published in Pediatric Pulmonology in 2025, on therapeutic bronchoscopic interventions for non foreign-body removal indications in children.
+
+Narrator: The framing matters. Pediatric bronchoscopy has traditionally centered on diagnostic flexible bronchoscopy and rigid bronchoscopy for foreign body extraction. This paper asks a different question: outside foreign bodies, what therapeutic airway interventions are being performed in children with central airway pathology, and what do the short-term outcomes look like?
+
+Guest: Right. For adult interventional pulmonology, central airway obstruction is familiar territory: dilation, debulking, electrocautery, cryotherapy, laser, A P C, stenting, rigid bronchoscopy, and complex anesthesia planning. In pediatrics, the same principles apply, but the margin for error is smaller, the tools are smaller, and the published experience is much more limited.
+
+Narrator: This was a retrospective chart review from four tertiary centers in India, covering January 2015 through November 2023. The authors included consecutive children younger than 18 who underwent therapeutic interventional bronchoscopy with either a flexible or rigid bronchoscope. They excluded foreign body removal, whole lung lavage, E B U S T B N A, transbronchial lung cryobiopsy, and other diagnostic procedures.
+
+Guest: So this is not a diagnostic yield paper and not a foreign-body paper. It is a feasibility and outcomes study of pediatric therapeutic airway intervention. That means the cohort is highly selected: children who were referred, accepted, and treated at centers with the expertise and equipment to do this work.
+
+Narrator: The cohort included 72 children who underwent 143 therapeutic bronchoscopic airway interventions. Mean age was 140 months, with a wide range from 2 months to 215 months. Forty-one children, or 57 percent, were male. Sixty-seven children, 93 percent, had central airway obstruction, or C A O.
+
+Guest: The disease mix is one of the most interesting parts of the paper. The most common diagnosis was post-tuberculosis tracheobronchial stenosis, at 29 percent. Central airway tumor accounted for 26 percent, and postintubation or posttracheostomy tracheal stenosis also accounted for 26 percent. That is not necessarily the same case mix many North American or European pediatric airway programs would see, particularly because tuberculosis-related stenosis is so prominent.
+
+Narrator: The symptoms were often chronic. Breathlessness was reported in 78 percent and cough in 61 percent. The median symptom duration was 60 months, with an interquartile range of 30 to 150 months. That raises a practical issue: for some children, delayed recognition and delayed referral may be part of the disease story.
+
+Guest: Bronchoscopically, airway stenosis was the dominant finding. Subglottic, tracheal, or bronchial stenosis was seen in 43 children, or 59.7 percent. Endoluminal growth or mass was seen in 21 children, or 29.2 percent. Radiographically, lung collapse was present in 38.9 percent, so many of these were clinically consequential obstructions, not minor incidental airway findings.
+
+Narrator: Procedurally, airway dilation was the most common intervention. Combining dilation alone with dilation plus stenting, 38 children, or 52.7 percent, underwent dilation. Balloon dilation was used in 34 cases, while rigid bronchoscopic dilation was used in 4. Endoluminal tumor debulking was performed in 21 children, or 29 percent.
+
+Guest: And the cases were clearly multimodality. Electrocautery was used in 44 percent, mechanical debulking in 10 percent, cryotherapy in 10 percent, A P C in 10 percent, and laser in 4 percent. Stenting was performed in 24 children, or one-third of the cohort, either alone or combined with dilation or debulking. Reported stent types included self-expanding metallic stents, silicone stents, and Montgomery T-tubes.
+
+Narrator: Every procedure was performed under general anesthesia. The airway conduit was a rigid bronchoscope in 53 children, or 74 percent, and an L M A in 19 children, or 26 percent. Rigid bronchoscopy alone was used in 18 percent, flexible bronchoscopy alone in 19 percent, and both together in 63 percent.
+
+Guest: That detail is important. The paper is not saying a pediatric flexible bronchoscope can do everything. It is describing a hybrid airway intervention environment: rigid and flexible bronchoscopy, general anesthesia, and adult-style interventional tools, adapted to pediatric anatomy and indication.
+
+Narrator: The headline outcome was immediate procedural success, defined as adequate airway patency without need for tracheostomy or open airway surgery. That was achieved in 66 of 72 patients, or 92 percent.
+
+Guest: That is a strong immediate outcome, but it needs the right interpretation. Immediate patency is clinically meaningful in C A O, especially when a child has lobar or whole-lung collapse. But it is not the same as durable success, normal airway growth, long-term symptom control, or avoidance of later surgery.
+
+Narrator: Complications occurred in 14 children, or 19.4 percent. The authors report that all were minor and that there was no procedural mortality. The most common delayed issue was intraluminal granulation tissue, seen in 6 children, especially after stent placement. Other complications included 3 episodes of mild to moderate airway bleeding, 1 pneumothorax during bronchial dilation, 1 tracheal injury during mechanical debulking, 2 cases of restenosis, and 1 stent fracture.
+
+Guest: The no-mortality finding is reassuring, but a nearly 20 percent complication rate is still meaningful, even when events are described as minor. Also, 46 percent of children required a repeat bronchoscopic procedure, and 17 percent required another intervention such as surgical resection, bronchoplasty, tracheoplasty, or cardiac repair. So this is not simply “bronchoscopy fixes the problem.” It is better framed as therapeutic bronchoscopy being one component of longitudinal airway management.
+
+Narrator: The figures reinforce that point visually. On page 4, Figure 1 shows severe left main bronchus stenosis with left lung collapse, balloon dilation, and radiographic improvement. On page 5, Figure 2 shows complete left main bronchus obstruction by an intraluminal mass, with near-complete patency after electrosurgical snaring and improved imaging afterward.
+
+Guest: Those images capture the appeal of therapeutic bronchoscopy: when the anatomy is right and the procedure works, the physiologic effect can be immediate. Recanalizing a mainstem bronchus or opening a critical stenosis can change ventilation quickly. But the histologies in the tumor group were heterogeneous, including inflammatory myofibroblastic tumor, mucoepidermoid carcinoma, carcinoid, papilloma, hemangioma, tubercular growth, and others. These are not one disease, and the post-procedure plan cannot be one-size-fits-all.
+
+Narrator: Methodologically, the strengths are clear. The study is multicenter, spans nearly a decade, and intentionally excludes foreign body extraction and purely diagnostic procedures. It gives a cleaner view of therapeutic pediatric airway intervention beyond the classic pediatric bronchoscopy lane.
+
+Guest: It also organizes disease in a way that makes sense procedurally. Is the obstruction intrinsic stenosis? Is it endoluminal tumor? Is it fistula, malacia, or extrinsic compression? That lesion-based thinking is exactly how interventional pulmonologists approach C A O.
+
+Narrator: The limitations are just as important. This is retrospective, with no standardized protocol across centers, no control group, and limited long-term follow-up. The endpoints are mostly procedural and immediate. There is no comparison with surgery, no standardized symptom score, no quality-of-life outcome, and no robust assessment of durable airway patency.
+
+Guest: Center expertise is another key confounder. The authors note that at three centers, procedures were performed by operators who routinely perform adult therapeutic airway interventions. That may explain part of the favorable immediate success rate. But it also limits generalizability. A center without pediatric anesthesia expertise, rigid bronchoscopy support, appropriately sized tools, and a clear rescue plan should not read this as a simple implementation protocol.
+
+Narrator: The stent signal deserves special caution. Stents can be useful for severe malacia, refractory stenosis, fistula management, or bridging to surgery. But in children, stents carry added issues: airway growth, granulation tissue, migration, fracture, sizing limits, and future removability. The granulation and stent fracture events in this study are reminders that pediatric airway stenting is not benign.
+
+Guest: The practical implementation message is that this work requires an ecosystem. Referral recognition, high-quality imaging, pediatric anesthesia, flexible and rigid platforms, device availability, multidisciplinary backup, and structured surveillance all matter. This is where collaboration between pediatric pulmonology, adult interventional pulmonology, otolaryngology, thoracic surgery, anesthesia, and critical care becomes central.
+
+Narrator: So, what should an I P audience take away?
+
+Guest: First, therapeutic bronchoscopy beyond foreign body removal is feasible in selected pediatric patients at experienced centers. Second, the work is genuinely multimodality, not just balloon dilation or stenting in isolation. Third, immediate procedural success can be high, but repeat procedures are common, and long-term outcomes remain incompletely defined.
+
+Narrator: The devil’s advocate question is whether this paper proves broad safety and efficacy.
+
+Guest: It does not. It supports feasibility and favorable immediate outcomes in selected patients treated by experienced teams. It should encourage appropriate referral pathways and thoughtful program development, not casual diffusion of complex pediatric airway intervention into settings without the necessary infrastructure.
+
+Narrator: Final synthesis: Madan and colleagues provide one of the larger descriptions of pediatric therapeutic bronchoscopy for non foreign-body indications, mostly central airway obstruction. The study shows high immediate procedural success, a manageable short-term complication profile, and a substantial need for repeat procedures and complementary surgical or multidisciplinary care.
+
+Guest: For interventional pulmonologists, the article is a reminder that the adult therapeutic bronchoscopy skill set can meaningfully contribute to pediatric airway care when deployed in the right environment. The message is not practice-changing certainty. It is careful feasibility, technical possibility, and the need to build systems that can support these children safely.
+
+Narrator: That is it for this episode of InterventionalPulm dot com I P Journal Review. Thanks for listening.

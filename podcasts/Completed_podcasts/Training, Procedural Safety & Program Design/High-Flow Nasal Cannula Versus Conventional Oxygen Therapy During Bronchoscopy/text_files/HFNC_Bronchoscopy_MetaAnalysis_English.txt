@@ -1,0 +1,73 @@
+Narrator: Welcome to InterventionalPulm.com I P Journal Review, where we take one article and ask what it actually means for interventional pulmonary practice. Today we are discussing Fliess de Castro and colleagues, published in the Journal of Bronchology and Interventional Pulmonology in 2026: “High-Flow Nasal Cannula Versus Conventional Oxygen Therapy During Bronchoscopy,” a meta-analysis of randomized controlled trials.
+
+Guest: And this is a very practical topic. Hypoxemia during bronchoscopy is not a rare nuisance. It affects procedural continuity, sedation decisions, the anesthesia conversation, and occasionally whether a diagnostic or therapeutic case can be completed safely. So even though high-flow nasal cannula, or H F N C, is familiar technology, the question is whether the evidence supports using it more deliberately during bronchoscopy rather than just reaching for it when the patient looks risky.
+
+Narrator: Right. The physiologic premise is pretty straightforward. Conventional oxygen therapy, or C O T, may be delivered by nasal cannula, face mask, Venturi mask, or nonrebreather, but it has limitations: variable F I O two, no meaningful PEEP effect, and no consistent dead-space washout. H F N C, by contrast, delivers heated humidified gas at flows that can exceed inspiratory demand, provides more stable F I O two, creates some low-level positive airway pressure, and washes out nasopharyngeal dead space.
+
+Guest: And that matters because bronchoscopy is a hostile respiratory environment. The scope narrows the airway lumen. Sedation reduces ventilatory drive. There can be worsening V Q matching, higher airway resistance, and intermittent obstruction. Add obesity, O S A, C O P D, interstitial lung disease, pulmonary hypertension, or heart failure, and the margin for error gets thin quickly.
+
+Narrator: The authors approached this as a systematic review and meta-analysis. They searched PubMed, Embase, and Cochrane in June 2025, followed PRISMA methods, registered the protocol in PROSPERO, and included adult randomized trials comparing H F N C with conventional oxygen strategies during flexible bronchoscopy. The primary outcome was desaturation events. Secondary outcomes included lowest S P O two, procedure time, patient comfort, and sedation dose.
+
+Guest: The PRISMA diagram is worth mentioning because it gives a sense of how narrow the evidence base still is. They started with 535 records, removed 150 duplicates, screened 385, assessed 23 full texts, and ended with 14 randomized trials. So the analysis is randomized evidence only, which is a strength, but it is still a modest trial universe.
+
+Narrator: In total, the meta-analysis included 2,480 patients. Of those, 1,263 received H F N C. Procedures included nasal fibroscopy, linear and radial E B U S, flexible bronchoscopy, transbronchial needle aspiration, standard bronchoscopy, and nasal bronchoscopy. So this is relevant to routine I P workflows, especially E B U S and flexible diagnostic bronchoscopy.
+
+Guest: The headline result is strong. H F N C reduced desaturation events compared with conventional oxygen. The pooled risk ratio was 0.41, with a 95 percent confidence interval from 0.29 to 0.59, and a P value less than 0.0001. In plain procedural terms, the risk of desaturation was less than half with H F N C.
+
+Narrator: But the heterogeneity was high. I squared was 81.5 percent for desaturation events. So the direction of effect is compelling, but the exact magnitude is not a single clean number that applies identically to every bronchoscopy suite.
+
+Guest: Exactly. That’s where it gets tricky. The forest plot on page 4 visually favors H F N C for desaturation, but the studies differ in patient risk, procedure type, sedation intensity, oxygen settings, and definitions of hypoxemia. A desaturation threshold of less than 90 percent is not the same thing as prolonged hypoxemia, cumulative time below threshold, or a clinically meaningful procedural interruption.
+
+Narrator: The oxygenation result was also favorable. H F N C increased the lowest S P O two by a mean difference of 5.10 percentage points, with a 95 percent confidence interval from 3.30 to 6.91. Again, P less than 0.0001. But again, heterogeneity was high, with I squared at 87.4 percent.
+
+Guest: That 5-point nadir difference is clinically meaningful in the right patient. A move from 86 to 91 is not a cosmetic change during E B U S with moderate or deep sedation. It can be the difference between staying the course and interrupting the procedure, jaw thrusting, escalating oxygen delivery, or involving anesthesia urgently.
+
+Narrator: On the other hand, the patient-centered and workflow outcomes were more neutral. Procedure time was not significantly different: mean difference minus 0.73 minutes, confidence interval minus 1.73 to plus 0.27. Patient comfort was also not significantly different, with a standardized mean difference around minus 0.09 in the main results.
+
+Guest: That is important because one concern with any oxygen delivery device is whether it gets in the way. For H F N C, the device usually preserves oral access and is less intrusive than noninvasive ventilation. But in this pooled analysis, it did not clearly make patients more comfortable, and it did not clearly shorten procedures. It mainly improved oxygenation.
+
+Narrator: Sedation dose is the interesting wrinkle. The pooled analysis found sedation requirements were slightly higher in the H F N C group, with a standardized mean difference of 0.18, confidence interval 0.05 to 0.31, and P equals 0.0059.
+
+Guest: That should not be overinterpreted as H F N C making patients require more sedation. A more plausible explanation is behavioral. If clinicians perceive a larger oxygen reserve, they may tolerate or administer deeper sedation. The authors’ sensitivity analysis supports being cautious here: when Darie and colleagues were excluded, the sedation effect lost statistical significance.
+
+Narrator: And the procedure time finding was also sensitive. Excluding Zhang and colleagues shifted procedure time toward a statistically significant reduction favoring H F N C. So the most durable outcomes are desaturation and nadir oxygen saturation. The secondary outcomes are useful, but less stable.
+
+Guest: Risk of bias was generally reassuring. Most trials were considered low risk, with concerns mostly around lack of blinding. That is not surprising. It is hard to blind H F N C versus a mask or low-flow cannula in a bronchoscopy suite. The GRADE assessment was moderate certainty for desaturation events, lowest S P O two, and sedation dose; high certainty for procedure duration; and low certainty for patient comfort.
+
+Narrator: Let’s talk about comparators. One issue is that “conventional oxygen therapy” is not one uniform thing. A nasal cannula at a few liters per minute, a Venturi mask, a nonrebreather, and N I V are physiologically different comparators. Pooling across them is practical, but it also blurs the bedside question.
+
+Guest: Right. The real procedural question is often not “H F N C versus anything else.” It is: for this patient, this sedation plan, this bronchoscopy duration, and this airway access requirement, is H F N C better than the available alternative? For a short, unsedated inspection in a low-risk patient, maybe the incremental value is small. For prolonged E B U S in a patient with C O P D or O S A, the value proposition is different.
+
+Narrator: The authors highlight several trial-level signals. Wang and colleagues contributed a large general cohort and showed fewer desaturation events. Darie and colleagues studied C O P D patients and reported reduced cumulative hypoxemia time. Zhang and colleagues focused on patients at risk for O S A and found a marked reduction in hypoxemia. Ben-Menachem and colleagues showed benefit in lung transplant recipients.
+
+Guest: And then Burton and colleagues reported no oxygenation advantage, which is also instructive. The authors suggest possible explanations: stricter F I O two matching, lighter sedation, and lower-risk patients. That matters because H F N C may look less impressive when the comparator is optimized and the patient population is less vulnerable.
+
+Narrator: There is also a wording issue worth flagging. The methods describe adult flexible bronchoscopy studies and exclude rigid bronchoscopy. Later, the discussion uses broader language about procedural coverage. For an I P audience, that distinction matters. Rigid bronchoscopy under general anesthesia is a different airway and ventilation problem than flexible bronchoscopy or E B U S under moderate sedation.
+
+Guest: Agreed. This paper supports H F N C during bronchoscopy, but listeners should be careful not to automatically extrapolate to rigid bronchoscopy, jet ventilation, therapeutic airway debulking, or cases where ventilation strategy is controlled by anesthesia through a different airway setup.
+
+Narrator: So how should an interventional pulmonologist operationalize this? One reasonable take is that H F N C should be strongly considered when desaturation prevention is a priority: high-risk E B U S, prolonged sampling, obese patients, O S A-risk patients, C O P D, marginal baseline oxygenation, lung transplant recipients, or patients where procedural interruption would be costly.
+
+Guest: It also has workflow implications. H F N C requires equipment availability, staff familiarity, pre-procedure setup time, and a plan for escalation. The cannula has to be positioned before sedation begins. Flow and F I O two settings need to be selected intentionally, not treated as decorative tubing with a very enthusiastic flow meter.
+
+Narrator: There is also the anesthesia interface. H F N C may allow moderate or deep sedation with better oxygen reserve, but it should not become permission to ignore ventilation. Oxygenation is not ventilation. In C O P D, obesity hypoventilation, or prolonged deep sedation, carbon dioxide monitoring and airway maneuvers still matter.
+
+Guest: The authors note that H F N C rarely worsened carbon dioxide retention across trials, which is reassuring. But the absence of a major hypercapnia signal in pooled bronchoscopy trials does not eliminate the need for patient-specific monitoring. Particularly when sedation deepens, the pulse oximeter may look beautiful while ventilation quietly deteriorates. The pulse ox can be a charming liar.
+
+Narrator: What about patient comfort? The pooled result did not show a significant difference. Clinically, some patients like H F N C because it is nasal and humidified. Others dislike high flow in the nose. N I V may oxygenate well, but it can interfere with bronchoscope access and patient tolerance. So comfort is probably context-dependent, and the low certainty rating reflects that.
+
+Guest: The biggest limitation remains heterogeneity. Different hypoxemia definitions, different sedation protocols, different bronchoscopic procedures, different oxygen delivery settings, and different patient risk profiles. The pooled estimate is helpful, but it is not a substitute for protocol-level thinking.
+
+Narrator: Another limitation is that the outcomes are mostly procedural and physiologic. Desaturation matters, but the paper does not establish downstream effects on major adverse events, admissions, intubation, diagnostic yield, or cost-effectiveness. Those outcomes would be harder to study, but they are the ones administrators, anesthesia teams, and procedural directors eventually ask about.
+
+Guest: And future trials should probably compare H F N C directly with N I V in selected high-risk groups, standardize hypoxemia definitions, and include workflow metrics: setup time, procedure interruptions, escalation events, staff burden, and cost. A device can be physiologically elegant and still be hard to implement consistently.
+
+Narrator: So the bottom line: this meta-analysis strengthens the case that H F N C improves oxygenation during bronchoscopy. The reduction in desaturation events and the higher nadir S P O two are the key findings. Procedure time and patient comfort appear similar. Sedation dose may be slightly higher, but that finding is sensitive and likely confounded by clinician behavior.
+
+Guest: For practice, this supports H F N C as a front-line option for bronchoscopy when hypoxemia risk is meaningful, especially in high-risk flexible bronchoscopy and E B U S workflows. It does not mean every low-risk bronchoscopy needs H F N C, and it does not replace thoughtful sedation, airway assessment, or escalation planning.
+
+Narrator: Well said. This paper gives I P clinicians a stronger evidence base for something many teams already suspected: during bronchoscopy, better oxygen delivery can reduce desaturation, but the details of patient selection, sedation, comparator, and workflow determine how much that benefit matters.
+
+Guest: Exactly. The pooled diamond favors H F N C, but the bronchoscopy suite still has to do the thinking.
+
+Narrator: That wraps up this episode of InterventionalPulm.com I P Journal Review. Thanks for listening.

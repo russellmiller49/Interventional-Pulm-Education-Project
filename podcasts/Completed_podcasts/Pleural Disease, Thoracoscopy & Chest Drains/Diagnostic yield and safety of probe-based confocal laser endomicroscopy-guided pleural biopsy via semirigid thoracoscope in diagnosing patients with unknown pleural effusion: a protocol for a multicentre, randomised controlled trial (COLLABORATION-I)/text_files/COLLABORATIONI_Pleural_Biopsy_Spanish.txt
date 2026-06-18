@@ -1,0 +1,116 @@
+Narrador:
+Bienvenidos a InterventionalPulm.com IP Journal Review. En este episodio, revisamos el artículo de Deng y colegas, publicado en BMJ Open en 2026, que describe el ensayo COLLABORATION-I: un protocolo que evalúa la biopsia pleural guiada por p C L E, es decir, endomicroscopía láser confocal basada en sonda, mediante toracoscopia semirrígida, en pacientes con derrame pleural exudativo sin diagnóstico.
+
+Invitado:
+Y aquí la palabra “protocolo” es importante. Este no es un ensayo terminado con datos de rendimiento diagnóstico, tasas de complicaciones o desenlaces que cambien la práctica clínica. Es un artículo de diseño de estudio. Por eso, la pregunta útil no es: “¿Debería todo el mundo empezar mañana a usar p C L E para la biopsia pleural?” La pregunta es: “¿Es este el ensayo correcto para responder si p C L E agrega un valor diagnóstico significativo más allá de una toracoscopia semirrígida cuidadosa con luz blanca?”
+
+Narrador:
+Exacto. El problema clínico es familiar para cualquiera que haga procedimientos pleurales. La toracoscopia médica ya es una herramienta diagnóstica importante para los derrames exudativos sin diagnóstico, pero la toracoscopia semirrígida mantiene algunos puntos débiles persistentes. El artículo enfatiza que el rendimiento diagnóstico puede ser subóptimo en poblaciones por intención de tratar, y que el valor predictivo negativo es una preocupación particular. Citan una tasa de diagnóstico tardío de malignidad de 15,4 por ciento entre pacientes cuya biopsia toracoscópica semirrígida inicial mostró pleuritis inespecífica o fibrosis.
+
+Invitado:
+Ese es el grupo que genera ansiedad. La pleura se ve lo suficientemente anormal como para biopsiarla, la patología regresa como inespecífica, y entonces todos tienen que decidir si confiar en la biopsia, repetir imágenes, buscar otra vía de biopsia o hacer seguimiento longitudinal. La preocupación no es solo si la pinza obtuvo suficiente tejido. Es si el operador tomó muestra del tejido correcto.
+
+Narrador:
+Exactamente. Los autores hacen una distinción útil entre la calidad de la muestra y la representatividad de la muestra. La criobiopsia y los abordajes asistidos por electrocauterio pueden mejorar el tamaño o la profundidad de la muestra, pero mejores fragmentos del área equivocada siguen dejando el mismo problema diagnóstico.
+
+Invitado:
+Y ahí es donde p C L E se vuelve conceptualmente atractiva. En lugar de depender solo de la apariencia toracoscópica macroscópica, como nódulos, placas, engrosamiento, fibrina o adherencias, se agrega imagen microscópica en tiempo real. La propuesta es esencialmente una “biopsia óptica” para guiar dónde debe realizarse la biopsia real con pinza.
+
+Narrador:
+El diseño del estudio es un ensayo aleatorizado, multicéntrico y de grupos paralelos en China. El resumen describe diez centros, mientras que la sección de métodos enumera ocho centros con experiencia en enfermedad pleural; esa discrepancia vale la pena aclararla al interpretar el protocolo. El reclutamiento planificado es de 158 adultos con derrame pleural exudativo sin diagnóstico, asignados al azar en proporción uno a uno a biopsia pleural convencional por toracoscopia semirrígida versus biopsia pleural guiada por p C L E mediante toracoscopia semirrígida.
+
+Invitado:
+Los criterios de inclusión son directos: adultos de al menos 18 años, derrame pleural exudativo sin diagnóstico después de evaluación clínica, radiológica, de laboratorio y citológica estándar, y disposición a someterse a un procedimiento invasivo. Las exclusiones incluyen engrosamiento pleural o una masa basada en la pleura sin derrame, derrame paraneumónico, contraindicaciones para biopsia pleural o toracoscopia semirrígida, y participación reciente en otro estudio.
+
+Narrador:
+En cuanto al diseño del procedimiento, ambos grupos se someten a toracoscopia semirrígida con anestesia local y sedación leve. En el grupo control, se inspeccionan la pleura parietal, visceral y diafragmática, y se toman ocho biopsias bajo visión directa de áreas parietales pleurales sospechosas.
+
+Invitado:
+En el grupo p C L E, el operador usa p C L E de dos maneras. Primero, las anomalías visibles con luz blanca, como nódulos o áreas engrosadas, se examinan con p C L E para evaluar la heterogeneidad y seleccionar el mejor sitio de biopsia. Segundo, se realiza un barrido sistemático de la pleura basal, incluida la pleura diafragmática y la pared torácica posterior inferior, cubriendo al menos dos espacios intercostales por encima del receso costofrénico. El operador interpreta las imágenes de p C L E en tiempo real, buscando patrones malignos como células pleomórficas, bordes intercelulares indistintos, arquitectura agrupada o papilar, y alteración del patrón mesotelial normal. Para lesiones tuberculosas o necróticas, describen regiones no estructuradas, arquitectura celular alterada y un fondo inflamatorio heterogéneo.
+
+Narrador:
+La figura del artículo en la página 4 es útil porque muestra visualmente el flujo de trabajo propuesto: nódulos pleurales con luz blanca, interrogación con la sonda de p C L E, visualización por p C L E de depósitos tumorales, biopsia con pinza en ese mismo sitio, y luego histología e inmunotinción C K 7 que confirman células tumorales.
+
+Invitado:
+Esa figura probablemente sea la ilustración más clara de toda la hipótesis: usar p C L E no como reemplazo de la histología, sino como herramienta de direccionamiento. La biopsia sigue importando. El patólogo sigue importando. La suficiencia molecular sigue importando. p C L E se está evaluando como el puente entre lo que el operador ve macroscópicamente y lo que la patología finalmente confirma.
+
+Narrador:
+El desenlace primario es el rendimiento diagnóstico, definido como la proporción de pacientes sometidos a biopsia pleural en quienes se establece un diagnóstico específico. Los investigadores esperan un rendimiento diagnóstico de aproximadamente 93 por ciento en el grupo de toracoscopia semirrígida convencional y de 95 por ciento en el grupo guiado por p C L E, con un margen de no inferioridad preespecificado de 10 por ciento.
+
+Invitado:
+Esa elección del desenlace merece discusión. El rendimiento diagnóstico es el desenlace procedimental convencional, pero para un ensayo como este, el punto clínicamente más interesante quizá sea la falsa tranquilidad después de una biopsia benigna o inespecífica. Los autores lo reconocen al incluir seguimiento de 12 meses para pacientes con histología benigna o inespecífica cuando todavía existe preocupación por malignidad. Eso fortalece el diagnóstico de referencia, especialmente en el grupo de pleuritis inespecífica.
+
+Narrador:
+Los desenlaces secundarios incluyen razón de verosimilitud negativa, sensibilidad diagnóstica para enfermedades específicas, como mesotelioma, cáncer metastásico y pleuritis tuberculosa, tiempo de procedimiento, suficiencia de las muestras para diagnóstico molecular y complicaciones. También planean evaluar profundidad de la biopsia, interpretabilidad y éxito de marcadores moleculares.
+
+Invitado:
+El desenlace de suficiencia molecular es muy relevante. En 2026, diagnosticar enfermedad pleural maligna sin suficiente tejido para marcadores predictivos suele ser solo la mitad de una victoria diagnóstica. Su tabla incluye marcadores relevantes por tipo de tumor, incluyendo P D L 1, E G F R, A L K y R O S 1 para cáncer pulmonar de células no pequeñas; H E R 2, E R y P R para mama; B R C A para ovario; y otros. Eso reconoce adecuadamente que la calidad de la biopsia pleural ya no es solo “maligno versus benigno”.
+
+Narrador:
+Metodológicamente, hay varias fortalezas. La aleatorización es uno a uno, con generación de secuencia oculta usando bloques de tamaño cuatro. Los patólogos están cegados a la técnica de biopsia. Los diagnósticos finales son verificados por un panel independiente de verificación diagnóstica que incluye médicos de neumología y cuidados críticos, un radiólogo y un patólogo.
+
+Invitado:
+Y requieren entrenamiento estandarizado en p C L E con evaluación de competencia. Eso es esencial porque la interpretación de imágenes de p C L E depende del operador. Sin estandarización del entrenamiento, la intervención se convierte en “p C L E más lo que el operador crea que significa p C L E”, lo cual no es una estrategia diagnóstica reproducible.
+
+Narrador:
+La posición del abogado del diablo es que este todavía puede ser un ensayo de alta experiencia. Los centros participantes son hospitales docentes con experiencia en enfermedad pleural, todos equipados con toracoscopia semirrígida y p C L E. La pregunta es si los resultados, cuando estén disponibles, serán generalizables a centros de menor volumen o a centros donde p C L E no forme parte del ecosistema procedimental existente.
+
+Invitado:
+Esa es la barrera del mundo real. p C L E agrega costo de equipo, entrenamiento, interpretación de imágenes, tiempo de procedimiento y probablemente coordinación alrededor del uso de fluoresceína. El protocolo menciona fluoresceína sódica como una diferencia de preparación en el grupo p C L E. Así que, incluso si mejora el rendimiento diagnóstico, la implementación dependerá de cuán grande sea esa ganancia y en qué subgrupo ocurra.
+
+Narrador:
+Y el tema de los subgrupos quizá sea la parte más interesante del artículo. Los autores reconocen explícitamente que p C L E puede aportar poco cuando hay depósitos tumorales evidentes bajo luz blanca. Si se ve tumor pleural voluminoso, ya se sabe dónde biopsiar. El valor potencial está en pleura normal o solo sutilmente anormal, pleura fibrótica, engrosamiento difuso o límites de lesión difíciles de localizar visualmente.
+
+Invitado:
+Pero también reconocen que el ensayo no tiene poder estadístico para ese análisis de subgrupos. Planean análisis exploratorios por grosor pleural, morfología nodular versus difusa y apariencia toracoscópica con luz blanca: depósitos tumorales evidentes versus pleura normal o ligeramente anormal. Eso es científicamente apropiado, pero debemos ser cautelosos. Si el ensayo global es neutral y un subgrupo pequeño parece positivo, eso debería generar un ensayo futuro, no una adopción amplia inmediata.
+
+Narrador:
+Otra limitación es el cegamiento. Los proceduralistas no pueden estar cegados a si están usando p C L E. Eso abre la puerta a sesgo de desempeño. Los operadores en el grupo p C L E pueden pasar más tiempo interrogando la pleura, pueden ser más deliberados al seleccionar el sitio de biopsia, y pueden comportarse de manera diferente simplemente porque el protocolo hace que el brazo de intervención sea más estructurado.
+
+Invitado:
+Ese es un punto sutil pero importante. El comparador es toracoscopia semirrígida convencional con visión directa y ocho biopsias. Pero el brazo p C L E incluye una conducta de mapeo estandarizada: lesiones visibles más barrido basal sistemático. Si el brazo p C L E gana, ¿cuánto se debe a la imagen celular y cuánto a una exploración pleural más disciplinada?
+
+Narrador:
+Ahí es donde los ensayos procedimentales son complicados. El dispositivo, el flujo de trabajo, la conducta del operador y la función de forzamiento cognitivo viajan juntos.
+
+Invitado:
+Exactamente. Es como en muchos estudios de broncoscopia avanzada: a veces la tecnología mejora el rendimiento; a veces la tecnología hace que el operador vaya más despacio y siga un mejor proceso. Clínicamente, al paciente quizá no le importe qué mecanismo ayudó, pero para la adopción y la costo-efectividad, la distinción sí importa.
+
+Narrador:
+El plan estadístico también merece una breve mención. Los pacientes diagnosticados con pleuritis inespecífica después de 12 meses de seguimiento serán excluidos del cálculo del rendimiento diagnóstico, y la sensibilidad se calculará para estados de enfermedad específicos. Los autores señalan que, como no se esperan falsos positivos de la biopsia, la razón de verosimilitud negativa en la práctica se convierte en uno menos la sensibilidad.
+
+Invitado:
+Eso es razonable, pero también resalta por qué será fundamental informar los resultados con transparencia. En el diagnóstico pleural, la manera en que se manejen la pleuritis inespecífica, el derrame idiopático y la verificación incompleta puede mover el rendimiento aparente. El plan de reporte alineado con STARD es tranquilizador, pero el artículo final de resultados tendrá que mostrar claramente el flujo de pacientes.
+
+Narrador:
+Entonces, ¿dónde encaja este protocolo en la práctica de neumología intervencionista ahora mismo?
+
+Invitado:
+Todavía no cambia la práctica. Plantea una pregunta muy relevante: ¿puede la imagen pleural microscópica en tiempo real reducir el error de muestreo durante la toracoscopia semirrígida? Para centros que ya usan toracoscopia semirrígida, especialmente donde las pinzas flexibles son la herramienta principal y los instrumentos rígidos o la criobiopsia pleural no se usan de manera rutinaria, esto podría ser un avance significativo si los resultados muestran mejor rendimiento, mayor sensibilidad o menos diagnósticos malignos tardíos, sin tiempo, costo o complicaciones inaceptables.
+
+Narrador:
+¿Y para mesotelioma?
+
+Invitado:
+Potencialmente muy relevante, especialmente en pleura fibrótica, donde el diagnóstico visual no es confiable y donde la suficiencia del tejido importa. Pero, de nuevo, este protocolo incluye cáncer metastásico, mesotelioma y pleuritis tuberculosa. El comportamiento diagnóstico de p C L E puede no ser uniforme en esas enfermedades. Una herramienta que ayuda a encontrar grupos tumorales pleurales puede comportarse de manera diferente en la pleuritis granulomatosa o en la inflamación necrótica.
+
+Narrador:
+Las complicaciones registradas incluyen fuga aérea prolongada, hemorragia, enfisema subcutáneo, fiebre posoperatoria, empiema, infección de la herida, arritmia, hipotensión y siembra en la pared torácica por mesotelioma. El sangrado se clasifica desde nulo o autolimitado, hasta leve que requiere epinefrina local, y moderado o severo que requiere electrocauterio o coagulación con argón plasma.
+
+Invitado:
+La seguridad será importante, pero la pregunta práctica más grande quizá sea la eficiencia. Si p C L E agrega tiempo o complejidad significativos al procedimiento, pero solo cambia el rendimiento de 93 por ciento a 95 por ciento en general, muchos centros quizá no lo encuentren convincente. Pero si el beneficio se concentra en pacientes con anomalías pleurales sutiles, pleura fibrótica o muestreo previo no diagnóstico, entonces p C L E podría convertirse en una herramienta selectiva en lugar de un complemento universal.
+
+Narrador:
+Así que, en resumen: COLLABORATION-I es un protocolo aleatorizado y bien pensado, dirigido a una debilidad diagnóstica real en medicina pleural: el error de muestreo durante la toracoscopia semirrígida. Sus fortalezas incluyen diseño aleatorizado, entrenamiento estandarizado en p C L E, revisión patológica cegada, desenlaces de suficiencia molecular y seguimiento de 12 meses para casos inicialmente benignos o inespecíficos.
+
+Invitado:
+Y la advertencia es que esto sigue siendo un protocolo, no evidencia de resultados. Las preguntas futuras clave son si p C L E mejora el desempeño diagnóstico clínicamente significativo, si reduce los falsos negativos o los diagnósticos malignos tardíos, si mejora la suficiencia molecular y si la carga adicional del flujo de trabajo se justifica. La señal más importante quizá no sea el rendimiento diagnóstico global. Puede ser si p C L E ayuda cuando la toracoscopia con luz blanca es menos útil.
+
+Narrador:
+Ese es un buen punto para cerrar. Para los clínicos de neumología intervencionista, vale la pena seguir este artículo porque evalúa un posible siguiente paso en el diagnóstico pleural: pasar de la selección macroscópica del objetivo a la selección del objetivo a nivel celular, manteniendo siempre el diagnóstico anclado en la histopatología.
+
+Invitado:
+Exacto. Un concepto elegante, escepticismo apropiado, y ahora esperamos los datos.
+
+Narrador:
+Eso es todo por este episodio de InterventionalPulm.com IP Journal Review. Gracias por escuchar. Los detalles completos del artículo se pueden encontrar en las notas del episodio.

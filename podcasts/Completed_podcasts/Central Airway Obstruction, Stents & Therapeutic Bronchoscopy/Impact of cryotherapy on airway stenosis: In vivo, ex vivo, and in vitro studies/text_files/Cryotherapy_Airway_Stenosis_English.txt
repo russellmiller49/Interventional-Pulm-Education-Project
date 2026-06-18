@@ -1,0 +1,77 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we’re looking at Chae and colleagues, published in the Journal of Thermal Biology in 2026, examining the impact of cryotherapy on airway stenosis using pig tracheal stenosis models, explanted airway tissue, and human lung fibroblasts.
+
+Guest: This is a nice article for an interventional pulmonology audience because it gets at a question that comes up all the time in benign central airway stenosis: are we just mechanically reopening the airway, or can we actually influence the biology that drives restenosis?
+
+Narrator: Exactly. Balloon dilatation can be effective immediately, but restenosis is the recurring frustration. Thermal tools like electrocautery, APC, and laser can be helpful, but they can also add mucosal and cartilage injury, which may feed the fibrotic cycle. Cryotherapy is appealing because it is nonthermal, but the mechanism in benign stenosis has been somewhat hand-wavy. Cold injury, less collateral thermal damage, maybe less fibrosis. But what does that actually mean at the tissue and cellular level?
+
+Guest: And this paper tries to answer that mechanistically. The investigators induced tracheal stenosis in fourteen female pigs, using a combination of endotracheal cuff overpressure and circumferential electrocautery injury. They then divided the animals into two groups: balloon dilatation alone, with seven pigs, versus balloon dilatation plus cryoablation, also with seven pigs.
+
+Narrator: The intervention is worth spelling out because it matters clinically. Balloon dilatation was performed to fifteen millimeters for one minute. In the cryoablation group, they then applied a flexible cryoprobe at four circumferential positions: three, six, nine, and twelve o’clock. Each position received three thirty-second freeze-thaw cycles.
+
+Guest: Right, so this is not spray cryotherapy. It is contact cryoablation after mechanical dilation. That distinction matters because the dose, depth, circumferential coverage, and procedural workflow are different.
+
+Narrator: The animals were then followed with bronchoscopy and CT. After euthanasia, tracheal specimens underwent histopathology, Western blot, and quantitative PCR. Then they added an in vitro arm using TGF beta one-treated MRC five human lung fibroblasts, looking at collagen, alpha smooth muscle actin, immunocytochemistry, and migration.
+
+Guest: So the study has three layers. First, does the airway look more open in vivo? Second, does the trachea show less inflammation and fibrosis ex vivo? Third, do fibroblasts exposed to a freezing protocol behave less like activated, matrix-producing myofibroblasts in vitro?
+
+Narrator: Let’s start with the in vivo results. The balloon plus cryoablation group consistently had larger tracheal diameters and lower stenosis percentages over follow-up, but the differences did not reach statistical significance. At post-intervention day twenty-eight, the mean tracheal diameter was eight point zero millimeters in the balloon-only group versus twelve point seven millimeters in the balloon plus cryoablation group, with a p value of zero point one zero zero. The final stenosis percentage was eighty-one point four percent with balloon alone versus sixty-eight point four percent with balloon plus cryoablation, p equals zero point two zero nine.
+
+Guest: That is where the interpretation needs to be careful. The direction of effect is favorable, and the effect sizes were moderate to large, but this is seven animals per group, with attrition from death and euthanasia. So the in vivo findings are suggestive, not definitive.
+
+Narrator: Survival showed a similar pattern. Mean survival after intervention was fifteen point four days in the balloon-only group and seventeen point nine days in the balloon plus cryoablation group, with median survival of twelve versus twenty-one days. But again, p equals zero point seven one zero. So that is not a survival signal we should overinterpret.
+
+Guest: The more compelling data are probably the histology. Histopathology was performed in eleven pigs. The balloon-only group showed severe neutrophilic inflammation, epithelial denudation, granulation tissue, and fibrosis. The balloon plus cryoablation group had milder inflammation, more focal epithelial denudation, and milder fibrosis.
+
+Narrator: Numerically, the total histopathology score was seven point three in the balloon-only group versus three point seven in the balloon plus cryoablation group, with p equals zero point zero zero four. Fibrosis scores were two point five versus one point two. Epithelial denudation was two point eight versus one point two. Inflammation was two point zero versus one point three. Those are meaningful tissue-level differences.
+
+Guest: And that is the most clinically intuitive part of the paper. If restenosis is not just narrowing, but a wound-healing disorder with inflammation, epithelial injury, fibroblast activation, and extracellular matrix deposition, then seeing less of those processes after cryoablation is biologically plausible and clinically interesting.
+
+Narrator: The molecular analysis pushes that further, although it is very small. Western blot and PCR were performed on three animals per group. The balloon plus cryoablation group had lower protein expression of collagen one, collagen three, fibronectin, alpha smooth muscle actin, and TGF beta one. The p values were all zero point one zero zero, which is what happens when the sample size is tiny and the test has limited resolution.
+
+Guest: Exactly. It is a mistake to say those molecular findings are statistically proven in the animal tissue. But the direction is consistent across multiple fibrosis-related markers. Collagen one was three point one versus one point two. Collagen three was three point nine versus zero point seven. Fibronectin was two point four versus one point zero. Alpha smooth muscle actin was three point two versus one point three. TGF beta one was three point eight versus one point zero.
+
+Narrator: The mRNA results were directionally similar. TGF beta one mRNA showed a five point one-fold reduction in the balloon plus cryoablation group compared with balloon alone. Collagen one, collagen three, fibronectin, and alpha smooth muscle actin were also lower.
+
+Guest: Mechanistically, TGF beta one is the center of gravity here. The paper is essentially arguing that cryoablation may blunt the profibrotic TGF beta one pathway, reduce myofibroblast differentiation, and decrease extracellular matrix deposition.
+
+Narrator: The in vitro work makes that argument cleaner. In TGF beta one-treated MRC five cells, cryotherapy reduced collagen one and alpha smooth muscle actin at the protein level, with p equals zero point zero two nine for both. At the mRNA level, collagen one and alpha smooth muscle actin were also reduced, with p equals zero point zero zero eight for both.
+
+Guest: And the migration assay is important. After twenty-four hours, untreated TGF beta one-treated fibroblasts had about seventy-nine percent gap closure, while cryotherapy-treated cells had about twenty-nine percent gap closure, p equals zero point zero zero two. That suggests the surviving fibroblasts were not just expressing fewer fibrotic markers; they were functionally less migratory.
+
+Narrator: That is a key point. A stenotic airway lesion is not only a static scar. It is an active remodeling environment. Fibroblast migration, myofibroblast differentiation, and matrix deposition all matter. So the cellular data support the histology.
+
+Guest: Now, devil’s advocate: how close is this to the patient in the bronchoscopy suite? The animal model is acute and intentionally severe. It uses cuff overpressure plus electrocautery. Human benign airway stenosis is heterogeneous: post-intubation, post-tracheostomy, post-transplant anastomotic issues, inflammatory disease, infection-related stenosis, and post-stent injury. Those are not all the same biology.
+
+Narrator: Right. And the model had high mortality and early euthanasia. That tells us the model was aggressive, but it also complicates interpretation of airway patency and survival over time.
+
+Guest: Another limitation is the absence of a cryotherapy-only arm. The authors acknowledge this. Clinically, that may be defensible because balloon dilatation gives immediate patency and cryoablation is delayed in effect. But scientifically, it means we cannot fully isolate the independent effect of cryoablation.
+
+Narrator: Also, the intervention is not blinded at the procedural level, and although histology was reviewed by a blinded pathologist, the overall study is small and exploratory. The animal molecular work is only three per group. The in vitro findings are cleaner, but a fibroblast monolayer exposed to minus eighty degree ethanol is not the same as a vascularized, cartilaginous human airway after rigid bronchoscopy.
+
+Guest: That said, the convergence is what makes the article worth discussing. The in vivo airway measurements trend in the right direction. The histology is significantly better. The fibrosis markers move in the expected direction. The fibroblast data show reduced collagen, reduced alpha smooth muscle actin, and reduced migration. None of those alone would settle the issue, but together they create a plausible mechanistic story.
+
+Narrator: How should an IP clinician translate this? Not as a mandate to add cryoablation to every benign stenosis case. The evidence is not there. But it does support thinking about cryoablation as more than a debulking or devitalization tool. In selected fibrostenotic lesions, especially where recurrent restenosis is the dominant problem, adjunctive cryoablation after dilation may be biologically rational.
+
+Guest: The workflow questions are real. Contact cryoablation at four quadrants with repeated freeze-thaw cycles adds procedural time. It requires cryotherapy equipment, airway control, careful circumferential dosing, and judgment about how much tissue injury is therapeutic versus excessive. In tight benign stenosis, edema after intervention is not a trivial concern.
+
+Narrator: And there is the bigger question of lesion phenotype. Is this most relevant for short, web-like stenosis? Complex circumferential stenosis? Granulation-heavy post-stent stenosis? Post-intubation fibrotic rings? Subglottic disease? Anastomotic disease? The paper does not answer that.
+
+Guest: Future studies would ideally stratify by stenosis type, length, cartilage involvement, inflammatory activity, prior interventions, and time from injury. They would also need patient-centered endpoints: time to restenosis, number of repeat bronchoscopies, need for stent placement, dyspnea scores, surgical referral, and complications.
+
+Narrator: And if this moves into clinical trials, the comparator matters. Balloon alone is a clean comparator, but real-world practice often includes radial incisions, steroid injection, mitomycin C in some centers, thermal modalities, mechanical debridement, stenting, or combinations. The question is not just whether cryoablation works. It is where it fits among existing multimodality airway strategies.
+
+Guest: The other interesting angle is whether cryoablation could be a less scarring alternative to thermal injury. Thermal modalities can be very useful, but in benign disease, the threshold for collateral injury should be low. If cryoablation preserves extracellular matrix architecture while reducing fibroblast activation, that would be a meaningful advantage. But that remains a hypothesis, not a settled clinical claim.
+
+Narrator: So the take-home is this: Chae and colleagues provide a mechanistic, proof-of-concept study suggesting that balloon dilatation plus cryoablation may reduce airway restenosis biology by suppressing TGF beta one-associated fibrosis, extracellular matrix deposition, and fibroblast migration.
+
+Guest: The strongest signal is not the in vivo airway diameter alone. It is the combined histologic and cellular story. Less inflammation, less epithelial denudation, less fibrosis, lower collagen and alpha smooth muscle actin, lower TGF beta one, and impaired fibroblast migration.
+
+Narrator: But the limitations are substantial: small animal numbers, pilot design, no cryotherapy-only arm, aggressive acute injury model, short follow-up, and mostly surrogate mechanistic endpoints.
+
+Guest: For now, this paper should probably be viewed as a rationale-building study. It supports further clinical evaluation of cryoablation as an adjunct to balloon dilatation in benign central airway stenosis, but it does not by itself define patient selection, optimal cryotherapy dose, procedural technique, or standard of care.
+
+Narrator: Well said. For the IP audience, the practical message is to keep cryoablation in the conversation for recurrent benign stenosis, but to be honest about the evidence. This study makes the biology more believable. The clinical trial still needs to be done.
+
+Guest: And as always in benign airway disease, the airway may open in the room, but the real endpoint is what happens over the next several months. Restenosis is where the biology declares itself.
+
+Narrator: That’s all for this episode of InterventionalPulm.com IP Journal Review. Thanks for listening, and we’ll see you next time for another focused look at the literature shaping interventional pulmonology.

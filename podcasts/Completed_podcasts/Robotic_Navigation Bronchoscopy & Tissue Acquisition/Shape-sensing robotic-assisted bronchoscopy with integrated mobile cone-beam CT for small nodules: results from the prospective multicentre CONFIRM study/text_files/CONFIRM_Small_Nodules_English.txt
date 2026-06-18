@@ -1,0 +1,89 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we’re looking at Husta and colleagues, published in Thorax in 2026, examining shape-sensing robotic-assisted bronchoscopy integrated with mobile cone-beam CT for biopsy of small peripheral pulmonary nodules.
+
+Guest: And this is a good article for an interventional pulmonology audience because it sits right at the intersection of three things everyone is wrestling with: small nodules, CT-to-body divergence, and how much advanced imaging actually changes bronchoscopy performance.
+
+Narrator: Exactly. The clinical question is not simply, “Can the robot reach the lesion?” It is whether the combination of shape-sensing robotic-assisted bronchoscopy, or S-S-RAB, with integrated mobile cone-beam CT can reliably demonstrate tool-in-lesion, generate a high diagnostic yield, and do so with a safety profile that compares favorably with transthoracic biopsy.
+
+Guest: Right. And the word “integrated” matters here. This is not just using cone-beam CT in the room and mentally triangulating where the catheter is relative to the nodule. The integration allows intraprocedural cone-beam CT data to update the virtual target and catheter relationship inside the navigation environment. That should reduce some of the cognitive load and, in theory, help proceduralists correct for divergence more efficiently.
+
+Narrator: The study, called CONFIRM, was prospective, multicenter, and observational. It enrolled 155 consecutive patients across six centers and 14 proceduralists. Eligible patients had a single solid or semisolid pulmonary nodule, 20 millimeters or smaller, suspicious for malignancy. Non-malignant index biopsies were followed for 12 months, while safety outcomes were tracked at about 30 days.
+
+Guest: And the endpoint definitions are important. The primary performance endpoints were tool-in-lesion confirmation, diagnostic yield, and sensitivity for malignancy. Diagnostic yield was defined using the A-T-S slash A-C-C-P consensus approach: malignant diagnosis or specific benign diagnosis on the index biopsy only. Non-specific benign findings did not count. Suspicious for malignancy, atypia alone, or benign bronchial cells were not treated as diagnostic.
+
+Narrator: That is a stricter and cleaner definition than many older navigational bronchoscopy studies used.
+
+Guest: Yes, and that matters because diagnostic yield in this space has historically been a moving target. Depending on whether non-specific benign results are counted as diagnostic, the same dataset can look very different. So using the conservative definition makes the headline result more meaningful, even if the definition was adopted after the study began.
+
+Narrator: Let’s talk about the nodules. These were not large, easy central lesions. Median nodule size was 14 millimeters, with an interquartile range of 11 to 17 millimeters. About 55 percent were in the upper lobes. Only 26 percent had a CT bronchus sign. Most were solid, and about 57 percent were in the outer third of the lung. Median distance to the nearest pleural surface was 8.2 millimeters.
+
+Guest: That is a reasonably challenging cohort. Small nodules, mostly no bronchus sign, peripheral, and close to pleura. Those features are exactly where CT-to-body divergence and biopsy tool orientation can make the case feel less like navigation and more like educated optimism.
+
+Narrator: Procedurally, all cases were done under general anesthesia with recommended ventilation settings based on the VESPA approach. Radial EBUS was used at the proceduralist’s discretion. A needle was recommended as the first sampling tool, and confirmation of tool-in-lesion with a three-dimensional spin was mandatory per protocol. Sampling could include needle, forceps, brush, BAL, and cryobiopsy. ROSE was available at all sites.
+
+Guest: The procedural workflow is worth pausing on. The paper’s Figure 1 shows the integrated sequence: select the catheter, confirm the target on mobile cone-beam CT, preview the updated target, and then confirm tool-in-lesion. That is the operational heart of the article. It is trying to move cone-beam CT from “separate imaging adjunct” to “navigation correction tool.”
+
+Narrator: The primary technical result was striking. Tool-in-lesion was achieved in 154 of 155 procedures, or 99.4 percent, with a 95 percent confidence interval from 96.5 to 100 percent. It was visually confirmed in 152 cases, or 98.1 percent. Median time from docking to tool-in-lesion confirmation was 18 minutes.
+
+Guest: That is impressive. But the more interesting part is the gap between tool-in-lesion and diagnosis. The A-T-S slash A-C-C-P diagnostic yield was 89 percent, or 138 out of 155 cases, with a 95 percent confidence interval from 83 to 93.5 percent. The intermediate diagnostic yield definition was 91 percent. So even with nearly universal tool-in-lesion, yield was not 99 percent.
+
+Narrator: That gap is clinically important.
+
+Guest: Very. It reminds us that localization is necessary, but not sufficient. Once the tool is in the lesion, yield still depends on tissue acquisition, lesion heterogeneity, necrosis, biopsy tool mechanics, pathologic interpretation, ROSE performance, and whether the sampled area contains diagnostic material. Cone-beam CT can confirm geometry. It cannot guarantee biology.
+
+Narrator: Sensitivity for malignancy was 91.5 percent, 107 out of 117 malignant cases, with a 95 percent confidence interval from 86.4 to 96.5 percent. The negative predictive value was 78.7 percent. Malignancy prevalence was high, at 75.5 percent.
+
+Guest: And that high prevalence affects interpretation. A sensitivity above 90 percent is encouraging, but the NPV under 80 percent reinforces the need for careful follow-up when the index biopsy is non-malignant. In a high pretest probability nodule, a benign or non-diagnostic bronchoscopic result still has to earn trust over time.
+
+Narrator: The diagnostic breakdown is also useful. Sixty-nine percent of index biopsies were malignant. Twenty percent were specific benign diagnoses. Nine percent were non-diagnostic. For primary lung cancer, most staged cases were early, with stage IA making up 82 percent of the staged primary lung cancer group. Concurrent EBUS-TBNA staging was performed in 75 of 107 relevant cases, or about 70 percent.
+
+Guest: That is one of bronchoscopy’s practical advantages over a transthoracic pathway. The ability to diagnose the nodule, stage the mediastinum when indicated, and potentially obtain molecularly adequate tissue in a single anesthetic encounter is a major workflow argument. In this study, when molecular testing was attempted, samples were adequate and sufficient in 55 of 56 cases, or 98.2 percent.
+
+Narrator: Safety is where this paper will get a lot of attention. There were zero pneumothoraces, with a 95 percent confidence interval up to 2.4 percent. Six airway bleeding events occurred, or 3.9 percent. Two were Nashville Grade 3, which is 1.3 percent. Five of the six bleeding events were associated with cryobiopsy, and one was associated with forceps biopsy.
+
+Guest: The zero pneumothorax rate is notable, especially given the small, peripheral, pleural-adjacent lesion set. But we should be careful. Zero events in 155 patients is not the same as zero risk. The confidence interval matters. Still, compared with historical CT-guided biopsy pneumothorax rates, this is a very favorable signal.
+
+Narrator: The authors frame the results against transthoracic biopsy, noting that CT-guided approaches remain common because of perceived diagnostic success, but carry pneumothorax risk and do not provide nodal staging.
+
+Guest: And that is the right comparison clinically, but this study was not randomized and did not include a transthoracic comparator. So the takeaway should not be, “This replaces CT-guided biopsy.” The better takeaway is, “This makes a strong case that a bronchoscopic, integrated-imaging pathway deserves direct comparison with CT-guided biopsy, especially for small suspicious nodules where staging and molecular adequacy matter.”
+
+Narrator: Radiation exposure was another secondary endpoint. Median total dose area product was 25.7 gray centimeters squared. Median fluoroscopy time was 5.5 minutes. Median cumulative air kerma was 184.2 milligray. The median number of total mobile cone-beam CT spins was two, and the median number needed to confirm tool-in-lesion was also two.
+
+Guest: That seems acceptable, but there is nuance. The authors point out that radiation varied substantially by institution, with one center achieving a median dose area product roughly a factor of 10 lower than the others. That is a big implementation signal. The device and software are not the whole story. Protocol design, spin settings, collimation, team discipline, and comfort with image interpretation all matter.
+
+Narrator: And from a workflow standpoint, the median S-S-RAB procedure time was 45 minutes. Cryoprobe use was common, used in about 57 percent of cases. Forceps were used in about 44 percent. Needle sampling was used frequently, with the 23-gauge Flexision needle used in about 64 percent.
+
+Guest: The cryobiopsy piece is interesting. It may help tissue acquisition and molecular adequacy, but bleeding clustered around cryobiopsy in this dataset. That does not mean cryobiopsy is unsafe here, but it does mean programs adopting this workflow need a clear bleeding plan: airway isolation strategy, balloon availability, team choreography, and comfort interrupting the robotic portion if needed. The paper reports no hypoxemia or hemodynamic instability in the Grade 3 bleeding cases, but those were still meaningful events.
+
+Narrator: Let’s put the methodology under pressure. The strengths are clear: prospective design, multicenter enrollment, consecutive patients, standardized outcome definitions, mandatory tool-in-lesion confirmation, and 12-month follow-up for non-malignant index biopsies.
+
+Guest: Agreed. The limitations are also clear. It is observational, not powered for a hypothesis, and has no comparator arm. Five of six centers were academic institutions. The proceduralists were experienced. The study population had a high malignancy prevalence. The technology package is resource-intensive. And the study was industry-funded, with several author conflicts disclosed, even though the authors describe mitigation steps including preregistration, standardized endpoints, open-data policy, and data review by authors without sponsor conflicts.
+
+Narrator: Generalizability is the big question. Would these results hold in a lower-volume community setting, with a new robotic program, limited cone-beam CT experience, less consistent anesthesia support, or no ROSE?
+
+Guest: That is exactly where it gets tricky. The study demonstrates what is achievable in capable hands with integrated technology and a defined workflow. It does not prove that every center purchasing the platform will reproduce an 89 percent diagnostic yield and zero pneumothoraces. Training, case selection, anesthesia, imaging protocols, cytopathology, and follow-up infrastructure are all part of the intervention, even if they are not listed as the device.
+
+Narrator: For patient selection, how should an IP clinician think about this?
+
+Guest: This paper strengthens the argument for a bronchoscopic approach to small suspicious nodules when several conditions line up: need for mediastinal staging, desire to minimize pneumothorax risk, need for molecular tissue, and access to advanced imaging with a team that can use it efficiently. It may be especially attractive for patients who would tolerate pneumothorax poorly or who need a single-session diagnosis-and-staging strategy.
+
+Narrator: But it does not answer whether every small nodule needs mobile cone-beam CT.
+
+Guest: Exactly. It does not define when radial EBUS alone is enough, when augmented fluoroscopy is enough, or when CT-guided biopsy remains the better path. It also does not solve the cost-effectiveness question. Two cone-beam spins and a 45-minute robotic procedure may be reasonable in a tertiary IP suite, but implementation has to account for capital equipment, room design, radiation safety, anesthesia time, staff training, and scheduling throughput.
+
+Narrator: Another subtle point is that subgroup analysis did not find meaningful diagnostic yield differences by nodule size, bronchus sign, lobe location, BMI, centrality, or density, with yield ranges clustered tightly.
+
+Guest: That is encouraging, but subgroup analyses in a 155-patient observational study should be interpreted cautiously. The absence of a detected difference is not proof of equivalence across all subgroups. Still, it suggests the integrated workflow may blunt some classic predictors of poor bronchoscopic performance, especially bronchus sign absence and peripheral location.
+
+Narrator: So, bottom line?
+
+Guest: The CONFIRM study adds prospective multicenter evidence that integrated S-S-RAB plus mobile cone-beam CT can achieve very high tool-in-lesion confirmation, high diagnostic yield by a strict definition, strong sensitivity for malignancy, high molecular adequacy, and a very favorable pneumothorax profile in small peripheral nodules.
+
+Narrator: And what remains uncertain?
+
+Guest: Comparative effectiveness against CT-guided biopsy, real-world reproducibility outside expert centers, learning curve for the combined platform, cost-effectiveness, radiation optimization, the ideal biopsy tool sequence, and how to manage non-malignant results given an NPV under 80 percent in a high-prevalence cohort.
+
+Narrator: For interventional pulmonologists, this paper is less about declaring a new universal standard and more about refining the question. The field is moving from “Can we navigate?” to “Can we confirm, sample, stage, and do it safely in one coherent workflow?” This study suggests integrated imaging may be a major part of that answer, but the next step is comparative data.
+
+Guest: Well said. The signal is strong. The evidence is not yet the final word. And for once, the most important endpoint may be the one that sounds the most procedural: tool-in-lesion. Because without that, all the downstream diagnostic claims start to get pretty squishy.
+
+Narrator: That wraps up this episode of InterventionalPulm.com IP Journal Review. Thanks for listening, and join us next time for another focused review of the interventional pulmonary literature.

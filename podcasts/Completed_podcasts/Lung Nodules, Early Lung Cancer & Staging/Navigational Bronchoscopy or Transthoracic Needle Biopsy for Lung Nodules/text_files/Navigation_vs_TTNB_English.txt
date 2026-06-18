@@ -1,0 +1,65 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we're discussing a head-to-head comparison of navigational bronchoscopy and transthoracic needle biopsy for peripheral pulmonary nodules: the VERITAS trial, first author Lentz, published in the New England Journal of Medicine in 2025.
+
+Guest: Right. This is an investigator-initiated, multicenter, randomized noninferiority trial comparing navigational bronchoscopy with CT-guided transthoracic needle biopsy, or TTNB, in patients with peripheral pulmonary nodules. The nodules were 10 to 30 millimeters, and the enrolled patients had an intermediate to high pretest probability of cancer.
+
+Narrator: And the technology matters here. The bronchoscopy arm used electromagnetic navigation integrated with digital tomosynthesis - specifically the Medtronic Illumisite platform. The trial included seven US centers with a mix of academic and community sites, which is important when thinking about generalizability.
+
+Guest: The primary outcome was diagnostic accuracy at 12 months. That was defined as a specific diagnosis - either malignancy or a specific benign diagnosis - that was confirmed as accurate after a year of follow-up. The noninferiority margin was 10 percentage points.
+
+Narrator: Let's go straight to the primary outcome. What did they find?
+
+Guest: Navigational bronchoscopy met the noninferiority endpoint. Diagnostic accuracy was 79.0% in the bronchoscopy group, 94 of 119 patients, compared with 73.6% in the TTNB group, 81 of 110 patients. The absolute difference was 5.4 percentage points, with a 95% confidence interval from -6.5 to 17.2. The p-value for noninferiority was 0.003.
+
+Narrator: So, statistically noninferior. The point estimate actually favored navigational bronchoscopy, although it did not meet superiority, with a p-value of 0.17. That is clinically interesting, but it still needs to be interpreted as a noninferiority result.
+
+Guest: Exactly. The diagnostic yield, which was a secondary outcome focused more narrowly on the procedure itself without the 12-month confirmation, was also very similar: 79.3% for navigational bronchoscopy versus 77.9% for TTNB.
+
+Narrator: The safety profile is where the clinical discussion becomes especially important.
+
+Guest: Absolutely. The overall complication rate was 5.0% in the navigational bronchoscopy group versus 29.2% in the TTNB group, driven mainly by pneumothorax. Any pneumothorax occurred in 3.3% of bronchoscopy patients compared with 28.3% of TTNB patients. Pneumothorax requiring intervention - a chest tube or hospital admission - occurred in 0.8% of the bronchoscopy group, essentially one patient, compared with 11.5% in the TTNB group.
+
+Narrator: That absolute difference is hard to ignore. The number needed to harm for TTNB compared with navigational bronchoscopy is roughly 9 to 10 for pneumothorax requiring intervention. That does not automatically make this universally practice-changing, but it is a clinically meaningful safety signal if the estimate holds across broader practice settings.
+
+Guest: Right. The methodology helps the interpretation. They centrally reviewed imaging to confirm nodules were amenable to both techniques. That is important because, in routine clinical practice, lesion selection often determines whether a patient is sent toward bronchoscopy or percutaneous biopsy in the first place.
+
+Narrator: They screened 519 patients to randomize 288, so this is not an all-comers peripheral nodule population. A key exclusion was technical infeasibility: 19 patients were deemed not candidates for TTNB and 1 for navigational bronchoscopy after central review. That means this trial applies to nodules that experts considered technically feasible for both approaches.
+
+Guest: Exactly. And that is a major clinical boundary. These results should not be generalized to every 8-mm subpleural lesion, every lesion without an airway path, or every patient with anatomy that makes one approach clearly preferable.
+
+Narrator: Let's talk about the TTNB arm. A diagnostic accuracy of 73.6% may feel low compared with historical series that often report numbers closer to 90%.
+
+Guest: The authors address that. They argue that many higher estimates come from retrospective, nonrandomized series with greater risk of bias. The median nodule size in this trial was 15 mm, and TTNB performance falls with smaller targets. So the TTNB result may be less surprising when you focus on the lesion size and the rigor of the endpoint.
+
+Narrator: But there is an important confounder: ROSE. Rapid onsite evaluation was used in 95.8% of bronchoscopy cases but only 7.2% of TTNB cases. Could that difference explain some of the bronchoscopy performance?
+
+Guest: It could. The magnitude is uncertain, but the imbalance is large. It may reflect real-world practice patterns, yet it complicates any claim that the devices or access routes were being compared in isolation. A TTNB program with routine cytopathology support might perform differently.
+
+Narrator: The post-randomization drop-off also deserves attention. Sixteen patients assigned to TTNB did not receive the intervention, compared with eight in the navigational bronchoscopy arm. In the TTNB group, six cases were attributed to proceduralist refusal even after central adjudication of feasibility.
+
+Guest: That is a revealing workflow detail. It suggests that some lesions may be technically feasible on central review but still uncomfortable for proceduralists at the bedside or scanner. Also, 10 TTNB patients had same-day regression on preprocedure imaging versus 2 in the bronchoscopy arm. The authors counted that as a diagnostic outcome for the primary analysis, which they argue may have biased the analysis toward TTNB and therefore strengthened the noninferiority conclusion for bronchoscopy.
+
+Narrator: Now for the devil's advocate question. The study was funded by Medtronic, and every bronchoscopy was done with the Illumisite platform. The authors state that the funder had no role in trial design, data analysis, or manuscript writing, but the single-platform bronchoscopy arm still affects interpretation.
+
+Guest: It does. This is not a comparison of every advanced bronchoscopy platform against TTNB. It is a comparison of one modern electromagnetic navigation and digital tomosynthesis workflow, used by experienced operators, against CT-guided TTNB across participating centers. That may be the clinically relevant comparison in some systems, but it is not a universal technology statement.
+
+Narrator: Operator experience is another key point. The bronchoscopy arm may reflect a high-performing, mature advanced bronchoscopy environment. The question is whether similar accuracy and safety would be reproduced by lower-volume operators, early in a program's learning curve, or without consistent ROSE.
+
+Guest: Exactly. At the same time, CT-guided biopsy is a mature technology. One could argue that if a mature percutaneous technique has a substantially higher pneumothorax rate in a randomized trial, that safety difference is clinically meaningful even if the bronchoscopy arm represents experienced practice.
+
+Narrator: The subgroup data are also useful. Did bronchus sign matter?
+
+Guest: It did. In patients with a bronchus sign, diagnostic accuracy was 90.2% for navigational bronchoscopy versus 75.7% for TTNB, an absolute difference of nearly 15 percentage points favoring bronchoscopy. In nodules without a bronchus sign, the numbers were nearly identical: 73.1% and 72.6%.
+
+Narrator: That supports the biologic and procedural intuition that an airway path matters. For a nodule with a bronchus sign, these data make a strong argument that navigational bronchoscopy deserves serious first-line consideration, especially when the lower pneumothorax risk is part of the decision.
+
+Guest: For nodules under 15 mm, accuracy was limited for both strategies: 69.6% for navigational bronchoscopy and 66.1% for TTNB. For nodules 15 to 30 mm, navigational bronchoscopy was 87.3% versus 81.5% for TTNB. That reinforces the point that lesion size remains central to diagnostic planning.
+
+Narrator: So how should an IP audience apply this? The study supports a bronch-first strategy for selected 10- to 30-mm nodules that are technically amenable to both approaches, particularly when there is a bronchus sign and when bronchoscopy can be performed by an experienced team with appropriate imaging and cytopathology support.
+
+Guest: But the caveats remain: platform specificity, operator experience, near-universal ROSE in the bronchoscopy arm, and the selected nature of the enrolled lesions. It would be too broad to say every peripheral nodule should go to bronchoscopy first. The better interpretation is that, for anatomically suitable nodules in capable programs, navigational bronchoscopy can offer similar confirmed diagnostic accuracy with substantially fewer pneumothoraces requiring intervention.
+
+Narrator: That is a practical message. It shifts the preprocedure conversation away from an assumption that TTNB is always the more accurate test and toward a more nuanced discussion of lesion anatomy, bronchus sign, local expertise, available navigation technology, cytopathology workflow, and pneumothorax risk.
+
+Guest: Agreed. This trial gives the IP community a strong randomized data point for patient selection and multidisciplinary nodule planning. It does not eliminate the role of TTNB, but it makes the case that advanced bronchoscopy should be considered early, not merely after percutaneous biopsy is deemed too risky or has already failed.
+
+Narrator: That wraps this episode of InterventionalPulm.com IP Journal Review. The take-home is that VERITAS supports navigational bronchoscopy as a highly competitive diagnostic strategy for selected peripheral nodules, with a major safety advantage in pneumothorax risk, while still leaving important questions about platform generalizability, ROSE, and operator experience. Thanks for listening.

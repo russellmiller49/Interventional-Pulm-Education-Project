@@ -1,0 +1,53 @@
+Narrador: Bienvenidos a InterventionalPulm.com, Revisión de Literatura de IP. En este episodio, comentamos una revisión narrativa de DeMaio y Sterman, publicada en European Respiratory Review en 2020, titulada “Terapias intratumorales broncoscópicas para el cáncer de pulmón de células no pequeñas”. La revisión recorre la justificación, la historia y la dirección futura de la terapia local broncoscópica para el cáncer de pulmón, y muestra cómo el campo está pasando de la paliación de la obstrucción maligna de la vía aérea hacia la administración local de terapias citotóxicas, inmunológicas y basadas en genes.
+
+Invitado: Exactamente. El atractivo conceptual es bastante directo: la broncoscopia puede administrar tratamiento directamente dentro del tejido tumoral, o cerca de él, con la posibilidad de lograr concentraciones locales altas y reducir la toxicidad sistémica. Los autores también destacan posibles efectos sobre los ganglios linfáticos de drenaje y la enfermedad micrometastásica. Eso se vuelve especialmente relevante cuando pensamos en inmunoterapia, y no solo en la inyección convencional de agentes citotóxicos.
+
+Narrador: La revisión comienza con un arco histórico amplio, desde conceptos inmunológicos tempranos, como las toxinas de Coley y las inyecciones de BCG, hasta estrategias modernas de inmunoterapia génica. Pero, clínicamente, gran parte de la experiencia broncoscópica se ha centrado en la obstrucción maligna de la vía aérea central.
+
+Invitado: Así es. La quimioterapia intratumoral endobronquial, o EITC por sus siglas en inglés, es el ejemplo clásico. La revisión analiza la experiencia de Mehta y sus colegas en 2015, en la que inyectaron cisplatino para tratar la obstrucción maligna de la vía aérea central. Reportaron una tasa de respuesta del 71%, definida como un aumento de al menos 50% en la permeabilidad de la vía aérea, sin efectos adversos graves relacionados con el tratamiento.
+
+Narrador: Eso es alentador para la paliación de la vía aérea, pero también subraya un problema recurrente con los desenlaces. La permeabilidad de la vía aérea es clínicamente significativa cuando la obstrucción es el problema, pero no es lo mismo que supervivencia libre de progresión, supervivencia global o control local duradero.
+
+Invitado: Correcto. La revisión también comenta el trabajo de Celikoglu, en el que los pacientes se sometieron a broncoscopias repetidas semanalmente hasta observar al menos una mejoría del 25% en la permeabilidad de la vía aérea. El 88% alcanzó ese umbral. Eso sugiere actividad, pero el flujo de trabajo es intensivo, y muchos pacientes recibieron otros tratamientos, lo que dificulta aislar el efecto de la inyección en sí.
+
+Narrador: Así que el sesgo de selección y las intervenciones concomitantes son problemas importantes. Estos suelen ser pacientes con enfermedad avanzada y un problema mecánico de la vía aérea. Es un salto muy grande generalizar esos datos al cáncer de pulmón periférico en etapa temprana, o al control de la enfermedad sistémica.
+
+Invitado: La historia de seguridad también es mixta. La revisión menciona el trabajo de Li y sus colegas con para-toluenosulfonamida. El 69% de los pacientes tuvo alivio de la obstrucción a los 30 días, pero un paciente desarrolló insuficiencia respiratoria por empeoramiento de la obstrucción de la vía aérea atribuido al fármaco. Por lo tanto, el concepto es factible, pero no está libre de riesgos.
+
+Narrador: Una de las partes más importantes de la revisión es la discusión farmacodinámica. Vignaud y sus colegas inyectaron azul de metileno dentro de tumores de cáncer de pulmón de células no pequeñas antes de la resección. La patología mostró que el tinte infiltró, en promedio, solo alrededor del 29% del volumen tumoral. Se acumuló preferentemente en el estroma, y algunas regiones del tumor quedaron completamente sin exposición.
+
+Invitado: Esa es la pregunta del abogado del diablo. Si un agente inyectado solo alcanza una minoría del tumor, ¿qué tan realista es lograr una ablación tumoral completa con un fármaco citotóxico? La distribución no es un detalle técnico menor; es central para determinar si la terapia puede funcionar.
+
+Narrador: Los autores plantean que esta limitación puede importar menos para las inmunoterapias que para los agentes citotóxicos. Si una inyección local puede iniciar la presentación de antígenos, el reclutamiento de células T y una respuesta inmunitaria más amplia, el efecto terapéutico podría extenderse más allá de la región exacta donde se depositó el fármaco.
+
+Invitado: Ese es el concepto de vacunación in situ. La revisión usa la experiencia con T-VEC en melanoma como analogía: se inyecta una lesión, y potencialmente se observan efectos en lesiones no inyectadas. Es un modelo atractivo, pero todavía es una inferencia cuando se aplica al cáncer de pulmón.
+
+Narrador: El estudio de Lee y colaboradores de 2017 es uno de los ejemplos mecanísticos más convincentes en la revisión. En un ensayo de fase uno, inyectaron células dendríticas modificadas genéticamente con CCL21 dentro de tumores de cáncer de pulmón de células no pequeñas. La seguridad era el objetivo principal, pero las biopsias antes y después de la inyección mostraron aumento de la infiltración de células T CD8 positivas y de la expresión de PD-L1 en el día 7.
+
+Invitado: Ese es el tipo de señal biológica que el campo necesita. No prueba eficacia clínica, pero muestra que la administración local broncoscópica puede modificar el microambiente inmunitario tumoral de maneras medibles. La siguiente pregunta natural es si esa preparación inmunitaria puede actuar en sinergia con el bloqueo sistémico de puntos de control inmunitario.
+
+Narrador: La revisión destaca exactamente esa dirección, incluidos ensayos que combinan células dendríticas CCL21 con pembrolizumab. La hipótesis es elegante: usar terapia local para llevar células T al tumor y mejorar la presentación de antígenos, y luego usar bloqueo sistémico de PD-1 para sostener o amplificar la respuesta.
+
+Invitado: Pero la implementación no es sencilla. Los broncoscopios EBUS estándar pueden alcanzar tumores centrales y ganglios linfáticos, pero no nódulos periféricos pequeños. El acceso periférico requiere navegación, broncoscopios más pequeños y plataformas de imagen o robóticas cada vez más avanzadas. Eso significa que el concepto terapéutico está estrechamente ligado a la tecnología procedimental.
+
+Narrador: La idea de inyectar dentro de los ganglios linfáticos es particularmente interesante. La inyección guiada por EBUS directamente en los ganglios linfáticos de drenaje tumoral podría, en teoría, dirigirse al sitio de activación inicial de las células T, en lugar de dirigirse a la masa tumoral en sí.
+
+Invitado: Es una idea convincente, pero una vez más, la distribución importa. Un ganglio linfático no es una esfera homogénea. La revisión cita trabajo farmacodinámico que sugiere que múltiples inyecciones pequeñas pueden distribuir el fármaco de manera más eficaz que una sola inyección grande. Eso tiene implicaciones procedimentales: el éxito no depende solo de alcanzar el objetivo, sino de cómo se deposita el agente.
+
+Narrador: La dosis sigue siendo otra brecha importante. ¿Cuánto se debe inyectar? ¿Cuántas pasadas se necesitan? ¿Qué volumen debe usarse en cada sitio de inyección? La revisión señala que, en muchos estudios, la dosificación ha sido empírica. Por ejemplo, un grupo usó 2 miligramos de cisplatino por mililitro de tumor porque parecía factible según su experiencia, pero eso no equivale a una dosis rigurosamente optimizada.
+
+Invitado: Y para virus oncolíticos o terapias génicas, la farmacocinética es todavía más complicada. Las mediciones relevantes pueden incluir replicación viral, eliminación o diseminación viral, activación inmunitaria y efectos sistémicos de citocinas, no solo concentración local.
+
+Narrador: Entonces, ¿cómo debería interpretar esta revisión una audiencia de neumología intervencionista?
+
+Invitado: Lo mejor es verla como una hoja de ruta conceptual y procedimental, más que como una síntesis definitiva de evidencia. Muestra que la terapia intratumoral broncoscópica tiene una justificación biológica plausible, una larga historia procedimental y señales mecanísticas tempranas. Pero también expone incertidumbres importantes: distribución, dosis, selección de desenlaces, carga de procedimientos repetidos, seguridad y necesidad de ensayos controlados.
+
+Narrador: Esa distinción es importante. La revisión no establece la inyección broncoscópica como un tratamiento estándar para el cáncer de pulmón. Sí muestra por qué la neumología intervencionista podría tener un papel en la administración futura de fármacos en oncología torácica, especialmente si la modulación inmunitaria local puede mejorar la respuesta al tratamiento sistémico o superar la resistencia.
+
+Invitado: La traducción práctica es que los programas de neumología intervencionista que participen en estas terapias necesitan más que acceso procedimental. Necesitan infraestructura de ensayos clínicos, apoyo de imagen, protocolos de manejo de tejido, colaboración con oncología, procesos de bioseguridad para productos virales o celulares, y desenlaces claros que importen más allá de la permeabilidad de la vía aérea.
+
+Narrador: Y el campo necesita ensayos que separen la factibilidad técnica del beneficio clínico. No basta con demostrar que se puede inyectar un agente. La pregunta relevante es si la administración local mejora el control tumoral duradero, la respuesta inmunitaria sistémica, los síntomas, la supervivencia o el índice terapéutico, en comparación con las opciones sistémicas o locales existentes.
+
+Invitado: Exactamente. Esta revisión es valiosa porque enmarca tanto la promesa como las limitaciones. La terapia intratumoral podría convertirse en una plataforma importante, pero sigue dependiendo de mejores estrategias de distribución del fármaco, dosificación racional, combinaciones cuidadosamente diseñadas y pruebas clínicas rigurosas.
+
+Narrador: Con esto cerramos este episodio de InterventionalPulm.com, Revisión de Literatura de IP. La idea principal es que la terapia intratumoral broncoscópica es un espacio traslacional intrigante para la neumología intervencionista, especialmente en inmuno-oncología; pero la evidencia actual se interpreta mejor como generadora de hipótesis y facilitadora de técnica, no como definitoria de la práctica clínica. Gracias por escuchar.

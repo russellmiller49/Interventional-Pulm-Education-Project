@@ -1,0 +1,116 @@
+Narrator:
+Welcome to InterventionalPulm.com IP Journal Review. In this episode, we’re looking at Deng and colleagues, published in BMJ Open in 2026, describing the COLLABORATION-I trial: a protocol evaluating probe-based confocal laser endomicroscopy-guided pleural biopsy via semirigid thoracoscopy in patients with undiagnosed exudative pleural effusion.
+
+Guest:
+And the word “protocol” is important here. This is not a completed trial with diagnostic yield, complication rates, or practice-changing outcome data. It is a study design paper. So the useful question is not, “Should everyone start using pCLE for pleural biopsy tomorrow?” The question is, “Is this the right trial to answer whether pCLE adds meaningful diagnostic value beyond careful white-light semirigid thoracoscopy?”
+
+Narrator:
+Right. The clinical problem is familiar to anyone doing pleural work. Medical thoracoscopy is already a major diagnostic tool for undiagnosed exudative effusions, but semirigid thoracoscopy has a few persistent weak points. The paper emphasizes that diagnostic yield can be suboptimal in intention-to-treat populations, and the negative predictive value is a particular concern. They cite a delayed malignancy diagnosis rate of 15.4% among patients whose initial semirigid thoracoscopic biopsy showed nonspecific pleuritis or fibrosis.
+
+Guest:
+That is the anxiety-provoking group. The pleura looks abnormal enough to biopsy, pathology comes back nonspecific, and then everyone has to decide whether to trust the biopsy, repeat imaging, pursue another biopsy route, or follow longitudinally. The concern is not just whether the forceps got enough tissue. It is whether the operator sampled the right tissue.
+
+Narrator:
+Exactly. The authors make a useful distinction between specimen quality and specimen representativeness. Cryobiopsy and electrocautery-assisted approaches may improve sample size or depth, but better chunks of the wrong area still leave you with the same diagnostic problem.
+
+Guest:
+And that’s where pCLE becomes conceptually attractive. Instead of relying only on gross thoracoscopic appearance—nodules, plaques, thickening, fibrin, adhesions—you add real-time microscopic imaging. The pitch is essentially “optical biopsy” to guide where the actual forceps biopsy should go.
+
+Narrator:
+The study design is a multicentre, parallel-group randomized trial in China. The abstract describes ten sites, while the methods section lists eight experienced pleural disease centers; that discrepancy is worth clarifying when interpreting the protocol. The planned enrollment is 158 adults with undiagnosed exudative pleural effusion, randomized one-to-one to conventional semirigid thoracoscopic pleural biopsy versus pCLE-guided semirigid thoracoscopic pleural biopsy.
+
+Guest:
+The inclusion criteria are straightforward: adults at least 18 years old, exudative pleural effusion without a diagnosis after standard clinical, radiologic, laboratory, and cytologic evaluation, and willingness to undergo an invasive procedure. Exclusions include pleural thickening or a pleural-based mass without effusion, parapneumonic effusion, contraindications to pleural biopsy or semirigid thoracoscopy, and recent participation in another study.
+
+Narrator:
+For the procedural design, both arms undergo semirigid thoracoscopy under local anesthesia and mild sedation. In the control group, the parietal, visceral, and diaphragmatic pleura are inspected, and eight biopsies are taken under direct vision from suspected parietal pleural areas.
+
+Guest:
+In the pCLE group, the operator uses pCLE in two ways. First, visible abnormalities under white light—nodules or thickened areas—are interrogated with pCLE to assess heterogeneity and select the best biopsy site. Second, there is a systematic sweep of the basal pleura, including the diaphragmatic pleura and lower posterior chest wall, covering at least two intercostal spaces above the costophrenic recess. The operator interprets the pCLE images in real time, looking for malignant patterns such as pleomorphic cells, indistinct intercellular borders, clustered or papillary architecture, and disruption of the normal mesothelial pattern. For tuberculous or necrotic lesions, they describe unstructured regions, disrupted cellular architecture, and a heterogeneous inflammatory background.
+
+Narrator:
+The paper’s figure on page 4 is helpful because it visually walks through the proposed workflow: white-light pleural nodules, pCLE probe interrogation, pCLE visualization of tumor deposits, forceps biopsy at that same location, then histology and CK7 immunostaining confirming tumor cells.
+
+Guest:
+That figure is probably the cleanest illustration of the whole hypothesis: use pCLE not as a replacement for histology, but as a targeting tool. The biopsy still matters. The pathologist still matters. Molecular adequacy still matters. pCLE is being tested as the bridge between what the operator sees macroscopically and what pathology ultimately confirms.
+
+Narrator:
+The primary endpoint is diagnostic yield, defined as the proportion of patients undergoing pleural biopsy in whom a specific diagnosis is established. The investigators expect about 93% diagnostic yield in the conventional semirigid thoracoscopy arm and 95% in the pCLE-guided arm, with a prespecified non-inferiority margin of 10%.
+
+Guest:
+That endpoint choice deserves discussion. Diagnostic yield is the conventional procedural endpoint, but for a trial like this, the most clinically interesting issue may be false reassurance after a benign or nonspecific biopsy. The authors recognize that by including 12-month follow-up for patients with benign or nonspecific histology when there is still concern for malignancy. That strengthens the reference diagnosis, especially in the nonspecific pleuritis group.
+
+Narrator:
+Secondary endpoints include negative likelihood ratio, diagnostic sensitivity for specific diseases—mesothelioma, metastatic cancer, and tuberculous pleurisy—procedure time, adequacy of specimens for molecular diagnosis, and complications. They also plan to assess biopsy depth, interpretability, and molecular marker success.
+
+Guest:
+The molecular adequacy endpoint is very relevant. In 2026, diagnosing malignant pleural disease without enough tissue for predictive markers is often only half a diagnostic win. Their table includes relevant markers by tumor type, including PD-L1, EGFR, ALK, and ROS1 for NSCLC; HER2, ER, and PR for breast; BRCA for ovarian; and others. That is a nice acknowledgment that pleural biopsy quality is no longer just “malignant versus benign.”
+
+Narrator:
+Methodologically, there are several strengths. Randomization is one-to-one, with concealed sequence generation using block sizes of four. Pathologists are blinded to the biopsy technique. Final diagnoses are verified by an independent diagnosis verification panel including pulmonary and critical care physicians, a radiologist, and a pathologist.
+
+Guest:
+And they require standardized pCLE training with competency assessment. That is essential because pCLE image interpretation is operator-dependent. Without training standardization, the intervention becomes “pCLE plus whatever the operator thinks pCLE means,” which is not a reproducible diagnostic strategy.
+
+Narrator:
+The devil’s advocate position is that this may still be a high-expertise trial. Participating centers are experienced pleural disease teaching hospitals, all equipped with semirigid thoracoscopy and pCLE. The question is whether the results, when available, will generalize to lower-volume centers or centers where pCLE is not part of the existing procedural ecosystem.
+
+Guest:
+That’s the real-world barrier. pCLE adds equipment cost, training, image interpretation, procedural time, and probably coordination around fluorescein use. The protocol mentions sodium fluorescein as a preparation difference in the pCLE group. So even if diagnostic yield improves, implementation will depend on how large that gain is and in which subgroup.
+
+Narrator:
+And the subgroup issue may be the most interesting part of the paper. The authors explicitly acknowledge that pCLE may add little when there are obvious tumor deposits under white light. If you can see bulky pleural tumor, you already know where to biopsy. The potential value is in normal or only subtly abnormal pleura, fibrotic pleura, diffuse thickening, or lesion boundaries that are hard to localize visually.
+
+Guest:
+But they also acknowledge that the trial is not powered for that subgroup analysis. They plan exploratory analyses by pleural thickness, nodular versus diffuse morphology, and white-light thoracoscopic appearance—obvious tumor deposits versus normal or slightly abnormal pleura. That is scientifically appropriate, but we should be cautious. If the overall trial is neutral and a small subgroup looks positive, that should generate a future trial, not immediate broad adoption.
+
+Narrator:
+Another limitation is blinding. Proceduralists cannot be blinded to whether they are using pCLE. That opens the door to performance bias. Operators in the pCLE arm may spend more time interrogating pleura, may be more deliberate about biopsy site selection, and may behave differently simply because the protocol makes the intervention arm more structured.
+
+Guest:
+That is a subtle but important point. The comparator is conventional semirigid thoracoscopy with direct vision and eight biopsies. But the pCLE arm includes a standardized mapping behavior: visible lesions plus systematic basal sweep. If the pCLE arm wins, how much of that is cellular imaging, and how much is more disciplined pleural survey?
+
+Narrator:
+That’s where procedural trials are tricky. The device, the workflow, the operator behavior, and the cognitive forcing function all travel together.
+
+Guest:
+Exactly. It is like many advanced bronchoscopy studies: sometimes the technology improves yield; sometimes the technology makes the operator slow down and follow a better process. Clinically, the patient may not care which mechanism helped, but for adoption and cost-effectiveness, the distinction matters.
+
+Narrator:
+The statistical plan also deserves a brief mention. Patients diagnosed with nonspecific pleurisy after 12 months of follow-up will be excluded from the diagnostic yield calculation, and sensitivity will be calculated for specific disease states. The authors note that because biopsy false positives are not expected, the negative likelihood ratio effectively becomes one minus sensitivity.
+
+Guest:
+That is reasonable, but it also highlights why transparent reporting will be critical. In pleural diagnostics, how you handle nonspecific pleuritis, idiopathic effusion, and incomplete verification can move the apparent yield. The planned STARD-aligned reporting is reassuring, but the eventual results paper will need to show the patient flow clearly.
+
+Narrator:
+So where does this protocol fit into IP practice right now?
+
+Guest:
+It does not change practice yet. It frames a very relevant question: can real-time microscopic pleural imaging reduce sampling error during semirigid thoracoscopy? For centers already using semirigid thoracoscopy, especially where flexible forceps are the main tool and rigid instruments or pleural cryobiopsy are not routinely used, this could be a meaningful advance if the results show improved yield, improved sensitivity, or fewer delayed malignancy diagnoses without unacceptable time, cost, or complications.
+
+Narrator:
+And for mesothelioma?
+
+Guest:
+Potentially very relevant, especially in fibrotic pleura where visual diagnosis is unreliable and where tissue adequacy matters. But again, this protocol includes metastatic cancer, mesothelioma, and tuberculous pleurisy. The diagnostic behavior of pCLE may not be uniform across those diseases. A tool that helps find pleural tumor clusters may perform differently in granulomatous pleuritis or necrotic inflammation.
+
+Narrator:
+The complications tracked include prolonged air leak, hemorrhage, subcutaneous emphysema, postoperative fever, empyema, wound infection, arrhythmia, hypotension, and chest wall seeding from mesothelioma. Bleeding is graded from nil or self-limited, to mild requiring local epinephrine, to moderate or severe requiring electrocautery or argon plasma coagulation.
+
+Guest:
+Safety will be important, but the bigger practical question may be efficiency. If pCLE adds significant procedural time or complexity but only shifts yield from 93% to 95% overall, many centers may not find that compelling. But if the benefit concentrates in patients with subtle pleural abnormalities, fibrotic pleura, or nondiagnostic prior sampling, then pCLE could become a selective tool rather than a universal add-on.
+
+Narrator:
+So the bottom line: COLLABORATION-I is a thoughtful randomized protocol aimed at a real diagnostic weakness in pleural medicine—sampling error during semirigid thoracoscopy. Its strengths include randomized design, standardized pCLE training, blinded pathology review, molecular adequacy endpoints, and 12-month follow-up for initially benign or nonspecific cases.
+
+Guest:
+And the caution is that this is still a protocol, not outcome evidence. The key future questions are whether pCLE improves clinically meaningful diagnostic performance, whether it reduces false-negative or delayed malignant diagnoses, whether molecular adequacy improves, and whether the added workflow burden is justified. The most important signal may not be the overall diagnostic yield. It may be whether pCLE helps when white-light thoracoscopy is least helpful.
+
+Narrator:
+That’s a good place to land. For IP clinicians, this paper is worth watching because it tests a plausible next step in pleural diagnostics: moving from macroscopic target selection to cellular-level target selection, while still anchoring the diagnosis in histopathology.
+
+Guest:
+Right. Elegant concept, appropriate skepticism, and now we wait for the data.
+
+Narrator:
+That’s it for this episode of InterventionalPulm.com IP Journal Review. Thanks for listening. The full article details can be found in the show notes.

@@ -1,0 +1,140 @@
+Narrator:
+Welcome to the InterventionalPulm.com IP Journal Review, where we examine the methods, results, and clinical implications of a single article relevant to interventional pulmonology.
+
+This episode looks at Kim and colleagues, published in CHEST in 2025. The study is titled, “Diagnostic Yield and Synergistic Impact of Needle Aspiration and Forceps Biopsy With Electromagnetic Navigation Bronchoscopy for Peripheral Pulmonary Lesions.”
+
+The practical question is straightforward: during electromagnetic navigation bronchoscopy, does using both a needle and forceps meaningfully improve diagnostic performance compared with using either device alone?
+
+Guest:
+And that is a relevant question because navigation gets the bronchoscope or extended working channel toward the lesion, but navigation is only one part of the diagnostic chain. Once the target is reached, the procedure still depends on whether the selected instrument can enter the lesion and recover representative material.
+
+Forceps and aspiration needles interact with peripheral lesions differently. Forceps generally require an airway path that permits the jaws to advance and open within the target. A needle may penetrate beyond the airway wall or enter a lesion despite imperfect airway alignment. On the other hand, needles can be difficult to deliver around sharp angulation, and forceps may provide better architecture for certain benign or malignant diagnoses.
+
+So the hypothesis that these tools might be complementary is biologically plausible. The question is whether the additional device produces enough incremental yield to justify additional time, cost, and procedural complexity.
+
+Narrator:
+How did the investigators test that?
+
+Guest:
+They conducted a prospective, single-center, randomized-order crossover trial at a tertiary hospital in South Korea.
+
+One hundred forty-two participants with peripheral pulmonary lesions underwent ENB. Every participant received both needle aspiration and forceps biopsy. The randomized component determined the sequence: half underwent needle aspiration first, and half underwent forceps biopsy first.
+
+That within-lesion design is important. Each lesion effectively served as its own control, limiting confounding from lesion size, location, bronchus sign, pathology, and technical accessibility.
+
+Procedures were performed under moderate sedation using a conventional electromagnetic navigation platform. Each device was used for at least three sampling attempts. There was no radial EBUS, fluoroscopy, cone-beam CT, or other complementary localization technique. There was also no rapid on-site evaluation.
+
+Narrator:
+So this was deliberately a fairly stripped-down ENB environment.
+
+Guest:
+Exactly. That makes the contribution of the sampling device easier to isolate, but it also affects generalizability to contemporary workflows incorporating robotic bronchoscopy, cone-beam CT, digital tomosynthesis, radial EBUS, or tool-in-lesion confirmation.
+
+The lesions had a mean diameter of approximately twenty-one millimeters. About sixty-four percent had a positive CT bronchus sign, and almost sixty percent were located in the outer third of the hemithorax. Eighty-four percent were solid lesions.
+
+The investigators also used a strict definition of diagnostic yield. Malignancy counted as diagnostic, as did a specific benign diagnosis that adequately represented the lesion and informed management. Nonspecific inflammation, normal lung, atypical cells, and insufficient material were considered nondiagnostic.
+
+Narrator:
+That distinction matters because diagnostic yield estimates can rise substantially when nonspecific benign findings are counted as successful procedures.
+
+Guest:
+Right. Under the strict definition, forceps biopsy alone had a diagnostic yield of forty-four point four percent. Needle aspiration alone yielded a diagnosis in fifty-one point four percent.
+
+That seven-percentage-point difference between needle and forceps was not statistically significant, with a p value of zero point two two one.
+
+The combined strategy, however, produced a diagnostic yield of sixty-six point nine percent. That was an absolute increase of twenty-two point five percentage points over forceps alone and fifteen point five percentage points over needle aspiration alone. Both comparisons had p values below zero point zero zero one.
+
+Narrator:
+And the paired results help explain that improvement.
+
+Guest:
+They do. Both devices were diagnostic in forty-one participants. But needle aspiration established a diagnosis in thirty-two cases in which forceps failed. Conversely, forceps established the diagnosis in twenty-two cases in which the needle failed.
+
+Most of the needle-only malignant diagnoses were non-small cell lung cancers. Forceps also added several malignant diagnoses, but it contributed particular value in some specific benign conditions, including mycobacterial disease, eosinophilic pneumonia, and dense anthracofibrosis.
+
+That discordance is the central finding. The two tools were not merely generating duplicate specimens. Each accessed diagnostic information that the other occasionally missed.
+
+Narrator:
+What happened when the analysis was restricted to malignancy?
+
+Guest:
+Of the one hundred forty participants with complete follow-up, one hundred twenty ultimately had malignant lesions. That is a malignancy prevalence of nearly eighty-six percent.
+
+Sensitivity for malignancy was forty-seven point five percent with forceps, fifty-eight point three percent with needle aspiration, and seventy-one point seven percent with the combination.
+
+Again, the combined approach was significantly better than either single modality. The difference between needle and forceps alone did not reach statistical significance, although the numerical advantage favored the needle.
+
+But seventy-one point seven percent sensitivity also means that nearly three in ten malignant lesions were still not diagnosed by the combined index procedure. A negative result in this population therefore remained far from reassuring.
+
+Narrator:
+That is especially important given the very high pretest probability represented by this cohort.
+
+Guest:
+Yes. These were selected lesions considered suspicious enough to require definitive diagnosis, and ENB was chosen because the lesions were believed to be bronchoscopically accessible. The results should not be interpreted as the performance of ENB across an unselected incidental nodule population.
+
+The findings were consistent across several clinically relevant subgroups. The combined strategy improved yield in lesions twenty millimeters or smaller, lesions without a bronchus sign, peripheral lesions, and lesions in emphysematous lung.
+
+The order of sampling did not significantly influence yield or sensitivity. That reduces concern that the first device either disrupted the target or unfairly benefited from pristine tissue.
+
+Narrator:
+What about complications?
+
+Guest:
+Pneumothorax occurred in five of the one hundred forty-two participants, or three point five percent. Two participants, or one point four percent, required tube drainage.
+
+Ten participants had grade two bleeding, but there were no grade three or higher bleeding events. There was no respiratory failure and no procedure-related mortality.
+
+So the safety profile was favorable, although the study cannot separate the complication risk attributable to the needle from that attributable to forceps because every participant received both.
+
+Narrator:
+The obvious devil’s advocate question is whether this study demonstrated true device synergy or simply demonstrated that taking more samples improves yield.
+
+Guest:
+That is probably the most important methodologic caution.
+
+The combined arm had at least three needle attempts plus at least three forceps attempts. A single-device strategy involved fewer total instrument passes and less sampling time. The study did not compare six forceps passes with three forceps passes plus three needle passes, for example.
+
+Therefore, the results establish the effectiveness of a two-device strategy, but they do not fully separate the effect of complementary tissue acquisition from the effect of greater sampling intensity.
+
+The needle component also required more time. Mean needle-biopsy time was approximately eighteen point six minutes, compared with eleven point seven minutes for forceps. Total ENB procedure time averaged about thirty-seven minutes.
+
+That additional time may be entirely justified by a fifteen- to twenty-two-point increase in yield, but the workflow and economic tradeoffs were not formally studied.
+
+Narrator:
+What other strengths stand out?
+
+Guest:
+The paired design is strong. Randomizing device order was thoughtful. Nine bronchoscopists participated, which makes this less vulnerable to the technique of a single operator. Pathologists were masked to device sequence, and only two participants lacked complete follow-up.
+
+Another strength is the conservative endpoint definition. The combined index-procedure yield of sixty-six point nine percent was almost identical to the twelve-month conservative diagnostic accuracy of sixty-seven point nine percent. That agreement suggests the strict initial endpoint was not hiding a large number of false-negative benign classifications.
+
+Narrator:
+And the limitations?
+
+Guest:
+First, this was a single-center study performed within one health care system and with one navigation platform.
+
+Second, the procedural environment differs from many current high-resource IP programs. There was no general anesthesia, radial EBUS, cone-beam CT, augmented fluoroscopy, robotic bronchoscopy, or ROSE. Those technologies might increase the absolute yield of either device, reduce the incremental benefit of the second tool, or possibly make complementary sampling even more useful once true tool-in-lesion position is confirmed.
+
+Third, the study was powered for the comparison between forceps alone and the combined approach. It was not powered to establish superiority of needle aspiration over forceps. The numerical advantage of the needle is interesting, but it should not be treated as a definitive head-to-head result.
+
+Fourth, only twenty final diagnoses were benign. Conclusions about benign disease are therefore much less stable than conclusions about malignancy.
+
+Finally, the study evaluated whether a diagnosis was obtained. It did not establish whether one strategy provided better specimen adequacy for molecular profiling, PD-L1 testing, broad next-generation sequencing, or other downstream tissue requirements. In contemporary thoracic oncology, diagnosis alone is not always the complete procedural endpoint.
+
+Narrator:
+So how should an interventional pulmonology team apply this?
+
+Guest:
+For ENB performed under moderate sedation without advanced confirmation imaging, this trial provides good randomized evidence against relying reflexively on a single sampling device. Needle aspiration and forceps appear meaningfully complementary, and the gain in diagnostic yield was achieved without a major safety penalty.
+
+However, the paper does not prove that every navigational bronchoscopy on every platform requires both devices. In a workflow with confirmed concentric tool-in-lesion positioning, extensive ROSE, or a different primary sampling tool such as cryobiopsy, the incremental value may differ.
+
+The broader procedural lesson is that navigation success should not be equated with diagnostic success. Even after reaching the target, sampling strategy matters.
+
+Narrator:
+The bottom line is that Kim and colleagues provide a well-controlled demonstration that combining needle aspiration with forceps biopsy improves both diagnostic yield and sensitivity during ENB compared with either tool alone.
+
+The study supports multimodal sampling, particularly in ENB workflows without adjunct localization or confirmation technologies. At the same time, the additional passes and procedural time complicate the claim of pure device synergy, and a negative combined procedure still leaves substantial residual malignancy risk.
+
+This has been the InterventionalPulm.com IP Journal Review. Thank you for listening.

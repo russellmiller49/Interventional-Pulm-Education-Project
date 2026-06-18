@@ -1,0 +1,134 @@
+Narrator:
+Welcome to InterventionalPulm.com IP Journal Review. In this episode, we’re discussing a focused but very practical staging question: when ROSE is not available during EBUS-TBNA, should bronchoscopists routinely change the needle between N two stations to avoid false multistation N two upstaging?
+
+Guest:
+Right. This episode looks at Sagar and colleagues, published in the Journal of Bronchology and Interventional Pulmonology in 2026. The article is titled, “Estimating False Multistation N two Upstaging From Cross-Contamination During EBUS-TBNA Without ROSE: Insights From a Monte Carlo Analysis.”
+
+Narrator:
+And the timing of this question makes sense because of the ninth edition TNM distinction between single-station N two disease, or N two A, and multistation N two disease, or N two B. That distinction matters prognostically, and potentially therapeutically, because selected patients with single-station N two disease may still be discussed for surgical strategies, whereas multistation N two disease generally moves the patient away from resection.
+
+Guest:
+Exactly. The procedural concern is simple: if a malignant N two station is sampled first, and the same needle is then used in a different benign N two station, could malignant cellular carryover create a false-positive second N two station? Under older TNM frameworks, that may not have changed the nodal category. But now, the difference between N two A and N two B can influence multidisciplinary decision-making.
+
+Narrator:
+The authors were careful about their objective. They were not claiming to measure the true contamination rate in EBUS. Instead, they tried to estimate a theoretical upper bound: under plausible, and in some cases conservative, contamination assumptions, how often would cross-contamination actually translate into false N two B classification? And how many needle changes would be required to prevent one false upstage?
+
+Guest:
+That framing is important. This is not a prospective clinical trial. It is a Monte Carlo decision-analytic model. They simulated mediastinal staging in one hundred thousand virtual patients per scenario, specifically in the absence of ROSE. They stratified patients by tumor centrality and clinical nodal status: peripheral clinical N zero, central clinical N zero, and clinical N one.
+
+Narrator:
+They also excluded patients with known radiographic or PET-positive N two disease, which is reasonable for this question. If N two disease is already suspected, the sampling strategy within the N two compartment may be different. The focus here is clinically unsuspected N two disease, where the bronchoscopist may be sampling multiple N two stations as part of systematic staging without knowing which one is malignant.
+
+Guest:
+For the base model inputs, they used an occult N two probability of three percent for peripheral clinical N zero tumors, seven percent for central clinical N zero tumors, and twenty-seven percent for clinical N one disease. Among patients with N two disease, the base-case assumption was that sixty percent had single-station N two disease, with sensitivity analyses ranging from fifty to seventy-five percent.
+
+Narrator:
+Then they layered in sampling assumptions. Each station was sampled with a mean of three passes, with a range from two to four. Sampling order was modeled as either least suspicious first, where the malignant station was sampled first only about twenty to thirty percent of the time, or random, where malignant-first sampling was closer to fifty percent.
+
+Guest:
+And the contamination assumptions are where the model intentionally becomes conservative. They modeled per-pass contamination at five percent, fifteen percent, and twenty percent. The fifteen percent condition represented a moderate estimate based on catheter or channel contamination literature, and twenty percent reflected a high, conservative interpretation of cytologic residuals in the EBUS setting.
+
+Narrator:
+The decision tree in Figure 1 is helpful because it shows the logic visually. In the high-risk central clinical N zero scenario, occult N two disease begins at seven percent. Then true N two disease branches into single-station N two A and true multistation N two B. Only the single-station group is vulnerable to false N two B upstaging. If the malignant station is sampled later, there is no carryover problem. If it is sampled first, then per-pass carryover creates the possibility of a false second positive station.
+
+Guest:
+And that is really the denominator problem. Even if carryover after a malignant node is not trivial, very few total patients sit in the exact pathway where it matters: occult N two disease, truly single-station, malignant station sampled before a benign N two station, and sufficient carryover to produce a false cytologic diagnosis. Each branch narrows the population.
+
+Narrator:
+So what did they find?
+
+Guest:
+False N two B upstaging was possible, but infrequent. In central clinical N zero disease under base-case assumptions — sixty percent N two A among N two cases and about fifteen percent per-pass carryover — about zero point five to zero point eight percent of all patients were falsely upstaged from N two A to N two B when a single needle was used.
+
+Narrator:
+And in the higher-risk scenario?
+
+Guest:
+With seventy-five percent N two A among N two cases and about twenty percent per-pass carryover, the false upstaging rate increased to roughly one point three to one point seven percent. For peripheral clinical N zero tumors, the rate remained less than zero point two percent. Clinical N one disease was higher than peripheral clinical N zero, with modeled false upstaging between zero point eight and one point four percent.
+
+Narrator:
+So the headline is not “contamination cannot matter.” It is more nuanced: the modeled risk is small, but not zero, and it concentrates in central clinical N zero and clinical N one tumors.
+
+Guest:
+Right. The second outcome may be even more relevant operationally: how many extra needle changes are required to prevent one false upstage? In the base-case scenario, preventing one false upstage required roughly two hundred to three hundred fifty additional needle changes in central clinical N zero disease, and one hundred to two hundred in clinical N one disease. In peripheral clinical N zero tumors, the number exceeded one thousand.
+
+Narrator:
+Figure 2 makes that visually obvious. The needle-change burden is very high in peripheral clinical N zero disease, lower in central clinical N zero disease, and lowest in clinical N one disease, but still not trivial. Even in higher-risk scenarios, the number of needles required per false upstage avoided rarely fell below one hundred fifty.
+
+Guest:
+That is a lot of needles. And in a no-ROSE environment, which may already imply resource limitations, cost and supply constraints are not theoretical. The incremental procedural burden matters.
+
+Narrator:
+The sensitivity analysis is also worth discussing. The authors found that per-pass carryover probability, the probability of single-station N two disease among all N two disease, and sampling order all had comparable influence on the model output.
+
+Guest:
+Which is a useful caution. It means the answer is not driven by a single magic variable. Better EBUS-specific contamination data would help, but so would better epidemiologic data on true N two A versus N two B distributions in clinically occult disease, and better procedural data on actual sampling sequence within N two stations.
+
+Narrator:
+Let’s do the skeptical read. What are the main limitations?
+
+Guest:
+First, the actual EBUS cross-contamination risk is unknown. The cited literature shows that malignant cells can remain in the needle, sheath, or channel after sampling a malignant node. But that is not the same as proving that subsequent sampling of a benign node will yield a clinically false-positive malignant diagnosis.
+
+Narrator:
+So residual cells are a necessary condition for this concern, but not sufficient proof of stage migration.
+
+Guest:
+Exactly. Second, the contamination priors come from heterogeneous endosonographic literature and may overestimate what happens during routine mediastinal staging. The authors acknowledge that these are conservative upper-bound estimates. Interestingly, even with conservative assumptions, the false N two B rate stayed low.
+
+Narrator:
+Third, the HAL and HOMER-based estimates reflect N two slash N three risk, not pure N two risk. If some modeled patients actually had occult N three disease rather than N two disease, that would probably reduce the relevance of N two-to-N two contamination and increase the number of needle changes needed to prevent one false N two B upstage.
+
+Guest:
+Fourth, the distribution of N two A versus N two B disease was taken from pathologic N two datasets, not necessarily from the clinically occult N two population. The authors tried to handle that with sensitivity analyses, but it remains a real uncertainty.
+
+Narrator:
+And fifth, not every false conversion from N two A to N two B necessarily changes management. Contemporary N two treatment decisions include resectability, physiologic reserve, induction response, institutional norms, and multidisciplinary judgment. If only some false N two B calls actually alter treatment, then the effective number of needle changes required to prevent one management-changing event would be even higher.
+
+Guest:
+That point matters. The model endpoint is stage migration, not treatment migration, survival, or patient-centered outcome. Stage migration is important, but it is still a surrogate.
+
+Narrator:
+So how should an interventional pulmonologist apply this?
+
+Guest:
+The most defensible interpretation is risk-based. Routine needle change between every N two station probably offers minimal incremental benefit for most patients, especially peripheral clinical N zero tumors. The modeled risk there is essentially negligible, and the needle-change efficiency is poor.
+
+Narrator:
+But the article does not say, “never change needles.”
+
+Guest:
+No, and that would be an overread. A selective strategy may be reasonable when several factors line up: no ROSE, central tumor or clinical N one disease, multiple N two stations being sampled, borderline surgical candidacy, and a situation where distinguishing N two A from N two B would plausibly affect the tumor board recommendation.
+
+Narrator:
+There is also a workflow implication that costs nothing: think about the order of sampling within the N two compartment. The authors modeled a least-suspicious-first strategy, and they note that ultrasound features may help guide which N two node is sampled first. Sampling a benign-appearing N two station before a more suspicious N two station could reduce carryover risk without changing needles.
+
+Guest:
+That may be the most practical takeaway. A needle change is one mitigation strategy. Sequencing is another. And documentation matters too. If two N two stations are positive and the second was sampled after a frankly malignant first station, that procedural sequence may be relevant when pathology, oncology, thoracic surgery, and radiation oncology interpret the result.
+
+Narrator:
+Although, to be clear, this paper should not be used to dismiss a positive N two station just because it came second.
+
+Guest:
+Absolutely. A positive node is still a positive node unless there is a clear reason to doubt it. The study gives a probabilistic framework for thinking about rare contamination-related misclassification. It does not create a rule for discounting cytology.
+
+Narrator:
+What future data would actually move this field forward?
+
+Guest:
+Prospective EBUS-specific carryover studies would be the first step: sampling known malignant nodes, then controlled assessment of needle, stylet, sheath, channel, and perhaps subsequent benign targets under standardized conditions. But the more clinically relevant endpoint would be actual false-positive node diagnosis and stage migration, not just residual malignant cells.
+
+Narrator:
+And procedural registries could help with the sequencing question: which N two station was sampled first, what were the ultrasound features, how many passes, was ROSE available, and did final surgical pathology or follow-up validate the nodal map?
+
+Guest:
+Exactly. That would allow future models to replace conservative assumptions with observed probabilities.
+
+Narrator:
+So the closing synthesis: Sagar and colleagues address a very specific but timely procedural question created by the N two A versus N two B distinction in TNM nine. Their Monte Carlo model suggests that false multistation N two upstaging from needle carryover during EBUS without ROSE is small but not negligible, highest in central clinical N zero and clinical N one disease, and essentially absent in peripheral clinical N zero disease.
+
+Guest:
+The article’s value is not that it mandates a new universal needle policy. It gives IP clinicians a quantitative way to think about a nagging staging concern. Routine needle change between N two stations is probably low-value for most no-ROSE cases, but selective needle change, careful N two sequencing, and clear documentation may be reasonable when the pretest probability and treatment stakes are high.
+
+Narrator:
+That’s a good place to end. For InterventionalPulm.com IP Journal Review, this has been a discussion of Sagar and colleagues’ Monte Carlo analysis on false N two B upstaging from EBUS-TBNA cross-contamination without ROSE. Thanks for listening, and we’ll see you next time.

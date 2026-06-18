@@ -1,0 +1,127 @@
+InterventionalPulm.com IP Journal Review: Guías de la AABIP sobre diagnóstico broncoscópico y estadificación del cáncer de pulmón
+
+Duración estimada: 9 a 10 minutos
+
+Tipo de artículo: guía clínica y declaración de consenso
+
+Narrador: Bienvenidos a InterventionalPulm punto com IP Journal Review. Hoy revisamos el artículo de Miller y colaboradores, publicado en el Journal of Bronchology and Interventional Pulmonology en 2025: las guías basadas en evidencia de la AABIP sobre diagnóstico broncoscópico y estadificación del cáncer de pulmón.
+
+Invitado: Y este es un documento importante para la audiencia de neumología intervencionista. No porque cada recomendación esté respaldada por datos aleatorizados impecables, porque no lo está, sino porque intenta organizar varias decisiones procedimentales del día a día: broncoscopia versus biopsia transtorácica guiada por tomografía computarizada para nódulos periféricos, cuántas herramientas de biopsia usar, si la evaluación rápida in situ aporta valor, qué tan sistemática debe ser la estadificación con EBUS, y cuándo podemos evitar razonablemente una estadificación invasiva adicional.
+
+Narrador: Exacto. El alcance tiene dos dominios principales: la biopsia no quirúrgica de nódulos pulmonares periféricos, y la estadificación mediastínica guiada por EBUS con sonda convexa en cáncer de pulmón presunto o confirmado. En cuanto a la metodología, el grupo utilizó un proceso Delphi modificado, una revisión sistemática de la literatura hasta marzo de 2023, el enfoque GRADE para evaluar la certeza de la evidencia, y lenguaje tipo NICE para expresar la fuerza de cada recomendación.
+
+Invitado: Eso es clave, porque “considerar”, “usar”, “no ofrecer de rutina” y “no hacer recomendación” no significan lo mismo. Este no es un documento que diga: “esta es la única forma correcta de manejar cada caso”. Es más matizado. Seis recomendaciones se apoyaron en metaanálisis, tres en revisiones sistemáticas, y gran parte de la evidencia fue de baja o muy baja certeza.
+
+Narrador: Empecemos con la recomendación principal, probablemente la que más atención va a recibir: broncoscopia periférica con navegación versus biopsia transtorácica con aguja guiada por tomografía computarizada para nódulos pulmonares periféricos indeterminados.
+
+Invitado: La recomendación es considerar broncoscopia periférica con navegación y biopsia, en lugar de biopsia transtorácica guiada por tomografía, tomando en cuenta factores del paciente, características del nódulo, experiencia local y costos. Y la palabra importa: dice considerar. No dice que la broncoscopia tenga claramente un rendimiento diagnóstico superior.
+
+Narrador: De hecho, los datos comparativos más antiguos favorecieron a la biopsia transtorácica guiada por tomografía en cuanto a rendimiento. El metaanálisis reportó un rendimiento diagnóstico de 87 por ciento para la biopsia transtorácica, versus 67 por ciento para la broncoscopia periférica con navegación, con una razón de momios de 3.24 a favor de la biopsia transtorácica. Pero el neumotórax fue significativamente más frecuente con la biopsia transtorácica, con una diferencia de riesgo agrupada de 0.18.
+
+Invitado: Ese intercambio es toda la historia. La biopsia transtorácica históricamente ha sido una prueba de alto rendimiento, pero su perfil de complicaciones es distinto. La broncoscopia puede ofrecer tasas más bajas de neumotórax, además de la posibilidad de estadificar el mediastino y tomar muestras de varios objetivos en el mismo evento anestésico.
+
+Narrador: Y luego la guía reconoce el problema tecnológico: gran parte de la base de evidencia refleja plataformas broncoscópicas más antiguas.
+
+Invitado: Exactamente. El ensayo VERITAS, que comparó broncoscopia con navegación electromagnética y tomosíntesis digital contra biopsia transtorácica guiada por tomografía, se analiza como un estudio de alto impacto posterior al período formal de búsqueda. En ese ensayo, el rendimiento de la broncoscopia con navegación electromagnética fue 79 por ciento versus 73.6 por ciento para la biopsia transtorácica, con neumotórax que requirió intervención en 11.5 por ciento con biopsia transtorácica versus 0.8 por ciento con broncoscopia. Pero cuando VERITAS se incorporó al análisis más amplio, la biopsia transtorácica siguió teniendo mayor rendimiento agrupado en general, aunque la brecha se redujo.
+
+Narrador: Entonces, la pregunta del abogado del diablo es: ¿esta recomendación está impulsada por la evidencia, o anticipa hacia dónde va la tecnología?
+
+Invitado: Un poco de ambas cosas. La evidencia formal todavía muestra mejor rendimiento para la biopsia guiada por tomografía en muchas comparaciones antiguas. Pero en la toma de decisiones real en neumología intervencionista, el comparador relevante no siempre es el EBUS radial de 2011. Es broncoscopia robótica, tomografía de haz cónico, tomosíntesis, fluoroscopia aumentada, criobiopsia, mejores agujas, mejor manejo de la divergencia entre tomografía y cuerpo, y un equipo que quizá también estadifique el mediastino en la misma sesión.
+
+Narrador: La conclusión práctica no es “hacer broncoscopia a todos”. Es elegir la vía según el tamaño de la lesión, el signo de bronquio, el enfisema, la distancia a la pleura, la necesidad de estadificación nodal, los problemas de anticoagulación, las tasas locales de éxito, y la tolerancia específica del paciente al neumotórax.
+
+Invitado: Y los datos locales importan. Cada programa debería conocer su propio rendimiento y sus propias tasas de complicaciones. Un servicio de biopsia por tomografía de alto volumen y un programa de broncoscopia de bajo volumen no deberían interpretar esta recomendación igual que un programa de broncoscopia robótica de alto volumen con tomografía de haz cónico y apoyo maduro de citopatología.
+
+Narrador: La recomendación dos es más operativa: durante la evaluación broncoscópica de nódulos periféricos indeterminados, considerar múltiples herramientas de biopsia en lugar de una sola.
+
+Invitado: Esta recomendación se alinea muy bien con la práctica de muchos grupos de neumología intervencionista. El metaanálisis incluyó diez estudios y encontró que agregar herramientas aumentó el rendimiento diagnóstico de aproximadamente 63 por ciento a 73 por ciento, una mejoría absoluta de alrededor de 10 por ciento, con una razón de momios de 1.78.
+
+Narrador: Y los análisis por subgrupos siguieron favoreciendo múltiples herramientas. Las herramientas convencionales tuvieron una razón de momios de 1.64, y el subgrupo de criobiopsia tuvo una razón de momios de 2.06 a favor de un enfoque combinado sobre una sola herramienta.
+
+Invitado: El matiz es que “múltiples herramientas” no debe significar acumulación aleatoria de instrumentos. La herramienta debe corresponder a la lesión. Si la lesión está adyacente a la vía aérea, la aspiración con aguja transbronquial o la criobiopsia pueden agregar valor. Si la herramienta queda excéntrica en la imagen de EBUS radial, las pinzas pueden ser menos confiables. Si se necesita prueba molecular, importan el manejo de la muestra y la arquitectura tisular. Así que esta recomendación apoya una estrategia multitarea deliberada, no un buffet procedimental.
+
+Narrador: La recomendación tres aborda la evaluación rápida in situ para nódulos periféricos. La guía dice considerar su uso según los recursos locales y el contexto clínico.
+
+Invitado: Los números son interesantes. Seis estudios, con más de 2,700 pacientes, mostraron mejor rendimiento diagnóstico con evaluación rápida in situ, razón de momios 2.71. En el subconjunto de ensayos aleatorizados, la razón de momios fue 1.93. La duración del procedimiento no fue significativamente diferente, con una diferencia media de aproximadamente menos 1 minuto, aunque la heterogeneidad fue alta.
+
+Narrador: Eso desafía la preocupación común de que la evaluación rápida in situ necesariamente retrasa la sala.
+
+Invitado: Sí, pero con salvedades. Todos los estudios analizados provinieron de centros asiáticos, y el valor incremental de la evaluación rápida in situ puede cambiar cuando existe confirmación en tiempo real de herramienta dentro de la lesión mediante tomografía de haz cónico o tomosíntesis. La evaluación rápida confirma adecuación celular, no necesariamente muestreo representativo de la parte biológicamente más relevante del tumor. Y requiere personal de citología, infraestructura de telecitología, o quizá en el futuro un flujo de trabajo con apoyo de inteligencia artificial.
+
+Narrador: Entonces, en la implementación, puede ser más valiosa cuando el tejido es escaso, cuando el riesgo de repetir la biopsia es alto, cuando la clasificación de muestras para cultivos o pruebas moleculares importa, o cuando el centro cuenta con apoyo confiable de citopatología.
+
+Invitado: Correcto. Pero un centro sin evaluación rápida in situ no debería interpretar esto como que la broncoscopia avanzada no es válida. Significa que el equipo necesita estrategias compensatorias: selección más deliberada de herramientas, número adecuado de pases, planificación del bloque celular, preparación por impronta cuando sea factible, y coordinación estrecha con patología.
+
+Narrador: La recomendación cuatro es deliberadamente no concluyente: no se hace recomendación sobre broncoscopia periférica versus biopsia transtorácica guiada por tomografía específicamente para obtener tejido tumoral para análisis molecular en nódulos periféricos malignos.
+
+Invitado: El metaanálisis fue pequeño: solo tres estudios y 357 pacientes. No hubo diferencia significativa, con una razón de momios de 1.72 y un intervalo de confianza muy amplio, de 0.07 a 45.05. La adecuación tisular para pruebas moleculares superó el 90 por ciento en ambos grupos, pero la certeza fue muy baja.
+
+Narrador: Y hay un problema importante con el denominador: estos resultados se aplican después de obtener un diagnóstico maligno.
+
+Invitado: Exactamente. La adecuación para secuenciación de nueva generación entre biopsias positivas es distinta de todo el trayecto diagnóstico. La biopsia transtorácica puede producir cilindros más grandes, pero la broncoscopia puede permitir diagnóstico y estadificación juntos. La adecuación tisular depende de celularidad tumoral, necrosis, calibre de la aguja, número de pases, fijación, uso prudente de inmunohistoquímica, y alineación entre el operador y el equipo de patología.
+
+Narrador: Pasemos a la estadificación. La recomendación cinco es una de las más claras: usar un examen sistemático de estadificación con EBUS con sonda convexa, en lugar de muestrear solo los ganglios radiográficamente sospechosos.
+
+Invitado: Esta probablemente sea la parte más definitoria para la práctica. El documento describe niveles de exhaustividad en la estadificación, desde muestreo dirigido, hasta estadificación sistemática mínima, examen completo, y estadificación sistemática completa con ultrasonido endoscópico o ultrasonido endoscópico usando el broncoscopio EBUS.
+
+Narrador: El enfoque sistemático detecta aproximadamente entre 5 y 15 por ciento más enfermedad oculta N dos o N tres, comparado con el muestreo dirigido únicamente.
+
+Invitado: Y eso importa porque los mediastinos normales por imagen no siempre son normales patológicamente. El estándar mínimo descrito es muestrear la cadena mediastínica central en secuencia de N tres a N dos a N uno, incluyendo estaciones clave como 4 R, 4 L y 7 cuando sea apropiado, con atención a ganglios de al menos 5 milímetros o con positividad en PET.
+
+Narrador: La guía también incorpora las implicaciones de la novena edición de T N M, especialmente la distinción entre enfermedad N dos de estación única y multiesación.
+
+Invitado: Ese es un cambio conceptual importante. Si un procedimiento se detiene después del primer ganglio N dos maligno porque la evaluación rápida es positiva, la estadificación puede ser incompleta para la pronosticación moderna y la planificación terapéutica. La pregunta ya no es solo “¿hay enfermedad N dos?”, sino “¿cuánta enfermedad N dos hay y en cuántas estaciones?”.
+
+Narrador: Abogado del diablo: la estadificación sistemática con EBUS toma tiempo, entrenamiento y sedación. ¿Es factible en todas partes?
+
+Invitado: No por igual. Aquí es donde la documentación se vuelve importante. Si un operador hace estadificación dirigida, el informe debería decirlo. Si el examen fue sistemático, el informe debería documentar estaciones examinadas, estaciones muestreadas, tamaño, características sonográficas, número de pases y adecuación. La guía no crea entrenamiento por arte de magia, pero eleva el estándar de lo que deberíamos querer decir cuando decimos “EBUS de estadificación”.
+
+Narrador: La recomendación seis dice no ofrecer de rutina mediastinoscopia preoperatoria después de un examen negativo de estadificación mediastínica guiado por EBUS con sonda convexa en pacientes con factores de riesgo de enfermedad oculta N dos o N tres pero sin compromiso radiográfico evidente.
+
+Invitado: El análisis agrupado de tres estudios no mostró una diferencia estadísticamente significativa en enfermedad N dos o N tres omitida entre EBUS solo y EBUS más mediastinoscopia, con una diferencia de riesgo de 0.03 y un intervalo de confianza que cruzaba cero. En el ensayo aleatorizado de Bousema, la enfermedad N dos no prevista fue 8.8 por ciento con resección inmediata versus 7.7 por ciento con mediastinoscopia confirmatoria.
+
+Narrador: Entonces la mediastinoscopia no está muerta, pero la mediastinoscopia confirmatoria de rutina después de un EBUS sistemático negativo y de buena calidad es más difícil de justificar.
+
+Invitado: Correcto. Sigue teniendo un rol cuando las imágenes y la patología son discordantes, como un ganglio grande, intensamente ávido en F D G, con una muestra por EBUS negativa o inadecuada, o cuando el examen EBUS fue incompleto. Pero para muchos pacientes, avanzar a resección con disección ganglionar intraoperatoria es razonable.
+
+Narrador: La recomendación siete aborda el tamaño tumoral. Los tumores mayores de 3 centímetros deben reconocerse como factor de riesgo de metástasis mediastínica oculta, incluso cuando el hilio y el mediastino son radiográficamente normales.
+
+Invitado: Cuatro estudios retrospectivos con más de 1,200 pacientes mostraron mayor riesgo de enfermedad N dos oculta en tumores mayores de 3 centímetros, con una diferencia de riesgo agrupada de 0.06. La guía lo plantea como estratificación de riesgo, no como un mandato rígido.
+
+Narrador: Entonces un adenocarcinoma periférico de 3.4 centímetros, sin ganglios positivos en PET, no plantea el mismo problema de estadificación que una lesión periférica de 1.4 centímetros, puramente en vidrio esmerilado.
+
+Invitado: Exactamente, y eso lleva directamente a la recomendación ocho: no ofrecer de rutina estadificación mediastínica invasiva para nódulos puramente en vidrio esmerilado con mediastino radiográficamente normal en tomografía y PET.
+
+Narrador: La literatura retrospectiva revisada mostró metástasis ganglionar despreciable o ausente en nódulos puramente en vidrio esmerilado, alrededor de 0 a 1 por ciento. Los nódulos parcialmente sólidos tienen mayor riesgo, especialmente cuando la relación consolidación a tumor supera 0.5.
+
+Invitado: Esta es una corrección útil contra el sobreuso de estadificación. Si la lesión es verdaderamente puramente en vidrio esmerilado, la tomografía de cortes finos lo confirma, PET y tomografía no muestran preocupación ganglionar, y el cuadro clínico encaja con enfermedad del espectro del adenocarcinoma indolente, la estadificación mediastínica invasiva probablemente no ayuda. Pero la palabra “verdaderamente” pesa mucho. La calidad de la medición y la terminología radiológica importan.
+
+Narrador: Finalmente, la recomendación nueve: no hay recomendación sobre el uso rutinario de EBUS con sonda convexa para detectar enfermedad N uno oculta antes de radioterapia corporal estereotáctica en pacientes con cáncer de pulmón de células no pequeñas en etapa temprana que no cumplen otros criterios para estadificación invasiva.
+
+Invitado: Esta es una zona gris fascinante. La justificación para hacer EBUS antes de radioterapia corporal estereotáctica es que los pacientes quirúrgicos reciben evaluación ganglionar patológica y los pacientes tratados con radioterapia estereotáctica usualmente no. La enfermedad N uno oculta podría impulsar falla regional. Pero la evidencia no mostró beneficio consistente en supervivencia o recurrencia con estadificación nodal invasiva en cohortes con imágenes negativas antes de radioterapia estereotáctica.
+
+Narrador: Algunos estudios encontraron que el EBUS con sonda convexa reclasificó aproximadamente 2 a 5 por ciento de pacientes clínicamente N cero a N uno, pero el EBUS puede pasar por alto ganglios intralobares, estaciones 12 a 14, que están fuera de su alcance estándar.
+
+Invitado: Y muchos pacientes tratados con radioterapia corporal estereotáctica son médicamente inoperables o de alto riesgo, por lo que encontrar enfermedad microscópica N uno no siempre cambia el manejo de una forma que mejore los resultados. La guía, apropiadamente, se niega a exagerar el caso.
+
+Narrador: Cerremos hablando de limitaciones e implementación. Los autores son transparentes en que gran parte de la evidencia es retrospectiva, observacional y afectada por la rápida evolución tecnológica.
+
+Invitado: El tema del rendimiento diagnóstico es especialmente importante. Las definiciones de rendimiento y exactitud varían entre estudios de broncoscopia, y el artículo señala que el rendimiento reportado puede cambiar en más de 20 por ciento dependiendo de si se usan definiciones estrictas, intermedias o liberales. Eso debería hacer que todos seamos cautelosos al comparar un solo número entre plataformas o artículos.
+
+Narrador: También hay supuestos de recursos. La estadificación sistemática con EBUS requiere entrenamiento. La evaluación rápida in situ requiere citopatología o telecitología. La broncoscopia periférica avanzada puede requerir plataformas robóticas, tomografía de haz cónico, tomosíntesis, apoyo de anestesia y volumen procedimental. Estas recomendaciones pueden ser más fáciles de operacionalizar en centros terciarios o cuaternarios que en entornos con menos recursos.
+
+Invitado: Y debido a que esta es una guía de la AABIP sobre diagnóstico y estadificación broncoscópicos, los lectores también deben estar atentos a la perspectiva de la especialidad y al contexto tecnológico. Eso no invalida el documento, pero hace que el lenguaje de la recomendación sea importante. El mensaje más fuerte no es que la broncoscopia reemplace todo. Es que la ruta diagnóstica y de estadificación debe ser integrada, adaptada al riesgo y responsable ante los resultados locales.
+
+Narrador: Entonces, ¿qué aporta este artículo?
+
+Invitado: Le da a los clínicos de neumología intervencionista un marco estructurado. Para nódulos periféricos, la broncoscopia es cada vez más competitiva, especialmente cuando importan el menor riesgo de neumotórax y la estadificación combinada, pero el rendimiento todavía depende mucho de la tecnología y la experiencia. Múltiples herramientas suelen mejorar el rendimiento. La evaluación rápida in situ puede ayudar, pero su implementación depende de recursos. La adecuación molecular parece alcanzable tanto con enfoques broncoscópicos como transtorácicos cuando la biopsia es diagnóstica.
+
+Narrador: ¿Y para la estadificación?
+
+Invitado: La estadificación sistemática con EBUS con sonda convexa debería ser el concepto por defecto cuando la estadificación mediastínica está indicada. La mediastinoscopia confirmatoria de rutina después de un EBUS negativo de alta calidad usualmente es innecesaria. Un tamaño tumoral mayor de 3 centímetros debe empujar a los clínicos hacia estadificación invasiva aun con imágenes normales. Los nódulos puramente en vidrio esmerilado con mediastino normal generalmente no requieren estadificación invasiva. Y el uso rutinario de EBUS solo para encontrar enfermedad N uno oculta antes de radioterapia corporal estereotáctica sigue sin resolverse.
+
+Narrador: Buena síntesis. La perspectiva práctica probablemente sea esta: usar la guía para estandarizar la toma de decisiones, pero no permitir que sustituya el juicio procedimental, los datos locales de resultados, la discusión multidisciplinaria o la evaluación de riesgo específica del paciente.
+
+Invitado: Correcto. Esto es una hoja de ruta, no un piloto automático. Y en diagnóstico y estadificación del cáncer de pulmón, el piloto automático suele ser la forma de terminar haciendo demasiado o demasiado poco.
+
+Narrador: Eso es todo por este episodio de InterventionalPulm.com IP Journal Review. Gracias por escucharnos.

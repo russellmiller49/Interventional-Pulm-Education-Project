@@ -4,6 +4,7 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/forgot-password',
   '/health',
   '/api/scope-calibration',
+  '/journal-club-podcasts',
   '/login',
   '/pocus',
   '/pleural-procedures/pleural-ultrasound-simulator',

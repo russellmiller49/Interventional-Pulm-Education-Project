@@ -1,0 +1,75 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. Today we’re discussing a single article that sits right in the middle of the current peripheral pulmonary nodule biopsy conversation: robotic bronchoscopy, cone beam C T, tool-in-lesion confirmation, and whether we are actually solving the CT-to-body divergence problem or just documenting it better.
+
+Guest: Right, and this is a very practical paper for IP audiences. The article is by Chan and colleagues, published in Thorax in 2026, and it evaluates shape-sensing robotic-assisted bronchoscopy with cone beam C T for sampling peripheral pulmonary nodules.
+
+Narrator: The headline is straightforward: this was a prospective, multicenter, single-arm study of 200 subjects with suspicious pulmonary nodules. The authors were asking whether shape-sensing robotic bronchoscopy, paired with cone beam C T, could reliably place the biopsy tool inside the target lesion. The primary outcome was tool-in-lesion, confirmed on cone beam C T.
+
+Guest: And that endpoint choice matters. Tool-in-lesion is not the same thing as diagnostic yield. It is a procedural endpoint. But in this space, it’s an important procedural endpoint, because if the needle or forceps is not actually in the lesion, the rest of the discussion about sampling tools, R O S E, cryobiopsy, cytology handling, or molecular adequacy becomes somewhat academic.
+
+Narrator: Exactly. The study enrolled adults with solid or part-solid nodules between 6 and 30 millimeters, located at or beyond the fourth-generation airway, and suitable for bronchoscopy under general anesthesia. Non-solid nodules were excluded, as were patients with a bulla greater than one centimeter near the target or patients not suitable for general anesthesia.
+
+Guest: The case mix is worth emphasizing. These were small nodules. The median nodule size was 13 millimeters. Only 26.8 percent had a positive bronchus sign, and more than 80 percent were in the outer two-thirds of the lung. So this was not a collection of big, central, airway-leading-right-to-it lesions.
+
+Narrator: The workflow was also very IP-realistic, but resource intensive. Procedures were done under general anesthesia with intubation. Planning used the Ion platform. Navigation was performed with shape-sensing robotic bronchoscopy, and then augmented fluoroscopy and, in about half the nodules, radial E B U S were used before biopsy. The key piece was fixed cone beam C T confirmation of the biopsy tool within the lesion. This cone beam C T system was not integrated into the robotic platform.
+
+Guest: And the anesthesia workflow is not a side note here. The team used breath holds, with P E E P between 5 and 20 centimeters of water, to reduce atelectasis and make the lesion visible on cone beam C T. If atelectasis was seen, recruitment maneuvers were performed. That is important because cone beam C T does not magically fix all divergence; it reveals the current anatomy, which still depends heavily on lung volume, atelectasis control, diaphragm position, and procedural discipline.
+
+Narrator: On page two, figure one is basically the visual thesis of the paper. It shows tool-in-lesion confirmation using three-dimensional reconstruction plus axial, coronal, and sagittal views. That is the operational definition: the operator reviewed the cone beam C T images and confirmed the tool position in at least two cardinal planes.
+
+Guest: Which leads to the big result: tool-in-lesion was achieved in 99.0 percent of procedures, 198 out of 200. That is a striking technical success rate. In 92.4 percent of sampled nodules, the tool was in the inner third of the lesion, not just grazing the edge. Median procedure time was 44 minutes, and median in-room time was 74 minutes.
+
+Narrator: There was also a learning curve signal. The first 10 cases at each site had a median procedure time of 59 minutes, compared with 35 minutes for the last 10 cases. So the platform and workflow appear learnable, but not frictionless.
+
+Guest: The operators were described as robotic-bronchoscopy-naive, with prior navigational bronchoscopy experience, and there was no run-in period. That helps generalizability to established bronchoscopy programs building a robotic service. But it does not mean this workflow is automatically portable to every bronchoscopy suite. A center still needs cone beam C T access, anesthesia coordination, fluoroscopy expertise, radiation processes, and a team that can troubleshoot atelectasis and registration issues in real time.
+
+Narrator: Moving from technical success to diagnostic outcomes, the strict diagnostic yield was 85 percent. Diagnostic accuracy at 6 months was 92 percent, and sensitivity for malignancy was 95.5 percent. There were 147 malignant diagnoses, 23 specific benign diagnoses, and 28 non-specific benign or non-diagnostic biopsies.
+
+Guest: And that gap between 99 percent tool-in-lesion and 85 percent strict diagnostic yield is probably the most important teaching point. Reaching the lesion is necessary, but it is not sufficient. Tissue acquisition still depends on lesion biology, tool selection, tissue volume, needle trajectory, sampling strategy, pathology processing, and whether the abnormal tissue is spatially heterogeneous.
+
+Narrator: This study did not use R O S E, and cryobiopsy was not permitted. Sampling was performed with 19, 21, or 23 gauge needles and forceps, with brushings or lavage at operator discretion. That could mean the diagnostic performance here is an underestimate compared with a program using optimized multimodality sampling or transbronchial cryobiopsy. But it also means the results are not being propped up by cryobiopsy.
+
+Guest: The molecular data are encouraging but still deserve attention. Among 87 primary lung adenocarcinomas, 82 underwent molecular testing. Complete molecular analysis was possible in 85.4 percent, with partial molecular analysis in another 8.5 percent. For an IP audience, that is very relevant. The question is no longer simply, “Did we diagnose cancer?” It is, “Did we acquire enough tissue to stage, subtype, and treat correctly?”
+
+Narrator: The subgroup analyses are where many clinicians will lean forward. On page seven, figure four breaks outcomes down by lesion size and proximity to structures. Diagnostic accuracy for nodules under 20 millimeters was 88.2 percent. For nodules within 5 millimeters of the pleura, accuracy was 93.3 percent. For nodules within 5 millimeters of a critical structure, including the heart, aorta, or main pulmonary artery, accuracy was 100 percent.
+
+Guest: That last number sounds impressive, but the denominator is only 11 nodules. So, yes, encouraging, especially for paramediastinal targets where transthoracic biopsy may be unattractive. But it is not enough to declare universal safety or efficacy in every high-risk anatomic scenario.
+
+Narrator: Good point. The paper also reports that nodule size was a significant positive predictor of diagnostic yield in both univariate and multivariate models. Bronchus sign was significant in univariate analysis, but not in multivariate analysis. Nodule type and lung centrality were not predictors of diagnostic yield.
+
+Guest: Clinically, that suggests the platform plus cone beam C T may partially blunt some of the usual disadvantages of a negative bronchus sign or a peripheral location, but it does not abolish the importance of size. Small lesions remain hard. A 7-millimeter nodule is still a 7-millimeter nodule, even with a robot and three-dimensional imaging.
+
+Narrator: Safety was one of the strongest parts of the paper. There were four procedure-related serious adverse events, for a rate of 2 percent. Pneumothorax occurred in one patient, 0.5 percent, and required a chest drain. Two patients had bleeding requiring balloon tamponade. There were no device-related or procedure-related deaths.
+
+Guest: The pneumothorax rate is particularly relevant because the paper frames this against transthoracic needle biopsy. The authors cite much higher pneumothorax rates for C T-guided transthoracic biopsy in the literature. But the usual caveat applies: this was not a randomized comparison against T T N B. Cross-study comparisons can be useful for context, but they are not definitive.
+
+Narrator: Right. It would be too strong to say this paper proves robotic bronchoscopy with cone beam C T is superior to transthoracic biopsy. It does support the idea that, for selected small peripheral nodules, including peripleural, perifissural, and paramediastinal lesions, a bronchoscopic approach can achieve high technical success with a low pneumothorax rate in experienced procedural environments.
+
+Guest: Another practical issue is radiation. The median combined radiation dose was a dose area product of 12.1 gray-centimeters squared, which the authors estimate as an effective dose of 1.92 millisieverts. That is not excessive in context, but it is not zero. And because the primary endpoint required cone beam C T confirmation of tool-in-lesion, trial procedures may have involved more imaging than some non-trial workflows.
+
+Narrator: Let’s talk limitations. The biggest one is the single-arm design. There is no contemporaneous comparator, so we cannot cleanly compare this strategy with electromagnetic navigation, ultrathin bronchoscopy, C T-guided biopsy, or robotic bronchoscopy without cone beam C T.
+
+Guest: Also, cancer prevalence was 77.8 percent. That affects interpretation of diagnostic yield and accuracy. In a high-prevalence cohort, malignant calls dominate the diagnostic performance estimates. The false negative count matters too: there were seven false negatives, and among the non-diagnostic or non-specific benign index results, some later declared themselves malignant.
+
+Narrator: Six-month follow-up is pragmatic, and it aligns with how many bronchoscopy outcome studies are adjudicated. But for indolent adenocarcinoma-spectrum lesions, part-solid nodules, or slow-growing tumors, six months is not the same as final truth.
+
+Guest: Another limitation is that tool-in-lesion was determined by the proceduralist. That reflects real-world practice, but it can introduce bias. A blinded core lab or independent imaging review would strengthen confidence in the primary endpoint. Tool-in-lesion is also not yet completely standardized across studies, which makes comparisons messy.
+
+Narrator: The funding and conflict-of-interest disclosures also matter. The trial was funded by Intuitive Surgical, and several authors reported paid lectures, consulting, travel fees, or advisory board roles. That does not invalidate the data, but it should calibrate how strongly we interpret conclusions, especially in a device-performance study.
+
+Guest: So where does this land clinically? For a center with robotic bronchoscopy and cone beam C T, this study supports a workflow centered on confirmation rather than navigation alone. It strengthens the argument that the procedure should not stop at reaching the virtual target. The operator needs real-time imaging confirmation of where the lesion actually is under anesthesia, and where the biopsy tool actually sits.
+
+Narrator: For case selection, the most compelling scenarios are small peripheral nodules, multiple targets in the same anesthetic session, lesions near the pleura or fissure, and paramediastinal lesions where transthoracic biopsy may be higher risk or less appealing. It also supports considering a bronchoscopic route for patients at high pneumothorax risk, assuming the center can execute the workflow safely.
+
+Guest: But the devil’s advocate position is important. If a center has rapid access to high-quality C T-guided biopsy, and the lesion is large, pleural-based, and technically straightforward, this paper does not prove robotic bronchoscopy should replace that pathway. The decision still depends on lesion anatomy, staging needs, molecular needs, anesthesia risk, local expertise, and system capacity.
+
+Narrator: The deeper message may be that advanced bronchoscopy is becoming less about the robot alone and more about the imaging ecosystem. Shape sensing helps with navigation and catheter stability. Cone beam C T helps with divergence and lesion localization. Fluoroscopy and radial E B U S remain useful adjuncts. Anesthesia strategy matters. Sampling tools matter. Pathology handling matters. The platform is one component of a chain.
+
+Guest: And the chain is only as strong as the weakest link. A 99 percent tool-in-lesion rate is impressive, but an 85 percent strict diagnostic yield reminds us that confirmation of position does not eliminate the need for thoughtful sampling and follow-up. Non-diagnostic results still need to be managed carefully, especially in high pretest probability lesions.
+
+Narrator: Final take-home: Chan and colleagues provide one of the stronger prospective multicenter datasets for shape-sensing robotic bronchoscopy with cone beam C T in small peripheral pulmonary nodules. The study shows excellent tool-in-lesion performance, strong diagnostic accuracy, reasonable molecular adequacy, and a favorable safety profile.
+
+Guest: The findings are clinically meaningful, but not definitive enough to mandate a universal change in biopsy strategy. They support the use of S S R A B plus cone beam C T in centers with the infrastructure and expertise, particularly for small or anatomically challenging nodules. What remains uncertain is how this approach performs head-to-head against other biopsy strategies, how much each component contributes, and whether these outcomes generalize outside well-supported advanced bronchoscopy programs.
+
+Narrator: That’s the balanced interpretation. This article does not end the peripheral nodule biopsy debate. It does move the conversation toward a more mature question: not simply, “Can the robot get there?” but, “Can the entire procedural system confirm location, acquire adequate tissue, minimize complications, and do it reproducibly?” For interventional pulmonology, that is exactly the question worth asking.
+
+Narrator: Thanks for listening to InterventionalPulm.com IP Journal Review. This episode reviewed the Thorax article by Chan and colleagues on tool-in-lesion verification for shape-sensing robotic-assisted bronchoscopy with cone beam C T in peripheral pulmonary nodules. 

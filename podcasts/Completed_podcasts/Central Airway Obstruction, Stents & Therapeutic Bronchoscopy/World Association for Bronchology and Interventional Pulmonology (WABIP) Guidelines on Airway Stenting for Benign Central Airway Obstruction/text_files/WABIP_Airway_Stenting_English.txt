@@ -1,0 +1,65 @@
+InterventionalPulm.com IP Journal Review: Airway Stenting for Benign Central Airway Obstruction
+Estimated duration: 9 to 10 minutes
+Article type: Clinical practice guideline
+
+Narrator: Welcome to the InterventionalPulm.com IP Journal Review. In this episode, we are reviewing Chaddha and colleagues, published in Respirology in 2025, on the W A B I P guidelines for airway stenting in benign central airway obstruction.
+
+Guest: This is a guideline for a difficult procedural space. Benign central airway obstruction, or B C A O, includes post-intubation stenosis, post-tracheostomy stenosis, post-surgical and anastomotic stenosis, post-infectious or inflammatory stenosis, and dynamic obstruction from T B M or E D A C. These disorders are benign histologically, but clinically they can produce respiratory failure, inability to clear secretions, and repeated urgent procedures.
+
+Narrator: And the stent decision is often uncomfortable. A stent can stabilize the airway, reduce the frequency of repeat dilations, or bridge a patient toward surgery. But it can also create a chronic foreign-body problem: mucostasis, granulation, migration, cough, surveillance procedures, and sometimes an extremely difficult removal.
+
+Guest: Right. The guideline is not a broad endorsement of benign airway stenting. It is more of a framework for when the tradeoff is defensible. The authors convened 20 experts from 19 institutions across 12 countries. They searched Medline from 1985 through February 2024, identified 892 records, reviewed 240 full texts, and included 138 articles. They used GRADE where possible, supplemented evidence with expert consensus when needed, and reached consensus on all eight P I C O questions through a modified Delphi process.
+
+Narrator: The evidence base matters here. The article states there are no randomized comparative trials of airway stenting in B C A O. Most data are retrospective, single-center, and procedurally heterogeneous. So even when the recommendations are useful, they should be read with appropriate humility.
+
+Guest: The first major recommendation addresses post-intubation and post-tracheostomy tracheal stenosis. The guideline separates simple from complex morphology. Simple stenosis is short, usually less than one centimeter, and without malacia. Complex stenosis includes longer disease, cartilage injury, malacia, hourglass morphology, or A-frame deformity. The figures in the paper make that visual distinction nicely: a web-like stenosis after radial cuts, a complex hourglass stenosis with CT reconstruction, and a post-tracheostomy A-frame stenosis.
+
+Narrator: For simple stenosis, endoscopic therapy remains first-line when feasible. The article cites success rates up to 90 percent with endoscopic intervention. In one series of 167 simple stenoses treated with an endoscopy-first strategy, the mean was only 2 endoscopic procedures per patient; 16 patients needed stenting and 1 needed surgery. In the same study, one-year success was 96 percent for simple stenosis but 69 percent for complex stenosis.
+
+Guest: So the recommendation is conditional. In non-surgical candidates with simple post-intubation or post-tracheostomy stenosis, stenting can be pursued when frequent endoscopic interventions are required or prior endoscopic therapy has failed. For complex stenosis in non-surgical candidates, especially when endoscopy is unlikely to provide durable relief, stenting can be considered to improve patient-centered outcomes and reduce recurrent procedures.
+
+Narrator: The devil's advocate point is that many studies emphasize technical durability more than actual quality of life. Still, reported cough and dyspnea improvement ranges from 75 to 100 percent in available series, and one 21-patient study reported FEV one improvement in 80 percent. But complications are common: mucostasis ranges from 16 to 66 percent and migration from 2 to 41 percent. That is why patient selection, stent sizing, and multidisciplinary airway review are not optional details.
+
+Guest: The next category is infectious or inflammatory stenosis. The guideline recommends stenting only for fibrotic stenosis when endoscopic interventions are not feasible or when the stenosis is frequently recurrent. That word fibrotic is critical. During active inflammatory disease, the document says every effort should be made to avoid stenting unless a critical symptomatic stenosis leaves no other practical option.
+
+Narrator: Tuberculosis provides most of the data. In a 75-patient post-tuberculosis stenosis study, dyspnea improved in 88 percent after stenting and median FEV one improved by 22 percent. Larger post-tuberculosis series suggest that some patients can eventually have successful stent removal, but granulation, mucostasis, migration, and restenosis remain recurring problems.
+
+Guest: For autoimmune disease, the evidence is far thinner. The guideline is appropriately cautious with granulomatosis with polyangiitis, where multifocal disease, recurrence, and immunosuppression complicate both surgery and stenting. The practical message is: endoscopy first when feasible, avoid stenting through active inflammation, and use multidisciplinary judgment for fibrotic recurrent disease.
+
+Narrator: The third question is post-lung transplant airway stenosis. The recommendation is also conditional: consider stenting only when endoscopic interventions are not feasible or when stenosis is recurrent.
+
+Guest: Post-transplant airways are different because repeat surgery is rarely straightforward. In one series of 223 transplant patients and 345 anastomoses, 47 patients underwent self-expanding metallic stenting, with a mean FEV one improvement of 370 milliliters. But granulation tissue occurred in 57 percent. A silicone stent series showed symptomatic improvement in all 17 patients and mean FEV one improvement of 672 milliliters, but granulation, mucus plugging, and migration were each common. So the decision is not whether stents work in the short term. They often do. The question is whether the airway and the care system can tolerate the downstream management.
+
+Narrator: The fourth topic is excessive central airway collapse, or E C A C. Here the guideline gives a strong recommendation: in symptomatic dynamic B C A O from E C A C who are surgical candidates, airway stenting should not be pursued over surgical correction as definitive therapy.
+
+Guest: That is one of the clearest messages in the document. Stent trials may help select patients for tracheobronchoplasty, but long-term stenting for E C A C is a different proposition. One study of 58 patients with severe T B M or E D A C found symptomatic improvement in 77.5 percent but no FEV one improvement, and complications occurred in 90 percent. The guideline also emphasizes that T B M and E D A C are not identical. E D A C may reflect peripheral airway disease, obesity, pleural pressure dynamics, or expiratory mechanics rather than a primary central airway cartilage disorder.
+
+Narrator: So first-line management should include comorbidity optimization, airway clearance, reflux management when relevant, and noninvasive positive pressure ventilation. Destination stenting for E C A C is essentially a last-resort option for non-surgical patients after other explanations for symptoms and other treatments have been exhausted.
+
+Guest: The fifth question is stent type. The guideline strongly recommends silicone stents over fully covered metallic stents for symptomatic B C A O requiring stenting, when technically feasible. The reason is not that silicone has zero complications. It absolutely does not. The reason is removability, customizability, and the long experience managing silicone-related complications.
+
+Narrator: And the operational point is important. If rigid bronchoscopy expertise is not available and the case is non-emergent, transfer to a center with that expertise should be considered. Fully covered metallic stents may have a role when rigid bronchoscopy is not feasible because of anatomy or urgency, but uncovered metallic stents should not be used as destination therapy for B C A O. The paper's image of a fractured embedded metallic stent obstructing the tracheal lumen is the visual argument against casual metallic stenting in benign disease.
+
+Guest: Sixth, pulmonary hygiene. The guideline makes this a best practice statement: all patients with airway stents for B C A O should receive pulmonary hygiene measures. There is no proven best regimen. Normal saline, hypertonic saline, mucolytics, expectorants, and mechanical clearance devices are all used. A pilot randomized study suggested that 3 percent saline three times daily may reduce unscheduled bronchoscopies compared with normal saline, but that is not enough to define a universal protocol.
+
+Narrator: Clinically, the point is simple. A stent changes secretion mechanics. Pulmonary hygiene is not a courtesy add-on; it is part of the procedure.
+
+Guest: Seventh, surveillance bronchoscopy. The guideline suggests routine surveillance bronchoscopy after stenting, with the first exam at four to six weeks. CT can complement bronchoscopy, but should not replace it.
+
+Narrator: The evidence is imperfect but persuasive enough. In one retrospective study of surveillance bronchoscopy at four to six weeks, stent-related complications were found in 69 percent of patients, and 60 percent of asymptomatic patients had at least one complication. That means symptoms alone can miss clinically actionable problems. But the guideline does not mandate an endless fixed schedule. After the first surveillance exam, timing should be individualized around complication risk, expected dwell time, procedural risk, and patient tolerance.
+
+Guest: Finally, stent removal. The guideline suggests a stent removal trial at six to twelve months to evaluate airway remodeling. The wording matters: removal is a trial, not a cure announcement.
+
+Narrator: Across studies, successful removal without further intervention appears to occur in about 30 to 40 percent of patients after at least six to twelve months. In a 128-patient silicone stent series for post-intubation or post-tracheostomy stenosis, 54 patients, or 42 percent, remained stable one year after removal. But 74 patients, or 58 percent, restenosed, with recurrence at a median of one week.
+
+Guest: That means removal planning should be as deliberate as placement. Cartilage integrity, etiology, stent tolerance, diabetes, obesity, and the ability to rapidly reintervene all matter. Observation for 12 to 24 hours after tracheal stent removal is reasonable, because early relapse can be consequential.
+
+Narrator: So what does this article add for an IP audience? It gives structure to a problem that is often driven by local expertise, device availability, and patient crisis. It says endoscopy first for simple stenosis. Surgery when feasible for appropriate complex tracheal disease. Stenting for selected non-surgical, recurrent, complex, or non-endoscopically manageable disease. Silicone over metallic when feasible. Hygiene and surveillance after placement. And an exit strategy whenever possible.
+
+Guest: The remaining gaps are major. We still need multicenter studies with standardized B C A O classification, patient-centered outcomes, stent dwell time, removal success, and long-term quality of life. Newer stent designs, including 3D-printed, biodegradable, antimicrobial, or drug-eluting platforms, are interesting, but technical feasibility is not the same thing as clinical benefit.
+
+Narrator: The practical question after this guideline is not, "Can a stent be placed?" It is, "Is this stent solving the patient's airway problem, or converting it into a different chronic airway problem?" Sometimes that tradeoff is justified. This guideline helps define when.
+
+Guest: And it also reminds us that benign airway stenting should be an elective, multidisciplinary, maintenance-intensive intervention whenever possible, not a reflexive answer to recurrence.
+
+Narrator: This has been the InterventionalPulm.com IP Journal Review. Today we discussed Chaddha and colleagues in Respirology, 2025, and the W A B I P guidelines on airway stenting for benign central airway obstruction. The take-home is selective use, multidisciplinary decision-making, silicone preference, active stent maintenance, planned surveillance, and deliberate removal strategy when appropriate. Thanks for listening.
