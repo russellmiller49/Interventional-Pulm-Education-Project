@@ -95,13 +95,13 @@ describe('JournalClubPodcastBrowser', () => {
     const user = userEvent.setup()
     renderBrowser()
 
-    await user.selectOptions(screen.getAllByLabelText('Language')[0], 'spanish')
+    await user.selectOptions(screen.getAllByLabelText('Language')[0], 'korean')
     await user.click(screen.getByRole('button', { name: playButtonName(testEpisodes[0].title) }))
     await user.click(screen.getAllByRole('button', { name: '1.5x' })[0])
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        `/api/journal-club-podcasts/audio-url?episodeId=${testEpisodes[0].id}&language=spanish`,
+        `/api/journal-club-podcasts/audio-url?episodeId=${testEpisodes[0].id}&language=korean`,
         { cache: 'no-store' },
       )
     })

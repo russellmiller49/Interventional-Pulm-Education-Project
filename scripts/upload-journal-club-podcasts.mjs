@@ -7,7 +7,11 @@ const root = process.cwd()
 const { loadEnvConfig } = nextEnv
 loadEnvConfig(root)
 
-const sourceDir = path.join(root, 'podcasts', 'Completed_podcasts')
+const sourceDirs = [
+  path.join(root, 'podcasts', 'Completed_podcasts'),
+  path.join(root, 'podcasts', 'arabic_mp3_files'),
+  path.join(root, 'podcasts', 'korean_mp3_files'),
+]
 const bucket = process.env.JOURNAL_CLUB_PODCAST_BUCKET || 'journal-club-podcasts'
 const prefix = (process.env.JOURNAL_CLUB_PODCAST_PREFIX || 'v1').replace(/^\/+|\/+$/g, '')
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -15,6 +19,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const secretKey = process.env.SUPABASE_SECRET_KEY
 const dryRun = process.argv.includes('--dry-run')
 const upsert = process.argv.includes('--upsert')
+const languagesArg = process.argv.find((arg) => arg.startsWith('--languages='))
 const minBucketFileSizeLimit = 16 * 1024 * 1024
 const bucketFileSizeLimitPadding = 2 * 1024 * 1024
 
@@ -22,7 +27,11 @@ const languageSuffixes = new Map([
   ['English', 'english'],
   ['Spanish', 'spanish'],
   ['Mandarin', 'mandarin'],
+  ['Arabic', 'arabic'],
+  ['Korean', 'korean'],
 ])
+const languageSuffixPattern = Array.from(languageSuffixes.keys()).join('|')
+const selectedLanguages = resolveSelectedLanguages()
 
 function slugify(value) {
   return value
@@ -40,7 +49,7 @@ async function* walk(dir) {
     entries = await readdir(dir, { withFileTypes: true })
   } catch (error) {
     if (error?.code === 'ENOENT') {
-      throw new Error(`Podcast source directory does not exist: ${sourceDir}`)
+      throw new Error(`Podcast source directory does not exist: ${dir}`)
     }
     throw error
   }
@@ -61,7 +70,7 @@ async function* walk(dir) {
 
 function resolveUploadTarget(filePath) {
   const fileName = path.basename(filePath)
-  const match = fileName.match(/^(.+)_(English|Spanish|Mandarin)\.mp3$/)
+  const match = fileName.match(new RegExp(`^(.+)_(${languageSuffixPattern})\\.mp3$`))
   if (!match) {
     throw new Error(`Podcast MP3 does not use the expected language suffix: ${fileName}`)
   }
@@ -79,15 +88,50 @@ function resolveUploadTarget(filePath) {
   }
 }
 
+function resolveSelectedLanguages() {
+  const supportedLanguages = new Set(languageSuffixes.values())
+
+  if (!languagesArg) {
+    return supportedLanguages
+  }
+
+  const requestedLanguages = languagesArg
+    .replace(/^--languages=/, '')
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+
+  if (!requestedLanguages.length) {
+    throw new Error('--languages requires at least one language, for example --languages=arabic,korean')
+  }
+
+  for (const language of requestedLanguages) {
+    if (!supportedLanguages.has(language)) {
+      throw new Error(
+        `Unsupported language "${language}". Supported languages: ${Array.from(supportedLanguages).join(', ')}`,
+      )
+    }
+  }
+
+  return new Set(requestedLanguages)
+}
+
 async function collectFiles() {
   const files = []
-  for await (const filePath of walk(sourceDir)) {
-    const fileStat = await stat(filePath)
-    files.push({
-      filePath,
-      size: fileStat.size,
-      ...resolveUploadTarget(filePath),
-    })
+  for (const sourceDir of sourceDirs) {
+    for await (const filePath of walk(sourceDir)) {
+      const fileStat = await stat(filePath)
+      const uploadTarget = resolveUploadTarget(filePath)
+      if (!selectedLanguages.has(uploadTarget.language)) {
+        continue
+      }
+
+      files.push({
+        filePath,
+        size: fileStat.size,
+        ...uploadTarget,
+      })
+    }
   }
 
   files.sort((a, b) => a.storagePath.localeCompare(b.storagePath))
@@ -170,7 +214,7 @@ function validateLanguageSets(files) {
 
   const missing = []
   for (const [episodeId, languages] of grouped) {
-    for (const language of languageSuffixes.values()) {
+    for (const language of selectedLanguages) {
       if (!languages.has(language)) {
         missing.push(`${episodeId}:${language}`)
       }

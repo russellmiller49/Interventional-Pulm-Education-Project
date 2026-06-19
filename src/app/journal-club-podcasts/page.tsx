@@ -11,7 +11,7 @@ import {
 export const metadata: Metadata = {
   title: 'Journal Club Podcasts',
   description:
-    'Beta journal club audio library for interventional pulmonology articles in English, Spanish, and Mandarin.',
+    'Beta journal club audio library for interventional pulmonology articles in English, Spanish, Mandarin, Arabic, and Korean.',
   robots: {
     index: false,
     follow: false,

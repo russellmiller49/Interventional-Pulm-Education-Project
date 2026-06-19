@@ -34,6 +34,8 @@ const languageLabels: Record<PodcastLanguage, string> = {
   english: 'English',
   spanish: 'Spanish',
   mandarin: 'Mandarin',
+  arabic: 'Arabic',
+  korean: 'Korean',
 }
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
@@ -113,7 +115,7 @@ export function JournalClubPodcastBrowser({
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
                 Listen to article-focused interventional pulmonology discussions in English,
-                Spanish, or Mandarin.
+                Spanish, Mandarin, Arabic, or Korean.
               </p>
             </div>
           </div>

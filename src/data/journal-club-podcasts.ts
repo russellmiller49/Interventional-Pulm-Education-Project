@@ -10,7 +10,7 @@ export const journalClubPodcastHubs = [
 
 export const defaultJournalClubPodcastHub = journalClubPodcastHubs[0]
 
-export const podcastLanguages = ['english', 'spanish', 'mandarin'] as const
+export const podcastLanguages = ['english', 'spanish', 'mandarin', 'arabic', 'korean'] as const
 
 export type JournalClubPodcastHub = (typeof journalClubPodcastHubs)[number]
 export type PodcastLanguage = (typeof podcastLanguages)[number]
@@ -57,6 +57,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/aabip-lung-cancer-staging/english.mp3',
       mandarin: 'v1/aabip-lung-cancer-staging/mandarin.mp3',
       spanish: 'v1/aabip-lung-cancer-staging/spanish.mp3',
+      arabic: 'v1/aabip-lung-cancer-staging/arabic.mp3',
+      korean: 'v1/aabip-lung-cancer-staging/korean.mp3',
     },
   },
   {
@@ -76,6 +78,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/pure-ggn-nomogram/english.mp3',
       mandarin: 'v1/pure-ggn-nomogram/mandarin.mp3',
       spanish: 'v1/pure-ggn-nomogram/spanish.mp3',
+      arabic: 'v1/pure-ggn-nomogram/arabic.mp3',
+      korean: 'v1/pure-ggn-nomogram/korean.mp3',
     },
   },
   {
@@ -95,6 +99,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/false-n2-upstaging-ebus/english.mp3',
       mandarin: 'v1/false-n2-upstaging-ebus/mandarin.mp3',
       spanish: 'v1/false-n2-upstaging-ebus/spanish.mp3',
+      arabic: 'v1/false-n2-upstaging-ebus/arabic.mp3',
+      korean: 'v1/false-n2-upstaging-ebus/korean.mp3',
     },
   },
   {
@@ -123,6 +129,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/global-ebus-n2-survey/english.mp3',
       mandarin: 'v1/global-ebus-n2-survey/mandarin.mp3',
       spanish: 'v1/global-ebus-n2-survey/spanish.mp3',
+      arabic: 'v1/global-ebus-n2-survey/arabic.mp3',
+      korean: 'v1/global-ebus-n2-survey/korean.mp3',
     },
   },
   {
@@ -149,6 +157,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/navigation-vs-ttnb/english.mp3',
       mandarin: 'v1/navigation-vs-ttnb/mandarin.mp3',
       spanish: 'v1/navigation-vs-ttnb/spanish.mp3',
+      arabic: 'v1/navigation-vs-ttnb/arabic.mp3',
+      korean: 'v1/navigation-vs-ttnb/korean.mp3',
     },
   },
   {
@@ -174,6 +184,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/ipn-program-time-to-diagnosis/english.mp3',
       mandarin: 'v1/ipn-program-time-to-diagnosis/mandarin.mp3',
       spanish: 'v1/ipn-program-time-to-diagnosis/spanish.mp3',
+      arabic: 'v1/ipn-program-time-to-diagnosis/arabic.mp3',
+      korean: 'v1/ipn-program-time-to-diagnosis/korean.mp3',
     },
   },
   {
@@ -203,6 +215,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/swe-transthoracic-biopsy/english.mp3',
       mandarin: 'v1/swe-transthoracic-biopsy/mandarin.mp3',
       spanish: 'v1/swe-transthoracic-biopsy/spanish.mp3',
+      arabic: 'v1/swe-transthoracic-biopsy/arabic.mp3',
+      korean: 'v1/swe-transthoracic-biopsy/korean.mp3',
     },
   },
   {
@@ -222,6 +236,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/icg-fiducial-markers/english.mp3',
       mandarin: 'v1/icg-fiducial-markers/mandarin.mp3',
       spanish: 'v1/icg-fiducial-markers/spanish.mp3',
+      arabic: 'v1/icg-fiducial-markers/arabic.mp3',
+      korean: 'v1/icg-fiducial-markers/korean.mp3',
     },
   },
   {
@@ -251,6 +267,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/sts-screendetected-nodules/english.mp3',
       mandarin: 'v1/sts-screendetected-nodules/mandarin.mp3',
       spanish: 'v1/sts-screendetected-nodules/spanish.mp3',
+      arabic: 'v1/sts-screendetected-nodules/arabic.mp3',
+      korean: 'v1/sts-screendetected-nodules/korean.mp3',
     },
   },
   {
@@ -270,6 +288,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/rab-rose-accuracy/english.mp3',
       mandarin: 'v1/rab-rose-accuracy/mandarin.mp3',
       spanish: 'v1/rab-rose-accuracy/spanish.mp3',
+      arabic: 'v1/rab-rose-accuracy/arabic.mp3',
+      korean: 'v1/rab-rose-accuracy/korean.mp3',
     },
   },
   {
@@ -295,6 +315,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/frostbite2-cryobiopsy-forceps/english.mp3',
       mandarin: 'v1/frostbite2-cryobiopsy-forceps/mandarin.mp3',
       spanish: 'v1/frostbite2-cryobiopsy-forceps/spanish.mp3',
+      arabic: 'v1/frostbite2-cryobiopsy-forceps/arabic.mp3',
+      korean: 'v1/frostbite2-cryobiopsy-forceps/korean.mp3',
     },
   },
   {
@@ -320,6 +342,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/multihospital-rab-outcomes/english.mp3',
       mandarin: 'v1/multihospital-rab-outcomes/mandarin.mp3',
       spanish: 'v1/multihospital-rab-outcomes/spanish.mp3',
+      arabic: 'v1/multihospital-rab-outcomes/arabic.mp3',
+      korean: 'v1/multihospital-rab-outcomes/korean.mp3',
     },
   },
   {
@@ -346,6 +370,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/enb-needle-forceps-synergy/english.mp3',
       mandarin: 'v1/enb-needle-forceps-synergy/mandarin.mp3',
       spanish: 'v1/enb-needle-forceps-synergy/spanish.mp3',
+      arabic: 'v1/enb-needle-forceps-synergy/arabic.mp3',
+      korean: 'v1/enb-needle-forceps-synergy/korean.mp3',
     },
   },
   {
@@ -365,6 +391,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/rope-dynamic-cell-imaging/english.mp3',
       mandarin: 'v1/rope-dynamic-cell-imaging/mandarin.mp3',
       spanish: 'v1/rope-dynamic-cell-imaging/spanish.mp3',
+      arabic: 'v1/rope-dynamic-cell-imaging/arabic.mp3',
+      korean: 'v1/rope-dynamic-cell-imaging/korean.mp3',
     },
   },
   {
@@ -396,6 +424,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/rab-cryobiopsy-ggo/english.mp3',
       mandarin: 'v1/rab-cryobiopsy-ggo/mandarin.mp3',
       spanish: 'v1/rab-cryobiopsy-ggo/spanish.mp3',
+      arabic: 'v1/rab-cryobiopsy-ggo/arabic.mp3',
+      korean: 'v1/rab-cryobiopsy-ggo/korean.mp3',
     },
   },
   {
@@ -424,6 +454,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/confirm-small-nodules/english.mp3',
       mandarin: 'v1/confirm-small-nodules/mandarin.mp3',
       spanish: 'v1/confirm-small-nodules/spanish.mp3',
+      arabic: 'v1/confirm-small-nodules/arabic.mp3',
+      korean: 'v1/confirm-small-nodules/korean.mp3',
     },
   },
   {
@@ -452,6 +484,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/lateral-decubitus-rab/english.mp3',
       mandarin: 'v1/lateral-decubitus-rab/mandarin.mp3',
       spanish: 'v1/lateral-decubitus-rab/spanish.mp3',
+      arabic: 'v1/lateral-decubitus-rab/arabic.mp3',
+      korean: 'v1/lateral-decubitus-rab/korean.mp3',
     },
   },
   {
@@ -479,6 +513,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/ssrab-cbct-verification/english.mp3',
       mandarin: 'v1/ssrab-cbct-verification/mandarin.mp3',
       spanish: 'v1/ssrab-cbct-verification/spanish.mp3',
+      arabic: 'v1/ssrab-cbct-verification/arabic.mp3',
+      korean: 'v1/ssrab-cbct-verification/korean.mp3',
     },
   },
   {
@@ -498,6 +534,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/enb-microwave-ablation/english.mp3',
       mandarin: 'v1/enb-microwave-ablation/mandarin.mp3',
       spanish: 'v1/enb-microwave-ablation/spanish.mp3',
+      arabic: 'v1/enb-microwave-ablation/arabic.mp3',
+      korean: 'v1/enb-microwave-ablation/korean.mp3',
     },
   },
   {
@@ -516,6 +554,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/bronchoscopic-intratumoural-therapies/english.mp3',
       mandarin: 'v1/bronchoscopic-intratumoural-therapies/mandarin.mp3',
       spanish: 'v1/bronchoscopic-intratumoural-therapies/spanish.mp3',
+      arabic: 'v1/bronchoscopic-intratumoural-therapies/arabic.mp3',
+      korean: 'v1/bronchoscopic-intratumoural-therapies/korean.mp3',
     },
   },
   {
@@ -546,6 +586,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/pef-carcinoid-ablation/english.mp3',
       mandarin: 'v1/pef-carcinoid-ablation/mandarin.mp3',
       spanish: 'v1/pef-carcinoid-ablation/spanish.mp3',
+      arabic: 'v1/pef-carcinoid-ablation/arabic.mp3',
+      korean: 'v1/pef-carcinoid-ablation/korean.mp3',
     },
   },
   {
@@ -573,6 +615,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/synergistic-pef-preclinical/english.mp3',
       mandarin: 'v1/synergistic-pef-preclinical/mandarin.mp3',
       spanish: 'v1/synergistic-pef-preclinical/spanish.mp3',
+      arabic: 'v1/synergistic-pef-preclinical/arabic.mp3',
+      korean: 'v1/synergistic-pef-preclinical/korean.mp3',
     },
   },
   {
@@ -600,6 +644,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/bronc-rfii-oneyear/english.mp3',
       mandarin: 'v1/bronc-rfii-oneyear/mandarin.mp3',
       spanish: 'v1/bronc-rfii-oneyear/spanish.mp3',
+      arabic: 'v1/bronc-rfii-oneyear/arabic.mp3',
+      korean: 'v1/bronc-rfii-oneyear/korean.mp3',
     },
   },
   {
@@ -619,6 +665,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/pef-lung-cancer-ablation/english.mp3',
       mandarin: 'v1/pef-lung-cancer-ablation/mandarin.mp3',
       spanish: 'v1/pef-lung-cancer-ablation/spanish.mp3',
+      arabic: 'v1/pef-lung-cancer-ablation/arabic.mp3',
+      korean: 'v1/pef-lung-cancer-ablation/korean.mp3',
     },
   },
   {
@@ -648,6 +696,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/rab-cryoablation-nodules/english.mp3',
       mandarin: 'v1/rab-cryoablation-nodules/mandarin.mp3',
       spanish: 'v1/rab-cryoablation-nodules/spanish.mp3',
+      arabic: 'v1/rab-cryoablation-nodules/arabic.mp3',
+      korean: 'v1/rab-cryoablation-nodules/korean.mp3',
     },
   },
   {
@@ -677,6 +727,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/relief-trial-protocol/english.mp3',
       mandarin: 'v1/relief-trial-protocol/mandarin.mp3',
       spanish: 'v1/relief-trial-protocol/spanish.mp3',
+      arabic: 'v1/relief-trial-protocol/arabic.mp3',
+      korean: 'v1/relief-trial-protocol/korean.mp3',
     },
   },
   {
@@ -704,6 +756,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/collaborationi-pleural-biopsy/english.mp3',
       mandarin: 'v1/collaborationi-pleural-biopsy/mandarin.mp3',
       spanish: 'v1/collaborationi-pleural-biopsy/spanish.mp3',
+      arabic: 'v1/collaborationi-pleural-biopsy/arabic.mp3',
+      korean: 'v1/collaborationi-pleural-biopsy/korean.mp3',
     },
   },
   {
@@ -723,6 +777,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/discordant-pleural-exudates/english.mp3',
       mandarin: 'v1/discordant-pleural-exudates/mandarin.mp3',
       spanish: 'v1/discordant-pleural-exudates/spanish.mp3',
+      arabic: 'v1/discordant-pleural-exudates/arabic.mp3',
+      korean: 'v1/discordant-pleural-exudates/korean.mp3',
     },
   },
   {
@@ -749,6 +805,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/uk-local-anaesthetic-thoracoscopy/english.mp3',
       mandarin: 'v1/uk-local-anaesthetic-thoracoscopy/mandarin.mp3',
       spanish: 'v1/uk-local-anaesthetic-thoracoscopy/spanish.mp3',
+      arabic: 'v1/uk-local-anaesthetic-thoracoscopy/arabic.mp3',
+      korean: 'v1/uk-local-anaesthetic-thoracoscopy/korean.mp3',
     },
   },
   {
@@ -775,6 +833,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/tactic-mpe-trial/english.mp3',
       mandarin: 'v1/tactic-mpe-trial/mandarin.mp3',
       spanish: 'v1/tactic-mpe-trial/spanish.mp3',
+      arabic: 'v1/tactic-mpe-trial/arabic.mp3',
+      korean: 'v1/tactic-mpe-trial/korean.mp3',
     },
   },
   {
@@ -802,6 +862,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/thoracoscopy-without-ptx/english.mp3',
       mandarin: 'v1/thoracoscopy-without-ptx/mandarin.mp3',
       spanish: 'v1/thoracoscopy-without-ptx/spanish.mp3',
+      arabic: 'v1/thoracoscopy-without-ptx/arabic.mp3',
+      korean: 'v1/thoracoscopy-without-ptx/korean.mp3',
     },
   },
   {
@@ -828,6 +890,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/pleural-manometry-ptx/english.mp3',
       mandarin: 'v1/pleural-manometry-ptx/mandarin.mp3',
       spanish: 'v1/pleural-manometry-ptx/spanish.mp3',
+      arabic: 'v1/pleural-manometry-ptx/arabic.mp3',
+      korean: 'v1/pleural-manometry-ptx/korean.mp3',
     },
   },
   {
@@ -847,6 +911,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/postthoracentesis-us-vs-cxr/english.mp3',
       mandarin: 'v1/postthoracentesis-us-vs-cxr/mandarin.mp3',
       spanish: 'v1/postthoracentesis-us-vs-cxr/spanish.mp3',
+      arabic: 'v1/postthoracentesis-us-vs-cxr/arabic.mp3',
+      korean: 'v1/postthoracentesis-us-vs-cxr/korean.mp3',
     },
   },
   {
@@ -872,6 +938,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/scope-pleural-infection/english.mp3',
       mandarin: 'v1/scope-pleural-infection/mandarin.mp3',
       spanish: 'v1/scope-pleural-infection/spanish.mp3',
+      arabic: 'v1/scope-pleural-infection/arabic.mp3',
+      korean: 'v1/scope-pleural-infection/korean.mp3',
     },
   },
   {
@@ -891,6 +959,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/vats-vs-percutaneous-tpc/english.mp3',
       mandarin: 'v1/vats-vs-percutaneous-tpc/mandarin.mp3',
       spanish: 'v1/vats-vs-percutaneous-tpc/spanish.mp3',
+      arabic: 'v1/vats-vs-percutaneous-tpc/arabic.mp3',
+      korean: 'v1/vats-vs-percutaneous-tpc/korean.mp3',
     },
   },
   {
@@ -909,6 +979,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/biodegradable-airway-stents/english.mp3',
       mandarin: 'v1/biodegradable-airway-stents/mandarin.mp3',
       spanish: 'v1/biodegradable-airway-stents/spanish.mp3',
+      arabic: 'v1/biodegradable-airway-stents/arabic.mp3',
+      korean: 'v1/biodegradable-airway-stents/korean.mp3',
     },
   },
   {
@@ -928,6 +1000,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/airway-stent-fistula/english.mp3',
       mandarin: 'v1/airway-stent-fistula/mandarin.mp3',
       spanish: 'v1/airway-stent-fistula/spanish.mp3',
+      arabic: 'v1/airway-stent-fistula/arabic.mp3',
+      korean: 'v1/airway-stent-fistula/korean.mp3',
     },
   },
   {
@@ -956,6 +1030,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/balloon-cryoablation-cao/english.mp3',
       mandarin: 'v1/balloon-cryoablation-cao/mandarin.mp3',
       spanish: 'v1/balloon-cryoablation-cao/spanish.mp3',
+      arabic: 'v1/balloon-cryoablation-cao/arabic.mp3',
+      korean: 'v1/balloon-cryoablation-cao/korean.mp3',
     },
   },
   {
@@ -974,6 +1050,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/cryotherapy-airway-stenosis/english.mp3',
       mandarin: 'v1/cryotherapy-airway-stenosis/mandarin.mp3',
       spanish: 'v1/cryotherapy-airway-stenosis/spanish.mp3',
+      arabic: 'v1/cryotherapy-airway-stenosis/arabic.mp3',
+      korean: 'v1/cryotherapy-airway-stenosis/korean.mp3',
     },
   },
   {
@@ -1003,6 +1081,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/accp-cao-guideline/english.mp3',
       mandarin: 'v1/accp-cao-guideline/mandarin.mp3',
       spanish: 'v1/accp-cao-guideline/spanish.mp3',
+      arabic: 'v1/accp-cao-guideline/arabic.mp3',
+      korean: 'v1/accp-cao-guideline/korean.mp3',
     },
   },
   {
@@ -1022,6 +1102,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/rigid-bronchoscopy-suite/english.mp3',
       mandarin: 'v1/rigid-bronchoscopy-suite/mandarin.mp3',
       spanish: 'v1/rigid-bronchoscopy-suite/spanish.mp3',
+      arabic: 'v1/rigid-bronchoscopy-suite/arabic.mp3',
+      korean: 'v1/rigid-bronchoscopy-suite/korean.mp3',
     },
   },
   {
@@ -1041,6 +1123,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/tracheobronchial-stent-trends/english.mp3',
       mandarin: 'v1/tracheobronchial-stent-trends/mandarin.mp3',
       spanish: 'v1/tracheobronchial-stent-trends/spanish.mp3',
+      arabic: 'v1/tracheobronchial-stent-trends/arabic.mp3',
+      korean: 'v1/tracheobronchial-stent-trends/korean.mp3',
     },
   },
   {
@@ -1067,6 +1151,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/pediatric-therapeutic-bronchoscopy/english.mp3',
       mandarin: 'v1/pediatric-therapeutic-bronchoscopy/mandarin.mp3',
       spanish: 'v1/pediatric-therapeutic-bronchoscopy/spanish.mp3',
+      arabic: 'v1/pediatric-therapeutic-bronchoscopy/arabic.mp3',
+      korean: 'v1/pediatric-therapeutic-bronchoscopy/korean.mp3',
     },
   },
   {
@@ -1094,6 +1180,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/wabip-airway-stenting/english.mp3',
       mandarin: 'v1/wabip-airway-stenting/mandarin.mp3',
       spanish: 'v1/wabip-airway-stenting/spanish.mp3',
+      arabic: 'v1/wabip-airway-stenting/arabic.mp3',
+      korean: 'v1/wabip-airway-stenting/korean.mp3',
     },
   },
   {
@@ -1121,6 +1209,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/breathe-airway-scaffolds/english.mp3',
       mandarin: 'v1/breathe-airway-scaffolds/mandarin.mp3',
       spanish: 'v1/breathe-airway-scaffolds/spanish.mp3',
+      arabic: 'v1/breathe-airway-scaffolds/arabic.mp3',
+      korean: 'v1/breathe-airway-scaffolds/korean.mp3',
     },
   },
   {
@@ -1147,6 +1237,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/ebv-blvr-consensus/english.mp3',
       mandarin: 'v1/ebv-blvr-consensus/mandarin.mp3',
       spanish: 'v1/ebv-blvr-consensus/spanish.mp3',
+      arabic: 'v1/ebv-blvr-consensus/arabic.mp3',
+      korean: 'v1/ebv-blvr-consensus/korean.mp3',
     },
   },
   {
@@ -1174,6 +1266,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/oneway-valves-elvr/english.mp3',
       mandarin: 'v1/oneway-valves-elvr/mandarin.mp3',
       spanish: 'v1/oneway-valves-elvr/spanish.mp3',
+      arabic: 'v1/oneway-valves-elvr/arabic.mp3',
+      korean: 'v1/oneway-valves-elvr/korean.mp3',
     },
   },
   {
@@ -1200,6 +1294,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/severe-ptx-after-blvr/english.mp3',
       mandarin: 'v1/severe-ptx-after-blvr/mandarin.mp3',
       spanish: 'v1/severe-ptx-after-blvr/spanish.mp3',
+      arabic: 'v1/severe-ptx-after-blvr/arabic.mp3',
+      korean: 'v1/severe-ptx-after-blvr/korean.mp3',
     },
   },
   {
@@ -1226,6 +1322,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/chest-drain-removal/english.mp3',
       mandarin: 'v1/chest-drain-removal/mandarin.mp3',
       spanish: 'v1/chest-drain-removal/spanish.mp3',
+      arabic: 'v1/chest-drain-removal/arabic.mp3',
+      korean: 'v1/chest-drain-removal/korean.mp3',
     },
   },
   {
@@ -1253,6 +1351,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/hfnc-highrisk-bronchoscopy-rct/english.mp3',
       mandarin: 'v1/hfnc-highrisk-bronchoscopy-rct/mandarin.mp3',
       spanish: 'v1/hfnc-highrisk-bronchoscopy-rct/spanish.mp3',
+      arabic: 'v1/hfnc-highrisk-bronchoscopy-rct/arabic.mp3',
+      korean: 'v1/hfnc-highrisk-bronchoscopy-rct/korean.mp3',
     },
   },
   {
@@ -1279,6 +1379,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/hfnc-bronchoscopy-metaanalysis/english.mp3',
       mandarin: 'v1/hfnc-bronchoscopy-metaanalysis/mandarin.mp3',
       spanish: 'v1/hfnc-bronchoscopy-metaanalysis/spanish.mp3',
+      arabic: 'v1/hfnc-bronchoscopy-metaanalysis/arabic.mp3',
+      korean: 'v1/hfnc-bronchoscopy-metaanalysis/korean.mp3',
     },
   },
   {
@@ -1306,6 +1408,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/fellow-participation-bronchoscopy/english.mp3',
       mandarin: 'v1/fellow-participation-bronchoscopy/mandarin.mp3',
       spanish: 'v1/fellow-participation-bronchoscopy/spanish.mp3',
+      arabic: 'v1/fellow-participation-bronchoscopy/arabic.mp3',
+      korean: 'v1/fellow-participation-bronchoscopy/korean.mp3',
     },
   },
   {
@@ -1336,6 +1440,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/ip-thoracic-surgery-collaboration/english.mp3',
       mandarin: 'v1/ip-thoracic-surgery-collaboration/mandarin.mp3',
       spanish: 'v1/ip-thoracic-surgery-collaboration/spanish.mp3',
+      arabic: 'v1/ip-thoracic-surgery-collaboration/arabic.mp3',
+      korean: 'v1/ip-thoracic-surgery-collaboration/korean.mp3',
     },
   },
   {
@@ -1363,6 +1469,8 @@ export const journalClubPodcastEpisodes = [
       english: 'v1/vr-ebus-anatomy-trainer/english.mp3',
       mandarin: 'v1/vr-ebus-anatomy-trainer/mandarin.mp3',
       spanish: 'v1/vr-ebus-anatomy-trainer/spanish.mp3',
+      arabic: 'v1/vr-ebus-anatomy-trainer/arabic.mp3',
+      korean: 'v1/vr-ebus-anatomy-trainer/korean.mp3',
     },
   },
 ] satisfies JournalClubPodcastEpisode[]
