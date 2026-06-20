@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 
 import { JournalClubPodcastBrowser } from '@/components/journal-club-podcasts/JournalClubPodcastBrowser'
 import {
-  defaultJournalClubPodcastHub,
   journalClubPodcastEpisodes,
   journalClubPodcastHubs,
   journalClubPodcastTags,
@@ -11,11 +10,7 @@ import {
 export const metadata: Metadata = {
   title: 'Journal Club Podcasts',
   description:
-    'Beta journal club audio library for interventional pulmonology articles in English, Spanish, Mandarin, Arabic, and Korean.',
-  robots: {
-    index: false,
-    follow: false,
-  },
+    'Journal club audio library for interventional pulmonology articles in English, Spanish, Mandarin, Arabic, and Korean.',
 }
 
 export default function JournalClubPodcastsPage() {
@@ -24,7 +19,6 @@ export default function JournalClubPodcastsPage() {
       episodes={journalClubPodcastEpisodes}
       hubs={journalClubPodcastHubs}
       tags={journalClubPodcastTags}
-      defaultHub={defaultJournalClubPodcastHub}
     />
   )
 }

@@ -62,6 +62,12 @@ const allNavigationItems: NavItem[] = [
     description: 'Interactive board review chapters',
   },
   {
+    title: 'Journal Club Podcasts',
+    shortTitle: 'Podcasts',
+    href: '/journal-club-podcasts' as Route,
+    description: 'Audio journal club discussions in five languages',
+  },
+  {
     title: 'FluoroView',
     href: '/fluoroview',
     description: 'C-arm airway simulation lab',

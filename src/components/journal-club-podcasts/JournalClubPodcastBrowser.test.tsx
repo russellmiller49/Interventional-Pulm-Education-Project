@@ -76,19 +76,43 @@ describe('JournalClubPodcastBrowser', () => {
     expect(link).toHaveAttribute('rel', expect.stringContaining('noreferrer'))
   })
 
-  it('can browse all podcasts across hubs', async () => {
-    const user = userEvent.setup()
+  it('starts in all-podcasts mode and sorts titles alphabetically', () => {
     expect(crossHubEpisode).toBeDefined()
-    renderBrowser([testEpisodes[0], crossHubEpisode!])
+    renderBrowser([
+      {
+        ...testEpisodes[0],
+        id: 'zulu-podcast',
+        title: 'Zulu podcast',
+        audio: {
+          english: 'v1/zulu-podcast/english.mp3',
+          spanish: 'v1/zulu-podcast/spanish.mp3',
+          mandarin: 'v1/zulu-podcast/mandarin.mp3',
+          arabic: 'v1/zulu-podcast/arabic.mp3',
+          korean: 'v1/zulu-podcast/korean.mp3',
+        },
+      },
+      {
+        ...crossHubEpisode!,
+        id: 'alpha-podcast',
+        title: 'Alpha podcast',
+        audio: {
+          english: 'v1/alpha-podcast/english.mp3',
+          spanish: 'v1/alpha-podcast/spanish.mp3',
+          mandarin: 'v1/alpha-podcast/mandarin.mp3',
+          arabic: 'v1/alpha-podcast/arabic.mp3',
+          korean: 'v1/alpha-podcast/korean.mp3',
+        },
+      },
+    ])
 
-    expect(screen.getByText(testEpisodes[0].title)).toBeInTheDocument()
-    expect(screen.queryByText(crossHubEpisode!.title)).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: /all podcasts/i }))
-
-    expect(screen.getByText(testEpisodes[0].title)).toBeInTheDocument()
-    expect(screen.getByText(crossHubEpisode!.title)).toBeInTheDocument()
+    const allPodcastsButton = screen.getByRole('button', { name: /all podcasts/i })
+    expect(allPodcastsButton).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('2 episodes')).toBeInTheDocument()
+
+    const titles = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent)
+    expect(titles).toEqual(['Alpha podcast', 'Zulu podcast'])
   })
 
   it('requests a signed URL for the selected language and supports speed changes', async () => {
@@ -154,7 +178,6 @@ function renderBrowser(episodes = testEpisodes) {
       episodes={episodes}
       hubs={journalClubPodcastHubs}
       tags={journalClubPodcastTags}
-      defaultHub={defaultJournalClubPodcastHub}
     />,
   )
 }

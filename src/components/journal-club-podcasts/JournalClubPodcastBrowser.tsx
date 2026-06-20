@@ -27,7 +27,6 @@ interface JournalClubPodcastBrowserProps {
   episodes: JournalClubPodcastEpisode[]
   hubs: readonly JournalClubPodcastHub[]
   tags: string[]
-  defaultHub: JournalClubPodcastHub
 }
 
 const languageLabels: Record<PodcastLanguage, string> = {
@@ -46,9 +45,8 @@ export function JournalClubPodcastBrowser({
   episodes,
   hubs,
   tags,
-  defaultHub,
 }: JournalClubPodcastBrowserProps) {
-  const [activeHub, setActiveHub] = useState<HubFilter>(defaultHub)
+  const [activeHub, setActiveHub] = useState<HubFilter>(allHubFilter)
   const [activeTag, setActiveTag] = useState<string>('all')
   const [query, setQuery] = useState('')
   const [activeEpisodeId, setActiveEpisodeId] = useState<string | null>(null)
@@ -65,25 +63,27 @@ export function JournalClubPodcastBrowser({
   const filteredEpisodes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
-    return episodes.filter((episode) => {
-      if (activeHub !== allHubFilter && episode.primaryHub !== activeHub) {
-        return false
-      }
+    return episodes
+      .filter((episode) => {
+        if (activeHub !== allHubFilter && episode.primaryHub !== activeHub) {
+          return false
+        }
 
-      if (activeTag !== 'all' && !episode.tags.includes(activeTag)) {
-        return false
-      }
+        if (activeTag !== 'all' && !episode.tags.includes(activeTag)) {
+          return false
+        }
 
-      if (!normalizedQuery) {
-        return true
-      }
+        if (!normalizedQuery) {
+          return true
+        }
 
-      const haystack = [episode.title, episode.citation, episode.synopsis, episode.tags.join(' ')]
-        .join(' ')
-        .toLowerCase()
+        const haystack = [episode.title, episode.citation, episode.synopsis, episode.tags.join(' ')]
+          .join(' ')
+          .toLowerCase()
 
-      return haystack.includes(normalizedQuery)
-    })
+        return haystack.includes(normalizedQuery)
+      })
+      .sort(comparePodcastTitles)
   }, [activeHub, activeTag, episodes, query])
 
   const visibleTags = useMemo(
@@ -252,6 +252,12 @@ export function JournalClubPodcastBrowser({
       </section>
     </div>
   )
+}
+
+function comparePodcastTitles(a: JournalClubPodcastEpisode, b: JournalClubPodcastEpisode) {
+  return a.title.localeCompare(b.title, undefined, {
+    sensitivity: 'base',
+  })
 }
 
 function TagButton({

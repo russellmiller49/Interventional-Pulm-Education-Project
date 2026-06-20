@@ -11,6 +11,7 @@ type InternalFooterHref =
   | '/ebus-training'
   | '/fluoroview'
   | '/intro-bronchoscopy'
+  | '/journal-club-podcasts'
   | '/learn/anatomy'
   | '/pleural-procedures'
   | '/resources'
@@ -56,6 +57,11 @@ const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
     title: 'Learning',
     links: [
       { label: 'Board Prep', href: '/board-prep', route: '/board-prep' },
+      {
+        label: 'Journal Club Podcasts',
+        href: '/journal-club-podcasts',
+        route: '/journal-club-podcasts',
+      },
       { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
       {
         label: 'Bronch Navigation Trainer',
