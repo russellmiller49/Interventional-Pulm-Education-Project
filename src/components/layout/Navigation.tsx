@@ -44,6 +44,12 @@ const allNavigationItems: NavItem[] = [
     description: 'Admin preview of the synchronized virtual bronchoscopy simulator',
   },
   {
+    title: 'Podcast Library',
+    shortTitle: 'Podcast Library',
+    href: '/journal-club-podcasts' as Route,
+    description: 'Journal club audio discussions in five languages',
+  },
+  {
     title: 'TNM-9 Staging',
     shortTitle: 'TNM-9',
     href: '/tnm-9-staging' as Route,
@@ -60,12 +66,6 @@ const allNavigationItems: NavItem[] = [
     shortTitle: 'Board Prep',
     href: '/board-prep',
     description: 'Interactive board review chapters',
-  },
-  {
-    title: 'Journal Club Podcasts',
-    shortTitle: 'Podcasts',
-    href: '/journal-club-podcasts' as Route,
-    description: 'Audio journal club discussions in five languages',
   },
   {
     title: 'FluoroView',

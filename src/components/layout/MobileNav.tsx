@@ -70,7 +70,7 @@ export function MobileNav({
           <SheetHeader className="space-y-1">
             <SheetTitle className="text-lg">Navigate</SheetTitle>
             <SheetDescription>
-              Explore EBUS training, TNM-9 staging, anatomy, Nav Bronch, FluoroView, and resources.
+              Explore EBUS training, podcasts, anatomy, Nav Bronch, FluoroView, and resources.
             </SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-6 overflow-y-auto">
