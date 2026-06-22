@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { JournalClubPodcastBrowser } from './JournalClubPodcastBrowser'
@@ -54,6 +54,11 @@ describe('JournalClubPodcastBrowser', () => {
     expect(
       screen.getByText(/entertainment, education, and general discussion/i),
     ).toBeInTheDocument()
+    expect(screen.getByText('Available in 5 languages')).toBeInTheDocument()
+    const languageList = screen.getByLabelText('Available podcast languages')
+    for (const language of ['English', 'Spanish', 'Mandarin', 'Arabic', 'Korean']) {
+      expect(within(languageList).getByText(language)).toBeInTheDocument()
+    }
     expect(screen.getByText(testEpisodes[0].title)).toBeInTheDocument()
     expect(screen.getByText(testEpisodes[1].title)).toBeInTheDocument()
 
@@ -110,8 +115,8 @@ describe('JournalClubPodcastBrowser', () => {
     expect(screen.getByText('2 episodes')).toBeInTheDocument()
 
     const titles = screen
-      .getAllByRole('heading', { level: 2 })
-      .map((heading) => heading.textContent)
+      .getAllByRole('article')
+      .map((article) => within(article).getByRole('heading', { level: 2 }).textContent)
     expect(titles).toEqual(['Alpha podcast', 'Zulu podcast'])
   })
 
@@ -156,6 +161,45 @@ describe('JournalClubPodcastBrowser', () => {
     audio.currentTime = 5
     await user.click(seekButton('Rewind', 30, testEpisodes[0].title))
     expect(audio.currentTime).toBe(0)
+  })
+
+  it('submits separate podcast feedback ratings with the selected language', async () => {
+    const user = userEvent.setup()
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'ok' }),
+    }) as jest.Mock
+    renderBrowser()
+    const firstArticle = screen.getAllByRole('article')[0]
+
+    await user.selectOptions(within(firstArticle).getByLabelText('Language used'), 'spanish')
+    await user.click(
+      within(firstArticle).getByRole('button', {
+        name: 'Content quality: 5 out of 5 stars',
+      }),
+    )
+    await user.click(
+      within(firstArticle).getByRole('button', {
+        name: 'Audio/dialog quality: 3 out of 5 stars',
+      }),
+    )
+    await user.click(within(firstArticle).getByRole('button', { name: /submit rating/i }))
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/journal-club-podcasts/feedback',
+        expect.objectContaining({
+          body: JSON.stringify({
+            audioDialogRating: 3,
+            contentQualityRating: 5,
+            episodeId: testEpisodes[0].id,
+            language: 'spanish',
+          }),
+          method: 'POST',
+        }),
+      )
+    })
+    expect(screen.getByText('Thanks. Your rating was saved.')).toBeInTheDocument()
   })
 
   it('pauses the previous episode when another episode starts', async () => {

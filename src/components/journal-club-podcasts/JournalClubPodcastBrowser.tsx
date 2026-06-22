@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ExternalLink,
+  Languages,
   Loader2,
   Pause,
   Play,
   RotateCcw,
   RotateCw,
   Search,
+  Star,
   Volume2,
 } from 'lucide-react'
 
@@ -36,8 +38,10 @@ const languageLabels: Record<PodcastLanguage, string> = {
   arabic: 'Arabic',
   korean: 'Korean',
 }
+const languageHighlightLabels = Object.values(languageLabels)
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
+const ratingValues = [1, 2, 3, 4, 5] as const
 const allHubFilter = 'all' as const
 type HubFilter = JournalClubPodcastHub | typeof allHubFilter
 
@@ -140,6 +144,35 @@ export function JournalClubPodcastBrowser({
           the linked publication and current guidelines; this is not patient-specific medical
           advice.
         </Callout>
+
+        <div className="rounded-lg border border-border/80 bg-muted/35 p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Languages className="h-5 w-5" aria-hidden />
+              </span>
+              <div className="space-y-1">
+                <h2 className="text-sm font-semibold text-foreground">
+                  Available in {languageHighlightLabels.length} languages
+                </h2>
+                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                  Every episode includes the same journal club discussion in each language. Choose
+                  the language from the selector on any podcast player.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2" aria-label="Available podcast languages">
+              {languageHighlightLabels.map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-foreground"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Podcast filters">
           <button
@@ -305,6 +338,12 @@ function PodcastAudioPlayer({
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [playbackRate, setPlaybackRate] = useState(1)
+  const [feedbackLanguage, setFeedbackLanguage] = useState<PodcastLanguage>('english')
+  const [contentQualityRating, setContentQualityRating] = useState<number | null>(null)
+  const [audioDialogRating, setAudioDialogRating] = useState<number | null>(null)
+  const [feedbackLoading, setFeedbackLoading] = useState(false)
+  const [feedbackError, setFeedbackError] = useState<string | null>(null)
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isActive && audioRef.current) {
@@ -366,6 +405,17 @@ function PodcastAudioPlayer({
     setError(null)
     setIsPlaying(false)
   }, [episode.id, language])
+
+  useEffect(() => {
+    setFeedbackLanguage(language)
+  }, [language])
+
+  useEffect(() => {
+    setContentQualityRating(null)
+    setAudioDialogRating(null)
+    setFeedbackError(null)
+    setFeedbackMessage(null)
+  }, [episode.id])
 
   async function ensureSignedUrl() {
     const isUrlFresh = signedUrl && urlExpiresAt && urlExpiresAt - Date.now() > 5000
@@ -466,6 +516,47 @@ function PodcastAudioPlayer({
       audio.currentTime = nextTime
     }
     setCurrentTime(nextTime)
+  }
+
+  async function submitFeedback(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!contentQualityRating || !audioDialogRating) {
+      setFeedbackError('Choose a rating for content and audio/dialog quality.')
+      setFeedbackMessage(null)
+      return
+    }
+
+    setFeedbackLoading(true)
+    setFeedbackError(null)
+    setFeedbackMessage(null)
+
+    try {
+      const response = await fetch('/api/journal-club-podcasts/feedback', {
+        body: JSON.stringify({
+          audioDialogRating,
+          contentQualityRating,
+          episodeId: episode.id,
+          language: feedbackLanguage,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      })
+      const payload = (await response.json().catch(() => ({}))) as { error?: string }
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Unable to save this rating.')
+      }
+
+      setFeedbackMessage('Thanks. Your rating was saved.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to save this rating.'
+      setFeedbackError(message)
+    } finally {
+      setFeedbackLoading(false)
+    }
   }
 
   return (
@@ -572,8 +663,119 @@ function PodcastAudioPlayer({
         <p className="text-xs leading-5 text-muted-foreground">
           Streaming only. Browser download controls are disabled.
         </p>
+
+        <form
+          onSubmit={(event) => void submitFeedback(event)}
+          className="space-y-3 border-t border-border/70 pt-4"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Rate this podcast</p>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Two quick ratings help improve the beta audio library.
+              </p>
+            </div>
+            <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
+              Language used
+              <select
+                value={feedbackLanguage}
+                onChange={(event) => setFeedbackLanguage(event.target.value as PodcastLanguage)}
+                className="h-9 rounded-md border border-border bg-background px-2 text-sm font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {Object.entries(languageLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <RatingStars
+            label="Content quality"
+            value={contentQualityRating}
+            onChange={(value) => setContentQualityRating(value)}
+          />
+          <RatingStars
+            label="Audio/dialog quality"
+            value={audioDialogRating}
+            onChange={(value) => setAudioDialogRating(value)}
+          />
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="submit"
+              size="sm"
+              variant="outline"
+              disabled={feedbackLoading || !contentQualityRating || !audioDialogRating}
+            >
+              {feedbackLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  Saving
+                </>
+              ) : (
+                'Submit rating'
+              )}
+            </Button>
+            {feedbackMessage ? (
+              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                {feedbackMessage}
+              </p>
+            ) : null}
+          </div>
+
+          {feedbackError ? (
+            <p className="text-xs leading-5 text-destructive">{feedbackError}</p>
+          ) : null}
+        </form>
       </div>
     </div>
+  )
+}
+
+function RatingStars({
+  label,
+  onChange,
+  value,
+}: {
+  label: string
+  onChange: (value: number) => void
+  value: number | null
+}) {
+  return (
+    <fieldset className="space-y-1.5">
+      <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </legend>
+      <div className="flex gap-1" aria-label={label}>
+        {ratingValues.map((rating) => {
+          const selected = value === rating
+          const filled = value !== null && rating <= value
+
+          return (
+            <button
+              key={rating}
+              type="button"
+              onClick={() => onChange(rating)}
+              aria-label={`${label}: ${rating} out of 5 stars`}
+              aria-pressed={selected}
+              className={cn(
+                'inline-flex h-8 w-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                selected
+                  ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-300'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
+            >
+              <Star
+                className={cn('h-4 w-4', filled ? 'fill-current' : 'fill-transparent')}
+                aria-hidden
+              />
+            </button>
+          )
+        })}
+      </div>
+    </fieldset>
   )
 }
 
