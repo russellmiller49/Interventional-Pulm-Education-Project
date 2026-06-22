@@ -1,0 +1,89 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we are discussing a procedural trial with very practical implications for pleural intervention: Wang and colleagues, published in CHEST in 2026, evaluating medical thoracoscopy with versus without prior artificial pneumothorax in patients with minimal or absent pleural effusion.
+
+Guest: This is a great paper for an IP audience because it targets one of those cases that always raises the temperature in the room a little bit: suspected pleural disease, very little fluid, limited pleural space, possible adhesions, and the question of how to safely get into the pleural cavity without creating unnecessary drama.
+
+Narrator: Right. Medical thoracoscopy is highly useful for undiagnosed pleural effusion, pleural nodularity, and pleural thickening, but it depends on having enough working space to place a trocar and inspect the pleura. Historically, guidelines have recommended creating an artificial pneumothorax first when there is minimal or absent effusion, with the idea that introducing air separates the lung from the chest wall and improves access.
+
+Guest: The problem is that this recommendation has always been a little more physiologically intuitive than trial-proven. And in the patient with minimal fluid, the reason the pleural space is difficult may be exactly the thing that makes artificial pneumothorax difficult: adhesions. If the lung is tethered, injecting air through a small catheter may not reliably create the space you want. It may just add another procedural step, and occasionally another complication.
+
+Narrator: So the research question here was straightforward: in adults with minimal or absent pleural effusion who require medical thoracoscopy, is a non-artificial pneumothorax approach noninferior to artificial pneumothorax for successful pleural access?
+
+Guest: This was a prospective, multicenter, randomized noninferiority trial across six hospitals in China, enrolling patients between July 2021 and November 2023. Eligible patients were adults with undiagnosed pleural disease, with either no pleural effusion or minimal effusion, defined as a maximum depth of three centimeters when seated, who were scheduled for medical thoracoscopy.
+
+Narrator: And they excluded patients with complete absence of pleural space from adhesions, as well as patients who could not tolerate the procedure because of things like hemodynamic instability, significant pulmonary hypertension, ongoing respiratory failure, bleeding risk, poor systemic condition, or local infection or tumor at the port site.
+
+Guest: That selection matters. This is not a trial of forcing thoracoscopy through a fused pleural symphysis. They were studying patients in whom medical thoracoscopy was considered feasible, but technically challenging because the pleural space was small or absent.
+
+Narrator: A major procedural element was thoracic ultrasound. The authors used a pleural adherence scoring system adapted from the SIMPLE trial framework. They assessed nine zones along the fifth through eighth interspaces, using dynamic ultrasound to classify pleural sliding as present, questionable, or absent. Lower scores suggested nonextensive adhesions, higher scores suggested extensive adhesions, and complete adhesions were excluded.
+
+Guest: That is important because the paper is not simply “skip artificial pneumothorax.” It is really “use careful ultrasound localization and then proceed without artificially inducing pneumothorax in appropriately selected patients.” That distinction is not cosmetic. It is the whole safety architecture of the approach.
+
+Narrator: Patients were randomized one-to-one to either artificial pneumothorax before thoracoscopy or no artificial pneumothorax. In the artificial pneumothorax group, the operators placed a catheter into the pleural space and injected filtered air slowly, up to a maximum of three hundred milliliters, confirming pneumothorax by radiography or thoracic ultrasound.
+
+Guest: In the non-AP group, they skipped that step. After ultrasound localization, they made a one-centimeter incision after local anesthesia, performed blunt dissection, inserted the trocar, and could bluntly dissect local adhesive bands around the incision site. Both groups then underwent semirigid thoracoscopy, with inspection of the parietal, diaphragmatic, and visceral pleura, and at least eight pleural biopsy specimens collected.
+
+Narrator: The primary endpoint was pleural access success, defined as successful entry into the pleural cavity allowing thoracoscopic inspection and fluid aspiration or biopsy. The noninferiority margin was minus ten percentage points, comparing non-AP minus AP.
+
+Guest: The trial randomized 204 participants, 102 to each group. One patient in the non-AP arm refused to continue, so the primary analysis included 101 patients in the non-AP group and 102 in the AP group. Baseline features were pretty balanced: mean age about 58 years, about 63 percent male, median pleural effusion depth around 15 millimeters, and most patients had undiagnosed pleural effusion rather than isolated nodularity or thickening.
+
+Narrator: Now the headline result: pleural access success was 95 percent in the non-AP group, 96 of 101 patients, compared with 78.4 percent in the AP group, 80 of 102 patients. The absolute difference was 16.6 percentage points favoring non-AP, with a one-sided lower 97.5 percent confidence bound of 7.6 percent. That easily cleared the noninferiority margin, with p less than 0.001 for noninferiority.
+
+Guest: And that result is striking because the study was framed as noninferiority, but the point estimate clearly favored non-AP. The practical interpretation is that in this study population, trying to induce artificial pneumothorax did not improve access. It actually appeared to create a failure point.
+
+Narrator: That is where the failed-procedure analysis is very helpful. In the non-AP group, all five failures were due to severe adhesions. In the AP group, 21 of 22 failures were essentially related to the artificial pneumothorax process itself.
+
+Guest: Exactly. That is the mechanistic clue. If the patient has adhesions, the catheter-based injection of air may not separate enough pleura to create a usable working cavity. In contrast, the non-AP approach allows the operator, after ultrasound-guided localization, to enter and bluntly dissect at the access site. It is a more direct solution to the local problem.
+
+Narrator: Secondary outcomes were also clinically relevant. Pathological confirmation among successful thoracoscopy cases was essentially identical: 76 percent in the non-AP group versus 75 percent in the AP group. So the better access rate did not come at the cost of worse diagnostic confirmation once access was achieved.
+
+Guest: And complications were similar overall: 14.9 percent in the non-AP group versus 17.6 percent in the AP group. The confidence interval crossed zero, so no statistically significant difference there. But the AP group had AP-related complications, including lung laceration, subcutaneous emphysema, pleural reaction, and one air embolism. Low frequency, but not nothing.
+
+Narrator: Operation time was meaningfully shorter without AP: median 32.4 minutes versus 39.9 minutes, an absolute difference of minus 7.5 minutes, with a confidence interval from minus 10.5 to minus 4.4 minutes, and p less than 0.001.
+
+Guest: That makes sense. Eliminating a procedural step should save time, but only if it does not create new problems downstream. Here it did not appear to. Air leak duration, drain removal time, chest pain category, and 90-day mortality were not significantly different. Ninety-day mortality was 1 percent in the non-AP group and 2 percent in the AP group, with deaths attributed to tumor progression or myocardial infarction, not a clear procedural signal.
+
+Narrator: The subgroup findings are interesting, although we should handle them cautiously. In patients with PAS of 20 or less, pleural access success was 100 percent with non-AP versus 81.4 percent with AP. In patients with PAS greater than 20, success was 66.7 percent versus 38.5 percent, again numerically favoring non-AP, but with small numbers. In patients with an anechoic area, success was 96.8 percent versus 90 percent.
+
+Guest: That is useful but underpowered, especially in the high-adhesion subgroup. The authors are careful about that. The signal is consistent, but the sample size is small where the clinical stakes are highest. It is also worth noting that PAS seemed to track thoracoscopic adhesions reasonably well. All patients with PAS above 20 who achieved thoracoscopic visualization had extensive adhesions, while most patients with PAS 20 or less had nonextensive adhesions.
+
+Narrator: Let’s put on the skeptic hat. What are the main limitations?
+
+Guest: First, the primary outcome is procedural access success, not a patient-centered endpoint. That is appropriate for a procedural trial, but it still means we are not directly measuring downstream outcomes like time to definitive oncologic treatment, need for repeat biopsy, patient satisfaction, or cost-effectiveness.
+
+Narrator: Second, pathological confirmation was analyzed among successful access cases. That is understandable, but from a strategy standpoint, failed access still matters. Fortunately, the primary endpoint captures the access failure problem directly.
+
+Guest: Third, this was single-masked. Patients could be masked, but operators obviously knew the technique. That can introduce bias in procedural decision-making, although the endpoint is fairly concrete: did they access the pleural space and obtain samples?
+
+Narrator: Fourth, generalizability depends heavily on ultrasound skill and procedural comfort with non-AP entry. The trial used standardized ultrasound assessment and trained operators. A center without strong thoracic ultrasound workflows should not interpret this as permission to be casual with pleural entry.
+
+Guest: Right. The lesson is not “do less imaging.” The lesson may be “do better imaging and skip a step that does not help.” There is a world of difference between those two.
+
+Narrator: Another nuance is that the AP technique itself may vary across centers. This study used a catheter-based technique with up to three hundred milliliters of filtered air. Some operators may use different approaches, different volumes, different confirmation strategies, or different thresholds for abandoning the attempt.
+
+Guest: True, although the trial reflects a plausible real-world AP workflow. And if AP success depends on highly specific technique refinements, that itself becomes part of the implementation burden. The comparator was clinically meaningful because artificial pneumothorax is exactly what guidelines and many proceduralists have historically considered in these low-fluid cases.
+
+Narrator: Clinically, how should an interventional pulmonologist think about this paper?
+
+Guest: For a patient with suspected pleural malignancy or unexplained pleural abnormality and minimal fluid, this study supports considering direct ultrasound-guided non-AP medical thoracoscopy rather than reflexively inducing artificial pneumothorax. The non-AP strategy may improve access and shorten the procedure, provided the operator can identify a safe entry site and manage adhesions with blunt dissection.
+
+Narrator: But it should not erase judgment. Patients with complete adhesions were excluded. Patients with respiratory failure, significant hemodynamic instability, major pulmonary hypertension, or bleeding risk were excluded. So the result applies to selected procedural candidates, not to everyone with a dry pleural space.
+
+Guest: Exactly. And there still needs to be a backup plan. If thoracoscopic access fails, the study protocol used CT-guided or ultrasound-guided biopsy, and in some AP failures, non-AP thoracoscopy became the salvage approach. In real workflow, that means the procedural plan should include imaging review, ultrasound mapping, discussion of alternative biopsy routes, and a clear threshold for stopping.
+
+Narrator: For implementation, the key pieces are preprocedural thoracic ultrasound, dynamic assessment of pleural sliding, recognition of loculated anechoic areas, comfort interpreting adhesions, and procedural discipline during blunt dissection. The equipment burden is not exotic, but the cognitive and technical burden is real.
+
+Guest: And there is a training implication. IP fellows and pleural proceduralists should not learn medical thoracoscopy as simply “find fluid and place a port.” Low-volume pleural disease requires a different mental model: ultrasound-based pleural mapping, anticipated adhesions, safe access planning, and readiness to adapt.
+
+Narrator: So what does this article add?
+
+Guest: It provides randomized evidence that, in selected patients with minimal or absent pleural effusion undergoing medical thoracoscopy, a non-artificial pneumothorax approach is at least noninferior to artificial pneumothorax for pleural access success, and in this trial had a higher access success rate and shorter procedure time, with comparable overall complications.
+
+Narrator: And what remains uncertain?
+
+Guest: How this performs across lower-volume centers, operators with less thoracic ultrasound experience, different AP techniques, more extreme adhesion burden, and broader patient populations. Also, whether the workflow advantage translates into lower cost, fewer repeat procedures, faster diagnosis, or improved patient-centered outcomes.
+
+Narrator: Final take-home: this paper challenges the reflex to induce artificial pneumothorax before medical thoracoscopy in minimal or absent pleural effusion. It does not argue for casual access. It argues for careful ultrasound-guided access, thoughtful patient selection, and recognition that artificial pneumothorax may be more obstacle than solution in adhesion-prone pleural spaces.
+
+Guest: Well said. For IP clinicians, the practical shift is not “AP is never useful.” It is more nuanced: do not assume AP is required, and do not assume it solves the problem. In the right patient, with the right ultrasound assessment and operator skill, going directly with a non-AP approach may be the cleaner procedural strategy.
+
+Narrator: This has been InterventionalPulm.com IP Journal Review. Thanks for listening.

@@ -1,0 +1,59 @@
+InterventionalPulm.com IP Journal Review: Dynamic Cell Imaging for ROPE During Robotic Bronchoscopy
+
+Estimated duration: 9 minutes
+
+Article type: Original research - single-center pilot diagnostic concordance study
+
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we are looking at Matus and colleagues, published in the Journal of Bronchology and Interventional Pulmonology in 2026. The article is titled "Proceduralist-Directed Rapid On-Site Pathologic Evaluation, or ROPE, Using Dynamic Cell Imaging: A Pilot Study of Peripheral Pulmonary Lesion Sampling Through Robotic Bronchoscopy."
+
+Guest: This paper lands in a very practical interventional pulmonology problem: localization is not the same thing as diagnostic sampling. Robotic bronchoscopy, radial EBUS, cone-beam CT, and better tools can increase confidence that the instrument is near the target. But the procedural question remains: does the specimen actually contain lesional tissue?
+
+Narrator: And the authors are not studying traditional ROSE in the cytology sense. They introduce ROPE, rapid on-site pathologic evaluation, using Dynamic Cell Imaging, or DCI. ROSE usually means a cytopathology workflow. ROPE here is proceduralist-directed assessment of tissue specimens, especially cryobiopsy and forceps material, at the point of care.
+
+Guest: The technology is the VanGogh system, formerly CelTivity in the study. It uses phase contrast microscopy with Michelson interferometry to assess live tissue and overlay metabolic activity onto morphology. The figure in the paper is helpful because this does not look like a conventional H and E read; it is more of a heat-map style display. The proceduralist classifies each specimen as lesional or nonlesional, and that is compared with the pathologist's later call of diagnostic or nondiagnostic.
+
+Narrator: The design was a single-center pilot study of consecutive patients undergoing routine robotic-assisted bronchoscopy with radial EBUS-guided sampling of peripheral pulmonary lesions from December 2022 to March 2023. Cone-beam CT was not integrated. Procedures were performed under general anesthesia through an endotracheal tube. Sampling followed a standard sequence: twenty-one gauge FNA, a one point one millimeter ultrathin cryoprobe, forceps biopsy, brushes, and BAL. DCI was applied to FNA, cryobiopsy, and forceps specimens.
+
+Guest: No additional research biopsies were taken, which is important. The authors used clinically obtained material. The key endpoint was concordance between the proceduralist's DCI interpretation and final pathology, at both the patient level and the biopsy level.
+
+Narrator: That endpoint is reasonable, but limited. It is reasonable because the immediate procedural question is often, "Do we have representative tissue?" But concordance is not diagnostic yield. The study was explicit that it was not designed to measure DCI's impact on yield, procedure time, repeat procedures, or molecular adequacy.
+
+Guest: Exactly. This is more foundational: does a proceduralist-directed DCI read track with pathology often enough to justify further study?
+
+Narrator: The cohort included fifty patients and 146 biopsies. The lesions were very relevant for an IP audience: median longest diameter was 12 millimeters, median distance from pleura was 7 millimeters, 92 percent were solid, 64 percent were in the upper lobes, and 76 percent had a negative bronchus sign. Radial EBUS was concentric in 68 percent and eccentric in 22 percent. So this was not just a cohort of large, bronchus-sign-positive nodules.
+
+Guest: The STARD diagram is straightforward: fifty patients assessed, fifty enrolled, 146 biopsies collected, all assessed by the proceduralist using DCI, all reviewed by pathology, and then analyzed at the patient and biopsy levels. Median procedure time was 35 minutes and 8 seconds, and the authors reported no deviations from standard workflow or block time constraints after adding DCI.
+
+Narrator: Now the main results. At the patient level, overall concordance between proceduralist DCI interpretation and pathologist diagnosis was 88 percent. At the biopsy level, across all 146 biopsies, concordance was 84 percent, with a 95 percent confidence interval from 77 to 90 percent.
+
+Guest: By tissue acquisition technique, concordance was 79 percent for FNA, with a 95 percent confidence interval from 67 to 90 percent; 88 percent for cryobiopsy, where a meaningful confidence interval could not be estimated because of sparse table counts; and 86 percent for forceps biopsy, with a 95 percent confidence interval from 74 to 94 percent. The signal is strongest for the histologic specimens, which fits the premise of ROPE.
+
+Narrator: Stratification by diagnosis is also useful. In malignant disease, biopsy-level concordance was 89 percent overall, and 93 percent when limited to cryobiopsy and forceps biopsy. In specific benign disease, concordance was lower: 76 percent overall, and 82 percent for cryobiopsy plus forceps biopsy. That matters because metabolically active inflammation, granulomatous disease, organizing pneumonia, fibrosis, or reactive tissue can make a binary lesional versus nonlesional interpretation messy.
+
+Guest: That is the devil's advocate point. DCI is not simply a malignancy detector. It is identifying lesional tissue based on metabolic and morphologic patterns. The authors note that cryobiopsy had high sensitivity and positive predictive value, but low specificity, with cryobiopsy specificity reported as 19 percent in the discussion. Larger, heterogeneous cryobiopsy specimens may include reactive or fibrotic tissue that looks metabolically active. In other words, "not normal alveolar parenchyma" is not the same as "cancer."
+
+Narrator: Safety deserves mention, though this study does not show that DCI changed complication risk. Four patients, or 8 percent, had pneumothorax, and all required intervention under the study site's protocol. Four patients, also 8 percent, had grade 2 bleeding by the Nashville Bleeding Scale. Those rates should be interpreted in the context of robotic bronchoscopy with multimodality sampling, including cryobiopsy, not as a DCI-specific safety signal.
+
+Guest: The follow-up of inconclusive cases is one of the more interesting parts. On index bronchoscopy, 44 percent of patients were diagnosed with malignancy, 32 percent had a specific benign diagnosis, and 14 patients were inconclusive. Four of those 14 were lost to follow-up. Of the remaining 10, four were later diagnosed with malignancy, and all four had at least one sample identified as lesional by DCI.
+
+Narrator: That is intriguing, but not definitive. It could mean DCI detected suspicious tissue that standard sectioning missed. The authors raise the possibility that DCI-lesional samples might prompt deeper sectioning or targeted pathology review. But it could also reflect false-positive metabolic activity, sampling heterogeneity, or the reality that pathology from small peripheral lesions is an imperfect reference standard when follow-up later clarifies the diagnosis.
+
+Guest: Methodologically, the strengths are the consecutive cohort, the real-world workflow, the inclusion of malignant and benign disease, and the fact that specimens still went through routine pathology. The reported lack of tissue integrity disruption is also important.
+
+Narrator: The limitations are substantial. This was small, single-center, and involved only two proceduralists. The sample size was not powered from formal calculations, and some confidence intervals could not be estimated. Proceduralists completed five learning cases before data collection, but that does not define a generalizable learning curve. There was no control arm, no randomization, no diagnostic yield endpoint, no standardized stopping rule based on DCI, and no cone-beam CT integration.
+
+Guest: Generalizability is the next issue. Would this perform similarly in lower-volume centers, with different proceduralists, different lesion morphology, different cryobiopsy protocols, or routine cone-beam CT? Would it add value in a center with strong cytology support, or mainly in settings where ROSE is unavailable? And practically, who runs the system, how is competency documented, what does it cost, and how should DCI information be communicated to pathology?
+
+Narrator: Clinically, the safest interpretation is that DCI-based ROPE is a promising adjunct for intraprocedural tissue confirmation, especially for cryobiopsy and forceps specimens. It may help answer the "lesion in the tool" question. But it does not replace final pathology, molecular adequacy assessment, staging discipline, or follow-up of nondiagnostic lesions.
+
+Guest: Future studies should be multicenter and prospective, with harder endpoints: diagnostic yield, number of biopsies, procedure time, repeat biopsy rates, molecular adequacy, complications, and cost. A prespecified algorithm would also help. For example, if DCI is lesional but pathology is nondiagnostic, should pathology perform deeper sections, additional stains, or targeted review of that specimen?
+
+Narrator: This also connects to bronchoscopic ablation. If bronchoscopic treatment of pulmonary malignancy becomes more common, target confirmation will need to be robust. Imaging can show tool position, but tissue-level confirmation may become a complementary checkpoint. The bar for ablation, though, is higher than the bar for biopsy confidence, because both false reassurance and false positives matter.
+
+Guest: The bottom line is measured optimism. This study does not prove improved diagnostic yield, and it should not be interpreted as practice-changing by itself. But the concordance signal, particularly for cryobiopsy and forceps biopsy, is strong enough to justify larger studies with clinically meaningful endpoints.
+
+Narrator: For InterventionalPulm.com IP Journal Review, the takeaway is that ROPE using Dynamic Cell Imaging may help bridge the gap between localization and representative tissue acquisition during robotic bronchoscopy. The next question is whether that added information changes outcomes that matter: diagnostic success, repeat procedures, workflow efficiency, pathology utilization, molecular adequacy, and patient care.
+
+Guest: Agreed. It is a promising concept, not yet a settled workflow. The best way to read this paper is as an invitation to study intraprocedural tissue confirmation more rigorously, not as a final answer.
+
+Narrator: That closes this episode of InterventionalPulm.com IP Journal Review. Thanks for listening, and we will see you in the next article discussion.

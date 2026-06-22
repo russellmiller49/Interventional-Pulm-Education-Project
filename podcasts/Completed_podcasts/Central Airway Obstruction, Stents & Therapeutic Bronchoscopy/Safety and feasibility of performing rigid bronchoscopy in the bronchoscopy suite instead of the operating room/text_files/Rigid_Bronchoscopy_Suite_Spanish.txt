@@ -1,0 +1,71 @@
+InterventionalPulm.com IP Journal Review: broncoscopia rígida en la sala de broncoscopia
+
+Duración estimada: aproximadamente nueve minutos.
+
+Tipo de artículo: investigación original. Cohorte retrospectiva de un solo centro.
+
+Narrador: Bienvenidos a InterventionalPulm.com IP Journal Review. En este episodio revisamos el artículo de Mahajan y colaboradores, publicado en Journal of Thoracic Disease en dos mil veinticinco, sobre la seguridad y factibilidad de realizar broncoscopia rígida en la sala de broncoscopia, en lugar del quirófano.
+
+Invitado: Esta es una pregunta muy práctica para neumología intervencionista. El artículo no pregunta si la broncoscopia rígida es útil. Eso ya lo sabemos. La pregunta es si, en pacientes apropiadamente seleccionados, la broncoscopia rígida puede trasladarse fuera del quirófano y realizarse en una sala de broncoscopia sin comprometer la seguridad.
+
+Narrador: Exacto. Históricamente, el quirófano ha sido el lugar predeterminado por el soporte anestésico, la capacidad de rescate de la vía aérea y la disponibilidad de equipos. Pero muchas salas avanzadas de broncoscopia ya cuentan con máquinas de anestesia, ventiladores jet, broncoscopios rígidos, telescopios, videolaringoscopios, carros de vía aérea difícil y torres de broncoscopia. Entonces la pregunta real es si la sala física es el principal elemento de seguridad, o si lo que realmente importa es el equipo humano, el equipamiento y el plan de rescate.
+
+Invitado: El diseño del estudio fue bastante directo. Fue un análisis retrospectivo, de un solo centro, durante cinco años, desde enero de dos mil diecinueve hasta marzo de dos mil veinticuatro. Durante ese período, el centro realizó seiscientas sesenta y siete broncoscopias rígidas en total. Trescientas setenta y dos se realizaron en la sala de broncoscopia para enfermedad compleja de la vía aérea en escenarios no emergentes.
+
+Narrador: Los criterios de selección son fundamentales para interpretar el estudio. Se excluyeron de la cohorte de sala de broncoscopia los pacientes con emergencias agudas de vía aérea, enfermedad coronaria inestable, hipertensión pulmonar significativa, o pacientes en la unidad de cuidados intensivos que requerían broncoscopia rígida. Esos casos se realizaron en el quirófano. Por lo tanto, este no es un estudio de broncoscopia rígida en todos los pacientes posibles. Es una cohorte seleccionada de pacientes no críticamente enfermos y hemodinámicamente estables.
+
+Invitado: Y eso no necesariamente es una debilidad. En realidad, refleja el flujo de trabajo previsto. Pero el titular no debería ser que la broncoscopia rígida siempre puede hacerse en la sala de broncoscopia. La conclusión más precisa es que algunos casos seleccionados pueden realizarse de forma segura en una sala, siempre que los operadores, los anestesiólogos y el equipamiento sean apropiados.
+
+Narrador: La cohorte se parece bastante a lo que uno esperaría en una práctica avanzada de vía aérea. La edad media fue de sesenta y un años, con una desviación estándar de trece. Aproximadamente el cincuenta y cuatro por ciento eran hombres y el cuarenta y seis por ciento mujeres. El treinta y siete por ciento eran pacientes hospitalizados y el sesenta y tres por ciento eran ambulatorios. La mayoría de los pacientes eran A S A estado físico tres, casi ochenta y cuatro por ciento, y el catorce por ciento eran A S A estado físico cuatro. No hubo pacientes A S A cinco.
+
+Invitado: Las indicaciones incluyeron obstrucción endobronquial maligna en doscientos sesenta y seis casos, estenosis de la vía aérea en ciento cincuenta, hemoptisis en treinta y dos, cuerpo extraño en setenta y ocho, y complicaciones de la vía aérea después de trasplante pulmonar en cincuenta y nueve. Las categorías de indicación parecen superponerse, lo cual es clínicamente plausible. Un paciente trasplantado también puede tener estenosis. Un paciente con obstrucción maligna puede requerir más de una intervención de vía aérea.
+
+Narrador: Y los procedimientos no fueron triviales. Se realizó aspiración terapéutica en doscientos treinta y siete casos, lavado broncoalveolar en doscientos nueve, dilatación con balón en ciento ochenta y tres, biopsia endobronquial en ciento cincuenta y siete, colocación de stent en ciento dieciséis, terapia térmica en ciento cuatro, E B U S guiado con T B N A en noventa y seis, y crioterapia o criodebulking en treinta y uno.
+
+Invitado: Esa mezcla de procedimientos es importante. Stenting, terapia térmica, dilatación, criodebulking y manejo de vía aérea postrasplante son exactamente los tipos de casos en los que muchos hospitales envían automáticamente al paciente al quirófano. Esta cohorte sugiere que la sala de broncoscopia se estaba usando para trabajo terapéutico real de vía aérea, no solo para casos diagnósticos de bajo riesgo bajo un broncoscopio rígido.
+
+Narrador: El desenlace primario fue seguridad, incluyendo complicaciones intraprocedimiento y deterioro clínico dentro de las primeras veinticuatro horas. La tasa global de complicaciones intraprocedimiento fue de dos de trescientos setenta y dos procedimientos, o cero coma cinco por ciento.
+
+Invitado: Las dos complicaciones intraprocedimiento fueron una hemorragia pulmonar y un episodio de isquemia cardíaca. La isquemia se diagnosticó por nuevas alteraciones de onda T en el electrocardiograma intraoperatorio. Ninguno de los dos eventos condujo a la muerte. Los autores no reportaron lesión de vía aérea, paro cardíaco ni muerte intraprocedimiento.
+
+Narrador: Dentro de las veinticuatro horas posteriores al procedimiento, siete casos, o uno coma nueve por ciento, se asociaron con un cambio en el estado clínico que requirió mayor soporte respiratorio. Seis de esos casos involucraron nueva insuficiencia respiratoria que requirió intubación, cánula nasal de alto flujo o ventilación bilevel. No hubo paro cardíaco posterior al procedimiento en esa ventana de veinticuatro horas.
+
+Invitado: Esos números son tranquilizadores, pero deben leerse con sobriedad. Dos complicaciones intraprocedimiento en trescientos setenta y dos casos es una tasa observada baja. Sin embargo, los eventos catastróficos raros son difíciles de estimar con precisión en una cohorte de este tamaño. Cero muertes es alentador. No demuestra que el riesgo real sea cero.
+
+Narrador: Desde el punto de vista metodológico, este es un estudio descriptivo de seguridad y factibilidad. No es una comparación aleatorizada entre quirófano y sala de broncoscopia. No hay grupo control contemporáneo en quirófano, no hay ajuste por selección de casos, y no hay diseño de no inferioridad. El estudio nos dice lo que ocurrió en una cohorte seleccionada tratada en sala de broncoscopia. No demuestra que la sala y el quirófano sean equivalentes para todos los pacientes o para todos los centros.
+
+Invitado: El sesgo de selección es intencional y clínicamente importante. Los pacientes de mayor riesgo fueron excluidos de la vía de sala. Las emergencias agudas de vía aérea, la enfermedad cardíaca inestable, la hipertensión pulmonar significativa y los casos de broncoscopia rígida en la unidad de cuidados intensivos se realizaron en el quirófano. Eso probablemente redujo la tasa esperada de complicaciones en la cohorte de sala.
+
+Narrador: El hecho de que sea un solo centro también importa. Los procedimientos fueron realizados por neumólogos intervencionistas con entrenamiento de fellowship, y en cada caso participaron anestesiólogos experimentados y familiarizados con enfermedad compleja de la vía aérea y ventilación jet. Esa experiencia no es un detalle menor. Es parte de la intervención.
+
+Invitado: Exactamente. Este artículo en realidad describe un sistema de atención, no solamente una ubicación física. Una sala de broncoscopia con el equipamiento correcto, pero sin operadores entrenados en rígida, sin comodidad anestésica con ventilación jet abierta y cerrada, sin respaldo para vía aérea difícil y sin rutas institucionales de rescate, es un ambiente diferente. La ubicación por sí sola no hace que el procedimiento sea seguro.
+
+Narrador: El desenlace postoperatorio también merece una mirada cuidadosa. El deterioro clínico dentro de veinticuatro horas puede reflejar complicaciones relacionadas con el procedimiento, pero también progresión de la enfermedad subyacente, efectos anestésicos, carga de secreciones, sangrado, edema de vía aérea o reserva fisiológica limítrofe basal. El artículo no adjudica esos eventos en detalle, por lo que es difícil traducirlos en un algoritmo granular de selección de pacientes.
+
+Invitado: Un estudio futuro podría ayudar estratificando el deterioro según indicación, tipo de intervención, estrategia de ventilación, requerimiento basal de oxígeno, extensión del debulking, colocación de stent, y estatus hospitalizado versus ambulatorio. Eso movería el campo desde “esto parece factible” hacia “estos son los pacientes que más probablemente se benefician de una vía basada en sala de broncoscopia”.
+
+Narrador: El argumento de recursos es otra parte importante del artículo. Los autores reportan una inversión en equipamiento de aproximadamente ciento sesenta mil dólares para cámaras V A T S, telescopios, torres de broncoscopia, broncoscopios rígidos y un ventilador jet. También reportan una reducción de costos directos de aproximadamente dos mil dólares por caso cuando la broncoscopia rígida se realizó en la sala de broncoscopia. A ese ritmo, ochenta casos compensarían la inversión de capital.
+
+Invitado: Eso es convincente, pero la matemática financiera exacta es local. El costo por minuto, los cargos de personal, el tiempo de recambio, los modelos de anestesia, los modelos de enfermería y la utilización de salas varían mucho entre hospitales. El mensaje transferible no es la cifra exacta en dólares. Es que trasladar casos seleccionados de broncoscopia rígida a una sala apropiadamente equipada puede mejorar el acceso y reducir la carga de recursos.
+
+Narrador: Hagamos de abogado del diablo. ¿Estos resultados se mantendrían en un centro de menor volumen o en un programa de broncoscopia rígida en desarrollo?
+
+Invitado: Eso sigue siendo incierto. Este estudio apoya el modelo de un programa maduro. No define un volumen anual mínimo, umbrales de credencialización, requisitos de competencia anestésica, rutas de conversión de emergencia ni una lista formal de equipamiento. Un programa nuevo debería ver este estudio como apoyo para construir una vía deliberada basada en sala de broncoscopia, no como permiso para simplemente sacar los casos del quirófano.
+
+Narrador: La pregunta inversa también es válida. ¿Hay centros que están usando demasiado el quirófano para casos estables y no emergentes que podrían hacerse de forma segura en una sala de broncoscopia de alto funcionamiento?
+
+Invitado: Probablemente sí. Algunos casos seleccionados de obstrucción maligna, estenosis de vía aérea, revisión planificada de stent, enfermedad anastomótica postrasplante o cuerpo extraño pueden ser candidatos razonables para la sala cuando la fisiología es estable y el plan de respaldo es creíble. Pero el umbral debería seguir siendo conservador para hemoptisis masiva, enfermedad cardiopulmonar inestable, vía aérea anticipada como imposible, hipertensión pulmonar severa o cualquier caso en el que la capacidad quirúrgica inmediata o un rescate extraordinario pueda determinar la supervivencia.
+
+Narrador: Entonces la traducción práctica no es: sala de broncoscopia buena, quirófano malo. Es más matizada. ¿Qué pacientes, qué procedimientos, qué operadores, qué anestesiólogos, qué equipamiento y qué plan de rescate?
+
+Invitado: Exactamente. Una vía defendible incluiría criterios explícitos de exclusión, revisión preprocedimiento por anestesia, equipamiento estandarizado, capacidad de ventilación jet, respaldo para vía aérea difícil, escalamiento claro al quirófano y criterios de monitoreo postprocedimiento. El artículo proporciona datos de factibilidad, pero el gobierno clínico local tiene que operacionalizarlo.
+
+Narrador: En resumen: en esta cohorte seleccionada de trescientas setenta y dos broncoscopias rígidas no emergentes realizadas en una sala de broncoscopia, la tasa observada de complicaciones intraprocedimiento fue cero coma cinco por ciento, sin lesión de vía aérea, paro cardíaco ni muerte. Siete procedimientos, o uno coma nueve por ciento, fueron seguidos por mayor soporte respiratorio dentro de veinticuatro horas.
+
+Invitado: Las limitaciones son tan importantes como los resultados. Fue un estudio retrospectivo, de un solo centro, altamente seleccionado, descriptivo y no comparativo. No debería justificar una migración amplia de toda broncoscopia rígida fuera del quirófano. Pero sí apoya la idea de que, para pacientes seleccionados, una sala avanzada de broncoscopia puede ser un ambiente seguro y consciente del uso de recursos cuando el programa se construye deliberadamente.
+
+Narrador: Para neumólogos intervencionistas y líderes de programa, el mensaje principal es tratar la ubicación como un componente de un sistema de seguridad. La selección de pacientes, la experiencia procedural, la capacidad anestésica, el equipamiento y el plan de rescate son las variables reales. La etiqueta de la sala importa menos que la presencia confiable de esos elementos.
+
+Invitado: Este es un artículo útil para conversaciones con anestesia, liderazgo perioperatorio, administración de salas de procedimientos y finanzas hospitalarias. Proporciona datos para una decisión operativa común, pero todavía deja mucho espacio para el juicio clínico cuidadoso.
+
+Narrador: Con esto cerramos este episodio de InterventionalPulm.com IP Journal Review. La cita completa del artículo puede incluirse por separado en las notas del episodio. Gracias por escuchar, y volveremos con otra revisión de la literatura en neumología intervencionista.

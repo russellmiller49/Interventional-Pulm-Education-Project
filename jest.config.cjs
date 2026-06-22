@@ -10,7 +10,7 @@ const config = createJestConfig({
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  modulePathIgnorePatterns: ['<rootDir>/.deploy_push/'],
+  modulePathIgnorePatterns: ['<rootDir>/.deploy_push/', '<rootDir>/.next/'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
 })

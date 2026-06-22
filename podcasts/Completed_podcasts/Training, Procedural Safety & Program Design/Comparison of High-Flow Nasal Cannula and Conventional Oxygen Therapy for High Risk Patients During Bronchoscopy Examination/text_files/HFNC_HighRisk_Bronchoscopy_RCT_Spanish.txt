@@ -1,0 +1,63 @@
+InterventionalPulm.com IP Journal Review: Cánula nasal de alto flujo durante broncoscopia de alto riesgo
+
+Duración estimada: 8 a 9 minutos
+
+Tipo de artículo: Investigación original, ensayo controlado aleatorizado multicéntrico
+
+Narrador: Bienvenidos a InterventionalPulm.com IP Journal Review, donde analizamos un artículo a la vez desde la perspectiva de la práctica en neumología intervencionista.
+
+Invitado: En este episodio revisamos el estudio de Qin y colegas, publicado en Annals of the American Thoracic Society en 2025. El estudio compara la cánula nasal de alto flujo con la oxigenoterapia convencional durante broncoscopia nasal en pacientes considerados de alto riesgo para desaturación.
+
+Narrador: La pregunta clínica es inmediatamente relevante. La hipoxemia durante la broncoscopia es frecuente, especialmente cuando convergen sedación, obstrucción de la vía aérea, aspiración, sangrado y trabajo terapéutico prolongado. La cánula nasal de alto flujo se usa cada vez más, pero utilizarla para cada broncoscopia tiene implicaciones de costo y de flujo de trabajo. La pregunta útil no es simplemente si el alto flujo funciona. Es si su uso dirigido en una población verdaderamente de alto riesgo produce un beneficio procedimental significativo.
+
+Invitado: Exacto. Este fue un ensayo aleatorizado realizado en tres hospitales de China. Los investigadores incluyeron adultos programados para broncoscopia que tenían al menos un factor de riesgo preespecificado: una relación PaO2 sobre FiO2 menor de 300, hipercapnia con enfermedad pulmonar crónica, estrechamiento traqueal identificado radiográficamente, o un índice de masa corporal mayor de 30.
+
+Narrador: Pero hay que mirar con cuidado a la población incluida. Aproximadamente 85 por ciento tenía estenosis de la vía aérea, y cerca de dos tercios se sometieron a broncoscopia terapéutica. Por lo tanto, no fue una cohorte típica de broncoscopia diagnóstica ambulatoria de bajo riesgo, y tampoco fue principalmente un estudio de obesidad o de enfermedad parenquimatosa difusa. Fue predominantemente un estudio de estenosis de la vía aérea y broncoscopia terapéutica.
+
+Invitado: Los investigadores también excluyeron varios grupos en el extremo más alto del riesgo. Se excluyeron pacientes que requerían anestesia general o broncoscopia rígida, pacientes con estrechamiento de la vía aérea central mayor de 80 por ciento, pacientes que necesitaban más de 3 litros por minuto de oxígeno basal, y pacientes críticamente enfermos considerados no adecuados para el protocolo. Eso significa que el estudio aborda pacientes de alto riesgo con respiración espontánea, pero no a los pacientes más graves ni a los casos de obstrucción central más severa.
+
+Narrador: En total, 148 pacientes fueron aleatorizados. Seis se retiraron, dejando 72 en el grupo de alto flujo y 70 en el grupo de oxígeno convencional para el análisis por protocolo.
+
+Invitado: La cánula nasal de alto flujo se inició a 50 litros por minuto y podía aumentarse a 60, con una fracción inspirada de oxígeno de 0.45 y una temperatura de 37 grados Celsius. El oxígeno convencional se administró mediante una cánula nasal estándar a 6 litros por minuto. La broncoscopia se realizó por vía nasal bajo sedación, con ventilación espontánea y un nivel objetivo de sedación moderada a profunda.
+
+Narrador: El desenlace primario fue la desaturación definida por protocolo, es decir, una saturación de oxígeno por debajo de 90 por ciento durante más de 10 segundos. Esto ocurrió en 34.7 por ciento de los pacientes que recibieron alto flujo, comparado con 61.4 por ciento de los que recibieron oxígeno convencional. El valor de P reportado fue 0.016.
+
+Invitado: En términos absolutos, eso representa una reducción de alrededor de 27 puntos porcentuales. Usando las tasas observadas en el análisis por protocolo, el número necesario a tratar es aproximadamente cuatro para prevenir un episodio de desaturación definida por protocolo durante un procedimiento. Es un efecto importante, aunque el desenlace es un evento fisiológico breve más que una complicación mayor centrada en el paciente.
+
+Narrador: Los desenlaces secundarios fueron consistentes en la misma dirección. Las maniobras de tracción mandibular se requirieron en 33.3 por ciento del grupo de alto flujo versus 61.4 por ciento del grupo de oxígeno convencional. La interrupción de la broncoscopia ocurrió en 26.4 por ciento versus 58.6 por ciento. La escalada de la oxigenoterapia ocurrió en 30.6 por ciento versus 57.1 por ciento.
+
+Invitado: El nadir de saturación de oxígeno también fue mejor con alto flujo. La mediana de la saturación más baja fue 94 por ciento, comparada con 87.5 por ciento usando oxígeno convencional. El pico de dióxido de carbono transcutáneo fue modestamente menor: 64.6 versus 68.3 milímetros de mercurio.
+
+Narrador: Ese hallazgo de dióxido de carbono es interesante, pero no debe exagerarse. Una diferencia de menos de 4 milímetros de mercurio en el pico de dióxido de carbono transcutáneo puede reflejar mejor lavado del espacio muerto o menor trabajo respiratorio, pero su importancia clínica es incierta. La monitorización transcutánea también tiene retraso en la medición y no ofrece la misma información que gases arteriales seriados.
+
+Invitado: La vía de rescate es una de las partes más prácticas del artículo. Cuando ocurría desaturación, el equipo primero utilizaba tracción mandibular e interrupción de la broncoscopia. Si la hipoxemia persistía, los pacientes con oxígeno convencional se cambiaban a alto flujo, y en los pacientes que ya recibían alto flujo se aumentaba la fracción inspirada de oxígeno hasta 1.0. La retirada del broncoscopio y las maniobras avanzadas de vía aérea seguían si era necesario.
+
+Narrador: Las maniobras manuales solas corrigieron la oxigenación en solo tres pacientes de cada grupo. Entre los 40 pacientes del grupo de oxígeno convencional que requirieron escalada, cambiar a alto flujo a 60 litros por minuto y una fracción inspirada de oxígeno de 0.45 corrigió la oxigenación en 14. Aumentar la fracción inspirada de oxígeno a 1.0 ayudó a otros 15. Esto sugiere que tanto el flujo como la concentración de oxígeno contribuyeron, y que el alto flujo funcionó como una estrategia de rescate efectiva para muchos pacientes después de que el oxígeno de bajo flujo falló.
+
+Invitado: Aun así, no todos los desenlaces favorecieron al alto flujo. No hubo diferencia estadísticamente significativa en el tiempo hasta la primera desaturación, la duración de la desaturación, la duración total de la broncoscopia, la retirada del broncoscopio, ni los eventos adversos generales. La retirada del broncoscopio fue necesaria en 9.7 por ciento del grupo de alto flujo y 15.7 por ciento del grupo de oxígeno convencional. Ningún paciente requirió intubación, y las complicaciones graves fueron poco frecuentes.
+
+Narrador: Entonces, el beneficio fue principalmente procedimental: menos episodios de hipoxemia, menos interrupciones, menos maniobras de tracción mandibular y menos escalada terapéutica. Eso es clínicamente significativo en trabajo complejo de vía aérea, pero no es lo mismo que demostrar menos ingresos a la unidad de cuidados intensivos, menos intubaciones no planificadas, hospitalización más corta o mejor supervivencia.
+
+Invitado: Desde el punto de vista metodológico, la aleatorización y un algoritmo de rescate estandarizado son fortalezas. La monitorización continua de la saturación de oxígeno y del dióxido de carbono transcutáneo también ofrece una imagen fisiológica más granular que las mediciones intermitentes.
+
+Narrador: Hay limitaciones importantes. Primero, fue un ensayo no cegado. El desenlace primario de saturación de oxígeno es objetivo, pero las decisiones de interrumpir la broncoscopia, realizar tracción mandibular o escalar la terapia pudieron verse influidas por el conocimiento de la asignación del tratamiento.
+
+Invitado: Segundo, el desenlace de escalada no fue completamente simétrico. En el brazo de oxígeno convencional, la escalada significaba cambiar a alto flujo. En el brazo de alto flujo, la escalada generalmente significaba aumentar la fracción inspirada de oxígeno. Esa estructura del protocolo hace que la comparación de escalada sea menos limpia que la comparación del desenlace primario de desaturación.
+
+Narrador: Tercero, los autores describen la fracción inspirada de oxígeno inicial como aproximadamente comparable entre grupos, pero la cánula nasal convencional no entrega una fracción inspirada de oxígeno fija. La fracción real inspirada varía con la ventilación minuto, el flujo inspiratorio, la apertura de la boca y el ajuste de la cánula. Por lo tanto, el estudio no aísla perfectamente el efecto independiente del flujo frente al efecto de la concentración de oxígeno entregada.
+
+Invitado: Cuarto, el análisis primario fue por protocolo y no por intención de tratar. Solo seis pacientes se retiraron, así que esto probablemente no elimina la señal, pero un análisis por intención de tratar habría preservado mejor la protección de la aleatorización en un ensayo de superioridad.
+
+Narrador: Y la generalización es limitada. El estudio se aplica principalmente a broncoscopia flexible nasal bajo sedación en pacientes con estenosis de la vía aérea, muchos de ellos sometidos a procedimientos terapéuticos. No responde directamente qué hacer durante broncoscopia rígida, anestesia general, broncoscopia oral, EBUS de rutina, broncoscopia robótica, insuficiencia respiratoria hipoxémica severa o estenosis crítica de la vía aérea central.
+
+Invitado: Tampoco hay análisis económico. El artículo apoya más el uso dirigido que el uso universal, pero no establece el umbral en el cual la reducción de interrupciones y maniobras de rescate compensa los costos de equipo y personal asociados al alto flujo.
+
+Narrador: Desde una perspectiva práctica, la aplicación más defendible es selectiva. Para un paciente con respiración espontánea sometido a broncoscopia flexible nasal prolongada, especialmente trabajo terapéutico en el contexto de estenosis de la vía aérea, iniciar cánula nasal de alto flujo a 50 a 60 litros por minuto con una fracción inspirada de oxígeno moderada parece razonable cuando el objetivo es reducir la desaturación breve y la interrupción del procedimiento.
+
+Invitado: Pero el alto flujo no es un plan de vía aérea. La estenosis severa, el sangrado activo, el colapso dinámico o el deterioro ventilatorio rápido siguen requiriendo acceso inmediato a retirada del broncoscopio, dispositivos de vía aérea, broncoscopia rígida y rescate definitivo de la vía aérea. Un mejor dispositivo de oxígeno no debe crear falsa seguridad.
+
+Narrador: El mensaje final es uso dirigido, no universal. Este ensayo aleatorizado ofrece evidencia creíble de que la cánula nasal de alto flujo reduce la hipoxemia definida por protocolo y mejora la continuidad procedimental durante broncoscopia nasal de alto riesgo, predominantemente en pacientes con estenosis de la vía aérea. La magnitud del beneficio fisiológico es significativa, pero el estudio no demuestra menos complicaciones mayores, y su aplicabilidad fuera de este contexto procedimental específico sigue siendo incierta.
+
+Invitado: Para los neumólogos intervencionistas, el artículo respalda el alto flujo como estrategia planificada de oxigenación para casos seleccionados de broncoscopia flexible compleja, y como un paso de rescate efectivo cuando el oxígeno nasal convencional es insuficiente. No elimina la necesidad de selección cuidadosa del paciente, planificación anestésica ni una estrategia de respaldo para una vía aérea definitiva.
+
+Narrador: Esto fue InterventionalPulm.com IP Journal Review. Gracias por escuchar.

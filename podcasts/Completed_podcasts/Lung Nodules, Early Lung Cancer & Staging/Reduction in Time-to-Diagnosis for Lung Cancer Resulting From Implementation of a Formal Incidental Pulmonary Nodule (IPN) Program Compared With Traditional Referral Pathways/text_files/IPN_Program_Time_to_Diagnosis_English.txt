@@ -1,0 +1,61 @@
+InterventionalPulm.com IP Journal Review: Formal Incidental Pulmonary Nodule Programs and Time to Lung Cancer Diagnosis
+Estimated duration: approximately 9 minutes
+Article type: Original research - retrospective single-center cohort and quality improvement analysis
+
+Narrator: Welcome to InterventionalPulm.com IP Journal Review, a focused discussion of clinically relevant literature for interventional pulmonology. In this episode, we are looking at Mahajan and colleagues, published in the Journal of Bronchology and Interventional Pulmonology in 2026. The question is practical: does a formal incidental pulmonary nodule program shorten the time from first detection of an incidental nodule to diagnosis of lung cancer?
+
+Guest: Right, and this is not primarily a bronchoscopy yield paper. It is asking whether the system around the nodule matters. For interventional pulmonology, that is a major issue, because delayed referral is often the hidden pre-procedure variable that never appears in a device outcomes table.
+
+Narrator: The study focused on incidental pulmonary nodules, meaning nodules found on imaging obtained for reasons unrelated to cancer diagnosis. The formal I P N program used specialized radiology-based software, including Medtronic LungGPS and an institutionally developed E H R identification tool. These systems used natural language processing to flag reports. Lung navigators then reviewed the reports, confirmed suspicious nodules, contacted patients, and expedited evaluation in a dedicated I P N clinic.
+
+Guest: The comparison group was patients with lung cancer who also first presented with an incidental nodule, but who arrived through traditional referral pathways. They reached the nodule clinic through the usual chain of referrals, without software detection or navigator-facilitated care.
+
+Narrator: The design was retrospective and single center. The formal program cohort was evaluated over five years, from May 2019 to May 2024. Patients with known primary lung cancer, known metastatic disease to the lung, or nodules found through lung cancer screening were excluded. The primary endpoint was time-to-diagnosis, defined as the interval from the initial CT scan identifying the nodule to the diagnostic procedure establishing lung cancer.
+
+Guest: That endpoint matters, but it should be interpreted precisely. It is not time to treatment, not time to definitive surgery or radiation, and not survival. Still, for an I P audience, it is actionable because it sits at the intersection of radiology reporting, navigation, clinic access, scheduling, and staging.
+
+Narrator: In the main results and flow diagram, the formal program identified nine thousand three hundred three patients with incidental pulmonary nodules. Ninety-four had biopsy-proven malignancies. Eleven were non-primary lung cancers metastatic to the lung. Eighty-three cancers originated from the lung, including four typical carcinoids and seventy-nine primary non-small cell lung cancers. Those seventy-nine N S C L C patients formed the formal program cohort for the main comparison.
+
+Guest: One housekeeping point: the abstract and main results use slightly different denominators for the cancer count and primary lung cancer count. The main text and figure support the seventy-nine-patient N S C L C cohort used in the comparison, so that is the denominator to keep in mind.
+
+Narrator: Among those seventy-nine patients, twenty-one, or twenty-seven percent, had stage 1 or stage 2 disease and underwent curative surgical resection. Fifty-eight, or seventy-three percent, had stage 3 or stage 4 disease and were referred for medical therapy. The traditional referral cohort was constructed with the same number of early-stage surgical patients and advanced-stage medical therapy patients, but it was not matched by age, sex, race, smoking status, or comorbidities.
+
+Guest: The diagnostic pathways were mixed: many patients had robotic or non-robotic navigational bronchoscopy with concurrent EBUS, while others underwent CT-guided or surgical biopsy. This is not a platform-specific paper. It is a workflow paper.
+
+Narrator: Now to the headline result. The average time from incidental nodule identification to lung cancer diagnosis was forty-three days in the formal program cohort, compared with one hundred seventy-seven days in the traditional referral cohort. That is a one hundred thirty-four day difference.
+
+Guest: And the key is where the delay occurred. In the formal program group, the average time from nodule identification to first I P N clinic visit was twenty days, and from clinic visit to diagnostic biopsy was twenty-three days. In the traditional pathway, the time from nodule identification to first I P N clinic visit was one hundred fifty-nine days, while the time from clinic visit to biopsy was eighteen days.
+
+Narrator: So the procedure suite was not the main source of delay. Once patients reached the nodule clinic, both pathways moved to biopsy in a similar range. The major difference was upstream: detection, notification, ownership, and routing.
+
+Guest: Exactly. The formal program did not magically make bronchoscopy faster. It made the patient visible to the right team earlier. The figure on page 4 captures this nicely: the traditional pathway runs from incidental nodule to primary care physician, to oncologist, to thoracic surgeon, to interventional pulmonologist, and then to pathologic diagnosis, over one hundred seventy-seven days. The formal pathway runs from incidental nodule, to lung navigator, to interventional pulmonologist, to pathologic diagnosis, over forty-three days. It is almost too honest a picture of the referral chain.
+
+Narrator: The study has real strengths. It examines an outcome that clinicians and patients understand, uses real-world patients, and routes both groups through the same health system and tumor board. The result is also clinically intuitive: a nodule safety-net program reduces silent loss to follow-up and unnecessary referral loops.
+
+Guest: But the devil's advocate side matters. This is a single-center retrospective analysis. The traditional referral cohort was not simply a contemporaneous usual-care control group. It spanned seven years, including five years before program implementation and two years overlapping with the formal program. Those patients also had imaging from outpatient centers or acute care facilities outside the formal network. So the comparator reflects a different referral ecosystem, not just absence of a navigator.
+
+Narrator: And because the traditional referral group was matched by equal numbers of early-stage surgical patients and advanced-stage medical therapy patients, the study is not designed to prove a stage shift against that comparator. The authors note that twenty-seven percent of formal-program lung cancers underwent curative surgery, compared with a national figure cited as sixteen percent early-stage diagnosis. That is interesting, but it is not the same as showing stage migration in a controlled before-and-after design.
+
+Guest: Right. The strongest evidence here is time-to-diagnosis, not survival or stage migration. Earlier diagnosis may improve outcomes, but this study did not measure treatment initiation, disease progression during delay, recurrence, lung-cancer-specific survival, overall survival, or cost-effectiveness. Lead-time bias is always lurking when earlier detection is linked to outcome claims.
+
+Narrator: Generalizability is another issue. This was a center with interventional pulmonology infrastructure, navigational bronchoscopy, EBUS staging, thoracic surgery, oncology, radiation oncology, and tumor board review. The workflow may be harder to reproduce in lower-volume systems or fragmented referral networks where radiology, primary care, pulmonology, and procedural services do not share an E H R.
+
+Guest: That said, the core intervention is not only technology. Yes, the paper describes software, natural language processing, and lung navigators. But the conceptual intervention is ownership. Someone has to see the nodule, risk-stratify it, contact the patient, and route the case to a team that can biopsy and stage efficiently. For some systems, that may require commercial software. For others, structured radiology language, an E H R search tool, a nodule registry, and a part-time navigator may be the first step.
+
+Narrator: Implementation is not trivial. The authors note that I P N software may require capital investment exceeding one hundred thousand dollars, plus time-consuming integration. Navigators are essential, and once a program identifies more high-risk nodules, the downstream system has to absorb more clinic visits, imaging, biopsies, staging, and tumor board discussions.
+
+Guest: That is where the article becomes very relevant for I P program planning. A nodule program without protected procedural capacity may simply move the bottleneck from referral to biopsy scheduling. In the formal program, the clinic-to-biopsy interval was still twenty-three days. That is far better than waiting five months just to enter clinic, but procedure access still matters.
+
+Narrator: The staging implications are important too. Traditional pathways may produce serial procedures: first a CT-guided biopsy, then a separate EBUS if mediastinal staging is needed. Direct referral to a clinician who can think through diagnosis and staging together can reduce that fragmentation. In this study, many bronchoscopic cases included concurrent EBUS, exactly the combined diagnostic-staging workflow I P teams are built to provide.
+
+Guest: The practical takeaway is not that every incidental nodule should go straight to bronchoscopy. The practical takeaway is that high-risk incidental nodules need a closed-loop system. That system should identify the nodule, confirm that it is actionable, risk-stratify the patient, align imaging and staging, and route the patient to the right diagnostic pathway.
+
+Narrator: So where does this leave us? Mahajan and colleagues provide persuasive single-center evidence that a formal incidental pulmonary nodule program can dramatically shorten time-to-diagnosis for lung cancer compared with traditional referral pathways. The most compelling number is the one hundred thirty-four day reduction, and the most compelling mechanism is the reduction in time before the first nodule clinic visit.
+
+Guest: But the article should not be read as definitive proof of improved survival, definitive proof of stage shift, or a mandate that every hospital purchase the same software. It is better read as a strong operational signal: if no one owns incidental nodules, the patient may spend months moving through the system before anyone reaches the diagnostic question. If a navigator-supported program owns that transition, diagnosis can happen much earlier.
+
+Narrator: For interventional pulmonologists, the paper pushes the conversation beyond device selection and into system design. The procedure matters, but the patient has to arrive first. And in lung cancer, one hundred thirty-four days is not an administrative footnote. It is a clinically meaningful interval that deserves attention.
+
+Guest: Agreed. The next studies need to ask whether these programs reduce time to treatment, improve stage distribution in a more controlled design, demonstrate cost-effectiveness, and ultimately affect lung-cancer-specific outcomes. But as a workflow study, this paper gives I P programs a concrete benchmark and a strong argument for investing in nodule safety nets.
+
+Narrator: That closes this episode of InterventionalPulm.com IP Journal Review. The bottom line: formal incidental pulmonary nodule programs may not change the tool, but they can change whether the patient reaches the right pathway in time. Thanks for listening.

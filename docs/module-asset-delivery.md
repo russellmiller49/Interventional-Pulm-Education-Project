@@ -73,6 +73,41 @@ Keys. Do not prefix it with `NEXT_PUBLIC_`.
 The script creates `module-assets` if it does not exist and uploads the heavy asset prefixes under
 `v1/`.
 
+Scope the upload to a single module with `--only=<public-relative prefix>` (repeatable or
+comma-separated) so you do not re-push every prefix:
+
+```bash
+# Push just the airway-anatomy module, leaving the other ~330 files in Storage untouched.
+npm run upload:module-assets -- --upsert --only=airway-anatomy
+```
+
+## Shipping a new in-progress / admin-only module
+
+`scripts/prepare-standalone.mjs` (`remoteAssetPrefixes`) trims these heavy prefixes out of the
+Railway standalone bundle, so a new module's assets **do not exist on the deployed server**. If you
+forget to upload them, requests fail in production even though everything works in local dev:
+
+- a same-origin static/raw path falls through to the `MODULE_ASSET_ORIGIN` rewrite and Supabase
+  Storage returns **HTTP 400** (`Object not found`) for the missing object, and
+- a `/api/admin/.../[...path]` route that does `readFile(process.cwd()/public/...)` returns **404**,
+  because the file was never copied into `.next/standalone/public`.
+
+Checklist when adding a module whose assets live under `public/`:
+
+1. Add its prefix to `remoteAssetPrefixes` in `scripts/prepare-standalone.mjs` (keeps the deploy
+   small) **and** to `uploadPrefixes` in `scripts/upload-module-assets-to-supabase.mjs`.
+2. Add a `MODULE_ASSET_ORIGIN` fallback rewrite for the prefix in `next.config.mjs`.
+3. Upload the bytes: `npm run upload:module-assets -- --upsert --only=<prefix>`.
+4. Verify: `curl -s -o /dev/null -w "%{http_code}\n" "$MODULE_ASSET_ORIGIN/<prefix>/<a file>"` is
+   `200` (a missing object shows as `400`).
+
+For an **admin-only** module, keep its asset requests on the **raw same-origin path** (e.g.
+`/airway-anatomy/*`) so middleware (`src/proxy.ts` + the `getRequiredEntitlement` /
+`isDevOnly*` rules in `src/lib/site-auth/access.ts`) enforces the `site_admin` gate and the fallback
+rewrite then proxies the bytes from Storage. Do **not** route admin assets through
+`resolveModuleAssetPath` (it prefixes `NEXT_PUBLIC_MODULE_ASSET_BASE_URL` and escapes the gate) or a
+local-file API route (the files are trimmed from the standalone output).
+
 ## Hostinger Nginx
 
 Use `docs/hostinger-module-assets.nginx.conf` as a production snippet. It creates a same-origin

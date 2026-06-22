@@ -1,0 +1,108 @@
+Narrator:
+Welcome to InterventionalPulm.com IP Journal Review, where we take a single article relevant to interventional pulmonology and work through what it actually adds, where the data are strong, and where the uncertainty remains.
+
+Today we’re discussing Karcıoğlu and colleagues, published in Respirology in 2025, titled “Biodegradable Stents—A New Option for Benign Central Airway Stenosis.” This is a retrospective experience from a tertiary interventional pneumology center looking at biodegradable airway stents for benign central airway stenosis.
+
+Guest:
+And this is a good IP topic because benign central airway stenosis is exactly where airway stenting becomes both useful and frustrating. These patients can be very symptomatic, many are not surgical candidates, and conventional stents come with real tradeoffs: silicone stents are removable but migrate, obstruct with mucus, and can granulate; metallic stents are generally avoided in benign disease because removal can be difficult and complications can be substantial.
+
+Narrator:
+Right. So the clinical question here is not, “Are biodegradable stents better than silicone or metal stents in a randomized trial?” This paper does not answer that. The more realistic question is: in a complex benign stenosis population, often after prior stenting or failed bronchoscopic management, can biodegradable stents be placed safely, and what complications show up over time?
+
+Guest:
+Exactly. The authors reviewed patients undergoing bronchoscopy for benign airway stenosis between January 2015 and February 2023 at Ruhrlandklinik. They started with a large procedural pool: 892 bronchoscopies for central airway stenosis in 387 patients. After excluding repeated reports and patients managed only with mechanical interventions or conventional silicone or metallic stents, they identified 18 patients who received at least one biodegradable stent.
+
+Narrator:
+So, small cohort, but procedurally dense. Across those 18 patients, they implanted 136 biodegradable stents at 22 airway locations. Median age was 56 years, with 10 male and 8 female patients. The etiologies were heterogeneous, which matters. The most common indications were tracheomalacia in five patients, or 27.7%, and relapsing polychondritis in four patients, or 22.2%. Other causes included tracheostomy-related stenosis, prolonged intubation, granulomatosis with polyangiitis, post-transplant narrowing, scarring from previous stenting, and one foreign body-related case.
+
+Guest:
+And that heterogeneity cuts both ways. It makes the cohort clinically real, because benign airway stenosis is not one disease. But it also makes interpretation harder. Tracheomalacia, inflammatory chondritis, post-transplant anastomotic disease, and GPA-related airway narrowing do not behave the same biologically. Their likelihood of restenosis, granulation, scarring, and response to mechanical stabilization can be very different.
+
+Narrator:
+That is an important limitation. Before we get into outcomes, let’s talk about the device concept. These biodegradable stents are self-expanding, made of polydioxanone, and designed to degrade over roughly 3 to 4 months. The appeal is that they may provide temporary scaffolding without committing the patient to long-term foreign material or a difficult removal procedure.
+
+Guest:
+And unlike a silicone stent, which sits in the airway as a removable tube, these are uncovered, softer, lower radial force stents. The authors emphasize customization, which is particularly relevant in bronchial stenoses or irregular benign narrowing. Theoretically, lower radial force should mean less mucosal pressure and less granulation, although the actual clinical granulation data are more complicated.
+
+Narrator:
+Procedurally, all cases were done under general anesthesia with a rigid bronchoscope. Stents were placed using a dedicated delivery catheter, with position checked using a standard videobronchoscope. They did not use fluoroscopy. The bronchoscopists were experienced, defined as more than 300 interventions.
+
+Guest:
+That detail is easy to gloss over, but it is central to generalizability. This is not a “plug-and-play” outpatient flexible bronchoscopy intervention. These were rigid bronchoscopy cases in an experienced tertiary center. So when the paper reports technical success and low immediate complication rates, that is partly a device story and partly a center-expertise story.
+
+Narrator:
+Let’s move to results. Placement was technically successful in all cases, and there were no immediate procedural complications. Stent distribution was fairly balanced: 10 of 22 locations, or 45.4%, were tracheal, and 12 of 22, or 54.5%, were bronchial. Of the bronchial stents, most were in the left main bronchus, with smaller numbers in the bronchus intermedius and left upper lobe bronchus.
+
+Guest:
+That bronchial use is one of the more interesting aspects. In many airway stent conversations, the trachea dominates. But this paper shows frequent use in mainstem and more distal bronchial stenoses. The figures on pages 4 and 5 are helpful here: they show bronchus intermedius stenosis after transplantation, careful balloon insertion, balloon dilation, the post-dilation airway, and then the biodegradable stent in place. That sequence captures the practical workflow: recanalize or dilate the stenosis first, then scaffold it.
+
+Narrator:
+The median duration of biodegradable stent use was 10.6 months, with a very wide range from 0.1 to 72 months. The median number of stents per patient was 3.5, but again the range was broad: 1 to 36 stents.
+
+Guest:
+That is key. Even though each stent is temporary, the treatment strategy may not be temporary. In some patients this becomes serial biodegradable stenting. That may be appropriate if surgery is not feasible and silicone or metallic stents are poorly tolerated, but it also means repeated anesthetics, repeated bronchoscopies, and repeated opportunities for granulation, migration, secretion retention, and cost accumulation.
+
+Narrator:
+Early complications were reported in four interventions, affecting three patients. These included two dislocations requiring fixation — one with clips and one sutured to another stent — one case of secretion retention requiring additional bronchoscopy, and one moderate granulation formation requiring cryotherapy and recanalization.
+
+Guest:
+And importantly, they report no deaths, no need for ventilation or ICU care, no pre-term stent removal in the early period, and no need to convert to a non-biodegradable stent. That is reassuring, but we should keep the denominator straight. This is a small retrospective cohort, and rare catastrophic events would not be expected to appear reliably in 18 patients.
+
+Narrator:
+Granulation tissue is the recurring theme. In the subacute period, four patients, or 23.5%, developed granulation formation, and one patient required stent removal. Chronically, granulation formation occurred in five patients, or 29.4%, across seven locations, or 33.3%.
+
+Guest:
+The granulation severity breakdown is also worth noting. Across the reported granulation events, eight cases, or 69.2%, were mild, while four cases, or 30.8%, were moderate and required cryotherapy. No severe granulation cases were observed. That sounds favorable, but it still means granulation is not solved by biodegradability. It remains one of the main management issues.
+
+Narrator:
+And that raises the devil’s advocate question: are biodegradable stents actually reducing granulation compared with silicone or metal stents, or are they simply changing the type and timing of follow-up burden?
+
+Guest:
+That is exactly where a comparator would matter. The authors discuss prior literature suggesting migration is a major limitation of silicone and metallic stents and that biodegradable stents may align better with airway anatomy because of their uncovered structure. But within this study, there is no matched silicone stent group, no standardized symptom score comparison, no spirometric endpoint, and no prospective protocol for bronchoscopy timing across patients.
+
+Narrator:
+Another issue is prior stenting. Thirteen of the 22 stented locations had previous non-biodegradable stent use: 10 silicone and 3 metal. That is clinically important because prior stents can produce scarring, mucosal injury, and granulation, which may influence outcomes after the biodegradable stent.
+
+Guest:
+The authors do address that and state that granulation occurred in patients with and without prior stenting, without a significant difference. But with this sample size, it is hard to exclude meaningful differences. Also, “no significant difference” in a small retrospective cohort should not be read as equivalence.
+
+Narrator:
+Agreed. The paper’s strongest claim is safety and feasibility in expert hands. The weaker claim would be superiority over conventional stents. The data are not designed to prove that.
+
+Guest:
+For clinical translation, the patient phenotype seems important. This is probably most relevant for benign stenosis patients who are poor surgical candidates, have failed or poorly tolerated silicone stenting, should not receive metal stents, or have anatomically complex stenoses where customization is useful. Bronchial stenoses, especially post-transplant or mainstem disease, may be a particularly interesting niche.
+
+Narrator:
+But the workflow implications are substantial. These patients need rigid bronchoscopy capability, general anesthesia, careful airway measurement, access to customized stents, and a follow-up system prepared for repeat bronchoscopies. The stent’s degradation profile means clinicians must anticipate when radial support will disappear and decide whether to re-stent, observe, dilate, or transition to another strategy.
+
+Guest:
+And the disease biology still matters. In GPA, relapsing polychondritis, and post-transplant stenosis, the airway problem is not just mechanical. Immunologic activity, ischemia, infection, and wound healing all influence restenosis. A stent can scaffold the lumen, but it does not treat the underlying inflammatory driver.
+
+Narrator:
+The authors actually make a similar point regarding patients with granulomatosis with polyangiitis and post-transplant narrowing: severe airway narrowing may reflect underlying disease activity and scarring rather than the stent itself. That is a useful reminder. Bronchoscopic mechanics and medical disease control are not substitutes for each other.
+
+Guest:
+Methodologically, the limitations are straightforward but important: retrospective design, single center, very small sample, heterogeneous etiologies, no control group, possible gaps in prior treatment history for referred patients, and outcomes that are largely procedural rather than patient-centered. We do not get a clean answer on dyspnea scores, quality of life, hospitalization reduction, infection reduction, lung function, or durability after stopping serial stenting.
+
+Narrator:
+Another subtle limitation is how stent duration was defined. Because the device degrades over about 3 months, the authors used assumptions around stent lifespan when exact removal or replacement did not occur. That is reasonable for retrospective analysis, but it introduces some uncertainty into the reported duration of use.
+
+Guest:
+Still, this is valuable real-world procedural data. There are not many adult benign airway biodegradable stent series, especially with this degree of repeated implantation and bronchial use. The study suggests that, in a high-expertise setting, biodegradable stents can be deployed successfully, can be repeated over time, and may avoid some of the major problems associated with permanent or difficult-to-remove devices.
+
+Narrator:
+So the practical takeaway for an IP audience is not, “biodegradable stents replace silicone stents.” It is more nuanced: biodegradable stents may be a reasonable tool in selected benign central airway stenosis patients, especially when the goal is temporary or serial scaffolding without long-term indwelling stent material.
+
+Guest:
+And the unanswered questions are exactly the ones that would guide broader adoption. Which etiologies benefit most? What is the optimal diameter selection strategy? How should surveillance bronchoscopy be timed? What is the cost compared with silicone stenting and repeat dilation alone? And most importantly, do patients actually experience better symptoms, fewer interventions, or fewer major complications over a longer horizon?
+
+Narrator:
+That’s where prospective registries or multicenter comparative cohorts would help. Randomization may be difficult in this population, but standardized endpoints would make a major difference: technical success, migration, secretion retention, granulation requiring intervention, number of repeat bronchoscopies, symptom scores, pulmonary function where applicable, and long-term airway patency.
+
+Guest:
+Until then, this article adds a useful piece to the benign airway stenosis toolbox. It supports feasibility, suggests an acceptable safety profile in expert hands, and highlights granulation as the complication to watch. But it should not be interpreted as definitive evidence that biodegradable stents are broadly superior to established approaches.
+
+Narrator:
+Well said. For InterventionalPulm.com, the bottom line is this: Karcıoğlu and colleagues provide a clinically relevant retrospective experience with biodegradable airway stents in benign central airway stenosis. The signal is encouraging, particularly for highly selected patients who are not surgical candidates and have limited conventional stent options. But the data remain observational, small, and center-dependent.
+
+Thanks for listening to InterventionalPulm.com IP Journal Review. This has been a focused discussion of biodegradable stents for benign central airway stenosis — a promising but still evolving option in complex airway intervention.

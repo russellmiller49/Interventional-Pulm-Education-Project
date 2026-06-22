@@ -58,6 +58,31 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['board review', 'exam', 'chapters', 'study', 'questions'],
   },
   {
+    title: 'Journal Club Podcasts',
+    description:
+      'Article-focused interventional pulmonology journal club audio discussions in English, Spanish, Mandarin, Arabic, and Korean.',
+    href: '/journal-club-podcasts',
+    section: 'Learning',
+    type: 'page',
+    keywords: [
+      'journal club',
+      'podcasts',
+      'audio',
+      'articles',
+      'papers',
+      'lung nodules',
+      'robotic bronchoscopy',
+      'pleural disease',
+      'airway obstruction',
+      'blvr',
+      'english',
+      'spanish',
+      'mandarin',
+      'arabic',
+      'korean',
+    ],
+  },
+  {
     title: 'EBUS Training',
     description:
       'Open EBUS knobology, mediastinal station, and simulator modules without course participant lockout.',

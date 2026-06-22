@@ -1,0 +1,121 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. Today we’re looking at Miller and colleagues, published in the Journal of Bronchology and Interventional Pulmonology in 2025: the AABIP evidence-based guidelines on bronchoscopic diagnosis and staging of lung cancer.
+
+Guest: And this is a big one for the IP audience. Not because every recommendation is backed by pristine randomized data, because it is not, but because the document tries to organize several daily procedural decisions: bronchoscopy versus CT-guided biopsy for peripheral nodules, how many tools to use, whether ROSE matters, how systematic EBUS staging should be, and when we can reasonably avoid additional invasive staging.
+
+Narrator: Right. The scope is really two domains: nonsurgical biopsy of peripheral pulmonary nodules, and CP-EBUS-guided mediastinal staging in presumed or confirmed lung cancer. Methodologically, the group used a modified Delphi process, systematic literature review through March 2023, GRADE for certainty assessment, and NICE-style recommendation language.
+
+Guest: Which is important, because “consider,” “use,” “do not routinely offer,” and “make no recommendation” are not interchangeable. This is not a document saying, “Here is the one correct way to do every case.” It is more nuanced. Six recommendations were supported by meta-analyses, three by systematic reviews, and much of the evidence was low or very low certainty.
+
+Narrator: Let’s start with the headline recommendation that will probably get the most attention: peripheral navigational bronchoscopy versus CT-guided transthoracic needle biopsy for indeterminate peripheral pulmonary nodules.
+
+Guest: The recommendation is to consider peripheral navigational bronchoscopy with biopsy rather than CT-TTNB, while taking into account patient factors, nodule characteristics, local expertise, and costs. And the wording matters. It says consider. It does not say bronchoscopy has clearly superior diagnostic yield.
+
+Narrator: In fact, the pooled older comparative data favored CT-TTNB for yield. The meta-analysis reported diagnostic yield of 87 percent for CT-TTNB versus 67 percent for peripheral navigational bronchoscopy, with an odds ratio of 3.24 favoring CT-TTNB. But pneumothorax was significantly more common with CT-TTNB, with a pooled risk difference of 0.18.
+
+Guest: That tradeoff is the entire story. CT-TTNB has historically been a high-yield test, but the complication profile is different. Bronchoscopy may offer lower pneumothorax rates, plus the ability to do mediastinal staging and potentially sample multiple targets in one anesthetic event.
+
+Narrator: And then the guideline acknowledges the technology problem: much of the evidence base reflects older bronchoscopic platforms.
+
+Guest: Exactly. The VERITAS trial, which compared ENB with digital tomosynthesis against CT-TTNB, is discussed as a post-search high-impact study. In that trial, ENB yield was 79 percent versus 73.6 percent for CT-TTNB, with pneumothorax requiring intervention at 11.5 percent for CT-TTNB versus 0.8 percent for bronchoscopy. But when VERITAS was incorporated into the broader analysis, CT-TTNB still had higher pooled yield overall, though the gap narrowed.
+
+Narrator: So the devil’s advocate question is: is this recommendation evidence-driven, or is it anticipating where technology is going?
+
+Guest: A bit of both. The formal evidence still shows better yield for CT-guided biopsy in many older comparisons. But in real-world IP decision-making, the relevant comparator is not necessarily radial EBUS from 2011. It is robotic bronchoscopy, CBCT, tomosynthesis, augmented fluoroscopy, cryobiopsy, improved needles, better CT-to-body divergence management, and a team that may also stage the mediastinum in the same session.
+
+Narrator: The practical takeaway is not “bronch everybody.” It is to choose the route based on lesion size, bronchus sign, emphysema, pleural distance, need for nodal staging, anticoagulation issues, local success rates, and patient-specific tolerance for pneumothorax.
+
+Guest: And local data matter. Every program should know its own yield and complication rates. A high-volume CT biopsy service and a low-volume bronchoscopy program should not interpret this the same way as a high-volume robotic bronchoscopy program with CBCT and mature cytopathology support.
+
+Narrator: Recommendation two is more operational: during bronchoscopic evaluation of indeterminate peripheral nodules, consider multiple biopsy tools rather than a single tool.
+
+Guest: This one feels very aligned with how many IP groups already work. The meta-analysis included ten studies and found that adding tools increased diagnostic yield from about 63 percent to 73 percent, roughly a 10 percent absolute improvement, with an odds ratio of 1.78.
+
+Narrator: And the subgroup analyses still favored multiple tools. Conventional tools had an odds ratio of 1.64, and the cryobiopsy subset had an odds ratio of 2.06 favoring a combined approach over a single tool.
+
+Guest: The nuance is that “multiple tools” should not mean random tool accumulation. The tool should match the lesion. If the lesion is airway-adjacent, TBNA or cryobiopsy may add value. If the tool is eccentric to the rEBUS image, forceps may be less reliable. If molecular testing is needed, sample handling and tissue architecture matter. So this recommendation supports a thoughtful multitool strategy, not a procedural buffet.
+
+Narrator: Recommendation three addresses ROSE for peripheral nodules. The guideline says to consider ROSE based on local resource availability and clinical context.
+
+Guest: The numbers are interesting. Six studies, over 2,700 patients, showed improved diagnostic yield with ROSE, odds ratio 2.71. In the randomized trial subset, the odds ratio was 1.93. Procedure duration was not significantly different, with a mean difference of about negative 1 minute, though heterogeneity was high.
+
+Narrator: That challenges the common concern that ROSE automatically slows down the room.
+
+Guest: It does, but with caveats. All analyzed studies were from Asian centers, and the incremental value of ROSE may shift when there is real-time tool-in-lesion confirmation with CBCT or tomosynthesis. ROSE confirms cellular adequacy, not necessarily representative sampling of the most biologically relevant part of the tumor. And ROSE requires cytology staffing, telecytology infrastructure, or some future AI-supported workflow.
+
+Narrator: So for implementation, ROSE may be most valuable when tissue is scarce, when repeat biopsy risk is high, when triage for cultures or molecular testing matters, or when the center has reliable cytopathology support.
+
+Guest: Right. But a center without ROSE should not interpret this as meaning advanced bronchoscopy is invalid. It means the team needs compensatory strategies: more deliberate tool selection, adequate pass numbers, cell block planning, touch prep where feasible, and close coordination with pathology.
+
+Narrator: Recommendation four is deliberately noncommittal: no recommendation for PNB versus CT-TTNB specifically to obtain tumor tissue for molecular analysis in malignant peripheral nodules.
+
+Guest: The meta-analysis was small, only three studies and 357 patients. There was no significant difference, with an odds ratio of 1.72 and a very wide confidence interval from 0.07 to 45.05. Tissue adequacy for molecular testing exceeded 90 percent in both groups, but the certainty was very low.
+
+Narrator: And there is a key denominator issue: these results apply after a malignant diagnosis is obtained.
+
+Guest: Exactly. Adequacy for NGS among positive biopsies is different from the entire diagnostic pathway. CT-TTNB may produce larger cores, but bronchoscopy may allow staging and diagnosis together. Tissue adequacy depends on tumor cellularity, necrosis, needle gauge, number of passes, fixation, IHC stewardship, and whether the proceduralist and pathology team are aligned.
+
+Narrator: Let’s pivot to staging. Recommendation five is one of the clearest: use a systematic CP-EBUS staging examination rather than sampling only radiographically suspicious nodes.
+
+Guest: This is probably the most practice-defining part of the guideline. The document describes levels of staging thoroughness, from targeted sampling to minimum systematic staging, thorough examination, and complete systematic staging with EUS or EUS-B.
+
+Narrator: The systematic approach detects about 5 to 15 percent more occult N2 or N3 disease compared with targeted sampling alone.
+
+Guest: And that matters because imaging-normal mediastina are not always pathologically normal. The minimum standard described is sampling the core mediastinal chain in an N3 to N2 to N1 sequence, including key stations such as 4R, 4L, and 7 when appropriate, with attention to nodes at least 5 millimeters or PET-positive.
+
+Narrator: The guideline also brings in the ninth edition TNM implications, especially distinguishing single-station from multistation N2 disease.
+
+Guest: That is a big conceptual shift. If a procedure stops after the first malignant N2 node because ROSE is positive, the staging may be incomplete for modern prognostication and treatment planning. The question is not only “is there N2 disease?” but “how much N2 disease, and in how many stations?”
+
+Narrator: Devil’s advocate: systematic EBUS takes time, training, and sedation. Is it feasible everywhere?
+
+Guest: Not equally. This is where documentation becomes important. If an operator performs targeted staging, the report should say that. If the exam was systematic, the report should document stations examined, stations sampled, size, sonographic features, number of passes, and adequacy. The guideline does not magically create training, but it raises the bar for what we should mean by “staging EBUS.”
+
+Narrator: Recommendation six says not to routinely offer preoperative mediastinoscopy after a negative CP-EBUS-guided mediastinal staging exam in patients with risk factors for occult N2 or N3 disease but no overt radiographic involvement.
+
+Guest: The pooled analysis of three studies showed no statistically significant difference in missed N2 or N3 disease between EBUS alone and EBUS plus mediastinoscopy, with a risk difference of 0.03 and a confidence interval crossing zero. In the Bousema randomized trial, unforeseen N2 disease was 8.8 percent with immediate resection versus 7.7 percent with confirmatory mediastinoscopy.
+
+Narrator: So mediastinoscopy is not dead, but routine confirmatory mediastinoscopy after a good negative systematic EBUS is harder to justify.
+
+Guest: Correct. It still has a role when imaging and pathology are discordant, such as a large intensely FDG-avid node with a negative or inadequate EBUS sample, or when the EBUS exam was incomplete. But for many patients, moving to resection with intraoperative lymph node dissection is reasonable.
+
+Narrator: Recommendation seven addresses tumor size. Tumors greater than 3 centimeters should be recognized as a risk factor for occult mediastinal metastasis, even when the hilum and mediastinum are radiographically normal.
+
+Guest: Four retrospective studies with over 1,200 patients showed a higher risk of occult N2 disease for tumors greater than 3 centimeters, with a pooled risk difference of 0.06. The guideline frames this as risk stratification rather than a blunt mandate.
+
+Narrator: So a 3.4-centimeter peripheral PET node-negative adenocarcinoma is not the same staging problem as a 1.4-centimeter peripheral pure ground-glass lesion.
+
+Guest: Exactly, which leads directly into recommendation eight: do not routinely offer invasive mediastinal staging for pure ground-glass nodules with a radiographically normal mediastinum on CT and PET.
+
+Narrator: The reviewed retrospective literature showed negligible or absent nodal metastasis from pure GGNs, around 0 to 1 percent. Part-solid nodules have higher risk, particularly when the consolidation-to-tumor ratio exceeds 0.5.
+
+Guest: This is a useful correction against staging overuse. If the lesion is truly pure ground-glass, thin-section CT confirms that, PET and CT show no nodal concern, and the clinical picture fits indolent adenocarcinoma-spectrum disease, invasive mediastinal staging is unlikely to help. But the word “truly” is doing a lot of work. Measurement quality and radiology terminology matter.
+
+Narrator: Finally, recommendation nine: no recommendation for routine CP-EBUS to detect occult N1 disease before SBRT in early-stage NSCLC patients who do not otherwise meet invasive staging criteria.
+
+Guest: This is a fascinating gray zone. The rationale for EBUS before SBRT is that surgical patients get pathologic nodal assessment and SBRT patients usually do not. Occult N1 disease could drive regional failure. But the evidence did not show consistent survival or recurrence benefit from invasive nodal staging in imaging-node-negative SBRT cohorts.
+
+Narrator: Some studies found CP-EBUS upstaged about 2 to 5 percent of cN0 patients to N1, but EBUS can miss intralobar nodes, stations 12 through 14, which are beyond standard reach.
+
+Guest: And many SBRT patients are medically inoperable or high risk, so finding microscopic N1 disease may not always change management in a way that improves outcomes. The guideline appropriately refuses to overstate the case.
+
+Narrator: Let’s close by talking about limitations and implementation. The authors are transparent that much of this evidence is retrospective, observational, and affected by rapid technology evolution.
+
+Guest: The diagnostic yield issue is especially important. Definitions of yield and accuracy vary across bronchoscopy studies, and the article notes that reported yield can shift by more than 20 percent depending on strict, intermediate, or liberal definitions. That should make everyone cautious about comparing a single number across platforms or papers.
+
+Narrator: There are also resource assumptions. Systematic EBUS requires training. ROSE requires cytopathology or telecytology. Advanced PNB may require robotic platforms, CBCT, tomosynthesis, anesthesia support, and procedural volume. These recommendations may be easier to operationalize in tertiary or quaternary centers than in lower-resource environments.
+
+Guest: And because this is an AABIP guideline about bronchoscopic diagnosis and staging, readers should also be alert to specialty perspective and technology context. That does not invalidate the document, but it makes the recommendation language important. The strongest message is not that bronchoscopy replaces everything. It is that the diagnostic and staging pathway should be integrated, risk-adapted, and locally accountable.
+
+Narrator: So what does this article add?
+
+Guest: It gives IP clinicians a structured framework. For peripheral nodules, bronchoscopy is increasingly competitive, especially when lower pneumothorax risk and combined staging matter, but yield still depends heavily on technology and expertise. Multiple tools usually improve yield. ROSE can help, but implementation is resource-dependent. Molecular adequacy appears achievable by both bronchoscopic and transthoracic approaches when the biopsy is diagnostic.
+
+Narrator: And for staging?
+
+Guest: Systematic CP-EBUS should be the default concept for mediastinal staging when staging is indicated. Routine confirmatory mediastinoscopy after a high-quality negative EBUS is usually unnecessary. Tumor size greater than 3 centimeters should push clinicians toward invasive staging even with normal imaging. Pure GGNs with normal mediastinum generally do not need invasive staging. And routine EBUS solely to find occult N1 before SBRT remains unresolved.
+
+Narrator: That is a good synthesis. The practical lens is probably this: use the guideline to standardize decision-making, but do not let it substitute for procedural judgment, local outcomes data, multidisciplinary discussion, or patient-specific risk assessment.
+
+Guest: Right. This is a roadmap, not autopilot. And in lung cancer diagnosis and staging, autopilot is usually how you end up doing either too much or too little.
+
+Narrator: That’s it for this episode of InterventionalPulm.com IP Journal Review. Thanks for listening.

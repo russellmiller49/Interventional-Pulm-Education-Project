@@ -1,0 +1,89 @@
+Narrador: Bienvenidos a la Revista de la Literatura de InterventionalPulm punto com. En este episodio, analizamos un ensayo procedimental con implicaciones muy prácticas para la intervención pleural: el estudio de Wang y colaboradores, publicado en CHEST en 2026, que evaluó la toracoscopia médica con versus sin neumotórax artificial previo en pacientes con derrame pleural mínimo o ausente.
+
+Invitado: Es un artículo excelente para una audiencia de neumología intervencionista, porque aborda uno de esos escenarios que siempre aumenta un poco la tensión en la sala: sospecha de enfermedad pleural, muy poco líquido, espacio pleural limitado, posibles adherencias, y la pregunta de cómo entrar de forma segura en la cavidad pleural sin crear drama innecesario.
+
+Narrador: Exacto. La toracoscopia médica es muy útil para el derrame pleural no diagnosticado, la nodularidad pleural y el engrosamiento pleural, pero depende de tener suficiente espacio de trabajo para colocar un trocar e inspeccionar la pleura. Históricamente, las guías han recomendado crear primero un neumotórax artificial cuando hay derrame mínimo o ausente, con la idea de que introducir aire separa el pulmón de la pared torácica y mejora el acceso.
+
+Invitado: El problema es que esta recomendación siempre ha sido un poco más intuitiva desde el punto de vista fisiológico que demostrada en ensayos. Y en el paciente con líquido mínimo, la razón por la que el espacio pleural es difícil puede ser exactamente lo mismo que dificulta el neumotórax artificial: las adherencias. Si el pulmón está fijado, inyectar aire a través de un catéter pequeño puede no crear de manera confiable el espacio que uno quiere. Puede simplemente agregar otro paso al procedimiento, y ocasionalmente otra complicación.
+
+Narrador: Entonces, la pregunta de investigación fue directa: en adultos con derrame pleural mínimo o ausente que requieren toracoscopia médica, ¿es un abordaje sin neumotórax artificial no inferior al neumotórax artificial para lograr acceso pleural exitoso?
+
+Invitado: Este fue un ensayo prospectivo, multicéntrico, aleatorizado, de no inferioridad, realizado en seis hospitales de China, que incluyó pacientes entre julio de 2021 y noviembre de 2023. Los pacientes elegibles eran adultos con enfermedad pleural no diagnosticada, ya sea sin derrame pleural o con derrame mínimo, definido como una profundidad máxima de tres centímetros en posición sentada, y que estaban programados para toracoscopia médica.
+
+Narrador: Y excluyeron a los pacientes con ausencia completa de espacio pleural por adherencias, así como a los pacientes que no podían tolerar el procedimiento por situaciones como inestabilidad hemodinámica, hipertensión pulmonar significativa, insuficiencia respiratoria en curso, riesgo de sangrado, mal estado general, o infección local o tumor en el sitio del puerto.
+
+Invitado: Esa selección importa. Este no es un ensayo de forzar una toracoscopia a través de una sínfisis pleural fusionada. Estudiaron pacientes en quienes la toracoscopia médica se consideraba factible, pero técnicamente desafiante porque el espacio pleural era pequeño o estaba ausente.
+
+Narrador: Un elemento procedimental importante fue el ultrasonido torácico. Los autores usaron un sistema de puntuación de adherencia pleural adaptado del marco del ensayo SIMPLE. Evaluaron nueve zonas a lo largo de los espacios intercostales quinto a octavo, usando ultrasonido dinámico para clasificar el deslizamiento pleural como presente, dudoso o ausente. Las puntuaciones más bajas sugerían adherencias no extensas; las puntuaciones más altas sugerían adherencias extensas; y las adherencias completas se excluyeron.
+
+Invitado: Eso es importante porque el artículo no dice simplemente “omita el neumotórax artificial.” En realidad dice: “use una localización cuidadosa con ultrasonido y luego proceda sin inducir neumotórax artificial en pacientes apropiadamente seleccionados.” Esa distinción no es cosmética. Es toda la arquitectura de seguridad del abordaje.
+
+Narrador: Los pacientes fueron aleatorizados uno a uno a neumotórax artificial antes de la toracoscopia o a ningún neumotórax artificial. En el grupo con neumotórax artificial, los operadores colocaron un catéter en el espacio pleural e inyectaron lentamente aire filtrado, hasta un máximo de trescientos mililitros, confirmando el neumotórax mediante radiografía o ultrasonido torácico.
+
+Invitado: En el grupo sin neumotórax artificial, omitieron ese paso. Después de la localización por ultrasonido, hicieron una incisión de un centímetro tras anestesia local, realizaron disección roma, insertaron el trocar, y podían disecar de forma roma bandas adhesivas locales alrededor del sitio de incisión. Ambos grupos luego se sometieron a toracoscopia semirrígida, con inspección de la pleura parietal, diafragmática y visceral, y obtención de al menos ocho muestras de biopsia pleural.
+
+Narrador: El criterio de valoración primario fue el éxito del acceso pleural, definido como la entrada exitosa en la cavidad pleural que permitiera inspección toracoscópica y aspiración de líquido o biopsia. El margen de no inferioridad fue de menos diez puntos porcentuales, comparando sin neumotórax artificial menos con neumotórax artificial.
+
+Invitado: El ensayo aleatorizó a 204 participantes, 102 en cada grupo. Un paciente del brazo sin neumotórax artificial se negó a continuar, de modo que el análisis primario incluyó 101 pacientes en el grupo sin neumotórax artificial y 102 en el grupo con neumotórax artificial. Las características basales estuvieron bastante equilibradas: edad media alrededor de 58 años, aproximadamente 63 por ciento hombres, profundidad mediana del derrame pleural alrededor de 15 milímetros, y la mayoría de los pacientes tenía derrame pleural no diagnosticado, más que nodularidad o engrosamiento aislado.
+
+Narrador: Ahora el resultado principal: el éxito del acceso pleural fue de 95 por ciento en el grupo sin neumotórax artificial, 96 de 101 pacientes, comparado con 78.4 por ciento en el grupo con neumotórax artificial, 80 de 102 pacientes. La diferencia absoluta fue de 16.6 puntos porcentuales a favor de no usar neumotórax artificial, con un límite inferior unilateral del intervalo de confianza del 97.5 por ciento de 7.6 por ciento. Eso superó claramente el margen de no inferioridad, con una p menor que 0.001 para no inferioridad.
+
+Invitado: Y ese resultado es llamativo porque el estudio se planteó como no inferioridad, pero la estimación puntual favoreció claramente al abordaje sin neumotórax artificial. La interpretación práctica es que, en esta población del estudio, intentar inducir un neumotórax artificial no mejoró el acceso. De hecho, pareció crear un punto de falla.
+
+Narrador: Ahí es donde el análisis de los procedimientos fallidos resulta muy útil. En el grupo sin neumotórax artificial, las cinco fallas se debieron a adherencias severas. En el grupo con neumotórax artificial, 21 de 22 fallas estuvieron esencialmente relacionadas con el propio proceso de crear el neumotórax artificial.
+
+Invitado: Exactamente. Esa es la pista mecanística. Si el paciente tiene adherencias, la inyección de aire mediante catéter puede no separar suficiente pleura como para crear una cavidad de trabajo utilizable. En cambio, el abordaje sin neumotórax artificial permite al operador, después de la localización guiada por ultrasonido, entrar y disecar de forma roma en el sitio de acceso. Es una solución más directa al problema local.
+
+Narrador: Los desenlaces secundarios también fueron clínicamente relevantes. La confirmación patológica entre los casos con toracoscopia exitosa fue esencialmente idéntica: 76 por ciento en el grupo sin neumotórax artificial versus 75 por ciento en el grupo con neumotórax artificial. Así que la mejor tasa de acceso no se logró a costa de una peor confirmación diagnóstica una vez que se obtuvo acceso.
+
+Invitado: Y las complicaciones fueron similares en general: 14.9 por ciento en el grupo sin neumotórax artificial versus 17.6 por ciento en el grupo con neumotórax artificial. El intervalo de confianza cruzó cero, por lo que no hubo una diferencia estadísticamente significativa. Pero el grupo con neumotórax artificial tuvo complicaciones relacionadas con ese paso, incluyendo laceración pulmonar, enfisema subcutáneo, reacción pleural y un caso de embolia aérea. Baja frecuencia, pero no es nada.
+
+Narrador: El tiempo de operación fue significativamente más corto sin neumotórax artificial: mediana de 32.4 minutos versus 39.9 minutos, una diferencia absoluta de menos 7.5 minutos, con un intervalo de confianza de menos 10.5 a menos 4.4 minutos, y p menor que 0.001.
+
+Invitado: Eso tiene sentido. Eliminar un paso procedimental debería ahorrar tiempo, pero solo si no crea nuevos problemas más adelante. Aquí no pareció hacerlo. La duración de la fuga aérea, el tiempo hasta retirar el drenaje, la categoría de dolor torácico y la mortalidad a 90 días no fueron significativamente diferentes. La mortalidad a 90 días fue de 1 por ciento en el grupo sin neumotórax artificial y 2 por ciento en el grupo con neumotórax artificial, con muertes atribuidas a progresión tumoral o infarto de miocardio, no a una señal procedimental clara.
+
+Narrador: Los hallazgos de subgrupos son interesantes, aunque debemos manejarlos con cautela. En pacientes con puntuación de adherencia pleural de 20 o menos, el éxito del acceso pleural fue de 100 por ciento sin neumotórax artificial versus 81.4 por ciento con neumotórax artificial. En pacientes con puntuación de adherencia pleural mayor de 20, el éxito fue de 66.7 por ciento versus 38.5 por ciento, nuevamente favoreciendo numéricamente al abordaje sin neumotórax artificial, pero con números pequeños. En pacientes con un área anecoica, el éxito fue de 96.8 por ciento versus 90 por ciento.
+
+Invitado: Eso es útil, pero con poder estadístico limitado, especialmente en el subgrupo con alta carga de adherencias. Los autores son cuidadosos al respecto. La señal es consistente, pero el tamaño muestral es pequeño donde las implicaciones clínicas son mayores. También vale la pena señalar que la puntuación de adherencia pleural pareció correlacionarse razonablemente bien con las adherencias observadas por toracoscopia. Todos los pacientes con puntuación por encima de 20 que lograron visualización toracoscópica tenían adherencias extensas, mientras que la mayoría de los pacientes con puntuación de 20 o menos tenían adherencias no extensas.
+
+Narrador: Pongámonos el sombrero escéptico. ¿Cuáles son las principales limitaciones?
+
+Invitado: Primero, el desenlace primario es el éxito del acceso procedimental, no un desenlace centrado en el paciente. Eso es apropiado para un ensayo procedimental, pero aun así significa que no estamos midiendo directamente desenlaces posteriores como el tiempo hasta tratamiento oncológico definitivo, la necesidad de repetir la biopsia, la satisfacción del paciente o la costo-efectividad.
+
+Narrador: Segundo, la confirmación patológica se analizó entre los casos con acceso exitoso. Eso es comprensible, pero desde el punto de vista de una estrategia, el acceso fallido sigue importando. Afortunadamente, el desenlace primario captura directamente el problema de la falla de acceso.
+
+Invitado: Tercero, fue un estudio con enmascaramiento simple. Los pacientes podían estar enmascarados, pero los operadores obviamente conocían la técnica. Eso puede introducir sesgo en la toma de decisiones procedimentales, aunque el desenlace es bastante concreto: ¿lograron acceder al espacio pleural y obtener muestras?
+
+Narrador: Cuarto, la generalización depende en gran medida de la habilidad con el ultrasonido y de la comodidad procedimental con la entrada sin neumotórax artificial. El ensayo usó evaluación ultrasonográfica estandarizada y operadores entrenados. Un centro sin flujos de trabajo sólidos de ultrasonido torácico no debería interpretar esto como permiso para ser casual con la entrada pleural.
+
+Invitado: Exacto. La lección no es “haga menos imagen.” La lección puede ser “haga mejor imagen y omita un paso que no ayuda.” Hay un mundo de diferencia entre esas dos cosas.
+
+Narrador: Otro matiz es que la técnica de neumotórax artificial puede variar entre centros. Este estudio usó una técnica basada en catéter con hasta trescientos mililitros de aire filtrado. Algunos operadores pueden usar otros enfoques, otros volúmenes, otras estrategias de confirmación, u otros umbrales para abandonar el intento.
+
+Invitado: Es cierto, aunque el ensayo refleja un flujo de trabajo plausible en la práctica real. Y si el éxito del neumotórax artificial depende de refinamientos técnicos muy específicos, eso mismo se convierte en parte de la carga de implementación. El comparador fue clínicamente significativo porque el neumotórax artificial es exactamente lo que las guías y muchos procedimentalistas han considerado históricamente en estos casos con poco líquido.
+
+Narrador: Clínicamente, ¿cómo debería pensar un neumólogo intervencionista sobre este artículo?
+
+Invitado: Para un paciente con sospecha de malignidad pleural o anormalidad pleural inexplicada y líquido mínimo, este estudio apoya considerar una toracoscopia médica directa, guiada por ultrasonido y sin neumotórax artificial, en lugar de inducirlo de forma refleja. La estrategia sin neumotórax artificial puede mejorar el acceso y acortar el procedimiento, siempre que el operador pueda identificar un sitio de entrada seguro y manejar adherencias con disección roma.
+
+Narrador: Pero no debe borrar el juicio clínico. Se excluyeron pacientes con adherencias completas. Se excluyeron pacientes con insuficiencia respiratoria, inestabilidad hemodinámica significativa, hipertensión pulmonar mayor o riesgo de sangrado. Así que el resultado aplica a candidatos procedimentales seleccionados, no a todas las personas con un espacio pleural seco.
+
+Invitado: Exactamente. Y aún debe existir un plan de respaldo. Si el acceso toracoscópico falla, el protocolo del estudio usó biopsia guiada por tomografía computarizada o por ultrasonido, y en algunas fallas del grupo con neumotórax artificial, la toracoscopia sin neumotórax artificial se convirtió en el abordaje de rescate. En el flujo de trabajo real, eso significa que el plan procedimental debe incluir revisión de imágenes, mapeo con ultrasonido, discusión de rutas alternativas de biopsia y un umbral claro para detenerse.
+
+Narrador: Para la implementación, las piezas clave son el ultrasonido torácico preprocedimental, la evaluación dinámica del deslizamiento pleural, el reconocimiento de áreas anecoicas loculadas, la comodidad para interpretar adherencias, y la disciplina procedimental durante la disección roma. La carga de equipo no es exótica, pero la carga cognitiva y técnica sí es real.
+
+Invitado: Y hay una implicación para la formación. Los fellows de neumología intervencionista y los procedimentalistas pleurales no deberían aprender la toracoscopia médica simplemente como “encuentre líquido y coloque un puerto.” La enfermedad pleural de bajo volumen requiere un modelo mental diferente: mapeo pleural basado en ultrasonido, anticipación de adherencias, planificación de acceso seguro, y disposición para adaptarse.
+
+Narrador: Entonces, ¿qué agrega este artículo?
+
+Invitado: Aporta evidencia aleatorizada de que, en pacientes seleccionados con derrame pleural mínimo o ausente que se someten a toracoscopia médica, un abordaje sin neumotórax artificial es al menos no inferior al neumotórax artificial para el éxito del acceso pleural, y en este ensayo tuvo una tasa más alta de éxito de acceso y menor tiempo de procedimiento, con complicaciones generales comparables.
+
+Narrador: ¿Y qué sigue siendo incierto?
+
+Invitado: Cómo se desempeña este abordaje en centros de menor volumen, con operadores con menos experiencia en ultrasonido torácico, con diferentes técnicas de neumotórax artificial, con cargas de adherencias más extremas y en poblaciones de pacientes más amplias. También queda por saber si la ventaja del flujo de trabajo se traduce en menor costo, menos procedimientos repetidos, diagnóstico más rápido o mejores desenlaces centrados en el paciente.
+
+Narrador: Mensaje final: este artículo desafía el reflejo de inducir neumotórax artificial antes de la toracoscopia médica en pacientes con derrame pleural mínimo o ausente. No defiende un acceso casual. Defiende un acceso cuidadoso guiado por ultrasonido, una selección reflexiva del paciente, y el reconocimiento de que el neumotórax artificial puede ser más obstáculo que solución en espacios pleurales propensos a adherencias.
+
+Invitado: Muy bien dicho. Para los clínicos de neumología intervencionista, el cambio práctico no es “el neumotórax artificial nunca es útil.” Es más matizado: no asuma que el neumotórax artificial es obligatorio, y no asuma que resuelve el problema. En el paciente adecuado, con la evaluación ultrasonográfica adecuada y la habilidad correcta del operador, ir directamente con un abordaje sin neumotórax artificial puede ser la estrategia procedimental más limpia.
+
+Narrador: Esto fue InterventionalPulm punto com, Revista de la Literatura de Neumología Intervencionista. Gracias por escuchar.

@@ -4,6 +4,7 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/forgot-password',
   '/health',
   '/api/scope-calibration',
+  '/journal-club-podcasts',
   '/login',
   '/pocus',
   '/pleural-procedures/pleural-ultrasound-simulator',
@@ -205,6 +206,7 @@ export function resolveSiteModuleId(pathname: string) {
     first === 'bronch-navigation-trainer' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
+    first === 'journal-club-podcasts' ||
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
     first === 'tnm-9-staging' ||

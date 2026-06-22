@@ -1,0 +1,78 @@
+Versión en español lista para TTS
+Interventional Pulm punto com, revisión de artículos de intervencionismo pulmonar: Manometría pleural en neumotórax
+
+Duración estimada: aproximadamente 8 minutos
+
+Narrador: Bienvenidos a la revisión de artículos de intervencionismo pulmonar de Interventional Pulm punto com, donde analizamos de manera enfocada artículos relevantes para el intervencionismo pulmonar, la enfermedad pleural, la oncología torácica y los procedimientos pulmonares avanzados. Hoy comentamos el trabajo de Latifi y colaboradores, publicado en Chest en dos mil veintiséis, titulado: “Manometría pleural en el neumotórax: evaluación de la fisiología de tensión y predicción de resultados”. Se trata de un estudio observacional prospectivo multicéntrico, que evaluó mediciones directas de la presión pleural en pacientes con neumotórax, incluidos pacientes con fisiología de tensión.
+
+Invitado: Y es un artículo muy interesante para una audiencia de intervencionismo pulmonar, porque se ubica justo en la intersección entre fisiología pleural y toma de decisiones procedimentales. El manejo del neumotórax es algo que los proceduralistas enfrentan todo el tiempo, pero los supuestos fisiológicos detrás del neumotórax a tensión históricamente se han inferido más de lo que se han medido.
+
+Narrador: Exactamente. La enseñanza tradicional es que el neumotórax a tensión ocurre cuando la presión pleural supera la presión atmosférica durante una parte suficiente del ciclo respiratorio, de modo que se compromete el retorno venoso, cae el gasto cardíaco y el paciente desarrolla colapso hemodinámico. Pero los autores señalan una brecha importante: la presión pleural no se ha medido realmente de forma directa en el neumotórax a tensión clínico, en gran parte porque la situación es urgente y la medición históricamente ha sido engorrosa.
+
+Invitado: Entonces la pregunta aquí es bastante directa, pero importante: ¿las presiones pleurales más altas realmente se asocian con neumotórax a tensión, y pueden las mediciones de presión pleural predecir resultados posteriores, como pleurodesis o muerte?
+
+Narrador: El estudio incluyó treinta y siete pacientes en cinco centros de Estados Unidos, entre dos mil veintiuno y dos mil veintitrés. Eran pacientes con neumotórax radiográfico que ya tenían planificada una toracostomía con tubo. Se excluyeron el neumotórax bilateral y el embarazo. Es importante destacar que fue un muestreo por conveniencia, sin un cálculo formal de potencia a priori, así que desde el inicio debemos enmarcarlo como exploratorio y generador de hipótesis.
+
+Invitado: La cohorte también tenía un sabor muy propio del intervencionismo pulmonar. Aproximadamente el setenta y tres por ciento de los neumotórax fueron iatrogénicos, y una gran proporción ocurrió después de broncoscopia. La enfermedad pulmonar estructural fue frecuente. Así que esta no es la misma población que una serie de sala de trauma, ni una cohorte joven de neumotórax espontáneo primario.
+
+Narrador: Correcto. De los treinta y siete pacientes, nueve cumplieron criterios de neumotórax a tensión, y veintiocho se clasificaron como neumotórax sin tensión. La tensión se definió de forma amplia: presión arterial sistólica menor de noventa, presión arterial media menor de sesenta y cinco, inicio de vasopresores, o desviación radiográfica de la línea media que se resolvía después de colocar el tubo torácico. Ocho tenían tensión radiográfica, pero solo dos tenían compromiso hemodinámico.
+
+Invitado: Esa distinción importa. Gran parte de lo que llamamos tensión en la práctica es tensión radiográfica: desviación mediastínica, neumotórax grande, quizá cierta preocupación clínica. Pero el verdadero colapso hemodinámico es menos común, y en este estudio, ambos pacientes con tensión hemodinámica estaban recibiendo ventilación con presión positiva.
+
+Narrador: Para la medición en sí, los autores utilizaron un manómetro digital en línea, conectado con la aguja introductora y la jeringa, en el momento de la colocación del tubo torácico. En la página tres, la Figura uno muestra el esquema: un manómetro digital colocado en línea, mientras la aguja entra al espacio pleural. Registraron las presiones durante los primeros tres ciclos respiratorios, y extrajeron las presiones pleurales al final de la inspiración y al final de la espiración.
+
+Invitado: Esa probablemente sea la parte más interesante desde el punto de vista práctico. Esto no fue un montaje elaborado de laboratorio de fisiología. Fue un manómetro digital portátil, incorporado a un procedimiento que ya se iba a realizar. Para los proceduralistas, la factibilidad lo es todo. Si la medición añade minutos, complejidad o riesgo durante un neumotórax potencialmente inestable, no se adoptará. Este enfoque al menos sugiere que la medición puede hacerse.
+
+Narrador: Pasemos ahora a los resultados. En la cohorte completa, la presión pleural inspiratoria media fue cero coma cinco centímetros de agua, la presión pleural espiratoria media fue seis coma cero centímetros de agua, y la presión pleural media fue tres coma dos centímetros de agua. Fisiológicamente, esto ya es interesante, porque la presión pleural normal debería ser subatmosférica durante la respiración tranquila espontánea.
+
+Invitado: Y vale la pena mirar la Figura dos en la página cinco. Grafica la presión al final de la inspiración en el eje X, y la presión al final de la espiración en el eje Y, con los pacientes con tensión y sin tensión separados visualmente. Todos los pacientes con neumotórax a tensión tenían presiones pleurales inspiratorias y espiratorias positivas. Pero varios pacientes sin tensión también tenían presiones por encima de la atmosférica durante todo el ciclo respiratorio.
+
+Narrador: Ese es el matiz clave. La presión más alta se asoció con tensión, pero la presión elevada por sí sola no definió perfectamente la tensión. En el análisis primario, una mayor presión pleural inspiratoria se asoció con mayores probabilidades de neumotórax a tensión, con una razón de probabilidades de uno coma cuarenta, y un intervalo de confianza del noventa y cinco por ciento de uno coma diez a uno coma setenta y seis. Una mayor presión pleural espiratoria también se asoció con tensión, con una razón de probabilidades de uno coma veintidós, y un intervalo de confianza del noventa y cinco por ciento de uno coma cero cinco a uno coma cuarenta y dos.
+
+Invitado: También analizaron por separado la tensión radiográfica y la tensión hemodinámica. Las presiones inspiratorias y espiratorias se asociaron de manera significativa con la tensión radiográfica. Para la tensión hemodinámica, las estimaciones se movieron en la misma dirección, pero los intervalos de confianza fueron más amplios, y la presión espiratoria no fue estadísticamente significativa. Dado que solo hubo dos eventos de tensión hemodinámica, eso no sorprende.
+
+Narrador: Una presión pleural media por encima de cero también se asoció con neumotórax a tensión en general, con un chi cuadrado de siete coma veinticuatro y una P igual a cero coma cero cero siete. Así que el estudio respalda la idea tradicional de que la presión pleural supraatmosférica forma parte de la fisiología de tensión.
+
+Invitado: Pero el punto del abogado del diablo es que seis pacientes sin tensión también tenían presiones inspiratorias y espiratorias por encima de la atmosférica. Así que si alguien busca un único umbral manométrico que diga: “esto es tensión”, este artículo no lo proporciona. De hecho, argumenta en contra de usar la presión como criterio diagnóstico independiente.
+
+Narrador: De acuerdo. El síndrome clínico todavía depende de más que el número de presión. La compensación del paciente, el grado de hipoxemia, la mecánica intratorácica, la enfermedad pulmonar subyacente y, especialmente, la ventilación con presión positiva, todos importan.
+
+Invitado: Esa señal de ventilación con presión positiva es fascinante. Los autores discuten la idea de que los pacientes con ventilación mecánica pueden ser más propensos al colapso hemodinámico porque las presiones pleurales pueden aumentar de manera sustancial, mientras que los mecanismos compensatorios que preservan el retorno venoso pueden estar atenuados. En esta cohorte, ambos pacientes con tensión hemodinámica estaban ventilados mecánicamente, lo cual es fisiológicamente coherente, aunque los números son demasiado pequeños para una conclusión definitiva.
+
+Narrador: El resultado secundario que quizá importe más para la práctica pleural fue la necesidad de pleurodesis. Aquí, el hallazgo fue algo contraintuitivo: una presión pleural inspiratoria más baja se asoció con mayor riesgo de pleurodesis, con una razón de probabilidades de cero coma sesenta y seis, y un intervalo de confianza del noventa y cinco por ciento de cero coma cuarenta y cinco a cero coma noventa y seis.
+
+Invitado: Eso es interesante, pero requiere moderación en la interpretación. Los autores proponen un posible mecanismo: los defectos pleurales más pequeños podrían comportarse más como válvulas unidireccionales, atrapando aire y generando mayor presión, pero quizá cicatrizando con más facilidad. Los defectos pleurales más grandes podrían permitir que el aire se ventile más libremente, produciendo presiones más bajas, pero persistiendo por más tiempo y requiriendo finalmente una intervención definitiva.
+
+Narrador: Eso es plausible, pero no está demostrado. Es una hipótesis mecanística generada por un conjunto de datos observacional pequeño. No hubo asociación entre la presión inspiratoria o espiratoria y la mortalidad intrahospitalaria. Y como solo cinco pacientes murieron, el estudio casi con seguridad no tenía potencia suficiente para evaluar mortalidad.
+
+Invitado: También realizaron un análisis de sensibilidad excluyendo a los cuatro pacientes con ventilación mecánica. Los hallazgos principales persistieron: la presión pleural inspiratoria y espiratoria siguió asociada con tensión, y la presión inspiratoria más baja siguió asociada con pleurodesis. Eso ayuda, pero no elimina las limitaciones centrales.
+
+Narrador: Hablemos de esas limitaciones. La más grande es el tamaño de la muestra: treinta y siete pacientes en total, nueve con tensión, dos con tensión hemodinámica. Eso impidió realizar modelos multivariables. Por lo tanto, no podemos ajustar adecuadamente por tamaño del neumotórax, etiología, ventilación mecánica, enfermedad pulmonar estructural, tipo de procedimiento o gravedad de la enfermedad.
+
+Invitado: También hay sesgo de selección. El reclutamiento dependía de la derivación al equipo del estudio, y ocurrió durante la pandemia de COVID diecinueve. La cohorte estaba enriquecida con neumotórax iatrogénico, especialmente neumotórax posbroncoscopia. Eso hace que el artículo sea muy relevante para el intervencionismo pulmonar, pero menos generalizable a trauma, medicina de urgencias, o poblaciones clásicas de neumotórax espontáneo primario.
+
+Narrador: Otro problema es la definición de tensión. Combinar desviación radiográfica e inestabilidad hemodinámica es práctico, pero no son el mismo fenotipo. Un neumotórax grande con desviación mediastínica que se resuelve después del drenaje puede no comportarse igual que un shock obstructivo asociado al ventilador por fisiología de tensión.
+
+Invitado: Y la medición en sí tiene restricciones. Midieron presiones al final de la inspiración y al final de la espiración durante los primeros tres ciclos respiratorios. Eso es razonable desde el punto de vista procedimental, pero no captura toda la onda de presión, los cambios dinámicos a lo largo del tiempo, la tos, la respiración laboriosa, la posición del paciente, ni el efecto de la sedación y los ajustes del ventilador.
+
+Narrador: Entonces, ¿qué aporta esto a los intervencionistas pulmonares?
+
+Invitado: Primero, muestra que la medición directa de la presión pleural durante el drenaje del neumotórax es factible usando un manómetro digital simple en línea. Segundo, respalda el concepto fisiológico de que el neumotórax a tensión se asocia con presiones pleurales elevadas. Tercero, complica el dogma al mostrar que la presión pleural positiva por sí sola no es suficiente para producir tensión clínica.
+
+Narrador: Y la señal sobre pleurodesis es potencialmente relevante para la práctica, pero aún no está lista para guiar decisiones rutinarias. Plantea la posibilidad de que la manometría pleural temprana pueda ayudar a identificar pacientes con mayor probabilidad de fuga aérea persistente o de necesidad de intervención pleural definitiva. Pero antes de cambiar el flujo de trabajo, esto necesita validación en una cohorte más grande, con etiologías de neumotórax más equilibradas, y con suficientes eventos para modelado ajustado.
+
+Invitado: La implementación también requeriría pensar en el flujo del procedimiento. En un neumotórax posbroncoscopia estable, añadir un manómetro puede ser sencillo. En un paciente inestable, la prioridad sigue siendo la descompresión. Cualquier estrategia de medición debe ser rápida, estéril, segura, y no retrasar el drenaje.
+
+Narrador: Y hay una cuestión de entrenamiento. La manometría pleural en la toracocentesis tiene un marco conceptual, pero la manometría en neumotórax está menos estandarizada. ¿Qué presión registramos? ¿En qué momento del ciclo respiratorio? ¿Bajo qué condiciones del ventilador? ¿Cómo interpretamos las presiones en enfermedad obstructiva grave, espiración activa, ventilación no invasiva, o P E E P alta?
+
+Invitado: Esas son exactamente las preguntas que deben responderse antes de que esto se convierta en una herramienta de manejo, y no solo en una medición fisiológica.
+
+Narrador: Entonces, la conclusión: este estudio de Chest por Latifi y colaboradores ofrece una mirada temprana importante a la medición directa de la presión pleural en neumotórax, incluido el neumotórax a tensión. Las presiones pleurales inspiratorias y espiratorias elevadas se asociaron con fisiología de tensión, pero algunos pacientes sin tensión también tenían presiones supraatmosféricas, lo que significa que la presión pleural por sí sola no define el síndrome.
+
+Invitado: Y la asociación entre presión pleural inspiratoria más baja y pleurodesis es intrigante. Puede reflejar el comportamiento del defecto pleural subyacente o el riesgo de fuga aérea persistente, pero en esta etapa debe considerarse generadora de hipótesis.
+
+Narrador: Para la audiencia de intervencionismo pulmonar, este artículo no trata tanto de cambiar el algoritmo de neumotórax mañana, sino de abrir una puerta: la manometría pleural podría eventualmente ayudar a caracterizar la fisiología del neumotórax, estratificar el riesgo de fuga aérea persistente, y orientar un manejo pleural definitivo más temprano. Pero se necesitan estudios prospectivos más grandes antes de que se convierta en un punto rutinario de decisión procedimental.
+
+Invitado: Muy bien dicho. Es un artículo de fisiología con implicaciones prácticas, pero todavía no es un artículo que cambie la práctica. Y a veces esos son los artículos que preparan la siguiente pregunta clínica importante.
+
+Narrador: Con esto terminamos este episodio de la revisión de artículos de intervencionismo pulmonar de Interventional Pulm punto com. Gracias por escuchar, y nos vemos la próxima vez para otra discusión enfocada en la intersección entre evidencia, procedimiento y medicina pulmonar.

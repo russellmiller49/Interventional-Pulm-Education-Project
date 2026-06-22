@@ -1,0 +1,75 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. Today we’re looking at Xu and colleagues, published in the European Journal of Cardio-Thoracic Surgery in 2025, examining electromagnetic navigation bronchoscopy combined with real-time digital subtraction angiography and cone-beam CT guidance for microwave ablation of malignant pulmonary nodules.
+
+Guest: And this is a very procedural paper. It is less about proving long-term oncologic efficacy and more about asking a practical question: can we make bronchoscopic ablation more accurate by adding real-time two-dimensional DSA to the usual ENB and CBCT workflow?
+
+Narrator: Right. The clinical problem is familiar. ENB can get us near a peripheral target, but “near” is not always good enough when the therapeutic endpoint is ablation zone coverage rather than tissue acquisition. A biopsy tool can sometimes tolerate a little localization error. An ablation antenna really cannot, especially for small, deep, ground-glass or part-solid nodules.
+
+Guest: Exactly. The paper frames the limitation well. ENB is vulnerable to registration error, respiratory motion, atelectasis, and bronchoscope-induced movement. CBCT helps by giving three-dimensional confirmation, but CBCT is not truly continuous real-time guidance. If every adjustment requires another spin, procedure time and radiation can escalate quickly.
+
+Narrator: So the authors propose a fusion workflow. Preoperative CT is loaded into the SuperDimension navigation platform. The patient undergoes general anesthesia with a laryngeal mask airway. Then an intraoperative CT scan is performed, the nodule is segmented and reconstructed in three dimensions, and that reconstructed target is imported into the real-time DSA system.
+
+Guest: Then the locatable guide is advanced bronchoscopically under ENB guidance toward the target. Once the guide is close, real-time DSA is used to check whether the guide is actually where the operator wants it. If it is not, the guide can be dynamically adjusted under combined ENB and DSA feedback, including a 360-degree view. After that, the locatable guide is exchanged for the ablation probe, probe position is confirmed, and microwave ablation is performed.
+
+Narrator: The workflow figure in the paper is useful because it shows the conceptual rhythm: ENB gets you to the neighborhood, DSA provides real-time fine-tuning, CBCT confirms the pre-ablation position, ablation is performed, and post-ablation CBCT assesses the ablation zone and complications. The most interesting visual is the DSA tuning schematic, where the apparent ENB target and the actual target are offset, and DSA allows the guide to be redirected anteriorly and inferiorly.
+
+Guest: That is the technical core of the paper. This is not simply “ENB plus CBCT.” The added value they are testing is whether real-time DSA can bridge the gap between navigation and confirmatory imaging.
+
+Narrator: Let’s get into the cohort. This was a single-center study of 39 patients treated between January and November 2024. They treated 51 malignant pulmonary nodules. Inclusion criteria were nodules 3 centimeters or smaller, suspected malignancy by imaging, and patients who were medically inoperable, declined surgery, or were being managed with a hybrid strategy, meaning resection of some nodules and ablation of others.
+
+Guest: The median age was 61 years, and the cohort was predominantly female: 32 female patients and 7 male patients. The median nodule diameter was 12 millimeters. That size matters. These are small lesions, and most were not solid. Thirty nodules were pure ground-glass, 16 were part-solid, and only 5 were solid.
+
+Narrator: That is an important generalizability point. A 12-millimeter, predominantly subsolid nodule cohort is very different from a cohort of larger solid metastases or central recurrent tumors. The technical challenge is real, but the biology and follow-up expectations are different.
+
+Guest: And the pulmonary function profile is also worth noting. The median FEV1 was 2.14 liters, and median FEV1 percent predicted was 96.7. So although the paper includes patients who were inoperable or who declined surgery, this is not purely a cohort of patients with profoundly limited pulmonary reserve.
+
+Narrator: Procedurally, the ENB-CBCT fusion guidance step was successful in all cases. The median navigation time from the locatable guide to the closest position to the nodule was 12 minutes, with a range of 6 to 32 minutes. They performed a median of 3 CBCT scans per procedure, with a range of 2 to 7.
+
+Guest: One of the most clinically interesting numbers is the initial targeting error. After initial navigation, the median distance from the locatable guide tip to the nodule edge was 10 millimeters, ranging up to 25 millimeters. That is not trivial when the median nodule itself is only 12 millimeters.
+
+Narrator: Right. That number is almost the argument for the paper. If ENB alone leaves you 10 millimeters off the nodule edge, then real-time correction is not a luxury. It may be the difference between treating the lesion and treating perinodular lung.
+
+Guest: With DSA-CBCT fusion guidance, they report that the ablation antenna was positioned at the nodule edge in all cases, with a median error of 1 millimeter and a range of 0 to 5 millimeters. That is a striking technical result, though it still needs to be interpreted cautiously because there was no comparator arm.
+
+Narrator: Microwave ablation was performed at 40 to 65 watts for 5 to 10 minutes, adjusted by nodule size and probe position. Multiple overlapping ablations were used when needed. Median ablation time was 12 minutes, and the number of ablation sessions per nodule ranged from 1 to 4, with a median of 2.
+
+Guest: The median total procedure time, from the start of navigation through final CBCT confirmation, was 85 minutes. The range was wide, 36 to 146 minutes. Median radiation dose from CBCT scans, reported as reference point air kerma, was 276 milligray, with a range of 107 to 913 milligray.
+
+Narrator: And that radiation metric deserves careful wording. The authors explicitly note that RPAK is not the same as the absorbed patient dose. It is a reference measure from the CBCT system and does not account for attenuation or scatter in the body. So it is useful for comparing imaging protocols, but it should not be casually translated into actual patient absorbed dose.
+
+Guest: For outcomes, the headline result is technical success in 47 of 51 nodules, or 92.2 percent, where technical success was defined as ablation zone coverage of the nodule on immediate post-ablation CBCT and postoperative day 1 chest CT. Four nodules had partial coverage, with the authors noting possible complete coverage on later follow-up.
+
+Narrator: Safety looked favorable in this initial series. There were no major complications. Minor complications included hemoptysis in 2 patients and postoperative fever in 3 patients, all observed on postoperative day 1 and resolving spontaneously without intervention.
+
+Guest: That is reassuring, especially because pneumothorax is one of the major differentiators between bronchoscopic and percutaneous ablation strategies. But this is where we need the devil’s advocate voice. With 39 patients, absence of major complications does not mean the major complication rate is zero. It means no major complications were observed in this early, selected cohort.
+
+Narrator: Agreed. And the study is descriptive. They did not perform inferential statistical analyses, and there was no control group. So we cannot say this technique is superior to percutaneous CT-guided MWA, ENB plus CBCT alone, robotic bronchoscopy with CBCT, or SBRT. We can say the technique was feasible in this center and produced a high immediate technical success rate.
+
+Guest: The other key limitation is follow-up. The authors did not assess long-term outcomes such as local tumor progression or survival, citing the indolent nature of early-stage lung cancer and limited follow-up duration. For ablation, immediate coverage is necessary, but it is not sufficient. The oncologic endpoint is durable local control.
+
+Narrator: That is especially relevant for ground-glass and part-solid lesions. If many lesions are indolent adenocarcinoma-spectrum nodules, short-term imaging success can look excellent. The real question is what happens at 6 months, 12 months, 24 months, and beyond, using standardized definitions of local progression and treatment failure.
+
+Guest: There is also a pathology question. The inclusion language includes nodules suspected malignant based on imaging features. In real-world multidisciplinary decision-making, that is sometimes reasonable, particularly for multiple primary lung cancer patterns. But when evaluating efficacy, confirmed histology and lesion-level diagnosis matter.
+
+Narrator: Another implementation issue is infrastructure. This is not a low-resource workflow. It requires ENB, intraoperative CT or CBCT capability, real-time DSA integration, image reconstruction, anesthesia support, and a team comfortable moving between bronchoscopy, advanced imaging, and ablation. That is a very different workflow from standard bronchoscopy in an endoscopy suite.
+
+Guest: And it raises the question of adoption. Is this broadly adoptable, or is it best viewed as expert-center innovation? The paper leans toward future potential, but the practical barriers are substantial: capital equipment, radiation workflow, room availability, training, coordination with radiology or hybrid OR teams, and credentialing for bronchoscopic ablation.
+
+Narrator: The flip side is that the patient-selection niche is very real. The representative cases in the paper make the rationale concrete: patients with multiple primary lung cancers, prior lobectomy, limited reserve, deep lesions, or hybrid strategies where one lesion is resected and another deeper lesion is ablated. Those are exactly the cases where parenchymal preservation and precise targeting matter.
+
+Guest: That may be where this technique is most compelling. Not as a blanket replacement for surgery or SBRT, but as a tool for carefully selected patients: multiple nodules, deep peripheral targets, prior resections, limited reserve, or patients declining surgery after multidisciplinary counseling.
+
+Narrator: The article also places ablation alongside SBRT. The authors note that SBRT is an established option for medically inoperable early-stage NSCLC or patients declining surgery, and they discuss ablation as an alternative in selected patients, particularly when individual characteristics, patient preference, and institutional expertise support it.
+
+Guest: That is the right framing. The clinical question is not, “Does this replace SBRT?” The question is, “For which patients does bronchoscopic thermal ablation offer a better balance of local therapy, tissue preservation, repeatability, procedural risk, and follow-up clarity?”
+
+Narrator: For an IP audience, this paper adds a few important ideas. First, it quantifies the gap between ENB proximity and actual target-edge positioning. Second, it proposes real-time DSA as a way to correct that gap without repeated CBCT spins. Third, it shows that in a selected single-center cohort, bronchoscopic MWA using this fusion approach can achieve high immediate coverage with low observed acute morbidity.
+
+Guest: But it does not yet answer the bigger questions. We still need multicenter reproducibility, learning-curve data, standardized radiation accounting, comparison against other guidance strategies, cost and workflow analysis, and most importantly, durable local control.
+
+Narrator: So the take-home is balanced. This is an elegant technical feasibility study with a very IP-relevant procedural concept. It should generate interest among centers already doing advanced image-guided bronchoscopy and bronchoscopic therapy. But it should not be read as definitive evidence that this workflow improves long-term cancer outcomes or should be broadly adopted tomorrow.
+
+Guest: Well said. For now, this is a paper to bring to tumor board discussions, procedural innovation meetings, and ablation program planning. It sharpens the question of how precise bronchoscopic therapy needs to be, and what imaging tools are required to make that precision credible.
+
+Narrator: That’s it for this episode of InterventionalPulm.com IP Journal Review. Today’s discussion focused on Xu and colleagues’ study of ENB combined with real-time DSA and CBCT guidance for bronchoscopic microwave ablation of malignant pulmonary nodules. The practical message is enthusiasm with discipline: promising workflow, impressive immediate technical performance, but still early evidence requiring longer follow-up and broader validation.
+
+Guest: And as always in procedural oncology, the image at the end of the case is not the same thing as the oncologic outcome. It is the starting point for proving the outcome.

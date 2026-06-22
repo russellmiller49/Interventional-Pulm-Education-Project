@@ -1,0 +1,71 @@
+InterventionalPulm.com IP Journal Review: Rigid Bronchoscopy in the Bronchoscopy Suite
+
+Estimated duration: approximately nine minutes.
+
+Article type: Original research - retrospective single-center cohort study.
+
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we are looking at Mahajan and colleagues, published in Journal of Thoracic Disease in twenty twenty-five, on the safety and feasibility of performing rigid bronchoscopy in the bronchoscopy suite instead of the operating room.
+
+Guest: This is a very practical interventional pulmonology question. The paper is not asking whether rigid bronchoscopy is useful. It is asking whether, in appropriately selected patients, rigid bronchoscopy can be moved out of the operating room and into a bronchoscopy suite without compromising safety.
+
+Narrator: Right. The operating room has historically been the default because of anesthesia support, airway rescue capability, and equipment. But many advanced bronchoscopy suites now have anesthesia machines, jet ventilators, rigid scopes, telescopes, video laryngoscopes, airway carts, and bronchoscopy towers. So the real question is whether the room is the key safety feature, or whether the team, equipment, and rescue plan are what matter.
+
+Guest: The design was straightforward. This was a retrospective, single-center analysis over five years, from January twenty nineteen through March twenty twenty-four. During that period, the center performed six hundred sixty seven rigid bronchoscopies overall. Three hundred seventy two were performed in the bronchoscopy suite for non-emergent complex airway disease.
+
+Narrator: The selection criteria are central to interpreting the study. Patients with acute airway emergencies, unstable coronary artery disease, significant pulmonary hypertension, or I C U status requiring rigid bronchoscopy were excluded from the bronchoscopy-suite cohort. Those cases went to the operating room. So this is not an all-comers rigid bronchoscopy study. It is a selected cohort of non-critically ill, hemodynamically stable patients.
+
+Guest: And that is not necessarily a weakness. It is the intended workflow. But the headline should not be, rigid bronchoscopy can always be done in the bronchoscopy suite. The more accurate conclusion is that selected cases may be done safely in a suite when the operators, anesthesiologists, and equipment are appropriate.
+
+Narrator: The cohort looks familiar for advanced airway practice. The mean age was sixty one years, with a standard deviation of thirteen. About fifty four percent were male and forty six percent female. Thirty seven percent were inpatients and sixty three percent were outpatients. Most patients were A S A physical status three, at nearly eighty four percent, and fourteen percent were A S A physical status four. There were no A S A five patients.
+
+Guest: Indications included malignant endobronchial obstruction in two hundred sixty six cases, airway stenosis in one hundred fifty, hemoptysis in thirty two, foreign body in seventy eight, and post-lung-transplant airway complications in fifty nine. The reported indication categories appear to overlap, which is clinically plausible. A transplant patient can also have stenosis; a malignant obstruction patient can need more than one airway intervention.
+
+Narrator: The procedures were not trivial. Therapeutic aspiration was performed in two hundred thirty seven cases, bronchoalveolar lavage in two hundred nine, balloon dilation in one hundred eighty three, endobronchial biopsy in one hundred fifty seven, stent placement in one hundred sixteen, thermal therapy in one hundred four, E B U S guided T B N A in ninety six, and cryotherapy or cryodebulking in thirty one.
+
+Guest: That procedural mix matters. Stenting, thermal therapy, dilation, cryodebulking, and transplant-airway work are exactly the cases where many hospitals reflexively go to the operating room. This cohort suggests the bronchoscopy suite was being used for real therapeutic airway work, not just low-risk diagnostic cases under a rigid barrel.
+
+Narrator: The primary endpoint was safety, including intraprocedural complications and clinical deterioration within twenty four hours. The overall intraprocedural complication rate was two out of three hundred seventy two procedures, or zero point five percent.
+
+Guest: The two intraprocedural complications were one pulmonary hemorrhage and one episode of cardiac ischemia. The ischemia was diagnosed by new T wave changes on intraoperative E K G. Neither event led to death. The authors reported no airway injury, no cardiac arrest, and no intraprocedural death.
+
+Narrator: Within twenty four hours after the procedure, seven cases, or one point nine percent, were followed by a change in clinical status requiring increased respiratory support. Six of those involved new respiratory failure requiring intubation, high-flow nasal cannula, or bilevel ventilation. No post-procedure cardiac arrest occurred in that twenty four-hour window.
+
+Guest: Those numbers are reassuring, but they require a sober read. Two intraprocedural complications in three hundred seventy two cases is a low observed event rate, but rare catastrophic events are difficult to estimate precisely in a cohort of this size. Zero deaths is encouraging. It is not proof that the true risk is zero.
+
+Narrator: Methodologically, this is a descriptive safety and feasibility study. It is not a randomized comparison of operating room versus bronchoscopy suite. There is no concurrent operating-room control group, no adjustment for case selection, and no noninferiority design. The study tells us what happened in a selected bronchoscopy-suite cohort; it does not prove that the suite and the operating room are equivalent for every patient or every center.
+
+Guest: The selection bias is intentional and clinically important. The highest-risk patients were excluded from the suite pathway. Acute airway emergencies, unstable cardiac disease, significant pulmonary hypertension, and I C U rigid cases were done in the operating room. That likely lowered the expected complication rate in the suite cohort.
+
+Narrator: The single-center setting also matters. The procedures were performed by fellowship-trained interventional pulmonologists, and experienced anesthesiologists familiar with complex airway disease and jet ventilation were involved in every case. That expertise is not a small background feature. It is part of the intervention.
+
+Guest: Exactly. This paper is really describing a system of care, not just a physical location. A bronchoscopy suite with the right equipment but without rigid-trained proceduralists, anesthesia comfort with open and closed jet ventilation, difficult-airway backup, and institutional rescue pathways is a different environment. Location alone does not make the procedure safe.
+
+Narrator: The postoperative endpoint is also worth unpacking. Clinical deterioration within twenty four hours can reflect procedure-related complications, but also progression of underlying disease, anesthesia effects, secretion burden, bleeding, airway edema, or borderline baseline reserve. The paper does not deeply adjudicate those events, so it is hard to translate them into a granular patient-selection algorithm.
+
+Guest: A future study could help by stratifying deterioration by indication, intervention type, ventilation strategy, baseline oxygen requirement, extent of debulking, stent placement, and inpatient versus outpatient status. That would move the field from, this appears feasible, toward, these are the patients most likely to benefit from a suite-based pathway.
+
+Narrator: The resource argument is another important part of the paper. The authors report an equipment investment of approximately one hundred sixty thousand dollars for V A T S cameras, telescopes, bronchoscopy towers, rigid bronchoscopes, and a jet ventilator. They also report a direct cost reduction of about two thousand dollars per case when rigid bronchoscopy was performed in the bronchoscopy suite. At that rate, eighty cases would offset the capital investment.
+
+Guest: That is compelling, but the exact financial math is local. Cost-per-minute, staffing charges, turnover time, anesthesia models, nursing models, and room utilization vary substantially between hospitals. The portable message is not the exact dollar amount. It is that moving selected rigid cases to an appropriately equipped suite may improve access and reduce resource burden.
+
+Narrator: Let us play devil's advocate. Would these results hold up in a lower-volume center or in a newly developing rigid program?
+
+Guest: That remains uncertain. This study supports the model of a mature program. It does not define minimum annual volume, credentialing thresholds, anesthesia competency requirements, emergency conversion pathways, or a formal equipment checklist. A new program should view this as support for building a deliberate suite-based pathway, not as permission to simply move cases out of the operating room.
+
+Narrator: The opposite question is also fair. Are some centers overusing the operating room for stable, non-emergent cases that could be done safely in a high-functioning bronchoscopy suite?
+
+Guest: Probably yes. Selected malignant obstruction, airway stenosis, planned stent revision, transplant anastomotic disease, or foreign body cases may be reasonable suite candidates when the physiology is stable and the backup plan is credible. But the threshold should remain conservative for massive hemoptysis, unstable cardiopulmonary disease, anticipated impossible airway, severe pulmonary hypertension, or any case where immediate surgical or extraordinary rescue capability may determine survival.
+
+Narrator: So the practical translation is not, bronchoscopy suite good, operating room bad. It is more nuanced. Which patients, which procedures, which operators, which anesthesiologists, which equipment, and what rescue plan?
+
+Guest: Exactly. A defensible pathway would include explicit exclusion criteria, pre-procedure anesthesia review, standardized equipment, jet ventilation capability, difficult-airway backup, clear escalation to the operating room, and post-procedure monitoring criteria. The paper provides feasibility data, but local governance has to operationalize it.
+
+Narrator: Bottom line: in this selected cohort of three hundred seventy two non-emergent rigid bronchoscopies performed in a bronchoscopy suite, the observed intraprocedural complication rate was zero point five percent, with no airway injury, cardiac arrest, or death. Seven procedures, or one point nine percent, were followed by increased respiratory support within twenty four hours.
+
+Guest: The limitations are just as important as the results. This was retrospective, single-center, highly selected, descriptive, and not comparative. It should not justify broad migration of all rigid bronchoscopy out of the operating room. But it does support the idea that, for selected patients, an advanced bronchoscopy suite can be a safe and resource-conscious environment when the program is built deliberately.
+
+Narrator: For interventional pulmonologists and program leaders, the take-home is to treat location as one component of a safety system. Patient selection, procedural expertise, anesthesia capability, equipment, and rescue planning are the actual variables. The room label matters less than whether those elements are reliably present.
+
+Guest: This is a useful paper for conversations with anesthesia, perioperative leadership, procedural-suite administration, and hospital finance. It provides data for a common operational decision, while still leaving plenty of room for careful clinical judgment.
+
+Narrator: That closes this episode of InterventionalPulm.com IP Journal Review. The full article citation can be included separately in the show notes. Thanks for listening, and we will be back with another interventional pulmonology journal review.

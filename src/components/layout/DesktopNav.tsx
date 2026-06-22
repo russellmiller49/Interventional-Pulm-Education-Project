@@ -21,7 +21,7 @@ interface DesktopNavProps {
 
 const quickNavTitles = new Set([
   'EBUS Training',
-  'TNM-9 Staging',
+  'Podcast Library',
   '3D Anatomy',
   'IP Board Prep',
   'FluoroView',

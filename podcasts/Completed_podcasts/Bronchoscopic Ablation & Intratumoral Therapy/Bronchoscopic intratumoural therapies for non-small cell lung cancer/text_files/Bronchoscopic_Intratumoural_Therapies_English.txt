@@ -1,0 +1,54 @@
+
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we're discussing a narrative review by DeMaio and Sterman, published in the European Respiratory Review in 2020, titled "Bronchoscopic intratumoural therapies for non-small cell lung cancer." The review traces the rationale, history, and future direction of bronchoscopic local therapy for lung cancer, moving beyond palliation of malignant airway obstruction toward local delivery of cytotoxic, immune, and gene-based therapies.
+
+Guest: Right. The conceptual appeal is straightforward: bronchoscopy can deliver therapy directly into or near tumor tissue, potentially achieving high local concentrations while reducing systemic toxicity. The authors also emphasize potential effects on draining lymph nodes and micrometastatic disease, which becomes especially relevant when thinking about immunotherapy rather than conventional cytotoxic injection alone.
+
+Narrator: The review starts with a long arc, from early immunologic concepts such as Coley's toxins and BCG injections to modern immunogene strategies. But clinically, much of the bronchoscopic experience has been in malignant central airway obstruction.
+
+Guest: Exactly. Endobronchial intratumoral chemotherapy, or EITC, is the classic example. The review discusses Mehta and colleagues' 2015 experience injecting cisplatin for malignant central airway obstruction, with a 71% response rate defined as at least a 50% increase in airway patency and no severe treatment-related adverse effects.
+
+Narrator: That is encouraging for airway palliation, but it also highlights a recurring endpoint problem. Airway patency is clinically meaningful when obstruction is the problem, but it is not the same as progression-free survival, overall survival, or durable local control.
+
+Guest: Right. The review also discusses Celikoglu's work, where patients underwent weekly repeat bronchoscopies until at least a 25% improvement in airway patency was seen, and 88% achieved that threshold. That suggests activity, but the workflow is intensive, and many patients received other therapies, making it difficult to isolate the effect of the injection itself.
+
+Narrator: So selection bias and co-intervention are major issues. These are often patients with advanced disease and a mechanical airway problem. It is a major leap to generalize those data to peripheral early-stage lung cancer or to systemic disease control.
+
+Guest: The safety story is also mixed. The review mentions Li and colleagues' work with para-toluenesulfonamide, where 69% had relief of obstruction at 30 days, but one patient developed respiratory failure from worsening airway obstruction attributed to the drug. So the concept is feasible, but not risk-free.
+
+Narrator: One of the most important parts of the review is the pharmacodynamic discussion. Vignaud and colleagues injected methylene blue into NSCLC tumors before resection. Pathology showed the dye infiltrated only about 29% of tumor volume on average. It preferentially accumulated in the stroma, and some tumor regions were completely spared.
+
+Guest: That is the devil's advocate question. If an injected agent only reaches a minority of the tumor, how realistic is complete tumor ablation with a cytotoxic drug? Distribution is not a minor technicality; it is central to whether the therapy can work.
+
+Narrator: The authors make the case that this limitation may matter less for immunotherapies than for cytotoxics. If a local injection can initiate antigen presentation, T-cell recruitment, and a broader immune response, the therapeutic effect may extend beyond the exact region of drug deposition.
+
+Guest: That is the in-situ vaccination concept. The review uses the T-VEC melanoma experience as an analogy: inject one lesion, potentially see effects in uninjected lesions. It is an attractive model, but still an inference when applied to lung cancer.
+
+Narrator: The Lee et al. 2017 study is one of the more compelling mechanistic examples in the review. They injected CCL21 gene-modified dendritic cells into NSCLC tumors in a phase I trial. Safety was the primary goal, but pre- and post-injection biopsies showed increased CD8-positive T-cell infiltration and PD-L1 expression at day 7.
+
+Guest: That is the kind of biologic signal the field needs. It does not prove clinical efficacy, but it shows that local bronchoscopic delivery can alter the tumor immune microenvironment in measurable ways. The natural next question is whether that priming can synergize with systemic checkpoint blockade.
+
+Narrator: The review highlights exactly that direction, including trials combining CCL21-dendritic cells with pembrolizumab. The hypothesis is elegant: use local therapy to bring T cells into the tumor and enhance antigen presentation, then use systemic PD-1 blockade to sustain or amplify the response.
+
+Guest: But implementation is not simple. Standard EBUS bronchoscopes can target central tumors and lymph nodes, but not small peripheral nodules. Peripheral access requires navigation, smaller scopes, and increasingly advanced imaging or robotic platforms. That means the therapeutic concept is tightly linked to procedural technology.
+
+Narrator: The intranodal idea is particularly interesting. EBUS-guided injection directly into tumor-draining lymph nodes could, in theory, target the site of T-cell priming rather than the tumor mass itself.
+
+Guest: It is compelling, but again, distribution matters. A lymph node is not a homogeneous sphere. The review cites pharmacodynamic work suggesting multiple small injections may distribute drug more effectively than one large injection. That has procedural implications: success depends not only on reaching the target, but on how the agent is deposited.
+
+Narrator: Dosing remains another major gap. How much should be injected? How many passes? How much volume per injection site? The review notes that dosing in many studies has been empirical. For example, one group used 2 mg of cisplatin per mL of tumor because it appeared workable in their experience, but that is not the same as a rigorously optimized dose.
+
+Guest: And for oncolytic viruses or gene therapies, pharmacokinetics are even more complicated. The relevant measurements may include viral replication, shedding, immune activation, and systemic cytokine effects, not just local concentration.
+
+Narrator: So how should an IP audience think about this review?
+
+Guest: It is best viewed as a conceptual and procedural roadmap rather than a definitive evidence synthesis. It shows that bronchoscopic intratumoral therapy has a plausible biologic rationale, a long procedural history, and early mechanistic signals, but it also exposes major uncertainties: distribution, dosing, endpoint selection, repeat procedure burden, safety, and the need for controlled trials.
+
+Narrator: That distinction is important. The review does not establish bronchoscopic injection as a standard lung cancer therapy. It does show why IP may have a role in future thoracic oncology drug delivery, especially if local immune modulation can improve response to systemic therapy or overcome resistance.
+
+Guest: The practical translation is that IP programs involved in these therapies need more than procedural access. They need trial infrastructure, imaging support, tissue handling protocols, oncology partnership, biosafety processes for viral or cellular products, and clear endpoints that matter beyond airway patency.
+
+Narrator: And the field needs trials that can separate technical feasibility from clinical benefit. It is not enough to show that an agent can be injected. The relevant question is whether local delivery improves durable tumor control, systemic immune response, symptoms, survival, or the therapeutic index compared with existing systemic or local options.
+
+Guest: Exactly. This review is valuable because it frames both the promise and the constraints. Intratumoral therapy could become an important platform, but it remains dependent on better drug distribution strategies, rational dosing, thoughtful combinations, and rigorous clinical testing.
+
+Narrator: That wraps this episode of InterventionalPulm.com IP Journal Review. The take-home is that bronchoscopic intratumoral therapy is an intriguing translational space for IP, especially in immuno-oncology, but the current evidence is best interpreted as hypothesis-generating and technique-enabling rather than practice-defining. Thanks for listening.

@@ -1,0 +1,116 @@
+Narrador:
+Bienvenidos a InterventionalPulm punto com IP Journal Review. Hoy revisamos un artículo preclínico sobre ablación, de Zhang y colegas, publicado en Translational Research en 2026. El artículo se titula: “Ablación por electroporación irreversible pulsada sinérgica guiada por broncoscopia, como nueva terapia intervencionista para lesiones pulmonares: un estudio piloto en un modelo preclínico.”
+
+Invitado:
+Este trabajo se ubica justo dentro del campo creciente de la terapia broncoscópica para nódulos pulmonares. No se trata de diagnóstico. No se trata de estadificación. Se trata de tratamiento local administrado a través de la vía aérea. Específicamente, el artículo evalúa la electroporación irreversible pulsada sinérgica guiada por broncoscopia, o S I R E, en un modelo porcino de pulmón.
+
+Narrador:
+Exacto. La motivación clínica es familiar. Para pacientes con cáncer de pulmón en estadio temprano, o con metástasis pulmonares, que no son candidatos ideales para cirugía, ya consideramos opciones como radioterapia corporal estereotáctica, ablación térmica percutánea y, en escenarios seleccionados, ablación broncoscópica. Pero cada abordaje tiene limitaciones. La ablación percutánea requiere atravesar la pleura. Las técnicas térmicas generan preocupación por el efecto de disipación de calor, la lesión colateral y las lesiones cercanas a vías aéreas, vasos o pleura.
+
+Invitado:
+Y ese es el atractivo conceptual de la electroporación irreversible. Es una técnica no térmica basada en campos eléctricos pulsados. En lugar de cocinar el tejido, el pulso altera las membranas celulares e induce muerte celular, mientras potencialmente preserva la matriz extracelular y elementos estructurales como vasos y conductos. En el pulmón, esa preservación teórica de bronquios y vasos es muy importante, especialmente para lesiones centrales o peribroncovasculares, donde la lesión térmica es precisamente lo que preocupa.
+
+Narrador:
+La diferencia en este artículo es la parte “sinérgica”. Los autores no están simplemente probando la electroporación irreversible convencional. Utilizan una estrategia de pulsos compuestos de microsegundos y nanosegundos. Su razonamiento es que el tejido pulmonar y el tejido tumoral son eléctricamente heterogéneos, y que la S I R E podría producir un campo eléctrico local más uniforme que las estrategias de pulsos convencionales.
+
+Invitado:
+Esa es la hipótesis. Pero es importante decirlo desde el principio: este no fue un estudio de eficacia tumoral. No había nódulos pulmonares malignos en estos animales. Fue un estudio de seguridad, factibilidad y efecto tisular en pulmón porcino normal.
+
+Narrador:
+El modelo incluyó tres cerdos Bama machos, de 45 a 55 kilogramos. Los autores planificaron objetivos de ablación en localizaciones clínicamente relevantes: adyacentes a vías aéreas, adyacentes a la vasculatura, adyacentes a la pleura y dentro del parénquima pulmonar. En total, describen 30 ablaciones repetidas en tres animales.
+
+Invitado:
+También vale la pena resaltar el flujo del procedimiento. Los animales se sometieron a tomografía computarizada preoperatoria de cortes finos, seguida de planificación de la ruta de navegación. Bajo anestesia general, se avanzó un broncoscopio flexible dentro de las vías aéreas. Se colocó un catéter descartable de ablación por pulsos en objetivos predefinidos usando una plataforma de broncoscopia navegacional, y la posición del catéter se confirmó con tomografía computarizada de haz cónico, antes y después de la ablación.
+
+Narrador:
+La figura de la página 3 es útil porque muestra visualmente el montaje: broncoscopio, catéter de ablación, generador de pulsos, monitoreo electrocardiográfico, confirmación por imagen broncoscópica y proyección por tomografía de haz cónico del catéter desplegado. Entonces, aunque el artículo presenta esto como terapia guiada por broncoscopia, en realidad es broncoscopia más navegación más confirmación con tomografía de haz cónico.
+
+Invitado:
+Exactamente. Eso importa para la traslación clínica. Esto no es simplemente “poner un catéter por el broncoscopio y activar la ablación”. Es un flujo avanzado guiado por imagen. Si esto avanza hacia ensayos clínicos, la infraestructura de imagen y el trabajo coordinado del equipo serán centrales para su adopción.
+
+Narrador:
+En cuanto a la factibilidad del procedimiento, todos los procedimientos se completaron con éxito. La inserción del catéter bajo navegación broncoscópica tomó aproximadamente de 1 a 3 minutos, y la entrega total de pulsos después de colocar la sonda fue de alrededor de 5 a 8 minutos.
+
+Invitado:
+Y las señales de seguridad aguda fueron alentadoras. No reportaron contracciones musculares evidentes, sangrado, neumotórax ni anomalías cardíacas. Eso es notable porque las terapias de campo eléctrico pulsado pueden generar preocupación por contracción muscular y arritmia, dependiendo de los parámetros de pulso y de la localización.
+
+Narrador:
+El monitoreo de laboratorio incluyó hemograma completo, bioquímica sanguínea, proteína C reactiva, parámetros de coagulación y gases arteriales. Los autores reportan que no hubo diferencias estadísticamente significativas entre los valores preoperatorios y postoperatorios. El cerdo A y el cerdo B fueron seguidos hasta el día postoperatorio 3, y el cerdo C tuvo evaluación seriada hasta el día 28.
+
+Invitado:
+Dicho eso, los datos de seguridad de laboratorio deben interpretarse con mucha cautela. Con solo tres animales, las comparaciones estadísticas no son muy informativas. Además, algunos valores basales en las tablas parecen lo suficientemente inusuales como para que la señal se interprete mejor de manera cualitativa: no hubo deterioro clínico claro, no hubo una respuesta inflamatoria sistémica severa y no hubo una anomalía de laboratorio sostenida claramente atribuible al procedimiento.
+
+Narrador:
+La evolución por imágenes es una de las partes más interesantes del artículo. Inmediatamente después de la ablación, la tomografía computarizada mostró una zona de ablación de alta densidad, con edema circundante, exudación periférica y neumatosis mínima. Para el día postoperatorio 3, el área de ablación era más conspicua y mejor delimitada. Para el día 7, el edema y la exudación habían disminuido, y la zona de ablación comenzaba a reducirse. Para el día 14, las lesiones mostraban contracción y características fibróticas. Para el día 28, las zonas de ablación habían disminuido aún más, y algunas mostraban resolución casi completa.
+
+Invitado:
+El montaje de tomografía en la página 5 facilita ver ese patrón temporal. La zona de ablación comienza como una lesión hiperdensa y discreta, y luego se contrae progresivamente. La observación clave de seguridad es que las vías aéreas y los vasos que atravesaban o estaban adyacentes a las regiones de ablación permanecieron permeables, sin defectos de llenado ni estenosis luminal en las imágenes de seguimiento.
+
+Narrador:
+La patología respaldó ese patrón de imagen. En el examen macroscópico al día 3, las zonas de ablación eran necróticas y bien delimitadas, con hemorragia localizada y edema leve alrededor. Las estructuras bronquiales y vasculares visibles se describieron como intactas. Para el día 28, la hemorragia y el edema se habían resuelto, la región de ablación era más pequeña, y el área estaba rellenada y organizada por tejido de granulación.
+
+Invitado:
+Histológicamente, el día 3 mostró atrofia celular, necrosis, edema intersticial, espacios intercelulares ensanchados, fragmentos nucleares, infiltración inflamatoria e infiltración de fibroblastos. Para el día 28, el tejido necrótico había sido reemplazado en gran medida por tejido de granulación con proliferación de fibroblastos, inflamación mínima y sin anomalías importantes en la arquitectura bronquial o vascular.
+
+Narrador:
+Entonces, el estudio sí demuestra que la S I R E administrada por vía broncoscópica puede crear un patrón localizado de lesión pulmonar en pulmón porcino normal, incluso cerca de estructuras críticas, sin destrucción evidente de vías aéreas o vasos a corto plazo.
+
+Invitado:
+Esa es la interpretación positiva y justa. La técnica parece factible, el perfil de seguridad aguda en este modelo pequeño es tranquilizador, y la respuesta tisular se comporta de una manera biológicamente plausible: lesión bien delimitada al inicio, seguida de organización y contracción con el tiempo.
+
+Narrador:
+Ahora, la pregunta del abogado del diablo: ¿hasta dónde podemos llevar esto?
+
+Invitado:
+Clínicamente, todavía no muy lejos. Este es un estudio que habilita una plataforma, no un estudio de eficacia clínica. La limitación más importante es que los objetivos fueron tejido pulmonar normal, no tumores pulmonares. Los tumores tienen distinta conductividad, celularidad, necrosis, vascularidad, arquitectura estromal y, a veces, adyacencia a atelectasia o enfisema. La razón de ser de la S I R E es que el tejido heterogéneo podría distorsionar los campos eléctricos, pero este estudio no demuestra destrucción tumoral confiable en lesiones pulmonares malignas heterogéneas.
+
+Narrador:
+Y no hay comparador.
+
+Invitado:
+Correcto. No hay comparación con ablación por microondas, ablación por radiofrecuencia, crioablación, electroporación irreversible convencional ni tratamiento simulado. Así que no podemos decir que la S I R E sea más segura o más eficaz que las técnicas existentes. Solo podemos decir que, en este pequeño modelo porcino, produjo zonas de ablación sin complicaciones mayores observadas.
+
+Narrador:
+Otro punto es la independencia de las observaciones. Los autores describen 30 ablaciones, lo cual suena considerable, pero esas ablaciones ocurrieron en solo tres animales.
+
+Invitado:
+Ese es un punto estadístico importante. Múltiples zonas de ablación dentro del mismo cerdo no equivalen a 30 animales independientes. Para evaluar la apariencia tisular, los objetivos repetidos son útiles. Para seguridad, especialmente complicaciones raras como neumotórax, hemoptisis, arritmia, estenosis tardía de vía aérea, fístula broncopleural o infección, tres animales y 28 días de seguimiento son solo una primera mirada.
+
+Narrador:
+Además, el horizonte de seguimiento es corto. El día 28 es útil para observar la cicatrización temprana, pero no es suficiente para comprender fibrosis madura, estrechamiento tardío de la vía aérea, remodelado vascular, cavitación, riesgo de infección crónica o cómo se comportan las zonas de ablación en pulmón humano enfisematoso o fibrótico.
+
+Invitado:
+Y clínicamente, el desenlace que importa no es solo si se puede ablar tejido normal. Es si una lesión maligna puede tratarse por completo con un margen adecuado, preservando al mismo tiempo las estructuras que nos importan. Eso significa que los estudios futuros necesitan geometría cuantitativa de la ablación, mapeo de dosis y respuesta, monitoreo de temperatura o exclusión de efecto térmico, confiabilidad del margen y, eventualmente, control local.
+
+Narrador:
+También hay un punto práctico sobre el flujo de trabajo. Este artículo usó confirmación con tomografía de haz cónico antes y después de la ablación. Eso es una fortaleza científica, porque confirma la posición del catéter, pero también significa que este flujo podría ser más relevante para centros con imagen avanzada en la sala de broncoscopia o en un quirófano híbrido.
+
+Invitado:
+Sí. Si la traslación clínica requiere tomografía de haz cónico, navegación, catéteres de ablación dedicados, generadores de pulsos, anestesia, monitoreo electrocardiográfico y potencialmente acceso robótico o broncoscópico avanzado, la adopción no será trivial. Pero eso no necesariamente es una falla. Muchos procedimientos avanzados de neumología intervencionista ya viven en ese espacio.
+
+Narrador:
+¿Cuál ves como el nicho clínico más plausible?
+
+Invitado:
+El nicho más interesante no necesariamente serían todos los nódulos periféricos pequeños. Podrían ser las lesiones en las que la ablación térmica percutánea no es atractiva por riesgo pleural, localización central, proximidad a vasos o vías aéreas, o reserva pulmonar limitada. El mecanismo no térmico podría ser particularmente atractivo para lesiones peribroncovasculares si realmente preserva la arquitectura de vías aéreas y vasos. Pero eso queda por demostrarse en modelos con tumores y luego en ensayos humanos cuidadosamente seleccionados.
+
+Narrador:
+También existe la posibilidad de una sesión broncoscópica combinada: diagnóstico, estadificación mediastínica y, eventualmente, ablación local.
+
+Invitado:
+Esa es la visión a largo plazo. Un clínico de neumología intervencionista podría, en teoría, confirmar malignidad, estadificar el mediastino y tratar una lesión en un solo evento anestésico. Pero ese futuro requiere mucha más evidencia: confirmación en tiempo real de herramienta dentro de la lesión, márgenes de ablación confiables, seguridad predecible cerca de pleura y vasos, y un algoritmo de vigilancia posterior a la ablación.
+
+Narrador:
+Los autores también discuten posibles efectos inmunológicos de los campos eléctricos pulsados de nanosegundos y una posible sinergia con administración de fármacos o inmunoterapia.
+
+Invitado:
+Interesante, pero especulativo para este artículo. No evaluaron inmunidad antitumoral, reexposición tumoral, combinaciones con inmunoterapia ni administración local de fármacos. Es un contexto razonable, pero no debería impulsar entusiasmo clínico antes de contar con datos oncológicos reales.
+
+Narrador:
+Entonces, síntesis final: Zhang y colegas presentan una demostración preclínica temprana de que la ablación por S I R E guiada por broncoscopia puede administrarse a múltiples objetivos pulmonares porcinos, incluyendo sitios cerca de bronquios, vasos, pleura y parénquima. Los procedimientos se completaron sin neumotórax, sangrado, contracciones musculares ni anomalías cardíacas observadas. La tomografía y la patología mostraron zonas de ablación bien delimitadas que se contrajeron y organizaron durante 28 días, mientras las vías aéreas y los vasos adyacentes permanecieron estructuralmente permeables.
+
+Invitado:
+Y la advertencia es igual de importante: este es pulmón porcino normal, tres animales, seguimiento corto, sin comparador y sin desenlace de eficacia contra cáncer. Es un estudio técnico prometedor de factibilidad, no un ensayo terapéutico que cambie la práctica clínica. Para una audiencia de neumología intervencionista, la conclusión correcta es interés cauteloso. La S I R E podría convertirse en parte de la conversación sobre ablación broncoscópica, especialmente para lesiones cerca de estructuras críticas, pero el campo necesita estudios animales más grandes, modelos tumorales, mapeo de dosis, estudios de margen y ensayos humanos tempranos cuidadosamente diseñados antes de que esto pueda considerarse una estrategia clínica de tratamiento.
+
+Narrador:
+Eso es todo por este episodio de InterventionalPulm punto com IP Journal Review. Gracias por escuchar. La pregunta clave de aquí en adelante no es simplemente si un catéter broncoscópico de campo eléctrico puede crear una zona de ablación. Es si puede erradicar tumores de manera reproducible, preservar la arquitectura pulmonar y hacerlo de forma segura en los pacientes que más podrían beneficiarse de una terapia broncoscópica mínimamente invasiva.

@@ -1,0 +1,92 @@
+Narrator:
+Welcome to InterventionalPulm.com IP Journal Review. In this episode, we’re looking at Swenson and colleagues, published in the Journal of Thoracic Disease in 2026, titled “Integrating interventional pulmonology and thoracic surgery: a multidisciplinary approach to advanced pulmonary care.”
+
+Guest:
+This is not a randomized trial or a diagnostic accuracy study. It’s a descriptive review and institutional blueprint, which changes how we should read it. The value is not in a primary endpoint or a hazard ratio. The value is in how the authors frame the operational overlap between interventional pulmonology and thoracic surgery across several high-complexity disease states.
+
+Narrator:
+Right. The central argument is that IP and thoracic surgery are increasingly managing the same patients, often at different points along the same diagnostic and therapeutic pathway. The authors describe a unified IP-thoracic surgery model built around shared referral pathways, joint clinics, multidisciplinary conferences, and early dual-specialty review.
+
+Guest:
+And that matters because many of these patients do not fit neatly into one specialty lane. ECAC, emphysema requiring lung volume reduction, early-stage lung cancer with peripheral nodules, complicated pleural infection, and persistent air leak all involve decisions where timing, escalation, and patient selection are everything.
+
+Narrator:
+Let’s start with ECAC. The authors frame ECAC as a classic multidisciplinary disease because symptoms overlap with COPD, asthma, GERD, and recurrent infection. Diagnosis requires more than a clinic impression. They describe dynamic CT with inspiratory and expiratory sequences, followed by awake dynamic bronchoscopy with conscious sedation. Severe ECAC is defined here by greater than 90 percent collapse in cross-sectional airway area.
+
+Guest:
+The key workflow point is the stent trial. In their model, IP performs a temporary two-week airway stent trial for severe ECAC to help predict who is likely to benefit from tracheobronchoplasty. They report that up to 75 percent of patients undergoing a stent trial describe significant symptomatic improvement, and 80 percent of positive responders subsequently report quality-of-life improvement after tracheobronchoplasty.
+
+Narrator:
+That is clinically compelling, but it’s also where we need to be careful. These are not randomized data showing that a stent trial improves hard outcomes. A stent trial may help with selection, but it also introduces its own problems: mucus plugging, cough, granulation tissue, migration, and the fact that a short-term airway stent is an imperfect simulation of surgical posterior membrane stabilization.
+
+Guest:
+Exactly. Still, the proposed pathway makes sense. The figure on page 4 lays this out visually: suspected ECAC goes through IP testing with early thoracic surgery involvement, severe cases undergo a stent trial, positive responders move to joint IP and thoracic surgery evaluation, surgical candidates proceed to tracheobronchoplasty, and negative trials or nonsurgical candidates move toward medical management, GERD treatment, or laryngology evaluation.
+
+Narrator:
+The emphysema section is another useful example because BLVR and surgical lung volume reduction are often discussed as competing approaches, but the authors frame them as complementary options along a single pathway.
+
+Guest:
+They review the familiar tension. NETT showed higher 90-day mortality with surgical lung volume reduction compared with medical therapy, 7.9 percent versus 1.3 percent. But high-volume centers have reported lower mortality and durable functional benefit in carefully selected patients. On the bronchoscopic side, endobronchial valves are less invasive and reversible, and the paper notes that GOLD lists EBVs as an evidence-level A treatment option for severe emphysema with hyperinflation.
+
+Narrator:
+The constraint, of course, is collateral ventilation. The authors state that only about 65 percent of otherwise eligible patients can undergo BLVR with EBVs because of collateral ventilation. That is exactly where the IP-surgery interface becomes interesting.
+
+Guest:
+Right. Their pathway asks: Is the fissure complete? If yes, EBVs are considered. If the patient responds, IP follows the patient. If not, both IP and thoracic surgery reassess. If the fissure is incomplete, the authors describe a combined strategy of thoracoscopic fissure completion followed by EBV placement. And if the patient is an optimal surgical candidate, surgical lung volume reduction remains on the table.
+
+Narrator:
+Page 5’s figure captures this nicely. It is not a “bronchoscopy first, surgery later if everything fails” model. It’s a parallel evaluation model. The interesting research angle is that the authors mention active trials, including COMPLETE-1, comparing medical management to thoracoscopic fissure completion followed by EBV placement, and SAVED-I, evaluating fissure completion with adhesiolysis in patients who failed BLVR.
+
+Guest:
+That’s an important point. A multidisciplinary clinic can become more than a scheduling convenience. It can become the infrastructure for pragmatic procedural research. But the devil’s advocate question is whether this is broadly feasible. Thoracoscopic fissure completion plus EBV placement is not a small lift. It requires surgical buy-in, IP expertise, quantitative CT workflows, Chartis or equivalent collateral ventilation assessment, anesthesia coordination, and a center willing to manage pneumothorax and post-procedure resource use.
+
+Narrator:
+Let’s move to lung cancer, where the article probably feels most immediately relevant to many IP groups. The authors review the now-familiar role of EBUS for mediastinal staging and molecular tissue acquisition, navigational bronchoscopy for peripheral nodules, fiducial placement for SBRT, and robotic bronchoscopy for biopsy or marking of lesions that are difficult to access by conventional bronchoscopy.
+
+Guest:
+The most provocative part is the same-anesthesia concept. The authors cite a retrospective case-control study in early-stage NSCLC where combined robotic-assisted bronchoscopy and surgical lobectomy reduced time to intervention by an average of 36 days and lowered complications compared with conventional biopsy, 0 percent versus 10 percent.
+
+Narrator:
+They also describe more than 15 cases at their center using combined single-procedure lesion marking followed by surgical resection, especially for small, less than one centimeter, deeply located, subsolid, or ground-glass nodules that may not be seen or palpated during surgery.
+
+Guest:
+That workflow is attractive because the usual pathway can be painfully slow: CT detection, referral, clinic visit, biopsy, pathology, tumor board, surgical consult, then resection. Same-day diagnose-and-resect or mark-and-resect compresses that timeline. But compression is not automatically better for every patient. The key questions are: How certain is the pretest probability? What is the plan if ROSE is nondiagnostic? Is there enough tissue for molecular testing if the final pathway changes? And how do we avoid taking benign disease to resection because the logistics are seductive?
+
+Narrator:
+Page 7’s figure shows the contrast well. Traditional care routes the patient through staged biopsy and multidisciplinary conference before resection. The streamlined pathway includes mark-and-resect or diagnose-and-resect under one anesthesia event, if malignancy is confirmed. For the right patient, that is elegant. For the wrong patient, it could be overly aggressive.
+
+Guest:
+That is the core theme of the article: integration should improve selection, not bypass judgment.
+
+Narrator:
+The pleural section brings the same idea into hospitalized care. For complicated pleural infection, the authors highlight the persistent uncertainty between surgical decortication and intrapleural fibrinolytic therapy with tPA and DNase.
+
+Guest:
+They note that complicated pleural infections affect roughly 80,000 patients annually in the United States and United Kingdom, and they cite high mortality in ICU patients. They also emphasize that direct comparative evidence remains limited. One prospective trial of 26 patients comparing tPA plus DNase to surgical decortication found comparable complication rates, similar chest tube duration, 5 days versus 4 days, and a longer median hospital stay in the fibrinolytic arm, 11 versus 5 days, although that difference was not statistically significant.
+
+Narrator:
+Their institutional pathway is straightforward: IP and thoracic surgery evaluate early during the admission. Surgical candidates move toward early definitive intervention. Patients with prohibitive operative risk receive IPFT under close surgical oversight, with rapid escalation if there is no clinical improvement.
+
+Guest:
+That may sound obvious, but it is not how pleural infection always plays out. In many hospitals, these patients bounce between antibiotics, repeated imaging, additional drains, delayed fibrinolytics, and late surgical consultation. The authors are arguing for parallel planning rather than serial disappointment, which is a phrase that probably should not appear in a guideline, but unfortunately describes a lot of pleural infection care.
+
+Narrator:
+Persistent air leak is similar. PAL is defined here as a non-resolving pneumothorax with air leak lasting more than 5 to 7 days. Surgery remains the gold standard, but many patients are poor candidates. The authors describe bronchoscopic options such as EBV deployment, sealants, autologous blood patch infusion, and pleural blood patching, coordinated with thoracic surgery around timing and escalation.
+
+Guest:
+The broader critique is that this review is an institutional model, not proof that the model improves mortality, length of stay, complication rates, cost, or patient-reported outcomes. It is highly plausible, but it is not definitive. A unified division, adjacent offices, frequent conferences, and embedded procedural trials are easier to describe than to reproduce. Smaller centers may not have the same personnel, procedural volume, or administrative structure.
+
+Narrator:
+So the practical takeaway is not that every center must duplicate this exact architecture. It’s that IP programs should map where delays and handoff failures occur. Is there a single referral pathway for complex airway disease? Is thoracic surgery involved before the failed third chest tube in pleural infection? Are BLVR patients reviewed with surgical options in mind before they are labeled ineligible? Are peripheral nodules triaged with a plan for biopsy, marking, staging, and possible resection from the outset?
+
+Guest:
+And for centers building these programs, the measurable outcomes matter. Time from referral to definitive intervention. Rate of duplicated procedures. Nondiagnostic biopsy rates. Time to oncologic therapy. Hospital length of stay for CPI and PAL. Complication rates. Patient-reported dyspnea and quality of life. Those metrics would move this from a thoughtful blueprint toward evidence for a care-delivery model.
+
+Narrator:
+In the end, Swenson and colleagues give us a useful conceptual framework. The review is strongest when it shows how IP and thoracic surgery can function as parallel procedural partners rather than sequential consultants. It is weakest, inevitably, where it relies on institutional experience and extrapolation rather than comparative outcomes.
+
+Guest:
+That’s a fair synthesis. This article should not be read as a mandate to restructure every program. It should be read as a prompt to ask whether current workflows match the complexity of the diseases being treated. For ECAC, emphysema, early lung cancer, CPI, and PAL, the patient often needs both minimally invasive expertise and surgical judgment early, not after the pathway has already stalled.
+
+Narrator:
+That will do it for this episode of InterventionalPulm.com IP Journal Review. The main message: integration is not just about collegiality. It is about patient selection, escalation pathways, timing, and preserving optionality across the full procedural spectrum. Thanks for listening.

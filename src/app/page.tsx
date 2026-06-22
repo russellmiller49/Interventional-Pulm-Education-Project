@@ -9,6 +9,14 @@ import { isVisibleModulePath } from '@/lib/draft-modules'
 
 const featureHighlights = [
   {
+    badge: 'New · Audio',
+    title: 'Journal Club Podcasts',
+    description:
+      'Listen to article-focused IP journal club discussions in English, Spanish, Mandarin, Arabic, and Korean.',
+    href: '/journal-club-podcasts',
+    cta: 'Browse Podcasts',
+  },
+  {
     badge: 'EBUS',
     title: 'EBUS Training',
     description:
@@ -116,7 +124,8 @@ export default async function HomePage() {
             </h2>
             <p className="text-base leading-7 text-muted-foreground md:text-lg">
               Start with the modules that are ready for learners now: EBUS training, TNM-9 staging,
-              3D anatomy, board review, Nav Bronch, FluoroView, and teaching resources.
+              3D anatomy, board review, journal club podcasts, Nav Bronch, FluoroView, and teaching
+              resources.
             </p>
           </div>
           <Button asChild variant="secondary" className="w-fit rounded-full px-6">

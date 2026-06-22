@@ -1,0 +1,65 @@
+Narrador: Bienvenidos a Interventional Pulm punto com, Revisión de Revistas de IP. En este episodio hablamos de una comparación directa entre broncoscopia navegacional y biopsia transtorácica con aguja para nódulos pulmonares periféricos: el ensayo VERITAS, con Lentz como primer autor, publicado en New England Journal of Medicine en dos mil veinticinco.
+
+Invitado: Correcto. Este fue un ensayo iniciado por investigadores, multicéntrico, aleatorizado y de no inferioridad, que comparó la broncoscopia navegacional con la biopsia transtorácica con aguja guiada por tomografía computarizada, o T T N B, en pacientes con nódulos pulmonares periféricos. Los nódulos medían entre diez y treinta milímetros, y los pacientes incluidos tenían una probabilidad preprueba intermedia a alta de cáncer.
+
+Narrador: Y la tecnología importa aquí. El brazo de broncoscopia usó navegación electromagnética integrada con tomosíntesis digital, específicamente la plataforma Illumisite de Medtronic. El ensayo incluyó siete centros en Estados Unidos, con una mezcla de sitios académicos y comunitarios, lo cual es importante al pensar en la generalizabilidad.
+
+Invitado: El desenlace primario fue la precisión diagnóstica a los doce meses. Se definió como un diagnóstico específico, ya fuera malignidad o un diagnóstico benigno específico, confirmado como correcto después de un año de seguimiento. El margen de no inferioridad fue de diez puntos porcentuales.
+
+Narrador: Vamos directamente al desenlace primario. ¿Qué encontraron?
+
+Invitado: La broncoscopia navegacional cumplió el criterio de no inferioridad. La precisión diagnóstica fue de setenta y nueve punto cero por ciento en el grupo de broncoscopia, noventa y cuatro de ciento diecinueve pacientes, en comparación con setenta y tres punto seis por ciento en el grupo de T T N B, ochenta y uno de ciento diez pacientes. La diferencia absoluta fue de cinco punto cuatro puntos porcentuales, con un intervalo de confianza del noventa y cinco por ciento desde menos seis punto cinco hasta diecisiete punto dos. El valor p para no inferioridad fue cero punto cero cero tres.
+
+Narrador: Entonces, estadísticamente, fue no inferior. La estimación puntual incluso favoreció a la broncoscopia navegacional, aunque no alcanzó superioridad, con un valor p de cero punto diecisiete. Eso es clínicamente interesante, pero aun así debe interpretarse como un resultado de no inferioridad.
+
+Invitado: Exactamente. El rendimiento diagnóstico, que fue un desenlace secundario centrado de manera más estrecha en el procedimiento mismo, sin la confirmación a doce meses, también fue muy similar: setenta y nueve punto tres por ciento para la broncoscopia navegacional versus setenta y siete punto nueve por ciento para la T T N B.
+
+Narrador: El perfil de seguridad es donde la discusión clínica se vuelve especialmente importante.
+
+Invitado: Absolutamente. La tasa global de complicaciones fue de cinco punto cero por ciento en el grupo de broncoscopia navegacional versus veintinueve punto dos por ciento en el grupo de T T N B, impulsada principalmente por el neumotórax. Cualquier neumotórax ocurrió en tres punto tres por ciento de los pacientes de broncoscopia, en comparación con veintiocho punto tres por ciento de los pacientes de T T N B. El neumotórax que requirió intervención, es decir, un tubo de tórax u hospitalización, ocurrió en cero punto ocho por ciento del grupo de broncoscopia, esencialmente un paciente, en comparación con once punto cinco por ciento en el grupo de T T N B.
+
+Narrador: Esa diferencia absoluta es difícil de ignorar. El número necesario para dañar con T T N B, en comparación con broncoscopia navegacional, es aproximadamente nueve a diez para neumotórax que requiere intervención. Eso no hace que el estudio sea automáticamente transformador para toda la práctica clínica, pero sí es una señal de seguridad clínicamente significativa si la estimación se mantiene en entornos de práctica más amplios.
+
+Invitado: Correcto. La metodología ayuda a interpretar los resultados. Las imágenes fueron revisadas centralmente para confirmar que los nódulos fueran accesibles para ambas técnicas. Eso es importante porque, en la práctica clínica habitual, la selección de lesiones con frecuencia determina si un paciente se deriva hacia broncoscopia o hacia biopsia percutánea.
+
+Narrador: Se evaluaron quinientos diecinueve pacientes para aleatorizar doscientos ochenta y ocho, de modo que esta no es una población de todos los pacientes con nódulos periféricos. Una exclusión clave fue la inviabilidad técnica: diecinueve pacientes fueron considerados no candidatos para T T N B, y uno para broncoscopia navegacional, después de la revisión central. Eso significa que este ensayo se aplica a nódulos que los expertos consideraron técnicamente factibles para ambos abordajes.
+
+Invitado: Exactamente. Y ese es un límite clínico importante. Estos resultados no deben generalizarse a cada lesión subpleural de ocho milímetros, a cada lesión sin una vía aérea hacia el objetivo, o a cada paciente con una anatomía que hace que un abordaje sea claramente preferible.
+
+Narrador: Hablemos del brazo de T T N B. Una precisión diagnóstica de setenta y tres punto seis por ciento puede parecer baja en comparación con series históricas que a menudo reportan cifras más cercanas al noventa por ciento.
+
+Invitado: Los autores abordan ese punto. Argumentan que muchas estimaciones más altas provienen de series retrospectivas y no aleatorizadas, con mayor riesgo de sesgo. El tamaño mediano del nódulo en este ensayo fue de quince milímetros, y el desempeño de la T T N B disminuye con objetivos más pequeños. Así que el resultado de la T T N B puede ser menos sorprendente cuando uno se enfoca en el tamaño de las lesiones y en el rigor del desenlace.
+
+Narrador: Pero hay un factor de confusión importante: R O S E. La evaluación rápida en el sitio se usó en noventa y cinco punto ocho por ciento de los casos de broncoscopia, pero solo en siete punto dos por ciento de los casos de T T N B. ¿Podría esa diferencia explicar parte del desempeño de la broncoscopia?
+
+Invitado: Podría. La magnitud es incierta, pero el desequilibrio es grande. Puede reflejar patrones reales de práctica, pero complica cualquier afirmación de que los dispositivos o las rutas de acceso se compararon de forma aislada. Un programa de T T N B con apoyo rutinario de citopatología podría comportarse de manera diferente.
+
+Narrador: La pérdida posterior a la aleatorización también merece atención. Dieciséis pacientes asignados a T T N B no recibieron la intervención, en comparación con ocho en el brazo de broncoscopia navegacional. En el grupo de T T N B, seis casos se atribuyeron a la negativa del proceduralista, incluso después de la adjudicación central de factibilidad.
+
+Invitado: Ese es un detalle revelador del flujo de trabajo. Sugiere que algunas lesiones pueden ser técnicamente factibles en una revisión central, pero aun así generar incomodidad para los proceduralistas en la práctica, ya sea junto a la cama del paciente o en el escáner. Además, diez pacientes del grupo de T T N B tuvieron regresión el mismo día en las imágenes previas al procedimiento, versus dos en el brazo de broncoscopia. Los autores contaron eso como un desenlace diagnóstico para el análisis primario, y argumentan que eso pudo haber sesgado el análisis a favor de la T T N B y, por lo tanto, fortalecer la conclusión de no inferioridad para la broncoscopia.
+
+Narrador: Ahora la pregunta del abogado del diablo. El estudio fue financiado por Medtronic, y todas las broncoscopias se realizaron con la plataforma Illumisite. Los autores declaran que el financiador no tuvo participación en el diseño del ensayo, el análisis de los datos ni la redacción del manuscrito, pero el uso de una sola plataforma en el brazo de broncoscopia todavía afecta la interpretación.
+
+Invitado: Sí, la afecta. Esta no es una comparación de todas las plataformas de broncoscopia avanzada contra la T T N B. Es una comparación de un flujo de trabajo moderno de navegación electromagnética y tomosíntesis digital, utilizado por operadores experimentados, frente a la T T N B guiada por tomografía computarizada en los centros participantes. Esa puede ser la comparación clínicamente relevante en algunos sistemas, pero no es una afirmación universal sobre la tecnología.
+
+Narrador: La experiencia del operador es otro punto clave. El brazo de broncoscopia puede reflejar un entorno de broncoscopia avanzada maduro y de alto rendimiento. La pregunta es si una precisión y seguridad similares se reproducirían con operadores de menor volumen, en las primeras etapas de una curva de aprendizaje, o sin R O S E consistente.
+
+Invitado: Exactamente. Al mismo tiempo, la biopsia guiada por tomografía computarizada es una tecnología madura. Uno podría argumentar que si una técnica percutánea madura tiene una tasa de neumotórax sustancialmente más alta en un ensayo aleatorizado, esa diferencia de seguridad es clínicamente significativa, incluso si el brazo de broncoscopia representa una práctica experimentada.
+
+Narrador: Los datos de subgrupos también son útiles. ¿Importó el signo del bronquio?
+
+Invitado: Sí. En pacientes con signo del bronquio, la precisión diagnóstica fue de noventa punto dos por ciento para broncoscopia navegacional versus setenta y cinco punto siete por ciento para T T N B, una diferencia absoluta de casi quince puntos porcentuales a favor de la broncoscopia. En nódulos sin signo del bronquio, los números fueron casi idénticos: setenta y tres punto uno por ciento y setenta y dos punto seis por ciento.
+
+Narrador: Eso respalda la intuición biológica y procedural de que una vía aérea hacia la lesión importa. Para un nódulo con signo del bronquio, estos datos ofrecen un argumento sólido para considerar seriamente la broncoscopia navegacional como primera línea, especialmente cuando el menor riesgo de neumotórax forma parte de la decisión.
+
+Invitado: En nódulos menores de quince milímetros, la precisión fue limitada para ambas estrategias: sesenta y nueve punto seis por ciento para broncoscopia navegacional y sesenta y seis punto uno por ciento para T T N B. Para nódulos de quince a treinta milímetros, la broncoscopia navegacional fue de ochenta y siete punto tres por ciento versus ochenta y uno punto cinco por ciento para T T N B. Eso refuerza el punto de que el tamaño de la lesión sigue siendo central en la planificación diagnóstica.
+
+Narrador: Entonces, ¿cómo debería aplicar esto una audiencia de intervención pulmonar? El estudio apoya una estrategia de broncoscopia primero para nódulos seleccionados de diez a treinta milímetros que sean técnicamente accesibles por ambos abordajes, en particular cuando existe signo del bronquio y cuando la broncoscopia puede realizarse por un equipo experimentado, con apoyo adecuado de imagen y citopatología.
+
+Invitado: Pero las salvedades siguen siendo importantes: especificidad de la plataforma, experiencia del operador, uso casi universal de R O S E en el brazo de broncoscopia, y la naturaleza seleccionada de las lesiones incluidas. Sería demasiado amplio decir que cada nódulo periférico debe ir primero a broncoscopia. La mejor interpretación es que, para nódulos anatómicamente adecuados en programas capaces, la broncoscopia navegacional puede ofrecer una precisión diagnóstica confirmada similar, con muchos menos neumotórax que requieren intervención.
+
+Narrador: Ese es un mensaje práctico. Cambia la conversación previa al procedimiento, alejándola de la suposición de que la T T N B siempre es la prueba más precisa, y llevándola hacia una discusión más matizada sobre la anatomía de la lesión, el signo del bronquio, la experiencia local, la tecnología de navegación disponible, el flujo de trabajo de citopatología y el riesgo de neumotórax.
+
+Invitado: De acuerdo. Este ensayo le da a la comunidad de intervención pulmonar un dato aleatorizado sólido para la selección de pacientes y la planificación multidisciplinaria de nódulos. No elimina el papel de la T T N B, pero sí construye el argumento de que la broncoscopia avanzada debe considerarse temprano, no solamente después de que la biopsia percutánea se considere demasiado riesgosa o ya haya fallado.
+
+Narrador: Con esto cerramos este episodio de Interventional Pulm punto com, Revisión de Revistas de IP. El mensaje principal es que VERITAS apoya la broncoscopia navegacional como una estrategia diagnóstica altamente competitiva para nódulos periféricos seleccionados, con una ventaja de seguridad importante en el riesgo de neumotórax, aunque todavía quedan preguntas importantes sobre la generalizabilidad de la plataforma, R O S E y la experiencia del operador. Gracias por escuchar.

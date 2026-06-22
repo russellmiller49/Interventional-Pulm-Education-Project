@@ -1,0 +1,57 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we're discussing Ratwani and colleagues, published in Annals of the American Thoracic Society in 2025, on post-thoracentesis ultrasound versus chest x-ray for evaluating effusion evacuation and lung re-expansion. The senior author is Shojaee, and the study is referred to as EVACUTE.
+
+Guest: This is a pragmatic workflow question. After therapeutic thoracentesis, clinicians often want to know whether the pleural space was adequately evacuated, whether the lung re-expanded, and whether there is evidence of a complication. Guidelines have moved away from routine post-procedure chest x-ray in asymptomatic patients, but many workflows still default to radiography.
+
+Narrator: The investigators enrolled 147 patients and analyzed 145 patients undergoing therapeutic thoracentesis for large, free-flowing effusions across six academic centers. The median age was 64, and malignancy was the most common known etiology at about 50%.
+
+Guest: The primary comparison was agreement between post-thoracentesis ultrasound and chest x-ray for complete pleural space evacuation. The definition was strict: no visible fluid in the anterior, mid-axillary, and posterior ultrasound views, and no blunting of the costophrenic angle on chest x-ray.
+
+Narrator: And the agreement was very high. They used Gwet's AC1 to address the kappa paradox, and the coefficient for complete evacuation was 0.93, with a 95% confidence interval from 0.83 to 1.00.
+
+Guest: That is a strong agreement statistic. They also assessed residual effusion size, categorizing residual fluid as small or large. Agreement there was still substantial, with a kappa of 0.64.
+
+Narrator: They also tackled trapped lung, which is always more clinically nuanced than the imaging label alone. Their pragmatic definition combined symptoms such as chest pain or intractable cough with incomplete lung re-expansion.
+
+Guest: Agreement between the proceduralist's assessment using ultrasound and the assessment using chest x-ray was strong, with a kappa of 0.89. The proceduralist called trapped lung in 49.7% of cases based on ultrasound and clinical signs, and that changed only slightly to 47.6% after reviewing chest x-ray.
+
+Narrator: That suggests chest x-ray may add little for that specific bedside question, at least in this population and in experienced hands. But there is an important bias issue.
+
+Guest: Yes. The proceduralist was not blinded. The assessment was made using ultrasound first and then chest x-ray. That reflects real clinical workflow, but it means the x-ray interpretation may have been influenced by what the operator had just seen and experienced during the procedure.
+
+Narrator: So the trapped lung agreement is pragmatic, not a pure independent-modality comparison. The authors strengthened other parts of the study by using blinded independent reviewers - two pulmonologists for ultrasound and two radiologists for chest x-ray - to assess interobserver reliability.
+
+Guest: And the proceduralist-to-blinded-ultrasound agreement for complete evacuation was strong, with a kappa of 0.81. That supports the reliability of the bedside ultrasound assessment for the evacuation endpoint.
+
+Narrator: Now for the devil's advocate question: what does ultrasound not assess as well?
+
+Guest: Parenchymal abnormalities. Agreement was much weaker for atelectasis, with Gwet's AC1 of 0.21, and consolidation, with AC1 of 0.13. Pleural thickening had high agreement at 0.89, which makes sense, but chest x-ray may still provide a broader overview of lung parenchyma.
+
+Narrator: The pneumothorax findings were also hard to interpret. There were only six pneumothoraces in the cohort, none requiring intervention. Agreement between ultrasound and chest x-ray for pneumothorax detection was slight to moderate, with kappa of 0.30. Even the two radiologists had only moderate agreement with each other, kappa 0.47.
+
+Guest: Three of the six pneumothoraces were seen on ultrasound but not on the initial chest x-ray. That could suggest sensitivity of ultrasound in expert hands, but with only six events, the study is underpowered for pneumothorax detection. The main message is really about effusion evacuation and lung re-expansion.
+
+Narrator: Generalizability is the next issue. These were experienced proceduralists at six academic centers. The median time for the post-procedure ultrasound was just over two and a half minutes. That is efficient, but it assumes ultrasound skill and a standardized scan pattern.
+
+Guest: Exactly. The results may not automatically translate to low-volume proceduralists or settings without strong ultrasound training. A key implementation issue is image storage. Chest x-ray is automatically archived in PACS. Ultrasound images may or may not be saved, labeled, and retrievable in the EMR.
+
+Narrator: Without image archiving, ultrasound becomes a bedside impression rather than a durable diagnostic record. If the field wants ultrasound to replace routine post-procedure radiography for this endpoint, documentation standards matter.
+
+Guest: Another limitation is timing. Ultrasound was immediate, while chest x-ray could be obtained within 4 hours. Fluid could reaccumulate in that interval, which might introduce discrepancies. The authors acknowledge that as part of the pragmatic design.
+
+Narrator: Patient selection also matters. They excluded loculated or complex effusions. That is important because complex pleural spaces may be precisely where a broader radiographic overview, or even CT, becomes more useful.
+
+Guest: And the cohort had a high proportion of malignant pleural effusions, which likely contributed to the high trapped lung rate of around 50%. The findings might look different in a population dominated by transudative effusions, such as heart failure, where trapped lung is less common.
+
+Narrator: They did explore predictors of trapped lung and found male sex and malignant etiology were the strongest predictors, with odds ratios of 2.32 and 2.61, respectively. That is clinically intuitive and supports the idea that etiology matters in interpreting post-drainage findings.
+
+Guest: So how should IP clinicians apply this?
+
+Narrator: For large, free-flowing effusions in the hands of trained operators, immediate post-thoracentesis ultrasound appears to be a reliable way to assess pleural space evacuation and lung re-expansion. It supports moving away from routine chest x-ray when the clinical question is simply, "Did we evacuate the fluid and did the lung re-expand?"
+
+Guest: But it is not a blanket argument that chest x-ray has no role. Chest x-ray may still be useful when symptoms develop, when ultrasound windows are poor, when there is concern for parenchymal abnormality, when the effusion is complex or loculated, when documentation is required and ultrasound archiving is unreliable, or when local operator expertise is limited.
+
+Narrator: The workflow implications are significant: reduced patient transport, less radiation, faster disposition, and more immediate procedural decision-making. But implementation requires training, a standardized scan protocol, image storage, and documentation comparable to radiology.
+
+Guest: Exactly. This pushes ultrasound from being merely a procedural guidance tool toward being a post-procedure diagnostic modality. That is appropriate only if the system treats it with similar rigor.
+
+Narrator: That wraps this episode of InterventionalPulm.com IP Journal Review. EVACUTE supports post-thoracentesis ultrasound as a reliable tool for assessing fluid evacuation and lung re-expansion after drainage of large, free-flowing effusions, while leaving unresolved questions about pneumothorax detection, complex effusions, parenchymal findings, operator dependence, and ultrasound archiving. Thanks for listening.

@@ -1,0 +1,105 @@
+Narrador: Bienvenidos a Interventional Pulm punto com, I.P. Journal Review. Hoy analizamos el documento de Servais y colegas, publicado en Annals of Thoracic Surgery en dos mil veintiséis: el Documento de Consenso de Expertos de la Society of Thoracic Surgeons sobre intervenciones para nódulos pulmonares detectados por tamizaje.
+
+Invitado: Y este documento es muy relevante para la neumología intervencionista, aunque provenga de S.T.S. El tema central es qué ocurre después de que el tamizaje de cáncer de pulmón encuentra un nódulo sospechoso. El tamizaje solo ayuda si la vía diagnóstica y terapéutica posterior es oportuna, segura y no excesivamente agresiva.
+
+Narrador: Correcto. El documento intenta definir estándares de calidad para esa vía posterior: cuándo se necesita biopsia, cuándo la cirugía sin diagnóstico tisular es aceptable, qué tasas de complicaciones deberían considerarse aceptables, y qué tan rápido debería ocurrir la intervención definitiva.
+
+Invitado: Metodológicamente, esto no es un ensayo aleatorizado y tampoco es una guía formal con metodología GRADE. Es un documento de consenso experto informado por la evidencia. El panel incluyó cirujanos torácicos, oncólogos radioterapeutas y neumólogos intervencionistas. Usaron un marco PICO, revisaron estudios en humanos publicados en inglés desde dos mil once hasta agosto de dos mil veinticuatro, y luego usaron un proceso Delphi modificado que requería al menos setenta y cinco por ciento de acuerdo. Finalmente desarrollaron veintitrés declaraciones de consenso después de tres rondas Delphi, con veinte que alcanzaron consenso en la primera ronda.
+
+Narrador: La figura PRISMA también vale la pena mencionarla. Recuperaron tres mil quinientos noventa y nueve registros, eliminaron trescientos cuarenta y dos duplicados, revisaron tres mil doscientos cincuenta y siete títulos y resúmenes, evaluaron quinientos cincuenta textos completos, e incluyeron doscientos tres estudios. Así que fue estructurado, pero el producto final sigue siendo consenso superpuesto sobre evidencia heterogénea, no un conjunto de recomendaciones derivadas de ensayos con alta certeza.
+
+Invitado: Esa distinción importa. El artículo ofrece puntos de referencia útiles, pero no debe leerse como si cada umbral estuviera biológicamente demostrado o fuera universalmente transferible. Algunos de estos números son métricas de calidad aspiracionales.
+
+Narrador: Empecemos con el primer gran tema: cirugía sin diagnóstico preoperatorio. La declaración de consenso dice que puede ser aceptable en pacientes cuidadosamente seleccionados con un nódulo detectado por tamizaje de cáncer de pulmón.
+
+Invitado: Pero las barreras de seguridad son importantes. Los autores enfatizan una alta probabilidad pretest de malignidad, enfermedad clínica estadio uno por imágenes apropiadas, posibilidad de obtener diagnóstico intraoperatorio antes de una resección anatómica, y reserva fisiológica adecuada para resección curativa. En general, están pensando en nódulos periféricos, idealmente susceptibles de resección en cuña.
+
+Narrador: Y no están respaldando un salto casual a lobectomía sin tejido.
+
+Invitado: Exactamente. Dicen que la lobectomía generalmente no debería realizarse sin un diagnóstico establecido, salvo que los intentos previos de biopsia hayan fallado o que la trayectoria de crecimiento sea altamente consistente con cáncer de pulmón. Y la neumonectomía sin diagnóstico se rechaza de forma categórica.
+
+Narrador: Ese punto es difícil de discutir. Una neumonectomía diagnóstica por una lesión detectada por tamizaje sería casi un ejemplo perfecto de daño del tamizaje superando el beneficio del tamizaje.
+
+Invitado: Para los clínicos de I.P., aquí es donde la conversación se vuelve práctica. Si el nódulo es periférico, pequeño, de alta probabilidad, y accesible para resección en cuña, el diagnóstico quirúrgico directo puede tener sentido. Pero si el paciente tiene riesgo operatorio moderado o alto, el documento se inclina con fuerza hacia biopsia preoperatoria antes de una resección diagnóstica en cuña.
+
+Narrador: Ahí es donde entra la broncoscopia. El artículo menciona explícitamente la broncoscopia navegacional y la biopsia guiada por tomografía computarizada como estrategias para reducir la resección benigna. También señala una precisión diagnóstica mayor del setenta por ciento con bajas tasas de complicaciones para estos enfoques, aunque reconoce biopsias preoperatorias no diagnósticas en aproximadamente quince a treinta por ciento de los casos.
+
+Invitado: Y si la biopsia preoperatoria no es diagnóstica en un candidato quirúrgico de riesgo moderado o alto, el panel dice que es razonable intentar una biopsia intraoperatoria con aguja, incluida biopsia broncoscópica intraoperatoria, antes de proceder a la resección. Esa es una declaración de flujo de trabajo interesante, porque acerca la capacidad de I.P. al quirófano.
+
+Narrador: La siguiente gran métrica de calidad es la resección benigna. El punto de referencia de consenso es menos de diez por ciento de resecciones pulmonares benignas entre pacientes evaluados en un programa de tamizaje de cáncer de pulmón, y los programas deberían rastrearlo.
+
+Invitado: Ese número es importante, pero debe interpretarse con cuidado. El artículo describe tasas contemporáneas de resección benigna que varían aproximadamente entre tres y quince por ciento en programas de tamizaje, mientras que ensayos de tamizaje más antiguos como N.L.S.T. y Nelson tuvieron tasas mucho más altas de resección benigna, alrededor de veinticuatro a veintiocho por ciento. El panel llega a menos de diez por ciento como un punto de referencia aspiracional.
+
+Narrador: La pregunta del abogado del diablo es si menos de diez por ciento es demasiado permisivo para programas maduros con radiología de alta calidad, disciplina con Lung-RADS, acceso a PET, broncoscopia robótica, tomografía de haz cónico y revisión multidisciplinaria.
+
+Invitado: Tal vez. La sección de comentarios señala que grandes programas contemporáneos que utilizan informes estructurados, evaluación multidisciplinaria y seguimiento longitudinal pueden tener procedimientos invasivos o cirugía por enfermedad benigna por debajo de cero punto cinco por ciento. Así que menos de diez por ciento puede ser un piso para aseguramiento de calidad, no el techo de la excelencia.
+
+Narrador: El otro mensaje práctico es que la tasa de resección benigna es una métrica del sistema. No es solo una métrica del cirujano ni de la broncoscopia. Refleja la calidad de la conferencia de nódulos, la interpretación radiológica, el acceso al diagnóstico tisular, la confiabilidad del seguimiento y la selección de pacientes.
+
+Invitado: Ahora los puntos de referencia de complicaciones. Para procedimientos diagnósticos después de nódulos detectados por tamizaje, el panel recomienda rastrear complicaciones y apuntar a una tasa de neumotórax que requiere intervención por debajo de cinco por ciento.
+
+Narrador: Lo enmarcan alrededor de las dos principales vías no quirúrgicas: biopsia transtorácica con aguja y biopsia broncoscópica. La tasa de neumotórax que requiere intervención después de biopsia transtorácica se describe alrededor de cinco por ciento, mientras que las series de broncoscopia navegacional y robótica generalmente reportan tasas más bajas, aunque los rangos varían.
+
+Invitado: También recomiendan que la hemoptisis clínicamente significativa que requiere intervención después de biopsia broncoscópica no debería exceder dos por ciento, y que la mortalidad o morbilidad mayor después de biopsia broncoscópica debería estar por debajo de uno por ciento.
+
+Narrador: Eso es útil para los programas de I.P. porque ofrece números concretos para un tablero de control. Neumotórax que requiere tubo torácico, hemoptisis clínicamente significativa, insuficiencia respiratoria, ingreso no planificado, escalamiento del nivel de atención, muerte. Estas no son solo complicaciones de facturación; son daños relevantes para el paciente.
+
+Invitado: Pero hay una advertencia metodológica. Estos umbrales mezclan evidencia de distintas plataformas, distintas épocas, distintos tamaños de lesión y distintas definiciones de complicaciones. Un centro de alto volumen que realiza biopsia robótica confirmada por tomografía de haz cónico en pequeños nódulos subsólidos no es lo mismo que un programa comunitario que realiza broncoscopia solo con fluoroscopía o una vía con gran dependencia de biopsia transtorácica.
+
+Narrador: Correcto. La comparación de desempeño solo ayuda si se ajusta por riesgo. Un programa que biopsia lesiones muy pequeñas, profundas y sin signo bronquial no debería compararse de forma simplista con un programa que biopsia principalmente nódulos sólidos periféricos más grandes.
+
+Invitado: La declaración sobre estadificación es otro punto relevante para I.P.: cuando se necesita estadificación ganglionar, el enfoque diagnóstico debería minimizar el número total de procedimientos necesarios para diagnosticar la lesión y estadificar el mediastino.
+
+Narrador: Eso significa, en términos prácticos, que si un paciente puede someterse a biopsia del nódulo periférico y EBUS-TBNA en el mismo evento anestésico, eso debería considerarse. No siempre es obligatorio, pero está fuertemente alineado con la lógica del documento.
+
+Invitado: También se opone a la atención fragmentada: tomografía computarizada, luego biopsia transtorácica, luego EBUS separado, luego PET, luego comité de tumores. A veces esa secuencia es inevitable, pero con frecuencia refleja ineficiencia del sistema.
+
+Narrador: También se describen puntos de referencia quirúrgicos. La resección sublobar con evaluación ganglionar para cáncer de pulmón de células no pequeñas detectado por tamizaje debería tener una mortalidad a treinta días menor de uno por ciento y morbilidad mayor menor de seis por ciento. La lobectomía con evaluación ganglionar debería tener mortalidad a treinta días menor de uno por ciento y morbilidad mayor menor de diez por ciento.
+
+Invitado: Y se favorece la cirugía mínimamente invasiva sobre la toracotomía. El documento cita el movimiento de la resección pulmonar hacia VATS y RATS, es decir, cirugía toracoscópica asistida por video y cirugía robótica asistida, con datos de la base de datos S.T.S. que muestran adopción amplia de técnicas mínimamente invasivas y mayor riesgo de mortalidad y morbilidad con toracotomía en comparación con abordajes mínimamente invasivos.
+
+Narrador: Desde la perspectiva de I.P., eso refuerza la importancia de las redes de derivación. Los programas de tamizaje deben saber no solo quién puede biopsiar estos nódulos, sino quién puede resecarlos con baja morbilidad, evaluación ganglionar adecuada y técnica mínimamente invasiva.
+
+Invitado: Luego llegamos al tiempo. El panel recomienda resección quirúrgica definitiva con intención curativa dentro de las doce semanas desde la tomografía computarizada que motivó la intervención.
+
+Narrador: Ese punto de partida es clave. No están midiendo desde la confirmación por biopsia. Están midiendo desde el estudio de imagen que desencadenó el trabajo diagnóstico.
+
+Invitado: Y esa es una métrica de calidad muy distinta. Captura todo el sistema: informe radiológico, derivación, acceso a clínica de nódulos, PET, biopsia, EBUS, comité de tumores, evaluación preoperatoria, cesación tabáquica, prehabilitación y programación de quirófano.
+
+Narrador: Los autores reconocen que hay datos de alta calidad limitados para definir el intervalo ideal. Citan evidencia que sugiere peores desenlaces cuando el tiempo hasta la cirugía excede doce semanas, y otro estudio de dos mil veinticinco que sugiere peores desenlaces más allá de ocho semanas, con aumentos incrementales en recurrencia y mortalidad por cada dos semanas adicionales de retraso después de ocho semanas. Pero la recomendación de consenso se establece en doce semanas como estándar mínimo aceptable.
+
+Invitado: Una crítica razonable es que doce semanas puede ser demasiado tiempo para algunas lesiones y demasiado rígido para otras. Un nódulo sólido de crecimiento rápido con alta avidez en PET no es lo mismo que una lesión Lung-RADS cuatro A con sospecha moderada. La biología importa.
+
+Narrador: Eso conecta bien con su declaración sobre Lung-RADS cuatro A. Para sospecha de cáncer de pulmón de células no pequeñas clínico estadio uno con una lesión Lung-RADS cuatro A, la evaluación longitudinal puede ser apropiada. Nos recuerdan que Lung-RADS cuatro A generalmente implica una probabilidad de malignidad de cinco a quince por ciento, y que una tomografía de intervalo corto, alrededor de tres meses, puede ayudar a evaluar la dinámica de crecimiento.
+
+Invitado: Ese es un buen mensaje contra el sobretratamiento. No todo tamizaje positivo necesita tejido inmediato. Pero el intercambio debe ser explícito: la vigilancia puede evitar procedimientos innecesarios, pero también puede retrasar el diagnóstico en lesiones que realmente son malignas.
+
+Narrador: Las declaraciones sobre prehabilitación y cesación tabáquica también son clínicamente prácticas. Para candidatos de alto riesgo operatorio, la rehabilitación pulmonar estructurada antes del tratamiento puede ser apropiada dentro de la ventana de doce semanas. El artículo cita una revisión Cochrane de diez ensayos aleatorizados que mostró que el entrenamiento preoperatorio con ejercicio redujo las complicaciones pulmonares posoperatorias con una razón de riesgo de cero punto cuatro cinco y acortó la estancia hospitalaria en aproximadamente dos punto veinticuatro días.
+
+Invitado: Y para fumadores activos que se someten a resección quirúrgica, el consenso es proporcionar recursos e instrucciones para intentar cesación durante al menos tres semanas antes de la cirugía, nuevamente dentro de esa ventana de doce semanas.
+
+Narrador: El problema de implementación es obvio: prehabilitación y cesación tabáquica son fáciles de recomendar y mucho más difíciles de operacionalizar. Los programas necesitan programación, consejería, acceso a farmacoterapia, vías de reembolso y una forma de evitar que la optimización se convierta en un retraso dañino.
+
+Invitado: Finalmente, el equipo multidisciplinario. El grupo mínimo debería incluir cirugía torácica, oncología médica, oncología radioterápica, radiología torácica y neumología.
+
+Narrador: Me gusta que neumología esté incluida explícitamente. Para nódulos detectados por tamizaje, neumología e I.P. a menudo se ubican en la intersección entre estrategia diagnóstica, estadificación, evaluación de riesgo y vigilancia longitudinal.
+
+Invitado: El documento también reconoce su propia limitación de alcance: se enfoca en la terapia quirúrgica. La radioterapia corporal estereotáctica, o SBRT, se reconoce como apropiada para pacientes seleccionados que son malos candidatos quirúrgicos o que prefieren tratamiento no quirúrgico, pero los autores señalan la ausencia de ensayos prospectivos aleatorizados completados que comparen directamente SBRT con cirugía en pacientes operables.
+
+Narrador: Entonces, ¿qué aporta este artículo?
+
+Invitado: Da a los programas de tamizaje un marco de calidad. Rastrear la resección benigna. Rastrear las complicaciones diagnósticas. Minimizar el número total de procedimientos. Preferir cirugía con preservación de parénquima y mínimamente invasiva cuando se opera sin tejido. Evitar neumonectomía sin diagnóstico. Apuntar a resección definitiva dentro de doce semanas desde la tomografía que desencadenó la evaluación. Construir una verdadera revisión multidisciplinaria.
+
+Narrador: ¿Y qué sigue siendo incierto?
+
+Invitado: Los umbrales necesitan validación. La evidencia es heterogénea. La tecnología evoluciona rápidamente. La broncoscopia robótica, la tomografía de haz cónico, la estratificación de riesgo basada en inteligencia artificial, los diagnósticos moleculares y el seguimiento mejorado de nódulos pueden cambiar el equilibrio aceptable entre biopsia, vigilancia y cirugía.
+
+Narrador: Para la audiencia de I.P., la conclusión no es que todo nódulo detectado por tamizaje necesite broncoscopia, ni que todo nódulo periférico de alta probabilidad necesite tejido preoperatorio. La conclusión es que la estrategia diagnóstica debe ser deliberada, medible e integrada.
+
+Invitado: Exactamente. El mejor programa no es el que biopsia todo ni el que envía todo a cirugía. Es el que lleva a los pacientes correctos a la intervención correcta, con el menor número de procedimientos, la menor carga de complicaciones, tratamiento oportuno y retroalimentación constante a partir de sus propios datos de resultados.
+
+Narrador: Ese es un buen punto para cerrar. Esto ha sido Interventional Pulm punto com, I.P. Journal Review. El artículo de hoy fue el Documento de Consenso de Expertos de S.T.S. sobre intervenciones para nódulos pulmonares detectados por tamizaje, por Servais y colegas, en Annals of Thoracic Surgery. Para los clínicos de I.P., esto se trata menos de memorizar veintitrés declaraciones y más de construir una vía de nódulos que pueda demostrar que es segura, oportuna y centrada en el paciente.
+
+Invitado: Y quizá la intervención más importante sea el tablero de calidad que nadie ve el día de la broncoscopia.
+
+Narrador: Muy bien dicho. Gracias por escucharnos.

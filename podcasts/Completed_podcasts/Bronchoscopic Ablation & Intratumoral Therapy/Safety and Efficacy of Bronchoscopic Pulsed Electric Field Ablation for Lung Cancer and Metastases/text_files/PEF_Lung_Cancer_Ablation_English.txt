@@ -1,0 +1,73 @@
+Narrator: Welcome to InterventionalPulm.com IP Journal Review. In this episode, we’re discussing Mahmood and colleagues, appearing in JTO Clinical and Research Reports in 2026, on the safety and efficacy of bronchoscopic pulsed electric field ablation for lung cancer and lung metastases.
+
+Guest: This is a small study, but it touches a big question in interventional pulmonology: can bronchoscopic ablation move beyond feasibility and begin to provide meaningful local control, especially for tumors in the central or middle thirds of the lung where percutaneous ablation and repeat radiation can be difficult or risky?
+
+Narrator: Exactly. The clinical context here is important. These were not straightforward early-stage peripheral nodules. These were patients with progressive lung cancer or metastatic disease to the lung, often after standard oncologic therapy, and most had already received radiation to the treated lesion.
+
+Guest: That makes this a very salvage-therapy type of cohort. The authors are asking whether bronchoscopic P E F ablation can be delivered safely in a difficult population, and whether there is any signal of local tumor response.
+
+Narrator: Before getting into the results, let’s define the intervention. P E F ablation is a non-thermal ablative approach. Instead of relying on heat, like microwave or radiofrequency ablation, it delivers high-voltage electrical pulses that alter transmembrane potential and lead to cell death. The theoretical attraction is preservation of the extracellular matrix and potentially lower risk near vessels, bronchioles, pleura, and other critical structures.
+
+Guest: And that distinction matters in the lung. Thermal ablation near central vessels and airways can be limited by bleeding risk, airway injury, heat sink, and difficulty achieving a safe margin. P E F is attractive because it may be less destructive to supporting structures, though whether that translates into durable tumor control is exactly the question.
+
+Narrator: The study used prospectively collected data from consecutive patients treated clinically with bronchoscopic P E F between October 2024 and April 2025. All patients had lung cancer or metastatic cancer to the lungs, had radiographic progression after prior therapy, and were evaluated after multidisciplinary discussion.
+
+Guest: The procedure was performed with shape-sensing robotic bronchoscopy and three-dimensional imaging for tool-in-lesion confirmation. A diagnostic sample was first obtained using a flexible needle, with R O S E confirmation of malignancy, and then ablation was performed in the same session.
+
+Narrator: The ablation system was the Aliya P E F system with the INUMI Flex needle. The device delivers short-duration, high-voltage, biphasic electrical pulses. Each treatment consisted of 100 pulses synchronized to the R wave on E K G over 5 minutes. The authors describe advancing the needle to the distal border of the lesion using three-dimensional imaging, treating, withdrawing the needle in half-centimeter increments, and, when feasible, re-entering with a different vector to maximize tumor volume coverage.
+
+Guest: That technical description is important. This is not simply placing a probe once and calling it treated. The workflow depends on robotic access, imaging confirmation, cardiac synchronization, grounding pad setup, and thoughtful vector planning. And the nominal ablation zone for the needle is small — about 0.88 cubic centimeters based on the device instructions cited in the article — so tumor size and vector geometry become central to whether the lesion is actually covered.
+
+Narrator: The cohort was very small: 6 patients and 7 lesions. The tables near the end of the PDF, especially Tables 1 through 3 on pages 19 through 21, summarize the key clinical picture. Median age was 75 years. Three patients had non-small cell lung cancer, and the other three had rectal, thyroid, and urothelial cancer, with the thyroid cancer patient having two lung lesions.
+
+Guest: Five of the 6 patients had prior radiation, and all had progressed on standard oncologic therapies. The median tumor size was 2.1 centimeters, with a range from 1.1 to 4 centimeters. Six lesions were in the central third of the lung and one was in the middle third. So the anatomic target here is exactly where a bronchoscopic approach may be most appealing.
+
+Narrator: Procedurally, the median number of initial P E F treatments per tumor was 3, and the median number of treatment vectors was 1. Median total procedure time was 68 minutes, median anesthesia time was 82 minutes, and median P E F ablation time was 15 minutes. The estimated median tumor volume ablated was 100 percent, although the authors acknowledge that some lesions were not fully covered because of lesion volume or technical inability to achieve an optimal additional vector.
+
+Guest: That estimated ablation percentage deserves a pause. It is calculated from the number of P E F treatments and the expected ablation zone volume relative to tumor volume. That is useful as a procedural planning metric, but it is not the same as histologic confirmation of complete ablation. In a small irregular tumor, particularly after radiation or systemic therapy, geometry and biology may not behave like a neat sphere on a planning diagram.
+
+Narrator: Follow-up was with P E T C T every 3 months, with a median follow-up of 9.7 months. On final follow-up, 4 of 7 lesions increased in size, 2 decreased, and 1 resolved. F D G uptake increased in 5 lesions, decreased in 1, and resolved in 1. Using R E C I S T 1.1 at the patient level, 4 of 6 patients had progressive disease, 1 had stable disease, and 1 had complete response.
+
+Guest: The signal is mixed, and the pattern is interesting. The lesions that decreased or resolved were all in patients with non-small cell lung cancer. All metastatic lesions increased in size or F D G avidity. The complete response occurred in the smallest lesion, which was 1.1 centimeters.
+
+Narrator: The authors reasonably suggest that lesion size may be an important predictor of response. With a small ablation field and a limited number of vectors, that makes intuitive sense. A 1.1-centimeter lesion is a very different technical problem from a 4-centimeter central recurrence.
+
+Guest: Right. And the biology may differ too. The authors raise the possibility that P E F may synergize with immune responsiveness in non-small cell lung cancer. But this study did not measure immune markers, and there was no abscopal effect in the one patient with multifocal disease. So that remains an interesting hypothesis, not a demonstrated mechanism.
+
+Narrator: Safety was the most favorable part of the study. There were no direct P E F-related complications within or beyond 30 days. Specifically, there were no significant cardiac arrhythmias, no bleeding, and no pneumothorax. One patient required reintubation for prolonged sedation after the procedure, was extubated after 6 hours, discharged within 24 hours, and did well afterward.
+
+Guest: That is encouraging, especially given central and middle-third lesions in previously treated patients. But the denominator is 6 patients. So the safety result is best interpreted as feasibility with no observed signal of procedure-specific harm, not proof of a low complication rate.
+
+Narrator: This is where the paper is clinically useful but easy to overread. The safety signal is meaningful because bronchoscopic thermal ablation has had real complications reported in early experience, including severe hemorrhage in some settings. A non-thermal bronchoscopic ablation method that can be delivered centrally without bleeding, pneumothorax, or arrhythmia in this cohort is worth paying attention to.
+
+Guest: But the efficacy signal is much less definitive. Four of 7 lesions grew. Four of 6 patients progressed by R E C I S T. There was no control group. The cohort mixed recurrent stage 1 non-small cell lung cancer with stage 4 metastatic disease from several primary tumors. Some patients received concurrent or adjuvant chemo-immunotherapy, and others received later systemic therapy after progression. That makes attribution very difficult.
+
+Narrator: Another limitation is response assessment. After ablation, C T size and F D G uptake can be hard to interpret. In this study, one non-small cell lung cancer lesion decreased in size while F D G uptake increased, and later follow-up suggested continued progression. The authors suggest increased F D G uptake after 3 months may be a sensitive marker of persistence or progression.
+
+Guest: That is plausible, but it also highlights the need for ablation-specific response criteria. R E C I S T was designed for systemic therapy assessment, not necessarily focal ablation effects, post-radiation change, or evolving inflammatory response. We need better definitions of local control for bronchoscopic tumor ablation.
+
+Narrator: From an IP workflow standpoint, implementation is also nontrivial. This requires robotic bronchoscopy, three-dimensional imaging, tool-in-lesion confirmation, same-session diagnostic confirmation with R O S E, P E F generator setup, E K G synchronization, grounding pad placement, and careful anesthesia management.
+
+Guest: And the anesthesia issue matters. One of 6 patients had prolonged ventilation related to sedation or anesthesia. That is not a P E F injury, but it is part of the real-world procedural package. These patients are often older, previously treated, and may have limited pulmonary reserve.
+
+Narrator: So how should an interventional pulmonologist translate this paper?
+
+Guest: The best reading is that bronchoscopic P E F ablation appears technically feasible and was safe in this very small, high-risk cohort of centrally located progressive lung lesions. There is a possible local control signal in small non-small cell lung cancer lesions, but mixed efficacy overall, particularly for metastatic lesions and larger tumors.
+
+Narrator: This should not be interpreted as evidence that bronchoscopic P E F is ready to replace S B R T, surgery, percutaneous ablation, or systemic therapy. It is better viewed as early clinical experience in a salvage population where standard local options were limited.
+
+Guest: And the next studies need to be much more structured. Ideally, they would stratify by histology, lesion size, prior radiation, lesion location, and concurrent immunotherapy. They should prospectively define technical success, ablation coverage, local control, P E T response, biopsy confirmation when feasible, progression-free survival, quality of life, and complications.
+
+Narrator: A key design question is comparator selection. In medically inoperable early-stage non-small cell lung cancer, the comparator might be S B R T or percutaneous ablation. In post-radiation central recurrence, the comparator may be systemic therapy, re-irradiation in selected cases, or best supportive local management. For metastatic lesions, histology and systemic disease control probably dominate.
+
+Guest: Exactly. A one-size-fits-all ablation trial may blur the signal. The most promising niche may be small, central or middle-third non-small cell lung cancer lesions in patients who are not surgical candidates and have limited radiation options. But that needs to be proven.
+
+Narrator: Final synthesis: Mahmood and colleagues provide an important early clinical report of bronchoscopic P E F ablation for progressive lung cancer and lung metastases. The safety profile was favorable in 6 patients and 7 central or middle-third lesions, with no direct P E F-related bleeding, pneumothorax, or arrhythmia. Local control was mixed: 4 lesions grew, 2 decreased, and 1 resolved at a median follow-up of 9.7 months.
+
+Guest: The article is best viewed as hypothesis-generating. It supports continued investigation of bronchoscopic P E F, particularly in small non-small cell lung cancer lesions and previously irradiated central targets, but it does not yet establish durable efficacy or broad clinical utility.
+
+Narrator: For the practicing interventional pulmonologist, the take-home is this: bronchoscopic P E F may expand the local therapy toolbox for difficult thoracic oncology cases, but patient selection, lesion size, ablation geometry, imaging follow-up, and multidisciplinary decision-making will determine whether the technology meaningfully helps patients.
+
+Guest: Safe delivery is the first milestone. Durable tumor control is the harder test.
+
+Narrator: Thanks for listening to InterventionalPulm.com IP Journal Review. We’ll see you next time.
