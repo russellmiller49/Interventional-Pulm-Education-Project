@@ -39,6 +39,7 @@ describe('main site auth access helpers', () => {
   it('keeps the unlisted journal club podcast beta page public by direct URL', () => {
     expect(isPublicPath('/journal-club-podcasts')).toBe(true)
     expect(getRequiredEntitlement('/journal-club-podcasts', params())).toBeNull()
+    expect(resolveSiteModuleId('/journal-club-podcasts')).toBe('journal-club-podcasts')
   })
 
   it('requires entitlements only for restricted website areas', () => {

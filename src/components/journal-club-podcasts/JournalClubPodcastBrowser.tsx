@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ExternalLink,
   Languages,
@@ -24,6 +24,7 @@ import type {
   JournalClubPodcastHub,
   PodcastLanguage,
 } from '@/data/journal-club-podcasts'
+import type { PodcastPlaybackEventType } from '@/lib/journal-club-podcasts/usage'
 
 interface JournalClubPodcastBrowserProps {
   episodes: JournalClubPodcastEpisode[]
@@ -43,6 +44,8 @@ const languageHighlightLabels = Object.values(languageLabels)
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
 const ratingValues = [1, 2, 3, 4, 5] as const
 const allHubFilter = 'all' as const
+const playbackProgressIntervalMs = 30_000
+const podcastPlaybackEndpoint = '/api/journal-club-podcasts/playback'
 type HubFilter = JournalClubPodcastHub | typeof allHubFilter
 
 export function JournalClubPodcastBrowser({
@@ -329,6 +332,16 @@ function PodcastAudioPlayer({
   onActivate: () => void
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const activeListenStartedAtRef = useRef<number | null>(null)
+  const currentTimeRef = useRef(0)
+  const durationRef = useRef(0)
+  const episodeIdRef = useRef(episode.id)
+  const hasReportedPlaybackRef = useRef(false)
+  const languageRef = useRef<PodcastLanguage>('english')
+  const lastProgressSentAtRef = useRef(0)
+  const listenedMsRef = useRef(0)
+  const playbackRateRef = useRef(1)
+  const playbackSessionIdRef = useRef(makePlaybackSessionId())
   const [language, setLanguage] = useState<PodcastLanguage>('english')
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [urlExpiresAt, setUrlExpiresAt] = useState<number | null>(null)
@@ -345,6 +358,87 @@ function PodcastAudioPlayer({
   const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
+  currentTimeRef.current = currentTime
+  durationRef.current = duration
+  episodeIdRef.current = episode.id
+  languageRef.current = language
+  playbackRateRef.current = playbackRate
+
+  const resetPlaybackTelemetry = useCallback(() => {
+    activeListenStartedAtRef.current = null
+    hasReportedPlaybackRef.current = false
+    lastProgressSentAtRef.current = 0
+    listenedMsRef.current = 0
+    playbackSessionIdRef.current = makePlaybackSessionId()
+  }, [])
+
+  const currentListenedSeconds = useCallback((now = Date.now()) => {
+    const activeMs =
+      activeListenStartedAtRef.current === null
+        ? 0
+        : Math.max(0, now - activeListenStartedAtRef.current)
+
+    return Math.max(0, Math.round((listenedMsRef.current + activeMs) / 1000))
+  }, [])
+
+  const captureActiveListening = useCallback((now = Date.now()) => {
+    if (activeListenStartedAtRef.current === null) {
+      return
+    }
+
+    listenedMsRef.current += Math.max(0, now - activeListenStartedAtRef.current)
+    activeListenStartedAtRef.current = null
+  }, [])
+
+  const getPlaybackSnapshot = useCallback(() => {
+    const audio = audioRef.current
+    const rawDuration = audio?.duration
+    const boundedDuration =
+      typeof rawDuration === 'number' && Number.isFinite(rawDuration) && rawDuration > 0
+        ? rawDuration
+        : durationRef.current > 0
+          ? durationRef.current
+          : null
+    const rawCurrentTime = audio?.currentTime ?? currentTimeRef.current
+    const currentTimeSeconds = Math.max(0, Math.round(rawCurrentTime || 0))
+    const durationSeconds =
+      boundedDuration === null ? null : Math.max(0, Math.round(boundedDuration))
+    const percentComplete =
+      durationSeconds && durationSeconds > 0
+        ? Math.max(0, Math.min(100, Math.round((currentTimeSeconds / durationSeconds) * 100)))
+        : 0
+
+    return {
+      currentTimeSeconds,
+      durationSeconds,
+      listenedSeconds: currentListenedSeconds(),
+      percentComplete,
+      playbackSessionId: playbackSessionIdRef.current,
+    }
+  }, [currentListenedSeconds])
+
+  const reportPlaybackEvent = useCallback(
+    (eventType: PodcastPlaybackEventType, options?: { beacon?: boolean }) => {
+      if (eventType !== 'play_started' && !hasReportedPlaybackRef.current) {
+        return
+      }
+
+      hasReportedPlaybackRef.current = true
+
+      postPodcastPlaybackEvent(
+        {
+          ...getPlaybackSnapshot(),
+          episodeId: episodeIdRef.current,
+          eventType,
+          language: languageRef.current,
+          playbackRate: playbackRateRef.current,
+        },
+        options,
+      )
+    },
+    [getPlaybackSnapshot],
+  )
+
   useEffect(() => {
     if (!isActive && audioRef.current) {
       audioRef.current.pause()
@@ -357,13 +451,40 @@ function PodcastAudioPlayer({
       return
     }
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime || 0)
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime || 0)
+
+      const now = Date.now()
+      if (
+        !audio.paused &&
+        hasReportedPlaybackRef.current &&
+        now - lastProgressSentAtRef.current >= playbackProgressIntervalMs
+      ) {
+        lastProgressSentAtRef.current = now
+        reportPlaybackEvent('play_progress')
+      }
+    }
     const handleLoadedMetadata = () => setDuration(audio.duration || 0)
-    const handlePlay = () => setIsPlaying(true)
-    const handlePause = () => setIsPlaying(false)
+    const handlePlay = () => {
+      setIsPlaying(true)
+      if (activeListenStartedAtRef.current === null) {
+        activeListenStartedAtRef.current = Date.now()
+      }
+      lastProgressSentAtRef.current = Date.now()
+      reportPlaybackEvent('play_started')
+    }
+    const handlePause = () => {
+      setIsPlaying(false)
+      if (!audio.ended) {
+        captureActiveListening()
+        reportPlaybackEvent('play_paused')
+      }
+    }
     const handleEnded = () => {
+      captureActiveListening()
       setIsPlaying(false)
       setCurrentTime(audio.duration || 0)
+      reportPlaybackEvent('play_completed')
     }
     const handleError = () => {
       setError('Audio could not be loaded. Try again in a moment.')
@@ -385,13 +506,26 @@ function PodcastAudioPlayer({
       audio.removeEventListener('ended', handleEnded)
       audio.removeEventListener('error', handleError)
     }
-  }, [signedUrl])
+  }, [captureActiveListening, reportPlaybackEvent, signedUrl])
 
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.playbackRate = playbackRate
     }
   }, [playbackRate])
+
+  useEffect(() => {
+    function handlePageHide() {
+      captureActiveListening()
+      reportPlaybackEvent('play_paused', { beacon: true })
+    }
+
+    window.addEventListener('pagehide', handlePageHide)
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide)
+    }
+  }, [captureActiveListening, reportPlaybackEvent])
 
   useEffect(() => {
     if (audioRef.current) {
@@ -404,7 +538,8 @@ function PodcastAudioPlayer({
     setDuration(0)
     setError(null)
     setIsPlaying(false)
-  }, [episode.id, language])
+    resetPlaybackTelemetry()
+  }, [episode.id, language, resetPlaybackTelemetry])
 
   useEffect(() => {
     setFeedbackLanguage(language)
@@ -532,12 +667,14 @@ function PodcastAudioPlayer({
     setFeedbackMessage(null)
 
     try {
+      const playbackSnapshot = getPlaybackSnapshot()
       const response = await fetch('/api/journal-club-podcasts/feedback', {
         body: JSON.stringify({
           audioDialogRating,
           contentQualityRating,
           episodeId: episode.id,
           language: feedbackLanguage,
+          ...playbackSnapshot,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -805,6 +942,67 @@ function SeekButton({
       <span>{seconds > 0 ? `+${amount}s` : `-${amount}s`}</span>
     </Button>
   )
+}
+
+interface PodcastPlaybackPayload {
+  currentTimeSeconds: number
+  durationSeconds: number | null
+  episodeId: string
+  eventType: PodcastPlaybackEventType
+  language: PodcastLanguage
+  listenedSeconds: number
+  playbackRate: number
+  playbackSessionId: string
+  percentComplete: number
+}
+
+function makePlaybackSessionId() {
+  const browserCrypto = typeof globalThis.crypto === 'undefined' ? null : globalThis.crypto
+
+  if (browserCrypto?.randomUUID) {
+    return browserCrypto.randomUUID()
+  }
+
+  const bytes = new Uint8Array(16)
+  if (browserCrypto?.getRandomValues) {
+    browserCrypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(
+    16,
+    20,
+  )}-${hex.slice(20)}`
+}
+
+function postPodcastPlaybackEvent(payload: PodcastPlaybackPayload, options?: { beacon?: boolean }) {
+  const body = JSON.stringify(payload)
+
+  if (options?.beacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+    const blob = new Blob([body], { type: 'application/json' })
+    navigator.sendBeacon(podcastPlaybackEndpoint, blob)
+    return
+  }
+
+  void fetch(podcastPlaybackEndpoint, {
+    body,
+    cache: 'no-store',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    keepalive: options?.beacon,
+    method: 'POST',
+  }).catch(() => {
+    // Podcast telemetry should never interrupt playback.
+  })
 }
 
 function formatTime(totalSeconds: number) {

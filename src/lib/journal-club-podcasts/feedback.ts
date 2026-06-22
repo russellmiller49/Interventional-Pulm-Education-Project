@@ -4,6 +4,10 @@ import {
   type PodcastLanguage,
 } from '@/data/journal-club-podcasts'
 import { isPodcastLanguage } from '@/lib/journal-club-podcasts/audio'
+import {
+  resolveJournalClubPodcastPlaybackContext,
+  type JournalClubPodcastPlaybackContext,
+} from '@/lib/journal-club-podcasts/usage'
 
 export const JOURNAL_CLUB_PODCAST_FEEDBACK_TABLE = 'journal_club_podcast_feedback'
 
@@ -11,7 +15,7 @@ export const podcastRatingValues = [1, 2, 3, 4, 5] as const
 
 export type PodcastRating = (typeof podcastRatingValues)[number]
 
-export interface JournalClubPodcastFeedbackResolution {
+export interface JournalClubPodcastFeedbackResolution extends JournalClubPodcastPlaybackContext {
   audioDialogRating: PodcastRating
   contentQualityRating: PodcastRating
   episodeId: string
@@ -32,12 +36,14 @@ export function resolveJournalClubPodcastFeedback(
   const normalizedLanguage = normalizeText(record.language).toLowerCase()
   const contentQualityRating = normalizePodcastRating(record.contentQualityRating)
   const audioDialogRating = normalizePodcastRating(record.audioDialogRating)
+  const playbackContext = resolveJournalClubPodcastPlaybackContext(record)
 
   if (
     !episodeId ||
     !isPodcastLanguage(normalizedLanguage) ||
     !contentQualityRating ||
-    !audioDialogRating
+    !audioDialogRating ||
+    !playbackContext
   ) {
     return null
   }
@@ -49,6 +55,7 @@ export function resolveJournalClubPodcastFeedback(
   }
 
   return {
+    ...playbackContext,
     audioDialogRating,
     contentQualityRating,
     episodeId,

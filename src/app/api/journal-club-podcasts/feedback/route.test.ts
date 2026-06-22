@@ -12,6 +12,7 @@ jest.mock('@/lib/supabase/admin', () => ({
 
 describe('journal club podcast feedback API', () => {
   const createSupabaseAdminMock = createSupabaseAdmin as jest.Mock
+  const playbackSessionId = '550e8400-e29b-41d4-a716-446655440000'
 
   beforeEach(() => {
     createSupabaseAdminMock.mockReset()
@@ -55,8 +56,13 @@ describe('journal club podcast feedback API', () => {
       expect.objectContaining({
         audio_dialog_rating: 4,
         content_quality_rating: 5,
+        current_time_seconds: 120,
+        duration_seconds: 600,
         episode_id: 'navigation-vs-ttnb',
         language: 'korean',
+        listened_seconds: 110,
+        playback_session_id: playbackSessionId,
+        percent_complete: 20,
         primary_hub: 'Lung Nodules, Early Lung Cancer & Staging',
         route_path: '/journal-club-podcasts',
         user_agent: 'jest',
@@ -70,8 +76,12 @@ function validFeedbackRequest() {
     body: JSON.stringify({
       audioDialogRating: 4,
       contentQualityRating: 5,
+      currentTimeSeconds: 120,
+      durationSeconds: 600,
       episodeId: 'navigation-vs-ttnb',
       language: 'korean',
+      listenedSeconds: 110,
+      playbackSessionId: '550e8400-e29b-41d4-a716-446655440000',
     }),
     headers: {
       'content-type': 'application/json',

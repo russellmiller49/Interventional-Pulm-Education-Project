@@ -137,6 +137,37 @@ describe('JournalClubPodcastBrowser', () => {
     expect(playMock).toHaveBeenCalled()
   })
 
+  it('records podcast playback with episode, language, and progress context', async () => {
+    const user = userEvent.setup()
+    renderBrowser()
+    const audio = document.querySelector('audio') as HTMLAudioElement
+
+    Object.defineProperty(audio, 'duration', {
+      configurable: true,
+      value: 600,
+    })
+
+    await user.selectOptions(screen.getAllByLabelText('Language')[0], 'korean')
+    audio.currentTime = 30
+    await user.click(screen.getByRole('button', { name: playButtonName(testEpisodes[0].title) }))
+
+    await waitFor(() => {
+      expect(playbackFetchCall()).toBeDefined()
+    })
+
+    const playbackBody = JSON.parse(playbackFetchCall()![1].body as string)
+    expect(playbackBody).toMatchObject({
+      currentTimeSeconds: 30,
+      durationSeconds: 600,
+      episodeId: testEpisodes[0].id,
+      eventType: 'play_started',
+      language: 'korean',
+      percentComplete: 5,
+      playbackRate: 1,
+    })
+    expect(playbackBody.playbackSessionId).toEqual(expect.any(String))
+  })
+
   it('supports 10 and 30 second seek controls', async () => {
     const user = userEvent.setup()
     renderBrowser()
@@ -186,19 +217,20 @@ describe('JournalClubPodcastBrowser', () => {
     await user.click(within(firstArticle).getByRole('button', { name: /submit rating/i }))
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/journal-club-podcasts/feedback',
-        expect.objectContaining({
-          body: JSON.stringify({
-            audioDialogRating: 3,
-            contentQualityRating: 5,
-            episodeId: testEpisodes[0].id,
-            language: 'spanish',
-          }),
-          method: 'POST',
-        }),
-      )
+      expect(feedbackFetchCall()).toBeDefined()
     })
+    const feedbackBody = JSON.parse(feedbackFetchCall()![1].body as string)
+    expect(feedbackBody).toMatchObject({
+      audioDialogRating: 3,
+      contentQualityRating: 5,
+      currentTimeSeconds: 0,
+      durationSeconds: null,
+      episodeId: testEpisodes[0].id,
+      language: 'spanish',
+      listenedSeconds: 0,
+      percentComplete: 0,
+    })
+    expect(feedbackBody.playbackSessionId).toEqual(expect.any(String))
     expect(screen.getByText('Thanks. Your rating was saved.')).toBeInTheDocument()
   })
 
@@ -234,6 +266,18 @@ function seekButton(direction: 'Advance' | 'Rewind', seconds: number, title: str
   return screen.getByRole('button', {
     name: `${direction} ${seconds} seconds for ${title}`,
   })
+}
+
+function playbackFetchCall() {
+  return (global.fetch as jest.Mock).mock.calls.find(
+    ([url]) => url === '/api/journal-club-podcasts/playback',
+  )
+}
+
+function feedbackFetchCall() {
+  return (global.fetch as jest.Mock).mock.calls.find(
+    ([url]) => url === '/api/journal-club-podcasts/feedback',
+  )
 }
 
 function escapeRegExp(value: string) {

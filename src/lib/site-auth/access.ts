@@ -206,6 +206,7 @@ export function resolveSiteModuleId(pathname: string) {
     first === 'bronch-navigation-trainer' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
+    first === 'journal-club-podcasts' ||
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
     first === 'tnm-9-staging' ||
