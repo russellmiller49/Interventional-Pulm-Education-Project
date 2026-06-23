@@ -1,18 +1,11 @@
 'use client'
 
 import type { Route } from 'next'
-import { usePathname, useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { Globe2 } from 'lucide-react'
 
-import {
-  activeLocales,
-  isActiveLocale,
-  localeCookieName,
-  localeLabels,
-  type ActiveLocale,
-} from '@/i18n/locale'
-import { localizePath, unlocalizedPathname } from '@/i18n/path'
+import { activeLocales, isActiveLocale, localeLabels, type ActiveLocale } from '@/i18n/locale'
+import { usePathname, useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 
 interface LanguageSelectorProps {
@@ -28,13 +21,13 @@ export function LanguageSelector({ className, compact = false }: LanguageSelecto
   const activeLocale = isActiveLocale(locale) ? locale : 'en'
 
   function handleLocaleChange(nextLocale: ActiveLocale) {
-    const queryString = window.location.search.replace(/^\?/, '')
-    const nextPath = localizePath(
-      `${unlocalizedPathname(pathname)}${queryString ? `?${queryString}` : ''}`,
-      nextLocale,
-    )
-    document.cookie = `${localeCookieName}=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`
-    router.replace(`${nextPath}${window.location.hash}` as Route)
+    if (nextLocale === activeLocale) {
+      return
+    }
+
+    const nextHref = `${pathname}${window.location.search}${window.location.hash}`
+    router.replace(nextHref as Route, { locale: nextLocale, scroll: false })
+    router.refresh()
   }
 
   return (
