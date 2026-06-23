@@ -1,4 +1,10 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 export function TriangleOfSafety() {
+  const t = useTranslations('thoracentesisPlanner.triangle')
+
   return (
     <svg
       role="img"
@@ -6,11 +12,8 @@ export function TriangleOfSafety() {
       viewBox="0 0 420 320"
       className="h-auto w-full"
     >
-      <title id="triangle-title">Triangle of safety diagram</title>
-      <desc id="triangle-description">
-        Educational chest wall diagram showing pectoralis major, latissimus dorsi, axilla, diaphragm
-        boundary, rib spaces, and a preferred lateral ultrasound window.
-      </desc>
+      <title id="triangle-title">{t('title')}</title>
+      <desc id="triangle-description">{t('desc')}</desc>
       <rect width="420" height="320" rx="18" fill="hsl(var(--muted))" />
       <path
         d="M210 45 C132 58 74 126 72 216 C120 254 301 255 348 216 C346 126 288 58 210 45Z"
@@ -46,19 +49,19 @@ export function TriangleOfSafety() {
         opacity="0.55"
       />
       <text x="210" y="33" textAnchor="middle" className="fill-foreground text-sm font-semibold">
-        Axilla
+        {t('axilla')}
       </text>
       <text x="82" y="112" className="fill-foreground text-xs font-semibold">
-        Pectoralis major
+        {t('pectoralis')}
       </text>
       <text x="278" y="112" className="fill-foreground text-xs font-semibold">
-        Latissimus
+        {t('latissimus')}
       </text>
       <text x="129" y="252" className="fill-foreground text-xs font-semibold">
-        Diaphragm boundary
+        {t('diaphragm')}
       </text>
       <text x="161" y="181" className="fill-foreground text-xs font-semibold">
-        Preferred window
+        {t('window')}
       </text>
     </svg>
   )

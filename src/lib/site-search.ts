@@ -4,6 +4,7 @@ import {
   type BoardReviewCategory,
 } from '@/data/board-review'
 import { allEbusTrainingModules } from '@/data/ebus-training'
+import type { ActiveLocale } from '@/i18n/locale'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 import { listCreativeCommonsCategories } from '@/lib/creative-commons'
 
@@ -18,6 +19,138 @@ export interface SiteSearchResult {
 
 interface SiteSearchOptions {
   canViewDrafts?: boolean
+  locale?: ActiveLocale
+}
+
+const localizedSearchOverrides: Partial<
+  Record<
+    ActiveLocale,
+    Record<
+      string,
+      Partial<Pick<SiteSearchResult, 'description' | 'keywords' | 'section' | 'title'>>
+    >
+  >
+> = {
+  es: {
+    '/resources': {
+      title: 'Biblioteca de recursos',
+      description:
+        'Colección con pestañas de imágenes médicas Creative Commons y guías para clínicos constructores.',
+      section: 'Recursos',
+      keywords: ['recursos', 'guías', 'imágenes médicas', 'clinicos', 'docencia'],
+    },
+    '/resources/creative-commons': {
+      title: 'Imágenes médicas Creative Commons',
+      description:
+        'Figuras médicas de licencia abierta de publicaciones revisadas por pares para uso educativo.',
+      section: 'Recursos',
+      keywords: ['imágenes', 'figuras', 'creative commons', 'presentaciones'],
+    },
+    '/board-prep': {
+      title: 'Preparación IP Board',
+      description:
+        'Capítulos interactivos de repaso para preparación del examen de neumología intervencionista.',
+      section: 'Aprendizaje',
+      keywords: ['repaso', 'examen', 'capítulos', 'estudio', 'preguntas'],
+    },
+    '/journal-club-podcasts': {
+      title: 'Podcasts de journal club',
+      description:
+        'Discusiones de audio sobre artículos de neumología intervencionista en inglés, español, mandarín, árabe y coreano.',
+      section: 'Aprendizaje',
+      keywords: ['podcast', 'journal club', 'artículos', 'español', 'mandarín'],
+    },
+    '/ebus-training': {
+      title: 'Formación EBUS',
+      description: 'Módulos abiertos de knobology, estaciones mediastínicas y simulador EBUS.',
+      section: 'Formación EBUS',
+      keywords: ['ebus', 'ultrasonido', 'mediastino', 'estaciones', 'simulador'],
+    },
+    '/tnm-9-staging': {
+      title: 'Estadificación TNM-9',
+      description:
+        'Módulo independiente de estadificación de cáncer de pulmón con descriptores, grupos de estadio, mapa N y casos.',
+      section: 'Estadificación',
+      keywords: ['tnm', 'cáncer de pulmón', 'estadificación', 'mapa n'],
+    },
+    '/bronch-navigation-trainer': {
+      title: 'Entrenador de navegación bronquial',
+      description:
+        'Simulador de navegación de TC a broncoscopio con decisiones de ramas, rutas objetivo y vistas virtuales.',
+      section: 'Simulación',
+      keywords: ['broncoscopía', 'navegación', 'tc', 'vía aérea', 'simulación'],
+    },
+    '/pleural-procedures': {
+      title: 'Procedimientos pleurales',
+      description:
+        'Enfermedad pleural, reconocimiento ecográfico, análisis de líquido pleural, neumotórax y drenajes.',
+      section: 'Procedimientos pleurales',
+      keywords: ['pleura', 'pleural', 'derrame', 'toracocentesis', 'ecografía', 'neumotórax'],
+    },
+    '/learn/anatomy': {
+      title: 'Visor anatómico interactivo 3D',
+      description:
+        'Explora estructuras de vía aérea, vasculatura y relaciones lobares con herramientas interactivas.',
+      section: 'Aprendizaje',
+      keywords: ['anatomía', 'vía aérea', 'modelos', 'segmentos'],
+    },
+  },
+  'zh-CN': {
+    '/resources': {
+      title: '资源库',
+      description: 'Creative Commons 医学图像和临床构建者学习指南的标签式集合。',
+      section: '资源',
+      keywords: ['资源', '指南', '医学图像', '教学'],
+    },
+    '/resources/creative-commons': {
+      title: 'Creative Commons 医学图像',
+      description: '来自同行评议出版物的开放许可医学图像，用于教育场景。',
+      section: '资源',
+      keywords: ['图像', '医学图像', 'figures', 'creative commons'],
+    },
+    '/board-prep': {
+      title: 'IP Board 备考',
+      description: '用于介入肺病学考试准备的交互式复习章节。',
+      section: '学习',
+      keywords: ['复习', '考试', '章节', '学习', '题库'],
+    },
+    '/journal-club-podcasts': {
+      title: 'Journal Club 播客',
+      description: '英语、西班牙语、普通话、阿拉伯语和韩语的介入肺病学文章音频讨论。',
+      section: '学习',
+      keywords: ['播客', 'journal club', '文章', '普通话'],
+    },
+    '/ebus-training': {
+      title: 'EBUS 培训',
+      description: '开放 EBUS 旋钮操作、纵隔分站和模拟器模块。',
+      section: 'EBUS 培训',
+      keywords: ['ebus', '超声', '纵隔', '分站', '模拟器'],
+    },
+    '/tnm-9-staging': {
+      title: 'TNM-9 分期',
+      description: '独立肺癌分期模块，包含描述符参考、分期分组、N 图谱和病例。',
+      section: '分期',
+      keywords: ['tnm', '肺癌', '分期', 'n 图谱'],
+    },
+    '/bronch-navigation-trainer': {
+      title: '支气管导航训练器',
+      description: '从 CT 到支气管镜的导航模拟器，包含分支决策、目标路径和虚拟镜视图。',
+      section: '模拟',
+      keywords: ['支气管镜', '导航', 'ct', '气道', '模拟'],
+    },
+    '/pleural-procedures': {
+      title: '胸膜操作',
+      description: '胸膜疾病、超声模式识别、胸水分析、气胸路径和引流系统。',
+      section: '胸膜操作',
+      keywords: ['胸膜', '胸水', '胸腔穿刺', '超声', '气胸', '引流'],
+    },
+    '/learn/anatomy': {
+      title: '交互式 3D 解剖查看器',
+      description: '使用交互工具探索气道结构、血管和肺叶关系。',
+      section: '学习',
+      keywords: ['解剖', '气道', '模型', '肺段'],
+    },
+  },
 }
 
 const allStaticResults: SiteSearchResult[] = [
@@ -263,10 +396,27 @@ const imageCategoryResults: SiteSearchResult[] = listCreativeCommonsCategories()
   }),
 )
 
+function localizeSearchResult(
+  item: SiteSearchResult,
+  locale: ActiveLocale = 'en',
+): SiteSearchResult {
+  const override = localizedSearchOverrides[locale]?.[item.href]
+
+  if (!override) {
+    return item
+  }
+
+  return {
+    ...item,
+    ...override,
+    keywords: override.keywords ?? item.keywords,
+  }
+}
+
 function getStaticResults(options: SiteSearchOptions = {}) {
-  return allStaticResults.filter((item) =>
-    isVisibleModulePath(item.href, { isAdmin: options.canViewDrafts === true }),
-  )
+  return allStaticResults
+    .filter((item) => isVisibleModulePath(item.href, { isAdmin: options.canViewDrafts === true }))
+    .map((item) => localizeSearchResult(item, options.locale))
 }
 
 function getEbusTrainingResults(options: SiteSearchOptions = {}) {
@@ -282,7 +432,7 @@ function getSearchIndex(options: SiteSearchOptions = {}) {
     ...vibeGuideSections,
     ...boardReviewResults,
     ...imageCategoryResults,
-  ]
+  ].map((item) => localizeSearchResult(item, options.locale))
 }
 
 export function getFeaturedSearchResults(options: SiteSearchOptions = {}) {
@@ -333,7 +483,9 @@ function scoreItem(item: SiteSearchResult, query: string, terms: string[]) {
 
 function normalize(value: string) {
   return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
 }

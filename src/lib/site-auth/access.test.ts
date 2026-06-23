@@ -36,18 +36,25 @@ describe('main site auth access helpers', () => {
     expect(isPublicPath('/pleural-procedures/pleural-ultrasound')).toBe(false)
   })
 
-  it('keeps the unlisted journal club podcast beta page public by direct URL', () => {
-    expect(isPublicPath('/journal-club-podcasts')).toBe(true)
+  it('requires login for the journal club podcast library while preserving module tracking', () => {
+    expect(isPublicPath('/journal-club-podcasts')).toBe(false)
+    expect(isPublicPath('/es/journal-club-podcasts')).toBe(false)
+    expect(isPublicPath('/zh-CN/journal-club-podcasts')).toBe(false)
     expect(getRequiredEntitlement('/journal-club-podcasts', params())).toBeNull()
+    expect(getRequiredEntitlement('/es/journal-club-podcasts', params())).toBeNull()
     expect(resolveSiteModuleId('/journal-club-podcasts')).toBe('journal-club-podcasts')
+    expect(resolveSiteModuleId('/zh-CN/journal-club-podcasts')).toBe('journal-club-podcasts')
   })
 
   it('requires entitlements only for restricted website areas', () => {
     expect(getRequiredEntitlement('/admin', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/admin/analytics', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/es/admin', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/zh-CN/admin/analytics', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/ip-registry', params())).toBe('ip_registry')
     expect(getRequiredEntitlement('/socal-ebus-course', params())).toBe('socal_ebus_course')
     expect(getRequiredEntitlement('/ebus-training', params())).toBeNull()
+    expect(getRequiredEntitlement('/es/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/tnm-9-staging', params())).toBeNull()
   })
 
@@ -89,6 +96,7 @@ describe('main site auth access helpers', () => {
     expect(isLegacyEbusGatewayPath('/socal-ebus-course/app')).toBe(true)
     expect(isLegacyEbusGatewayPath('/socal-ebus-course/app/')).toBe(true)
     expect(isLegacyEbusGatewayPath('/socal-ebus-course/app/index.html')).toBe(true)
+    expect(isLegacyEbusGatewayPath('/es/socal-ebus-course/app/index.html')).toBe(true)
     expect(isPublicPath('/socal-ebus-course/app/index.html')).toBe(true)
     expect(isPublicPath('/socal-ebus-course')).toBe(false)
   })
@@ -109,6 +117,7 @@ describe('main site auth access helpers', () => {
 
   it('requires site admin for synchronized airway anatomy routes and assets', () => {
     expect(getRequiredEntitlement('/learn/anatomy/airway', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/zh-CN/learn/anatomy/airway', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/airway-anatomy/case-001/case_manifest.json', params())).toBe(
       'site_admin',
     )

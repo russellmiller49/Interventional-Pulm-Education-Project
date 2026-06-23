@@ -1,0 +1,1633 @@
+{
+  "common": {
+    "siteName": "Educación en Neumología Intervencionista",
+    "shortBrand": "IP Lab",
+    "skipToContent": "Saltar al contenido",
+    "search": "Buscar",
+    "signIn": "Iniciar sesión",
+    "admin": "Admin",
+    "logOut": "Cerrar sesión",
+    "loggingOut": "Cerrando sesión",
+    "welcome": "Bienvenido/a, <userName>{name}</userName>",
+    "educationalUseOnly": "Solo para uso educativo."
+  },
+  "language": {
+    "label": "Idioma",
+    "choose": "Elegir idioma",
+    "current": "Idioma actual",
+    "reviewed": "Traducciones revisadas",
+    "planned": "Idiomas planificados"
+  },
+  "metadata": {
+    "title": "Educación en Neumología Intervencionista",
+    "description": "Centro de educación e innovación para la comunidad de neumología intervencionista."
+  },
+  "navigation": {
+    "primary": "Principal",
+    "modules": "Módulos",
+    "openMenu": "Abrir menú de navegación",
+    "mobileLabel": "Navegación móvil",
+    "navigate": "Navegar",
+    "mobileDescription": "Explora formación EBUS, podcasts, anatomía, Nav Bronch, FluoroView y recursos.",
+    "searchResources": "Buscar recursos",
+    "searchResourcesAndGuides": "Buscar recursos y guías",
+    "searchPlaceholder": "Buscar recursos y guías",
+    "display": "Visualización",
+    "items": {
+      "ebusTraining": {
+        "title": "Formación EBUS",
+        "shortTitle": "EBUS",
+        "description": "Knobology, estaciones y módulos de simulador"
+      },
+      "ebusVirtualBronch": {
+        "title": "Broncoscopía virtual EBUS",
+        "shortTitle": "EBUS VB",
+        "description": "Vista previa administrativa del simulador de broncoscopía virtual sincronizado"
+      },
+      "podcastLibrary": {
+        "title": "Biblioteca de podcasts",
+        "shortTitle": "Podcasts",
+        "description": "Discusiones de journal club en cinco idiomas"
+      },
+      "tnm9": {
+        "title": "Estadificación TNM-9",
+        "shortTitle": "TNM-9",
+        "description": "Módulo independiente de estadificación de cáncer de pulmón"
+      },
+      "anatomy": {
+        "title": "Anatomía 3D",
+        "shortTitle": "Anatomía",
+        "description": "Visor anatómico 3D e interactivo"
+      },
+      "boardPrep": {
+        "title": "Preparación IP Board",
+        "shortTitle": "Board Prep",
+        "description": "Capítulos interactivos de repaso"
+      },
+      "fluoroview": {
+        "title": "FluoroView",
+        "shortTitle": "FluoroView",
+        "description": "Laboratorio de simulación de vía aérea con arco en C"
+      },
+      "bronchNavigation": {
+        "title": "Navegación bronquial",
+        "shortTitle": "Nav Bronch",
+        "description": "Simulador de navegación de TC a broncoscopio"
+      },
+      "pleuralProcedures": {
+        "title": "Procedimientos pleurales",
+        "shortTitle": "Pleural",
+        "description": "Módulos de enfermedad y procedimientos pleurales"
+      },
+      "resources": {
+        "title": "Recursos",
+        "shortTitle": "Recursos",
+        "description": "Recursos Creative Commons y ayudas de estudio"
+      },
+      "socalEbusCourse": {
+        "title": "Curso EBUS SoCal",
+        "shortTitle": "Curso EBUS",
+        "description": "Para participantes del Southern California EBUS Course"
+      },
+      "rapidOnsiteCytology": {
+        "title": "Citología rápida in situ",
+        "shortTitle": "Citología",
+        "description": "Entrenador de interpretación ROSE y Diff-Quik"
+      },
+      "introBronchoscopy": {
+        "title": "Introducción a broncoscopía",
+        "shortTitle": "Intro Bronch",
+        "description": "Módulos básicos de tamaño, alcance y ajuste de herramientas"
+      },
+      "ipRegistry": {
+        "title": "Registro IP",
+        "shortTitle": "Registro",
+        "description": "Abrir la interfaz Procedure Suite"
+      },
+      "comingSoon": {
+        "title": "Próximamente",
+        "shortTitle": "Próximamente",
+        "description": "Módulos próximos de pleura, broncoscopía y broncoscopía rígida"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "Herramientas prácticas de aprendizaje, modelos imprimibles y currículos modernos que impulsan la educación de vía aérea en todo el mundo. Creado para clínicos, educadores y trainees.",
+    "motion": "¿Prefieres menos movimiento? Actívalo en las preferencias del sistema y lo respetaremos.",
+    "explore": "Explorar",
+    "learning": "Aprendizaje",
+    "comingSoon": "Próximamente",
+    "home": "Inicio",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "codeOfConduct": "Código de conducta",
+    "copyright": "© {year} Educación en Neumología Intervencionista. Solo para uso educativo."
+  },
+  "home": {
+    "heroEyebrow": "Educación en Neumología Intervencionista",
+    "heroTitle": "Educación e innovación en neumología intervencionista",
+    "heroBody": "Explora formación EBUS, journal clubs en podcast, anatomía 3D, Nav Bronch, repaso para boards y módulos de simulación FluoroView para estudiantes y educadores de neumología intervencionista.",
+    "openEbus": "Abrir formación EBUS",
+    "browsePodcasts": "Explorar podcasts",
+    "launchCatalog": "Catálogo inicial",
+    "coreModules": "Módulos principales de aprendizaje",
+    "coreModulesBody": "Comienza con los módulos listos para estudiantes: formación EBUS, estadificación TNM-9, anatomía 3D, repaso de boards, podcasts de journal club, Nav Bronch, FluoroView y recursos docentes.",
+    "socalParticipants": "Participantes del curso EBUS SoCal",
+    "participantCourse": "Curso para participantes",
+    "participantTitle": "Participantes del Southern California EBUS Course",
+    "participantBody": "El portal completo del curso sigue disponible para participantes registrados que necesitan el itinerario de clases, encuestas, pruebas, seguimiento de progreso y materiales específicos del curso. Los recursos de formación EBUS también están disponibles por separado arriba.",
+    "openCoursePortal": "Abrir portal del curso",
+    "roadmap": "Hoja de ruta",
+    "upcomingModules": "Módulos próximos",
+    "upcomingBody": "Los próximos lanzamientos públicos se centran en introducción a enfermedad pleural, fundamentos de broncoscopía rígida e introducción a broncoscopía.",
+    "viewComingSoon": "Ver próximos módulos",
+    "cards": {
+      "podcast": {
+        "badge": "Nuevo · Audio",
+        "title": "Podcasts de journal club",
+        "description": "Escucha discusiones de journal club enfocadas en artículos de IP en inglés, español, mandarín, árabe y coreano.",
+        "cta": "Explorar podcasts"
+      },
+      "ebus": {
+        "badge": "EBUS",
+        "title": "Formación EBUS",
+        "description": "Abre módulos de knobology, estaciones mediastínicas y simulador EBUS sin bloqueo de participante del curso.",
+        "cta": "Abrir formación EBUS"
+      },
+      "tnm": {
+        "badge": "Estadificación",
+        "title": "Estadificación TNM-9",
+        "description": "Práctica independiente de estadificación de cáncer de pulmón con referencia de descriptores, grupos de estadio, mapa N y casos.",
+        "cta": "Abrir TNM-9"
+      },
+      "anatomy": {
+        "badge": "Anatomía 3D",
+        "title": "Visor anatómico interactivo",
+        "description": "Explora anatomía 3D de vía aérea, mediastino, pleura e intervenciones con planos de TC y controles segmentarios.",
+        "cta": "Explorar anatomía"
+      },
+      "board": {
+        "badge": "Repaso",
+        "title": "Capítulos IP Board Prep",
+        "description": "Cobertura basada en casos de dominios malignos, benignos y procedimentales para repaso de neumología intervencionista.",
+        "cta": "Iniciar repaso"
+      },
+      "fluoro": {
+        "badge": "Simulación",
+        "title": "FluoroView",
+        "description": "Practica orientación TC-fluoroscopía, ángulos del arco en C, superposiciones de vía aérea y controles de imagen no diagnóstica.",
+        "cta": "Abrir FluoroView"
+      },
+      "nav": {
+        "badge": "Navegación",
+        "title": "Entrenador de navegación bronquial",
+        "description": "Conduce un broncoscopio virtual por decisiones de ramas correlacionando planos de TC, vistas de vía aérea y objetivos.",
+        "cta": "Iniciar navegación"
+      },
+      "intro": {
+        "badge": "Broncoscopía",
+        "title": "Introducción a broncoscopía",
+        "description": "Herramientas fundamentales para tamaño del broncoscopio, conceptos de alcance de vía aérea y compatibilidad de instrumentos.",
+        "cta": "Abrir módulo"
+      },
+      "pleural": {
+        "badge": "Pleural",
+        "title": "Procedimientos pleurales",
+        "description": "Aprende enfermedad pleural, reconocimiento ecográfico, análisis de líquido pleural, neumotórax y sistemas de drenaje.",
+        "cta": "Abrir módulos pleurales"
+      },
+      "resources": {
+        "badge": "Recursos",
+        "title": "Biblioteca de recursos",
+        "description": "Explora imágenes médicas Creative Commons y guías de aprendizaje para clínicos constructores.",
+        "cta": "Explorar recursos"
+      }
+    }
+  },
+  "search": {
+    "title": "Buscar",
+    "description": "Busca recursos, capítulos de repaso, herramientas de simulación y guías para clínicos.",
+    "heading": "Buscar recursos y guías",
+    "body": "Encuentra capítulos de repaso, colecciones de imágenes médicas, herramientas de simulación y recursos para clínicos constructores.",
+    "placeholder": "Prueba EBUS, pleura, stent de vía aérea, codificación o seguridad",
+    "resultsFor": "Resultados para \"{query}\"",
+    "suggested": "Puntos de partida sugeridos",
+    "resultCount": "{count, plural, one {# resultado} other {# resultados}}",
+    "noMatches": "Todavía no hay coincidencias. Prueba un término más amplio como vía aérea, EBUS, pleura, codificación, anatomía o seguridad."
+  },
+  "journalClub": {
+    "defaultLanguage": "spanish",
+    "availableIn": "Disponible en {count} idiomas",
+    "languageNames": {
+      "english": "Inglés",
+      "spanish": "Español",
+      "mandarin": "Mandarín",
+      "arabic": "Árabe",
+      "korean": "Coreano"
+    }
+  },
+  "thoracentesisPlanner": {
+    "overview": {
+      "metaTitle": "Toracocentesis y acceso pleural",
+      "metaDescription": "Aprende el acceso pleural seguro, el riesgo vascular y la manometría; practica planificar una toracocentesis y predecir la curva de drenaje; luego comprueba tu razonamiento.",
+      "headerTitle": "Toracocentesis y acceso pleural",
+      "headerDescription": "Planifica una toracocentesis segura desde los principios básicos: dónde es seguro entrar, cómo enmarcar el riesgo de sangrado y qué te dice la presión pleural sobre el pulmón.",
+      "objectivesLead": "Al terminar este módulo podrás",
+      "steps": {
+        "learn": {
+          "title": "Aprender",
+          "description": "Triángulo de seguridad, riesgo vascular, enmarque del riesgo de sangrado, manometría y reglas de detención."
+        },
+        "practice": {
+          "title": "Practicar",
+          "description": "Elige una ventana segura, ajusta las variables de riesgo de sangrado y predice la curva de drenaje."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Ocho preguntas sobre acceso, riesgo vascular, manometría y cuándo detenerse."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de toracocentesis",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y el itinerario de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprender",
+        "description": "Acceso seguro, manometría y reglas de detención"
+      },
+      "practice": {
+        "title": "Practicar",
+        "description": "Planifica una toracocentesis segura y predice la curva de drenaje"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Comprueba tu razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de guías y manometría"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprende toracocentesis",
+      "metaDescription": "Acceso pleural seguro, riesgo de vasos intercostales, riesgo de sangrado individualizado, manometría pleural y cuándo dejar de drenar.",
+      "headerTitle": "Aprende toracocentesis",
+      "headerDescription": "Planifica la toracocentesis antes de hacerla: dónde es seguro entrar, cómo pensar en el riesgo de sangrado y qué revela la presión pleural sobre el pulmón.",
+      "intro": "Los bloques esenciales son todo lo que necesitas para planificar una toracocentesis segura y leer una curva de manometría. Abre «Profundizar» para el edema pulmonar por reexpansión, situaciones especiales y el detalle técnico de nivel board.",
+      "boardSourceLabel": "Del capítulo de board: Derrames pleurales e intervenciones pleurales",
+      "progressLabel": "Marcar Aprender como completado"
+    },
+    "practice": {
+      "metaTitle": "Practica toracocentesis",
+      "metaDescription": "Planifica una ventana de acceso segura, ajusta las variables de riesgo de sangrado y predice la curva de drenaje por manometría antes de revelar el punto de enseñanza.",
+      "headerTitle": "Practica: planifica la toracocentesis",
+      "headerDescription": "Elige una ventana segura, ajusta las variables de riesgo de sangrado del caso y luego comprométete con una predicción de drenaje antes de comprobar el veredicto de la manometría.",
+      "progressLabel": "Marcar Practicar como completado"
+    },
+    "assessment": {
+      "metaTitle": "Evaluación de toracocentesis",
+      "metaDescription": "Comprueba tu razonamiento sobre acceso seguro, riesgo de vasos intercostales, riesgo de sangrado, manometría y reglas de detención.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Ocho preguntas que comprueban si puedes convertir la anatomía y la curva de presión en un plan seguro.",
+      "checkTitle": "Repaso de toracocentesis",
+      "checkIntro": "Responde cada pregunta y luego revela la explicación. Reflejan los objetivos de Aprender.",
+      "progressLabel": "Marcar Evaluación como completado"
+    },
+    "references": {
+      "metaTitle": "Referencias de toracocentesis",
+      "metaDescription": "Fuentes de guías y manometría que respaldan la enseñanza del módulo de toracocentesis.",
+      "headerTitle": "Referencias",
+      "headerDescription": "Las fuentes de guías y manometría que respaldan la enseñanza de seguridad de acceso y drenaje.",
+      "heading": "Referencias clínicas"
+    },
+    "planner": {
+      "scaffoldTitle": "Seguridad de la toracocentesis y comportamiento del drenaje",
+      "objectives": [
+        "Trazar una ventana de acceso lateral más segura y evitar errores anatómicos comunes.",
+        "Usar las variables de riesgo de sangrado como guía para la planificación en lugar de una única regla de corte.",
+        "Predecir cómo cambian la presión de drenaje y los síntomas con un pulmón expansible o no expansible."
+      ],
+      "howToUse": [
+        "Revisa el diagrama de acceso y elige la trayectoria de aguja que quieres probar.",
+        "Ajusta los controles de riesgo de sangrado y de drenaje según el caso.",
+        "Predice el comportamiento del drenaje antes de revelar el punto de enseñanza de la manometría."
+      ],
+      "clinicalAnchor": "Se está preparando a un paciente con un derrame unilateral sintomático para una toracocentesis guiada por ecografía. El equipo debe elegir una ventana segura, revisar el riesgo de sangrado y decidir cuándo el drenaje debe reducirse o detenerse.",
+      "revealLabel": "Revelar el veredicto del drenaje",
+      "keyTakeaway": "La ecografía confirma dónde entrar; los síntomas continuos y el comportamiento de la presión deciden cómo procede el drenaje. Las decisiones sobre sangrado todavía requieren indicación, urgencia, momento de la medicación y política local.",
+      "matchHeading": "La predicción coincide con la curva",
+      "compareHeading": "Compara tu predicción",
+      "pleuralPressureLabel": "Presión pleural",
+      "symptomsLabel": "Síntomas",
+      "noSymptoms": "No se desencadenaron síntomas",
+      "rpeRiskLabel": "Riesgo de edema pulmonar por reexpansión",
+      "stopSlow": "Detén o reduce el drenaje cuando los síntomas, una presión muy negativa o la extracción rápida de gran volumen generen preocupación.",
+      "triangleHeading": "Triángulo de seguridad",
+      "triangleBody": "Usa el diagrama para ensayar la ventana lateral delimitada por el pectoral mayor, el dorsal ancho, la axila, los espacios intercostales y el diafragma.",
+      "vesselHeading": "Riesgo de vasos intercostales",
+      "entryLegend": "Posición de entrada",
+      "entry": {
+        "posterior-medial": "Posterior o medial",
+        "mid-axillary": "Media axilar",
+        "lateral-safe": "Ventana lateral",
+        "too-low": "Demasiado baja"
+      },
+      "vesselRiskLine": "{label}: riesgo didáctico {level}",
+      "manometryHeading": "Entrenador de drenaje por manometría",
+      "expectedPatternLabel": "Patrón de expansión pulmonar esperado",
+      "archetype": {
+        "expandable": "Expansible",
+        "partiallyExpandable": "Parcialmente expansible",
+        "trapped": "Atrapado o no expansible"
+      },
+      "drainedVolumeLabel": "Volumen drenado: {ml} mL",
+      "predictLegend": "Predice el comportamiento del drenaje",
+      "predictions": {
+        "gradual": {
+          "label": "Descenso gradual de la presión",
+          "description": "El drenaje se tolera hasta que aparecen mayores volúmenes o síntomas."
+        },
+        "biphasic": {
+          "label": "Caída tardía y brusca de la presión",
+          "description": "El drenaje inicial parece razonable y luego la presión cae más rápido."
+        },
+        "earlyNegativePressure": {
+          "label": "Aviso de presión negativa temprana",
+          "description": "Los síntomas y un marcado descenso de la presión pueden aparecer con volúmenes pequeños."
+        }
+      },
+      "bleedingHeading": "Riesgo de sangrado",
+      "inrLabel": "INR",
+      "plateletsLabel": "Plaquetas",
+      "antiplateletLabel": "Tratamiento antiagregante",
+      "antiplatelet": {
+        "none": "Ninguno",
+        "single": "Un solo agente",
+        "dual": "Terapia doble"
+      },
+      "anticoagulantLabel": "Anticoagulante",
+      "anticoagulant": {
+        "none": "Ninguno",
+        "held": "Suspendido según el plan",
+        "active": "Dosis terapéutica activa"
+      },
+      "bleedingRiskLabel": "riesgo {level}"
+    },
+    "triangle": {
+      "title": "Diagrama del triángulo de seguridad",
+      "desc": "Diagrama educativo de la pared torácica que muestra el pectoral mayor, el dorsal ancho, la axila, el límite del diafragma, los espacios intercostales y una ventana ecográfica lateral preferida.",
+      "axilla": "Axila",
+      "pectoralis": "Pectoral mayor",
+      "latissimus": "Dorsal ancho",
+      "diaphragm": "Límite del diafragma",
+      "window": "Ventana preferida"
+    },
+    "symptom": {
+      "chestPressure": "presión torácica",
+      "cough": "tos",
+      "throatTickle": "cosquilleo en la garganta",
+      "pleuriticPain": "dolor pleurítico"
+    },
+    "riskLevel": {
+      "lower": "menor",
+      "moderate": "moderado",
+      "higher": "mayor",
+      "low": "bajo",
+      "elevated": "elevado",
+      "high": "alto"
+    },
+    "vesselRisk": {
+      "posterior-medial": {
+        "label": "Posterior/medial",
+        "teachingPoint": "Los abordajes posteriores y mediales cerca de la columna tienen vasos intercostales más variables y expuestos; escanea lateralmente para una ventana más segura."
+      },
+      "too-low": {
+        "label": "Por debajo del límite seguro del diafragma",
+        "teachingPoint": "Una entrada baja pone en riesgo el diafragma y las estructuras abdominales; vuelve a mapear el bolsillo y mantén el diafragma visible."
+      },
+      "mid-axillary": {
+        "label": "Media axilar",
+        "teachingPoint": "El acceso medio axilar puede ser apropiado cuando la ecografía confirma la profundidad del líquido, la anatomía del espacio intercostal y la ubicación del diafragma."
+      },
+      "lateral-safe": {
+        "label": "Ventana lateral confirmada por ecografía",
+        "teachingPoint": "Un bolsillo lateral confirmado por ecografía con un límite diafragmático claro es el objetivo didáctico preferido."
+      }
+    },
+    "drainageTeaching": {
+      "expandable": "El pulmón expansible muestra un descenso gradual de la presión y un drenaje limitado por síntomas.",
+      "partiallyExpandable": "El pulmón parcialmente expansible tiene una curva bifásica: el drenaje inicial parece tolerable y luego la presión cae más rápido.",
+      "trapped": "El pulmón atrapado comienza negativo y se vuelve muy negativo con volúmenes pequeños de drenaje; los síntomas pueden aparecer temprano."
+    },
+    "bleeding": {
+      "reasons": {
+        "inrHigh": "El INR es 3 o mayor en este modelo educativo de riesgo.",
+        "plateletsLow": "Las plaquetas son 20.000/uL o menos en este modelo educativo de riesgo.",
+        "anticoagActive": "La anticoagulación terapéutica está activa.",
+        "dapt": "La terapia antiagregante doble añade complejidad a la planificación del procedimiento.",
+        "none": "No hay señales de laboratorio o de medicación de alto riesgo en este caso."
+      },
+      "teachingPoint": "Las decisiones sobre sangrado en procedimientos pleurales son individualizadas; la guía ecográfica, la indicación, la urgencia, la política local y el momento de la medicación importan más que un único valor de laboratorio."
+    }
+  },
+  "pneumothoraxPathway": {
+    "overview": {
+      "metaTitle": "Vía del neumotórax",
+      "metaDescription": "Aprende la vía del neumotórax centrada primero en la fisiología, practica pasando un caso por ACCP 2001 y BTS 2023 en paralelo y luego comprueba tu razonamiento.",
+      "headerTitle": "Vía del neumotórax",
+      "headerDescription": "Primero la fisiología, luego elige: separa la emergencia del paciente estable y observa dónde coinciden y dónde divergen los marcos ACCP 2001 y BTS 2023.",
+      "objectivesLead": "Al terminar este módulo podrás",
+      "steps": {
+        "learn": {
+          "title": "Aprende",
+          "description": "Estabilidad, PSP vs SSP, la divergencia ACCP-vs-BTS, fuga de aire persistente, recurrencia."
+        },
+        "practice": {
+          "title": "Practica",
+          "description": "Construye un caso y observa cómo ACCP 2001 y BTS 2023 coinciden o divergen."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Ocho preguntas sobre estabilidad, elección de marco, fuga de aire y recurrencia."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de neumotórax",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y la ruta de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprende",
+        "description": "Estabilidad, PSP vs SSP, ACCP vs BTS, fuga de aire"
+      },
+      "practice": {
+        "title": "Practica",
+        "description": "Pasa un caso por ambos marcos en paralelo"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Comprueba tu razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de las guías"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprende sobre el neumotórax",
+      "metaDescription": "Primero la estabilidad, primario vs secundario, la divergencia ACCP-vs-BTS, el manejo de la fuga de aire persistente y la prevención de recurrencias.",
+      "headerTitle": "Aprende la vía del neumotórax",
+      "headerDescription": "Empieza por la fisiología, separa el primario del secundario y entiende exactamente dónde coinciden y dónde divergen los dos marcos principales.",
+      "intro": "Los bloques centrales llevan toda la decisión, desde la emergencia hasta la prevención de recurrencias. Abre «Profundizar» para los signos de ecografía pulmonar, APF-vs-BPF y los algoritmos y tablas de nivel board.",
+      "boardSourceLabel": "Del capítulo del board: Neumotórax, fugas de aire prolongadas y fístula broncopleural",
+      "progressLabel": "Marcar Aprende como completado"
+    },
+    "practice": {
+      "metaTitle": "Practica el neumotórax",
+      "metaDescription": "Construye un caso de neumotórax, decídete por una conducta y luego observa cómo lo evalúan ACCP 2001 y BTS 2023 en paralelo.",
+      "headerTitle": "Practica: ambos marcos en paralelo",
+      "headerDescription": "Configura el caso, decídete por una conducta y luego revela cómo lo evalúan ACCP 2001 y BTS 2023 — y dónde coinciden o divergen.",
+      "progressLabel": "Marcar Practica como completado"
+    },
+    "assessment": {
+      "metaTitle": "Evaluación del neumotórax",
+      "metaDescription": "Comprueba tu razonamiento sobre la estabilidad, PSP vs SSP, la divergencia ACCP-vs-BTS, la fuga de aire persistente y la prevención de recurrencias.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Ocho preguntas que comprueban si sabes poner la fisiología primero y elegir la vía correcta.",
+      "checkTitle": "Comprobación del neumotórax",
+      "checkIntro": "Responde cada pregunta y luego revela la explicación. Reflejan los objetivos de Aprende.",
+      "progressLabel": "Marcar Evaluación como completado"
+    },
+    "references": {
+      "metaTitle": "Referencias del neumotórax",
+      "metaDescription": "Fuentes de las guías detrás de la enseñanza de la vía del neumotórax.",
+      "headerTitle": "Referencias",
+      "headerDescription": "Las fuentes de las guías detrás de la vía centrada en la fisiología y la comparación de marcos.",
+      "heading": "Referencias clínicas"
+    },
+    "pathway": {
+      "scaffoldTitle": "Neumotórax: ACCP 2001 comparado con BTS 2023",
+      "objectives": [
+        "Pasar un caso por los marcos del American College of Chest Physicians 2001 y de la British Thoracic Society 2023.",
+        "Explicar por qué los pacientes inestables convergen mientras que el neumotórax espontáneo primario estable puede divergir.",
+        "Identificar si lo que impulsa la recomendación es el tamaño, los síntomas, las prioridades del paciente o el momento de la fuga de aire."
+      ],
+      "howToUse": [
+        "Elige un escenario y revisa los detalles de estabilidad, tamaño y síntomas.",
+        "Predice la conducta antes de revelar la comparación de las guías.",
+        "Compara las dos tarjetas y decide por qué coinciden o divergen."
+      ],
+      "scenarioLabel": "Escenario",
+      "dataType": "Tipo",
+      "dataSymptoms": "Síntomas",
+      "dataSizeAccp": "Tamaño para ACCP",
+      "dataAirLeak": "Fuga de aire",
+      "sizeLarge": "Grande",
+      "sizeSmall": "Pequeño",
+      "airLeakNone": "Ninguna",
+      "airLeakDays": "{days} días",
+      "predictHeading": "Predice la conducta antes de revelar la comparación",
+      "revealLabel": "Revelar ambos marcos",
+      "frameworksAgree": "Los marcos coinciden",
+      "frameworksDiverge": "Los marcos divergen",
+      "matchesPrediction": "Coincide con tu predicción",
+      "recurrencePreventionLabel": "Prevención de recurrencias",
+      "keyTakeaway": "ACCP 2001 es útil como comparador histórico de tamaño y estabilidad. BTS 2023 pone más énfasis en los síntomas, las prioridades del paciente, las vías ambulatorias y un seguimiento fiable."
+    },
+    "disposition": {
+      "observation": "Observación o tratamiento conservador",
+      "aspiration": "Aspiración con aguja",
+      "ambulatory": "Dispositivo ambulatorio",
+      "chest-drain": "Drenaje torácico",
+      "escalate": "Escalada a especialista",
+      "emergency": "Descompresión de emergencia"
+    },
+    "pneumothoraxType": {
+      "psp": "Neumotórax espontáneo primario",
+      "ssp": "Neumotórax espontáneo secundario",
+      "iatrogenic": "Neumotórax iatrogénico",
+      "traumatic": "Neumotórax traumático"
+    },
+    "symptomBurden": {
+      "minimal": "Síntomas mínimos",
+      "moderate": "Síntomas moderados",
+      "severe": "Síntomas graves"
+    },
+    "headline": {
+      "urgentDecompression": "Descompresión y drenaje urgentes",
+      "escalatePal": "Escalada a especialista por fuga de aire persistente",
+      "chestDrainAdmission": "Drenaje torácico e ingreso",
+      "observeRepeat": "Observar con reevaluación",
+      "needleAspiration": "Aspiración con aguja o drenaje con catéter",
+      "monitoredIntervention": "Vía de intervención monitorizada",
+      "conservativeSafetyNet": "Manejo conservador con red de seguridad",
+      "shortTermDrainage": "Drenaje a corto plazo para alivio rápido de los síntomas",
+      "ambulatoryPathway": "Vía de dispositivo ambulatorio o aspiración"
+    },
+    "rationale": {
+      "accpStabilityNotMet": "No se cumplen los criterios de estabilidad del American College of Chest Physicians, por lo que la fisiología tiene prioridad sobre el tamaño.",
+      "accpPalEarly": "El marco de 2001 escala antes la fuga de aire persistente, alrededor de los días 3 a 5 tras el drenaje y las comprobaciones del sistema.",
+      "accpSspReserve": "El neumotórax espontáneo secundario tiene menos reserva respiratoria, por lo que el marco histórico favorece el drenaje y la monitorización.",
+      "accpStableVitals": "El paciente cumple los criterios históricos de signos vitales de paciente estable.",
+      "accpSmallPspObserve": "El neumotórax espontáneo primario pequeño es territorio de observación en ACCP 2001.",
+      "accpLargeOrSymptomatic": "Un tamaño grande o síntomas relevantes mueven la vía histórica hacia la aspiración o el drenaje.",
+      "btsTensionEmergency": "La guía de la British Thoracic Society trata la fisiología de tensión o la hipoxia significativa como una emergencia de alto riesgo.",
+      "btsPalWindow": "La vía de 2023 usa una reevaluación y escalada acotadas en el tiempo cuando una fuga de aire persiste alrededor de los días 5 a 7.",
+      "btsHighRiskContext": "Las características de alto riesgo, incluida la enfermedad pulmonar subyacente o el contexto ventilado/traumático, favorecen una intervención monitorizada.",
+      "btsSizeDeemphasized": "La vía de 2023 resta peso al tamaño en el neumotórax espontáneo primario estable y con síntomas mínimos.",
+      "btsProcedureAvoidance": "Evitar el procedimiento es razonable cuando el seguimiento y las precauciones de reconsulta son fiables.",
+      "btsSevereRelief": "Los síntomas graves desplazan la cuestión de la prioridad del paciente hacia el alivio rápido y el drenaje monitorizado.",
+      "btsStableSymptomaticChoice": "Para el neumotórax espontáneo primario estable y sintomático, la vía sopesa la preferencia del paciente, la disponibilidad local y el alivio rápido de los síntomas."
+    },
+    "comparisonNote": {
+      "converge": "Ambos marcos convergen aquí, lo que suele significar que la fisiología, el contexto de alto riesgo o el momento de la fuga de aire persistente domina la decisión.",
+      "sizeVsSymptom": "Divergencia clásica: ACCP 2001 reacciona al tamaño, mientras que BTS 2023 prioriza los síntomas, las prioridades del paciente y la fiabilidad del seguimiento.",
+      "palTiming": "La divergencia es de momento: ACCP 2001 escala la fuga de aire persistente antes de la ventana del día 5 de BTS 2023.",
+      "genericDivergence": "Los marcos divergen; identifica si lo que impulsa la diferencia es el tamaño, la carga de síntomas, la atención ambulatoria local o el contexto de riesgo."
+    },
+    "recurrencePrevention": {
+      "highRiskOccupation": "Una ocupación de alto riesgo, como la aviación o el buceo, reduce el umbral para una discusión definitiva sobre la prevención de recurrencias.",
+      "recurrenceOrSsp": "Una recurrencia o un neumotórax espontáneo secundario debe motivar consejo de prevención, abandono del tabaco, opciones de pleurodesis o quirúrgicas y seguimiento por especialista.",
+      "firstPsp": "Para un primer neumotórax espontáneo primario, aconseja sobre el riesgo de recurrencia, el abandono del tabaco, el seguimiento y las precauciones de reconsulta."
+    }
+  },
+  "pleuralFluidAnalysis": {
+    "overview": {
+      "metaTitle": "Análisis del líquido pleural",
+      "metaDescription": "Aprende los criterios de Light y la trampa del pseudoexudado, practica en una cabina de diagnóstico diferencial y luego empareja los hallazgos con la enfermedad.",
+      "headerTitle": "Análisis del líquido pleural",
+      "headerDescription": "Empareja los números del líquido con la historia clínica: clasifica el derrame, reconcilia el pseudoexudado y deja que el aspecto guíe las pruebas dirigidas.",
+      "objectivesLead": "Al terminar este módulo serás capaz de",
+      "steps": {
+        "learn": {
+          "title": "Aprende",
+          "description": "Criterios de Light, pseudoexudados, pruebas dirigidas y leer el aspecto."
+        },
+        "practice": {
+          "title": "Practica",
+          "description": "Introduce los valores del líquido y observa cómo responden el diferencial ordenado y los medidores de Light."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Empareja el patrón completo de hallazgos con el diagnóstico más probable."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de análisis del líquido pleural",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y la ruta de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprende",
+        "description": "Criterios de Light, pseudoexudados, pruebas dirigidas"
+      },
+      "practice": {
+        "title": "Practica",
+        "description": "Cabina interactiva de diagnóstico diferencial"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Empareja los hallazgos con la enfermedad"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de las guías"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprende el análisis del líquido pleural",
+      "metaDescription": "Criterios de Light, la trampa del pseudoexudado, pruebas dirigidas del líquido pleural, aspecto macroscópico y convertir los números en un diagnóstico diferencial.",
+      "headerTitle": "Aprende el análisis del líquido pleural",
+      "headerDescription": "Clasifica el derrame, reconcilia el pseudoexudado y deja que el aspecto macroscópico y la historia clínica guíen las pruebas dirigidas.",
+      "intro": "Los bloques principales te llevan desde los criterios de Light hasta un diagnóstico diferencial ordenado. Abre «Profundiza» para las perlas de pruebas dirigidas, los derrames raros y la vía y las tablas de nivel board.",
+      "boardSourceLabel": "Del capítulo board: Derrames pleurales e intervenciones pleurales",
+      "progressLabel": "Marcar Aprende como completado"
+    },
+    "practice": {
+      "metaTitle": "Practica el análisis del líquido pleural",
+      "metaDescription": "Introduce los valores del líquido pleural y observa cómo responden los medidores de los criterios de Light y el diagnóstico diferencial ordenado en una cabina interactiva.",
+      "headerTitle": "Practica: la cabina diferencial",
+      "headerDescription": "Introduce los valores del líquido y el contexto clínico, luego observa cómo se actualizan los criterios de Light, las señales de pseudoexudado y el diferencial ordenado a medida que avanzas.",
+      "progressLabel": "Marcar Practica como completado"
+    },
+    "assessment": {
+      "metaTitle": "Evaluación del análisis del líquido pleural",
+      "metaDescription": "Empareja un patrón completo de hallazgos del líquido pleural con el diagnóstico más probable, incluidas las trampas clásicas y los derrames raros.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Empareja el patrón completo de hallazgos con el diagnóstico — los ítems raros están mezclados a propósito para comprobar cuándo una pista cambia la rama.",
+      "progressLabel": "Marcar Evaluación como completado"
+    },
+    "references": {
+      "metaTitle": "Referencias del análisis del líquido pleural",
+      "metaDescription": "Fuentes de las guías detrás de la enseñanza del módulo de análisis del líquido pleural.",
+      "headerTitle": "Referencias",
+      "headerDescription": "Las fuentes de las guías detrás de la enseñanza de la clasificación y la escalada.",
+      "heading": "Referencias clínicas"
+    },
+    "header": {
+      "eyebrow": "Procedimientos pleurales"
+    },
+    "cockpit": {
+      "badge": "Cabina de casos",
+      "title": "Laboratorio de razonamiento del líquido pleural",
+      "intro": "Cambia entre casos clínicos, modifica el perfil del líquido y observa cómo el razonamiento diagnóstico se actualiza en torno al contexto clínico en lugar de solo la química.",
+      "resetCase": "Reiniciar caso",
+      "clinicalFrame": "Marco clínico",
+      "fluidSnapshot": "Instantánea del líquido",
+      "appearanceLabel": "Aspecto",
+      "lightCriteriaLabel": "Criterios de Light",
+      "reconciledLabel": "Reconciliado",
+      "teachingFocusLabel": "Foco de enseñanza",
+      "clinicalContextLabel": "Contexto clínico",
+      "ultrasoundLabel": "Ecografía torácica",
+      "grossAppearanceLabel": "Aspecto macroscópico",
+      "pairedChemistry": "Química emparejada",
+      "phGlucoseCells": "pH, glucosa y células",
+      "targetedTests": "Pruebas dirigidas",
+      "interpretation": "Interpretación",
+      "proteinRatioMeter": "Proteína LP / suero",
+      "ldhRatioMeter": "LDH LP / suero",
+      "ldhUlnMeter": "LDH LP / LSN suero",
+      "cutoff": "corte {value}",
+      "pseudoexudateClues": "Pistas de pseudoexudado",
+      "rankedDifferential": "Diferencial ordenado",
+      "contextWeighted": "ponderado por contexto",
+      "nextMove": "Siguiente paso",
+      "pitfallsToCheck": "Trampas a revisar",
+      "frameworkBadge": "Marco",
+      "approachMap": "Mapa del enfoque",
+      "step": "Paso {number}",
+      "patternLibraryBadge": "Biblioteca de patrones",
+      "highYieldBranches": "Ramas de alto rendimiento",
+      "branchPoint": "Punto de ramificación",
+      "routineStudies": "Estudios de rutina",
+      "targetedStudies": "Estudios dirigidos",
+      "sources": "Fuentes"
+    },
+    "fields": {
+      "serumProtein": "Proteína sérica",
+      "pleuralProtein": "Proteína pleural",
+      "serumLdh": "LDH sérica",
+      "pleuralLdh": "LDH pleural",
+      "serumLdhUln": "LSN de LDH sérica",
+      "ntProBnp": "NT-proBNP",
+      "serumAlbumin": "Albúmina sérica",
+      "pleuralAlbumin": "Albúmina pleural",
+      "pleuralPH": "pH pleural",
+      "pleuralGlucose": "Glucosa pleural",
+      "nucleatedCells": "Células nucleadas",
+      "neutrophils": "Neutrófilos",
+      "lymphocytes": "Linfocitos",
+      "eosinophils": "Eosinófilos",
+      "mesothelialCells": "Células mesoteliales",
+      "triglycerides": "Triglicéridos",
+      "cholesterol": "Colesterol",
+      "ada": "ADA",
+      "amylase": "Amilasa",
+      "pfBloodHct": "Hct LP/sangre",
+      "pfSerumCreatinine": "Creatinina LP/suero",
+      "pfSerumBilirubin": "Bilirrubina LP/suero",
+      "cytologyPositive": "Citología +",
+      "microbiologyPositive": "Microbiología +",
+      "chylomicrons": "Quilomicrones"
+    },
+    "category": {
+      "transudate": "transudado",
+      "exudate": "exudado",
+      "Pseudoexudate": "Pseudoexudado"
+    },
+    "appearance": {
+      "straw": "Pajizo",
+      "serous": "Seroso",
+      "serosanguineous": "Serosanguinolento",
+      "bloody": "Sanguinolento",
+      "milky": "Lechoso",
+      "turbid": "Turbio",
+      "purulent": "Purulento",
+      "green": "Verde",
+      "food-particles": "Partículas de alimento",
+      "urine-odor": "Olor a orina"
+    },
+    "differential": {
+      "badge": "Motor de diferencial",
+      "title": "Ajusta la lente diagnóstica",
+      "contextEmphasis": "Énfasis en el contexto",
+      "contextEmphasisLeft": "Los laboratorios amplían",
+      "contextEmphasisRight": "El contexto estrecha",
+      "raritySensitivity": "Sensibilidad a enfermedades raras",
+      "raritySensitivityLeft": "Comunes primero",
+      "raritySensitivityRight": "Raras permitidas",
+      "currentLens": "Lente actual",
+      "lensHelp": "Los ajustes de contexto más bajos muestran una coincidencia de patrones más amplia. Los ajustes más altos premian la historia clínica y la ecografía, por lo que la lista se estrecha en torno al marco clínico actual.",
+      "mostProbable": "Etiologías más probables",
+      "rankedFromFindings": "Diferencial ordenado a partir de los hallazgos introducidos",
+      "topScore": "Puntuación máxima",
+      "matchingClues": "Pistas coincidentes",
+      "teachingMove": "Paso de enseñanza"
+    },
+    "lens": {
+      "broadCommon": "Lente amplia de patrón común",
+      "broadLabFirst": "Lente amplia de laboratorio primero",
+      "contextHeavyRare": "Lente de enfermedades raras con fuerte contexto",
+      "narrowContext": "Lente estrecha de contexto clínico",
+      "balanced": "Lente diagnóstica equilibrada"
+    },
+    "rarity": {
+      "common": "común",
+      "uncommon": "poco común",
+      "rare": "raro",
+      "very rare": "muy raro"
+    },
+    "difficulty": {
+      "core": "básico",
+      "advanced": "avanzado",
+      "rare": "raro"
+    },
+    "quiz": {
+      "badge": "Modo cuestionario",
+      "title": "Empareja los hallazgos pleurales con la enfermedad",
+      "reset": "Reiniciar",
+      "questionProgress": "Pregunta {current} de {total}",
+      "score": "Puntuación del cuestionario",
+      "correct": "Correcto",
+      "notQuite": "No del todo",
+      "youChose": "Elegiste {name}. ",
+      "bestAnswer": "La mejor respuesta es {name}.",
+      "memoryHook": "Regla mnemotécnica",
+      "nextQuestion": "Siguiente pregunta",
+      "emptyState": "Elige el diagnóstico más asociado con el patrón completo. Los ítems raros están mezclados a propósito; el objetivo no es memorizar un único punto de corte de laboratorio, sino reconocer cuándo una pista cambia la rama.",
+      "choiceMeta": "{family} · {rarity}"
+    },
+    "headlineCode": {
+      "pseudoexudate": "Los criterios de Light son positivos, pero la reconciliación favorece un pseudoexudado.",
+      "definitiveSignal": "{diagnosis} tiene una señal específica en el líquido pleural.",
+      "exudatePattern": "Este es un patrón exudativo; ahora estréchalo con el contexto clínico.",
+      "transudatePattern": "Este es un patrón transudativo, salvo que la historia clínica diga lo contrario."
+    },
+    "reconciliationCode": {
+      "tooSmall": "Un derrame muy pequeño suele ser una decisión de muestreo antes que una decisión de química.",
+      "pseudoexudate": "La etiqueta química diverge de la historia clínica. En este escenario, los gradientes y el NT-proBNP ayudan a evitar un estudio invasivo innecesario en un derrame sistémico diuresado.",
+      "transudateButPretest": "La química parece transudativa, pero la probabilidad pretest clínica no es baja. La malignidad y otros procesos competidores pueden a veces parecer engañosamente anodinos.",
+      "exudateInfection": "La etiqueta de exudado es esperable, pero el pH, la glucosa, la LDH, la ecografía y los cultivos determinan si se comporta como una infección pleural que necesita drenaje.",
+      "exudateTb": "La etiqueta de exudado es solo la primera bifurcación. El predominio de linfocitos, la historia de exposición, la ADA y la estrategia de biopsia pleural llevan el diagnóstico hacia adelante.",
+      "transudateAligned": "La química y el marco inicial concuerdan con presión sistémica o fuerzas oncóticas alteradas; aún así, comprueba rasgos unilaterales, sanguinolentos, nodulares o recurrentes que rompan el patrón.",
+      "probabilityShifter": "El análisis del líquido pleural debe interpretarse como un desplazador de probabilidad: estrecha la búsqueda, y luego la historia, la imagen y las pruebas seleccionadas completan el razonamiento."
+    },
+    "pseudoexudateReason": {
+      "proteinGradient": "el gradiente de proteína suero-pleural de {value} g/dL es > 3,1",
+      "albuminGradient": "el gradiente de albúmina suero-pleural de {value} g/dL es > 1,2",
+      "ntProBnp": "el NT-proBNP sérico de {value} pg/mL es > 1.500",
+      "weaklyPositive": "los criterios de Light son solo débilmente positivos en un contexto de transudado sistémico"
+    },
+    "findings": {
+      "empyema": {
+        "diagnosis": "Empiema",
+        "strengthLabel": "definitivo",
+        "rationale": "El pus franco en el líquido pleural es diagnóstico de infección del espacio pleural.",
+        "action": "Drena el espacio pleural y trátalo como infección pleural; envía microbiología si no se ha hecho ya."
+      },
+      "malignantEffusion": {
+        "diagnosis": "Derrame pleural maligno",
+        "strengthLabel": "definitivo",
+        "rationale": "Una citología positiva del líquido pleural establece la malignidad pleural en el contexto clínico adecuado.",
+        "action": "Estadifica la malignidad, ajusta el manejo al pronóstico y los síntomas, y considera pruebas moleculares cuando sea apropiado."
+      },
+      "chylothorax": {
+        "diagnosis": "Quilotórax",
+        "strengthLabel": "definitivo",
+        "rationale": "Triglicéridos pleurales por encima de 110 mg/dL, o triglicéridos intermedios con quilomicrones, apoyan la presencia de quilo en el espacio pleural.",
+        "action": "Busca traumatismo, cirugía torácica, linfoma, trastornos linfáticos o quilotórax transudativo relacionado con cirrosis."
+      },
+      "hemothorax": {
+        "diagnosis": "Hemotórax",
+        "strengthLabel": "definitivo",
+        "rationale": "Un hematocrito del líquido pleural superior al 50% del hematocrito de la sangre define el hemotórax.",
+        "action": "Escala el control del foco y la planificación del drenaje; evalúa trauma, lesión por procedimiento, malignidad o anticoagulación."
+      },
+      "urinothoraxCreatinine": {
+        "diagnosis": "Urinotórax",
+        "strengthLabel": "definitivo",
+        "rationale": "Una relación creatinina LP/suero por encima de 1 apoya el paso de orina al espacio pleural.",
+        "action": "Evalúa la uropatía obstructiva o la lesión genitourinaria; el drenaje pleural por sí solo suele recurrir."
+      },
+      "bilothorax": {
+        "diagnosis": "Biliotórax",
+        "strengthLabel": "definitivo",
+        "rationale": "Una relación bilirrubina LP/suero por encima de 1 apoya la presencia de bilis en el espacio pleural.",
+        "action": "Busca patología biliar o cirugía hepatobiliar reciente y coordina el control definitivo del foco."
+      },
+      "pancreaticopleuralFistula": {
+        "diagnosis": "Fístula pancreaticopleural",
+        "strengthLabel": "definitivo",
+        "rationale": "Una amilasa pleural muy alta sugiere fuertemente la entrada de líquido pancreático en el espacio pleural.",
+        "action": "Evalúa pancreatitis crónica, pseudoquiste y fuga ductal; la imagen abdominal y la consulta pancreática suelen importar más que las punciones repetidas."
+      },
+      "esophagealPerforation": {
+        "diagnosis": "Perforación esofágica",
+        "strengthLabel": "definitivo",
+        "rationale": "Las partículas de alimento en el líquido pleural son una pista de alta especificidad de rotura esofágica.",
+        "action": "Escala con urgencia para el control del foco, antimicrobianos amplios y evaluación esofágica."
+      },
+      "urinothoraxOdor": {
+        "diagnosis": "Urinotórax",
+        "strengthLabel": "muy sugestivo",
+        "rationale": "El olor a orina es una pista clásica de la inspección macroscópica, sobre todo con obstrucción o lesión ipsilateral del tracto urinario.",
+        "action": "Comprueba la creatinina LP/suero y evalúa el tracto urinario."
+      },
+      "parapneumonic": {
+        "diagnosis": "Derrame paraneumónico complicado",
+        "strengthLabel": "muy sugestivo",
+        "rationale": "El contexto de neumonía más pH bajo, glucosa baja, LDH alta, células nucleadas altas o microbiología positiva apunta a infección pleural.",
+        "action": "No dejes que los criterios de Light sean el punto final; evalúa la necesidad de drenaje con tubo, antibióticos dirigidos por cultivo y manejo de la loculación."
+      },
+      "tuberculous": {
+        "diagnosis": "Derrame pleural tuberculoso",
+        "strengthLabel": "muy sugestivo",
+        "rationale": "Un exudado de predominio linfocítico con historia de exposición compatible y ADA elevada estrecha el diferencial hacia la TB.",
+        "action": "Envía cultivo micobacteriano cuando se sospeche; si la sospecha se mantiene alta, la biopsia pleural puede asegurar la microbiología y la sensibilidad a fármacos."
+      },
+      "malignancyInPlay": {
+        "diagnosis": "La malignidad sigue en juego",
+        "strengthLabel": "muy sugestivo",
+        "rationale": "La nodularidad pleural o un contexto fuerte de cáncer pueden pesar más que un perfil químico inespecífico o incluso transudativo.",
+        "action": "Envía un volumen adecuado de citología y considera la biopsia pleural guiada por imagen o toracoscópica si la citología es negativa y la probabilidad pretest se mantiene alta."
+      },
+      "repeatedNegativeCytology": {
+        "diagnosis": "Citología negativa repetida",
+        "strengthLabel": "trampa",
+        "rationale": "Dos muestras de citología no diagnósticas no descartan la enfermedad pleural maligna cuando la imagen o la probabilidad clínica se mantienen altas.",
+        "action": "Deja de repetir solo el líquido y escala hacia un diagnóstico de tejido pleural, como la biopsia guiada por imagen o la pleuroscopia."
+      },
+      "autoimmunePleuritis": {
+        "diagnosis": "Pleuritis reumatoide o lúpica",
+        "strengthLabel": "de apoyo",
+        "rationale": "Un contexto autoinmune con pH bajo, glucosa baja o LDH alta puede imitar una infección pleural.",
+        "action": "Reconcilia con serologías, actividad articular/sistémica, microbiología e imagen antes de anclarte solo en la infección."
+      },
+      "eosinophilic": {
+        "diagnosis": "Derrame pleural eosinofílico",
+        "strengthLabel": "de apoyo",
+        "rationale": "Los eosinófilos pleurales por encima del 10% sugieren aire o sangre en el espacio pleural, toracocentesis previa, reacción a fármacos, exposición al asbesto, parásitos, infección o malignidad.",
+        "action": "Usa la historia y el aspecto macroscópico para decidir si es ruido relacionado con el procedimiento o una pista diagnóstica."
+      },
+      "lymphocytePredominant": {
+        "diagnosis": "Derrame de predominio linfocítico",
+        "strengthLabel": "de apoyo",
+        "rationale": "Un marcado predominio de linfocitos estrecha el diferencial a TB, linfoma, sarcoidosis, quilotórax, pulmón atrapado, post-CABG, síndrome de las uñas amarillas, uremia, causas farmacológicas y enfermedad reumatoide.",
+        "action": "Deja que la cronología, la exposición, la imagen y las pruebas dirigidas decidan la siguiente bifurcación."
+      },
+      "lymphaticLeak": {
+        "diagnosis": "Fenotipo de fuga linfática",
+        "strengthLabel": "de apoyo",
+        "rationale": "Un líquido pleural lechoso o turbio con un contexto de cirugía, linfoma, linfático o de uñas amarillas debe desencadenar pruebas de lípidos.",
+        "action": "Comprueba triglicéridos, colesterol y quilomicrones en lugar de basarte solo en el aspecto."
+      },
+      "bloodInPleuralSpace": {
+        "diagnosis": "Sangre en el espacio pleural",
+        "strengthLabel": "de apoyo",
+        "rationale": "El líquido sanguinolento puede deberse a malignidad, embolia pulmonar, traumatismo, lesión poscardiotomía, pleuritis por asbesto o hemotórax.",
+        "action": "Mide el hematocrito pleural cuando sea francamente sanguinolento; no trates todo líquido serosanguinolento como hemotórax."
+      }
+    },
+    "findingStrength": {
+      "definitive": "definitivo",
+      "highly suggestive": "muy sugestivo",
+      "supportive": "de apoyo",
+      "pitfall": "trampa"
+    },
+    "nextActions": {
+      "tooSmall": [
+        "Confirma si el derrame es muestreable de forma segura con ecografía.",
+        "Trata u observa la causa probable si el derrame es < 1 cm y el paciente está clínicamente estable."
+      ],
+      "bilateralSystemic": [
+        "Trata la causa sistémica cuando la historia es evidente y los derrames son bilaterales y anecoicos.",
+        "Muestrea si el curso, la lateralidad, la fiebre, el dolor pleurítico o la imagen ya no encajan con el diagnóstico sistémico."
+      ],
+      "definitiveFollowUp": "Usa los datos restantes del análisis del líquido para identificar procesos concurrentes y el riesgo de manejo.",
+      "pseudoexudate": [
+        "Reclasifica con cautela como probable transudado sistémico y trata el factor subyacente de IC, renal, hepático u oncótico.",
+        "Reevalúa la respuesta; muestrea o haz más imagen si el derrame persiste, es unilateral, se vuelve sanguinolento o desarrolla engrosamiento pleural."
+      ],
+      "infection": [
+        "Usa el pH pleural, la glucosa, la LDH, el rendimiento del cultivo y la loculación ecográfica para decidir la urgencia del drenaje.",
+        "Inocula el líquido pleural en frascos de hemocultivo cuando se sospeche infección pleural."
+      ],
+      "tb": [
+        "Envía baciloscopia y cultivo de AFB, pero planifica contando con el bajo rendimiento del cultivo y los resultados tardíos.",
+        "Si la sospecha se mantiene alta, busca una biopsia pleural para histología, cultivo y sensibilidad a fármacos."
+      ],
+      "malignancyEscalate": [
+        "Deja de repetir solo el líquido y avanza hacia un diagnóstico de tejido pleural con biopsia guiada por imagen o pleuroscopia.",
+        "Usa la expansión pulmonar, los síntomas, el pronóstico y los objetivos del paciente para elegir un CPP, pleurodesis o una estrategia combinada."
+      ],
+      "malignancyCytology": [
+        "Envía un volumen adecuado de citología y revisa la TC o la ecografía en busca de objetivos pleurales.",
+        "Si la citología es negativa pero la nodularidad pleural o el antecedente de cáncer siguen siendo convincentes, avanza hacia la biopsia pleural."
+      ],
+      "transudate": [
+        "Céntrate en la fisiología de IC, renal, hepática, oncótica, peritoneal y de pulmón atrapado.",
+        "Evita las punciones diagnósticas repetidas salvo que el curso clínico deje de encajar con un transudado."
+      ],
+      "exudateGeneric": [
+        "Usa la etiqueta de exudado para elegir una rama dirigida: infección, malignidad, TB, embolia pulmonar, enfermedad autoinmune, posprocedimiento u origen abdominal.",
+        "Repite la toracocentesis, observa, trata empíricamente o haz biopsia según la probabilidad restante tras la reconciliación clínica."
+      ]
+    },
+    "pitfalls": {
+      "pairedSerum": "No interpretes la química pleural sin los valores séricos emparejados y la impresión clínica previa a la toracocentesis.",
+      "diuresisCrossesLight": "La diuresis y los derrames sistémicos pueden cruzar los criterios de Light por un margen pequeño.",
+      "systemicGradientCheck": "Un contexto de transudado sistémico con criterios de Light positivos debería desencadenar una comprobación de gradiente antes de anclarse en un exudado.",
+      "fragilePH": "El pH pleural es frágil; un análisis tardío, el aire o la contaminación con lidocaína pueden cambiar el resultado.",
+      "milkyTurbid": "El líquido lechoso o turbio puede ser quilo, colesterol, empiema o detritos celulares.",
+      "negativeCytology": "Una citología negativa no descarta la enfermedad pleural maligna cuando la imagen o la historia son convincentes.",
+      "repeatedCytologyDelay": "Tras dos muestras de citología no diagnósticas, repetir solo las pruebas del líquido puede retrasar el necesario diagnóstico de tejido pleural.",
+      "mesothelialTb": "Las células mesoteliales por encima del 5% hacen menos probable la TB, pero no borran una historia de exposición de alto riesgo."
+    },
+    "routineStudies": {
+      "grossAppearance": "Aspecto macroscópico y olor a pie de cama",
+      "proteinLdh": "Proteína y LDH pleurales con proteína y LDH séricas emparejadas",
+      "ph": "pH pleural medido sin demora en un analizador de gases en sangre",
+      "glucose": "Glucosa pleural",
+      "cellCount": "Recuento celular con diferencial",
+      "gramStainCulture": "Tinción de Gram y cultivo con inoculación directa en frascos de hemocultivo",
+      "cytology": "Citología con volumen de muestra adecuado"
+    },
+    "targetedStudies": {
+      "lipids": "Triglicéridos, colesterol y quilomicrones",
+      "hematocrit": "Hematocrito pleural comparado con el hematocrito de la sangre",
+      "ada": "ADA, baciloscopia/cultivo de AFB y biopsia pleural cuando la sospecha se mantiene alta",
+      "amylase": "Amilasa pleural con evaluación abdominal o esofágica enfocada en el foco",
+      "bilirubin": "Relación bilirrubina LP/suero",
+      "creatinine": "Relación creatinina LP/suero",
+      "autoimmune": "Serologías autoinmunes interpretadas con microbiología e imagen",
+      "branchPoint": "Dirige pruebas adicionales solo cuando la historia o el aspecto macroscópico del líquido cree un punto de ramificación"
+    }
+  },
+  "pleuralInfection": {
+    "overview": {
+      "metaTitle": "Infección pleural",
+      "metaDescription": "Aprende la estadificación paraneumónica y el control del foco, practica estadificando un caso y eligiendo la vía, y luego comprueba tu razonamiento.",
+      "headerTitle": "Infección pleural",
+      "headerDescription": "Sitúa un derrame paraneumónico en el continuo simple → complicado → empiema, y luego drena, dosifica, escala y reevalúa como una sola vía.",
+      "objectivesLead": "Al terminar este módulo podrás",
+      "steps": {
+        "learn": {
+          "title": "Aprende",
+          "description": "Umbrales de estadificación, antibióticos + drenaje, tPA + DNasa, cirugía y reevaluación."
+        },
+        "practice": {
+          "title": "Practica",
+          "description": "Estadifica un caso a partir de los valores del líquido y luego comprométete antes de revelar la vía."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Ocho preguntas sobre estadificación, MIST2, cirugía, irrigación y la puntuación RAPID."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de infección pleural",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y el itinerario de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprende",
+        "description": "Estadificación, drenaje, tPA + DNasa, cirugía"
+      },
+      "practice": {
+        "title": "Practica",
+        "description": "Estadifica un caso y elige la vía de control del foco"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Comprueba tu razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de guías y ensayos"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprende la infección pleural",
+      "metaDescription": "Estadificación paraneumónica, umbrales de drenaje, antibióticos, tPA + DNasa intrapleurales (MIST2), cirugía y la irrigación como alternativa.",
+      "headerTitle": "Aprende la infección pleural",
+      "headerDescription": "Estadifica el derrame, drena y dosifica de forma temprana, y sabe exactamente dónde encajan la terapia intrapleural, la cirugía y la irrigación en una sola vía de reevaluación.",
+      "intro": "Los bloques principales te llevan de la estadificación al control del foco. Abre «Profundiza» para la puntuación de mortalidad RAPID, las consideraciones de sangrado y los algoritmos y tablas de nivel board.",
+      "boardSourceLabel": "Del capítulo del board: Infecciones pleurales",
+      "progressLabel": "Marcar Aprende como completado"
+    },
+    "practice": {
+      "metaTitle": "Practica la infección pleural",
+      "metaDescription": "Estadifica un derrame paraneumónico a partir de los valores del líquido y comprométete con una vía de control del foco antes de revelar el plan.",
+      "headerTitle": "Practica: estadifica y actúa",
+      "headerDescription": "Lee los valores del líquido y de la imagen, comprométete con un estadio y luego revela el plan de drenaje, antibióticos, terapia intrapleural y escalada.",
+      "progressLabel": "Marcar Practica como completado"
+    },
+    "assessment": {
+      "metaTitle": "Evaluación de infección pleural",
+      "metaDescription": "Comprueba tu razonamiento sobre estadificación, umbrales de drenaje, terapia MIST2, cirugía, irrigación y la puntuación RAPID.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Ocho preguntas que comprueban si sabes estadificar el derrame y elegir el paso de control del foco correcto.",
+      "checkTitle": "Comprobación de infección pleural",
+      "checkIntro": "Responde cada pregunta y luego revela la explicación. Estas reflejan los objetivos de Aprende.",
+      "progressLabel": "Marcar Evaluación como completado"
+    },
+    "references": {
+      "metaTitle": "Referencias de infección pleural",
+      "metaDescription": "Fuentes de guías y ensayos detrás de la enseñanza del módulo de infección pleural.",
+      "headerTitle": "Referencias",
+      "headerDescription": "Las fuentes de guías y ensayos detrás de la enseñanza sobre estadificación, terapia intrapleural e irrigación.",
+      "heading": "Referencias clínicas"
+    },
+    "workflow": {
+      "scaffoldTitle": "Estadificación de la infección pleural y control del foco",
+      "objectives": [
+        "Clasificar los derrames paraneumónicos usando pH, glucosa, LDH, microbiología, pus y patrón ecográfico.",
+        "Elegir la rama de enseñanza de drenaje y duración del antibiótico antes de ver la respuesta.",
+        "Explicar dónde encajan la terapia tipo MIST2, la irrigación como alternativa, el riesgo de sangrado y la cirugía."
+      ],
+      "howToUse": [
+        "Selecciona un caso y luego ajusta los valores del líquido y de la ecografía si quieres probar una variante.",
+        "Predice el estadio antes de revelar el plan de acción.",
+        "Revisa juntos el drenaje, los antibióticos, la terapia complementaria, el riesgo de sangrado y la escalada."
+      ],
+      "clinicalAnchor": "Un paciente con neumonía tiene inflamación sistémica persistente y un derrame pleural. El equipo debe decidir si los antibióticos solos son suficientes o si se requiere control del foco.",
+      "matchHeading": "La predicción del estadio coincide",
+      "compareHeading": "Compara tu predicción del estadio",
+      "antibioticDurationLabel": "Duración del antibiótico: {duration}",
+      "revealLabel": "Revelar la vía de control del foco",
+      "keyTakeaway": "Las decisiones en la infección pleural combinan química, microbiología, complejidad ecográfica y evolución clínica. El drenaje, los antibióticos, la terapia intrapleural, la irrigación como alternativa y la cirugía deben enseñarse como una sola vía de reevaluación.",
+      "caseLabel": "Caso de infección",
+      "adjunctLabel": "Opción complementaria a probar",
+      "bleedingContextHeading": "Contexto de sangrado del caso",
+      "fluidHeading": "Valores del líquido y de la imagen",
+      "phLabel": "pH pleural",
+      "glucoseLabel": "Glucosa (mg/dL)",
+      "ldhLabel": "LDH (IU/L)",
+      "ultrasoundPatternLabel": "Patrón ecográfico",
+      "gramStainLabel": "Tinción de Gram",
+      "frankPusLabel": "Pus franco",
+      "predictStageHeading": "Predice el estadio",
+      "positive": "Positivo",
+      "negative": "Negativo",
+      "cases": {
+        "anechoic-low-ph": "Derrame anecoico con pH 7,18",
+        "septated-residual": "Colección residual septada tras el tubo",
+        "pus-anticoagulated": "Pus franco con anticoagulación obligatoria"
+      },
+      "adjunct": {
+        "alteplase10Dnase5": "Activador tisular del plasminógeno más DNasa",
+        "alteplaseOnly": "Activador tisular del plasminógeno solo",
+        "dnaseOnly": "DNasa sola",
+        "salineIrrigation": "Irrigación con suero salino normal",
+        "placebo": "Solo drenaje"
+      },
+      "bleedingContext": {
+        "anticoagulated": "La anticoagulación terapéutica no puede pausarse de forma segura.",
+        "none": "No hay marca de anticoagulación terapéutica en este caso."
+      },
+      "ultrasoundPattern": {
+        "freeFlowing": "De libre flujo",
+        "complex": "Complejo",
+        "septated": "Septado",
+        "large": "Gran volumen"
+      },
+      "cards": {
+        "mist2": {
+          "title": "Rama del ensayo MIST2"
+        },
+        "irrigation": {
+          "title": "Alternativa del Pleural Irrigation Trial",
+          "body": "La irrigación con suero salino normal puede comentarse cuando la terapia lítica/enzimática no es adecuada o el riesgo de sangrado no puede mitigarse.",
+          "note": "Trata la irrigación como una vía alternativa seleccionada, no un reemplazo universal del drenaje, la terapia combinada o la cirugía."
+        },
+        "bleeding": {
+          "title": "Superposición de sangrado",
+          "body": "Señal de sangrado estimada para este caso didáctico: {percent} %."
+        }
+      },
+      "escalation": {
+        "heading": "Cadena de escalada",
+        "steps": [
+          "Drenaje de pequeño calibre guiado por imagen",
+          "Lavado y nueva imagen",
+          "Terapia intrapleural combinada",
+          "Irrigación como alternativa cuando sea adecuada",
+          "Revisión quirúrgica"
+        ]
+      }
+    },
+    "stage": {
+      "uncomplicated": "Derrame paraneumónico no complicado",
+      "complicated": "Derrame paraneumónico complicado",
+      "empyema": "Empiema"
+    },
+    "stageOption": {
+      "uncomplicated": {
+        "description": "Los antibióticos y la reevaluación pueden bastar cuando encajan características de bajo riesgo."
+      },
+      "complicated": {
+        "description": "Hay química de nivel de drenaje o características de imagen presentes."
+      },
+      "empyema": {
+        "description": "El pus o la microbiología positiva hacen explícito el control del foco."
+      }
+    },
+    "staging": {
+      "reasons": {
+        "frankPus": "El pus franco es empiema en este modelo didáctico.",
+        "gramStain": "Una tinción de Gram positiva indica infección pleural.",
+        "phLow": "El pH pleural es 7,20 o menor.",
+        "glucoseLow": "La glucosa pleural está por debajo de 60 mg/dL.",
+        "ldhHigh": "La LDH pleural está por encima de 1000 IU/L.",
+        "imagingComplex": "La imagen tiene características de complejidad o tamaño de alto riesgo.",
+        "noDrainageFeatures": "No hay química, microbiología, pus ni imagen compleja de nivel de drenaje en este caso."
+      },
+      "action": {
+        "uncomplicated": "Los antibióticos con reevaluación clínica estrecha pueden ser razonables en el contexto adecuado.",
+        "complicated": "Usa antibióticos más drenaje de pequeño calibre guiado por imagen cuando sea seguro, y luego reevalúa.",
+        "empyema": "Drena con antibióticos y reevalúa el control del foco de forma temprana."
+      }
+    },
+    "antibioticDuration": {
+      "uncomplicated": "Hasta 2 semanas, adaptado a la respuesta clínica.",
+      "complicated": "A menudo 2-4 semanas, adaptado al control del foco y a la respuesta clínica.",
+      "empyema": "A menudo 4-6 semanas, adaptado al drenaje, el microorganismo y la respuesta clínica."
+    },
+    "lytic": {
+      "alteplase10Dnase5": {
+        "label": "Activador tisular del plasminógeno (tPA) 10 mg más DNasa 5 mg",
+        "effect": "La terapia combinada mejoró el aclaramiento radiográfico y redujo la derivación quirúrgica y la estancia hospitalaria en la enseñanza de MIST2.",
+        "caution": "Evalúa el riesgo de sangrado y el momento de la medicación; no trates la dosis como un consejo específico para el paciente."
+      },
+      "alteplaseOnly": {
+        "label": "tPA solo",
+        "effect": "La terapia fibrinolítica con un solo agente no mostró el mismo beneficio didáctico de MIST2.",
+        "caution": "Evita enseñar la monoterapia como la vía preferida."
+      },
+      "dnaseOnly": {
+        "label": "DNasa sola",
+        "effect": "La monoterapia con DNasa es una trampa didáctica y no fue beneficiosa en MIST2.",
+        "caution": "Usa terapia combinada o una estrategia alternativa en lugar de DNasa sola."
+      },
+      "salineIrrigation": {
+        "label": "Irrigación pleural",
+        "effect": "La irrigación con suero salino normal es una alternativa con datos piloto a comentar cuando los líticos no son adecuados o el riesgo de sangrado no puede mitigarse.",
+        "caution": "Enmárcala como enseñanza de vía seleccionada, no un reemplazo universal de los líticos o la cirugía."
+      },
+      "placebo": {
+        "label": "Placebo / solo drenaje",
+        "effect": "Solo el drenaje puede ser suficiente cuando se logra el control del foco, pero las colecciones residuales requieren reevaluación temprana.",
+        "caution": "No demores la escalada cuando la fiebre, los marcadores inflamatorios, el débito o la imagen no mejoran."
+      }
+    },
+    "bleedingNote": {
+      "anticoagulated": "La anticoagulación terapéutica aumenta la preocupación por el sangrado y debería desencadenar una planificación de mitigación.",
+      "baseline": "La señal basal de sangrado pleural para la enseñanza de líticos es del 4,1 %."
+    }
+  },
+  "malignantEffusion": {
+    "overview": {
+      "metaTitle": "Derrame pleural maligno",
+      "metaDescription": "Aprende la escalada diagnóstica y la decisión entre IPC y pleurodesis, practica eligiendo un brazo de manejo y luego comprueba tu razonamiento.",
+      "headerTitle": "Derrame pleural maligno",
+      "headerDescription": "Pasa de una toracocentesis no diagnóstica a un plan definitivo: cuándo obtener tejido, cómo la expansibilidad pulmonar elige entre pleurodesis y un catéter permanente, y cómo deciden los objetivos del paciente.",
+      "objectivesLead": "Al terminar este módulo podrás",
+      "steps": {
+        "learn": {
+          "title": "Aprender",
+          "description": "Escalada de citología, expansibilidad pulmonar, pleurodesis con talco, IPC y objetivos del paciente."
+        },
+        "practice": {
+          "title": "Practicar",
+          "description": "Define el cuadro diagnóstico y de expansión, y luego comprométete con un brazo de manejo."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Ocho preguntas sobre escalada, expansibilidad, IPC frente a pleurodesis y objetivos."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de derrame pleural maligno",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y el itinerario de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprender",
+        "description": "Citología, expansibilidad, IPC frente a pleurodesis"
+      },
+      "practice": {
+        "title": "Practicar",
+        "description": "Escala el diagnóstico y elige un brazo de manejo"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Comprueba tu razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de guías, ensayos e imágenes"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprende el derrame pleural maligno",
+      "metaDescription": "Escalada diagnóstica tras toracocentesis no diagnósticas, expansibilidad pulmonar, pleurodesis con talco, catéteres pleurales permanentes y objetivos centrados en el paciente.",
+      "headerTitle": "Aprende el derrame pleural maligno",
+      "headerDescription": "Por qué una toracocentesis negativa no es el final, cómo la expansibilidad pulmonar elige el camino definitivo y cómo sopesar IPC, pleurodesis y estrategias combinadas frente a los objetivos del paciente.",
+      "intro": "Los bloques esenciales te llevan de una toracocentesis no diagnóstica a un plan definitivo. Abre «Profundizar» para las complicaciones del IPC, los ensayos clave y los algoritmos y tablas de nivel board.",
+      "boardSourceLabel": "Del capítulo de board: Catéteres pleurales permanentes y pleurodesis",
+      "progressLabel": "Marcar Aprender como completado"
+    },
+    "practice": {
+      "metaTitle": "Practica el derrame pleural maligno",
+      "metaDescription": "Define el cuadro de escalada diagnóstica y de expansión pulmonar, y luego comprométete con un brazo de manejo antes de revelar la vía.",
+      "headerTitle": "Practica: elige la vía",
+      "headerDescription": "Define el cuadro de citología y de expansión pulmonar, comprométete con un brazo de manejo y luego revela cómo se compara la vía.",
+      "progressLabel": "Marcar Practicar como completado"
+    },
+    "assessment": {
+      "metaTitle": "Evaluación del derrame pleural maligno",
+      "metaDescription": "Comprueba tu razonamiento sobre la escalada de citología, la expansibilidad pulmonar, IPC frente a pleurodesis, estrategias combinadas y objetivos del paciente.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Ocho preguntas que comprueban si puedes convertir el cuadro diagnóstico y de expansión en un plan alineado con los objetivos.",
+      "checkTitle": "Repaso del derrame pleural maligno",
+      "checkIntro": "Responde cada pregunta y luego revela la explicación. Reflejan los objetivos de Aprender.",
+      "progressLabel": "Marcar Evaluación como completado"
+    },
+    "references": {
+      "metaTitle": "Referencias del derrame pleural maligno",
+      "metaDescription": "Fuentes de guías, ensayos e imágenes CC BY para el módulo de derrame pleural maligno.",
+      "headerTitle": "Referencias y atribuciones",
+      "headerDescription": "Las fuentes de guías y ensayos que respaldan la vía, junto con las atribuciones de imágenes CC BY 4.0.",
+      "clinicalHeading": "Referencias clínicas",
+      "imageHeading": "Atribuciones de imágenes",
+      "imageLicenseNote": "Todas las imágenes tienen licencia CC BY 4.0 y se almacenan en el repositorio con atribución.",
+      "sourceLink": "Fuente"
+    },
+    "pathway": {
+      "scaffoldTitle": "Vía diagnóstica y de manejo del derrame pleural maligno",
+      "objectives": [
+        "Explicar por qué una citología negativa no descarta el derrame pleural maligno.",
+        "Elegir una vía de manejo según la expansión pulmonar tras el drenaje.",
+        "Adecuar la pleurodesis, el catéter pleural permanente o las estrategias combinadas a los objetivos del paciente."
+      ],
+      "howToUse": [
+        "Establece el número de muestras de citología no diagnósticas y revisa la advertencia de escalada.",
+        "Elige el patrón de expansión pulmonar tras el drenaje.",
+        "Predice el brazo de manejo antes de revelar la recomendación de la vía."
+      ],
+      "clinicalAnchor": "Un paciente tiene un derrame pleural unilateral sintomático recurrente y características de imagen que mantienen la malignidad en el diagnóstico diferencial a pesar de las pruebas del líquido. El siguiente paso depende de la estrategia de tejido, la expansión pulmonar, los síntomas y los objetivos.",
+      "revealLabel": "Revelar la vía del derrame maligno",
+      "keyTakeaway": "En el derrame pleural maligno, una toracocentesis no diagnóstica no es el punto final. La expansión pulmonar y los objetivos del paciente determinan si lo más enseñable es la pleurodesis, un catéter pleural permanente o una estrategia combinada.",
+      "matchHeading": "La predicción de manejo coincide",
+      "compareHeading": "Compara tu predicción de manejo",
+      "escalationHeading": "Escalada diagnóstica",
+      "tapCountLabel": "Muestras de citología no diagnósticas: {count}",
+      "expansionHeading": "Expansión pulmonar tras el drenaje",
+      "expansion": {
+        "full": {
+          "label": "Expansión completa",
+          "description": "El pulmón se expande y las superficies pleurales pueden aponerse."
+        },
+        "partial": {
+          "label": "Expansión parcial",
+          "description": "Los síntomas mejoran, pero queda una falta de expansión residual."
+        },
+        "trapped": {
+          "label": "Atrapado o no expansible",
+          "description": "El pulmón no se expande lo suficiente para que la pleurodesis funcione de forma fiable."
+        }
+      },
+      "predictHeading": "Predice el brazo de manejo",
+      "management": {
+        "pleurodesisCandidate": "Vía con capacidad de pleurodesis",
+        "ipcOrRapidPleurodesis": "Catéter permanente con estrategia seleccionada de pleurodesis rápida",
+        "ipcPreferred": "Control de síntomas centrado en el catéter pleural permanente"
+      },
+      "revealCards": {
+        "cytologyTitle": "Sensibilidad de la citología",
+        "cytologyNote": "Tras una o dos toracocentesis no diagnósticas, evita repetir solo pruebas del líquido cuando la sospecha sigue siendo alta.",
+        "tissueTitle": "Escalada a tejido",
+        "higherYieldTitle": "Opción de mayor rendimiento",
+        "higherYieldNote": "La aptitud para el procedimiento, el objetivo de imagen, la experiencia local y los objetivos del paciente siguen decidiendo el camino."
+      },
+      "comparatorHeading": "Comparador de modalidades",
+      "comparator": {
+        "thoracentesis": {
+          "title": "Toracocentesis",
+          "body": "Paso diagnóstico y sintomático rápido; la citología negativa es contextual."
+        },
+        "pleuroscopy": {
+          "title": "Pleuroscopia",
+          "body": "Diagnóstico de tejido y opción de poudrage; importa la aptitud para el procedimiento."
+        },
+        "ipc": {
+          "title": "Catéter pleural permanente",
+          "body": "Control ambulatorio de síntomas; importan el apoyo para el drenaje domiciliario y la educación sobre infección."
+        },
+        "pleurodesis": {
+          "title": "Pleurodesis",
+          "body": "Objetivo sin dispositivo cuando el pulmón se expande y el paciente tolera el procedimiento."
+        },
+        "combined": {
+          "title": "Estrategia combinada",
+          "body": "Vía seleccionada que combina la atención ambulatoria centrada en el catéter con la intención de pleurodesis."
+        }
+      },
+      "imageReferencesHeading": "Referencias de imágenes",
+      "imageAlt": {
+        "pleural-nodularity-ultrasound": "Correlación de ecografía y TC que muestra engrosamiento pleural y nodularidad.",
+        "pleuroscopy-malignancy": "Imágenes de pleuroscopia de mesotelioma maligno y linfoma con patrones vasculares en imagen de banda estrecha.",
+        "ipc-pleuroscope-equipment": "Comparación de equipos de pleuroscopia con posicionamiento de la pinza de biopsia."
+      },
+      "attributionLabel": "Atribución:",
+      "reflectionHeading": "Reflexión sobre los objetivos del paciente",
+      "reflectionBody": "Cada punto final debería preguntar qué importa más para este paciente: días sin hospital, un tórax sin dispositivo, rapidez del alivio, apoyo domiciliario, pronóstico esperado, carga de infección y disposición a manejar un catéter."
+    },
+    "nondiagnostic": {
+      "twoPlus": {
+        "recommendation": "Deja de repetir solo pruebas del líquido y escala hacia biopsia pleural, biopsia guiada por imagen o pleuroscopia cuando la sospecha sigue siendo alta.",
+        "teachingPoint": "Una citología no diagnóstica repetida no debe tranquilizar falsamente cuando la imagen, la historia o la recurrencia mantienen probable el derrame pleural maligno."
+      },
+      "one": {
+        "recommendation": "Una segunda muestra de citología puede considerarse en casos seleccionados, pero la estrategia de tejido ya debería ser visible si la probabilidad pretest es alta.",
+        "teachingPoint": "Una toracocentesis no diagnóstica es una bifurcación: repite de forma selectiva, pero empieza a planificar el diagnóstico de tejido cuando la sospecha sigue siendo alta."
+      },
+      "zero": {
+        "recommendation": "Envía una citología adecuada y combina el resultado con la imagen, la expansión pulmonar, los síntomas y los objetivos del paciente.",
+        "teachingPoint": "La toracocentesis puede diagnosticar algunos derrames pleurales malignos, pero una citología negativa no es una prueba de descarte."
+      }
+    },
+    "branch": {
+      "pleurodesisCandidate": "Un pulmón expansible puede considerarse para pleurodesis con talco, IPC o una estrategia ambulatoria combinada según los objetivos y la aptitud.",
+      "ipcOrRapidPleurodesis": "La expansión parcial favorece la atención centrada en el IPC o una estrategia seleccionada combinada/de pleurodesis rápida, en lugar de asumir que el talco por sí solo funcionará.",
+      "ipcPreferred": "Un pulmón atrapado o no expansible hace poco probable el éxito de la pleurodesis; el control de síntomas centrado en el IPC es el brazo de enseñanza principal."
+    },
+    "yield": {
+      "thoracentesis": "La sensibilidad de la citología por toracocentesis se enseña como aproximadamente 40-60 %, por lo que los resultados negativos requieren contexto.",
+      "pleuroscopy": "La pleuroscopia o la biopsia pleural suele ofrecer un diagnóstico de tejido de mayor rendimiento, en torno al 80-90 % en este contexto docente."
+    }
+  },
+  "pleuralUltrasound": {
+    "overview": {
+      "metaTitle": "Ecografía pleural",
+      "metaDescription": "Aprende a leer los patrones de la ecografía pleural, practica clasificándolos y comprueba tu razonamiento — la base ecografía-primero de los procedimientos pleurales.",
+      "headerTitle": "Ecografía pleural",
+      "headerDescription": "La base ecografía-primero de todo procedimiento pleural: lee los patrones, practica con imágenes reales y luego comprueba tu razonamiento.",
+      "objectivesLead": "Al terminar este módulo podrás",
+      "steps": {
+        "learn": {
+          "title": "Aprende",
+          "description": "Por qué la ecografía va primero, los cuatro patrones de derrame, el acceso seguro y los signos dinámicos."
+        },
+        "practice": {
+          "title": "Practica",
+          "description": "Clasifica imágenes ecográficas reales y vídeos de signos dinámicos en laboratorios de compromiso previo."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Ocho preguntas que comprueban el reconocimiento de patrones y el razonamiento procedimental."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de ecografía pleural",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y la ruta de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprende",
+        "description": "Cómo leer los patrones pleurales"
+      },
+      "practice": {
+        "title": "Practica",
+        "description": "Laboratorios de imagen y vídeo con compromiso previo"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Comprueba tu razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes y atribuciones de imágenes"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprende ecografía pleural",
+      "metaDescription": "Lee los cuatro patrones de derrame pleural, elige una ventana de acceso segura y reconoce los signos pleurales dinámicos.",
+      "headerTitle": "Aprende ecografía pleural",
+      "headerDescription": "Cómo leer el espacio pleural antes de colocar una aguja: técnica, los cuatro patrones de derrame y los signos que cambian el plan.",
+      "intro": "Trabaja primero los bloques centrales — son todo lo que necesitas para leer una ecografía pleural y elegir una ventana segura. Abre los apartados de «Profundiza» cuando quieras los signos dinámicos avanzados y el detalle de nivel board.",
+      "boardSourceLabel": "Del capítulo de board: Derrames pleurales e intervenciones pleurales",
+      "progressLabel": "Marcar Aprende como completado"
+    },
+    "practice": {
+      "metaTitle": "Practica ecografía pleural",
+      "metaDescription": "Laboratorio de clasificación de patrones de ecografía pleural con compromiso previo y retroalimentación continua sobre imágenes reales.",
+      "headerTitle": "Practica: clasifica el patrón",
+      "headerDescription": "Lee cada imagen y comprométete con un patrón antes de comprobarte. Tu puntuación se acumula a lo largo del conjunto de casos.",
+      "progressLabel": "Marcar Practica como completado",
+      "modes": {
+        "patterns": {
+          "label": "Patrones de derrame",
+          "description": "Clasifica imágenes fijas antes de revelar."
+        },
+        "dynamicSigns": {
+          "label": "Signos dinámicos",
+          "description": "Interpreta clips en movimiento antes de revelar."
+        }
+      }
+    },
+    "assessment": {
+      "metaTitle": "Evaluación de ecografía pleural",
+      "metaDescription": "Comprueba tu razonamiento en ecografía pleural: reconocimiento de patrones, acceso seguro, signos dinámicos y cuándo no puncionar.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Ocho preguntas que comprueban si puedes convertir la imagen ecográfica en un plan procedimental seguro.",
+      "checkTitle": "Comprobación de ecografía pleural",
+      "checkIntro": "Responde cada pregunta y luego revela la explicación. Reflejan los objetivos de Aprende.",
+      "progressLabel": "Marcar Evaluación como completada"
+    },
+    "references": {
+      "metaTitle": "Referencias de ecografía pleural",
+      "metaDescription": "Fuentes de las guías y atribuciones Creative Commons de imágenes/vídeos del módulo de ecografía pleural.",
+      "headerTitle": "Referencias y atribuciones",
+      "headerDescription": "Las fuentes de las guías que respaldan la enseñanza y las atribuciones Creative Commons de los laboratorios de imagen y vídeo.",
+      "clinicalHeading": "Referencias clínicas",
+      "imageHeading": "Atribuciones de imágenes didácticas",
+      "imageNote": "Todas las imágenes del laboratorio de patrones tienen licencia CC BY 4.0 y se almacenan en el repositorio con atribución.",
+      "videoHeading": "Atribuciones de vídeos didácticos",
+      "videoNote": "Los clips de signos dinámicos se seleccionan a partir de metadatos Creative Commons a nivel de fila y se almacenan en el repositorio como archivos MP4 reproducibles en el navegador.",
+      "sourceLink": "Fuente",
+      "sourceClipLink": "Clip fuente",
+      "metadataLink": "Metadatos",
+      "convertedNote": " · Convertido a MP4 para reproducción en el navegador"
+    },
+    "patternLab": {
+      "scaffoldTitle": "Reconocimiento de patrones de ecografía pleural",
+      "objectives": [
+        "Clasifica el líquido pleural como anecoico simple, complejo no septado, septado o tabicado, o ecogénico.",
+        "Conecta el patrón con el razonamiento de toma de muestra, drenaje o control del foco.",
+        "Explica por qué la apariencia ecográfica debe acompañarse de la historia clínica."
+      ],
+      "howToUse": [
+        "Lee la viñeta e inspecciona la imagen sin usar el pie de imagen como pista.",
+        "Elige un patrón antes de comprobar el punto de enseñanza.",
+        "Revisa la implicación de manejo y luego avanza al siguiente caso."
+      ],
+      "caseLabel": "Caso {index} de {total}: {vignette}",
+      "scoreLabel": "Puntuación: {correct}/{attempted}",
+      "correctHeading": "Correcto",
+      "incorrectHeading": "No del todo",
+      "nextLabel": "Siguiente caso",
+      "revealLabel": "Comprobar mi clasificación",
+      "keyTakeaway": "La ecografía pleural acota el plan del procedimiento, pero por sí sola no diagnostica la causa. El líquido simple aún puede ser exudativo, y el líquido complejo debe plantear preguntas de control del foco cuando la historia encaja.",
+      "neutralAlt": "Imagen del espacio pleural para clasificación de patrones.",
+      "attributionLabel": "Atribución: {attribution}",
+      "sourceLabel": "Fuente:",
+      "withAttribution": " con atribución requerida",
+      "classifyHeading": "Clasifica el patrón",
+      "options": {
+        "simpleAnechoic": "Anecoico simple",
+        "complexNonSeptated": "Complejo no septado",
+        "septatedLoculated": "Septado o tabicado",
+        "echogenic": "Ecogénico",
+        "noDrainableEffusion": "Sin derrame drenable"
+      }
+    },
+    "dynamicLab": {
+      "scaffoldTitle": "Laboratorio de vídeo de signos dinámicos",
+      "objectives": [
+        "Reconoce en movimiento las líneas A, las líneas B, la irregularidad de la línea pleural, la consolidación y las vistas de cortina/sin objetivo.",
+        "Separa los hallazgos de patrón pulmonar de los bolsillos de líquido pleural drenable.",
+        "Usa los clips dinámicos para decidir si seguir escaneando, tomar muestra de líquido o pensar en el control del foco."
+      ],
+      "howToUse": [
+        "Mira el clip antes de usar las opciones como pista.",
+        "Comprométete con el signo dinámico dominante antes de comprobar el punto de enseñanza.",
+        "Revisa por qué el clip es o no un objetivo de procedimiento pleural y luego avanza."
+      ],
+      "clipLabel": "Clip {index} de {total}: {vignette}",
+      "scoreLabel": "Puntuación: {correct}/{attempted}",
+      "correctHeading": "Correcto",
+      "incorrectHeading": "No del todo",
+      "nextLabel": "Siguiente clip",
+      "revealLabel": "Comprobar mi interpretación",
+      "keyTakeaway": "El movimiento importa. Las líneas A, las líneas B, el signo de la cortina y la consolidación pueden responder a la pregunta pulmonar, pero un procedimiento pleural sigue requiriendo un bolsillo de líquido discreto y seguro.",
+      "neutralVideoLabel": "Clip de ecografía pulmonar para clasificación de signos dinámicos.",
+      "videoFallback": "Tu navegador no admite vídeo incrustado.",
+      "attributionLabel": "Atribución: {attribution}",
+      "sourceFilenameLabel": "Nombre de archivo fuente: {filename}",
+      "sourceLabel": "Fuente:",
+      "withAttribution": " con atribución requerida",
+      "convertedNote": " · Convertido a MP4 para reproducción en el navegador",
+      "classifyHeading": "Clasifica el signo dinámico",
+      "options": {
+        "normalALines": "Líneas A normales",
+        "bLinesPleuralIrregularity": "Líneas B con irregularidad de la línea pleural",
+        "subpleuralConsolidation": "Consolidación subpleural",
+        "lungCurtainNoTarget": "Cortina pulmonar / sin objetivo drenable",
+        "effusionAdjacentConsolidation": "Derrame con consolidación adyacente"
+      }
+    },
+    "management": {
+      "thoraReasonable": "La toracocentesis puede ser razonable si el bolsillo es seguro y la pregunta clínica requiere toma de muestra o alivio de síntomas.",
+      "considerTubeAndAdjuncts": "Considera el drenaje con tubo y los adyuvantes cuando la infección, la sangre, la tabicación o la complejidad maligna encajan en el caso.",
+      "noPleuralDrainageTarget": "En esta vista no se muestra un objetivo de drenaje pleural; reorienta al estudiante hacia la interpretación del patrón pulmonar o sigue escaneando en busca de líquido."
+    },
+    "patternTeaching": {
+      "simpleAnechoic": "El líquido anecoico simple puede ser un trasudado o un exudado; la imagen no sustituye al contexto clínico ni al análisis del líquido pleural.",
+      "complexNonSeptated": "El líquido complejo no septado todavía puede muestrearse de forma segura cuando el bolsillo es accesible, pero la historia más amplia decide la urgencia.",
+      "septatedLoculated": "Los septos o lóculos sugieren fibrina, infección, sangre o complejidad maligna y deben motivar el razonamiento de drenaje/control del foco cuando el contexto clínico encaja.",
+      "echogenic": "El líquido ecogénico hace pensar en pus, sangre, detritos celulares o malignidad; no lo trates como un derrame simple de flujo libre.",
+      "noDrainableEffusion": "Esta vista no muestra un bolsillo de líquido pleural drenable. Las líneas B, las líneas A o la consolidación subpleural pueden responder a una pregunta pulmonar, pero no son un objetivo de toracocentesis."
+    },
+    "patternReveal": {
+      "simpleAnechoic": "El objetivo didáctico es un bolsillo anecoico simple; una apariencia simple no prueba un trasudado.",
+      "complexNonSeptated": "El objetivo didáctico es líquido complejo no septado con ecos internos pero sin bandas de fibrina claras.",
+      "septatedLoculated": "El objetivo didáctico es líquido septado o tabicado, que sugiere organización fibrinosa.",
+      "echogenic": "El objetivo didáctico es material pleural ecogénico; el pus, la sangre, los detritos celulares o la malignidad pueden crear esta apariencia.",
+      "noDrainableEffusion": "El objetivo didáctico es un patrón pulmonar sin un bolsillo de líquido pleural drenable en esta vista."
+    },
+    "dynamicTeaching": {
+      "normalALines": "Las líneas A son artefactos de reverberación horizontales del pulmón aireado. Son distractores útiles en un módulo pleural porque no crean un objetivo de drenaje.",
+      "bLinesPleuralIrregularity": "Las líneas B surgen de la línea pleural y se mueven con el deslizamiento pulmonar. Responden a una pregunta pulmonar intersticial o inflamatoria, pero no son un objetivo de toracocentesis.",
+      "subpleuralConsolidation": "La consolidación subpleural puede situarse justo contra la pleura y, a primera vista, imitar un objetivo procedimental. La clave es seguir escaneando en busca de una ventana de líquido real.",
+      "lungCurtainNoTarget": "El signo de la cortina es movimiento dinámico de pulmón aireado. En un módulo de procedimiento pleural es un patrón crítico de ausencia de objetivo, especialmente cerca del diafragma.",
+      "effusionAdjacentConsolidation": "El líquido junto con pulmón consolidado debe desplazar el pensamiento del «piloto automático» de la punción simple hacia la infección, la adecuación de la ventana de acceso y la planificación del control del foco."
+    },
+    "dynamicReveal": {
+      "normalALines": "El objetivo didáctico es la reverberación normal de líneas A bajo una línea pleural que se desliza.",
+      "bLinesPleuralIrregularity": "El objetivo didáctico es actividad de líneas B con irregularidad de la línea pleural, no un bolsillo de líquido pleural.",
+      "subpleuralConsolidation": "El objetivo didáctico es consolidación subpleural con irregularidad de la línea pleural.",
+      "lungCurtainNoTarget": "El objetivo didáctico es una cortina pulmonar que barre sobre el hígado, no un bolsillo de líquido seguro.",
+      "effusionAdjacentConsolidation": "El objetivo didáctico es derrame con consolidación adyacente, un contexto de mayor riesgo que un bolsillo simple aislado."
+    },
+    "vignette": {
+      "simple-anechoic-reference": "Persona de 74 años con disnea tras diuresis y un derrame unilateral en la imagen de tórax.",
+      "complex-nonseptated-reference": "Persona de 68 años con derrame unilateral recurrente, molestia torácica y pérdida de peso.",
+      "septated-reference": "Persona de 62 años con neumonía, fiebre persistente y una colección pleural tras antibióticos.",
+      "echogenic-reference": "Persona de 56 años con fiebre, dolor pleurítico y escasa mejoría clínica pese a los antibióticos.",
+      "ambiguous-simple-exudate": "Persona de 37 años con riesgo de exposición a tuberculosis, sudores nocturnos y un derrame unilateral.",
+      "b-lines-no-effusion-distractor": "Persona de 70 años con disnea y hallazgos intersticiales difusos en la imagen de tórax, pero sin colección pleural conocida.",
+      "subpleural-consolidation-distractor": "Persona de 59 años con síntomas pleuríticos y hallazgos pulmonares focales, donde la pregunta es si hay un bolsillo pleural al que acceder.",
+      "atelectasis-with-effusion-reference": "Persona de 66 años con derrame unilateral recurrente y tejido móvil visto dentro de la vista del espacio pleural.",
+      "dynamic-normal-a-lines": "Exploración del tórax anterior en un paciente donde la pregunta es si la línea pleural se comporta como pulmón aireado.",
+      "dynamic-b-lines-pleural-irregularity": "Clip pulmonar con sonda convexa donde los artefactos verticales y la textura de la línea pleural deben clasificarse antes de pensar en el drenaje.",
+      "dynamic-subpleural-consolidation": "Clip pulmonar dirigido en un paciente con anomalía focal adyacente a la pleura; decide si la vista muestra un bolsillo drenable.",
+      "dynamic-lung-curtain-no-target": "Clip del tórax inferior derecho donde el borde móvil del pulmón aireado debe separarse de un objetivo de líquido pleural.",
+      "dynamic-effusion-adjacent-consolidation": "Clip en contexto de neumonía donde el estudiante debe decidir si el espacio oscuro y el tejido adyacente representan un objetivo de procedimiento pleural."
+    }
+  }
+}

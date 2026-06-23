@@ -1,9 +1,9 @@
 'use client'
 
-import { useTheme } from 'next-themes'
 import { useEffect, useState, type ComponentProps } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { useTheme } from '@/components/layout/theme-provider'
 import { cn } from '@/lib/cn'
 
 type ButtonProps = ComponentProps<typeof Button>

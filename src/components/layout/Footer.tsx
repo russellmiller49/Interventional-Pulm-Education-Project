@@ -1,6 +1,7 @@
-import Link from 'next/link'
 import type { Route } from 'next'
+import { getTranslations } from 'next-intl/server'
 
+import { Link } from '@/i18n/navigation'
 import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 
@@ -37,66 +38,72 @@ type FooterLink =
       route: InternalFooterHref
     }
 
-const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
-  {
-    title: 'Explore',
-    links: [
-      { label: 'Home', href: '/', route: '/' },
-      { label: 'EBUS Training', href: '/ebus-training', route: '/ebus-training' },
-      { label: 'TNM-9 Staging', href: '/tnm-9-staging', route: '/tnm-9-staging' },
-      { label: '3D Anatomy', href: '/learn/anatomy', route: '/learn/anatomy' },
-      {
-        label: 'Resources',
-        href: '/resources',
-        route: '/resources',
-      },
-      { label: 'Coming Soon', href: '/coming-soon', route: '/coming-soon' },
-    ],
-  },
-  {
-    title: 'Learning',
-    links: [
-      { label: 'Board Prep', href: '/board-prep', route: '/board-prep' },
-      {
-        label: 'Journal Club Podcasts',
-        href: '/journal-club-podcasts',
-        route: '/journal-club-podcasts',
-      },
-      { label: 'FluoroView', href: '/fluoroview', route: '/fluoroview' },
-      {
-        label: 'Bronch Navigation Trainer',
-        href: '/bronch-navigation-trainer',
-        route: '/bronch-navigation-trainer',
-      },
-      {
-        label: 'Intro Bronchoscopy',
-        href: '/intro-bronchoscopy',
-        route: '/intro-bronchoscopy',
-      },
-      {
-        label: 'Pleural Procedures',
-        href: '/pleural-procedures',
-        route: '/pleural-procedures',
-      },
-      {
-        label: 'SoCal EBUS Course',
-        href: '/socal-ebus-course',
-        route: '/socal-ebus-course',
-      },
-    ],
-  },
-  {
-    title: 'Coming Soon',
-    links: [
-      { label: 'Intro to Pleural Disease', href: '/coming-soon', route: '/coming-soon' },
-      { label: 'Rigid Bronchoscopy Foundations', href: '/coming-soon', route: '/coming-soon' },
-      { label: 'Intro to Bronchoscopy', href: '/coming-soon', route: '/coming-soon' },
-    ],
-  },
-]
-
 export async function Footer() {
   const canViewDrafts = await canCurrentUserViewDraftModules()
+  const footer = await getTranslations('footer')
+  const common = await getTranslations('common')
+  const nav = await getTranslations('navigation')
+  const columnLinks: Array<{ title: string; links: FooterLink[] }> = [
+    {
+      title: footer('explore'),
+      links: [
+        { label: footer('home'), href: '/', route: '/' },
+        { label: nav('items.ebusTraining.title'), href: '/ebus-training', route: '/ebus-training' },
+        { label: nav('items.tnm9.title'), href: '/tnm-9-staging', route: '/tnm-9-staging' },
+        { label: nav('items.anatomy.title'), href: '/learn/anatomy', route: '/learn/anatomy' },
+        {
+          label: nav('items.resources.title'),
+          href: '/resources',
+          route: '/resources',
+        },
+        { label: nav('items.comingSoon.title'), href: '/coming-soon', route: '/coming-soon' },
+      ],
+    },
+    {
+      title: footer('learning'),
+      links: [
+        { label: nav('items.boardPrep.shortTitle'), href: '/board-prep', route: '/board-prep' },
+        {
+          label: nav('items.podcastLibrary.title'),
+          href: '/journal-club-podcasts',
+          route: '/journal-club-podcasts',
+        },
+        { label: nav('items.fluoroview.title'), href: '/fluoroview', route: '/fluoroview' },
+        {
+          label: nav('items.bronchNavigation.title'),
+          href: '/bronch-navigation-trainer',
+          route: '/bronch-navigation-trainer',
+        },
+        {
+          label: nav('items.introBronchoscopy.title'),
+          href: '/intro-bronchoscopy',
+          route: '/intro-bronchoscopy',
+        },
+        {
+          label: nav('items.pleuralProcedures.title'),
+          href: '/pleural-procedures',
+          route: '/pleural-procedures',
+        },
+        {
+          label: nav('items.socalEbusCourse.title'),
+          href: '/socal-ebus-course',
+          route: '/socal-ebus-course',
+        },
+      ],
+    },
+    {
+      title: footer('comingSoon'),
+      links: [
+        { label: 'Intro to Pleural Disease', href: '/coming-soon', route: '/coming-soon' },
+        { label: 'Rigid Bronchoscopy Foundations', href: '/coming-soon', route: '/coming-soon' },
+        {
+          label: nav('items.introBronchoscopy.title'),
+          href: '/coming-soon',
+          route: '/coming-soon',
+        },
+      ],
+    },
+  ]
 
   return (
     <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
@@ -105,17 +112,11 @@ export async function Footer() {
           <div className="max-w-sm space-y-4">
             <div>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                Interventional Pulmonology Education
+                {common('siteName')}
               </span>
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Practical learning tools, printable models, and modern curricula advancing airway
-              education around the globe. Built for clinicians, educators, and trainees.
-            </p>
-            <div className="text-xs text-muted-foreground">
-              Prefer a low motion experience? Enable it in your operating system preferences and
-              we&apos;ll match it.
-            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground">{footer('tagline')}</p>
+            <div className="text-xs text-muted-foreground">{footer('motion')}</div>
           </div>
           <div className="grid flex-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {columnLinks.map((column) => (
@@ -155,28 +156,25 @@ export async function Footer() {
         </div>
         <div className="border-t pt-6 text-xs text-muted-foreground">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              © {new Date().getFullYear()} Interventional Pulmonology Education. Educational use
-              only.
-            </p>
+            <p>{footer('copyright', { year: new Date().getFullYear() })}</p>
             <div className="flex flex-wrap gap-4">
               <Link
                 href={'/privacy' as Route}
                 className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Privacy
+                {footer('privacy')}
               </Link>
               <Link
                 href={'/terms' as Route}
                 className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Terms
+                {footer('terms')}
               </Link>
               <Link
                 href={'/community/code-of-conduct' as Route}
                 className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Code of Conduct
+                {footer('codeOfConduct')}
               </Link>
             </div>
           </div>

@@ -1,18 +1,28 @@
 'use client'
 
 import * as React from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { ArrowRight, CheckCircle2, HelpCircle, RotateCcw, XCircle } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 
-import { pleuralDiseaseProfiles } from '../content/diseaseProfiles'
-import { pleuralAnalysisQuizItems } from '../content/quizItems'
-
-const diseaseById = new Map(pleuralDiseaseProfiles.map((disease) => [disease.id, disease]))
+import { getPleuralDiseaseProfiles } from '../content/diseaseProfiles'
+import { getPleuralAnalysisQuizItems } from '../content/quizItems'
 
 export function PleuralAnalysisQuiz() {
+  const t = useTranslations('pleuralFluidAnalysis')
+  const locale = useLocale()
+  const pleuralAnalysisQuizItems = React.useMemo(
+    () => getPleuralAnalysisQuizItems(locale),
+    [locale],
+  )
+  const diseaseById = React.useMemo(
+    () => new Map(getPleuralDiseaseProfiles(locale).map((disease) => [disease.id, disease])),
+    [locale],
+  )
+
   const [questionIndex, setQuestionIndex] = React.useState(0)
   const [selectedDiseaseId, setSelectedDiseaseId] = React.useState<string | null>(null)
   const [correctAnswers, setCorrectAnswers] = React.useState(0)
@@ -59,25 +69,28 @@ export function PleuralAnalysisQuiz() {
                 <HelpCircle className="h-5 w-5" aria-hidden />
               </span>
               <div>
-                <Badge variant="info">Quiz mode</Badge>
+                <Badge variant="info">{t('quiz.badge')}</Badge>
                 <h2 className="mt-2 break-words text-2xl font-semibold tracking-tight">
-                  Match the pleural findings to the disease
+                  {t('quiz.title')}
                 </h2>
               </div>
             </div>
             <Button type="button" variant="outline" size="sm" onClick={resetQuiz}>
               <RotateCcw className="h-4 w-4" aria-hidden />
-              Reset
+              {t('quiz.reset')}
             </Button>
           </div>
 
           <div className="mt-5 rounded-lg border border-border/70 bg-background p-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={item.difficulty === 'rare' ? 'secondary' : 'outline'} size="sm">
-                {item.difficulty}
+                {t(`difficulty.${item.difficulty}`)}
               </Badge>
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Question {questionIndex + 1} of {pleuralAnalysisQuizItems.length}
+                {t('quiz.questionProgress', {
+                  current: questionIndex + 1,
+                  total: pleuralAnalysisQuizItems.length,
+                })}
               </span>
             </div>
             <p className="mt-3 break-words text-base font-semibold leading-7">{item.stem}</p>
@@ -123,7 +136,10 @@ export function PleuralAnalysisQuiz() {
                   </span>
                   {disease ? (
                     <span className="mt-1 block break-words text-xs leading-5 text-muted-foreground">
-                      {disease.family} · {disease.rarity}
+                      {t('quiz.choiceMeta', {
+                        family: disease.family,
+                        rarity: t(`rarity.${disease.rarity}`),
+                      })}
                     </span>
                   ) : null}
                 </button>
@@ -134,7 +150,7 @@ export function PleuralAnalysisQuiz() {
 
         <aside className="min-w-0 rounded-lg border border-border/70 bg-background p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Quiz score
+            {t('quiz.score')}
           </p>
           <p className="mt-1 text-3xl font-semibold">
             {correctAnswers}/{answeredIds.size || 0}
@@ -157,11 +173,15 @@ export function PleuralAnalysisQuiz() {
                   )}
                   <div className="min-w-0">
                     <h3 className="break-words font-semibold">
-                      {isCorrect ? 'Correct' : 'Not quite'}
+                      {isCorrect ? t('quiz.correct') : t('quiz.notQuite')}
                     </h3>
                     <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
-                      {selectedDisease?.name ? `You chose ${selectedDisease.name}. ` : null}
-                      The best answer is {correctDisease?.name ?? item.answerDiseaseId}.
+                      {selectedDisease?.name
+                        ? t('quiz.youChose', { name: selectedDisease.name })
+                        : null}
+                      {t('quiz.bestAnswer', {
+                        name: correctDisease?.name ?? item.answerDiseaseId,
+                      })}
                     </p>
                   </div>
                 </div>
@@ -171,7 +191,7 @@ export function PleuralAnalysisQuiz() {
                 {correctDisease ? (
                   <div className="rounded-lg border border-border/70 bg-background p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Memory hook
+                      {t('quiz.memoryHook')}
                     </p>
                     <p className="mt-2 break-words text-sm leading-6">
                       {correctDisease.teachingPearl}
@@ -179,17 +199,13 @@ export function PleuralAnalysisQuiz() {
                   </div>
                 ) : null}
                 <Button type="button" onClick={goNext}>
-                  Next question
+                  {t('quiz.nextQuestion')}
                   <ArrowRight className="h-4 w-4" aria-hidden />
                 </Button>
               </div>
             ) : (
               <div className="flex h-full min-h-[13rem] flex-col justify-center gap-3 text-sm leading-6 text-muted-foreground">
-                <p>
-                  Choose the diagnosis most associated with the full pattern. The rare items are
-                  mixed in on purpose; the goal is not memorizing a single lab cutoff, it is
-                  recognizing when a clue changes the branch.
-                </p>
+                <p>{t('quiz.emptyState')}</p>
               </div>
             )}
           </div>

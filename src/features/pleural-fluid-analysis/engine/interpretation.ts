@@ -2,9 +2,17 @@ import type {
   FindingStrength,
   FluidCategory,
   InterpretationFinding,
+  InterpretationFindingCode,
+  InterpretationHeadlineCode,
+  InterpretationReconciliationCode,
   LightCriteriaResult,
+  NextActionsCode,
+  PitfallCode,
   PleuralFluidInput,
   PleuralInterpretation,
+  PseudoexudateReason,
+  RoutineStudyCode,
+  TargetedStudyCode,
 } from './types'
 
 const round = (value: number, places = 2) => Number(value.toFixed(places))
@@ -34,8 +42,9 @@ function pushFinding(
   diagnosis: string,
   rationale: string,
   action: string,
+  code: InterpretationFindingCode,
 ) {
-  findings.push({ diagnosis, strength, rationale, action })
+  findings.push({ diagnosis, strength, rationale, action, code })
 }
 
 export function evaluateLightsCriteria(input: PleuralFluidInput): LightCriteriaResult {
@@ -61,6 +70,50 @@ export function evaluateLightsCriteria(input: PleuralFluidInput): LightCriteriaR
     positiveCriteria,
     classification: positiveCriteria.length > 0 ? 'exudate' : 'transudate',
   }
+}
+
+/**
+ * Structured (locale-independent) pseudoexudate reasons. Each entry carries a
+ * stable {@link PseudoexudateReasonCode} plus numeric args, so the UI can render
+ * a localized template. {@link getPseudoexudateReasons} returns the English
+ * strings (preserved for tests and non-UI callers) derived from the same logic.
+ */
+export function getPseudoexudateReasonDetails(
+  input: PleuralFluidInput,
+  category: FluidCategory,
+): PseudoexudateReason[] {
+  if (category !== 'exudate' || !contextSuggestsSystemicTransudate(input)) {
+    return []
+  }
+
+  const details: PseudoexudateReason[] = []
+  const proteinGradient = input.serumProtein - input.pleuralProtein
+  const hasAlbuminGradient =
+    input.serumAlbumin !== undefined && input.pleuralAlbumin !== undefined
+      ? input.serumAlbumin - input.pleuralAlbumin
+      : undefined
+
+  if (proteinGradient > 3.1) {
+    details.push({ code: 'proteinGradient', args: { value: round(proteinGradient, 1) } })
+  }
+
+  if (hasAlbuminGradient !== undefined && hasAlbuminGradient > 1.2) {
+    details.push({ code: 'albuminGradient', args: { value: round(hasAlbuminGradient, 1) } })
+  }
+
+  if (input.ntProBnp !== undefined && input.ntProBnp > 1500) {
+    details.push({ code: 'ntProBnp', args: { value: input.ntProBnp } })
+  }
+
+  if (
+    details.length === 0 &&
+    input.pleuralProtein / input.serumProtein < 0.65 &&
+    input.pleuralLdh / input.serumLdh < 1
+  ) {
+    details.push({ code: 'weaklyPositive' })
+  }
+
+  return details
 }
 
 export function getPseudoexudateReasons(input: PleuralFluidInput, category: FluidCategory) {
@@ -101,6 +154,10 @@ export function getPseudoexudateReasons(input: PleuralFluidInput, category: Flui
 export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpretation {
   const lightCriteria = evaluateLightsCriteria(input)
   const pseudoexudateReasons = getPseudoexudateReasons(input, lightCriteria.classification)
+  const pseudoexudateReasonDetails = getPseudoexudateReasonDetails(
+    input,
+    lightCriteria.classification,
+  )
   const reconciledCategory =
     pseudoexudateReasons.length > 0 ? 'transudate' : lightCriteria.classification
   const findings: InterpretationFinding[] = []
@@ -112,6 +169,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Empyema',
       'Gross pus in pleural fluid is diagnostic of pleural space infection.',
       'Drain the pleural space and treat as pleural infection; send microbiology if not already done.',
+      'empyema',
     )
   }
 
@@ -122,6 +180,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Malignant pleural effusion',
       'Positive pleural fluid cytology establishes pleural malignancy in the right clinical setting.',
       'Stage the malignancy, match management to prognosis and symptoms, and consider molecular testing when appropriate.',
+      'malignantEffusion',
     )
   }
 
@@ -135,6 +194,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Chylothorax',
       'Pleural triglycerides above 110 mg/dL, or intermediate triglycerides with chylomicrons, support chyle in the pleural space.',
       'Look for trauma, thoracic surgery, lymphoma, lymphatic disorders, or cirrhosis-related transudative chylothorax.',
+      'chylothorax',
     )
   }
 
@@ -148,6 +208,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Hemothorax',
       'Pleural fluid hematocrit more than 50% of blood hematocrit defines hemothorax.',
       'Escalate source control and drainage planning; evaluate trauma, procedure injury, malignancy, or anticoagulation.',
+      'hemothorax',
     )
   }
 
@@ -161,6 +222,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Urinothorax',
       'Pleural-to-serum creatinine ratio above 1 supports urine tracking into the pleural space.',
       'Evaluate obstructive uropathy or genitourinary injury; pleural drainage alone usually recurs.',
+      'urinothoraxCreatinine',
     )
   }
 
@@ -171,6 +233,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Bilothorax',
       'Pleural-to-serum bilirubin ratio above 1 supports bile in the pleural space.',
       'Search for biliary pathology or recent hepatobiliary surgery and coordinate definitive source control.',
+      'bilothorax',
     )
   }
 
@@ -181,6 +244,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Pancreaticopleural fistula',
       'Very high pleural amylase strongly suggests pancreatic fluid entering the pleural space.',
       'Evaluate chronic pancreatitis, pseudocyst, and duct leak; abdominal imaging and pancreatic consultation usually matter more than repeat taps.',
+      'pancreaticopleuralFistula',
     )
   }
 
@@ -191,6 +255,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Esophageal perforation',
       'Food particles in pleural fluid are a high-specificity clue for esophageal rupture.',
       'Escalate urgently for source control, broad antimicrobials, and esophageal evaluation.',
+      'esophagealPerforation',
     )
   }
 
@@ -201,6 +266,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Urinothorax',
       'A urine odor is a classic gross inspection clue, especially with ipsilateral urinary tract obstruction or injury.',
       'Check pleural-to-serum creatinine and evaluate the urinary tract.',
+      'urinothoraxOdor',
     )
   }
 
@@ -220,6 +286,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Complicated parapneumonic effusion',
       'Pneumonia context plus low pH, low glucose, high LDH, high nucleated cells, or positive microbiology points toward pleural infection.',
       'Do not let Light criteria be the endpoint; assess need for tube drainage, culture-directed antibiotics, and loculation management.',
+      'parapneumonic',
     )
   }
 
@@ -234,6 +301,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Tuberculous pleural effusion',
       'A lymphocyte-predominant exudate with compatible exposure history and elevated ADA narrows the differential toward TB.',
       'Send mycobacterial culture when suspected; if suspicion remains high, pleural biopsy can secure microbiology and drug susceptibility.',
+      'tuberculous',
     )
   }
 
@@ -244,6 +312,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Malignancy remains in play',
       'Pleural nodularity or a strong cancer context can outweigh a nonspecific or even transudative chemistry profile.',
       'Send adequate cytology volume and consider image-guided or thoracoscopic pleural biopsy if cytology is negative and pretest probability stays high.',
+      'malignancyInPlay',
     )
   }
 
@@ -258,6 +327,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Repeated negative cytology',
       'Two nondiagnostic cytology samples do not rule out malignant pleural disease when imaging or clinical probability remains high.',
       'Stop fluid-only cycling and escalate toward pleural tissue diagnosis such as image-guided biopsy or pleuroscopy.',
+      'repeatedNegativeCytology',
     )
   }
 
@@ -271,6 +341,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Rheumatoid or lupus pleuritis',
       'Autoimmune context with low pH, low glucose, or high LDH can mimic pleural infection.',
       'Reconcile with serologies, joint/systemic activity, microbiology, and imaging before anchoring on infection alone.',
+      'autoimmunePleuritis',
     )
   }
 
@@ -281,6 +352,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Eosinophilic pleural effusion',
       'Pleural eosinophils above 10% suggest air or blood in the pleural space, prior thoracentesis, drug reaction, asbestos exposure, parasites, infection, or malignancy.',
       'Use the history and gross appearance to decide whether this is procedure-related noise or a diagnostic clue.',
+      'eosinophilic',
     )
   }
 
@@ -291,6 +363,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Lymphocyte-predominant effusion',
       'Marked lymphocyte predominance narrows the differential to TB, lymphoma, sarcoidosis, chylothorax, trapped lung, post-CABG, yellow nail syndrome, uremia, drug causes, and rheumatoid disease.',
       'Let timeline, exposure, imaging, and targeted tests decide the next fork.',
+      'lymphocytePredominant',
     )
   }
 
@@ -301,6 +374,7 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Lymphatic leak phenotype',
       'Milky or turbid pleural fluid with a surgery, lymphoma, lymphatic, or yellow-nail context should trigger lipid testing.',
       'Check triglycerides, cholesterol, and chylomicrons rather than relying on appearance alone.',
+      'lymphaticLeak',
     )
   }
 
@@ -315,23 +389,40 @@ export function interpretPleuralFluid(input: PleuralFluidInput): PleuralInterpre
       'Blood in the pleural space',
       'Bloody fluid can be caused by malignancy, pulmonary embolism, trauma, post-cardiotomy injury, asbestos pleuritis, or hemothorax.',
       'Measure pleural hematocrit when grossly bloody; do not treat all serosanguineous fluid as hemothorax.',
+      'bloodInPleuralSpace',
     )
   }
 
   const pitfalls = buildPitfalls(input, lightCriteria, pseudoexudateReasons)
+  const pitfallCodes = buildPitfallCodes(input, lightCriteria, pseudoexudateReasons)
   const nextActions = buildNextActions(input, lightCriteria, pseudoexudateReasons, findings)
+  const nextActionsCode = buildNextActionsCode(input, lightCriteria, pseudoexudateReasons, findings)
+  const routineStudies = buildRoutineStudies(input)
+  const routineStudyCodes = buildRoutineStudyCodes(input)
+  const targetedStudies = buildTargetedStudies(input, findings)
+  const targetedStudyCodes = buildTargetedStudyCodes(input, findings)
+  const definitive = findings.find((finding) => finding.strength === 'definitive')
 
   return {
     lightCriteria,
     reconciledCategory,
     headline: buildHeadline(lightCriteria, pseudoexudateReasons, findings),
+    headlineCode: buildHeadlineCode(lightCriteria, pseudoexudateReasons, findings),
+    headlineDiagnosisCode:
+      pseudoexudateReasons.length === 0 && definitive ? definitive.code : undefined,
     reconciliation: buildReconciliation(input, lightCriteria, pseudoexudateReasons),
+    reconciliationCode: buildReconciliationCode(input, lightCriteria, pseudoexudateReasons),
     pseudoexudateReasons,
+    pseudoexudateReasonDetails,
     findings,
     nextActions,
+    nextActionsCode,
     pitfalls,
-    routineStudies: buildRoutineStudies(input),
-    targetedStudies: buildTargetedStudies(input, findings),
+    pitfallCodes,
+    routineStudies,
+    routineStudyCodes,
+    targetedStudies,
+    targetedStudyCodes,
   }
 }
 
@@ -355,6 +446,29 @@ function buildHeadline(
   }
 
   return 'This is a transudative pattern unless the clinical story says otherwise.'
+}
+
+/** Locale-independent headline code mirroring {@link buildHeadline}. */
+function buildHeadlineCode(
+  lightCriteria: LightCriteriaResult,
+  pseudoexudateReasons: readonly string[],
+  findings: readonly InterpretationFinding[],
+): InterpretationHeadlineCode {
+  const definitive = findings.find((finding) => finding.strength === 'definitive')
+
+  if (pseudoexudateReasons.length > 0) {
+    return 'pseudoexudate'
+  }
+
+  if (definitive) {
+    return 'definitiveSignal'
+  }
+
+  if (lightCriteria.classification === 'exudate') {
+    return 'exudatePattern'
+  }
+
+  return 'transudatePattern'
 }
 
 function buildReconciliation(
@@ -390,6 +504,42 @@ function buildReconciliation(
   }
 
   return 'PFA should be interpreted as a probability shifter: it narrows the search, then history, imaging, and selected tests finish the reasoning.'
+}
+
+/** Locale-independent reconciliation code mirroring {@link buildReconciliation}. */
+function buildReconciliationCode(
+  input: PleuralFluidInput,
+  lightCriteria: LightCriteriaResult,
+  pseudoexudateReasons: readonly string[],
+): InterpretationReconciliationCode {
+  if (input.ultrasound === 'too-small') {
+    return 'tooSmall'
+  }
+
+  if (pseudoexudateReasons.length > 0) {
+    return 'pseudoexudate'
+  }
+
+  if (
+    lightCriteria.classification === 'transudate' &&
+    (contextSuggestsMalignancy(input) || input.appearance === 'bloody')
+  ) {
+    return 'transudateButPretest'
+  }
+
+  if (lightCriteria.classification === 'exudate' && contextSuggestsInfection(input)) {
+    return 'exudateInfection'
+  }
+
+  if (lightCriteria.classification === 'exudate' && contextSuggestsTb(input)) {
+    return 'exudateTb'
+  }
+
+  if (lightCriteria.classification === 'transudate') {
+    return 'transudateAligned'
+  }
+
+  return 'probabilityShifter'
 }
 
 function buildPitfalls(
@@ -438,6 +588,41 @@ function buildPitfalls(
   }
 
   return pitfalls
+}
+
+/** Locale-independent pitfall codes mirroring {@link buildPitfalls}. */
+function buildPitfallCodes(
+  input: PleuralFluidInput,
+  lightCriteria: LightCriteriaResult,
+  pseudoexudateReasons: readonly string[],
+): PitfallCode[] {
+  const codes: PitfallCode[] = ['pairedSerum']
+
+  if (lightCriteria.classification === 'exudate' && contextSuggestsSystemicTransudate(input)) {
+    codes.push(pseudoexudateReasons.length > 0 ? 'diuresisCrossesLight' : 'systemicGradientCheck')
+  }
+
+  if (input.pleuralPH < 7.35) {
+    codes.push('fragilePH')
+  }
+
+  if (input.appearance === 'milky' || input.appearance === 'turbid') {
+    codes.push('milkyTurbid')
+  }
+
+  if (contextSuggestsMalignancy(input) && !input.cytologyPositive) {
+    codes.push('negativeCytology')
+  }
+
+  if (contextSuggestsMalignancy(input) && (input.negativeCytologyCount ?? 0) >= 2) {
+    codes.push('repeatedCytologyDelay')
+  }
+
+  if (contextSuggestsTb(input) && input.mesothelialCells > 5) {
+    codes.push('mesothelialTb')
+  }
+
+  return codes
 }
 
 function buildNextActions(
@@ -517,6 +702,60 @@ function buildNextActions(
   ]
 }
 
+/**
+ * Locale-independent next-actions code mirroring {@link buildNextActions}. The UI
+ * maps it to an array via `pleuralFluidAnalysis.nextActions.<code>`. The
+ * `definitive` branch's first action is the definitive finding's own action
+ * (rendered from `headlineDiagnosisCode`), so its namespace entry only carries
+ * the trailing generic line.
+ */
+function buildNextActionsCode(
+  input: PleuralFluidInput,
+  lightCriteria: LightCriteriaResult,
+  pseudoexudateReasons: readonly string[],
+  findings: readonly InterpretationFinding[],
+): NextActionsCode {
+  if (input.ultrasound === 'too-small') {
+    return 'tooSmall'
+  }
+
+  if (input.ultrasound === 'anechoic-bilateral' && contextSuggestsSystemicTransudate(input)) {
+    return 'bilateralSystemic'
+  }
+
+  const definitive = findings.find((finding) => finding.strength === 'definitive')
+
+  if (definitive) {
+    return 'definitive'
+  }
+
+  if (pseudoexudateReasons.length > 0) {
+    return 'pseudoexudate'
+  }
+
+  if (contextSuggestsInfection(input)) {
+    return 'infection'
+  }
+
+  if (contextSuggestsTb(input)) {
+    return 'tb'
+  }
+
+  if (contextSuggestsMalignancy(input)) {
+    if ((input.negativeCytologyCount ?? 0) >= 2 && !input.cytologyPositive) {
+      return 'malignancyEscalate'
+    }
+
+    return 'malignancyCytology'
+  }
+
+  if (lightCriteria.classification === 'transudate') {
+    return 'transudate'
+  }
+
+  return 'exudateGeneric'
+}
+
 function buildRoutineStudies(input: PleuralFluidInput) {
   const studies = [
     'Gross appearance and odor at the bedside',
@@ -535,6 +774,21 @@ function buildRoutineStudies(input: PleuralFluidInput) {
   }
 
   return studies
+}
+
+/** Locale-independent routine-study codes mirroring {@link buildRoutineStudies}. */
+function buildRoutineStudyCodes(input: PleuralFluidInput): RoutineStudyCode[] {
+  const codes: RoutineStudyCode[] = ['grossAppearance', 'proteinLdh', 'ph', 'glucose', 'cellCount']
+
+  if (contextSuggestsInfection(input)) {
+    codes.push('gramStainCulture')
+  }
+
+  if (contextSuggestsMalignancy(input)) {
+    codes.push('cytology')
+  }
+
+  return codes
 }
 
 function buildTargetedStudies(
@@ -584,4 +838,47 @@ function buildTargetedStudies(
   }
 
   return [...studies]
+}
+
+/** Locale-independent targeted-study codes mirroring {@link buildTargetedStudies}. */
+function buildTargetedStudyCodes(
+  input: PleuralFluidInput,
+  findings: readonly InterpretationFinding[],
+): TargetedStudyCode[] {
+  const codes = new Set<TargetedStudyCode>()
+  const hasChylothorax = findings.some((finding) => finding.code === 'chylothorax')
+
+  if (input.appearance === 'milky' || contextSuggestsLymphaticLeak(input) || hasChylothorax) {
+    codes.add('lipids')
+  }
+
+  if (input.appearance === 'bloody' || input.ultrasound === 'hematocrit-sign') {
+    codes.add('hematocrit')
+  }
+
+  if (contextSuggestsTb(input)) {
+    codes.add('ada')
+  }
+
+  if (input.clinicalContext === 'pancreatic-esophageal' || input.amylase !== undefined) {
+    codes.add('amylase')
+  }
+
+  if (input.appearance === 'green') {
+    codes.add('bilirubin')
+  }
+
+  if (input.appearance === 'urine-odor' || input.pleuralToSerumCreatinineRatio !== undefined) {
+    codes.add('creatinine')
+  }
+
+  if (input.clinicalContext === 'autoimmune') {
+    codes.add('autoimmune')
+  }
+
+  if (!codes.size) {
+    codes.add('branchPoint')
+  }
+
+  return [...codes]
 }

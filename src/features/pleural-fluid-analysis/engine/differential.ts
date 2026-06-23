@@ -7,7 +7,9 @@ import type {
   DifferentialRuleDomain,
   DifferentialRuleKey,
   DifferentialSummary,
+  DiseaseProfile,
   DiseaseRarity,
+  LensLabelCode,
   PleuralFluidInput,
 } from './types'
 
@@ -37,11 +39,12 @@ const rarityCap: Record<DiseaseRarity, number> = {
 export function scoreDifferential(
   input: PleuralFluidInput,
   options: DifferentialOptions,
+  profiles: readonly DiseaseProfile[] = pleuralDiseaseProfiles,
 ): DifferentialSummary {
   const contextEmphasis = clamp(options.contextEmphasis, 0, 100)
   const raritySensitivity = clamp(options.raritySensitivity, 0, 100)
   const domainWeights = getDomainWeights(contextEmphasis)
-  const results = pleuralDiseaseProfiles
+  const results = profiles
     .map((disease) => {
       const prior =
         rarityPrior[disease.rarity] + (raritySensitivity / 100) * rarityBonus[disease.rarity]
@@ -97,6 +100,7 @@ export function scoreDifferential(
     visibleResults,
     hiddenCount: Math.max(0, results.length - visibleResults.length),
     lensLabel: getLensLabel(contextEmphasis, raritySensitivity),
+    lensLabelCode: getLensLabelCode(contextEmphasis, raritySensitivity),
   }
 }
 
@@ -143,6 +147,30 @@ function getLensLabel(contextEmphasis: number, raritySensitivity: number) {
   }
 
   return 'Balanced diagnostic lens'
+}
+
+/**
+ * Locale-independent lens-label code mirroring {@link getLensLabel}. The UI maps
+ * it to a localized string via `pleuralFluidAnalysis.lens.<code>`.
+ */
+function getLensLabelCode(contextEmphasis: number, raritySensitivity: number): LensLabelCode {
+  if (contextEmphasis < 30 && raritySensitivity < 35) {
+    return 'broadCommon'
+  }
+
+  if (contextEmphasis < 40) {
+    return 'broadLabFirst'
+  }
+
+  if (contextEmphasis > 75 && raritySensitivity > 65) {
+    return 'contextHeavyRare'
+  }
+
+  if (contextEmphasis > 70) {
+    return 'narrowContext'
+  }
+
+  return 'balanced'
 }
 
 function matchesRule(input: PleuralFluidInput, rule: DifferentialRule) {

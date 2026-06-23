@@ -1,0 +1,1633 @@
+{
+  "common": {
+    "siteName": "介入肺病学教育",
+    "shortBrand": "IP Lab",
+    "skipToContent": "跳到内容",
+    "search": "搜索",
+    "signIn": "登录",
+    "admin": "管理员",
+    "logOut": "退出登录",
+    "loggingOut": "正在退出",
+    "welcome": "欢迎，<userName>{name}</userName>",
+    "educationalUseOnly": "仅供教育使用。"
+  },
+  "language": {
+    "label": "语言",
+    "choose": "选择语言",
+    "current": "当前语言",
+    "reviewed": "已审核翻译",
+    "planned": "计划支持的语言"
+  },
+  "metadata": {
+    "title": "介入肺病学教育",
+    "description": "面向介入肺病学社区的教育与创新中心。"
+  },
+  "navigation": {
+    "primary": "主导航",
+    "modules": "模块",
+    "openMenu": "打开导航菜单",
+    "mobileLabel": "移动导航",
+    "navigate": "导航",
+    "mobileDescription": "探索 EBUS 培训、播客、解剖、Nav Bronch、FluoroView 和资源。",
+    "searchResources": "搜索资源",
+    "searchResourcesAndGuides": "搜索资源和指南",
+    "searchPlaceholder": "搜索资源和指南",
+    "display": "显示",
+    "items": {
+      "ebusTraining": {
+        "title": "EBUS 培训",
+        "shortTitle": "EBUS",
+        "description": "旋钮操作、淋巴结分站和模拟器模块"
+      },
+      "ebusVirtualBronch": {
+        "title": "EBUS 虚拟支气管镜",
+        "shortTitle": "EBUS VB",
+        "description": "同步虚拟支气管镜模拟器的管理员预览"
+      },
+      "podcastLibrary": {
+        "title": "播客库",
+        "shortTitle": "播客",
+        "description": "五种语言的 journal club 音频讨论"
+      },
+      "tnm9": {
+        "title": "TNM-9 分期",
+        "shortTitle": "TNM-9",
+        "description": "独立肺癌分期模块"
+      },
+      "anatomy": {
+        "title": "3D 解剖",
+        "shortTitle": "解剖",
+        "description": "3D 与交互式解剖查看器"
+      },
+      "boardPrep": {
+        "title": "IP Board 备考",
+        "shortTitle": "备考",
+        "description": "交互式复习章节"
+      },
+      "fluoroview": {
+        "title": "FluoroView",
+        "shortTitle": "FluoroView",
+        "description": "C 臂气道模拟实验室"
+      },
+      "bronchNavigation": {
+        "title": "支气管导航",
+        "shortTitle": "Nav Bronch",
+        "description": "从 CT 到支气管镜的导航模拟器"
+      },
+      "pleuralProcedures": {
+        "title": "胸膜操作",
+        "shortTitle": "胸膜",
+        "description": "胸膜疾病与操作模块"
+      },
+      "resources": {
+        "title": "资源",
+        "shortTitle": "资源",
+        "description": "Creative Commons 资料与学习辅助"
+      },
+      "socalEbusCourse": {
+        "title": "南加州 EBUS 课程",
+        "shortTitle": "EBUS 课程",
+        "description": "面向 Southern California EBUS Course 学员"
+      },
+      "rapidOnsiteCytology": {
+        "title": "现场快速细胞学",
+        "shortTitle": "细胞学",
+        "description": "ROSE 与 Diff-Quik 玻片判读训练器"
+      },
+      "introBronchoscopy": {
+        "title": "支气管镜入门",
+        "shortTitle": "入门",
+        "description": "基础镜身尺寸、到达范围和工具适配模块"
+      },
+      "ipRegistry": {
+        "title": "IP 注册系统",
+        "shortTitle": "注册",
+        "description": "启动 Procedure Suite 界面"
+      },
+      "comingSoon": {
+        "title": "即将推出",
+        "shortTitle": "即将推出",
+        "description": "即将发布的胸膜、支气管镜和硬质支气管镜模块"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "实用学习工具、可打印模型和现代课程，推动全球气道教育。为临床医生、教育者和学员而建。",
+    "motion": "偏好低动态体验？在操作系统设置中启用，我们会自动匹配。",
+    "explore": "探索",
+    "learning": "学习",
+    "comingSoon": "即将推出",
+    "home": "首页",
+    "privacy": "隐私",
+    "terms": "条款",
+    "codeOfConduct": "行为准则",
+    "copyright": "© {year} 介入肺病学教育。仅供教育使用。"
+  },
+  "home": {
+    "heroEyebrow": "介入肺病学教育",
+    "heroTitle": "介入肺病学的教育与创新",
+    "heroBody": "探索 EBUS 培训、journal club 播客、3D 解剖、Nav Bronch、board 复习和 FluoroView 模拟模块，服务介入肺病学学习者和教育者。",
+    "openEbus": "打开 EBUS 培训",
+    "browsePodcasts": "浏览播客库",
+    "launchCatalog": "上线目录",
+    "coreModules": "核心学习模块",
+    "coreModulesBody": "从已面向学习者开放的模块开始：EBUS 培训、TNM-9 分期、3D 解剖、board 复习、journal club 播客、Nav Bronch、FluoroView 和教学资源。",
+    "socalParticipants": "南加州 EBUS 课程学员",
+    "participantCourse": "学员课程",
+    "participantTitle": "Southern California EBUS Course 学员",
+    "participantBody": "完整课程门户仍对注册学员开放，包含讲座路径、问卷、测试、进度跟踪和课程专属材料。EBUS 培训资源也可在上方单独访问。",
+    "openCoursePortal": "打开课程门户",
+    "roadmap": "路线图",
+    "upcomingModules": "即将推出的模块",
+    "upcomingBody": "下一批公开发布将聚焦胸膜疾病入门、硬质支气管镜基础和支气管镜入门。",
+    "viewComingSoon": "查看即将推出",
+    "cards": {
+      "podcast": {
+        "badge": "新 · 音频",
+        "title": "Journal Club 播客",
+        "description": "收听以文章为中心的 IP journal club 讨论，支持英语、西班牙语、普通话、阿拉伯语和韩语。",
+        "cta": "浏览播客"
+      },
+      "ebus": {
+        "badge": "EBUS",
+        "title": "EBUS 培训",
+        "description": "开放旋钮操作、纵隔分站和 EBUS 模拟器模块，无需课程学员限制。",
+        "cta": "打开 EBUS 培训"
+      },
+      "tnm": {
+        "badge": "分期",
+        "title": "TNM-9 分期",
+        "description": "独立肺癌分期练习，包含描述符参考、分期分组、N 图谱和病例。",
+        "cta": "打开 TNM-9"
+      },
+      "anatomy": {
+        "badge": "3D 解剖",
+        "title": "交互式解剖查看器",
+        "description": "通过 CT 平面和肺段控制探索气道、纵隔、胸膜和介入相关 3D 解剖。",
+        "cta": "浏览解剖"
+      },
+      "board": {
+        "badge": "Board 复习",
+        "title": "IP Board Prep 章节",
+        "description": "基于病例覆盖恶性、良性和操作领域，对应介入肺病学复习内容。",
+        "cta": "开始复习"
+      },
+      "fluoro": {
+        "badge": "模拟",
+        "title": "FluoroView",
+        "description": "练习 CT 到透视定位、C 臂角度、气道叠加和非诊断图像控制。",
+        "cta": "启动 FluoroView"
+      },
+      "nav": {
+        "badge": "导航",
+        "title": "支气管导航训练器",
+        "description": "驾驶虚拟支气管镜完成分支选择，并关联 CT 平面、气道视图和目标。",
+        "cta": "开始导航"
+      },
+      "intro": {
+        "badge": "支气管镜",
+        "title": "支气管镜入门",
+        "description": "用于镜身尺寸、气道到达概念和器械兼容性的基础工具。",
+        "cta": "打开入门模块"
+      },
+      "pleural": {
+        "badge": "胸膜",
+        "title": "胸膜操作",
+        "description": "学习胸膜疾病、超声模式识别、胸水分析、气胸路径和引流系统。",
+        "cta": "打开胸膜模块"
+      },
+      "resources": {
+        "badge": "资源",
+        "title": "资源库",
+        "description": "浏览 Creative Commons 医学图像和面向临床构建者的学习指南。",
+        "cta": "浏览资源"
+      }
+    }
+  },
+  "search": {
+    "title": "搜索",
+    "description": "搜索资源、board 复习章节、模拟工具和临床指南。",
+    "heading": "搜索资源和指南",
+    "body": "查找 board 复习章节、医学图像集合、模拟工具和临床构建者资源。",
+    "placeholder": "试试 EBUS、胸膜、气道支架、编码或安全",
+    "resultsFor": "“{query}”的结果",
+    "suggested": "推荐起点",
+    "resultCount": "{count, plural, one {# 个结果} other {# 个结果}}",
+    "noMatches": "尚无匹配。试试更宽泛的词，例如气道、EBUS、胸膜、编码、解剖或安全。"
+  },
+  "journalClub": {
+    "defaultLanguage": "mandarin",
+    "availableIn": "提供 {count} 种语言",
+    "languageNames": {
+      "english": "英语",
+      "spanish": "西班牙语",
+      "mandarin": "普通话",
+      "arabic": "阿拉伯语",
+      "korean": "韩语"
+    }
+  },
+  "thoracentesisPlanner": {
+    "overview": {
+      "metaTitle": "胸腔穿刺与胸膜入路",
+      "metaDescription": "学习安全的胸膜入路、血管风险和测压；练习规划穿刺并预测引流曲线；然后检验你的推理。",
+      "headerTitle": "胸腔穿刺与胸膜入路",
+      "headerDescription": "从基本原则规划一次安全的胸腔穿刺：在哪里进针是安全的、如何看待出血风险，以及胸膜压力能告诉你关于肺的什么信息。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "安全三角、血管风险、出血风险判断、测压和停止规则。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "选择安全窗、设置出血风险输入并预测引流曲线。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "关于入路、血管风险、测压和何时停止的八道题。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "胸腔穿刺模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "安全入路、测压和停止规则"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "规划安全穿刺并预测引流曲线"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南与测压来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习胸腔穿刺",
+      "metaDescription": "安全的胸膜入路、肋间血管风险、个体化出血风险、胸膜测压，以及何时停止引流。",
+      "headerTitle": "学习胸腔穿刺",
+      "headerDescription": "在操作前规划穿刺：在哪里进针是安全的、如何看待出血风险，以及胸膜压力揭示了关于肺的什么。",
+      "intro": "核心模块涵盖规划安全穿刺和解读测压曲线所需的全部内容。打开「深入了解」可查看复张性肺水肿、特殊情况和 board 级别的技术细节。",
+      "boardSourceLabel": "出自 board 章节：胸腔积液与胸膜介入",
+      "progressLabel": "标记「学习」为完成"
+    },
+    "practice": {
+      "metaTitle": "练习胸腔穿刺",
+      "metaDescription": "规划安全的入路窗、设置出血风险输入，并在揭示教学要点前预测测压引流曲线。",
+      "headerTitle": "练习：规划穿刺",
+      "headerDescription": "选择安全窗、设置该病例的出血风险输入，然后在查看测压结论前确定你的引流预测。",
+      "progressLabel": "标记「练习」为完成"
+    },
+    "assessment": {
+      "metaTitle": "胸腔穿刺评估",
+      "metaDescription": "检验你对安全入路、肋间血管风险、出血风险、测压和停止规则的推理。",
+      "headerTitle": "评估",
+      "headerDescription": "八道题，检验你能否将解剖和压力曲线转化为安全方案。",
+      "checkTitle": "胸腔穿刺自测",
+      "checkIntro": "回答每道题，然后揭示解释。这些题目对应「学习」目标。",
+      "progressLabel": "标记「评估」为完成"
+    },
+    "references": {
+      "metaTitle": "胸腔穿刺参考文献",
+      "metaDescription": "支撑胸腔穿刺模块教学的指南与测压来源。",
+      "headerTitle": "参考文献",
+      "headerDescription": "支撑入路安全与引流教学的指南与测压来源。",
+      "heading": "临床参考文献"
+    },
+    "planner": {
+      "scaffoldTitle": "胸腔穿刺安全与引流行为",
+      "objectives": [
+        "规划更安全的外侧入路窗，避免常见的解剖陷阱。",
+        "把出血风险输入作为规划提示，而非单一的截断规则。",
+        "预测可复张或不可复张肺的引流压力和症状如何变化。"
+      ],
+      "howToUse": [
+        "查看入路示意图，选择你想测试的进针路径。",
+        "根据病例调整出血风险和引流控制。",
+        "在揭示测压教学要点前预测引流行为。"
+      ],
+      "clinicalAnchor": "一名有症状的单侧胸腔积液患者正准备接受超声引导下胸腔穿刺。团队必须选择安全窗、评估出血风险，并决定何时减缓或停止引流。",
+      "revealLabel": "揭示引流结论",
+      "keyTakeaway": "超声确认在哪里进针；持续的症状和压力行为决定引流如何进行。出血决策仍需考虑指征、紧迫性、用药时机和当地政策。",
+      "matchHeading": "预测与曲线一致",
+      "compareHeading": "对比你的预测",
+      "pleuralPressureLabel": "胸膜压力",
+      "symptomsLabel": "症状",
+      "noSymptoms": "未触发症状",
+      "rpeRiskLabel": "复张性肺水肿风险",
+      "stopSlow": "当出现症状、压力非常负或快速大量引流引起担忧时，停止或减缓引流。",
+      "triangleHeading": "安全三角",
+      "triangleBody": "使用示意图演练由胸大肌、背阔肌、腋窝、肋间隙和膈肌界定的外侧窗。",
+      "vesselHeading": "肋间血管风险",
+      "entryLegend": "进针位置",
+      "entry": {
+        "posterior-medial": "后方或内侧",
+        "mid-axillary": "腋中线",
+        "lateral-safe": "外侧窗",
+        "too-low": "过低"
+      },
+      "vesselRiskLine": "{label}：{level}教学风险",
+      "manometryHeading": "测压引流训练器",
+      "expectedPatternLabel": "预期的肺复张模式",
+      "archetype": {
+        "expandable": "可复张",
+        "partiallyExpandable": "部分可复张",
+        "trapped": "被困或不可复张"
+      },
+      "drainedVolumeLabel": "引流量：{ml} mL",
+      "predictLegend": "预测引流行为",
+      "predictions": {
+        "gradual": {
+          "label": "压力逐渐下降",
+          "description": "在更大量或出现症状之前，引流可被耐受。"
+        },
+        "biphasic": {
+          "label": "后期压力急剧下降",
+          "description": "早期引流看似合理，随后压力下降更快。"
+        },
+        "earlyNegativePressure": {
+          "label": "早期负压预警",
+          "description": "症状和明显的压力下降可在小容量时出现。"
+        }
+      },
+      "bleedingHeading": "出血风险",
+      "inrLabel": "INR",
+      "plateletsLabel": "血小板",
+      "antiplateletLabel": "抗血小板治疗",
+      "antiplatelet": {
+        "none": "无",
+        "single": "单药",
+        "dual": "双联治疗"
+      },
+      "anticoagulantLabel": "抗凝剂",
+      "anticoagulant": {
+        "none": "无",
+        "held": "按计划停用",
+        "active": "正在治疗剂量"
+      },
+      "bleedingRiskLabel": "{level}风险"
+    },
+    "triangle": {
+      "title": "安全三角示意图",
+      "desc": "胸壁教学示意图，显示胸大肌、背阔肌、腋窝、膈肌界线、肋间隙以及首选的外侧超声窗。",
+      "axilla": "腋窝",
+      "pectoralis": "胸大肌",
+      "latissimus": "背阔肌",
+      "diaphragm": "膈肌界线",
+      "window": "首选窗"
+    },
+    "symptom": {
+      "chestPressure": "胸部压迫感",
+      "cough": "咳嗽",
+      "throatTickle": "咽喉发痒",
+      "pleuriticPain": "胸膜性疼痛"
+    },
+    "riskLevel": {
+      "lower": "较低",
+      "moderate": "中等",
+      "higher": "较高",
+      "low": "低",
+      "elevated": "偏高",
+      "high": "高"
+    },
+    "vesselRisk": {
+      "posterior-medial": {
+        "label": "后方/内侧",
+        "teachingPoint": "脊柱附近的后方和内侧入路，肋间血管更易变异且暴露；向外侧扫查以寻找更安全的窗。"
+      },
+      "too-low": {
+        "label": "低于安全的膈肌界线",
+        "teachingPoint": "进针过低会危及膈肌和腹腔结构；重新定位积液并保持膈肌可见。"
+      },
+      "mid-axillary": {
+        "label": "腋中线",
+        "teachingPoint": "当超声确认积液深度、肋间隙解剖和膈肌位置时，腋中线入路可能是合适的。"
+      },
+      "lateral-safe": {
+        "label": "经超声确认的外侧窗",
+        "teachingPoint": "经超声确认、膈肌界线清晰的外侧积液是首选的教学目标。"
+      }
+    },
+    "drainageTeaching": {
+      "expandable": "可复张肺表现为压力逐渐下降和症状限制性引流。",
+      "partiallyExpandable": "部分可复张肺呈双相曲线：早期引流看似可耐受，随后压力下降更快。",
+      "trapped": "被困肺起始为负压，并在小引流量时变得非常负；症状可能较早出现。"
+    },
+    "bleeding": {
+      "reasons": {
+        "inrHigh": "在本教学风险模型中，INR 为 3 或更高。",
+        "plateletsLow": "在本教学风险模型中，血小板为 20,000/uL 或更低。",
+        "anticoagActive": "正在进行治疗性抗凝。",
+        "dapt": "双联抗血小板治疗增加了操作规划的复杂性。",
+        "none": "本病例没有高风险的实验室或用药提示。"
+      },
+      "teachingPoint": "胸膜操作的出血决策是个体化的；超声引导、指征、紧迫性、当地政策和用药时机比单一的实验室数值更重要。"
+    }
+  },
+  "pneumothoraxPathway": {
+    "overview": {
+      "metaTitle": "气胸处理路径",
+      "metaDescription": "学习以生理优先的气胸处理路径，练习将一个病例并排通过 ACCP 2001 和 BTS 2023，然后检验你的推理。",
+      "headerTitle": "气胸处理路径",
+      "headerDescription": "先看生理，再做选择：把急症与稳定患者区分开，看看 ACCP 2001 与 BTS 2023 框架在哪里一致、在哪里分歧。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "稳定性、PSP 与 SSP、ACCP 与 BTS 的分歧、持续性漏气、复发。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "构建一个病例，看看 ACCP 2001 与 BTS 2023 如何一致或分歧。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "关于稳定性、框架选择、漏气和复发的八道题。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "气胸模块各部分",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "稳定性、PSP 与 SSP、ACCP 与 BTS、漏气"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "将一个病例并排通过两个框架"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习气胸",
+      "metaDescription": "稳定性优先、原发性与继发性、ACCP 与 BTS 的分歧、持续性漏气的处理以及复发预防。",
+      "headerTitle": "学习气胸处理路径",
+      "headerDescription": "从生理开始，区分原发性与继发性，并准确理解两大框架在哪里一致、在哪里分歧。",
+      "intro": "核心模块承载了从急症到复发预防的整个决策。打开「深入了解」可查看肺部超声征象、APF 与 BPF 以及 board 级别的算法和表格。",
+      "boardSourceLabel": "摘自 board 章节：气胸、长期漏气与支气管胸膜瘘",
+      "progressLabel": "标记「学习」为已完成"
+    },
+    "practice": {
+      "metaTitle": "练习气胸",
+      "metaDescription": "构建一个气胸病例，确定处理方案，然后并排查看 ACCP 2001 与 BTS 2023 如何评估它。",
+      "headerTitle": "练习：两个框架并排比较",
+      "headerDescription": "设定病例，确定处理方案，然后揭示 ACCP 2001 与 BTS 2023 如何评估它——以及它们在哪里一致或分歧。",
+      "progressLabel": "标记「练习」为已完成"
+    },
+    "assessment": {
+      "metaTitle": "气胸评估",
+      "metaDescription": "检验你对稳定性、PSP 与 SSP、ACCP 与 BTS 的分歧、持续性漏气以及复发预防的推理。",
+      "headerTitle": "评估",
+      "headerDescription": "八道题，检验你能否将生理放在首位并选择正确的路径。",
+      "checkTitle": "气胸自测",
+      "checkIntro": "回答每道题，然后揭示解析。这些题目对应「学习」目标。",
+      "progressLabel": "标记「评估」为已完成"
+    },
+    "references": {
+      "metaTitle": "气胸参考文献",
+      "metaDescription": "气胸处理路径教学背后的指南来源。",
+      "headerTitle": "参考文献",
+      "headerDescription": "以生理优先的路径与框架比较背后的指南来源。",
+      "heading": "临床参考文献"
+    },
+    "pathway": {
+      "scaffoldTitle": "气胸：ACCP 2001 与 BTS 2023 的比较",
+      "objectives": [
+        "将一个病例分别通过 American College of Chest Physicians 2001 和 British Thoracic Society 2023 框架。",
+        "解释为什么不稳定患者会趋于一致，而稳定的原发性自发性气胸却可能出现分歧。",
+        "判断推荐意见是由大小、症状、患者优先事项还是漏气的时机所驱动。"
+      ],
+      "howToUse": [
+        "选择一个情景，查看稳定性、大小和症状的细节。",
+        "在揭示指南比较之前预测处理方案。",
+        "比较两张卡片，判断它们为何一致或分歧。"
+      ],
+      "scenarioLabel": "情景",
+      "dataType": "类型",
+      "dataSymptoms": "症状",
+      "dataSizeAccp": "ACCP 所用大小",
+      "dataAirLeak": "漏气",
+      "sizeLarge": "大量",
+      "sizeSmall": "少量",
+      "airLeakNone": "无",
+      "airLeakDays": "{days} 天",
+      "predictHeading": "在揭示比较之前预测处理方案",
+      "revealLabel": "揭示两个框架",
+      "frameworksAgree": "两个框架一致",
+      "frameworksDiverge": "两个框架分歧",
+      "matchesPrediction": "与你的预测一致",
+      "recurrencePreventionLabel": "复发预防",
+      "keyTakeaway": "ACCP 2001 作为以大小和稳定性为基础的历史性参照很有用。BTS 2023 更强调症状、患者优先事项、门诊路径以及可靠的随访。"
+    },
+    "disposition": {
+      "observation": "观察或保守处理",
+      "aspiration": "针吸",
+      "ambulatory": "门诊装置",
+      "chest-drain": "胸腔引流",
+      "escalate": "升级至专科",
+      "emergency": "紧急减压"
+    },
+    "pneumothoraxType": {
+      "psp": "原发性自发性气胸",
+      "ssp": "继发性自发性气胸",
+      "iatrogenic": "医源性气胸",
+      "traumatic": "外伤性气胸"
+    },
+    "symptomBurden": {
+      "minimal": "症状轻微",
+      "moderate": "中等症状",
+      "severe": "症状严重"
+    },
+    "headline": {
+      "urgentDecompression": "紧急减压与引流",
+      "escalatePal": "因持续性漏气升级至专科",
+      "chestDrainAdmission": "胸腔引流并收入院",
+      "observeRepeat": "观察并复评",
+      "needleAspiration": "针吸或导管引流",
+      "monitoredIntervention": "监护性干预路径",
+      "conservativeSafetyNet": "带安全网的保守处理",
+      "shortTermDrainage": "短期引流以快速缓解症状",
+      "ambulatoryPathway": "门诊装置或针吸路径"
+    },
+    "rationale": {
+      "accpStabilityNotMet": "未满足 American College of Chest Physicians 的稳定性标准，因此生理优先于大小。",
+      "accpPalEarly": "2001 框架对持续性漏气升级更早，大约在引流和系统检查后的第 3 至 5 天。",
+      "accpSspReserve": "继发性自发性气胸的呼吸储备较少，因此历史框架倾向于引流和监测。",
+      "accpStableVitals": "患者符合历史上稳定患者的生命体征标准。",
+      "accpSmallPspObserve": "少量原发性自发性气胸在 ACCP 2001 中属于观察范畴。",
+      "accpLargeOrSymptomatic": "大量或明显的症状会使历史路径转向针吸或引流。",
+      "btsTensionEmergency": "British Thoracic Society 的指南将张力性生理状态或明显低氧视为高风险急症。",
+      "btsPalWindow": "当漏气持续到大约第 5 至 7 天时，2023 路径采用有时间界限的复评与升级。",
+      "btsHighRiskContext": "高风险特征，包括基础肺部疾病或机械通气/外伤背景，倾向于监护性干预。",
+      "btsSizeDeemphasized": "2023 路径对稳定、症状轻微的原发性自发性气胸淡化了大小的作用。",
+      "btsProcedureAvoidance": "当随访和再就诊注意事项可靠时，避免操作是合理的。",
+      "btsSevereRelief": "严重症状会使患者优先事项的考量转向快速缓解和监护性引流。",
+      "btsStableSymptomaticChoice": "对于稳定、有症状的原发性自发性气胸，该路径会权衡患者偏好、当地可及性以及快速缓解症状。"
+    },
+    "comparisonNote": {
+      "converge": "两个框架在此趋于一致，这通常意味着生理、高风险背景或持续性漏气的时机正在主导决策。",
+      "sizeVsSymptom": "经典分歧：ACCP 2001 依据大小做出反应，而 BTS 2023 优先考虑症状、患者优先事项以及随访的可靠性。",
+      "palTiming": "分歧在于时机：ACCP 2001 在 BTS 2023 的第 5 天窗口之前就对持续性漏气升级。",
+      "genericDivergence": "两个框架出现分歧；判断驱动差异的是大小、症状负担、当地门诊条件还是风险背景。"
+    },
+    "recurrencePrevention": {
+      "highRiskOccupation": "航空或潜水等高风险职业会降低进行确定性复发预防讨论的门槛。",
+      "recurrenceOrSsp": "复发或继发性自发性气胸应促使开展预防宣教、戒烟、胸膜固定术或手术选择以及专科随访。",
+      "firstPsp": "对于首次原发性自发性气胸，应就复发风险、戒烟、随访和再就诊注意事项进行宣教。"
+    }
+  },
+  "pleuralFluidAnalysis": {
+    "overview": {
+      "metaTitle": "胸腔积液分析",
+      "metaDescription": "学习 Light 标准和假性渗出液陷阱，在鉴别诊断驾驶舱中练习，然后将所见与疾病配对。",
+      "headerTitle": "胸腔积液分析",
+      "headerDescription": "将积液数值与临床病史结合：对积液分类、核对假性渗出液，并让外观引导有针对性的检查。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "Light 标准、假性渗出液、有针对性的检查，以及解读外观。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "输入积液数值，观察分层鉴别诊断和 Light 量表如何响应。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "将完整的所见模式与最可能的诊断配对。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "胸腔积液分析模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "学习目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "Light 标准、假性渗出液、有针对性的检查"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "交互式鉴别诊断驾驶舱"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "将所见与疾病配对"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习胸腔积液分析",
+      "metaDescription": "Light 标准、假性渗出液陷阱、有针对性的胸腔积液检查、大体外观，以及把数值转化为鉴别诊断。",
+      "headerTitle": "学习胸腔积液分析",
+      "headerDescription": "对积液分类、核对假性渗出液，并让大体外观和临床病史驱动有针对性的检查。",
+      "intro": "核心板块带你从 Light 标准走到分层鉴别诊断。打开「深入了解」可查看有针对性检查的要点、罕见积液，以及 board 级别的路径和表格。",
+      "boardSourceLabel": "出自 board 章节：胸腔积液与胸膜介入",
+      "progressLabel": "标记“学习”完成"
+    },
+    "practice": {
+      "metaTitle": "练习胸腔积液分析",
+      "metaDescription": "在交互式驾驶舱中输入胸腔积液数值，观察 Light 标准量表和分层鉴别诊断的响应。",
+      "headerTitle": "练习：鉴别诊断驾驶舱",
+      "headerDescription": "输入积液数值和临床背景，然后观察 Light 标准、假性渗出液标记和分层鉴别诊断随你的操作而更新。",
+      "progressLabel": "标记“练习”完成"
+    },
+    "assessment": {
+      "metaTitle": "胸腔积液分析评估",
+      "metaDescription": "将完整的一组胸腔积液所见与最可能的诊断配对，包括经典陷阱和罕见积液。",
+      "headerTitle": "评估",
+      "headerDescription": "将完整的所见模式与诊断配对——罕见条目是有意混入的，用以检验何时某条线索会改变分支。",
+      "progressLabel": "标记“评估”完成"
+    },
+    "references": {
+      "metaTitle": "胸腔积液分析参考文献",
+      "metaDescription": "胸腔积液分析模块教学背后的指南来源。",
+      "headerTitle": "参考文献",
+      "headerDescription": "分类和升级教学背后的指南来源。",
+      "heading": "临床参考文献"
+    },
+    "header": {
+      "eyebrow": "胸膜操作"
+    },
+    "cockpit": {
+      "badge": "病例驾驶舱",
+      "title": "胸腔积液推理实验室",
+      "intro": "在各临床病例之间切换，改变积液特征，观察诊断推理如何围绕临床背景（而非仅凭生化）更新。",
+      "resetCase": "重置病例",
+      "clinicalFrame": "临床框架",
+      "fluidSnapshot": "积液快照",
+      "appearanceLabel": "外观",
+      "lightCriteriaLabel": "Light 标准",
+      "reconciledLabel": "核对后",
+      "teachingFocusLabel": "教学重点",
+      "clinicalContextLabel": "临床背景",
+      "ultrasoundLabel": "胸部超声",
+      "grossAppearanceLabel": "大体外观",
+      "pairedChemistry": "配对生化",
+      "phGlucoseCells": "pH、葡萄糖与细胞",
+      "targetedTests": "有针对性的检查",
+      "interpretation": "判读",
+      "proteinRatioMeter": "积液 / 血清蛋白",
+      "ldhRatioMeter": "积液 / 血清 LDH",
+      "ldhUlnMeter": "积液 LDH / 血清正常上限",
+      "cutoff": "截断值 {value}",
+      "pseudoexudateClues": "假性渗出液线索",
+      "rankedDifferential": "分层鉴别诊断",
+      "contextWeighted": "按背景加权",
+      "nextMove": "下一步",
+      "pitfallsToCheck": "需核查的陷阱",
+      "frameworkBadge": "框架",
+      "approachMap": "处理思路图",
+      "step": "第 {number} 步",
+      "patternLibraryBadge": "模式库",
+      "highYieldBranches": "高产率分支",
+      "branchPoint": "分支点",
+      "routineStudies": "常规检查",
+      "targetedStudies": "有针对性的检查",
+      "sources": "来源"
+    },
+    "fields": {
+      "serumProtein": "血清蛋白",
+      "pleuralProtein": "胸腔蛋白",
+      "serumLdh": "血清 LDH",
+      "pleuralLdh": "胸腔 LDH",
+      "serumLdhUln": "血清 LDH 正常上限",
+      "ntProBnp": "NT-proBNP",
+      "serumAlbumin": "血清白蛋白",
+      "pleuralAlbumin": "胸腔白蛋白",
+      "pleuralPH": "胸腔 pH",
+      "pleuralGlucose": "胸腔葡萄糖",
+      "nucleatedCells": "有核细胞",
+      "neutrophils": "中性粒细胞",
+      "lymphocytes": "淋巴细胞",
+      "eosinophils": "嗜酸性粒细胞",
+      "mesothelialCells": "间皮细胞",
+      "triglycerides": "甘油三酯",
+      "cholesterol": "胆固醇",
+      "ada": "ADA",
+      "amylase": "淀粉酶",
+      "pfBloodHct": "积液/血液 Hct",
+      "pfSerumCreatinine": "积液/血清肌酐",
+      "pfSerumBilirubin": "积液/血清胆红素",
+      "cytologyPositive": "细胞学 +",
+      "microbiologyPositive": "微生物学 +",
+      "chylomicrons": "乳糜微粒"
+    },
+    "category": {
+      "transudate": "漏出液",
+      "exudate": "渗出液",
+      "Pseudoexudate": "假性渗出液"
+    },
+    "appearance": {
+      "straw": "草黄色",
+      "serous": "浆液性",
+      "serosanguineous": "血清血性",
+      "bloody": "血性",
+      "milky": "乳白色",
+      "turbid": "浑浊",
+      "purulent": "脓性",
+      "green": "绿色",
+      "food-particles": "食物颗粒",
+      "urine-odor": "尿味"
+    },
+    "differential": {
+      "badge": "鉴别诊断引擎",
+      "title": "调整诊断视角",
+      "contextEmphasis": "背景权重",
+      "contextEmphasisLeft": "化验拓宽",
+      "contextEmphasisRight": "背景收窄",
+      "raritySensitivity": "罕见病敏感度",
+      "raritySensitivityLeft": "常见优先",
+      "raritySensitivityRight": "允许罕见",
+      "currentLens": "当前视角",
+      "lensHelp": "背景设置越低，模式匹配越宽泛。设置越高，越偏重床旁病史和超声，因此列表会围绕当前临床框架收窄。",
+      "mostProbable": "最可能的病因",
+      "rankedFromFindings": "根据所输入所见的分层鉴别诊断",
+      "topScore": "最高分",
+      "matchingClues": "匹配线索",
+      "teachingMove": "教学要点"
+    },
+    "lens": {
+      "broadCommon": "宽泛的常见模式视角",
+      "broadLabFirst": "宽泛的化验优先视角",
+      "contextHeavyRare": "侧重背景的罕见病视角",
+      "narrowContext": "聚焦临床背景的视角",
+      "balanced": "平衡的诊断视角"
+    },
+    "rarity": {
+      "common": "常见",
+      "uncommon": "少见",
+      "rare": "罕见",
+      "very rare": "极罕见"
+    },
+    "difficulty": {
+      "core": "核心",
+      "advanced": "进阶",
+      "rare": "罕见"
+    },
+    "quiz": {
+      "badge": "测验模式",
+      "title": "将胸膜所见与疾病配对",
+      "reset": "重置",
+      "questionProgress": "第 {current} 题，共 {total} 题",
+      "score": "测验得分",
+      "correct": "正确",
+      "notQuite": "不太对",
+      "youChose": "你选择了 {name}。",
+      "bestAnswer": "最佳答案是 {name}。",
+      "memoryHook": "记忆要点",
+      "nextQuestion": "下一题",
+      "emptyState": "选择与整体模式最相关的诊断。罕见条目是有意混入的；目标不是记住单一的实验室截断值，而是识别何时某条线索会改变分支。",
+      "choiceMeta": "{family} · {rarity}"
+    },
+    "headlineCode": {
+      "pseudoexudate": "Light 标准为阳性，但核对结果更倾向于假性渗出液。",
+      "definitiveSignal": "{diagnosis} 具有特异性的胸腔积液信号。",
+      "exudatePattern": "这是渗出液模式；现在用临床背景加以收窄。",
+      "transudatePattern": "除非临床病史另有提示，否则这是漏出液模式。"
+    },
+    "reconciliationCode": {
+      "tooSmall": "极小的积液通常先是取样决策，其次才是生化决策。",
+      "pseudoexudate": "生化标签与床旁病史不一致。在这种情形下，梯度和 NT-proBNP 有助于避免对已利尿的全身性积液做不必要的有创检查。",
+      "transudateButPretest": "生化看起来像漏出液，但临床验前概率并不低。恶性肿瘤和其他竞争性病变偶尔会显得具有迷惑性的平淡。",
+      "exudateInfection": "渗出液这一标签在意料之中，但 pH、葡萄糖、LDH、超声和培养决定它是否表现为需要引流的胸膜感染。",
+      "exudateTb": "渗出液标签只是第一个分叉。淋巴细胞为主、暴露史、ADA 和胸膜活检策略推动诊断向前。",
+      "transudateAligned": "生化和初始框架与全身性压力或胶体渗透力的改变一致；但仍应核查单侧、血性、结节状或复发等打破该模式的特征。",
+      "probabilityShifter": "胸腔积液分析应被理解为概率的调节器：它缩小搜索范围，然后由病史、影像和所选检查来完成推理。"
+    },
+    "pseudoexudateReason": {
+      "proteinGradient": "血清-胸腔蛋白梯度 {value} g/dL，> 3.1",
+      "albuminGradient": "血清-胸腔白蛋白梯度 {value} g/dL，> 1.2",
+      "ntProBnp": "血清 NT-proBNP {value} pg/mL，> 1,500",
+      "weaklyPositive": "在全身性漏出液背景下，Light 标准仅为弱阳性"
+    },
+    "findings": {
+      "empyema": {
+        "diagnosis": "脓胸",
+        "strengthLabel": "确定性",
+        "rationale": "胸腔积液中的明显脓液即可诊断胸膜腔感染。",
+        "action": "引流胸膜腔并按胸膜感染治疗；若尚未送检则送微生物学。"
+      },
+      "malignantEffusion": {
+        "diagnosis": "恶性胸腔积液",
+        "strengthLabel": "确定性",
+        "rationale": "在合适的临床背景下，胸腔积液细胞学阳性可确立胸膜恶性肿瘤。",
+        "action": "对恶性肿瘤进行分期，使管理与预后和症状相匹配，并在适当时考虑分子检测。"
+      },
+      "chylothorax": {
+        "diagnosis": "乳糜胸",
+        "strengthLabel": "确定性",
+        "rationale": "胸腔甘油三酯高于 110 mg/dL，或甘油三酯中等但存在乳糜微粒，支持胸膜腔内存在乳糜。",
+        "action": "寻找创伤、胸外科手术、淋巴瘤、淋巴系统疾病，或与肝硬化相关的漏出性乳糜胸。"
+      },
+      "hemothorax": {
+        "diagnosis": "血胸",
+        "strengthLabel": "确定性",
+        "rationale": "胸腔积液血细胞比容超过血液血细胞比容的 50% 即定义为血胸。",
+        "action": "升级源头控制和引流规划；评估创伤、操作损伤、恶性肿瘤或抗凝。"
+      },
+      "urinothoraxCreatinine": {
+        "diagnosis": "尿胸",
+        "strengthLabel": "确定性",
+        "rationale": "积液/血清肌酐比值大于 1 支持尿液渗入胸膜腔。",
+        "action": "评估梗阻性尿路病变或泌尿生殖系统损伤；单纯胸膜引流通常会复发。"
+      },
+      "bilothorax": {
+        "diagnosis": "胆汁胸",
+        "strengthLabel": "确定性",
+        "rationale": "积液/血清胆红素比值大于 1 支持胸膜腔内存在胆汁。",
+        "action": "查找胆道病变或近期肝胆手术，并协调确定性的源头控制。"
+      },
+      "pancreaticopleuralFistula": {
+        "diagnosis": "胰源性胸膜瘘",
+        "strengthLabel": "确定性",
+        "rationale": "胸腔淀粉酶极高强烈提示胰液进入胸膜腔。",
+        "action": "评估慢性胰腺炎、假性囊肿和胰管漏；腹部影像和胰腺会诊通常比反复穿刺更重要。"
+      },
+      "esophagealPerforation": {
+        "diagnosis": "食管穿孔",
+        "strengthLabel": "确定性",
+        "rationale": "胸腔积液中的食物颗粒是食管破裂的高特异性线索。",
+        "action": "紧急升级以进行源头控制、广谱抗菌和食管评估。"
+      },
+      "urinothoraxOdor": {
+        "diagnosis": "尿胸",
+        "strengthLabel": "高度提示",
+        "rationale": "尿味是经典的大体观察线索，尤其在伴有同侧尿路梗阻或损伤时。",
+        "action": "检查积液/血清肌酐并评估尿路。"
+      },
+      "parapneumonic": {
+        "diagnosis": "复杂性肺炎旁积液",
+        "strengthLabel": "高度提示",
+        "rationale": "肺炎背景加上低 pH、低葡萄糖、高 LDH、有核细胞高或微生物学阳性，指向胸膜感染。",
+        "action": "不要把 Light 标准当作终点；评估是否需要置管引流、按培养结果用抗生素以及分隔处理。"
+      },
+      "tuberculous": {
+        "diagnosis": "结核性胸腔积液",
+        "strengthLabel": "高度提示",
+        "rationale": "以淋巴细胞为主的渗出液，伴有相符的暴露史和升高的 ADA，将鉴别诊断收窄至结核。",
+        "action": "怀疑时送分枝杆菌培养；若怀疑持续较高，胸膜活检可获取微生物学和药敏。"
+      },
+      "malignancyInPlay": {
+        "diagnosis": "恶性肿瘤仍需考虑",
+        "strengthLabel": "高度提示",
+        "rationale": "胸膜结节或强烈的癌症背景可能胜过不特异甚至漏出性的生化特征。",
+        "action": "送足量细胞学，若细胞学阴性而验前概率仍高，则考虑影像引导或胸腔镜下胸膜活检。"
+      },
+      "repeatedNegativeCytology": {
+        "diagnosis": "反复细胞学阴性",
+        "strengthLabel": "陷阱",
+        "rationale": "当影像或临床概率仍高时，两次非诊断性细胞学样本并不能排除恶性胸膜病变。",
+        "action": "停止仅做积液的循环，升级到胸膜组织诊断，如影像引导下活检或胸膜镜检查。"
+      },
+      "autoimmunePleuritis": {
+        "diagnosis": "类风湿或狼疮性胸膜炎",
+        "strengthLabel": "支持性",
+        "rationale": "伴有低 pH、低葡萄糖或高 LDH 的自身免疫背景可模仿胸膜感染。",
+        "action": "在仅锚定感染之前，结合血清学、关节/全身活动度、微生物学和影像加以核对。"
+      },
+      "eosinophilic": {
+        "diagnosis": "嗜酸性胸腔积液",
+        "strengthLabel": "支持性",
+        "rationale": "胸腔嗜酸性粒细胞高于 10% 提示胸膜腔内有气体或血液、既往胸腔穿刺、药物反应、石棉暴露、寄生虫、感染或恶性肿瘤。",
+        "action": "用病史和大体外观判断这是与操作相关的干扰还是诊断线索。"
+      },
+      "lymphocytePredominant": {
+        "diagnosis": "以淋巴细胞为主的积液",
+        "strengthLabel": "支持性",
+        "rationale": "明显的淋巴细胞为主将鉴别诊断收窄至结核、淋巴瘤、结节病、乳糜胸、被困肺、CABG 术后、黄甲综合征、尿毒症、药物原因和类风湿病。",
+        "action": "让时间线、暴露、影像和有针对性的检查决定下一个分叉。"
+      },
+      "lymphaticLeak": {
+        "diagnosis": "淋巴渗漏表型",
+        "strengthLabel": "支持性",
+        "rationale": "伴有手术、淋巴瘤、淋巴或黄甲背景的乳白或浑浊胸腔积液，应触发脂质检查。",
+        "action": "检查甘油三酯、胆固醇和乳糜微粒，而不要仅凭外观判断。"
+      },
+      "bloodInPleuralSpace": {
+        "diagnosis": "胸膜腔内出血",
+        "strengthLabel": "支持性",
+        "rationale": "血性液体可由恶性肿瘤、肺栓塞、创伤、心脏切开术后损伤、石棉性胸膜炎或血胸引起。",
+        "action": "当为大体血性时测量胸腔血细胞比容；不要把所有血清血性液体都当作血胸。"
+      }
+    },
+    "findingStrength": {
+      "definitive": "确定性",
+      "highly suggestive": "高度提示",
+      "supportive": "支持性",
+      "pitfall": "陷阱"
+    },
+    "nextActions": {
+      "tooSmall": [
+        "用超声确认该积液是否可安全取样。",
+        "若积液 < 1 cm 且患者临床稳定，则治疗或观察可能的病因。"
+      ],
+      "bilateralSystemic": [
+        "当病史明确且积液为双侧无回声时，治疗全身性病因。",
+        "若病程、侧别、发热、胸膜炎性疼痛或影像不再符合全身性诊断，则取样。"
+      ],
+      "definitiveFollowUp": "用其余的积液分析数据识别并发病变和管理风险。",
+      "pseudoexudate": [
+        "谨慎地重新归类为可能的全身性漏出液，并治疗潜在的 CHF、肾、肝或胶体渗透驱动因素。",
+        "重新评估反应；若积液持续、为单侧、变为血性或出现胸膜增厚，则取样或进一步影像检查。"
+      ],
+      "infection": [
+        "用胸腔 pH、葡萄糖、LDH、培养产率和超声分隔来判断引流的紧迫性。",
+        "怀疑胸膜感染时，将胸腔积液接种到血培养瓶中。"
+      ],
+      "tb": [
+        "送 AFB 涂片和培养，但要按培养产率低和结果延迟来计划。",
+        "若怀疑持续较高，进行胸膜活检以获取组织学、培养和药敏。"
+      ],
+      "malignancyEscalate": [
+        "停止仅做积液的循环，转向用影像引导活检或胸膜镜进行胸膜组织诊断。",
+        "用肺复张、症状、预后和患者目标来选择 IPC、胸膜固定术或联合策略。"
+      ],
+      "malignancyCytology": [
+        "送足量细胞学，并复阅 CT 或超声以寻找胸膜靶点。",
+        "若细胞学阴性但胸膜结节或癌症史仍有说服力，则转向胸膜活检。"
+      ],
+      "transudate": [
+        "聚焦于 CHF、肾、肝、胶体渗透、腹膜和被困肺的生理。",
+        "除非临床病程不再符合漏出液，否则避免反复诊断性穿刺。"
+      ],
+      "exudateGeneric": [
+        "用渗出液标签选择一条有针对性的分支：感染、恶性肿瘤、结核、肺栓塞、自身免疫病、术后或腹腔来源。",
+        "在临床核对后，根据剩余概率重复胸腔穿刺、观察、经验性治疗或活检。"
+      ]
+    },
+    "pitfalls": {
+      "pairedSerum": "不要在没有配对血清值和胸腔穿刺前临床印象的情况下解读胸腔生化。",
+      "diuresisCrossesLight": "利尿和全身性积液可以微小差距越过 Light 标准。",
+      "systemicGradientCheck": "全身性漏出液背景下 Light 标准为阳性时，应先做梯度检查，再锚定为渗出液。",
+      "fragilePH": "胸腔 pH 很脆弱；分析延迟、空气或利多卡因污染都可改变结果。",
+      "milkyTurbid": "乳白或浑浊液体可为乳糜、胆固醇、脓胸或细胞碎屑。",
+      "negativeCytology": "当影像或病史有说服力时，细胞学阴性不能排除恶性胸膜病变。",
+      "repeatedCytologyDelay": "在两次非诊断性细胞学样本后，反复仅做积液检查会延误所需的胸膜组织诊断。",
+      "mesothelialTb": "间皮细胞高于 5% 会降低结核的可能性，但并不能消除高风险的暴露史。"
+    },
+    "routineStudies": {
+      "grossAppearance": "床旁的大体外观和气味",
+      "proteinLdh": "胸腔蛋白和 LDH，并配对血清蛋白和 LDH",
+      "ph": "在血气分析仪上及时测量的胸腔 pH",
+      "glucose": "胸腔葡萄糖",
+      "cellCount": "带分类的细胞计数",
+      "gramStainCulture": "革兰染色和培养，并直接接种到血培养瓶中",
+      "cytology": "样本量充足的细胞学"
+    },
+    "targetedStudies": {
+      "lipids": "甘油三酯、胆固醇和乳糜微粒",
+      "hematocrit": "胸腔血细胞比容与血液血细胞比容的比较",
+      "ada": "ADA、AFB 涂片/培养，以及当怀疑持续较高时的胸膜活检",
+      "amylase": "胸腔淀粉酶，并进行针对来源的腹部或食管评估",
+      "bilirubin": "积液/血清胆红素比值",
+      "creatinine": "积液/血清肌酐比值",
+      "autoimmune": "自身免疫血清学，并结合微生物学和影像解读",
+      "branchPoint": "仅当病史或大体积液外观形成分支点时，才有针对性地增加检查"
+    }
+  },
+  "pleuralInfection": {
+    "overview": {
+      "metaTitle": "胸膜感染",
+      "metaDescription": "学习肺炎旁积液的分期与感染源控制，练习对病例分期并选择路径，然后检验你的推理。",
+      "headerTitle": "胸膜感染",
+      "headerDescription": "把肺炎旁积液定位到单纯 → 复杂 → 脓胸的连续谱上，然后把引流、用药、升级和重新评估作为一条路径来处理。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "分期阈值、抗生素 + 引流、tPA + DNase、外科手术与重新评估。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "依据积液数值对病例分期，然后在揭示路径前作出判断。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "关于分期、MIST2、外科手术、冲洗和 RAPID 评分的八道题。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "胸膜感染模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "分期、引流、tPA + DNase、外科手术"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "对病例分期并选择感染源控制路径"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南与试验来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习胸膜感染",
+      "metaDescription": "肺炎旁积液分期、引流阈值、抗生素、胸膜腔内 tPA + DNase（MIST2）、外科手术与冲洗替代方案。",
+      "headerTitle": "学习胸膜感染",
+      "headerDescription": "对积液分期，尽早引流和用药，并准确把握胸膜腔内治疗、外科手术和冲洗在同一条重新评估路径上的位置。",
+      "intro": "核心板块带你从分期走向感染源控制。打开「深入了解」以查看 RAPID 死亡率评分、出血方面的考量，以及 board 级别的流程图和表格。",
+      "boardSourceLabel": "出自 board 章节：胸膜感染",
+      "progressLabel": "标记学习为完成"
+    },
+    "practice": {
+      "metaTitle": "练习胸膜感染",
+      "metaDescription": "依据积液数值对肺炎旁积液分期，并在揭示方案前确定一条感染源控制路径。",
+      "headerTitle": "练习：分期并处置",
+      "headerDescription": "阅读积液和影像数值，确定一个分期，然后揭示引流、抗生素、胸膜腔内治疗和升级方案。",
+      "progressLabel": "标记练习为完成"
+    },
+    "assessment": {
+      "metaTitle": "胸膜感染评估",
+      "metaDescription": "检验你在分期、引流阈值、MIST2 治疗、外科手术、冲洗和 RAPID 评分方面的推理。",
+      "headerTitle": "评估",
+      "headerDescription": "八道题，检验你能否对积液分期并选择正确的感染源控制步骤。",
+      "checkTitle": "胸膜感染检验",
+      "checkIntro": "回答每道题，然后揭示解释。这些题对应学习目标。",
+      "progressLabel": "标记评估为完成"
+    },
+    "references": {
+      "metaTitle": "胸膜感染参考文献",
+      "metaDescription": "胸膜感染模块教学背后的指南与试验来源。",
+      "headerTitle": "参考文献",
+      "headerDescription": "分期、胸膜腔内治疗和冲洗教学背后的指南与试验来源。",
+      "heading": "临床参考文献"
+    },
+    "workflow": {
+      "scaffoldTitle": "胸膜感染分期与感染源控制",
+      "objectives": [
+        "运用 pH、葡萄糖、LDH、微生物学、脓液和超声模式对肺炎旁积液进行分类。",
+        "在看到答案前选择引流和抗生素疗程的教学分支。",
+        "解释 MIST2 式治疗、冲洗替代方案、出血风险和外科手术各自的位置。"
+      ],
+      "howToUse": [
+        "选择一个病例，若想测试变体，再调整积液和超声数值。",
+        "在揭示处置方案前预测分期。",
+        "把引流、抗生素、辅助治疗、出血风险和升级一并审视。"
+      ],
+      "clinicalAnchor": "一名肺炎患者有持续的全身炎症和胸腔积液。团队需要决定单用抗生素是否足够，还是需要感染源控制。",
+      "matchHeading": "分期预测一致",
+      "compareHeading": "对照你的分期预测",
+      "antibioticDurationLabel": "抗生素疗程：{duration}",
+      "revealLabel": "揭示感染源控制路径",
+      "keyTakeaway": "胸膜感染的决策综合化验、微生物学、超声复杂度和临床进展。引流、抗生素、胸膜腔内治疗、冲洗替代方案和外科手术应作为一条重新评估路径来讲授。",
+      "caseLabel": "感染病例",
+      "adjunctLabel": "待测试的辅助选项",
+      "bleedingContextHeading": "病例出血背景",
+      "fluidHeading": "积液与影像数值",
+      "phLabel": "胸膜 pH",
+      "glucoseLabel": "葡萄糖（mg/dL）",
+      "ldhLabel": "LDH（IU/L）",
+      "ultrasoundPatternLabel": "超声模式",
+      "gramStainLabel": "革兰染色",
+      "frankPusLabel": "明显脓液",
+      "predictStageHeading": "预测分期",
+      "positive": "阳性",
+      "negative": "阴性",
+      "cases": {
+        "anechoic-low-ph": "pH 7.18 的无回声积液",
+        "septated-residual": "置管后分隔的残余积液",
+        "pus-anticoagulated": "明显脓液且必须抗凝"
+      },
+      "adjunct": {
+        "alteplase10Dnase5": "组织型纤溶酶原激活剂加 DNase",
+        "alteplaseOnly": "仅组织型纤溶酶原激活剂",
+        "dnaseOnly": "仅 DNase",
+        "salineIrrigation": "生理盐水冲洗",
+        "placebo": "仅引流"
+      },
+      "bleedingContext": {
+        "anticoagulated": "治疗性抗凝无法安全暂停。",
+        "none": "本病例无治疗性抗凝标记。"
+      },
+      "ultrasoundPattern": {
+        "freeFlowing": "游离流动",
+        "complex": "复杂",
+        "septated": "分隔",
+        "large": "大量"
+      },
+      "cards": {
+        "mist2": {
+          "title": "MIST2 试验分支"
+        },
+        "irrigation": {
+          "title": "Pleural Irrigation Trial 替代方案",
+          "body": "当溶栓/酶疗法不适合或出血风险无法缓解时，可讨论生理盐水冲洗。",
+          "note": "将冲洗视为一种经选择的替代路径，而非引流、联合治疗或外科手术的普遍替代。"
+        },
+        "bleeding": {
+          "title": "出血叠加",
+          "body": "本教学病例的估计出血信号：{percent}%。"
+        }
+      },
+      "escalation": {
+        "heading": "升级链",
+        "steps": [
+          "小口径影像引导引流",
+          "冲洗并复查影像",
+          "联合胸膜腔内治疗",
+          "适合时采用冲洗替代",
+          "外科评估"
+        ]
+      }
+    },
+    "stage": {
+      "uncomplicated": "单纯性肺炎旁积液",
+      "complicated": "复杂性肺炎旁积液",
+      "empyema": "脓胸"
+    },
+    "stageOption": {
+      "uncomplicated": {
+        "description": "当符合低风险特征时，抗生素加重新评估可能就足够。"
+      },
+      "complicated": {
+        "description": "存在达引流标准的化验或影像特征。"
+      },
+      "empyema": {
+        "description": "脓液或微生物学阳性使感染源控制成为明确指征。"
+      }
+    },
+    "staging": {
+      "reasons": {
+        "frankPus": "在本教学模型中，明显脓液即为脓胸。",
+        "gramStain": "革兰染色阳性提示胸膜感染。",
+        "phLow": "胸膜 pH 为 7.20 或更低。",
+        "glucoseLow": "胸膜葡萄糖低于 60 mg/dL。",
+        "ldhHigh": "胸膜 LDH 高于 1000 IU/L。",
+        "imagingComplex": "影像具有高风险的复杂度或体积特征。",
+        "noDrainageFeatures": "本病例无达引流标准的化验、微生物学、脓液或复杂影像。"
+      },
+      "action": {
+        "uncomplicated": "在适当情境下，抗生素加密切的临床重新评估可能是合理的。",
+        "complicated": "在安全时使用抗生素加小口径影像引导引流，然后重新评估。",
+        "empyema": "使用抗生素引流，并尽早重新评估感染源控制。"
+      }
+    },
+    "antibioticDuration": {
+      "uncomplicated": "最多 2 周，根据临床反应调整。",
+      "complicated": "常为 2-4 周，根据感染源控制和临床反应调整。",
+      "empyema": "常为 4-6 周，根据引流、病原体和临床反应调整。"
+    },
+    "lytic": {
+      "alteplase10Dnase5": {
+        "label": "组织型纤溶酶原激活剂（tPA）10 mg 加 DNase 5 mg",
+        "effect": "在 MIST2 教学中，联合治疗改善了影像学清除并减少了外科转诊和住院时间。",
+        "caution": "评估出血风险和用药时机；不要把该剂量当作针对具体患者的建议。"
+      },
+      "alteplaseOnly": {
+        "label": "单用 tPA",
+        "effect": "单药纤溶治疗未显示出 MIST2 中相同的教学获益。",
+        "caution": "避免把单药治疗作为首选路径来讲授。"
+      },
+      "dnaseOnly": {
+        "label": "单用 DNase",
+        "effect": "单用 DNase 是一个教学陷阱，在 MIST2 中无获益。",
+        "caution": "使用联合治疗或替代策略，而非单用 DNase。"
+      },
+      "salineIrrigation": {
+        "label": "胸膜冲洗",
+        "effect": "生理盐水冲洗是有初步数据支持的替代方案，可在溶栓药不适合或出血风险无法缓解时讨论。",
+        "caution": "应将其定位为经选择路径的教学，而非溶栓药或外科手术的普遍替代。"
+      },
+      "placebo": {
+        "label": "安慰剂／仅引流",
+        "effect": "当达成感染源控制时，仅引流可能已足够，但残余积液需要早期重新评估。",
+        "caution": "当发热、炎症标志物、引流量或影像未改善时，不要延误升级。"
+      }
+    },
+    "bleedingNote": {
+      "anticoagulated": "治疗性抗凝增加了出血方面的顾虑，应触发缓解方案的规划。",
+      "baseline": "用于溶栓教学的胸膜基线出血信号为 4.1%。"
+    }
+  },
+  "malignantEffusion": {
+    "overview": {
+      "metaTitle": "恶性胸腔积液",
+      "metaDescription": "学习诊断升级以及 IPC 与胸膜固定术之间的抉择，练习选择一个管理分支，然后检验你的推理。",
+      "headerTitle": "恶性胸腔积液",
+      "headerDescription": "从一次非诊断性穿刺迈向明确方案：何时获取组织、肺的可复张性如何在胸膜固定术与留置导管之间做出选择，以及患者目标如何决定。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "细胞学升级、肺可复张性、滑石粉胸膜固定术、IPC 和患者目标。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "设定诊断与复张情况，然后确定一个管理分支。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "关于升级、可复张性、IPC 与胸膜固定术以及目标的八道题。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "恶性胸腔积液模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "细胞学、可复张性、IPC 与胸膜固定术"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "升级诊断并选择一个管理分支"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南、试验和图像来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习恶性胸腔积液",
+      "metaDescription": "非诊断性穿刺后的诊断升级、肺可复张性、滑石粉胸膜固定术、留置胸膜导管以及以患者目标为终点。",
+      "headerTitle": "学习恶性胸腔积液",
+      "headerDescription": "为什么一次阴性穿刺并非终点、肺的可复张性如何选择明确路径，以及如何在 IPC、胸膜固定术和联合策略之间权衡患者目标。",
+      "intro": "核心模块带你从一次非诊断性穿刺走向明确方案。打开「深入了解」可查看 IPC 并发症、关键试验以及 board 级别的算法和表格。",
+      "boardSourceLabel": "出自 board 章节：留置胸膜导管与胸膜固定术",
+      "progressLabel": "标记「学习」为完成"
+    },
+    "practice": {
+      "metaTitle": "练习恶性胸腔积液",
+      "metaDescription": "设定诊断升级与肺复张情况，然后在揭示路径前确定一个管理分支。",
+      "headerTitle": "练习：选择路径",
+      "headerDescription": "设定细胞学与肺复张情况，确定一个管理分支，然后揭示该路径如何对比。",
+      "progressLabel": "标记「练习」为完成"
+    },
+    "assessment": {
+      "metaTitle": "恶性胸腔积液评估",
+      "metaDescription": "检验你对细胞学升级、肺可复张性、IPC 与胸膜固定术、联合策略以及患者目标的推理。",
+      "headerTitle": "评估",
+      "headerDescription": "八道题，检验你能否将诊断与复张情况转化为与目标一致的方案。",
+      "checkTitle": "恶性胸腔积液自测",
+      "checkIntro": "回答每道题，然后揭示解释。这些题目对应「学习」目标。",
+      "progressLabel": "标记「评估」为完成"
+    },
+    "references": {
+      "metaTitle": "恶性胸腔积液参考文献",
+      "metaDescription": "恶性胸腔积液模块的指南、试验和 CC BY 图像来源。",
+      "headerTitle": "参考文献与署名",
+      "headerDescription": "支撑该路径的指南与试验来源，以及 CC BY 4.0 图像署名。",
+      "clinicalHeading": "临床参考文献",
+      "imageHeading": "图像署名",
+      "imageLicenseNote": "所有图像均采用 CC BY 4.0 许可，并连同署名存储于代码库中。",
+      "sourceLink": "来源"
+    },
+    "pathway": {
+      "scaffoldTitle": "恶性胸腔积液的诊断与管理路径",
+      "objectives": [
+        "解释为什么阴性细胞学不能排除恶性胸腔积液。",
+        "根据引流后的肺复张情况选择一条管理路径。",
+        "将胸膜固定术、留置胸膜导管或联合策略与患者目标相匹配。"
+      ],
+      "howToUse": [
+        "设定非诊断性细胞学样本的数量，并查看升级警示。",
+        "选择引流后的肺复张模式。",
+        "在揭示路径推荐之前，预测管理分支。"
+      ],
+      "clinicalAnchor": "一名患者有复发的、有症状的单侧胸腔积液，且尽管已做胸水检查，影像学特征仍使恶性肿瘤保留在鉴别诊断中。下一步取决于组织策略、肺复张、症状和目标。",
+      "revealLabel": "揭示恶性积液路径",
+      "keyTakeaway": "在恶性胸腔积液中，一次非诊断性穿刺并非终点。肺复张和患者目标决定了最值得教学的是胸膜固定术、留置胸膜导管还是联合策略。",
+      "matchHeading": "管理预测一致",
+      "compareHeading": "对比你的管理预测",
+      "escalationHeading": "诊断升级",
+      "tapCountLabel": "非诊断性细胞学样本：{count}",
+      "expansionHeading": "引流后的肺复张",
+      "expansion": {
+        "full": {
+          "label": "完全复张",
+          "description": "肺复张，胸膜表面可以贴合。"
+        },
+        "partial": {
+          "label": "部分复张",
+          "description": "症状改善，但仍残留未复张。"
+        },
+        "trapped": {
+          "label": "被困或不可复张",
+          "description": "肺复张不足，胸膜固定术难以可靠见效。"
+        }
+      },
+      "predictHeading": "预测管理分支",
+      "management": {
+        "pleurodesisCandidate": "可行胸膜固定术的路径",
+        "ipcOrRapidPleurodesis": "留置导管联合选定的快速胸膜固定策略",
+        "ipcPreferred": "以留置胸膜导管为中心的症状控制"
+      },
+      "revealCards": {
+        "cytologyTitle": "细胞学敏感性",
+        "cytologyNote": "在一到两次非诊断性穿刺后，当怀疑仍然较高时，避免反复只做胸水检查。",
+        "tissueTitle": "组织升级",
+        "higherYieldTitle": "更高产出的选择",
+        "higherYieldNote": "手术耐受性、影像靶点、当地经验和患者目标仍然决定路径。"
+      },
+      "comparatorHeading": "诊疗方式对比",
+      "comparator": {
+        "thoracentesis": {
+          "title": "胸腔穿刺",
+          "body": "快速的症状与诊断步骤；阴性细胞学需结合具体情况判断。"
+        },
+        "pleuroscopy": {
+          "title": "胸膜腔镜",
+          "body": "组织诊断与 poudrage 选项；手术耐受性很重要。"
+        },
+        "ipc": {
+          "title": "留置胸膜导管",
+          "body": "门诊症状控制；家庭引流支持和感染教育很重要。"
+        },
+        "pleurodesis": {
+          "title": "胸膜固定术",
+          "body": "当肺复张且患者能耐受操作时，以无装置为目标。"
+        },
+        "combined": {
+          "title": "联合策略",
+          "body": "选定的路径，将以导管为中心的门诊管理与胸膜固定意图相结合。"
+        }
+      },
+      "imageReferencesHeading": "图像参考",
+      "imageAlt": {
+        "pleural-nodularity-ultrasound": "超声与 CT 对照，显示胸膜增厚和结节。",
+        "pleuroscopy-malignancy": "恶性间皮瘤与淋巴瘤的胸膜腔镜图像，伴窄带成像血管模式。",
+        "ipc-pleuroscope-equipment": "胸膜腔镜器械对比，以及活检钳的定位。"
+      },
+      "attributionLabel": "署名：",
+      "reflectionHeading": "围绕患者目标的思考",
+      "reflectionBody": "每个终点都应询问对该患者而言什么更重要：无住院天数、无装置的胸部、缓解的速度、家庭支持、预期预后、感染负担以及管理导管的意愿。"
+    },
+    "nondiagnostic": {
+      "twoPlus": {
+        "recommendation": "停止只做胸水检查的反复循环，当怀疑仍然较高时升级到胸膜活检、影像引导活检或胸膜腔镜。",
+        "teachingPoint": "当影像、病史或复发仍使 MPE 可能时，反复的非诊断性细胞学不应带来虚假的安心。"
+      },
+      "one": {
+        "recommendation": "在选定病例中可考虑第二份细胞学样本，但如果验前概率较高，组织策略此时就应已显现。",
+        "teachingPoint": "一次非诊断性穿刺是一个分叉：可有选择地重复，但当怀疑持续较高时就应开始规划组织诊断。"
+      },
+      "zero": {
+        "recommendation": "送检足量细胞学，并将结果与影像、肺复张、症状和患者目标结合起来。",
+        "teachingPoint": "胸腔穿刺可以诊断部分 MPE，但阴性细胞学并非排除性检查。"
+      }
+    },
+    "branch": {
+      "pleurodesisCandidate": "可复张的肺可根据目标和耐受性考虑滑石粉胸膜固定术、IPC 或联合门诊策略。",
+      "ipcOrRapidPleurodesis": "部分复张更倾向于以 IPC 为中心的管理或选定的联合/快速胸膜固定策略，而非假定单用滑石粉即可见效。",
+      "ipcPreferred": "被困或不可复张的肺使胸膜固定术难以成功；以 IPC 为中心的症状控制是核心教学分支。"
+    },
+    "yield": {
+      "thoracentesis": "胸腔穿刺细胞学敏感性按大约 40-60% 教学，因此阴性结果需结合具体情况。",
+      "pleuroscopy": "胸膜腔镜或胸膜活检通常提供更高产出的组织诊断，在本教学情境中约为 80-90%。"
+    }
+  },
+  "pleuralUltrasound": {
+    "overview": {
+      "metaTitle": "胸膜超声",
+      "metaDescription": "学习读懂胸膜超声模式，练习对其分类，并检验你的推理——胸膜操作以超声为先的基础。",
+      "headerTitle": "胸膜超声",
+      "headerDescription": "每一项胸膜操作以超声为先的基础：读懂模式，在真实图像上练习，然后检验你的推理。",
+      "objectivesLead": "学完本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "为何超声为先、四种积液模式、安全入路以及动态征象。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "在先作答的实验室中对真实超声图像和动态征象视频进行分类。"
+        },
+        "assessment": {
+          "title": "测评",
+          "description": "八道检验模式识别和操作推理的题目。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "胸膜超声模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "如何读懂胸膜模式"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "先作答的图像与视频实验室"
+      },
+      "assessment": {
+        "title": "测评",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "来源与图像署名"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习胸膜超声",
+      "metaDescription": "读懂四种胸膜积液模式，选择安全的入路窗，并识别动态胸膜征象。",
+      "headerTitle": "学习胸膜超声",
+      "headerDescription": "在进针之前先读懂胸膜腔：技术、四种积液模式，以及改变方案的征象。",
+      "intro": "先完成核心模块——它们涵盖了读懂胸膜超声并选择安全窗所需的一切。当你想了解进阶的动态征象和 board 级别的细节时，再展开「深入了解」条目。",
+      "boardSourceLabel": "出自 board 章节：胸腔积液与胸膜介入",
+      "progressLabel": "标记「学习」为完成"
+    },
+    "practice": {
+      "metaTitle": "练习胸膜超声",
+      "metaDescription": "先作答的胸膜超声模式分类实验室，对真实图像提供实时反馈。",
+      "headerTitle": "练习：对模式分类",
+      "headerDescription": "阅读每幅图像，在自我检验前先确定一种模式。随着病例集的推进，你的得分会不断累积。",
+      "progressLabel": "标记「练习」为完成",
+      "modes": {
+        "patterns": {
+          "label": "积液模式",
+          "description": "在揭晓前对静态图像分类。"
+        },
+        "dynamicSigns": {
+          "label": "动态征象",
+          "description": "在揭晓前解读动态视频。"
+        }
+      }
+    },
+    "assessment": {
+      "metaTitle": "胸膜超声测评",
+      "metaDescription": "检验你的胸膜超声推理：模式识别、安全入路、动态征象，以及何时不应穿刺。",
+      "headerTitle": "测评",
+      "headerDescription": "八道题目，检验你能否把超声图像转化为安全的操作方案。",
+      "checkTitle": "胸膜超声检验",
+      "checkIntro": "回答每道题目，然后揭晓解释。这些题目对应「学习」的目标。",
+      "progressLabel": "标记「测评」为完成"
+    },
+    "references": {
+      "metaTitle": "胸膜超声参考文献",
+      "metaDescription": "胸膜超声模块的指南来源以及图像/视频的 Creative Commons 署名。",
+      "headerTitle": "参考文献与署名",
+      "headerDescription": "支撑教学内容的指南来源，以及图像与视频实验室的 Creative Commons 署名。",
+      "clinicalHeading": "临床参考文献",
+      "imageHeading": "教学图像署名",
+      "imageNote": "所有模式实验室图像均采用 CC BY 4.0 许可，并连同署名存放于代码仓库中。",
+      "videoHeading": "教学视频署名",
+      "videoNote": "动态征象视频根据行级 Creative Commons 元数据选取，并以浏览器可播放的 MP4 文件存放于代码仓库中。",
+      "sourceLink": "来源",
+      "sourceClipLink": "来源视频",
+      "metadataLink": "元数据",
+      "convertedNote": " · 已转换为 MP4 以便浏览器播放"
+    },
+    "patternLab": {
+      "scaffoldTitle": "胸膜超声模式识别",
+      "objectives": [
+        "将胸膜积液分类为单纯无回声、复杂无分隔、有分隔或包裹，或强回声。",
+        "将模式与取样、引流或控制感染源的思路联系起来。",
+        "解释为何超声表现必须结合临床病史一起判断。"
+      ],
+      "howToUse": [
+        "阅读病例简介并观察图像，不要把图注当作提示。",
+        "在查看教学要点前先选择一种模式。",
+        "回顾处理意义，然后进入下一个病例。"
+      ],
+      "caseLabel": "病例 {index} / {total}：{vignette}",
+      "scoreLabel": "得分：{correct}/{attempted}",
+      "correctHeading": "正确",
+      "incorrectHeading": "尚不准确",
+      "nextLabel": "下一个病例",
+      "revealLabel": "检验我的分类",
+      "keyTakeaway": "胸膜超声能缩小操作方案的范围，但单凭它不能诊断病因。单纯积液仍可能是渗出液，而当病史相符时，复杂积液应引发对控制感染源的考虑。",
+      "neutralAlt": "用于模式分类的胸膜腔图像。",
+      "attributionLabel": "署名：{attribution}",
+      "sourceLabel": "来源：",
+      "withAttribution": "（需署名）",
+      "classifyHeading": "对模式分类",
+      "options": {
+        "simpleAnechoic": "单纯无回声",
+        "complexNonSeptated": "复杂无分隔",
+        "septatedLoculated": "有分隔或包裹",
+        "echogenic": "强回声",
+        "noDrainableEffusion": "无可引流的积液"
+      }
+    },
+    "dynamicLab": {
+      "scaffoldTitle": "动态征象视频实验室",
+      "objectives": [
+        "在动态中识别 A线、B线、胸膜线不规则、实变以及帘征/无目标的视图。",
+        "将肺部模式的发现与可引流的胸膜积液腔区分开来。",
+        "利用动态视频来决定是继续扫查、取样积液，还是考虑控制感染源。"
+      ],
+      "howToUse": [
+        "在把选项当作提示之前先观看视频。",
+        "在查看教学要点前先确定占主导的动态征象。",
+        "回顾该视频为何是或不是胸膜操作的目标，然后继续。"
+      ],
+      "clipLabel": "视频 {index} / {total}：{vignette}",
+      "scoreLabel": "得分：{correct}/{attempted}",
+      "correctHeading": "正确",
+      "incorrectHeading": "尚不准确",
+      "nextLabel": "下一个视频",
+      "revealLabel": "检验我的解读",
+      "keyTakeaway": "动态很重要。A线、B线、帘征和实变可能回答肺部的问题，但胸膜操作仍然需要一处独立且安全的积液腔。",
+      "neutralVideoLabel": "用于动态征象分类的肺部超声视频。",
+      "videoFallback": "你的浏览器不支持嵌入式视频。",
+      "attributionLabel": "署名：{attribution}",
+      "sourceFilenameLabel": "来源文件名：{filename}",
+      "sourceLabel": "来源：",
+      "withAttribution": "（需署名）",
+      "convertedNote": " · 已转换为 MP4 以便浏览器播放",
+      "classifyHeading": "对动态征象分类",
+      "options": {
+        "normalALines": "正常 A线",
+        "bLinesPleuralIrregularity": "B线伴胸膜线不规则",
+        "subpleuralConsolidation": "胸膜下实变",
+        "lungCurtainNoTarget": "肺帘征 / 无可引流目标",
+        "effusionAdjacentConsolidation": "积液伴邻近实变"
+      }
+    },
+    "management": {
+      "thoraReasonable": "如果积液腔安全且临床问题需要取样或缓解症状，胸腔穿刺可能是合理的。",
+      "considerTubeAndAdjuncts": "当感染、血液、包裹或恶性复杂性符合病例时，应考虑置管引流及辅助手段。",
+      "noPleuralDrainageTarget": "此视图未显示可供胸膜引流的目标；应引导学习者转向肺部模式的解读，或继续扫查以寻找积液。"
+    },
+    "patternTeaching": {
+      "simpleAnechoic": "单纯无回声积液可能是漏出液或渗出液；图像并不能替代临床背景或胸膜积液分析。",
+      "complexNonSeptated": "当积液腔可及时，复杂无分隔积液仍可安全取样，但其紧迫性由更广泛的病史决定。",
+      "septatedLoculated": "分隔或小腔提示纤维蛋白、感染、血液或恶性复杂性，当临床背景相符时，应促使考虑引流/控制感染源。",
+      "echogenic": "强回声积液令人担心脓液、血液、细胞碎屑或恶性病变；不要将其当作单纯的自由流动积液。",
+      "noDrainableEffusion": "此视图未显示可引流的胸膜积液腔。B线、A线或胸膜下实变可能回答肺部问题，但它们并非胸腔穿刺的目标。"
+    },
+    "patternReveal": {
+      "simpleAnechoic": "教学目标是一处单纯无回声腔；单纯的表现并不能证明是漏出液。",
+      "complexNonSeptated": "教学目标是复杂无分隔积液，有内部回声但无清晰的纤维蛋白条索。",
+      "septatedLoculated": "教学目标是有分隔或包裹的积液，提示纤维素性机化。",
+      "echogenic": "教学目标是强回声胸膜物质；脓液、血液、细胞碎屑或恶性病变都可造成这种表现。",
+      "noDrainableEffusion": "教学目标是此视图中的肺部模式，而无可引流的胸膜积液腔。"
+    },
+    "dynamicTeaching": {
+      "normalALines": "A线是含气肺产生的水平混响伪像。它们在胸膜模块中是有用的干扰项，因为它们不构成引流目标。",
+      "bLinesPleuralIrregularity": "B线起自胸膜线并随肺滑动而移动。它们回答的是间质或炎症性肺部问题，而非胸腔穿刺的目标。",
+      "subpleuralConsolidation": "胸膜下实变可能紧贴胸膜，乍看之下像是操作目标。关键是继续扫查以寻找真正的积液窗。",
+      "lungCurtainNoTarget": "帘征是含气肺的动态运动。在胸膜操作模块中，它是一个关键的无目标模式，尤其在膈肌附近。",
+      "effusionAdjacentConsolidation": "积液加上实变的肺应使思路从「单纯穿刺」的惯性中跳出，转向感染、入路窗是否充分以及控制感染源的规划。"
+    },
+    "dynamicReveal": {
+      "normalALines": "教学目标是滑动的胸膜线下方正常的 A线混响。",
+      "bLinesPleuralIrregularity": "教学目标是伴胸膜线不规则的 B线活动，而非胸膜积液腔。",
+      "subpleuralConsolidation": "教学目标是伴胸膜线不规则的胸膜下实变。",
+      "lungCurtainNoTarget": "教学目标是扫过肝脏的肺帘征，而非安全的积液腔。",
+      "effusionAdjacentConsolidation": "教学目标是积液伴邻近实变，这是比孤立的单纯积液腔风险更高的情境。"
+    },
+    "vignette": {
+      "simple-anechoic-reference": "74 岁，利尿后呼吸困难，胸部影像示单侧积液。",
+      "complex-nonseptated-reference": "68 岁，复发性单侧积液、胸部不适及体重减轻。",
+      "septated-reference": "62 岁，肺炎、持续发热，抗生素治疗后出现胸膜积聚。",
+      "echogenic-reference": "56 岁，发热、胸膜炎性疼痛，尽管使用抗生素临床改善仍欠佳。",
+      "ambiguous-simple-exudate": "37 岁，有结核暴露风险、盗汗及单侧积液。",
+      "b-lines-no-effusion-distractor": "70 岁，呼吸困难，胸部影像示弥漫性间质改变，但无已知的胸膜积聚。",
+      "subpleural-consolidation-distractor": "59 岁，胸膜炎性症状及局灶性肺部发现，问题在于是否存在可供入路的胸膜腔。",
+      "atelectasis-with-effusion-reference": "66 岁，复发性单侧积液，胸膜腔视图内可见活动的组织。",
+      "dynamic-normal-a-lines": "一名患者的前胸扫查，问题在于胸膜线是否表现得像含气肺。",
+      "dynamic-b-lines-pleural-irregularity": "凸阵探头的肺部视频，在考虑引流之前，应先对垂直伪像和胸膜线纹理进行分类。",
+      "dynamic-subpleural-consolidation": "一名有局灶性胸膜旁异常患者的聚焦肺部视频；判断该视图是否显示可引流的腔。",
+      "dynamic-lung-curtain-no-target": "右下胸视频，须将活动的含气肺边界与胸膜积液目标区分开来。",
+      "dynamic-effusion-adjacent-consolidation": "肺炎背景下的视频，学习者须判断暗区及邻近组织是否代表胸膜操作的目标。"
+    }
+  }
+}

@@ -1,10 +1,11 @@
 'use client'
 
-import Link from 'next/link'
 import type { Route } from 'next'
 import { ChevronDownIcon } from '@radix-ui/react-icons'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
+import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 
 export interface NavItem {
@@ -19,16 +20,17 @@ interface DesktopNavProps {
   activePath?: string | null
 }
 
-const quickNavTitles = new Set([
-  'EBUS Training',
-  'Podcast Library',
-  '3D Anatomy',
-  'IP Board Prep',
-  'FluoroView',
-  'Bronch Navigation',
+const quickNavHrefs = new Set([
+  '/ebus-training',
+  '/journal-club-podcasts',
+  '/learn/anatomy',
+  '/board-prep',
+  '/fluoroview',
+  '/bronch-navigation-trainer',
 ])
 
 export function DesktopNav({ items, activePath }: DesktopNavProps) {
+  const t = useTranslations('navigation')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
@@ -77,15 +79,16 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
   }
 
   const isItemActive = (item: NavItem) =>
-    normalizedPath === item.href || (normalizedPath.startsWith(item.href) && item.href !== '/')
+    normalizedPath === item.href ||
+    (normalizedPath.startsWith(item.href) && String(item.href) !== '/')
 
-  const quickItems = items.filter((item) => quickNavTitles.has(item.title))
+  const quickItems = items.filter((item) => quickNavHrefs.has(item.href))
   const hasActiveOverflowItem = items.some(isItemActive) && !quickItems.some(isItemActive)
 
   return (
     <nav
       ref={navRef}
-      aria-label="Primary"
+      aria-label={t('primary')}
       className="relative hidden min-w-0 flex-1 items-center justify-start gap-0.5 lg:flex xl:gap-1"
     >
       <button
@@ -98,7 +101,7 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
         aria-expanded={isMenuOpen}
         onClick={() => setIsMenuOpen((value) => !value)}
       >
-        Modules
+        {t('modules')}
         <ChevronDownIcon
           className={cn('h-4 w-4 transition-transform', isMenuOpen && 'rotate-180')}
           aria-hidden

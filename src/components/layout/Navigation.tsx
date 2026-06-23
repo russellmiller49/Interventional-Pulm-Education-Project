@@ -1,19 +1,22 @@
 'use client'
 
-import Link from 'next/link'
 import type { Route } from 'next'
-import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import { LogOut, ShieldCheck } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Link, usePathname, useRouter } from '@/i18n/navigation'
+import { isActiveLocale } from '@/i18n/locale'
+import { localizePath } from '@/i18n/path'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 import { supabaseBrowser, supabaseCookieBrowser } from '@/lib/supabase/browser'
 
 import { DesktopNav, type NavItem } from './DesktopNav'
+import { LanguageSelector } from './LanguageSelector'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
 
@@ -29,89 +32,6 @@ interface SiteProfileName {
   first_name: string | null
   last_name: string | null
 }
-
-const allNavigationItems: NavItem[] = [
-  {
-    title: 'EBUS Training',
-    shortTitle: 'EBUS',
-    href: '/ebus-training' as Route,
-    description: 'Knobology, stations, and simulator modules',
-  },
-  {
-    title: 'EBUS Virtual Bronch',
-    shortTitle: 'EBUS VB',
-    href: '/ebus-training/virtual-bronchoscopy' as Route,
-    description: 'Admin preview of the synchronized virtual bronchoscopy simulator',
-  },
-  {
-    title: 'Podcast Library',
-    shortTitle: 'Podcast Library',
-    href: '/journal-club-podcasts' as Route,
-    description: 'Journal club audio discussions in five languages',
-  },
-  {
-    title: 'TNM-9 Staging',
-    shortTitle: 'TNM-9',
-    href: '/tnm-9-staging' as Route,
-    description: 'Standalone lung cancer staging module',
-  },
-  {
-    title: '3D Anatomy',
-    shortTitle: 'Anatomy',
-    href: '/learn/anatomy',
-    description: '3D and interactive anatomy viewer',
-  },
-  {
-    title: 'IP Board Prep',
-    shortTitle: 'Board Prep',
-    href: '/board-prep',
-    description: 'Interactive board review chapters',
-  },
-  {
-    title: 'FluoroView',
-    href: '/fluoroview',
-    description: 'C-arm airway simulation lab',
-  },
-  {
-    title: 'Bronch Navigation',
-    shortTitle: 'Nav Bronch',
-    href: '/bronch-navigation-trainer' as Route,
-    description: 'CT-to-bronchoscope navigation simulator',
-  },
-  {
-    title: 'Pleural Procedures',
-    href: '/pleural-procedures' as Route,
-    description: 'Pleural disease and procedure modules',
-  },
-  {
-    title: 'Resources',
-    href: '/resources' as Route,
-    description: 'Creative Commons assets & study aids',
-  },
-  {
-    title: 'SoCal EBUS Course',
-    shortTitle: 'EBUS Course',
-    href: '/socal-ebus-course',
-    description: 'For Southern California EBUS Course participants',
-  },
-  {
-    title: 'Rapid Onsite Cytology',
-    shortTitle: 'Cytology',
-    href: '/rapid-onsite-cytology' as Route,
-    description: 'ROSE and Diff-Quik slide interpretation trainer',
-  },
-  {
-    title: 'Intro Bronchoscopy',
-    href: '/intro-bronchoscopy' as Route,
-    description: 'Foundational scope sizing, reach, and tool fit modules',
-  },
-  { title: 'IP Registry', href: '/ip-registry', description: 'Launch the Procedure Suite UI' },
-  {
-    title: 'Coming Soon',
-    href: '/coming-soon',
-    description: 'Upcoming pleural, bronchoscopy, and rigid bronchoscopy modules',
-  },
-]
 
 function getMetadataString(user: User, keys: string[]) {
   for (const key of keys) {
@@ -153,15 +73,114 @@ function getUserDisplayName(user: User, profile: SiteProfileName | null) {
 export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
+  const locale = useLocale()
+  const activeLocale = isActiveLocale(locale) ? locale : 'en'
+  const common = useTranslations('common')
+  const nav = useTranslations('navigation')
   const [searchQuery, setSearchQuery] = useState('')
   const [authStatus, setAuthStatus] = useState<NavAuthStatus>('checking')
   const [currentUser, setCurrentUser] = useState<NavUserSummary | null>(null)
+  const allNavigationItems = useMemo<NavItem[]>(
+    () => [
+      {
+        title: nav('items.ebusTraining.title'),
+        shortTitle: nav('items.ebusTraining.shortTitle'),
+        href: '/ebus-training' as Route,
+        description: nav('items.ebusTraining.description'),
+      },
+      {
+        title: nav('items.ebusVirtualBronch.title'),
+        shortTitle: nav('items.ebusVirtualBronch.shortTitle'),
+        href: '/ebus-training/virtual-bronchoscopy' as Route,
+        description: nav('items.ebusVirtualBronch.description'),
+      },
+      {
+        title: nav('items.podcastLibrary.title'),
+        shortTitle: nav('items.podcastLibrary.shortTitle'),
+        href: '/journal-club-podcasts' as Route,
+        description: nav('items.podcastLibrary.description'),
+      },
+      {
+        title: nav('items.tnm9.title'),
+        shortTitle: nav('items.tnm9.shortTitle'),
+        href: '/tnm-9-staging' as Route,
+        description: nav('items.tnm9.description'),
+      },
+      {
+        title: nav('items.anatomy.title'),
+        shortTitle: nav('items.anatomy.shortTitle'),
+        href: '/learn/anatomy' as Route,
+        description: nav('items.anatomy.description'),
+      },
+      {
+        title: nav('items.boardPrep.title'),
+        shortTitle: nav('items.boardPrep.shortTitle'),
+        href: '/board-prep' as Route,
+        description: nav('items.boardPrep.description'),
+      },
+      {
+        title: nav('items.fluoroview.title'),
+        shortTitle: nav('items.fluoroview.shortTitle'),
+        href: '/fluoroview' as Route,
+        description: nav('items.fluoroview.description'),
+      },
+      {
+        title: nav('items.bronchNavigation.title'),
+        shortTitle: nav('items.bronchNavigation.shortTitle'),
+        href: '/bronch-navigation-trainer' as Route,
+        description: nav('items.bronchNavigation.description'),
+      },
+      {
+        title: nav('items.pleuralProcedures.title'),
+        shortTitle: nav('items.pleuralProcedures.shortTitle'),
+        href: '/pleural-procedures' as Route,
+        description: nav('items.pleuralProcedures.description'),
+      },
+      {
+        title: nav('items.resources.title'),
+        shortTitle: nav('items.resources.shortTitle'),
+        href: '/resources' as Route,
+        description: nav('items.resources.description'),
+      },
+      {
+        title: nav('items.socalEbusCourse.title'),
+        shortTitle: nav('items.socalEbusCourse.shortTitle'),
+        href: '/socal-ebus-course' as Route,
+        description: nav('items.socalEbusCourse.description'),
+      },
+      {
+        title: nav('items.rapidOnsiteCytology.title'),
+        shortTitle: nav('items.rapidOnsiteCytology.shortTitle'),
+        href: '/rapid-onsite-cytology' as Route,
+        description: nav('items.rapidOnsiteCytology.description'),
+      },
+      {
+        title: nav('items.introBronchoscopy.title'),
+        shortTitle: nav('items.introBronchoscopy.shortTitle'),
+        href: '/intro-bronchoscopy' as Route,
+        description: nav('items.introBronchoscopy.description'),
+      },
+      {
+        title: nav('items.ipRegistry.title'),
+        shortTitle: nav('items.ipRegistry.shortTitle'),
+        href: '/ip-registry' as Route,
+        description: nav('items.ipRegistry.description'),
+      },
+      {
+        title: nav('items.comingSoon.title'),
+        shortTitle: nav('items.comingSoon.shortTitle'),
+        href: '/coming-soon' as Route,
+        description: nav('items.comingSoon.description'),
+      },
+    ],
+    [nav],
+  )
   const navigationItems = useMemo(
     () =>
       allNavigationItems.filter((item) =>
         isVisibleModulePath(item.href, { isAdmin: currentUser?.isAdmin === true }),
       ),
-    [currentUser?.isAdmin],
+    [allNavigationItems, currentUser?.isAdmin],
   )
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -310,19 +329,19 @@ export function Navigation() {
           className="flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-            IP Lab
+            {common('shortBrand')}
           </span>
         </Link>
       </div>
       <DesktopNav items={navigationItems} activePath={pathname} />
       <div className="hidden shrink-0 items-center justify-end gap-2 lg:flex">
         <Button asChild variant="ghost" size="icon" className="h-9 w-9 min-[1700px]:hidden">
-          <Link href={'/search' as Route} aria-label="Search resources">
+          <Link href={'/search' as Route} aria-label={nav('searchResources')}>
             <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
           </Link>
         </Button>
         <form
-          action="/search"
+          action={localizePath('/search', activeLocale)}
           className="hidden items-center gap-1 min-[1700px]:flex"
           role="search"
         >
@@ -332,17 +351,17 @@ export function Navigation() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search resources and guides"
+            placeholder={nav('searchPlaceholder')}
             leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
             className="w-48 text-sm min-[1850px]:w-52"
-            aria-label="Search resources and guides"
+            aria-label={nav('searchResourcesAndGuides')}
           />
           <Button
             type="submit"
             variant="ghost"
             size="icon"
             className="h-9 w-9"
-            aria-label="Search resources"
+            aria-label={nav('searchResources')}
           >
             <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
           </Button>
@@ -350,8 +369,12 @@ export function Navigation() {
         {currentUser ? (
           <div className="flex min-w-0 items-center gap-2">
             <p className="hidden max-w-36 truncate text-sm text-muted-foreground min-[1500px]:block min-[1850px]:max-w-44">
-              Welcome,{' '}
-              <span className="font-semibold text-foreground">{currentUser.displayName}</span>
+              {common.rich('welcome', {
+                name: currentUser.displayName,
+                userName: (chunks) => (
+                  <span className="font-semibold text-foreground">{chunks}</span>
+                ),
+              })}
             </p>
             {currentUser.isAdmin ? (
               <Button
@@ -362,7 +385,7 @@ export function Navigation() {
               >
                 <Link href={'/admin' as Route}>
                   <ShieldCheck className="h-4 w-4" aria-hidden />
-                  <span className="sr-only min-[1500px]:not-sr-only">Admin</span>
+                  <span className="sr-only min-[1500px]:not-sr-only">{common('admin')}</span>
                 </Link>
               </Button>
             ) : null}
@@ -373,19 +396,20 @@ export function Navigation() {
               className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
               onClick={handleLogout}
               disabled={authStatus === 'signing-out'}
-              aria-label={authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
+              aria-label={authStatus === 'signing-out' ? common('loggingOut') : common('logOut')}
             >
               <LogOut className="h-4 w-4" aria-hidden />
               <span className="sr-only min-[1500px]:not-sr-only">
-                {authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
+                {authStatus === 'signing-out' ? common('loggingOut') : common('logOut')}
               </span>
             </Button>
           </div>
         ) : authStatus === 'checking' ? null : (
           <Button asChild variant="outline" size="sm" className="hidden xl:inline-flex">
-            <Link href={'/login' as Route}>Sign in</Link>
+            <Link href={'/login' as Route}>{common('signIn')}</Link>
           </Button>
         )}
+        <LanguageSelector compact className="hidden xl:inline-flex" />
         <ModeToggle
           size="sm"
           className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4 [&>span:last-child]:hidden min-[1500px]:[&>span:last-child]:inline"

@@ -1,8 +1,8 @@
 'use client'
 
 import type { Route } from 'next'
-import Link from 'next/link'
 import { useMemo } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import { HamburgerMenuIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import { LogOut, ShieldCheck } from 'lucide-react'
 
@@ -16,9 +16,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { isActiveLocale } from '@/i18n/locale'
+import { Link } from '@/i18n/navigation'
+import { localizePath } from '@/i18n/path'
 import { cn } from '@/lib/cn'
 
 import type { NavItem } from './DesktopNav'
+import { LanguageSelector } from './LanguageSelector'
 import { ModeToggle } from './mode-toggle'
 import type { NavAuthStatus, NavUserSummary } from './Navigation'
 import { SearchShortcut } from './SearchShortcut'
@@ -38,6 +42,10 @@ export function MobileNav({
   currentUser,
   onLogout,
 }: MobileNavProps) {
+  const locale = useLocale()
+  const activeLocale = isActiveLocale(locale) ? locale : 'en'
+  const common = useTranslations('common')
+  const nav = useTranslations('navigation')
   const normalizedPath = useMemo(() => {
     if (!activePath) {
       return '/'
@@ -56,7 +64,7 @@ export function MobileNav({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="Open navigation menu"
+            aria-label={nav('openMenu')}
             className="h-10 w-10"
           >
             <HamburgerMenuIcon className="h-5 w-5" aria-hidden />
@@ -65,20 +73,18 @@ export function MobileNav({
         <SheetContent
           side="left"
           className="flex h-full flex-col gap-6 bg-background/95 pb-8 backdrop-blur"
-          aria-label="Mobile navigation"
+          aria-label={nav('mobileLabel')}
         >
           <SheetHeader className="space-y-1">
-            <SheetTitle className="text-lg">Navigate</SheetTitle>
-            <SheetDescription>
-              Explore EBUS training, podcasts, anatomy, Nav Bronch, FluoroView, and resources.
-            </SheetDescription>
+            <SheetTitle className="text-lg">{nav('navigate')}</SheetTitle>
+            <SheetDescription>{nav('mobileDescription')}</SheetDescription>
           </SheetHeader>
           <div className="flex flex-col gap-6 overflow-y-auto">
-            <nav aria-label="Primary mobile" className="flex flex-col gap-3">
+            <nav aria-label={nav('primary')} className="flex flex-col gap-3">
               {items.map((item) => {
                 const isActive =
                   normalizedPath === item.href ||
-                  (normalizedPath.startsWith(item.href) && item.href !== '/')
+                  (normalizedPath.startsWith(item.href) && String(item.href) !== '/')
 
                 return (
                   <Link
@@ -104,7 +110,10 @@ export function MobileNav({
                 <div className="space-y-3 rounded-lg border p-3">
                   <div className="min-w-0 space-y-1">
                     <p className="truncate text-sm font-semibold">
-                      Welcome, {currentUser.displayName}
+                      {common.rich('welcome', {
+                        name: currentUser.displayName,
+                        userName: (chunks) => chunks,
+                      })}
                     </p>
                     {currentUser.email ? (
                       <p className="truncate text-xs text-muted-foreground">{currentUser.email}</p>
@@ -114,7 +123,7 @@ export function MobileNav({
                     <Button asChild variant="outline" className="w-full justify-center">
                       <Link href={'/admin' as Route}>
                         <ShieldCheck className="h-4 w-4" aria-hidden />
-                        Admin
+                        {common('admin')}
                       </Link>
                     </Button>
                   ) : null}
@@ -126,31 +135,36 @@ export function MobileNav({
                     disabled={authStatus === 'signing-out'}
                   >
                     <LogOut className="h-4 w-4" aria-hidden />
-                    {authStatus === 'signing-out' ? 'Logging out' : 'Log out'}
+                    {authStatus === 'signing-out' ? common('loggingOut') : common('logOut')}
                   </Button>
                 </div>
               ) : authStatus === 'checking' ? null : (
                 <Button asChild variant="default" className="justify-center">
-                  <Link href={'/login' as Route}>Sign in</Link>
+                  <Link href={'/login' as Route}>{common('signIn')}</Link>
                 </Button>
               )}
-              <form action="/search" className="space-y-2" role="search">
+              <form
+                action={localizePath('/search', activeLocale)}
+                className="space-y-2"
+                role="search"
+              >
                 <Input
                   type="search"
                   name="q"
-                  placeholder="Search resources"
+                  placeholder={nav('searchResources')}
                   leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" aria-hidden />}
-                  aria-label="Search resources and guides"
+                  aria-label={nav('searchResourcesAndGuides')}
                 />
                 <Button type="submit" variant="outline" className="w-full justify-between gap-3">
-                  <span>Search resources</span>
+                  <span>{nav('searchResources')}</span>
                   <SearchShortcut />
                 </Button>
               </form>
               <div className="space-y-3 rounded-lg border p-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Display
+                  {nav('display')}
                 </p>
+                <LanguageSelector className="w-full justify-between" />
                 <ModeToggle className="w-full justify-center" />
               </div>
             </div>

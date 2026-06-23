@@ -1,26 +1,31 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 
 const base = '/pleural-procedures/pleural-infection'
 
-export const pleuralInfectionNavItems: readonly ModuleNavItem[] = [
-  { href: base, title: 'Overview', description: 'Objectives and the learning path' },
-  { href: `${base}/learn`, title: 'Learn', description: 'Staging, drainage, tPA + DNase, surgery' },
-  {
-    href: `${base}/practice`,
-    title: 'Practice',
-    description: 'Stage a case and choose the source-control pathway',
-  },
-  { href: `${base}/assessment`, title: 'Assessment', description: 'Check your reasoning' },
-  { href: `${base}/references`, title: 'References', description: 'Guideline and trial sources' },
+/** Section base href, exported for pages that need the overview's activeHref. */
+export const pleuralInfectionNavBase = base
+
+const sections = [
+  { key: 'overview', href: base },
+  { key: 'learn', href: `${base}/learn` },
+  { key: 'practice', href: `${base}/practice` },
+  { key: 'assessment', href: `${base}/assessment` },
+  { key: 'references', href: `${base}/references` },
 ] as const
 
 export function PleuralInfectionNav({ activeHref }: { activeHref: string }) {
-  return (
-    <ModuleNav
-      items={pleuralInfectionNavItems}
-      activeHref={activeHref}
-      ariaLabel="Pleural infection module sections"
-    />
-  )
+  const t = useTranslations('pleuralInfection.nav')
+
+  const items: ModuleNavItem[] = sections.map((section) => ({
+    href: section.href,
+    title: t(`${section.key}.title`),
+    description: t(`${section.key}.description`),
+  }))
+
+  return <ModuleNav items={items} activeHref={activeHref} ariaLabel={t('ariaLabel')} />
 }

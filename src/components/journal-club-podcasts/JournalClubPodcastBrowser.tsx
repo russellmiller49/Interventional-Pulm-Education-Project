@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   ExternalLink,
   Languages,
@@ -32,14 +33,19 @@ interface JournalClubPodcastBrowserProps {
   tags: string[]
 }
 
-const languageLabels: Record<PodcastLanguage, string> = {
-  english: 'English',
-  spanish: 'Spanish',
-  mandarin: 'Mandarin',
-  arabic: 'Arabic',
-  korean: 'Korean',
+const podcastLanguages: PodcastLanguage[] = ['english', 'spanish', 'mandarin', 'arabic', 'korean']
+
+function getDefaultPodcastLanguage(locale: string): PodcastLanguage {
+  if (locale === 'es') {
+    return 'spanish'
+  }
+
+  if (locale === 'zh-CN') {
+    return 'mandarin'
+  }
+
+  return 'english'
 }
-const languageHighlightLabels = Object.values(languageLabels)
 
 const playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
 const ratingValues = [1, 2, 3, 4, 5] as const
@@ -53,6 +59,15 @@ export function JournalClubPodcastBrowser({
   hubs,
   tags,
 }: JournalClubPodcastBrowserProps) {
+  const journalT = useTranslations('journalClub')
+  const languageLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        podcastLanguages.map((language) => [language, journalT(`languageNames.${language}`)]),
+      ) as Record<PodcastLanguage, string>,
+    [journalT],
+  )
+  const languageHighlightLabels = podcastLanguages.map((language) => languageLabels[language])
   const [activeHub, setActiveHub] = useState<HubFilter>(allHubFilter)
   const [activeTag, setActiveTag] = useState<string>('all')
   const [query, setQuery] = useState('')
@@ -156,7 +171,7 @@ export function JournalClubPodcastBrowser({
               </span>
               <div className="space-y-1">
                 <h2 className="text-sm font-semibold text-foreground">
-                  Available in {languageHighlightLabels.length} languages
+                  {journalT('availableIn', { count: languageHighlightLabels.length })}
                 </h2>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                   Every episode includes the same journal club discussion in each language. Choose
@@ -331,18 +346,28 @@ function PodcastAudioPlayer({
   isActive: boolean
   onActivate: () => void
 }) {
+  const siteLocale = useLocale()
+  const defaultLanguage = getDefaultPodcastLanguage(siteLocale)
+  const journalT = useTranslations('journalClub')
+  const languageLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        podcastLanguages.map((language) => [language, journalT(`languageNames.${language}`)]),
+      ) as Record<PodcastLanguage, string>,
+    [journalT],
+  )
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const activeListenStartedAtRef = useRef<number | null>(null)
   const currentTimeRef = useRef(0)
   const durationRef = useRef(0)
   const episodeIdRef = useRef(episode.id)
   const hasReportedPlaybackRef = useRef(false)
-  const languageRef = useRef<PodcastLanguage>('english')
+  const languageRef = useRef<PodcastLanguage>(defaultLanguage)
   const lastProgressSentAtRef = useRef(0)
   const listenedMsRef = useRef(0)
   const playbackRateRef = useRef(1)
   const playbackSessionIdRef = useRef(makePlaybackSessionId())
-  const [language, setLanguage] = useState<PodcastLanguage>('english')
+  const [language, setLanguage] = useState<PodcastLanguage>(defaultLanguage)
   const [signedUrl, setSignedUrl] = useState<string | null>(null)
   const [urlExpiresAt, setUrlExpiresAt] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
@@ -351,7 +376,7 @@ function PodcastAudioPlayer({
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
   const [playbackRate, setPlaybackRate] = useState(1)
-  const [feedbackLanguage, setFeedbackLanguage] = useState<PodcastLanguage>('english')
+  const [feedbackLanguage, setFeedbackLanguage] = useState<PodcastLanguage>(defaultLanguage)
   const [contentQualityRating, setContentQualityRating] = useState<number | null>(null)
   const [audioDialogRating, setAudioDialogRating] = useState<number | null>(null)
   const [feedbackLoading, setFeedbackLoading] = useState(false)

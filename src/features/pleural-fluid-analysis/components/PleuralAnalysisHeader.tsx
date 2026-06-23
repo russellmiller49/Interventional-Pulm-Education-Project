@@ -1,8 +1,11 @@
+'use client'
+
+import { useLocale, useTranslations } from 'next-intl'
 import { AlertTriangle } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 
-import { pleuralAnalysisDisclaimer } from '../content/framework'
+import { getPleuralAnalysisDisclaimer } from '../content/framework'
 
 interface PleuralAnalysisHeaderProps {
   title: string
@@ -10,6 +13,10 @@ interface PleuralAnalysisHeaderProps {
 }
 
 export function PleuralAnalysisHeader({ title, description }: PleuralAnalysisHeaderProps) {
+  const t = useTranslations('pleuralFluidAnalysis')
+  const locale = useLocale()
+  const pleuralAnalysisDisclaimer = getPleuralAnalysisDisclaimer(locale)
+
   return (
     <section className="container min-w-0 space-y-5 overflow-hidden">
       <div className="max-w-4xl min-w-0 space-y-3">
@@ -17,7 +24,7 @@ export function PleuralAnalysisHeader({ title, description }: PleuralAnalysisHea
           variant="info"
           className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
         >
-          Pleural procedures
+          {t('header.eyebrow')}
         </Badge>
         <div className="space-y-3">
           <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{title}</h1>

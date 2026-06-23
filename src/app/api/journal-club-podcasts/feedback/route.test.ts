@@ -3,6 +3,7 @@
  */
 
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
+import { supabaseServer } from '@/lib/supabase/server'
 
 import { POST } from './route'
 
@@ -10,12 +11,28 @@ jest.mock('@/lib/supabase/admin', () => ({
   createSupabaseAdmin: jest.fn(),
 }))
 
+jest.mock('@/lib/supabase/server', () => ({
+  supabaseServer: jest.fn(),
+}))
+
 describe('journal club podcast feedback API', () => {
   const createSupabaseAdminMock = createSupabaseAdmin as jest.Mock
+  const supabaseServerMock = supabaseServer as jest.Mock
   const playbackSessionId = '550e8400-e29b-41d4-a716-446655440000'
 
   beforeEach(() => {
     createSupabaseAdminMock.mockReset()
+    supabaseServerMock.mockReset()
+    supabaseServerMock.mockResolvedValue(authenticatedSupabase())
+  })
+
+  it('requires authentication before recording feedback', async () => {
+    supabaseServerMock.mockResolvedValue(unauthenticatedSupabase())
+
+    const response = await POST(validFeedbackRequest())
+
+    expect(response.status).toBe(401)
+    expect(createSupabaseAdminMock).not.toHaveBeenCalled()
   })
 
   it('rejects invalid feedback payloads before writing to Supabase', async () => {
@@ -70,6 +87,28 @@ describe('journal club podcast feedback API', () => {
     )
   })
 })
+
+function authenticatedSupabase() {
+  return {
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      }),
+    },
+  }
+}
+
+function unauthenticatedSupabase() {
+  return {
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: null },
+        error: null,
+      }),
+    },
+  }
+}
 
 function validFeedbackRequest() {
   return new Request('http://localhost/api/journal-club-podcasts/feedback', {

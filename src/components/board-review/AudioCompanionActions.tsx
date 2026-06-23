@@ -1,10 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Headphones, Loader2, Pause, Play } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 import type { BoardReviewChapterMeta } from '@/data/board-review'
 

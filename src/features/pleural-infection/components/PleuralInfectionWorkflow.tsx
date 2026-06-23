@@ -1,12 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { LessonScaffold } from '@/components/learning/LessonScaffold'
 
-import { bleedingRisk, evaluateLyticChoice, type LyticChoice } from '../engine/lytics'
+import { bleedingRisk, type LyticChoice } from '../engine/lytics'
 import {
-  antibioticDuration,
   classifyParapneumonic,
   type InfectionUltrasoundPattern,
   type ParapneumonicInput,
@@ -14,36 +14,22 @@ import {
 } from '../engine/staging'
 import { infectionCases } from '../scenarios/infectionCases'
 
-const stageOptions: { id: ParapneumonicStage; label: string; description: string }[] = [
-  {
-    id: 'uncomplicated',
-    label: 'Uncomplicated parapneumonic effusion',
-    description: 'Antibiotics and reassessment may be enough when low-risk features fit.',
-  },
-  {
-    id: 'complicated',
-    label: 'Complicated parapneumonic effusion',
-    description: 'Drainage-level chemistry or imaging features are present.',
-  },
-  {
-    id: 'empyema',
-    label: 'Empyema',
-    description: 'Pus or positive microbiology makes source control explicit.',
-  },
+const STAGE_IDS: ParapneumonicStage[] = ['uncomplicated', 'complicated', 'empyema']
+
+const ULTRASOUND_PATTERN_IDS: InfectionUltrasoundPattern[] = [
+  'freeFlowing',
+  'complex',
+  'septated',
+  'large',
 ]
 
-const stageLabels: Record<ParapneumonicStage, string> = {
-  uncomplicated: 'Uncomplicated parapneumonic effusion',
-  complicated: 'Complicated parapneumonic effusion',
-  empyema: 'Empyema',
-}
-
-const ultrasoundPatternLabels: Record<InfectionUltrasoundPattern, string> = {
-  freeFlowing: 'Free-flowing',
-  complex: 'Complex',
-  septated: 'Septated',
-  large: 'Large volume',
-}
+const ADJUNCT_IDS: LyticChoice[] = [
+  'alteplase10Dnase5',
+  'alteplaseOnly',
+  'dnaseOnly',
+  'salineIrrigation',
+  'placebo',
+]
 
 function cloneInput(input: ParapneumonicInput): ParapneumonicInput {
   return { ...input }
@@ -54,6 +40,8 @@ function numberOrUndefined(value: string) {
 }
 
 export function PleuralInfectionWorkflow() {
+  const t = useTranslations('pleuralInfection')
+
   const [caseId, setCaseId] = useState(infectionCases[0]?.id ?? '')
   const [choice, setChoice] = useState<LyticChoice>('alteplase10Dnase5')
   const [workingInput, setWorkingInput] = useState<ParapneumonicInput>(() =>
@@ -78,7 +66,6 @@ export function PleuralInfectionWorkflow() {
   }
 
   const classification = classifyParapneumonic(workingInput)
-  const lytic = evaluateLyticChoice(choice)
   const bleed = bleedingRisk(clinicalCase.anticoagulated)
   const guessedCorrectly = stageGuess === classification.stage
 
@@ -103,24 +90,10 @@ export function PleuralInfectionWorkflow() {
 
   return (
     <LessonScaffold
-      title="Pleural infection staging and source control"
-      objectives={[
-        'Classify parapneumonic effusions using pH, glucose, LDH, microbiology, pus, and ultrasound pattern.',
-        'Choose the drainage and antibiotic-duration teaching branch before seeing the answer.',
-        'Explain where MIST2-style therapy, irrigation fallback, bleeding risk, and surgery fit.',
-      ]}
-      howToUse={[
-        'Select a case, then adjust the fluid and ultrasound values if you want to test a variant.',
-        'Predict the stage before revealing the action plan.',
-        'Review drainage, antibiotics, adjunct therapy, bleeding risk, and escalation together.',
-      ]}
-      clinicalAnchor={
-        <p>
-          A patient with pneumonia has persistent systemic inflammation and a pleural effusion. The
-          team needs to decide whether antibiotics alone are enough or whether source control is
-          required.
-        </p>
-      }
+      title={t('workflow.scaffoldTitle')}
+      objectives={t.raw('workflow.objectives') as string[]}
+      howToUse={t.raw('workflow.howToUse') as string[]}
+      clinicalAnchor={<p>{t('workflow.clinicalAnchor')}</p>}
       reveal={
         <div className="space-y-4">
           <div
@@ -131,50 +104,48 @@ export function PleuralInfectionWorkflow() {
             }
           >
             <h3 className="font-semibold">
-              {guessedCorrectly ? 'Stage prediction matches' : 'Compare your stage prediction'}
+              {guessedCorrectly ? t('workflow.matchHeading') : t('workflow.compareHeading')}
             </h3>
-            <p className="mt-2 text-base font-semibold">{stageLabels[classification.stage]}</p>
-            <p className="mt-2">{classification.action}</p>
+            <p className="mt-2 text-base font-semibold">{t(`stage.${classification.stage}`)}</p>
+            <p className="mt-2">{t(`staging.action.${classification.stage}`)}</p>
             <ul className="mt-3 grid gap-2">
-              {classification.reasons.map((reason) => (
-                <li key={reason} className="rounded-lg border border-current/30 p-3">
-                  {reason}
+              {classification.reasonCodes.map((code) => (
+                <li key={code} className="rounded-lg border border-current/30 p-3">
+                  {t(`staging.reasons.${code}`)}
                 </li>
               ))}
             </ul>
             <p className="mt-3 font-medium">
-              Antibiotic duration: {antibioticDuration(classification.stage)}
+              {t('workflow.antibioticDurationLabel', {
+                duration: t(`antibioticDuration.${classification.stage}`),
+              })}
             </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
             <RevealCard
-              title="MIST2 trial branch"
-              body={`${lytic.label}: ${lytic.effect}`}
-              note={lytic.caution}
+              title={t('workflow.cards.mist2.title')}
+              body={`${t(`lytic.${choice}.label`)}: ${t(`lytic.${choice}.effect`)}`}
+              note={t(`lytic.${choice}.caution`)}
             />
             <RevealCard
-              title="Pleural Irrigation Trial fallback"
-              body="Normal saline irrigation can be discussed when lytic/enzyme therapy is unsuitable or bleeding risk cannot be mitigated."
-              note="Treat irrigation as a selected fallback pathway, not a universal replacement for drainage, combination therapy, or surgery."
+              title={t('workflow.cards.irrigation.title')}
+              body={t('workflow.cards.irrigation.body')}
+              note={t('workflow.cards.irrigation.note')}
             />
             <RevealCard
-              title="Bleeding overlay"
-              body={`Estimated bleeding signal for this teaching case: ${bleed.percent.toFixed(1)}%.`}
-              note={bleed.note}
+              title={t('workflow.cards.bleeding.title')}
+              body={t('workflow.cards.bleeding.body', { percent: bleed.percent.toFixed(1) })}
+              note={t(`bleedingNote.${bleed.noteCode}`)}
             />
           </div>
 
           <div className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-            <h3 className="text-base font-semibold text-foreground">Escalation chain</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              {t('workflow.escalation.heading')}
+            </h3>
             <div className="mt-4 grid gap-3 md:grid-cols-5">
-              {[
-                'Small-bore image-guided drain',
-                'Flush and reimage',
-                'Combination intrapleural therapy',
-                'Irrigation fallback when suitable',
-                'Surgical review',
-              ].map((step) => (
+              {(t.raw('workflow.escalation.steps') as string[]).map((step) => (
                 <div key={step} className="rounded-lg border border-border bg-background p-3">
                   <p className="text-sm font-semibold text-foreground">{step}</p>
                 </div>
@@ -186,19 +157,13 @@ export function PleuralInfectionWorkflow() {
       revealed={revealed}
       onReveal={() => setRevealed(true)}
       canReveal={stageGuess !== null}
-      revealLabel="Reveal source-control pathway"
-      keyTakeaway={
-        <p>
-          Pleural infection decisions combine chemistry, microbiology, ultrasound complexity, and
-          clinical progress. Drainage, antibiotics, intrapleural therapy, irrigation fallback, and
-          surgery should be taught as one reassessment pathway.
-        </p>
-      }
+      revealLabel={t('workflow.revealLabel')}
+      keyTakeaway={<p>{t('workflow.keyTakeaway')}</p>}
     >
       <div className="grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
         <aside className="h-fit space-y-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm lg:sticky lg:top-20">
           <label className="grid gap-2 text-sm font-medium text-foreground">
-            Infection case
+            {t('workflow.caseLabel')}
             <select
               value={caseId}
               onChange={(event) => selectCase(event.target.value)}
@@ -206,14 +171,14 @@ export function PleuralInfectionWorkflow() {
             >
               {infectionCases.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.title}
+                  {t(`workflow.cases.${item.id}`)}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="grid gap-2 text-sm font-medium text-foreground">
-            Adjunct choice to test
+            {t('workflow.adjunctLabel')}
             <select
               value={choice}
               onChange={(event) => {
@@ -222,42 +187,42 @@ export function PleuralInfectionWorkflow() {
               }}
               className="min-h-11 rounded-lg border border-input bg-background px-3"
             >
-              <option value="alteplase10Dnase5">Tissue plasminogen activator plus DNase</option>
-              <option value="alteplaseOnly">Tissue plasminogen activator only</option>
-              <option value="dnaseOnly">DNase only</option>
-              <option value="salineIrrigation">Normal saline irrigation</option>
-              <option value="placebo">Drainage alone</option>
+              {ADJUNCT_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {t(`workflow.adjunct.${id}`)}
+                </option>
+              ))}
             </select>
           </label>
 
           <div className="rounded-lg border border-border bg-background p-4 text-sm leading-6">
-            <p className="font-semibold text-foreground">Case bleeding context</p>
+            <p className="font-semibold text-foreground">{t('workflow.bleedingContextHeading')}</p>
             <p className="mt-1 text-muted-foreground">
               {clinicalCase.anticoagulated
-                ? 'Therapeutic anticoagulation cannot be safely paused.'
-                : 'No therapeutic anticoagulation flag in this case.'}
+                ? t('workflow.bleedingContext.anticoagulated')
+                : t('workflow.bleedingContext.none')}
             </p>
           </div>
         </aside>
 
         <div className="space-y-6">
           <article className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-            <h3 className="text-xl font-semibold text-foreground">Fluid and imaging values</h3>
+            <h3 className="text-xl font-semibold text-foreground">{t('workflow.fluidHeading')}</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <NumberField
-                label="Pleural pH"
+                label={t('workflow.phLabel')}
                 step={0.01}
                 value={workingInput.ph}
                 onChange={(value) => updateInput({ ...workingInput, ph: value })}
               />
               <NumberField
-                label="Glucose (mg/dL)"
+                label={t('workflow.glucoseLabel')}
                 step={1}
                 value={workingInput.glucose}
                 onChange={(value) => updateInput({ ...workingInput, glucose: value })}
               />
               <NumberField
-                label="LDH (IU/L)"
+                label={t('workflow.ldhLabel')}
                 step={50}
                 value={workingInput.ldh}
                 onChange={(value) => updateInput({ ...workingInput, ldh: value })}
@@ -266,7 +231,7 @@ export function PleuralInfectionWorkflow() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <label className="grid gap-2 text-sm font-medium text-foreground">
-                Ultrasound pattern
+                {t('workflow.ultrasoundPatternLabel')}
                 <select
                   value={workingInput.usPattern}
                   onChange={(event) =>
@@ -277,20 +242,24 @@ export function PleuralInfectionWorkflow() {
                   }
                   className="min-h-11 rounded-lg border border-input bg-background px-3"
                 >
-                  {Object.entries(ultrasoundPatternLabels).map(([id, label]) => (
+                  {ULTRASOUND_PATTERN_IDS.map((id) => (
                     <option key={id} value={id}>
-                      {label}
+                      {t(`workflow.ultrasoundPattern.${id}`)}
                     </option>
                   ))}
                 </select>
               </label>
               <BooleanButton
-                label="Gram stain"
+                label={t('workflow.gramStainLabel')}
+                positiveLabel={t('workflow.positive')}
+                negativeLabel={t('workflow.negative')}
                 active={workingInput.gramStain}
                 onChange={(value) => updateInput({ ...workingInput, gramStain: value })}
               />
               <BooleanButton
-                label="Frank pus"
+                label={t('workflow.frankPusLabel')}
+                positiveLabel={t('workflow.positive')}
+                negativeLabel={t('workflow.negative')}
                 active={workingInput.frankPus}
                 onChange={(value) => updateInput({ ...workingInput, frankPus: value })}
               />
@@ -298,22 +267,24 @@ export function PleuralInfectionWorkflow() {
           </article>
 
           <article className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-            <h3 className="text-xl font-semibold text-foreground">Predict the stage</h3>
+            <h3 className="text-xl font-semibold text-foreground">
+              {t('workflow.predictStageHeading')}
+            </h3>
             <div className="mt-4 grid gap-2 lg:grid-cols-3">
-              {stageOptions.map((option) => (
+              {STAGE_IDS.map((id) => (
                 <button
-                  key={option.id}
+                  key={id}
                   type="button"
-                  aria-pressed={stageGuess === option.id}
+                  aria-pressed={stageGuess === id}
                   disabled={revealed}
-                  onClick={() => setStageGuess(option.id)}
+                  onClick={() => setStageGuess(id)}
                   className="rounded-lg border border-border bg-background p-3 text-left transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10 disabled:opacity-60"
                 >
                   <span className="block text-sm font-semibold text-foreground">
-                    {option.label}
+                    {t(`stage.${id}`)}
                   </span>
                   <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {option.description}
+                    {t(`stageOption.${id}.description`)}
                   </span>
                 </button>
               ))}
@@ -353,11 +324,15 @@ function NumberField({
 function BooleanButton({
   active,
   label,
+  negativeLabel,
   onChange,
+  positiveLabel,
 }: {
   active: boolean
   label: string
+  negativeLabel: string
   onChange: (value: boolean) => void
+  positiveLabel: string
 }) {
   return (
     <button
@@ -367,7 +342,9 @@ function BooleanButton({
       className="rounded-lg border border-border bg-background p-3 text-left text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10"
     >
       <span className="block font-semibold text-foreground">{label}</span>
-      <span className="mt-1 block text-muted-foreground">{active ? 'Positive' : 'Negative'}</span>
+      <span className="mt-1 block text-muted-foreground">
+        {active ? positiveLabel : negativeLabel}
+      </span>
     </button>
   )
 }

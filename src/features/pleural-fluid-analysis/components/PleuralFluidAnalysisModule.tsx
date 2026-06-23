@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   AlertTriangle,
   Beaker,
@@ -23,14 +24,15 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/cn'
 
-import { defaultPleuralFluidCase, pleuralFluidCases } from '../content/cases'
+import { defaultPleuralFluidCase, getPleuralFluidCases } from '../content/cases'
+import { getPleuralDiseaseProfiles } from '../content/diseaseProfiles'
 import {
-  analysisFrameworkSteps,
-  clinicalContextOptions,
-  fluidAppearanceOptions,
-  patternLibrary,
-  pleuralAnalysisReferences,
-  ultrasoundPatternOptions,
+  getAnalysisFrameworkSteps,
+  getClinicalContextOptions,
+  getFluidAppearanceOptions,
+  getPatternLibrary,
+  getPleuralAnalysisReferences,
+  getUltrasoundPatternOptions,
 } from '../content/framework'
 import { scoreDifferential } from '../engine/differential'
 import { interpretPleuralFluid } from '../engine/interpretation'
@@ -44,22 +46,63 @@ import type {
 import { PleuralAnalysisQuiz } from './PleuralAnalysisQuiz'
 import { PleuralDifferentialExplorer } from './PleuralDifferentialExplorer'
 
-const appearanceStyles: Record<FluidAppearance, { background: string; label: string }> = {
-  straw: { background: '#f5c84c', label: 'Straw' },
-  serous: { background: '#f7d885', label: 'Serous' },
-  serosanguineous: { background: '#e89b8f', label: 'Serosanguineous' },
-  bloody: { background: '#b91c1c', label: 'Bloody' },
-  milky: { background: '#e7f0ef', label: 'Milky' },
-  turbid: { background: '#c6b47f', label: 'Turbid' },
-  purulent: { background: '#d9b84f', label: 'Purulent' },
-  green: { background: '#6aa56f', label: 'Green' },
-  'food-particles': { background: '#b9824f', label: 'Food particles' },
-  'urine-odor': { background: '#e2c04d', label: 'Urine odor' },
+const appearanceBackground: Record<FluidAppearance, string> = {
+  straw: '#f5c84c',
+  serous: '#f7d885',
+  serosanguineous: '#e89b8f',
+  bloody: '#b91c1c',
+  milky: '#e7f0ef',
+  turbid: '#c6b47f',
+  purulent: '#d9b84f',
+  green: '#6aa56f',
+  'food-particles': '#b9824f',
+  'urine-odor': '#e2c04d',
 }
 
 const cloneInput = (input: PleuralFluidInput): PleuralFluidInput => ({ ...input })
 
+type Translate = ReturnType<typeof useTranslations<'pleuralFluidAnalysis'>>
+
+/**
+ * Build the localized "Next move" list from the engine's `nextActionsCode`. The
+ * `definitive` branch prepends the definitive finding's own action (keyed by
+ * `headlineDiagnosisCode`) before the shared follow-up line; every other code
+ * maps to a ready-made array in the namespace.
+ */
+function renderNextActions(
+  t: Translate,
+  interpretation: ReturnType<typeof interpretPleuralFluid>,
+): string[] {
+  if (interpretation.nextActionsCode === 'definitive') {
+    const definitive = interpretation.findings.find((finding) => finding.strength === 'definitive')
+    const firstAction = definitive
+      ? t(`findings.${definitive.code}.action`)
+      : t('nextActions.definitiveFollowUp')
+
+    return [firstAction, t('nextActions.definitiveFollowUp')]
+  }
+
+  return t.raw(`nextActions.${interpretation.nextActionsCode}`) as string[]
+}
+
 export function PleuralFluidAnalysisModule() {
+  const t = useTranslations('pleuralFluidAnalysis')
+  const locale = useLocale()
+  const pleuralFluidCases = React.useMemo(() => getPleuralFluidCases(locale), [locale])
+  const diseaseProfiles = React.useMemo(() => getPleuralDiseaseProfiles(locale), [locale])
+  const clinicalContextOptions = React.useMemo(() => getClinicalContextOptions(locale), [locale])
+  const ultrasoundPatternOptions = React.useMemo(
+    () => getUltrasoundPatternOptions(locale),
+    [locale],
+  )
+  const fluidAppearanceOptions = React.useMemo(() => getFluidAppearanceOptions(locale), [locale])
+  const analysisFrameworkSteps = React.useMemo(() => getAnalysisFrameworkSteps(locale), [locale])
+  const patternLibrary = React.useMemo(() => getPatternLibrary(locale), [locale])
+  const pleuralAnalysisReferences = React.useMemo(
+    () => getPleuralAnalysisReferences(locale),
+    [locale],
+  )
+
   const [activeCaseId, setActiveCaseId] = React.useState(defaultPleuralFluidCase.id)
   const [input, setInput] = React.useState<PleuralFluidInput>(() =>
     cloneInput(defaultPleuralFluidCase.input),
@@ -67,11 +110,16 @@ export function PleuralFluidAnalysisModule() {
 
   const activeCase =
     pleuralFluidCases.find((clinicalCase) => clinicalCase.id === activeCaseId) ??
-    defaultPleuralFluidCase
+    pleuralFluidCases[0]
   const interpretation = React.useMemo(() => interpretPleuralFluid(input), [input])
   const differentialPreview = React.useMemo(
-    () => scoreDifferential(input, { contextEmphasis: 72, raritySensitivity: 55, maxResults: 4 }),
-    [input],
+    () =>
+      scoreDifferential(
+        input,
+        { contextEmphasis: 72, raritySensitivity: 55, maxResults: 4 },
+        diseaseProfiles,
+      ),
+    [diseaseProfiles, input],
   )
 
   const selectCase = (caseId: string) => {
@@ -93,11 +141,11 @@ export function PleuralFluidAnalysisModule() {
   }
 
   const fluidHeight = Math.min(86, Math.max(18, 18 + input.pleuralProtein * 9))
-  const fluidStyle = appearanceStyles[input.appearance]
+  const fluidBackground = appearanceBackground[input.appearance]
   const dominantCategory =
     interpretation.pseudoexudateReasons.length > 0
-      ? 'Pseudoexudate'
-      : interpretation.lightCriteria.classification
+      ? t('category.Pseudoexudate')
+      : t(`category.${interpretation.lightCriteria.classification}`)
 
   return (
     <div className="min-w-0 space-y-10 overflow-hidden">
@@ -106,7 +154,7 @@ export function PleuralFluidAnalysisModule() {
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-4 border-b border-border/70 pb-4">
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="info">Case cockpit</Badge>
+                <Badge variant="info">{t('cockpit.badge')}</Badge>
                 <Badge
                   variant={interpretation.reconciledCategory === 'exudate' ? 'default' : 'success'}
                 >
@@ -114,11 +162,10 @@ export function PleuralFluidAnalysisModule() {
                 </Badge>
               </div>
               <h2 className="break-words text-2xl font-semibold tracking-tight">
-                Pleural fluid reasoning lab
+                {t('cockpit.title')}
               </h2>
               <p className="max-w-3xl break-words text-sm leading-6 text-muted-foreground">
-                Move between clinical cases, change the fluid profile, and watch the diagnostic
-                reasoning update around the clinical context rather than the chemistry alone.
+                {t('cockpit.intro')}
               </p>
             </div>
             <Button
@@ -129,7 +176,7 @@ export function PleuralFluidAnalysisModule() {
               className="shrink-0"
             >
               <RefreshCcw className="h-4 w-4" aria-hidden />
-              Reset case
+              {t('cockpit.resetCase')}
             </Button>
           </div>
 
@@ -168,7 +215,7 @@ export function PleuralFluidAnalysisModule() {
                     <Stethoscope className="h-5 w-5" aria-hidden />
                   </span>
                   <div className="min-w-0 space-y-2">
-                    <h3 className="font-semibold">Clinical frame</h3>
+                    <h3 className="font-semibold">{t('cockpit.clinicalFrame')}</h3>
                     <p className="break-words text-sm leading-6 text-muted-foreground">
                       {activeCase.patient}
                     </p>
@@ -193,27 +240,33 @@ export function PleuralFluidAnalysisModule() {
               <section className="min-w-0 rounded-lg border border-border/80 bg-background p-4">
                 <div className="flex items-center gap-2">
                   <TestTube2 className="h-5 w-5 text-sky-700 dark:text-sky-300" aria-hidden />
-                  <h3 className="font-semibold">Fluid snapshot</h3>
+                  <h3 className="font-semibold">{t('cockpit.fluidSnapshot')}</h3>
                 </div>
                 <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-[160px_minmax(0,1fr)]">
                   <div className="mx-auto flex h-56 w-28 items-end rounded-b-[2rem] rounded-t-lg border-2 border-slate-300 bg-white/70 p-2 shadow-inner dark:border-slate-600 dark:bg-slate-950">
                     <div
                       className="w-full rounded-b-[1.45rem] rounded-t-md transition-all duration-500"
-                      style={{ height: `${fluidHeight}%`, background: fluidStyle.background }}
+                      style={{ height: `${fluidHeight}%`, background: fluidBackground }}
                     />
                   </div>
                   <div className="grid min-w-0 gap-3 text-sm">
-                    <MetricRow label="Appearance" value={fluidStyle.label} />
                     <MetricRow
-                      label="Light criteria"
-                      value={interpretation.lightCriteria.classification}
+                      label={t('cockpit.appearanceLabel')}
+                      value={t(`appearance.${input.appearance}`)}
                     />
                     <MetricRow
-                      label="Reconciled"
-                      value={interpretation.reconciledCategory}
+                      label={t('cockpit.lightCriteriaLabel')}
+                      value={t(`category.${interpretation.lightCriteria.classification}`)}
+                    />
+                    <MetricRow
+                      label={t('cockpit.reconciledLabel')}
+                      value={t(`category.${interpretation.reconciledCategory}`)}
                       tone={interpretation.reconciledCategory === 'exudate' ? 'amber' : 'emerald'}
                     />
-                    <MetricRow label="Teaching focus" value={activeCase.teachingFocus} />
+                    <MetricRow
+                      label={t('cockpit.teachingFocusLabel')}
+                      value={activeCase.teachingFocus}
+                    />
                   </div>
                 </div>
               </section>
@@ -221,7 +274,7 @@ export function PleuralFluidAnalysisModule() {
               <section className="min-w-0 rounded-lg border border-border/80 bg-background p-4">
                 <div className="grid min-w-0 gap-4">
                   <SelectField
-                    label="Clinical context"
+                    label={t('cockpit.clinicalContextLabel')}
                     value={input.clinicalContext}
                     options={clinicalContextOptions}
                     onValueChange={(value) =>
@@ -229,13 +282,13 @@ export function PleuralFluidAnalysisModule() {
                     }
                   />
                   <SelectField
-                    label="Thoracic ultrasound"
+                    label={t('cockpit.ultrasoundLabel')}
                     value={input.ultrasound}
                     options={ultrasoundPatternOptions}
                     onValueChange={(value) => updateInput('ultrasound', value as UltrasoundPattern)}
                   />
                   <SelectField
-                    label="Gross appearance"
+                    label={t('cockpit.grossAppearanceLabel')}
                     value={input.appearance}
                     options={fluidAppearanceOptions}
                     onValueChange={(value) => updateInput('appearance', value as FluidAppearance)}
@@ -248,56 +301,56 @@ export function PleuralFluidAnalysisModule() {
               <section className="min-w-0 rounded-lg border border-border/80 bg-background p-4">
                 <div className="flex items-center gap-2">
                   <FlaskConical className="h-5 w-5 text-sky-700 dark:text-sky-300" aria-hidden />
-                  <h3 className="font-semibold">Paired chemistry</h3>
+                  <h3 className="font-semibold">{t('cockpit.pairedChemistry')}</h3>
                 </div>
                 <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
                   <NumberField
-                    label="Serum protein"
+                    label={t('fields.serumProtein')}
                     unit="g/dL"
                     value={input.serumProtein}
                     step={0.1}
                     onChange={(value) => updateInput('serumProtein', value)}
                   />
                   <NumberField
-                    label="Pleural protein"
+                    label={t('fields.pleuralProtein')}
                     unit="g/dL"
                     value={input.pleuralProtein}
                     step={0.1}
                     onChange={(value) => updateInput('pleuralProtein', value)}
                   />
                   <NumberField
-                    label="Serum LDH"
+                    label={t('fields.serumLdh')}
                     unit="U/L"
                     value={input.serumLdh}
                     onChange={(value) => updateInput('serumLdh', value)}
                   />
                   <NumberField
-                    label="Pleural LDH"
+                    label={t('fields.pleuralLdh')}
                     unit="U/L"
                     value={input.pleuralLdh}
                     onChange={(value) => updateInput('pleuralLdh', value)}
                   />
                   <NumberField
-                    label="Serum LDH ULN"
+                    label={t('fields.serumLdhUln')}
                     unit="U/L"
                     value={input.serumLdhUpperLimit}
                     onChange={(value) => updateInput('serumLdhUpperLimit', value)}
                   />
                   <NumberField
-                    label="NT-proBNP"
+                    label={t('fields.ntProBnp')}
                     unit="pg/mL"
                     value={input.ntProBnp ?? 0}
                     onChange={(value) => updateInput('ntProBnp', value)}
                   />
                   <NumberField
-                    label="Serum albumin"
+                    label={t('fields.serumAlbumin')}
                     unit="g/dL"
                     value={input.serumAlbumin ?? 0}
                     step={0.1}
                     onChange={(value) => updateInput('serumAlbumin', value)}
                   />
                   <NumberField
-                    label="Pleural albumin"
+                    label={t('fields.pleuralAlbumin')}
                     unit="g/dL"
                     value={input.pleuralAlbumin ?? 0}
                     step={0.1}
@@ -309,29 +362,29 @@ export function PleuralFluidAnalysisModule() {
               <section className="min-w-0 rounded-lg border border-border/80 bg-background p-4">
                 <div className="flex items-center gap-2">
                   <Microscope className="h-5 w-5 text-sky-700 dark:text-sky-300" aria-hidden />
-                  <h3 className="font-semibold">pH, glucose, and cells</h3>
+                  <h3 className="font-semibold">{t('cockpit.phGlucoseCells')}</h3>
                 </div>
                 <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
                   <NumberField
-                    label="Pleural pH"
+                    label={t('fields.pleuralPH')}
                     value={input.pleuralPH}
                     step={0.01}
                     onChange={(value) => updateInput('pleuralPH', value)}
                   />
                   <NumberField
-                    label="Pleural glucose"
+                    label={t('fields.pleuralGlucose')}
                     unit="mg/dL"
                     value={input.pleuralGlucose}
                     onChange={(value) => updateInput('pleuralGlucose', value)}
                   />
                   <NumberField
-                    label="Nucleated cells"
+                    label={t('fields.nucleatedCells')}
                     unit="/uL"
                     value={input.nucleatedCells}
                     onChange={(value) => updateInput('nucleatedCells', value)}
                   />
                   <NumberField
-                    label="Neutrophils"
+                    label={t('fields.neutrophils')}
                     unit="%"
                     value={input.neutrophils}
                     min={0}
@@ -339,7 +392,7 @@ export function PleuralFluidAnalysisModule() {
                     onChange={(value) => updateInput('neutrophils', value)}
                   />
                   <NumberField
-                    label="Lymphocytes"
+                    label={t('fields.lymphocytes')}
                     unit="%"
                     value={input.lymphocytes}
                     min={0}
@@ -347,7 +400,7 @@ export function PleuralFluidAnalysisModule() {
                     onChange={(value) => updateInput('lymphocytes', value)}
                   />
                   <NumberField
-                    label="Eosinophils"
+                    label={t('fields.eosinophils')}
                     unit="%"
                     value={input.eosinophils}
                     min={0}
@@ -355,7 +408,7 @@ export function PleuralFluidAnalysisModule() {
                     onChange={(value) => updateInput('eosinophils', value)}
                   />
                   <NumberField
-                    label="Mesothelial cells"
+                    label={t('fields.mesothelialCells')}
                     unit="%"
                     value={input.mesothelialCells}
                     min={0}
@@ -368,47 +421,47 @@ export function PleuralFluidAnalysisModule() {
               <section className="min-w-0 rounded-lg border border-border/80 bg-background p-4">
                 <div className="flex items-center gap-2">
                   <Beaker className="h-5 w-5 text-sky-700 dark:text-sky-300" aria-hidden />
-                  <h3 className="font-semibold">Targeted tests</h3>
+                  <h3 className="font-semibold">{t('cockpit.targetedTests')}</h3>
                 </div>
                 <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
                   <NumberField
-                    label="Triglycerides"
+                    label={t('fields.triglycerides')}
                     unit="mg/dL"
                     value={input.triglycerides ?? 0}
                     onChange={(value) => updateInput('triglycerides', value)}
                   />
                   <NumberField
-                    label="Cholesterol"
+                    label={t('fields.cholesterol')}
                     unit="mg/dL"
                     value={input.cholesterol ?? 0}
                     onChange={(value) => updateInput('cholesterol', value)}
                   />
                   <NumberField
-                    label="ADA"
+                    label={t('fields.ada')}
                     unit="IU/L"
                     value={input.ada ?? 0}
                     onChange={(value) => updateInput('ada', value)}
                   />
                   <NumberField
-                    label="Amylase"
+                    label={t('fields.amylase')}
                     unit="U/L"
                     value={input.amylase ?? 0}
                     onChange={(value) => updateInput('amylase', value)}
                   />
                   <NumberField
-                    label="PF/blood Hct"
+                    label={t('fields.pfBloodHct')}
                     value={input.pleuralToBloodHematocritRatio ?? 0}
                     step={0.01}
                     onChange={(value) => updateInput('pleuralToBloodHematocritRatio', value)}
                   />
                   <NumberField
-                    label="PF/serum creatinine"
+                    label={t('fields.pfSerumCreatinine')}
                     value={input.pleuralToSerumCreatinineRatio ?? 0}
                     step={0.1}
                     onChange={(value) => updateInput('pleuralToSerumCreatinineRatio', value)}
                   />
                   <NumberField
-                    label="PF/serum bilirubin"
+                    label={t('fields.pfSerumBilirubin')}
                     value={input.pleuralToSerumBilirubinRatio ?? 0}
                     step={0.1}
                     onChange={(value) => updateInput('pleuralToSerumBilirubinRatio', value)}
@@ -416,17 +469,17 @@ export function PleuralFluidAnalysisModule() {
                 </div>
                 <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-3">
                   <ToggleField
-                    label="Cytology +"
+                    label={t('fields.cytologyPositive')}
                     active={input.cytologyPositive}
                     onClick={() => updateInput('cytologyPositive', !input.cytologyPositive)}
                   />
                   <ToggleField
-                    label="Microbiology +"
+                    label={t('fields.microbiologyPositive')}
                     active={input.microbiologyPositive}
                     onClick={() => updateInput('microbiologyPositive', !input.microbiologyPositive)}
                   />
                   <ToggleField
-                    label="Chylomicrons"
+                    label={t('fields.chylomicrons')}
                     active={input.chylomicronsPresent}
                     onClick={() => updateInput('chylomicronsPresent', !input.chylomicronsPresent)}
                   />
@@ -438,40 +491,47 @@ export function PleuralFluidAnalysisModule() {
 
         <aside className="min-w-0 space-y-4 xl:sticky xl:top-24 xl:self-start">
           <section className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-            <Badge variant="secondary">Interpretation</Badge>
+            <Badge variant="secondary">{t('cockpit.interpretation')}</Badge>
             <h2 className="mt-3 break-words text-xl font-semibold tracking-tight">
-              {interpretation.headline}
+              {t(`headlineCode.${interpretation.headlineCode}`, {
+                diagnosis: interpretation.headlineDiagnosisCode
+                  ? t(`findings.${interpretation.headlineDiagnosisCode}.diagnosis`)
+                  : '',
+              })}
             </h2>
             <p className="mt-3 break-words text-sm leading-6 text-muted-foreground">
-              {interpretation.reconciliation}
+              {t(`reconciliationCode.${interpretation.reconciliationCode}`)}
             </p>
             <div className="mt-5 space-y-3">
               <CriteriaMeter
-                label="PF / serum protein"
+                label={t('cockpit.proteinRatioMeter')}
+                cutoffLabel={t('cockpit.cutoff', { value: 0.5 })}
                 value={interpretation.lightCriteria.proteinRatio}
                 threshold={0.5}
                 active={interpretation.lightCriteria.proteinCriterion}
               />
               <CriteriaMeter
-                label="PF / serum LDH"
+                label={t('cockpit.ldhRatioMeter')}
+                cutoffLabel={t('cockpit.cutoff', { value: 0.6 })}
                 value={interpretation.lightCriteria.ldhRatio}
                 threshold={0.6}
                 active={interpretation.lightCriteria.ldhRatioCriterion}
               />
               <CriteriaMeter
-                label="PF LDH / serum ULN"
+                label={t('cockpit.ldhUlnMeter')}
+                cutoffLabel={t('cockpit.cutoff', { value: 0.67 })}
                 value={interpretation.lightCriteria.ldhUpperLimitRatio}
                 threshold={0.67}
                 active={interpretation.lightCriteria.ldhUpperLimitCriterion}
               />
             </div>
-            {interpretation.pseudoexudateReasons.length > 0 ? (
+            {interpretation.pseudoexudateReasonDetails.length > 0 ? (
               <div className="mt-4 min-w-0 rounded-lg border border-emerald-300/60 bg-emerald-50 p-3 text-sm leading-6 text-emerald-950 dark:border-emerald-400/30 dark:bg-emerald-950/30 dark:text-emerald-100">
-                <p className="font-semibold">Pseudoexudate clues</p>
+                <p className="font-semibold">{t('cockpit.pseudoexudateClues')}</p>
                 <ul className="mt-2 space-y-1">
-                  {interpretation.pseudoexudateReasons.map((reason) => (
-                    <li key={reason} className="break-words">
-                      {reason}
+                  {interpretation.pseudoexudateReasonDetails.map((reason) => (
+                    <li key={reason.code} className="break-words">
+                      {t(`pseudoexudateReason.${reason.code}`, reason.args)}
                     </li>
                   ))}
                 </ul>
@@ -481,9 +541,9 @@ export function PleuralFluidAnalysisModule() {
 
           <section className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-semibold">Ranked differential</h3>
+              <h3 className="font-semibold">{t('cockpit.rankedDifferential')}</h3>
               <Badge variant="outline" size="sm">
-                context weighted
+                {t('cockpit.contextWeighted')}
               </Badge>
             </div>
             <div className="mt-4 space-y-3">
@@ -494,11 +554,11 @@ export function PleuralFluidAnalysisModule() {
           </section>
 
           <section className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-            <h3 className="font-semibold">Next move</h3>
+            <h3 className="font-semibold">{t('cockpit.nextMove')}</h3>
             <div className="mt-4 space-y-3">
-              {interpretation.nextActions.map((action) => (
+              {renderNextActions(t, interpretation).map((action, index) => (
                 <div
-                  key={action}
+                  key={index}
                   className="flex min-w-0 gap-3 text-sm leading-6 text-muted-foreground"
                 >
                   <CheckCircle2
@@ -515,11 +575,11 @@ export function PleuralFluidAnalysisModule() {
             <div className="flex min-w-0 gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
               <div className="min-w-0">
-                <h3 className="font-semibold">Pitfalls to check</h3>
+                <h3 className="font-semibold">{t('cockpit.pitfallsToCheck')}</h3>
                 <ul className="mt-3 space-y-2 text-sm leading-6">
-                  {interpretation.pitfalls.map((pitfall) => (
-                    <li key={pitfall} className="break-words">
-                      {pitfall}
+                  {interpretation.pitfallCodes.map((code) => (
+                    <li key={code} className="break-words">
+                      {t(`pitfalls.${code}`)}
                     </li>
                   ))}
                 </ul>
@@ -534,8 +594,8 @@ export function PleuralFluidAnalysisModule() {
 
       <section className="container grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <div className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-          <Badge variant="info">Framework</Badge>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight">Approach map</h2>
+          <Badge variant="info">{t('cockpit.frameworkBadge')}</Badge>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight">{t('cockpit.approachMap')}</h2>
           <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
             {analysisFrameworkSteps.map((step, index) => (
               <div
@@ -543,7 +603,7 @@ export function PleuralFluidAnalysisModule() {
                 className="min-w-0 rounded-lg border border-border/70 bg-background p-4"
               >
                 <span className="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">
-                  Step {index + 1}
+                  {t('cockpit.step', { number: index + 1 })}
                 </span>
                 <h3 className="mt-2 font-semibold">{step.title}</h3>
                 <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
@@ -555,8 +615,10 @@ export function PleuralFluidAnalysisModule() {
         </div>
 
         <div className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-          <Badge variant="secondary">Pattern library</Badge>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight">High-yield branches</h2>
+          <Badge variant="secondary">{t('cockpit.patternLibraryBadge')}</Badge>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+            {t('cockpit.highYieldBranches')}
+          </h2>
           <div className="mt-5 space-y-3">
             {patternLibrary.map((pattern) => (
               <div
@@ -566,7 +628,7 @@ export function PleuralFluidAnalysisModule() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-semibold">{pattern.pattern}</h3>
                   <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Branch point
+                    {t('cockpit.branchPoint')}
                   </span>
                 </div>
                 <p className="mt-2 break-words text-sm leading-6 text-muted-foreground">
@@ -581,35 +643,35 @@ export function PleuralFluidAnalysisModule() {
 
       <section className="container grid min-w-0 gap-5 lg:grid-cols-2">
         <div className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-          <Badge variant="outline">Routine studies</Badge>
+          <Badge variant="outline">{t('cockpit.routineStudies')}</Badge>
           <div className="mt-4 space-y-3">
-            {interpretation.routineStudies.map((study) => (
+            {interpretation.routineStudyCodes.map((code) => (
               <div
-                key={study}
+                key={code}
                 className="flex min-w-0 gap-3 text-sm leading-6 text-muted-foreground"
               >
                 <CheckCircle2
                   className="mt-1 h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300"
                   aria-hidden
                 />
-                <span className="min-w-0 break-words">{study}</span>
+                <span className="min-w-0 break-words">{t(`routineStudies.${code}`)}</span>
               </div>
             ))}
           </div>
         </div>
         <div className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-          <Badge variant="outline">Targeted studies</Badge>
+          <Badge variant="outline">{t('cockpit.targetedStudies')}</Badge>
           <div className="mt-4 space-y-3">
-            {interpretation.targetedStudies.map((study) => (
+            {interpretation.targetedStudyCodes.map((code) => (
               <div
-                key={study}
+                key={code}
                 className="flex min-w-0 gap-3 text-sm leading-6 text-muted-foreground"
               >
                 <CheckCircle2
                   className="mt-1 h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300"
                   aria-hidden
                 />
-                <span className="min-w-0 break-words">{study}</span>
+                <span className="min-w-0 break-words">{t(`targetedStudies.${code}`)}</span>
               </div>
             ))}
           </div>
@@ -618,7 +680,7 @@ export function PleuralFluidAnalysisModule() {
 
       <section className="container min-w-0">
         <div className="min-w-0 rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-          <Badge variant="outline">Sources</Badge>
+          <Badge variant="outline">{t('cockpit.sources')}</Badge>
           <div className="mt-4 grid min-w-0 gap-3 lg:grid-cols-3">
             {pleuralAnalysisReferences.map((reference) => (
               <div
@@ -780,12 +842,13 @@ function MetricRow({ label, value, tone }: MetricRowProps) {
 
 interface CriteriaMeterProps {
   label: string
+  cutoffLabel: string
   value: number
   threshold: number
   active: boolean
 }
 
-function CriteriaMeter({ label, value, threshold, active }: CriteriaMeterProps) {
+function CriteriaMeter({ label, cutoffLabel, value, threshold, active }: CriteriaMeterProps) {
   const width = Math.min(100, Math.max(8, (value / threshold) * 56))
 
   return (
@@ -793,7 +856,7 @@ function CriteriaMeter({ label, value, threshold, active }: CriteriaMeterProps) 
       <div className="flex min-w-0 items-center justify-between gap-2 text-xs">
         <span className="min-w-0 break-words font-semibold text-muted-foreground">{label}</span>
         <span className={cn('font-semibold', active ? 'text-sky-700 dark:text-sky-300' : '')}>
-          {value} / cutoff {threshold}
+          {value} / {cutoffLabel}
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">

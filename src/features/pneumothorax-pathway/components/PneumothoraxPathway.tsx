@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { LessonScaffold } from '@/components/learning/LessonScaffold'
 
@@ -9,39 +10,30 @@ import {
   type Disposition,
   type FrameworkResult,
 } from '../engine/frameworks'
-import type { PneumothoraxCase } from '../engine/types'
-import { pneumothoraxCases } from '../scenarios/pneumothoraxCases'
+import { getPneumothoraxCases } from '../scenarios/pneumothoraxCases'
 
-const guessOptions: { id: Disposition; label: string }[] = [
-  { id: 'observation', label: 'Observation or conservative care' },
-  { id: 'aspiration', label: 'Needle aspiration' },
-  { id: 'ambulatory', label: 'Ambulatory device' },
-  { id: 'chest-drain', label: 'Chest drain' },
-  { id: 'escalate', label: 'Specialist escalation' },
-  { id: 'emergency', label: 'Emergency decompression' },
+const DISPOSITION_IDS: Disposition[] = [
+  'observation',
+  'aspiration',
+  'ambulatory',
+  'chest-drain',
+  'escalate',
+  'emergency',
 ]
 
-const typeLabels: Record<PneumothoraxCase['type'], string> = {
-  psp: 'Primary spontaneous pneumothorax',
-  ssp: 'Secondary spontaneous pneumothorax',
-  iatrogenic: 'Iatrogenic pneumothorax',
-  traumatic: 'Traumatic pneumothorax',
-}
-
-const symptomLabels: Record<PneumothoraxCase['symptomBurden'], string> = {
-  minimal: 'Minimal symptoms',
-  moderate: 'Moderate symptoms',
-  severe: 'Severe symptoms',
-}
-
 export function PneumothoraxPathway() {
-  const [caseId, setCaseId] = useState(pneumothoraxCases[0]?.id ?? '')
+  const t = useTranslations('pneumothoraxPathway')
+  const locale = useLocale()
+
+  const cases = useMemo(() => getPneumothoraxCases(locale), [locale])
+
+  const [caseId, setCaseId] = useState(cases[0]?.id ?? '')
   const [guess, setGuess] = useState<Disposition | null>(null)
   const [revealed, setRevealed] = useState(false)
 
   const clinicalCase = useMemo(
-    () => pneumothoraxCases.find((item) => item.id === caseId) ?? pneumothoraxCases[0],
-    [caseId],
+    () => cases.find((item) => item.id === caseId) ?? cases[0],
+    [cases, caseId],
   )
 
   const result = useMemo(
@@ -61,27 +53,19 @@ export function PneumothoraxPathway() {
 
   return (
     <LessonScaffold
-      title="Pneumothorax: ACCP 2001 compared with BTS 2023"
-      objectives={[
-        'Run one case through the American College of Chest Physicians 2001 and British Thoracic Society 2023 frameworks.',
-        'Explain why unstable patients converge while stable primary spontaneous pneumothorax can diverge.',
-        'Identify whether size, symptoms, patient priorities, or air-leak timing is driving the recommendation.',
-      ]}
-      howToUse={[
-        'Pick a scenario and review the stability, size, and symptom details.',
-        'Predict the disposition before revealing the guideline comparison.',
-        'Compare the two cards and decide why they agree or diverge.',
-      ]}
+      title={t('pathway.scaffoldTitle')}
+      objectives={t.raw('pathway.objectives') as string[]}
+      howToUse={t.raw('pathway.howToUse') as string[]}
       clinicalAnchor={
         <div>
           <label className="grid gap-2 text-sm font-medium text-foreground">
-            Scenario
+            {t('pathway.scenarioLabel')}
             <select
               value={caseId}
               onChange={(event) => selectCase(event.target.value)}
               className="min-h-11 max-w-xl rounded-lg border border-input bg-background px-3"
             >
-              {pneumothoraxCases.map((item) => (
+              {cases.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.title}
                 </option>
@@ -90,18 +74,28 @@ export function PneumothoraxPathway() {
           </label>
           <p className="mt-3">{clinicalCase.learningCue}</p>
           <dl className="mt-4 grid gap-2 text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
-            <Data label="Type" value={typeLabels[clinicalCase.type]} />
-            <Data label="Symptoms" value={symptomLabels[clinicalCase.symptomBurden]} />
             <Data
-              label="Size for ACCP"
-              value={clinicalCase.sizeCategory === 'large' ? 'Large' : 'Small'}
+              label={t('pathway.dataType')}
+              value={t(`pneumothoraxType.${clinicalCase.type}`)}
             />
             <Data
-              label="Air leak"
+              label={t('pathway.dataSymptoms')}
+              value={t(`symptomBurden.${clinicalCase.symptomBurden}`)}
+            />
+            <Data
+              label={t('pathway.dataSizeAccp')}
+              value={
+                clinicalCase.sizeCategory === 'large'
+                  ? t('pathway.sizeLarge')
+                  : t('pathway.sizeSmall')
+              }
+            />
+            <Data
+              label={t('pathway.dataAirLeak')}
               value={
                 clinicalCase.persistentAirLeakDays
-                  ? `${clinicalCase.persistentAirLeakDays} days`
-                  : 'None'
+                  ? t('pathway.airLeakDays', { days: clinicalCase.persistentAirLeakDays })
+                  : t('pathway.airLeakNone')
               }
             />
           </dl>
@@ -116,44 +110,40 @@ export function PneumothoraxPathway() {
                 : 'rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-900 dark:text-amber-100'
             }
           >
-            {result.agreement ? 'Frameworks agree' : 'Frameworks diverge'}: {result.comparisonNote}
+            {result.agreement ? t('pathway.frameworksAgree') : t('pathway.frameworksDiverge')}:{' '}
+            {t(`comparisonNote.${result.comparisonNoteCode}`)}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <FrameworkCard result={result.accp} guessedRight={guess === result.accp.disposition} />
             <FrameworkCard result={result.bts} guessedRight={guess === result.bts.disposition} />
           </div>
           <div className="rounded-lg border border-border bg-background p-4 text-sm leading-6 text-muted-foreground">
-            <p className="font-semibold text-foreground">Recurrence prevention</p>
-            <p className="mt-1">{result.recurrencePrevention}</p>
+            <p className="font-semibold text-foreground">
+              {t('pathway.recurrencePreventionLabel')}
+            </p>
+            <p className="mt-1">{t(`recurrencePrevention.${result.recurrencePreventionCode}`)}</p>
           </div>
         </div>
       }
       revealed={revealed}
       onReveal={() => setRevealed(true)}
       canReveal={guess !== null}
-      revealLabel="Reveal both frameworks"
-      keyTakeaway={
-        <p>
-          ACCP 2001 is useful as a historical size-and-stability comparator. BTS 2023 places more
-          emphasis on symptoms, patient priorities, ambulatory pathways, and reliable follow-up.
-        </p>
-      }
+      revealLabel={t('pathway.revealLabel')}
+      keyTakeaway={<p>{t('pathway.keyTakeaway')}</p>}
     >
       <div className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-foreground">
-          Predict the disposition before revealing the comparison
-        </h3>
+        <h3 className="text-base font-semibold text-foreground">{t('pathway.predictHeading')}</h3>
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {guessOptions.map((option) => (
+          {DISPOSITION_IDS.map((id) => (
             <button
-              key={option.id}
+              key={id}
               type="button"
-              aria-pressed={guess === option.id}
+              aria-pressed={guess === id}
               disabled={revealed}
-              onClick={() => setGuess(option.id)}
+              onClick={() => setGuess(id)}
               className="rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10 disabled:opacity-60"
             >
-              {option.label}
+              {t(`disposition.${id}`)}
             </button>
           ))}
         </div>
@@ -169,6 +159,8 @@ function FrameworkCard({
   result: FrameworkResult
   guessedRight: boolean
 }) {
+  const t = useTranslations('pneumothoraxPathway')
+
   return (
     <article className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
       <div className="flex items-center justify-between gap-2">
@@ -177,15 +169,17 @@ function FrameworkCard({
         </span>
         {guessedRight ? (
           <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-            Matches your prediction
+            {t('pathway.matchesPrediction')}
           </span>
         ) : null}
       </div>
-      <h3 className="mt-3 text-lg font-semibold text-foreground">{result.headline}</h3>
+      <h3 className="mt-3 text-lg font-semibold text-foreground">
+        {t(`headline.${result.headlineCode}`)}
+      </h3>
       <ul className="mt-3 grid gap-2 text-sm leading-6 text-muted-foreground">
-        {result.rationale.map((item) => (
-          <li key={item} className="rounded-lg border border-border bg-background p-3">
-            {item}
+        {result.rationaleCodes.map((code) => (
+          <li key={code} className="rounded-lg border border-border bg-background p-3">
+            {t(`rationale.${code}`)}
           </li>
         ))}
       </ul>

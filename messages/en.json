@@ -1,0 +1,1633 @@
+{
+  "common": {
+    "siteName": "Interventional Pulmonology Education",
+    "shortBrand": "IP Lab",
+    "skipToContent": "Skip to content",
+    "search": "Search",
+    "signIn": "Sign in",
+    "admin": "Admin",
+    "logOut": "Log out",
+    "loggingOut": "Logging out",
+    "welcome": "Welcome, <userName>{name}</userName>",
+    "educationalUseOnly": "Educational use only."
+  },
+  "language": {
+    "label": "Language",
+    "choose": "Choose language",
+    "current": "Current language",
+    "reviewed": "Reviewed translations",
+    "planned": "Planned languages"
+  },
+  "metadata": {
+    "title": "Interventional Pulmonology Education",
+    "description": "Education and innovation hub for the interventional pulmonology community."
+  },
+  "navigation": {
+    "primary": "Primary",
+    "modules": "Modules",
+    "openMenu": "Open navigation menu",
+    "mobileLabel": "Mobile navigation",
+    "navigate": "Navigate",
+    "mobileDescription": "Explore EBUS training, podcasts, anatomy, Nav Bronch, FluoroView, and resources.",
+    "searchResources": "Search resources",
+    "searchResourcesAndGuides": "Search resources and guides",
+    "searchPlaceholder": "Search resources and guides",
+    "display": "Display",
+    "items": {
+      "ebusTraining": {
+        "title": "EBUS Training",
+        "shortTitle": "EBUS",
+        "description": "Knobology, stations, and simulator modules"
+      },
+      "ebusVirtualBronch": {
+        "title": "EBUS Virtual Bronch",
+        "shortTitle": "EBUS VB",
+        "description": "Admin preview of the synchronized virtual bronchoscopy simulator"
+      },
+      "podcastLibrary": {
+        "title": "Podcast Library",
+        "shortTitle": "Podcast Library",
+        "description": "Journal club audio discussions in five languages"
+      },
+      "tnm9": {
+        "title": "TNM-9 Staging",
+        "shortTitle": "TNM-9",
+        "description": "Standalone lung cancer staging module"
+      },
+      "anatomy": {
+        "title": "3D Anatomy",
+        "shortTitle": "Anatomy",
+        "description": "3D and interactive anatomy viewer"
+      },
+      "boardPrep": {
+        "title": "IP Board Prep",
+        "shortTitle": "Board Prep",
+        "description": "Interactive board review chapters"
+      },
+      "fluoroview": {
+        "title": "FluoroView",
+        "shortTitle": "FluoroView",
+        "description": "C-arm airway simulation lab"
+      },
+      "bronchNavigation": {
+        "title": "Bronch Navigation",
+        "shortTitle": "Nav Bronch",
+        "description": "CT-to-bronchoscope navigation simulator"
+      },
+      "pleuralProcedures": {
+        "title": "Pleural Procedures",
+        "shortTitle": "Pleural",
+        "description": "Pleural disease and procedure modules"
+      },
+      "resources": {
+        "title": "Resources",
+        "shortTitle": "Resources",
+        "description": "Creative Commons assets & study aids"
+      },
+      "socalEbusCourse": {
+        "title": "SoCal EBUS Course",
+        "shortTitle": "EBUS Course",
+        "description": "For Southern California EBUS Course participants"
+      },
+      "rapidOnsiteCytology": {
+        "title": "Rapid Onsite Cytology",
+        "shortTitle": "Cytology",
+        "description": "ROSE and Diff-Quik slide interpretation trainer"
+      },
+      "introBronchoscopy": {
+        "title": "Intro Bronchoscopy",
+        "shortTitle": "Intro Bronch",
+        "description": "Foundational scope sizing, reach, and tool fit modules"
+      },
+      "ipRegistry": {
+        "title": "IP Registry",
+        "shortTitle": "Registry",
+        "description": "Launch the Procedure Suite UI"
+      },
+      "comingSoon": {
+        "title": "Coming Soon",
+        "shortTitle": "Coming Soon",
+        "description": "Upcoming pleural, bronchoscopy, and rigid bronchoscopy modules"
+      }
+    }
+  },
+  "footer": {
+    "tagline": "Practical learning tools, printable models, and modern curricula advancing airway education around the globe. Built for clinicians, educators, and trainees.",
+    "motion": "Prefer a low motion experience? Enable it in your operating system preferences and we'll match it.",
+    "explore": "Explore",
+    "learning": "Learning",
+    "comingSoon": "Coming Soon",
+    "home": "Home",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "codeOfConduct": "Code of Conduct",
+    "copyright": "© {year} Interventional Pulmonology Education. Educational use only."
+  },
+  "home": {
+    "heroEyebrow": "Interventional Pulmonology Education",
+    "heroTitle": "Education & Innovation in Interventional Pulmonology",
+    "heroBody": "Explore EBUS training, podcast journal clubs, 3D anatomy, Nav Bronch, board review, and FluoroView simulation modules built for interventional pulmonology learners and educators.",
+    "openEbus": "Open EBUS Training",
+    "browsePodcasts": "Browse Podcast Library",
+    "launchCatalog": "Launch catalog",
+    "coreModules": "Core learning modules",
+    "coreModulesBody": "Start with the modules that are ready for learners now: EBUS training, TNM-9 staging, 3D anatomy, board review, journal club podcasts, Nav Bronch, FluoroView, and teaching resources.",
+    "socalParticipants": "SoCal EBUS Course participants",
+    "participantCourse": "Participant course",
+    "participantTitle": "Southern California EBUS Course participants",
+    "participantBody": "The full course portal remains available for registered participants who need the lecture pathway, surveys, tests, progress tracking, and course-specific materials. EBUS training assets are also available separately above.",
+    "openCoursePortal": "Open Course Portal",
+    "roadmap": "Roadmap",
+    "upcomingModules": "Upcoming modules",
+    "upcomingBody": "The next public releases focus on intro pleural disease, rigid bronchoscopy foundations, and intro bronchoscopy.",
+    "viewComingSoon": "View Coming Soon",
+    "cards": {
+      "podcast": {
+        "badge": "New · Audio",
+        "title": "Journal Club Podcasts",
+        "description": "Listen to article-focused IP journal club discussions in English, Spanish, Mandarin, Arabic, and Korean.",
+        "cta": "Browse Podcasts"
+      },
+      "ebus": {
+        "badge": "EBUS",
+        "title": "EBUS Training",
+        "description": "Open knobology, mediastinal station, and EBUS simulator modules without course-participant lockout.",
+        "cta": "Open EBUS Training"
+      },
+      "tnm": {
+        "badge": "Staging",
+        "title": "TNM-9 Staging",
+        "description": "Standalone lung cancer staging practice with descriptor reference, stage grouping, N map, and cases.",
+        "cta": "Open TNM-9"
+      },
+      "anatomy": {
+        "badge": "3D Anatomy",
+        "title": "Interactive Anatomy Viewer",
+        "description": "Explore airway, mediastinal, pleural, and intervention-focused 3D anatomy with CT planes and segment controls.",
+        "cta": "Browse Anatomy"
+      },
+      "board": {
+        "badge": "Board Review",
+        "title": "IP Board Prep Chapters",
+        "description": "Case-based coverage of malignant, benign, and procedural domains mapped to interventional pulmonology review.",
+        "cta": "Start Board Prep"
+      },
+      "fluoro": {
+        "badge": "Simulation",
+        "title": "FluoroView",
+        "description": "Practice CT-to-fluoroscopy orientation, C-arm angles, airway overlays, and non-diagnostic image controls.",
+        "cta": "Launch FluoroView"
+      },
+      "nav": {
+        "badge": "Navigation",
+        "title": "Bronch Navigation Trainer",
+        "description": "Drive a virtual bronchoscope through branch choices while correlating CT planes, airway views, and targets.",
+        "cta": "Start Navigation"
+      },
+      "intro": {
+        "badge": "Bronchoscopy",
+        "title": "Intro Bronchoscopy",
+        "description": "Foundational tools for scope sizing, airway reach concepts, and instrument compatibility.",
+        "cta": "Open Intro Module"
+      },
+      "pleural": {
+        "badge": "Pleural",
+        "title": "Pleural Procedures",
+        "description": "Learn pleural disease, ultrasound pattern recognition, fluid analysis, pneumothorax pathways, and drainage systems.",
+        "cta": "Open Pleural Modules"
+      },
+      "resources": {
+        "badge": "Resources",
+        "title": "Resource Library",
+        "description": "Browse Creative Commons medical images and clinician-builder learning guides for teaching and development.",
+        "cta": "Browse Resources"
+      }
+    }
+  },
+  "search": {
+    "title": "Search",
+    "description": "Search resources, board review chapters, simulation tools, and clinician guides.",
+    "heading": "Search resources and guides",
+    "body": "Find board review chapters, medical image collections, simulation tools, and clinician-builder resources.",
+    "placeholder": "Try EBUS, pleural, airway stent, coding, or safety",
+    "resultsFor": "Results for \"{query}\"",
+    "suggested": "Suggested starting points",
+    "resultCount": "{count, plural, one {# result} other {# results}}",
+    "noMatches": "No matches yet. Try a broader term like airway, EBUS, pleural, coding, anatomy, or safety."
+  },
+  "journalClub": {
+    "defaultLanguage": "english",
+    "availableIn": "Available in {count} languages",
+    "languageNames": {
+      "english": "English",
+      "spanish": "Spanish",
+      "mandarin": "Mandarin",
+      "arabic": "Arabic",
+      "korean": "Korean"
+    }
+  },
+  "thoracentesisPlanner": {
+    "overview": {
+      "metaTitle": "Thoracentesis & Pleural Access",
+      "metaDescription": "Learn safe pleural access, vessel risk, and manometry; practice planning a tap and predicting the drainage curve; then check your reasoning.",
+      "headerTitle": "Thoracentesis & pleural access",
+      "headerDescription": "Plan a safe tap from first principles: where it is safe to enter, how to frame bleeding risk, and what pleural pressure tells you about the lung.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Triangle of safety, vessel risk, bleeding-risk framing, manometry, and stopping rules."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Choose a safe window, set the bleeding-risk inputs, and predict the drainage curve."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Eight questions on access, vessel risk, manometry, and when to stop."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Thoracentesis module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Safe access, manometry, and stopping rules"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Plan a safe tap and predict the drainage curve"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline and manometry sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Thoracentesis",
+      "metaDescription": "Safe pleural access, intercostal vessel risk, individualized bleeding risk, pleural manometry, and when to stop draining.",
+      "headerTitle": "Learn thoracentesis",
+      "headerDescription": "Plan the tap before you do it: where it is safe to enter, how to think about bleeding risk, and what pleural pressure reveals about the lung.",
+      "intro": "The core blocks are everything you need to plan a safe tap and read a manometry curve. Open “Go deeper” for re-expansion pulmonary edema, special situations, and the board-level technique detail.",
+      "boardSourceLabel": "From the board chapter: Pleural Effusions and Pleural Interventions",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Thoracentesis",
+      "metaDescription": "Plan a safe access window, set the bleeding-risk inputs, and predict the manometry drainage curve before revealing the teaching point.",
+      "headerTitle": "Practice: plan the tap",
+      "headerDescription": "Choose a safe window, set the case's bleeding-risk inputs, then commit to a drainage prediction before checking the manometry verdict.",
+      "progressLabel": "Mark Practice complete"
+    },
+    "assessment": {
+      "metaTitle": "Thoracentesis Assessment",
+      "metaDescription": "Check your reasoning on safe access, intercostal vessel risk, bleeding risk, manometry, and stopping rules.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Eight questions that check whether you can turn the anatomy and the pressure curve into a safe plan.",
+      "checkTitle": "Thoracentesis check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Thoracentesis References",
+      "metaDescription": "Guideline and manometry sources behind the thoracentesis module teaching.",
+      "headerTitle": "References",
+      "headerDescription": "The guideline and manometry sources behind the access-safety and drainage teaching.",
+      "heading": "Clinical references"
+    },
+    "planner": {
+      "scaffoldTitle": "Thoracentesis safety and drainage behavior",
+      "objectives": [
+        "Map a safer lateral access window and avoid common anatomy pitfalls.",
+        "Use bleeding-risk inputs as prompts for planning rather than a single cutoff rule.",
+        "Predict how drainage pressure and symptoms change with expandable or non-expandable lung."
+      ],
+      "howToUse": [
+        "Review the access diagram and choose the needle path you want to test.",
+        "Adjust the bleeding-risk and drainage controls for the case.",
+        "Predict the drainage behavior before revealing the manometry teaching point."
+      ],
+      "clinicalAnchor": "A patient with a symptomatic unilateral effusion is being prepared for ultrasound-guided thoracentesis. The team must choose a safe window, review bleeding risk, and decide when drainage should slow or stop.",
+      "revealLabel": "Reveal drainage verdict",
+      "keyTakeaway": "Ultrasound confirms where to enter; ongoing symptoms and pressure behavior decide how drainage proceeds. Bleeding decisions still require indication, urgency, medication timing, and local policy.",
+      "matchHeading": "Prediction matches the curve",
+      "compareHeading": "Compare your prediction",
+      "pleuralPressureLabel": "Pleural pressure",
+      "symptomsLabel": "Symptoms",
+      "noSymptoms": "No symptoms triggered",
+      "rpeRiskLabel": "Re-expansion pulmonary edema risk",
+      "stopSlow": "Stop or slow drainage when symptoms, very negative pressure, or rapid large-volume removal raises concern.",
+      "triangleHeading": "Triangle of safety",
+      "triangleBody": "Use the diagram to rehearse the lateral window bounded by pectoralis major, latissimus dorsi, the axilla, rib spaces, and the diaphragm.",
+      "vesselHeading": "Intercostal vessel risk",
+      "entryLegend": "Entry position",
+      "entry": {
+        "posterior-medial": "Posterior or medial",
+        "mid-axillary": "Mid-axillary",
+        "lateral-safe": "Lateral window",
+        "too-low": "Too low"
+      },
+      "vesselRiskLine": "{label}: {level} teaching risk",
+      "manometryHeading": "Manometry drainage trainer",
+      "expectedPatternLabel": "Expected lung expansion pattern",
+      "archetype": {
+        "expandable": "Expandable",
+        "partiallyExpandable": "Partially expandable",
+        "trapped": "Trapped or non-expandable"
+      },
+      "drainedVolumeLabel": "Drained volume: {ml} mL",
+      "predictLegend": "Predict the drainage behavior",
+      "predictions": {
+        "gradual": {
+          "label": "Gradual pressure decline",
+          "description": "Drainage is tolerated until higher volumes or symptoms appear."
+        },
+        "biphasic": {
+          "label": "Late steep pressure drop",
+          "description": "Early drainage looks reasonable, then pressure falls faster."
+        },
+        "earlyNegativePressure": {
+          "label": "Early negative-pressure warning",
+          "description": "Symptoms and marked pressure drop can appear with small volumes."
+        }
+      },
+      "bleedingHeading": "Bleeding risk",
+      "inrLabel": "INR",
+      "plateletsLabel": "Platelets",
+      "antiplateletLabel": "Antiplatelet therapy",
+      "antiplatelet": {
+        "none": "None",
+        "single": "Single agent",
+        "dual": "Dual therapy"
+      },
+      "anticoagulantLabel": "Anticoagulant",
+      "anticoagulant": {
+        "none": "None",
+        "held": "Held per plan",
+        "active": "Active therapeutic dosing"
+      },
+      "bleedingRiskLabel": "{level} risk"
+    },
+    "triangle": {
+      "title": "Triangle of safety diagram",
+      "desc": "Educational chest wall diagram showing pectoralis major, latissimus dorsi, axilla, diaphragm boundary, rib spaces, and a preferred lateral ultrasound window.",
+      "axilla": "Axilla",
+      "pectoralis": "Pectoralis major",
+      "latissimus": "Latissimus",
+      "diaphragm": "Diaphragm boundary",
+      "window": "Preferred window"
+    },
+    "symptom": {
+      "chestPressure": "chest pressure",
+      "cough": "cough",
+      "throatTickle": "throat tickle",
+      "pleuriticPain": "pleuritic pain"
+    },
+    "riskLevel": {
+      "lower": "lower",
+      "moderate": "moderate",
+      "higher": "higher",
+      "low": "low",
+      "elevated": "elevated",
+      "high": "high"
+    },
+    "vesselRisk": {
+      "posterior-medial": {
+        "label": "Posterior/medial",
+        "teachingPoint": "Posterior and medial approaches near the spine have more variable, exposed intercostal vessels; scan laterally for a safer window."
+      },
+      "too-low": {
+        "label": "Below safe diaphragm boundary",
+        "teachingPoint": "A low entry risks diaphragm and abdominal structures; re-map the pocket and keep the diaphragm visible."
+      },
+      "mid-axillary": {
+        "label": "Mid-axillary",
+        "teachingPoint": "Mid-axillary access can be appropriate when ultrasound confirms fluid depth, rib-space anatomy, and diaphragm location."
+      },
+      "lateral-safe": {
+        "label": "Lateral ultrasound-confirmed window",
+        "teachingPoint": "A lateral ultrasound-confirmed pocket with a clear diaphragm boundary is the preferred teaching target."
+      }
+    },
+    "drainageTeaching": {
+      "expandable": "Expandable lung shows a gradual pressure decline and symptom-limited drainage.",
+      "partiallyExpandable": "Partially expandable lung has a biphasic curve: early drainage looks tolerable, then pressure falls faster.",
+      "trapped": "Trapped lung starts negative and becomes steeply negative with small drainage volumes; symptoms can occur early."
+    },
+    "bleeding": {
+      "reasons": {
+        "inrHigh": "INR is 3 or higher in this educational risk model.",
+        "plateletsLow": "Platelets are 20,000/uL or lower in this educational risk model.",
+        "anticoagActive": "Therapeutic anticoagulation is active.",
+        "dapt": "Dual antiplatelet therapy adds procedure-planning complexity.",
+        "none": "No high-risk lab or medication flags in this case."
+      },
+      "teachingPoint": "Pleural procedure bleeding decisions are individualized; ultrasound guidance, indication, urgency, local policy, and medication timing matter more than a single lab number."
+    }
+  },
+  "pneumothoraxPathway": {
+    "overview": {
+      "metaTitle": "Pneumothorax Pathway",
+      "metaDescription": "Learn the physiology-first pneumothorax pathway, practice running a case through ACCP 2001 and BTS 2023 side by side, then check your reasoning.",
+      "headerTitle": "Pneumothorax pathway",
+      "headerDescription": "Physiology first, then choose: separate the emergency from the stable patient, and see where the ACCP 2001 and BTS 2023 frameworks agree and diverge.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Stability, PSP vs SSP, the ACCP-vs-BTS divergence, persistent air leak, recurrence."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Build a case and see how ACCP 2001 and BTS 2023 agree or diverge."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Eight questions on stability, framework choice, air leak, and recurrence."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Pneumothorax module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Stability, PSP vs SSP, ACCP vs BTS, air leak"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Run a case through both frameworks side by side"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Pneumothorax",
+      "metaDescription": "Stability first, primary vs secondary, the ACCP-vs-BTS divergence, persistent air leak management, and recurrence prevention.",
+      "headerTitle": "Learn the pneumothorax pathway",
+      "headerDescription": "Start with physiology, separate primary from secondary, and understand exactly where the two major frameworks agree and diverge.",
+      "intro": "The core blocks carry the whole decision, from the emergency to recurrence prevention. Open “Go deeper” for lung ultrasound signs, APF-vs-BPF, and the board-level algorithms and tables.",
+      "boardSourceLabel": "From the board chapter: Pneumothorax, Prolonged Air Leaks, and Bronchopleural Fistula",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Pneumothorax",
+      "metaDescription": "Build a pneumothorax case, commit to a disposition, then see how ACCP 2001 and BTS 2023 evaluate it side by side.",
+      "headerTitle": "Practice: both frameworks side by side",
+      "headerDescription": "Set the case, commit to a disposition, then reveal how ACCP 2001 and BTS 2023 evaluate it — and where they agree or diverge.",
+      "progressLabel": "Mark Practice complete"
+    },
+    "assessment": {
+      "metaTitle": "Pneumothorax Assessment",
+      "metaDescription": "Check your reasoning on stability, PSP vs SSP, the ACCP-vs-BTS divergence, persistent air leak, and recurrence prevention.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Eight questions that check whether you can put physiology first and choose the right pathway.",
+      "checkTitle": "Pneumothorax check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Pneumothorax References",
+      "metaDescription": "Guideline sources behind the pneumothorax pathway teaching.",
+      "headerTitle": "References",
+      "headerDescription": "The guideline sources behind the physiology-first pathway and framework comparison.",
+      "heading": "Clinical references"
+    },
+    "pathway": {
+      "scaffoldTitle": "Pneumothorax: ACCP 2001 compared with BTS 2023",
+      "objectives": [
+        "Run one case through the American College of Chest Physicians 2001 and British Thoracic Society 2023 frameworks.",
+        "Explain why unstable patients converge while stable primary spontaneous pneumothorax can diverge.",
+        "Identify whether size, symptoms, patient priorities, or air-leak timing is driving the recommendation."
+      ],
+      "howToUse": [
+        "Pick a scenario and review the stability, size, and symptom details.",
+        "Predict the disposition before revealing the guideline comparison.",
+        "Compare the two cards and decide why they agree or diverge."
+      ],
+      "scenarioLabel": "Scenario",
+      "dataType": "Type",
+      "dataSymptoms": "Symptoms",
+      "dataSizeAccp": "Size for ACCP",
+      "dataAirLeak": "Air leak",
+      "sizeLarge": "Large",
+      "sizeSmall": "Small",
+      "airLeakNone": "None",
+      "airLeakDays": "{days} days",
+      "predictHeading": "Predict the disposition before revealing the comparison",
+      "revealLabel": "Reveal both frameworks",
+      "frameworksAgree": "Frameworks agree",
+      "frameworksDiverge": "Frameworks diverge",
+      "matchesPrediction": "Matches your prediction",
+      "recurrencePreventionLabel": "Recurrence prevention",
+      "keyTakeaway": "ACCP 2001 is useful as a historical size-and-stability comparator. BTS 2023 places more emphasis on symptoms, patient priorities, ambulatory pathways, and reliable follow-up."
+    },
+    "disposition": {
+      "observation": "Observation or conservative care",
+      "aspiration": "Needle aspiration",
+      "ambulatory": "Ambulatory device",
+      "chest-drain": "Chest drain",
+      "escalate": "Specialist escalation",
+      "emergency": "Emergency decompression"
+    },
+    "pneumothoraxType": {
+      "psp": "Primary spontaneous pneumothorax",
+      "ssp": "Secondary spontaneous pneumothorax",
+      "iatrogenic": "Iatrogenic pneumothorax",
+      "traumatic": "Traumatic pneumothorax"
+    },
+    "symptomBurden": {
+      "minimal": "Minimal symptoms",
+      "moderate": "Moderate symptoms",
+      "severe": "Severe symptoms"
+    },
+    "headline": {
+      "urgentDecompression": "Urgent decompression and drainage",
+      "escalatePal": "Specialist escalation for persistent air leak",
+      "chestDrainAdmission": "Chest drain and admission",
+      "observeRepeat": "Observe with repeat assessment",
+      "needleAspiration": "Needle aspiration or catheter drainage",
+      "monitoredIntervention": "Monitored intervention pathway",
+      "conservativeSafetyNet": "Conservative management with safety-netting",
+      "shortTermDrainage": "Short-term drainage for rapid symptom relief",
+      "ambulatoryPathway": "Ambulatory device or aspiration pathway"
+    },
+    "rationale": {
+      "accpStabilityNotMet": "American College of Chest Physicians stability criteria are not met, so physiology takes priority over size.",
+      "accpPalEarly": "The 2001 framework escalates persistent air leak earlier, around days 3 to 5 after drainage and system checks.",
+      "accpSspReserve": "Secondary spontaneous pneumothorax has less respiratory reserve, so the historical framework favors drainage and monitoring.",
+      "accpStableVitals": "The patient meets the historical stable-patient vital sign criteria.",
+      "accpSmallPspObserve": "Small primary spontaneous pneumothorax is observation territory in ACCP 2001.",
+      "accpLargeOrSymptomatic": "Large size or meaningful symptoms move the historical pathway toward aspiration or drainage.",
+      "btsTensionEmergency": "British Thoracic Society guidance treats tension physiology or significant hypoxia as a high-risk emergency.",
+      "btsPalWindow": "The 2023 pathway uses time-bounded reassessment and escalation when an air leak persists around days 5 to 7.",
+      "btsHighRiskContext": "High-risk characteristics, including underlying lung disease or ventilated/traumatic context, favor monitored intervention.",
+      "btsSizeDeemphasized": "The 2023 pathway de-emphasizes size for stable, minimally symptomatic primary spontaneous pneumothorax.",
+      "btsProcedureAvoidance": "Procedure avoidance is reasonable when follow-up and return precautions are reliable.",
+      "btsSevereRelief": "Severe symptoms shift the patient-priority question toward rapid relief and monitored drainage.",
+      "btsStableSymptomaticChoice": "For stable symptomatic primary spontaneous pneumothorax, the pathway weighs patient preference, local availability, and rapid symptom relief."
+    },
+    "comparisonNote": {
+      "converge": "Both frameworks converge here, which usually means physiology, high-risk context, or persistent air leak timing is dominating the decision.",
+      "sizeVsSymptom": "Classic divergence: ACCP 2001 reacts to size, while BTS 2023 prioritizes symptoms, patient priorities, and follow-up reliability.",
+      "palTiming": "The divergence is timing: ACCP 2001 escalates persistent air leak before the BTS 2023 day-5 window.",
+      "genericDivergence": "The frameworks diverge; identify whether size, symptom burden, local ambulatory care, or risk context is driving the difference."
+    },
+    "recurrencePrevention": {
+      "highRiskOccupation": "High-risk occupation, such as aviation or diving, lowers the threshold for definitive recurrence-prevention discussion.",
+      "recurrenceOrSsp": "Recurrence or secondary spontaneous pneumothorax should prompt prevention counseling, smoking cessation, pleurodesis or surgical options, and specialist follow-up.",
+      "firstPsp": "For a first primary spontaneous pneumothorax, counsel about recurrence risk, smoking cessation, follow-up, and return precautions."
+    }
+  },
+  "pleuralFluidAnalysis": {
+    "overview": {
+      "metaTitle": "Pleural Fluid Analysis",
+      "metaDescription": "Learn Light's criteria and the pseudoexudate trap, practice in a differential cockpit, then match the findings to the disease.",
+      "headerTitle": "Pleural fluid analysis",
+      "headerDescription": "Pair the fluid numbers with the clinical story: classify the effusion, reconcile the pseudoexudate, and let the appearance steer the targeted tests.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Light's criteria, pseudoexudates, targeted tests, and reading the appearance."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Enter fluid values and watch the ranked differential and Light's meters respond."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Match the full pattern of findings to the most likely diagnosis."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Pleural fluid analysis module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Light's criteria, pseudoexudates, targeted tests"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Interactive differential cockpit"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Match the findings to the disease"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Pleural Fluid Analysis",
+      "metaDescription": "Light's criteria, the pseudoexudate trap, targeted pleural fluid tests, gross appearance, and turning numbers into a differential.",
+      "headerTitle": "Learn pleural fluid analysis",
+      "headerDescription": "Classify the effusion, reconcile the pseudoexudate, and let the gross appearance and clinical story drive the targeted tests.",
+      "intro": "The core blocks take you from Light's criteria to a ranked differential. Open “Go deeper” for targeted-test pearls, the rare effusions, and the board-level pathway and tables.",
+      "boardSourceLabel": "From the board chapter: Pleural Effusions and Pleural Interventions",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Pleural Fluid Analysis",
+      "metaDescription": "Enter pleural fluid values and watch Light's criteria meters and the ranked differential respond in an interactive cockpit.",
+      "headerTitle": "Practice: the differential cockpit",
+      "headerDescription": "Enter the fluid values and clinical context, then watch Light's criteria, pseudoexudate flags, and the ranked differential update as you go.",
+      "progressLabel": "Mark Practice complete"
+    },
+    "assessment": {
+      "metaTitle": "Pleural Fluid Analysis Assessment",
+      "metaDescription": "Match a full pattern of pleural fluid findings to the most likely diagnosis, including the classic traps and rare effusions.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Match the full pattern of findings to the diagnosis — the rare items are mixed in on purpose to test when a clue changes the branch.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Pleural Fluid Analysis References",
+      "metaDescription": "Guideline sources behind the pleural fluid analysis module teaching.",
+      "headerTitle": "References",
+      "headerDescription": "The guideline sources behind the classification and escalation teaching.",
+      "heading": "Clinical references"
+    },
+    "header": {
+      "eyebrow": "Pleural procedures"
+    },
+    "cockpit": {
+      "badge": "Case cockpit",
+      "title": "Pleural fluid reasoning lab",
+      "intro": "Move between clinical cases, change the fluid profile, and watch the diagnostic reasoning update around the clinical context rather than the chemistry alone.",
+      "resetCase": "Reset case",
+      "clinicalFrame": "Clinical frame",
+      "fluidSnapshot": "Fluid snapshot",
+      "appearanceLabel": "Appearance",
+      "lightCriteriaLabel": "Light criteria",
+      "reconciledLabel": "Reconciled",
+      "teachingFocusLabel": "Teaching focus",
+      "clinicalContextLabel": "Clinical context",
+      "ultrasoundLabel": "Thoracic ultrasound",
+      "grossAppearanceLabel": "Gross appearance",
+      "pairedChemistry": "Paired chemistry",
+      "phGlucoseCells": "pH, glucose, and cells",
+      "targetedTests": "Targeted tests",
+      "interpretation": "Interpretation",
+      "proteinRatioMeter": "PF / serum protein",
+      "ldhRatioMeter": "PF / serum LDH",
+      "ldhUlnMeter": "PF LDH / serum ULN",
+      "cutoff": "cutoff {value}",
+      "pseudoexudateClues": "Pseudoexudate clues",
+      "rankedDifferential": "Ranked differential",
+      "contextWeighted": "context weighted",
+      "nextMove": "Next move",
+      "pitfallsToCheck": "Pitfalls to check",
+      "frameworkBadge": "Framework",
+      "approachMap": "Approach map",
+      "step": "Step {number}",
+      "patternLibraryBadge": "Pattern library",
+      "highYieldBranches": "High-yield branches",
+      "branchPoint": "Branch point",
+      "routineStudies": "Routine studies",
+      "targetedStudies": "Targeted studies",
+      "sources": "Sources"
+    },
+    "fields": {
+      "serumProtein": "Serum protein",
+      "pleuralProtein": "Pleural protein",
+      "serumLdh": "Serum LDH",
+      "pleuralLdh": "Pleural LDH",
+      "serumLdhUln": "Serum LDH ULN",
+      "ntProBnp": "NT-proBNP",
+      "serumAlbumin": "Serum albumin",
+      "pleuralAlbumin": "Pleural albumin",
+      "pleuralPH": "Pleural pH",
+      "pleuralGlucose": "Pleural glucose",
+      "nucleatedCells": "Nucleated cells",
+      "neutrophils": "Neutrophils",
+      "lymphocytes": "Lymphocytes",
+      "eosinophils": "Eosinophils",
+      "mesothelialCells": "Mesothelial cells",
+      "triglycerides": "Triglycerides",
+      "cholesterol": "Cholesterol",
+      "ada": "ADA",
+      "amylase": "Amylase",
+      "pfBloodHct": "PF/blood Hct",
+      "pfSerumCreatinine": "PF/serum creatinine",
+      "pfSerumBilirubin": "PF/serum bilirubin",
+      "cytologyPositive": "Cytology +",
+      "microbiologyPositive": "Microbiology +",
+      "chylomicrons": "Chylomicrons"
+    },
+    "category": {
+      "transudate": "transudate",
+      "exudate": "exudate",
+      "Pseudoexudate": "Pseudoexudate"
+    },
+    "appearance": {
+      "straw": "Straw",
+      "serous": "Serous",
+      "serosanguineous": "Serosanguineous",
+      "bloody": "Bloody",
+      "milky": "Milky",
+      "turbid": "Turbid",
+      "purulent": "Purulent",
+      "green": "Green",
+      "food-particles": "Food particles",
+      "urine-odor": "Urine odor"
+    },
+    "differential": {
+      "badge": "Differential engine",
+      "title": "Adjust the diagnostic lens",
+      "contextEmphasis": "Context emphasis",
+      "contextEmphasisLeft": "Labs broaden",
+      "contextEmphasisRight": "Context narrows",
+      "raritySensitivity": "Rare-disease sensitivity",
+      "raritySensitivityLeft": "Common first",
+      "raritySensitivityRight": "Rare allowed",
+      "currentLens": "Current lens",
+      "lensHelp": "Lower context settings show a broader pattern match. Higher settings reward the bedside story and ultrasound, so the list narrows around the current clinical frame.",
+      "mostProbable": "Most probable etiologies",
+      "rankedFromFindings": "Ranked differential from entered findings",
+      "topScore": "Top score",
+      "matchingClues": "Matching clues",
+      "teachingMove": "Teaching move"
+    },
+    "lens": {
+      "broadCommon": "Broad common-pattern lens",
+      "broadLabFirst": "Broad lab-first lens",
+      "contextHeavyRare": "Context-heavy rare-disease lens",
+      "narrowContext": "Narrow clinical-context lens",
+      "balanced": "Balanced diagnostic lens"
+    },
+    "rarity": {
+      "common": "common",
+      "uncommon": "uncommon",
+      "rare": "rare",
+      "very rare": "very rare"
+    },
+    "difficulty": {
+      "core": "core",
+      "advanced": "advanced",
+      "rare": "rare"
+    },
+    "quiz": {
+      "badge": "Quiz mode",
+      "title": "Match the pleural findings to the disease",
+      "reset": "Reset",
+      "questionProgress": "Question {current} of {total}",
+      "score": "Quiz score",
+      "correct": "Correct",
+      "notQuite": "Not quite",
+      "youChose": "You chose {name}. ",
+      "bestAnswer": "The best answer is {name}.",
+      "memoryHook": "Memory hook",
+      "nextQuestion": "Next question",
+      "emptyState": "Choose the diagnosis most associated with the full pattern. The rare items are mixed in on purpose; the goal is not memorizing a single lab cutoff, it is recognizing when a clue changes the branch.",
+      "choiceMeta": "{family} · {rarity}"
+    },
+    "headlineCode": {
+      "pseudoexudate": "Light's criteria are positive, but reconciliation favors a pseudoexudate.",
+      "definitiveSignal": "{diagnosis} has a specific pleural fluid signal.",
+      "exudatePattern": "This is an exudative pattern; now narrow it with clinical context.",
+      "transudatePattern": "This is a transudative pattern unless the clinical story says otherwise."
+    },
+    "reconciliationCode": {
+      "tooSmall": "A very small effusion is usually a sampling decision before it is a chemistry decision.",
+      "pseudoexudate": "The chemistry label diverges from the bedside story. In this setting, gradients and NT-proBNP help avoid unnecessary invasive workup for a diuresed systemic effusion.",
+      "transudateButPretest": "The chemistry looks transudative, but the clinical pretest probability is not low. Malignancy and other competing processes can occasionally look deceptively bland.",
+      "exudateInfection": "The exudate label is expected, but pH, glucose, LDH, ultrasound, and cultures determine whether this behaves like pleural infection needing drainage.",
+      "exudateTb": "The exudate label is only the first fork. Lymphocyte predominance, exposure history, ADA, and pleural biopsy strategy carry the diagnosis forward.",
+      "transudateAligned": "The chemistry and initial frame align with altered systemic pressure or oncotic forces; still check for unilateral, bloody, nodular, or recurrent features that break the pattern.",
+      "probabilityShifter": "PFA should be interpreted as a probability shifter: it narrows the search, then history, imaging, and selected tests finish the reasoning."
+    },
+    "pseudoexudateReason": {
+      "proteinGradient": "serum-pleural protein gradient {value} g/dL is > 3.1",
+      "albuminGradient": "serum-pleural albumin gradient {value} g/dL is > 1.2",
+      "ntProBnp": "serum NT-proBNP {value} pg/mL is > 1,500",
+      "weaklyPositive": "Light criteria are only weakly positive in a systemic transudate context"
+    },
+    "findings": {
+      "empyema": {
+        "diagnosis": "Empyema",
+        "strengthLabel": "definitive",
+        "rationale": "Gross pus in pleural fluid is diagnostic of pleural space infection.",
+        "action": "Drain the pleural space and treat as pleural infection; send microbiology if not already done."
+      },
+      "malignantEffusion": {
+        "diagnosis": "Malignant pleural effusion",
+        "strengthLabel": "definitive",
+        "rationale": "Positive pleural fluid cytology establishes pleural malignancy in the right clinical setting.",
+        "action": "Stage the malignancy, match management to prognosis and symptoms, and consider molecular testing when appropriate."
+      },
+      "chylothorax": {
+        "diagnosis": "Chylothorax",
+        "strengthLabel": "definitive",
+        "rationale": "Pleural triglycerides above 110 mg/dL, or intermediate triglycerides with chylomicrons, support chyle in the pleural space.",
+        "action": "Look for trauma, thoracic surgery, lymphoma, lymphatic disorders, or cirrhosis-related transudative chylothorax."
+      },
+      "hemothorax": {
+        "diagnosis": "Hemothorax",
+        "strengthLabel": "definitive",
+        "rationale": "Pleural fluid hematocrit more than 50% of blood hematocrit defines hemothorax.",
+        "action": "Escalate source control and drainage planning; evaluate trauma, procedure injury, malignancy, or anticoagulation."
+      },
+      "urinothoraxCreatinine": {
+        "diagnosis": "Urinothorax",
+        "strengthLabel": "definitive",
+        "rationale": "Pleural-to-serum creatinine ratio above 1 supports urine tracking into the pleural space.",
+        "action": "Evaluate obstructive uropathy or genitourinary injury; pleural drainage alone usually recurs."
+      },
+      "bilothorax": {
+        "diagnosis": "Bilothorax",
+        "strengthLabel": "definitive",
+        "rationale": "Pleural-to-serum bilirubin ratio above 1 supports bile in the pleural space.",
+        "action": "Search for biliary pathology or recent hepatobiliary surgery and coordinate definitive source control."
+      },
+      "pancreaticopleuralFistula": {
+        "diagnosis": "Pancreaticopleural fistula",
+        "strengthLabel": "definitive",
+        "rationale": "Very high pleural amylase strongly suggests pancreatic fluid entering the pleural space.",
+        "action": "Evaluate chronic pancreatitis, pseudocyst, and duct leak; abdominal imaging and pancreatic consultation usually matter more than repeat taps."
+      },
+      "esophagealPerforation": {
+        "diagnosis": "Esophageal perforation",
+        "strengthLabel": "definitive",
+        "rationale": "Food particles in pleural fluid are a high-specificity clue for esophageal rupture.",
+        "action": "Escalate urgently for source control, broad antimicrobials, and esophageal evaluation."
+      },
+      "urinothoraxOdor": {
+        "diagnosis": "Urinothorax",
+        "strengthLabel": "highly suggestive",
+        "rationale": "A urine odor is a classic gross inspection clue, especially with ipsilateral urinary tract obstruction or injury.",
+        "action": "Check pleural-to-serum creatinine and evaluate the urinary tract."
+      },
+      "parapneumonic": {
+        "diagnosis": "Complicated parapneumonic effusion",
+        "strengthLabel": "highly suggestive",
+        "rationale": "Pneumonia context plus low pH, low glucose, high LDH, high nucleated cells, or positive microbiology points toward pleural infection.",
+        "action": "Do not let Light criteria be the endpoint; assess need for tube drainage, culture-directed antibiotics, and loculation management."
+      },
+      "tuberculous": {
+        "diagnosis": "Tuberculous pleural effusion",
+        "strengthLabel": "highly suggestive",
+        "rationale": "A lymphocyte-predominant exudate with compatible exposure history and elevated ADA narrows the differential toward TB.",
+        "action": "Send mycobacterial culture when suspected; if suspicion remains high, pleural biopsy can secure microbiology and drug susceptibility."
+      },
+      "malignancyInPlay": {
+        "diagnosis": "Malignancy remains in play",
+        "strengthLabel": "highly suggestive",
+        "rationale": "Pleural nodularity or a strong cancer context can outweigh a nonspecific or even transudative chemistry profile.",
+        "action": "Send adequate cytology volume and consider image-guided or thoracoscopic pleural biopsy if cytology is negative and pretest probability stays high."
+      },
+      "repeatedNegativeCytology": {
+        "diagnosis": "Repeated negative cytology",
+        "strengthLabel": "pitfall",
+        "rationale": "Two nondiagnostic cytology samples do not rule out malignant pleural disease when imaging or clinical probability remains high.",
+        "action": "Stop fluid-only cycling and escalate toward pleural tissue diagnosis such as image-guided biopsy or pleuroscopy."
+      },
+      "autoimmunePleuritis": {
+        "diagnosis": "Rheumatoid or lupus pleuritis",
+        "strengthLabel": "supportive",
+        "rationale": "Autoimmune context with low pH, low glucose, or high LDH can mimic pleural infection.",
+        "action": "Reconcile with serologies, joint/systemic activity, microbiology, and imaging before anchoring on infection alone."
+      },
+      "eosinophilic": {
+        "diagnosis": "Eosinophilic pleural effusion",
+        "strengthLabel": "supportive",
+        "rationale": "Pleural eosinophils above 10% suggest air or blood in the pleural space, prior thoracentesis, drug reaction, asbestos exposure, parasites, infection, or malignancy.",
+        "action": "Use the history and gross appearance to decide whether this is procedure-related noise or a diagnostic clue."
+      },
+      "lymphocytePredominant": {
+        "diagnosis": "Lymphocyte-predominant effusion",
+        "strengthLabel": "supportive",
+        "rationale": "Marked lymphocyte predominance narrows the differential to TB, lymphoma, sarcoidosis, chylothorax, trapped lung, post-CABG, yellow nail syndrome, uremia, drug causes, and rheumatoid disease.",
+        "action": "Let timeline, exposure, imaging, and targeted tests decide the next fork."
+      },
+      "lymphaticLeak": {
+        "diagnosis": "Lymphatic leak phenotype",
+        "strengthLabel": "supportive",
+        "rationale": "Milky or turbid pleural fluid with a surgery, lymphoma, lymphatic, or yellow-nail context should trigger lipid testing.",
+        "action": "Check triglycerides, cholesterol, and chylomicrons rather than relying on appearance alone."
+      },
+      "bloodInPleuralSpace": {
+        "diagnosis": "Blood in the pleural space",
+        "strengthLabel": "supportive",
+        "rationale": "Bloody fluid can be caused by malignancy, pulmonary embolism, trauma, post-cardiotomy injury, asbestos pleuritis, or hemothorax.",
+        "action": "Measure pleural hematocrit when grossly bloody; do not treat all serosanguineous fluid as hemothorax."
+      }
+    },
+    "findingStrength": {
+      "definitive": "definitive",
+      "highly suggestive": "highly suggestive",
+      "supportive": "supportive",
+      "pitfall": "pitfall"
+    },
+    "nextActions": {
+      "tooSmall": [
+        "Confirm whether the effusion is safely sampleable with ultrasound.",
+        "Treat or observe the likely cause if the effusion is < 1 cm and the patient is clinically stable."
+      ],
+      "bilateralSystemic": [
+        "Treat the systemic cause when the story is obvious and the effusions are bilateral and anechoic.",
+        "Sample if the course, laterality, fever, pleuritic pain, or imaging no longer fits the systemic diagnosis."
+      ],
+      "definitiveFollowUp": "Use the remaining PFA data to identify concurrent processes and management risk.",
+      "pseudoexudate": [
+        "Reclassify cautiously as likely systemic transudate and treat the underlying CHF, renal, hepatic, or oncotic driver.",
+        "Reassess response; sample or image further if the effusion persists, is unilateral, becomes bloody, or develops pleural thickening."
+      ],
+      "infection": [
+        "Use pleural pH, glucose, LDH, culture yield, and ultrasound loculation to decide drainage urgency.",
+        "Inoculate pleural fluid into blood culture bottles when pleural infection is suspected."
+      ],
+      "tb": [
+        "Send AFB smear and culture, but plan around low culture yield and delayed results.",
+        "If suspicion stays high, pursue pleural biopsy for histology, culture, and drug susceptibility."
+      ],
+      "malignancyEscalate": [
+        "Stop fluid-only cycling and move toward pleural tissue diagnosis with image-guided biopsy or pleuroscopy.",
+        "Use lung expansion, symptoms, prognosis, and patient goals to choose IPC, pleurodesis, or combined strategy."
+      ],
+      "malignancyCytology": [
+        "Send adequate cytology volume and review CT or ultrasound for pleural targets.",
+        "If cytology is negative but pleural nodularity or cancer history remains convincing, move toward pleural biopsy."
+      ],
+      "transudate": [
+        "Focus on CHF, renal, hepatic, oncotic, peritoneal, and trapped-lung physiology.",
+        "Avoid repeated diagnostic taps unless the clinical course stops fitting a transudate."
+      ],
+      "exudateGeneric": [
+        "Use the exudate label to choose a targeted branch: infection, malignancy, TB, pulmonary embolism, autoimmune disease, post-procedure, or abdominal source.",
+        "Repeat thoracentesis, observe, treat empirically, or biopsy based on the remaining probability after clinical reconciliation."
+      ]
+    },
+    "pitfalls": {
+      "pairedSerum": "Do not interpret pleural chemistry without the paired serum values and the pre-thoracentesis clinical impression.",
+      "diuresisCrossesLight": "Diuresis and systemic effusions can cross Light criteria by a small margin.",
+      "systemicGradientCheck": "A systemic transudate context with positive Light criteria should trigger a gradient check before anchoring on an exudate.",
+      "fragilePH": "Pleural pH is fragile; delayed analysis, air, or lidocaine contamination can change the result.",
+      "milkyTurbid": "Milky or turbid fluid can be chyle, cholesterol, empyema, or cellular debris.",
+      "negativeCytology": "Negative cytology does not rule out malignant pleural disease when imaging or history is convincing.",
+      "repeatedCytologyDelay": "After two nondiagnostic cytology samples, repeated fluid-only testing can delay needed pleural tissue diagnosis.",
+      "mesothelialTb": "Mesothelial cells above 5% make TB less likely, but they do not erase a high-risk exposure story."
+    },
+    "routineStudies": {
+      "grossAppearance": "Gross appearance and odor at the bedside",
+      "proteinLdh": "Pleural protein and LDH with paired serum protein and LDH",
+      "ph": "Pleural pH measured promptly on a blood gas analyzer",
+      "glucose": "Pleural glucose",
+      "cellCount": "Cell count with differential",
+      "gramStainCulture": "Gram stain and culture with direct inoculation into blood culture bottles",
+      "cytology": "Cytology with adequate sample volume"
+    },
+    "targetedStudies": {
+      "lipids": "Triglycerides, cholesterol, and chylomicrons",
+      "hematocrit": "Pleural hematocrit compared with blood hematocrit",
+      "ada": "ADA, AFB smear/culture, and pleural biopsy when suspicion remains high",
+      "amylase": "Pleural amylase with source-focused abdominal or esophageal evaluation",
+      "bilirubin": "Pleural-to-serum bilirubin ratio",
+      "creatinine": "Pleural-to-serum creatinine ratio",
+      "autoimmune": "Autoimmune serologies interpreted with microbiology and imaging",
+      "branchPoint": "Target additional tests only when the story or gross fluid appearance creates a branch point"
+    }
+  },
+  "pleuralInfection": {
+    "overview": {
+      "metaTitle": "Pleural Infection",
+      "metaDescription": "Learn parapneumonic staging and source control, practice staging a case and choosing the pathway, then check your reasoning.",
+      "headerTitle": "Pleural infection",
+      "headerDescription": "Place a parapneumonic effusion on the simple → complicated → empyema continuum, then drain, dose, escalate, and reassess as one pathway.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Staging thresholds, antibiotics + drainage, tPA + DNase, surgery, and reassessment."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Stage a case from the fluid values, then commit before revealing the pathway."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Eight questions on staging, MIST2, surgery, irrigation, and the RAPID score."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Pleural infection module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Staging, drainage, tPA + DNase, surgery"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Stage a case and choose the source-control pathway"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline and trial sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Pleural Infection",
+      "metaDescription": "Parapneumonic staging, drainage thresholds, antibiotics, intrapleural tPA + DNase (MIST2), surgery, and the irrigation fallback.",
+      "headerTitle": "Learn pleural infection",
+      "headerDescription": "Stage the effusion, drain and dose early, and know exactly where intrapleural therapy, surgery, and irrigation fit on one reassessment pathway.",
+      "intro": "The core blocks take you from staging to source control. Open “Go deeper” for the RAPID mortality score, bleeding considerations, and the board-level algorithms and tables.",
+      "boardSourceLabel": "From the board chapter: Pleural Infections",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Pleural Infection",
+      "metaDescription": "Stage a parapneumonic effusion from the fluid values and commit to a source-control pathway before revealing the plan.",
+      "headerTitle": "Practice: stage and act",
+      "headerDescription": "Read the fluid and imaging values, commit to a stage, then reveal the drainage, antibiotic, intrapleural-therapy, and escalation plan.",
+      "progressLabel": "Mark Practice complete"
+    },
+    "assessment": {
+      "metaTitle": "Pleural Infection Assessment",
+      "metaDescription": "Check your reasoning on staging, drainage thresholds, MIST2 therapy, surgery, irrigation, and the RAPID score.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Eight questions that check whether you can stage the effusion and choose the right source-control step.",
+      "checkTitle": "Pleural infection check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Pleural Infection References",
+      "metaDescription": "Guideline and trial sources behind the pleural infection module teaching.",
+      "headerTitle": "References",
+      "headerDescription": "The guideline and trial sources behind the staging, intrapleural-therapy, and irrigation teaching.",
+      "heading": "Clinical references"
+    },
+    "workflow": {
+      "scaffoldTitle": "Pleural infection staging and source control",
+      "objectives": [
+        "Classify parapneumonic effusions using pH, glucose, LDH, microbiology, pus, and ultrasound pattern.",
+        "Choose the drainage and antibiotic-duration teaching branch before seeing the answer.",
+        "Explain where MIST2-style therapy, irrigation fallback, bleeding risk, and surgery fit."
+      ],
+      "howToUse": [
+        "Select a case, then adjust the fluid and ultrasound values if you want to test a variant.",
+        "Predict the stage before revealing the action plan.",
+        "Review drainage, antibiotics, adjunct therapy, bleeding risk, and escalation together."
+      ],
+      "clinicalAnchor": "A patient with pneumonia has persistent systemic inflammation and a pleural effusion. The team needs to decide whether antibiotics alone are enough or whether source control is required.",
+      "matchHeading": "Stage prediction matches",
+      "compareHeading": "Compare your stage prediction",
+      "antibioticDurationLabel": "Antibiotic duration: {duration}",
+      "revealLabel": "Reveal source-control pathway",
+      "keyTakeaway": "Pleural infection decisions combine chemistry, microbiology, ultrasound complexity, and clinical progress. Drainage, antibiotics, intrapleural therapy, irrigation fallback, and surgery should be taught as one reassessment pathway.",
+      "caseLabel": "Infection case",
+      "adjunctLabel": "Adjunct choice to test",
+      "bleedingContextHeading": "Case bleeding context",
+      "fluidHeading": "Fluid and imaging values",
+      "phLabel": "Pleural pH",
+      "glucoseLabel": "Glucose (mg/dL)",
+      "ldhLabel": "LDH (IU/L)",
+      "ultrasoundPatternLabel": "Ultrasound pattern",
+      "gramStainLabel": "Gram stain",
+      "frankPusLabel": "Frank pus",
+      "predictStageHeading": "Predict the stage",
+      "positive": "Positive",
+      "negative": "Negative",
+      "cases": {
+        "anechoic-low-ph": "Anechoic effusion with pH 7.18",
+        "septated-residual": "Septated residual collection after tube",
+        "pus-anticoagulated": "Frank pus with mandatory anticoagulation"
+      },
+      "adjunct": {
+        "alteplase10Dnase5": "Tissue plasminogen activator plus DNase",
+        "alteplaseOnly": "Tissue plasminogen activator only",
+        "dnaseOnly": "DNase only",
+        "salineIrrigation": "Normal saline irrigation",
+        "placebo": "Drainage alone"
+      },
+      "bleedingContext": {
+        "anticoagulated": "Therapeutic anticoagulation cannot be safely paused.",
+        "none": "No therapeutic anticoagulation flag in this case."
+      },
+      "ultrasoundPattern": {
+        "freeFlowing": "Free-flowing",
+        "complex": "Complex",
+        "septated": "Septated",
+        "large": "Large volume"
+      },
+      "cards": {
+        "mist2": {
+          "title": "MIST2 trial branch"
+        },
+        "irrigation": {
+          "title": "Pleural Irrigation Trial fallback",
+          "body": "Normal saline irrigation can be discussed when lytic/enzyme therapy is unsuitable or bleeding risk cannot be mitigated.",
+          "note": "Treat irrigation as a selected fallback pathway, not a universal replacement for drainage, combination therapy, or surgery."
+        },
+        "bleeding": {
+          "title": "Bleeding overlay",
+          "body": "Estimated bleeding signal for this teaching case: {percent}%."
+        }
+      },
+      "escalation": {
+        "heading": "Escalation chain",
+        "steps": [
+          "Small-bore image-guided drain",
+          "Flush and reimage",
+          "Combination intrapleural therapy",
+          "Irrigation fallback when suitable",
+          "Surgical review"
+        ]
+      }
+    },
+    "stage": {
+      "uncomplicated": "Uncomplicated parapneumonic effusion",
+      "complicated": "Complicated parapneumonic effusion",
+      "empyema": "Empyema"
+    },
+    "stageOption": {
+      "uncomplicated": {
+        "description": "Antibiotics and reassessment may be enough when low-risk features fit."
+      },
+      "complicated": {
+        "description": "Drainage-level chemistry or imaging features are present."
+      },
+      "empyema": {
+        "description": "Pus or positive microbiology makes source control explicit."
+      }
+    },
+    "staging": {
+      "reasons": {
+        "frankPus": "Frank pus is empyema in this teaching model.",
+        "gramStain": "Positive Gram stain indicates pleural infection.",
+        "phLow": "Pleural pH is 7.20 or lower.",
+        "glucoseLow": "Pleural glucose is below 60 mg/dL.",
+        "ldhHigh": "Pleural LDH is above 1,000 IU/L.",
+        "imagingComplex": "Imaging has high-risk complexity or size features.",
+        "noDrainageFeatures": "No drainage-level chemistry, microbiology, pus, or complex imaging in this case."
+      },
+      "action": {
+        "uncomplicated": "Antibiotics with close clinical reassessment may be reasonable in the right context.",
+        "complicated": "Use antibiotics plus small-bore image-guided drainage when safe, then reassess.",
+        "empyema": "Drain with antibiotics and reassess source control early."
+      }
+    },
+    "antibioticDuration": {
+      "uncomplicated": "Up to 2 weeks, tailored to clinical response.",
+      "complicated": "Often 2-4 weeks, tailored to source control and clinical response.",
+      "empyema": "Often 4-6 weeks, tailored to drainage, organism, and clinical response."
+    },
+    "lytic": {
+      "alteplase10Dnase5": {
+        "label": "Tissue plasminogen activator (tPA) 10 mg plus DNase 5 mg",
+        "effect": "Combination therapy improved radiographic clearance and reduced surgical referral and length of stay in MIST2 teaching.",
+        "caution": "Assess bleeding risk and medication timing; do not treat the dose as patient-specific advice."
+      },
+      "alteplaseOnly": {
+        "label": "tPA alone",
+        "effect": "Single-agent fibrinolytic therapy did not show the same MIST2 teaching benefit.",
+        "caution": "Avoid teaching monotherapy as the preferred pathway."
+      },
+      "dnaseOnly": {
+        "label": "DNase alone",
+        "effect": "DNase monotherapy is a teaching trap and was not beneficial in MIST2.",
+        "caution": "Use combination therapy or an alternative strategy rather than DNase alone."
+      },
+      "salineIrrigation": {
+        "label": "Pleural irrigation",
+        "effect": "Normal saline irrigation is a pilot-data alternative to discuss when lytics are unsuitable or bleeding risk cannot be mitigated.",
+        "caution": "Frame as selected-pathway teaching, not universal replacement for lytics or surgery."
+      },
+      "placebo": {
+        "label": "Placebo / drainage alone",
+        "effect": "Drainage alone can be sufficient when source control is achieved, but residual collections need early reassessment.",
+        "caution": "Do not delay escalation when fever, inflammatory markers, output, or imaging fail to improve."
+      }
+    },
+    "bleedingNote": {
+      "anticoagulated": "Therapeutic anticoagulation increases bleeding concern and should trigger mitigation planning.",
+      "baseline": "Baseline pleural bleeding signal for lytic teaching is 4.1%."
+    }
+  },
+  "malignantEffusion": {
+    "overview": {
+      "metaTitle": "Malignant Pleural Effusion",
+      "metaDescription": "Learn diagnostic escalation and the IPC-vs-pleurodesis decision, practice choosing a management arm, then check your reasoning.",
+      "headerTitle": "Malignant pleural effusion",
+      "headerDescription": "Move from a nondiagnostic tap to a definitive plan: when to get tissue, how lung expandability chooses pleurodesis vs. an indwelling catheter, and how patient goals decide.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Cytology escalation, lung expandability, talc pleurodesis, IPC, and patient goals."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Set the diagnostic and expansion picture, then commit to a management arm."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Eight questions on escalation, expandability, IPC vs pleurodesis, and goals."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Malignant pleural effusion module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Cytology, expandability, IPC vs pleurodesis"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Escalate the diagnosis and choose a management arm"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline, trial, and image sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Malignant Pleural Effusion",
+      "metaDescription": "Diagnostic escalation after nondiagnostic taps, lung expandability, talc pleurodesis, indwelling pleural catheters, and patient-goals endpoints.",
+      "headerTitle": "Learn malignant pleural effusion",
+      "headerDescription": "Why a negative tap is not the end, how lung expandability chooses the definitive path, and how to weigh IPC, pleurodesis, and combined strategies against patient goals.",
+      "intro": "The core blocks take you from a nondiagnostic tap to a definitive plan. Open “Go deeper” for IPC complications, the key trials, and the board-level algorithms and tables.",
+      "boardSourceLabel": "From the board chapter: Indwelling Pleural Catheters and Pleurodesis",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Malignant Pleural Effusion",
+      "metaDescription": "Set the diagnostic escalation and lung-expansion picture, then commit to a management arm before revealing the pathway.",
+      "headerTitle": "Practice: choose the pathway",
+      "headerDescription": "Set the cytology and lung-expansion picture, commit to a management arm, then reveal how the pathway compares.",
+      "progressLabel": "Mark Practice complete"
+    },
+    "assessment": {
+      "metaTitle": "Malignant Pleural Effusion Assessment",
+      "metaDescription": "Check your reasoning on cytology escalation, lung expandability, IPC vs pleurodesis, combined strategies, and patient goals.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Eight questions that check whether you can turn the diagnostic and expansion picture into a goal-aligned plan.",
+      "checkTitle": "Malignant pleural effusion check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Malignant Pleural Effusion References",
+      "metaDescription": "Guideline, trial, and CC BY image sources for the malignant pleural effusion module.",
+      "headerTitle": "References & attributions",
+      "headerDescription": "The guideline and trial sources behind the pathway, plus the CC BY 4.0 image attributions.",
+      "clinicalHeading": "Clinical references",
+      "imageHeading": "Image attributions",
+      "imageLicenseNote": "All images are licensed CC BY 4.0 and stored in the repository with attribution.",
+      "sourceLink": "Source"
+    },
+    "pathway": {
+      "scaffoldTitle": "Malignant pleural effusion diagnostic and management pathway",
+      "objectives": [
+        "Explain why negative cytology does not rule out malignant pleural effusion.",
+        "Choose a management pathway based on lung expansion after drainage.",
+        "Match pleurodesis, indwelling pleural catheter, or combined strategies to patient goals."
+      ],
+      "howToUse": [
+        "Set the number of nondiagnostic cytology samples and review the escalation warning.",
+        "Choose the post-drainage lung expansion pattern.",
+        "Predict the management arm before revealing the pathway recommendation."
+      ],
+      "clinicalAnchor": "A patient has recurrent symptomatic unilateral pleural effusion and imaging features that keep malignancy on the differential despite fluid testing. The next step depends on tissue strategy, lung expansion, symptoms, and goals.",
+      "revealLabel": "Reveal malignant effusion pathway",
+      "keyTakeaway": "In malignant pleural effusion, a nondiagnostic tap is not the endpoint. Lung expansion and patient goals determine whether pleurodesis, an indwelling pleural catheter, or a combined strategy is most teachable.",
+      "matchHeading": "Management prediction matches",
+      "compareHeading": "Compare your management prediction",
+      "escalationHeading": "Diagnostic escalation",
+      "tapCountLabel": "Nondiagnostic cytology samples: {count}",
+      "expansionHeading": "Post-drainage lung expansion",
+      "expansion": {
+        "full": {
+          "label": "Full expansion",
+          "description": "The lung expands and the pleural surfaces can appose."
+        },
+        "partial": {
+          "label": "Partial expansion",
+          "description": "Symptoms improve, but residual non-expansion remains."
+        },
+        "trapped": {
+          "label": "Trapped or non-expandable",
+          "description": "The lung does not expand enough for pleurodesis to work reliably."
+        }
+      },
+      "predictHeading": "Predict the management arm",
+      "management": {
+        "pleurodesisCandidate": "Pleurodesis-capable pathway",
+        "ipcOrRapidPleurodesis": "Indwelling catheter with selected rapid pleurodesis strategy",
+        "ipcPreferred": "Indwelling pleural catheter-centered symptom control"
+      },
+      "revealCards": {
+        "cytologyTitle": "Cytology sensitivity",
+        "cytologyNote": "After one to two nondiagnostic taps, avoid cycling fluid-only tests when suspicion remains high.",
+        "tissueTitle": "Tissue escalation",
+        "higherYieldTitle": "Higher-yield option",
+        "higherYieldNote": "Procedure fitness, imaging target, local expertise, and patient goals still decide the path."
+      },
+      "comparatorHeading": "Modality comparator",
+      "comparator": {
+        "thoracentesis": {
+          "title": "Thoracentesis",
+          "body": "Fast symptom and diagnostic step; negative cytology is contextual."
+        },
+        "pleuroscopy": {
+          "title": "Pleuroscopy",
+          "body": "Tissue diagnosis and poudrage option; procedure fitness matters."
+        },
+        "ipc": {
+          "title": "Indwelling pleural catheter",
+          "body": "Outpatient symptom control; home drainage support and infection education matter."
+        },
+        "pleurodesis": {
+          "title": "Pleurodesis",
+          "body": "Device-free goal when lung expands and the patient can tolerate the procedure."
+        },
+        "combined": {
+          "title": "Combined strategy",
+          "body": "Selected pathway that pairs catheter-centered outpatient care with pleurodesis intent."
+        }
+      },
+      "imageReferencesHeading": "Image references",
+      "imageAlt": {
+        "pleural-nodularity-ultrasound": "Ultrasound and CT correlation showing pleural thickening and nodularity.",
+        "pleuroscopy-malignancy": "Pleuroscopy images of malignant mesothelioma and lymphoma with narrow-band imaging vascular patterns.",
+        "ipc-pleuroscope-equipment": "Pleuroscopy equipment comparison with biopsy forceps positioning."
+      },
+      "attributionLabel": "Attribution:",
+      "reflectionHeading": "Patient-goals reflection",
+      "reflectionBody": "Every endpoint should ask what matters more for this patient: hospital-free days, device-free chest, speed of relief, home support, expected prognosis, infection burden, and willingness to manage a catheter."
+    },
+    "nondiagnostic": {
+      "twoPlus": {
+        "recommendation": "Stop fluid-only cycling and escalate toward pleural biopsy, image-guided biopsy, or pleuroscopy when suspicion remains high.",
+        "teachingPoint": "Repeated nondiagnostic cytology should not falsely reassure when imaging, history, or recurrence keeps MPE likely."
+      },
+      "one": {
+        "recommendation": "A second cytology sample can be considered in selected cases, but tissue strategy should already be visible if pretest probability is high.",
+        "teachingPoint": "One nondiagnostic tap is a fork: repeat selectively, but start planning tissue diagnosis when suspicion stays high."
+      },
+      "zero": {
+        "recommendation": "Send adequate cytology and pair the result with imaging, lung expansion, symptoms, and patient goals.",
+        "teachingPoint": "Thoracentesis can diagnose some MPE, but negative cytology is not a rule-out test."
+      }
+    },
+    "branch": {
+      "pleurodesisCandidate": "Expandable lung can be considered for talc pleurodesis, IPC, or combined outpatient strategy depending on goals and fitness.",
+      "ipcOrRapidPleurodesis": "Partial expansion favors IPC-centered care or selected combined/rapid pleurodesis strategy rather than assuming talc alone will work.",
+      "ipcPreferred": "Trapped or non-expandable lung makes pleurodesis unlikely to succeed; IPC-centered symptom control is the core teaching branch."
+    },
+    "yield": {
+      "thoracentesis": "Thoracentesis cytology sensitivity is taught as roughly 40-60%, so negative results require context.",
+      "pleuroscopy": "Pleuroscopy or pleural biopsy usually offers higher-yield tissue diagnosis, around 80-90% in this teaching context."
+    }
+  },
+  "pleuralUltrasound": {
+    "overview": {
+      "metaTitle": "Pleural Ultrasound",
+      "metaDescription": "Learn to read pleural ultrasound patterns, practice classifying them, and check your reasoning — the ultrasound-first foundation for pleural procedures.",
+      "headerTitle": "Pleural ultrasound",
+      "headerDescription": "The ultrasound-first foundation for every pleural procedure: read the patterns, practice on real images, then check your reasoning.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Why ultrasound comes first, the four effusion patterns, safe access, and dynamic signs."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Classify real ultrasound images and dynamic-sign videos in commit-first labs."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Eight questions that check pattern recognition and procedural reasoning."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Pleural ultrasound module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "How to read the pleural patterns"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Commit-first image and video labs"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Sources and image attributions"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Pleural Ultrasound",
+      "metaDescription": "Read the four pleural effusion patterns, choose a safe access window, and recognize dynamic pleural signs.",
+      "headerTitle": "Learn pleural ultrasound",
+      "headerDescription": "How to read the pleural space before you ever place a needle: technique, the four effusion patterns, and the signs that change the plan.",
+      "intro": "Work through the core blocks first — they are everything you need to read a pleural scan and pick a safe window. Open the “Go deeper” items when you want the advanced dynamic signs and the board-level detail.",
+      "boardSourceLabel": "From the board chapter: Pleural Effusions and Pleural Interventions",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Pleural Ultrasound",
+      "metaDescription": "Commit-first pleural ultrasound pattern classification lab with running feedback on real images.",
+      "headerTitle": "Practice: classify the pattern",
+      "headerDescription": "Read each image and commit to a pattern before checking yourself. Your running score builds across the case set.",
+      "progressLabel": "Mark Practice complete",
+      "modes": {
+        "patterns": {
+          "label": "Effusion patterns",
+          "description": "Classify still images before reveal."
+        },
+        "dynamicSigns": {
+          "label": "Dynamic signs",
+          "description": "Interpret motion clips before reveal."
+        }
+      }
+    },
+    "assessment": {
+      "metaTitle": "Pleural Ultrasound Assessment",
+      "metaDescription": "Check your pleural ultrasound reasoning: pattern recognition, safe access, dynamic signs, and when not to tap.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Eight questions that check whether you can turn the ultrasound picture into a safe procedural plan.",
+      "checkTitle": "Pleural ultrasound check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Pleural Ultrasound References",
+      "metaDescription": "Guideline sources and Creative Commons image/video attributions for the pleural ultrasound module.",
+      "headerTitle": "References & attributions",
+      "headerDescription": "The guideline sources behind the teaching and the Creative Commons attributions for the image and video labs.",
+      "clinicalHeading": "Clinical references",
+      "imageHeading": "Teaching image attributions",
+      "imageNote": "All pattern-lab images are licensed CC BY 4.0 and stored in the repository with attribution.",
+      "videoHeading": "Teaching video attributions",
+      "videoNote": "Dynamic-sign clips are selected from row-level Creative Commons metadata and stored in the repository as browser-playable MP4 files.",
+      "sourceLink": "Source",
+      "sourceClipLink": "Source clip",
+      "metadataLink": "Metadata",
+      "convertedNote": " · Converted to MP4 for browser playback"
+    },
+    "patternLab": {
+      "scaffoldTitle": "Pleural ultrasound pattern recognition",
+      "objectives": [
+        "Classify pleural fluid as simple anechoic, complex nonseptated, septated or loculated, or echogenic.",
+        "Connect the pattern to sampling, drainage, or source-control thinking.",
+        "Explain why ultrasound appearance must be paired with the clinical story."
+      ],
+      "howToUse": [
+        "Read the vignette and inspect the image without using the caption as a clue.",
+        "Choose one pattern before checking the teaching point.",
+        "Review the management implication, then advance to the next case."
+      ],
+      "caseLabel": "Case {index} of {total}: {vignette}",
+      "scoreLabel": "Score: {correct}/{attempted}",
+      "correctHeading": "Correct",
+      "incorrectHeading": "Not quite",
+      "nextLabel": "Next case",
+      "revealLabel": "Check my classification",
+      "keyTakeaway": "Pleural ultrasound narrows the procedure plan, but it does not diagnose the cause alone. Simple fluid can still be exudative, and complex fluid should raise source-control questions when the story fits.",
+      "neutralAlt": "Pleural-space image for pattern classification.",
+      "attributionLabel": "Attribution: {attribution}",
+      "sourceLabel": "Source:",
+      "withAttribution": " with attribution required",
+      "classifyHeading": "Classify the pattern",
+      "options": {
+        "simpleAnechoic": "Simple anechoic",
+        "complexNonSeptated": "Complex nonseptated",
+        "septatedLoculated": "Septated or loculated",
+        "echogenic": "Echogenic",
+        "noDrainableEffusion": "No drainable effusion"
+      }
+    },
+    "dynamicLab": {
+      "scaffoldTitle": "Dynamic signs video lab",
+      "objectives": [
+        "Recognize A-lines, B-lines, pleural-line irregularity, consolidation, and curtain/no-target views in motion.",
+        "Separate lung-pattern findings from drainable pleural-fluid pockets.",
+        "Use dynamic clips to decide whether to keep scanning, sample fluid, or think source control."
+      ],
+      "howToUse": [
+        "Watch the clip before using the choices as a clue.",
+        "Commit to the dominant dynamic sign before checking the teaching point.",
+        "Review why the clip is or is not a pleural-procedure target, then advance."
+      ],
+      "clipLabel": "Clip {index} of {total}: {vignette}",
+      "scoreLabel": "Score: {correct}/{attempted}",
+      "correctHeading": "Correct",
+      "incorrectHeading": "Not quite",
+      "nextLabel": "Next clip",
+      "revealLabel": "Check my interpretation",
+      "keyTakeaway": "Motion matters. A-lines, B-lines, curtain sign, and consolidation may answer the lung question, but a pleural procedure still requires a discrete safe fluid pocket.",
+      "neutralVideoLabel": "Lung ultrasound clip for dynamic-sign classification.",
+      "videoFallback": "Your browser does not support embedded video.",
+      "attributionLabel": "Attribution: {attribution}",
+      "sourceFilenameLabel": "Source filename: {filename}",
+      "sourceLabel": "Source:",
+      "withAttribution": " with attribution required",
+      "convertedNote": " · Converted to MP4 for browser playback",
+      "classifyHeading": "Classify the dynamic sign",
+      "options": {
+        "normalALines": "Normal A-lines",
+        "bLinesPleuralIrregularity": "B-lines with pleural-line irregularity",
+        "subpleuralConsolidation": "Subpleural consolidation",
+        "lungCurtainNoTarget": "Lung curtain / no drainable target",
+        "effusionAdjacentConsolidation": "Effusion with adjacent consolidation"
+      }
+    },
+    "management": {
+      "thoraReasonable": "Thoracentesis may be reasonable if the pocket is safe and the clinical question requires sampling or symptom relief.",
+      "considerTubeAndAdjuncts": "Consider tube drainage and adjuncts when infection, blood, loculation, or malignant complexity fits the case.",
+      "noPleuralDrainageTarget": "No pleural drainage target is shown in this view; redirect the learner toward lung-pattern interpretation or keep scanning for fluid."
+    },
+    "patternTeaching": {
+      "simpleAnechoic": "Simple anechoic fluid can be a transudate or exudate; the image does not replace clinical context or pleural fluid analysis.",
+      "complexNonSeptated": "Complex nonseptated fluid may still be sampled safely when the pocket is accessible, but the broader story decides urgency.",
+      "septatedLoculated": "Septations or locules suggest fibrin, infection, blood, or malignant complexity and should prompt drainage/source-control thinking when the clinical context fits.",
+      "echogenic": "Echogenic fluid raises concern for pus, blood, cellular debris, or malignancy; do not treat it as a simple free-flowing effusion.",
+      "noDrainableEffusion": "This view does not show a drainable pleural fluid pocket. B-lines, A-lines, or subpleural consolidation may answer a lung question, but they are not a thoracentesis target."
+    },
+    "patternReveal": {
+      "simpleAnechoic": "The teaching target is a simple anechoic pocket; simple appearance does not prove a transudate.",
+      "complexNonSeptated": "The teaching target is complex nonseptated fluid with internal echoes but no clear fibrin strands.",
+      "septatedLoculated": "The teaching target is septated or loculated fluid, suggesting fibrinous organization.",
+      "echogenic": "The teaching target is echogenic pleural material; pus, blood, cellular debris, or malignancy can create this appearance.",
+      "noDrainableEffusion": "The teaching target is a lung pattern without a drainable pleural fluid pocket in this view."
+    },
+    "dynamicTeaching": {
+      "normalALines": "A-lines are horizontal reverberation artifacts from aerated lung. They are useful distractors in a pleural module because they do not create a drainage target.",
+      "bLinesPleuralIrregularity": "B-lines arise from the pleural line and move with lung sliding. They answer an interstitial or inflammatory lung question, but they are not a thoracentesis target.",
+      "subpleuralConsolidation": "Subpleural consolidation can sit right against the pleura and mimic a procedural target at first glance. The key is to keep scanning for an actual fluid window.",
+      "lungCurtainNoTarget": "The curtain sign is dynamic aerated lung movement. In a pleural procedure module it is a critical no-target pattern, especially near the diaphragm.",
+      "effusionAdjacentConsolidation": "Fluid plus consolidated lung should shift thinking away from “simple tap” autopilot and toward infection, access-window adequacy, and source-control planning."
+    },
+    "dynamicReveal": {
+      "normalALines": "The teaching target is normal A-line reverberation below a sliding pleural line.",
+      "bLinesPleuralIrregularity": "The teaching target is B-line activity with pleural-line irregularity, not a pleural fluid pocket.",
+      "subpleuralConsolidation": "The teaching target is subpleural consolidation with pleural-line irregularity.",
+      "lungCurtainNoTarget": "The teaching target is a lung curtain sweeping over the liver, not a safe fluid pocket.",
+      "effusionAdjacentConsolidation": "The teaching target is effusion with adjacent consolidation, a higher-risk context than an isolated simple pocket."
+    },
+    "vignette": {
+      "simple-anechoic-reference": "74-year-old with dyspnea after diuresis and a unilateral effusion on chest imaging.",
+      "complex-nonseptated-reference": "68-year-old with recurrent unilateral effusion, chest discomfort, and weight loss.",
+      "septated-reference": "62-year-old with pneumonia, persistent fever, and a pleural collection after antibiotics.",
+      "echogenic-reference": "56-year-old with fever, pleuritic pain, and poor clinical improvement despite antibiotics.",
+      "ambiguous-simple-exudate": "37-year-old with tuberculosis exposure risk, night sweats, and a unilateral effusion.",
+      "b-lines-no-effusion-distractor": "70-year-old with dyspnea and diffuse interstitial findings on chest imaging, but no known pleural collection.",
+      "subpleural-consolidation-distractor": "59-year-old with pleuritic symptoms and focal lung findings where the question is whether there is a pleural pocket to access.",
+      "atelectasis-with-effusion-reference": "66-year-old with recurrent unilateral effusion and mobile tissue seen within the pleural-space view.",
+      "dynamic-normal-a-lines": "Anterior chest scan in a patient where the question is whether the pleural line is behaving like aerated lung.",
+      "dynamic-b-lines-pleural-irregularity": "Convex-probe lung clip where vertical artifacts and pleural-line texture should be classified before thinking about drainage.",
+      "dynamic-subpleural-consolidation": "Focused lung clip in a patient with focal pleural-adjacent abnormality; decide whether the view shows a drainable pocket.",
+      "dynamic-lung-curtain-no-target": "Right lower chest clip where the moving aerated lung boundary must be separated from a pleural fluid target.",
+      "dynamic-effusion-adjacent-consolidation": "Pneumonia-context clip where the learner must decide whether dark space and adjacent tissue represent a pleural-procedure target."
+    }
+  }
+}

@@ -1,12 +1,16 @@
 'use client'
 
-import Link from 'next/link'
 import type { Route } from 'next'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
+import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 
 export function Hero() {
+  const t = useTranslations('home')
+  const nav = useTranslations('navigation')
+
   return (
     <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-sky-500/90 via-sky-500/80 to-teal-500/80 p-[1px] shadow-lg">
       <section
@@ -21,23 +25,19 @@ export function Hero() {
         </div>
         <div className="max-w-xl space-y-6">
           <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
-            Interventional Pulmonology Education
+            {t('heroEyebrow')}
           </span>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:text-5xl">
-            Education &amp; Innovation in Interventional Pulmonology
+            {t('heroTitle')}
           </h1>
-          <p className="text-base text-sky-100 md:text-lg">
-            Explore EBUS training, podcast journal clubs, 3D anatomy, Nav Bronch, board review, and
-            FluoroView simulation modules built for interventional pulmonology learners and
-            educators.
-          </p>
+          <p className="text-base text-sky-100 md:text-lg">{t('heroBody')}</p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               asChild
               size="lg"
               className="h-11 rounded-full bg-white text-sky-900 hover:bg-sky-100"
             >
-              <Link href={'/ebus-training' as Route}>Open EBUS Training</Link>
+              <Link href={'/ebus-training' as Route}>{t('openEbus')}</Link>
             </Button>
             <Button
               asChild
@@ -45,7 +45,7 @@ export function Hero() {
               variant="outline"
               className="h-11 rounded-full border-white/60 bg-transparent text-white hover:border-white hover:bg-white/10"
             >
-              <Link href={'/journal-club-podcasts' as Route}>Browse Podcast Library</Link>
+              <Link href={'/journal-club-podcasts' as Route}>{t('browsePodcasts')}</Link>
             </Button>
           </div>
         </div>
@@ -54,49 +54,49 @@ export function Hero() {
             href={'/ebus-training' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            EBUS Training
+            {nav('items.ebusTraining.title')}
           </Link>
           <Link
             href={'/journal-club-podcasts' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Podcast Library
+            {nav('items.podcastLibrary.title')}
           </Link>
           <Link
             href={'/tnm-9-staging' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            TNM-9
+            {nav('items.tnm9.shortTitle')}
           </Link>
           <Link
             href={'/learn/anatomy' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            3D Anatomy
+            {nav('items.anatomy.title')}
           </Link>
           <Link
             href={'/bronch-navigation-trainer' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Nav Bronch
+            {nav('items.bronchNavigation.shortTitle')}
           </Link>
           <Link
             href={'/fluoroview' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            FluoroView
+            {nav('items.fluoroview.title')}
           </Link>
           <Link
             href={'/board-prep' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Board Prep
+            {nav('items.boardPrep.shortTitle')}
           </Link>
           <Link
             href={'/resources' as Route}
             className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
           >
-            Resources
+            {nav('items.resources.title')}
           </Link>
         </div>
       </section>

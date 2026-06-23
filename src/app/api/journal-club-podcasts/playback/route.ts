@@ -4,11 +4,17 @@ import {
   JOURNAL_CLUB_PODCAST_LISTENS_TABLE,
   resolveJournalClubPodcastPlayback,
 } from '@/lib/journal-club-podcasts/usage'
+import { requireJournalClubPodcastApiAuth } from '@/lib/journal-club-podcasts/auth'
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  const auth = await requireJournalClubPodcastApiAuth(request)
+  if (!auth.ok) {
+    return auth.response
+  }
+
   const rawPayload = await request.json().catch(() => null)
   const playback = resolveJournalClubPodcastPlayback(rawPayload)
 

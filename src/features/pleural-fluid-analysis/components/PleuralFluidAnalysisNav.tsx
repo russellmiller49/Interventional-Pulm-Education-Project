@@ -1,34 +1,31 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 
 const base = '/pleural-procedures/pleural-fluid-analysis'
 
-export const pleuralFluidAnalysisNavItems: readonly ModuleNavItem[] = [
-  { href: base, title: 'Overview', description: 'Objectives and the learning path' },
-  {
-    href: `${base}/learn`,
-    title: 'Learn',
-    description: "Light's criteria, pseudoexudates, targeted tests",
-  },
-  {
-    href: `${base}/practice`,
-    title: 'Practice',
-    description: 'Interactive differential cockpit',
-  },
-  {
-    href: `${base}/assessment`,
-    title: 'Assessment',
-    description: 'Match the findings to the disease',
-  },
-  { href: `${base}/references`, title: 'References', description: 'Guideline sources' },
+/** Section base href, exported for pages that need the overview's activeHref. */
+export const pleuralFluidAnalysisNavBase = base
+
+const sections = [
+  { key: 'overview', href: base },
+  { key: 'learn', href: `${base}/learn` },
+  { key: 'practice', href: `${base}/practice` },
+  { key: 'assessment', href: `${base}/assessment` },
+  { key: 'references', href: `${base}/references` },
 ] as const
 
 export function PleuralFluidAnalysisNav({ activeHref }: { activeHref: string }) {
-  return (
-    <ModuleNav
-      items={pleuralFluidAnalysisNavItems}
-      activeHref={activeHref}
-      ariaLabel="Pleural fluid analysis module sections"
-    />
-  )
+  const t = useTranslations('pleuralFluidAnalysis.nav')
+
+  const items: ModuleNavItem[] = sections.map((section) => ({
+    href: section.href,
+    title: t(`${section.key}.title`),
+    description: t(`${section.key}.description`),
+  }))
+
+  return <ModuleNav items={items} activeHref={activeHref} ariaLabel={t('ariaLabel')} />
 }
