@@ -204,6 +204,20 @@
       }
     }
   },
+  "dashboard": {
+    "title": "欢迎回来",
+    "signedInAs": "你已以 {email} 身份登录。",
+    "authenticatedUser": "已认证用户",
+    "sessionNotDetected": "未检测到会话。如果问题持续存在，请重新登录。",
+    "permissionRequired": "{access} 需要额外权限。你的免费账号仍可访问标准教育模块。",
+    "exploreResources": "浏览资源",
+    "seeComingSoon": "查看即将推出",
+    "requiredAccess": {
+      "ipRegistry": "IP 注册系统",
+      "socalEbusCourse": "南加州 EBUS 课程",
+      "fallback": "该受限区域"
+    }
+  },
   "search": {
     "title": "搜索",
     "description": "搜索资源、board 复习章节、模拟工具和临床指南。",

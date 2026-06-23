@@ -204,6 +204,20 @@
       }
     }
   },
+  "dashboard": {
+    "title": "Bienvenido/a de nuevo",
+    "signedInAs": "Has iniciado sesión como {email}.",
+    "authenticatedUser": "un usuario autenticado",
+    "sessionNotDetected": "No se detectó la sesión. Si esto persiste, vuelve a iniciar sesión.",
+    "permissionRequired": "Se requiere permiso adicional para {access}. Tu cuenta gratuita aún puede acceder a los módulos educativos estándar.",
+    "exploreResources": "Explorar recursos",
+    "seeComingSoon": "Ver lo próximo",
+    "requiredAccess": {
+      "ipRegistry": "Registro IP",
+      "socalEbusCourse": "Curso EBUS SoCal",
+      "fallback": "esa área restringida"
+    }
+  },
   "search": {
     "title": "Buscar",
     "description": "Busca recursos, capítulos de repaso, herramientas de simulación y guías para clínicos.",
