@@ -53,7 +53,7 @@ function getProfileDisplayName(profile: SiteProfileName | null) {
   return displayName || null
 }
 
-function getUserDisplayName(user: User, profile: SiteProfileName | null) {
+function getUserDisplayName(user: User, profile: SiteProfileName | null, fallbackName: string) {
   const metadataName = [
     getMetadataString(user, ['first_name']),
     getMetadataString(user, ['last_name']),
@@ -66,7 +66,7 @@ function getUserDisplayName(user: User, profile: SiteProfileName | null) {
     getMetadataString(user, ['full_name', 'name']) ??
     (metadataName || null) ??
     user.email?.split('@')[0] ??
-    'there'
+    fallbackName
   )
 }
 
@@ -77,6 +77,7 @@ export function Navigation() {
   const activeLocale = isActiveLocale(locale) ? locale : 'en'
   const common = useTranslations('common')
   const nav = useTranslations('navigation')
+  const genericUserName = common('genericUser')
   const [searchQuery, setSearchQuery] = useState('')
   const [authStatus, setAuthStatus] = useState<NavAuthStatus>('checking')
   const [currentUser, setCurrentUser] = useState<NavUserSummary | null>(null)
@@ -191,60 +192,63 @@ export function Navigation() {
     }
   }
 
-  const loadCurrentUser = useCallback(async (isActive: () => boolean) => {
-    try {
-      const supabase = supabaseCookieBrowser()
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser()
+  const loadCurrentUser = useCallback(
+    async (isActive: () => boolean) => {
+      try {
+        const supabase = supabaseCookieBrowser()
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser()
 
-      if (!isActive()) {
-        return
-      }
+        if (!isActive()) {
+          return
+        }
 
-      if (error || !user) {
+        if (error || !user) {
+          setCurrentUser(null)
+          setAuthStatus('signed-out')
+          return
+        }
+
+        const [{ data: profileData }, { data: adminEntitlement }] = await Promise.all([
+          supabase
+            .from('site_profiles')
+            .select('first_name,last_name')
+            .eq('id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('site_entitlements')
+            .select('entitlement')
+            .eq('user_id', user.id)
+            .eq('entitlement', 'site_admin')
+            .eq('status', 'active')
+            .maybeSingle(),
+        ])
+
+        if (!isActive()) {
+          return
+        }
+
+        const profile = profileData as SiteProfileName | null
+
+        setCurrentUser({
+          displayName: getUserDisplayName(user, profile, genericUserName),
+          email: user.email ?? null,
+          isAdmin: Boolean(adminEntitlement),
+        })
+        setAuthStatus('signed-in')
+      } catch {
+        if (!isActive()) {
+          return
+        }
+
         setCurrentUser(null)
         setAuthStatus('signed-out')
-        return
       }
-
-      const [{ data: profileData }, { data: adminEntitlement }] = await Promise.all([
-        supabase
-          .from('site_profiles')
-          .select('first_name,last_name')
-          .eq('id', user.id)
-          .maybeSingle(),
-        supabase
-          .from('site_entitlements')
-          .select('entitlement')
-          .eq('user_id', user.id)
-          .eq('entitlement', 'site_admin')
-          .eq('status', 'active')
-          .maybeSingle(),
-      ])
-
-      if (!isActive()) {
-        return
-      }
-
-      const profile = profileData as SiteProfileName | null
-
-      setCurrentUser({
-        displayName: getUserDisplayName(user, profile),
-        email: user.email ?? null,
-        isAdmin: Boolean(adminEntitlement),
-      })
-      setAuthStatus('signed-in')
-    } catch {
-      if (!isActive()) {
-        return
-      }
-
-      setCurrentUser(null)
-      setAuthStatus('signed-out')
-    }
-  }, [])
+    },
+    [genericUserName],
+  )
 
   useEffect(() => {
     let isActive = true

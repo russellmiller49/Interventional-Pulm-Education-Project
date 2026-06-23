@@ -72,6 +72,7 @@ describe('journal club podcast playback API', () => {
         play_count: 1,
         progress_event_count: 2,
         started_at: '2026-06-22T19:00:00.000Z',
+        user_id: 'user-1',
       },
       error: null,
     })
@@ -102,6 +103,7 @@ describe('journal club podcast playback API', () => {
         progress_event_count: 3,
         route_path: '/journal-club-podcasts',
         started_at: '2026-06-22T19:00:00.000Z',
+        user_id: 'user-1',
         user_agent: 'jest',
       }),
       { onConflict: 'playback_session_id' },

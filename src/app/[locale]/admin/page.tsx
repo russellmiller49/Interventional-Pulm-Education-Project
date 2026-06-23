@@ -6,8 +6,11 @@ import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import {
   Activity,
+  BookOpen,
+  CheckCircle2,
   Clock,
   Filter,
+  Headphones,
   KeyRound,
   RotateCcw,
   Search,
@@ -107,9 +110,27 @@ interface SiteModuleProgressRow {
 
 interface SiteModuleSessionRow {
   user_id: string
+  module_id: string
+  route_path: string
   duration_seconds: number | null
   started_at: string | null
   last_heartbeat_at: string | null
+  ended_at: string | null
+}
+
+interface PodcastListenRow {
+  user_id: string | null
+  episode_id: string
+  episode_title: string
+  primary_hub: string
+  language: string
+  started_at: string | null
+  last_event_at: string | null
+  completed_at: string | null
+  listened_seconds: number | null
+  duration_seconds: number | null
+  max_percent_complete: number | null
+  play_count: number | null
 }
 
 interface LegacyEbusProfileRow {
@@ -124,9 +145,75 @@ interface LegacyEbusProfileRow {
 
 interface UserUsageSummary {
   completedModules: number
+  completedPodcasts: number
   lastActivityAt: string | null
   moduleCount: number
+  modules: UserModuleUsageDetail[]
+  podcastListenSeconds: number
+  podcastSessionCount: number
+  podcasts: UserPodcastUsageDetail[]
   totalSeconds: number
+}
+
+interface UserModuleUsageDetail {
+  completedAt: string | null
+  lastActivityAt: string | null
+  moduleId: string
+  percentComplete: number
+  routePath: string
+  sessionCount: number
+  totalSeconds: number
+}
+
+interface UserPodcastUsageDetail {
+  completedAt: string | null
+  durationSeconds: number | null
+  episodeId: string
+  episodeTitle: string
+  language: string
+  lastActivityAt: string | null
+  listenedSeconds: number
+  listenSessionCount: number
+  maxPercentComplete: number
+  playCount: number
+  primaryHub: string
+}
+
+interface ModuleUsageSummary {
+  completedUsers: number
+  lastActivityAt: string | null
+  moduleId: string
+  routePath: string
+  sessionCount: number
+  totalSeconds: number
+  uniqueUsers: number
+}
+
+interface PodcastUsageSummary {
+  completedSessions: number
+  episodeId: string
+  episodeTitle: string
+  languages: string[]
+  lastActivityAt: string | null
+  listenSessions: number
+  primaryHub: string
+  totalListenedSeconds: number
+  uniqueCompletedListeners: number
+  uniqueListeners: number
+}
+
+interface UsageAnalyticsSummary {
+  activeModuleUsers: number
+  completedModuleUsers: number
+  completedPodcastSessions: number
+  moduleCount: number
+  moduleHours: number
+  moduleSessions: number
+  podcastEpisodeCount: number
+  podcastHours: number
+  podcastListeners: number
+  podcastSessions: number
+  unattributedPodcastSessions: number
 }
 
 interface AdminUserRow {
@@ -159,6 +246,54 @@ interface InstitutionFilterOption {
 
 interface AdminFilterOptions {
   institutions: InstitutionFilterOption[]
+}
+
+interface ModuleUsageAccumulator {
+  completedAt: string | null
+  lastActivityAt: string | null
+  moduleId: string
+  percentComplete: number
+  progressSeconds: number
+  routePaths: Set<string>
+  sessionCount: number
+  sessionSeconds: number
+}
+
+interface PodcastUsageAccumulator {
+  completedAt: string | null
+  durationSeconds: number | null
+  episodeId: string
+  episodeTitle: string
+  language: string
+  lastActivityAt: string | null
+  listenedSeconds: number
+  listenSessionCount: number
+  maxPercentComplete: number
+  playCount: number
+  primaryHub: string
+}
+
+interface ModuleUsageSummaryAccumulator {
+  completedUserIds: Set<string>
+  lastActivityAt: string | null
+  moduleId: string
+  routePath: string
+  sessionCount: number
+  totalSeconds: number
+  userIds: Set<string>
+}
+
+interface PodcastUsageSummaryAccumulator {
+  completedSessions: number
+  completedUserIds: Set<string>
+  episodeId: string
+  episodeTitle: string
+  languages: Set<string>
+  lastActivityAt: string | null
+  listenSessions: number
+  listenerIds: Set<string>
+  primaryHub: string
+  totalListenedSeconds: number
 }
 
 const roleLabels: Map<string, string> = new Map(
@@ -301,6 +436,168 @@ function formatDuration(totalSeconds: number) {
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`
 }
 
+function formatPercent(value: number) {
+  return `${Math.max(0, Math.min(100, Math.round(value)))}%`
+}
+
+function formatModuleLabel(moduleId: string) {
+  return moduleId
+    .split(':')
+    .map((segment) =>
+      segment
+        .replaceAll('-', ' ')
+        .replaceAll('_', ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+    )
+    .join(' / ')
+}
+
+function formatPodcastLanguage(language: string) {
+  return language ? language.charAt(0).toUpperCase() + language.slice(1) : 'Unknown'
+}
+
+function getLatestDate(current: string | null, candidate: string | null | undefined) {
+  if (!candidate) {
+    return current
+  }
+
+  if (!current || new Date(candidate).getTime() > new Date(current).getTime()) {
+    return candidate
+  }
+
+  return current
+}
+
+function getEarliestDate(current: string | null, candidate: string | null | undefined) {
+  if (!candidate) {
+    return current
+  }
+
+  if (!current || new Date(candidate).getTime() < new Date(current).getTime()) {
+    return candidate
+  }
+
+  return current
+}
+
+function compareLatestDates(a: string | null, b: string | null) {
+  return (b ?? '').localeCompare(a ?? '')
+}
+
+function getDefaultUsageSummary(): UserUsageSummary {
+  return {
+    completedModules: 0,
+    completedPodcasts: 0,
+    lastActivityAt: null,
+    moduleCount: 0,
+    modules: [],
+    podcastListenSeconds: 0,
+    podcastSessionCount: 0,
+    podcasts: [],
+    totalSeconds: 0,
+  }
+}
+
+function getDefaultUsageAnalyticsSummary(): UsageAnalyticsSummary {
+  return {
+    activeModuleUsers: 0,
+    completedModuleUsers: 0,
+    completedPodcastSessions: 0,
+    moduleCount: 0,
+    moduleHours: 0,
+    moduleSessions: 0,
+    podcastEpisodeCount: 0,
+    podcastHours: 0,
+    podcastListeners: 0,
+    podcastSessions: 0,
+    unattributedPodcastSessions: 0,
+  }
+}
+
+function getModuleUsageAccumulator(
+  usageByUserAndModule: Map<string, Map<string, ModuleUsageAccumulator>>,
+  userId: string,
+  moduleId: string,
+) {
+  const modulesByUser =
+    usageByUserAndModule.get(userId) ?? new Map<string, ModuleUsageAccumulator>()
+  const current =
+    modulesByUser.get(moduleId) ??
+    ({
+      completedAt: null,
+      lastActivityAt: null,
+      moduleId,
+      percentComplete: 0,
+      progressSeconds: 0,
+      routePaths: new Set<string>(),
+      sessionCount: 0,
+      sessionSeconds: 0,
+    } satisfies ModuleUsageAccumulator)
+
+  modulesByUser.set(moduleId, current)
+  usageByUserAndModule.set(userId, modulesByUser)
+
+  return current
+}
+
+function toUserModuleUsageDetail(accumulator: ModuleUsageAccumulator): UserModuleUsageDetail {
+  return {
+    completedAt: accumulator.completedAt,
+    lastActivityAt: accumulator.lastActivityAt,
+    moduleId: accumulator.moduleId,
+    percentComplete: accumulator.percentComplete,
+    routePath: Array.from(accumulator.routePaths)[0] ?? '',
+    sessionCount: accumulator.sessionCount,
+    totalSeconds: Math.max(accumulator.sessionSeconds, accumulator.progressSeconds),
+  }
+}
+
+function getPodcastUsageAccumulator(
+  usageByUserAndPodcast: Map<string, Map<string, PodcastUsageAccumulator>>,
+  userId: string,
+  podcast: PodcastListenRow,
+) {
+  const podcastKey = `${podcast.episode_id}:${podcast.language}`
+  const podcastsByUser =
+    usageByUserAndPodcast.get(userId) ?? new Map<string, PodcastUsageAccumulator>()
+  const current =
+    podcastsByUser.get(podcastKey) ??
+    ({
+      completedAt: null,
+      durationSeconds: null,
+      episodeId: podcast.episode_id,
+      episodeTitle: podcast.episode_title,
+      language: podcast.language,
+      lastActivityAt: null,
+      listenedSeconds: 0,
+      listenSessionCount: 0,
+      maxPercentComplete: 0,
+      playCount: 0,
+      primaryHub: podcast.primary_hub,
+    } satisfies PodcastUsageAccumulator)
+
+  podcastsByUser.set(podcastKey, current)
+  usageByUserAndPodcast.set(userId, podcastsByUser)
+
+  return current
+}
+
+function toUserPodcastUsageDetail(accumulator: PodcastUsageAccumulator): UserPodcastUsageDetail {
+  return {
+    completedAt: accumulator.completedAt,
+    durationSeconds: accumulator.durationSeconds,
+    episodeId: accumulator.episodeId,
+    episodeTitle: accumulator.episodeTitle,
+    language: accumulator.language,
+    lastActivityAt: accumulator.lastActivityAt,
+    listenedSeconds: accumulator.listenedSeconds,
+    listenSessionCount: accumulator.listenSessionCount,
+    maxPercentComplete: accumulator.maxPercentComplete,
+    playCount: accumulator.playCount,
+    primaryHub: accumulator.primaryHub,
+  }
+}
+
 function entitlementIsActive(row: SiteEntitlementRow) {
   if (row.status !== 'active') {
     return false
@@ -323,6 +620,13 @@ function userHasEffectiveEntitlement(user: AdminUserRow, entitlement: AdminEntit
   return (
     userHasActiveSiteEntitlement(user, entitlement) ||
     (entitlement === 'socal_ebus_course' && userHasLegacyEbusAccess(user))
+  )
+}
+
+function shouldExcludeUserFromUsageAnalytics(user: AdminUserRow) {
+  return (
+    user.email.trim().toLowerCase() === ADMIN_EMAIL ||
+    userHasEffectiveEntitlement(user, 'site_admin')
   )
 }
 
@@ -538,8 +842,13 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
         activeAdminCount: 0,
         activeEbusCourseCount: 0,
         activeRegistryCount: 0,
+        analytics: getDefaultUsageAnalyticsSummary(),
         totalHours: 0,
         totalUsers: 0,
+      },
+      usageAnalytics: {
+        moduleUsage: [] as ModuleUsageSummary[],
+        podcastUsage: [] as PodcastUsageSummary[],
       },
     }
   }
@@ -551,6 +860,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
     entitlementsResult,
     progressResult,
     sessionsResult,
+    podcastListensResult,
   ] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 }),
     supabaseAdmin
@@ -573,7 +883,14 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
       .limit(5000),
     supabaseAdmin
       .from('site_module_sessions')
-      .select('user_id,duration_seconds,started_at,last_heartbeat_at')
+      .select('user_id,module_id,route_path,duration_seconds,started_at,last_heartbeat_at,ended_at')
+      .limit(5000),
+    supabaseAdmin
+      .from('journal_club_podcast_listens')
+      .select(
+        'user_id,episode_id,episode_title,primary_hub,language,started_at,last_event_at,completed_at,listened_seconds,duration_seconds,max_percent_complete,play_count',
+      )
+      .order('last_event_at', { ascending: false })
       .limit(5000),
   ])
 
@@ -588,8 +905,13 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
         activeAdminCount: 0,
         activeEbusCourseCount: 0,
         activeRegistryCount: 0,
+        analytics: getDefaultUsageAnalyticsSummary(),
         totalHours: 0,
         totalUsers: 0,
+      },
+      usageAnalytics: {
+        moduleUsage: [] as ModuleUsageSummary[],
+        podcastUsage: [] as PodcastUsageSummary[],
       },
     }
   }
@@ -602,12 +924,17 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
   const entitlements = ((entitlementsResult.data ?? []) as SiteEntitlementRow[]).filter(Boolean)
   const progressRows = ((progressResult.data ?? []) as SiteModuleProgressRow[]).filter(Boolean)
   const sessionRows = ((sessionsResult.data ?? []) as SiteModuleSessionRow[]).filter(Boolean)
+  const podcastListenRows = ((podcastListensResult.data ?? []) as PodcastListenRow[]).filter(
+    Boolean,
+  )
 
   const profilesById = new Map(profiles.map((profile) => [profile.id, profile]))
   const legacyEbusProfilesById = new Map(legacyEbusProfiles.map((profile) => [profile.id, profile]))
   const usersById = new Map(authUsers.map((user) => [user.id, user]))
   const entitlementsByUser = new Map<string, SiteEntitlementRow[]>()
   const usageByUser = new Map<string, UserUsageSummary>()
+  const moduleUsageByUserAndModule = new Map<string, Map<string, ModuleUsageAccumulator>>()
+  const podcastUsageByUserAndPodcast = new Map<string, Map<string, PodcastUsageAccumulator>>()
 
   for (const entitlement of entitlements) {
     const current = entitlementsByUser.get(entitlement.user_id) ?? []
@@ -616,52 +943,123 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
   }
 
   for (const progress of progressRows) {
-    const current = usageByUser.get(progress.user_id) ?? {
-      completedModules: 0,
-      lastActivityAt: null,
-      moduleCount: 0,
-      totalSeconds: 0,
-    }
+    const accumulator = getModuleUsageAccumulator(
+      moduleUsageByUserAndModule,
+      progress.user_id,
+      progress.module_id,
+    )
 
-    current.moduleCount += 1
-    current.totalSeconds += progress.total_time_seconds ?? 0
-    current.completedModules += progress.completed_at ? 1 : 0
-    if (
-      progress.last_visited_at &&
-      (!current.lastActivityAt ||
-        new Date(progress.last_visited_at).getTime() > new Date(current.lastActivityAt).getTime())
-    ) {
-      current.lastActivityAt = progress.last_visited_at
-    }
-
-    usageByUser.set(progress.user_id, current)
+    accumulator.completedAt = getEarliestDate(accumulator.completedAt, progress.completed_at)
+    accumulator.lastActivityAt = getLatestDate(accumulator.lastActivityAt, progress.last_visited_at)
+    accumulator.percentComplete = Math.max(
+      accumulator.percentComplete,
+      progress.percent_complete ?? 0,
+    )
+    accumulator.progressSeconds = Math.max(
+      accumulator.progressSeconds,
+      progress.total_time_seconds ?? 0,
+    )
   }
 
   for (const session of sessionRows) {
-    const current = usageByUser.get(session.user_id) ?? {
-      completedModules: 0,
-      lastActivityAt: null,
-      moduleCount: 0,
-      totalSeconds: 0,
+    const accumulator = getModuleUsageAccumulator(
+      moduleUsageByUserAndModule,
+      session.user_id,
+      session.module_id,
+    )
+
+    accumulator.routePaths.add(session.route_path)
+    accumulator.sessionCount += 1
+    accumulator.sessionSeconds += session.duration_seconds ?? 0
+    accumulator.lastActivityAt = getLatestDate(
+      accumulator.lastActivityAt,
+      session.ended_at ?? session.last_heartbeat_at ?? session.started_at,
+    )
+  }
+
+  for (const [userId, modulesByUser] of moduleUsageByUserAndModule.entries()) {
+    const modules = Array.from(modulesByUser.values())
+      .map(toUserModuleUsageDetail)
+      .sort((a, b) => compareLatestDates(a.lastActivityAt, b.lastActivityAt))
+    const completedModules = modules.filter(
+      (moduleDetail) => moduleDetail.completedAt || moduleDetail.percentComplete >= 100,
+    ).length
+    const lastActivityAt = modules.reduce<string | null>(
+      (latest, moduleDetail) => getLatestDate(latest, moduleDetail.lastActivityAt),
+      null,
+    )
+
+    usageByUser.set(userId, {
+      ...getDefaultUsageSummary(),
+      completedModules,
+      lastActivityAt,
+      moduleCount: modules.length,
+      modules,
+      totalSeconds: modules.reduce((total, moduleDetail) => total + moduleDetail.totalSeconds, 0),
+    })
+  }
+
+  for (const podcast of podcastListenRows) {
+    if (!podcast.user_id) {
+      continue
     }
 
-    current.totalSeconds += session.duration_seconds ?? 0
-    const sessionActivityAt = session.last_heartbeat_at ?? session.started_at
-    if (
-      sessionActivityAt &&
-      (!current.lastActivityAt ||
-        new Date(sessionActivityAt).getTime() > new Date(current.lastActivityAt).getTime())
-    ) {
-      current.lastActivityAt = sessionActivityAt
-    }
+    const accumulator = getPodcastUsageAccumulator(
+      podcastUsageByUserAndPodcast,
+      podcast.user_id,
+      podcast,
+    )
 
-    usageByUser.set(session.user_id, current)
+    accumulator.completedAt = getEarliestDate(accumulator.completedAt, podcast.completed_at)
+    if (typeof podcast.duration_seconds === 'number') {
+      accumulator.durationSeconds = Math.max(
+        accumulator.durationSeconds ?? 0,
+        podcast.duration_seconds,
+      )
+    }
+    accumulator.lastActivityAt = getLatestDate(
+      accumulator.lastActivityAt,
+      podcast.last_event_at ?? podcast.started_at,
+    )
+    accumulator.listenedSeconds += podcast.listened_seconds ?? 0
+    accumulator.listenSessionCount += 1
+    accumulator.maxPercentComplete = Math.max(
+      accumulator.maxPercentComplete,
+      podcast.max_percent_complete ?? 0,
+    )
+    accumulator.playCount += podcast.play_count ?? 0
+  }
+
+  for (const [userId, podcastsByUser] of podcastUsageByUserAndPodcast.entries()) {
+    const current = usageByUser.get(userId) ?? getDefaultUsageSummary()
+    const podcasts = Array.from(podcastsByUser.values())
+      .map(toUserPodcastUsageDetail)
+      .sort((a, b) => compareLatestDates(a.lastActivityAt, b.lastActivityAt))
+    const podcastLastActivityAt = podcasts.reduce<string | null>(
+      (latest, podcast) => getLatestDate(latest, podcast.lastActivityAt),
+      null,
+    )
+
+    usageByUser.set(userId, {
+      ...current,
+      completedPodcasts: podcasts.filter(
+        (podcast) => podcast.completedAt || podcast.maxPercentComplete >= 95,
+      ).length,
+      lastActivityAt: getLatestDate(current.lastActivityAt, podcastLastActivityAt),
+      podcastListenSeconds: podcasts.reduce((total, podcast) => total + podcast.listenedSeconds, 0),
+      podcastSessionCount: podcasts.reduce(
+        (total, podcast) => total + podcast.listenSessionCount,
+        0,
+      ),
+      podcasts,
+    })
   }
 
   const allUserIds = new Set<string>([
     ...authUsers.map((user) => user.id),
     ...profiles.map((profile) => profile.id),
     ...legacyEbusProfiles.map((profile) => profile.id),
+    ...usageByUser.keys(),
   ])
 
   const searchQuery = normalizeQuery(filters.q)
@@ -685,12 +1083,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
       profile,
       legacyEbusProfile,
       entitlements: entitlementsByUser.get(userId) ?? [],
-      usage: usageByUser.get(userId) ?? {
-        completedModules: 0,
-        lastActivityAt: null,
-        moduleCount: 0,
-        totalSeconds: 0,
-      },
+      usage: usageByUser.get(userId) ?? getDefaultUsageSummary(),
     }
   })
 
@@ -744,7 +1137,152 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
   const activeEbusCourseCount = users.filter((user) =>
     userHasEffectiveEntitlement(user, 'socal_ebus_course'),
   ).length
-  const totalSeconds = users.reduce((total, user) => total + user.usage.totalSeconds, 0)
+  const analyticsUsers = users.filter((user) => !shouldExcludeUserFromUsageAnalytics(user))
+  const analyticsUserIds = new Set(analyticsUsers.map((user) => user.id))
+  const moduleUsageById = new Map<string, ModuleUsageSummaryAccumulator>()
+  const podcastUsageById = new Map<string, PodcastUsageSummaryAccumulator>()
+
+  for (const user of analyticsUsers) {
+    for (const moduleDetail of user.usage.modules) {
+      const current =
+        moduleUsageById.get(moduleDetail.moduleId) ??
+        ({
+          completedUserIds: new Set<string>(),
+          lastActivityAt: null,
+          moduleId: moduleDetail.moduleId,
+          routePath: moduleDetail.routePath,
+          sessionCount: 0,
+          totalSeconds: 0,
+          userIds: new Set<string>(),
+        } satisfies ModuleUsageSummaryAccumulator)
+
+      current.userIds.add(user.id)
+      current.sessionCount += moduleDetail.sessionCount
+      current.totalSeconds += moduleDetail.totalSeconds
+      current.lastActivityAt = getLatestDate(current.lastActivityAt, moduleDetail.lastActivityAt)
+      if (!current.routePath && moduleDetail.routePath) {
+        current.routePath = moduleDetail.routePath
+      }
+      if (moduleDetail.completedAt || moduleDetail.percentComplete >= 100) {
+        current.completedUserIds.add(user.id)
+      }
+      moduleUsageById.set(moduleDetail.moduleId, current)
+    }
+
+    for (const podcast of user.usage.podcasts) {
+      const current =
+        podcastUsageById.get(podcast.episodeId) ??
+        ({
+          completedSessions: 0,
+          completedUserIds: new Set<string>(),
+          episodeId: podcast.episodeId,
+          episodeTitle: podcast.episodeTitle,
+          languages: new Set<string>(),
+          lastActivityAt: null,
+          listenSessions: 0,
+          listenerIds: new Set<string>(),
+          primaryHub: podcast.primaryHub,
+          totalListenedSeconds: 0,
+        } satisfies PodcastUsageSummaryAccumulator)
+
+      current.listenerIds.add(user.id)
+      current.languages.add(podcast.language)
+      current.listenSessions += podcast.listenSessionCount
+      current.totalListenedSeconds += podcast.listenedSeconds
+      current.lastActivityAt = getLatestDate(current.lastActivityAt, podcast.lastActivityAt)
+      if (podcast.completedAt || podcast.maxPercentComplete >= 95) {
+        current.completedUserIds.add(user.id)
+      }
+      podcastUsageById.set(podcast.episodeId, current)
+    }
+  }
+
+  const attributedNonAdminPodcastRows = podcastListenRows.filter(
+    (podcast) => podcast.user_id && analyticsUserIds.has(podcast.user_id),
+  )
+
+  for (const podcast of attributedNonAdminPodcastRows) {
+    const current = podcastUsageById.get(podcast.episode_id)
+    if (!current) {
+      continue
+    }
+
+    if (podcast.completed_at || (podcast.max_percent_complete ?? 0) >= 95) {
+      current.completedSessions += 1
+    }
+  }
+
+  const moduleUsage: ModuleUsageSummary[] = Array.from(moduleUsageById.values())
+    .map((moduleSummary) => ({
+      completedUsers: moduleSummary.completedUserIds.size,
+      lastActivityAt: moduleSummary.lastActivityAt,
+      moduleId: moduleSummary.moduleId,
+      routePath: moduleSummary.routePath,
+      sessionCount: moduleSummary.sessionCount,
+      totalSeconds: moduleSummary.totalSeconds,
+      uniqueUsers: moduleSummary.userIds.size,
+    }))
+    .sort((a, b) => {
+      return (
+        b.uniqueUsers - a.uniqueUsers ||
+        b.sessionCount - a.sessionCount ||
+        b.totalSeconds - a.totalSeconds ||
+        compareLatestDates(a.lastActivityAt, b.lastActivityAt)
+      )
+    })
+
+  const podcastUsage: PodcastUsageSummary[] = Array.from(podcastUsageById.values())
+    .map((podcast) => ({
+      completedSessions: podcast.completedSessions,
+      episodeId: podcast.episodeId,
+      episodeTitle: podcast.episodeTitle,
+      languages: Array.from(podcast.languages).sort(),
+      lastActivityAt: podcast.lastActivityAt,
+      listenSessions: podcast.listenSessions,
+      primaryHub: podcast.primaryHub,
+      totalListenedSeconds: podcast.totalListenedSeconds,
+      uniqueCompletedListeners: podcast.completedUserIds.size,
+      uniqueListeners: podcast.listenerIds.size,
+    }))
+    .sort((a, b) => {
+      return (
+        b.uniqueListeners - a.uniqueListeners ||
+        b.completedSessions - a.completedSessions ||
+        b.listenSessions - a.listenSessions ||
+        compareLatestDates(a.lastActivityAt, b.lastActivityAt)
+      )
+    })
+
+  const analyticsSummary: UsageAnalyticsSummary = {
+    activeModuleUsers: analyticsUsers.filter((user) => user.usage.modules.length > 0).length,
+    completedModuleUsers: analyticsUsers.filter((user) => user.usage.completedModules > 0).length,
+    completedPodcastSessions: attributedNonAdminPodcastRows.filter(
+      (podcast) => podcast.completed_at || (podcast.max_percent_complete ?? 0) >= 95,
+    ).length,
+    moduleCount: moduleUsage.length,
+    moduleHours: Math.round(
+      analyticsUsers.reduce((total, user) => total + user.usage.totalSeconds, 0) / 3600,
+    ),
+    moduleSessions: analyticsUsers.reduce(
+      (total, user) =>
+        total +
+        user.usage.modules.reduce(
+          (moduleTotal, moduleDetail) => moduleTotal + moduleDetail.sessionCount,
+          0,
+        ),
+      0,
+    ),
+    podcastEpisodeCount: podcastUsage.length,
+    podcastHours: Math.round(
+      attributedNonAdminPodcastRows.reduce(
+        (total, podcast) => total + (podcast.listened_seconds ?? 0),
+        0,
+      ) / 3600,
+    ),
+    podcastListeners: analyticsUsers.filter((user) => user.usage.podcasts.length > 0).length,
+    podcastSessions: attributedNonAdminPodcastRows.length,
+    unattributedPodcastSessions: podcastListenRows.filter((podcast) => !podcast.user_id).length,
+  }
 
   return {
     error: [
@@ -753,6 +1291,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
       entitlementsResult.error,
       progressResult.error,
       sessionsResult.error,
+      podcastListensResult.error,
     ]
       .filter(Boolean)
       .map((error) => error?.message)
@@ -763,8 +1302,13 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
       activeAdminCount,
       activeEbusCourseCount,
       activeRegistryCount,
-      totalHours: Math.round(totalSeconds / 3600),
+      analytics: analyticsSummary,
+      totalHours: analyticsSummary.moduleHours,
       totalUsers: users.length,
+    },
+    usageAnalytics: {
+      moduleUsage,
+      podcastUsage,
     },
   }
 }
@@ -855,7 +1399,8 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
   const params = await searchParams
   const filters = getAdminFilters(params)
   const status = params?.status
-  const { error, filterOptions, summary, users } = await loadAdminDashboardData(filters)
+  const { error, filterOptions, summary, usageAnalytics, users } =
+    await loadAdminDashboardData(filters)
   const filtersAreActive = hasActiveFilters(filters)
 
   return (
@@ -887,7 +1432,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         </div>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" aria-hidden />
@@ -919,9 +1464,146 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" aria-hidden />
-            Total learning time
+            Non-admin module time
           </div>
           <p className="mt-2 text-2xl font-semibold">{summary.totalHours}h</p>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Headphones className="h-4 w-4" aria-hidden />
+            Podcast listens
+          </div>
+          <p className="mt-2 text-2xl font-semibold">{summary.analytics.podcastSessions}</p>
+          <p className="text-xs text-muted-foreground">
+            {summary.analytics.completedPodcastSessions} completed
+          </p>
+        </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <div className="space-y-4 rounded-lg border bg-card p-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <BookOpen className="h-5 w-5" aria-hidden />
+                Module usage
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {summary.analytics.activeModuleUsers} users, {summary.analytics.moduleSessions}{' '}
+                sessions, {summary.analytics.moduleCount} modules,{' '}
+                {summary.analytics.completedModuleUsers} with completions
+              </p>
+            </div>
+            <p className="text-sm font-medium">{summary.analytics.moduleHours}h total</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3 font-medium">Module</th>
+                  <th className="px-3 py-2 font-medium">Users</th>
+                  <th className="px-3 py-2 font-medium">Sessions</th>
+                  <th className="px-3 py-2 font-medium">Time</th>
+                  <th className="px-3 py-2 font-medium">Completed</th>
+                  <th className="py-2 pl-3 font-medium">Last used</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usageAnalytics.moduleUsage.slice(0, 10).map((moduleSummary) => (
+                  <tr key={moduleSummary.moduleId} className="border-b last:border-b-0">
+                    <td className="max-w-[220px] py-3 pr-3 align-top">
+                      <p className="font-medium">{formatModuleLabel(moduleSummary.moduleId)}</p>
+                      {moduleSummary.routePath ? (
+                        <p className="break-all text-xs text-muted-foreground">
+                          {moduleSummary.routePath}
+                        </p>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3 align-top">{moduleSummary.uniqueUsers}</td>
+                    <td className="px-3 py-3 align-top">{moduleSummary.sessionCount}</td>
+                    <td className="px-3 py-3 align-top">
+                      {formatDuration(moduleSummary.totalSeconds)}
+                    </td>
+                    <td className="px-3 py-3 align-top">{moduleSummary.completedUsers}</td>
+                    <td className="py-3 pl-3 align-top">
+                      {formatDate(moduleSummary.lastActivityAt)}
+                    </td>
+                  </tr>
+                ))}
+                {usageAnalytics.moduleUsage.length === 0 ? (
+                  <tr>
+                    <td className="py-6 text-sm text-muted-foreground" colSpan={6}>
+                      No non-admin module activity found.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-lg border bg-card p-4">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <Headphones className="h-5 w-5" aria-hidden />
+                Podcast usage
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {summary.analytics.podcastListeners} listeners, {summary.analytics.podcastSessions}{' '}
+                sessions, {summary.analytics.podcastEpisodeCount} episodes
+                {summary.analytics.unattributedPodcastSessions > 0
+                  ? `, ${summary.analytics.unattributedPodcastSessions} unattributed omitted`
+                  : ''}
+              </p>
+            </div>
+            <p className="text-sm font-medium">{summary.analytics.podcastHours}h listened</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left text-sm">
+              <thead className="border-b text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3 font-medium">Podcast</th>
+                  <th className="px-3 py-2 font-medium">Listeners</th>
+                  <th className="px-3 py-2 font-medium">Sessions</th>
+                  <th className="px-3 py-2 font-medium">Completed</th>
+                  <th className="px-3 py-2 font-medium">Time</th>
+                  <th className="py-2 pl-3 font-medium">Last heard</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usageAnalytics.podcastUsage.slice(0, 10).map((podcast) => (
+                  <tr key={podcast.episodeId} className="border-b last:border-b-0">
+                    <td className="max-w-[260px] py-3 pr-3 align-top">
+                      <p className="font-medium">{podcast.episodeTitle}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {podcast.languages.map(formatPodcastLanguage).join(', ')}
+                      </p>
+                    </td>
+                    <td className="px-3 py-3 align-top">{podcast.uniqueListeners}</td>
+                    <td className="px-3 py-3 align-top">{podcast.listenSessions}</td>
+                    <td className="px-3 py-3 align-top">
+                      {podcast.completedSessions}
+                      <span className="block text-xs text-muted-foreground">
+                        {podcast.uniqueCompletedListeners} listeners
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 align-top">
+                      {formatDuration(podcast.totalListenedSeconds)}
+                    </td>
+                    <td className="py-3 pl-3 align-top">{formatDate(podcast.lastActivityAt)}</td>
+                  </tr>
+                ))}
+                {usageAnalytics.podcastUsage.length === 0 ? (
+                  <tr>
+                    <td className="py-6 text-sm text-muted-foreground" colSpan={6}>
+                      No attributed non-admin podcast listens found.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -1100,7 +1782,104 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                         </p>
                         <p>{user.usage.moduleCount} modules visited</p>
                         <p>{user.usage.completedModules} completed</p>
+                        <p>
+                          {user.usage.podcastSessionCount} podcast listens,{' '}
+                          {user.usage.completedPodcasts} completed
+                        </p>
+                        <p>{formatDuration(user.usage.podcastListenSeconds)} podcast audio</p>
                         <p>Last active: {formatDate(user.usage.lastActivityAt)}</p>
+                        {user.usage.modules.length > 0 ? (
+                          <details className="pt-2">
+                            <summary className="cursor-pointer text-xs font-medium text-foreground">
+                              Module detail
+                            </summary>
+                            <ul className="mt-2 space-y-2">
+                              {user.usage.modules.slice(0, 6).map((moduleDetail) => {
+                                const completed =
+                                  moduleDetail.completedAt || moduleDetail.percentComplete >= 100
+
+                                return (
+                                  <li key={moduleDetail.moduleId} className="space-y-0.5">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <span className="font-medium text-foreground">
+                                        {formatModuleLabel(moduleDetail.moduleId)}
+                                      </span>
+                                      {completed ? (
+                                        <Badge variant="success" size="sm">
+                                          <CheckCircle2 className="h-3 w-3" aria-hidden />
+                                          Done
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" size="sm">
+                                          {formatPercent(moduleDetail.percentComplete)}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p>
+                                      {formatDuration(moduleDetail.totalSeconds)} across{' '}
+                                      {moduleDetail.sessionCount} sessions
+                                    </p>
+                                    <p>Last used: {formatDate(moduleDetail.lastActivityAt)}</p>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                            {user.usage.modules.length > 6 ? (
+                              <p className="mt-2 text-xs">
+                                +{user.usage.modules.length - 6} more modules
+                              </p>
+                            ) : null}
+                          </details>
+                        ) : null}
+                        {user.usage.podcasts.length > 0 ? (
+                          <details className="pt-2">
+                            <summary className="cursor-pointer text-xs font-medium text-foreground">
+                              Podcast detail
+                            </summary>
+                            <ul className="mt-2 space-y-2">
+                              {user.usage.podcasts.slice(0, 6).map((podcast) => {
+                                const completed =
+                                  podcast.completedAt || podcast.maxPercentComplete >= 95
+
+                                return (
+                                  <li
+                                    key={`${podcast.episodeId}:${podcast.language}`}
+                                    className="space-y-0.5"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <span className="font-medium text-foreground">
+                                        {podcast.episodeTitle}
+                                      </span>
+                                      {completed ? (
+                                        <Badge variant="success" size="sm">
+                                          <CheckCircle2 className="h-3 w-3" aria-hidden />
+                                          Done
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" size="sm">
+                                          {formatPercent(podcast.maxPercentComplete)}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p>
+                                      {formatPodcastLanguage(podcast.language)} -{' '}
+                                      {formatDuration(podcast.listenedSeconds)} listened
+                                    </p>
+                                    <p>
+                                      {podcast.listenSessionCount} sessions - Last heard:{' '}
+                                      {formatDate(podcast.lastActivityAt)}
+                                    </p>
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                            {user.usage.podcasts.length > 6 ? (
+                              <p className="mt-2 text-xs">
+                                +{user.usage.podcasts.length - 6} more podcasts
+                              </p>
+                            ) : null}
+                          </details>
+                        ) : null}
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top">

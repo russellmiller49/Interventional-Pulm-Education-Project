@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, type ComponentProps } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/components/layout/theme-provider'
@@ -15,6 +16,7 @@ interface ModeToggleProps {
 }
 
 export function ModeToggle({ className, variant = 'outline', size }: ModeToggleProps) {
+  const common = useTranslations('common')
   const { theme, systemTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -23,6 +25,7 @@ export function ModeToggle({ className, variant = 'outline', size }: ModeToggleP
   }, [])
 
   const currentTheme = theme === 'system' ? systemTheme : theme
+  const isDarkMode = mounted && currentTheme === 'dark'
 
   return (
     <Button
@@ -30,13 +33,13 @@ export function ModeToggle({ className, variant = 'outline', size }: ModeToggleP
       variant={variant}
       size={size}
       onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
-      aria-label="Toggle dark mode"
+      aria-label={common('toggleDarkMode')}
       className={cn('gap-2', className)}
     >
       <span aria-hidden className="text-base">
-        {mounted && currentTheme === 'dark' ? '🌙' : '☀️'}
+        {isDarkMode ? '🌙' : '☀️'}
       </span>
-      <span>{mounted && currentTheme === 'dark' ? 'Dark' : 'Light'} mode</span>
+      <span>{isDarkMode ? common('darkMode') : common('lightMode')}</span>
     </Button>
   )
 }

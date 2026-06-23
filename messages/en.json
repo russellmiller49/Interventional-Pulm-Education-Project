@@ -9,7 +9,11 @@
     "logOut": "Log out",
     "loggingOut": "Logging out",
     "welcome": "Welcome, <userName>{name}</userName>",
-    "educationalUseOnly": "Educational use only."
+    "educationalUseOnly": "Educational use only.",
+    "toggleDarkMode": "Toggle dark mode",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "genericUser": "there"
   },
   "language": {
     "label": "Language",
@@ -121,7 +125,10 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "codeOfConduct": "Code of Conduct",
-    "copyright": "© {year} Interventional Pulmonology Education. Educational use only."
+    "copyright": "© {year} Interventional Pulmonology Education. Educational use only.",
+    "introPleuralDisease": "Intro to Pleural Disease",
+    "rigidBronchoscopyFoundations": "Rigid Bronchoscopy Foundations",
+    "introToBronchoscopy": "Intro to Bronchoscopy"
   },
   "home": {
     "heroEyebrow": "Interventional Pulmonology Education",
@@ -153,6 +160,12 @@
         "title": "EBUS Training",
         "description": "Open knobology, mediastinal station, and EBUS simulator modules without course-participant lockout.",
         "cta": "Open EBUS Training"
+      },
+      "adminPreview": {
+        "badge": "Admin preview",
+        "title": "EBUS Simulator + Virtual Bronchoscopy",
+        "description": "Review the synchronized virtual bronchoscopy pane alongside the EBUS simulator before it is production-ready.",
+        "cta": "Open Admin Preview"
       },
       "tnm": {
         "badge": "Staging",

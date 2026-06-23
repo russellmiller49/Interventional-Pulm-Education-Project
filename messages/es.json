@@ -5,11 +5,15 @@
     "skipToContent": "Saltar al contenido",
     "search": "Buscar",
     "signIn": "Iniciar sesión",
-    "admin": "Admin",
+    "admin": "Administración",
     "logOut": "Cerrar sesión",
     "loggingOut": "Cerrando sesión",
-    "welcome": "Bienvenido/a, <userName>{name}</userName>",
-    "educationalUseOnly": "Solo para uso educativo."
+    "welcome": "Te damos la bienvenida, <userName>{name}</userName>",
+    "educationalUseOnly": "Solo para uso educativo",
+    "toggleDarkMode": "Alternar modo oscuro",
+    "darkMode": "Modo oscuro",
+    "lightMode": "Modo claro",
+    "genericUser": "usuario"
   },
   "language": {
     "label": "Idioma",
@@ -23,61 +27,61 @@
     "description": "Centro de educación e innovación para la comunidad de neumología intervencionista."
   },
   "navigation": {
-    "primary": "Principal",
+    "primary": "Navegación principal",
     "modules": "Módulos",
     "openMenu": "Abrir menú de navegación",
     "mobileLabel": "Navegación móvil",
     "navigate": "Navegar",
-    "mobileDescription": "Explora formación EBUS, podcasts, anatomía, Nav Bronch, FluoroView y recursos.",
+    "mobileDescription": "Explora la formación en EBUS, los pódcasts, la anatomía, la broncoscopia navegacional, FluoroView y los recursos.",
     "searchResources": "Buscar recursos",
     "searchResourcesAndGuides": "Buscar recursos y guías",
-    "searchPlaceholder": "Buscar recursos y guías",
-    "display": "Visualización",
+    "searchPlaceholder": "Buscar guías, módulos, pódcasts...",
+    "display": "Pantalla",
     "items": {
       "ebusTraining": {
-        "title": "Formación EBUS",
+        "title": "Formación en EBUS",
         "shortTitle": "EBUS",
-        "description": "Knobology, estaciones y módulos de simulador"
+        "description": "Controles del equipo, estaciones ganglionares y módulos de simulación"
       },
       "ebusVirtualBronch": {
-        "title": "Broncoscopía virtual EBUS",
-        "shortTitle": "EBUS VB",
-        "description": "Vista previa administrativa del simulador de broncoscopía virtual sincronizado"
+        "title": "Broncoscopia virtual EBUS",
+        "shortTitle": "EBUS virtual",
+        "description": "Vista previa para administradores del simulador sincronizado de broncoscopia virtual"
       },
       "podcastLibrary": {
-        "title": "Biblioteca de podcasts",
-        "shortTitle": "Podcasts",
-        "description": "Discusiones de journal club en cinco idiomas"
+        "title": "Biblioteca de pódcasts",
+        "shortTitle": "Pódcasts",
+        "description": "Debates de audio del club de revistas en cinco idiomas"
       },
       "tnm9": {
         "title": "Estadificación TNM-9",
         "shortTitle": "TNM-9",
-        "description": "Módulo independiente de estadificación de cáncer de pulmón"
+        "description": "Módulo independiente de estadificación del cáncer de pulmón"
       },
       "anatomy": {
         "title": "Anatomía 3D",
         "shortTitle": "Anatomía",
-        "description": "Visor anatómico 3D e interactivo"
+        "description": "Visor de anatomía 3D e interactivo"
       },
       "boardPrep": {
-        "title": "Preparación IP Board",
-        "shortTitle": "Board Prep",
-        "description": "Capítulos interactivos de repaso"
+        "title": "Preparación para certificación de IP",
+        "shortTitle": "Certificación IP",
+        "description": "Capítulos interactivos de repaso para la certificación"
       },
       "fluoroview": {
         "title": "FluoroView",
         "shortTitle": "FluoroView",
-        "description": "Laboratorio de simulación de vía aérea con arco en C"
+        "description": "Laboratorio de simulación de la vía aérea con arco en C"
       },
       "bronchNavigation": {
-        "title": "Navegación bronquial",
-        "shortTitle": "Nav Bronch",
-        "description": "Simulador de navegación de TC a broncoscopio"
+        "title": "Broncoscopia navegacional",
+        "shortTitle": "Navegación",
+        "description": "Simulador de navegación de la TC al broncoscopio"
       },
       "pleuralProcedures": {
         "title": "Procedimientos pleurales",
-        "shortTitle": "Pleural",
-        "description": "Módulos de enfermedad y procedimientos pleurales"
+        "shortTitle": "Pleura",
+        "description": "Módulos sobre enfermedad pleural y procedimientos"
       },
       "resources": {
         "title": "Recursos",
@@ -85,35 +89,35 @@
         "description": "Recursos Creative Commons y ayudas de estudio"
       },
       "socalEbusCourse": {
-        "title": "Curso EBUS SoCal",
+        "title": "Curso de EBUS del Sur de California",
         "shortTitle": "Curso EBUS",
-        "description": "Para participantes del Southern California EBUS Course"
+        "description": "Para participantes del curso de EBUS del Sur de California"
       },
       "rapidOnsiteCytology": {
-        "title": "Citología rápida in situ",
+        "title": "Evaluación citológica rápida in situ",
         "shortTitle": "Citología",
-        "description": "Entrenador de interpretación ROSE y Diff-Quik"
+        "description": "Entrenador de interpretación de ROSE y tinción Diff-Quik"
       },
       "introBronchoscopy": {
-        "title": "Introducción a broncoscopía",
-        "shortTitle": "Intro Bronch",
-        "description": "Módulos básicos de tamaño, alcance y ajuste de herramientas"
+        "title": "Introducción a la broncoscopia",
+        "shortTitle": "Broncoscopia",
+        "description": "Fundamentos sobre tamaño, alcance y compatibilidad de instrumentos"
       },
       "ipRegistry": {
-        "title": "Registro IP",
-        "shortTitle": "Registro",
-        "description": "Abrir la interfaz Procedure Suite"
+        "title": "Registro de IP",
+        "shortTitle": "Registro de IP",
+        "description": "Abrir la interfaz de Procedure Suite"
       },
       "comingSoon": {
         "title": "Próximamente",
         "shortTitle": "Próximamente",
-        "description": "Módulos próximos de pleura, broncoscopía y broncoscopía rígida"
+        "description": "Próximos módulos de pleura, broncoscopia y broncoscopia rígida"
       }
     }
   },
   "footer": {
-    "tagline": "Herramientas prácticas de aprendizaje, modelos imprimibles y currículos modernos que impulsan la educación de vía aérea en todo el mundo. Creado para clínicos, educadores y trainees.",
-    "motion": "¿Prefieres menos movimiento? Actívalo en las preferencias del sistema y lo respetaremos.",
+    "tagline": "Herramientas prácticas de aprendizaje, modelos imprimibles y planes de estudio modernos que impulsan la enseñanza de la vía aérea en todo el mundo. Creado para clínicos, docentes y profesionales en formación.",
+    "motion": "¿Prefieres una experiencia con menos movimiento? Actívala en las preferencias del sistema operativo y la aplicaremos automáticamente.",
     "explore": "Explorar",
     "learning": "Aprendizaje",
     "comingSoon": "Próximamente",
@@ -121,101 +125,110 @@
     "privacy": "Privacidad",
     "terms": "Términos",
     "codeOfConduct": "Código de conducta",
-    "copyright": "© {year} Educación en Neumología Intervencionista. Solo para uso educativo."
+    "copyright": "© {year} Educación en Neumología Intervencionista. Solo para uso educativo.",
+    "introPleuralDisease": "Introducción a la enfermedad pleural",
+    "rigidBronchoscopyFoundations": "Fundamentos de broncoscopia rígida",
+    "introToBronchoscopy": "Introducción a la broncoscopia"
   },
   "home": {
     "heroEyebrow": "Educación en Neumología Intervencionista",
     "heroTitle": "Educación e innovación en neumología intervencionista",
-    "heroBody": "Explora formación EBUS, journal clubs en podcast, anatomía 3D, Nav Bronch, repaso para boards y módulos de simulación FluoroView para estudiantes y educadores de neumología intervencionista.",
-    "openEbus": "Abrir formación EBUS",
-    "browsePodcasts": "Explorar podcasts",
-    "launchCatalog": "Catálogo inicial",
-    "coreModules": "Módulos principales de aprendizaje",
-    "coreModulesBody": "Comienza con los módulos listos para estudiantes: formación EBUS, estadificación TNM-9, anatomía 3D, repaso de boards, podcasts de journal club, Nav Bronch, FluoroView y recursos docentes.",
-    "socalParticipants": "Participantes del curso EBUS SoCal",
+    "heroBody": "Explora módulos de formación en EBUS, pódcasts del club de revistas, anatomía 3D, broncoscopia navegacional, repaso para la certificación y simulación FluoroView, diseñados para profesionales en formación y docentes de neumología intervencionista.",
+    "openEbus": "Abrir formación en EBUS",
+    "browsePodcasts": "Explorar la biblioteca de pódcasts",
+    "launchCatalog": "Catálogo de módulos",
+    "coreModules": "Módulos formativos principales",
+    "coreModulesBody": "Comienza con los módulos que ya están disponibles: formación en EBUS, estadificación TNM-9, anatomía 3D, preparación para la certificación, pódcasts del club de revistas, broncoscopia navegacional, FluoroView y recursos docentes.",
+    "socalParticipants": "Participantes del curso EBUS del Sur de California",
     "participantCourse": "Curso para participantes",
-    "participantTitle": "Participantes del Southern California EBUS Course",
-    "participantBody": "El portal completo del curso sigue disponible para participantes registrados que necesitan el itinerario de clases, encuestas, pruebas, seguimiento de progreso y materiales específicos del curso. Los recursos de formación EBUS también están disponibles por separado arriba.",
+    "participantTitle": "Participantes del curso EBUS del Sur de California",
+    "participantBody": "El portal completo del curso sigue disponible para los participantes inscritos que necesiten el itinerario de clases, las encuestas, los exámenes, el seguimiento del progreso y los materiales específicos del curso. Los recursos de formación en EBUS también están disponibles por separado arriba.",
     "openCoursePortal": "Abrir portal del curso",
     "roadmap": "Hoja de ruta",
-    "upcomingModules": "Módulos próximos",
-    "upcomingBody": "Los próximos lanzamientos públicos se centran en introducción a enfermedad pleural, fundamentos de broncoscopía rígida e introducción a broncoscopía.",
-    "viewComingSoon": "Ver próximos módulos",
+    "upcomingModules": "Próximos módulos",
+    "upcomingBody": "Los próximos lanzamientos públicos se centrarán en la introducción a la enfermedad pleural, los fundamentos de la broncoscopia rígida y la introducción a la broncoscopia.",
+    "viewComingSoon": "Ver próximos lanzamientos",
     "cards": {
       "podcast": {
         "badge": "Nuevo · Audio",
-        "title": "Podcasts de journal club",
-        "description": "Escucha discusiones de journal club enfocadas en artículos de IP en inglés, español, mandarín, árabe y coreano.",
-        "cta": "Explorar podcasts"
+        "title": "Pódcasts del club de revistas",
+        "description": "Escucha debates del club de revistas centrados en artículos de neumología intervencionista en inglés, español, mandarín, árabe y coreano.",
+        "cta": "Explorar pódcasts"
       },
       "ebus": {
         "badge": "EBUS",
-        "title": "Formación EBUS",
-        "description": "Abre módulos de knobology, estaciones mediastínicas y simulador EBUS sin bloqueo de participante del curso.",
-        "cta": "Abrir formación EBUS"
+        "title": "Formación en EBUS",
+        "description": "Accede libremente a los módulos de manejo del equipo, estaciones mediastínicas y simulación EBUS, sin necesidad de estar inscrito en el curso.",
+        "cta": "Abrir formación en EBUS"
+      },
+      "adminPreview": {
+        "badge": "Vista previa para administradores",
+        "title": "Simulador EBUS + broncoscopia virtual",
+        "description": "Revisa el panel sincronizado de broncoscopia virtual junto al simulador EBUS antes de su lanzamiento definitivo.",
+        "cta": "Abrir vista previa para administradores"
       },
       "tnm": {
         "badge": "Estadificación",
         "title": "Estadificación TNM-9",
-        "description": "Práctica independiente de estadificación de cáncer de pulmón con referencia de descriptores, grupos de estadio, mapa N y casos.",
+        "description": "Practica la estadificación del cáncer de pulmón con una referencia de descriptores, agrupación por estadios, mapa N y casos clínicos.",
         "cta": "Abrir TNM-9"
       },
       "anatomy": {
         "badge": "Anatomía 3D",
-        "title": "Visor anatómico interactivo",
-        "description": "Explora anatomía 3D de vía aérea, mediastino, pleura e intervenciones con planos de TC y controles segmentarios.",
+        "title": "Visor interactivo de anatomía",
+        "description": "Explora la anatomía 3D de la vía aérea, el mediastino, la pleura y los procedimientos, con planos de TC y controles segmentarios.",
         "cta": "Explorar anatomía"
       },
       "board": {
-        "badge": "Repaso",
-        "title": "Capítulos IP Board Prep",
-        "description": "Cobertura basada en casos de dominios malignos, benignos y procedimentales para repaso de neumología intervencionista.",
-        "cta": "Iniciar repaso"
+        "badge": "Repaso para certificación",
+        "title": "Capítulos de preparación para la certificación de IP",
+        "description": "Contenido basado en casos sobre enfermedades malignas y benignas y sobre procedimientos, organizado para el repaso de certificación en neumología intervencionista.",
+        "cta": "Comenzar el repaso"
       },
       "fluoro": {
         "badge": "Simulación",
         "title": "FluoroView",
-        "description": "Practica orientación TC-fluoroscopía, ángulos del arco en C, superposiciones de vía aérea y controles de imagen no diagnóstica.",
-        "cta": "Abrir FluoroView"
+        "description": "Practica la orientación de TC a fluoroscopia, los ángulos del arco en C, las superposiciones de la vía aérea y los controles de imágenes no diagnósticas.",
+        "cta": "Iniciar FluoroView"
       },
       "nav": {
         "badge": "Navegación",
-        "title": "Entrenador de navegación bronquial",
-        "description": "Conduce un broncoscopio virtual por decisiones de ramas correlacionando planos de TC, vistas de vía aérea y objetivos.",
+        "title": "Entrenador de broncoscopia navegacional",
+        "description": "Conduce un broncoscopio virtual a través de las bifurcaciones mientras correlacionas los planos de TC, las vistas de la vía aérea y los objetivos.",
         "cta": "Iniciar navegación"
       },
       "intro": {
-        "badge": "Broncoscopía",
-        "title": "Introducción a broncoscopía",
-        "description": "Herramientas fundamentales para tamaño del broncoscopio, conceptos de alcance de vía aérea y compatibilidad de instrumentos.",
-        "cta": "Abrir módulo"
+        "badge": "Broncoscopia",
+        "title": "Introducción a la broncoscopia",
+        "description": "Herramientas fundamentales para seleccionar el tamaño del broncoscopio, comprender su alcance en la vía aérea y comprobar la compatibilidad de los instrumentos.",
+        "cta": "Abrir módulo introductorio"
       },
       "pleural": {
-        "badge": "Pleural",
+        "badge": "Pleura",
         "title": "Procedimientos pleurales",
-        "description": "Aprende enfermedad pleural, reconocimiento ecográfico, análisis de líquido pleural, neumotórax y sistemas de drenaje.",
+        "description": "Aprende sobre enfermedad pleural, reconocimiento de patrones ecográficos, análisis del líquido pleural, abordaje del neumotórax y sistemas de drenaje.",
         "cta": "Abrir módulos pleurales"
       },
       "resources": {
         "badge": "Recursos",
         "title": "Biblioteca de recursos",
-        "description": "Explora imágenes médicas Creative Commons y guías de aprendizaje para clínicos constructores.",
+        "description": "Explora imágenes médicas con licencia Creative Commons y guías de aprendizaje para clínicos que desarrollan recursos, destinadas a la docencia y la creación de herramientas.",
         "cta": "Explorar recursos"
       }
     }
   },
   "dashboard": {
-    "title": "Bienvenido/a de nuevo",
+    "title": "Te damos la bienvenida de nuevo",
     "signedInAs": "Has iniciado sesión como {email}.",
     "authenticatedUser": "un usuario autenticado",
-    "sessionNotDetected": "No se detectó la sesión. Si esto persiste, vuelve a iniciar sesión.",
-    "permissionRequired": "Se requiere permiso adicional para {access}. Tu cuenta gratuita aún puede acceder a los módulos educativos estándar.",
+    "sessionNotDetected": "No se detectó ninguna sesión. Si el problema persiste, vuelve a iniciar sesión.",
+    "permissionRequired": "Se requiere un permiso adicional para acceder a {access}. Tu cuenta gratuita puede seguir accediendo a los módulos educativos estándar.",
     "exploreResources": "Explorar recursos",
-    "seeComingSoon": "Ver lo próximo",
+    "seeComingSoon": "Ver próximos lanzamientos",
     "requiredAccess": {
-      "ipRegistry": "Registro IP",
-      "socalEbusCourse": "Curso EBUS SoCal",
-      "fallback": "esa área restringida"
+      "ipRegistry": "Registro de IP",
+      "socalEbusCourse": "Curso EBUS del Sur de California",
+      "fallback": "esa zona restringida"
     }
   },
   "search": {

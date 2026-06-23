@@ -19,12 +19,7 @@ const featureHighlightDefinitions = [
   },
   {
     key: 'adminPreview',
-    badge: 'Admin preview',
-    title: 'EBUS Simulator + Virtual Bronchoscopy',
-    description:
-      'Review the synchronized virtual bronchoscopy pane alongside the EBUS simulator before it is production-ready.',
     href: '/ebus-training/virtual-bronchoscopy',
-    cta: 'Open Admin Preview',
   },
   {
     key: 'tnm',
@@ -65,19 +60,13 @@ export default async function HomePage() {
   const canViewDrafts = await canCurrentUserViewDraftModules()
   const visibleFeatureHighlights = featureHighlightDefinitions
     .filter((link) => isVisibleModulePath(link.href, { isAdmin: canViewDrafts }))
-    .map((item) => {
-      if (item.key === 'adminPreview') {
-        return item
-      }
-
-      return {
-        ...item,
-        badge: t(`cards.${item.key}.badge`),
-        title: t(`cards.${item.key}.title`),
-        description: t(`cards.${item.key}.description`),
-        cta: t(`cards.${item.key}.cta`),
-      }
-    })
+    .map((item) => ({
+      ...item,
+      badge: t(`cards.${item.key}.badge`),
+      title: t(`cards.${item.key}.title`),
+      description: t(`cards.${item.key}.description`),
+      cta: t(`cards.${item.key}.cta`),
+    }))
 
   return (
     <div className="space-y-20 py-12 md:py-16">

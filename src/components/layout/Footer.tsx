@@ -94,10 +94,14 @@ export async function Footer() {
     {
       title: footer('comingSoon'),
       links: [
-        { label: 'Intro to Pleural Disease', href: '/coming-soon', route: '/coming-soon' },
-        { label: 'Rigid Bronchoscopy Foundations', href: '/coming-soon', route: '/coming-soon' },
+        { label: footer('introPleuralDisease'), href: '/coming-soon', route: '/coming-soon' },
         {
-          label: nav('items.introBronchoscopy.title'),
+          label: footer('rigidBronchoscopyFoundations'),
+          href: '/coming-soon',
+          route: '/coming-soon',
+        },
+        {
+          label: footer('introToBronchoscopy'),
           href: '/coming-soon',
           route: '/coming-soon',
         },
