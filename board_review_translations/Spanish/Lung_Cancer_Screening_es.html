@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detección del cáncer de pulmón</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        .references li { margin-bottom: 10px; }
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Detección del cáncer de pulmón</h1>
+
+<h3>Correspondencia con el examen y alcance</h3>
+<p><strong>Correspondencia:</strong> Dominios de la AABIP/CAQ de Neumología Intervencionista sobre diagnóstico oncológico y programas de detección.</p>
+<p><strong>Temas clave:</strong> Elegibilidad, toma de decisiones compartida, normas técnicas de TC de detección pulmonar, Lung-RADS v2022, manejo y escalamiento de nódulos —PET/TC, biopsia, broncoscopia, cirugía—, beneficios y daños —mortalidad, falsos positivos, complicaciones, radiación—, poblaciones especiales —EPOC/EPID, sobrevivientes de cáncer— y herramientas en evolución —modelos de riesgo y biomarcadores—.</p>
+
+<h3>Objetivos de aprendizaje</h3>
+<ul>
+    <li>Diferenciar los marcos actuales de elegibilidad —USPSTF, cobertura de CMS/Medicare, NCCN y ACS— e identificar cuándo suspender la detección.</li>
+    <li>Realizar una toma de decisiones compartida de alta calidad e integrar intervenciones para dejar de fumar dentro del programa.</li>
+    <li>Aplicar parámetros técnicos y referencias de dosis de la TC de detección y utilizar Lung-RADS v2022 para interpretar informes.</li>
+    <li>Elegir el siguiente paso más apropiado ante una prueba positiva —TCBD a 3 meses, PET/TC o toma de tejido— según tipo, tamaño, crecimiento y riesgo del nódulo.</li>
+    <li>Anticipar y reducir daños: falsos positivos, procedimientos posteriores, hallazgos incidentales, sobrediagnóstico y radiación acumulada.</li>
+    <li>Adaptar el manejo en adultos mayores, EPOC/EPID, cáncer previo y esperanza de vida limitada.</li>
+    <li>Reconocer controversias y evidencia emergente sobre modelos de riesgo, umbrales volumétricos, biomarcadores e inteligencia artificial.</li>
+</ul>
+
+<hr>
+
+<h3>Resumen de alto rendimiento</h3>
+<div class="algorithm-note">
+    <p><strong>Beneficio:</strong> La TC de baja dosis anual reduce la mortalidad por cáncer de pulmón en adultos de alto riesgo; la mayoría de los cánceres detectados por el programa se identifica en etapas más tempranas.</p>
+    <p><strong>Elegibilidad USPSTF 2021:</strong> 50–80 años, ≥20 paquetes-año, fumador actual o abandono hace menos de 15 años; suspender después de 15 años sin fumar o si la esperanza de vida o el estado funcional impiden tratamiento curativo.</p>
+    <p><strong>Matiz de cobertura CMS:</strong> Habitualmente 50–77 años con los mismos requisitos de paquetes-año y tiempo desde abandono, además de una visita documentada de toma de decisiones compartida; confirmar siempre las reglas del pagador local.</p>
+    <p><strong>Diferencias NCCN/ACS:</strong> NCCN recomienda ≥20 paquetes-año; ACS 2023 elimina el límite de 15 años desde abandono y el límite superior de edad, con continuación individualizada en pacientes aptos.</p>
+    <p><strong>Protocolo:</strong> TC sin contraste, cortes ≤2,5 mm, índice volumétrico de dosis (CTDIvol) alrededor de 3 mGy en un paciente de tamaño estándar y dosis efectiva aproximada de 1–1,5 mSv por examen.</p>
+    <p><strong>Lung-RADS v2022:</strong> El tamaño y el crecimiento determinan el manejo.</p>
+    <ul>
+        <li><strong>Crecimiento:</strong> Aumento &gt;1,5 mm del diámetro medio en 12 meses.</li>
+        <li><strong>4A:</strong> Nódulo sólido nuevo de 6–&lt;8 mm o en crecimiento &lt;8 mm → TCBD a 3 meses; considerar PET si el componente sólido es ≥8 mm.</li>
+        <li><strong>4B:</strong> Nódulo persistente en vía aérea proximal o segmentaria a los 3 meses → evaluación diagnóstica, a menudo broncoscopia.</li>
+        <li><strong>Lesiones quísticas atípicas:</strong> Quistes de pared gruesa o multiloculados y quistes con nódulo sólido son sospechosos; aumento del grosor o nodularidad de la pared → 4B.</li>
+    </ul>
+    <p><strong>Daños que deben explicarse:</strong> Falsos positivos y estudios adicionales, riesgos pequeños pero reales de procedimientos invasivos, ansiedad, sobrediagnóstico y radiación acumulada.</p>
+    <p><strong>Diseño del programa:</strong> La coordinación centralizada mejora la adherencia; usar registro, métricas de calidad y revisión multidisciplinaria de lesiones categoría 4.</p>
+    <p><strong>Errores frecuentes en el examen:</strong> Solicitar radiografía para detección, usar TC diagnóstica en lugar de baja dosis, omitir toma de decisiones compartida, solicitar PET en nódulos sólidos &lt;8 mm y clasificar mal lesiones de la vía aérea o quísticas.</p>
+</div>
+
+<hr>
+
+<h3>Conceptos fundamentales</h3>
+
+<h4>Fisiopatología / epidemiología</h4>
+<p>El cáncer de pulmón sigue siendo la principal causa de muerte por cáncer. La supervivencia está estrechamente ligada a la etapa al diagnóstico; la detección desplaza la identificación hacia etapas potencialmente curables. La TC de baja dosis reduce la mortalidad específica por la enfermedad en poblaciones de alto riesgo, con señales consistentes en grandes ensayos.</p>
+
+<h4>Indicaciones y contraindicaciones</h4>
+<p><strong>A quién detectar: marcos que deben conocerse</strong></p>
+<ul>
+    <li><strong>USPSTF 2021:</strong> 50–80 años, ≥20 paquetes-año, fumador actual o abandono &lt;15 años; suspender después de 15 años sin fumar o cuando no sea candidato a tratamiento curativo.</li>
+    <li><strong>CMS/Medicare:</strong> Generalmente 50–77 años con los mismos criterios de exposición y abandono; exige toma de decisiones compartida documentada.</li>
+    <li><strong>NCCN — versión vigente:</strong> ≥50 años con ≥20 paquetes-año; valorar riesgos competitivos; sin límite absoluto superior si el tratamiento curativo es razonable.</li>
+    <li><strong>ACS 2023:</strong> Comenzar a los 50 años con ≥20 paquetes-año; sin límite por tiempo desde abandono ni edad superior; continuar si esperanza de vida ≥5 años y el paciente tolera tratamiento.</li>
+</ul>
+
+<p><strong>Cuándo no realizar detección</strong></p>
+<ul>
+    <li>Síntomas sugestivos de cáncer, como hemoptisis o pérdida de peso inexplicada &gt;15 lb.</li>
+    <li>TC de tórax en los últimos 12 meses que ya cumple el objetivo de detección.</li>
+    <li>Cáncer pulmonar previo bajo vigilancia o estadificación activa; la detección cesa una vez diagnosticado el cáncer.</li>
+    <li>Comorbilidad grave que limita la esperanza de vida o impide tratamiento curativo.</li>
+</ul>
+
+<h3>Evaluación previa</h3>
+
+<h4>Toma de decisiones compartida</h4>
+<p><strong>Revisar la elegibilidad:</strong> Explicar posibles beneficios —desplazamiento de etapa, reducción de mortalidad— y daños —falsos positivos, procedimientos, hallazgos incidentales, radiación, sobrediagnóstico y ansiedad—.</p>
+<p><strong>Compromiso:</strong> Recalcar que se trata de un programa anual; una TC negativa no elimina el riesgo futuro.</p>
+<p><strong>Documentación:</strong> Registrar al menos una ayuda para la decisión y ofrecer recursos para dejar de fumar.</p>
+
+<h4>Abandono del tabaco</h4>
+<p>Es la intervención con mayor impacto sobre mortalidad. Integrar consejería breve y farmacoterapia —terapia sustitutiva de nicotina, vareniclina o bupropión— con seguimiento proactivo. La participación en un programa de detección puede aumentar las tasas de abandono; aprovechar este «momento educativo».</p>
+
+<h4>Modelos de riesgo</h4>
+<p>PLCOm2012, LCRAT/LCDRAT y LLPv refinan el riesgo individual más allá de paquetes-año y pueden mejorar eficiencia y equidad, por ejemplo en mujeres y adultos negros. Todavía no están incorporados universalmente en los criterios de pago de Estados Unidos; pueden ayudar en decisiones limítrofes.</p>
+
+<h4>Antecedentes y comorbilidades especiales</h4>
+<ul>
+    <li><strong>EPOC y EPID fibrótica:</strong> Elevan notablemente el riesgo. Si el paciente cumple criterios y está apto, la detección es apropiada; anticipar más hallazgos indeterminados y adaptar seguimiento.</li>
+    <li><strong>Sobrevivientes de cáncer:</strong> Pacientes con antecedentes oncológicos torácicos, por ejemplo cáncer pulmonar hace ≥5 años, tienen mayor riesgo de un segundo primario; seguir vigilancia específica de NCCN o individualizar detección.</li>
+</ul>
+
+<h3>Equipo y configuración: normas técnicas</h3>
+<ul>
+    <li><strong>Escáner:</strong> TC helicoidal multidetector con al menos 4 filas.</li>
+    <li><strong>Adquisición:</strong> Sin contraste, cobertura completa del tórax en una sola inspiración sostenida, reconstrucciones ≤2,5 mm y series con kernel pulmonar y de tejidos blandos.</li>
+    <li><strong>Dosis:</strong> Modulación según tamaño; CTDIvol típico alrededor de 3 mGy; dosis efectiva ~1–1,5 mSv.</li>
+    <li><strong>Calidad:</strong> Registrar dosis y compararla con referencias locales y nacionales.</li>
+    <li><strong>Infraestructura:</strong> Procesos acreditados, control de radiación, informe estandarizado con Lung-RADS, navegación por coordinador y registro para calidad y llamadas de seguimiento.</li>
+</ul>
+
+<h3>Técnica paso a paso / lista de verificación</h3>
+<ol>
+    <li>Identificar candidatos mediante búsquedas en historia electrónica y alertas clínicas.</li>
+    <li>Realizar toma de decisiones compartida y consejería para dejar de fumar; confirmar disposición para TC anual y evaluación posterior si es positiva.</li>
+    <li>Solicitar explícitamente TC de baja dosis para detección, no «TC de tórax con contraste».</li>
+    <li>Adquirir según especificaciones y asegurar cobertura pulmonar completa sin artefacto significativo.</li>
+    <li>Interpretar con Lung-RADS v2022; añadir modificador S para hallazgos incidentales importantes y especificar claramente el intervalo de seguimiento.</li>
+    <li>Comunicar resultados en lenguaje claro al paciente y al profesional solicitante; reforzar abandono del tabaco en toda carta de resultados.</li>
+    <li>Programar seguimientos a 3 o 6 meses antes de que el paciente salga; coordinar PET/TC, broncoscopia o cirugía en 4B/4X.</li>
+    <li>Revisar hallazgos categoría 4 en equipo multidisciplinario.</li>
+    <li>Registrar adherencia, puntualidad de seguimiento, valor predictivo positivo, tasa de resección benigna y métricas de radiación.</li>
+</ol>
+
+<h3>Resolución de problemas</h3>
+
+<h4>Lung-RADS 0 — incompleto</h4>
+<p>Movimiento, cobertura limitada o sospecha de infección/inflamación aguda. Recuperar estudios previos o repetir TCBD en 1–3 meses y reclasificar.</p>
+
+<h4>Infección o inflamación</h4>
+<p>Consolidación segmentaria/lobar, múltiples nódulos nuevos —más de seis— o nódulos sólidos grandes aparecidos en poco tiempo: considerar categoría 0 con TCBD en 1–3 meses y reclasificar según el hallazgo residual más sospechoso.</p>
+
+<h4>Nódulos de la vía aérea</h4>
+<ul>
+    <li>Opacidades tubulares subsegmentarias o multifocales favorecen secreciones → generalmente benignas/categoría 0–2.</li>
+    <li>Anomalías segmentarias o más proximales → 4A inicialmente; si persisten a 3 meses, subir a 4B y remitir a broncoscopia.</li>
+</ul>
+
+<h4>Lesiones quísticas atípicas</h4>
+<ul>
+    <li>Quistes uniloculares de pared fina son benignos y no se clasifican.</li>
+    <li>Quistes de pared gruesa o multiloculados, aumento del grosor o tamaño quístico, o quiste con nódulo adyacente → lesión quística atípica, a menudo 4A/4B.</li>
+</ul>
+
+<h4>Nódulos de crecimiento lento</h4>
+<ul>
+    <li><strong>Vidrio esmerilado:</strong> Pueden permanecer categoría 2 pese a crecimiento lento hasta cumplir otro criterio, como desarrollar componente sólido.</li>
+    <li><strong>Sólidos o parcialmente sólidos:</strong> El crecimiento lento en varias rondas es sospechoso; considerar 4B incluso si el cambio en 12 meses es ≤1,5 mm. PET puede ser falsamente negativa; puede corresponder biopsia o cirugía.</li>
+</ul>
+
+<h3>Seguimiento: fundamentos de Lung-RADS v2022</h3>
+<table>
+    <thead><tr><th>Categoría</th><th>Hallazgo</th><th>Manejo</th></tr></thead>
+    <tbody>
+        <tr><td><strong>1 — Negativa</strong></td><td>Sin nódulos o nódulos claramente benignos, como grasa o calcificación clásica.</td><td>TCBD anual.</td></tr>
+        <tr><td><strong>2 — Benigno o indolente</strong></td><td>Sólido &lt;6 mm; sólido nuevo &lt;4 mm; parcialmente sólido &lt;6 mm; GGN &lt;30 mm o ≥30 mm estable/lento; nódulos perifisurales o yuxtapleurales típicos; nódulos subsegmentarios de vía aérea; lesiones 3/4A que se resolvieron o estabilizaron.</td><td>TCBD anual.</td></tr>
+        <tr><td><strong>3 — Probablemente benigno</strong></td><td>Sólido 6–&lt;8 mm; parcialmente sólido ≥6 mm con componente sólido &lt;6 mm; no sólido ≥30 mm; sólido nuevo 4–&lt;6 mm; sub-sólido nuevo &lt;6 mm.</td><td>TCBD a 6 meses; si estable o menor, bajar a 2 y volver a anual.</td></tr>
+        <tr><td><strong>4A — Sospechoso</strong></td><td>Sólido 8–&lt;15 mm; en crecimiento &lt;8 mm; sólido nuevo 6–&lt;8 mm; parcialmente sólido ≥6 mm con sólido 6–&lt;8 mm; componente sólido nuevo/en crecimiento &lt;4 mm; nódulo de vía aérea segmentario/proximal; ciertas lesiones quísticas.</td><td>TCBD a 3 meses; considerar PET/TC si componente sólido ≥8 mm.</td></tr>
+        <tr><td><strong>4B — Muy sospechoso</strong></td><td>Sólido ≥15 mm o nuevo/en crecimiento ≥8 mm; parcialmente sólido con componente sólido ≥8 mm; sólido o parcialmente sólido de crecimiento lento en varias rondas; nódulo proximal persistente/en crecimiento; quiste atípico con mayor pared, nodularidad o complejidad.</td><td>TC diagnóstica ± contraste, PET/TC si componente sólido ≥8 mm, toma de tejido y/o remisión especializada.</td></tr>
+        <tr><td><strong>4X</strong></td><td>Nódulo categoría 3 o 4 con características adicionales de alto riesgo, como espiculación, adenopatías, nodularidad pleural, metástasis manifiestas o GGN de duplicación rápida.</td><td>Evaluación multidisciplinaria urgente; PET/TC y diagnóstico tisular según corresponda.</td></tr>
+        <tr><td><strong>Modificador S</strong></td><td>Hallazgo incidental significativo no relacionado con cáncer pulmonar, por ejemplo masa suprarrenal, lesión renal o aneurisma aórtico.</td><td>Manejar según guías de hallazgos incidentales.</td></tr>
+    </tbody>
+</table>
+
+<h3>Complicaciones y daños</h3>
+<ul>
+    <li><strong>Falsos positivos:</strong> Frecuentes; la mayoría se resuelve con vigilancia y no con procedimientos cuando se aplican vías estandarizadas.</li>
+    <li><strong>Estudios invasivos:</strong> Biopsia percutánea y cirugía tienen riesgos pequeños pero reales; minimizar resecciones benignas mediante equipo multidisciplinario y PET en lesiones adecuadas —sólidas ≥8 mm—.</li>
+    <li><strong>Hallazgos incidentales:</strong> Enfisema y calcificación coronaria son frecuentes y requieren orientación contextual y remisiones dirigidas.</li>
+    <li><strong>Radiación:</strong> Aproximadamente 1–1,5 mSv por TCBD; dosis acumuladas durante una década suelen ser &lt;15 mSv. El riesgo estimado de cáncer inducido es bajo frente al beneficio en adultos de alto riesgo bien seleccionados.</li>
+    <li><strong>Ansiedad y calidad de vida:</strong> Puede haber angustia transitoria tras un falso positivo; la comunicación clara y el seguimiento predecible la reducen.</li>
+    <li><strong>Sobrediagnóstico:</strong> Una fracción de los cánceres detectados, en especial adenocarcinomas sub-sólidos indolentes, nunca habría causado síntomas; usar decisiones adaptadas al riesgo y multidisciplinarias.</li>
+</ul>
+
+<h3>Poblaciones especiales</h3>
+<ul>
+    <li><strong>Adultos mayores de 75–80 años:</strong> Equilibrar beneficio y mortalidad competitiva. Si están aptos para tratamiento curativo y una guía lo permite —NCCN/ACS individualizadas—, continuar con decisión compartida; de lo contrario, suspender.</li>
+    <li><strong>Comorbilidad grave o esperanza de vida limitada:</strong> No detectar si el tratamiento curativo no es factible.</li>
+    <li><strong>EPOC/enfisema:</strong> Mayor riesgo de cáncer y enfisema incidental; orientar sobre optimización pulmonar y abandono del tabaco.</li>
+    <li><strong>EPID fibrótica:</strong> Mayor riesgo basal y patrones particulares —inferiores/periféricos—; equilibrar beneficio y riesgo quirúrgico e involucrar al equipo multidisciplinario.</li>
+    <li><strong>Oncología torácica previa:</strong> Seguir vigilancia específica de la enfermedad; individualizar detección de segundos primarios.</li>
+    <li><strong>Inmunocompromiso:</strong> Múltiples nódulos nuevos suelen ser infecciosos; usar seguimiento corto y clasificar a menudo como categoría 0 con TCBD en 1–3 meses.</li>
+</ul>
+
+<h3>Evidencia y resultados: datos clave</h3>
+<ul>
+    <li><strong>NLST:</strong> TCBD anual frente a radiografía durante tres años en adultos de alto riesgo redujo aproximadamente 20% la mortalidad por cáncer pulmonar y 6–7% la mortalidad global; las pruebas positivas fueron frecuentes y la mayoría falsas.</li>
+    <li><strong>NELSON:</strong> TCBD frente a ninguna detección, con umbrales volumétricos e intervalos ampliados, redujo alrededor de 24% la mortalidad masculina a 10 años y produjo importante desplazamiento de etapa.</li>
+    <li><strong>Rentabilidad:</strong> Los modelos estadounidenses muestran costo por QALY aceptable, especialmente en grupos de mayor riesgo basal, como fumadores actuales y mujeres.</li>
+    <li><strong>Desempeño del programa:</strong> Los programas centralizados mejoran adherencia y reducen procedimientos innecesarios; la tasa de resección benigna es una métrica crítica.</li>
+</ul>
+
+<hr>
+
+<h3>Algoritmos diagnósticos y terapéuticos</h3>
+<h4>A. Flujo de elegibilidad e inscripción</h4>
+<div class="mermaid">
+    flowchart TD
+        A["Identificar candidato en clínica/historia electrónica"] --> B{"¿Cumple edad y tabaquismo?"}
+        B -->|"USPSTF: 50–80, ≥20 paquetes-año, actual o abandono <15 años"| C["Evaluar aptitud para tratamiento curativo"]
+        B -->|"No cumple"| Z["No TC de detección; reforzar abandono y reducción de riesgo"]
+        C --> D{"¿Comorbilidad limita beneficio?"}
+        D -->|"Sí"| Z
+        D -->|"No"| E["Toma de decisiones compartida + ayuda para decisión"]
+        E --> F["Solicitar TCBD de detección"]
+        F --> G["Adquisición sin contraste, ≤2,5 mm, baja dosis"]
+        G --> H["Interpretar con Lung-RADS v2022"]
+        H --> I{"¿Categoría 1–2?"}
+        I -->|"Sí"| J["TCBD anual en 12 meses"]
+        I -->|"No"| K{"¿Categoría 3?"}
+        K -->|"Sí"| L["TCBD a 6 meses; si estable o menor, bajar a 2"]
+        K -->|"No"| M{"¿Categoría 4A?"}
+        M -->|"Sí"| N["TCBD a 3 meses; considerar PET si sólido ≥8 mm"]
+        M -->|"No"| O["4B/4X: TC diagnóstica ± contraste, PET/TC y tejido"]
+        O --> P["Discusión multidisciplinaria y manejo definitivo"]
+</div>
+
+<h4>B. Prueba positiva: vía resumida</h4>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>Categoría 3:</strong> TCBD a 6 meses y bajar categoría si estable.</li>
+        <li><strong>Categoría 4A:</strong> TCBD a 3 meses; PET/TC si componente sólido ≥8 mm; escalar si crece.</li>
+        <li><strong>Categoría 4B/4X:</strong> TC diagnóstica ± contraste, PET/TC y diagnóstico tisular —broncoscopia, percutáneo o cirugía directa— según probabilidad preprueba y aptitud.</li>
+    </ul>
+</div>
+
+<h3>Tablas y cuadros de consulta rápida</h3>
+
+<h4>Tabla 1. A quién detectar y cuándo suspender</h4>
+<table>
+    <thead><tr><th>Guía</th><th>Edad inicial</th><th>Exposición</th><th>Límite desde abandono</th><th>Suspensión</th></tr></thead>
+    <tbody>
+        <tr><td><strong>USPSTF</strong></td><td>50–80</td><td>≥20 paquetes-año</td><td>&lt;15 años</td><td>Tras 15 años sin fumar o si no es candidato a tratamiento curativo</td></tr>
+        <tr><td><strong>CMS</strong></td><td>50–77</td><td>≥20 paquetes-año</td><td>&lt;15 años</td><td>Aplican reglas de cobertura; criterios clínicos similares a USPSTF</td></tr>
+        <tr><td><strong>NCCN</strong></td><td>≥50</td><td>≥20 paquetes-año y riesgo clínico</td><td>No fijo</td><td>Individualizado si está apto para tratamiento curativo</td></tr>
+        <tr><td><strong>ACS 2023</strong></td><td>50+</td><td>≥20 paquetes-año</td><td>Ninguno</td><td>Individualizado; continuar si esperanza de vida ≥5 años y está apto</td></tr>
+    </tbody>
+</table>
+
+<h4>Tabla 2. Lung-RADS v2022: definiciones condensadas</h4>
+<div class="algorithm-note">
+    <p><strong>Definiciones clave:</strong></p>
+    <ul>
+        <li><strong>Crecimiento:</strong> Aumento &gt;1,5 mm del diámetro medio en 12 meses.</li>
+        <li>El crecimiento lento en varias rondas de lesiones sólidas o parcialmente sólidas es sospechoso aunque no alcance el umbral de 12 meses.</li>
+        <li>Consultar la tabla de seguimiento para la lógica completa de categorías.</li>
+    </ul>
+</div>
+
+<h4>Tabla 3. Referencias de dosis</h4>
+<table>
+    <thead><tr><th>Examen</th><th>Dosis efectiva típica</th></tr></thead>
+    <tbody>
+        <tr><td>TCBD de detección</td><td>~1–1,5 mSv</td></tr>
+        <tr><td>TC diagnóstica estándar de tórax</td><td>~7–8 mSv</td></tr>
+        <tr><td>Radiografía de tórax en dos proyecciones</td><td>~0,1 mSv</td></tr>
+        <tr><td>Radiación ambiental anual promedio en EE. UU.</td><td>~3,1 mSv</td></tr>
+    </tbody>
+</table>
+
+<h4>Lista rápida para la toma de decisiones compartida</h4>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>Elegibilidad:</strong> Por qué cumple criterios.</li>
+        <li><strong>Beneficios:</strong> Detección más temprana y menor probabilidad de morir por cáncer pulmonar.</li>
+        <li><strong>Daños:</strong> Falsas alarmas, estudios adicionales, procedimientos ocasionales, pequeñas dosis de radiación y sobrediagnóstico raro.</li>
+        <li><strong>Expectativas:</strong> Estudios anuales y controles cortos si aparece algo indeterminado.</li>
+        <li><strong>Abandono:</strong> Es la medida más poderosa; existen apoyo y medicamentos.</li>
+        <li><strong>Siguientes pasos:</strong> Cómo se comunicarán resultados y coordinarán seguimientos.</li>
+    </ul>
+</div>
+
+<h3>Casos y aprendizaje aplicado</h3>
+
+<div class="case-study">
+    <p><strong>Caso 1:</strong> Fumador actual de 62 años, 45 paquetes-año, en TCBD basal presenta nódulo sólido liso de 7 mm en lóbulo superior derecho sin estudios previos.</p>
+    <p><strong>Pregunta:</strong> ¿Mejor siguiente paso?</p>
+    <p><strong>Respuesta:</strong> TCBD a 6 meses.</p>
+    <p><strong>Explicación:</strong> Un nódulo sólido basal de 6–&lt;8 mm es categoría 3 y requiere vigilancia a 6 meses; escalar solo si crece o aparecen características sospechosas.</p>
+</div>
+
+<div class="case-study">
+    <p><strong>Caso 2:</strong> Exfumador de 68 años, 30 paquetes-año, abandono hace 10 años, con nódulo parcialmente sólido de 12 mm y núcleo sólido de 8 mm.</p>
+    <p><strong>Pregunta:</strong> ¿Mejor siguiente paso?</p>
+    <p><strong>Respuesta:</strong> Evaluación diagnóstica con PET/TC y toma de tejido.</p>
+    <p><strong>Explicación:</strong> Un componente sólido ≥8 mm cumple categoría 4B; proceder a PET/TC —reconociendo falsos negativos en algunos cánceres sub-sólidos— y planificar biopsia o evaluación quirúrgica.</p>
+</div>
+
+<div class="case-study">
+    <p><strong>Caso 3:</strong> Fumador actual de 59 años con nódulo sólido nuevo de 7 mm y opacidades multifocales en árbol en brote; fiebre leve la semana anterior.</p>
+    <p><strong>Pregunta:</strong> ¿Clasificación y manejo?</p>
+    <p><strong>Respuesta:</strong> Lung-RADS 0 con TCBD en 1–3 meses.</p>
+    <p><strong>Explicación:</strong> Los hallazgos sugieren bronquiolitis infecciosa; repetir a corto plazo y reclasificar según el hallazgo residual más sospechoso.</p>
+</div>
+
+<div class="case-study">
+    <p><strong>Caso 4:</strong> Paciente de 71 años con nódulo endobronquial segmentario basal; persiste en TCBD a 3 meses.</p>
+    <p><strong>Pregunta:</strong> ¿Categoría y siguiente paso?</p>
+    <p><strong>Respuesta:</strong> 4B y remisión a broncoscopia, con PET/TC si hay un componente sólido sustancial.</p>
+    <p><strong>Explicación:</strong> Los nódulos segmentarios o proximales persistentes a 3 meses se elevan a 4B.</p>
+</div>
+
+<h3>Banco de preguntas: 12 preguntas de opción múltiple</h3>
+<ol>
+    <li>
+        <p>El principal resultado de mortalidad demostrado por los grandes ensayos de TCBD fue:</p>
+        <ul><li>A. Ningún cambio en mortalidad por cáncer</li><li>B. Reducción sin desplazamiento de etapa</li><li>C. Reducción de mortalidad con desplazamiento hacia enfermedad temprana</li><li>D. Solo reducción de mortalidad global</li><li>E. Más incidencia sin efecto en mortalidad</li></ul>
+        <blockquote><strong>Respuesta: C.</strong><br><strong>Explicación:</strong> La TCBD reduce muertes y desplaza el diagnóstico a etapas más tempranas; algunos ensayos también mostraron menor mortalidad global.</blockquote>
+    </li>
+    <li>
+        <p>Según USPSTF 2021, ¿qué paciente cumple criterios?</p>
+        <ul><li>A. 47 años, 30 paquetes-año, abandono hace 5 años</li><li>B. 55 años, 25 paquetes-año, aún fuma</li><li>C. 70 años, 15 paquetes-año, abandono hace 10 años</li><li>D. 82 años, 40 paquetes-año, aún fuma y está apto</li><li>E. 60 años, 20 paquetes-año, abandono hace 20 años</li></ul>
+        <blockquote><strong>Respuesta: B.</strong><br><strong>Explicación:</strong> Edad 50–80, ≥20 paquetes-año y fumador actual o abandono &lt;15 años.</blockquote>
+    </li>
+    <li>
+        <p>Paciente apto de 65 años, 40 paquetes-año, abandono hace 18 años, pregunta por detección. ¿Mejor respuesta?</p>
+        <ul><li>A. Según USPSTF no cumple por abandono &gt;15 años</li><li>B. Cumple cobertura de Medicare</li><li>C. Cumple todas las guías</li><li>D. Está contraindicado por edad</li><li>E. Debe hacerse radiografía</li></ul>
+        <blockquote><strong>Respuesta: A.</strong><br><strong>Explicación:</strong> USPSTF/CMS usan límite de 15 años; ACS difiere y la cobertura puede no acompañar.</blockquote>
+    </li>
+    <li>
+        <p>TCBD muestra un nódulo sólido nuevo de 7 mm sin características preocupantes. Categoría y siguiente paso:</p>
+        <ul><li>A. 2 → anual</li><li>B. 4A → TCBD a 3 meses; considerar PET si ≥8 mm</li><li>C. 3 → TCBD a 6 meses</li><li>D. 4B → PET/TC y biopsia</li><li>E. 0 → repetir de inmediato</li></ul>
+        <blockquote><strong>Respuesta: B.</strong><br><strong>Explicación:</strong> Un nódulo sólido nuevo de 6–&lt;8 mm es 4A.</blockquote>
+    </li>
+    <li>
+        <p>¿Qué es cierto sobre nódulos de la vía aérea?</p>
+        <ul><li>A. Los subsegmentarios siempre son 4A</li><li>B. Los segmentarios/proximales persistentes a 3 meses suben a 4B</li><li>C. El aire dentro indica siempre cáncer</li><li>D. Se excluyen de Lung-RADS</li><li>E. Toda anomalía requiere broncoscopia inmediata</li></ul>
+        <blockquote><strong>Respuesta: B.</strong><br><strong>Explicación:</strong> La persistencia a 3 meses eleva de 4A a 4B.</blockquote>
+    </li>
+    <li>
+        <p>Crecimiento en Lung-RADS v2022 se define como:</p>
+        <ul><li>A. Cualquier aumento visual</li><li>B. Aumento &gt;1,5 mm del diámetro medio en 12 meses</li><li>C. &gt;2,5 mm en el eje largo</li><li>D. Tiempo de duplicación &lt;600 días</li><li>E. Cambio de atenuación aislado</li></ul>
+        <blockquote><strong>Respuesta: B.</strong><br><strong>Explicación:</strong> Es un aumento &gt;1,5 mm del diámetro medio en 12 meses.</blockquote>
+    </li>
+    <li>
+        <p>¿Qué nódulo es 4B en el estudio basal?</p>
+        <ul><li>A. Parcialmente sólido de 14 mm con núcleo de 6 mm</li><li>B. Sólido nuevo de 7 mm</li><li>C. Sólido de 16 mm</li><li>D. No sólido de 32 mm estable 2 años</li><li>E. Perifisural triangular de 9 mm</li></ul>
+        <blockquote><strong>Respuesta: C.</strong><br><strong>Explicación:</strong> Los sólidos ≥15 mm son categoría 4B.</blockquote>
+    </li>
+    <li>
+        <p>Uso apropiado de PET/TC en detección incluye:</p>
+        <ul><li>A. Todo nódulo no sólido ≥20 mm</li><li>B. Nódulo o componente sólido ≥8 mm</li><li>C. Nódulo sólido nuevo de 4–5 mm</li><li>D. Nódulos subsegmentarios de vía aérea</li><li>E. Todos los categoría 3</li></ul>
+        <blockquote><strong>Respuesta: B.</strong><br><strong>Explicación:</strong> PET/TC es apropiada cuando el componente sólido alcanza 8 mm.</blockquote>
+    </li>
+    <li>
+        <p>Dosis efectiva típica de una TCBD:</p>
+        <ul><li>A. 0,05 mSv</li><li>B. 0,3 mSv</li><li>C. ~1–1,5 mSv</li><li>D. 5–6 mSv</li><li>E. 10–12 mSv</li></ul>
+        <blockquote><strong>Respuesta: C.</strong><br><strong>Explicación:</strong> La dosis típica es aproximadamente 1–1,5 mSv.</blockquote>
+    </li>
+    <li>
+        <p>El sobrediagnóstico significa:</p>
+        <ul><li>A. Resultado falso positivo</li><li>B. Detectar cáncer que no habría causado síntomas o muerte durante la vida del paciente</li><li>C. Clasificación errónea por movimiento</li><li>D. Exagerar hallazgos incidentales</li><li>E. Contar dos veces un nódulo</li></ul>
+        <blockquote><strong>Respuesta: B.</strong><br><strong>Explicación:</strong> Es identificar un tumor indolente que nunca habría sido clínicamente manifiesto.</blockquote>
+    </li>
+    <li>
+        <p>¿Qué no se recomienda para detección?</p>
+        <ul><li>A. TCBD anual en adultos elegibles</li><li>B. Decisión compartida y apoyo para dejar de fumar</li><li>C. Radiografía rutinaria ± citología de esputo</li><li>D. Informe con Lung-RADS</li><li>E. Registro de calidad y adherencia</li></ul>
+        <blockquote><strong>Respuesta: C.</strong><br><strong>Explicación:</strong> Radiografía y citología de esputo no son métodos recomendados.</blockquote>
+    </li>
+    <li>
+        <p>Paciente de 70 años con EPID fibrótica, 30 paquetes-año, fumador actual, elegible y apto. TCBD muestra quiste de pared gruesa con nodularidad interna nueva. ¿Manejo?</p>
+        <ul><li>A. Solo anual</li><li>B. TCBD a 6 meses</li><li>C. Tratar como 4B: TC diagnóstica ± contraste, PET/TC si componente ≥8 mm y tejido</li><li>D. PET solo si crecimiento &gt;1,5 mm</li><li>E. No escalar porque los quistes son benignos</li></ul>
+        <blockquote><strong>Respuesta: C.</strong><br><strong>Explicación:</strong> Un quiste atípico con nodularidad o complejidad creciente es sospechoso y requiere evaluación diagnóstica.</blockquote>
+    </li>
+</ol>
+
+<h3>Controversias, variabilidad y evidencia en evolución</h3>
+<ul>
+    <li><strong>Elegibilidad:</strong> USPSTF/CMS frente a NCCN/ACS difieren en edad y tiempo desde abandono. Esperar discrepancias entre guía y cobertura; documentar el fundamento.</li>
+    <li><strong>Modelos de riesgo frente a paquetes-año:</strong> La predicción individual mejora selección y equidad, pero la integración y reembolso varían.</li>
+    <li><strong>Volumetría frente a diámetro:</strong> Las estrategias volumétricas de NELSON reducen positivos y mejoran valor predictivo; Lung-RADS estadounidense sigue basado principalmente en diámetro.</li>
+    <li><strong>Lesiones sub-sólidas de crecimiento lento:</strong> Equilibrar evitar sobretratamiento con resección oportuna cuando aparece o crece componente sólido.</li>
+    <li><strong>PET/TC:</strong> Útil para componentes sólidos ≥8 mm; puede ser falsamente negativa en adenocarcinoma indolente y GGN puro.</li>
+    <li><strong>Biomarcadores e IA:</strong> Fragmentómica de ADN libre y análisis de TC asistido por IA son prometedores; utilidad clínica y rentabilidad siguen en estudio.</li>
+    <li><strong>Prestación del programa:</strong> La adherencia y la tasa de resección benigna varían entre programas centralizados y descentralizados; los recursos de navegación importan.</li>
+</ul>
+
+<h3>Lista de verificación final</h3>
+<div class="algorithm-note">
+    <ul>
+        <li>Detectar solo adultos elegibles y aptos; suspender cuando el tratamiento curativo ya no sea apropiado o se exceda el límite de abandono del marco aplicado.</li>
+        <li>Realizar toma de decisiones compartida y consejería para dejar de fumar en cada contacto.</li>
+        <li>Solicitar TCBD de detección, no TC diagnóstica.</li>
+        <li>Usar Lung-RADS v2022 en todos los informes y programar seguimientos antes de que el paciente salga.</li>
+        <li><strong>4A:</strong> TCBD a 3 meses; PET/TC si componente sólido ≥8 mm.</li>
+        <li><strong>4B/4X:</strong> TC diagnóstica ± contraste, PET/TC y tejido mediante equipo multidisciplinario.</li>
+        <li>Aplicar reglas específicas a nódulos de la vía aérea y quistes atípicos.</li>
+        <li>Registrar adherencia, tasa de resección benigna, dosis y tiempo hasta diagnóstico.</li>
+        <li>Comunicar resultados con claridad y reducir ansiedad mediante planes predecibles.</li>
+        <li>Reevaluar elegibilidad cada año y alinear con políticas del pagador.</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>Abreviaturas</h3>
+    <dl>
+        <dt>ACS</dt><dd>American Cancer Society.</dd>
+        <dt>CMS</dt><dd>Centers for Medicare & Medicaid Services.</dd>
+        <dt>CTDIvol</dt><dd>Índice volumétrico de dosis de TC.</dd>
+        <dt>CTLS</dt><dd>Programa de detección de cáncer de pulmón por TC.</dd>
+        <dt>EHR</dt><dd>Historia clínica electrónica.</dd>
+        <dt>GGN</dt><dd>Nódulo en vidrio esmerilado.</dd>
+        <dt>ILD/EPID</dt><dd>Enfermedad pulmonar intersticial difusa.</dd>
+        <dt>LDCT/TCBD</dt><dd>Tomografía computarizada de baja dosis.</dd>
+        <dt>Lung-RADS</dt><dd>Sistema de informe y datos para detección por TC de pulmón.</dd>
+        <dt>MDT</dt><dd>Equipo multidisciplinario.</dd>
+        <dt>NCCN</dt><dd>National Comprehensive Cancer Network.</dd>
+        <dt>NRT</dt><dd>Terapia de reemplazo de nicotina.</dd>
+        <dt>PET/CT</dt><dd>Tomografía por emisión de positrones con TC.</dd>
+        <dt>QA</dt><dd>Aseguramiento de calidad.</dd>
+        <dt>SDM</dt><dd>Toma de decisiones compartida.</dd>
+        <dt>USPSTF</dt><dd>U.S. Preventive Services Task Force.</dd>
+    </dl>
+</div>
+
+<hr>
+
+<div class="references">
+    <h3>Referencias</h3>
+    <ol>
+        <li>Aberle DR, Adams AM, Berg CD, et al. Reduced lung-cancer mortality with low-dose computed tomographic screening. N Engl J Med. 2011;365:395-409.</li>
+        <li>de Koning HJ, van der Aalst CM, de Jong PA, et al. Reduced lung-cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382:503-513.</li>
+        <li>Krist AH, Davidson KW, Mangione CM, et al. Screening for Lung Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325:962-970.</li>
+        <li>Wood DE, Kazerooni EA, Baum SL, et al. NCCN Guidelines® Insights: Lung Cancer Screening (current version). J Natl Compr Canc Netw. 2022–2025.</li>
+        <li>Wolf AMD, Shih Y-CT, Fontham ETH, et al. Screening for lung cancer: 2023 guideline update from the American Cancer Society. CA Cancer J Clin. 2024;74:50-81.</li>
+        <li>Mazzone PJ, Silvestri GA, Patel S, et al. Screening for Lung Cancer: CHEST Guideline and Expert Panel Report. Chest. 2021;160:e427-e494.</li>
+        <li>Christensen J, Prosper AE, Wu CC, et al. ACR Lung-RADS v2022: Assessment Categories and Management Recommendations. J Am Coll Radiol. 2024;21:473-486.</li>
+        <li>Black WC, Gareen IF, Soneji SS, et al. Cost-effectiveness of CT screening in the National Lung Screening Trial. N Engl J Med. 2014;371:1793-1802.</li>
+        <li>Larke FJ, Kruger RL, Cagnon CH, et al. Estimated radiation dose associated with LDCT of NLST participants. AJR Am J Roentgenol. 2011;197:1165-1169.</li>
+        <li>Pinsky PF, Gierada DS, Black W, et al. Performance of Lung-RADS in the National Lung Screening Trial: a retrospective assessment. Ann Intern Med. 2015;162:485-491.</li>
+        <li>Silvestri GA, Goldman L, Tanner NT, et al. Outcomes from more than 1 million people screened for lung cancer with low-dose CT. Chest. 2023;164:241-251.</li>
+        <li>McKee BJ, Regis SM, McKee AB, et al. Performance of ACR Lung-RADS in a clinical CT lung screening program. J Am Coll Radiol. 2016;13:R25-R29.</li>
+        <li>Kinsinger LS, Anderson C, Kim J, et al. Implementation of Lung Cancer Screening in the Veterans Health Administration. JAMA Intern Med. 2017;177:399-406.</li>
+        <li>Rampinelli C, De Marco P, Origgi D, et al. Exposure to low-dose CT for screening and risk-benefit analysis. BMJ. 2017;356:j347.</li>
+        <li>Tammemägi MC, Katki HA, Hocking WG, et al. Selection criteria for lung-cancer screening. N Engl J Med. 2013;368:728-736.</li>
+        <li>Katki HA, Kovalchik SA, Berg CD, et al. Development and Validation of Risk Models to Select Ever-Smokers for CT Lung Cancer Screening. JAMA. 2016;315:2300-2311.</li>
+        <li>Robbins HA, Berg CD, Cheung LC, et al. Comparative performance of lung cancer risk models in the United Kingdom. Br J Cancer. 2021;124:2026-2034.</li>
+        <li>Raghu G, Remy-Jardin M, Myers JL, et al. Idiopathic pulmonary fibrosis and progressive pulmonary fibrosis in adults: clinical practice guideline. Am J Respir Crit Care Med. 2022;205:e18-e47.</li>
+        <li>Mazzone PJ, Bach PB, Carey J, et al. Clinical validation of a cfDNA fragmentome assay for early detection of lung cancer. Cancer Discov. 2024;14:2224-2238.</li>
+        <li>Geppert J, Kothari J, Karia R, et al. AI for nodule and cancer detection in CT lung cancer screening: systematic review. Thorax. 2024;79:1040-1049.</li>
+    </ol>
+</div>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+</body>
+</html>

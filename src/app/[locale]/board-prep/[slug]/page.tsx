@@ -1,25 +1,38 @@
 import type { Metadata } from 'next'
+import type { Route } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { setRequestLocale } from 'next-intl/server'
 
 import { BoardReviewChapterContent } from '@/components/board-review/BoardReviewChapterContent'
 import { BoardReviewProgressToggle } from '@/components/board-review/BoardReviewProgressToggle'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { boardReviewCategoryLabels } from '@/data/board-review'
+import { activeLocales, defaultLocale, isActiveLocale } from '@/i18n/locale'
+import { localizePath } from '@/i18n/path'
 import { formatDuration } from '@/lib/format-duration'
 import { loadBoardReviewChapter, listBoardReviewChapters } from '@/lib/board-review-loader'
 
 interface BoardPrepModulePageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ locale: string; slug: string }>
 }
 
 export function generateStaticParams() {
-  return listBoardReviewChapters().map((chapter) => ({ slug: chapter.slug }))
+  const chapters = listBoardReviewChapters()
+
+  return activeLocales.flatMap((locale) =>
+    chapters.map((chapter) => ({
+      locale,
+      slug: chapter.slug,
+    })),
+  )
 }
 
 export async function generateMetadata({ params }: BoardPrepModulePageProps): Promise<Metadata> {
-  const { slug } = await params
-  const chapter = await loadBoardReviewChapter(slug)
+  const { locale: rawLocale, slug } = await params
+  const locale = isActiveLocale(rawLocale) ? rawLocale : defaultLocale
+  const chapter = await loadBoardReviewChapter(slug, locale)
 
   if (!chapter) {
     return {
@@ -34,15 +47,18 @@ export async function generateMetadata({ params }: BoardPrepModulePageProps): Pr
 }
 
 export default async function BoardPrepModulePage({ params }: BoardPrepModulePageProps) {
-  const { slug } = await params
-  const chapter = await loadBoardReviewChapter(slug)
+  const { locale: rawLocale, slug } = await params
+  const locale = isActiveLocale(rawLocale) ? rawLocale : defaultLocale
+  setRequestLocale(locale)
+
+  const chapter = await loadBoardReviewChapter(slug, locale)
 
   if (!chapter) {
     notFound()
   }
 
   const categoryLabel = boardReviewCategoryLabels[chapter.category]
-  const allChapters = listBoardReviewChapters()
+  const allChapters = listBoardReviewChapters(locale)
   const peerChapters = allChapters.filter(
     (item) => item.category === chapter.category && item.slug !== chapter.slug,
   )
@@ -137,12 +153,12 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
                   {peerChapters.slice(0, 4).map((peer) => (
                     <li key={peer.slug} className="flex items-start gap-2">
                       <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-                      <a
+                      <Link
                         className="text-primary hover:text-primary/80"
-                        href={`/board-prep/${peer.slug}`}
+                        href={localizePath(`/board-prep/${peer.slug}`, locale) as Route}
                       >
                         {peer.title}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>气胸、持续漏气与支气管胸膜瘘</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>气胸、持续漏气与支气管胸膜瘘</h1>
+
+<h3>考试对应与范围</h3>
+<p>本章涵盖气胸（原发性、继发性、医源性、创伤性）、持续/延长漏气（PAL）、肺泡-胸膜瘘（APF）和支气管胸膜瘘（BPF）的识别与处理。重点包括符合指南的分诊、操作步骤（针吸、胸腔引流、门诊装置）、支气管镜治疗（单向活瓣、栓塞子、封堵胶、支架、封堵器）、外科选择以及并发症预防。</p>
+<p><strong>领域：</strong>胸膜疾病、介入肺病学（诊断与治疗性支气管镜）、围操作期管理。</p>
+
+<h3>学习目标</h3>
+<ul>
+    <li>区分 PSP 与 SSP、APF 与 BPF，定义 PAL，并认识到“气胸大小”不能单独决定管理。</li>
+    <li>依据稳定性、风险和医疗场景选择初始处理：保守、针吸、门诊装置或胸管。</li>
+    <li>按步骤用球囊封堵、亚甲蓝、二氧化碳图和/或 Chartis 定位并治疗 PAL。</li>
+    <li>选择并实施 PAL/BPF 的支气管镜治疗，包括活瓣、Watanabe 栓塞子、封堵胶、支架和封堵器，并识别适应证与陷阱。</li>
+    <li>优化胸管策略（水封或吸引）、门诊 Heimlich 阀和发作后咨询（复发预防、航空旅行）。</li>
+    <li>预判并发症，并针对 COPD、肺切除术后、机械通气和脓胸等特殊人群个体化。</li>
+</ul>
+
+<hr>
+
+<h3>高收益一页总结</h3>
+
+<h4>术语</h4>
+<ul>
+    <li><strong>APF：</strong>位于段支气管远端的肺实质漏气。</li>
+    <li><strong>BPF：</strong>主、叶或段支气管等中央气道与胸膜腔之间的交通。</li>
+    <li><strong>PAL：</strong>置管引流后漏气持续 &gt;5 天。</li>
+    <li><strong>PSP 流行病学：</strong>常见于年轻、瘦高吸烟者；复发常见；大小本身不等于不稳定。</li>
+    <li><strong>SSP：</strong>多见于有基础肺病（如 COPD）的老年患者；病死病残率更高，更易发生张力性气胸。</li>
+</ul>
+
+<div class="algorithm-note">
+    <strong>要点与核心概念</strong>
+    <ul>
+        <li><strong>超声：</strong>肺滑动和 B 线可排除探头所在位置的气胸；“条码/平流层征”提示气胸；肺点征具有诊断性。</li>
+        <li><strong>PSP 初始处理：</strong>症状轻且稳定可保守；有症状时优先针吸，而非常规大口径胸管。</li>
+        <li><strong>门诊处理：</strong>精选 PSP 可用小口径导管 + 单向阀缩短住院，但器械相关事件更多；不推荐用于 SSP。</li>
+        <li><strong>胸管策略：</strong>优先小口径；水封优于常规吸引；精选持续漏气患者可用 Heimlich 阀门诊。</li>
+        <li><strong>PAL 定位：</strong>从肺叶到肺段依次球囊封堵，观察引流系统冒泡变化；不明显时用亚甲蓝、二氧化碳图或 Chartis。</li>
+        <li><strong>活瓣：</strong>Zephyr® 和 Spiration® 单向活瓣允许气体排出但阻止吸入；适用于手术高风险的 PAL 和精选 BPF。漏气停止后约 6 周评估取出。</li>
+        <li><strong>栓塞子：</strong>EWS 硅胶塞按气道直径选择；移位常见，镇咳有帮助。</li>
+        <li><strong>封堵胶：</strong>纤维蛋白胶或氰基丙烯酸酯适合小而可见的缺损；固化时避免吸引，并保护支气管镜工作通道。</li>
+        <li><strong>支架/封堵器：</strong>覆膜支架用于中央缺损；Amplatzer® 装置可关闭精选 BPF，仅限有经验中心。</li>
+        <li><strong>肺切除后 BPF 时序：</strong>早期（≤7 天）、中期（8–30 天）、晚期（&gt;30 天）；右侧全肺切除风险高于左侧。</li>
+        <li><strong>感染/脓胸：</strong>先充分引流并控制脓毒症，不应在感染未控制时仓促封闭瘘口。</li>
+        <li><strong>机械通气：</strong>降低 PEEP 和潮气量；巨大 BPF 可考虑选择性对侧主支气管插管。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p><strong>气胸：</strong>胸膜腔内气体导致肺萎陷。PSP 与胸膜下肺大疱/小疱和胸膜孔隙增加有关，烟草和大麻会提高风险。SSP 源于 COPD、囊性肺病、坏死性感染或气压伤等基础病。</p>
+<p><strong>APF 与 BPF：</strong>APF 来源于肺泡/脏层胸膜破裂，通常外周且无法直接看到；BPF 是中央气道缺损，常见于肺叶/全肺切除术后，也可见于坏死性感染和恶性肿瘤。</p>
+<p><strong>PAL：</strong>持续 &gt;5 天；肺减容术、肺叶切除或严重肺实质病后常见。</p>
+
+<h4>适应证与禁忌证</h4>
+<ul>
+    <li><strong>保守 PSP：</strong>生命体征稳定且症状轻的成人，不应仅因气胸较大而排除。</li>
+    <li><strong>针吸：</strong>血流动力学稳定、症状明显或较大的 PSP。</li>
+    <li><strong>门诊装置：</strong>可可靠随访的精选 PSP；避免 SSP。</li>
+    <li><strong>胸管：</strong>不稳定、SSP、针吸失败、明显生理受损或机械通气患者。</li>
+    <li><strong>支气管镜 PAL/BPF 治疗：</strong>手术失败或不适合手术；缺损较小至中等且漏气可定位。</li>
+    <li><strong>外科：</strong>肺切除后早期 BPF、支气管镜失败、巨大中央缺损或需要复发预防。</li>
+</ul>
+
+<h3>术前评估</h3>
+<p><strong>影像：</strong>直立胸片评估气胸；复杂、复发或寻找基础病时 CT；床旁超声用于快速分诊。怀疑 BPF 时关注新发气液平面、胸膜腔体积变化及皮下气肿。</p>
+<p><strong>支气管镜：</strong>检查残端和中央气道；盐水冒泡试验；亚甲蓝可经气道或胸管逆行注入；球囊封堵定位；二氧化碳图/气道压力波形；有条件时用 Chartis 测远端压力和流量。</p>
+<p><strong>风险分层：</strong>肺切除后发生时间；感染/脓胸；营养、免疫抑制；指南高风险因素（双侧气胸、≥50 岁并吸烟、低氧、血气胸等）。</p>
+<p><strong>知情同意：</strong>讨论复发预防（胸膜固定/手术）、活瓣或栓塞子后续取出，以及可能的分期治疗。</p>
+
+<h3>器械与准备</h3>
+<ul>
+    <li><strong>针吸：</strong>小口径导管；传统入路为第 2 肋间锁骨中线。</li>
+    <li><strong>门诊装置：</strong>6–8 Fr 导管及串联单向阀。</li>
+    <li><strong>胸腔引流：</strong>优先小口径，连接水封；数字系统可定量漏气。</li>
+    <li><strong>支气管镜：</strong>治疗镜（工作通道 ≥2.8 mm）、Fogarty/封堵球囊、亚甲蓝、二氧化碳取样线、Chartis（如有）、活瓣输送系统、Watanabe 栓塞子（5/6/7 mm）、封堵胶导管、支架/封堵器套件、抓钳和吸引收集器。</li>
+    <li><strong>封堵胶输送：</strong>纤维蛋白双组分用双腔导管；固化期间将导管移出镜体，避免损伤工作通道。</li>
+</ul>
+
+<hr>
+
+<h3>分步技术与操作核对表</h3>
+
+<h4>针吸（PSP）</h4>
+<ol>
+    <li>确认稳定，镇痛并无菌准备。</li>
+    <li>在第 2 肋间锁骨中线置入小口径导管，手动抽气。</li>
+    <li>复查肺复张；观察数小时；必要时重复抽吸。</li>
+</ol>
+
+<h4>胸管置入</h4>
+<ol>
+    <li>确认指征；液体/分隔时使用超声。</li>
+    <li>第 4–5 肋间腋中线；小口径采用 Seldinger 技术。</li>
+    <li>连接水封，避免常规吸引；评估吸气/呼气期漏气；考虑数字系统。</li>
+</ol>
+
+<h4>PAL 球囊封堵定位</h4>
+<ol>
+    <li>深镇静或全麻，采用封闭回路使流量稳定。</li>
+    <li>从叶支气管口开始，依次封堵各肺段，每个位置观察引流冒泡变化至少 1 分钟。</li>
+    <li>注意侧支通气；定位不明确时，可经支气管镜吸引口短暂低流量注氧以突出责任肺段，或注入亚甲蓝。</li>
+</ol>
+
+<h4>支气管内活瓣置入</h4>
+<ol>
+    <li>根据定位确定型号和数量；尽可能在近端用最少活瓣覆盖责任肺段。</li>
+    <li>确认漏气立即减少以及影像改善。</li>
+    <li>漏气停止后约 6 周评估取出，以减少感染和肉芽。</li>
+</ol>
+
+<h4>封堵胶应用（中央小缺损）</h4>
+<ol>
+    <li>保持视野干燥，将纤维蛋白胶或氰基丙烯酸酯经导管轻柔涂于缺损，导管尖端远离镜头。</li>
+    <li>固化时不吸引；清除多余凝固物以维持气道通畅。</li>
+    <li>精选病例可用聚乙醇酸网等支架材料固定封堵胶。</li>
+</ol>
+
+<h4>Watanabe 栓塞子置入</h4>
+<ol>
+    <li>按气道直径选型，用抓钳推进并楔入；确认漏气停止或明显减少。</li>
+    <li>镇咳并监测移位；瘘口愈合后取出。</li>
+</ol>
+
+<h4>支架与封堵器（精选中央 BPF）</h4>
+<ol>
+    <li>覆膜支架跨越中央缺损，并降低污染/误吸。</li>
+    <li>Amplatzer 装置按瘘口腰部直径选择，释放前确认仍可回收。</li>
+</ol>
+
+<h3>故障排除与术中处理</h3>
+<ul>
+    <li><strong>封堵后漏气无变化：</strong>评估侧支通气；提高封堵层级至更近端；再次确认胸管通畅和位置。</li>
+    <li><strong>极小中央缺损：</strong>染料定位后靶向封堵胶可能优于活瓣。</li>
+    <li><strong>封堵胶陷阱：</strong>固化时不吸引，避免镜体接触；胶靠近镜头时可导管与镜体整套撤出；切勿强行挤压已堵塞的胶导管。</li>
+    <li><strong>活瓣后仍漏气：</strong>重新定位寻找其他责任肺段；警惕分泌物堵塞，怀疑时复查支气管镜。</li>
+</ul>
+
+<h3>术后护理与随访</h3>
+<ul>
+    <li>胸管保持水封，除非有明确吸引指征。</li>
+    <li>持续但可控漏气的精选患者可用 Heimlich 阀门诊。</li>
+    <li><strong>航空旅行：</strong>胸片证实完全吸收后再等待约 7 天；仍有封闭性气胸者不得乘坐商业航班。</li>
+    <li><strong>复发预防：</strong>戒烟并讨论诱因；复发 PSP、首次 SSP、双侧事件或高风险职业者讨论胸膜固定或手术。</li>
+</ul>
+
+<h3>并发症：预防、识别与处理</h3>
+<ul>
+    <li><strong>活瓣/栓塞子/支架：</strong>黏液堵塞、感染、肉芽、移位；加强气道清除、计划随访并在可行时及时取出。</li>
+    <li><strong>封堵胶：</strong>异物肉芽和气道堵塞；及时清除多余材料。</li>
+    <li><strong>外科相关 BPF：</strong>可合并脓胸和脓毒症；可能需 Eloesser 开放引流，改善营养和康复后再封闭。</li>
+    <li><strong>机械通气：</strong>避免高 PEEP/高压力；巨大 BPF 可考虑单肺通气。</li>
+</ul>
+
+<h3>特殊人群</h3>
+<ul>
+    <li><strong>肺切除术后：</strong>早期 BPF（≤4–7 天）常需尽快再手术和残端修补；晚期多与感染/缺血有关，应先引流和控制感染。</li>
+    <li><strong>重度 COPD/弥漫性肺气肿：</strong>PAL 常见；叶间裂完整性预测活瓣成功，不完整叶裂提示侧支通气和较低疗效。</li>
+    <li><strong>恶性肿瘤：</strong>肿瘤快速缩小可暴露瘘口；支架/封堵器常用于姑息。</li>
+    <li><strong>脓胸：</strong>优先持续引流和抗生素；感染控制后再关闭瘘口。</li>
+</ul>
+
+<h3>证据与结局</h3>
+<ul>
+    <li>PSP 中针吸较胸管缩短住院时间；部分实用研究在 SSP 亚组也有类似信号。</li>
+    <li>精选 PSP 中保守治疗在影像复张方面不劣于干预，并可减少严重不良事件和复发，但需严格选择。</li>
+    <li>PSP 门诊装置可缩短住院，但器械相关不良事件增加；不建议 SSP。</li>
+    <li>PAL 活瓣系列的愈合率差异大；叶间裂完整和无侧支通气预测成功。</li>
+    <li>小 BPF（&lt;6–8 mm）内镜封闭成功率最高；巨大中央缺损常需手术或定制方案。</li>
+    <li>Watanabe 栓塞子在多数病例中可减少漏气并促进拔管，但移位常见；全国性资料提示虚弱患者仍有较高失败和死亡风险，因此患者选择至关重要。</li>
+</ul>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——成人自发性气胸的初始处理</h4>
+<div class="mermaid">
+flowchart TD
+    A["成人疑似气胸"] --> B{"血流动力学不稳定或严重低氧？"}
+    B -- "是" --> C["立即针刺减压 + 胸管；住院"]
+    B -- "否" --> D["区分 PSP/SSP；评估症状和稳定性"]
+    D --> E{"PSP、症状轻、稳定？"}
+    E -- "是" --> F["保守治疗 + 密切随访"]
+    E -- "否" --> G["优先针吸"]
+    G --> H{"观察期间失败或复发？"}
+    H -- "是" --> I["小口径胸管 + 住院"]
+    H -- "否" --> J["带安全网出院"]
+    D --> K{"SSP 或症状/生理影响明显？"}
+    K -- "是" --> L["小口径胸管、住院、水封"]
+    L --> M{"PAL 或病情恶化？"}
+    M -- "是" --> N["考虑自体血胸膜固定、支气管镜治疗或手术"]
+    M -- "否" --> O["无漏气后评估夹管试验并拔管"]
+</div>
+<div class="algorithm-note">
+    <strong>路径说明：</strong>
+    <ul>
+        <li>不稳定/张力性气胸 → 立即减压 + 胸管。</li>
+        <li>PSP 且稳定、症状轻 → 可保守。</li>
+        <li>PSP 有症状/较大 → 先针吸；失败后小口径胸管。</li>
+        <li>SSP → 小口径胸管 + 水封；避免常规吸引。</li>
+        <li>PAL 或恶化 → 升级自体血、支气管镜方案或外科会诊。</li>
+    </ul>
+</div>
+
+<h4>算法 2——持续漏气（APF/BPF）的定位与封闭</h4>
+<div class="mermaid">
+flowchart TD
+    A["持续漏气 >5 天"] --> B["确认胸管通畅；优先水封"]
+    B --> C{"有感染/脓胸？"}
+    C -- "是" --> D["充分引流；抗生素；优化营养"]
+    C -- "否" --> E["支气管镜定位"]
+    E --> F{"可见中央缺损？"}
+    F -- "是" --> G["靶向封闭：封堵胶 ± 覆膜支架/封堵器"]
+    F -- "否" --> H["球囊封堵定位 ± 亚甲蓝/二氧化碳图/Chartis"]
+    H --> I{"漏气局限于少数肺段？"}
+    I -- "是" --> J["责任肺段置入活瓣或栓塞子"]
+    I -- "否" --> K["重新评估侧支通气；扩大近端封堵；考虑影像辅助"]
+    J --> L{"漏气停止？"}
+    L -- "是" --> M["观察；停止后约 6 周评估取出装置"]
+    L -- "否" --> N["重复定位；联合方法；外科会诊"]
+    D --> O["感染控制后重新评估封闭策略"]
+</div>
+<div class="algorithm-note">
+    <strong>路径说明：</strong>
+    <ul>
+        <li>先优化胸管并控制感染。</li>
+        <li>支气管镜区分中央和外周漏气。</li>
+        <li>中央小缺损 → 封堵胶 ± 支架/封堵器；巨大中央缺损多需手术。</li>
+        <li>外周漏气 → 球囊定位；局限时活瓣/栓塞子；弥漫或侧支通气明显时调整策略或升级。</li>
+        <li>愈合后计划装置取出，并监测并发症。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<h4>表 1．气胸的肺超声征象</h4>
+<table>
+    <thead>
+        <tr>
+            <th>类别</th>
+            <th>表现</th>
+            <th>解释/用途</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>排除气胸</td>
+            <td>肺滑动、B 线、海岸征（M 型）</td>
+            <td>探头所在位置出现这些征象时，气胸可能性低。</td>
+        </tr>
+        <tr>
+            <td>提示气胸</td>
+            <td>条码/平流层征（M 型）、无 B 线</td>
+            <td>提示但不特异；肺气肿、主支气管插管、胸膜固定术后也可见。</td>
+        </tr>
+        <tr>
+            <td>诊断气胸</td>
+            <td>肺点征</td>
+            <td>肺滑动与无滑动交界，表示气胸边缘。</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>表 2．APF 与 BPF 的区别及管理意义</h4>
+<table>
+    <thead>
+        <tr>
+            <th>特征</th>
+            <th>APF（肺泡-胸膜瘘）</th>
+            <th>BPF（支气管胸膜瘘）</th>
+            <th>管理意义</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>解剖层级</td>
+            <td>远端肺实质/脏层胸膜</td>
+            <td>中央气道（主/叶/段支气管）至胸膜腔</td>
+            <td>BPF 更可能需要靶向内镜或外科封闭。</td>
+        </tr>
+        <tr>
+            <td>支气管镜可见性</td>
+            <td>通常不可直接见</td>
+            <td>常可见残端裂开或中央缺损</td>
+            <td>中央且较小者可用封堵胶、支架或封堵器。</td>
+        </tr>
+        <tr>
+            <td>定位</td>
+            <td>球囊封堵；侧支通气可干扰</td>
+            <td>直接观察、盐水冒泡或染料</td>
+            <td>中央漏气适合盐水/亚甲蓝。</td>
+        </tr>
+        <tr>
+            <td>典型病因</td>
+            <td>术后 PAL、肺气肿、坏死性肺炎</td>
+            <td>肺切除、放化疗、感染、恶性肿瘤</td>
+            <td>先处理感染/脓胸，必要时分期。</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>表 3．PAL/BPF 的支气管镜治疗选择</h4>
+<table>
+    <thead>
+        <tr>
+            <th>方式</th>
+            <th>最适用途</th>
+            <th>实用要点</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>单向活瓣（Zephyr®、Spiration®）</td>
+            <td>可定位 PAL、精选 BPF、手术高风险</td>
+            <td>充分定位；侧支通气预测失败；漏气停止后约 6 周评估取出。</td>
+        </tr>
+        <tr>
+            <td>Watanabe 栓塞子（EWS）</td>
+            <td>段/亚段漏气，活瓣不适合时</td>
+            <td>锥形硅胶塞；移位常见；镇咳可帮助；愈合后取出。</td>
+        </tr>
+        <tr>
+            <td>封堵胶（纤维蛋白、氰基丙烯酸酯）</td>
+            <td>小而可见的中央缺损</td>
+            <td>固化时避免吸引；防止胶接触镜体；必要时用网片支架。</td>
+        </tr>
+        <tr>
+            <td>覆膜气道支架</td>
+            <td>中央瘘、污染/误吸风险、姑息</td>
+            <td>可致肉芽和黏液堵塞；需维护；良性病应及时取出。</td>
+        </tr>
+        <tr>
+            <td>Amplatzer® 封堵器</td>
+            <td>精选中央 BPF</td>
+            <td>自定心，按缺损选型；释放前可回收；气道应用为超说明书。</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <strong>病例 1（下一最佳步骤）</strong>
+    <p>24 岁男性，瘦高、吸烟，出现胸膜性胸痛和呼吸困难。生命体征稳定，室内空气 SpO₂ 97%。胸片示中等量 PSP；肺超声示前胸肺滑动消失并见肺点征。</p>
+    <p><strong>下一步最佳措施是什么？</strong></p>
+    <ol type="A">
+        <li>大口径胸管并吸引</li>
+        <li>针吸</li>
+        <li>按 SSP 路径置入小口径单向阀门诊</li>
+        <li>立即 VATS</li>
+        <li>无增强 CT</li>
+    </ol>
+    <p><strong>答案：B。</strong>稳定且有症状的 PSP 优先针吸，而非常规胸管。具备成熟路径的中心也可考虑门诊方案，但本题选项 C 错将患者归为 SSP。</p>
+</div>
+
+<div class="case-study">
+    <strong>病例 2（故障排除）</strong>
+    <p>68 岁 COPD 患者发生 SSP，水封下小口径胸管位置良好，但第 5 天仍为 3 级持续漏气，计划支气管镜治疗。全麻下封堵推测责任肺叶后漏气不变。</p>
+    <p><strong>哪项最有助于定位？</strong></p>
+    <ol type="A">
+        <li>将 PEEP 增至 12 cm H₂O 放大漏气</li>
+        <li>经支气管镜吸引口短暂低流量气道内注氧</li>
+        <li>胸管持续吸引</li>
+        <li>置入覆膜气管支架</li>
+        <li>经支气管镜注入滑石粉</li>
+    </ol>
+    <p><strong>答案：B。</strong>在全麻定位不明确时，短暂低流量气道内注氧可增加责任肺段的流量信号。提高通气压力可能加重漏气。</p>
+</div>
+
+<div class="case-study">
+    <strong>病例 3（策略选择）</strong>
+    <p>62 岁男性右全肺切除术后第 10 天出现发热和咳痰。胸片气液平面改变；支气管镜见残端裂开，滴盐水后冒泡。</p>
+    <p><strong>最佳初始策略是什么？</strong></p>
+    <ol type="A">
+        <li>立即残端注胶</li>
+        <li>跨隆突覆膜支架</li>
+        <li>抗生素并确保胸膜腔充分引流，随后考虑分期封闭</li>
+        <li>高频振荡通气</li>
+        <li>仅经胸管自体血封堵</li>
+    </ol>
+    <p><strong>答案：C。</strong>全肺切除后 BPF 合并感染时，应先广泛引流和抗生素控制感染，再进行手术或联合分期封闭。</p>
+</div>
+
+<h3>题库</h3>
+<ol>
+    <li>
+        <strong>30 岁 PSP 患者症状轻且稳定，胸片按 ATS 标准为大量气胸。哪项最准确？</strong><br>
+        A. 大小决定必须置管<br>
+        B. 可考虑保守治疗<br>
+        C. 应采用 SSP 门诊路径<br>
+        D. 必须立即 VATS<br>
+        E. 胸腔吸引可降低复发<br>
+        <strong>答案：B。</strong>稳定且症状轻的 PSP 可保守，不应仅依据大小决定侵入性处理。
+    </li>
+    <li>
+        <strong>SSP 第 5 天仍持续漏气，初始胸管策略首选哪项？</strong><br>
+        A. 所有人持续墙壁负压<br>
+        B. 水封，避免常规吸引<br>
+        C. 拔管促进愈合<br>
+        D. 立即改大口径<br>
+        E. 持续夹管 24 小时<br>
+        <strong>答案：B。</strong>水封优先；吸引可能使瘘口持续开放，不应常规使用。
+    </li>
+    <li>
+        <strong>哪项肺超声征象对气胸具有诊断性？</strong><br>
+        A. 肺滑动消失<br>
+        B. 条码/平流层征<br>
+        C. 肺点征<br>
+        D. B 线消失<br>
+        E. 肺脉搏征<br>
+        <strong>答案：C。</strong>肺点征具有诊断性；其余多为提示性或可见于其他情况。
+    </li>
+    <li>
+        <strong>66 岁肺叶切除术后，支气管镜见约 4 mm 中央缺损，无脓液。最佳支气管镜选择？</strong><br>
+        A. 所有叶段置入单向活瓣<br>
+        B. 直接应用纤维蛋白胶/氰基丙烯酸酯<br>
+        C. 裸金属支架<br>
+        D. 40 mm Amplatzer 封堵器<br>
+        E. 气管内 Watanabe 栓塞子<br>
+        <strong>答案：B。</strong>小而可见的中央缺损适合靶向封堵胶；支架/封堵器用于较大或特殊中央瘘。
+    </li>
+    <li>
+        <strong>向 BPF 注入纤维蛋白胶时，为防止器械损伤最重要的是：</strong><br>
+        A. 立即吸引清除多余胶<br>
+        B. 导管尖端与镜头齐平<br>
+        C. 使胶远离镜体、固化时不吸引；必要时导管和镜体一并撤出<br>
+        D. 增加氧流量<br>
+        E. 用单腔导管依次注入两组分<br>
+        <strong>答案：C。</strong>胶进入工作通道可永久损坏镜体；固化期应避免吸引。
+    </li>
+    <li>
+        <strong>哪项可预测 PAL 应用支气管内活瓣成功率较高？</strong><br>
+        A. 广泛叶间侧支通气<br>
+        B. 叶间裂完整且无侧支通气<br>
+        C. 巨大弥漫性肺气肿<br>
+        D. 双侧漏气<br>
+        E. 活动性脓胸<br>
+        <strong>答案：B。</strong>无侧支通气时，活瓣可更有效隔离责任区域。
+    </li>
+    <li>
+        <strong>以下哪项是全肺切除后 BPF 的已知危险因素？</strong><br>
+        A. 左侧手术<br>
+        B. 短残端<br>
+        C. 术前新辅助放疗<br>
+        D. 女性<br>
+        E. 右侧分泌物聚集较少<br>
+        <strong>答案：C。</strong>新辅助放疗和右侧全肺切除会增加风险。
+    </li>
+    <li>
+        <strong>74 岁 COPD 合并 SSP，能行走并要求门诊。哪项正确？</strong><br>
+        A. 小口径单向阀门诊方案获指南推荐用于 SSP<br>
+        B. PSP 门诊装置可缩短住院但器械事件更多；不推荐 SSP<br>
+        C. 门诊装置可消除复发<br>
+        D. 门诊必须用大口径胸管<br>
+        E. 门诊必须持续吸引<br>
+        <strong>答案：B。</strong>门诊证据主要来自 PSP，SSP 风险更高且不推荐常规采用。
+    </li>
+    <li>
+        <strong>定位后在 RB6 和 RB9 置入两个活瓣，漏气减少但未消失。下一步？</strong><br>
+        A. 立即取出两个活瓣<br>
+        B. 胸管加负压<br>
+        C. 重新定位其他责任肺段，必要时增加活瓣<br>
+        D. 气管支架<br>
+        E. 胸管注入滑石粉<br>
+        <strong>答案：C。</strong>PAL 可能涉及多个肺段，应重新定位并最小化但充分覆盖。
+    </li>
+    <li>
+        <strong>关于 Watanabe 栓塞子，哪项正确？</strong><br>
+        A. 是可嵌入的金属线圈<br>
+        B. 是硅胶塞；移位常见；可用镇咳药<br>
+        C. 为永久装置，不应取出<br>
+        D. 需球囊激活<br>
+        E. 禁用于段支气管<br>
+        <strong>答案：B。</strong>EWS 是不透 X 线的硅胶塞，移位是已知问题，瘘口关闭后应取出。
+    </li>
+    <li>
+        <strong>58 岁全肺切除后脓胸合并 BPF。最佳立即计划：</strong><br>
+        A. 同次支气管镜注胶并支架<br>
+        B. Eloesser/开放引流、抗生素和营养支持，之后再考虑封闭<br>
+        C. 仅胸管自体血<br>
+        D. 高 PEEP 压迫瘘口<br>
+        E. 抗凝改善血流<br>
+        <strong>答案：B。</strong>应先持续引流、控制感染并改善营养，再行确定性封闭。
+    </li>
+    <li>
+        <strong>PSP 胸片今日证实完全吸收且患者无症状。何时可考虑乘坐商业航班？</strong><br>
+        A. 立即<br>
+        B. 24 小时<br>
+        C. 影像完全吸收后约 7 天<br>
+        D. 必须胸膜固定后<br>
+        E. 必须 CT 正常后<br>
+        <strong>答案：C。</strong>通常建议影像证实吸收后再等待约一周。
+    </li>
+</ol>
+
+<hr>
+
+<h3>争议、实践差异与演变中的证据</h3>
+<ul>
+    <li><strong>PSP 保守治疗：</strong>精选患者支持证据增加，但选择和随访必须严格。</li>
+    <li><strong>PSP 门诊装置：</strong>缩短住院但增加器械事件，各中心和患者偏好不同。</li>
+    <li><strong>吸引：</strong>证据不足以支持 PSP/SSP 常规吸引，多数中心先水封。</li>
+    <li><strong>PAL/BPF 活瓣：</strong>研究人群和定义异质；专家共识支持在手术高风险且漏气可定位者使用。</li>
+    <li><strong>栓塞子和封堵器：</strong>应用差异大；全国性结局强调患者选择和中心经验。</li>
+    <li><strong>监管：</strong>部分地区 PAL 使用活瓣需特殊监管路径；器械和适应证仍在演变。</li>
+</ul>
+
+<h3>带走要点核对表</h3>
+<ul style="list-style-type: none; padding-left: 0;">
+    <li><input type="checkbox" disabled> 区分 APF、BPF，并确认 PAL（&gt;5 天）；解剖标签决定治疗。</li>
+    <li><input type="checkbox" disabled> PSP 稳定且症状轻？可保守；否则胸管前优先针吸。</li>
+    <li><input type="checkbox" disabled> 优先小口径胸管和水封，避免常规吸引。</li>
+    <li><input type="checkbox" disabled> SSP 通常住院、胸管和密切监测。</li>
+    <li><input type="checkbox" disabled> PAL 先定位后治疗：依次球囊封堵，必要时染料、二氧化碳图或 Chartis。</li>
+    <li><input type="checkbox" disabled> 活瓣/栓塞子覆盖能消除漏气的最少肺段，并计划及时取出。</li>
+    <li><input type="checkbox" disabled> 小型中央 BPF 可封堵胶或封堵器；巨大复杂 BPF 多需外科和/或分期引流。</li>
+    <li><input type="checkbox" disabled> 脓胸相关 BPF 先控制感染。</li>
+    <li><input type="checkbox" disabled> 机械通气降低 PEEP/潮气量，必要时选择性通气。</li>
+    <li><input type="checkbox" disabled> 咨询戒烟、复发预防和航空旅行时机。</li>
+    <li><input type="checkbox" disabled> 有条件时用数字引流系统定量漏气。</li>
+    <li><input type="checkbox" disabled> 明确记录装置复查和取出计划。</li>
+</ul>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>缩写与术语</h3>
+    <dl>
+        <dt>ABP</dt><dd>自体血胸膜固定术</dd>
+        <dt>APF</dt><dd>肺泡-胸膜瘘（肺实质性）</dd>
+        <dt>BPF</dt><dd>支气管胸膜瘘（中央气道至胸膜腔）</dd>
+        <dt>BTS</dt><dd>英国胸科学会</dd>
+        <dt>Chartis</dt><dd>测量远端气道压力/流量的球囊导管系统</dd>
+        <dt>CXR</dt><dd>胸部 X 线片</dd>
+        <dt>EBV</dt><dd>支气管内活瓣</dd>
+        <dt>EWS</dt><dd>支气管内 Watanabe 栓塞子</dd>
+        <dt>GA</dt><dd>全身麻醉</dd>
+        <dt>PAL</dt><dd>持续/延长漏气（引流后 &gt;5 天）</dd>
+        <dt>PSP/SSP</dt><dd>原发性/继发性自发性气胸</dd>
+    </dl>
+</div>
+
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Lichtenstein D, Mezière G, Biderman P, Gepner A, Barré O. The comet-tail artifact: an ultrasound sign of alveolar-interstitial syndrome. Chest. 1997;112(6):1655-1660.</li>
+<li>Lichtenstein DA, Lascols N, Mezière G, Gepner A. Ultrasound diagnosis of alveolar consolidation in the critically ill. Intensive Care Med. 2004;30(2):276-281.</li>
+<li>Brown SGA, Ball EL, Perrin K, et al. Conservative versus interventional treatment for spontaneous pneumothorax. N Engl J Med. 2020;382(5):405-415.</li>
+<li>Thelle A, Gjerdevik M, Abdelnoor M, et al. Randomized comparison of needle aspiration and chest tube drainage in spontaneous pneumothorax. Eur Respir J. 2017;49(4):1601296.</li>
+<li>Hallifax RJ, McKeown E, Sivakumar P, et al. Ambulatory management of primary spontaneous pneumothorax: an open-label, randomized controlled trial. Lancet. 2020;396(10243):39-49.</li>
+<li>Roberts ME, Arnold DT, Maskell NA, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):1-42.</li>
+<li>Walker S, Hallifax R, Ricciardi S, et al. Joint ERS/EACTS/ESTS clinical practice guidelines on adults with spontaneous pneumothorax. Eur Respir J. 2024;63(5):2300797.</li>
+<li>Dugan KC, Laxmanan B, Murgu S, Hogarth DK. Management of persistent air leaks. Chest. 2017;152(2):417-423.</li>
+<li>Duron G, Backer E, Feller-Kopman D. Evaluation and management of persistent air leak. Expert Rev Respir Med. 2023;17(10):865-872.</li>
+<li>Vial MR, Bilal H, McCormack D, et al. Endobronchial oxygen insufflation: a technique for localization of occult bronchopleural fistulas. Ann Am Thorac Soc. 2013;10(2):157-159.</li>
+<li>Lois M, Noppen M. Bronchopleural fistulas: an overview with special focus on endoscopic management. Chest. 2005;128(6):3955-3965.</li>
+<li>Hollaus PH, Lax F, el-Nashef BB, et al. Natural history of bronchopleural fistula after pneumonectomy: a review of 96 cases. Ann Thorac Surg. 1997;63(5):1391-1396.</li>
+<li>Cardillo G, Carbone L, Carleo F, et al. Rationale for treatment of postresectional bronchopleural fistula: analysis of 52 patients. Ann Thorac Surg. 2015;100(1):251-257.</li>
+<li>Low SW, Cartin-Ceba R, Vaszar LT, Swanson KL, Sakata KK. Trends in intrabronchial valve implantation for persistent air leak: U.S. database analysis over 10 years. Ann Am Thorac Soc. 2020;17(12):1642-1645.</li>
+<li>Travaline JM, McKenna RJ Jr, De Giacomo T, et al. Treatment of persistent pulmonary air leaks using endobronchial valves. Chest. 2009;136(2):355-360.</li>
+<li>Majid A, Kheir F, Sierra-Ruiz M, et al. Assessment of fissure integrity in patients with intrabronchial valves for treatment of prolonged air leak. Ann Thorac Surg. 2019;107(2):407-411.</li>
+<li>Smesseim I, Morin-Thibault LV, Herth FJF, et al. Endobronchial valves in treatment of persistent air leak: European case-series and best practice recommendations. Respiration. 2024;103(9):544-562.</li>
+<li>Huh JY, Jeong BH, Yoon HI, et al. Endobronchial valves for emphysema and persistent air leak: 10-year experience in an Asian country. BMC Pulm Med. 2024;24(1):162.</li>
+<li>Watanabe Y, Matsuo K, Tamaoki A, Komoto R, Hiraki S. Bronchial occlusion with endobronchial Watanabe spigot. J Bronchol. 2003;10(4):264-267.</li>
+<li>Taniguchi J, Aso S, Matsui H, et al. Endobronchial silicone spigot in prolonged air leaks: nationwide outcomes and risk factors for failure. Respir Investig. 2024;62(3):449-454.</li>
+<li>Fruchter O, Kramer MR, Dagan T, et al. Endobronchial closure of bronchopleural fistulae using Amplatzer devices: experience and literature review. Chest. 2011;139(3):682-687.</li>
+<li>Fruchter O, El Raouf BA, Abdel-Rahman N, et al. Efficacy of bronchoscopic closure of bronchopleural fistula with Amplatzer devices: long-term follow-up. Respiration. 2014;87(3):227-233.</li>
+<li>Takaoka K, Inoue S, Ohira S. Central bronchopleural fistulas closed by bronchoscopic injection of absolute ethanol. Chest. 2002;122(1):374-378.</li>
+<li>Cao GQ, He ZY, Wu Y, Liu L, Zhao H. Autologous blood patch pleurodesis for persistent air leak in spontaneous pneumothorax. Ann Thorac Surg. 2012;93(5):1652-1657.</li>
+<li>Ibrahim IM, Elkhayat H, Abdelsadek A, et al. Early autologous blood patch vs conservative treatment in persistent air leak. Thorac Cardiovasc Surg. 2019;67(3):222-226.</li>
+<li>Thourani VH, Lancaster RT, Mansour KA, Miller JI Jr. Twenty-six years of experience with the modified Eloesser flap. Ann Thorac Surg. 2003;76(2):401-405.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>高级外周支气管镜技术：径向探头、电磁导航与机器人辅助支气管镜</title>
+<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style></head><body><h1>高级外周支气管镜技术：径向探头、电磁导航与机器人辅助支气管镜</h1>
+<p>本章介绍使用径向支气管内超声（rEBUS）、电磁导航（EMN）和机器人辅助支气管镜（RAB）诊断外周肺部病变（PPL）的方法。内容对应 AABIP 介入肺脏病学专科考试中有关外周支气管镜适应证、影像/导航、麻醉与通气策略、并发症、辐射安全及证据解读的考核领域。</p>
+<h3>学习目标</h3>
+<p>完成本章学习后，学员应能够：</p>
+<ul>
+<li>针对不同的 PPL 表现，在 rEBUS、EMN、超细支气管镜和 RAB 之间进行选择。</li>
+<li>利用薄层 CT 规划导航路径，解读“支气管征”和“血管征”，并减轻 CT-机体偏差（CTBD）。</li>
+<li>在不同平台上按步骤完成配准、导航、病灶确认和取样。</li>
+<li>解读 rEBUS 图像模式（同心型与偏心型），并据此调整器械和进针/进镜轨迹。</li>
+<li>采用可减少肺不张并提高“器械位于病灶内”确认率的麻醉与呼吸机策略。</li>
+<li>预判、预防和处理出血、气胸及辐射暴露。</li>
+<li>批判性评价诊断率数据及其定义，并识别增强透视、锥形束 CT 等辅助影像可增加价值的情境。</li>
+</ul>
+<hr/>
+<h3>高频要点一页通</h3>
+<div class="algorithm-note">
+<ul>
+<li><strong>为何对 PPL 采用支气管镜？</strong> 与经胸路径相比，气胸风险较低，而且可在一次麻醉中同时完成病灶诊断和纵隔分期。</li>
+<li><strong>术前规划决定成败：</strong> 使用接近全肺总量（TLC）时采集的薄层（&lt;1 mm）CT；标记靶病灶所在气道代数，并记录是否存在支气管征。若无支气管征，则沿血管征（支气管血管束）追踪。</li>
+<li><strong>CT-机体偏差（CTBD）是主要敌人：</strong> 下叶及全身麻醉（GA）时偏差更大。可在患者耐受范围内采用肺复张、PEEP 8–12 cmH₂O，并在安全时避免过高 FiO₂，以减少肺不张。</li>
+<li><strong>配准质量至关重要：</strong> 使镜身居中，避免贴壁或弯折；确认主隆嵴对位，并在开始导航前完成平台规定的配准序列。</li>
+<li><strong>rEBUS 模式可预测成功率：</strong>
+<ul>
+<li>同心型：器械位于病灶中央。</li>
+<li>偏心型：器械邻近病灶。</li>
+<li>肺不张：警惕模拟病灶的表现，例如塌陷肺组织内的空气支气管征。</li>
+</ul>
+</li>
+<li><strong>辅助影像可纠正错位：</strong> 增强透视/断层合成或锥形束 CT（CBCT）可校正 CTBD，并确认器械确实位于病灶内。</li>
+<li><strong>机器人系统可延伸到达范围并提高稳定性：</strong>
+<ul>
+<li>Monarch 和 Galaxy：基于 EMN；取样过程中可持续保持视野。</li>
+<li>Ion：采用形状感知；取样时需移除视觉探头。</li>
+</ul>
+</li>
+<li><strong>超细镜可进入更远端：</strong> 约 3.0 mm 外径、1.7 mm 工作通道的支气管镜可到达约第 5 级支气管，并容纳 rEBUS 和微型器械。</li>
+<li><strong>取样策略：</strong> 先用针（无支气管征时可建立通道），再加用活检钳/刷；需要较大组织结构时可考虑冷冻活检。</li>
+<li><strong>并发症谱：</strong> RAB 的气胸率通常较低。出血多为轻至中度，可通过楔入、冷盐水、局部肾上腺素、氨甲环酸或球囊压迫处理。</li>
+<li><strong>辐射安全：</strong> 遵循 ALARA 原则；使用脉冲透视和准直，增加与 X 线源的距离，并佩戴眼、甲状腺及躯干防护用品。</li>
+<li><strong>诊断率定义差异很大：</strong> 若采用宽松定义或把随访结局计入，“诊断率”可能被高估。务必确认研究所采用的具体定义。</li>
+<li><strong>常见考试陷阱：</strong> 将 rEBUS 上的肺不张误认为肿瘤；盲信虚拟路径而忽视实时内镜解剖；在呼吸机参数或患者体位发生重大变化后未重新配准。</li>
+</ul>
+</div>
+<hr/>
+<h3>核心概念</h3>
+<h4>病理生理学 / 流行病学</h4>
+<p>胸部 CT 上的肺结节十分常见（约每 5 次扫描中就有 1 次可见）。筛查试验显示阳性发现率较高，并证实 CT 筛查具有死亡率获益。因此，偶然发现和筛查发现的结节不断增加，也随之增加了对安全、准确支气管镜诊断的需求。</p>
+<h4>适应证与禁忌证</h4>
+<p><strong>适应证：</strong> 诊断实性或亚实性 PPL；同次完成纵隔分期；进入常规支气管镜无法到达的病灶；相较经胸活检希望降低气胸风险；为潜在治疗性操作（如消融）进行靶向定位。</p>
+<p><strong>禁忌证：</strong> 多为相对而非绝对禁忌，与常规支气管镜相似，包括严重低氧血症（例如 P/F &lt;70 或 FiO₂ &gt;0.9）、无法纠正的凝血障碍或血小板减少（Plt &lt;20,000/µL）、不稳定心血管状态（休克、活动性缺血、近期心肌梗死、重度肺高压）、颅内压升高或急性哮喘。注意：ENB 对心脏植入式电子装置（CIED）通常安全，电磁干扰风险很低。</p>
+<h4>术前评估</h4>
+<p><strong>CT 规划：</strong> 接近 TLC、吸气末屏气获得的薄层（&lt;1 mm）CT 对优化气道分割和路径生成至关重要。识别支气管征（气道直接通向病灶）或血管征（可见伴行肺动脉，提示即使气道不可见也可能存在伴行支气管）。</p>
+<p><strong>建立心中地图：</strong> 记录连续气道分支及病灶位置，并预判软件误差和 CTBD。</p>
+<p><strong>房间布局：</strong> 确保使用兼容透视的手术床；合理摆放机器人主机、支气管镜塔、麻醉机以及 C 形臂/CBCT；预先安排快速现场评估（ROSE）和标本流程。使用 EMN 时，配准期间应清除场发生器附近的金属物品。</p>
+<p><strong>麻醉/通气：</strong> 引导性外周操作和机器人支气管镜首选 GA 联合全静脉麻醉（TIVA）。实施肺复张，并在血流动力学允许时设置 PEEP 8–12 cmH₂O。将 FiO₂ 滴定至维持安全血氧饱和度所需的最低水平，以减少吸收性肺不张。较低潮气量（Vt）配合较高呼吸频率有助于减少气道移动。</p>
+<h4>设备与设置（部分尺寸/特征）</h4>
+<ul>
+<li><strong>rEBUS：</strong> 探头约 1.4 mm；提供 360° 成像；操作者必须区分同心型、偏心型及肺不张模式。</li>
+<li><strong>超细支气管镜：</strong> 外径约 3.0 mm、工作通道 1.7 mm；可容纳 rEBUS、微型冷冻探头和针；比细径支气管镜可到达更远端支气管。</li>
+<li><strong>EMN 平台：</strong> 基于薄层 CT 预先规划路径；与患者完成配准；使用可转向导管/导引鞘。现代系统可整合增强透视（如断层合成），在术中更新病灶位置。</li>
+<li><strong>RAB 平台：</strong>
+<ul>
+<li><strong>Monarch™：</strong> 伸缩式外鞘（外径 6.0 mm）与内镜（外径 4.2 mm；工作通道 2.1 mm）；取样时可持续观察；采用基于 EMN 的混合追踪。</li>
+<li><strong>Ion™：</strong> 导管外径 3.5 mm、工作通道 2.0 mm；采用形状感知；取样时需移除视觉探头；配有腔内罗盘用于定位。</li>
+<li><strong>Galaxy™：</strong> 4.0 mm 一次性支气管镜，工作通道 2.1 mm；基于 EMN；整合增强透视（TiLT），可实时校正 CTBD。</li>
+</ul>
+</li>
+<li><strong>辅助影像：</strong>
+<ul>
+<li><strong>增强透视/断层合成：</strong> 更新靶点位置；支持确认“器械位于病灶内”。</li>
+<li><strong>CBCT（移动式或吊顶式）/O 形臂：</strong> 提供术中三维成像；确认器械与靶点的关系；在许多方案中，每次旋转扫描的剂量与低剂量 CT 相近。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h3>分步技术 / 操作核对表</h3>
+<ol>
+<li><strong>术前规划：</strong> 复核 CT；标记靶点；选择分叉较平缓的路径；预判下叶急转弯和呼吸运动。</li>
+<li><strong>麻醉与通气：</strong> 使用合适尺寸的气管导管（机器人操作时如条件允许应 ≥8.0 mm）。实施肺复张；设置 PEEP 8–12 cmH₂O；在保证安全的前提下降低 FiO₂。</li>
+<li><strong>气道检查与清理：</strong> 先用常规支气管镜谨慎吸除分泌物，避免因过度吸引诱发肺不张。</li>
+<li><strong>配准：</strong> 按平台要求完成配准（隆嵴对位、进入对侧支气管、肺叶/肺段映射）。</li>
+<li><strong>导航：</strong> 在实时内镜视野下前进；保持镜身居中；避免弯折或损伤气道壁；在具备时使用路径预览功能。</li>
+<li><strong>病灶确认：</strong>
+<ul>
+<li>评估 rEBUS 模式（同心型优于偏心型）及深度；警惕肺不张模拟征象（空气支气管征）。</li>
+<li>使用增强透视或 CBCT 校正 CTBD，并确认器械位于病灶内。</li>
+</ul>
+</li>
+<li><strong>取样：</strong> 先用针（无支气管征时可建立通道），再用活检钳 ± 刷；需要组织结构时考虑冷冻活检，尤其适用于亚实性病灶。利用 ROSE 指导穿刺次数（通常先做 3–4 针，再更换器械）。</li>
+<li><strong>故障排查：</strong> 若气道塌陷阻碍前进，可经工作通道注入少量空气支撑远端气道；在发生重大改变后重新肺复张并重新配准。</li>
+<li><strong>止血准备：</strong> 备妥肾上腺素、氨甲环酸和压迫球囊；将外鞘楔入尽可能远端的气道，以限制出血扩散。</li>
+<li><strong>术后：</strong> 将呼吸机参数恢复至基线；监测气胸和出血；按辐射安全规范脱卸防护用品并记录剂量。</li>
+</ol>
+<hr/>
+<h3>故障排查与术中处理</h3>
+<ul>
+<li><strong>CTBD：</strong> 下叶通常偏差更大。重新采集断层合成或 CBCT；调整镜身轨迹；重复肺复张；确保成像和取样期间呼吸机参数保持一致。</li>
+<li><strong>rEBUS 将肺不张误判为病灶：</strong> 寻找高回声空气支气管征和提示塌陷而非肿瘤的均一模式。</li>
+<li><strong>远端气道塌陷：</strong> 可经工作通道小量注气（例如约 20 mL）以撑开气道；若 rEBUS/CBCT 图像质量至关重要，应避免注入盐水。</li>
+<li><strong>取样时镜体不稳定：</strong> 对伸缩系统，可在肺段支气管“停泊”外鞘，再沿可视导向前进内镜或器械。</li>
+<li><strong>EMN 干扰：</strong> 清除场内金属；检查传感器完整性；若 C 形臂或手术床位置有显著改变，应考虑重新配准。</li>
+</ul>
+<h3>并发症（预防、识别与处理）</h3>
+<ul>
+<li><strong>出血：</strong> 楔入定位；冷盐水；局部肾上腺素（0.1 mg/mL × 4 mL）；氨甲环酸（250–500 mg）；必要时使用腔内球囊压迫。若需升级处理，可换用治疗型支气管镜，同时始终维持气道控制。</li>
+<li><strong>气胸：</strong> RAB 后发生率较低；将外鞘楔入远端；谨慎维持 PEEP；操作结束时可考虑少量盐水灌注以降低漏气风险。</li>
+<li><strong>辐射：</strong> 遵循 ALARA；采用脉冲透视和严格准直；尽量增加与射线源距离；穿戴铅围裙、甲状腺防护和铅眼镜。</li>
+</ul>
+<h3>特殊人群</h3>
+<ul>
+<li><strong>下叶病灶 / 高 BMI / 长时间操作：</strong> 预期 CTBD 和肺不张增加；使用移动 CT 时，可考虑靶侧向上的侧卧位，以减少依赖部位塌陷。</li>
+<li><strong>解剖改变（肺切除术后）：</strong> 某些系统可仅对保留肺叶进行部分配准。</li>
+<li><strong>肺气肿伴易塌陷气道：</strong> 小量注气支撑气道并仔细滴定 PEEP，有助于远端导航。</li>
+<li><strong>亚实性/磨玻璃病灶：</strong> 透视下往往不可见；依赖 CBCT 确认，并可考虑冷冻活检以获得组织结构。</li>
+</ul>
+<h3>证据与结局</h3>
+<ul>
+<li><strong>rEBUS：</strong> 总体诊断率约 70%；同心型视野优于偏心型；部分研究提示机器人可视化可能缩小这一差距。</li>
+<li><strong>EMN：</strong> 大型队列显示，与 rEBUS 和增强影像联合时诊断率提高。现代 EMN 联合断层合成在随机研究中对 CT 引导经胸活检的诊断率达到非劣效，同时气胸率显著更低。</li>
+<li><strong>RAB：</strong> 各平台均显示较高导航成功率和较低并发症率；与 rEBUS 和/或三维影像联合时，前瞻性及多中心数据中诊断率通常处于 70% 中段至 80% 中段。</li>
+<li><strong>定义很重要：</strong> 严格与宽松的诊断率定义可使报告结果相差超过 20 个百分点；近期共识声明正在推动报告标准化。</li>
+</ul>
+<hr/>
+<h3>诊断与治疗算法</h3>
+<h4>算法 1——外周肺部病灶的支气管镜取样流程</h4>
+<div class="mermaid">
+graph TD
+    A["获取薄层 CT"] --&gt; B["识别支气管征或血管征"]
+    B --&gt; C["选择 rEBUS / EMN / RAB"]
+    C --&gt; D["优化通气（肺复张、PEEP、FiO₂）"]
+    D --&gt; E["配准并导航"]
+    E --&gt; F["用 rEBUS（同心型）± 增强透视/CBCT 确认"]
+    F --&gt; G["取样（先用针）"]
+    G --&gt; H["ROSE 评估"]
+    H --&gt;|已获诊断| I["结束操作并监测"]
+    H --&gt;|未获诊断| J["重新成像（CBCT/断层合成）并调整方案"]
+    J --&gt; F
+</div>
+<h4>算法 2——减轻 CT-机体偏差与肺不张</h4>
+<div class="mermaid">
+graph TD
+    A["怀疑 CT-机体偏差"] --&gt; B["重新肺复张并检查 PEEP/FiO₂"]
+    B --&gt; C["确保呼吸机参数一致"]
+    C --&gt; D["获取增强影像/断层合成"]
+    D --&gt; E["调整镜体轨迹"]
+    E --&gt; F["可选：向远端支气管注气"]
+    F --&gt; G["再次确认器械位于病灶内"]
+    G --&gt; H["继续取样"]
+</div>
+<hr/>
+<h3>表格与速查框</h3>
+<h4>表 1. 机器人及导航平台速览</h4>
+<table>
+<thead><tr><th>特征</th><th>Monarch™</th><th>Ion™</th><th>Galaxy™</th></tr></thead>
+<tbody>
+<tr><td><strong>导航方式</strong></td><td>EMN 混合追踪并结合光学提示</td><td>形状感知</td><td>EMN + 内置断层合成</td></tr>
+<tr><td><strong>取样时可视化</strong></td><td>持续可视</td><td>使用器械时需移除视觉探头</td><td>持续可视</td></tr>
+<tr><td><strong>尺寸</strong></td><td>外鞘外径 6.0 mm；内镜外径 4.2 mm；通道 2.1 mm</td><td>导管外径 3.5 mm；通道 2.0 mm</td><td>内镜外径 4.0 mm；通道 2.1 mm</td></tr>
+<tr><td><strong>远端操控</strong></td><td>沿外鞘伸缩式“蛙跳”推进</td><td>精细弯曲；腔内罗盘</td><td>EMN + 靶点实时更新</td></tr>
+<tr><td><strong>备注</strong></td><td>停泊外鞘可减少气胸/出血外溢</td><td>不受电磁干扰影响</td><td>单推车、一次性内镜</td></tr>
+</tbody>
+</table>
+<div class="algorithm-note"><p><strong>缩写：</strong> EMN，电磁导航；OD，外径；PTX，气胸。</p></div>
+<h4>表 2. rEBUS 模式及相应处理</h4>
+<table>
+<thead><tr><th>rEBUS 模式</th><th>解读</th><th>处理</th></tr></thead>
+<tbody>
+<tr><td><strong>同心型</strong>（探头周围呈低回声环）</td><td>器械位于病灶中央</td><td>取样——诊断率最高</td></tr>
+<tr><td><strong>偏心型</strong>（仅部分接触病灶界面）</td><td>器械邻近病灶</td><td>微调轨迹；考虑注气；用影像再次确认</td></tr>
+<tr><td><strong>伴高回声点的均一模式</strong></td><td>肺不张模拟征象（空气支气管征）</td><td>肺复张；调整 PEEP/FiO₂；避免误判；重新成像</td></tr>
+</tbody>
+</table>
+<h4>表 3. 有利于导航的麻醉与呼吸机设置</h4>
+<table>
+<thead><tr><th>阶段</th><th>实用要点</th></tr></thead>
+<tbody>
+<tr><td><strong>气管插管前</strong></td><td>在安全情况下避免长时间 100% FiO₂ 预氧合；RAB 器械尽量选用 ≥8.0 mm 气管导管</td></tr>
+<tr><td><strong>插管后</strong></td><td>实施肺复张（例如压力 &gt;20 cmH₂O，持续 &gt;20 秒）</td></tr>
+<tr><td><strong>维持期</strong></td><td>PEEP 8–12 cmH₂O（血流动力学允许时）；低 Vt、高频率；将 FiO₂ 降至维持安全 SpO₂ 的最低水平；成像/取样期间保持参数不变</td></tr>
+<tr><td><strong>成像</strong></td><td>断层合成/CBCT 时在目标压力下屏气；移动 C 形臂或手术床后应重新配准</td></tr>
+<tr><td><strong>止血准备</strong></td><td>备妥冷盐水、肾上腺素 0.1 mg/mL、氨甲环酸 250–500 mg 和压迫球囊</td></tr>
+</tbody>
+</table>
+<hr/>
+<h3>病例与应用学习</h3>
+<div class="case-study">
+<h4>病例 1</h4>
+<p>一名 64 岁女性，右下叶有 14 mm 结节，无支气管征，计划接受 RAB。GA 下，rEBUS 在虚拟靶点处未见信号。</p>
+<p><strong>下一步最佳处理是什么？</strong></p>
+<p><strong>答案：C. 先实施肺复张并优化 PEEP，再行断层合成以更新靶点。</strong></p>
+<p><strong>理由：</strong> GA 下下叶常出现 CTBD 和肺不张。肺复张/PEEP 联合断层合成可重新对准靶点，并在取样前确认器械位于病灶内。</p>
+</div>
+<div class="case-study">
+<h4>病例 2</h4>
+<p>一名 53 岁男性，右上叶有 10 mm 混合性磨玻璃影，接受基于 Ion 的 RAB。透视下病灶不可见，rEBUS 结果不明确。</p>
+<p><strong>确认器械位于病灶内的最佳方法是什么？</strong></p>
+<p><strong>答案：B. 屏气状态下行 CBCT，随后进行冷冻活检。</strong></p>
+<p><strong>理由：</strong> 亚实性病灶常在透视下不可见；CBCT 可提供三维确认，并支持通过冷冻活检获取组织结构。</p>
+</div>
+<div class="case-study">
+<h4>病例 3</h4>
+<p>使用 Monarch 对外周病灶行活检钳取样时，渗血遮挡视野。</p>
+<p><strong>应立即如何处理？</strong></p>
+<p><strong>答案：B. 将外鞘楔入远端，应用冷盐水并吸引；必要时考虑局部肾上腺素。</strong></p>
+<p><strong>理由：</strong> 楔入可限制出血扩散；局部药物和吸引是一线措施。</p>
+</div>
+<hr/>
+<h3>题库（选择题）</h3>
+<ol>
+<li><strong>下一步最佳处理（导航）。</strong> EMN 支气管镜配准已完成，但实时内镜显示亚段支气管处虚拟解剖与实际解剖不一致。
+<ol type="A"><li>相信软件并继续</li><li>仅在主隆嵴重新配准</li><li>依据实时支气管镜视野和“路径预览”重新定向，并避免贴壁</li><li>将 FiO₂ 提高至 1.0</li><li>终止并改期</li></ol>
+<p><strong>答案：C。</strong> 导航应以实时视野为准；使用路径预览功能并避免镜体弯折。</p></li>
+<li><strong>故障排查（CTBD）。</strong> 对下叶病灶使用 RAB 时，尽管导航显示“到达靶点”，rEBUS 仍为阴性。
+<ol type="A"><li>增加吸引</li><li>实施肺复张、确认 PEEP，并采集断层合成/CBCT</li><li>盲目进行活检钳取样</li><li>改用硬质支气管镜</li><li>拔管后在中度镇静下重试</li></ol>
+<p><strong>答案：B。</strong></p></li>
+<li><strong>适应证。</strong> 下列哪种情况最支持选择支气管镜而非经胸活检？
+<ol type="A"><li>正常肺内 14 mm 胸膜旁后部病灶</li><li>28 mm 上叶病灶伴需分期的巨大纵隔淋巴结</li><li>肺气肿伴肺大疱患者的 8 mm 深部下叶结节</li><li>无离散结节的弥漫性间质改变</li><li>邻近胸壁的大型空洞性病灶</li></ol>
+<p><strong>答案：B。</strong> 支气管镜可在一次操作中完成诊断和分期。</p></li>
+<li><strong>rEBUS 解读。</strong> 获得同心型 rEBUS 图像后，最合适的即时操作是什么？
+<ol type="A"><li>仅改用冷冻活检</li><li>先针吸、再活检钳取样，并保持对位</li><li>取样前重新配准</li><li>认为是肺不张并重新定位</li><li>注入盐水以改善图像</li></ol>
+<p><strong>答案：B。</strong></p></li>
+<li><strong>麻醉/通气。</strong> 为减少 RAB 期间肺不张，循证支持最充分的方法是：
+<ol type="A"><li>高 Vt、低频率和 FiO₂ 1.0</li><li>肺复张并设置 PEEP 8–12 cmH₂O，同时采用所需最低 FiO₂</li><li>零 PEEP 和呼吸暂停</li><li>氧化亚氮麻醉</li><li>长时间 FiO₂ 1.0 预氧合</li></ol>
+<p><strong>答案：B。</strong></p></li>
+<li><strong>平台特点。</strong> 下列哪项正确？
+<ol type="A"><li>Ion 在取样时可持续提供内镜视野</li><li>Monarch 取样时必须移除视觉探头</li><li>Galaxy 整合增强透视，可在术中校正 CTBD</li><li>所有平台配准后均可自动驾驶</li><li>所有平台均不能使用 rEBUS</li></ol>
+<p><strong>答案：C。</strong></p></li>
+<li><strong>出血控制。</strong> 经支气管取样后出现中度出血，初始最佳处理为：
+<ol type="A"><li>仅使用正压通气</li><li>雾化加压素</li><li>将外鞘楔入远端、冷盐水和吸引；考虑局部肾上腺素或氨甲环酸</li><li>立即置入胸管</li><li>Trendelenburg 体位</li></ol>
+<p><strong>答案：C。</strong></p></li>
+<li><strong>辐射安全。</strong> 下列哪项最有效降低操作者剂量？
+<ol type="A"><li>延长连续透视时间</li><li>更靠近 X 线球管站立</li><li>准直、脉冲透视并最大化与射线源的距离</li><li>为提高舒适度移除甲状腺防护</li><li>改用模拟影像增强器</li></ol>
+<p><strong>答案：C。</strong></p></li>
+<li><strong>取样顺序。</strong> 无支气管征时，通常首选哪种初始器械？
+<ol type="A"><li>活检钳</li><li>先用针建立通道，再用活检钳/刷</li><li>仅用刷</li><li>仅 BAL</li><li>仅冷冻活检</li></ol>
+<p><strong>答案：B。</strong></p></li>
+<li><strong>特殊情况。</strong> 肺气肿患者导航时出现远端气道塌陷，最有帮助的操作是：
+<ol type="A"><li>高流量吸引</li><li>经工作通道小量注气以撑开气道</li><li>注入 20–30 mL 盐水使肺显影</li><li>取消 PEEP</li><li>立即改为经皮活检</li></ol>
+<p><strong>答案：B。</strong></p></li>
+<li><strong>诊断率定义。</strong> 宽松的诊断率定义可能：
+<ol type="A"><li>因排除随访结局而降低报告诊断率</li><li>因将随访结局计为诊断而提高报告诊断率</li><li>对报告诊断率无影响</li><li>仅适用于机器人研究</li><li>仅适用于磨玻璃结节</li></ol>
+<p><strong>答案：B。</strong></p></li>
+<li><strong>并发症率（RAB）。</strong> 下列哪项最准确？
+<ol type="A"><li>所有 RAB 队列中气胸均常见（&gt;10%）</li><li>需要开胸处理的出血很常见</li><li>气胸率通常较低；楔入和稳定平台可能降低风险</li><li>辐射可忽略，因此无需防护</li><li>RAB 不能与 CBCT 联用</li></ol>
+<p><strong>答案：C。</strong></p></li>
+</ol>
+<h3>争议、差异与不断演进的证据</h3>
+<ul>
+<li><strong>机器人是否优于最先进的 EMN？</strong> 比较数据提示，当 EMN 与断层合成联合时，诊断率可能相近；但机器人在到达范围、稳定性和器械控制方面可能具有优势。</li>
+<li><strong>辅助影像能在多大程度上改善结局？</strong> 这些技术可可靠纠正 CTBD 并确认器械位于病灶内，但对诊断率的增量效应在不同研究间不一致，且受定义和病例组合影响。</li>
+<li><strong>最佳取样器械组合是什么？</strong> 针和活检钳仍是基础；冷冻活检对亚实性病灶很有前景，但会增加成本及出血方面的考量。</li>
+<li><strong>诊断率定义：</strong> 若无标准化定义，各研究的标题数字不可直接比较；近期共识旨在统一报告方式。</li>
+</ul>
+<hr/>
+<h3>带回家的核对表</h3>
+<ul>
+<li>[ ] 使用接近 TLC 的薄层 CT；标记支气管征或血管征；建立心中地图。</li>
+<li>[ ] 根据病灶大小、位置、可达性和本地资源选择 rEBUS/EMN/RAB。</li>
+<li>[ ] GA 联合 TIVA；肺复张和 PEEP 8–12 cmH₂O；在安全前提下降低 FiO₂。</li>
+<li>[ ] 完成可靠配准；保持镜体居中；避免贴壁/弯折。</li>
+<li>[ ] 用 rEBUS（力求同心型）和/或增强透视/CBCT 确认病灶。</li>
+<li>[ ] 无支气管征时先用针；再加活检钳/刷；必要时考虑冷冻活检。</li>
+<li>[ ] 用 ROSE 指导取样次数；未获诊断时先重新成像，再决定放弃。</li>
+<li>[ ] 用外鞘楔入止血；备妥冷盐水、肾上腺素、TXA 和球囊。</li>
+<li>[ ] 严格遵守辐射防护：脉冲透视、准直、距离和屏蔽。</li>
+<li>[ ] 记录呼吸机设置，并在成像/取样过程中保持不变。</li>
+<li>[ ] 明确本中心报告及引用研究中的“诊断率”定义。</li>
+<li>[ ] 患者进入手术间前即规划房间布局和团队分工。</li>
+</ul>
+<hr/>
+<div class="abbreviations">
+<h3>缩写与术语表</h3>
+<dl>
+<dt>AABIP</dt><dd>美国支气管学与介入肺脏病学协会</dd>
+<dt>ALARA</dt><dd>在合理可行范围内尽可能低（辐射安全原则）</dd>
+<dt>CBCT</dt><dd>锥形束计算机断层扫描</dd>
+<dt>CTBD</dt><dd>CT-机体偏差</dd>
+<dt>EMN/ENB</dt><dd>电磁导航支气管镜</dd>
+<dt>GA</dt><dd>全身麻醉</dd>
+<dt>GGO</dt><dd>磨玻璃影</dd>
+<dt>PEEP</dt><dd>呼气末正压</dd>
+<dt>PPL</dt><dd>外周肺部病变</dd>
+<dt>RAB</dt><dd>机器人辅助支气管镜</dd>
+<dt>rEBUS</dt><dd>径向支气管内超声</dd>
+<dt>ROSE</dt><dd>快速现场评估</dd>
+<dt>TIVA</dt><dd>全静脉麻醉</dd>
+</dl>
+</div>
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Gould MK, Tang T, et al. Recent trends in the identification of incidental pulmonary nodules. Am J Respir Crit Care Med. 2015;192(10):1208-1214.</li>
+<li>National Lung Screening Trial Research Team; Church TR, Black WC, et al. Results of initial low-dose computed tomographic screening for lung cancer. N Engl J Med. 2013;368(21):1980-1991.</li>
+<li>de Koning HJ, van der Aalst CM, et al. Reduced lung-cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382(6):503-513.</li>
+<li>Ali MS, Sethi J, et al. Computed tomography bronchus sign and the diagnostic yield of guided bronchoscopy for peripheral pulmonary lesions: a systematic review and meta-analysis. Ann Am Thorac Soc. 2018;15(8):978-987.</li>
+<li>Ho E, Cho RJ, et al. The feasibility of using the “artery sign” for pre-procedural planning in navigational bronchoscopy for parenchymal pulmonary lesion sampling. Diagnostics (Basel). 2022;12(12):3059.</li>
+<li>Sagar AS, Sabath BF, et al. Incidence and location of atelectasis developed during bronchoscopy under general anesthesia: the I-LOCATE trial. Chest. 2020;158(6):2658-2666.</li>
+<li>Salahuddin M, Sarkiss M, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia (VESPA). Chest. 2022;162(6):1393-1401.</li>
+<li>Akulian JA, Molena D, et al. A direct comparative study of bronchoscopic navigation planning platforms for peripheral lung navigation (ATLAS). J Bronchol Interv Pulmonol. 2022;29(3):171-178.</li>
+<li>Ali MS, Trick W, et al. Radial endobronchial ultrasound for the diagnosis of peripheral pulmonary lesions: a systematic review and meta-analysis. Respirology. 2017;22(3):443-453.</li>
+<li>Steinfort DP, Khor YH, et al. Radial probe endobronchial ultrasound for the diagnosis of peripheral lung cancer: systematic review and meta-analysis. Eur Respir J. 2011;37(4):902-910.</li>
+<li>Tanner NT, Yarmus L, et al. Standard bronchoscopy with fluoroscopy vs thin bronchoscopy and rEBUS for biopsy of pulmonary lesions: a multicenter randomized trial. Chest. 2018;154(5):1035-1043.</li>
+<li>Chen A, Pastis NJ Jr, et al. Robotic bronchoscopy for peripheral pulmonary lesions: the BENEFIT study. Chest. 2021;159(2):845-852.</li>
+<li>Murgu S, Chen AC, et al. A prospective, multicenter evaluation of safety and diagnostic outcomes with robotic-assisted bronchoscopy (TARGET). Chest. 2025;166(4):A5268-A5270.</li>
+<li>Kalchiem-Dekel O, Fuentes P, et al. Multiplanar 3D fluoroscopy redefines tool-lesion relationship during robotic-assisted bronchoscopy. Respirology. 2021;26(1):120-123.</li>
+<li>Pritchett MA. Prospective analysis of an endobronchial augmented fluoroscopic navigation system for PPLs. J Bronchol Interv Pulmonol. 2021;28(2):107-115.</li>
+<li>Dunn BK, Blaj M, et al. Tomosynthesis-assisted visualization and intraprocedural positional correction with EMN. J Bronchol Interv Pulmonol. 2023;30(1):16-23.</li>
+<li>Reisenauer J, Duke JD, et al. Combining shape-sensing robotic bronchoscopy with mobile 3D imaging to verify tool-in-lesion. Mayo Clin Proc Innov Qual Outcomes. 2022;6(3):177-185.</li>
+<li>Saghaie T, Williamson JP, et al. First-in-human use of a robotic EMN platform with integrated tomosynthesis (FRONTIER). Respirology. 2024;29(11):969-975.</li>
+<li>Lentz RJ, Frederick-Dyer K, et al. Navigational bronchoscopy or transthoracic needle biopsy for lung nodules (VERITAS). N Engl J Med. 2025;392(21):2100-2112.</li>
+<li>Ost DE, Ernst A, et al. Diagnostic yield and complications of bronchoscopy for peripheral lung lesions (AQuIRE). Am J Respir Crit Care Med. 2016;193(1):68-77.</li>
+<li>Folch EE, Pritchett MA, et al. Electromagnetic navigation bronchoscopy for PPLs: NAVIGATE 1-year results. J Thorac Oncol. 2019;14(3):445-458.</li>
+<li>Oki M, Saka H, et al. Ultrathin bronchoscopy with multimodal devices for PPLs: randomized trial. Am J Respir Crit Care Med. 2015;192:468-476.</li>
+<li>Oki M, Saka H, et al. Use of an ultrathin vs thin bronchoscope for PPLs: randomized trial. Chest. 2019;156:954-964.</li>
+<li>Oberg CL, Lau RP, et al. Robotic-assisted cryobiopsy for PPLs. Lung. 2022;200(6):737-745.</li>
+<li>Kops SEP, Heus P, Korevaar DA, et al. Diagnostic yield and safety of navigation bronchoscopy: systematic review and meta-analysis. Lung Cancer. 2023;180:107196.</li>
+<li>Nadig TR, Thomas N, et al. Guided bronchoscopy for pulmonary lesions: updated meta-analysis. Chest. 2023;163(6):1589-1598.</li>
+<li>Pyarali FF, Hakami-Majd N, et al. Robotic-assisted navigation bronchoscopy: meta-analysis of yield and complications. J Bronchol Interv Pulmonol. 2024;31(1):70-81.</li>
+<li>Vachani A, Maldonado F, et al. Alternative approaches to diagnostic yield calculation in bronchoscopy. Chest. 2022;161(5):1426-1428.</li>
+<li>Gonzalez AV, Silvestri GA, et al. Advanced diagnostic bronchoscopy outcomes for PPLs: research statement on yield and study design. Am J Respir Crit Care Med. 2024;209(6):634-646.</li>
+</ol>
+</div>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+mermaid.initialize({ startOnLoad: true });
+</script>
+</body></html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>肺癌筛查</title>
+<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        .references li { margin-bottom: 10px; }
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body><h1>肺癌筛查</h1>
+<h3>考试内容映射与范围</h3>
+<p><strong>对应领域：</strong> AABIP/CAQ 介入肺脏病学中肿瘤诊断与筛查项目管理。</p>
+<p><strong>核心主题：</strong> 筛查资格、共同决策、CT 肺癌筛查（CTLS）技术标准、Lung-RADS v2022、结节管理与升级（PET/CT、活检、支气管镜、手术）、获益与伤害（死亡率、假阳性、并发症、辐射）、特殊人群（COPD/ILD、癌症生存者）以及不断发展的工具（风险模型、生物标志物）。</p>
+<h3>学习目标</h3>
+<ul>
+<li>区分当前肺癌筛查资格框架（USPSTF、CMS/Medicare 覆盖、NCCN、ACS），并识别何时停止筛查。</li>
+<li>完成高质量共同决策，并将戒烟干预嵌入筛查项目。</li>
+<li>应用 CTLS 技术参数和辐射剂量基准，并用 Lung-RADS v2022 解读报告。</li>
+<li>根据结节类型、大小、生长和患者风险，为阳性筛查选择下一步最佳处理（如 3 个月 LDCT、PET/CT 或组织取样）。</li>
+<li>预判并减少伤害：假阳性、后续操作、偶然发现、过度诊断和累积辐射。</li>
+<li>针对特殊人群（高龄、COPD/ILD、既往癌症、预期寿命有限）调整管理。</li>
+<li>识别争议及新证据（风险模型、体积阈值、生物标志物、AI）。</li>
+</ul>
+<hr/>
+<h3>高频要点一页通</h3>
+<div class="algorithm-note">
+<p><strong>获益：</strong> 对高风险成人每年行 LDCT 可降低肺癌死亡率；多数筛查发现的肺癌处于较早期。</p>
+<p><strong>USPSTF 2021 主要资格：</strong> 50–80 岁、≥20 包年、当前吸烟或戒烟不足 15 年；戒烟满 15 年后停止，或当预期寿命/身体状况不允许根治性治疗时停止。</p>
+<p><strong>CMS 覆盖细节：</strong> 通常为 50–77 岁，包年和戒烟时间要求相同，并需记录共同决策；务必核对本地付款方规则。</p>
+<p><strong>NCCN/ACS 差异：</strong> NCCN 支持 ≥20 包年；ACS（2023）取消 15 年戒烟限制和固定上限年龄，强调在身体状况良好的患者中个体化继续筛查。</p>
+<p><strong>CTLS 方案：</strong> 无对比剂，层厚 ≤2.5 mm；标准体型患者容积 CT 剂量指数（CTDIvol）约 3 mGy；每次有效剂量约 1–1.5 mSv。</p>
+<p><strong>Lung-RADS v2022：</strong> 大小和生长阈值决定管理。</p>
+<ul>
+<li><strong>生长：</strong> 12 个月内平均直径增加 &gt;1.5 mm。</li>
+<li><strong>4A：</strong> 新发实性 6–&lt;8 mm，或生长但 &lt;8 mm → 3 个月 LDCT（实性部分 ≥8 mm 时考虑 PET）。</li>
+<li><strong>4B：</strong> 3 个月仍持续存在的近端/肺段气道结节 → 诊断性评估（常为支气管镜）。</li>
+<li><strong>非典型囊性病变：</strong> 厚壁/多房囊肿和囊肿伴实性结节可疑；囊壁增厚或结节性增加 → 4B。</li>
+</ul>
+<p><strong>应讨论的伤害：</strong> 假阳性（及后续影像）、侵入性检查的小但真实风险、焦虑、过度诊断和累积辐射。</p>
+<p><strong>项目设计：</strong> 集中化协调可提高依从性；使用登记系统、质量指标，并对 4 类病变进行多学科评审。</p>
+<p><strong>常见考试陷阱：</strong> 用胸片筛查；使用“诊断剂量”CT 而非 LDCT；跳过共同决策；对 &lt;8 mm 实性结节做 PET；错误分类气道或囊性病变。</p>
+</div>
+<hr/>
+<h3>核心概念</h3>
+<h4>病理生理学 / 流行病学</h4>
+<p>肺癌仍是癌症死亡的首要原因。生存与诊断时分期密切相关；筛查可将检出阶段前移至可治愈期。大型试验一致显示，高风险人群接受 LDCT 可降低肺癌特异性死亡率。</p>
+<h4>适应证与禁忌证</h4>
+<p><strong>筛查对象（需掌握各框架）：</strong></p>
+<ul>
+<li><strong>USPSTF（2021）：</strong> 50–80 岁，≥20 包年，当前吸烟或戒烟 &lt;15 年；戒烟满 15 年，或不再适合根治性治疗时停止。</li>
+<li><strong>CMS/Medicare（覆盖）：</strong> 通常为 50–77 岁，包年/戒烟标准相同；必须完成并记录共同决策（SDM）就诊。</li>
+<li><strong>NCCN（当前版本）：</strong> ≥50 岁且 ≥20 包年；评估竞争风险；只要患者可接受根治性治疗，不设绝对年龄上限。</li>
+<li><strong>ACS（2023 更新）：</strong> 从 50 岁、≥20 包年开始；取消戒烟年限和年龄上限；预期寿命 ≥5 年且可耐受治疗者可继续。</li>
+</ul>
+<p><strong>通常不应筛查：</strong></p>
+<ul>
+<li>存在提示肺癌的症状（如咯血、不明原因体重下降 &gt;15 磅）。</li>
+<li>过去 12 个月内已有可满足筛查目的的胸部 CT。</li>
+<li>既往肺癌正处于主动监测/分期（确诊后不再属于筛查）。</li>
+<li>严重合并症限制预期寿命或无法接受根治性治疗。</li>
+</ul>
+<h3>术前/筛查前评估</h3>
+<h4>共同决策（CMS 要求，也是最佳实践）</h4>
+<p><strong>确认资格：</strong> 讨论潜在获益（分期前移、降低死亡率）和伤害（假阳性、后续操作、偶然发现、辐射、过度诊断、焦虑）。</p>
+<p><strong>持续承诺：</strong> 强调每年筛查；一次阴性 LDCT 并不能“清除”未来风险。</p>
+<p><strong>记录：</strong> 记录至少使用一种决策辅助工具，并提供戒烟资源。</p>
+<h4>戒烟</h4>
+<p>这是降低死亡率最有效的干预。整合简短咨询、药物治疗（尼古丁替代、伐尼克兰、安非他酮）和主动随访。参加筛查可提高戒烟率，应把握这一“可教育时机”。</p>
+<h4>风险模型（何时考虑）</h4>
+<p>PLCOm2012、LCRAT/LCDRAT 和 LLPv 可在包年之外进一步细化个体风险，并可能提高效率和公平性（如女性和黑人成人）。这些模型尚未普遍纳入美国付款方标准，可用于边界病例的个体化决策。</p>
+<h4>特殊病史和合并症</h4>
+<ul>
+<li><strong>COPD 与纤维化 ILD：</strong> 显著增加风险。若符合资格且身体状况允许，应筛查；预判不确定发现更多，并调整随访。</li>
+<li><strong>癌症生存者：</strong> 胸部肿瘤患者（如肺癌治疗后 ≥5 年）发生第二原发癌风险较高；遵循 NCCN 疾病特异性监测，或个体化考虑筛查。</li>
+</ul>
+<h3>设备与设置（CTLS 技术标准）</h3>
+<ul>
+<li><strong>扫描仪：</strong> 至少 4 排探测器的多排螺旋 CT。</li>
+<li><strong>采集：</strong> 无对比剂，一次吸气末屏气覆盖全胸；重建层厚 ≤2.5 mm；提供肺窗核和软组织序列。</li>
+<li><strong>剂量：</strong> 根据体型调制；典型 CTDIvol 约 3 mGy；有效剂量约 1–1.5 mSv/次。</li>
+<li><strong>质量保证：</strong> 在登记系统中追踪剂量，并与本地/全国基准比较。</li>
+<li><strong>项目基础设施：</strong> 认证中心流程、辐射质量保证、标准化报告（Lung-RADS）、协调员导航以及用于质量报告和召回的筛查登记系统。</li>
+</ul>
+<h3>分步流程 / 项目核对表</h3>
+<ol>
+<li>识别符合条件的候选者（电子病历检索、门诊提示）。</li>
+<li>共同决策就诊并进行戒烟咨询；确认愿意每年接受 LDCT，并在阳性时接受后续评估。</li>
+<li>明确开具 CTLS（LDCT 筛查方案），而不是“增强胸部 CT”。</li>
+<li>按技术标准采集，确保全肺覆盖且无明显伪影。</li>
+<li>用 Lung-RADS v2022 标准化解读；重大非肺癌偶然发现加 S 修饰，并明确下一步时间。</li>
+<li>结果沟通：向患者和开单医师提供通俗摘要；每封结果信再次强化戒烟。</li>
+<li>导航：患者离开前安排 3 或 6 个月复查；4B/4X 协调 PET/CT、支气管镜或外科会诊。</li>
+<li>4 类发现进入多学科讨论。</li>
+<li>登记/质量改进：追踪依从性、召回时效、阳性预测值、良性切除率和辐射指标。</li>
+</ol>
+<h3>故障排查与管理</h3>
+<h4>Lung-RADS 0（不完整）</h4>
+<p>运动伪影、覆盖不全，或疑急性感染/炎症。应调取既往影像，或 1–3 个月内重复 LDCT，之后重新分类。</p>
+<h4>感染/炎症</h4>
+<p>肺段/肺叶实变、多个新发结节（&gt;6 个），或短期出现大实性结节时，可考虑 0 类并在 1–3 个月复查 LDCT；根据随访最可疑残余病变重新分类。</p>
+<h4>气道结节</h4>
+<ul>
+<li>亚段/多灶管状密度更像分泌物 → 通常良性/0–2 类。</li>
+<li>肺段或更近端异常 → 初始列为 4A；3 个月仍持续则升级 4B 并转支气管镜。</li>
+</ul>
+<h4>非典型囊性病变</h4>
+<ul>
+<li>薄壁单房囊肿为良性，不分类。</li>
+<li>厚壁/多房囊肿、囊壁增厚或囊性部分增大，或囊旁伴结节 → 作为非典型囊肿处理（常 4A/4B）。</li>
+</ul>
+<h4>缓慢生长结节</h4>
+<ul>
+<li><strong>磨玻璃：</strong> 可在缓慢增大时仍保持 2 类，直至达到其他类别标准（如出现实性成分）。</li>
+<li><strong>实性/部分实性：</strong> 多轮筛查中持续缓慢生长仍可疑；即使 12 个月增长 ≤1.5 mm，也可考虑 4B。PET 可能假阴性，应考虑活检/外科评估。</li>
+</ul>
+<h3>筛查后管理与随访（Lung-RADS v2022 要点）</h3>
+<table>
+<thead><tr><th>类别</th><th>发现</th><th>管理</th></tr></thead>
+<tbody>
+<tr><td><strong>1（阴性）</strong></td><td>无结节或明确良性结节（如脂肪或典型钙化）。</td><td>每年 LDCT。</td></tr>
+<tr><td><strong>2（良性或惰性）</strong></td><td>实性 &lt;6 mm；新发实性 &lt;4 mm；部分实性 &lt;6 mm；GGN &lt;30 mm，或 ≥30 mm 但稳定/缓慢生长；典型叶间裂旁/胸膜旁结节；亚段气道结节；适当缓解或稳定的 3/4A 病变。</td><td>每年 LDCT。</td></tr>
+<tr><td><strong>3（很可能良性）</strong></td><td>实性 6–&lt;8 mm；部分实性 ≥6 mm 且实性部分 &lt;6 mm；非实性 ≥30 mm；新发实性 4–&lt;6 mm；新发亚实性 &lt;6 mm。</td><td>6 个月 LDCT；稳定/缩小则降为 2 类并恢复年度筛查。</td></tr>
+<tr><td><strong>4A（可疑）</strong></td><td>实性 8–&lt;15 mm；生长但 &lt;8 mm；新发实性 6–&lt;8 mm；部分实性 ≥6 mm 且实性部分 6–&lt;8 mm；新发/生长的实性成分 &lt;4 mm；肺段/近端气道结节；部分非典型囊肿。</td><td>3 个月 LDCT；实性部分 ≥8 mm 时考虑 PET/CT。</td></tr>
+<tr><td><strong>4B（高度可疑）</strong></td><td>实性 ≥15 mm，或新发/生长实性 ≥8 mm；部分实性中实性部分 ≥8 mm；多次检查缓慢生长的实性/部分实性；持续/生长的近端或肺段气道结节；囊壁/结节增大或复杂性增加的非典型囊肿。</td><td>诊断性胸部 CT ± 对比剂；实性部分 ≥8 mm 时 PET/CT；组织取样和/或专科转诊。</td></tr>
+<tr><td><strong>4X</strong></td><td>3 或 4 类结节伴额外高危征象（如毛刺、可疑淋巴结、胸膜结节、明确转移、快速倍增的 GGN）。</td><td>紧急多学科评估；按需 PET/CT 和组织诊断。</td></tr>
+<tr><td><strong>S 修饰</strong></td><td>与肺癌无关但重要的偶然发现（如肾上腺肿块、肾病变、主动脉瘤）。</td><td>按相应偶然发现指南管理。</td></tr>
+</tbody>
+</table>
+<h3>并发症与伤害</h3>
+<ul>
+<li><strong>假阳性：</strong> 常见；使用标准化 Lung-RADS 路径时，多数阳性筛查通过监测解决，而非侵入性操作。</li>
+<li><strong>侵入性检查：</strong> 穿刺活检和手术有小但真实风险；通过 MDT 分诊和在合适病灶（实性 ≥8 mm）使用 PET，减少良性切除。</li>
+<li><strong>偶然发现：</strong> 肺气肿和冠状动脉钙化常见，需要结合背景咨询和定向转诊。</li>
+<li><strong>辐射：</strong> 每次 LDCT 约 1–1.5 mSv；10 年累积通常 &lt;15 mSv；适当高风险人群中的辐射致癌风险相对于筛查获益较低。</li>
+<li><strong>焦虑/生活质量：</strong> 假阳性后可短期焦虑；清晰沟通和一致随访可缓解。</li>
+<li><strong>过度诊断：</strong> 部分筛查检出的癌症（尤其惰性亚实性腺癌）可能终生不引起症状；应强调风险适配和多学科决策。</li>
+</ul>
+<h3>特殊人群</h3>
+<ul>
+<li><strong>高龄（&gt;75–80 岁）：</strong> 权衡获益与竞争性死亡。如仍可接受根治治疗且所在指南允许（如 NCCN/ACS 个体化），可经共同决策继续；否则停止。</li>
+<li><strong>严重合并症/预期寿命有限：</strong> 无法接受根治治疗时不筛查。</li>
+<li><strong>COPD/肺气肿：</strong> 癌症风险增加，CT 常偶然发现肺气肿——应优化肺病并强化戒烟。</li>
+<li><strong>纤维化 ILD：</strong> 基线风险更高且分布独特（下叶、周边）；权衡筛查获益和外科风险，纳入 MDT。</li>
+<li><strong>既往胸部肿瘤：</strong> 按疾病特异性方案监测；第二原发癌筛查可个体化。</li>
+<li><strong>免疫功能低下：</strong> 新发多发结节常为感染——短间隔随访并相应分类（常为 0 类，1–3 个月 LDCT）。</li>
+</ul>
+<h3>证据与结局（关键数据）</h3>
+<ul>
+<li><strong>NLST：</strong> 高风险成人接受 3 年年度 LDCT 相较胸片，肺癌死亡率降低约 20%，全因死亡率降低约 6–7%；阳性筛查常见，绝大多数是假阳性。</li>
+<li><strong>NELSON：</strong> 使用体积阈值和延长间隔的 LDCT 对无筛查，在 10 年男性肺癌死亡率降低约 24%，并显著实现分期前移。</li>
+<li><strong>成本效益：</strong> 美国模型中的每 QALY 成本在常用阈值内，尤其基线风险较高人群（如当前吸烟者、女性）。</li>
+<li><strong>项目表现：</strong> 集中化项目提高依从性并减少不必要侵入操作；良性切除率是关键质量指标。</li>
+</ul>
+<hr/>
+<h3>诊断与治疗算法</h3>
+<h4>A. 资格与纳入流程图</h4>
+<div class="mermaid">
+flowchart TD
+A["在门诊/电子病历识别候选者"] --&gt; B{"年龄与吸烟史？"}
+B --&gt;|"符合 USPSTF（50–80 岁、≥20 包年、当前或戒烟 &lt;15 年）"| C["评估根治性治疗适应性"]
+B --&gt;|"不符合"| Z["不做 CTLS；强化戒烟和风险降低"]
+C --&gt; D{"合并症限制获益？"}
+D --&gt;|"是"| Z
+D --&gt;|"否"| E["共同决策 + 决策辅助工具"]
+E --&gt; F["开具 LDCT（筛查方案）"]
+F --&gt; G["CT 采集（无对比剂、≤2.5 mm、低剂量）"]
+G --&gt; H["Lung-RADS v2022 解读"]
+H --&gt; I{"1–2 类？"}
+I --&gt;|"是"| J["12 个月年度 LDCT"]
+I --&gt;|"否"| K{"3 类？"}
+K --&gt;|"是"| L["6 个月 LDCT；稳定/缩小则降为 2 类"]
+K --&gt;|"否"| M{"4A 类？"}
+M --&gt;|"是"| N["3 个月 LDCT；实性 ≥8 mm 考虑 PET"]
+M --&gt;|"否"| O["4B/4X → 诊断性 CT ± 对比剂、PET/CT、组织取样"]
+O --&gt; P["MDT 讨论和确定性管理"]
+</div>
+<h4>B. 阳性筛查（要点路径）</h4>
+<div class="algorithm-note"><ul>
+<li><strong>3 类：</strong> 6 个月 LDCT；稳定则降级。</li>
+<li><strong>4A 类：</strong> 3 个月 LDCT；实性部分 ≥8 mm 时 PET/CT；生长则升级。</li>
+<li><strong>4B/4X 类：</strong> 诊断性 CT ± 对比剂、PET/CT，并根据前测概率和患者身体状况选择支气管镜、经皮活检或直接手术。</li>
+</ul></div>
+<h3>表格与速查框</h3>
+<h4>表 1. 谁应筛查、何时停止（速览）</h4>
+<table>
+<thead><tr><th>指南</th><th>起始年龄</th><th>吸烟暴露</th><th>戒烟限制</th><th>停止条件</th></tr></thead>
+<tbody>
+<tr><td><strong>USPSTF</strong></td><td>50–80</td><td>≥20 包年</td><td>&lt;15 年</td><td>戒烟满 15 年，或不再适合根治治疗</td></tr>
+<tr><td><strong>CMS</strong></td><td>50–77</td><td>≥20 包年</td><td>&lt;15 年</td><td>依覆盖政策；临床停止原则同 USPSTF</td></tr>
+<tr><td><strong>NCCN</strong></td><td>≥50</td><td>≥20 包年；结合临床风险</td><td>不固定</td><td>若仍适合根治治疗则个体化</td></tr>
+<tr><td><strong>ACS 2023</strong></td><td>50+</td><td>≥20 包年</td><td>无</td><td>个体化；预期寿命 ≥5 年且身体状况允许可继续</td></tr>
+</tbody>
+</table>
+<h4>表 2. Lung-RADS v2022（精简定义）</h4>
+<div class="algorithm-note"><p><strong>关键定义：</strong></p><ul>
+<li><strong>生长：</strong> 12 个月平均直径增加 &gt;1.5 mm。</li>
+<li>实性/部分实性病灶在多轮中缓慢生长，即使未达到 12 个月阈值，也应视为可疑。</li>
+<li>完整分类逻辑见“筛查后管理与随访”。</li>
+</ul></div>
+<h4>表 3. CTLS 剂量基准</h4>
+<table>
+<thead><tr><th>检查</th><th>典型有效剂量</th></tr></thead>
+<tbody>
+<tr><td>LDCT 筛查</td><td>约 1–1.5 mSv</td></tr>
+<tr><td>标准诊断性胸部 CT</td><td>约 7–8 mSv</td></tr>
+<tr><td>双体位胸片</td><td>约 0.1 mSv</td></tr>
+<tr><td>美国平均年度本底辐射</td><td>约 3.1 mSv</td></tr>
+</tbody>
+</table>
+<h4>速查表：共同决策谈话要点</h4>
+<div class="algorithm-note"><ul>
+<li><strong>资格：</strong> 为什么符合筛查。</li>
+<li><strong>获益：</strong> 更早发现，降低死于肺癌的机会。</li>
+<li><strong>伤害：</strong> 假警报、额外扫描、偶尔需要操作、小剂量辐射、罕见过度诊断。</li>
+<li><strong>预期：</strong> 每年扫描；发现不确定病灶时需短间隔复查。</li>
+<li><strong>戒烟：</strong> 最有力的风险降低措施——可提供支持和药物。</li>
+<li><strong>下一步：</strong> 如何沟通结果并协调随访。</li>
+</ul></div>
+<h3>病例与应用学习</h3>
+<div class="case-study"><p><strong>病例 1：</strong> 一名 62 岁当前吸烟者（45 包年）接受基线 LDCT。右上叶有 7 mm 光滑实性结节，无既往影像。</p><p><strong>问题：</strong> 下一步最佳处理？</p><p><strong>答案：</strong> 6 个月 LDCT。</p><p><strong>解释：</strong> 基线实性 6–&lt;8 mm 属 3 类 → 6 个月监测；出现生长或其他可疑特征才升级。</p></div>
+<div class="case-study"><p><strong>病例 2：</strong> 一名 68 岁既往吸烟者（30 包年，戒烟 10 年），有 1.2 cm（12 mm）部分实性结节，实性核心 8 mm。</p><p><strong>问题：</strong> 下一步最佳处理？</p><p><strong>答案：</strong> PET/CT 和组织取样进行诊断性评估。</p><p><strong>解释：</strong> 实性成分 ≥8 mm 达 4B；行 PET/CT（注意部分亚实性癌可假阴性）并计划活检或外科评估。</p></div>
+<div class="case-study"><p><strong>病例 3：</strong> 一名 59 岁当前吸烟者的 LDCT 显示新发 7 mm 实性结节及多灶树芽征，上周有低热。</p><p><strong>问题：</strong> 如何分类和管理？</p><p><strong>答案：</strong> Lung-RADS 0，1–3 个月复查 LDCT。</p><p><strong>解释：</strong> 表现提示感染性细支气管炎；短间隔复查，再按残余最可疑发现重新分类。</p></div>
+<div class="case-study"><p><strong>病例 4：</strong> 一名 71 岁患者基线见肺段支气管内结节，3 个月 LDCT 仍持续存在。</p><p><strong>问题：</strong> 类别和下一步？</p><p><strong>答案：</strong> 4B，转支气管镜（实性成分足够大时 ± PET/CT）。</p><p><strong>解释：</strong> 3 个月持续的肺段/近端气道结节升级为 4B。</p></div>
+<h3>题库（12 道选择题）</h3>
+<ol>
+<li><p>大型 LDCT 试验在高风险成人中证实的主要死亡结局是：</p><ul><li>A. 肺癌死亡率无变化</li><li>B. 肺癌死亡率降低但无分期前移</li><li>C. 肺癌死亡率降低并向早期分期前移（正确）</li><li>D. 仅全因死亡率降低</li><li>E. 肺癌发病率增加但死亡率不变</li></ul><blockquote><strong>答案：C。</strong><br/><strong>解释：</strong> LDCT 降低肺癌死亡并实现早期分期前移；部分试验也显示全因死亡下降。</blockquote></li>
+<li><p>根据 USPSTF 2021，哪位患者符合筛查资格？</p><ul><li>A. 47 岁，30 包年，戒烟 5 年</li><li>B. 55 岁，25 包年，仍吸烟（正确）</li><li>C. 70 岁，15 包年，戒烟 10 年</li><li>D. 82 岁，40 包年，仍吸烟且身体状况好</li><li>E. 60 岁，20 包年，戒烟 20 年</li></ul><blockquote><strong>答案：B。</strong><br/><strong>解释：</strong> 50–80 岁、≥20 包年、当前吸烟或戒烟 &lt;15 年。</blockquote></li>
+<li><p>一名 65 岁患者 40 包年，戒烟 18 年，身体状况良好，询问筛查。最佳回答？</p><ul><li>A. 按 USPSTF，他因戒烟 &gt;15 年不符合。（正确）</li><li>B. 符合 Medicare 覆盖。</li><li>C. 符合所有指南。</li><li>D. 因年龄禁忌。</li><li>E. 应行胸片筛查。</li></ul><blockquote><strong>答案：A。</strong><br/><strong>解释：</strong> USPSTF/CMS 有 15 年戒烟限制；ACS 等学会不同，但付款覆盖可能不一致。</blockquote></li>
+<li><p>基线 LDCT 显示新发 7 mm 实性结节，无高危征象。Lung-RADS 类别与下一步：</p><ul><li>A. 2 → 年度 LDCT</li><li>B. 4A → 3 个月 LDCT；≥8 mm 时考虑 PET（正确）</li><li>C. 3 → 6 个月 LDCT</li><li>D. 4B → PET/CT 和活检</li><li>E. 0 → 立即重复 LDCT</li></ul><blockquote><strong>答案：B。</strong><br/><strong>解释：</strong> 新发实性 6–&lt;8 mm 为 4A。</blockquote></li>
+<li><p>关于 CTLS 中气道结节，哪项正确？</p><ul><li>A. 亚段气道结节一律 4A。</li><li>B. 3 个月仍持续的肺段/近端气道结节升级为 4B。（正确）</li><li>C. 病灶内有空气一定是癌。</li><li>D. Lung-RADS 不包括气道发现。</li><li>E. 任何气道异常都需立即支气管镜。</li></ul><blockquote><strong>答案：B。</strong><br/><strong>解释：</strong> 肺段/近端气道结节 3 个月持续存在时由 4A 升级 4B。</blockquote></li>
+<li><p>Lung-RADS v2022 中“生长”定义为：</p><ul><li>A. 任何视觉增大</li><li>B. 12 个月内平均直径增加 &gt;1.5 mm（正确）</li><li>C. 最长径增加 &gt;2.5 mm</li><li>D. 倍增时间 &lt;600 天</li><li>E. 仅密度变化</li></ul><blockquote><strong>答案：B。</strong><br/><strong>解释：</strong> 12 个月内平均直径增加 &gt;1.5 mm。</blockquote></li>
+<li><p>基线哪一结节属于 4B？</p><ul><li>A. 14 mm 部分实性，实性核心 6 mm</li><li>B. 新发实性 7 mm</li><li>C. 实性 16 mm（正确）</li><li>D. 32 mm 非实性，稳定 2 年</li><li>E. 9 mm 三角形叶间裂旁实性结节</li></ul><blockquote><strong>答案：C。</strong><br/><strong>解释：</strong> 实性结节 ≥15 mm 为 4B。</blockquote></li>
+<li><p>CTLS 中恰当使用 PET/CT 包括：</p><ul><li>A. 任何 ≥20 mm 非实性结节</li><li>B. 实性结节或实性成分 ≥8 mm（正确）</li><li>C. 新发实性 4–5 mm</li><li>D. 亚段气道结节</li><li>E. 所有 3 类结节</li></ul><blockquote><strong>答案：B。</strong><br/><strong>解释：</strong> PET/CT 适用于实性结节或实性成分 ≥8 mm。</blockquote></li>
+<li><p>LDCT 筛查的典型有效剂量：</p><ul><li>A. 0.05 mSv</li><li>B. 0.3 mSv</li><li>C. 约 1–1.5 mSv（正确）</li><li>D. 5–6 mSv</li><li>E. 10–12 mSv</li></ul><blockquote><strong>答案：C。</strong><br/><strong>解释：</strong> LDCT 通常约 1–1.5 mSv。</blockquote></li>
+<li><p>肺癌筛查中的“过度诊断”是指：</p><ul><li>A. 影像假阳性</li><li>B. 发现患者终生不会产生症状/死亡的癌症（正确）</li><li>C. 运动伪影导致误分类</li><li>D. 过度报告偶然发现</li><li>E. 重复计数结节</li></ul><blockquote><strong>答案：B。</strong><br/><strong>解释：</strong> 过度诊断是发现本不会临床显现的惰性癌症。</blockquote></li>
+<li><p>哪项不推荐用于肺癌筛查？</p><ul><li>A. 符合条件高风险成人年度 LDCT</li><li>B. 共同决策和戒烟支持</li><li>C. 常规胸片 ± 痰细胞学（正确）</li><li>D. Lung-RADS 报告</li><li>E. 登记系统质量保证和依从性追踪</li></ul><blockquote><strong>答案：C。</strong><br/><strong>解释：</strong> 胸片和痰细胞学不是推荐的筛查方式。</blockquote></li>
+<li><p>一名 70 岁纤维化 ILD 患者，30 包年，仍吸烟，符合资格且身体状况允许。LDCT 显示厚壁囊肿伴新发内部结节。最佳处理？</p><ul><li>A. 仅年度 LDCT</li><li>B. 6 个月 LDCT</li><li>C. 按 4B：诊断性胸部 CT ± 对比剂；实性部分 ≥8 mm 时 PET/CT；组织诊断（正确）</li><li>D. 只有既往增长 &gt;1.5 mm 才 PET/CT</li><li>E. 囊肿都是良性，不升级</li></ul><blockquote><strong>答案：C。</strong><br/><strong>解释：</strong> 非典型囊肿出现结节或复杂性增加属于可疑 4B，需要诊断性评估。</blockquote></li>
+</ol>
+<h3>争议、差异与不断演进的证据</h3>
+<ul>
+<li><strong>资格阈值：</strong> USPSTF/CMS 与 NCCN/ACS 在戒烟时间和年龄上限方面不同。应预判指南与付款方不一致，记录理由并确认覆盖。</li>
+<li><strong>风险模型与包年：</strong> 风险预测可提高靶向效率和公平性，但实施和报销仍不一致。</li>
+<li><strong>体积与线性大小：</strong> NELSON 类体积策略可减少阳性筛查并提高 PPV；美国 Lung-RADS 仍以直径为主，体积为可选。</li>
+<li><strong>缓慢生长的亚实性病灶：</strong> 在避免过度治疗与实性成分出现/增大时及时切除之间平衡。</li>
+<li><strong>PET/CT：</strong> 对实性成分 ≥8 mm 有价值；惰性腺癌和纯 GGN 可假阴性。</li>
+<li><strong>生物标志物与 AI：</strong> cfDNA 片段组学和 AI 辅助 CT 是有前景的辅助工具；临床效用和成本效益整合仍在研究。</li>
+<li><strong>项目实施：</strong> 集中式与分散式项目在依从性和良性切除率方面不同；导航资源很重要。</li>
+</ul>
+<h3>带回家的核对表</h3>
+<div class="algorithm-note"><ul>
+<li>仅筛查符合条件且可接受根治治疗的成人；按相应框架在不再适合治疗或超过戒烟时限时停止。</li>
+<li>每个接触点都进行共同决策和戒烟咨询。</li>
+<li>开具 LDCT 筛查方案，而不是诊断性 CT。</li>
+<li>每份报告使用 Lung-RADS v2022；患者离开前安排复查。</li>
+<li><strong>4A：</strong> 3 个月 LDCT；实性 ≥8 mm 时加 PET/CT。</li>
+<li><strong>4B/4X：</strong> 诊断性 CT ± 对比剂、PET/CT 和 MDT 指导的组织诊断。</li>
+<li>按 v2022 规则处理气道结节和非典型囊肿，避免漏掉升级。</li>
+<li>在登记系统中追踪依从性、良性切除率、剂量和确诊时间。</li>
+<li>清晰沟通结果，用可预测的随访计划减少焦虑。</li>
+<li>每年重新评估资格，并与付款方政策一致。</li>
+</ul></div>
+<hr/>
+<div class="abbreviations">
+<h3>缩写</h3>
+<dl>
+<dt>ACS</dt><dd>美国癌症协会</dd>
+<dt>CMS</dt><dd>美国医疗保险和医疗补助服务中心</dd>
+<dt>CTDIvol</dt><dd>容积 CT 剂量指数</dd>
+<dt>CTLS</dt><dd>CT 肺癌筛查</dd>
+<dt>EHR</dt><dd>电子健康记录</dd>
+<dt>GGN</dt><dd>磨玻璃结节</dd>
+<dt>ILD</dt><dd>间质性肺病</dd>
+<dt>LDCT</dt><dd>低剂量计算机断层扫描</dd>
+<dt>Lung-RADS</dt><dd>肺癌筛查 CT 报告与数据系统</dd>
+<dt>MDT</dt><dd>多学科团队</dd>
+<dt>NCCN</dt><dd>美国国家综合癌症网络</dd>
+<dt>NRT</dt><dd>尼古丁替代治疗</dd>
+<dt>PET/CT</dt><dd>正电子发射断层扫描/计算机断层扫描</dd>
+<dt>QA</dt><dd>质量保证</dd>
+<dt>SDM</dt><dd>共同决策</dd>
+<dt>USPSTF</dt><dd>美国预防服务工作组</dd>
+</dl>
+</div>
+<hr/>
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Aberle DR, Adams AM, Berg CD, et al. Reduced lung‑cancer mortality with low‑dose computed tomographic screening. N Engl J Med. 2011;365:395‑409.</li>
+<li>de Koning HJ, van der Aalst CM, de Jong PA, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382:503‑513.</li>
+<li>Krist AH, Davidson KW, Mangione CM, et al. Screening for Lung Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325:962‑970.</li>
+<li>Wood DE, Kazerooni EA, Baum SL, et al. NCCN Guidelines® Insights: Lung Cancer Screening (current version). J Natl Compr Canc Netw. 2022–2025.</li>
+<li>Wolf AMD, Shih Y‑CT, Fontham ETH, et al. Screening for lung cancer: 2023 guideline update from the American Cancer Society. CA Cancer J Clin. 2024;74:50‑81.</li>
+<li>Mazzone PJ, Silvestri GA, Patel S, et al. Screening for Lung Cancer: CHEST Guideline and Expert Panel Report. Chest. 2021;160:e427‑e494.</li>
+<li>Christensen J, Prosper AE, Wu CC, et al. ACR Lung‑RADS v2022: Assessment Categories and Management Recommendations. J Am Coll Radiol. 2024;21:473‑486.</li>
+<li>Black WC, Gareen IF, Soneji SS, et al. Cost‑effectiveness of CT screening in the National Lung Screening Trial. N Engl J Med. 2014;371:1793‑1802.</li>
+<li>Larke FJ, Kruger RL, Cagnon CH, et al. Estimated radiation dose associated with LDCT of NLST participants. AJR Am J Roentgenol. 2011;197:1165‑1169.</li>
+<li>Pinsky PF, Gierada DS, Black W, et al. Performance of Lung‑RADS in the National Lung Screening Trial: a retrospective assessment. Ann Intern Med. 2015;162:485‑491.</li>
+<li>Silvestri GA, Goldman L, Tanner NT, et al. Outcomes from more than 1 million people screened for lung cancer with low‑dose CT. Chest. 2023;164:241‑251.</li>
+<li>McKee BJ, Regis SM, McKee AB, et al. Performance of ACR Lung‑RADS in a clinical CT lung screening program. J Am Coll Radiol. 2016;13:R25‑R29.</li>
+<li>Kinsinger LS, Anderson C, Kim J, et al. Implementation of Lung Cancer Screening in the Veterans Health Administration. JAMA Intern Med. 2017;177:399‑406.</li>
+<li>Rampinelli C, De Marco P, Origgi D, et al. Exposure to low‑dose CT for screening and risk‑benefit analysis. BMJ. 2017;356:j347.</li>
+<li>Tammemägi MC, Katki HA, Hocking WG, et al. Selection criteria for lung‑cancer screening. N Engl J Med. 2013;368:728‑736.</li>
+<li>Katki HA, Kovalchik SA, Berg CD, et al. Development and Validation of Risk Models to Select Ever‑Smokers for CT Lung Cancer Screening. JAMA. 2016;315:2300‑2311.</li>
+<li>Robbins HA, Berg CD, Cheung LC, et al. Comparative performance of lung cancer risk models in the United Kingdom. Br J Cancer. 2021;124:2026‑2034.</li>
+<li>Raghu G, Remy‑Jardin M, Myers JL, et al. Idiopathic pulmonary fibrosis and progressive pulmonary fibrosis in adults: clinical practice guideline. Am J Respir Crit Care Med. 2022;205:e18‑e47.</li>
+<li>Mazzone PJ, Bach PB, Carey J, et al. Clinical validation of a cfDNA fragmentome assay for early detection of lung cancer. Cancer Discov. 2024;14:2224‑2238.</li>
+<li>Geppert J, Kothari J, Karia R, et al. AI for nodule and cancer detection in CT lung cancer screening: systematic review. Thorax. 2024;79:1040‑1049.</li>
+</ol>
+</div>
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+</body> </html>

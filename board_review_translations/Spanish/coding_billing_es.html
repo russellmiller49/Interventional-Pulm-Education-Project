@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codificación y facturación</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <h1>Codificación y facturación</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo corresponde al dominio de gestión de la práctica del temario de la AABIP, con énfasis en la codificación profesional y de la institución para broncoscopia, procedimientos terapéuticos de la vía aérea, reducción broncoscópica del volumen pulmonar (BLVR), procedimientos pleurales y evaluación y manejo (E/M). Se centra en la Regla de Endoscopias Múltiples (MER), los códigos complementarios, los modificadores, los estándares de documentación y las ediciones frecuentes de los pagadores relevantes para neumología intervencionista (IP).</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Aplicar la Regla de Endoscopias Múltiples a casos reales y calcular correctamente las wRVU cuando se realizan varias técnicas broncoscópicas en una sesión.</li>
+        <li>Seleccionar y ordenar códigos base, complementarios y terapéuticos para broncoscopia avanzada, incluidos EBUS, sonda radial, navegación, prótesis, dilatación, aspiración y BLVR.</li>
+        <li>Utilizar correctamente los modificadores clave (-25, -50, -51, -53, -59, -76 y, según corresponda, -22/-26) y documentar de forma que se sustenten servicios separados o interrumpidos.</li>
+        <li>Diferenciar las consideraciones de pago profesional frente a las de la institución (APC, reducciones por múltiples procedimientos, pago transitorio adicional para broncoscopios de un solo uso) e incorporarlas a las operaciones del programa.</li>
+        <li>Facturar correctamente la sedación moderada cuando la proporciona el broncoscopista y comprender que se factura por separado de los códigos de broncoscopia.</li>
+        <li>Alinear la codificación con una documentación favorable para el pagador que identifique sitios anatómicos, lóbulos y estaciones, y señale la existencia de imágenes archivables cuando sea necesario.</li>
+    </ul>
+
+    <hr>
+
+    <div class="algorithm-note">
+        <h3>Resumen de alto rendimiento</h3>
+        <ul>
+            <li><strong>MER en una frase:</strong> El código broncoscópico base de mayor valor se paga al 100%; los demás códigos broncoscópicos que no son complementarios se pagan como (su valor − el valor base de 31622). Los códigos complementarios se pagan completos.</li>
+            <li><strong>Conozca los códigos complementarios:</strong> +31627 (navegación), +31654 (EBUS radial), +31632 (TBLB en cada lóbulo adicional), +31633 (TBNA en cada lóbulo adicional), +31637 (cada prótesis bronquial adicional). La MER no reduce estos códigos.</li>
+            <li><strong>Plantilla para prótesis en Y:</strong> 31631 (tráquea) + 31636 (un bronquio principal) + +31637 (bronquio principal contralateral). La fluoroscopia está incluida.</li>
+            <li><strong>Escisión frente a ablación en un mismo sitio:</strong> 31640 y 31641 están agrupados; elija el que mejor describa el tratamiento predominante en ese sitio. Use -59 solo para sitios verdaderamente distintos.</li>
+            <li><strong>Dilatación con prótesis:</strong> 31630 está incluido cuando la dilatación forma parte de la colocación de una prótesis en el mismo segmento de la vía aérea; use -59 solo si se dilata una vía aérea diferente. Anticipe denegaciones y apele con claridad anatómica.</li>
+            <li><strong>Aspiración terapéutica:</strong> La inicial es 31645; una aspiración terapéutica repetida durante la misma hospitalización es 31646.</li>
+            <li><strong>Precaución con el código de navegación:</strong> Informe +31627 solo cuando realmente se inició la navegación. Si no se inició, no lo facture. Considere -52/-53 únicamente si el servicio comenzó y luego se redujo o interrumpió por seguridad.</li>
+            <li><strong>Trabajo pleural bilateral:</strong> La toracocentesis o inserción bilateral de tubos torácicos utiliza el modificador -50 (no es un modificador broncoscópico).</li>
+            <li><strong>Toracocentesis + broncoscopia el mismo día:</strong> Use -51 en el procedimiento distinto de menor valor; las notas separadas ayudan.</li>
+            <li><strong>Sedación moderada:</strong> 99152 (primeros 15 min, proporcionada por el broncoscopista; +0,25 wRVU dentro de las actualizaciones del código) y 99153 (cada 15 min adicionales; solo gasto de práctica, sin wRVU médica).</li>
+            <li><strong>Guía ecográfica para accesos (76937):</strong> Documente «ecografía en tiempo real» y «se archivó una imagen permanente».</li>
+            <li><strong>BLVR:</strong> Chartis 31634; válvulas 31647 (primer lóbulo) +31651 (cada lóbulo adicional); retirada 31648 (+31649 por cada lóbulo adicional). Coordine la planificación hospitalaria.</li>
+            <li><strong>Código complementario de E/M en clínica:</strong> G2211 puede reconocer atención longitudinal compleja y continua en E/M ambulatoria; no puede facturarse con otros procedimientos el mismo día. Se requiere documentación clara.</li>
+            <li><strong>Realidad de la institución:</strong> Las broncoscopias se agrupan en familias APC; los broncoscopios de un solo uso pueden reunir los requisitos para pago transitorio (C1601) durante un periodo limitado; el hospital debe implementar los cargos del dispositivo y las ediciones de reclamaciones.</li>
+            <li><strong>Mentalidad de apelación:</strong> Muchas reclamaciones correctas serán denegadas en el primer envío. La nota operatoria y las imágenes guardadas constituyen la apelación.</li>
+        </ul>
+    </div>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Indicaciones y contraindicaciones (perspectiva de codificación)</h4>
+    <p>Utilice códigos integrales de broncoscopia o procedimientos pleurales cuando sean médicamente necesarios y documente las indicaciones (por ejemplo, masa pulmonar, estadificación ganglionar, tapones de moco). Algunas combinaciones están inherentemente agrupadas (por ejemplo, escisión con ablación en el mismo sitio; dilatación incluida con la prótesis en el mismo segmento). Los sitios anatómicos separados justifican servicios distintos y el posible uso de modificadores.</p>
+
+    <h4>Evaluación preprocedimiento</h4>
+    <p>Implemente guiones de autorización previa y programación que reflejen el conjunto de CPT previsto (por ejemplo, «EMN + EBUS radial + TBLB ± BAL» o «BLVR con Chartis + válvulas; posible segundo lóbulo»). Incluya las indicaciones ICD-10 y los detalles de los dispositivos; esto mejora la autorización inicial y la preparación apropiada de la institución.</p>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li>Guarde imágenes ecográficas siempre que facture 76937; indique expresamente que se utilizó guía en tiempo real y que se archivó una imagen permanente.</li>
+        <li>Reconozca que la fluoroscopia está incluida en los códigos de broncoscopia y prótesis y no se factura por separado.</li>
+    </ul>
+
+    <h4>Técnica paso a paso / Lista de verificación</h4>
+    <p>Documente lo siguiente en cada nota de broncoscopia para respaldar la codificación y las apelaciones:</p>
+    <ul>
+        <li>Indicación o indicaciones.</li>
+        <li>Anestesia.</li>
+        <li>Inspección completa.</li>
+        <li>Lateralidad, lóbulos y segmentos.</li>
+        <li>Detalles del muestreo (estaciones/pases de TBNA; lóbulos/herramientas de TBLB; localización/volumen de BAL).</li>
+        <li>Plataforma de navegación y confirmación.</li>
+        <li>Imágenes de EBUS radial.</li>
+        <li>Modalidad terapéutica y sitios (tipo de energía, tamaño/presión del balón, tipo/tamaño/localización de la prótesis).</li>
+        <li>Complicaciones y hemostasia.</li>
+        <li>Si los servicios se redujeron o se interrumpieron (hora y motivo).</li>
+    </ul>
+
+    <h4>Resolución de problemas y manejo intraprocedimiento</h4>
+    <p><strong>Servicios abortados frente a reducidos:</strong> Use -53 cuando un procedimiento se interrumpe por seguridad del paciente después de haber comenzado; use -52 cuando se completa una parte reducida del servicio previsto. La nota operatoria debe distinguirlos con claridad.</p>
+    <p><strong>Errores de cálculo de MER:</strong> No sume todo al valor nominal; reste el valor base (31622) de los códigos no principales y no complementarios. Los códigos complementarios conservan su valor completo.</p>
+    <p><strong>Sitios distintos:</strong> Cuando los procedimientos se agruparían de otro modo (por ejemplo, dilatación + prótesis), asegúrese de que la nota identifique vías aéreas diferentes si piensa utilizar -59. Anticipe denegaciones iniciales y prepárese para apelar con diagramas e imágenes.</p>
+
+    <h4>Cuidados y seguimiento posteriores</h4>
+    <p>La mayoría de los procedimientos pleurales ambulatorios (toracocentesis, tubos torácicos, catéteres pleurales permanentes) tienen un periodo global de 0 días; una E/M el mismo día debe ser identificable por separado y suele requerir -25. Las familias de toracoscopia difieren (diagnóstica/biopsia: 0 días; pleurodesis/decorticación: 90 días), lo que afecta la facturación de E/M posoperatoria.</p>
+
+    <h4>Complicaciones (prevención, reconocimiento y manejo)</h4>
+    <p>Desde la perspectiva de codificación, las «complicaciones» suelen manifestarse como ediciones y denegaciones.</p>
+    <ul>
+        <li><strong>Prevéngalas</strong> con documentación anatómica detallada, imágenes archivables cuando se requieran (por ejemplo, 76937) y evitando combinaciones no permitidas (por ejemplo, 31640+31641 en el mismo sitio; facturar 31627 cuando nunca se inició la navegación).</li>
+        <li><strong>Maneje</strong> las denegaciones con cartas de apelación oportunas que hagan referencia a los detalles operatorios y al lenguaje de la política del pagador.</li>
+    </ul>
+
+    <h4>Poblaciones especiales</h4>
+    <ul>
+        <li><strong>UCI:</strong> La aspiración terapéutica puede repetirse; use 31645 inicialmente y 31646 para aspiraciones repetidas durante la misma hospitalización por el mismo profesional/grupo. Aclare la cronología de los encuentros.</li>
+        <li><strong>Atención crónica en clínica:</strong> Considere G2211 con E/M ambulatoria para manejo complejo continuo (por ejemplo, EPOC, vigilancia de nódulos) cuando no se facture un procedimiento ese día.</li>
+        <li><strong>Realidad de la institución:</strong> Los broncoscopios de un solo uso pueden reunir los requisitos para el pago C1601; asegúrese de que el maestro de cargos y las ediciones de reclamaciones del hospital estén configurados.</li>
+    </ul>
+
+    <h4>Evidencia y resultados (seleccionados)</h4>
+    <p><strong>Sedación moderada facturada por separado:</strong> CMS separó la sedación moderada de los códigos de broncoscopia; el broncoscopista puede informar 99152 por los primeros 15 minutos y 99153 por el tiempo posterior, este último como gasto de práctica solamente (sin wRVU médica).</p>
+    <p><strong>Entorno de pago:</strong> La presión sobre el factor de conversión y el crecimiento de Medicare Advantage complican los ingresos; alinee la codificación con la estrategia de la institución (APC, relaciones costo-cargo y pago transitorio de dispositivos).</p>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1. Codificación del estudio de una lesión pulmonar periférica</h4>
+    <div class="mermaid">
+        graph TD
+        A["Sospecha de lesión periférica"] --> B{"¿Se realizó navegación?"}
+        B -- Sí --> C["Facturar +31627 (navegación)"]
+        B -- No --> D["Sin código complementario de navegación"]
+        C --> E{"¿EBUS radial localizó la lesión?"}
+        D --> E
+        E -- Sí --> F["Facturar +31654 (EBUS radial)"]
+        E -- No --> G["Sin código complementario radial"]
+        F --> H{"¿Se obtuvieron muestras?"}
+        G --> H
+        H --> I["TBNA: facturar 31629"]
+        H --> J["TBLB en 1 lóbulo: facturar 31628"]
+        H --> K["TBLB en lóbulo adicional: +31632"]
+        H --> L["Cepillado/BAL: 31623/31624"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Resumen:</strong>
+        <ul>
+            <li>Confirme que la navegación realmente se inició; si fue así, informe +31627.</li>
+            <li>Añada +31654 cuando se utilice EBUS radial para localizar una lesión periférica.</li>
+            <li>Elija los códigos de muestreo: 31629 (TBNA), 31628 (TBLB en 1 lóbulo), +31632 (cada lóbulo adicional), 31623/31624 (cepillado/BAL según corresponda).</li>
+            <li>Calcule MER: el código base de mayor valor al 100%; los otros códigos no complementarios reciben (su wRVU − la wRVU de 31622). Los complementarios se pagan completos.</li>
+            <li>Documente los lóbulos/segmentos objetivo, los pases y las imágenes archivadas.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 2. Manejo terapéutico de la vía aérea con posible colocación de prótesis</h4>
+    <div class="mermaid">
+        graph TD
+        A["Obstrucción de la vía aérea"] --> B{"¿Tratamiento en el mismo sitio?"}
+        B --> C["Escisión O ablación"]
+        C --> C1["Elegir 31640 O 31641 (no ambos)"]
+        B --> D["Sitios/modalidades diferentes"]
+        D --> D1["Considerar -59 con documentación clara"]
+        C1 --> E{"¿Se necesita prótesis?"}
+        D1 --> E
+        E -- Sí --> F{"¿Localización?"}
+        F -- "Tráquea" --> G["31631"]
+        F -- "Bronquio" --> H["31636 (+31637 por cada adicional)"]
+        E -- No --> I["Fin"]
+        G --> J{"¿Se realizó dilatación?"}
+        H --> J
+        J -- "Mismo segmento" --> K["Incluida con la prótesis"]
+        J -- "Vía aérea separada" --> L["31630-59 (anticipar ediciones)"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Resumen:</strong>
+        <ul>
+            <li>En un solo sitio, no informe 31640 y 31641 juntos.</li>
+            <li>Ejemplo de prótesis en Y en una sesión: 31631 + 31636 + +31637.</li>
+            <li>La dilatación (31630) está incluida con la prótesis en el mismo segmento; use -59 solo si se dilata otra vía aérea.</li>
+            <li>La fluoroscopia está incluida con los códigos de broncoscopia y prótesis.</li>
+            <li>Anticipe ediciones; respalde la reclamación con documentación específica del sitio.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Códigos de broncoscopia diagnóstica utilizados con frecuencia en IP</h4>
+    <table>
+        <thead><tr><th>Código CPT</th><th>Descriptor</th><th>wRVU</th><th>Notas</th></tr></thead>
+        <tbody>
+            <tr><td>31622</td><td>Broncoscopia diagnóstica (incluye fluoroscopia), con lavado celular cuando se realiza</td><td>2,53</td><td>Código base de MER</td></tr>
+            <tr><td>31623</td><td>Cepillado</td><td>2,63</td><td>No complementario (se aplica MER)</td></tr>
+            <tr><td>31624</td><td>BAL</td><td>2,63</td><td>No complementario (se aplica MER)</td></tr>
+            <tr><td>31628</td><td>TBLB, un solo lóbulo</td><td>3,55</td><td>No complementario (se aplica MER)</td></tr>
+            <tr><td>+31632</td><td>TBLB, cada lóbulo adicional</td><td>1,03</td><td>Complementario</td></tr>
+            <tr><td>31629</td><td>TBNA (tráquea/principal/lobar)</td><td>3,75</td><td>No complementario (se aplica MER)</td></tr>
+            <tr><td>+31633</td><td>TBNA, cada lóbulo adicional</td><td>1,32</td><td>Complementario</td></tr>
+            <tr><td>+31654</td><td>EBUS con sonda radial</td><td>1,40</td><td>Complementario (localización periférica)</td></tr>
+            <tr><td>+31627</td><td>Navegación (VB/EMN/robótica)</td><td>2,00</td><td>Complementario</td></tr>
+            <tr><td>31645</td><td>Aspiración terapéutica, inicial</td><td>2,88</td><td>No complementario</td></tr>
+            <tr><td>31646</td><td>Aspiración terapéutica posterior (misma hospitalización)</td><td>2,78</td><td>No complementario</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 2. Codificación de BLVR y prótesis de vía aérea: resumen</h4>
+    <table>
+        <thead><tr><th>Acción clínica</th><th>CPT</th><th>Notas</th></tr></thead>
+        <tbody>
+            <tr><td>Chartis</td><td>31634</td><td>Documentar el lóbulo evaluado</td></tr>
+            <tr><td>Colocación de válvulas</td><td>31647 (lóbulo inicial) + +31651 (cada lóbulo adicional)</td><td>Registrar válvulas y lóbulos</td></tr>
+            <tr><td>Retirada de válvulas</td><td>31648 (inicial) + +31649 (cada lóbulo adicional)</td><td>—</td></tr>
+            <tr><td>Prótesis traqueal</td><td>31631</td><td>—</td></tr>
+            <tr><td>Prótesis bronquial</td><td>31636 (primer bronquio) + +31637 (cada adicional)</td><td>—</td></tr>
+            <tr><td>Dilatación con balón</td><td>31630</td><td>Incluida con prótesis en el mismo segmento; use -59 si es otra vía aérea</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Modificadores que realmente utilizará (con lenguaje favorable para el pagador)</h4>
+    <table>
+        <thead><tr><th>Modificador</th><th>Cuándo utilizarlo</th><th>Ejemplo de documentación</th></tr></thead>
+        <tbody>
+            <tr><td>-25</td><td>E/M significativa e identificable por separado el mismo día de un procedimiento con periodo global de 0 días</td><td>«Evaluación separada de un derrame nuevo que condujo a toracocentesis; se abordaron problemas adicionales a la atención habitual pre/postprocedimiento».</td></tr>
+            <tr><td>-50</td><td>Procedimiento pleural bilateral (por ejemplo, toracocentesis o tubos bilaterales)</td><td>«Se realizaron toracocentesis bilaterales: se accedió a los espacios pleurales derecho e izquierdo».</td></tr>
+            <tr><td>-51</td><td>Múltiples procedimientos distintos el mismo día (por ejemplo, toracocentesis + broncoscopia)</td><td>«Se crearon notas separadas para la toracocentesis y la broncoscopia».</td></tr>
+            <tr><td>-53</td><td>Procedimiento interrumpido por seguridad del paciente después de iniciarlo</td><td>«El procedimiento se abortó después de la inducción y la inserción del broncoscopio debido a hipoxemia».</td></tr>
+            <tr><td>-59</td><td>Servicio procedimental distinto en otro sitio</td><td>«Se realizó dilatación en LSI; se colocó prótesis en bronquio principal derecho: vías aéreas separadas».</td></tr>
+            <tr><td>-22</td><td>Servicios procedimentales incrementados (infrecuente)</td><td>«Caso &gt;2 veces la duración habitual por tumor friable; se cuantificó el trabajo adicional».</td></tr>
+            <tr><td>-26</td><td>Componente profesional de imagen propiedad de la institución</td><td>«Se interpretó ecografía de la institución; se facturó el componente profesional».</td></tr>
+        </tbody>
+    </table>
+
+    <div class="algorithm-note">
+        <h4>Marcadores de conceptos visuales</h4>
+        <ul>
+            <li><strong>Mapa de codificación para prótesis en Y:</strong> Rama traqueal (31631) + ramas de ambos bronquios principales (31636, +31637).</li>
+            <li><strong>Cálculo MER:</strong> Principal 31653 (100%), 31628/31629 (crédito parcial = valor − 31622), complementarios 31627/31654 (crédito completo).</li>
+            <li><strong>Planificador de sesión BLVR:</strong> Chartis (31634), seguido de colocación de válvulas (31647 para el primer lóbulo, +31651 para cada adicional).</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Un paciente de 67 años con nódulo de 2,2 cm en LSD se somete a navegación robótica con confirmación de herramienta dentro de la lesión mediante EBUS radial. Se realizan TBNA y TBLB en LSD y BAL en lóbulo medio derecho. ¿Cuál es la estructura de codificación correcta?</p>
+        <p>A. Solo 31653<br>B. 31627, 31628, 31624<br>C. 31628, 31629, 31623, 31624<br>D. 31629 (principal), 31628 (parcial por MER), 31624 (parcial por MER), +31627, +31654<br>E. 31627, +31632, 31624</p>
+        <p><strong>Respuesta: D.</strong> La navegación (+31627) y el EBUS radial (+31654) son códigos complementarios pagados completos; TBNA y TBLB son códigos base no complementarios sujetos a MER; BAL también está sujeto a MER. +31632 solo se aplicaría si la TBLB se realizara en un lóbulo adicional al primero.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Un paciente de 58 años con obstrucción maligna central de la vía aérea se somete a ablación y desobstrucción de la misma lesión del bronquio principal derecho, seguidas de colocación de prótesis bronquial. Más tarde se dilata una estenosis segmentaria distinta del LSI. ¿Qué codificación es la mejor?</p>
+        <p>A. 31641 + 31640 (mismo sitio), 31636, 31630<br>B. 31641 o 31640 (elegir uno), 31636, 31630-59<br>C. 31641 + 31640, 31636-59<br>D. 31641, 31636, 31630</p>
+        <p><strong>Respuesta: B.</strong> No informe ablación y escisión en el mismo sitio; elija la más apropiada. La dilatación está incluida con la prótesis en el mismo segmento, pero puede informarse por separado para otra vía aérea con -59 y documentación anatómica clara.</p>
+    </div>
+
+    <h3>Banco de preguntas (opción múltiple)</h3>
+    <ol>
+        <li><strong>Durante una sola broncoscopia se realiza EBUS-TBNA de 4R, 7 y 11L; localización con EBUS radial y TBLB del LSD. ¿Qué códigos reciben pago completo (sin reducción por MER)?</strong><br>A. 31628 y 31653<br>B. +31654 y +31627<br>C. Solo 31653 y 31628<br>D. 31624 y 31623<br>E. Todos se reducen por MER<br><strong>Respuesta: B.</strong> Los códigos complementarios (+31627, +31654) se pagan completos; los no complementarios están sujetos a MER, y 31653 suele ser el código base de mayor valor.</li>
+        <li><strong>(Siguiente mejor paso) Un candidato a BLVR tiene ventilación colateral negativa por Chartis en LSD y lóbulo medio; se colocan válvulas en LSD y después se decide tratar el lóbulo medio en la misma sesión. ¿Qué debe añadirse?</strong><br>A. Solo 31647<br>B. 31648 + 31649<br>C. 31647 + +31651<br>D. 31647 + 31636<br>E. Solo 31651<br><strong>Respuesta: C.</strong> La colocación usa 31647 para el primer lóbulo y +31651 para cada lóbulo adicional en la misma sesión.</li>
+        <li><strong>¿Qué afirmación sobre la sedación moderada es correcta cuando la proporciona el broncoscopista?</strong><br>A. 99153 asigna wRVU médicas por cada 15 minutos.<br>B. 99152 puede informarse por los primeros 15 minutos; 99153 posteriormente es solo gasto de práctica.<br>C. La sedación sigue incluida en todos los códigos de broncoscopia.<br>D. Solo los anestesiólogos pueden facturar sedación.<br>E. No puede facturarse en pacientes ≥5 años.<br><strong>Respuesta: B.</strong> CMS separó la sedación moderada; 99152 corresponde a los primeros 15 minutos proporcionados por el broncoscopista y 99153 representa solo gasto de práctica.</li>
+        <li><strong>¿Qué combinación utiliza correctamente el modificador -50?</strong><br>A. EBUS-TBNA bilateral<br>B. Prótesis de ambos bronquios principales<br>C. Toracocentesis bilaterales<br>D. TBLB de LSD + LII<br>E. BAL bilateral<br><strong>Respuesta: C.</strong> Los procedimientos pleurales bilaterales utilizan -50; no es un modificador broncoscópico.</li>
+        <li><strong>(Resolución de problemas) Se había previsto navegación EMN, pero se abortó antes de cualquier paso de navegación por hipoxemia tras la inducción. ¿Qué hacer con 31627?</strong><br>A. Facturarlo normalmente<br>B. Facturar 31627-52<br>C. No informar 31627<br>D. Facturar 31627-59<br>E. Facturar 31627-76<br><strong>Respuesta: C.</strong> No facture navegación si nunca se inició. Considere -53 solo para servicios iniciados e interrumpidos por seguridad; -52 se aplica únicamente si se realizó parte del servicio.</li>
+        <li><strong>(Siguiente mejor paso) Durante broncoscopia rígida para prótesis en Y también se realizó toracocentesis guiada por ecografía ese mismo día. ¿Cómo se informa la toracocentesis respecto al trabajo broncoscópico?</strong><br>A. Sin modificador<br>B. Añadir -51 al CPT de toracocentesis<br>C. Añadir -59 al CPT de toracocentesis<br>D. Añadir -25 al CPT de toracocentesis<br>E. Está incluida en la broncoscopia<br><strong>Respuesta: B.</strong> La toracocentesis es un procedimiento separado; use -51 cuando se realiza el mismo día. Las notas separadas fortalecen la reclamación.</li>
+        <li><strong>Para una vía yugular interna guiada por ecografía en un día de broncoscopia, ¿cuándo es apropiado informar 76937?</strong><br>A. Cuando se colocó por referencias anatómicas<br>B. Cuando había una máquina de ecografía en la sala<br>C. Cuando se utilizó guía en tiempo real y se archivó una imagen permanente<br>D. Solo cuando el médico interpreta las imágenes más tarde<br>E. Solo para líneas arteriales<br><strong>Respuesta: C.</strong> La política del pagador exige guía ecográfica en tiempo real e imagen archivada. Documéntelo expresamente.</li>
+        <li><strong>(Resolución de problemas) Se realiza ablación y escisión de la misma lesión obstructiva del bronquio principal izquierdo. ¿Qué es correcto?</strong><br>A. Informar 31640 y 31641<br>B. Elegir 31640 o 31641<br>C. Añadir siempre -59 a 31641<br>D. Facturar 31630 en su lugar<br>E. Pueden informarse ambos si uno se realizó con broncoscopio rígido y otro con flexible<br><strong>Respuesta: B.</strong> Escisión y ablación en el mismo sitio están agrupadas; informe solo una. Use -59 únicamente para sitios anatómicos verdaderamente distintos.</li>
+        <li><strong>Un paciente requiere aspiración terapéutica por tapones de moco en la UCI el lunes y de nuevo el miércoles de la misma hospitalización por su grupo. ¿Qué códigos corresponden?</strong><br>A. 31645 ambas veces<br>B. 31645 y después 31646<br>C. 31646 ambas veces<br>D. 31645-76 el miércoles<br>E. 31645 el lunes y ningún código el miércoles<br><strong>Respuesta: B.</strong> La aspiración inicial utiliza 31645; la repetida durante la misma hospitalización por el mismo profesional/grupo utiliza 31646.</li>
+        <li><strong>¿Qué combinación es incorrecta por agrupamiento?</strong><br>A. 31636 con 31630 en el mismo segmento de vía aérea<br>B. 31631 + 31636 + +31637 para prótesis en Y<br>C. 31647 + +31651 para BLVR en dos lóbulos<br>D. 31640 + 31641 en un sitio<br>E. +31654 cuando se utiliza EBUS radial<br><strong>Respuesta: D.</strong> Escisión y ablación en un sitio están agrupadas; informe una. La dilatación también está incluida con la prótesis en el mismo segmento, mientras que las combinaciones mostradas para prótesis en Y y BLVR son correctas.</li>
+        <li><strong>(Siguiente mejor paso) Se planifica E/M ambulatoria para vigilancia de nódulos, optimización de medicación y coordinación de atención, sin procedimiento ese día. ¿Cómo reflejar la complejidad longitudinal?</strong><br>A. Añadir 99153<br>B. Añadir G2211 a la E/M<br>C. Añadir 31622<br>D. Añadir 25 a la E/M<br>E. Usar 59 en la E/M<br><strong>Respuesta: B.</strong> G2211 reconoce atención ambulatoria compleja y continua; no se factura el mismo día que procedimientos.</li>
+        <li><strong>(Resolución de problemas) Se coloca una prótesis en bronquio principal derecho y se dilata el LSI. La reclamación deniega 31630 como incluido. ¿Cuál debe ser el foco de la apelación?</strong><br>A. Solicitar solo revisión entre pares<br>B. Aclarar vías aéreas distintas (bronquio principal derecho frente a LSI), añadir -59 e incluir imágenes/diagrama anotados<br>C. Eliminar 31630<br>D. Reenviar con 51<br>E. Añadir 50<br><strong>Respuesta: B.</strong> La dilatación está incluida con la prótesis en el mismo segmento; una apelación exitosa depende de documentar sitios distintos y utilizar -59.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Uso de -22:</strong> A menudo se desaconseja por los umbrales subjetivos y la carga administrativa; requiere documentación cuantificada y puede retrasar el procesamiento.</li>
+        <li><strong>Ediciones locales del pagador:</strong> Los requisitos para ciertos modificadores (por ejemplo, -59) varían según el intermediario; las denegaciones son frecuentes incluso con codificación correcta. Planifique apelaciones basadas en notas e imágenes anatómicamente detalladas.</li>
+        <li><strong>Dotación para sedación:</strong> La separación de la sedación moderada puede fomentar de forma no intencional el uso de anestesia independiente; las prácticas varían.</li>
+        <li><strong>Adopción institucional de dispositivos con pago transitorio:</strong> Los hospitales difieren en la rapidez con la que implementan C1601; los programas de IP deben promover activamente su uso durante el periodo temporal.</li>
+    </ul>
+
+    <h3>Lista de verificación final</h3>
+    <ul>
+        <li>[ ] Identifique los lóbulos/segmentos y estaciones ganglionares exactos; cuantifique pases y muestras.</li>
+        <li>[ ] Facture +31627 solo si comenzó la navegación; de lo contrario, considere -53 únicamente si el procedimiento comenzó y se interrumpió.</li>
+        <li>[ ] Añada +31654 siempre que EBUS radial localice una lesión periférica.</li>
+        <li>[ ] Calcule MER para códigos no complementarios; los complementarios se pagan completos.</li>
+        <li>[ ] Elija uno entre 31640 y 31641 en un solo sitio; use -59 solo para sitios separados.</li>
+        <li>[ ] Para prótesis, recuerde que la dilatación está incluida en el mismo segmento; use -59 para otra vía aérea y prepárese para apelar.</li>
+        <li>[ ] Guarde la imagen e indique «imagen permanente archivada» para 76937.</li>
+        <li>[ ] Codificación BLVR: 31634 → 31647 (+31651 para otro lóbulo); retirada 31648 (+31649).</li>
+        <li>[ ] Toracocentesis/tubo bilateral → -50; toracocentesis + broncoscopia el mismo día → -51.</li>
+        <li>[ ] Aspiraciones terapéuticas repetidas en la misma hospitalización → 31646.</li>
+        <li>[ ] Use G2211 con E/M ambulatoria para atención compleja continua (sin procedimiento el mismo día).</li>
+        <li>[ ] Alinee las operaciones del programa con APC institucionales y oportunidades de pago transitorio para dispositivos (C1601).</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abreviaturas y glosario</h3>
+        <dl>
+            <dt>APC</dt><dd>Clasificación de pago ambulatorio de la institución.</dd>
+            <dt>BAL</dt><dd>Lavado broncoalveolar.</dd>
+            <dt>BLVR</dt><dd>Reducción broncoscópica del volumen pulmonar.</dd>
+            <dt>C1601</dt><dd>HCPCS para pago transitorio de broncoscopios de un solo uso elegibles.</dd>
+            <dt>G2211</dt><dd>Código complementario de complejidad para E/M ambulatoria y atención continua.</dd>
+            <dt>MER</dt><dd>Regla de Endoscopias Múltiples (pago profesional).</dd>
+            <dt>TBNA/TBLB</dt><dd>Aspiración transbronquial con aguja / biopsia pulmonar transbronquial.</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>Referencias</h3>
+        <ol>
+            <li>Ninan N, Wahidi MM. Basic bronchoscopy: technology, techniques, and professional fees. Chest. 2019;155(5):1067-1074.</li>
+            <li>Nelson ME. Moderate sedation changes for bronchoscopy in 2017. Chest. 2017;152(4):893-897.</li>
+            <li>Chest. 2021;160(1):259-267.</li>
+            <li>Chest. 2020;158(6):2517-2523.</li>
+            <li>Centers for Medicare & Medicaid Services (CMS). Medicare Program; Revisions to Payment Policies Under the Physician Fee Schedule and Other Revisions to Part B for CY 2018; Medicare Shared Savings Program Requirements; and Medicare Diabetes Prevention Program. Final rule. Fed Regist. 2017;82(219):52976-53371.</li>
+            <li>American Thoracic Society. Coding & Billing Quarterly. December 2023.</li>
+        </ol>
+    </div>
+
+    <p style="font-size: 0.85em; color: #777; margin-top: 50px; font-style: italic;">
+        Aviso importante: El contenido CPT® y los honorarios cambian, los pagadores difieren y la orientación de codificación evoluciona. Considere este capítulo material educativo, no asesoramiento legal ni financiero. Confirme siempre con el manual CPT vigente, las políticas del pagador y el maestro de cargos de su institución.
+    </p>
+
+</body>
+</html>

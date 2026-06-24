@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>延迟性消融治疗</title>
+<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mcq-answer { display: block; margin-top: 8px; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>延迟性消融治疗</h1>
+<h3>考试对应与范围</h3>
+<p>本章介绍介入呼吸病学中使用的延迟性消融方式：光动力治疗（PDT）、冷冻治疗（延迟性冷冻消融以及即时冷冻黏附/冷冻清创）和支气管内近距离放射治疗（EBB）。重点包括适应证、禁忌证、技术操作、故障排查、并发症处理，以及认证和再认证考试中常考的证据。</p>
+<h3>学习目标</h3>
+<p>完成本章后，学习者应能够：</p>
+<ul>
+<li>根据肿瘤形态、缓解紧迫性和既往治疗，在PDT、冷冻治疗和EBB之间进行选择。</li>
+<li>概述每种治疗方式特有的术前评估和患者宣教（例如PDT相关光毒性）。</li>
+<li>执行PDT（给药-照光-清创）、冷冻消融/冷冻黏附以及EBB导管置入和计划制定的分步技术。</li>
+<li>预判、预防和处理并发症，例如PDT后坏死脱落物相关阻塞、EBB后放射性支气管炎，以及冷冻治疗后出血/气道水肿。</li>
+<li>将证据（完全缓解率、功能结局、生存信号）应用于临床决策和患者沟通。</li>
+</ul>
+<hr/>
+<h3>高频要点一页总结</h3>
+<div class="algorithm-note">
+<strong>关键要点：</strong>
+<ul>
+<li>PDT = 药物 + 光照 + 清创。卟吩姆钠2 mg/kg静脉给药，约48小时后进行光激活（630 nm），光照后48小时复查支气管镜以清除坏死脱落物。给药后一周内可再次照光。</li>
+<li>深度很重要。PDT穿透约4–6 mm，最适合纯腔内、表浅病变（例如CIS、早期中央型SCC）。</li>
+<li>光敏反应确实存在。皮肤光毒性可持续6–8周；必须严格避光。</li>
+<li>合理安排时间。避免在会使48小时清创安排困难的日期启动PDT。</li>
+<li>冷冻治疗有两种面貌。冷冻消融（冻融循环）产生延迟性坏死；冷冻黏附/冷冻清创可立即整块取出肿瘤、血凝块或黏液。</li>
+<li>冷冻治疗对氧气环境友好。在高FiO2环境和支架周围安全；无气道起火风险。</li>
+<li>冷冻技术要点。30秒冷冻/被动解冻循环，应用点相距约5 mm并适度重叠；如果探头粘在不该粘的位置，停止冷冻并等待解冻。</li>
+<li>EBB = 局部内照射放射治疗。HDR方案通常以短程分次、门诊方式实施；若有大血管受累、瘘管，或未经再通的完全闭塞，应避免使用。</li>
+<li>EBB计划本质上是几何学。导管尖端位于病变远端约2 cm；近端和远端边界通常各1–2 cm；处方深度取决于气道直径。</li>
+<li><strong>当阻塞严重时：</strong> PDT（延迟起效）和冷冻消融不适用于紧急缓解；应优先进行即时减瘤（硬镜/机械、激光/电灼或冷冻黏附），之后再考虑延迟起效方式。</li>
+<li>EBB适用于特殊情境。既往EBRT后需要再治疗时是良好选择，也可用于腔内肿瘤导致叶性肺不张时促进再膨胀。</li>
+<li>证据快照——PDT（根治意图）。对于中央型、&lt;1 cm的病变，完全缓解（CR）率接近约90%，在经选择患者中可获得有意义的长期疾病控制。</li>
+<li>证据快照——冷冻治疗。大型系列显示咳嗽、呼吸困难、咯血和生活质量改善；放疗前冷冻治疗可能改善不可切除NSCLC的局部控制和生存。</li>
+<li>证据快照——EBB。可稳定缓解呼吸困难、咳嗽和咯血，并使肺再通气；比较试验提示，在适当整合时可改善症状并在部分患者中带来生存获益。</li>
+<li><strong>考试陷阱：</strong> 把冷冻黏附（即时取出）与冷冻消融（延迟性坏死脱落）混淆。要清楚题目问的是哪一种。</li>
+</ul>
+</div>
+<hr/>
+<h3>核心概念</h3>
+<h4>病理生理学 / 流行病学</h4>
+<p>原发性肺癌或支气管内转移导致的中央气道阻塞可引起呼吸困难、咳嗽、咯血、阻塞后感染和低氧血症。表浅中央病变（CIS/早期SCC）较少见，但在无法手术时，非常适合PDT或EBB等表面定向治疗。良性肉芽组织（移植后、气管切开后、支架相关）对冷冻尤其敏感。</p>
+<h4>适应证和禁忌证</h4>
+<h4>PDT</h4>
+<p><strong>适应证：</strong></p>
+<ul>
+<li>当边界清晰且病变长度较小（最佳&lt;=1 cm）时，可用于微浸润/早期中央型NSCLC的根治性治疗。</li>
+<li>用于部分患者恶性支气管内阻塞的姑息治疗（不用于紧急缓解）。</li>
+</ul>
+<p><strong>禁忌证/注意事项：</strong></p>
+<ul>
+<li>卟啉病；需要立即缓解气道的严重急性呼吸窘迫；肿瘤侵蚀大血管；既存气管/支气管-食管瘘。放疗后应谨慎（咯血风险较高）。</li>
+</ul>
+<h4>冷冻治疗</h4>
+<p><strong>适应证：</strong></p>
+<ul>
+<li>延迟性冷冻消融用于控制腔内肿瘤或肉芽组织。</li>
+<li>即时冷冻黏附用于肿瘤碎片、黏液栓或血凝块；也可取出异物（有机/含水量高）。</li>
+</ul>
+<p><strong>禁忌证/注意事项：</strong></p>
+<ul>
+<li>进行消融时应纠正凝血障碍/停用氯吡格雷和抗凝药；当需要紧急即时通气时，应避免使用消融性冷冻（除非采用冷冻黏附）。</li>
+</ul>
+<h4>EBB</h4>
+<p><strong>适应证：</strong></p>
+<ul>
+<li>有症状的恶性支气管内病变；非手术候选人的早期疾病；既往EBRT后的再治疗；部分叶性塌陷病例。</li>
+</ul>
+<p><strong>禁忌证：</strong></p>
+<ul>
+<li>无法接受支气管镜检查；显著支气管内溃疡；瘘管；大血管受累；未经建立通道的完全闭塞。</li>
+</ul>
+<h3>术前评估</h3>
+<ul>
+<li><strong>影像与分期：</strong> 明确病变范围和深度；为EBB计划考虑使用EBUS进行分期并评估与血管的邻近关系。</li>
+<li><strong>抗血栓药物：</strong> 消融性冷冻治疗前暂停抗凝/抗血小板药；进行活检/冷冻黏附时阿司匹林可继续使用。</li>
+<li><strong>PDT宣教：</strong> 光敏预防措施在药物输注后立即开始并持续数周；应计划避光并使用防护衣物/护目镜。</li>
+<li><strong>气道策略：</strong> 规划全身麻醉或深度镇静；当高级别阻塞需要主动气道控制时，应考虑硬质支气管镜。</li>
+</ul>
+<h3>设备与设置</h3>
+<ul>
+<li><strong>PDT：</strong> 二极管激光（卟吩姆使用630 nm）、圆柱形弥散光纤（硬性约1.7 mm或柔性约1.07 mm）、支气管镜、眼部防护。</li>
+<li><strong>冷冻：</strong> 使用CO2（常见）或N2O的主机；柔性探头（1.1–2.4 mm）或硬性冷冻探头；脚踏开关；大通道支气管镜；用于解冻的生理盐水盆；协助整块取出的助手。</li>
+<li><strong>EBB:</strong> 聚乙烯后装导管；远程HDR后装机（Ir-192）；透视/CT确认；剂量计划系统；牢固固定。</li>
+</ul>
+<h3>分步技术 / 操作核对清单</h3>
+<h4>PDT（卟吩姆钠方案）</h4>
+<ul>
+<li><strong>药物：</strong> 卟吩姆钠2 mg/kg静脉输注3–5分钟。立即开始光防护。</li>
+<li><strong>光照（约40–50小时后）：</strong> 行柔性支气管镜；选择与病变相匹配的弥散光纤长度；在630 nm下给予200 J/cm（常用400 mW/cm，约500秒）。激活期间即使屏幕出现“白屏”，也要保持光纤位置。</li>
+<li><strong>清创（光照后约48小时）：</strong> 复查支气管镜以清除坏死脱落物；若残余肿瘤接触后出血，可在本次操作中考虑再次照光（药物活性可持续至约5天）。</li>
+</ul>
+<h4>冷冻治疗</h4>
+<ul>
+<li><strong>冷冻消融（延迟性）：</strong> 将探头置于目标处；冷冻约30秒后被动解冻；每个部位重复3个循环；每次应用间移动约5 mm并轻度重叠以覆盖病变。安排5–10天后复查支气管镜清除脱落物。</li>
+<li><strong>冷冻黏附/冷冻清创（即时）：</strong> 将组织/血凝块/栓子冷冻数秒直至黏附，然后随支气管镜整块取出；在生理盐水中使标本从探头上解冻脱离。取出过程中固定好气管插管以避免意外拔管；若探头粘到正常组织或气管插管，停止冷冻并等待解冻。</li>
+</ul>
+<h4>支气管内近距离放射治疗（HDR）</h4>
+<ul>
+<li><strong>评估与评分：</strong> 记录阻塞部位、长度和程度；确保腔道可通过（必要时先进行辅助减瘤）。</li>
+<li><strong>导管置入：</strong> 在支气管镜下（常经鼻）将导管推进至病变远端约2 cm；标记并固定；用影像确认。</li>
+<li><strong>计划：</strong> 使用模拟源行X线/CT；按固定距离（常为10 mm）或按气道直径调整的深度处方；包括近端/远端1–2 cm边界。</li>
+<li><strong>治疗递送：</strong> 通过后装机门诊递送HDR分次治疗；剂量完成后移除导管，并告知警示症状。</li>
+</ul>
+<h3>故障排查与术中管理</h3>
+<ul>
+<li><strong>PDT：</strong> 使用足够镇静以保持患者不动；预期激活期间屏幕会“白屏”，并依靠对光纤的物理稳定；为48小时清创备好清除脱落物的工具（钳子、吸引、冷冻探头）。</li>
+<li><strong>冷冻：</strong> 将镜端保持在稍近端位置（约4 mm），避免意外冻结镜身；如出血，可使用吸引、冰盐水、局部肾上腺素，必要时辅以APC。</li>
+<li><strong>EBB:</strong> 切勿强行推进导管；遇到阻力应重新评估；治疗前确认最终导管位置和深度；环周病变可考虑多根导管。</li>
+</ul>
+<h3>术后护理与随访</h3>
+<ul>
+<li><strong>PDT：</strong> 严格避光6–8周；若出现呼吸困难、发热或咯血，应紧急就诊。1–3个月进行监测性支气管镜以记录局部控制。</li>
+<li><strong>冷冻：</strong> 预期会有短暂咳嗽和分泌物；消融后安排5–10天复查支气管镜。</li>
+<li><strong>EBB:</strong> 监测放射性支气管炎/狭窄；对严重程度分级并按严重程度处理（必要时清创、扩张、置入支架）。</li>
+</ul>
+<h3>并发症（预防、识别和处理）</h3>
+<h4>PDT：</h4>
+<ul>
+<li>光敏性皮炎——教育和防护措施；可持续数周。</li>
+<li>坏死脱落物相关阻塞——常规48小时清创。</li>
+<li>支气管狭窄——避免与正常黏膜重叠；必要时用扩张/支架治疗。</li>
+<li>咯血——病变贴近大血管时应避免；既往放疗后风险更高。</li>
+</ul>
+<h4>冷冻治疗：</h4>
+<ul>
+<li>水肿/分泌物——术后吸引；可考虑短程类固醇（实践各异）。</li>
+<li>出血——通常轻微；按上述方式处理。</li>
+<li>穿孔——罕见（软骨相对耐冷冻）。</li>
+<li>喷雾冷冻——确保排气以防气压伤/氧饱和度下降。</li>
+</ul>
+<h4>EBB:</h4>
+<ul>
+<li>放射性支气管炎/狭窄——分级并用清创/扩张/支架治疗。</li>
+<li>溃疡/坏死、瘘管、大咯血——在溃疡性病变和大血管受累时应避免；需严密计划。</li>
+</ul>
+<h3>特殊人群</h3>
+<ul>
+<li><strong>高氧需求：</strong> 冷冻治疗可在高FiO2下安全进行；热消融方式存在气道起火风险。</li>
+<li><strong>气道支架：</strong> 冷冻治疗对支架内肿瘤长入或支架周围肉芽有优势。</li>
+<li><strong>移植后 / 肉芽组织：</strong> 对冷冻治疗高度敏感。</li>
+<li><strong>既往胸部放疗：</strong> 使用PDT时权衡咯血风险；EBB常用于腔内病变的再治疗。</li>
+</ul>
+<h3>证据与结局（精选）</h3>
+<ul>
+<li><strong>PDT（根治意图）：</strong> 在中央型病变中，当病变&lt;1 cm且边界可见时，CR率超过90%；在小型&lt;1 cm队列中报道5年生存率接近58%，但需承认衰弱人群中的竞争风险。</li>
+<li><strong>PDT（姑息）：</strong> 晚期疾病系列中，治疗后体能状态和肺功能（FEV1、FVC）改善；肺再通气和症状缓解（呼吸困难、咳嗽、咯血）常见。</li>
+<li><strong>冷冻治疗：</strong> 大型系列和前瞻性队列显示症状改善和气道通畅恢复；即时冷冻再通对急性阻塞有效；在不可切除NSCLC中，与外照射联合可改善局部控制（65% vs 35%）和中位生存（397 vs 144天）。</li>
+<li><strong>EBB:</strong> 各领域症状改善率约70–90%（呼吸困难、咳嗽、咯血、再通气）；在EBRT/化疗反应不完全后使用时有生存获益报道；因便利性和导管稳定性，HDR优于LDR。</li>
+</ul>
+<hr/>
+<h3>诊断与治疗算法</h3>
+<h4>算法1：在支气管内肿瘤中选择延迟性消融方式</h4>
+<div class="mermaid">
+        flowchart TD
+        A[有症状的支气管内病变] --&gt; B{是否需要紧急缓解？}
+        B -- 是，高级别阻塞/潴留 --&gt; C[即时减瘤：硬镜/机械 +/- 激光/电灼或冷冻黏附]
+        C --&gt; D{是否有残余腔内病变？}
+        D -- 是 --&gt; E[考虑下列延迟方式]
+        B -- 否/初始减瘤后 --&gt; E[考虑下列延迟方式]
+        E --&gt; F{病变特征}
+        F --&gt;|表浅、边界可见；大小 &lt;=1 cm；中央型| G[PDT 给药-光照-48小时清创]
+        F --&gt;|腔内肿瘤/肉芽；需要高FiO2；支架在位| H[冷冻消融 +/- 分阶段清创]
+        F --&gt;|EBRT后再治疗；以再通气为目标的姑息治疗| I[HDR EBB计划与递送]
+        G --&gt; J[安排随访支气管镜和监测]
+        H --&gt; J
+        I --&gt; J
+    </div>
+<div class="algorithm-note">
+<strong>并行步骤：</strong>
+<ul>
+<li>分诊紧迫性 -&gt; 若为急症，立即再通；随后重新评估是否需要延迟治疗。</li>
+<li>对于小而表浅、边界可见的中央病变 -&gt; PDT。</li>
+<li>对于冷冻敏感组织或需要高FiO2时 -&gt; 冷冻治疗（消融或黏附）。</li>
+<li>对于既往EBRT后的再治疗/姑息治疗，或腔内病变导致的肺叶不张 -&gt; EBB（HDR）。</li>
+</ul>
+</div>
+<h4>算法2：支气管内近距离放射治疗流程（HDR）</h4>
+<div class="mermaid">
+        flowchart LR
+        A[支气管镜：评估病变长度和通畅性] --&gt; B{腔道可通过？}
+        B -- 否 --&gt; C[建立通道：机械/热减瘤]
+        C --&gt; D
+        B -- 是 --&gt; D[导管置入病变远端约2 cm；固定]
+        D --&gt; E[计划：深度5–10 mm，加1–2 cm边界]
+        E --&gt; F[影像/模拟源确认]
+        F --&gt; G[HDR递送：按方案分次]
+        G --&gt; H[移除导管；带医嘱出院]
+        H --&gt; I[随访：放射性支气管炎/狭窄分级并处理]
+    </div>
+<div class="algorithm-note">
+<strong>并行步骤：</strong>
+<ul>
+<li>确保导管可通过；若不能，在先前一次操作中先减瘤。</li>
+<li>设定深度（常为10 mm）或基于气道的处方；包括近端/远端1–2 cm边界。</li>
+<li>按方案递送HDR（例如单独姑息时7.5 Gy x3每周，或10 Gy x2；与EBRT联合时使用减少的分次）。</li>
+<li>随访放射性支气管炎/狭窄，并按分级治疗。</li>
+</ul>
+</div>
+<hr/>
+<h3>表格与快速参考框</h3>
+<h4>表1. 延迟性消融方式比较</h4>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>PDT</th>
+<th>冷冻治疗</th>
+<th>支气管内近距离放射治疗（HDR）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>机制</td>
+<td>光敏剂 + 光照 -&gt; ROS、血管血栓形成 -&gt; 凋亡/坏死</td>
+<td>冻融细胞毒性；冷冻黏附用于取出</td>
+<td>通过后装导管递送Ir-192内照射</td>
+</tr>
+<tr>
+<td>起效</td>
+<td>延迟（需要48小时清创）</td>
+<td>消融：延迟；黏附：即时</td>
+<td>可变；症状缓解需数天至数周</td>
+</tr>
+<tr>
+<td>深度/目标</td>
+<td>约4–6 mm；表浅腔内病变</td>
+<td>腔内组织；肉芽；血凝块/黏液</td>
+<td>距放射源约5–10 mm内的腔内病变</td>
+</tr>
+<tr>
+<td>最佳用途</td>
+<td>CIS/早期中央型SCC；选择性姑息</td>
+<td>冷冻敏感组织；高FiO2环境；支架内长入；血凝块/黏液</td>
+<td>姑息、EBRT后再治疗；腔内肿瘤导致的肺不张</td>
+</tr>
+<tr>
+<td>关键禁忌证</td>
+<td>卟啉病；瘘管；大血管侵蚀；紧急高级别阻塞</td>
+<td>消融时未纠正的凝血障碍</td>
+<td>瘘管；大血管受累；未建立通道的完全闭塞</td>
+</tr>
+<tr>
+<td>场所</td>
+<td>支气管镜室；门诊</td>
+<td>支气管镜室；柔性或硬性</td>
+<td>配备后装机的放射肿瘤治疗室</td>
+</tr>
+</tbody>
+</table>
+<p>缩略语：CIS，原位癌；EBRT，外照射放射治疗；FiO2，吸入氧浓度分数。</p>
+<h4>表2. 实用剂量、设备和时间安排</h4>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>剂量/设备</th>
+<th>时间安排要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PDT（卟吩姆）</td>
+<td>卟吩姆钠2 mg/kg静脉给药；通过圆柱形弥散器递送630 nm红光；常用200 J/cm</td>
+<td>给药后约48小时光激活；光照后48小时复查支气管镜清除脱落物；给药后5–7天内可再次照光</td>
+</tr>
+<tr>
+<td>冷冻消融</td>
+<td>柔性探头1.1–2.4 mm；CO2或N2O；30秒冷冻/被动解冻，每个部位约3个循环；重叠约5 mm</td>
+<td>5–10天后复查支气管镜以清除坏死组织</td>
+</tr>
+<tr>
+<td>冷冻黏附</td>
+<td>短时间冷冻以黏附；随镜整块取出</td>
+<td>即时清理气道；在生理盐水中解冻标本</td>
+</tr>
+<tr>
+<td>EBB（HDR）</td>
+<td>Ir-192；距导管5–10 mm处方；近端/远端边界1–2 cm</td>
+<td>HDR方案示例（1 cm处）：姑息治疗7.5 Gy x3每周，或10 Gy x2，或6 Gy x4；联合EBRT时：7.5 Gy x2、5 Gy x3或4 Gy x4</td>
+</tr>
+</tbody>
+</table>
+<p>缩略语：CO2，二氧化碳；N2O，一氧化二氮；HDR，高剂量率。</p>
+<h4>表3. 并发症——预防和处理</h4>
+<table>
+<thead>
+<tr>
+<th>并发症</th>
+<th>方式</th>
+<th>预防/处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>光敏性皮炎</td>
+<td>PDT</td>
+<td>严格避光6–8周</td>
+</tr>
+<tr>
+<td>坏死脱落物相关阻塞</td>
+<td>PDT，冷冻消融</td>
+<td>计划清创（PDT为48小时；冷冻为5–10天）</td>
+</tr>
+<tr>
+<td>咯血（重度）</td>
+<td>PDT，EBB</td>
+<td>病变贴近大血管时避免；EBRT后风险更高；紧急止血流程</td>
+</tr>
+<tr>
+<td>放射性支气管炎/狭窄</td>
+<td>EBB</td>
+<td>剂量计划；分级并用清创/扩张/支架处理</td>
+</tr>
+<tr>
+<td>气道水肿/分泌物</td>
+<td>冷冻</td>
+<td>预期发生；吸引；考虑短程类固醇（基于实践）</td>
+</tr>
+<tr>
+<td>气压伤/氧饱和度下降</td>
+<td>喷雾冷冻</td>
+<td>确保排气；大气道通路；仅短暂呼吸暂停喷放</td>
+</tr>
+</tbody>
+</table>
+<p>缩略语：EBRT，外照射放射治疗。</p>
+<hr/>
+<h3>病例与应用学习</h3>
+<div class="case-study">
+<h4>病例1——1 cm斑块</h4>
+<p>一名67岁重度COPD患者右主支气管有0.8 cm扁平白斑样病变；活检证实CIS；边界完全可见。最佳下一步是什么？</p>
+<p><strong>选项：</strong><br/>
+        A. 单纯外照射放射治疗<br/>
+        B. 基于卟吩姆方案的PDT<br/>
+        C. HDR EBB<br/>
+        D. 氩等离子凝固<br/>
+        E. 观察
+        </p>
+<p><strong>答案：B。边界可见的小型、表浅、中央病变非常适合按给药-照光-清创顺序进行PDT，CR率高。EBB和EBRT是可选方案，但此处没有优势；观察存在进展风险。</strong></p>
+</div>
+<div class="case-study">
+<h4>病例2——伴分泌物的低氧性阻塞</h4>
+<p>一名ICU低氧患者在活检后左主支气管有近乎闭塞的血凝块和黏液。最佳即时支气管镜干预是什么？</p>
+<p><strong>选项：</strong><br/>
+        A. 立即PDT<br/>
+        B. 冷冻消融（冻融循环）<br/>
+        C. 冷冻黏附并整块取出<br/>
+        D. 置入EBB导管<br/>
+        E. 延后以进行CT计划
+        </p>
+<p><strong>答案：C。冷冻黏附可高成功率地即时清除血凝块/黏液；PDT和EBB是延迟策略；冷冻消融的获益来自延迟性脱落。</strong></p>
+</div>
+<div class="case-study">
+<h4>病例3——既往EBRT，反复咯血</h4>
+<p>一名72岁鳞状NSCLC患者既往接受全剂量EBRT，现出现腔内复发，导致咯血和部分肺叶塌陷。建立可通过腔道后的下一步是什么？</p>
+<p><strong>选项：</strong><br/>
+        A. 再次全剂量EBRT<br/>
+        B. 不清创的PDT<br/>
+        C. 经过仔细计划的HDR EBB<br/>
+        D. 手术<br/>
+        E. 观察
+        </p>
+<p><strong>答案：C。EBB适用于既往EBRT后有症状的腔内复发，并与较高的症状姑息和再通气率相关；仔细计划可避开血管/溃疡区域。</strong></p>
+</div>
+<h3>题库（选择题）</h3>
+<ol>
+<li>
+<strong>一名58岁左主支气管CIS（0.7 cm）患者拒绝手术。最佳根治性支气管镜选择是什么？</strong><br/>
+            A. 单独Nd:YAG激光<br/>
+            B. 卟吩姆方案PDT<br/>
+            C. 单独EBB<br/>
+            D. 电灼加支架<br/>
+            E. 观察<br/>
+<strong>答案：B。边界可见的小型中央CIS使用PDT具有高CR率。</strong>
+</li>
+<li>
+<strong>PDT激活期间屏幕出现“白屏”。最关键的操作是：</strong><br/>
+            A. 增加光功率以缩短时间<br/>
+            B. 将弥散器推进到肿瘤更深处<br/>
+            C. 保持弥散器位置和患者不动<br/>
+            D. 中止并重新安排<br/>
+            E. 改用蓝光<br/>
+<strong>答案：C。激活期间稳定弥散器，以确保即使视觉“白屏”仍能准确给量。</strong>
+</li>
+<li>
+<strong>关于PDT安全性，哪项说法正确？</strong><br/>
+            A. 光敏性在48小时内消退<br/>
+            B. 表浅病变的严重咯血风险最高<br/>
+            C. PDT后不会发生支气管狭窄<br/>
+            D. 给药后需要数周光敏预防措施<br/>
+            E. 肿瘤贴近纵隔大血管时优先选择PDT<br/>
+<strong>答案：D。皮肤光毒性可持续6–8周；应避开大血管。</strong>
+</li>
+<li>
+<strong>一名70岁服用氯吡格雷的患者有易碎腔内肿瘤，计划冷冻消融。最佳围操作期计划是什么？</strong><br/>
+            A. 继续操作；出血风险可忽略<br/>
+            B. 消融性冷冻前按机构方案停用氯吡格雷<br/>
+            C. 改用华法林<br/>
+            D. 使用喷雾冷冻以减少出血<br/>
+            E. 加用全身抗纤溶药<br/>
+<strong>答案：B。消融性冷冻治疗前应纠正凝血障碍/暂停抗血小板药。</strong>
+</li>
+<li>
+<strong>冷冻治疗相对于热减瘤的常考优势：</strong><br/>
+            A. 气道起火风险更高<br/>
+            B. 需要低于环境浓度的氧气<br/>
+            C. 在气道支架周围和高FiO2下更安全<br/>
+            D. 起效比激光更快<br/>
+            E. 对肉芽组织效果较差<br/>
+<strong>答案：C。冷冻治疗无起火风险且适合支架周围使用。</strong>
+</li>
+<li>
+<strong>立即清除阻塞右主支气管的大型机化血凝块，最佳方法是：</strong><br/>
+            A. 钳取<br/>
+            B. 球囊取出<br/>
+            C. 冷冻黏附并整块取出<br/>
+            D. PDT<br/>
+            E. EBB<br/>
+<strong>答案：C。冷冻黏附对高含水材料有强黏附力，可实现整块取出。</strong>
+</li>
+<li>
+<strong>作为单独姑息治疗的HDR EBB，可接受的分割方案（约1 cm处方）是：</strong><br/>
+            A. 1 Gy x30，每日<br/>
+            B. 7.5 Gy x3，每周<br/>
+            C. 20 Gy单次分割<br/>
+            D. 2 Gy x30<br/>
+            E. 60 Gy，30次分割<br/>
+<strong>答案：B。常见HDR姑息方案包括7.5 Gy x3（或10 Gy x2；6 Gy x4）。</strong>
+</li>
+<li>
+<strong>EBB计划中导管位置的关键参数是：</strong><br/>
+            A. 尖端刚好在病变近端<br/>
+            B. 尖端位于病变远端约2 cm<br/>
+            C. 尖端位于胸膜腔内<br/>
+            D. 尖端位于食管内<br/>
+            E. 距离无关紧要<br/>
+<strong>答案：B。将导管置于病变远端边界外约2 cm并固定。</strong>
+</li>
+<li>
+<strong>支气管内肿瘤冷冻消融后，最合适的随访是：</strong><br/>
+            A. 48小时后复查支气管镜<br/>
+            B. 5–10天后复查支气管镜<br/>
+            C. 仅年度监测<br/>
+            D. 立即EBB<br/>
+            E. 次日PET-CT<br/>
+<strong>答案：B。坏死脱落物在消融后数天达到高峰；计划5–10天清创。</strong>
+</li>
+<li>
+<strong>以下哪项是HDR相对于LDR EBB的公认优势？</strong><br/>
+            A. 症状反应更低<br/>
+            B. 治疗时间更短且导管移位更少<br/>
+            C. 不需要放射计划<br/>
+            D. 对瘘管患者更安全<br/>
+            E. 每次分割剂量不受限制<br/>
+<strong>答案：B。HDR缩短治疗时间，减少住院和移位风险。</strong>
+</li>
+<li>
+<strong>PDT剂量递送最接近哪个参数？</strong><br/>
+            A. 每个导管停留点处方通量<br/>
+            B. 每厘米弥散器长度的焦耳数<br/>
+            C. 每个气道段的戈瑞数<br/>
+            D. 每秒开尔文<br/>
+            E. 每瓦流明<br/>
+<strong>答案：B。PDT使用每厘米弥散器长度的J/cm（例如200 J/cm）。</strong>
+</li>
+<li>
+<strong>一名支气管内溃疡性肿瘤贴近肺动脉的患者被转诊进行EBB。最佳下一步是：</strong><br/>
+            A. 继续EBB；溃疡无关紧要<br/>
+            B. 继续PDT<br/>
+            C. 重新评估治疗方式——血管/溃疡受累会增加EBB相关坏死/出血风险<br/>
+            D. 加用抗凝<br/>
+            E. 继续观察<br/>
+<strong>答案：C。大血管受累和显著溃疡是EBB禁忌证。</strong>
+</li>
+</ol>
+<hr/>
+<h3>争议、差异性和新兴证据</h3>
+<ul>
+<li>更新型光敏剂（如二氢卟吩、细菌叶绿素类）和剂量学改进旨在降低光毒性并增加组织穿透；监管批准因地区而异。</li>
+<li>通过导航平台在外周肺实施PDT仍属研究性应用，已有早期安全性/可行性数据，但尚不属于常规护理方案。</li>
+<li>冷冻治疗涵盖延迟消融和即时再通；旧教材强调延迟效应，而现代冷冻黏附可快速缓解——考试和实践都需理解两者。</li>
+<li>专业指南建议EBB优先使用并优化HDR或PDR而非LDR；选择和分割方案需个体化并取决于中心。</li>
+</ul>
+<div class="algorithm-note">
+<strong>带走要点清单</strong>
+<ul>
+<li>在选择治疗方式前，确认病变表型（表浅 vs bulky；腔内 vs 混合）和紧迫性。</li>
+<li>对于PDT，安排给药 -&gt; 光照（约48小时）-&gt; 必须48小时清创；提前规划流程。</li>
+<li>告知PDT药物输注后数周需采取光毒性预防措施。</li>
+<li>冷冻消融用于延迟性细胞减量；冷冻黏附用于即时取出血凝块/黏液/肿瘤。</li>
+<li>预期冷冻后5–10天需要清创；安排随访支气管镜。</li>
+<li>对于EBB，确保腔道可通过，将导管置于病变远端约2 cm，并按5–10 mm深度、1–2 cm边界处方。</li>
+<li>EBB后对放射性支气管炎/狭窄分级并治疗；必要时计划再次干预。</li>
+<li>当肿瘤贴近大血管或存在瘘管时，避免EBB/PDT。</li>
+<li>高FiO2环境或支架附近优先考虑冷冻治疗。</li>
+<li>记录治疗前/后的体能状态和功能指标，以量化获益并指导下一步。</li>
+</ul>
+</div>
+<hr/>
+<h3>缩略语和术语表</h3>
+<div class="abbreviations">
+<dl>
+<dt>APC</dt>
+<dd>氩等离子凝固</dd>
+<dt>CIS</dt>
+<dd>原位癌</dd>
+<dt>CR</dt>
+<dd>完全缓解</dd>
+<dt>EBB</dt>
+<dd>支气管内近距离放射治疗</dd>
+<dt>EBRT</dt>
+<dd>外照射放射治疗</dd>
+<dt>FiO2</dt>
+<dd>吸入氧浓度分数</dd>
+<dt>HDR/LDR/PDR</dt>
+<dd>高/低/脉冲剂量率</dd>
+<dt>HPD</dt>
+<dd>血卟啉衍生物</dd>
+<dt>Ir-192</dt>
+<dd>铱-192放射源</dd>
+<dt>NSCLC</dt>
+<dd>非小细胞肺癌</dd>
+<dt>PDT</dt>
+<dd>光动力治疗</dd>
+<dt>ROS</dt>
+<dd>活性氧</dd>
+<dt>SCC</dt>
+<dd>鳞状细胞癌</dd>
+</dl>
+</div>
+<h3>参考文献</h3>
+<div class="references">
+<ol>
+<li>Hayata Y, Kato H, Konaka C, et al. Hematoporphyrin derivative and laser photoradiation in the treatment of lung cancer. Chest. 1982;81(3):269-277.</li>
+<li>McCaughan JS Jr, Williams TE. Photodynamic therapy for endobronchial malignant disease: a prospective fourteen-year study. J Thorac Cardiovasc Surg. 1997;114(6):940-946.</li>
+<li>Kato H, Usuda J, Okunaka T, et al. Basic and clinical research on photodynamic therapy at Tokyo Medical University Hospital. Lasers Surg Med. 2006;38(5):371-375.</li>
+<li>Moghissi K, Dixon K, Stringer M, et al. The place of bronchoscopic photodynamic therapy in advanced unresectable lung cancer: experience of 100 cases. Eur J Cardiothorac Surg. 1999;15(1):1-6.</li>
+<li>Chaddha U, Hogarth DK, Murgu S. Bronchoscopic ablative therapies for malignant central airway obstruction and peripheral lung tumors. Ann Am Thorac Soc. 2019;16(10):1220-1229.</li>
+<li>Lee P, Kupeli E, Mehta AC. Therapeutic bronchoscopy in lung cancer: laser therapy, electrocautery, brachytherapy, stents, and photodynamic therapy. Clin Chest Med. 2002;23(1):241-256.</li>
+<li>Dougherty TJ, Gomer CJ, Henderson BW, et al. Photodynamic therapy. J Natl Cancer Inst. 1998;90(12):889-905.</li>
+<li>Edell E, Cortese DA. Photodynamic therapy in early superficial squamous cell carcinoma as an alternative to surgical resection. Chest. 1992;102(5):1319-1322.</li>
+<li>Furukawa K, Kato H, Konaka C, et al. Locally recurrent central-type early-stage lung cancer &lt;1.0 cm in diameter after complete remission by photodynamic therapy. Chest. 2005;128(5):3269-3275.</li>
+<li>Mathur PN, Wolf KM, Busk MF, et al. Fiberoptic bronchoscopic cryotherapy in the management of tracheobronchial obstruction. Chest. 1996;110(3):718-723.</li>
+<li>Walsh D, Maiwand M, Nath A, et al. Bronchoscopic cryotherapy for advanced bronchial carcinoma. Thorax. 1990;45(7):509-513.</li>
+<li>Vergnon JM, Schmitt T, Alamartine E, et al. Initial combined cryotherapy and irradiation for unresectable non-small-cell lung cancer: preliminary results. Chest. 1992;102(5):1436-1440.</li>
+<li>Stewart A, Parashar B, Patel M, et al. ABS consensus guidelines for thoracic brachytherapy for lung cancer. Brachytherapy. 2016;15(1):1-11.</li>
+<li>Kelly JF, Delclos ME, Morice RC, et al. High-dose-rate endobronchial brachytherapy effectively palliates symptoms due to airway tumors: the 10-year MD Anderson experience. Int J Radiat Oncol Biol Phys. 2000;48:697-702.</li>
+<li>Celebioglu B, Gurkan OU, Erdogan S, et al. High-dose rate endobronchial brachytherapy effectively palliates symptoms due to inoperable lung cancer. Jpn J Clin Oncol. 2002;32(11):443-448.</li>
+<li>Hennequin C, Bleichner O, Tredaniel J, et al. Long-term results of endobronchial brachytherapy: a curative treatment? Int J Radiat Oncol Biol Phys. 2007;67:425-430.</li>
+<li>Diaz-Jimenez JP, Martinez-Ballarin JE, Llunell A, et al. Efficacy and safety of photodynamic therapy versus Nd-YAG laser resection in NSCLC with airway obstruction. Eur Respir J. 1999;14(4):800-805.</li>
+<li>Lam S, Grafton C, Coy P, et al. Combined photodynamic therapy and radiotherapy versus radiotherapy alone in inoperable obstructive NSCLC. Proc SPIE. 1991;1616:20-28.</li>
+<li>Reddy C, Michaud G, Majid A, et al. Photodynamic therapy in endobronchial metastases from renal cell carcinoma. J Bronchology Interv Pulmonol. 2009;16(4):245-249.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

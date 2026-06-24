@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胸腔积液与胸膜介入操作</title>
+    <style>
+        body {
+            font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fdfdfd;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 10px;
+            margin-top: 50px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 40px;
+            font-weight: 600;
+        }
+        h4 {
+            color: #555;
+            margin-top: 25px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+        }
+        p {
+            margin-bottom: 16px;
+        }
+        ul, ol {
+            margin-bottom: 16px;
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e1e4e8;
+            margin: 50px 0;
+        }
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.95em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #e1e4e8;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f8ff;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        tr:nth-child(even) {
+            background-color: #fbfbfb;
+        }
+        /* Callout Boxes */
+        .algorithm-note {
+            background-color: #eef6fc;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #3498db;
+            margin: 25px 0;
+        }
+        .case-study {
+            background-color: #fff8e1;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #ffc107;
+            margin: 20px 0;
+        }
+        /* Mermaid Diagram Container */
+        .mermaid {
+            background: white;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+        }
+        /* Reference List */
+        .references ol {
+            padding-left: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .references li {
+            margin-bottom: 10px;
+        }
+        .abbreviations dl {
+            display: grid;
+            grid-template-columns: max-content auto;
+            gap: 10px 20px;
+            font-size: 0.95em;
+        }
+        .abbreviations dt {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .abbreviations dd {
+            margin: 0;
+        }
+        /* Responsiveness */
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; gap: 5px; }
+            .abbreviations dt { margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+<h1>胸腔积液与胸膜介入操作</h1>
+
+<h3>考试对应与范围</h3>
+<p>本章对应 AABIP/CAQ 中胸腔积液诊断及完整胸膜操作谱系：胸部超声（TUS）、诊断性与治疗性胸腔穿刺（包括胸膜腔测压）、影像引导胸膜导管/穿刺操作、胸管选择与管理、胸膜感染的胸腔内治疗、恶性胸腔积液（MPE）的处理路径（IPC 与胸膜固定术），以及内科胸腔镜（MT）。重点包括考试常见决策、分步技术、并发症预防和不断演变的证据。</p>
+
+<hr>
+
+<h3>学习目标</h3>
+<p>完成本章后，学习者应能够：</p>
+<ul>
+    <li>使用以超声为先的高收益算法<strong>分类</strong>胸腔积液并安排诊断检查优先级。</li>
+    <li>在正确选择患者、准备器械和采用测压指导大容量引流的前提下，<strong>安全实施</strong>实时超声引导胸腔穿刺。</li>
+    <li><strong>选择并置入</strong>小口径或大口径胸管；决定水封或负压吸引；处理漏气、堵塞、位置异常及复张性肺水肿（RPE）风险。</li>
+    <li><strong>构建</strong>胸膜感染（抗生素 + 胸管、纤溶酶 + DNase、手术）和 MPE（反复穿刺、IPC、滑石粉胸膜固定术、胸腔镜）的管理路径。</li>
+    <li><strong>识别并处理</strong>特殊人群，包括机械通气、抗凝/尿毒症、陷闭或不可复张肺、自发性/创伤性气胸和血胸患者。</li>
+    <li><strong>预判、预防和处理</strong>气胸、血胸、感染、RPE、皮下气肿等并发症，并确定术后影像指征。</li>
+</ul>
+
+<hr>
+
+<h3>高收益一页总结（要点、陷阱与常见考点）</h3>
+<ul>
+    <li><strong>超声是胸膜操作的标准配置：</strong>胸腔穿刺和胸管置入均应使用超声，可显著降低气胸和“干穿”发生率。</li>
+    <li><strong>Light 标准</strong>仍是区分渗出液与漏出液的首选，但临界值准确性下降，必须结合临床和辅助检测。</li>
+    <li><strong>大容量胸腔穿刺</strong>在症状和胸膜腔压力指导下是安全的。胸膜腔压力降至约 −20 cm H₂O 以下，或出现胸痛、持续剧烈咳嗽时应停止。</li>
+    <li><strong>胸腔穿刺后不常规拍胸片。</strong>仅在抽到空气、操作困难、多次穿刺、既往胸部放疗/手术或出现症状等情况下影像复查。</li>
+    <li><strong>小口径（≤14F）胸管</strong>足以处理大多数积液和气胸，耐受性更好，通常采用 Seldinger 技术。</li>
+    <li><strong>优先大口径的情境：</strong>不稳定或大量创伤性血胸、巨大漏气、胸外科术后即刻引流，因为需要更大流量并减少堵塞。</li>
+    <li><strong>气胸不常规使用负压吸引：</strong>水封常已足够，并可能减少瘘口持续开放。</li>
+    <li><strong>胸膜感染：</strong>尽早使用抗生素 + 小口径胸管；引流不畅时升级胸腔内 tPA/DNase；无反应者转外科。</li>
+    <li><strong>MPE：</strong>有症状且反复积液时选择 IPC 或滑石粉胸膜固定术；不可复张肺优先 IPC。小口径胸管滑石粉浆与胸腔镜滑石粉喷洒的成功率相近。</li>
+    <li><strong>门诊装置</strong>可用于精心筛选的原发性自发性气胸；继发性自发性气胸的门诊证据不足。</li>
+    <li><strong>RPE 少见但严重。</strong>极负胸膜腔压力、快速引流和功能状态差会增加风险；出现症状时立即停止或夹闭并给予支持治疗。</li>
+    <li><strong>肋间动脉解剖：</strong>后部走行变异大。避免在距脊柱 6 cm 内的后方穿刺，且<strong>始终从肋骨上缘进入</strong>以保护神经血管束。</li>
+    <li><strong>拔管标准：</strong>
+        <ul>
+            <li><em>气胸：</em>肺复张且无漏气。</li>
+            <li><em>积液：</em>引流量下降（常 &lt;100–200 mL/日）且肺复张。</li>
+        </ul>
+    </li>
+    <li><strong>术后超声</strong>评估残余液体和胸管位置，常比常规胸片更具即时可操作性。</li>
+    <li><strong>陷闭肺与肺受困：</strong>基线压力已为负且引流后立即陡降提示陷闭肺（单相 ex vacuo 生理）；肺受困通常基线压力为正并呈双相曲线——最初缓慢下降、肺部分复张，随后出现陡峭拐点提示限制。</li>
+</ul>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<ul>
+    <li><strong>胸腔积液</strong>源于液体形成与清除失衡，病因超过 50 种；美国每年约 150 万人受影响。</li>
+    <li><strong>气胸和胸膜感染</strong>是住院和胸膜操作的重要原因；自发性气胸若未进行根治性干预，复发率较高。</li>
+    <li><strong>MPE</strong>常见于肺癌和乳腺癌；管理目标是缓解症状、减少住院天数并符合患者预后和价值取向。</li>
+</ul>
+
+<h4>适应证与禁忌证</h4>
+<p><strong>胸腔穿刺</strong></p>
+<ul>
+    <li><strong>适应证：</strong>新发且原因不明的积液；缓解症状；实施 MPE 根治性干预前评估。</li>
+    <li><strong>相对禁忌证：</strong>未纠正的凝血障碍/重度血小板减少、穿刺处蜂窝织炎、无法配合。采用超声引导时，机械通气<strong>并非</strong>禁忌证。</li>
+</ul>
+
+<p><strong>胸管（多数情况优先小口径）</strong></p>
+<ul>
+    <li><strong>胸膜感染/脓胸：</strong>早期胸管引流 + 抗生素。</li>
+    <li><strong>MPE：</strong>住院症状控制和/或滑石粉浆胸膜固定术；门诊长期症状控制可用 IPC。</li>
+    <li><strong>气胸：</strong>有症状的原发性气胸，或任何继发性、中至大量气胸；巨大漏气、机械通气或创伤时考虑大口径。</li>
+    <li><strong>血胸：</strong>不稳定者用大口径；稳定且非急救场景可用 14F，排液效果相近且疼痛更少。</li>
+</ul>
+
+<p><strong>胸腔内纤溶酶 + DNase</strong></p>
+<ul>
+    <li><strong>适应证：</strong>胸膜感染初始引流失败，持续脓毒症/分隔；仍无反应时转外科。</li>
+</ul>
+
+<p><strong>内科胸腔镜（MT）</strong></p>
+<ul>
+    <li><strong>适应证：</strong>原因未明、怀疑恶性或结核的渗出液；滑石粉喷洒胸膜固定术；精选病例粘连松解/分隔处理。</li>
+    <li><strong>相对禁忌证：</strong>严重粘连无法安全进入、不可纠正的心肺不稳定；应以超声规划入路。</li>
+</ul>
+
+<h4>术前评估</h4>
+<ul>
+    <li><strong>影像：</strong>床旁 TUS 确定积液大小、复杂程度和分隔；识别膈肌及脾/肝；并可帮助预测不可复张肺。</li>
+    <li><strong>实验室/药物：</strong>复核抗凝和抗血小板药；可行时纠正严重凝血异常；评估肾病相关血小板功能障碍；完成知情同意。</li>
+    <li><strong>风险分层与沟通：</strong>讨论 RPE 风险、呼吸储备和以患者为中心的目标，MPE 尤其重要。</li>
+    <li><strong>胸水检查：</strong>细胞计数与分类、蛋白/LDH（Light 标准）、葡萄糖、pH（评估肺炎旁积液）、怀疑恶性时细胞学；按需加 ADA、淀粉酶、胆固醇、BNP 或类风湿因子。</li>
+</ul>
+
+<h4>器械与准备</h4>
+<ul>
+    <li><strong>胸腔穿刺套件：</strong>无菌铺单、25G 与 22G 针、套管针、注射器、单向阀管路、标本管；可选真空瓶或墙壁负压（舒适度和并发症证据见相关试验）。</li>
+    <li><strong>小口径引流套件（≤14F）：</strong>穿刺针、导丝、手术刀、序贯扩张器、猪尾导管、固定缝线以及三腔引流系统。</li>
+    <li><strong>胸腔引流系统：</strong>集液室、水封室（单向阀）和负压控制室（湿式或干式）。数字系统可定量漏气并精准调控负压。</li>
+</ul>
+
+<hr>
+
+<h3>分步技术与操作核对表</h3>
+
+<h4>胸腔穿刺（实时超声引导）</h4>
+<ol>
+    <li><strong>体位：</strong>能耐受者坐位；替代方案为患侧朝上的侧卧位。</li>
+    <li><strong>准备：</strong>知情同意、暂停核查、基线生命体征，必要时给氧。</li>
+    <li><strong>超声：</strong>选择后外侧肋间隙，标记膈肌及脾/肝；避开脊柱旁后方危险区和肋骨下缘。</li>
+    <li><strong>麻醉：</strong>无菌消毒铺巾；25G 针皮下局麻，随后 22G 针沿计划路径充分浸润至壁层胸膜。</li>
+    <li><strong>进入：</strong>从肋骨上缘一次性进入，持续回抽见液后推进导管并撤针。</li>
+    <li><strong>引流：</strong>注射器/单向阀管路缓慢引流；计划大容量或出现症状时考虑胸膜腔测压。</li>
+    <li><strong>终止：</strong>胸痛、持续剧烈咳嗽、迷走反应或 Ppl &lt;−20 cm H₂O 时停止。呼气末拔管并覆盖封闭敷料。</li>
+    <li><strong>术后：</strong>不常规胸片；抽到空气、多次尝试、出现症状或既往胸部放疗/手术时检查。</li>
+</ol>
+
+<h4>小口径胸管（Seldinger 技术）</h4>
+<ol>
+    <li><strong>准备：</strong>复核影像和实验室检查；采取最佳侧方入路体位；持续监护；超声标记。</li>
+    <li><strong>麻醉：</strong>无菌消毒铺巾；充分麻醉皮下组织与壁层胸膜，避免将受污染液体回注穿刺道。</li>
+    <li><strong>进入：</strong>边回抽边进针；将导丝送入胸膜腔 &gt;10 cm，撤针。</li>
+    <li><strong>置管：</strong>小切口，序贯扩张，沿导丝推进猪尾导管，撤导丝，缝合固定，连接水封（必要时加负压）。</li>
+    <li><strong>确认：</strong>确认液体/气体引流和患者稳定；选择性胸片；可用床旁超声确认位置。</li>
+</ol>
+
+<hr>
+
+<h3>故障排除与术中处理</h3>
+<ul>
+    <li><strong>胸腔穿刺无液体：</strong>确认针与定位路径同轴，检查导管折曲；重新扫描；考虑外侧或前方液体口袋。</li>
+    <li><strong>影像有液但“干穿”：</strong>重新用超声定位可挽救多达约 88% 的病例。</li>
+    <li><strong>胸管堵塞：</strong>无菌盐水冲洗；检查折曲；改变体位；确认侧孔均位于胸腔内。</li>
+    <li><strong>持续漏气：</strong>确认导管在胸腔内且未堵塞；气胸避免过强负压；考虑数字引流系统；长期不愈时升级支气管镜或外科。</li>
+    <li><strong>皮下气肿：</strong>评估位置异常或堵塞；确保侧孔在胸腔内；给予支持治疗。</li>
+    <li><strong>RPE 信号：</strong>大容量引流后新发低氧、咳嗽/胸痛及肺浸润影，应停止或夹闭并给氧及支持治疗。</li>
+</ul>
+
+<hr>
+
+<h3>术后护理与随访</h3>
+<ul>
+    <li><strong>胸腔穿刺：</strong>观察迷走反应；重新评估呼吸困难；鼓励肺扩张训练；无需常规影像。</li>
+    <li><strong>胸管：</strong>维持水封；选择性负压；每日检查漏气室、负压指示及引流量。</li>
+    <li><strong>拔管：</strong>
+        <ul>
+            <li><em>气胸：</em>无漏气且肺复张。</li>
+            <li><em>积液：</em>引流量 &lt;100–200 mL/日且肺复张。</li>
+            <li><em>技术：</em>Valsalva 或呼气末拔除，并用凡士林纱布封闭。</li>
+        </ul>
+    </li>
+</ul>
+
+<hr>
+
+<h3>并发症：预防、识别与处理</h3>
+<ul>
+    <li><strong>气胸：</strong>胸腔穿刺最常见并发症；实时超声和单次受控穿刺可降低风险。</li>
+    <li><strong>出血：</strong>从肋骨上缘进入以保护肋间神经血管束；脊柱旁后方“危险区”血管走行不确定。局部压迫/烧灼处理，严重出血少见。</li>
+    <li><strong>感染：</strong>严格无菌；置管部位感染和脓胸较少见。</li>
+    <li><strong>血胸：</strong>通常由肋间动脉损伤引起；血性穿刺后快速再积聚应高度怀疑。</li>
+    <li><strong>RPE：</strong>少见但可能严重；支持治疗；避免极负压力和强制负压快速排空。</li>
+</ul>
+
+<hr>
+
+<h3>特殊人群</h3>
+<ul>
+    <li><strong>机械通气：</strong>超声引导胸腔穿刺可安全实施；高 PEEP/FiO₂ 下置管应尽量减少呼吸回路中断。</li>
+    <li><strong>抗凝/尿毒症：</strong>许多胸膜操作可在谨慎技术下进行；高风险情境尽可能调整/暂停药物并选择性纠正血小板或 INR。</li>
+    <li><strong>肥胖：</strong>皮肤至胸膜距离增加，应依靠超声规划；较长导管可减少脱位。</li>
+    <li><strong>自发性气胸（SP）：</strong>精选原发性 SP 可保守；否则针吸或小口径胸管。门诊装置仅用于随访可靠的原发性 SP；继发性 SP 通常不适合。</li>
+    <li><strong>血胸：</strong>稳定且非大量可用 14F；不稳定/大量血胸需立即大口径引流和外科会诊。</li>
+    <li><strong>陷闭或不可复张肺：</strong>可由超声/测压预测；避免滑石粉胸膜固定，优先 IPC 缓解症状。</li>
+</ul>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——新发胸腔积液：诊断与初始治疗路径</h4>
+<div class="mermaid">
+flowchart TD
+    A["新发胸腔积液"] --> B{"有明确漏出液病因（如心衰）且治疗有效？"}
+    B -- "是" --> B1["可不穿刺，治疗原发病；表现不典型或反应差时穿刺"]
+    B -- "否或不典型" --> C["床旁超声：大小、复杂度、分隔"]
+    C --> D["超声引导诊断性胸腔穿刺"]
+    D --> E{"Light 标准为渗出液？"}
+    E -- "漏出液" --> E1["处理系统性病因；按需复查影像"]
+    E -- "渗出液" --> F{"最可能类别"}
+    F -- "肺炎旁/脓胸" --> G["抗生素；复杂者小口径胸管；引流差考虑 tPA/DNase"]
+    F -- "怀疑恶性" --> H["送细胞学；按症状选择 IPC、滑石粉固定术或重复穿刺"]
+    F -- "结核/其他" --> I["ADA、培养及靶向检测；必要时 MT/活检"]
+    G --> J{"临床改善？"}
+    J -- "是" --> K["继续引流至控制；达标后拔管"]
+    J -- "否" --> L["胸腔内 tPA/DNase；仍无反应则外科"]
+    H --> M{"肺可复张？"}
+    M -- "是" --> N["依据目标选择滑石粉固定术（浆或喷洒）或 IPC"]
+    M -- "否（陷闭）" --> O["IPC"]
+</div>
+
+<div class="algorithm-note">
+    <strong>平行文字算法：</strong>
+    <ol>
+        <li><strong>确认临床背景：</strong>典型漏出液（如心衰）且治疗有效时可暂不穿刺。</li>
+        <li><strong>先超声，</strong>再行诊断性胸腔穿刺并送检。</li>
+        <li><strong>肺炎旁积液/脓胸：</strong>抗生素；出现脓液、低 pH 或分隔时尽早小口径胸管。
+            <ul>
+                <li>引流停滞时考虑 tPA/DNase。</li>
+                <li>持续脓毒症或无法引流时转外科。</li>
+            </ul>
+        </li>
+        <li><strong>MPE：</strong>细胞学确诊；依据症状、肺可复张性和目标选择 IPC 或滑石粉固定。
+            <ul><li>陷闭肺 → IPC。</li></ul>
+        </li>
+        <li><strong>疑似结核/其他：</strong>加做 ADA、培养，并按需影像引导活检或 MT。</li>
+    </ol>
+</div>
+
+<h4>算法 2——胸腔引流管选择与管理（气体/液体）</h4>
+<div class="mermaid">
+flowchart TD
+    A["需要胸腔引流"] --> B{"目标：气体、液体还是两者？"}
+    B -- "气体（气胸）" --> C{"原发性还是继发性/创伤性？"}
+    C -- "原发性，有症状" --> D["小口径胸管或针吸；精选患者可门诊装置"]
+    C -- "继发性或创伤性" --> E["多数小口径；巨大漏气/机械通气时大口径"]
+    B -- "液体（积液）" --> F{"感染、MPE 还是血胸？"}
+    F -- "感染" --> G["小口径胸管；分隔时考虑 tPA/DNase"]
+    F -- "MPE" --> H["住院引流/滑石粉浆用小口径；门诊控制用 IPC"]
+    F -- "血胸" --> I["不稳定/大量用大口径；稳定非急救可用 14F"]
+    E & D & G & H & I --> J{"是否吸引？"}
+    J -- "先考虑水封" --> K["监测漏气、引流量和肺复张"]
+    J -- "需要时吸引" --> L["−10 至 −20 cm H₂O；复评"]
+    K & L --> M{"达到拔管条件？"}
+    M -- "气胸：无漏气 + 复张" --> N["拔管"]
+    M -- "积液：≤100–200 mL/24 h + 复张" --> N
+</div>
+
+<div class="algorithm-note">
+    <strong>平行文字算法：</strong>
+    <ol>
+        <li><strong>气体：</strong>
+            <ul>
+                <li>原发性 SP → 针吸或小口径胸管；精选可靠患者可门诊装置。</li>
+                <li>继发性 SP/创伤 → 多数小口径；巨大漏气、机械通气或不稳定时大口径。</li>
+            </ul>
+        </li>
+        <li><strong>液体：</strong>
+            <ul>
+                <li>感染 → 小口径胸管；必要时 tPA/DNase。</li>
+                <li>MPE → 住院引流/滑石粉浆用小口径；门诊姑息或不可复张肺用 IPC。</li>
+                <li>血胸 → 不稳定/大量时大口径；稳定场景可用 14F。</li>
+            </ul>
+        </li>
+        <li><strong>吸引：</strong>气胸不常规使用；先水封，最低必要负压并复评。积液也应谨慎，以降低 RPE 风险。</li>
+        <li><strong>拔管：</strong>肺复张且无漏气，或积液引流量 &lt;100–200 mL/24 h。</li>
+    </ol>
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<p><strong>表 1．胸水分类与常见病因（高收益）</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>类别</th>
+            <th>关键检查/线索</th>
+            <th>常见病因</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>漏出液</strong></td>
+            <td>Light 标准均不满足；常双侧</td>
+            <td>心衰、肝硬化性胸水、肾病综合征、腹膜透析、低白蛋白、肺不张、缩窄性心包炎、尿胸</td>
+        </tr>
+        <tr>
+            <td><strong>渗出液</strong></td>
+            <td>任一 Light 标准阳性（蛋白或 LDH）</td>
+            <td>肺炎旁积液/脓胸、恶性（肺癌、乳腺癌、淋巴瘤、间皮瘤）、结核、类风湿/狼疮胸膜炎、胰腺炎、肺栓塞/梗死、乳糜胸、药物、心脏损伤后综合征</td>
+        </tr>
+        <tr>
+            <td><strong>特殊线索</strong></td>
+            <td>极低 pH/葡萄糖 → 复杂感染<br><br>ADA 高 → 结合背景考虑结核<br><br>淀粉酶高 → 食管破裂/胰腺病<br><br>乳白且甘油三酯高 → 乳糜胸</td>
+            <td>结合临床缩小鉴别；必要时影像引导活检或 MT</td>
+        </tr>
+    </tbody>
+</table>
+<p><em>缩写：ADA，腺苷脱氨酶；CHF，充血性心力衰竭；LDH，乳酸脱氢酶；PE，肺栓塞；TG，甘油三酯。</em></p>
+
+<p><strong>表 2．胸腔穿刺安全与技术核对表</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>阶段</th>
+            <th>核对项目</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>术前</strong></td>
+            <td>复核影像和实验室检查；抗凝/抗血小板计划；知情同意和暂停核查；监护和给氧；体位；备复苏器材</td>
+        </tr>
+        <tr>
+            <td><strong>超声定位</strong></td>
+            <td>确认液体深度、膈肌运动、脾/肝位置；避开后方危险区；标记肋间隙</td>
+        </tr>
+        <tr>
+            <td><strong>无菌准备</strong></td>
+            <td>手卫生；全屏障；氯己定消毒；铺巾</td>
+        </tr>
+        <tr>
+            <td><strong>局麻与进入</strong></td>
+            <td>皮丘；沿路径浸润；从肋骨上缘进针；持续回抽至胸膜腔</td>
+        </tr>
+        <tr>
+            <td><strong>引流</strong></td>
+            <td>轻柔手动抽吸或受控真空；考虑测压；胸痛/持续咳嗽或 Ppl &lt;−20 cm H₂O 时停止</td>
+        </tr>
+        <tr>
+            <td><strong>结束</strong></td>
+            <td>呼气末拔除；封闭敷料；术后超声；无担忧时<strong>不常规胸片</strong></td>
+        </tr>
+        <tr>
+            <td><strong>并发症监测</strong></td>
+            <td>气胸、出血、迷走反应、RPE 的症状体征；及时处理</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>表 3．小口径与大口径胸管：如何选择</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>情境</th>
+            <th>推荐口径</th>
+            <th>理由/证据要点</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>胸膜感染</strong></td>
+            <td>小口径（≤14F）</td>
+            <td>结局相近、疼痛更少；关键是早期抗生素 + 引流；必要时 tPA/DNase</td>
+        </tr>
+        <tr>
+            <td><strong>MPE——住院</strong></td>
+            <td>小口径</td>
+            <td>有效引流；胸膜固定成功率与大口径相当</td>
+        </tr>
+        <tr>
+            <td><strong>MPE——门诊</strong></td>
+            <td>IPC</td>
+            <td>减少住院日；有效缓解呼吸困难；适用于不可复张肺</td>
+        </tr>
+        <tr>
+            <td><strong>原发性 SP（有症状）</strong></td>
+            <td>小口径</td>
+            <td>多数合适；针吸为替代；精选原发性 SP 可门诊装置</td>
+        </tr>
+        <tr>
+            <td><strong>继发性 SP/创伤性</strong></td>
+            <td>考虑大口径</td>
+            <td>根据漏气大小和堵塞风险；巨大漏气或机械通气时尤其考虑</td>
+        </tr>
+        <tr>
+            <td><strong>血胸——不稳定</strong></td>
+            <td>大口径</td>
+            <td>快速排液、较少堵塞</td>
+        </tr>
+        <tr>
+            <td><strong>血胸——稳定</strong></td>
+            <td>14F 可接受</td>
+            <td>精选场景排液成功率相近且疼痛更少</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>表 4．胸腔引流系统与吸引：实用要点</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>组成</th>
+            <th>功能</th>
+            <th>实用提示</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>集液室</strong></td>
+            <td>收集气体/液体</td>
+            <td>监测量和性质，观察趋势</td>
+        </tr>
+        <tr>
+            <td><strong>水封</strong></td>
+            <td>单向阀</td>
+            <td>持续冒泡提示活动性漏气</td>
+        </tr>
+        <tr>
+            <td><strong>负压控制</strong></td>
+            <td>施加负压</td>
+            <td>选择性使用；常用 −20 cm H₂O；数字系统可定量漏气并调节负压</td>
+        </tr>
+        <tr>
+            <td><strong>正压释放</strong></td>
+            <td>安全功能</td>
+            <td>防止过度负压；回路断开时减少张力性风险</td>
+        </tr>
+        <tr>
+            <td><strong>水封与吸引</strong></td>
+            <td>默认策略与升级</td>
+            <td>气胸不常规吸引；先水封；吸引可能加快引流但有代价</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <p><strong>病例 1</strong><br>
+    <em>68 岁心衰患者利尿后仅部分改善，仍因大量右侧积液呼吸困难。床旁 TUS 显示单纯、游离积液。下一步最佳措施是什么？</em></p>
+    <ul>
+        <li><strong>最佳答案：</strong>超声引导胸腔穿刺，送诊断检查并按症状实施大容量引流。</li>
+        <li><strong>理由：</strong>即使最可能为漏出液，表现不典型或治疗反应不完全也需要诊断和治疗性穿刺；超声可提高成功率并减少并发症。</li>
+    </ul>
+</div>
+
+<div class="case-study">
+    <p><strong>病例 2</strong><br>
+    <em>55 岁社区获得性肺炎患者有分隔性积液，pH 7.05，抗生素后仍发热。</em></p>
+    <ul>
+        <li><strong>最佳答案：</strong>小口径胸管引流，并考虑胸腔内 tPA/DNase。</li>
+        <li><strong>理由：</strong>复杂肺炎旁积液需及时引流；初始引流不佳时联合酶治疗可改善清除并减少外科需求。</li>
+    </ul>
+</div>
+
+<div class="case-study">
+    <p><strong>病例 3</strong><br>
+    <em>72 岁转移性乳腺癌患者每周因单侧积液反复呼吸困难；既往穿刺后超声显示肺扩张不佳。</em></p>
+    <ul>
+        <li><strong>最佳答案：</strong>留置胸膜导管（IPC）。</li>
+        <li><strong>理由：</strong>不可复张肺优先 IPC，可门诊缓解症状并减少住院；胸膜固定不易成功。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>题库（12 题）</h3>
+<ol>
+    <li><strong>67 岁患者新发单侧胸腔积液，无明确系统性病因。最佳初始诊断步骤是什么？</strong>
+        <ul>
+            <li>A. CT 肺动脉造影</li>
+            <li>B. 后腋线盲法胸腔穿刺</li>
+            <li>C. 超声引导诊断性胸腔穿刺</li>
+            <li>D. 立即置入 IPC</li>
+            <li>E. PET-CT</li>
+            <li><strong>答案：C。</strong>超声引导是标准，可提高成功率、降低气胸，并通过标本指导后续治疗。</li>
+        </ul>
+    </li>
+    <li><strong>治疗性胸腔穿刺移除 1.3 L 后，患者出现胸膜性胸痛和持续咳嗽；测压为 −35 cm H₂O。下一步最佳措施？</strong>
+        <ul>
+            <li>A. 继续引流至干</li>
+            <li>B. 停止引流，支持治疗，考虑分次引流</li>
+            <li>C. 加负压加速</li>
+            <li>D. 使用袢利尿剂后继续</li>
+            <li>E. 改置胸管</li>
+            <li><strong>答案：B。</strong>胸痛和显著负压提示 RPE 风险，应停止或夹闭并给予支持。</li>
+        </ul>
+    </li>
+    <li><strong>以下哪位胸腔穿刺后患者需要胸片？</strong>
+        <ul>
+            <li>A. 单次顺利穿刺且症状明显改善</li>
+            <li>B. 操作中抽到气泡</li>
+            <li>C. 轻度迷走反应，Trendelenburg 位后完全恢复</li>
+            <li>D. 所有人均不检查</li>
+            <li>E. 所有人均检查</li>
+            <li><strong>答案：B。</strong>抽到空气、操作困难、症状或特殊风险时才需要影像。</li>
+        </ul>
+    </li>
+    <li><strong>故障排除：超声确认液体深度 4 cm，但无法抽到胸水。下一步最佳措施？</strong>
+        <ul>
+            <li>A. 直接改置大口径胸管</li>
+            <li>B. 重新扫描，检查导管折曲，确认从肋骨上缘进入，并考虑更后/更外侧窗口</li>
+            <li>C. 接墙壁负压</li>
+            <li>D. 让患者咳嗽</li>
+            <li>E. 立即 CT</li>
+            <li><strong>答案：B。</strong>先排查路径和器械；超声可挽救大多数“干穿”。</li>
+        </ul>
+    </li>
+    <li><strong>复杂肺炎旁积液经小口径胸管 48 小时后仍脓毒症并有多房分隔。最佳升级措施？</strong>
+        <ul>
+            <li>A. 更换 28F 胸管</li>
+            <li>B. 胸腔内 tPA/DNase</li>
+            <li>C. 常规 −40 cm H₂O 吸引</li>
+            <li>D. 拔管并重复胸腔穿刺</li>
+            <li>E. 再观察 72 小时</li>
+            <li><strong>答案：B。</strong>联合酶治疗可改善分隔积液引流；单纯换大口径并不能改善主要结局。</li>
+        </ul>
+    </li>
+    <li><strong>肺可复张的 MPE 中，哪项最能减少住院天数并维持症状控制？</strong>
+        <ul>
+            <li>A. 仅反复胸腔穿刺</li>
+            <li>B. IPC</li>
+            <li>C. 仅胸腔镜滑石粉喷洒</li>
+            <li>D. 大口径胸管持续吸引</li>
+            <li>E. NSAID 和观察</li>
+            <li><strong>答案：B。</strong>IPC 可减少住院日并有效缓解呼吸困难；肺可复张时胸膜固定也合理，但 IPC 的门诊负担常更低。</li>
+        </ul>
+    </li>
+    <li><strong>病房内继发性 SP，持续漏气但无呼吸窘迫。首选胸管策略？</strong>
+        <ul>
+            <li>A. 水封，不常规吸引，监测漏气</li>
+            <li>B. 立即 −20 cm H₂O 吸引</li>
+            <li>C. 夹管</li>
+            <li>D. 拔管</li>
+            <li>E. 改 Heimlich 阀并出院</li>
+            <li><strong>答案：A。</strong>不建议常规吸引，水封通常足够。</li>
+        </ul>
+    </li>
+    <li><strong>钝性创伤后稳定血胸，在监护环境下最佳初始引流管选择？</strong>
+        <ul>
+            <li>A. 14F 小口径导管</li>
+            <li>B. 必须 &gt;28F</li>
+            <li>C. IPC</li>
+            <li>D. 胸腔穿刺</li>
+            <li>E. 仅观察</li>
+            <li><strong>答案：A。</strong>稳定非急救血胸中，14F 的排液成功率可与大口径相当且疼痛更少；不稳定/大量者用大口径。</li>
+        </ul>
+    </li>
+    <li><strong>胸腔穿刺测压中哪项最提示陷闭肺？</strong>
+        <ul>
+            <li>A. 初始正常，后期压力骤降</li>
+            <li>B. 基线胸膜腔压力即为负，且引流后压力陡降</li>
+            <li>C. 移除 2 L 后压力仍轻度为正</li>
+            <li>D. ADA 高</li>
+            <li>E. 混浊液且 LDH 高</li>
+            <li><strong>答案：B。</strong>负基线并立即陡降符合陷闭肺。</li>
+        </ul>
+    </li>
+    <li><strong>反复 MPE、功能状态差，完整穿刺后肺仍不可复张。下一步最佳措施？</strong>
+        <ul>
+            <li>A. 小口径胸管滑石粉浆胸膜固定</li>
+            <li>B. 胸腔镜滑石粉喷洒</li>
+            <li>C. IPC</li>
+            <li>D. 每几天重复穿刺</li>
+            <li>E. 胸膜切除</li>
+            <li><strong>答案：C。</strong>陷闭/不可复张肺首选 IPC。</li>
+        </ul>
+    </li>
+    <li><strong>脓胸置入小口径胸管后，引流突然停止并出现皮下气肿。第一步？</strong>
+        <ul>
+            <li>A. 夹管</li>
+            <li>B. 增加高负压</li>
+            <li>C. 检查折曲/位置，冲洗导管并确认侧孔在胸腔内</li>
+            <li>D. 立即拔管</li>
+            <li>E. 直接置入第二根大口径胸管</li>
+            <li><strong>答案：C。</strong>先排查系统和导管位置。</li>
+        </ul>
+    </li>
+    <li><strong>关于 MPE 胸膜固定术，哪项最准确？</strong>
+        <ul>
+            <li>A. 滑石粉喷洒明确优于滑石粉浆</li>
+            <li>B. 适当选择患者时，小口径胸管滑石粉浆与胸腔镜喷洒成功率相近</li>
+            <li>C. 大口径胸管提高固定成功率</li>
+            <li>D. 不可复张肺首选胸膜固定</li>
+            <li>E. 所有胸膜固定都需要负压</li>
+            <li><strong>答案：B。</strong>两种策略均可；胸管大小不决定成功，不可复张肺优先 IPC。</li>
+        </ul>
+    </li>
+</ol>
+
+<hr>
+
+<h3>争议、实践差异与演变中的证据</h3>
+<ul>
+    <li><strong>重力与负压驱动胸腔穿刺：</strong>随机资料显示不适程度相近；部分研究提示真空引流并发症较多。核心仍是症状或测压指导。</li>
+    <li><strong>气胸常规吸引：</strong>指南不支持默认吸引；水封优先可能避免持续增加瘘口流量。</li>
+    <li><strong>气胸门诊处理：</strong>精选原发性 SP 证据较强，继发性 SP 支持不足。</li>
+    <li><strong>脓胸 tPA/DNase 与早期 VATS：</strong>两条路径均存在；联合胸腔内治疗对许多初始引流不佳患者有效并可减少手术，但难治病例仍需外科清创/剥脱。</li>
+    <li><strong>滑石粉浆与喷洒：</strong>现代随机试验提示，恰当选择患者时总体成功率相近，选择取决于中心经验和流程。</li>
+</ul>
+
+<hr>
+
+<h3>带走要点核对表</h3>
+<ul>
+    <li><strong>每次胸膜操作均使用超声：</strong>确定液体口袋、深度和安全窗口。</li>
+    <li><strong>从肋骨上缘进入，</strong>避免距脊柱 6 cm 内的后方穿刺。</li>
+    <li><strong>大容量穿刺</strong>采用测压或症状停止规则，避免极负压力。</li>
+    <li><strong>多数积液和许多气胸优先小口径胸管；</strong>大口径保留给不稳定血胸、巨大漏气或胸外科术后即刻。</li>
+    <li><strong>气胸不默认吸引：</strong>先水封。</li>
+    <li><strong>脓胸：</strong>早期抗生素 + 小口径引流；不畅时 tPA/DNase；持续失败转外科。</li>
+    <li><strong>MPE：</strong>依据症状、肺可复张性和患者目标选择 IPC 或滑石粉胸膜固定；陷闭肺 → IPC。</li>
+    <li><strong>胸腔穿刺后不常规胸片：</strong>仅在怀疑并发症时影像。</li>
+    <li><strong>妥善固定和敷料覆盖胸管；</strong>冲洗防堵并确认侧孔位于胸腔内。</li>
+    <li><strong>拔管：</strong>气胸无漏气，或积液 &lt;100–200 mL/日且肺复张。</li>
+    <li><strong>警惕 RPE：</strong>早期识别、停止引流并支持治疗。</li>
+    <li><strong>尤其在 MPE 中记录患者目标。</strong></li>
+</ul>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>缩写与术语</h3>
+    <dl>
+        <dt>ADA</dt><dd>腺苷脱氨酶</dd>
+        <dt>BTS</dt><dd>英国胸科学会</dd>
+        <dt>CHF</dt><dd>充血性心力衰竭</dd>
+        <dt>cm H₂O</dt><dd>厘米水柱</dd>
+        <dt>DNase</dt><dd>脱氧核糖核酸酶</dd>
+        <dt>IPC</dt><dd>留置胸膜导管</dd>
+        <dt>LDH</dt><dd>乳酸脱氢酶</dd>
+        <dt>MPE</dt><dd>恶性胸腔积液</dd>
+        <dt>MT</dt><dd>内科胸腔镜</dd>
+        <dt>Ppl</dt><dd>胸膜腔液体压力（测压）</dd>
+        <dt>RPE</dt><dd>复张性肺水肿</dd>
+        <dt>SP</dt><dd>自发性气胸</dd>
+        <dt>滑石粉浆/喷洒</dt><dd>经胸管注入滑石粉混悬液/经胸腔镜吹入滑石粉</dd>
+        <dt>tPA</dt><dd>组织型纤溶酶原激活物</dd>
+        <dt>TUS</dt><dd>胸部超声</dd>
+        <dt>VATS</dt><dd>电视辅助胸腔镜手术</dd>
+    </dl>
+</div>
+
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Roberts ME, Rahman NM, Maskell NA, Bibby AC, Blyth KG, Corcoran JP, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):S1–S42.</li>
+<li>Asciak R, Bedawi EO, Bhatnagar R, Clive AO, Hassan M, Lloyd H, et al. British Thoracic Society Clinical Statement on pleural procedures. Thorax. 2023;78(Suppl 3):S43–S68.</li>
+<li>Feller‑Kopman D. Ultrasound‑guided thoracentesis. Chest. 2006;129:1709‑14.</li>
+<li>Gordon CE, Feller‑Kopman D, et al. Pneumothorax following thoracentesis: a systematic review and meta‑analysis. Arch Intern Med. 2010;170(4):332‑9.</li>
+<li>Feller‑Kopman D, Walkey A, et al. The relationship of pleural pressure to symptom development during therapeutic thoracentesis. Chest. 2006;6:1556‑60.</li>
+<li>Feller‑Kopman D, Berkowitz D, et al. Large‑volume thoracentesis and the risk of reexpansion pulmonary edema. Ann Thorac Surg. 2007;84:1656‑61.</li>
+<li>Lentz RJ, Shojaee S, et al. Gravity vs suction‑driven therapeutic thoracentesis (GRAVITAS): a multicenter randomized controlled trial. Chest. 2020;157(3):702‑11.</li>
+<li>Shojaee S, Pannu J, et al. Gravity‑ vs wall suction‑driven large‑volume thoracentesis: randomized controlled study. Chest. 2024;166(6):1573‑82.</li>
+<li>Rahman NM, Maskell NA, Davies CW, Hedley EL, Nunn AJ, Gleeson FV, et al. Relationship between chest tube size and clinical outcome in pleural infection. Chest. 2010;137(3):536‑43.</li>
+<li>Chaddha U, Agrawal A, Feller‑Kopman D, Kaul V, Shojaee S, Maldonado F, et al. Use of fibrinolytics and deoxyribonuclease in adult patients with pleural empyema: a consensus statement. Lancet Respir Med. 2021;9(9):1050‑64.</li>
+<li>Davies HE, Mishra EK, Kahan BC, Wrightson JM, Stanton AE, Guhan A, et al. Indwelling pleural catheter vs chest tube with talc pleurodesis for relief of dyspnea in MPE (TIME2). JAMA. 2012;307(22):2383‑9.</li>
+<li>Thomas R, Fysh ETH, Smith NA, Lee P, Kwan BCH, Yap E, et al. Indwelling pleural catheter vs talc pleurodesis (AMPLE). JAMA. 2017;318(19):1903‑12.</li>
+<li>Bhatnagar R, Piotrowska HEG, Laskawiec‑Szkonter M, Kahan BC, Luengo‑Fernandez R, Pepperell JCT, et al. Thoracoscopic talc poudrage vs talc slurry via chest tube for pleurodesis failure rate in MPE. JAMA. 2020;323(1):60‑9.</li>
+<li>Thethi I, Ramirez S, Shen W, Zhang D, Mohamad M, Kaphle U, et al. Effect of chest tube size on pleurodesis efficacy in malignant pleural effusion: meta‑analysis. J Thorac Dis. 2018;10(1):355‑62.</li>
+<li>Brown SGA, Ball EL, Perrin K, Asha SE, Braithwaite I, Egerton‑Warburton D, et al. Conservative vs interventional treatment for spontaneous pneumothorax. N Engl J Med. 2020;382(5):405‑15.</li>
+<li>Walker S, Hallifax R, Ricciardi S, Fitzgerald D, Keijzers M, Lauk O, et al. Joint ERS/EACTS/ESTS clinical practice guidelines on adults with spontaneous pneumothorax. Eur Respir J. 2024;63(5):2300797.</li>
+<li>Hallifax RJ, McKeown E, Sivakumar P, Fairbairn I, Peter C, Leitch A, et al. Ambulatory management of primary spontaneous pneumothorax: randomized trial. Lancet. 2020;396(10243):39‑49.</li>
+<li>Bauman ZM, Kulvatunyou N, Joseph B, Gries L, O’Keeffe T, Tang AL, et al. 14‑F pigtail vs 28–32F chest tubes in traumatic hemothorax/hemopneumothorax: RCT. World J Surg. 2021;45(3):880‑6.</li>
+<li>Petiot A, Tawk S, Ghaye B. Re‑expansion pulmonary oedema. Lancet. 2018;392(10146):507.</li>
+<li>Reed MF, Lyons JM, Luchette FA, Neu JA, Howington JA. Underwater seal vs suction for pneumothorax: preliminary randomized trial. J Am Coll Surg. 2007;204(1):84‑90.</li>
+<li>Helm EJ, Rahman NM, Talakoub O, Fox DL, Gleeson FV. Course and variation of the intercostal artery by CT. Chest. 2013;143(3):634‑9.</li>
+<li>Kwiatt M, Tarbox A, Seamon MJ, Swaroop M, Cipolla J, Allen C, et al. Thoracostomy tubes: complications and related topics. Int J Crit Illn Inj Sci. 2014;4(2):143‑55.</li>
+<li>Light RW. Pleural Diseases. 4th ed. Philadelphia, PA: Lippincott Williams &amp; Wilkins; 2001.</li>
+<li>Light RW, Lee YCG. Textbook of Pleural Diseases. 2nd ed. London: Hodder Arnold; 2008.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

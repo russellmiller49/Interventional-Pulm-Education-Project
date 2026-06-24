@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abordaje diagnóstico de los nódulos pulmonares</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mcq-container { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px dashed #eee; }
+        .mcq-options { list-style-type: none; padding-left: 15px; margin: 10px 0; }
+        .mcq-options li { margin-bottom: 4px; }
+        .mcq-answer { background-color: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 10px; border-left: 3px solid #2ecc71; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<h1>Abordaje diagnóstico de los nódulos pulmonares</h1>
+
+<h3>Correspondencia con el examen y alcance</h3>
+<p>Este capítulo se corresponde con el dominio de nódulos pulmonares incidentales y detectados por cribado en neumología intervencionista. Las competencias fundamentales incluyen:</p>
+<ul>
+    <li><strong>Predicción del riesgo de malignidad:</strong> Mayo, Herder, Brock y TREAT 2.0.</li>
+    <li><strong>Seguimiento según guías:</strong> Fleischner para hallazgos incidentales, ACCP, BTS y Lung-RADS para cribado.</li>
+    <li><strong>Imagen:</strong> Interpretación de PET/TC e integración de biomarcadores.</li>
+    <li><strong>Selección del procedimiento:</strong> Broncoscópico —convencional, navegación o robótico— frente a transtorácico.</li>
+    <li><strong>Técnica:</strong> Estrategias anestésicas y ventilatorias para reducir atelectasia, imagen intraprocedimiento —TC de haz cónico—, mitigación de complicaciones e interpretación de resultados.</li>
+</ul>
+
+<h3>Objetivos de aprendizaje</h3>
+<ul>
+    <li>Aplicar modelos validados de riesgo de malignidad para estratificar nódulos únicos y múltiples y seleccionar una vía basada en evidencia.</li>
+    <li>Distinguir el manejo de nódulos sólidos y subsólidos mediante guías para hallazgos incidentales y de cribado.</li>
+    <li>Interpretar PET/TC de nódulos y reconocer causas frecuentes de falsos positivos y falsos negativos.</li>
+    <li>Elegir una modalidad de obtención de tejido que maximice rendimiento y minimice complicaciones, usando estrategias para reducir la divergencia TC-cuerpo.</li>
+    <li>Optimizar el muestreo broncoscópico —secuencia de herramientas y factores de rendimiento— y resolver resultados no diagnósticos.</li>
+    <li>Incorporar correctamente biomarcadores no invasivos para reducir procedimientos innecesarios en nódulos de riesgo intermedio.</li>
+</ul>
+
+<hr>
+
+<h3>Resumen de alto rendimiento</h3>
+<div class="algorithm-note">
+    <p><strong>Elija el modelo de riesgo correcto:</strong> Mayo para hallazgos incidentales, Herder para incidentales más PET, Brock para cribado y TREAT 2.0 para clínicas especializadas o de alto riesgo. Ajuste el modelo a la prevalencia de la población.</p>
+    <p><strong>Umbrales de riesgo de ACCP:</strong> Bajo &lt;5 %; intermedio 5–65 %; alto &gt;65 %. El manejo depende de estos puntos de corte.</p>
+    <ul>
+        <li><strong>Fleischner, nódulos sólidos incidentales:</strong>
+            <ul>
+                <li>&lt;6 mm: con frecuencia sin seguimiento en riesgo bajo.</li>
+                <li>6–8 mm: TC a los 6–12 meses, con posible estudio adicional a los 18–24 meses si el riesgo es alto.</li>
+                <li>&gt;8 mm: considerar TC a unos 3 meses, PET/TC o muestreo tisular.</li>
+            </ul>
+        </li>
+        <li><strong>Nódulos subsólidos, ACCP/Fleischner:</strong>
+            <ul>
+                <li>Vidrio esmerilado puro ≤5 mm: sin seguimiento o vigilancia anual.</li>
+                <li>Vidrio esmerilado puro &gt;5 mm: TC anual durante ≥3 años; algunas guías extienden a 5.</li>
+                <li>Parcialmente sólido &lt;8 mm: TC a 3, 12 y 24 meses, luego anual.</li>
+                <li>Parcialmente sólido ≥8 mm o núcleo sólido en crecimiento: PET, biopsia o resección.</li>
+                <li>≥15 mm: escalar a PET, biopsia o resección.</li>
+            </ul>
+        </li>
+        <li><strong>Lung-RADS, cribado:</strong>
+            <ul>
+                <li>Categoría 3: TC de baja dosis a 6 meses.</li>
+                <li>Categoría 4A: TC de baja dosis a 3 meses; PET si componente sólido ≥8 mm.</li>
+                <li>Categoría 4B/4X: TC diagnóstica ± PET ± muestreo tisular.</li>
+            </ul>
+        </li>
+    </ul>
+    <p><strong>Predictores de malignidad en imagen:</strong> Mayor tamaño; parcialmente sólido &gt; sólido &gt; vidrio esmerilado puro; espiculación; ubicación en lóbulo superior; retracción pleural; convergencia vascular y seudocavitación.</p>
+    <p><strong>Indicios benignos:</strong> Calcificación central, laminada o en «palomitas de maíz».</p>
+    <p><strong>Cinética de crecimiento:</strong> El tiempo de duplicación volumétrica habitual del cáncer es aproximadamente 100–400 días. Un crecimiento muy rápido, &lt;30–40 días, o muy lento, &gt;400 días, suele ser benigno. Un aumento de diámetro cercano al 26 % equivale a duplicar el volumen.</p>
+    <p><strong>PET/TC:</strong> SUV ≥2–2,5 es preocupante, pero no debe usarse como umbral aislado. La sensibilidad suele ser alta y la especificidad limitada. Falsos negativos: lesiones &lt;8 mm, subsólidas, carcinoide y adenocarcinoma indolente. Falsos positivos: infección e inflamación.</p>
+    <p><strong>Biomarcadores en riesgo intermedio:</strong> Un clasificador proteómico plasmático de exclusión presenta alta sensibilidad y valor predictivo negativo; un clasificador genómico bronquial puede apoyar vigilancia tras broncoscopia no diagnóstica.</p>
+    <p><strong>Rendimiento broncoscópico:</strong> Herramientas convencionales: lavado broncoalveolar ~20 %, cepillo ~38 %, pinza ~43 %, aspiración transbronquial con aguja ~47 %. Guiada: rEBUS ~57 %; navegación electromagnética sola ~39 %; navegación + rEBUS ~47 %; gran estudio prospectivo de navegación ~73 % a 12 meses.</p>
+    <p><strong>Broncoscopia robótica:</strong> Series contemporáneas informan con frecuencia rendimiento de ~80–94 % y pocas complicaciones. Ensayos aleatorizados o por conglomerados muestran rendimiento no inferior a biopsia transtorácica o navegación avanzada, con menos neumotórax.</p>
+    <p><strong>Biopsia transtorácica frente a broncoscopia:</strong> La biopsia transtorácica tiene alto rendimiento, pero neumotórax de ~15–25 %. La broncoscopia navegacional o robótica ofrece exactitud competitiva con mucho menor riesgo.</p>
+    <p><strong>Anestesia y ventilación:</strong> La atelectasia bajo anestesia general es frecuente y reduce el rendimiento. Reclutamiento, PEEP 8–10 cmH₂O y reducción de FiO₂ disminuyen la atelectasia.</p>
+</div>
+
+<hr>
+
+<h3>Conceptos fundamentales</h3>
+
+<h4>Fisiopatología y epidemiología</h4>
+<p>Los nódulos pulmonares indeterminados se detectan cada vez más por el uso generalizado de TC de tórax y del cribado de cáncer pulmonar. El reto clínico es maximizar el diagnóstico oportuno de cáncer y, al mismo tiempo, evitar pruebas invasivas innecesarias y sus daños en enfermedad benigna.</p>
+
+<h4>Indicaciones y contraindicaciones</h4>
+<p><strong>Observación frente a acción diagnóstica:</strong></p>
+<ul>
+    <li><strong>Riesgo bajo, &lt;5 %:</strong> Vigilancia por TC.</li>
+    <li><strong>Riesgo intermedio, 5–65 %:</strong> PET/TC o biopsia no quirúrgica.</li>
+    <li><strong>Riesgo alto, &gt;65 %:</strong> Diagnóstico quirúrgico; biopsia no quirúrgica si el resultado molecular influirá en tratamiento neoadyuvante o adyuvante.</li>
+</ul>
+<p><strong>Selección de modalidad:</strong></p>
+<ul>
+    <li><strong>Broncoscopia:</strong> Favorecida en lesiones próximas a vía aérea o con signo del bronquio, ubicación central o medioperiférica, o cuando se necesita estadificación ganglionar en la misma sesión.</li>
+    <li><strong>Biopsia transtorácica:</strong> Favorecida en blancos pequeños adosados a pleura o con acceso bronquial deficiente.</li>
+    <li><strong>Limitaciones de la navegación electromagnética:</strong> La interferencia electromagnética y la divergencia TC-cuerpo reducen la precisión; atelectasia y cambios ventilatorios son causas clave.</li>
+</ul>
+
+<h4>Evaluación preprocedimiento</h4>
+<ul>
+    <li><strong>Estratificación:</strong> Use Mayo, Herder, Brock o TREAT 2.0 según corresponda para estimar la probabilidad pretest de cáncer y alinearla con umbrales ACCP/BTS.</li>
+    <li><strong>Revisión de imagen:</strong> Evalúe tamaño, densidad —sólido o subsólido—, espiculación, lóbulo superior, patrón de calcificación, multiplicidad e imágenes previas para crecimiento y tiempo de duplicación.</li>
+    <li><strong>PET/TC:</strong> Es más útil en nódulos ≥8 mm de riesgo intermedio y para estadificación; anticipe falsos positivos y negativos.</li>
+    <li><strong>Biomarcadores:</strong> En riesgo intermedio, un clasificador proteómico plasmático validado puede reducir procedimientos benignos. Tras broncoscopia no diagnóstica, un clasificador genómico bronquial negativo apoya seguimiento conservador.</li>
+    <li><strong>Consentimiento, laboratorio y comorbilidades:</strong> Use los estudios habituales para broncoscopia o biopsia transtorácica; considere anticoagulación, reserva cardiopulmonar y valores del paciente.</li>
+</ul>
+
+<h4>Equipo y preparación</h4>
+<p><strong>Plataformas broncoscópicas:</strong> Broncoscopia flexible convencional ± fluoroscopia, rEBUS, navegación electromagnética y broncoscopia robótica; las plataformas varían en diámetro, canal de trabajo y visualización.</p>
+<p><strong>Imagen intraprocedimiento:</strong> TC de haz cónico móvil o fija para confirmación tridimensional de herramienta dentro de la lesión.</p>
+<p><strong>Herramientas de muestreo:</strong> Aguja —mayor sensibilidad para malignidad—, pinza —mejor para enfermedad benigna— y cepillo. La combinación aumenta el rendimiento; intente obtener ≥6 biopsias.</p>
+<p><strong>Anestesia y ventilación:</strong> Minimice la duración de la anestesia. Use reclutamiento, PEEP 8–10 cmH₂O y FiO₂ controlada.</p>
+
+<h4>Técnica paso a paso y lista de verificación</h4>
+<ol>
+    <li><strong>Planificar:</strong> Revise TC de cortes finos; elija ruta; confirme signo del bronquio; anticipe divergencia del orden de ~10 mm en lóbulos superiores y ~20 mm en inferiores.</li>
+    <li><strong>Navegar:</strong> Use navegación electromagnética o robótica según corresponda; confirme con rEBUS, preferentemente vista concéntrica.</li>
+    <li><strong>Estabilizar y obtener imagen:</strong> Use CBCT cuando esté disponible para confirmar herramienta dentro de la lesión y corregir divergencia; puede convertir muchos escenarios sin contacto en contactos adecuados y reducir distancia al centro.</li>
+    <li><strong>Tomar muestras:</strong> Secuencia: aguja → pinza → cepillo. Obtenga ≥6 biopsias. Use complementos según protocolo y ROSE si está disponible.</li>
+    <li><strong>Reevaluar:</strong> Si rEBUS es excéntrica o negativa, o ROSE no es diagnóstica, repita imagen y redirija; ajuste ventilación si hay atelectasia.</li>
+    <li><strong>Integrar biomarcadores:</strong> Tras muestreo no diagnóstico en riesgo intermedio, considere biomarcadores antes de repetir una prueba invasiva.</li>
+</ol>
+
+<h4>Resolución de problemas y manejo intraprocedimiento</h4>
+<ul>
+    <li><strong>Vista rEBUS negativa o excéntrica:</strong> Reoriente, ajuste profundidad o replantee con CBCT. El rendimiento es menor con vista excéntrica, tamaño &lt;20 mm, ausencia de signo del bronquio y ubicación inferior.</li>
+    <li><strong>Atelectasia bajo anestesia general:</strong> Reclutamiento + PEEP 8–10 cmH₂O y reducción de FiO₂. Aumenta con anestesia prolongada, IMC alto y blancos basales.</li>
+    <li><strong>Interferencia electromagnética:</strong> Identifique y reduzca fuentes metálicas que alteran el campo.</li>
+    <li><strong>Divergencia TC-cuerpo:</strong> Minimice el tiempo entre TC de planificación y muestreo; use imagen intraprocedimiento para corregir trayectoria.</li>
+</ul>
+
+<h4>Cuidados y seguimiento después del procedimiento</h4>
+<p><strong>Inmediato:</strong> Vigile sangrado y neumotórax; radiografía posterior según protocolo institucional. Las tasas de neumotórax broncoscópico son mucho menores que con biopsia transtorácica.</p>
+<p><strong>Posterior:</strong> Integre anatomía patológica, PET/TC para estadificación cuando se confirme malignidad y biomarcadores en decisiones multidisciplinarias. Reanude vigilancia si el nódulo es benigno y estable.</p>
+
+<h4>Complicaciones: prevención, reconocimiento y tratamiento</h4>
+<p><strong>Biopsia transtorácica:</strong> Neumotórax ~15–25 %, algunos con tubo. Sopese el beneficio frente a broncoscopia si existe acceso por vía aérea.</p>
+<p><strong>Broncoscopia:</strong> Tasas bajas de neumotórax, a menudo ≤2–4 % con técnicas guiadas o robóticas; el sangrado suele ser menor y controlable. CBCT agrega radiación, pero mejora precisión.</p>
+<p><strong>Ensayos comparativos:</strong> La broncoscopia navegacional muestra rendimiento no inferior a la biopsia transtorácica y mucho menos neumotórax; robótica + CBCT es no inferior a navegación electromagnética avanzada en aleatorización por conglomerados.</p>
+
+<h4>Poblaciones especiales</h4>
+<ul>
+    <li><strong>Nódulos de cribado:</strong> Use Lung-RADS y Brock; escale según categoría.</li>
+    <li><strong>Enfermedad pulmonar fibrótica o FPI:</strong> Mayor riesgo de malignidad; PET/TC puede ser menos específica y a menudo se necesita tejido antes.</li>
+    <li><strong>Anticoagulación, embarazo o UCI:</strong> Siga vías institucionales y elija la modalidad menos invasiva que responda la pregunta clínica.</li>
+</ul>
+
+<h4>Evidencia y resultados</h4>
+<p>El rendimiento de las herramientas convencionales varía según blanco e histología; combinar herramientas y obtener ≥6 muestras mejora el rendimiento. rEBUS suele superar a navegación electromagnética aislada; un gran estudio multicéntrico comunicó ~73 % a 12 meses. Las plataformas robóticas informan con frecuencia ≥80–90 % con poco neumotórax. Sin embargo, un metaanálisis muestra que el rendimiento agrupado de broncoscopia guiada se mantiene alrededor del 69 % durante dos décadas; la selección, la imagen y la ventilación impulsan las mejoras incrementales.</p>
+
+<hr>
+
+<h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+<h4>Algoritmo 1 — Manejo de nódulo pulmonar sólido de 8–30 mm</h4>
+<div class="mermaid">
+graph TD
+    A["Nódulo sólido (8–30 mm)"] --> B["Estimar probabilidad de cáncer (Mayo/Brock/Herder)"]
+    B --> C["Riesgo bajo (<5 %)"]
+    B --> D["Riesgo intermedio (5–65 %)"]
+    B --> E["Riesgo alto (>65 %)"]
+    C --> F["Vigilancia por TC (3, 9, 24 meses)"]
+    D --> G["PET/TC y/o biopsia no quirúrgica"]
+    G --> H{"¿Resultado?"}
+    H -- "PET negativo o biopsia benigna/no diagnóstica con baja sospecha" --> F
+    H -- "Sospechoso/positivo" --> I["Diagnóstico quirúrgico"]
+    E --> J{"¿Se necesitan datos moleculares?"}
+    J -- "Sí" --> G
+    J -- "No" --> I
+</div>
+<div class="algorithm-note">
+    <p><strong>Manejo:</strong></p>
+    <ul>
+        <li><strong>Bajo, &lt;5 %:</strong> TC a 3–6, 9–12 y 18–24 meses; detener si estable a 2 años.</li>
+        <li><strong>Intermedio, 5–65 %:</strong> PET/TC o biopsia no quirúrgica.</li>
+        <li><strong>Si PET es negativo y probabilidad &lt;30–40 %, o biopsia benigna/no diagnóstica con bajo riesgo:</strong> continuar vigilancia.</li>
+        <li><strong>Alto, &gt;65 %:</strong> Diagnóstico quirúrgico. Excepción: biopsia no quirúrgica si el perfil molecular puede cambiar tratamiento.</li>
+        <li><strong>Estadificación:</strong> PET/TC una vez establecido el cáncer.</li>
+    </ul>
+</div>
+
+<h4>Algoritmo 2 — Nódulos subsólidos</h4>
+<div class="mermaid">
+graph TD
+    A["Nódulo subsólido"] --> B{"Tipo"}
+    B --> C["Vidrio esmerilado puro <=5 mm"]
+    B --> D["Vidrio esmerilado puro >5 mm"]
+    B --> E["Parcialmente sólido <8 mm"]
+    B --> F["Parcialmente sólido >=8 mm"]
+    C --> G["Sin seguimiento o vigilancia anual"]
+    D --> H["TC anual durante >=3 años"]
+    E --> I["TC a 3, 12 y 24 meses, luego anual"]
+    F --> J["Repetir TC a 3 meses"]
+    J --> K{"¿Resultado?"}
+    K -- "Persistente o crece el núcleo sólido" --> L["PET / biopsia / resección"]
+    K -- "Estable" --> I
+    L -- ">=15 mm o núcleo en crecimiento" --> M["Escalada inmediata; PET poco fiable si sólido <8 mm"]
+</div>
+<div class="algorithm-note">
+    <p><strong>Manejo:</strong></p>
+    <ul>
+        <li><strong>Vidrio esmerilado puro ≤5 mm:</strong> A menudo sin seguimiento o vigilancia anual.</li>
+        <li><strong>&gt;5 mm:</strong> TC anual durante ≥3 años, a veces 5.</li>
+        <li><strong>Parcialmente sólido &lt;8 mm:</strong> TC a 3, 12 y 24 meses, luego anual.</li>
+        <li><strong>Parcialmente sólido ≥8 mm:</strong> Repetir a 3 meses; si persiste o crece el componente sólido, PET, biopsia o resección.</li>
+        <li><strong>≥15 mm o núcleo en crecimiento:</strong> Escalar; PET no es fiable si el componente sólido es &lt;8 mm.</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>Tablas y cuadros de consulta rápida</h3>
+
+<h4>Tabla 1. Predictores clínicos y radiológicos de malignidad</h4>
+<table>
+    <thead><tr><th>Característica</th><th>Mayor riesgo</th><th>Notas</th></tr></thead>
+    <tbody>
+        <tr><td>Tamaño</td><td>Aumenta con el diámetro</td><td>&gt;2 cm confiere mayor riesgo</td></tr>
+        <tr><td>Morfología</td><td>Parcialmente sólido &gt; sólido &gt; vidrio esmerilado puro</td><td>Los subsólidos pueden ser indolentes, pero el riesgo aumenta con el núcleo sólido</td></tr>
+        <tr><td>Espiculación</td><td>Mayor que bordes lisos</td><td>Razón de posibilidades ~2,2–2,5 en cohortes</td></tr>
+        <tr><td>Ubicación</td><td>Lóbulo superior &gt; inferior</td><td>—</td></tr>
+        <tr><td>Multiplicidad</td><td>1–4 nódulos pueden ser de mayor riesgo que uno</td><td>Puede disminuir con &gt;5, según población</td></tr>
+        <tr><td>Enfisema/FPI</td><td>Riesgo aumentado</td><td>—</td></tr>
+        <tr><td>Crecimiento</td><td>Duplicación 100–400 días típica de cáncer</td><td>~26 % de aumento de diámetro ≈ duplicación de volumen</td></tr>
+        <tr><td>Calcificación</td><td>Excéntrica o puntiforme: sospechosa</td><td>Central, laminada o en palomitas: benigna</td></tr>
+        <tr><td>Signos asociados</td><td>Retracción pleural, convergencia vascular y seudocavitación</td><td>—</td></tr>
+    </tbody>
+</table>
+
+<h4>Tabla 2. Seguimiento según guías, selección</h4>
+<table>
+    <thead><tr><th>Escenario</th><th>Recomendación</th></tr></thead>
+    <tbody>
+        <tr><td>Fleischner, sólido &lt;6 mm</td><td>Riesgo bajo: con frecuencia sin seguimiento. Riesgo alto: considerar TC a 12 meses.</td></tr>
+        <tr><td>Sólido 6–8 mm</td><td>TC a 6–12 meses, con posible segunda a 18–24 meses si riesgo alto.</td></tr>
+        <tr><td>Sólido &gt;8 mm</td><td>TC de intervalo corto, unos 3 meses, PET/TC o muestreo.</td></tr>
+        <tr><td>Subsólido, ACCP</td><td><ul>
+            <li>Vidrio esmerilado puro ≤5 mm: sin seguimiento o anual ≥3 años.</li>
+            <li>&gt;5 mm: anual ≥3 años.</li>
+            <li>Parcialmente sólido &lt;8 mm: 3, 12, 24 meses y luego anual.</li>
+            <li>≥8 mm o núcleo en crecimiento: PET, biopsia o resección.</li>
+            <li>≥15 mm: escalar.</li>
+        </ul></td></tr>
+    </tbody>
+</table>
+
+<h4>Tabla 3. Rendimiento diagnóstico y complicaciones: datos representativos</h4>
+<table>
+    <thead><tr><th>Modalidad</th><th>Rendimiento</th><th>Complicaciones clave</th></tr></thead>
+    <tbody>
+        <tr><td>Biopsia transtorácica guiada por TC</td><td>A menudo ~85–90 %</td><td>Neumotórax ~15–25 %</td></tr>
+        <tr><td>Broncoscopia convencional, registro</td><td>Lavado ~19 %, cepillo ~38 %, pinza ~43 %, aguja ~47 %</td><td>Poco neumotórax</td></tr>
+        <tr><td>rEBUS sola</td><td>~57 %</td><td>—</td></tr>
+        <tr><td>Navegación electromagnética sola</td><td>~39 %</td><td>—</td></tr>
+        <tr><td>Navegación + rEBUS</td><td>~47 %</td><td>—</td></tr>
+        <tr><td>Navegación, NAVIGATE</td><td>~73 % a 12 meses</td><td>Poco neumotórax</td></tr>
+        <tr><td>Broncoscopia robótica</td><td>~80–94 %</td><td>Neumotórax usualmente ≤~4 %</td></tr>
+        <tr><td>Navegación frente a transtorácica, aleatorizado</td><td>Exactitud no inferior</td><td>Mucho menos neumotórax con navegación</td></tr>
+    </tbody>
+</table>
+
+<div class="algorithm-note">
+    <h4>Cuadro rápido: interpretación de PET/TC</h4>
+    <p><strong>Umbrales:</strong> No dependa de un solo corte de SUV; informe patrón de captación y contexto.</p>
+    <p><strong>Exactitud:</strong> Sensibilidad alta en general, pero menor para lesiones pequeñas o indolentes; la especificidad cae en entornos granulomatosos o inflamatorios.</p>
+    <p><strong>Falsos positivos:</strong> Infección, enfermedad granulomatosa, sarcoidosis y cambios postratamiento.</p>
+    <p><strong>Falsos negativos:</strong> Tamaño pequeño, carcinoide, adenocarcinoma mucinoso o indolente y vidrio esmerilado puro.</p>
+</div>
+
+<hr>
+
+<h3>Casos y aprendizaje aplicado</h3>
+
+<div class="case-study">
+    <h4>Caso 1</h4>
+    <p>Una mujer de 70 años con un nuevo nódulo sólido incidental de 9 mm en lóbulo superior derecho y 40 paquetes-año está asintomática. ¿Siguiente mejor paso?</p>
+    <p>A. Sin seguimiento<br>B. TC en 3 meses<br>C. TC en 6 meses<br>D. TC en 12 meses<br>E. Solo PET/TC</p>
+    <p><strong>Respuesta: B.</strong> Para un nódulo incidental sólido &gt;8 mm son aceptables TC corta, PET/TC o tejido. Una TC a unos 3 meses es una primera opción común para evaluar estabilidad.</p>
+</div>
+
+<div class="case-study">
+    <h4>Caso 2</h4>
+    <p>¿Qué escenario es más compatible con un proceso benigno?</p>
+    <p>A. Nódulo espiculado de 20 mm en lóbulo superior<br>B. Nódulo de 17 mm con captación intensa y fibrosis<br>C. Masa de 35 mm con duplicación ~40 días<br>D. Nódulo de 22 mm con calcificación excéntrica en fumador<br>E. Nódulo sólido de 14 mm con retracción pleural</p>
+    <p><strong>Respuesta: C.</strong> El crecimiento muy rápido, &lt;30–40 días, suele sugerir infección o inflamación; el cáncer suele duplicarse en 100–400 días.</p>
+</div>
+
+<div class="case-study">
+    <h4>Caso 3</h4>
+    <p>Un nódulo de 16 mm en lóbulo inferior izquierdo tiene vista rEBUS excéntrica y no presenta signo del bronquio. ¿Qué debe hacer?</p>
+    <p>A. Tomar muestras; el rendimiento será alto<br>B. Abortar y programar biopsia transtorácica<br>C. Reorientar, ajustar posición o usar CBCT para lograr herramienta dentro de la lesión antes de muestrear<br>D. Cambiar a lavado solamente<br>E. Aumentar FiO₂ a 100 % y continuar</p>
+    <p><strong>Respuesta: C.</strong> La vista excéntrica, el lóbulo inferior y la ausencia de signo del bronquio predicen bajo rendimiento; confirme contacto y corrija atelectasia o divergencia.</p>
+</div>
+
+<h3>Banco de preguntas</h3>
+
+<div class="mcq-container"><p><strong>1. Siguiente mejor paso, detectado por cribado:</strong> Un fumador activo de 72 años tiene un nuevo nódulo de 7 mm descrito en una TC de calcio coronario.</p><ul class="mcq-options"><li>A. Programar PET/TC</li><li>B. TC de cribado de baja dosis</li><li>C. Biopsia guiada por TC</li><li>D. Repetir TC en 12 meses</li><li>E. Biopsia broncoscópica</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> Use TC de baja dosis de cribado para clasificar con Lung-RADS antes de decidir PET o biopsia.</div></div>
+
+<div class="mcq-container"><p><strong>2. Patrón de calcificación:</strong> ¿Cuál sugiere benignidad?</p><ul class="mcq-options"><li>A. Excéntrica</li><li>B. Puntiforme</li><li>C. Central o laminada</li><li>D. Amorfa</li><li>E. En anillo periférico</li></ul><div class="mcq-answer"><strong>Respuesta: C.</strong> Las calcificaciones centrales, laminadas o en palomitas son benignas clásicas.</div></div>
+
+<div class="mcq-container"><p><strong>3. Resolución intraprocedimiento:</strong> Durante broncoscopia robótica, rEBUS es negativa y CBCT muestra atelectasia basal. ¿Qué hacer?</p><ul class="mcq-options"><li>A. Aumentar FiO₂ a 100 %</li><li>B. Reclutamiento + PEEP 8–10 cmH₂O, reducir FiO₂ y repetir imagen</li><li>C. Abortar y programar biopsia transtorácica</li><li>D. Tomar muestras a ciegas</li><li>E. Administrar furosemida</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> La atelectasia degrada la localización; reclutamiento y PEEP mejoran el acceso.</div></div>
+
+<div class="mcq-container"><p><strong>4. Indicaciones:</strong> Un nódulo de 12 mm en lóbulo superior derecho, riesgo intermedio ~25 %, está junto a un bronquio segmentario y tiene signo del bronquio. ¿Mejor abordaje inicial?</p><ul class="mcq-options"><li>A. Resección quirúrgica inmediata</li><li>B. Broncoscopia con rEBUS/navegación ± CBCT</li><li>C. Antibióticos empíricos sin seguimiento</li><li>D. Biopsia transtorácica independientemente del acceso</li><li>E. Radioterapia sin tejido</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> Los blancos contiguos a vía aérea favorecen muestreo broncoscópico con imagen complementaria.</div></div>
+
+<div class="mcq-container"><p><strong>5. Dificultades de PET:</strong> ¿Qué escenario tiene mayor riesgo de falso negativo?</p><ul class="mcq-options"><li>A. Nódulo sólido espiculado de 2,5 cm</li><li>B. Carcinoide típico de 1,0 cm</li><li>C. Neumonía activa</li><li>D. Sarcoidosis</li><li>E. Neumonitis por radiación</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> Carcinoides pequeños y adenocarcinomas indolentes pueden ser negativos.</div></div>
+
+<div class="mcq-container"><p><strong>6. Herramienta para enfermedad benigna:</strong> Se sospecha infección granulomatosa en un nódulo periférico de 20 mm. ¿Qué estrategia aporta diagnóstico más específico?</p><ul class="mcq-options"><li>A. Solo aguja</li><li>B. Biopsias con pinza, ≥6, más muestras auxiliares</li><li>C. Solo cepillo</li><li>D. Solo lavado</li><li>E. Repetir TC en lugar de muestrear</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> La pinza es mejor para enfermedad benigna; múltiples fragmentos y combinación de herramientas aumentan rendimiento.</div></div>
+
+<div class="mcq-container"><p><strong>7. Siguiente paso, subsólido:</strong> Un nódulo parcialmente sólido persistente de 18 mm tiene un núcleo sólido de 7 mm en crecimiento.</p><ul class="mcq-options"><li>A. Solo TC anual</li><li>B. PET no es útil, observar</li><li>C. PET/TC y luego biopsia o resección</li><li>D. Ignorar el crecimiento si el tamaño total es estable</li><li>E. Radioterapia sin tejido</li></ul><div class="mcq-answer"><strong>Respuesta: C.</strong> El crecimiento del componente sólido eleva el riesgo y exige escalada.</div></div>
+
+<div class="mcq-container"><p><strong>8. Factores de rendimiento:</strong> ¿Qué conjunto predice el menor rendimiento broncoscópico?</p><ul class="mcq-options"><li>A. rEBUS concéntrica y lóbulo superior</li><li>B. rEBUS excéntrica, lóbulo inferior y sin signo del bronquio</li><li>C. rEBUS concéntrica y lóbulo inferior</li><li>D. rEBUS excéntrica y lóbulo superior</li><li>E. rEBUS concéntrica con signo del bronquio</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> Cada uno de esos factores reduce el rendimiento.</div></div>
+
+<div class="mcq-container"><p><strong>9. Seguridad comparativa:</strong> En ensayos aleatorizados o por conglomerados, la complicación más reducida con broncoscopia navegacional o robótica frente a transtorácica es:</p><ul class="mcq-options"><li>A. Hemoptisis</li><li>B. Neumotórax que requiere tubo</li><li>C. Fiebre</li><li>D. Embolia aérea</li><li>E. Hipoxemia</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> La broncoscopia reduce de forma marcada el neumotórax manteniendo rendimiento.</div></div>
+
+<div class="mcq-container"><p><strong>10. Manejo de alto riesgo:</strong> Un paciente apto tiene un nódulo espiculado de 2,6 cm en lóbulo superior, probabilidad ~75 %. ¿Primer paso?</p><ul class="mcq-options"><li>A. Solo TC seriada</li><li>B. PET únicamente para decidir benigno o maligno</li><li>C. Diagnóstico quirúrgico; considerar biopsia no quirúrgica si los datos moleculares cambian el tratamiento</li><li>D. Radioterapia empírica</li><li>E. Antibióticos y TC en 6 semanas</li></ul><div class="mcq-answer"><strong>Respuesta: C.</strong> Los nódulos de alto riesgo suelen ir a diagnóstico quirúrgico.</div></div>
+
+<div class="mcq-container"><p><strong>11. Marco de cribado:</strong> Un nódulo sólido de 6 mm en TC de baja dosis se clasifica como:</p><ul class="mcq-options"><li>A. Lung-RADS 1</li><li>B. Lung-RADS 2</li><li>C. Lung-RADS 3</li><li>D. Lung-RADS 4A</li><li>E. Lung-RADS 4X</li></ul><div class="mcq-answer"><strong>Respuesta: C.</strong> Probablemente benigno; habitualmente TC de baja dosis a 6 meses.</div></div>
+
+<div class="mcq-container"><p><strong>12. Valor de imagen intraprocedimiento:</strong> El principal beneficio de CBCT durante biopsia broncoscópica es:</p><ul class="mcq-options"><li>A. Sustituir PET en estadificación</li><li>B. Convertir muchos casos sin herramienta en la lesión y reducir distancia al centro</li><li>C. Eliminar rEBUS</li><li>D. Reducir directamente el sangrado</li><li>E. Acortar automáticamente la anestesia</li></ul><div class="mcq-answer"><strong>Respuesta: B.</strong> CBCT visualiza directamente la relación herramienta-lesión y corrige la divergencia.</div></div>
+
+<hr>
+
+<h3>Controversias, variabilidad y evidencia en evolución</h3>
+<ul>
+    <li>El rendimiento de PET varía con la prevalencia local de enfermedad granulomatosa; un único SUV es poco fiable.</li>
+    <li>Los intervalos para subsólidos difieren entre guías, con ≥3 años frente a 5 años en algunos vidrios esmerilados puros.</li>
+    <li>El rendimiento global de broncoscopia guiada ha cambiado poco pese a nuevas tecnologías; selección, ventilación e imagen intraprocedimiento son palancas principales.</li>
+    <li>Robótica frente a biopsia transtorácica o navegación: se demostraron no inferioridad y ventajas de seguridad, pero siguen acumulándose datos sobre adecuación molecular y tiempo al tratamiento.</li>
+    <li>Criobiopsia de nódulos con sonda de 1,1 mm: no aprobada por la FDA; datos limitados, insuficientes para recomendar o rechazar el uso rutinario.</li>
+</ul>
+
+<h3>Lista de verificación final</h3>
+<ul>
+    <li>Identifique contexto clínico, incidental frente a cribado, y elija el modelo de riesgo apropiado.</li>
+    <li>Aplique umbrales ACCP, Fleischner y Lung-RADS para vigilancia o acción diagnóstica.</li>
+    <li>Solicite PET/TC selectivamente, en general ≥8 mm y riesgo intermedio; anticipe falsos resultados.</li>
+    <li>Use biomarcadores para reclasificar riesgo intermedio y reducir procedimientos benignos.</li>
+    <li>En broncoscopia, busque signo del bronquio, vista rEBUS concéntrica y ≥6 biopsias con varias herramientas.</li>
+    <li>Mitigue atelectasia con reclutamiento, PEEP 8–10 cmH₂O y FiO₂ menor, especialmente en blancos basales, IMC alto y casos largos.</li>
+    <li>Use CBCT si está disponible para confirmar herramienta dentro de la lesión y corregir divergencia.</li>
+    <li>Ajuste la modalidad: adosado a pleura favorece transtorácica; contiguo a vía aérea o necesidad de estadificación favorece broncoscopia.</li>
+    <li>Tras resultado no diagnóstico, reevalúe probabilidad e imagen; no repita un procedimiento de bajo rendimiento sin cambiar el plan.</li>
+</ul>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>Abreviaturas y glosario</h3>
+    <dl>
+        <dt>ACS</dt><dd>American Cancer Society</dd>
+        <dt>CTDIvol</dt><dd>Índice volumétrico de dosis de TC, mGy</dd>
+        <dt>CTLS</dt><dd>Cribado pulmonar mediante TC</dd>
+        <dt>GGN</dt><dd>Nódulo en vidrio esmerilado no sólido</dd>
+        <dt>EPI/EPID</dt><dd>Enfermedad pulmonar intersticial</dd>
+        <dt>LDCT</dt><dd>TC de baja dosis</dd>
+        <dt>MDT</dt><dd>Equipo multidisciplinario</dd>
+        <dt>NCCN</dt><dd>National Comprehensive Cancer Network</dd>
+        <dt>NLST/NELSON</dt><dd>Ensayos fundamentales de cribado con TC de baja dosis</dd>
+        <dt>PET/TC</dt><dd>Tomografía por emisión de positrones con TC</dd>
+        <dt>PLCOm2012</dt><dd>Modelo de riesgo del ensayo de próstata, pulmón, colorrectal y ovario de 2012</dd>
+        <dt>QALY</dt><dd>Año de vida ajustado por calidad</dd>
+        <dt>USPSTF</dt><dd>U.S. Preventive Services Task Force</dd>
+    </dl>
+</div>
+
+<div class="references">
+    <h3>Referencias</h3>
+    <ol>
+        <li>Aberle DR, Adams AM, Berg CD, et al. Reduced lung‑cancer mortality with low‑dose computed tomographic screening. N Engl J Med. 2011;365:395‑409.</li>
+        <li>de Koning HJ, van der Aalst CM, de Jong PA, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382:503‑513.</li>
+        <li>Krist AH, Davidson KW, Mangione CM, et al. Screening for Lung Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325:962‑970.</li>
+        <li>Wood DE, Kazerooni EA, Baum SL, et al. NCCN Guidelines® Insights: Lung Cancer Screening (current version). J Natl Compr Canc Netw. 2022–2025.</li>
+        <li>Wolf AMD, Shih Y‑CT, Fontham ETH, et al. Screening for lung cancer: 2023 guideline update from the American Cancer Society. CA Cancer J Clin. 2024;74:50‑81.</li>
+        <li>Mazzone PJ, Silvestri GA, Patel S, et al. Screening for Lung Cancer: CHEST Guideline and Expert Panel Report. Chest. 2021;160:e427‑e494.</li>
+        <li>Christensen J, Prosper AE, Wu CC, et al. ACR Lung‑RADS v2022: Assessment Categories and Management Recommendations. J Am Coll Radiol. 2024;21:473‑486.</li>
+        <li>Black WC, Gareen IF, Soneji SS, et al. Cost‑effectiveness of CT screening in the National Lung Screening Trial. N Engl J Med. 2014;371:1793‑1802.</li>
+        <li>Larke FJ, Kruger RL, Cagnon CH, et al. Estimated radiation dose associated with LDCT of NLST participants. AJR Am J Roentgenol. 2011;197:1165‑1169.</li>
+        <li>Pinsky PF, Gierada DS, Black W, et al. Performance of Lung‑RADS in the National Lung Screening Trial: a retrospective assessment. Ann Intern Med. 2015;162:485‑491.</li>
+        <li>Silvestri GA, Goldman L, Tanner NT, et al. Outcomes from more than 1 million people screened for lung cancer with low‑dose CT. Chest. 2023;164:241‑251.</li>
+        <li>McKee BJ, Regis SM, McKee AB, et al. Performance of ACR Lung‑RADS in a clinical CT lung screening program. J Am Coll Radiol. 2016;13:R25‑R29.</li>
+        <li>Kinsinger LS, Anderson C, Kim J, et al. Implementation of Lung Cancer Screening in the Veterans Health Administration. JAMA Intern Med. 2017;177:399‑406.</li>
+        <li>Rampinelli C, De Marco P, Origgi D, et al. Exposure to low‑dose CT for screening and risk‑benefit analysis. BMJ. 2017;356:j347.</li>
+        <li>Tammemägi MC, Katki HA, Hocking WG, et al. Selection criteria for lung‑cancer screening. N Engl J Med. 2013;368:728‑736.</li>
+        <li>Katki HA, Kovalchik SA, Berg CD, et al. Development and Validation of Risk Models to Select Ever‑Smokers for CT Lung Cancer Screening. JAMA. 2016;315:2300‑2311.</li>
+        <li>Robbins HA, Berg CD, Cheung LC, et al. Comparative performance of lung cancer risk models in the United Kingdom. Br J Cancer. 2021;124:2026‑2034.</li>
+        <li>Raghu G, Remy‑Jardin M, Myers JL, et al. Idiopathic pulmonary fibrosis and progressive pulmonary fibrosis in adults: clinical practice guideline. Am J Respir Crit Care Med. 2022;205:e18‑e47.</li>
+        <li>Mazzone PJ, Bach PB, Carey J, et al. Clinical validation of a cfDNA fragmentome assay for early detection of lung cancer. Cancer Discov. 2024;14:2224‑2238.</li>
+        <li>Geppert J, Kothari J, Karia R, et al. AI for nodule and cancer detection in CT lung cancer screening: systematic review. Thorax. 2024;79:1040‑1049.</li>
+    </ol>
+</div>
+
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+</body>
+</html>

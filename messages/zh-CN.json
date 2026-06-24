@@ -1,6 +1,6 @@
 {
   "common": {
-    "siteName": "介入呼吸病学教育",
+    "siteName": "介入肺脏病教育",
     "shortBrand": "IP Lab",
     "skipToContent": "跳至主要内容",
     "search": "搜索",
@@ -54,7 +54,7 @@
         "description": "提供五种语言的文献研讨音频"
       },
       "tnm9": {
-        "title": "TNM 第9版分期",
+        "title": "TNM-9 分期",
         "shortTitle": "TNM-9",
         "description": "独立的肺癌分期模块"
       },
@@ -65,7 +65,7 @@
       },
       "boardPrep": {
         "title": "IP 专科认证备考",
-        "shortTitle": "认证备考",
+        "shortTitle": "考试复习",
         "description": "互动式专科认证复习章节"
       },
       "fluoroview": {
@@ -74,8 +74,8 @@
         "description": "C 形臂气道模拟实验室"
       },
       "bronchNavigation": {
-        "title": "导航支气管镜",
-        "shortTitle": "导航支气管镜",
+        "title": "支气管导航",
+        "shortTitle": "导航",
         "description": "从 CT 到支气管镜视图的导航模拟器"
       },
       "pleuralProcedures": {
@@ -116,8 +116,8 @@
     }
   },
   "footer": {
-    "tagline": "通过实用学习工具、可打印模型和现代课程体系，推动全球气道教育。面向临床医生、教育者和培训学员。",
-    "motion": "偏好减少动态效果？请在操作系统偏好设置中启用，我们会自动遵循。",
+    "tagline": "实用学习工具、可打印模型和现代化课程，推动全球气道教育发展。专为临床医生、教育者和培训学员打造。",
+    "motion": "偏好减少动态效果的体验？请在操作系统偏好设置中启用，我们会自动匹配。",
     "explore": "探索",
     "learning": "学习",
     "comingSoon": "即将推出",
@@ -131,88 +131,88 @@
     "introToBronchoscopy": "支气管镜入门"
   },
   "home": {
-    "heroEyebrow": "介入呼吸病学教育",
+    "heroEyebrow": "介入肺脏病教育",
     "heroTitle": "介入呼吸病学的教育与创新",
     "heroBody": "探索面向介入呼吸病学学习者与教育者的 EBUS 培训、文献研讨播客、3D 解剖、导航支气管镜、专科认证复习和 FluoroView 模拟模块。",
     "openEbus": "打开 EBUS 培训",
     "browsePodcasts": "浏览播客库",
-    "launchCatalog": "模块目录",
+    "launchCatalog": "启动目录",
     "coreModules": "核心学习模块",
-    "coreModulesBody": "从目前已面向学习者开放的模块开始：EBUS 培训、TNM 第9版分期、3D 解剖、专科认证复习、文献研讨播客、导航支气管镜、FluoroView 和教学资源。",
+    "coreModulesBody": "从目前已可供学习者使用的模块开始：EBUS 培训、TNM-9 分期、3D 解剖、考试复习、期刊俱乐部播客、Nav Bronch、FluoroView 和教学资源。",
     "socalParticipants": "南加州 EBUS 课程学员",
     "participantCourse": "学员课程",
     "participantTitle": "南加州 EBUS 课程学员",
-    "participantBody": "完整课程门户仍向已注册学员开放，供其访问讲座学习路径、问卷、测试、进度跟踪及课程专属资料。上方也可单独进入 EBUS 培训资源。",
+    "participantBody": "完整课程门户仍向已注册学员开放，供其访问课程路径、问卷、测试、进度追踪和课程专属资料。EBUS 培训资源也可在上方单独访问。",
     "openCoursePortal": "打开课程门户",
     "roadmap": "路线图",
     "upcomingModules": "即将推出的模块",
-    "upcomingBody": "下一批公开发布内容将重点涵盖胸膜疾病入门、硬质支气管镜基础和支气管镜入门。",
+    "upcomingBody": "下一批公开发布内容将重点介绍胸膜疾病入门、硬质支气管镜基础和支气管镜入门。",
     "viewComingSoon": "查看即将推出",
     "cards": {
       "podcast": {
         "badge": "新内容 · 音频",
-        "title": "文献研讨播客",
-        "description": "收听以介入呼吸病学论文为主题的文献研讨，提供英语、西班牙语、普通话、阿拉伯语和韩语版本。",
+        "title": "期刊俱乐部播客",
+        "description": "收听以文献为核心的介入肺脏病期刊俱乐部讨论，提供英语、西班牙语、普通话、阿拉伯语和韩语版本。",
         "cta": "浏览播客"
       },
       "ebus": {
         "badge": "EBUS",
         "title": "EBUS 培训",
-        "description": "无需课程学员权限，即可学习设备操作、纵隔淋巴结分站和 EBUS 模拟训练模块。",
+        "description": "开放超声设备操作、纵隔淋巴结分站和 EBUS 模拟器模块，不限制课程学员访问。",
         "cta": "打开 EBUS 培训"
       },
       "adminPreview": {
         "badge": "管理员预览",
         "title": "EBUS 模拟器 + 虚拟支气管镜",
-        "description": "在正式上线前，预览与 EBUS 模拟器同步显示的虚拟支气管镜面板。",
+        "description": "在正式上线前，预览与 EBUS 模拟器同步显示的虚拟支气管镜界面。",
         "cta": "打开管理员预览"
       },
       "tnm": {
         "badge": "分期",
-        "title": "TNM 第9版分期",
-        "description": "进行独立的肺癌分期练习，包含分期描述符参考、分期分组、N 分期图谱和病例。",
+        "title": "TNM-9 分期",
+        "description": "独立的肺癌分期练习模块，包含描述符参考、分期分组、N 分期图谱和病例。",
         "cta": "打开 TNM-9"
       },
       "anatomy": {
         "badge": "3D 解剖",
-        "title": "互动解剖查看器",
-        "description": "结合 CT 平面和肺段显示控制，探索气道、纵隔、胸膜及介入操作相关的 3D 解剖。",
+        "title": "交互式解剖查看器",
+        "description": "通过 CT 平面和分段控制，探索气道、纵隔、胸膜及介入相关的 3D 解剖。",
         "cta": "浏览解剖"
       },
       "board": {
-        "badge": "认证复习",
-        "title": "IP 专科认证备考章节",
-        "description": "以病例为基础，涵盖恶性、良性及操作相关领域，并按介入呼吸病学认证复习需求编排。",
-        "cta": "开始复习"
+        "badge": "委员会考试复习",
+        "title": "介入肺脏病考试复习章节",
+        "description": "以病例为基础，涵盖恶性、良性和操作相关领域，并对应介入肺脏病复习内容。",
+        "cta": "开始考试复习"
       },
       "fluoro": {
         "badge": "模拟",
         "title": "FluoroView",
-        "description": "练习从 CT 到透视的方位转换、C 形臂角度、气道叠加显示和非诊断性图像控制。",
+        "description": "练习 CT 到透视的方位转换、C 臂角度、气道叠加显示以及非诊断性图像控制。",
         "cta": "启动 FluoroView"
       },
       "nav": {
         "badge": "导航",
-        "title": "支气管镜导航训练器",
-        "description": "操控虚拟支气管镜通过各级分支，同时对应 CT 平面、气道视图和目标位置。",
+        "title": "支气管导航训练器",
+        "description": "驾驶虚拟支气管镜穿过不同分支，同时关联 CT 平面、气道视图和目标病灶。",
         "cta": "开始导航"
       },
       "intro": {
         "badge": "支气管镜",
         "title": "支气管镜入门",
-        "description": "学习镜体尺寸选择、气道到达范围和器械兼容性的基础工具。",
+        "description": "提供支气管镜尺寸选择、气道可达性概念和器械兼容性的基础工具。",
         "cta": "打开入门模块"
       },
       "pleural": {
         "badge": "胸膜",
         "title": "胸膜操作",
-        "description": "学习胸膜疾病、超声模式识别、胸腔积液分析、气胸处置路径和引流系统。",
+        "description": "学习胸膜疾病、超声模式识别、胸腔积液分析、气胸处理路径和引流系统。",
         "cta": "打开胸膜模块"
       },
       "resources": {
         "badge": "资源",
         "title": "资源库",
-        "description": "浏览采用 Creative Commons 许可的医学图像，以及面向临床开发者、用于教学与开发的学习指南。",
+        "description": "浏览知识共享许可的医学图像，以及面向临床开发者的教学和开发学习指南。",
         "cta": "浏览资源"
       }
     }

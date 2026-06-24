@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>肺结节的诊断评估</title>
+<style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fdfdfd;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 10px;
+            margin-top: 50px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 40px;
+            font-weight: 600;
+        }
+        h4 {
+            color: #555;
+            margin-top: 25px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+        }
+        p, ul, ol {
+            margin-bottom: 16px;
+        }
+        ul, ol {
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e1e4e8;
+            margin: 50px 0;
+        }
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.95em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #e1e4e8;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f8ff;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        tr:nth-child(even) {
+            background-color: #fbfbfb;
+        }
+        /* Callout Boxes */
+        .algorithm-note {
+            background-color: #eef6fc;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #3498db;
+            margin: 25px 0;
+        }
+        .case-study {
+            background-color: #fff8e1;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #ffc107;
+            margin: 20px 0;
+        }
+        /* MCQ Styling */
+        .mcq-container {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #eee;
+        }
+        .mcq-options {
+            list-style-type: none;
+            padding-left: 15px;
+            margin: 10px 0;
+        }
+        .mcq-options li {
+            margin-bottom: 4px;
+        }
+        .mcq-answer {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border-left: 3px solid #2ecc71;
+        }
+        /* Mermaid */
+        .mermaid {
+            background: white;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+        }
+        /* Footer Sections */
+        .abbreviations dl {
+            display: grid;
+            grid-template-columns: max-content auto;
+            gap: 10px 20px;
+            font-size: 0.95em;
+        }
+        .abbreviations dt {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .abbreviations dd {
+            margin: 0;
+        }
+        .references ol {
+            padding-left: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body><h1>肺结节的诊断评估</h1>
+<h3>考试内容映射与范围</h3>
+<p>本章对应介入肺脏病学中偶然发现和筛查发现肺结节的考核领域。核心能力包括：</p>
+<ul>
+<li><strong>恶性风险预测：</strong> Mayo、Herder、Brock、TREAT 2.0。</li>
+<li><strong>指南指导的随访：</strong> Fleischner（偶然发现）、ACCP、BTS 和 Lung-RADS（筛查）。</li>
+<li><strong>影像：</strong> PET/CT 解读及生物标志物整合。</li>
+<li><strong>操作方式选择：</strong> 支气管镜（常规、导航、机器人）与经胸穿刺活检（TTNB）。</li>
+<li><strong>技术：</strong> 减少肺不张的麻醉/通气策略、术中影像（锥形束 CT）、并发症降低及结局解读。</li>
+</ul>
+<h3>学习目标</h3>
+<ul>
+<li>应用经验证的恶性风险模型，对单发和多发肺结节进行风险分层，并选择循证路径。</li>
+<li>依据偶然发现和筛查发现的指南框架，区分实性与亚实性结节的管理。</li>
+<li>解读肺结节 PET/CT，并识别常见假阳性和假阴性原因。</li>
+<li>选择既能最大化诊断率又能最小化并发症的取材方式，并采用策略减轻 CT-机体偏差。</li>
+<li>优化支气管镜取样（器械顺序和诊断率因素），并对无诊断结果进行故障排查。</li>
+<li>合理整合非侵入性生物标志物，以减少中间风险结节的不必要操作。</li>
+</ul>
+<hr/>
+<h3>高频要点一页通</h3>
+<div class="algorithm-note">
+<p><strong>选择正确的风险模型：</strong> Mayo（偶然发现）、Herder（偶然发现 + PET）、Brock（筛查）、TREAT 2.0（专科/高风险门诊）。模型必须匹配其开发人群的疾病患病率。</p>
+<p><strong>风险阈值（ACCP）：</strong> 低风险 &lt;5%；中间风险 5–65%；高风险 &gt;65%。管理方案取决于这些界值。</p>
+<ul>
+<li><strong>Fleischner（偶然发现——实性）：</strong>
+<ul>
+<li>&lt;6 mm：低风险患者通常无需随访。</li>
+<li>6–8 mm：6–12 个月复查 CT（高风险时可在 18–24 个月再查一次）。</li>
+<li>&gt;8 mm：考虑约 3 个月 CT、PET/CT 或组织取样。</li>
+</ul>
+</li>
+<li><strong>亚实性结节（ACCP/Fleischner）：</strong>
+<ul>
+<li>纯磨玻璃结节（GGN）≤5 mm：不随访或年度监测。</li>
+<li>纯 GGN &gt;5 mm：每年 CT，至少 3 年（部分指南延长至 5 年）。</li>
+<li>部分实性 &lt;8 mm：3、12、24 个月 CT，之后每年复查。</li>
+<li>部分实性 ≥8 mm 或实性核心增大：PET/活检/切除。</li>
+<li>≥15 mm：升级至 PET/活检/切除。</li>
+</ul>
+</li>
+<li><strong>Lung-RADS（筛查）：</strong>
+<ul>
+<li>3 类：6 个月低剂量 CT（LDCT）。</li>
+<li>4A 类：3 个月 LDCT（实性部分 ≥8 mm 时可行 PET）。</li>
+<li>4B/4X 类：诊断性 CT ± PET ± 组织取样。</li>
+</ul>
+</li>
+</ul>
+<p><strong>提示恶性的影像特征：</strong> 直径较大；部分实性 &gt; 实性 &gt; 纯 GGN；毛刺；上叶位置；胸膜牵拉；血管汇聚；假性空洞。</p>
+<p><strong>提示良性的特征：</strong> 中央性、层状或“爆米花样”钙化。</p>
+<p><strong>生长动力学：</strong> 典型肺癌体积倍增时间（VDT）约 100–400 天。极快（&lt;30–40 天）或极慢（&gt;400 天）的生长往往提示良性。注意：直径增加约 26% ≈ 体积倍增。</p>
+<p><strong>肺结节 PET/CT：</strong> SUV ≥2–2.5 值得警惕。总体敏感度高，但特异度有限。假阴性：&lt;8 mm 病灶、亚实性结节、类癌、惰性腺癌。假阳性：感染/炎症。</p>
+<p><strong>生物标志物（中间风险）：</strong> 血浆蛋白组“排除型”分类器具有较高敏感度/阴性预测值；支气管基因组分类器可在支气管镜无诊断后支持继续监测。</p>
+<p><strong>支气管镜诊断率：</strong> 常规工具：BAL 约 20%，刷检约 38%，活检钳约 43%，TBNA 约 47%。引导技术：rEBUS 约 57%；单独 EMN 约 39%；EMN+rEBUS 约 47%；大型前瞻性导航研究 12 个月诊断率约 73%。</p>
+<p><strong>机器人支气管镜：</strong> 当代系列常报告约 80–94% 诊断率，气胸率较低。随机/整群试验显示，其诊断表现对 TTNB/高级 EMN 达到非劣效，而气胸更少。</p>
+<p><strong>TTNB 与支气管镜：</strong> TTNB 诊断率高，但气胸率约 15–25%。导航/机器人支气管镜准确性具有竞争力，且气胸风险显著更低。</p>
+<p><strong>麻醉/通气：</strong> GA 下肺不张常见并降低诊断率。肺复张、PEEP 8–10 cmH₂O 和降低 FiO₂ 可减少肺不张。</p>
+</div>
+<hr/>
+<h3>核心概念</h3>
+<h4>病理生理学 / 流行病学</h4>
+<p>随着胸部 CT 和肺癌筛查广泛应用，不确定性质的肺结节（IPN）检出日益增多。临床挑战是在及时诊断肺癌的同时，避免良性病变患者接受不必要的侵入性检查及其伤害。</p>
+<h4>适应证与禁忌证</h4>
+<p><strong>观察还是采取诊断行动：</strong></p>
+<ul>
+<li><strong>低风险（&lt;5%）：</strong> CT 监测。</li>
+<li><strong>中间风险（5–65%）：</strong> PET/CT 和/或非手术活检。</li>
+<li><strong>高风险（&gt;65%）：</strong> 外科诊断；若分子结果会影响新辅助/辅助治疗，可先行非手术活检。</li>
+</ul>
+<p><strong>方式选择：</strong></p>
+<ul>
+<li><strong>支气管镜：</strong> 病灶靠近气道/有支气管征、位于中央至中外周，或同次需要淋巴结分期时优先。</li>
+<li><strong>TTNB：</strong> 小而贴近胸膜、气道通路不佳的靶点更合适。</li>
+<li><strong>电磁导航（EMN）注意事项：</strong> 电磁干扰和 CT-机体偏差可降低准确性；肺不张和通气改变是偏差的重要驱动因素。</li>
+</ul>
+<h4>术前评估</h4>
+<ul>
+<li><strong>风险分层：</strong> 根据人群选择 Mayo/Herder/Brock/TREAT 2.0，估算癌症前测概率（pCA），并与 ACCP/BTS 阈值对应。</li>
+<li><strong>影像复核：</strong> 评估结节大小、密度（实性/亚实性）、毛刺、上叶位置、钙化模式、数目及既往影像中的生长/VDT。</li>
+<li><strong>PET/CT：</strong> 最适用于 ≥8 mm 的中间风险结节及分期；预判假阳性和假阴性。</li>
+<li><strong>生物标志物：</strong> 在中间风险人群中，经验证的血浆蛋白组分类器可减少良性病变操作。支气管镜无诊断后，阴性的支气管基因组分类器支持保守随访。</li>
+<li><strong>知情同意/化验/合并症：</strong> 按支气管镜/TTNB 常规准备；权衡抗凝、心肺储备和患者价值偏好。</li>
+</ul>
+<h4>设备与设置</h4>
+<p><strong>支气管镜平台：</strong> 常规软镜 ± 透视、rEBUS（导管式超声）、EMN 以及机器人支气管镜（商业平台在镜体直径、工作通道和可视化方面不同）。</p>
+<p><strong>术中影像：</strong> 移动式/固定式锥形束 CT（CBCT），用于三维确认器械位于病灶内（TIL）。</p>
+<p><strong>取样工具：</strong> 针（恶性病变敏感度最高）、活检钳（良性病变更有优势）、刷。策略：联合工具可提高诊断率；力争 ≥6 份活检。</p>
+<p><strong>麻醉与通气：</strong> 尽量缩短麻醉时间。采用肺复张、PEEP 8–10 cmH₂O 和受控 FiO₂，减轻肺不张。</p>
+<h4>分步技术 / 操作核对表</h4>
+<ol>
+<li><strong>规划：</strong> 复核薄层 CT；选择气道路径；确认支气管征；预判 CT-机体偏差（上叶约 10 mm、下叶约 20 mm）。</li>
+<li><strong>导航：</strong> 按需使用 EMN/机器人引导；用 rEBUS 确认靶点（首选同心型）。</li>
+<li><strong>稳定并成像：</strong> 条件允许时用 CBCT 确认 TIL 并校正偏差；CBCT 可将许多非 TIL 情况转为 TIL，并缩短针尖至病灶中心的距离。</li>
+<li><strong>取样：</strong> 顺序：针 → 活检钳 → 刷。获得 ≥6 份活检。根据本地方案加用辅助工具；条件允许时用 ROSE 减少无诊断取样。</li>
+<li><strong>重新评估：</strong> rEBUS 偏心或阴性，或 ROSE 无诊断时，应重新成像和调整靶点；存在肺不张时调整通气。</li>
+<li><strong>整合生物标志物：</strong> 中间风险患者组织取样无诊断后，在重复侵入性检查前考虑生物标志物检测。</li>
+</ol>
+<h4>故障排查与术中处理</h4>
+<ul>
+<li><strong>rEBUS 阴性或偏心：</strong> 重新定向、调整导管深度，或借助 CBCT 重新规划。偏心视野、小病灶（&lt;20 mm）、无支气管征和下叶位置均会降低诊断率。</li>
+<li><strong>GA 下肺不张：</strong> 肺复张 + PEEP 8–10 cmH₂O，并降低 FiO₂。麻醉越久、BMI 越高、靶点越靠基底部，肺不张越明显。</li>
+<li><strong>电磁干扰：</strong> 识别并处理会干扰 EMN 磁场的金属来源。</li>
+<li><strong>CT-机体偏差：</strong> 尽量缩短规划 CT 至取样的时间；使用术中影像调整轨迹。</li>
+</ul>
+<h4>术后照护与随访</h4>
+<p><strong>即刻：</strong> 监测出血或气胸；根据机构方案决定术后胸片（支气管镜气胸率远低于 TTNB）。</p>
+<p><strong>后续：</strong> 在多学科决策中整合病理、PET/CT（确诊恶性后分期）和生物标志物结果。良性且稳定者按指南间隔恢复监测。</p>
+<h4>并发症（预防、识别与处理）</h4>
+<p><strong>TTNB：</strong> 气胸约 15–25%（部分需胸管）。病灶与气道相连时，应权衡与支气管镜的利弊。</p>
+<p><strong>支气管镜：</strong> 气胸率通常较低（引导/机器人技术常 ≤2–4%）；出血多为少量且可控制。CBCT 增加辐射暴露，但提高靶向准确性。</p>
+<p><strong>比较试验：</strong> 导航支气管镜的诊断表现对 TTNB 达到非劣效，气胸显著更少；机器人 + CBCT 在整群随机试验中对高级 EMN 达到非劣效。</p>
+<h4>特殊人群</h4>
+<ul>
+<li><strong>筛查发现结节：</strong> 使用 Lung-RADS 分类，使用 Brock 估算风险，并按类别升级处理。</li>
+<li><strong>纤维化肺病/IPF：</strong> 恶性风险更高；PET/CT 特异度可能更低；常需更早获取组织诊断。</li>
+<li><strong>抗凝/妊娠/ICU：</strong> 遵循机构路径；选择能够回答临床问题的最小侵入性方式。</li>
+</ul>
+<h4>证据与结局</h4>
+<p>常规工具的表现随靶点和组织学而异；联合工具并获得 ≥6 条组织可提高诊断率。rEBUS 等辅助引导优于单独 EMN；大型多中心导航研究显示 12 个月诊断率约 73%。机器人平台报告较高诊断率（常 ≥80–90%）和较低气胸率。荟萃分析显示，尽管技术不断发展，过去 20 年引导支气管镜的汇总诊断率仍约 69%；病例选择、影像和通气策略是进一步改善的关键。</p>
+<hr/>
+<h3>诊断与治疗算法</h3>
+<h4>算法 1——实性肺结节（8–30 mm）管理</h4>
+<div class="mermaid">
+graph TD
+    A["实性结节（8–30 mm）"] --&gt; B["估算 pCA（Mayo/Brock/Herder）"]
+    B --&gt; C["低风险（&lt;5%）"]
+    B --&gt; D["中间风险（5–65%）"]
+    B --&gt; E["高风险（&gt;65%）"]
+    C --&gt; F["CT 监测（3、9、24 个月）"]
+    D --&gt; G["PET/CT 和/或非手术活检"]
+    G --&gt; H{"结果？"}
+    H -- "PET 阴性或良性/无诊断活检（临床怀疑低）" --&gt; F
+    H -- "可疑/阳性" --&gt; I["外科诊断"]
+    E --&gt; J{"需要分子数据？"}
+    J -- 是 --&gt; G
+    J -- 否 --&gt; I
+</div>
+<div class="algorithm-note">
+<p><strong>实性结节管理：</strong></p>
+<ul>
+<li><strong>低风险（&lt;5%）：</strong> 3–6、9–12、18–24 个月 CT 监测；稳定 2 年可停止。</li>
+<li><strong>中间风险（5–65%）：</strong> PET/CT 和/或非手术活检（支气管镜或 TTNB）。</li>
+<li><strong>PET 阴性且 pCA &lt;30–40%，或活检良性/无诊断且风险低：</strong> 继续监测。</li>
+<li><strong>高风险（&gt;65%）：</strong> 外科诊断。<em>例外：</em> 若分子数据可能改变新辅助/辅助治疗，可先行非手术活检。</li>
+<li><strong>分期：</strong> 确诊癌症后用 PET/CT 分期。</li>
+</ul>
+</div>
+<h4>算法 2——亚实性结节</h4>
+<div class="mermaid">
+graph TD
+    A["亚实性结节"] --&gt; B{结节类型}
+    B --&gt; C["纯 GGN ≤5 mm"]
+    B --&gt; D["纯 GGN &gt;5 mm"]
+    B --&gt; E["部分实性 &lt;8 mm"]
+    B --&gt; F["部分实性 ≥8 mm"]
+    C --&gt; G["不随访或年度监测"]
+    D --&gt; H["每年 CT，至少 3 年"]
+    E --&gt; I["3、12、24 个月 CT，之后每年"]
+    F --&gt; J["3 个月复查 CT"]
+    J --&gt; K{结果？}
+    K -- "持续存在或实性核心增大" --&gt; L["PET / 活检 / 切除"]
+    K -- "稳定" --&gt; I
+    L -- "≥15 mm 或实性核心增大" --&gt; M["立即升级处理（实性部分 &lt;8 mm 时 PET 不可靠）"]
+</div>
+<div class="algorithm-note">
+<p><strong>亚实性结节管理：</strong></p>
+<ul>
+<li><strong>纯 GGN ≤5 mm：</strong> 通常不随访或每年监测。</li>
+<li><strong>纯 GGN &gt;5 mm：</strong> 每年 CT 至少 3 年（部分延长至 5 年）。</li>
+<li><strong>部分实性 &lt;8 mm：</strong> 3、12、24 个月 CT，之后每年。</li>
+<li><strong>部分实性 ≥8 mm：</strong> 3 个月复查 CT。持续存在或实性成分增大时行 PET/活检/切除。</li>
+<li><strong>≥15 mm 或实性核心增大：</strong> 升级至 PET/活检/切除。（注意：实性成分 &lt;8 mm 时 PET 不可靠。）</li>
+</ul>
+</div>
+<hr/>
+<h3>表格与速查框</h3>
+<h4>表 1. 提示恶性的临床与影像因素</h4>
+<table>
+<thead><tr><th>特征</th><th>高风险表现</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>大小</td><td>直径越大风险越高</td><td>&gt;2 cm 风险更高</td></tr>
+<tr><td>形态</td><td>部分实性 &gt; 实性 &gt; 纯 GGN</td><td>亚实性常较惰性，但实性核心越大风险越高</td></tr>
+<tr><td>毛刺</td><td>高于光滑边缘</td><td>队列数据比值比约 2.2–2.5</td></tr>
+<tr><td>位置</td><td>上叶 &gt; 下叶</td><td>—</td></tr>
+<tr><td>多发性</td><td>1–4 个结节高于单发</td><td>&gt;5 个时风险可能降低（取决于人群）</td></tr>
+<tr><td>肺气肿/IPF</td><td>风险增加</td><td>—</td></tr>
+<tr><td>生长</td><td>癌症典型 VDT 约 100–400 天</td><td>直径增加约 26% ≈ 体积倍增</td></tr>
+<tr><td>钙化</td><td>偏心/点状 → 可疑</td><td>中央/层状/爆米花样 → 良性</td></tr>
+<tr><td>辅助征象</td><td>胸膜牵拉、血管汇聚、假性空洞 → 可疑</td><td>—</td></tr>
+</tbody>
+</table>
+<h4>表 2. 指南指导的随访（精选）</h4>
+<table>
+<thead><tr><th>情境</th><th>建议</th></tr></thead>
+<tbody>
+<tr><td>Fleischner（实性 &lt;6 mm）</td><td>低风险：通常不随访。高风险：可考虑 12 个月 CT。</td></tr>
+<tr><td>实性 6–8 mm</td><td>6–12 个月 CT（高风险时可在 18–24 个月再查一次）。</td></tr>
+<tr><td>实性 &gt;8 mm</td><td>短间隔 CT（约 3 个月）、PET/CT 或组织取样。</td></tr>
+<tr><td>亚实性（ACCP）</td><td>
+<ul>
+<li>纯 GGN ≤5 mm：不随访或年度监测 ≥3 年。</li>
+<li>&gt;5 mm：每年 ≥3 年。</li>
+<li>部分实性 &lt;8 mm：3、12、24 个月，之后每年。</li>
+<li>≥8 mm 或实性核心增大：PET/活检/切除。</li>
+<li>≥15 mm：升级处理。</li>
+</ul>
+</td></tr>
+</tbody>
+</table>
+<h4>表 3. 诊断表现与并发症（代表性数据）</h4>
+<table>
+<thead><tr><th>方式</th><th>诊断表现</th><th>主要并发症</th></tr></thead>
+<tbody>
+<tr><td>CT 引导 TTNB</td><td>诊断率常约 85–90%</td><td>气胸约 15–25%</td></tr>
+<tr><td>常规支气管镜（登记研究）</td><td>BAL 约 19%，刷检约 38%，活检钳约 43%，TBNA 约 47%</td><td>气胸率低</td></tr>
+<tr><td>单独 rEBUS</td><td>诊断率约 57%</td><td>—</td></tr>
+<tr><td>单独 EMN</td><td>诊断率约 39%</td><td>—</td></tr>
+<tr><td>EMN + rEBUS</td><td>诊断率约 47%</td><td>—</td></tr>
+<tr><td>EMN（NAVIGATE）</td><td>12 个月诊断率约 73%</td><td>气胸率低</td></tr>
+<tr><td>机器人支气管镜</td><td>诊断率约 80–94%</td><td>气胸通常 ≤约 4%</td></tr>
+<tr><td>EMN 与 TTNB（随机）</td><td>诊断准确性非劣效</td><td>EMN 气胸显著更少</td></tr>
+</tbody>
+</table>
+<div class="algorithm-note">
+<h4>速查框——PET/CT 解读</h4>
+<p><strong>阈值：</strong> 不要依赖单一 SUV 界值；应报告摄取模式并结合临床背景。</p>
+<p><strong>准确性：</strong> 总体敏感度高，但小病灶（&lt;1 cm）或惰性病灶敏感度下降；肉芽肿/炎症高发地区特异度下降。</p>
+<p><strong>假阳性：</strong> 感染、肉芽肿病、结节病、治疗后改变。</p>
+<p><strong>假阴性：</strong> 体积小、类癌、黏液性/惰性腺癌、纯 GGN（AIS/MIA）。</p>
+</div>
+<hr/>
+<h3>病例与应用学习</h3>
+<div class="case-study">
+<h4>病例 1</h4>
+<p>一名 70 岁女性，偶然发现新的右上叶 9 mm 实性结节，有 40 包年吸烟史，无症状。下一步最佳处理？</p>
+<p>A. 不随访<br/>B. 3 个月复查 CT<br/>C. 6 个月复查 CT<br/>D. 12 个月复查 CT<br/>E. 仅 PET/CT</p>
+<p><strong>答案：B。</strong> 偶然发现的 &gt;8 mm 实性结节可选择短间隔 CT（约 3 个月）、PET/CT 或组织取样。先行短间隔 CT 评估稳定性是常见路径。</p>
+</div>
+<div class="case-study">
+<h4>病例 2</h4>
+<p>下列哪种情况最符合良性过程？</p>
+<p>A. 20 mm 上叶毛刺结节<br/>B. 17 mm 结节，FDG 强摄取并伴纤维化<br/>C. 35 mm 肿块，VDT 约 40 天<br/>D. 吸烟者 22 mm 结节伴偏心钙化<br/>E. 14 mm 实性结节伴胸膜牵拉</p>
+<p><strong>答案：C。</strong> 极快生长（VDT &lt;30–40 天）常提示感染/炎症；典型恶性 VDT 多在 100–400 天。</p>
+</div>
+<div class="case-study">
+<h4>病例 3</h4>
+<p>一枚 16 mm 左下叶结节在支气管镜中呈偏心型 rEBUS，且无支气管征。应如何处理？</p>
+<p>A. 直接取样——诊断率会很高<br/>B. 终止并安排 TTNB<br/>C. 重新定向、调整位置和/或用 CBCT 在取样前达到 TIL<br/>D. 仅改做 BAL<br/>E. 将 FiO₂ 提高至 100% 并继续</p>
+<p><strong>答案：C。</strong> 偏心视野、下叶位置和无支气管征均预示低诊断率；取样前应重新定位、确认 TIL，并校正肺不张/偏差。</p>
+</div>
+<h3>题库（选择题）</h3>
+<div class="mcq-container"><p><strong>1. 下一步最佳处理（筛查发现）：</strong> 一名 72 岁现吸烟者在冠状动脉钙化 CT 上发现新的 7 mm 结节。</p><ul class="mcq-options"><li>A. 安排 PET/CT</li><li>B. 低剂量筛查 CT（LDCT）</li><li>C. CT 引导活检</li><li>D. 12 个月后复查 CT</li><li>E. 支气管镜活检</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 先用筛查方案 LDCT 按 Lung-RADS 分类，再决定 PET 或活检。</div></div>
+<div class="mcq-container"><p><strong>2. 钙化模式：</strong> 哪一种提示良性？</p><ul class="mcq-options"><li>A. 偏心</li><li>B. 点状</li><li>C. 中央或层状</li><li>D. 无定形</li><li>E. 周边环状</li></ul><div class="mcq-answer"><strong>答案：C。</strong> 中央/层状/爆米花样钙化是典型良性模式。</div></div>
+<div class="mcq-container"><p><strong>3. 术中故障排查：</strong> 机器人支气管镜中 rEBUS 阴性，CBCT 显示基底部肺不张。下一步？</p><ul class="mcq-options"><li>A. 将 FiO₂ 提高至 100%</li><li>B. 肺复张 + PEEP 8–10 cmH₂O 并降低 FiO₂，然后重新成像</li><li>C. 终止并安排 TTNB</li><li>D. 盲目继续取样</li><li>E. 给予呋塞米</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 肺不张会破坏靶向；肺复张/PEEP 策略可减少肺不张并改善可达性。</div></div>
+<div class="mcq-container"><p><strong>4. 适应证：</strong> 一枚中间风险（pCA 约 25%）的 12 mm 右上叶结节贴近肺段支气管并有支气管征。最佳初始诊断方式？</p><ul class="mcq-options"><li>A. 立即手术切除</li><li>B. rEBUS/EMN ± CBCT 支气管镜</li><li>C. 经验性抗生素且不随访</li><li>D. 不考虑气道邻近度，一律 TTNB</li><li>E. 无组织直接 SBRT</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 与气道连续的靶点适合支气管镜取样并联合辅助影像。</div></div>
+<div class="mcq-container"><p><strong>5. PET 陷阱：</strong> 哪种情况最易出现 PET 假阴性？</p><ul class="mcq-options"><li>A. 2.5 cm 毛刺实性结节</li><li>B. 1.0 cm 典型类癌</li><li>C. 活动性肺炎</li><li>D. 结节病</li><li>E. 放射性肺炎</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 小型类癌和惰性腺癌可为 PET 阴性。</div></div>
+<div class="mcq-container"><p><strong>6. 良性病变工具选择：</strong> 怀疑一枚 20 mm 外周结节为肉芽肿感染。哪种策略最有利于获得特异性诊断？</p><ul class="mcq-options"><li>A. 仅针吸</li><li>B. 活检钳（≥6 份）± 辅助取样</li><li>C. 仅刷检</li><li>D. 仅 BAL</li><li>E. 不取样，仅复查 CT</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 活检钳对良性疾病更有优势；多条组织并联合工具可提高诊断率。</div></div>
+<div class="mcq-container"><p><strong>7. 下一步最佳处理（亚实性）：</strong> 一枚持续存在的 18 mm 部分实性结节，其 7 mm 实性核心正在增大。</p><ul class="mcq-options"><li>A. 仅年度 CT</li><li>B. PET/CT 无帮助——观察</li><li>C. PET/CT 并进一步活检或切除</li><li>D. 总体大小稳定即可忽略核心生长</li><li>E. 无组织立即 SBRT</li></ul><div class="mcq-answer"><strong>答案：C。</strong> 实性成分增大提示风险上升，应升级诊断。</div></div>
+<div class="mcq-container"><p><strong>8. 诊断率因素：</strong> 哪组因素预示最低的支气管镜诊断率？</p><ul class="mcq-options"><li>A. 同心型 rEBUS；上叶</li><li>B. 偏心型 rEBUS；下叶；无支气管征</li><li>C. 同心型 rEBUS；下叶</li><li>D. 偏心型 rEBUS；上叶</li><li>E. 同心型 rEBUS；有支气管征</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 偏心视野、下叶位置和无支气管征均降低诊断率。</div></div>
+<div class="mcq-container"><p><strong>9. 比较安全性：</strong> 随机/整群试验中，导航/机器人支气管镜相对 TTNB 最明显减少的并发症是：</p><ul class="mcq-options"><li>A. 咯血</li><li>B. 需胸管的气胸</li><li>C. 术后发热</li><li>D. 空气栓塞</li><li>E. 低氧血症</li></ul><div class="mcq-answer"><strong>答案：B。</strong> 支气管镜在保持诊断表现的同时显著降低 TTNB 相关气胸风险。</div></div>
+<div class="mcq-container"><p><strong>10. 高风险管理：</strong> 一名身体状况良好的患者有 2.6 cm 上叶毛刺结节（pCA 约 75%）。第一步最佳处理？</p><ul class="mcq-options"><li>A. 仅连续 CT</li><li>B. 仅用 PET/CT 判断良恶性</li><li>C. 外科诊断；若分子数据会改变治疗，可先非手术活检</li><li>D. 经验性 SBRT</li><li>E. 抗生素后 6 周复查</li></ul><div class="mcq-answer"><strong>答案：C。</strong> 高风险结节通常进入外科诊断；若分子分型会影响新辅助/辅助方案，可先做非手术活检。</div></div>
+<div class="mcq-container"><p><strong>11. 筛查框架：</strong> LDCT 上一枚 6 mm 实性结节属于：</p><ul class="mcq-options"><li>A. Lung-RADS 1</li><li>B. Lung-RADS 2</li><li>C. Lung-RADS 3</li><li>D. Lung-RADS 4A</li><li>E. Lung-RADS 4X</li></ul><div class="mcq-answer"><strong>答案：C。</strong> 很可能良性，通常 6 个月复查 LDCT。</div></div>
+<div class="mcq-container"><p><strong>12. 术中影像价值：</strong> 支气管镜活检期间 CBCT 的主要获益是：</p><ul class="mcq-options"><li>A. 取代 PET/CT 分期</li><li>B. 将许多非 TIL 情况转为 TIL，并缩短针尖至中心距离</li><li>C. 完全取消 rEBUS 需求</li><li>D. 直接降低出血风险</li><li>E. 自动缩短麻醉时间</li></ul><div class="mcq-answer"><strong>答案：B。</strong> CBCT 可直接显示器械-病灶关系，校正偏差并改善靶向。</div></div>
+<hr/>
+<h3>争议、差异与不断演进的证据</h3>
+<ul>
+<li>PET 表现随当地肉芽肿病患病率而异；依赖单一 SUV 阈值并不可靠。</li>
+<li>亚实性结节监测时长在不同指南间不同（部分纯 GGN 为 ≥3 年，部分为 5 年）。</li>
+<li>尽管新技术不断出现，引导支气管镜总体诊断率相对稳定；操作者病例选择、通气和术中影像是改善的主要杠杆。</li>
+<li>机器人与 TTNB/EMN：非劣效和安全优势已有证据，但分子检测充分性和至治疗时间的长期数据仍在积累。</li>
+<li>结节冷冻活检（1.1 mm 探头）：尚未获 FDA 批准，数据有限，无法支持或反对常规使用。</li>
+</ul>
+<h3>带回家的核对表</h3>
+<ul>
+<li>先确定临床背景（偶然发现还是筛查），再选择相应风险模型。</li>
+<li>使用 ACCP/Fleischner/Lung-RADS 阈值决定监测或诊断行动。</li>
+<li>选择性使用 PET/CT（≥8 mm、中间风险），并预判假阳性和假阴性。</li>
+<li>用生物标志物下调中间风险，减少良性病变操作。</li>
+<li>支气管镜应寻找支气管征、争取同心型 rEBUS，并用多种工具获取 ≥6 份活检。</li>
+<li>减轻肺不张（肺复张、PEEP 8–10 cmH₂O、降低 FiO₂），尤其适用于基底部靶点、高 BMI 和长时间病例。</li>
+<li>条件允许时使用 CBCT 确认 TIL 并校正 CT-机体偏差。</li>
+<li>根据病灶匹配活检方式：贴近胸膜偏向 TTNB；与气道连续或需淋巴结分期偏向支气管镜。</li>
+<li>无诊断结果后重新评估 pCA 和影像；不要在不改变方案的情况下重复低诊断率操作。</li>
+</ul>
+<hr/>
+<div class="abbreviations">
+<h3>缩写与术语表</h3>
+<dl>
+<dt>ACS</dt><dd>美国癌症协会</dd>
+<dt>CTDIvol</dt><dd>容积 CT 剂量指数（mGy）</dd>
+<dt>CTLS</dt><dd>CT 肺癌筛查</dd>
+<dt>GGN</dt><dd>磨玻璃结节（非实性）</dd>
+<dt>ILC/ILD</dt><dd>间质性肺病</dd>
+<dt>LDCT</dt><dd>低剂量计算机断层扫描</dd>
+<dt>MDT</dt><dd>多学科团队</dd>
+<dt>NCCN</dt><dd>美国国家综合癌症网络</dd>
+<dt>NLST/NELSON</dt><dd>里程碑式 LDCT 筛查试验</dd>
+<dt>PET/CT</dt><dd>正电子发射断层扫描联合 CT</dd>
+<dt>PLCOm2012</dt><dd>前列腺、肺、结直肠和卵巢癌筛查试验风险模型（2012）</dd>
+<dt>QALY</dt><dd>质量调整生命年</dd>
+<dt>USPSTF</dt><dd>美国预防服务工作组</dd>
+</dl>
+</div>
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Aberle DR, Adams AM, Berg CD, et al. Reduced lung‑cancer mortality with low‑dose computed tomographic screening. N Engl J Med. 2011;365:395‑409.</li>
+<li>de Koning HJ, van der Aalst CM, de Jong PA, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382:503‑513.</li>
+<li>Krist AH, Davidson KW, Mangione CM, et al. Screening for Lung Cancer: US Preventive Services Task Force Recommendation Statement. JAMA. 2021;325:962‑970.</li>
+<li>Wood DE, Kazerooni EA, Baum SL, et al. NCCN Guidelines® Insights: Lung Cancer Screening (current version). J Natl Compr Canc Netw. 2022–2025.</li>
+<li>Wolf AMD, Shih Y‑CT, Fontham ETH, et al. Screening for lung cancer: 2023 guideline update from the American Cancer Society. CA Cancer J Clin. 2024;74:50‑81.</li>
+<li>Mazzone PJ, Silvestri GA, Patel S, et al. Screening for Lung Cancer: CHEST Guideline and Expert Panel Report. Chest. 2021;160:e427‑e494.</li>
+<li>Christensen J, Prosper AE, Wu CC, et al. ACR Lung‑RADS v2022: Assessment Categories and Management Recommendations. J Am Coll Radiol. 2024;21:473‑486.</li>
+<li>Black WC, Gareen IF, Soneji SS, et al. Cost‑effectiveness of CT screening in the National Lung Screening Trial. N Engl J Med. 2014;371:1793‑1802.</li>
+<li>Larke FJ, Kruger RL, Cagnon CH, et al. Estimated radiation dose associated with LDCT of NLST participants. AJR Am J Roentgenol. 2011;197:1165‑1169.</li>
+<li>Pinsky PF, Gierada DS, Black W, et al. Performance of Lung‑RADS in the National Lung Screening Trial: a retrospective assessment. Ann Intern Med. 2015;162:485‑491.</li>
+<li>Silvestri GA, Goldman L, Tanner NT, et al. Outcomes from more than 1 million people screened for lung cancer with low‑dose CT. Chest. 2023;164:241‑251.</li>
+<li>McKee BJ, Regis SM, McKee AB, et al. Performance of ACR Lung‑RADS in a clinical CT lung screening program. J Am Coll Radiol. 2016;13:R25‑R29.</li>
+<li>Kinsinger LS, Anderson C, Kim J, et al. Implementation of Lung Cancer Screening in the Veterans Health Administration. JAMA Intern Med. 2017;177:399‑406.</li>
+<li>Rampinelli C, De Marco P, Origgi D, et al. Exposure to low‑dose CT for screening and risk‑benefit analysis. BMJ. 2017;356:j347.</li>
+<li>Tammemägi MC, Katki HA, Hocking WG, et al. Selection criteria for lung‑cancer screening. N Engl J Med. 2013;368:728‑736.</li>
+<li>Katki HA, Kovalchik SA, Berg CD, et al. Development and Validation of Risk Models to Select Ever‑Smokers for CT Lung Cancer Screening. JAMA. 2016;315:2300‑2311.</li>
+<li>Robbins HA, Berg CD, Cheung LC, et al. Comparative performance of lung cancer risk models in the United Kingdom. Br J Cancer. 2021;124:2026‑2034.</li>
+<li>Raghu G, Remy‑Jardin M, Myers JL, et al. Idiopathic pulmonary fibrosis and progressive pulmonary fibrosis in adults: clinical practice guideline. Am J Respir Crit Care Med. 2022;205:e18‑e47.</li>
+<li>Mazzone PJ, Bach PB, Carey J, et al. Clinical validation of a cfDNA fragmentome assay for early detection of lung cancer. Cancer Discov. 2024;14:2224‑2238.</li>
+<li>Geppert J, Kothari J, Karia R, et al. AI for nodule and cancer detection in CT lung cancer screening: systematic review. Thorax. 2024;79:1040‑1049.</li>
+</ol>
+</div>
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+</script>
+</body>
+</html>

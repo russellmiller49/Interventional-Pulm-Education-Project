@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tratamiento broncoscópico y quirúrgico de la EPOC y la bronquitis crónica</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+    <h1>Tratamiento broncoscópico y quirúrgico de la EPOC y la bronquitis crónica</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda las intervenciones para la EPOC avanzada, incluidos los fenotipos con predominio de enfisema y de bronquitis crónica, con énfasis en la reducción broncoscópica del volumen pulmonar (BLVR), la cirugía de reducción del volumen pulmonar (LVRS), el manejo perioperatorio, el reconocimiento y tratamiento de las complicaciones y los algoritmos de selección. Se corresponde con los dominios del temario de la AABIP: selección de pacientes, imagen y fisiología, broncoscopia terapéutica, anestesia/sedación, complicaciones y seguimiento posterior al procedimiento.</p>
+
+    <hr>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Identificar candidatos y contraindicaciones para BLVR frente a LVRS mediante criterios fisiológicos, radiográficos y clínicos.</li>
+        <li>Aplicar un algoritmo escalonado para evaluar la integridad de las cisuras y la ventilación colateral y para elegir el lóbulo diana.</li>
+        <li>Ejecutar una lista de verificación reproducible para la colocación de válvulas EBV/IBV y estrategias anestésicas perioperatorias que mitiguen el riesgo de neumotórax.</li>
+        <li>Diagnosticar y tratar las complicaciones frecuentes, especialmente el neumotórax, mediante vías basadas en la evidencia.</li>
+        <li>Asesorar a pacientes con condiciones especiales —FEV₁ o DLCO muy bajos, hipertensión pulmonar, deficiencia de alfa-1 antitripsina y candidatura a trasplante— sobre riesgos, beneficios y secuenciación con la cirugía.</li>
+        <li>Reconocer las terapias broncoscópicas emergentes para la bronquitis crónica, como la crioterapia por aerosol y la denervación pulmonar dirigida, así como el estado actual de la evidencia.</li>
+        <li>Demostrar dominio de alto rendimiento para el examen de los ensayos NETT, VENT, STELVIO, TRANSFORM, LIBERATE y EMPROVE y sus implicaciones prácticas.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Mecanismo:</strong> Oclusión lobar → atelectasia del lóbulo diana → reducción de la hiperinsuflación estática y dinámica → mejoría del retroceso elástico, la curvatura diafragmática, la relación V/Q y la precarga cardíaca.</li>
+            <li><strong>Válvulas:</strong> Zephyr® EBV (tipo pico de pato) y Spiration® IBV (tipo paraguas); ambas son válvulas unidireccionales que permiten la salida de aire y secreciones, están disponibles en varios tamaños y son removibles.</li>
+            <li><strong>Selección — ventana típica para BLVR:</strong> FEV₁ aproximadamente 20–50% del predicho; hiperinsuflación marcada (por ejemplo, RV ≥175% del predicho; ≥200% si el enfisema es homogéneo); relación RV/TLC elevada; lóbulo diana adecuado sin ventilación colateral interlobar y con integridad cisural suficiente.</li>
+            <li><strong>Ventilación colateral (CV):</strong> Evaluarla mediante TC de alta resolución con análisis de cisuras y/o catéter Chartis®; ambos métodos son imperfectos, por lo que conviene utilizarlos de forma complementaria.</li>
+            <li><strong>Señales de los ensayos:</strong> En el enfisema grave sin CV, las válvulas mejoran el FEV₁, los síntomas (SGRQ) y la distancia de marcha de 6 minutos en ensayos aleatorizados; el neumotórax es el principal acontecimiento adverso temprano.</li>
+            <li><strong>LVRS:</strong> Beneficia a pacientes seleccionados —enfisema de predominio en lóbulos superiores y baja capacidad de ejercicio basal— con mejoría de síntomas y ejercicio; el riesgo perioperatorio es mayor que con BLVR.</li>
+            <li><strong>Datos sobre neumotórax:</strong> Suele presentarse en las primeras 72 horas tras la colocación de válvulas; el riesgo es mayor con lóbulos superiores y cisuras muy completas. En pacientes estables suele iniciarse con tubo torácico sin succión; la retirada de válvulas se reserva para fuga persistente o inestabilidad.</li>
+            <li><strong>Perla anestésica:</strong> Una estrategia con baja fracción inspirada de oxígeno —mantener SpO₂ ≥89% con la FiO₂ mínima factible y esperar a que se equilibre el O₂ al final de la espiración— se asocia con menores tasas de neumotórax.</li>
+            <li><strong>Exacerbaciones de EPOC posteriores al procedimiento:</strong> La profilaxis con antibióticos ± corticosteroides reduce las exacerbaciones tempranas; muchos centros prefieren antibióticos solos.</li>
+            <li><strong>Realidad de las derivaciones:</strong> Solo una minoría de los pacientes remitidos termina siendo elegible para BLVR. Las causas más frecuentes de exclusión son la ausencia de un lóbulo diana adecuado, el fenotipo con predominio de bronquitis crónica y exacerbaciones frecuentes y la hiperinsuflación insuficiente.</li>
+            <li><strong>Poblaciones especiales:</strong> Pacientes con FEV₁ &lt;20% o DLCO &lt;20% aún pueden beneficiarse en centros con experiencia; los datos sobre hipertensión pulmonar son limitados, pero la factibilidad inicial es alentadora.</li>
+            <li><strong>Estrategia de puente:</strong> BLVR puede servir de puente hacia el trasplante o la LVRS; la BLVR secuencial o bilateral puede recuperar una respuesta perdida en pacientes seleccionados.</li>
+            <li><strong>Terapias para bronquitis crónica:</strong> La crioterapia por aerosol con nitrógeno líquido busca remodelar la mucosa; la denervación pulmonar dirigida interrumpe la inervación parasimpática. Ambas son prometedoras, pero siguen siendo investigacionales para las decisiones rutinarias del examen.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología / epidemiología</h4>
+    <p>El enfisema avanzado produce destrucción alveolar, pérdida del retroceso elástico e hiperinsuflación, lo que aplana el diafragma y agrava la limitación al flujo espiratorio. La hiperinsuflación también reduce el retorno venoso y los volúmenes de las cámaras cardíacas; la reducción de volumen mejora la mecánica y puede aumentar la precarga y el gasto cardíacos. La bronquitis crónica se caracteriza por hiperplasia de las glándulas mucosas y aumento de células caliciformes, que causan tos, expectoración y exacerbaciones. En general, no es el fenotipo ideal para BLVR con válvulas, lo que ha impulsado terapias broncoscópicas dirigidas a la vía aérea.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>BLVR: indicaciones típicas</strong></p>
+    <ul>
+        <li>EPOC grave con hiperinsuflación sintomática pese a tratamiento inhalado óptimo, oxígeno cuando está indicado y rehabilitación pulmonar.</li>
+        <li>Lóbulo diana adecuado con destrucción evidente y baja perfusión.</li>
+        <li>Integridad cisural suficiente para sugerir ausencia de CV interlobar, confirmada con Chartis cuando sea necesario.</li>
+        <li>Alteración fisiológica dentro de los intervalos estudiados, por ejemplo FEV₁ aproximadamente 20–50% del predicho y RV elevado.</li>
+    </ul>
+
+    <p><strong>BLVR: contraindicaciones frecuentes o motivos de ineligibilidad</strong></p>
+    <ul>
+        <li>Ausencia de un lóbulo diana adecuado (~18%).</li>
+        <li>Fenotipo no apropiado —bronquitis crónica con exacerbaciones frecuentes, asma— (~18%).</li>
+        <li>Hiperinsuflación insuficiente (~16%).</li>
+        <li>Enfisema homogéneo sin una diana clara (~10%).</li>
+        <li>Cisuras incompletas (~9%).</li>
+        <li>Otros: tabaquismo activo, falta de rehabilitación pulmonar, necesidad importante de anticoagulación, bullas grandes, fragilidad extrema, nódulos sospechosos o comorbilidad grave.</li>
+    </ul>
+
+    <p><strong>LVRS: principios clave de selección del NETT</strong></p>
+    <ul>
+        <li>Enfisema bilateral con hiperinsuflación marcada; excluir el grupo de alto riesgo —FEV₁ ≤20% con patrón homogéneo o DLCO ≤20%—.</li>
+        <li>Mayor beneficio: enfisema de predominio en lóbulos superiores con baja tolerancia basal al ejercicio.</li>
+        <li>Mayor morbilidad y mortalidad perioperatorias que BLVR; la selección del centro y del paciente es crucial.</li>
+    </ul>
+
+    <h4>Evaluación previa al procedimiento</h4>
+    <ul>
+        <li><strong>Fisiología pulmonar:</strong> Espirometría, pletismografía —RV/TLC—, DLCO y prueba de marcha de 6 minutos; confirmar rehabilitación pulmonar reciente.</li>
+        <li><strong>Imagen:</strong> TCAR de cortes finos con cuantificación lobar del enfisema y análisis de cisuras; documentar distribución —heterogénea frente a homogénea—, bullas, enfermedad paraseptal, adherencias pleurales y nódulos.</li>
+        <li><strong>Evaluación de CV:</strong> Análisis cuantitativo de cisuras —los umbrales dependen de la plataforma— y/o Chartis intraprocedimiento.</li>
+        <li><strong>Perfusión:</strong> La gammagrafía de perfusión puede ayudar a decidir el lóbulo diana cuando la anatomía es equívoca.</li>
+        <li><strong>Comorbilidades:</strong> Riesgo cardíaco, hipertensión pulmonar, apnea obstructiva del sueño, osteoporosis, cirugía torácica previa y anticoagulación; optimizar antes de la intervención.</li>
+        <li><strong>Tabaquismo:</strong> Se requiere abstinencia, comúnmente durante al menos 4–6 meses.</li>
+        <li><strong>Consentimiento:</strong> Explicar beneficios frente al riesgo de neumotórax, posible necesidad de broncoscopia de revisión o retirada de válvulas y observación hospitalaria.</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Broncoscopio:</strong> Canal de trabajo ≥2,6 mm.</li>
+        <li><strong>Válvulas:</strong>
+            <ul>
+                <li><em>Spiration® IBV:</em> Diseño en paraguas, armazón de nitinol con anclajes distales, membrana de poliuretano; tamaños de 5, 6, 7 y 9 mm; dimensionamiento con balón y kit de calibración específicos.</li>
+                <li><em>Zephyr® EBV:</em> Válvula de silicona tipo pico de pato sobre retenedor de nitinol; tamaños 4.0, 4.0-LP, 5.5 y 5.5-LP; dimensionamiento con catéter de profundidad/diámetro recto o en J.</li>
+            </ul>
+        </li>
+        <li><strong>Sistema Chartis®:</strong> Catéter con balón y consola para evaluar funcionalmente la CV.</li>
+        <li><strong>Accesorios:</strong> Cargador y catéteres de liberación de válvulas, fluoroscopia opcional, instrumentos de medición de vía aérea y accesorios broncoscópicos estándar.</li>
+        <li><strong>Anestesia:</strong> Anestesia general con tubo endotraqueal o mascarilla laríngea, o cuidados anestésicos monitorizados con anestesia tópica; muchos centros prefieren tubo endotraqueal y anestesia intravenosa total por estabilidad.</li>
+        <li><strong>Protocolo de FiO₂ baja:</strong> Mantener SpO₂ ≥89% con la FiO₂ viable más baja y retrasar la liberación de válvulas hasta que el O₂ exhalado se aproxime al inspirado.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso / lista de verificación</h3>
+    <ul>
+        <li><strong>Revisión final del plan:</strong> Confirmar lóbulo diana, estado de cisuras y plan anestésico; asegurar la estrategia de profilaxis antibiótica si se utiliza.</li>
+        <li><strong>Acceso a la vía aérea:</strong> Asegurar la vía aérea; aplicar estrategia de FiO₂ baja, frecuencia respiratoria baja y tiempo espiratorio prolongado, por ejemplo I:E 1:3–1:4.</li>
+        <li><strong>Chartis, si es necesario:</strong> Aislar el bronquio lobar diana; verificar un patrón de flujo/volumen negativo para CV, reconociendo el fenómeno de bajo flujo o colapso.</li>
+        <li><strong>Mapeo y dimensionamiento:</strong> Medir en secuencia los bronquios segmentarios y subsegmentarios.</li>
+        <li><strong>Despliegue de válvulas:</strong> Colocar al final la válvula más proximal; confirmar posición y oclusión; reevaluar el flujo aéreo y asegurar la salida de secreciones.</li>
+        <li><strong>Hemostasia y limpieza:</strong> Aspirar secreciones y minimizar la presión de succión en el lóbulo tratado.</li>
+        <li><strong>Después del procedimiento:</strong> Radiografía de tórax inmediata y observación estructurada, habitualmente hospitalaria durante 2–3 días, con radiografías seriadas y vigilancia de síntomas.</li>
+        <li><strong>Plan de alta:</strong> Educar sobre síntomas de neumotórax; proporcionar contacto disponible las 24 horas; programar imagen y pruebas funcionales.</li>
+    </ul>
+
+    <h4>Resolución de problemas y manejo intraprocedimiento</h4>
+    <ul>
+        <li><strong>Sin lóbulo diana o heterogeneidad equívoca:</strong> Considerar imagen de perfusión. En enfermedad homogénea, los umbrales estrictos de hiperinsuflación son importantes; LVRS u opciones broncoscópicas sin válvulas pueden ser preferibles.</li>
+        <li><strong>Chartis indeterminado:</strong> Reposicionar el balón, optimizar ventilación —reducir frecuencia y prolongar espiración— y confirmar el sello; correlacionar con la puntuación cisural en TC.</li>
+        <li><strong>Migración de válvula u oclusión incompleta:</strong> Aumentar el tamaño de la válvula o añadir válvulas subsegmentarias; comprobar orientación y expansión completa.</li>
+        <li><strong>Hipoxemia durante el despliegue:</strong> Aumentar brevemente la FiO₂ y volver con rapidez a la estrategia de FiO₂ baja una vez estabilizado el paciente.</li>
+    </ul>
+
+    <h4>Cuidados y seguimiento posteriores</h4>
+    <ul>
+        <li><strong>Vigilancia:</strong> El mayor riesgo de neumotórax ocurre en las primeras 72 horas; umbral bajo para repetir radiografía ante disnea o dolor pleurítico.</li>
+        <li><strong>Profilaxis de exacerbación aguda:</strong> Depende del centro; en cohortes retrospectivas, los antibióticos solos se asociaron con la menor tasa de exacerbaciones tempranas.</li>
+        <li><strong>Rehabilitación:</strong> Reanudar o continuar la rehabilitación pulmonar tras el alta.</li>
+        <li><strong>Broncoscopia de revisión:</strong> Considerarla si no existe respuesta clínica o radiográfica significativa a las 6–12 semanas o si el beneficio disminuye. Las causas frecuentes incluyen tejido de granulación, migración o CV no reconocida.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Complicaciones: prevención, reconocimiento y manejo</h3>
+    <h4>Neumotórax</h4>
+    <p><strong>Factores que aumentan el riesgo:</strong> Lóbulos superiores —especialmente el superior izquierdo—, cisuras muy completas, lóbulo diana grande e hiperinsuflado, atelectasia rápida inmediata, adherencias pleurales y enfisema bulloso o paraseptal.</p>
+    <p><strong>Momento:</strong> La mayoría ocurre entre los días 0 y 3; también pueden presentarse eventos tardíos tras revisiones o finalización escalonada.</p>
+    <p><strong>Manejo inicial en paciente estable:</strong> Toracostomía con tubo sin succión y observación.</p>
+    <p><strong>Fuga persistente durante más de unas 72 horas o expansión incompleta:</strong> Aplicar succión, retirar 1–2 válvulas, obtener TC para identificar el segmento responsable y considerar una válvula de Heimlich para el alta.</p>
+    <p><strong>Inestabilidad o fuga grande:</strong> Retirada temprana parcial o completa de válvulas y tratamiento definitivo de la fuga; reparación quirúrgica en casos refractarios.</p>
+    <p><strong>Reimplantación:</strong> Es posible tras la retirada, pero conlleva un riesgo considerable de recurrencia que debe explicarse cuidadosamente.</p>
+
+    <h4>Otras complicaciones</h4>
+    <p>Exacerbación aguda de EPOC —reducida con profilaxis—, neumonía postobstructiva, hemoptisis, migración de válvula o tejido de granulación que requiere revisión y, rara vez, muerte en el contexto de neumotórax grave o comorbilidad.</p>
+
+    <hr>
+
+    <h3>Poblaciones especiales y evidencia</h3>
+    <h4>Poblaciones especiales</h4>
+    <ul>
+        <li><strong>FEV₁ muy bajo (&lt;20%) o DLCO muy baja (&lt;20%):</strong> Series pequeñas muestran factibilidad y mejorías clínicamente relevantes con tasas similares de neumotórax; advertir sobre mayor fragilidad y fugas prolongadas.</li>
+        <li><strong>Hipertensión pulmonar del grupo 3:</strong> Datos limitados de factibilidad sugieren mejoría hemodinámica y de la marcha de 6 minutos sin complicaciones específicas de hipertensión pulmonar en pacientes cuidadosamente seleccionados.</li>
+        <li><strong>Deficiencia de alfa-1 antitripsina:</strong> Ya no constituye una exclusión automática si los demás criterios son favorables.</li>
+        <li><strong>Estrategias puente:</strong> BLVR puede retrasar el trasplante y no parece empeorar los resultados posteriores; LVRS tras BLVR fallida es factible como rescate.</li>
+        <li><strong>BLVR escalonada o secuencial:</strong> Completar un lóbulo en dos etapas puede reducir el riesgo de neumotórax y conservar la eficacia.</li>
+        <li><strong>BLVR bilateral repetida:</strong> Puede recuperar beneficios tras una disminución temprana en pacientes seleccionados.</li>
+    </ul>
+
+    <h4>Evidencia y resultados: ensayos y señales clave</h4>
+    <ul>
+        <li><strong>LVRS — NETT:</strong> Tras excluir al subgrupo de alto riesgo, LVRS mejoró la capacidad de ejercicio y la calidad de vida; el beneficio fue mayor en enfermedad de predominio superior con baja capacidad de ejercicio. El riesgo perioperatorio siguió siendo significativo —por ejemplo, mortalidad a 90 días de ~8% frente a ~1% con tratamiento médico—.</li>
+        <li><strong>Primeros estudios con válvulas — VENT:</strong> Beneficio promedio modesto; la señal se concentró en pacientes con cisuras completas.</li>
+        <li><strong>Ensayos modernos de EBV — STELVIO, TRANSFORM, LIBERATE:</strong> En enfisema heterogéneo sin CV, mejorías clínicamente significativas en FEV₁, marcha de 6 minutos y SGRQ; neumotórax aproximadamente 18–30% en los primeros 45 días, según el estudio.</li>
+        <li><strong>Ensayo de IBV — EMPROVE:</strong> Mejorías en FEV₁ y estado de salud; reducción de volumen del lóbulo diana en la mayoría; menor señal en marcha de 6 minutos; beneficios mantenidos hasta 24 meses con baja tasa tardía de neumotórax.</li>
+        <li><strong>Corazón y hemodinámica:</strong> Aumento de la precarga y el gasto cardíacos tras BLVR sin elevar la presión arterial pulmonar.</li>
+        <li><strong>Exacerbaciones y supervivencia:</strong> Disminuyen las exacerbaciones —la mayor reducción se observa con atelectasia lobar completa—; la selección para BLVR y el colapso lobar se asocian con mayor supervivencia.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1: selección entre BLVR, LVRS y tratamiento médico</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["EPOC grave pese a tratamiento óptimo y rehabilitación"] --> B["TCAR: patrón de enfisema y cisuras"]
+        B -->|"Lóbulo heterogéneo tratable"| C["Fisiología: FEV1 ~20–50%, RV elevado"]
+        B -->|"Homogéneo o difuso"| H["Considerar criterios de LVRS u opciones sin válvulas"]
+        C --> D["Evaluar CV: TC cuantitativa de cisuras +/− Chartis"]
+        D -->|"Sin CV y cisura adecuada"| E["Candidato a BLVR"]
+        D -->|"CV probable o cisura inadecuada"| F["Opciones broncoscópicas sin válvula / LVRS"]
+        E --> G["Plan anestésico con FiO2 baja, dimensionamiento y despliegue"]
+        H --> I["LVRS si perfil favorable del NETT; si no, tratamiento médico + rehabilitación"]
+        F --> J["Considerar terapias para bronquitis crónica si corresponde al fenotipo"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Resumen del flujo de trabajo</strong>
+        <ul>
+            <li>Confirmar carga sintomática pese a tratamiento inhalado, oxígeno y rehabilitación optimizados.</li>
+            <li>Usar TCAR para localizar un lóbulo muy destruido y de baja perfusión y cuantificar la integridad cisural.</li>
+            <li>Confirmar hiperinsuflación y reserva funcional dentro de los intervalos estudiados.</li>
+            <li>Si las cisuras son adecuadas, confirmar ausencia de CV —Chartis si es necesario—.</li>
+            <li>Proceder a BLVR cuando lóbulo diana, fisiología y CV concuerden; de lo contrario, considerar LVRS si el perfil es favorable según NETT o terapias investigacionales para bronquitis crónica.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 2: manejo del neumotórax posterior a válvulas</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Disnea o dolor pleurítico después de BLVR"] --> B["Radiografía ± ecografía a pie de cama"]
+        B -->|"Sin neumotórax"| C["Observar; repetir imagen si persisten síntomas"]
+        B -->|"Neumotórax"| D["Evaluar estabilidad"]
+        D -->|"Estable"| E["Tubo torácico a sello de agua, sin succión"]
+        E --> F["Reevaluar en 24–72 h"]
+        F -->|"Pulmón expandido, sin fuga"| G["Retirar tubo y continuar seguimiento"]
+        F -->|"Fuga persistente o mala expansión"| H["Aplicar succión + TC"]
+        H -->|"Mejora"| G
+        H -->|"Sin mejora"| I["Retirar 1–2 válvulas; considerar válvula de Heimlich"]
+        D -->|"Inestable / neumotórax grande"| J["Tubo inmediato + retirada temprana parcial/completa ± UCI"]
+        I --> K["Reevaluar en 5–6 semanas para posible reimplantación con cautela"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Resumen del flujo de trabajo</strong>
+        <ul>
+            <li>La mayoría de los eventos ocurre en las primeras 72 horas; mantener un umbral bajo para obtener imagen.</li>
+            <li>Iniciar drenaje sin succión en pacientes estables y escalar solo si es necesario.</li>
+            <li>Retirar válvulas de forma temprana si hay compromiso hemodinámico o fuga refractaria; reconocer el riesgo de recurrencia tras reimplantación.</li>
+            <li>Educar al paciente sobre síntomas y garantizar acceso rápido a atención.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tablas y cuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. BLVR frente a LVRS: selección y resultados</h4>
+    <table>
+        <thead><tr><th>Dominio</th><th>BLVR con válvulas</th><th>LVRS</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Anatomía ideal</strong></td><td>Lóbulo diana muy destruido, sin CV y con cisuras adecuadas</td><td>Enfisema de predominio superior, favorable según NETT</td></tr>
+            <tr><td><strong>Fisiología típica</strong></td><td>FEV₁ ~20–50% del predicho; RV ≥175% —≥200% si homogéneo—</td><td>Evitar FEV₁ ≤20% con patrón homogéneo o DLCO ≤20%</td></tr>
+            <tr><td><strong>Entorno</strong></td><td>Broncoscopia; reversible</td><td>Cirugía torácica; irreversible</td></tr>
+            <tr><td><strong>Beneficios en ensayos</strong></td><td>↑FEV₁, ↓SGRQ, ↑marcha de 6 minutos cuando no hay CV</td><td>↑Capacidad de ejercicio y calidad de vida; beneficio de supervivencia en subgrupo seleccionado</td></tr>
+            <tr><td><strong>Riesgo temprano dominante</strong></td><td>Neumotórax, aproximadamente 18–30%</td><td>Mortalidad a 90 días ~8%; alta carga de complicaciones</td></tr>
+            <tr><td><strong>Estancia hospitalaria</strong></td><td>Corta, habitualmente observación 2–3 días</td><td>Más prolongada; UCI y rehabilitación frecuentes</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 2. Válvulas endobronquiales de un vistazo</h4>
+    <table>
+        <thead><tr><th>Característica</th><th>Zephyr® EBV</th><th>Spiration® IBV</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Diseño</strong></td><td>Silicona tipo pico de pato en retenedor de nitinol</td><td>Armazón de nitinol en paraguas con membrana de poliuretano</td></tr>
+            <tr><td><strong>Tamaños</strong></td><td>4.0, 4.0-LP, 5.5, 5.5-LP</td><td>5, 6, 7 y 9 mm</td></tr>
+            <tr><td><strong>Instrumento de medición</strong></td><td>Catéter de profundidad/diámetro recto o en J</td><td>Balón y kit de calibración</td></tr>
+            <tr><td><strong>Reversibilidad</strong></td><td>Removible</td><td>Removible</td></tr>
+            <tr><td><strong>Uso típico</strong></td><td>Oclusión lobar sin CV</td><td>Oclusión lobar sin CV</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Motivos frecuentes de ineligibilidad para BLVR</h4>
+    <table>
+        <thead><tr><th>Motivo</th><th>Significado práctico</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Sin lóbulo diana adecuado (~18%)</strong></td><td>No hay destrucción heterogénea, la perfusión está relativamente conservada o la distribución es desfavorable.</td></tr>
+            <tr><td><strong>Fenotipo inadecuado (~18%)</strong></td><td>Bronquitis crónica con exacerbaciones frecuentes o solapamiento con asma.</td></tr>
+            <tr><td><strong>Hiperinsuflación insuficiente (~16%)</strong></td><td>RV/TLC no está lo bastante elevado para obtener beneficio mecánico.</td></tr>
+            <tr><td><strong>Distribución homogénea (~10%)</strong></td><td>No existe una diana dominante; considerar criterios de LVRS.</td></tr>
+            <tr><td><strong>Cisuras incompletas (~9%)</strong></td><td>CV probable; las válvulas tienen poca probabilidad de éxito.</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 4. Evaluación de CV: Chartis frente a análisis cisural por TC</h4>
+    <table>
+        <thead><tr><th>Atributo</th><th>Chartis® — funcional</th><th>Análisis cisural por TCAR — anatómico</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Qué mide</strong></td><td>Flujo y presión en tiempo real distal a la oclusión con balón</td><td>Integridad cisural visual o cuantitativa</td></tr>
+            <tr><td><strong>Fortalezas</strong></td><td>Demostración funcional de ausencia de CV; útil cuando la cisura no es completa</td><td>Ampliamente disponible, no invasiva y permite planificar la diana</td></tr>
+            <tr><td><strong>Limitaciones</strong></td><td>Artefacto por colapso o bajo flujo; depende de la ventilación</td><td>Variabilidad entre lectores y plataformas; predice CV de forma indirecta</td></tr>
+            <tr><td><strong>Rendimiento diagnóstico</strong></td><td>Sensibilidad alta; exactitud global alrededor de la mitad de los 70%</td><td>Especificidad más alta; exactitud global alrededor de la mitad de los 70%</td></tr>
+            <tr><td><strong>Uso práctico</strong></td><td>Confirmar antes de EBV cuando la cisura no alcanza valores muy altos o es equívoca</td><td>Cribado inicial y planificación del lóbulo diana</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Exfumador de 64 años con disnea grave pese a triple terapia inhalada y rehabilitación: FEV₁ 28% del predicho, RV 235%, DLCO 32%, marcha de 6 minutos de 260 m. La TCAR muestra enfisema heterogéneo con cisura mayor izquierda casi completa. ¿Cuál es el siguiente paso?</p>
+        <p><strong>Respuesta:</strong> Proceder a evaluación funcional de CV con Chartis si persiste cualquier duda sobre la integridad cisural; si es negativa, planificar EBV/IBV con estrategia anestésica de FiO₂ baja.</p>
+        <p><strong>Explicación:</strong> Incluso con cisuras muy completas, una prueba funcional confirmatoria es razonable cuando el balance riesgo-beneficio depende del éxito. La ausencia de CV predice colapso lobar y respuesta clínica.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Paciente de 71 años con EBV en lóbulo superior izquierdo sin CV desarrolla dolor pleurítico agudo 18 horas después. La radiografía muestra neumotórax izquierdo grande; signos vitales estables.</p>
+        <p><strong>Respuesta:</strong> Insertar tubo torácico a sello de agua sin succión inicial, vigilar estrechamente y reevaluar expansión y fuga durante 24–72 horas.</p>
+        <p><strong>Explicación:</strong> La mayoría de los neumotórax tempranos posteriores a válvulas puede tratarse con drenaje sin succión. La succión o retirada de válvulas se reserva para fuga persistente, mala expansión o inestabilidad.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3</h4>
+        <p>Paciente de 58 años con enfisema homogéneo, RV 210%, cisuras limítrofes y exacerbaciones frecuentes. Se considera una vía de reducción de volumen.</p>
+        <p><strong>Respuesta:</strong> Debe discutirse candidatura a LVRS si el perfil es favorable según NETT; es menos probable que BLVR con válvulas tenga éxito. Si predominan tos y expectoración, considerar terapias investigacionales para bronquitis crónica.</p>
+        <p><strong>Explicación:</strong> La enfermedad homogénea y el fenotipo de bronquitis crónica con exacerbaciones son menos apropiados para EBV/IBV; LVRS puede beneficiar a pacientes seleccionados.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas: 12 preguntas de opción múltiple</h3>
+    <ol>
+        <li>
+            <strong>Paciente de 66 años con enfisema heterogéneo grave, destrucción del lóbulo superior izquierdo, RV 240% y cisura mayor izquierda visualmente ~90%. ¿Qué optimiza la predicción de respuesta antes de EBV?</strong>
+            <ul><li>A. Proceder directamente: la cisura es suficiente</li><li>B. Evaluación del lóbulo superior izquierdo con Chartis</li><li>C. Solo gammagrafía de perfusión</li><li>D. Termoplastia bronquial</li><li>E. Tratar el pulmón contralateral</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> Cuando la integridad cisural no es inequívocamente muy alta, la confirmación funcional de ausencia de CV con Chartis mejora la predicción de reducción de volumen y respuesta.</p>
+        </li>
+        <li>
+            <strong>Dos días después de EBV en el lóbulo superior derecho, la radiografía muestra neumotórax moderado. El paciente está estable en aire ambiente. ¿Manejo inmediato?</strong>
+            <ul><li>A. Solo observación</li><li>B. Toracostomía con tubo a sello de agua</li><li>C. Succión inmediata a −20 cmH₂O</li><li>D. Retirar todas las válvulas</li><li>E. Solo corticosteroides en dosis altas</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> En un paciente estable, el neumotórax posterior a EBV se trata inicialmente con tubo a sello de agua; la succión y retirada de válvulas se reservan para fuga refractaria o inestabilidad.</p>
+        </li>
+        <li>
+            <strong>¿Qué estrategia intraoperatoria se asocia con menor incidencia de neumotórax tras EBV?</strong>
+            <ul><li>A. FiO₂ al 100% durante todo el caso</li><li>B. Frecuencia respiratoria alta y espiración corta</li><li>C. FiO₂ baja para mantener SpO₂ ≥89% y esperar equilibrio del O₂ al final de la espiración antes del despliegue</li><li>D. PEEP de 15 cmH₂O</li><li>E. Apnea intermitente con maniobras de reclutamiento</li></ul>
+            <p><strong>Respuesta: C.</strong></p>
+            <p><strong>Explicación:</strong> Un protocolo de FiO₂ baja reduce el lavado de nitrógeno y la atelectasia rápida, mitigando el riesgo de neumotórax temprano.</p>
+        </li>
+        <li>
+            <strong>Paciente con EBV sin reducción del volumen del lóbulo diana a las 8 semanas. La TC muestra válvulas bien asentadas; inicialmente se subestimó la integridad cisural. ¿Siguiente paso?</strong>
+            <ul><li>A. Retirar todas las válvulas: fracaso definitivo</li><li>B. Broncoscopia de revisión para corregir granulación o malposición y reevaluar CV oculta</li><li>C. LVRS inmediata</li><li>D. Macrólido a largo plazo</li><li>E. Observar un año</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> La ausencia o pérdida de efecto suele reflejar malposición, oclusión incompleta o granulación; la broncoscopia de revisión puede restaurar el beneficio.</p>
+        </li>
+        <li>
+            <strong>¿Qué subgrupo del NETT obtuvo el beneficio global más claro de LVRS?</strong>
+            <ul><li>A. Enfisema homogéneo con alta capacidad de ejercicio</li><li>B. Enfisema de predominio superior con baja capacidad de ejercicio</li><li>C. Enfisema de predominio inferior con alta capacidad de ejercicio</li><li>D. FEV₁ ≤20% y DLCO ≤20%</li><li>E. Cualquier patrón con DLCO alta</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> NETT demostró menor mortalidad y mejor función en enfermedad de predominio superior con baja tolerancia basal al ejercicio.</p>
+        </li>
+        <li>
+            <strong>Paciente con enfisema y DLCO 18% pregunta por el riesgo de BLVR. ¿Cuál afirmación es más correcta?</strong>
+            <ul><li>A. Contraindicación absoluta: no existen datos</li><li>B. Es factible en centros con experiencia y puede producir mejorías relevantes; el riesgo de neumotórax es similar, aunque las fugas pueden durar más</li><li>C. Solo LVRS es segura</li><li>D. BLVR solo beneficia con DLCO &gt;60%</li><li>E. BLVR empeora siempre el intercambio gaseoso</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> Cohortes pequeñas muestran seguridad y eficacia en DLCO muy baja cuando la selección es cuidadosa, aunque son más frecuentes las fugas prolongadas.</p>
+        </li>
+        <li>
+            <strong>Para un paciente con EPOC de predominio bronquitis crónica, exacerbaciones frecuentes y poca hiperinsuflación, ¿qué opción broncoscópica se alinea mejor con la fisiopatología?</strong>
+            <ul><li>A. EBV en el lóbulo más destruido</li><li>B. IBV en ambos lóbulos inferiores</li><li>C. Crioterapia por aerosol de la vía aérea</li><li>D. LVRS</li><li>E. Espirales endobronquiales</li></ul>
+            <p><strong>Respuesta: C.</strong></p>
+            <p><strong>Explicación:</strong> La crioterapia por aerosol busca remodelar la mucosa en la bronquitis crónica; las válvulas se dirigen al enfisema con hiperinsuflación.</p>
+        </li>
+        <li>
+            <strong>¿Qué afirmación sobre reimplantar válvulas después de retirarlas por neumotórax es correcta?</strong>
+            <ul><li>A. Elimina el riesgo de recurrencia</li><li>B. El riesgo de recurrencia puede ser considerable y debe discutirse antes de intentarlo</li><li>C. Debe hacerse dentro de 48 horas</li><li>D. Está contraindicado si la fuga inicial se resolvió</li><li>E. Requiere tratar el lado contralateral</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> La recurrencia tras reimplantación es significativa; el momento y la candidatura se individualizan.</p>
+        </li>
+        <li>
+            <strong>Candidato con RV 150%, FEV₁ 40% y enfisema heterogéneo. ¿Por qué es menos probable que BLVR ayude?</strong>
+            <ul><li>A. RV demasiado alto</li><li>B. RV demasiado bajo: hiperinsuflación insuficiente</li><li>C. FEV₁ demasiado bajo</li><li>D. La heterogeneidad impide beneficio</li><li>E. Necesita rehabilitación primero</li></ul>
+            <p><strong>Respuesta: B.</strong></p>
+            <p><strong>Explicación:</strong> La hiperinsuflación estática insuficiente es una causa frecuente de exclusión y predice poca ganancia mecánica.</p>
+        </li>
+        <li>
+            <strong>¿Qué profilaxis se ha asociado con menos exacerbaciones tempranas tras BLVR en series retrospectivas?</strong>
+            <ul><li>A. Corticosteroides solos</li><li>B. Sin profilaxis</li><li>C. Antibióticos solos</li><li>D. Doble antiagregación</li><li>E. Solución salina hipertónica inhalada</li></ul>
+            <p><strong>Respuesta: C.</strong></p>
+            <p><strong>Explicación:</strong> Los antibióticos solos se asociaron con las menores tasas de exacerbación temprana frente a otras estrategias.</p>
+        </li>
+        <li>
+            <strong>¿Qué emparejamiento dispositivo-característica es correcto?</strong>
+            <ul><li>A. Zephyr: membrana en paraguas con cinco anclajes</li><li>B. Spiration: válvula de silicona tipo pico de pato</li><li>C. Spiration: kit de medición con balón y válvulas de 5–9 mm</li><li>D. Zephyr: no puede retirarse</li><li>E. Ambas requieren broncoscopia rígida</li></ul>
+            <p><strong>Respuesta: C.</strong></p>
+            <p><strong>Explicación:</strong> Spiration emplea balón y kit de calibración y se ofrece en 5–9 mm; Zephyr utiliza un catéter de profundidad/diámetro. Ambas son removibles mediante broncoscopia flexible.</p>
+        </li>
+        <li>
+            <strong>Paciente de 70 años con EBV en lóbulo superior izquierdo desarrolla neumotórax grande y sintomático con fuga persistente tras 72 horas de drenaje y succión. ¿Siguiente paso?</strong>
+            <ul><li>A. Alta con observación</li><li>B. Solo antibióticos</li><li>C. Retirar 1–2 válvulas y reevaluar; considerar retirada completa si persiste la fuga</li><li>D. LVRS inmediata</li><li>E. Colocar IBV en lóbulos adyacentes</li></ul>
+            <p><strong>Respuesta: C.</strong></p>
+            <p><strong>Explicación:</strong> La fuga persistente justifica retirada parcial inicial de válvulas y manejo dirigido; la cirugía agresiva se reserva para casos refractarios seleccionados.</p>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h3>Lista de verificación final</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li>Confirmar hiperinsuflación sintomática y finalización de rehabilitación pulmonar antes de una intervención de reducción de volumen.</li>
+            <li>Usar TCAR para mapear enfisema y cisuras; añadir Chartis si las cisuras no son inequívocamente completas.</li>
+            <li>Priorizar ausencia de CV y un lóbulo diana claramente tratable para las válvulas.</li>
+            <li>Planificar anestesia con FiO₂ baja y parámetros ventilatorios deliberados para reducir neumotórax.</li>
+            <li>Observar en el hospital 2–3 días tras las válvulas; la mayoría de los neumotórax ocurre antes del día 3.</li>
+            <li>Tratar primero el neumotórax estable con tubo a sello de agua y escalar paso a paso.</li>
+            <li>Programar broncoscopia de revisión si no hay beneficio a las 6–12 semanas o si la respuesta disminuye.</li>
+            <li>Considerar finalización escalonada o BLVR bilateral en pacientes seleccionados y discutir su papel como puente a trasplante o LVRS.</li>
+            <li>Replantear la vía —LVRS o terapias investigacionales de vía aérea— en enfermedad homogénea o con predominio de bronquitis.</li>
+            <li>Ofrecer expectativas realistas: no todos los pacientes remitidos son elegibles; explicar riesgos, reintervenciones y magnitud esperada del beneficio.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>AECOPD</dt><dd>Exacerbación aguda de la EPOC.</dd>
+            <dt>BLVR</dt><dd>Reducción broncoscópica del volumen pulmonar.</dd>
+            <dt>Chartis</dt><dd>Sistema de catéter con balón intraprocedimiento que mide la ventilación colateral.</dd>
+            <dt>CV</dt><dd>Ventilación colateral.</dd>
+            <dt>DLCO</dt><dd>Capacidad de difusión de monóxido de carbono.</dd>
+            <dt>EBV/IBV</dt><dd>Válvula endobronquial / intrabronquial.</dd>
+            <dt>HRCT/TCAR</dt><dd>Tomografía computarizada de alta resolución.</dd>
+            <dt>LVRS</dt><dd>Cirugía de reducción del volumen pulmonar.</dd>
+            <dt>NETT</dt><dd>National Emphysema Treatment Trial.</dd>
+            <dt>RV/TLC</dt><dd>Volumen residual / capacidad pulmonar total.</dd>
+            <dt>SGRQ</dt><dd>Cuestionario respiratorio de St. George.</dd>
+            <dt>TLVR</dt><dd>Reducción del volumen del lóbulo diana.</dd>
+            <dt>V/Q</dt><dd>Ventilación/perfusión.</dd>
+            <dt>VENT/STELVIO/TRANSFORM/LIBERATE/EMPROVE</dt><dd>Ensayos aleatorizados clave de válvulas.</dd>
+        </dl>
+    </div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+        <ol>
+            <li>Fishman A, Martinez F, Naunheim K, et al. A randomized trial comparing lung-volume-reduction surgery with medical therapy for severe emphysema. N Engl J Med. 2003;348(21):2059-2073.</li>
+            <li>Klooster K, Ten Hacken NHT, Hartman JE, Kerstjens HAM, van Rikxoort EM, Slebos DJ. Endobronchial valves for emphysema without interlobar collateral ventilation. N Engl J Med. 2015;373(24):2325-2335.</li>
+            <li>Kemp SV, Slebos DJ, Kirk A, et al. A multicenter randomized controlled trial of Zephyr endobronchial valve treatment in heterogeneous emphysema (TRANSFORM). Am J Respir Crit Care Med. 2017;196(12):1535-1543.</li>
+            <li>Criner GJ, Sue R, Wright S, et al. Zephyr endobronchial valve treatment in heterogeneous emphysema (LIBERATE). Am J Respir Crit Care Med. 2018;198(9):1151-1164.</li>
+            <li>Criner GJ, Delage A, Voelker K, et al. Improving lung function in severe heterogeneous emphysema with the Spiration Valve System (EMPROVE). Am J Respir Crit Care Med. 2019;200(11):1354-1362.</li>
+            <li>Valipour A, Slebos DJ, Herth FJF, et al. Endobronchial valve therapy in patients with homogeneous emphysema (IMPACT). Am J Respir Crit Care Med. 2016;194(9):1073-1082.</li>
+            <li>Herth FJF, Eberhardt R, Gompelmann D, et al. Radiological and clinical outcomes of using Chartis™ to plan endobronchial valve treatment. Eur Respir J. 2013;41(2):302-308.</li>
+            <li>Welling JBA, Hartman JE, Augustijn SWS, et al. Patient selection for bronchoscopic lung volume reduction. Int J Chron Obstruct Pulmon Dis. 2020;15:871-881.</li>
+            <li>van der Molen MC, Hartman JE, Vanfleteren LEGW, et al. Reduction of lung hyperinflation improves cardiac preload, contractility, and output in emphysema after endobronchial valves. Am J Respir Crit Care Med. 2022;206(6):704-711.</li>
+            <li>Abia-Trujillo D, Lee-Mateus AY, Garcia-Saucedo JC, et al. Prevention of acute exacerbation of COPD after BLVR with endobronchial valves. Clin Respir J. 2022;16(1):43-48.</li>
+            <li>Roodenburg SA, Klooster K, Hartman JE, et al. Revision bronchoscopy after endobronchial valve treatment: indications, findings and outcomes. Int J Chron Obstruct Pulmon Dis. 2021;16:1127-1136.</li>
+            <li>van Dijk M, Sue R, Criner GJ, et al. Expert statement: pneumothorax associated with one-way valve therapy for emphysema—2020 update. Respiration. 2021;100(10):969-978.</li>
+            <li>Lentz RJ, Low SW, Saettele T, et al. Association between inspired oxygen fraction and pneumothorax after endobronchial valve placement. Ann Am Thorac Soc. 2023;20(6):926-933.</li>
+            <li>Hartman JE, Welling JBA, et al. Survival in COPD patients treated with bronchoscopic lung volume reduction. Respir Med. 2022;196:106825.</li>
+            <li>Egenod T, Tricard J, Fumat R, et al. Two-stage bronchoscopic endobronchial valve treatment can lead to progressive lung volume reduction and may decrease pneumothorax risk. Int J Chron Obstruct Pulmon Dis. 2021;16:1957-1965.</li>
+            <li>Gompelmann D, Benjamin N, Bischoff E, et al. Survival after endoscopic valve therapy in severe emphysema. Respiration. 2019;97(2):145-152.</li>
+            <li>Brock JM, Dittrich SA, Eichhorn F, et al. Risk factors and clinical impact of severe pneumothorax after endoscopic lung volume reduction with endobronchial valves. Chest. 2025;167(4):1012-1023.</li>
+            <li>Slebos DJ, Breen D, Coad J, et al. Safety and histological effect of liquid nitrogen metered spray cryotherapy in the lung. Am J Respir Crit Care Med. 2017;196(10):1351-1352.</li>
+            <li>Slebos DJ, Shah PL, Herth FJ, et al. Safety and adverse events after targeted lung denervation for symptomatic COPD (AIRFLOW). Am J Respir Crit Care Med. 2019;200(2):201-205.</li>
+        </ol>
+    </div>
+</body>
+</html>

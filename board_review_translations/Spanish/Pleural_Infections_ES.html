@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infecciones pleurales</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Infecciones pleurales</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda la evaluación y el manejo de las infecciones del espacio pleural a lo largo del espectro que va desde el derrame paraneumónico complicado hasta el empiema. Se enfatizan la estratificación de riesgo mediante RAPID, la selección del tubo torácico, el tratamiento enzimático intrapleural, la irrigación con solución salina, el escalamiento quirúrgico y las poblaciones especiales. La orientación refleja declaraciones contemporáneas de sociedades científicas y rutas pragmáticas evaluadas en ensayos.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Distinguir derrame paraneumónico simple, complicado y empiema mediante ecografía, TC y química del líquido pleural.</li>
+        <li>Aplicar una ruta escalonada y limitada en el tiempo para control de foco —drenaje con tubo, tratamiento intrapleural o irrigación y cirugía— con reevaluación alrededor de 48 horas.</li>
+        <li>Elegir tamaño y sitio del drenaje e implementar tPA y DNasa intrapleurales, incluida reducción de dosis cuando el riesgo hemorrágico es alto.</li>
+        <li>Iniciar antibióticos empíricos adecuados al entorno, pasar a tratamiento dirigido y comprender cuándo pueden ser razonables duraciones más cortas.</li>
+        <li>Usar la puntuación RAPID para comunicar riesgo, orientar intensidad de atención y anticipar desenlaces.</li>
+        <li>Reconocer cuándo solicitar cirugía temprana y adaptar el manejo en traumatismo, tuberculosis, infección fúngica y trasplante.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento</h3>
+    <div class="algorithm-note"><ul>
+        <li><strong>Terminología:</strong> «infección pleural» incluye derrame paraneumónico complicado (CPPE) y empiema; los principios de manejo son comunes.</li>
+        <li><strong>Epidemiología:</strong> incidencia y hospitalizaciones han aumentado; los adultos mayores concentran una subida desproporcionada y mayor mortalidad.</li>
+        <li><strong>No demore:</strong> un derrame simple puede complicarse rápidamente; actúe de forma decisiva.</li>
+        <li><strong>Imágenes:</strong> la ecografía torácica (TUS) identifica tabiques y loculaciones y guía un acceso seguro; la TC define anatomía y muestra el signo de separación pleural.</li>
+        <li><strong>Química que importa:</strong> pH ≤7,20, obtenido correctamente, indica tubo si es seguro. Si pH 7,21–7,39, integre LDH &gt;900 IU/L, glucosa ≤4 mmol/L —aproximadamente 72 mg/dL— e imágenes. Pus, Gram/cultivo positivo o glucosa &lt;60 mg/dL también favorecen drenaje.</li>
+        <li><strong>Elección del drenaje:</strong> se prefieren tubos pequeños ≤14F, con eficacia similar y menos dolor. Irrigue regularmente para mantener permeabilidad.</li>
+        <li><strong>Reevalúe a las ~48 h:</strong> si persisten colección e inflamación sistémica, escale a TC, tratamiento intrapleural o cirugía.</li>
+        <li><strong>Tratamiento enzimático intrapleural (IET):</strong> tPA 10 mg + DNasa 5 mg dos veces al día hasta tres días, con pinzamiento alrededor de una hora. Considere tPA 5 mg con DNasa estándar si el riesgo de sangrado es alto. Evite monoterapia fibrinolítica.</li>
+        <li><strong>Anticoagulación:</strong> suspenda si es posible antes de IET; si no, use dosis reducida de tPA con DNasa o irrigación salina.</li>
+        <li><strong>Irrigación salina:</strong> 250 mL de solución salina normal tres veces al día durante tres días puede reducir carga radiográfica y derivación quirúrgica cuando IET o cirugía están contraindicados.</li>
+        <li><strong>Cuándo llamar pronto a cirugía:</strong> pacientes inestables o sépticos, estadio 3 organizado con corteza gruesa o pulmón no expandible y fracaso tras un curso adecuado de IET. Prefiera VATS frente a toracotomía abierta cuando sea posible.</li>
+        <li><strong>Antibióticos:</strong> inicie pronto; cubra grampositivos y anaerobios en infección comunitaria y añada gramnegativos, con o sin Pseudomonas, en hospitalaria. Ajuste al cultivo y evolución.</li>
+        <li><strong>RAPID:</strong> predice mortalidad a 90 días y ayuda a establecer objetivos y escalamiento.</li>
+        <li><strong>Trampas:</strong> interpretar mal el pH por errores de toma, depender solo de radiografía, esperar cultivos antes de drenar, usar tubo grande por defecto o administrar estreptocinasa o DNasa aislada.</li>
+    </ul></div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>La infección pleural aparece cuando un derrame exudativo se infecta, por lo general con predominio de neutrófilos. Las vías incluyen neumonía contigua, extensión transdiafragmática desde abdomen, propagación mediastínica, siembra hematógena e inoculación directa por cirugía o traumatismo. Los anaerobios son frecuentes; considere enfermedad dental y riesgo de aspiración. La incidencia ha aumentado, con predominio masculino y mayor mortalidad en adultos mayores; la estancia suele ser de 12–15 días o más.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p>El drenaje está indicado ante pus, Gram o cultivo positivo, pH ≤7,20 o pH intermedio con características de alto riesgo —LDH &gt;900, glucosa ≤4 mmol/L o &lt;60 mg/dL, ecografía compleja, derrame grande o realce pleural—. Evite demoras; medir pH a pie de cama permite convertir la punción diagnóstica en tubo pequeño durante el mismo procedimiento. VATS inicial no es la primera línea habitual en adultos estables, pero solicite cirugía temprana ante inestabilidad, estadio 3 organizado o fracaso del tubo.</p>
+
+    <h4>Evaluación previa al procedimiento</h4>
+    <ul>
+        <li><strong>Imágenes:</strong> TUS para confirmar y cartografiar bolsas y tabiques; TC en fase pleural venosa para anatomía, signo de separación pleural y planificación de acceso o escalamiento.</li>
+        <li><strong>Laboratorio:</strong> hemograma, función renal para RAPID y coagulación si se prevé IET o cirugía.</li>
+        <li><strong>Muestra pleural:</strong> técnica correcta de pH con jeringa de gasometría sin heparina líquida, sin contaminación con lidocaína, expulsando aire y analizando pronto.</li>
+        <li><strong>Consentimiento:</strong> explique la ruta tubo → IET/irrigación → cirugía y riesgos como sangrado con IET o fuga aérea tras decorticación.</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Drenaje:</strong> catéter pigtail ≤14F guiado por imagen, preferido; conectar a aspiración según necesidad e irrigar para evitar obstrucción.</li>
+        <li><strong>Complementos:</strong> llave de tres vías, solución salina estéril, suturas y apósito para evitar desplazamiento.</li>
+        <li><strong>IET:</strong> tPA y DNasa disponibles junto con pinzas para una permanencia de una hora.</li>
+    </ul>
+
+    <h3>Técnica paso a paso / lista de verificación del procedimiento</h3>
+    <ol>
+        <li>Confirme objetivo con TUS y marque una ventana segura.</li>
+        <li>Con asepsia y anestesia, realice una pequeña incisión y coloque por Seldinger un tubo ≤14F en la bolsa mayor o más tabicada.</li>
+        <li>Asegure y conecte a drenaje; irrigue con solución salina para mantener permeabilidad.</li>
+        <li>Envíe pH inmediato, glucosa, proteína/LDH, Gram y cultivo —incluidos frascos de hemocultivo— y citología.</li>
+        <li>Inicie antibióticos de inmediato.</li>
+        <li>Reevalúe a las ~48 h. Si persiste colección más inflamación —por ejemplo caída de CRP &lt;50% o SIRS—, obtenga TC y escale.</li>
+        <li>Régimen habitual de IET: tPA 10 mg y DNasa 5 mg, ambos dos veces al día hasta tres días, pinzando cerca de una hora; considere tPA 5 mg con DNasa 5 mg si alto riesgo. Evite monoterapia.</li>
+    </ol>
+
+    <div class="algorithm-note"><strong>Resolución de problemas y manejo intraprocedimiento</strong><ul>
+        <li><strong>Drenaje deficiente:</strong> confirme posición con TUS o TC, irrigue, considere otro catéter para una loculación separada y, si sigue insuficiente, IET o irrigación según riesgo hemorrágico.</li>
+        <li><strong>Sospecha de sangrado durante IET:</strong> no confunda líquido rosado con hemorragia; mida hematocrito pleural y pause o ajuste dosis si es necesario.</li>
+        <li><strong>Inestabilidad tras el tubo:</strong> consulta quirúrgica temprana; muchos se benefician de VATS oportuna para desbridamiento o decorticación.</li>
+    </ul></div>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <p><strong>Antibióticos:</strong> inicie empíricos, ajuste con cultivos y cambie de IV a oral cuando haya mejoría y disminución de marcadores. La duración total habitual ronda cuatro semanas tras buen control de foco, aunque se estudian cursos más cortos.</p>
+    <p><strong>Vigilancia:</strong> examen diario, salida del drenaje y marcadores inflamatorios; imágenes para comprobar aclaramiento.</p>
+    <p><strong>Alta:</strong> confirme respuesta antes de retirar el tubo y programe seguimiento a las 2–4 y 8–12 semanas para resolución y recurrencia.</p>
+
+    <h4>Complicaciones: prevención, reconocimiento y manejo</h4>
+    <ul>
+        <li><strong>Dolor y sangrado por IET:</strong> dolor en alrededor de 15% y hemorragia pleural 3–5%; la mayoría se maneja con transfusión. Reduzca tPA a 5 mg si no puede suspender anticoagulación y evite IET en coagulopatía sistémica.</li>
+        <li><strong>Problemas del tubo:</strong> desplazamiento, obstrucción e infección del sitio; prevenga con fijación, irrigación y asepsia.</li>
+        <li><strong>Complicaciones quirúrgicas:</strong> fuga aérea prolongada, fibrilación auricular y espacio residual; aumentan con mayor duración de síntomas y estadio avanzado.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>Traumatismo o hemotórax retenido:</strong> mayor riesgo de empiema; redrenaje, IET no basada en estreptocinasa y VATS temprana cuando esté indicada.</li>
+        <li><strong>Empiema tuberculoso estadio 3:</strong> una corteza gruesa limita la penetración; suele requerir decorticación más tratamiento antituberculoso. VATS es posible en casos seleccionados, con más tiempo y sangrado que en infección piógena.</li>
+        <li><strong>Empiema fúngico:</strong> infrecuente pero grave; necesita antifúngicos con buena penetración pleural y a menudo cirugía.</li>
+        <li><strong>Trasplante pulmonar:</strong> drenaje temprano y agresivo; IET con cautela por las anastomosis; cirugía menos agresiva, aceptando espacios residuales; un catéter tunelizado puede facilitar expansión gradual.</li>
+        <li><strong>Alto riesgo hemorrágico o anticoagulación obligatoria:</strong> tPA reducida con DNasa o irrigación si los líticos están contraindicados; considere VATS temprana si el riesgo operatorio es aceptable.</li>
+    </ul>
+
+    <h3>Evidencia y desenlaces</h3>
+    <p>Los puntos clave incluyen eficacia similar de tubos pequeños y grandes para los desenlaces principales, con menos dolor en ≤14F; tPA más DNasa mejora aclaramiento radiográfico y reduce cirugía y estancia frente a atención estándar; la irrigación reduce carga radiográfica y derivación en datos piloto; VATS se prefiere a toracotomía cuando se necesita cirugía; no existe evidencia robusta para VATS inicial en adultos estables; los estudios comparando VATS temprana con IET muestran equilibrio clínico y continúan.</p>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1: evaluación inicial y decisión de drenaje</h4>
+    <div class="mermaid">
+    graph TD
+        A["Sospecha de infección pleural"] --> B{"TUS: ¿drenable?"}
+        B -- "No" --> C["Antibióticos y vigilancia"]
+        B -- "Sí" --> D["Punción diagnóstica con pH inmediato"]
+        D --> E{"¿Pus o Gram/cultivo positivo?"}
+        E -- "Sí" --> F["Tubo ≤14F + antibióticos"]
+        E -- "No" --> G{"Comprobar pH"}
+        G -- "≤7,20" --> F
+        G -- "7,21–7,39" --> H{"¿Alto riesgo: LDH>900, glucosa baja, TUS compleja?"}
+        H -- "Sí" --> F
+        H -- "No" --> I["Antibióticos y seguimiento estrecho"]
+        G -- "≥7,40" --> I
+    </div>
+
+    <h4>Algoritmo 2: escalamiento después del tubo</h4>
+    <div class="mermaid">
+    graph TD
+        A["Base: tubo ≤14F + antibióticos"] --> B["Reevaluar a ~48 horas"]
+        B --> C{"¿Colección residual + inflamación persistente?"}
+        C -- "No" --> D["Continuar y planificar retirada"]
+        C -- "Sí" --> E["TC con contraste"]
+        E --> F{"¿Inestable o corteza gruesa/estadio 3?"}
+        F -- "Sí" --> G["Consulta quirúrgica temprana, VATS"]
+        F -- "No" --> H{"¿IET contraindicada o alto riesgo?"}
+        H -- "No" --> I["Iniciar tPA 10 mg + DNasa 5 mg"]
+        H -- "Sí" --> J["Irrigación salina"]
+        I --> K{"¿Aclaramiento?"}
+        J --> K
+        K -- "Sí" --> L["Continuar antibióticos y retirar"]
+        K -- "No" --> M["Consulta quirúrgica, VATS"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Espectro de infección pleural</h4>
+    <table><thead><tr><th>Característica</th><th>Paraneumónico simple</th><th>Paraneumónico complicado</th><th>Empiema</th></tr></thead><tbody>
+        <tr><td><strong>Ecografía/TC</strong></td><td>Anecoico y libre</td><td>Tabiques, loculaciones, engrosamiento ± separación pleural</td><td>Como CPPE, a menudo corteza gruesa</td></tr>
+        <tr><td><strong>pH pleural</strong></td><td>&gt;7,20</td><td>≤7,20 o 7,21–7,39 con alto riesgo</td><td>Variable, a menudo bajo</td></tr>
+        <tr><td><strong>Glucosa</strong></td><td>&gt;60 mg/dL</td><td>≤60 mg/dL o ≤4 mmol/L</td><td>A menudo baja</td></tr>
+        <tr><td><strong>Microbiología</strong></td><td>Negativa</td><td>Negativa o positiva</td><td>Pus o Gram/cultivo positivo</td></tr>
+        <tr><td><strong>Acción</strong></td><td>Antibióticos</td><td>Tubo ≤14F ± IET</td><td>Tubo ± IET y evaluación quirúrgica</td></tr>
+    </tbody></table>
+
+    <h4>Tabla 2. Antibióticos empíricos</h4>
+    <table><thead><tr><th>Entorno</th><th>Cobertura</th><th>Opciones empíricas</th><th>Desescalamiento</th></tr></thead><tbody>
+        <tr><td><strong>Comunitaria</strong></td><td>Grampositivos aerobios y anaerobios</td><td>Amoxicilina-clavulanato ± metronidazol o clindamicina; en alergia, clindamicina ± cefalosporina</td><td>Mantener cobertura anaerobia aun con cultivos negativos y ajustar</td></tr>
+        <tr><td><strong>Hospitalaria o posprocedimiento</strong></td><td>Grampositivos, gramnegativos, Pseudomonas, anaerobios y considerar MRSA</td><td>Piperacilina-tazobactam, cefepima + metronidazol o carbapenémico + vancomicina/linezolid</td><td>Desescalar pronto si estreptococo monomicrobiano y mejoría</td></tr>
+    </tbody></table>
+
+    <h4>Tabla 3. Tratamiento enzimático intrapleural</h4>
+    <table><thead><tr><th>Elemento</th><th>Puntos prácticos</th></tr></thead><tbody>
+        <tr><td><strong>Dosis estándar</strong></td><td>tPA 10 mg + DNasa 5 mg, BID hasta 3 días, máximo 6 dosis; pinzar ~1 h</td></tr>
+        <tr><td><strong>Dosis reducida</strong></td><td>tPA 5 mg + DNasa 5 mg si alto riesgo o anticoagulación inevitable</td></tr>
+        <tr><td><strong>Secuencia</strong></td><td>La administración simultánea es aceptable; evite monoterapia</td></tr>
+        <tr><td><strong>Anticoagulación</strong></td><td>Suspender si es posible; si no, dosis reducida y vigilancia</td></tr>
+        <tr><td><strong>Fracaso</strong></td><td>Colección significativa tras curso completo → cirugía</td></tr>
+    </tbody></table>
+
+    <h4>Tabla 4. Puntuación RAPID y mortalidad a 90 días</h4>
+    <table><thead><tr><th>Componente</th><th>0 puntos</th><th>1 punto</th><th>2 puntos</th></tr></thead><tbody>
+        <tr><td><strong>Renal, urea mmol/L</strong></td><td>&lt;5</td><td>5–8</td><td>&gt;8</td></tr>
+        <tr><td><strong>Edad</strong></td><td>&lt;50</td><td>50–70</td><td>&gt;70</td></tr>
+        <tr><td><strong>Purulencia</strong></td><td>Purulento</td><td>No purulento</td><td>—</td></tr>
+        <tr><td><strong>Origen</strong></td><td>Comunitario</td><td>Hospitalario</td><td>—</td></tr>
+        <tr><td><strong>Albúmina g/L</strong></td><td>≥27</td><td>&lt;27</td><td>—</td></tr>
+    </tbody></table>
+    <p><em>Categorías: 0–2 bajo, 3–4 moderado y 5–7 alto.</em></p>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+    <div class="case-study"><h4>Caso 1: decisión temprana</h4><p>Paciente de 66 años con neumonía derecha, fiebre y dolor pleurítico. TUS muestra derrame moderado anecoico; pH inmediato 7,18.</p><p><strong>Mejor respuesta:</strong> colocar un tubo ≤14F en la misma sesión e iniciar antibióticos.</p><p><strong>Explicación:</strong> pH ≤7,20 exige drenaje cuando sea seguro.</p></div>
+    <div class="case-study"><h4>Caso 2: punto de control de 48 horas</h4><p>Paciente de 58 años con pigtail 12F por CPPE persiste febril, CRP solo disminuye 20% y TC muestra loculación importante.</p><p><strong>Mejor respuesta:</strong> tPA 10 mg + DNasa 5 mg BID hasta tres días, o tPA 5 mg si alto riesgo.</p><p><strong>Explicación:</strong> colección residual más poca mejoría a las 48 h exige escalamiento; cirugía si IET falla o predomina estadio 3.</p></div>
+    <div class="case-study"><h4>Caso 3: limitación por anticoagulación</h4><p>Paciente de 72 años con VTE aguda no puede suspender anticoagulación y persiste CPPE tras tubo.</p><p><strong>Mejor respuesta:</strong> tPA 5 mg + DNasa 5 mg con vigilancia o irrigación salina si el riesgo es inaceptable.</p></div>
+
+    <h3>Banco de preguntas de opción múltiple</h3>
+    <p><strong>1. ¿Qué afirmación sobre infecciones pleurales es correcta?</strong></p><blockquote>Respuesta: <strong>D.</strong> La mortalidad sigue siendo importante, la incidencia ha aumentado, especialmente en mayores, existen mecanismos no neumónicos y la progresión puede ocurrir en 24 horas.</blockquote>
+    <p><strong>2. Neumonía derecha con derrame anecoico y pH 7,18. ¿Siguiente paso?</strong></p><blockquote>Respuesta: <strong>B.</strong> pH ≤7,20 requiere drenaje.</blockquote>
+    <p><strong>3. A las 48 h, TC muestra colección grande y CRP solo bajó 20%. Está estable. ¿Qué sigue?</strong></p><blockquote>Respuesta: <strong>B.</strong> Escale a IET en enfermedad fibrinopurulenta estable.</blockquote>
+    <p><strong>4. Paciente con anticoagulación no interrumpible y empiema residual. ¿Qué régimen es aceptable?</strong></p><blockquote>Respuesta: <strong>C.</strong> tPA reducida con DNasa estándar; evite estreptocinasa y monoterapia.</blockquote>
+    <p><strong>5. Durante IET, el drenaje se vuelve rosado y el paciente está estable. ¿Qué hacer?</strong></p><blockquote>Respuesta: <strong>B.</strong> Compruebe hematocrito pleural antes de considerar hemorragia verdadera.</blockquote>
+    <p><strong>6. Mejor régimen empírico en infección hospitalaria con riesgo de MRSA y Pseudomonas.</strong></p><blockquote>Respuesta: <strong>B.</strong> Cobertura gramnegativa antipseudomónica más MRSA; los aminoglucósidos penetran mal la pleura.</blockquote>
+    <p><strong>7. ¿Qué es correcto sobre tubos en infección pleural?</strong></p><blockquote>Respuesta: <strong>B.</strong> Los pequeños logran resultados similares con menos dolor y requieren irrigación.</blockquote>
+    <p><strong>8. ¿Qué hallazgo favorece más derivación quirúrgica temprana?</strong></p><blockquote>Respuesta: <strong>C.</strong> Estadio 3 con corteza visceral gruesa y pulmón no expandible.</blockquote>
+    <p><strong>9. Respecto al empiema tuberculoso:</strong></p><blockquote>Respuesta: <strong>B.</strong> Corteza y alta carga limitan tratamiento médico; suele requerir decorticación más tratamiento antituberculoso.</blockquote>
+    <p><strong>10. Principio en receptor de trasplante con infección pleural temprana:</strong></p><blockquote>Respuesta: <strong>B.</strong> Control de foco temprano, IET con cautela y cirugía conservadora.</blockquote>
+    <p><strong>11. Respecto a imágenes:</strong></p><blockquote>Respuesta: <strong>B.</strong> TUS detecta tabiques y guía intervenciones; TC define anatomía antes de escalar.</blockquote>
+    <p><strong>12. ¿Qué práctica de IET coincide con la evidencia?</strong></p><blockquote>Respuesta: <strong>B.</strong> tPA más DNasa, con dosis reducida en alto riesgo; evite monoterapia y estreptocinasa.</blockquote>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>VATS inicial frente a tubo/IET:</strong> evidencia limitada y sesgo retrospectivo; se favorece tubo pequeño primero en adultos estables y cirugía temprana en inestables o enfermedad organizada.</li>
+        <li><strong>Duración antibiótica:</strong> son habituales unas cuatro semanas, pero estudios emergentes sugieren cursos más cortos tras buen control de foco; la evidencia aún es insuficiente.</li>
+        <li><strong>Irrigación pleural:</strong> datos piloto muestran mejoría radiográfica y menos cirugía, sin beneficio demostrado en mortalidad.</li>
+        <li><strong>Toracoscopia médica:</strong> pequeños ensayos sugieren estancia posterior menor frente a IET, pero se necesitan estudios mayores.</li>
+    </ul>
+
+    <h3>Lista de verificación de puntos clave</h3>
+    <ul>
+        <li>[ ] Confirme el derrame con TUS y la ventana más segura.</li>
+        <li>[ ] Mida pH de inmediato; convierta a tubo si ≤7,20 o si hay pus/Gram/cultivo positivo.</li>
+        <li>[ ] Use tubos ≤14F guiados por imagen e irríguelos.</li>
+        <li>[ ] Inicie antibióticos empíricos sin esperar cultivos y ajústelos pronto.</li>
+        <li>[ ] Reevalúe a ~48 h mediante clínica, marcadores y TC si es necesario.</li>
+        <li>[ ] En estadio 2 estable con colección residual, tPA 10 mg + DNasa 5 mg BID; considere tPA 5 mg si riesgo.</li>
+        <li>[ ] Si IET está contraindicada, considere irrigación salina.</li>
+        <li>[ ] Llame pronto a cirugía en inestabilidad, estadio 3/corteza o fracaso de IET; prefiera VATS.</li>
+        <li>[ ] Calcule RAPID al inicio.</li>
+        <li>[ ] Planifique seguimiento a 2–4 y 8–12 semanas, priorizando recuperación clínica sobre resolución radiográfica completa.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations"><h3>Abreviaturas y glosario</h3><dl>
+        <dt>CPPE</dt><dd>Derrame paraneumónico complicado</dd><dt>DNasa</dt><dd>Dornasa alfa administrada intrapleuralmente con tPA</dd><dt>IET</dt><dd>Tratamiento enzimático intrapleural con tPA y DNasa</dd><dt>IPC</dt><dd>Catéter pleural permanente</dd><dt>LDH</dt><dd>Lactato deshidrogenasa</dd><dt>RAPID</dt><dd>Renal, edad, purulencia, origen de infección y estado dietético por albúmina</dd><dt>TUS</dt><dd>Ecografía torácica</dd><dt>VATS</dt><dd>Cirugía torácica videoasistida</dd>
+    </dl></div>
+
+    <div class="references">
+<h3>Referencias</h3>
+<ol>
+<li>Roberts ME, Rahman NM, Maskell NA, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):s1-s42.</li>
+<li>Mummadi SR, Stoller JK, Lopez R, Kailasam K, Gillespie CT, Hahn PY. Epidemiology of adult pleural disease in the United States. Chest. 2021;160(4):1534-1551.</li>
+<li>Arnold DT, Hamilton FW, Morris TT, et al. Epidemiology of pleural empyema in English hospitals and the impact of influenza. Eur Respir J. 2021;57(6):2003546.</li>
+<li>Rahman NM, Kahan BC, Miller RF, et al. A clinical score (RAPID) to identify those at risk for poor outcome at presentation in patients with pleural infection. Chest. 2014;145(4):848-855.</li>
+<li>Maskell NA, Davies CWH, Nunn AJ, et al. U.K. controlled trial of intrapleural streptokinase for pleural infection. N Engl J Med. 2005;352(9):865-874.</li>
+<li>Rahman NM, Maskell NA, West A, et al. Intrapleural use of tissue plasminogen activator and DNase in pleural infection. N Engl J Med. 2011;365(6):518-526.</li>
+<li>Chaddha U, Agrawal A, Davidoff F, et al. Use of fibrinolytics and deoxyribonuclease in adult patients with pleural empyema: a consensus statement. Lancet Respir Med. 2021.</li>
+<li>Akulian J, Bedawi EO, Abbas H, et al. Bleeding risk with combination intrapleural fibrinolytic and enzyme therapy in pleural infection. Chest. 2022;162(6):1384-1392.</li>
+<li>Hooper CE, Edey AJ, Wallis A, et al. Pleural irrigation trial (PIT): a randomized controlled pilot of pleural irrigation with normal saline versus standard care in pleural infection. Eur Respir J. 2015;46(2):456-463.</li>
+<li>Bedawi EO, Stavroulias D, Hedley E, et al. Early video-assisted thoracoscopic surgery or intrapleural enzyme therapy in pleural infection: a feasibility randomized controlled trial (MIST-3). Am J Respir Crit Care Med. 2023;208(12):1305-1315.</li>
+<li>Pan H, He J, Shen J, et al. Video-assisted thoracoscopic decortication versus open thoracotomy decortication for empyema: a meta-analysis. J Thorac Dis. 2017;9(7):2006-2014.</li>
+<li>Shen KR, Bribriesco A, Crabtree T, et al. The American Association for Thoracic Surgery consensus guidelines for the management of empyema. J Thorac Cardiovasc Surg. 2017;153(6):e129-e146.</li>
+<li>Menzies SM, Rahman NM, Wrightson JM, et al. Blood culture bottle culture of pleural fluid in pleural infection. Thorax. 2011;66(8):658-662.</li>
+<li>Heffner JE, Klein JS, Hampson C. Diagnostic utility and clinical application of imaging for pleural space infections. Chest. 2010;137(2):467-479.</li>
+<li>Kheir F, Thakore S, Mehta H, et al. Intrapleural fibrinolytic therapy versus early medical thoracoscopy for treatment of pleural infection: randomized controlled trial. Ann Am Thorac Soc. 2020;17(8):958-964.</li>
+<li>Bedawi EO, Ricciardi S, Hassan M, et al. ERS/ESTS statement on the management of pleural infection in adults. Eur Respir J. 2023;61(2):2201062.</li>
+</ol>
+</div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

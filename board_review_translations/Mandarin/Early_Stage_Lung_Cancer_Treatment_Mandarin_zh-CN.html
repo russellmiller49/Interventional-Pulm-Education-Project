@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>早期肺癌的治疗选择</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>早期肺癌的治疗选择</h1>
+
+    <h3>考试内容对应与范围</h3>
+    <p>本章介绍可切除及医学上无法手术的I–II期非小细胞肺癌（NSCLC）的现代治疗，并与AABIP考试的以下领域相对应：</p>
+    <ul>
+        <li>患者选择与术前评估</li>
+        <li>外科选择（肺叶切除、肺段切除、楔形切除；微创入路；淋巴结评估）</li>
+        <li>立体定向体部放射治疗（SBRT）</li>
+        <li>围手术期系统治疗（新辅助、辅助、围手术期免疫治疗；辅助靶向治疗）</li>
+        <li>影像引导消融</li>
+        <li>并发症与监测</li>
+    </ul>
+
+    <h3>学习目标</h3>
+    <p>完成本章后，学习者应能够：</p>
+    <ul>
+        <li>依据肿瘤和患者因素，为I–II期NSCLC选择手术、SBRT或消融。</li>
+        <li>应用生理评估流程（FEV₁/DLCO及预计术后值）判断可手术性及是否需要进一步检查。</li>
+        <li>针对小型周围型肿瘤，在肺叶切除和亚肺叶切除之间作出选择，并说明淋巴结分期策略。</li>
+        <li>在适当的分子分型亚组中整合围手术期免疫治疗和辅助靶向治疗。</li>
+        <li>预判、预防并处理手术、SBRT和热消融的主要并发症。</li>
+        <li>制定根治性局部治疗后的监测计划，并识别失败模式和挽救治疗选择。</li>
+    </ul>
+
+    <hr>
+
+    <h3>高频考点一页通（要点、陷阱与误区）</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>分期决定治疗。</strong>I–II期NSCLC有治愈可能；根治治疗前应准确评估纵隔。</li>
+            <li><strong>可手术性包括两部分：</strong>（1）肿瘤学可切除性；（2）根据FEV₁/DLCO及预计术后（ppo）数值判断生理耐受性；结果临界时需运动试验。</li>
+            <li><strong>手术是可手术患者的标准治疗。</strong>肺叶切除仍为默认方案；对于严格选择的≤2 cm周围型cT1N0病灶，在充分淋巴结评估的前提下可行肺段切除。</li>
+            <li><strong>中央型肿瘤：</strong>可行时考虑袖式切除，以避免全肺切除。</li>
+            <li><strong>淋巴结处理：</strong>至少进行肺叶特异性系统采样；若既往采样阴性，常规完整纵隔淋巴结清扫并未一致显示总生存获益。</li>
+            <li><strong>SBRT：</strong>医学上无法手术的周围型I期肿瘤首选根治治疗；局部控制率极佳；中央型病变放射性肺炎风险更高。</li>
+            <li><strong>术后放疗（PORT）：</strong>I–II期完整切除（R0）后不推荐；切缘阳性（R1）时有指征。</li>
+            <li><strong>围手术期免疫治疗：</strong>新辅助化疗＋免疫治疗可改善无事件生存（EFS）和病理完全缓解（pCR）；对于无可靶向驱动基因的可切除II–III期患者，新辅助＋辅助的围手术期策略可进一步改善EFS。</li>
+            <li><strong>化疗后辅助免疫治疗：</strong>可使已切除II–IIIA期患者获益，但不同方案的获益程度与PD-L1表达相关。</li>
+            <li><strong>辅助靶向治疗：</strong>奥希替尼（EGFR 19号外显子缺失／L858R）和阿来替尼（ALK）可改善术后无病生存（DFS）。</li>
+            <li><strong>消融（RFA/MWA/冷冻）：</strong>适用于高风险患者或寡转移场景；靠近关键结构时更偏向冷冻消融；气胸常见但通常可处理。</li>
+            <li><strong>高龄／衰弱患者：</strong>亚肺叶切除或SBRT均合理；应个体化决策。</li>
+            <li><strong>常见陷阱：</strong>过度治疗惰性磨玻璃病灶、纵隔分期不足、R0切除的I–II期患者仍给予PORT，以及制定免疫治疗方案前遗漏EGFR/ALK检测。</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>核心概念</h3>
+
+    <h4>病理生理／流行病学</h4>
+    <p>早期NSCLC约占新诊断NSCLC的三分之一，主要为腺癌和鳞状细胞癌。五年生存率随分期升高而下降；准确的TNM分期（采用当前IASLC/AJCC版本）对于选择根治性治疗至关重要。</p>
+
+    <h4>适应证与禁忌证</h4>
+    <ul>
+        <li><strong>手术：</strong>可手术的cT1–2N0–1病变。禁忌证包括不可接受的心肺风险或弥漫性转移。</li>
+        <li><strong>SBRT：</strong>医学上无法手术或拒绝手术且为周围型病灶的患者；中央型肿瘤需谨慎。</li>
+        <li><strong>消融：</strong>手术风险高、既往高剂量放疗区域，或在可实现所有病灶完整局部控制的寡转移／寡进展场景。</li>
+        <li><strong>围手术期系统治疗：</strong>
+            <ul>
+                <li>新辅助化疗＋免疫治疗：可切除II–III期，以及部分IB期≥4 cm且无EGFR/ALK改变的患者。</li>
+                <li>辅助免疫治疗：已切除II–IIIA期；获益随PD-L1状态和方案而异。</li>
+                <li>辅助靶向治疗：EGFR 19号外显子缺失／L858R（奥希替尼），ALK阳性（阿来替尼）。</li>
+            </ul>
+        </li>
+        <li><strong>PORT：</strong>适用于R1切除；不用于常规R0切除的I–II期患者。</li>
+    </ul>
+
+    <h4>术前评估（影像、实验室、风险与知情同意）</h4>
+    <ul>
+        <li><strong>影像：</strong>薄层胸部CT；PET-CT分期；≥II期可考虑脑MRI。</li>
+        <li><strong>纵隔评估：</strong>对于可疑淋巴结、肿瘤＞3 cm或中央型肿瘤，行EBUS-TBNA；必要时进一步外科分期。</li>
+        <li><strong>肺生理：</strong>所有外科候选者均测FEV₁和DLCO。任一指标＜预计值80%时，用肺段计数或分侧灌注计算预计术后（ppo）FEV₁/DLCO；临界结果需心肺运动试验（CPET）。</li>
+        <li><strong>抗栓药物：</strong>椎管内麻醉和VATS按机构桥接流程处理；有冠状动脉支架者与心脏科协调。</li>
+        <li><strong>知情同意：</strong>包括所选技术特异风险，如持续漏气、房性心律失常、放射性肺炎、气胸、支气管胸膜瘘和咯血。</li>
+    </ul>
+
+    <h4>设备与设置</h4>
+    <ul>
+        <li><strong>手术：</strong>VATS或RATS平台、内镜吻合器和能量器械；具备袖式切除条件；准备纵隔淋巴结器械。</li>
+        <li><strong>SBRT：</strong>固定装置、四维CT模拟、影像引导（锥形束CT）；呼吸运动管理（屏气、门控）。</li>
+        <li><strong>消融：</strong>
+            <ul>
+                <li>RFA：单根／簇状电极（消融区约2–5 cm）、温度监测；较大病灶可采用盐水灌注或冷却电极。</li>
+                <li>MWA：900–2500 MHz天线；消融范围更大、速度更快；病灶≥3 cm时可用多根天线。</li>
+                <li>冷冻消融：多根冷冻探针间距≤2 cm，常用三次冻融循环；冰球边界清晰可见；中央型病灶推荐全身麻醉以确保气道控制。</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>逐步技术／操作核查表</h3>
+
+    <h4>肺叶切除／肺段切除（VATS/RATS）</h4>
+    <ul>
+        <li>确认侧别、分期和手术计划；确保术前淋巴结评估完整。</li>
+        <li>建立操作孔并松解粘连。</li>
+        <li>根据解剖采用“最后处理叶间裂”或“先处理叶间裂”策略；分别游离静脉、动脉和支气管。</li>
+        <li>用吻合器切断肺实质；确认肿瘤学切缘。</li>
+        <li>淋巴结评估：肺门和纵隔（肺叶特异性系统评估）；送病理。</li>
+        <li>漏气试验、止血并放置胸管。</li>
+    </ul>
+
+    <h4>SBRT</h4>
+    <ul>
+        <li>四维CT模拟；依据呼吸运动界定内部靶区（ITV）和计划靶区（PTV）。</li>
+        <li>根据部位、大小和与危及器官（OAR）的距离选择剂量／分割，并核对剂量限制。</li>
+        <li>每日影像引导；管理咳嗽和呼吸运动。</li>
+        <li>告知治疗后可能出现咳嗽、乏力和放射性肺炎。</li>
+    </ul>
+
+    <h4>经皮消融</h4>
+    <ul>
+        <li>规划CT路径，避开肺大疱和血管；知情同意中说明气胸风险。</li>
+        <li>镇痛／麻醉：周围型病灶可中度镇静；中央型或出血风险高者采用全身麻醉；必要时考虑双腔通气以保护气道。</li>
+        <li>装置放置：
+            <ul>
+                <li>RFA/MWA：先将电极／天线置于中央，再在周边重叠消融以覆盖病灶。</li>
+                <li>冷冻：放置多根探针，执行冻融循环；监测冰球边缘超出肿瘤至少5–10 mm。</li>
+            </ul>
+        </li>
+        <li>消融后CT；需要时行穿刺道消融；观察气胸；有症状或较大气胸时放置胸管。</li>
+    </ul>
+
+    <hr>
+
+    <h3>故障处理与术中管理</h3>
+    <ul>
+        <li><strong>新辅助免疫治疗后肺门致密纤维化：</strong>及早转开胸，取得近端血管控制，并准备袖式重建。</li>
+        <li><strong>持续漏气：</strong>加固吻合器线、行胸膜帐篷术；术后可考虑自体血胸膜固定。</li>
+        <li><strong>SBRT运动过大：</strong>加强运动控制（门控／腹部压迫）；运动＞1 cm时重新计划。</li>
+        <li><strong>靠近关键结构的消融：</strong>优先冷冻；可通过人为小气胸或水分离移开危及器官；警惕咯血。</li>
+    </ul>
+
+    <h3>术后护理与随访</h3>
+    <ul>
+        <li><strong>手术：</strong>早期下床、肺部康复和气道清洁；无漏气且引流量合适时拔胸管；根据病理决定辅助治疗。</li>
+        <li><strong>SBRT／消融：</strong>短期影像评估放射性肺炎或炎症改变；3、6和12个月复查CT，之后按监测计划进行。</li>
+        <li><strong>根治治疗后监测：</strong>病史／体检和胸部CT每6个月一次，共2年，随后每年一次；强化戒烟。</li>
+    </ul>
+
+    <h3>并发症（预防、识别与处理）</h3>
+    <ul>
+        <li><strong>手术：</strong>持续漏气、肺炎、房性心律失常、静脉血栓栓塞；通过加速康复、疼痛控制和早期活动降低风险。</li>
+        <li><strong>SBRT：</strong>乏力、皮炎、食管炎（中央型病变）、放射性肺炎；用糖皮质激素和支持治疗。</li>
+        <li><strong>消融：</strong>气胸（常见；有症状／较大时引流）、病灶周围出血、支气管胸膜瘘（冷冻风险低于热消融）、咯血、罕见系统性空气栓塞及肺动脉假性动脉瘤（需紧急介入放射／外科处理）。</li>
+    </ul>
+
+    <h3>特殊人群</h3>
+    <ul>
+        <li><strong>重度COPD／肺储备差：</strong>优先SBRT或亚肺叶切除；部分病灶可消融。</li>
+        <li><strong>高龄／衰弱：</strong>个体化；对于小型周围型肿瘤，肺段切除或SBRT通常合适，疾病控制可比且功能获益较好。</li>
+        <li><strong>驱动基因阳性肿瘤（EGFR/ALK）：</strong>切除后优先辅助靶向治疗；这些亚组通常避免围手术期免疫治疗。</li>
+        <li><strong>抗凝／抗血小板治疗：</strong>按具体操作协调管理；消融和椎管内麻醉均需评估出血风险。</li>
+    </ul>
+
+    <h3>证据与结局（关键试验／效应）</h3>
+    <ul>
+        <li><strong>肺叶切除与亚肺叶切除：</strong>现代随机数据支持，对于≤2 cm周围型cT1N0病灶，肺段切除与肺叶切除结局相当；局部区域复发略增，但肺功能保留更好。</li>
+        <li><strong>SBRT：</strong>II／III期研究显示，小型周围型肿瘤局部控制率约90%；与常规放疗相比生活质量更好；合并随机数据提示部分可手术患者的总生存可能与手术相当，但样本量很小。</li>
+        <li><strong>新辅助化疗＋免疫治疗（CheckMate 816）：</strong>改善EFS和pCR（约24%对约2%），且未增加手术并发症；围手术期策略（KEYNOTE-671、AEGEAN、CheckMate 77T）进一步提高EFS和pCR。</li>
+        <li><strong>辅助免疫治疗（IMpower010、PEARLS/KEYNOTE-091）：</strong>铂类辅助化疗后可改善DFS；获益程度随PD-L1状态和方案而异。</li>
+        <li><strong>辅助靶向治疗：</strong>奥希替尼（EGFR 19号外显子缺失／L858R）和阿来替尼（ALK）在已切除IB–IIIA期疾病中显示显著DFS获益。</li>
+    </ul>
+
+    <hr>
+
+    <h3>诊断与治疗流程</h3>
+
+    <h4>流程1——可切除早期NSCLC（治疗选择）</h4>
+    <div class="mermaid">
+    graph TD
+        A["确诊I–II期NSCLC"] --> B{"可手术？"}
+        B -- 否 --> C["根治性SBRT／消融"]
+        B -- 是 --> D{"评估大小与位置"}
+        D -- "≤2 cm、周围型、cN0" --> E["解剖性肺段切除"]
+        D -- ">2 cm或中央型／N1" --> F["肺叶切除（需要时袖式）"]
+        E --> G{"是否有驱动基因？"}
+        F --> G
+        G -- "EGFR 19del/L858R" --> H["辅助奥希替尼"]
+        G -- "ALK融合" --> I["辅助阿来替尼"]
+        G -- "均无" --> J{"评估分期／风险"}
+        J -- "II–III期或IB期≥4 cm" --> K["新辅助化疗＋免疫治疗<br/>或围手术期方案"]
+        J -- "IA期" --> L["观察"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>说明：</strong>肺段切除必须进行充分淋巴结评估。若有辅助化疗指征，辅助TKI通常在化疗后给予。</p>
+    </div>
+
+    <h4>流程2——肺切除的生理可手术性</h4>
+    <div class="mermaid">
+    graph TD
+        A["测量FEV1和DLCO"] --> B{"两者均≥预计值80%？"}
+        B -- 是 --> C["可行肺叶／肺段切除"]
+        B -- 否 --> D["计算ppo FEV1和DLCO"]
+        D --> E{"ppo数值"}
+        E -- "≥40%" --> C
+        E -- "<40%" --> F["行CPET"]
+        F --> G{"VO2峰值"}
+        G -- 可接受 --> H["考虑有限切除或SBRT"]
+        G -- 不可接受 --> I["非手术治疗（SBRT／消融）"]
+    </div>
+
+    <hr>
+
+    <h3>表格与快速参考</h3>
+
+    <h4>表1．早期NSCLC外科方式的选择</h4>
+    <table>
+        <thead>
+            <tr><th>临床情境</th><th>首选术式</th><th>关键要求</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>≤2 cm、周围型、cT1N0</td>
+                <td>肺段切除</td>
+                <td>术中冰冻确认N0；肺叶特异性淋巴结采样</td>
+                <td>现代随机试验显示生存与肺叶切除相似；局部区域复发略高；更保留肺功能。</td>
+            </tr>
+            <tr>
+                <td>＞2 cm或中央型；发现N1</td>
+                <td>肺叶切除</td>
+                <td>系统性肺叶特异性淋巴结评估</td>
+                <td>可行时袖式切除优于全肺切除。</td>
+            </tr>
+            <tr>
+                <td>衰弱／肺储备有限</td>
+                <td>亚肺叶切除或SBRT</td>
+                <td>个体化；讨论利弊</td>
+                <td>对于选择良好的小病灶，疾病控制可相当并具有功能获益。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>表2．围手术期系统治疗——考试速查</h4>
+    <table>
+        <thead><tr><th>策略</th><th>适用分期</th><th>治疗骨架</th><th>关键结局</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>新辅助化疗＋免疫治疗<br>（如纳武利尤单抗＋铂类双药）</td>
+                <td>可切除IB（≥4 cm）–IIIA期（无EGFR/ALK）</td>
+                <td>3–4周期铂类双药＋抗PD-1</td>
+                <td>pCR较单纯化疗提高约5–10倍；EFS改善；手术安全性可接受。</td>
+            </tr>
+            <tr>
+                <td>围手术期方案<br>（如帕博利珠单抗或度伐利尤单抗）</td>
+                <td>可切除II–III期（无EGFR/ALK）</td>
+                <td>新辅助化疗＋免疫治疗 → 手术 → 1年免疫治疗</td>
+                <td>较单纯新辅助策略进一步改善EFS；pCR约17%–25%。</td>
+            </tr>
+            <tr>
+                <td>化疗后辅助免疫治疗<br>（如阿替利珠单抗、帕博利珠单抗）</td>
+                <td>已切除IB–IIIA期（II–IIIA获益更明显；随PD-L1而异）</td>
+                <td>标准化疗后1年免疫治疗</td>
+                <td>意向治疗或PD-L1筛选人群DFS改善；OS数据仍在成熟。</td>
+            </tr>
+            <tr>
+                <td>辅助靶向治疗<br>（奥希替尼；阿来替尼）</td>
+                <td>已切除IB–IIIA期EGFR 19del/L858R；ALK+</td>
+                <td>手术后±化疗后给予2–3年TKI</td>
+                <td>DFS显著提高；EGFR-TKI可降低中枢神经系统复发。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>表3．手术、SBRT与消融速览</h4>
+    <table>
+        <thead><tr><th>特征</th><th>手术</th><th>SBRT</th><th>消融（RFA/MWA/冷冻）</th></tr></thead>
+        <tbody>
+            <tr><td>理想患者</td><td>可手术I–II期</td><td>医学上无法手术的周围型I期</td><td>高风险患者、既往放疗区域、寡转移／寡进展</td></tr>
+            <tr><td>局部控制</td><td>极佳；取决于切缘和淋巴结状态</td><td>小型周围型肿瘤约90%–95%</td><td>≤3 cm时良好；靠近关键结构时偏向冷冻</td></tr>
+            <tr><td>并发症</td><td>漏气、肺炎、心律失常等操作风险</td><td>急性毒性低；中央型病灶有肺炎／食管炎风险</td><td>气胸常见；出血；支气管胸膜瘘（冷冻较低）</td></tr>
+            <tr><td>恢复</td><td>初始恢复较慢；效果持久</td><td>门诊／短疗程（1–5次）</td><td>门诊；恢复快</td></tr>
+            <tr><td>驱动基因相关作用</td><td>可获得病理分期和分子检测组织</td><td>无</td><td>可在消融时同时活检</td></tr>
+        </tbody>
+    </table>
+
+    <h4>表4．热消融技术要点</h4>
+    <table>
+        <thead><tr><th>方式</th><th>最佳用途</th><th>技术要点</th><th>注意事项</th></tr></thead>
+        <tbody>
+            <tr><td>RFA</td><td>≤3 cm病灶</td><td>中央至周边重叠消融；冷却电极</td><td>邻近血管的热沉效应可降低疗效</td></tr>
+            <tr><td>MWA</td><td>3–5 cm病灶；需要更大消融区</td><td>多根天线；时间短；受炭化影响较小</td><td>附带热损伤较大；设备差异</td></tr>
+            <tr><td>冷冻</td><td>靠近气道／血管的病灶</td><td>多根探针间距≤2 cm；三次冻融；观察冰球</td><td>操作时间较长；中央型靶区全身麻醉</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>病例与应用学习</h3>
+
+    <div class="case-study">
+        <p><strong>病例1（下一步最佳处理）</strong><br>
+        一名68岁、35包年吸烟史患者，左下叶周围型1.8 cm腺癌（cT1bN0），FEV₁ 82%，DLCO 78%，PET未见纵隔转移，EGFR/ALK阴性。</p>
+        <p><strong>答案：C（解剖性肺段切除）。</strong>对于≤2 cm周围型cT1N0且肺储备足够者，肺段切除联合严格淋巴结评估可获得与肺叶切除相当的肿瘤学结局，同时更保留肺功能。</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>病例2（故障处理）</strong><br>
+        一名cN1患者接受新辅助化疗＋免疫治疗后行VATS右上叶切除，术中肺门致密纤维化遮蔽肺动脉。</p>
+        <p><strong>答案：B（转开胸并取得近端肺动脉控制）。</strong>治疗相关纤维化时及早转开胸并控制近端血管，可降低血管损伤风险；仍可通过袖式或标准肺叶切除实现R0。</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>病例3（并发症识别）</strong><br>
+        一名76岁医学上无法手术的患者，因右下叶周围型病灶接受SBRT。四周后出现干咳、低热，影像显示高剂量区内新发磨玻璃影。</p>
+        <p><strong>答案：B（放射性肺炎）。</strong>发病时间和局限于照射野的影像表现典型。开始口服糖皮质激素并给予支持治疗。</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>病例4（下一步最佳处理）</strong><br>
+        一名62岁患者，pT2aN0（3.5 cm）腺癌，VATS肺叶切除R0，PD-L1 10%，EGFR 19号外显子缺失；已完成4周期含顺铂化疗。</p>
+        <p><strong>答案：D（辅助奥希替尼）。</strong>对于已切除的EGFR 19del/L858R疾病，辅助奥希替尼可改善DFS。II期R0切除后无其他指征时，不推荐PORT。</p>
+    </div>
+
+    <h3>题库（选择题）</h3>
+    <ol>
+        <li><strong>一名70岁患者有1.2 cm周围型cT1aN0鳞状病灶，FEV₁ 88%，DLCO 84%。最佳根治选择是？</strong><br>
+            A．SBRT<br>B．单纯楔形切除<br>C．肺段切除＋淋巴结采样<br>D．肺叶切除<br>E．新辅助化疗＋免疫治疗<br>
+            <strong>答案：C。</strong>对于≤2 cm周围型cN0病灶，解剖性肺段切除联合淋巴结评估适当，并可保留功能。</li>
+        <li><strong>肺段切除在≤2 cm周围型肿瘤中可与肺叶切除相当的关键原因是：</strong><br>
+            A．出血更少<br>B．辅助治疗耐受更好<br>C．解剖性切除充分并严格评估淋巴结<br>D．手术时间更短<br>E．中央型肿瘤复发更少<br>
+            <strong>答案：C。</strong>沿解剖肺段切除并进行淋巴结评估，可维持肿瘤学原则。</li>
+        <li><strong>已切除I–II期NSCLC术后PORT最合适的用途是：</strong><br>
+            A．所有pT2肿瘤<br>B．切缘接近<br>C．显微镜下切缘阳性（R1）<br>D．PD-L1≥50%<br>E．任何N1病变<br>
+            <strong>答案：C。</strong>该分期的PORT通常保留给R1切除。</li>
+        <li><strong>术前生理评估：FEV₁ 62%，DLCO 58%。下一步是？</strong><br>
+            A．直接肺叶切除<br>B．计算ppo FEV₁/DLCO<br>C．立即CPET<br>D．必须SBRT<br>E．PORT<br>
+            <strong>答案：B。</strong>任一指标＜80%时先计算ppo；ppo低时再行CPET。</li>
+        <li><strong>与常规放疗相比，SBRT治疗早期NSCLC的一项主要优势是：</strong><br>
+            A．局部控制更低<br>B．分次更多<br>C．合适病灶中食管炎／肺炎更少，且试验显示生活质量改善<br>D．需要麻醉<br>E．必须联合化疗<br>
+            <strong>答案：C。</strong>SBRT在合适病灶中以较少毒性和较短疗程获得优异控制。</li>
+        <li><strong>可切除II–III期NSCLC的新辅助化疗＋免疫治疗可提高：</strong><br>
+            A．术后死亡率<br>B．pCR和无事件生存<br>C．全肺切除需求<br>D．PORT使用<br>E．EGFR突变率<br>
+            <strong>答案：B。</strong>试验显示pCR和EFS改善，且未增加手术死亡。</li>
+        <li><strong>驱动基因阳性：ALK+ II期腺癌R0切除并完成辅助化疗后，下一步是：</strong><br>
+            A．辅助阿来替尼<br>B．辅助帕博利珠单抗<br>C．观察<br>D．PORT<br>E．新辅助纳武利尤单抗<br>
+            <strong>答案：A。</strong>辅助ALK TKI可改善DFS。</li>
+        <li><strong>邻近支气管中间段病灶的消融方式首选：</strong><br>
+            A．RFA<br>B．MWA<br>C．冷冻消融<br>D．激光消融<br>E．不可逆电穿孔始终首选<br>
+            <strong>答案：C。</strong>冷冻靠近关键结构时更受青睐，支气管胸膜瘘风险较低且可观察冰球边界。</li>
+        <li><strong>新辅助免疫治疗后术中肺门瘢痕致密，最恰当的处理是：</strong><br>
+            A．为避免大切口坚持内镜操作<br>B．及早转开胸以取得血管控制<br>C．终止手术并行PORT<br>D．用血管带继续VATS<br>E．直接全肺切除<br>
+            <strong>答案：B。</strong>及早转换可降低血管风险并安全完成切除。</li>
+        <li><strong>SBRT后放射性肺炎最常出现于：</strong><br>
+            A．24–48小时内<br>B．治疗后2–12周<br>C．2年后<br>D．仅中央型病灶<br>E．仅联合化疗时<br>
+            <strong>答案：B。</strong>典型为亚急性起病，影像与照射野一致。</li>
+        <li><strong>下一步最佳处理：1.9 cm周围型腺癌、cN0，手术风险高（ppoFEV₁ 36%，ppoDLCO 34%）。</strong><br>
+            A．新辅助化疗＋免疫治疗后肺叶切除<br>B．SBRT<br>C．仅硬膜外麻醉下楔形切除<br>D．PORT<br>E．观察<br>
+            <strong>答案：B。</strong>医学上无法手术的周围型I期肿瘤首选SBRT。</li>
+        <li><strong>关于≤2 cm周围型cT1N0病灶的肺段切除，下列哪项正确？</strong><br>
+            A．总生存始终劣于肺叶切除<br>B．改善总生存但局部复发增加一倍<br>C．无病生存不劣，局部区域复发略增，并保留肺功能<br>D．无需淋巴结采样<br>E．仅适用于磨玻璃为主病灶<br>
+            <strong>答案：C。</strong>现代随机数据支持在严格淋巴结评估下结局相当，并更保留功能。</li>
+    </ol>
+
+    <h3>要点核查表</h3>
+    <ul>
+        <li>[ ] 根治治疗前确认分期和纵隔状态。</li>
+        <li>[ ] 所有外科候选者测FEV₁/DLCO；任一＜80%时计算ppo。</li>
+        <li>[ ] 对≤2 cm周围型cT1N0病灶，考虑肺段切除并充分评估淋巴结。</li>
+        <li>[ ] 医学上无法手术的周围型I期患者采用SBRT；注意中央型病灶限制。</li>
+        <li>[ ] R0切除的I–II期患者不行PORT；R1时给予。</li>
+        <li>[ ] 可切除疾病检测EGFR/ALK；有指征时整合奥希替尼／阿来替尼。</li>
+        <li>[ ] 无可靶向驱动基因的II–III期患者考虑新辅助化疗＋免疫治疗及围手术期方案。</li>
+        <li>[ ] 预判新辅助免疫治疗后的纤维化；为安全控制血管及早转开胸。</li>
+        <li>[ ] 识别SBRT放射性肺炎并及时用激素治疗。</li>
+        <li>[ ] 消融时预先规划气胸处理；靠近关键结构时使用冷冻。</li>
+        <li>[ ] 胸部CT每6个月一次，共2年，随后每年一次；强化戒烟。</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>缩写</h3>
+        <dl>
+            <dt>NSCLC</dt><dd>非小细胞肺癌</dd>
+            <dt>SBRT</dt><dd>立体定向体部放射治疗</dd>
+            <dt>VATS</dt><dd>电视辅助胸腔镜手术</dd>
+            <dt>RATS</dt><dd>机器人辅助胸腔镜手术</dd>
+            <dt>DLCO</dt><dd>一氧化碳肺弥散量</dd>
+            <dt>FEV₁</dt><dd>第一秒用力呼气容积</dd>
+            <dt>CPET</dt><dd>心肺运动试验</dd>
+            <dt>PORT</dt><dd>术后放射治疗</dd>
+            <dt>pCR</dt><dd>病理完全缓解</dd>
+            <dt>EFS</dt><dd>无事件生存</dd>
+            <dt>DFS</dt><dd>无病生存</dd>
+            <dt>OAR</dt><dd>危及器官</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>参考文献</h3>
+        <ol>
+<li>Saji H, Okada M, Tsuboi M, et al. Segmentectomy versus lobectomy in small‑sized peripheral non‑small‑cell lung cancer (JCOG0802/WJOG4607L). <em>Lancet</em>. 2022;399:1607‑1617.</li>
+<li>Altorki N, Wang X, Kozono D, et al. Lobar or Sublobar Resection for Peripheral Stage IA Non–Small‑Cell Lung Cancer. <em>N Engl J Med</em>. 2023;388:489‑498.</li>
+<li>Darling GE, Allen MS, Decker PA, et al. Mediastinal lymph node sampling versus complete lymphadenectomy (ACOSOG Z0030). <em>J Thorac Cardiovasc Surg</em>. 2011;141:662‑670.</li>
+<li>Ball D, Mai GT, Vinod S, et al. SABR versus standard radiotherapy in stage I NSCLC (CHISEL). <em>Lancet Oncol</em>. 2019;20:494‑503.</li>
+<li>Nyman J, Hallqvist A, Lund JÅ, et al. SPACE—SBRT vs conventional RT in inoperable stage I NSCLC. <em>Radiother Oncol</em>. 2016;121:1‑8.</li>
+<li>Chang JY, Senan S, Paul MA, et al. SABR versus lobectomy in operable stage I NSCLC: pooled randomized analysis. <em>Lancet Oncol</em>. 2015;16:630‑637.</li>
+<li>Schneider BJ, Daly ME, Kennedy EB, et al. ASCO Endorsement of ASTRO SBRT guideline for early‑stage NSCLC. <em>J Clin Oncol</em>. 2018;36:710‑719.</li>
+<li>Wang EH, Corso CD, Rutter CE, et al. PORT and survival in incompletely resected NSCLC. <em>J Clin Oncol</em>. 2015;33:2727‑2734.</li>
+<li>Forde PM, Spicer J, Lu S, et al. Neoadjuvant Nivolumab plus Chemotherapy in Resectable NSCLC (CheckMate 816). <em>N Engl J Med</em>. 2022;386:1973‑1985.</li>
+<li>KEYNOTE‑671 Investigators. Perioperative Pembrolizumab for Resectable NSCLC (KEYNOTE‑671). <em>N Engl J Med</em>. 2023.</li>
+<li>AEGEAN Investigators. Perioperative Durvalumab for Resectable NSCLC (AEGEAN). <em>N Engl J Med</em>. 2023/2024.</li>
+<li>IMpower010 Investigators. Adjuvant Atezolizumab after Resection and Chemotherapy in NSCLC. <em>J Clin Oncol</em>. 2021/2024 update.</li>
+<li>PEARLS/KEYNOTE‑091 Investigators. Adjuvant Pembrolizumab after Resection. <em>Lancet/J Clin Oncol</em>. 2022–2023.</li>
+<li>ADAURA Investigators. Osimertinib in Resected EGFR‑Mutated NSCLC. <em>N Engl J Med</em>. 2020/2023 update.</li>
+<li>ALINA Investigators. Alectinib vs platinum‑based chemotherapy in ALK‑positive resected NSCLC. <em>N Engl J Med</em>. 2023.</li>
+<li>Choi R, Liddell RP. Minimally Invasive Image‑Guided Ablation for Lung Cancer. In: <em>Principles and Practice of Interventional Pulmonology</em>. Springer; 2025.</li>
+<li>Jeon H, Wang S, Song J, Gill H, Cheng H. Update 2025: Management of Non–Small‑Cell Lung Cancer. <em>Lung</em>. 2025;203:53‑xx.</li>
+<li>Gillaspie EA. The evolving treatment for early‑stage lung cancer: Immunotherapy. <em>Surgical Oncology Insight</em>. 2025;2:100128.</li>
+</ol>
+    </div>
+
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

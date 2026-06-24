@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
 import type { Route } from 'next'
 import Link from 'next/link'
+import { setRequestLocale } from 'next-intl/server'
 
 import { BoardReviewCatalog } from '@/components/board-review/BoardReviewCatalog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { boardReviewCategoryLabels } from '@/data/board-review'
+import { defaultLocale, isActiveLocale } from '@/i18n/locale'
+import { localizePath } from '@/i18n/path'
 import { listBoardReviewChapters } from '@/lib/board-review-loader'
 
 export const metadata: Metadata = {
@@ -15,9 +18,19 @@ export const metadata: Metadata = {
     'Interactive study modules, exam-aligned checklists, and high-yield notes to help you prepare for the Interventional Pulmonology board exam.',
 }
 
-export default function BoardPrepPage() {
-  const chapters = listBoardReviewChapters()
+interface BoardPrepPageProps {
+  params: Promise<{ locale: string }>
+}
+
+export default async function BoardPrepPage({ params }: BoardPrepPageProps) {
+  const { locale: rawLocale } = await params
+  const locale = isActiveLocale(rawLocale) ? rawLocale : defaultLocale
+  setRequestLocale(locale)
+
+  const chapters = listBoardReviewChapters(locale)
   const totalMinutes = chapters.reduce((sum, chapter) => sum + chapter.estimatedMinutes, 0)
+  const firstChapterPath = localizePath(`/board-prep/${chapters[0]?.slug ?? ''}`, locale) as Route
+  const roadmapPath = localizePath('/coming-soon', locale) as Route
 
   return (
     <div className="space-y-16 py-16">
@@ -47,12 +60,10 @@ export default function BoardPrepPage() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link href={`/board-prep/${chapters[0]?.slug ?? ''}` as Route}>
-                Start with first chapter
-              </Link>
+              <Link href={firstChapterPath}>Start with first chapter</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/coming-soon">Preview simulation roadmap</Link>
+              <Link href={roadmapPath}>Preview simulation roadmap</Link>
             </Button>
           </div>
         </div>

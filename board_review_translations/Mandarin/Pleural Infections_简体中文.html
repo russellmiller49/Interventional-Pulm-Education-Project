@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胸膜腔感染</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>胸膜腔感染</h1>
+
+<h3>考试对应领域与范围</h3>
+<p>本章涵盖胸膜腔感染的评估与处理，疾病谱包括复杂性肺炎旁胸腔积液和脓胸。重点内容包括风险分层（RAPID 评分）、胸腔引流管选择、胸膜腔内酶治疗、生理盐水冲洗、外科升级治疗以及特殊人群。所述路径依据当代学会声明及所提供资料中总结的临床试验，强调可直接应用的实践方案。</p>
+
+<h3>学习目标</h3>
+<ul>
+    <li>依据超声、CT 特征和胸腔积液生化指标，区分单纯性肺炎旁胸腔积液、复杂性肺炎旁胸腔积液与脓胸。</li>
+    <li>应用有明确时间节点的分步感染源控制路径（置管引流 → 胸膜腔内治疗或冲洗 → 外科手术），并在约 48 小时进行再评估。</li>
+    <li>选择合适的引流管口径与放置策略，并执行最佳实践的胸膜腔内组织型纤溶酶原激活剂（tPA）和 DNase 给药方案，包括高出血风险时的减量方案。</li>
+    <li>启动符合感染场景的经验性抗菌治疗并转为靶向治疗；理解何时可合理采用较短疗程。</li>
+    <li>使用 RAPID 评分沟通风险、指导监护强度并预测结局。</li>
+    <li>识别应早期外科会诊的情形，并针对创伤、结核、真菌感染和肺移植受者调整处理方案。</li>
+</ul>
+
+<hr>
+
+<h3>高频考点一页通</h3>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>术语：</strong>“胸膜腔感染”涵盖复杂性肺炎旁胸腔积液（CPPE）和脓胸，二者的处理原则一致。</li>
+        <li><strong>流行病学：</strong>发病率及住院率持续上升；老年人增幅尤为明显，病死率也更高。</li>
+        <li><strong>不要延误：</strong>“单纯性”积液可迅速进展为“复杂性”积液，必须果断处理。</li>
+        <li><strong>影像：</strong>胸部超声（TUS）可可靠识别分隔与包裹，并指导安全穿刺；CT 有助于明确解剖结构并显示“胸膜分离征”。</li>
+        <li><strong>关键生化指标：</strong>胸腔积液 pH ≤7.20（且取样方法正确）时，如技术上安全，应置入胸腔引流管。若 pH 为 7.21–7.39，应结合 LDH（&gt;900 IU/L）、葡萄糖（≤4 mmol/L，约 72 mg/dL）及影像特征决定。脓性液体、革兰染色/培养阳性或葡萄糖 &lt;60 mg/dL 也进一步支持引流。</li>
+        <li><strong>引流管选择：</strong>首选小口径（≤14F）引流管，疼痛更轻而疗效相近。应规律冲洗以维持通畅。</li>
+        <li><strong>约 48 小时复评：</strong>若仍有积液并伴持续全身炎症，应升级处理（CT、胸膜腔内治疗或手术）。</li>
+        <li><strong>胸膜腔内酶治疗（IET）：</strong>tPA 10 mg + DNase 5 mg，每日 2 次，最多 3 天；每次给药后夹管约 1 小时。高出血风险时可考虑 tPA 5 mg 搭配标准剂量 DNase。不要使用单一纤溶药物治疗。</li>
+        <li><strong>抗凝：</strong>实施 IET 前如可行应暂停抗凝；若不能暂停，可采用减量 tPA + DNase，或考虑生理盐水冲洗。</li>
+        <li><strong>生理盐水冲洗：</strong>250 mL 0.9% 氯化钠，每日 3 次，共 3 天；当 IET 或手术禁忌时，可减少影像学积液负荷及外科转诊率。</li>
+        <li><strong>何时早期联系外科：</strong>患者不稳定或脓毒症、已有厚纤维板及肺不能复张的机化期（第 3 期），或充分 IET 疗程后仍失败。条件允许时优先 VATS，而非开胸手术。</li>
+        <li><strong>抗菌药物：</strong>立即开始。社区获得性感染应覆盖革兰阳性菌与厌氧菌；医院获得性感染还应覆盖革兰阴性菌（必要时包括铜绿假单胞菌）。根据培养及临床进展调整。</li>
+        <li><strong>RAPID 评分：</strong>预测 90 天病死率，有助于目标设定及升级治疗规划。</li>
+        <li><strong>常见陷阱：</strong>因取样错误误判 pH；仅依赖胸片；等待培养结果后才引流；默认使用大口径引流管；使用链激酶或 DNase 单药治疗。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p>当渗出性胸腔积液发生感染时，即形成胸膜腔感染，通常表现为中性粒细胞为主的积液。感染途径包括邻近肺炎蔓延、腹腔感染经膈肌扩散、纵隔感染延伸、血行播散以及手术或创伤造成的直接接种。厌氧菌常见，应评估牙源性疾病和误吸危险因素。过去十年发病率上升，男性更多见，老年患者病死率更高；胸膜腔感染消耗大量医疗资源，住院时间常达 12–15 天或更久。</p>
+
+<h4>适应证与禁忌证</h4>
+<p>以下情况应进行引流：脓性液体；革兰染色或培养阳性；pH ≤7.20；或处于中间 pH 范围但伴高危特征（LDH &gt;900 IU/L、葡萄糖 ≤4 mmol/L［72 mg/dL］或 &lt;60 mg/dL、复杂超声表现、大量积液、胸膜强化）。不要延误；在同一次操作中床旁即时测定 pH，可将诊断性胸腔穿刺立即转为小口径置管。对于病情稳定的成人，通常不把 VATS 作为一线初始治疗；但不稳定、机化期第 3 期或置管失败时应尽早外科会诊。</p>
+
+<h4>术前评估</h4>
+<ul>
+    <li><strong>影像：</strong>使用 TUS 确认并绘制积液腔与分隔；必要时采用静脉期“胸膜期”增强 CT 明确解剖、识别胸膜分离征，并为置管或升级治疗规划路径。</li>
+    <li><strong>实验室：</strong>全血细胞计数、肾功能（用于 RAPID 评分）；若计划 IET 或手术，应检查凝血功能。</li>
+    <li><strong>胸腔积液取样：</strong>pH 取样必须规范：使用无肝素污染的动脉血气注射器，避免利多卡因污染，排尽空气并及时检测。</li>
+    <li><strong>知情同意：</strong>说明分阶段路径（置管 → IET/冲洗 → 手术）及潜在并发症（IET 出血、剥脱术后漏气）。</li>
+</ul>
+
+<h4>设备与准备</h4>
+<ul>
+    <li><strong>引流管：</strong>首选影像引导下 ≤14F 猪尾导管；连接负压引流并规律冲洗，防止堵塞。</li>
+    <li><strong>辅助用品：</strong>三通阀、用于冲洗的无菌生理盐水、固定缝线及敷料以防脱管。</li>
+    <li><strong>IET：</strong>床旁备妥 tPA、DNase 和夹管装置，并规划 1 小时留置时间。</li>
+</ul>
+
+<h3>分步技术与操作核对表</h3>
+<ol>
+    <li>用 TUS 确认靶区并标记安全进针窗口。</li>
+    <li>无菌准备与局部麻醉；小切口后采用 Seldinger 法，将 ≤14F 引流管置入最大或分隔最明显的腔隙。</li>
+    <li>固定并连接引流装置；用生理盐水规律冲洗以维持通畅。</li>
+    <li>送检 pH（立即）、葡萄糖、蛋白/LDH（必要时按 Light 标准）、革兰染色与培养（包括接种血培养瓶）以及细胞学。</li>
+    <li>立即开始抗菌治疗（见表 2）。</li>
+    <li>约 48 小时评估：若仍有积液并伴全身炎症（如 CRP 下降 &lt;50% 或 SIRS 持续），行 CT 并升级至 IET、冲洗或手术。</li>
+    <li>典型 IET 方案：tPA 10 mg，随后 DNase 5 mg；两者均每日 2 次，最多 3 天；每次注药后夹管约 1 小时。高出血风险时可考虑 tPA 5 mg + DNase 5 mg。避免单药治疗。</li>
+</ol>
+
+<div class="algorithm-note">
+    <strong>故障排除与术中处理</strong>
+    <ul>
+        <li><strong>引流不佳：</strong>用 TUS/CT 确认导管位置；冲洗；若存在独立包裹腔，可增置导管；仍不足时依据出血风险选择 IET 或冲洗。</li>
+        <li><strong>IET 期间疑似出血：</strong>不要把粉红色引流液直接等同于真实出血；检测胸腔积液血细胞比容，必要时暂停或调整剂量。</li>
+        <li><strong>置管后患者不稳定：</strong>尽早外科会诊；许多患者可从及时 VATS 清创/剥脱术中获益。</li>
+    </ul>
+</div>
+
+<h3>术后护理与随访</h3>
+<p><strong>抗菌药物：</strong>先经验性治疗，培养结果回报后调整；当患者临床改善且炎症指标下降时，由静脉转口服。充分感染源控制后总疗程通常约 4 周，但较短疗程正在研究。</p>
+<p><strong>监测：</strong>每日评估临床状况、引流量及炎症指标；通过影像判断清除程度。</p>
+<p><strong>出院计划：</strong>拔管前确认临床改善；安排 2–4 周及 8–12 周随访，评估影像吸收并识别复发。</p>
+
+<h4>并发症：预防、识别与处理</h4>
+<ul>
+    <li><strong>IET 相关疼痛/出血：</strong>约 15% 出现疼痛；胸膜腔出血约 3%–5%，多数仅需输血处理。若抗凝不能安全暂停，可用 tPA 5 mg 减量；全身性凝血障碍时避免使用。</li>
+    <li><strong>导管问题：</strong>脱管（加强固定）、堵塞（规律冲洗）、置管处感染（严格无菌操作）。</li>
+    <li><strong>手术并发症：</strong>持续漏气、心房颤动、残余腔隙；症状持续时间越长、分期越晚，风险越高。</li>
+</ul>
+
+<hr>
+
+<h3>特殊人群</h3>
+<ul>
+    <li><strong>创伤/残留血胸：</strong>脓胸风险较高；处理可包括再次置管、IET（非链激酶方案）以及有指征时早期 VATS。</li>
+    <li><strong>结核性脓胸（第 3 期）：</strong>厚纤维板限制药物穿透；最佳处理常需剥脱术联合抗结核治疗。部分患者可行 VATS，但与化脓性疾病相比，手术时间和失血量通常更多。</li>
+    <li><strong>真菌性脓胸：</strong>少见但严重，ICU 需求和病死率更高；需要胸膜腔穿透良好的抗真菌药，并常需外科感染源控制。</li>
+    <li><strong>肺移植受者：</strong>应尽早积极引流；因吻合口顾虑，谨慎使用 IET；手术往往采取较保守的剥脱策略，可容忍一定残余腔隙；隧道式留置导管有助于逐步复张。</li>
+    <li><strong>高出血风险/必须抗凝：</strong>优先考虑减量 tPA + DNase；若溶栓禁忌，可用生理盐水冲洗；如手术风险可接受，也可尽早 VATS。</li>
+</ul>
+
+<h3>证据与结局</h3>
+<p>关键证据包括：小口径与大口径引流管在主要结局上疗效相当，但 ≤14F 疼痛更少；与标准治疗相比，tPA + DNase 的 IET 可改善影像清除、减少手术和住院时间；胸膜腔冲洗在先导研究中可减轻影像负荷并降低外科转诊率；需手术时优先 VATS 而非开胸。对于病情稳定成人，尚无充分证据支持一开始即采用 VATS；比较早期 VATS 与 IET 的可行性研究提示二者存在临床均衡，确证性试验仍在进行。</p>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——初始评估与引流决策</h4>
+<div class="mermaid">
+graph TD
+    A["疑似胸膜腔感染"] --> B{"TUS：是否有可引流积液？"}
+    B -- "否" --> C["抗菌治疗并监测"]
+    B -- "是" --> D["诊断性穿刺（立即测 pH）"]
+    D --> E{"脓性或革兰染色/培养阳性？"}
+    E -- "是" --> F["置入 ≤14F 引流管 + 抗菌药"]
+    E -- "否" --> G{"检查 pH"}
+    G -- "≤7.20" --> F
+    G -- "7.21–7.39" --> H{"有高危特征？（LDH>900、低糖、复杂 TUS）"}
+    H -- "是" --> F
+    H -- "否" --> I["抗菌治疗 + 密切随访"]
+    G -- "≥7.40" --> I
+</div>
+
+<h4>算法 2——置管后的升级治疗</h4>
+<div class="mermaid">
+graph TD
+    A["基础治疗：≤14F 引流管 + 抗菌药"] --> B["约 48 小时复评"]
+    B --> C{"仍有积液并伴持续炎症？"}
+    C -- "否" --> D["继续治疗 / 规划拔管"]
+    C -- "是" --> E["增强 CT"]
+    E --> F{"病情不稳定或厚纤维板/第 3 期？"}
+    F -- "是" --> G["尽早外科会诊（VATS）"]
+    F -- "否" --> H{"IET 禁忌或高出血风险？"}
+    H -- "否" --> I["启动 IET（tPA 10 mg + DNase 5 mg）"]
+    H -- "是" --> J["生理盐水冲洗"]
+    I --> K{"结果：积液清除？"}
+    J --> K
+    K -- "是" --> L["继续抗菌药 / 规划拔管"]
+    K -- "否" --> M["外科会诊（VATS）"]
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<h4>表 1. 胸膜腔感染谱系——定义性特征</h4>
+<table>
+    <thead>
+        <tr>
+            <th>特征</th>
+            <th>单纯性肺炎旁积液</th>
+            <th>复杂性肺炎旁积液（CPPE）</th>
+            <th>脓胸</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>超声/CT</strong></td>
+            <td>无回声、自由流动</td>
+            <td>分隔、包裹、胸膜增厚（可有胸膜分离征）</td>
+            <td>与 CPPE 类似；常伴厚纤维板</td>
+        </tr>
+        <tr>
+            <td><strong>胸腔积液 pH</strong></td>
+            <td>&gt;7.20</td>
+            <td>≤7.20，或 7.21–7.39 且伴高危特征</td>
+            <td>可变；常 ≤7.20</td>
+        </tr>
+        <tr>
+            <td><strong>葡萄糖</strong></td>
+            <td>&gt;60 mg/dL</td>
+            <td>≤60 mg/dL（或 ≤4 mmol/L）</td>
+            <td>常降低</td>
+        </tr>
+        <tr>
+            <td><strong>微生物学</strong></td>
+            <td>阴性</td>
+            <td>可阴性或阳性</td>
+            <td>脓性和/或革兰染色/培养阳性</td>
+        </tr>
+        <tr>
+            <td><strong>典型处理</strong></td>
+            <td>单用抗菌药</td>
+            <td>置管引流（≤14F）± IET</td>
+            <td>置管引流 ± IET；外科评估</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>表 2. 经验性抗菌治疗方案</h4>
+<table>
+    <thead>
+        <tr>
+            <th>场景</th>
+            <th>需要覆盖的病原体</th>
+            <th>经验性方案示例</th>
+            <th>降阶梯与注意事项</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>社区获得性</strong></td>
+            <td>革兰阳性需氧菌 + 厌氧菌</td>
+            <td>阿莫西林-克拉维酸，可加甲硝唑/克林霉素；青霉素过敏者可用克林霉素 ± 头孢菌素</td>
+            <td>即使培养阴性也应保留厌氧菌覆盖；根据结果调整</td>
+        </tr>
+        <tr>
+            <td><strong>医院获得性/操作后</strong></td>
+            <td>革兰阳性菌、革兰阴性菌（必要时铜绿假单胞菌）、厌氧菌；考虑 MRSA</td>
+            <td>哌拉西林-他唑巴坦、头孢吡肟 + 甲硝唑，或碳青霉烯 + 万古霉素/利奈唑胺</td>
+            <td>若证实为单一链球菌感染且临床改善，应尽早降阶梯</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>表 3. 胸膜腔内酶治疗（IET）速览</h4>
+<table>
+    <thead>
+        <tr>
+            <th>要素</th>
+            <th>实践要点</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>标准剂量</strong></td>
+            <td>tPA 10 mg + DNase 5 mg，每日 2 次，最多 3 天（最多 6 次）；每次夹管约 1 小时</td>
+        </tr>
+        <tr>
+            <td><strong>减量方案</strong></td>
+            <td>高出血风险或抗凝无法暂停时，可考虑 tPA 5 mg + DNase 5 mg</td>
+        </tr>
+        <tr>
+            <td><strong>给药顺序</strong></td>
+            <td>可同时给药；避免单药（仅 tPA 或仅 DNase）</td>
+        </tr>
+        <tr>
+            <td><strong>抗凝</strong></td>
+            <td>如可行应暂停；若不能暂停，减量 tPA 并密切监测</td>
+        </tr>
+        <tr>
+            <td><strong>治疗失败</strong></td>
+            <td>完整疗程后仍有明显残余积液，应转外科处理</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>表 4. RAPID 评分（预测 90 天病死率）</h4>
+<table>
+    <thead>
+        <tr>
+            <th>组成</th>
+            <th>0 分</th>
+            <th>1 分</th>
+            <th>2 分</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>肾功能（尿素，mmol/L）</strong></td>
+            <td>&lt;5</td>
+            <td>5–8</td>
+            <td>&gt;8</td>
+        </tr>
+        <tr>
+            <td><strong>年龄（岁）</strong></td>
+            <td>&lt;50</td>
+            <td>50–70</td>
+            <td>&gt;70</td>
+        </tr>
+        <tr>
+            <td><strong>积液是否脓性</strong></td>
+            <td>脓性（0 分）</td>
+            <td>非脓性（1 分）</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>感染来源</strong></td>
+            <td>社区获得性</td>
+            <td>医院获得性</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>白蛋白（g/L）</strong></td>
+            <td>≥27</td>
+            <td>&lt;27</td>
+            <td>—</td>
+        </tr>
+    </tbody>
+</table>
+<p><em>风险分层：0–2 分为低危，3–4 分为中危，5–7 分为高危。</em></p>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <h4>病例 1——早期决策</h4>
+    <p>66 岁患者因右侧肺炎出现发热和胸膜性疼痛。TUS 显示中等量、无回声胸腔积液。诊断性穿刺后即时测得 pH 7.18。</p>
+    <p><strong>最佳答案：</strong>在同一次操作中置入 ≤14F 胸腔引流管并开始抗菌治疗。</p>
+    <p><strong>解析：</strong>pH ≤7.20 是提示必须引流的高危生化特征（技术上安全时）。即时测定 pH 可将穿刺直接转为置管，从而避免延误。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 2——48 小时检查点</h4>
+    <p>58 岁 CPPE 患者已置入 12F 猪尾导管，仍持续发热，CRP 仅下降 20%，CT 显示较大残余包裹腔。</p>
+    <p><strong>最佳答案：</strong>开始 tPA 10 mg + DNase 5 mg，每日 2 次，最多 3 天；若出血风险高，可考虑 tPA 5 mg。</p>
+    <p><strong>解析：</strong>约 48 小时仍有积液且炎症改善不足，应升级治疗。纤维脓性期首选 IET；若 IET 失败或以第 3 期机化特征为主，则转外科手术。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 3——抗凝限制</h4>
+    <p>72 岁患者因急性静脉血栓栓塞接受治疗剂量抗凝，无法暂停。置管后仍有残余 CPPE。</p>
+    <p><strong>最佳答案：</strong>减量 tPA 5 mg + DNase 5 mg 并严密监测；若出血风险不可接受，则采用生理盐水冲洗。</p>
+    <p><strong>解析：</strong>无法中断抗凝时，减量可降低出血风险；IET 禁忌时，冲洗是替代方案。</p>
+</div>
+
+<h3>题库（选择题）</h3>
+
+<p><strong>1. 关于胸膜腔感染，哪项陈述正确？</strong></p>
+<blockquote>答案：<strong>D。</strong>当代队列中病死率仍然显著；发病率上升，老年人尤其明显；非肺炎性机制（血行、膈下、医源性）并不少见。病情可在 24 小时内迅速进展。</blockquote>
+
+<p><strong>2. 右侧肺炎患者有无回声胸腔积液，即时胸腔积液 pH 为 7.18。下一步最佳处理？</strong></p>
+<blockquote>答案：<strong>B。</strong>pH ≤7.20 时，如安全应置入胸腔引流管；延迟引流会增加恶化风险。</blockquote>
+
+<p><strong>3. 置管引流 48 小时后，CT 显示仍有较大积液，CRP 仅下降 20%，患者生命体征稳定。下一步最佳处理？</strong></p>
+<blockquote>答案：<strong>B。</strong>约 48 小时进展不佳应升级治疗；稳定且处于纤维脓性期的患者适合 IET，而手术通常用于治疗失败或机化期第 3 期。</blockquote>
+
+<p><strong>4. 无法暂停抗凝的患者置管后仍有脓胸，哪种方案可以接受？</strong></p>
+<blockquote>答案：<strong>C。</strong>减量 tPA 配合标准剂量 DNase 可在降低出血风险的同时维持疗效；不推荐链激酶或单药治疗。</blockquote>
+
+<p><strong>5. IET 期间引流液变为粉红色，但患者稳定。最佳处理？</strong></p>
+<blockquote>答案：<strong>B。</strong>粉红色改变并不一定代表真正出血；改变治疗前应通过胸腔积液血细胞比容确认。</blockquote>
+
+<p><strong>6. 医院获得性胸膜腔感染，同时存在 MRSA 与铜绿假单胞菌风险，最佳经验性方案是什么？</strong></p>
+<blockquote>答案：<strong>B。</strong>初始应给予包括铜绿假单胞菌在内的广谱革兰阴性菌覆盖并联合 MRSA 覆盖；氨基糖苷类胸膜腔穿透差，复方磺胺甲噁唑的胸膜腔浓度也可能不足。</blockquote>
+
+<p><strong>7. 关于胸膜腔感染的胸腔引流管，哪项正确？</strong></p>
+<blockquote>答案：<strong>B。</strong>前瞻性资料显示小口径引流管在关键结局上疗效相近、疼痛更少；规律冲洗有助于维持通畅。</blockquote>
+
+<p><strong>8. 哪一发现最支持早期外科转诊？</strong></p>
+<blockquote>答案：<strong>C。</strong>机化期第 3 期伴厚脏层胸膜纤维板和肺不能复张，是尽早外科处理的典型指征，常采用 VATS 剥脱术。</blockquote>
+
+<p><strong>9. 关于结核性脓胸，哪项正确？</strong></p>
+<blockquote>答案：<strong>B。</strong>厚纤维板和高菌量会限制单纯药物治疗；常需剥脱术联合抗结核治疗，部分患者可采用 VATS。</blockquote>
+
+<p><strong>10. 肺移植受者早期发生胸膜腔感染，最合适的处理原则是什么？</strong></p>
+<blockquote>答案：<strong>B。</strong>早期感染源控制至关重要；因气道和血管吻合口顾虑，应谨慎使用 IET；剥脱术应相对保守，隧道式导管可帮助逐步复张。</blockquote>
+
+<p><strong>11. 关于影像，哪项正确？</strong></p>
+<blockquote>答案：<strong>B。</strong>TUS 可识别分隔与包裹并指导操作；CT 用于明确解剖，并常在升级治疗前实施。</blockquote>
+
+<p><strong>12. 哪种 IET 实践符合证据？</strong></p>
+<blockquote>答案：<strong>B。</strong>推荐标准剂量联合治疗；高出血风险时可减量 tPA。不推荐单药或链激酶。</blockquote>
+
+<h3>争议、实践差异与新兴证据</h3>
+<ul>
+    <li><strong>初始 VATS 与先置管/IET：</strong>现有证据受小样本试验及回顾性偏倚限制。共识倾向于稳定成人先用小口径置管，而不稳定或机化期患者尽早手术。比较早期 VATS 与 IET 的可行性试验提示二者均合理，确证性研究仍在进行。</li>
+    <li><strong>抗菌药疗程：</strong>传统上常用约 4 周；新兴试验提示充分感染源控制后可能采用更短疗程，但目前证据效能不足。</li>
+    <li><strong>胸膜腔冲洗：</strong>先导资料支持影像改善和外科转诊减少，但尚未证实病死率获益，仍需更大规模试验。</li>
+    <li><strong>内科胸腔镜：</strong>小型随机试验初步显示其术后住院时间可能短于 IET；常规应用前仍需更大研究。</li>
+</ul>
+
+<h3>要点核对表</h3>
+<ul>
+    <li>[ ] 用 TUS 确认积液并规划最安全的穿刺点。</li>
+    <li>[ ] 首次穿刺即刻测定 pH；若 pH ≤7.20，或液体脓性/革兰染色阳性/培养阳性，应转为置管。</li>
+    <li>[ ] 使用影像引导的 ≤14F 引流管，并规律冲洗。</li>
+    <li>[ ] 不等待培养结果，立即开始适当的经验性抗菌治疗，并及时调整。</li>
+    <li>[ ] 约 48 小时根据临床状况、炎症指标和必要时 CT 再评估。</li>
+    <li>[ ] 稳定的第 2 期疾病且仍有积液时，使用 tPA 10 mg + DNase 5 mg 每日 2 次；高出血风险可考虑 tPA 5 mg。</li>
+    <li>[ ] IET 禁忌时，考虑生理盐水冲洗。</li>
+    <li>[ ] 不稳定、机化期第 3 期/纤维板或 IET 失败时尽早联系外科；条件允许优先 VATS。</li>
+    <li>[ ] 基线计算 RAPID 评分，用于风险沟通及监护强度规划。</li>
+    <li>[ ] 安排 2–4 周和 8–12 周随访；临床恢复比影像完全消失更重要。</li>
+</ul>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>缩略语与术语</h3>
+    <dl>
+        <dt>CPPE</dt><dd>复杂性肺炎旁胸腔积液。</dd>
+        <dt>DNase</dt><dd>与 tPA 联合胸膜腔内给药的多奈酶 alfa。</dd>
+        <dt>IET</dt><dd>胸膜腔内酶治疗（tPA + DNase）。</dd>
+        <dt>IPC</dt><dd>留置胸膜导管。</dd>
+        <dt>LDH</dt><dd>乳酸脱氢酶。</dd>
+        <dt>RAPID</dt><dd>肾功能（尿素）、年龄、积液脓性、感染来源、营养（白蛋白）评分。</dd>
+        <dt>TUS</dt><dd>胸部超声。</dd>
+        <dt>VATS</dt><dd>电视辅助胸腔镜手术。</dd>
+    </dl>
+</div>
+
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Roberts ME, Rahman NM, Maskell NA, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):s1-s42.</li>
+<li>Mummadi SR, Stoller JK, Lopez R, Kailasam K, Gillespie CT, Hahn PY. Epidemiology of adult pleural disease in the United States. Chest. 2021;160(4):1534-1551.</li>
+<li>Arnold DT, Hamilton FW, Morris TT, et al. Epidemiology of pleural empyema in English hospitals and the impact of influenza. Eur Respir J. 2021;57(6):2003546.</li>
+<li>Rahman NM, Kahan BC, Miller RF, et al. A clinical score (RAPID) to identify those at risk for poor outcome at presentation in patients with pleural infection. Chest. 2014;145(4):848-855.</li>
+<li>Maskell NA, Davies CWH, Nunn AJ, et al. U.K. controlled trial of intrapleural streptokinase for pleural infection. N Engl J Med. 2005;352(9):865-874.</li>
+<li>Rahman NM, Maskell NA, West A, et al. Intrapleural use of tissue plasminogen activator and DNase in pleural infection. N Engl J Med. 2011;365(6):518-526.</li>
+<li>Chaddha U, Agrawal A, Davidoff F, et al. Use of fibrinolytics and deoxyribonuclease in adult patients with pleural empyema: a consensus statement. Lancet Respir Med. 2021.</li>
+<li>Akulian J, Bedawi EO, Abbas H, et al. Bleeding risk with combination intrapleural fibrinolytic and enzyme therapy in pleural infection. Chest. 2022;162(6):1384-1392.</li>
+<li>Hooper CE, Edey AJ, Wallis A, et al. Pleural irrigation trial (PIT): a randomized controlled pilot of pleural irrigation with normal saline versus standard care in pleural infection. Eur Respir J. 2015;46(2):456-463.</li>
+<li>Bedawi EO, Stavroulias D, Hedley E, et al. Early video-assisted thoracoscopic surgery or intrapleural enzyme therapy in pleural infection: a feasibility randomized controlled trial (MIST-3). Am J Respir Crit Care Med. 2023;208(12):1305-1315.</li>
+<li>Pan H, He J, Shen J, et al. Video-assisted thoracoscopic decortication versus open thoracotomy decortication for empyema: a meta-analysis. J Thorac Dis. 2017;9(7):2006-2014.</li>
+<li>Shen KR, Bribriesco A, Crabtree T, et al. The American Association for Thoracic Surgery consensus guidelines for the management of empyema. J Thorac Cardiovasc Surg. 2017;153(6):e129-e146.</li>
+<li>Menzies SM, Rahman NM, Wrightson JM, et al. Blood culture bottle culture of pleural fluid in pleural infection. Thorax. 2011;66(8):658-662.</li>
+<li>Heffner JE, Klein JS, Hampson C. Diagnostic utility and clinical application of imaging for pleural space infections. Chest. 2010;137(2):467-479.</li>
+<li>Kheir F, Thakore S, Mehta H, et al. Intrapleural fibrinolytic therapy versus early medical thoracoscopy for treatment of pleural infection: randomized controlled trial. Ann Am Thorac Soc. 2020;17(8):958-964.</li>
+<li>Bedawi EO, Ricciardi S, Hassan M, et al. ERS/ESTS statement on the management of pleural infection in adults. Eur Respir J. 2023;61(2):2201062.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

@@ -1,0 +1,564 @@
+<!DOCTYPE html><html lang="es"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broncoscopia periférica avanzada: sonda radial, navegación electromagnética y broncoscopia robótica</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style></head><body>
+
+    <h1>Broncoscopia periférica avanzada: sonda radial, navegación electromagnética y broncoscopia robótica</h1>
+
+    <p>Este capítulo aborda los métodos diagnósticos para las lesiones pulmonares periféricas (LPP) mediante ecografía endobronquial radial (rEBUS), navegación electromagnética (NEM) y broncoscopia asistida por robot (BAR). Se alinea con los dominios del examen de certificación de neumología intervencionista de la AABIP relativos a indicaciones de broncoscopia periférica, imagen y navegación, estrategias de anestesia y ventilación, complicaciones, seguridad radiológica e interpretación de la evidencia.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <p>Al finalizar este capítulo, el lector podrá:</p>
+    <ul>
+        <li>Seleccionar entre rEBUS, NEM, broncoscopia ultrafina y BAR según la presentación específica de la LPP.</li>
+        <li>Planificar la navegación con TC de cortes finos, interpretar el «signo del bronquio» y el «signo del vaso», y reducir la divergencia entre la TC y la anatomía corporal (CTBD).</li>
+        <li>Ejecutar de forma secuencial el registro, la navegación, la confirmación de la lesión y la toma de muestras en distintas plataformas.</li>
+        <li>Interpretar los patrones de rEBUS (concéntrico frente a excéntrico) y ajustar las herramientas y la trayectoria en consecuencia.</li>
+        <li>Aplicar estrategias anestésicas y ventilatorias que reduzcan la atelectasia y mejoren la confirmación de herramienta dentro de la lesión.</li>
+        <li>Anticipar, prevenir y tratar el sangrado, el neumotórax y la exposición a radiación.</li>
+        <li>Evaluar críticamente los datos y definiciones de rendimiento diagnóstico, e identificar situaciones en las que la imagen complementaria (fluoroscopia aumentada, TC de haz cónico) agrega valor.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>¿Por qué broncoscopia para las LPP?</strong> Menor riesgo de neumotórax que las vías transtorácicas y posibilidad de combinar diagnóstico y estadificación mediastínica en un solo evento anestésico.</li>
+            <li><strong>La planificación previa gana casos:</strong> Utilice TC de cortes finos (&lt;1 mm) cerca de la capacidad pulmonar total; determine la generación bronquial del blanco y registre la presencia de signo del bronquio. Si está ausente, siga el signo del vaso (haz broncovascular).</li>
+            <li><strong>La CTBD es el enemigo:</strong> Espere mayor divergencia en lóbulos inferiores y bajo anestesia general. Emplee maniobras de reclutamiento, PEEP de 8–12 cmH₂O (según tolerancia) y evite una FiO₂ alta cuando sea seguro para minimizar la atelectasia.</li>
+            <li><strong>El registro importa:</strong> Mantenga el broncoscopio centrado, evite el contacto con la pared o el acodamiento, confirme la alineación con la carina principal y complete las secuencias específicas de la plataforma antes de navegar.</li>
+            <li><strong>Los patrones de rEBUS predicen el éxito:</strong>
+                <ul>
+                    <li>Concéntrico: la herramienta está centrada en la lesión.</li>
+                    <li>Excéntrico: la herramienta está adyacente a la lesión.</li>
+                    <li>Atelectasia: vigile imitadores, como broncogramas aéreos en tejido colapsado.</li>
+                </ul>
+            </li>
+            <li><strong>La imagen complementaria corrige la desalineación:</strong> La fluoroscopia aumentada/tomosíntesis o la TC de haz cónico (CBCT) pueden corregir la CTBD y confirmar que la herramienta está dentro de la lesión.</li>
+            <li><strong>La robótica amplía el alcance y la estabilidad:</strong>
+                <ul>
+                    <li>Monarch y Galaxy: basadas en NEM; permiten visión continua durante la toma de muestras.</li>
+                    <li>Ion: detección de forma; exige retirar la sonda de visión durante la toma de muestras.</li>
+                </ul>
+            </li>
+            <li><strong>Los broncoscopios ultrafinos llegan más distalmente:</strong> Los equipos de aproximadamente 3,0 mm de diámetro externo y canal de 1,7 mm alcanzan bronquios de alrededor de quinta generación y admiten rEBUS y miniherramientas.</li>
+            <li><strong>Estrategia de muestreo:</strong> Comience con una aguja (para crear un trayecto si no existe signo del bronquio), luego agregue pinza y cepillo; considere criobiopsia cuando se requiera mayor arquitectura tisular.</li>
+            <li><strong>Perfil de complicaciones:</strong> Las tasas de neumotórax con BAR suelen ser bajas. El sangrado suele ser leve a moderado y se trata con enclavamiento, suero salino frío, epinefrina tópica, ácido tranexámico o balones de taponamiento.</li>
+            <li><strong>Seguridad radiológica:</strong> Respete ALARA. Use fluoroscopia pulsada y colimación; aumente la distancia respecto de la fuente de rayos X; utilice protección ocular, tiroidea y corporal.</li>
+            <li><strong>Las definiciones de rendimiento varían mucho:</strong> El «rendimiento diagnóstico» puede parecer inflado cuando se emplean definiciones liberales o se incluyen resultados de seguimiento. Identifique siempre la definición específica del ensayo.</li>
+            <li><strong>Trampas frecuentes del examen:</strong> Confundir atelectasia en rEBUS con tumor; confiar en la ruta virtual por encima de la anatomía endoscópica en tiempo real; no volver a registrar después de cambios importantes de ventilación o posición.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>Los nódulos pulmonares son frecuentes en la TC de tórax (aparecen aproximadamente en una de cada cinco exploraciones). Los ensayos de detección informan tasas altas de resultados positivos y demostraron beneficios en mortalidad con la detección por TC, lo que aumenta los nódulos incidentales y detectados por cribado y, por tanto, la necesidad de un diagnóstico broncoscópico seguro y preciso.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Indicaciones:</strong> Diagnóstico de LPP sólidas o subsólidas; integración con estadificación mediastínica en la misma sesión; acceso a lesiones fuera del alcance de broncoscopios convencionales; necesidad de reducir el riesgo de neumotórax frente a la biopsia transtorácica; localización para posibles intervenciones terapéuticas, como ablación.</p>
+    <p><strong>Contraindicaciones:</strong> Por lo general son relativas, similares a las de la broncoscopia estándar: hipoxemia grave (p. ej., P/F &lt;70 o FiO₂ &gt;0,9); coagulopatía o trombocitopenia no corregible (plaquetas &lt;20.000); inestabilidad cardiovascular (choque, isquemia activa, infarto reciente, hipertensión pulmonar grave); presión intracraneal elevada o asma aguda. Nota: la broncoscopia con navegación electromagnética suele ser segura en pacientes con dispositivos electrónicos cardíacos implantables, dado el riesgo mínimo de interferencia electromagnética.</p>
+
+    <h4>Evaluación preprocedimiento</h4>
+    <p><strong>Planificación por TC:</strong> Una TC inspiratoria con cortes finos (&lt;1 mm), contención de la respiración y volumen cercano a la capacidad pulmonar total es esencial para segmentar óptimamente la vía aérea y generar la ruta. Identifique el signo del bronquio (vía aérea que conduce directamente a la lesión) o el signo del vaso (arteria acompañante que indica la probable presencia de una vía aérea asociada cuando el bronquio no se visualiza).</p>
+    <p><strong>Mapa mental:</strong> Documente las ramas sucesivas de la vía aérea y la posición de la lesión, anticipando inexactitudes del software y CTBD.</p>
+    <p><strong>Configuración de la sala:</strong> Asegure una camilla compatible con fluoroscopia; ubique la torre robótica, la torre de broncoscopia, la máquina de anestesia y el arco en C/CBCT; planifique el flujo de evaluación rápida in situ (ROSE) y de las muestras. Para NEM, retire metal de las proximidades del generador de campo durante el registro.</p>
+    <p><strong>Anestesia y ventilación:</strong> Se prefiere anestesia general con anestesia intravenosa total (TIVA) para procedimientos periféricos guiados y robótica. Use maniobras de reclutamiento y PEEP de 8–12 cmH₂O si la hemodinámica lo permite. Titule la FiO₂ al mínimo necesario para mantener saturaciones seguras y reducir la atelectasia por absorción. Un volumen corriente menor con frecuencia respiratoria mayor ayuda a reducir el movimiento de la vía aérea.</p>
+
+    <h4>Equipo y configuración (tamaños y características seleccionados)</h4>
+    <ul>
+        <li><strong>rEBUS:</strong> Sonda de aproximadamente 1,4 mm; imagen de 360°; el operador debe distinguir patrones concéntricos, excéntricos y de atelectasia.</li>
+        <li><strong>Broncoscopia ultrafina:</strong> Diámetro externo de alrededor de 3,0 mm con canal de 1,7 mm; admite rEBUS, minicriosonda y aguja; alcanza bronquios más distales que los broncoscopios finos.</li>
+        <li><strong>Plataformas de NEM:</strong> Planificación previa de la ruta en TC de cortes finos; registro con el paciente; uso de catéteres direccionables y vainas guía. Los sistemas modernos integran fluoroscopia aumentada, como tomosíntesis, para actualizar la posición de la lesión durante el procedimiento.</li>
+        <li><strong>Plataformas de BAR:</strong>
+            <ul>
+                <li><strong>Monarch™:</strong> Vaina telescópica (6,0 mm de diámetro externo) y broncoscopio interno (4,2 mm de diámetro externo; canal de 2,1 mm); visión continua durante el muestreo; seguimiento híbrido basado en NEM.</li>
+                <li><strong>Ion™:</strong> Catéter de 3,5 mm de diámetro externo con canal de 2,0 mm; detección de forma; exige retirar la sonda de visión para el muestreo; brújula endoluminal para orientación.</li>
+                <li><strong>Galaxy™:</strong> Broncoscopio desechable de 4,0 mm con canal de 2,1 mm; basado en NEM; fluoroscopia aumentada integrada (TiLT) para corregir la CTBD en tiempo real.</li>
+            </ul>
+        </li>
+        <li><strong>Imagen complementaria:</strong>
+            <ul>
+                <li><strong>Fluoroscopia aumentada/tomosíntesis:</strong> Actualiza la ubicación del blanco y facilita la confirmación de «herramienta dentro de la lesión».</li>
+                <li><strong>CBCT móvil o fija / O-arm:</strong> Proporciona imagen tridimensional intraoperatoria; confirma la relación entre herramienta y blanco; en muchos protocolos, la dosis por giro es similar a la de una TC de baja dosis.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso y lista de verificación</h3>
+    <ol>
+        <li><strong>Planificación preoperatoria:</strong> Revise la TC; marque el blanco; elija una ruta que favorezca bifurcaciones graduales; anticipe giros cerrados y movimiento respiratorio en lóbulos inferiores.</li>
+        <li><strong>Anestesia y ventilación:</strong> Intube con un tubo endotraqueal de tamaño adecuado (≥8,0 mm cuando sea posible para robótica). Realice reclutamiento; ajuste PEEP a 8–12 cmH₂O; minimice la FiO₂ manteniendo la seguridad.</li>
+        <li><strong>Inspección y limpieza de la vía aérea:</strong> Use un broncoscopio convencional para aspirar secreciones con prudencia y evitar inducir atelectasia.</li>
+        <li><strong>Registro:</strong> Complete el registro específico de la plataforma (alineación de carina, pasadas por bronquio contralateral, mapeo lobar y segmentario).</li>
+        <li><strong>Navegación:</strong> Avance bajo visión endoscópica en tiempo real; mantenga el broncoscopio centrado; evite acodamiento y traumatismo de pared; utilice la vista previa de la ruta cuando esté disponible.</li>
+        <li><strong>Confirmación de la lesión:</strong>
+            <ul>
+                <li>Evalúe el patrón de rEBUS (concéntrico mejor que excéntrico) y la profundidad; vigile imitadores de atelectasia, como broncogramas aéreos.</li>
+                <li>Use fluoroscopia aumentada o CBCT para corregir la CTBD y confirmar herramienta dentro de la lesión.</li>
+            </ul>
+        </li>
+        <li><strong>Muestreo:</strong> Comience con aguja (crea un trayecto cuando no hay signo del bronquio), luego pinza ± cepillo; considere criobiopsia para preservar arquitectura, en especial en lesiones subsólidas. Use ROSE para orientar las pasadas (a menudo 3–4 pasadas con aguja antes de cambiar de herramienta).</li>
+        <li><strong>Resolución de problemas:</strong> Si el colapso impide el avance, inyecte pequeños volúmenes de aire por el canal de trabajo para ferulizar las vías aéreas distales; vuelva a reclutar y a registrar después de cambios importantes.</li>
+        <li><strong>Preparación para hemostasia:</strong> Tenga disponibles epinefrina, ácido tranexámico y balones de taponamiento; enclave la vaina en la vía aérea más distal para confinar cualquier sangrado.</li>
+        <li><strong>Después del procedimiento:</strong> Restablezca los parámetros ventilatorios basales; vigile neumotórax y sangrado; complete el retiro del equipo de protección radiológica y documente la dosis.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>CTBD:</strong> Espere mayor divergencia en lóbulos inferiores. Repita tomosíntesis o CBCT; ajuste la trayectoria; repita el reclutamiento; mantenga parámetros ventilatorios constantes durante imagen y muestreo.</li>
+        <li><strong>Interpretación errónea de atelectasia en rEBUS:</strong> Busque broncogramas aéreos hiperecogénicos y patrones uniformes que sugieran colapso, no tumor.</li>
+        <li><strong>Colapso de la vía aérea distal:</strong> Use pequeñas inyecciones de aire (p. ej., unos 20 mL) por el canal de trabajo para mantener abiertas las vías; evite suero salino si es crucial la calidad de rEBUS o CBCT.</li>
+        <li><strong>Inestabilidad del broncoscopio durante el muestreo:</strong> En sistemas telescópicos, «estacione» la vaina a nivel segmentario; avance el broncoscopio interno o las herramientas sobre una guía visible.</li>
+        <li><strong>Interferencia con NEM:</strong> Retire metal del campo; verifique la integridad del sensor; considere repetir el registro si cambió de forma importante la posición del arco en C o la mesa.</li>
+    </ul>
+
+    <h3>Complicaciones: prevención, reconocimiento y tratamiento</h3>
+    <ul>
+        <li><strong>Sangrado:</strong> Enclavamiento; suero salino frío; epinefrina tópica (0,1 mg/mL × 4 mL); ácido tranexámico (250–500 mg); taponamiento con balón cuando sea necesario. Escale a broncoscopio terapéutico si se precisa, preservando el control de la vía aérea.</li>
+        <li><strong>Neumotórax:</strong> Incidencia baja con BAR; enclave la vaina distalmente; mantenga PEEP con prudencia; considere una pequeña instilación de suero salino al final para reducir el riesgo de fuga aérea.</li>
+        <li><strong>Radiación:</strong> Siga ALARA; use fluoroscopia pulsada y colimación estrecha; maximice la distancia a la fuente; utilice delantal, protector tiroideo y gafas plomadas.</li>
+    </ul>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>Lesiones de lóbulos inferiores, IMC alto o casos prolongados:</strong> Anticipe más CTBD y atelectasia; considere decúbito lateral con el lado del blanco hacia arriba cuando se emplee TC móvil para reducir el colapso dependiente.</li>
+        <li><strong>Anatomía alterada tras resección:</strong> Algunos sistemas permiten registro parcial limitado a los lóbulos restantes.</li>
+        <li><strong>Enfisema con vías aéreas colapsables:</strong> La ferulización mediante inyección de aire y la titulación cuidadosa de PEEP pueden facilitar la navegación distal.</li>
+        <li><strong>Lesiones subsólidas o en vidrio esmerilado:</strong> A menudo no son visibles por fluoroscopia; dependa de CBCT para confirmación y considere criobiopsia para histoarquitectura.</li>
+    </ul>
+
+    <h3>Evidencia y resultados</h3>
+    <ul>
+        <li><strong>rEBUS:</strong> El rendimiento global es cercano al 70 %, con mayor rendimiento en vistas concéntricas que excéntricas; la visualización robótica puede reducir esta diferencia en algunas series.</li>
+        <li><strong>NEM:</strong> Grandes cohortes muestran mejor rendimiento cuando se combina con rEBUS e imagen aumentada. La NEM moderna con tomosíntesis ha alcanzado rendimiento diagnóstico no inferior a la biopsia transtorácica guiada por TC en datos aleatorizados, con tasas de neumotórax muy inferiores.</li>
+        <li><strong>BAR:</strong> Las plataformas muestran alta tasa de navegación exitosa y baja tasa de complicaciones; datos prospectivos y multicéntricos informan rendimientos habitualmente entre mediados de los 70 y mediados de los 80 %, cuando se combinan con rEBUS o imagen tridimensional.</li>
+        <li><strong>Las definiciones importan:</strong> Definiciones estrictas frente a liberales pueden cambiar el rendimiento comunicado en más de 20 puntos porcentuales; consensos recientes estandarizan la presentación de resultados.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1 — Evaluación de una lesión pulmonar periférica para muestreo broncoscópico</h4>
+    <div class="mermaid">
+graph TD
+    A["Obtener TC de cortes finos"] --> B["Identificar signo del bronquio o del vaso"]
+    B --> C["Elegir rEBUS / NEM / BAR"]
+    C --> D["Optimizar ventilación (reclutamiento, PEEP, FiO2)"]
+    D --> E["Registrar y navegar"]
+    E --> F["Confirmar con rEBUS (concéntrico) +/- fluoroscopia aumentada/CBCT"]
+    F --> G["Tomar muestras (aguja primero)"]
+    G --> H["Evaluación ROSE"]
+    H -->|Diagnóstica| I["Finalizar y vigilar"]
+    H -->|No diagnóstica| J["Repetir imagen (CBCT/tomosíntesis) y ajustar plan"]
+    J --> F
+    </div>
+
+    <h4>Algoritmo 2 — Mitigación de divergencia TC-cuerpo y atelectasia</h4>
+    <div class="mermaid">
+graph TD
+    A["Sospecha de divergencia TC-cuerpo"] --> B["Volver a reclutar y revisar PEEP/FiO2"]
+    B --> C["Mantener constantes los parámetros ventilatorios"]
+    C --> D["Obtener imagen aumentada / tomosíntesis"]
+    D --> E["Ajustar trayectoria del broncoscopio"]
+    E --> F["Opcional: inyectar aire en bronquios distales"]
+    F --> G["Volver a confirmar herramienta dentro de la lesión"]
+    G --> H["Proceder al muestreo"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y cuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Plataformas robóticas y de navegación: resumen</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Monarch™</th>
+                <th>Ion™</th>
+                <th>Galaxy™</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Guía</strong></td>
+                <td>NEM híbrida con señales ópticas</td>
+                <td>Detección de forma</td>
+                <td>NEM + tomosíntesis integrada</td>
+            </tr>
+            <tr>
+                <td><strong>Visualización durante el muestreo</strong></td>
+                <td>Continua</td>
+                <td>Se retira la sonda de visión para introducir herramientas</td>
+                <td>Continua</td>
+            </tr>
+            <tr>
+                <td><strong>Dimensiones</strong></td>
+                <td>Vaina 6,0 mm DE; broncoscopio 4,2 mm DE; canal 2,1 mm</td>
+                <td>Catéter 3,5 mm DE; canal 2,0 mm</td>
+                <td>Broncoscopio 4,0 mm DE; canal 2,1 mm</td>
+            </tr>
+            <tr>
+                <td><strong>Maniobra distal</strong></td>
+                <td>Avance telescópico alternante sobre la vaina</td>
+                <td>Articulación fina; brújula endoluminal</td>
+                <td>NEM + actualización del blanco en tiempo real</td>
+            </tr>
+            <tr>
+                <td><strong>Notas</strong></td>
+                <td>Estacionar la vaina reduce neumotórax y dispersión del sangrado</td>
+                <td>No se afecta por interferencia electromagnética</td>
+                <td>Carro único y broncoscopio de un solo uso</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="algorithm-note">
+        <p><strong>Abreviaturas:</strong> NEM, navegación electromagnética; DE, diámetro externo; PTX, neumotórax.</p>
+    </div>
+
+    <h4>Tabla 2. Patrones de rEBUS y conducta</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Patrón de rEBUS</th>
+                <th>Interpretación</th>
+                <th>Conducta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Concéntrico</strong> (anillo hipoecogénico alrededor de la sonda)</td>
+                <td>Herramienta centrada dentro de la lesión</td>
+                <td>Tomar muestras: mayor rendimiento</td>
+            </tr>
+            <tr>
+                <td><strong>Excéntrico</strong> (interfaz con contacto parcial)</td>
+                <td>Adyacente a la lesión</td>
+                <td>Microajustar la trayectoria; considerar inyección de aire; confirmar con imagen</td>
+            </tr>
+            <tr>
+                <td><strong>Patrón homogéneo con puntos hiperecogénicos</strong></td>
+                <td>Imitador de atelectasia (broncogramas aéreos)</td>
+                <td>Reclutar; ajustar PEEP/FiO₂; evitar clasificación errónea; repetir imagen</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Ajustes anestésicos y ventilatorios que facilitan la navegación</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Fase</th>
+                <th>Consejo práctico</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Antes de la intubación</strong></td>
+                <td>Evitar preoxigenación prolongada con FiO₂ al 100 % cuando sea seguro; planificar tubo endotraqueal ≥8,0 mm para herramientas de BAR</td>
+            </tr>
+            <tr>
+                <td><strong>Después de la intubación</strong></td>
+                <td>Maniobra de reclutamiento (p. ej., presión &gt;20 cmH₂O durante &gt;20 s)</td>
+            </tr>
+            <tr>
+                <td><strong>Mantenimiento</strong></td>
+                <td>PEEP 8–12 cmH₂O si la hemodinámica lo permite; volumen corriente bajo con mayor frecuencia; minimizar FiO₂ para mantener SpO₂ segura; mantener parámetros constantes durante imagen y muestreo</td>
+            </tr>
+            <tr>
+                <td><strong>Imagen</strong></td>
+                <td>Contención respiratoria a la presión objetivo durante tomosíntesis/CBCT; no mover el arco en C o la mesa sin repetir el registro</td>
+            </tr>
+            <tr>
+                <td><strong>Preparación para hemostasia</strong></td>
+                <td>Disponer de suero salino frío, epinefrina 0,1 mg/mL, ácido tranexámico 250–500 mg y balón de taponamiento</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Una mujer de 64 años con un nódulo de 14 mm en el lóbulo inferior derecho y sin signo del bronquio está programada para BAR. Bajo anestesia general, rEBUS no muestra señal en el blanco virtual.</p>
+        <p><strong>¿Cuál es el siguiente mejor paso?</strong></p>
+        <p><strong>Respuesta: C. Realizar reclutamiento y optimizar PEEP, seguido de tomosíntesis para actualizar el blanco.</strong></p>
+        <p><strong>Fundamento:</strong> La CTBD y la atelectasia son frecuentes en lóbulos inferiores bajo anestesia general. El reclutamiento, la PEEP y la tomosíntesis pueden volver a alinear el blanco y confirmar herramienta dentro de la lesión antes de tomar muestras.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Un hombre de 53 años con una opacidad en vidrio esmerilado mixta de 10 mm en el lóbulo superior derecho se somete a BAR con Ion. La lesión no se observa por fluoroscopia y rEBUS es equívoca.</p>
+        <p><strong>¿Cuál es la mejor forma de confirmar herramienta dentro de la lesión?</strong></p>
+        <p><strong>Respuesta: B. CBCT con contención respiratoria y después criobiopsia.</strong></p>
+        <p><strong>Fundamento:</strong> Las lesiones subsólidas suelen ser invisibles por fluoroscopia; la CBCT proporciona confirmación tridimensional y facilita la criobiopsia para obtener arquitectura.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3</h4>
+        <p>Durante una biopsia con pinza de una lesión periférica mediante Monarch, un sangrado en rezumamiento oculta el campo.</p>
+        <p><strong>¿Manejo inmediato?</strong></p>
+        <p><strong>Respuesta: B. Enclavar la vaina distalmente, aplicar suero salino frío y aspiración; considerar epinefrina tópica.</strong></p>
+        <p><strong>Fundamento:</strong> El enclavamiento confina el sangrado; los agentes tópicos y la aspiración son medidas de primera línea.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas (opción múltiple)</h3>
+    <ol>
+        <li>
+            <strong>Siguiente mejor paso (navegación).</strong> Durante broncoscopia con NEM, el registro se completa, pero la endoscopia en tiempo real muestra anatomía virtual desalineada en ramas subsegmentarias.
+            <ol type="A">
+                <li>Confiar en el software y continuar</li>
+                <li>Volver a registrar solo en la carina principal</li>
+                <li>Reorientar con la visión broncoscópica en tiempo real y la «vista previa de ruta»; evitar contacto con la pared</li>
+                <li>Aumentar FiO₂ a 1,0</li>
+                <li>Abortar y reprogramar</li>
+            </ol>
+            <p><strong>Respuesta: C.</strong> La visualización en tiempo real guía la navegación; utilice las funciones de vista previa y evite el acodamiento.</p>
+        </li>
+        <li>
+            <strong>Resolución de problemas (CTBD).</strong> Durante BAR para una lesión de lóbulo inferior, rEBUS es negativa pese a una navegación «en el blanco».
+            <ol type="A">
+                <li>Aumentar la aspiración</li>
+                <li>Realizar reclutamiento, confirmar PEEP y obtener tomosíntesis/CBCT</li>
+                <li>Proceder a biopsia ciega con pinza</li>
+                <li>Cambiar a broncoscopia rígida</li>
+                <li>Extubar y repetir con sedación moderada</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong></p>
+        </li>
+        <li>
+            <strong>Indicaciones.</strong> ¿Qué escenario favorece más la biopsia broncoscópica que la transtorácica?
+            <ol type="A">
+                <li>Lesión posterior de 14 mm adosada a pleura en pulmón normal</li>
+                <li>Lesión de 28 mm en lóbulo superior con adenopatías mediastínicas voluminosas que requieren estadificación</li>
+                <li>Nódulo profundo de 8 mm en lóbulo inferior de un pulmón enfisematoso con bullas</li>
+                <li>Cambios intersticiales difusos sin nódulo definido</li>
+                <li>Lesión cavitada grande adyacente a la pared torácica</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong> La broncoscopia permite diagnosticar y estadificar en una misma sesión.</p>
+        </li>
+        <li>
+            <strong>Interpretación de rEBUS.</strong> Se obtiene una vista concéntrica. ¿Cuál es la acción inmediata más apropiada?
+            <ol type="A">
+                <li>Cambiar exclusivamente a criobiopsia</li>
+                <li>Proceder con aguja y luego pinza, manteniendo la alineación</li>
+                <li>Volver a registrar antes de tomar muestras</li>
+                <li>Suponer atelectasia y cambiar de sitio</li>
+                <li>Inyectar suero salino para mejorar la imagen</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong></p>
+        </li>
+        <li>
+            <strong>Anestesia y ventilación.</strong> Para reducir la atelectasia durante BAR, el método con mejor respaldo es:
+            <ol type="A">
+                <li>Volumen corriente alto, frecuencia baja y FiO₂ 1,0</li>
+                <li>Maniobra de reclutamiento y PEEP 8–12 cmH₂O con la FiO₂ mínima necesaria</li>
+                <li>PEEP cero y períodos de apnea</li>
+                <li>Anestesia con óxido nitroso</li>
+                <li>Preoxigenación prolongada con FiO₂ 1,0</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong></p>
+        </li>
+        <li>
+            <strong>Matiz de plataforma.</strong> ¿Qué afirmación es correcta?
+            <ol type="A">
+                <li>Ion ofrece visualización endoscópica continua durante el muestreo</li>
+                <li>Monarch exige retirar la sonda de visión para tomar muestras</li>
+                <li>Galaxy integra fluoroscopia aumentada para corregir CTBD durante el procedimiento</li>
+                <li>Todas las plataformas son autónomas después del registro</li>
+                <li>Ninguna permite usar rEBUS</li>
+            </ol>
+            <p><strong>Respuesta: C.</strong></p>
+        </li>
+        <li>
+            <strong>Control del sangrado.</strong> El manejo inicial más apropiado del sangrado moderado tras muestreo transbronquial es:
+            <ol type="A">
+                <li>Solo presión positiva</li>
+                <li>Vasopresina nebulizada</li>
+                <li>Enclavar la vaina distalmente, suero frío y aspiración; considerar epinefrina tópica o ácido tranexámico</li>
+                <li>Colocación inmediata de tubo torácico</li>
+                <li>Posición de Trendelenburg</li>
+            </ol>
+            <p><strong>Respuesta: C.</strong></p>
+        </li>
+        <li>
+            <strong>Seguridad radiológica.</strong> ¿Qué reduce con mayor eficacia la dosis del operador?
+            <ol type="A">
+                <li>Series prolongadas de fluoroscopia continua</li>
+                <li>Permanecer más cerca del tubo de rayos X</li>
+                <li>Colimación, fluoroscopia pulsada y máxima distancia a la fuente</li>
+                <li>Retirar el protector tiroideo para mayor comodidad</li>
+                <li>Cambiar a intensificador de imagen analógico</li>
+            </ol>
+            <p><strong>Respuesta: C.</strong></p>
+        </li>
+        <li>
+            <strong>Secuencia de muestreo.</strong> Cuando no hay signo del bronquio, la primera herramienta suele ser:
+            <ol type="A">
+                <li>Pinza de biopsia</li>
+                <li>Aguja para crear un trayecto, seguida de pinza/cepillo</li>
+                <li>Solo cepillo</li>
+                <li>Solo lavado broncoalveolar</li>
+                <li>Solo criobiopsia</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong></p>
+        </li>
+        <li>
+            <strong>Situación especial.</strong> Paciente enfisematoso con colapso distal durante la navegación: maniobra más útil:
+            <ol type="A">
+                <li>Aspiración de alto flujo</li>
+                <li>Pequeña inyección de aire por el canal de trabajo para ferulizar la vía aérea</li>
+                <li>Instilar 20–30 mL de suero salino para opacificar el pulmón</li>
+                <li>Eliminar PEEP</li>
+                <li>Conversión inmediata a biopsia percutánea</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong></p>
+        </li>
+        <li>
+            <strong>Definiciones de rendimiento.</strong> Las definiciones liberales pueden:
+            <ol type="A">
+                <li>Reducir el rendimiento comunicado al excluir resultados de seguimiento</li>
+                <li>Aumentar el rendimiento comunicado al contar el seguimiento como diagnóstico</li>
+                <li>No modificar el rendimiento comunicado</li>
+                <li>Aplicarse solo a estudios robóticos</li>
+                <li>Aplicarse solo a nódulos en vidrio esmerilado</li>
+            </ol>
+            <p><strong>Respuesta: B.</strong></p>
+        </li>
+        <li>
+            <strong>Tasas de complicaciones (BAR).</strong> ¿Qué afirmación es más exacta?
+            <ol type="A">
+                <li>El neumotórax es frecuente (&gt;10 %) en todas las cohortes de BAR</li>
+                <li>Es frecuente el sangrado que requiere toracotomía</li>
+                <li>Las tasas de neumotórax suelen ser bajas; el enclavamiento y las plataformas estables pueden reducir el riesgo</li>
+                <li>La radiación es insignificante, por lo que la protección es opcional</li>
+                <li>La BAR no puede usarse con CBCT</li>
+            </ol>
+            <p><strong>Respuesta: C.</strong></p>
+        </li>
+    </ol>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>¿Mejora la robótica el rendimiento frente a la NEM de última generación?</strong> Los datos comparativos sugieren rendimientos diagnósticos similares cuando la NEM se combina con tomosíntesis, aunque la robótica puede aportar ventajas de alcance, estabilidad y control de herramientas.</li>
+        <li><strong>¿Cuánto mejoran los resultados las modalidades de imagen complementaria?</strong> Corrigen de forma fiable la CTBD y confirman herramienta dentro de la lesión, pero su efecto incremental sobre el rendimiento varía entre estudios y depende de las definiciones y la mezcla de casos.</li>
+        <li><strong>¿Cuál es el conjunto óptimo de herramientas?</strong> Agujas y pinzas siguen siendo fundamentales; la criobiopsia es prometedora para lesiones subsólidas, pero agrega costo y consideraciones de sangrado.</li>
+        <li><strong>Definiciones de rendimiento:</strong> Sin definiciones estandarizadas, las cifras principales no son comparables; consensos recientes buscan armonizar los informes.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Lista de verificación final</h3>
+    <ul>
+        <li>[ ] TC de cortes finos cerca de capacidad pulmonar total; marcar signo del bronquio o del vaso; construir un mapa mental.</li>
+        <li>[ ] Elegir rEBUS/NEM/BAR según tamaño, ubicación, acceso y recursos locales.</li>
+        <li>[ ] Anestesia general con TIVA; reclutamiento y PEEP 8–12 cmH₂O; minimizar FiO₂ de forma segura.</li>
+        <li>[ ] Completar un registro robusto; centrar el broncoscopio; evitar contacto con pared y acodamiento.</li>
+        <li>[ ] Confirmar la lesión con rEBUS (buscar patrón concéntrico) o fluoroscopia aumentada/CBCT.</li>
+        <li>[ ] Comenzar con aguja cuando no hay signo del bronquio; agregar pinza/cepillo; considerar criobiopsia.</li>
+        <li>[ ] Usar ROSE para orientar las pasadas; repetir imagen si no es diagnóstica antes de abandonar.</li>
+        <li>[ ] Enclavar la vaina para hemostasia; tener preparados suero frío, epinefrina, ácido tranexámico y balón.</li>
+        <li>[ ] Mantener disciplina radiológica: fluoroscopia pulsada, colimación, distancia y protección.</li>
+        <li>[ ] Documentar los parámetros ventilatorios y mantenerlos constantes durante imagen y muestreo.</li>
+        <li>[ ] Comprender cómo se define el rendimiento en los informes propios y en los ensayos citados.</li>
+        <li>[ ] Planificar la ergonomía de la sala y las funciones del equipo antes de que ingrese el paciente.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abreviaturas y glosario</h3>
+        <dl>
+            <dt>AABIP</dt><dd>American Association for Bronchology and Interventional Pulmonology</dd>
+            <dt>ALARA</dt><dd>Tan bajo como sea razonablemente alcanzable (seguridad radiológica)</dd>
+            <dt>CBCT</dt><dd>Tomografía computarizada de haz cónico</dd>
+            <dt>CTBD</dt><dd>Divergencia entre la TC y la anatomía corporal</dd>
+            <dt>NEM/ENB</dt><dd>Broncoscopia con navegación electromagnética</dd>
+            <dt>AG</dt><dd>Anestesia general</dd>
+            <dt>GGO</dt><dd>Opacidad en vidrio esmerilado</dd>
+            <dt>PEEP</dt><dd>Presión positiva al final de la espiración</dd>
+            <dt>LPP</dt><dd>Lesión pulmonar periférica</dd>
+            <dt>BAR</dt><dd>Broncoscopia asistida por robot</dd>
+            <dt>rEBUS</dt><dd>Ecografía endobronquial radial</dd>
+            <dt>ROSE</dt><dd>Evaluación rápida in situ</dd>
+            <dt>TIVA</dt><dd>Anestesia intravenosa total</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>Referencias</h3>
+        <ol>
+            <li>Gould MK, Tang T, et al. Recent trends in the identification of incidental pulmonary nodules. Am J Respir Crit Care Med. 2015;192(10):1208‑1214.</li>
+            <li>National Lung Screening Trial Research Team; Church TR, Black WC, et al. Results of initial low‑dose computed tomographic screening for lung cancer. N Engl J Med. 2013;368(21):1980‑1991.</li>
+            <li>de Koning HJ, van der Aalst CM, et al. Reduced lung‑cancer mortality with volume CT screening in a randomized trial. N Engl J Med. 2020;382(6):503‑513.</li>
+            <li>Ali MS, Sethi J, et al. Computed tomography bronchus sign and the diagnostic yield of guided bronchoscopy for peripheral pulmonary lesions: a systematic review and meta‑analysis. Ann Am Thorac Soc. 2018;15(8):978‑987.</li>
+            <li>Ho E, Cho RJ, et al. The feasibility of using the “artery sign” for pre‑procedural planning in navigational bronchoscopy for parenchymal pulmonary lesion sampling. Diagnostics (Basel). 2022;12(12):3059.</li>
+            <li>Sagar AS, Sabath BF, et al. Incidence and location of atelectasis developed during bronchoscopy under general anesthesia: the I‑LOCATE trial. Chest. 2020;158(6):2658‑2666.</li>
+            <li>Salahuddin M, Sarkiss M, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia (VESPA). Chest. 2022;162(6):1393‑1401.</li>
+            <li>Akulian JA, Molena D, et al. A direct comparative study of bronchoscopic navigation planning platforms for peripheral lung navigation (ATLAS). J Bronchol Interv Pulmonol. 2022;29(3):171‑178.</li>
+            <li>Ali MS, Trick W, et al. Radial endobronchial ultrasound for the diagnosis of peripheral pulmonary lesions: a systematic review and meta‑analysis. Respirology. 2017;22(3):443‑453.</li>
+            <li>Steinfort DP, Khor YH, et al. Radial probe endobronchial ultrasound for the diagnosis of peripheral lung cancer: systematic review and meta‑analysis. Eur Respir J. 2011;37(4):902‑910.</li>
+            <li>Tanner NT, Yarmus L, et al. Standard bronchoscopy with fluoroscopy vs thin bronchoscopy and rEBUS for biopsy of pulmonary lesions: a multicenter randomized trial. Chest. 2018;154(5):1035‑1043.</li>
+            <li>Chen A, Pastis NJ Jr, et al. Robotic bronchoscopy for peripheral pulmonary lesions: the BENEFIT study. Chest. 2021;159(2):845‑852.</li>
+            <li>Murgu S, Chen AC, et al. A prospective, multicenter evaluation of safety and diagnostic outcomes with robotic‑assisted bronchoscopy (TARGET). Chest. 2025;166(4):A5268‑A5270.</li>
+            <li>Kalchiem‑Dekel O, Fuentes P, et al. Multiplanar 3D fluoroscopy redefines tool‑lesion relationship during robotic‑assisted bronchoscopy. Respirology. 2021;26(1):120‑123.</li>
+            <li>Pritchett MA. Prospective analysis of an endobronchial augmented fluoroscopic navigation system for PPLs. J Bronchol Interv Pulmonol. 2021;28(2):107‑115.</li>
+            <li>Dunn BK, Blaj M, et al. Tomosynthesis‑assisted visualization and intraprocedural positional correction with EMN. J Bronchol Interv Pulmonol. 2023;30(1):16‑23.</li>
+            <li>Reisenauer J, Duke JD, et al. Combining shape‑sensing robotic bronchoscopy with mobile 3D imaging to verify tool‑in‑lesion. Mayo Clin Proc Innov Qual Outcomes. 2022;6(3):177‑185.</li>
+            <li>Saghaie T, Williamson JP, et al. First‑in‑human use of a robotic EMN platform with integrated tomosynthesis (FRONTIER). Respirology. 2024;29(11):969‑975.</li>
+            <li>Lentz RJ, Frederick‑Dyer K, et al. Navigational bronchoscopy or transthoracic needle biopsy for lung nodules (VERITAS). N Engl J Med. 2025;392(21):2100‑2112.</li>
+            <li>Ost DE, Ernst A, et al. Diagnostic yield and complications of bronchoscopy for peripheral lung lesions (AQuIRE). Am J Respir Crit Care Med. 2016;193(1):68‑77.</li>
+            <li>Folch EE, Pritchett MA, et al. Electromagnetic navigation bronchoscopy for PPLs: NAVIGATE 1‑year results. J Thorac Oncol. 2019;14(3):445‑458.</li>
+            <li>Oki M, Saka H, et al. Ultrathin bronchoscopy with multimodal devices for PPLs: randomized trial. Am J Respir Crit Care Med. 2015;192:468‑476.</li>
+            <li>Oki M, Saka H, et al. Use of an ultrathin vs thin bronchoscope for PPLs: randomized trial. Chest. 2019;156:954‑964.</li>
+            <li>Oberg CL, Lau RP, et al. Robotic‑assisted cryobiopsy for PPLs. Lung. 2022;200(6):737‑745.</li>
+            <li>Kops SEP, Heus P, Korevaar DA, et al. Diagnostic yield and safety of navigation bronchoscopy: systematic review and meta‑analysis. Lung Cancer. 2023;180:107196.</li>
+            <li>Nadig TR, Thomas N, et al. Guided bronchoscopy for pulmonary lesions: updated meta‑analysis. Chest. 2023;163(6):1589‑1598.</li>
+            <li>Pyarali FF, Hakami‑Majd N, et al. Robotic‑assisted navigation bronchoscopy: meta‑analysis of yield and complications. J Bronchol Interv Pulmonol. 2024;31(1):70‑81.</li>
+            <li>Vachani A, Maldonado F, et al. Alternative approaches to diagnostic yield calculation in bronchoscopy. Chest. 2022;161(5):1426‑1428.</li>
+            <li>Gonzalez AV, Silvestri GA, et al. Advanced diagnostic bronchoscopy outcomes for PPLs: research statement on yield and study design. Am J Respir Crit Care Med. 2024;209(6):634‑646.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body></html>

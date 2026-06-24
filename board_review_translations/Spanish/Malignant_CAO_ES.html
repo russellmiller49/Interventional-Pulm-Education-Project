@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manejo de la obstrucción maligna de la vía aérea central</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Manejo de la obstrucción maligna de la vía aérea central</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda el diagnóstico y el manejo broncoscópico de la obstrucción maligna de la vía aérea central (MCAO), definida como un estrechamiento ≥50% de la tráquea, los bronquios principales, el bronquio intermedio o los bronquios lobares. Corresponde a los dominios de AABIP/AATS/ACCP sobre broncoscopia terapéutica (rígida y flexible), modalidades ablativas (térmicas y no térmicas), colocación de stents en la vía aérea, estrategias de sedación y ventilación, prevención y manejo de complicaciones, toma de decisiones periprocedimiento e integración multidisciplinaria con radioterapia, tratamiento sistémico y cirugía.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <p>Al finalizar este capítulo, el lector podrá:</p>
+    <ul>
+        <li>Reconocer las características clínicas y de imagen que exigen una intervención urgente frente a una intervención acelerada por MCAO.</li>
+        <li>Clasificar la obstrucción como intrínseca, extrínseca o mixta y elegir las modalidades broncoscópicas de primera línea correspondientes.</li>
+        <li>Planificar una anestesia y ventilación seguras, incluidos los objetivos de FiO₂, y preparar el equipo para una terapia multimodal basada en broncoscopia rígida.</li>
+        <li>Ejecutar una secuencia escalonada de reducción tumoral, hemostasia y recanalización, y decidir cuándo colocar un stent.</li>
+        <li>Anticipar, prevenir y manejar las complicaciones intraoperatorias y posteriores al procedimiento, incluidos incendio de la vía aérea, hemorragia, migración e infección.</li>
+        <li>Integrar el tratamiento broncoscópico con radioterapia externa, tratamiento sistémico y cirugía, reduciendo el riesgo de las modalidades combinadas.</li>
+        <li>Aplicar la evidencia sobre desenlaces, incluidos éxito técnico, calidad de vida y supervivencia, a la selección y orientación de pacientes.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento: perlas, errores frecuentes y trampas de examen</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>La definición importa:</strong> la MCAO corresponde a un compromiso luminal ≥50%; los síntomas suelen aparecer solo después de superar este umbral.</li>
+            <li><strong>Señales de urgencia:</strong> el estridor implica una luz traqueal críticamente estrecha; debe tratarse como una emergencia de la vía aérea dependiente del tiempo.</li>
+            <li><strong>Clasifique primero:</strong> intrínseca (endoluminal), extrínseca (compresión) o mixta; esta clasificación determina la selección de la modalidad.</li>
+            <li><strong>Mejor plataforma inicial:</strong> se prefiere la broncoscopia rígida bajo anestesia general para la mayoría de los casos terapéuticos, porque permite control de la vía aérea, aspiración y paso de instrumentos.</li>
+            <li><strong>Disciplina con la FiO₂:</strong> mantenga la FiO₂ ≤0,40 cuando utilice herramientas térmicas para reducir el riesgo de incendio de la vía aérea.</li>
+            <li><strong>Ciclo de ablación–resección:</strong> coagular (láser/APC/electrocauterio) → retirar mecánicamente (pinzas, microdesbridador, coring o extracción criogénica) → reevaluar → repetir hasta obtener permeabilidad.</li>
+            <li><strong>Selección del stent:</strong> use stents para compresión extrínseca o enfermedad mixta con estrechamiento residual después de la reducción tumoral. Stent de silicona en Y para enfermedad carinal; stent metálico/híbrido cubierto o tubo de silicona para bronquio principal o BI.</li>
+            <li><strong>Cuándo no intervenir:</strong> pulmón distal no viable, ausencia de una vía aérea distal permeable u obstrucción &lt;50% sin síntomas y con alta probabilidad de respuesta rápida al tratamiento sistémico o a la radioterapia.</li>
+            <li><strong>Matiz anestésico:</strong> para broncoscopia terapéutica controlada, la anestesia general con bloqueo neuromuscular reduce complicaciones. En una obstrucción traqueal superior inestable durante el establecimiento de la vía aérea, evite los paralizantes hasta asegurarla.</li>
+            <li><strong>Factores de riesgo de complicaciones:</strong> procedimientos urgentes o emergentes, ASA &gt;3, broncoscopias terapéuticas repetidas y sedación moderada.</li>
+            <li><strong>Herramientas de efecto diferido:</strong> la terapia fotodinámica (PDT) y la braquiterapia tienen utilidad en casos seleccionados; espere beneficios tardíos y toxicidades específicas.</li>
+            <li><strong>Cuidados posteriores al stent:</strong> régimen rutinario de depuración mucociliar, por ejemplo solución salina hipertónica nebulizada, y vigilancia con broncoscopia guiada por síntomas o con TC.</li>
+            <li><strong>Desenlaces para citar:</strong> éxito técnico cercano al 90% en manos experimentadas; la disnea y la calidad de vida mejoran en una proporción importante; una recanalización temprana y exitosa facilita la liberación del ventilador y el tratamiento oncológico definitivo.</li>
+            <li><strong>Radiación con stents:</strong> el tratamiento combinado puede ser eficaz, pero aumenta el riesgo de necrosis o fístula de la vía aérea; planifique cuidadosamente la dosis y retire los stents con prontitud cuando el tumor regrese.</li>
+            <li><strong>Error frecuente:</strong> tratar una compresión extrínseca pura con energía ablativa; esto puede lesionar la pared sin restablecer la luz. El stent es la solución principal.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>La MCAO puede deberse a tumor dentro de la luz (endobronquial), compresión por estructuras adyacentes (extrínseca) o un patrón mixto en el que el tumor comprime e invade la pared de la vía aérea. Las cohortes contemporáneas estiman MCAO en aproximadamente un porcentaje de la mitad de la segunda decena de los casos de cáncer de pulmón, mientras que series antiguas comunicaron hasta un tercio. El desplazamiento hacia adenocarcinomas periféricos y el cribado pueden contribuir a los cambios de prevalencia. La enfermedad endobronquial intrínseca suele asociarse con mejores resultados broncoscópicos que los patrones extrínsecos o mixtos.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Indicaciones</strong></p>
+    <ul>
+        <li>Obstrucción central sintomática ≥50% con disnea, estridor, neumonía postobstructiva o hemoptisis.</li>
+        <li>Puente hacia tratamiento definitivo, como radioterapia, tratamiento sistémico o cirugía.</li>
+        <li>Dependencia del ventilador por lesiones obstructivas cuando la recanalización permite la extubación.</li>
+    </ul>
+    <p><strong>Contraindicaciones relativas o situaciones de bajo rendimiento</strong></p>
+    <ul>
+        <li>Ausencia de vía aérea distal permeable o pulmón distal no viable.</li>
+        <li>Enfermedad lobar o segmentaria aislada con repercusión fisiológica mínima, menos propensa a mejorar la disnea o la calidad de vida.</li>
+        <li>Coagulopatía no corregida o inestabilidad que no pueda corregirse en el entorno del procedimiento.</li>
+        <li>Cuando una respuesta oncológica rápida y muy probable hace innecesaria la broncoscopia; aun así se requiere vigilancia estrecha.</li>
+    </ul>
+
+    <h4>Evaluación previa al procedimiento</h4>
+    <ul>
+        <li><strong>Triaje clínico:</strong> identifique emergencias de la vía aérea, como estridor intenso o paro inminente.</li>
+        <li><strong>Imágenes:</strong> TC de tórax con reconstrucciones multiplanares o 3D para definir nivel, longitud y patrón de obstrucción; busque permeabilidad distal y proximidad vascular.</li>
+        <li><strong>Pruebas funcionales:</strong> las curvas flujo-volumen pueden mostrar obstrucción fija o variable, pero no son necesarias ni seguras en dificultad respiratoria grave.</li>
+        <li><strong>Evaluación de la vía aérea y anestesia:</strong> apertura bucal, dentición, Mallampati, movilidad cervical y distancia tiromentoniana; planifique broncoscopia rígida y modalidad ventilatoria; considere respaldo con ECMO en compromiso extremo de la tráquea principal o de ambos bronquios principales.</li>
+        <li><strong>Laboratorio y consentimiento:</strong> evalúe hemostasia (INR/PTT y plaquetas), solicite grupo y reserva, y realice toma de decisiones compartida sobre intención paliativa frente a puente terapéutico y evolución prevista.</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Plataforma:</strong> broncoscopio rígido con aspiración de alto flujo, pinzas rígidas y dilatadores; broncoscopio flexible terapéutico de canal grande como complemento.</li>
+        <li><strong>Herramientas térmicas:</strong> láser (Nd:YAG/YAP), APC y electrocauterio; los intervalos iniciales suelen ser de 20–40 W para electrocirugía y 40–60 W para APC, con pulsos de 2–5 s sin contacto.</li>
+        <li><strong>Herramientas no térmicas:</strong> microdesbridador, balones de dilatación con inflaciones de 30–60 s, criosondas para extracción y ablación diferida, y crioterapia en aerosol con consideraciones ventilatorias especiales.</li>
+        <li><strong>Stents:</strong> silicona, incluidos los de tipo Y, y tubos metálicos/híbridos totalmente cubiertos; elija tamaño y forma para cubrir la lesión con márgenes ≥5–10 mm cuando sea posible.</li>
+        <li><strong>Seguridad:</strong> FiO₂ ≤0,40 al usar energía térmica; evite aplicar energía cerca de materiales combustibles y siga los protocolos de seguridad láser y de la tríada del fuego.</li>
+    </ul>
+
+    <h4>Técnica paso a paso / lista de verificación del procedimiento</h4>
+    <ol>
+        <li>Asegure la vía aérea; se prefiere broncoscopia rígida bajo anestesia general.</li>
+        <li>Inspeccione y clasifique la lesión como intrínseca, extrínseca o mixta; confirme la permeabilidad distal y anticipe problemas hemodinámicos o ventilatorios.</li>
+        <li>Ciclo de ablación–resección para enfermedad intrínseca o mixta:
+            <ul>
+                <li>Coagule con láser, APC o electrocauterio manteniendo una FiO₂ segura.</li>
+                <li>Retire mecánicamente el tejido mediante coring rígido, microdesbridador, pinzas o extracción criogénica.</li>
+                <li>Reevalúe y repita hasta lograr una permeabilidad &gt;50%, o mayor si es segura y beneficiosa.</li>
+            </ul>
+        </li>
+        <li>Dilate anillos fibróticos o estenosis estrechas con balón o dilatadores rígidos seriados.</li>
+        <li>Coloque un stent ante compresión extrínseca o estrechamiento residual tras la reducción tumoral; seleccione silicona en Y en la carina y tubo de silicona o metálico cubierto en bronquio principal o BI.</li>
+        <li>Realice hemostasia y limpieza mediante aspiración y taponamiento con el tubo rígido; considere APC o electrocauterio para sangrado en capa.</li>
+        <li>Deténgase en el momento adecuado, cuando se hayan cumplido los objetivos —a menudo permeabilidad &gt;50%— y el riesgo marginal supere el beneficio marginal.</li>
+        <li>Documente enfermedad residual, permeabilidad distal, dimensiones y posición del stent, y el plan de seguimiento.</li>
+    </ol>
+
+    <h4>Resolución de problemas y manejo intraprocedimiento</h4>
+    <ul>
+        <li><strong>Hemorragia:</strong> precoagule antes de la resección mecánica; comprima con el tubo rígido; aplique APC o electrocauterio; use crioextracción para retirar coágulos.</li>
+        <li><strong>Hipoxemia o hipercapnia:</strong> interrumpa la energía, aumente la ventilación y elija ventilación jet o ciclada por volumen según la experiencia del equipo; retire brevemente los instrumentos para ventilar.</li>
+        <li><strong>Prevención del incendio de la vía aérea:</strong> FiO₂ ≤0,40, aspiración del humo, evitar contacto de sondas energizadas con el ETT o el broncoscopio y coordinación con anestesia durante la aplicación de energía.</li>
+        <li><strong>No se visualiza distalmente:</strong> utilice un broncoscopio ultrafino o una guía con balón para delimitar la luz distal antes de elegir el tamaño del stent.</li>
+        <li><strong>Paso o ángulo difícil:</strong> cambie de instrumento, por ejemplo microdesbridador o flexible a través del rígido, reposicione al paciente o use un broncoscopio rígido más pequeño.</li>
+    </ul>
+
+    <h4>Cuidados y seguimiento posteriores al procedimiento</h4>
+    <ul>
+        <li><strong>Inmediatos:</strong> vigile hemorragia, edema de la vía aérea y neumotórax; proporcione humidificación e higiene bronquial.</li>
+        <li><strong>Régimen para el stent:</strong> depuración de la vía aérea, por ejemplo solución salina hipertónica nebulizada, y educación sobre síntomas de infección.</li>
+        <li><strong>Vigilancia:</strong> consulta en 2–4 semanas; una TC de tórax alrededor de un mes es razonable. La broncoscopia debe dirigirse por síntomas o hallazgos de imagen en lugar de hacerse sistemáticamente en todos los casos. Retire los stents con prontitud cuando el tumor regrese para reducir el riesgo de necrosis o fístula con radioterapia posterior.</li>
+    </ul>
+
+    <h4>Complicaciones: prevención, reconocimiento y manejo</h4>
+    <ul>
+        <li><strong>Inmediatas:</strong> hipoxemia, hipercapnia, hemorragia, neumotórax, incendio de la vía aérea, perforación y embolia gaseosa, esta última infrecuente.</li>
+        <li><strong>Tardías, especialmente con stents:</strong> tejido de granulación, tapones de moco, migración, infección y erosión o fístula, con mayor riesgo tras radioterapia.</li>
+        <li><strong>Reducción del riesgo:</strong> favorezca anestesia general con bloqueo neuromuscular en casos terapéuticos; evite situaciones urgentes de rescate mediante derivación temprana; use stents metálicos cubiertos en lugar de descubiertos en malignidad; mantenga control estricto de FiO₂ y planifique cuidadosamente la dosis de radiación cuando exista un stent.</li>
+    </ul>
+
+    <h4>Poblaciones especiales</h4>
+    <ul>
+        <li><strong>Pacientes con ventilación mecánica:</strong> la broncoscopia terapéutica permite con frecuencia la extubación dentro de las 48 horas posteriores a una recanalización exitosa.</li>
+        <li><strong>Colapso completo inminente de la vía aérea, tráquea proximal o ambos bronquios principales:</strong> considere ECMO como puente para una inducción e intervención seguras.</li>
+        <li><strong>Carcinoide o carcinoma adenoide quístico:</strong> la reducción tumoral alivia la obstrucción; procure resección quirúrgica cuando sea posible. El tratamiento broncoscópico puede ser definitivo en carcinoides típicos seleccionados no operables.</li>
+        <li><strong>Dispositivos cardiacos:</strong> el láser no interfiere; la electrocirugía y APC requieren precauciones con el dispositivo.</li>
+        <li><strong>Anticoagulación:</strong> optimice la hemostasia y valore individualmente el riesgo-beneficio de puente o suspensión.</li>
+    </ul>
+
+    <h4>Evidencia y desenlaces</h4>
+    <ul>
+        <li><strong>Éxito técnico, permeabilidad posterior &gt;50%:</strong> aproximadamente 90% en centros experimentados.</li>
+        <li><strong>Síntomas y calidad de vida:</strong> mejoría clínicamente significativa de la disnea en cerca de la mitad y de la calidad de vida en una proporción importante; las mejoras espirométricas son frecuentes en cohortes seleccionadas.</li>
+        <li><strong>Supervivencia:</strong> la recanalización exitosa se asocia con mayor supervivencia y esperanza de vida ajustada por calidad; la intervención temprana se correlaciona con mejores desenlaces.</li>
+        <li><strong>Liberación del ventilador:</strong> alta tasa de extubación poco después de la recanalización en insuficiencia respiratoria por MCAO.</li>
+        <li><strong>Complicaciones:</strong> los eventos graves son infrecuentes; el riesgo aumenta en casos urgentes, clase ASA alta, procedimientos repetidos y sedación moderada.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo A: triaje urgente y manejo inicial</h4>
+    <div class="mermaid">
+    graph TD
+        A["Sospecha de MCAO"] --> B{"Evaluar estabilidad"}
+        B -- "Inestable: estridor/dificultad" --> C["Traslado del equipo a quirófano/UCI"]
+        C --> D{"¿Localización?"}
+        D -- "Proximal/superior" --> E["Intubación asistida por fibrobroncoscopio o broncoscopia rígida"]
+        D -- "Distal/desconocida" --> F["Broncoscopia rígida"]
+        B -- "Estable" --> G["TC de tórax con MPR/3D"]
+        G --> H["Planificar anestesia e instrumentos"]
+        H --> I["Broncoscopia rígida bajo anestesia general"]
+        E --> J["Clasificar la obstrucción"]
+        F --> J
+        I --> J
+        J -- "Intrínseca" --> K["Ablación → resección mecánica"]
+        J -- "Extrínseca" --> L["Medir y colocar stent"]
+        J -- "Mixta" --> M["Reducir componente intrínseco"]
+        M --> N{"¿Compresión extrínseca residual?"}
+        N -- "Sí" --> L
+        N -- "No" --> O
+        K --> O{"¿Permeabilidad >50%?"}
+        O -- "No" --> K
+        O -- "Sí" --> P["Hemostasia/limpieza"]
+        L --> P
+        P --> Q["Recuperación → puente a tratamiento definitivo"]
+    </div>
+
+    <h4>Algoritmo B: selección de modalidad y seguridad del procedimiento</h4>
+    <div class="mermaid">
+    graph TD
+        A["Determinar el tipo de obstrucción"] --> B["Intrínseca"]
+        A --> C["Extrínseca"]
+        A --> D["Mixta"]
+        B --> E["Ablación: láser/APC/cauterio"]
+        E --> F["Resección mecánica"]
+        F --> G{"¿Fibrótica?"}
+        G -- "Sí" --> H["Dilatación con balón"]
+        G -- "No" --> I["Reevaluar"]
+        C --> J["Colocación de stent"]
+        D --> K["Reducir componente intrínseco"]
+        K --> L{"¿Estrechamiento residual?"}
+        L -- "Sí" --> J
+        L -- "No" --> I
+        I --> M{"Bucle de seguridad"}
+        M --> N{"¿FiO2 ≤0,40?"}
+        N -- "No" --> O["Pausar, ventilar y reducir FiO2"]
+        O --> E
+        M --> P{"¿Hemorragia persistente?"}
+        P -- "Sí" --> Q["APC/taponamiento/crioterapia"]
+        Q --> I
+        P -- "No" --> R{"¿Riesgo mayor que beneficio?"}
+        R -- "No" --> E
+        R -- "Sí" --> S["DETENER"]
+    </div>
+
+    <div class="algorithm-note">
+        <strong>Resumen de la lógica de los algoritmos:</strong>
+        <ul>
+            <li><strong>Triaje:</strong> la inestabilidad exige asegurar de inmediato la vía aérea en quirófano o UCI, mientras que los pacientes estables se benefician de imágenes avanzadas con TC MPR/3D para planificar el abordaje rígido.</li>
+            <li><strong>Selección de modalidad:</strong> la enfermedad intrínseca requiere el ciclo de ablación–resección, es decir, coagular y luego reducir. La enfermedad extrínseca requiere stent. En enfermedad mixta se reduce primero el componente intrínseco y se coloca stent si persiste la compresión.</li>
+            <li><strong>Seguridad:</strong> son esenciales la vigilancia continua de FiO₂, manteniéndola ≤0,40, y el control del sangrado. El procedimiento termina cuando se cumplen los objetivos de permeabilidad o el riesgo supera el beneficio.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Patrón de obstrucción e intervenciones de primera línea</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Patrón</th>
+                <th>Hallazgos típicos</th>
+                <th>Abordaje de primera línea</th>
+                <th>Alternativas o complementos</th>
+                <th>Advertencia principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Intrínseco (endoluminal)</strong></td>
+                <td>Tumor polipoide o fungante; luz distal visible</td>
+                <td>Coagulación térmica con láser/APC/electrocauterio → resección mecánica</td>
+                <td>Dilatación con balón para anillos fibróticos; terapias de efecto diferido como PDT</td>
+                <td>Mantener FiO₂ ≤0,40 durante la ablación térmica</td>
+            </tr>
+            <tr>
+                <td><strong>Extrínseco (compresión)</strong></td>
+                <td>Mucosa normal; vía aérea estrechada por una masa externa</td>
+                <td>Stent de vía aérea: silicona en Y en la carina; tubo de silicona o metálico cubierto en bronquio principal/BI</td>
+                <td>Radioterapia o tratamiento sistémico; dilatación ocasional como puente</td>
+                <td>La energía ablativa aislada no mantiene la permeabilidad</td>
+            </tr>
+            <tr>
+                <td><strong>Mixto</strong></td>
+                <td>Componente endoluminal con distorsión o compresión de la pared</td>
+                <td>Reducir componente intrínseco → stent si persiste estrechamiento extrínseco</td>
+                <td>Combinar con radioterapia o tratamiento sistémico</td>
+                <td>Evitar stent prematuro en paciente sin tratamiento previo y con alta probabilidad de respuesta</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 2. Modalidades térmicas frente a no térmicas: puntos esenciales</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Modalidad</th>
+                <th>Profundidad/efecto</th>
+                <th>Ajustes y observaciones típicas</th>
+                <th>Ventajas</th>
+                <th>Complicaciones/limitaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Láser (Nd:YAG/YAP)</strong></td>
+                <td>Coagulación y vaporización; penetración más profunda con Nd:YAG</td>
+                <td>Contacto o no contacto; respetar seguridad láser; FiO₂ ≤0,40</td>
+                <td>Reducción rápida, hemostasia potente y eficacia en lesiones centrales</td>
+                <td>Riesgo de incendio, perforación y, rara vez, embolia gaseosa</td>
+            </tr>
+            <tr>
+                <td><strong>APC</strong></td>
+                <td>Superficial, aproximadamente 1–3 mm, sin contacto</td>
+                <td>Alrededor de 40–60 W, pulsos de 2–5 s; útil para hemostasia y superficies amplias</td>
+                <td>Bajo costo, rápida y excelente para sangrado en capa o lesiones difusas</td>
+                <td>Incendio, perforación por energía excesiva y menor eficacia en masas voluminosas</td>
+            </tr>
+            <tr>
+                <td><strong>Electrocauterio</strong></td>
+                <td>Coagulación o vaporización por contacto</td>
+                <td>Alrededor de 20–40 W; asas, cuchillos y sondas; precauciones en marcapasos o ICD</td>
+                <td>Accesible y versátil</td>
+                <td>Interferencia con dispositivos y necesidad de contacto directo</td>
+            </tr>
+            <tr>
+                <td><strong>Microdesbridador</strong></td>
+                <td>Afeitado mecánico no térmico con aspiración</td>
+                <td>Se utiliza a través del broncoscopio rígido</td>
+                <td>Retirada rápida con buena visualización y sin límite de FiO₂</td>
+                <td>Curva de aprendizaje y necesidad frecuente de control adicional del sangrado</td>
+            </tr>
+            <tr>
+                <td><strong>Dilatación con balón</strong></td>
+                <td>Expansión radial</td>
+                <td>Inflaciones de 30–60 s; puede requerir cortes radiales</td>
+                <td>Ganancia luminal rápida y puente hacia stent</td>
+                <td>Desgarros, neumomediastino o neumotórax</td>
+            </tr>
+            <tr>
+                <td><strong>Crioterapia (extracción)</strong></td>
+                <td>Adhesión y retirada inmediata de tejido</td>
+                <td>Ciclos repetidos de congelar y traccionar</td>
+                <td>Útil para tumores friables o coágulos, sin riesgo de incendio</td>
+                <td>Hemorragia y menor velocidad que las técnicas térmicas para grandes volúmenes</td>
+            </tr>
+            <tr>
+                <td><strong>PDT (diferida)</strong></td>
+                <td>Fotosensibilizador más luz, con efecto tardío</td>
+                <td>Precauciones por fotosensibilidad</td>
+                <td>Disminuye el recrecimiento y alcanza bronquios distales</td>
+                <td>Obstrucción tardía por desprendimiento, edema y fotosensibilidad</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Indicaciones de imágenes y figuras</h3>
+    <p><strong>Figura 1. Esquema de patrones intrínsecos, extrínsecos y mixtos de MCAO.</strong><br><em>Texto alternativo:</em> tres paneles muestran tumor endoluminal, compresión extrínseca e invasión mixta a través de la pared de la vía aérea.</p>
+    <p><strong>Figura 2. Ciclo de ablación–resección con coring rígido.</strong><br><em>Texto alternativo:</em> cuadros secuenciales muestran coagulación, retirada mecánica y taponamiento con el tubo rígido.</p>
+    <p><strong>Figura 3. Ejemplos de selección de stent: silicona en Y en la carina y tubo cubierto en bronquio principal/BI.</strong><br><em>Texto alternativo:</em> comparación esquemática de las técnicas de despliegue y los perfiles.</p>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Un paciente de 64 años con NSCLC escamoso presenta estridor audible y disnea en reposo. La TC muestra una masa voluminosa en la tráquea proximal con luz en hendidura; la tráquea distal está permeable.</p>
+        <p><strong>Pregunta:</strong> ¿Cuál es el mejor abordaje inmediato?</p>
+        <p><strong>Respuesta:</strong> A. Intubación fibroóptica despierto seguida de broncoscopia rígida bajo anestesia general.</p>
+        <p><strong>Justificación:</strong> asegure la vía aérea con una técnica que inicialmente mantenga la respiración espontánea y luego proceda a broncoscopia rígida para tratamiento multimodal definitivo.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Un paciente de 58 años con carcinoma renal metastásico y disnea intensa tiene una TC que muestra compresión grave del bronquio principal izquierdo por una masa mediastínica. La broncoscopia revela mucosa normal y ausencia de tumor intraluminal.</p>
+        <p><strong>Pregunta:</strong> ¿Cuál es la mejor estrategia broncoscópica?</p>
+        <p><strong>Respuesta:</strong> B. Stent cubierto de la vía aérea que abarque el segmento comprimido.</p>
+        <p><strong>Justificación:</strong> se trata de una compresión extrínseca pura; el stent es la solución de primera línea.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3</h4>
+        <p>Un paciente de 72 años con MCAO está intubado por insuficiencia respiratoria hipoxémica debida a una masa endobronquial obstructiva en el bronquio intermedio con atelectasia distal de menos de cuatro semanas de duración.</p>
+        <p><strong>Pregunta:</strong> ¿Cuál es el desenlace a corto plazo más probable después de una broncoscopia terapéutica exitosa?</p>
+        <p><strong>Respuesta:</strong> C. Es probable la extubación dentro de las 48 horas.</p>
+        <p><strong>Justificación:</strong> la recanalización exitosa permite con frecuencia la extubación temprana en este contexto.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas de opción múltiple</h3>
+    <ol>
+        <li>
+            <strong>Un paciente de 70 años con MCAO presenta sibilancias y una TC muestra una masa polipoide en la tráquea distal con luz distal visible. ¿Cuál es el siguiente paso más adecuado?</strong><br>
+            A. Iniciar radioterapia externa y reevaluar en dos semanas<br>
+            B. Broncoscopia flexible con sedación moderada y APC con FiO₂ 0,80<br>
+            C. Broncoscopia rígida bajo anestesia general con coagulación mediante láser/APC seguida de reducción mecánica<br>
+            D. PDT como tratamiento único<br>
+            E. Colocar un stent metálico descubierto<br>
+            <em><strong>Respuesta: C.</strong> Es apropiada una broncoscopia de efecto inmediato con plataforma rígida y ciclo de ablación–resección; evite FiO₂ alta con herramientas térmicas.</em>
+        </li>
+        <li>
+            <strong>Durante APC, el pulsioxímetro muestra SpO₂ 95% con FiO₂ 0,60. ¿Cuál es la mejor acción inmediata?</strong><br>
+            A. Continuar APC porque la saturación es adecuada<br>
+            B. Aumentar FiO₂ a 1,0 por seguridad<br>
+            C. Pausar la energía, reducir FiO₂ a ≤0,40 y luego reanudar<br>
+            D. Cambiar a PDT<br>
+            E. Cambiar de inmediato a crioterapia en aerosol<br>
+            <em><strong>Respuesta: C.</strong> La energía térmica debe aplicarse con FiO₂ ≤0,40 para reducir el riesgo de incendio.</em>
+        </li>
+        <li>
+            <strong>¿Qué escenario favorece con mayor fuerza la colocación inicial de un stent en lugar de ablación?</strong><br>
+            A. Tumor exofítico friable en la carina<br>
+            B. Membrana traqueal circunferencial fibrótica<br>
+            C. Estrechamiento liso por linfoma mediastínico que comprime el bronquio principal izquierdo<br>
+            D. Carcinoide obstructivo con neumonitis distal<br>
+            E. Tumor endobronquial con luz distal evidente<br>
+            <em><strong>Respuesta: C.</strong> La compresión extrínseca pura requiere stent como tratamiento de primera línea.</em>
+        </li>
+        <li>
+            <strong>Un paciente con MCAO mixta se somete a reducción tumoral, pero persiste estrechamiento por efecto de masa externo. No ha recibido tratamiento y existe alta probabilidad de respuesta rápida a quimiorradioterapia. ¿Cuál es la opción más prudente?</strong><br>
+            A. Colocar ahora un stent permanente<br>
+            B. Observar sin un plan<br>
+            C. Observación a corto plazo después de la reducción; diferir el stent si la reserva respiratoria lo permite<br>
+            D. Administrar braquiterapia de inmediato<br>
+            E. Proceder a PDT y stent<br>
+            <em><strong>Respuesta: C.</strong> En un paciente con alta probabilidad de respuesta, es razonable diferir el stent si la permeabilidad y la reserva posteriores a la reducción son adecuadas.</em>
+        </li>
+        <li>
+            <strong>¿Qué combinación reduce mejor las complicaciones de la broncoscopia terapéutica?</strong><br>
+            A. Sedación moderada y broncoscopia flexible<br>
+            B. Anestesia general con bloqueo neuromuscular y plataforma rígida<br>
+            C. Ventilación jet con FiO₂ 0,80<br>
+            D. Evitar la aspiración durante el láser<br>
+            E. Braquiterapia antes de cualquier reducción<br>
+            <em><strong>Respuesta: B.</strong> La anestesia general con bloqueo neuromuscular y broncoscopia rígida se asocia con menos complicaciones.</em>
+        </li>
+        <li>
+            <strong>¿Cuál es la opción hemostática más adecuada para sangrado difuso en capa después de la reducción mecánica?</strong><br>
+            A. Aumentar FiO₂ a 1,0 y continuar el láser<br>
+            B. APC en pulsos cortos y potencia baja a moderada, con aspiración<br>
+            C. Stent metálico descubierto<br>
+            D. Dilatación con balón<br>
+            E. Crioterapia en aerosol inmediata<br>
+            <em><strong>Respuesta: B.</strong> APC es excelente para superficies amplias con sangrado en capa; mantenga FiO₂ ≤0,40.</em>
+        </li>
+        <li>
+            <strong>¿Qué afirmación sobre PDT en MCAO es correcta?</strong><br>
+            A. Tiene un efecto inmediato equivalente al láser<br>
+            B. A menudo requiere exposición a luz entre 48 y 72 horas después del fotosensibilizador<br>
+            C. No conlleva riesgo de fotosensibilidad<br>
+            D. Impide radioterapia externa posterior<br>
+            E. No puede utilizarse en bronquios lobares<br>
+            <em><strong>Respuesta: B.</strong> PDT es una terapia de efecto diferido con fotosensibilizador seguido de iluminación programada.</em>
+        </li>
+        <li>
+            <strong>Se coloca un stent metálico cubierto en el bronquio principal derecho. La estrategia preventiva de mayor rendimiento contra los tapones de moco es:</strong><br>
+            A. Corticoides sistémicos rutinarios<br>
+            B. Antibióticos rutinarios indefinidos<br>
+            C. Régimen nebulizado de depuración de la vía aérea dos veces al día y educación del paciente<br>
+            D. Evitar broncodilatadores<br>
+            E. Radiación inmediata para fijar el stent<br>
+            <em><strong>Respuesta: C.</strong> Las medidas de depuración mucociliar son estándar.</em>
+        </li>
+        <li>
+            <strong>¿Cuál es un factor de riesgo reconocido de complicaciones broncoscópicas en MCAO?</strong><br>
+            A. Clase ASA I–II<br>
+            B. Programación electiva<br>
+            C. Sedación moderada en lugar de anestesia general<br>
+            D. Uso de stents cubiertos<br>
+            E. Realización del procedimiento con broncoscopio rígido<br>
+            <em><strong>Respuesta: C.</strong> La sedación moderada y los entornos urgentes o emergentes aumentan el riesgo.</em>
+        </li>
+        <li>
+            <strong>Una obstrucción lobar ha persistido más de cuatro semanas con colapso lobar completo. ¿Qué desenlace es menos probable después de la recanalización?</strong><br>
+            A. Alivio espectacular de la disnea<br>
+            B. Mejoría de la espirometría<br>
+            C. Reexpansión radiográfica<br>
+            D. Reducción de infecciones postobstructivas<br>
+            E. Facilitar la administración de tratamiento sistémico<br>
+            <em><strong>Respuesta: A.</strong> Un colapso lobar de larga evolución puede limitar el beneficio fisiológico incluso con éxito técnico.</em>
+        </li>
+        <li>
+            <strong>¿Qué afirmación sobre la combinación de radioterapia externa y stents de vía aérea es la más exacta?</strong><br>
+            A. Está contraindicada<br>
+            B. Es segura y sin complicaciones<br>
+            C. Puede realizarse, pero requiere planificación cuidadosa por riesgo de necrosis o fístula, y los stents deben retirarse cuando sea posible tras la respuesta<br>
+            D. Exige stents metálicos descubiertos<br>
+            E. Elimina la necesidad de vigilancia broncoscópica<br>
+            <em><strong>Respuesta: C.</strong> El tratamiento combinado es posible, pero presenta mayor riesgo; planifique cuidadosamente la dosimetría y retire los stents cuando sea seguro.</em>
+        </li>
+        <li>
+            <strong>Durante broncoscopia rígida por un tumor traqueal no puede visualizar la luz distal. ¿Cuál es el mejor paso siguiente?</strong><br>
+            A. Aumentar la potencia del láser para penetrar a ciegas<br>
+            B. Avanzar a ciegas con el tubo rígido<br>
+            C. Utilizar guía y balón o un broncoscopio más pequeño para identificar la vía aérea distal antes de continuar<br>
+            D. Colocar un stent a ciegas<br>
+            E. Abortar de inmediato el procedimiento<br>
+            <em><strong>Respuesta: C.</strong> Defina con seguridad la vía aérea distal antes de aplicar más tratamiento.</em>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Estrategia de sedación:</strong> aunque las técnicas despierto son esenciales para asegurar inicialmente la vía aérea en una obstrucción proximal, la broncoscopia terapéutica suele favorecer anestesia general con bloqueo neuromuscular; las prácticas varían entre centros.</li>
+        <li><strong>Modalidades de efecto diferido:</strong> el uso de PDT y braquiterapia depende del centro; la evidencia respalda un empleo selectivo, reconociendo efectos tardíos y toxicidades.</li>
+        <li><strong>Colocar o no un stent tras la reducción:</strong> en enfermedad endobronquial que responde a tratamiento sistémico o radioterapia, algunos difieren el stent para evitar complicaciones tardías y otros lo colocan para prolongar el alivio; el contexto del paciente guía la decisión.</li>
+        <li><strong>Broncoscopia de vigilancia:</strong> sigue en debate el seguimiento rutinario frente al guiado por síntomas; la TC puede complementar la vigilancia no invasiva.</li>
+        <li><strong>Radioterapia con stents:</strong> los equipos difieren en sus umbrales para el uso simultáneo; es obligatoria una planificación multidisciplinaria cuidadosa.</li>
+    </ul>
+
+    <h3>Lista de verificación de puntos clave</h3>
+    <ul>
+        <li>Confirme MCAO, definida como estrechamiento ≥50%, y determine la urgencia.</li>
+        <li>Planifique broncoscopia rígida bajo anestesia general; defina estrategia ventilatoria y límites de FiO₂.</li>
+        <li>Clasifique la obstrucción y asigne la modalidad: ablación–resección para intrínseca, stent para extrínseca y ambas para mixta.</li>
+        <li>Aplique el ciclo de ablación–resección con hemostasia meticulosa y prevención del incendio de la vía aérea.</li>
+        <li>Dimensione con precisión los stents; prefiera diseños cubiertos en malignidad y silicona en Y para la carina.</li>
+        <li>Deténgase cuando se hayan cumplido los objetivos y el riesgo supere el beneficio.</li>
+        <li>Inicie un régimen de depuración de la vía aérea si se coloca stent y eduque sobre signos de infección.</li>
+        <li>Coordine con oncología y radioterapia; reevalúe la necesidad del stent después de la respuesta tumoral.</li>
+        <li>Programe seguimiento clínico temprano en 2–4 semanas, TC alrededor de un mes y broncoscopia ante síntomas o hallazgos de imagen.</li>
+        <li>Documente los desenlaces —permeabilidad, síntomas y calidad de vida— para orientar el momento de una nueva intervención.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>MCAO</dt><dd>Obstrucción maligna de la vía aérea central.</dd>
+            <dt>APC</dt><dd>Coagulación con plasma de argón: coagulación térmica sin contacto mediante argón ionizado.</dd>
+            <dt>Nd:YAG/YAP</dt><dd>Tipos de láser utilizados para ablación de la vía aérea; Nd:YAG penetra más profundamente y YAP absorbe más agua con menor profundidad.</dd>
+            <dt>PDT</dt><dd>Terapia fotodinámica: fotosensibilizador más exposición programada a luz, con efecto diferido.</dd>
+            <dt>EBBT</dt><dd>Braquiterapia endobronquial: radiación a corta distancia mediante catéter intraluminal.</dd>
+            <dt>Coring rígido</dt><dd>Reducción mecánica con el extremo biselado del tubo rígido, rotación y taponamiento.</dd>
+            <dt>Microdesbridador</dt><dd>Dispositivo de corte rotatorio con aspiración para afeitar mecánicamente el tumor.</dd>
+            <dt>BI</dt><dd>Bronquio intermedio.</dd>
+            <dt>FiO₂</dt><dd>Fracción inspirada de oxígeno; mantener ≤0,40 durante la ablación térmica.</dd>
+            <dt>ECMO</dt><dd>Oxigenación por membrana extracorpórea; puente para control de una vía aérea de alto riesgo.</dd>
+            <dt>Clase ASA</dt><dd>Estado físico de la American Society of Anesthesiologists, marcador de riesgo perioperatorio.</dd>
+            <dt>QOL</dt><dd>Calidad de vida; carga sintomática y función que mejoran con tratamiento exitoso.</dd>
+            <dt>Stent cubierto</dt><dd>Stent con membrana que reduce el crecimiento tumoral hacia el interior; preferido en malignidad.</dd>
+            <dt>Solución salina hipertónica</dt><dd>Tratamiento nebulizado de depuración de la vía aérea para reducir la obstrucción posterior al stent.</dd>
+        </dl>
+    </div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+<ol>
+<li>Mahmood K, Frazer‑Green L, Gonzalez AV, et al. Management of central airway obstruction: an American College of Chest Physicians Clinical Practice Guideline. Chest. 2024;167(1):283‑295.</li>
+<li>Ernst A, Feller‑Kopman D, Becker HD, Mehta AC. Central airway obstruction. Am J Respir Crit Care Med. 2004;169(12):1278‑1297.</li>
+<li>Ost DE, Ernst A, Grosu HB, et al. Therapeutic bronchoscopy for malignant central airway obstruction: success rates and impact on dyspnea and quality of life. Chest. 2015;147(5):1282‑1298.</li>
+<li>Ost DE, Ernst A, Grosu HB, et al. Complications following therapeutic bronchoscopy for malignant central airway obstruction: results of the AQuIRE Registry. Chest. 2015;148(2):450‑471.</li>
+<li>Ong P, Grosu HB, Debiane L, et al. Long‑term quality‑adjusted survival following therapeutic bronchoscopy for malignant central airway obstruction. Thorax. 2019;74(2):141‑156.</li>
+<li>Oki M, Saka H, Hori K. Airway stenting in patients requiring intubation due to malignant airway stenosis: a 10‑year experience. J Thorac Dis. 2017;9(9):3154‑3160.</li>
+<li>Khemasuwan D, Mehta AC, Wang KP. Past, present, and future of endobronchial laser photoresection. J Thorac Dis. 2015;7(Suppl 4):S380‑S388.</li>
+<li>Dumon JF, Reboud E, Garbe L, et al. Treatment of tracheobronchial lesions by laser photoresection. Chest. 1982;81:278‑284.</li>
+<li>Morice RC, Ece T, Ece F, Keus L. Endobronchial argon plasma coagulation for treatment of hemoptysis and neoplastic airway obstruction. Chest. 2001;119(3):781‑787.</li>
+<li>Casal RF, Iribarren J, Eapen G, et al. Safety and effectiveness of microdebrider bronchoscopy for the management of central airway obstruction. Respirology. 2013;18:1011‑1015.</li>
+<li>Hetzel M, Hetzel J, Schumann C, et al. Cryorecanalization: a new approach for the immediate management of acute airway obstruction. J Thorac Cardiovasc Surg. 2004;127:1427‑1431.</li>
+<li>Moore RF, Lile DJ, Abbas AE. Current status of spray cryotherapy for airway disease. J Thorac Dis. 2017;9(Suppl 2):S122‑S129.</li>
+<li>Rodrigues G, Videtic GM, Sur R, et al. Palliative thoracic radiotherapy in lung cancer: an American Society for Radiation Oncology evidence‑based clinical practice guideline. Pract Radiat Oncol. 2011;1:60‑71.</li>
+<li>Stewart A, Parashar B, Patel M, et al. American Brachytherapy Society consensus guidelines for thoracic brachytherapy for lung cancer. Brachytherapy. 2016;15:1‑11.</li>
+<li>Rochet N, Hauswald H, Schmaus M, et al. Safety and efficacy of thoracic external beam radiotherapy after airway stenting in malignant airway obstruction. Int J Radiat Oncol Biol Phys. 2012;83(1):e129‑e135.</li>
+<li>Dutau H, Di Palma F, Thibout Y, et al. Impact of silicone stent placement in symptomatic airway obstruction due to non‑small cell lung cancer – the SPOC trial. Respiration. 2020;99(4):344‑352.</li>
+<li>Chaddha U, Agrawal A, Kurman J, et al. WABIP guidelines on airway stenting for malignant central airway obstruction. Respirology. 2024;29(7):563‑573.</li>
+<li>Dialani V, Ernst A, Sun M, et al. MDCT detection of airway stent complications: comparison with bronchoscopy. AJR Am J Roentgenol. 2008;191(5):1576‑1580.</li>
+<li>Matsuo T, Colt HG. Evidence against routine scheduling of surveillance bronchoscopy after stent insertion. Chest. 2000;118(5):1455‑1459.</li>
+<li>Cavaliere S, Venuta F, Foccoli P, et al. Endoscopic treatment of malignant airway obstructions in 2,008 patients. Chest. 1996;110:1536‑1542.</li>
+<li>Breitenbucher A, Chhajed PN, Brutsche MH, Mordasini C, Schilter D, Tamm M. Long‑term follow‑up and survival after Ultraflex stent insertion in the management of complex malignant airway stenoses. Respiration. 2008;75(4):443‑449.</li>
+<li>Wahidi MM, Unroe MA, Adlakha N, Beyea M, Shofer SL. The use of electrocautery as the primary ablation modality for malignant and benign airway obstruction. J Thorac Oncol. 2011;6(9):1516‑1520.</li>
+</ol>
+</div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

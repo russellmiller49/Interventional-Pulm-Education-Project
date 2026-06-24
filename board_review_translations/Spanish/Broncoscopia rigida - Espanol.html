@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broncoscopia rígida: indicaciones, técnica y resolución de problemas</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Broncoscopia rígida: indicaciones, técnica y resolución de problemas</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p><strong>Dominio:</strong> Broncoscopia rígida/extracción de cuerpos extraños</p>
+    <p>Este capítulo se ajusta a los estándares de conocimientos procedimentales del examen de Neumología Intervencionista de la AABIP. Integra las indicaciones y contraindicaciones actuales, las estrategias de anestesia y ventilación, las técnicas paso a paso (incluidas la desobstrucción tumoral y la extracción de cuerpos extraños), la resolución de problemas, las complicaciones, los resultados y los puntos de alto rendimiento para el éxito en el examen y la práctica clínica.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Diferenciar las indicaciones y contraindicaciones de la broncoscopia rígida (BR), y seleccionar cuándo se prefiere la BR sobre la broncoscopia flexible.</li>
+        <li>Elegir estrategias de anestesia y ventilación (TIVA, ventilación espontánea-asistida frente a ventilación jet) que optimicen la seguridad de la intervención planificada.</li>
+        <li>Ejecutar los pasos fundamentales de la intubación con BR y la secuencia de desobstrucción endobronquial (desvascularizar → resecar mecánicamente → coagular la base), y aplicar un enfoque basado en una lista de verificación de competencia.</li>
+        <li>Manejar la hemoptisis masiva, extraer cuerpos extraños (incluida la extracción en bloque) y tratar la estenosis benigna (simple frente a compleja) mediante BR.</li>
+        <li>Anticipar, prevenir y manejar las complicaciones periprocedimiento, y comprender los predictores de éxito y mortalidad derivados de datos de registros.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento</h3>
+    <div class="algorithm-note">
+        <p><strong>Concepto clave:</strong> La BR es el instrumento de elección para el compromiso agudo de la vía aérea central (maligno o benigno), la hemoptisis masiva y la extracción compleja de cuerpos extraños (CE), debido a su mayor control de la ventilación, capacidad de aspiración y taponamiento del sangrado, y posibilidad de introducir instrumentos de gran calibre.</p>
+        
+        <p><strong>Contraindicaciones:</strong>
+        <br><em>Absoluta:</em> Inestabilidad de la columna cervical.
+        <br><em>Relativas:</em> Artrodesis cervical previa, inestabilidad hemodinámica, hipoxemia grave, coagulopatía/trombocitopenia y falta de experiencia del operador.</p>
+        
+        <p><strong>Anestesia:</strong> La BR se realiza bajo anestesia general. Se prefiere la TIVA (anestesia intravenosa total) sobre los agentes inhalatorios porque la BR es un sistema abierto.</p>
+        
+        <p><strong>Ventilación:</strong>
+        <br><em>Espontánea-asistida:</em> Permite aplicar PEEP y monitorizar en un sistema cerrado.
+        <br><em>Ventilación jet:</em> Permite reducir rápidamente la FiO₂ antes de las terapias térmicas, pero no monitoriza la presión de la vía aérea y conlleva riesgo de barotrauma.</p>
+        
+        <p><strong>Tasas de éxito:</strong> El éxito técnico de la broncoscopia terapéutica para la obstrucción maligna de la vía aérea central (OVAC) es alto (~93 %). La mejoría de la disnea es mayor en pacientes con más síntomas al inicio; la enfermedad limitada a un lóbulo se beneficia menos.</p>
+        
+        <p><strong>Predictores de éxito:</strong> La enfermedad endobronquial y la colocación de una prótesis aumentan el éxito; ASA &gt;3, insuficiencia renal, afectación del bronquio principal izquierdo y fístula traqueoesofágica (FTE) lo disminuyen.</p>
+        
+        <p><strong>Complicaciones:</strong> Tasa global ~3,9 %; mortalidad relacionada con el procedimiento ~0,5 %. El riesgo aumenta en casos urgentes/emergentes, ASA &gt;3, reintervenciones y uso de sedación moderada.</p>
+        
+        <p><strong>Mortalidad:</strong> La mortalidad a 30 días refleja la carga de enfermedad; se asocia con ASA &gt;3, ECOG &gt;1, obstrucción intrínseca o mixta y colocación de prótesis (en especial prótesis en Y).</p>
+        
+        <p><strong>Secuencia de desobstrucción:</strong> Coagular/desvascularizar → resección mecánica con el bisel → coagular la base tumoral. (Colocar una prótesis cuando exista obstrucción extrínseca o mixta, o inestabilidad de la vía aérea).</p>
+        
+        <p><strong>Estenosis benigna:</strong>
+        <br><em>Simple (mucosa):</em> Incisiones radiales + dilatación seriada.
+        <br><em>Compleja (cartílago):</em> A menudo requiere una prótesis.</p>
+        
+        <p><strong>Perla sobre cuerpos extraños:</strong> Sujete al máximo y extraiga en bloque junto con el broncoscopio rígido; inspeccione la orofaringe si el cuerpo extraño se pierde durante la extracción.</p>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Indicaciones (ejemplos):</strong> OVAC maligna o benigna, hemoptisis masiva, extracción compleja de CE, dilatación de estenosis, colocación de prótesis y facilitación de terapias ablativas térmicas o frías. La BR suele servir como plataforma para intervenciones combinadas (p. ej., dilatación + prótesis; láser/APC + desobstrucción mecánica).</p>
+    
+    <p><strong>Contraindicaciones:</strong></p>
+    <ul>
+        <li><strong>Absoluta:</strong> Inestabilidad de la columna cervical.</li>
+        <li><strong>Relativas:</strong> Artrodesis cervical previa, inestabilidad hemodinámica, hipoxemia grave, coagulopatía/trombocitopenia grave y falta de experiencia del operador.</li>
+    </ul>
+    
+    <p><strong>¿Cuándo elegir BR en lugar de broncoscopia flexible?</strong> Lesiones traqueales, CE que causan asfixia, sangrado masivo e insuficiencia respiratoria aguda por OVAC; la BR proporciona mayor control de la vía aérea y la ventilación, además de aspiración e instrumentación de gran calibre.</p>
+
+    <h4>Evaluación previa al procedimiento</h4>
+    <p><strong>Vía aérea, imágenes y cartografía de la enfermedad:</strong> Defina el patrón de obstrucción (intrínseca, extrínseca o mixta) y la permeabilidad distal para planificar la desobstrucción y la colocación de prótesis.</p>
+    <p><strong>Planificación de anestesia y ventilación:</strong> Preoxigene; acuerde la TIVA frente a otras alternativas; elija ventilación espontánea-asistida o jet según la necesidad de terapia térmica y el paso de instrumentos.</p>
+    <p><strong>Estratificación del riesgo:</strong> La clase ASA y el estado funcional (ECOG/Zubrod) se correlacionan con las complicaciones y la mortalidad a 30 días en conjuntos de datos de registros.</p>
+    <p><em>[Nota del autor/limitación]: Los umbrales específicos de laboratorio antes del procedimiento, el manejo de anticoagulantes/antiagregantes y la profilaxis antibiótica requieren protocolos locales o referencias adicionales.</em></p>
+
+    <h4>Equipo y preparación</h4>
+    <p><strong>Broncoscopio rígido:</strong> De acero inoxidable, recto y biselado, con fenestraciones distales (broncoscopios de ~40 cm; traqueoscopios de ~30 cm). Los diámetros externos habituales son ~9–14 mm; los tubos están codificados por color y disponen de múltiples puertos proximales para ventilación e instrumentos.</p>
+    <p><strong>Visualización:</strong> Telescopio directo o cámara de video; el broncoscopio flexible se utiliza con frecuencia a través del tubo rígido para inspección distal, limpieza y terapia complementaria.</p>
+    <p><strong>Plataformas:</strong> Los sistemas de uso común ofrecen tubos intercambiables, cabezales universales y endoscopios semiflexibles integrados que preservan la luz para aspiración e instrumentos.</p>
+
+    <h3>Técnica paso a paso / Lista de verificación del procedimiento</h3>
+
+    <h4>1. Intubación rígida (pasos fundamentales)</h4>
+    <ul>
+        <li><strong>Posición:</strong> Extensión parcial de la cabeza («posición de olfateo»); proteja los dientes con un dedo o protector.</li>
+        <li><strong>Inserción:</strong> Introduzca por la línea media con el bisel orientado hacia anterior; pase por debajo de la epiglotis; rote 90° para atravesar las cuerdas vocales y entrar en la tráquea superior.</li>
+        <li><strong>Navegación:</strong> Para entrar en un bronquio principal, gire la cabeza del paciente hacia el hombro contralateral.</li>
+        <li><strong>Selección del tamaño:</strong> Utilice inicialmente un traqueoscopio de mayor calibre cuando sea necesario; introduzca tubos más pequeños a través de este sin repetir la intubación.</li>
+        <li><strong>Evaluación:</strong> Utilice el broncoscopio flexible a través del tubo rígido para la evaluación y limpieza distal.</li>
+        <li><strong>Competencia (RIGID-TASC):</strong> Utilice una lista de verificación estandarizada para evaluar las destrezas básicas de BR. Los alumnos suelen alcanzar la competencia después de aproximadamente 5–24 procedimientos de BR (mediana ~15).</li>
+    </ul>
+
+    <h4>2. Desobstrucción tumoral (intrínseca o mixta)</h4>
+    <ol>
+        <li>Coagule/desvascularice.</li>
+        <li>Resección mecánica: utilice el bisel distal (maniobra de «sacacorchos/extracción del núcleo»).</li>
+        <li>Coagule la base.</li>
+        <li>Prótesis: coloque una prótesis cuando persista compresión extrínseca/inestabilidad o cuando el riesgo de recidiva sea alto.</li>
+    </ol>
+
+    <h4>3. Extracción de cuerpos extraños</h4>
+    <ul>
+        <li>Elija pinzas lisas para CE redondeados y pinzas de cocodrilo para objetos cortantes o irregulares.</li>
+        <li>Extraiga en bloque junto con la BR (broncoscopio + pinzas + CE) para evitar que se pierda.</li>
+        <li>Si se pierde durante la extracción, inspeccione la orofaringe/laringe antes de volver a intubar.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+
+    <h4>Hemoptisis masiva</h4>
+    <p><strong>Acción:</strong> Intube con BR, ventile y proteja el pulmón contralateral.</p>
+    <p><strong>Control:</strong> Ejerza taponamiento con el propio broncoscopio; aplique solución salina fría, APC, fotocoagulación láser o electrocauterio según corresponda.</p>
+
+    <h4>Estenosis crítica / entrada difícil</h4>
+    <p><strong>Acción:</strong> Utilice tubos más pequeños (pediátricos), balones o guíe la luz inicial con el broncoscopio flexible; después, dilate de manera seriada.</p>
+
+    <h4>Selección de la ventilación</h4>
+    <p><strong>Espontánea/asistida:</strong> Sistema cerrado (requiere sellar las fugas con compresas). Permite PEEP y monitorización de la presión, pero puede producirse hipoxia cuando los instrumentos ocupan la luz.</p>
+    <p><strong>Ventilación jet:</strong> Libera la luz y facilita una reducción rápida de la FiO₂ para terapias térmicas. Sin embargo, no se miden las presiones de la vía aérea, lo que aumenta el riesgo de neumotórax iatrogénico.</p>
+
+    <hr>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <p><strong>Expectativas:</strong> Al recanalizar las vías aéreas centrales se espera un alivio rápido de los síntomas. Los beneficios tras la desobstrucción suelen persistir 2–3 meses; después de colocar una prótesis, ≈4 meses (más tiempo si el tratamiento oncológico es eficaz).</p>
+    <p><strong>Vigilancia:</strong> En tumores benignos tratados por vía endoscópica, programe broncoscopias de vigilancia debido al riesgo poco frecuente de recidiva o transformación maligna.</p>
+
+    <h3>Complicaciones: prevención, reconocimiento y manejo</h3>
+    <ul>
+        <li><strong>Tasas:</strong> Complicaciones globales ~3,9 %; mortalidad del procedimiento ~0,4–0,5 % en series y registros grandes.</li>
+        <li><strong>Tipos:</strong> Lesión orofaríngea/dental, desgarro de la membrana posterior, hipoxia/hipercapnia, sangrado, neumotórax y arritmia.</li>
+        <li><strong>Factores de riesgo:</strong> Casos urgentes/emergentes, ASA &gt;3, reintervenciones y sedación moderada (frente a anestesia general).</li>
+        <li><strong>Determinantes de mortalidad a 30 días:</strong> ASA &gt;3; ECOG &gt;1; obstrucción intrínseca/mixta; colocación de prótesis, en especial una prótesis en Y (como reflejo de una gran carga de enfermedad).</li>
+    </ul>
+
+    <h3>Poblaciones y situaciones especiales</h3>
+    <p><strong>Fístula traqueoesofágica (FTE):</strong> Evalúe el compromiso de la vía aérea por un tumor esofágico voluminoso. El orden de colocación de las prótesis se individualiza; una fístula persistente después de una prótesis esofágica óptima suele requerir doble prótesis (vía aérea + esófago).</p>
+    <p><strong>Estenosis benigna posterior a intubación/traqueostomía:</strong> La distinción entre simple y compleja determina si basta la dilatación o si se necesita una prótesis para estabilizar el cartílago.</p>
+    <p><strong>Anastomosis posquirúrgicas o de trasplante:</strong> Las estenosis estrechas de alto grado pueden requerir primero tubos pediátricos o balones.</p>
+    <p><em>[Nota del autor/limitación]: No se incluyen aquí vías específicas para el embarazo, detalles de la reversión de la anticoagulación ni intervalos de vigilancia específicos del trasplante.</em></p>
+
+    <h3>Evidencia y resultados</h3>
+    <p><strong>Eficacia:</strong> En datos de registros multicéntricos (&gt;900 pacientes, &gt;1.100 procedimientos), el éxito técnico se aproxima al 93 %. La mejoría de la disnea es mayor cuando la puntuación de Borg previa al procedimiento es más alta y menor cuando la obstrucción se limita a un lóbulo.</p>
+    <p><strong>Predictores de éxito:</strong> Enfermedad endobronquial y colocación de prótesis (↑ éxito); ASA &gt;3, insuficiencia renal, enfermedad del bronquio principal izquierdo y FTE (↓ éxito).</p>
+    <p><strong>Seguridad y anestesia:</strong> Series de un solo centro respaldan la seguridad de la TIVA con ventilación espontánea-asistida en cohortes de alto riesgo; la duración del procedimiento es un predictor modificable de mortalidad a 30 días.</p>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Obstrucción maligna de la vía aérea central (OVACM): manejo endoscópico</h4>
+    <div class="mermaid">
+    graph TD
+        A["Confirmar OVACM (TC + broncoscopia)"] --> B{"Patrón de obstrucción"}
+        B -->|Intrínseca| C["Coagular/desvascularizar"]
+        C --> D["Resección mecánica (bisel de BR)"]
+        D --> E["Coagular la base tumoral"]
+        E --> F["Considerar prótesis (si hay inestabilidad)"]
+        B -->|Extrínseca| G["Dilatar"]
+        G --> H["Colocar prótesis de vía aérea"]
+        B -->|Mixta| I["Pasos para el componente intrínseco (coagular → resecar → base)"]
+        I --> J["Dilatar el estrechamiento residual"]
+        J --> K["Colocar prótesis"]
+    </div>
+
+    <h4>Hemoptisis masiva (estabilización y control)</h4>
+    <div class="mermaid">
+    graph TD
+        A["Hemoptisis masiva"] --> B["Intubar con BR (proteger el pulmón contralateral)"]
+        B --> C["Taponamiento con el broncoscopio"]
+        C --> D["Solución salina fría ± APC/láser/electrocauterio"]
+        D --> E["Tratamiento definitivo"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <p><strong>Tabla 1. Contraindicaciones de la broncoscopia rígida</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Elementos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Absoluta</td>
+                <td>Inestabilidad de la columna cervical</td>
+            </tr>
+            <tr>
+                <td>Relativas</td>
+                <td>Artrodesis cervical; inestabilidad hemodinámica; hipoxemia grave; coagulopatía grave; trombocitopenia grave; falta de experiencia del operador</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>Tabla 2. Especificaciones rápidas del broncoscopio rígido</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo de tubo</th>
+                <th>Longitud</th>
+                <th>Luz/diseño</th>
+                <th>Rango habitual del diámetro externo</th>
+                <th>Ventajas principales</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Traqueoscopio</td>
+                <td>~30 cm</td>
+                <td>Sin fenestraciones</td>
+                <td>9–14 mm</td>
+                <td>Intubación inicial; permite introducir tubos más pequeños a través de él.</td>
+            </tr>
+            <tr>
+                <td>Broncoscopio</td>
+                <td>~40 cm</td>
+                <td>Fenestrado (ranuras de ventilación)</td>
+                <td>9–14 mm</td>
+                <td>Ventilación del pulmón contralateral; aspiración de gran calibre; acceso para instrumentos.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>Tabla 3. Opciones de anestesia y ventilación en BR</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Dominio</th>
+                <th>Opción</th>
+                <th>Ventajas</th>
+                <th>Consideraciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Anestesia</td>
+                <td>TIVA</td>
+                <td>Preferida para un sistema abierto; evita la contaminación del quirófano</td>
+                <td>Requiere titulación cuidadosa y buena comunicación</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Inhalatoria</td>
+                <td>Agentes conocidos</td>
+                <td>Se utiliza menos por las fugas y la contaminación en un sistema abierto</td>
+            </tr>
+            <tr>
+                <td>Ventilación</td>
+                <td>Espontánea-asistida</td>
+                <td>Sistema cerrado; monitorización de PEEP/presión</td>
+                <td>Requiere sellar fugas; riesgo de hipoxia cuando la luz está ocupada</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Ventilación jet</td>
+                <td>Más espacio en el tubo; reducción rápida de FiO₂ para terapias térmicas</td>
+                <td>Sin visualización de presión/ventilación minuto; riesgo de neumotórax</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>Tabla 4. Secuencia de desobstrucción de un tumor endobronquial intrínseco</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Paso</th>
+                <th>Acción</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Coagular/desvascularizar</td>
+                <td>Láser/electrocauterio/APC para reducir al mínimo el sangrado</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Resección mecánica</td>
+                <td>Utilizar el bisel del broncoscopio rígido («sacacorchos/extracción del núcleo»)</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Coagular la base</td>
+                <td>Tratar el lecho tumoral residual; colocar una prótesis si la vía aérea es inestable</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1 — Hemoptisis masiva y protección de la vía aérea</h4>
+        <p>Un paciente de 64 años con carcinoma escamocelular presenta hemoptisis de 300 mL e hipoxemia. ¿Cuál es el siguiente mejor paso?</p>
+        <p>A. Gran volumen de solución salina fría mediante broncoscopio flexible bajo sedación moderada<br>
+        B. Intubación selectiva con tubo endotraqueal y esperar la embolización por radiología intervencionista<br>
+        C. Broncoscopia rígida bajo anestesia general con protección de la vía aérea y taponamiento; después, hemostasia tópica<br>
+        D. Ácido tranexámico nebulizado y observación<br>
+        E. Toracotomía inmediata</p>
+        <p><strong>Respuesta: C.</strong> La BR permite controlar la vía aérea, aspirar, ejercer taponamiento y aplicar modalidades hemostáticas.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2 — OVACM mixta</h4>
+        <p>Un paciente de 58 años presenta disnea y la TC muestra una masa en el bronquio principal derecho con compresión extrínseca. ¿Cuál es la secuencia endoscópica óptima?</p>
+        <p>A. Solo dilatación con balón<br>
+        B. Desvascularizar → resección mecánica → coagular la base → prótesis<br>
+        C. Solo láser<br>
+        D. Colocar primero la prótesis y después aplicar láser a través de ella<br>
+        E. Solo terapia fotodinámica</p>
+        <p><strong>Respuesta: B.</strong> La obstrucción mixta requiere desobstruir el componente intrínseco y colocar una prótesis para la compresión extrínseca/inestabilidad.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3 — Estenosis benigna posterior a intubación</h4>
+        <p>Un paciente de 36 años presenta estenosis traqueal de segmento corto con cartílago intacto. ¿Qué enfoque se prefiere?</p>
+        <p>A. Colocación de prótesis de silicona como primera línea<br>
+        B. Incisiones radiales en tres puntos seguidas de dilatación seriada; sin prótesis si el cartílago está intacto (estenosis simple)<br>
+        C. Solo electrocauterio<br>
+        D. Solo resección mecánica con el bisel de la BR<br>
+        E. Resección traqueal inmediata</p>
+        <p><strong>Respuesta: B.</strong> La estenosis simple (mucosa) suele resolverse con incisiones radiales + dilataciones; la compleja (cartílago) suele requerir una prótesis.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas (opción múltiple)</h3>
+    <ol>
+        <li><strong>¿Cuál es una contraindicación absoluta de la broncoscopia rígida?</strong>
+            <br>A. BR previa
+            <br>B. Artrodesis cervical previa
+            <br>C. Inestabilidad de la columna cervical
+            <br>D. Hemoptisis masiva
+            <br>E. ASA III
+            <br><strong>Respuesta: C.</strong> La BR permite controlar la vía aérea, aspirar, ejercer taponamiento y aplicar modalidades hemostáticas.</li>
+        <li><strong>Durante la intubación con BR, ¿qué maniobra es correcta?</strong>
+            <br>A. Mantener el bisel paralelo a las cuerdas vocales al atravesarlas
+            <br>B. Colocar el bisel bajo la epiglotis y después rotar 90° para pasar las cuerdas vocales
+            <br>C. Girar la cabeza hacia el mismo lado del bronquio objetivo para entrar en él
+            <br>D. Sostener el broncoscopio con la mano izquierda para intubar
+            <br>E. Permitir que los intentos superen los 120 s
+            <br><strong>Respuesta: B.</strong> Los puntos anatómicos y la rotación son fundamentales para una intubación rígida segura.</li>
+        <li><strong>¿Qué estrategia ventilatoria facilita mejor una reducción rápida de la FiO₂ antes de las terapias térmicas?</strong>
+            <br>A. Ventilación espontánea-asistida
+            <br>B. Ventilación jet
+            <br>C. Ventilación oscilatoria de alta frecuencia
+            <br>D. Oxigenación apneica
+            <br>E. Ventilación con presión negativa
+            <br><strong>Respuesta: B.</strong> La ventilación jet permite disminuir rápidamente la FiO₂, pero carece de monitorización de la presión.</li>
+        <li><strong>¿Qué factor se asocia con mayor éxito técnico en los datos de registros?</strong>
+            <br>A. Obstrucción limitada a un lóbulo
+            <br>B. ASA &gt;3
+            <br>C. Enfermedad endobronquial y/o colocación de prótesis
+            <br>D. Presencia de FTE
+            <br>E. Insuficiencia renal
+            <br><strong>Respuesta: C.</strong> Ambos aumentan las tasas de éxito.</li>
+        <li><strong>La secuencia para la desobstrucción de un tumor intrínseco con BR es:</strong>
+            <br>A. Resección mecánica → coagular la base → desvascularizar
+            <br>B. Desvascularizar → resección mecánica → coagular la base
+            <br>C. Dilatar → prótesis → láser
+            <br>D. Colocar primero la prótesis → aplicar láser a través de ella
+            <br>E. Solo crioextracción
+            <br><strong>Respuesta: B.</strong> Reduce el sangrado y despeja la luz de manera eficiente.</li>
+        <li><strong>Tratamiento inicial más apropiado para una compresión puramente extrínseca sin tumor intraluminal:</strong>
+            <br>A. Desobstrucción con láser
+            <br>B. Crioterapia
+            <br>C. Dilatación seguida de colocación de prótesis
+            <br>D. Terapia fotodinámica
+            <br>E. Observación
+            <br><strong>Respuesta: C.</strong> Aborda el componente mecánico.</li>
+        <li><strong>Una desventaja de seguridad de la ventilación jet durante la BR es:</strong>
+            <br>A. Reducción lenta de la FiO₂
+            <br>B. Imposibilidad de utilizar terapias térmicas
+            <br>C. Imposibilidad de monitorizar las presiones de la vía aérea → riesgo de neumotórax
+            <br>D. Dificultad para introducir instrumentos
+            <br>E. PEEP excesiva
+            <br><strong>Respuesta: C.</strong> Es la principal contrapartida de la ventilación jet.</li>
+        <li><strong>¿Qué factor se asocia con complicaciones en los datos de registros?</strong>
+            <br>A. Anestesia general
+            <br>B. Sedación moderada
+            <br>C. ASA I–II
+            <br>D. Procedimiento ambulatorio electivo
+            <br>E. Ausencia de broncoscopia previa
+            <br><strong>Respuesta: B.</strong> Se ha relacionado con mayores tasas de complicaciones.</li>
+        <li><strong>La mortalidad a 30 días después de una broncoscopia terapéutica se asoció con todos los siguientes excepto:</strong>
+            <br>A. ASA &gt;3
+            <br>B. ECOG &gt;1
+            <br>C. Obstrucción intrínseca o mixta
+            <br>D. Obstrucción limitada exclusivamente a un lóbulo
+            <br>E. Colocación de una prótesis en Y
+            <br><strong>Respuesta: D.</strong> Es menos probable que la enfermedad limitada a un lóbulo tenga el mismo perfil de alto riesgo.</li>
+        <li><strong>Mejor práctica para extraer un cuerpo extraño redondeado alojado en un bronquio:</strong>
+            <br>A. Pinzas de cocodrilo y extracción por fragmentos
+            <br>B. Pinzas lisas con extracción en bloque de BR + pinzas + CE
+            <br>C. Solo extracción con criosonda
+            <br>D. Fragmentación con láser y después aspiración
+            <br>E. Solo extracción con cesta mediante broncoscopio flexible
+            <br><strong>Respuesta: B.</strong> Reduce al mínimo la pérdida y la aspiración.</li>
+        <li><strong>En una estenosis benigna posterior a intubación con afectación del cartílago (compleja), el plan con BR debe incluir:</strong>
+            <br>A. Solo dilatación seriada
+            <br>B. Solo láser
+            <br>C. Dilatación más prótesis para estabilizar la vía aérea
+            <br>D. Observación
+            <br>E. Radioterapia externa
+            <br><strong>Respuesta: C.</strong> Por lo general se requiere estabilización.</li>
+        <li><strong>¿Qué afirmación sobre la anestesia para la BR es más precisa?</strong>
+            <br>A. Se prefiere la anestesia inhalatoria porque el sistema es cerrado
+            <br>B. Se prefiere TIVA; la BR es un sistema abierto con fugas/contaminación importantes bajo anestesia inhalatoria
+            <br>C. La sedación moderada produce resultados similares a la TIVA
+            <br>D. La preoxigenación es innecesaria
+            <br>E. Los agentes volátiles permiten reducir la FiO₂ más rápido que la ventilación jet
+            <br><strong>Respuesta: B.</strong> Predomina la TIVA; la sedación moderada se asocia con más complicaciones.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Orden de las prótesis en la FTE:</strong> La decisión de colocar una prótesis en la vía aérea, el esófago o ambos se individualiza. Muchos comienzan con la prótesis esofágica, salvo que el compromiso de la vía aérea exija colocar primero una prótesis aérea; una fístula persistente suele requerir doble prótesis.</li>
+        <li><strong>Elección de la ventilación:</strong> Los centros varían entre ventilación espontánea-asistida y jet. Ambas son aceptables; la ventilación jet permite reducir más rápido la FiO₂, pero sacrifica la monitorización de la presión.</li>
+        <li><strong>Estrategia de sedación:</strong> La sedación moderada se asocia con más complicaciones en la BR, aunque todavía puede utilizarse en contextos limitados; predomina la TIVA.</li>
+    </ul>
+
+    <h3>Lista de verificación final</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li>Confirme la indicación y descarte contraindicaciones absolutas (inestabilidad de la columna cervical).</li>
+            <li>Alinee al equipo respecto de la anestesia/ventilación (prefiera TIVA; elija ventilación espontánea-asistida o jet según el caso).</li>
+            <li>Prepare la bandeja completa de BR: tubos de varios tamaños, telescopio/cámara, dispositivo de coagulación, crioterapia, dilatadores, prótesis y aspiración.</li>
+            <li>Secuencia de intubación: línea media, bisel anterior, bajo la epiglotis, rotación de 90° a través de las cuerdas; cabeza hacia el lado contralateral para entrar en un bronquio principal.</li>
+            <li>Tumor intrínseco: desvascularizar → resección mecánica → base; mantenga una FiO₂ adecuada para terapias térmicas.</li>
+            <li>Obstrucción extrínseca/mixta: dilate y coloque una prótesis para lograr estabilidad.</li>
+            <li>Hemoptisis masiva: BR para controlar la vía aérea, ejercer taponamiento y aplicar hemostasia tópica.</li>
+            <li>Extracción de CE: elija las pinzas según la forma; extracción en bloque.</li>
+            <li>Estenosis benigna: clasifique como simple o compleja; coloque una prótesis cuando exista afectación del cartílago.</li>
+            <li>Anticipe las complicaciones; evite la sedación moderada; identifique perfiles de alto riesgo (casos urgentes, ASA &gt;3, mal estado funcional).</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>BR</dt>
+            <dd>Broncoscopia rígida</dd>
+            <dt>OVAC/OVACM</dt>
+            <dd>Obstrucción (maligna) de la vía aérea central</dd>
+            <dt>CE</dt>
+            <dd>Cuerpo extraño</dd>
+            <dt>TIVA</dt>
+            <dd>Anestesia intravenosa total</dd>
+            <dt>ASA</dt>
+            <dd>Clasificación del estado físico de la American Society of Anesthesiologists</dd>
+            <dt>ECOG/Zubrod</dt>
+            <dd>Escala de estado funcional</dd>
+            <dt>APC</dt>
+            <dd>Coagulación con plasma de argón</dd>
+            <dt>FTE</dt>
+            <dd>Fístula traqueoesofágica</dd>
+        </dl>
+    </div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+        <ol>
+            <li>Ernst A, Feller-Kopman D, Becker HD, Mehta AC. Central Airway Obstruction. Am J Respir Crit Care Med. 2004;169(12):1278-1297.</li>
+            <li>Colt HG, Harrell J, Neuman TR, Robbins J. Safety and Efficacy of Therapeutic Flexible Bronchoscopy in Patients With Malignant Central Airway Obstruction. Chest. 1992;102(3):881-886.</li>
+            <li>Dumon JF. A Dedicated Airway Stent for Use in the Tracheobronchial Tree. Chest. 1990;97(2):328-332.</li>
+            <li>Dutau H, Musani AI, Plojoux J, et al. Therapeutic Rigid Bronchoscopy: An Essential Skill for the Interventional Pulmonologist. Respirology. 2014;19(5):714-721.</li>
+            <li>Dalar L, Eryuksel E, Karasulu L, et al. Rigid Bronchoscopy in the Management of Central Airway Obstruction: Experience of 2,008 Procedures. J Bronchology Interv Pulmonol. 2015;22(3):220-228.</li>
+            <li>Ost DE, Ernst A, Grosu HB, et al; AQuIRE Investigators. Complications Following Therapeutic Bronchoscopy for Malignant Central Airway Obstruction: Results of the AQuIRE Registry. Chest. 2015;148(2):450-471.</li>
+            <li>Ost DE, Ernst A, Grosu HB, et al. Success of Therapeutic Bronchoscopy for Malignant Central Airway Obstruction: Data From the AQuIRE Registry. Chest. 2015;147(5):1282-1298.</li>
+            <li>Stratakos G, Gerovasili V, Dimitropoulos C, et al. Immediate Effect of Therapeutic Bronchoscopic Interventions on Quality of Life in Malignant Airway Obstruction. Respiration. 2011;81(6):475-480.</li>
+            <li>Lunn W, Garland R, Ashiku SK, et al. Management of Central Airway Obstruction With Rigid Bronchoscopy. Semin Thorac Cardiovasc Surg. 2009;21(4):307-315.</li>
+            <li>Gasparini S. Rigid Bronchoscopy: Indications, Technique, and Results. Monaldi Arch Chest Dis. 1997;52(4):360-364.</li>
+            <li>Noppen M, D'Haese J, Meysman M, Peche R, Vincken W. Interventional Bronchoscopic Techniques in the Management of Benign Airway Stenosis: An Institutional Experience. Thorax. 1999;54(10):1084-1090.</li>
+            <li>Murgu SD, Colt HG. Tracheobronchial Stenosis and the Role of Bronchoscopic Interventions: State of the Art. Chest. 2016;150(2):426-441.</li>
+            <li>Dutau H, Vandemoortele T, Laroumagne S, et al. Rigid Bronchoscopy in the Management of Hemoptysis. J Thorac Dis. 2016;8(Suppl 2):S137-S150.</li>
+            <li>Hetzel M, Eberhardt R, Herth FJF, et al. Cryorecanalization for Central Airway Obstruction: A New Approach. Chest. 2010;138(4):857-862.</li>
+            <li>Freitag L, Darwiche K. Endoscopic Treatment of Benign Airway Stenosis: An Update. Clin Chest Med. 2013;34(3):429-438.</li>
+            <li>Murgu S, Colt H. Role of Rigid Bronchoscopy in the Management of Airway Stents. Clin Chest Med. 2010;31(1):151-167.</li>
+            <li>Dumon JF, Reboud E, Garbe L, Aucomte F, Meric B. Treatment of Tracheobronchial Lesions by Laser Photoresection. Chest. 1982;81(3):278-284.</li>
+            <li>Cavaliere S, Venuta F, Foccoli P, Toninelli C, La Face B. Endoscopic Treatment of Malignant Airway Obstruction in 2,008 Patients. Chest. 1996;110(6):1536-1542.</li>
+            <li>Gompelmann D, Eberhardt R, Herth FJF. Advanced Diagnostic and Therapeutic Bronchoscopy in the Management of Central Airway Obstruction. Lung. 2010;188(5):435-441.</li>
+            <li>Stather DR, MacEachern P, Chee A, Dumoulin E, Tremblay A. An Educational Program for Rigid Bronchoscopy: Development and Evaluation of the RIGID-TASC Tool. Ann Am Thorac Soc. 2015;12(4):539-543.</li>
+            <li>Folch E, Keyes C. Airway Stents. Ann Cardiothorac Surg. 2018;7(2):273-283.</li>
+            <li>Darwiche K, Freitag L. Rigid Bronchoscopy in the Management of Airway Emergencies. Semin Respir Crit Care Med. 2018;39(6):760-770.</li>
+            <li>Sood N, Murgu SD, Colt HG. Anesthetic Considerations During Rigid Bronchoscopy for Interventional Pulmonology Procedures. J Bronchology Interv Pulmonol. 2013;20(4):296-306.</li>
+            <li>Mayse ML, Greenheck J, Friedman M, et al. Airway Stent Complications: Experience With Silicone and Metallic Stents in 191 Patients. Chest. 2004;125(3):1069-1076.</li>
+            <li>Dalar L, Karasulu L, Abul Y, et al. Rigid Bronchoscopy for Foreign Body Aspiration: Clinical Review of 500 Cases. Respir Care. 2016;61(6):736-741.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anestesia para neumología intervencionista</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Anestesia para neumología intervencionista</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda las estrategias anestésicas y de vía aérea para procedimientos de neumología intervencionista (NI), con énfasis en ecografía endobronquial (EBUS), broncoscopia periférica —incluidas las plataformas robóticas—, broncoscopia rígida para obstrucción central de la vía aérea y reducción broncoscópica de volumen pulmonar (RBVP). Los dominios incluyen estrategia y monitorización de la sedación, selección del dispositivo de vía aérea, métodos ventilatorios para reducir la atelectasia, manejo de oxígeno durante terapias térmicas y no térmicas, consideraciones en masas mediastínicas, anestesia para pleuroscopia con cuidados anestésicos monitorizados y prevención y rescate de complicaciones.</p>
+
+    <hr>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Elegir un plan anestésico y un dispositivo de vía aérea adaptados a EBUS, navegación o biopsia periférica, broncoscopia rígida terapéutica y RBVP.</li>
+        <li>Aplicar estrategias ventilatorias —PEEP, titulación de FiO₂ y maniobras de reclutamiento— que reduzcan la atelectasia y mejoren la broncoscopia periférica.</li>
+        <li>Integrar normas de seguridad con oxígeno para ablación térmica y modalidades más nuevas, y reducir el riesgo de neumotórax durante RBVP.</li>
+        <li>Anticipar y tratar las dificultades de masas mediastínicas, EPOC grave con hiperinsuflación y alto riesgo de aspiración.</li>
+        <li>Ejecutar respuestas de crisis frente a hipoxemia, atrapamiento aéreo, riesgo de incendio de la vía aérea y hemoptisis masiva.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>El continuo de sedación</strong> se define por la respuesta del paciente, no por el fármaco elegido. Use MOAA/S, RASS o Ramsay para fijar la profundidad objetivo.</li>
+            <li><strong>La lidocaína tópica</strong> reduce la tos y los requisitos de sedación; evite benzocaína y tetracaína por riesgo de metahemoglobinemia.</li>
+            <li><strong>Midazolam</strong>, benzodiacepina preferida, más fentanilo ofrece sedación y analgesia sinérgicas cuando es apropiada la sedación moderada.</li>
+            <li>No se recomiendan anticolinérgicos rutinarios —atropina o glicopirrolato— para controlar secreciones o mejorar la función pulmonar durante broncoscopia.</li>
+            <li><strong>La elección del dispositivo de vía aérea importa:</strong>
+                <ul>
+                    <li><strong>Mascarilla laríngea:</strong> Excelente acceso a tráquea superior, pero menos segura si hay riesgo de sangrado o aspiración.</li>
+                    <li><strong>Tubo endotraqueal:</strong> Opción más segura y preferida con alto riesgo de sangrado; use diámetro interno ≥8,0–8,5 mm para EBUS y preserve espacio ventilatorio alrededor del broncoscopio.</li>
+                    <li><strong>Broncoscopio rígido:</strong> Instrumento terapéutico fundamental para obstrucción central y control del sangrado.</li>
+                </ul>
+            </li>
+            <li><strong>Sedación para EBUS:</strong> Son aceptables sedación moderada o profunda; no existe una obligación universal de utilizar una vía aérea artificial.</li>
+            <li><strong>La atelectasia</strong> es frecuente bajo anestesia general y reduce el rendimiento periférico. El riesgo aumenta con el tiempo y el IMC; su prevención es un concepto examinable clave.</li>
+            <li>Dos estrategias validadas para reducir la atelectasia intraprocedimiento:
+                <ul>
+                    <li><strong>VESPA:</strong> Tubo endotraqueal, reclutamiento inmediato, PEEP 8–10 cmH₂O y FiO₂ &lt;100 %.</li>
+                    <li><strong>LNVP:</strong> Tubo endotraqueal, reclutamiento tras intubación, objetivos de PEEP más altos —hasta 15–20 cmH₂O según lóbulo—, volumen corriente 10–12 mL/kg de peso ideal y breves pausas respiratorias para imagen.</li>
+                </ul>
+            </li>
+            <li><strong>Modalidades térmicas</strong> —láser, electrocauterio, coagulación con plasma de argón—: mantenga FiO₂ &lt;0,40 para prevenir incendio de la vía aérea.</li>
+            <li><strong>Crioterapia por pulverización:</strong> Desconecte el circuito para permitir la salida del gas; preoxigene antes de cada aplicación; vigile barotrauma y embolia gaseosa.</li>
+            <li><strong>RBVP:</strong> La mayoría de los centros utiliza anestesia general con tubo endotraqueal. Use volúmenes corrientes bajos, tiempos espiratorios largos y la FiO₂ mínima tolerable durante el despliegue de válvulas para reducir el riesgo de neumotórax.</li>
+            <li><strong>Masa mediastínica:</strong> La ventilación con presión positiva y bloqueo neuromuscular pueden ser seguros; prevenga la hiperinsuflación prolongando rigurosamente la espiración.</li>
+            <li><strong>Algoritmo de hemoptisis masiva:</strong> Lado sangrante hacia abajo → aislar pulmón con tubo grande y bloqueador o tubo de doble luz → broncoscopia rígida para estabilización → tratamiento definitivo, como embolización.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>La atelectasia bajo anestesia general aparece con rapidez, especialmente en segmentos dependientes. Borra los blancos, produce divergencia entre TC y cuerpo y reduce la precisión de la navegación. En una cohorte prospectiva, la mayoría de los pacientes desarrolló atelectasia segmentaria dependiente dentro de unos 30 minutos de la inducción; el IMC alto y la mayor duración aumentaron el riesgo.</p>
+    <p>La EPOC y la hiperinsuflación complican la RBVP y los procedimientos centrales: la espiración incompleta aumenta la auto-PEEP, causa hipotensión y eleva el riesgo de barotrauma.</p>
+    <p>Las masas mediastínicas pueden comprimir la vía aérea y estructuras vasculares; los cambios dinámicos durante la ventilación exigen planificación y titulación vigilantes.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <ul>
+        <li><strong>Sedación moderada:</strong> Adecuada para broncoscopia diagnóstica sencilla y EBUS seleccionada en pacientes estables sin alto riesgo de aspiración o sangrado.</li>
+        <li><strong>Sedación profunda o anestesia general:</strong> Necesaria para navegación periférica avanzada —incluida la robótica—, desobstrucción o prótesis terapéuticas, broncoscopia rígida, RBVP, alto riesgo de sangrado, vía aérea difícil o procedimientos prolongados.</li>
+        <li><strong>Contraindicaciones relativas de la mascarilla laríngea:</strong> Alto riesgo de aspiración, sangrado importante previsto o necesidad de abordar de forma segura patología subglótica o traqueal proximal.</li>
+    </ul>
+
+    <h4>Evaluación preprocedimiento</h4>
+    <ul>
+        <li><strong>Vía aérea y riesgo de aspiración:</strong> Optimice ayuno e identifique reflujo, gastroparesia o factores de «estómago lleno».</li>
+        <li><strong>Revisión de la TC de tórax:</strong> Examínela con cuidado para EBUS y lesiones centrales. Un tubo endotraqueal puede ocultar blancos traqueales superiores y estaciones mediastínicas altas; los abordajes transorales sin vía aérea artificial requieren protector dental.</li>
+        <li><strong>Objetivo de sedación:</strong> Elija y documente una meta MOAA/S o RASS.</li>
+        <li><strong>Complementos:</strong> Aplique lidocaína tópica en la vía aérea; evite benzocaína y tetracaína.</li>
+        <li><strong>Masa mediastínica:</strong> Evalúe calibre de vía aérea y riesgo hemodinámico; prepare rescate con broncoscopio rígido y, según las capacidades del centro, disponibilidad de ECMO.</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Dispositivos de vía aérea:</strong>
+            <ul>
+                <li><strong>Mascarilla laríngea, preferentemente de segunda generación:</strong> Para trabajo diagnóstico avanzado cuando se necesita buen acceso traqueal.</li>
+                <li><strong>Tubo endotraqueal:</strong> Diámetro interno ≥8,0–8,5 mm con broncoscopios EBUS para conservar una luz de ventilación; 8,5–9,0 mm mejora el margen para intercambio gaseoso.</li>
+                <li><strong>Broncoscopio rígido:</strong> Permite ventilación simultánea y paso de herramientas rígidas; esencial para prótesis de silicona y control del sangrado.</li>
+            </ul>
+        </li>
+        <li><strong>Ventilación:</strong> Ventiladores anestésicos modernos y ventilador jet disponible para broncoscopia rígida.</li>
+        <li><strong>Seguridad térmica y de crioterapia:</strong> Mezclador de oxígeno en el campo, aspiración, suero salino y plan de incendio de vía aérea.</li>
+    </ul>
+
+    <h4>Técnica paso a paso y lista de verificación</h4>
+    <ol>
+        <li><strong>Reunión del equipo:</strong> Confirme objetivos, profundidad prevista, dispositivo de vía aérea, plan ventilatorio y contingencias de incendio y sangrado.</li>
+        <li><strong>Plan de sedación:</strong>
+            <ul>
+                <li><em>Moderada:</em> Midazolam + fentanilo, titulados según escala.</li>
+                <li><em>Profunda o anestesia general:</em> Se favorece TIVA, que mantiene profundidad estable pese a aspiración o circuitos abiertos; utilice bloqueo neuromuscular cuando sea imprescindible un campo inmóvil.</li>
+            </ul>
+        </li>
+        <li><strong>Colocación del dispositivo de vía aérea:</strong> Elíjalo según el procedimiento y el riesgo de sangrado o aspiración.</li>
+        <li><strong>Configuración ventilatoria:</strong>
+            <ul>
+                <li><em>Broncoscopia periférica:</em> Elija ajustes tipo VESPA o LNVP.</li>
+                <li><em>Broncoscopia rígida:</em> Ajuste ventilación jet o mecánica y reduzca fugas con empaquetamiento o tapas.</li>
+            </ul>
+        </li>
+        <li><strong>Política de oxígeno:</strong>
+            <ul>
+                <li><em>Ablación térmica:</em> FiO₂ &lt;0,40 durante la aplicación de energía.</li>
+                <li><em>RBVP:</em> FiO₂ mínima tolerable durante el despliegue de válvulas.</li>
+            </ul>
+        </li>
+        <li><strong>Durante el procedimiento:</strong> Minimice el enclavamiento del broncoscopio; vigile aumento de presiones; repita reclutamiento si se abre el circuito, de acuerdo con el protocolo.</li>
+        <li><strong>Extubación y recuperación:</strong> Trate la tos con lidocaína tópica y opioides de acción corta según necesidad; vigile neumotórax o hipoventilación.</li>
+    </ol>
+
+    <h4>Resolución de problemas y manejo intraprocedimiento</h4>
+    <ul>
+        <li><strong>Hipoxemia durante broncoscopia periférica:</strong> Confirme FiO₂ y PEEP, realice reclutamiento, aspire tapones mucosos, evite enclavamiento excesivo y considere reposicionar.</li>
+        <li><strong>Hipotensión con PEEP alta en LNVP:</strong> Reduzca PEEP para mejorar retorno venoso; descarte neumotórax o neumomediastino; administre líquidos o vasopresores según necesidad.</li>
+        <li><strong>Broncoespasmo:</strong> Administre broncodilatador volátil —breve exposición a sevoflurano— o broncodilatador por el broncoscopio; profundice la anestesia.</li>
+        <li><strong>Prevención de incendio:</strong> Mantenga FiO₂ &lt;0,40, comuníquelo antes de activar energía y suspenda brevemente el oxígeno si es necesario.</li>
+        <li><strong>Atrapamiento aéreo en obstrucción central:</strong> Prolongue la espiración —I:E 1:3 o mayor—, considere desconexión breve y aspire distal a la lesión para desinflar gas atrapado.</li>
+        <li><strong>Crioterapia por pulverización:</strong> Desconecte el ventilador —manguito desinflado o puerto de mascarilla laríngea o rígido abierto— para permitir salida de gas; reanude oxigenación entre ciclos.</li>
+        <li><strong>Hemoptisis masiva:</strong> Coloque el lado sangrante hacia abajo; asegure y aísle la vía aérea con tubo grande y bloqueador o doble luz; cambie a broncoscopia rígida; planifique hemostasia definitiva, como embolización.</li>
+    </ul>
+
+    <h4>Cuidados y seguimiento después del procedimiento</h4>
+    <ul>
+        <li><strong>Periférica o RBVP:</strong> Vigile neumotórax —especialmente después de RBVP—, hipoventilación y desaturación tardía.</li>
+        <li><strong>Terapia térmica:</strong> Reevalúe edema tardío de vía aérea o secreciones; mantenga FiO₂ segura en recuperación si puede requerirse nueva instrumentación.</li>
+        <li><strong>Casos con PEEP alta:</strong> Continúe vigilancia hemodinámica hasta normalizarla.</li>
+    </ul>
+
+    <h4>Complicaciones: prevención, reconocimiento y tratamiento</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Complicación</th>
+                <th>Prevención y tratamiento</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Atelectasia</strong></td>
+                <td>Prevenga con PEEP y reclutamiento; minimice FiO₂; reduzca el tiempo bajo anestesia general antes de navegar.</td>
+            </tr>
+            <tr>
+                <td><strong>Neumotórax o neumomediastino</strong></td>
+                <td>Más probables con PEEP alta o pausas respiratorias agresivas; descomprima de inmediato cuando esté indicado.</td>
+            </tr>
+            <tr>
+                <td><strong>Incendio de vía aérea</strong></td>
+                <td>Control estricto de FiO₂ durante el uso de energía térmica.</td>
+            </tr>
+            <tr>
+                <td><strong>Sangrado</strong></td>
+                <td>Prepare agentes tópicos; taponamiento con broncoscopio rígido; aísle pulmón si es masivo; escale a radiología intervencionista o cirugía.</td>
+            </tr>
+            <tr>
+                <td><strong>Hipercapnia o atrapamiento aéreo</strong></td>
+                <td>Ajuste relación I:E, reduzca frecuencia respiratoria y aspire más allá de la lesión.</td>
+            </tr>
+            <tr>
+                <td><strong>Aspiración</strong></td>
+                <td>Mitigue con ayuno, inducción semisentada, secuencia rápida cuando esté indicada y aspiración gástrica mediante dispositivo supraglótico con canal de drenaje.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Poblaciones especiales</h4>
+    <ul>
+        <li><strong>Masa mediastínica:</strong> La anestesia general con bloqueo neuromuscular y presión positiva puede ampliar la vía aérea; la clave es prevenir hiperinsuflación con frecuencia baja y espiración prolongada. Tenga disponible un broncoscopio rígido y discuta vías de rescate, incluida ECMO en centros seleccionados.</li>
+        <li><strong>EPOC grave o candidatos a RBVP:</strong> Favorezca volumen corriente bajo, aproximadamente 6–8 mL/kg, espiración prolongada, I:E cercana a 1:3, y ventilación controlada por volumen; anticipe hipoxemia durante la evaluación de ventilación colateral.</li>
+        <li><strong>Obesidad:</strong> Puede requerir PEEP mayor para evitar cierre de vía aérea; vigile efectos hemodinámicos.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Evidencia y resultados: datos clave</h3>
+    <ul>
+        <li><strong>Sedación para EBUS:</strong> Son aceptables sedación moderada y profunda; no existe una obligación universal de dispositivo de vía aérea.</li>
+        <li><strong>Incidencia de atelectasia bajo anestesia general:</strong> Alta en segmentos dependientes dentro de unos 30–40 minutos; aumenta con IMC y tiempo.</li>
+        <li><strong>VESPA, ensayo aleatorizado:</strong> Tubo endotraqueal con reclutamiento inmediato, PEEP 8–10 y FiO₂ &lt;100 % reduce de manera marcada la atelectasia frente a mascarilla laríngea con FiO₂ 100 % y PEEP cero, sin aumentar complicaciones.</li>
+        <li><strong>LNVP, series retrospectivas:</strong> Tubo endotraqueal, reclutamiento, PEEP alta de 10–20 cmH₂O según lóbulo, volumen corriente 10–12 mL/kg de peso ideal y pausas para imagen reducen atelectasia dependiente y lobar; se requiere vigilancia hemodinámica, pues fue frecuente el uso de vasopresores.</li>
+        <li><strong>Patrones anestésicos en RBVP:</strong> Predomina anestesia general con tubo; son habituales volumen corriente bajo y espiración larga. Una FiO₂ menor durante el despliegue se asoció con menos neumotórax y aparición más tardía cuando ocurrió.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1 — Elección de vía aérea y plan anestésico para broncoscopia avanzada</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Procedimiento planificado"] --> B{"¿Terapia de vía aérea central?"}
+        B -- "Sí" --> C["Broncoscopia rígida"]
+        C --> C1["Anestesia general + TIVA"]
+        C --> C2["Ventilación jet o mecánica"]
+        C --> C3["FiO2 < 0,40 para terapia térmica"]
+        B -- "No" --> D{"¿Navegación/biopsia periférica?"}
+        D -- "Sí" --> E["Anestesia general + tubo ≥8–8,5 mm"]
+        E --> E1["Elegir ajustes VESPA o LNVP"]
+        E --> E2["Reclutamiento + PEEP + FiO2 baja"]
+        D -- "No" --> F{"¿EBUS?"}
+        F -- "Sí" --> G["Sedación moderada o profunda"]
+        G --> H{"¿Riesgo alto de sangrado/aspiración?"}
+        H -- "Sí" --> I["Anestesia general + tubo ≥8–8,5 mm"]
+        H -- "No" --> J["Mascarilla laríngea o vía natural + protector dental"]
+        F -- "No" --> K["Broncoscopia flexible diagnóstica sencilla"]
+        K --> L["Sedación moderada +/- mascarilla laríngea"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Resumen:</strong></p>
+        <ul>
+            <li><strong>Trabajo terapéutico central</strong> —desobstrucción, energía térmica, prótesis—: broncoscopia rígida, anestesia general con TIVA, ventilación jet o mecánica y FiO₂ &lt;0,40 durante terapia térmica.</li>
+            <li><strong>Navegación o biopsia periférica:</strong> Anestesia general, tubo ≥8,0–8,5 mm, VESPA o LNVP, reclutamiento, PEEP y FiO₂ tan baja como se tolere.</li>
+            <li><strong>EBUS:</strong> Sedación moderada o profunda; elija mascarilla laríngea o vía natural para acceso traqueal proximal si el riesgo es bajo y tubo si el riesgo de aspiración o sangrado es alto o se necesita estabilidad.</li>
+            <li><strong>Broncoscopia flexible sencilla:</strong> Sedación moderada y lidocaína tópica; considere mascarilla laríngea para comodidad y acceso.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 2 — Ventilación para reducir atelectasia en broncoscopia periférica</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Inducción y colocación del tubo"] --> B["Reclutamiento inmediato"]
+        B --> C{"Estrategia"}
+        C -- "VESPA" --> D["PEEP 8–10; Vt 6–8 mL/kg peso ideal; FiO2 <100 %"]
+        C -- "LNVP" --> E["PEEP 10–15 (superior/medio), 15–20 (inferior); Vt 10–12 mL/kg"]
+        E --> F["Pausas respiratorias con APL≈PEEP para imagen"]
+        D --> G{"¿Hemodinámica estable?"}
+        E --> G
+        G -- "No" --> H["Reducir PEEP; líquidos; vasopresores; descartar neumotórax/neumomediastino"]
+        G -- "Sí" --> I["Proceder a navegación/biopsia"]
+        I --> J["Volver a reclutar si se abre circuito o se desinfla manguito"]
+        J --> K["Minimizar enclavamiento; aspirar tapones"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Resumen:</strong></p>
+        <ul>
+            <li>Después de intubar, realice reclutamiento.</li>
+            <li><strong>VESPA:</strong> Vt 6–8 mL/kg de peso ideal, PEEP 8–10 y titulación de FiO₂ por debajo de 1,0.</li>
+            <li><strong>LNVP:</strong> Vt 10–12 mL/kg, PEEP 10–15 cmH₂O para lóbulos superior o medio y 15–20 para inferiores; pausas breves con APL aproximada a PEEP.</li>
+            <li><strong>Si aparece hipotensión:</strong> Reduzca PEEP, administre líquidos o vasopresores y descarte barotrauma.</li>
+            <li><strong>Durante el procedimiento:</strong> Minimice enclavamiento, aspire selectivamente y repita reclutamiento tras desconexión.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 3 — Oxígeno y ventilación durante RBVP</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Anestesia general + tubo grande"] --> B["Control por volumen; Vt 6–8 mL/kg; I:E≈1:3"]
+        B --> C["FiO2 mínima tolerable para desplegar válvulas"]
+        C --> D["Vigilar hipotensión/auto-PEEP"]
+        D -- "Si aparece" --> E["Reducir frecuencia; prolongar espiración; reevaluar"]
+        D -- "Si no aparece" --> F["Continuar; considerar reducir Vt después de válvula"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y cuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Continuo de sedación y responsabilidades</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Profundidad</th>
+                <th>Respuesta</th>
+                <th>Ventilación</th>
+                <th>Vía aérea</th>
+                <th>Cardiovascular</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Mínima</td>
+                <td>Respuesta normal a la voz</td>
+                <td>Sin cambios</td>
+                <td>Sin cambios</td>
+                <td>Sin cambios</td>
+            </tr>
+            <tr>
+                <td>Moderada</td>
+                <td>Respuesta intencionada a estímulo verbal o táctil</td>
+                <td>Adecuada</td>
+                <td>No requiere intervención</td>
+                <td>Generalmente mantenida</td>
+            </tr>
+            <tr>
+                <td>Profunda</td>
+                <td>Respuesta intencionada a estímulo doloroso</td>
+                <td>Puede ser inadecuada</td>
+                <td>Puede requerir intervención</td>
+                <td>Generalmente mantenida</td>
+            </tr>
+            <tr>
+                <td>Anestesia general</td>
+                <td>No despertable</td>
+                <td>Frecuentemente inadecuada</td>
+                <td>Suele requerir intervención</td>
+                <td>Puede estar alterada</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 2. Selección del dispositivo de vía aérea en broncoscopia</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Dispositivo</th>
+                <th>Ventajas</th>
+                <th>Limitaciones</th>
+                <th>Usos habituales</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Vía aérea natural con protector dental</td>
+                <td>Sin equipo adicional; rápida</td>
+                <td>Profundidad limitada; sin control si sangra</td>
+                <td>Broncoscopias diagnósticas breves</td>
+            </tr>
+            <tr>
+                <td>Mascarilla laríngea de segunda generación</td>
+                <td>Permite anestesia general, ventilación ajustable y excelente acceso a tráquea superior</td>
+                <td>Riesgo de aspiración; menos segura con sangrado importante</td>
+                <td>EBUS, extracción de cuerpos extraños, RBVP en centros seleccionados</td>
+            </tr>
+            <tr>
+                <td>Tubo endotraqueal ≥8–8,5 mm</td>
+                <td>Más seguro, control ventilatorio completo y mejor para sangrado</td>
+                <td>Acceso limitado a tráquea proximal; puede ocultar estaciones altas</td>
+                <td>Broncoscopia terapéutica; EBUS de alto riesgo</td>
+            </tr>
+            <tr>
+                <td>Broncoscopio rígido</td>
+                <td>Estabilización y taponamiento; despliegue de silicona; paso de instrumentos grandes</td>
+                <td>Requiere experiencia y configuración ventilatoria especial</td>
+                <td>Obstrucción central y hemoptisis masiva</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Protocolos ventilatorios para reducir atelectasia</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Protocolo</th>
+                <th>Vía aérea</th>
+                <th>Vt (mL/kg peso ideal)</th>
+                <th>PEEP (cmH₂O)</th>
+                <th>FiO₂</th>
+                <th>Reclutamiento</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Convencional</td>
+                <td>A menudo mascarilla laríngea</td>
+                <td>Variable</td>
+                <td>0–5</td>
+                <td>A menudo 1,0</td>
+                <td>Ninguno o variable</td>
+                <td>Más atelectasia y ocultamiento del blanco</td>
+            </tr>
+            <tr>
+                <td>VESPA</td>
+                <td>Tubo endotraqueal</td>
+                <td>6–8</td>
+                <td>8–10</td>
+                <td>&lt;100 %</td>
+                <td>Inmediato tras intubación</td>
+                <td>Gran reducción de atelectasia unilateral o bilateral sin complicaciones adicionales</td>
+            </tr>
+            <tr>
+                <td>LNVP</td>
+                <td>Tubo endotraqueal</td>
+                <td>10–12</td>
+                <td>10–15 superior/medio; 15–20 inferior</td>
+                <td>Mínima tolerable</td>
+                <td>Cuatro maniobras tras intubación y pausas respiratorias</td>
+                <td>Menos atelectasia; vigilancia hemodinámica porque el uso de vasopresores no es infrecuente</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <p><strong>Caso 1:</strong> Un paciente de 68 años con un nódulo de 15 mm en el lóbulo inferior derecho se somete a broncoscopia robótica bajo anestesia general. A los 30 minutos el nódulo deja de verse en imagen; IMC 36. ¿Qué cambio único restablece mejor la visibilidad?</p>
+        <p>A. Aumentar FiO₂ a 1,0<br>
+        B. Añadir PEEP de 10 cmH₂O y realizar reclutamiento<br>
+        C. Aumentar Vt a 15 mL/kg<br>
+        D. Cambiar a mascarilla laríngea<br>
+        E. Suspender el bloqueo neuromuscular</p>
+        <p><strong>Respuesta: B.</strong> La atelectasia dependiente es frecuente bajo anestesia general, en especial con IMC alto y duración prolongada. El reclutamiento y una PEEP adecuada mejoran aireación y visualización.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Caso 2:</strong> Un paciente de 60 años con obstrucción central requiere desobstrucción térmica. Durante la activación aparece una llama breve en la punta. ¿Siguiente mejor paso?</p>
+        <p>A. Aumentar FiO₂ a 1,0<br>
+        B. Continuar la energía para terminar rápido<br>
+        C. Detener flujo de gas y aspirar; confirmar FiO₂ &lt;0,40 antes de reanudar<br>
+        D. Instilar epinefrina<br>
+        E. Abortar definitivamente el caso</p>
+        <p><strong>Respuesta: C.</strong> La prevención de incendio exige restringir FiO₂. Detenga energía, restablezca un campo seguro con oxígeno bajo y solo entonces continúe.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas</h3>
+    <p><strong>Un paciente está programado para broncoscopia diagnóstica con sedación moderada. ¿Qué define el nivel de sedación?</strong><br>
+    A. Uso de propofol<br>
+    B. Uso conjunto de midazolam y fentanilo<br>
+    C. Respuesta del paciente a estímulos<br>
+    D. Valor de CO₂ al final de la espiración<br>
+    E. Lugar de atención<br>
+    <strong>Respuesta: C.</strong> Los niveles se definen por la respuesta, no por los fármacos concretos.</p>
+
+    <p><strong>Para EBUS-TBNA dirigida a estaciones mediastínicas altas, ¿qué vía preserva mejor el acceso?</strong><br>
+    A. Tubo de 7,0 mm<br>
+    B. Tubo de 8,5 mm<br>
+    C. Mascarilla laríngea<br>
+    D. Tubo de doble luz<br>
+    E. Tubo nasal de 6,0 mm<br>
+    <strong>Respuesta: C.</strong> La mascarilla laríngea ofrece mejor acceso a tráquea proximal y estaciones altas.</p>
+
+    <p><strong>Durante broncoscopia periférica bajo anestesia general, ¿qué factor se correlaciona más con atelectasia?</strong><br>
+    A. Edad<br>
+    B. Tabaquismo<br>
+    C. IMC y tiempo desde la inducción<br>
+    D. Lobectomía previa<br>
+    E. Sexo<br>
+    <strong>Respuesta: C.</strong> IMC mayor y tiempo más prolongado aumentan la probabilidad.</p>
+
+    <p><strong>En ventilación tipo VESPA, el paso inmediato más apropiado después de intubar es:</strong><br>
+    A. PEEP cero<br>
+    B. Reclutamiento seguido de PEEP 8–10 cmH₂O<br>
+    C. Cambiar a mascarilla laríngea<br>
+    D. FiO₂ 1,0 durante todo el caso<br>
+    E. I:E 1:1<br>
+    <strong>Respuesta: B.</strong> VESPA usa reclutamiento inmediato, PEEP moderada y FiO₂ titulada por debajo de 100 %.</p>
+
+    <p><strong>En LNVP, ¿qué objetivo de PEEP corresponde a una lesión del lóbulo inferior derecho?</strong><br>
+    A. 0–5 cmH₂O<br>
+    B. 5–8 cmH₂O<br>
+    C. 8–10 cmH₂O<br>
+    D. 15–20 cmH₂O<br>
+    E. 20–25 cmH₂O<br>
+    <strong>Respuesta: D.</strong> Los lóbulos inferiores reciben PEEP más alta para contrarrestar la dependencia.</p>
+
+    <p><strong>Se planifica ablación térmica de un tumor central. ¿Qué objetivo de oxígeno es más seguro durante la energía?</strong><br>
+    A. FiO₂ 1,0<br>
+    B. FiO₂ 0,8<br>
+    C. FiO₂ 0,6<br>
+    D. FiO₂ ≤0,40<br>
+    E. El aire ambiente es inseguro<br>
+    <strong>Respuesta: D.</strong> Mantenga FiO₂ ≤0,40 para reducir el riesgo de incendio.</p>
+
+    <p><strong>En RBVP con válvulas endobronquiales, ¿qué ajuste se asocia a menos neumotórax?</strong><br>
+    A. FiO₂ alta durante el despliegue<br>
+    B. FiO₂ mínima tolerable durante el despliegue<br>
+    C. Vt &gt;10 mL/kg<br>
+    D. Eliminar PEEP<br>
+    E. Frecuencia respiratoria alta<br>
+    <strong>Respuesta: B.</strong> Una FiO₂ menor se asocia con menor incidencia y aparición más tardía.</p>
+
+    <p><strong>En broncoscopia rígida con ventilación jet, ¿qué ajuste evita atrapamiento en una lesión de válvula unidireccional?</strong><br>
+    A. Aumentar tiempo inspiratorio<br>
+    B. Aumentar frecuencia a 600/min sin otros cambios<br>
+    C. Reducir tiempo inspiratorio y permitir espiración más larga<br>
+    D. Humidificación al 100 %<br>
+    E. Aumentar presión impulsora<br>
+    <strong>Respuesta: C.</strong> Una inspiración más corta y espiración más larga facilitan salida de gas.</p>
+
+    <p><strong>Un paciente con gran masa mediastínica anterior recibe anestesia para broncoscopia rígida. ¿Qué estrategia reduce mejor el colapso hemodinámico por hiperinsuflación?</strong><br>
+    A. Frecuencia alta y espiración corta<br>
+    B. Mantener respiración espontánea a toda costa<br>
+    C. Presión positiva con espiración prolongada y frecuencia baja<br>
+    D. Solo anestésicos volátiles<br>
+    E. Evitar bloqueo neuromuscular<br>
+    <strong>Respuesta: C.</strong> La presión positiva puede ampliar la vía; prevenga hiperinsuflación con espiración larga y frecuencia baja.</p>
+
+    <p><strong>Durante navegación periférica con LNVP aparece hipotensión. ¿Siguiente mejor paso?</strong><br>
+    A. Aumentar PEEP a 20 cmH₂O<br>
+    B. Reducir PEEP y evaluar neumotórax o neumomediastino<br>
+    C. Aumentar FiO₂ a 1,0 para el resto del caso<br>
+    D. Administrar esmolol<br>
+    E. Aumentar volumen corriente<br>
+    <strong>Respuesta: B.</strong> Reduzca PEEP para mejorar retorno venoso, descarte barotrauma y sostenga la hemodinámica.</p>
+
+    <p><strong>Durante EBUS con tubo de 8,0 mm la ventilación es insuficiente al introducir el broncoscopio. ¿Medida preventiva más práctica?</strong><br>
+    A. Usar tubo de 7,0 mm<br>
+    B. Usar mascarilla laríngea siempre<br>
+    C. Usar tubo ≥8,5–9,0 mm para conservar una luz mayor<br>
+    D. Cambiar a intubación despierta<br>
+    E. Agregar atropina<br>
+    <strong>Respuesta: C.</strong> El broncoscopio grande ocupa gran parte del tubo; uno mayor conserva área transversal.</p>
+
+    <p><strong>Hemoptisis masiva durante broncoscopia flexible: ¿primeros dos pasos?</strong><br>
+    A. Trendelenburg y retirar el broncoscopio<br>
+    B. Lado sangrante arriba y presión positiva<br>
+    C. Lado sangrante abajo y aislar la vía aérea con tubo grande y bloqueador o doble luz<br>
+    D. Solo epinefrina nebulizada inmediata<br>
+    E. Realizar TC de tórax<br>
+    <strong>Respuesta: C.</strong> La posición protege el pulmón sano; aísle la vía y cambie a broncoscopia rígida según necesidad.</p>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Sedación para EBUS:</strong> La práctica varía entre moderada, profunda y anestesia general; moderada y profunda son aceptables y no existe un dispositivo obligatorio.</li>
+        <li><strong>Prevención de atelectasia, VESPA frente a LNVP:</strong> Ambas reducen atelectasia. LNVP usa PEEP y Vt mayores con posibles costos hemodinámicos; VESPA utiliza Vt menor y PEEP moderada. La elección depende de experiencia local, flujo de imagen y tolerancia.</li>
+        <li><strong>Masa mediastínica:</strong> Se cuestiona la evitación tradicional del bloqueo neuromuscular; la presión positiva cuidadosamente manejada con espiración prolongada puede ser segura.</li>
+        <li><strong>Agentes de sedación:</strong> Remimazolam y dexmedetomidina son prometedores en pleuroscopia y broncoscopia, pero su adopción y logística varían.</li>
+        <li><strong>Terapias emergentes:</strong> Se expanden las aplicaciones de campo eléctrico pulsado y microondas; sigue siendo fundamental reducir FiO₂ durante la energía.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Lista de verificación final</h3>
+    <ul>
+        <li>Defina la profundidad de sedación con una escala objetiva y elija los fármacos en consecuencia.</li>
+        <li>Use lidocaína tópica para suprimir la tos; evite benzocaína y tetracaína.</li>
+        <li>Adapte el dispositivo al procedimiento y al riesgo: mascarilla laríngea para acceso, tubo para seguridad y rígido para terapia.</li>
+        <li>En broncoscopia periférica, planifique reclutamiento, PEEP y FiO₂ baja para prevenir atelectasia.</li>
+        <li>Use tubo ≥8,0–8,5 mm para EBUS; considere mascarilla laríngea para tráquea proximal.</li>
+        <li>Durante terapia térmica, mantenga FiO₂ ≤0,40 y comuníquelo antes de activar energía.</li>
+        <li>Para RBVP, use Vt bajo, espiración larga y FiO₂ mínima tolerable durante el despliegue.</li>
+        <li>En masa mediastínica, la presión positiva con espiración prolongada y bloqueo neuromuscular puede ser segura; prepare broncoscopio rígido y rescate.</li>
+        <li>Vigile los efectos hemodinámicos de PEEP alta; redúzcala y descarte barotrauma si aparece hipotensión.</li>
+        <li>En hemoptisis masiva, lado sangrante abajo, aislamiento pulmonar, broncoscopia rígida y coordinación de tratamiento definitivo.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>APL</dt><dd>Válvula limitadora de presión ajustable</dd>
+            <dt>APC</dt><dd>Coagulación con plasma de argón</dd>
+            <dt>RBVP</dt><dd>Reducción broncoscópica de volumen pulmonar</dd>
+            <dt>CBCT</dt><dd>Tomografía computarizada de haz cónico</dd>
+            <dt>DLT</dt><dd>Tubo de doble luz</dd>
+            <dt>EBUS</dt><dd>Ecografía endobronquial</dd>
+            <dt>ETT</dt><dd>Tubo endotraqueal</dd>
+            <dt>FiO₂</dt><dd>Fracción inspirada de oxígeno</dd>
+            <dt>AG</dt><dd>Anestesia general</dd>
+            <dt>PI</dt><dd>Peso ideal</dd>
+            <dt>NI</dt><dd>Neumología intervencionista</dd>
+            <dt>LMA</dt><dd>Mascarilla laríngea</dd>
+            <dt>LNVP</dt><dd>Protocolo ventilatorio para navegación pulmonar</dd>
+            <dt>MOAA/S</dt><dd>Evaluación modificada del observador sobre alerta y sedación</dd>
+            <dt>PEEP</dt><dd>Presión positiva al final de la espiración</dd>
+            <dt>PEF</dt><dd>Campo eléctrico pulsado</dd>
+            <dt>NM</dt><dd>Neumomediastino</dd>
+            <dt>NTX</dt><dd>Neumotórax</dd>
+            <dt>RASS</dt><dd>Escala de agitación y sedación de Richmond</dd>
+            <dt>rEBUS</dt><dd>Ecografía endobronquial radial</dd>
+            <dt>TIVA</dt><dd>Anestesia intravenosa total</dd>
+            <dt>Vt</dt><dd>Volumen corriente</dd>
+            <dt>VESPA</dt><dd>Estrategia ventilatoria para prevenir atelectasia</dd>
+        </dl>
+    </div>
+
+    <hr>
+
+    <h3>Referencias</h3>
+    <div class="references">
+        <ol>
+            <li>Wahidi MM, Jain P, Jantz M, et al. American College of Chest Physicians consensus statement on the use of topical anesthesia, analgesia, and sedation during flexible bronchoscopy in adult patients. Chest. 2011;140(5):1342-1350.</li>
+            <li>Wahidi MM, Herth F, Yasufuku K, et al. Technical aspects of endobronchial ultrasound-guided transbronchial needle aspiration. Chest. 2016;149(3):816-835.</li>
+            <li>Sagar AS, Sabath BF, Eapen GA, et al. Incidence and location of atelectasis developed during bronchoscopy under general anesthesia: the I-LOCATE trial. Chest. 2020;158(6):2658-2666.</li>
+            <li>Salahuddin M, Sarkiss M, Sagar AS, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia (VESPA). Chest. 2022;162(6):1393-1401.</li>
+            <li>Bhadra K, Setser RM, Condra W, Pritchett MA. Lung navigation ventilation protocol to optimize biopsy of peripheral lung lesions. J Bronchology Interv Pulmonol. 2022;29(1):7-17.</li>
+            <li>Bhadra K, Baleeiro C, Patel S, et al. High tidal volume, high positive end-expiratory pressure and apneic breath-hold strategies (Lung Navigation Ventilation Protocol): results in 100 patients. J Bronchology Interv Pulmonol. 2024;31:105-116.</li>
+            <li>Khan A, Bashour SI, Casal RF. Preventing atelectasis during bronchoscopy under general anesthesia. J Thorac Dis. 2023;15(6):3443-3452.</li>
+            <li>Roodenburg SA, Barends CRM, Krenz G, et al. Safety and considerations of the anaesthetic management during bronchoscopic lung volume reduction treatments. Respiration. 2023;102:55-63.</li>
+            <li>Lentz RJ, Low S-W, Saettele T, et al. Association between inspired oxygen fraction and pneumothorax after endobronchial valve placement for emphysema. Ann Am Thorac Soc. 2023;20(6).</li>
+            <li>Sarkiss M, Eapen GA. Airway management for central airway and transbronchial lung procedures. Curr Anesthesiol Rep. 2022;12:390-397.</li>
+            <li>Sikachi RR, Mishra KL, Anders M. Anesthetic considerations in interventional pulmonology. Curr Opin Pulm Med. 2024;30:99-106.</li>
+            <li>Putz L, Mayné A, Dincq AS. Jet ventilation during rigid bronchoscopy in adults: a focused review. Biomed Res Int. 2016;2016:4234861.</li>
+            <li>Mahajan AK, Patel PP, Garg R, Manley C, Ibrahim O, Mehta AC. Safety of laser and thermal therapy during rigid bronchoscopy using manual hand jet ventilation. Surg Technol Int. 2021;39:103-106.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

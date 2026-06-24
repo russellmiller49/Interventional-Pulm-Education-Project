@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prótesis de la vía aérea</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; overflow-x: auto; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Prótesis de la vía aérea</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda la selección de dispositivos, indicaciones y contraindicaciones, medición y despliegue, prevención y tratamiento de complicaciones, y situaciones especiales (enfermedad anastomótica después de trasplante, traqueobroncomalacia y fístulas aerodigestivas). Se enfatizan las decisiones prácticas y relevantes para el examen en la obstrucción central de la vía aérea (OCVA) maligna y no maligna, incluidas opciones contemporáneas como prótesis personalizadas o impresas en 3D y prótesis bioabsorbibles.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <p>Al finalizar este capítulo, el lector podrá:</p>
+    <ul>
+        <li>Clasificar la OCVA como intrínseca, extrínseca o mixta y elegir una estrategia broncoscópica y protésica apropiada.</li>
+        <li>Seleccionar el tipo de prótesis adecuado (silicona frente a metálica autoexpandible cubierta y opciones más nuevas) para enfermedad maligna y benigna.</li>
+        <li>Medir, cargar, desplegar y retirar prótesis de silicona mediante broncoscopia rígida, aplicando las medidas clave de diámetro, longitud y márgenes.</li>
+        <li>Anticipar, prevenir y tratar complicaciones tempranas y tardías (migración, tejido de granulación, impactación de moco e infección).</li>
+        <li>Tratar poblaciones especiales: estenosis posintubación o postraqueostomía, enfermedad anastomótica del trasplante, traqueobroncomalacia y fístulas aerodigestivas.</li>
+        <li>Interpretar la evidencia actual (p. ej., datos aleatorizados sobre prótesis en malignidad y advertencias regulatorias en enfermedad benigna) y las tecnologías en evolución (dispositivos impresos en 3D, bioabsorbibles y liberadores de fármacos).</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento: perlas, dificultades y trampas del examen</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>Clasifique la obstrucción:</strong> Intrínseca (endoluminal), extrínseca (compresión) o mixta. Desobstruya la intrínseca y coloque prótesis en la extrínseca o mixta; reevalúe la necesidad después del tratamiento oncológico.</li>
+            <li><strong>La silicona es la opción principal en enfermedad benigna:</strong> Es removible, personalizable y tiene un perfil a largo plazo más seguro; evite prótesis metálicas no cubiertas o parcialmente cubiertas en enfermedad benigna.</li>
+            <li><strong>Reglas de tamaño que aparecen en el examen:</strong> Extienda aproximadamente 5 mm más allá de ambos extremos de la lesión. Diámetros habituales: tráquea 14–16 mm; bronquio principal 12–13 mm; bronquio intermediario 10–11 mm. Sobredimensione ligeramente cuando no exista un anclaje rígido, como en malacia o fístula.</li>
+            <li><strong>Despliegue:</strong> La broncoscopia rígida bajo anestesia general es el estándar para silicona; mida la longitud endoscópicamente; dilate antes del despliegue; complete la expansión con balón o instrumentos rígidos si es necesario.</li>
+            <li><strong>Riesgo de migración:</strong> Aumenta con tamaño insuficiente o involución tumoral después del tratamiento; considere prótesis en reloj de arena o fijación externa cuando corresponda; las prótesis en Y u Oki reducen la migración en la carina o la carina primaria derecha.</li>
+            <li><strong>La impactación de moco puede ser mortal:</strong> Prevenga con humidificación y nebulización de suero salino; establezca un plan de higiene bronquial posoperatoria y seguimiento broncoscópico temprano.</li>
+            <li><strong>Granulación en los bordes:</strong> Reduzca el cizallamiento mediante buen ajuste y zonas de apoyo atraumáticas; trate con herramientas mecánicas o térmicas y cambie la prótesis si recurre.</li>
+            <li><strong>Fístula traqueoesofágica o broncoesofágica:</strong> Coloque primero la prótesis de vía aérea cuando se requiera doble prótesis; vigile necrosis por presión cuando coexisten prótesis aérea y esofágica.</li>
+            <li><strong>Traqueobroncomalacia:</strong> Use una prótesis de silicona como prueba para predecir el beneficio antes de una estabilización quirúrgica externa; la prótesis permanente a largo plazo en malacia genera numerosos problemas.</li>
+            <li><strong>Anastomosis de trasplante:</strong> Se prefieren prótesis removibles; con frecuencia se necesita silicona bifurcada cuando la enfermedad está cerca de carinas secundarias.</li>
+            <li><strong>Mensaje del ensayo aleatorizado SPOC:</strong> La broncoscopia terapéutica mejora la disnea; el grupo con prótesis reduce las broncoscopias repetidas y mantiene el alivio sintomático durante más tiempo.</li>
+            <li><strong>Impresión 3D y bioabsorción:</strong> Son prometedoras para anatomía compleja o soporte temporal, pero todavía no son la opción predeterminada; para paliación urgente, elija dispositivos estándar.</li>
+            <li><strong>Costo:</strong> Las prótesis de silicona son considerablemente menos costosas (del orden de 1,5–2 veces menos que los dispositivos metálicos autoexpandibles).</li>
+            <li><strong>Reevaluación anual:</strong> Planifique evaluación y sustitución anual de las prótesis de silicona si persiste la indicación.</li>
+            <li><strong>Trampa del examen:</strong> No coloque una prótesis como primer paso en una malignidad puramente intrínseca sin tratamiento sistémico previo si puede desobstruir y esperar una respuesta rápida; úsela solo cuando sea clínicamente necesaria.</li>
+            <li><strong>Otra trampa:</strong> Empujar una prótesis de silicona distalmente para recolocarla puede causar perforación; reposiciónela hacia proximal con pinza rígida.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología: enfoque práctico para el examen</h4>
+    <p>Las vías aéreas centrales —tráquea, bronquios principales y bronquio intermediario— fallan por: 1) tumor intrínseco o estrechamiento cicatricial; 2) compresión extrínseca por masas o adenopatías; o 3) enfermedad mixta. Otras causas estructurales incluyen malacia, policondritis e isquemia anastomótica después del trasplante. Las fístulas (traqueoesofágicas o broncoesofágicas y broncopleurales del muñón después de resección) generan riesgo de contaminación y aspiración, y con frecuencia exigen sellado y soporte de la vía aérea.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Cinco indicaciones de alto rendimiento:</strong></p>
+    <ol>
+        <li>Contrarrestar la compresión extrínseca por tumor o adenopatías.</li>
+        <li>Estabilizar la permeabilidad después de desobstruir un cáncer endoluminal.</li>
+        <li>Tratar estenosis benignas, como las posintubación, postraqueostomía o anastomóticas tras trasplante.</li>
+        <li>Estabilizar malacia o policondritis, a menudo como prueba temporal.</li>
+        <li>Sellar fístulas traqueoesofágicas, broncoesofágicas o dehiscencias del muñón después de resección.</li>
+    </ol>
+    <p><strong>Contraindicaciones relativas o estratégicas:</strong></p>
+    <ul>
+        <li><strong>Tumor intraluminal:</strong> Ablar o desobstruir primero; colocar prótesis solo si es necesario.</li>
+        <li><strong>Enfermedad benigna:</strong> Use prótesis removibles; evite dispositivos metálicos no cubiertos o parcialmente cubiertos por fractura, crecimiento tisular y dificultad de extracción.</li>
+        <li><strong>Pulmón distal no funcionante:</strong> Si existe necrosis o cavitación extensa, la reexpansión con prótesis probablemente no aportará beneficio.</li>
+        <li><strong>Fragilidad fisiológica grave:</strong> Puede impedir el beneficio, salvo paliación de disnea intratable.</li>
+    </ul>
+
+    <h4>Evaluación preprocedimiento: imagen, laboratorio, riesgo y consentimiento</h4>
+    <ul>
+        <li><strong>TC:</strong> Cortes finos y ventana pulmonar; mida diámetros mínimo y normal y longitud de la lesión; determine la relación con la carina y las carinas secundarias.</li>
+        <li><strong>Evaluación broncoscópica:</strong> Flexible seguida de rígida si se va a intervenir; clasifique la obstrucción; valore al tacto la rigidez; mida la longitud endoscópicamente.</li>
+        <li><strong>Planifique los márgenes:</strong> Aproximadamente 5 mm más allá de la enfermedad proximal y distal.</li>
+        <li><strong>Selección del dispositivo:</strong> Según indicación, anatomía, reversibilidad prevista —malignidad en tratamiento frente a lesión benigna fija— y necesidad de extracción futura.</li>
+        <li><strong>Optimización:</strong> Plan de anticoagulación, estrategia de limpieza de la vía aérea y consentimiento que incluya posible necesidad de desobstrucción térmica o mecánica, traqueostomía o maniobras urgentes de vía aérea.</li>
+    </ul>
+
+    <h4>Equipo y preparación: detalles prácticos</h4>
+    <ul>
+        <li><strong>Broncoscopio rígido:</strong> Bajo anestesia general para prótesis de silicona; es el estándar de atención.</li>
+        <li><strong>Herramientas de dilatación:</strong> Dilatación con tubo rígido y balones según necesidad.</li>
+        <li><strong>Carga y liberación:</strong> Aplicador específico para silicona; técnicas flexibles o rígidas para prótesis metálicas autoexpandibles cubiertas; fluoroscopia como complemento.</li>
+    </ul>
+    <p><strong>Opciones protésicas, no exhaustivas:</strong></p>
+    <ul>
+        <li><strong>Silicona:</strong> Recta, en reloj de arena y en Y, incluidas variantes Oki o para carina derecha; marcadores radiopacos; fenestraciones personalizables.</li>
+        <li><strong>Prótesis metálica autoexpandible cubierta (nitinol):</strong> Recta o en Y; despliegue más sencillo; considere las limitaciones de extracción.</li>
+        <li><strong>Especializadas:</strong> Silicona personalizada o impresa en 3D; bioabsorbible de polidioxanona cuando se desea soporte temporal.</li>
+    </ul>
+
+    <h4>Técnica paso a paso y lista de verificación</h4>
+    <ol>
+        <li><strong>Control de la vía aérea:</strong> Broncoscopio rígido; coordine la estrategia de oxigenación con anestesia.</li>
+        <li><strong>Desobstrucción y dilatación:</strong> Retire el tumor intraluminal; dilate la estenosis con el tubo rígido o balón.</li>
+        <li><strong>Medición:</strong> Confirme longitud y diámetro durante el procedimiento; objetivos habituales: 14–16 mm en tráquea, 12–13 mm en bronquio principal y 10–11 mm en bronquio intermediario; sobredimensione ligeramente en malacia o fístulas para reducir migración.</li>
+        <li><strong>Carga:</strong> Introduzca la prótesis en el aplicador; avance distal a la lesión y libérela.</li>
+        <li><strong>Posición y expansión:</strong> Tire hacia proximal con pinza rígida hasta colocarla; complete la expansión con balón, tubo rígido o pinzas si no se abre por completo. Evite empujar con fuerza hacia distal.</li>
+        <li><strong>Estrategia de ventilación:</strong> Fenestre la silicona en la mesa para orificios lobares cuando sea necesario —por ejemplo, lóbulo superior derecho con prótesis en Y— o agregue ramas distales mediante la técnica de Borgne.</li>
+        <li><strong>Comprobación después del despliegue:</strong> Evalúe la limpieza de la vía aérea, el sellado de la fuga si existe fístula y la hemostasia.</li>
+        <li><strong>Técnica de retirada:</strong> Sujete el borde proximal, rote 360°, introduzca 2–3 mm en el bisel del rígido y retire en bloque para proteger laringe y cuerdas vocales.</li>
+    </ol>
+
+    <h4>Resolución de problemas y manejo intraprocedimiento</h4>
+    <ul>
+        <li><strong>Apertura incompleta:</strong> Dilate con balón o utilice instrumentos rígidos para asentar y expandir.</li>
+        <li><strong>Migración durante el despliegue:</strong> Reevalúe el ajuste; elija diseño en reloj de arena o mayor diámetro; considere configuración en Y para enfermedad carinal y fijación externa en ciertos casos subglóticos.</li>
+        <li><strong>Fístula no sellada por completo:</strong> Busque fuga lateral residual; aumente el tamaño o agregue anillos de sellado o cobertura adyacente; considere prótesis esofágica combinada, siempre después de asegurar la vía aérea.</li>
+        <li><strong>Anatomía difícil, angulada o ramificada:</strong> Considere silicona personalizada o impresa en 3D y, en casos electivos, pruebe el ajuste sobre un modelo.</li>
+    </ul>
+
+    <h4>Cuidados y seguimiento después del procedimiento</h4>
+    <ul>
+        <li>Humidificación y nebulización de suero salino dos o tres veces al día para reducir la impactación de moco.</li>
+        <li>Broncoscopia temprana de seguimiento si hay secreciones abundantes o bordes de alto riesgo; en otros casos, reevaluación protocolizada.</li>
+        <li>Reevaluación y sustitución anual de prótesis de silicona si persiste la indicación; antes si aparecen complicaciones.</li>
+        <li>Es razonable la vigilancia microbiológica cuando se sospecha colonización; retire o cambie prótesis impactadas con secreciones infectadas.</li>
+    </ul>
+
+    <h4>Complicaciones: prevención, reconocimiento y tratamiento</h4>
+    <ul>
+        <li><strong>Migración, alrededor del 10 %:</strong> Se debe sobre todo a tamaño insuficiente o reducción tumoral después del tratamiento; trate con extracción rígida y nuevo ajuste; los diseños en reloj de arena o la fijación reducen el riesgo.</li>
+        <li><strong>Granulación, alrededor del 8 %:</strong> Aparece en los bordes; trate con herramientas mecánicas o térmicas; cambie la prótesis si recurre.</li>
+        <li><strong>Impactación de moco, alrededor del 3–4 %:</strong> Puede ser mortal; enfatice humidificación, limpieza de la vía aérea y broncoscopia temprana para desobstrucción.</li>
+        <li><strong>Colonización bacteriana:</strong> Considere cambio de prótesis si se asocia a secreciones refractarias.</li>
+        <li><strong>Específicas de metal:</strong> Riesgo de fractura y crecimiento tisular —en especial en dispositivos no cubiertos o parcialmente cubiertos— y extracción difícil; evítelos en enfermedad benigna.</li>
+    </ul>
+
+    <h4>Poblaciones especiales</h4>
+    <p><strong>Estenosis traqueal posintubación o postraqueostomía:</strong></p>
+    <ul>
+        <li><strong>Membrana simple:</strong> A menudo no requiere prótesis; dilate o incida.</li>
+        <li><strong>Compleja con afectación cartilaginosa:</strong> Se prefiere silicona; el riesgo de migración aumenta cerca de las cuerdas vocales; son útiles el diseño en reloj de arena o la fijación. Una permanencia más larga, de hasta unos 18 meses, se asocia a mayor permeabilidad a largo plazo después de retirarla que períodos más cortos.</li>
+    </ul>
+    <p><strong>Enfermedad anastomótica tras trasplante pulmonar:</strong></p>
+    <ul>
+        <li>Son frecuentes la isquemia y la cicatriz; se prefieren prótesis removibles; anticipe moco, cicatrización y colonización; a menudo se necesita silicona en Y cuando la enfermedad llega a carinas secundarias; muchos pacientes pueden quedar sin prótesis después de la cicatrización.</li>
+    </ul>
+    <p><strong>Traqueobroncomalacia:</strong></p>
+    <ul>
+        <li>Reserve las prótesis como prueba temporal para predecir mejoría antes de la estabilización quirúrgica externa; la silicona recta tiende a migrar en vías aéreas flexibles y discinéticas, por lo que debe medirse cuidadosamente.</li>
+    </ul>
+    <p><strong>Fístulas aerodigestivas:</strong></p>
+    <ul>
+        <li><strong>Fístula traqueoesofágica o broncoesofágica maligna:</strong> Prótesis de vía aérea primero y esofágica después si es necesario; vigile necrosis por presión con doble prótesis.</li>
+        <li><strong>Fístula del muñón tras neumonectomía o lobectomía:</strong> Se prefiere cirugía; una prótesis de silicona puede ser medida temporal o alternativa en candidatos no quirúrgicos.</li>
+    </ul>
+
+    <h4>Evidencia y resultados seleccionados</h4>
+    <ul>
+        <li><strong>Broncoscopia terapéutica para OCVA maligna:</strong> Mejora la disnea; las prótesis prolongan el control sintomático y reducen reintervenciones en datos aleatorizados y de cohortes.</li>
+        <li><strong>Prótesis de nitinol cubiertas:</strong> Son más fáciles de desplegar, pero tienen perfiles diferentes de extracción y crecimiento tisular que la silicona; se desaconsejan dispositivos no cubiertos o parcialmente cubiertos en enfermedad benigna.</li>
+        <li><strong>Silicona personalizada o impresa en 3D:</strong> Se adapta bien a anatomía compleja y ofrece mejoría sintomática y funcional, aunque persisten tasas relevantes de moco y migración.</li>
+        <li><strong>Prótesis bioabsorbibles de polidioxanona:</strong> Ofrecen soporte temporal con resultados iniciales prometedores; estudios en curso evalúan durabilidad y perfiles ideales de degradación.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1 — Obstrucción central maligna de la vía aérea</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Sospecha de OCVA sintomática"] --> B["Broncoscopia + TC"]
+        B --> C{"Tipo de afectación de la vía aérea"}
+        C -->|"Solo intrínseca"| D["Desobstruir/ablar + dilatar"]
+        C -->|"Extrínseca"| E["Dilatar + colocar prótesis"]
+        C -->|"Mixta"| F["Desobstruir y luego colocar prótesis"]
+        D --> G{"¿Alto riesgo de recurrencia temprana o pared inestable?"}
+        G -->|"Sí"| E
+        G -->|"No"| H["Observar + tratamiento oncológico"]
+        E --> I{"Elección de prótesis"}
+        I -->|"Se espera reversibilidad / segmentos benignos"| J["Silicona (removible)"]
+        I -->|"Compresión maligna duradera"| K["Metálica cubierta o silicona"]
+        J --> L["Humidificación + seguimiento"]
+        K --> L
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Notas complementarias:</strong></p>
+        <ul>
+            <li>Confirme OCVA y defina si es intrínseca, extrínseca o mixta.</li>
+            <li>Intrínseca: desobstruir primero; agregar prótesis si hay riesgo de recurrencia o inestabilidad de pared.</li>
+            <li>Extrínseca o mixta: dilatar y colocar prótesis.</li>
+            <li>Elección: silicona si se desea extracción o hay segmentos benignos; metálica cubierta o silicona en compresión maligna duradera.</li>
+            <li>Después del procedimiento: humidificación, plan de limpieza y vigilancia temprana.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 2 — Estenosis traqueal benigna posintubación o postraqueostomía</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Estenosis traqueal benigna"] --> B{"Tipo"}
+        B -->|"Membrana simple"| C["Incisión/dilatación endoscópica"]
+        B -->|"Compleja (cartílago afectado)"| D["Prótesis de silicona"]
+        D --> E{"¿Cerca de las cuerdas vocales?"}
+        E -->|"Sí"| F["Reloj de arena o fijación externa"]
+        E -->|"No"| G["Silicona recta estándar"]
+        G --> H["Permanencia 6–18 meses según riesgo de recurrencia"]
+        H --> I["Prueba de retirada + reevaluación"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Notas complementarias:</strong></p>
+        <ul>
+            <li>Membrana simple: incidir o dilatar; por lo general sin prótesis.</li>
+            <li>Estenosis compleja: silicona; considere reloj de arena o fijación cerca de las cuerdas.</li>
+            <li>Planifique una permanencia más larga, hasta unos 18 meses, cuando sea seguro; pruebe retirada con seguimiento estrecho.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 3 — Fístula aerodigestiva</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Fístula traqueo/broncoesofágica con aspiración"] --> B["Localizar fístula y evaluar compromiso de vía aérea"]
+        B --> C{"¿Hay prótesis esofágica?"}
+        C -->|"No"| D["Colocar primero prótesis de vía aérea"]
+        C -->|"Sí, con compresión de vía aérea"| E["Asegurar vía aérea y colocar prótesis"]
+        D --> F{"¿Persiste la fuga?"}
+        E --> F
+        F -->|"Sí"| G["Considerar prótesis esofágica (doble prótesis) con cautela"]
+        F -->|"No"| H["Cuidados de soporte + plan nutricional"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Notas complementarias:</strong></p>
+        <ul>
+            <li>Asegure la vía aérea; coloque la prótesis aérea antes de la esofágica cuando se requiera doble prótesis.</li>
+            <li>Evite presión excesiva entre ambas; reevalúe aspiración, control de neumonía y vía de nutrición.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tablas y cuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Selección de prótesis: características generales</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Silicona</th>
+                <th>Metálica autoexpandible cubierta (nitinol)</th>
+                <th>Metálica no cubierta o parcialmente cubierta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Facilidad de despliegue</strong></td>
+                <td>Requiere broncoscopia rígida y anestesia general</td>
+                <td>Despliegue más sencillo, flexible o rígido</td>
+                <td>Despliegue sencillo</td>
+            </tr>
+            <tr>
+                <td><strong>Extracción</strong></td>
+                <td>Excelente; personalizable</td>
+                <td>Variable; suele ser posible, pero más difícil</td>
+                <td>Problemática por inclusión y crecimiento tisular</td>
+            </tr>
+            <tr>
+                <td><strong>Mejores usos</strong></td>
+                <td>Enfermedad benigna; OCVA maligna reversible; carina con Y</td>
+                <td>OCVA maligna, sobre todo cuando se requiere despliegue rápido</td>
+                <td>Evitar en enfermedad benigna por fractura y crecimiento tisular</td>
+            </tr>
+            <tr>
+                <td><strong>Riesgos frecuentes</strong></td>
+                <td>Migración, moco, granulación</td>
+                <td>Moco, granulación y fractura con el tiempo</td>
+                <td>Crecimiento tumoral, fractura y extracción difícil</td>
+            </tr>
+            <tr>
+                <td><strong>Costo</strong></td>
+                <td>Menor, con frecuencia alrededor de 1,5–2 veces menos que metal</td>
+                <td>Mayor</td>
+                <td>Variable</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>Abreviaturas: prótesis metálica autoexpandible; OCVA, obstrucción central de la vía aérea.</em></p>
+
+    <h4>Tabla 2. Tamaños y márgenes prácticos de prótesis de silicona</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Segmento</th>
+                <th>Diámetro externo habitual</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Tráquea</strong></td>
+                <td>14–16 mm</td>
+                <td>Extender unos 5 mm más allá de ambos extremos de la lesión</td>
+            </tr>
+            <tr>
+                <td><strong>Bronquio principal</strong></td>
+                <td>12–13 mm</td>
+                <td>Considere Y/Oki para enfermedad carinal o de carina derecha</td>
+            </tr>
+            <tr>
+                <td><strong>Bronquio intermediario</strong></td>
+                <td>10–11 mm</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td><strong>Fístula o malacia</strong></td>
+                <td>Ligero sobredimensionamiento</td>
+                <td>Mejora el sellado y reduce la migración</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>Oki: prótesis de silicona bifurcada adaptada a la carina primaria derecha.</em></p>
+
+    <h4>Tabla 3. Complicaciones y manejo</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Complicación</th>
+                <th>Prevención</th>
+                <th>Tratamiento</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Migración, ≈10 %</strong></td>
+                <td>Tamaño correcto; reloj de arena o Y; fijación cuando sea necesaria</td>
+                <td>Extracción rígida; aumentar tamaño o cambiar diseño</td>
+            </tr>
+            <tr>
+                <td><strong>Granulación, ≈8 %</strong></td>
+                <td>Zonas de apoyo lisas; evitar movimiento excesivo</td>
+                <td>Desobstrucción mecánica o térmica; cambio de prótesis</td>
+            </tr>
+            <tr>
+                <td><strong>Impactación de moco, ≈3–4 %</strong></td>
+                <td>Humidificación, nebulización salina y limpieza temprana</td>
+                <td>Limpieza broncoscópica; retirada o cambio si está infectada</td>
+            </tr>
+            <tr>
+                <td><strong>Colonización bacteriana</strong></td>
+                <td>Humidificación y reducción del estancamiento de moco</td>
+                <td>Tratar infección; considerar cambio si persiste</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 4. Indicaciones y estrategia de dispositivo</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Indicación</th>
+                <th>Estrategia preferida</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Compresión maligna extrínseca</strong></td>
+                <td>Dilatar + prótesis (silicona o metálica cubierta)</td>
+            </tr>
+            <tr>
+                <td><strong>OCVA maligna mixta</strong></td>
+                <td>Desobstruir y luego colocar prótesis</td>
+            </tr>
+            <tr>
+                <td><strong>Membrana simple posintubación</strong></td>
+                <td>Incisión/dilatación endoscópica sin prótesis</td>
+            </tr>
+            <tr>
+                <td><strong>Estenosis benigna o traqueal compleja</strong></td>
+                <td>Silicona; considerar reloj de arena o fijación cerca de cuerdas</td>
+            </tr>
+            <tr>
+                <td><strong>Anastomosis de trasplante</strong></td>
+                <td>Prótesis removible, con frecuencia silicona bifurcada</td>
+            </tr>
+            <tr>
+                <td><strong>Fístula traqueo/broncoesofágica</strong></td>
+                <td>Prótesis de vía aérea primero; considerar esofágica después</td>
+            </tr>
+            <tr>
+                <td><strong>Traqueobroncomalacia</strong></td>
+                <td>Prueba con silicona; estabilización quirúrgica si responde</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Llamadas para imágenes y figuras</h3>
+    <p><strong>Figura A. Tumor traqueal con estenosis casi crítica antes y después de colocar una prótesis de silicona.</strong><br><em>Texto alternativo: Vista endoscópica de una masa traqueal casi oclusiva, seguida de luz restablecida con una prótesis de silicona visible.</em></p>
+    <p><strong>Figura B. Prótesis de silicona en reloj de arena que cubre una estenosis subglótica corta y de alto grado.</strong><br><em>Texto alternativo: Imagen endoscópica que muestra una cintura en la lesión y extremos más anchos que anclan por encima y por debajo.</em></p>
+    <p><strong>Figura C. Prótesis bifurcada de silicona en Y sobre la carina principal, que conserva la ventilación lobar mediante fenestración.</strong><br><em>Texto alternativo: Ramas protésicas visibles en tráquea y bronquios principales con una pequeña fenestración para el lóbulo superior derecho.</em></p>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Un paciente de 68 años con cáncer pulmonar escamoso presenta obstrucción del 80 % del bronquio principal izquierdo por una masa endoluminal friable, sin compresión extrínseca. ¿Cuál es el siguiente mejor paso?</p>
+        <p>A. Prótesis metálica cubierta ahora<br>
+        B. Broncoscopia rígida con desobstrucción; considerar prótesis solo si es necesaria<br>
+        C. Radioterapia externa primero<br>
+        D. Prótesis de silicona ahora<br>
+        E. Prótesis esofágica</p>
+        <p><strong>Respuesta: B.</strong> La enfermedad puramente intrínseca se desobstruye primero; coloque prótesis solo si existe alto riesgo de recurrencia o pared inestable después de la desobstrucción.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Un paciente de 54 años con fístula traqueoesofágica después de quimiorradiación recibió ayer una prótesis esofágica y ahora presenta estridor creciente. ¿Siguiente paso?</p>
+        <p>A. Retirar la prótesis esofágica<br>
+        B. Colocar ahora una prótesis de vía aérea<br>
+        C. Solo traqueostomía<br>
+        D. Mantener ayuno y observar<br>
+        E. Prótesis de silicona en esófago</p>
+        <p><strong>Respuesta: B.</strong> Asegure la vía aérea con una prótesis; una prótesis esofágica aislada puede comprimirla.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3</h4>
+        <p>Un paciente de 42 años presenta estenosis traqueal compleja posintubación a 1 cm de las cuerdas. ¿Qué dispositivo disminuye el riesgo de migración?</p>
+        <p>A. Prótesis de nitinol no cubierta<br>
+        B. Prótesis metálica cubierta<br>
+        C. Prótesis de silicona en reloj de arena<br>
+        D. Prótesis recta de silicona 1 mm menor de lo necesario<br>
+        E. Ninguna prótesis</p>
+        <p><strong>Respuesta: C.</strong> El diseño en reloj de arena ofrece anclaje cerca de las cuerdas y reduce la migración en lesiones traqueales cortas y de alto grado.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas</h3>
+    <ol>
+        <li>
+            <strong>Siguiente mejor paso: OCVA maligna mixta.</strong> Después de desobstruir una lesión mixta en el bronquio intermediario, persiste compresión extrínseca.
+            <br>A. Observar
+            <br>B. Prótesis metálica cubierta o de silicona
+            <br>C. Solo radiación
+            <br>D. Traqueostomía
+            <br>E. Tratamiento con ventilación jet
+            <br><strong>Respuesta: B.</strong> La enfermedad mixta suele requerir desobstrucción y prótesis.
+        </li>
+        <li>
+            <strong>Resolución de problemas.</strong> Una prótesis traqueal de silicona recién colocada no se expande por completo en su extremo proximal.
+            <br>A. Empujar con fuerza hacia distal hasta que se abra
+            <br>B. Retirar y abandonar la prótesis
+            <br>C. Dilatar con balón o usar tubo rígido/pinzas para completar la expansión
+            <br>D. Colocar una prótesis esofágica
+            <br>E. Iniciar radioterapia
+            <br><strong>Respuesta: C.</strong> Complete la expansión con balón o instrumentos rígidos y evite empujar con fuerza hacia distal.
+        </li>
+        <li>
+            <strong>Indicaciones.</strong> ¿Qué paciente tiene menos probabilidad de beneficiarse de una prótesis de vía aérea?
+            <br>A. Compresión extrínseca por conglomerado ganglionar
+            <br>B. Fístula traqueoesofágica con aspiración
+            <br>C. Estenosis traqueal compleja posintubación
+            <br>D. Gran cavidad necrótica distal sin ventilación
+            <br>E. Estenosis anastomótica tras trasplante
+            <br><strong>Respuesta: D.</strong> Un pulmón distal no funcionante es un objetivo inadecuado para reexpansión.
+        </li>
+        <li>
+            <strong>Elección contraindicada en enfermedad benigna:</strong>
+            <br>A. Silicona recta
+            <br>B. Silicona en reloj de arena
+            <br>C. Metálica cubierta
+            <br>D. Metálica no cubierta o parcialmente cubierta
+            <br>E. Silicona bifurcada en Y
+            <br><strong>Respuesta: D.</strong> Evite prótesis no cubiertas o parcialmente cubiertas en enfermedad benigna por crecimiento tisular, fractura y extracción difícil.
+        </li>
+        <li>
+            <strong>Regla clásica de tamaño.</strong> El margen estándar más allá de cada extremo de la lesión al colocar silicona es aproximadamente:
+            <br>A. 1 mm
+            <br>B. 3 mm
+            <br>C. 5 mm
+            <br>D. 10 mm
+            <br>E. No se requiere margen
+            <br><strong>Respuesta: C.</strong> Extienda unos 5 mm proximal y distalmente.
+        </li>
+        <li>
+            <strong>Sedación, oxigenación y técnica.</strong> Para desplegar una prótesis de silicona, la preparación recomendada es:
+            <br>A. Broncoscopia flexible con sedación consciente
+            <br>B. Broncoscopia rígida bajo anestesia general
+            <br>C. Solo fluoroscopia
+            <br>D. Oxígeno nasal de alto flujo sin broncoscopia
+            <br>E. Mascarilla laríngea y solo broncoscopia flexible
+            <br><strong>Respuesta: B.</strong> Las prótesis de silicona se despliegan con broncoscopia rígida bajo anestesia general.
+        </li>
+        <li>
+            <strong>Prevención de migración cerca de las cuerdas vocales.</strong>
+            <br>A. Elegir 1–2 mm menos de diámetro
+            <br>B. Usar diseño en reloj de arena o fijación externa
+            <br>C. Elegir metal no cubierto
+            <br>D. Usar silicona recta independientemente del ajuste
+            <br>E. Evitar la dilatación
+            <br><strong>Respuesta: B.</strong> El reloj de arena o la fijación reduce la migración en estenosis traqueal corta y proximal.
+        </li>
+        <li>
+            <strong>Prevención de complicaciones.</strong> La medida diaria más eficaz para reducir la impactación de moco es:
+            <br>A. Antibióticos profilácticos
+            <br>B. Suero salino nebulizado y humidificación
+            <br>C. Corticoides inhalados rutinarios
+            <br>D. Anticolinérgicos nebulizados
+            <br>E. Solo fisioterapia torácica
+            <br><strong>Respuesta: B.</strong> La humidificación y el suero salino ayudan a prevenir la impactación.
+        </li>
+        <li>
+            <strong>Estenosis anastomótica del trasplante.</strong> Mejor estrategia inicial de dispositivo:
+            <br>A. Prótesis no cubierta para favorecer epitelización
+            <br>B. Silicona removible, a menudo bifurcada cerca de carinas secundarias
+            <br>C. Sin prótesis, solo balón
+            <br>D. Prótesis metálica cubierta permanente
+            <br>E. Traqueobroncoplastia inmediata
+            <br><strong>Respuesta: B.</strong> Se prefiere silicona removible y con frecuencia bifurcada.
+        </li>
+        <li>
+            <strong>Tratamiento de la traqueobroncomalacia.</strong>
+            <br>A. La prótesis permanente es el estándar
+            <br>B. Usar una prueba temporal con silicona y, si mejora, considerar estabilización quirúrgica
+            <br>C. Metal no cubierto para colapso dinámico
+            <br>D. Prótesis esofágica para estabilizar la vía aérea
+            <br>E. Evitar broncoscopia
+            <br><strong>Respuesta: B.</strong> La prueba protésica predice beneficio antes de la cirugía.
+        </li>
+        <li>
+            <strong>Secuencia en fístula.</strong> En una doble prótesis planificada para fístula traqueoesofágica maligna, el orden recomendado es:
+            <br>A. Esófago primero
+            <br>B. Vía aérea primero
+            <br>C. Cualquier orden
+            <br>D. Ninguna; evitar doble prótesis
+            <br>E. Traqueostomía antes de ambas
+            <br><strong>Respuesta: B.</strong> Prótesis aérea primero y después esofágica si es necesaria.
+        </li>
+        <li>
+            <strong>Migración recurrente tras reducción tumoral.</strong>
+            <br>A. Solo observar
+            <br>B. Fijación externa siempre
+            <br>C. Sustituir por silicona mayor o en reloj de arena; considerar Y si está cerca de carina
+            <br>D. Cambiar a metal no cubierto
+            <br>E. Agregar prótesis esofágica
+            <br><strong>Respuesta: C.</strong> Aumente tamaño o cambie diseño; la Y reduce migración cerca de la carina.
+        </li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Prótesis en malignidad sin quimioterapia previa:</strong> Algunos centros la difieren salvo que persista inestabilidad tras desobstrucción; datos aleatorizados muestran mejoría sintomática y menos reintervenciones, pero el beneficio en supervivencia global sigue incierto.</li>
+        <li><strong>Metálica cubierta frente a silicona en OCVA maligna:</strong> Facilidad de despliegue frente a extracción y personalización; la experiencia institucional importa.</li>
+        <li><strong>Enfermedad benigna:</strong> Fuerte preferencia por silicona removible; persisten advertencias contra metal no cubierto o parcialmente cubierto.</li>
+        <li><strong>Silicona personalizada o impresa en 3D:</strong> Excelente ajuste en geometría compleja, pero persisten tasas no triviales de moco y migración; la logística y regulación pueden demorar la atención urgente, por lo que a menudo se usa temporalmente una prótesis estándar.</li>
+        <li><strong>Bioabsorbibles:</strong> Atractivas para soporte temporal, incluido el trasplante, pero requieren más estudio de cinética de degradación y riesgo de reestenosis.</li>
+        <li><strong>Liberación de fármacos:</strong> Prometedora para reducir granulación o administrar tratamiento antineoplásico local; la evidencia clínica es inicial.</li>
+    </ul>
+
+    <h3>Lista de verificación final</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li>Clasifique la OCVA como intrínseca, extrínseca o mixta y trate primero la intrínseca con desobstrucción.</li>
+            <li>Planifique márgenes de unos 5 mm; diámetros: tráquea 14–16 mm, bronquio principal 12–13 mm y bronquio intermediario 10–11 mm.</li>
+            <li>Use broncoscopia rígida bajo anestesia general para silicona y dilate antes del despliegue.</li>
+            <li>En enfermedad benigna o probablemente reversible, elija silicona removible; evite metal no cubierto o parcialmente cubierto.</li>
+            <li>Considere reloj de arena, Y u Oki para enfermedad subglótica, carinal o de carina derecha; sobredimensione en malacia y fístula.</li>
+            <li>Prevenga moco con humidificación y nebulización salina; organice seguimiento broncoscópico temprano.</li>
+            <li>Reconozca y trate con rapidez migración, granulación e impactación de moco.</li>
+            <li>En fístula traqueo/broncoesofágica, coloque primero la prótesis de vía aérea; doble prótesis con cautela.</li>
+            <li>En traqueobroncomalacia, use una prueba protésica para predecir beneficio antes de cirugía.</li>
+            <li>En enfermedad de trasplante, favorezca silicona removible, con frecuencia bifurcada.</li>
+            <li>Reevalúe o sustituya anualmente la silicona si todavía está indicada.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>FVA/FTE/FBE</dt><dd>Fístula de vía aérea, traqueoesofágica o broncoesofágica</dd>
+            <dt>BI</dt><dd>Bronquio intermediario</dd>
+            <dt>OCVA</dt><dd>Obstrucción central de la vía aérea</dd>
+            <dt>CPAP</dt><dd>Presión positiva continua en la vía aérea, complemento para malacia cuando no se usa prótesis</dd>
+            <dt>DES</dt><dd>Prótesis liberadora de fármacos</dd>
+            <dt>ETPIT</dt><dd>Estenosis traqueal posintubación o postraqueostomía</dd>
+            <dt>SEMS</dt><dd>Prótesis metálica autoexpandible</dd>
+            <dt>TBM</dt><dd>Traqueobroncomalacia</dd>
+            <dt>Prótesis Y/Oki</dt><dd>Prótesis bifurcadas de silicona; la variante Oki se adapta a la carina primaria derecha</dd>
+        </dl>
+    </div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+        <ol>
+            <li>Dumon JF. A dedicated tracheobronchial stent. Chest. 1990;97:328-332.</li>
+            <li>Freitag L. Airway stents. Eur Respir Mon. 2010;48:190-217.</li>
+            <li>Cavaliere S, Venuta F, Foccoli P, Toninelli C, La Face B. Endoscopic treatment of malignant airway obstruction in 2008 patients. Chest. 1996;110:536-542.</li>
+            <li>Chaddha U, Agrawal A, Kurman J, et al. World Association for Bronchology and Interventional Pulmonology (WABIP) guidelines on airway stenting for malignant central airway obstruction. Respirology. 2024;29:563-573.</li>
+            <li>Dutau H, Di Palma F, Thibout Y, et al. Impact of silicone stent placement in symptomatic airway obstruction due to non-small cell lung cancer: the SPOC Trial. Respiration. 2020;99:344-352.</li>
+            <li>Ernst A, Majid A, Feller-Kopman D, et al. Airway stabilization with silicone stents for treating adult tracheobronchomalacia: a prospective observational study. Chest. 2007;132:609-616.</li>
+            <li>Murgu SD, Colt HG. Complications of silicone stent insertion in patients with expiratory central airway collapse. Ann Thorac Surg. 2007;84:1870-1877.</li>
+            <li>U.S. Food and Drug Administration. Public Health Notification: complications from metallic tracheal stents in patients with benign airway disorders. 2005.</li>
+            <li>Breitenbücher A, Chhajed PN, Brutsche MH, et al. Long-term follow-up and survival after Ultraflex stent insertion in complex malignant airway stenoses. Respiration. 2008;75:443-449.</li>
+            <li>Dutau H, Cavailles A, Sakr L, et al. Silicone stent placement for anastomotic airway complications in lung transplant recipients: short- and long-term outcomes. J Heart Lung Transplant. 2010;29:658-664.</li>
+            <li>Martinod E, Dutau H, Guibert N. Management of airway complications after lung transplantation: is there an ideal stent? J Thorac Dis. 2022;14:3111-3115.</li>
+            <li>Guinde J, Bismuth J, Laroumagne S, et al. Bifurcated silicone stents for anastomotic complications in lung transplantation: ten years’ experience. Respiration. 2022;101:675-682.</li>
+            <li>Sawal N, Pennington KM, Petrossian R, et al. Custom silicone Y-stents for anastomotic stenosis in lung transplant recipients. Respir Med. 2024;8(231):107737.</li>
+            <li>Watanabe S, Shimokawa S, Yotsumoto G, et al. Use of a Dumon stent for the treatment of a bronchopleural fistula. Ann Thorac Surg. 2001;72:276-278.</li>
+            <li>Wang Q, Chen Y, Xu Y, et al. Palliation of malignant esophageal stent esophagorespiratory fistula with rigid bronchoscope and Y silicone trachea stent: experience with seven patients. J Thorac Dis. 2024;29(16):948-959.</li>
+            <li>Guibert N, Didier A, Moreno B, et al. Treatment of complex airway stenoses using patient-specific 3D engineered stents: a proof-of-concept study. Thorax. 2019;74(8):810-813.</li>
+            <li>Freitag L, Gördes M, Zarogoulidis P, et al. Towards individualized tracheobronchial stents: technical, practical and legal considerations. Respiration. 2017;94:442-456.</li>
+            <li>Stehlik L, Guha D, Anandakumar S, Taskova A, Vasakova MK. Biodegradable tracheal stents: our ten-year experience with adult patients. BMC Pulm Med. 2024;24(1):238.</li>
+            <li>Lischke R, Pozniak J, Vondrys D, Elliott MJ. Novel biodegradable stents in the treatment of bronchial stenosis after lung transplantation. Eur J Cardiothorac Surg. 2011;40:619-624.</li>
+            <li>Chao YK, Liu KS, Wang YC, Huang YL, Liu SJ. Biodegradable cisplatin-eluting tracheal stent for malignant airway obstruction: in vivo and in vitro studies. Chest. 2013;144(1):193-199.</li>
+            <li>Xu J, Ong HX, Traini D, Williamson J, Byrom M, Gomes Dos Reis L, et al. Paclitaxel-eluting silicone airway stent for preventing granulation tissue growth and lung cancer relapse. Expert Opin Drug Deliv. 2020;17(11):1631-1645.</li>
+            <li>Paunović N, Bao Y, Coulter FB, et al. Digital light 3D printing of customized bioresorbable airway stents with elastomeric properties. Sci Adv. 2021;7(6):eabe9499.</li>
+            <li>Dutau H, Breen D, Bugalho A, et al. Current practice of airway stenting in adults in Europe: EABIP survey. Respiration. 2018;95:44-54.</li>
+            <li>Noppen M, Pierard D, Meysman M, et al. Bacterial colonization of central airways after stenting. Am J Respir Crit Care Med. 1999;160:672-677.</li>
+            <li>Oki M, Saka H. New dedicated bifurcated silicone stent placement for stenosis around the primary right carina. Chest. 2013;144:450-455.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

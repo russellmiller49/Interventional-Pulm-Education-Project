@@ -1,13 +1,22 @@
-import { cp, rm, stat } from 'node:fs/promises'
+import { cp, mkdir, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
 
 const root = process.cwd()
 const nextDir = path.join(root, '.next')
 const standaloneDir = path.join(nextDir, 'standalone')
 const publicDir = path.join(root, 'public')
+const boardReviewHtmlDir = path.join(root, 'Imports', 'Board_Review_Book', 'Updated_chapters')
+const boardReviewTranslationsDir = path.join(root, 'board_review_translations')
 
 const copiedPublicDir = path.join(standaloneDir, 'public')
 const copiedStaticDir = path.join(standaloneDir, '.next', 'static')
+const copiedBoardReviewHtmlDir = path.join(
+  standaloneDir,
+  'Imports',
+  'Board_Review_Book',
+  'Updated_chapters',
+)
+const copiedBoardReviewTranslationsDir = path.join(standaloneDir, 'board_review_translations')
 
 const remoteAssetPrefixes = [
   'airway-anatomy',
@@ -74,6 +83,23 @@ function shouldCopyPublicAsset(source) {
   return true
 }
 
+function shouldCopyBoardReviewAsset(source) {
+  return path.basename(source) !== '.DS_Store'
+}
+
+async function copyDirectoryIfExists(source, destination, filter) {
+  if (!(await exists(source))) {
+    return
+  }
+
+  await rm(destination, { force: true, recursive: true })
+  await mkdir(path.dirname(destination), { recursive: true })
+  await cp(source, destination, {
+    recursive: true,
+    filter,
+  })
+}
+
 async function main() {
   if (!(await exists(standaloneDir))) {
     console.log('No .next/standalone directory found; skipping standalone asset preparation.')
@@ -88,6 +114,17 @@ async function main() {
     recursive: true,
     filter: shouldCopyPublicAsset,
   })
+
+  await copyDirectoryIfExists(
+    boardReviewHtmlDir,
+    copiedBoardReviewHtmlDir,
+    shouldCopyBoardReviewAsset,
+  )
+  await copyDirectoryIfExists(
+    boardReviewTranslationsDir,
+    copiedBoardReviewTranslationsDir,
+    shouldCopyBoardReviewAsset,
+  )
 
   console.log('Prepared standalone output with static files and trimmed public assets.')
 }

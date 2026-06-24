@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Técnicas de imagen periférica en tiempo real</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        /* MCQ Styling */
+        .mcq-options { list-style-type: none; padding-left: 0; margin: 10px 0 15px 0; }
+        .mcq-options li { margin-bottom: 4px; color: #444; }
+        .answer-block { margin-top: 10px; font-style: italic; color: #2c3e50; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Técnicas de imagen periférica en tiempo real</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda las técnicas de imagen en tiempo real utilizadas para localizar y biopsiar lesiones pulmonares periféricas durante la broncoscopia, con énfasis en la tomosíntesis digital (DTS), la tomografía computarizada de haz cónico (CBCT) y los flujos de trabajo con fluoroscopia aumentada. Corresponde a los dominios AABIP de broncoscopia diagnóstica de nódulos periféricos, navegación guiada por imagen, seguridad radiológica y resolución de problemas intraprocedimiento.</p>
+
+    <hr>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Explicar cómo DTS y CBCT generan información tridimensional casi en tiempo real a partir de adquisiciones de rayos X y describir sus diferencias prácticas.</li>
+        <li>Definir la divergencia entre la TC de planificación y la anatomía corporal intraprocedimiento, sus causas y la forma en que la imagen en tiempo real la corrige.</li>
+        <li>Seleccionar una plataforma —DTS frente a CBCT, fija frente a móvil— según la lesión, el paciente y los recursos.</li>
+        <li>Aplicar estrategias de anestesia y ventilación que reduzcan atelectasia y mejoren la calidad de imagen.</li>
+        <li>Ejecutar flujos paso a paso de navegación asistida por DTS y broncoscopia guiada por CBCT.</li>
+        <li>Reconocer y resolver atelectasia, artefacto por movimiento y desalineación entre instrumento y lesión.</li>
+        <li>Resumir la evidencia sobre rendimiento diagnóstico, radiación, seguridad y usos terapéuticos emergentes.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento: perlas, errores y trampas</h3>
+    <p><strong>¿Por qué imagen en tiempo real?</strong> Una de las principales limitaciones del rendimiento en broncoscopia periférica es la divergencia TC-cuerpo: durante el procedimiento, el objetivo puede no encontrarse donde lo predijo la TC preoperatoria. Las actualizaciones intraprocedimiento permiten corregir la trayectoria antes de obtener muestras.</p>
+
+    <div class="algorithm-note">
+        <p><strong>DTS frente a CBCT:</strong></p>
+        <ul>
+            <li><strong>DTS:</strong> utiliza un barrido fluoroscópico corto y de ángulo limitado para reconstruir pilas de cortes, con baja dosis y compatibilidad con arcos en C convencionales.</li>
+            <li><strong>CBCT:</strong> rota un haz cónico alrededor del paciente para crear un volumen 3D que, en sistemas fijos, puede superponerse a la fluoroscopia en vivo.</li>
+        </ul>
+
+        <p><strong>La ventilación importa:</strong> la atelectasia desplaza u oculta el objetivo. Cuando sea apropiado, use anestesia general con bloqueo neuromuscular, PEEP ≥10 cm H<sub>2</sub>O, volúmenes corrientes altos y apnea inspiratoria durante la adquisición.</p>
+
+        <p><strong>Momento de la apnea:</strong> inicie el barrido CBCT aproximadamente 5–7 segundos después de comenzar la apnea para superar el movimiento pulmonar inicial.</p>
+
+        <p><strong>Confirmación del instrumento dentro de la lesión:</strong> combine rEBUS, cuando esté disponible, con la superposición instrumento-lesión o con un giro/barrido confirmatorio rápido antes de muestrear.</p>
+
+        <p><strong>Plataformas de uso clínico:</strong></p>
+        <ul>
+            <li><strong>Illumisite™:</strong> navegación electromagnética asistida por DTS con barrido aproximado de ±25° y actualización del registro del objetivo.</li>
+            <li><strong>LungVision™:</strong> fusión multimodal con giro de carina principal y giro en isocentro; compatible con diversos broncoscopios y robots.</li>
+            <li><strong>Galaxy System™:</strong> broncoscopia robótica con DTS integrada —TiLT+—, broncoscopio desechable y orientación mediante retícula.</li>
+        </ul>
+
+        <p><strong>Señales de la evidencia:</strong> la ENB asistida por DTS mejora el rendimiento frente a ENB sola; la navegación guiada por CBCT muestra rendimientos altos y puede superar técnicas anteriores; CBCT combinada con plataformas robóticas suele comunicar rendimientos desde mediados de 70% hasta valores bajos de 90%.</p>
+
+        <p><strong>Seguridad radiológica:</strong> los procedimientos de navegación guiada por CBCT optimizados suelen producir una dosis efectiva total mediana cercana a 5–6 mSv, comparable a una TC diagnóstica de tórax.</p>
+    </div>
+
+    <h3>Trampas frecuentes</h3>
+    <ul>
+        <li><strong>Atelectasia por reabsorción:</strong> favorecida por FiO<sub>2</sub> alta y ventilación prolongada.</li>
+        <li><strong>Error de deformación:</strong> adquirir imágenes antes de colocar los instrumentos cerca del objetivo genera superposiciones engañosas por deformación inducida por el dispositivo.</li>
+        <li><strong>Ignorar la posición:</strong> las lesiones posteriores y de lóbulos inferiores son especialmente sensibles a dependencia y atelectasia.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>Los nódulos pulmonares periféricos se detectan con frecuencia en programas de cribado por TC o de forma incidental. La fluoroscopia bidimensional convencional tiene limitaciones para navegación 3D. La DTS de ángulo limitado y las reconstrucciones volumétricas CBCT reducen esta brecha al actualizar la posición del objetivo y la relación entre el instrumento y la lesión durante el procedimiento.</p>
+
+    <h4>Divergencia entre TC y cuerpo</h4>
+    <p>Las causas incluyen menor volumen pulmonar intraprocedimiento que en la TC inspiratoria, atelectasia por oclusión de la vía aérea, secreciones o reabsorción relacionada con FiO<sub>2</sub>, y deformación provocada por instrumentos. La mitigación requiere protocolos de ventilación, apneas coordinadas y nuevas adquisiciones que registren el objetivo con la anatomía real.</p>
+
+    <h4>Indicaciones</h4>
+    <p>Broncoscopia guiada por imagen para nódulos periféricos; confirmación de instrumento dentro de la lesión antes del muestreo; corrección de divergencia; planificación y verificación de marcadores o fiduciales; y soporte de terapias locales guiadas por CBCT.</p>
+
+    <hr>
+
+    <h3>Evaluación previa al procedimiento</h3>
+    <h4>TC de planificación</h4>
+    <ul>
+        <li><strong>Illumisite:</strong> TC dentro de las 4 semanas previas, grosor de 1,0–1,25 mm e intervalo de 0,8–1,0 mm con 20–50% de solapamiento.</li>
+        <li><strong>LungVision:</strong> TC de tórax con grosor de corte &lt;1,5 mm.</li>
+    </ul>
+    <h4>Anestesia y ventilación</h4>
+    <p>Use anestesia general con bloqueo neuromuscular cuando proceda, PEEP ≥10 cm H<sub>2</sub>O para reducir atelectasia y apneas inspiratorias coordinadas para las adquisiciones.</p>
+
+    <hr>
+
+    <h3>Equipo y preparación</h3>
+    <h4>DTS</h4>
+    <p>Un arco en C convencional realiza un barrido de ángulo limitado —por ejemplo, aproximadamente ±25° para Illumisite o ±30° para Galaxy—. La reconstrucción produce cortes apilados y el sistema muestra la relación entre el nódulo y el extremo del catéter para volver a registrar la trayectoria.</p>
+    <h4>CBCT</h4>
+    <p>Un arco en C fijo o móvil con capacidad 3D rota alrededor del paciente y reconstruye un volumen. Los sistemas fijos suelen permitir fluoroscopia aumentada (AF), con superposición de nódulos, vías aéreas e instrumentos sobre la fluoroscopia en vivo. Los equipos móviles proporcionan confirmación 3D, aunque habitualmente sin AF nativa.</p>
+    <h4>Broncoscopios y canales</h4>
+    <ul>
+        <li><strong>Galaxy:</strong> broncoscopio desechable de 4,0 mm de diámetro externo y canal de trabajo de 2,1 mm.</li>
+        <li><strong>Illumisite:</strong> catéter a través de broncoscopio terapéutico con canal de 2,8 mm.</li>
+        <li><strong>LungVision:</strong> catéter mecánico desechable introducido por el canal; integra múltiples arcos en C y plataformas de navegación.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso / lista de verificación</h3>
+
+    <h4>A. Navegación asistida por DTS, estilo Illumisite</h4>
+    <ol>
+        <li>Cargue la TC de planificación y trace la ruta.</li>
+        <li>Intube, aplique bloqueo neuromuscular y establezca PEEP ≥10 cm H<sub>2</sub>O.</li>
+        <li>Registre las vías aéreas y avance la guía localizable o el canal de trabajo extendido (EWC) hacia el objetivo, manteniendo el marcador en plano.</li>
+        <li>Al estar aproximadamente a 25 mm, coloque el arco en C, por ejemplo en oblicua anterior izquierda de 25°.</li>
+        <li>Realice apnea inspiratoria y un barrido fluoroscópico continuo desde LAO 25° hasta RAO 25° durante unos 8–30 segundos.</li>
+        <li>El sistema reconstruye DTS; marque nódulo y extremo del catéter y actualice el registro.</li>
+        <li>Corrija la alineación, confirme con rEBUS si está disponible y obtenga muestras.</li>
+    </ol>
+
+    <h4>B. Fluoroscopia aumentada basada en DTS, estilo LungVision</h4>
+    <ol>
+        <li>Planifique con TC de corte fino &lt;1,5 mm.</li>
+        <li>Tras la sedación, realice un giro estrecho de la carina principal y registre la carina en la reconstrucción y en la TC de planificación.</li>
+        <li>Use un giro en isocentro para actualizar el objetivo y superponer el plan.</li>
+        <li>Introduzca el catéter mecánico a través del broncoscopio, diríjalo según la pantalla y confirme la relación instrumento-lesión en vistas multiplanares o 3D antes de muestrear.</li>
+    </ol>
+
+    <h4>C. Broncoscopia robótica con DTS integrada, estilo Galaxy</h4>
+    <ol>
+        <li>Navegue robóticamente cerca de la lesión mediante navegación electromagnética.</li>
+        <li>Active TiLT+ y realice un giro aproximado de −30° a +30° cerca del isocentro.</li>
+        <li>Identifique el objetivo, actualice su posición y use la retícula para centrar la lesión respecto al extremo; muestree desde la plataforma estable.</li>
+    </ol>
+
+    <h4>D. Broncoscopia guiada por CBCT, con AF cuando esté disponible</h4>
+    <ol>
+        <li>Planifique la vía aérea y acuñe el broncoscopio o EWC en el subsegmento objetivo.</li>
+        <li>Realice apnea y primer giro CBCT; segmente la lesión y, opcionalmente, el extremo distal del EWC; seleccione los ángulos óptimos de AF.</li>
+        <li>Use AF para dirigir EWC e instrumento, correlacionando la superposición con el extremo visible bajo ventilación.</li>
+        <li>Confirme con rEBUS o con una CBCT rápida que la aguja esté dentro de la lesión.</li>
+        <li>Obtenga muestras adecuadas —aguja, pinza o ambas— de varios puntos y use ROSE cuando esté disponible.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>Atelectasia que oculta el objetivo:</strong> aumente PEEP, use volúmenes corrientes altos, reduzca el tiempo hasta imagen y muestreo, limite FiO<sub>2</sub> cuando sea seguro y coordine una apnea inspiratoria. Obesidad y lesiones posteriores o basales tienen mayor riesgo.</li>
+        <li><strong>Desajuste de la superposición:</strong> coloque primero los instrumentos cerca del objetivo, marque el extremo distal del EWC en el volumen y correlaciónelo con fluoroscopia en vivo; repita el giro si persiste incertidumbre.</li>
+        <li><strong>Artefacto por movimiento:</strong> minimice el tiempo del barrido, retire cables u objetos móviles del campo y espere 5–7 segundos tras iniciar la apnea antes de CBCT.</li>
+        <li><strong>Sin señal rEBUS:</strong> use la reconstrucción con visualización del instrumento, ajuste la trayectoria y considere una vía transparenquimatosa si no existe bronquio hacia la lesión; CBCT ayuda a definir puntos de salida y entrada.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Cuidados posteriores y seguimiento</h3>
+    <p>Evalúe complicaciones inmediatas. El neumotórax es infrecuente después de broncoscopia de navegación, pero debe descartarse cuando los síntomas o el procedimiento lo indiquen.</p>
+
+    <h3>Complicaciones: prevención, reconocimiento y manejo</h3>
+    <p>La broncoscopia de navegación con DTS o CBCT presenta tasas bajas de neumotórax y rara vez requiere tubo torácico.</p>
+    <ul>
+        <li>En una comparación aleatorizada entre broncoscopia de navegación y biopsia transtorácica, el neumotórax fue menos frecuente con broncoscopia y el drenaje fue excepcional.</li>
+        <li>En las primeras experiencias con Galaxy, el neumotórax también fue poco frecuente, aunque algunos casos requirieron drenaje.</li>
+    </ul>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>Obesidad y lesiones posteriores de lóbulos inferiores:</strong> mayor riesgo de atelectasia; priorice ventilación protectora de reclutamiento e imagen temprana.</li>
+        <li><strong>UCI o recursos limitados:</strong> DTS ofrece menor dosis y compatibilidad con arcos en C convencionales.</li>
+    </ul>
+
+    <h3>Evidencia y resultados</h3>
+    <ul>
+        <li><strong>ENB asistida por DTS:</strong> el rendimiento aumentó aproximadamente desde la mitad de 50% hasta la parte alta de 70% al añadir corrección por tomosíntesis; las correcciones de divergencia suelen ser de 12–15 mm.</li>
+        <li><strong>Comparación de plataformas:</strong> ENB corregida por DTS y broncoscopia robótica con detección de forma han mostrado rendimientos similares, alrededor de 77–80%, en algunas cohortes.</li>
+        <li><strong>Navegación con CBCT:</strong> metaanálisis sitúan el rendimiento cerca de 78%; integrada con plataformas modernas se comunican con frecuencia valores de 75–93%.</li>
+        <li><strong>Comparación aleatorizada con TTNB:</strong> resultados iniciales muestran rendimiento semejante y menos complicaciones con broncoscopia de navegación.</li>
+        <li><strong>Radiación:</strong> los procedimientos CBCT optimizados tienen dosis efectiva total mediana cercana a 5,5 mSv, similar a TC diagnóstica de tórax.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1: selección de imagen en tiempo real para biopsia de nódulo periférico</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Nódulo periférico planificado para broncoscopia"] --> B{"¿Qué recursos hay disponibles?"}
+        B -->|"CBCT fija con AF"| C["Planificar flujo CBCT-AF"]
+        B -->|"Solo CBCT móvil"| D["Usar CBCT para confirmación 3D e integrar navegación/robot"]
+        B -->|"Sin CBCT; arco en C disponible"| E["Usar plataforma de navegación asistida por DTS"]
+        B -->|"Ninguno"| F["Reevaluar y considerar vía no broncoscópica"]
+
+        C --> G{"¿Existe signo del bronquio?"}
+        D --> G
+        E --> G
+        G -->|"Sí"| H["Navegación por vía aérea hasta la lesión"]
+        G -->|"No"| I["Considerar vía transparenquimatosa planificada por CBCT"]
+
+        H --> J["Optimizar PEEP y realizar apnea inspiratoria"]
+        I --> J
+        J --> K{"¿Instrumento dentro de la lesión por rEBUS o imagen?"}
+        K -->|"Sí"| L["Biopsiar en varios sitios y considerar ROSE"]
+        K -->|"No"| M["Volver a registrar, corregir trayectoria y repetir giro/barrido"]
+        L --> N["Evaluar complicaciones y planificar seguimiento"]
+        M --> K
+    </div>
+
+    <div class="algorithm-note">
+        <strong>Resumen:</strong>
+        <ul>
+            <li>Confirme la jerarquía de recursos: CBCT fija con AF, CBCT móvil, DTS o ninguno.</li>
+            <li>Determine si existe una ruta bronquial; si no, use CBCT para planificar una vía transparenquimatosa.</li>
+            <li>Implemente PEEP ≥10 cm H<sub>2</sub>O y apnea inspiratoria.</li>
+            <li>Confirme instrumento dentro de la lesión antes de muestrear.</li>
+            <li>Si está desalineado, vuelva a registrar y repita una adquisición breve.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 2: manejo de divergencia TC-cuerpo y atelectasia</h4>
+    <div class="mermaid">
+        flowchart TD
+        A["Fallo inesperado o señal rEBUS deficiente"] --> B["Revisar ventilación: aumentar PEEP y asegurar volumen corriente"]
+        B --> C["Limitar FiO2 cuando sea seguro, aspirar secreciones y reducir oclusión"]
+        C --> D["Mover EWC/instrumento cerca del objetivo antes de imagen"]
+        D --> E["Realizar apnea inspiratoria"]
+        E --> F{"Modalidad"}
+        F -->|"CBCT"| G["Giro rápido; segmentar lesión y extremo; actualizar AF"]
+        F -->|"DTS"| H["Barrido limitado y nuevo registro de lesión/instrumento"]
+        G --> I["Correlacionar con fluoroscopia en vivo y ajustar trayectoria"]
+        H --> I
+        I --> J{"¿Instrumento dentro de la lesión?"}
+        J -->|"Sí"| K["Proceder al muestreo"]
+        J -->|"No"| L["Repetir imagen rápida o considerar vía transparenquimatosa"]
+    </div>
+
+    <div class="algorithm-note">
+        <strong>Resumen:</strong>
+        <ul>
+            <li>Aumente PEEP, mantenga volumen adecuado y coordine apnea inspiratoria.</li>
+            <li>Reduzca factores de atelectasia, incluidas FiO<sub>2</sub> excesiva, secreciones y oclusión prolongada.</li>
+            <li>Coloque el instrumento cerca antes de adquirir imagen para limitar deformación posterior.</li>
+            <li>En CBCT, marque el extremo y seleccione ángulos de AF; en DTS, actualice el registro con barrido.</li>
+            <li>Itere imagen y corrección hasta confirmar el instrumento dentro de la lesión.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tablas y cuadros de consulta rápida</h3>
+
+    <p><strong>Tabla 1. Dosis efectivas típicas relacionadas con imagen periférica</strong></p>
+    <table>
+        <thead><tr><th>Procedimiento</th><th>Dosis efectiva típica (mSv)</th><th>Notas</th></tr></thead>
+        <tbody>
+            <tr><td>Radiografía PA</td><td>0,02</td><td>Comparación basal</td></tr>
+            <tr><td>Radiografía lateral</td><td>0,15</td><td>—</td></tr>
+            <tr><td>DTS de tórax</td><td>0,1–0,2</td><td>Reconstrucción de ángulo limitado</td></tr>
+            <tr><td>TC de baja dosis</td><td>1,5</td><td>TC de cribado</td></tr>
+            <tr><td>CBCT durante broncoscopia</td><td>~2–2,5 por adquisición</td><td>El total depende del número de giros</td></tr>
+            <tr><td>TC diagnóstica de tórax</td><td>4–8</td><td>—</td></tr>
+        </tbody>
+    </table>
+
+    <p><strong>Tabla 2. Plataformas de imagen en tiempo real</strong></p>
+    <table>
+        <thead><tr><th>Plataforma</th><th>Método</th><th>Barrido</th><th>Endoscopio/canal</th><th>Visualización</th><th>Uso típico</th></tr></thead>
+        <tbody>
+            <tr><td><strong>Illumisite™</strong></td><td>ENB asistida por DTS</td><td>LAO 25° a RAO 25° con apnea, ~8–30 s</td><td>Broncoscopio terapéutico, canal 2,8 mm</td><td>Actualiza registro de lesión e instrumento</td><td>Corrección de divergencia y confirmación</td></tr>
+            <tr><td><strong>LungVision™</strong></td><td>DTS con fusión multimodal</td><td>Giro de carina principal y giro en isocentro</td><td>Catéter mecánico desechable por el canal</td><td>Superposición fluoroscópica y alineación multimodal</td><td>Compatibilidad amplia con broncoscopios y robots</td></tr>
+            <tr><td><strong>Galaxy System™</strong></td><td>Robótica + DTS integrada TiLT+</td><td>Giro aproximado de −30° a +30°</td><td>Broncoscopio desechable 4,0 mm, canal 2,1 mm</td><td>Retícula del objetivo respecto al extremo</td><td>Orientación robótica estable con confirmación integrada</td></tr>
+        </tbody>
+    </table>
+
+    <p><strong>Tabla 3. Diferencias prácticas entre DTS y CBCT</strong></p>
+    <table>
+        <thead><tr><th>Atributo</th><th>DTS</th><th>CBCT</th></tr></thead>
+        <tbody>
+            <tr><td>Geometría</td><td>Barrido de ángulo limitado y pila de cortes</td><td>Rotación completa de haz cónico y volumen 3D</td></tr>
+            <tr><td>Dosis</td><td>Menor, típicamente 0,1–0,2 mSv para DTS torácica</td><td>Aproximadamente 2–2,5 mSv por adquisición; el total varía</td></tr>
+            <tr><td>Hardware</td><td>Compatible con arco en C convencional</td><td>Arco 3D fijo o móvil</td></tr>
+            <tr><td>Fluoroscopia aumentada</td><td>Dependiente de plataforma; actualiza registro</td><td>Los sistemas fijos permiten superposición robusta</td></tr>
+            <tr><td>Movimiento y atelectasia</td><td>Sensibilidad moderada y barridos más cortos</td><td>Sensible al movimiento; requiere apnea optimizada</td></tr>
+            <tr><td>Mejor encaje</td><td>Salas sensibles a costo/dosis y actualización rápida</td><td>Planificación 3D completa, AF y procedimientos terapéuticos</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <p><strong>Caso 1</strong></p>
+        <p>Se planifica ENB para un nódulo posterior de 2 cm en lóbulo inferior. Tras el registro no hay señal rEBUS y la fluoroscopia sugiere bajo volumen pulmonar. El centro no tiene CBCT, pero sí Illumisite.</p>
+        <ul class="mcq-options"><li>A. Aumentar FiO<sub>2</sub> al 100% y muestrear</li><li>B. Obtener una nueva TC de planificación</li><li>C. Aumentar PEEP, realizar apnea inspiratoria y barrido DTS para volver a registrar</li><li>D. Convertir de inmediato a biopsia transtorácica</li><li>E. Abortar</li></ul>
+        <p class="answer-block"><strong>Respuesta: C.</strong> La atelectasia y los bajos volúmenes causan divergencia; DTS y ventilación optimizada corrigen la alineación.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Caso 2</strong></p>
+        <p>Una TC fina muestra un nódulo de 15 mm en segmento lateral del lóbulo superior derecho sin signo del bronquio. Hay CBCT fija con AF. Después de acercar el EWC por el lado pleural, ¿qué optimiza el éxito?</p>
+        <ul class="mcq-options"><li>A. Girar antes de avanzar instrumentos</li><li>B. Marcar el extremo distal del EWC y usar ángulos AF correlacionados con fluoroscopia</li><li>C. Evitar apnea</li><li>D. Aumentar aspiración para colapsar el segmento</li><li>E. Muestrear pese a rEBUS negativo</li></ul>
+        <p class="answer-block"><strong>Respuesta: B.</strong> Marcar el extremo traduce la información 3D adquirida en apnea a la anatomía ventilada y guía la trayectoria.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Caso 3</strong></p>
+        <p>Un centro dispone de broncoscopia robótica con detección de forma y CBCT móvil para un nódulo de 18 mm predominantemente en vidrio deslustrado. rEBUS es equívoco. ¿Qué imagen intraprocedimiento es apropiada?</p>
+        <ul class="mcq-options"><li>A. Omitir imagen y tomar más pinzas</li><li>B. Giro CBCT móvil para confirmar instrumento dentro de la lesión y reajustar</li><li>C. Radiografía lateral</li><li>D. Aumentar FiO<sub>2</sub> y esperar</li><li>E. Abortar</li></ul>
+        <p class="answer-block"><strong>Respuesta: B.</strong> CBCT móvil puede confirmar la posición e informar una actualización de la navegación cuando rEBUS no es concluyente.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas</h3>
+    <ol>
+        <li>Un nódulo periférico de 20 mm se aborda con ENB; después de 30 minutos rEBUS sigue excéntrico y las muestras no son diagnósticas. Hay DTS disponible. ¿Qué sigue?<ul class="mcq-options"><li>A. Continuar a ciegas</li><li>B. Barrido DTS para actualizar el registro</li><li>C. Aumentar FiO₂ a 100%</li><li>D. Abortar para TTNB</li><li>E. Esteroides</li></ul><p class="answer-block"><strong>Respuesta: B.</strong> DTS permite corregir rápidamente la divergencia.</p></li>
+        <li>¿Qué diferencia mejor DTS de CBCT?<ul class="mcq-options"><li>A. DTS da más dosis</li><li>B. CBCT no produce volumen 3D</li><li>C. DTS usa barrido de ángulo limitado y suele funcionar con arco convencional</li><li>D. CBCT no se integra con robots</li><li>E. DTS exige sala híbrida fija</li></ul><p class="answer-block"><strong>Respuesta: C.</strong></p></li>
+        <li>Durante CBCT-AF, la lesión superpuesta parece desplazada respecto al catéter visible. ¿Primera acción?<ul class="mcq-options"><li>A. Reducir PEEP</li><li>B. Marcar el extremo del EWC en el volumen y seleccionar ángulos AF</li><li>C. Prolongar el barrido</li><li>D. Radiografía lateral</li><li>E. Biopsiar</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+        <li>¿Qué maniobra ventilatoria reduce mejor la divergencia por atelectasia?<ul class="mcq-options"><li>A. Volumen bajo y PEEP cero</li><li>B. Volumen corriente alto, PEEP ≥10 y apnea inspiratoria</li><li>C. Solo FiO₂ baja</li><li>D. Oxigenación apneica sin apnea coordinada</li><li>E. Extubar entre giros</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+        <li>¿Dosis efectiva aproximada de DTS torácica?<ul class="mcq-options"><li>A. 0,02 mSv</li><li>B. 0,1–0,2 mSv</li><li>C. 1,5 mSv</li><li>D. 2–2,5 mSv</li><li>E. 4–8 mSv</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+        <li>Un centro tiene CBCT móvil y broncoscopia robótica. ¿Qué es correcto?<ul class="mcq-options"><li>A. No genera volumen 3D</li><li>B. Suele carecer de AF nativa, pero confirma instrumento dentro de la lesión y actualiza el plan</li><li>C. Siempre tiene menos artefacto que CBCT fija</li><li>D. Todos los giros duran ≥60 s</li><li>E. No puede combinarse con rEBUS</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+        <li>rEBUS ausente en lesión basal y paciente con obesidad. ¿Mejor conjunto de acciones?<ul class="mcq-options"><li>A. Aumentar FiO₂ y esperar</li><li>B. Reducir PEEP</li><li>C. Aumentar PEEP, apnea inspiratoria y repetir DTS/CBCT para registrar y confirmar</li><li>D. Abortar</li><li>E. Criobiopsia sin imagen</li></ul><p class="answer-block"><strong>Respuesta: C.</strong></p></li>
+        <li>¿Qué caracteriza la imagen integrada de Galaxy?<ul class="mcq-options"><li>A. No tiene imagen en tiempo real</li><li>B. TiLT+ con orientación por retícula</li><li>C. Requiere canal de 6 mm</li><li>D. Solo funciona con CBCT fija</li><li>E. Prohíbe apnea</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+        <li>En cohortes comparativas, los rendimientos de ENB corregida por DTS frente a robótica con detección de forma fueron aproximadamente:<ul class="mcq-options"><li>A. 50% frente a 55%</li><li>B. 70% frente a 55%</li><li>C. 80% frente a 77%, sin diferencia significativa</li><li>D. 93% frente a 70%</li><li>E. 60% frente a 90%</li></ul><p class="answer-block"><strong>Respuesta: C.</strong></p></li>
+        <li>Los datos aleatorizados iniciales de navegación broncoscópica frente a TTNB sugieren:<ul class="mcq-options"><li>A. TTNB tiene más rendimiento y menos complicaciones</li><li>B. Broncoscopia tiene más rendimiento y más complicaciones</li><li>C. Rendimiento similar y menos complicaciones con broncoscopia</li><li>D. Broncoscopia es inferior y más riesgosa</li><li>E. No existen datos</li></ul><p class="answer-block"><strong>Respuesta: C.</strong></p></li>
+        <li>¿Cuál es la secuencia correcta para CBCT-AF?<ul class="mcq-options"><li>A. Girar solo después de muestrear</li><li>B. Colocar broncoscopio cerca, girar, segmentar lesión/instrumento, guiar con AF y confirmar</li><li>C. Evitar marcar instrumentos</li><li>D. Preferir apnea espiratoria</li><li>E. Girar solo con rEBUS concéntrico</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+        <li>¿Qué comparación de dosis es correcta?<ul class="mcq-options"><li>A. DTS 4–8 mSv; CBCT 0,02</li><li>B. DTS 0,1–0,2 mSv; CBCT 2–2,5 mSv por adquisición</li><li>C. DTS 1,5; CBCT 0,15</li><li>D. DTS 2–2,5; CBCT 0,1–0,2</li><li>E. Ambas superan 8 mSv</li></ul><p class="answer-block"><strong>Respuesta: B.</strong></p></li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>DTS frente a CBCT:</strong> DTS ofrece velocidad, baja dosis y compatibilidad amplia, pero menor resolución en profundidad; CBCT ofrece volumen 3D y AF robusta a mayor costo y dosis. Se necesitan comparaciones directas y definiciones estandarizadas de rendimiento.</li>
+        <li><strong>CBCT fija frente a móvil:</strong> los sistemas fijos ofrecen AF y giros más cortos; los móviles mejoran el acceso y la integración robótica, pero normalmente carecen de AF nativa.</li>
+        <li><strong>Definición de rendimiento:</strong> los criterios estrictos o intermedios y el tratamiento de resultados benignos inespecíficos cambian las cifras publicadas.</li>
+        <li><strong>Ventilación óptima:</strong> PEEP, volumen y apneas reducen atelectasia, pero la adopción varía entre centros y afecta de forma importante la calidad y el rendimiento.</li>
+        <li><strong>Más allá del diagnóstico:</strong> CBCT puede guiar terapias locales precisas; los flujos y resultados comparativos siguen definiéndose.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Lista de verificación de puntos clave</h3>
+    <ul>
+        <li>Confirme los recursos disponibles —CBCT fija/AF, CBCT móvil o DTS— antes de programar.</li>
+        <li>Obtenga TC de planificación de corte fino según la plataforma.</li>
+        <li>Use anestesia general, bloqueo neuromuscular cuando proceda, PEEP ≥10 cm H<sub>2</sub>O y apneas inspiratorias.</li>
+        <li>Coloque los instrumentos cerca del objetivo antes del primer giro o barrido.</li>
+        <li>En CBCT-AF, segmente la lesión, marque el extremo y seleccione ángulos útiles.</li>
+        <li>En DTS, haga un barrido limitado y vuelva a registrar objetivo e instrumento.</li>
+        <li>Confirme siempre el instrumento dentro de la lesión mediante rEBUS o imagen.</li>
+        <li>Muestree varias zonas y utilice ROSE cuando esté disponible.</li>
+        <li>Si existe desalineación, repita imagen breve, corrija y vuelva a confirmar.</li>
+        <li>Minimice movimiento, cables y objetos dispersores.</li>
+        <li>Vigile neumotórax y otras complicaciones.</li>
+        <li>Documente las métricas de dosis y los pasos de imagen para mejora de calidad.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abreviaturas y glosario</h3>
+        <dl>
+            <dt>AF</dt><dd>Fluoroscopia aumentada, superposición 3D sobre fluoroscopia en vivo.</dd>
+            <dt>CBCT</dt><dd>Tomografía computarizada de haz cónico.</dd>
+            <dt>Divergencia TC-cuerpo</dt><dd>Desajuste entre la posición del objetivo en la TC de planificación y la anatomía intraprocedimiento.</dd>
+            <dt>DTS</dt><dd>Tomosíntesis digital, reconstrucción mediante barrido de ángulo limitado.</dd>
+            <dt>EWC</dt><dd>Canal de trabajo extendido.</dd>
+            <dt>ENB</dt><dd>Broncoscopia de navegación electromagnética.</dd>
+            <dt>rEBUS</dt><dd>Ecografía endobronquial radial.</dd>
+            <dt>ROSE</dt><dd>Evaluación rápida in situ.</dd>
+            <dt>TiLT+</dt><dd>Tomosíntesis para confirmar instrumento dentro de la lesión en Galaxy.</dd>
+            <dt>TTNB</dt><dd>Biopsia transtorácica con aguja.</dd>
+            <dt>WC</dt><dd>Canal de trabajo del broncoscopio.</dd>
+        </dl>
+    </div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+<ol>
+<li>Dobbins JT, Godfrey DJ. Digital x-ray tomosynthesis: current state of the art and clinical potential. Phys Med Biol. 2003;48(19):R65-106.</li>
+<li>Brenner DJ, Hall EJ. Computed tomography—an increasing source of radiation exposure. N Engl J Med. 2007;357(22):2277-2284.</li>
+<li>Dobbins JT, McAdams HP, Godfrey DJ, Li CM. Digital tomosynthesis of the chest. J Thorac Imaging. 2008;23(2):86-92.</li>
+<li>Aboudara M, Roller L, Rickman O, et al. Improved diagnostic yield for lung nodules with digital tomosynthesis-corrected navigational bronchoscopy: initial experience with a novel adjunct. Respirology. 2020;25(2):206-213.</li>
+<li>Avasarala SK, Roller L, Katsis J, et al. Sight unseen: diagnostic yield and safety outcomes of a novel multimodality navigation bronchoscopy platform with real-time target acquisition. Respiration. 2022;101(2):166-173.</li>
+<li>Dunn BK, Blaj M, Stahl J, et al. Evaluation of electromagnetic navigational bronchoscopy using tomosynthesis-assisted visualization, intraprocedural positional correction and continuous guidance for evaluation of peripheral pulmonary nodules. J Bronchol Interv Pulmonol. 2023;30(1):16-23.</li>
+<li>Low SW, Lentz RJ, Chen H, et al. Shape-sensing robotic-assisted bronchoscopy vs digital tomosynthesis-corrected electromagnetic navigation bronchoscopy: a comparative cohort study of diagnostic performance. Chest. 2023;163(4):977-984.</li>
+<li>Lentz RJ, Frederick-Dyer K, Planz VB, et al. Navigational bronchoscopy or transthoracic needle biopsy for lung nodules. N Engl J Med. 2025;392(21):2100-2112.</li>
+<li>Pritchett MA, Schampaert S, de Groot JAH, Schirmer CC, van der Bom I. Cone-beam CT with augmented fluoroscopy combined with electromagnetic navigation bronchoscopy for biopsy of pulmonary nodules. J Bronchol Interv Pulmonol. 2018;25(4):274-282.</li>
+<li>Casal RF, Sarkiss M, Jones AK, et al. Cone-beam computed tomography-guided thin/ultrathin bronchoscopy for diagnosis of peripheral lung nodules: a prospective pilot study. J Thorac Dis. 2018;10(12):6950-6959.</li>
+<li>Verhoeven RLJ, Futterer JJ, Hoefsloot W, van der Heijden E. Cone-beam CT image guidance with and without electromagnetic navigation bronchoscopy for biopsy of peripheral pulmonary lesions. J Bronchol Interv Pulmonol. 2021;28(1):60-69.</li>
+<li>Verhoeven RLJ, van der Sterren W, Kong W, et al. Cone-beam CT and augmented fluoroscopy-guided navigation bronchoscopy: radiation exposure and diagnostic accuracy learning curves. J Bronchol Interv Pulmonol. 2021;28(4):262-271.</li>
+<li>Yu KL, Yang SM, Ko HJ, et al. Efficacy and safety of cone-beam computed tomography-derived augmented fluoroscopy combined with endobronchial ultrasound in peripheral pulmonary lesions. Respiration. 2021;100(6):538-546.</li>
+<li>Lin CK, Fan HJ, Yao ZH, et al. Cone-beam computed tomography-derived augmented fluoroscopy improves the diagnostic yield of endobronchial ultrasound-guided transbronchial biopsy for peripheral pulmonary lesions. Diagnostics. 2021;12(1):41.</li>
+<li>Kops SEP, Heus P, Korevaar DA, et al. Diagnostic yield and safety of navigation bronchoscopy: a systematic review and meta-analysis. Lung Cancer. 2023;180:107196.</li>
+<li>Wijma IN, Casal RF, Cheng GZ, et al. Radiation principles, protection and reporting for interventional pulmonology: a WABIP White Paper. Respiration. 2024;103(11):707-722.</li>
+<li>Bhadra K, Rickman OB, Mahajan AK, Hogarth DK. “Tool-in-lesion” accuracy of Galaxy System—a robotic electromagnetic navigation bronchoscopy with integrated tool-in-lesion tomosynthesis technology: the MATCH study. J Bronchol Interv Pulmonol. 2024;31(1):23-29.</li>
+<li>Saghaie T, Williamson JP, Phillips M, et al. First-in-human use of a new robotic electromagnetic navigation bronchoscopic platform with integrated Tool-in-Lesion Tomosynthesis (TiLT) technology for peripheral pulmonary lesions: the FRONTIER study. Respirology. 2024;29:969-975.</li>
+<li>Salahuddin M, Sarkiss M, Sagar A-ES, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia: a multicenter randomized controlled trial. Chest. 2022;162(6):1393-1401.</li>
+</ol>
+</div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

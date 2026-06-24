@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>热消融治疗</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>热消融治疗</h1>
+
+    <h3>考试内容对应与范围</h3>
+    <p>本章介绍介入支气管镜治疗中央气道疾病时可立即产生疗效的热能技术：医用激光、电灼（EC）和氩等离子体凝固（APC）。内容对应AABIP考试蓝图中的恶性中央气道梗阻（CAO）处理、良性狭窄、止血、器械物理原理与安全、麻醉／通气策略、操作技术、疗效以及并发症处理。</p>
+
+    <h3>学习目标</h3>
+    <ul>
+        <li>根据能量传递方式、组织效应、穿透深度和最佳临床场景，区分激光、EC和APC。</li>
+        <li>针对腔内型、外压型或混合型CAO以及支气管腔内咯血来源，选择合适的热治疗方式。</li>
+        <li>完成热消融患者和手术间准备，包括FiO₂/FeO₂目标、气道火灾预防以及植入装置注意事项。</li>
+        <li>掌握硬镜和软镜下的逐步技术，包括激光辅助机械减瘤和多模式联合治疗。</li>
+        <li>处理术中问题，如低氧、出血、凝固效果差、炭化、蒸汽“爆米花”效应和气体栓塞风险。</li>
+        <li>预判并发症并应用即时处理流程。</li>
+        <li>解读疗效与安全性数据，以便向患者说明预期结局。</li>
+    </ul>
+
+    <hr>
+
+    <h3>高频考点一页通</h3>
+    
+    <h4>最常考的技术对应</h4>
+    <ul>
+        <li><strong>激光</strong>＝凝固最深且可有效汽化；远端气道仍有通气时，最适合快速减除腔内型肿瘤。</li>
+        <li><strong>EC（电灼）</strong>＝接触式切割／凝固，器械多样（针状刀、圈套器）；是处理腔内病变时性价比较高的激光替代方案。</li>
+        <li><strong>APC（氩等离子体凝固）</strong>＝非接触、浅层穿透；是弥漫性渗血止血的主力技术，也可先使组织失活以便机械减瘤。</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <strong>关键要点：</strong>
+        <ul>
+            <li><strong>火灾预防：</strong>启动任何热能设备前，保持FiO₂和FeO₂≤0.40，并与麻醉团队进行闭环确认。</li>
+            <li><strong>功率密度很重要（激光）：</strong>光纤越近且功率越高，越容易汽化／炭化；光纤越远且功率越低，凝固范围越宽。采用“扫涂，不停驻”，避免深部损伤。</li>
+            <li><strong>同轴对准：</strong>能量方向应与气道长轴平行，以降低穿孔风险，尤其是在气管后方膜部和邻近大血管处。</li>
+            <li><strong>APC安全：</strong>探头距靶组织1–3 mm；气流≤1.0 L/min可降低气体栓塞风险；导管尖端应伸出内镜以保护镜头。</li>
+            <li><strong>EC针状刀处理膜样狭窄：</strong>在12、3、9点方向作放射状切开，避开6点方向（后膜部），随后扩张。</li>
+            <li><strong>植入装置：</strong>EC/APC使用电流；起搏器／植入式心律转复除颤器（ICD）患者需协调磁铁应用或临时重设程序。激光使用光能，不受此限制。</li>
+            <li><strong>硬镜＋软镜协同：</strong>硬镜用于气道控制、大口径吸引、机械削切和支架；软镜经硬镜用于远端检查和气道清理。</li>
+            <li><strong>激光禁忌证陷阱：</strong>近乎完全梗阻且看不到远端管腔时，穿孔风险高；避免盲目释放能量。</li>
+            <li><strong>疗效概况：</strong>现代登记研究显示，经验丰富的团队可获得高技术成功率和较低的单次操作并发症率；治疗性支气管镜在全身麻醉下的并发症少于中度镇静。</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>核心概念</h3>
+
+    <h4>病理生理／流行病学</h4>
+    <p>CAO可由腔内肿瘤、外压或混合型病变引起。热能技术主要治疗腔内成分；对于混合型或外压型病变，常与机械减瘤和支架联合。热治疗也常用于处理支气管腔内咯血以及部分良性膜样狭窄／短段狭窄。</p>
+
+    <h4>适应证与禁忌证</h4>
+    <p><strong>常见适应证：</strong></p>
+    <ul>
+        <li>有症状且包含腔内成分的CAO（恶性或部分良性病变）。</li>
+        <li>可见中央气道来源的支气管腔内咯血。</li>
+        <li>适合放射状切开＋扩张的良性膜样或短段狭窄。</li>
+        <li>姑息性减瘤或作为后续根治性肿瘤治疗的桥接。</li>
+    </ul>
+    <p><strong>相对禁忌证：</strong></p>
+    <ul>
+        <li>完全／近乎完全梗阻且无法看见远端管腔（尤其激光）。</li>
+        <li>无法将FiO₂降至≤0.40的难治性低氧血症。</li>
+        <li>极度脆弱的黏膜并伴无法控制的出血（应先稳定）。</li>
+        <li>对于EC/APC：心脏植入式电子装置未经适当围手术期调整。</li>
+    </ul>
+
+    <h3>术前评估</h3>
+    <ul>
+        <li><strong>影像：</strong>CT用于明确病变范围及气道与血管的关系；预判术后或放疗后解剖改变。</li>
+        <li><strong>气道计划：</strong>选择硬镜或软镜；确认支架、球囊、冷冻探头和钳具可用；准备大口径吸引和压迫止血等出血备用方案。</li>
+        <li><strong>麻醉与通气：</strong>治疗性操作优先全身麻醉；释放能量前确保FiO₂/FeO₂≤0.40；在气管导管附近使用激光时考虑抗激光气管导管。</li>
+        <li><strong>植入装置：</strong>如有起搏器／ICD，使用EC/APC前协调异步模式，术后复核装置。</li>
+        <li><strong>团队与安全：</strong>准备激光防护眼镜、标称危险区管控、烟羽排出系统，并在手边备无菌水／盐水用于火灾处理。</li>
+        <li><strong>知情同意：</strong>包括出血、穿孔、气道火灾、APC气体栓塞、可能需要支架或分期操作等风险。</li>
+    </ul>
+
+    <h3>设备与设置（常见）</h3>
+    <ul>
+        <li><strong>激光平台：</strong>
+            <ul>
+                <li>Nd:YAG（约1064 nm）：凝固较深，常用20–40 W。</li>
+                <li>Nd:YAP（约1340 nm）：约20 W。</li>
+                <li>Ho:YAG（约2100 nm）：约10 W，浅层、精确切割。</li>
+                <li>KTP（532 nm）：15–35 W，表浅切割。</li>
+                <li>CO₂（10,600 nm）：4–8 W，极表浅、精确切割。</li>
+                <li>半导体激光：例如980 nm约20 W、1470 nm约10 W；不同设备差异较大，部分资料报告更低功率范围。</li>
+            </ul>
+        </li>
+        <li><strong>EC：</strong>发生器设切割（黄色）和凝固（蓝色）脚踏；配钝头探头、针状刀、圈套器和热活检钳；常用功率20–60 W，切割时通常更高。</li>
+        <li><strong>APC：</strong>发生器＋氩气源；轴向或侧向喷射导管；常用20–40 W，气流0.3–1.8 L/min（安全起见保持≤1.0 L/min）。</li>
+        <li><strong>辅助器械：</strong>硬镜套装（镜管／望远镜）、高流量吸引、钳具、冷冻探头、球囊、支架、支气管镜保护套和烟雾排出装置。</li>
+    </ul>
+
+    <hr>
+
+    <h3>逐步技术／操作核查表</h3>
+
+    <h4>通用安全核查（任何能量释放前）</h4>
+    <ul>
+        <li>通过闭环口头确认FiO₂/FeO₂≤0.40。</li>
+        <li>确保气道稳固，并准备两套吸引（镜内＋口腔）。</li>
+        <li>设置烟羽／烟雾排出。</li>
+        <li>确认植入装置方案（EC/APC时使用磁铁或重设程序）。</li>
+        <li>简要复核火灾处理流程；无菌水／盐水立即可用。</li>
+    </ul>
+
+    <h4>激光辅助机械减瘤（优先硬镜）</h4>
+    <ul>
+        <li>确认气道走向，使光纤与管腔同轴。</li>
+        <li>先进行较宽范围凝固：光纤距病灶约1 cm，以较低功率和短脉冲（约1秒）去血管化。</li>
+        <li>用硬镜斜口／钳具机械削切；重复“凝固 → 减瘤”循环。</li>
+        <li>处理表浅病变（膜样狭窄／肉芽）时，可使用精确切割激光，如KTP、CO₂或Ho:YAG。</li>
+        <li>切勿长时间停留于一点；每1–3个脉冲移动光束，以避免深部蒸汽“爆米花”效应和穿孔。</li>
+    </ul>
+
+    <h4>电灼</h4>
+    <ul>
+        <li><strong>针状刀处理膜样狭窄：</strong>在12、3、9点方向放射状切开，避开6点；随后以硬镜或球囊扩张。</li>
+        <li><strong>圈套器处理有蒂病变：</strong>套住基底，通电同时收紧，并整块取出。</li>
+        <li><strong>钝头探头：</strong>每次短暂接触（≤1–2秒），每次激活后重新目视评估。</li>
+        <li><strong>设置：</strong>止血优先凝固模式；可交替使用切割／凝固模式以兼顾速度和控制。</li>
+    </ul>
+
+    <h4>APC（氩等离子体凝固）</h4>
+    <ul>
+        <li>导管伸出内镜尖端至少5–10 mm。</li>
+        <li>距组织1–3 mm，以短脉冲“扫涂”方式移动。</li>
+        <li>气流≤1.0 L/min；推进导管时不要激活，也不要将导管刺入组织。</li>
+        <li>先使组织失活，随后按需用钳具或冷冻探头机械减瘤。</li>
+    </ul>
+
+    <h3>故障处理与术中管理</h3>
+    <ul>
+        <li><strong>血氧下降：</strong>暂停能量，暂时提高FiO₂，吸除血块／烟雾；仅在FeO₂再次≤0.40时恢复。</li>
+        <li><strong>出血：</strong>弥漫性渗血优先APC；或用激光从病灶周边向中心凝固；用硬镜压迫，并按需置入局部止血材料。</li>
+        <li><strong>湿性术野凝固不佳：</strong>吸除血液／黏液；改用非接触方式（APC或激光）。</li>
+        <li><strong>激光导致炭化：</strong>增加光纤距离或降低功率；改用机械取除。</li>
+        <li><strong>激光蒸汽“爆米花”效应：</strong>缩短脉冲、持续移动光束、避免深部长时间停留。</li>
+        <li><strong>EC/APC装置干扰：</strong>如出现心律异常，确认是否已应用磁铁或设为异步模式。</li>
+        <li><strong>APC/EC损伤内镜风险：</strong>保持工作端伸出内镜尖端，避免意外接触。</li>
+    </ul>
+
+    <h3>术后护理与随访</h3>
+    <ul>
+        <li>按常规支气管镜流程恢复；高风险病例（声门下操作、气管支架）延长观察。</li>
+        <li>复杂狭窄或肿瘤负荷大者可考虑早期复查支气管镜，以评估再狭窄并规划分期治疗。</li>
+        <li>加强咳嗽和气道清洁；气道再通后尽快衔接肿瘤系统治疗。</li>
+    </ul>
+
+    <h3>并发症（预防—识别—处理）</h3>
+    <ul>
+        <li><strong>气道火灾：</strong>通过FiO₂/FeO₂≤0.40、湿布单和避免酒精消毒剂预防。若起火：停止能量和供氧，用盐水冲洗气道，移除燃烧材料，并以支气管镜重新评估气道。</li>
+        <li><strong>出血：</strong>用APC／激光凝固、硬镜压迫、局部止血材料；持续出血则升级处理。</li>
+        <li><strong>穿孔／瘘：</strong>停止能量、压迫止血、对侧肺通气，获取影像并请外科会诊。</li>
+        <li><strong>气体栓塞（APC）：</strong>避免高流量、刺入组织或推进时持续激活；若怀疑（突发心血管崩溃或神经功能缺损），立即停止操作、给予血流动力学支持，适当时取左侧卧位并紧急处理。</li>
+        <li><strong>心律失常／装置故障：</strong>术前与器械团队规划；术后监测并重新编程。</li>
+        <li><strong>梗阻后水肿／肺不张：</strong>气道清洁；临床上气道水肿明显时可考虑糖皮质激素。</li>
+    </ul>
+
+    <h3>特殊人群</h3>
+    <ul>
+        <li><strong>心脏植入式电子装置：</strong>可行时优先激光以避免电流；使用EC/APC时采用磁铁／异步模式并在术后复核装置。</li>
+        <li><strong>气管切开／高位声门下操作：</strong>激光操作时可考虑经造口置入抗激光气管导管，以改善通气控制。</li>
+        <li><strong>严重低氧血症：</strong>若FiO₂无法降低，热消融可能不安全；可采用分期策略、无火灾风险的替代技术（如冷冻取出），极少数病例可依据机构条件考虑体外支持。</li>
+        <li><strong>上叶病变：</strong>软镜通常更易到达；硬镜可能无法抵达。</li>
+    </ul>
+
+    <h3>证据与结局</h3>
+    <ul>
+        <li>大型病例系列／登记研究显示，经验丰富的团队技术成功率高、单次操作并发症率低；治疗性操作通常优先全身麻醉而非中度镇静。</li>
+        <li>激光辅助减瘤可迅速扩大管腔并缓解症状；与放疗／系统治疗联合可改善结局。</li>
+        <li>对于许多腔内病变，EC疗效可与激光相当，并可能更具成本效益。</li>
+        <li>APC可对中央气道支气管腔内出血实现良好的即时止血，并有助于后续安全机械减瘤。</li>
+    </ul>
+
+    <hr>
+
+    <h3>诊断与治疗流程</h3>
+
+    <h4>流程1——有症状的中央气道梗阻（CAO）</h4>
+    <div class="mermaid">
+    graph TD
+        A["疑似CAO"] --> B["评估气道／通气<br/>SpO₂ • 血流动力学"]
+        B --> C{"是否紧急呼吸窘迫？"}
+        C -- 是 --> D["建立气道（优先硬镜）<br/>通气 • 吸引"]
+        D --> E["将FiO₂/FeO₂降至≤0.40"]
+        C -- 否 --> E
+        E --> F["确定梗阻模式<br/>（支气管镜／CT）"]
+        F --> G{"是否有腔内成分？"}
+        G -- 否 --> H["纯外压型：<br/>扩张 ± 支架<br/>（不行热消融）"]
+        G -- 是 --> I["规划热治疗方式"]
+        I --> J{"治疗目标？"}
+        J -- 减瘤 --> K["激光或EC<br/>激光辅助机械减瘤"]
+        J -- 止血 --> L["APC（非接触）<br/>或激光凝固"]
+        K --> M["辅助：<br/>钳具／冷冻探头<br/>球囊 • 混合型时支架"]
+        L --> M
+        M --> N["术后：<br/>气道清理<br/>规划肿瘤治疗"]
+    </div>
+    <div class="algorithm-note">
+        <strong>流程1总结：</strong>
+        <ul>
+            <li>先稳定气道／通气；释放能量前FiO₂/FeO₂≤0.40。</li>
+            <li>确定腔内型、外压型或混合型梗阻。</li>
+            <li>腔内型：激光或EC减瘤；APC／激光止血。</li>
+            <li>混合型：先处理腔内成分，再扩张／置入支架。</li>
+            <li>看不到远端气道时，避免盲目释放能量。</li>
+            <li>术后规划肿瘤治疗和随访。</li>
+        </ul>
+    </div>
+
+    <h4>流程2——支气管腔内咯血（中央气道来源）</h4>
+    <div class="mermaid">
+    graph TD
+        A["中央气道来源咯血"] --> B["建立气道（优先硬镜）"]
+        B --> C["出血侧向下<br/>吸除血块"]
+        C --> D["将FiO₂/FeO₂降至≤0.40"]
+        D --> E["定位出血点"]
+        E --> F{"出血类型？"}
+        F -- 弥漫性 --> G["APC短脉冲<br/>距组织1–3 mm<br/>气流≤1.0 L/min"]
+        F -- 局灶性 --> H["激光凝固<br/>由周边向中心"]
+        G --> I["辅助：<br/>硬镜压迫<br/>局部止血剂"]
+        H --> I
+        I --> J{"是否仍出血？"}
+        J -- 是 --> K["重复凝固<br/>考虑支架／压迫<br/>介入放射栓塞"]
+        J -- 否 --> L["气道清理<br/>观察 • 治疗病因"]
+    </div>
+    <div class="algorithm-note">
+        <strong>流程2总结：</strong>
+        <ul>
+            <li>先控制气道并清除血块。</li>
+            <li>降低FiO₂/FeO₂并定位出血点。</li>
+            <li>弥漫性渗血用APC；局灶性病变用激光。</li>
+            <li>按需联合压迫和局部止血措施。</li>
+            <li>难治性病例转介入放射栓塞／外科，依机构流程处理。</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>表格与快速参考</h3>
+
+    <h4>表1．气道医用激光——物理特性与常用设置</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>激光类型</th>
+                <th>波长（nm）</th>
+                <th>主要组织效应</th>
+                <th>约穿透深度</th>
+                <th>气道常用功率</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Nd:YAG</td><td>约1064</td><td>凝固＋汽化</td><td>约5–15 mm</td><td>约20–40 W</td></tr>
+            <tr><td>Nd:YAP</td><td>约1340</td><td>凝固</td><td>约3–10 mm</td><td>约20 W</td></tr>
+            <tr><td>Ho:YAG</td><td>约2100</td><td>精确切割＋浅层凝固</td><td>&lt;1 mm</td><td>约10 W</td></tr>
+            <tr><td>KTP</td><td>532</td><td>表浅切割；小血管止血</td><td>&lt;1 mm</td><td>约15–35 W</td></tr>
+            <tr><td>半导体</td><td>980／1470</td><td>混合凝固／切割；依设备而异</td><td>约2–4 mm*</td><td>约10–20 W*</td></tr>
+            <tr><td>CO₂</td><td>10,600</td><td>极精确切割；止血能力有限</td><td>&lt;1 mm</td><td>约4–8 W</td></tr>
+        </tbody>
+    </table>
+    <p><em>*部分资料针对特定半导体平台列出更低功率；设置随设备和临床目标而异。</em></p>
+
+    <h4>表2．热治疗方式速览</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>特征</th>
+                <th>激光</th>
+                <th>电灼（EC）</th>
+                <th>氩等离子体凝固（APC）</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>接触／非接触</td><td>均可（裸光纤或空气冷却导管）</td><td>接触式</td><td>非接触式</td></tr>
+            <tr><td>作用深度</td><td>可变；Nd:YAG最深</td><td>中等，受接触限制</td><td>浅层（约1–2 mm）</td></tr>
+            <tr><td>最佳用途</td><td>快速减瘤；局灶止血</td><td>膜样狭窄切开；有蒂病变；高性价比减瘤</td><td>弥漫性渗血、黏膜凝固；为减瘤预处理</td></tr>
+            <tr><td>关键设置</td><td>功率、脉冲、光纤距离</td><td>功率；切割／凝固模式</td><td>功率；气流（≤1.0 L/min）；距组织1–3 mm</td></tr>
+            <tr><td>装置／植入物问题</td><td>光能（起搏器患者可用）</td><td>电能（需管理CIED）</td><td>电能＋气体（需管理CIED及气体安全）</td></tr>
+            <tr><td>火灾风险</td><td>有（FiO₂/FeO₂≤0.40）</td><td>有（FiO₂/FeO₂≤0.40）</td><td>有（FiO₂/FeO₂≤0.40）</td></tr>
+            <tr><td>局限</td><td>深部损伤风险；成本</td><td>湿性术野效果差；后壁风险</td><td>作用浅；误用时有气体栓塞风险</td></tr>
+        </tbody>
+    </table>
+
+    <h4>表3．气道火灾与操作安全核查表</h4>
+    <table>
+        <thead><tr><th>核查项目</th><th>措施</th></tr></thead>
+        <tbody>
+            <tr><td>氧浓度控制</td><td>启动前确认FiO₂/FeO₂≤0.40；采用闭环确认。</td></tr>
+            <tr><td>气道装置</td><td>在导管附近使用激光时优先抗激光气管导管；工作端伸出内镜以保护镜头。</td></tr>
+            <tr><td>术野准备</td><td>避免酒精消毒剂；使用湿布单；盐水／水置于伸手可及处。</td></tr>
+            <tr><td>团队防护</td><td>激光专用护目镜；烟羽排出；激光室按要求使用面屏、手套和隔离衣。</td></tr>
+            <tr><td>起搏器／ICD（EC/APC）</td><td>磁铁／异步模式；术后装置复核。</td></tr>
+            <tr><td>APC要点</td><td>气流≤1.0 L/min；推进时不激活；尖端不得接触／刺入组织。</td></tr>
+            <tr><td>激光技术</td><td>同轴对准；短脉冲；每1–3个脉冲移动光束。</td></tr>
+            <tr><td>出血备用</td><td>用硬镜压迫；备局部止血材料；必要时介入放射栓塞。</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>病例与应用学习</h3>
+
+    <div class="case-study">
+        <h4>病例1</h4>
+        <p>一名68岁鳞状细胞肺癌患者出现吸气性喘鸣。CT显示气管腔内肿块，远端气管和支气管仍充气。患者吸氧2 L/min时SpO₂为93%；全身麻醉下可见易出血的脆性肿块。</p>
+        <p><strong>下一步最佳处理？</strong><br>
+        A．将FiO₂升至100%并开始激光汽化<br>
+        B．以2.0 L/min氩气流量使用APC快速止血<br>
+        C．将FiO₂/FeO₂降至≤0.40，以短脉冲激光凝固，随后机械减瘤<br>
+        D．仅冷冻消融<br>
+        E．盲目置入支架</p>
+        <p><strong>最佳答案：C。</strong>先降低氧浓度；用短脉冲激光凝固并去血管化，再机械减瘤。APC也可用于止血，但气流应≤1.0 L/min。</p>
+    </div>
+
+    <div class="case-study">
+        <h4>病例2</h4>
+        <p>一名54岁患者既往插管后出现声门下膜样狭窄和活动后呼吸困难。支气管镜显示薄的同心环状狭窄。</p>
+        <p><strong>最佳技术？</strong><br>
+        A．激光环周消融<br>
+        B．EC针状刀放射状切开（避开6点）后扩张<br>
+        C．高流量APC“烧穿”狭窄<br>
+        D．立即置入支架<br>
+        E．光动力治疗</p>
+        <p><strong>最佳答案：B。</strong>标准做法是EC放射状切开后扩张；应避免环周热损伤。</p>
+    </div>
+
+    <div class="case-study">
+        <h4>病例3</h4>
+        <p>一名71岁转移性肾细胞癌患者，支气管中间段可见渗血性支气管腔内转移灶。</p>
+        <p><strong>最合适的初始热治疗？</strong><br>
+        A．接触式高功率激光汽化<br>
+        B．非接触式APC短脉冲止血，随后机械清除<br>
+        C．EC切割模式60 W<br>
+        D．CO₂激光切割<br>
+        E．不行支气管镜，仅转介入放射</p>
+        <p><strong>最佳答案：B。</strong>APC可对弥漫性渗血进行表浅凝固，并为机械减瘤做好准备。</p>
+    </div>
+
+    <h3>题库（选择题）</h3>
+    <ol>
+        <li><strong>激光减除腔内肿瘤时，降低深部组织穿孔风险最有效的方法是：</strong><br>
+            A．提高功率密度和停留时间<br>
+            B．近距离连续高功率照射<br>
+            C．短脉冲、持续移动光束（“扫涂”）并保持同轴对准<br>
+            D．改用100%氧以预防火灾<br>
+            E．垂直照射气道壁<br>
+            <strong>答案：C。</strong>短脉冲、持续移动和同轴对准可减少深部热损伤。</li>
+        <li><strong>关于作用深度，下列配对最准确的是：</strong><br>
+            A．APC：5–15 mm<br>
+            B．KTP激光：&lt;1 mm<br>
+            C．Nd:YAG激光：&lt;1 mm<br>
+            D．EC：恰好1 mm<br>
+            E．CO₂激光：5–15 mm<br>
+            <strong>答案：B。</strong>KTP作用表浅（&lt;1 mm）；Nd:YAG较深（约5–15 mm）；APC约1–2 mm。</li>
+        <li><strong>（下一步最佳处理）恶性CAO减瘤时出现明显渗血，FiO₂为0.30。最佳即时措施是：</strong><br>
+            A．将FiO₂升至1.0<br>
+            B．以短脉冲APC、气流≤1.0 L/min止血<br>
+            C．改用60 W EC切割模式<br>
+            D．固定一点长时间激光照射<br>
+            E．终止操作<br>
+            <strong>答案：B。</strong></li>
+        <li><strong>（故障处理）用EC针状刀处理气管膜样狭窄时，术者反复在6点方向切开。主要风险是：</strong><br>
+            A．支架移位<br>
+            B．食管损伤／穿孔<br>
+            C．气体栓塞<br>
+            D．起搏器干扰<br>
+            E．无法止血<br>
+            <strong>答案：B。</strong>应避开后方膜部。</li>
+        <li><strong>关于APC，下列哪项正确？</strong><br>
+            A．属于接触式技术。<br>
+            B．有效治疗必须气流≥2 L/min。<br>
+            C．提供表浅凝固，最适合弥漫性渗血。<br>
+            D．高FiO₂环境下比激光安全。<br>
+            E．穿透深度大于Nd:YAG。<br>
+            <strong>答案：C。</strong></li>
+        <li><strong>起搏器／ICD患者接受热消融时：</strong><br>
+            A．禁用激光。<br>
+            B．EC/APC无需装置管理。<br>
+            C．激光不传导电流；EC/APC需磁铁／异步模式并在术后复核装置。<br>
+            D．只有APC安全。<br>
+            E．抗凝必须停2周。<br>
+            <strong>答案：C。</strong></li>
+        <li><strong>（下一步最佳处理）计划在气管切开导管附近使用激光。降低火灾风险的最佳措施是：</strong><br>
+            A．提高FiO₂以预防低氧<br>
+            B．保留普通PVC导管<br>
+            C．使用抗激光气管导管，并维持FiO₂/FeO₂≤0.40<br>
+            D．气道内滴注肾上腺素<br>
+            E．改用APC即可消除火灾风险<br>
+            <strong>答案：C。</strong></li>
+        <li><strong>激光减瘤前优化止血的实用策略是：</strong><br>
+            A．近距离高功率接触模式起始<br>
+            B．光纤距组织约1 cm，以较低功率密度先去血管化，再机械减瘤<br>
+            C．同一点持续长脉冲<br>
+            D．立即改用EC切割模式<br>
+            E．使用高气流<br>
+            <strong>答案：B。</strong></li>
+        <li><strong>（故障处理）在积血的术野中APC效果不佳。最佳措施是：</strong><br>
+            A．将气流提高到2 L/min<br>
+            B．缩短距离直至接触组织<br>
+            C．吸除血液／黏液后，以短脉冲再次使用APC<br>
+            D．推进导管时激活<br>
+            E．改用EC切割模式<br>
+            <strong>答案：C。</strong></li>
+        <li><strong>下列哪项与气体栓塞风险最相关？</strong><br>
+            A．0.6 L/min气流下短脉冲APC<br>
+            B．推进APC导管或刺入组织时持续激活<br>
+            C．20 W激光脉冲<br>
+            D．EC针状刀短暂切开<br>
+            E．球囊扩张<br>
+            <strong>答案：B。</strong></li>
+        <li><strong>恶性CAO登记研究显示，治疗性支气管镜术：</strong><br>
+            A．所有患者症状均改善<br>
+            B．技术成功率高，许多患者呼吸困难获得有临床意义的改善；经验丰富中心的单次操作并发症率较低<br>
+            C．死亡率高到不可接受<br>
+            D．在肿瘤系统治疗前没有作用<br>
+            E．中度镇静比全身麻醉更安全<br>
+            <strong>答案：B。</strong></li>
+        <li><strong>良性声门下薄膜样狭窄最合适的顺序是：</strong><br>
+            A．环周EC消融 → 不扩张<br>
+            B．EC放射状切开 → 轻柔扩张（硬镜或球囊）<br>
+            C．仅高流量APC<br>
+            D．先置入支架<br>
+            E．光动力治疗<br>
+            <strong>答案：B。</strong></li>
+    </ol>
+
+    <hr>
+
+    <h3>争议、实践差异与演进中的证据</h3>
+    <ul>
+        <li><strong>激光选择与剂量：</strong>不同波长的穿透和止血作用不同；各中心拥有的Nd:YAG、半导体、KTP、Ho:YAG或CO₂平台不同，因此“典型”设置和技术存在差异。</li>
+        <li><strong>硬镜与软镜：</strong>硬镜在CAO和止血方面控制更佳；软镜对上叶和远端病变仍很重要。多数高容量中心采用联合方式。</li>
+        <li><strong>镇静与全身麻醉：</strong>治疗性支气管镜通常优先全身麻醉；中度镇静在治疗性操作中与更多并发症相关。</li>
+        <li><strong>APC安全参数：</strong>APC止血有效，但各中心气流设置不同；强调保守气流（≤1.0 L/min）和短脉冲以降低栓塞风险。</li>
+        <li><strong>良性狭窄策略：</strong>短段膜样病变对放射状切开＋扩张反应良好；复杂／软骨性病变若不置入支架或手术，常复发，需个体化。</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h3>要点核查表</h3>
+        <ul>
+            <li>释放任何能量前确认FiO₂/FeO₂≤0.40。</li>
+            <li>根据目标（止血或减瘤）和病变类型（腔内型、外压型或混合型）选择技术。</li>
+            <li>激光保持同轴、使用短脉冲并移动光束；避开后方膜部。</li>
+            <li>APC尖端不接触组织、气流≤1.0 L/min，推进时不激活。</li>
+            <li>EC处理膜样狭窄时作放射状切开（避开6点）后扩张。</li>
+            <li>使用EC/APC时管理起搏器／ICD；激光不传导电流。</li>
+            <li>准备两套吸引、烟羽排出和局部止血用品。</li>
+            <li>硬镜与软镜协同可提高安全性和效率。</li>
+            <li>预判并及时处理出血、火灾、穿孔和栓塞。</li>
+            <li>气道再通后规划根治性肿瘤治疗或计划性再次干预。</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>缩写与术语表</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>APC</dt><dd>氩等离子体凝固——以离子化氩气进行的非接触电凝；组织作用较浅。</dd>
+            <dt>CIED</dt><dd>心脏植入式电子装置（起搏器／ICD）。</dd>
+            <dt>EC</dt><dd>电灼——接触式能量传递，用于切割／凝固。</dd>
+            <dt>FeO₂/FiO₂</dt><dd>呼出／吸入氧浓度（热消融时目标≤0.40）。</dd>
+            <dt>Ho:YAG/KTP/Nd:YAG/Nd:YAP</dt><dd>常见医用激光，波长和组织相互作用各异。</dd>
+            <dt>功率密度（激光）</dt><dd>靶组织单位面积上的能量，由功率和光纤至组织距离决定；密度越高，越倾向汽化／炭化。</dd>
+            <dt>硬镜削切</dt><dd>利用硬质支气管镜远端斜口进行机械减瘤。</dd>
+            <dt>“爆米花”效应</dt><dd>激光能量停留过久导致深部蒸汽爆裂，可引起破裂／穿孔。</dd>
+        </dl>
+    </div>
+
+    <h3>参考文献</h3>
+    <div class="references"><ol>
+<li>Cavaliere S, Foccoli P, Farina PL. Nd:YAG laser bronchoscopy. A five-year experience with 1,396 applications in 1,000 patients. Chest. 1988;94(1):15-21.</li>
+<li>Cavaliere S, Venuta F, Foccoli P, Toninelli C, La Face B. Endoscopic treatment of malignant airway obstructions in 2,008 patients. Chest. 1996;110(6):1536-1542.</li>
+<li>Ost DE, Ernst A, Grosu HB, et al. Complications following therapeutic bronchoscopy for malignant central airway obstruction: results of the AQuIRE Registry. Chest. 2015;148(2):450-471.</li>
+<li>Ost DE, Ernst A, Grosu HB, et al. Therapeutic bronchoscopy for malignant central airway obstruction: success rates and impact on dyspnea and quality of life. Chest. 2015;147(5):1282-1298.</li>
+<li>Ong P, Grosu HB, Debiane L, et al. Long-term quality-adjusted survival following therapeutic bronchoscopy for malignant central airway obstruction. Thorax. 2019;74(2):141-156.</li>
+<li>Sachdeva A, Pickering EM, Lee HJ. From electrocautery, balloon dilatation, neodymium-doped: yttrium-aluminum-garnet (Nd:YAG) laser to argon plasma coagulation and cryotherapy. J Thorac Dis. 2015;7(Suppl 4):S363-S379.</li>
+<li>Lee HJ, Malhotra R, Grossman C, Wesley SR. Initial report of neodymium: yttrium-aluminum-perovskite (Nd:YAP) laser use during bronchoscopy. J Bronchol Interv Pulmonol. 2011;18(3):229-232.</li>
+<li>Squiers JJ, Teeter WA, Hoopman JE, et al. Holmium:YAG laser bronchoscopy ablation of benign and malignant airway obstructions: an 8-year experience. Lasers Med Sci. 2014;29(4):1437-1443.</li>
+<li>Dalar L, Karasulu L, Sökücü S, Altin S. Diode laser in the endoscopic treatment of obstructive airway disease: two years’ experience in Istanbul. Thorac Cardiovasc Surg. 2012;60(02):140-144.</li>
+<li>Morice RC, Ece T, Ece F, Keus L. Endobronchial argon plasma coagulation for treatment of hemoptysis and neoplastic airway obstruction. Chest. 2001;119:781-787.</li>
+<li>Reichle G, Freitag L, Kullmann HJ, Prenzel R, Macha HN, Farin G. Argon plasma coagulation in bronchology: a new method—alternative or complementary? Pneumologie. 2000;54:508-516.</li>
+<li>Wahidi MM, Unroe MA, Adlakha N, Beyea M, Shofer SL. The use of electrocautery as the primary ablation modality for malignant and benign airway obstruction. J Thorac Oncol. 2011;6:1516-1520.</li>
+<li>Van Boxem T, Muller M, Venmans B, Postmus P, Sutedja T. Nd:YAG laser vs bronchoscopic electrocautery for palliation of symptomatic airway obstruction: a cost-effectiveness study. Chest. 1999;116:1108-1112.</li>
+<li>van Boxem TJ, Westerga J, Venmans BJ, Postmus PE, Sutedja TG. Tissue effects of bronchoscopic electrocautery: bronchoscopic appearance and histologic changes of bronchial wall after electrocautery. Chest. 2000;117:887-891.</li>
+<li>Tellides G, Ugurlu BS, Kim RW, Hammond GL. Pathogenesis of systemic air embolism during bronchoscopic Nd:YAG laser operations. Ann Thorac Surg. 1998;65(4):930-934.</li>
+<li>Naguib M. Sugammadex: another milestone in clinical neuromuscular pharmacology. Anesth Analg. 2007;104(3):575-581.</li>
+</ol></div>
+
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>
