@@ -85,16 +85,73 @@ content lives in the module's `content/*.ts` `…Es` / `…ZhCn` exports.
 | pneumothorax-pathway                  | ✅ machine | ✅ machine | ⬜ pending                         |
 | malignant-effusion                    | ✅ machine | ✅ machine | ⬜ pending                         |
 | pleural-ultrasound                    | ✅ machine | ✅ machine | ⬜ pending                         |
+| board-review chapter bodies           | ✅ HTML    | ✅ HTML    | ⬜ pending                         |
+| fluoroview wrapper/common controls    | ✅ handoff | ✅ handoff | ⬜ pending                         |
+| bronch-navigation wrapper             | ✅ handoff | ✅ handoff | ⬜ pending                         |
+| bronch-navigation embedded app        | ⬜         | ⬜         | — (generated static app)           |
 | rapid-onsite-cytology                 | ⬜         | ⬜         | — (workbench shape; bespoke)       |
 | chest-drainage                        | ⬜         | ⬜         | — (large simulator; bespoke)       |
 | pleural-ultrasound-simulator          | ⬜         | ⬜         | — (3D/canvas; little text)         |
 | intro-pleural-course                  | ⬜         | ⬜         | — (no [locale] route yet)          |
 | pleural-dataset-lab                   | ⬜         | ⬜         | — (no [locale] route yet)          |
-| fluoroview                            | ⬜         | ⬜         | — (large interactive app; bespoke) |
+| fluoroview app internals              | ⬜ partial | ⬜ partial | — (large interactive app; bespoke) |
 | airway-anatomy                        | ⬜         | ⬜         | — (large interactive app; bespoke) |
 | bronchoscope-size-explorer            | ⬜         | ⬜         | —                                  |
 
 When a clinician signs off on a module's medical accuracy, remove its
 `PENDING CLINICAL REVIEW` markers and tick the Reviewed column.
+
+## 2026-06-25 locale-switch audit
+
+The root localized home route now explicitly sets the request locale, so changing the
+language selector from `/en` to `/es` or `/zh-CN` updates the page content without needing
+to manually navigate to a nested route. The same locale binding was added to the
+FluoroView and Bronch Navigation wrapper pages.
+
+Runtime fixes:
+
+- `src/app/[locale]/page.tsx` — binds `params.locale` with `setRequestLocale(locale)`.
+- `src/app/[locale]/fluoroview/page.tsx` — binds wrapper/page copy to the route locale.
+- `src/app/[locale]/bronch-navigation-trainer/page.tsx` — binds wrapper/page copy to the
+  route locale.
+- `src/components/layout/LanguageSelector.tsx` — lets `router.replace(..., { locale })`
+  complete the locale transition without immediately refreshing the old locale payload.
+- `src/i18n/handoff-message-ids.ts` and `messages/{en,es,zh-CN}.json` — add the missing
+  Bronch Navigation wrapper strings.
+
+Translation data confirmed in use:
+
+- `messages/{en,es,zh-CN}.json` for the app shell, home catalog, FluoroView wrapper, and
+  Bronch Navigation wrapper.
+- `src/i18n/handoff-core.ts`, `src/i18n/handoff.tsx`, and
+  `src/i18n/handoff-message-ids.ts` for legacy JSX/string handoff translations.
+- `src/lib/board-review-html.ts` and `src/lib/board-review-loader.ts` for localized board
+  chapter titles and HTML bodies from `board_review_translations/Spanish` and
+  `board_review_translations/Mandarin`.
+
+Files still needing conversion or structured localization:
+
+- `../navigation_module/web/src/App.tsx`
+- `../navigation_module/web/src/components/BronchoscopeView.tsx`
+- `../navigation_module/web/src/components/CtPane.tsx`
+- `../navigation_module/web/src/components/AirwayMap.tsx`
+- `../navigation_module/web/src/styles.css` if visible text is added through CSS.
+- `public/bronch-navigation-trainer/app/**` is generated output; translate the source app
+  above, then run `npm run sync:bronch-navigation-trainer`.
+- `src/data/board-review.ts` for board-review catalog/front-matter metadata such as
+  descriptions, summaries, exam domains, tags, focus labels, and category labels.
+- `content/modules/board/*.mdx` if the canonical front matter itself should be localized
+  instead of adding a separate metadata map.
+- `src/components/fluoroview/FluoroViewApp.tsx` for remaining bespoke simulator status,
+  quiz, error, and control strings not covered by the handoff dictionary.
+- `src/components/fluoroview/FluoroViewAppDynamic.tsx` for the loading fallback.
+- `src/app/[locale]/learn/anatomy/page.tsx` and `src/components/3d/AnatomyViewer.tsx`.
+- `src/app/[locale]/rapid-onsite-cytology/*` and
+  `src/features/rapid-onsite-cytology/*`.
+- `src/app/[locale]/education/chest-drainage/*`,
+  `src/app/[locale]/pleural-procedures/chest-drainage/*`, and
+  `src/features/chest-drainage/*`.
+- `src/app/[locale]/pleural-procedures/pleural-ultrasound-simulator/page.tsx` and
+  `src/features/pleural-ultrasound-simulator/*`.
 
 [next-intl]: https://next-intl.dev

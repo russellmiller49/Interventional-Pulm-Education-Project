@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
 
 import { FluoroViewAppDynamic } from '@/components/fluoroview/FluoroViewAppDynamic'
 import { Badge } from '@/components/ui/badge'
@@ -23,7 +24,14 @@ const learningObjectives = [
   'Overlay airway surfaces, wireframe, labels, and centerlines while preserving non-diagnostic safety framing.',
 ]
 
-export default function FluoroViewPage() {
+interface FluoroViewPageProps {
+  params: Promise<{ locale: string }>
+}
+
+export default async function FluoroViewPage({ params }: FluoroViewPageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   return (
     <HandoffContent>
       {

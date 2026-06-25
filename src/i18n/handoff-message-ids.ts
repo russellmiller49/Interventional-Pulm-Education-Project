@@ -4655,6 +4655,14 @@ export const handoffMessageIds: Readonly<Record<string, string>> = {
   'Unable to load FluoroView': 'h_ffa8b5e9a976',
   'RAB – Integrated multimodal monitors': 'h_ffbe9f952d68',
   'Download the base spaCy model with `python -m spacy download en_core_sci_md`.': 'h_ffea4a31d086',
+  "What's inside": 'h_eac83dc024d3',
+  'Drive a virtual bronchoscope from central airway landmarks toward peripheral targets.':
+    'h_c4989ed26b59',
+  'Practice branch-by-branch decision making with labeled A/B/C airway choices.': 'h_e88d86c73f7b',
+  'Correlate axial, coronal, sagittal, and airway-aligned CT views with the live scope position.':
+    'h_8269404610b3',
+  'Use accepted target paths and a 3D airway map to build navigation intuition before lab day.':
+    'h_79946be76bdf',
   'This is a single-case research prototype that generates synthetic B-mode images from a 3D model. It is not a validated teaching tool. For the core ultrasound curriculum, use the Pleural Ultrasound module (Learn → Practice → Assess).':
     'h_6df300a26f54',
 } as const

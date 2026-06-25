@@ -54,4 +54,14 @@ describe('static translation bundles', () => {
     expect(zhCnMessages.footer.introPleuralDisease).toBe('胸膜疾病入门')
     expect(zhCnMessages.common.darkMode).toBe('深色模式')
   })
+
+  it('keeps Bronch Navigation wrapper copy localized for Spanish and Mandarin', () => {
+    expect(esMessages.handoff.h_eac83dc024d3).toBe('Qué incluye')
+    expect(esMessages.handoff.h_c4989ed26b59).toBe(
+      'Conduzca un broncoscopio virtual desde puntos anatómicos centrales de la vía aérea hacia objetivos periféricos.',
+    )
+
+    expect(zhCnMessages.handoff.h_eac83dc024d3).toBe('包含内容')
+    expect(zhCnMessages.handoff.h_c4989ed26b59).toBe('从中央气道标志点向外周目标推进虚拟支气管镜。')
+  })
 })

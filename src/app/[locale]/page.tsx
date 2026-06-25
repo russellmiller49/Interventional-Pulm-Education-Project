@@ -1,5 +1,5 @@
 import type { Route } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Hero } from '@/components/home/hero'
 import { Badge } from '@/components/ui/badge'
@@ -56,7 +56,13 @@ const featureHighlightDefinitions = [
   },
 ] as const
 
-export default async function HomePage() {
+interface HomePageProps {
+  params: Promise<{ locale: string }>
+}
+
+export default async function HomePage({ params }: HomePageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
   const t = await getTranslations('home')
   const canViewDrafts = await canCurrentUserViewDraftModules()
   const visibleFeatureHighlights = featureHighlightDefinitions

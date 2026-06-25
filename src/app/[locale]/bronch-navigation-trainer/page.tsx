@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
 
 import { TrainerEmbedShell } from '@/components/bronch-navigation/TrainerEmbedShell'
 import { Badge } from '@/components/ui/badge'
@@ -27,7 +28,16 @@ const trainerHighlights = [
 
 const embeddedTrainerAppPath = '/bronch-navigation-trainer/app/index.html'
 
-export default function BronchNavigationTrainerPage() {
+interface BronchNavigationTrainerPageProps {
+  params: Promise<{ locale: string }>
+}
+
+export default async function BronchNavigationTrainerPage({
+  params,
+}: BronchNavigationTrainerPageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   return (
     <HandoffContent>
       {
