@@ -2,8 +2,10 @@ import type { Metadata } from 'next'
 
 import { AuthShell } from '@/components/auth/AuthShell'
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm'
+import { HandoffContent } from '@/i18n/handoff'
+import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
-export const metadata: Metadata = {
+const handoffMetadata: Metadata = {
   title: 'Reset password',
   robots: {
     index: false,
@@ -11,10 +13,19 @@ export const metadata: Metadata = {
   },
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  return localizeHandoffServerValue(locale, handoffMetadata)
+}
+
 export default function ForgotPasswordPage() {
   return (
-    <AuthShell title="Reset password" description="Send a password reset link to your email.">
-      <ForgotPasswordForm />
-    </AuthShell>
+    <HandoffContent>
+      {
+        <AuthShell title="Reset password" description="Send a password reset link to your email.">
+          <ForgotPasswordForm />
+        </AuthShell>
+      }
+    </HandoffContent>
   )
 }

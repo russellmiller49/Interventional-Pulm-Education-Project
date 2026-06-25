@@ -5,6 +5,7 @@ import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { PleuralFluidAnalysisNav } from '@/features/pleural-fluid-analysis/components/PleuralFluidAnalysisNav'
 import { PleuralAnalysisQuiz } from '@/features/pleural-fluid-analysis/components/PleuralAnalysisQuiz'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -12,7 +13,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pleuralFluidAnalysis.assessment' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pleuralFluidAnalysis.assessment',
+  })
 
   return {
     title: t('metaTitle'),
@@ -27,21 +31,25 @@ export default async function PleuralFluidAnalysisAssessmentPage({ params }: Pag
   const nav = await getTranslations('navigation')
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('assessment.headerTitle')}
-        description={t('assessment.headerDescription')}
-      />
-      <PleuralFluidAnalysisNav activeHref="/pleural-procedures/pleural-fluid-analysis/assessment" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('assessment.headerTitle')}
+            description={t('assessment.headerDescription')}
+          />
+          <PleuralFluidAnalysisNav activeHref="/pleural-procedures/pleural-fluid-analysis/assessment" />
 
-      <PleuralAnalysisQuiz />
+          <PleuralAnalysisQuiz />
 
-      <ModuleProgressToggle
-        moduleId="pleural-fluid-analysis"
-        section="assessment"
-        label={t('assessment.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pleural-fluid-analysis"
+            section="assessment"
+            label={t('assessment.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

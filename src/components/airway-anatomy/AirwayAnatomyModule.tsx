@@ -49,6 +49,7 @@ import type {
   ScopePoseSnapshot,
   Vec3,
 } from '@/lib/airway-anatomy/types'
+import { HandoffContent } from '@/i18n/handoff'
 
 const MANIFEST_URL = resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json')
 const VIEWPORT_CLASS =
@@ -309,150 +310,162 @@ export function AirwayAnatomyModule() {
 
   if (loadError) {
     return (
-      <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
-        {loadError}
-      </div>
+      <HandoffContent>
+        {
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-5 text-sm text-destructive">
+            {loadError}
+          </div>
+        }
+      </HandoffContent>
     )
   }
 
   if (!loadedCase || !snapshot || !currentWindow) {
     return (
-      <div className="flex min-h-[680px] items-center justify-center rounded-lg border border-border/70 bg-card/70 text-sm text-muted-foreground">
-        Loading synchronized airway case...
-      </div>
+      <HandoffContent>
+        {
+          <div className="flex min-h-[680px] items-center justify-center rounded-lg border border-border/70 bg-card/70 text-sm text-muted-foreground">
+            Loading synchronized airway case...
+          </div>
+        }
+      </HandoffContent>
     )
   }
 
   return (
-    <section
-      className="overflow-hidden rounded-lg border border-slate-700 bg-slate-950 text-white shadow-sm outline-none"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
-      <div className="border-b border-slate-800 bg-slate-950/95 px-4 py-4 md:px-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold">
-                Simulation
-              </Badge>
-              <span className="text-xs font-medium text-slate-400">
-                {loadedCase.manifest.ct.sourceNrrd}
-              </span>
+    <HandoffContent>
+      {
+        <section
+          className="overflow-hidden rounded-lg border border-slate-700 bg-slate-950 text-white shadow-sm outline-none"
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+        >
+          <div className="border-b border-slate-800 bg-slate-950/95 px-4 py-4 md:px-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="info" className="rounded-full px-3 py-1 text-xs font-semibold">
+                    Simulation
+                  </Badge>
+                  <span className="text-xs font-medium text-slate-400">
+                    {loadedCase.manifest.ct.sourceNrrd}
+                  </span>
+                </div>
+                <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
+                  Synchronized Airway Anatomy
+                </h2>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowAnatomyPins((value) => !value)}
+                >
+                  {showAnatomyPins ? (
+                    <EyeOff className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Eye className="mr-2 h-4 w-4" />
+                  )}
+                  {showAnatomyPins ? 'Hide 3D pins' : 'Show 3D pins'}
+                </Button>
+                <Button
+                  type="button"
+                  variant={showXr ? 'default' : 'secondary'}
+                  size="sm"
+                  onClick={() => setShowXr((value) => !value)}
+                >
+                  <Headset className="mr-2 h-4 w-4" />
+                  {showXr ? 'Hide VR view' : 'VR view'}
+                </Button>
+                <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Reset
+                </Button>
+              </div>
             </div>
-            <h2 className="text-xl font-semibold tracking-tight text-white md:text-2xl">
-              Synchronized Airway Anatomy
-            </h2>
+            <p className="mt-3 max-w-4xl text-sm text-slate-300">
+              Drive the scope freely: steer toward an ostium and advance — the scope follows the
+              branch you are pointing at, and the 3D model and CT track the tip in real time.{' '}
+              {loadedCase.manifest.safetyLabel} For education and anatomy correlation only.
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setShowAnatomyPins((value) => !value)}
-            >
-              {showAnatomyPins ? (
-                <EyeOff className="mr-2 h-4 w-4" />
-              ) : (
-                <Eye className="mr-2 h-4 w-4" />
-              )}
-              {showAnatomyPins ? 'Hide 3D pins' : 'Show 3D pins'}
-            </Button>
-            <Button
-              type="button"
-              variant={showXr ? 'default' : 'secondary'}
-              size="sm"
-              onClick={() => setShowXr((value) => !value)}
-            >
-              <Headset className="mr-2 h-4 w-4" />
-              {showXr ? 'Hide VR view' : 'VR view'}
-            </Button>
-            <Button type="button" variant="secondary" size="sm" onClick={handleReset}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Reset
-            </Button>
+
+          <div className="grid gap-3 p-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
+            <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
+              <VirtualBronchoscopyViewport
+                manifest={loadedCase.manifest}
+                pose={snapshot}
+                ostia={upcomingOstia}
+                showBranchLabels={showBranchLabels}
+                location={currentLocation}
+                onLookDrag={handleLookDrag}
+                onAlignBranch={handleAlignBranch}
+              />
+              <AirwayTreeViewport
+                manifest={loadedCase.manifest}
+                graph={loadedCase.graph}
+                targets={airwayTargets}
+                pose={snapshot}
+                showAnatomyPins={showAnatomyPins}
+                ctVolume={loadedCase.ctVolume}
+                windowLow={currentWindow.low}
+                windowHigh={currentWindow.high}
+                ctPlaneOpacity={ctPlaneOpacity}
+              />
+            </div>
+
+            <div className="grid gap-3">
+              <ControlPanel
+                pose={snapshot}
+                location={currentLocation}
+                stepMm={stepMm}
+                onSteer={handleSteer}
+                onRecenter={handleRecenter}
+                onMove={handleMove}
+                ctAxis={ctAxis}
+                onCtAxisChange={setCtAxis}
+                windowPresetId={windowPresetId}
+                windowPresets={loadedCase.manifest.ct.windowPresets}
+                onWindowPresetChange={setWindowPresetId}
+                ctPlaneOpacity={ctPlaneOpacity}
+                onCtPlaneOpacityChange={setCtPlaneOpacity}
+                onRollChange={handleRollChange}
+                showBranchLabels={showBranchLabels}
+                onShowBranchLabelsChange={setShowBranchLabels}
+              />
+              <CtSliceViewport
+                ct={loadedCase.manifest.ct}
+                volume={loadedCase.ctVolume}
+                axis={ctAxis}
+                pose={snapshot}
+                trail={snapshot.trailLps}
+                windowLow={currentWindow.low}
+                windowHigh={currentWindow.high}
+              />
+            </div>
           </div>
-        </div>
-        <p className="mt-3 max-w-4xl text-sm text-slate-300">
-          Drive the scope freely: steer toward an ostium and advance — the scope follows the branch
-          you are pointing at, and the 3D model and CT track the tip in real time.{' '}
-          {loadedCase.manifest.safetyLabel} For education and anatomy correlation only.
-        </p>
-      </div>
 
-      <div className="grid gap-3 p-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
-        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-1">
-          <VirtualBronchoscopyViewport
-            manifest={loadedCase.manifest}
-            pose={snapshot}
-            ostia={upcomingOstia}
-            showBranchLabels={showBranchLabels}
-            location={currentLocation}
-            onLookDrag={handleLookDrag}
-            onAlignBranch={handleAlignBranch}
-          />
-          <AirwayTreeViewport
-            manifest={loadedCase.manifest}
-            graph={loadedCase.graph}
-            targets={airwayTargets}
-            pose={snapshot}
-            showAnatomyPins={showAnatomyPins}
-            ctVolume={loadedCase.ctVolume}
-            windowLow={currentWindow.low}
-            windowHigh={currentWindow.high}
-            ctPlaneOpacity={ctPlaneOpacity}
-          />
-        </div>
-
-        <div className="grid gap-3">
-          <ControlPanel
-            pose={snapshot}
-            location={currentLocation}
-            stepMm={stepMm}
-            onSteer={handleSteer}
-            onRecenter={handleRecenter}
-            onMove={handleMove}
-            ctAxis={ctAxis}
-            onCtAxisChange={setCtAxis}
-            windowPresetId={windowPresetId}
-            windowPresets={loadedCase.manifest.ct.windowPresets}
-            onWindowPresetChange={setWindowPresetId}
-            ctPlaneOpacity={ctPlaneOpacity}
-            onCtPlaneOpacityChange={setCtPlaneOpacity}
-            onRollChange={handleRollChange}
-            showBranchLabels={showBranchLabels}
-            onShowBranchLabelsChange={setShowBranchLabels}
-          />
-          <CtSliceViewport
-            ct={loadedCase.manifest.ct}
-            volume={loadedCase.ctVolume}
-            axis={ctAxis}
-            pose={snapshot}
-            trail={snapshot.trailLps}
-            windowLow={currentWindow.low}
-            windowHigh={currentWindow.high}
-          />
-        </div>
-      </div>
-
-      {showXr ? (
-        <div className="border-t border-slate-800 p-3">
-          <AirwayXRSceneDynamic
-            manifest={loadedCase.manifest}
-            graph={loadedCase.graph}
-            pose={snapshot}
-            ctVolume={loadedCase.ctVolume}
-            windowLow={currentWindow.low}
-            windowHigh={currentWindow.high}
-            ctPlaneOpacity={ctPlaneOpacity}
-            stepMm={stepMm}
-            onMove={handleMove}
-            onSteer={handleSteer}
-            onRecenter={handleRecenter}
-          />
-        </div>
-      ) : null}
-    </section>
+          {showXr ? (
+            <div className="border-t border-slate-800 p-3">
+              <AirwayXRSceneDynamic
+                manifest={loadedCase.manifest}
+                graph={loadedCase.graph}
+                pose={snapshot}
+                ctVolume={loadedCase.ctVolume}
+                windowLow={currentWindow.low}
+                windowHigh={currentWindow.high}
+                ctPlaneOpacity={ctPlaneOpacity}
+                stepMm={stepMm}
+                onMove={handleMove}
+                onSteer={handleSteer}
+                onRecenter={handleRecenter}
+              />
+            </div>
+          ) : null}
+        </section>
+      }
+    </HandoffContent>
   )
 }
 
@@ -495,134 +508,138 @@ function ControlPanel({
     pose.edgeLengthMm > 0 ? clamp(pose.distanceMm / pose.edgeLengthMm, 0, 1) : 0
 
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/80 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Current position
+    <HandoffContent>
+      {
+        <div className="rounded-lg border border-slate-700 bg-slate-900/80 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Current position
+              </div>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-lg font-bold text-cyan-200">{location.abbr}</span>
+                <span className="truncate text-sm text-slate-300">{location.name}</span>
+              </div>
+            </div>
+            <div className="shrink-0 rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
+              yaw {Math.round(pose.yawDeg)}° · pitch {Math.round(pose.pitchDeg)}°
+            </div>
           </div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-lg font-bold text-cyan-200">{location.abbr}</span>
-            <span className="truncate text-sm text-slate-300">{location.name}</span>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
+            <div
+              className="h-full rounded-full bg-cyan-400/80 transition-[width]"
+              style={{ width: `${branchProgress * 100}%` }}
+            />
+          </div>
+          <div className="mt-1 text-xs text-slate-400">
+            {Math.round(pose.distanceMm)} / {Math.round(pose.edgeLengthMm)} mm into branch
+          </div>
+
+          <div className="mt-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Steer the tip
+            </div>
+            <SteeringRing onSteer={onSteer} onRecenter={onRecenter} />
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <HoldButton
+                ariaLabel="Withdraw scope"
+                onTrigger={() => onMove(-stepMm)}
+                intervalMs={110}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-600 bg-slate-800 text-sm font-semibold text-slate-100 transition hover:border-slate-400 hover:bg-slate-700 active:bg-slate-600"
+              >
+                <ArrowDown className="h-4 w-4" />
+                Withdraw
+              </HoldButton>
+              <HoldButton
+                ariaLabel="Advance scope"
+                onTrigger={() => onMove(stepMm)}
+                intervalMs={110}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-cyan-400/50 bg-cyan-500/15 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/25 active:bg-cyan-400/35"
+              >
+                <ArrowUp className="h-4 w-4" />
+                Advance
+              </HoldButton>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              Steer toward an ostium, then advance — the scope enters the branch you point at. Hold
+              buttons to repeat. Keys: arrows steer, W/S drive, R recenter.
+            </p>
+          </div>
+
+          <div className="mt-4 grid gap-3 border-t border-slate-800 pt-4">
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                CT plane
+              </span>
+              <select
+                value={ctAxis}
+                onChange={(event) => onCtAxisChange(event.target.value as CtAxis)}
+                className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
+              >
+                <option value="axial">Axial</option>
+                <option value="coronal">Coronal</option>
+                <option value="sagittal">Sagittal</option>
+              </select>
+            </label>
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                CT window
+              </span>
+              <select
+                value={windowPresetId}
+                onChange={(event) => onWindowPresetChange(event.target.value)}
+                className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
+              >
+                {windowPresets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2">
+              <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <span>3D CT overlay</span>
+                <span>{Math.round(ctPlaneOpacity * 100)}%</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={0.65}
+                step={0.01}
+                value={ctPlaneOpacity}
+                onChange={(event) => onCtPlaneOpacityChange(Number(event.target.value))}
+                className="w-full accent-cyan-300"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <span>Scope roll</span>
+                <span>{Math.round(pose.rollDeg)} deg</span>
+              </span>
+              <input
+                type="range"
+                min={-90}
+                max={90}
+                step={1}
+                value={pose.rollDeg}
+                onChange={(event) => onRollChange(Number(event.target.value))}
+                className="w-full accent-cyan-300"
+              />
+            </label>
+            <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <span>Branch labels in view</span>
+              <input
+                type="checkbox"
+                checked={showBranchLabels}
+                onChange={(event) => onShowBranchLabelsChange(event.target.checked)}
+                className="h-4 w-4 accent-cyan-300"
+              />
+            </label>
           </div>
         </div>
-        <div className="shrink-0 rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
-          yaw {Math.round(pose.yawDeg)}° · pitch {Math.round(pose.pitchDeg)}°
-        </div>
-      </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
-        <div
-          className="h-full rounded-full bg-cyan-400/80 transition-[width]"
-          style={{ width: `${branchProgress * 100}%` }}
-        />
-      </div>
-      <div className="mt-1 text-xs text-slate-400">
-        {Math.round(pose.distanceMm)} / {Math.round(pose.edgeLengthMm)} mm into branch
-      </div>
-
-      <div className="mt-4">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Steer the tip
-        </div>
-        <SteeringRing onSteer={onSteer} onRecenter={onRecenter} />
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <HoldButton
-            ariaLabel="Withdraw scope"
-            onTrigger={() => onMove(-stepMm)}
-            intervalMs={110}
-            className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-600 bg-slate-800 text-sm font-semibold text-slate-100 transition hover:border-slate-400 hover:bg-slate-700 active:bg-slate-600"
-          >
-            <ArrowDown className="h-4 w-4" />
-            Withdraw
-          </HoldButton>
-          <HoldButton
-            ariaLabel="Advance scope"
-            onTrigger={() => onMove(stepMm)}
-            intervalMs={110}
-            className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-cyan-400/50 bg-cyan-500/15 text-sm font-semibold text-cyan-100 transition hover:border-cyan-300 hover:bg-cyan-400/25 active:bg-cyan-400/35"
-          >
-            <ArrowUp className="h-4 w-4" />
-            Advance
-          </HoldButton>
-        </div>
-        <p className="mt-2 text-xs leading-relaxed text-slate-400">
-          Steer toward an ostium, then advance — the scope enters the branch you point at. Hold
-          buttons to repeat. Keys: arrows steer, W/S drive, R recenter.
-        </p>
-      </div>
-
-      <div className="mt-4 grid gap-3 border-t border-slate-800 pt-4">
-        <label className="grid gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            CT plane
-          </span>
-          <select
-            value={ctAxis}
-            onChange={(event) => onCtAxisChange(event.target.value as CtAxis)}
-            className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
-          >
-            <option value="axial">Axial</option>
-            <option value="coronal">Coronal</option>
-            <option value="sagittal">Sagittal</option>
-          </select>
-        </label>
-        <label className="grid gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            CT window
-          </span>
-          <select
-            value={windowPresetId}
-            onChange={(event) => onWindowPresetChange(event.target.value)}
-            className="min-h-10 rounded-md border border-slate-600 bg-slate-950 px-3 text-sm text-white outline-none focus:border-cyan-300"
-          >
-            {windowPresets.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-2">
-          <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
-            <span>3D CT overlay</span>
-            <span>{Math.round(ctPlaneOpacity * 100)}%</span>
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={0.65}
-            step={0.01}
-            value={ctPlaneOpacity}
-            onChange={(event) => onCtPlaneOpacityChange(Number(event.target.value))}
-            className="w-full accent-cyan-300"
-          />
-        </label>
-        <label className="grid gap-2">
-          <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
-            <span>Scope roll</span>
-            <span>{Math.round(pose.rollDeg)} deg</span>
-          </span>
-          <input
-            type="range"
-            min={-90}
-            max={90}
-            step={1}
-            value={pose.rollDeg}
-            onChange={(event) => onRollChange(Number(event.target.value))}
-            className="w-full accent-cyan-300"
-          />
-        </label>
-        <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
-          <span>Branch labels in view</span>
-          <input
-            type="checkbox"
-            checked={showBranchLabels}
-            onChange={(event) => onShowBranchLabelsChange(event.target.checked)}
-            className="h-4 w-4 accent-cyan-300"
-          />
-        </label>
-      </div>
-    </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -636,20 +653,24 @@ function SteeringRing({
   onRecenter: () => void
 }) {
   return (
-    <div className="relative mx-auto mt-2 h-44 w-44">
-      {STEER_ANGLES.map((angleDeg) => (
-        <SteerButton key={angleDeg} angleDeg={angleDeg} onSteer={onSteer} />
-      ))}
-      <button
-        type="button"
-        aria-label="Recenter view"
-        title="Recenter view (R)"
-        onClick={onRecenter}
-        className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200 active:bg-cyan-400/15"
-      >
-        <Crosshair className="h-5 w-5" />
-      </button>
-    </div>
+    <HandoffContent>
+      {
+        <div className="relative mx-auto mt-2 h-44 w-44">
+          {STEER_ANGLES.map((angleDeg) => (
+            <SteerButton key={angleDeg} angleDeg={angleDeg} onSteer={onSteer} />
+          ))}
+          <button
+            type="button"
+            aria-label="Recenter view"
+            title="Recenter view (R)"
+            onClick={onRecenter}
+            className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition hover:border-cyan-300 hover:text-cyan-200 active:bg-cyan-400/15"
+          >
+            <Crosshair className="h-5 w-5" />
+          </button>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -668,35 +689,39 @@ function SteerButton({
   const top = 50 - 36 * Math.cos(rad)
 
   return (
-    <button
-      type="button"
-      aria-label={`Steer ${angleDeg} degrees clockwise from up`}
-      style={{ left: `${left}%`, top: `${top}%` }}
-      className="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none select-none items-center justify-center rounded-full border border-slate-600 bg-slate-800/90 text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200 active:border-cyan-200 active:bg-cyan-400/20"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.currentTarget.setPointerCapture(event.pointerId)
-        hold.start()
-      }}
-      onPointerUp={hold.stop}
-      onPointerCancel={hold.stop}
-      onLostPointerCapture={hold.stop}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-5 w-5"
-        style={{ transform: `rotate(${angleDeg}deg)` }}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2.4}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 19V6" />
-        <path d="m6 11 6-6 6 6" />
-      </svg>
-    </button>
+    <HandoffContent>
+      {
+        <button
+          type="button"
+          aria-label={`Steer ${angleDeg} degrees clockwise from up`}
+          style={{ left: `${left}%`, top: `${top}%` }}
+          className="absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 touch-none select-none items-center justify-center rounded-full border border-slate-600 bg-slate-800/90 text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200 active:border-cyan-200 active:bg-cyan-400/20"
+          onPointerDown={(event) => {
+            event.preventDefault()
+            event.currentTarget.setPointerCapture(event.pointerId)
+            hold.start()
+          }}
+          onPointerUp={hold.stop}
+          onPointerCancel={hold.stop}
+          onLostPointerCapture={hold.stop}
+          onContextMenu={(event) => event.preventDefault()}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            style={{ transform: `rotate(${angleDeg}deg)` }}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 19V6" />
+            <path d="m6 11 6-6 6 6" />
+          </svg>
+        </button>
+      }
+    </HandoffContent>
   )
 }
 
@@ -715,22 +740,26 @@ function HoldButton({
 }) {
   const hold = useHoldRepeat(onTrigger, intervalMs)
   return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      className={`touch-none select-none ${className ?? ''}`}
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.currentTarget.setPointerCapture(event.pointerId)
-        hold.start()
-      }}
-      onPointerUp={hold.stop}
-      onPointerCancel={hold.stop}
-      onLostPointerCapture={hold.stop}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      {children}
-    </button>
+    <HandoffContent>
+      {
+        <button
+          type="button"
+          aria-label={ariaLabel}
+          className={`touch-none select-none ${className ?? ''}`}
+          onPointerDown={(event) => {
+            event.preventDefault()
+            event.currentTarget.setPointerCapture(event.pointerId)
+            hold.start()
+          }}
+          onPointerUp={hold.stop}
+          onPointerCancel={hold.stop}
+          onLostPointerCapture={hold.stop}
+          onContextMenu={(event) => event.preventDefault()}
+        >
+          {children}
+        </button>
+      }
+    </HandoffContent>
   )
 }
 
@@ -785,77 +814,86 @@ function VirtualBronchoscopyViewport({
   const aspect = size.height > 0 ? size.width / size.height : 16 / 9
 
   return (
-    <div
-      ref={containerRef}
-      className={`${VIEWPORT_CLASS} touch-none select-none`}
-      onPointerDown={(event) => {
-        pointerRef.current = { x: event.clientX, y: event.clientY }
-        event.currentTarget.setPointerCapture(event.pointerId)
-      }}
-      onPointerMove={(event) => {
-        const previous = pointerRef.current
-        if (!previous) return
-        const dx = event.clientX - previous.x
-        const dy = event.clientY - previous.y
-        pointerRef.current = { x: event.clientX, y: event.clientY }
-        onLookDrag(dx, dy)
-      }}
-      onPointerUp={() => {
-        pointerRef.current = null
-      }}
-      onPointerCancel={() => {
-        pointerRef.current = null
-      }}
-    >
-      <div className="absolute inset-0">
-        <Canvas
-          dpr={[1, 2]}
-          camera={{ fov: BRONCH_FOV_DEG, near: 0.06, far: 900, position: pose.tipLps }}
-          gl={{ antialias: true, alpha: false }}
+    <HandoffContent>
+      {
+        <div
+          ref={containerRef}
+          className={`${VIEWPORT_CLASS} touch-none select-none`}
+          onPointerDown={(event) => {
+            pointerRef.current = { x: event.clientX, y: event.clientY }
+            event.currentTarget.setPointerCapture(event.pointerId)
+          }}
+          onPointerMove={(event) => {
+            const previous = pointerRef.current
+            if (!previous) return
+            const dx = event.clientX - previous.x
+            const dy = event.clientY - previous.y
+            pointerRef.current = { x: event.clientX, y: event.clientY }
+            onLookDrag(dx, dy)
+          }}
+          onPointerUp={() => {
+            pointerRef.current = null
+          }}
+          onPointerCancel={() => {
+            pointerRef.current = null
+          }}
         >
-          <color attach="background" args={[0x070201]} />
-          <ambientLight intensity={0.55} color={0xffc4a6} />
-          <Suspense fallback={null}>
-            <AirwaySurface
-              stlUrl={
-                manifest.assets.airwayStl
-                  ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
-                  : null
-              }
-              transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
-              mode="bronch"
+          <div className="absolute inset-0">
+            <Canvas
+              dpr={[1, 2]}
+              camera={{
+                fov: BRONCH_FOV_DEG,
+                near: 0.06,
+                far: 900,
+                position: pose.tipLps,
+              }}
+              gl={{ antialias: true, alpha: false }}
+            >
+              <color attach="background" args={[0x070201]} />
+              <ambientLight intensity={0.55} color={0xffc4a6} />
+              <Suspense fallback={null}>
+                <AirwaySurface
+                  stlUrl={
+                    manifest.assets.airwayStl
+                      ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
+                      : null
+                  }
+                  transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
+                  mode="bronch"
+                />
+                <ScopeCamera pose={pose} />
+              </Suspense>
+            </Canvas>
+          </div>
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(circle at 50% 50%, transparent 44%, rgba(0,0,0,0.16) 66%, rgba(10,2,2,0.6) 100%)',
+            }}
+          />
+          {showBranchLabels && (
+            <BronchLabelOverlay
+              ostia={ostia}
+              pose={pose}
+              aspect={aspect}
+              onAlignBranch={onAlignBranch}
             />
-            <ScopeCamera pose={pose} />
-          </Suspense>
-        </Canvas>
-      </div>
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(circle at 50% 50%, transparent 44%, rgba(0,0,0,0.16) 66%, rgba(10,2,2,0.6) 100%)',
-        }}
-      />
-      {showBranchLabels && (
-        <BronchLabelOverlay
-          ostia={ostia}
-          pose={pose}
-          aspect={aspect}
-          onAlignBranch={onAlignBranch}
-        />
-      )}
-      <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
-        Virtual bronchoscopy
-      </div>
-      <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs">
-        <span className="font-bold text-cyan-200">{location.abbr}</span>
-        <span className="text-slate-300">{location.name}</span>
-        <span className="text-slate-500">· {Math.round(pose.distanceMm)} mm</span>
-      </div>
-      <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
-        drag to look
-      </div>
-    </div>
+          )}
+          <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
+            Virtual bronchoscopy
+          </div>
+          <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs">
+            <span className="font-bold text-cyan-200">{location.abbr}</span>
+            <span className="text-slate-300">{location.name}</span>
+            <span className="text-slate-500">· {Math.round(pose.distanceMm)} mm</span>
+          </div>
+          <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
+            drag to look
+          </div>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -886,50 +924,54 @@ function BronchLabelOverlay({
     })
     .filter((item): item is NonNullable<typeof item> => item != null)
 
-  if (!placed.length) return null
+  if (!placed.length) return <HandoffContent>{null}</HandoffContent>
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10">
-      {placed.map((item) => {
-        const labelScale = clamp(34 / item.depthMm, 0.78, 1.35)
-        return (
-          <button
-            type="button"
-            key={`${item.abbr}-${item.edgeId}`}
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => onAlignBranch(item.edgeId)}
-            title={`Align scope toward ${item.abbr}`}
-            className="pointer-events-auto absolute cursor-pointer text-center leading-tight transition-opacity hover:opacity-80 focus:outline-none"
-            style={{
-              left: `${item.leftPct}%`,
-              top: `${item.topPct}%`,
-              transform: `translate(-50%, -50%) scale(${labelScale})`,
-            }}
-          >
-            <span
-              className="block text-[15px] font-semibold tracking-wide"
-              style={{
-                color: '#8fe3d9',
-                textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
-              }}
-            >
-              {item.abbr}
-            </span>
-            {item.descriptor && (
-              <span
-                className="block text-[12px] font-medium"
+    <HandoffContent>
+      {
+        <div className="pointer-events-none absolute inset-0 z-10">
+          {placed.map((item) => {
+            const labelScale = clamp(34 / item.depthMm, 0.78, 1.35)
+            return (
+              <button
+                type="button"
+                key={`${item.abbr}-${item.edgeId}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={() => onAlignBranch(item.edgeId)}
+                title={`Align scope toward ${item.abbr}`}
+                className="pointer-events-auto absolute cursor-pointer text-center leading-tight transition-opacity hover:opacity-80 focus:outline-none"
                 style={{
-                  color: '#9ce8de',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
+                  left: `${item.leftPct}%`,
+                  top: `${item.topPct}%`,
+                  transform: `translate(-50%, -50%) scale(${labelScale})`,
                 }}
               >
-                {item.descriptor}
-              </span>
-            )}
-          </button>
-        )
-      })}
-    </div>
+                <span
+                  className="block text-[15px] font-semibold tracking-wide"
+                  style={{
+                    color: '#8fe3d9',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
+                  }}
+                >
+                  {item.abbr}
+                </span>
+                {item.descriptor && (
+                  <span
+                    className="block text-[12px] font-medium"
+                    style={{
+                      color: '#9ce8de',
+                      textShadow: '0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)',
+                    }}
+                  >
+                    {item.descriptor}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -962,53 +1004,62 @@ function AirwayTreeViewport({
   ]
 
   return (
-    <div className={VIEWPORT_CLASS}>
-      <Canvas
-        dpr={[1, 2]}
-        camera={{ fov: 34, near: 0.5, far: bounds.radius * 12, position: cameraPosition }}
-        gl={{ antialias: true, alpha: false }}
-      >
-        <color attach="background" args={[0x040812]} />
-        <ambientLight intensity={0.55} />
-        <directionalLight position={[180, -260, 120]} intensity={1.15} />
-        <directionalLight position={[-120, 180, -100]} intensity={0.35} color={0x9bb8ff} />
-        <Suspense fallback={null}>
-          <AirwaySurface
-            stlUrl={
-              manifest.assets.airwayStl
-                ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
-                : null
-            }
-            transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
-            mode="tree"
-          />
-          <CtAxialPlane
-            ct={manifest.ct}
-            volume={ctVolume}
-            pose={pose}
-            windowLow={windowLow}
-            windowHigh={windowHigh}
-            opacity={ctPlaneOpacity}
-          />
-          <group>
-            {graph.edges.map((edge) => (
-              <Polyline
-                key={edge.id}
-                points={edge.pointsLps}
-                color={edge.id === pose.edgeId ? '#fbbf24' : '#38bdf8'}
-                opacity={edge.id === pose.edgeId ? 0.85 : 0.2}
+    <HandoffContent>
+      {
+        <div className={VIEWPORT_CLASS}>
+          <Canvas
+            dpr={[1, 2]}
+            camera={{
+              fov: 34,
+              near: 0.5,
+              far: bounds.radius * 12,
+              position: cameraPosition,
+            }}
+            gl={{ antialias: true, alpha: false }}
+          >
+            <color attach="background" args={[0x040812]} />
+            <ambientLight intensity={0.55} />
+            <directionalLight position={[180, -260, 120]} intensity={1.15} />
+            <directionalLight position={[-120, 180, -100]} intensity={0.35} color={0x9bb8ff} />
+            <Suspense fallback={null}>
+              <AirwaySurface
+                stlUrl={
+                  manifest.assets.airwayStl
+                    ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
+                    : null
+                }
+                transform={manifest.airwaySurfaceTransform ?? manifest.airwayTransform}
+                mode="tree"
               />
-            ))}
-            <ScopeBody graph={graph} pose={pose} />
-          </group>
-          {showAnatomyPins && <SceneLabels targets={targets} />}
-        </Suspense>
-        <OrbitControls target={bounds.center} enablePan enableRotate enableZoom />
-      </Canvas>
-      <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
-        3D airway correlation
-      </div>
-    </div>
+              <CtAxialPlane
+                ct={manifest.ct}
+                volume={ctVolume}
+                pose={pose}
+                windowLow={windowLow}
+                windowHigh={windowHigh}
+                opacity={ctPlaneOpacity}
+              />
+              <group>
+                {graph.edges.map((edge) => (
+                  <Polyline
+                    key={edge.id}
+                    points={edge.pointsLps}
+                    color={edge.id === pose.edgeId ? '#fbbf24' : '#38bdf8'}
+                    opacity={edge.id === pose.edgeId ? 0.85 : 0.2}
+                  />
+                ))}
+                <ScopeBody graph={graph} pose={pose} />
+              </group>
+              {showAnatomyPins && <SceneLabels targets={targets} />}
+            </Suspense>
+            <OrbitControls target={bounds.center} enablePan enableRotate enableZoom />
+          </Canvas>
+          <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
+            3D airway correlation
+          </div>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1052,24 +1103,28 @@ function CtSliceViewport({
   }, [axis, ct, pose, sliceIndex, trail, volume, windowHigh, windowLow])
 
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/80 p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            CT slice
+    <HandoffContent>
+      {
+        <div className="rounded-lg border border-slate-700 bg-slate-900/80 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                CT slice
+              </div>
+              <div className="text-sm text-slate-200">
+                IJK {tipIndex.map((value) => Math.round(value)).join(', ')}
+              </div>
+            </div>
+            <div className="rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
+              {axis} {clamp(sliceIndex, 0, ctAxisLength(ct, axis) - 1)}
+            </div>
           </div>
-          <div className="text-sm text-slate-200">
-            IJK {tipIndex.map((value) => Math.round(value)).join(', ')}
+          <div className="relative aspect-square overflow-hidden rounded-md border border-slate-800 bg-black">
+            <canvas ref={canvasRef} className="h-full w-full object-contain" />
           </div>
         </div>
-        <div className="rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
-          {axis} {clamp(sliceIndex, 0, ctAxisLength(ct, axis) - 1)}
-        </div>
-      </div>
-      <div className="relative aspect-square overflow-hidden rounded-md border border-slate-800 bg-black">
-        <canvas ref={canvasRef} className="h-full w-full object-contain" />
-      </div>
-    </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1125,16 +1180,20 @@ function AirwaySurface({
     }
   }, [material])
 
-  if (!stlUrl || !geometry) return null
+  if (!stlUrl || !geometry) return <HandoffContent>{null}</HandoffContent>
 
   return (
-    <mesh
-      geometry={geometry}
-      material={material}
-      scale={transform.sceneScale}
-      rotation={transform.rotationDeg.map((deg) => THREE.MathUtils.degToRad(deg)) as Vec3}
-      position={transform.positionOffsetMm}
-    />
+    <HandoffContent>
+      {
+        <mesh
+          geometry={geometry}
+          material={material}
+          scale={transform.sceneScale}
+          rotation={transform.rotationDeg.map((deg) => THREE.MathUtils.degToRad(deg)) as Vec3}
+          position={transform.positionOffsetMm}
+        />
+      }
+    </HandoffContent>
   )
 }
 
@@ -1174,7 +1233,11 @@ function ScopeCamera({ pose }: { pose: ScopePoseSnapshot }) {
     lightRef.current?.position.copy(camera.position)
   })
 
-  return <pointLight ref={lightRef} intensity={20} distance={190} decay={1.05} color={0xfff0e0} />
+  return (
+    <HandoffContent>
+      {<pointLight ref={lightRef} intensity={20} distance={190} decay={1.05} color={0xfff0e0} />}
+    </HandoffContent>
+  )
 }
 
 /** Bronchoscope rendered as an insertion tube from the tracheal inlet to the tip. */
@@ -1234,45 +1297,55 @@ function ScopeBody({ graph, pose }: { graph: AirwayGraph; pose: ScopePoseSnapsho
   const beamPosition = add(pose.tipLps, scale(viewForward, beamLength / 2))
 
   return (
-    <group>
-      {tubeGeometry && (
-        <mesh geometry={tubeGeometry}>
-          <meshStandardMaterial
-            color="#3f4754"
-            roughness={0.35}
-            metalness={0.35}
-            emissive="#1e293b"
-            emissiveIntensity={0.5}
+    <HandoffContent>
+      {
+        <group>
+          {tubeGeometry && (
+            <mesh geometry={tubeGeometry}>
+              <meshStandardMaterial
+                color="#3f4754"
+                roughness={0.35}
+                metalness={0.35}
+                emissive="#1e293b"
+                emissiveIntensity={0.5}
+              />
+            </mesh>
+          )}
+          <mesh position={tipSegmentPosition} quaternion={tipQuaternion}>
+            <cylinderGeometry args={[2.1, 2.1, 7, 16]} />
+            <meshStandardMaterial
+              color="#9ca3af"
+              roughness={0.28}
+              metalness={0.6}
+              emissive="#475569"
+              emissiveIntensity={0.4}
+            />
+          </mesh>
+          <mesh position={pose.tipLps}>
+            <sphereGeometry args={[1.5, 16, 16]} />
+            <meshStandardMaterial color="#eff6ff" emissive="#bfdbfe" emissiveIntensity={2.2} />
+          </mesh>
+          <mesh position={beamPosition} quaternion={beamQuaternion}>
+            <coneGeometry args={[6.5, beamLength, 20, 1, true]} />
+            <meshBasicMaterial
+              color="#bfdbfe"
+              transparent
+              opacity={0.15}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+          <pointLight
+            position={pose.tipLps}
+            intensity={5}
+            distance={34}
+            decay={1.4}
+            color="#cfe3ff"
           />
-        </mesh>
-      )}
-      <mesh position={tipSegmentPosition} quaternion={tipQuaternion}>
-        <cylinderGeometry args={[2.1, 2.1, 7, 16]} />
-        <meshStandardMaterial
-          color="#9ca3af"
-          roughness={0.28}
-          metalness={0.6}
-          emissive="#475569"
-          emissiveIntensity={0.4}
-        />
-      </mesh>
-      <mesh position={pose.tipLps}>
-        <sphereGeometry args={[1.5, 16, 16]} />
-        <meshStandardMaterial color="#eff6ff" emissive="#bfdbfe" emissiveIntensity={2.2} />
-      </mesh>
-      <mesh position={beamPosition} quaternion={beamQuaternion}>
-        <coneGeometry args={[6.5, beamLength, 20, 1, true]} />
-        <meshBasicMaterial
-          color="#bfdbfe"
-          transparent
-          opacity={0.15}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      <pointLight position={pose.tipLps} intensity={5} distance={34} decay={1.4} color="#cfe3ff" />
-    </group>
+        </group>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1296,30 +1369,34 @@ function Polyline({ points, color, opacity }: { points: Vec3[]; color: string; o
     [geometry, material],
   )
 
-  if (points.length < 2) return null
-  return <primitive object={line} />
+  if (points.length < 2) return <HandoffContent>{null}</HandoffContent>
+  return <HandoffContent>{<primitive object={line} />}</HandoffContent>
 }
 
 function SceneLabels({ targets }: { targets: AirwayTarget[] }) {
   return (
-    <>
-      {targets.slice(0, 90).map((target) => (
-        <group key={target.id} position={target.anchorLps}>
-          <mesh>
-            <sphereGeometry args={[1.6, 8, 8]} />
-            <meshBasicMaterial color="#facc15" />
-          </mesh>
-          <Html center distanceFactor={38} zIndexRange={[10, 0]}>
-            <div
-              className="rounded border border-amber-200/60 bg-slate-950/85 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-100 shadow"
-              title={target.fullLabel}
-            >
-              {target.label}
-            </div>
-          </Html>
-        </group>
-      ))}
-    </>
+    <HandoffContent>
+      {
+        <>
+          {targets.slice(0, 90).map((target) => (
+            <group key={target.id} position={target.anchorLps}>
+              <mesh>
+                <sphereGeometry args={[1.6, 8, 8]} />
+                <meshBasicMaterial color="#facc15" />
+              </mesh>
+              <Html center distanceFactor={38} zIndexRange={[10, 0]}>
+                <div
+                  className="rounded border border-amber-200/60 bg-slate-950/85 px-1.5 py-0.5 text-[10px] font-bold leading-none text-amber-100 shadow"
+                  title={target.fullLabel}
+                >
+                  {target.label}
+                </div>
+              </Html>
+            </group>
+          ))}
+        </>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1360,7 +1437,7 @@ function CtAxialPlane({
 
   useEffect(() => () => texture?.dispose(), [texture])
 
-  if (!texture || opacity <= 0.01) return null
+  if (!texture || opacity <= 0.01) return <HandoffContent>{null}</HandoffContent>
 
   const [i, j, k] = lpsToCtIndex(pose.tipLps, ct)
   const center = ctIndexToLps([(ct.sizeXyz[0] - 1) / 2, (ct.sizeXyz[1] - 1) / 2, Math.round(k)], ct)
@@ -1370,16 +1447,20 @@ function CtAxialPlane({
   void j
 
   return (
-    <mesh position={center} scale={[1, -1, 1]}>
-      <planeGeometry args={[width, height]} />
-      <meshBasicMaterial
-        map={texture}
-        transparent
-        opacity={opacity}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-      />
-    </mesh>
+    <HandoffContent>
+      {
+        <mesh position={center} scale={[1, -1, 1]}>
+          <planeGeometry args={[width, height]} />
+          <meshBasicMaterial
+            map={texture}
+            transparent
+            opacity={opacity}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      }
+    </HandoffContent>
   )
 }
 

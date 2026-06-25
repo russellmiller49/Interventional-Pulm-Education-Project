@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { anatomyModels } from '@/data/printable-models'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
+import { HandoffContent } from '@/i18n/handoff'
 
 const axisLabels: Record<AnatomyAxis, string> = {
   x: 'Sagittal',
@@ -589,7 +590,10 @@ export default function CtAlignmentSandboxPage() {
               step={0.01}
               value={ctAlignment.scale}
               onChange={(event) =>
-                setCtAlignment((prev) => ({ ...prev, scale: Number(event.target.value) }))
+                setCtAlignment((prev) => ({
+                  ...prev,
+                  scale: Number(event.target.value),
+                }))
               }
               className="w-full accent-cyan-300"
             />
@@ -599,7 +603,10 @@ export default function CtAlignmentSandboxPage() {
               step={0.01}
               value={ctAlignment.scale}
               onChange={(event) =>
-                setCtAlignment((prev) => ({ ...prev, scale: Number(event.target.value) }))
+                setCtAlignment((prev) => ({
+                  ...prev,
+                  scale: Number(event.target.value),
+                }))
               }
               className={smallInputClassName}
             />
@@ -709,7 +716,10 @@ export default function CtAlignmentSandboxPage() {
               step={1}
               value={rotation[axis]}
               onChange={(event) =>
-                setRotation((prev) => ({ ...prev, [axis]: Number(event.target.value) }))
+                setRotation((prev) => ({
+                  ...prev,
+                  [axis]: Number(event.target.value),
+                }))
               }
               className="w-full accent-cyan-300"
             />
@@ -786,98 +796,105 @@ export default function CtAlignmentSandboxPage() {
   )
 
   return (
-    <div className="space-y-8 py-10">
-      <section className="container space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-3xl space-y-2">
-            <Badge
-              variant="info"
-              className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-            >
-              Temporary CT Calibration
-            </Badge>
-            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">CT Alignment Sandbox</h1>
-            <p className="text-muted-foreground">
-              Live workspace for lining up the updated fistula GLB with the diagnostic CT volume,
-              checking 3D cut planes, and correcting axial, coronal, and sagittal view orientation.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <Link href={'/learn/anatomy' as Route}>Back to anatomy viewer</Link>
-            </Button>
-            <Button onClick={handleCopyJson}>
-              <Copy className="mr-2 h-4 w-4" aria-hidden />
-              Copy settings JSON
-            </Button>
-          </div>
-        </div>
-      </section>
+    <HandoffContent>
+      {
+        <div className="space-y-8 py-10">
+          <section className="container space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-3xl space-y-2">
+                <Badge
+                  variant="info"
+                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                >
+                  Temporary CT Calibration
+                </Badge>
+                <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+                  CT Alignment Sandbox
+                </h1>
+                <p className="text-muted-foreground">
+                  Live workspace for lining up the updated fistula GLB with the diagnostic CT
+                  volume, checking 3D cut planes, and correcting axial, coronal, and sagittal view
+                  orientation.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline">
+                  <Link href={'/learn/anatomy' as Route}>Back to anatomy viewer</Link>
+                </Button>
+                <Button onClick={handleCopyJson}>
+                  <Copy className="mr-2 h-4 w-4" aria-hidden />
+                  Copy settings JSON
+                </Button>
+              </div>
+            </div>
+          </section>
 
-      <section className="container">
-        <AnatomyViewerDynamic
-          key={selectedModel.id}
-          model={viewerModel}
-          visibleSegments={visibleSegments}
-          crossSection={crossSection}
-          volumeSlice={volumeSlice}
-          showCtPlanes={showCtPlanes}
-          ctPlaneVisibility={ctPlaneVisibility}
-          ctPlaneSlices={ctPlaneSlices}
-          ctPlaneOpacity={ctPlaneOpacity}
-          ctClipMode={ctClipMode}
-          ctClipAxis={ctClipAxis}
-          ctAlignment={ctAlignment}
-          ctSliceOrientation={ctSliceOrientation}
-          showAnnotations={showAnnotations}
-          resetSignal={resetSignal}
-          showDebugHelpers={showDebugHelpers}
-          rotation={rotation}
-          controlPanel={viewerControlPanel}
-          onCrossSectionChange={setCrossSection}
-          onShowCtPlanesChange={setShowCtPlanes}
-          onCtPlaneVisibilityChange={updateCtPlaneVisibility}
-          onCtPlaneOpacityChange={setCtPlaneOpacity}
-          onCtClipModeChange={setCtClipMode}
-          onCtClipAxisChange={setCtClipAxis}
-          onSceneMetrics={handleSceneMetrics}
-          onCtPlaneSliceChange={updateCtPlaneSlice}
-          onVolumeSliceChange={setVolumeSlice}
-          onSegmentsChanged={(segments) => {
-            setDisplaySegments((prev) => {
-              const sameLength = prev.length === segments.length
-              const identical =
-                sameLength &&
-                prev.every((segment, index) => {
-                  const next = segments[index]
-                  return (
-                    next &&
-                    segment.id === next.id &&
-                    segment.color === next.color &&
-                    (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
-                  )
+          <section className="container">
+            <AnatomyViewerDynamic
+              key={selectedModel.id}
+              model={viewerModel}
+              visibleSegments={visibleSegments}
+              crossSection={crossSection}
+              volumeSlice={volumeSlice}
+              showCtPlanes={showCtPlanes}
+              ctPlaneVisibility={ctPlaneVisibility}
+              ctPlaneSlices={ctPlaneSlices}
+              ctPlaneOpacity={ctPlaneOpacity}
+              ctClipMode={ctClipMode}
+              ctClipAxis={ctClipAxis}
+              ctAlignment={ctAlignment}
+              ctSliceOrientation={ctSliceOrientation}
+              showAnnotations={showAnnotations}
+              resetSignal={resetSignal}
+              showDebugHelpers={showDebugHelpers}
+              rotation={rotation}
+              controlPanel={viewerControlPanel}
+              onCrossSectionChange={setCrossSection}
+              onShowCtPlanesChange={setShowCtPlanes}
+              onCtPlaneVisibilityChange={updateCtPlaneVisibility}
+              onCtPlaneOpacityChange={setCtPlaneOpacity}
+              onCtClipModeChange={setCtClipMode}
+              onCtClipAxisChange={setCtClipAxis}
+              onSceneMetrics={handleSceneMetrics}
+              onCtPlaneSliceChange={updateCtPlaneSlice}
+              onVolumeSliceChange={setVolumeSlice}
+              onSegmentsChanged={(segments) => {
+                setDisplaySegments((prev) => {
+                  const sameLength = prev.length === segments.length
+                  const identical =
+                    sameLength &&
+                    prev.every((segment, index) => {
+                      const next = segments[index]
+                      return (
+                        next &&
+                        segment.id === next.id &&
+                        segment.color === next.color &&
+                        (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
+                      )
+                    })
+                  return identical ? prev : segments
                 })
-              return identical ? prev : segments
-            })
-            setVisibleSegments((prev) => {
-              const next: Record<string, boolean> = {}
-              let changed = false
-              segments.forEach((segment) => {
-                const current =
-                  segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
-                next[segment.id] = current
-                if (prev[segment.id] !== current) {
-                  changed = true
-                }
-              })
-              if (Object.keys(prev).length !== Object.keys(next).length) {
-                changed = true
-              }
-              return changed ? next : prev
-            })
-          }}
-        />
-      </section>
-    </div>
+                setVisibleSegments((prev) => {
+                  const next: Record<string, boolean> = {}
+                  let changed = false
+                  segments.forEach((segment) => {
+                    const current =
+                      segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
+                    next[segment.id] = current
+                    if (prev[segment.id] !== current) {
+                      changed = true
+                    }
+                  })
+                  if (Object.keys(prev).length !== Object.keys(next).length) {
+                    changed = true
+                  }
+                  return changed ? next : prev
+                })
+              }}
+            />
+          </section>
+        </div>
+      }
+    </HandoffContent>
   )
 }

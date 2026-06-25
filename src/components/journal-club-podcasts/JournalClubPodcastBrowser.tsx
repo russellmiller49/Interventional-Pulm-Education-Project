@@ -26,6 +26,8 @@ import type {
   PodcastLanguage,
 } from '@/data/journal-club-podcasts'
 import type { PodcastPlaybackEventType } from '@/lib/journal-club-podcasts/usage'
+import { HandoffContent } from '@/i18n/handoff'
+import { useHandoffTranslator } from '@/i18n/handoff-client'
 
 interface JournalClubPodcastBrowserProps {
   episodes: JournalClubPodcastEpisode[]
@@ -60,6 +62,7 @@ export function JournalClubPodcastBrowser({
   tags,
 }: JournalClubPodcastBrowserProps) {
   const journalT = useTranslations('journalClub')
+  const translate = useHandoffTranslator()
   const languageLabels = useMemo(
     () =>
       Object.fromEntries(
@@ -99,14 +102,19 @@ export function JournalClubPodcastBrowser({
           return true
         }
 
-        const haystack = [episode.title, episode.citation, episode.synopsis, episode.tags.join(' ')]
-          .join(' ')
-          .toLowerCase()
+        const sourceValues = [
+          episode.title,
+          episode.citation,
+          episode.synopsis,
+          episode.primaryHub,
+          ...episode.tags,
+        ]
+        const haystack = [...sourceValues, ...sourceValues.map(translate)].join(' ').toLowerCase()
 
         return haystack.includes(normalizedQuery)
       })
       .sort(comparePodcastTitles)
-  }, [activeHub, activeTag, episodes, query])
+  }, [activeHub, activeTag, episodes, query, translate])
 
   const visibleTags = useMemo(
     () =>
@@ -121,187 +129,198 @@ export function JournalClubPodcastBrowser({
   )
 
   return (
-    <div className="container space-y-6 py-8 md:py-10">
-      <section aria-labelledby="journal-club-podcasts" className="space-y-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl space-y-3">
-            <Badge variant="info" className="w-fit">
-              Beta audio library
-            </Badge>
-            <div className="space-y-2">
-              <h1
-                id="journal-club-podcasts"
-                className="text-3xl font-semibold tracking-tight md:text-4xl"
-              >
-                Journal Club Podcasts
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
-                Listen to article-focused interventional pulmonology discussions in English,
-                Spanish, Mandarin, Arabic, or Korean.
-              </p>
-            </div>
-          </div>
-          <div className="w-full lg:max-w-md">
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search articles, tags, or citations"
-              aria-label="Search journal club podcasts"
-              leadingIcon={<Search className="h-4 w-4" aria-hidden />}
-            />
-          </div>
-        </div>
-
-        <Callout
-          variant="info"
-          title="Beta listening note"
-          className="rounded-lg border-sky-500/30 bg-sky-500/5 shadow-none"
-        >
-          These journal club podcasts are for entertainment, education, and general discussion only.
-          They may contain errors, omissions, or outdated interpretations. Please verify details in
-          the linked publication and current guidelines; this is not patient-specific medical
-          advice.
-        </Callout>
-
-        <div className="rounded-lg border border-border/80 bg-muted/35 p-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex gap-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Languages className="h-5 w-5" aria-hidden />
-              </span>
-              <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-foreground">
-                  {journalT('availableIn', { count: languageHighlightLabels.length })}
-                </h2>
-                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Every episode includes the same journal club discussion in each language. Choose
-                  the language from the selector on any podcast player.
-                </p>
+    <HandoffContent>
+      {
+        <div className="container space-y-6 py-8 md:py-10">
+          <section aria-labelledby="journal-club-podcasts" className="space-y-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-3xl space-y-3">
+                <Badge variant="info" className="w-fit">
+                  Beta audio library
+                </Badge>
+                <div className="space-y-2">
+                  <h1
+                    id="journal-club-podcasts"
+                    className="text-3xl font-semibold tracking-tight md:text-4xl"
+                  >
+                    Journal Club Podcasts
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+                    Listen to article-focused interventional pulmonology discussions in English,
+                    Spanish, Mandarin, Arabic, or Korean.
+                  </p>
+                </div>
+              </div>
+              <div className="w-full lg:max-w-md">
+                <Input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search articles, tags, or citations"
+                  aria-label="Search journal club podcasts"
+                  leadingIcon={<Search className="h-4 w-4" aria-hidden />}
+                />
               </div>
             </div>
-            <div className="flex flex-wrap gap-2" aria-label="Available podcast languages">
-              {languageHighlightLabels.map((label) => (
-                <span
-                  key={label}
-                  className="rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-foreground"
-                >
-                  {label}
-                </span>
-              ))}
+
+            <Callout
+              variant="info"
+              title="Beta listening note"
+              className="rounded-lg border-sky-500/30 bg-sky-500/5 shadow-none"
+            >
+              These journal club podcasts are for entertainment, education, and general discussion
+              only. They may contain errors, omissions, or outdated interpretations. Please verify
+              details in the linked publication and current guidelines; this is not patient-specific
+              medical advice.
+            </Callout>
+
+            <div className="rounded-lg border border-border/80 bg-muted/35 p-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Languages className="h-5 w-5" aria-hidden />
+                  </span>
+                  <div className="space-y-1">
+                    <h2 className="text-sm font-semibold text-foreground">
+                      {journalT('availableIn', {
+                        count: languageHighlightLabels.length,
+                      })}
+                    </h2>
+                    <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                      Every episode includes the same journal club discussion in each language.
+                      Choose the language from the selector on any podcast player.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2" aria-label="Available podcast languages">
+                  {languageHighlightLabels.map((label) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-border bg-background px-3 py-1 text-sm font-medium text-foreground"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Podcast filters">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveHub(allHubFilter)
-              setActiveTag('all')
-            }}
-            className={cn(
-              'min-h-10 shrink-0 rounded-full border px-4 py-2 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              activeHub === allHubFilter
-                ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                : 'border-border bg-background text-foreground hover:bg-muted',
-            )}
-            aria-pressed={activeHub === allHubFilter}
-          >
-            <span>All podcasts</span>
-            <span className="ml-2 text-xs opacity-75">{episodes.length}</span>
-          </button>
-          {hubs.map((hub) => {
-            const isActive = activeHub === hub
-
-            return (
+            <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Podcast filters">
               <button
-                key={hub}
                 type="button"
                 onClick={() => {
-                  setActiveHub(hub)
+                  setActiveHub(allHubFilter)
                   setActiveTag('all')
                 }}
                 className={cn(
                   'min-h-10 shrink-0 rounded-full border px-4 py-2 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  isActive
+                  activeHub === allHubFilter
                     ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                     : 'border-border bg-background text-foreground hover:bg-muted',
                 )}
-                aria-pressed={isActive}
+                aria-pressed={activeHub === allHubFilter}
               >
-                <span>{hub}</span>
-                <span className="ml-2 text-xs opacity-75">{hubCounts[hub] ?? 0}</span>
+                <span>All podcasts</span>
+                <span className="ml-2 text-xs opacity-75">{episodes.length}</span>
               </button>
-            )
-          })}
-        </div>
+              {hubs.map((hub) => {
+                const isActive = activeHub === hub
 
-        <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Cross-tags">
-          <TagButton label="All" active={activeTag === 'all'} onClick={() => setActiveTag('all')} />
-          {visibleTags.map((tag) => (
-            <TagButton
-              key={tag}
-              label={tag}
-              active={activeTag === tag}
-              onClick={() => setActiveTag(tag)}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section aria-live="polite" className="space-y-4">
-        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-          <p>
-            {filteredEpisodes.length} episode{filteredEpisodes.length === 1 ? '' : 's'}
-          </p>
-          <p className="hidden sm:block">Streaming only. Direct downloads are not exposed.</p>
-        </div>
-
-        <div className="grid gap-4">
-          {filteredEpisodes.map((episode) => (
-            <article
-              key={episode.id}
-              className="rounded-lg border border-border/80 bg-card p-4 shadow-sm md:p-5"
-            >
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-                <div className="min-w-0 space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="outline">{episode.year}</Badge>
-                      {episode.tags.slice(0, 6).map((tag) => (
-                        <Badge key={tag} variant="secondary">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                      {episode.title}
-                    </h2>
-                  </div>
-                  <p className="text-sm leading-6 text-muted-foreground">{episode.synopsis}</p>
-                  <p className="text-xs leading-5 text-muted-foreground">{episode.citation}</p>
-                  <a
-                    href={episode.publicationUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Open publication for ${episode.title} in a new tab`}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                return (
+                  <button
+                    key={hub}
+                    type="button"
+                    onClick={() => {
+                      setActiveHub(hub)
+                      setActiveTag('all')
+                    }}
+                    className={cn(
+                      'min-h-10 shrink-0 rounded-full border px-4 py-2 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      isActive
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-background text-foreground hover:bg-muted',
+                    )}
+                    aria-pressed={isActive}
                   >
-                    Open publication
-                    <ExternalLink className="h-4 w-4" aria-hidden />
-                  </a>
-                </div>
-                <PodcastAudioPlayer
-                  episode={episode}
-                  isActive={activeEpisodeId === episode.id}
-                  onActivate={() => setActiveEpisodeId(episode.id)}
+                    <span>{hub}</span>
+                    <span className="ml-2 text-xs opacity-75">{hubCounts[hub] ?? 0}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Cross-tags">
+              <TagButton
+                label="All"
+                active={activeTag === 'all'}
+                onClick={() => setActiveTag('all')}
+              />
+              {visibleTags.map((tag) => (
+                <TagButton
+                  key={tag}
+                  label={tag}
+                  active={activeTag === tag}
+                  onClick={() => setActiveTag(tag)}
                 />
-              </div>
-            </article>
-          ))}
+              ))}
+            </div>
+          </section>
+
+          <section aria-live="polite" className="space-y-4">
+            <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+              <p>
+                {filteredEpisodes.length} episode
+                {filteredEpisodes.length === 1 ? '' : 's'}
+              </p>
+              <p className="hidden sm:block">Streaming only. Direct downloads are not exposed.</p>
+            </div>
+
+            <div className="grid gap-4">
+              {filteredEpisodes.map((episode) => (
+                <article
+                  key={episode.id}
+                  className="rounded-lg border border-border/80 bg-card p-4 shadow-sm md:p-5"
+                >
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+                    <div className="min-w-0 space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline">{episode.year}</Badge>
+                          {episode.tags.slice(0, 6).map((tag) => (
+                            <Badge key={tag} variant="secondary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                          {episode.title}
+                        </h2>
+                      </div>
+                      <p className="text-sm leading-6 text-muted-foreground">{episode.synopsis}</p>
+                      <p className="text-xs leading-5 text-muted-foreground">{episode.citation}</p>
+                      <a
+                        href={episode.publicationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open publication for ${episode.title} in a new tab`}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        Open publication
+                        <ExternalLink className="h-4 w-4" aria-hidden />
+                      </a>
+                    </div>
+                    <PodcastAudioPlayer
+                      episode={episode}
+                      isActive={activeEpisodeId === episode.id}
+                      onActivate={() => setActiveEpisodeId(episode.id)}
+                    />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
-      </section>
-    </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -321,19 +340,23 @@ function TagButton({
   onClick: () => void
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'min-h-9 shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        active
-          ? 'border-primary bg-primary/10 text-primary'
-          : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
-      )}
-      aria-pressed={active}
-    >
-      {label}
-    </button>
+    <HandoffContent>
+      {
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(
+            'min-h-9 shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            active
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
+          )}
+          aria-pressed={active}
+        >
+          {label}
+        </button>
+      }
+    </HandoffContent>
   )
 }
 
@@ -706,7 +729,9 @@ function PodcastAudioPlayer({
         },
         method: 'POST',
       })
-      const payload = (await response.json().catch(() => ({}))) as { error?: string }
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+      }
 
       if (!response.ok) {
         throw new Error(payload.error ?? 'Unable to save this rating.')
@@ -722,127 +747,32 @@ function PodcastAudioPlayer({
   }
 
   return (
-    <div className="rounded-lg border border-border/70 bg-background p-4">
-      <audio
-        ref={audioRef}
-        preload="metadata"
-        controls={false}
-        controlsList="nodownload noplaybackrate noremoteplayback"
-        playsInline
-        className="hidden"
-      />
+    <HandoffContent>
+      {
+        <div className="rounded-lg border border-border/70 bg-background p-4">
+          <audio
+            ref={audioRef}
+            preload="metadata"
+            controls={false}
+            controlsList="nodownload noplaybackrate noremoteplayback"
+            playsInline
+            className="hidden"
+          />
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <Volume2 className="h-4 w-4 text-primary" aria-hidden />
-            Listen
-          </div>
-          <label className="sr-only" htmlFor={`${episode.id}-language`}>
-            Language
-          </label>
-          <select
-            id={`${episode.id}-language`}
-            value={language}
-            onChange={(event) => setLanguage(event.target.value as PodcastLanguage)}
-            className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {Object.entries(languageLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            onClick={() => void togglePlayback()}
-            aria-label={isPlaying ? `Pause ${episode.title}` : `Play ${episode.title}`}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-            ) : isPlaying ? (
-              <Pause className="h-4 w-4" aria-hidden />
-            ) : (
-              <Play className="h-4 w-4" aria-hidden />
-            )}
-          </Button>
-          <div className="min-w-0 flex-1 space-y-1">
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              step="0.5"
-              value={Math.min(currentTime, duration || 0)}
-              onChange={handleTimelineChange}
-              className="h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-primary"
-              aria-label={`Playback position for ${episode.title}`}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5" aria-label={`Seek controls for ${episode.title}`}>
-          <SeekButton seconds={-30} title={episode.title} onSeek={seekBy} />
-          <SeekButton seconds={-10} title={episode.title} onSeek={seekBy} />
-          <SeekButton seconds={10} title={episode.title} onSeek={seekBy} />
-          <SeekButton seconds={30} title={episode.title} onSeek={seekBy} />
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Speed
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {playbackRates.map((rate) => (
-              <button
-                key={rate}
-                type="button"
-                onClick={() => setPlaybackRate(rate)}
-                className={cn(
-                  'min-h-8 rounded-full border px-2.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  playbackRate === rate
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
-                )}
-                aria-pressed={playbackRate === rate}
-              >
-                {formatRate(rate)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {error ? <p className="text-sm leading-5 text-destructive">{error}</p> : null}
-        <p className="text-xs leading-5 text-muted-foreground">
-          Streaming only. Browser download controls are disabled.
-        </p>
-
-        <form
-          onSubmit={(event) => void submitFeedback(event)}
-          className="space-y-3 border-t border-border/70 pt-4"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Rate this podcast</p>
-              <p className="text-xs leading-5 text-muted-foreground">
-                Two quick ratings help improve the beta audio library.
-              </p>
-            </div>
-            <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
-              Language used
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Volume2 className="h-4 w-4 text-primary" aria-hidden />
+                Listen
+              </div>
+              <label className="sr-only" htmlFor={`${episode.id}-language`}>
+                Language
+              </label>
               <select
-                value={feedbackLanguage}
-                onChange={(event) => setFeedbackLanguage(event.target.value as PodcastLanguage)}
-                className="h-9 rounded-md border border-border bg-background px-2 text-sm font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                id={`${episode.id}-language`}
+                value={language}
+                onChange={(event) => setLanguage(event.target.value as PodcastLanguage)}
+                className="h-9 rounded-full border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {Object.entries(languageLabels).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -850,49 +780,151 @@ function PodcastAudioPlayer({
                   </option>
                 ))}
               </select>
-            </label>
-          </div>
+            </div>
 
-          <RatingStars
-            label="Content quality"
-            value={contentQualityRating}
-            onChange={(value) => setContentQualityRating(value)}
-          />
-          <RatingStars
-            label="Audio/dialog quality"
-            value={audioDialogRating}
-            onChange={(value) => setAudioDialogRating(value)}
-          />
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="submit"
-              size="sm"
-              variant="outline"
-              disabled={feedbackLoading || !contentQualityRating || !audioDialogRating}
-            >
-              {feedbackLoading ? (
-                <>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                onClick={() => void togglePlayback()}
+                aria-label={isPlaying ? `Pause ${episode.title}` : `Play ${episode.title}`}
+                disabled={loading}
+              >
+                {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  Saving
-                </>
-              ) : (
-                'Submit rating'
-              )}
-            </Button>
-            {feedbackMessage ? (
-              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                {feedbackMessage}
-              </p>
-            ) : null}
-          </div>
+                ) : isPlaying ? (
+                  <Pause className="h-4 w-4" aria-hidden />
+                ) : (
+                  <Play className="h-4 w-4" aria-hidden />
+                )}
+              </Button>
+              <div className="min-w-0 flex-1 space-y-1">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 0}
+                  step="0.5"
+                  value={Math.min(currentTime, duration || 0)}
+                  onChange={handleTimelineChange}
+                  className="h-1 w-full cursor-pointer appearance-none rounded-full bg-border accent-primary"
+                  aria-label={`Playback position for ${episode.title}`}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              </div>
+            </div>
 
-          {feedbackError ? (
-            <p className="text-xs leading-5 text-destructive">{feedbackError}</p>
-          ) : null}
-        </form>
-      </div>
-    </div>
+            <div
+              className="flex flex-wrap gap-1.5"
+              aria-label={`Seek controls for ${episode.title}`}
+            >
+              <SeekButton seconds={-30} title={episode.title} onSeek={seekBy} />
+              <SeekButton seconds={-10} title={episode.title} onSeek={seekBy} />
+              <SeekButton seconds={10} title={episode.title} onSeek={seekBy} />
+              <SeekButton seconds={30} title={episode.title} onSeek={seekBy} />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Speed
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {playbackRates.map((rate) => (
+                  <button
+                    key={rate}
+                    type="button"
+                    onClick={() => setPlaybackRate(rate)}
+                    className={cn(
+                      'min-h-8 rounded-full border px-2.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      playbackRate === rate
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+                    )}
+                    aria-pressed={playbackRate === rate}
+                  >
+                    {formatRate(rate)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {error ? <p className="text-sm leading-5 text-destructive">{error}</p> : null}
+            <p className="text-xs leading-5 text-muted-foreground">
+              Streaming only. Browser download controls are disabled.
+            </p>
+
+            <form
+              onSubmit={(event) => void submitFeedback(event)}
+              className="space-y-3 border-t border-border/70 pt-4"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Rate this podcast</p>
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Two quick ratings help improve the beta audio library.
+                  </p>
+                </div>
+                <label className="flex flex-col gap-1 text-xs font-semibold text-muted-foreground">
+                  Language used
+                  <select
+                    value={feedbackLanguage}
+                    onChange={(event) => setFeedbackLanguage(event.target.value as PodcastLanguage)}
+                    className="h-9 rounded-md border border-border bg-background px-2 text-sm font-normal text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {Object.entries(languageLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <RatingStars
+                label="Content quality"
+                value={contentQualityRating}
+                onChange={(value) => setContentQualityRating(value)}
+              />
+              <RatingStars
+                label="Audio/dialog quality"
+                value={audioDialogRating}
+                onChange={(value) => setAudioDialogRating(value)}
+              />
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant="outline"
+                  disabled={feedbackLoading || !contentQualityRating || !audioDialogRating}
+                >
+                  {feedbackLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      Saving
+                    </>
+                  ) : (
+                    'Submit rating'
+                  )}
+                </Button>
+                {feedbackMessage ? (
+                  <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    {feedbackMessage}
+                  </p>
+                ) : null}
+              </div>
+
+              {feedbackError ? (
+                <p className="text-xs leading-5 text-destructive">{feedbackError}</p>
+              ) : null}
+            </form>
+          </div>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -906,38 +938,42 @@ function RatingStars({
   value: number | null
 }) {
   return (
-    <fieldset className="space-y-1.5">
-      <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </legend>
-      <div className="flex gap-1" aria-label={label}>
-        {ratingValues.map((rating) => {
-          const selected = value === rating
-          const filled = value !== null && rating <= value
+    <HandoffContent>
+      {
+        <fieldset className="space-y-1.5">
+          <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {label}
+          </legend>
+          <div className="flex gap-1" aria-label={label}>
+            {ratingValues.map((rating) => {
+              const selected = value === rating
+              const filled = value !== null && rating <= value
 
-          return (
-            <button
-              key={rating}
-              type="button"
-              onClick={() => onChange(rating)}
-              aria-label={`${label}: ${rating} out of 5 stars`}
-              aria-pressed={selected}
-              className={cn(
-                'inline-flex h-8 w-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                selected
-                  ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-300'
-                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
-              )}
-            >
-              <Star
-                className={cn('h-4 w-4', filled ? 'fill-current' : 'fill-transparent')}
-                aria-hidden
-              />
-            </button>
-          )
-        })}
-      </div>
-    </fieldset>
+              return (
+                <button
+                  key={rating}
+                  type="button"
+                  onClick={() => onChange(rating)}
+                  aria-label={`${label}: ${rating} out of 5 stars`}
+                  aria-pressed={selected}
+                  className={cn(
+                    'inline-flex h-8 w-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    selected
+                      ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-300'
+                      : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <Star
+                    className={cn('h-4 w-4', filled ? 'fill-current' : 'fill-transparent')}
+                    aria-hidden
+                  />
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      }
+    </HandoffContent>
   )
 }
 
@@ -955,17 +991,21 @@ function SeekButton({
   const amount = Math.abs(seconds)
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="ghost"
-      onClick={() => onSeek(seconds)}
-      aria-label={`${direction} ${amount} seconds for ${title}`}
-      className="h-8 min-w-[4rem] border border-border/70 px-2.5 text-xs text-muted-foreground hover:text-foreground"
-    >
-      <Icon className="h-3.5 w-3.5" aria-hidden />
-      <span>{seconds > 0 ? `+${amount}s` : `-${amount}s`}</span>
-    </Button>
+    <HandoffContent>
+      {
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => onSeek(seconds)}
+          aria-label={`${direction} ${amount} seconds for ${title}`}
+          className="h-8 min-w-[4rem] border border-border/70 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Icon className="h-3.5 w-3.5" aria-hidden />
+          <span>{seconds > 0 ? `+${amount}s` : `-${amount}s`}</span>
+        </Button>
+      }
+    </HandoffContent>
   )
 }
 

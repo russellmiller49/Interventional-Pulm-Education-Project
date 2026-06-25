@@ -6,6 +6,7 @@ import { AssessSection } from '@/features/learning-module/components/AssessSecti
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { MalignantEffusionNav } from '@/features/malignant-effusion/components/MalignantEffusionNav'
 import { getMpeQuizQuestions } from '@/features/malignant-effusion/content/quizItems'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -13,7 +14,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'malignantEffusion.assessment' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'malignantEffusion.assessment',
+  })
 
   return {
     title: t('metaTitle'),
@@ -28,25 +32,29 @@ export default async function MalignantEffusionAssessmentPage({ params }: PagePr
   const nav = await getTranslations('navigation')
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('assessment.headerTitle')}
-        description={t('assessment.headerDescription')}
-      />
-      <MalignantEffusionNav activeHref="/pleural-procedures/malignant-effusion/assessment" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('assessment.headerTitle')}
+            description={t('assessment.headerDescription')}
+          />
+          <MalignantEffusionNav activeHref="/pleural-procedures/malignant-effusion/assessment" />
 
-      <AssessSection
-        title={t('assessment.checkTitle')}
-        intro={t('assessment.checkIntro')}
-        questions={getMpeQuizQuestions(locale)}
-      />
+          <AssessSection
+            title={t('assessment.checkTitle')}
+            intro={t('assessment.checkIntro')}
+            questions={getMpeQuizQuestions(locale)}
+          />
 
-      <ModuleProgressToggle
-        moduleId="malignant-effusion"
-        section="assessment"
-        label={t('assessment.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="malignant-effusion"
+            section="assessment"
+            label={t('assessment.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

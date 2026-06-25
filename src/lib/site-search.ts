@@ -4,6 +4,7 @@ import {
   type BoardReviewCategory,
 } from '@/data/board-review'
 import { allEbusTrainingModules } from '@/data/ebus-training'
+import { localizeSearchText } from '@/i18n/handoff-search'
 import type { ActiveLocale } from '@/i18n/locale'
 import { isVisibleModulePath } from '@/lib/draft-modules'
 import { listCreativeCommonsCategories } from '@/lib/creative-commons'
@@ -401,21 +402,50 @@ function localizeSearchResult(
   locale: ActiveLocale = 'en',
 ): SiteSearchResult {
   const override = localizedSearchOverrides[locale]?.[item.href]
+  const merged = override
+    ? {
+        ...item,
+        ...override,
+        keywords: override.keywords ?? item.keywords,
+      }
+    : item
 
-  if (!override) {
-    return item
+  if (locale === 'en') {
+    return merged
+  }
+
+  if (merged.type === 'image-category') {
+    const categoryName = localizeSearchText(locale, merged.keywords?.[0] ?? merged.title)
+    const count = merged.description.match(/^\d+/)?.[0] ?? ''
+
+    return {
+      ...merged,
+      title: locale === 'es' ? `Imágenes de ${categoryName}` : `${categoryName}图像`,
+      description:
+        locale === 'es'
+          ? `${count} imágenes médicas Creative Commons en la colección ${categoryName}.`
+          : `${categoryName}集合中的 ${count} 张 Creative Commons 医学图像。`,
+      section: locale === 'es' ? 'Imágenes Creative Commons' : 'Creative Commons 图像',
+      keywords: [categoryName],
+    }
   }
 
   return {
-    ...item,
-    ...override,
-    keywords: override.keywords ?? item.keywords,
+    ...merged,
+    title: localizeSearchText(locale, merged.title),
+    description: localizeSearchText(locale, merged.description),
+    section: localizeSearchText(locale, merged.section),
+    keywords: merged.keywords?.map((keyword) => localizeSearchText(locale, keyword)),
   }
 }
 
 function getStaticResults(options: SiteSearchOptions = {}) {
   return allStaticResults
-    .filter((item) => isVisibleModulePath(item.href, { isAdmin: options.canViewDrafts === true }))
+    .filter((item) =>
+      isVisibleModulePath(item.href, {
+        isAdmin: options.canViewDrafts === true,
+      }),
+    )
     .map((item) => localizeSearchResult(item, options.locale))
 }
 

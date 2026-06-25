@@ -6,19 +6,30 @@ import {
   journalClubPodcastHubs,
   journalClubPodcastTags,
 } from '@/data/journal-club-podcasts'
+import { HandoffContent } from '@/i18n/handoff'
+import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
-export const metadata: Metadata = {
+const handoffMetadata: Metadata = {
   title: 'Journal Club Podcasts',
   description:
     'Journal club audio library for interventional pulmonology articles in English, Spanish, Mandarin, Arabic, and Korean.',
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  return localizeHandoffServerValue(locale, handoffMetadata)
+}
+
 export default function JournalClubPodcastsPage() {
   return (
-    <JournalClubPodcastBrowser
-      episodes={journalClubPodcastEpisodes}
-      hubs={journalClubPodcastHubs}
-      tags={journalClubPodcastTags}
-    />
+    <HandoffContent>
+      {
+        <JournalClubPodcastBrowser
+          episodes={journalClubPodcastEpisodes}
+          hubs={journalClubPodcastHubs}
+          tags={journalClubPodcastTags}
+        />
+      }
+    </HandoffContent>
   )
 }

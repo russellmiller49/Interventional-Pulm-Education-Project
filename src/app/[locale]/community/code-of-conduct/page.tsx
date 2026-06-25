@@ -1,11 +1,18 @@
 import type { Metadata } from 'next'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { HandoffContent } from '@/i18n/handoff'
+import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
-export const metadata: Metadata = {
+const handoffMetadata: Metadata = {
   title: 'Code of Conduct | Interventional Pulmonology Collaborative',
   description:
     'The Interventional Pulmonology Collaborative follows the Contributor Covenant Code of Conduct.',
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
 const sections = [
@@ -102,29 +109,33 @@ const sections = [
 
 export default function CodeOfConductPage() {
   return (
-    <div className="space-y-10 py-16">
-      <section className="container space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Code of Conduct</h1>
-        <p className="max-w-2xl text-base text-muted-foreground">
-          The Interventional Pulmonology Collaborative follows the Contributor Covenant to keep this
-          community welcoming. Please review the expectations below before contributing or joining
-          discussions.
-        </p>
-      </section>
-      <section className="container grid gap-6">
-        {sections.map((section) => (
-          <Card key={section.title} className="border-border/60 bg-card/80">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold tracking-tight">
-                {section.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {typeof section.body === 'string' ? <p>{section.body}</p> : section.body}
-            </CardContent>
-          </Card>
-        ))}
-      </section>
-    </div>
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <section className="container space-y-4">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Code of Conduct</h1>
+            <p className="max-w-2xl text-base text-muted-foreground">
+              The Interventional Pulmonology Collaborative follows the Contributor Covenant to keep
+              this community welcoming. Please review the expectations below before contributing or
+              joining discussions.
+            </p>
+          </section>
+          <section className="container grid gap-6">
+            {sections.map((section) => (
+              <Card key={section.title} className="border-border/60 bg-card/80">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold tracking-tight">
+                    {section.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  {typeof section.body === 'string' ? <p>{section.body}</p> : section.body}
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+        </div>
+      }
+    </HandoffContent>
   )
 }

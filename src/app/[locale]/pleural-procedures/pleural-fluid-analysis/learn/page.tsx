@@ -12,6 +12,7 @@ import {
   getFluidCoreBlocks,
   getFluidGoDeeperBlocks,
 } from '@/features/pleural-fluid-analysis/content/learnContent'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -19,7 +20,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pleuralFluidAnalysis.learn' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pleuralFluidAnalysis.learn',
+  })
 
   return {
     title: t('metaTitle'),
@@ -36,27 +40,31 @@ export default async function PleuralFluidAnalysisLearnPage({ params }: PageProp
   const boardSections = getBoardSections(fluidBoardSlug, fluidBoardSectionIds)
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('learn.headerTitle')}
-        description={t('learn.headerDescription')}
-      />
-      <PleuralFluidAnalysisNav activeHref="/pleural-procedures/pleural-fluid-analysis/learn" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('learn.headerTitle')}
+            description={t('learn.headerDescription')}
+          />
+          <PleuralFluidAnalysisNav activeHref="/pleural-procedures/pleural-fluid-analysis/learn" />
 
-      <LearnSection
-        intro={<p>{t('learn.intro')}</p>}
-        coreBlocks={getFluidCoreBlocks(locale)}
-        goDeeperBlocks={getFluidGoDeeperBlocks(locale)}
-        boardSections={boardSections}
-        boardSourceLabel={t('learn.boardSourceLabel')}
-      />
+          <LearnSection
+            intro={<p>{t('learn.intro')}</p>}
+            coreBlocks={getFluidCoreBlocks(locale)}
+            goDeeperBlocks={getFluidGoDeeperBlocks(locale)}
+            boardSections={boardSections}
+            boardSourceLabel={t('learn.boardSourceLabel')}
+          />
 
-      <ModuleProgressToggle
-        moduleId="pleural-fluid-analysis"
-        section="learn"
-        label={t('learn.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pleural-fluid-analysis"
+            section="learn"
+            label={t('learn.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

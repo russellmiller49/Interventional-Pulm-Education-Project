@@ -6,6 +6,7 @@ import { AssessSection } from '@/features/learning-module/components/AssessSecti
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { PneumothoraxNav } from '@/features/pneumothorax-pathway/components/PneumothoraxNav'
 import { getPneumothoraxQuizQuestions } from '@/features/pneumothorax-pathway/content/quizItems'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -13,7 +14,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pneumothoraxPathway.assessment' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pneumothoraxPathway.assessment',
+  })
 
   return {
     title: t('metaTitle'),
@@ -28,25 +32,29 @@ export default async function PneumothoraxAssessmentPage({ params }: PageProps) 
   const nav = await getTranslations('navigation')
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('assessment.headerTitle')}
-        description={t('assessment.headerDescription')}
-      />
-      <PneumothoraxNav activeHref="/pleural-procedures/pneumothorax-pathway/assessment" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('assessment.headerTitle')}
+            description={t('assessment.headerDescription')}
+          />
+          <PneumothoraxNav activeHref="/pleural-procedures/pneumothorax-pathway/assessment" />
 
-      <AssessSection
-        title={t('assessment.checkTitle')}
-        intro={t('assessment.checkIntro')}
-        questions={getPneumothoraxQuizQuestions(locale)}
-      />
+          <AssessSection
+            title={t('assessment.checkTitle')}
+            intro={t('assessment.checkIntro')}
+            questions={getPneumothoraxQuizQuestions(locale)}
+          />
 
-      <ModuleProgressToggle
-        moduleId="pneumothorax-pathway"
-        section="assessment"
-        label={t('assessment.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pneumothorax-pathway"
+            section="assessment"
+            label={t('assessment.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

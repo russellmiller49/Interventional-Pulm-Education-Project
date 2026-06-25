@@ -13,6 +13,7 @@ import {
 } from '@/features/learning-module/engine/moduleProgress'
 
 import type { PleuralModule } from '../content/types'
+import { HandoffContent } from '@/i18n/handoff'
 
 const statusLabel: Record<PleuralModule['status'], string> = {
   live: 'Live',
@@ -38,34 +39,38 @@ export function PleuralLearningPath({ modules }: PleuralLearningPathProps) {
   const experimentalModules = modules.filter((module) => module.experimental)
 
   return (
-    <div className="space-y-10">
-      <ol className="grid gap-4">
-        {pathModules.map((module, index) => (
-          <li key={module.id}>
-            <ModuleCard module={module} step={index + 1} record={progress[module.id]} />
-          </li>
-        ))}
-      </ol>
-
-      {experimentalModules.length ? (
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground">Experimental / prototypes</h2>
-            <Badge
-              variant="outline"
-              className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground"
-            >
-              Not part of the core path
-            </Badge>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {experimentalModules.map((module) => (
-              <ModuleCard key={module.id} module={module} record={progress[module.id]} />
+    <HandoffContent>
+      {
+        <div className="space-y-10">
+          <ol className="grid gap-4">
+            {pathModules.map((module, index) => (
+              <li key={module.id}>
+                <ModuleCard module={module} step={index + 1} record={progress[module.id]} />
+              </li>
             ))}
-          </div>
-        </section>
-      ) : null}
-    </div>
+          </ol>
+
+          {experimentalModules.length ? (
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-foreground">Experimental / prototypes</h2>
+                <Badge
+                  variant="outline"
+                  className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground"
+                >
+                  Not part of the core path
+                </Badge>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {experimentalModules.map((module) => (
+                  <ModuleCard key={module.id} module={module} record={progress[module.id]} />
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -82,41 +87,45 @@ function ModuleCard({
   const complete = isModuleComplete(record)
 
   return (
-    <Link
-      href={module.route as Route}
-      className="group flex gap-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-sky-500/60 hover:bg-sky-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      {step ? (
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-sm font-semibold text-sky-600">
-          {step}
-        </span>
-      ) : null}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-lg font-semibold text-foreground">{module.title}</h3>
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {statusLabel[module.status]}
-          </span>
-          {complete ? (
-            <Badge
-              variant="success"
-              className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
-            >
-              Complete
-            </Badge>
-          ) : completedSections > 0 ? (
-            <Badge
-              variant="info"
-              className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
-            >
-              {completedSections}/3 sections
-            </Badge>
+    <HandoffContent>
+      {
+        <Link
+          href={module.route as Route}
+          className="group flex gap-4 rounded-lg border border-border/80 bg-card p-5 shadow-sm transition-colors hover:border-sky-500/60 hover:bg-sky-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {step ? (
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-background text-sm font-semibold text-sky-600">
+              {step}
+            </span>
           ) : null}
-        </div>
-        {module.summary ? (
-          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{module.summary}</p>
-        ) : null}
-      </div>
-    </Link>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-lg font-semibold text-foreground">{module.title}</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {statusLabel[module.status]}
+              </span>
+              {complete ? (
+                <Badge
+                  variant="success"
+                  className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
+                >
+                  Complete
+                </Badge>
+              ) : completedSections > 0 ? (
+                <Badge
+                  variant="info"
+                  className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
+                >
+                  {completedSections}/3 sections
+                </Badge>
+              ) : null}
+            </div>
+            {module.summary ? (
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{module.summary}</p>
+            ) : null}
+          </div>
+        </Link>
+      }
+    </HandoffContent>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from 'react'
 
 import { cn } from '@/lib/cn'
+import { HandoffContent } from '@/i18n/handoff'
 
 type MermaidInstance = (typeof import('mermaid'))['default']
 
@@ -66,22 +67,26 @@ export function MermaidDiagram({ chart, variant = 'dark' }: MermaidDiagramProps)
   }, [chart, id, variant])
 
   return (
-    <div
-      className={cn(
-        'my-6 overflow-x-auto rounded-2xl border p-5 text-sm shadow-sm',
-        variant === 'light'
-          ? 'border-slate-200 bg-white text-slate-600'
-          : 'border-border/60 bg-background/90 text-muted-foreground',
-      )}
-    >
-      {error ? (
-        <div>{error}</div>
-      ) : svg ? (
-        <div dangerouslySetInnerHTML={{ __html: svg }} />
-      ) : (
-        <div>Rendering flowchart…</div>
-      )}
-    </div>
+    <HandoffContent>
+      {
+        <div
+          className={cn(
+            'my-6 overflow-x-auto rounded-2xl border p-5 text-sm shadow-sm',
+            variant === 'light'
+              ? 'border-slate-200 bg-white text-slate-600'
+              : 'border-border/60 bg-background/90 text-muted-foreground',
+          )}
+        >
+          {error ? (
+            <div>{error}</div>
+          ) : svg ? (
+            <div dangerouslySetInnerHTML={{ __html: svg }} />
+          ) : (
+            <div>Rendering flowchart…</div>
+          )}
+        </div>
+      }
+    </HandoffContent>
   )
 }
 

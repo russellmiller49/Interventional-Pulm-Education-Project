@@ -1,0 +1,1594 @@
+{
+  "generatedAt": "2026-06-25",
+  "sourceExport": "interventionalpulm-spanish-mandarin-translation-export-2026-06-24.zip",
+  "locales": ["es", "zh-CN"],
+  "summary": {
+    "manifestFiles": 246,
+    "manifestFilesPresent": 246,
+    "modifiedManifestFiles": 154,
+    "preservedManifestFiles": 92,
+    "supportFilesAdded": 7,
+    "totalFilesInArchive": 253,
+    "flattenedMessageKeysPerLocale": 4882,
+    "handoffMessagesPerLocale": 3823,
+    "exactLookupEntries": 3792,
+    "dynamicPatterns": 31,
+    "exactRuntimeTestsPassed": 7584,
+    "dynamicRuntimeTestsPassed": 62,
+    "typescriptSyntaxFilesPassed": 224
+  },
+  "categoryStatusCounts": [
+    {
+      "category": "auth and profile",
+      "status": "modified",
+      "count": 5
+    },
+    {
+      "category": "auth and profile",
+      "status": "preserved",
+      "count": 3
+    },
+    {
+      "category": "board review",
+      "status": "modified",
+      "count": 5
+    },
+    {
+      "category": "board review",
+      "status": "preserved",
+      "count": 27
+    },
+    {
+      "category": "embedded app wrappers and sync notes",
+      "status": "preserved",
+      "count": 2
+    },
+    {
+      "category": "i18n infrastructure",
+      "status": "preserved",
+      "count": 8
+    },
+    {
+      "category": "learning feature content",
+      "status": "modified",
+      "count": 37
+    },
+    {
+      "category": "learning feature content",
+      "status": "preserved",
+      "count": 36
+    },
+    {
+      "category": "locale route pages",
+      "status": "modified",
+      "count": 77
+    },
+    {
+      "category": "locale route pages",
+      "status": "preserved",
+      "count": 1
+    },
+    {
+      "category": "message dictionaries",
+      "status": "modified",
+      "count": 3
+    },
+    {
+      "category": "other",
+      "status": "modified",
+      "count": 26
+    },
+    {
+      "category": "other",
+      "status": "preserved",
+      "count": 3
+    },
+    {
+      "category": "search index",
+      "status": "modified",
+      "count": 1
+    },
+    {
+      "category": "structured data",
+      "status": "preserved",
+      "count": 12
+    }
+  ],
+  "supportFiles": [
+    "src/i18n/creative-commons-search.ts",
+    "src/i18n/handoff-client.ts",
+    "src/i18n/handoff-core.ts",
+    "src/i18n/handoff-message-ids.ts",
+    "src/i18n/handoff-search.ts",
+    "src/i18n/handoff-server.ts",
+    "src/i18n/handoff.tsx"
+  ],
+  "artifacts": {
+    "zip": {
+      "filename": "interventionalpulm-es-zh-CN-complete-files.zip",
+      "sha256": "050273e6e143c0920082306896fdee3a046a99a8b250b437d9e40c50928bea7d"
+    },
+    "patch": {
+      "filename": "interventionalpulm-es-zh-CN-complete.patch",
+      "sha256": "be8676c746e681254104a752a774caaa43e5b12b81b37872d5770406bfc918ce"
+    }
+  },
+  "files": [
+    {
+      "path": "content/modules/board/advanced-peripheral-bronchoscopy-radial-probe-electromagnetic-navigation-and-robotic-bronchoscopy.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/airway-stents.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/anesthesia-for-ip.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/bronchoscopic-and-surgical-treatment-for-copd-and-chronic-bronchitis.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/bronchoscopy-in-high-risk-patients-and-complications-in-bronchoscopy.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/coding-and-billing.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/delayed-ablative-therapies.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/diagnostic-approach-to-pulmonary-nodules.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/indwelling-pleural-catheters-and-pleurodesis.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/lung-cancer-screening.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/lung-cancer-staging-and-linear-ebus.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/management-of-malignant-central-airway-obstruction.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/mechanical-debridement-and-balloon-dilitation.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/non-malignant-cao.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/pathology-histology-cytology-rose-and-molecular-markers.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/percutaneous-tracheostomy-and-cricothyroidotomy.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/peripheral-biopsy-techniques-conventional-sampling-and-transbronchial-cryobiopsy.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/pleural-effusions-and-pleural-interventions.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/pleural-infections.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/pneumothorax-prolonged-air-leaks-and-bronchopleural-fistula.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/real-time-peripheral-imaging-techniques.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/rigid-bronchoscopy-indications-technique.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/thermal-ablatitive-therapies.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "content/modules/board/treatment-options-for-early-stage-lung-cancer.mdx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "contentlayer.config.ts",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "preserved"
+    },
+    {
+      "path": "messages/en.json",
+      "category": "message dictionaries",
+      "reason": "Current next-intl dictionaries; translate values only and keep keys identical.",
+      "status": "modified"
+    },
+    {
+      "path": "messages/es.json",
+      "category": "message dictionaries",
+      "reason": "Current next-intl dictionaries; translate values only and keep keys identical.",
+      "status": "modified"
+    },
+    {
+      "path": "messages/zh-CN.json",
+      "category": "message dictionaries",
+      "reason": "Current next-intl dictionaries; translate values only and keep keys identical.",
+      "status": "modified"
+    },
+    {
+      "path": "package.json",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "preserved"
+    },
+    {
+      "path": "scripts/sync-bronch-navigation-trainer.mjs",
+      "category": "embedded app wrappers and sync notes",
+      "reason": "Main-site wrappers and source sync boundaries for iframe apps.",
+      "status": "preserved"
+    },
+    {
+      "path": "scripts/sync-socal-ebus-course.mjs",
+      "category": "embedded app wrappers and sync notes",
+      "reason": "Main-site wrappers and source sync boundaries for iframe apps.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/app/[locale]/admin/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/auth/update-password/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/board-prep/[slug]/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/board-prep/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/bronch-navigation-trainer/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/coming-soon/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/community/code-of-conduct/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/dashboard/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/ebus-training/[module]/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/ebus-training/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/fluoroview/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/forgot-password/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/intro-bronchoscopy/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/ip-registry/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/journal-club-podcasts/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/layout.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/app/[locale]/learn/anatomy/airway/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/learn/anatomy/ct-alignment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/learn/anatomy/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/login/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/chest-drainage/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/chest-drainage/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/chest-drainage/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/chest-drainage/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/chest-drainage/simulators/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/chest-drainage/troubleshooting/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/clinical-review/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/dataset-lab/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/intro-course/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/malignant-effusion/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/malignant-effusion/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/malignant-effusion/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/malignant-effusion/practice/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/malignant-effusion/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-fluid-analysis/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-fluid-analysis/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-fluid-analysis/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-fluid-analysis/practice/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-fluid-analysis/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-infection/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-infection/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-infection/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-infection/practice/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-infection/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-ultrasound-simulator/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-ultrasound/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-ultrasound/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-ultrasound/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-ultrasound/practice/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pleural-ultrasound/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pneumothorax-pathway/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pneumothorax-pathway/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pneumothorax-pathway/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pneumothorax-pathway/practice/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/pneumothorax-pathway/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/thoracentesis-planner/assessment/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/thoracentesis-planner/learn/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/thoracentesis-planner/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/thoracentesis-planner/practice/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/pleural-procedures/thoracentesis-planner/references/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/qa-admin/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/qa-admin/session-list.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/qa-sandbox/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/rapid-onsite-cytology/annotate/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/rapid-onsite-cytology/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/resources/creative-commons/[category]/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/resources/creative-commons/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/resources/creative-commons/search/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/resources/resource-tabs-nav.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/resources/vibe-coding-for-clinicians/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/search/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/signup/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/socal-ebus-course/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/tnm-9-staging/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/verify-email/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/app/[locale]/xr/page.tsx",
+      "category": "locale route pages",
+      "reason": "Route-level metadata, headings, labels, body copy, and page wrappers.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/airway-anatomy/AirwayAnatomyModule.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/auth/AuthPromoVideo.tsx",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/auth/ForgotPasswordForm.tsx",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/auth/LoginForm.tsx",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/auth/SignInModal.tsx",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/auth/SignupForm.tsx",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/board-review/AudioCompanionActions.tsx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/board-review/BoardReviewCatalog.tsx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/board-review/BoardReviewHtmlFrame.tsx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/board-review/BoardReviewSections.tsx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/board-review/MermaidDiagram.tsx",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/AirwayReachMap.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/CompatibilityResult.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/EducationalDisclaimer.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/InstrumentFitPanel.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/ScopeComparisonTable.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/ScopeCrossSection.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/ScopeSelector.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/bronchoscope-size-explorer/SourceNotes.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/ebus-training/EmbeddedTrainingModuleFrame.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/fluoroview/CarmInsetView.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/fluoroview/FluoroViewApp.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/home/hero.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/journal-club-podcasts/JournalClubPodcastBrowser.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/DesktopNav.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/Footer.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/LanguageSelector.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/MobileNav.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/Navigation.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/SearchShortcut.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/mode-toggle.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/layout/theme-provider.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/learning/LessonScaffold.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/mdx/Callout.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/components/mdx/ImageComparison.tsx",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/data/board-review.ts",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/bronchoscope-size-explorer/airway-generations.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/bronchoscope-size-explorer/bronchoscopes.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/bronchoscope-size-explorer/instruments.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/creative-commons-images.json",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/ebus-training.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/journal-club-podcasts.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/make-projects.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/printable-models.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/projects.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/rigid-bronchoscopy-curriculum.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/tool-details.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/data/training-modules.ts",
+      "category": "structured data",
+      "reason": "Typed module/resource/podcast data with titles, descriptions, tags, objectives, quiz text, or search text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/chest-drainage/components/ChestDrainageNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/components/ClinicalReviewTable.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/components/DrySealDrainageSimulator.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/components/KnobPanel.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/components/LessonOverview.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/components/PressureTrendChart.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/components/TroubleshootingCaseTrainer.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/chest-drainage/content/drySealHotspots.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/chest-drainage/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/chest-drainage/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/chest-drainage/content/references.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/chest-drainage/scenarios/chestDrainageCases.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/intro-pleural-course/components/IntroPleuralCourse.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/intro-pleural-course/engine/moduleRegistry.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/learning-module/components/LearnSection.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/malignant-effusion/components/MalignantEffusionNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/malignant-effusion/components/MalignantEffusionPathway.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/malignant-effusion/content/learnContent.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/malignant-effusion/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/malignant-effusion/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-dataset-lab/components/PleuralDatasetLab.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-dataset-lab/content/datasetCases.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/components/PleuralAnalysisHeader.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/components/PleuralAnalysisQuiz.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/components/PleuralDifferentialExplorer.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/components/PleuralFluidAnalysisModule.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/components/PleuralFluidAnalysisNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/content/cases.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/content/diseaseProfiles.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/content/framework.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/content/learnContent.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-fluid-analysis/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-infection/components/PleuralInfectionNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-infection/components/PleuralInfectionWorkflow.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-infection/content/learnContent.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-infection/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-infection/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-infection/scenarios/infectionCases.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-procedures/components/ClinicalReviewTable.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-procedures/components/PleuralLearningPath.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-procedures/content/references.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-procedures/content/types.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-ultrasound-simulator/components/CaseObjectives.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound-simulator/components/PleuralScene3D.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound-simulator/components/PleuralUltrasoundSimulator.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound-simulator/components/ProbeControls.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound-simulator/components/UltrasoundCanvas.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound-simulator/content/pleuralSimulatorCases.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/components/DynamicSignsLab.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/components/PatternRecognitionLab.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/components/PleuralUltrasoundNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/components/PleuralUltrasoundPractice.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/content/learnContent.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pleural-ultrasound/content/videoAssets.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pneumothorax-pathway/components/PneumothoraxNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pneumothorax-pathway/components/PneumothoraxPathway.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/pneumothorax-pathway/content/learnContent.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pneumothorax-pathway/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pneumothorax-pathway/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/pneumothorax-pathway/scenarios/pneumothoraxCases.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/rapid-onsite-cytology/components/AnnotationWorkbench.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/rapid-onsite-cytology/components/RapidOnsiteCytologyModule.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/rapid-onsite-cytology/content/slides.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/rapid-onsite-cytology/engine/types.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/thoracentesis-planner/components/ThoracentesisNav.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/thoracentesis-planner/components/ThoracentesisPlanner.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/thoracentesis-planner/components/TriangleOfSafety.tsx",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "modified"
+    },
+    {
+      "path": "src/features/thoracentesis-planner/content/learnContent.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/thoracentesis-planner/content/lessons.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/features/thoracentesis-planner/content/quizItems.ts",
+      "category": "learning feature content",
+      "reason": "Lesson, quiz, scenario, simulator, and feature component text.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/content.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/locale.test.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/locale.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/navigation.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/path.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/request.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/routing.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/i18n/translations.test.ts",
+      "category": "i18n infrastructure",
+      "reason": "Locale routing and tests; use as implementation context.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/board-review-html.ts",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/board-review-loader.ts",
+      "category": "board review",
+      "reason": "Board review catalog/chapter metadata/UI; preserve slugs/source files/answer structure.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/creative-commons.ts",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "modified"
+    },
+    {
+      "path": "src/lib/format-duration.ts",
+      "category": "other",
+      "reason": "Contains locale infrastructure or learner-facing copy candidate.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/site-auth/profile-options.ts",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/site-auth/profile-schema.ts",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/site-auth/user-agreement.ts",
+      "category": "auth and profile",
+      "reason": "Login/signup/profile/user-agreement labels, errors, options, and consent copy.",
+      "status": "preserved"
+    },
+    {
+      "path": "src/lib/site-search.ts",
+      "category": "search index",
+      "reason": "Localized search overrides and English fallback search entries.",
+      "status": "modified"
+    }
+  ]
+}

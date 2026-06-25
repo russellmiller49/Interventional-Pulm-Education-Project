@@ -19,6 +19,7 @@ import { DesktopNav, type NavItem } from './DesktopNav'
 import { LanguageSelector } from './LanguageSelector'
 import { MobileNav } from './MobileNav'
 import { ModeToggle } from './mode-toggle'
+import { HandoffContent } from '@/i18n/handoff'
 
 export type NavAuthStatus = 'checking' | 'signed-in' | 'signed-out' | 'signing-out'
 
@@ -179,7 +180,9 @@ export function Navigation() {
   const navigationItems = useMemo(
     () =>
       allNavigationItems.filter((item) =>
-        isVisibleModulePath(item.href, { isAdmin: currentUser?.isAdmin === true }),
+        isVisibleModulePath(item.href, {
+          isAdmin: currentUser?.isAdmin === true,
+        }),
       ),
     [allNavigationItems, currentUser?.isAdmin],
   )
@@ -326,106 +329,112 @@ export function Navigation() {
   }, [])
 
   return (
-    <div className="flex w-full min-w-0 items-center justify-between gap-2 lg:gap-3">
-      <div className="flex shrink-0 items-center gap-3">
-        <Link
-          href="/"
-          className="flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        >
-          <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-            {common('shortBrand')}
-          </span>
-        </Link>
-      </div>
-      <DesktopNav items={navigationItems} activePath={pathname} />
-      <div className="hidden shrink-0 items-center justify-end gap-2 lg:flex">
-        <Button asChild variant="ghost" size="icon" className="h-9 w-9 min-[1700px]:hidden">
-          <Link href={'/search' as Route} aria-label={nav('searchResources')}>
-            <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
-          </Link>
-        </Button>
-        <form
-          action={localizePath('/search', activeLocale)}
-          className="hidden items-center gap-1 min-[1700px]:flex"
-          role="search"
-        >
-          <Input
-            type="search"
-            name="q"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={nav('searchPlaceholder')}
-            leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
-            className="w-48 text-sm min-[1850px]:w-52"
-            aria-label={nav('searchResourcesAndGuides')}
-          />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9"
-            aria-label={nav('searchResources')}
-          >
-            <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
-          </Button>
-        </form>
-        {currentUser ? (
-          <div className="flex min-w-0 items-center gap-2">
-            <p className="hidden max-w-36 truncate text-sm text-muted-foreground min-[1500px]:block min-[1850px]:max-w-44">
-              {common.rich('welcome', {
-                name: currentUser.displayName,
-                userName: (chunks) => (
-                  <span className="font-semibold text-foreground">{chunks}</span>
-                ),
-              })}
-            </p>
-            {currentUser.isAdmin ? (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
-              >
-                <Link href={'/admin' as Route}>
-                  <ShieldCheck className="h-4 w-4" aria-hidden />
-                  <span className="sr-only min-[1500px]:not-sr-only">{common('admin')}</span>
-                </Link>
-              </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
-              onClick={handleLogout}
-              disabled={authStatus === 'signing-out'}
-              aria-label={authStatus === 'signing-out' ? common('loggingOut') : common('logOut')}
+    <HandoffContent>
+      {
+        <div className="flex w-full min-w-0 items-center justify-between gap-2 lg:gap-3">
+          <div className="flex shrink-0 items-center gap-3">
+            <Link
+              href="/"
+              className="flex items-center gap-2 rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <LogOut className="h-4 w-4" aria-hidden />
-              <span className="sr-only min-[1500px]:not-sr-only">
-                {authStatus === 'signing-out' ? common('loggingOut') : common('logOut')}
+              <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                {common('shortBrand')}
               </span>
-            </Button>
+            </Link>
           </div>
-        ) : authStatus === 'checking' ? null : (
-          <Button asChild variant="outline" size="sm" className="hidden xl:inline-flex">
-            <Link href={'/login' as Route}>{common('signIn')}</Link>
-          </Button>
-        )}
-        <LanguageSelector compact className="hidden xl:inline-flex" />
-        <ModeToggle
-          size="sm"
-          className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4 [&>span:last-child]:hidden min-[1500px]:[&>span:last-child]:inline"
-        />
-      </div>
-      <MobileNav
-        items={navigationItems}
-        activePath={pathname}
-        authStatus={authStatus}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-      />
-    </div>
+          <DesktopNav items={navigationItems} activePath={pathname} />
+          <div className="hidden shrink-0 items-center justify-end gap-2 lg:flex">
+            <Button asChild variant="ghost" size="icon" className="h-9 w-9 min-[1700px]:hidden">
+              <Link href={'/search' as Route} aria-label={nav('searchResources')}>
+                <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+              </Link>
+            </Button>
+            <form
+              action={localizePath('/search', activeLocale)}
+              className="hidden items-center gap-1 min-[1700px]:flex"
+              role="search"
+            >
+              <Input
+                type="search"
+                name="q"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={nav('searchPlaceholder')}
+                leadingIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
+                className="w-48 text-sm min-[1850px]:w-52"
+                aria-label={nav('searchResourcesAndGuides')}
+              />
+              <Button
+                type="submit"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                aria-label={nav('searchResources')}
+              >
+                <MagnifyingGlassIcon className="h-4 w-4" aria-hidden />
+              </Button>
+            </form>
+            {currentUser ? (
+              <div className="flex min-w-0 items-center gap-2">
+                <p className="hidden max-w-36 truncate text-sm text-muted-foreground min-[1500px]:block min-[1850px]:max-w-44">
+                  {common.rich('welcome', {
+                    name: currentUser.displayName,
+                    userName: (chunks) => (
+                      <span className="font-semibold text-foreground">{chunks}</span>
+                    ),
+                  })}
+                </p>
+                {currentUser.isAdmin ? (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
+                  >
+                    <Link href={'/admin' as Route}>
+                      <ShieldCheck className="h-4 w-4" aria-hidden />
+                      <span className="sr-only min-[1500px]:not-sr-only">{common('admin')}</span>
+                    </Link>
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4"
+                  onClick={handleLogout}
+                  disabled={authStatus === 'signing-out'}
+                  aria-label={
+                    authStatus === 'signing-out' ? common('loggingOut') : common('logOut')
+                  }
+                >
+                  <LogOut className="h-4 w-4" aria-hidden />
+                  <span className="sr-only min-[1500px]:not-sr-only">
+                    {authStatus === 'signing-out' ? common('loggingOut') : common('logOut')}
+                  </span>
+                </Button>
+              </div>
+            ) : authStatus === 'checking' ? null : (
+              <Button asChild variant="outline" size="sm" className="hidden xl:inline-flex">
+                <Link href={'/login' as Route}>{common('signIn')}</Link>
+              </Button>
+            )}
+            <LanguageSelector compact className="hidden xl:inline-flex" />
+            <ModeToggle
+              size="sm"
+              className="h-9 w-9 px-0 min-[1500px]:w-auto min-[1500px]:px-4 [&>span:last-child]:hidden min-[1500px]:[&>span:last-child]:inline"
+            />
+          </div>
+          <MobileNav
+            items={navigationItems}
+            activePath={pathname}
+            authStatus={authStatus}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

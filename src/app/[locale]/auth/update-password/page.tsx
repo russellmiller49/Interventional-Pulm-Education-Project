@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
+import { HandoffContent } from '@/i18n/handoff'
 
 type RecoveryStatus = 'checking' | 'ready' | 'submitting' | 'success' | 'error'
 
@@ -126,67 +127,71 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="container mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center gap-6 pb-16 pt-24">
-      <div className="space-y-3">
-        <h1 className="text-3xl font-semibold sm:text-4xl">Update password</h1>
-        <p className="text-muted-foreground">{message}</p>
-      </div>
+    <HandoffContent>
+      {
+        <div className="container mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center gap-6 pb-16 pt-24">
+          <div className="space-y-3">
+            <h1 className="text-3xl font-semibold sm:text-4xl">Update password</h1>
+            <p className="text-muted-foreground">{message}</p>
+          </div>
 
-      {status === 'ready' || status === 'submitting' ? (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border bg-card p-6 shadow-sm"
-        >
-          <label className="block text-sm font-medium">
-            New password
-            <input
-              required
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              minLength={8}
-              autoComplete="new-password"
-              className="mt-1 w-full rounded border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </label>
-          <label className="block text-sm font-medium">
-            Confirm password
-            <input
-              required
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              minLength={8}
-              autoComplete="new-password"
-              className="mt-1 w-full rounded border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={status === 'submitting'}
-            className="w-full rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {status === 'submitting' ? 'Updating password...' : 'Save new password'}
-          </button>
-        </form>
-      ) : null}
+          {status === 'ready' || status === 'submitting' ? (
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 rounded-2xl border bg-card p-6 shadow-sm"
+            >
+              <label className="block text-sm font-medium">
+                New password
+                <input
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="mt-1 w-full rounded border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                Confirm password
+                <input
+                  required
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  minLength={8}
+                  autoComplete="new-password"
+                  className="mt-1 w-full rounded border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={status === 'submitting'}
+                className="w-full rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {status === 'submitting' ? 'Updating password...' : 'Save new password'}
+              </button>
+            </form>
+          ) : null}
 
-      {status === 'error' ? (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
-          <p className="text-sm text-muted-foreground">
-            Request another reset email, then open the link from the same browser.
-          </p>
+          {status === 'error' ? (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6">
+              <p className="text-sm text-muted-foreground">
+                Request another reset email, then open the link from the same browser.
+              </p>
+            </div>
+          ) : null}
+
+          <div>
+            <Link
+              href={'/login' as Route}
+              className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Back to sign in
+            </Link>
+          </div>
         </div>
-      ) : null}
-
-      <div>
-        <Link
-          href={'/login' as Route}
-          className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        >
-          Back to sign in
-        </Link>
-      </div>
-    </div>
+      }
+    </HandoffContent>
   )
 }

@@ -5,6 +5,7 @@ import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { PneumothoraxNav } from '@/features/pneumothorax-pathway/components/PneumothoraxNav'
 import { PneumothoraxPathway } from '@/features/pneumothorax-pathway/components/PneumothoraxPathway'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -12,7 +13,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pneumothoraxPathway.practice' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pneumothoraxPathway.practice',
+  })
 
   return {
     title: t('metaTitle'),
@@ -27,23 +31,27 @@ export default async function PneumothoraxPracticePage({ params }: PageProps) {
   const nav = await getTranslations('navigation')
 
   return (
-    <div className="space-y-10 py-16">
-      {/* Disclaimer is rendered by the pathway's LessonScaffold, so suppress it here. */}
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('practice.headerTitle')}
-        description={t('practice.headerDescription')}
-        showDisclaimer={false}
-      />
-      <PneumothoraxNav activeHref="/pleural-procedures/pneumothorax-pathway/practice" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          {/* Disclaimer is rendered by the pathway's LessonScaffold, so suppress it here. */}
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('practice.headerTitle')}
+            description={t('practice.headerDescription')}
+            showDisclaimer={false}
+          />
+          <PneumothoraxNav activeHref="/pleural-procedures/pneumothorax-pathway/practice" />
 
-      <PneumothoraxPathway />
+          <PneumothoraxPathway />
 
-      <ModuleProgressToggle
-        moduleId="pneumothorax-pathway"
-        section="practice"
-        label={t('practice.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pneumothorax-pathway"
+            section="practice"
+            label={t('practice.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

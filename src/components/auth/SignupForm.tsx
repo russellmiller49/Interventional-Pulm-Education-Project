@@ -28,6 +28,7 @@ import {
   SITE_USER_AGREEMENT_VERSION,
   siteUserAgreementPoints,
 } from '@/lib/site-auth/user-agreement'
+import { HandoffContent } from '@/i18n/handoff'
 
 type SubmitStatus = 'idle' | 'checking' | 'submitting' | 'sent' | 'error'
 
@@ -300,286 +301,292 @@ export function SignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {!completionMode ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm font-medium">
-            Email
-            <Input
-              required
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              placeholder="you@example.com"
-              className="mt-2 rounded-lg"
-            />
-          </label>
-          <div className="hidden md:block" aria-hidden />
-          <label className="block text-sm font-medium">
-            Password
-            <Input
-              required
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="new-password"
-              minLength={8}
-              className="mt-2 rounded-lg"
-            />
-          </label>
-          <label className="block text-sm font-medium">
-            Confirm password
-            <Input
-              required
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              autoComplete="new-password"
-              minLength={8}
-              className="mt-2 rounded-lg"
-            />
-          </label>
-        </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          {email ? `Completing profile for ${email}.` : 'Checking your signed-in account...'}
-        </p>
-      )}
+    <HandoffContent>
+      {
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {!completionMode ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Email
+                <Input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  className="mt-2 rounded-lg"
+                />
+              </label>
+              <div className="hidden md:block" aria-hidden />
+              <label className="block text-sm font-medium">
+                Password
+                <Input
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  className="mt-2 rounded-lg"
+                />
+              </label>
+              <label className="block text-sm font-medium">
+                Confirm password
+                <Input
+                  required
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  className="mt-2 rounded-lg"
+                />
+              </label>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {email ? `Completing profile for ${email}.` : 'Checking your signed-in account...'}
+            </p>
+          )}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="block text-sm font-medium">
-          First name
-          <Input
-            required
-            value={firstName}
-            onChange={(event) => setFirstName(event.target.value)}
-            autoComplete="given-name"
-            className="mt-2 rounded-lg"
-          />
-        </label>
-        <label className="block text-sm font-medium">
-          Last name
-          <Input
-            required
-            value={lastName}
-            onChange={(event) => setLastName(event.target.value)}
-            autoComplete="family-name"
-            className="mt-2 rounded-lg"
-          />
-        </label>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="block text-sm font-medium">
-          Professional role
-          <select
-            required
-            value={professionalRole}
-            onChange={(event) => handleProfessionalRoleChange(event.target.value)}
-            className={fieldClassName}
-          >
-            {professionalRoleOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {professionalRole === 'resident' ? (
-          <label className="block text-sm font-medium">
-            Resident specialty
-            <select
-              required
-              value={residentSpecialty}
-              onChange={(event) => setResidentSpecialty(event.target.value)}
-              className={fieldClassName}
-            >
-              {residentSpecialtyOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-        {professionalRole === 'other' ? (
-          <label className="block text-sm font-medium">
-            Other role
-            <Input
-              required
-              value={roleOther}
-              onChange={(event) => setRoleOther(event.target.value)}
-              className="mt-2 rounded-lg"
-            />
-          </label>
-        ) : null}
-        {trainingLevelOptions.length > 0 ? (
-          <label className="block text-sm font-medium">
-            Training level
-            <select
-              required
-              value={trainingLevel}
-              onChange={(event) => setTrainingLevel(event.target.value)}
-              className={fieldClassName}
-            >
-              {trainingLevelOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="block text-sm font-medium">
-          Institution type
-          <select
-            required
-            value={institutionType}
-            onChange={(event) => setInstitutionType(event.target.value)}
-            className={fieldClassName}
-          >
-            {institutionTypeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm font-medium">
-          Institution
-          <Input
-            required
-            value={institution}
-            onChange={(event) => setInstitution(event.target.value)}
-            className="mt-2 rounded-lg"
-          />
-        </label>
-        <label className="block text-sm font-medium">
-          Country
-          <Input
-            required
-            value={country}
-            onChange={(event) => setCountry(event.target.value)}
-            autoComplete="country-name"
-            className="mt-2 rounded-lg"
-          />
-        </label>
-        <label className="block text-sm font-medium">
-          Years in practice
-          <select
-            required
-            value={yearsInPractice}
-            onChange={(event) => setYearsInPractice(event.target.value)}
-            className={fieldClassName}
-          >
-            {yearsInPracticeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold">Interests</legend>
-        <div className="grid gap-2 md:grid-cols-2">
-          {interestOptions.map((option) => (
-            <label key={option.value} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={interests.includes(option.value)}
-                onChange={() => setInterests((current) => toggleValue(current, option.value))}
-                className="h-4 w-4 rounded border-border"
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block text-sm font-medium">
+              First name
+              <Input
+                required
+                value={firstName}
+                onChange={(event) => setFirstName(event.target.value)}
+                autoComplete="given-name"
+                className="mt-2 rounded-lg"
               />
-              <span>{option.label}</span>
             </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold">Learning goals</legend>
-        <div className="grid gap-2 md:grid-cols-2">
-          {learningGoalOptions.map((option) => (
-            <label key={option.value} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={learningGoals.includes(option.value)}
-                onChange={() => setLearningGoals((current) => toggleValue(current, option.value))}
-                className="h-4 w-4 rounded border-border"
+            <label className="block text-sm font-medium">
+              Last name
+              <Input
+                required
+                value={lastName}
+                onChange={(event) => setLastName(event.target.value)}
+                autoComplete="family-name"
+                className="mt-2 rounded-lg"
               />
-              <span>{option.label}</span>
             </label>
-          ))}
-        </div>
-      </fieldset>
+          </div>
 
-      <fieldset className="rounded-lg border border-border bg-muted/30 p-4">
-        <legend className="px-1 text-sm font-semibold">User agreement</legend>
-        <div className="space-y-3">
-          <ul className="list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
-            {siteUserAgreementPoints.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-          <label className="flex items-start gap-3 text-sm font-medium">
-            <input
-              required
-              type="checkbox"
-              checked={agreementAccepted}
-              onChange={(event) => setAgreementAccepted(event.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-border"
-            />
-            <span>
-              I have read and agree to these terms, including the tracking of educational usage and
-              performance data and the anonymous, de-identified, or aggregated research use
-              described above.
-            </span>
-          </label>
-          <p className="text-xs text-muted-foreground">
-            Agreement version: {SITE_USER_AGREEMENT_VERSION}
-          </p>
-        </div>
-      </fieldset>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block text-sm font-medium">
+              Professional role
+              <select
+                required
+                value={professionalRole}
+                onChange={(event) => handleProfessionalRoleChange(event.target.value)}
+                className={fieldClassName}
+              >
+                {professionalRoleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {professionalRole === 'resident' ? (
+              <label className="block text-sm font-medium">
+                Resident specialty
+                <select
+                  required
+                  value={residentSpecialty}
+                  onChange={(event) => setResidentSpecialty(event.target.value)}
+                  className={fieldClassName}
+                >
+                  {residentSpecialtyOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {professionalRole === 'other' ? (
+              <label className="block text-sm font-medium">
+                Other role
+                <Input
+                  required
+                  value={roleOther}
+                  onChange={(event) => setRoleOther(event.target.value)}
+                  className="mt-2 rounded-lg"
+                />
+              </label>
+            ) : null}
+            {trainingLevelOptions.length > 0 ? (
+              <label className="block text-sm font-medium">
+                Training level
+                <select
+                  required
+                  value={trainingLevel}
+                  onChange={(event) => setTrainingLevel(event.target.value)}
+                  className={fieldClassName}
+                >
+                  {trainingLevelOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+          </div>
 
-      {message ? (
-        <p
-          className={
-            status === 'error' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'
-          }
-        >
-          {message}
-        </p>
-      ) : null}
-      <Button
-        type="submit"
-        disabled={status === 'submitting' || status === 'checking'}
-        className="w-full"
-      >
-        {status === 'submitting'
-          ? completionMode
-            ? 'Saving profile...'
-            : 'Creating account...'
-          : completionMode
-            ? 'Save profile'
-            : 'Create free account'}
-      </Button>
-      {!completionMode ? (
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <Link
-            href={'/login' as Route}
-            className="font-medium text-primary underline-offset-4 hover:underline"
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block text-sm font-medium">
+              Institution type
+              <select
+                required
+                value={institutionType}
+                onChange={(event) => setInstitutionType(event.target.value)}
+                className={fieldClassName}
+              >
+                {institutionTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              Institution
+              <Input
+                required
+                value={institution}
+                onChange={(event) => setInstitution(event.target.value)}
+                className="mt-2 rounded-lg"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Country
+              <Input
+                required
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
+                autoComplete="country-name"
+                className="mt-2 rounded-lg"
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Years in practice
+              <select
+                required
+                value={yearsInPractice}
+                onChange={(event) => setYearsInPractice(event.target.value)}
+                className={fieldClassName}
+              >
+                {yearsInPracticeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold">Interests</legend>
+            <div className="grid gap-2 md:grid-cols-2">
+              {interestOptions.map((option) => (
+                <label key={option.value} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={interests.includes(option.value)}
+                    onChange={() => setInterests((current) => toggleValue(current, option.value))}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-semibold">Learning goals</legend>
+            <div className="grid gap-2 md:grid-cols-2">
+              {learningGoalOptions.map((option) => (
+                <label key={option.value} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={learningGoals.includes(option.value)}
+                    onChange={() =>
+                      setLearningGoals((current) => toggleValue(current, option.value))
+                    }
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="rounded-lg border border-border bg-muted/30 p-4">
+            <legend className="px-1 text-sm font-semibold">User agreement</legend>
+            <div className="space-y-3">
+              <ul className="list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
+                {siteUserAgreementPoints.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+              <label className="flex items-start gap-3 text-sm font-medium">
+                <input
+                  required
+                  type="checkbox"
+                  checked={agreementAccepted}
+                  onChange={(event) => setAgreementAccepted(event.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border"
+                />
+                <span>
+                  I have read and agree to these terms, including the tracking of educational usage
+                  and performance data and the anonymous, de-identified, or aggregated research use
+                  described above.
+                </span>
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Agreement version: {SITE_USER_AGREEMENT_VERSION}
+              </p>
+            </div>
+          </fieldset>
+
+          {message ? (
+            <p
+              className={
+                status === 'error' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'
+              }
+            >
+              {message}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            disabled={status === 'submitting' || status === 'checking'}
+            className="w-full"
           >
-            Sign in
-          </Link>
-        </p>
-      ) : null}
-    </form>
+            {status === 'submitting'
+              ? completionMode
+                ? 'Saving profile...'
+                : 'Creating account...'
+              : completionMode
+                ? 'Save profile'
+                : 'Create free account'}
+          </Button>
+          {!completionMode ? (
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link
+                href={'/login' as Route}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Sign in
+              </Link>
+            </p>
+          ) : null}
+        </form>
+      }
+    </HandoffContent>
   )
 }

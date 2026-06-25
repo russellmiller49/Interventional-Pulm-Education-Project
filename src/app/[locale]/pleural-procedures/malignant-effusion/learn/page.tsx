@@ -12,6 +12,7 @@ import {
   mpeBoardSectionIds,
   mpeBoardSlug,
 } from '@/features/malignant-effusion/content/learnContent'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -19,7 +20,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'malignantEffusion.learn' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'malignantEffusion.learn',
+  })
 
   return {
     title: t('metaTitle'),
@@ -36,27 +40,31 @@ export default async function MalignantEffusionLearnPage({ params }: PageProps) 
   const boardSections = getBoardSections(mpeBoardSlug, mpeBoardSectionIds)
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('learn.headerTitle')}
-        description={t('learn.headerDescription')}
-      />
-      <MalignantEffusionNav activeHref="/pleural-procedures/malignant-effusion/learn" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('learn.headerTitle')}
+            description={t('learn.headerDescription')}
+          />
+          <MalignantEffusionNav activeHref="/pleural-procedures/malignant-effusion/learn" />
 
-      <LearnSection
-        intro={<p>{t('learn.intro')}</p>}
-        coreBlocks={getMpeCoreBlocks(locale)}
-        goDeeperBlocks={getMpeGoDeeperBlocks(locale)}
-        boardSections={boardSections}
-        boardSourceLabel={t('learn.boardSourceLabel')}
-      />
+          <LearnSection
+            intro={<p>{t('learn.intro')}</p>}
+            coreBlocks={getMpeCoreBlocks(locale)}
+            goDeeperBlocks={getMpeGoDeeperBlocks(locale)}
+            boardSections={boardSections}
+            boardSourceLabel={t('learn.boardSourceLabel')}
+          />
 
-      <ModuleProgressToggle
-        moduleId="malignant-effusion"
-        section="learn"
-        label={t('learn.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="malignant-effusion"
+            section="learn"
+            label={t('learn.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

@@ -3,8 +3,10 @@ import { Suspense } from 'react'
 
 import { AuthShell } from '@/components/auth/AuthShell'
 import { LoginForm } from '@/components/auth/LoginForm'
+import { HandoffContent } from '@/i18n/handoff'
+import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
-export const metadata: Metadata = {
+const handoffMetadata: Metadata = {
   title: 'Sign in',
   robots: {
     index: false,
@@ -12,12 +14,21 @@ export const metadata: Metadata = {
   },
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  return localizeHandoffServerValue(locale, handoffMetadata)
+}
+
 export default function LoginPage() {
   return (
-    <AuthShell title="Sign in" description="Use your email and password to continue." showPromo>
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading sign in...</p>}>
-        <LoginForm />
-      </Suspense>
-    </AuthShell>
+    <HandoffContent>
+      {
+        <AuthShell title="Sign in" description="Use your email and password to continue." showPromo>
+          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading sign in...</p>}>
+            <LoginForm />
+          </Suspense>
+        </AuthShell>
+      }
+    </HandoffContent>
   )
 }

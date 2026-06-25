@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
 import type { ModuleNavItem } from '@/features/learning-module/types'
+import { HandoffContent } from '@/i18n/handoff'
 
 const base = '/pleural-procedures/pleural-ultrasound'
 
@@ -27,5 +28,9 @@ export function PleuralUltrasoundNav({ activeHref }: { activeHref: string }) {
     description: t(`${section.key}.description`),
   }))
 
-  return <ModuleNav items={items} activeHref={activeHref} ariaLabel={t('ariaLabel')} />
+  return (
+    <HandoffContent>
+      {<ModuleNav items={items} activeHref={activeHref} ariaLabel={t('ariaLabel')} />}
+    </HandoffContent>
+  )
 }

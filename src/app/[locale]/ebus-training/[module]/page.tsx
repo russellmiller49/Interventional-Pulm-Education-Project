@@ -8,9 +8,12 @@ import {
   getEbusTrainingModule,
 } from '@/data/ebus-training'
 import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
+import { HandoffContent } from '@/i18n/handoff'
+import { localizeHandoffServerValue } from '@/i18n/handoff-server'
+import { defaultLocale, isActiveLocale } from '@/i18n/locale'
 
 interface EbusTrainingModulePageProps {
-  params: Promise<{ module: string }>
+  params: Promise<{ locale: string; module: string }>
 }
 
 export function generateStaticParams() {
@@ -18,35 +21,48 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: EbusTrainingModulePageProps): Promise<Metadata> {
-  const { module: moduleSlug } = await params
+  const { locale: rawLocale, module: moduleSlug } = await params
+  const locale = isActiveLocale(rawLocale) ? rawLocale : defaultLocale
   const trainingModule = getAnyEbusTrainingModule(moduleSlug)
 
   if (!trainingModule) {
-    return {
+    return localizeHandoffServerValue(locale, {
       title: 'EBUS training module not found',
-    }
+    })
   }
 
-  return {
-    title: `${trainingModule.title} | EBUS Training`,
+  const localized = await localizeHandoffServerValue(locale, {
     description: trainingModule.description,
+    sectionTitle: 'EBUS Training',
+    title: trainingModule.title,
+  })
+
+  return {
+    title: `${localized.title} | ${localized.sectionTitle}`,
+    description: localized.description,
   }
 }
 
 export default async function EbusTrainingModulePage({ params }: EbusTrainingModulePageProps) {
   const { module: moduleSlug } = await params
   const canViewAdminModules = await canCurrentUserViewDraftModules()
-  const trainingModule = getEbusTrainingModule(moduleSlug, { canViewAdminModules })
+  const trainingModule = getEbusTrainingModule(moduleSlug, {
+    canViewAdminModules,
+  })
 
   if (!trainingModule) {
     notFound()
   }
 
   return (
-    <EmbeddedTrainingModuleFrame
-      backHref="/ebus-training"
-      backLabel="Back to EBUS Training"
-      module={trainingModule}
-    />
+    <HandoffContent>
+      {
+        <EmbeddedTrainingModuleFrame
+          backHref="/ebus-training"
+          backLabel="Back to EBUS Training"
+          module={trainingModule}
+        />
+      }
+    </HandoffContent>
   )
 }

@@ -2,6 +2,7 @@
 
 import { Play } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface AuthPromoVideoProps {
   posterSrc: string
@@ -71,38 +72,42 @@ export function AuthPromoVideo({ posterSrc, videoSrc }: AuthPromoVideoProps) {
   }
 
   return (
-    <div className="relative w-full">
-      <video
-        ref={videoRef}
-        aria-label="Preview of interventionalpulm.com interactive learning modules"
-        autoPlay
-        className="aspect-square w-full max-w-full bg-slate-950 object-cover"
-        controls
-        loop
-        muted
-        playsInline
-        poster={posterSrc}
-        preload="auto"
-        src={videoSrc}
-        onLoadedData={startMutedPreview}
-        onPause={() => setNeedsGesture(true)}
-        onPlay={() => setNeedsGesture(false)}
-      >
-        <p>Preview video for interventionalpulm.com interactive learning modules.</p>
-      </video>
+    <HandoffContent>
+      {
+        <div className="relative w-full">
+          <video
+            ref={videoRef}
+            aria-label="Preview of interventionalpulm.com interactive learning modules"
+            autoPlay
+            className="aspect-square w-full max-w-full bg-slate-950 object-cover"
+            controls
+            loop
+            muted
+            playsInline
+            poster={posterSrc}
+            preload="auto"
+            src={videoSrc}
+            onLoadedData={startMutedPreview}
+            onPause={() => setNeedsGesture(true)}
+            onPlay={() => setNeedsGesture(false)}
+          >
+            <p>Preview video for interventionalpulm.com interactive learning modules.</p>
+          </video>
 
-      {needsGesture ? (
-        <button
-          type="button"
-          onClick={startWithSound}
-          className="absolute inset-0 flex items-center justify-center bg-slate-950/35 text-white transition hover:bg-slate-950/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-          aria-label="Play preview video with sound"
-        >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-lg">
-            <Play className="h-7 w-7 fill-current" aria-hidden="true" />
-          </span>
-        </button>
-      ) : null}
-    </div>
+          {needsGesture ? (
+            <button
+              type="button"
+              onClick={startWithSound}
+              className="absolute inset-0 flex items-center justify-center bg-slate-950/35 text-white transition hover:bg-slate-950/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              aria-label="Play preview video with sound"
+            >
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-slate-950 shadow-lg">
+                <Play className="h-7 w-7 fill-current" aria-hidden="true" />
+              </span>
+            </button>
+          ) : null}
+        </div>
+      }
+    </HandoffContent>
   )
 }

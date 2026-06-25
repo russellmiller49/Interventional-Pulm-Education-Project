@@ -6,6 +6,7 @@ import { AssessSection } from '@/features/learning-module/components/AssessSecti
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { PleuralInfectionNav } from '@/features/pleural-infection/components/PleuralInfectionNav'
 import { getInfectionQuizQuestions } from '@/features/pleural-infection/content/quizItems'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -13,7 +14,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pleuralInfection.assessment' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pleuralInfection.assessment',
+  })
 
   return {
     title: t('metaTitle'),
@@ -28,25 +32,29 @@ export default async function PleuralInfectionAssessmentPage({ params }: PagePro
   const nav = await getTranslations('navigation')
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('assessment.headerTitle')}
-        description={t('assessment.headerDescription')}
-      />
-      <PleuralInfectionNav activeHref="/pleural-procedures/pleural-infection/assessment" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('assessment.headerTitle')}
+            description={t('assessment.headerDescription')}
+          />
+          <PleuralInfectionNav activeHref="/pleural-procedures/pleural-infection/assessment" />
 
-      <AssessSection
-        title={t('assessment.checkTitle')}
-        intro={t('assessment.checkIntro')}
-        questions={getInfectionQuizQuestions(locale)}
-      />
+          <AssessSection
+            title={t('assessment.checkTitle')}
+            intro={t('assessment.checkIntro')}
+            questions={getInfectionQuizQuestions(locale)}
+          />
 
-      <ModuleProgressToggle
-        moduleId="pleural-infection"
-        section="assessment"
-        label={t('assessment.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pleural-infection"
+            section="assessment"
+            label={t('assessment.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

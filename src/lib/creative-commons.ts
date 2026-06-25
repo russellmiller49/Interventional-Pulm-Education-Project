@@ -1,4 +1,6 @@
 import imagesData from '@/data/creative-commons-images.json'
+import { localizeCreativeCommonsText } from '@/i18n/creative-commons-search'
+import type { ActiveLocale } from '@/i18n/locale'
 
 export interface CreativeCommonsImageRecord {
   Category: string
@@ -29,7 +31,11 @@ export interface PaginatedCreativeCommonsImages {
 const images = imagesData as CreativeCommonsImageRecord[]
 
 const categoryConfig: Array<Omit<CreativeCommonsCategory, 'count'>> = [
-  { name: '3D reconstructions', slug: '3d-reconstructions', icon: 'Microscopy' },
+  {
+    name: '3D reconstructions',
+    slug: '3d-reconstructions',
+    icon: 'Microscopy',
+  },
   { name: 'Imaging', slug: 'imaging', icon: 'Imaging' },
   { name: 'Pathology', slug: 'pathology', icon: 'Pathology' },
   { name: 'Miscellaneous', slug: 'miscellaneous', icon: 'Files' },
@@ -39,7 +45,11 @@ const categoryConfig: Array<Omit<CreativeCommonsCategory, 'count'>> = [
     icon: 'Navigation',
   },
   { name: 'Surgery', slug: 'surgery', icon: 'Procedure' },
-  { name: 'Therapeutic Bronchoscopy', slug: 'therapeutic-bronchoscopy', icon: 'Therapy' },
+  {
+    name: 'Therapeutic Bronchoscopy',
+    slug: 'therapeutic-bronchoscopy',
+    icon: 'Therapy',
+  },
   { name: 'Tracheostomy', slug: 'tracheostomy', icon: 'Airway' },
   { name: 'EBUS/EUS', slug: 'ebus-eus', icon: 'Ultrasound' },
   { name: 'Radiotherapy', slug: 'radiotherapy', icon: 'Radiation' },
@@ -85,9 +95,11 @@ export function getCreativeCommonsCategorySlug(categoryName: string) {
 
 export function filterCreativeCommonsImages({
   categorySlug,
+  locale = 'en',
   query,
 }: {
   categorySlug?: string
+  locale?: ActiveLocale
   query?: string
 }) {
   const normalizedQuery = normalizeSearchTerm(query)
@@ -106,10 +118,13 @@ export function filterCreativeCommonsImages({
       return true
     }
 
+    const localizedDescription = localizeCreativeCommonsText(locale, image['Image Description'])
+    const localizedCategory = localizeCreativeCommonsText(locale, image.Category)
+
     return normalizeSearchTerm(
-      `${image['Image Description']} ${image.article_title} ${image.Category} ${
-        image.license ?? ''
-      } ${image.attribution ?? ''}`,
+      `${image['Image Description']} ${localizedDescription} ${image.article_title} ${
+        image.Category
+      } ${localizedCategory} ${image.license ?? ''} ${image.attribution ?? ''}`,
     ).includes(normalizedQuery)
   })
 }

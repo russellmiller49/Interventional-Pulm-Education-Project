@@ -12,6 +12,7 @@ import {
   thoracentesisBoardSectionIds,
   thoracentesisBoardSlug,
 } from '@/features/thoracentesis-planner/content/learnContent'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -19,7 +20,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'thoracentesisPlanner.learn' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'thoracentesisPlanner.learn',
+  })
 
   return {
     title: t('metaTitle'),
@@ -36,27 +40,31 @@ export default async function ThoracentesisLearnPage({ params }: PageProps) {
   const boardSections = getBoardSections(thoracentesisBoardSlug, thoracentesisBoardSectionIds)
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('learn.headerTitle')}
-        description={t('learn.headerDescription')}
-      />
-      <ThoracentesisNav activeHref="/pleural-procedures/thoracentesis-planner/learn" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('learn.headerTitle')}
+            description={t('learn.headerDescription')}
+          />
+          <ThoracentesisNav activeHref="/pleural-procedures/thoracentesis-planner/learn" />
 
-      <LearnSection
-        intro={<p>{t('learn.intro')}</p>}
-        coreBlocks={getThoracentesisCoreBlocks(locale)}
-        goDeeperBlocks={getThoracentesisGoDeeperBlocks(locale)}
-        boardSections={boardSections}
-        boardSourceLabel={t('learn.boardSourceLabel')}
-      />
+          <LearnSection
+            intro={<p>{t('learn.intro')}</p>}
+            coreBlocks={getThoracentesisCoreBlocks(locale)}
+            goDeeperBlocks={getThoracentesisGoDeeperBlocks(locale)}
+            boardSections={boardSections}
+            boardSourceLabel={t('learn.boardSourceLabel')}
+          />
 
-      <ModuleProgressToggle
-        moduleId="thoracentesis-planner"
-        section="learn"
-        label={t('learn.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="thoracentesis-planner"
+            section="learn"
+            label={t('learn.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

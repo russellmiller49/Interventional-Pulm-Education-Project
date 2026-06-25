@@ -12,6 +12,7 @@ import {
   infectionBoardSectionIds,
   infectionBoardSlug,
 } from '@/features/pleural-infection/content/learnContent'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -19,7 +20,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pleuralInfection.learn' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pleuralInfection.learn',
+  })
 
   return {
     title: t('metaTitle'),
@@ -36,27 +40,31 @@ export default async function PleuralInfectionLearnPage({ params }: PageProps) {
   const boardSections = getBoardSections(infectionBoardSlug, infectionBoardSectionIds)
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('learn.headerTitle')}
-        description={t('learn.headerDescription')}
-      />
-      <PleuralInfectionNav activeHref="/pleural-procedures/pleural-infection/learn" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('learn.headerTitle')}
+            description={t('learn.headerDescription')}
+          />
+          <PleuralInfectionNav activeHref="/pleural-procedures/pleural-infection/learn" />
 
-      <LearnSection
-        intro={<p>{t('learn.intro')}</p>}
-        coreBlocks={getInfectionCoreBlocks(locale)}
-        goDeeperBlocks={getInfectionGoDeeperBlocks(locale)}
-        boardSections={boardSections}
-        boardSourceLabel={t('learn.boardSourceLabel')}
-      />
+          <LearnSection
+            intro={<p>{t('learn.intro')}</p>}
+            coreBlocks={getInfectionCoreBlocks(locale)}
+            goDeeperBlocks={getInfectionGoDeeperBlocks(locale)}
+            boardSections={boardSections}
+            boardSourceLabel={t('learn.boardSourceLabel')}
+          />
 
-      <ModuleProgressToggle
-        moduleId="pleural-infection"
-        section="learn"
-        label={t('learn.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pleural-infection"
+            section="learn"
+            label={t('learn.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

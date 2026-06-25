@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { HandoffContent } from '@/i18n/handoff'
 
 type Theme = 'light' | 'dark' | 'system'
 type ResolvedTheme = 'light' | 'dark'
@@ -172,7 +173,11 @@ export function ThemeProvider({
     [enableSystem, resolvedTheme, setTheme, systemTheme, theme],
   )
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  return (
+    <HandoffContent>
+      {<ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>}
+    </HandoffContent>
+  )
 }
 
 export function useTheme() {

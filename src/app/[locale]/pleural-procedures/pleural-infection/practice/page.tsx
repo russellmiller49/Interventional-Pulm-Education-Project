@@ -5,6 +5,7 @@ import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
 import { PleuralInfectionNav } from '@/features/pleural-infection/components/PleuralInfectionNav'
 import { PleuralInfectionWorkflow } from '@/features/pleural-infection/components/PleuralInfectionWorkflow'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -12,7 +13,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pleuralInfection.practice' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pleuralInfection.practice',
+  })
 
   return {
     title: t('metaTitle'),
@@ -27,23 +31,27 @@ export default async function PleuralInfectionPracticePage({ params }: PageProps
   const nav = await getTranslations('navigation')
 
   return (
-    <div className="space-y-10 py-16">
-      {/* Disclaimer is rendered by the workflow's LessonScaffold, so suppress it here. */}
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('practice.headerTitle')}
-        description={t('practice.headerDescription')}
-        showDisclaimer={false}
-      />
-      <PleuralInfectionNav activeHref="/pleural-procedures/pleural-infection/practice" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          {/* Disclaimer is rendered by the workflow's LessonScaffold, so suppress it here. */}
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('practice.headerTitle')}
+            description={t('practice.headerDescription')}
+            showDisclaimer={false}
+          />
+          <PleuralInfectionNav activeHref="/pleural-procedures/pleural-infection/practice" />
 
-      <PleuralInfectionWorkflow />
+          <PleuralInfectionWorkflow />
 
-      <ModuleProgressToggle
-        moduleId="pleural-infection"
-        section="practice"
-        label={t('practice.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pleural-infection"
+            section="practice"
+            label={t('practice.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }

@@ -14,11 +14,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/cn'
+import { HandoffContent } from '@/i18n/handoff'
+import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
-export const metadata: Metadata = {
+const handoffMetadata: Metadata = {
   title: 'Vibe Coding for Clinicians',
   description:
     'A beginner-friendly companion for clinicians learning AI-assisted coding, IDEs, GitHub, and agentic workflows.',
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
 const sectionLinks = [
@@ -498,230 +505,237 @@ const glossaryRows = [
 
 export default function VibeCodingForCliniciansPage() {
   return (
-    <div className="container py-8 md:py-10">
-      <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-28 rounded-2xl border border-border/80 bg-card/70 p-4 shadow-sm">
-            <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Guide sections
-            </p>
-            <nav aria-label="Vibe coding guide sections" className="mt-3 space-y-1">
-              {sectionLinks.map(([id, label]) => (
-                <a
-                  key={id}
-                  href={`#${id}`}
-                  className="block rounded-lg px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  {label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
-        <article className="min-w-0 space-y-12">
-          <header className="overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-secondary/10 p-6 shadow-sm md:p-8">
-            <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-              <div className="max-w-3xl space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="info" className="rounded-full px-3 py-1">
-                    Lecture companion
-                  </Badge>
-                  <Badge variant="outline" className="rounded-full px-3 py-1">
-                    Updated May 8, 2026
-                  </Badge>
-                </div>
-                <div className="space-y-3">
-                  <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
-                    Vibe Coding for Clinicians, Researchers, and Educators
-                  </h2>
-                  <p className="text-base leading-7 text-muted-foreground md:text-lg">
-                    A beginner-friendly handbook for physicians who want to build useful clinical,
-                    research, and teaching tools with AI coding assistants without pretending to be
-                    software engineers.
-                  </p>
-                </div>
+    <HandoffContent>
+      {
+        <div className="container py-8 md:py-10">
+          <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+            <aside className="hidden lg:block">
+              <div className="sticky top-28 rounded-2xl border border-border/80 bg-card/70 p-4 shadow-sm">
+                <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Guide sections
+                </p>
+                <nav aria-label="Vibe coding guide sections" className="mt-3 space-y-1">
+                  {sectionLinks.map(([id, label]) => (
+                    <a
+                      key={id}
+                      href={`#${id}`}
+                      className="block rounded-lg px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </nav>
               </div>
-              <div className="grid gap-3 text-sm text-muted-foreground md:min-w-56">
-                <div className="rounded-2xl border bg-background/70 p-4">
-                  <p className="font-semibold text-foreground">Audience</p>
-                  <p>Beginner physician-builders</p>
+            </aside>
+
+            <article className="min-w-0 space-y-12">
+              <header className="overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-secondary/10 p-6 shadow-sm md:p-8">
+                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                  <div className="max-w-3xl space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="info" className="rounded-full px-3 py-1">
+                        Lecture companion
+                      </Badge>
+                      <Badge variant="outline" className="rounded-full px-3 py-1">
+                        Updated May 8, 2026
+                      </Badge>
+                    </div>
+                    <div className="space-y-3">
+                      <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
+                        Vibe Coding for Clinicians, Researchers, and Educators
+                      </h2>
+                      <p className="text-base leading-7 text-muted-foreground md:text-lg">
+                        A beginner-friendly handbook for physicians who want to build useful
+                        clinical, research, and teaching tools with AI coding assistants without
+                        pretending to be software engineers.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 text-sm text-muted-foreground md:min-w-56">
+                    <div className="rounded-2xl border bg-background/70 p-4">
+                      <p className="font-semibold text-foreground">Audience</p>
+                      <p>Beginner physician-builders</p>
+                    </div>
+                    <div className="rounded-2xl border bg-background/70 p-4">
+                      <p className="font-semibold text-foreground">Best first use</p>
+                      <p>Education, research, and workflow prototypes</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-2xl border bg-background/70 p-4">
-                  <p className="font-semibold text-foreground">Best first use</p>
-                  <p>Education, research, and workflow prototypes</p>
-                </div>
-              </div>
-            </div>
-          </header>
+              </header>
 
-          <GuideSection
-            id="start"
-            kicker="1 - Start here"
-            title="What vibe coding means for physicians"
-          >
-            <p>
-              Vibe coding means building software by describing what you want in natural language,
-              letting an AI coding assistant draft the code, testing the result, and refining it
-              through conversation. You are not handing over clinical judgment. You are using AI as
-              a fast junior developer while you remain the clinical architect.
-            </p>
-            <Callout tone="success" icon={CheckCircle2}>
-              You do not need to know every programming syntax rule before you begin. You need to
-              define the clinical problem clearly, test whether the output solves it, and keep human
-              review in the loop.
-            </Callout>
-            <CardGrid>
-              {openingCards.map((card) => (
-                <InfoCard key={card.title} {...card} />
-              ))}
-            </CardGrid>
-            <TwoColumnList
-              leftTitle="Good first uses"
-              leftItems={[
-                'Educational apps: board review, anatomy teaching, EBUS station practice, procedural checklists, simulation modules.',
-                'Research tools: REDCap helpers, screening logs, CSV parsers, abstract dashboards, literature extraction workflows.',
-                'Workflow prototypes: note templates, registry extraction mockups, CPT coding demos, QA dashboards.',
-              ]}
-              rightTitle="Not a shortcut for"
-              rightItems={[
-                'Sending protected health information to unapproved tools.',
-                'Replacing institutional IT, security review, IRB, compliance, or FDA review when those apply.',
-                'Shipping clinical decision support without validation.',
-              ]}
-            />
-          </GuideSection>
+              <GuideSection
+                id="start"
+                kicker="1 - Start here"
+                title="What vibe coding means for physicians"
+              >
+                <p>
+                  Vibe coding means building software by describing what you want in natural
+                  language, letting an AI coding assistant draft the code, testing the result, and
+                  refining it through conversation. You are not handing over clinical judgment. You
+                  are using AI as a fast junior developer while you remain the clinical architect.
+                </p>
+                <Callout tone="success" icon={CheckCircle2}>
+                  You do not need to know every programming syntax rule before you begin. You need
+                  to define the clinical problem clearly, test whether the output solves it, and
+                  keep human review in the loop.
+                </Callout>
+                <CardGrid>
+                  {openingCards.map((card) => (
+                    <InfoCard key={card.title} {...card} />
+                  ))}
+                </CardGrid>
+                <TwoColumnList
+                  leftTitle="Good first uses"
+                  leftItems={[
+                    'Educational apps: board review, anatomy teaching, EBUS station practice, procedural checklists, simulation modules.',
+                    'Research tools: REDCap helpers, screening logs, CSV parsers, abstract dashboards, literature extraction workflows.',
+                    'Workflow prototypes: note templates, registry extraction mockups, CPT coding demos, QA dashboards.',
+                  ]}
+                  rightTitle="Not a shortcut for"
+                  rightItems={[
+                    'Sending protected health information to unapproved tools.',
+                    'Replacing institutional IT, security review, IRB, compliance, or FDA review when those apply.',
+                    'Shipping clinical decision support without validation.',
+                  ]}
+                />
+              </GuideSection>
 
-          <GuideSection
-            id="why-ip"
-            kicker="2 - Why this matters"
-            title="IP tools are often too niche for industry"
-          >
-            <p>
-              Interventional pulmonology has problems that are obvious to physicians but too narrow
-              for many commercial roadmaps: registry capture from procedure notes, board-style
-              teaching tools, procedure simulators, anatomy modules, literature assistants, and
-              workflows that understand EBUS-TBNA, cryobiopsy, navigational bronchoscopy, pleural
-              procedures, valves, rigid bronchoscopy, and stent surveillance.
-            </p>
-            <CardGrid>
-              {ipCards.map((card) => (
-                <InfoCard key={card.title} {...card} />
-              ))}
-            </CardGrid>
-          </GuideSection>
+              <GuideSection
+                id="why-ip"
+                kicker="2 - Why this matters"
+                title="IP tools are often too niche for industry"
+              >
+                <p>
+                  Interventional pulmonology has problems that are obvious to physicians but too
+                  narrow for many commercial roadmaps: registry capture from procedure notes,
+                  board-style teaching tools, procedure simulators, anatomy modules, literature
+                  assistants, and workflows that understand EBUS-TBNA, cryobiopsy, navigational
+                  bronchoscopy, pleural procedures, valves, rigid bronchoscopy, and stent
+                  surveillance.
+                </p>
+                <CardGrid>
+                  {ipCards.map((card) => (
+                    <InfoCard key={card.title} {...card} />
+                  ))}
+                </CardGrid>
+              </GuideSection>
 
-          <GuideSection id="workflow" kicker="3 - Core loop" title="The physician-builder workflow">
-            <StepList steps={workflowSteps} />
-            <CardGrid columns="three">
-              <InfoCard
-                title="AI as workbench builder"
-                body="When a visual task is hard to describe, ask AI to create a temporary editor. Example: a hotspot placement page where you drag controls into position, copy JSON, and then delete the temporary tool after integration."
-              />
-              <InfoCard
-                title="Show, do not only describe"
-                body="For spatial bugs, layouts, 3D anatomy, ultrasound geometry, or UI problems, screenshots and target images converge faster than paragraphs."
-              />
-              <InfoCard
-                title="Make invisible state visible"
-                body="Ask for debug panels, timestamps, axes, centroids, labels, and logs. Many bugs stay hidden because you cannot see the state the code is using."
-              />
-            </CardGrid>
-          </GuideSection>
+              <GuideSection
+                id="workflow"
+                kicker="3 - Core loop"
+                title="The physician-builder workflow"
+              >
+                <StepList steps={workflowSteps} />
+                <CardGrid columns="three">
+                  <InfoCard
+                    title="AI as workbench builder"
+                    body="When a visual task is hard to describe, ask AI to create a temporary editor. Example: a hotspot placement page where you drag controls into position, copy JSON, and then delete the temporary tool after integration."
+                  />
+                  <InfoCard
+                    title="Show, do not only describe"
+                    body="For spatial bugs, layouts, 3D anatomy, ultrasound geometry, or UI problems, screenshots and target images converge faster than paragraphs."
+                  />
+                  <InfoCard
+                    title="Make invisible state visible"
+                    body="Ask for debug panels, timestamps, axes, centroids, labels, and logs. Many bugs stay hidden because you cannot see the state the code is using."
+                  />
+                </CardGrid>
+              </GuideSection>
 
-          <GuideSection
-            id="tool-stack"
-            kicker="4 - Tool stack chooser"
-            title="Which tools should a beginner physician use?"
-          >
-            <p>
-              Do not start by learning every tool. Pick the stack that matches the current goal.
-            </p>
-            <DataTable
-              headers={['Goal', 'Best starter stack', 'Why', 'First project']}
-              rows={toolRows}
-            />
-            <h3 className="mt-8 text-xl font-semibold tracking-tight">
-              Three tiers of AI coding tools
-            </h3>
-            <CardGrid columns="three">
-              {toolTiers.map((card) => (
-                <InfoCard key={card.title} {...card} />
-              ))}
-            </CardGrid>
-          </GuideSection>
+              <GuideSection
+                id="tool-stack"
+                kicker="4 - Tool stack chooser"
+                title="Which tools should a beginner physician use?"
+              >
+                <p>
+                  Do not start by learning every tool. Pick the stack that matches the current goal.
+                </p>
+                <DataTable
+                  headers={['Goal', 'Best starter stack', 'Why', 'First project']}
+                  rows={toolRows}
+                />
+                <h3 className="mt-8 text-xl font-semibold tracking-tight">
+                  Three tiers of AI coding tools
+                </h3>
+                <CardGrid columns="three">
+                  {toolTiers.map((card) => (
+                    <InfoCard key={card.title} {...card} />
+                  ))}
+                </CardGrid>
+              </GuideSection>
 
-          <GuideSection
-            id="ide"
-            kicker="5 - IDE basics"
-            title="What an IDE is, and why clinicians should care"
-          >
-            <p>
-              An IDE is an integrated development environment: a workspace where you view files,
-              edit code, run commands, manage Git, and debug errors. Think of it as the software
-              workbench that keeps the editor, terminal, source control, and AI assistant in one
-              place.
-            </p>
-            <CardGrid>
-              {ideCards.map((card) => (
-                <InfoCard key={card.title} {...card} />
-              ))}
-            </CardGrid>
-            <h3 className="mt-8 text-xl font-semibold tracking-tight">
-              The five IDE areas beginners should learn
-            </h3>
-            <StepList steps={ideAreas} />
-            <Callout tone="warning" icon={AlertTriangle}>
-              Never let an agent make changes you cannot review. Learn where the diff is. A diff
-              shows exactly what changed.
-            </Callout>
-          </GuideSection>
+              <GuideSection
+                id="ide"
+                kicker="5 - IDE basics"
+                title="What an IDE is, and why clinicians should care"
+              >
+                <p>
+                  An IDE is an integrated development environment: a workspace where you view files,
+                  edit code, run commands, manage Git, and debug errors. Think of it as the software
+                  workbench that keeps the editor, terminal, source control, and AI assistant in one
+                  place.
+                </p>
+                <CardGrid>
+                  {ideCards.map((card) => (
+                    <InfoCard key={card.title} {...card} />
+                  ))}
+                </CardGrid>
+                <h3 className="mt-8 text-xl font-semibold tracking-tight">
+                  The five IDE areas beginners should learn
+                </h3>
+                <StepList steps={ideAreas} />
+                <Callout tone="warning" icon={AlertTriangle}>
+                  Never let an agent make changes you cannot review. Learn where the diff is. A diff
+                  shows exactly what changed.
+                </Callout>
+              </GuideSection>
 
-          <GuideSection
-            id="github"
-            kicker="6 - GitHub basics"
-            title="GitHub for physicians: the minimum you need"
-          >
-            <p>
-              Git tracks changes. GitHub stores those changes online, supports collaboration, and
-              can host simple websites. Beginners can start with GitHub Desktop before relying on
-              terminal commands.
-            </p>
-            <DataTable
-              headers={['Term', 'Plain-English meaning', 'Medical analogy']}
-              rows={gitRows}
-            />
-            <h3 className="mt-8 text-xl font-semibold tracking-tight">
-              The beginner GitHub workflow
-            </h3>
-            <StepList
-              steps={[
-                [
-                  'Create a private repository',
-                  'Use a short name, add a README, and add a license only when you are ready to share.',
-                ],
-                [
-                  'Clone it locally',
-                  'Use GitHub Desktop or the terminal. Open the folder in VS Code, Cursor, or Windsurf.',
-                ],
-                ['Build one feature', 'Add one page, one parser, one component, or one test.'],
-                [
-                  'Review changed files',
-                  'Read the diff. Ask the AI to explain anything you do not understand.',
-                ],
-                [
-                  'Commit with a useful message',
-                  'Example: Add EBUS station quiz with JSON question data.',
-                ],
-                [
-                  'Push to GitHub',
-                  'Now the checkpoint exists online and can be reviewed, deployed, or continued elsewhere.',
-                ],
-              ]}
-            />
-            <CodeBlock
-              label="Essential commands"
-              code={`# See what changed
+              <GuideSection
+                id="github"
+                kicker="6 - GitHub basics"
+                title="GitHub for physicians: the minimum you need"
+              >
+                <p>
+                  Git tracks changes. GitHub stores those changes online, supports collaboration,
+                  and can host simple websites. Beginners can start with GitHub Desktop before
+                  relying on terminal commands.
+                </p>
+                <DataTable
+                  headers={['Term', 'Plain-English meaning', 'Medical analogy']}
+                  rows={gitRows}
+                />
+                <h3 className="mt-8 text-xl font-semibold tracking-tight">
+                  The beginner GitHub workflow
+                </h3>
+                <StepList
+                  steps={[
+                    [
+                      'Create a private repository',
+                      'Use a short name, add a README, and add a license only when you are ready to share.',
+                    ],
+                    [
+                      'Clone it locally',
+                      'Use GitHub Desktop or the terminal. Open the folder in VS Code, Cursor, or Windsurf.',
+                    ],
+                    ['Build one feature', 'Add one page, one parser, one component, or one test.'],
+                    [
+                      'Review changed files',
+                      'Read the diff. Ask the AI to explain anything you do not understand.',
+                    ],
+                    [
+                      'Commit with a useful message',
+                      'Example: Add EBUS station quiz with JSON question data.',
+                    ],
+                    [
+                      'Push to GitHub',
+                      'Now the checkpoint exists online and can be reviewed, deployed, or continued elsewhere.',
+                    ],
+                  ]}
+                />
+                <CodeBlock
+                  label="Essential commands"
+                  code={`# See what changed
 git status
 
 # Save all changed files into the next checkpoint
@@ -735,65 +749,70 @@ git push
 
 # Create a safe branch for a new feature
 git checkout -b add-tnm-module`}
-            />
-          </GuideSection>
+                />
+              </GuideSection>
 
-          <GuideSection
-            id="agents"
-            kicker="7 - Agentic coding"
-            title="How to use coding agents safely"
-          >
-            <p>
-              Agents are different from chatbots. A chatbot answers. An agent can inspect files,
-              edit files, run commands, and sometimes create pull requests. That power is why agents
-              are useful and why guardrails matter.
-            </p>
-            <div className="grid gap-4 md:grid-cols-[1fr_0.8fr]">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Use an agent when</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Checklist
-                    items={[
-                      'The project is already in GitHub or otherwise backed up.',
-                      'You can describe a clear goal and success test.',
-                      'The change spans multiple files.',
-                      'You want tests, documentation, or refactoring.',
-                      'You can review the diff before accepting changes.',
-                    ]}
-                  />
-                </CardContent>
-              </Card>
-              <Callout tone="danger" icon={ShieldCheck} className="m-0">
-                Do not use an agent on unreviewed PHI, production clinical systems without approval,
-                live databases, credential files, or anything where an accidental edit could harm
-                patients, leak data, or break operations.
-              </Callout>
-            </div>
-            <h3 className="mt-8 text-xl font-semibold tracking-tight">The safest agent workflow</h3>
-            <StepList
-              steps={[
-                ['Start from a clean Git state', 'Run git status. Commit or stash current work.'],
-                ['Create a branch', 'Example: git checkout -b add-tnm-staging-module.'],
-                [
-                  'Ask for a plan before edits',
-                  'Tell the agent: Inspect the repo and propose a plan. Do not edit yet.',
-                ],
-                [
-                  'Approve a small scope',
-                  'Prefer one feature. Avoid rebuilding the entire app in one pass.',
-                ],
-                ['Run tests or build', 'Require npm run build, pytest, or whatever applies.'],
-                [
-                  'Review the diff and summary',
-                  'Ask for changed files, risks, assumptions, and manual test steps.',
-                ],
-              ]}
-            />
-            <CodeBlock
-              label="Agent prompt template"
-              code={`You are working in my GitHub repo for an educational interventional pulmonology app.
+              <GuideSection
+                id="agents"
+                kicker="7 - Agentic coding"
+                title="How to use coding agents safely"
+              >
+                <p>
+                  Agents are different from chatbots. A chatbot answers. An agent can inspect files,
+                  edit files, run commands, and sometimes create pull requests. That power is why
+                  agents are useful and why guardrails matter.
+                </p>
+                <div className="grid gap-4 md:grid-cols-[1fr_0.8fr]">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Use an agent when</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Checklist
+                        items={[
+                          'The project is already in GitHub or otherwise backed up.',
+                          'You can describe a clear goal and success test.',
+                          'The change spans multiple files.',
+                          'You want tests, documentation, or refactoring.',
+                          'You can review the diff before accepting changes.',
+                        ]}
+                      />
+                    </CardContent>
+                  </Card>
+                  <Callout tone="danger" icon={ShieldCheck} className="m-0">
+                    Do not use an agent on unreviewed PHI, production clinical systems without
+                    approval, live databases, credential files, or anything where an accidental edit
+                    could harm patients, leak data, or break operations.
+                  </Callout>
+                </div>
+                <h3 className="mt-8 text-xl font-semibold tracking-tight">
+                  The safest agent workflow
+                </h3>
+                <StepList
+                  steps={[
+                    [
+                      'Start from a clean Git state',
+                      'Run git status. Commit or stash current work.',
+                    ],
+                    ['Create a branch', 'Example: git checkout -b add-tnm-staging-module.'],
+                    [
+                      'Ask for a plan before edits',
+                      'Tell the agent: Inspect the repo and propose a plan. Do not edit yet.',
+                    ],
+                    [
+                      'Approve a small scope',
+                      'Prefer one feature. Avoid rebuilding the entire app in one pass.',
+                    ],
+                    ['Run tests or build', 'Require npm run build, pytest, or whatever applies.'],
+                    [
+                      'Review the diff and summary',
+                      'Ask for changed files, risks, assumptions, and manual test steps.',
+                    ],
+                  ]}
+                />
+                <CodeBlock
+                  label="Agent prompt template"
+                  code={`You are working in my GitHub repo for an educational interventional pulmonology app.
 
 Goal: Add a TNM staging teaching module for pulmonary fellows.
 
@@ -807,30 +826,30 @@ Rules:
 - At the end, summarize changed files, assumptions, risks, and manual test steps.
 
 Start by inspecting README.md, package.json, and the src folder. Then propose a plan.`}
-            />
-            <DataTable
-              headers={['Agent', 'Good use', 'How to think about it', 'Beginner guardrail']}
-              rows={agentRows}
-            />
-          </GuideSection>
+                />
+                <DataTable
+                  headers={['Agent', 'Good use', 'How to think about it', 'Beginner guardrail']}
+                  rows={agentRows}
+                />
+              </GuideSection>
 
-          <GuideSection
-            id="prompts"
-            kicker="8 - Prompt library"
-            title="Copy-ready prompts for clinicians"
-          >
-            <p>
-              The goal is not perfect wording. The goal is enough context for the assistant to make
-              good decisions.
-            </p>
-            <CardGrid columns="three">
-              {clearCards.map(([title, body]) => (
-                <InfoCard key={title} title={title} body={body} />
-              ))}
-            </CardGrid>
-            <CodeBlock
-              label="Planning prompt"
-              code={`I am a pulmonary/critical care physician building a beginner project with AI coding tools.
+              <GuideSection
+                id="prompts"
+                kicker="8 - Prompt library"
+                title="Copy-ready prompts for clinicians"
+              >
+                <p>
+                  The goal is not perfect wording. The goal is enough context for the assistant to
+                  make good decisions.
+                </p>
+                <CardGrid columns="three">
+                  {clearCards.map(([title, body]) => (
+                    <InfoCard key={title} title={title} body={body} />
+                  ))}
+                </CardGrid>
+                <CodeBlock
+                  label="Planning prompt"
+                  code={`I am a pulmonary/critical care physician building a beginner project with AI coding tools.
 
 Clinical problem:
 [Describe the problem]
@@ -860,10 +879,10 @@ Please create:
 5. Data model.
 6. Step-by-step build plan.
 7. Risks and safety review checklist.`}
-            />
-            <CodeBlock
-              label="Debugging prompt"
-              code={`I am getting this error while running my app:
+                />
+                <CodeBlock
+                  label="Debugging prompt"
+                  code={`I am getting this error while running my app:
 
 [Paste exact error]
 
@@ -880,10 +899,10 @@ Please:
 3. Give the smallest safe fix.
 4. Tell me exactly which file to edit.
 5. Suggest a test to confirm it is fixed.`}
-            />
-            <CodeBlock
-              label="Workbench pattern prompt"
-              code={`This is a visual/spatial problem and text iteration is not converging.
+                />
+                <CodeBlock
+                  label="Workbench pattern prompt"
+                  code={`This is a visual/spatial problem and text iteration is not converging.
 
 Please build a temporary workbench page that lets me manually adjust the values.
 Requirements:
@@ -895,10 +914,10 @@ Requirements:
 - Do not integrate into production yet.
 
 After I paste the final JSON, help me wire it into the production component and remove the debug page.`}
-            />
-            <CodeBlock
-              label="Teaching app prompt"
-              code={`Build a React + Vite teaching app for EBUS nodal stations.
+                />
+                <CodeBlock
+                  label="Teaching app prompt"
+                  code={`Build a React + Vite teaching app for EBUS nodal stations.
 
 Audience: pulmonary fellows.
 Purpose: rapid visual review before simulation lab.
@@ -915,40 +934,44 @@ Features:
 9. Disclaimer: educational use only.
 
 Use synthetic cases only. Create the folder structure and starter components.`}
-            />
-          </GuideSection>
+                />
+              </GuideSection>
 
-          <GuideSection
-            id="projects"
-            kicker="9 - Starter projects"
-            title="Beginner projects that teach useful skills"
-          >
-            <DataTable
-              headers={['Project', 'Skills learned', 'Stack', 'Safety level']}
-              rows={projectRows}
-            />
-            <Callout tone="success" icon={CheckCircle2}>
-              Make an educational quiz or data dashboard first. It has real value, low risk, and
-              teaches the same building blocks you will need later: files, data, UI, testing,
-              GitHub, deployment, and user feedback.
-            </Callout>
-          </GuideSection>
+              <GuideSection
+                id="projects"
+                kicker="9 - Starter projects"
+                title="Beginner projects that teach useful skills"
+              >
+                <DataTable
+                  headers={['Project', 'Skills learned', 'Stack', 'Safety level']}
+                  rows={projectRows}
+                />
+                <Callout tone="success" icon={CheckCircle2}>
+                  Make an educational quiz or data dashboard first. It has real value, low risk, and
+                  teaches the same building blocks you will need later: files, data, UI, testing,
+                  GitHub, deployment, and user feedback.
+                </Callout>
+              </GuideSection>
 
-          <GuideSection id="safety" kicker="10 - Safety and governance" title="Build responsibly">
-            <p>
-              Healthcare software has a different risk profile than a hobby app. Treat safety as a
-              design requirement, not a final checklist.
-            </p>
-            <CardGrid>
-              {safetyCards.map((card) => (
-                <InfoCard key={card.title} {...card} />
-              ))}
-            </CardGrid>
-            <h3 className="mt-8 text-xl font-semibold tracking-tight">Pre-share checklist</h3>
-            <Checklist items={checklist} />
-            <CodeBlock
-              label="Minimal .gitignore for clinician projects"
-              code={`.env
+              <GuideSection
+                id="safety"
+                kicker="10 - Safety and governance"
+                title="Build responsibly"
+              >
+                <p>
+                  Healthcare software has a different risk profile than a hobby app. Treat safety as
+                  a design requirement, not a final checklist.
+                </p>
+                <CardGrid>
+                  {safetyCards.map((card) => (
+                    <InfoCard key={card.title} {...card} />
+                  ))}
+                </CardGrid>
+                <h3 className="mt-8 text-xl font-semibold tracking-tight">Pre-share checklist</h3>
+                <Checklist items={checklist} />
+                <CodeBlock
+                  label="Minimal .gitignore for clinician projects"
+                  code={`.env
 .env.*
 *.key
 *.pem
@@ -963,80 +986,82 @@ logs/
 node_modules/
 __pycache__/
 .DS_Store`}
-            />
-            <Callout tone="warning" icon={AlertTriangle}>
-              A file added to Git and later deleted can still remain in repository history. If PHI
-              or a secret is accidentally committed, stop and ask for help from someone who knows
-              Git history cleanup and institutional reporting requirements.
-            </Callout>
-          </GuideSection>
+                />
+                <Callout tone="warning" icon={AlertTriangle}>
+                  A file added to Git and later deleted can still remain in repository history. If
+                  PHI or a secret is accidentally committed, stop and ask for help from someone who
+                  knows Git history cleanup and institutional reporting requirements.
+                </Callout>
+              </GuideSection>
 
-          <GuideSection
-            id="learning-plan"
-            kicker="11 - Learning pathway"
-            title="A 30-day beginner plan for physicians"
-          >
-            <DataTable
-              headers={['Week', 'Goal', 'What to do', 'Deliverable']}
-              rows={learningRows}
-            />
-            <Callout tone="success" icon={CheckCircle2}>
-              Ship tiny. A finished 20-question EBUS quiz teaches more than an unfinished
-              mega-project. Useful beats impressive.
-            </Callout>
-          </GuideSection>
+              <GuideSection
+                id="learning-plan"
+                kicker="11 - Learning pathway"
+                title="A 30-day beginner plan for physicians"
+              >
+                <DataTable
+                  headers={['Week', 'Goal', 'What to do', 'Deliverable']}
+                  rows={learningRows}
+                />
+                <Callout tone="success" icon={CheckCircle2}>
+                  Ship tiny. A finished 20-question EBUS quiz teaches more than an unfinished
+                  mega-project. Useful beats impressive.
+                </Callout>
+              </GuideSection>
 
-          <GuideSection
-            id="resources"
-            kicker="12 - Useful links"
-            title="Curated links for clinician-builders"
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              {resourceGroups.map((group) => (
-                <Card key={group.title}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{group.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {group.links.map(([label, href]) => (
-                        <li key={href}>
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                          >
-                            {label}
-                            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </GuideSection>
+              <GuideSection
+                id="resources"
+                kicker="12 - Useful links"
+                title="Curated links for clinician-builders"
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  {resourceGroups.map((group) => (
+                    <Card key={group.title}>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{group.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {group.links.map(([label, href]) => (
+                            <li key={href}>
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                              >
+                                {label}
+                                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </GuideSection>
 
-          <GuideSection id="glossary" kicker="13 - Glossary" title="Plain-English glossary">
-            <DataTable headers={['Term', 'Meaning']} rows={glossaryRows} />
-            <Callout tone="success" icon={CheckCircle2}>
-              The most important skill is not syntax. It is translating a clinical problem into
-              clear requirements, testing the result, and knowing when expert review is needed.
-            </Callout>
-          </GuideSection>
+              <GuideSection id="glossary" kicker="13 - Glossary" title="Plain-English glossary">
+                <DataTable headers={['Term', 'Meaning']} rows={glossaryRows} />
+                <Callout tone="success" icon={CheckCircle2}>
+                  The most important skill is not syntax. It is translating a clinical problem into
+                  clear requirements, testing the result, and knowing when expert review is needed.
+                </Callout>
+              </GuideSection>
 
-          <footer className="rounded-2xl border border-border/80 bg-muted/40 p-5 text-sm text-muted-foreground">
-            <p>
-              Vibe Coding for Clinicians, Researchers, and Educators. Educational material only. Not
-              medical advice. Do not use with PHI unless your institution has approved tools,
-              agreements, workflows, and safeguards.
-            </p>
-          </footer>
-        </article>
-      </div>
-    </div>
+              <footer className="rounded-2xl border border-border/80 bg-muted/40 p-5 text-sm text-muted-foreground">
+                <p>
+                  Vibe Coding for Clinicians, Researchers, and Educators. Educational material only.
+                  Not medical advice. Do not use with PHI unless your institution has approved
+                  tools, agreements, workflows, and safeguards.
+                </p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1052,13 +1077,17 @@ function GuideSection({
   children: ReactNode
 }) {
   return (
-    <section id={id} className="scroll-mt-32 border-b border-border/80 pb-12 last:border-b-0">
-      <div className="mb-5 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">{kicker}</p>
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
-      </div>
-      <div className="space-y-5 text-base leading-7 text-muted-foreground">{children}</div>
-    </section>
+    <HandoffContent>
+      {
+        <section id={id} className="scroll-mt-32 border-b border-border/80 pb-12 last:border-b-0">
+          <div className="mb-5 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">{kicker}</p>
+            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+          </div>
+          <div className="space-y-5 text-base leading-7 text-muted-foreground">{children}</div>
+        </section>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1070,14 +1099,18 @@ function CardGrid({
   columns?: 'two' | 'three'
 }) {
   return (
-    <div
-      className={cn(
-        'grid gap-4',
-        columns === 'three' ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-2',
-      )}
-    >
-      {children}
-    </div>
+    <HandoffContent>
+      {
+        <div
+          className={cn(
+            'grid gap-4',
+            columns === 'three' ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-2',
+          )}
+        >
+          {children}
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1093,27 +1126,31 @@ function InfoCard({
   href?: string
 }) {
   return (
-    <Card className="h-full">
-      <CardHeader>
-        {label ? (
-          <Badge variant="outline" className="w-fit rounded-full">
-            {label}
-          </Badge>
-        ) : null}
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">{body}</p>
-        {href ? (
-          <Button asChild variant="link" className="h-auto justify-start p-0">
-            <a href={href} target="_blank" rel="noreferrer">
-              Open resource
-              <ExternalLink className="h-4 w-4" aria-hidden />
-            </a>
-          </Button>
-        ) : null}
-      </CardContent>
-    </Card>
+    <HandoffContent>
+      {
+        <Card className="h-full">
+          <CardHeader>
+            {label ? (
+              <Badge variant="outline" className="w-fit rounded-full">
+                {label}
+              </Badge>
+            ) : null}
+            <CardTitle className="text-lg">{title}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-6 text-muted-foreground">{body}</p>
+            {href ? (
+              <Button asChild variant="link" className="h-auto justify-start p-0">
+                <a href={href} target="_blank" rel="noreferrer">
+                  Open resource
+                  <ExternalLink className="h-4 w-4" aria-hidden />
+                </a>
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1135,33 +1172,45 @@ function Callout({
   }[tone]
 
   return (
-    <div
-      className={cn('flex gap-3 rounded-2xl border p-4 text-sm leading-6', toneClass, className)}
-    >
-      <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
-      <div>{children}</div>
-    </div>
+    <HandoffContent>
+      {
+        <div
+          className={cn(
+            'flex gap-3 rounded-2xl border p-4 text-sm leading-6',
+            toneClass,
+            className,
+          )}
+        >
+          <Icon className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+          <div>{children}</div>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
 function StepList({ steps }: { steps: ReadonlyArray<readonly [string, string]> }) {
   return (
-    <ol className="grid gap-3">
-      {steps.map(([title, body], index) => (
-        <li
-          key={title}
-          className="grid gap-3 rounded-2xl border border-border/80 bg-card p-4 text-sm shadow-sm sm:grid-cols-[2.5rem_1fr]"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-            {index + 1}
-          </span>
-          <span>
-            <span className="block font-semibold text-foreground">{title}</span>
-            <span className="mt-1 block leading-6 text-muted-foreground">{body}</span>
-          </span>
-        </li>
-      ))}
-    </ol>
+    <HandoffContent>
+      {
+        <ol className="grid gap-3">
+          {steps.map(([title, body], index) => (
+            <li
+              key={title}
+              className="grid gap-3 rounded-2xl border border-border/80 bg-card p-4 text-sm shadow-sm sm:grid-cols-[2.5rem_1fr]"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {index + 1}
+              </span>
+              <span>
+                <span className="block font-semibold text-foreground">{title}</span>
+                <span className="mt-1 block leading-6 text-muted-foreground">{body}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1173,63 +1222,75 @@ function DataTable({
   rows: ReadonlyArray<ReadonlyArray<ReactNode>>
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm">
-      <table className="min-w-full divide-y divide-border text-left text-sm">
-        <thead className="bg-muted/70 text-xs uppercase tracking-wide text-muted-foreground">
-          <tr>
-            {headers.map((header) => (
-              <th key={header} scope="col" className="px-4 py-3 font-semibold">
-                {header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border/80">
-          {rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className="align-top">
-              {row.map((cell, cellIndex) => (
-                <td
-                  key={`${rowIndex}-${cellIndex}`}
-                  className={cn(
-                    'px-4 py-3 text-muted-foreground',
-                    cellIndex === 0 && 'font-medium text-foreground',
-                  )}
-                >
-                  {cell}
-                </td>
+    <HandoffContent>
+      {
+        <div className="overflow-x-auto rounded-2xl border border-border/80 bg-card shadow-sm">
+          <table className="min-w-full divide-y divide-border text-left text-sm">
+            <thead className="bg-muted/70 text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                {headers.map((header) => (
+                  <th key={header} scope="col" className="px-4 py-3 font-semibold">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/80">
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex} className="align-top">
+                  {row.map((cell, cellIndex) => (
+                    <td
+                      key={`${rowIndex}-${cellIndex}`}
+                      className={cn(
+                        'px-4 py-3 text-muted-foreground',
+                        cellIndex === 0 && 'font-medium text-foreground',
+                      )}
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+            </tbody>
+          </table>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
 function CodeBlock({ label, code }: { label: string; code: string }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-sm">
-      <div className="flex items-center gap-2 border-b border-slate-800 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
-        <Code2 className="h-4 w-4" aria-hidden />
-        {label}
-      </div>
-      <pre className="overflow-x-auto p-4 text-sm leading-6 text-slate-100">
-        <code>{code}</code>
-      </pre>
-    </div>
+    <HandoffContent>
+      {
+        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-800 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
+            <Code2 className="h-4 w-4" aria-hidden />
+            {label}
+          </div>
+          <pre className="overflow-x-auto p-4 text-sm leading-6 text-slate-100">
+            <code>{code}</code>
+          </pre>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
 function Checklist({ items }: { items: readonly string[] }) {
   return (
-    <ul className="grid gap-2 text-sm">
-      {items.map((item) => (
-        <li key={item} className="flex gap-2 leading-6 text-muted-foreground">
-          <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
+    <HandoffContent>
+      {
+        <ul className="grid gap-2 text-sm">
+          {items.map((item) => (
+            <li key={item} className="flex gap-2 leading-6 text-muted-foreground">
+              <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      }
+    </HandoffContent>
   )
 }
 
@@ -1245,29 +1306,33 @@ function TwoColumnList({
   rightItems: readonly string[]
 }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <BookOpen className="h-5 w-5 text-primary" aria-hidden />
-            {leftTitle}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Checklist items={leftItems} />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <ListChecks className="h-5 w-5 text-primary" aria-hidden />
-            {rightTitle}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Checklist items={rightItems} />
-        </CardContent>
-      </Card>
-    </div>
+    <HandoffContent>
+      {
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BookOpen className="h-5 w-5 text-primary" aria-hidden />
+                {leftTitle}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Checklist items={leftItems} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ListChecks className="h-5 w-5 text-primary" aria-hidden />
+                {rightTitle}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Checklist items={rightItems} />
+            </CardContent>
+          </Card>
+        </div>
+      }
+    </HandoffContent>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { SessionList } from './session-list'
+import { HandoffContent } from '@/i18n/handoff'
 
 type Session = {
   id: string
@@ -79,20 +80,28 @@ export default function QAAdmin() {
 
   if (loading && sessions.length === 0) {
     return (
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <p className="text-muted-foreground">Loading sessions...</p>
-      </div>
+      <HandoffContent>
+        {
+          <div className="container mx-auto max-w-6xl px-4 py-8">
+            <p className="text-muted-foreground">Loading sessions...</p>
+          </div>
+        }
+      </HandoffContent>
     )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <p className="text-red-600">Error loading sessions: {error}</p>
-        <Button onClick={fetchSessions} className="mt-4">
-          Retry
-        </Button>
-      </div>
+      <HandoffContent>
+        {
+          <div className="container mx-auto max-w-6xl px-4 py-8">
+            <p className="text-red-600">Error loading sessions: {error}</p>
+            <Button onClick={fetchSessions} className="mt-4">
+              Retry
+            </Button>
+          </div>
+        }
+      </HandoffContent>
     )
   }
 
@@ -106,50 +115,54 @@ export default function QAAdmin() {
   const safeCount = sessions.filter((s) => s.safe_to_use === true).length
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">QA Sessions Dashboard</h1>
-        <Button onClick={fetchSessions} disabled={loading} variant="outline">
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </Button>
-      </div>
+    <HandoffContent>
+      {
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">QA Sessions Dashboard</h1>
+            <Button onClick={fetchSessions} disabled={loading} variant="outline">
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
 
-      {/* Last Updated Timestamp */}
-      <p className="mb-4 text-sm text-muted-foreground">
-        Last updated: {lastUpdated.toLocaleString()}
-        {loading && ' (refreshing...)'}
-      </p>
+          {/* Last Updated Timestamp */}
+          <p className="mb-4 text-sm text-muted-foreground">
+            Last updated: {lastUpdated.toLocaleString()}
+            {loading && ' (refreshing...)'}
+          </p>
 
-      {/* Statistics Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Total Sessions</CardDescription>
-            <CardTitle className="text-3xl">{totalSessions}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>With Feedback</CardDescription>
-            <CardTitle className="text-3xl">{sessionsWithFeedback}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Avg Rating</CardDescription>
-            <CardTitle className="text-3xl">{avgRating.toFixed(1)}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Safe to Use</CardDescription>
-            <CardTitle className="text-3xl">{safeCount}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+          {/* Statistics Cards */}
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Total Sessions</CardDescription>
+                <CardTitle className="text-3xl">{totalSessions}</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>With Feedback</CardDescription>
+                <CardTitle className="text-3xl">{sessionsWithFeedback}</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Avg Rating</CardDescription>
+                <CardTitle className="text-3xl">{avgRating.toFixed(1)}</CardTitle>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription>Safe to Use</CardDescription>
+                <CardTitle className="text-3xl">{safeCount}</CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
 
-      {/* Sessions List */}
-      <SessionList sessions={sessions} onDelete={fetchSessions} />
-    </div>
+          {/* Sessions List */}
+          <SessionList sessions={sessions} onDelete={fetchSessions} />
+        </div>
+      }
+    </HandoffContent>
   )
 }

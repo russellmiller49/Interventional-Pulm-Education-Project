@@ -12,6 +12,7 @@ import { getModel } from '@/data/models'
 import { anatomyModels } from '@/data/printable-models'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 import type { AnatomyModel, AnatomySegment } from '@/lib/types'
+import { HandoffContent } from '@/i18n/handoff'
 
 const axisLabels: Record<AnatomyAxis, string> = {
   x: 'Sagittal',
@@ -392,7 +393,10 @@ export default function AnatomyLearnPage() {
               step={1}
               value={rotation[axis]}
               onChange={(event) =>
-                setRotation((prev) => ({ ...prev, [axis]: Number(event.target.value) }))
+                setRotation((prev) => ({
+                  ...prev,
+                  [axis]: Number(event.target.value),
+                }))
               }
               className="w-full accent-cyan-300"
             />
@@ -430,182 +434,193 @@ export default function AnatomyLearnPage() {
   )
 
   return (
-    <div className="space-y-12 py-16">
-      <section className="container space-y-4">
-        <div className="space-y-2">
-          <Badge
-            variant="info"
-            className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-          >
-            Learn · Anatomy
-          </Badge>
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
-            Interactive 3D Anatomy Viewer
-          </h1>
-          <p className="max-w-3xl text-muted-foreground">
-            Explore airway structures, vasculature, and lobar relationships with orbit controls,
-            cross-sectional slicing, annotated segments, and WebXR spatial viewing for supported
-            headsets. Built for fellows and faculty running rehearsal labs or patient consults.
-          </p>
-          <div className="flex flex-wrap gap-2 pt-2">
-            {canViewAdminModules ? (
-              <Button asChild variant="outline">
-                <Link href={'/learn/anatomy/airway' as Route}>Open synchronized airway module</Link>
-              </Button>
-            ) : null}
-            {isCtAlignmentSandboxEnabled ? (
-              <Button asChild variant="outline">
-                <Link href={'/learn/anatomy/ct-alignment' as Route}>Open CT alignment sandbox</Link>
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      <section className="container">
-        <AnatomyViewerDynamic
-          key={selectedModel.id}
-          model={viewerModel}
-          visibleSegments={visibleSegments}
-          crossSection={crossSection}
-          volumeSlice={volumeSlice}
-          showCtPlanes={showCtPlanes}
-          ctPlaneVisibility={ctPlaneVisibility}
-          ctPlaneSlices={ctPlaneSlices}
-          ctPlaneOpacity={ctPlaneOpacity}
-          ctClipMode={ctClipMode}
-          ctClipAxis={ctClipAxis}
-          showAnnotations={showAnnotations}
-          resetSignal={resetSignal}
-          showDebugHelpers={showDebugHelpers}
-          rotation={rotation}
-          controlPanel={viewerControlPanel}
-          onCrossSectionChange={setCrossSection}
-          onShowCtPlanesChange={setShowCtPlanes}
-          onCtPlaneVisibilityChange={handleCtPlaneVisibilityChange}
-          onCtPlaneOpacityChange={setCtPlaneOpacity}
-          onCtClipModeChange={setCtClipMode}
-          onCtClipAxisChange={setCtClipAxis}
-          onScreenshot={(dataUrl) => {
-            const link = document.createElement('a')
-            link.href = dataUrl
-            link.download = `${selectedModel.slug}-anatomy.png`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-          }}
-          onVolumeSliceChange={setVolumeSlice}
-          onCtPlaneSliceChange={handleCtPlaneSliceChange}
-          onSegmentsChanged={(segments) => {
-            setDisplaySegments((prev) => {
-              const sameLength = prev.length === segments.length
-              const identical =
-                sameLength &&
-                prev.every((segment, index) => {
-                  const next = segments[index]
-                  return (
-                    next &&
-                    segment.id === next.id &&
-                    segment.color === next.color &&
-                    (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
-                  )
-                })
-              if (identical) {
-                return prev
-              }
-              return segments
-            })
-            setVisibleSegments((prev) => {
-              const next: Record<string, boolean> = {}
-              let changed = false
-
-              segments.forEach((segment) => {
-                const current =
-                  segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
-                next[segment.id] = current
-                if (prev[segment.id] !== current) {
-                  changed = true
-                }
-              })
-
-              if (Object.keys(prev).length !== Object.keys(next).length) {
-                changed = true
-              }
-
-              return changed ? next : prev
-            })
-          }}
-        />
-      </section>
-
-      <section className="container grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.55fr)]">
-        <div className="space-y-4 rounded-3xl border border-border/70 bg-muted/30 p-6">
-          <h2 className="text-lg font-semibold">About this structure</h2>
-          <p className="text-sm text-muted-foreground">{selectedModel.description}</p>
-          <div className="grid gap-4 text-sm text-muted-foreground md:grid-cols-2">
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
-                Clinical relevance
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground/90">
-                {selectedModel.clinicalRelevance}
+    <HandoffContent>
+      {
+        <div className="space-y-12 py-16">
+          <section className="container space-y-4">
+            <div className="space-y-2">
+              <Badge
+                variant="info"
+                className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+              >
+                Learn · Anatomy
+              </Badge>
+              <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+                Interactive 3D Anatomy Viewer
+              </h1>
+              <p className="max-w-3xl text-muted-foreground">
+                Explore airway structures, vasculature, and lobar relationships with orbit controls,
+                cross-sectional slicing, annotated segments, and WebXR spatial viewing for supported
+                headsets. Built for fellows and faculty running rehearsal labs or patient consults.
               </p>
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
-                Related procedures
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground/90">
-                {selectedModel.relatedProcedures.join(', ')}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
-          <h2 className="text-lg font-semibold">Download model</h2>
-          <p className="text-sm text-muted-foreground">
-            Export the optimized STL or GLB to incorporate in your rehearsal lab, print farm, or
-            teaching decks.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {downloads.map((download) => (
-              <Button key={download.url} asChild variant="outline">
-                <a href={download.url} download>
-                  {download.format.toUpperCase()} ·{' '}
-                  {download.sizeMB ? `${download.sizeMB} MB` : 'N/A'}
-                </a>
-              </Button>
-            ))}
-          </div>
-          {xrModel ? (
-            <div className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-background/60 p-4">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Spatial headset mode</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Open the viewer in a WebXR-capable headset browser to inspect the model at room
-                  scale. Select or pinch a visible segment to move it; squeeze recenters it.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link href={`/xr/${xrModel.slug}` as Route}>Open fullscreen spatial viewer</Link>
-                </Button>
-                {xrModel.usdzSrc ? (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {canViewAdminModules ? (
                   <Button asChild variant="outline">
-                    <a href={xrModel.usdzSrc} rel="ar">
-                      View in AR
-                    </a>
+                    <Link href={'/learn/anatomy/airway' as Route}>
+                      Open synchronized airway module
+                    </Link>
+                  </Button>
+                ) : null}
+                {isCtAlignmentSandboxEnabled ? (
+                  <Button asChild variant="outline">
+                    <Link href={'/learn/anatomy/ct-alignment' as Route}>
+                      Open CT alignment sandbox
+                    </Link>
                   </Button>
                 ) : null}
               </div>
             </div>
-          ) : null}
-          {selectedModel.notes ? (
-            <p className="text-xs text-muted-foreground/80">{selectedModel.notes}</p>
-          ) : null}
+          </section>
+
+          <section className="container">
+            <AnatomyViewerDynamic
+              key={selectedModel.id}
+              model={viewerModel}
+              visibleSegments={visibleSegments}
+              crossSection={crossSection}
+              volumeSlice={volumeSlice}
+              showCtPlanes={showCtPlanes}
+              ctPlaneVisibility={ctPlaneVisibility}
+              ctPlaneSlices={ctPlaneSlices}
+              ctPlaneOpacity={ctPlaneOpacity}
+              ctClipMode={ctClipMode}
+              ctClipAxis={ctClipAxis}
+              showAnnotations={showAnnotations}
+              resetSignal={resetSignal}
+              showDebugHelpers={showDebugHelpers}
+              rotation={rotation}
+              controlPanel={viewerControlPanel}
+              onCrossSectionChange={setCrossSection}
+              onShowCtPlanesChange={setShowCtPlanes}
+              onCtPlaneVisibilityChange={handleCtPlaneVisibilityChange}
+              onCtPlaneOpacityChange={setCtPlaneOpacity}
+              onCtClipModeChange={setCtClipMode}
+              onCtClipAxisChange={setCtClipAxis}
+              onScreenshot={(dataUrl) => {
+                const link = document.createElement('a')
+                link.href = dataUrl
+                link.download = `${selectedModel.slug}-anatomy.png`
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+              }}
+              onVolumeSliceChange={setVolumeSlice}
+              onCtPlaneSliceChange={handleCtPlaneSliceChange}
+              onSegmentsChanged={(segments) => {
+                setDisplaySegments((prev) => {
+                  const sameLength = prev.length === segments.length
+                  const identical =
+                    sameLength &&
+                    prev.every((segment, index) => {
+                      const next = segments[index]
+                      return (
+                        next &&
+                        segment.id === next.id &&
+                        segment.color === next.color &&
+                        (segment.visibleByDefault ?? true) === (next.visibleByDefault ?? true)
+                      )
+                    })
+                  if (identical) {
+                    return prev
+                  }
+                  return segments
+                })
+                setVisibleSegments((prev) => {
+                  const next: Record<string, boolean> = {}
+                  let changed = false
+
+                  segments.forEach((segment) => {
+                    const current =
+                      segment.id in prev ? prev[segment.id] : segment.visibleByDefault !== false
+                    next[segment.id] = current
+                    if (prev[segment.id] !== current) {
+                      changed = true
+                    }
+                  })
+
+                  if (Object.keys(prev).length !== Object.keys(next).length) {
+                    changed = true
+                  }
+
+                  return changed ? next : prev
+                })
+              }}
+            />
+          </section>
+
+          <section className="container grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.55fr)]">
+            <div className="space-y-4 rounded-3xl border border-border/70 bg-muted/30 p-6">
+              <h2 className="text-lg font-semibold">About this structure</h2>
+              <p className="text-sm text-muted-foreground">{selectedModel.description}</p>
+              <div className="grid gap-4 text-sm text-muted-foreground md:grid-cols-2">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+                    Clinical relevance
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground/90">
+                    {selectedModel.clinicalRelevance}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground/80">
+                    Related procedures
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground/90">
+                    {selectedModel.relatedProcedures.join(', ')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 rounded-3xl border border-border/70 bg-card/70 p-6">
+              <h2 className="text-lg font-semibold">Download model</h2>
+              <p className="text-sm text-muted-foreground">
+                Export the optimized STL or GLB to incorporate in your rehearsal lab, print farm, or
+                teaching decks.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {downloads.map((download) => (
+                  <Button key={download.url} asChild variant="outline">
+                    <a href={download.url} download>
+                      {download.format.toUpperCase()} ·{' '}
+                      {download.sizeMB ? `${download.sizeMB} MB` : 'N/A'}
+                    </a>
+                  </Button>
+                ))}
+              </div>
+              {xrModel ? (
+                <div className="mt-4 space-y-3 rounded-2xl border border-border/60 bg-background/60 p-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Spatial headset mode</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Open the viewer in a WebXR-capable headset browser to inspect the model at
+                      room scale. Select or pinch a visible segment to move it; squeeze recenters
+                      it.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild>
+                      <Link href={`/xr/${xrModel.slug}` as Route}>
+                        Open fullscreen spatial viewer
+                      </Link>
+                    </Button>
+                    {xrModel.usdzSrc ? (
+                      <Button asChild variant="outline">
+                        <a href={xrModel.usdzSrc} rel="ar">
+                          View in AR
+                        </a>
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+              {selectedModel.notes ? (
+                <p className="text-xs text-muted-foreground/80">{selectedModel.notes}</p>
+              ) : null}
+            </div>
+          </section>
         </div>
-      </section>
-    </div>
+      }
+    </HandoffContent>
   )
 }

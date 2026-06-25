@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { HandoffContent } from '@/i18n/handoff'
 
 type CodeSuggestion = {
   code: string
@@ -57,13 +58,18 @@ const ERROR_CATEGORIES = [
 
 // Helper to render a key-value row
 function DataRow({ label, value }: { label: string; value: ReactNode }) {
-  if (value === null || value === undefined || value === '') return null
+  if (value === null || value === undefined || value === '')
+    return <HandoffContent>{null}</HandoffContent>
 
   return (
-    <div className="flex border-b border-border py-2 last:border-0">
-      <span className="w-1/3 shrink-0 text-sm font-medium text-muted-foreground">{label}</span>
-      <span className="text-sm">{value}</span>
-    </div>
+    <HandoffContent>
+      {
+        <div className="flex border-b border-border py-2 last:border-0">
+          <span className="w-1/3 shrink-0 text-sm font-medium text-muted-foreground">{label}</span>
+          <span className="text-sm">{value}</span>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -185,42 +191,47 @@ function RegistrySection({ data }: { data: Record<string, unknown> }) {
 
   if (isNestedSchema) {
     return (
-      <div className="space-y-6">
-        {/* Top-level flat fields */}
-        {(() => {
-          const topLevelFields = Object.entries(data).filter(([key, value]) => {
-            if (Object.keys(NESTED_SCHEMA_CATEGORIES).includes(key)) return false
-            if (key === 'evidence' || key === 'version') return false
-            return isNonEmpty(value) && typeof value !== 'object'
-          })
-          if (topLevelFields.length === 0) return null
+      <HandoffContent>
+        {
+          <div className="space-y-6">
+            {/* Top-level flat fields */}
+            {(() => {
+              const topLevelFields = Object.entries(data).filter(([key, value]) => {
+                if (Object.keys(NESTED_SCHEMA_CATEGORIES).includes(key)) return false
+                if (key === 'evidence' || key === 'version') return false
+                return isNonEmpty(value) && typeof value !== 'object'
+              })
+              if (topLevelFields.length === 0) return null
 
-          return (
-            <div>
-              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Indication & Diagnosis
-                <Badge variant="outline" className="text-xs font-normal normal-case">
-                  {topLevelFields.length} field{topLevelFields.length > 1 ? 's' : ''}
-                </Badge>
-              </h4>
-              <div className="rounded-lg border bg-card p-4 space-y-3">
-                {topLevelFields.map(([field, value]) => (
-                  <DataRow
-                    key={field}
-                    label={formatFieldName(field)}
-                    value={renderValue(field, value)}
-                  />
-                ))}
-              </div>
-            </div>
-          )
-        })()}
+              return (
+                <div>
+                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Indication & Diagnosis
+                    <Badge variant="outline" className="text-xs font-normal normal-case">
+                      {topLevelFields.length} field
+                      {topLevelFields.length > 1 ? 's' : ''}
+                    </Badge>
+                  </h4>
+                  <div className="rounded-lg border bg-card p-4 space-y-3">
+                    {topLevelFields.map(([field, value]) => (
+                      <DataRow
+                        key={field}
+                        label={formatFieldName(field)}
+                        value={renderValue(field, value)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
 
-        {/* Nested schema categories */}
-        {Object.entries(NESTED_SCHEMA_CATEGORIES).map(([key, { label, excludeFields }]) =>
-          renderNestedCategory(key, label, excludeFields),
-        )}
-      </div>
+            {/* Nested schema categories */}
+            {Object.entries(NESTED_SCHEMA_CATEGORIES).map(([key, { label, excludeFields }]) =>
+              renderNestedCategory(key, label, excludeFields),
+            )}
+          </div>
+        }
+      </HandoffContent>
     )
   }
 
@@ -230,11 +241,15 @@ function RegistrySection({ data }: { data: Record<string, unknown> }) {
   )
 
   return (
-    <div className="space-y-3">
-      {flatFields.map(([field, value]) => (
-        <DataRow key={field} label={formatFieldName(field)} value={renderValue(field, value)} />
-      ))}
-    </div>
+    <HandoffContent>
+      {
+        <div className="space-y-3">
+          {flatFields.map(([field, value]) => (
+            <DataRow key={field} label={formatFieldName(field)} value={renderValue(field, value)} />
+          ))}
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -251,175 +266,185 @@ function CPTCodesSection({ data }: { data: UnifiedOutput }) {
   } = data
 
   return (
-    <div className="space-y-6">
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg border bg-card p-4 text-center">
-          <p className="text-2xl font-bold">{suggestions.length}</p>
-          <p className="text-sm text-muted-foreground">CPT Codes</p>
-        </div>
-        <div className="rounded-lg border bg-card p-4 text-center">
-          <p className="text-2xl font-bold">{total_work_rvu?.toFixed(2) || '—'}</p>
-          <p className="text-sm text-muted-foreground">Total Work RVU</p>
-        </div>
-      </div>
-
-      {estimated_payment && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800 dark:bg-green-950">
-          <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-            ${estimated_payment.toFixed(2)}
-          </p>
-          <p className="text-sm text-green-600 dark:text-green-400">Estimated Payment</p>
-        </div>
-      )}
-
-      {/* Quality Indicators */}
-      <div className="flex flex-wrap gap-2">
-        <Badge variant={coder_difficulty === 'HIGH_CONF' ? 'default' : 'secondary'}>
-          {coder_difficulty || 'Unknown'} Confidence
-        </Badge>
-        {needs_manual_review && <Badge variant="destructive">Manual Review Required</Badge>}
-      </div>
-
-      {/* Audit Warnings */}
-      {audit_warnings.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
-          <p className="mb-2 font-medium text-amber-800 dark:text-amber-200">Audit Warnings</p>
-          <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-300">
-            {audit_warnings.map((warning, idx) => (
-              <li key={idx}>{warning}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* CPT Codes Table */}
-      <div>
-        <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Derived CPT Codes
-        </h4>
-        <div className="overflow-hidden rounded-lg border">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-medium">Code</th>
-                <th className="px-4 py-2 text-left text-sm font-medium">Description</th>
-                <th className="px-4 py-2 text-right text-sm font-medium">RVU</th>
-                <th className="px-4 py-2 text-right text-sm font-medium">Payment</th>
-                <th className="px-4 py-2 text-left text-sm font-medium">Review</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {suggestions.map((suggestion, idx) => {
-                const billing = per_code_billing?.find((b) => b.cpt_code === suggestion.code)
-                return (
-                  <tr key={idx} className="hover:bg-muted/50">
-                    <td className="px-4 py-3">
-                      <Badge variant="outline" className="font-mono">
-                        {suggestion.code}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{suggestion.description}</td>
-                    <td className="px-4 py-3 text-right text-sm">
-                      {billing?.work_rvu?.toFixed(2) || '—'}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm">
-                      {billing?.facility_payment ? `$${billing.facility_payment.toFixed(2)}` : '—'}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <Badge
-                        variant={
-                          suggestion.review_flag === 'required'
-                            ? 'destructive'
-                            : suggestion.review_flag === 'recommended'
-                              ? 'secondary'
-                              : 'outline'
-                        }
-                        className="text-xs"
-                      >
-                        {suggestion.review_flag}
-                      </Badge>
-                    </td>
-                  </tr>
-                )
-              })}
-              {suggestions.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    No CPT codes derived
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Rationales */}
-      {suggestions.some((s) => s.rationale) && (
-        <div>
-          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Derivation Rationales
-          </h4>
-          <div className="space-y-2">
-            {suggestions
-              .filter((s) => s.rationale)
-              .map((suggestion, idx) => (
-                <div key={idx} className="rounded-lg border bg-muted/30 p-3">
-                  <span className="font-mono font-medium">{suggestion.code}</span>
-                  <span className="text-muted-foreground"> — </span>
-                  <span className="text-sm">{suggestion.rationale}</span>
-                </div>
-              ))}
+    <HandoffContent>
+      {
+        <div className="space-y-6">
+          {/* Summary Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-lg border bg-card p-4 text-center">
+              <p className="text-2xl font-bold">{suggestions.length}</p>
+              <p className="text-sm text-muted-foreground">CPT Codes</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4 text-center">
+              <p className="text-2xl font-bold">{total_work_rvu?.toFixed(2) || '—'}</p>
+              <p className="text-sm text-muted-foreground">Total Work RVU</p>
+            </div>
           </div>
+
+          {estimated_payment && (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800 dark:bg-green-950">
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                ${estimated_payment.toFixed(2)}
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-400">Estimated Payment</p>
+            </div>
+          )}
+
+          {/* Quality Indicators */}
+          <div className="flex flex-wrap gap-2">
+            <Badge variant={coder_difficulty === 'HIGH_CONF' ? 'default' : 'secondary'}>
+              {coder_difficulty || 'Unknown'} Confidence
+            </Badge>
+            {needs_manual_review && <Badge variant="destructive">Manual Review Required</Badge>}
+          </div>
+
+          {/* Audit Warnings */}
+          {audit_warnings.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+              <p className="mb-2 font-medium text-amber-800 dark:text-amber-200">Audit Warnings</p>
+              <ul className="list-disc list-inside text-sm text-amber-700 dark:text-amber-300">
+                {audit_warnings.map((warning, idx) => (
+                  <li key={idx}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* CPT Codes Table */}
+          <div>
+            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Derived CPT Codes
+            </h4>
+            <div className="overflow-hidden rounded-lg border">
+              <table className="w-full">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-medium">Code</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium">Description</th>
+                    <th className="px-4 py-2 text-right text-sm font-medium">RVU</th>
+                    <th className="px-4 py-2 text-right text-sm font-medium">Payment</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium">Review</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {suggestions.map((suggestion, idx) => {
+                    const billing = per_code_billing?.find((b) => b.cpt_code === suggestion.code)
+                    return (
+                      <tr key={idx} className="hover:bg-muted/50">
+                        <td className="px-4 py-3">
+                          <Badge variant="outline" className="font-mono">
+                            {suggestion.code}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm">{suggestion.description}</td>
+                        <td className="px-4 py-3 text-right text-sm">
+                          {billing?.work_rvu?.toFixed(2) || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm">
+                          {billing?.facility_payment
+                            ? `$${billing.facility_payment.toFixed(2)}`
+                            : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <Badge
+                            variant={
+                              suggestion.review_flag === 'required'
+                                ? 'destructive'
+                                : suggestion.review_flag === 'recommended'
+                                  ? 'secondary'
+                                  : 'outline'
+                            }
+                            className="text-xs"
+                          >
+                            {suggestion.review_flag}
+                          </Badge>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {suggestions.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                        No CPT codes derived
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Rationales */}
+          {suggestions.some((s) => s.rationale) && (
+            <div>
+              <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Derivation Rationales
+              </h4>
+              <div className="space-y-2">
+                {suggestions
+                  .filter((s) => s.rationale)
+                  .map((suggestion, idx) => (
+                    <div key={idx} className="rounded-lg border bg-muted/30 p-3">
+                      <span className="font-mono font-medium">{suggestion.code}</span>
+                      <span className="text-muted-foreground"> — </span>
+                      <span className="text-sm">{suggestion.rationale}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      }
+    </HandoffContent>
   )
 }
 
 // Unified Output Display
 function UnifiedOutputDisplay({ data }: { data: UnifiedOutput }) {
   return (
-    <div className="space-y-8">
-      {/* Registry Extraction Section */}
-      <div>
-        <h3 className="mb-4 text-lg font-semibold flex items-center gap-2">
-          Registry Extraction
-          <Badge variant="outline">Extraction-First</Badge>
-        </h3>
-        <RegistrySection data={data.registry} />
-      </div>
+    <HandoffContent>
+      {
+        <div className="space-y-8">
+          {/* Registry Extraction Section */}
+          <div>
+            <h3 className="mb-4 text-lg font-semibold flex items-center gap-2">
+              Registry Extraction
+              <Badge variant="outline">Extraction-First</Badge>
+            </h3>
+            <RegistrySection data={data.registry} />
+          </div>
 
-      {/* Divider */}
-      <div className="border-t border-border" />
+          {/* Divider */}
+          <div className="border-t border-border" />
 
-      {/* CPT Codes Section */}
-      <div>
-        <h3 className="mb-4 text-lg font-semibold flex items-center gap-2">
-          Derived CPT Codes
-          <Badge variant="outline">Deterministic</Badge>
-        </h3>
-        <CPTCodesSection data={data} />
-      </div>
+          {/* CPT Codes Section */}
+          <div>
+            <h3 className="mb-4 text-lg font-semibold flex items-center gap-2">
+              Derived CPT Codes
+              <Badge variant="outline">Deterministic</Badge>
+            </h3>
+            <CPTCodesSection data={data} />
+          </div>
 
-      {/* Processing Info */}
-      <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
-        <span>Pipeline: {data.pipeline_mode}</span>
-        <span>KB Version: {data.kb_version}</span>
-        <span>Processing Time: {data.processing_time_ms.toFixed(0)}ms</span>
-      </div>
+          {/* Processing Info */}
+          <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
+            <span>Pipeline: {data.pipeline_mode}</span>
+            <span>KB Version: {data.kb_version}</span>
+            <span>Processing Time: {data.processing_time_ms.toFixed(0)}ms</span>
+          </div>
 
-      {/* Raw JSON toggle */}
-      <details className="group">
-        <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
-          View Raw JSON (for debugging)
-        </summary>
-        <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
-          {JSON.stringify(data, null, 2)}
-        </pre>
-      </details>
-    </div>
+          {/* Raw JSON toggle */}
+          <details className="group">
+            <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
+              View Raw JSON (for debugging)
+            </summary>
+            <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </details>
+        </div>
+      }
+    </HandoffContent>
   )
 }
 
@@ -523,186 +548,192 @@ export default function QASandbox() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
-      {/* PHI Warning Banner */}
-      <div className="mb-6 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-4 dark:bg-yellow-950">
-        <p className="font-bold text-yellow-800 dark:text-yellow-200">
-          Warning: QA Sandbox - No PHI
-        </p>
-        <p className="text-yellow-700 dark:text-yellow-300">
-          Use de-identified or synthetic notes only. Do not enter real patient data.
-        </p>
-      </div>
-
-      <h1 className="mb-6 text-2xl font-bold">Procedure Suite QA Sandbox</h1>
-      <p className="mb-6 text-muted-foreground">
-        Unified extraction-first pipeline: Registry extraction followed by deterministic CPT code
-        derivation.
-      </p>
-
-      {/* Input Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Input</CardTitle>
-          <CardDescription>Enter a procedure note for testing</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="mb-2 block font-medium">
-              Procedure Note (de-identified/synthetic)
-            </label>
-            <Textarea
-              className="min-h-40"
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              placeholder="Paste procedure note here..."
-            />
+    <HandoffContent>
+      {
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          {/* PHI Warning Banner */}
+          <div className="mb-6 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 p-4 dark:bg-yellow-950">
+            <p className="font-bold text-yellow-800 dark:text-yellow-200">
+              Warning: QA Sandbox - No PHI
+            </p>
+            <p className="text-yellow-700 dark:text-yellow-300">
+              Use de-identified or synthetic notes only. Do not enter real patient data.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-2 block font-medium">Procedure Type (optional)</label>
-              <Input
-                value={procedureType}
-                onChange={(e) => setProcedureType(e.target.value)}
-                placeholder="e.g., EBUS, rigid, flex"
-              />
-            </div>
+          <h1 className="mb-6 text-2xl font-bold">Procedure Suite QA Sandbox</h1>
+          <p className="mb-6 text-muted-foreground">
+            Unified extraction-first pipeline: Registry extraction followed by deterministic CPT
+            code derivation.
+          </p>
 
-            <div>
-              <label className="mb-2 block font-medium">
-                Tester Name <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={testerName}
-                onChange={(e) => setTesterName(e.target.value)}
-                placeholder="Enter your name"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="phi-confirm"
-              checked={phiConfirmed}
-              onCheckedChange={(checked) => setPhiConfirmed(checked === true)}
-            />
-            <label htmlFor="phi-confirm" className="cursor-pointer">
-              I confirm I am NOT entering PHI (protected health information)
-            </label>
-          </div>
-
-          <Button
-            onClick={handleRun}
-            disabled={loading || !noteText || !phiConfirmed || !testerName.trim()}
-          >
-            {loading ? 'Running...' : 'Run Unified Extraction'}
-          </Button>
-
-          {error && <p className="mt-2 text-red-600">{error}</p>}
-        </CardContent>
-      </Card>
-
-      {/* Output Section */}
-      {unifiedOutput && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Unified Output</CardTitle>
-            <CardDescription>Registry extraction with derived CPT codes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UnifiedOutputDisplay data={unifiedOutput} />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Feedback Section */}
-      {sessionId && !feedbackSubmitted && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Feedback</CardTitle>
-            <CardDescription>Help improve the system by providing feedback</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="mb-2 block font-medium">Overall Quality (1-5)</label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <Button
-                    key={n}
-                    variant={qualityRating === n ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setQualityRating(n)}
-                    className="h-10 w-10"
-                  >
-                    {n}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block font-medium">Would you sign off on this output?</label>
-              <div className="flex gap-4">
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={safeToUse === true}
-                    onChange={() => setSafeToUse(true)}
-                    className="h-4 w-4"
-                  />
-                  Yes
+          {/* Input Section */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Input</CardTitle>
+              <CardDescription>Enter a procedure note for testing</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="mb-2 block font-medium">
+                  Procedure Note (de-identified/synthetic)
                 </label>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="radio"
-                    checked={safeToUse === false}
-                    onChange={() => setSafeToUse(false)}
-                    className="h-4 w-4"
-                  />
-                  No
-                </label>
+                <Textarea
+                  className="min-h-40"
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Paste procedure note here..."
+                />
               </div>
-            </div>
 
-            <div>
-              <label className="mb-2 block font-medium">Error Categories</label>
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                {ERROR_CATEGORIES.map((cat) => (
-                  <label key={cat.id} className="flex cursor-pointer items-center gap-2">
-                    <Checkbox
-                      checked={errorCategories.includes(cat.id)}
-                      onCheckedChange={() => toggleErrorCategory(cat.id)}
-                    />
-                    {cat.label}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block font-medium">Procedure Type (optional)</label>
+                  <Input
+                    value={procedureType}
+                    onChange={(e) => setProcedureType(e.target.value)}
+                    placeholder="e.g., EBUS, rigid, flex"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block font-medium">
+                    Tester Name <span className="text-red-500">*</span>
                   </label>
-                ))}
+                  <Input
+                    value={testerName}
+                    onChange={(e) => setTesterName(e.target.value)}
+                    placeholder="Enter your name"
+                    required
+                  />
+                </div>
               </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="phi-confirm"
+                  checked={phiConfirmed}
+                  onCheckedChange={(checked) => setPhiConfirmed(checked === true)}
+                />
+                <label htmlFor="phi-confirm" className="cursor-pointer">
+                  I confirm I am NOT entering PHI (protected health information)
+                </label>
+              </div>
+
+              <Button
+                onClick={handleRun}
+                disabled={loading || !noteText || !phiConfirmed || !testerName.trim()}
+              >
+                {loading ? 'Running...' : 'Run Unified Extraction'}
+              </Button>
+
+              {error && <p className="mt-2 text-red-600">{error}</p>}
+            </CardContent>
+          </Card>
+
+          {/* Output Section */}
+          {unifiedOutput && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Unified Output</CardTitle>
+                <CardDescription>Registry extraction with derived CPT codes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UnifiedOutputDisplay data={unifiedOutput} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Feedback Section */}
+          {sessionId && !feedbackSubmitted && (
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Feedback</CardTitle>
+                <CardDescription>Help improve the system by providing feedback</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="mb-2 block font-medium">Overall Quality (1-5)</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Button
+                        key={n}
+                        variant={qualityRating === n ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setQualityRating(n)}
+                        className="h-10 w-10"
+                      >
+                        {n}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block font-medium">
+                    Would you sign off on this output?
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="radio"
+                        checked={safeToUse === true}
+                        onChange={() => setSafeToUse(true)}
+                        className="h-4 w-4"
+                      />
+                      Yes
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="radio"
+                        checked={safeToUse === false}
+                        onChange={() => setSafeToUse(false)}
+                        className="h-4 w-4"
+                      />
+                      No
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block font-medium">Error Categories</label>
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    {ERROR_CATEGORIES.map((cat) => (
+                      <label key={cat.id} className="flex cursor-pointer items-center gap-2">
+                        <Checkbox
+                          checked={errorCategories.includes(cat.id)}
+                          onCheckedChange={() => toggleErrorCategory(cat.id)}
+                        />
+                        {cat.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block font-medium">Additional Feedback</label>
+                  <Textarea
+                    value={freeTextFeedback}
+                    onChange={(e) => setFreeTextFeedback(e.target.value)}
+                    placeholder="Describe any issues or suggestions..."
+                    className="min-h-24"
+                  />
+                </div>
+
+                <Button onClick={handleFeedbackSubmit} variant="secondary">
+                  Submit Feedback
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {feedbackSubmitted && (
+            <div className="rounded-lg border-l-4 border-green-500 bg-green-50 p-4 dark:bg-green-950">
+              <p className="text-green-800 dark:text-green-200">Feedback submitted successfully!</p>
             </div>
-
-            <div>
-              <label className="mb-2 block font-medium">Additional Feedback</label>
-              <Textarea
-                value={freeTextFeedback}
-                onChange={(e) => setFreeTextFeedback(e.target.value)}
-                placeholder="Describe any issues or suggestions..."
-                className="min-h-24"
-              />
-            </div>
-
-            <Button onClick={handleFeedbackSubmit} variant="secondary">
-              Submit Feedback
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {feedbackSubmitted && (
-        <div className="rounded-lg border-l-4 border-green-500 bg-green-50 p-4 dark:bg-green-950">
-          <p className="text-green-800 dark:text-green-200">Feedback submitted successfully!</p>
+          )}
         </div>
-      )}
-    </div>
+      }
+    </HandoffContent>
   )
 }

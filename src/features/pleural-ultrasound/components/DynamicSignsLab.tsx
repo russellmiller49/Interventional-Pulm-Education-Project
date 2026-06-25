@@ -7,6 +7,7 @@ import { LessonScaffold } from '@/components/learning/LessonScaffold'
 
 import { dynamicSignOptions, publicPleuralUltrasoundVideoAssets } from '../content/videoAssets'
 import type { DynamicUltrasoundSign } from '../content/videoAssets'
+import { HandoffContent } from '@/i18n/handoff'
 
 export function DynamicSignsLab() {
   const t = useTranslations('pleuralUltrasound.dynamicLab')
@@ -31,7 +32,7 @@ export function DynamicSignsLab() {
   )
 
   if (!asset) {
-    return null
+    return <HandoffContent>{null}</HandoffContent>
   }
 
   function reveal() {
@@ -54,119 +55,130 @@ export function DynamicSignsLab() {
   }
 
   return (
-    <LessonScaffold
-      title={t('scaffoldTitle')}
-      objectives={t.raw('objectives') as string[]}
-      howToUse={t.raw('howToUse') as string[]}
-      clinicalAnchor={
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p>
-            {t('clipLabel', {
-              index: index + 1,
-              total,
-              vignette: tu(`vignette.${asset.id}`),
-            })}
-          </p>
-          <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
-            {t('scoreLabel', { correct: score.correct, attempted: score.attempted })}
-          </span>
-        </div>
-      }
-      reveal={
-        result ? (
-          <div
-            className={
-              result.correct
-                ? 'rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm leading-6 text-emerald-900 dark:text-emerald-100'
-                : 'rounded-lg border border-amber-500/30 bg-amber-500/10 p-5 text-sm leading-6 text-amber-900 dark:text-amber-100'
-            }
-          >
-            <h3 className="font-semibold">
-              {result.correct ? t('correctHeading') : t('incorrectHeading')}
-            </h3>
-            <p className="mt-2">{tu(`dynamicReveal.${asset.groundTruth}`)}</p>
-            <p className="mt-2">{tu(`dynamicTeaching.${asset.groundTruth}`)}</p>
-            <p className="mt-2 text-xs text-muted-foreground dark:text-slate-300">
-              {t('attributionLabel', { attribution: asset.attribution })}
-              {' · '}
-              <a
-                href={asset.sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="underline decoration-sky-500 underline-offset-4"
-              >
-                {asset.license}
-              </a>
-              {asset.convertedToMp4 ? t('convertedNote') : ''}
-            </p>
-            <button
-              type="button"
-              onClick={next}
-              className="mt-4 rounded-lg border border-current px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {t('nextLabel')}
-            </button>
-          </div>
-        ) : null
-      }
-      revealed={revealed}
-      onReveal={reveal}
-      canReveal={answer !== null}
-      revealLabel={t('revealLabel')}
-      keyTakeaway={<p>{t('keyTakeaway')}</p>}
-    >
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
-          <div className="bg-muted/40 p-4">
-            <video
-              key={asset.id}
-              controls
-              playsInline
-              preload="metadata"
-              aria-label={t('neutralVideoLabel')}
-              className="max-h-[34rem] w-full rounded-lg border border-border bg-black object-contain"
-            >
-              <source src={asset.localPath ?? asset.path} type="video/mp4" />
-              {t('videoFallback')}
-            </video>
-          </div>
-          {revealed ? (
-            <div className="border-t border-border/80 p-4 text-xs leading-5 text-muted-foreground">
-              <p>{t('sourceFilenameLabel', { filename: asset.sourceFilename })}</p>
-              <p className="mt-1">
-                {t('sourceLabel')}{' '}
-                <a
-                  href={asset.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline decoration-sky-500 underline-offset-4"
-                >
-                  {asset.license}
-                </a>
-                {asset.attributionRequired ? t('withAttribution') : ''}
+    <HandoffContent>
+      {
+        <LessonScaffold
+          title={t('scaffoldTitle')}
+          objectives={t.raw('objectives') as string[]}
+          howToUse={t.raw('howToUse') as string[]}
+          clinicalAnchor={
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p>
+                {t('clipLabel', {
+                  index: index + 1,
+                  total,
+                  vignette: tu(`vignette.${asset.id}`),
+                })}
               </p>
+              <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground">
+                {t('scoreLabel', {
+                  correct: score.correct,
+                  attempted: score.attempted,
+                })}
+              </span>
             </div>
-          ) : null}
-        </div>
-
-        <div className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-          <h3 className="text-base font-semibold text-foreground">{t('classifyHeading')}</h3>
-          <div className="mt-4 grid gap-2">
-            {dynamicSignOptions.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={answer === option.id}
-                disabled={revealed}
-                onClick={() => setAnswer(option.id)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10 disabled:opacity-60"
+          }
+          reveal={
+            result ? (
+              <div
+                className={
+                  result.correct
+                    ? 'rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm leading-6 text-emerald-900 dark:text-emerald-100'
+                    : 'rounded-lg border border-amber-500/30 bg-amber-500/10 p-5 text-sm leading-6 text-amber-900 dark:text-amber-100'
+                }
               >
-                {t(`options.${option.id}`)}
-              </button>
-            ))}
+                <h3 className="font-semibold">
+                  {result.correct ? t('correctHeading') : t('incorrectHeading')}
+                </h3>
+                <p className="mt-2">{tu(`dynamicReveal.${asset.groundTruth}`)}</p>
+                <p className="mt-2">{tu(`dynamicTeaching.${asset.groundTruth}`)}</p>
+                <p className="mt-2 text-xs text-muted-foreground dark:text-slate-300">
+                  {t('attributionLabel', { attribution: asset.attribution })}
+                  {' · '}
+                  <a
+                    href={asset.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline decoration-sky-500 underline-offset-4"
+                  >
+                    {asset.license}
+                  </a>
+                  {asset.convertedToMp4 ? t('convertedNote') : ''}
+                </p>
+                <button
+                  type="button"
+                  onClick={next}
+                  className="mt-4 rounded-lg border border-current px-3 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {t('nextLabel')}
+                </button>
+              </div>
+            ) : null
+          }
+          revealed={revealed}
+          onReveal={reveal}
+          canReveal={answer !== null}
+          revealLabel={t('revealLabel')}
+          keyTakeaway={<p>{t('keyTakeaway')}</p>}
+        >
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
+              <div className="bg-muted/40 p-4">
+                <video
+                  key={asset.id}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  aria-label={t('neutralVideoLabel')}
+                  className="max-h-[34rem] w-full rounded-lg border border-border bg-black object-contain"
+                >
+                  <source src={asset.localPath ?? asset.path} type="video/mp4" />
+                  {t('videoFallback')}
+                </video>
+              </div>
+              {revealed ? (
+                <div className="border-t border-border/80 p-4 text-xs leading-5 text-muted-foreground">
+                  <p>
+                    {t('sourceFilenameLabel', {
+                      filename: asset.sourceFilename,
+                    })}
+                  </p>
+                  <p className="mt-1">
+                    {t('sourceLabel')}{' '}
+                    <a
+                      href={asset.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline decoration-sky-500 underline-offset-4"
+                    >
+                      {asset.license}
+                    </a>
+                    {asset.attributionRequired ? t('withAttribution') : ''}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
+              <h3 className="text-base font-semibold text-foreground">{t('classifyHeading')}</h3>
+              <div className="mt-4 grid gap-2">
+                {dynamicSignOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={answer === option.id}
+                    disabled={revealed}
+                    onClick={() => setAnswer(option.id)}
+                    className="rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10 disabled:opacity-60"
+                  >
+                    {t(`options.${option.id}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </LessonScaffold>
+        </LessonScaffold>
+      }
+    </HandoffContent>
   )
 }

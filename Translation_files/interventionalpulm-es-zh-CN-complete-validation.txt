@@ -1,0 +1,92 @@
+InterventionalPulm.com Spanish and Simplified Chinese Translation — Complete Package
+Generated: 2026-06-25
+Locales: es, zh-CN
+Source handoff: interventionalpulm-spanish-mandarin-translation-export-2026-06-24.zip
+
+DELIVERABLES
+- Complete path-preserving source archive: interventionalpulm-es-zh-CN-complete-files.zip
+- Cumulative binary-safe patch against source-files/: interventionalpulm-es-zh-CN-complete.patch
+- Machine-readable coverage inventory: interventionalpulm-es-zh-CN-complete-coverage.json
+
+COMPLETE ARCHIVE COVERAGE
+- TRANSLATION_MANIFEST.json paths: 246
+- Manifest paths present in complete archive: 246 / 246
+- Manifest paths missing: 0
+- Modified manifest files: 154
+- Preserved manifest files included byte-for-byte: 92
+- Localization support files added: 7
+- Total files in complete archive: 253
+
+The 92 preserved files are not an untranslated “part 2.” They are English fallback/context files,
+board-review MDX bodies already served through the existing translated HTML layer, files whose
+learner-facing data already contains explicit locale variants, locale infrastructure/tests, or
+package/sync files requiring no translation edit. They are included in the complete archive so the
+package now contains every manifest path.
+
+TRANSLATION COVERAGE
+- Identical flattened message-key count in en, es, and zh-CN: 4,882 per locale
+- Handoff messages: 3,823 per locale
+  - Exact lookup entries: 3,792
+  - Runtime-composed patterns: 31
+- Exact runtime translation tests: 7,584 / 7,584 PASS
+- Runtime-composed translation tests: 62 / 62 PASS
+- Search translation maps:
+  - General search: 286 Spanish / 286 Chinese keys; parity PASS
+  - Creative Commons search: 718 Spanish / 718 Chinese keys; parity PASS
+- Candidate audit: 0 unresolved English learner-facing prose strings outside files with explicit
+  Spanish and Chinese typed locale variants. Technical values, CSS classes, IDs, brands, and
+  abbreviations were excluded from this learner-facing check.
+
+ADDITIONAL FINAL-RUN CORRECTIONS
+- Added a complete runtime translation for a multi-line experimental pleural-ultrasound warning
+  whose prior catalog entry had been split into fragments.
+- Corrected visible bronchoscope/instrument category terms such as therapeutic, thin, ultrathin,
+  single-use, brush, forceps, needle, ultrasound, and custom in Spanish and/or Chinese.
+
+VALIDATION RESULTS
+- Dictionary key parity: PASS
+- Empty translation check: PASS
+- ICU placeholder parity across all message values: PASS (0 mismatches)
+- HTML-tag parity across all message values: PASS (0 mismatches)
+- Translation-token preservation for exact lookup entries: PASS
+  - URLs: 0 mismatches
+  - DOI values: 0 mismatches
+  - Email addresses: 0 mismatches
+  - Numeric tokens: 0 mismatches
+  - HTML tags: 0 mismatches
+  - Filename/path tokens: 0 mismatches
+- Protected source invariants across 217 TypeScript/TSX/MJS manifest files: PASS
+  - IDs, slugs, routes, hrefs, URLs, source/image/audio paths, DOI/PubMed identifiers,
+    answer indexes, and answer IDs: 0 mismatches
+- TypeScript/TSX/MJS syntax parse: 224 / 224 files PASS
+- UTF-8 decoding: 253 / 253 files PASS
+- JSON parsing: 5 / 5 files PASS
+- git diff --check: PASS
+- Patch application against untouched source-files baseline: PASS
+- Patch reproduction comparison: 253 files, 0 missing, 0 extra, 0 byte mismatches
+- ZIP member/content comparison: 253 files, 0 byte mismatches
+
+IMPLEMENTATION NOTE
+English fallback strings intentionally remain in several TypeScript data files. At runtime they are
+localized through HandoffContent, localizeHandoffServerValue, localized search maps, or existing
+pickLocaleContent locale variants. Therefore a raw grep for English source literals is not a valid
+translation-completeness test; the runtime and candidate-coverage tests above are the relevant checks.
+
+BOARD REVIEW AND EMBEDDED APP BOUNDARIES
+- The 24 board-review MDX source bodies remain byte-identical because the existing translated HTML
+  context is already selected by src/lib/board-review-html.ts. Catalog/page-shell metadata and UI
+  are localized by the completed handoff layer.
+- Generated iframe application internals remain outside this packet’s source boundary, as specified
+  by README_TRANSLATION_HANDOFF.md. The main-site wrappers included in the manifest are covered.
+
+BUILD NOTE
+A full Next.js production build cannot be executed from this partial handoff packet because it omits
+project-wide build inputs such as the original tsconfig/Next configuration, generated Contentlayer
+modules, and non-manifest dependencies. Syntax parsing, runtime translation tests, structural checks,
+protected-invariant checks, patch application, and archive byte comparison were completed instead.
+
+SHA-256
+- interventionalpulm-es-zh-CN-complete-files.zip
+  050273e6e143c0920082306896fdee3a046a99a8b250b437d9e40c50928bea7d
+- interventionalpulm-es-zh-CN-complete.patch
+  be8676c746e681254104a752a774caaa43e5b12b81b37872d5770406bfc918ce

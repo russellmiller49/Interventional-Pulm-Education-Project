@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import { MermaidDiagram } from './MermaidDiagram'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface BoardReviewHtmlFrameProps {
   html: string
@@ -39,19 +40,27 @@ export function BoardReviewHtmlFrame({ html, title }: BoardReviewHtmlFrameProps)
   }, [parts])
 
   return (
-    <article ref={articleRef} className="board-review-html" aria-label={`${title} chapter content`}>
-      {parts.map((part, index) =>
-        part.type === 'mermaid' ? (
-          <MermaidDiagram key={`${part.type}-${index}`} chart={part.content} variant="light" />
-        ) : (
-          <div
-            key={`${part.type}-${index}`}
-            className="board-review-html-content"
-            dangerouslySetInnerHTML={{ __html: part.content }}
-          />
-        ),
-      )}
-    </article>
+    <HandoffContent>
+      {
+        <article
+          ref={articleRef}
+          className="board-review-html"
+          aria-label={`${title} chapter content`}
+        >
+          {parts.map((part, index) =>
+            part.type === 'mermaid' ? (
+              <MermaidDiagram key={`${part.type}-${index}`} chart={part.content} variant="light" />
+            ) : (
+              <div
+                key={`${part.type}-${index}`}
+                className="board-review-html-content"
+                dangerouslySetInnerHTML={{ __html: part.content }}
+              />
+            ),
+          )}
+        </article>
+      }
+    </HandoffContent>
   )
 }
 

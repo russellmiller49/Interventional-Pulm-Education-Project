@@ -11,6 +11,7 @@ import { redirectToPostLoginPath } from '@/lib/site-auth/post-login-redirect'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 
 import { AuthFooterLink } from './AuthShell'
+import { HandoffContent } from '@/i18n/handoff'
 
 type SubmitStatus = 'idle' | 'submitting' | 'redirecting' | 'error'
 
@@ -111,50 +112,58 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <label className="block space-y-2 text-sm font-medium">
-        <span>Email</span>
-        <Input
-          required
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          placeholder="you@example.com"
-        />
-      </label>
-      <label className="block space-y-2 text-sm font-medium">
-        <span>Password</span>
-        <Input
-          required
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          autoComplete="current-password"
-          minLength={8}
-        />
-      </label>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href={'/forgot-password' as Route}
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-        >
-          Forgot password?
-        </Link>
-      </div>
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-      <Button
-        type="submit"
-        disabled={status === 'submitting' || status === 'redirecting'}
-        className="w-full"
-      >
-        {status === 'submitting'
-          ? 'Signing in...'
-          : status === 'redirecting'
-            ? 'Redirecting...'
-            : 'Sign in'}
-      </Button>
-      <AuthFooterLink href={'/signup' as Route} text="Need an account?" label="Sign up for free" />
-    </form>
+    <HandoffContent>
+      {
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <label className="block space-y-2 text-sm font-medium">
+            <span>Email</span>
+            <Input
+              required
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            <span>Password</span>
+            <Input
+              required
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              minLength={8}
+            />
+          </label>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Link
+              href={'/forgot-password' as Route}
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Button
+            type="submit"
+            disabled={status === 'submitting' || status === 'redirecting'}
+            className="w-full"
+          >
+            {status === 'submitting'
+              ? 'Signing in...'
+              : status === 'redirecting'
+                ? 'Redirecting...'
+                : 'Sign in'}
+          </Button>
+          <AuthFooterLink
+            href={'/signup' as Route}
+            text="Need an account?"
+            label="Sign up for free"
+          />
+        </form>
+      }
+    </HandoffContent>
   )
 }

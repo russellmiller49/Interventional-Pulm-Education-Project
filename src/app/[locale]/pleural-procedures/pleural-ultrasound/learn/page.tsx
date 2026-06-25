@@ -12,6 +12,7 @@ import {
   ultrasoundBoardSectionIds,
   ultrasoundBoardSlug,
 } from '@/features/pleural-ultrasound/content/learnContent'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -19,7 +20,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'pleuralUltrasound.learn' })
+  const t = await getTranslations({
+    locale,
+    namespace: 'pleuralUltrasound.learn',
+  })
 
   return {
     title: t('metaTitle'),
@@ -37,27 +41,31 @@ export default async function PleuralUltrasoundLearnPage({ params }: PageProps) 
   const boardSections = getBoardSections(ultrasoundBoardSlug, ultrasoundBoardSectionIds)
 
   return (
-    <div className="space-y-10 py-16">
-      <ModuleHeader
-        eyebrow={nav('items.pleuralProcedures.title')}
-        title={t('learn.headerTitle')}
-        description={t('learn.headerDescription')}
-      />
-      <PleuralUltrasoundNav activeHref="/pleural-procedures/pleural-ultrasound/learn" />
+    <HandoffContent>
+      {
+        <div className="space-y-10 py-16">
+          <ModuleHeader
+            eyebrow={nav('items.pleuralProcedures.title')}
+            title={t('learn.headerTitle')}
+            description={t('learn.headerDescription')}
+          />
+          <PleuralUltrasoundNav activeHref="/pleural-procedures/pleural-ultrasound/learn" />
 
-      <LearnSection
-        intro={<p>{t('learn.intro')}</p>}
-        coreBlocks={getUltrasoundCoreBlocks(locale)}
-        goDeeperBlocks={getUltrasoundGoDeeperBlocks(locale)}
-        boardSections={boardSections}
-        boardSourceLabel={t('learn.boardSourceLabel')}
-      />
+          <LearnSection
+            intro={<p>{t('learn.intro')}</p>}
+            coreBlocks={getUltrasoundCoreBlocks(locale)}
+            goDeeperBlocks={getUltrasoundGoDeeperBlocks(locale)}
+            boardSections={boardSections}
+            boardSourceLabel={t('learn.boardSourceLabel')}
+          />
 
-      <ModuleProgressToggle
-        moduleId="pleural-ultrasound"
-        section="learn"
-        label={t('learn.progressLabel')}
-      />
-    </div>
+          <ModuleProgressToggle
+            moduleId="pleural-ultrasound"
+            section="learn"
+            label={t('learn.progressLabel')}
+          />
+        </div>
+      }
+    </HandoffContent>
   )
 }
