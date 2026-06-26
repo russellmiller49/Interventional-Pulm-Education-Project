@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { buildEmbeddedAppSrc, socalEbusCourseAppPath } from '@/lib/embedded-app-locale'
 import {
   hasSupabaseBrowserConfig,
   resetSupabaseBrowserClients,
@@ -12,8 +13,6 @@ import {
   supabaseCookieBrowser,
 } from '@/lib/supabase/browser'
 import { getSupabasePublicConfig, setSupabasePublicConfig } from '@/lib/supabase/config'
-
-const embeddedCourseAppPath = '/socal-ebus-course/app/index.html'
 
 const SignInModal = dynamic(() => import('@/components/auth/SignInModal'), {
   ssr: false,
@@ -27,6 +26,10 @@ interface RuntimeSupabaseConfigResponse {
   url: string | null
 }
 
+interface CourseEmbedShellProps {
+  locale: string
+}
+
 function formatErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message
@@ -35,7 +38,7 @@ function formatErrorMessage(error: unknown) {
   return 'Unable to verify the learner session for the embedded course.'
 }
 
-export function CourseEmbedShell() {
+export function CourseEmbedShell({ locale }: CourseEmbedShellProps) {
   const [status, setStatus] = useState<EmbedStatus>('checking')
   const [allowLocalOnly, setAllowLocalOnly] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
@@ -183,6 +186,7 @@ export function CourseEmbedShell() {
   }, [bridgeEmbeddedSession])
 
   const shouldRenderEmbed = status === 'signed-in' || status === 'local-only' || allowLocalOnly
+  const embedSrc = buildEmbeddedAppSrc(socalEbusCourseAppPath, locale)
 
   return (
     <div className="space-y-6">
@@ -284,7 +288,7 @@ export function CourseEmbedShell() {
         <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-sm">
           <iframe
             title="SoCal EBUS Course"
-            src={embeddedCourseAppPath}
+            src={embedSrc}
             className="h-[calc(100vh-12rem)] min-h-[780px] w-full bg-white"
           />
         </div>

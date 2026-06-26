@@ -28,6 +28,7 @@ export function LanguageSelector({ className, compact = false }: LanguageSelecto
 
     const nextHref = `${pathname}${window.location.search}${window.location.hash}`
     router.replace(nextHref as Route, { locale: nextLocale, scroll: false })
+    router.refresh()
   }
 
   return (

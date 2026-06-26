@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { setRequestLocale } from 'next-intl/server'
 
 import { EmbeddedTrainingModuleFrame } from '@/components/ebus-training/EmbeddedTrainingModuleFrame'
 import { tnm9TrainingModule } from '@/data/ebus-training'
@@ -16,8 +17,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
-export default function Tnm9StagingPage() {
+export default async function Tnm9StagingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   return (
-    <HandoffContent>{<EmbeddedTrainingModuleFrame module={tnm9TrainingModule} />}</HandoffContent>
+    <HandoffContent>
+      {<EmbeddedTrainingModuleFrame locale={locale} module={tnm9TrainingModule} />}
+    </HandoffContent>
   )
 }

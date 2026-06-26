@@ -1,3 +1,5 @@
+import { buildEmbeddedAppSrc, socalEbusCourseAppPath } from '@/lib/embedded-app-locale'
+
 export interface EmbeddedTrainingModule {
   slug: string
   title: string
@@ -11,8 +13,6 @@ export interface EmbeddedTrainingModule {
   highlights: string[]
   keywords: string[]
 }
-
-const embeddedCourseAppPath = '/socal-ebus-course/app/index.html'
 
 export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
   {
@@ -109,12 +109,25 @@ export const tnm9TrainingModule: EmbeddedTrainingModule = {
   keywords: ['tnm', 'tnm 9', 'tnm-9', 'lung cancer staging', 'stage grouping', 'n map'],
 }
 
-export function getEmbeddedCourseModuleSrc(module: EmbeddedTrainingModule) {
+export function getEmbeddedCourseModuleSrc(module: EmbeddedTrainingModule, locale: string) {
   if (module.requiresAdmin) {
-    return `${embeddedCourseAppPath}?adminPreview=1#${module.appHashPath}`
+    return buildEmbeddedAppSrc(
+      socalEbusCourseAppPath,
+      locale,
+      { adminPreview: '1' },
+      module.appHashPath,
+    )
   }
 
-  return `${embeddedCourseAppPath}?publicTraining=1&publicScope=${module.publicScope}#${module.appHashPath}`
+  return buildEmbeddedAppSrc(
+    socalEbusCourseAppPath,
+    locale,
+    {
+      publicTraining: '1',
+      publicScope: module.publicScope,
+    },
+    module.appHashPath,
+  )
 }
 
 export function getPublicEbusTrainingModule(slug: string) {

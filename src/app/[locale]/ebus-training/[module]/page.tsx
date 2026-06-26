@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { setRequestLocale } from 'next-intl/server'
 
 import { EmbeddedTrainingModuleFrame } from '@/components/ebus-training/EmbeddedTrainingModuleFrame'
 import {
@@ -44,7 +45,9 @@ export async function generateMetadata({ params }: EbusTrainingModulePageProps):
 }
 
 export default async function EbusTrainingModulePage({ params }: EbusTrainingModulePageProps) {
-  const { module: moduleSlug } = await params
+  const { locale, module: moduleSlug } = await params
+  setRequestLocale(locale)
+
   const canViewAdminModules = await canCurrentUserViewDraftModules()
   const trainingModule = getEbusTrainingModule(moduleSlug, {
     canViewAdminModules,
@@ -60,6 +63,7 @@ export default async function EbusTrainingModulePage({ params }: EbusTrainingMod
         <EmbeddedTrainingModuleFrame
           backHref="/ebus-training"
           backLabel="Back to EBUS Training"
+          locale={locale}
           module={trainingModule}
         />
       }

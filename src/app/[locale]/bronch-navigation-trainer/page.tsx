@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
+import { bronchNavigationTrainerAppPath, buildEmbeddedAppSrc } from '@/lib/embedded-app-locale'
 
 const handoffMetadata: Metadata = {
   title: 'Bronch Navigation Trainer',
@@ -26,8 +27,6 @@ const trainerHighlights = [
   'Use accepted target paths and a 3D airway map to build navigation intuition before lab day.',
 ]
 
-const embeddedTrainerAppPath = '/bronch-navigation-trainer/app/index.html'
-
 interface BronchNavigationTrainerPageProps {
   params: Promise<{ locale: string }>
 }
@@ -37,6 +36,7 @@ export default async function BronchNavigationTrainerPage({
 }: BronchNavigationTrainerPageProps) {
   const { locale } = await params
   setRequestLocale(locale)
+  const embeddedTrainerAppPath = buildEmbeddedAppSrc(bronchNavigationTrainerAppPath, locale)
 
   return (
     <HandoffContent>
@@ -87,7 +87,7 @@ export default async function BronchNavigationTrainerPage({
           </section>
 
           <section className="container">
-            <TrainerEmbedShell />
+            <TrainerEmbedShell locale={locale} />
           </section>
         </div>
       }

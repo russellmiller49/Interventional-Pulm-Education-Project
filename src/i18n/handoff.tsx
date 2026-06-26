@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
+import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { translateHandoffText, type HandoffRawTranslator } from './handoff-core'
@@ -112,13 +112,7 @@ function localizeNode(t: HandoffRawTranslator, node: ReactNode): ReactNode {
   }
 
   if (Array.isArray(node)) {
-    let changed = false
-    const localized = node.map((child) => {
-      const nextChild = localizeNode(t, child)
-      changed ||= nextChild !== child
-      return nextChild
-    })
-    return changed ? localized : node
+    return Children.map(node, (child) => localizeNode(t, child))
   }
 
   if (!isValidElement(node)) {

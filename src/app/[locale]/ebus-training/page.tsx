@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { Gauge, Map, Radar, ScanEye } from 'lucide-react'
+import { setRequestLocale } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
 import { adminEbusTrainingModules, publicEbusTrainingModules } from '@/data/ebus-training'
@@ -27,7 +28,14 @@ const moduleIcons = {
   'virtual-bronchoscopy': ScanEye,
 } as const
 
-export default async function EbusTrainingPage() {
+interface EbusTrainingPageProps {
+  params: Promise<{ locale: string }>
+}
+
+export default async function EbusTrainingPage({ params }: EbusTrainingPageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
   const canViewAdminModules = await canCurrentUserViewDraftModules()
   const modules = canViewAdminModules
     ? [...publicEbusTrainingModules, ...adminEbusTrainingModules]

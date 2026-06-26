@@ -11,14 +11,16 @@ interface EmbeddedTrainingModuleFrameProps {
   module: EmbeddedTrainingModule
   backHref?: string
   backLabel?: string
+  locale: string
 }
 
 export function EmbeddedTrainingModuleFrame({
   backHref,
   backLabel,
+  locale,
   module,
 }: EmbeddedTrainingModuleFrameProps) {
-  const embedSrc = getEmbeddedCourseModuleSrc(module)
+  const embedSrc = getEmbeddedCourseModuleSrc(module, locale)
 
   return (
     <HandoffContent>

@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Route } from 'next'
+import { setRequestLocale } from 'next-intl/server'
 
 import { CourseEmbedShell } from '@/components/socal-ebus/CourseEmbedShell'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
+import { buildEmbeddedAppSrc, socalEbusCourseAppPath } from '@/lib/embedded-app-locale'
 
 const handoffMetadata: Metadata = {
   title: 'Southern California EBUS Course Participant Portal',
@@ -26,9 +28,16 @@ const courseHighlights = [
   'Course logistics, faculty materials, and completion workflow in one embedded portal.',
 ]
 
-const embeddedCourseAppPath = '/socal-ebus-course/app/index.html'
+interface SoCalEbusCoursePageProps {
+  params: Promise<{ locale: string }>
+}
 
-export default function SoCalEbusCoursePage() {
+export default async function SoCalEbusCoursePage({ params }: SoCalEbusCoursePageProps) {
+  const { locale } = await params
+  setRequestLocale(locale)
+
+  const embeddedCourseSrc = buildEmbeddedAppSrc(socalEbusCourseAppPath, locale)
+
   return (
     <HandoffContent>
       {
@@ -53,7 +62,7 @@ export default function SoCalEbusCoursePage() {
 
             <div className="flex flex-wrap gap-3">
               <Button asChild>
-                <a href={embeddedCourseAppPath} target="_blank" rel="noreferrer">
+                <a href={embeddedCourseSrc} target="_blank" rel="noreferrer">
                   Open Dedicated View
                 </a>
               </Button>
@@ -79,7 +88,7 @@ export default function SoCalEbusCoursePage() {
           </section>
 
           <section className="container">
-            <CourseEmbedShell />
+            <CourseEmbedShell locale={locale} />
           </section>
         </div>
       }
