@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derrames pleurales e intervenciones pleurales</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fdfdfd;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eaeaea;
+            padding-bottom: 10px;
+            margin-top: 50px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 40px;
+            font-weight: 600;
+        }
+        h4 {
+            color: #555;
+            margin-top: 25px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.95em;
+            letter-spacing: 0.5px;
+        }
+        p {
+            margin-bottom: 16px;
+        }
+        ul, ol {
+            margin-bottom: 16px;
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e1e4e8;
+            margin: 50px 0;
+        }
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.95em;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #e1e4e8;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f8ff;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        tr:nth-child(even) {
+            background-color: #fbfbfb;
+        }
+        /* Callout Boxes */
+        .algorithm-note {
+            background-color: #eef6fc;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #3498db;
+            margin: 25px 0;
+        }
+        .case-study {
+            background-color: #fff8e1;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 5px solid #ffc107;
+            margin: 20px 0;
+        }
+        /* Mermaid Diagram Container */
+        .mermaid {
+            background: white;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+        }
+        /* Reference List */
+        .references ol {
+            padding-left: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .references li {
+            margin-bottom: 10px;
+        }
+        .abbreviations dl {
+            display: grid;
+            grid-template-columns: max-content auto;
+            gap: 10px 20px;
+            font-size: 0.95em;
+        }
+        .abbreviations dt {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .abbreviations dd {
+            margin: 0;
+        }
+        /* Responsiveness */
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            th, td { display: block; width: 100%; box-sizing: border-box; }
+            tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; }
+            .abbreviations dl { grid-template-columns: 1fr; gap: 5px; }
+            .abbreviations dt { margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Derrames pleurales e intervenciones pleurales</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo corresponde a los dominios AABIP/CAQ sobre el abordaje diagnóstico de los derrames pleurales y el espectro completo de procedimientos pleurales: ecografía torácica (TUS), toracocentesis diagnóstica y terapéutica —incluida manometría pleural—, intervenciones pleurales con catéter o aguja guiadas por imagen, selección y manejo de tubos torácicos, tratamiento intrapleural de infección, rutas para derrame pleural maligno (MPE) —IPC frente a pleurodesis— y toracoscopia médica (MT). Se enfatizan la toma de decisiones de alto rendimiento, la técnica paso a paso, la prevención de complicaciones y la evidencia en evolución.</p>
+
+    <hr>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <p>Al finalizar este capítulo, el estudiante podrá:</p>
+    <ul>
+        <li><strong>Clasificar</strong> derrames pleurales y priorizar pruebas mediante un algoritmo de alto rendimiento centrado en ecografía.</li>
+        <li><strong>Realizar</strong> toracocentesis segura guiada por ecografía en tiempo real con selección, preparación y drenaje de gran volumen guiado por síntomas o manometría.</li>
+        <li><strong>Seleccionar y colocar</strong> drenajes pequeños frente a grandes, elegir sello de agua frente a aspiración y resolver fugas, obstrucción, mala posición y riesgo de edema pulmonar de reexpansión (RPE).</li>
+        <li><strong>Construir</strong> rutas para infección pleural —antibióticos y tubo, fibrinolíticos más DNasa o cirugía— y MPE —punciones repetidas, IPC, pleurodesis con talco o toracoscopia—.</li>
+        <li><strong>Reconocer y manejar</strong> poblaciones especiales: ventilación mecánica, anticoagulación o uremia, pulmón atrapado/no expandible, neumotórax espontáneo o traumático y hemotórax.</li>
+        <li><strong>Anticipar, prevenir y tratar</strong> neumotórax, hemotórax, infección, RPE y enfisema subcutáneo, e identificar indicaciones de imagen posterior.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento: perlas, errores y trampas frecuentes</h3>
+    <ul>
+        <li><strong>La ecografía es el estándar</strong> para toracocentesis y colocación de tubos; reduce notablemente neumotórax y punciones secas.</li>
+        <li><strong>Los criterios de Light</strong> siguen siendo la primera línea para clasificar exudados; los valores limítrofes reducen precisión, por lo que debe integrar contexto y pruebas auxiliares.</li>
+        <li><strong>La toracocentesis de gran volumen</strong> es segura si se guía por síntomas y presión pleural. Deténgase si Ppl cae por debajo de aproximadamente −20 cm H₂O o si aparece dolor torácico o tos persistente.</li>
+        <li><strong>No solicite radiografía rutinaria tras la punción.</strong> Reserve imágenes para aspiración de aire, procedimiento difícil, radioterapia previa, síntomas u otras preocupaciones.</li>
+        <li><strong>Los tubos pequeños ≤14F</strong> bastan para la mayoría de derrames y neumotórax, se toleran mejor y se colocan por Seldinger.</li>
+        <li><strong>Cuándo favorecer un tubo grande:</strong> hemotórax traumático inestable, fuga aérea masiva o posoperatorio torácico inmediato por flujo y riesgo de obstrucción.</li>
+        <li><strong>La aspiración no es rutinaria</strong> en neumotórax; el sello de agua suele bastar y puede reducir la propagación de la fístula.</li>
+        <li><strong>Infección pleural:</strong> antibióticos y tubo pequeño tempranos. Escale a tPA/DNasa si el drenaje se detiene y a cirugía si no hay respuesta.</li>
+        <li><strong>MPE:</strong> derrames recurrentes sintomáticos → IPC o pleurodesis con talco. Pulmón no expandible → IPC. La lechada de talco por tubo pequeño tiene éxito similar al poudrage por toracoscopia.</li>
+        <li><strong>Dispositivos ambulatorios:</strong> pueden usarse en neumotórax espontáneo primario cuidadosamente seleccionado; hay menos evidencia en el secundario.</li>
+        <li><strong>RPE es infrecuente pero grave.</strong> El riesgo aumenta con presiones muy negativas, drenaje rápido y mal estado funcional. Trate con soporte y detenga o pince si aparecen síntomas.</li>
+        <li><strong>Anatomía de la arteria intercostal:</strong> su trayecto es variable posteriormente. Evite inserción posterior a menos de 6 cm de la columna y entre siempre por encima del borde superior de la costilla para proteger el paquete neurovascular.</li>
+        <li><strong>Retirada del drenaje:</strong>
+            <ul>
+                <li><em>Neumotórax:</em> pulmón expandido y ausencia de fuga.</li>
+                <li><em>Derrames:</em> salida &lt;100–200 mL/día y pulmón reexpandido.</li>
+            </ul>
+        </li>
+        <li><strong>La ecografía posterior</strong> para confirmar líquido residual y posición del tubo suele ser más útil que una radiografía rutinaria.</li>
+        <li><strong>Pulmón atrapado frente a atrapamiento pulmonar:</strong> una presión basal negativa con descenso inmediato y pronunciado sugiere pulmón atrapado y fisiología monofásica ex vacuo. El atrapamiento presenta presión basal positiva y curva bifásica, inicialmente gradual y luego con punto de inflexión brusco.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <ul>
+        <li><strong>El derrame pleural</strong> refleja desequilibrio entre formación y eliminación y tiene más de 50 etiologías; afecta aproximadamente a 1,5 millones de personas al año en Estados Unidos.</li>
+        <li><strong>Neumotórax e infección pleural</strong> son causas importantes de ingreso y procedimientos; el neumotórax espontáneo recurre con frecuencia si no se trata de forma definitiva.</li>
+        <li><strong>MPE</strong> es frecuente en cáncer de pulmón y mama; el manejo prioriza control de síntomas, menos días hospitalarios y concordancia con pronóstico y objetivos.</li>
+    </ul>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Toracocentesis</strong></p>
+    <ul>
+        <li><strong>Indicaciones:</strong> derrame nuevo sin explicación, alivio sintomático y evaluación antes de una intervención definitiva por MPE.</li>
+        <li><strong>Contraindicaciones relativas:</strong> coagulopatía o trombocitopenia intensa no corregida, celulitis sobre el sitio e imposibilidad de cooperar. La ventilación mecánica no es una contraindicación con ecografía.</li>
+    </ul>
+
+    <p><strong>Tubo torácico, pequeño en la mayoría</strong></p>
+    <ul>
+        <li><strong>Infección o empiema:</strong> drenaje temprano y antibióticos.</li>
+        <li><strong>MPE:</strong> control hospitalario o pleurodesis con talco en lechada; control ambulatorio mediante IPC.</li>
+        <li><strong>Neumotórax:</strong> primario sintomático o secundario moderado-grande; considere tubo grande si fuga masiva, ventilación o traumatismo.</li>
+        <li><strong>Hemotórax:</strong> inestable → tubo grande; estable y no emergente puede tratarse con 14F con evacuación similar y menos dolor.</li>
+    </ul>
+
+    <p><strong>Fibrinolíticos intrapleurales más DNasa</strong></p>
+    <ul><li><strong>Indicación:</strong> infección pleural que no drena, con sepsis o loculaciones persistentes; si no responde, cirugía.</li></ul>
+
+    <p><strong>Toracoscopia médica</strong></p>
+    <ul>
+        <li><strong>Indicaciones:</strong> exudado no diagnosticado con sospecha de malignidad o TB, pleurodesis con talco poudrage y adhesiolisis o loculaciones seleccionadas.</li>
+        <li><strong>Contraindicaciones relativas:</strong> adherencias intensas que impiden acceso y estado cardiorrespiratorio inestable no corregible; use ecografía para planificar.</li>
+    </ul>
+
+    <h4>Evaluación previa al procedimiento</h4>
+    <ul>
+        <li><strong>Imágenes:</strong> TUS define tamaño, complejidad y loculaciones, identifica diafragma e hígado/bazo y puede sugerir pulmón no expandible.</li>
+        <li><strong>Laboratorio y medicamentos:</strong> revise anticoagulantes y antiagregantes, corrija coagulopatía grave cuando sea posible, evalúe disfunción plaquetaria urémica y documente consentimiento.</li>
+        <li><strong>Riesgo y objetivos:</strong> aborde factores de RPE, reserva respiratoria y objetivos del paciente, especialmente en MPE.</li>
+        <li><strong>Estudios del líquido:</strong> recuento celular y diferencial, proteína/LDH, glucosa, pH en derrame paraneumónico y citología si sospecha cáncer; ADA, amilasa, colesterol, BNP o factor reumatoide de forma selectiva.</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Kit de toracocentesis:</strong> campo estéril, agujas 25 G y 22 G, catéter sobre aguja, jeringas, tubería con válvula unidireccional y recipientes; botella de vacío o aspiración de pared opcional.</li>
+        <li><strong>Kit de drenaje pequeño ≤14F:</strong> aguja introductora, guía, bisturí, dilatadores, catéter pigtail, sutura y conexión a sistema de tres cámaras.</li>
+        <li><strong>Sistema de drenaje:</strong> cámara de recolección, sello de agua unidireccional y control de aspiración húmedo o seco. Los sistemas digitales cuantifican fuga y regulan presión.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso / lista de verificación del procedimiento</h3>
+
+    <h4>Toracocentesis guiada por ecografía en tiempo real</h4>
+    <ol>
+        <li><strong>Posición:</strong> sentado si tolera; alternativa, decúbito lateral con lado afectado arriba.</li>
+        <li><strong>Preparación:</strong> consentimiento, pausa de seguridad, signos vitales y oxígeno según necesidad.</li>
+        <li><strong>Ecografía:</strong> seleccione espacio posterolateral, identifique diafragma e hígado/bazo y evite región cercana a columna y borde inferior costal.</li>
+        <li><strong>Anestesia:</strong> preparación estéril, habón con aguja 25 G e infiltración por el trayecto con 22 G hasta pleura.</li>
+        <li><strong>Entrada:</strong> un solo pase con catéter sobre aguja justo por encima de la costilla; aspire líquido, avance el catéter y retire la aguja.</li>
+        <li><strong>Drenaje:</strong> jeringa y válvula unidireccional; considere manometría si se busca gran volumen o aparecen síntomas.</li>
+        <li><strong>Finalización:</strong> deténgase por dolor, tos incesante, reacción vagal o Ppl &lt;−20 cm H₂O. Retire en espiración y coloque apósito oclusivo.</li>
+        <li><strong>Después:</strong> no radiografía rutinaria; solicítela si aspiró aire, hubo varios intentos, síntomas o radiación/cirugía torácica previa.</li>
+    </ol>
+
+    <h4>Tubo torácico pequeño por técnica de Seldinger</h4>
+    <ol>
+        <li><strong>Preparación:</strong> revise imágenes y laboratorio, posicione para acceso lateral, monitorice y marque con ecografía.</li>
+        <li><strong>Anestesia:</strong> campo estéril e infiltración generosa de tejido subcutáneo y pleura parietal; no reinyecte líquido contaminado en el trayecto.</li>
+        <li><strong>Acceso:</strong> introduzca aguja aspirando, pase &gt;10 cm de guía en pleura y retire aguja.</li>
+        <li><strong>Colocación:</strong> incisión cutánea, dilatación seriada, avance pigtail sobre guía, retire guía, suture y conecte a sello de agua con o sin aspiración.</li>
+        <li><strong>Comprobación:</strong> confirme salida de líquido o aire y estabilidad; radiografía selectiva y ecografía para posición.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>No retorna líquido:</strong> confirme que la aguja sigue el trayecto del localizador, busque acodamiento, repita ecografía y considere una bolsa más lateral o anterior.</li>
+        <li><strong>Punción seca pese a imágenes:</strong> la ecografía rescata hasta 88% de estos casos; vuelva a cartografiar y reintente.</li>
+        <li><strong>Obstrucción del tubo:</strong> irrigue con solución salina, revise acodamientos, reposicione al paciente y confirme que los orificios laterales sean intratorácicos.</li>
+        <li><strong>Fuga aérea persistente:</strong> confirme posición y permeabilidad, evite aspiración excesiva, considere sistemas digitales y escale a broncoscopia o cirugía si se prolonga.</li>
+        <li><strong>Enfisema subcutáneo:</strong> evalúe mala posición u obstrucción y asegure que los puertos estén intrapleurales.</li>
+        <li><strong>Señales de RPE:</strong> hipoxemia nueva, tos, dolor o infiltrados tras drenaje grande → detener o pinzar y proporcionar soporte.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <ul>
+        <li><strong>Toracocentesis:</strong> vigile reacciones vagales, reevalúe disnea y fomente espirometría incentivada; no imágenes rutinarias.</li>
+        <li><strong>Tubos:</strong> mantenga sello de agua, use aspiración selectiva, revise cámara de fuga e indicador y siga salida diaria.</li>
+        <li><strong>Retirada:</strong>
+            <ul>
+                <li><em>Neumotórax:</em> sin fuga y con reexpansión.</li>
+                <li><em>Derrame:</em> salida &lt;100–200 mL/día y expansión.</li>
+                <li><em>Técnica:</em> retirar con Valsalva o al final de espiración y cerrar con gasa vaselinada.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Complicaciones: prevención, reconocimiento y manejo</h3>
+    <ul>
+        <li><strong>Neumotórax:</strong> la complicación más frecuente tras toracocentesis; se reduce con ecografía en tiempo real y un pase controlado.</li>
+        <li><strong>Hemorragia:</strong> entre por encima de la costilla y evite la zona posterior cercana a columna. Maneje con presión o cauterio; la hemorragia mayor es rara.</li>
+        <li><strong>Infección:</strong> técnica estéril; la infección del sitio y el empiema son infrecuentes.</li>
+        <li><strong>Hemotórax:</strong> suele deberse a lesión arterial intercostal; sospeche ante líquido sanguinolento y reacumulación rápida.</li>
+        <li><strong>RPE:</strong> raro pero grave; tratamiento de soporte y evitar presiones excesivamente negativas o evacuación rápida forzada.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>Ventilación mecánica:</strong> toracocentesis segura con ecografía; durante tubos con PEEP/FiO₂ altas, reduzca interrupciones del circuito.</li>
+        <li><strong>Anticoagulación o uremia:</strong> muchos procedimientos pueden realizarse con técnica cuidadosa; ajuste medicamentos y corrija plaquetas/INR de forma selectiva en alto riesgo.</li>
+        <li><strong>Obesidad:</strong> mayor distancia piel-pleura favorece planificación ecográfica y a veces tubos más largos.</li>
+        <li><strong>Neumotórax espontáneo:</strong> manejo conservador en PSP seleccionado; si no, aspiración o tubo pequeño. Dispositivos ambulatorios solo en pacientes fiables con PSP y seguimiento estrecho; menos adecuados en SSP.</li>
+        <li><strong>Hemotórax:</strong> colecciones estables no masivas pueden drenarse con 14F; inestables o masivas requieren tubo grande y cirugía.</li>
+        <li><strong>Pulmón atrapado o no expandible:</strong> anticípelo con ecografía o manometría; evite pleurodesis con talco y prefiera IPC.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1: nuevo derrame pleural</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Nuevo derrame pleural"] --> B{"¿Causa transudativa clara, p. ej. CHF, con respuesta?"}
+        B -- Sí --> B1["Tratar causa; puede no requerir punción. Puncionar si atípico o no responde"]
+        B -- "No o atípico" --> C["Ecografía: tamaño, complejidad y loculaciones"]
+        C --> D["Toracocentesis diagnóstica guiada"]
+        D --> E{"¿Exudado por criterios de Light?"}
+        E -- Transudado --> E1["Tratar causa sistémica y revaluar"]
+        E -- Exudado --> F{"Categoría sospechada"}
+        F -- "Paraneumónico/empiema" --> G["Antibióticos + tubo pequeño si complicado; tPA/DNasa si drena mal"]
+        F -- "Malignidad" --> H["Citología y ruta por síntomas: IPC, talco o punciones"]
+        F -- "TB/otra" --> I["ADA, cultivos y pruebas; considerar MT/biopsia"]
+        G --> J{"¿Respuesta clínica?"}
+        J -- Sí --> K["Continuar drenaje y retirar al cumplir criterios"]
+        J -- No --> L["tPA/DNasa → si no responde → cirugía"]
+        H --> M{"¿Pulmón expandible?"}
+        M -- Sí --> N["Pleurodesis con talco o IPC según objetivos"]
+        M -- "No, atrapado" --> O["IPC"]
+    </div>
+
+    <div class="algorithm-note"><strong>Algoritmo paralelo:</strong><ol>
+        <li><strong>Contexto:</strong> si es un transudado clásico que responde, puede diferirse punción.</li>
+        <li><strong>Ecografía y toracocentesis</strong> con estudios adecuados.</li>
+        <li><strong>Paraneumónico/empiema:</strong> antibióticos y tubo pequeño si pus, pH bajo o loculación; tPA/DNasa si se detiene; cirugía si persiste.</li>
+        <li><strong>MPE:</strong> citología e IPC frente a talco según síntomas, expandibilidad y objetivos; pulmón atrapado → IPC.</li>
+        <li><strong>TB u otra:</strong> ADA/cultivos y biopsia guiada o MT si es necesario.</li>
+    </ol></div>
+
+    <h4>Algoritmo 2: selección y manejo del drenaje pleural</h4>
+    <div class="mermaid">
+    flowchart TD
+        A["Indicación de drenaje torácico"] --> B{"¿Aire, líquido o ambos?"}
+        B -- "Aire" --> C{"¿Primario o secundario/traumático?"}
+        C -- "Primario sintomático" --> D["Tubo pequeño o aspiración ± dispositivo ambulatorio seleccionado"]
+        C -- "Secundario o traumático" --> E["Tubo pequeño en la mayoría; grande si fuga masiva o ventilado"]
+        B -- "Líquido" --> F{"¿Infección, MPE o hemotórax?"}
+        F -- Infección --> G["Tubo pequeño; tPA/DNasa si loculado"]
+        F -- MPE --> H["Tubo pequeño para hospital/talco; IPC para ambulatorio"]
+        F -- Hemotórax --> I["Grande si inestable/masivo; 14F si estable"]
+        E & D & G & H & I --> J{"¿Aspiración?"}
+        J -- "Primero sello de agua" --> K["Vigilar fuga, salida y expansión"]
+        J -- "Si se necesita" --> L["−10 a −20 cm H₂O y reevaluar"]
+        K & L --> M{"¿Listo para retirar?"}
+        M -- "Neumotórax: sin fuga + expansión" --> N["Retirar"]
+        M -- "Derrame: ≤100–200 mL/24 h + expansión" --> N
+    </div>
+
+    <div class="algorithm-note"><strong>Algoritmo paralelo:</strong><ol>
+        <li><strong>Aire:</strong><ul><li>PSP → aspiración o tubo pequeño; dispositivo ambulatorio en seleccionados.</li><li>SSP/traumatismo → tubo pequeño en la mayoría y grande si fuga masiva, ventilación o inestabilidad.</li></ul></li>
+        <li><strong>Líquido:</strong><ul><li>Infección → tubo pequeño y tPA/DNasa si hace falta.</li><li>MPE → tubo pequeño para talco o IPC ambulatorio/no expandible.</li><li>Hemotórax → grande si inestable, 14F si estable.</li></ul></li>
+        <li><strong>Aspiración:</strong> no rutinaria en neumotórax; úsela con prudencia en derrames para evitar RPE.</li>
+        <li><strong>Retirada:</strong> expansión y ausencia de fuga o salida &lt;100–200 mL/día.</li>
+    </ol></div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <p><strong>Tabla 1. Clasificación del líquido pleural y etiologías frecuentes</strong></p>
+    <table><thead><tr><th>Categoría</th><th>Pruebas o claves</th><th>Etiologías frecuentes</th></tr></thead><tbody>
+        <tr><td><strong>Transudado</strong></td><td>No cumple ningún criterio de Light; a menudo bilateral</td><td>CHF, cirrosis, síndrome nefrótico, diálisis peritoneal, hipoalbuminemia, atelectasia, pericarditis constrictiva y urinotórax</td></tr>
+        <tr><td><strong>Exudado</strong></td><td>Cualquier criterio de Light positivo</td><td>Paraneumónico/empiema, malignidad, TB, pleuritis reumatoide o lúpica, pancreatitis, embolia, quilotórax, fármacos y síndrome poscardiaco</td></tr>
+        <tr><td><strong>Claves</strong></td><td>pH/glucosa muy bajos → infección complicada<br><br>ADA alta → TB según contexto<br><br>Amilasa alta → esófago/páncreas<br><br>Lechoso y TG alto → quilotórax</td><td>Use el contexto y proceda a biopsia guiada o MT si es necesario</td></tr>
+    </tbody></table>
+    <p><em>ADA, adenosina desaminasa; CHF, insuficiencia cardiaca; LDH, lactato deshidrogenasa; PE, embolia pulmonar; TG, triglicéridos.</em></p>
+
+    <p><strong>Tabla 2. Lista de seguridad para toracocentesis</strong></p>
+    <table><thead><tr><th>Fase</th><th>Elementos</th></tr></thead><tbody>
+        <tr><td><strong>Antes</strong></td><td>Revisar imágenes, laboratorio y antitrombóticos; consentimiento y pausa; monitor y oxígeno; posición y equipo de reanimación</td></tr>
+        <tr><td><strong>Ecografía</strong></td><td>Profundidad del líquido, diafragma, hígado/bazo y zona segura; evitar región posterior de peligro</td></tr>
+        <tr><td><strong>Campo estéril</strong></td><td>Higiene, barrera completa, clorhexidina y campos</td></tr>
+        <tr><td><strong>Anestesia y entrada</strong></td><td>Habón, infiltración del trayecto, aguja por encima de costilla y aspiración continua</td></tr>
+        <tr><td><strong>Drenaje</strong></td><td>Aspiración manual suave o vacío controlado; manometría opcional; detener por dolor, tos o Ppl &lt;−20</td></tr>
+        <tr><td><strong>Finalización</strong></td><td>Retirar al final de espiración, apósito oclusivo, ecografía posterior y sin radiografía rutinaria</td></tr>
+        <tr><td><strong>Vigilancia</strong></td><td>Neumotórax, sangrado, reacción vagal y RPE</td></tr>
+    </tbody></table>
+
+    <p><strong>Tabla 3. Tubos pequeños frente a grandes</strong></p>
+    <table><thead><tr><th>Situación</th><th>Calibre recomendado</th><th>Justificación</th></tr></thead><tbody>
+        <tr><td><strong>Infección pleural</strong></td><td>Pequeño ≤14F</td><td>Resultados similares, menos dolor; antibióticos y drenaje temprano</td></tr>
+        <tr><td><strong>MPE hospitalario</strong></td><td>Pequeño</td><td>Drenaje eficaz y pleurodesis equivalente</td></tr>
+        <tr><td><strong>MPE ambulatorio</strong></td><td>IPC</td><td>Menos días hospitalarios y útil en pulmón no expandible</td></tr>
+        <tr><td><strong>PSP sintomático</strong></td><td>Pequeño</td><td>Adecuado en la mayoría; aspiración o dispositivo ambulatorio selectivo</td></tr>
+        <tr><td><strong>SSP/traumatismo</strong></td><td>Considerar grande</td><td>Problemas de flujo u obstrucción si fuga masiva o ventilación</td></tr>
+        <tr><td><strong>Hemotórax inestable</strong></td><td>Grande</td><td>Evacuación rápida y menor obstrucción</td></tr>
+        <tr><td><strong>Hemotórax estable</strong></td><td>14F aceptable</td><td>Éxito similar y menos dolor en seleccionados</td></tr>
+    </tbody></table>
+
+    <p><strong>Tabla 4. Sistemas de drenaje y aspiración</strong></p>
+    <table><thead><tr><th>Componente</th><th>Función</th><th>Puntos prácticos</th></tr></thead><tbody>
+        <tr><td><strong>Cámara de recolección</strong></td><td>Recoge aire y líquido</td><td>Vigilar volumen y características</td></tr>
+        <tr><td><strong>Sello de agua</strong></td><td>Válvula unidireccional</td><td>Burbujeo continuo indica fuga activa</td></tr>
+        <tr><td><strong>Control de aspiración</strong></td><td>Aplica presión negativa</td><td>Uso selectivo; −20 cm H₂O habitual; sistemas digitales cuantifican</td></tr>
+        <tr><td><strong>Alivio de presión positiva</strong></td><td>Seguridad</td><td>Evita presión excesiva y tensión por desconexión</td></tr>
+        <tr><td><strong>Sello frente a aspiración</strong></td><td>Predeterminado frente a escalamiento</td><td>No aspiración rutinaria en neumotórax; primero sello de agua</td></tr>
+    </tbody></table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+    <div class="case-study"><p><strong>Caso 1</strong><br><em>Paciente de 68 años con CHF responde parcialmente a diuresis, pero persiste disnea y gran derrame derecho simple en TUS. ¿Qué sigue?</em></p><ul><li><strong>Mejor respuesta:</strong> toracocentesis guiada con estudios diagnósticos y drenaje de gran volumen guiado por síntomas.</li><li><strong>Por qué:</strong> incluso en probable transudado, las características atípicas o respuesta incompleta justifican punción.</li></ul></div>
+    <div class="case-study"><p><strong>Caso 2</strong><br><em>Paciente de 55 años con neumonía, derrame tabicado, pH 7,05 y fiebre persistente.</em></p><ul><li><strong>Mejor respuesta:</strong> tubo pequeño más tPA/DNasa si es necesario.</li><li><strong>Por qué:</strong> es un derrame complicado que requiere drenaje inmediato.</li></ul></div>
+    <div class="case-study"><p><strong>Caso 3</strong><br><em>Paciente de 72 años con cáncer de mama metastásico y derrame recurrente semanal; el pulmón expande mal tras punción.</em></p><ul><li><strong>Mejor respuesta:</strong> IPC.</li><li><strong>Por qué:</strong> el pulmón no expandible favorece IPC; la pleurodesis probablemente fallará.</li></ul></div>
+
+    <hr>
+
+    <h3>Banco de 12 preguntas</h3>
+    <ol>
+        <li><strong>Paciente de 67 años con derrame unilateral nuevo sin causa sistémica clara. ¿Primer paso?</strong><ul><li>A. Angio-TC</li><li>B. Toracocentesis ciega</li><li>C. Toracocentesis diagnóstica guiada por ecografía</li><li>D. IPC inmediato</li><li>E. PET-TC</li><li><strong>Respuesta: C.</strong> La guía ecográfica es estándar y reduce complicaciones.</li></ul></li>
+        <li><strong>Durante toracocentesis aparecen dolor y tos persistente tras 1,3 L; Ppl −35 cm H₂O. ¿Qué sigue?</strong><ul><li>A. Continuar hasta sequedad</li><li>B. Detener, dar soporte y considerar drenaje escalonado</li><li>C. Añadir aspiración</li><li>D. Diurético y continuar</li><li>E. Convertir a tubo</li><li><strong>Respuesta: B.</strong> Dolor y presión muy negativa indican riesgo de RPE.</li></ul></li>
+        <li><strong>¿Quién requiere radiografía tras toracocentesis?</strong><ul><li>A. Punción simple sin síntomas</li><li>B. Aspiración de burbujas de aire</li><li>C. Vagal leve resuelto</li><li>D. Nunca</li><li>E. Todos</li><li><strong>Respuesta: B.</strong></li></ul></li>
+        <li><strong>No se aspira líquido pese a bolsa ecográfica a 4 cm. ¿Siguiente acción?</strong><ul><li>A. Tubo grande</li><li>B. Repetir ecografía, revisar acodamiento y trayecto, y considerar otro sitio</li><li>C. Aspiración de pared</li><li>D. Pedir que tosa</li><li>E. TC inmediata</li><li><strong>Respuesta: B.</strong></li></ul></li>
+        <li><strong>CPPE con sepsis y multiloculaciones tras 48 h de tubo pequeño. ¿Escalamiento?</strong><ul><li>A. Cambiar a 28F</li><li>B. tPA/DNasa intrapleural</li><li>C. Aspiración −40</li><li>D. Retirar y repetir punción</li><li>E. Observar 72 h</li><li><strong>Respuesta: B.</strong></li></ul></li>
+        <li><strong>En MPE con pulmón expandible, ¿qué opción minimiza días hospitalarios manteniendo control?</strong><ul><li>A. Punciones seriadas</li><li>B. IPC</li><li>C. Solo poudrage</li><li>D. Tubo grande con aspiración</li><li>E. AINE</li><li><strong>Respuesta: B.</strong></li></ul></li>
+        <li><strong>SSP en planta con fuga estable y sin dificultad. ¿Qué se prefiere?</strong><ul><li>A. Sello de agua sin aspiración rutinaria</li><li>B. Aspiración inmediata −20</li><li>C. Pinzar</li><li>D. Retirar</li><li>E. Heimlich y alta</li><li><strong>Respuesta: A.</strong></li></ul></li>
+        <li><strong>Hemotórax estable tras traumatismo en entorno monitorizado. ¿Drenaje inicial?</strong><ul><li>A. Catéter 14F</li><li>B. &gt;28F obligatorio</li><li>C. IPC</li><li>D. Toracocentesis</li><li>E. Observar</li><li><strong>Respuesta: A.</strong> En estable no emergente, 14F puede ser equivalente.</li></ul></li>
+        <li><strong>¿Qué sugiere pulmón atrapado durante toracocentesis?</strong><ul><li>A. Descenso brusco tardío tras presión normal</li><li>B. Presión basal negativa con descenso pronunciado inmediato</li><li>C. Presión positiva tras 2 L</li><li>D. ADA alta</li><li>E. Líquido turbio</li><li><strong>Respuesta: B.</strong></li></ul></li>
+        <li><strong>MPE recurrente, mal estado y pulmón no expandible. ¿Qué sigue?</strong><ul><li>A. Talco en lechada</li><li>B. Poudrage</li><li>C. IPC</li><li>D. Punción cada pocos días</li><li>E. Pleurectomía</li><li><strong>Respuesta: C.</strong></li></ul></li>
+        <li><strong>Tras tubo pequeño por empiema, se detiene drenaje y aparece enfisema subcutáneo. ¿Primera acción?</strong><ul><li>A. Pinzar</li><li>B. Aspiración alta</li><li>C. Revisar acodamiento/mala posición, irrigar y confirmar puertos intrapleurales</li><li>D. Retirar</li><li>E. Segundo tubo grande</li><li><strong>Respuesta: C.</strong></li></ul></li>
+        <li><strong>¿Qué afirmación sobre pleurodesis en MPE es más exacta?</strong><ul><li>A. Poudrage claramente superior</li><li>B. Lechada por tubo pequeño y poudrage tienen éxito similar en seleccionados</li><li>C. Tubos grandes mejoran éxito</li><li>D. Se prefiere en pulmón no expandible</li><li>E. Siempre requiere aspiración</li><li><strong>Respuesta: B.</strong></li></ul></li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Gravedad frente a aspiración en toracocentesis:</strong> ensayos muestran molestias similares; algunos asocian vacío con más complicaciones. El drenaje guiado por síntomas o manometría sigue siendo central.</li>
+        <li><strong>Aspiración rutinaria en neumotórax:</strong> las guías desaconsejan su uso por defecto; primero sello de agua para no perpetuar flujo por fístula.</li>
+        <li><strong>Manejo ambulatorio:</strong> evidencia sólida en PSP seleccionado y menor en SSP.</li>
+        <li><strong>tPA/DNasa frente a VATS temprana:</strong> ambas rutas existen; el tratamiento intrapleural es eficaz en muchos casos y la decorticación sigue siendo esencial en refractarios.</li>
+        <li><strong>Talco en lechada frente a poudrage:</strong> ensayos contemporáneos muestran éxito ampliamente similar; la experiencia y logística guían la elección.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Lista de verificación de puntos clave</h3>
+    <ul>
+        <li><strong>Use ecografía</strong> en todos los procedimientos pleurales.</li>
+        <li><strong>Entre por encima de la costilla</strong> y evite inserción posterior a menos de 6 cm de columna.</li>
+        <li><strong>En grandes volúmenes,</strong> use manometría o reglas por síntomas y evite presiones muy negativas.</li>
+        <li><strong>Prefiera tubos pequeños</strong> para la mayoría de derrames y neumotórax; reserve grandes para hemotórax inestable, fuga masiva o posoperatorio inmediato.</li>
+        <li><strong>No use aspiración por defecto</strong> en neumotórax; comience con sello de agua.</li>
+        <li><strong>Empiema:</strong> antibióticos y tubo pequeño temprano; tPA/DNasa si se detiene; cirugía si persiste.</li>
+        <li><strong>MPE:</strong> IPC frente a talco según síntomas, expandibilidad y objetivos; pulmón atrapado → IPC.</li>
+        <li><strong>No radiografía rutinaria</strong> tras punción sin complicaciones.</li>
+        <li><strong>Asegure e irrigue los tubos</strong> y confirme que los orificios estén intrapleurales.</li>
+        <li><strong>Retire</strong> cuando cese fuga o salida sea &lt;100–200 mL/día con expansión.</li>
+        <li><strong>Anticipe RPE</strong> y detenga drenaje si aparecen síntomas o presión muy negativa.</li>
+        <li><strong>Documente objetivos</strong> del paciente, especialmente en MPE.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations"><h3>Abreviaturas y glosario</h3><dl>
+        <dt>ADA</dt><dd>Adenosina desaminasa</dd><dt>BTS</dt><dd>British Thoracic Society</dd><dt>CHF</dt><dd>Insuficiencia cardiaca congestiva</dd><dt>cm H₂O</dt><dd>Centímetros de agua</dd><dt>DNasa</dt><dd>Desoxirribonucleasa</dd><dt>IPC</dt><dd>Catéter pleural permanente</dd><dt>LDH</dt><dd>Lactato deshidrogenasa</dd><dt>MPE</dt><dd>Derrame pleural maligno</dd><dt>MT</dt><dd>Toracoscopia médica</dd><dt>Ppl</dt><dd>Presión del líquido pleural</dd><dt>RPE</dt><dd>Edema pulmonar de reexpansión</dd><dt>SP</dt><dd>Neumotórax espontáneo</dd><dt>Talco en lechada/poudrage</dt><dd>Suspensión por tubo / insuflación por toracoscopia</dd><dt>tPA</dt><dd>Activador tisular del plasminógeno</dd><dt>TUS</dt><dd>Ecografía torácica</dd><dt>VATS</dt><dd>Cirugía torácica videoasistida</dd>
+    </dl></div>
+
+    <hr>
+    <div class="references">
+<h3>Referencias</h3>
+<ol>
+<li>Roberts ME, Rahman NM, Maskell NA, Bibby AC, Blyth KG, Corcoran JP, et al. British Thoracic Society guideline for pleural disease. Thorax. 2023;78(Suppl 3):S1–S42.</li>
+<li>Asciak R, Bedawi EO, Bhatnagar R, Clive AO, Hassan M, Lloyd H, et al. British Thoracic Society Clinical Statement on pleural procedures. Thorax. 2023;78(Suppl 3):S43–S68.</li>
+<li>Feller‑Kopman D. Ultrasound‑guided thoracentesis. Chest. 2006;129:1709‑14.</li>
+<li>Gordon CE, Feller‑Kopman D, et al. Pneumothorax following thoracentesis: a systematic review and meta‑analysis. Arch Intern Med. 2010;170(4):332‑9.</li>
+<li>Feller‑Kopman D, Walkey A, et al. The relationship of pleural pressure to symptom development during therapeutic thoracentesis. Chest. 2006;6:1556‑60.</li>
+<li>Feller‑Kopman D, Berkowitz D, et al. Large‑volume thoracentesis and the risk of reexpansion pulmonary edema. Ann Thorac Surg. 2007;84:1656‑61.</li>
+<li>Lentz RJ, Shojaee S, et al. Gravity vs suction‑driven therapeutic thoracentesis (GRAVITAS): a multicenter randomized controlled trial. Chest. 2020;157(3):702‑11.</li>
+<li>Shojaee S, Pannu J, et al. Gravity‑ vs wall suction‑driven large‑volume thoracentesis: randomized controlled study. Chest. 2024;166(6):1573‑82.</li>
+<li>Rahman NM, Maskell NA, Davies CW, Hedley EL, Nunn AJ, Gleeson FV, et al. Relationship between chest tube size and clinical outcome in pleural infection. Chest. 2010;137(3):536‑43.</li>
+<li>Chaddha U, Agrawal A, Feller‑Kopman D, Kaul V, Shojaee S, Maldonado F, et al. Use of fibrinolytics and deoxyribonuclease in adult patients with pleural empyema: a consensus statement. Lancet Respir Med. 2021;9(9):1050‑64.</li>
+<li>Davies HE, Mishra EK, Kahan BC, Wrightson JM, Stanton AE, Guhan A, et al. Indwelling pleural catheter vs chest tube with talc pleurodesis for relief of dyspnea in MPE (TIME2). JAMA. 2012;307(22):2383‑9.</li>
+<li>Thomas R, Fysh ETH, Smith NA, Lee P, Kwan BCH, Yap E, et al. Indwelling pleural catheter vs talc pleurodesis (AMPLE). JAMA. 2017;318(19):1903‑12.</li>
+<li>Bhatnagar R, Piotrowska HEG, Laskawiec‑Szkonter M, Kahan BC, Luengo‑Fernandez R, Pepperell JCT, et al. Thoracoscopic talc poudrage vs talc slurry via chest tube for pleurodesis failure rate in MPE. JAMA. 2020;323(1):60‑9.</li>
+<li>Thethi I, Ramirez S, Shen W, Zhang D, Mohamad M, Kaphle U, et al. Effect of chest tube size on pleurodesis efficacy in malignant pleural effusion: meta‑analysis. J Thorac Dis. 2018;10(1):355‑62.</li>
+<li>Brown SGA, Ball EL, Perrin K, Asha SE, Braithwaite I, Egerton‑Warburton D, et al. Conservative vs interventional treatment for spontaneous pneumothorax. N Engl J Med. 2020;382(5):405‑15.</li>
+<li>Walker S, Hallifax R, Ricciardi S, Fitzgerald D, Keijzers M, Lauk O, et al. Joint ERS/EACTS/ESTS clinical practice guidelines on adults with spontaneous pneumothorax. Eur Respir J. 2024;63(5):2300797.</li>
+<li>Hallifax RJ, McKeown E, Sivakumar P, Fairbairn I, Peter C, Leitch A, et al. Ambulatory management of primary spontaneous pneumothorax: randomized trial. Lancet. 2020;396(10243):39‑49.</li>
+<li>Bauman ZM, Kulvatunyou N, Joseph B, Gries L, O’Keeffe T, Tang AL, et al. 14‑F pigtail vs 28–32F chest tubes in traumatic hemothorax/hemopneumothorax: RCT. World J Surg. 2021;45(3):880‑6.</li>
+<li>Petiot A, Tawk S, Ghaye B. Re‑expansion pulmonary oedema. Lancet. 2018;392(10146):507.</li>
+<li>Reed MF, Lyons JM, Luchette FA, Neu JA, Howington JA. Underwater seal vs suction for pneumothorax: preliminary randomized trial. J Am Coll Surg. 2007;204(1):84‑90.</li>
+<li>Helm EJ, Rahman NM, Talakoub O, Fox DL, Gleeson FV. Course and variation of the intercostal artery by CT. Chest. 2013;143(3):634‑9.</li>
+<li>Kwiatt M, Tarbox A, Seamon MJ, Swaroop M, Cipolla J, Allen C, et al. Thoracostomy tubes: complications and related topics. Int J Crit Illn Inj Sci. 2014;4(2):143‑55.</li>
+<li>Light RW. Pleural Diseases. 4th ed. Philadelphia, PA: Lippincott Williams &amp; Wilkins; 2001.</li>
+<li>Light RW, Lee YCG. Textbook of Pleural Diseases. 2nd ed. London: Hodder Arnold; 2008.</li>
+</ol>
+</div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

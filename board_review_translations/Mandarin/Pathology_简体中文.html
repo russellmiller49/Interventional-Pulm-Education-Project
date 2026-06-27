@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病理学：组织学、细胞学、ROSE 与分子标志物</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>病理学：组织学、细胞学、ROSE 与分子标志物</h1>
+
+<h3>考试对应领域与范围</h3>
+<p>本章对应介入肺科学考试复习的核心诊断领域：肺癌组织学与分类；细胞学基础；快速现场评估（ROSE）的工作流程和决策；组织及细胞块在免疫组化（IHC）、荧光原位杂交（FISH）、聚合酶链反应（PCR）、二代测序（NGS）和循环肿瘤 DNA（ctDNA）检测中的分配；PD-L1 评估与免疫治疗反应评价标准；以及将标本类型与腺癌、鳞癌和神经内分泌癌的分子检测及治疗选择相联系的实用算法。</p>
+
+<h3>学习目标</h3>
+<p>完成本章后，学习者应能够：</p>
+<ul>
+    <li>区分肺癌的关键组织学亚型，并识别腺癌中的高危结构模式。</li>
+    <li>采用以标本为先的细胞学与 ROSE 策略，在保证诊断率的同时保留后续分子检测材料。</li>
+    <li>依据临床问题和标本限制，选择并排序适当的生物标志物检测（IHC、FISH、PCR、NGS、液体活检）。</li>
+    <li>实施晚期 NSCLC 的实用检测算法，包括 PD-L1 评估及进展时再次检测。</li>
+    <li>预判会降低检测性能和可解释性的分析前陷阱（固定液、脱钙剂、肿瘤比例）。</li>
+    <li>将免疫治疗反应评价概念（RECIST 1.1 与免疫修订框架）整合至多学科决策。</li>
+</ul>
+
+<hr>
+
+<h3>高频考点一页通</h3>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>NSCLC 概况：</strong>腺癌是最常见肺癌（约占全部肺癌 50%，约占 NSCLC 60%）。分类遵循 WHO/IASLC 原则，并用谱系标志物 IHC 确认：TTF-1/napsin A 支持腺癌，p40/p63 支持鳞癌。</li>
+        <li><strong>腺癌模式：</strong>原位腺癌（AIS，≤3 cm、纯贴壁生长、无浸润）、微浸润腺癌（MIA，浸润 ≤0.5 cm），以及浸润性腺癌模式（腺泡、乳头、微乳头、实性）。微乳头和实性模式更具侵袭性；筛状结构预后不良，并富集于 ALK/ROS1 重排肿瘤。</li>
+        <li><strong>鳞状细胞癌：</strong>与吸烟密切相关；分为角化型、非角化型和基底样。形态受限时用 p40/p63 确认谱系。</li>
+        <li><strong>神经内分泌谱系：</strong>典型/不典型类癌（低至中级别）与高级别小细胞肺癌（SCLC）和大细胞神经内分泌癌（LCNEC）。SCLC 有核塑形和极高 Ki-67；LCNEC 具有神经内分泌形态及高核分裂指数。</li>
+        <li><strong>分期要点（AJCC 第 8 版）：</strong>部分实性肿瘤按浸润部分大小细化 T 分期；AIS/MIA 归为 Tis；更新了多灶磨玻璃/贴壁病变和肺炎型腺癌的处理。</li>
+        <li><strong>ROSE 目标：</strong>确认取到病灶、优化涂片/快速染色质量、减少无诊断价值的穿刺，并实时分配材料制作细胞块和分子检测。</li>
+        <li><strong>标本分配：</strong>保留组织条或专门的 FNA 针次用于细胞块/NGS；避免重金属固定液和酸性脱钙剂；记录肿瘤比例及坏死。</li>
+        <li><strong>平台匹配：</strong>IHC 检测蛋白（ALK、ROS1、PD-L1、BRAF V600E、NTRK）；FISH 检测基因重排或扩增（ALK、ROS1、RET、MET 扩增）；PCR/NGS 检测突变、融合和拷贝数改变；血浆 ctDNA 用于特定情形（如进展时 EGFR T790M）。</li>
+        <li><strong>驱动基因：</strong>EGFR 18–21 外显子敏感变异（西方约 15%，东亚可达约 50%）；ALK 3%–5%；ROS1 约 1%–2%；BRAF 约 2%–4%（其中 V600E 约占一半）；MET 14 外显子跳跃约 5%；RET 约 1%–2%；NTRK 约 1%–2%；KRAS 是最常见驱动基因（包括 G12C 亚型）。</li>
+        <li><strong>PD-L1 检测：</strong>有多种经验证的 IHC 克隆/方法；报告肿瘤细胞膜染色百分比，适用时也报告免疫细胞评分。若治疗标签指定，应使用相应配套检测。</li>
+        <li><strong>液体活检：</strong>当组织获取不安全或已耗尽，以及某些耐药问题时有用；若血浆阴性而结果会改变治疗，应进一步组织活检。</li>
+        <li><strong>免疫治疗反应评价：</strong>反应可能延迟；假性进展并不常见。iRECIST 引入“免疫未确认进展（iUPD）”并要求确认，但多数试验和临床决策仍以 RECIST 1.1 为标准。</li>
+        <li><strong>常见考题陷阱：</strong>在挤压、坏死或极少量标本上报告 PD-L1，却不说明标本是否充分，可能误导治疗选择。</li>
+        <li><strong>要点：</strong>小活检/细胞学中的低分化 NSCLC，未用谱系 IHC 时不要过度分型，应写“非小细胞癌，倾向腺癌/鳞癌”。</li>
+        <li><strong>陷阱：</strong>用酸性脱钙骨活检做 NGS——酸脱钙会破坏核酸并增加检测失败。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p>肺癌大体分为 NSCLC（腺癌、鳞癌、大细胞及其变异型）和 SCLC。腺癌占主导，现可见于外周及中央部位。组织学亚型具有意义，因为生长模式携带预后信息，并可能与特定分子改变相关。</p>
+<p>神经内分泌肿瘤构成生物学连续谱；SCLC 和 LCNEC 为高级别，核分裂和 Ki-67 高，而类癌级别较低。</p>
+
+<h4>适应证与禁忌证</h4>
+<p><strong>ROSE 和细胞学流程的适应证：</strong></p>
+<ul>
+    <li>经 EBUS-TBNA、EUS-FNA、导航支气管镜或经胸 FNA 取样的外周或纵隔病灶。</li>
+    <li>不适合重复操作，或病灶位置导致取样充分性具有挑战的患者。</li>
+    <li>需要实时分配材料的情形（预计需 IHC、FISH、NGS、PD-L1）。</li>
+</ul>
+<p><strong>相对禁忌证/局限：</strong></p>
+<ul>
+    <li>因坏死或出血无法取得代表性细胞材料。</li>
+    <li>骨转移需要脱钙（优先其他部位，或采用 EDTA 脱钙）。</li>
+</ul>
+
+<h4>术前评估（病理学视角）</h4>
+<p><strong>与细胞病理团队术前沟通：</strong>明确主要临床问题（诊断、分期或分子分型）、可能需要的检测及首选固定液。</p>
+<p><strong>标本规划：</strong>安排专门针次制作细胞块（IHC/PD-L1）、核酸提取（NGS），并可制作现场涂片（Diff-Quik/快速 H&amp;E）评估充分性。</p>
+<p><strong>固定策略：</strong>FFPE 是 IHC/FISH/NGS 的标准；酒精固定适用于细胞学；避免重金属固定液和酸性脱钙剂，以免破坏 DNA/RNA 和蛋白表位。</p>
+
+<h4>设备与准备</h4>
+<ul>
+    <li><strong>ROSE 推车：</strong>洁净标记玻片、Diff-Quik 或同类快速染色套件、Pap 固定用酒精缸、细胞块固定液容器、针冲洗用无菌盐水和记录工具。</li>
+    <li><strong>EBUS/EUS：</strong>与支气管镜医师/介入医师协调针径和针次，并确保材料立即转移用于涂片和细胞块。</li>
+</ul>
+
+<h4>分步技术与操作核对表</h4>
+<ol>
+    <li><strong>靶区确认：</strong>通过超声/透视/CT 导航确认后穿刺。</li>
+    <li><strong>涂片制作：</strong>
+        <ul>
+            <li>挤出极小液滴；用轻柔“拉开”或“羽化”法制作薄涂片。</li>
+            <li>至少制作一张风干片用于快速染色，一张酒精固定片用于 Pap 染色。</li>
+            <li>避免厚涂片和挤压；立即标记。</li>
+        </ul>
+    </li>
+    <li><strong>快速染色与充分性判断：</strong>
+        <ul>
+            <li>评估细胞量、肿瘤细胞与良性成分、坏死、淋巴结取样（如分期淋巴结应有淋巴细胞背景）以及是否命中病灶。</li>
+        </ul>
+    </li>
+    <li><strong>实时分配：</strong>
+        <ul>
+            <li>若有恶性细胞：先保证细胞块和专门核酸管（如针冲洗液），再制作更多涂片。</li>
+            <li>为 PD-L1、ALK/ROS1 IHC/FISH 和 NGS 保留材料；避免在少量标本上使用不必要的染色。</li>
+        </ul>
+    </li>
+    <li><strong>迭代取样：</strong>
+        <ul>
+            <li>若细胞少或仅坏死，要求增加针次并调整角度/针尖位置。</li>
+        </ul>
+    </li>
+    <li><strong>记录：</strong>
+        <ul>
+            <li>记录充分性、疑似谱系（“倾向腺癌/鳞癌”）以及是否已保留材料用于分子检测。</li>
+        </ul>
+    </li>
+</ol>
+
+<h4>故障排除与术中处理</h4>
+<ul>
+    <li><strong>血性涂片：</strong>减少压力，优先收集细胞块（血凝块捕获）和冲洗液。</li>
+    <li><strong>风干伪影：</strong>Pap 玻片应立即固定；只有 Diff-Quik 玻片风干。</li>
+    <li><strong>挤压伪影：</strong>轻柔铺片，避免研磨。</li>
+    <li><strong>组织条仅坏死：</strong>调整取样，靶向存活边缘。</li>
+    <li><strong>NGS 肿瘤比例不足：</strong>增加病灶针次；若无法取得组织且临床问题具有可行动性，可辅助使用血浆 ctDNA。</li>
+</ul>
+
+<h4>术后处理与随访</h4>
+<p><strong>整合报告：</strong>需要时结合谱系 IHC 给出最终亚型，并明确说明 PD-L1 和 NGS 的标本充分性。</p>
+<p><strong>反射性检测策略：</strong>许多中心对新诊断晚期 NSCLC 自动检测关键驱动基因（EGFR、ALK、ROS1、BRAF、RET、MET 14 外显子跳跃、KRAS）及 PD-L1。</p>
+<p><strong>疾病进展时：</strong>再次活检或血浆检测，评估耐药机制（如 EGFR T790M、小细胞转化）。</p>
+
+<h4>并发症（诊断学视角）</h4>
+<ul>
+    <li><strong>假阴性风险：</strong>细胞量少、广泛坏死，或未识别黏液性肿瘤（浸润性黏液腺癌可 TTF-1 阴性）。</li>
+    <li><strong>分析失败：</strong>酸性脱钙、重金属固定液、冷缺血时间过长。</li>
+    <li><strong>解释陷阱：</strong>在挤压标本上评分 PD-L1；未做 IHC 即将实性腺癌误判为鳞癌。</li>
+</ul>
+
+<h4>特殊人群与模式</h4>
+<ul>
+    <li><strong>浸润性黏液腺癌：</strong>常有 KRAS 突变，TTF-1 常阴性；形态和 IHC 可模拟胃肠道来源黏液性转移癌。</li>
+    <li><strong>高级别模式（实性/微乳头）：</strong>复发风险更高；需警惕淋巴血管侵犯和气腔播散。</li>
+    <li><strong>肉瘤样癌：</strong>MET 14 外显子跳跃富集，应优先综合 NGS。</li>
+</ul>
+
+<h4>证据与结局（节选）</h4>
+<p>预测性生物标志物检测已改变 NSCLC 管理；EGFR 18–21 外显子敏感突变可预测 EGFR TKI 获益，常见耐药机制包括 T790M。</p>
+<p>可靶向融合（ALK、ROS1、RET、NTRK）和 MET 14 外显子跳跃可对匹配的 TKI 产生反应。</p>
+<p>采用经验证方法测定 PD-L1 可指导免疫检查点抑制剂使用；不同方案中，PD-L1 各分层均可能出现反应，但具体意义取决于治疗方案。</p>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——以标本为先的 ROSE 引导分子检测（EBUS/EUS/FNA）</h4>
+<div class="mermaid">
+flowchart TD
+    A["靶向 FNA/EBUS/EUS 针次"] --> B{"ROSE：是否见病灶细胞？"}
+    B -- "否" --> C["调整针道/针位或更换靶区"]
+    C --> A
+    B -- "是" --> D["制作细胞块并保留核酸冲洗液"]
+    D --> E{"估计肿瘤比例是否足够？"}
+    E -- "否" --> F["增加病灶针次制作细胞块"]
+    F --> D
+    E -- "是" --> G["启动反射性检测组合"]
+    G --> H["细胞块 PD-L1 IHC"]
+    G --> I["NGS 驱动基因面板（DNA±RNA）"]
+    I --> J{"怀疑特定融合（ALK/ROS1/RET/NTRK）？"}
+    J -- "是且组织有限" --> K["优先正交 IHC±FISH"]
+    J -- "否" --> L["NGS 优先策略"]
+    H & K & L --> M["整合报告 → 肿瘤多学科讨论"]
+    M --> N{"后续进展？"}
+    N -- "是" --> O["血浆 ctDNA ± 组织再活检"]
+    N -- "否" --> P["追踪周转时间与充分性质量指标"]
+</div>
+
+<div class="algorithm-note">
+    <strong>算法 1 关键步骤：</strong>
+    <ul>
+        <li>ROSE 确认取到病灶；无诊断价值时立即调整。</li>
+        <li>尽早保留细胞块，避免在非必要涂片上耗尽材料。</li>
+        <li>条件允许时用 NGS 一次性检测多种改变；组织有限或怀疑特定融合时，用 IHC/FISH 作分流或正交确认。</li>
+        <li>用经验证方法在细胞块上检测 PD-L1。</li>
+        <li>进展时可先用血浆 ctDNA 快速筛查可行动耐药机制；若血浆阴性且结果会改变管理，应组织再活检。</li>
+    </ul>
+</div>
+
+<h4>算法 2——新诊断晚期 NSCLC 检测路径</h4>
+<div class="mermaid">
+flowchart TD
+    A["组织学：腺癌、鳞癌或倾向某谱系的 NSCC"] --> B{"腺癌或 NSCC NOS？"}
+    B -- "是" --> C["PD-L1 + 广泛 NGS（DNA±RNA）"]
+    B -- "鳞癌" --> D{"不吸烟/轻度吸烟或小标本？"}
+    D -- "是" --> C
+    D -- "否" --> E["PD-L1；按临床因素考虑 NGS"]
+    C --> F{"NGS 是否有可行动结果？"}
+    F -- "是" --> G["匹配靶向治疗"]
+    F -- "否" --> H["依据 PD-L1 与合并症选择化疗-免疫或免疫治疗"]
+    H --> I{"进展？"}
+    I -- "是" --> J["再活检 ± 液体活检；评估耐药（如 T790M、MET 扩增、组织学转化）"]
+</div>
+
+<div class="algorithm-note">
+    <strong>算法 2 关键步骤：</strong>
+    <ul>
+        <li>腺癌/NSCC-NOS：起始即做包含融合检测的综合 NGS + PD-L1。</li>
+        <li>鳞癌：所有患者检测 PD-L1；从不/轻度吸烟、年轻或小活检存在误分型风险时考虑 NGS。</li>
+        <li>血浆阴性不能排除可行动改变；若结果会改变治疗，应组织确认。</li>
+        <li>进展时再次检测应考虑组织学转化（如转为 SCLC）。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<h4>表 1. WHO/IASLC 导向的 NSCLC 快速分类</h4>
+<table>
+    <thead><tr><th>主要类型</th><th>关键形态</th><th>谱系 IHC</th><th>说明</th></tr></thead>
+    <tbody>
+        <tr><td>腺癌</td><td>贴壁、腺泡、乳头、微乳头、实性；黏液性变异型</td><td>TTF-1、napsin A；黏液染色</td><td>AIS：≤3 cm 贴壁、无浸润；MIA：浸润 ≤0.5 cm</td></tr>
+        <tr><td>鳞状细胞癌</td><td>角化、细胞间桥；非角化型；基底样</td><td>p40（首选）、p63</td><td>与吸烟密切相关</td></tr>
+        <tr><td>SCLC</td><td>小细胞、胞质少、核塑形、核分裂高</td><td>神经内分泌标志物、TTF-1、高 Ki-67</td><td>侵袭性强；TKI 耐药时考虑转化</td></tr>
+        <tr><td>LCNEC</td><td>大细胞神经内分泌结构、核分裂高</td><td>神经内分泌标志物</td><td>高级别；分子异质性</td></tr>
+        <tr><td>肉瘤样癌</td><td>梭形/巨细胞成分 ≥10%</td><td>可变</td><td>MET 14 外显子跳跃富集</td></tr>
+        <tr><td>唾液腺型肿瘤</td><td>黏液表皮样癌、腺样囊性癌</td><td>依诊断而定</td><td>通常中央/支气管腔内</td></tr>
+    </tbody>
+</table>
+
+<h4>表 2. 生物标志物—检测方法匹配及典型标本需求</h4>
+<table>
+    <thead><tr><th>检测目标</th><th>首选方法</th><th>典型 FFPE 需求（约）</th><th>说明</th></tr></thead>
+    <tbody>
+        <tr><td>PD-L1 表达</td><td>经验证 IHC 克隆/方法</td><td>1–2 张切片（4–5 µm）</td><td>报告肿瘤细胞膜阳性百分比；了解方法与药物标签匹配</td></tr>
+        <tr><td>ALK/ROS1 融合</td><td>IHC 筛查 ± 断裂探针 FISH；RNA-NGS 融合面板</td><td>IHC 1–2 张；FISH 1–2 张；NGS 需 RNA 输入</td><td>FISH 不依赖融合伙伴；RNA-NGS 可识别伙伴</td></tr>
+        <tr><td>RET/NTRK 融合</td><td>RNA-NGS ± FISH；pan-TRK IHC 作筛查</td><td>NGS 通常 ≥8–10 张 7 µm 切片；靶向检测更少</td><td>pan-TRK IHC 阳性需分子确认</td></tr>
+        <tr><td>EGFR/BRAF/KRAS/MET 14 外显子</td><td>DNA-NGS 或靶向 PCR</td><td>DNA 50 ng–2 µg，依平台而定</td><td>DNA-NGS 覆盖广；PCR 适合热点</td></tr>
+        <tr><td>MET 扩增</td><td>FISH ± NGS 拷贝数</td><td>FISH 1–2 张</td><td>不同方法阈值尚不完全统一</td></tr>
+    </tbody>
+</table>
+
+<h4>表 3. PD-L1 IHC 方法——如何选择与报告</h4>
+<table>
+    <thead><tr><th>治疗情境</th><th>常用 PD-L1 克隆</th><th>评分重点</th><th>实践提示</th></tr></thead>
+    <tbody>
+        <tr><td>抗 PD-1（如 pembrolizumab）</td><td>22C3</td><td>肿瘤比例评分（%）</td><td>标签指定时匹配相应方法</td></tr>
+        <tr><td>抗 PD-1（如 nivolumab）</td><td>28-8</td><td>肿瘤比例评分（%）</td><td>许多实验室中分析表现与 22C3 相近</td></tr>
+        <tr><td>抗 PD-L1（如 atezolizumab）</td><td>SP142</td><td>肿瘤细胞和免疫细胞评分</td><td>肿瘤细胞敏感性较低；严格遵循实验室 SOP</td></tr>
+        <tr><td>抗 PD-L1（如 durvalumab）</td><td>SP263</td><td>肿瘤比例评分（%）</td><td>广泛应用于自动化平台</td></tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>影像与图示提示</h3>
+<p><strong>图 1. 腺癌生长模式。</strong>替代文字：贴壁、腺泡、乳头、微乳头和实性模式；注意贴壁型无浸润结构及高级别微乳头/实性特征。</p>
+<p><strong>图 2. SCLC 与 LCNEC 特征。</strong>替代文字：SCLC 显示核塑形和挤压伪影；LCNEC 显示器官样巢状结构和高核分裂；并展示相应神经内分泌标志物。</p>
+<p><strong>图 3. PD-L1 染色模式。</strong>替代文字：肿瘤细胞膜 PD-L1 染色显示强度和分布差异；并示例需要免疫细胞评分的方法。</p>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <h4>病例 1</h4>
+    <p>67 岁既往吸烟者接受 4R 淋巴结 EBUS-TBNA。ROSE 显示成团恶性细胞，无角化。细胞块 TTF-1 阳性、p40 阴性。下一步如何最大化治疗选择？</p>
+    <ol type="A">
+        <li>仅检测 PD-L1</li>
+        <li>仅做 ALK FISH</li>
+        <li>在同一细胞块上进行综合 DNA±RNA NGS 和 PD-L1</li>
+        <li>任何检测前重复 EBUS 取得更多组织</li>
+        <li>仅做 pan-TRK IHC</li>
+    </ol>
+    <p><strong>答案：C。</strong>晚期腺癌谱系 NSCLC 应在现有细胞块上反射性实施包含融合的综合 NGS 和 PD-L1，以最大化诊断率、缩短周转并节约组织。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 2</h4>
+    <p>EGFR 突变肺腺癌患者在第一代 EGFR TKI 后进展。血浆 ctDNA 未检出 T790M。下一步最佳处理？</p>
+    <ol type="A">
+        <li>改用免疫治疗单药</li>
+        <li>对进展部位进行组织再活检并检测耐药机制</li>
+        <li>不再检测，直接化疗</li>
+        <li>做 ALK IHC</li>
+        <li>6 个月后重复血浆</li>
+    </ol>
+    <p><strong>答案：B。</strong>血浆阴性不能排除 T790M；阳性结果会改变治疗时应组织活检。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 3</h4>
+    <p>58 岁从不吸烟者，转移性 NSCLC，小标本报告“非小细胞癌，倾向腺癌”。pan-TRK IHC 弥漫阳性，未做 RNA-NGS。最合适的故障排除步骤？</p>
+    <ol type="A">
+        <li>直接报告 NTRK 融合并开始 TRK 抑制剂</li>
+        <li>按无驱动基因治疗</li>
+        <li>用保留材料或新标本进行 RNA 融合检测（或 FISH）确认</li>
+        <li>因特异性低而忽略 IHC</li>
+        <li>更换克隆重复 pan-TRK IHC</li>
+    </ol>
+    <p><strong>答案：C。</strong>pan-TRK IHC 是筛查工具，必须分子检测确认。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 4</h4>
+    <p>骨转移组织条用强酸脱钙后送 NGS，实验室报告检测失败。最佳纠正措施？</p>
+    <ol type="A">
+        <li>从同一蜡块切更深层</li>
+        <li>在同一样本上重复 NGS</li>
+        <li>选择软组织靶区或采用非酸/EDTA 脱钙取得替代活检</li>
+        <li>用 PD-L1 IHC 替代 NGS</li>
+        <li>未来所有检测均只依赖血浆</li>
+    </ol>
+    <p><strong>答案：C。</strong>酸性脱钙会破坏核酸，应选择其他部位或 EDTA 方法。</p>
+</div>
+
+<hr>
+
+<h3>题库</h3>
+
+<p><strong>1. 下一步最佳处理：</strong>ROSE 显示纵隔淋巴结只有少量异型细胞和广泛坏死，患者不适合重复操作。哪项最能保留治疗选择？</p>
+<ol type="A">
+    <li>把全部剩余材料只用于 PD-L1</li>
+    <li>优先制作细胞块并采用有限的高收益热点 PCR 面板</li>
+    <li>在制作细胞块前用谱系 IHC 耗尽材料</li>
+    <li>丢弃血性冲洗液</li>
+    <li>延迟所有检测直到影像进展</li>
+</ol>
+<p><strong>答案：B。</strong>材料有限时，优先保留细胞块用于 IHC，并选择聚焦、高收益的分子面板以保留可行动性。</p>
+
+<p><strong>2. 术中故障排除：</strong>ROSE 反复出现厚而堆叠、伴挤压伪影的涂片，无法解释。最有效的即时纠正？</p>
+<ol type="A">
+    <li>增加铺片压力</li>
+    <li>所有玻片染色前先风干</li>
+    <li>用轻压力羽化法并增加细胞块材料</li>
+    <li>改用酸性脱钙</li>
+    <li>取消 ROSE</li>
+</ol>
+<p><strong>答案：C。</strong>轻柔羽化可减少挤压；更多细胞块材料可保护后续检测。</p>
+
+<p><strong>3. 肺浸润性黏液腺癌最典型的特征是？</strong></p>
+<ol type="A">
+    <li>几乎所有病例强弥漫 TTF-1 阳性</li>
+    <li>常见 KRAS 突变，TTF-1 可阴性</li>
+    <li>特征性 p40 阳性</li>
+    <li>只发生于中央气道</li>
+    <li>均有 EGFR 19 外显子缺失</li>
+</ol>
+<p><strong>答案：B。</strong></p>
+
+<p><strong>4. 小活检/细胞学中最可靠地区分腺癌和鳞癌的谱系标志物组合是？</strong></p>
+<ol type="A">
+    <li>CK7 和 CK20</li>
+    <li>TTF-1（±napsin A）与 p40（±p63）</li>
+    <li>GATA3 和 SOX10</li>
+    <li>INSM1 和 chromogranin A</li>
+    <li>Desmin 和 SMA</li>
+</ol>
+<p><strong>答案：B。</strong></p>
+
+<p><strong>5. 关于 PD-L1 检测，哪项最准确？</strong></p>
+<ol type="A">
+    <li>所有克隆在任何情境下分析性能相同且可互换</li>
+    <li>只需评估胞质染色强度</li>
+    <li>使用经验证方法；报告肿瘤细胞膜阳性百分比，并遵循治疗配套方法</li>
+    <li>细胞块不能做 PD-L1</li>
+    <li>坏死和挤压不影响解释</li>
+</ol>
+<p><strong>答案：C。</strong></p>
+
+<p><strong>6. 小细胞块 ALK IHC 结果可疑且材料有限，最合适的确认策略？</strong></p>
+<ol type="A">
+    <li>只重复 ALK IHC</li>
+    <li>用保留材料做断裂探针 FISH 或 RNA 融合检测</li>
+    <li>因先验概率低而忽略 ALK</li>
+    <li>先做 EGFR PCR</li>
+    <li>PD-L1 可替代 ALK 检测</li>
+</ol>
+<p><strong>答案：B。</strong></p>
+
+<p><strong>7. FFPE 标本做 NGS 时，哪种分析前条件最威胁成功率？</strong></p>
+<ol type="A">
+    <li>标准 10% 中性缓冲福尔马林固定</li>
+    <li>同时制作风干 ROSE 玻片</li>
+    <li>重金属固定液或酸性脱钙</li>
+    <li>专门针次制作细胞块</li>
+    <li>宏切前复核 H&amp;E 玻片</li>
+</ol>
+<p><strong>答案：C。</strong></p>
+
+<p><strong>8. 第一/二代 EGFR TKI 后影像进展，血浆 ctDNA 检出 EGFR T790M。下一步最佳处理？</strong></p>
+<ol type="A">
+    <li>继续原 TKI，稍后复查</li>
+    <li>改用合适的第三代 EGFR 抑制剂</li>
+    <li>开始双免疫检查点抑制</li>
+    <li>立即铂类双药化疗</li>
+    <li>做 ALK FISH</li>
+</ol>
+<p><strong>答案：B。</strong></p>
+
+<p><strong>9. SCLC 的正确关联是？</strong></p>
+<ol type="A">
+    <li>Ki-67 低、核分裂少</li>
+    <li>常见核塑形和高核分裂活性</li>
+    <li>常见 ALK 融合</li>
+    <li>强 p40 阳性</li>
+    <li>病程与典型类癌一样惰性</li>
+</ol>
+<p><strong>答案：B。</strong></p>
+
+<p><strong>10. 在少量、挤压明显且坏死显著的细胞块上申请 PD-L1。最佳解释方式？</strong></p>
+<ol type="A">
+    <li>无说明直接报告高表达</li>
+    <li>取消 PD-L1，改用血浆</li>
+    <li>报告时注明充分性限制；若与临床不符，考虑重新取样</li>
+    <li>改做 FISH</li>
+    <li>因保存差而假定低表达</li>
+</ol>
+<p><strong>答案：C。</strong></p>
+
+<p><strong>11. 组织有限且怀疑特定融合时，哪种标志物—检测配对最合适？</strong></p>
+<ol type="A">
+    <li>BRAF—仅 FISH</li>
+    <li>NTRK—pan-TRK IHC 筛查后用 RNA-NGS 或 FISH 确认</li>
+    <li>KRAS—ALK IHC</li>
+    <li>PD-L1—PCR</li>
+    <li>EGFR—断裂探针 FISH</li>
+</ol>
+<p><strong>答案：B。</strong></p>
+
+<p><strong>12. 使用免疫修订反应框架时，哪项最准确？</strong></p>
+<ol type="A">
+    <li>iRECIST 已在所有临床实践中取代 RECIST 1.1</li>
+    <li>NSCLC 中假性进展很常见</li>
+    <li>iRECIST 引入 iUPD，确认后才能判定 iCPD</li>
+    <li>任何新病灶都等于已确认进展</li>
+    <li>首次进展后不可能再出现最佳总体反应</li>
+</ol>
+<p><strong>答案：C。</strong></p>
+
+<hr>
+
+<h3>争议、实践差异与新兴证据</h3>
+<ul>
+    <li><strong>PD-L1 方法可比性：</strong>多种方法总体一致性较好，但仍有分析差异；应在实验室质量体系内遵循经验证、与治疗配套的流程。</li>
+    <li><strong>TMB 与血液标志物：</strong>血液 TMB 在部分情形可能富集获益人群，但临床效用和阈值不一致，不能常规替代已确立标志物。</li>
+    <li><strong>NGS 优先与串行单基因：</strong>随着可行动靶点增加，NGS 优先可节约组织和时间；串行检测容易耗尽组织并延误治疗。</li>
+    <li><strong>液体活检范围：</strong>在特定耐药机制和无法安全取得组织时很有价值；若治疗取决于结果，阴性仍需组织确认。</li>
+    <li><strong>免疫反应标准：</strong>iRECIST 等框架可细化解释，但 RECIST 1.1 仍是多数试验终点和临床决策基础。</li>
+</ul>
+
+<h3>要点核对表</h3>
+<ul>
+    <li>小标本用 TTF-1/napsin A 与 p40/p63 确认谱系，不要仅凭形态。</li>
+    <li>ROSE 时尽早分配：先保证细胞块和核酸材料，再增加涂片。</li>
+    <li>用于 IHC/FISH/NGS 的标本避免酸性脱钙和重金属固定液。</li>
+    <li>腺癌/NSCC-NOS 及选定鳞癌采用 NGS 优先，并包含融合检测。</li>
+    <li>在细胞块上用经验证克隆/方法检测 PD-L1，并报告充分性。</li>
+    <li>进展时组织再活检或血浆 ctDNA；血浆阴性不能排除可行动耐药。</li>
+    <li>标注高危腺癌模式（微乳头/实性、筛状）。</li>
+    <li>记录肿瘤比例和坏死；必要时要求增加针次。</li>
+    <li>在 PD-L1 和分子解释中明确标本限制（挤压、坏死等）。</li>
+    <li>与多学科团队协调检测策略、周转时间和治疗决策。</li>
+</ul>
+
+<hr>
+
+<h3>缩略语与术语</h3>
+<div class="abbreviations">
+    <dl>
+        <dt>AIS/MIA</dt><dd>原位腺癌 / 微浸润腺癌</dd>
+        <dt>CAP/IASLC/AMP</dt><dd>美国病理学家学会 / 国际肺癌研究协会 / 分子病理学协会</dd>
+        <dt>ctDNA</dt><dd>循环肿瘤 DNA</dd>
+        <dt>FISH</dt><dd>荧光原位杂交；断裂探针检测重排，拷贝数探针检测扩增</dd>
+        <dt>IHC</dt><dd>免疫组织化学</dd>
+        <dt>iRECIST/iUPD/iCPD</dt><dd>免疫修订 RECIST；免疫未确认/已确认进展</dd>
+        <dt>NGS</dt><dd>二代测序；DNA 面板检测突变/拷贝数，RNA 面板检测融合</dd>
+        <dt>PD-1/PD-L1</dt><dd>程序性死亡受体 1 / 配体 1</dd>
+        <dt>ROSE</dt><dd>快速现场评估；实时细胞学评估和标本分配</dd>
+        <dt>SCLC/LCNEC</dt><dd>小细胞肺癌 / 大细胞神经内分泌癌</dd>
+    </dl>
+</div>
+
+<div class="references"><h3>参考文献</h3>
+<ol>
+<li>Travis WD, Brambilla E, Nicholson AG, et al. The 2015 World Health Organization Classification of Lung Tumors: impact of genetic, clinical and radiologic advances since the 2004 classification. J Thorac Oncol. 2015;10(9):1243‑1260.</li>
+<li>Travis WD, Brambilla E, Noguchi M, et al. International multidisciplinary classification of lung adenocarcinoma. J Thorac Oncol. 2011;6(2):244‑285.</li>
+<li>Yoshizawa A, Motoi N, Riely GJ, et al. Impact of proposed IASLC/ATS/ERS classification of lung adenocarcinoma: prognostic subgroups and implications for further revision of staging based on analysis of 514 stage I cases. Mod Pathol. 2011;24(5):653‑664.</li>
+<li>Tsao MS, Marguet S, Le Teuff G, et al. Subtype classification of lung adenocarcinoma predicts benefit from adjuvant chemotherapy. J Clin Oncol. 2015;33(30):3439‑3446.</li>
+<li>Rami‑Porta R, Bolejack V, Crowley J, et al. Proposals for revisions of the T descriptors in the 8th edition TNM classification for lung cancer. J Thorac Oncol. 2015;10(7):990‑1003.</li>
+<li>Detterbeck FC, Franklin WA, Nicholson AG, et al. Criteria to distinguish separate primary lung cancers from metastatic foci in patients with two lung tumors. J Thorac Oncol. 2016;11(5):651‑665.</li>
+<li>Paez JG, Jänne PA, Lee JC, et al. EGFR mutations in lung cancer: correlation with clinical response to gefitinib therapy. Science. 2004;304(5676):1497‑1500.</li>
+<li>Lynch TJ, Bell DW, Sordella R, et al. Activating mutations in EGFR underlying responsiveness to gefitinib. N Engl J Med. 2004;350(21):2129‑2139.</li>
+<li>Soria JC, Ohe Y, Vansteenkiste J, et al. Osimertinib in untreated EGFR‑mutated advanced NSCLC. N Engl J Med. 2018;378(2):113‑125.</li>
+<li>Lin JJ, Shaw AT. Recent advances in targeting ROS1 in lung cancer. J Thorac Oncol. 2017;12(11):1611‑1625.</li>
+<li>Planchard D, Smit EF, Groen HJM, et al. Dabrafenib plus trametinib in untreated BRAF V600E–mutant metastatic NSCLC: phase 2 trial. Lancet Oncol. 2017;18(10):1307‑1316.</li>
+<li>Liu X, Jia Y, Stoopler MB, et al. High frequency of actionable MET gene mutations in pulmonary sarcomatoid carcinoma. J Clin Oncol. 2016;34(8):794‑802.</li>
+<li>Drilon A, Hu ZI, Lai GGY, Tan DSW. Targeting RET‑driven cancers: evolving landscapes. Nat Rev Clin Oncol. 2018;15(3):151‑167.</li>
+<li>Cocco E, Scaltriti M, Drilon A. NTRK fusion‑positive cancers and TRK inhibitor therapy. Nat Rev Clin Oncol. 2018;15(12):731‑747.</li>
+<li>Jordan EJ, Kim HR, Arcila ME, et al. Prospective molecular characterization of lung adenocarcinomas. Cancer Discov. 2017;7(6):596‑609.</li>
+<li>Lindeman NI, Cagle PT, Aisner DL, et al. Updated molecular testing guideline for the selection of lung cancer patients for treatment with targeted tyrosine kinase inhibitors: guideline from the College of American Pathologists, the International Association for the Study of Lung Cancer, and the Association for Molecular Pathology. Arch Pathol Lab Med. 2018;142(3):321-346.</li>
+<li>Rittmeyer A, Barlesi F, Waterkamp D, et al. Atezolizumab versus docetaxel in previously treated NSCLC (OAK). Lancet. 2017;389(10066):255‑265.</li>
+<li>Fehrenbacher L, Spira A, Ballinger M, et al. Atezolizumab vs docetaxel (POPLAR). Lancet. 2016;387(10030):1837‑1846.</li>
+<li>Garon EB, Rizvi NA, Hui R, et al. Pembrolizumab for NSCLC (KEYNOTE‑001). N Engl J Med. 2015;372(21):2018‑2028.</li>
+<li>Borghaei H, Paz‑Ares L, Horn L, et al. Nivolumab vs docetaxel in nonsquamous NSCLC (CheckMate 057). N Engl J Med. 2015;373(17):1627‑1639.</li>
+<li>Seymour L, Bogaerts J, Perrone A, et al. iRECIST: guidelines for response criteria for use in trials testing immunotherapeutics. Lancet Oncol. 2017;18(3):e143‑e152.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

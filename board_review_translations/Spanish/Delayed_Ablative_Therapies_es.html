@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Terapias ablativas diferidas</title>
+<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        .mcq-answer { display: block; margin-top: 8px; }
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>Terapias ablativas diferidas</h1>
+<h3>Correspondencia con el examen y alcance</h3>
+<p>Este capítulo cubre las modalidades ablativas diferidas utilizadas en neumología intervencionista: terapia fotodinámica (PDT), crioterapia (crioablación diferida y crioadhesión/criodesbridamiento inmediatos) y braquiterapia endobronquial (EBB). El énfasis está en indicaciones, contraindicaciones, técnica, solución de problemas, manejo de complicaciones y evidencia que se evalúa con frecuencia en los exámenes de certificación y recertificación.</p>
+<h3>Objetivos de aprendizaje</h3>
+<p>Al completar este capítulo, los estudiantes deberán ser capaces de:</p>
+<ul>
+<li>Seleccionar entre PDT, crioterapia y EBB según la morfología tumoral, la urgencia del alivio y las terapias previas.</li>
+<li>Describir la evaluación previa al procedimiento y el asesoramiento al paciente propios de cada modalidad (por ejemplo, fototoxicidad con PDT).</li>
+<li>Ejecutar una técnica paso a paso para PDT (fármaco-luz-desbridamiento), crioablación/crioadhesión y colocación y planificación del catéter para EBB.</li>
+<li>Anticipar, prevenir y manejar complicaciones como obstrucción por tejido necrótico desprendido después de PDT, bronquitis por radiación después de EBB y sangrado/edema de la vía aérea después de crioterapia.</li>
+<li>Aplicar la evidencia (tasas de respuesta completa, desenlaces funcionales, señales de supervivencia) a la toma de decisiones clínicas y al asesoramiento del paciente.</li>
+</ul>
+<hr/>
+<h3>Resumen de alto rendimiento en una página</h3>
+<div class="algorithm-note">
+<strong>Puntos clave críticos:</strong>
+<ul>
+<li>PDT = fármaco + luz + desbridamiento. Porfímero sódico 2 mg/kg IV, activación lumínica ~48 h después (630 nm) y broncoscopia repetida 48 h después de la luz para retirar el tejido necrótico desprendido. La reiluminación puede realizarse dentro de la semana posterior a la inyección del fármaco.</li>
+<li>La profundidad importa. PDT penetra ~4-6 mm; es ideal para enfermedad puramente endoluminal y superficial (por ejemplo, CIS, SCC central temprano).</li>
+<li>La fotosensibilidad es real. La fototoxicidad cutánea puede persistir 6-8 semanas; las precauciones estrictas frente a la luz son obligatorias.</li>
+<li>Programe con inteligencia. Evite iniciar PDT en días que dificulten logísticamente el desbridamiento a las 48 horas.</li>
+<li>La crioterapia tiene dos caras. La crioablación (ciclos de congelación-descongelación) produce necrosis diferida; la crioadhesión/criodesbridamiento permite la extracción inmediata en bloque de tumor, coágulos o moco.</li>
+<li>La crioterapia es compatible con oxígeno. Es segura en entornos con FiO2 alta y alrededor de stents; no existe riesgo de incendio de la vía aérea.</li>
+<li>Perlas técnicas de crioterapia. Ciclos de congelación de 30 s/descongelación pasiva, aplicaciones superpuestas separadas ~5 mm; si la sonda se adhiere donde no debe, detenga la congelación y espere la descongelación.</li>
+<li>EBB = radioterapia interna localizada. Los esquemas HDR suelen administrarse de forma ambulatoria en fracciones breves; evítela si hay compromiso de un vaso mayor, fístula u oclusión completa sin recanalización previa.</li>
+<li>La planificación de EBB es geometría. La punta del catéter queda ~2 cm distal a la lesión; los márgenes suelen ser 1-2 cm proximal y distal; la prescripción en profundidad depende del diámetro de la vía aérea.</li>
+<li><strong>Cuando la obstrucción es crítica:</strong> PDT (efecto diferido) y la crioablación no son para alivio emergente; favorezca la reducción tumoral inmediata (rígida/mecánica, láser/electrocauterio o crioadhesión) y luego considere una modalidad diferida.</li>
+<li>EBB para escenarios especiales. Es una buena opción después de EBRT previa cuando se necesita retratamiento, y para la reexpansión en atelectasia lobar por tumor endoluminal.</li>
+<li>Instantánea de evidencia: PDT (intención curativa). En lesiones centrales &lt;1 cm, las tasas de respuesta completa (CR) se aproximan a ~90%, con control significativo de la enfermedad a largo plazo en pacientes seleccionados.</li>
+<li>Instantánea de evidencia: crioterapia. Series grandes muestran mejoría de tos, disnea, hemoptisis y calidad de vida; la crioterapia antes de radiación puede mejorar el control local y la supervivencia en NSCLC irresecable.</li>
+<li>Instantánea de evidencia: EBB. Alivia de forma consistente disnea, tos y hemoptisis, y reairea el pulmón; ensayos comparativos sugieren mejoría sintomática y beneficio de supervivencia en casos seleccionados cuando se integra apropiadamente.</li>
+<li><strong>Trampa de examen:</strong> confundir crioadhesión (extracción inmediata) con crioablación (desprendimiento diferido de tejido necrótico). Sepa cuál de las dos se está preguntando.</li>
+</ul>
+</div>
+<hr/>
+<h3>Conceptos clave</h3>
+<h4>Fisiopatología / epidemiología</h4>
+<p>La obstrucción de la vía aérea central por cáncer pulmonar primario o metástasis endobronquiales produce disnea, tos, hemoptisis, infección posobstructiva e hipoxemia. Las lesiones centrales superficiales (CIS/SCC temprano) son raras, pero son muy susceptibles a terapias dirigidas a la superficie como PDT o EBB cuando la cirugía no es factible. El tejido de granulación benigno (postrasplante, traqueostomía, stents) es particularmente criosensible.</p>
+<h4>Indicaciones y contraindicaciones</h4>
+<h4>PDT</h4>
+<p><strong>Indicaciones:</strong></p>
+<ul>
+<li>Intención curativa para NSCLC central microinvasivo/temprano cuando los márgenes son visibles y la longitud de la lesión es pequeña (ideal &lt;=1 cm).</li>
+<li>Paliación de la obstrucción endobronquial maligna en pacientes seleccionados (no para alivio emergente).</li>
+</ul>
+<p><strong>Contraindicaciones/precauciones:</strong></p>
+<ul>
+<li>Porfiria; dificultad respiratoria aguda grave que requiere alivio inmediato de la vía aérea; tumor que erosiona un vaso mayor; fístula traqueo/broncoesofágica preexistente. Tenga precaución después de radiación (mayor riesgo de hemoptisis).</li>
+</ul>
+<h4>Crioterapia</h4>
+<p><strong>Indicaciones:</strong></p>
+<ul>
+<li>Crioablación diferida para control tumoral endoluminal o tejido de granulación.</li>
+<li>Crioadhesión inmediata para fragmentos tumorales, tapones de moco o coágulos sanguíneos; extracción de cuerpos extraños (orgánicos/con alto contenido de agua).</li>
+</ul>
+<p><strong>Contraindicaciones/precauciones:</strong></p>
+<ul>
+<li>Corrija la coagulopatía/suspenda clopidogrel y anticoagulantes cuando se vaya a realizar ablación; evite el uso ablativo cuando se requiere ventilación inmediata urgente (salvo que se use crioadhesión).</li>
+</ul>
+<h4>EBB</h4>
+<p><strong>Indicaciones:</strong></p>
+<ul>
+<li>Lesiones endobronquiales malignas sintomáticas; enfermedad en etapa temprana en candidatos no quirúrgicos; retratamiento después de EBRT previa; casos seleccionados con colapso lobar.</li>
+</ul>
+<p><strong>Contraindicaciones:</strong></p>
+<ul>
+<li>Imposibilidad de someterse a broncoscopia; ulceración endobronquial significativa; fístula; compromiso vascular mayor; oclusión completa sin creación previa de un pasaje.</li>
+</ul>
+<h3>Evaluación previa al procedimiento</h3>
+<ul>
+<li><strong>Imágenes y estadificación:</strong> Defina la extensión y profundidad de la lesión; considere EBUS para estadificación y para valorar la proximidad vascular en la planificación de EBB.</li>
+<li><strong>Antitrombóticos:</strong> Suspenda anticoagulantes/antiagregantes para crioterapia ablativa; la aspirina puede continuarse para biopsia/crioadhesión.</li>
+<li><strong>Consejería sobre PDT:</strong> Las precauciones por fotosensibilidad comienzan inmediatamente después de la infusión del fármaco y persisten semanas; planifique evitar la luz y usar ropa/gafas protectoras.</li>
+<li><strong>Estrategia de vía aérea:</strong> Planifique anestesia general frente a sedación profunda; considere broncoscopia rígida cuando una obstrucción de alto grado exija control activo de la vía aérea.</li>
+</ul>
+<h3>Equipo y preparación</h3>
+<ul>
+<li><strong>PDT:</strong> Láser de diodo (630 nm para porfímero), fibras difusoras cilíndricas (rígida ~1,7 mm o flexible ~1,07 mm), broncoscopio, protección ocular.</li>
+<li><strong>Crio:</strong> Consola con CO2 (frecuente) o N2O; sondas flexibles (1,1-2,4 mm) o criosonda rígida; activación con pedal; broncoscopio de canal grande; recipiente con solución salina para descongelación; asistentes para extracción en bloque.</li>
+<li><strong>EBB:</strong> Catéteres de polietileno para carga diferida; afterloader remoto HDR (Ir-192); verificación por fluoroscopia/TC; sistema de planificación de dosis; fijación segura.</li>
+</ul>
+<h3>Técnica paso a paso / lista de verificación del procedimiento</h3>
+<h4>PDT (protocolo con porfímero sódico)</h4>
+<ul>
+<li><strong>Fármaco:</strong> Porfímero sódico 2 mg/kg IV durante 3-5 min. Inicie fotoprotección de inmediato.</li>
+<li><strong>Luz (~40-50 h después):</strong> Broncoscopia flexible; seleccione la longitud del difusor para corresponder a la lesión; administre 200 J/cm a 630 nm (habitualmente 400 mW/cm durante ~500 s). Mantenga la posición de la fibra a pesar del “blanqueamiento” de la pantalla durante la activación.</li>
+<li><strong>Desbridamiento (~48 h después de la luz):</strong> Repita la broncoscopia para retirar el tejido necrótico desprendido; considere reiluminación en esta sesión si el tumor residual sangra al contacto (el fármaco permanece activo hasta ~5 días).</li>
+</ul>
+<h4>Crioterapia</h4>
+<ul>
+<li><strong>Crioablación (diferida):</strong> Coloque la sonda sobre el objetivo; congele ~30 s y luego permita descongelación pasiva; repita 3 ciclos por sitio; desplace ~5 mm entre aplicaciones con ligera superposición para cubrir la lesión. Planifique broncoscopia de seguimiento en 5-10 días para retirar el tejido desprendido.</li>
+<li><strong>Crioadhesión/criodesbridamiento (inmediato):</strong> Congele tejido/coágulo/tapón durante unos segundos hasta que se adhiera y luego retírelo en bloque con el broncoscopio; descongele la muestra de la sonda en solución salina. Asegure el tubo endotraqueal durante la extracción para evitar extubación inadvertida; si la sonda se adhiere a tejido normal o al tubo endotraqueal, detenga la congelación y espere la descongelación.</li>
+</ul>
+<h4>Braquiterapia endobronquial (HDR)</h4>
+<ul>
+<li><strong>Evaluación y puntuación:</strong> Documente sitio/longitud/grado de obstrucción; asegure una luz transitable (use reducción tumoral adjunta primero si es necesario).</li>
+<li><strong>Colocación del catéter:</strong> Bajo broncoscopia (a menudo transnasal), avance el catéter ~2 cm más allá de la lesión; marque y fije; verifique con imágenes.</li>
+<li><strong>Planificación:</strong> Radiografía/TC con fuente simulada; prescriba a una distancia fija (comúnmente 10 mm) o a una profundidad ajustada al diámetro de la vía aérea; incluya márgenes proximales/distales de 1-2 cm.</li>
+<li><strong>Administración:</strong> Fracciones HDR ambulatorias mediante afterloader; retire el catéter después de la dosis y proporcione instrucciones sobre síntomas de alarma.</li>
+</ul>
+<h3>Solución de problemas y manejo intraprocedimiento</h3>
+<ul>
+<li><strong>PDT:</strong> Use sedación adecuada para mantener inmovilidad; anticipe el “blanqueamiento” de la pantalla durante la activación y dependa de la estabilización física de la fibra; tenga listas herramientas para retirar tejido desprendido (pinzas, succión, criosonda) para el desbridamiento a las 48 h.</li>
+<li><strong>Crio:</strong> Mantenga la punta del broncoscopio ligeramente proximal (~4 mm) para evitar congelación inadvertida del equipo; para sangrado, use succión, solución salina fría, epinefrina tópica o APC adjunta si es necesario.</li>
+<li><strong>EBB:</strong> Nunca fuerce un catéter; si hay resistencia, reevalúe; verifique la posición y profundidad finales del catéter antes del tratamiento; considere múltiples catéteres para lesiones circunferenciales.</li>
+</ul>
+<h3>Cuidados posteriores y seguimiento</h3>
+<ul>
+<li><strong>PDT:</strong> Precauciones estrictas frente a la luz durante 6-8 semanas; retorno urgente si hay disnea/fiebre/hemoptisis. Broncoscopia de vigilancia a 1-3 meses para documentar el control local.</li>
+<li><strong>Crio:</strong> Espere tos y secreciones transitorias; programe broncoscopia de seguimiento 5-10 días después de la ablación.</li>
+<li><strong>EBB:</strong> Vigile bronquitis/estenosis por radiación; gradúe la gravedad y trate según la gravedad (desbridamiento, dilatación, stent según esté indicado).</li>
+</ul>
+<h3>Complicaciones (prevención, reconocimiento y manejo)</h3>
+<h4>PDT:</h4>
+<ul>
+<li>Dermatitis por fotosensibilidad: educación y medidas protectoras; persiste semanas.</li>
+<li>Obstrucción por tejido necrótico desprendido: desbridamiento rutinario a las 48 h.</li>
+<li>Estenosis bronquial: evite superposición con mucosa normal; trate con dilatación/stent si es necesario.</li>
+<li>Hemoptisis: evite cuando la lesión contacta con un vaso mayor; mayor riesgo después de radiación previa.</li>
+</ul>
+<h4>Crioterapia:</h4>
+<ul>
+<li>Edema/secreciones: succión posprocedimiento; considere un ciclo corto de esteroides (la práctica varía).</li>
+<li>Sangrado: por lo general leve; maneje como se indicó arriba.</li>
+<li>Perforación: rara (el cartílago es relativamente criopreservado/resistente al frío).</li>
+<li>Crioterapia por spray: asegure ventilación de escape para prevenir barotrauma/desaturación.</li>
+</ul>
+<h4>EBB:</h4>
+<ul>
+<li>Bronquitis/estenosis por radiación: gradúe y trate con desbridamiento/dilatación/stents.</li>
+<li>Ulceración/necrosis, fístula, hemoptisis masiva: evite en lesiones ulceradas y cuando hay compromiso de vasos mayores; planificación meticulosa.</li>
+</ul>
+<h3>Poblaciones especiales</h3>
+<ul>
+<li><strong>Alto requerimiento de oxígeno:</strong> La crioterapia se realiza de forma segura con FiO2 alta; las modalidades térmicas conllevan riesgo de incendio de la vía aérea.</li>
+<li><strong>Stents de vía aérea:</strong> La crioterapia es ventajosa para crecimiento tumoral hacia el stent o granulación alrededor de stents.</li>
+<li><strong>Postrasplante / tejido de granulación:</strong> Muy sensible a la crioterapia.</li>
+<li><strong>Radiación torácica previa:</strong> Sopese el riesgo de hemoptisis con PDT; EBB se usa con frecuencia como retratamiento para enfermedad endoluminal.</li>
+</ul>
+<h3>Evidencia y desenlaces (selección)</h3>
+<ul>
+<li><strong>PDT (intención curativa):</strong> En lesiones centrales, las tasas de CR superan 90% cuando el tamaño de la lesión es &lt;1 cm con márgenes visibles; se ha reportado supervivencia a 5 años cercana a 58% en cohortes pequeñas con lesiones &lt;1 cm, reconociendo riesgos competitivos en poblaciones frágiles.</li>
+<li><strong>PDT (paliación):</strong> El estado funcional y la espirometría (FEV1, FVC) mejoran después de la terapia en series de enfermedad avanzada; la reaireación y el alivio sintomático (disnea, tos, hemoptisis) son frecuentes.</li>
+<li><strong>Crioterapia:</strong> Series grandes y cohortes prospectivas muestran mejoría sintomática y restauración de la permeabilidad de la vía aérea; la criorecanalización inmediata es eficaz en obstrucción aguda; la combinación con radiación externa mejoró el control local (65% frente a 35%) y la supervivencia mediana (397 frente a 144 días) en NSCLC irresecable.</li>
+<li><strong>EBB:</strong> Las tasas de mejoría sintomática son ~70-90% en distintos dominios (disnea, tos, hemoptisis, reaireación); se ha reportado beneficio de supervivencia cuando se usa después de respuesta incompleta a EBRT/quimioterapia; se prefiere HDR sobre LDR por conveniencia y estabilidad del catéter.</li>
+</ul>
+<hr/>
+<h3>Algoritmos diagnósticos y terapéuticos</h3>
+<h4>Algoritmo 1: selección de una modalidad ablativa diferida en tumor endobronquial</h4>
+<div class="mermaid">
+        flowchart TD
+        A[Lesión endobronquial sintomática] --&gt; B{¿Se necesita alivio urgente?}
+        B -- Sí, obstrucción/retención de alto grado --&gt; C[Reducción inmediata: rígida/mecánica +/- láser/electrocauterio o crioadhesión]
+        C --&gt; D{¿Enfermedad endoluminal residual?}
+        D -- Sí --&gt; E[Considerar modalidad diferida abajo]
+        B -- No/después de reducción inicial --&gt; E[Considerar modalidad diferida abajo]
+        E --&gt; F{Características de la lesión}
+        F --&gt;|Superficial, márgenes visibles; tamaño &lt;=1 cm; central| G[PDT fármaco-luz-desbridamiento a 48 h]
+        F --&gt;|Tumor/granulación endoluminal; necesidad de FiO2 alta; stent in situ| H[Crioablación +/- desbridamiento escalonado]
+        F --&gt;|Retratamiento después de EBRT; paliación con objetivo de reaireación| I[Planificación y administración de EBB HDR]
+        G --&gt; J[Programar broncoscopia de seguimiento y vigilancia]
+        H --&gt; J
+        I --&gt; J
+    </div>
+<div class="algorithm-note">
+<strong>Pasos paralelos:</strong>
+<ul>
+<li>Clasifique la urgencia -&gt; si es emergente, realice recanalización inmediata; luego reevalúe para terapia diferida.</li>
+<li>Para lesiones centrales pequeñas, superficiales y con márgenes visibles -&gt; PDT.</li>
+<li>Para tejido criosensible o cuando se necesita FiO2 alta -&gt; crioterapia (ablación o adhesión).</li>
+<li>Para retratamiento/paliación después de EBRT previa, o lóbulos atelectásicos por enfermedad endoluminal -&gt; EBB (HDR).</li>
+</ul>
+</div>
+<h4>Algoritmo 2: flujo de trabajo de braquiterapia endobronquial (HDR)</h4>
+<div class="mermaid">
+        flowchart LR
+        A[Broncoscopia: evaluar longitud de la lesión y permeabilidad] --&gt; B{¿Luz transitable?}
+        B -- No --&gt; C[Crear pasaje: reducción mecánica/térmica]
+        C --&gt; D
+        B -- Sí --&gt; D[Colocar catéter ~2 cm más allá de la lesión; fijar]
+        D --&gt; E[Planificación: profundidad 5-10 mm más márgenes de 1-2 cm]
+        E --&gt; F[Verificar con imágenes/fuentes simuladas]
+        F --&gt; G[Administración HDR: fracción según protocolo]
+        G --&gt; H[Retirar catéter; alta con instrucciones]
+        H --&gt; I[Seguimiento: graduar y manejar bronquitis/estenosis por radiación]
+    </div>
+<div class="algorithm-note">
+<strong>Pasos paralelos:</strong>
+<ul>
+<li>Asegure que un catéter pueda pasar; si no, reduzca la obstrucción en una sesión previa.</li>
+<li>Defina la profundidad (a menudo 10 mm) o una prescripción basada en la vía aérea; incluya márgenes proximales/distales de 1-2 cm.</li>
+<li>Administre HDR según el esquema (por ejemplo, 7,5 Gy x3 semanal, o 10 Gy x2, como paliación única; fracciones reducidas cuando se combina con EBRT).</li>
+<li>Haga seguimiento de bronquitis/estenosis por radiación y trate según el grado.</li>
+</ul>
+</div>
+<hr/>
+<h3>Tablas y cuadros de referencia rápida</h3>
+<h4>Tabla 1. Comparación de modalidades ablativas diferidas</h4>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>PDT</th>
+<th>Crioterapia</th>
+<th>Braquiterapia endobronquial (HDR)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mecanismo</td>
+<td>Fotosensibilizador + luz -&gt; ROS, trombosis vascular -&gt; apoptosis/necrosis</td>
+<td>Citotoxicidad por congelación-descongelación; crioadhesión para extracción</td>
+<td>Radiación interna con Ir-192 mediante catéter de carga diferida</td>
+</tr>
+<tr>
+<td>Inicio de efecto</td>
+<td>Diferido (requiere desbridamiento a las 48 h)</td>
+<td>Ablación: diferida; adhesión: inmediata</td>
+<td>Variable; alivio sintomático en días-semanas</td>
+</tr>
+<tr>
+<td>Profundidad/objetivo</td>
+<td>~4-6 mm; lesiones endoluminales superficiales</td>
+<td>Tejido endoluminal; granulación; coágulos/moco</td>
+<td>Lesiones endoluminales dentro de ~5-10 mm de la fuente</td>
+</tr>
+<tr>
+<td>Mejor uso</td>
+<td>CIS/SCC central temprano; paliación seleccionada</td>
+<td>Tejido criosensible; entornos con FiO2 alta; crecimiento hacia stent; coágulo/moco</td>
+<td>Paliación, retratamiento post-EBRT; atelectasia por tumor intraluminal</td>
+</tr>
+<tr>
+<td>Contraindicaciones clave</td>
+<td>Porfiria; fístula; erosión de vaso mayor; obstrucción emergente de alto grado</td>
+<td>Coagulopatía no corregida para ablación</td>
+<td>Fístula; compromiso vascular mayor; oclusión completa sin pasaje previo</td>
+</tr>
+<tr>
+<td>Entorno</td>
+<td>Sala de broncoscopia; ambulatorio</td>
+<td>Sala de broncoscopia; flexible o rígida</td>
+<td>Sala de oncología radioterápica con afterloader</td>
+</tr>
+</tbody>
+</table>
+<p>Abreviaturas: CIS, carcinoma in situ; EBRT, radioterapia externa; FiO2, fracción inspirada de oxígeno.</p>
+<h4>Tabla 2. Dosis, dispositivos y programación práctica</h4>
+<table>
+<thead>
+<tr>
+<th>Modalidad</th>
+<th>Dosis/dispositivo</th>
+<th>Aspectos esenciales de programación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PDT (porfímero)</td>
+<td>Porfímero sódico 2 mg/kg IV; luz roja 630 nm mediante difusor cilíndrico; 200 J/cm de uso común</td>
+<td>Activación lumínica ~48 h después del fármaco; repetir broncoscopia 48 h después de la luz para retirar tejido desprendido; reiluminación posible dentro de 5-7 días posteriores al fármaco</td>
+</tr>
+<tr>
+<td>Crioablación</td>
+<td>Sonda flexible 1,1-2,4 mm; CO2 o N2O; congelación de 30 s/descongelación pasiva x ~3 ciclos por sitio; superposición ~5 mm</td>
+<td>Broncoscopia de seguimiento 5-10 días después para retirar necrosis</td>
+</tr>
+<tr>
+<td>Crioadhesión</td>
+<td>Congelación breve para adhesión; extracción en bloque con el broncoscopio</td>
+<td>Limpieza inmediata de la vía aérea; descongelar la muestra en solución salina</td>
+</tr>
+<tr>
+<td>EBB (HDR)</td>
+<td>Ir-192; prescripción a 5-10 mm del catéter; márgenes proximales/distales de 1-2 cm</td>
+<td>Ejemplos de esquemas HDR (a 1 cm): paliación 7,5 Gy x3 semanal, o 10 Gy x2, o 6 Gy x4; con EBRT: 7,5 Gy x2, 5 Gy x3 o 4 Gy x4</td>
+</tr>
+</tbody>
+</table>
+<p>Abreviaturas: CO2, dióxido de carbono; N2O, óxido nitroso; HDR, alta tasa de dosis.</p>
+<h4>Tabla 3. Complicaciones: prevención y manejo</h4>
+<table>
+<thead>
+<tr>
+<th>Complicación</th>
+<th>Modalidad</th>
+<th>Prevención/manejo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dermatitis por fotosensibilidad</td>
+<td>PDT</td>
+<td>Precauciones estrictas frente a la luz durante 6-8 semanas</td>
+</tr>
+<tr>
+<td>Obstrucción por tejido necrótico desprendido</td>
+<td>PDT, crioablación</td>
+<td>Desbridamiento programado (48 h para PDT; 5-10 d para crio)</td>
+</tr>
+<tr>
+<td>Hemoptisis (grave)</td>
+<td>PDT, EBB</td>
+<td>Evitar si la lesión contacta con un vaso mayor; mayor riesgo post-EBRT; protocolos urgentes de hemostasia</td>
+</tr>
+<tr>
+<td>Bronquitis/estenosis por radiación</td>
+<td>EBB</td>
+<td>Planificación de dosis; graduar y manejar con desbridamiento/dilatación/stent</td>
+</tr>
+<tr>
+<td>Edema/secreciones de vía aérea</td>
+<td>Crio</td>
+<td>Anticipar; succión; considerar esteroides cortos (basado en práctica)</td>
+</tr>
+<tr>
+<td>Barotrauma/desaturación</td>
+<td>Crio por spray</td>
+<td>Asegurar escape de gas; acceso de vía aérea grande; solo ráfagas en apnea</td>
+</tr>
+</tbody>
+</table>
+<p>Abreviaturas: EBRT, radioterapia externa.</p>
+<hr/>
+<h3>Casos y aprendizaje aplicado</h3>
+<div class="case-study">
+<h4>Caso 1 -- La placa de 1 cm</h4>
+<p>Paciente de 67 años con EPOC grave presenta una lesión plana leucoplásica de 0,8 cm en el bronquio principal derecho; la biopsia confirma CIS; los márgenes se visualizan por completo. ¿Cuál es el mejor siguiente paso?</p>
+<p><strong>Opciones:</strong><br/>
+        A. Radioterapia externa sola<br/>
+        B. PDT con protocolo basado en porfímero<br/>
+        C. EBB HDR<br/>
+        D. Coagulación con plasma de argón<br/>
+        E. Observación
+        </p>
+<p><strong>Respuesta: B. Las lesiones pequeñas, superficiales y centrales con márgenes visibles son ideales para PDT con secuencia fármaco-luz-desbridamiento y altas tasas de CR. EBB y EBRT son opciones, pero no ofrecen ventaja aquí; la observación conlleva riesgo de progresión.</strong></p>
+</div>
+<div class="case-study">
+<h4>Caso 2 -- Obstrucción hipoxémica con secreciones</h4>
+<p>Un paciente hipoxémico en UCI tiene un coágulo sanguíneo y moco casi oclusivos en el bronquio principal izquierdo después de una biopsia. ¿Cuál es la mejor intervención broncoscópica inmediata?</p>
+<p><strong>Opciones:</strong><br/>
+        A. PDT ahora<br/>
+        B. Crioablación (ciclos de congelación-descongelación)<br/>
+        C. Crioadhesión con extracción en bloque<br/>
+        D. Colocación de catéter para EBB<br/>
+        E. Diferir para planificación con TC
+        </p>
+<p><strong>Respuesta: C. La crioadhesión permite la extracción inmediata de coágulos/moco con alta tasa de éxito; PDT y EBB son estrategias diferidas; el beneficio de la crioablación es el desprendimiento diferido.</strong></p>
+</div>
+<div class="case-study">
+<h4>Caso 3 -- EBRT previa, hemoptisis recurrente</h4>
+<p>Paciente de 72 años con NSCLC escamoso y EBRT previa a dosis completa presenta recurrencia endoluminal que causa hemoptisis y colapso lobar parcial. ¿Cuál es el siguiente paso después de crear una luz transitable?</p>
+<p><strong>Opciones:</strong><br/>
+        A. Repetir EBRT a dosis completa<br/>
+        B. PDT sin desbridamiento<br/>
+        C. EBB HDR con planificación cuidadosa<br/>
+        D. Cirugía<br/>
+        E. Observación
+        </p>
+<p><strong>Respuesta: C. EBB es apropiada para recurrencia endoluminal sintomática después de EBRT previa y se asocia con altas tasas de paliación sintomática y reaireación; la planificación cuidadosa evita vasos/ulceración.</strong></p>
+</div>
+<h3>Banco de preguntas (opción múltiple)</h3>
+<ol>
+<li>
+<strong>Paciente de 58 años con CIS en el bronquio principal izquierdo (0,7 cm) rechaza cirugía. ¿Cuál es la mejor opción broncoscópica definitiva?</strong><br/>
+            A. Láser Nd:YAG solo<br/>
+            B. PDT con protocolo de porfímero<br/>
+            C. EBB sola<br/>
+            D. Electrocauterio más stent<br/>
+            E. Observación<br/>
+<strong>Respuesta: B. El CIS central pequeño con márgenes visibles tiene alta CR con PDT.</strong>
+</li>
+<li>
+<strong>Durante la activación de PDT, la pantalla se “blanquea”. La acción más crítica es:</strong><br/>
+            A. Aumentar la potencia lumínica para acortar el tiempo<br/>
+            B. Avanzar el difusor más profundo en el tumor<br/>
+            C. Mantener la posición del difusor y la inmovilidad del paciente<br/>
+            D. Abortar y reprogramar<br/>
+            E. Cambiar a luz azul<br/>
+<strong>Respuesta: C. Estabilice el difusor durante la activación para asegurar precisión de dosis a pesar del “blanqueamiento” visual.</strong>
+</li>
+<li>
+<strong>¿Cuál afirmación sobre la seguridad de PDT es VERDADERA?</strong><br/>
+            A. La fotosensibilidad se resuelve en 48 horas<br/>
+            B. El riesgo de hemoptisis grave es mayor en lesiones superficiales<br/>
+            C. La estenosis bronquial es inexistente después de PDT<br/>
+            D. Se requieren precauciones por fotosensibilidad durante semanas después de administrar el fármaco<br/>
+            E. PDT se prefiere cuando el tumor contacta con un vaso mediastínico mayor<br/>
+<strong>Respuesta: D. La fototoxicidad cutánea puede durar 6-8 semanas; evite vasos mayores.</strong>
+</li>
+<li>
+<strong>Paciente de 70 años en clopidogrel tiene un tumor endoluminal friable programado para crioablación. ¿Cuál es el mejor plan periprocedimiento?</strong><br/>
+            A. Proceder; el riesgo de sangrado es insignificante<br/>
+            B. Suspenda clopidogrel según el protocolo institucional antes de crioterapia ablativa<br/>
+            C. Cambiar a warfarina<br/>
+            D. Usar crioterapia por spray para reducir sangrado<br/>
+            E. Agregar antifibrinolítico sistémico<br/>
+<strong>Respuesta: B. Corrija coagulopatía/suspenda antiagregantes para crioterapia ablativa.</strong>
+</li>
+<li>
+<strong>Ventaja de la crioterapia sobre la reducción térmica que se evalúa con frecuencia:</strong><br/>
+            A. Mayor riesgo de incendio de la vía aérea<br/>
+            B. Requiere oxígeno subambiente<br/>
+            C. Más segura alrededor de stents de vía aérea y con FiO2 alta<br/>
+            D. Inicio más rápido que el láser<br/>
+            E. Menos eficaz para tejido de granulación<br/>
+<strong>Respuesta: C. La crioterapia no genera incendio y es favorable alrededor de stents.</strong>
+</li>
+<li>
+<strong>La extracción inmediata de un gran coágulo organizado que obstruye el bronquio principal derecho se logra mejor mediante:</strong><br/>
+            A. Extracción con pinzas<br/>
+            B. Extracción con balón<br/>
+            C. Crioadhesión con extracción en bloque<br/>
+            D. PDT<br/>
+            E. EBB<br/>
+<strong>Respuesta: C. La crioadhesión ofrece fuerte adherencia a materiales con alto contenido de agua para extracción en bloque.</strong>
+</li>
+<li>
+<strong>Para EBB HDR usada como paliación única, una fraccionación aceptada (prescrita a ~1 cm) es:</strong><br/>
+            A. 1 Gy x30 diario<br/>
+            B. 7,5 Gy x3 semanal<br/>
+            C. 20 Gy en fracción única<br/>
+            D. 2 Gy x30<br/>
+            E. 60 Gy en 30 fracciones<br/>
+<strong>Respuesta: B. Los esquemas comunes de paliación HDR incluyen 7,5 Gy x3 (o 10 Gy x2; 6 Gy x4).</strong>
+</li>
+<li>
+<strong>El parámetro clave de posición del catéter en la planificación de EBB es:</strong><br/>
+            A. Punta justo proximal a la lesión<br/>
+            B. Punta ~2 cm distal a la lesión<br/>
+            C. Punta dentro del espacio pleural<br/>
+            D. Punta en el esófago<br/>
+            E. Ninguna distancia importa<br/>
+<strong>Respuesta: B. Coloque el catéter ~2 cm más allá del margen distal de la lesión y fíjelo.</strong>
+</li>
+<li>
+<strong>Después de crioablación de un tumor endobronquial, el seguimiento más apropiado es:</strong><br/>
+            A. Repetir broncoscopia en 48 h<br/>
+            B. Repetir broncoscopia en 5-10 días<br/>
+            C. Solo vigilancia anual<br/>
+            D. EBB inmediata<br/>
+            E. PET-TC al día siguiente<br/>
+<strong>Respuesta: B. El tejido necrótico desprendido alcanza su máximo días después de la ablación; planifique desbridamiento a los 5-10 días.</strong>
+</li>
+<li>
+<strong>¿Cuál de las siguientes es una ventaja reconocida de HDR sobre LDR en EBB?</strong><br/>
+            A. Menores respuestas sintomáticas<br/>
+            B. Menor tiempo de tratamiento y menor desplazamiento del catéter<br/>
+            C. No requiere planificación radioterápica<br/>
+            D. Más segura para pacientes con fístulas<br/>
+            E. Dosis ilimitada por fracción<br/>
+<strong>Respuesta: B. HDR acorta el tratamiento y reduce la hospitalización y el riesgo de desplazamiento.</strong>
+</li>
+<li>
+<strong>La administración de dosis en PDT se alinea más estrechamente con qué parámetro?</strong><br/>
+            A. Fluencia prescrita por posición de permanencia del catéter<br/>
+            B. Julios por centímetro de longitud del difusor<br/>
+            C. Gray por segmento de vía aérea<br/>
+            D. Kelvin por segundo<br/>
+            E. Lúmenes por vatio<br/>
+<strong>Respuesta: B. PDT usa J/cm de longitud del difusor (por ejemplo, 200 J/cm).</strong>
+</li>
+<li>
+<strong>Un paciente con tumor endobronquial ulcerado en contacto con una arteria pulmonar es referido para EBB. El mejor siguiente paso es:</strong><br/>
+            A. Proceder con EBB; la ulceración es irrelevante<br/>
+            B. Proceder con PDT<br/>
+            C. Reevaluar la modalidad: el compromiso vascular/ulcerativo aumenta el riesgo de necrosis/hemorragia con EBB<br/>
+            D. Agregar anticoagulación<br/>
+            E. Continuar observación<br/>
+<strong>Respuesta: C. EBB está contraindicada con compromiso vascular mayor y ulceración significativa.</strong>
+</li>
+</ol>
+<hr/>
+<h3>Controversias, variabilidad y evidencia emergente</h3>
+<ul>
+<li>Los fotosensibilizadores más nuevos (por ejemplo, clorinas, bacterioclorinas) y los refinamientos de dosimetría buscan reducir la fototoxicidad y extender la penetración tisular; las aprobaciones regulatorias varían por región.</li>
+<li>La PDT en pulmón periférico mediante plataformas de navegación es investigacional, con datos tempranos de seguridad/factibilidad, pero sigue fuera de los protocolos de atención rutinaria.</li>
+<li>La crioterapia abarca ablación diferida y recanalización inmediata; los textos antiguos enfatizan el retraso, mientras que la crioadhesión moderna permite alivio rápido: comprenda ambas para exámenes y práctica.</li>
+<li>La orientación profesional sugiere HDR o PDR con optimización sobre LDR para EBB; la selección y fraccionamiento se individualizan y dependen del centro.</li>
+</ul>
+<div class="algorithm-note">
+<strong>Lista de verificación para recordar</strong>
+<ul>
+<li>Confirme el fenotipo de la lesión (superficial frente a voluminosa; endoluminal frente a mixta) y la urgencia antes de elegir una modalidad.</li>
+<li>Para PDT, programe fármaco -&gt; luz (~48 h) -&gt; desbridamiento obligatorio a las 48 h; planifique la logística por adelantado.</li>
+<li>Aconseje precauciones por fototoxicidad durante varias semanas después de la infusión del fármaco de PDT.</li>
+<li>Use crioablación para citorreducción diferida; crioadhesión para extracción inmediata de coágulo/moco/tumor.</li>
+<li>Anticipe desbridamiento 5-10 días post-crio; programe broncoscopia de seguimiento.</li>
+<li>Para EBB, asegure una luz transitable, coloque el catéter ~2 cm más allá de la lesión y prescriba a 5-10 mm de profundidad con márgenes de 1-2 cm.</li>
+<li>Gradúe y trate bronquitis/estenosis por radiación después de EBB; planifique reintervenciones si es necesario.</li>
+<li>Evite EBB/PDT cuando el tumor contacta vasos mayores o hay fístulas.</li>
+<li>Prefiera crioterapia en entornos con FiO2 alta o cerca de stents.</li>
+<li>Documente estado funcional y métricas funcionales antes/después para cuantificar el beneficio y guiar los siguientes pasos.</li>
+</ul>
+</div>
+<hr/>
+<h3>Abreviaturas y glosario</h3>
+<div class="abbreviations">
+<dl>
+<dt>APC</dt>
+<dd>Coagulación con plasma de argón</dd>
+<dt>CIS</dt>
+<dd>Carcinoma in situ</dd>
+<dt>CR</dt>
+<dd>Respuesta completa</dd>
+<dt>EBB</dt>
+<dd>Braquiterapia endobronquial</dd>
+<dt>EBRT</dt>
+<dd>Radioterapia externa</dd>
+<dt>FiO2</dt>
+<dd>Fracción inspirada de oxígeno</dd>
+<dt>HDR/LDR/PDR</dt>
+<dd>Alta/baja/pulsada tasa de dosis</dd>
+<dt>HPD</dt>
+<dd>Derivado de hematoporfirina</dd>
+<dt>Ir-192</dt>
+<dd>Fuente radiactiva de iridio-192</dd>
+<dt>NSCLC</dt>
+<dd>Cáncer de pulmón de células no pequeñas</dd>
+<dt>PDT</dt>
+<dd>Terapia fotodinámica</dd>
+<dt>ROS</dt>
+<dd>Especies reactivas de oxígeno</dd>
+<dt>SCC</dt>
+<dd>Carcinoma de células escamosas</dd>
+</dl>
+</div>
+<h3>Referencias</h3>
+<div class="references">
+<ol>
+<li>Hayata Y, Kato H, Konaka C, et al. Hematoporphyrin derivative and laser photoradiation in the treatment of lung cancer. Chest. 1982;81(3):269-277.</li>
+<li>McCaughan JS Jr, Williams TE. Photodynamic therapy for endobronchial malignant disease: a prospective fourteen-year study. J Thorac Cardiovasc Surg. 1997;114(6):940-946.</li>
+<li>Kato H, Usuda J, Okunaka T, et al. Basic and clinical research on photodynamic therapy at Tokyo Medical University Hospital. Lasers Surg Med. 2006;38(5):371-375.</li>
+<li>Moghissi K, Dixon K, Stringer M, et al. The place of bronchoscopic photodynamic therapy in advanced unresectable lung cancer: experience of 100 cases. Eur J Cardiothorac Surg. 1999;15(1):1-6.</li>
+<li>Chaddha U, Hogarth DK, Murgu S. Bronchoscopic ablative therapies for malignant central airway obstruction and peripheral lung tumors. Ann Am Thorac Soc. 2019;16(10):1220-1229.</li>
+<li>Lee P, Kupeli E, Mehta AC. Therapeutic bronchoscopy in lung cancer: laser therapy, electrocautery, brachytherapy, stents, and photodynamic therapy. Clin Chest Med. 2002;23(1):241-256.</li>
+<li>Dougherty TJ, Gomer CJ, Henderson BW, et al. Photodynamic therapy. J Natl Cancer Inst. 1998;90(12):889-905.</li>
+<li>Edell E, Cortese DA. Photodynamic therapy in early superficial squamous cell carcinoma as an alternative to surgical resection. Chest. 1992;102(5):1319-1322.</li>
+<li>Furukawa K, Kato H, Konaka C, et al. Locally recurrent central-type early-stage lung cancer &lt;1.0 cm in diameter after complete remission by photodynamic therapy. Chest. 2005;128(5):3269-3275.</li>
+<li>Mathur PN, Wolf KM, Busk MF, et al. Fiberoptic bronchoscopic cryotherapy in the management of tracheobronchial obstruction. Chest. 1996;110(3):718-723.</li>
+<li>Walsh D, Maiwand M, Nath A, et al. Bronchoscopic cryotherapy for advanced bronchial carcinoma. Thorax. 1990;45(7):509-513.</li>
+<li>Vergnon JM, Schmitt T, Alamartine E, et al. Initial combined cryotherapy and irradiation for unresectable non-small-cell lung cancer: preliminary results. Chest. 1992;102(5):1436-1440.</li>
+<li>Stewart A, Parashar B, Patel M, et al. ABS consensus guidelines for thoracic brachytherapy for lung cancer. Brachytherapy. 2016;15(1):1-11.</li>
+<li>Kelly JF, Delclos ME, Morice RC, et al. High-dose-rate endobronchial brachytherapy effectively palliates symptoms due to airway tumors: the 10-year MD Anderson experience. Int J Radiat Oncol Biol Phys. 2000;48:697-702.</li>
+<li>Celebioglu B, Gurkan OU, Erdogan S, et al. High-dose rate endobronchial brachytherapy effectively palliates symptoms due to inoperable lung cancer. Jpn J Clin Oncol. 2002;32(11):443-448.</li>
+<li>Hennequin C, Bleichner O, Tredaniel J, et al. Long-term results of endobronchial brachytherapy: a curative treatment? Int J Radiat Oncol Biol Phys. 2007;67:425-430.</li>
+<li>Diaz-Jimenez JP, Martinez-Ballarin JE, Llunell A, et al. Efficacy and safety of photodynamic therapy versus Nd-YAG laser resection in NSCLC with airway obstruction. Eur Respir J. 1999;14(4):800-805.</li>
+<li>Lam S, Grafton C, Coy P, et al. Combined photodynamic therapy and radiotherapy versus radiotherapy alone in inoperable obstructive NSCLC. Proc SPIE. 1991;1616:20-28.</li>
+<li>Reddy C, Michaud G, Majid A, et al. Photodynamic therapy in endobronchial metastases from renal cell carcinoma. J Bronchology Interv Pulmonol. 2009;16(4):245-249.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

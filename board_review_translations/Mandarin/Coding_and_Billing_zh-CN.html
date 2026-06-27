@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>编码与收费</title>
+<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body><h1>编码与收费</h1>
+<h3>考试内容映射与范围</h3>
+<p>本章对应 AABIP 考试蓝图中的执业管理领域，重点为支气管镜、治疗性气道操作、支气管镜肺减容术（BLVR）、胸膜操作及评估与管理（E/M）的专业和机构编码。内容强调多项内镜规则（MER）、附加代码、修饰符、文书标准以及介入肺脏病学（IP）常见的付款方编辑规则。</p>
+<h3>学习目标</h3>
+<ul>
+<li>在实际病例中应用多项内镜规则，并在同次完成多种支气管镜技术时正确计算 wRVU。</li>
+<li>为高级支气管镜选择并排序基础代码、附加代码和治疗代码，包括 EBUS、径向探头、导航、支架、扩张、治疗性吸引和 BLVR。</li>
+<li>恰当使用关键修饰符（-25、-50、-51、-53、-59、-76，以及按需 -22/-26），并通过文书支持独立或中止的服务。</li>
+<li>区分专业费用与机构支付（APC、多项操作减付、一次性支气管镜过渡性额外支付），并将其纳入项目运营。</li>
+<li>支气管镜医师亲自提供中度镇静时正确收费，并理解镇静已从支气管镜代码中拆分。</li>
+<li>采用付款方易于接受的文书，明确解剖部位/肺叶/淋巴结站，并在要求时注明可存档图像。</li>
+</ul>
+<hr/>
+<div class="algorithm-note">
+<h3>高频要点一页通</h3>
+<ul>
+<li><strong>MER 一句话：</strong> 价值最高的基础支气管镜代码按 100% 支付；其他非附加支气管镜代码按“该代码价值 − 基础代码 31622 的价值”支付。附加代码全额支付。</li>
+<li><strong>熟记附加代码：</strong> +31627（导航）、+31654（径向 EBUS）、+31632（每增加一个肺叶的 TBLB）、+31633（每增加一个肺叶的 TBNA）、+31637（每增加一个支气管支架）。这些不受 MER 减付。</li>
+<li><strong>Y 支架模板：</strong> 31631（气管）+ 31636（一个主支气管）+ +31637（对侧主支气管）。透视已打包。</li>
+<li><strong>同一部位切除与消融：</strong> 31640 与 31641 打包——选择最能描述该部位主要治疗的一个代码。仅在真正不同部位时使用 -59。</li>
+<li><strong>支架伴扩张：</strong> 同一气道段中，作为支架置入一部分的扩张 31630 已打包；只有另一独立气道接受扩张时才用 -59。应预期可能被拒付，并用清晰解剖记录申诉。</li>
+<li><strong>治疗性吸引：</strong> 首次 31645；同次住院期间再次治疗性吸引为 31646。</li>
+<li><strong>导航代码注意：</strong> 只有导航真正启动时才报告 +31627；若未开始，不得收费。若服务已开始后因安全原因减少/中止，可考虑 -52/-53。</li>
+<li><strong>双侧胸膜操作：</strong> 双侧胸腔穿刺或胸管置入使用 -50（这不是支气管镜修饰符）。</li>
+<li><strong>同日胸穿 + 支气管镜：</strong> 在价值较低且独立的操作上使用 -51；分别记录操作有帮助。</li>
+<li><strong>中度镇静：</strong> 99152（支气管镜医师提供的首 15 分钟；代码更新后计入 +0.25 wRVU）和 99153（每增加 15 分钟；仅执业费用，无医师 wRVU）。</li>
+<li><strong>血管通路超声引导（76937）：</strong> 记录“实时超声引导”，并注明“永久图像已存档”。</li>
+<li><strong>BLVR：</strong> Chartis 31634；瓣膜置入 31647（首个肺叶）+31651（每增加一个肺叶）；取出 31648（每增加一个肺叶 +31649）。应协调住院计划。</li>
+<li><strong>门诊 E/M 附加：</strong> G2211 可体现办公室 E/M 中持续、复杂、纵向照护；同日另有操作时不能报告。需清晰文书。</li>
+<li><strong>机构现实：</strong> 支气管镜归入 APC 系列；一次性支气管镜在有限期间可能符合过渡性额外支付（C1601）——医院需配置器械收费和理赔编辑。</li>
+<li><strong>申诉思维：</strong> 许多正确理赔首轮也会被拒。操作记录和保存的影像就是申诉依据。</li>
+</ul>
+</div>
+<h3>核心概念</h3>
+<h4>适应证与禁忌证（编码视角）</h4>
+<p>在有医疗必要性时使用完整的支气管镜或胸膜代码，并记录适应证（如肺肿块、淋巴结分期、黏液栓塞）。某些组合本身已打包（例如同一部位的切除与消融；同一气道段支架置入所包含的扩张）。不同解剖部位可支持独立服务及相应修饰符。</p>
+<h4>术前评估</h4>
+<p>将预计 CPT 组合写入事前授权和排程脚本，例如“EMN + 径向 EBUS + TBLB ± BAL”，或“BLVR：Chartis + 瓣膜，可能第二个肺叶”。同时纳入 ICD-10 适应证和器械信息，可提高首次授权成功率并便于机构准备。</p>
+<h4>设备与设置</h4>
+<ul>
+<li>报告 76937 时保存超声图像，并明确记录实时引导和永久存档。</li>
+<li>透视已包含在支气管镜和支架代码中，不得另行收费。</li>
+</ul>
+<h4>分步技术 / 操作核对表</h4>
+<p>每份支气管镜操作记录应包含以下内容，以支持编码和申诉：</p>
+<ul>
+<li>适应证。</li>
+<li>麻醉方式。</li>
+<li>完整气道检查。</li>
+<li>侧别/肺叶/肺段。</li>
+<li>取样细节（TBNA 站点/针数；TBLB 肺叶/器械；BAL 部位/容量）。</li>
+<li>导航平台和靶点确认方式。</li>
+<li>径向 EBUS 图像。</li>
+<li>治疗方式与部位（能量类型、球囊尺寸/压力、支架类型/尺寸/位置）。</li>
+<li>并发症/止血。</li>
+<li>服务是否减少或中止（时间和原因）。</li>
+</ul>
+<h4>故障排查与术中管理</h4>
+<p><strong>中止与减少服务：</strong> 操作开始后因患者安全而停止使用 -53；若完成了原计划服务的缩减版本，使用 -52。操作记录必须清晰区分两者。</p>
+<p><strong>MER 计算陷阱：</strong> 不要把所有 wRVU 直接相加——次要的非附加代码需减去基础代码 31622；附加代码仍按全额计入。</p>
+<p><strong>不同部位：</strong> 原本会打包的操作（如扩张 + 支架）如计划使用 -59，记录必须明确不同气道。应预期首轮拒付，并准备解剖示意图/影像申诉。</p>
+<h4>术后照护与随访</h4>
+<p>多数门诊胸膜操作（胸腔穿刺、胸管、留置胸膜导管）的全球期为 0 天；同日 E/M 必须是显著且可单独识别的服务，通常需 -25。胸腔镜代码系列不同（诊断/活检 0 天；胸膜固定/剥脱 90 天），会影响术后 E/M 收费。</p>
+<h4>并发症（预防、识别与处理）</h4>
+<p>从编码角度看，“并发症”常表现为编辑和拒付。</p>
+<ul>
+<li><strong>预防：</strong> 详细记录解剖部位；按要求保存图像（如 76937）；避免不允许的组合（如同一部位 31640+31641，或导航从未启动却报告 31627）。</li>
+<li><strong>处理：</strong> 及时申诉，并引用操作细节和付款方政策措辞。</li>
+</ul>
+<h4>特殊场景</h4>
+<ul>
+<li><strong>ICU：</strong> 治疗性吸引可能重复；首次用 31645，同一住院期间由同一医师/团体再次完成用 31646。明确时间线。</li>
+<li><strong>门诊慢病管理：</strong> 无同日操作时，可在持续复杂管理（如 COPD、结节监测）的办公室 E/M 中考虑 G2211。</li>
+<li><strong>机构现实：</strong> 一次性支气管镜可能符合 C1601 过渡性额外支付；确保医院收费主文件和理赔编辑已配置。</li>
+</ul>
+<h4>证据与结局（精选）</h4>
+<p><strong>中度镇静已拆分：</strong> CMS 将中度镇静从支气管镜代码中分离；支气管镜医师可报告首 15 分钟 99152，后续 99153 仅计执业费用，无医师 wRVU。</p>
+<p><strong>支付环境：</strong> 换算因子压力和 Medicare Advantage 增长使收入更复杂；编码应与机构策略（APC、成本收费比、器械额外支付）一致。</p>
+<hr/>
+<h3>诊断与治疗算法</h3>
+<h4>算法 1. 外周肺部病变检查的编码</h4>
+<div class="mermaid">
+graph TD
+A["疑似外周病变"] --&gt; B{"是否完成导航？"}
+B -- 是 --&gt; C["报告 +31627（导航）"]
+B -- 否 --&gt; D["不报告导航附加代码"]
+C --&gt; E{"径向 EBUS 是否定位病灶？"}
+D --&gt; E
+E -- 是 --&gt; F["报告 +31654（径向 EBUS）"]
+E -- 否 --&gt; G["不报告径向附加代码"]
+F --&gt; H{"是否取样？"}
+G --&gt; H
+H --&gt; I["TBNA：报告 31629"]
+H --&gt; J["单个肺叶 TBLB：报告 31628"]
+H --&gt; K["每增加一个 TBLB 肺叶：+31632"]
+H --&gt; L["刷检/BAL：31623/31624"]
+</div>
+<div class="algorithm-note"><strong>总结：</strong>
+<ul>
+<li>确认导航确已启动；若是，报告 +31627。</li>
+<li>径向 EBUS 用于定位外周病变时加报 +31654。</li>
+<li>选择取样代码：31629（TBNA）、31628（首个肺叶 TBLB）、+31632（每增加一个肺叶）、按需 31623/31624（刷检/BAL）。</li>
+<li>计算 MER：最高价值基础代码按 100%；其他非附加代码按“其 wRVU − 31622 wRVU”；附加代码全额。</li>
+<li>记录靶肺叶/肺段、针数和存档图像。</li>
+</ul></div>
+<h4>算法 2. 可能需要支架的治疗性气道管理</h4>
+<div class="mermaid">
+graph TD
+A["气道梗阻"] --&gt; B{"是否在同一部位治疗？"}
+B --&gt; C["切除或消融"]
+C --&gt; C1["31640 或 31641 二选一（不可同时）"]
+B --&gt; D["不同部位/不同方式"]
+D --&gt; D1["文书清晰时考虑 -59"]
+C1 --&gt; E{"是否需要支架？"}
+D1 --&gt; E
+E -- 是 --&gt; F{"位置？"}
+F -- "气管" --&gt; G["31631"]
+F -- "支气管" --&gt; H["31636（每增加一个 +31637）"]
+E -- 否 --&gt; I["结束"]
+G --&gt; J{"是否扩张？"}
+H --&gt; J
+J -- "同一气道段" --&gt; K["已打包进支架"]
+J -- "另一气道" --&gt; L["31630-59（应预期编辑）"]
+</div>
+<div class="algorithm-note"><strong>总结：</strong>
+<ul>
+<li>同一部位不要同时报告 31640 和 31641。</li>
+<li>同次 Y 支架示例：31631 + 31636 + +31637。</li>
+<li>同一气道段中扩张 31630 已包含在支架置入；另一气道扩张才用 -59。</li>
+<li>透视已包含在支气管镜和支架代码中。</li>
+<li>预判编辑，并用部位特异性记录支持。</li>
+</ul></div>
+<hr/>
+<h3>表格与速查框</h3>
+<h4>表 1. IP 常用诊断性支气管镜代码</h4>
+<table>
+<thead><tr><th>CPT 代码</th><th>描述</th><th>wRVU</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>31622</td><td>诊断性支气管镜（包括透视），必要时含细胞冲洗</td><td>2.53</td><td>MER 基础代码</td></tr>
+<tr><td>31623</td><td>刷检</td><td>2.63</td><td>非附加（适用 MER）</td></tr>
+<tr><td>31624</td><td>BAL</td><td>2.63</td><td>非附加（适用 MER）</td></tr>
+<tr><td>31628</td><td>TBLB，单个肺叶</td><td>3.55</td><td>非附加（适用 MER）</td></tr>
+<tr><td>+31632</td><td>TBLB，每增加一个肺叶</td><td>1.03</td><td>附加代码</td></tr>
+<tr><td>31629</td><td>TBNA（气管/主支气管/肺叶支气管）</td><td>3.75</td><td>非附加（适用 MER）</td></tr>
+<tr><td>+31633</td><td>TBNA，每增加一个肺叶</td><td>1.32</td><td>附加代码</td></tr>
+<tr><td>+31654</td><td>径向探头 EBUS</td><td>1.40</td><td>附加代码（外周定位）</td></tr>
+<tr><td>+31627</td><td>导航（虚拟支气管镜/EMN/机器人）</td><td>2.00</td><td>附加代码</td></tr>
+<tr><td>31645</td><td>治疗性吸引，首次</td><td>2.88</td><td>非附加</td></tr>
+<tr><td>31646</td><td>治疗性吸引，后续（同次住院）</td><td>2.78</td><td>非附加</td></tr>
+</tbody>
+</table>
+<h4>表 2. BLVR 与气道支架编码速览</h4>
+<table>
+<thead><tr><th>临床操作</th><th>CPT</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>Chartis</td><td>31634</td><td>记录检测肺叶</td></tr>
+<tr><td>瓣膜置入</td><td>31647（首个肺叶）+ +31651（每增加一个肺叶）</td><td>记录瓣膜和肺叶</td></tr>
+<tr><td>瓣膜取出</td><td>31648（首个肺叶）+ +31649（每增加一个肺叶）</td><td>—</td></tr>
+<tr><td>气管支架</td><td>31631</td><td>—</td></tr>
+<tr><td>支气管支架</td><td>31636（首个支气管）+ +31637（每增加一个）</td><td>—</td></tr>
+<tr><td>球囊扩张</td><td>31630</td><td>同一气道段支架中已打包；另一气道用 -59</td></tr>
+</tbody>
+</table>
+<h4>表 3. 实际会用到的修饰符（含付款方友好措辞）</h4>
+<table>
+<thead><tr><th>修饰符</th><th>何时使用</th><th>示例文书</th></tr></thead>
+<tbody>
+<tr><td>-25</td><td>0 天全球期操作同日存在显著、可单独识别的 E/M</td><td>“针对新发胸腔积液进行了独立评估并决定胸腔穿刺；处理内容超出常规术前/术后服务。”</td></tr>
+<tr><td>-50</td><td>双侧胸膜操作（如双侧胸穿/胸管）</td><td>“完成双侧胸腔穿刺：分别进入右、左胸膜腔。”</td></tr>
+<tr><td>-51</td><td>同日多项独立操作（如胸穿 + 支气管镜）</td><td>“胸腔穿刺与支气管镜分别建立独立操作记录。”</td></tr>
+<tr><td>-53</td><td>操作开始后因患者安全而中止</td><td>“麻醉诱导并插入镜体后因低氧血症中止操作。”</td></tr>
+<tr><td>-59</td><td>不同部位的独立操作服务</td><td>“左上叶扩张；右主支气管置入支架——不同气道。”</td></tr>
+<tr><td>-22</td><td>增加的操作服务（少用）</td><td>“因肿瘤易出血，操作时间超过常规 2 倍；量化记录额外工作。”</td></tr>
+<tr><td>-26</td><td>机构拥有影像设备时的专业部分</td><td>“判读机构超声；仅报告专业部分。”</td></tr>
+</tbody>
+</table>
+<div class="algorithm-note"><h4>可视化概念占位</h4><ul>
+<li><strong>Y 支架编码图：</strong> 气管支臂（31631）+ 双侧主支气管支臂（31636、+31637）。</li>
+<li><strong>MER 计算：</strong> 主要代码 31653（100%），31628/31629（部分计入 = 该值 − 31622），附加 31627/31654（全额）。</li>
+<li><strong>BLVR 会话规划：</strong> Chartis（31634）后置入瓣膜（首个肺叶 31647，增加肺叶 +31651）。</li>
+</ul></div>
+<hr/>
+<h3>病例与应用学习</h3>
+<div class="case-study">
+<h4>病例 1</h4>
+<p>一名 67 岁患者有 2.2 cm 右上叶结节，接受机器人导航，并用径向 EBUS 确认器械位于病灶内。右上叶完成 TBNA 和 TBLB，右中叶完成 BAL。正确的编码结构是什么？</p>
+<p>A. 仅 31653<br/>B. 31627、31628、31624<br/>C. 31628、31629、31623、31624<br/>D. 31629（主要）、31628（MER 部分）、31624（MER 部分）、+31627、+31654<br/>E. 31627、+31632、31624</p>
+<p><strong>答案：D。</strong> 导航（+31627）和径向 EBUS（+31654）为全额附加代码；TBNA 和 TBLB 为适用 MER 的基础代码；BAL 同样适用 MER。只有在首个肺叶之外另一个肺叶也做 TBLB 时才用 +31632。</p>
+</div>
+<div class="case-study">
+<h4>病例 2</h4>
+<p>一名 58 岁恶性中央气道梗阻患者，对同一右主支气管病变进行了消融和减瘤，随后置入支气管支架。稍后又对独立的左上叶肺段狭窄扩张。最佳编码？</p>
+<p>A. 同一部位 31641 + 31640，另加 31636、31630<br/>B. 31641 或 31640（二选一）、31636、31630-59<br/>C. 31641 + 31640、31636-59<br/>D. 31641、31636、31630</p>
+<p><strong>答案：B。</strong> 同一部位不能同时报告消融和切除；选择最合适的一个。扩张在同一支架气道段中已打包，但不同气道可用 -59 独立报告，且必须清楚记录解剖部位。</p>
+</div>
+<h3>题库（选择题）</h3>
+<ol>
+<li><strong>同次支气管镜完成 4R、7、11L 的 EBUS-TBNA、径向 EBUS 定位和右上叶 TBLB。哪些代码不受 MER 减付、按全额支付？</strong><br/>A. 31628 和 31653<br/>B. +31654 和 +31627<br/>C. 仅 31653 和 31628<br/>D. 31624 和 31623<br/>E. 所有代码均减付<br/><strong>答案：B。</strong> 附加代码（+31627、+31654）全额支付；非附加代码适用 MER，通常 31653 为价值最高的基础代码。</li>
+<li><strong>（下一步最佳处理）BLVR 候选者在右上叶和右中叶 Chartis 均为侧支通气阴性；先在右上叶置入瓣膜，随后同次决定治疗右中叶。应增加什么？</strong><br/>A. 仅 31647<br/>B. 31648 + 31649<br/>C. 31647 + +31651<br/>D. 31647 + 31636<br/>E. 仅 31651<br/><strong>答案：C。</strong> 瓣膜置入首个肺叶用 31647，同次每增加一个肺叶用 +31651。</li>
+<li><strong>支气管镜医师亲自提供中度镇静时，哪项正确？</strong><br/>A. 每 15 分钟 99153 均产生医师 wRVU。<br/>B. 首 15 分钟可报告 99152；之后 99153 仅计执业费用。<br/>C. 镇静仍打包在所有支气管镜代码中。<br/>D. 只有麻醉人员能报告镇静。<br/>E. ≥5 岁患者不能收费镇静。<br/><strong>答案：B。</strong> CMS 已拆分中度镇静；首 15 分钟为 99152，99153 仅为执业费用。</li>
+<li><strong>哪项正确使用修饰符 -50？</strong><br/>A. 双侧 EBUS-TBNA<br/>B. 双侧主支气管支架<br/>C. 双侧胸腔穿刺<br/>D. 右上叶 TBLB + 左下叶 TBLB<br/>E. 双侧 BAL<br/><strong>答案：C。</strong> 双侧胸膜操作使用 -50；这不是支气管镜修饰符。</li>
+<li><strong>（操作故障排查）计划 EMN 导航，但麻醉诱导后低氧，在任何导航步骤开始前即终止。31627 如何处理？</strong><br/>A. 正常报告 31627<br/>B. 报告 31627-52<br/>C. 不报告 31627<br/>D. 报告 31627-59<br/>E. 报告 31627-76<br/><strong>答案：C。</strong> 导航从未启动不得收费。只有服务已开始并因安全中止时才考虑 -53；-52 仅适用于实际完成了部分服务。</li>
+<li><strong>（下一步最佳处理）硬质镜置入 Y 支架同日，较早还完成了超声引导胸腔穿刺。胸穿相对支架操作如何报告？</strong><br/>A. 无需修饰符<br/>B. 胸穿 CPT 加 -51<br/>C. 胸穿 CPT 加 -59<br/>D. 胸穿 CPT 加 -25<br/>E. 胸穿打包进支气管镜<br/><strong>答案：B。</strong> 胸穿与支气管镜是独立操作；同日使用 -51。分别记录可增强理赔。</li>
+<li><strong>支气管镜当日超声引导颈内静脉置管，何时可报告 76937？</strong><br/>A. 采用体表标志法<br/>B. 房间里有超声机<br/>C. 使用实时超声引导且永久图像已存档<br/>D. 只有医师稍后判读影像时<br/>E. 仅动脉置管<br/><strong>答案：C。</strong> 付款政策要求实时超声和存档图像，必须明确记录。</li>
+<li><strong>（操作故障排查）对同一左主支气管梗阻病变同时消融和切除。正确做法？</strong><br/>A. 同时报 31640 和 31641<br/>B. 31640 或 31641 二选一<br/>C. 一律给 31641 加 -59<br/>D. 改报 31630<br/>E. 先硬镜后软镜即可同时收费<br/><strong>答案：B。</strong> 同一部位切除和消融打包，只报告一个。只有真正不同部位才用 -59。</li>
+<li><strong>ICU 患者周一因黏液栓由本团队治疗性吸引，周三同次住院再次吸引。代码？</strong><br/>A. 两次均 31645<br/>B. 首次 31645，之后 31646<br/>C. 两次均 31646<br/>D. 周三 31645-76<br/>E. 周一 31645，周三不收费<br/><strong>答案：B。</strong> 首次治疗性吸引用 31645；同次住院后续由同一医师/团体完成用 31646。</li>
+<li><strong>哪一组合因打包而不正确？</strong><br/>A. 同一气道段 31636 与 31630<br/>B. Y 支架 31631 + 31636 + +31637<br/>C. 两个肺叶 BLVR 31647 + +31651<br/>D. 同一部位 31640 + 31641<br/>E. 使用径向 EBUS 时加 +31654<br/><strong>答案：D。</strong> 同一部位切除和消融打包，只报一个。相同气道段支架伴扩张也打包；所示 Y 支架和 BLVR 组合正确。</li>
+<li><strong>（下一步最佳处理）门诊为肺结节监测、药物优化和照护协调进行 E/M，同日无操作。如何体现纵向复杂度？</strong><br/>A. 加 99153<br/>B. E/M 加 G2211<br/>C. 加 31622<br/>D. E/M 加 25<br/>E. E/M 加 59<br/><strong>答案：B。</strong> G2211 体现办公室/门诊持续复杂照护；有同日操作时不能使用。</li>
+<li><strong>（操作故障排查）右主支气管置支架并扩张左上叶；理赔将 31630 作为打包拒付。申诉重点？</strong><br/>A. 仅要求同业复核<br/>B. 明确不同气道（右主支气管与左上叶），加 -59，并附标注影像/示意图<br/>C. 删除 31630<br/>D. 改用 -51 重报<br/>E. 加 -50<br/><strong>答案：B。</strong> 只有同一气道段中的扩张才打包；成功申诉依赖清楚的不同部位文书和 -59。</li>
+</ol>
+<hr/>
+<h3>争议、差异与不断演进的证据</h3>
+<ul>
+<li><strong>-22 的使用：</strong> 因阈值主观且行政负担大，常不鼓励；需量化文书，且可能延迟理赔。</li>
+<li><strong>本地付款方编辑：</strong> 不同承保方对修饰符（如 -59）要求不同；即使编码正确也常被拒，申诉应依靠解剖明确的记录和影像。</li>
+<li><strong>镇静人员配置：</strong> 中度镇静拆分可能无意中推动更多独立麻醉服务；各机构实践不同。</li>
+<li><strong>机构采用额外支付器械：</strong> 医院落实 C1601 的速度不同；IP 项目应在临时支付窗口内主动推动。</li>
+</ul>
+<h3>带回家的核对表</h3>
+<ul>
+<li>[ ] 明确具体肺叶/肺段和淋巴结站；量化针数和标本。</li>
+<li>[ ] 只有导航启动才报告 +31627；若未启动不报告；服务开始后中止才考虑 -53。</li>
+<li>[ ] 径向 EBUS 用于定位外周病变时加 +31654。</li>
+<li>[ ] 非附加代码进行 MER 计算；附加代码全额。</li>
+<li>[ ] 同一部位 31640 与 31641 二选一；不同部位才用 -59。</li>
+<li>[ ] 支架同一气道段扩张已打包；另一气道用 -59，并准备申诉。</li>
+<li>[ ] 报告 76937 时保存并注明“永久图像已存档”。</li>
+<li>[ ] BLVR：31634 → 31647（增加肺叶 +31651）；取出 31648（增加肺叶 +31649）。</li>
+<li>[ ] 双侧胸穿/胸管 → -50；同日胸穿 + 支气管镜 → -51。</li>
+<li>[ ] 同次住院重复治疗性吸引 → 31646。</li>
+<li>[ ] 持续复杂门诊照护、同日无操作时，E/M 可加 G2211。</li>
+<li>[ ] 将项目运营与机构 APC 和器械额外支付机会（C1601）对齐。</li>
+</ul>
+<hr/>
+<div class="abbreviations">
+<h3>缩写与术语表</h3>
+<dl>
+<dt>APC</dt><dd>门诊支付分类（机构支付分组）。</dd>
+<dt>BAL</dt><dd>支气管肺泡灌洗。</dd>
+<dt>BLVR</dt><dd>支气管镜肺减容术。</dd>
+<dt>C1601</dt><dd>符合条件的一次性支气管镜过渡性额外支付 HCPCS 代码。</dd>
+<dt>G2211</dt><dd>用于持续照护的办公室/门诊 E/M 复杂度附加代码。</dd>
+<dt>MER</dt><dd>多项内镜规则（专业费用支付）。</dd>
+<dt>TBNA/TBLB</dt><dd>经支气管针吸 / 经支气管肺活检。</dd>
+</dl>
+</div>
+<div class="references">
+<h3>参考文献</h3>
+<ol>
+<li>Ninan N, Wahidi MM. Basic bronchoscopy: technology, techniques, and professional fees. Chest. 2019;155(5):1067-1074.</li>
+<li>Nelson ME. Moderate sedation changes for bronchoscopy in 2017. Chest. 2017;152(4):893-897.</li>
+<li>Chest. 2021;160(1):259-267.</li>
+<li>Chest. 2020;158(6):2517-2523.</li>
+<li>Centers for Medicare &amp; Medicaid Services (CMS). Medicare Program; Revisions to Payment Policies Under the Physician Fee Schedule and Other Revisions to Part B for CY 2018; Medicare Shared Savings Program Requirements; and Medicare Diabetes Prevention Program. Final rule. Fed Regist. 2017;82(219):52976-53371.</li>
+<li>American Thoracic Society. Coding &amp; Billing Quarterly. December 2023.</li>
+</ol>
+</div>
+<p style="font-size: 0.85em; color: #777; margin-top: 50px; font-style: italic;">重要提示：CPT® 内容和费用会变化，不同付款方政策不同，编码指导也不断更新。本章仅供教育使用，不构成法律或财务建议。务必核对最新版 CPT 手册、付款方政策及本机构收费主文件。</p>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

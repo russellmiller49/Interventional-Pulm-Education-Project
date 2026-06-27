@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desbridamiento mecánico y dilatación con balón</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Desbridamiento mecánico y dilatación con balón</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda el manejo de la obstrucción de la vía aérea central (CAO) mediante broncoscopia intervencionista, con énfasis en modalidades mecánicas no térmicas —coring rígido, pinzas rígidas y flexibles, microdesbridador y criorecanalización— y en la dilatación de la vía aérea con balón (broncoplastia). El contenido corresponde a los dominios del programa AABIP sobre broncoscopia terapéutica para estenosis malignas y benignas de la vía aérea, manejo periprocedimiento, selección de dispositivos, reconocimiento y tratamiento de complicaciones y complicaciones de la vía aérea posteriores al trasplante.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Seleccionar estrategias apropiadas de desbridamiento mecánico y dilatación con balón para CAO maligna y benigna.</li>
+        <li>Preparar a los pacientes para una dilatación o reducción mecánica segura y eficaz, incluida la planificación de oxigenación, ventilación y anestesia.</li>
+        <li>Ejecutar paso a paso las técnicas de coring rígido, reducción con pinzas, microdesbridador, criorecanalización y dilatación con balón.</li>
+        <li>Anticipar, prevenir y manejar complicaciones como laceración de la vía aérea, hemorragia, barotrauma y neumomediastino.</li>
+        <li>Aplicar algoritmos de triaje de CAO y manejo de estenosis benigna, incluidos los criterios para añadir incisiones radiales, stents o sesiones repetidas.</li>
+        <li>Interpretar los datos de resultados para orientar a los pacientes sobre la durabilidad esperada y el papel de los tratamientos complementarios, especialmente después del trasplante pulmonar.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h3>Resumen de alto rendimiento</h3>
+        <ul>
+            <li><strong>Primeras prioridades en CAO:</strong> control de la vía aérea, oxigenación/ventilación y hemodinámica; después elija la modalidad de reducción o dilatación más segura y eficaz.</li>
+            <li><strong>Consideraciones sobre FiO₂:</strong> las herramientas mecánicas están indicadas cuando la FiO₂ es alta, porque los dispositivos térmicos están contraindicados por riesgo de incendio.</li>
+            <li><strong>Desvascularice antes de reducir</strong> cuando sea posible. Coagule con láser o electrocauterio antes de utilizar coring, pinzas o microdesbridador para disminuir el sangrado. Excepciones: hipoxemia refractaria o situaciones que impiden el uso térmico.</li>
+            <li><strong>Dilatación con balón frente a rígida:</strong> los balones reducen el cizallamiento longitudinal y la lesión mucosa; la dilatación rígida mantiene la ventilación y aporta retroalimentación táctil en pacientes con poca reserva.</li>
+            <li><strong>Estenosis benigna simple en membrana:</strong> los mejores resultados se obtienen con incisiones radiales, por ejemplo a las 12, 4 y 8 horas, seguidas de dilatación incremental con balón.</li>
+            <li><strong>Estenosis compleja:</strong> las lesiones con afectación cartilaginosa, inflamación o calcificación responden peor a la dilatación aislada; planifique tratamientos complementarios o stent.</li>
+            <li><strong>Duración de la inflación:</strong> suelen utilizarse inflaciones de 30–90 segundos, 2–3 veces por etapa, desde la perspectiva mecánica, o inflaciones de aproximadamente un minuto repetidas tres veces en broncoplastia; aumente el diámetro de forma escalonada.</li>
+            <li><strong>La posición importa:</strong> centre el balón no distensible con leve solapamiento a ambos lados de la estenosis; manténgalo completamente distal al extremo del broncoscopio antes de inflarlo.</li>
+            <li><strong>Observe a través del balón:</strong> una aspiración suave sobre el balón lleno de líquido proporciona una vista de 360° para detectar desgarros en desarrollo.</li>
+            <li><strong>La comunicación protege la vía aérea:</strong> nunca confunda milímetros con atmósferas al indicar el objetivo de inflación. Es esencial la comunicación en circuito cerrado.</li>
+            <li><strong>Complicaciones:</strong> suelen ser autolimitadas. Las laceraciones superficiales son frecuentes y, en algunas estenosis benignas, pueden correlacionarse con mayor permeabilidad; manéjelas de forma conservadora salvo inestabilidad.</li>
+            <li><strong>Complicaciones de la vía aérea tras trasplante:</strong> son frecuentes las dilataciones repetidas; considere stent si se necesitan más de dos dilataciones al mes.</li>
+            <li><strong>Microdesbridador:</strong> permite reducción rápida con aspiración continua; es potente pero poco tolerante a errores, por lo que exige visualización estricta y respeto de los planos de la vía aérea.</li>
+            <li><strong>Criorecanalización:</strong> rápida y eficaz para tejido rico en agua y poco adherido; no es hemostática y debe evitarse cerca de invasión vascular.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>La estenosis de la vía aérea central puede deberse a lesión posterior a intubación, anastomosis quirúrgicas —trasplante o resección en manguito—, infecciones como tuberculosis, enfermedades inflamatorias como sarcoidosis, EGPA o policondritis recidivante, malignidad, etiologías idiopáticas, radiación, lesión por inhalación y traumatismo. Los pacientes suelen presentar disnea de esfuerzo y sibilancia monofónica focal, y pueden recibir erróneamente un diagnóstico de asma hasta que la broncoscopia confirma una obstrucción o estenosis definida. La visualización broncoscópica sigue siendo el estándar de referencia para determinar localización, longitud, morfología —exofítica, membranosa o circunferencial— y etiología, al tiempo que permite tratamiento inmediato.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Indicaciones</strong></p>
+    <ul>
+        <li>Obstrucción endoluminal maligna o benigna sintomática que cause disnea, sibilancias, infección postobstructiva o imposibilidad de retirar la ventilación.</li>
+        <li>Estenosis benigna focal en membrana susceptible de dilatación con o sin incisiones radiales.</li>
+        <li>Estrechamiento maligno que requiera expansión temporal para colocar un stent o permitir el paso de instrumentos de reducción.</li>
+        <li>Estenosis anastomótica posterior al trasplante.</li>
+    </ul>
+
+    <p><strong>Contraindicaciones relativas y precauciones</strong></p>
+    <ul>
+        <li>Visualización deficiente o imposibilidad de controlar la vía aérea o la ventilación.</li>
+        <li>Tumores muy vasculares o lesiones que invaden vasos adyacentes; la criorecanalización y la dilatación agresiva aumentan el riesgo hemorrágico.</li>
+        <li>Estenosis benignas complejas con afectación cartilaginosa, inflamación o calcificación; considere abordajes combinados o stent.</li>
+        <li>Inflación de balón en pacientes que no toleran una oclusión breve; prefiera dilatación rígida con ventilación continua.</li>
+        <li>Procedimientos distales a través de ETT pequeños o en pacientes con poca reserva; considere técnicas guiadas por alambre bajo fluoroscopia.</li>
+    </ul>
+
+    <h4>Evaluación previa al procedimiento</h4>
+    <ul>
+        <li><strong>Plan de vía aérea:</strong> determine si se requiere LMA, tubo endotraqueal o broncoscopio rígido. Se prefiere broncoscopia rígida en CAO potencialmente mortal, alto riesgo de sangrado o cuando debe mantenerse la ventilación durante todo el procedimiento.</li>
+        <li><strong>Oxigenación y ventilación:</strong> evalúe si el paciente puede tolerar una oclusión breve con balón; si no, utilice dilatación rígida o reducción mecánica mientras mantiene ventilación.</li>
+        <li><strong>Imágenes y fisiología:</strong> revise la TC, de ser posible con reconstrucciones, y las curvas flujo-volumen; no obstante, la broncoscopia dirige las decisiones en tiempo real.</li>
+        <li><strong>Sedación y anestesia:</strong> suele utilizarse sedación profunda o anestesia general; la dilatación traqueal a menudo requiere anestesia general por la sensación angustiante de asfixia durante la oclusión.</li>
+        <li><strong>Consentimiento y riesgos:</strong> hemorragia, desgarros o laceración mucosa, neumotórax, neumomediastino, mediastinitis, dolor torácico y necesidad de sesiones repetidas o colocación de stent.</li>
+        <li><strong>Preparación de complementos:</strong> dispositivos térmicos para desvascularización si la FiO₂ lo permite, agentes hemostáticos como epinefrina, ácido tranexámico tópico y solución salina fría, balón Fogarty o bloqueador endobronquial, kits de stent y aspiración.</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Balones:</strong> balones no conformables de alta presión y baja distensibilidad, dimensionados para abarcar la estenosis con solapamiento moderado a ambos lados. Los diseños de uno o varios diámetros, determinados por la presión de inflación, se conectan a una jeringa de inflación con manómetro llena de solución salina o contraste diluido cuando se utiliza fluoroscopia.</li>
+        <li><strong>Sistema de broncoscopia rígida:</strong> traqueoscopio ventilatorio y broncoscopios, preferentemente un sistema modular para dilatación seriada, telescopios ópticos y aspiración de gran calibre.</li>
+        <li><strong>Instrumentos mecánicos:</strong>
+            <ul>
+                <li><strong>Coring rígido:</strong> extremo biselado del broncoscopio rígido para lesiones exofíticas.</li>
+                <li><strong>Pinzas rígidas y flexibles:</strong> incluidas pinzas grandes o jumbo a través de canales terapéuticos para extracción de tejido.</li>
+                <li><strong>Microdesbridador:</strong> hoja dentada angulada de 4 mm tipo palo de hockey, consola con aspiración e irrigación y velocidad de 500–1200 rpm.</li>
+                <li><strong>Criosondas:</strong> flexibles, accionadas por consola, con óxido nitroso o CO₂ como refrigerante y temperatura aproximada de −89 °C en la punta.</li>
+                <li><strong>Balones Fogarty:</strong> para taponamiento o compresión y extracción retrógrada en vías aéreas pequeñas o distales.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso / lista de verificación del procedimiento</h3>
+
+    <h4>Dilatación con balón (broncoplastia)</h4>
+    <ul>
+        <li><strong>Vía aérea y oxigenación:</strong> asegure la vía aérea con LMA, ETT o broncoscopio rígido y preoxigene.</li>
+        <li><strong>Evaluación de la lesión:</strong> defina longitud, estrechez y morfología de la estenosis.</li>
+        <li><strong>Selección del balón:</strong> elija un balón que quede centrado con leve solapamiento proximal y distal; comience apenas por encima de la luz nativa y aumente el tamaño en serie.</li>
+        <li><strong>Posicionamiento:</strong> avance el balón desinflado más allá de la punta del broncoscopio hasta la estenosis; asegúrese de que esté completamente fuera del canal de trabajo antes de inflarlo.</li>
+        <li><strong>Estabilización:</strong> retraiga con suavidad hasta que el balón contacte la punta del broncoscopio.</li>
+        <li><strong>Ciclos de inflación:</strong> infle al diámetro objetivo durante aproximadamente un minuto tres veces para un tamaño determinado, o 30–90 segundos dos o tres veces por etapa; interrumpa antes si aparece desaturación.</li>
+        <li><strong>Truco de visualización:</strong> aplique aspiración suave al balón lleno de líquido para obtener una vista de 360° de desgarros mucosos; desinfle de inmediato si sospecha una laceración profunda.</li>
+        <li><strong>Escalamiento:</strong> si encuentra poca resistencia, avance al siguiente diámetro.</li>
+        <li><strong>Usos complementarios:</strong> los balones pueden ayudar a asentar stents, taponar una hemorragia u ocluir transitoriamente una vía aérea.</li>
+        <li><strong>Finalización:</strong> desinfle por completo, retire y vuelva a inspeccionar en busca de desgarros o sangrado; considere stent si hay retroceso elástico o malacia persistente.</li>
+    </ul>
+
+    <h4>Dilatación rígida</h4>
+    <ul>
+        <li>Induzca anestesia general y establezca traqueoscopia rígida.</li>
+        <li>Introduzca un traqueoscopio grande, retire su base y pase de forma seriada broncoscopios ventilatorios más largos y de menor diámetro con un movimiento suave de torsión tipo descorazonado a través de la estenosis mientras mantiene la ventilación.</li>
+        <li>Vigile barotrauma si utiliza ventilación jet y evite obstruir los puertos proximales con varios instrumentos.</li>
+    </ul>
+
+    <h4>Incisiones radiales para estenosis en membrana</h4>
+    <ul>
+        <li>Con cuchillo de electrocauterio o láser de corte, realice tres incisiones radiales de 1–2 mm a las 12, 4 y 8 horas para crear puntos de desgarro controlado.</li>
+        <li>Continúe con dilatación incremental con balón.</li>
+    </ul>
+
+    <h4>Coring rígido</h4>
+    <ul>
+        <li>Bajo visualización directa con telescopio, mantenga el broncoscopio paralelo al eje de la vía aérea.</li>
+        <li>Gire en sacacorchos la punta biselada a lo largo del plano entre lesión y mucosa para desprender tumores exofíticos.</li>
+        <li>Use aspiración de gran calibre en línea; si aparece hemorragia, comprima la base durante varios minutos.</li>
+    </ul>
+
+    <h4>Pinzas rígidas y flexibles</h4>
+    <ul>
+        <li><strong>Rígidas:</strong> introdúzcalas junto al telescopio; tome y retire tejido en bloque moviendo telescopio y pinzas en conjunto.</li>
+        <li><strong>Flexibles:</strong> útiles para retirar residuos y tratar segmentos pequeños o angulados; las pinzas grandes o jumbo a través de canales terapéuticos aceleran la limpieza.</li>
+    </ul>
+
+    <h4>Microdesbridador</h4>
+    <ul>
+        <li>Conecte la consola y ajuste 500–1200 rpm.</li>
+        <li>Bajo visualización constante, ponga la punta angulada en contacto ligero con el tejido.</li>
+        <li>La aspiración atrae el tejido hacia el puerto, donde la hoja rotatoria lo fragmenta y aspira.</li>
+        <li>Utilice presión mínima y respete estrictamente los planos de la vía aérea.</li>
+    </ul>
+
+    <h4>Criorecanalización</h4>
+    <ul>
+        <li>Aplique la punta de la sonda directamente sobre el tumor.</li>
+        <li>Congele durante 3–6 segundos y ejerza tracción suave para arrancar el tejido en bloque; retire juntos el broncoscopio y la sonda.</li>
+        <li>Evite radios de congelación amplios o contacto con mucosa normal.</li>
+        <li>Tenga listos complementos hemostáticos no térmicos; la crioterapia no es hemostática.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>Hipoxemia durante la inflación:</strong> reduzca la inflación a 20–30 segundos, preoxigene, use dilatación rígida para mantener ventilación o realice dilataciones parciales escalonadas.</li>
+        <li><strong>Migración del balón:</strong> asegure 0,5 cm de solapamiento proximal a la estenosis, estabilícelo contra la punta del broncoscopio y evite inflarlo parcialmente dentro del canal.</li>
+        <li><strong>Desgarros mucosos en desarrollo:</strong> utilice la vista de 360°, reduzca el tamaño o deténgase; la mayoría de los desgarros superficiales cicatriza con manejo conservador.</li>
+        <li><strong>Hemorragia:</strong> comprima con broncoscopio rígido o balón; instile solución salina fría, epinefrina diluida o ácido tranexámico tópico; considere oclusión con Fogarty o bloqueador endobronquial para sangrado distal.</li>
+        <li><strong>Riesgo de barotrauma:</strong> pause la ventilación durante las inflaciones si se tolera y evite que varios instrumentos obstruyan simultáneamente los puertos espiratorios.</li>
+        <li><strong>Error de comunicación entre mm y atm:</strong> utilice comunicación en circuito cerrado para los objetivos de inflación.</li>
+        <li><strong>Fatiga del dispositivo:</strong> varios pases pueden debilitar algunos catéteres; sustitúyalos si la reinserción se vuelve difícil.</li>
+    </ul>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <ul>
+        <li>Vigile dolor torácico, esputo hemático, enfisema subcutáneo o dificultad respiratoria; obtenga imágenes si sospecha neumotórax o neumomediastino.</li>
+        <li>En estenosis benigna, planifique reevaluación y posibles dilataciones repetidas; discuta una estrategia a largo plazo, como incisiones complementarias o stent si las sesiones son muy frecuentes.</li>
+        <li>Después de trasplante o en lesiones complejas, anticipe múltiples sesiones y stent complementario más temprano cuando las recurrencias sean frecuentes.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1: selección de instrumentos en obstrucción de la vía aérea central</h4>
+    <div class="mermaid">
+    graph TD
+        Start["Sospecha o diagnóstico de CAO"] --> Stable{"¿La vía aérea está estable?"}
+        Stable -- "No" --> Secure["Asegurar vía aérea: broncoscopia rígida ± ventilación jet; restaurar oxigenación"]
+        Stable -- "Sí" --> Assess["Evaluar lesión: proximal/distal, intra/extraluminal y vascularidad"]
+        Secure --> Assess
+        Assess --> FiO2{"¿Puede reducirse FiO₂ de forma segura?"}
+        FiO2 -- "No" --> NonThermal["Herramientas no térmicas: coring, microdesbridador, pinzas, crio ± balón"]
+        FiO2 -- "Sí" --> Thermal["Desvascularizar con láser/electrocauterio/APC y luego reducir mecánicamente"]
+        NonThermal --> Extra{"¿Componente extraluminal?"}
+        Thermal --> Extra
+        Extra -- "Sí" --> Dilate["Dilatación ± stent; preferir rígida si poca reserva"]
+        Extra -- "No: intraluminal" --> Debulk["Reducción mecánica; considerar balón para expandir luz o asentar stent"]
+        Dilate --> Result{"¿Luz adecuada?"}
+        Debulk --> Result
+        Result -- "No" --> Adjunct["Complemento: stent, sesiones repetidas, revisión multidisciplinaria"]
+        Result -- "Sí" --> Monitor["Vigilancia y seguimiento posteriores"]
+    </div>
+
+    <h4>Algoritmo 2: manejo endoscópico de la estenosis traqueobronquial benigna</h4>
+    <div class="mermaid">
+    graph TD
+        Start["Estenosis benigna confirmada"] --> Type{"¿Membrana simple o compleja?"}
+        Type -- "Membrana simple" --> SimpleTx["Incisiones radiales 12, 4 y 8 h → dilatación incremental con balón"]
+        Type -- "Compleja" --> ComplexTx["Tratamiento combinado: incisiones + balón ± stent"]
+        SimpleTx --> Lumen{"¿Luz adecuada?"}
+        Lumen -- "Sí" --> Surveil["Vigilancia y seguimiento guiado por síntomas"]
+        Lumen -- "No" --> Repeat["Repetir sesión de dilatación a intervalo"]
+        ComplexTx --> Recur{"Frecuencia de recurrencia"}
+        Repeat --> Recur
+        Recur -- "Alta, p. ej. >2/mes" --> Stent["Considerar stent"]
+        Recur -- "Baja/moderada" --> Staged["Dilataciones repetidas escalonadas; controlar inflamación; reevaluar"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Modalidades de desbridamiento mecánico: función, fortalezas y limitaciones</h4>
+    <table>
+        <thead><tr><th>Modalidad</th><th>Función principal</th><th>Fortalezas clave</th><th>Limitaciones y precauciones</th></tr></thead>
+        <tbody>
+            <tr><td>Coring rígido</td><td>Retirada rápida de tumores exofíticos</td><td>Reducción inmediata, taponamiento con el tubo y utilidad con FiO₂ alta</td><td>Riesgo de perforación o lesión vascular; exige experiencia y visualización directa</td></tr>
+            <tr><td>Pinzas rígidas</td><td>Extracción y reducción de tejido</td><td>Agarre potente y múltiples diseños de mandíbula</td><td>Desgarros mucosos en luces estrechas; no son hemostáticas</td></tr>
+            <tr><td>Pinzas flexibles grandes/jumbo</td><td>Retirada de residuos y tratamiento de segmentos pequeños o angulados</td><td>Maniobrables y complementarias al tratamiento térmico</td><td>Mordidas pequeñas, sangrado con pinzas frías y función limitada como reducción primaria</td></tr>
+            <tr><td>Microdesbridador</td><td>Reducción rápida de tumores infiltrativos largos</td><td>Aspiración y corte continuos; rapidez</td><td>No hemostático, voluminoso y rígido; lesión catastrófica si se utiliza incorrectamente</td></tr>
+            <tr><td>Criorecanalización</td><td>Retirada en bloque de tejido criosensible cuando el tratamiento térmico está contraindicado</td><td>Funciona con FiO₂ alta y retira fragmentos grandes</td><td>No hemostática; evitar cerca de invasión vascular o pared membranosa</td></tr>
+            <tr><td>Dilatación con balón</td><td>Expandir estenosis y facilitar stent</td><td>Reduce cizallamiento; simple y rápida</td><td>Ocluye la vía aérea durante la inflación; riesgo de laceración o perforación si se sobredilata</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 2. Broncoplastia con balón: parámetros prácticos</h4>
+    <table>
+        <thead><tr><th>Parámetro</th><th>Punto práctico</th></tr></thead>
+        <tbody>
+            <tr><td>Diseño del balón</td><td>Alta presión, baja distensibilidad y no conformable; uno o varios diámetros según presión</td></tr>
+            <tr><td>Posicionamiento</td><td>Centrar sobre la estenosis con leve solapamiento a ambos lados; completamente distal a la punta antes de inflar</td></tr>
+            <tr><td>Ciclos de inflación</td><td>Habitualmente 30–90 s × 2–3 por etapa o cerca de 1 min × 3; interrumpir si no se tolera</td></tr>
+            <tr><td>Escalamiento</td><td>Aumento incremental; detener si se sospecha laceración profunda</td></tr>
+            <tr><td>Visualización</td><td>La aspiración suave sobre el balón lleno de líquido brinda visión de 360° para detectar desgarros</td></tr>
+            <tr><td>Usos complementarios</td><td>Taponar sangrado, ayudar a asentar stents y producir oclusión temporal</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Complicaciones previstas y manejo</h4>
+    <table>
+        <thead><tr><th>Complicación</th><th>Prevención</th><th>Reconocimiento</th><th>Manejo</th></tr></thead>
+        <tbody>
+            <tr><td>Laceración de la vía aérea</td><td>Tamaños incrementales y visualización a través del balón</td><td>Hendidura mucosa lineal súbita</td><td>Generalmente conservador; vigilar y evitar más sobredilatación</td></tr>
+            <tr><td>Hemorragia</td><td>Desvascularizar cuando sea posible y técnica suave</td><td>Sangrado en capa frente a hemorragia activa</td><td>Taponamiento con tubo o balón, solución salina fría, epinefrina diluida, TXA tópico y bloqueador/Fogarty</td></tr>
+            <tr><td>Neumotórax o neumomediastino</td><td>Evitar sobredilatación y respetar planos</td><td>Dolor torácico o enfisema</td><td>Imágenes, oxígeno y drenaje torácico si está indicado</td></tr>
+            <tr><td>Barotrauma o atrapamiento aéreo</td><td>No obstruir puertos espiratorios; pausar ventilación</td><td>Aumento de presiones e hipoxia</td><td>Retirar instrumentos, ventilar y tratar el barotrauma</td></tr>
+            <tr><td>Edema pulmonar por presión negativa</td><td>Evitar oclusión prolongada durante respiración espontánea</td><td>Hipoxemia aguda después de la dilatación</td><td>Tratamiento de soporte; considerar anestesia general en sesiones futuras</td></tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 4. Indicaciones y durabilidad esperada de la dilatación con balón</h4>
+    <table>
+        <thead><tr><th>Situación</th><th>Efecto esperado</th><th>Observaciones</th></tr></thead>
+        <tbody>
+            <tr><td>Estrechamiento intraluminal maligno</td><td>Alivio inmediato; a menudo puente a stent</td><td>Mejora el diámetro en la mayoría con un procedimiento</td></tr>
+            <tr><td>Estenosis benigna en membrana</td><td>Buena respuesta inicial; son frecuentes las sesiones repetidas</td><td>Combinar con incisiones radiales; en algunas series disminuye el beneficio tras múltiples sesiones</td></tr>
+            <tr><td>Estenosis benigna compleja</td><td>Variable y a menudo transitorio</td><td>Considerar complementos y stent más temprano</td></tr>
+            <tr><td>Estenosis anastomótica posterior al trasplante</td><td>Alivio transitorio; procedimientos repetidos frecuentes</td><td>El stent mejora resultados en pacientes seleccionados</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Un paciente de 62 años con carcinoma escamoso presenta obstrucción traqueal casi crítica y FiO₂ 0,9 al llegar. Los intentos por reducir la FiO₂ provocan desaturación.</p>
+        <p><strong>¿Cuál es la mejor estrategia inmediata?</strong></p>
+        <ul><li>A. APC seguida de dilatación con balón</li><li>B. Coring rígido con punta biselada bajo anestesia general y aspiración preparada</li><li>C. Incisiones radiales con láser de CO₂ seguidas de dilatación rígida con bujía</li><li>D. Criorecanalización seguida de APC</li><li>E. Dilatación con balón sobre guía bajo fluoroscopia</li></ul>
+        <p><strong>Respuesta: B.</strong></p>
+        <p><strong>Explicación:</strong> una FiO₂ alta impide el uso térmico por riesgo de incendio. El coring rígido bajo anestesia general permite recanalización rápida con taponamiento y aspiración.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Una paciente de 34 años con estenosis subglótica corta y membranosa posterior a intubación está programada para tratamiento endoscópico.</p>
+        <p><strong>¿Qué secuencia reduce al mínimo el desgarro mucoso no controlado?</strong></p>
+        <ul><li>A. Dilatación con balón aislada empezando por el balón más grande</li><li>B. Reducción con microdesbridador seguida de balón</li><li>C. Incisiones radiales a las 12, 4 y 8 horas seguidas de dilatación incremental con balón</li><li>D. Criorecanalización seguida de stent</li><li>E. Dilatación rígida con bujía aislada</li></ul>
+        <p><strong>Respuesta: C.</strong></p>
+        <p><strong>Explicación:</strong> las incisiones radiales controladas reducen el cizallamiento longitudinal y la cicatrización; después se realiza dilatación incremental.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3</h4>
+        <p>Un receptor de trasplante pulmonar de 58 años presenta estenosis anastomótica recurrente que ha requerido tres dilataciones durante el último mes.</p>
+        <p><strong>¿Cuál es el siguiente paso más adecuado?</strong></p>
+        <ul><li>A. Programar dilatación mensual de forma indefinida</li><li>B. Colocar un stent</li><li>C. Cambiar a microdesbridador</li><li>D. Intentar solo resección con láser</li><li>E. No intervenir más y observar</li></ul>
+        <p><strong>Respuesta: B.</strong></p>
+        <p><strong>Explicación:</strong> las recurrencias frecuentes, por ejemplo más de dos al mes, respaldan considerar un stent en estenosis posterior al trasplante.</p>
+    </div>
+
+    <hr>
+
+    <h3>Banco de preguntas de opción múltiple</h3>
+
+    <p><strong>1. Un paciente con CAO que recibe FiO₂ 100% requiere reducción urgente. ¿Qué modalidad es la más adecuada inicialmente?</strong></p>
+    <p>A. APC<br>B. Láser Nd:YAG<br>C. Criorecanalización<br>D. Asa de electrocauterio<br>E. Terapia fotodinámica</p>
+    <p><strong>Respuesta: C.</strong> Es no térmica y eficaz con FiO₂ alta; sin embargo, no es hemostática, por lo que deben prepararse complementos.</p>
+
+    <p><strong>2. Durante una dilatación con balón, el endoscopista indica «inflar a 12». El técnico interpreta 12 atm en lugar de un diámetro objetivo de 12 mm. ¿Qué complicación es más probable?</strong></p>
+    <p>A. Hipotensión<br>B. Perforación o laceración por sobreinflación<br>C. Migración del stent<br>D. Embolia de CO₂<br>E. Anafilaxia</p>
+    <p><strong>Respuesta: B.</strong> La comunicación en circuito cerrado evita confundir presión con diámetro.</p>
+
+    <p><strong>3. La mejor manera de vigilar desgarros mucosos inminentes durante la inflación es:</strong></p>
+    <p>A. Inyectar azul de metileno en el balón<br>B. Aplicar aspiración al balón lleno de líquido para ver a través de él<br>C. Usar ventilación jet a mayor frecuencia<br>D. Dejar el balón parcialmente dentro del canal de trabajo<br>E. Inflarlo con aire</p>
+    <p><strong>Respuesta: B.</strong> La aspiración crea una vista de 360° a través del balón para vigilancia en tiempo real.</p>
+
+    <p><strong>4. ¿Qué afirmación sobre la dilatación rígida es verdadera?</strong></p>
+    <p>A. Siempre produce más cizallamiento mucoso que los balones<br>B. No puede realizarse bajo anestesia general<br>C. Permite mantener la ventilación durante la dilatación<br>D. Requiere fluoroscopia<br>E. Se prefiere para estenosis lobares distales en niños</p>
+    <p><strong>Respuesta: C.</strong> La dilatación rígida permite ventilación continua, útil en pacientes con poca reserva.</p>
+
+    <p><strong>5. Después de la dilatación con balón, un paciente presenta esputo hemático y dolor torácico, con signos vitales estables. ¿Cuál es el mejor manejo?</strong></p>
+    <p>A. Toracotomía inmediata<br>B. Colocación emergente de stent cubierto<br>C. Observación conservadora y reevaluación<br>D. Embolización de arteria bronquial<br>E. Trombólisis sistémica</p>
+    <p><strong>Respuesta: C.</strong> La mayoría de las laceraciones superficiales son autolimitadas y cicatrizan con manejo conservador.</p>
+
+    <div class="algorithm-note">
+        <h3>Lista de verificación de puntos clave</h3>
+        <ul>
+            <li>Confirme la estabilidad de la vía aérea; establezca acceso rígido temprano en CAO inestable.</li>
+            <li>Elija herramientas no térmicas cuando la FiO₂ sea alta; desvascularice antes de la reducción mecánica cuando sea posible.</li>
+            <li>Para membranas simples: incisiones radiales → dilatación incremental con balón.</li>
+            <li>Para estenosis complejas: planifique tratamiento combinado y stent más temprano si las recurrencias son frecuentes.</li>
+            <li>Balón: céntrelo, manténgalo fuera del canal, use inflaciones cortas y escalonadas y observe desgarros a través del balón.</li>
+            <li>Mantenga ventilación durante la dilatación rígida y pause durante las inflaciones con balón cuando sea seguro.</li>
+            <li>Use comunicación en circuito cerrado para objetivos del balón en mm frente a atm.</li>
+            <li>Prepare el equipo hemostático: taponamiento, solución salina fría, epinefrina diluida, TXA tópico y Fogarty o bloqueador.</li>
+            <li>Microdesbridador: contacto ligero, visualización continua y respeto de los planos.</li>
+            <li>Criorecanalización: congelaciones cortas de 3–6 s, evitar invasión vascular y recordar que no es hemostática.</li>
+            <li>Estenosis posterior al trasplante: anticipe sesiones repetidas y coloque stent cuando las dilataciones sean frecuentes, por ejemplo más de dos al mes.</li>
+            <li>Planifique vigilancia y reevaluación funcional posterior mediante síntomas y espirometría.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abreviaturas y glosario</h3>
+        <dl>
+            <dt>APC</dt><dd>Coagulación con plasma de argón</dd>
+            <dt>CAO</dt><dd>Obstrucción de la vía aérea central</dd>
+            <dt>FiO₂</dt><dd>Fracción inspirada de oxígeno</dd>
+            <dt>GA</dt><dd>Anestesia general</dd>
+            <dt>LMA</dt><dd>Mascarilla laríngea</dd>
+            <dt>Microdesbridador</dt><dd>Dispositivo rotatorio motorizado con aspiración para fragmentar tejido</dd>
+            <dt>Balón no conformable</dt><dd>Balón de alta presión y baja distensibilidad que se expande hasta un diámetro definido sin amoldarse a una estenosis irregular</dd>
+            <dt>Incisiones radiales</dt><dd>Cortes cortos y controlados en una estenosis membranosa, habitualmente a las 12, 4 y 8 horas, antes de la dilatación</dd>
+            <dt>TXA</dt><dd>Ácido tranexámico</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+<h3>Referencias</h3>
+<ol>
+<li>Mayse ML, Greenheck J, Friedman M, Kovitz KL. Successful bronchoscopic balloon dilation of nonmalignant tracheobronchial obstruction without fluoroscopy. Chest. 2004;126(2):634-637.</li>
+<li>Sheski FD, Mathur PN. Long-term results of fiberoptic bronchoscopic balloon dilation in the management of benign tracheobronchial stenosis. Chest. 1998;114(3):796-800.</li>
+<li>Hebra A, Powell DD, Smith CD, Othersen HB. Balloon tracheoplasty in children: results of a 15-year experience. J Pediatr Surg. 1991;26(8):957-961.</li>
+<li>Ferretti G, Jouvan FB, Thony F, Pison C, Coulomb M. Benign noninflammatory bronchial stenosis: treatment with balloon dilation. Radiology. 1995;196(3):831-834.</li>
+<li>Liang W, Hu P, Guo W, et al. Appropriate treatment sessions of bronchoscopic balloon dilation for patients with nonmalignant central airway stenosis. Ther Adv Respir Dis. 2019;13:1-13.</li>
+<li>Hautmann H, Gamarra F, Pfeifer KJ, Huber RM. Fiberoptic bronchoscopic balloon dilation in malignant tracheobronchial disease: indications and results. Chest. 2001;120(1):43-49.</li>
+<li>Shitrit D, Kuchuk M, Zismanov V, Abdel Rhman N, Amital A, Kramer MR. Bronchoscopic balloon dilatation of tracheobronchial stenosis: long-term follow-up. Eur J Cardiothorac Surg. 2010;38(2):198-202.</li>
+<li>Kim JH, Shin JH, Song HY, et al. Tracheobronchial laceration after balloon dilation for benign strictures: incidence and clinical significance. Chest. 2007;131(4):1114-1117.</li>
+<li>Abi-Jaoudeh N, Francois RJ, Oliva VL, et al. Endobronchial dilation for the management of bronchial stenosis in patients after lung transplantation: effect of stent placement on survival. J Vasc Interv Radiol. 2009;20(7):912-920.</li>
+<li>De Gracia J, Culebras M, Alvarez A, et al. Bronchoscopic balloon dilation in the management of bronchial stenosis following lung transplantation. Respir Med. 2007;101(1):27-33.</li>
+<li>Crespo MM, McCarhy DP, Hopkins PM, et al. ISHLT Consensus Statement on adult and pediatric airway complications after lung transplantation: definitions, grading system, and therapeutics. J Heart Lung Transplant. 2018;37:548-563.</li>
+<li>McArdle JR, Gildea TR, Mehta AC. Balloon bronchoplasty: its indications, benefits, and complications. J Bronchol Interv Pulmonol. 2005;12(2):123-127.</li>
+<li>Liberman M. Bronchoscopic evaluation of the trachea and dilation of the trachea. Semin Thorac Cardiovasc Surg. 2009;21(3):255-262.</li>
+<li>Shapshay SM, Beamis JF Jr, Hybels RL, Bohigian RK. Endoscopic treatment of subglottic and tracheal stenosis by radial laser incision and dilation. Ann Otol Rhinol Laryngol. 1987;96(6):661-664.</li>
+<li>Tremblay A, Coulter TD, Mehta AC. Modification of a mucosal-sparing technique using electrocautery and balloon dilatation in the endoscopic management of web-like benign airway stenosis. J Bronchol. 2003;10(4):268-271.</li>
+<li>Kim JH, Shin JH, Song H-Y. Cutting balloon treatment for resistant benign bronchial strictures: report of eleven patients. J Vasc Interv Radiol. 2010;21(5):748-752.</li>
+<li>Sakata KK, Midthun DE. Cutting balloon dilation for central airway stricture. J Bronchol Interv Pulmonol. 2018;25(3):e29-e30.</li>
+<li>Stephens KE Jr, Wood DE. Bronchoscopic management of central airway obstruction. J Thorac Cardiovasc Surg. 2000;119(2):289-296.</li>
+<li>Casal RF, Iribarren J, Eapen G, et al. Safety and effectiveness of microdebrider bronchoscopy for the management of central airway obstruction. Respirology. 2013;18(6):1011-1015.</li>
+<li>Hetzel M, Hetzel J, Schumann C, Marx N, Babiak A. Cryorecanalization: a new approach for the immediate management of acute airway obstruction. J Thorac Cardiovasc Surg. 2004;127(5):1427-1431.</li>
+<li>Schumann C, Hetzel M, Babiak AJ, et al. Endobronchial tumor debulking with a flexible cryoprobe for immediate treatment of malignant stenosis. J Thorac Cardiovasc Surg. 2010;139(4):997-1000.</li>
+<li>Yılmaz A, Aktaş Z, Alici IO, Çağlar A, Sazak H, Ulus F. Cryorecanalization: keys to success. Surg Endosc. 2012;26(10):2969-2974.</li>
+<li>Morales-Estrella JL, Machuzak M, Pichurko B, Inaty H, Mehta AC. Suffocation from balloon bronchoplasty. J Bronchol Interv Pulmonol. 2018;25(2):156-160.</li>
+<li>Kim YH, Sung DJ, Cho SB, et al. Deep tracheal laceration after balloon dilation for benign tracheobronchial stenosis: case reports of two patients. Br J Radiol. 2006;79(942):529-535.</li>
+<li>Alraiyes AH, Kumar A, Gildea TR. Peering beyond an occluded airway. Ann Am Thorac Soc. 2015;12(1):124-127.</li>
+</ol>
+</div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

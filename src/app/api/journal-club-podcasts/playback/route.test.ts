@@ -3,6 +3,7 @@
  */
 
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
+import { supabaseServer } from '@/lib/supabase/server'
 
 import { POST } from './route'
 
@@ -10,13 +11,29 @@ jest.mock('@/lib/supabase/admin', () => ({
   createSupabaseAdmin: jest.fn(),
 }))
 
+jest.mock('@/lib/supabase/server', () => ({
+  supabaseServer: jest.fn(),
+}))
+
 const playbackSessionId = '550e8400-e29b-41d4-a716-446655440000'
 
 describe('journal club podcast playback API', () => {
   const createSupabaseAdminMock = createSupabaseAdmin as jest.Mock
+  const supabaseServerMock = supabaseServer as jest.Mock
 
   beforeEach(() => {
     createSupabaseAdminMock.mockReset()
+    supabaseServerMock.mockReset()
+    supabaseServerMock.mockResolvedValue(authenticatedSupabase())
+  })
+
+  it('requires authentication before recording playback', async () => {
+    supabaseServerMock.mockResolvedValue(unauthenticatedSupabase())
+
+    const response = await POST(validPlaybackRequest())
+
+    expect(response.status).toBe(401)
+    expect(createSupabaseAdminMock).not.toHaveBeenCalled()
   })
 
   it('rejects invalid playback payloads before writing to Supabase', async () => {
@@ -55,6 +72,7 @@ describe('journal club podcast playback API', () => {
         play_count: 1,
         progress_event_count: 2,
         started_at: '2026-06-22T19:00:00.000Z',
+        user_id: 'user-1',
       },
       error: null,
     })
@@ -85,12 +103,35 @@ describe('journal club podcast playback API', () => {
         progress_event_count: 3,
         route_path: '/journal-club-podcasts',
         started_at: '2026-06-22T19:00:00.000Z',
+        user_id: 'user-1',
         user_agent: 'jest',
       }),
       { onConflict: 'playback_session_id' },
     )
   })
 })
+
+function authenticatedSupabase() {
+  return {
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      }),
+    },
+  }
+}
+
+function unauthenticatedSupabase() {
+  return {
+    auth: {
+      getUser: jest.fn().mockResolvedValue({
+        data: { user: null },
+        error: null,
+      }),
+    },
+  }
+}
 
 function validPlaybackRequest() {
   return new Request('http://localhost/api/journal-club-podcasts/playback', {

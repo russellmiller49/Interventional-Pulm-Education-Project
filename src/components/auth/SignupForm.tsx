@@ -4,9 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { isActiveLocale } from '@/i18n/locale'
+import { localizePath } from '@/i18n/path'
+import { normalizePostAuthNextPath } from '@/lib/site-auth/auth-next-path'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 import { buildSignInRedirectUrl } from '@/lib/supabase/auth-redirect'
 import {
@@ -24,23 +28,32 @@ import {
   siteProfileSchema,
   type SiteProfileInput,
 } from '@/lib/site-auth/profile-schema'
-import {
-  SITE_USER_AGREEMENT_VERSION,
-  siteUserAgreementPoints,
-} from '@/lib/site-auth/user-agreement'
+import { SITE_USER_AGREEMENT_VERSION } from '@/lib/site-auth/user-agreement'
 
 type SubmitStatus = 'idle' | 'checking' | 'submitting' | 'sent' | 'error'
 
 const fieldClassName =
   'mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
-function normalizeNextPath(value: string | null) {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) {
-    return '/dashboard'
-  }
+const agreementPointKeys = ['educationOnly', 'analytics', 'researchUse', 'noPatientData'] as const
 
-  return value
-}
+const validationMessageKeys = {
+  'First name is required.': 'firstNameRequired',
+  'Last name is required.': 'lastNameRequired',
+  'Institution is required.': 'institutionRequired',
+  'Country is required.': 'countryRequired',
+  'Choose at least one interest.': 'chooseInterest',
+  'Choose at least one learning goal.': 'chooseLearningGoal',
+  'Resident specialty is required.': 'residentSpecialtyRequired',
+  'Choose a valid resident specialty.': 'validResidentSpecialty',
+  'Resident specialty only applies to residents.': 'residentSpecialtyResidentsOnly',
+  'Describe your professional role.': 'describeProfessionalRole',
+  'Choose a valid training level.': 'validTrainingLevel',
+  'Training level only applies to students, residents, and fellows.': 'trainingLevelLimited',
+  'Choose valid interests.': 'validInterests',
+  'Choose valid learning goals.': 'validLearningGoals',
+  'Please review the signup form.': 'reviewForm',
+} as const
 
 function toggleValue(values: string[], value: string) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
@@ -48,10 +61,18 @@ function toggleValue(values: string[], value: string) {
 
 export function SignupForm() {
   const router = useRouter()
+  const locale = useLocale()
+  const activeLocale = isActiveLocale(locale) ? locale : 'en'
+  const t = useTranslations('auth.signup')
   const searchParams = useSearchParams()
   const completionMode =
     searchParams.get('mode') === 'complete' || searchParams.get('completeProfile') === '1'
-  const nextPath = useMemo(() => normalizeNextPath(searchParams.get('next')), [searchParams])
+  const nextPath = useMemo(
+    () => normalizePostAuthNextPath(searchParams.get('next'), activeLocale),
+    [activeLocale, searchParams],
+  )
+  const loginHref = localizePath('/login', activeLocale) as Route
+  const verifyEmailPath = localizePath('/verify-email', activeLocale)
 
   const [email, setEmail] = useState('')
   const [currentUserId, setCurrentUserId] = useState<string>()
@@ -75,6 +96,11 @@ export function SignupForm() {
 
   const trainingLevelOptions = getTrainingLevelOptions(professionalRole)
 
+  function validationMessage(message: string) {
+    const key = validationMessageKeys[message as keyof typeof validationMessageKeys]
+    return key ? t(`validation.${key}`) : t('validation.reviewForm')
+  }
+
   useEffect(() => {
     if (!completionMode) {
       return
@@ -96,7 +122,7 @@ export function SignupForm() {
 
         if (error || !user) {
           setStatus('error')
-          setMessage('Sign in before completing your profile.')
+          setMessage(t('messages.signInBeforeProfile'))
           return
         }
 
@@ -109,9 +135,7 @@ export function SignupForm() {
         }
 
         setStatus('error')
-        setMessage(
-          error instanceof Error ? error.message : 'Unable to load the current Supabase session.',
-        )
+        setMessage(error instanceof Error ? error.message : t('messages.sessionLoadFailed'))
       }
     }
 
@@ -120,7 +144,7 @@ export function SignupForm() {
     return () => {
       isActive = false
     }
-  }, [completionMode])
+  }, [completionMode, t])
 
   function buildProfileInput(): SiteProfileInput | null {
     const parsed = siteProfileSchema.safeParse({
@@ -140,7 +164,7 @@ export function SignupForm() {
 
     if (!parsed.success) {
       setStatus('error')
-      setMessage(getSiteProfileValidationMessage(parsed.error))
+      setMessage(validationMessage(getSiteProfileValidationMessage(parsed.error)))
       return null
     }
 
@@ -191,20 +215,20 @@ export function SignupForm() {
     if (!completionMode) {
       if (password.length < 8) {
         setStatus('error')
-        setMessage('Use a password that is at least 8 characters long.')
+        setMessage(t('messages.passwordTooShort'))
         return
       }
 
       if (password !== confirmPassword) {
         setStatus('error')
-        setMessage('The password confirmation does not match.')
+        setMessage(t('messages.passwordMismatch'))
         return
       }
     }
 
     if (!agreementAccepted) {
       setStatus('error')
-      setMessage('Review and accept the user agreement before continuing.')
+      setMessage(t('messages.acceptAgreement'))
       return
     }
 
@@ -216,7 +240,7 @@ export function SignupForm() {
       if (completionMode) {
         if (!currentUserId || !email) {
           setStatus('error')
-          setMessage('Sign in before completing your profile.')
+          setMessage(t('messages.signInBeforeProfile'))
           return
         }
 
@@ -287,15 +311,11 @@ export function SignupForm() {
       }
 
       setStatus('sent')
-      setMessage('Check your email to verify your account before signing in.')
-      router.replace(`/verify-email?email=${encodeURIComponent(normalizedEmail)}` as Route)
+      setMessage(t('messages.checkEmail'))
+      router.replace(`${verifyEmailPath}?email=${encodeURIComponent(normalizedEmail)}` as Route)
     } catch (error) {
       setStatus('error')
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : 'Signup is not available because Supabase is not configured.',
-      )
+      setMessage(error instanceof Error ? error.message : t('messages.signupUnavailable'))
     }
   }
 
@@ -304,7 +324,7 @@ export function SignupForm() {
       {!completionMode ? (
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block text-sm font-medium">
-            Email
+            {t('emailLabel')}
             <Input
               required
               type="email"
@@ -317,7 +337,7 @@ export function SignupForm() {
           </label>
           <div className="hidden md:block" aria-hidden />
           <label className="block text-sm font-medium">
-            Password
+            {t('passwordLabel')}
             <Input
               required
               type="password"
@@ -329,7 +349,7 @@ export function SignupForm() {
             />
           </label>
           <label className="block text-sm font-medium">
-            Confirm password
+            {t('confirmPasswordLabel')}
             <Input
               required
               type="password"
@@ -343,13 +363,13 @@ export function SignupForm() {
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          {email ? `Completing profile for ${email}.` : 'Checking your signed-in account...'}
+          {email ? t('status.completingProfile', { email }) : t('status.checkingAccount')}
         </p>
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block text-sm font-medium">
-          First name
+          {t('firstNameLabel')}
           <Input
             required
             value={firstName}
@@ -359,7 +379,7 @@ export function SignupForm() {
           />
         </label>
         <label className="block text-sm font-medium">
-          Last name
+          {t('lastNameLabel')}
           <Input
             required
             value={lastName}
@@ -372,7 +392,7 @@ export function SignupForm() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block text-sm font-medium">
-          Professional role
+          {t('professionalRoleLabel')}
           <select
             required
             value={professionalRole}
@@ -381,14 +401,14 @@ export function SignupForm() {
           >
             {professionalRoleOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(`options.professionalRole.${option.value}`)}
               </option>
             ))}
           </select>
         </label>
         {professionalRole === 'resident' ? (
           <label className="block text-sm font-medium">
-            Resident specialty
+            {t('residentSpecialtyLabel')}
             <select
               required
               value={residentSpecialty}
@@ -397,7 +417,7 @@ export function SignupForm() {
             >
               {residentSpecialtyOptions.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(`options.residentSpecialty.${option.value}`)}
                 </option>
               ))}
             </select>
@@ -405,7 +425,7 @@ export function SignupForm() {
         ) : null}
         {professionalRole === 'other' ? (
           <label className="block text-sm font-medium">
-            Other role
+            {t('otherRoleLabel')}
             <Input
               required
               value={roleOther}
@@ -416,7 +436,7 @@ export function SignupForm() {
         ) : null}
         {trainingLevelOptions.length > 0 ? (
           <label className="block text-sm font-medium">
-            Training level
+            {t('trainingLevelLabel')}
             <select
               required
               value={trainingLevel}
@@ -425,7 +445,7 @@ export function SignupForm() {
             >
               {trainingLevelOptions.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(`options.trainingLevel.${option.value}`)}
                 </option>
               ))}
             </select>
@@ -435,7 +455,7 @@ export function SignupForm() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block text-sm font-medium">
-          Institution type
+          {t('institutionTypeLabel')}
           <select
             required
             value={institutionType}
@@ -444,13 +464,13 @@ export function SignupForm() {
           >
             {institutionTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(`options.institutionType.${option.value}`)}
               </option>
             ))}
           </select>
         </label>
         <label className="block text-sm font-medium">
-          Institution
+          {t('institutionLabel')}
           <Input
             required
             value={institution}
@@ -459,7 +479,7 @@ export function SignupForm() {
           />
         </label>
         <label className="block text-sm font-medium">
-          Country
+          {t('countryLabel')}
           <Input
             required
             value={country}
@@ -469,7 +489,7 @@ export function SignupForm() {
           />
         </label>
         <label className="block text-sm font-medium">
-          Years in practice
+          {t('yearsInPracticeLabel')}
           <select
             required
             value={yearsInPractice}
@@ -478,7 +498,7 @@ export function SignupForm() {
           >
             {yearsInPracticeOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(`options.yearsInPractice.${option.value}`)}
               </option>
             ))}
           </select>
@@ -486,7 +506,7 @@ export function SignupForm() {
       </div>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold">Interests</legend>
+        <legend className="text-sm font-semibold">{t('interestsLabel')}</legend>
         <div className="grid gap-2 md:grid-cols-2">
           {interestOptions.map((option) => (
             <label key={option.value} className="flex items-center gap-2 text-sm">
@@ -496,14 +516,14 @@ export function SignupForm() {
                 onChange={() => setInterests((current) => toggleValue(current, option.value))}
                 className="h-4 w-4 rounded border-border"
               />
-              <span>{option.label}</span>
+              <span>{t(`options.interests.${option.value}`)}</span>
             </label>
           ))}
         </div>
       </fieldset>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-semibold">Learning goals</legend>
+        <legend className="text-sm font-semibold">{t('learningGoalsLabel')}</legend>
         <div className="grid gap-2 md:grid-cols-2">
           {learningGoalOptions.map((option) => (
             <label key={option.value} className="flex items-center gap-2 text-sm">
@@ -513,18 +533,18 @@ export function SignupForm() {
                 onChange={() => setLearningGoals((current) => toggleValue(current, option.value))}
                 className="h-4 w-4 rounded border-border"
               />
-              <span>{option.label}</span>
+              <span>{t(`options.learningGoals.${option.value}`)}</span>
             </label>
           ))}
         </div>
       </fieldset>
 
       <fieldset className="rounded-lg border border-border bg-muted/30 p-4">
-        <legend className="px-1 text-sm font-semibold">User agreement</legend>
+        <legend className="px-1 text-sm font-semibold">{t('agreement.title')}</legend>
         <div className="space-y-3">
           <ul className="list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
-            {siteUserAgreementPoints.map((point) => (
-              <li key={point}>{point}</li>
+            {agreementPointKeys.map((key) => (
+              <li key={key}>{t(`agreement.points.${key}`)}</li>
             ))}
           </ul>
           <label className="flex items-start gap-3 text-sm font-medium">
@@ -535,14 +555,10 @@ export function SignupForm() {
               onChange={(event) => setAgreementAccepted(event.target.checked)}
               className="mt-1 h-4 w-4 rounded border-border"
             />
-            <span>
-              I have read and agree to these terms, including the tracking of educational usage and
-              performance data and the anonymous, de-identified, or aggregated research use
-              described above.
-            </span>
+            <span>{t('agreement.accept')}</span>
           </label>
           <p className="text-xs text-muted-foreground">
-            Agreement version: {SITE_USER_AGREEMENT_VERSION}
+            {t('agreement.versionLabel')} {SITE_USER_AGREEMENT_VERSION}
           </p>
         </div>
       </fieldset>
@@ -563,20 +579,20 @@ export function SignupForm() {
       >
         {status === 'submitting'
           ? completionMode
-            ? 'Saving profile...'
-            : 'Creating account...'
+            ? t('submit.saving')
+            : t('submit.creating')
           : completionMode
-            ? 'Save profile'
-            : 'Create free account'}
+            ? t('submit.save')
+            : t('submit.create')}
       </Button>
       {!completionMode ? (
         <p className="text-sm text-muted-foreground">
-          Already have an account?{' '}
+          {t('footerText')}{' '}
           <Link
-            href={'/login' as Route}
+            href={loginHref}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            Sign in
+            {t('footerLabel')}
           </Link>
         </p>
       ) : null}

@@ -4,11 +4,17 @@ import {
   JOURNAL_CLUB_PODCAST_LISTENS_TABLE,
   resolveJournalClubPodcastPlayback,
 } from '@/lib/journal-club-podcasts/usage'
+import { requireJournalClubPodcastApiAuth } from '@/lib/journal-club-podcasts/auth'
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
+  const auth = await requireJournalClubPodcastApiAuth(request)
+  if (!auth.ok) {
+    return auth.response
+  }
+
   const rawPayload = await request.json().catch(() => null)
   const playback = resolveJournalClubPodcastPlayback(rawPayload)
 
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
   const { data: current, error: readError } = await supabase
     .from(JOURNAL_CLUB_PODCAST_LISTENS_TABLE)
     .select(
-      'completed_at, duration_seconds, listened_seconds, max_percent_complete, max_position_seconds, play_count, progress_event_count, started_at',
+      'completed_at, duration_seconds, listened_seconds, max_percent_complete, max_position_seconds, play_count, progress_event_count, started_at,user_id',
     )
     .eq('playback_session_id', playback.playbackSessionId)
     .maybeSingle()
@@ -85,6 +91,7 @@ export async function POST(request: Request) {
       progress_event_count: (current?.progress_event_count ?? 0) + 1,
       route_path: '/journal-club-podcasts',
       started_at: current?.started_at ?? now,
+      user_id: auth.userId ?? current?.user_id ?? null,
       user_agent: trimHeader(request.headers.get('user-agent')),
     },
     { onConflict: 'playback_session_id' },

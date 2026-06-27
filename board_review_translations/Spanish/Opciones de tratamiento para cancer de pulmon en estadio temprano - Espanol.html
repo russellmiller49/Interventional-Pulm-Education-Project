@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opciones de tratamiento para el cáncer de pulmón en estadio temprano</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Opciones de tratamiento para el cáncer de pulmón en estadio temprano</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda el manejo actual del cáncer de pulmón de células no pequeñas (CPCNP) en estadios I–II, resecable o médicamente inoperable, de acuerdo con los dominios del examen de la AABIP:</p>
+    <ul>
+        <li>Selección de pacientes y evaluación preoperatoria</li>
+        <li>Opciones quirúrgicas (lobectomía, segmentectomía, resección en cuña; abordajes mínimamente invasivos; evaluación ganglionar)</li>
+        <li>Radioterapia corporal estereotáctica (SBRT)</li>
+        <li>Tratamiento sistémico perioperatorio (inmunoterapia neoadyuvante, adyuvante y periadyuvante; terapia dirigida adyuvante)</li>
+        <li>Ablación guiada por imagen</li>
+        <li>Complicaciones y vigilancia</li>
+    </ul>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <p>Al finalizar este capítulo, el alumno podrá:</p>
+    <ul>
+        <li>Seleccionar cirugía, SBRT o ablación para el CPCNP en estadios I–II según los factores del tumor y del paciente.</li>
+        <li>Aplicar algoritmos fisiológicos (FEV₁/DLCO y valores posoperatorios predichos) para determinar la operabilidad y la necesidad de pruebas adicionales.</li>
+        <li>Elegir entre lobectomía y resección sublobar para tumores periféricos pequeños y describir las estrategias de estadificación ganglionar.</li>
+        <li>Integrar la inmunoterapia perioperatoria y la terapia dirigida adyuvante en los subgrupos moleculares apropiados.</li>
+        <li>Anticipar, prevenir y manejar las complicaciones principales de la cirugía, la SBRT y la ablación térmica.</li>
+        <li>Diseñar planes de vigilancia después del tratamiento local definitivo y reconocer los patrones de fracaso y las opciones de rescate.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento (perlas, dificultades y trampas)</h3>
+    <div class="algorithm-note">
+        <ul>
+            <li><strong>El estadio determina el tratamiento.</strong> El CPCNP en estadios I–II es potencialmente curable; asegure una evaluación mediastínica precisa antes del tratamiento definitivo.</li>
+            <li><strong>La operabilidad tiene dos componentes:</strong> (1) resecabilidad oncológica; (2) aptitud fisiológica según FEV₁/DLCO y valores posoperatorios predichos (ppo); los resultados limítrofes requieren pruebas de ejercicio.</li>
+            <li><strong>La cirugía es el estándar en pacientes operables.</strong> La lobectomía sigue siendo la opción predeterminada; la segmentectomía es aceptable para lesiones periféricas cT1N0 ≤2 cm cuidadosamente seleccionadas y con evaluación ganglionar completa.</li>
+            <li><strong>Tumores centrales:</strong> Considere una resección en manguito para evitar la neumonectomía cuando sea factible.</li>
+            <li><strong>Manejo ganglionar:</strong> Realice al menos un muestreo sistemático específico del lóbulo; la disección mediastínica completa rutinaria no ha mejorado de forma constante la supervivencia global cuando el muestreo previo es negativo.</li>
+            <li><strong>SBRT:</strong> Tratamiento definitivo preferido para tumores periféricos en estadio I médicamente inoperables; ofrece excelente control local; el riesgo de neumonitis aumenta en lesiones centrales.</li>
+            <li><strong>PORT (radioterapia posoperatoria):</strong> No está indicada después de una resección completa (R0) en estadios I–II; sí está indicada para márgenes positivos (R1).</li>
+            <li><strong>Inmunoterapia perioperatoria:</strong> La quimioinmunoterapia neoadyuvante mejora la supervivencia libre de eventos (EFS) y la respuesta patológica completa (pCR); las estrategias periadyuvantes (neo + adyuvancia) mejoran aún más la EFS en pacientes con enfermedad resecable en estadios II–III sin alteraciones moleculares accionables.</li>
+            <li><strong>Inmunoterapia adyuvante después de quimioterapia:</strong> Beneficia a pacientes resecados con enfermedad en estadios II–IIIA (el beneficio enriquecido por PD-L1 varía según el régimen).</li>
+            <li><strong>Terapia dirigida adyuvante:</strong> Osimertinib (EGFR 19del/L858R) y alectinib (ALK) mejoran la supervivencia libre de enfermedad (DFS) después de la resección.</li>
+            <li><strong>Ablación (RFA/MWA/crioablación):</strong> Opción para pacientes de alto riesgo o contextos oligometastásicos; se favorece la crioablación cerca de estructuras críticas; el neumotórax es frecuente y manejable.</li>
+            <li><strong>Pacientes de edad avanzada o frágiles:</strong> La resección sublobar o la SBRT son razonables; las decisiones deben individualizarse.</li>
+            <li><strong>Trampas frecuentes:</strong> Tratar en exceso lesiones indolentes en vidrio esmerilado, estadificar de forma insuficiente el mediastino, administrar PORT después de una resección R0 en estadio I–II y omitir las pruebas de EGFR/ALK antes de definir un plan de inmunoterapia.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología / epidemiología</h4>
+    <p>El CPCNP en estadio temprano representa aproximadamente un tercio de los nuevos casos de CPCNP, principalmente adenocarcinomas y carcinomas escamocelulares. La supervivencia a cinco años disminuye conforme avanza el estadio; una estadificación TNM precisa (edición vigente de IASLC/AJCC) es esencial para seleccionar tratamientos curativos.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <ul>
+        <li><strong>Cirugía:</strong> Enfermedad cT1–2N0–1 operable. Las contraindicaciones incluyen riesgo cardiopulmonar prohibitivo o enfermedad metastásica difusa.</li>
+        <li><strong>SBRT:</strong> Pacientes médicamente inoperables o que rechazan la cirugía, con lesiones periféricas; utilice cautela en tumores centrales.</li>
+        <li><strong>Ablación:</strong> Alto riesgo quirúrgico, campo previamente irradiado con dosis altas o contextos oligometastásicos/oligoprogresivos cuando sea posible lograr control local completo de todos los sitios.</li>
+        <li><strong>Tratamiento sistémico perioperatorio:</strong>
+            <ul>
+                <li>Quimioinmunoterapia neoadyuvante: enfermedad resecable en estadios II–III (y algunos IB ≥4 cm) sin alteraciones de EGFR/ALK.</li>
+                <li>Inmunoterapia adyuvante: estadios II–IIIA resecados (el beneficio dependiente de PD-L1 varía).</li>
+                <li>Terapia dirigida adyuvante: EGFR 19del/L858R (osimertinib), ALK (alectinib).</li>
+            </ul>
+        </li>
+        <li><strong>PORT:</strong> Resecciones R1; no se utiliza de rutina después de una resección R0 en estadios I–II.</li>
+    </ul>
+
+    <h4>Evaluación previa al procedimiento (imágenes, laboratorio, riesgo y consentimiento)</h4>
+    <ul>
+        <li><strong>Imágenes:</strong> TC de tórax con cortes finos; PET-TC para estadificación; considere RM cerebral en estadio II o superior.</li>
+        <li><strong>Evaluación mediastínica:</strong> EBUS-TBNA para ganglios sospechosos o tumores &gt;3 cm/centrales; estadificación quirúrgica cuando sea necesario.</li>
+        <li><strong>Fisiología pulmonar:</strong> Obtenga FEV₁ y DLCO en todos los candidatos quirúrgicos. Si cualquiera es &lt;80 % del valor predicho, calcule FEV₁/DLCO posoperatorios predichos (ppo) mediante recuento de segmentos o perfusión con función diferencial; los resultados limítrofes requieren una prueba de ejercicio cardiopulmonar (CPET).</li>
+        <li><strong>Antitrombóticos:</strong> Siga los protocolos institucionales de terapia puente para anestesia neuroaxial y VATS; coordine con cardiología en pacientes con stents.</li>
+        <li><strong>Consentimiento:</strong> Incluya los riesgos específicos de la modalidad elegida (fuga aérea, arritmia auricular, neumonitis, neumotórax, fístula broncopleural y hemoptisis).</li>
+    </ul>
+
+    <h4>Equipo y preparación</h4>
+    <ul>
+        <li><strong>Cirugía:</strong> Plataformas VATS o RATS con grapadoras endoscópicas y dispositivos de energía; disponibilidad para resección en manguito; instrumental para evaluación ganglionar mediastínica.</li>
+        <li><strong>SBRT:</strong> Dispositivos de inmovilización, simulación con TC 4D, guía por imagen (haz cónico) y manejo del movimiento (apnea, sincronización respiratoria).</li>
+        <li><strong>Ablación:</strong>
+            <ul>
+                <li>RFA: Electrodos individuales o agrupados (zonas de ablación de 2–5 cm), monitorización de temperatura; infusión de solución salina o puntas refrigeradas para lesiones mayores.</li>
+                <li>MWA: Antenas de 900–2500 MHz; permite ablaciones más grandes y rápidas; múltiples antenas para lesiones ≥3 cm.</li>
+                <li>Crioablación: Múltiples criosondas separadas ≤2 cm, habitualmente tres ciclos de congelación; visualización clara de la bola de hielo; se recomienda anestesia general para lesiones centrales a fin de asegurar el control de la vía aérea.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso / Lista de verificación del procedimiento</h3>
+
+    <h4>Lobectomía/segmentectomía (VATS/RATS)</h4>
+    <ul>
+        <li>Confirme lado, estadio y plan; asegure una evaluación ganglionar preoperatoria completa.</li>
+        <li>Colocación de puertos; adhesiólisis.</li>
+        <li>Estrategia de cisura al final o al principio según la anatomía; aísle vena, arteria y bronquio.</li>
+        <li>División del parénquima con grapadoras; confirme márgenes oncológicos.</li>
+        <li>Evaluación ganglionar: hiliar y mediastínica (sistemática específica del lóbulo); envíe las muestras a patología.</li>
+        <li>Prueba de fuga aérea; hemostasia; colocación de tubo torácico.</li>
+    </ul>
+
+    <h4>SBRT</h4>
+    <ul>
+        <li>Simulación (TC 4D); defina ITV/PTV con márgenes para el movimiento.</li>
+        <li>Dosis/fraccionamiento según el sitio, el tamaño y la proximidad a órganos en riesgo (OAR); verifique las restricciones.</li>
+        <li>Guía diaria por imagen; maneje la tos y la respiración.</li>
+        <li>Explique las toxicidades posteriores al tratamiento (tos, fatiga, neumonitis por radiación).</li>
+    </ul>
+
+    <h4>Ablación percutánea</h4>
+    <ul>
+        <li>TC de planificación y trayectoria que evite bullas y vasos; el consentimiento debe incluir el riesgo de neumotórax.</li>
+        <li>Analgesia: sedación moderada para lesiones periféricas; anestesia general para lesiones centrales o con riesgo de sangrado; considere ventilación con tubo de doble luz para proteger la vía aérea.</li>
+        <li>Colocación del dispositivo:
+            <ul>
+                <li>RFA/MWA: Coloque primero el electrodo o la antena en el centro y después realice pases periféricos para lograr cobertura.</li>
+                <li>Crioablación: Coloque múltiples sondas; realice ciclos de congelación-descongelación; monitorice los márgenes de la bola de hielo (≥5–10 mm más allá del tumor).</li>
+            </ul>
+        </li>
+        <li>TC posterior a la ablación; cauterice el trayecto si es necesario; observe la aparición de neumotórax; planifique un tubo torácico si es sintomático o grande.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>Fibrosis hiliar densa (después de inmunoterapia neoadyuvante):</strong> Convierta pronto a toracotomía; obtenga control proximal; esté preparado para una reconstrucción en manguito.</li>
+        <li><strong>Fuga aérea persistente:</strong> Refuerce las líneas de grapas; realice tienda pleural; considere un parche de sangre autóloga en el posoperatorio.</li>
+        <li><strong>Movimiento durante SBRT:</strong> Intensifique el control del movimiento (sincronización/compresión abdominal); vuelva a planificar si el movimiento es &gt;1 cm.</li>
+        <li><strong>Ablación cerca de estructuras críticas:</strong> Prefiera crioablación; utilice un pequeño neumotórax intencional o hidrodissección para desplazar los OAR; vigile la hemoptisis.</li>
+    </ul>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <ul>
+        <li><strong>Cirugía:</strong> Deambulación temprana e higiene pulmonar; retire el tubo torácico cuando no haya fuga aérea y el drenaje sea aceptable; tome decisiones adyuvantes según la patología.</li>
+        <li><strong>SBRT/ablación:</strong> Imágenes a corto plazo para detectar neumonitis o cambios inflamatorios; TC seriada a los 3, 6 y 12 meses, y después según el programa de vigilancia.</li>
+        <li><strong>Vigilancia (después de tratamiento curativo):</strong> Historia clínica/examen físico y TC de tórax cada 6 meses durante 2 años, y después anualmente; aconseje dejar de fumar.</li>
+    </ul>
+
+    <h3>Complicaciones (prevención, reconocimiento y manejo)</h3>
+    <ul>
+        <li><strong>Cirugía:</strong> Fuga aérea prolongada, neumonía, arritmias auriculares y tromboembolismo venoso; reduzca el riesgo mediante recuperación mejorada, control del dolor y movilización temprana.</li>
+        <li><strong>SBRT:</strong> Fatiga, dermatitis, esofagitis (lesiones centrales) y neumonitis por radiación; trate con corticosteroides y medidas de apoyo.</li>
+        <li><strong>Ablación:</strong> Neumotórax (frecuente; drenar si es sintomático o grande), hemorragia perilesional, fístula broncopleural (menor riesgo con crioablación que con técnicas térmicas), hemoptisis, embolia aérea sistémica poco frecuente y pseudoaneurisma de la arteria pulmonar (manejo urgente por radiología intervencionista/cirugía).</li>
+    </ul>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>EPOC grave/reserva limitada:</strong> Prefiera SBRT o resección sublobar; ablación para lesiones seleccionadas.</li>
+        <li><strong>Pacientes de edad avanzada o frágiles:</strong> Individualice; la segmentectomía o la SBRT suelen ser apropiadas y ofrecen control comparable de la enfermedad en tumores periféricos pequeños seleccionados.</li>
+        <li><strong>Tumores con alteraciones moleculares accionables (EGFR/ALK):</strong> Favorezca la terapia dirigida adyuvante después de la resección; por lo general se evita la inmunoterapia perioperatoria en estos subgrupos.</li>
+        <li><strong>Tratamiento anticoagulante/antiagregante:</strong> Coordine según el procedimiento; maneje el riesgo de sangrado para la ablación y la anestesia neuroaxial.</li>
+    </ul>
+
+    <h3>Evidencia y resultados (ensayos/efectos clave)</h3>
+    <ul>
+        <li><strong>Cirugía frente a resección sublobar:</strong> Los datos aleatorizados contemporáneos respaldan la equivalencia de la segmentectomía con la lobectomía para lesiones periféricas cT1N0 ≤2 cm, con un pequeño aumento de la recidiva locorregional y preservación de la función pulmonar.</li>
+        <li><strong>SBRT:</strong> Los datos de fase II/III muestran ~90 % de control local en tumores periféricos pequeños; mejor calidad de vida frente a radioterapia convencional; los datos aleatorizados agrupados sugieren una supervivencia global comparable a la cirugía en pacientes operables seleccionados, pero están limitados por el bajo reclutamiento.</li>
+        <li><strong>Quimioinmunoterapia neoadyuvante (CheckMate 816):</strong> Mejoró la supervivencia libre de eventos y la pCR (~24 % frente a ~2 %), sin aumentar la morbilidad quirúrgica; las estrategias periadyuvantes (KEYNOTE-671, AEGEAN, CheckMate 77T) aumentan aún más la EFS y la pCR.</li>
+        <li><strong>Inmunoterapia adyuvante (IMpower010, PEARLS/KEYNOTE-091):</strong> Beneficio en DFS después de quimioterapia basada en platino; la magnitud varía según el estado de PD-L1 y el régimen.</li>
+        <li><strong>Terapia dirigida adyuvante:</strong> Osimertinib (EGFR 19del/L858R) y alectinib (ALK) muestran beneficios sustanciales en DFS en enfermedad resecada en estadios IB–IIIA.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1 — CPCNP resecable en estadio temprano (selección del tratamiento)</h4>
+    <div class="mermaid">
+    graph TD
+        A["CPCNP confirmado en estadio I–II"] --> B{"¿Operable?"}
+        B -- No --> C["SBRT definitiva / ablación"]
+        B -- Sí --> D{"Evaluar tamaño y localización"}
+        D -- "≤2 cm, periférico, cN0" --> E["Segmentectomía anatómica"]
+        D -- ">2 cm o central / N1" --> F["Lobectomía (manguito si es necesario)"]
+        E --> G{"¿Alteraciones moleculares?"}
+        F --> G
+        G -- "EGFR 19del/L858R" --> H["Osimertinib adyuvante"]
+        G -- "Fusión ALK" --> I["Alectinib adyuvante"]
+        G -- "Ninguna" --> J{"Evaluar estadio/riesgo"}
+        J -- "Estadio II–III o IB ≥4 cm" --> K["Quimioinmunoterapia neoadyuvante<br/>o periadyuvante"]
+        J -- "Estadio IA" --> L["Observación"]
+    </div>
+    <div class="algorithm-note">
+        <p><strong>Nota:</strong> La evaluación ganglionar completa es obligatoria para la segmentectomía. La terapia adyuvante con TKI suele administrarse después de la quimioterapia adyuvante cuando está indicada.</p>
+    </div>
+
+    <h4>Algoritmo 2 — Operabilidad fisiológica para resección pulmonar</h4>
+    <div class="mermaid">
+    graph TD
+        A["Medir FEV₁ y DLCO"] --> B{"¿Ambos ≥80 % del predicho?"}
+        B -- Sí --> C["Proceder a lobectomía/segmentectomía"]
+        B -- No --> D["Calcular FEV₁ y DLCO ppo"]
+        D --> E{"Valor ppo"}
+        E -- "≥40 %" --> C
+        E -- "<40 %" --> F["Realizar CPET"]
+        F --> G{"VO₂ pico"}
+        G -- Aceptable --> H["Considerar resección limitada o SBRT"]
+        G -- No aceptable --> I["No quirúrgico (SBRT/ablación)"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Elección del abordaje quirúrgico en el CPCNP en estadio temprano</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Situación clínica</th>
+                <th>Procedimiento preferido</th>
+                <th>Requisitos clave</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>≤2 cm, periférico, cT1N0</td>
+                <td>Segmentectomía</td>
+                <td>Confirmación intraoperatoria de N0 por congelación; muestreo ganglionar específico del lóbulo</td>
+                <td>Supervivencia similar a la lobectomía en ensayos aleatorizados modernos; recidiva locorregional ligeramente mayor; preserva pulmón.</td>
+            </tr>
+            <tr>
+                <td>&gt;2 cm o central; N1 identificado</td>
+                <td>Lobectomía</td>
+                <td>Evaluación ganglionar sistemática específica del lóbulo</td>
+                <td>Se prefiere resección en manguito sobre neumonectomía cuando sea factible.</td>
+            </tr>
+            <tr>
+                <td>Paciente frágil/reserva limitada</td>
+                <td>Resección sublobar o SBRT</td>
+                <td>Individualizar; discutir ventajas y desventajas</td>
+                <td>Control comparable de la enfermedad en lesiones pequeñas seleccionadas, con ventajas funcionales.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 2. Tratamiento sistémico perioperatorio: resumen para el examen</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Estrategia</th>
+                <th>Estadios elegibles</th>
+                <th>Base del tratamiento</th>
+                <th>Resultados clave</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Quimioinmunoterapia neoadyuvante<br>(p. ej., nivolumab + doblete de platino)</td>
+                <td>IB resecable (≥4 cm)–IIIA (sin EGFR/ALK)</td>
+                <td>3–4 ciclos de doblete de platino + anti–PD-1</td>
+                <td>↑ pCR (~5–10 veces frente a quimioterapia sola); ↑ EFS; seguridad quirúrgica aceptable.</td>
+            </tr>
+            <tr>
+                <td>Regímenes periadyuvantes<br>(p. ej., pembrolizumab o durvalumab)</td>
+                <td>Estadios II–III resecables (sin EGFR/ALK)</td>
+                <td>Quimioinmunoterapia neoadyuvante → cirugía → 1 año de inmunoterapia</td>
+                <td>Mayor ↑ de EFS frente a neoadyuvancia sola; pCR ~17–25 %.</td>
+            </tr>
+            <tr>
+                <td>Inmunoterapia adyuvante después de quimioterapia<br>(p. ej., atezolizumab, pembrolizumab)</td>
+                <td>IB–IIIA resecado (beneficio enriquecido en II–IIIA; variable según PD-L1)</td>
+                <td>1 año de inmunoterapia después de quimioterapia estándar</td>
+                <td>↑ DFS en poblaciones por intención de tratar o seleccionadas por PD-L1; supervivencia global aún en maduración.</td>
+            </tr>
+            <tr>
+                <td>Terapia dirigida adyuvante<br>(osimertinib; alectinib)</td>
+                <td>IB–IIIA resecado con EGFR 19del/L858R; ALK+</td>
+                <td>TKI durante 2–3 años después de cirugía ± quimioterapia</td>
+                <td>Mejoría marcada de DFS; protección del SNC con TKI para EGFR.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Cirugía frente a SBRT frente a ablación: de un vistazo</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Cirugía</th>
+                <th>SBRT</th>
+                <th>Ablación (RFA/MWA/crioablación)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Candidato ideal</td>
+                <td>Estadio I–II operable</td>
+                <td>Estadio I periférico médicamente inoperable</td>
+                <td>Pacientes de alto riesgo, campo previamente irradiado, enfermedad oligometastásica/oligoprogresiva</td>
+            </tr>
+            <tr>
+                <td>Control local</td>
+                <td>Excelente; depende de márgenes y estado ganglionar</td>
+                <td>~90–95 % en tumores periféricos pequeños</td>
+                <td>Bueno para ≤3 cm; se favorece la crioablación cerca de estructuras críticas</td>
+            </tr>
+            <tr>
+                <td>Morbilidad</td>
+                <td>Riesgos del procedimiento (fuga aérea, neumonía, arritmia)</td>
+                <td>Baja toxicidad aguda; riesgo de neumonitis/esofagitis (central)</td>
+                <td>Neumotórax frecuente; hemorragia; fístula broncopleural (menor con crioablación)</td>
+            </tr>
+            <tr>
+                <td>Recuperación</td>
+                <td>Recuperación inicial más larga; resultado duradero</td>
+                <td>Ambulatoria/curso corto (1–5 fracciones)</td>
+                <td>Ambulatoria; recuperación rápida</td>
+            </tr>
+            <tr>
+                <td>Función en alteraciones moleculares</td>
+                <td>Permite estadificación patológica y obtención de tejido para pruebas moleculares</td>
+                <td>Ninguna</td>
+                <td>Puede combinarse con biopsia en el momento de la ablación</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 4. Ablación térmica: perlas técnicas</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Modalidad</th>
+                <th>Mejores usos</th>
+                <th>Consejos técnicos</th>
+                <th>Consideraciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>RFA</td>
+                <td>Lesiones ≤3 cm</td>
+                <td>Ablaciones superpuestas del centro hacia la periferia; puntas refrigeradas</td>
+                <td>El efecto disipador térmico cerca de vasos puede reducir la eficacia</td>
+            </tr>
+            <tr>
+                <td>MWA</td>
+                <td>Lesiones de 3–5 cm; se necesita una zona mayor</td>
+                <td>Múltiples antenas; menor duración; menos afectada por la carbonización</td>
+                <td>Mayor calor colateral; variabilidad entre dispositivos</td>
+            </tr>
+            <tr>
+                <td>Crioablación</td>
+                <td>Lesiones cerca de vía aérea/vasos</td>
+                <td>Múltiples sondas separadas ≤2 cm; tres ciclos de congelación; visualizar la bola de hielo</td>
+                <td>Procedimiento más largo; anestesia general para objetivos centrales</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <p><strong>Caso 1 (siguiente mejor paso)</strong><br>
+        Un paciente de 68 años con antecedente de 35 paquetes-año tiene un adenocarcinoma periférico de 1,8 cm en el lóbulo inferior izquierdo (cT1bN0), FEV₁ 82 %, DLCO 78 % y mediastino negativo en PET. EGFR/ALK negativos.</p>
+        <p><strong>Respuesta: C (segmentectomía anatómica).</strong> Para una lesión periférica cT1N0 ≤2 cm con reserva adecuada, la segmentectomía con evaluación ganglionar rigurosa ofrece equivalencia oncológica con la lobectomía y preserva la función pulmonar.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Caso 2 (resolución de problemas)</strong><br>
+        Durante una lobectomía superior derecha por VATS después de quimioinmunoterapia neoadyuvante para enfermedad cN1, una fibrosis hiliar densa oculta la arteria pulmonar.</p>
+        <p><strong>Respuesta: B (convertir a toracotomía y obtener control proximal de la arteria pulmonar).</strong> La conversión temprana con control proximal reduce el riesgo vascular en la fibrosis relacionada con el tratamiento; todavía puede lograrse una resección R0 mediante lobectomía estándar o en manguito.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Caso 3 (reconocimiento de una complicación)</strong><br>
+        Una paciente de 76 años médicamente inoperable recibe SBRT para una lesión periférica del lóbulo inferior derecho. Cuatro semanas después presenta tos seca, febrícula y una nueva opacidad en vidrio esmerilado dentro de la región de dosis alta.</p>
+        <p><strong>Respuesta: B (neumonitis por radiación).</strong> El momento de aparición y la imagen confinada al campo irradiado son clásicos de neumonitis por radiación. Inicie esteroides orales y medidas de apoyo.</p>
+    </div>
+
+    <div class="case-study">
+        <p><strong>Caso 4 (siguiente mejor paso)</strong><br>
+        Un paciente de 62 años con adenocarcinoma pT2aN0 resecado (3,5 cm), lobectomía VATS R0, PD-L1 10 % y deleción del exón 19 de EGFR. Completó 4 ciclos de quimioterapia basada en cisplatino.</p>
+        <p><strong>Respuesta: D (osimertinib adyuvante).</strong> El osimertinib adyuvante mejora la DFS en enfermedad resecada con EGFR 19del/L858R. La PORT no está indicada después de márgenes R0 en estadio II sin otras indicaciones.</p>
+    </div>
+
+    <h3>Banco de preguntas (opción múltiple)</h3>
+    <ol>
+        <li><strong>Un paciente de 70 años con una lesión escamocelular periférica cT1aN0 de 1,2 cm, FEV₁ 88 % y DLCO 84 %. ¿Cuál es la mejor opción definitiva?</strong><br>
+            A. SBRT<br>
+            B. Solo resección en cuña<br>
+            C. Segmentectomía con muestreo ganglionar<br>
+            D. Lobectomía<br>
+            E. Quimioinmunoterapia neoadyuvante<br>
+            <strong>Respuesta: C.</strong> La segmentectomía anatómica con evaluación ganglionar es apropiada para lesiones periféricas cN0 ≤2 cm y preserva la función.
+        </li>
+        <li><strong>Razón principal por la cual la segmentectomía puede igualar a la lobectomía en tumores periféricos ≤2 cm:</strong><br>
+            A. Menor sangrado<br>
+            B. Mejor tolerancia del tratamiento adyuvante<br>
+            C. Resección anatómica completa más evaluación ganglionar rigurosa<br>
+            D. Menor tiempo quirúrgico<br>
+            E. Menor recidiva en tumores centrales<br>
+            <strong>Respuesta: C.</strong> Los planos segmentarios anatómicos y la evaluación ganglionar mantienen los principios oncológicos.
+        </li>
+        <li><strong>Función más apropiada de la PORT después de la resección de un CPCNP en estadio I–II:</strong><br>
+            A. Todos los tumores pT2<br>
+            B. Márgenes cercanos<br>
+            C. Margen microscópico positivo (R1)<br>
+            D. PD-L1 ≥50 %<br>
+            E. Cualquier enfermedad N1<br>
+            <strong>Respuesta: C.</strong> En estos estadios, la PORT suele reservarse para resecciones R1.
+        </li>
+        <li><strong>Fisiología: En la evaluación preoperatoria, FEV₁ 62 % y DLCO 58 %. ¿Cuál es el siguiente paso?</strong><br>
+            A. Proceder a lobectomía<br>
+            B. Calcular FEV₁/DLCO ppo<br>
+            C. CPET inmediata<br>
+            D. SBRT obligatoria<br>
+            E. PORT<br>
+            <strong>Respuesta: B.</strong> Cuando FEV₁ o DLCO son &lt;80 %, calcule los valores ppo para precisar el riesgo; la CPET se realiza después si los valores ppo son bajos.
+        </li>
+        <li><strong>SBRT frente a radioterapia convencional: Una ventaja principal de la SBRT en el CPCNP en estadio temprano es:</strong><br>
+            A. Menor control local<br>
+            B. Más fracciones<br>
+            C. Menos esofagitis y neumonitis, y mejor calidad de vida en los ensayos<br>
+            D. Requiere anestesia<br>
+            E. Quimioterapia obligatoria<br>
+            <strong>Respuesta: C.</strong> La SBRT proporciona excelente control con menos toxicidad que el fraccionamiento convencional en lesiones apropiadas.
+        </li>
+        <li><strong>La quimioinmunoterapia neoadyuvante en enfermedad resecable en estadios II–III aumenta:</strong><br>
+            A. La mortalidad posoperatoria<br>
+            B. La pCR y la supervivencia libre de eventos<br>
+            C. La necesidad de neumonectomía<br>
+            D. El uso de PORT<br>
+            E. Las tasas de mutación de EGFR<br>
+            <strong>Respuesta: B.</strong> Los ensayos muestran mayor pCR y mejor EFS sin exceso de mortalidad quirúrgica.
+        </li>
+        <li><strong>Enfermedad con alteración molecular: Después de una resección R0 de un adenocarcinoma ALK+ en estadio II y quimioterapia adyuvante, ¿cuál es el siguiente paso?</strong><br>
+            A. Alectinib adyuvante<br>
+            B. Pembrolizumab adyuvante<br>
+            C. Observación<br>
+            D. PORT<br>
+            E. Nivolumab neoadyuvante<br>
+            <strong>Respuesta: A.</strong> El TKI adyuvante contra ALK mejora la DFS.
+        </li>
+        <li><strong>Modalidad de ablación cerca del bronquio intermediario:</strong><br>
+            A. RFA<br>
+            B. MWA<br>
+            C. Crioablación<br>
+            D. Ablación láser<br>
+            E. La electroporación irreversible siempre es preferible<br>
+            <strong>Respuesta: C.</strong> Se favorece la crioablación cerca de estructuras críticas por el menor riesgo de fístula broncopleural y el control preciso de la bola de hielo.
+        </li>
+        <li><strong>Resolución de problemas ante cicatrización hiliar densa después de inmunoterapia neoadyuvante: la maniobra más apropiada es:</strong><br>
+            A. Persistir por vía endoscópica para evitar una incisión mayor<br>
+            B. Convertir pronto para obtener control vascular<br>
+            C. Abortar y administrar PORT<br>
+            D. Utilizar cintas vasculares y continuar VATS<br>
+            E. Proceder directamente a neumonectomía<br>
+            <strong>Respuesta: B.</strong> La conversión temprana reduce el riesgo vascular y permite una resección segura.
+        </li>
+        <li><strong>Momento de la toxicidad por SBRT: La neumonitis por radiación se presenta con mayor frecuencia:</strong><br>
+            A. En 24–48 h<br>
+            B. Entre 2 y 12 semanas después del tratamiento<br>
+            C. Dos años después<br>
+            D. Solo en lesiones centrales<br>
+            E. Solo con quimioterapia<br>
+            <strong>Respuesta: B.</strong> Inicio subagudo con imágenes concordantes con el campo irradiado.
+        </li>
+        <li><strong>Siguiente mejor paso: adenocarcinoma periférico de 1,9 cm, cN0, mal candidato quirúrgico (ppoFEV₁ 36 %, ppoDLCO 34 %).</strong><br>
+            A. Quimioinmunoterapia neoadyuvante y después lobectomía<br>
+            B. SBRT<br>
+            C. Resección en cuña solo con anestesia epidural<br>
+            D. PORT<br>
+            E. Observación<br>
+            <strong>Respuesta: B.</strong> La SBRT se prefiere para un estadio I periférico médicamente inoperable.
+        </li>
+        <li><strong>¿Qué afirmación sobre la segmentectomía es VERDADERA para un tumor periférico cT1N0 ≤2 cm?</strong><br>
+            A. Siempre ofrece supervivencia global inferior a la lobectomía<br>
+            B. Mejora la supervivencia global, pero duplica la recidiva local<br>
+            C. Supervivencia libre de enfermedad no inferior, pequeño aumento de la recidiva locorregional y preservación funcional<br>
+            D. No requiere muestreo ganglionar<br>
+            E. Solo se utiliza en lesiones con predominio de vidrio esmerilado<br>
+            <strong>Respuesta: C.</strong> Los datos aleatorizados modernos muestran equivalencia con una evaluación ganglionar cuidadosa; la función se preserva mejor.
+        </li>
+    </ol>
+
+    <h3>Lista de verificación final</h3>
+    <ul>
+        <li>[ ] Confirme el estadio y el estado mediastínico antes del tratamiento definitivo.</li>
+        <li>[ ] Mida FEV₁/DLCO en todos los candidatos quirúrgicos; calcule ppo si es &lt;80 %.</li>
+        <li>[ ] Para un tumor periférico cT1N0 ≤2 cm, considere segmentectomía con evaluación ganglionar completa.</li>
+        <li>[ ] Utilice SBRT para un estadio I periférico médicamente inoperable; respete las restricciones de lesiones centrales.</li>
+        <li>[ ] No administre PORT después de una resección R0 en estadio I–II; sí adminístrela para R1.</li>
+        <li>[ ] Realice pruebas de EGFR/ALK en enfermedad resecable; incorpore osimertinib/alectinib cuando estén indicados.</li>
+        <li>[ ] Considere quimioinmunoterapia neoadyuvante (y plataformas periadyuvantes) para estadios II–III sin alteraciones moleculares accionables.</li>
+        <li>[ ] Anticipe fibrosis después de inmunoterapia neoadyuvante; convierta pronto para obtener control vascular seguro.</li>
+        <li>[ ] Reconozca la neumonitis por SBRT y trátela de inmediato con esteroides.</li>
+        <li>[ ] En la ablación, planifique el manejo del neumotórax; utilice crioablación cerca de estructuras críticas.</li>
+        <li>[ ] TC de vigilancia cada 6 meses × 2 años y después anual; refuerce el abandono del tabaco.</li>
+    </ul>
+
+    <hr>
+
+    <div class="abbreviations">
+        <h3>Abreviaturas</h3>
+        <dl>
+            <dt>CPCNP</dt><dd>Cáncer de pulmón de células no pequeñas</dd>
+            <dt>SBRT</dt><dd>Radioterapia corporal estereotáctica</dd>
+            <dt>VATS</dt><dd>Cirugía toracoscópica asistida por video</dd>
+            <dt>RATS</dt><dd>Cirugía toracoscópica asistida por robot</dd>
+            <dt>DLCO</dt><dd>Capacidad de difusión pulmonar para monóxido de carbono</dd>
+            <dt>FEV₁</dt><dd>Volumen espiratorio forzado en el primer segundo</dd>
+            <dt>CPET</dt><dd>Prueba de ejercicio cardiopulmonar</dd>
+            <dt>PORT</dt><dd>Radioterapia posoperatoria</dd>
+            <dt>pCR</dt><dd>Respuesta patológica completa</dd>
+            <dt>EFS</dt><dd>Supervivencia libre de eventos</dd>
+            <dt>DFS</dt><dd>Supervivencia libre de enfermedad</dd>
+            <dt>OAR</dt><dd>Órgano en riesgo</dd>
+        </dl>
+    </div>
+
+    <div class="references">
+        <h3>Referencias</h3>
+        <ol>
+            <li>Saji H, Okada M, Tsuboi M, et al. Segmentectomy versus lobectomy in small‑sized peripheral non‑small‑cell lung cancer (JCOG0802/WJOG4607L). <em>Lancet</em>. 2022;399:1607‑1617.</li>
+            <li>Altorki N, Wang X, Kozono D, et al. Lobar or Sublobar Resection for Peripheral Stage IA Non–Small‑Cell Lung Cancer. <em>N Engl J Med</em>. 2023;388:489‑498.</li>
+            <li>Darling GE, Allen MS, Decker PA, et al. Mediastinal lymph node sampling versus complete lymphadenectomy (ACOSOG Z0030). <em>J Thorac Cardiovasc Surg</em>. 2011;141:662‑670.</li>
+            <li>Ball D, Mai GT, Vinod S, et al. SABR versus standard radiotherapy in stage I NSCLC (CHISEL). <em>Lancet Oncol</em>. 2019;20:494‑503.</li>
+            <li>Nyman J, Hallqvist A, Lund JÅ, et al. SPACE—SBRT vs conventional RT in inoperable stage I NSCLC. <em>Radiother Oncol</em>. 2016;121:1‑8.</li>
+            <li>Chang JY, Senan S, Paul MA, et al. SABR versus lobectomy in operable stage I NSCLC: pooled randomized analysis. <em>Lancet Oncol</em>. 2015;16:630‑637.</li>
+            <li>Schneider BJ, Daly ME, Kennedy EB, et al. ASCO Endorsement of ASTRO SBRT guideline for early‑stage NSCLC. <em>J Clin Oncol</em>. 2018;36:710‑719.</li>
+            <li>Wang EH, Corso CD, Rutter CE, et al. PORT and survival in incompletely resected NSCLC. <em>J Clin Oncol</em>. 2015;33:2727‑2734.</li>
+            <li>Forde PM, Spicer J, Lu S, et al. Neoadjuvant Nivolumab plus Chemotherapy in Resectable NSCLC (CheckMate 816). <em>N Engl J Med</em>. 2022;386:1973‑1985.</li>
+            <li>KEYNOTE‑671 Investigators. Perioperative Pembrolizumab for Resectable NSCLC (KEYNOTE‑671). <em>N Engl J Med</em>. 2023.</li>
+            <li>AEGEAN Investigators. Perioperative Durvalumab for Resectable NSCLC (AEGEAN). <em>N Engl J Med</em>. 2023/2024.</li>
+            <li>IMpower010 Investigators. Adjuvant Atezolizumab after Resection and Chemotherapy in NSCLC. <em>J Clin Oncol</em>. 2021/2024 update.</li>
+            <li>PEARLS/KEYNOTE‑091 Investigators. Adjuvant Pembrolizumab after Resection. <em>Lancet/J Clin Oncol</em>. 2022–2023.</li>
+            <li>ADAURA Investigators. Osimertinib in Resected EGFR‑Mutated NSCLC. <em>N Engl J Med</em>. 2020/2023 update.</li>
+            <li>ALINA Investigators. Alectinib vs platinum‑based chemotherapy in ALK‑positive resected NSCLC. <em>N Engl J Med</em>. 2023.</li>
+            <li>Choi R, Liddell RP. Minimally Invasive Image‑Guided Ablation for Lung Cancer. In: <em>Principles and Practice of Interventional Pulmonology</em>. Springer; 2025.</li>
+            <li>Jeon H, Wang S, Song J, Gill H, Cheng H. Update 2025: Management of Non–Small‑Cell Lung Cancer. <em>Lung</em>. 2025;203:53‑xx.</li>
+            <li>Gillaspie EA. The evolving treatment for early‑stage lung cancer: Immunotherapy. <em>Surgical Oncology Insight</em>. 2025;2:100128.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

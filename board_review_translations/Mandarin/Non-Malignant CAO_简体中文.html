@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>非恶性中央气道阻塞</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>非恶性中央气道阻塞</h1>
+
+<p><strong>考试对应领域与范围：</strong>本章涵盖良性中央气道阻塞（CAO）和呼气性中央气道塌陷（ECAC），包括结构性狭窄（插管/气管切开后、感染后、炎症/免疫介导、特发性、移植相关）、气道内良性肿瘤、外压/扭曲，以及动态性疾病（气管支气管软化［TBM］和过度动态气道塌陷［EDAC］）。重点讨论诊断、稳定化、支气管镜和外科治疗、支架、围术期麻醉/通气、并发症及结局，面向 AABIP/CAQ 考试。</p>
+
+<h3>学习目标</h3>
+<ul>
+    <li>区分非恶性 CAO 的结构性与功能性（动态性）病因，并为各类匹配一线诊断和治疗方式。</li>
+    <li>识别气道急症并制定分步稳定方案，包括何时避免气管切开、何时考虑硬质支气管镜或 ECMO。</li>
+    <li>将良性狭窄分为简单型和复杂型，并实施保留黏膜的放射状切口 + 扩张技术。</li>
+    <li>为良性疾病选择适当的消融/扩张方式和气道支架，并预判器械特异性并发症。</li>
+    <li>为炎症性/感染性狭窄（如 GPA、结核后狭窄）构建整合全身治疗与支气管镜干预的方案。</li>
+    <li>评估和治疗 EDAC/TBM，包括 CPAP 试验、支架试验及气管支气管成形术的适应标准。</li>
+    <li>预判、预防并处理围术期并发症（火灾、出血、气压伤、高碳酸血症、再狭窄、支架相关事件）。</li>
+</ul>
+
+<hr>
+
+<h3>高频考点一页通</h3>
+<ul>
+    <li><strong>定义：</strong>临床显著 CAO 通常指气管、主支气管或中间支气管横截面积减少约 &gt;50%。</li>
+    <li><strong>症状与管径：</strong>管腔低于正常的 25%–50% 时常出现活动性呼吸困难；气管直径约 5 mm 时可出现静息症状/喘鸣。</li>
+    <li><strong>急症优先事项：</strong>不要强行将 ETT 通过紧密狭窄；可将 ETT 停在病灶近端或使用喉罩。条件允许时避免一开始即气管切开。尽早呼叫手术室硬质支气管镜团队。若气道丢失风险很高，考虑 VV-ECMO（或预置插管鞘）。</li>
+    <li><strong>影像：</strong>高分辨率 CT 明确长度、机制和远端通畅；配对吸气末/动态呼气 CT 用于评估 EDAC/TBM。</li>
+    <li><strong>肺功能线索：</strong>吸气和呼气支均变平提示固定阻塞；可变性胸外与胸内阻塞有不同图形；双相曲线可提示主支气管病变；TBM/上气道振动可出现“锯齿”征。</li>
+    <li><strong>简单型与复杂型狭窄：</strong>
+        <ul>
+            <li><strong>简单型：</strong>同心性、膜状、长度 &lt;10 mm、无软化 → 放射状切口 + 轻柔球囊扩张（保留黏膜）。</li>
+            <li><strong>复杂型：</strong>≥10 mm 和/或软骨损伤/软化 → 往往需要支架 ± 手术。</li>
+        </ul>
+    </li>
+    <li><strong>保留黏膜技术：</strong>在纤维瘢痕带作 3 个放射状切口（避开正常黏膜），随后低创伤球囊扩张。</li>
+    <li><strong>良性病变支架：</strong>首选硅酮支架（可移除、可调整）。良性病变避免裸金属自膨式支架（并发症高、取出困难）。</li>
+    <li><strong>结核后左主支气管狭窄：</strong>单纯球囊持久性差，很多患者需要硅酮支架；监测再狭窄、肉芽和移位。</li>
+    <li><strong>炎症性狭窄（如 GPA）：</strong>免疫抑制联合内镜切口/扩张；病灶内激素或丝裂霉素 C（MMC）使用不一；尽量避免支架，以免放大炎症。</li>
+    <li><strong>EDAC/TBM：</strong>先用 CPAP（气动支撑）。短期支架试验（约 2 周）可筛选适合气管支气管成形术（后膜折叠并用网片支撑）或局灶切除的患者。</li>
+    <li><strong>围术期麻醉：</strong>TIVA（丙泊酚）、短效阿片、神经肌肉阻滞（如罗库溴铵）下硬质支气管镜。喷射通气方便但有高碳酸血症/气压伤风险；常规通气对漏气敏感。</li>
+    <li><strong>火灾预防：</strong>激光时 FiO₂ &lt;40%；电凝/APC 时 FiO₂ &lt;30%。</li>
+</ul>
+
+<div class="algorithm-note">
+    <strong>关键陷阱：</strong>过度扩张或不恰当气管切开会延长原本可切除的狭窄，并损害手术机会。
+</div>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p><strong>结构性 CAO 机制：</strong>腔内肿瘤或弥漫黏膜病（如乳头状瘤病、淀粉样变、气管支气管骨软骨病）；外部压迫/扭曲（甲状腺肿、囊肿、淋巴结肿大、血管环/吊带、全肺切除后旋转）；以及瘢痕性狭窄（插管/气管切开后、结核后、GPA、复发性多软骨炎、特发性喉气管狭窄）。</p>
+<p><strong>功能性 CAO（ECAC）：</strong>TBM 为软骨薄弱，EDAC 为后膜向前弓起，两者均在呼气时导致横截面积减少，可引起咳嗽、喘鸣、黏液潴留和反复感染；肺功能往往缺乏特异性。</p>
+
+<h4>适应证与禁忌证</h4>
+<ul>
+    <li><strong>紧急支气管镜：</strong>喘鸣伴窘迫；CAO 导致高碳酸/低氧性呼吸衰竭。</li>
+    <li><strong>治疗性支气管镜：</strong>症状性 CAO、即将气道受损，或作为手术桥接；全身治疗不足时（如结核后瘢痕）也适用。</li>
+    <li><strong>手术：</strong>可切除狭窄的确定性治疗（通常病变长度小于约一半气管，且必须无张力吻合）。评估患者手术耐受性；若病变 ≥40 mm 且仍可能手术，避免会延长病变的术前操作（如大范围激光消融）。</li>
+    <li><strong>相对禁忌证：</strong>未控制的活动性炎症（如 GPA 活动期）不宜手术；良性病变禁用裸金属支架；高 FiO₂ 时禁用激光/APC；喷雾冷冻若无法有效排气则禁用。</li>
+</ul>
+
+<h4>术前评估</h4>
+<ul>
+    <li><strong>病史：</strong>既往插管/气管切开、结核或肉芽肿性疾病、全身自身免疫病、移植、胃食管反流、化学/热损伤。</li>
+    <li><strong>查体/警示：</strong>吸入药无效的新发哮鸣、单音干啰音、喘鸣、反复感染。</li>
+    <li><strong>检查：</strong>HRCT（狭窄长度、机制、远端气道）、动态 CT（EDAC/TBM）、肺功能及流量-容积环；阻塞严重或很可能同时诊治时，规划硬质支气管镜。</li>
+    <li><strong>气道策略：</strong>选择无需强行即可通过的 ETT；不能通过时置于近端或使用喉罩。尽量避免初始气管切开。</li>
+    <li><strong>团队与场所：</strong>手术室内介入肺科、胸外科、耳鼻喉科和麻醉团队；若真正存在气道丢失风险，考虑预防性 VV-ECMO 或备用鞘管。</li>
+</ul>
+
+<h4>设备与准备</h4>
+<ul>
+    <li><strong>内镜：</strong>硬质支气管镜/气管镜套件，配喷射或常规通气；需要时经硬质镜筒使用软性支气管镜。</li>
+    <li><strong>扩张器械：</strong>分级球囊（充盈 30–120 秒，逐级加大）、半硬性扩张棒、硬质镜筒“套管递进”技术。</li>
+    <li><strong>消融器械：</strong>电刀/针、APC、激光；冷冻探头（再通和延迟冷冻治疗）；液氮喷雾冷冻（需开放回路/放空套囊）。</li>
+    <li><strong>支架：</strong>硅酮直管/Y 形/沙漏形；声门下/高位气管可用 Montgomery T 管；外固定缝线可减少移位。</li>
+</ul>
+
+<hr>
+
+<h3>分步技术与操作核对表</h3>
+<ul>
+    <li><strong>确认方案：</strong>紧急或半择期；明确抢救选项和 ECMO 备用。</li>
+    <li><strong>诱导：</strong>TIVA；肌松以利硬质镜；预氧合并将 FiO₂ 调至能量器械安全范围。</li>
+    <li><strong>诊断性通过：</strong>记录病变部位、长度、形态、远端通畅、软化和活动性炎症。</li>
+    <li><strong>简单膜状狭窄（&lt;10 mm、无软化）：</strong>仅在瘢痕带作 3 个放射状切口，再轻柔球囊扩张；避免环周剥离黏膜。</li>
+    <li><strong>复杂狭窄（≥10 mm，伴或不伴软化）：</strong>在纤维化扇区作靶向切口 → 分级扩张；若回缩/炎症持续，测量并置入硅酮支架；高位/声门下可考虑外固定。</li>
+    <li><strong>腔内肿瘤：</strong>机械削切 + 按需冷热消融；预先准备止血方案。</li>
+    <li><strong>弥漫性疾病（气管支气管骨软骨病/淀粉样变）：</strong>无症状时保守；消融时预期出血；淀粉样变可考虑体外放疗。</li>
+    <li><strong>EDAC/TBM：</strong>CPAP 试验；严重者短期支架试验确认症状获益，随后考虑气管支气管成形术（后膜折叠固定于网片）或局灶软化段切除。</li>
+    <li><strong>辅助治疗：</strong>病灶内激素（常为储库型甲泼尼龙多象限注射）和/或 MMC（方案不一，见“争议”）。</li>
+    <li><strong>总结与监测：</strong>记录分类、技术、器械尺寸、FiO₂ 上限和并发症；支架患者规划随访支气管镜（常为 6–12 个月间隔）。</li>
+</ul>
+
+<h4>故障排除与术中处理</h4>
+<ul>
+    <li><strong>低氧/高碳酸：</strong>喷射通气时暂停、手控通气并评估气体潴留/气压伤；常规通气时减少漏气（口咽填塞）、手控通气并暂停操作。</li>
+    <li><strong>气道火灾：</strong>激光 FiO₂ ≤40%，电凝/APC ≤30%；能量脉冲与降氧协调。</li>
+    <li><strong>出血：</strong>硬质镜筒压迫、冰盐水、APC/激光凝固；避免在后膜作深切口。</li>
+    <li><strong>喷雾冷冻后窘迫：</strong>停止喷雾，确认套囊放空/回路开放并允许气体逸出；怀疑气压伤时立即处理。</li>
+    <li><strong>支架问题：</strong>早期移位应重新测量或外固定；肉芽可靶向消融并优化支架贴合；黏液潴留需湿化和气道清除。</li>
+</ul>
+
+<hr>
+
+<h3>术后护理与随访</h3>
+<ul>
+    <li><strong>即刻：</strong>湿化氧疗、气道清除、按需支气管扩张剂；镇痛和控制咳嗽；治疗反流。</li>
+    <li><strong>支架气道：</strong>常规监测性支气管镜（如每 6–12 个月），有症状时提前；预判肉芽、移位和黏液潴留。</li>
+    <li><strong>炎症性病因：</strong>协调全身治疗（GPA/复发性多软骨炎免疫抑制；结核/真菌抗感染）。</li>
+    <li><strong>手术转诊：</strong>可切除狭窄应尽早；若可手术，避免延长病变的干预。</li>
+</ul>
+
+<h3>并发症：预防、识别与处理</h3>
+<ul>
+    <li><strong>激光/电凝火灾：</strong>严格 FiO₂ 限制、短脉冲、吸除烟雾；发生后立即灭火和冷却。</li>
+    <li><strong>气压伤（喷射通气、喷雾冷冻）：</strong>监测呼气末 CO₂ 和胸廓顺应性；停止诱因、减压并处理气胸/纵隔气肿。</li>
+    <li><strong>出血（肿瘤/淀粉样变/支气管结石）：</strong>压迫、凝固，必要时输血。</li>
+    <li><strong>支架相关：</strong>肉芽、黏液潴留、移位；金属支架取出可导致残留碎片、黏膜撕裂、张力性气胸，因此仅在特定情形和有经验中心使用。</li>
+    <li><strong>再狭窄：</strong>重复保留黏膜的扩张；依据表型升级至支架或手术。</li>
+    <li><strong>术后吻合口问题：</strong>采用减张策略；激素会增加裂开风险；早期识别至关重要。</li>
+</ul>
+
+<h3>特殊人群</h3>
+<ul>
+    <li><strong>结核后狭窄：</strong>常累及左主支气管；单纯球囊通常不持久，常需硅酮支架；监测再狭窄/肉芽/移位；按需抗真菌或抗结核。</li>
+    <li><strong>GPA：</strong>免疫抑制联合放射状切口/扩张；可用病灶内激素 ± MMC；尽量避免支架。</li>
+    <li><strong>复发性多软骨炎：</strong>常弥漫受累；先药物治疗；弥漫 TBM 用 CPAP；选择性局灶扩张/支架；难治性声门下病变可气管切开。</li>
+    <li><strong>特发性声门下狭窄：</strong>多见于中年女性，常为 20–30 mm 长段；简单病变内镜疗效可持久；复杂或接近声门者考虑手术；不能手术时可用 T 管或外固定硅酮支架。</li>
+    <li><strong>肺移植吻合口狭窄：</strong>多因素所致，需个体化多模式处理。</li>
+    <li><strong>外压（甲状腺肿、囊肿、血管）：</strong>尽可能外科纠正；解除压迫后需警惕软化。</li>
+</ul>
+
+<h3>证据与结局（节选）</h3>
+<ul>
+    <li>保留黏膜的 Nd:YAG 切口 + 轻柔扩张可改善简单声门下/气管膜状狭窄。</li>
+    <li>球囊扩张可增加管径，但常需重复；30–120 秒较长充盈及逐级增大是常用做法。</li>
+    <li>硅酮支架可维持许多良性狭窄的通畅；良性疾病使用裸金属支架并发症和取出风险高，一般不推荐。</li>
+    <li>治疗性支气管镜可改善选定 CAO 患者的肺功能、症状和生存。</li>
+    <li>EDAC/TBM 中 CPAP 常缓解症状；短期支架试验有助于筛选气管支气管成形术获益者，该术可改善生活质量和功能状态。</li>
+</ul>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——疑似非恶性 CAO 的稳定与初始评估</h4>
+<div class="mermaid">
+flowchart TD
+    A["疑似 CAO"] --> B{"呼吸窘迫/喘鸣或呼吸衰竭？"}
+    B -- "是" --> C["转手术室，由介入肺科/耳鼻喉/胸外科/麻醉协作"]
+    C --> D["考虑 VV-ECMO 备用或启动"]
+    D --> E["TIVA 下硬质支气管镜"]
+    B -- "否" --> F["胸部 CT ± 动态呼气/吸气 CT"]
+    F --> G["肺功能（流量-容积环）"]
+    G --> H["规划支气管镜评估（严重者用硬质镜）"]
+    E --> I["明确病变部位/长度/类型/软化"]
+    H --> I
+    I --> J{"结构性还是功能性"}
+    J -- "结构性" --> K["见算法 2"]
+    J -- "功能性（EDAC/TBM）" --> L["见算法 3"]
+</div>
+<div class="algorithm-note">
+    <strong>路径说明：</strong>
+    <ul>
+        <li>评估严重度（窘迫/喘鸣及气体交换）。</li>
+        <li>不要强行通过 ETT；可将 ETT 置于病灶近端或使用喉罩；条件允许时避免初始气管切开。</li>
+        <li>在手术室准备硬质支气管镜；气道丢失风险高时考虑 ECMO。</li>
+        <li>使用 CT/动态 CT 和流量-容积环；最终通过支气管镜表征病变。</li>
+        <li>分流为结构性（腔内、外压、瘢痕）或功能性（EDAC/TBM）。</li>
+    </ul>
+</div>
+
+<h4>算法 2——结构性良性 CAO（瘢痕/肿瘤/外压）</h4>
+<div class="mermaid">
+flowchart TD
+    A["结构性 CAO"] --> B{"腔内肿块？"}
+    B -- "是" --> C["机械削切 ± 激光/APC/冷冻；准备止血"]
+    B -- "否" --> D{"外压/扭曲？"}
+    D -- "是" --> E["处理病因（甲状腺/囊肿/血管/纵隔）；考虑外科纠正；警惕减压后软化"]
+    D -- "否" --> F["狭窄/瘢痕"]
+    F --> G{"简单型（<10 mm、膜状、无软化）？"}
+    G -- "是" --> H["在瘢痕带作 3 个放射状切口 → 轻柔球囊扩张"]
+    G -- "否" --> I["纤维化扇区靶向切口 → 分级扩张 → 回缩/软化时硅酮支架"]
+    I --> J["高位气管/声门下考虑外固定"]
+    H --> K["观察；稳定时避免支架"]
+    K --> L["复发？→ 再扩张或支架；评估手术"]
+    J --> M["稳定后多学科讨论手术"]
+</div>
+<div class="algorithm-note">
+    <strong>路径说明：</strong>
+    <ul>
+        <li><strong>肿块：</strong>机械 + 能量消融；必要时分期；预防气道火灾。</li>
+        <li><strong>外压：</strong>尽可能纠正基础病因；无血管威胁且症状严重时选择性支架。</li>
+        <li><strong>简单狭窄：</strong>保留黏膜的放射状切口 + 轻柔球囊；通常无需支架。</li>
+        <li><strong>复杂狭窄：</strong>靶向切口 + 分级扩张 → 硅酮支架；规划最终取出或手术。</li>
+        <li><strong>手术：</strong>适合者尽早外科会诊；避免医源性延长病变。</li>
+    </ul>
+</div>
+
+<h4>算法 3——EDAC/TBM</h4>
+<div class="mermaid">
+flowchart TD
+    A["动态 CT/支气管镜证实 EDAC/TBM"] --> B["优化合并症（COPD/哮喘/GERD/肥胖）"]
+    B --> C["夜间/间歇 CPAP/BiPAP 试验"]
+    C --> D{"仍有致残性症状？"}
+    D -- "否" --> E["继续药物治疗与随访"]
+    D -- "是" --> F["靶段短期支架试验（约 2 周）"]
+    F --> G{"症状改善？"}
+    G -- "是" --> H["弥漫病变考虑气管支气管成形术；局灶软化考虑切除"]
+    G -- "否" --> I["重新评估诊断；替代治疗（气道清除、康复）"]
+</div>
+<div class="algorithm-note">
+    <strong>路径说明：</strong>
+    <ul>
+        <li>治疗合并气道疾病和反流；进行肺康复。</li>
+        <li>CPAP 作为气动支撑。</li>
+        <li>支架试验用于筛选，不作为长期治疗。</li>
+        <li>弥漫 TBM 且支架试验有反应者考虑气管支气管成形术；局灶病变考虑切除。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<h4>表 1. 结构性与功能性非恶性 CAO：机制、示例与一线治疗</h4>
+<table>
+    <thead><tr><th>类别</th><th>机制</th><th>典型示例</th><th>一线治疗</th></tr></thead>
+    <tbody>
+        <tr><td>结构性—腔内</td><td>气道内病变</td><td>错构瘤、脂肪瘤、乳头状瘤病、淀粉样结节</td><td>机械减瘤 ± 激光/APC/冷冻；可分期</td></tr>
+        <tr><td>结构性—外压</td><td>外部压迫/成角</td><td>甲状腺肿、纵隔囊肿、淋巴结肿大、血管吊带、全肺切除后旋转</td><td>可行时外科纠正；选择性支架</td></tr>
+        <tr><td>结构性—瘢痕</td><td>纤维性瘢痕 ± 软骨损伤</td><td>插管/气管切开后、结核后、GPA、复发性多软骨炎、特发性声门下狭窄</td><td>简单型：放射状切口 + 球囊；复杂型：扩张 + 硅酮支架 ± 手术</td></tr>
+        <tr><td>功能性—EDAC/TBM</td><td>呼气塌陷；后膜弓起或软骨薄弱</td><td>COPD/哮喘/肥胖相关 EDAC；复发性多软骨炎、Mounier-Kuhn 相关 TBM</td><td>CPAP → 短期支架试验 → 考虑气管支气管成形术</td></tr>
+    </tbody>
+</table>
+
+<h4>表 2. 简单型与复杂型良性狭窄——特征与方案</h4>
+<table>
+    <thead><tr><th>特征</th><th>简单型</th><th>复杂型</th></tr></thead>
+    <tbody>
+        <tr><td>形态/长度</td><td>同心、膜状；&lt;10 mm</td><td>≥10 mm，偏心/三角/沙漏形；可伴软化</td></tr>
+        <tr><td>一线</td><td>瘢痕带 3 个放射状切口 → 轻柔球囊</td><td>靶向切口 → 分级扩张 → 硅酮支架</td></tr>
+        <tr><td>支架需求</td><td>少见</td><td>常见（高位/声门下考虑外固定）</td></tr>
+        <tr><td>手术</td><td>通常不需要</td><td>稳定后考虑；避免延长病变</td></tr>
+    </tbody>
+</table>
+
+<h4>表 3. 支气管镜方式——实用设置与陷阱</h4>
+<table>
+    <thead><tr><th>方式</th><th>典型用途</th><th>要点</th><th>主要风险</th></tr></thead>
+    <tbody>
+        <tr><td>球囊扩张</td><td>膜状狭窄/瘢痕</td><td>充盈 30–120 秒；逐级加大；阻力高时停止</td><td>黏膜裂伤、破裂、气压伤</td></tr>
+        <tr><td>电凝</td><td>扩张前放射状切口</td><td>FiO₂ ≤30%；接触技术</td><td>火灾、穿孔、出血</td></tr>
+        <tr><td>激光（Nd:YAG/KTP/CO₂/二极管）</td><td>放射状切口、肿瘤减瘤</td><td>FiO₂ ≤40%；短脉冲；吸除烟雾</td><td>火灾、空气栓塞、穿孔</td></tr>
+        <tr><td>APC</td><td>凝固/止血；肉芽组织</td><td>浅表效应；非接触</td><td>火灾、气道干燥、深度有限</td></tr>
+        <tr><td>冷冻探头</td><td>再通；延迟冷冻治疗</td><td>冻融；后续清除坏死组织</td><td>出血、支气管痉挛</td></tr>
+        <tr><td>液氮喷雾冷冻</td><td>非接触大面积消融</td><td>开放回路/放空套囊以排气</td><td>气压伤、气胸</td></tr>
+    </tbody>
+</table>
+
+<h4>表 4. 良性疾病中的支架——必知要点</h4>
+<table>
+    <thead><tr><th>支架</th><th>最佳用途</th><th>优势</th><th>缺点/并发症</th></tr></thead>
+    <tbody>
+        <tr><td>硅酮（直管/Y 形/沙漏形）</td><td>复杂瘢痕、软化；需要可逆治疗</td><td>可移除、可重新定位、可定制</td><td>肉芽、黏液潴留、移位；需硬质镜置入</td></tr>
+        <tr><td>Montgomery T 管</td><td>声门下/高位气管；不能手术</td><td>防止向尾侧移位；支臂可定制</td><td>声音改变、护理要求高；远端支臂过长可肉芽</td></tr>
+        <tr><td>裸金属自膨支架</td><td>良性病变应避免</td><td>置入方便</td><td>嵌入、断裂、侵蚀、取出困难；取出并发症严重</td></tr>
+        <tr><td>覆膜金属/混合支架</td><td>仅特定情形</td><td>内径较大</td><td>仍有取出风险；仅由专家用于桥接或特殊解剖</td></tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>影像与图示提示</h3>
+<ul>
+    <li><strong>图 1. 动态呼气 CT 显示气管塌陷 &gt;70%。</strong>［替代文字：轴位图显示用力呼气时气道呈新月形，符合 EDAC/TBM。］</li>
+    <li><strong>图 2. 固定性与可变性阻塞的流量-容积环。</strong>［替代文字：三条曲线显示吸气/呼气平台，用于区分固定、胸内可变和胸外可变阻塞。］</li>
+    <li><strong>图 3. 简单声门下膜状狭窄在放射状切口 + 球囊扩张前后。</strong>［替代文字：内镜图显示保留黏膜的切口以及扩张后管腔恢复。］</li>
+</ul>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <strong>病例 1。</strong>46 岁女性进行性呼吸困难，声门下同心性膜状狭窄长 8 mm，无软化。下一步最佳处理？
+    <br>
+    A. 整块环周切除<br>
+    B. 放射状电凝切口 + 轻柔球囊扩张<br>
+    C. 置入裸金属支架<br>
+    D. 立即气管切开<br>
+    E. 单用大剂量全身激素
+    <br><br>
+    <strong>最佳答案：B。</strong>简单膜状狭窄（&lt;10 mm、无软化）最适合在瘢痕带作保留黏膜的放射状切口后轻柔球囊扩张。环周剥离会增加瘢痕；裸金属支架禁忌；气管切开可延长病变；激素不能重塑致密瘢痕。
+</div>
+
+<div class="case-study">
+    <strong>病例 2。</strong>38 岁男性长期机械通气后出现喘鸣。CT 显示上段气管 2.5 cm 狭窄，管腔呈三角形（A 形），伴软骨骨折。靶向切口和扩张后仍明显回缩。现在最佳器械？
+    <br>
+    A. 外固定硅酮支架<br>
+    B. 裸金属自膨支架<br>
+    C. 覆膜金属支架<br>
+    D. 近端支臂抵近声带的 Montgomery T 管<br>
+    E. 不置入器械，仅重复球囊
+    <br><br>
+    <strong>最佳答案：A。</strong>伴软骨损伤的复杂狭窄常需硅酮支架；高位气管位置适合外固定。裸金属支架不合适；覆膜/混合支架非一线；位置不当的 T 管会损伤声门下区。
+</div>
+
+<div class="case-study">
+    <strong>病例 3。</strong>62 岁患者咳嗽、喘鸣并反复感染，动态 CT 显示用力呼气时气管和双侧主支气管塌陷 &gt;80%，支气管镜证实 TBM。CPAP 有帮助但症状仍持续。短期支架试验的作用是什么？
+    <br>
+    A. 永久支架长期治疗<br>
+    B. 无指征，直接手术<br>
+    C. 短期验证症状是否改善，以筛选气管支气管成形术候选者<br>
+    D. 因感染风险禁忌<br>
+    E. 用全身激素替代 CPAP
+    <br><br>
+    <strong>最佳答案：C。</strong>约 2 周的短期支架试验用于筛选气管支气管成形术获益者；尽量避免长期支架。
+</div>
+
+<hr>
+
+<h3>题库（选择题）</h3>
+<ol>
+    <li><strong>35 岁既往健康患者创伤后远端左主支气管狭窄，肺功能最可能显示哪种流量-容积环？</strong>
+        <br>A. 固定性胸外阻塞
+        <br>B. 可变性胸内阻塞
+        <br>C. 可变性胸外阻塞
+        <br>D. 双相呼气流量图形
+        <br>E. 正常
+        <br><strong>答案：D。</strong>主支气管腔内病变经典可见双相图形；固定/可变图形提示其他部位和生理机制。
+    </li>
+    <li><strong>硬质支气管镜处理紧密气管膜状狭窄，拟用激光作放射状切口。哪种氧策略可降低气道火灾？</strong>
+        <br>A. FiO₂ 100%
+        <br>B. FiO₂ 80%，短脉冲
+        <br>C. FiO₂ ≤40%，短脉冲并持续吸引
+        <br>D. FiO₂ 60%，因为激光非接触
+        <br>E. 喷射通气时 FiO₂ 无关紧要
+        <br><strong>答案：C。</strong>激光需低 FiO₂（≤约 40%）、短脉冲和吸引；高 FiO₂ 显著增加火灾风险。
+    </li>
+    <li><strong>下一步最佳处理：54 岁患者喘鸣，急诊怀疑声门下狭窄，轻度窘迫，ETT 无法通过病灶。</strong>
+        <br>A. 强行推过 ETT
+        <br>B. 将 ETT 置于病灶近端或使用喉罩，尽快转手术室硬质支气管镜
+        <br>C. 立即气管切开
+        <br>D. 雾化支气管扩张剂后出院
+        <br>E. 床旁清醒软性支气管镜
+        <br><strong>答案：B。</strong>强行通过可导致出血/完全阻塞；条件允许时避免初始气管切开；在手术室进行确定性评估和治疗。
+    </li>
+    <li><strong>术中故障排除：喷射通气期间呼气末 CO₂ 升高、胸廓过度充气。</strong>
+        <br>A. 增加喷射频率
+        <br>B. 停止喷射、允许呼气；考虑手控通气并评估气压伤
+        <br>C. 提高 FiO₂
+        <br>D. 加快操作完成
+        <br>E. 改用 APC
+        <br><strong>答案：B。</strong>高碳酸和气体潴留是喷射通气风险；应暂停并减压以防气压伤。
+    </li>
+    <li><strong>同心性、长 6 mm、无软化的简单气管膜状狭窄，哪种技术再狭窄风险最低？</strong>
+        <br>A. 单纯最大压力球囊扩张
+        <br>B. 3 个保留黏膜的放射状切口 → 轻柔球囊扩张
+        <br>C. 整块环周黏膜剥离
+        <br>D. 裸金属支架
+        <br>E. 大剂量全身激素 2 周
+        <br><strong>答案：B。</strong>仅切开瘢痕带后轻柔球囊扩张，可保留黏膜并提高持久性。
+    </li>
+    <li><strong>下一步最佳处理：复杂气管切开后狭窄（2.2 cm、软骨骨折）在球囊后复发。</strong>
+        <br>A. 无限期每周球囊
+        <br>B. 硅酮支架并规划随访；高位时考虑外固定
+        <br>C. 裸金属支架以获得更大扩张力
+        <br>D. 不再干预，接受呼吸困难
+        <br>E. 在急诊立即确定性切除
+        <br><strong>答案：B。</strong>复杂病变常需硅酮支架；良性病变禁用裸金属支架。
+    </li>
+    <li><strong>特殊人群：GPA 相关声门下狭窄，最合适的策略是：</strong>
+        <br>A. 裸金属支架
+        <br>B. 免疫抑制 + 内镜放射状切口/扩张 ± 病灶内激素/MMC
+        <br>C. 首先手术
+        <br>D. 单纯观察
+        <br>E. 仅控制反流
+        <br><strong>答案：B。</strong>治疗全身炎症并采取保留黏膜的内镜方式；尽可能避免支架。
+    </li>
+    <li><strong>并发症意识：取出金属气道支架的已知风险包括：</strong>
+        <br>A. 支架在透视下消失
+        <br>B. 残留碎片、黏膜撕裂、需再次支架的再狭窄、张力性气胸
+        <br>C. 低钙血症
+        <br>D. 常规永久声带麻痹
+        <br>E. 无风险，取出始终简单
+        <br><strong>答案：B。</strong>良性气道中取出金属支架风险高，因此总体应避免使用。
+    </li>
+    <li><strong>能量器械安全：气道内电凝时 FiO₂ 约应设为：</strong>
+        <br>A. 90%
+        <br>B. 60%
+        <br>C. ≤30%
+        <br>D. 任何水平都安全
+        <br>E. 0%
+        <br><strong>答案：C。</strong>电凝/APC 时 FiO₂ 应尽可能低（常 ≤30%），降低火灾风险。
+    </li>
+    <li><strong>EDAC/TBM：优化药物治疗和 CPAP 后仍有症状，短期支架试验的目的是什么？</strong>
+        <br>A. 作为软化的长期治疗
+        <br>B. 预测气管支气管成形术反应
+        <br>C. 评估咳嗽反射
+        <br>D. 替代手术
+        <br>E. 诊断 GERD
+        <br><strong>答案：B。</strong>1–2 周试验有助于筛选手术候选者。
+    </li>
+    <li><strong>关于丝裂霉素 C 的实践差异，哪项正确？</strong>
+        <br>A. MMC 在气道绝对禁忌
+        <br>B. 报道的局部方案不同（如 0.4 mg/mL 作用约 4 分钟；有些用 2 mg/5 mL 纱片），可能减少瘢痕增生
+        <br>C. 只有黏膜下注射有效
+        <br>D. 一定能防止再狭窄
+        <br>E. 可替代机械扩张
+        <br><strong>答案：B。</strong>不同中心剂量和时间不一；MMC 是辅助而非替代治疗。
+    </li>
+    <li><strong>结核后左主支气管狭窄的结局最符合哪项？</strong>
+        <br>A. 单纯球囊很少持久，很多患者需要硅酮支架
+        <br>B. 裸金属支架长期效果最佳
+        <br>C. 手术始终为一线
+        <br>D. 只需抗真菌药
+        <br>E. 最常见机制是 EDAC
+        <br><strong>答案：A。</strong>单纯扩张持久性差；硅酮支架可维持许多患者管腔，但需预期支架相关事件。
+    </li>
+</ol>
+
+<hr>
+
+<h3>争议、实践差异与新兴证据</h3>
+<ul>
+    <li><strong>MMC 剂量与用法：</strong>方案差异很大，从局部 0.4 mg/mL 作用约 4 分钟（总量约 0.4 mg），到 2 mg/5 mL 纱片应用，也有经 TBNA 注射。证据提示可能减少瘢痕增生，但最佳剂量和时间尚未确定。</li>
+    <li><strong>良性病变中的金属支架：</strong>2005 年警示不建议在良性气道使用裸金属支架。一些中心在桥接或特殊解剖中选择性使用覆膜/混合支架，但可移除性和晚期并发症仍是问题。</li>
+    <li><strong>动态塌陷阈值：</strong>许多系列以呼气横截面积减少 &gt;50% 定义软化；有些项目以 &gt;70%–90% 作为严重度和手术考虑阈值。肺功能缺乏特异性，不能可靠量化 ECAC 负荷。</li>
+    <li><strong>通气策略：</strong>喷射与常规通气因中心而异；在高碳酸/气压伤风险与漏气敏感性之间权衡。</li>
+    <li><strong>喷雾冷冻：</strong>在瘢痕重塑和保留黏膜方面应用增加，但必须保证气体排出，避免气压伤。</li>
+</ul>
+
+<h3>要点核对表</h3>
+<ul>
+    <li>明确结构性还是功能性机制，并治疗病因。</li>
+    <li>不要强行让 ETT 通过紧密狭窄；若即将形成确定性方案，避免反射性气管切开。</li>
+    <li>严重 CAO 最安全的平台是手术室硬质支气管镜。</li>
+    <li>激光时 FiO₂ ≤40%，电凝/APC 时 ≤30%，防止气道火灾。</li>
+    <li>简单膜状狭窄（&lt;10 mm）：放射状切口 + 轻柔球囊，保留黏膜。</li>
+    <li>复杂狭窄（≥10 mm/伴软化）：靶向切口 → 分级扩张 → 硅酮支架（高位/声门下外固定）。</li>
+    <li>良性病变避免裸金属自膨支架。</li>
+    <li>内镜治疗应与全身治疗配合（如 GPA 免疫抑制、结核抗菌治疗）。</li>
+    <li>EDAC/TBM：优化合并症 → CPAP → 短期支架试验 → 有反应者气管支气管成形术。</li>
+    <li>支架气道需监测，并预期肉芽、移位和黏液潴留。</li>
+    <li>尽早多学科协作，尤其可能通过手术获得确定性治疗时。</li>
+</ul>
+
+<hr>
+
+<h3>缩略语与术语</h3>
+<div class="abbreviations">
+    <dl>
+        <dt>APC</dt><dd>氩等离子凝固</dd>
+        <dt>CAO</dt><dd>中央气道阻塞</dd>
+        <dt>CPAP/BiPAP</dt><dd>持续/双水平气道正压</dd>
+        <dt>CSA</dt><dd>横截面积</dd>
+        <dt>ECAC</dt><dd>过度中央气道塌陷（总称）</dd>
+        <dt>EDAC</dt><dd>过度动态气道塌陷（后膜弓起）</dd>
+        <dt>ETT</dt><dd>气管插管</dd>
+        <dt>GPA</dt><dd>肉芽肿性多血管炎</dd>
+        <dt>LMA</dt><dd>喉罩气道</dd>
+        <dt>MMC</dt><dd>丝裂霉素 C</dd>
+        <dt>PTTS/PITS</dt><dd>气管切开后/插管后气管狭窄</dd>
+        <dt>RP</dt><dd>复发性多软骨炎</dd>
+        <dt>SEMS</dt><dd>自膨式金属支架</dd>
+        <dt>TBM</dt><dd>气管支气管软化</dd>
+        <dt>TIVA</dt><dd>全静脉麻醉</dd>
+        <dt>VV-ECMO</dt><dd>静脉-静脉体外膜氧合</dd>
+    </dl>
+</div>
+
+<div class="references"><h3>参考文献</h3>
+<ol>
+<li>Brouns M, Jayaraju ST, Lacor C, et al. Tracheal stenosis: a flow dynamics study. J Appl Physiol. 2007;102(3):1178-1184.</li>
+<li>Galway U, Zura A, Wang M, et al. Anesthetic considerations for rigid bronchoscopy: a narrative educational review. Trends Anaesth Crit Care. 2022;43:38-45.</li>
+<li>Maxwell C, Forrest P. The role of ECMO support in airway procedures. BJA Educ. 2023;23(7):248-255.</li>
+<li>Lee KS, Sun MRM, Ernst A, Feller-Kopman D, Majid P, Boiselle PM. Comparison of dynamic expiratory CT with bronchoscopy for diagnosing airway malacia. Chest. 2007;131(3):758-764.</li>
+<li>Majid A, Gaurav K, Sanchez JM, et al. Evaluation of tracheobronchomalacia by dynamic flexible bronchoscopy. Ann Am Thorac Soc. 2014;11(6):951-955.</li>
+<li>Freitag L, Ernst A, Unger M, Kovitz K, Marquette CH. A proposed classification system of central airway stenosis. Eur Respir J. 2007;30(1):7-12.</li>
+<li>Mehta AC, Lee FY, Cordasco EM, et al. Concentric tracheal and subglottic stenosis: mucosa-sparing Nd:YAG laser followed by gentle dilatation. Chest. 1993;104(3):673-677.</li>
+<li>Carlin BW, Harrell JH II, Moser KM. Treatment of endobronchial stenosis using balloon catheter dilatation. Chest. 1988;93(6):1148-1151.</li>
+<li>Martinez-Ballarin JI, Diaz-Jimenez JP, Castro MJ, Moya JA. Silicone stents in the management of benign tracheobronchial stenoses. Chest. 1996;109(3):626-629.</li>
+<li>Lunn W, Feller-Kopman D, Wahidi M, et al. Endoscopic removal of metallic airway stents. Chest. 2005;127(6):2106-2112.</li>
+<li>U.S. Food and Drug Administration. Public Health Notification: Complications from Metallic Tracheal Stents in Patients with Benign Airway Disorders. 2005.</li>
+<li>Shin B, Kim K, Jeong BH, et al. Differentiating post-intubation and post-tracheostomy tracheal stenosis. Respirology. 2017;22(3):513-520.</li>
+<li>Grillo HC, Mark EJ, Mathisen DJ, Wain JC. Idiopathic laryngotracheal stenosis and its management. Ann Thorac Surg. 1993;56(1):80-87.</li>
+<li>Kim H. Rigid bronchoscopy for post-tuberculosis tracheobronchial stenosis. Tuberc Respir Dis (Seoul). 2023;86(4):245-250.</li>
+<li>Hoffman GS, Thomas-Golbanov CK, Chan J, Akst LM, Eliachar I. Treatment of subglottic stenosis due to Wegener’s granulomatosis with intralesional corticosteroids and dilation. J Rheumatol. 2003;30(5):1017-1021.</li>
+<li>Madan K, Agarwal R, Aggarwal AN, Gupta D. Rigid dilatation and mitomycin C in post-intubation tracheal stenosis: systematic review. J Bronchol Interv Pulmonol. 2012;19(4):304-310.</li>
+<li>Ernst A, Rafeq S, Boiselle P, et al. Relapsing polychondritis and airway involvement. Chest. 2009;135(4):1024-1030.</li>
+<li>Nienhuis DM, Prakash UB, Edell ES. Tracheobronchopathia osteochondroplastica. Ann Otol Rhinol Laryngol. 1990;99(9 Pt 1):689-694.</li>
+<li>Utz JP, Swensen SJ, Gertz MA. Pulmonary amyloidosis: Mayo Clinic experience 1980–1993. Ann Intern Med. 1996;124(4):407-413.</li>
+<li>Finley DJ, Dunning J, Sarkar SA, et al. Airway spray cryotherapy: initial outcomes from a multi-institutional registry. Ann Thorac Surg. 2012;94(1):199-203.</li>
+<li>Mahmood K, Wahidi MM, Thomas S, et al. Therapeutic bronchoscopy improves spirometry, quality of life, and survival in central airway obstruction. Respiration. 2015;89(5):404-413.</li>
+<li>Buitrago DH, Wilson JL, Parikh M, Majid A, Gangadharan SP. Severe adult tracheobronchomalacia: evaluation and treatment. J Thorac Dis. 2017;9(1):E57-E66.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

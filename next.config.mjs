@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import { withContentlayer } from 'next-contentlayer2'
+import createNextIntlPlugin from 'next-intl/plugin'
 
 const csp = [
   "default-src 'self'",
@@ -370,4 +371,6 @@ const nextConfig = {
   },
 }
 
-export default withContentlayer(nextConfig)
+const withNextIntl = createNextIntlPlugin()
+
+export default withNextIntl(withContentlayer(nextConfig))

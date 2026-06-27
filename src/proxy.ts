@@ -14,13 +14,42 @@ import {
   type SiteEntitlement,
 } from '@/lib/site-auth/access'
 import {
+  defaultLocale,
+  getLocaleFromAcceptLanguage,
+  isActiveLocale,
+  localeCookieName,
+} from '@/i18n/locale'
+import { localizePath, pathShouldBypassLocaleRedirect, stripLocalePrefix } from '@/i18n/path'
+import {
   hasValidLocalDevAuthCookie,
   LOCAL_DEV_AUTH_COOKIE_NAME,
 } from '@/lib/site-auth/local-dev-auth'
 
 export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
-  const pathname = req.nextUrl.pathname
+  const originalPathname = req.nextUrl.pathname
+  const localePath = stripLocalePrefix(originalPathname)
+  const locale = localePath.locale
+  const pathname = localePath.pathname
+  const localizedPathname = locale ? originalPathname : pathname
+
+  if (!locale && !pathShouldBypassLocaleRedirect(originalPathname)) {
+    const requestedLocale = req.cookies.get(localeCookieName)?.value
+    const nextLocale = isActiveLocale(requestedLocale)
+      ? requestedLocale
+      : getLocaleFromAcceptLanguage(req.headers.get('accept-language'))
+    const redirectUrl = req.nextUrl.clone()
+    redirectUrl.pathname = localizePath(originalPathname, nextLocale)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  if (locale) {
+    res.cookies.set(localeCookieName, locale, {
+      maxAge: 60 * 60 * 24 * 365,
+      path: '/',
+      sameSite: 'lax',
+    })
+  }
 
   if (process.env.NODE_ENV === 'production' && isCtAlignmentSandboxPath(pathname)) {
     return new NextResponse(null, { status: 404 })
@@ -77,8 +106,11 @@ export async function proxy(req: NextRequest) {
   }
 
   if (userError || !user) {
-    const redirectUrl = new URL('/login', req.url)
-    redirectUrl.searchParams.set('next', resolveLoginRedirectPath(pathname, req.nextUrl.search))
+    const redirectUrl = new URL(localizePath('/login', locale ?? defaultLocale), req.url)
+    redirectUrl.searchParams.set(
+      'next',
+      resolveLoginRedirectPath(localizedPathname, req.nextUrl.search),
+    )
     return redirectWithCookies(redirectUrl)
   }
 
@@ -88,7 +120,7 @@ export async function proxy(req: NextRequest) {
     (await hasApprovedLegacyEbusAccess(user.id))
 
   if (!user.email_confirmed_at && !hasLegacyEbusAccess) {
-    const redirectUrl = new URL('/verify-email', req.url)
+    const redirectUrl = new URL(localizePath('/verify-email', locale ?? defaultLocale), req.url)
     return redirectWithCookies(redirectUrl)
   }
 
@@ -97,7 +129,7 @@ export async function proxy(req: NextRequest) {
       (await hasActiveSiteEntitlement(requiredEntitlement, user.id)) || hasLegacyEbusAccess
 
     if (!hasAccess) {
-      const redirectUrl = new URL('/dashboard', req.url)
+      const redirectUrl = new URL(localizePath('/dashboard', locale ?? defaultLocale), req.url)
       redirectUrl.searchParams.set('required', requiredEntitlement)
       return redirectWithCookies(redirectUrl)
     }
@@ -113,9 +145,12 @@ export async function proxy(req: NextRequest) {
       .maybeSingle()
 
     if (!profile?.onboarding_completed_at) {
-      const redirectUrl = new URL('/signup', req.url)
+      const redirectUrl = new URL(localizePath('/signup', locale ?? defaultLocale), req.url)
       redirectUrl.searchParams.set('mode', 'complete')
-      redirectUrl.searchParams.set('next', resolveLoginRedirectPath(pathname, req.nextUrl.search))
+      redirectUrl.searchParams.set(
+        'next',
+        resolveLoginRedirectPath(localizedPathname, req.nextUrl.search),
+      )
       return redirectWithCookies(redirectUrl)
     }
   }

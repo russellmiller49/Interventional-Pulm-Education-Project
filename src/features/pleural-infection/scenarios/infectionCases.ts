@@ -2,6 +2,8 @@ import type { ParapneumonicInput } from '../engine/staging'
 
 export interface InfectionCase {
   id: string
+  /** English case title (kept for tests/non-UI use). The UI renders the
+   * localized title via messages `pleuralInfection.workflow.cases.<id>` keyed by id. */
   title: string
   input: ParapneumonicInput
   anticoagulated: boolean

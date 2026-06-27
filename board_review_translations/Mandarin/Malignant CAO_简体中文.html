@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恶性中央气道阻塞的处理</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>恶性中央气道阻塞的处理</h1>
+
+<h3>考试对应领域与范围</h3>
+<p>本章涵盖恶性中央气道阻塞（MCAO）的诊断和支气管镜治疗。MCAO 定义为气管、主支气管、中间支气管或叶支气管管腔狭窄 ≥50%。内容对应 AABIP/AATS/ACCP 关于治疗性支气管镜（硬质/软性）、消融方式（热与非热）、气道支架、镇静与通气策略、并发症预防和处理、围术期决策，以及与放疗、全身治疗和外科手术的多学科整合等领域。</p>
+
+<h3>学习目标</h3>
+<p>完成本章后，读者应能够：</p>
+<ul>
+    <li>识别提示 MCAO 需要紧急或加速干预的临床和影像特征。</li>
+    <li>将阻塞分为腔内型、外压型或混合型，并据此选择一线支气管镜方式。</li>
+    <li>规划安全麻醉和通气（包括 FiO₂ 目标），并准备以硬质支气管镜为平台的多模式治疗设备。</li>
+    <li>执行“减瘤—止血—再通”的分步流程，并判断何时置入支架。</li>
+    <li>预判、预防并处理术中和术后并发症，包括气道火灾、出血、支架移位和感染。</li>
+    <li>将支气管镜治疗与体外放疗、全身治疗和外科手术整合，同时降低联合治疗风险。</li>
+    <li>运用技术成功率、生活质量和生存等证据进行患者选择与沟通。</li>
+</ul>
+
+<hr>
+
+<h3>高频考点一页通（要点、陷阱与考题误区）</h3>
+<div class="algorithm-note">
+    <ul>
+        <li><strong>定义很重要：</strong>MCAO 为管腔受损 ≥50%；症状往往在超过该阈值后才明显。</li>
+        <li><strong>紧急信号：</strong>喘鸣提示气管腔已危重性狭窄，应按时间敏感的气道急症处理。</li>
+        <li><strong>先分类：</strong>腔内型、外压型或混合型；分类决定器械选择。</li>
+        <li><strong>最佳初始平台：</strong>大多数治疗病例首选全麻下硬质支气管镜，可控制气道、提供大口径吸引并容纳多种器械。</li>
+        <li><strong>FiO₂ 纪律：</strong>使用热能器械时保持 FiO₂ ≤0.40，降低气道火灾风险。</li>
+        <li><strong>消融—切除循环：</strong>凝固（激光/APC/电凝）→ 机械去除（活检钳、微型切割器、硬质镜削切、冷冻取出）→ 复评 → 重复至恢复通畅。</li>
+        <li><strong>支架选择：</strong>外压型或混合型减瘤后仍有残余狭窄时使用支架。隆突病变用硅酮 Y 形支架；主支气管/中间支气管可用覆膜金属/混合支架或硅酮直管。</li>
+        <li><strong>不宜干预：</strong>远端肺无活性、无可通远端气道，或阻塞 &lt;50% 且无症状并高度可能快速响应全身/放射治疗。</li>
+        <li><strong>麻醉细节：</strong>可控的治疗性支气管镜通常采用全麻加神经肌肉阻滞以减少并发症。极不稳定的上段气管阻塞在气道建立前应避免使用肌松药。</li>
+        <li><strong>并发症危险因素：</strong>紧急/急诊操作、ASA &gt;3、重复治疗性支气管镜及中度镇静。</li>
+        <li><strong>延迟起效方式：</strong>光动力治疗（PDT）和近距离放疗适用于特定病例；预期疗效延迟并注意特异性毒性。</li>
+        <li><strong>支架后护理：</strong>常规黏液纤毛清除方案（如雾化高渗盐水），并采用症状驱动的支气管镜或 CT 随访。</li>
+        <li><strong>可引用结局：</strong>有经验团队技术成功率约 90%；相当比例患者呼吸困难和生活质量改善；早期成功再通有助于脱离呼吸机并接受确定性肿瘤治疗。</li>
+        <li><strong>支架与放疗：</strong>联合治疗可有效，但会增加气道坏死/瘘风险；应精细规划剂量，肿瘤退缩后及时移除支架。</li>
+        <li><strong>陷阱：</strong>对单纯外压型病变使用消融能量——既不能持续恢复管腔，又可能损伤气道壁；主要治疗是支架。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p>MCAO 可由管腔内肿瘤（支气管腔内型）、邻近结构外压或肿瘤同时压迫并侵犯气道壁的混合型造成。当代队列估计约百分之十几的肺癌患者存在 MCAO，旧系列报道可高达约三分之一。外周型腺癌比例增加和筛查普及可能影响流行率。腔内型病变的支气管镜结局通常优于外压型或混合型。</p>
+
+<h4>适应证与禁忌证</h4>
+<p><strong>适应证</strong></p>
+<ul>
+    <li>中央气道症状性阻塞 ≥50%（呼吸困难、喘鸣、阻塞后肺炎、咯血）。</li>
+    <li>作为放疗、全身治疗或手术的桥接。</li>
+    <li>因阻塞病灶依赖机械通气，且再通后有望拔管。</li>
+</ul>
+<p><strong>相对禁忌证/低获益情形</strong></p>
+<ul>
+    <li>无可通远端气道或远端肺无活性。</li>
+    <li>孤立叶/段支气管病变且生理影响很小（呼吸困难/生活质量较不易改善）。</li>
+    <li>未纠正的凝血障碍，或无法在操作环境中纠正的不稳定状态。</li>
+    <li>肿瘤治疗预计快速且高度可能有效，使支气管镜不必要；仍需密切监测。</li>
+</ul>
+
+<h4>术前评估</h4>
+<ul>
+    <li><strong>临床分诊：</strong>识别气道急症（严重喘鸣、即将心搏骤停）。</li>
+    <li><strong>影像：</strong>胸部 CT 多平面/三维重建，明确阻塞水平、长度和类型；评估远端气道通畅及与血管的关系。</li>
+    <li><strong>功能检查：</strong>流量-容积环可显示固定或可变阻塞，但严重窘迫时既不必要也不安全。</li>
+    <li><strong>气道与麻醉评估：</strong>张口度、牙齿、Mallampati、颈部活动度、甲颏距离；规划硬质镜和通气方式；极端双侧主支气管/主气管受压时考虑 ECMO 备用。</li>
+    <li><strong>实验室与知情同意：</strong>评估止血（INR/PTT、血小板），备血；共同决策明确姑息或桥接目标及预期病程。</li>
+</ul>
+
+<h4>设备与准备</h4>
+<ul>
+    <li><strong>平台：</strong>硬质支气管镜配高流量吸引、硬质活检钳和扩张器；大通道治疗性软性支气管镜作为辅助。</li>
+    <li><strong>热能器械：</strong>激光（Nd:YAG/YAP）、APC、电凝；电外科常用初始功率约 20–40 W，APC 约 40–60 W（每次 2–5 秒，非接触）。</li>
+    <li><strong>非热器械：</strong>微型切割器、球囊扩张器（充盈 30–60 秒）、冷冻探头（取出与延迟消融）、喷雾冷冻（需特殊通气考虑）。</li>
+    <li><strong>支架：</strong>硅酮（包括 Y 形）和全覆膜金属/混合直管；条件允许时长度应覆盖病变并在两端超出 ≥5–10 mm。</li>
+    <li><strong>安全：</strong>热能操作 FiO₂ ≤0.40；避免在可燃材料附近释放能量；遵循激光安全及“火灾三要素”流程。</li>
+</ul>
+
+<h4>分步技术与操作核对表</h4>
+<ol>
+    <li>建立气道（首选全麻下硬质支气管镜）。</li>
+    <li>全面观察并分类病灶（腔内/外压/混合），确认远端气道通畅，预判血流动力学和通气挑战。</li>
+    <li>腔内型或混合型采用消融—切除循环：
+        <ul>
+            <li>在严格控制 FiO₂ 下，用激光/APC/电凝凝固。</li>
+            <li>机械去除组织（硬质镜削切、微型切割器、活检钳、冷冻取出）。</li>
+            <li>复评；重复至通畅度 &gt;50%（安全且有益时可更高）。</li>
+        </ul>
+    </li>
+    <li>纤维环或紧密狭窄采用球囊或序贯硬质扩张器。</li>
+    <li>外压型或减瘤后残余狭窄置入支架（隆突用硅酮 Y；主支气管/中间支气管用硅酮或覆膜金属直管）。</li>
+    <li>止血与清理（吸引、硬质镜筒压迫；渗血可用 APC/电凝）。</li>
+    <li>在正确时点停止——通常达到 &gt;50% 通畅且边际风险超过边际获益时。</li>
+    <li>记录残余病变、远端通畅、支架尺寸/位置和随访计划。</li>
+</ol>
+
+<h4>故障排除与术中处理</h4>
+<ul>
+    <li><strong>出血：</strong>机械切除前先凝固；用硬质镜筒压迫；APC/电凝止血；冷冻可取出血凝块。</li>
+    <li><strong>低氧/高碳酸血症：</strong>暂停能量；加强通气；依据团队经验选择喷射或容量控制通气；短暂撤出器械进行通气。</li>
+    <li><strong>预防气道火灾：</strong>FiO₂ ≤0.40；吸除烟雾；避免带电探头接触 ETT/镜体；与麻醉团队协调能量释放。</li>
+    <li><strong>看不到远端：</strong>用超细镜或导丝配球囊确定远端管腔后再测量支架。</li>
+    <li><strong>通过困难/角度不佳：</strong>更换器械（微型切割器、硬质镜内使用软镜）、调整患者体位或改用较小硬质镜。</li>
+</ul>
+
+<h4>术后护理与随访</h4>
+<ul>
+    <li><strong>即刻：</strong>观察出血、气道水肿、气胸；湿化并进行支气管卫生。</li>
+    <li><strong>支架方案：</strong>气道清除（如雾化高渗盐水）并教育感染症状。</li>
+    <li><strong>监测：</strong>2–4 周内门诊随访；约 1 个月胸部 CT 合理。支气管镜以症状或影像异常为指征，而非所有患者常规实施。肿瘤退缩后及时移除支架，降低后续放疗相关坏死/瘘风险。</li>
+</ul>
+
+<h4>并发症：预防、识别与处理</h4>
+<ul>
+    <li><strong>即刻：</strong>低氧、高碳酸血症、出血、气胸、气道火灾、穿孔、空气栓塞（少见）。</li>
+    <li><strong>晚期（尤其支架）：</strong>肉芽组织、黏液栓、移位、感染、侵蚀/瘘（放疗后更高）。</li>
+    <li><strong>降低风险：</strong>治疗性操作优先全麻加神经肌肉阻滞；通过早期转诊避免急诊“抢救式”场景；恶性病变选覆膜而非裸金属支架；严格控制 FiO₂；支架在位时精细规划放疗剂量。</li>
+</ul>
+
+<h4>特殊人群</h4>
+<ul>
+    <li><strong>机械通气患者：</strong>成功再通后，治疗性支气管镜常可使患者在 48 小时内拔管。</li>
+    <li><strong>近端气管/双侧主支气管即将完全塌陷：</strong>可考虑 ECMO 作为安全诱导与干预的桥接。</li>
+    <li><strong>类癌/腺样囊性癌：</strong>减瘤可缓解阻塞；可手术时争取切除；对不适合手术的部分典型类癌，支气管镜可作为确定性治疗。</li>
+    <li><strong>心脏植入器械：</strong>激光不干扰；电外科/APC 需采取器械防护措施。</li>
+    <li><strong>抗凝：</strong>优化止血；停药或桥接应个体化权衡。</li>
+</ul>
+
+<h4>证据与结局</h4>
+<ul>
+    <li><strong>技术成功（术后通畅 &gt;50%）：</strong>有经验中心约 90%。</li>
+    <li><strong>症状/生活质量：</strong>约半数患者有临床意义的呼吸困难改善，相当比例生活质量改善；选择合适的队列常见肺功能提升。</li>
+    <li><strong>生存：</strong>成功再通与更长生存和质量调整生存期相关；早期干预结局更佳。</li>
+    <li><strong>脱离呼吸机：</strong>MCAO 导致呼吸衰竭时，再通后短期拔管成功率高。</li>
+    <li><strong>并发症：</strong>严重事件少见；急诊病例、较高 ASA、重复操作和中度镇静风险更高。</li>
+</ul>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 A——紧急分诊与初始处理</h4>
+<div class="mermaid">
+graph TD
+    A["疑似 MCAO"] --> B{"评估稳定性"}
+    B -- "不稳定（喘鸣/窘迫）" --> C["团队转入手术室/ICU"]
+    C --> D{"位置？"}
+    D -- "近端/上段" --> E["纤维支气管镜辅助插管或硬质支气管镜"]
+    D -- "远端/不明确" --> F["硬质支气管镜"]
+    B -- "稳定" --> G["胸部 CT（MPR/3D）"]
+    G --> H["规划麻醉与器械"]
+    H --> I["全麻下硬质支气管镜"]
+    E --> J["阻塞分类"]
+    F --> J
+    I --> J
+    J -- "腔内型" --> K["消融 → 机械切除"]
+    J -- "外压型" --> L["测量并置入支架"]
+    J -- "混合型" --> M["先减除腔内成分"]
+    M --> N{"仍有外压？"}
+    N -- "是" --> L
+    N -- "否" --> O
+    K --> O{"通畅是否 >50%？"}
+    O -- "否" --> K
+    O -- "是" --> P["止血/清理"]
+    L --> P
+    P --> Q["恢复 → 桥接确定性治疗"]
+</div>
+
+<h4>算法 B——方式选择与操作安全</h4>
+<div class="mermaid">
+graph TD
+    A["确定阻塞类型"] --> B["腔内型"]
+    A --> C["外压型"]
+    A --> D["混合型"]
+    B --> E["消融（激光/APC/电凝）"]
+    E --> F["机械切除"]
+    F --> G{"纤维化？"}
+    G -- "是" --> H["球囊扩张"]
+    G -- "否" --> I["复评"]
+    C --> J["置入支架"]
+    D --> K["减除腔内成分"]
+    K --> L{"仍有狭窄？"}
+    L -- "是" --> J
+    L -- "否" --> I
+    I --> M{"安全循环"}
+    M --> N{"FiO₂ 是否 ≤0.40？"}
+    N -- "否" --> O["暂停、通气、降低 FiO₂"]
+    O --> E
+    M --> P{"持续出血？"}
+    P -- "是" --> Q["APC / 压迫 / 冷冻"]
+    Q --> I
+    P -- "否" --> R{"风险是否超过获益？"}
+    R -- "否" --> E
+    R -- "是" --> S["停止"]
+</div>
+
+<div class="algorithm-note">
+    <strong>算法逻辑摘要：</strong>
+    <ul>
+        <li><strong>分诊：</strong>不稳定时必须立即在手术室/ICU 建立气道；稳定者可先用 CT MPR/3D 规划硬质镜路径。</li>
+        <li><strong>方式选择：</strong>腔内型需要“消融—切除循环”（先凝固再减瘤）；外压型需要支架；混合型先减瘤，若仍受压再置支架。</li>
+        <li><strong>安全：</strong>全过程持续监测 FiO₂（≤0.40）和出血控制。达到通畅目标或风险超过获益时停止。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<h4>表 1. 阻塞类型与一线干预</h4>
+<table>
+    <thead><tr><th>类型</th><th>典型表现</th><th>一线方案</th><th>替代/辅助</th><th>关键注意点</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><strong>腔内型</strong></td>
+            <td>息肉样/菜花样肿瘤；可见远端管腔</td>
+            <td>热凝固（激光/APC/电凝）→ 机械切除</td>
+            <td>纤维环用球囊扩张；延迟起效治疗（PDT）</td>
+            <td>热消融时 FiO₂ ≤0.40</td>
+        </tr>
+        <tr>
+            <td><strong>外压型</strong></td>
+            <td>黏膜正常；外部肿块压窄气道</td>
+            <td>气道支架（隆突硅酮 Y；主支气管/中间支气管硅酮或覆膜金属直管）</td>
+            <td>放疗/全身治疗；偶尔扩张作为桥接</td>
+            <td>单用消融不能维持通畅</td>
+        </tr>
+        <tr>
+            <td><strong>混合型</strong></td>
+            <td>腔内病变伴气道壁变形/外压</td>
+            <td>先减除腔内成分 → 若仍有外压狭窄则置支架</td>
+            <td>联合放疗/全身治疗</td>
+            <td>初治且预计快速响应者，避免过早置支架</td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>表 2. 热与非热方式速览</h4>
+<table>
+    <thead><tr><th>方式</th><th>深度/效应</th><th>典型设置/说明</th><th>优势</th><th>并发症/局限</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><strong>激光（Nd:YAG/YAP）</strong></td>
+            <td>凝固 + 汽化；Nd:YAG 穿透较深</td>
+            <td>接触或非接触；遵守激光安全；FiO₂ ≤0.40</td>
+            <td>快速减瘤、止血强；中央病灶有效</td>
+            <td>火灾、穿孔、空气栓塞（少见）</td>
+        </tr>
+        <tr>
+            <td><strong>APC</strong></td>
+            <td>浅表（约 1–3 mm）；非接触</td>
+            <td>约 40–60 W；2–5 秒脉冲；适合止血和广泛表面</td>
+            <td>成本低、快速，适合渗血与弥漫病灶</td>
+            <td>火灾；能量过高可穿孔；对大块肿瘤核心效果有限</td>
+        </tr>
+        <tr>
+            <td><strong>电凝</strong></td>
+            <td>接触性凝固/汽化</td>
+            <td>约 20–40 W；圈套/刀/探头；起搏器/ICD 需防护</td>
+            <td>易获得、用途广</td>
+            <td>器械干扰；必须直接接触</td>
+        </tr>
+        <tr>
+            <td><strong>微型切割器</strong></td>
+            <td>非热机械切削并吸引</td>
+            <td>经硬质镜使用</td>
+            <td>快速取组织、视野好；无 FiO₂ 限制</td>
+            <td>学习曲线；常仍需止血</td>
+        </tr>
+        <tr>
+            <td><strong>球囊扩张</strong></td>
+            <td>径向扩张</td>
+            <td>充盈 30–60 秒；可能需放射状切口</td>
+            <td>快速增加管腔；支架桥接</td>
+            <td>裂伤、纵隔气肿/气胸</td>
+        </tr>
+        <tr>
+            <td><strong>冷冻取出</strong></td>
+            <td>组织即时黏附并取出</td>
+            <td>重复冻结-牵拉循环</td>
+            <td>适合易碎肿瘤/血凝块；无火灾风险</td>
+            <td>出血；大体积肿瘤速度慢于热方式</td>
+        </tr>
+        <tr>
+            <td><strong>PDT（延迟）</strong></td>
+            <td>光敏剂 + 光照，延迟起效</td>
+            <td>需光敏防护</td>
+            <td>减少再生；可到达远端支气管</td>
+            <td>坏死脱落可延迟阻塞；水肿；光敏反应</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>影像与图示提示</h3>
+<p><strong>图 1. 腔内型、外压型及混合型 MCAO 示意图。</strong><br><em>替代文字：</em>三个面板分别显示腔内肿瘤、外部压迫及跨越气道壁的混合型侵犯。</p>
+<p><strong>图 2. 硬质镜削切的消融—切除循环。</strong><br><em>替代文字：</em>连续画面显示凝固、机械取出及用硬质镜筒压迫。</p>
+<p><strong>图 3. 支架选择示例（隆突硅酮 Y、主支气管/中间支气管覆膜直管）。</strong><br><em>替代文字：</em>比较不同置入技术和形态的示意图。</p>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <h4>病例 1</h4>
+    <p>64 岁鳞状 NSCLC 患者出现可闻喘鸣和静息呼吸困难。CT 显示近端气管巨大肿块，管腔呈裂隙状，远端气管通畅。</p>
+    <p><strong>问题：</strong>最佳即时处理？</p>
+    <p><strong>答案：</strong>A. 清醒纤维支气管镜插管，随后全麻下硬质支气管镜。</p>
+    <p><strong>理由：</strong>先用可维持自主呼吸的方式建立气道，再进行硬质镜多模式确定性治疗。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 2</h4>
+    <p>58 岁转移性肾细胞癌患者严重呼吸困难。CT 显示纵隔肿块严重压迫左主支气管；支气管镜见黏膜正常，无腔内肿瘤。</p>
+    <p><strong>问题：</strong>最佳支气管镜策略？</p>
+    <p><strong>答案：</strong>B. 置入覆膜气道支架跨越受压段。</p>
+    <p><strong>理由：</strong>这是单纯外压型，支架是一线方案。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 3</h4>
+    <p>72 岁 MCAO 患者因中间支气管腔内肿块导致低氧性呼吸衰竭而插管，远端肺不张持续不足 4 周。</p>
+    <p><strong>问题：</strong>成功治疗性支气管镜后最可能的短期结局？</p>
+    <p><strong>答案：</strong>C. 很可能在 48 小时内拔管。</p>
+    <p><strong>理由：</strong>此类患者成功再通后常可早期拔管。</p>
+</div>
+
+<hr>
+
+<h3>题库（选择题）</h3>
+<ol>
+    <li>
+        <strong>70 岁 MCAO 患者有哮鸣，CT 显示远端气管息肉样肿块且可见远端管腔。下一步最佳处理？</strong><br>
+        A. 开始体外放疗，2 周后复评<br>
+        B. 中度镇静软性支气管镜，在 FiO₂ 0.80 下行 APC<br>
+        C. 全麻下硬质支气管镜，用激光/APC 凝固后机械减瘤<br>
+        D. 单用 PDT<br>
+        E. 置入裸金属支架<br>
+        <em><strong>答案：C。</strong>应以硬质镜为平台采用即时起效的消融—切除循环；热能操作避免高 FiO₂。</em>
+    </li>
+    <li>
+        <strong>APC 期间血氧仪显示 SpO₂ 95%，FiO₂ 0.60。最佳即时处理？</strong><br>
+        A. 血氧充足，继续 APC<br>
+        B. 将 FiO₂ 提高至 1.0<br>
+        C. 暂停能量，将 FiO₂ 降至 ≤0.40 后再继续<br>
+        D. 转为 PDT<br>
+        E. 立即改喷雾冷冻<br>
+        <em><strong>答案：C。</strong>热能操作应在 FiO₂ ≤0.40 下进行，以降低火灾风险。</em>
+    </li>
+    <li>
+        <strong>哪种情形最支持初始支架而非消融？</strong><br>
+        A. 隆突易碎外生性肿瘤<br>
+        B. 环形纤维性气管膜<br>
+        C. 纵隔淋巴瘤外压左主支气管，管腔平滑变窄<br>
+        D. 阻塞性类癌伴远端肺炎<br>
+        E. 腔内肿瘤且远端管腔清楚<br>
+        <em><strong>答案：C。</strong>单纯外压型应以支架为一线。</em>
+    </li>
+    <li>
+        <strong>混合型 MCAO 减瘤后仍有外压狭窄。患者尚未接受治疗，预计对放化疗快速响应。最稳妥选择？</strong><br>
+        A. 立即置入永久支架<br>
+        B. 无计划观察<br>
+        C. 减瘤后短期观察；若呼吸储备允许，暂缓支架<br>
+        D. 立即近距离放疗<br>
+        E. PDT 后置支架<br>
+        <em><strong>答案：C。</strong>预计快速响应且减瘤后通畅和储备足够时，可合理暂缓支架。</em>
+    </li>
+    <li>
+        <strong>哪种组合最能减少治疗性支气管镜并发症？</strong><br>
+        A. 中度镇静 + 软性支气管镜<br>
+        B. 全麻 + 神经肌肉阻滞 + 硬质镜平台<br>
+        C. FiO₂ 0.80 喷射通气<br>
+        D. 激光时避免吸引<br>
+        E. 任何减瘤前先近距离放疗<br>
+        <em><strong>答案：B。</strong>全麻、神经肌肉阻滞和硬质镜与较少并发症相关。</em>
+    </li>
+    <li>
+        <strong>机械减瘤后弥漫渗血，最合适的止血方式？</strong><br>
+        A. FiO₂ 提至 1.0 并继续激光<br>
+        B. 低至中等功率 APC 短脉冲并同时吸引<br>
+        C. 裸金属支架<br>
+        D. 球囊扩张<br>
+        E. 立即喷雾冷冻<br>
+        <em><strong>答案：B。</strong>APC 适合广泛渗血表面；FiO₂ 保持 ≤0.40。</em>
+    </li>
+    <li>
+        <strong>关于 MCAO 中 PDT，哪项正确？</strong><br>
+        A. 起效与激光同样即时<br>
+        B. 光敏剂后常在 48–72 小时内照光<br>
+        C. 没有光敏风险<br>
+        D. 此后不能行体外放疗<br>
+        E. 不能用于叶支气管<br>
+        <em><strong>答案：B。</strong>PDT 为延迟起效治疗，先给光敏剂，再按时间进行照光。</em>
+    </li>
+    <li>
+        <strong>右主支气管置入覆膜金属支架后，预防黏液栓最有效的措施是：</strong><br>
+        A. 常规全身激素<br>
+        B. 无限期常规抗菌药<br>
+        C. 每日两次雾化气道清除方案并进行患者教育<br>
+        D. 避免支气管扩张剂<br>
+        E. 立即放疗固定支架<br>
+        <em><strong>答案：C。</strong>黏液纤毛清除是标准护理。</em>
+    </li>
+    <li>
+        <strong>哪项是 MCAO 支气管镜并发症的已知危险因素？</strong><br>
+        A. ASA I–II<br>
+        B. 择期安排<br>
+        C. 中度镇静而非全麻<br>
+        D. 使用覆膜支架<br>
+        E. 使用硬质支气管镜<br>
+        <em><strong>答案：C。</strong>中度镇静及急诊情境风险更高。</em>
+    </li>
+    <li>
+        <strong>叶支气管阻塞已持续 &gt;4 周并完全肺叶萎陷。再通后哪种结局最不可能？</strong><br>
+        A. 呼吸困难显著缓解<br>
+        B. 肺功能改善<br>
+        C. 影像复张<br>
+        D. 阻塞后感染减少<br>
+        E. 有助于全身治疗实施<br>
+        <em><strong>答案：A。</strong>长期肺叶萎陷即使技术成功，也可能限制生理获益。</em>
+    </li>
+    <li>
+        <strong>关于体外放疗与气道支架联合，哪项最准确？</strong><br>
+        A. 绝对禁忌<br>
+        B. 完全安全、无并发症<br>
+        C. 可实施，但需因坏死/瘘风险谨慎规划；肿瘤响应后应尽可能移除支架<br>
+        D. 必须用裸金属支架<br>
+        E. 不再需要支气管镜随访<br>
+        <em><strong>答案：C。</strong>联合治疗可行但风险更高，应精细剂量规划并在安全时移除支架。</em>
+    </li>
+    <li>
+        <strong>硬质支气管镜处理气管肿瘤时看不到远端管腔。下一步最佳处理：</strong><br>
+        A. 盲目提高激光功率穿透<br>
+        B. 盲目前送硬质镜筒<br>
+        C. 用导丝/球囊或更细支气管镜确认远端气道后再继续<br>
+        D. 盲目置入支架<br>
+        E. 立即终止操作<br>
+        <em><strong>答案：C。</strong>进一步治疗前必须安全明确远端气道。</em>
+    </li>
+</ol>
+
+<hr>
+
+<h3>争议、实践差异与新兴证据</h3>
+<ul>
+    <li><strong>镇静策略：</strong>近端阻塞建立初始气道时清醒技术至关重要，但治疗性支气管镜通常倾向全麻加神经肌肉阻滞；各中心实践不同。</li>
+    <li><strong>延迟起效方式：</strong>PDT 和近距离放疗的使用依中心而异；证据支持选择性应用，但需认识延迟疗效和毒性。</li>
+    <li><strong>减瘤后是否置支架：</strong>对预计响应全身/放疗的腔内病变，有些团队为避免晚期并发症而暂缓支架；另一些为延长症状缓解而置入，取决于患者情境。</li>
+    <li><strong>监测性支气管镜：</strong>常规复查与症状驱动随访仍有争议；CT 可辅助非侵入性监测。</li>
+    <li><strong>支架与放疗：</strong>各团队对同期应用阈值不同；必须多学科精细规划。</li>
+</ul>
+
+<h3>要点核对表</h3>
+<ul>
+    <li>确认 MCAO（狭窄 ≥50%）并判断紧急程度。</li>
+    <li>规划全麻下硬质支气管镜，明确通气策略和 FiO₂ 上限。</li>
+    <li>分类并匹配治疗：腔内型消融—切除，外压型支架，混合型两者结合。</li>
+    <li>严格执行消融—切除循环、止血和气道火灾预防。</li>
+    <li>准确测量支架；恶性病变优先覆膜设计；隆突病变使用硅酮 Y。</li>
+    <li>达到目标且风险超过获益时停止。</li>
+    <li>置支架后启动气道清除，并教育感染信号。</li>
+    <li>与肿瘤科和放疗科协调；肿瘤响应后重新评估支架必要性。</li>
+    <li>安排早期随访（2–4 周）；约 1 个月 CT；症状或影像异常时支气管镜。</li>
+    <li>记录通畅度、症状/生活质量，以指导再次干预时机。</li>
+</ul>
+
+<hr>
+
+<h3>缩略语与术语</h3>
+<div class="abbreviations">
+    <dl>
+        <dt>MCAO</dt><dd>恶性中央气道阻塞。</dd>
+        <dt>APC</dt><dd>氩等离子凝固——利用电离氩气进行非接触热凝固。</dd>
+        <dt>Nd:YAG/YAP</dt><dd>气道消融激光类型；Nd:YAG 穿透较深，YAP 对水吸收更高、作用深度较浅。</dd>
+        <dt>PDT</dt><dd>光动力治疗——光敏剂加定时光照，延迟起效。</dd>
+        <dt>EBBT</dt><dd>支气管腔内近距离放疗——经管腔内导管进行短距离放射治疗。</dd>
+        <dt>硬质镜削切</dt><dd>用斜面硬质镜筒旋转进行机械减瘤，并兼具压迫止血。</dd>
+        <dt>微型切割器</dt><dd>带吸引的旋转切割装置，用于机械削除肿瘤。</dd>
+        <dt>BI</dt><dd>中间支气管。</dd>
+        <dt>FiO₂</dt><dd>吸入氧浓度；热消融期间保持 ≤0.40。</dd>
+        <dt>ECMO</dt><dd>体外膜氧合；用于高危气道控制的桥接。</dd>
+        <dt>ASA 分级</dt><dd>美国麻醉医师协会体格状态分级，围术期风险指标。</dd>
+        <dt>QOL</dt><dd>生活质量；成功治疗可改善症状负担和功能。</dd>
+        <dt>覆膜支架</dt><dd>带膜衬里以减少肿瘤长入的支架，恶性病变中优先。</dd>
+        <dt>高渗盐水</dt><dd>雾化气道清除治疗，用于减少支架后黏液栓。</dd>
+    </dl>
+</div>
+
+<div class="references"><h3>参考文献</h3>
+<ol>
+<li>Mahmood K, Frazer‑Green L, Gonzalez AV, et al. Management of central airway obstruction: an American College of Chest Physicians Clinical Practice Guideline. Chest. 2024;167(1):283‑295.</li>
+<li>Ernst A, Feller‑Kopman D, Becker HD, Mehta AC. Central airway obstruction. Am J Respir Crit Care Med. 2004;169(12):1278‑1297.</li>
+<li>Ost DE, Ernst A, Grosu HB, et al. Therapeutic bronchoscopy for malignant central airway obstruction: success rates and impact on dyspnea and quality of life. Chest. 2015;147(5):1282‑1298.</li>
+<li>Ost DE, Ernst A, Grosu HB, et al. Complications following therapeutic bronchoscopy for malignant central airway obstruction: results of the AQuIRE Registry. Chest. 2015;148(2):450‑471.</li>
+<li>Ong P, Grosu HB, Debiane L, et al. Long‑term quality‑adjusted survival following therapeutic bronchoscopy for malignant central airway obstruction. Thorax. 2019;74(2):141‑156.</li>
+<li>Oki M, Saka H, Hori K. Airway stenting in patients requiring intubation due to malignant airway stenosis: a 10‑year experience. J Thorac Dis. 2017;9(9):3154‑3160.</li>
+<li>Khemasuwan D, Mehta AC, Wang KP. Past, present, and future of endobronchial laser photoresection. J Thorac Dis. 2015;7(Suppl 4):S380‑S388.</li>
+<li>Dumon JF, Reboud E, Garbe L, et al. Treatment of tracheobronchial lesions by laser photoresection. Chest. 1982;81:278‑284.</li>
+<li>Morice RC, Ece T, Ece F, Keus L. Endobronchial argon plasma coagulation for treatment of hemoptysis and neoplastic airway obstruction. Chest. 2001;119(3):781‑787.</li>
+<li>Casal RF, Iribarren J, Eapen G, et al. Safety and effectiveness of microdebrider bronchoscopy for the management of central airway obstruction. Respirology. 2013;18:1011‑1015.</li>
+<li>Hetzel M, Hetzel J, Schumann C, et al. Cryorecanalization: a new approach for the immediate management of acute airway obstruction. J Thorac Cardiovasc Surg. 2004;127:1427‑1431.</li>
+<li>Moore RF, Lile DJ, Abbas AE. Current status of spray cryotherapy for airway disease. J Thorac Dis. 2017;9(Suppl 2):S122‑S129.</li>
+<li>Rodrigues G, Videtic GM, Sur R, et al. Palliative thoracic radiotherapy in lung cancer: an American Society for Radiation Oncology evidence‑based clinical practice guideline. Pract Radiat Oncol. 2011;1:60‑71.</li>
+<li>Stewart A, Parashar B, Patel M, et al. American Brachytherapy Society consensus guidelines for thoracic brachytherapy for lung cancer. Brachytherapy. 2016;15:1‑11.</li>
+<li>Rochet N, Hauswald H, Schmaus M, et al. Safety and efficacy of thoracic external beam radiotherapy after airway stenting in malignant airway obstruction. Int J Radiat Oncol Biol Phys. 2012;83(1):e129‑e135.</li>
+<li>Dutau H, Di Palma F, Thibout Y, et al. Impact of silicone stent placement in symptomatic airway obstruction due to non‑small cell lung cancer – the SPOC trial. Respiration. 2020;99(4):344‑352.</li>
+<li>Chaddha U, Agrawal A, Kurman J, et al. WABIP guidelines on airway stenting for malignant central airway obstruction. Respirology. 2024;29(7):563‑573.</li>
+<li>Dialani V, Ernst A, Sun M, et al. MDCT detection of airway stent complications: comparison with bronchoscopy. AJR Am J Roentgenol. 2008;191(5):1576‑1580.</li>
+<li>Matsuo T, Colt HG. Evidence against routine scheduling of surveillance bronchoscopy after stent insertion. Chest. 2000;118(5):1455‑1459.</li>
+<li>Cavaliere S, Venuta F, Foccoli P, et al. Endoscopic treatment of malignant airway obstructions in 2,008 patients. Chest. 1996;110:1536‑1542.</li>
+<li>Breitenbucher A, Chhajed PN, Brutsche MH, Mordasini C, Schilter D, Tamm M. Long‑term follow‑up and survival after Ultraflex stent insertion in the management of complex malignant airway stenoses. Respiration. 2008;75(4):443‑449.</li>
+<li>Wahidi MM, Unroe MA, Adlakha N, Beyea M, Shofer SL. The use of electrocautery as the primary ablation modality for malignant and benign airway obstruction. J Thorac Oncol. 2011;6(9):1516‑1520.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

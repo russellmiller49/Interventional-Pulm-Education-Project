@@ -1,34 +1,36 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
 import type { ModuleNavItem } from '@/features/learning-module/types'
+import { HandoffContent } from '@/i18n/handoff'
 
 const base = '/pleural-procedures/malignant-effusion'
 
-export const malignantEffusionNavItems: readonly ModuleNavItem[] = [
-  { href: base, title: 'Overview', description: 'Objectives and the learning path' },
-  {
-    href: `${base}/learn`,
-    title: 'Learn',
-    description: 'Cytology, expandability, IPC vs pleurodesis',
-  },
-  {
-    href: `${base}/practice`,
-    title: 'Practice',
-    description: 'Escalate the diagnosis and choose a management arm',
-  },
-  { href: `${base}/assessment`, title: 'Assessment', description: 'Check your reasoning' },
-  {
-    href: `${base}/references`,
-    title: 'References',
-    description: 'Guideline, trial, and image sources',
-  },
+/** Section base href, exported for pages that need the overview's activeHref. */
+export const malignantEffusionNavBase = base
+
+const sections = [
+  { key: 'overview', href: base },
+  { key: 'learn', href: `${base}/learn` },
+  { key: 'practice', href: `${base}/practice` },
+  { key: 'assessment', href: `${base}/assessment` },
+  { key: 'references', href: `${base}/references` },
 ] as const
 
 export function MalignantEffusionNav({ activeHref }: { activeHref: string }) {
+  const t = useTranslations('malignantEffusion.nav')
+
+  const items: ModuleNavItem[] = sections.map((section) => ({
+    href: section.href,
+    title: t(`${section.key}.title`),
+    description: t(`${section.key}.description`),
+  }))
+
   return (
-    <ModuleNav
-      items={malignantEffusionNavItems}
-      activeHref={activeHref}
-      ariaLabel="Malignant pleural effusion module sections"
-    />
+    <HandoffContent>
+      {<ModuleNav items={items} activeHref={activeHref} ariaLabel={t('ariaLabel')} />}
+    </HandoffContent>
   )
 }

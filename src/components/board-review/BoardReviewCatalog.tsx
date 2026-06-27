@@ -8,6 +8,8 @@ import { cn } from '@/lib/cn'
 import { boardReviewCategoryLabels, type BoardReviewChapterMeta } from '@/data/board-review'
 
 import { BoardReviewCard } from './BoardReviewCard'
+import { HandoffContent } from '@/i18n/handoff'
+import { useHandoffTranslator } from '@/i18n/handoff-client'
 
 interface BoardReviewCatalogProps {
   chapters: BoardReviewChapterMeta[]
@@ -16,6 +18,7 @@ interface BoardReviewCatalogProps {
 export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
   const [category, setCategory] = useState<'all' | BoardReviewChapterMeta['category']>('all')
   const [query, setQuery] = useState('')
+  const translate = useHandoffTranslator()
 
   const categories = useMemo(() => {
     const counts = chapters.reduce<Record<string, number>>((acc, chapter) => {
@@ -32,6 +35,25 @@ export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
       }))
   }, [chapters])
 
+  const localizedChapters = useMemo(
+    () =>
+      new Map(
+        chapters.map((chapter) => [
+          chapter.slug,
+          {
+            ...chapter,
+            title: translate(chapter.title),
+            description: translate(chapter.description),
+            summary: translate(chapter.summary),
+            examDomains: chapter.examDomains.map(translate),
+            tags: chapter.tags.map(translate),
+            focus: chapter.focus.map(translate),
+          },
+        ]),
+      ),
+    [chapters, translate],
+  )
+
   const filteredChapters = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
@@ -46,7 +68,7 @@ export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
         return true
       }
 
-      const haystack = [
+      const sourceValues = [
         chapter.title,
         chapter.description,
         chapter.summary,
@@ -54,66 +76,72 @@ export function BoardReviewCatalog({ chapters }: BoardReviewCatalogProps) {
         ...chapter.examDomains,
         ...chapter.focus,
       ]
-        .join(' ')
-        .toLowerCase()
+      const haystack = [...sourceValues, ...sourceValues.map(translate)].join(' ').toLowerCase()
 
       return haystack.includes(normalizedQuery)
     })
-  }, [category, chapters, query])
+  }, [category, chapters, query, translate])
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant={category === 'all' ? 'default' : 'outline'}
-            className={cn(
-              'rounded-full px-4 py-1 text-sm',
-              category === 'all' ? 'shadow-sm' : 'border-border/60',
-            )}
-            onClick={() => setCategory('all')}
-          >
-            All ({chapters.length})
-          </Button>
-          {categories.map((item) => (
-            <Button
-              key={item.value}
-              type="button"
-              variant={category === item.value ? 'default' : 'outline'}
-              className={cn(
-                'rounded-full px-4 py-1 text-sm',
-                category === item.value ? 'shadow-sm' : 'border-border/60',
-              )}
-              onClick={() => setCategory(item.value as BoardReviewChapterMeta['category'])}
-            >
-              {item.label} ({item.count})
-            </Button>
-          ))}
-        </div>
-        <Input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search chapters, domains, or tags"
-          className="w-full max-w-sm text-sm"
-          aria-label="Search board review chapters"
-        />
-      </div>
+    <HandoffContent>
+      {
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={category === 'all' ? 'default' : 'outline'}
+                className={cn(
+                  'rounded-full px-4 py-1 text-sm',
+                  category === 'all' ? 'shadow-sm' : 'border-border/60',
+                )}
+                onClick={() => setCategory('all')}
+              >
+                All ({chapters.length})
+              </Button>
+              {categories.map((item) => (
+                <Button
+                  key={item.value}
+                  type="button"
+                  variant={category === item.value ? 'default' : 'outline'}
+                  className={cn(
+                    'rounded-full px-4 py-1 text-sm',
+                    category === item.value ? 'shadow-sm' : 'border-border/60',
+                  )}
+                  onClick={() => setCategory(item.value as BoardReviewChapterMeta['category'])}
+                >
+                  {item.label} ({item.count})
+                </Button>
+              ))}
+            </div>
+            <Input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search chapters, domains, or tags"
+              className="w-full max-w-sm text-sm"
+              aria-label="Search board review chapters"
+            />
+          </div>
 
-      {filteredChapters.length ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredChapters.map((chapter) => (
-            <BoardReviewCard key={chapter.slug} chapter={chapter} />
-          ))}
+          {filteredChapters.length ? (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {filteredChapters.map((chapter) => (
+                <BoardReviewCard
+                  key={chapter.slug}
+                  chapter={localizedChapters.get(chapter.slug) ?? chapter}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-dashed border-border/70 bg-card/60 p-12 text-center">
+              <p className="text-sm text-muted-foreground">
+                No chapters match that filter yet. Try another keyword or category.
+              </p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="rounded-3xl border border-dashed border-border/70 bg-card/60 p-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            No chapters match that filter yet. Try another keyword or category.
-          </p>
-        </div>
-      )}
-    </div>
+      }
+    </HandoffContent>
   )
 }

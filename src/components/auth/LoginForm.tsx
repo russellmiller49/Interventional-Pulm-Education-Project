@@ -4,9 +4,13 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { isActiveLocale } from '@/i18n/locale'
+import { localizePath } from '@/i18n/path'
+import { normalizePostAuthNextPath } from '@/lib/site-auth/auth-next-path'
 import { redirectToPostLoginPath } from '@/lib/site-auth/post-login-redirect'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 
@@ -14,39 +18,17 @@ import { AuthFooterLink } from './AuthShell'
 
 type SubmitStatus = 'idle' | 'submitting' | 'redirecting' | 'error'
 
-const DEFAULT_NEXT_PATH = '/dashboard'
-const AUTH_DESTINATION_PATHS = new Set([
-  '/auth/update-password',
-  '/forgot-password',
-  '/login',
-  '/signup',
-  '/verify-email',
-])
-
-function normalizeNextPath(value: string | null) {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) {
-    return DEFAULT_NEXT_PATH
-  }
-
-  try {
-    const target = new URL(value, 'https://interventionalpulm.local')
-
-    if (
-      AUTH_DESTINATION_PATHS.has(target.pathname) ||
-      target.pathname.startsWith('/auth/callback')
-    ) {
-      return DEFAULT_NEXT_PATH
-    }
-
-    return `${target.pathname}${target.search}${target.hash}`
-  } catch {
-    return DEFAULT_NEXT_PATH
-  }
-}
-
 export function LoginForm() {
+  const locale = useLocale()
+  const activeLocale = isActiveLocale(locale) ? locale : 'en'
+  const t = useTranslations('auth.login')
   const searchParams = useSearchParams()
-  const nextPath = useMemo(() => normalizeNextPath(searchParams.get('next')), [searchParams])
+  const nextPath = useMemo(
+    () => normalizePostAuthNextPath(searchParams.get('next'), activeLocale),
+    [activeLocale, searchParams],
+  )
+  const forgotPasswordHref = localizePath('/forgot-password', activeLocale) as Route
+  const signupHref = localizePath('/signup', activeLocale) as Route
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<SubmitStatus>('idle')
@@ -102,18 +84,14 @@ export function LoginForm() {
       redirectToPostLoginPath(nextPath)
     } catch (configError) {
       setStatus('error')
-      setError(
-        configError instanceof Error
-          ? configError.message
-          : 'Sign-in is not available because Supabase is not configured.',
-      )
+      setError(configError instanceof Error ? configError.message : t('errors.unavailable'))
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <label className="block space-y-2 text-sm font-medium">
-        <span>Email</span>
+        <span>{t('emailLabel')}</span>
         <Input
           required
           type="email"
@@ -124,7 +102,7 @@ export function LoginForm() {
         />
       </label>
       <label className="block space-y-2 text-sm font-medium">
-        <span>Password</span>
+        <span>{t('passwordLabel')}</span>
         <Input
           required
           type="password"
@@ -136,10 +114,10 @@ export function LoginForm() {
       </label>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href={'/forgot-password' as Route}
+          href={forgotPasswordHref}
           className="text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
-          Forgot password?
+          {t('forgotPassword')}
         </Link>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -149,12 +127,12 @@ export function LoginForm() {
         className="w-full"
       >
         {status === 'submitting'
-          ? 'Signing in...'
+          ? t('submitting')
           : status === 'redirecting'
-            ? 'Redirecting...'
-            : 'Sign in'}
+            ? t('redirecting')
+            : t('submit')}
       </Button>
-      <AuthFooterLink href={'/signup' as Route} text="Need an account?" label="Sign up for free" />
+      <AuthFooterLink href={signupHref} text={t('footerText')} label={t('footerLabel')} />
     </form>
   )
 }

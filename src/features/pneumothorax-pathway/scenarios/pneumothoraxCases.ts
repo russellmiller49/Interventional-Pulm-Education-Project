@@ -1,3 +1,5 @@
+import { pickLocaleContent } from '@/i18n/content'
+
 import type { PneumothoraxCase } from '../engine/types'
 
 export const pneumothoraxCases: readonly PneumothoraxCase[] = [
@@ -140,3 +142,101 @@ export const pneumothoraxCases: readonly PneumothoraxCase[] = [
       'Recurrent primary spontaneous pneumothorax in a pilot changes the recurrence-prevention discussion.',
   },
 ]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Localized variants (es, zh-CN).
+// MACHINE-TRANSLATED, PENDING CLINICAL REVIEW. Case ids and all clinical/logic
+// fields mirror the English source above so the dual-framework engine evaluates
+// identically; only the learner-facing title and learningCue differ. See
+// docs/i18n-localization.md.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const caseById = (id: string): PneumothoraxCase => {
+  const found = pneumothoraxCases.find((item) => item.id === id)
+
+  if (!found) {
+    throw new Error(`Missing pneumothorax case ${id}`)
+  }
+
+  return found
+}
+
+const pneumothoraxCasesEs: readonly PneumothoraxCase[] = [
+  {
+    ...caseById('stable-minimal-psp'),
+    title: 'Neumotórax primario estable con síntomas mínimos',
+    learningCue:
+      'Neumotórax espontáneo primario grande en la imagen, pero el paciente está cómodo y el seguimiento es fiable.',
+  },
+  {
+    ...caseById('stable-symptomatic-psp'),
+    title: 'Neumotórax primario estable sintomático',
+    learningCue:
+      'Neumotórax espontáneo primario pequeño, pero la disnea y el dolor torácico dominan el cuadro.',
+  },
+  {
+    ...caseById('copd-ssp'),
+    title: 'Neumotórax secundario por EPOC',
+    learningCue:
+      'Neumotórax espontáneo secundario en enfermedad pulmonar obstructiva crónica con reserva respiratoria limitada.',
+  },
+  {
+    ...caseById('unstable-tension'),
+    title: 'Fisiología de neumotórax inestable',
+    learningCue:
+      'La hipotensión, la hipoxemia grave y la incapacidad de hablar frases completas anulan las ramas de menor riesgo.',
+  },
+  {
+    ...caseById('persistent-air-leak'),
+    title: 'Fuga de aire persistente en el día 5',
+    learningCue:
+      'El burbujeo de aire persiste tras comprobar la posición del drenaje y el sistema de drenaje al quinto día.',
+  },
+  {
+    ...caseById('recurrent-pilot'),
+    title: 'Neumotórax primario recurrente en un piloto',
+    learningCue:
+      'Un neumotórax espontáneo primario recurrente en un piloto cambia la discusión sobre la prevención de recurrencias.',
+  },
+]
+
+const pneumothoraxCasesZhCn: readonly PneumothoraxCase[] = [
+  {
+    ...caseById('stable-minimal-psp'),
+    title: '稳定、症状轻微的原发性气胸',
+    learningCue: '影像显示大量原发性自发性气胸，但患者无明显不适且随访可靠。',
+  },
+  {
+    ...caseById('stable-symptomatic-psp'),
+    title: '稳定、有症状的原发性气胸',
+    learningCue: '少量原发性自发性气胸，但呼吸困难和胸痛是就诊的主要原因。',
+  },
+  {
+    ...caseById('copd-ssp'),
+    title: 'COPD 继发性气胸',
+    learningCue: '慢性阻塞性肺疾病（COPD）患者发生继发性自发性气胸，呼吸储备有限。',
+  },
+  {
+    ...caseById('unstable-tension'),
+    title: '不稳定气胸的生理状态',
+    learningCue: '低血压、严重低氧血症以及无法说出完整句子，优先于较低风险的分支。',
+  },
+  {
+    ...caseById('persistent-air-leak'),
+    title: '第 5 天持续性漏气',
+    learningCue: '在第五天检查引流管位置和引流系统后，气泡仍持续冒出。',
+  },
+  {
+    ...caseById('recurrent-pilot'),
+    title: '飞行员复发性原发性气胸',
+    learningCue: '飞行员发生复发性原发性自发性气胸，改变了关于复发预防的讨论。',
+  },
+]
+
+export function getPneumothoraxCases(locale: string): readonly PneumothoraxCase[] {
+  return pickLocaleContent(locale, {
+    en: pneumothoraxCases,
+    es: pneumothoraxCasesEs,
+    'zh-CN': pneumothoraxCasesZhCn,
+  })
+}

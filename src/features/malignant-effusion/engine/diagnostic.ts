@@ -1,8 +1,18 @@
 export type LungExpansion = 'full' | 'partial' | 'trapped'
 export type ManagementArm = 'pleurodesisCandidate' | 'ipcOrRapidPleurodesis' | 'ipcPreferred'
 
+/**
+ * Stable, locale-independent identifier for each nondiagnostic-tap branch. The
+ * UI maps these to localized strings (messages `malignantEffusion.nondiagnostic.*`)
+ * so the conditional logic lives in one place instead of being duplicated per
+ * language. The English `recommendation` / `teachingPoint` strings below mirror
+ * these for tests/non-UI use.
+ */
+export type NondiagnosticTapCode = 'twoPlus' | 'one' | 'zero'
+
 export interface NondiagnosticTapRecommendation {
   shouldEscalate: boolean
+  code: NondiagnosticTapCode
   recommendation: string
   teachingPoint: string
 }
@@ -11,6 +21,7 @@ export function afterNondiagnosticTaps(count: number): NondiagnosticTapRecommend
   if (count >= 2) {
     return {
       shouldEscalate: true,
+      code: 'twoPlus',
       recommendation:
         'Stop fluid-only cycling and escalate toward pleural biopsy, image-guided biopsy, or pleuroscopy when suspicion remains high.',
       teachingPoint:
@@ -21,6 +32,7 @@ export function afterNondiagnosticTaps(count: number): NondiagnosticTapRecommend
   if (count === 1) {
     return {
       shouldEscalate: true,
+      code: 'one',
       recommendation:
         'A second cytology sample can be considered in selected cases, but tissue strategy should already be visible if pretest probability is high.',
       teachingPoint:
@@ -30,6 +42,7 @@ export function afterNondiagnosticTaps(count: number): NondiagnosticTapRecommend
 
   return {
     shouldEscalate: false,
+    code: 'zero',
     recommendation:
       'Send adequate cytology and pair the result with imaging, lung expansion, symptoms, and patient goals.',
     teachingPoint:

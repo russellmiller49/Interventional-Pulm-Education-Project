@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadificación del cáncer de pulmón y EBUS lineal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 20px;
+        }
+        ul, ol {
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .highlight-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 5px solid #2980b9;
+            margin: 20px 0;
+        }
+        .checklist-item {
+            list-style-type: none;
+        }
+        .checklist-item:before {
+            content: "☐ ";
+            font-size: 1.2em;
+        }
+        .answer-key {
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Estadificación del cáncer de pulmón y EBUS lineal</h1>
+        <p><strong>Correspondencia con el examen y alcance</strong></p>
+        <p>Este capítulo integra la clasificación TNM de 9.ª edición con la aplicación práctica y relevante para el examen de la ecobroncoscopia endobronquial lineal (EBUS) en la estadificación mediastínica. Se enfatizan el triaje por imagen (TC, PET/TC y RM cerebral cuando corresponda), los mapas y límites ganglionares, las indicaciones para estadificación invasiva, las estrategias sistemática frente a dirigida con EBUS, la obtención y el procesamiento de muestras, el reconocimiento de complicaciones y la toma de decisiones posterior a la prueba (incluido cuándo —si alguna vez— confirmar un EBUS negativo con mediastinoscopia).</p>
+    </header>
+
+    <section>
+        <h2>Objetivos de aprendizaje</h2>
+        <p>Al finalizar este capítulo, el lector podrá:</p>
+        <ul>
+            <li>Aplicar las actualizaciones de la 9.ª edición del TNM, en particular N2a frente a N2b y M1c1 frente a M1c2, a las decisiones de estadificación clínica.</li>
+            <li>Identificar qué estaciones ganglionares mediastínicas e hiliares son accesibles mediante EBUS frente a EUS‑B y reconocer los límites anatómicos de alto riesgo.</li>
+            <li>Seleccionar a los pacientes para estadificación mediastínica invasiva y elegir entre estrategias sistemáticas y dirigidas con EBUS.</li>
+            <li>Ejecutar un flujo de trabajo escalonado de EBUS‑TBNA que minimice la contaminación, incluido el orden correcto de muestreo (N3 → N2 → N1) y la realización de un número adecuado de pases.</li>
+            <li>Optimizar la sedación y la oxigenación, y resolver ventanas acústicas deficientes, ganglios calcificados o necróticos y sangrado.</li>
+            <li>Interpretar una estadificación invasiva negativa en su contexto y decidir cuándo una mediastinoscopia adicional cambiaría el manejo.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Resumen de alto rendimiento (perlas, errores y trampas)</h2>
+        <div class="highlight-box">
+            <ul>
+                <li><strong>Aspectos esenciales de TNM‑9:</strong> N2 se subdivide en una sola estación (N2a) frente a múltiples estaciones (N2b); M1c se subdivide en un solo órgano (M1c1) frente a múltiples órganos (M1c2). Varias combinaciones T/N cambian de grupo de estadio (en particular, T1N2aM0 → estadio IIB).</li>
+                <li><strong>Reglas de medición:</strong> Mida el componente sólido/invasivo para determinar el tamaño T; las porciones lepídicas/en vidrio deslustrado no cuentan para el tamaño T; la diseminación a través de los espacios aéreos (STAS) no modifica la categoría T.</li>
+                <li><strong>Los límites del mapa ganglionar importan:</strong>
+                    <ul>
+                        <li>El borde inferior de la vena ácigos distingue la estación 4R de la 10R.</li>
+                        <li>El borde superior del arco aórtico separa la estación 2L de la 4L.</li>
+                        <li><em>Perla:</em> Etiquetar de forma incorrecta estos límites puede sobreestadificar o infraestadificar artificialmente al paciente.</li>
+                    </ul>
+                </li>
+                <li><strong>Triaje por imagen:</strong> La PET/TC supera a la TC para evaluar ganglios mediastínicos, pero presenta falsos positivos. No confíe en la PET/TC para metástasis cerebrales pequeñas; utilice RM cerebral cuando esté clínicamente indicada.</li>
+                <li><strong>¿Quién necesita estadificación invasiva?</strong>
+                    <ul>
+                        <li>Adenopatía mediastínica definida o ganglios mediastínicos hipermetabólicos en PET.</li>
+                        <li>Situaciones de «riesgo intermedio»: mediastino normal en TC/PET, pero tumor central, tumor &gt;3 cm o cN1.</li>
+                    </ul>
+                </li>
+                <li><strong>EBUS frente a cirugía:</strong> La estadificación endoscópica con aguja (EBUS/EUS‑B) tiene sensibilidad y especificidad altas y constituye la primera prueba preferida. La combinación EBUS + EUS aumenta el rendimiento.</li>
+                <li><strong>Sistemática &gt; dirigida:</strong> Un abordaje sistemático (muestreo de ≥3 estaciones, habitualmente 4R, 4L y 7) detecta enfermedad N2/N3 adicional en comparación con estrategias dirigidas tipo «hit‑and‑run».</li>
+                <li><strong>Orden de muestreo (favorito de examen):</strong> Muestree siempre N3 → N2 → N1 para evitar contaminación.</li>
+                <li><strong>Adecuación:</strong> ≥3 pases por objetivo es un punto de referencia habitual; considere pases adicionales para pruebas moleculares o cuando no haya ROSE disponible.</li>
+                <li><strong>Advertencia sobre estaciones 5–6:</strong> Rara vez son accesibles mediante EBUS; considere EUS‑B o abordajes quirúrgicos cuando sean decisivas.</li>
+                <li><strong>Complicaciones:</strong> Los eventos mayores son infrecuentes. El neumotórax es inusual (&lt;1%), pero puede producirse cerca de la pleura (por ejemplo, en una estación paratraqueal derecha próxima a la reflexión pleural).</li>
+                <li><strong>EBUS negativo: ¿y después?</strong> La mediastinoscopia confirmatoria tras un EBUS sistemático negativo de alta calidad aporta un beneficio incremental limitado en muchos contextos; resérvela para pacientes seleccionados de alto riesgo o según protocolos institucionales.</li>
+                <li><strong>Sedación:</strong> Tanto la sedación moderada como la profunda son aceptables. La sedación profunda puede reducir la inestabilidad intraprocedimiento; la cánula nasal de alto flujo (HFNC) puede mitigar la desaturación bajo sedación moderada.</li>
+                <li><strong>Situaciones especiales:</strong> La EBUS‑TBNA tiene utilidad limitada para el linfoma de Hodgkin clásico; a menudo se necesita criobiopsia o tejido quirúrgico para preservar la arquitectura.</li>
+                <li><strong>Informe como un cirujano:</strong> Especifique las estaciones muestreadas, el calibre de la aguja, el número de pases, el uso de ROSE y cualquier limitación (calcificación, necrosis, proximidad vascular).</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>Conceptos fundamentales</h2>
+        
+        <h3>Fisiopatología / Epidemiología (breve)</h3>
+        <p>La diseminación ganglionar sigue patrones previsibles desde las estaciones lobares hasta las mediastínicas. El pronóstico depende no solo de la presencia de enfermedad ganglionar, sino también de su distribución (una sola estación frente a varias) y extensión (ipsilateral frente a contralateral). TNM‑9 formaliza este gradiente clínicamente observado al subdividir N2 y M1c.</p>
+
+        <h3>Indicaciones y contraindicaciones</h3>
+        <p><strong>Indicaciones de estadificación mediastínica invasiva (se prefiere inicialmente una técnica con aguja):</strong></p>
+        <ul>
+            <li>Aumento definido de ganglios mediastínicos (eje corto &gt;1 cm) y/o ganglios mediastínicos con captación de FDG en ausencia de metástasis a distancia.</li>
+            <li>«Riesgo intermedio» con mediastino radiográficamente normal, pero tumor primario de alto riesgo: central, &gt;3 cm o N1 sospechoso en imagen.</li>
+            <li>Primarios seleccionados PET negativos (SUV bajo) en los que persiste el riesgo de N2/N3 oculto.</li>
+        </ul>
+        <p><strong>Cuándo, en general, NO está indicada la estadificación invasiva:</strong></p>
+        <ul>
+            <li>Tumor periférico &lt;3 cm con primario hipermetabólico y sin ganglios sospechosos en TC/PET (proceder a resección).</li>
+        </ul>
+        <p><strong>Selección de estaciones mediante EBUS/EUS‑B:</strong></p>
+        <ul>
+            <li><strong>EBUS:</strong> Alcanza la mayoría de las estaciones excepto 5–6 (aortopulmonares y paraaórticas).</li>
+            <li><strong>EUS‑B:</strong> Añade excelente acceso a las estaciones 8–9 y mejora el acceso a 4L y 7; con frecuencia puede evaluarse la glándula suprarrenal izquierda en la misma sesión.</li>
+        </ul>
+        <p><strong>Contraindicaciones y precauciones:</strong></p>
+        <ul>
+            <li>Coagulopatía no controlada o alto riesgo hemorrágico (suspender la anticoagulación terapéutica cuando sea seguro).</li>
+            <li>Para EUS‑B, las várices esofágicas o la disfagia grave aumentan el riesgo.</li>
+        </ul>
+
+        <h3>Evaluación preprocedimiento</h3>
+        <ul>
+            <li><strong>Imagen:</strong> TC de tórax (cortes finos); PET/TC para buscar enfermedad a distancia y priorizar estaciones; RM cerebral según el caso (por ejemplo, síntomas neurológicos o intención curativa).</li>
+            <li><strong>Laboratorios y medicamentos:</strong> Revise recuento plaquetario, coagulación y antitrombóticos, con un plan de suspensión y reinicio conforme al protocolo local.</li>
+            <li><strong>Plan de vía aérea y anestesia:</strong> Sedación moderada frente a sedación profunda/anestesia general. La anestesia general facilita la estabilidad, suprime la tos y permite intercambios repetidos del broncoscopio (TET ≥8,0, LMA o soporte rígido). Con sedación moderada, la HFNC reduce la desaturación frente al oxígeno de bajo flujo.</li>
+            <li><strong>Consentimiento:</strong> Documente beneficios potenciales (estadificación mínimamente invasiva, adecuación para pruebas moleculares) y riesgos infrecuentes pero graves (sangrado importante, neumotórax, mediastinitis).</li>
+        </ul>
+
+        <h3>Equipo y preparación</h3>
+        <ul>
+            <li><strong>Broncoscopio:</strong> Ecobroncoscopio lineal (curvilíneo) con transductor de ~7,5 MHz; diámetro externo ≈6,3–6,6 mm. Balón de acoplamiento (inflado con solución salina).</li>
+            <li><strong>Agujas:</strong> 19G, 21G, 22G, 25G; profundidad de excursión habitual ~5–40 mm con bloqueo de seguridad ajustable.</li>
+            <li><strong>Accesorios:</strong> Doppler, aspiración, jeringas para vacío (o técnica capilar), ROSE (si está disponible), medios para bloque celular/núcleo, HFNC o soporte ventilatorio.</li>
+            <li><strong>Distribución de la sala:</strong> Campo estéril, protector bucal/boquilla y carro de reanimación disponible. Coloque el equipo de ultrasonido de modo que el operador pueda ver simultáneamente las imágenes endoscópicas y ecográficas.</li>
+        </ul>
+
+        <h3>Técnica paso a paso / Lista de verificación</h3>
+        <ol>
+            <li><strong>Acceso:</strong> Acceso a la vía aérea (boca/LMA/TET/rígido) y anestesia tópica; acople el balón para lograr contacto ecográfico.</li>
+            <li><strong>Exploración:</strong> Oriéntese con la hoja de ruta de TC/PET; confirme los puntos de referencia vasculares en la ecografía (por ejemplo, VCS y ácigos para 4R; arteria pulmonar izquierda y arco aórtico para 4L).</li>
+            <li><strong>Orden sistemático de muestreo:</strong> Mediastínicos contralaterales (N3) → mediastínicos ipsilaterales (N2) → hiliares (N1).</li>
+            <li><strong>Selección del objetivo y seguridad:</strong> Active Doppler para evitar vasos; respete la pleura cerca de la región paratraqueal derecha/ácigos; diferencie el esófago posterior en la estación 7.</li>
+            <li><strong>Manejo de la aguja (técnica de punción rápida):</strong> Bloquee el cuerpo, avance la vaina hasta el campo visual, libere el bloqueo, realice una punción rápida en el ganglio bajo ecografía en tiempo real, manipule el estilete, aplique aspiración, efectúe 3–10 movimientos de ida y vuelta, libere la aspiración, retraiga y recupere la muestra.</li>
+            <li><strong>Pases:</strong> Realice ≥3 pases por estación para citología; añada más si se prevén pruebas moleculares o si ROSE es insuficiente.</li>
+            <li><strong>Procesamiento:</strong> Prepare extendidos + bloque celular (o núcleo de coágulo) para histología y estudios auxiliares; etiquete por estación.</li>
+            <li><strong>EUS‑B:</strong> Combine con EUS‑B (en la misma sesión) si están indicadas estaciones posteriores/inferiores o la suprarrenal izquierda.</li>
+            <li><strong>Finalización:</strong> Enjuague el broncoscopio, reinfle el balón según sea necesario para confirmar hemostasia y realice una inspección breve de la vía aérea.</li>
+        </ol>
+
+        <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+        <ul>
+            <li><strong>Contacto deficiente:</strong> Rellene el balón, ajuste la flexión, cambie la posición del cuello o realice pequeñas deflexiones de la punta para optimizar la ventana.</li>
+            <li><strong>Ganglios calcificados o fibróticos:</strong> Utilice una aguja más rígida (por ejemplo, 19–21G) y varias redirecciones dentro del ganglio; considere pases adicionales para bloque celular.</li>
+            <li><strong>Ganglios necróticos:</strong> Muestree el borde periférico viable en la ecografía; utilice Doppler para evitar vasos nutricios. Nota: los centros necróticos suelen ser hipoecoicos o anecoicos.</li>
+            <li><strong>Sangrado:</strong> La mayoría de los episodios son leves; aplique aspiración y solución salina fría. Si persiste, retire la aguja y reevalúe la coagulación; considere taponamiento con el broncoscopio/balón.</li>
+            <li><strong>Tos/movimiento:</strong> Profundice la sedación o convierta a anestesia general; la LMA o el TET suelen mejorar la precisión y la eficiencia.</li>
+            <li><strong>Errores de estación:</strong> Vuelva a identificar los puntos de referencia (arco de la ácigos = borde inferior de 4R; borde superior de la API = borde inferior de 4L; esófago posterior en 7). Una clasificación errónea puede modificar la categoría N.</li>
+        </ul>
+
+        <h3>Cuidados y seguimiento posteriores</h3>
+        <ul>
+            <li>Vigile durante 1–2 horas por hipoxemia o sangrado.</li>
+            <li>Reinicie los antitrombóticos según el protocolo; proporcione indicaciones de alarma (fiebre, dolor torácico, hemoptisis).</li>
+            <li><strong>Elementos esenciales del informe:</strong> Contexto clínico, resumen de imagen, estaciones evaluadas y muestreadas, calibre y número de pases, resultado de ROSE (si se utilizó), complicaciones/limitaciones inmediatas y siguientes pasos.</li>
+        </ul>
+        
+        <h3>Complicaciones (prevención, reconocimiento y manejo)</h3>
+        <ul>
+            <li><strong>Riesgo general:</strong> Bajo. Los eventos adversos mayores son infrecuentes (&lt;2%).</li>
+            <li><strong>Neumotórax:</strong> Infrecuente (&lt;1%); el riesgo aumenta cuando la pleura está próxima (por ejemplo, 4R alta). Mantenga siempre la pleura visible durante el muestreo.</li>
+            <li><strong>Infecciosas:</strong> La mediastinitis es infrecuente. La técnica estéril reduce el riesgo. Considere profilaxis antibiótica de forma selectiva (por ejemplo, lesiones quísticas o huéspedes de alto riesgo).</li>
+            <li><strong>Relacionadas con la sedación:</strong> Hipoventilación, hipotensión, arritmia. Optimice la preoxigenación (HFNC); en algunas cohortes, la sedación profunda/anestesia general reduce la inestabilidad intraprocedimiento.</li>
+        </ul>
+
+        <h3>Poblaciones especiales</h3>
+        <ul>
+            <li><strong>cN0 de «riesgo intermedio»:</strong> Tumores centrales, &gt;3 cm o cN1: es apropiado un EBUS/EUS‑B sistemático; la enfermedad N2/N3 oculta no es infrecuente.</li>
+            <li><strong>Tumores del LSI (ventana aortopulmonar):</strong> Considere EUS‑B o acceso quirúrgico a estaciones 5–6 si son decisivas para el manejo.</li>
+            <li><strong>Linfoma:</strong> El linfoma de Hodgkin clásico es difícil de diagnosticar mediante TBNA; considere criobiopsia complementaria u otro abordaje para obtener arquitectura.</li>
+            <li><strong>Planificación radioterápica:</strong> EBUS/EUS‑B antes del tratamiento mejora la delimitación del volumen objetivo cuando el estado ganglionar es incierto.</li>
+        </ul>
+
+        <h3>Evidencia y resultados (seleccionados)</h3>
+        <ul>
+            <li><strong>Rendimiento de la imagen:</strong> La sensibilidad/especificidad de PET/TC para ganglios mediastínicos es ~77–85% / 86–90%. La TC sola alcanza ~55–61% / 79–81%. La PET/TC tiene falsos positivos (inflamación) y falsos negativos (histologías con baja captación de FDG).</li>
+            <li><strong>Estadificación endoscópica:</strong> La sensibilidad de EBUS‑TBNA es ~90%, con especificidad casi perfecta. La combinación EBUS+EUS eleva la sensibilidad a valores medios del 90%.</li>
+            <li><strong>Sistemática frente a dirigida:</strong> La estadificación sistemática (muestreo de ≥3 estaciones) detecta enfermedad N2/N3 adicional frente a abordajes dirigidos solo a hallazgos sospechosos.</li>
+            <li><strong>Tras un EBUS negativo:</strong> La mediastinoscopia confirmatoria rutinaria aporta poco en muchos pacientes; resérvela para situaciones seleccionadas de alto riesgo o casos discordantes.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Algoritmos diagnósticos y terapéuticos</h2>
+        
+        <h3>Algoritmo 1 — Imagen en CPNM → Estadificación mediastínica invasiva</h3>
+        <ol>
+            <li>CPNM sospechado o confirmado → TC con contraste de tórax/abdomen + PET/TC con FDG.</li>
+            <li><strong>¿Metástasis a distancia?</strong>
+                <ul>
+                    <li>Sí → Estudio de estadio IV.</li>
+                    <li>No → Evaluar riesgo mediastínico.</li>
+                </ul>
+            </li>
+            <li><strong>Evaluación del riesgo mediastínico:</strong>
+                <ul>
+                    <li>Ganglio definido en TC o hipermetabólico en PET → Estadificación invasiva (EBUS ± EUS‑B).</li>
+                    <li>Mediastino normal PERO tumor central, &gt;3 cm o cN1 → Estadificación invasiva.</li>
+                    <li>Periférico &lt;3 cm, sin ganglios sospechosos → Tratamiento local directo.</li>
+                </ul>
+            </li>
+            <li><strong>Estadificación invasiva:</strong>
+                <ul>
+                    <li>Muestreo sistemático (N3 → N2 → N1).</li>
+                    <li>≥3 pases/estación.</li>
+                </ul>
+            </li>
+            <li><strong>Resultados:</strong>
+                <ul>
+                    <li>N2/N3 confirmado → Plan multidisciplinario para estadio III.</li>
+                    <li>Negativo → Proceder al tratamiento local.</li>
+                    <li>Si persiste alta sospecha pese a EBUS negativo → Mediastinoscopia confirmatoria selectiva.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h3>Algoritmo 2 — Flujo de trabajo del procedimiento EBUS‑TBNA lineal</h3>
+        <ul>
+            <li><strong>Preoperatorio:</strong> Revisar imágenes, coagulación y plan de sedación.</li>
+            <li><strong>Preparación:</strong> Acceso a la vía aérea, acoplamiento con balón y comprobación ecográfica.</li>
+            <li><strong>Mapeo:</strong> Identificar puntos de referencia vasculares y límites de estaciones.</li>
+            <li><strong>Muestreo:</strong> N3 → N2 → N1 (técnica de punción rápida, aspiración).</li>
+            <li><strong>Adecuación:</strong> ≥3 pases/estación (más para pruebas moleculares). Revisión ROSE si está disponible.</li>
+            <li><strong>Complemento:</strong> Añadir EUS‑B para 7/8/9/suprarrenal izquierda si es necesario.</li>
+            <li><strong>Finalización:</strong> Comprobación de hemostasia e informe estructurado.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Tablas y recuadros de consulta rápida</h2>
+        
+        <h3>Tabla 1. Actualizaciones de alto rendimiento de TNM‑9</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Elemento</th>
+                    <th>Punto clave</th>
+                    <th>Impacto práctico</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Subcategorías N2</td>
+                    <td>N2a: una sola estación mediastínica ipsilateral/subcarinal<br>N2b: múltiples estaciones</td>
+                    <td>El N2 multiestacional confiere peor pronóstico e influye en la candidatura quirúrgica y en las decisiones adyuvantes.</td>
+                </tr>
+                <tr>
+                    <td>Subcategorías M1c</td>
+                    <td>M1c1: múltiples metástasis en un solo sistema orgánico<br>M1c2: múltiples sistemas orgánicos</td>
+                    <td>Aclara la carga metastásica y apoya la planificación multidisciplinaria.</td>
+                </tr>
+                <tr>
+                    <td>Grupos de estadio</td>
+                    <td>Varias combinaciones T/N fueron reasignadas (por ejemplo, T1N2aM0 → IIB)</td>
+                    <td>Evita el «sesgo heredado» de la 8.ª edición al asesorar y tratar.</td>
+                </tr>
+                <tr>
+                    <td>Recordatorios de clasificación T</td>
+                    <td>Tamaño = componente sólido/invasivo; el componente lepídico no se cuenta</td>
+                    <td>Evita sobreestimar T.</td>
+                </tr>
+                <tr>
+                    <td>VPI, STAS</td>
+                    <td>La VPI aumenta la categoría (T2 cuando el tumor es pequeño); STAS se registra, pero no modifica T</td>
+                    <td>No cuente STAS para el tamaño T.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Tabla 2. Estaciones ganglionares: acceso y referencias (EBUS frente a EUS‑B)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Estación</th>
+                    <th>Acceso habitual</th>
+                    <th>Pistas de referencia (ecografía)</th>
+                    <th>Notas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2R/2L</td>
+                    <td>EBUS (±EUS‑B)</td>
+                    <td>2R: carótida/subclavia derecha<br>2L: por encima del arco aórtico</td>
+                    <td>Definir los límites por ecografía es difícil.</td>
+                </tr>
+                <tr>
+                    <td>4R</td>
+                    <td>EBUS</td>
+                    <td>VCS y ácigos; borde inferior de la ácigos = límite inferior de 4R</td>
+                    <td>La ácigos distingue 4R de 10R. La pleura está próxima (riesgo de neumotórax).</td>
+                </tr>
+                <tr>
+                    <td>4L</td>
+                    <td>EBUS (±EUS‑B)</td>
+                    <td>«Mickey Mouse» (aorta‑AP‑ganglio); borde superior de la API = límite inferior de 4L</td>
+                    <td>EUS‑B puede ayudar en ángulos difíciles.</td>
+                </tr>
+                <tr>
+                    <td>5–6</td>
+                    <td>EUS‑B o cirugía</td>
+                    <td>Ventana aortopulmonar / paraaórtica</td>
+                    <td>A menudo no son alcanzables mediante EBUS.</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>EBUS o EUS‑B</td>
+                    <td>Subcarinal; esófago posterior</td>
+                    <td>Puede abordarse a través de la pared de cualquiera de los bronquios principales.</td>
+                </tr>
+                <tr>
+                    <td>8–9</td>
+                    <td>Solo EUS‑B</td>
+                    <td>Paraesofágica / ligamento pulmonar</td>
+                    <td>No accesibles mediante EBUS.</td>
+                </tr>
+                <tr>
+                    <td>10–11</td>
+                    <td>EBUS</td>
+                    <td>10R: inferior a la ácigos<br>10L: por encima de la API</td>
+                    <td>Ganglios hiliares / interlobares.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Tabla 3. Protocolo rápido de EBUS‑TBNA</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dominio</th>
+                    <th>Mejor práctica</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Estrategia</td>
+                    <td>Evaluación sistemática; muestrear ≥3 estaciones (habitualmente 4R, 4L y 7) en orden N3 → N2 → N1.</td>
+                </tr>
+                <tr>
+                    <td>Pases</td>
+                    <td>≥3 pases por ganglio; más si se necesitan pruebas moleculares o no hay ROSE.</td>
+                </tr>
+                <tr>
+                    <td>Aguja</td>
+                    <td>19/21/22/25G; las agujas más rígidas ayudan en ganglios calcificados; 25G ofrece ventajas en ángulos estrechos.</td>
+                </tr>
+                <tr>
+                    <td>Sedación</td>
+                    <td>Moderada o profunda; la anestesia general mejora la estabilidad. La HFNC reduce el riesgo de desaturación con sedación moderada.</td>
+                </tr>
+                <tr>
+                    <td>Seguridad</td>
+                    <td>Comprobación vascular con Doppler; mantener la pleura visible en 4R alta; evitar centros necróticos.</td>
+                </tr>
+                <tr>
+                    <td>Informe</td>
+                    <td>Estaciones muestreadas, calibre/número de pases, adecuación/ROSE, complicaciones y limitaciones.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Tabla 4. Imagen para estadificación: fortalezas y limitaciones</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modalidad</th>
+                    <th>Ventajas</th>
+                    <th>Limitaciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>PET/TC</td>
+                    <td>Alta sensibilidad para enfermedad a distancia y ganglios mediastínicos</td>
+                    <td>Deficiente para metástasis cerebrales pequeñas; falsos positivos (infección); falsos negativos (tumores con baja captación de FDG).</td>
+                </tr>
+                <tr>
+                    <td>RM</td>
+                    <td>Mejor para metástasis del SNC; excelente contraste de tejidos blandos para invasión de tumor de Pancoast</td>
+                    <td>Disponibilidad, contraindicaciones y mayor duración del estudio.</td>
+                </tr>
+                <tr>
+                    <td>TC</td>
+                    <td>Mapa anatómico basal; planificación quirúrgica</td>
+                    <td>Inferior a PET/TC para estadificación ganglionar; subestima invasión.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Casos y aprendizaje aplicado</h2>
+        
+        <p><strong>Caso 1 (siguiente mejor paso)</strong><br>
+        Un CPNM de 5 cm en el lóbulo inferior izquierdo es hipermetabólico en PET; hay captación leve en 4L, 7 y 11R, sin metástasis a distancia.<br>
+        <span class="answer-key">Respuesta: B. Comenzar el muestreo en 11R.</span> Empiece por N3 (hiliar contralateral 11R; en este caso, 11R es contralateral al LII), después N2 (4L/7) y finalmente N1. Nota: Confirme que la lateralidad de la estación en la pregunta coincide con la lógica de «N3 primero».</p>
+
+        <p><strong>Caso 2 (planificación del acceso)</strong><br>
+        Tumor del lóbulo superior izquierdo con sospecha de afectación de la ventana aortopulmonar en PET/TC.<br>
+        <span class="answer-key">Respuesta: B. EUS‑B o abordaje quirúrgico de estaciones 5–6.</span> Las estaciones 5–6 rara vez son accesibles mediante EBUS.</p>
+
+        <p><strong>Caso 3 (EBUS negativo)</strong><br>
+        Un paciente con tumor central T2 y cN0 por TC/PET se somete a EBUS/EUS‑B sistemático (≥3 estaciones, pases adecuados), con resultado negativo.<br>
+        <span class="answer-key">Respuesta: B. Proceder a resección/radioterapia según el plan.</span> Una endosonografía negativa de alta calidad suele evitar la necesidad de mediastinoscopia confirmatoria rutinaria.</p>
+    </section>
+
+    <section>
+        <h2>Banco de preguntas (opción múltiple)</h2>
+        <ol>
+            <li>
+                Masa central de 3,5 cm en LSD con mediastino normal en TC/PET. ¿Cuál es el siguiente mejor paso para la evaluación mediastínica?
+                <br>A. Repetir PET/TC en 3 meses
+                <br>B. EBUS‑TBNA sistemático
+                <br>C. Proceder directamente a lobectomía
+                <br>D. RM de tórax
+                <br>E. Gammagrafía ósea
+                <br><span class="answer-key">Respuesta: B.</span> Los tumores centrales &gt;3 cm son de «riesgo intermedio» pese a imagen normal y requieren estadificación mediastínica invasiva.
+            </li>
+            <br>
+            <li>
+                Durante EBUS de 4R, ¿qué referencia define mejor el límite inferior de 4R y ayuda a distinguirla de 10R?
+                <br>A. Arteria pulmonar izquierda
+                <br>B. Arco aórtico
+                <br>C. Vena ácigos (borde inferior)
+                <br>D. Aurícula derecha
+                <br>E. Carina
+                <br><span class="answer-key">Respuesta: C.</span> El borde inferior de la ácigos marca el límite inferior de 4R; por debajo se encuentra 10R.
+            </li>
+            <br>
+            <li>
+                En TNM‑9, ¿qué cambio es correcto?
+                <br>A. M1a se subdivide en M1a1/M1a2
+                <br>B. N2 se subdivide en N2a (una estación) y N2b (múltiples estaciones)
+                <br>C. Las categorías T ahora cuentan el componente lepídico
+                <br>D. STAS aumenta la categoría T
+                <br>E. La VPI ya no afecta T
+                <br><span class="answer-key">Respuesta: B.</span> N2 se divide ahora en N2a y N2b; el componente lepídico no se cuenta para el tamaño T; STAS no modifica T; la VPI conserva su efecto.
+            </li>
+            <br>
+            <li>
+                ¿Qué estación no suele ser alcanzable mediante EBUS lineal y a menudo requiere EUS‑B o cirugía?
+                <br>A. 4L
+                <br>B. 7
+                <br>C. 10L
+                <br>D. 5
+                <br>E. 11R
+                <br><span class="answer-key">Respuesta: D.</span> La estación 5 (ventana aortopulmonar) rara vez es accesible mediante EBUS.
+            </li>
+            <br>
+            <li>
+                ¿Cuál es el orden de muestreo preferido durante la estadificación del cáncer de pulmón con EBUS?
+                <br>A. N1 → N2 → N3
+                <br>B. N2 → N3 → N1
+                <br>C. N3 → N2 → N1
+                <br>D. Cualquier orden es aceptable
+                <br>E. Solo N2
+                <br><span class="answer-key">Respuesta: C.</span> Muestree N3 → N2 → N1 para evitar contaminación y sobreestadificación.
+            </li>
+            <br>
+            <li>
+                ¿Qué afirmación sobre la sedación para EBUS‑TBNA es correcta?
+                <br>A. La sedación profunda está contraindicada
+                <br>B. La sedación moderada y profunda son aceptables; la profunda puede reducir la inestabilidad intraprocedimiento
+                <br>C. Solo la anestesia general permite obtener muestras diagnósticas
+                <br>D. La HFNC empeora la desaturación bajo sedación moderada
+                <br>E. ROSE es obligatoria con sedación profunda
+                <br><span class="answer-key">Respuesta: B.</span> Ambas estrategias son aceptables; la sedación profunda/anestesia general puede estabilizar el procedimiento; la HFNC reduce el riesgo de desaturación durante sedación moderada.
+            </li>
+            <br>
+            <li>
+                Un ganglio subcarinal posterior es difícil de visualizar mediante EBUS. ¿Cuál es la mejor estrategia complementaria?
+                <br>A. Aumentar únicamente la aspiración
+                <br>B. Cambiar a EUS‑B para una vista posterior
+                <br>C. Reducir el acoplamiento del balón
+                <br>D. Muestrear primero N1
+                <br>E. Abortar el procedimiento
+                <br><span class="answer-key">Respuesta: B.</span> EUS‑B suele mejorar la visualización y el acceso a ganglios subcarinales posteriores.
+            </li>
+            <br>
+            <li>
+                Estrategia de adecuación cuando no hay ROSE disponible y se prevén pruebas moleculares:
+                <br>A. Un pase por ganglio es suficiente
+                <br>B. Dos pases por ganglio sin bloque celular
+                <br>C. ≥3 pases por ganglio y asegurar bloque celular/núcleo de coágulo
+                <br>D. Omitir el muestreo ganglionar y biopsiar solo el primario
+                <br>E. Utilizar únicamente aguja 25G
+                <br><span class="answer-key">Respuesta: C.</span> Varios pases más bloque celular optimizan el rendimiento para histología y perfil molecular.
+            </li>
+            <br>
+            <li>
+                ¿Qué escenario respalda con mayor fuerza una estadificación sistemática en lugar de dirigida?
+                <br>A. Múltiples ganglios mediastínicos voluminosos hipermetabólicos en PET en un mal candidato quirúrgico
+                <br>B. Tumor periférico pequeño &lt;3 cm con mediastino negativo
+                <br>C. Tumor central con mediastino por lo demás normal
+                <br>D. Metástasis suprarrenal aislada en PET/TC
+                <br>E. Reestadificación tras neoadyuvancia por N2 multiestacional conocido
+                <br><span class="answer-key">Respuesta: C.</span> El «riesgo intermedio» (por ejemplo, tumor central) se beneficia de una estadificación sistemática para detectar N2/N3 oculto.
+            </li>
+            <br>
+            <li>
+                ¿Cuál es el manejo más apropiado tras un EBUS/EUS‑B sistemático negativo de alta calidad en un paciente con ganglios 4R y 7 inicialmente hipermetabólicos en PET?
+                <br>A. Tratar como N2b
+                <br>B. Mediastinoscopia inmediata en todos los casos
+                <br>C. Proceder al tratamiento local previsto; considerar confirmación solo si persiste discordancia
+                <br>D. Iniciar quimioterapia de inducción por defecto
+                <br>E. Repetir EBUS la semana siguiente
+                <br><span class="answer-key">Respuesta: C.</span> La mediastinoscopia confirmatoria rutinaria no es obligatoria; individualice según el riesgo residual y la discusión multidisciplinaria.
+            </li>
+            <br>
+            <li>
+                ¿Qué afirmación sobre PET/TC es correcta?
+                <br>A. Detecta de forma fiable metástasis cerebrales pequeñas
+                <br>B. Es superior a la TC para estadificación ganglionar, pero puede ser falsamente positiva por inflamación
+                <br>C. Supera a la RM para invasión de tumor de Pancoast
+                <br>D. Es ideal para tumores de baja captación de FDG
+                <br>E. Una PET/TC negativa descarta definitivamente enfermedad mediastínica
+                <br><span class="answer-key">Respuesta: B.</span> PET/TC tiene mejor rendimiento ganglionar que la TC, pero sensibilidad cerebral limitada y falsos positivos.
+            </li>
+            <br>
+            <li>
+                Durante el muestreo de 4R se encuentra un centro hipoecoico con vasos periféricos anecoicos. ¿Cuál es el siguiente mejor paso?
+                <br>A. Muestrear solo el centro hiperecoico
+                <br>B. Utilizar Doppler y redirigir al borde viable, evitando vasos
+                <br>C. Aumentar la aspiración y continuar
+                <br>D. Abortar la estadificación
+                <br>E. Cambiar inmediatamente a mediastinoscopia
+                <br><span class="answer-key">Respuesta: B.</span> Evite las estructuras vasculares; los centros necróticos tienen bajo rendimiento: muestree el borde periférico viable.
+            </li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>Controversias, variabilidad y evidencia en evolución</h2>
+        <ul>
+            <li><strong>Mediastinoscopia confirmatoria:</strong> Los ensayos modernos muestran una detección incremental pequeña (sobre todo N2 de una sola estación) a costa de retraso y morbilidad; la práctica varía entre centros.</li>
+            <li><strong>Definiciones de «zona»:</strong> La división N2a/N2b de TNM‑9 aclara la separación pronóstica, pero los umbrales clínicos de resecabilidad siguen siendo multidisciplinarios.</li>
+            <li><strong>Estrategia de sedación:</strong> La elección entre sedación moderada y profunda depende de la experiencia institucional y las comorbilidades del paciente.</li>
+            <li><strong>Criobiopsia:</strong> La criobiopsia mediastínica guiada por EBUS es una técnica emergente cuando la TBNA es insuficiente (por ejemplo, arquitectura de linfoma o perfil molecular amplio).</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Lista de verificación final</h2>
+        <ul>
+            <li class="checklist-item">Conozca TNM‑9: N2a frente a N2b; M1c1 frente a M1c2; T cuenta solo el tamaño sólido/invasivo.</li>
+            <li class="checklist-item">Triaje: primero TC + PET/TC; RM cerebral de forma selectiva.</li>
+            <li class="checklist-item">Estadificación invasiva: indicada para enfermedad mediastínica radiográfica y tumores primarios de «riesgo intermedio».</li>
+            <li class="checklist-item">Técnica: EBUS±EUS‑B sistemático; N3 → N2 → N1; ≥3 pases por estación.</li>
+            <li class="checklist-item">Referencias: ácigos (4R/10R); arco aórtico/API (4L).</li>
+            <li class="checklist-item">Seguridad: Doppler para vasos; respete la pleura en 4R.</li>
+            <li class="checklist-item">EUS‑B: úselo para estación 7 posterior, 8–9 y suprarrenal izquierda.</li>
+            <li class="checklist-item">Informe: documento estructurado con estaciones, pases, adecuación y limitaciones.</li>
+            <li class="checklist-item">EBUS negativo: no siempre requiere mediastinoscopia; decida caso por caso.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Abreviaturas y glosario</h2>
+        <ul>
+            <li><strong>ACCP:</strong> American College of Chest Physicians</li>
+            <li><strong>EUS‑B:</strong> Uso esofágico del broncoscopio EBUS</li>
+            <li><strong>FDG:</strong> Fluorodesoxiglucosa</li>
+            <li><strong>GA:</strong> Anestesia general</li>
+            <li><strong>HFNC:</strong> Cánula nasal de alto flujo</li>
+            <li><strong>IASLC:</strong> International Association for the Study of Lung Cancer</li>
+            <li><strong>N2a/N2b:</strong> Enfermedad mediastínica ipsilateral de una sola estación frente a múltiples estaciones (TNM‑9)</li>
+            <li><strong>M1c1/M1c2:</strong> Múltiples lesiones en un solo sistema orgánico frente a múltiples sistemas orgánicos (TNM‑9)</li>
+            <li><strong>PET/TC:</strong> Tomografía por emisión de positrones/tomografía computarizada</li>
+            <li><strong>ROSE:</strong> Evaluación citológica rápida in situ</li>
+            <li><strong>STAS:</strong> Diseminación a través de los espacios aéreos</li>
+            <li><strong>TBNA:</strong> Aspiración transbronquial con aguja</li>
+            <li><strong>VPI:</strong> Invasión pleural visceral</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Referencias</h2>
+        <ul>
+            <li>Detterbeck FC, Woodard GA, Bader AS, et al. The proposed ninth edition TNM classification of lung cancer. Chest. 2024;166(4):882‑895.</li>
+            <li>Rami‑Porta R, Nishimura K, Giroux D, et al. IASLC Lung Cancer Staging Project: proposals for revision of the TNM stage groups in the forthcoming ninth edition. J Thorac Oncol. 2024;19(7):1007‑1027.</li>
+            <li>Huang J, Osarogiagbon RU, Giroux DJ, et al. Proposals for revision of the N descriptors in the forthcoming ninth edition. J Thorac Oncol. 2024;19(5):766‑785.</li>
+            <li>Fong KM, Rosenthal A, Giroux DJ, et al. Proposals for revision of the M descriptors in the forthcoming ninth edition. J Thorac Oncol. 2024;19(5):786‑802.</li>
+            <li>Silvestri GA, Gonzalez AV, Jantz MA, et al. Methods for staging non‑small cell lung cancer: ACCP evidence‑based guideline (3rd ed). Chest. 2013.</li>
+            <li>De Leyn P, Dooms C, Kuzdzal J, et al. Revised ESTS guidelines for preoperative lymph node staging for NSCLC. Eur J Cardiothorac Surg. 2014.</li>
+            <li>Darling GE, Allen MS, Decker PA, et al. PET‑CT compared with invasive mediastinal staging in NSCLC: results of mediastinal staging in the ELPET trial. J Thorac Oncol. 2011.</li>
+            <li>Yasufuku K, Nakajima T, Motoori K, et al. Comparison of EBUS, PET, and CT for lymph node staging of lung cancer. Chest. 2006.</li>
+            <li>Mehta AC, Wang KP. Endobronchial ultrasound‑guided transbronchial needle aspiration: procedural technique (reference framework used in EBUS curricula). Chest. 2013.</li>
+            <li>Bousema JE, et al. MEDIASTrial: confirmatory mediastinoscopy vs no mediastinoscopy after negative endosonography. Lancet/Multicenter RCT (as cited in provided materials).</li>
+            <li>Hylton DA, Turner S, Kidane B, et al. The Canada Lymph Node Score during EBUS. J Thorac Cardiovasc Surg. 2020.</li>
+            <li>Irfan M, Ahmed M, Breen D. High‑flow nasal cannula oxygenation in EBUS bronchoscopy: randomized controlled trial. J Bronchology Interv Pulmonol. 2021.</li>
+            <li>Yarmus LB, Akulian JA, Gilbert C, et al. Moderate vs deep sedation for EBUS‑TBNA. Ann Am Thorac Soc. 2013.</li>
+            <li>Krajnik I, Pavić TM, Knežević L, et al. Lung cancer staging in the ninth TNM edition: imaging pitfalls and pearls. Diagnostics. 2025;15:908.</li>
+        </ul>
+    </section>
+
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经皮气管切开术与环甲膜切开术</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>经皮气管切开术与环甲膜切开术</h1>
+
+<h3>考试对应领域与范围</h3>
+<p>本章涵盖经皮扩张气管切开术（PDT/PT）和环甲膜切开术的适应证、禁忌证、患者选择、术前评估、操作技术、故障排除、并发症及术后护理。重点包括 ICU 床旁决策、器械选择与操作步骤、支气管镜和超声引导、抗凝/抗血小板药物管理、特殊人群（肥胖、高呼吸机支持、凝血障碍、ECMO/COVID），以及“无法插管、无法氧合”（CICO）时采用针刺、外科或经皮环甲膜切开进行急救。</p>
+
+<h3>学习目标</h3>
+<ul>
+    <li>比较 PT 与外科气管切开术（ST）在实施场所、结局和并发症方面的差异，并为具体 ICU 患者选择最佳方式。</li>
+    <li>完成结构化术前评估（解剖、凝血、呼吸机支持、血流动力学），并规划支气管镜 ± 超声引导。</li>
+    <li>在支气管镜确认下分步完成 PT，并处理常见术中问题（后壁接触、气道丢失、出血）。</li>
+    <li>识别、预防和处理气管切开的早期与晚期并发症，包括气管-无名动脉瘘（TIF）和气管狭窄。</li>
+    <li>在 CICO 情境下选择并实施合适的环甲膜切开技术；掌握不同年龄的注意事项及何时转换为气管切开。</li>
+    <li>应用关于气管切开时机、镇静/脱机效应和拔管流程的证据。</li>
+</ul>
+
+<div class="algorithm-note">
+    <h4>高频考点一页通</h4>
+    <ul>
+        <li><strong>PT 与 ST：</strong>总体并发症率相近。PT 的伤口感染率较低、操作时间较短、成本较低；出血风险总体相当。</li>
+        <li><strong>引导：</strong>支气管镜引导提高首次成功率并减少并发症。超声可补充解剖和血管定位，并可能降低严重出血。</li>
+        <li><strong>穿刺部位：</strong>在支气管镜直视下于第 1–2 或第 2–3 气管环之间正中穿刺；穿刺时将气管插管（ETT）置于环状软骨下方。</li>
+        <li><strong>凝血障碍：</strong>目标 INR &lt;1.5、血小板 &gt;50 × 10⁹/L（必要时输注）。如可行，氯吡格雷停用至少 5 天；特定情况下即便使用抗血小板/抗凝药，也可在充分知情同意下实施 PT。</li>
+        <li><strong>呼吸机设置：</strong>即使 PEEP 较高也可实施 PT；应协调 ETT 回撤并尽量减少断开管路，以维持 PEEP。</li>
+        <li><strong>肥胖：</strong>在经验丰富的团队中不是禁忌证；应预期气管位置更深，并考虑加长型气管套管（XLT）。</li>
+        <li><strong>早期并发症：</strong>皮下气肿（约 1.4%）、气胸（约 0.8%）、出血、位置异常。可通过支气管镜、导引器上换管和止血处理。</li>
+        <li><strong>晚期并发症：</strong>气管狭窄（临床显著者 3%–12%）、气管软化、TIF（&lt;1%，外科急症）。</li>
+        <li><strong>误吸：</strong>气管切开后误吸风险不会立刻下降；充盈套囊也不能防止微量误吸。</li>
+        <li><strong>脱机获益：</strong>气管切开可降低呼吸功和气道阻力，可能缩短 ICU 住院并减少镇静需求。</li>
+        <li><strong>时机：</strong>证据不一致。有些分析未显示结局差异，另一些支持较早气管切开可增加无呼吸机天数并缩短 ICU 住院；应依据患者病程个体化。</li>
+        <li><strong>CICO 急救：</strong>成人默认采用外科或经皮环甲膜切开。儿童 &lt;10–12 岁时，优先针刺环甲膜并行经气管通气。</li>
+        <li><strong>拔除套管：</strong>脱离呼吸机、咳嗽有力且可清除分泌物后，按缩小管径 → 说话阀 → 封管 48–72 小时 → 拔管的流程进行；不耐受时行内镜评估。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p>气管切开可减少上气道死腔和阻力，从而降低呼吸功。许多患者术后可减少镇静并更积极地进行脱机试验。上述生理获益，加上舒适度和交流能力改善，构成其用于长期机械通气的基础。</p>
+
+<h4>适应证与禁忌证</h4>
+<p><strong>适应证（PT 与 ST 基本相同）：</strong>绕过上气道梗阻；预计需要长期机械通气；分泌物管理/减少误吸（有辅助作用，但并非即时获益）。</p>
+<p><strong>禁忌证（需结合情境）：</strong></p>
+<ul>
+    <li><strong>PT：</strong>真正的绝对禁忌证很少；安全性主要取决于有经验的术者和合适的技术。许多“相对风险”可通过准备进行管理，如肥胖、高 PEEP、既往气管切开和凝血障碍。</li>
+    <li><strong>实际警示：</strong>穿刺部位活动性感染、无法识别解剖标志的不利解剖、严重血流动力学不稳定——应考虑延期或 ST。</li>
+    <li><strong>环甲膜切开：</strong>成人 CICO 的首选急救方式。约 10 岁以下儿童应避免外科环甲膜切开，采用针刺技术和经气管通气。择期环甲膜切开仅用于特定情形；长期插管后或存在喉部病变时，因声门下损伤风险通常应避免。</li>
+</ul>
+
+<h3>术前评估</h3>
+<p><strong>气道/解剖：</strong>触诊喉部标志并评估深度。可用超声定位甲状腺峡部、颈前静脉及气管前血管，并测量皮肤至气管的距离。</p>
+<p><strong>通气/血流动力学：</strong>记录 FiO₂、PEEP、低血压及升压药使用。谨慎操作时高 PEEP 并非绝对禁忌；若需要多种或大剂量升压药，应避免床旁 PT。</p>
+<p><strong>凝血/药物：</strong>目标 INR &lt;1.5、血小板 &gt;50 × 10⁹/L。</p>
+<ul>
+    <li>肝素持续输注约术前停 3 小时、术后约 2 小时恢复。</li>
+    <li>皮下肝素/依诺肝素：每日 2 次者停 12 小时，每日 1 次者停 24 小时。</li>
+    <li>如可行，氯吡格雷停 ≥5 天（双联抗血小板治疗可停 3–5 天）。使用抗血小板/抗凝药时也有安全实施 PT 的报道，虽轻微出血增加，但严重出血率较低。</li>
+</ul>
+<p><strong>知情同意/团队：</strong>明确治疗目标与替代方案。协调术者、支气管镜医师、呼吸治疗师、护士和支气管镜技师；完成安全核对并维持无菌区域。</p>
+
+<h3>设备与准备</h3>
+<ul>
+    <li>常用套件包括 Ciaglia Blue Rhino（单一锥形扩张器）、Griggs（导丝扩张钳）、PercuTwist 和 Blue Dolphin 球囊。</li>
+    <li>准备合适尺寸的标准型及加长型套管。</li>
+    <li>选择与 ETT 内径相容的支气管镜。</li>
+    <li>局部浸润麻醉（如含肾上腺素的利多卡因）。</li>
+</ul>
+
+<h3>分步技术与操作核对表</h3>
+<ol>
+    <li><strong>体位：</strong>仰卧，肩下垫卷，耐受范围内伸颈；消毒铺巾。</li>
+    <li><strong>气道控制：</strong>按需给予镇静、镇痛和肌松；吸净气道。支气管镜直视下将 ETT 套囊回撤至环状软骨下方，再充盈套囊。</li>
+    <li><strong>切口：</strong>正中纵行皮肤切口 1–1.5 cm；钝性分离至气管前筋膜并识别气管环。</li>
+    <li><strong>针刺：</strong>支气管镜直视下于第 1–2 或第 2–3 气管环间正中穿刺；导丝向尾侧进入气管。</li>
+    <li><strong>扩张：</strong>采用序贯/单步扩张（如初始扩张器 → 带鞘单一锥形扩张器）或 Griggs 扩张钳。</li>
+    <li><strong>置入：</strong>将气管套管沿扩张器/鞘管送入管腔。</li>
+    <li><strong>确认：</strong>支气管镜确认套管在腔内并见隆突；远端尖端应距隆突至少约 1 英寸。</li>
+    <li><strong>固定：</strong>恢复通气，通过呼吸机潮气量和呼气末二氧化碳确认；用系带/缝线固定。</li>
+</ol>
+
+<hr>
+
+<h3>故障排除与术中处理</h3>
+<ul>
+    <li><strong>接触后壁/形成假道：</strong>导丝保持正中、向尾侧，并全程直视。若遇阻力或氧饱和度下降，应重新支气管镜检查，先恢复 ETT 通气，再次尝试。</li>
+    <li><strong>深颈/肥胖患者气道丢失：</strong>使用加长型套管。困难再置入时可考虑气道交换导管及支气管镜引导。</li>
+    <li><strong>出血：</strong>局部压迫或血管收缩剂填塞。若持续则探查造口。术后数天至数周出现前哨出血或大量出血时，应怀疑 TIF——过度充盈套囊、用手指向后压迫气管前壁，并紧急外科会诊。</li>
+    <li><strong>高度依赖 PEEP：</strong>协调短暂回撤 ETT，尽量不破坏呼吸回路。如有疑虑，可先进行“PEEP 依赖试验”。</li>
+</ul>
+
+<h3>术后护理与随访</h3>
+<p>进行湿化、吸痰、内套管护理、套囊压力监测及固定装置检查。</p>
+<p><strong>拔除套管：</strong>患者脱离呼吸机、咳嗽有力、分泌物可控后，依次缩小套管 → 使用说话阀 → 封管 48–72 小时 → 拔除。封管失败时行支气管镜评估。</p>
+
+<h3>并发症：预防、识别与处理</h3>
+<h4>早期（数小时至数天）</h4>
+<p>出血、皮下气肿（约 1.4%）、气胸（约 0.8%）、位置异常/阻塞（尤其套管贴靠后壁时）。</p>
+<ul>
+    <li><strong>预防：</strong>正中穿刺、支气管镜引导、选择合适长度的套管。</li>
+    <li><strong>处理：</strong>止血、支气管镜检查、重新定位或换管。</li>
+</ul>
+<h4>晚期（数周至数月）</h4>
+<p>气管狭窄（临床显著者 3%–12%）、套囊相关气管软化、TIF（&lt;1%）、气管食管瘘（少见）、造口感染。</p>
+<ul>
+    <li><strong>预防：</strong>选择正确气管环水平（第 1–3 环之间）、控制套囊压力并保持卫生。</li>
+    <li><strong>处理：</strong>TIF 属外科急症。</li>
+</ul>
+
+<h3>特殊人群</h3>
+<ul>
+    <li><strong>肥胖：</strong>证据支持熟练术者安全实施。位置异常风险较高；皮肤至气管距离增加时选择 XLT。</li>
+    <li><strong>高呼吸机支持/ARDS：</strong>高 PEEP 下仍可实施 PT；仔细操作时通常不会持续恶化氧合。</li>
+    <li><strong>凝血障碍/抗栓治疗：</strong>虽然出血风险升高，但严重出血率较低；遵循停药与输注策略。ECMO 队列中短暂停肝素后严重出血率低。</li>
+    <li><strong>COVID-19：</strong>广泛采用封闭回路改良 PT；病例系列提示可更快脱机并缩短 ICU 住院。</li>
+    <li><strong>儿童环甲膜切开：</strong>约 &lt;10–12 岁采用针刺环甲膜切开；因环甲膜狭小及喉损伤风险，避免外科技术。</li>
+</ul>
+
+<h3>证据与结局</h3>
+<ul>
+    <li><strong>PT 与 ST：</strong>荟萃分析显示总体并发症相近；PT 伤口感染更少、操作时间更短、成本更低。出血风险相当，长期气管狭窄风险也相近。</li>
+    <li><strong>气管切开时机：</strong>证据不一致——部分随机试验荟萃分析未显示主要结局差异；较新的分析倾向于较早气管切开可增加无呼吸机天数、缩短 ICU 住院并减少镇静。应个体化决定。</li>
+    <li><strong>支气管镜与超声：</strong>支气管镜提高准确性并减少并发症。超声帮助识别安全入口，可能减少严重出血。在熟练团队中，随机资料显示支气管镜引导与超声引导的总体并发症率相近。</li>
+</ul>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——选择 PT、ST 或延期</h4>
+<div class="mermaid">
+graph TD
+    A["患者需要气管切开"] --> B{"解剖标志清楚且条件合适？"}
+    B -- "否" --> C["考虑 ST、辅助技术（超声、硬质支气管镜）或延期"]
+    B -- "是" --> D{"凝血障碍/抗栓药物？"}
+    D -- "不可纠正且高风险" --> E["考虑 ST"]
+    D -- "可纠正或风险可接受" --> F{"通气/PEEP 可接受且血流动力学稳定？"}
+    F -- "严重不稳定/多种升压药" --> G["考虑 ST 或延期"]
+    F -- "稳定或可优化" --> H{"术者有经验且可用支气管镜？"}
+    H -- "否" --> I["考虑 ST"]
+    H -- "是" --> J["实施 PT（支气管镜 ± 超声）"]
+</div>
+
+<h4>算法 2——PT 后出血（包括 TIF）</h4>
+<div class="mermaid">
+graph TD
+    A["PT 后出血"] --> B{"评估发生时间与严重程度"}
+    B --> C["情形 A：即刻/渗血"]
+    C --> C1["局部压迫、血管收缩剂填塞"]
+    C --> C2["纠正凝血障碍"]
+    B --> D["情形 B：持续/大量出血"]
+    D --> D1["探查造口、烧灼/缝扎"]
+    D --> D2["支气管镜评估气道"]
+    B --> E["情形 C：延迟（数天至数周）或前哨出血"]
+    E --> E1["怀疑 TIF"]
+    E1 --> E2["过度充盈套囊"]
+    E1 --> E3["胸骨切迹处手指压迫气管前壁"]
+    E1 --> E4["启动大量输血并紧急外科会诊"]
+    E4 --> E5["确定性外科修复"]
+</div>
+
+<h4>算法 3——CICO：紧急外科气道</h4>
+<div class="mermaid">
+graph TD
+    A["CICO：无法插管、无法氧合"] --> B{"年龄 ≥10–12 岁？"}
+    B -- "是（成人）" --> C["外科或经皮环甲膜切开"]
+    C --> C1["通气、确认 CO₂、固定"]
+    B -- "否（儿童 <10–12 岁）" --> D["针刺环甲膜切开 + 经气管通气"]
+    D --> D1["条件允许时尽快建立确定性气道（气管切开）"]
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<h4>表 1. PT 与 ST：何者更优、何者相当</h4>
+<table>
+    <thead><tr><th>比较维度</th><th>PT 与 ST</th></tr></thead>
+    <tbody>
+        <tr><td>总体并发症</td><td>相近</td></tr>
+        <tr><td>伤口感染</td><td>PT 更低</td></tr>
+        <tr><td>操作时间</td><td>PT 更短</td></tr>
+        <tr><td>成本</td><td>PT 更低</td></tr>
+        <tr><td>出血</td><td>相当</td></tr>
+        <tr><td>长期气管狭窄</td><td>相近</td></tr>
+        <tr><td>后壁/前壁损伤风险</td><td>可变，取决于技术</td></tr>
+    </tbody>
+</table>
+
+<h4>表 2. PDT 禁忌证——实践视角</h4>
+<table>
+    <thead><tr><th>类别</th><th>示例/说明</th></tr></thead>
+    <tbody>
+        <tr><td>实际意义上的绝对禁忌</td><td>无有经验的术者；无法安全识别解剖标志</td></tr>
+        <tr><td>通常可管理的相对风险</td><td>肥胖（XLT、超声定位）；高 PEEP（优化并协调）；既往气管切开（利用瘢痕道）；凝血障碍（优化 INR/血小板）；抗血小板/抗凝药（如可行停药，无法停药时谨慎实施）</td></tr>
+        <tr><td>避免/延期</td><td>穿刺部位活动性感染；需要多种或大剂量升压药的严重血流动力学不稳定</td></tr>
+    </tbody>
+</table>
+
+<h4>表 3. 抗凝与抗血小板管理速查（PT）</h4>
+<table>
+    <thead><tr><th>药物/状态</th><th>建议的 PT 围术期处理</th></tr></thead>
+    <tbody>
+        <tr><td>INR / 血小板</td><td>目标 INR &lt;1.5、血小板 &gt;50 × 10⁹/L（必要时输注）</td></tr>
+        <tr><td>肝素持续输注</td><td>术前约停 3 小时，术后约 2 小时恢复</td></tr>
+        <tr><td>皮下肝素/依诺肝素</td><td>每日 2 次给药停 12 小时；每日 1 次给药停 24 小时</td></tr>
+        <tr><td>氯吡格雷/双联抗血小板</td><td>如可行优先停 ≥5 天（双联可停 3–5 天）；若不能延期，可在充分知情同意和出血应对计划下实施 PT</td></tr>
+        <tr><td>ECMO</td><td>短暂停用肝素；严重出血报道较低（约 1%–2%），轻微出血较常见</td></tr>
+    </tbody>
+</table>
+
+<h4>表 4. 气管切开并发症——时间与警示信号</h4>
+<table>
+    <thead><tr><th>时间</th><th>并发症</th></tr></thead>
+    <tbody>
+        <tr><td>早期（数小时至数天）</td><td>出血；皮下气肿（约 1.4%）；气胸（约 0.8%）；位置异常/假道</td></tr>
+        <tr><td>晚期（数周至数月）</td><td>临床显著气管狭窄（3%–12%）；气管软化；TIF &lt;1%；气管食管瘘；造口感染</td></tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <h4>病例 1</h4>
+    <p>55 岁 COPD 患者插管第 11 天。PEEP 8，FiO₂ 0.4。血小板 58 × 10⁹/L，INR 1.4；因 18 个月前置入支架仍服用氯吡格雷。颈部标志可触及。最佳方案？</p>
+    <p>A. 为降低出血风险，在手术室行 ST<br>B. 输注血小板后，在支气管镜引导下立即实施 PT<br>C. 延期气管切开；先拔管，需要时再插管<br>D. 不用支气管镜直接 PT</p>
+    <p><strong>答案：B。</strong>解剖和生理条件合适；纠正凝血状态（血小板应 &gt;50），在支气管镜引导下实施 PT。理想情况下氯吡格雷停 ≥5 天，但若不能延期，可采取预防措施后进行。PT 在伤口感染、时间和成本方面有优势。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 2</h4>
+    <p>62 岁 ARDS 患者，PEEP 14，需要气管切开以继续长期通气。低剂量升压药下血流动力学稳定。下一步？</p>
+    <p>A. 延期至 PEEP ≤8<br>B. 可在精细通气策略和支气管镜引导下实施 PT<br>C. 因 PEEP 高必须行 ST<br>D. 拔管改高流量鼻导管并避免气管切开</p>
+    <p><strong>答案：B。</strong>在谨慎处理 ETT 和呼吸回路的前提下，高 PEEP 时仍可实施 PT；规范操作通常不会持续恶化氧合。</p>
+</div>
+
+<div class="case-study">
+    <h4>病例 3</h4>
+    <p>70 岁患者 PT 后第 21 天，造口出现少量“前哨”出血，随后自行停止。立即处理？</p>
+    <p>A. 安排次日换管<br>B. 过度充盈套囊并手指压迫；启动紧急外科路径<br>C. 仅开始抗菌药<br>D. 放空套囊以减轻黏膜压力</p>
+    <p><strong>答案：B。</strong>在排除前应按 TIF 处理——过度充盈套囊和向后压迫气管前壁是等待紧急外科控制期间的暂时救命措施。</p>
+</div>
+
+<h3>题库（选择题）</h3>
+
+<p><strong>1. 60 岁患者机械通气第 7 天（FiO₂ 0.5、PEEP 5），自主呼吸试验失败（RSBI 130）。下一步最佳处理？</strong><br>
+A. 立即安排 ST 以降低伤口感染<br>
+B. 改用 SIMV 加速脱机<br>
+C. 仅为降低病死率而安排早期气管切开<br>
+D. 继续 ICU 治疗、每日自主呼吸试验并重新评估气管切开需求<br>
+<strong>答案：D。</strong>第 7 天的气管切开时机应个体化；继续优化并每日进行自主呼吸试验合理，早期气管切开对病死率的获益证据不一致。</p>
+
+<p><strong>2. 哪项陈述最准确？</strong><br>
+A. PT 总体并发症高于 ST<br>
+B. 与 ST 相比，PT 可减少伤口感染并缩短操作时间<br>
+C. ST 的出血始终少于 PT<br>
+D. PT 比 ST 更昂贵<br>
+<strong>答案：B。</strong>荟萃分析显示 PT 的伤口感染更少、操作时间更短、成本更低；总体并发症和出血相近。</p>
+
+<p><strong>3. 关于氯吡格雷和 PT，最佳陈述是：</strong><br>
+A. 必须停用 ≥3 天<br>
+B. 必须停用 ≥10 天<br>
+C. 如可行优先停 ≥5 天；无法停药时可在预防措施下实施 PT<br>
+D. 无需考虑抗血小板药<br>
+<strong>答案：C。</strong>条件允许时目标为停药至少 5 天；真实世界系列显示，充分知情同意并采取出血预防措施后仍可进行 PT。</p>
+
+<p><strong>4. PT 前合理的实验室目标是：</strong><br>
+A. INR ≤2.0、血小板 ≥20 × 10⁹/L<br>
+B. INR &lt;1.5、血小板 &gt;50 × 10⁹/L<br>
+C. INR 必须 &lt;1.0<br>
+D. 血小板必须 &gt;100 × 10⁹/L<br>
+<strong>答案：B。</strong>这些实用阈值兼顾安全性与可行性。</p>
+
+<p><strong>5. 关于支气管镜引导，哪项正确？</strong><br>
+A. 增加后壁损伤<br>
+B. 首次成功率低于单纯解剖标志法<br>
+C. 有助于确认正中环间位置并减少并发症<br>
+D. 肥胖患者禁用<br>
+<strong>答案：C。</strong>支气管镜可确认穿刺入口和导丝方向；试验显示成功率提高、并发症减少。</p>
+
+<p><strong>6. 超声在 PT 中最重要的用途是：</strong><br>
+A. 显示气管后壁<br>
+B. 映射前方血管并测量皮肤至气管深度<br>
+C. 在所有病例中替代支气管镜<br>
+D. 稳定缩短总操作时间<br>
+<strong>答案：B。</strong>超声可显示血管和深度，但不能显示后壁；对操作时间的获益并不一致。</p>
+
+<p><strong>7. 在 PEEP 16、FiO₂ 0.6 的患者实施 PT 时，放空并回撤 ETT 套囊准备穿刺后氧饱和度下降。下一步最佳处理？</strong><br>
+A. 继续回撤，这是预期现象<br>
+B. 断开呼吸机，从造口手控通气<br>
+C. 重新充盈套囊并将 ETT 前送恢复通气，再在支气管镜下、尽量减少断路后重试<br>
+D. 立即改行 ST<br>
+<strong>答案：C。</strong>优先保证氧合；先重新建立可靠气道，再通过精细回路管理和支气管镜引导继续。</p>
+
+<p><strong>8. 病态肥胖患者的重要预防措施是：</strong><br>
+A. 选择更小的标准长度套管<br>
+B. 避免支气管镜<br>
+C. 使用加长型套管并考虑超声定位<br>
+D. 一律选择 ST<br>
+<strong>答案：C。</strong>皮肤至气管距离增加会提高位置异常风险；XLT 可减少套囊漏气和套管位置异常。</p>
+
+<p><strong>9. 气管切开后哪项正确？</strong><br>
+A. 误吸风险立即消失<br>
+B. 充盈套囊可防止微量误吸<br>
+C. 误吸风险可能数周后才下降<br>
+D. 呼吸机相关肺炎风险被消除<br>
+<strong>答案：C。</strong>误吸风险可能随后降低；套囊不能阻止微量误吸。</p>
+
+<p><strong>10. 扩张过程中怀疑后壁被牵拉。最佳处理？</strong><br>
+A. 快速前送以减少黏膜接触<br>
+B. 移除导丝后盲目重新置入<br>
+C. 先恢复 ETT 通气，重新支气管镜检查并纠正角度后再尝试<br>
+D. 立即在手术室转换为 ST<br>
+<strong>答案：C。</strong>安全优先：先恢复通气，再在直视下重新定位。</p>
+
+<p><strong>11. 7 岁儿童发生 CICO，首选侵入性气道是：</strong><br>
+A. 外科环甲膜切开<br>
+B. 经皮环甲膜切开<br>
+C. 针刺环甲膜切开并经气管通气<br>
+D. 由非外科医师紧急气管切开<br>
+<strong>答案：C。</strong>儿童环甲膜狭小，外科技术可能损伤喉部，因此首选针刺技术。</p>
+
+<p><strong>12. ICU 患者气管切开后第 28 天，造口突发搏动性出血。第一步？</strong><br>
+A. 放空套囊检查<br>
+B. 过度充盈套囊并向后压迫气管前壁；启动紧急外科路径<br>
+C. 更换较小套管<br>
+D. 观察，可能只是肉芽组织<br>
+<strong>答案：B。</strong>按 TIF 处理——在组织确定性外科控制的同时实施救命性暂时措施。</p>
+
+<div class="algorithm-note">
+    <h3>要点核对表</h3>
+    <ul>
+        <li>确认适应证、解剖、团队与方案（支气管镜 ± 超声）。</li>
+        <li>优化 INR/血小板；在可行范围内协调抗凝药停用。</li>
+        <li>术前沟通通气策略；尽量减少回路断开；规划直视下回撤 ETT。</li>
+        <li>在气管环间正中穿刺；支气管镜下保持导丝向尾侧。</li>
+        <li>根据深度选择套管长度（深部气管使用 XLT）。</li>
+        <li>置管后支气管镜确认管腔和隆突，并验证通气。</li>
+        <li>固定装置并开始湿化/吸痰；监测套囊压力。</li>
+        <li>警惕早期出血和漏气；预先准备出血处理算法。</li>
+        <li>教育床旁人员识别 TIF 信号并立即处理。</li>
+        <li>达到脱机目标后启动结构化拔管流程。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>缩略语与术语</h3>
+<div class="abbreviations">
+    <dl>
+        <dt>PT/PDT</dt><dd>经皮（扩张）气管切开术</dd>
+        <dt>ST</dt><dd>外科气管切开术</dd>
+        <dt>CICO</dt><dd>无法插管、无法氧合</dd>
+        <dt>CT membrane</dt><dd>环甲膜</dd>
+        <dt>ETT</dt><dd>气管插管</dd>
+        <dt>XLT</dt><dd>加长型气管套管</dd>
+        <dt>VAP</dt><dd>呼吸机相关肺炎</dd>
+        <dt>TIF</dt><dd>气管-无名动脉瘘</dd>
+        <dt>TEF</dt><dd>气管食管瘘</dd>
+        <dt>ECMO</dt><dd>体外膜氧合</dd>
+        <dt>RSBI</dt><dd>浅快呼吸指数</dd>
+    </dl>
+</div>
+
+<div class="references"><h3>参考文献</h3>
+<ol>
+<li>Delaney A, Bagshaw SM, Nalos M. Percutaneous dilatational tracheostomy versus surgical tracheostomy in critically ill patients: a systematic review and meta-analysis. Crit Care. 2006;10(2):R55.</li>
+<li>Higgins KM, Punthakee X. Meta-analysis comparison of open versus percutaneous tracheostomy. Laryngoscope. 2007;117(3):447-454.</li>
+<li>Johnson-Obaseki S, et al. Laryngoscope. 2016;126:2459-67.</li>
+<li>Ghattas C, Alsunaid S, Pickering EM, Holden VK. J Thorac Dis. 2021.</li>
+<li>Diehl JL, El Atrous S, Touchard D, Lemaire F, Brochard L. Changes in the work of breathing induced by tracheotomy in ventilator-dependent patients. Am J Respir Crit Care Med. 1999;159(2):383-388.</li>
+<li>Law AC. Benefits of tracheostomy. Ann Am Thorac Soc. 2022;19(3):424-432.</li>
+<li>Beiderlinden M, Groeben H, Peters J. Safety of PDT in patients ventilated with high PEEP. Intensive Care Med. 2003;29(6):944-948.</li>
+<li>Shah S, Morgan P. PDT during high-frequency oscillatory ventilation. Crit Care Med. 2002;30(8):1762-1764.</li>
+<li>Roy CF, Silver JA, Turkdogan S, et al. PDT in obesity: systematic review and meta-analysis. JAMA Otolaryngol Head Neck Surg. 2023;149(4):334-343.</li>
+<li>Majid A, et al. Rigid bronchoscopy-guided PDT: pilot study. Ann Am Thorac Soc. 2014;11(5):789-794.</li>
+<li>Douketis JD, Spyropoulos AC, Murad MH, et al. Perioperative management of antithrombotic therapy. Chest. 2022;162(5):e207-e243.</li>
+<li>Huang Y-H, Tseng C-H, Chan M-C, et al. Antiplatelets/anticoagulants increased bleeding risk in bedside PDT. J Formos Med Assoc. 2020;119(7):1193-1200.</li>
+<li>Braune S, Kienast S, Hadem J, et al. PDT on extracorporeal lung support. Intensive Care Med. 2013;39(10):1792-1799.</li>
+<li>Deppe AC, Kuhn E, Scherner M, et al. Coagulation disorders do not increase PDT bleeding risk. Thorac Cardiovasc Surg. 2013;61:234-239.</li>
+<li>Abouzgheib W, Meena N, Jagtap P, et al. PDT in patients receiving antiplatelet therapy: is it safe? J Bronchology Interv Pulmonol. 2013;20(4):322-325.</li>
+<li>Lüsebrink E, Stark K, Bertlich M, et al. PDT safety on dual antiplatelet therapy/anticoagulation. Crit Care Explor. 2019;1(10):e0050.</li>
+<li>Lamb CR, Desai NR, Angel L, et al. Use of tracheostomy during COVID-19: Expert Panel Report. Chest. 2020;158(4):1499-1514.</li>
+<li>Rudas M, Seppelt I, Herkes R, et al. Ultrasound- vs landmark-guided puncture in PDT: RCT. Crit Care. 2014;18(5):514.</li>
+<li>Gobatto ALN, Besen BAMP, Tierno PFGMM, et al. Ultrasound-guided vs bronchoscopy-guided PDT: noninferiority RCT (TRACHUS). Intensive Care Med. 2016;42(3):342-351.</li>
+<li>Simon M, Metschke M, Braune SA, et al. Death after PDT: systematic review. Crit Care. 2013;17(5):R258.</li>
+<li>Goldenberg D, Ari EG, Golz A, et al. Tracheotomy complications: 1,130 cases. Otolaryngol Head Neck Surg. 2000;123(4):495-500.</li>
+<li>Mitchell RB, Hussey HM, Setzen G, et al. Clinical consensus statement: tracheostomy care. Otolaryngol Head Neck Surg. 2013;148(1):6-20.</li>
+<li>Epstein SK. Late complications of tracheostomy. Respir Care. 2005;50(4):542-549.</li>
+<li>Reed MF, Mathisen DJ. Tracheoesophageal fistula. Chest Surg Clin. 2003;13(2):271-289.</li>
+<li>Wen D, et al. Ultrasound-guided vs landmark-guided PDT: systematic review/meta-analysis. BMC Anesthesiol. 2025;25(1):211.</li>
+<li>Esteban A, et al. International study; median time to trach 11 days. Am J Respir Crit Care Med. 2000;161(5):1450-1458.</li>
+<li>Hosokawa K, et al. Early vs late trach meta-analysis. Crit Care. 2015;19:424.</li>
+<li>Mehta AB, et al. Early trach and outcomes. Crit Care Med. 2016;44(8):1506-1514.</li>
+<li>McGrath BA, et al. Tracheostomy window framework. Lancet Respir Med. 2020;8(7):717-725.</li>
+<li>Chorath K, et al. JAMA Otolaryngol Head Neck Surg. 2021.</li>
+<li>Merola R, et al. Life (Basel). 2024.</li>
+<li>Shen G, Yin H, Cao Y, et al. Fiberoptic bronchoscopy-guided vs standard PDT: RCT. Ir J Med Sci. 2019;188(2):675-681.</li>
+<li>Lim CK. Tracheostomy effects on mechanics. PLoS One. 2015;10(9):e0138294.</li>
+<li>Leder SB. Aspiration and cuff inflation. Chest. 2002;122(5):1721.</li>
+<li>Gadkaree SK. Risk with PDT without bronchoscopy. JAMA Otolaryngol Head Neck Surg. 2016.</li>
+<li>American Society of Anesthesiologists Task Force. Difficult airway guidelines. Anesthesiology. 2003;98(5):1269-1277.</li>
+<li>Brofeldt BT, Panacek EA, Richards JR. Rapid four-step cricothyroidotomy. Acad Emerg Med. 1996;3(11):1060-1063.</li>
+<li>Schober P, Hegemann MC, Schwarte LA, et al. Emergency cricothyroidotomy—comparative cadaver study. Resuscitation. 2009;80(2):204-209.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

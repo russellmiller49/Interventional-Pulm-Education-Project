@@ -1,12 +1,13 @@
 'use client'
 
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Headphones, Loader2, Pause, Play } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/cn'
 import type { BoardReviewChapterMeta } from '@/data/board-review'
+import { HandoffContent } from '@/i18n/handoff'
 
 interface AudioCompanionActionsProps {
   chapter: BoardReviewChapterMeta
@@ -392,35 +393,39 @@ URL: ${audioElement?.src?.substring(0, 120)}...`
   }
 
   return (
-    <div className="flex w-full flex-col gap-2 sm:w-auto sm:max-w-sm">
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]"
-          onClick={handleTogglePanel}
-        >
-          <Headphones className="h-4 w-4" aria-hidden="true" />
-          {panelOpen ? 'Hide audio companion' : 'Listen to audio companion'}
-        </Button>
-        <Link
-          href={`/board-prep/${chapter.slug}`}
-          className="text-sm font-semibold text-primary transition hover:text-primary/80"
-        >
-          Enter module →
-        </Link>
-      </div>
-      {panelOpen && (
-        <div className="w-full rounded-2xl border border-border/60 bg-background/80 p-3 text-left shadow-sm">
-          {renderStatus()}
-          {signedUrl && (
-            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
-              Streaming only · downloads disabled
-            </p>
+    <HandoffContent>
+      {
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:max-w-sm">
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]"
+              onClick={handleTogglePanel}
+            >
+              <Headphones className="h-4 w-4" aria-hidden="true" />
+              {panelOpen ? 'Hide audio companion' : 'Listen to audio companion'}
+            </Button>
+            <Link
+              href={`/board-prep/${chapter.slug}`}
+              className="text-sm font-semibold text-primary transition hover:text-primary/80"
+            >
+              Enter module →
+            </Link>
+          </div>
+          {panelOpen && (
+            <div className="w-full rounded-2xl border border-border/60 bg-background/80 p-3 text-left shadow-sm">
+              {renderStatus()}
+              {signedUrl && (
+                <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                  Streaming only · downloads disabled
+                </p>
+              )}
+            </div>
           )}
         </div>
-      )}
-    </div>
+      }
+    </HandoffContent>
   )
 }

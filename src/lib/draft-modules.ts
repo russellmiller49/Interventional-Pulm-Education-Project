@@ -1,3 +1,5 @@
+import { unlocalizedPathname } from '@/i18n/path'
+
 const draftModulePathPrefixes = [
   '/ebus-training/virtual-bronchoscopy',
   '/education/chest-drainage',
@@ -15,7 +17,11 @@ export const areDraftModulesEnabled =
   process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_SHOW_DRAFT_MODULES === 'true'
 
 export function isDraftModulePath(path: string): boolean {
-  return draftModulePathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  const normalizedPath = unlocalizedPathname(path)
+
+  return draftModulePathPrefixes.some(
+    (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
+  )
 }
 
 export function canViewDraftModules(options: DraftModuleVisibilityOptions = {}): boolean {

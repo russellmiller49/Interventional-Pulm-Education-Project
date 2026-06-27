@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>介入肺脏病学操作的麻醉</title>
+<style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body><h1>介入肺脏病学操作的麻醉</h1>
+<h3>考试内容映射与范围</h3>
+<p>本章涵盖介入肺脏病学（IP）操作中的麻醉与气道策略，重点包括支气管内超声（EBUS）、外周支气管镜（含机器人平台）、用于中央气道梗阻的硬质支气管镜以及支气管镜肺减容术（BLVR）。涉及领域包括镇静策略与监测、气道装置选择、减少肺不张的通气方法、热治疗与非热治疗中的氧管理、纵隔肿块注意事项、胸腔镜/监护麻醉（MAC），以及并发症预防与抢救。</p>
+<hr/>
+<h3>学习目标</h3>
+<ul>
+<li>根据 EBUS、外周导航/活检、治疗性硬质支气管镜和 BLVR 选择相应的麻醉方案与气道装置。</li>
+<li>应用可减少肺不张并改善外周支气管镜表现的通气策略（PEEP、FiO₂ 滴定、肺复张）。</li>
+<li>整合热消融及新型治疗的氧安全规则，并在 BLVR 期间降低气胸风险。</li>
+<li>预判和处理纵隔肿块、重度 COPD/过度充气及高误吸风险患者的特殊问题。</li>
+<li>执行低氧血症、气体潴留、气道火灾风险和大咯血的危机处置。</li>
+</ul>
+<hr/>
+<h3>高频要点一页通</h3>
+<div class="algorithm-note">
+<ul>
+<li><strong>镇静连续谱</strong>由患者反应性而非所用药物决定。可用 MOAA/S、RASS 或 Ramsay 量表设定目标深度。</li>
+<li><strong>局部利多卡因</strong>可减少咳嗽及镇静药需求；因有高铁血红蛋白血症风险，应避免苯佐卡因和丁卡因。</li>
+<li><strong>咪达唑仑</strong>（首选苯二氮䓬类）联合芬太尼，在适合中度镇静时可产生协同镇静和镇痛作用。</li>
+<li>不推荐常规使用抗胆碱能药（阿托品/格隆溴铵）来减少支气管镜分泌物或改善肺功能。</li>
+<li><strong>气道装置选择很重要：</strong>
+<ul>
+<li><strong>喉罩（LMA）：</strong> 便于进入上段气管，但在出血或误吸风险较高时保护性较差。</li>
+<li><strong>气管导管（ETT）：</strong> 最稳妥，最适合高出血风险；EBUS 建议内径 ≥8.0–8.5 mm，以保留镜体周围的通气空间。</li>
+<li><strong>硬质支气管镜：</strong> 中央气道梗阻治疗和出血控制的核心工具。</li>
+</ul>
+</li>
+<li><strong>EBUS 镇静：</strong> 中度或深度镇静均可接受，并无必须使用人工气道的统一规定。</li>
+<li><strong>肺不张</strong>在全身麻醉（GA）下很常见，并会降低外周诊断率；风险随操作时间和 BMI 增加，预防是重要考点。</li>
+<li>两种已验证的术中肺不张预防策略：
+<ul>
+<li><strong>VESPA：</strong> ETT、插管后立即肺复张、PEEP 8–10 cmH₂O、FiO₂ &lt;100%。</li>
+<li><strong>LNVP：</strong> ETT、插管后肺复张、按肺叶采用较高 PEEP（最高 15–20 cmH₂O）、潮气量 10–12 mL/kg 理想体重（IBW），成像时短暂屏气。</li>
+</ul>
+</li>
+<li><strong>热治疗方式</strong>（激光/电凝/APC）：能量释放时保持 FiO₂ &lt;0.40，以预防气道火灾。</li>
+<li><strong>喷雾冷冻治疗：</strong> 断开呼吸回路以便气体排出；每次喷雾前预氧合；警惕气压伤和气体栓塞。</li>
+<li><strong>BLVR：</strong> 多数中心采用 GA + ETT。置入瓣膜时使用低潮气量、延长呼气时间和可耐受的最低 FiO₂，以降低气胸风险。</li>
+<li><strong>纵隔肿块：</strong> 正压通气联合神经肌肉阻滞可以安全应用；必须严格延长呼气以避免过度充气。</li>
+<li><strong>大咯血算法：</strong> 出血侧向下 → 隔离肺（大号 ETT + 支气管封堵器或双腔管）→ 硬质支气管镜稳定气道 → 确定性治疗（如栓塞）。</li>
+</ul>
+</div>
+<hr/>
+<h3>核心概念</h3>
+<h4>病理生理学 / 流行病学</h4>
+<p>GA 下肺不张形成迅速，尤其发生于依赖部位肺段。其会使靶点模糊、造成 CT-机体偏差，并降低导航准确性。一项前瞻性队列显示，多数患者在诱导后约 30 分钟内出现依赖肺段肺不张；BMI 较高及麻醉时间较长会增加风险。</p>
+<p>COPD/过度充气会使 BLVR 和中央气道操作更复杂：呼气不完全可增加内源性 PEEP，导致低血压并提高气压伤风险。</p>
+<p>纵隔肿块可压迫气道和血管结构；通气过程中动态变化明显，需要严密规划和滴定。</p>
+<h4>适应证与禁忌证</h4>
+<ul>
+<li><strong>中度镇静：</strong> 适用于简单诊断性支气管镜，以及无高误吸/出血风险的部分稳定 EBUS 患者。</li>
+<li><strong>深度镇静/GA：</strong> 适用于高级外周导航（含机器人）、治疗性减瘤/支架、硬质支气管镜、BLVR、高出血风险、困难气道或长时间操作。</li>
+<li><strong>LMA 的相对禁忌证：</strong> 高误吸风险、预计大量出血，或需要安全处理声门下/近端气管病变。</li>
+</ul>
+<h4>术前评估</h4>
+<ul>
+<li><strong>气道与误吸风险：</strong> 优化禁食；识别反流、胃轻瘫或“饱胃”风险因素。</li>
+<li><strong>复核胸部 CT：</strong> EBUS 和中央病变前应仔细审阅。ETT 可能遮挡上段气管靶点和高位纵隔站；不使用人工气道、经口操作时需放置咬口。</li>
+<li><strong>镇静目标：</strong> 选择并记录 MOAA/S 或 RASS 目标。</li>
+<li><strong>辅助措施：</strong> 气道局部使用利多卡因；避免苯佐卡因/丁卡因。</li>
+<li><strong>纵隔肿块：</strong> 评估气道口径和血流动力学风险；制定抢救方案（硬质镜，必要时依据中心能力准备 ECMO）。</li>
+</ul>
+<h4>设备与设置</h4>
+<ul>
+<li><strong>气道装置：</strong>
+<ul>
+<li><strong>LMA（首选第二代）：</strong> 适合需要良好气管通路的高级诊断操作。</li>
+<li><strong>ETT：</strong> 使用 EBUS 镜时建议内径 ≥8.0–8.5 mm，以维持通气腔；≥8.5–9.0 mm 可进一步增加气体交换余量。</li>
+<li><strong>硬质支气管镜：</strong> 可同时通气并通过大型硬质器械；硅酮支架置入和出血控制不可或缺。</li>
+</ul>
+</li>
+<li><strong>通气：</strong> 现代麻醉呼吸机；硬质支气管镜应备喷射呼吸机。</li>
+<li><strong>热治疗/冷冻治疗安全：</strong> 操作区域备氧混合器、吸引、盐水和气道火灾应急方案。</li>
+</ul>
+<h4>分步技术 / 操作核对表</h4>
+<ol>
+<li><strong>团队简报：</strong> 确认操作目标、预计镇静深度、气道装置、通气方案以及火灾/出血应急方案。</li>
+<li><strong>镇静方案：</strong>
+<ul>
+<li><em>中度：</em> 咪达唑仑 + 芬太尼；按量表滴定。</li>
+<li><em>深度/GA：</em> 倾向 TIVA（即使吸引或开放回路也能维持稳定深度）；需要无运动术野时使用神经肌肉阻滞。</li>
+</ul>
+</li>
+<li><strong>气道装置置入：</strong> 根据操作类型及出血/误吸风险选择。</li>
+<li><strong>通气设置：</strong>
+<ul>
+<li><em>外周支气管镜：</em> 选择 VESPA 或 LNVP 类设置（见算法）。</li>
+<li><em>硬质支气管镜：</em> 设置喷射或机械通气，并处理漏气（填塞、封帽等）。</li>
+</ul>
+</li>
+<li><strong>氧管理：</strong>
+<ul>
+<li><em>热消融：</em> 能量释放时 FiO₂ &lt;0.40。</li>
+<li><em>BLVR：</em> 瓣膜置入时采用可耐受的最低 FiO₂。</li>
+</ul>
+</li>
+<li><strong>术中：</strong> 尽量减少镜体楔入；监测气道压升高；呼吸回路打开后按方案重复肺复张。</li>
+<li><strong>拔管与恢复：</strong> 处理咳嗽（局部利多卡因、必要时短效阿片）；监测气胸或低通气。</li>
+</ol>
+<h4>故障排查与术中处理</h4>
+<ul>
+<li><strong>外周支气管镜期间低氧：</strong> 确认 FiO₂/PEEP，实施肺复张，吸除黏液栓，避免过度楔入，并考虑改变体位。</li>
+<li><strong>高 PEEP 策略（LNVP）期间低血压：</strong> 降低 PEEP 改善静脉回流；排除气胸或纵隔气肿；按需给予液体和升压药。</li>
+<li><strong>支气管痉挛：</strong> 短暂使用挥发性支气管扩张剂（如七氟烷）或经支气管镜给药；加深麻醉。</li>
+<li><strong>气道火灾预防：</strong> 保持 FiO₂ &lt;0.40，能量启动前明确沟通，必要时短暂停止供氧。</li>
+<li><strong>中央气道梗阻时气体潴留：</strong> 延长呼气时间（I:E 1:3 或更长），可短暂断开回路，并在病变远端吸引以排出潴留气体。</li>
+<li><strong>喷雾冷冻治疗：</strong> 断开呼吸机（放松套囊，或打开 LMA/硬质镜接口）以便气体排出；各循环之间恢复氧合。</li>
+<li><strong>大咯血：</strong> 将患者置于出血侧向下；建立并隔离气道（大号 ETT + 封堵器或双腔管）；转用硬质支气管镜；安排确定性止血（如栓塞）。</li>
+</ul>
+<h4>术后照护与随访</h4>
+<ul>
+<li><strong>外周操作/BLVR：</strong> 观察气胸（BLVR 后尤其重要）、低通气和延迟性低氧。</li>
+<li><strong>热治疗：</strong> 重新评估延迟性气道水肿或分泌物；若恢复室可能再次插入器械，应保证 FiO₂ 安全。</li>
+<li><strong>高 PEEP 病例：</strong> PEEP 恢复正常前持续血流动力学监测。</li>
+</ul>
+<h4>并发症（预防、识别与处理）</h4>
+<table>
+<thead><tr><th>并发症</th><th>预防/处理</th></tr></thead>
+<tbody>
+<tr><td><strong>肺不张</strong></td><td>用 PEEP 和肺复张预防；降低 FiO₂；缩短导航前 GA 时间。</td></tr>
+<tr><td><strong>气胸 / 纵隔气肿</strong></td><td>高 PEEP 或过度屏气时风险更高；有指征时立即减压。</td></tr>
+<tr><td><strong>气道火灾</strong></td><td>热能量使用时严格控制 FiO₂。</td></tr>
+<tr><td><strong>出血</strong></td><td>备局部止血药；硬质镜压迫；大量出血时隔离肺；升级至介入放射/外科。</td></tr>
+<tr><td><strong>高碳酸血症 / 气体潴留</strong></td><td>调整 I:E、降低呼吸频率、在病变远端吸引。</td></tr>
+<tr><td><strong>误吸</strong></td><td>禁食、半坐位诱导、有指征时快速序贯诱导；经带引流通道的声门上气道装置吸引胃内容物。</td></tr>
+</tbody>
+</table>
+<h4>特殊人群</h4>
+<ul>
+<li><strong>纵隔肿块：</strong> GA 下神经肌肉阻滞和正压通气可扩大气道；关键是预防过度充气——低频率、延长呼气。备硬质支气管镜，并讨论抢救选择（部分中心包括 ECMO）。</li>
+<li><strong>重度 COPD / BLVR 候选者：</strong> 倾向低潮气量（约 6–8 mL/kg）、长呼气时间（I:E 约 1:3）和容量控制通气；侧支通气评估时预判低氧。</li>
+<li><strong>肥胖：</strong> 可能需要更高 PEEP 防止气道闭合；注意血流动力学影响。</li>
+</ul>
+<hr/>
+<h3>证据与结局（应掌握的关键数据）</h3>
+<ul>
+<li><strong>EBUS 镇静：</strong> 中度和深度镇静均可接受；无统一气道装置要求。</li>
+<li><strong>GA 下肺不张发生率：</strong> 依赖肺段在约 30–40 分钟内发生率很高；BMI 和时间越高，风险越大。</li>
+<li><strong>VESPA（随机试验）：</strong> ETT 联合插管后立即肺复张、PEEP 8–10 和 FiO₂ &lt;100%，与 LMA + 100% FiO₂ + 零 PEEP 相比显著减少肺不张，且未增加并发症。</li>
+<li><strong>LNVP（回顾性/病例系列）：</strong> ETT、肺复张、较高 PEEP（按肺叶 10–20 cmH₂O）、Vt 10–12 mL/kg IBW 和成像屏气可减少依赖性和肺叶性肺不张；需要严密血流动力学监测（较大系列中升压药使用常见）。</li>
+<li><strong>BLVR 麻醉模式：</strong> GA + ETT 占主导；常用低 Vt 和长呼气。瓣膜置入时较低 FiO₂ 与更低气胸率相关，发生气胸时其出现时间也更晚。</li>
+</ul>
+<hr/>
+<h3>诊断与治疗算法</h3>
+<h4>算法 1——高级支气管镜的气道与麻醉方案选择</h4>
+<div class="mermaid">
+flowchart TD
+    A["计划操作"] --&gt; B{"中央气道治疗操作？"}
+    B -- "是" --&gt; C["硬质支气管镜"]
+    C --&gt; C1["GA + TIVA"]
+    C --&gt; C2["喷射或机械通气"]
+    C --&gt; C3["热治疗时 FiO₂ &lt; 0.40"]
+    B -- "否" --&gt; D{"外周导航/活检？"}
+    D -- "是" --&gt; E["GA + ETT ≥8–8.5 mm"]
+    E --&gt; E1["选择 VESPA 或 LNVP 设置"]
+    E --&gt; E2["肺复张 + PEEP + 低 FiO₂"]
+    D -- "否" --&gt; F{"EBUS？"}
+    F -- "是" --&gt; G["中度或深度镇静"]
+    G --&gt; H{"出血/误吸风险高？"}
+    H -- "是" --&gt; I["GA + ETT ≥8–8.5 mm"]
+    H -- "否" --&gt; J["LMA 或自然气道 + 咬口"]
+    F -- "否" --&gt; K["简单诊断性软镜"]
+    K --&gt; L["中度镇静 ± LMA"]
+</div>
+<div class="algorithm-note">
+<p><strong>总结：</strong></p>
+<ul>
+<li><strong>中央治疗操作</strong>（减瘤/热治疗/支架）：硬质支气管镜；GA（TIVA）；喷射或机械通气；热治疗时 FiO₂ &lt;0.40。</li>
+<li><strong>外周导航/活检：</strong> GA；ETT ≥8.0–8.5 mm；采用 VESPA 或 LNVP；肺复张 + PEEP；FiO₂ 尽可能低。</li>
+<li><strong>EBUS：</strong> 中度或深度镇静均可；低风险且需进入近端气管时可选 LMA/自然气道；误吸/出血风险高或需高度稳定时选 ETT。</li>
+<li><strong>简单软镜：</strong> 中度镇静、局部利多卡因，可考虑 LMA 改善舒适度和通路。</li>
+</ul>
+</div>
+<h4>算法 2——减少外周支气管镜肺不张的通气方案</h4>
+<div class="mermaid">
+flowchart TD
+    A["诱导并置入 ETT"] --&gt; B["立即肺复张"]
+    B --&gt; C{"选择策略"}
+    C -- "VESPA" --&gt; D["PEEP 8–10；Vt 6–8 mL/kg IBW；FiO₂ &lt;100%"]
+    C -- "LNVP" --&gt; E["上/中叶 PEEP 10–15，下叶 15–20；Vt 10–12 mL/kg IBW"]
+    E --&gt; F["成像时屏气，APL≈PEEP"]
+    D --&gt; G{"血流动力学稳定？"}
+    E --&gt; G
+    G -- "否" --&gt; H["降低 PEEP；补液；升压药；排除气胸/纵隔气肿"]
+    G -- "是" --&gt; I["继续导航/活检"]
+    I --&gt; J["回路打开或套囊放气后重新肺复张"]
+    J --&gt; K["减少镜体楔入；选择性吸除黏液栓"]
+</div>
+<div class="algorithm-note">
+<p><strong>总结：</strong></p>
+<ul>
+<li>ETT 置入后立即肺复张。</li>
+<li><strong>VESPA 选项：</strong> Vt 6–8 mL/kg IBW；PEEP 8–10；将 FiO₂ 滴定至低于 1.0。</li>
+<li><strong>LNVP 选项：</strong> Vt 10–12 mL/kg IBW；上/中叶 PEEP 10–15 cmH₂O，下叶 15–20；成像时短暂屏气，APL 约等于 PEEP。</li>
+<li><strong>若发生低血压：</strong> 降低 PEEP；给予液体/升压药；排除气胸/纵隔气肿。</li>
+<li><strong>操作期间：</strong> 减少镜体楔入；选择性吸引；断开回路后重新肺复张。</li>
+</ul>
+</div>
+<h4>算法 3——BLVR 的氧与通气管理</h4>
+<div class="mermaid">
+flowchart TD
+    A["GA + 大号 ETT"] --&gt; B["容量控制；Vt 6–8 mL/kg；I:E≈1:3"]
+    B --&gt; C["瓣膜置入时将 FiO₂ 设为可耐受最低值"]
+    C --&gt; D["监测低血压/内源性 PEEP"]
+    D -- "若存在" --&gt; E["降低呼吸频率；延长呼气；重新评估"]
+    D -- "若不存在" --&gt; F["继续操作；瓣膜置入后可考虑降低 Vt"]
+</div>
+<hr/>
+<h3>表格与速查框</h3>
+<h4>表 1. 镇静连续谱及所需支持</h4>
+<table>
+<thead><tr><th>深度</th><th>反应性</th><th>通气</th><th>气道</th><th>心血管</th></tr></thead>
+<tbody>
+<tr><td>最小镇静</td><td>对言语正常反应</td><td>不受影响</td><td>不受影响</td><td>不受影响</td></tr>
+<tr><td>中度镇静</td><td>对言语/触觉刺激有目的反应</td><td>足够</td><td>通常无需干预</td><td>通常维持</td></tr>
+<tr><td>深度镇静</td><td>对疼痛刺激有目的反应</td><td>可能不足</td><td>可能需要干预</td><td>通常维持</td></tr>
+<tr><td>全身麻醉</td><td>无法唤醒</td><td>常不足</td><td>通常需要干预</td><td>可能受损</td></tr>
+</tbody>
+</table>
+<h4>表 2. 支气管镜中的气道装置选择</h4>
+<table>
+<thead><tr><th>装置</th><th>优点</th><th>局限</th><th>常见用途</th></tr></thead>
+<tbody>
+<tr><td>自然气道（咬口）</td><td>无需额外器械；快速</td><td>镇静深度受限；出血时缺乏控制</td><td>短暂诊断性检查</td></tr>
+<tr><td>LMA（第二代）</td><td>可行 GA；通气可调；进入上段气管极佳</td><td>误吸风险；大量出血时保护较差</td><td>EBUS、异物取出、部分中心的 BLVR</td></tr>
+<tr><td>ETT（≥8–8.5 mm）</td><td>最稳妥；完全控制呼吸机；更适合出血</td><td>近端气管进入受限；导管可能遮挡高位站</td><td>治疗性支气管镜；高风险 EBUS</td></tr>
+<tr><td>硬质支气管镜</td><td>稳定气道、压迫止血；置入硅酮支架；通过大型器械</td><td>需专门技术；通气设置特殊</td><td>中央气道梗阻、大咯血</td></tr>
+</tbody>
+</table>
+<h4>表 3. 减少肺不张的通气方案</h4>
+<table>
+<thead><tr><th>方案</th><th>气道</th><th>Vt（mL/kg IBW）</th><th>PEEP（cmH₂O）</th><th>FiO₂</th><th>肺复张</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>常规</td><td>常用 LMA</td><td>不一</td><td>0–5</td><td>常为 1.0</td><td>无/不一</td><td>肺不张更多；靶点被遮挡更常见</td></tr>
+<tr><td>VESPA</td><td>ETT</td><td>6–8</td><td>8–10</td><td>&lt;100%</td><td>插管后立即进行</td><td>显著减少单侧/双侧肺不张且不增加并发症</td></tr>
+<tr><td>LNVP</td><td>ETT</td><td>10–12</td><td>上/中叶 10–15；下叶 15–20</td><td>可耐受最低值</td><td>插管后四次肺复张；屏气</td><td>肺不张减少；需注意血流动力学（升压药使用并不少见）</td></tr>
+</tbody>
+</table>
+<hr/>
+<h3>病例与应用学习</h3>
+<div class="case-study">
+<p><strong>病例 1：</strong> 一名 68 岁患者因右下叶 15 mm 结节在 GA 下接受机器人支气管镜。30 分钟后影像中不再显示结节；BMI 36。哪一项改变最能恢复可见性？</p>
+<p>A. 将 FiO₂ 提高至 1.0<br/>B. 增加 PEEP 至 10 cmH₂O 并实施肺复张<br/>C. 将 Vt 提高至 15 mL/kg<br/>D. 改用 LMA<br/>E. 停止肌松</p>
+<p><strong>答案：B。</strong> GA 下依赖性肺不张常见，BMI 较高和操作时间较长时尤甚。肺复张和足够 PEEP 可改善充气与靶点显示。</p>
+</div>
+<div class="case-study">
+<p><strong>病例 2：</strong> 一名 60 岁中央气道梗阻患者需热减瘤。能量激活时探头尖端短暂出现火焰。下一步最佳处理？</p>
+<p>A. 将 FiO₂ 提高至 1.0<br/>B. 继续能量以尽快完成<br/>C. 停止气流并吸引；恢复前确保 FiO₂ &lt;0.40<br/>D. 滴入肾上腺素溶液<br/>E. 终止操作</p>
+<p><strong>答案：C。</strong> 预防气道火灾需要限制 FiO₂。停止能量，确保吸入氧浓度降低并重新建立安全术野后方可继续。</p>
+</div>
+<hr/>
+<h3>题库（选择题）</h3>
+<p><strong>患者计划在中度镇静下接受诊断性支气管镜。镇静深度由什么定义？</strong><br/>A. 使用丙泊酚<br/>B. 咪达唑仑与芬太尼联用<br/>C. 患者对刺激的反应性<br/>D. 呼气末 CO₂ 数值<br/>E. 操作地点（手术室或支气管镜室）<br/><strong>答案：C。</strong> 镇静级别由患者反应性（如 MOAA/S、RASS）而非具体药物决定。</p>
+<p><strong>EBUS-TBNA 靶向高位纵隔站时，哪种气道方式最有利于保留通路？</strong><br/>A. 7.0 mm ETT<br/>B. 8.5 mm ETT<br/>C. LMA<br/>D. 双腔管<br/>E. 6.0 mm 经鼻 ETT<br/><strong>答案：C。</strong> LMA 可更好进入近端气管和高位站；小号 ETT 会妨碍镜体活动和通气。</p>
+<p><strong>GA 下外周支气管镜期间，哪项因素与肺不张形成关系最强？</strong><br/>A. 年龄<br/>B. 吸烟史<br/>C. BMI 和诱导后经过时间<br/>D. 既往肺叶切除<br/>E. 性别<br/><strong>答案：C。</strong> BMI 越高、术中时间越长，肺不张概率越高。</p>
+<p><strong>在 VESPA 通气中，插管后最合适的立即操作是：</strong><br/>A. 将 PEEP 设为 0 以避免低血压<br/>B. 肺复张后设 PEEP 8–10 cmH₂O<br/>C. 改用 LMA<br/>D. 全程将 FiO₂ 设为 1.0<br/>E. 将 I:E 设为 1:1<br/><strong>答案：B。</strong> VESPA 包括立即肺复张、中等 PEEP 以及 FiO₂ 滴定（低于 100%）。</p>
+<p><strong>在 LNVP 中，右下叶病灶最合适的 PEEP 目标是：</strong><br/>A. 0–5 cmH₂O<br/>B. 5–8 cmH₂O<br/>C. 8–10 cmH₂O<br/>D. 15–20 cmH₂O<br/>E. 20–25 cmH₂O<br/><strong>答案：D。</strong> 下叶靶点使用更高 PEEP（15–20 cmH₂O）以抵消依赖性塌陷。</p>
+<p><strong>计划对中央气道肿瘤进行热消融。能量释放时哪一氧浓度目标最安全？</strong><br/>A. FiO₂ 1.0<br/>B. FiO₂ 0.8<br/>C. FiO₂ 0.6<br/>D. FiO₂ ≤0.40<br/>E. 室内空气不安全，应避免<br/><strong>答案：D。</strong> 热治疗时保持 FiO₂ ≤0.40 以降低气道火灾风险。</p>
+<p><strong>使用支气管内瓣膜进行 BLVR 时，哪项术中调整与术后气胸率降低相关？</strong><br/>A. 置入时使用高 FiO₂<br/>B. 置入时使用可耐受最低 FiO₂<br/>C. 潮气量 &gt;10 mL/kg<br/>D. 取消 PEEP<br/>E. 高呼吸频率<br/><strong>答案：B。</strong> 置入时较低 FiO₂ 与较低气胸发生率相关，气胸发生时也更延迟。</p>
+<p><strong>硬质支气管镜喷射通气中，哪项参数调整有助于避免球阀样病变造成气体潴留？</strong><br/>A. 增加吸气时间比例<br/>B. 将频率提高至 600 次/分且不做其他调整<br/>C. 缩短吸气时间并延长呼气<br/>D. 改为 100% 湿化<br/>E. 提高驱动压<br/><strong>答案：C。</strong> 缩短吸气、延长呼气可促进气体经狭窄气道排出，减少过度充气。</p>
+<p><strong>一名巨大前纵隔肿块患者接受硬质支气管镜麻醉。哪种策略最能降低过度充气导致的血流动力学崩溃？</strong><br/>A. 高频率、短呼气<br/>B. 无论如何都必须维持自主呼吸<br/>C. 正压通气、延长呼气并降低频率<br/>D. 仅用挥发性麻醉药<br/>E. 避免神经肌肉阻滞<br/><strong>答案：C。</strong> 正压可扩大气道；通过延长呼气和降低频率避免过度充气，神经肌肉阻滞可使用。</p>
+<p><strong>在 LNVP 设置下进行外周导航时患者出现低血压。下一步最佳处理？</strong><br/>A. 将 PEEP 提高至 20 cmH₂O<br/>B. 降低 PEEP，并评估气胸/纵隔气肿<br/>C. 余下操作均使用 FiO₂ 1.0<br/>D. 给予艾司洛尔<br/>E. 增加潮气量<br/><strong>答案：B。</strong> 降低 PEEP 改善静脉回流；排除气压伤并按需支持血流动力学。</p>
+<p><strong>EBUS 使用 8.0 mm ETT 时，插入 EBUS 镜后通气不足。最实用的预防措施？</strong><br/>A. 使用 7.0 mm ETT 减少摩擦<br/>B. 改用 LMA<br/>C. 使用 ≥8.5–9.0 mm ETT 以保留更大通气腔<br/>D. 改为清醒纤维支气管镜插管<br/>E. 加用阿托品<br/><strong>答案：C。</strong> 大口径镜体占据导管大部分截面积；更大 ETT 可保留气体交换空间。</p>
+<p><strong>软镜操作中发生大咯血——前两步是什么？</strong><br/>A. Trendelenburg 体位并拔出镜体<br/>B. 出血侧向上并正压通气<br/>C. 出血侧向下并隔离气道（大号 ETT + 封堵器或双腔管）<br/>D. 仅立即雾化肾上腺素<br/>E. 前往胸部 CT<br/><strong>答案：C。</strong> 体位可防止健侧肺被血液淹没；隔离气道并按需转用硬质支气管镜。</p>
+<hr/>
+<h3>争议、差异与不断演进的证据</h3>
+<ul>
+<li><strong>EBUS 镇静：</strong> 实践从中度镇静、深度镇静到 GA 不等；中度和深度均为可接受方法，无单一气道装置强制要求。</li>
+<li><strong>肺不张预防（VESPA 与 LNVP）：</strong> 两者均可减少肺不张。LNVP 采用更高 PEEP 和更大潮气量，可能带来血流动力学代价；VESPA 采用较低 Vt 和中等 PEEP。选择取决于本地经验、影像流程和患者耐受性。</li>
+<li><strong>纵隔肿块：</strong> 传统上避免神经肌肉阻滞的观点正在受到挑战；精细管理的正压通气联合延长呼气可以安全有效。</li>
+<li><strong>镇静药物：</strong> 瑞马唑仑和右美托咪定在胸腔镜及支气管镜中很有前景，但不同机构采用程度和物流条件不同。</li>
+<li><strong>新兴治疗：</strong> 脉冲电场消融和微波消融应用不断扩大；能量释放时降低 FiO₂ 的原则仍至关重要。</li>
+</ul>
+<hr/>
+<h3>带回家的核对表</h3>
+<ul>
+<li>用客观量表定义目标镇静深度，并据此选择药物。</li>
+<li>局部利多卡因用于抑制咳嗽；避免苯佐卡因/丁卡因。</li>
+<li>让气道装置匹配操作和风险（LMA 便于进入；ETT 更安全；硬质镜用于治疗）。</li>
+<li>外周支气管镜应规划肺复张 + PEEP + 低 FiO₂，以预防肺不张。</li>
+<li>EBUS 使用 ≥8.0–8.5 mm ETT；近端气管操作可考虑 LMA。</li>
+<li>热治疗期间保持 FiO₂ ≤0.40，并在能量启动前沟通。</li>
+<li>BLVR 使用低 Vt、长呼气，瓣膜置入时采用可耐受最低 FiO₂。</li>
+<li>纵隔肿块患者中，延长呼气的正压通气和神经肌肉阻滞可以安全应用；备硬质镜和抢救路径。</li>
+<li>注意高 PEEP 的血流动力学效应；低血压时降低 PEEP 并评估气压伤。</li>
+<li>大咯血时：出血侧向下、隔离肺、硬质支气管镜，并协调确定性治疗。</li>
+</ul>
+<hr/>
+<h3>缩写与术语表</h3>
+<div class="abbreviations">
+<dl>
+<dt>APL</dt><dd>可调压力限制阀</dd>
+<dt>APC</dt><dd>氩等离子体凝固</dd>
+<dt>BLVR</dt><dd>支气管镜肺减容术</dd>
+<dt>CBCT</dt><dd>锥形束计算机断层扫描</dd>
+<dt>DLT</dt><dd>双腔气管导管</dd>
+<dt>EBUS</dt><dd>支气管内超声</dd>
+<dt>ETT</dt><dd>气管导管</dd>
+<dt>FiO₂</dt><dd>吸入氧浓度</dd>
+<dt>GA</dt><dd>全身麻醉</dd>
+<dt>IBW</dt><dd>理想体重</dd>
+<dt>IP</dt><dd>介入肺脏病学</dd>
+<dt>LMA</dt><dd>喉罩气道</dd>
+<dt>LNVP</dt><dd>肺导航通气方案</dd>
+<dt>MOAA/S</dt><dd>改良观察者警觉/镇静评估量表</dd>
+<dt>PEEP</dt><dd>呼气末正压</dd>
+<dt>PEF</dt><dd>脉冲电场</dd>
+<dt>PM</dt><dd>纵隔气肿</dd>
+<dt>PTX</dt><dd>气胸</dd>
+<dt>RASS</dt><dd>Richmond 躁动-镇静量表</dd>
+<dt>rEBUS</dt><dd>径向支气管内超声</dd>
+<dt>TIVA</dt><dd>全静脉麻醉</dd>
+<dt>Vt</dt><dd>潮气量</dd>
+<dt>VESPA</dt><dd>预防肺不张的通气策略</dd>
+</dl>
+</div>
+<hr/>
+<div class="references">
+<ol>
+<li>Wahidi MM, Jain P, Jantz M, et al. American College of Chest Physicians consensus statement on the use of topical anesthesia, analgesia, and sedation during flexible bronchoscopy in adult patients. Chest. 2011;140(5):1342-1350.</li>
+<li>Wahidi MM, Herth F, Yasufuku K, et al. Technical aspects of endobronchial ultrasound-guided transbronchial needle aspiration. Chest. 2016;149(3):816-835.</li>
+<li>Sagar AS, Sabath BF, Eapen GA, et al. Incidence and location of atelectasis developed during bronchoscopy under general anesthesia: the I-LOCATE trial. Chest. 2020;158(6):2658-2666.</li>
+<li>Salahuddin M, Sarkiss M, Sagar AS, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia (VESPA). Chest. 2022;162(6):1393-1401.</li>
+<li>Bhadra K, Setser RM, Condra W, Pritchett MA. Lung navigation ventilation protocol to optimize biopsy of peripheral lung lesions. J Bronchology Interv Pulmonol. 2022;29(1):7-17.</li>
+<li>Bhadra K, Baleeiro C, Patel S, et al. High tidal volume, high positive end-expiratory pressure and apneic breath-hold strategies (Lung Navigation Ventilation Protocol): results in 100 patients. J Bronchology Interv Pulmonol. 2024;31:105-116.</li>
+<li>Khan A, Bashour SI, Casal RF. Preventing atelectasis during bronchoscopy under general anesthesia. J Thorac Dis. 2023;15(6):3443-3452.</li>
+<li>Roodenburg SA, Barends CRM, Krenz G, et al. Safety and considerations of the anaesthetic management during bronchoscopic lung volume reduction treatments. Respiration. 2023;102:55-63.</li>
+<li>Lentz RJ, Low S-W, Saettele T, et al. Association between inspired oxygen fraction and pneumothorax after endobronchial valve placement for emphysema. Ann Am Thorac Soc. 2023;20(6).</li>
+<li>Sarkiss M, Eapen GA. Airway management for central airway and transbronchial lung procedures. Curr Anesthesiol Rep. 2022;12:390-397.</li>
+<li>Sikachi RR, Mishra KL, Anders M. Anesthetic considerations in interventional pulmonology. Curr Opin Pulm Med. 2024;30:99-106.</li>
+<li>Putz L, Mayné A, Dincq AS. Jet ventilation during rigid bronchoscopy in adults: a focused review. Biomed Res Int. 2016;2016:4234861.</li>
+<li>Mahajan AK, Patel PP, Garg R, Manley C, Ibrahim O, Mehta AC. Safety of laser and thermal therapy during rigid bronchoscopy using manual hand jet ventilation. Surg Technol Int. 2021;39:103-106.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

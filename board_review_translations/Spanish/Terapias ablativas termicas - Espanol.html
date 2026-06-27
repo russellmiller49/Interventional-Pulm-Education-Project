@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terapias ablativas térmicas</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <h1>Terapias ablativas térmicas</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda las modalidades térmicas de efecto inmediato utilizadas en broncoscopia intervencionista para trastornos de la vía aérea central: láseres médicos, electrocauterio (EC) y coagulación con plasma de argón (APC). Se corresponde con los dominios del temario de la AABIP sobre el manejo de la obstrucción maligna de la vía aérea central (OVAC), la estenosis benigna, la hemostasia, la física y seguridad de los dispositivos, las estrategias de anestesia y ventilación, la técnica del procedimiento, los resultados y el manejo de las complicaciones.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Distinguir el láser, el EC y la APC por el modo de entrega de energía, los efectos tisulares, la profundidad de penetración y los escenarios clínicos ideales.</li>
+        <li>Seleccionar la terapia térmica apropiada para la OVAC intrínseca, extrínseca o mixta, y para las fuentes endobronquiales de hemoptisis.</li>
+        <li>Preparar al paciente y la sala para una ablación térmica, incluidos los objetivos de FiO₂/FeO₂, la prevención de incendios en la vía aérea y las precauciones con dispositivos/implantes.</li>
+        <li>Ejecutar la técnica paso a paso con broncoscopia rígida y flexible, incluida la desobstrucción mecánica asistida por láser y las estrategias multimodales.</li>
+        <li>Resolver problemas intraprocedimiento (desaturación, sangrado, coagulación deficiente, carbonización, efecto de «palomitas» por vapor y riesgo de embolia gaseosa).</li>
+        <li>Anticipar las complicaciones y aplicar algoritmos de manejo inmediato.</li>
+        <li>Interpretar los datos de eficacia y seguridad para orientar a los pacientes sobre los resultados esperados.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Resumen de alto rendimiento</h3>
+    
+    <h4>Correspondencias más evaluadas</h4>
+    <ul>
+        <li><strong>Láser</strong> = Coagulación más profunda y vaporización eficaz; ideal para la desobstrucción rápida de tumores intrínsecos cuando la vía aérea distal es viable.</li>
+        <li><strong>EC (electrocauterio)</strong> = Corte/coagulación por contacto con herramientas versátiles (cuchillo de aguja, asa); alternativa rentable al láser para la enfermedad endoluminal.</li>
+        <li><strong>APC (coagulación con plasma de argón)</strong> = Modalidad sin contacto y de penetración superficial; herramienta principal de hemostasia para el sangrado difuso; también prepara el tejido para la desobstrucción mecánica.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <strong>Perlas fundamentales:</strong>
+        <ul>
+            <li><strong>Prevención de incendios:</strong> Mantenga la FiO₂ y la FeO₂ ≤0,40 antes de activar cualquier dispositivo térmico. Utilice comunicación de circuito cerrado con anestesia.</li>
+            <li><strong>La densidad de potencia importa (láser):</strong> Fibra más cercana + mayor potencia = vaporización/carbonización; fibra más alejada + menor potencia = coagulación más amplia. «Pinte, no se detenga» para evitar lesiones profundas.</li>
+            <li><strong>Alineación coaxial:</strong> Mantenga la entrega de energía paralela al eje de la vía aérea para reducir el riesgo de perforación, sobre todo cerca de la pared traqueal posterior/membranosa y de los grandes vasos.</li>
+            <li><strong>Seguridad de la APC:</strong> Apunte a 1–3 mm del objetivo; un flujo de gas ≤1,0 L/min reduce el riesgo de embolia gaseosa; la punta del dispositivo debe sobresalir del broncoscopio para proteger la óptica.</li>
+            <li><strong>Cuchillo de aguja de EC para membranas:</strong> Realice incisiones radiales (p. ej., a las 12, 3 y 9 en punto), evite las 6 en punto (pared membranosa) y después dilate.</li>
+            <li><strong>Dispositivos implantados:</strong> EC/APC utilizan corriente eléctrica; coordine el uso de imán o la reprogramación temporal de marcapasos/desfibriladores implantables. El láser (luz, no corriente) evita esta limitación.</li>
+            <li><strong>Sinergia entre broncoscopia rígida y flexible:</strong> La rígida proporciona control de la vía aérea, aspiración de gran calibre, resección mecánica y colocación de prótesis; la flexible, introducida a través de la rígida, permite inspección y limpieza distales.</li>
+            <li><strong>Trampa de contraindicación (láser):</strong> Obstrucción casi completa sin luz distal visible: alto riesgo de perforación; evite administrar energía a ciegas.</li>
+            <li><strong>Resumen de eficacia:</strong> Los registros modernos muestran un alto éxito técnico con bajas tasas de complicaciones por procedimiento cuando intervienen equipos experimentados; la anestesia general se asocia con menos complicaciones que la sedación moderada en la broncoscopia terapéutica.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología / epidemiología</h4>
+    <p>La OVAC puede deberse a un tumor endoluminal intrínseco, compresión extrínseca o enfermedad mixta. Las modalidades térmicas tratan el componente endoluminal y suelen combinarse con desobstrucción mecánica y colocación de prótesis en la enfermedad mixta/extrínseca. La terapia térmica también es fundamental para manejar la hemoptisis endobronquial y ciertas membranas o estenosis benignas.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Indicaciones frecuentes:</strong></p>
+    <ul>
+        <li>OVAC sintomática con componente endoluminal (maligno o benigno seleccionado).</li>
+        <li>Hemoptisis endobronquial procedente de una fuente central visible.</li>
+        <li>Membranas o estenosis benignas cortas susceptibles de incisiones radiales + dilatación.</li>
+        <li>Desobstrucción paliativa o como puente a un tratamiento oncológico definitivo.</li>
+    </ul>
+    <p><strong>Contraindicaciones relativas:</strong></p>
+    <ul>
+        <li>Obstrucción completa o casi completa sin visualización de la luz distal (láser).</li>
+        <li>Hipoxemia no controlable que impida reducir la FiO₂ a ≤0,40.</li>
+        <li>Mucosa extremadamente friable con sangrado no controlado (estabilizar primero).</li>
+        <li>Para EC/APC: dispositivos cardíacos incompatibles sin los ajustes perioperatorios apropiados.</li>
+    </ul>
+
+    <h3>Evaluación previa al procedimiento</h3>
+    <ul>
+        <li><strong>Imágenes:</strong> TC para definir la extensión de la lesión y las relaciones entre la vía aérea y los vasos; anticipe una anatomía alterada (después de cirugía o radiación).</li>
+        <li><strong>Plan de vía aérea:</strong> Broncoscopia rígida frente a flexible; disponibilidad de prótesis, balones, criosondas y pinzas; respaldo para sangrado (aspiración de gran calibre y opciones de taponamiento).</li>
+        <li><strong>Anestesia y ventilación:</strong> Prefiera anestesia general en casos terapéuticos; asegure FiO₂/FeO₂ ≤0,40 antes de aplicar energía; considere un tubo endotraqueal resistente al láser cuando se utilice láser cerca de tubos.</li>
+        <li><strong>Implantes:</strong> Marcapasos/desfibriladores implantables: coordine el modo asincrónico y la interrogación posterior al procedimiento si se emplea EC/APC.</li>
+        <li><strong>Equipo y seguridad:</strong> Gafas de protección específicas para láser, controles de la zona nominal de peligro, evacuación del humo y agua/solución salina estéril disponible para un incendio.</li>
+        <li><strong>Consentimiento:</strong> Incluya los riesgos de sangrado, perforación, incendio de la vía aérea, embolia gaseosa (APC), necesidad de prótesis y procedimientos por etapas.</li>
+    </ul>
+
+    <h3>Equipo y preparación (habituales)</h3>
+    <ul>
+        <li><strong>Plataformas láser:</strong>
+            <ul>
+                <li>Nd:YAG (~1064 nm): coagulación más profunda, potencia habitual 20–40 W.</li>
+                <li>Nd:YAP (~1340 nm): 20 W.</li>
+                <li>Ho:YAG (~2100 nm): ~10 W, superficial, corte preciso.</li>
+                <li>KTP (532 nm): 15–35 W, corte superficial.</li>
+                <li>CO₂ (10.600 nm): 4–8 W, muy superficial, corte preciso.</li>
+                <li>Láseres de diodo: (p. ej., 980 nm a aproximadamente 20 W; 1470 nm a aproximadamente 10 W; algunas fuentes describen intervalos menores por la variabilidad entre dispositivos).</li>
+            </ul>
+        </li>
+        <li><strong>EC:</strong> Generador con pedales de corte (amarillo) y coagulación (azul); sonda roma, cuchillo de aguja, asa y pinzas calientes; potencia habitual de 20–60 W (mayor para corte).</li>
+        <li><strong>APC:</strong> Generador + fuente de argón; catéter axial o de disparo lateral; potencia habitual de 20–40 W y flujo de gas de 0,3–1,8 L/min (mantenga ≤1,0 L/min por seguridad).</li>
+        <li><strong>Elementos complementarios:</strong> Juego rígido (tubos/telescopios), aspiración de alto flujo, pinzas, criosonda, balones, prótesis, protector del broncoscopio y evacuación de humo.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Técnica paso a paso / Lista de verificación del procedimiento</h3>
+
+    <h4>Comprobaciones universales de seguridad (antes de aplicar energía)</h4>
+    <ul>
+        <li>Confirme FiO₂/FeO₂ ≤0,40 mediante comunicación de circuito cerrado.</li>
+        <li>Asegure la vía aérea; disponga de dos sistemas de aspiración (broncoscopio + oral).</li>
+        <li>Prepare la evacuación del humo y los vapores.</li>
+        <li>Confirme el plan para dispositivos implantados (imán/reprogramación si se usa EC/APC).</li>
+        <li>Repase el protocolo de incendio; tenga agua/solución salina estéril disponible de inmediato.</li>
+    </ul>
+
+    <h4>Desobstrucción mecánica asistida por láser (se prefiere broncoscopia rígida)</h4>
+    <ul>
+        <li>Marque la trayectoria de la vía aérea; mantenga la fibra coaxial con la luz.</li>
+        <li>Comience con una coagulación amplia: fibra a ~1 cm de la lesión, menor potencia y pulsos cortos (≈1 s) para desvascularizar.</li>
+        <li>Reseque mecánicamente con el bisel rígido o pinzas; repita ciclos de coagular → desobstruir.</li>
+        <li>Para cortes superficiales (membranas/tejido de granulación), utilice láseres de precisión (p. ej., KTP/CO₂/Ho:YAG).</li>
+        <li>No mantenga nunca el haz fijo en un punto; desplácelo cada 1–3 pulsos para evitar el efecto subsuperficial de «palomitas» por vapor y la perforación.</li>
+    </ul>
+
+    <h4>Electrocauterio</h4>
+    <ul>
+        <li><strong>Cuchillo de aguja para estenosis en forma de membrana:</strong> Incisiones radiales a las 12, 3 y 9 en punto; evite las 6 en punto; después dilate (con broncoscopio rígido o balón).</li>
+        <li><strong>Asa para lesiones pediculadas:</strong> Rodee la base con el asa, apriete mientras activa y extraiga en bloque.</li>
+        <li><strong>Sonda roma:</strong> Contactos breves (≤1–2 s) con reevaluación visual entre activaciones.</li>
+        <li><strong>Ajustes:</strong> Prefiera el modo de coagulación para la hemostasia; alterne corte/coagulación para equilibrar rapidez y control.</li>
+    </ul>
+
+    <h4>APC (coagulación con plasma de argón)</h4>
+    <ul>
+        <li>Extienda el catéter ≥5–10 mm más allá de la punta del broncoscopio.</li>
+        <li>Manténgalo a 1–3 mm del tejido; aplique ráfagas cortas con movimiento de barrido.</li>
+        <li>Utilice un flujo de gas ≤1,0 L/min; evite activar mientras avanza y no impacte el tejido.</li>
+        <li>Desvitalice y después realice desobstrucción mecánica (pinzas/criosonda) según sea necesario.</li>
+    </ul>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>Desaturación:</strong> Interrumpa la energía, aumente temporalmente la FiO₂ y aspire coágulos/humo; reanude solo cuando la FeO₂ sea ≤0,40.</li>
+        <li><strong>Sangrado:</strong> Prefiera APC (sangrado difuso) o coagulación láser desde la periferia hacia el centro; ejerza taponamiento con el tubo rígido; introduzca agentes hemostáticos si es necesario.</li>
+        <li><strong>Coagulación deficiente (campo húmedo):</strong> Aspire sangre/moco; cambie a una modalidad sin contacto (APC/láser).</li>
+        <li><strong>Carbonización/tejido carbonizado (láser):</strong> Aumente la distancia de la fibra o reduzca la potencia; cambie a extracción mecánica.</li>
+        <li><strong>Efecto de «palomitas» por vapor (láser):</strong> Acorte los pulsos, mantenga el haz en movimiento y evite una aplicación profunda y prolongada.</li>
+        <li><strong>Interferencia con dispositivos (EC/APC):</strong> Confirme el imán/modo asincrónico si aparece alguna irregularidad del ritmo.</li>
+        <li><strong>Riesgo de daño al broncoscopio (APC/EC):</strong> Mantenga la punta activa más allá del extremo del broncoscopio y evite el contacto accidental.</li>
+    </ul>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <ul>
+        <li>Recuperación habitual tras la broncoscopia; observe durante más tiempo los casos de alto riesgo (trabajo subglótico, prótesis traqueal).</li>
+        <li>Considere una broncoscopia temprana de control en estenosis complejas o gran carga tumoral para evaluar la reestenosis y planificar un tratamiento por etapas.</li>
+        <li>Indique medidas para la tos y la higiene bronquial y, cuando corresponda, coordine el tratamiento oncológico con rapidez después de recanalizar la vía aérea.</li>
+    </ul>
+
+    <h3>Complicaciones (prevención–reconocimiento–manejo)</h3>
+    <ul>
+        <li><strong>Incendio de la vía aérea:</strong> Prevención mediante FiO₂/FeO₂ ≤0,40, campos húmedos y evitar preparaciones con alcohol. Si ocurre un incendio: detenga la energía y el oxígeno, inunde la vía aérea con solución salina, retire el material en combustión y reevalúe la vía aérea mediante broncoscopia.</li>
+        <li><strong>Sangrado:</strong> Coagule (APC/láser), ejerza taponamiento con el tubo rígido, coloque material hemostático y escale el tratamiento si persiste.</li>
+        <li><strong>Perforación/fístula:</strong> Detenga la energía, ejerza taponamiento, ventile el pulmón contralateral y solicite imágenes/consulta quirúrgica.</li>
+        <li><strong>Embolia gaseosa (APC):</strong> Evite flujo alto, impactación del tejido y activación continua durante el avance; si se sospecha (colapso cardiovascular súbito o déficit neurológico), detenga el procedimiento, proporcione soporte hemodinámico, coloque en decúbito lateral izquierdo si corresponde y active el manejo urgente.</li>
+        <li><strong>Arritmia/fallo del dispositivo:</strong> Planifique con el equipo de dispositivos; monitorice y reprograme después del procedimiento.</li>
+        <li><strong>Edema/atelectasia posobstructiva:</strong> Higiene bronquial; considere esteroides si el edema de la vía aérea es clínicamente significativo.</li>
+    </ul>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>Dispositivos electrónicos cardíacos implantables:</strong> Prefiera láser cuando sea factible para evitar la corriente eléctrica; de lo contrario, use imán/modo asincrónico para EC/APC con interrogación posterior al caso.</li>
+        <li><strong>Traqueostomía/trabajo subglótico alto:</strong> Considere un tubo endotraqueal resistente al láser a través del estoma para controlar mejor la ventilación durante el uso del láser.</li>
+        <li><strong>Hipoxemia grave:</strong> La ablación térmica puede ser insegura si no se puede reducir la FiO₂; considere abordajes por etapas, modalidades alternativas (p. ej., crioextracción sin riesgo de incendio) o soporte extracorpóreo en casos excepcionales (los protocolos institucionales varían).</li>
+        <li><strong>Lesiones de lóbulos superiores:</strong> El acceso flexible suele ser mejor; el broncoscopio rígido puede no alcanzar la lesión.</li>
+    </ul>
+
+    <h3>Evidencia y resultados</h3>
+    <ul>
+        <li>Las grandes series y registros muestran un alto éxito técnico con bajas tasas de complicaciones por procedimiento cuando intervienen equipos experimentados; se favorece la anestesia general frente a la sedación moderada en casos terapéuticos.</li>
+        <li>La desobstrucción asistida por láser logra un aumento rápido de la luz y alivio de los síntomas; la combinación con radioterapia o tratamiento sistémico mejora los resultados.</li>
+        <li>El EC tiene una eficacia comparable a la del láser en muchas lesiones endoluminales y puede ser más rentable.</li>
+        <li>La APC ofrece una hemostasia inmediata excelente en el sangrado endobronquial central y facilita una desobstrucción mecánica segura.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1 — Obstrucción sintomática de la vía aérea central (OVAC)</h4>
+    <div class="mermaid">
+    graph TD
+        A["Sospecha de OVAC"] --> B["Evaluar vía aérea/ventilación <br/> SpO₂ • Hemodinámica"]
+        B --> C{"¿Dificultad respiratoria emergente?"}
+        C -- Sí --> D["Asegurar la vía aérea (se prefiere rígida) <br/> Ventilar • Aspirar"]
+        D --> E["Reducir FiO₂/FeO₂ a ≤0,40"]
+        C -- No --> E
+        E --> F["Definir el patrón de obstrucción <br/>(broncoscopia/TC)"]
+        F --> G{"¿Componente endoluminal <br/>intrínseco?"}
+        G -- No --> H["Extrínseca pura: <br/>dilatación ± prótesis <br/>(sin ablación térmica)"]
+        G -- Sí --> I["Planificar la modalidad térmica"]
+        I --> J{"¿Objetivo?"}
+        J -- Desobstrucción --> K["Láser o EC <br/>Desobstrucción mecánica asistida por láser"]
+        J -- Hemostasia --> L["APC (sin contacto) <br/>o coagulación láser"]
+        K --> M["Complementos: <br/>pinzas/criosonda <br/>balón • prótesis si es mixta"]
+        L --> M
+        M --> N["Después del procedimiento: <br/>limpieza de la vía aérea <br/>planificar tratamiento oncológico"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Resumen del algoritmo 1:</strong>
+        <ul>
+            <li>Estabilice la vía aérea/ventilación; FiO₂/FeO₂ ≤0,40 antes de aplicar energía.</li>
+            <li>Identifique obstrucción intrínseca, extrínseca o mixta.</li>
+            <li>Intrínseca: láser o EC para desobstrucción; APC/láser para hemostasia.</li>
+            <li>Mixta: desobstruya el componente intrínseco y después dilate/coloque una prótesis.</li>
+            <li>Evite administrar energía a ciegas cuando no se visualiza la vía aérea distal.</li>
+            <li>Después del procedimiento, planifique el tratamiento oncológico y el seguimiento.</li>
+        </ul>
+    </div>
+
+    <h4>Algoritmo 2 — Hemoptisis endobronquial (fuente central)</h4>
+    <div class="mermaid">
+    graph TD
+        A["Hemoptisis con fuente en la vía aérea central"] --> B["Asegurar la vía aérea (se prefiere rígida)"]
+        B --> C["Colocar el lado sangrante hacia abajo <br/> aspirar coágulos"]
+        C --> D["Reducir FiO₂/FeO₂ a ≤0,40"]
+        D --> E["Localizar el sitio de sangrado"]
+        E --> F{"¿Tipo?"}
+        F -- Difuso --> G["APC en ráfagas cortas <br/>a 1–3 mm del tejido <br/>gas ≤1,0 L/min"]
+        F -- Focal --> H["Coagulación láser <br/>de la periferia → al centro"]
+        G --> I["Complementos: <br/>taponamiento con tubo rígido <br/>hemostáticos tópicos"]
+        H --> I
+        I --> J{"¿Persiste el sangrado?"}
+        J -- Sí --> K["Repetir coagulación <br/>considerar prótesis/taponamiento <br/>embolización por radiología intervencionista"]
+        J -- No --> L["Limpieza de la vía aérea <br/>observar • tratar la causa subyacente"]
+    </div>
+    <div class="algorithm-note">
+        <strong>Resumen del algoritmo 2:</strong>
+        <ul>
+            <li>Primero controle la vía aérea y evacue los coágulos.</li>
+            <li>Reduzca FiO₂/FeO₂ y localice el sangrado.</li>
+            <li>APC para sangrado difuso; láser para lesiones focales.</li>
+            <li>Utilice taponamiento y complementos hemostáticos según sea necesario.</li>
+            <li>Casos refractarios → embolización por radiología intervencionista/cirugía según la institución.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. Láseres médicos para la vía aérea: física y ajustes habituales</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo de láser</th>
+                <th>Longitud de onda (nm)</th>
+                <th>Efecto tisular predominante</th>
+                <th>Penetración aproximada</th>
+                <th>Potencia habitual en vía aérea</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Nd:YAG</td>
+                <td>~1064</td>
+                <td>Coagulación + vaporización</td>
+                <td>~5–15 mm</td>
+                <td>~20–40 W</td>
+            </tr>
+            <tr>
+                <td>Nd:YAP</td>
+                <td>~1340</td>
+                <td>Coagulación</td>
+                <td>~3–10 mm</td>
+                <td>~20 W</td>
+            </tr>
+            <tr>
+                <td>Ho:YAG</td>
+                <td>~2100</td>
+                <td>Corte preciso + coagulación superficial</td>
+                <td>&lt;1 mm</td>
+                <td>~10 W</td>
+            </tr>
+            <tr>
+                <td>KTP</td>
+                <td>532</td>
+                <td>Corte superficial; hemostasia de vasos pequeños</td>
+                <td>&lt;1 mm</td>
+                <td>~15–35 W</td>
+            </tr>
+            <tr>
+                <td>Diodo</td>
+                <td>980 / 1470</td>
+                <td>Coagulación/corte mixtos; depende del dispositivo</td>
+                <td>~2–4 mm*</td>
+                <td>~10–20 W*</td>
+            </tr>
+            <tr>
+                <td>CO₂</td>
+                <td>10.600</td>
+                <td>Corte muy preciso; hemostasia limitada</td>
+                <td>&lt;1 mm</td>
+                <td>~4–8 W</td>
+            </tr>
+        </tbody>
+    </table>
+    <p><em>*Algunas fuentes describen potencias menores para plataformas específicas de diodo; los ajustes varían según el dispositivo y el objetivo clínico.</em></p>
+
+    <h4>Tabla 2. Modalidades térmicas de un vistazo</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Láser</th>
+                <th>Electrocauterio (EC)</th>
+                <th>Coagulación con plasma de argón (APC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Contacto frente a sin contacto</td>
+                <td>Ambos (fibra desnuda frente a catéter refrigerado por aire)</td>
+                <td>Contacto</td>
+                <td>Sin contacto</td>
+            </tr>
+            <tr>
+                <td>Profundidad del efecto</td>
+                <td>Variable; la más profunda (Nd:YAG)</td>
+                <td>Moderada, limitada por el contacto</td>
+                <td>Superficial (~1–2 mm)</td>
+            </tr>
+            <tr>
+                <td>Mejores usos</td>
+                <td>Desobstrucción rápida; hemostasia focal</td>
+                <td>Incisiones de membranas; lesiones pediculadas; desobstrucción rentable</td>
+                <td>Sangrado difuso, coagulación mucosa; preparación para desobstrucción</td>
+            </tr>
+            <tr>
+                <td>Ajustes clave</td>
+                <td>Vatios, pulso, distancia de la fibra</td>
+                <td>Vatios; modos de corte/coagulación</td>
+                <td>Vatios; flujo de gas (≤1,0 L/min); distancia punta-tejido de 1–3 mm</td>
+            </tr>
+            <tr>
+                <td>Aspectos relacionados con dispositivos/implantes</td>
+                <td>Luz (seguro con marcapasos)</td>
+                <td>Eléctrico (manejar dispositivos cardíacos implantables)</td>
+                <td>Eléctrico + gas (manejar dispositivos cardíacos implantables; seguridad del gas)</td>
+            </tr>
+            <tr>
+                <td>Riesgo de incendio</td>
+                <td>Sí (FiO₂/FeO₂ ≤0,40)</td>
+                <td>Sí (FiO₂/FeO₂ ≤0,40)</td>
+                <td>Sí (FiO₂/FeO₂ ≤0,40)</td>
+            </tr>
+            <tr>
+                <td>Limitaciones</td>
+                <td>Riesgo de lesión profunda; costo</td>
+                <td>El campo húmedo reduce el efecto; riesgo para la pared posterior</td>
+                <td>Profundidad limitada; riesgo de embolia gaseosa si se utiliza mal</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Tabla 3. Lista de verificación de incendio de la vía aérea y seguridad del procedimiento</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Elemento de la lista</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Control del oxígeno</td>
+                <td>Confirme FiO₂/FeO₂ ≤0,40 antes de activar; utilice confirmación de circuito cerrado.</td>
+            </tr>
+            <tr>
+                <td>Dispositivo de vía aérea</td>
+                <td>Prefiera un tubo endotraqueal resistente al láser cuando trabaje cerca de tubos; proteja la óptica del broncoscopio (extienda las puntas activas).</td>
+            </tr>
+            <tr>
+                <td>Preparación del campo</td>
+                <td>Evite preparaciones con alcohol; coloque campos húmedos; tenga solución salina/agua al alcance de la mano.</td>
+            </tr>
+            <tr>
+                <td>Equipo de protección personal</td>
+                <td>Gafas específicas para láser; evacuación del humo; pantalla facial UV/guantes/bata en salas de láser.</td>
+            </tr>
+            <tr>
+                <td>Marcapasos/desfibriladores (EC/APC)</td>
+                <td>Imán/modo asincrónico; interrogación posterior al procedimiento.</td>
+            </tr>
+            <tr>
+                <td>Aspectos específicos de APC</td>
+                <td>Flujo de gas ≤1,0 L/min; no active mientras avanza; mantenga la punta separada del tejido.</td>
+            </tr>
+            <tr>
+                <td>Técnica láser</td>
+                <td>Alineación coaxial; pulsos cortos; mueva el haz cada 1–3 pulsos.</td>
+            </tr>
+            <tr>
+                <td>Respaldo para sangrado</td>
+                <td>Tubo rígido para taponamiento; agentes hemostáticos; disponibilidad de radiología intervencionista para embolización.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study">
+        <h4>Caso 1</h4>
+        <p>Un paciente de 68 años con cáncer pulmonar escamocelular presenta estridor inspiratorio. La TC muestra una masa intraluminal traqueal; la tráquea distal y los bronquios están aireados. SpO₂ de 93 % con 2 L/min; bajo anestesia general se observa una masa friable y sangrante.</p>
+        <p><strong>¿Cuál es el siguiente mejor paso?</strong><br>
+        A. Aumentar la FiO₂ al 100 % e iniciar vaporización láser<br>
+        B. APC con flujo de gas de 2,0 L/min para hemostasia rápida<br>
+        C. Reducir FiO₂/FeO₂ a ≤0,40, coagulación láser con pulsos cortos y después desobstrucción mecánica<br>
+        D. Solo crioablación<br>
+        E. Colocación de prótesis a ciegas</p>
+        <p><strong>Mejor respuesta: C.</strong> Primero reduzca la fracción de oxígeno; coagule con láser mediante pulsos cortos y desvascularice antes de la desobstrucción mecánica. La APC podría ayudar con el sangrado, pero el flujo de gas debe ser ≤1,0 L/min.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 2</h4>
+        <p>Un paciente de 54 años con una membrana subglótica posterior a intubación presenta disnea de esfuerzo. La broncoscopia muestra un anillo concéntrico fino.</p>
+        <p><strong>¿Cuál es la mejor técnica?</strong><br>
+        A. Ablación circunferencial con láser<br>
+        B. Incisiones radiales con cuchillo de aguja de EC (evitar las 6 en punto) y después dilatación<br>
+        C. APC de alto flujo para «atravesar por combustión»<br>
+        D. Prótesis inmediata<br>
+        E. Terapia fotodinámica</p>
+        <p><strong>Mejor respuesta: B.</strong> Las incisiones radiales con EC seguidas de dilatación son el estándar; evite una lesión térmica circunferencial.</p>
+    </div>
+
+    <div class="case-study">
+        <h4>Caso 3</h4>
+        <p>Un paciente de 71 años con carcinoma renal metastásico y metástasis endobronquiales con sangrado difuso en el bronquio intermediario.</p>
+        <p><strong>¿Cuál es el abordaje térmico inicial más apropiado?</strong><br>
+        A. Vaporización láser de alta potencia en modo de contacto<br>
+        B. APC sin contacto en ráfagas cortas y después limpieza mecánica<br>
+        C. Modo de corte de EC a 60 W<br>
+        D. Corte con láser de CO₂<br>
+        E. Sin broncoscopia; solo radiología intervencionista</p>
+        <p><strong>Mejor respuesta: B.</strong> La APC proporciona coagulación superficial para el sangrado difuso y prepara el tejido para la desobstrucción mecánica.</p>
+    </div>
+
+    <h3>Banco de preguntas (opción múltiple)</h3>
+    <ol>
+        <li>
+            <strong>Durante la desobstrucción con láser de un tumor endoluminal, la forma más eficaz de reducir el riesgo de perforación profunda es:</strong><br>
+            A. Aumentar la densidad de potencia y el tiempo de aplicación<br>
+            B. Aplicar de forma continua alta potencia a corta distancia<br>
+            C. Administrar pulsos cortos, mantener el haz en movimiento («pintar») y conservar la alineación coaxial<br>
+            D. Cambiar a oxígeno al 100 % para prevenir incendios<br>
+            E. Apuntar perpendicularmente a la pared de la vía aérea<br>
+            <strong>Respuesta: C.</strong> Los pulsos cortos con movimiento constante y alineación coaxial reducen al mínimo la lesión térmica profunda.
+        </li>
+        <li>
+            <strong>¿Qué correspondencia es más precisa respecto de la profundidad del efecto?</strong><br>
+            A. APC: 5–15 mm<br>
+            B. Láser KTP: &lt;1 mm<br>
+            C. Láser Nd:YAG: &lt;1 mm<br>
+            D. EC: exactamente 1 mm<br>
+            E. Láser de CO₂: 5–15 mm<br>
+            <strong>Respuesta: B.</strong> KTP es superficial (&lt;1 mm). Nd:YAG penetra más profundamente (~5–15 mm). APC alcanza ~1–2 mm.
+        </li>
+        <li>
+            <strong>(Siguiente mejor paso) Un paciente con OVAC maligna desarrolla sangrado difuso importante durante la desobstrucción. La FiO₂ es 0,30. ¿Cuál es el mejor paso inmediato?</strong><br>
+            A. Aumentar FiO₂ a 1,0<br>
+            B. Utilizar APC en ráfagas cortas y flujo de gas ≤1,0 L/min para lograr hemostasia<br>
+            C. Cambiar a modo de corte de EC a 60 W<br>
+            D. Aplicación láser prolongada en un punto fijo<br>
+            E. Abortar el procedimiento<br>
+            <strong>Respuesta: B.</strong>
+        </li>
+        <li>
+            <strong>(Resolución de problemas) Durante el tratamiento de una membrana traqueal con cuchillo de aguja de EC, el operador realiza repetidamente incisiones a las 6 en punto. El principal riesgo es:</strong><br>
+            A. Migración de la prótesis<br>
+            B. Lesión/perforación esofágica<br>
+            C. Embolia gaseosa<br>
+            D. Interferencia del dispositivo con el marcapasos<br>
+            E. Falta de hemostasia<br>
+            <strong>Respuesta: B.</strong> Evite la pared membranosa posterior.
+        </li>
+        <li>
+            <strong>¿Qué afirmación sobre la APC es verdadera?</strong><br>
+            A. Es una modalidad de contacto.<br>
+            B. Requiere flujos de gas ≥2 L/min para ser eficaz.<br>
+            C. Proporciona coagulación superficial y es ideal para el sangrado difuso.<br>
+            D. Es más segura que el láser en entornos con FiO₂ alta.<br>
+            E. Penetra más profundamente que Nd:YAG.<br>
+            <strong>Respuesta: C.</strong>
+        </li>
+        <li>
+            <strong>En pacientes con marcapasos/desfibriladores implantables sometidos a ablación térmica:</strong><br>
+            A. Los láseres están contraindicados.<br>
+            B. EC/APC no requieren planificación del dispositivo.<br>
+            C. Los láseres evitan la corriente eléctrica; EC/APC requieren imán/modo asincrónico e interrogación posterior al procedimiento.<br>
+            D. Solo APC es segura.<br>
+            E. Suspenda la anticoagulación durante 2 semanas.<br>
+            <strong>Respuesta: C.</strong>
+        </li>
+        <li>
+            <strong>(Siguiente mejor paso) Se planea terapia láser cerca de un tubo de traqueostomía. ¿Cuál es el paso óptimo para reducir el riesgo de incendio?</strong><br>
+            A. Aumentar FiO₂ para prevenir la desaturación<br>
+            B. Dejar un tubo estándar de PVC<br>
+            C. Utilizar un tubo endotraqueal resistente al láser y mantener FiO₂/FeO₂ ≤0,40<br>
+            D. Instilar epinefrina<br>
+            E. Utilizar APC en lugar de láser para eliminar el riesgo de incendio<br>
+            <strong>Respuesta: C.</strong>
+        </li>
+        <li>
+            <strong>Una estrategia práctica para optimizar la hemostasia láser antes de la desobstrucción es:</strong><br>
+            A. Comenzar con alta potencia en modo de contacto<br>
+            B. Empezar con menor densidad de potencia y la fibra separada (~1 cm) para desvascularizar, y después desobstruir mecánicamente<br>
+            C. Utilizar pulsos largos y continuos en el mismo punto<br>
+            D. Cambiar de inmediato al modo de corte de EC<br>
+            E. Utilizar flujos altos de gas<br>
+            <strong>Respuesta: B.</strong>
+        </li>
+        <li>
+            <strong>(Resolución de problemas) La APC parece ineficaz en un campo con sangre acumulada. ¿Cuál es la mejor maniobra?</strong><br>
+            A. Aumentar el gas a 2 L/min<br>
+            B. Reducir la distancia hasta contactar el tejido<br>
+            C. Aspirar sangre/moco y después repetir la APC en ráfagas cortas<br>
+            D. Activar mientras se avanza el catéter<br>
+            E. Cambiar al modo de corte de EC<br>
+            <strong>Respuesta: C.</strong>
+        </li>
+        <li>
+            <strong>¿Cuál de las siguientes situaciones se asocia más con riesgo de embolia gaseosa?</strong><br>
+            A. Ráfagas cortas de APC a 0,6 L/min<br>
+            B. Activar APC mientras se avanza o se impacta el tejido<br>
+            C. Pulsos láser a 20 W<br>
+            D. Incisiones breves con cuchillo de aguja de EC<br>
+            E. Dilatación con balón<br>
+            <strong>Respuesta: B.</strong>
+        </li>
+        <li>
+            <strong>En la OVAC maligna, los datos de registros muestran que la broncoscopia terapéutica se asocia con:</strong><br>
+            A. Mejoría universal de los síntomas<br>
+            B. Alto éxito técnico y mejoría clínicamente relevante de la disnea en una proporción considerable; bajas tasas de complicaciones por procedimiento en centros experimentados<br>
+            C. Mortalidad prohibitiva<br>
+            D. Ninguna función antes del tratamiento oncológico<br>
+            E. Mayor seguridad con sedación moderada que con anestesia general<br>
+            <strong>Respuesta: B.</strong>
+        </li>
+        <li>
+            <strong>Para una estenosis subglótica benigna debida a una membrana fina, la secuencia más apropiada es:</strong><br>
+            A. Ablación circunferencial con EC → sin dilatación<br>
+            B. Incisiones radiales con EC → dilatación suave (rígida o con balón)<br>
+            C. Solo APC con flujo alto de gas<br>
+            D. Colocar primero una prótesis<br>
+            E. Terapia fotodinámica<br>
+            <strong>Respuesta: B.</strong>
+        </li>
+    </ol>
+
+    <hr>
+
+    <h3>Controversias, variabilidad y evidencia en evolución</h3>
+    <ul>
+        <li><strong>Elección y dosificación del láser:</strong> La penetración y la hemostasia difieren según la longitud de onda; la disponibilidad de plataformas varía entre centros (Nd:YAG frente a diodo/KTP/Ho:YAG/CO₂), lo que produce diferencias en los ajustes y técnicas «habituales».</li>
+        <li><strong>Rígida frente a flexible:</strong> La rígida ofrece mayor control para la OVAC y la hemostasia; la flexible sigue siendo importante para los lóbulos superiores y el trabajo distal. La mayoría de los programas de gran volumen utiliza abordajes combinados.</li>
+        <li><strong>Sedación frente a anestesia general:</strong> En general se favorece la anestesia general para la broncoscopia terapéutica; la sedación moderada se ha asociado con más complicaciones en contextos terapéuticos.</li>
+        <li><strong>Parámetros de seguridad de la APC:</strong> Aunque es muy eficaz para la hemostasia, la práctica varía en cuanto a los flujos de gas; se enfatizan flujos conservadores (≤1,0 L/min) y ráfagas cortas para reducir el riesgo de embolia.</li>
+        <li><strong>Estrategias para la estenosis benigna:</strong> Las lesiones cortas en forma de membrana responden bien a incisiones radiales + dilatación; la enfermedad compleja/cartilaginosa suele recidivar sin prótesis o cirugía, por lo que el enfoque se individualiza.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h3>Lista de verificación final</h3>
+        <ul>
+            <li>Confirme FiO₂/FeO₂ ≤0,40 antes de administrar cualquier energía.</li>
+            <li>Elija la modalidad según el objetivo (hemostasia frente a desobstrucción) y el tipo de lesión (intrínseca, extrínseca o mixta).</li>
+            <li>Mantenga el láser coaxial, utilice pulsos cortos y mueva el haz; evite la pared membranosa posterior.</li>
+            <li>Para APC, mantenga la punta separada del tejido, el gas ≤1,0 L/min y no active mientras avanza.</li>
+            <li>Para membranas tratadas con EC, realice incisiones radiales (evite las 6 en punto) y después dilate.</li>
+            <li>Maneje los marcapasos/desfibriladores al utilizar EC/APC; el láser evita la corriente.</li>
+            <li>Mantenga dos sistemas de aspiración, evacuación del humo y complementos hemostáticos preparados.</li>
+            <li>La sinergia entre broncoscopia rígida y flexible mejora la seguridad y la eficiencia.</li>
+            <li>Anticipe y trate de inmediato el sangrado, el incendio, la perforación y la embolia según los protocolos.</li>
+            <li>Planifique el tratamiento oncológico definitivo o una reintervención programada después de la recanalización.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations">
+        <dl>
+            <dt>APC</dt>
+            <dd>Coagulación con plasma de argón: electrocoagulación sin contacto mediante gas argón ionizado; efecto tisular superficial.</dd>
+            
+            <dt>CIED</dt>
+            <dd>Dispositivo electrónico cardíaco implantable (marcapasos/desfibrilador implantable).</dd>
+            
+            <dt>EC</dt>
+            <dd>Electrocauterio: entrega de energía por contacto para corte/coagulación.</dd>
+            
+            <dt>FeO₂/FiO₂</dt>
+            <dd>Fracción espirada/inspirada de oxígeno (objetivo ≤0,40 durante la ablación térmica).</dd>
+            
+            <dt>Ho:YAG/KTP/Nd:YAG/Nd:YAP</dt>
+            <dd>Láseres médicos comunes que difieren en longitud de onda y perfiles de interacción tisular.</dd>
+            
+            <dt>Densidad de potencia (láser)</dt>
+            <dd>Energía por unidad de área en el objetivo, determinada por la potencia y la distancia entre la fibra y el tejido; una densidad mayor favorece la vaporización/carbonización.</dd>
+            
+            <dt>Resección rígida</dt>
+            <dd>Desobstrucción mecánica mediante el extremo distal biselado de un broncoscopio rígido.</dd>
+            
+            <dt>Efecto de «palomitas»</dt>
+            <dd>Explosión de vapor subsuperficial por permanencia excesiva de energía láser, con riesgo de rotura/perforación.</dd>
+        </dl>
+    </div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+        <ol>
+            <li>Cavaliere S, Foccoli P, Farina PL. Nd:YAG laser bronchoscopy. A five-year experience with 1,396 applications in 1,000 patients. Chest. 1988;94(1):15-21.</li>
+            <li>Cavaliere S, Venuta F, Foccoli P, Toninelli C, La Face B. Endoscopic treatment of malignant airway obstructions in 2,008 patients. Chest. 1996;110(6):1536-1542.</li>
+            <li>Ost DE, Ernst A, Grosu HB, et al. Complications following therapeutic bronchoscopy for malignant central airway obstruction: results of the AQuIRE Registry. Chest. 2015;148(2):450-471.</li>
+            <li>Ost DE, Ernst A, Grosu HB, et al. Therapeutic bronchoscopy for malignant central airway obstruction: success rates and impact on dyspnea and quality of life. Chest. 2015;147(5):1282-1298.</li>
+            <li>Ong P, Grosu HB, Debiane L, et al. Long-term quality-adjusted survival following therapeutic bronchoscopy for malignant central airway obstruction. Thorax. 2019;74(2):141-156.</li>
+            <li>Sachdeva A, Pickering EM, Lee HJ. From electrocautery, balloon dilatation, neodymium-doped: yttrium-aluminum-garnet (Nd:YAG) laser to argon plasma coagulation and cryotherapy. J Thorac Dis. 2015;7(Suppl 4):S363-S379.</li>
+            <li>Lee HJ, Malhotra R, Grossman C, Wesley SR. Initial report of neodymium: yttrium-aluminum-perovskite (Nd:YAP) laser use during bronchoscopy. J Bronchol Interv Pulmonol. 2011;18(3):229-232.</li>
+            <li>Squiers JJ, Teeter WA, Hoopman JE, et al. Holmium:YAG laser bronchoscopy ablation of benign and malignant airway obstructions: an 8-year experience. Lasers Med Sci. 2014;29(4):1437-1443.</li>
+            <li>Dalar L, Karasulu L, Sökücü S, Altin S. Diode laser in the endoscopic treatment of obstructive airway disease: two years’ experience in Istanbul. Thorac Cardiovasc Surg. 2012;60(02):140-144.</li>
+            <li>Morice RC, Ece T, Ece F, Keus L. Endobronchial argon plasma coagulation for treatment of hemoptysis and neoplastic airway obstruction. Chest. 2001;119:781-787.</li>
+            <li>Reichle G, Freitag L, Kullmann HJ, Prenzel R, Macha HN, Farin G. Argon plasma coagulation in bronchology: a new method—alternative or complementary? Pneumologie. 2000;54:508-516.</li>
+            <li>Wahidi MM, Unroe MA, Adlakha N, Beyea M, Shofer SL. The use of electrocautery as the primary ablation modality for malignant and benign airway obstruction. J Thorac Oncol. 2011;6:1516-1520.</li>
+            <li>Van Boxem T, Muller M, Venmans B, Postmus P, Sutedja T. Nd:YAG laser vs bronchoscopic electrocautery for palliation of symptomatic airway obstruction: a cost-effectiveness study. Chest. 1999;116:1108-1112.</li>
+            <li>van Boxem TJ, Westerga J, Venmans BJ, Postmus PE, Sutedja TG. Tissue effects of bronchoscopic electrocautery: bronchoscopic appearance and histologic changes of bronchial wall after electrocautery. Chest. 2000;117:887-891.</li>
+            <li>Tellides G, Ugurlu BS, Kim RW, Hammond GL. Pathogenesis of systemic air embolism during bronchoscopic Nd:YAG laser operations. Ann Thorac Surg. 1998;65(4):930-934.</li>
+            <li>Naguib M. Sugammadex: another milestone in clinical neuromuscular pharmacology. Anesth Analg. 2007;104(3):575-581.</li>
+        </ol>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

@@ -1,5 +1,3 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import { allBoardModules } from 'contentlayer/generated'
 
 import type { BoardModule } from 'contentlayer/generated'
@@ -8,6 +6,10 @@ import {
   boardReviewChapterMap,
   type BoardReviewChapterMeta,
 } from '@/data/board-review'
+import {
+  getTranslatedBoardReviewTitle,
+  loadBoardReviewHtmlForSourceFile,
+} from '@/lib/board-review-html'
 import { slugify } from '@/lib/slugify'
 
 export interface BoardReviewSection {
@@ -26,70 +28,32 @@ export interface BoardReviewChapter extends BoardReviewChapterMeta {
   readingMinutes: number
 }
 
-const updatedChapterDir = path.join(
-  process.cwd(),
-  'Imports',
-  'Board_Review_Book',
-  'Updated_chapters',
-)
-
-const boardReviewHtmlBySourceFile: Record<string, string> = {
-  'advanced-peripheral-bronchoscopy-radial-probe-electromagnetic-navigation-and-robotic-bronchoscopy.mdx':
-    'Advanced_peripheral_bronch.html',
-  'airway-stents.mdx': 'Airway Stents.html',
-  'anesthesia-for-ip.mdx': 'Anesthesia for IP.html',
-  'bronchoscopic-and-surgical-treatment-for-copd-and-chronic-bronchitis.mdx': 'COPD.html',
-  'bronchoscopy-in-high-risk-patients-and-complications-in-bronchoscopy.mdx':
-    'Bronchoscopy in High\u2011Risk Patients.html',
-  'coding-and-billing.mdx': 'coding_billing.html',
-  'diagnostic-approach-to-pulmonary-nodules.mdx': 'Approach_to_Pulmonary_Nodules.html',
-  'indwelling-pleural-catheters-and-pleurodesis.mdx':
-    'Indwelling Pleural Catheters and Pleurodesis.html',
-  'lung-cancer-screening.mdx': 'Lung_Cancer_Screening.html',
-  'lung-cancer-staging-and-linear-ebus.mdx': 'Lung_cancer_staging_EBUS.html',
-  'management-of-malignant-central-airway-obstruction.mdx': 'Malignant CAO.html',
-  'mechanical-debridement-and-balloon-dilitation.mdx':
-    'Mechanical Debridement and Balloon Dilatation.html',
-  'non-malignant-cao.mdx': 'Non-Malignant CAO.html',
-  'pathology-histology-cytology-rose-and-molecular-markers.mdx': 'Pathology.html',
-  'percutaneous-tracheostomy-and-cricothyroidotomy.mdx':
-    'Percutaneous Tracheostomy and Cricothyroidotomy.html',
-  'peripheral-biopsy-techniques-conventional-sampling-and-transbronchial-cryobiopsy.mdx':
-    'Peripheral Biopsy Techniques.html',
-  'pleural-effusions-and-pleural-interventions.mdx': 'pleural_effusions.html',
-  'pleural-infections.mdx': 'Pleural Infections.html',
-  'pneumothorax-prolonged-air-leaks-and-bronchopleural-fistula.mdx':
-    'Pneumothorax, Prolonged Air Leaks, and Bronchopleural Fistula.html',
-  'real-time-peripheral-imaging-techniques.mdx': 'real_time_imaging.html',
-  'rigid-bronchoscopy-indications-technique.mdx': 'Rigid Bronchoscopy.html',
-  'thermal-ablatitive-therapies.mdx': 'Thermal Ablative Therapies.html',
-  'treatment-options-for-early-stage-lung-cancer.mdx':
-    'Treatment Options for Early-Stage Lung Cancer.html',
-}
-
-const htmlCache = new Map<string, string | null>()
-
-export function listBoardReviewChapters(): BoardReviewChapterMeta[] {
+export function listBoardReviewChapters(locale?: string): BoardReviewChapterMeta[] {
   return allBoardModules
-    .map((module) => ({
-      slug: module.slug,
-      title: module.title,
-      description: module.description,
-      summary: module.summary,
-      category: module.category as BoardReviewChapterMeta['category'],
-      estimatedMinutes: module.estimatedMinutes,
-      examDomains: module.examDomains,
-      tags: module.tags,
-      focus: module.focus,
-      sourceFile: module._raw.sourceFileName,
-      audioFile: boardReviewChapterMap[module.slug]?.audioFile,
-      order: module.order,
-      published: true as const,
-    }))
+    .map((module) => {
+      const localizedTitle =
+        getTranslatedBoardReviewTitle(module._raw.sourceFileName, locale) ?? module.title
+
+      return {
+        slug: module.slug,
+        title: localizedTitle,
+        description: module.description,
+        summary: module.summary,
+        category: module.category as BoardReviewChapterMeta['category'],
+        estimatedMinutes: module.estimatedMinutes,
+        examDomains: module.examDomains,
+        tags: module.tags,
+        focus: module.focus,
+        sourceFile: module._raw.sourceFileName,
+        audioFile: boardReviewChapterMap[module.slug]?.audioFile,
+        order: module.order,
+        published: true as const,
+      }
+    })
     .sort((a, b) => a.order - b.order)
 }
 
-export function loadBoardReviewChapter(slug: string): BoardReviewChapter | null {
+export function loadBoardReviewChapter(slug: string, locale?: string): BoardReviewChapter | null {
   const boardModule = allBoardModules.find((item) => item.slug === slug)
 
   if (!boardModule) {
@@ -102,11 +66,12 @@ export function loadBoardReviewChapter(slug: string): BoardReviewChapter | null 
   const examScope = extractExamScope(parsed.sections) ?? parsed.intro
   const wordCount = countWords(rawContent)
   const readingMinutes = Math.max(boardModule.estimatedMinutes, Math.ceil(wordCount / 225))
-  const formattedHtml = loadFormattedHtmlForSourceFile(boardModule._raw.sourceFileName)
+  const loadedHtml = loadBoardReviewHtmlForSourceFile(boardModule._raw.sourceFileName, locale)
+  const localizedTitle = getTranslatedBoardReviewTitle(boardModule._raw.sourceFileName, locale)
 
   return {
     slug: boardModule.slug,
-    title: boardModule.title,
+    title: localizedTitle ?? boardModule.title,
     summary: boardModule.summary,
     description: boardModule.description,
     category: boardModule.category as BoardReviewChapterMeta['category'],
@@ -121,7 +86,7 @@ export function loadBoardReviewChapter(slug: string): BoardReviewChapter | null 
     sections: parsed.sections,
     highYield,
     examScope,
-    formattedHtml: formattedHtml ?? undefined,
+    formattedHtml: loadedHtml?.html ?? undefined,
     wordCount,
     readingMinutes,
   }
@@ -396,26 +361,4 @@ function formatMermaidDiagrams(content: string) {
   }
 
   return formatted.join('\n')
-}
-
-function loadFormattedHtmlForSourceFile(sourceFile: string): string | null {
-  if (htmlCache.has(sourceFile)) {
-    return htmlCache.get(sourceFile) ?? null
-  }
-
-  const htmlFileName = boardReviewHtmlBySourceFile[sourceFile]
-  if (!htmlFileName) {
-    htmlCache.set(sourceFile, null)
-    return null
-  }
-
-  const fullPath = path.join(updatedChapterDir, htmlFileName)
-  if (!fs.existsSync(fullPath)) {
-    htmlCache.set(sourceFile, null)
-    return null
-  }
-
-  const html = fs.readFileSync(fullPath, 'utf8')
-  htmlCache.set(sourceFile, html)
-  return html
 }

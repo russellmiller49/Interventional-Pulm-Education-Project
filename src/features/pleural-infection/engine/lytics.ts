@@ -57,9 +57,17 @@ export function evaluateLyticChoice(choice: LyticChoice): LyticResult {
   }
 }
 
+/**
+ * Stable, locale-independent identifier for the bleeding-overlay note. The UI
+ * maps it to a localized string (messages `pleuralInfection.workflow.bleeding.note.*`).
+ * The English `note` string mirrors it for tests/non-UI use.
+ */
+export type BleedingNoteCode = 'anticoagulated' | 'baseline'
+
 export function bleedingRisk(anticoagulated: boolean) {
   return {
     percent: anticoagulated ? 8.2 : 4.1,
+    noteCode: (anticoagulated ? 'anticoagulated' : 'baseline') as BleedingNoteCode,
     note: anticoagulated
       ? 'Therapeutic anticoagulation increases bleeding concern and should trigger mitigation planning.'
       : 'Baseline pleural bleeding signal for lytic teaching is 4.1%.',

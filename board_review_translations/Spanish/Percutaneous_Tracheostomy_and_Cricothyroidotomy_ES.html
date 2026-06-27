@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traqueostomía percutánea y cricotirotomía</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <h1>Traqueostomía percutánea y cricotirotomía</h1>
+
+    <h3>Correspondencia con el examen y alcance</h3>
+    <p>Este capítulo aborda indicaciones, contraindicaciones, selección de pacientes, evaluación previa, técnica, resolución de problemas, complicaciones y cuidados posteriores de la traqueostomía dilatacional percutánea (PDT/PT) y la cricotirotomía. Se enfatiza la toma de decisiones a pie de cama en la UCI, las opciones de dispositivos y pasos técnicos, la guía broncoscópica y ecográfica, el manejo de anticoagulantes y antiagregantes, poblaciones especiales —obesidad, soporte ventilatorio alto, coagulopatía, ECMO y COVID— y el rescate de emergencia ante «no se puede intubar, no se puede oxigenar» (CICO) mediante cricotirotomía con aguja, quirúrgica o percutánea.</p>
+
+    <h3>Objetivos de aprendizaje</h3>
+    <ul>
+        <li>Distinguir PT de traqueostomía quirúrgica (ST) en entorno, resultados y perfiles de complicaciones, y seleccionar el mejor abordaje para cada paciente de UCI.</li>
+        <li>Realizar una evaluación estructurada previa al procedimiento —anatomía, coagulopatía, soporte ventilatorio y hemodinámica— y planificar guía broncoscópica con o sin ecografía.</li>
+        <li>Ejecutar paso a paso una PT con confirmación broncoscópica y manejar problemas frecuentes como contacto con la pared posterior, pérdida de la vía aérea y hemorragia.</li>
+        <li>Reconocer, prevenir y tratar complicaciones tempranas y tardías, incluidas fístula traqueo-innominada (TIF) y estenosis traqueal.</li>
+        <li>Elegir y realizar la técnica de cricotirotomía adecuada en CICO, conocer las consideraciones por edad y saber cuándo convertir a traqueostomía.</li>
+        <li>Aplicar la evidencia sobre momento de traqueostomía, implicaciones para sedación y destete, y procesos de decanulación.</li>
+    </ul>
+
+    <div class="algorithm-note">
+        <h4>Resumen de alto rendimiento</h4>
+        <ul>
+            <li><strong>PT frente a ST:</strong> las tasas globales de complicaciones son similares. PT presenta menos infección de herida, menor duración y menor costo; el riesgo hemorrágico suele ser comparable.</li>
+            <li><strong>Guía:</strong> la broncoscopia mejora el éxito al primer intento y reduce complicaciones. La ecografía aporta cartografía anatómica y vascular y puede reducir hemorragia grave.</li>
+            <li><strong>Sitio de punción:</strong> línea media entre el primer y segundo o entre el segundo y tercer anillo traqueal bajo broncoscopia; mantenga el ETT justo por debajo del cricoides durante la punción.</li>
+            <li><strong>Coagulopatía:</strong> objetivo INR &lt;1,5 y plaquetas &gt;50 × 10⁹/L, con transfusión si es necesario. Si es posible, suspenda clopidogrel ≥5 días; en situaciones seleccionadas puede realizarse PT durante antiagregación o anticoagulación con consentimiento informado.</li>
+            <li><strong>Ajustes del ventilador:</strong> PT es posible incluso con PEEP alta; coordine la retirada del ETT y reduzca desconexiones para conservar PEEP.</li>
+            <li><strong>Obesidad:</strong> no es una contraindicación en manos expertas; anticipe mayor profundidad traqueal y considere cánulas extralargas (XLT).</li>
+            <li><strong>Complicaciones tempranas:</strong> enfisema subcutáneo alrededor de 1,4%, neumotórax 0,8%, hemorragia y mala posición. Manéjelas con broncoscopia, intercambio sobre guía y hemostasia.</li>
+            <li><strong>Complicaciones tardías:</strong> estenosis traqueal clínicamente significativa 3–12%, traqueomalacia y TIF &lt;1%, que es una emergencia quirúrgica.</li>
+            <li><strong>Aspiración:</strong> el riesgo no disminuye inmediatamente tras la traqueostomía y el manguito inflado no evita la microaspiración.</li>
+            <li><strong>Beneficios para el destete:</strong> disminuye el trabajo respiratorio y la resistencia; puede reducir estancia en UCI y necesidad de sedación.</li>
+            <li><strong>Momento:</strong> la evidencia es mixta. Algunos análisis no muestran diferencias; otros favorecen traqueostomía temprana por más días sin ventilador y menor estancia. Individualice según evolución.</li>
+            <li><strong>Rescate CICO:</strong> en adultos, la opción habitual es cricotirotomía quirúrgica o percutánea. En niños &lt;10–12 años, prefiera aguja con ventilación transtraqueal.</li>
+            <li><strong>Decanulación:</strong> tras liberación del ventilador, tos fuerte y control de secreciones: reducir calibre → válvula fonatoria → tapón 48–72 h → retirar. Realice endoscopia si no se tolera.</li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h3>Conceptos fundamentales</h3>
+
+    <h4>Fisiopatología y epidemiología</h4>
+    <p>La traqueostomía reduce el espacio muerto y la resistencia de la vía aérea superior, con menor trabajo respiratorio. Muchos pacientes toleran menos sedación y pruebas de destete más intensivas después del procedimiento. Estos beneficios fisiológicos, además de mayor comodidad y posibilidad de comunicación, sustentan su papel en ventilación prolongada.</p>
+
+    <h4>Indicaciones y contraindicaciones</h4>
+    <p><strong>Indicaciones, similares para PT y ST:</strong> derivar una obstrucción de la vía aérea superior, ventilación prolongada prevista y apoyo al manejo de secreciones o aspiración, aunque el beneficio sobre aspiración no es inmediato.</p>
+    <p><strong>Contraindicaciones según contexto:</strong></p>
+    <ul>
+        <li><strong>PT:</strong> existen pocas contraindicaciones absolutas; la seguridad depende de experiencia y técnica. Muchos riesgos relativos, como obesidad, PEEP alta, traqueostomía previa o coagulopatía, pueden manejarse con preparación.</li>
+        <li><strong>Alertas prácticas:</strong> infección activa en el sitio, anatomía desfavorable con puntos de referencia no identificables e inestabilidad hemodinámica intensa; considere diferir o realizar ST.</li>
+        <li><strong>Cricotirotomía:</strong> rescate principal de CICO en adultos. Evite la técnica quirúrgica en niños menores de aproximadamente 10 años; utilice aguja con ventilación transtraqueal. La cricotirotomía electiva es selectiva y suele evitarse tras intubación prolongada o en enfermedad laríngea por riesgo subglótico.</li>
+    </ul>
+
+    <h3>Evaluación previa al procedimiento</h3>
+    <p><strong>Vía aérea y anatomía:</strong> palpe referencias laríngeas y anticipe profundidad. Considere ecografía para localizar istmo tiroideo, venas yugulares anteriores, vasos pretraqueales y distancia piel-tráquea.</p>
+    <p><strong>Ventilación y hemodinámica:</strong> registre FiO₂, PEEP, hipotensión y vasopresores. PT puede realizarse con PEEP alta, pero evítela en pacientes con múltiples vasopresores o dosis altas.</p>
+    <p><strong>Coagulación y medicamentos:</strong> objetivo INR &lt;1,5 y plaquetas &gt;50 × 10⁹/L.</p>
+    <ul>
+        <li>Suspenda infusión de heparina unas 3 h antes y reanude unas 2 h después.</li>
+        <li>Suspenda heparina subcutánea o enoxaparina 12 h si es dos veces al día o 24 h si es diaria.</li>
+        <li>Suspenda clopidogrel ≥5 días si es posible, o 3–5 días en tratamiento dual. Se ha realizado PT durante tratamiento, con más sangrado menor pero poco sangrado mayor.</li>
+    </ul>
+    <p><strong>Consentimiento y equipo:</strong> aclare objetivos y alternativas. Coordine operador, broncoscopista, terapeuta respiratorio, enfermería y técnico. Complete lista de seguridad y mantenga campo estéril.</p>
+
+    <h3>Equipo y preparación</h3>
+    <ul>
+        <li>Los kits frecuentes incluyen Ciaglia Blue Rhino con dilatador único cónico, Griggs con pinza GWDF, PercuTwist y balón Blue Dolphin.</li>
+        <li>Prepare cánulas estándar y extralargas del tamaño adecuado.</li>
+        <li>Elija un broncoscopio compatible con el diámetro interno del ETT.</li>
+        <li>Infiltre anestésico local, por ejemplo lidocaína con epinefrina.</li>
+    </ul>
+
+    <h3>Técnica paso a paso / lista de verificación del procedimiento</h3>
+    <ol>
+        <li><strong>Posición:</strong> decúbito supino, rollo bajo hombros y cuello extendido según tolerancia; preparar y cubrir.</li>
+        <li><strong>Control de la vía aérea:</strong> sedación, analgesia y parálisis según necesidad; aspire. Retire el manguito del ETT bajo broncoscopia hasta justo debajo del cricoides y vuelva a inflarlo.</li>
+        <li><strong>Incisión:</strong> incisión vertical media de 1–1,5 cm y disección roma hasta fascia pretraqueal; identifique anillos.</li>
+        <li><strong>Punción:</strong> línea media entre primer-segundo o segundo-tercer anillo bajo broncoscopia; pase guía hacia caudal.</li>
+        <li><strong>Dilatación:</strong> serial o con dilatador único, por ejemplo dilatador inicial y luego cónico con vaina, o dilatación con pinza Griggs.</li>
+        <li><strong>Inserción:</strong> introduzca la cánula sobre dilatador o vaina y avance dentro de la luz.</li>
+        <li><strong>Confirmación:</strong> confirme luz y carina por broncoscopia; mantenga la punta distal al menos alrededor de 2,5 cm por encima de la carina.</li>
+        <li><strong>Fijación:</strong> ventile, verifique volumen corriente y capnografía, y asegure con cintas o suturas.</li>
+    </ol>
+
+    <hr>
+
+    <h3>Resolución de problemas y manejo intraprocedimiento</h3>
+    <ul>
+        <li><strong>Contacto con pared posterior o falso trayecto:</strong> mantenga guía en línea media y hacia caudal siempre bajo visión. Si hay resistencia o desaturación, vuelva a introducir el ETT y restablezca ventilación antes de reintentar.</li>
+        <li><strong>Pérdida de vía aérea en cuello profundo u obesidad:</strong> use cánula extralarga. Considere intercambiador de vía aérea y broncoscopia para reentrada difícil.</li>
+        <li><strong>Hemorragia:</strong> presión local o taponamiento vasoconstrictor. Si persiste, explore el estoma. Ante sangrado centinela o abundante días-semanas después, sospeche TIF: hiperinfle el manguito, ejerza presión digital sobre la pared anterior y llame a cirugía de emergencia.</li>
+        <li><strong>Dependencia de PEEP alta:</strong> coordine retirada breve del ETT con mínimo número de desconexiones. Considere una prueba de dependencia de PEEP si existe duda.</li>
+    </ul>
+
+    <h3>Cuidados y seguimiento posteriores al procedimiento</h3>
+    <p>Humidificación, aspiración, cuidado de la cánula interna, vigilancia de presión del manguito y revisión de fijación.</p>
+    <p><strong>Decanulación:</strong> tras liberación del ventilador, tos fuerte y secreciones manejables: reducir calibre → válvula fonatoria → tapar 48–72 h → retirar. Realice broncoscopia si fracasa el taponamiento.</p>
+
+    <h3>Complicaciones: prevención, reconocimiento y manejo</h3>
+    <h4>Tempranas, horas a días</h4>
+    <p>Hemorragia, enfisema subcutáneo alrededor de 1,4%, neumotórax 0,8% y mala posición u obstrucción, especialmente por contacto con pared posterior.</p>
+    <ul><li><strong>Prevención:</strong> punción media, broncoscopia y longitud adecuada.</li><li><strong>Tratamiento:</strong> hemostasia, broncoscopia y reposición o intercambio.</li></ul>
+    <h4>Tardías, semanas a meses</h4>
+    <p>Estenosis traqueal clínicamente significativa 3–12%, traqueomalacia relacionada con manguito, TIF &lt;1%, fístula traqueoesofágica infrecuente e infección del estoma.</p>
+    <ul><li><strong>Prevención:</strong> nivel correcto entre anillos 1–3, control de presión del manguito e higiene.</li><li><strong>Tratamiento:</strong> TIF requiere cirugía inmediata.</li></ul>
+
+    <h3>Poblaciones especiales</h3>
+    <ul>
+        <li><strong>Obesidad:</strong> la evidencia respalda seguridad con operadores expertos. Anticipe mala posición y use XLT si aumenta la distancia piel-tráquea.</li>
+        <li><strong>Soporte ventilatorio alto o ARDS:</strong> PT es posible con PEEP alta y no produce de forma constante deterioro de oxigenación si se realiza con cuidado.</li>
+        <li><strong>Coagulopatía o antitrombóticos:</strong> PT puede realizarse con mayor riesgo de sangrado, pero poca hemorragia mayor. Siga estrategias de suspensión o transfusión; en ECMO se ha comunicado bajo sangrado mayor tras pausar heparina.</li>
+        <li><strong>COVID-19:</strong> PT se adoptó ampliamente con modificaciones de circuito cerrado y se asoció con destete más rápido y menor estancia en series.</li>
+        <li><strong>Cricotirotomía pediátrica:</strong> utilice aguja en menores de 10–12 años; evite técnica quirúrgica por membrana pequeña y riesgo laríngeo.</li>
+    </ul>
+
+    <h3>Evidencia y desenlaces</h3>
+    <ul>
+        <li><strong>PT frente a ST:</strong> metanálisis muestran complicaciones globales similares, menos infección de herida, menor tiempo y menor costo con PT. Hemorragia y estenosis a largo plazo son comparables.</li>
+        <li><strong>Momento de traqueostomía:</strong> datos mixtos; algunos metanálisis de ensayos no muestran diferencias importantes y otros favorecen la temprana por más días sin ventilador, menor estancia y menos sedación. Individualice.</li>
+        <li><strong>Broncoscopia frente a ecografía:</strong> la broncoscopia mejora precisión y reduce complicaciones; la ecografía identifica un acceso seguro y puede reducir sangrado grave. En manos experimentadas, ensayos aleatorizados muestran tasas globales similares.</li>
+    </ul>
+
+    <hr>
+
+    <h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+    <h4>Algoritmo 1: elegir PT, ST o aplazamiento</h4>
+    <div class="mermaid">
+    graph TD
+        A["Paciente necesita traqueostomía"] --> B{"¿Anatomía y referencias favorables?"}
+        B -- No --> C["Considerar ST, complementos como US/broncoscopia rígida o aplazar"]
+        B -- Sí --> D{"¿Coagulopatía o antitrombóticos?"}
+        D -- "No corregible y alto riesgo" --> E["Considerar ST"]
+        D -- "Corregible o riesgo aceptable" --> F{"¿Ventilación/PEEP aceptables y hemodinámica estable?"}
+        F -- "Inestabilidad grave o múltiples vasopresores" --> G["Considerar ST o aplazar"]
+        F -- "Estable u optimizable" --> H{"¿Experiencia y broncoscopia disponibles?"}
+        H -- No --> I["Considerar ST"]
+        H -- Sí --> J["Realizar PT con broncoscopia ± US"]
+    </div>
+
+    <h4>Algoritmo 2: hemorragia después de PT, incluida TIF</h4>
+    <div class="mermaid">
+    graph TD
+        A["Hemorragia posterior a PT"] --> B{"Evaluar momento y gravedad"}
+        B --> C["Escenario A: inmediata o exudativa"]
+        C --> C1["Presión local y taponamiento vasoconstrictor"]
+        C --> C2["Corregir coagulopatía"]
+        B --> D["Escenario B: persistente o abundante"]
+        D --> D1["Explorar estoma, cauterio o sutura"]
+        D --> D2["Broncoscopia para evaluar luz"]
+        B --> E["Escenario C: tardía o sangrado centinela"]
+        E --> E1["Sospechar TIF"]
+        E1 --> E2["Hiperinflar manguito"]
+        E1 --> E3["Presión digital anterior en escotadura esternal"]
+        E1 --> E4["Activar transfusión masiva y cirugía urgente"]
+        E4 --> E5["Reparación quirúrgica definitiva"]
+    </div>
+
+    <h4>Algoritmo 3: CICO, vía aérea quirúrgica de emergencia</h4>
+    <div class="mermaid">
+    graph TD
+        A["CICO: no se puede intubar ni oxigenar"] --> B{"¿Edad ≥10–12 años?"}
+        B -- "Sí, adulto" --> C["Cricotirotomía quirúrgica o percutánea"]
+        C --> C1["Ventilar, confirmar CO2 y asegurar"]
+        B -- "No, pediátrico" --> D["Cricotirotomía con aguja + ventilación transtraqueal"]
+        D --> D1["Vía aérea definitiva urgente cuando sea posible"]
+    </div>
+
+    <hr>
+
+    <h3>Tablas y recuadros de consulta rápida</h3>
+
+    <h4>Tabla 1. PT frente a ST: superioridad y equivalencia</h4>
+    <table><thead><tr><th>Dimensión</th><th>PT frente a ST</th></tr></thead><tbody>
+        <tr><td>Complicaciones globales</td><td>Similares</td></tr><tr><td>Infección de herida</td><td>Menor con PT</td></tr><tr><td>Duración</td><td>Menor con PT</td></tr><tr><td>Costo</td><td>Menor con PT</td></tr><tr><td>Hemorragia</td><td>Comparable</td></tr><tr><td>Estenosis a largo plazo</td><td>Similar</td></tr><tr><td>Lesión de pared anterior o posterior</td><td>Variable según técnica</td></tr>
+    </tbody></table>
+
+    <h4>Tabla 2. Contraindicaciones prácticas de PDT</h4>
+    <table><thead><tr><th>Categoría</th><th>Ejemplos y observaciones</th></tr></thead><tbody>
+        <tr><td>Absolutas pragmáticas</td><td>Ausencia de operador experimentado o imposibilidad de identificar referencias con seguridad</td></tr>
+        <tr><td>Relativas que suelen manejarse</td><td>Obesidad con XLT y US; PEEP alta con coordinación; traqueostomía previa usando trayecto cicatricial; coagulopatía optimizando INR/plaquetas; antitrombóticos con suspensión si es posible</td></tr>
+        <tr><td>Evitar o aplazar</td><td>Infección activa en el sitio e inestabilidad intensa con múltiples vasopresores</td></tr>
+    </tbody></table>
+
+    <h4>Tabla 3. Anticoagulación y antiagregación en PT</h4>
+    <table><thead><tr><th>Medicamento o estado</th><th>Abordaje sugerido</th></tr></thead><tbody>
+        <tr><td>INR/plaquetas</td><td>Objetivo INR &lt;1,5 y plaquetas &gt;50 × 10⁹/L</td></tr>
+        <tr><td>Infusión de heparina</td><td>Suspender unas 3 h antes y reanudar unas 2 h después</td></tr>
+        <tr><td>Heparina SC/enoxaparina</td><td>Suspender 12 h si BID o 24 h si diaria</td></tr>
+        <tr><td>Clopidogrel/DAPT</td><td>Preferir suspensión ≥5 días; puede procederse con consentimiento y plan hemostático si no es posible</td></tr>
+        <tr><td>ECMO</td><td>Interrupción breve de heparina; sangrado mayor bajo, alrededor de 1–2%, y menor más frecuente</td></tr>
+    </tbody></table>
+
+    <h4>Tabla 4. Complicaciones de traqueostomía según momento</h4>
+    <table><thead><tr><th>Momento</th><th>Complicaciones</th></tr></thead><tbody>
+        <tr><td>Tempranas, horas a días</td><td>Hemorragia, enfisema subcutáneo alrededor de 1,4%, neumotórax 0,8% y mala posición o falso trayecto</td></tr>
+        <tr><td>Tardías, semanas a meses</td><td>Estenosis traqueal 3–12%, traqueomalacia, TIF &lt;1%, TEF e infección del estoma</td></tr>
+    </tbody></table>
+
+    <hr>
+
+    <h3>Casos y aprendizaje aplicado</h3>
+
+    <div class="case-study"><h4>Caso 1</h4><p>Un paciente de 55 años con COPD está intubado en el día 11. PEEP 8, FiO₂ 0,4, plaquetas 58 × 10⁹/L, INR 1,4 y clopidogrel por stent de hace 18 meses. La anatomía cervical es palpable. ¿Cuál es el mejor abordaje?</p>
+        <p>A. ST en quirófano por menor sangrado<br>B. PT ahora bajo broncoscopia y transfundir plaquetas<br>C. Diferir y extubar<br>D. PT sin broncoscopia</p>
+        <p><strong>Respuesta: B.</strong> Anatomía y fisiología son favorables; optimice plaquetas y proceda bajo broncoscopia. Idealmente se suspende clopidogrel, pero puede hacerse con precauciones si no puede diferirse.</p></div>
+
+    <div class="case-study"><h4>Caso 2</h4><p>Un paciente de 62 años con ARDS y PEEP 14 requiere traqueostomía por ventilación prolongada. Está estable con vasopresor a dosis baja. ¿Cuál es el siguiente paso?</p>
+        <p>A. Diferir hasta PEEP ≤8<br>B. PT posible con estrategia ventilatoria y broncoscopia cuidadosas<br>C. ST obligatoria<br>D. Extubar a HFNC</p>
+        <p><strong>Respuesta: B.</strong> PT puede hacerse con PEEP alta mediante manipulación cuidadosa del ETT y del circuito.</p></div>
+
+    <div class="case-study"><h4>Caso 3</h4><p>Un paciente de 70 años, 21 días después de PT, presenta un pequeño sangrado centinela que se detiene. ¿Cuál es la acción inmediata?</p>
+        <p>A. Cambiar la cánula mañana<br>B. Hiperinflar manguito, ejercer presión digital y activar cirugía<br>C. Solo antibióticos<br>D. Desinflar manguito</p>
+        <p><strong>Respuesta: B.</strong> Trátelo como TIF hasta demostrar lo contrario.</p></div>
+
+    <h3>Banco de preguntas de opción múltiple</h3>
+    <p><strong>1. Paciente de 60 años en día 7 de ventilación, FiO₂ 0,5 y PEEP 5, fracasa prueba de respiración espontánea. ¿Qué sigue?</strong><br>A. ST inmediata<br>B. Cambiar a SIMV<br>C. Traqueostomía temprana solo para reducir mortalidad<br>D. Continuar cuidados y pruebas diarias, reevaluando necesidad<br><strong>Respuesta: D.</strong> El momento es individual; al día 7 son apropiadas pruebas diarias y optimización.</p>
+    <p><strong>2. ¿Qué afirmación es más exacta?</strong><br>A. PT tiene más complicaciones<br>B. PT reduce infección de herida y tiempo frente a ST<br>C. ST sangra siempre menos<br>D. PT cuesta más<br><strong>Respuesta: B.</strong></p>
+    <p><strong>3. Respecto a clopidogrel y PT:</strong><br>A. Debe suspenderse 3 días<br>B. 10 días<br>C. Preferir ≥5 días si es posible; puede procederse con precauciones<br>D. No importa<br><strong>Respuesta: C.</strong></p>
+    <p><strong>4. Un objetivo razonable previo es:</strong><br>A. INR ≤2 y plaquetas ≥20<br>B. INR &lt;1,5 y plaquetas &gt;50<br>C. INR &lt;1 solamente<br>D. Plaquetas &gt;100 obligatorias<br><strong>Respuesta: B.</strong></p>
+    <p><strong>5. La guía broncoscópica:</strong><br>A. Aumenta lesiones posteriores<br>B. Disminuye éxito<br>C. Confirma espacio interanular y reduce complicaciones<br>D. Está contraindicada en obesidad<br><strong>Respuesta: C.</strong></p>
+    <p><strong>6. La principal utilidad de la ecografía es:</strong><br>A. Ver pared posterior<br>B. Cartografiar vasos anteriores y medir profundidad<br>C. Sustituir siempre broncoscopia<br>D. Acortar siempre el tiempo<br><strong>Respuesta: B.</strong></p>
+    <p><strong>7. Durante PT con PEEP 16 y FiO₂ 0,6, cae la saturación al retirar el ETT. ¿Qué sigue?</strong><br>A. Continuar<br>B. Desconectar y ventilar por estoma<br>C. Reavanzar e inflar ETT, restablecer ventilación y reintentar con pocas desconexiones<br>D. Convertir siempre a ST<br><strong>Respuesta: C.</strong></p>
+    <p><strong>8. En obesidad mórbida, una medida preventiva clave es:</strong><br>A. Cánula estándar más pequeña<br>B. Evitar broncoscopia<br>C. Cánula extralarga y cartografía ecográfica<br>D. ST siempre<br><strong>Respuesta: C.</strong></p>
+    <p><strong>9. Después de traqueostomía:</strong><br>A. Desaparece la aspiración<br>B. El manguito evita microaspiración<br>C. El riesgo puede disminuir solo tras varias semanas<br>D. Desaparece VAP<br><strong>Respuesta: C.</strong></p>
+    <p><strong>10. Durante dilatación se sospecha tenting de pared posterior. ¿Qué hacer?</strong><br>A. Avanzar rápido<br>B. Retirar guía y repasar a ciegas<br>C. Restablecer ventilación con ETT, revisar con broncoscopio y reintentar con ángulo correcto<br>D. Convertir de inmediato a ST<br><strong>Respuesta: C.</strong></p>
+    <p><strong>11. En CICO de un niño de 7 años, la vía invasiva inicial es:</strong><br>A. Cricotirotomía quirúrgica<br>B. Percutánea<br>C. Aguja con ventilación transtraqueal<br>D. Traqueostomía por no cirujano<br><strong>Respuesta: C.</strong></p>
+    <p><strong>12. Un paciente en día 28 presenta sangrado pulsátil por estoma. ¿Primera acción?</strong><br>A. Desinflar manguito<br>B. Hiperinflar y comprimir anterior, activar cirugía<br>C. Cambiar a cánula pequeña<br>D. Observar<br><strong>Respuesta: B.</strong></p>
+
+    <div class="algorithm-note"><h3>Lista de verificación de puntos clave</h3><ul>
+        <li>Confirme indicación, anatomía, equipo y plan broncoscópico con o sin ecografía.</li>
+        <li>Optimice INR y plaquetas y coordine suspensión de antitrombóticos cuando sea posible.</li>
+        <li>Planifique estrategia ventilatoria, reduzca desconexiones y retire ETT bajo visión.</li>
+        <li>Puncione en línea media entre anillos y mantenga guía caudal bajo broncoscopia.</li>
+        <li>Elija longitud adecuada, XLT en tráquea profunda.</li>
+        <li>Confirme luz y carina después de colocar y verifique ventilación.</li>
+        <li>Asegure el dispositivo y prepare humidificación y aspiración.</li>
+        <li>Vigile sangrado y fuga aérea tempranos y disponga de un algoritmo.</li>
+        <li>Eduque al personal sobre signos de TIF y respuesta inmediata.</li>
+        <li>Inicie una ruta estructurada de decanulación cuando se cumplan objetivos.</li>
+    </ul></div>
+
+    <hr>
+
+    <h3>Abreviaturas y glosario</h3>
+    <div class="abbreviations"><dl>
+        <dt>PT/PDT</dt><dd>Traqueostomía percutánea dilatacional</dd>
+        <dt>ST</dt><dd>Traqueostomía quirúrgica</dd>
+        <dt>CICO</dt><dd>No se puede intubar, no se puede oxigenar</dd>
+        <dt>Membrana CT</dt><dd>Membrana cricotiroidea</dd>
+        <dt>ETT</dt><dd>Tubo endotraqueal</dd>
+        <dt>XLT</dt><dd>Cánula de traqueostomía extralarga</dd>
+        <dt>VAP</dt><dd>Neumonía asociada a ventilador</dd>
+        <dt>TIF</dt><dd>Fístula traqueo-innominada</dd>
+        <dt>TEF</dt><dd>Fístula traqueoesofágica</dd>
+        <dt>ECMO</dt><dd>Oxigenación por membrana extracorpórea</dd>
+        <dt>RSBI</dt><dd>Índice de respiración rápida y superficial</dd>
+    </dl></div>
+
+    <h3>Referencias</h3>
+    <div class="references">
+<ol>
+<li>Delaney A, Bagshaw SM, Nalos M. Percutaneous dilatational tracheostomy versus surgical tracheostomy in critically ill patients: a systematic review and meta-analysis. Crit Care. 2006;10(2):R55.</li>
+<li>Higgins KM, Punthakee X. Meta-analysis comparison of open versus percutaneous tracheostomy. Laryngoscope. 2007;117(3):447-454.</li>
+<li>Johnson-Obaseki S, et al. Laryngoscope. 2016;126:2459-67.</li>
+<li>Ghattas C, Alsunaid S, Pickering EM, Holden VK. J Thorac Dis. 2021.</li>
+<li>Diehl JL, El Atrous S, Touchard D, Lemaire F, Brochard L. Changes in the work of breathing induced by tracheotomy in ventilator-dependent patients. Am J Respir Crit Care Med. 1999;159(2):383-388.</li>
+<li>Law AC. Benefits of tracheostomy. Ann Am Thorac Soc. 2022;19(3):424-432.</li>
+<li>Beiderlinden M, Groeben H, Peters J. Safety of PDT in patients ventilated with high PEEP. Intensive Care Med. 2003;29(6):944-948.</li>
+<li>Shah S, Morgan P. PDT during high-frequency oscillatory ventilation. Crit Care Med. 2002;30(8):1762-1764.</li>
+<li>Roy CF, Silver JA, Turkdogan S, et al. PDT in obesity: systematic review and meta-analysis. JAMA Otolaryngol Head Neck Surg. 2023;149(4):334-343.</li>
+<li>Majid A, et al. Rigid bronchoscopy-guided PDT: pilot study. Ann Am Thorac Soc. 2014;11(5):789-794.</li>
+<li>Douketis JD, Spyropoulos AC, Murad MH, et al. Perioperative management of antithrombotic therapy. Chest. 2022;162(5):e207-e243.</li>
+<li>Huang Y-H, Tseng C-H, Chan M-C, et al. Antiplatelets/anticoagulants increased bleeding risk in bedside PDT. J Formos Med Assoc. 2020;119(7):1193-1200.</li>
+<li>Braune S, Kienast S, Hadem J, et al. PDT on extracorporeal lung support. Intensive Care Med. 2013;39(10):1792-1799.</li>
+<li>Deppe AC, Kuhn E, Scherner M, et al. Coagulation disorders do not increase PDT bleeding risk. Thorac Cardiovasc Surg. 2013;61:234-239.</li>
+<li>Abouzgheib W, Meena N, Jagtap P, et al. PDT in patients receiving antiplatelet therapy: is it safe? J Bronchology Interv Pulmonol. 2013;20(4):322-325.</li>
+<li>Lüsebrink E, Stark K, Bertlich M, et al. PDT safety on dual antiplatelet therapy/anticoagulation. Crit Care Explor. 2019;1(10):e0050.</li>
+<li>Lamb CR, Desai NR, Angel L, et al. Use of tracheostomy during COVID-19: Expert Panel Report. Chest. 2020;158(4):1499-1514.</li>
+<li>Rudas M, Seppelt I, Herkes R, et al. Ultrasound- vs landmark-guided puncture in PDT: RCT. Crit Care. 2014;18(5):514.</li>
+<li>Gobatto ALN, Besen BAMP, Tierno PFGMM, et al. Ultrasound-guided vs bronchoscopy-guided PDT: noninferiority RCT (TRACHUS). Intensive Care Med. 2016;42(3):342-351.</li>
+<li>Simon M, Metschke M, Braune SA, et al. Death after PDT: systematic review. Crit Care. 2013;17(5):R258.</li>
+<li>Goldenberg D, Ari EG, Golz A, et al. Tracheotomy complications: 1,130 cases. Otolaryngol Head Neck Surg. 2000;123(4):495-500.</li>
+<li>Mitchell RB, Hussey HM, Setzen G, et al. Clinical consensus statement: tracheostomy care. Otolaryngol Head Neck Surg. 2013;148(1):6-20.</li>
+<li>Epstein SK. Late complications of tracheostomy. Respir Care. 2005;50(4):542-549.</li>
+<li>Reed MF, Mathisen DJ. Tracheoesophageal fistula. Chest Surg Clin. 2003;13(2):271-289.</li>
+<li>Wen D, et al. Ultrasound-guided vs landmark-guided PDT: systematic review/meta-analysis. BMC Anesthesiol. 2025;25(1):211.</li>
+<li>Esteban A, et al. International study; median time to trach 11 days. Am J Respir Crit Care Med. 2000;161(5):1450-1458.</li>
+<li>Hosokawa K, et al. Early vs late trach meta-analysis. Crit Care. 2015;19:424.</li>
+<li>Mehta AB, et al. Early trach and outcomes. Crit Care Med. 2016;44(8):1506-1514.</li>
+<li>McGrath BA, et al. Tracheostomy window framework. Lancet Respir Med. 2020;8(7):717-725.</li>
+<li>Chorath K, et al. JAMA Otolaryngol Head Neck Surg. 2021.</li>
+<li>Merola R, et al. Life (Basel). 2024.</li>
+<li>Shen G, Yin H, Cao Y, et al. Fiberoptic bronchoscopy-guided vs standard PDT: RCT. Ir J Med Sci. 2019;188(2):675-681.</li>
+<li>Lim CK. Tracheostomy effects on mechanics. PLoS One. 2015;10(9):e0138294.</li>
+<li>Leder SB. Aspiration and cuff inflation. Chest. 2002;122(5):1721.</li>
+<li>Gadkaree SK. Risk with PDT without bronchoscopy. JAMA Otolaryngol Head Neck Surg. 2016.</li>
+<li>American Society of Anesthesiologists Task Force. Difficult airway guidelines. Anesthesiology. 2003;98(5):1269-1277.</li>
+<li>Brofeldt BT, Panacek EA, Richards JR. Rapid four-step cricothyroidotomy. Acad Emerg Med. 1996;3(11):1060-1063.</li>
+<li>Schober P, Hegemann MC, Schwarte LA, et al. Emergency cricothyroidotomy—comparative cadaver study. Resuscitation. 2009;80(2):204-209.</li>
+</ol>
+</div>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+
+</body>
+</html>

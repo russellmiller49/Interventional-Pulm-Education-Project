@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabaseCookieBrowser } from '@/lib/supabase/browser'
 import { buildLocalSupabaseRedirectUrl } from '@/lib/supabase/url'
+import { HandoffContent } from '@/i18n/handoff'
 
 type SubmitStatus = 'idle' | 'submitting' | 'sent' | 'error'
 
@@ -54,39 +55,43 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <label className="block space-y-2 text-sm font-medium">
-        <span>Email</span>
-        <Input
-          required
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
-          placeholder="you@example.com"
-        />
-      </label>
-      {message ? (
-        <p
-          className={
-            status === 'error' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'
-          }
-        >
-          {message}
-        </p>
-      ) : null}
-      <Button type="submit" disabled={status === 'submitting'} className="w-full">
-        {status === 'submitting' ? 'Sending reset link...' : 'Send reset link'}
-      </Button>
-      <p className="text-sm text-muted-foreground">
-        Remembered it?{' '}
-        <Link
-          href={'/login' as Route}
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          Sign in
-        </Link>
-      </p>
-    </form>
+    <HandoffContent>
+      {
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <label className="block space-y-2 text-sm font-medium">
+            <span>Email</span>
+            <Input
+              required
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </label>
+          {message ? (
+            <p
+              className={
+                status === 'error' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'
+              }
+            >
+              {message}
+            </p>
+          ) : null}
+          <Button type="submit" disabled={status === 'submitting'} className="w-full">
+            {status === 'submitting' ? 'Sending reset link...' : 'Send reset link'}
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Remembered it?{' '}
+            <Link
+              href={'/login' as Route}
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+        </form>
+      }
+    </HandoffContent>
   )
 }

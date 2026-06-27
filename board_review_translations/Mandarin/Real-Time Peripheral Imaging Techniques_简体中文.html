@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外周病灶实时成像技术</title>
+    <style>
+        body { font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+        h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+        h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+        p, ul, ol { margin-bottom: 16px; }
+        ul, ol { padding-left: 25px; }
+        li { margin-bottom: 8px; }
+        strong { color: #2c3e50; font-weight: 700; }
+        hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+        th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+        tr:nth-child(even) { background-color: #fbfbfb; }
+        /* Callout Boxes */
+        .algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+        .case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+        /* Mermaid */
+        .mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+        /* Footer Sections */
+        .abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+        .abbreviations dt { font-weight: bold; color: #2c3e50; }
+        .abbreviations dd { margin: 0; }
+        .references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+        /* MCQ Styling */
+        .mcq-options { list-style-type: none; padding-left: 0; margin: 10px 0 15px 0; }
+        .mcq-options li { margin-bottom: 4px; color: #444; }
+        .answer-block { margin-top: 10px; font-style: italic; color: #2c3e50; }
+        @media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<h1>外周病灶实时成像技术</h1>
+
+<h3>考试对应与范围</h3>
+<p>本章介绍支气管镜检查中用于定位和活检外周肺病灶的实时成像，重点包括数字断层合成（DTS）、锥形束 CT（CBCT）和增强透视工作流程。内容对应 AABIP 中外周结节诊断性支气管镜、影像引导导航、辐射安全和术中故障排除等领域。</p>
+
+<hr>
+
+<h3>学习目标</h3>
+<ul>
+    <li>解释 DTS 和 CBCT 如何由有限角度 X 线采集生成近实时三维信息，以及两者的实际差异。</li>
+    <li>描述 CT-人体偏差、其成因，以及实时成像如何减轻这种偏差。</li>
+    <li>根据病灶、患者和资源选择 DTS 或 CBCT，以及固定式或移动式平台。</li>
+    <li>实施减少肺不张、改善图像质量的麻醉和通气策略。</li>
+    <li>执行 DTS 辅助导航和 CBCT 引导导航支气管镜的分步流程。</li>
+    <li>识别、预防和处理常见术中问题，如肺不张、运动伪影和器械-病灶错位。</li>
+    <li>概括诊断率、辐射剂量、安全性和新兴局部治疗用途的证据。</li>
+</ul>
+
+<hr>
+
+<h3>高收益一页总结（要点、陷阱、考点）</h3>
+<p><strong>为何需要实时成像？</strong>外周支气管镜诊断率的主要限制是 CT-人体偏差：术中靶点位置常与术前 CT 预测不同。实时更新可在取样前纠正路径。</p>
+
+<div class="algorithm-note">
+    <p><strong>DTS 与 CBCT：</strong></p>
+    <ul>
+        <li><strong>DTS：</strong>通过短程、有限角度的透视扫描重建层面堆栈，剂量低，可兼容常规 C 臂。</li>
+        <li><strong>CBCT：</strong>锥形束围绕患者旋转形成三维体积，并可叠加于实时透视形成增强透视。</li>
+    </ul>
+
+    <p><strong>通气非常关键：</strong>肺不张会移位或遮蔽靶点。适当时采用全身麻醉和神经肌肉阻滞，PEEP ≥10 cm H₂O、较大潮气量，并在图像采集时吸气末屏气。</p>
+
+    <p><strong>屏气时机：</strong>启动屏气后等待 5–7 秒再开始 CBCT 扫描，以避开最初的肺运动。</p>
+
+    <p><strong>器械入灶确认：</strong>有条件时联合 rEBUS 与系统的器械/病灶叠加，或在取样前进行快速确认旋转/扫描。</p>
+
+    <p><strong>临床常用平台：</strong></p>
+    <ul>
+        <li><strong>Illumisite™（DTS 辅助 ENB）：</strong>透视扫描约 ±25°，可更新靶点配准。</li>
+        <li><strong>LungVision™：</strong>多模态影像融合；通过“主隆突旋转”和等中心旋转建立叠加；可兼容多种支气管镜和机器人。</li>
+        <li><strong>Galaxy System™：</strong>集成 DTS（TiLT+）的机器人支气管镜，一次性镜体，十字准星靶向。</li>
+    </ul>
+
+    <p><strong>证据信号：</strong>DTS 辅助 ENB 的诊断率优于单纯 ENB；CBCT 引导导航具有较高诊断率，可优于较旧技术；CBCT 联合机器人系统的报道诊断率通常约 75%–93%。</p>
+
+    <p><strong>辐射安全：</strong>优化后的 CBCT 导航操作中位有效剂量常约 5–6 mSv，与诊断性胸部 CT 相近。</p>
+</div>
+
+<h3>常见陷阱</h3>
+<ul>
+    <li><strong>吸收性肺不张：</strong>高 FiO₂ 与长时间通气共同导致。</li>
+    <li><strong>变形误差：</strong>器械尚未到位就成像，之后器械诱发的肺实质变形会使叠加误导。</li>
+    <li><strong>忽视体位依赖：</strong>后部和下叶更易发生依赖性肺不张和靶点移位。</li>
+</ul>
+
+<hr>
+
+<h3>核心概念</h3>
+
+<h4>病理生理与流行病学</h4>
+<p>外周肺结节常由 CT 筛查或偶然发现。传统二维透视难以支持三维导航。DTS 的有限角度断层成像和 CBCT 三维重建可在操作中更新靶点位置及器械-病灶关系。</p>
+
+<h4>CT-人体偏差</h4>
+<p>成因包括：术中肺容量低于术前吸气 CT；肺不张（气道被器械封堵、分泌物、高 FiO₂ 相关吸收性肺不张）；以及器械引起的组织变形。减轻方法包括规范通气、吸气末屏气和实时重新配准当前解剖。</p>
+
+<h4>适应证</h4>
+<p>外周结节影像引导支气管镜；取样前确认器械入灶；补偿 CT-人体偏差；规划与验证定位标记物；以及 CBCT 支持的局部治疗。</p>
+
+<hr>
+
+<h3>术前评估</h3>
+<h4>规划 CT</h4>
+<ul>
+    <li><strong>Illumisite 辅助流程：</strong>CT 距操作不超过 4 周，层厚 1.0–1.25 mm，重建间隔 0.8–1.0 mm，重叠 20%–50%。</li>
+    <li><strong>LungVision 流程：</strong>胸部 CT 层厚 &lt;1.5 mm。</li>
+</ul>
+<h4>麻醉与通气</h4>
+<p>适当时全麻并神经肌肉阻滞；PEEP ≥10 cm H₂O 可减少肺不张；与麻醉团队协调吸气末屏气进行采集。</p>
+
+<hr>
+
+<h3>器械与准备</h3>
+<h4>DTS</h4>
+<p>常规 C 臂完成有限角度扫描（例如 Illumisite 约 ±25°，Galaxy 约 ±30°）。重建生成层面堆栈，系统显示结节和导管尖端以更新配准。</p>
+<h4>CBCT</h4>
+<p>固定式或移动式三维 C 臂绕患者旋转并重建三维体积。固定式系统可将分割出的结节、气道和器械叠加至实时透视；移动式系统可三维确认，但通常缺少原生 AF。</p>
+<h4>镜体与工作通道</h4>
+<ul>
+    <li><strong>Galaxy：</strong>一次性支气管镜，外径 4.0 mm，工作通道 2.1 mm。</li>
+    <li><strong>Illumisite：</strong>定位导管经工作通道 2.8 mm 的治疗镜使用。</li>
+    <li><strong>LungVision：</strong>一次性机械导管经支气管镜工作通道置入，可与多数 C 臂和导航平台整合。</li>
+</ul>
+
+<hr>
+
+<h3>分步技术与操作核对表</h3>
+
+<h4>A．DTS 辅助导航（Illumisite 型）</h4>
+<ol>
+    <li>载入规划 CT 并建立导航路径。</li>
+    <li>插管；神经肌肉阻滞；设置 PEEP ≥10 cm H₂O。</li>
+    <li>配准气道；将可定位导丝/延长工作通道（EWC）推进至靶点附近，保持靶标在正确平面。</li>
+    <li>距靶点约 25 mm 内时定位 C 臂，例如从左前斜 25° 开始。</li>
+    <li>吸气末屏气；高质量连续透视从 LAO 25° 扫至 RAO 25°，约 8–30 秒。</li>
+    <li>系统重建 DTS，标记结节和导管尖端并更新配准。</li>
+    <li>纠正方向；有条件时以 rEBUS 确认；随后取样。</li>
+</ol>
+
+<h4>B．DTS 增强透视（LungVision 型）</h4>
+<ol>
+    <li>用薄层 CT（&lt;1.5 mm）规划。</li>
+    <li>镇静后行“主隆突旋转”（窄角度），在重建影像与规划 CT 上配准隆突。</li>
+    <li>行等中心旋转更新靶点位置并叠加导航路径。</li>
+    <li>机械导管经支气管镜送入，按系统显示转向；在多平面/三维图像确认器械-病灶关系后取样。</li>
+</ol>
+
+<h4>C．集成 DTS 的机器人支气管镜（Galaxy 型）</h4>
+<ol>
+    <li>电磁导航和机器人平台将镜体推进至病灶附近。</li>
+    <li>启动 TiLT+，在等中心附近完成约 −30° 至 +30° DTS 旋转。</li>
+    <li>识别并更新靶点，用十字准星使病灶相对镜尖居中，在稳定平台上取样。</li>
+</ol>
+
+<h4>D．CBCT 引导导航支气管镜（有条件时联合 AF）</h4>
+<ol>
+    <li>术前规划气道路径，将支气管镜/EWC 楔入靶亚段。</li>
+    <li>屏气并完成首次 CBCT；分割靶点，并可标记远端 EWC 尖端；选择最佳 AF 角度。</li>
+    <li>使用 AF 引导 EWC/器械进入病灶，同时将叠加与实时通气状态下可见的远端尖端对应。</li>
+    <li>以 rEBUS 和/或快速确认 CBCT 证实针尖在病灶内。</li>
+    <li>充分取样（针 ± 活检钳，多次且不同位置）；有条件时用 ROSE。</li>
+</ol>
+
+<hr>
+
+<h3>故障排除与术中处理</h3>
+<ul>
+    <li><strong>肺不张遮蔽靶点：</strong>提高 PEEP、使用较大潮气量、缩短到成像/取样的时间、在安全前提下降低 FiO₂，并采用吸气末屏气。后部/下叶病灶和肥胖风险更高。</li>
+    <li><strong>叠加错位（CBCT-人体偏差）：</strong>首次旋转前先将器械推进至靶点附近；在三维体积标记 EWC 远端尖端；将叠加与实时透视尖端对应；仍不确定时重复快速旋转。</li>
+    <li><strong>运动伪影：</strong>缩短扫描时间；移除视野内移动线缆/物体；启动屏气 5–7 秒后再开始 CBCT。</li>
+    <li><strong>无 rEBUS 信号：</strong>依靠可见器械的 DTS/CBCT 重建，调整轨迹；若无气道通向病灶，可在 CBCT 下规划经肺实质路径。</li>
+</ul>
+
+<hr>
+
+<h3>术后护理与随访</h3>
+<p>评估即时并发症；导航支气管镜气胸率较低，但有临床指征时仍应排除。</p>
+
+<h3>并发症：预防、识别与处理</h3>
+<p>DTS 或 CBCT 导航支气管镜总体气胸率低，需要胸管者少见。</p>
+<ul>
+    <li>一项导航支气管镜与经胸壁活检的随机比较中，支气管镜气胸较少，胸管罕见。</li>
+    <li>Galaxy 早期经验中气胸不常见，少数需引流。</li>
+</ul>
+
+<h3>特殊人群</h3>
+<ul>
+    <li><strong>肥胖及后部下叶病灶：</strong>肺不张风险高，应优先通气策略并尽早成像。</li>
+    <li><strong>ICU/资源有限：</strong>DTS 剂量低且可兼容常规 C 臂。</li>
+</ul>
+
+<h3>证据与结局</h3>
+<ul>
+    <li><strong>DTS 辅助 ENB：</strong>加入断层校正后，诊断率可由约 50% 中段提高至接近 80%；典型位置校正约 12–15 mm。</li>
+    <li><strong>比较诊断率：</strong>部分队列中，DTS 校正 ENB 与形状感知机器人支气管镜相近（约 77%–80%）。</li>
+    <li><strong>CBCT 导航：</strong>按中等定义的荟萃诊断率约 78%；与现代平台整合时常报道 75%–93%。</li>
+    <li><strong>与 TTNB 的随机比较（初步结果）：</strong>导航支气管镜与 CT 引导经胸壁活检诊断率相近，但支气管镜并发症更少。</li>
+    <li><strong>辐射：</strong>优化 CBCT 导航的中位有效剂量约 5.5 mSv，与诊断性胸部 CT 相近。</li>
+</ul>
+
+<hr>
+
+<h3>诊断与治疗算法</h3>
+
+<h4>算法 1——外周结节活检实时成像方式选择</h4>
+<div class="mermaid">
+flowchart TD
+    A["计划对外周肺结节行支气管镜"] --> B{"可用资源？"}
+    B -->|固定式 CBCT + AF| C["规划 CBCT-AF 流程"]
+    B -->|仅移动式 CBCT| D["用 CBCT 三维确认；与导航/机器人整合"]
+    B -->|无 CBCT，有 C 臂| E["使用 DTS 辅助导航平台"]
+    B -->|均无| F["重新评估：考虑非支气管镜路径"]
+
+    C --> G{"存在支气管征？"}
+    D --> G
+    E --> G
+    G -->|是| H["沿气道导航至病灶"]
+    G -->|否| I["用 CBCT 规划经肺实质路径"]
+
+    H --> J["优化通气/PEEP；成像时吸气末屏气"]
+    I --> J
+    J --> K{"已确认器械入灶（rEBUS 和/或 CBCT/DTS）？"}
+    K -->|是| L["多次、多位置取样；考虑 ROSE"]
+    K -->|否| M["重新配准；纠正轨迹；重复快速旋转/扫描"]
+
+    L --> N["评估并发症并安排随访"]
+    M --> K
+</div>
+
+<div class="algorithm-note">
+    <p><strong>文字算法：</strong></p>
+    <ul>
+        <li>确认成像资源优先级：固定式 CBCT/AF → 移动式 CBCT → DTS → 无实时三维成像。</li>
+        <li>确定气道路径；若无支气管征，可用 CBCT 规划经肺实质路径。</li>
+        <li>实施通气方案：PEEP ≥10 cm H₂O，吸气末屏气。</li>
+        <li>取样前以 rEBUS ± DTS/CBCT 确认器械入灶。</li>
+        <li>错位时重新配准、调整并快速复扫。</li>
+        <li>充分取样并监测并发症。</li>
+    </ul>
+</div>
+
+<h4>算法 2——术中处理 CT-人体偏差与肺不张</h4>
+<div class="mermaid">
+flowchart TD
+    A["意外未命中或 rEBUS 信号差"] --> B["检查通气：提高 PEEP，确保较大潮气量"]
+    B --> C["安全时降低 FiO₂；吸引分泌物；减少气道封堵"]
+    C --> D["器械是否已接近靶点？先推进 EWC/器械"]
+    D --> E["吸气末屏气"]
+    E --> F{"成像方式"}
+    F -->|CBCT| G["快速旋转；分割病灶并标记尖端；更新 AF 角度"]
+    F -->|DTS| H["有限角度扫描；重新配准病灶/器械"]
+    G --> I["将叠加对应到实时通气状态，调整轨迹"]
+    H --> I
+    I --> J{"器械入灶？"}
+    J -->|是| K["开始取样"]
+    J -->|否| L["再次快速成像；无气道时考虑经肺实质路径"]
+</div>
+
+<div class="algorithm-note">
+    <p><strong>文字算法：</strong></p>
+    <ul>
+        <li>提高 PEEP、维持较大潮气量，并在吸气末屏气。</li>
+        <li>减少肺不张来源：安全时降低 FiO₂，清除分泌物并减少器械长期封堵。</li>
+        <li>成像前先把器械推进至靶点附近，以减少成像后变形误差。</li>
+        <li><strong>CBCT：</strong>标记 EWC 尖端，选择最佳 AF 角度，并与实时透视对应。</li>
+        <li><strong>DTS：</strong>完成重新校准扫描并更新配准。</li>
+        <li>反复“成像 → 调整”直至器械入灶，再取样。</li>
+    </ul>
+</div>
+
+<hr>
+
+<h3>表格与快速参考</h3>
+
+<p><strong>表 1．外周成像相关的典型辐射剂量</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>检查</th>
+            <th>典型有效剂量（mSv）</th>
+            <th>备注</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>胸片（后前位）</td>
+            <td>0.02</td>
+            <td>基线比较</td>
+        </tr>
+        <tr>
+            <td>胸片（侧位）</td>
+            <td>0.15</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td>胸部 DTS</td>
+            <td>0.1–0.2</td>
+            <td>有限角度重建</td>
+        </tr>
+        <tr>
+            <td>低剂量胸部 CT</td>
+            <td>1.5</td>
+            <td>筛查 CT</td>
+        </tr>
+        <tr>
+            <td>CBCT（支气管镜）</td>
+            <td>约 2–2.5</td>
+            <td>典型单次采集范围</td>
+        </tr>
+        <tr>
+            <td>诊断性胸部 CT</td>
+            <td>4–8</td>
+            <td>—</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>表 2．外周支气管镜实时成像平台（部分特征）</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>平台</th>
+            <th>成像方式</th>
+            <th>主要旋转/扫描</th>
+            <th>镜体/工作通道</th>
+            <th>显示方式</th>
+            <th>典型用途</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Illumisite™</strong></td>
+            <td>DTS 辅助 ENB</td>
+            <td>约 LAO 25° → RAO 25°，屏气 8–30 秒</td>
+            <td>经治疗镜（2.8 mm 工作通道）</td>
+            <td>更新病灶/器械配准；透视增强</td>
+            <td>纠正偏差并确认器械入灶</td>
+        </tr>
+        <tr>
+            <td><strong>LungVision™</strong></td>
+            <td>DTS + 多模态融合</td>
+            <td>主隆突旋转；等中心旋转</td>
+            <td>一次性机械导管经镜体</td>
+            <td>增强透视叠加；多模态配准</td>
+            <td>兼容多种镜体/机器人；叠加导航</td>
+        </tr>
+        <tr>
+            <td><strong>Galaxy System™</strong></td>
+            <td>机器人 + 集成 DTS（TiLT+）</td>
+            <td>约 −30° 至 +30° DTS 旋转</td>
+            <td>一次性镜体（外径 4.0 mm，工作通道 2.1 mm）</td>
+            <td>病灶相对镜尖的十字准星靶向</td>
+            <td>稳定机器人定位及内置器械入灶确认</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><strong>表 3．DTS 与 CBCT 的实用差异</strong></p>
+<table>
+    <thead>
+        <tr>
+            <th>属性</th>
+            <th>DTS</th>
+            <th>CBCT</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>几何</strong></td>
+            <td>有限角度扫描；层面堆栈</td>
+            <td>完整旋转锥形束；三维体积</td>
+        </tr>
+        <tr>
+            <td><strong>剂量</strong></td>
+            <td>较低（胸部 DTS 通常 0.1–0.2 mSv）</td>
+            <td>单次采集常约 2–2.5 mSv，操作总量随次数变化</td>
+        </tr>
+        <tr>
+            <td><strong>硬件</strong></td>
+            <td>可使用常规 C 臂</td>
+            <td>固定式或移动式三维 C 臂</td>
+        </tr>
+        <tr>
+            <td><strong>增强透视</strong></td>
+            <td>依平台而定，主要用于重新配准</td>
+            <td>固定式系统可提供成熟 AF 叠加</td>
+        </tr>
+        <tr>
+            <td><strong>运动/肺不张</strong></td>
+            <td>中等敏感；扫描较短</td>
+            <td>对运动敏感；需优化屏气时机</td>
+        </tr>
+        <tr>
+            <td><strong>最佳场景</strong></td>
+            <td>重视成本/剂量的介入室；快速重新配准</td>
+            <td>完整三维规划、AF 导航和局部治疗规划</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<h3>病例与应用学习</h3>
+
+<div class="case-study">
+    <p><strong>病例 1</strong></p>
+    <p>计划对 2 cm 后部下叶结节行 ENB。气道配准后无 rEBUS 信号，透视提示肺充气不足。中心无 CBCT，但有 Illumisite C 臂。下一步最佳措施？</p>
+    <ul class="mcq-options">
+        <li>A. 将 FiO₂ 增至 100%，不更新影像直接取样</li>
+        <li>B. 重新获取规划 CT</li>
+        <li>C. 提高 PEEP，在吸气末屏气时完成有限角度 DTS 扫描并重新配准靶点/器械</li>
+        <li>D. 立即改经胸壁活检</li>
+        <li>E. 中止并改期</li>
+    </ul>
+    <p class="answer-block"><strong>答案：C。</strong>肺不张和低肺容量是 CT-人体偏差常见原因。优化通气后 DTS 扫描和重新配准可在取样前改善对准。</p>
+</div>
+
+<div class="case-study">
+    <p><strong>病例 2</strong></p>
+    <p>薄层 CT 显示 15 mm 右上叶外侧段结节，无支气管征。可用固定式 CBCT + AF。将 EWC 推进至胸膜侧附近后，哪项最能提高成功率？</p>
+    <ul class="mcq-options">
+        <li>A. 器械进入亚段前先旋转</li>
+        <li>B. 在 CBCT 体积标记远端 EWC 尖端，并用 AF 角度与实时透视对应</li>
+        <li>C. 避免屏气，以模拟正常呼吸</li>
+        <li>D. 增加吸引使肺段塌陷</li>
+        <li>E. rEBUS 阴性也不成像，直接取样</li>
+    </ul>
+    <p class="answer-block"><strong>答案：B。</strong>标记尖端并选择 AF 视角可将屏气状态三维数据对应到实时通气状态，也有助于规划经肺实质路径。</p>
+</div>
+
+<div class="case-study">
+    <p><strong>病例 3</strong></p>
+    <p>中心使用形状感知机器人支气管镜和移动式 CBCT，拟活检 18 mm、磨玻璃为主的结节。rEBUS 信号不确定。最合适的术中成像步骤是什么？</p>
+    <ul class="mcq-options">
+        <li>A. 跳过成像，增加活检钳次数</li>
+        <li>B. 移动式 CBCT 旋转以验证器械入灶并调整导航计划</li>
+        <li>C. 改拍侧位胸片</li>
+        <li>D. 提高 FiO₂ 后等待</li>
+        <li>E. 中止</li>
+    </ul>
+    <p class="answer-block"><strong>答案：B。</strong>移动式 CBCT 可与机器人平台整合，在 rEBUS 不明确时实时验证器械入灶并更新路径。</p>
+</div>
+
+<hr>
+
+<h3>题库</h3>
+<ol>
+    <li>
+        20 mm 外周结节采用单纯 ENB，30 分钟后 rEBUS 仍为偏心，取样无诊断结果。介入室有 DTS 平台。下一步最佳措施？
+        <ul class="mcq-options">
+            <li>A. 继续盲目取样</li>
+            <li>B. 完成有限角度 DTS 扫描，更新靶点配准</li>
+            <li>C. FiO₂ 增至 100% 后重复 rEBUS</li>
+            <li>D. 中止并安排 TTNB</li>
+            <li>E. 激素治疗后观察</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>DTS 可在继续取样前快速纠正 CT-人体偏差。</p>
+    </li>
+    <li>
+        以下哪项最准确地区分 DTS 与 CBCT？
+        <ul class="mcq-options">
+            <li>A. DTS 剂量高于 CBCT</li>
+            <li>B. CBCT 不能显示三维体积</li>
+            <li>C. DTS 使用有限角度扫描，常可利用常规 C 臂</li>
+            <li>D. CBCT 无法与机器人平台整合</li>
+            <li>E. DTS 必须在固定式复合手术室完成</li>
+        </ul>
+        <p class="answer-block"><strong>答案：C。</strong>DTS 是常规 C 臂可完成的有限角度重建；CBCT 提供完整三维体积，可固定或移动。</p>
+    </li>
+    <li>
+        CBCT-AF 导航时，叠加的结节与实时透视可见的导管尖端错位。第一步最合适的措施？
+        <ul class="mcq-options">
+            <li>A. 降低 PEEP 以减少过度扩张</li>
+            <li>B. 在 CBCT 体积标记远端 EWC 尖端并调整 AF 角度</li>
+            <li>C. 延长扫描时间</li>
+            <li>D. 改侧位胸片</li>
+            <li>E. 直接活检</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>标记尖端和选择最佳 AF 角度有助于把屏气采集对应至实时通气状态。</p>
+    </li>
+    <li>
+        哪项通气操作最能减少肺不张相关偏差？
+        <ul class="mcq-options">
+            <li>A. 低潮气量、零 PEEP</li>
+            <li>B. 较大潮气量、PEEP ≥10 cm H₂O，并在成像时吸气末屏气</li>
+            <li>C. 仅低 FiO₂ 过度通气</li>
+            <li>D. 无屏气的窒息氧合</li>
+            <li>E. 每次旋转间拔管</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>较大肺容量和足够 PEEP 保持肺开放，屏气稳定靶点。</p>
+    </li>
+    <li>
+        辐射考点：胸部 DTS 的典型有效剂量约为？
+        <ul class="mcq-options">
+            <li>A. 0.02 mSv</li>
+            <li>B. 0.1–0.2 mSv</li>
+            <li>C. 1.5 mSv</li>
+            <li>D. 2–2.5 mSv</li>
+            <li>E. 4–8 mSv</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>胸部 DTS 通常约 0.1–0.2 mSv。</p>
+    </li>
+    <li>
+        一个中心有移动式 CBCT 和机器人支气管镜。哪项正确？
+        <ul class="mcq-options">
+            <li>A. 移动式 CBCT 不能生成三维体积</li>
+            <li>B. 移动式 CBCT 通常缺少原生 AF，但可验证器械入灶并更新导航计划</li>
+            <li>C. 移动式 CBCT 的运动伪影始终少于固定式</li>
+            <li>D. 所有移动式系统均需 ≥60 秒的 360° 旋转</li>
+            <li>E. 移动式 CBCT 不能与 rEBUS 联合</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>移动式系统可提供三维确认并越来越多地整合机器人，但通常没有原生 AF。</p>
+    </li>
+    <li>
+        故障排除：rEBUS 无信号，靶点位于下叶，患者肥胖。最佳整合措施？
+        <ul class="mcq-options">
+            <li>A. 提高 FiO₂ 后等待</li>
+            <li>B. 降低 PEEP，拍侧位胸片</li>
+            <li>C. 提高 PEEP、吸气末屏气，重复 DTS/CBCT 重新配准，并考虑快速确认旋转</li>
+            <li>D. 中止</li>
+            <li>E. 无影像直接经支气管冷冻活检</li>
+        </ul>
+        <p class="answer-block"><strong>答案：C。</strong>下叶和肥胖易肺不张，应优化通气并重新成像纠正偏差。</p>
+    </li>
+    <li>
+        Galaxy 系统集成成像的特征是什么？
+        <ul class="mcq-options">
+            <li>A. 无实时成像</li>
+            <li>B. Tool-in-Lesion Tomosynthesis（TiLT+）与十字准星靶向</li>
+            <li>C. 需要 6 mm 工作通道</li>
+            <li>D. 仅可与固定式 CBCT 使用</li>
+            <li>E. 禁止屏气</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>Galaxy 集成 TiLT+，显示病灶相对镜尖的位置。</p>
+    </li>
+    <li>
+        比较队列中，DTS 校正 ENB 与形状感知机器人支气管镜的诊断率约为：
+        <ul class="mcq-options">
+            <li>A. 50% 与 55%</li>
+            <li>B. 70% 与 55%</li>
+            <li>C. 80% 与 77%，差异无统计学意义</li>
+            <li>D. 93% 与 70%，DTS 更优</li>
+            <li>E. 60% 与 90%，机器人更优</li>
+        </ul>
+        <p class="answer-block"><strong>答案：C。</strong>部分队列显示两者相近，约 80% 与 77%。</p>
+    </li>
+    <li>
+        导航支气管镜与 CT 引导 TTNB 的随机初步结果提示：
+        <ul class="mcq-options">
+            <li>A. TTNB 诊断率更高且并发症更少</li>
+            <li>B. 导航支气管镜诊断率更高但并发症更多</li>
+            <li>C. 诊断率相近，导航支气管镜并发症更少</li>
+            <li>D. 支气管镜更差且更危险</li>
+            <li>E. 尚无资料</li>
+        </ul>
+        <p class="answer-block"><strong>答案：C。</strong>早期随机结果显示诊断率相近，而支气管镜并发症较低。</p>
+    </li>
+    <li>
+        CBCT-AF 导航的正确流程顺序是：
+        <ul class="mcq-options">
+            <li>A. 取样后旋转确认诊断率</li>
+            <li>B. 镜体位于或接近靶亚段时先旋转，分割病灶和器械，再用 AF 引导，并以 rEBUS/第二次旋转确认</li>
+            <li>C. 为避免混乱，不标记器械</li>
+            <li>D. 优先呼气末屏气</li>
+            <li>E. 仅 rEBUS 中心型时旋转</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>首次旋转前将器械接近靶点，分割病灶和器械，AF 引导后再确认。</p>
+    </li>
+    <li>
+        剂量配对考点：哪项正确？
+        <ul class="mcq-options">
+            <li>A. DTS 约 4–8 mSv；CBCT 约 0.02 mSv</li>
+            <li>B. DTS 约 0.1–0.2 mSv；CBCT 约 2–2.5 mSv</li>
+            <li>C. DTS 约 1.5 mSv；CBCT 约 0.15 mSv</li>
+            <li>D. DTS 约 2–2.5 mSv；CBCT 约 0.1–0.2 mSv</li>
+            <li>E. 两者均常规 &gt;8 mSv</li>
+        </ul>
+        <p class="answer-block"><strong>答案：B。</strong>胸部 DTS 通常约 0.1–0.2 mSv；CBCT 单次采集常约 2–2.5 mSv。</p>
+    </li>
+</ol>
+
+<hr>
+
+<h3>争议、实践差异与演变中的证据</h3>
+<ul>
+    <li><strong>DTS 与 CBCT：</strong>DTS 快、剂量低、兼容常规 C 臂，但深度分辨率有限且受运动影响；CBCT 三维和 AF 更强，但成本与剂量较高。直接比较研究和统一诊断率定义仍在发展。</li>
+    <li><strong>固定式与移动式 CBCT：</strong>固定式提供 AF 且旋转较短；移动式提高可及性并便于机器人整合，但目前常无原生 AF，旋转可能较长。</li>
+    <li><strong>“诊断率”定义：</strong>严格与中等定义对非特异性良性结果的判定不同，显著影响报道数字。</li>
+    <li><strong>最佳通气策略：</strong>高 PEEP、较大潮气量和屏气可减少肺不张，但中心执行差异大，直接影响图像和诊断率。</li>
+    <li><strong>诊断之外的治疗：</strong>CBCT 对精准局部治疗具有重要价值，标准流程和比较结局仍在建立。</li>
+</ul>
+
+<hr>
+
+<h3>带走要点核对表</h3>
+<ul>
+    <li>排程前确认资源：固定式 CBCT/AF → 移动式 CBCT → DTS。</li>
+    <li>按平台要求取得薄层规划 CT。</li>
+    <li>适当时全麻、神经肌肉阻滞、PEEP ≥10 cm H₂O，并预先安排吸气末屏气。</li>
+    <li>首次旋转/扫描前将器械推进至靶点附近。</li>
+    <li>CBCT-AF：分割病灶并标记器械尖端，选择最佳推进和角度视图。</li>
+    <li>DTS：完成有限角度扫描并重新配准靶点/器械。</li>
+    <li>取样前始终确认器械入灶（rEBUS ± 成像）。</li>
+    <li>在病灶不同位置多次取样；有条件时用 ROSE。</li>
+    <li>错位时快速复扫、纠正轨迹并再次确认。</li>
+    <li>减少运动和散射；移除视野内不必要物体。</li>
+    <li>监测并发症；气胸虽少见仍需早期识别。</li>
+    <li>记录剂量指标和成像步骤用于质量改进。</li>
+</ul>
+
+<hr>
+
+<div class="abbreviations">
+    <h3>缩写与术语</h3>
+    <dl>
+        <dt>AF</dt><dd>增强透视（三维图像叠加于实时透视）</dd>
+        <dt>CBCT</dt><dd>锥形束计算机断层扫描（旋转锥形束生成三维成像）</dd>
+        <dt>CT-人体偏差</dt><dd>规划 CT 靶点位置与术中实际解剖不匹配</dd>
+        <dt>DTS</dt><dd>数字断层合成（有限角度扫描重建）</dd>
+        <dt>EWC</dt><dd>延长工作通道</dd>
+        <dt>ENB</dt><dd>电磁导航支气管镜</dd>
+        <dt>rEBUS</dt><dd>径向支气管内超声</dd>
+        <dt>ROSE</dt><dd>快速现场评价</dd>
+        <dt>TiLT+</dt><dd>器械入灶断层合成（Galaxy 系统）</dd>
+        <dt>TTNB</dt><dd>经胸壁针吸/活检</dd>
+        <dt>WC</dt><dd>支气管镜工作通道</dd>
+    </dl>
+</div>
+
+<div class="references"><h3>参考文献</h3>
+<ol>
+<li>Dobbins JT, Godfrey DJ. Digital x-ray tomosynthesis: current state of the art and clinical potential. Phys Med Biol. 2003;48(19):R65-106.</li>
+<li>Brenner DJ, Hall EJ. Computed tomography—an increasing source of radiation exposure. N Engl J Med. 2007;357(22):2277-2284.</li>
+<li>Dobbins JT, McAdams HP, Godfrey DJ, Li CM. Digital tomosynthesis of the chest. J Thorac Imaging. 2008;23(2):86-92.</li>
+<li>Aboudara M, Roller L, Rickman O, et al. Improved diagnostic yield for lung nodules with digital tomosynthesis-corrected navigational bronchoscopy: initial experience with a novel adjunct. Respirology. 2020;25(2):206-213.</li>
+<li>Avasarala SK, Roller L, Katsis J, et al. Sight unseen: diagnostic yield and safety outcomes of a novel multimodality navigation bronchoscopy platform with real-time target acquisition. Respiration. 2022;101(2):166-173.</li>
+<li>Dunn BK, Blaj M, Stahl J, et al. Evaluation of electromagnetic navigational bronchoscopy using tomosynthesis-assisted visualization, intraprocedural positional correction and continuous guidance for evaluation of peripheral pulmonary nodules. J Bronchol Interv Pulmonol. 2023;30(1):16-23.</li>
+<li>Low SW, Lentz RJ, Chen H, et al. Shape-sensing robotic-assisted bronchoscopy vs digital tomosynthesis-corrected electromagnetic navigation bronchoscopy: a comparative cohort study of diagnostic performance. Chest. 2023;163(4):977-984.</li>
+<li>Lentz RJ, Frederick-Dyer K, Planz VB, et al. Navigational bronchoscopy or transthoracic needle biopsy for lung nodules. N Engl J Med. 2025;392(21):2100-2112.</li>
+<li>Pritchett MA, Schampaert S, de Groot JAH, Schirmer CC, van der Bom I. Cone-beam CT with augmented fluoroscopy combined with electromagnetic navigation bronchoscopy for biopsy of pulmonary nodules. J Bronchol Interv Pulmonol. 2018;25(4):274-282.</li>
+<li>Casal RF, Sarkiss M, Jones AK, et al. Cone-beam computed tomography-guided thin/ultrathin bronchoscopy for diagnosis of peripheral lung nodules: a prospective pilot study. J Thorac Dis. 2018;10(12):6950-6959.</li>
+<li>Verhoeven RLJ, Futterer JJ, Hoefsloot W, van der Heijden E. Cone-beam CT image guidance with and without electromagnetic navigation bronchoscopy for biopsy of peripheral pulmonary lesions. J Bronchol Interv Pulmonol. 2021;28(1):60-69.</li>
+<li>Verhoeven RLJ, van der Sterren W, Kong W, et al. Cone-beam CT and augmented fluoroscopy-guided navigation bronchoscopy: radiation exposure and diagnostic accuracy learning curves. J Bronchol Interv Pulmonol. 2021;28(4):262-271.</li>
+<li>Yu KL, Yang SM, Ko HJ, et al. Efficacy and safety of cone-beam computed tomography-derived augmented fluoroscopy combined with endobronchial ultrasound in peripheral pulmonary lesions. Respiration. 2021;100(6):538-546.</li>
+<li>Lin CK, Fan HJ, Yao ZH, et al. Cone-beam computed tomography-derived augmented fluoroscopy improves the diagnostic yield of endobronchial ultrasound-guided transbronchial biopsy for peripheral pulmonary lesions. Diagnostics. 2021;12(1):41.</li>
+<li>Kops SEP, Heus P, Korevaar DA, et al. Diagnostic yield and safety of navigation bronchoscopy: a systematic review and meta-analysis. Lung Cancer. 2023;180:107196.</li>
+<li>Wijma IN, Casal RF, Cheng GZ, et al. Radiation principles, protection and reporting for interventional pulmonology: a WABIP White Paper. Respiration. 2024;103(11):707-722.</li>
+<li>Bhadra K, Rickman OB, Mahajan AK, Hogarth DK. “Tool-in-lesion” accuracy of Galaxy System—a robotic electromagnetic navigation bronchoscopy with integrated tool-in-lesion tomosynthesis technology: the MATCH study. J Bronchol Interv Pulmonol. 2024;31(1):23-29.</li>
+<li>Saghaie T, Williamson JP, Phillips M, et al. First-in-human use of a new robotic electromagnetic navigation bronchoscopic platform with integrated Tool-in-Lesion Tomosynthesis (TiLT) technology for peripheral pulmonary lesions: the FRONTIER study. Respirology. 2024;29:969-975.</li>
+<li>Salahuddin M, Sarkiss M, Sagar A-ES, et al. Ventilatory strategy to prevent atelectasis during bronchoscopy under general anesthesia: a multicenter randomized controlled trial. Chest. 2022;162(6):1393-1401.</li>
+</ol>
+</div>
+<script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</body>
+</html>

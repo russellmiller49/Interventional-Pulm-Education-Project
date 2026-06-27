@@ -5,9 +5,15 @@ import {
   resolveJournalClubAudioPath,
   resolveJournalClubAudioTtl,
 } from '@/lib/journal-club-podcasts/audio'
+import { requireJournalClubPodcastApiAuth } from '@/lib/journal-club-podcasts/auth'
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(request: Request) {
+  const auth = await requireJournalClubPodcastApiAuth(request)
+  if (!auth.ok) {
+    return auth.response
+  }
+
   const { searchParams } = new URL(request.url)
   const resolution = resolveJournalClubAudioPath(
     searchParams.get('episodeId'),

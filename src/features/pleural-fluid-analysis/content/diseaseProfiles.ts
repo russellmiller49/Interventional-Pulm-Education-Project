@@ -1,3 +1,5 @@
+import { pickLocaleContent } from '@/i18n/content'
+
 import type { DiseaseProfile } from '../engine/types'
 
 export const pleuralDiseaseProfiles: readonly DiseaseProfile[] = [
@@ -1201,3 +1203,769 @@ export const pleuralDiseaseProfiles: readonly DiseaseProfile[] = [
     ],
   },
 ] as const
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Localized variants (es, zh-CN).
+// MACHINE-TRANSLATED, PENDING CLINICAL REVIEW. Each localized profile reuses the
+// English rule logic (keys/operators/weights/domains) by id, translating only
+// the learner-facing text fields (name/family/summary/teachingPearl/nextStep)
+// and the per-rule `evidence` chips (one string per rule, in source order). The
+// differential engine accepts a profiles argument so the UI can pass the locale
+// variant. See docs/i18n-localization.md.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const englishProfileById = new Map(pleuralDiseaseProfiles.map((profile) => [profile.id, profile]))
+
+interface LocalizedProfileText {
+  id: string
+  name: string
+  family: string
+  summary: string
+  teachingPearl: string
+  nextStep: string
+  /** One evidence string per rule, in the same order as the English source. */
+  evidence: readonly string[]
+}
+
+function buildLocalizedProfiles(texts: readonly LocalizedProfileText[]): readonly DiseaseProfile[] {
+  return texts.map((text) => {
+    const base = englishProfileById.get(text.id)
+
+    if (!base) {
+      throw new Error(`Missing pleural disease profile for id ${text.id}`)
+    }
+
+    if (text.evidence.length !== base.rules.length) {
+      throw new Error(
+        `Evidence count mismatch for ${text.id}: ${text.evidence.length} vs ${base.rules.length}`,
+      )
+    }
+
+    return {
+      ...base,
+      name: text.name,
+      family: text.family,
+      summary: text.summary,
+      teachingPearl: text.teachingPearl,
+      nextStep: text.nextStep,
+      rules: base.rules.map((rule, index) => ({ ...rule, evidence: text.evidence[index] })),
+    }
+  })
+}
+
+const pleuralDiseaseProfilesTextEs: readonly LocalizedProfileText[] = [
+  {
+    id: 'congestive-heart-failure',
+    name: 'Insuficiencia cardíaca congestiva',
+    family: 'Transudados sistémicos',
+    summary: 'Derrames bilaterales o de predominio derecho por fisiología de presión sistémica.',
+    teachingPearl:
+      'Tras la diuresis, la IC puede cumplir los criterios de Light por un margen pequeño; los gradientes y el NT-proBNP rescatan la interpretación.',
+    nextStep:
+      'Trata la fisiología de volumen/presión y reevalúa; vuelve a muestrear solo si la historia rompe el patrón.',
+    evidence: [
+      'química transudativa reconciliada',
+      'marco de insuficiencia cardíaca o diuresis',
+      'derrames anecoicos bilaterales',
+      'NT-proBNP por encima de 1.500 pg/mL',
+      'el gradiente de albúmina suero-pleural apoya el pseudoexudado',
+      'pH pleural alcalino',
+    ],
+  },
+  {
+    id: 'hepatic-hydrothorax',
+    name: 'Hidrotórax hepático',
+    family: 'Transudados sistémicos',
+    summary: 'Acumulación pleural por el paso de ascitis a través de defectos diafragmáticos.',
+    teachingPearl:
+      'La ascitis puede ser sutil; los derrames anecoicos derechos o bilaterales aún pueden encajar.',
+    nextStep: 'Busca cirrosis, ascitis sutil y fisiología de hipertensión portal.',
+    evidence: [
+      'marco de transudado hepático o sistémico',
+      'química transudativa',
+      'proteína pleural baja',
+      'patrón ecográfico anecoico',
+    ],
+  },
+  {
+    id: 'parapneumonic-empyema',
+    name: 'Derrame paraneumónico complicado / empiema',
+    family: 'Infección',
+    summary: 'Exudado inflamatorio por neumonía que puede requerir drenaje.',
+    teachingPearl:
+      'El pH, la glucosa, la LDH, la complejidad ecográfica y la microbiología deciden la urgencia.',
+    nextStep:
+      'Evalúa el drenaje con tubo torácico, los antibióticos y la estrategia de loculación.',
+    evidence: [
+      'marco de neumonía o infección',
+      'patrón ecográfico septado o complejo',
+      'pH pleural por debajo de 7,2',
+      'glucosa pleural baja',
+      'LDH por encima de 1.000 U/L',
+      'predominio de neutrófilos',
+      'microbiología positiva',
+      'líquido turbio o purulento',
+    ],
+  },
+  {
+    id: 'tuberculous-pleural-effusion',
+    name: 'Derrame pleural tuberculoso',
+    family: 'Infección',
+    summary:
+      'Exudado de predominio linfocítico donde la epidemiología cambia el valor de las pruebas.',
+    teachingPearl:
+      'La ADA es un desplazador de probabilidad; la biopsia y el cultivo importan cuando la sospecha se mantiene alta.',
+    nextStep:
+      'Envía cultivo micobacteriano y considera la biopsia pleural para histología y sensibilidad a fármacos.',
+    evidence: [
+      'contexto de exposición a TB o riesgo endémico',
+      'química exudativa',
+      'linfocitos por encima del 80%',
+      'ADA por encima de 40 IU/L',
+      'ADA por encima de 70 IU/L',
+      'porcentaje bajo de células mesoteliales',
+      'proteína pleural alta',
+    ],
+  },
+  {
+    id: 'malignant-pleural-effusion',
+    name: 'Derrame pleural maligno',
+    family: 'Malignidad',
+    summary: 'Derrame asociado a cáncer, a veces engañosamente transudativo.',
+    teachingPearl:
+      'La nodularidad pleural y el antecedente de cáncer mantienen viva la malignidad a pesar de una citología negativa.',
+    nextStep:
+      'Envía citología adecuada; biopsia si la citología es negativa y la probabilidad pretest se mantiene alta.',
+    evidence: [
+      'contexto de malignidad',
+      'nodularidad o engrosamiento pleural',
+      'citología positiva',
+      'líquido sanguinolento o serosanguinolento',
+      'predominio linfocítico moderado',
+    ],
+  },
+  {
+    id: 'mesothelioma',
+    name: 'Mesotelioma',
+    family: 'Malignidad',
+    summary:
+      'Malignidad pleural a menudo asociada a engrosamiento pleural, nodularidad y exposición al asbesto.',
+    teachingPearl:
+      'Un derrame masivo sin el desplazamiento mediastínico esperado puede encajar con una enfermedad pleural que encierra el pulmón.',
+    nextStep:
+      'Usa objetivos de imagen pleural y biopsia de tejido en lugar de basarte solo en la química.',
+    evidence: [
+      'marco de malignidad o exposición',
+      'nodularidad o engrosamiento pleural',
+      'líquido sanguinolento o serosanguinolento',
+      'química exudativa',
+    ],
+  },
+  {
+    id: 'pulmonary-embolism',
+    name: 'Embolia pulmonar',
+    family: 'Vascular',
+    summary: 'A menudo pequeño, unilateral y a veces sanguinolento o serosanguinolento.',
+    teachingPearl:
+      'Un pequeño derrame ipsilateral con EP comprobada puede no necesitar toracocentesis diagnóstica.',
+    nextStep:
+      'Deja que la probabilidad de EP y la imagen guíen el manejo; muestrea si el derrame es atípico.',
+    evidence: [
+      'líquido sanguinolento o serosanguinolento',
+      'química exudativa',
+      'patrón de derrame pequeño o unilateral',
+    ],
+  },
+  {
+    id: 'rheumatoid-pleural-effusion',
+    name: 'Derrame pleural reumatoide',
+    family: 'Autoinmune',
+    summary: 'Pleuritis autoinmune que puede imitar bioquímicamente una infección.',
+    teachingPearl:
+      'Una glucosa muy baja y un pH bajo pueden parecer un empiema; la historia articular/sistémica importa.',
+    nextStep: 'Reconcilia con serologías, hallazgos articulares, imagen y microbiología negativa.',
+    evidence: [
+      'marco autoinmune',
+      'glucosa pleural muy baja',
+      'pH pleural bajo',
+      'LDH alta',
+      'inflamación de predominio linfocítico o mixta',
+    ],
+  },
+  {
+    id: 'lupus-pleuritis',
+    name: 'Pleuritis lúpica',
+    family: 'Autoinmune',
+    summary: 'Derrame inflamatorio asociado a LES, a veces con pH y glucosa bajos.',
+    teachingPearl:
+      'Al igual que la enfermedad reumatoide, la pleuritis lúpica puede imitar una infección.',
+    nextStep:
+      'Integra la actividad lúpica sistémica, las serologías, el complemento y la exclusión de infección.',
+    evidence: [
+      'marco autoinmune',
+      'química exudativa',
+      'pH pleural bajo',
+      'recuento de células nucleadas inflamatorio',
+    ],
+  },
+  {
+    id: 'chylothorax',
+    name: 'Quilotórax',
+    family: 'Linfático / lípidos',
+    summary: 'Quilo en el espacio pleural por disrupción u obstrucción linfática.',
+    teachingPearl:
+      'El aspecto ayuda, pero los triglicéridos y los quilomicrones hacen el diagnóstico.',
+    nextStep: 'Busca traumatismo, cirugía torácica, linfoma, trastornos linfáticos o cirrosis.',
+    evidence: [
+      'líquido lechoso o turbio',
+      'triglicéridos por encima de 110 mg/dL',
+      'quilomicrones presentes',
+      'predominio de linfocitos',
+      'marco linfático o posprocedimiento',
+    ],
+  },
+  {
+    id: 'yellow-nail-syndrome',
+    name: 'Síndrome de las uñas amarillas',
+    family: 'Linfático / lípidos',
+    summary:
+      'Trastorno linfático asociado a uñas amarillas distróficas, linfedema, bronquiectasias y derrame pleural.',
+    teachingPearl:
+      'La pista clínica es el diagnóstico: los cambios ungueales más el linfedema pueden explicar un derrame linfocítico.',
+    nextStep:
+      'Busca uñas distróficas de crecimiento lento, linfedema, enfermedad respiratoria crónica y derrames recurrentes.',
+    evidence: [
+      'marco de fenotipo linfático o de uñas amarillas',
+      'predominio de linfocitos',
+      'líquido seroso o con tinte lipídico',
+      'patrón de derrame anecoico recurrente',
+    ],
+  },
+  {
+    id: 'pseudochylothorax',
+    name: 'Pseudoquilotórax / derrame de colesterol',
+    family: 'Linfático / lípidos',
+    summary: 'Derrame crónico rico en colesterol, clásicamente tras TB o pleuritis reumatoide.',
+    teachingPearl:
+      'El líquido lechoso no siempre es quilo; un colesterol por encima de 250 mg/dL cambia la rama.',
+    nextStep:
+      'Comprueba el colesterol y la historia pleural crónica, especialmente TB o enfermedad reumatoide.',
+    evidence: [
+      'líquido lechoso o turbio',
+      'colesterol por encima de 250 mg/dL',
+      'contexto crónico de TB o reumatoide',
+    ],
+  },
+  {
+    id: 'trapped-lung',
+    name: 'Pulmón atrapado',
+    family: 'Mecánico / crónico',
+    summary: 'Derrame crónico estable por fisiología de pulmón no expansible.',
+    teachingPearl:
+      'La química puede ser anodina o discordante en proteínas; la clave es la cronicidad y la mecánica pleural.',
+    nextStep:
+      'Usa la imagen, la manometría cuando esté disponible y la trayectoria de síntomas antes de repetir el drenaje.',
+    evidence: [
+      'química transudativa o anodina',
+      'perfil crónico de predominio linfocítico',
+      'derrame unilateral de aspecto crónico',
+    ],
+  },
+  {
+    id: 'post-cabg-pcis',
+    name: 'Post-CABG / síndrome poslesión cardíaca',
+    family: 'Posprocedimiento',
+    summary:
+      'Derrame tras procedimiento cardíaco por trauma quirúrgico, lesión linfática, IC o pleuropericarditis inmune.',
+    teachingPearl:
+      'Los derrames post-CABG pueden ser sanguinolentos, linfocíticos o pseudoexudativos según el momento y el mecanismo.',
+    nextStep:
+      'Usa el tiempo tras la cirugía, los hallazgos pericárdicos, la fiebre y la lateralidad para ordenar el mecanismo.',
+    evidence: [
+      'marco posprocedimiento',
+      'líquido sanguinolento o seroso posprocedimiento',
+      'predominio de linfocitos',
+      'el gradiente de pseudoexudado puede ocurrir tras CABG',
+    ],
+  },
+  {
+    id: 'uremic-pleuritis',
+    name: 'Pleuritis urémica',
+    family: 'Inflamación sistémica',
+    summary: 'Derrame inflamatorio en la enfermedad renal avanzada.',
+    teachingPearl:
+      'La insuficiencia renal puede producir transudados sistémicos o pleuritis urémica exudativa.',
+    nextStep:
+      'Reconcilia con la trayectoria renal, el estado de diálisis y la exclusión de infección.',
+    evidence: ['contexto renal/sistémico', 'química exudativa', 'perfil inflamatorio linfocítico'],
+  },
+  {
+    id: 'drug-induced-pleural-effusion',
+    name: 'Derrame pleural inducido por fármacos',
+    family: 'Medicación / inmune',
+    summary:
+      'Derrame asociado a medicación, incluyendo dasatinib, inhibidores de checkpoint inmune y lupus inducido por fármacos.',
+    teachingPearl:
+      'La relación temporal puede ser tardía; la eosinofilia puede ayudar, pero no es obligatoria.',
+    nextStep: 'Audita la cronología de la medicación y busca eosinofilia periférica o pleural.',
+    evidence: [
+      'contexto de tipo inmune/farmacológico',
+      'eosinofilia pleural',
+      'predominio de linfocitos',
+    ],
+  },
+  {
+    id: 'benign-asbestos-pleural-effusion',
+    name: 'Derrame pleural benigno por asbesto',
+    family: 'Ocupacional',
+    summary: 'Derrame asociado al asbesto que puede ser hemorrágico y eosinofílico.',
+    teachingPearl:
+      'Es un diagnóstico de contexto y de exclusión; la malignidad debe permanecer visible.',
+    nextStep:
+      'Indaga la exposición ocupacional y evalúa placas pleurales, engrosamiento y riesgo de malignidad.',
+    evidence: [
+      'líquido sanguinolento o serosanguinolento',
+      'eosinofilia pleural',
+      'química exudativa',
+    ],
+  },
+  {
+    id: 'hemothorax',
+    name: 'Hemotórax',
+    family: 'Sangre / trauma',
+    summary:
+      'Sangre en el espacio pleural, normalmente relacionada con trauma, procedimiento, malignidad o anticoagulación.',
+    teachingPearl:
+      'La definición es un hematocrito del líquido pleural por encima del 50% del hematocrito de la sangre.',
+    nextStep: 'Escala el drenaje y la evaluación del control del foco.',
+    evidence: [
+      'marco de trauma o anticoagulación',
+      'líquido francamente sanguinolento',
+      'signo del hematocrito en ecografía',
+      'relación hematocrito LP/sangre por encima de 0,5',
+    ],
+  },
+  {
+    id: 'urinothorax',
+    name: 'Urinotórax',
+    family: 'Origen extravascular',
+    summary:
+      'Orina que penetra en el espacio pleural por uropatía obstructiva o lesión del tracto urinario.',
+    teachingPearl:
+      'Un transudado de pH bajo es inusual; la relación de creatinina y el olor a orina son la rama.',
+    nextStep: 'Evalúa la obstrucción o lesión del tracto urinario; corrige el foco o recurre.',
+    evidence: [
+      'olor a orina',
+      'relación creatinina LP/suero por encima de 1',
+      'líquido pleural con proteína muy baja',
+      'pH bajo a pesar de un perfil transudativo',
+    ],
+  },
+  {
+    id: 'bilothorax',
+    name: 'Biliotórax',
+    family: 'Origen extravascular',
+    summary: 'Bilis en el espacio pleural tras patología biliar o cirugía hepatobiliar.',
+    teachingPearl:
+      'El líquido verde es una pista; una relación bilirrubina LP/suero por encima de 1 es decisiva.',
+    nextStep: 'Investiga el foco biliar y coordina el control del foco.',
+    evidence: [
+      'líquido pleural verde',
+      'relación bilirrubina LP/suero por encima de 1',
+      'química exudativa',
+    ],
+  },
+  {
+    id: 'pancreaticopleural-fistula',
+    name: 'Fístula pancreaticopleural',
+    family: 'Origen abdominal',
+    summary: 'Fuga del conducto pancreático o pseudoquiste que comunica con el espacio pleural.',
+    teachingPearl:
+      'Una amilasa pleural muy alta es la pista; las punciones repetidas no resuelven la fuga del conducto.',
+    nextStep:
+      'Estudia con imagen el páncreas y la anatomía ductal; coordina el control del foco pancreático.',
+    evidence: [
+      'marco pancreático o esofágico',
+      'amilasa por encima de 100.000 U/L',
+      'química exudativa',
+    ],
+  },
+  {
+    id: 'esophageal-rupture',
+    name: 'Perforación esofágica',
+    family: 'Origen abdominal',
+    summary:
+      'Contenido esofágico que entra en el espacio pleural, a menudo hidroneumotórax izquierdo tras procedimiento o rotura.',
+    teachingPearl: 'Las partículas de alimento son un diagnóstico en un vaso.',
+    nextStep:
+      'Escala con urgencia para el control del foco quirúrgico/GI y la cobertura antimicrobiana amplia.',
+    evidence: [
+      'partículas de alimento en el líquido pleural',
+      'marco esofágico o pancreático',
+      'amilasa pleural elevada',
+      'líquido pleural marcadamente ácido',
+    ],
+  },
+  {
+    id: 'sarcoidosis-pleural-effusion',
+    name: 'Derrame pleural asociado a sarcoidosis',
+    family: 'Granulomatoso',
+    summary: 'Exudado linfocítico raro que puede parecerse a la TB.',
+    teachingPearl: 'La distinción de la TB es clínica y basada en tejido más que en la química.',
+    nextStep:
+      'Busca sarcoidosis conocida, enfermedad hiliar/mediastínica y excluye TB cuando exista riesgo.',
+    evidence: [
+      'química exudativa',
+      'predominio de linfocitos',
+      'derrame con proteína alta',
+      'ADA no fuertemente sugestiva de TB',
+    ],
+  },
+  {
+    id: 'lymphoma-effusion',
+    name: 'Linfoma / linfoma primario de cavidades',
+    family: 'Malignidad',
+    summary:
+      'Derrame maligno de predominio linfocítico; el linfoma primario de cavidades es raro y a menudo relacionado con VIH.',
+    teachingPearl:
+      'La citometría de flujo importa cuando dominan los linfocitos y la citología no es reveladora.',
+    nextStep:
+      'Envía citometría de flujo e integra síntomas sistémicos, estado de VIH, ganglios e imagen.',
+    evidence: [
+      'predominio marcado de linfocitos',
+      'marco de malignidad/síntomas sistémicos',
+      'química exudativa',
+      'prueba positiva de células malignas',
+    ],
+  },
+  {
+    id: 'peritoneal-dialysis-effusion',
+    name: 'Derrame asociado a diálisis peritoneal',
+    family: 'Origen extravascular',
+    summary: 'Movimiento de dialisado al espacio pleural a través de defectos diafragmáticos.',
+    teachingPearl: 'Una proteína muy baja más una glucosa pleural inusualmente alta es la pista.',
+    nextStep: 'Compara la glucosa pleural y sérica y evalúa la fuga de dialisado.',
+    evidence: [
+      'marco renal o de diálisis',
+      'proteína pleural muy baja',
+      'glucosa pleural muy alta',
+      'química transudativa',
+    ],
+  },
+  {
+    id: 'central-line-extravasation',
+    name: 'Extravasación de vía central',
+    family: 'Origen extravascular',
+    summary:
+      'Infusión que entra en el espacio pleural tras malposición o migración del catéter venoso central.',
+    teachingPearl:
+      'El líquido pleural puede parecerse al infundido y tener una proteína extremadamente baja.',
+    nextStep:
+      'Comprueba la posición de la vía y compara la química pleural con la solución infundida.',
+    evidence: [
+      'proteína por debajo de 1 g/dL',
+      'patrón de derrame anecoico ipsilateral',
+      'química transudativa',
+    ],
+  },
+]
+
+const pleuralDiseaseProfilesTextZhCn: readonly LocalizedProfileText[] = [
+  {
+    id: 'congestive-heart-failure',
+    name: '充血性心力衰竭',
+    family: '全身性漏出液',
+    summary: '由全身性压力生理引起的双侧或以右侧为主的积液。',
+    teachingPearl: '利尿后，CHF 可以微小差距满足 Light 标准；梯度和 NT-proBNP 可挽救判读。',
+    nextStep: '处理容量/压力生理并重新评估；仅当病史不符合该模式时才再次取样。',
+    evidence: [
+      '核对后的漏出液生化',
+      '心力衰竭或利尿的背景',
+      '双侧无回声积液',
+      'NT-proBNP 高于 1,500 pg/mL',
+      '血清-胸腔白蛋白梯度支持假性渗出液',
+      '碱性胸腔 pH',
+    ],
+  },
+  {
+    id: 'hepatic-hydrothorax',
+    name: '肝性胸水',
+    family: '全身性漏出液',
+    summary: '腹水经膈肌缺损流入胸膜腔所致的积液。',
+    teachingPearl: '腹水可能不明显；右侧或双侧无回声积液仍可符合。',
+    nextStep: '寻找肝硬化、轻微腹水和门静脉高压生理。',
+    evidence: ['肝性或全身性漏出液背景', '漏出液生化', '胸腔蛋白低', '无回声超声表现'],
+  },
+  {
+    id: 'parapneumonic-empyema',
+    name: '复杂性肺炎旁积液 / 脓胸',
+    family: '感染',
+    summary: '由肺炎引起、可能需要引流的炎性渗出液。',
+    teachingPearl: 'pH、葡萄糖、LDH、超声复杂程度和微生物学决定紧迫性。',
+    nextStep: '评估胸腔置管引流、抗生素和分隔处理策略。',
+    evidence: [
+      '肺炎或感染背景',
+      '分隔或复杂的超声表现',
+      '胸腔 pH 低于 7.2',
+      '胸腔葡萄糖低',
+      'LDH 高于 1,000 U/L',
+      '中性粒细胞为主',
+      '微生物学阳性',
+      '浑浊或脓性液体',
+    ],
+  },
+  {
+    id: 'tuberculous-pleural-effusion',
+    name: '结核性胸腔积液',
+    family: '感染',
+    summary: '以淋巴细胞为主的渗出液，流行病学改变了检查的价值。',
+    teachingPearl: 'ADA 是概率的调节因素；当怀疑持续较高时，活检和培养更重要。',
+    nextStep: '送分枝杆菌培养，并考虑胸膜活检以获取组织学和药敏。',
+    evidence: [
+      '结核暴露或流行区风险背景',
+      '渗出液生化',
+      '淋巴细胞高于 80%',
+      'ADA 高于 40 IU/L',
+      'ADA 高于 70 IU/L',
+      '间皮细胞比例低',
+      '胸腔蛋白高',
+    ],
+  },
+  {
+    id: 'malignant-pleural-effusion',
+    name: '恶性胸腔积液',
+    family: '恶性肿瘤',
+    summary: '与癌症相关的积液，有时具有迷惑性的漏出液表现。',
+    teachingPearl: '即使细胞学阴性，胸膜结节和癌症史仍使恶性肿瘤的可能性存在。',
+    nextStep: '送足量细胞学；若细胞学阴性而验前概率仍高则活检。',
+    evidence: [
+      '恶性肿瘤背景',
+      '胸膜结节或增厚',
+      '细胞学阳性',
+      '血性或血清血性液体',
+      '中度淋巴细胞为主',
+    ],
+  },
+  {
+    id: 'mesothelioma',
+    name: '间皮瘤',
+    family: '恶性肿瘤',
+    summary: '常伴胸膜增厚、结节和石棉暴露的胸膜恶性肿瘤。',
+    teachingPearl: '大量积液却无预期的纵隔移位，可符合包裹性胸膜病变。',
+    nextStep: '使用胸膜影像靶点和组织活检，而非仅依赖生化。',
+    evidence: ['恶性肿瘤或暴露背景', '胸膜结节或增厚', '血性或血清血性液体', '渗出液生化'],
+  },
+  {
+    id: 'pulmonary-embolism',
+    name: '肺栓塞',
+    family: '血管性',
+    summary: '常为小量、单侧，有时为血性或血清血性。',
+    teachingPearl: '在已证实 PE 的情况下，小的同侧积液可能不需要诊断性胸腔穿刺。',
+    nextStep: '让 PE 概率和影像主导处理；若积液不典型则取样。',
+    evidence: ['血性或血清血性液体', '渗出液生化', '小量或单侧积液的表现'],
+  },
+  {
+    id: 'rheumatoid-pleural-effusion',
+    name: '类风湿性胸腔积液',
+    family: '自身免疫',
+    summary: '可在生化上类似感染的自身免疫性胸膜炎。',
+    teachingPearl: '极低的葡萄糖和低 pH 可能看起来像脓胸；关节/全身病史很重要。',
+    nextStep: '结合血清学、关节表现、影像和阴性微生物学加以核对。',
+    evidence: [
+      '自身免疫背景',
+      '胸腔葡萄糖极低',
+      '胸腔 pH 低',
+      'LDH 高',
+      '以淋巴细胞为主或混合性炎症',
+    ],
+  },
+  {
+    id: 'lupus-pleuritis',
+    name: '狼疮性胸膜炎',
+    family: '自身免疫',
+    summary: '与 SLE 相关的炎性积液，有时 pH 和葡萄糖偏低。',
+    teachingPearl: '与类风湿病相似，狼疮性胸膜炎可模仿感染。',
+    nextStep: '整合全身性狼疮活动度、血清学、补体和感染的排除。',
+    evidence: ['自身免疫背景', '渗出液生化', '胸腔 pH 低', '炎性有核细胞计数'],
+  },
+  {
+    id: 'chylothorax',
+    name: '乳糜胸',
+    family: '淋巴 / 脂质',
+    summary: '由淋巴管破坏或梗阻导致乳糜进入胸膜腔。',
+    teachingPearl: '外观有帮助，但甘油三酯和乳糜微粒才能确诊。',
+    nextStep: '寻找创伤、胸外科手术、淋巴瘤、淋巴系统疾病或肝硬化。',
+    evidence: [
+      '乳白或浑浊液体',
+      '甘油三酯高于 110 mg/dL',
+      '存在乳糜微粒',
+      '淋巴细胞为主',
+      '淋巴或术后背景',
+    ],
+  },
+  {
+    id: 'yellow-nail-syndrome',
+    name: '黄甲综合征',
+    family: '淋巴 / 脂质',
+    summary: '与黄色营养不良性指甲、淋巴水肿、支气管扩张和胸腔积液相关的淋巴系统疾病。',
+    teachingPearl: '床旁线索即诊断：指甲改变加淋巴水肿可解释淋巴细胞性积液。',
+    nextStep: '寻找生长缓慢的营养不良性指甲、淋巴水肿、慢性呼吸道疾病和复发性积液。',
+    evidence: [
+      '淋巴或黄甲表型背景',
+      '淋巴细胞为主',
+      '浆液性或带脂质色调的液体',
+      '反复出现的无回声积液表现',
+    ],
+  },
+  {
+    id: 'pseudochylothorax',
+    name: '假性乳糜胸 / 胆固醇性积液',
+    family: '淋巴 / 脂质',
+    summary: '富含胆固醇的慢性积液，典型见于结核或类风湿性胸膜炎之后。',
+    teachingPearl: '乳白色液体并不总是乳糜；胆固醇高于 250 mg/dL 会改变分支。',
+    nextStep: '检查胆固醇和慢性胸膜病史，尤其是结核或类风湿病。',
+    evidence: ['乳白或浑浊液体', '胆固醇高于 250 mg/dL', '慢性结核或类风湿背景'],
+  },
+  {
+    id: 'trapped-lung',
+    name: '被困肺',
+    family: '机械性 / 慢性',
+    summary: '由不可复张肺的生理导致的慢性稳定积液。',
+    teachingPearl: '生化可平淡或蛋白不一致；关键在于慢性病程和胸膜力学。',
+    nextStep: '在反复引流前，使用影像、可行时的测压和症状走向。',
+    evidence: ['漏出性或平淡的生化', '以淋巴细胞为主的慢性特征', '单侧、外观慢性的积液'],
+  },
+  {
+    id: 'post-cabg-pcis',
+    name: 'CABG 术后 / 心脏损伤后综合征',
+    family: '术后',
+    summary: '心脏术后由手术创伤、淋巴损伤、CHF 或免疫性胸膜心包炎引起的积液。',
+    teachingPearl: 'CABG 术后积液可为血性、淋巴细胞性或假性渗出性，取决于时机和机制。',
+    nextStep: '利用术后时间、心包表现、发热和侧别来梳理机制。',
+    evidence: ['术后背景', '术后血性或浆液性液体', '淋巴细胞为主', 'CABG 术后可出现假性渗出液梯度'],
+  },
+  {
+    id: 'uremic-pleuritis',
+    name: '尿毒症性胸膜炎',
+    family: '全身性炎症',
+    summary: '晚期肾病中的炎性积液。',
+    teachingPearl: '肾衰竭既可产生全身性漏出液，也可产生尿毒症性渗出性胸膜炎。',
+    nextStep: '结合肾功能走向、透析状态和感染的排除加以核对。',
+    evidence: ['肾/全身性背景', '渗出液生化', '淋巴细胞性炎症特征'],
+  },
+  {
+    id: 'drug-induced-pleural-effusion',
+    name: '药物性胸腔积液',
+    family: '药物 / 免疫',
+    summary: '与药物相关的积液，包括达沙替尼、免疫检查点抑制剂和药物性狼疮。',
+    teachingPearl: '时间关系可能延迟；嗜酸性粒细胞增多有帮助但非必需。',
+    nextStep: '审查用药时间线，寻找外周或胸腔嗜酸性粒细胞增多。',
+    evidence: ['免疫/药物样背景', '胸腔嗜酸性粒细胞增多', '淋巴细胞为主'],
+  },
+  {
+    id: 'benign-asbestos-pleural-effusion',
+    name: '良性石棉性胸腔积液',
+    family: '职业性',
+    summary: '与石棉相关的积液，可为出血性和嗜酸性。',
+    teachingPearl: '这是依靠背景和排除的诊断；恶性肿瘤必须始终在视野内。',
+    nextStep: '询问职业暴露，并评估胸膜斑块、增厚和恶性风险。',
+    evidence: ['血性或血清血性液体', '胸腔嗜酸性粒细胞增多', '渗出液生化'],
+  },
+  {
+    id: 'hemothorax',
+    name: '血胸',
+    family: '血液 / 创伤',
+    summary: '胸膜腔内积血，通常与创伤、操作、恶性肿瘤或抗凝相关。',
+    teachingPearl: '定义为胸腔积液血细胞比容高于血液血细胞比容的 50%。',
+    nextStep: '升级引流和源头控制评估。',
+    evidence: [
+      '创伤或抗凝背景',
+      '大体血性液体',
+      '超声血细胞比容征',
+      '积液/血液血细胞比容比值高于 0.5',
+    ],
+  },
+  {
+    id: 'urinothorax',
+    name: '尿胸',
+    family: '血管外来源',
+    summary: '尿液因梗阻性尿路病变或尿路损伤进入胸膜腔。',
+    teachingPearl: '低 pH 的漏出液并不常见；肌酐比值和尿味是关键分支。',
+    nextStep: '评估尿路梗阻或损伤；纠正源头，否则会复发。',
+    evidence: ['尿味', '积液/血清肌酐比值高于 1', '蛋白极低的胸腔积液', '尽管为漏出性但 pH 低'],
+  },
+  {
+    id: 'bilothorax',
+    name: '胆汁胸',
+    family: '血管外来源',
+    summary: '胆道病变或肝胆手术后胆汁进入胸膜腔。',
+    teachingPearl: '绿色液体是线索；积液/血清胆红素比值高于 1 具有决定性。',
+    nextStep: '查找胆道来源并协调源头控制。',
+    evidence: ['绿色胸腔积液', '积液/血清胆红素比值高于 1', '渗出液生化'],
+  },
+  {
+    id: 'pancreaticopleural-fistula',
+    name: '胰源性胸膜瘘',
+    family: '腹腔来源',
+    summary: '胰管漏或假性囊肿与胸膜腔相通。',
+    teachingPearl: '胸腔淀粉酶极高是线索；反复穿刺无法解决胰管漏。',
+    nextStep: '对胰腺及胰管解剖进行影像检查；协调胰腺源头控制。',
+    evidence: ['胰腺或食管背景', '淀粉酶高于 100,000 U/L', '渗出液生化'],
+  },
+  {
+    id: 'esophageal-rupture',
+    name: '食管穿孔',
+    family: '腹腔来源',
+    summary: '食管内容物进入胸膜腔，常为操作或破裂后的左侧液气胸。',
+    teachingPearl: '食物颗粒就是装在杯子里的诊断。',
+    nextStep: '紧急升级以进行外科/消化道源头控制和广谱抗菌覆盖。',
+    evidence: ['胸腔积液中的食物颗粒', '食管或胰腺背景', '胸腔淀粉酶升高', '明显酸性的胸腔积液'],
+  },
+  {
+    id: 'sarcoidosis-pleural-effusion',
+    name: '结节病相关胸腔积液',
+    family: '肉芽肿性',
+    summary: '可类似结核的罕见淋巴细胞性渗出液。',
+    teachingPearl: '与结核的区分更多依靠临床和组织，而非生化。',
+    nextStep: '寻找已知的结节病、肺门/纵隔病变，并在有风险时排除结核。',
+    evidence: ['渗出液生化', '淋巴细胞为主', '高蛋白积液', 'ADA 不强烈支持结核'],
+  },
+  {
+    id: 'lymphoma-effusion',
+    name: '淋巴瘤 / 原发性渗出性淋巴瘤',
+    family: '恶性肿瘤',
+    summary: '以淋巴细胞为主的恶性积液；原发性渗出性淋巴瘤罕见，常与 HIV 相关。',
+    teachingPearl: '当淋巴细胞占优而细胞学无阳性发现时，流式细胞术很重要。',
+    nextStep: '送流式细胞术，并整合全身症状、HIV 状态、淋巴结和影像。',
+    evidence: ['淋巴细胞明显占优', '恶性肿瘤/全身症状背景', '渗出液生化', '恶性细胞检测阳性'],
+  },
+  {
+    id: 'peritoneal-dialysis-effusion',
+    name: '腹膜透析相关积液',
+    family: '血管外来源',
+    summary: '透析液经膈肌缺损进入胸膜腔。',
+    teachingPearl: '蛋白极低加上异常高的胸腔葡萄糖是线索。',
+    nextStep: '比较胸腔和血清葡萄糖，并评估透析液渗漏。',
+    evidence: ['肾或透析背景', '胸腔蛋白极低', '胸腔葡萄糖极高', '漏出液生化'],
+  },
+  {
+    id: 'central-line-extravasation',
+    name: '中心静脉导管外渗',
+    family: '血管外来源',
+    summary: '中心静脉导管位置不当或移位后，输注液进入胸膜腔。',
+    teachingPearl: '胸腔积液可类似输注液，并具有极低的蛋白。',
+    nextStep: '检查导管位置，并将胸腔生化与输注溶液进行比较。',
+    evidence: ['蛋白低于 1 g/dL', '同侧无回声积液表现', '漏出液生化'],
+  },
+]
+
+const pleuralDiseaseProfilesEs = buildLocalizedProfiles(pleuralDiseaseProfilesTextEs)
+const pleuralDiseaseProfilesZhCn = buildLocalizedProfiles(pleuralDiseaseProfilesTextZhCn)
+
+export function getPleuralDiseaseProfiles(locale: string): readonly DiseaseProfile[] {
+  return pickLocaleContent(locale, {
+    en: pleuralDiseaseProfiles,
+    es: pleuralDiseaseProfilesEs,
+    'zh-CN': pleuralDiseaseProfilesZhCn,
+  })
+}

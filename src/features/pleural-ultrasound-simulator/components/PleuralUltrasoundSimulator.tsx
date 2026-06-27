@@ -21,6 +21,7 @@ import { CaseObjectives } from './CaseObjectives'
 import { PleuralScene3D } from './PleuralScene3D'
 import { ProbeControls } from './ProbeControls'
 import { UltrasoundCanvas } from './UltrasoundCanvas'
+import { HandoffContent } from '@/i18n/handoff'
 
 const patternOptions: { id: EffusionPattern; label: string }[] = [
   { id: 'simpleAnechoic', label: 'Simple anechoic' },
@@ -139,63 +140,75 @@ export function PleuralUltrasoundSimulator() {
 
   if (error) {
     return (
-      <section className="container">
-        <Callout variant="warning" title="Simulator assets could not load">
-          {error}
-        </Callout>
-      </section>
+      <HandoffContent>
+        {
+          <section className="container">
+            <Callout variant="warning" title="Simulator assets could not load">
+              {error}
+            </Callout>
+          </section>
+        }
+      </HandoffContent>
     )
   }
 
   if (!caseData || !probe) {
     return (
-      <section className="container">
-        <div className="flex min-h-[28rem] items-center justify-center rounded-lg border border-border/80 bg-card text-sm text-muted-foreground">
-          Loading pleural simulator case...
-        </div>
-      </section>
+      <HandoffContent>
+        {
+          <section className="container">
+            <div className="flex min-h-[28rem] items-center justify-center rounded-lg border border-border/80 bg-card text-sm text-muted-foreground">
+              Loading pleural simulator case...
+            </div>
+          </section>
+        }
+      </HandoffContent>
     )
   }
 
   return (
-    <section className="container space-y-6">
-      <Callout variant="warning" title="Educational simulation only">
-        {caseData.safetyLabel} The image is synthetic and should not be used for diagnosis,
-        treatment, or real procedure guidance.
-      </Callout>
+    <HandoffContent>
+      {
+        <section className="container space-y-6">
+          <Callout variant="warning" title="Educational simulation only">
+            {caseData.safetyLabel} The image is synthetic and should not be used for diagnosis,
+            treatment, or real procedure guidance.
+          </Callout>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(24rem,0.9fr)]">
-        <div className="space-y-6">
-          <PleuralScene3D
-            caseData={caseData}
-            probe={probe}
-            needleUnsafe={!(score?.needleTrajectorySafe ?? false)}
-          />
-          <ProbeControls caseData={caseData} probe={probe} onChange={setProbe} />
-        </div>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(24rem,0.9fr)]">
+            <div className="space-y-6">
+              <PleuralScene3D
+                caseData={caseData}
+                probe={probe}
+                needleUnsafe={!(score?.needleTrajectorySafe ?? false)}
+              />
+              <ProbeControls caseData={caseData} probe={probe} onChange={setProbe} />
+            </div>
 
-        <div className="space-y-6">
-          <UltrasoundCanvas
-            frame={frame}
-            atlasFrame={atlasSelection?.entry ?? null}
-            depthCm={probe.depthCm}
-          />
-          <CaseObjectives caseData={caseData} metrics={activeMetrics} score={score} />
-          <PatternClassifier
-            answer={answer}
-            revealed={revealed}
-            onAnswer={(next) => {
-              setAnswer(next)
-              setRevealed(false)
-            }}
-            onReveal={() => setRevealed(true)}
-            classification={classification}
-            groundTruth={activeGroundTruth ?? caseData.groundTruthPattern}
-            score={score}
-          />
-        </div>
-      </div>
-    </section>
+            <div className="space-y-6">
+              <UltrasoundCanvas
+                frame={frame}
+                atlasFrame={atlasSelection?.entry ?? null}
+                depthCm={probe.depthCm}
+              />
+              <CaseObjectives caseData={caseData} metrics={activeMetrics} score={score} />
+              <PatternClassifier
+                answer={answer}
+                revealed={revealed}
+                onAnswer={(next) => {
+                  setAnswer(next)
+                  setRevealed(false)
+                }}
+                onReveal={() => setRevealed(true)}
+                classification={classification}
+                groundTruth={activeGroundTruth ?? caseData.groundTruthPattern}
+                score={score}
+              />
+            </div>
+          </div>
+        </section>
+      }
+    </HandoffContent>
   )
 }
 
@@ -219,59 +232,65 @@ function PatternClassifier({
   score,
 }: PatternClassifierProps) {
   return (
-    <article className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Pattern classification</h3>
-          <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            Classify the current synthetic window, then compare it with the case target.
-          </p>
-        </div>
-        <Badge variant={score?.patternClassificationCorrect ? 'success' : 'outline'}>
-          {score?.patternClassificationCorrect ? 'Matched' : 'Unscored'}
-        </Badge>
-      </div>
+    <HandoffContent>
+      {
+        <article className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Pattern classification</h3>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                Classify the current synthetic window, then compare it with the case target.
+              </p>
+            </div>
+            <Badge variant={score?.patternClassificationCorrect ? 'success' : 'outline'}>
+              {score?.patternClassificationCorrect ? 'Matched' : 'Unscored'}
+            </Badge>
+          </div>
 
-      <fieldset className="mt-4 grid gap-2 sm:grid-cols-2">
-        <legend className="sr-only">Pleural ultrasound pattern</legend>
-        {patternOptions.map((option) => (
-          <button
-            key={option.id}
+          <fieldset className="mt-4 grid gap-2 sm:grid-cols-2">
+            <legend className="sr-only">Pleural ultrasound pattern</legend>
+            {patternOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                aria-pressed={answer === option.id}
+                onClick={() => onAnswer(option.id)}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10"
+              >
+                {option.label}
+              </button>
+            ))}
+          </fieldset>
+
+          <Button
             type="button"
-            aria-pressed={answer === option.id}
-            onClick={() => onAnswer(option.id)}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10"
+            className="mt-4"
+            variant="outline"
+            disabled={!answer}
+            onClick={onReveal}
           >
-            {option.label}
-          </button>
-        ))}
-      </fieldset>
+            Check classification
+          </Button>
 
-      <Button
-        type="button"
-        className="mt-4"
-        variant="outline"
-        disabled={!answer}
-        onClick={onReveal}
-      >
-        Check classification
-      </Button>
-
-      {revealed && classification ? (
-        <div
-          className={
-            classification.correct
-              ? 'mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm leading-6 text-emerald-900 dark:text-emerald-100'
-              : 'mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-6 text-amber-900 dark:text-amber-100'
-          }
-        >
-          <p className="font-semibold">
-            {classification.correct ? 'Correct' : 'Compare the pattern'}
-          </p>
-          <p className="mt-2">{classification.teachingPoint}</p>
-          <p className="mt-2 font-medium">{describeManagement(patternToManagement[groundTruth])}</p>
-        </div>
-      ) : null}
-    </article>
+          {revealed && classification ? (
+            <div
+              className={
+                classification.correct
+                  ? 'mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm leading-6 text-emerald-900 dark:text-emerald-100'
+                  : 'mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-6 text-amber-900 dark:text-amber-100'
+              }
+            >
+              <p className="font-semibold">
+                {classification.correct ? 'Correct' : 'Compare the pattern'}
+              </p>
+              <p className="mt-2">{classification.teachingPoint}</p>
+              <p className="mt-2 font-medium">
+                {describeManagement(patternToManagement[groundTruth])}
+              </p>
+            </div>
+          ) : null}
+        </article>
+      }
+    </HandoffContent>
   )
 }

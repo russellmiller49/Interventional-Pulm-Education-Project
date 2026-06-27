@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broncoscopia en pacientes de alto riesgo y complicaciones</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: #fdfdfd; }
+h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+h2 { color: #2c3e50; border-bottom: 2px solid #eaeaea; padding-bottom: 10px; margin-top: 50px; }
+h3 { color: #2980b9; margin-top: 40px; font-weight: 600; }
+h4 { color: #555; margin-top: 25px; font-weight: 600; text-transform: uppercase; font-size: 0.95em; letter-spacing: 0.5px; }
+p, ul, ol { margin-bottom: 16px; }
+ul, ol { padding-left: 25px; }
+li { margin-bottom: 8px; }
+strong { color: #2c3e50; font-weight: 700; }
+hr { border: 0; height: 1px; background: #e1e4e8; margin: 50px 0; }
+table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.95em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+th, td { border: 1px solid #e1e4e8; padding: 12px 15px; text-align: left; vertical-align: top; }
+th { background-color: #f1f8ff; color: #2c3e50; font-weight: 700; }
+tr:nth-child(even) { background-color: #fbfbfb; }
+.algorithm-note { background-color: #eef6fc; padding: 20px; border-radius: 6px; border-left: 5px solid #3498db; margin: 25px 0; }
+.case-study { background-color: #fff8e1; padding: 20px; border-radius: 6px; border-left: 5px solid #ffc107; margin: 20px 0; }
+.mermaid { background: white; padding: 20px; margin: 30px 0; text-align: center; border: 1px solid #e1e4e8; border-radius: 8px; }
+.abbreviations dl { display: grid; grid-template-columns: max-content auto; gap: 10px 20px; font-size: 0.95em; }
+.abbreviations dt { font-weight: bold; color: #2c3e50; }
+.abbreviations dd { margin: 0; }
+.references ol { padding-left: 20px; font-size: 0.9em; color: #555; }
+@media (max-width: 600px) { body { padding: 15px; } th, td { display: block; width: 100%; box-sizing: border-box; } tr { margin-bottom: 15px; display: block; border-bottom: 2px solid #ddd; } .abbreviations dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Broncoscopia en pacientes de alto riesgo y complicaciones de la broncoscopia</h1>
+
+<h3>Correspondencia con el examen y alcance</h3>
+<p>Los dominios incluyen evaluación perioperatoria del riesgo, sedación y monitorización, poblaciones especiales —embarazo e hipertensión pulmonar— y reconocimiento y tratamiento de las complicaciones broncoscópicas: sangrado, hipoxemia, arritmias, neumotórax, fiebre o infección y broncoespasmo.</p>
+
+<hr>
+
+<h3>Objetivos de aprendizaje</h3>
+<ul>
+    <li>Diferenciar complicaciones menores y mayores y conocer tasas realistas para preguntas de examen.</li>
+    <li>Estratificar el riesgo hemorrágico según paciente, procedimiento, hemostasia y tejido, y aplicar intervalos prácticos para suspender y reiniciar antitrombóticos.</li>
+    <li>Ejecutar un algoritmo escalonado de control del sangrado intraprocedimiento e identificar cuándo pasar a broncoscopia rígida o embolización.</li>
+    <li>Prevenir, detectar y tratar hipoxemia, laringoespasmo o broncoespasmo, eventos relacionados con sedación, neumotórax y fiebre o infección posterior.</li>
+    <li>Adaptar la práctica al embarazo y a la hipertensión pulmonar, incluidas consideraciones de vía aérea, hemodinámica y medicación.</li>
+</ul>
+
+<hr>
+
+<h3>Resumen de alto rendimiento</h3>
+
+<h4>Cifras que debe conocer</h4>
+<ul>
+    <li><strong>Tasa global de complicaciones:</strong> alrededor del 1 % en grandes cohortes; mortalidad ~0,02 %.</li>
+    <li><strong>Sangrado:</strong> global ~0,3–5 %; el sangrado grave es infrecuente, cerca de 0,3 %.</li>
+    <li><strong>Neumotórax:</strong> ~0,1–0,8 % global; aumenta a ~11 % tras biopsia pulmonar transbronquial con pinza y ~5 % con criobiopsia en enfermedad intersticial.</li>
+    <li><strong>Fiebre postbroncoscopia:</strong> ~5–16 % después de lavado broncoalveolar; suele ser una respuesta estéril de citocinas.</li>
+</ul>
+
+<h4>Perlas y dificultades</h4>
+<ul>
+    <li><strong>Clasificación del sangrado:</strong> Clasifique por la intervención necesaria, no por el volumen estimado.</li>
+    <li><strong>Antitrombóticos:</strong> La aspirina suele continuarse; clopidogrel aumenta el sangrado en biopsias. EBUS-TBNA bajo clopidogrel no ha mostrado de forma consistente un exceso de sangrado.</li>
+    <li><strong>Reducción de hipoxemia:</strong> SpO₂ continua; administre oxígeno si cae &gt;4 % durante &gt;1 minuto o a &lt;90 %. La cánula nasal de alto flujo reduce desaturaciones durante broncoscopia sedada.</li>
+    <li><strong>Sedación consciente o moderada:</strong> Midazolam 1–2 mg IV, luego 0,5–1 mg; fentanilo 25–50 µg IV titulado. Reversión: flumazenilo 0,2 mg, luego 0,1 mg/min hasta 1 mg; naloxona desde 0,04 mg, repetida cada 2–5 minutos, hasta aproximadamente 0,01 mg/kg.</li>
+    <li><strong>Embarazo:</strong> Anticipe vía aérea difícil; evite la vía nasal; coloque cuña bajo cadera derecha para desplazar útero a la izquierda; minimice hipercapnia; use la menor dosis eficaz de lidocaína; planifique multidisciplinariamente.</li>
+    <li><strong>Hipertensión pulmonar:</strong> No está claro que aumente el sangrado de biopsia transbronquial, pero son más probables hipoxemia y ventilación mecánica prolongada. Evite factores que aumentan la resistencia vascular pulmonar —hipoxemia, hipercapnia, dolor o ansiedad— y mantenga la precarga.</li>
+</ul>
+
+<div class="algorithm-note">
+    <strong>Secuencia para sangrado:</strong> Mantenga el broncoscopio dentro → aspire y visualice → pulmón sangrante hacia abajo → suero salino frío → vasoconstrictor tópico, epinefrina o ácido tranexámico → bloqueo con balón → selladores o tapones → asegure pronto la vía aérea → escale a broncoscopia rígida o embolización cuando corresponda.
+</div>
+
+<hr>
+
+<h3>Conceptos fundamentales</h3>
+
+<h4>Fisiopatología y epidemiología</h4>
+<p>Las complicaciones van desde menores —epistaxis, fiebre, arritmias leves y sangrado limitado— hasta mayores —neumonía, neumotórax significativo, insuficiencia respiratoria y hemorragia potencialmente mortal—. La hipoxemia surge por reducción del calibre de vía aérea causada por el broncoscopio, desequilibrio ventilación-perfusión tras anestésico tópico, suero o lavado, atelectasia transitoria y broncoconstricción. Las arritmias suelen ser benignas y relacionarse con hipoxemia, tono vagal o fármacos estimulantes; las taquiarritmias mayores son infrecuentes.</p>
+<p>En el embarazo, el edema mucoso, la hiperplasia glandular y el mayor reflujo elevan el riesgo de aspiración y vía aérea difícil. El aumento del volumen sanguíneo y del gasto cardíaco, y la compresión de la vena cava inferior al final de la gestación, predisponen a hipotensión supina. En hipertensión pulmonar, la descompensación se debe al aumento de resistencia vascular pulmonar por hipoxemia, hipercapnia, dolor, ansiedad o reducción de precarga por vasodilatación de la inducción o pérdida sanguínea.</p>
+
+<h4>Indicaciones y contraindicaciones</h4>
+<p>La edad por sí sola no es contraindicación. La broncoscopia puede realizarse durante el embarazo y en hipertensión pulmonar cuando el beneficio supera el riesgo y existen salvaguardas adecuadas. Los datos disponibles no muestran aumento constante del sangrado de biopsia transbronquial en hipertensión pulmonar, aunque el riesgo de oxigenación y ventilación es mayor. En el embarazo, las decisiones deben ser multidisciplinarias y adaptarse a urgencia, alternativas y estrategia de vía aérea.</p>
+
+<hr>
+
+<h3>Evaluación preprocedimiento</h3>
+
+<h4>Estratificación del riesgo hemorrágico</h4>
+<ul>
+    <li><strong>Factores del paciente:</strong> Cáncer de pulmón, trasplante e inmunosupresión; riesgo variable o controvertido con hipertensión pulmonar.</li>
+    <li><strong>Factores del procedimiento:</strong> Biopsia transbronquial y criobiopsia tienen más riesgo que EBUS, lavado o cepillado.</li>
+    <li><strong>Factores hemostáticos:</strong> Uremia, hepatopatía y antitrombóticos; las pruebas de coagulación aisladas predicen mal.</li>
+    <li><strong>Factores tisulares:</strong> Carcinoide, metástasis renal o tiroidea, amiloide, antracosis y lesiones de Dieulafoy bronquial son muy vasculares.</li>
+</ul>
+
+<h4>Umbrales de laboratorio pragmáticos</h4>
+<ul>
+    <li><strong>Lavado broncoalveolar:</strong> Suele aceptarse con plaquetas ≥20 × 10³/µL.</li>
+    <li><strong>Biopsia endobronquial o transbronquial:</strong> Generalmente con plaquetas ≥50 × 10³/µL.</li>
+</ul>
+
+<h4>Antitrombóticos: intervalos habituales para broncoscopia diagnóstica</h4>
+<ul>
+    <li><strong>Warfarina:</strong> Suspender ~5 días, con INR &lt;1,5 el día del procedimiento; reiniciar esa noche si es seguro.</li>
+    <li><strong>Anticoagulantes orales directos:</strong> Suspender ~24–48 horas; ampliar si hay disfunción renal, especialmente dabigatrán.</li>
+    <li><strong>Clopidogrel:</strong> Suspender ~5–7 días para biopsias; EBUS-TBNA puede realizarse en situaciones seleccionadas.</li>
+    <li><strong>Aspirina:</strong> Generalmente se continúa.</li>
+    <li><strong>Heparina de bajo peso molecular o fondaparinux:</strong> Suspensiones más breves; consulte la tabla 2.</li>
+</ul>
+
+<h4>Planificación durante el embarazo</h4>
+<p>Evite la vía nasal; aplique ayuno y precauciones de aspiración; coloque cuña bajo la cadera derecha o posición semisentada; use la menor dosis eficaz de lidocaína; discuta monitorización fetal y planes de emergencia.</p>
+
+<h4>Planificación en hipertensión pulmonar</h4>
+<p>Continúe los tratamientos específicos —por ejemplo, sildenafil o análogos inhalados de prostaciclina—. Evite hipoxemia, hipercapnia, dolor, ansiedad y reducción brusca de precarga. Favorezca técnica delicada con anestesia tópica suficiente.</p>
+
+<hr>
+
+<h3>Equipo y preparación</h3>
+<ul>
+    <li><strong>Herramientas:</strong> Broncoscopio de canal amplio; aspiración potente; suero salino frío; vasoconstrictores tópicos —epinefrina, ácido tranexámico—; análogos de vasopresina cuando corresponda; balones bloqueadores; sellador de fibrina o tapones de silicona; herramientas térmicas —plasma de argón, láser y electrocauterio monopolar— en casos seleccionados.</li>
+    <li><strong>Monitorización:</strong> SpO₂ y ECG continuos durante y después; considere cánula nasal de alto flujo en quienes se desaturan con facilidad.</li>
+</ul>
+
+<hr>
+
+<h3>Técnica paso a paso y lista de verificación</h3>
+<ul>
+    <li><strong>Reunión del equipo:</strong> Indicación, alternativas, plan antitrombótico, estrategia de vía aérea y respaldo —broncoscopia rígida, UCI, embolización de arteria bronquial—.</li>
+    <li><strong>Sedación:</strong> Titule midazolam y fentanilo; evite bolos grandes. Si usa propofol, se recomienda apoyo de anestesia. Tenga preparados los antagonistas.</li>
+    <li><strong>Oxigenación:</strong> Inicie oxígeno suplementario en pacientes de alto riesgo; use alto flujo en quienes tienden a desaturarse.</li>
+    <li><strong>Embarazo:</strong> Evite vía nasal, coloque cuña derecha, minimice hipercapnia y planifique riesgo de aspiración y vía difícil.</li>
+    <li><strong>Hipertensión pulmonar:</strong> Continúe medicación, evite aumento de resistencia vascular pulmonar, mantenga precarga e instrumente con delicadeza.</li>
+</ul>
+
+<hr>
+
+<h3>Resolución de problemas y manejo intraprocedimiento</h3>
+<ul>
+    <li><strong>Sangrado:</strong> Mantenga el broncoscopio dentro, aspire para visualizar, coloque el pulmón sangrante hacia abajo, instile suero salino a 4 °C, aplique epinefrina tópica —dilución habitual 1:10.000 a 1:100.000; muchos operadores limitan la dosis endobronquial acumulada a ~0,6 mg— o ácido tranexámico —p. ej., 250 mg diluidos, 1–3 alícuotas—. Escale a balón, sellador de fibrina o tapón de silicona y broncoscopia rígida o embolización.</li>
+    <li><strong>Hipoxemia:</strong> Aumente FiO₂, pause las instilaciones, aspire secreciones o sangre y use alto flujo o ventilación no invasiva si es necesario.</li>
+    <li><strong>Arritmias:</strong> Suelen ser benignas; trate desencadenantes como hipoxemia o dolor y mantenga ECG.</li>
+    <li><strong>Laringoespasmo:</strong> Prevenga con lidocaína tópica adecuada antes de pasar las cuerdas; trate con oxígeno, elevación mandibular, presión positiva y mayor profundidad anestésica si es necesario.</li>
+    <li><strong>Problemas de sedación:</strong> Tenga flumazenilo y naloxona de inmediato; reconozca rigidez de pared torácica por fentanilo y apoye la ventilación mientras revierte.</li>
+</ul>
+
+<hr>
+
+<h3>Cuidados y seguimiento después del procedimiento</h3>
+<ul>
+    <li><strong>Recuperación:</strong> Vigile 2–4 horas en área dotada: SpO₂ hasta basal, dolor torácico o desaturación, temperatura, permeabilidad de vía aérea o broncoespasmo y conciencia. Mantenga ayuno hasta recuperar el reflejo tusígeno, aproximadamente 2 horas.</li>
+    <li><strong>Imagen:</strong> Si hay síntomas de neumotórax, obtenga radiografía o ecografía pulmonar. Neumotórax pequeños, &lt;20 %, pueden observarse; grandes o inestables requieren drenaje.</li>
+</ul>
+
+<hr>
+
+<h3>Complicaciones: prevención, reconocimiento y tratamiento</h3>
+
+<h4>Sangrado</h4>
+<p>El riesgo es mayor en tumores vasculares y biopsia transbronquial o criobiopsia. La epinefrina profiláctica antes de biopsia en ciertas poblaciones trasplantadas reduce sangrado grave. Considere broncoscopia rígida inicial en tumores endobronquiales centrales muy vasculares; las modalidades térmicas pueden ayudar a hemostasia.</p>
+
+<h4>Neumotórax</h4>
+<p>Evite biopsia transbronquial bilateral en la misma sesión; en sarcoidosis, las pinzas tipo alligator pueden ser preferibles a las de copa; la fluoroscopia mejora localización y rendimiento, pero no reduce claramente el neumotórax. No se requiere radiografía inmediata rutinaria; observe ≥2 horas porque puede ser tardío.</p>
+
+<h4>Infección y fiebre postbroncoscopia</h4>
+<p>La fiebre tras lavado es frecuente y suele ser estéril. Los antibióticos profilácticos no la reducen. La procalcitonina puede ayudar a diferenciar infección bacteriana. La bacteriemia real ocurre en una minoría; son habituales estafilococos y estreptococos.</p>
+
+<h4>Broncoespasmo</h4>
+<p>Fue el evento de vía aérea potencialmente mortal más frecuente en encuestas antiguas. Los broncodilatadores rutinarios antes del procedimiento no han demostrado beneficio claro en EPOC o asma; optimice el control basal.</p>
+
+<hr>
+
+<h3>Poblaciones especiales</h3>
+
+<h4>Embarazo</h4>
+<ul>
+    <li>Anticipe vía aérea difícil y mayor riesgo de aspiración; evite la vía nasal; use cuña bajo cadera derecha para desplazamiento uterino izquierdo; minimice hipercapnia; use la menor dosis eficaz de lidocaína.</li>
+    <li>La epinefrina endobronquial plantea una preocupación teórica por reducción del flujo uterino; pruebe primero medidas más seguras y valore riesgo-beneficio.</li>
+    <li>Las herramientas térmicas no se han estudiado, pero pueden usarse si son necesarias ante obstrucción potencialmente mortal; coloque correctamente la placa dispersiva y coordine con obstetricia.</li>
+    <li>Es esencial la coordinación entre NI, anestesia, obstetricia y equipo remitente.</li>
+</ul>
+
+<h4>Hipertensión pulmonar</h4>
+<ul>
+    <li>No existe aumento consistente del sangrado de biopsia transbronquial; sí mayor riesgo de hipoxemia perioperatoria y ventilación prolongada.</li>
+    <li>Prevenga descompensación evitando hipoxemia e hipercapnia, tratando dolor y ansiedad, reduciendo trauma y manteniendo precarga. Continúe tratamientos específicos salvo contraindicación.</li>
+</ul>
+
+<hr>
+
+<h3>Evidencia y resultados</h3>
+<p>Las clasificaciones del sangrado basadas en intervenciones ofrecen desencadenantes reproducibles para escalar. El alto flujo reduce episodios de hipoxemia. En hipertensión pulmonar, el sangrado tras biopsia no está claramente aumentado, pero las complicaciones de oxigenación y ventilación son más frecuentes y deben guiar la planificación.</p>
+
+<hr>
+
+<h3>Algoritmos diagnósticos y terapéuticos</h3>
+
+<h4>A. Control del sangrado intraprocedimiento durante broncoscopia flexible</h4>
+<div class="mermaid">
+graph TD
+    A["Se observa sangrado"] --> B["Mantener broncoscopio; aspirar y visualizar"]
+    B --> C["Pulmón sangrante hacia abajo; enclavar si es periférico"]
+    C --> D["Alícuotas de suero a 4 °C"]
+    D --> E{"¿Controlado?"}
+    E -- "Sí" --> Z["Continuar y observar"]
+    E -- "No" --> F["Vasoconstrictor tópico: epinefrina 1:10.000–1:100.000 o TXA 250 mg diluido"]
+    F --> G{"¿Controlado?"}
+    G -- "Sí" --> Z
+    G -- "No" --> H["Balón de taponamiento/aislar segmento"]
+    H --> I{"¿Controlado?"}
+    I -- "Sí" --> Z
+    I -- "No" --> J["Sellador de fibrina o tapón de silicona"]
+    J --> K{"¿Controlado?"}
+    K -- "Sí" --> Z
+    K -- "No" --> L["Intubar; considerar broncoscopia rígida y embolización"]
+</div>
+<div class="algorithm-note"><strong>Pasos rápidos paralelos:</strong> No retire el broncoscopio → aspire y lateralice → suero frío → vasoconstrictor → balón → sellador o tapón → asegure vía aérea → rígida o embolización.</div>
+
+<h4>B. Triaje prebroncoscopia en pacientes de alto riesgo</h4>
+<div class="mermaid">
+graph TD
+    A["Paciente programado"] --> B{"¿Embarazo?"}
+    B -- "Sí" --> B1["Evitar vía nasal; cuña derecha; minimizar hipercapnia; lidocaína mínima; plan multidisciplinario"]
+    B -- "No" --> C{"¿Hipertensión pulmonar?"}
+    C -- "Sí" --> C1["Continuar tratamiento; evitar aumento de resistencia vascular; técnica delicada; mantener precarga"]
+    C -- "No" --> D["Vía estándar"]
+    B1 --> E{"¿Antitrombóticos?"}
+    C1 --> E
+    D --> E
+    E -- "Sí" --> F["Suspender según protocolo; INR <1,5 con warfarina; ajustar directos a función renal"]
+    E -- "No" --> G["Sedación con midazolam + fentanilo; antagonistas disponibles; considerar alto flujo"]
+    F --> G
+    G --> H["Consentimiento: sangrado, neumotórax, hipoxemia, infección; plan de recuperación"]
+</div>
+
+<hr>
+
+<h3>Tablas y cuadros de consulta rápida</h3>
+
+<h4>Tabla 1. Gravedad del sangrado según intervención</h4>
+<table><thead><tr><th>Categoría</th><th>Definición operativa</th></tr></thead><tbody>
+<tr><td>Sin sangrado</td><td>Rastros autolimitados; no requieren aspiración continua.</td></tr>
+<tr><td>Leve</td><td>Requiere aspiración continua; autolimitado.</td></tr>
+<tr><td>Moderado</td><td>Requiere enclavamiento, suero frío o vasoconstrictor tópico.</td></tr>
+<tr><td>Grave</td><td>Requiere balón, sellador o tapón; reanimación, transfusión o UCI.</td></tr>
+</tbody></table>
+
+<h4>Tabla 2. Manejo perioperatorio habitual de antitrombóticos</h4>
+<table><thead><tr><th>Fármaco</th><th>Suspender antes</th><th>Reiniciar después</th></tr></thead><tbody>
+<tr><td>Heparina no fraccionada</td><td>6 h</td><td>4–12 h</td></tr>
+<tr><td>Heparina de bajo peso molecular</td><td>12 h</td><td>4–12 h</td></tr>
+<tr><td>Fondaparinux</td><td>36–42 h</td><td>4–12 h</td></tr>
+<tr><td>Aspirina</td><td>No suspender</td><td>—</td></tr>
+<tr><td>Clopidogrel</td><td>5–7 días</td><td>5–7 días</td></tr>
+<tr><td>Ticagrelor</td><td>5 días</td><td>4–12 h</td></tr>
+<tr><td>Prasugrel</td><td>7–10 días</td><td>4–12 h</td></tr>
+<tr><td>Warfarina</td><td>5 días, objetivo INR &lt;1,5</td><td>4–12 h</td></tr>
+<tr><td>Dabigatrán</td><td>2–3 días, más si disfunción renal</td><td>4–12 h</td></tr>
+<tr><td>Rivaroxabán/apixabán/edoxabán</td><td>1–2 días</td><td>4–12 h</td></tr>
+</tbody></table>
+
+<h4>Tabla 3. Sedación y reversión: dosis rápidas</h4>
+<table><thead><tr><th>Agente</th><th>Dosis inicial y titulación</th><th>Precauciones</th></tr></thead><tbody>
+<tr><td>Midazolam</td><td>1–2 mg IV, luego 0,5–1 mg; ≤5 mg si &lt;70 años y ≤2 mg si ≥70</td><td>Prepare 1 mg/mL para evitar sobredosis; flumazenilo 0,2 mg, luego 0,1 mg/min hasta 1 mg; vigile resedación.</td></tr>
+<tr><td>Fentanilo</td><td>25–50 µg IV, titular</td><td>Vigile bradicardia e hipotensión; rara rigidez torácica: naloxona desde 0,04 mg y soporte ventilatorio.</td></tr>
+<tr><td>Propofol</td><td>Según anestesiólogo</td><td>Ventana estrecha; riesgo de apnea e hipotensión; siga normas institucionales.</td></tr>
+</tbody></table>
+
+<h4>Tabla 4. Vigilancia durante las primeras 2–4 horas</h4>
+<table><thead><tr><th>Dominio</th><th>Qué vigilar</th><th>Qué sugiere</th><th>Conducta</th></tr></thead><tbody>
+<tr><td>SpO₂</td><td>Retorno a basal</td><td>Desaturación persistente</td><td>Evaluar broncoespasmo, secreciones retenidas o neumotórax.</td></tr>
+<tr><td>Dolor torácico</td><td>Nuevo o creciente</td><td>Posible neumotórax</td><td>Radiografía o ecografía pulmonar.</td></tr>
+<tr><td>Temperatura</td><td>Fiebre baja transitoria</td><td>Fiebre postbroncoscopia</td><td>Antitérmicos; reevaluar si persiste o hay datos sistémicos.</td></tr>
+<tr><td>Deglución</td><td>Ausencia de reflejo de tos, ~2 h</td><td>Riesgo de aspiración</td><td>Mantener ayuno hasta que regrese.</td></tr>
+<tr><td>Conciencia</td><td>Despertar tardío, p. ej. EPOC o apnea del sueño</td><td>Hipercapnia</td><td>Considerar ventilación no invasiva o intubación.</td></tr>
+<tr><td>Patrón respiratorio</td><td>Taquipnea, sibilancias o músculos accesorios</td><td>Broncoespasmo</td><td>Broncodilatadores, corticoides sistémicos, oxígeno y escalada.</td></tr>
+</tbody></table>
+
+<hr>
+
+<h3>Casos y aprendizaje aplicado</h3>
+
+<div class="case-study"><strong>Caso 1: hipertensión pulmonar y estudio de enfermedad intersticial</strong><p><strong>Escenario:</strong> Paciente de 62 años con esclerodermia, enfermedad intersticial y presión arterial pulmonar media de 40 mmHg, remitido para lavado y biopsia por nuevas opacidades.</p><p><strong>Respuesta:</strong> La hipertensión pulmonar aumenta el riesgo de hipoxemia y ventilación prolongada; no está claro que aumente el sangrado de la biopsia.</p><p><strong>Punto docente:</strong> Optimice oxigenación y ventilación, evite aumento de resistencia vascular y coordine con anestesia.</p></div>
+
+<div class="case-study"><strong>Caso 2: EBUS durante el embarazo</strong><p><strong>Escenario:</strong> Mujer de 29 años, 22 semanas, con sospecha de afectación mediastínica por cáncer de mama, programada para EBUS.</p><p><strong>Respuesta:</strong> Anticipar vía aérea difícil, evitar vía nasal, cuña bajo cadera derecha, minimizar hipercapnia y coordinar con anestesia y obstetricia.</p><p><strong>Punto docente:</strong> Fisiología de dos pacientes; priorice protección de vía aérea y estabilidad hemodinámica.</p></div>
+
+<div class="case-study"><strong>Caso 3: disnea tras biopsia transbronquial</strong><p><strong>Escenario:</strong> Dos horas después de biopsia, aparece dolor pleurítico y SpO₂ 89 %.</p><p><strong>Respuesta:</strong> Evaluar neumotórax con radiografía o ecografía; los pequeños pueden observarse y los grandes o inestables requieren drenaje.</p><p><strong>Punto docente:</strong> No se requiere radiografía rutinaria en asintomáticos, pero el neumotórax puede ser tardío.</p></div>
+
+<hr>
+
+<h3>Banco de preguntas</h3>
+
+<p><strong>1. Durante una biopsia transbronquial, el sangrado abundante oculta la visión. Tras aspirar y lateralizar, el siguiente paso es:</strong></p><ul><li>A. Retirar el broncoscopio y sentar al paciente</li><li>B. Instilar suero a temperatura ambiente</li><li>C. Instilar alícuotas de suero a 4 °C</li><li>D. Pasar directamente a fibrina</li><li>E. Colocar tubo de doble luz</li></ul><p><strong>Correcta: C.</strong> El suero frío es primera línea después de aspiración y posición.</p>
+
+<p><strong>2. ¿Qué antitrombótico puede continuarse por lo general incluso con biopsia?</strong></p><ul><li>A. Warfarina</li><li>B. Apixabán</li><li>C. Aspirina</li><li>D. Clopidogrel</li><li>E. Fondaparinux</li></ul><p><strong>Correcta: C.</strong></p>
+
+<p><strong>3. Paciente con warfarina y bajo riesgo trombótico programado para EBUS-TBNA. ¿Plan óptimo?</strong></p><ul><li>A. Continuar warfarina</li><li>B. Suspender ~5 días, INR &lt;1,5 y reiniciar esa noche</li><li>C. Suspender 24 h</li><li>D. Puente con heparina en todos</li><li>E. Esperar INR &lt;1,0</li></ul><p><strong>Correcta: B.</strong></p>
+
+<p><strong>4. ¿Qué afirmación sobre hipertensión pulmonar y broncoscopia es más exacta?</strong></p><ul><li>A. Contraindicación absoluta para biopsia</li><li>B. Sin aumento claro de sangrado, pero más hipoxemia</li><li>C. Siempre causa hemoptisis masiva</li><li>D. Siempre requiere anestesia general</li><li>E. UCI posoperatoria obligatoria</li></ul><p><strong>Correcta: B.</strong></p>
+
+<p><strong>5. Durante midazolam y fentanilo aparece rigidez de pared torácica con hipoventilación. ¿Acción inmediata?</strong></p><ul><li>A. Succinilcolina</li><li>B. Naloxona desde 0,04 mg y soporte ventilatorio</li><li>C. Flumazenilo 0,2 mg</li><li>D. Bolo de propofol</li><li>E. Atropina</li></ul><p><strong>Correcta: B.</strong></p>
+
+<p><strong>6. Fiebre de 38,4 °C cuatro horas después del lavado, con buen aspecto. ¿Qué laboratorio ayuda más a distinguir fiebre estéril de infección?</strong></p><ul><li>A. PCR</li><li>B. VSG</li><li>C. Leucocitos</li><li>D. Procalcitonina</li><li>E. LDH</li></ul><p><strong>Correcta: D.</strong></p>
+
+<p><strong>7. ¿Qué maniobra reduce el laringoespasmo al pasar las cuerdas?</strong></p><ul><li>A. Anestesia inhalatoria profunda</li><li>B. Lidocaína tópica adecuada antes de atravesarlas</li><li>C. Bloqueante neuromuscular rutinario</li><li>D. Evitar oxígeno</li><li>E. Vía nasal</li></ul><p><strong>Correcta: B.</strong></p>
+
+<p><strong>8. Embarazada de 30 semanas con estenosis subglótica presenta hipotensión en la inducción. ¿Qué medida preventiva debía estar preparada?</strong></p><ul><li>A. Gran bolo de epinefrina</li><li>B. Cuña bajo cadera derecha y optimización de precarga</li><li>C. Trendelenburg</li><li>D. Nitroglicerina</li><li>E. Intubación nasal rutinaria</li></ul><p><strong>Correcta: B.</strong></p>
+
+<p><strong>9. Tras biopsia, el paciente tiene dolor pleurítico leve y signos vitales estables. ¿Siguiente paso?</strong></p><ul><li>A. Radiografía inmediata para todos</li><li>B. Ingreso 24 h</li><li>C. Observar ≥2 h e imagen solo si hay síntomas o empeora</li><li>D. TC de tórax</li><li>E. Alta inmediata</li></ul><p><strong>Correcta: C.</strong></p>
+
+<p><strong>10. ¿Qué estrategia de oxígeno reduce desaturaciones durante broncoscopia sedada?</strong></p><ul><li>A. Cánula convencional</li><li>B. Mascarilla con reservorio</li><li>C. Ventilación no invasiva para todos</li><li>D. Cánula nasal de alto flujo</li><li>E. Aire ambiente</li></ul><p><strong>Correcta: D.</strong></p>
+
+<p><strong>11. La dosis máxima recomendada de lidocaína tópica durante broncoscopia es:</strong></p><ul><li>A. 2 mg/kg</li><li>B. 4 mg/kg</li><li>C. 6 mg/kg</li><li>D. 10 mg/kg</li><li>E. Sin máximo</li></ul><p><strong>Correcta: B.</strong></p>
+
+<p><strong>12. ¿Qué afirmación sobre antibióticos profilácticos para fiebre postbroncoscopia es correcta?</strong></p><ul><li>A. Deben darse a todos</li><li>B. Solo a trasplantados</li><li>C. No reducen la fiebre y no se recomiendan rutinariamente</li><li>D. Son obligatorios si PCR está elevada</li><li>E. Son necesarios si el lavado supera 200 mL</li></ul><p><strong>Correcta: C.</strong></p>
+
+<hr>
+
+<h3>Lista de verificación final</h3>
+<ul>
+    <li>[ ] Comunique riesgos reales: complicaciones ~1 % y mortalidad ~0,02 %.</li>
+    <li>[ ] Prepare control de sangrado: suero frío, vasoconstrictor, balón, selladores y respaldo rígido.</li>
+    <li>[ ] Suspenda antitrombóticos de forma pragmática; la aspirina suele continuar; verifique INR.</li>
+    <li>[ ] Use alto flujo en pacientes propensos a desaturación y trate la hipoxemia de inmediato.</li>
+    <li>[ ] Tenga flumazenilo y naloxona preparados; reconozca rigidez torácica.</li>
+    <li>[ ] Sospeche neumotórax ante dolor o desaturación tras biopsia; observe ≥2 h e imagen si hay síntomas.</li>
+    <li>[ ] Distinga fiebre estéril de infección; la procalcitonina ayuda; no use profilaxis rutinaria.</li>
+    <li>[ ] Embarazo: evitar vía nasal, cuña derecha, minimizar hipercapnia, lidocaína mínima y equipo multidisciplinario.</li>
+    <li>[ ] Hipertensión pulmonar: continuar medicación, evitar aumento de resistencia vascular y anticipar más hipoxemia que sangrado.</li>
+</ul>
+
+<hr>
+
+<div class="references">
+    <h3>Referencias</h3>
+    <ol>
+        <li>Facciolongo N, Patelli M, Gasparini S, et al. Incidence of complications in bronchoscopy: multicentre prospective study of 20,986 bronchoscopies. Monaldi Arch Chest Dis. 2009;71(1):8‑14.</li>
+        <li>Du Rand IA, Blaikley J, Booton R, et al. British Thoracic Society guideline for diagnostic flexible bronchoscopy in adults. Thorax. 2013;68:i1‑i44.</li>
+        <li>Muthu V, Ram B, Sehgal IS, et al. Major complications during 9,979 flexible bronchoscopies under local anesthesia. Lung India. 2022;39(4):384‑387.</li>
+        <li>Bernasconi M, Koegelenberg CFN, Koutsokera A, et al. Iatrogenic bleeding during flexible bronchoscopy: risk factors, prophylaxis and management. ERJ Open Res. 2017;3(2):00084‑2016.</li>
+        <li>Gil HI, Ko RE, Lee K, et al. Effects of antithrombotic treatment on bleeding complications of EBUS‑TBNA. Medicina (Kaunas). 2021;57(2):142.</li>
+        <li>Meena N, Abouzgheib W, Patolia S, et al. EBUS‑TBNA and EUS‑FNA: risk assessment for patients receiving clopidogrel. J Bronchology Interv Pulmonol. 2016;23(4):303‑307.</li>
+        <li>Márquez‑Martín E, Vergara DG, Martín‑Juan J, et al. Endobronchial tranexamic acid for controlling pulmonary bleeding: a pilot study. J Bronchology Interv Pulmonol. 2010;17(2):122‑125.</li>
+        <li>Khoo KL, Lee P, Mehta AC. Endobronchial epinephrine: confusion is in the air. Am J Respir Crit Care Med. 2013;187(10):1137‑1138.</li>
+        <li>Tüller C, Tüller D, Tamm M, Brutsche MH. Hemodynamic effects of endobronchial ornipressin vs terlipressin. Respiration. 2004;71(4):397‑401.</li>
+        <li>Kalchiem‑Dekel O, Tran BC, Glick DR, et al. Prophylactic epinephrine attenuates severe bleeding in lung transplantation patients undergoing TBLB (PROPHET). J Heart Lung Transplant. 2023;42(9):1205‑1213.</li>
+        <li>Radchenko C, Alraiyes AH, Shojaee S. Systematic approach to massive hemoptysis. J Thorac Dis. 2017;9:S1069‑S1086.</li>
+        <li>Roy A, Khanna P, Chowdhury SR, et al. HFNC vs other devices during bronchoscopy under sedation: systematic review and meta‑analyses. Indian J Crit Care Med. 2022;26(10):1131‑1140.</li>
+        <li>Pirozyński M, Śliwiński P, Zieliński J. Effect of different BAL volumes on oxygen saturation. Eur Respir J. 1988;1(10):943‑947.</li>
+        <li>van Zwam JP, Kapteijns EF, Lahey S, Smit HJ. Bronchoscopy in supine or sitting position: randomized prospective analysis. J Bronchology Interv Pulmonol. 2010;17(1):29‑32.</li>
+        <li>Jones AM, O’Driscoll R. Do all patients require supplemental oxygen during flexible bronchoscopy? Chest. 2001;119(6):1906‑1909.</li>
+        <li>Dreher M, Ekkernkamp E, Storre JH, et al. Sedation during flexible bronchoscopy in respiratory failure: midazolam vs midazolam+alfentanil. Respiration. 2010;79(4):307‑314.</li>
+        <li>Williamson BH, Nolan PJ, Tribe AE, Thompson PJ. Flumazenil in bronchoscopic procedures: a placebo‑controlled study. Br J Clin Pharmacol. 1997;43(1):77‑83.</li>
+        <li>Çoruh B, Tonelli MR, Park DR. Fentanyl‑induced chest wall rigidity. Chest. 2013;143(4):1145‑1146.</li>
+        <li>Rosal NR, Thelmo FL Jr, Tzarnas S, et al. Wooden chest syndrome: fentanyl‑induced chest wall rigidity. J Investig Med High Impact Case Rep. 2021;9:23247096211034036.</li>
+        <li>Izbicki G, Shitrit D, Yarmolovsky A, et al. Is routine chest radiography after TBLB necessary? Prospective study of 350 cases. Chest. 2006;129(6):1561‑1564.</li>
+        <li>Sehgal IS, Bal A, Dhooria S, et al. Cup vs alligator forceps for TBLB in sarcoidosis: randomized trial. Chest. 2016;149(6):1584‑1586.</li>
+        <li>Lachowicz JA, Smallwood NE, Prasad JD, et al. Procedural and sampling techniques for TBCB in ILD: systematic review. Eur Respir Rev. 2024;33(173):240035.</li>
+        <li>DeMasi S, Parker MS, Joyce M, et al. Thoracic point‑of‑care ultrasound for clinically significant traumatic pneumothorax. Acad Emerg Med. 2023;30(6):653‑661.</li>
+        <li>Park JS, Lee CH, Yim JJ, et al. Antibiotic prophylaxis and PBF: randomized controlled study. Int J Tuberc Lung Dis. 2011;15(4):528‑535.</li>
+        <li>Um SW, Choi CM, Lee CT, et al. Clinical characteristics and risk factors of PBF: prospective analysis. Chest. 2004;125(3):945‑952.</li>
+        <li>Yigla M, Oren I, Bentur L, et al. Incidence of bacteremia after fiberoptic bronchoscopy. Eur Respir J. 1999;14(4):789‑791.</li>
+        <li>Sharif‑Kashani B, Shahabi P, Behzadnia N, et al. Incidence of fever and bacteremia after flexible bronchoscopy: prospective study. Acta Med Iran. 2010;48(6):385‑388.</li>
+        <li>Hackner K, Riegler W, Handzhiev S, et al. Procalcitonin enables early diagnosis of post‑interventional bacterial infection. BMC Pulm Med. 2017;17(1):156.</li>
+        <li>Suratt PM, Smiddy JF, Gruber B. Deaths and complications associated with fiberoptic bronchoscopy. Chest. 1976;69(6):747‑751.</li>
+        <li>Stolz D, Pollak V, Chhajed PN, et al. Bronchodilators for bronchoscopy in COPD: randomized, placebo‑controlled trial. Chest. 2007;131(3):765‑772.</li>
+        <li>Humbert M, Robinson DS, Assoufi B, et al. Safety of fibreoptic bronchoscopy in asthmatic and control subjects. Thorax. 1996;51(7):664‑669.</li>
+        <li>Wahidi MM, Rocha AT, Hollingsworth JW, et al. Bronchoscopy in pulmonary hypertension: physician survey on perceived risk. Respiration. 2005;72:285‑295.</li>
+        <li>Ali J, et al. Bronchoscopy in pulmonary hypertension: meta‑analysis. Ann Am Thorac Soc. 20(6):898‑905.</li>
+        <li>Bahhady I, Ernst A. Bronchoscopy in pregnancy. Chest. 2004;126.</li>
+        <li>Morgan R, Ernst A. Bronchoscopy during pregnancy. Clin Chest Med. 2011;32.</li>
+        <li>Tang SJ, et al. ERCP in pregnancy: safety of sphincterotomy. Gastrointest Endosc. 2009;69.</li>
+        <li>Price LC, et al. Peri‑operative management of pulmonary hypertension. Br J Anaesth. 2021;126(4):774‑790.</li>
+        <li>Broker T, et al. Anaesthesia for pulmonary hypertension. Ann Transl Med. 2019;7(15):355.</li>
+    </ol>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/9.3.0/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true });</script>
+</body>
+</html>

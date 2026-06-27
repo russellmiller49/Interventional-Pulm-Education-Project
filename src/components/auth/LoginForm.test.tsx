@@ -46,7 +46,7 @@ describe('LoginForm', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(await screen.findByRole('button', { name: 'Redirecting...' })).toBeDisabled()
-    await waitFor(() => expect(mockRedirectToPostLoginPath).toHaveBeenCalledWith('/dashboard'))
+    await waitFor(() => expect(mockRedirectToPostLoginPath).toHaveBeenCalledWith('/en/dashboard'))
   })
 
   it('redirects authenticated visitors away from the sign-in form', async () => {
@@ -54,6 +54,6 @@ describe('LoginForm', () => {
 
     render(<LoginForm />)
 
-    await waitFor(() => expect(mockRedirectToPostLoginPath).toHaveBeenCalledWith('/dashboard'))
+    await waitFor(() => expect(mockRedirectToPostLoginPath).toHaveBeenCalledWith('/en/dashboard'))
   })
 })

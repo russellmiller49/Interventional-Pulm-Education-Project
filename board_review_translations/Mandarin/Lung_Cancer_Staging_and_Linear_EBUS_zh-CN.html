@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>肺癌分期与线性 EBUS</title>
+<style>
+        body {
+            font-family: Arial, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 20px;
+        }
+        ul, ol {
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .highlight-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 5px solid #2980b9;
+            margin: 20px 0;
+        }
+        .checklist-item {
+            list-style-type: none;
+        }
+        .checklist-item:before {
+            content: "☐ ";
+            font-size: 1.2em;
+        }
+        .answer-key {
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body><header>
+<h1>肺癌分期与线性 EBUS</h1>
+<p><strong>考试内容映射与范围</strong></p>
+<p>本章将第 9 版 TNM 分期与线性支气管内超声（EBUS）的纵隔分期实践相结合，重点包括影像分诊（CT、PET/CT、适当时脑 MRI）、淋巴结图谱与边界、侵入性分期适应证、系统性与靶向 EBUS 策略、标本获取/处理、并发症识别，以及检查后决策（包括阴性 EBUS 后何时——如有必要——再行纵隔镜）。</p>
+</header>
+<section>
+<h2>学习目标</h2>
+<p>完成本章学习后，读者应能够：</p>
+<ul>
+<li>将第 9 版 TNM 更新——尤其 N2a 与 N2b、M1c1 与 M1c2——应用于临床分期决策。</li>
+<li>识别 EBUS 与 EUS-B 可到达的纵隔/肺门淋巴结站，并理解高风险解剖边界。</li>
+<li>选择需要侵入性纵隔分期的患者，并在系统性与靶向 EBUS 之间做出选择。</li>
+<li>执行减少污染的分步 EBUS-TBNA 流程，包括正确取样顺序（N3 → N2 → N1）和足够穿刺次数。</li>
+<li>优化镇静/氧合，并处理声窗不佳、淋巴结钙化或坏死及出血。</li>
+<li>结合背景解读阴性侵入性分期，并判断何时追加纵隔镜会改变管理。</li>
+</ul>
+</section>
+<section>
+<h2>高频要点一页通（要点、陷阱与误区）</h2>
+<div class="highlight-box">
+<ul>
+<li><strong>TNM-9 核心：</strong> N2 分为单站（N2a）与多站（N2b）；M1c 分为单器官多发转移（M1c1）与多器官转移（M1c2）。若干 T/N 组合的分期组发生改变（尤其 T1N2aM0 → IIB 期）。</li>
+<li><strong>尺寸规则：</strong> T 大小按实性/浸润性成分测量；贴壁样/磨玻璃部分不计入 T 大小；气腔内播散（STAS）不改变 T 类别。</li>
+<li><strong>淋巴结图谱边界很重要：</strong>
+<ul>
+<li>奇静脉下缘区分 4R 与 10R。</li>
+<li>主动脉弓上缘区分 2L 与 4L。</li>
+<li><em>要点：</em> 错误标注这些边界可能人为使患者分期升高或降低。</li>
+</ul>
+</li>
+<li><strong>影像分诊：</strong> PET/CT 对纵隔淋巴结优于 CT，但可假阳性。小脑转移不能依赖 PET/CT；有临床指征时用脑 MRI。</li>
+<li><strong>谁需要侵入性分期？</strong>
+<ul>
+<li>明确纵隔淋巴结肿大或 PET 高摄取。</li>
+<li>“中间风险”情境：CT/PET 纵隔正常，但原发肿瘤位于中央、直径 &gt;3 cm，或临床 N1。</li>
+</ul>
+</li>
+<li><strong>EBUS 与手术：</strong> 内镜针吸分期（EBUS/EUS-B）敏感度和特异度高，是首选检查。联合 EBUS + EUS 可提高诊断率。</li>
+<li><strong>系统性优于靶向性：</strong> 系统性方法（取样 ≥3 个站，通常 4R、4L、7）较“见到可疑才取样”的靶向策略可发现更多 N2/N3 病变。</li>
+<li><strong>取样顺序（经典考点）：</strong> 始终 N3 → N2 → N1，以避免污染。</li>
+<li><strong>标本充分性：</strong> 每个靶点 ≥3 针是常用基准；需要分子检测或无 ROSE 时应增加针数。</li>
+<li><strong>5–6 站注意：</strong> EBUS 很少能到达；若对管理关键，应考虑 EUS-B 或外科方式。</li>
+<li><strong>并发症：</strong> 严重事件少见。气胸罕见（&lt;1%），但在靠近胸膜处取样时可发生，例如右气管旁站靠近胸膜反折。</li>
+<li><strong>阴性 EBUS 后怎么办？</strong> 高质量、系统性阴性 EBUS 后常规纵隔镜的增量获益在许多情境有限；仅对特定高风险患者或按机构方案使用。</li>
+<li><strong>镇静：</strong> 中度和深度镇静均可。深度镇静可能减少术中不稳定；中度镇静下 HFNC 可降低低氧。</li>
+<li><strong>特殊情境：</strong> EBUS-TBNA 对经典霍奇金淋巴瘤价值有限；常需冷冻活检或外科组织以保留结构。</li>
+<li><strong>像外科医师需要的那样报告：</strong> 明确取样站、针径、针数、是否使用 ROSE，以及限制因素（钙化、坏死、邻近血管）。</li>
+</ul>
+</div>
+</section>
+<section>
+<h2>核心概念</h2>
+<h3>病理生理学 / 流行病学（简要）</h3>
+<p>淋巴结转移通常沿可预测的路径由肺叶淋巴结向纵隔站扩散。预后不仅取决于是否有淋巴结病变，还与分布（单站或多站）和范围（同侧或对侧）有关。TNM-9 通过细分 N2 和 M1c，正式反映这一临床梯度。</p>
+<h3>适应证与禁忌证</h3>
+<p><strong>侵入性纵隔分期适应证（首选针吸内镜方式）：</strong></p>
+<ul>
+<li>明确纵隔淋巴结增大（短径 &gt;1 cm）和/或 FDG 高摄取，且无远处转移。</li>
+<li>影像纵隔正常但属于“中间风险”的原发肿瘤：中央型、直径 &gt;3 cm，或影像疑 N1。</li>
+<li>部分 PET 原发灶低摄取、但仍可能存在隐匿 N2/N3 的患者。</li>
+</ul>
+<p><strong>通常不需要侵入性分期：</strong></p>
+<ul>
+<li>周边型肿瘤 &lt;3 cm，原发灶高摄取，CT/PET 无可疑淋巴结（可直接切除）。</li>
+</ul>
+<p><strong>EBUS/EUS-B 站点选择：</strong></p>
+<ul>
+<li><strong>EBUS：</strong> 除 5–6 站（主动脉肺动脉窗和主动脉旁）外，可到达大多数站。</li>
+<li><strong>EUS-B：</strong> 可很好到达 8–9 站，并补充 4L 和 7 站；同次常可评估左肾上腺。</li>
+</ul>
+<p><strong>禁忌证与注意事项：</strong></p>
+<ul>
+<li>未控制的凝血障碍或高出血风险（在安全时暂停治疗性抗凝）。</li>
+<li>EUS-B 时，食管静脉曲张或严重吞咽困难会增加风险。</li>
+</ul>
+<h3>术前评估</h3>
+<ul>
+<li><strong>影像：</strong> 薄层胸部 CT；PET/CT 用于筛查远处病变并确定优先站点；脑 MRI 依据病例决定（如神经症状或根治意图）。</li>
+<li><strong>化验与药物：</strong> 复核血小板/凝血和抗栓药，并按本地方案制定停药/恢复计划。</li>
+<li><strong>气道与麻醉计划：</strong> 中度镇静或深度镇静/GA。GA 可提高稳定性、抑制咳嗽，并允许反复换镜（ETT ≥8.0、LMA 或硬质镜支持）。中度镇静时，HFNC 比低流量氧更能减少低氧。</li>
+<li><strong>知情同意：</strong> 记录获益（微创分期、满足分子检测）以及罕见但严重风险（明显出血、气胸、纵隔炎）。</li>
+</ul>
+<h3>设备与设置</h3>
+<ul>
+<li><strong>镜体：</strong> 线阵（凸阵）超声支气管镜，换能器约 7.5 MHz；外径约 6.3–6.6 mm。用球囊套盐水充盈以耦合。</li>
+<li><strong>穿刺针：</strong> 19G、21G、22G、25G；常用伸出长度约 5–40 mm，并有可调安全锁。</li>
+<li><strong>附件：</strong> 多普勒、吸引、负压注射器（或毛细法）、ROSE（如有）、细胞块/组织芯保存液、HFNC 或通气支持。</li>
+<li><strong>布局：</strong> 无菌区域、咬口/口垫、抢救车备用。超声屏幕应使操作者可同时看到内镜和超声图像。</li>
+</ul>
+<h3>分步技术 / 操作核对表</h3>
+<ol>
+<li><strong>通路：</strong> 建立气道通路（经口/LMA/ETT/硬质镜）并局部麻醉；球囊耦合超声。</li>
+<li><strong>扫查：</strong> 按 CT/PET 路线图定位；在超声上确认血管标志（如 4R 的上腔静脉和奇静脉；4L 的左肺动脉和主动脉弓）。</li>
+<li><strong>系统性取样顺序：</strong> 对侧纵隔（N3）→ 同侧纵隔（N2）→ 肺门（N1）。</li>
+<li><strong>靶向与安全：</strong> 启用多普勒避开血管；右气管旁/奇静脉区域注意胸膜；7 站后方应区分食管。</li>
+<li><strong>穿刺针操作（快速刺入法）：</strong> 锁定镜身，将针鞘推进至视野内，解除锁定，在实时超声下快速刺入淋巴结，操纵针芯，施加负压，来回 3–10 次，解除负压，退针并回收标本。</li>
+<li><strong>针数：</strong> 每站至少 3 针用于细胞学；预计分子检测或 ROSE 不充分时增加。</li>
+<li><strong>标本处理：</strong> 制作涂片 + 细胞块（或凝块组织芯）用于组织学和辅助检测；按站点分别标记。</li>
+<li><strong>EUS-B：</strong> 后方/下方站点或左肾上腺有指征时，在同次联合 EUS-B。</li>
+<li><strong>结束：</strong> 冲洗镜体，必要时重新充盈球囊确认止血，并简短复查气道。</li>
+</ol>
+<h3>故障排查与术中处理</h3>
+<ul>
+<li><strong>接触不良：</strong> 重新充盈球囊、调整镜体屈曲、改变患者颈部位置，或微调镜尖以优化声窗。</li>
+<li><strong>钙化/纤维化淋巴结：</strong> 使用更硬的针（如 19–21G），在淋巴结内多方向取样；增加细胞块针数。</li>
+<li><strong>坏死淋巴结：</strong> 在超声上取样有活性的外周缘；用多普勒避开供血血管。坏死中心通常低回声或无回声。</li>
+<li><strong>出血：</strong> 多数轻微；吸引、冷盐水；持续时退针并复查凝血；可用镜体/球囊压迫。</li>
+<li><strong>咳嗽/移动：</strong> 加深镇静或转 GA；LMA/ETT 常可提高精确度和效率。</li>
+<li><strong>站点错误：</strong> 重新确认标志（奇静脉弓 = 4R 下界；左肺动脉上缘 = 4L 下界；7 站后方为食管）。误分类可改变 N 类别。</li>
+</ul>
+<h3>术后照护与随访</h3>
+<ul>
+<li>监测 1–2 小时，观察低氧或出血。</li>
+<li>按方案恢复抗栓药；告知发热、胸痛、咯血等返院警示症状。</li>
+<li><strong>报告要点：</strong> 临床背景、影像摘要、评估和取样站点、针径与针数、ROSE 结果（如有）、即时并发症/限制及下一步。</li>
+</ul>
+<h3>并发症（预防、识别与处理）</h3>
+<ul>
+<li><strong>总体风险：</strong> 低；重大不良事件罕见（&lt;2%）。</li>
+<li><strong>气胸：</strong> 罕见（&lt;1%）；胸膜靠近时风险升高（如高位 4R）。取样时始终让胸膜保持在视野内。</li>
+<li><strong>感染：</strong> 纵隔炎罕见。无菌技术可降低风险。特定患者（如囊性病变、高风险宿主）可选择性预防抗生素。</li>
+<li><strong>镇静相关：</strong> 低通气、低血压、心律失常。优化预氧合（HFNC）；部分队列中深度镇静/GA 可减少术中不稳定。</li>
+</ul>
+<h3>特殊人群</h3>
+<ul>
+<li><strong>临床 N0“中间风险”：</strong> 中央肿瘤、&gt;3 cm 或临床 N1——适合系统性 EBUS/EUS-B；隐匿 N2/N3 并不少见。</li>
+<li><strong>左上叶肿瘤（主动脉肺动脉窗）：</strong> 若 5–6 站对管理关键，考虑 EUS-B 或外科通路。</li>
+<li><strong>淋巴瘤：</strong> 经典霍奇金淋巴瘤用 TBNA 诊断困难；可考虑辅助冷冻活检或其他保留组织结构的方法。</li>
+<li><strong>放疗规划：</strong> 治疗前 EBUS/EUS-B 可在淋巴结状态不确定时改善靶区勾画。</li>
+</ul>
+<h3>证据与结局（精选）</h3>
+<ul>
+<li><strong>影像表现：</strong> PET/CT 纵隔淋巴结敏感度/特异度约 77–85% / 86–90%；CT 约 55–61% / 79–81%。PET/CT 可因炎症假阳性，也可在低 FDG 组织学中假阴性。</li>
+<li><strong>内镜分期：</strong> EBUS-TBNA 敏感度约 90%，特异度接近 100%。联合 EBUS+EUS 可将敏感度提高至 90% 中段。</li>
+<li><strong>系统性与靶向性：</strong> 系统性分期（≥3 个站）较仅取样可疑站点可发现更多 N2/N3。</li>
+<li><strong>阴性 EBUS 后：</strong> 对多数患者常规纵隔镜增量很小；仅用于特定高风险或结果不一致情境。</li>
+</ul>
+</section>
+<section>
+<h2>诊断与治疗算法</h2>
+<h3>算法 1——NSCLC 影像 → 侵入性纵隔分期</h3>
+<ol>
+<li>疑似/确诊 NSCLC → 增强胸/腹 CT + FDG PET/CT。</li>
+<li><strong>有远处转移？</strong>
+<ul><li>是 → IV 期评估。</li><li>否 → 评估纵隔风险。</li></ul>
+</li>
+<li><strong>纵隔风险评估：</strong>
+<ul>
+<li>CT 明确淋巴结或 PET 高摄取 → 侵入性分期（EBUS ± EUS-B）。</li>
+<li>纵隔正常，但中央肿瘤、&gt;3 cm 或临床 N1 → 侵入性分期。</li>
+<li>周边型 &lt;3 cm，无可疑淋巴结 → 直接局部治疗。</li>
+</ul>
+</li>
+<li><strong>侵入性分期：</strong>
+<ul><li>系统性取样（N3 → N2 → N1）。</li><li>每站 ≥3 针。</li></ul>
+</li>
+<li><strong>结果：</strong>
+<ul>
+<li>证实 N2/N3 → III 期多学科方案。</li>
+<li>阴性 → 继续计划的局部治疗。</li>
+<li>高质量 EBUS 阴性后仍高度怀疑 → 选择性纵隔镜确认。</li>
+</ul>
+</li>
+</ol>
+<h3>算法 2——线性 EBUS-TBNA 操作流程</h3>
+<ul>
+<li><strong>术前：</strong> 复核影像、凝血和镇静方案。</li>
+<li><strong>设置：</strong> 建立气道、球囊耦合、检查超声。</li>
+<li><strong>映射：</strong> 识别血管标志和站点边界。</li>
+<li><strong>取样：</strong> N3 → N2 → N1（快速刺入法、负压）。</li>
+<li><strong>充分性：</strong> 每站 ≥3 针（分子检测更多）；如有 ROSE，现场评估。</li>
+<li><strong>辅助：</strong> 有需要时加 EUS-B 评估 7/8/9 站或左肾上腺。</li>
+<li><strong>结束：</strong> 确认止血并完成结构化报告。</li>
+</ul>
+</section>
+<section>
+<h2>表格与速查框</h2>
+<h3>表 1. TNM-9 高频更新</h3>
+<table>
+<thead><tr><th>项目</th><th>关键点</th><th>实际影响</th></tr></thead>
+<tbody>
+<tr><td>N2 亚类</td><td>N2a：单个同侧纵隔/隆突下站<br/>N2b：多个站</td><td>多站 N2 预后更差；影响手术适应证和辅助治疗。</td></tr>
+<tr><td>M1c 亚类</td><td>M1c1：一个器官系统内多发转移<br/>M1c2：多个器官系统</td><td>明确转移负荷；支持 MDT 规划。</td></tr>
+<tr><td>分期组</td><td>若干 T/N 组合重新分组（如 T1N2aM0 → IIB）</td><td>咨询和治疗时避免沿用第 8 版偏差。</td></tr>
+<tr><td>T 编码提醒</td><td>大小 = 实性/浸润性成分；贴壁样部分不计</td><td>避免高估 T。</td></tr>
+<tr><td>VPI、STAS</td><td>VPI 可使小肿瘤升至 T2；STAS 记录但不改变 T</td><td>不要把 STAS 计入 T 大小。</td></tr>
+</tbody>
+</table>
+<h3>表 2. 淋巴结站：EBUS 与 EUS-B 通路及标志</h3>
+<table>
+<thead><tr><th>站点</th><th>常用途径</th><th>超声标志</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td>2R/2L</td><td>EBUS（±EUS-B）</td><td>2R：右颈总/锁骨下动脉<br/>2L：主动脉弓上方</td><td>超声下边界较难定义。</td></tr>
+<tr><td>4R</td><td>EBUS</td><td>上腔静脉和奇静脉；奇静脉下缘 = 4R 下界</td><td>奇静脉区分 4R 与 10R。胸膜靠近（气胸风险）。</td></tr>
+<tr><td>4L</td><td>EBUS（±EUS-B）</td><td>“米老鼠征”（主动脉-肺动脉-淋巴结）；左肺动脉上缘 = 4L 下界</td><td>EUS-B 可改善困难角度。</td></tr>
+<tr><td>5–6</td><td>EUS-B 或外科</td><td>主动脉肺动脉窗 / 主动脉旁</td><td>EBUS 通常不能到达。</td></tr>
+<tr><td>7</td><td>EBUS 或 EUS-B</td><td>隆突下；食管位于后方</td><td>可从任一主支气管壁进入。</td></tr>
+<tr><td>8–9</td><td>仅 EUS-B</td><td>食管旁 / 肺韧带</td><td>EBUS 不能到达。</td></tr>
+<tr><td>10–11</td><td>EBUS</td><td>10R：奇静脉下方<br/>10L：左肺动脉上方</td><td>肺门 / 叶间淋巴结。</td></tr>
+</tbody>
+</table>
+<h3>表 3. EBUS-TBNA 速查方案</h3>
+<table>
+<thead><tr><th>领域</th><th>最佳实践</th></tr></thead>
+<tbody>
+<tr><td>策略</td><td>系统性评估；按 N3 → N2 → N1 顺序取样 ≥3 个站（常为 4R、4L、7）。</td></tr>
+<tr><td>针数</td><td>每结 ≥3 针；需要分子检测或无 ROSE 时增加。</td></tr>
+<tr><td>针</td><td>19/21/22/25G；较硬针有助钙化结节；25G 适合锐角。</td></tr>
+<tr><td>镇静</td><td>中度或深度均可；GA 提高稳定性。HFNC 降低中度镇静时低氧风险。</td></tr>
+<tr><td>安全</td><td>多普勒检查血管；高位 4R 让胸膜保持可见；避免坏死中心。</td></tr>
+<tr><td>报告</td><td>记录站点、针径/针数、充分性/ROSE、并发症和限制。</td></tr>
+</tbody>
+</table>
+<h3>表 4. 分期影像——优势与局限</h3>
+<table>
+<thead><tr><th>方式</th><th>优势</th><th>局限</th></tr></thead>
+<tbody>
+<tr><td>PET/CT</td><td>对远处病变和纵隔淋巴结敏感度高</td><td>小脑转移表现差；感染可假阳性；低 FDG 肿瘤可假阴性。</td></tr>
+<tr><td>MRI</td><td>中枢神经系统转移最佳；评估肺上沟瘤侵犯软组织优秀</td><td>可及性、禁忌证、检查时间较长。</td></tr>
+<tr><td>CT</td><td>基础解剖地图；手术规划</td><td>淋巴结分期不如 PET/CT；可能低估侵犯。</td></tr>
+</tbody>
+</table>
+</section>
+<section>
+<h2>病例与应用学习</h2>
+<p><strong>病例 1（下一步最佳处理）</strong><br/>一枚 5 cm 左下叶 NSCLC，PET 高摄取；4L、7 和 11R 轻度摄取；无远处转移。<br/><span class="answer-key">答案：B. 先取样 11R。</span> 应从 N3 开始（对于左下叶原发，11R 为对侧肺门），再取 N2（4L/7），最后 N1。注意题目侧别必须与“N3 优先”逻辑一致。</p>
+<p><strong>病例 2（通路规划）</strong><br/>左上叶肿瘤，PET/CT 疑主动脉肺动脉窗受累。<br/><span class="answer-key">答案：B. EUS-B 或外科方式进入 5–6 站。</span> EBUS 很少能到达 5–6 站。</p>
+<p><strong>病例 3（阴性 EBUS）</strong><br/>中央 T2 肿瘤，CT/PET 临床 N0；完成系统性 EBUS/EUS-B（≥3 站、针数充分）均阴性。<br/><span class="answer-key">答案：B. 按计划继续切除/放疗。</span> 高质量阴性内镜超声常可免除常规纵隔镜确认。</p>
+</section>
+<section>
+<h2>题库（选择题）</h2>
+<ol>
+<li>一枚 3.5 cm 中央型右上叶肿块，CT/PET 纵隔正常。纵隔评估下一步最佳处理？<br/>A. 3 个月后重复 PET/CT<br/>B. 系统性 EBUS-TBNA<br/>C. 直接肺叶切除<br/>D. 胸部 MRI<br/>E. 骨扫描<br/><span class="answer-key">答案：B。</span> 中央型且 &gt;3 cm 即使影像纵隔正常也属于“中间风险”，应侵入性分期。</li><br/>
+<li>EBUS 评估 4R 时，哪一标志定义 4R 下界并区分 10R？<br/>A. 左肺动脉<br/>B. 主动脉弓<br/>C. 奇静脉下缘<br/>D. 右心房<br/>E. 隆嵴<br/><span class="answer-key">答案：C。</span> 奇静脉下缘为 4R 下界；其下为 10R。</li><br/>
+<li>TNM-9 中哪项变化正确？<br/>A. M1a 分为 M1a1/M1a2<br/>B. N2 分为 N2a（单站）和 N2b（多站）<br/>C. T 现在计入贴壁样成分<br/>D. STAS 提高 T 类别<br/>E. VPI 不再影响 T<br/><span class="answer-key">答案：B。</span> N2 分为 N2a 和 N2b；贴壁样部分不计 T 大小；STAS 不改变 T；VPI 仍有影响。</li><br/>
+<li>哪一站通常无法通过线性 EBUS 到达，常需 EUS-B 或外科？<br/>A. 4L<br/>B. 7<br/>C. 10L<br/>D. 5<br/>E. 11R<br/><span class="answer-key">答案：D。</span> 5 站（主动脉肺动脉窗）很少能用 EBUS 到达。</li><br/>
+<li>肺癌 EBUS 分期的首选取样顺序？<br/>A. N1 → N2 → N3<br/>B. N2 → N3 → N1<br/>C. N3 → N2 → N1<br/>D. 任意顺序均可<br/>E. 仅 N2<br/><span class="answer-key">答案：C。</span> N3 → N2 → N1 可避免污染和错误升期。</li><br/>
+<li>关于 EBUS-TBNA 镇静，哪项正确？<br/>A. 深度镇静禁忌<br/>B. 中度和深度均可；深度镇静可能减少术中不稳定<br/>C. 只有 GA 才能获得诊断标本<br/>D. HFNC 会加重中度镇静低氧<br/>E. 深度镇静必须有 ROSE<br/><span class="answer-key">答案：B。</span> 两种策略均可；深度镇静/GA 可稳定操作；HFNC 减少中度镇静低氧。</li><br/>
+<li>后方隆突下淋巴结用 EBUS 难以显示。最佳互补策略？<br/>A. 仅增加负压<br/>B. 改用 EUS-B 从后方观察<br/>C. 减少球囊耦合<br/>D. 先取 N1<br/>E. 终止操作<br/><span class="answer-key">答案：B。</span> EUS-B 常改善后方隆突下结节的显示和通路。</li><br/>
+<li>无 ROSE 且预计需要分子检测时，标本充分性策略？<br/>A. 每结 1 针足够<br/>B. 每结 2 针且不做细胞块<br/>C. 每结 ≥3 针，并确保细胞块/凝块组织芯<br/>D. 不取淋巴结，只活检原发灶<br/>E. 只用 25G<br/><span class="answer-key">答案：C。</span> 多针加细胞块可优化组织学和分子检测。</li><br/>
+<li>哪一情境最支持系统性而非靶向性分期？<br/>A. 多个巨大 PET 高摄取纵隔结节，患者不适合手术<br/>B. 周边型 &lt;3 cm，纵隔阴性<br/>C. 中央型肿瘤，纵隔影像正常<br/>D. PET/CT 仅肾上腺转移<br/>E. 已知多站 N2 的新辅助治疗后再分期<br/><span class="answer-key">答案：C。</span> “中间风险”（如中央型）可通过系统性分期发现隐匿 N2/N3。</li><br/>
+<li>最初 PET 高摄取 4R、7 站，高质量系统性 EBUS/EUS-B 均阴性。最合适管理？<br/>A. 按 N2b 治疗<br/>B. 所有人立即纵隔镜<br/>C. 继续计划的局部治疗；仅残余不一致时考虑确认<br/>D. 默认开始诱导化疗<br/>E. 下周重复 EBUS<br/><span class="answer-key">答案：C。</span> 不要求常规纵隔镜；根据残余风险和 MDT 个体化。</li><br/>
+<li>关于 PET/CT，哪项正确？<br/>A. 可可靠发现小脑转移<br/>B. 淋巴结分期优于 CT，但炎症可假阳性<br/>C. 评估肺上沟瘤侵犯优于 MRI<br/>D. 最适合低 FDG 肿瘤<br/>E. 阴性可完全排除纵隔病变<br/><span class="answer-key">答案：B。</span> PET/CT 淋巴结表现优于 CT，但脑敏感度有限且可假阳性。</li><br/>
+<li>4R 取样时发现低回声中心，周围有无回声血管。下一步最佳处理？<br/>A. 仅取高回声中心<br/>B. 用多普勒并重定向至有活性的外周缘，避开血管<br/>C. 增加负压继续<br/>D. 终止分期<br/>E. 立即纵隔镜<br/><span class="answer-key">答案：B。</span> 避免血管；坏死中心诊断率低，应取有活性的外周缘。</li>
+</ol>
+</section>
+<section>
+<h2>争议、差异与不断演进的证据</h2>
+<ul>
+<li><strong>确认性纵隔镜：</strong> 现代试验显示增量检出较小（多为单站 N2），同时带来延迟和发病风险；中心实践不同。</li>
+<li><strong>“区域”定义：</strong> TNM-9 的 N2a/N2b 提供预后区分，但可切除性阈值仍需多学科决定。</li>
+<li><strong>镇静策略：</strong> 中度或深度镇静取决于机构经验和患者合并症。</li>
+<li><strong>冷冻活检：</strong> EBUS 引导纵隔冷冻活检正用于 TBNA 不足的情境（如淋巴瘤结构、广泛分子检测）。</li>
+</ul>
+</section>
+<section>
+<h2>带回家的核对表</h2>
+<ul>
+<li class="checklist-item">掌握 TNM-9：N2a 与 N2b；M1c1 与 M1c2；T 仅按实性/浸润性大小。</li>
+<li class="checklist-item">分诊：先 CT + PET/CT；选择性脑 MRI。</li>
+<li class="checklist-item">侵入性分期：影像纵隔病变和“中间风险”原发肿瘤均有指征。</li>
+<li class="checklist-item">技术：系统性 EBUS±EUS-B；N3 → N2 → N1；每站 ≥3 针。</li>
+<li class="checklist-item">标志：奇静脉（4R/10R）；主动脉弓/左肺动脉（4L）。</li>
+<li class="checklist-item">安全：多普勒避血管；4R 注意胸膜。</li>
+<li class="checklist-item">EUS-B：用于后方 7 站、8–9 站和左肾上腺。</li>
+<li class="checklist-item">报告：结构化记录站点、针数、充分性和限制。</li>
+<li class="checklist-item">阴性 EBUS：不总需纵隔镜——逐例决定。</li>
+</ul>
+</section>
+<section>
+<h2>缩写与术语表</h2>
+<ul>
+<li><strong>ACCP：</strong> 美国胸科医师学会</li>
+<li><strong>EUS-B：</strong> 使用 EBUS 镜经食管检查</li>
+<li><strong>FDG：</strong> 氟代脱氧葡萄糖</li>
+<li><strong>GA：</strong> 全身麻醉</li>
+<li><strong>HFNC：</strong> 高流量鼻导管</li>
+<li><strong>IASLC：</strong> 国际肺癌研究协会</li>
+<li><strong>N2a/N2b：</strong> 单站/多站同侧纵隔病变（TNM-9）</li>
+<li><strong>M1c1/M1c2：</strong> 一个器官系统内多发病灶/多个器官系统转移（TNM-9）</li>
+<li><strong>PET/CT：</strong> 正电子发射断层扫描/计算机断层扫描</li>
+<li><strong>ROSE：</strong> 快速现场细胞学评估</li>
+<li><strong>STAS：</strong> 气腔内播散</li>
+<li><strong>TBNA：</strong> 经支气管针吸</li>
+<li><strong>VPI：</strong> 脏层胸膜侵犯</li>
+</ul>
+</section>
+<section>
+<h2>参考文献</h2>
+<ul>
+<li>Detterbeck FC, Woodard GA, Bader AS, et al. The proposed ninth edition TNM classification of lung cancer. Chest. 2024;166(4):882-895.</li>
+<li>Rami-Porta R, Nishimura K, Giroux D, et al. IASLC Lung Cancer Staging Project: proposals for revision of the TNM stage groups in the forthcoming ninth edition. J Thorac Oncol. 2024;19(7):1007-1027.</li>
+<li>Huang J, Osarogiagbon RU, Giroux DJ, et al. Proposals for revision of the N descriptors in the forthcoming ninth edition. J Thorac Oncol. 2024;19(5):766-785.</li>
+<li>Fong KM, Rosenthal A, Giroux DJ, et al. Proposals for revision of the M descriptors in the forthcoming ninth edition. J Thorac Oncol. 2024;19(5):786-802.</li>
+<li>Silvestri GA, Gonzalez AV, Jantz MA, et al. Methods for staging non-small cell lung cancer: ACCP evidence-based guideline (3rd ed). Chest. 2013.</li>
+<li>De Leyn P, Dooms C, Kuzdzal J, et al. Revised ESTS guidelines for preoperative lymph node staging for NSCLC. Eur J Cardiothorac Surg. 2014.</li>
+<li>Darling GE, Allen MS, Decker PA, et al. PET-CT compared with invasive mediastinal staging in NSCLC: results of mediastinal staging in the ELPET trial. J Thorac Oncol. 2011.</li>
+<li>Yasufuku K, Nakajima T, Motoori K, et al. Comparison of EBUS, PET, and CT for lymph node staging of lung cancer. Chest. 2006.</li>
+<li>Mehta AC, Wang KP. Endobronchial ultrasound-guided transbronchial needle aspiration: procedural technique (reference framework used in EBUS curricula). Chest. 2013.</li>
+<li>Bousema JE, et al. MEDIASTrial: confirmatory mediastinoscopy vs no mediastinoscopy after negative endosonography. Lancet/Multicenter RCT (as cited in provided materials).</li>
+<li>Hylton DA, Turner S, Kidane B, et al. The Canada Lymph Node Score during EBUS. J Thorac Cardiovasc Surg. 2020.</li>
+<li>Irfan M, Ahmed M, Breen D. High-flow nasal cannula oxygenation in EBUS bronchoscopy: randomized controlled trial. J Bronchology Interv Pulmonol. 2021.</li>
+<li>Yarmus LB, Akulian JA, Gilbert C, et al. Moderate vs deep sedation for EBUS-TBNA. Ann Am Thorac Soc. 2013.</li>
+<li>Krajnik I, Pavić TM, Knežević L, et al. Lung cancer staging in the ninth TNM edition: imaging pitfalls and pearls. Diagnostics. 2025;15:908.</li>
+</ul>
+</section>
+</body>
+</html>

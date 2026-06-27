@@ -1,10 +1,11 @@
+import { unlocalizedPathname } from '@/i18n/path'
+
 export type SiteEntitlement = 'ip_registry' | 'site_admin' | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
   '/forgot-password',
   '/health',
   '/api/scope-calibration',
-  '/journal-club-podcasts',
   '/login',
   '/pocus',
   '/pleural-procedures/pleural-ultrasound-simulator',
@@ -26,87 +27,110 @@ const STATIC_FILE_PATTERN =
   /\.(?:avif|bin|br|css|gif|glb|gltf|gz|ico|jpeg|jpg|js|json|map|mp4|mjs|nrrd|png|raw|stl|svg|txt|usdz|wasm|webmanifest|webp|woff|woff2|xml|zst)$/i
 
 export function isStaticAssetPath(pathname: string) {
-  return STATIC_FILE_PATTERN.test(pathname)
+  return STATIC_FILE_PATTERN.test(unlocalizedPathname(pathname))
 }
 
 export function isLegacyEbusGatewayPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
   return (
-    pathname === '/socal-ebus-course/app' ||
-    pathname === '/socal-ebus-course/app/' ||
-    pathname === '/socal-ebus-course/app/index.html'
+    normalizedPathname === '/socal-ebus-course/app' ||
+    normalizedPathname === '/socal-ebus-course/app/' ||
+    normalizedPathname === '/socal-ebus-course/app/index.html'
   )
 }
 
 export function isCtAlignmentSandboxPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
   return (
-    pathname === '/learn/anatomy/ct-alignment' ||
-    pathname.startsWith('/learn/anatomy/ct-alignment/')
+    normalizedPathname === '/learn/anatomy/ct-alignment' ||
+    normalizedPathname.startsWith('/learn/anatomy/ct-alignment/')
   )
 }
 
 export function isDevOnlyAirwayAnatomyPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
   return (
-    pathname === '/learn/anatomy/airway' ||
-    pathname.startsWith('/learn/anatomy/airway/') ||
-    pathname === '/airway-anatomy' ||
-    pathname.startsWith('/airway-anatomy/')
+    normalizedPathname === '/learn/anatomy/airway' ||
+    normalizedPathname.startsWith('/learn/anatomy/airway/') ||
+    normalizedPathname === '/airway-anatomy' ||
+    normalizedPathname.startsWith('/airway-anatomy/')
   )
 }
 
 export function isAdminOnlyEbusTrainingAssetPath(pathname: string) {
-  if (!pathname.startsWith('/socal-ebus-course/app/')) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  if (!normalizedPathname.startsWith('/socal-ebus-course/app/')) {
     return false
   }
 
   return (
-    pathname.startsWith('/socal-ebus-course/app/pipelines/') ||
+    normalizedPathname.startsWith('/socal-ebus-course/app/pipelines/') ||
     /\/assets\/(?:Case001Page-|CT_segmentation_[12]-|case_001_(?:ct|segmentation)-|itk-wasm-pipeline\.worker-)/.test(
-      pathname,
+      normalizedPathname,
     )
   )
 }
 
 export function isPublicPath(pathname: string) {
-  if (isDevOnlyAirwayAnatomyPath(pathname) || isAdminOnlyEbusTrainingAssetPath(pathname)) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  if (
+    isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
+  ) {
     return false
   }
 
-  if (PUBLIC_EXACT_PATHS.has(pathname)) {
+  if (PUBLIC_EXACT_PATHS.has(normalizedPathname)) {
     return true
   }
 
-  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+  if (PUBLIC_PREFIXES.some((prefix) => normalizedPathname.startsWith(prefix))) {
     return true
   }
 
-  if (isLegacyEbusGatewayPath(pathname)) {
+  if (isLegacyEbusGatewayPath(normalizedPathname)) {
     return true
   }
 
-  if (pathname.startsWith('/socal-ebus-course/app/') && isStaticAssetPath(pathname)) {
+  if (
+    normalizedPathname.startsWith('/socal-ebus-course/app/') &&
+    isStaticAssetPath(normalizedPathname)
+  ) {
     return true
   }
 
-  if (pathname.startsWith('/bronch-navigation-trainer/app/') && isStaticAssetPath(pathname)) {
+  if (
+    normalizedPathname.startsWith('/bronch-navigation-trainer/app/') &&
+    isStaticAssetPath(normalizedPathname)
+  ) {
     return true
   }
 
-  return isStaticAssetPath(pathname)
+  return isStaticAssetPath(normalizedPathname)
 }
 
 export function isAuthPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
   return (
-    pathname === '/login' ||
-    pathname === '/signup' ||
-    pathname === '/forgot-password' ||
-    pathname === '/verify-email' ||
-    pathname === '/auth/update-password' ||
-    pathname.startsWith('/auth/callback')
+    normalizedPathname === '/login' ||
+    normalizedPathname === '/signup' ||
+    normalizedPathname === '/forgot-password' ||
+    normalizedPathname === '/verify-email' ||
+    normalizedPathname === '/auth/update-password' ||
+    normalizedPathname.startsWith('/auth/callback')
   )
 }
 
 export function isPublicTrainingEmbed(pathname: string, searchParams: URLSearchParams) {
-  if (!pathname.startsWith('/socal-ebus-course/app')) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  if (!normalizedPathname.startsWith('/socal-ebus-course/app')) {
     return false
   }
 
@@ -121,36 +145,45 @@ export function isPublicTrainingEmbed(pathname: string, searchParams: URLSearchP
 }
 
 export function isAdminEbusPreviewEmbed(pathname: string, searchParams: URLSearchParams) {
-  return isLegacyEbusGatewayPath(pathname) && searchParams.get('adminPreview') === '1'
+  return (
+    isLegacyEbusGatewayPath(unlocalizedPathname(pathname)) &&
+    searchParams.get('adminPreview') === '1'
+  )
 }
 
 export function getRequiredEntitlement(
   pathname: string,
   searchParams: URLSearchParams,
 ): SiteEntitlement | null {
-  if (isDevOnlyAirwayAnatomyPath(pathname) || isAdminOnlyEbusTrainingAssetPath(pathname)) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  if (
+    isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
+  ) {
     return 'site_admin'
   }
 
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+  if (normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')) {
     return 'site_admin'
   }
 
-  if (pathname.startsWith('/ip-registry')) {
+  if (normalizedPathname.startsWith('/ip-registry')) {
     return 'ip_registry'
   }
 
-  if (isAdminEbusPreviewEmbed(pathname, searchParams)) {
+  if (isAdminEbusPreviewEmbed(normalizedPathname, searchParams)) {
     return 'site_admin'
   }
 
-  if (pathname.startsWith('/socal-ebus-course/app')) {
-    return isLegacyEbusGatewayPath(pathname) || isPublicTrainingEmbed(pathname, searchParams)
+  if (normalizedPathname.startsWith('/socal-ebus-course/app')) {
+    return isLegacyEbusGatewayPath(normalizedPathname) ||
+      isPublicTrainingEmbed(normalizedPathname, searchParams)
       ? null
       : 'socal_ebus_course'
   }
 
-  if (pathname.startsWith('/socal-ebus-course')) {
+  if (normalizedPathname.startsWith('/socal-ebus-course')) {
     return 'socal_ebus_course'
   }
 
@@ -170,14 +203,15 @@ export function resolveLoginRedirectPath(pathname: string, search: string) {
 }
 
 export function resolveSiteModuleId(pathname: string) {
-  const segments = pathname.split('/').filter(Boolean)
+  const normalizedPathname = unlocalizedPathname(pathname)
+  const segments = normalizedPathname.split('/').filter(Boolean)
   const first = segments[0]
 
   if (
     !first ||
-    isAuthPath(pathname) ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/pocus')
+    isAuthPath(normalizedPathname) ||
+    normalizedPathname.startsWith('/api') ||
+    normalizedPathname.startsWith('/pocus')
   ) {
     return null
   }
