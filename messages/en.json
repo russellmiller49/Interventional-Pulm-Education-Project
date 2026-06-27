@@ -15,6 +15,182 @@
     "lightMode": "Light mode",
     "genericUser": "there"
   },
+  "auth": {
+    "login": {
+      "metadataTitle": "Sign in",
+      "title": "Sign in",
+      "description": "Use your email and password to continue.",
+      "loading": "Loading sign in...",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "redirecting": "Redirecting...",
+      "footerText": "Need an account?",
+      "footerLabel": "Sign up for free",
+      "errors": {
+        "unavailable": "Sign-in is not available because Supabase is not configured."
+      }
+    },
+    "signup": {
+      "metadataTitle": "Create account",
+      "title": "Create your free account",
+      "description": "Your profile helps tailor education modules and aggregate learning analytics.",
+      "loading": "Loading signup form...",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm password",
+      "firstNameLabel": "First name",
+      "lastNameLabel": "Last name",
+      "professionalRoleLabel": "Professional role",
+      "residentSpecialtyLabel": "Resident specialty",
+      "otherRoleLabel": "Other role",
+      "trainingLevelLabel": "Training level",
+      "institutionTypeLabel": "Institution type",
+      "institutionLabel": "Institution",
+      "countryLabel": "Country",
+      "yearsInPracticeLabel": "Years in practice",
+      "interestsLabel": "Interests",
+      "learningGoalsLabel": "Learning goals",
+      "submit": {
+        "create": "Create free account",
+        "creating": "Creating account...",
+        "save": "Save profile",
+        "saving": "Saving profile..."
+      },
+      "status": {
+        "checkingAccount": "Checking your signed-in account...",
+        "completingProfile": "Completing profile for {email}."
+      },
+      "footerText": "Already have an account?",
+      "footerLabel": "Sign in",
+      "messages": {
+        "signInBeforeProfile": "Sign in before completing your profile.",
+        "passwordTooShort": "Use a password that is at least 8 characters long.",
+        "passwordMismatch": "The password confirmation does not match.",
+        "acceptAgreement": "Review and accept the user agreement before continuing.",
+        "checkEmail": "Check your email to verify your account before signing in.",
+        "sessionLoadFailed": "Unable to load the current Supabase session.",
+        "signupUnavailable": "Signup is not available because Supabase is not configured."
+      },
+      "validation": {
+        "firstNameRequired": "First name is required.",
+        "lastNameRequired": "Last name is required.",
+        "institutionRequired": "Institution is required.",
+        "countryRequired": "Country is required.",
+        "chooseInterest": "Choose at least one interest.",
+        "chooseLearningGoal": "Choose at least one learning goal.",
+        "residentSpecialtyRequired": "Resident specialty is required.",
+        "validResidentSpecialty": "Choose a valid resident specialty.",
+        "residentSpecialtyResidentsOnly": "Resident specialty only applies to residents.",
+        "describeProfessionalRole": "Describe your professional role.",
+        "validTrainingLevel": "Choose a valid training level.",
+        "trainingLevelLimited": "Training level only applies to students, residents, and fellows.",
+        "validInterests": "Choose valid interests.",
+        "validLearningGoals": "Choose valid learning goals.",
+        "reviewForm": "Please review the signup form."
+      },
+      "agreement": {
+        "title": "User agreement",
+        "points": {
+          "educationOnly": "This site is an educational tool only. It is not medical advice, credentialing, certification, or a substitute for clinical judgment, supervised training, institutional policy, or manufacturer instructions.",
+          "analytics": "The site may collect, retain, and analyze my module activity, quiz or simulation responses, completion status, timing, and related usage/performance data for educational analytics and product improvement.",
+          "researchUse": "Anonymous, de-identified, or aggregated usage and performance data may be used for research, quality improvement, presentations, or publications.",
+          "noPatientData": "I will not enter patient identifiers, protected health information, or other confidential patient data into this website."
+        },
+        "accept": "I have read and agree to these terms, including the tracking of educational usage and performance data and the anonymous, de-identified, or aggregated research use described above.",
+        "versionLabel": "Agreement version:"
+      },
+      "options": {
+        "professionalRole": {
+          "medical_student": "Medical Student",
+          "resident": "Resident",
+          "chief_resident": "Chief Resident",
+          "pulmonary_fellow": "Pulmonary Fellow",
+          "critical_care_fellow": "Critical Care Fellow",
+          "pccm_fellow": "PCCM Fellow",
+          "interventional_pulmonology_fellow": "Interventional Pulmonology Fellow",
+          "thoracic_surgery_fellow": "Thoracic Surgery Fellow",
+          "pulmonologist": "Pulmonologist",
+          "interventional_pulmonologist": "Interventional Pulmonologist",
+          "intensivist": "Intensivist",
+          "thoracic_surgeon": "Thoracic Surgeon",
+          "general_surgeon": "General Surgeon",
+          "anesthesiologist": "Anesthesiologist",
+          "emergency_medicine_physician": "Emergency Medicine Physician",
+          "advanced_practice_provider": "Advanced Practice Provider (NP/PA)",
+          "respiratory_therapist": "Respiratory Therapist",
+          "nurse": "Nurse",
+          "cytotechnologist": "Cytotechnologist",
+          "pathologist": "Pathologist",
+          "medical_educator": "Medical Educator",
+          "industry": "Industry",
+          "other": "Other"
+        },
+        "residentSpecialty": {
+          "internal_medicine": "Internal Medicine",
+          "pediatrics": "Pediatrics",
+          "surgery": "Surgery",
+          "anesthesia": "Anesthesia",
+          "emergency_medicine": "Emergency Medicine",
+          "other": "Other"
+        },
+        "institutionType": {
+          "hospital": "Hospital",
+          "medical_school": "Medical School",
+          "training_program": "Training Program",
+          "company": "Company"
+        },
+        "trainingLevel": {
+          "ms1": "MS1",
+          "ms2": "MS2",
+          "ms3": "MS3",
+          "ms4": "MS4",
+          "pgy_1": "PGY-1",
+          "pgy_2": "PGY-2",
+          "pgy_3": "PGY-3",
+          "pgy_4": "PGY-4",
+          "pgy_5": "PGY-5",
+          "pgy_6": "PGY-6",
+          "fellow_year_1": "Fellow Year 1",
+          "fellow_year_2": "Fellow Year 2",
+          "fellow_year_3": "Fellow Year 3",
+          "ip_fellow": "IP Fellow"
+        },
+        "yearsInPractice": {
+          "in_training": "In Training",
+          "lt_5": "<5 years",
+          "5_10": "5-10 years",
+          "10_20": "10-20 years",
+          "20_plus": "20+ years"
+        },
+        "interests": {
+          "flexible_bronchoscopy": "Flexible Bronchoscopy",
+          "ebus": "EBUS",
+          "robotic_bronchoscopy": "Robotic Bronchoscopy",
+          "peripheral_bronchoscopy": "Peripheral Bronchoscopy",
+          "pleural_disease": "Pleural Disease",
+          "thoracic_ultrasound": "Thoracic Ultrasound",
+          "airway_disease": "Airway Disease",
+          "interventional_pulmonology": "Interventional Pulmonology",
+          "lung_cancer": "Lung Cancer",
+          "critical_care_bronchoscopy": "Critical Care Bronchoscopy",
+          "rose_cytology": "ROSE/Cytology",
+          "simulation": "Simulation",
+          "medical_education": "Medical Education"
+        },
+        "learningGoals": {
+          "learn_fundamentals": "Learn fundamentals",
+          "board_preparation": "Board preparation",
+          "fellowship_training": "Fellowship training",
+          "procedural_skills": "Procedural skills",
+          "faculty_development": "Faculty development",
+          "teaching_trainees": "Teaching trainees"
+        }
+      }
+    }
+  },
   "language": {
     "label": "Language",
     "choose": "Choose language",

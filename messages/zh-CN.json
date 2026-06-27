@@ -15,6 +15,182 @@
     "lightMode": "浅色模式",
     "genericUser": "用户"
   },
+  "auth": {
+    "login": {
+      "metadataTitle": "登录",
+      "title": "登录",
+      "description": "请使用您的电子邮箱和密码继续。",
+      "loading": "正在加载登录表单...",
+      "emailLabel": "电子邮箱",
+      "passwordLabel": "密码",
+      "forgotPassword": "忘记密码？",
+      "submit": "登录",
+      "submitting": "正在登录...",
+      "redirecting": "正在跳转...",
+      "footerText": "还没有账户？",
+      "footerLabel": "免费注册",
+      "errors": {
+        "unavailable": "由于尚未配置 Supabase，暂时无法登录。"
+      }
+    },
+    "signup": {
+      "metadataTitle": "创建账户",
+      "title": "创建您的免费账户",
+      "description": "您的个人资料可帮助我们定制教学模块，并汇总学习分析数据。",
+      "loading": "正在加载注册表单...",
+      "emailLabel": "电子邮箱",
+      "passwordLabel": "密码",
+      "confirmPasswordLabel": "确认密码",
+      "firstNameLabel": "名",
+      "lastNameLabel": "姓",
+      "professionalRoleLabel": "专业角色",
+      "residentSpecialtyLabel": "住院医师专业",
+      "otherRoleLabel": "其他角色",
+      "trainingLevelLabel": "培训阶段",
+      "institutionTypeLabel": "机构类型",
+      "institutionLabel": "机构",
+      "countryLabel": "国家/地区",
+      "yearsInPracticeLabel": "执业年限",
+      "interestsLabel": "兴趣方向",
+      "learningGoalsLabel": "学习目标",
+      "submit": {
+        "create": "创建免费账户",
+        "creating": "正在创建账户...",
+        "save": "保存个人资料",
+        "saving": "正在保存个人资料..."
+      },
+      "status": {
+        "checkingAccount": "正在检查已登录账户...",
+        "completingProfile": "正在为 {email} 完善个人资料。"
+      },
+      "footerText": "已有账户？",
+      "footerLabel": "登录",
+      "messages": {
+        "signInBeforeProfile": "请先登录，然后再完善个人资料。",
+        "passwordTooShort": "请使用至少 8 个字符的密码。",
+        "passwordMismatch": "两次输入的密码不一致。",
+        "acceptAgreement": "请先查看并接受用户协议，然后继续。",
+        "checkEmail": "请先检查电子邮箱并验证账户，然后再登录。",
+        "sessionLoadFailed": "无法加载当前 Supabase 会话。",
+        "signupUnavailable": "由于尚未配置 Supabase，暂时无法注册。"
+      },
+      "validation": {
+        "firstNameRequired": "名为必填项。",
+        "lastNameRequired": "姓为必填项。",
+        "institutionRequired": "机构为必填项。",
+        "countryRequired": "国家/地区为必填项。",
+        "chooseInterest": "请至少选择一个兴趣方向。",
+        "chooseLearningGoal": "请至少选择一个学习目标。",
+        "residentSpecialtyRequired": "住院医师专业为必填项。",
+        "validResidentSpecialty": "请选择有效的住院医师专业。",
+        "residentSpecialtyResidentsOnly": "住院医师专业仅适用于住院医师。",
+        "describeProfessionalRole": "请描述您的专业角色。",
+        "validTrainingLevel": "请选择有效的培训阶段。",
+        "trainingLevelLimited": "培训阶段仅适用于医学生、住院医师和 fellows。",
+        "validInterests": "请选择有效的兴趣方向。",
+        "validLearningGoals": "请选择有效的学习目标。",
+        "reviewForm": "请检查注册表单。"
+      },
+      "agreement": {
+        "title": "用户协议",
+        "points": {
+          "educationOnly": "本网站仅作为教学工具。它不是医学建议、资质认证、证书，也不能替代临床判断、监督培训、机构政策或厂家说明。",
+          "analytics": "本网站可能收集、保存并分析我的模块活动、测验或模拟回答、完成状态、用时以及相关使用/表现数据，用于教学分析和产品改进。",
+          "researchUse": "匿名、去标识化或汇总后的使用和表现数据可用于研究、质量改进、会议展示或发表。",
+          "noPatientData": "我不会在本网站输入患者标识符、受保护健康信息或其他患者机密数据。"
+        },
+        "accept": "我已阅读并同意这些条款，包括跟踪教学使用和表现数据，以及上述匿名、去标识化或汇总形式的研究用途。",
+        "versionLabel": "协议版本："
+      },
+      "options": {
+        "professionalRole": {
+          "medical_student": "医学生",
+          "resident": "住院医师",
+          "chief_resident": "总住院医师",
+          "pulmonary_fellow": "呼吸专科 fellow",
+          "critical_care_fellow": "重症医学 fellow",
+          "pccm_fellow": "呼吸与重症医学 fellow",
+          "interventional_pulmonology_fellow": "介入呼吸病学 fellow",
+          "thoracic_surgery_fellow": "胸外科 fellow",
+          "pulmonologist": "呼吸科医师",
+          "interventional_pulmonologist": "介入呼吸科医师",
+          "intensivist": "重症医学医师",
+          "thoracic_surgeon": "胸外科医师",
+          "general_surgeon": "普外科医师",
+          "anesthesiologist": "麻醉科医师",
+          "emergency_medicine_physician": "急诊医学医师",
+          "advanced_practice_provider": "高级执业医务人员（NP/PA）",
+          "respiratory_therapist": "呼吸治疗师",
+          "nurse": "护士",
+          "cytotechnologist": "细胞技术师",
+          "pathologist": "病理医师",
+          "medical_educator": "医学教育者",
+          "industry": "行业人员",
+          "other": "其他"
+        },
+        "residentSpecialty": {
+          "internal_medicine": "内科",
+          "pediatrics": "儿科",
+          "surgery": "外科",
+          "anesthesia": "麻醉科",
+          "emergency_medicine": "急诊医学",
+          "other": "其他"
+        },
+        "institutionType": {
+          "hospital": "医院",
+          "medical_school": "医学院",
+          "training_program": "培训项目",
+          "company": "公司"
+        },
+        "trainingLevel": {
+          "ms1": "MS1",
+          "ms2": "MS2",
+          "ms3": "MS3",
+          "ms4": "MS4",
+          "pgy_1": "PGY-1",
+          "pgy_2": "PGY-2",
+          "pgy_3": "PGY-3",
+          "pgy_4": "PGY-4",
+          "pgy_5": "PGY-5",
+          "pgy_6": "PGY-6",
+          "fellow_year_1": "Fellow 第 1 年",
+          "fellow_year_2": "Fellow 第 2 年",
+          "fellow_year_3": "Fellow 第 3 年",
+          "ip_fellow": "IP fellow"
+        },
+        "yearsInPractice": {
+          "in_training": "培训中",
+          "lt_5": "<5 年",
+          "5_10": "5-10 年",
+          "10_20": "10-20 年",
+          "20_plus": "20 年以上"
+        },
+        "interests": {
+          "flexible_bronchoscopy": "软式支气管镜",
+          "ebus": "EBUS",
+          "robotic_bronchoscopy": "机器人支气管镜",
+          "peripheral_bronchoscopy": "外周支气管镜",
+          "pleural_disease": "胸膜疾病",
+          "thoracic_ultrasound": "胸部超声",
+          "airway_disease": "气道疾病",
+          "interventional_pulmonology": "介入呼吸病学",
+          "lung_cancer": "肺癌",
+          "critical_care_bronchoscopy": "重症支气管镜",
+          "rose_cytology": "ROSE/细胞学",
+          "simulation": "模拟训练",
+          "medical_education": "医学教育"
+        },
+        "learningGoals": {
+          "learn_fundamentals": "学习基础知识",
+          "board_preparation": "专科考试备考",
+          "fellowship_training": "Fellowship 培训",
+          "procedural_skills": "操作技能",
+          "faculty_development": "教师发展",
+          "teaching_trainees": "带教培训医师"
+        }
+      }
+    }
+  },
   "language": {
     "label": "语言",
     "choose": "选择语言",

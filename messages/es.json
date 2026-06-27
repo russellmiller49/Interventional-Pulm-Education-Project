@@ -15,6 +15,182 @@
     "lightMode": "Modo claro",
     "genericUser": "usuario"
   },
+  "auth": {
+    "login": {
+      "metadataTitle": "Iniciar sesión",
+      "title": "Iniciar sesión",
+      "description": "Use su correo electrónico y contraseña para continuar.",
+      "loading": "Cargando inicio de sesión...",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "forgotPassword": "¿Olvidó su contraseña?",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión...",
+      "redirecting": "Redirigiendo...",
+      "footerText": "¿Necesita una cuenta?",
+      "footerLabel": "Regístrese gratis",
+      "errors": {
+        "unavailable": "El inicio de sesión no está disponible porque Supabase no está configurado."
+      }
+    },
+    "signup": {
+      "metadataTitle": "Crear cuenta",
+      "title": "Cree su cuenta gratuita",
+      "description": "Su perfil ayuda a adaptar los módulos educativos y las analíticas agregadas de aprendizaje.",
+      "loading": "Cargando formulario de registro...",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "confirmPasswordLabel": "Confirmar contraseña",
+      "firstNameLabel": "Nombre",
+      "lastNameLabel": "Apellido",
+      "professionalRoleLabel": "Rol profesional",
+      "residentSpecialtyLabel": "Especialidad de residencia",
+      "otherRoleLabel": "Otro rol",
+      "trainingLevelLabel": "Nivel de formación",
+      "institutionTypeLabel": "Tipo de institución",
+      "institutionLabel": "Institución",
+      "countryLabel": "País",
+      "yearsInPracticeLabel": "Años en práctica",
+      "interestsLabel": "Intereses",
+      "learningGoalsLabel": "Objetivos de aprendizaje",
+      "submit": {
+        "create": "Crear cuenta gratuita",
+        "creating": "Creando cuenta...",
+        "save": "Guardar perfil",
+        "saving": "Guardando perfil..."
+      },
+      "status": {
+        "checkingAccount": "Comprobando su cuenta iniciada...",
+        "completingProfile": "Completando el perfil de {email}."
+      },
+      "footerText": "¿Ya tiene una cuenta?",
+      "footerLabel": "Iniciar sesión",
+      "messages": {
+        "signInBeforeProfile": "Inicie sesión antes de completar su perfil.",
+        "passwordTooShort": "Use una contraseña de al menos 8 caracteres.",
+        "passwordMismatch": "La confirmación de contraseña no coincide.",
+        "acceptAgreement": "Revise y acepte el acuerdo de usuario antes de continuar.",
+        "checkEmail": "Revise su correo electrónico para verificar su cuenta antes de iniciar sesión.",
+        "sessionLoadFailed": "No se pudo cargar la sesión actual de Supabase.",
+        "signupUnavailable": "El registro no está disponible porque Supabase no está configurado."
+      },
+      "validation": {
+        "firstNameRequired": "El nombre es obligatorio.",
+        "lastNameRequired": "El apellido es obligatorio.",
+        "institutionRequired": "La institución es obligatoria.",
+        "countryRequired": "El país es obligatorio.",
+        "chooseInterest": "Elija al menos un interés.",
+        "chooseLearningGoal": "Elija al menos un objetivo de aprendizaje.",
+        "residentSpecialtyRequired": "La especialidad de residencia es obligatoria.",
+        "validResidentSpecialty": "Elija una especialidad de residencia válida.",
+        "residentSpecialtyResidentsOnly": "La especialidad de residencia solo corresponde a residentes.",
+        "describeProfessionalRole": "Describa su rol profesional.",
+        "validTrainingLevel": "Elija un nivel de formación válido.",
+        "trainingLevelLimited": "El nivel de formación solo aplica a estudiantes, residentes y fellows.",
+        "validInterests": "Elija intereses válidos.",
+        "validLearningGoals": "Elija objetivos de aprendizaje válidos.",
+        "reviewForm": "Revise el formulario de registro."
+      },
+      "agreement": {
+        "title": "Acuerdo de usuario",
+        "points": {
+          "educationOnly": "Este sitio es solo una herramienta educativa. No constituye consejo médico, acreditación, certificación ni sustituye el juicio clínico, la formación supervisada, las políticas institucionales o las instrucciones del fabricante.",
+          "analytics": "El sitio puede recopilar, conservar y analizar mi actividad en los módulos, respuestas de cuestionarios o simulaciones, estado de finalización, tiempos y otros datos relacionados de uso o desempeño para analíticas educativas y mejora del producto.",
+          "researchUse": "Los datos de uso y desempeño anónimos, desidentificados o agregados pueden utilizarse para investigación, mejora de calidad, presentaciones o publicaciones.",
+          "noPatientData": "No ingresaré identificadores de pacientes, información médica protegida ni otros datos confidenciales de pacientes en este sitio web."
+        },
+        "accept": "He leído y acepto estos términos, incluido el seguimiento de datos de uso educativo y desempeño, así como el uso para investigación anónima, desidentificada o agregada descrito anteriormente.",
+        "versionLabel": "Versión del acuerdo:"
+      },
+      "options": {
+        "professionalRole": {
+          "medical_student": "Estudiante de medicina",
+          "resident": "Residente",
+          "chief_resident": "Jefe de residentes",
+          "pulmonary_fellow": "Fellow de neumología",
+          "critical_care_fellow": "Fellow de cuidados críticos",
+          "pccm_fellow": "Fellow de neumología y cuidados críticos",
+          "interventional_pulmonology_fellow": "Fellow de neumología intervencionista",
+          "thoracic_surgery_fellow": "Fellow de cirugía torácica",
+          "pulmonologist": "Neumólogo/a",
+          "interventional_pulmonologist": "Neumólogo/a intervencionista",
+          "intensivist": "Intensivista",
+          "thoracic_surgeon": "Cirujano/a torácico/a",
+          "general_surgeon": "Cirujano/a general",
+          "anesthesiologist": "Anestesiólogo/a",
+          "emergency_medicine_physician": "Médico/a de urgencias",
+          "advanced_practice_provider": "Proveedor/a de práctica avanzada (NP/PA)",
+          "respiratory_therapist": "Terapeuta respiratorio/a",
+          "nurse": "Enfermero/a",
+          "cytotechnologist": "Citotecnólogo/a",
+          "pathologist": "Patólogo/a",
+          "medical_educator": "Educador/a médico/a",
+          "industry": "Industria",
+          "other": "Otro"
+        },
+        "residentSpecialty": {
+          "internal_medicine": "Medicina interna",
+          "pediatrics": "Pediatría",
+          "surgery": "Cirugía",
+          "anesthesia": "Anestesia",
+          "emergency_medicine": "Medicina de urgencias",
+          "other": "Otra"
+        },
+        "institutionType": {
+          "hospital": "Hospital",
+          "medical_school": "Facultad de medicina",
+          "training_program": "Programa de formación",
+          "company": "Empresa"
+        },
+        "trainingLevel": {
+          "ms1": "MS1",
+          "ms2": "MS2",
+          "ms3": "MS3",
+          "ms4": "MS4",
+          "pgy_1": "PGY-1",
+          "pgy_2": "PGY-2",
+          "pgy_3": "PGY-3",
+          "pgy_4": "PGY-4",
+          "pgy_5": "PGY-5",
+          "pgy_6": "PGY-6",
+          "fellow_year_1": "Fellow año 1",
+          "fellow_year_2": "Fellow año 2",
+          "fellow_year_3": "Fellow año 3",
+          "ip_fellow": "Fellow de IP"
+        },
+        "yearsInPractice": {
+          "in_training": "En formación",
+          "lt_5": "<5 años",
+          "5_10": "5-10 años",
+          "10_20": "10-20 años",
+          "20_plus": "Más de 20 años"
+        },
+        "interests": {
+          "flexible_bronchoscopy": "Broncoscopia flexible",
+          "ebus": "EBUS",
+          "robotic_bronchoscopy": "Broncoscopia robótica",
+          "peripheral_bronchoscopy": "Broncoscopia periférica",
+          "pleural_disease": "Enfermedad pleural",
+          "thoracic_ultrasound": "Ecografía torácica",
+          "airway_disease": "Enfermedad de la vía aérea",
+          "interventional_pulmonology": "Neumología intervencionista",
+          "lung_cancer": "Cáncer de pulmón",
+          "critical_care_bronchoscopy": "Broncoscopia en cuidados críticos",
+          "rose_cytology": "ROSE/Citología",
+          "simulation": "Simulación",
+          "medical_education": "Educación médica"
+        },
+        "learningGoals": {
+          "learn_fundamentals": "Aprender fundamentos",
+          "board_preparation": "Preparación para certificación",
+          "fellowship_training": "Formación de fellowship",
+          "procedural_skills": "Habilidades procedimentales",
+          "faculty_development": "Desarrollo docente",
+          "teaching_trainees": "Enseñar a residentes y fellows"
+        }
+      }
+    }
+  },
   "language": {
     "label": "Idioma",
     "choose": "Elegir idioma",

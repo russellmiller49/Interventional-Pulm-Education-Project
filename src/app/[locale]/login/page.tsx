@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { AuthShell } from '@/components/auth/AuthShell'
 import { LoginForm } from '@/components/auth/LoginForm'
-import { HandoffContent } from '@/i18n/handoff'
-import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Sign in',
   robots: {
     index: false,
     follow: false,
@@ -16,19 +14,23 @@ const handoffMetadata: Metadata = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
-  return localizeHandoffServerValue(locale, handoffMetadata)
+  const t = await getTranslations({ locale, namespace: 'auth.login' })
+  return {
+    ...handoffMetadata,
+    title: t('metadataTitle'),
+  }
 }
 
-export default function LoginPage() {
+export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  setRequestLocale(locale)
+  const t = await getTranslations({ locale, namespace: 'auth.login' })
+
   return (
-    <HandoffContent>
-      {
-        <AuthShell title="Sign in" description="Use your email and password to continue." showPromo>
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading sign in...</p>}>
-            <LoginForm />
-          </Suspense>
-        </AuthShell>
-      }
-    </HandoffContent>
+    <AuthShell title={t('title')} description={t('description')} showPromo>
+      <Suspense fallback={<p className="text-sm text-muted-foreground">{t('loading')}</p>}>
+        <LoginForm />
+      </Suspense>
+    </AuthShell>
   )
 }
