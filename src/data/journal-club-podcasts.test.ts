@@ -1,19 +1,41 @@
 import {
   journalClubPodcastEpisodes,
   journalClubPodcastHubs,
+  landmarkJournalClubPodcastHub,
+  landmarkPodcastTag,
   podcastLanguages,
 } from './journal-club-podcasts'
 
 describe('journal club podcast data', () => {
   it('contains the complete beta episode set', () => {
-    expect(journalClubPodcastEpisodes).toHaveLength(54)
+    expect(journalClubPodcastEpisodes).toHaveLength(78)
   })
 
-  it('assigns each episode to one known primary hub', () => {
+  it('assigns each episode to known hubs', () => {
     const hubs = new Set<string>(journalClubPodcastHubs)
 
     for (const episode of journalClubPodcastEpisodes) {
       expect(hubs.has(episode.primaryHub)).toBe(true)
+
+      for (const secondaryHub of episode.secondaryHubs ?? []) {
+        expect(hubs.has(secondaryHub)).toBe(true)
+        expect(secondaryHub).not.toBe(episode.primaryHub)
+      }
+    }
+  })
+
+  it('labels landmark studies in the landmark hub and visible tag set', () => {
+    const landmarkEpisodes = journalClubPodcastEpisodes.filter((episode) =>
+      episode.secondaryHubs?.includes(landmarkJournalClubPodcastHub),
+    )
+
+    expect(landmarkEpisodes).toHaveLength(25)
+    expect(
+      journalClubPodcastEpisodes.find((episode) => episode.id === 'navigation-vs-ttnb')?.tags,
+    ).toContain(landmarkPodcastTag)
+
+    for (const episode of landmarkEpisodes) {
+      expect(episode.tags[0]).toBe(landmarkPodcastTag)
     }
   })
 

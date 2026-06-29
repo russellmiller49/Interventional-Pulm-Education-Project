@@ -7,7 +7,7 @@ const root = process.cwd()
 const { loadEnvConfig } = nextEnv
 loadEnvConfig(root)
 
-const sourceDirs = [
+const defaultSourceDirs = [
   path.join(root, 'podcasts', 'Completed_podcasts'),
   path.join(root, 'podcasts', 'arabic_mp3_files'),
   path.join(root, 'podcasts', 'korean_mp3_files'),
@@ -20,6 +20,9 @@ const secretKey = process.env.SUPABASE_SECRET_KEY
 const dryRun = process.argv.includes('--dry-run')
 const upsert = process.argv.includes('--upsert')
 const languagesArg = process.argv.find((arg) => arg.startsWith('--languages='))
+const sourceDirArgs = process.argv
+  .filter((arg) => arg.startsWith('--source-dir='))
+  .map((arg) => arg.replace(/^--source-dir=/, ''))
 const minBucketFileSizeLimit = 16 * 1024 * 1024
 const bucketFileSizeLimitPadding = 2 * 1024 * 1024
 
@@ -30,8 +33,11 @@ const languageSuffixes = new Map([
   ['Arabic', 'arabic'],
   ['Korean', 'korean'],
 ])
-const languageSuffixPattern = Array.from(languageSuffixes.keys()).join('|')
+const languageLabelsByLowercase = new Map(
+  Array.from(languageSuffixes, ([label, language]) => [label.toLowerCase(), language]),
+)
 const selectedLanguages = resolveSelectedLanguages()
+const sourceDirs = resolveSourceDirs()
 
 function slugify(value) {
   return value
@@ -70,22 +76,43 @@ async function* walk(dir) {
 
 function resolveUploadTarget(filePath) {
   const fileName = path.basename(filePath)
-  const match = fileName.match(new RegExp(`^(.+)_(${languageSuffixPattern})\\.mp3$`))
-  if (!match) {
-    throw new Error(`Podcast MP3 does not use the expected language suffix: ${fileName}`)
+  const extension = path.extname(fileName)
+  const baseFileName = path.basename(fileName, extension)
+  const parsed = parseLanguageTaggedBaseName(baseFileName)
+  const parentLanguage = resolveLanguageLabel(path.basename(path.dirname(filePath)))
+  const language = parsed?.language ?? parentLanguage
+
+  if (!language) {
+    throw new Error(`Podcast MP3 does not use an expected language suffix or folder: ${fileName}`)
   }
 
-  const [, baseName, languageLabel] = match
-  const language = languageSuffixes.get(languageLabel)
-  if (!language) {
-    throw new Error(`Unsupported podcast language suffix: ${languageLabel}`)
-  }
+  const baseName = parsed?.baseName ?? baseFileName
 
   return {
     episodeId: slugify(baseName),
     language,
     storagePath: `${prefix}/${slugify(baseName)}/${language}.mp3`,
   }
+}
+
+function parseLanguageTaggedBaseName(baseFileName) {
+  for (const [label, language] of languageSuffixes) {
+    const match = baseFileName.match(
+      new RegExp(`^(.+?)[\\s_\\-\\u2013\\u2014]+${label}$`, 'i'),
+    )
+    if (match?.[1]?.trim()) {
+      return {
+        baseName: match[1].trim(),
+        language,
+      }
+    }
+  }
+
+  return null
+}
+
+function resolveLanguageLabel(value) {
+  return languageLabelsByLowercase.get(value.trim().toLowerCase()) ?? null
 }
 
 function resolveSelectedLanguages() {
@@ -114,6 +141,18 @@ function resolveSelectedLanguages() {
   }
 
   return new Set(requestedLanguages)
+}
+
+function resolveSourceDirs() {
+  const extraSourceDirs = [
+    ...(process.env.JOURNAL_CLUB_PODCAST_EXTRA_SOURCE_DIRS || '').split(path.delimiter),
+    ...sourceDirArgs.flatMap((value) => value.split(path.delimiter)),
+  ]
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => (path.isAbsolute(value) ? value : path.resolve(root, value)))
+
+  return Array.from(new Set([...defaultSourceDirs, ...extraSourceDirs]))
 }
 
 async function collectFiles() {
