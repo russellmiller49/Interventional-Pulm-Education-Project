@@ -1,6 +1,6 @@
 export const journalClubPodcastHubs = [
-  'Lung Nodules, Early Lung Cancer & Staging',
   'Landmark Studies',
+  'Lung Nodules, Early Lung Cancer & Staging',
   'Robotic / Navigation Bronchoscopy & Tissue Acquisition',
   'Bronchoscopic Ablation & Intratumoral Therapy',
   'Pleural Disease, Thoracoscopy & Chest Drains',
