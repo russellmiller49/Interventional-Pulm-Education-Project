@@ -9,7 +9,7 @@ export const journalClubPodcastHubs = [
   'Training, Procedural Safety & Program Design',
 ] as const
 
-export const defaultJournalClubPodcastHub = journalClubPodcastHubs[0]
+export const defaultJournalClubPodcastHub = 'Lung Nodules, Early Lung Cancer & Staging'
 
 export const podcastLanguages = ['english', 'spanish', 'mandarin', 'arabic', 'korean'] as const
 
@@ -202,51 +202,6 @@ export const journalClubPodcastEpisodes = [
     audio: makePodcastAudio('intrapleural-tissue-plasminogen-activator-2011'),
   },
   {
-    id: 'bronchial-genomic-classifier-diagnostic-2015',
-    title: 'A Bronchial Genomic Classifier for the Diagnostic Evaluation of Lung Cancer',
-    citation:
-      'Silvestri, G. A., et al. (2015). "A Bronchial Genomic Classifier for the Diagnostic Evaluation of Lung Cancer." N Engl J Med 373(3): 243-251.',
-    year: 2015,
-    journal: 'N Engl J Med 373(3): 243-251.',
-    primaryHub: 'Lung Nodules, Early Lung Cancer & Staging',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Bronchoscopy',
-      'Diagnostic Yield',
-      'Lung Cancer',
-      'Molecular Diagnostics',
-      'Risk Stratification',
-    ],
-    synopsis:
-      'This AEGIS-derived classifier showed how airway gene-expression testing could refine post-bronchoscopy risk assessment when lung cancer remains suspected after a nondiagnostic procedure.',
-    publicationUrl: 'https://doi.org/10.1056/NEJMoa1504601',
-    audio: makePodcastAudio('bronchial-genomic-classifier-diagnostic-2015'),
-  },
-  {
-    id: 'endobronchial-ultrasonography-guide-sheath-2004',
-    title:
-      'Endobronchial Ultrasonography Using a Guide Sheath Increases the Ability to Diagnose Peripheral Pulmonary Lesions Endoscopically',
-    citation:
-      'Kurimoto, N., et al. (2004). "Endobronchial Ultrasonography Using a Guide Sheath Increases the Ability to Diagnose Peripheral Pulmonary Lesions Endoscopically." Chest 126(3): 959-965.',
-    year: 2004,
-    journal: 'Chest 126(3): 959-965.',
-    primaryHub: 'Robotic / Navigation Bronchoscopy & Tissue Acquisition',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Diagnostic Yield',
-      'EBUS',
-      'Lung Nodules',
-      'Peripheral Lesions',
-      'Radial EBUS',
-    ],
-    synopsis:
-      'A foundational radial EBUS guide-sheath study demonstrating that confirming and maintaining access to peripheral lesions could improve bronchoscopic diagnosis.',
-    publicationUrl: 'https://doi.org/10.1378/chest.126.3.959',
-    audio: makePodcastAudio('endobronchial-ultrasonography-guide-sheath-2004'),
-  },
-  {
     id: 'effect-of-an-ipc-vs-talc-pleurodesis-on-hospitalization-days-in-patients-with-mpe-the-ample-rct',
     title:
       'Effect of an Indwelling Pleural Catheter vs Talc Pleurodesis on Hospitalization Days in Patients With Malignant Pleural Effusion: The AMPLE RCT',
@@ -272,29 +227,6 @@ export const journalClubPodcastEpisodes = [
     ),
   },
   {
-    id: 'respiratory-infections-increase-risk-2012',
-    title:
-      'Respiratory Infections Increase the Risk of Granulation Tissue Formation Following Airway Stenting in Patients With Malignant Airway Obstruction',
-    citation:
-      'Ost, D. E., et al. (2012). "Respiratory Infections Increase the Risk of Granulation Tissue Formation Following Airway Stenting in Patients With Malignant Airway Obstruction." Chest 141(6): 1473-1481.',
-    year: 2012,
-    journal: 'Chest 141(6): 1473-1481.',
-    primaryHub: 'Central Airway Obstruction, Stents & Therapeutic Bronchoscopy',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Airway Stents',
-      'Bronchoscopy Safety',
-      'Central Airway Obstruction',
-      'Granulation Tissue',
-      'Therapeutic Bronchoscopy',
-    ],
-    synopsis:
-      'This airway-stent outcomes study linked lower respiratory tract infection with later granulation tissue, highlighting infection surveillance as part of longitudinal stent care.',
-    publicationUrl: 'https://doi.org/10.1378/chest.11-2005',
-    audio: makePodcastAudio('respiratory-infections-increase-risk-2012'),
-  },
-  {
     id: 'coldice-2020',
     title:
       'Diagnostic Accuracy of Transbronchial Lung Cryobiopsy for Interstitial Lung Disease Diagnosis (COLDICE)',
@@ -316,75 +248,6 @@ export const journalClubPodcastEpisodes = [
       'COLDICE prospectively compared transbronchial cryobiopsy with surgical lung biopsy in multidisciplinary ILD diagnosis, anchoring modern discussions of bronchoscopic tissue acquisition.',
     publicationUrl: 'https://doi.org/10.1016/S2213-2600(19)30342-X',
     audio: makePodcastAudio('coldice-2020'),
-  },
-  {
-    id: 'cost-effectiveness-of-indwelling-pleural-catheter-compared-with-talc-in-malignant-pleural-effusion',
-    title:
-      'Cost-Effectiveness of Indwelling Pleural Catheter Compared With Talc in Malignant Pleural Effusion',
-    citation:
-      'Olfert, J. A. P., et al. (2017). "Cost-Effectiveness of Indwelling Pleural Catheter Compared With Talc in Malignant Pleural Effusion." Respirology 22(4): 764-770.',
-    year: 2017,
-    journal: 'Respirology 22(4): 764-770.',
-    primaryHub: 'Pleural Disease, Thoracoscopy & Chest Drains',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Cost Effectiveness',
-      'IPC',
-      'Malignant Pleural Effusion',
-      'Pleural Disease',
-      'Pleurodesis',
-    ],
-    synopsis:
-      'A health-economic analysis comparing IPC and talc strategies for malignant pleural effusion, useful for connecting clinical outcomes with resource use and patient pathways.',
-    publicationUrl: 'https://doi.org/10.1111/resp.12962',
-    audio: makePodcastAudio(
-      'cost-effectiveness-of-indwelling-pleural-catheter-compared-with-talc-in-malignant-pleural-effusion',
-    ),
-  },
-  {
-    id: 'endoscopic-treatment-malignant-airway-1996',
-    title: 'Endoscopic Treatment of Malignant Airway Obstructions in 2,008 Patients',
-    citation:
-      'Cavaliere, S., et al. (1996). "Endoscopic Treatment of Malignant Airway Obstructions in 2,008 Patients." Chest 110(6): 1536-1542.',
-    year: 1996,
-    journal: 'Chest 110(6): 1536-1542.',
-    primaryHub: 'Central Airway Obstruction, Stents & Therapeutic Bronchoscopy',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Airway Stents',
-      'Central Airway Obstruction',
-      'Laser Therapy',
-      'Rigid Bronchoscopy',
-      'Therapeutic Bronchoscopy',
-    ],
-    synopsis:
-      'A large early therapeutic bronchoscopy series describing multimodality endoscopic management for malignant airway obstruction, including laser, brachytherapy, and silicone stenting.',
-    publicationUrl: 'https://doi.org/10.1378/chest.110.6.1536',
-    audio: makePodcastAudio('endoscopic-treatment-malignant-airway-1996'),
-  },
-  {
-    id: 'transbronchial-cryobiopsy-new-tool-2009',
-    title: 'Transbronchial Cryobiopsy: A New Tool for Lung Biopsies',
-    citation:
-      'Babiak, A., et al. (2009). "Transbronchial Cryobiopsy: A New Tool for Lung Biopsies." Respiration 78(2): 203-208.',
-    year: 2009,
-    journal: 'Respiration 78(2): 203-208.',
-    primaryHub: 'Robotic / Navigation Bronchoscopy & Tissue Acquisition',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Bronchoscopy Safety',
-      'Cryobiopsy',
-      'Diagnostic Yield',
-      'Interstitial Lung Disease',
-      'Tissue Acquisition',
-    ],
-    synopsis:
-      'One of the early clinical reports framing transbronchial cryobiopsy as a larger-sample bronchoscopic biopsy technique for diffuse lung disease.',
-    publicationUrl: 'https://doi.org/10.1159/000203987',
-    audio: makePodcastAudio('transbronchial-cryobiopsy-new-tool-2009'),
   },
   {
     id: 'dedicated-tracheobronchial-stent-1990',
@@ -451,44 +314,6 @@ export const journalClubPodcastEpisodes = [
       'AQuIRE provided multicenter complication and risk-factor data for therapeutic bronchoscopy in malignant central airway obstruction, grounding procedural safety discussions in registry outcomes.',
     publicationUrl: 'https://doi.org/10.1378/chest.14-1530',
     audio: makePodcastAudio('complications-therapeutic-bronchoscopy-malignant-2015'),
-  },
-  {
-    id: 'technical-aspects-of-ebus-tbna',
-    title: 'Technical Aspects of Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration',
-    citation:
-      'Wahidi, M. M., et al. (2016). "Technical Aspects of Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration: CHEST Guideline and Expert Panel Report." Chest 149(3): 816-835.',
-    year: 2016,
-    journal: 'Chest 149(3): 816-835.',
-    primaryHub: 'Training, Procedural Safety & Program Design',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [landmarkPodcastTag, 'Bronchoscopy Safety', 'EBUS', 'Guideline', 'Staging', 'Training'],
-    synopsis:
-      'CHEST technical guidance for EBUS-TBNA consolidated practical questions around procedure performance, sample handling, and staging technique.',
-    publicationUrl: 'https://doi.org/10.1378/chest.15-1216',
-    audio: makePodcastAudio('technical-aspects-of-ebus-tbna'),
-  },
-  {
-    id: 'electromagnetic-navigation-bronchoscopy-peripheral-2019',
-    title:
-      'Electromagnetic Navigation Bronchoscopy for Peripheral Pulmonary Lesions: One-Year Results of the Prospective, Multicenter NAVIGATE Study',
-    citation:
-      'Folch, E. E., et al. (2019). "Electromagnetic Navigation Bronchoscopy for Peripheral Pulmonary Lesions: One-Year Results of the Prospective, Multicenter NAVIGATE Study." J Thorac Oncol 14(3): 445-458.',
-    year: 2019,
-    journal: 'J Thorac Oncol 14(3): 445-458.',
-    primaryHub: 'Robotic / Navigation Bronchoscopy & Tissue Acquisition',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Diagnostic Yield',
-      'ENB',
-      'Lung Nodules',
-      'Navigation Bronchoscopy',
-      'Pneumothorax',
-    ],
-    synopsis:
-      'NAVIGATE supplied large prospective multicenter data on electromagnetic navigation bronchoscopy performance and safety for peripheral pulmonary lesions.',
-    publicationUrl: 'https://doi.org/10.1016/j.jtho.2018.11.013',
-    audio: makePodcastAudio('electromagnetic-navigation-bronchoscopy-peripheral-2019'),
   },
   {
     id: 'endobronchial-ultrasound-guided-transbronchial-2005',
@@ -629,50 +454,6 @@ export const journalClubPodcastEpisodes = [
       'LIBERATE supplied pivotal randomized evidence for Zephyr endobronchial valve therapy in selected heterogeneous emphysema, including benefit and pneumothorax-risk framing.',
     publicationUrl: 'https://doi.org/10.1164/rccm.201803-0590OC',
     audio: makePodcastAudio('liberate-2018'),
-  },
-  {
-    id: 'randomized-study-endobronchial-valves-2010',
-    title: 'A Randomized Study of Endobronchial Valves for Advanced Emphysema',
-    citation:
-      'Sciurba, F. C., et al. (2010). "A Randomized Study of Endobronchial Valves for Advanced Emphysema." N Engl J Med 363(13): 1233-1244.',
-    year: 2010,
-    journal: 'N Engl J Med 363(13): 1233-1244.',
-    primaryHub: 'Emphysema, BLVR & Hyperinflation',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'BLVR',
-      'Endobronchial Valves',
-      'Emphysema',
-      'Hyperinflation',
-      'Randomized Trial',
-    ],
-    synopsis:
-      'The VENT trial was an early randomized evaluation of endobronchial valves for advanced emphysema, clarifying both potential benefit and the importance of patient selection.',
-    publicationUrl: 'https://doi.org/10.1056/NEJMoa0900928',
-    audio: makePodcastAudio('randomized-study-endobronchial-valves-2010'),
-  },
-  {
-    id: 'effectiveness-safety-bronchial-thermoplasty-2010',
-    title: 'Effectiveness and Safety of Bronchial Thermoplasty in the Treatment of Severe Asthma',
-    citation:
-      'Castro, M., et al. (2010). "Effectiveness and Safety of Bronchial Thermoplasty in the Treatment of Severe Asthma: A Multicenter, Randomized, Double-Blind, Sham-Controlled Clinical Trial." Am J Respir Crit Care Med 181(2): 116-124.',
-    year: 2010,
-    journal: 'Am J Respir Crit Care Med 181(2): 116-124.',
-    primaryHub: 'Central Airway Obstruction, Stents & Therapeutic Bronchoscopy',
-    secondaryHubs: [landmarkJournalClubPodcastHub],
-    tags: [
-      landmarkPodcastTag,
-      'Bronchial Thermoplasty',
-      'Bronchoscopy Safety',
-      'Randomized Trial',
-      'Severe Asthma',
-      'Therapeutic Bronchoscopy',
-    ],
-    synopsis:
-      'The sham-controlled AIR2 trial remains the central randomized study for bronchial thermoplasty in severe asthma, balancing quality-of-life signals with short-term respiratory adverse events.',
-    publicationUrl: 'https://doi.org/10.1164/rccm.200903-0354OC',
-    audio: makePodcastAudio('effectiveness-safety-bronchial-thermoplasty-2010'),
   },
   {
     id: 'outpatient-talc-administration-indwelling-2018',
