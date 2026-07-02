@@ -9,6 +9,7 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
+  Download,
   Filter,
   Headphones,
   KeyRound,
@@ -749,6 +750,29 @@ function buildAdminUrl(status: string, filters: AdminDashboardFilters) {
   }
 
   return `/admin?${params.toString()}` as Route
+}
+
+function buildAdminExportUrl(filters: AdminDashboardFilters) {
+  const params = new URLSearchParams()
+
+  if (filters.q) {
+    params.set('q', filters.q)
+  }
+
+  if (filters.institution !== ALL_INSTITUTIONS_FILTER) {
+    params.set('institution', filters.institution)
+  }
+
+  if (filters.permission !== 'all') {
+    params.set('permission', filters.permission)
+  }
+
+  if (filters.agreement !== 'all') {
+    params.set('agreement', filters.agreement)
+  }
+
+  const query = params.toString()
+  return query ? `/api/admin/users/export?${query}` : '/api/admin/users/export'
 }
 
 async function requireSiteAdminUser() {
@@ -1674,6 +1698,12 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                   {users.length} matching {users.length === 1 ? 'user' : 'users'}
                 </p>
               </div>
+              <Button asChild variant="outline" className="w-full lg:w-auto">
+                <a href={buildAdminExportUrl(filters)}>
+                  <Download className="h-4 w-4" aria-hidden />
+                  Export CSV
+                </a>
+              </Button>
             </div>
 
             <form

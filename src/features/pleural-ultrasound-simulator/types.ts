@@ -1,4 +1,24 @@
+/**
+ * Pleural-typed view over the shared thoracic ultrasound simulator engine.
+ *
+ * The pleural feature was the prototype the shared engine was extracted from;
+ * these aliases keep every historical type name stable (and the existing test
+ * suite unchanged) while the implementations live in
+ * `@/features/thoracic-ultrasound-simulator`.
+ */
 import type { EffusionPattern } from '@/features/pleural-ultrasound/engine/types'
+import type {
+  FrameAtlasTolerance,
+  FrameGeneratorSource,
+  FrameReviewStatus,
+  LabelBounds,
+  NeedlePathAssessment as ThoracicNeedlePathAssessment,
+  ThoracicFrameMetrics,
+  ThoracicProbeState,
+  VolumeGeometry,
+} from '@/features/thoracic-ultrasound-simulator/types'
+
+export type { Vec3, LabelBounds } from '@/features/thoracic-ultrasound-simulator/types'
 
 export type PleuralTissueLabel =
   | 'background'
@@ -17,52 +37,15 @@ export type PleuralTissueLabel =
 
 export type PleuralLabelCode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
-export type Vec3 = [number, number, number]
+export type PleuralVolumeGeometry = VolumeGeometry
 
-export interface LabelBounds {
-  min: [number, number, number]
-  max: [number, number, number]
-  voxels: number
-}
+export type PleuralProbeState = ThoracicProbeState
 
-export interface PleuralVolumeGeometry {
-  sizeXyz: [number, number, number]
-  sourceSizeXyz: [number, number, number]
-  strideXyz: [number, number, number]
-  spacingXyzMm: [number, number, number]
-  originLpsMm: [number, number, number]
-  coordinateSystem: 'LPS'
-}
+export type PleuralAtlasGeneratorSource = FrameGeneratorSource
 
-export interface PleuralProbeState {
-  lateralMm: number
-  posteriorMm: number
-  craniocaudalMm: number
-  tiltDeg: number
-  rotationDeg: number
-  depthCm: number
-  gain: number
-  dynamicRangeDb: number
-  sectorAngleDeg: number
-  needleAngleDeg: number
-}
+export type PleuralAtlasReviewStatus = FrameReviewStatus
 
-export type PleuralAtlasGeneratorSource =
-  | 'browser-raymarcher'
-  | 'plus-offline'
-  | 'must-inspired-offline'
-  | 'manual-curated'
-
-export type PleuralAtlasReviewStatus = 'reviewed' | 'needs-review'
-
-export interface PleuralFrameAtlasTolerance {
-  lateralMm: number
-  craniocaudalMm: number
-  tiltDeg: number
-  rotationDeg: number
-  depthCm: number
-  sectorAngleDeg: number
-}
+export type PleuralFrameAtlasTolerance = FrameAtlasTolerance
 
 export interface PleuralFrameAtlasEntry {
   id: string
@@ -138,26 +121,9 @@ export interface PleuralVolume {
   labels: Record<string, PleuralTissueLabel>
 }
 
-export interface UltrasoundFrameMetrics {
-  maxFluidPocketMm: number
-  meanFluidPocketMm: number
-  fluidBeamFraction: number
-  ribShadowBeamFraction: number
-  diaphragmSeen: boolean
-  lungSeen: boolean
-  solidOrganSeen: boolean
-  centralNeedle: NeedlePathAssessment
-}
+export type UltrasoundFrameMetrics = ThoracicFrameMetrics
 
-export interface NeedlePathAssessment {
-  ribHit: boolean
-  diaphragmHit: boolean
-  solidOrganHit: boolean
-  lungHit: boolean
-  fluidRunMm: number
-  firstFluidDepthMm: number | null
-  safeWindow: boolean
-}
+export type NeedlePathAssessment = ThoracicNeedlePathAssessment
 
 export interface ProbeScore {
   safeWindow: boolean

@@ -1,3 +1,11 @@
+import type { FrameAtlas, FrameAtlasEntry } from '@/features/thoracic-ultrasound-simulator/types'
+import {
+  defaultFrameAtlasTolerance,
+  normalizeFrameAtlas as thoracicNormalizeFrameAtlas,
+  poseDistanceWithinTolerance as thoracicPoseDistanceWithinTolerance,
+  selectNearestReviewedFrame,
+} from '@/features/thoracic-ultrasound-simulator/engine/frameAtlas'
+
 import type {
   PleuralFrameAtlas,
   PleuralFrameAtlasEntry,
@@ -5,75 +13,46 @@ import type {
   PleuralProbeState,
 } from '../types'
 
-export const defaultFrameAtlasTolerance: PleuralFrameAtlasTolerance = {
-  lateralMm: 8,
-  craniocaudalMm: 8,
-  tiltDeg: 4,
-  rotationDeg: 6,
-  depthCm: 0.6,
-  sectorAngleDeg: 4,
-}
+export { defaultFrameAtlasTolerance }
 
 export interface AtlasFrameSelection {
   entry: PleuralFrameAtlasEntry
   normalizedDistance: number
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
+/**
+ * Bridge a pleural atlas to the generic one: the pleural ground-truth pattern
+ * becomes the generic `groundTruthKey`, everything else is shared. Entries keep
+ * their `groundTruthPattern` field through the spread, so mapping back is a
+ * cast.
+ */
+function toGenericAtlas(atlas: PleuralFrameAtlas): FrameAtlas {
+  return {
+    ...atlas,
+    entries: (atlas.entries ?? []).map((entry) => ({
+      ...entry,
+      groundTruthKey: entry.groundTruthPattern,
+    })) as FrameAtlasEntry[],
+  }
 }
 
-function hasProbeState(value: unknown): value is PleuralProbeState {
-  const probe = value as PleuralProbeState
-  return (
-    isFiniteNumber(probe?.lateralMm) &&
-    isFiniteNumber(probe?.posteriorMm) &&
-    isFiniteNumber(probe?.craniocaudalMm) &&
-    isFiniteNumber(probe?.tiltDeg) &&
-    isFiniteNumber(probe?.rotationDeg) &&
-    isFiniteNumber(probe?.depthCm) &&
-    isFiniteNumber(probe?.gain) &&
-    isFiniteNumber(probe?.dynamicRangeDb) &&
-    isFiniteNumber(probe?.sectorAngleDeg) &&
-    isFiniteNumber(probe?.needleAngleDeg)
-  )
-}
-
-function isAtlasEntry(value: unknown): value is PleuralFrameAtlasEntry {
-  const entry = value as PleuralFrameAtlasEntry
-  return (
-    typeof entry?.id === 'string' &&
-    typeof entry.label === 'string' &&
-    typeof entry.imageUrl === 'string' &&
-    hasProbeState(entry.probe) &&
-    !!entry.metrics &&
-    !!entry.metrics.centralNeedle &&
-    typeof entry.groundTruthPattern === 'string' &&
-    !!entry.generator &&
-    typeof entry.generator.name === 'string' &&
-    typeof entry.generator.source === 'string' &&
-    (entry.reviewStatus === 'reviewed' || entry.reviewStatus === 'needs-review')
-  )
-}
-
-export function normalizeFrameAtlas(atlas: PleuralFrameAtlas | null | undefined) {
+export function normalizeFrameAtlas(
+  atlas: PleuralFrameAtlas | null | undefined,
+): PleuralFrameAtlas | null {
   if (!atlas || !Array.isArray(atlas.entries)) {
     return null
   }
 
-  const entries = atlas.entries.filter(isAtlasEntry)
-  if (entries.length === 0) {
+  const normalized = thoracicNormalizeFrameAtlas(toGenericAtlas(atlas))
+  if (!normalized) {
     return null
   }
 
   return {
     ...atlas,
-    selectionTolerance: {
-      ...defaultFrameAtlasTolerance,
-      ...(atlas.selectionTolerance ?? {}),
-    },
-    entries,
-  } satisfies PleuralFrameAtlas
+    selectionTolerance: normalized.selectionTolerance,
+    entries: normalized.entries as unknown as PleuralFrameAtlasEntry[],
+  }
 }
 
 export function poseDistanceWithinTolerance(
@@ -81,56 +60,24 @@ export function poseDistanceWithinTolerance(
   entry: PleuralFrameAtlasEntry,
   tolerance: PleuralFrameAtlasTolerance,
 ) {
-  const deltas = [
-    Math.abs(probe.lateralMm - entry.probe.lateralMm) / tolerance.lateralMm,
-    Math.abs(probe.craniocaudalMm - entry.probe.craniocaudalMm) / tolerance.craniocaudalMm,
-    Math.abs(probe.tiltDeg - entry.probe.tiltDeg) / tolerance.tiltDeg,
-    Math.abs(probe.rotationDeg - entry.probe.rotationDeg) / tolerance.rotationDeg,
-    Math.abs(probe.depthCm - entry.probe.depthCm) / tolerance.depthCm,
-    Math.abs(probe.sectorAngleDeg - entry.probe.sectorAngleDeg) / tolerance.sectorAngleDeg,
-  ]
-  const maxDelta = Math.max(...deltas)
-  const euclidean = Math.sqrt(deltas.reduce((total, value) => total + value * value, 0))
-
-  return {
-    withinTolerance: maxDelta <= 1,
-    normalizedDistance: euclidean,
-  }
+  return thoracicPoseDistanceWithinTolerance(probe, entry.probe, tolerance)
 }
 
 export function selectNearestReviewedAtlasFrame(
   atlas: PleuralFrameAtlas | null | undefined,
   probe: PleuralProbeState,
 ): AtlasFrameSelection | null {
-  const normalizedAtlas = normalizeFrameAtlas(atlas)
-  if (!normalizedAtlas) {
+  if (!atlas || !Array.isArray(atlas.entries)) {
     return null
   }
 
-  const tolerance = {
-    ...defaultFrameAtlasTolerance,
-    ...normalizedAtlas.selectionTolerance,
+  const selection = selectNearestReviewedFrame(toGenericAtlas(atlas), probe)
+  if (!selection) {
+    return null
   }
 
-  let bestSelection: AtlasFrameSelection | null = null
-
-  for (const entry of normalizedAtlas.entries) {
-    if (entry.reviewStatus !== 'reviewed') {
-      continue
-    }
-
-    const distance = poseDistanceWithinTolerance(probe, entry, tolerance)
-    if (!distance.withinTolerance) {
-      continue
-    }
-
-    if (!bestSelection || distance.normalizedDistance < bestSelection.normalizedDistance) {
-      bestSelection = {
-        entry,
-        normalizedDistance: distance.normalizedDistance,
-      }
-    }
+  return {
+    entry: selection.entry as unknown as PleuralFrameAtlasEntry,
+    normalizedDistance: selection.normalizedDistance,
   }
-
-  return bestSelection
 }
