@@ -1,5 +1,6 @@
 import {
   isAdminOnlyEbusTrainingAssetPath,
+  isAdminOnlyThermalAblationPath,
   isAdminEbusPreviewEmbed,
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
@@ -122,6 +123,21 @@ describe('main site auth access helpers', () => {
       'site_admin',
     )
     expect(isPublicPath('/airway-anatomy/case-001/case_manifest.json')).toBe(false)
+  })
+
+  it('requires site admin for the thermal ablation module route and static assets', () => {
+    expect(isAdminOnlyThermalAblationPath('/thermal-ablation')).toBe(true)
+    expect(isAdminOnlyThermalAblationPath('/thermal-ablation/index.html')).toBe(true)
+    expect(isAdminOnlyThermalAblationPath('/thermal-ablation/any-asset.js')).toBe(true)
+    expect(isAdminOnlyThermalAblationPath('/es/thermal-ablation')).toBe(true)
+    expect(isAdminOnlyThermalAblationPath('/thermal-ablation-extra')).toBe(false)
+    expect(getRequiredEntitlement('/thermal-ablation', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/zh-CN/thermal-ablation', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/thermal-ablation/index.html', params())).toBe('site_admin')
+    expect(getRequiredEntitlement('/thermal-ablation/any-asset.js', params())).toBe('site_admin')
+    expect(isPublicPath('/thermal-ablation/index.html')).toBe(false)
+    expect(isPublicPath('/thermal-ablation/any-asset.js')).toBe(false)
+    expect(resolveSiteModuleId('/thermal-ablation')).toBe('thermal-ablation')
   })
 
   it('keeps virtual EBUS simulator artifacts out of public static access', () => {

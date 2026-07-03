@@ -5,7 +5,8 @@
       "name": "main-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3001
+      "port": 3001,
+      "autoPort": false
     },
     {
       "name": "bronch-trainer",

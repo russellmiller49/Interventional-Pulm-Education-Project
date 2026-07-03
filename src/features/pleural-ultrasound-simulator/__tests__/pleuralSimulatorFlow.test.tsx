@@ -143,6 +143,7 @@ describe('pleural simulator component flow', () => {
     // Left pane: 3D scene falls back to the surface map in jsdom + probe controls.
     expect(screen.getByLabelText('Projected access window map')).toBeInTheDocument()
     expect(screen.getByText('Lateral position')).toBeInTheDocument()
+    expect(screen.queryByText('Posterior contact')).not.toBeInTheDocument()
     expect(screen.getByText('Guide line')).toBeInTheDocument()
 
     // Neutral prompts from the manifest's learning tasks.

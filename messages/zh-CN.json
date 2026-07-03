@@ -254,6 +254,11 @@
         "shortTitle": "导航",
         "description": "从 CT 到支气管镜视图的导航模拟器"
       },
+      "thermalAblation": {
+        "title": "热消融",
+        "shortTitle": "热消融",
+        "description": "激光、电灼与 APC 交互式物理教学模块"
+      },
       "pleuralProcedures": {
         "title": "胸膜操作",
         "shortTitle": "胸膜",

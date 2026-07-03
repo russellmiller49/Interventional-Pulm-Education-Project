@@ -68,8 +68,8 @@ export interface VolumeGeometry {
 }
 
 /**
- * Shared probe transform. `posteriorMm` is the contact depth into the chest
- * wall (the transform Y axis), `lateralMm`/`craniocaudalMm` slide along it.
+ * Shared probe transform. `posteriorMm` is the skin-contact coordinate on the
+ * chest wall (the transform Y axis), `lateralMm`/`craniocaudalMm` slide along it.
  * Beam-forming settings (depth, gain, dynamic range, sector fan) and the
  * needle-guide angle round out the state the scene and B-mode panel both read.
  */

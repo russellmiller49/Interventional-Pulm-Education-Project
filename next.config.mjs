@@ -221,12 +221,18 @@ const nextConfig = {
     return [
       {
         // Apply security headers to HTML pages only, not static app assets.
-        source: '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app).*)',
+        source:
+          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/).*)',
         headers: securityHeaders,
       },
       {
         // Allow the bundled SoCal EBUS app to render inside the same-site iframe.
         source: '/socal-ebus-course/app/:path*',
+        headers: embeddedAppSecurityHeaders,
+      },
+      {
+        // Allow the admin-gated thermal ablation modules to render inside the same-site iframe.
+        source: '/thermal-ablation/:path*',
         headers: embeddedAppSecurityHeaders,
       },
       {

@@ -36,6 +36,14 @@ import { HandoffContent } from '@/i18n/handoff'
 
 const degreesToRadians = Math.PI / 180
 const FAN_SEGMENTS = 24
+const FAN_RANGE_LINE_FRACTIONS = [0.25, 0.5, 0.75, 1] as const
+const FAN_GRID_VERTEX_COUNT = (3 + FAN_RANGE_LINE_FRACTIONS.length * FAN_SEGMENTS) * 2
+const FAN_FILL_RENDER_ORDER = 45
+const FAN_GRID_RENDER_ORDER = 46
+const SCENE_CAMERA_BASE_FOV = 42
+const PROBE_MODEL_SCALE_MM = 30
+const SKIN_CONTACT_SNAP_EPSILON_MM = 0.5
+const SKIN_CONTACT_RAYCAST_PADDING_MM = 120
 
 interface ThoracicScene3DProps {
   manifest: ThoracicCaseManifest
@@ -176,7 +184,13 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
             {webglReady ? (
               <div className="h-[32rem] w-full">
                 <Canvas
-                  camera={{ position: [0, 0, 0], up: [0, 0, 1], near: 1, far: 6000, fov: 42 }}
+                  camera={{
+                    position: [0, 0, 0],
+                    up: [0, 0, 1],
+                    near: 1,
+                    far: 6000,
+                    fov: SCENE_CAMERA_BASE_FOV,
+                  }}
                   dpr={[1, 2]}
                 >
                   <Suspense fallback={null}>
@@ -304,17 +318,47 @@ function SceneContent({
     const material = new THREE.MeshBasicMaterial({
       color: '#38bdf8',
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.32,
       side: THREE.DoubleSide,
+      depthTest: false,
       depthWrite: false,
     })
-    return new THREE.Mesh(geometry, material)
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.renderOrder = FAN_FILL_RENDER_ORDER
+    return mesh
+  }, [])
+
+  const fanGrid = useMemo(() => {
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(new Float32Array(FAN_GRID_VERTEX_COUNT * 3), 3),
+    )
+    const material = new THREE.LineBasicMaterial({
+      color: '#e0f2fe',
+      transparent: true,
+      opacity: 0.82,
+      depthTest: false,
+      depthWrite: false,
+    })
+    const lines = new THREE.LineSegments(geometry, material)
+    lines.renderOrder = FAN_GRID_RENDER_ORDER
+    return lines
   }, [])
 
   const guideLine = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3))
-    return new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: '#10b981' }))
+    const line = new THREE.Line(
+      geometry,
+      new THREE.LineBasicMaterial({
+        color: '#10b981',
+        depthTest: false,
+        depthWrite: false,
+      }),
+    )
+    line.renderOrder = FAN_GRID_RENDER_ORDER + 1
+    return line
   }, [])
 
   useEffect(() => {
@@ -325,10 +369,12 @@ function SceneContent({
     return () => {
       fan.geometry.dispose()
       ;(fan.material as THREE.Material).dispose()
+      fanGrid.geometry.dispose()
+      ;(fanGrid.material as THREE.Material).dispose()
       guideLine.geometry.dispose()
       ;(guideLine.material as THREE.Material).dispose()
     }
-  }, [fan, guideLine])
+  }, [fan, fanGrid, guideLine])
 
   const basisTemps = useMemo(
     () => ({
@@ -338,6 +384,36 @@ function SceneContent({
       zAxis: new THREE.Vector3(),
     }),
     [],
+  )
+  const skinContactRaycastTempsRef = useRef({
+    raycaster: new THREE.Raycaster(),
+    origin: new THREE.Vector3(),
+    direction: new THREE.Vector3(0, -1, 0),
+    hits: [] as THREE.Intersection[],
+  })
+  const skinContactRayStartY = center[1] + radius + SKIN_CONTACT_RAYCAST_PADDING_MM
+  const skinContactRayFar = radius * 2 + SKIN_CONTACT_RAYCAST_PADDING_MM * 2
+
+  const skinContactPosteriorMm = useCallback(
+    (probe: ThoracicProbeState) => {
+      const skinMeshes = meshesByLabelRef.current.get('skin')
+      if (!skinMeshes?.length) {
+        return null
+      }
+
+      const { raycaster, origin, direction, hits } = skinContactRaycastTempsRef.current
+      origin.set(probe.lateralMm, skinContactRayStartY, probe.craniocaudalMm)
+      raycaster.set(origin, direction)
+      raycaster.near = 0
+      raycaster.far = skinContactRayFar
+
+      raycaster.intersectObjects(skinMeshes, false, hits)
+      const posteriorMm = hits[0]?.point.y ?? null
+      hits.length = 0
+
+      return posteriorMm
+    },
+    [skinContactRayFar, skinContactRayStartY],
   )
 
   // The scene reads the store imperatively every frame: dragging updates the
@@ -350,7 +426,17 @@ function SceneContent({
       })
     })
 
-    const probe = store.getState()
+    let probe = store.getState()
+    const contactPosteriorMm = skinContactPosteriorMm(probe)
+    if (contactPosteriorMm !== null) {
+      const snappedPosteriorMm = contactPosteriorMm
+
+      if (Math.abs(snappedPosteriorMm - probe.posteriorMm) > SKIN_CONTACT_SNAP_EPSILON_MM) {
+        store.setState({ posteriorMm: snappedPosteriorMm })
+      }
+      probe = { ...probe, posteriorMm: snappedPosteriorMm }
+    }
+
     const origin = probeOrigin(probe)
     const maxDepthMm = probe.depthCm * 10
 
@@ -378,6 +464,36 @@ function SceneContent({
     fanPositions.needsUpdate = true
     fan.geometry.computeBoundingSphere()
 
+    const fanGridPositions = fanGrid.geometry.getAttribute('position') as THREE.BufferAttribute
+    let gridVertexIndex = 0
+    const setGridPoint = (point: [number, number, number]) => {
+      fanGridPositions.setXYZ(gridVertexIndex, point[0], point[1], point[2])
+      gridVertexIndex += 1
+    }
+    const leftFanAngle = -probe.sectorAngleDeg / 2
+    const rightFanAngle = probe.sectorAngleDeg / 2
+    const leftFanPoint = projectBeamToWorld(probe, leftFanAngle, maxDepthMm)
+    const rightFanPoint = projectBeamToWorld(probe, rightFanAngle, maxDepthMm)
+    const centerFanPoint = projectBeamToWorld(probe, 0, maxDepthMm)
+    setGridPoint(origin)
+    setGridPoint(leftFanPoint)
+    setGridPoint(origin)
+    setGridPoint(rightFanPoint)
+    setGridPoint(origin)
+    setGridPoint(centerFanPoint)
+
+    FAN_RANGE_LINE_FRACTIONS.forEach((depthFraction) => {
+      const depthMm = maxDepthMm * depthFraction
+      for (let segment = 0; segment < FAN_SEGMENTS; segment += 1) {
+        const startAngle = probe.sectorAngleDeg * (segment / FAN_SEGMENTS - 0.5)
+        const endAngle = probe.sectorAngleDeg * ((segment + 1) / FAN_SEGMENTS - 0.5)
+        setGridPoint(projectBeamToWorld(probe, startAngle, depthMm))
+        setGridPoint(projectBeamToWorld(probe, endAngle, depthMm))
+      }
+    })
+    fanGridPositions.needsUpdate = true
+    fanGrid.geometry.computeBoundingSphere()
+
     const guidePositions = guideLine.geometry.getAttribute('position') as THREE.BufferAttribute
     const guideEnd = needleEndpoint(probe, maxDepthMm)
     guidePositions.setXYZ(0, origin[0], origin[1], origin[2])
@@ -396,13 +512,13 @@ function SceneContent({
 
   const moveProbeToPoint = useCallback(
     (point: THREE.Vector3) => {
-      store.setState(
-        clampToRanges({
+      store.setState({
+        ...clampToRanges({
           lateralMm: point.x,
-          posteriorMm: point.y,
           craniocaudalMm: point.z,
         }),
-      )
+        posteriorMm: point.y,
+      })
     },
     [store, clampToRanges],
   )
@@ -461,14 +577,12 @@ function SceneContent({
         {manifest.probeModelUrl ? (
           <ProbeModel url={manifest.probeModelUrl} />
         ) : (
-          <mesh position={[0, 16, 0]}>
-            <boxGeometry args={[14, 32, 9]} />
-            <meshStandardMaterial color="#e5e7eb" />
-          </mesh>
+          <FallbackProbeModel />
         )}
       </group>
 
       <primitive object={fan} />
+      <primitive object={fanGrid} />
       <primitive object={guideLine} />
 
       <OrbitControls
@@ -490,12 +604,24 @@ function SceneCamera({
   target: [number, number, number]
 }) {
   useFrame(({ camera }) => {
+    const perspectiveCamera = camera instanceof THREE.PerspectiveCamera ? camera : null
+    const aspect = perspectiveCamera?.aspect ?? 1
+    const portraitFov = aspect < 0.75 ? 72 : aspect < 1 ? 58 : SCENE_CAMERA_BASE_FOV
+
     if (!camera.userData.thoracicPlaced) {
       camera.position.set(position[0], position[1], position[2])
       camera.up.set(0, 0, 1)
       camera.lookAt(target[0], target[1], target[2])
+      camera.userData.thoracicFov = portraitFov
+      if (perspectiveCamera) {
+        perspectiveCamera.fov = portraitFov
+      }
       camera.updateProjectionMatrix()
       camera.userData.thoracicPlaced = true
+    } else if (perspectiveCamera && camera.userData.thoracicFov !== portraitFov) {
+      perspectiveCamera.fov = portraitFov
+      camera.updateProjectionMatrix()
+      camera.userData.thoracicFov = portraitFov
     }
   })
   return null
@@ -543,8 +669,62 @@ function hasMeshDescendant(object: THREE.Object3D): boolean {
 
 function ProbeModel({ url }: { url: string }) {
   const gltf = useGLTF(url)
-  const model = useMemo(() => gltf.scene.clone(true), [gltf.scene])
-  return <primitive object={model} position={[0, 6, 0]} scale={30} />
+  const { contactFaceOffsetY, model } = useMemo(() => {
+    const clonedModel = gltf.scene.clone(true)
+    const bounds = new THREE.Box3().setFromObject(clonedModel)
+
+    return {
+      // This probe asset is authored with the transducer footprint on local +Z.
+      // Rotating +Z onto local -Y would bury the handle in the fan; +90deg
+      // around X puts the footprint at the scan origin and the body behind it.
+      contactFaceOffsetY: bounds.max.z * PROBE_MODEL_SCALE_MM,
+      model: clonedModel,
+    }
+  }, [gltf.scene])
+
+  return (
+    <group>
+      <primitive
+        object={model}
+        position={[0, contactFaceOffsetY, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={PROBE_MODEL_SCALE_MM}
+      />
+      <ProbeFootprintMarker />
+    </group>
+  )
+}
+
+function FallbackProbeModel() {
+  return (
+    <group>
+      <mesh position={[0, 18, 0]}>
+        <boxGeometry args={[14, 36, 9]} />
+        <meshStandardMaterial color="#e5e7eb" />
+      </mesh>
+      <ProbeFootprintMarker />
+    </group>
+  )
+}
+
+function ProbeFootprintMarker() {
+  return (
+    <group>
+      <mesh position={[0, -0.45, 0]} renderOrder={60}>
+        <boxGeometry args={[17, 1.2, 9]} />
+        <meshStandardMaterial color="#111827" depthTest={false} roughness={0.56} />
+      </mesh>
+      <mesh position={[0, -1.18, 3.7]} renderOrder={61}>
+        <boxGeometry args={[16.4, 1.05, 1.65]} />
+        <meshStandardMaterial
+          color="#dc2626"
+          depthTest={false}
+          emissive="#7f1d1d"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
+    </group>
+  )
 }
 
 function structureOpacity(structure: ThoracicStructureLabelDef) {

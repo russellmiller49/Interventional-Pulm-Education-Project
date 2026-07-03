@@ -22,7 +22,6 @@ interface ControlDef {
 
 const positionControls: ControlDef[] = [
   { key: 'lateralMm', label: 'Lateral position', unit: 'mm' },
-  { key: 'posteriorMm', label: 'Posterior contact', unit: 'mm' },
   { key: 'craniocaudalMm', label: 'Cranial/caudal position', unit: 'mm' },
   { key: 'tiltDeg', label: 'Cranial/caudal tilt', unit: 'deg' },
   { key: 'rotationDeg', label: 'Marker rotation', unit: 'deg' },
