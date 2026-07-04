@@ -79,7 +79,7 @@ export function JournalClubPodcastBrowser({
   const hubCounts = useMemo(
     () =>
       hubs.reduce<Record<string, number>>((acc, hub) => {
-        acc[hub] = episodes.filter((episode) => episode.primaryHub === hub).length
+        acc[hub] = episodes.filter((episode) => episodeBelongsToHub(episode, hub)).length
         return acc
       }, {}),
     [episodes, hubs],
@@ -90,7 +90,7 @@ export function JournalClubPodcastBrowser({
 
     return episodes
       .filter((episode) => {
-        if (activeHub !== allHubFilter && episode.primaryHub !== activeHub) {
+        if (activeHub !== allHubFilter && !episodeBelongsToHub(episode, activeHub)) {
           return false
         }
 
@@ -107,6 +107,7 @@ export function JournalClubPodcastBrowser({
           episode.citation,
           episode.synopsis,
           episode.primaryHub,
+          ...(episode.secondaryHubs ?? []),
           ...episode.tags,
         ]
         const haystack = [...sourceValues, ...sourceValues.map(translate)].join(' ').toLowerCase()
@@ -122,7 +123,7 @@ export function JournalClubPodcastBrowser({
         ? tags
         : tags.filter((tag) =>
             episodes.some(
-              (episode) => episode.primaryHub === activeHub && episode.tags.includes(tag),
+              (episode) => episodeBelongsToHub(episode, activeHub) && episode.tags.includes(tag),
             ),
           ),
     [activeHub, episodes, tags],
@@ -328,6 +329,10 @@ function comparePodcastTitles(a: JournalClubPodcastEpisode, b: JournalClubPodcas
   return a.title.localeCompare(b.title, undefined, {
     sensitivity: 'base',
   })
+}
+
+function episodeBelongsToHub(episode: JournalClubPodcastEpisode, hub: JournalClubPodcastHub) {
+  return episode.primaryHub === hub || episode.secondaryHubs?.includes(hub) === true
 }
 
 function TagButton({

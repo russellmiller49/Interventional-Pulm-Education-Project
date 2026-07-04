@@ -254,6 +254,11 @@
         "shortTitle": "Navegación",
         "description": "Simulador de navegación de la TC al broncoscopio"
       },
+      "thermalAblation": {
+        "title": "Ablación Térmica",
+        "shortTitle": "Térmica",
+        "description": "Módulos interactivos de física del láser, electrocauterio y APC"
+      },
       "pleuralProcedures": {
         "title": "Procedimientos Pleurales",
         "shortTitle": "Pleural",

@@ -3,6 +3,8 @@ import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { syncScopeInput } from './sync-scope-input.mjs'
+
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const projectRoot = resolve(scriptDir, '..')
 const sourceAppCandidates = [
@@ -18,6 +20,8 @@ if (!sourceAppDir) {
 const sourceDistDir = resolve(sourceAppDir, 'dist')
 const destinationDir = resolve(projectRoot, 'public/bronch-navigation-trainer/app')
 const embeddedBasePath = '/bronch-navigation-trainer/app/'
+
+syncScopeInput()
 
 console.log('Building Bronch Navigation Trainer app...')
 console.log(`Embed build config: base ${embeddedBasePath}, authoring tools enabled on loopback hosts only`)

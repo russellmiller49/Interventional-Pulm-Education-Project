@@ -18,6 +18,7 @@ export function TrainerEmbedShell({ locale }: TrainerEmbedShellProps) {
       <iframe
         title="Bronch Navigation Trainer"
         src={embedSrc}
+        allow="gamepad"
         className="h-[calc(100vh-10rem)] min-h-[860px] w-full bg-slate-950"
       />
     </div>

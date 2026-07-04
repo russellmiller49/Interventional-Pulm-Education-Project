@@ -7,6 +7,9 @@ import {
   journalClubPodcastEpisodes,
   journalClubPodcastHubs,
   journalClubPodcastTags,
+  landmarkJournalClubPodcastHub,
+  landmarkPodcastTag,
+  type JournalClubPodcastEpisode,
 } from '@/data/journal-club-podcasts'
 
 const testEpisodes = journalClubPodcastEpisodes.slice(0, 2)
@@ -118,6 +121,32 @@ describe('JournalClubPodcastBrowser', () => {
       .getAllByRole('article')
       .map((article) => within(article).getByRole('heading', { level: 2 }).textContent)
     expect(titles).toEqual(['Alpha podcast', 'Zulu podcast'])
+  })
+
+  it('filters secondary-hub landmark studies and shows the landmark tag', async () => {
+    const user = userEvent.setup()
+    const landmarkEpisode: JournalClubPodcastEpisode = {
+      ...testEpisodes[0],
+      id: 'secondary-landmark-podcast',
+      title: 'Secondary landmark podcast',
+      secondaryHubs: [landmarkJournalClubPodcastHub],
+      tags: [landmarkPodcastTag, ...testEpisodes[0].tags],
+      audio: {
+        english: 'v1/secondary-landmark-podcast/english.mp3',
+        spanish: 'v1/secondary-landmark-podcast/spanish.mp3',
+        mandarin: 'v1/secondary-landmark-podcast/mandarin.mp3',
+        arabic: 'v1/secondary-landmark-podcast/arabic.mp3',
+        korean: 'v1/secondary-landmark-podcast/korean.mp3',
+      },
+    }
+    renderBrowser([landmarkEpisode, testEpisodes[1]])
+
+    await user.click(screen.getByRole('button', { name: /landmark studies/i }))
+
+    expect(screen.getByText('1 episode')).toBeInTheDocument()
+    const article = screen.getByRole('article')
+    expect(within(article).getByText('Secondary landmark podcast')).toBeInTheDocument()
+    expect(within(article).getByText(landmarkPodcastTag)).toBeInTheDocument()
   })
 
   it('requests a signed URL for the selected language and supports speed changes', async () => {
@@ -248,7 +277,7 @@ describe('JournalClubPodcastBrowser', () => {
   })
 })
 
-function renderBrowser(episodes = testEpisodes) {
+function renderBrowser(episodes: JournalClubPodcastEpisode[] = testEpisodes) {
   render(
     <JournalClubPodcastBrowser
       episodes={episodes}

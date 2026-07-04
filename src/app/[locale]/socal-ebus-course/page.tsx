@@ -72,6 +72,9 @@ export default async function SoCalEbusCoursePage({ params }: SoCalEbusCoursePag
               <Button asChild variant="secondary">
                 <Link href={'/tnm-9-staging' as Route}>TNM-9 Staging</Link>
               </Button>
+              <Button asChild variant="outline">
+                <Link href={'/hardware' as Route}>Hardware Scope Setup</Link>
+              </Button>
             </div>
 
             <div className="rounded-3xl border border-border/70 bg-card/70 p-6">

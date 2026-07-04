@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Ruler, Telescope } from 'lucide-react'
+import { Ruler, Telescope, Waypoints } from 'lucide-react'
 
 import { BronchoscopeSizeExplorer } from '@/components/bronchoscope-size-explorer/BronchoscopeSizeExplorer'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,14 @@ const introModules = [
     description: 'Compare scope diameter, working channel size, airway reach, and tool fit.',
     status: 'Live',
     icon: Ruler,
+  },
+  {
+    href: '/intro-bronchoscopy/airway-anatomy',
+    title: 'Airway Anatomy',
+    description:
+      'Tour the tracheobronchial tree: animated endoscopic survey, a labeled 3D model, and segmental self-check.',
+    status: 'Live',
+    icon: Waypoints,
   },
   {
     href: '/coming-soon',
@@ -61,7 +69,7 @@ export default function IntroBronchoscopyPage() {
             </div>
 
             <nav aria-label="Intro bronchoscopy module tabs">
-              <div className="grid gap-3 rounded-2xl border border-border/80 bg-background/70 p-2 shadow-sm md:grid-cols-2">
+              <div className="grid gap-3 rounded-2xl border border-border/80 bg-background/70 p-2 shadow-sm md:grid-cols-3">
                 {introModules.map((module) => {
                   const Icon = module.icon
                   const isActive = module.href === '/intro-bronchoscopy'

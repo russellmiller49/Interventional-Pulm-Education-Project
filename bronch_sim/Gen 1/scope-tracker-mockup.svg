@@ -1,0 +1,322 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1720" viewBox="0 0 1240 1720" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#11304F"/>
+    </marker>
+    <marker id="arrS" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L7,4 L0,8 Z" fill="#6B7F92"/>
+    </marker>
+  </defs>
+
+  <!-- ======== sheet ======== -->
+  <rect x="0" y="0" width="1240" height="1720" fill="#FBFCFD"/>
+  <rect x="22" y="22" width="1196" height="1676" fill="none" stroke="#11304F" stroke-width="2.5"/>
+
+  <!-- ======== header ======== -->
+  <text x="60" y="80" font-size="25" font-weight="bold" fill="#11304F" letter-spacing="3">UNIVERSAL SINGLE-USE SCOPE TRACKER</text>
+  <text x="60" y="106" font-size="12" fill="#6B7F92" letter-spacing="1.2">TWO-MODULE CLIP-ON KIT · NO SCOPE MODIFICATION · CONCEPT MOCKUP</text>
+  <rect x="905" y="58" width="92" height="26" rx="13" fill="none" stroke="#0E8C8B" stroke-width="1.5"/>
+  <text x="951" y="75" font-size="10.5" fill="#0E8C8B" text-anchor="middle" letter-spacing="1">FLEXION</text>
+  <rect x="1005" y="58" width="70" height="26" rx="13" fill="none" stroke="#0E8C8B" stroke-width="1.5"/>
+  <text x="1040" y="75" font-size="10.5" fill="#0E8C8B" text-anchor="middle" letter-spacing="1">ROLL</text>
+  <rect x="1083" y="58" width="100" height="26" rx="13" fill="none" stroke="#0E8C8B" stroke-width="1.5"/>
+  <text x="1133" y="75" font-size="10.5" fill="#0E8C8B" text-anchor="middle" letter-spacing="1">INSERTION</text>
+  <line x1="40" y1="132" x2="1200" y2="132" stroke="#11304F" stroke-width="1.5"/>
+
+  <!-- ======== PANEL A : LEVER MODULE ======== -->
+  <text x="60" y="172" font-size="15" font-weight="bold" fill="#11304F" letter-spacing="2">A · LEVER MODULE</text>
+  <text x="60" y="192" font-size="11" fill="#6B7F92" letter-spacing="0.6">clamps to the handle — a follower arm rides the thumb lever</text>
+
+  <g transform="translate(-55 0)">
+  <!-- scope handle body -->
+  <path d="M 270 265
+           C 268 300 262 332 268 372
+           C 274 422 270 472 284 522
+           C 292 562 300 592 312 612
+           L 340 606
+           C 352 580 358 545 362 515
+           C 372 470 368 420 360 380
+           C 355 345 358 305 360 265
+           Q 315 234 270 265 Z"
+        fill="#DFF0EF" stroke="#11304F" stroke-width="2.5"/>
+  <!-- suction button -->
+  <rect x="298" y="226" width="34" height="22" rx="8" fill="#FFFFFF" stroke="#11304F" stroke-width="2"/>
+  <!-- working channel port -->
+  <circle cx="262" cy="352" r="7" fill="#FFFFFF" stroke="#11304F" stroke-width="2"/>
+  <line x1="255" y1="352" x2="244" y2="352" stroke="#11304F" stroke-width="2"/>
+  <!-- thumb lever paddle -->
+  <path d="M 356 302 C 384 292 410 288 426 294 C 433 308 433 322 426 334 C 408 338 382 336 358 332 Z"
+        fill="#FFFFFF" stroke="#11304F" stroke-width="2"/>
+  <path d="M 430 282 C 438 272 444 270 452 272" fill="none" stroke="#6B7F92" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrS)"/>
+  <path d="M 432 346 C 440 356 446 358 454 356" fill="none" stroke="#6B7F92" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrS)"/>
+  <text x="448" y="238" font-size="10" font-family="'Courier New', monospace" fill="#6B7F92">&#177;55&#176;</text>
+
+  <!-- insertion cord leaving handle -->
+  <path d="M 320 612 C 314 685 356 745 442 778 L 450 760 C 372 730 332 676 338 610 Z"
+        fill="#DFF0EF" stroke="#11304F" stroke-width="2"/>
+  <line x1="332" y1="650" x2="347" y2="647" stroke="#11304F" stroke-width="1.2"/>
+  <line x1="345" y1="690" x2="359" y2="683" stroke="#11304F" stroke-width="1.2"/>
+  <line x1="372" y1="724" x2="383" y2="713" stroke="#11304F" stroke-width="1.2"/>
+  <line x1="446" y1="769" x2="540" y2="796" stroke="#6B7F92" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrS)"/>
+  <text x="404" y="806" font-size="10" fill="#6B7F92" letter-spacing="0.8">CORD &#8594; MODULE B</text>
+
+  <!-- clamp band -->
+  <path d="M 264 430 L 374 430 L 378 468 L 268 468 Z" fill="#FBEFD9" stroke="#11304F" stroke-width="2"/>
+  <g stroke="#11304F" stroke-width="1">
+    <line x1="276" y1="436" x2="288" y2="462"/><line x1="284" y1="436" x2="296" y2="462"/>
+    <line x1="344" y1="436" x2="356" y2="462"/><line x1="352" y1="436" x2="364" y2="462"/>
+  </g>
+  <rect x="374" y="440" width="12" height="18" fill="#FBEFD9" stroke="#11304F" stroke-width="1.5"/>
+  <circle cx="396" cy="449" r="9" fill="#FBEFD9" stroke="#11304F" stroke-width="2"/>
+  <line x1="390" y1="443" x2="402" y2="455" stroke="#11304F" stroke-width="1.2"/>
+  <line x1="390" y1="455" x2="402" y2="443" stroke="#11304F" stroke-width="1.2"/>
+
+  <!-- module body -->
+  <rect x="398" y="338" width="130" height="140" rx="10" fill="#FBEFD9" stroke="#11304F" stroke-width="2.5"/>
+  <rect x="378" y="430" width="24" height="32" fill="#FBEFD9" stroke="none"/>
+  <line x1="378" y1="430" x2="398" y2="430" stroke="#11304F" stroke-width="2"/>
+  <line x1="378" y1="462" x2="398" y2="462" stroke="#11304F" stroke-width="2"/>
+
+  <!-- follower arm + shoe -->
+  <polygon points="424,360 442,368 440,310 428,308" fill="#FBEFD9" stroke="#11304F" stroke-width="2"/>
+  <path d="M 420 298 L 446 292 L 449 314 L 424 320 L 422 312 L 440 308 L 438 300 L 421 304 Z"
+        fill="#FBEFD9" stroke="#11304F" stroke-width="1.8"/>
+  <!-- hinge + magnet -->
+  <circle cx="432" cy="366" r="12" fill="#FFFFFF" stroke="#11304F" stroke-width="2"/>
+  <circle cx="432" cy="366" r="5" fill="#E8930C"/>
+  <!-- torsion spring -->
+  <path d="M 452 374 a 7 7 0 1 1 6 -10 a 5 5 0 1 1 -9 4" fill="none" stroke="#11304F" stroke-width="1.5"/>
+  <!-- AS5600 tag + buttons -->
+  <rect x="468" y="396" width="48" height="20" rx="3" fill="#11304F"/>
+  <text x="492" y="410" font-size="9" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">AS5600</text>
+  <circle cx="424" cy="444" r="6" fill="#FFFFFF" stroke="#11304F" stroke-width="1.8"/>
+  <circle cx="448" cy="444" r="6" fill="#FFFFFF" stroke="#11304F" stroke-width="1.8"/>
+  <!-- cable out -->
+  <path d="M 455 478 C 470 548 505 572 540 596" fill="none" stroke="#11304F" stroke-width="2.5"/>
+  <rect x="536" y="586" width="20" height="13" rx="2" fill="#FFFFFF" stroke="#11304F" stroke-width="1.8" transform="rotate(28 546 592)"/>
+  </g>
+
+  <!-- panel A callouts : left -->
+  <g font-size="10.5" fill="#11304F" letter-spacing="0.8">
+    <text x="64" y="231">SUCTION BUTTON — UNTOUCHED</text>
+    <line x1="232" y1="228" x2="241" y2="232" stroke="#6B7F92" stroke-width="1"/><circle cx="241" cy="232" r="2.2" fill="#6B7F92"/>
+    <text x="64" y="356">WORKING CHANNEL PORT</text>
+    <line x1="200" y1="352" x2="189" y2="352" stroke="#6B7F92" stroke-width="1"/><circle cx="189" cy="352" r="2.2" fill="#6B7F92"/>
+    <text x="64" y="416">ANY SINGLE-USE SCOPE</text>
+    <text x="64" y="430">(SHOWN: ASCOPE-STYLE HANDLE)</text>
+    <line x1="64" y1="436" x2="64" y2="448" stroke="none"/>
+    <line x1="190" y1="420" x2="211" y2="410" stroke="#6B7F92" stroke-width="1"/><circle cx="211" cy="410" r="2.2" fill="#6B7F92"/>
+    <text x="64" y="664">INSERTION CORD</text>
+    <line x1="160" y1="660" x2="279" y2="664" stroke="#6B7F92" stroke-width="1"/><circle cx="279" cy="664" r="2.2" fill="#6B7F92"/>
+  </g>
+  <!-- panel A callouts : right -->
+  <g font-size="10.5" fill="#11304F" letter-spacing="0.8" text-anchor="end">
+    <text x="606" y="258">LEVER SHOE — PER-SCOPE ADAPTER</text>
+    <text x="606" y="280">SPRING-LOADED FOLLOWER ARM</text>
+    <text x="606" y="302">AS5600 ENCODER AT MODULE HINGE</text>
+    <text x="606" y="520">ACTION BUTTONS &#215;2</text>
+    <text x="606" y="545">TOOL-FREE C-CLAMP · TPU PADS</text>
+    <text x="606" y="616">CABLE TO MODULE B — 1.2 m I2C</text>
+    <text x="606" y="631">(BLE VARIANT OPTIONAL)</text>
+  </g>
+  <g stroke="#6B7F92" stroke-width="1" fill="#6B7F92">
+    <line x1="416" y1="254" x2="392" y2="300"/><circle cx="392" cy="300" r="2.2"/>
+    <line x1="438" y1="276" x2="385" y2="332"/><circle cx="385" cy="332" r="2.2"/>
+    <line x1="408" y1="298" x2="382" y2="362"/><circle cx="382" cy="362" r="2.2"/>
+    <line x1="492" y1="516" x2="396" y2="450"/><circle cx="396" cy="450" r="2.2"/>
+    <line x1="424" y1="541" x2="348" y2="462"/><circle cx="348" cy="462" r="2.2"/>
+    <line x1="500" y1="612" x2="468" y2="566"/><circle cx="468" cy="566" r="2.2"/>
+  </g>
+
+  <line x1="622" y1="150" x2="622" y2="822" stroke="#D8E0E6" stroke-width="1.5"/>
+
+  <!-- ======== PANEL B : CORD TRACKER ======== -->
+  <text x="660" y="172" font-size="15" font-weight="bold" fill="#11304F" letter-spacing="2">B · CORD TRACKER — CUTAWAY</text>
+  <text x="660" y="192" font-size="11" fill="#6B7F92" letter-spacing="0.6">one optical sensor reads insertion (Y) and roll (X) off the cord surface</text>
+
+  <!-- top callout row -->
+  <g font-size="10.5" fill="#11304F" letter-spacing="0.8">
+    <text x="652" y="238">SWAPPABLE BORE INSERT &#216;2.8&#8211;6.3 mm</text>
+    <text x="700" y="266">PHOTOGATE AUTO-ZERO</text>
+    <text x="912" y="238">CAL BUTTON · STATUS LED</text>
+    <text x="986" y="266">FLANGE — PHANTOM / MANIKIN / STAND</text>
+  </g>
+  <g stroke="#6B7F92" stroke-width="1" fill="#6B7F92">
+    <line x1="700" y1="244" x2="710" y2="356"/><circle cx="710" cy="356" r="2.2"/>
+    <line x1="778" y1="272" x2="777" y2="330"/><circle cx="777" cy="330" r="2.2"/>
+    <line x1="936" y1="244" x2="848" y2="296"/><circle cx="848" cy="296" r="2.2"/>
+    <line x1="1110" y1="272" x2="1140" y2="316"/><circle cx="1140" cy="316" r="2.2"/>
+  </g>
+
+  <!-- housing -->
+  <rect x="690" y="300" width="440" height="265" rx="14" fill="#FDF6E9" stroke="#11304F" stroke-width="2.5"/>
+  <!-- top wall details -->
+  <circle cx="824" cy="300" r="6" fill="#FFFFFF" stroke="#11304F" stroke-width="1.8"/>
+  <circle cx="852" cy="300" r="5" fill="#E8930C" stroke="#11304F" stroke-width="1"/>
+  <rect x="704" y="304" width="38" height="20" rx="2" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <g stroke="#11304F" stroke-width="1"><line x1="710" y1="308" x2="710" y2="320"/><line x1="718" y1="308" x2="718" y2="320"/><line x1="726" y1="308" x2="726" y2="320"/><line x1="734" y1="308" x2="734" y2="320"/></g>
+  <text x="752" y="318" font-size="9" fill="#6B7F92" letter-spacing="0.5">LEVER IN</text>
+
+  <!-- cord ribbon -->
+  <rect x="632" y="372" width="556" height="20" fill="#DFF0EF" stroke="#11304F" stroke-width="1.8"/>
+  <text x="630" y="362" font-size="9.5" fill="#6B7F92" letter-spacing="0.5">FROM SCOPE</text>
+
+  <!-- bore inserts -->
+  <rect x="688" y="354" width="48" height="56" rx="6" fill="#F6DFB4" stroke="#11304F" stroke-width="2"/>
+  <rect x="1086" y="354" width="44" height="56" rx="6" fill="#F6DFB4" stroke="#11304F" stroke-width="2"/>
+  <rect x="696" y="372" width="40" height="20" fill="#DFF0EF" stroke="none"/>
+  <rect x="1086" y="372" width="44" height="20" fill="#DFF0EF" stroke="none"/>
+  <line x1="688" y1="372" x2="1130" y2="372" stroke="#11304F" stroke-width="1.8"/>
+  <line x1="688" y1="392" x2="1130" y2="392" stroke="#11304F" stroke-width="1.8"/>
+
+  <!-- photogate -->
+  <rect x="765" y="330" width="24" height="26" rx="3" fill="#11304F"/>
+  <rect x="765" y="408" width="24" height="26" rx="3" fill="#11304F"/>
+  <line x1="777" y1="356" x2="777" y2="408" stroke="#E8930C" stroke-width="2" stroke-dasharray="3 3"/>
+
+  <!-- wiper spring above sensor window -->
+  <path d="M 894 366 Q 918 352 942 366" fill="none" stroke="#11304F" stroke-width="1.8"/>
+
+  <!-- optical sensor + cone -->
+  <rect x="880" y="442" width="76" height="44" rx="4" fill="#11304F"/>
+  <text x="918" y="462" font-size="9" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.8">OPTICAL</text>
+  <text x="918" y="475" font-size="9" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.8">FLOW IC</text>
+  <polygon points="898,442 938,442 930,396 906,396" fill="#E8930C" fill-opacity="0.28" stroke="#E8930C" stroke-width="1.5"/>
+  <rect x="904" y="390" width="28" height="7" fill="#FFFFFF" stroke="#E8930C" stroke-width="1.5"/>
+
+  <!-- axis annotations -->
+  <line x1="800" y1="344" x2="872" y2="344" stroke="#11304F" stroke-width="1.8" marker-end="url(#arr)" marker-start="url(#arr)"/>
+  <text x="836" y="334" font-size="10" fill="#11304F" text-anchor="middle" letter-spacing="0.8">INSERTION (Y)</text>
+  <path d="M 1018 358 A 16 25 0 1 0 1018 406" fill="none" stroke="#11304F" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="1034" y="346" font-size="10" fill="#11304F" letter-spacing="0.8">ROLL (X)</text>
+  <text x="1034" y="360" font-size="9.5" font-family="'Courier New', monospace" fill="#6B7F92">&#8776;0.4&#176;/ct</text>
+  <text x="800" y="424" font-size="9.5" font-family="'Courier New', monospace" fill="#6B7F92">&#8776;0.02 mm/ct</text>
+
+  <!-- PCB -->
+  <rect x="712" y="500" width="396" height="48" rx="4" fill="#EAF0F5" stroke="#11304F" stroke-width="1.8"/>
+  <rect x="756" y="508" width="44" height="32" rx="3" fill="#11304F"/>
+  <text x="778" y="528" font-size="8.5" fill="#FFFFFF" text-anchor="middle">RP2040</text>
+  <rect x="1124" y="510" width="26" height="28" rx="3" fill="#11304F"/>
+  <line x1="1150" y1="524" x2="1188" y2="524" stroke="#11304F" stroke-width="2.5"/>
+  <text x="1158" y="548" font-size="9.5" fill="#6B7F92" letter-spacing="0.5">USB-C</text>
+
+  <!-- flange -->
+  <rect x="1130" y="316" width="20" height="232" fill="#FBEFD9" stroke="#11304F" stroke-width="2"/>
+  <circle cx="1140" cy="338" r="5" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <circle cx="1140" cy="526" r="5" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+
+  <!-- bottom callouts -->
+  <g font-size="10.5" fill="#11304F" letter-spacing="0.8">
+    <text x="930" y="606">OPTICAL FLOW SENSOR — PAT9125 / PMW3360</text>
+    <text x="930" y="621" fill="#6B7F92">Y = DEPTH · X = ROLL · NO MOVING PARTS</text>
+    <text x="930" y="648">RP2040 — USB HID GAMEPAD + WEB SERIAL</text>
+  </g>
+  <g stroke="#6B7F92" stroke-width="1" fill="#6B7F92">
+    <line x1="926" y1="602" x2="920" y2="488"/><circle cx="920" cy="488" r="2.2"/>
+    <line x1="926" y1="644" x2="804" y2="528"/><circle cx="804" cy="528" r="2.2"/>
+  </g>
+
+  <!-- section inset -->
+  <circle cx="772" cy="706" r="72" fill="#FFFFFF" stroke="#11304F" stroke-width="2"/>
+  <circle cx="772" cy="700" r="30" fill="#FDF6E9" stroke="#11304F" stroke-width="1.5"/>
+  <circle cx="772" cy="700" r="17" fill="#DFF0EF" stroke="#11304F" stroke-width="1.8"/>
+  <path d="M 752 690 Q 772 678 792 690" fill="none" stroke="#11304F" stroke-width="1.5"/>
+  <rect x="756" y="742" width="32" height="9" fill="#E8930C" fill-opacity="0.3" stroke="#E8930C" stroke-width="1.5"/>
+  <line x1="772" y1="717" x2="772" y2="742" stroke="#6B7F92" stroke-width="1"/>
+  <line x1="767" y1="717" x2="777" y2="717" stroke="#6B7F92" stroke-width="1"/>
+  <line x1="767" y1="742" x2="777" y2="742" stroke="#6B7F92" stroke-width="1"/>
+  <text x="786" y="734" font-size="9.5" font-family="'Courier New', monospace" fill="#6B7F92">2.4 mm</text>
+  <text x="690" y="804" font-size="10" fill="#6B7F92" letter-spacing="0.8">SECTION — CONSTANT SENSOR STANDOFF</text>
+
+  <line x1="40" y1="842" x2="1200" y2="842" stroke="#D8E0E6" stroke-width="1.5"/>
+
+  <!-- ======== PANEL C : SYSTEM OVERVIEW ======== -->
+  <text x="60" y="884" font-size="15" font-weight="bold" fill="#11304F" letter-spacing="2">C · SYSTEM OVERVIEW</text>
+  <text x="60" y="904" font-size="11" fill="#6B7F92" letter-spacing="0.6">phantom optional — the tracker bolts to any target or stands alone</text>
+
+  <!-- mini handle -->
+  <rect x="150" y="950" width="76" height="172" rx="32" fill="#DFF0EF" stroke="#11304F" stroke-width="2"/>
+  <path d="M 224 984 C 246 978 262 980 268 988 C 270 998 268 1006 262 1010 C 248 1012 232 1008 224 1004 Z"
+        fill="#FFFFFF" stroke="#11304F" stroke-width="1.8"/>
+  <rect x="146" y="1016" width="88" height="30" rx="4" fill="#FBEFD9" fill-opacity="0.92" stroke="#11304F" stroke-width="1.5"/>
+  <rect x="234" y="1000" width="54" height="54" rx="6" fill="#FBEFD9" stroke="#11304F" stroke-width="2"/>
+  <circle cx="252" cy="1018" r="6" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <circle cx="252" cy="1018" r="2.5" fill="#E8930C"/>
+  <text x="150" y="938" font-size="10.5" fill="#11304F" letter-spacing="0.8">SCOPE + LEVER MODULE</text>
+
+  <!-- cord : outline trick -->
+  <path d="M 186 1122 C 196 1240 360 1300 556 1246" fill="none" stroke="#11304F" stroke-width="13"/>
+  <path d="M 186 1122 C 196 1240 360 1300 556 1246" fill="none" stroke="#DFF0EF" stroke-width="9"/>
+
+  <!-- lever cable -->
+  <path d="M 288 1028 C 390 1080 480 1150 566 1216" fill="none" stroke="#6B7F92" stroke-width="1.8" stroke-dasharray="5 5"/>
+  <text x="352" y="1078" font-size="10" fill="#6B7F92" letter-spacing="0.8">LEVER ANGLE (I2C)</text>
+
+  <!-- mini tracker -->
+  <rect x="556" y="1210" width="144" height="72" rx="10" fill="#FDF6E9" stroke="#11304F" stroke-width="2"/>
+  <rect x="616" y="1252" width="26" height="14" rx="2" fill="#11304F"/>
+  <text x="556" y="1200" font-size="10.5" fill="#11304F" letter-spacing="0.8">CORD TRACKER</text>
+
+  <!-- phantom cradle + airway tree -->
+  <rect x="700" y="1130" width="320" height="200" rx="16" fill="#F4F8FA" stroke="#6B7F92" stroke-width="2"/>
+  <path d="M 700 1246 C 760 1244 800 1242 840 1238" fill="none" stroke="#11304F" stroke-width="13"/>
+  <path d="M 700 1246 C 760 1244 800 1242 840 1238" fill="none" stroke="#DFF0EF" stroke-width="9"/>
+  <path d="M 840 1238 C 880 1216 912 1192 942 1172" fill="none" stroke="#11304F" stroke-width="10"/>
+  <path d="M 840 1238 C 880 1216 912 1192 942 1172" fill="none" stroke="#DFF0EF" stroke-width="6.5"/>
+  <path d="M 840 1238 C 878 1258 912 1280 946 1298" fill="none" stroke="#11304F" stroke-width="10"/>
+  <path d="M 840 1238 C 878 1258 912 1280 946 1298" fill="none" stroke="#DFF0EF" stroke-width="6.5"/>
+  <path d="M 920 1188 L 958 1206" stroke="#11304F" stroke-width="7"/><path d="M 920 1188 L 958 1206" stroke="#DFF0EF" stroke-width="4"/>
+  <path d="M 942 1172 L 978 1158" stroke="#11304F" stroke-width="7"/><path d="M 942 1172 L 978 1158" stroke="#DFF0EF" stroke-width="4"/>
+  <path d="M 946 1298 L 984 1310" stroke="#11304F" stroke-width="7"/><path d="M 946 1298 L 984 1310" stroke="#DFF0EF" stroke-width="4"/>
+  <text x="712" y="1152" font-size="10.5" fill="#11304F" letter-spacing="0.8">PRINTED AIRWAY PHANTOM</text>
+  <text x="712" y="1166" font-size="9.5" fill="#6B7F92" letter-spacing="0.6">(OPTIONAL ACCESSORY — FLANGE MOUNT)</text>
+
+  <!-- laptop -->
+  <rect x="1040" y="1150" width="142" height="100" rx="6" fill="#11304F" stroke="#11304F" stroke-width="2"/>
+  <path d="M 1066 1228 C 1086 1216 1102 1204 1118 1194" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+  <path d="M 1118 1194 L 1144 1180" stroke="#FFFFFF" stroke-width="3"/>
+  <path d="M 1118 1194 L 1146 1208" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="1100" cy="1206" r="10" fill="none" stroke="#E8930C" stroke-width="1.8"/>
+  <line x1="1100" y1="1192" x2="1100" y2="1220" stroke="#E8930C" stroke-width="1"/>
+  <line x1="1086" y1="1206" x2="1114" y2="1206" stroke="#E8930C" stroke-width="1"/>
+  <polygon points="1028,1250 1194,1250 1206,1282 1016,1282" fill="#EAF0F5" stroke="#11304F" stroke-width="2"/>
+  <text x="1040" y="1124" font-size="10.5" fill="#11304F" letter-spacing="0.8">NEXT.JS SIM</text>
+  <text x="1040" y="1139" font-size="9.5" fill="#6B7F92" letter-spacing="0.6">GAMEPAD API / WEB SERIAL</text>
+
+  <!-- USB cable -->
+  <path d="M 640 1282 C 700 1396 960 1404 1100 1290" fill="none" stroke="#11304F" stroke-width="2.5"/>
+  <text x="700" y="1424" font-size="10" fill="#6B7F92" letter-spacing="0.8">USB-C · FLEXION + ROLL + DEPTH + BUTTONS @ 250 Hz</text>
+
+  <!-- spec chips -->
+  <rect x="60" y="1438" width="372" height="40" rx="20" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <text x="246" y="1463" font-size="10.5" fill="#11304F" text-anchor="middle" letter-spacing="0.8">ATTACHES TO ANY SINGLE-USE SCOPE — NO MODIFICATION</text>
+  <rect x="452" y="1438" width="300" height="40" rx="20" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <text x="602" y="1463" font-size="10.5" fill="#11304F" text-anchor="middle" letter-spacing="0.8">PHANTOM OPTIONAL — FLANGE STANDARD</text>
+  <rect x="772" y="1438" width="186" height="40" rx="20" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <text x="865" y="1463" font-size="10.5" fill="#11304F" text-anchor="middle" letter-spacing="0.8">KIT BOM &#8776; $40</text>
+  <rect x="978" y="1438" width="202" height="40" rx="20" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <text x="1079" y="1463" font-size="10.5" fill="#11304F" text-anchor="middle" letter-spacing="0.8">OPEN HARDWARE</text>
+
+  <!-- legend -->
+  <g font-size="10" fill="#11304F" letter-spacing="0.6">
+    <rect x="60" y="1546" width="16" height="16" fill="#DFF0EF" stroke="#11304F" stroke-width="1.5"/>
+    <text x="84" y="1559">SINGLE-USE SCOPE — UNMODIFIED</text>
+    <rect x="60" y="1576" width="16" height="16" fill="#FBEFD9" stroke="#11304F" stroke-width="1.5"/>
+    <text x="84" y="1589">PRINTED CLIP-ON MODULES</text>
+    <rect x="60" y="1606" width="16" height="16" fill="#11304F"/>
+    <text x="84" y="1619">ELECTRONICS</text>
+    <text x="60" y="1652" fill="#6B7F92">GEOMETRY ILLUSTRATIVE — SEE ENGINEERING PLAN V2 FOR DIMENSIONS</text>
+  </g>
+
+  <!-- title block -->
+  <rect x="820" y="1530" width="380" height="132" fill="#FFFFFF" stroke="#11304F" stroke-width="1.5"/>
+  <line x1="820" y1="1564" x2="1200" y2="1564" stroke="#11304F" stroke-width="1"/>
+  <line x1="820" y1="1597" x2="1200" y2="1597" stroke="#11304F" stroke-width="1"/>
+  <line x1="820" y1="1630" x2="1200" y2="1630" stroke="#11304F" stroke-width="1"/>
+  <g font-size="10" font-family="'Courier New', monospace" fill="#11304F">
+    <text x="832" y="1552">TITLE   UNIVERSAL SCOPE TRACKER — CONCEPT MOCKUP</text>
+    <text x="832" y="1585">PROJECT INTERVENTIONALPULM.COM          REV  B</text>
+    <text x="832" y="1618">SCALE NTS   DATE 2026-06-12   LIC CERN-OHL-P-2.0</text>
+    <text x="832" y="1651">SHEET 1/1   STATUS: CONCEPT — NOT FOR FABRICATION</text>
+  </g>
+</svg>

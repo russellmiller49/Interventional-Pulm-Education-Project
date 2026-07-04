@@ -81,6 +81,13 @@ const localizedSearchOverrides: Partial<
       section: 'Simulación',
       keywords: ['broncoscopía', 'navegación', 'tc', 'vía aérea', 'simulación'],
     },
+    '/thermal-ablation': {
+      title: 'Módulos interactivos de ablación térmica',
+      description:
+        'Física del láser, densidad de potencia, formas de onda de electrocauterio en una consola ERBE VIO 3 simulada, APC y seguridad contra incendios de la vía aérea.',
+      section: 'Simulación',
+      keywords: ['ablación térmica', 'láser', 'electrocauterio', 'apc', 'vio 3', 'incendio'],
+    },
     '/pleural-procedures': {
       title: 'Procedimientos pleurales',
       description:
@@ -138,6 +145,13 @@ const localizedSearchOverrides: Partial<
       description: '从 CT 到支气管镜的导航模拟器，包含分支决策、目标路径和虚拟镜视图。',
       section: '模拟',
       keywords: ['支气管镜', '导航', 'ct', '气道', '模拟'],
+    },
+    '/thermal-ablation': {
+      title: '热消融交互模块',
+      description:
+        '激光物理、功率密度、模拟 ERBE VIO 3 主机上的电灼波形、APC 以及气道防火安全，含病例自测。',
+      section: '模拟',
+      keywords: ['热消融', '激光', '电灼', 'apc', 'vio 3', '气道火灾'],
     },
     '/pleural-procedures': {
       title: '胸膜操作',
@@ -251,6 +265,25 @@ const allStaticResults: SiteSearchResult[] = [
     section: 'Simulation',
     type: 'page',
     keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
+  },
+  {
+    title: 'Thermal Ablation Interactive Modules',
+    description:
+      'Laser physics, power density, electrocautery waveforms on a simulated ERBE VIO 3 console, APC, and airway-fire safety with case-based self-assessment.',
+    href: '/thermal-ablation',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'thermal ablation',
+      'laser',
+      'nd:yag',
+      'electrocautery',
+      'electrosurgery',
+      'vio 3',
+      'apc',
+      'argon plasma',
+      'airway fire',
+    ],
   },
   {
     title: 'Pleural Procedures',

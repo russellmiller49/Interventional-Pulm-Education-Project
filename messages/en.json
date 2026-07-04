@@ -254,6 +254,11 @@
         "shortTitle": "Nav Bronch",
         "description": "CT-to-bronchoscope navigation simulator"
       },
+      "thermalAblation": {
+        "title": "Thermal Ablation",
+        "shortTitle": "Thermal",
+        "description": "Laser, electrocautery & APC interactive physics modules"
+      },
       "pleuralProcedures": {
         "title": "Pleural Procedures",
         "shortTitle": "Pleural",

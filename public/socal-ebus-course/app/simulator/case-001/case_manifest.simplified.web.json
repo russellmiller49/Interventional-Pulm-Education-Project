@@ -486,6 +486,9 @@
     "scope_model": "GLB bronchoscope tip presentation model aligned to the active probe pose.",
     "simplified_model_trial": "Uses Simplified _sim_model.gltf converted to GLB for anatomy and mesh-derived point clouds. Station snap targets are updated from Simplified_point_list when markers are available."
   },
+  "physics_snapshots": {
+    "station_4r_node_a::default": "physics_snapshots/station_4r_node_a__default.json"
+  },
   "presets": [
     {
       "approach": "default",
@@ -1237,5 +1240,29 @@
   },
   "schema_version": 1,
   "sector_snapshots": {},
-  "source_manifest": "/Users/russellmiller/Projects/EBUS-course/tools/ebus-simulator/configs/3d_slicer_files.yaml"
+  "source_manifest": "/Users/russellmiller/Projects/EBUS-course/tools/ebus-simulator/configs/3d_slicer_files.yaml",
+  "endoscope_camera": {
+    "model": "bf_uc180f",
+    "optical_axis_offset_deg": 30,
+    "obliquity_axis": "depth_axis",
+    "fov_deg": 85,
+    "near_mm": 0.4,
+    "far_mm": 4000,
+    "eye_offset_mm": {
+      "shaft": -6,
+      "depth": 0,
+      "lateral": 0
+    },
+    "circular_aperture": true,
+    "lens_distortion": true,
+    "scope_tip_occlusion": false,
+    "contact_cap": true,
+    "headlight_falloff": true,
+    "contact_min_distance_mm": 1.5
+  },
+  "ultrasound_probe": {
+    "sector_angle_deg": 60,
+    "displayed_range_mm": 40,
+    "optical_axis_offset_deg": 30
+  }
 }

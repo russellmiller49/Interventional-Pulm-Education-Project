@@ -7,6 +7,7 @@ const draftModulePathPrefixes = [
   '/learn/anatomy/airway',
   '/pleural-procedures',
   '/rapid-onsite-cytology',
+  '/thermal-ablation',
 ] as const
 
 interface DraftModuleVisibilityOptions {

@@ -60,6 +60,15 @@ export function isDevOnlyAirwayAnatomyPath(pathname: string) {
   )
 }
 
+export function isAdminOnlyThermalAblationPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/thermal-ablation' ||
+    normalizedPathname.startsWith('/thermal-ablation/')
+  )
+}
+
 export function isAdminOnlyEbusTrainingAssetPath(pathname: string) {
   const normalizedPathname = unlocalizedPathname(pathname)
 
@@ -80,7 +89,8 @@ export function isPublicPath(pathname: string) {
 
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
-    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
+    isAdminOnlyThermalAblationPath(normalizedPathname)
   ) {
     return false
   }
@@ -159,7 +169,8 @@ export function getRequiredEntitlement(
 
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
-    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
+    isAdminOnlyThermalAblationPath(normalizedPathname)
   ) {
     return 'site_admin'
   }
@@ -243,6 +254,7 @@ export function resolveSiteModuleId(pathname: string) {
     first === 'journal-club-podcasts' ||
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
+    first === 'thermal-ablation' ||
     first === 'tnm-9-staging' ||
     first === 'xr'
   ) {

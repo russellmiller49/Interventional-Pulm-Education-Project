@@ -1,4 +1,5 @@
 export const journalClubPodcastHubs = [
+  'Landmark Studies',
   'Lung Nodules, Early Lung Cancer & Staging',
   'Robotic / Navigation Bronchoscopy & Tissue Acquisition',
   'Bronchoscopic Ablation & Intratumoral Therapy',
@@ -8,7 +9,7 @@ export const journalClubPodcastHubs = [
   'Training, Procedural Safety & Program Design',
 ] as const
 
-export const defaultJournalClubPodcastHub = journalClubPodcastHubs[0]
+export const defaultJournalClubPodcastHub = 'Lung Nodules, Early Lung Cancer & Staging'
 
 export const podcastLanguages = ['english', 'spanish', 'mandarin', 'arabic', 'korean'] as const
 
@@ -22,10 +23,24 @@ export interface JournalClubPodcastEpisode {
   year: number
   journal: string
   primaryHub: JournalClubPodcastHub
+  secondaryHubs?: JournalClubPodcastHub[]
   tags: string[]
   synopsis: string
   publicationUrl: string
   audio: Record<PodcastLanguage, string>
+}
+
+export const landmarkJournalClubPodcastHub = 'Landmark Studies'
+export const landmarkPodcastTag = 'Landmark Study'
+
+function makePodcastAudio(episodeId: string): Record<PodcastLanguage, string> {
+  return {
+    english: `v1/${episodeId}/english.mp3`,
+    mandarin: `v1/${episodeId}/mandarin.mp3`,
+    spanish: `v1/${episodeId}/spanish.mp3`,
+    arabic: `v1/${episodeId}/arabic.mp3`,
+    korean: `v1/${episodeId}/korean.mp3`,
+  }
 }
 
 export const journalClubPodcastEpisodes = [
@@ -141,9 +156,12 @@ export const journalClubPodcastEpisodes = [
     year: 2025,
     journal: 'N Engl J Med 392(21): 2100-2112.',
     primaryHub: 'Lung Nodules, Early Lung Cancer & Staging',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
     tags: [
+      landmarkPodcastTag,
       'Lung Cancer',
       'Lung Nodules',
+      'Navigation Bronchoscopy',
       'Pneumothorax',
       'Randomized Trial',
       'Screening',
@@ -160,6 +178,327 @@ export const journalClubPodcastEpisodes = [
       arabic: 'v1/navigation-vs-ttnb/arabic.mp3',
       korean: 'v1/navigation-vs-ttnb/korean.mp3',
     },
+  },
+  {
+    id: 'intrapleural-tissue-plasminogen-activator-2011',
+    title: 'Intrapleural Use of Tissue Plasminogen Activator and DNase in Pleural Infection',
+    citation:
+      'Rahman, N. M., et al. (2011). "Intrapleural Use of Tissue Plasminogen Activator and DNase in Pleural Infection." N Engl J Med 365(6): 518-526.',
+    year: 2011,
+    journal: 'N Engl J Med 365(6): 518-526.',
+    primaryHub: 'Pleural Disease, Thoracoscopy & Chest Drains',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'Chest Drains',
+      'Empyema',
+      'Pleural Disease',
+      'Pleural Infection',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'The MIST2 factorial trial established combined intrapleural tPA and DNase as a key medical strategy for pleural infection, improving radiographic clearance and reducing surgical referral compared with either agent alone.',
+    publicationUrl: 'https://doi.org/10.1056/NEJMoa1012740',
+    audio: makePodcastAudio('intrapleural-tissue-plasminogen-activator-2011'),
+  },
+  {
+    id: 'effect-of-an-ipc-vs-talc-pleurodesis-on-hospitalization-days-in-patients-with-mpe-the-ample-rct',
+    title:
+      'Effect of an Indwelling Pleural Catheter vs Talc Pleurodesis on Hospitalization Days in Patients With Malignant Pleural Effusion: The AMPLE RCT',
+    citation:
+      'Thomas, R., et al. (2017). "Effect of an Indwelling Pleural Catheter vs Talc Pleurodesis on Hospitalization Days in Patients With Malignant Pleural Effusion: The AMPLE Randomized Clinical Trial." JAMA 318(19): 1903-1912.',
+    year: 2017,
+    journal: 'JAMA 318(19): 1903-1912.',
+    primaryHub: 'Pleural Disease, Thoracoscopy & Chest Drains',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'IPC',
+      'Malignant Pleural Effusion',
+      'Pleural Disease',
+      'Pleurodesis',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'The AMPLE trial compared IPC with talc pleurodesis using hospitalization days as a patient-centered endpoint, shaping practical discussions around outpatient pleural management.',
+    publicationUrl: 'https://doi.org/10.1001/jama.2017.17426',
+    audio: makePodcastAudio(
+      'effect-of-an-ipc-vs-talc-pleurodesis-on-hospitalization-days-in-patients-with-mpe-the-ample-rct',
+    ),
+  },
+  {
+    id: 'coldice-2020',
+    title:
+      'Diagnostic Accuracy of Transbronchial Lung Cryobiopsy for Interstitial Lung Disease Diagnosis (COLDICE)',
+    citation:
+      'Troy, L. K., et al. (2020). "Diagnostic Accuracy of Transbronchial Lung Cryobiopsy for Interstitial Lung Disease Diagnosis (COLDICE): A Prospective, Comparative Study." Lancet Respir Med 8(2): 171-181.',
+    year: 2020,
+    journal: 'Lancet Respir Med 8(2): 171-181.',
+    primaryHub: 'Robotic / Navigation Bronchoscopy & Tissue Acquisition',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'Bronchoscopy Safety',
+      'Cryobiopsy',
+      'Diagnostic Yield',
+      'Interstitial Lung Disease',
+      'Tissue Acquisition',
+    ],
+    synopsis:
+      'COLDICE prospectively compared transbronchial cryobiopsy with surgical lung biopsy in multidisciplinary ILD diagnosis, anchoring modern discussions of bronchoscopic tissue acquisition.',
+    publicationUrl: 'https://doi.org/10.1016/S2213-2600(19)30342-X',
+    audio: makePodcastAudio('coldice-2020'),
+  },
+  {
+    id: 'dedicated-tracheobronchial-stent-1990',
+    title: 'A Dedicated Tracheobronchial Stent',
+    citation: 'Dumon, J. F. (1990). "A Dedicated Tracheobronchial Stent." Chest 97(2): 328-332.',
+    year: 1990,
+    journal: 'Chest 97(2): 328-332.',
+    primaryHub: 'Central Airway Obstruction, Stents & Therapeutic Bronchoscopy',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'Airway Stents',
+      'Central Airway Obstruction',
+      'Rigid Bronchoscopy',
+      'Silicone Stents',
+      'Therapeutic Bronchoscopy',
+    ],
+    synopsis:
+      'The classic Dumon stent report introduced a dedicated molded silicone tracheobronchial stent design that became central to airway intervention practice.',
+    publicationUrl: 'https://doi.org/10.1378/chest.97.2.328',
+    audio: makePodcastAudio('dedicated-tracheobronchial-stent-1990'),
+  },
+  {
+    id: 'endobronchial-valves-emphysema-without-2015',
+    title: 'Endobronchial Valves for Emphysema Without Interlobar Collateral Ventilation',
+    citation:
+      'Klooster, K., et al. (2015). "Endobronchial Valves for Emphysema Without Interlobar Collateral Ventilation." N Engl J Med 373(24): 2325-2335.',
+    year: 2015,
+    journal: 'N Engl J Med 373(24): 2325-2335.',
+    primaryHub: 'Emphysema, BLVR & Hyperinflation',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'BLVR',
+      'Endobronchial Valves',
+      'Emphysema',
+      'Hyperinflation',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'The STELVIO trial showed clinically meaningful benefit from endobronchial valves when collateral ventilation is absent, sharpening patient-selection principles for BLVR.',
+    publicationUrl: 'https://doi.org/10.1056/NEJMoa1507807',
+    audio: makePodcastAudio('endobronchial-valves-emphysema-without-2015'),
+  },
+  {
+    id: 'complications-therapeutic-bronchoscopy-malignant-2015',
+    title:
+      'Complications Following Therapeutic Bronchoscopy for Malignant Central Airway Obstruction: Results of the AQuIRE Registry',
+    citation:
+      'Ost, D. E., et al. (2015). "Complications Following Therapeutic Bronchoscopy for Malignant Central Airway Obstruction: Results of the AQuIRE Registry." Chest 148(2): 450-471.',
+    year: 2015,
+    journal: 'Chest 148(2): 450-471.',
+    primaryHub: 'Central Airway Obstruction, Stents & Therapeutic Bronchoscopy',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'Bronchoscopy Safety',
+      'Central Airway Obstruction',
+      'Quality Registry',
+      'Risk Stratification',
+      'Therapeutic Bronchoscopy',
+    ],
+    synopsis:
+      'AQuIRE provided multicenter complication and risk-factor data for therapeutic bronchoscopy in malignant central airway obstruction, grounding procedural safety discussions in registry outcomes.',
+    publicationUrl: 'https://doi.org/10.1378/chest.14-1530',
+    audio: makePodcastAudio('complications-therapeutic-bronchoscopy-malignant-2015'),
+  },
+  {
+    id: 'endobronchial-ultrasound-guided-transbronchial-2005',
+    title:
+      'Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration for Staging of Lung Cancer',
+    citation:
+      'Yasufuku, K., et al. (2005). "Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration for Staging of Lung Cancer." Lung Cancer 50(3): 347-354.',
+    year: 2005,
+    journal: 'Lung Cancer 50(3): 347-354.',
+    primaryHub: 'Lung Nodules, Early Lung Cancer & Staging',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'Diagnostic Yield',
+      'EBUS',
+      'Lung Cancer',
+      'Mediastinal Staging',
+      'Staging',
+    ],
+    synopsis:
+      'An early convex-probe EBUS-TBNA lung cancer staging study that helped establish real-time ultrasound-guided mediastinal needle aspiration as a minimally invasive staging tool.',
+    publicationUrl: 'https://doi.org/10.1016/j.lungcan.2005.07.013',
+    audio: makePodcastAudio('endobronchial-ultrasound-guided-transbronchial-2005'),
+  },
+  {
+    id: 'randomized-comparison-indwelling-pleural-1999',
+    title:
+      'A Randomized Comparison of Indwelling Pleural Catheter and Doxycycline Pleurodesis in the Management of Malignant Pleural Effusions',
+    citation:
+      'Putnam, J. B., Jr., et al. (1999). "A Randomized Comparison of Indwelling Pleural Catheter and Doxycycline Pleurodesis in the Management of Malignant Pleural Effusions." Cancer 86(10): 1992-1999.',
+    year: 1999,
+    journal: 'Cancer 86(10): 1992-1999.',
+    primaryHub: 'Pleural Disease, Thoracoscopy & Chest Drains',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'IPC',
+      'Malignant Pleural Effusion',
+      'Pleural Disease',
+      'Pleurodesis',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'A pivotal randomized comparison that helped move outpatient indwelling pleural catheter management into the malignant pleural effusion treatment conversation.',
+    publicationUrl: 'https://pubmed.ncbi.nlm.nih.gov/10570423/',
+    audio: makePodcastAudio('randomized-comparison-indwelling-pleural-1999'),
+  },
+  {
+    id: 'prospective-controlled-trial-ebus-2011',
+    title:
+      'A Prospective Controlled Trial of EBUS-TBNA Compared With Mediastinoscopy for Mediastinal Lymph Node Staging of Lung Cancer',
+    citation:
+      'Yasufuku, K., et al. (2011). "A Prospective Controlled Trial of Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration Compared With Mediastinoscopy for Mediastinal Lymph Node Staging of Lung Cancer." J Thorac Cardiovasc Surg 142(6): 1393-1400.e1.',
+    year: 2011,
+    journal: 'J Thorac Cardiovasc Surg 142(6): 1393-1400.e1.',
+    primaryHub: 'Lung Nodules, Early Lung Cancer & Staging',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'EBUS',
+      'Lung Cancer',
+      'Mediastinal Staging',
+      'Mediastinoscopy',
+      'Staging',
+    ],
+    synopsis:
+      'This prospective comparison of EBUS-TBNA with mediastinoscopy informed the shift toward endosonographic mediastinal staging in potentially resectable lung cancer.',
+    publicationUrl: 'https://doi.org/10.1016/j.jtcvs.2011.08.037',
+    audio: makePodcastAudio('prospective-controlled-trial-ebus-2011'),
+  },
+  {
+    id: 'mediastinoscopy-endosonography-mediastinal-nodal-2010',
+    title: 'Mediastinoscopy vs Endosonography for Mediastinal Nodal Staging of Lung Cancer',
+    citation:
+      'Annema, J. T., et al. (2010). "Mediastinoscopy vs Endosonography for Mediastinal Nodal Staging of Lung Cancer: A Randomized Trial." JAMA 304(20): 2245-2252.',
+    year: 2010,
+    journal: 'JAMA 304(20): 2245-2252.',
+    primaryHub: 'Lung Nodules, Early Lung Cancer & Staging',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'EBUS',
+      'EUS',
+      'Lung Cancer',
+      'Mediastinoscopy',
+      'Randomized Trial',
+      'Staging',
+    ],
+    synopsis:
+      'The ASTER randomized trial compared surgical staging with an endosonography-first strategy, supporting combined endoscopic staging pathways before mediastinoscopy.',
+    publicationUrl: 'https://doi.org/10.1001/jama.2010.1705',
+    audio: makePodcastAudio('mediastinoscopy-endosonography-mediastinal-nodal-2010'),
+  },
+  {
+    id: 'effect-of-an-indwelling-pleural-catheter-vs-chest-tube-and-talc-pleurodesis-for-relieving-dyspnea-in-patients-with-malignant-pleural-effusion-the-time2-rct',
+    title:
+      'Effect of an Indwelling Pleural Catheter vs Chest Tube and Talc Pleurodesis for Relieving Dyspnea in Patients With Malignant Pleural Effusion: The TIME2 RCT',
+    citation:
+      'Davies, H. E., et al. (2012). "Effect of an Indwelling Pleural Catheter vs Chest Tube and Talc Pleurodesis for Relieving Dyspnea in Patients With Malignant Pleural Effusion: The TIME2 Randomized Controlled Trial." JAMA 307(22): 2383-2389.',
+    year: 2012,
+    journal: 'JAMA 307(22): 2383-2389.',
+    primaryHub: 'Pleural Disease, Thoracoscopy & Chest Drains',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'IPC',
+      'Malignant Pleural Effusion',
+      'Pleural Disease',
+      'Pleurodesis',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'TIME2 compared IPC with chest tube talc pleurodesis for breathlessness relief, helping define tradeoffs between symptom control, hospitalization, and repeat procedures.',
+    publicationUrl: 'https://doi.org/10.1001/jama.2012.5535',
+    audio: makePodcastAudio(
+      'effect-of-an-indwelling-pleural-catheter-vs-chest-tube-and-talc-pleurodesis-for-relieving-dyspnea-in-patients-with-malignant-pleural-effusion-the-time2-rct',
+    ),
+  },
+  {
+    id: 'liberate-2018',
+    title:
+      'A Multicenter Randomized Controlled Trial of Zephyr Endobronchial Valve Treatment in Heterogeneous Emphysema (LIBERATE)',
+    citation:
+      'Criner, G. J., et al. (2018). "A Multicenter Randomized Controlled Trial of Zephyr Endobronchial Valve Treatment in Heterogeneous Emphysema (LIBERATE)." Am J Respir Crit Care Med 198(9): 1151-1164.',
+    year: 2018,
+    journal: 'Am J Respir Crit Care Med 198(9): 1151-1164.',
+    primaryHub: 'Emphysema, BLVR & Hyperinflation',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'BLVR',
+      'Endobronchial Valves',
+      'Emphysema',
+      'Hyperinflation',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'LIBERATE supplied pivotal randomized evidence for Zephyr endobronchial valve therapy in selected heterogeneous emphysema, including benefit and pneumothorax-risk framing.',
+    publicationUrl: 'https://doi.org/10.1164/rccm.201803-0590OC',
+    audio: makePodcastAudio('liberate-2018'),
+  },
+  {
+    id: 'outpatient-talc-administration-indwelling-2018',
+    title: 'Outpatient Talc Administration by Indwelling Pleural Catheter for Malignant Effusion',
+    citation:
+      'Bhatnagar, R., et al. (2018). "Outpatient Talc Administration by Indwelling Pleural Catheter for Malignant Effusion." N Engl J Med 378(14): 1313-1322.',
+    year: 2018,
+    journal: 'N Engl J Med 378(14): 1313-1322.',
+    primaryHub: 'Pleural Disease, Thoracoscopy & Chest Drains',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'IPC',
+      'Malignant Pleural Effusion',
+      'Pleural Disease',
+      'Pleurodesis',
+      'Randomized Trial',
+    ],
+    synopsis:
+      'IPC-PLUS tested outpatient talc delivery through an indwelling pleural catheter, showing how ambulatory IPC management can be combined with pleurodesis intent.',
+    publicationUrl: 'https://doi.org/10.1056/NEJMoa1716883',
+    audio: makePodcastAudio('outpatient-talc-administration-indwelling-2018'),
+  },
+  {
+    id: 'lung-cancer-diagnosis-staging-2015',
+    title:
+      'Lung Cancer Diagnosis and Staging With Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration Compared With Conventional Approaches',
+    citation:
+      'Navani, N., et al. (2015). "Lung Cancer Diagnosis and Staging With Endobronchial Ultrasound-Guided Transbronchial Needle Aspiration Compared With Conventional Approaches: An Open-Label, Pragmatic, Randomised Controlled Trial." Lancet Respir Med 3(4): 282-289.',
+    year: 2015,
+    journal: 'Lancet Respir Med 3(4): 282-289.',
+    primaryHub: 'Lung Nodules, Early Lung Cancer & Staging',
+    secondaryHubs: [landmarkJournalClubPodcastHub],
+    tags: [
+      landmarkPodcastTag,
+      'Diagnostic Yield',
+      'EBUS',
+      'Lung Cancer',
+      'Randomized Trial',
+      'Staging',
+    ],
+    synopsis:
+      'The Lung-BOOST pragmatic randomized trial evaluated EBUS-TBNA as an initial diagnostic and staging approach for suspected lung cancer, emphasizing efficient pathway design.',
+    publicationUrl: 'https://doi.org/10.1016/S2213-2600(15)00029-6',
+    audio: makePodcastAudio('lung-cancer-diagnosis-staging-2015'),
   },
   {
     id: 'ipn-program-time-to-diagnosis',

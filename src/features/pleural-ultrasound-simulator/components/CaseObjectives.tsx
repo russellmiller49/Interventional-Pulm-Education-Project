@@ -4,16 +4,16 @@ import { CheckCircle2, CircleAlert, CircleDashed } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 
-import type { PleuralSimulatorCase, ProbeScore, UltrasoundFrameMetrics } from '../types'
+import type { ProbeScore, UltrasoundFrameMetrics } from '../types'
 import { HandoffContent } from '@/i18n/handoff'
 
 interface CaseObjectivesProps {
-  caseData: PleuralSimulatorCase
+  objectives: string[]
   metrics: UltrasoundFrameMetrics | null
   score: ProbeScore | null
 }
 
-export function CaseObjectives({ caseData, metrics, score }: CaseObjectivesProps) {
+export function CaseObjectives({ objectives, metrics, score }: CaseObjectivesProps) {
   return (
     <HandoffContent>
       {
@@ -82,7 +82,7 @@ export function CaseObjectives({ caseData, metrics, score }: CaseObjectivesProps
           <div className="mt-5 border-t border-border/80 pt-5">
             <h4 className="text-sm font-semibold text-foreground">Case objectives</h4>
             <ul className="mt-3 grid gap-2 text-sm leading-6 text-muted-foreground">
-              {caseData.objectives.map((objective) => (
+              {objectives.map((objective) => (
                 <li key={objective} className="flex gap-2">
                   <CircleDashed className="mt-1 h-4 w-4 shrink-0 text-sky-600" aria-hidden />
                   <span>{objective}</span>

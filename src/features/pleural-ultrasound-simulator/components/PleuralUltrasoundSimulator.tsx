@@ -12,15 +12,26 @@ import {
 } from '@/features/pleural-ultrasound/engine/patterns'
 import type { EffusionPattern } from '@/features/pleural-ultrasound/engine/types'
 
+import { BModeFramePanel } from '@/features/thoracic-ultrasound-simulator/components/BModeFramePanel'
+import {
+  activeProbePreset,
+  ThoracicProbeControls,
+} from '@/features/thoracic-ultrasound-simulator/components/ThoracicProbeControls'
+import { ThoracicScene3D } from '@/features/thoracic-ultrasound-simulator/components/ThoracicScene3D'
+import type { LoadedThoracicCase } from '@/features/thoracic-ultrasound-simulator/loader/loadThoracicCase'
+import { loadThoracicCase } from '@/features/thoracic-ultrasound-simulator/loader/loadThoracicCase'
+import { useBModeFrame } from '@/features/thoracic-ultrasound-simulator/providers/useBModeFrame'
+import type { ProbeStore } from '@/features/thoracic-ultrasound-simulator/state/probeStore'
+import {
+  createProbeStore,
+  useProbeState,
+} from '@/features/thoracic-ultrasound-simulator/state/probeStore'
+
 import { pleuralSimulatorCases } from '../content/pleuralSimulatorCases'
-import { selectNearestReviewedAtlasFrame } from '../engine/frameAtlas'
 import { scoreProbeWindow } from '../engine/scoring'
-import { simulatePleuralBMode } from '../engine/simulateBMode'
-import type { PleuralProbeState, PleuralSimulatorCase, PleuralVolume, ProbeScore } from '../types'
+import { pleuralTissueModel } from '../engine/tissueModel'
+import type { ProbeScore } from '../types'
 import { CaseObjectives } from './CaseObjectives'
-import { PleuralScene3D } from './PleuralScene3D'
-import { ProbeControls } from './ProbeControls'
-import { UltrasoundCanvas } from './UltrasoundCanvas'
 import { HandoffContent } from '@/i18n/handoff'
 
 const patternOptions: { id: EffusionPattern; label: string }[] = [
@@ -31,112 +42,41 @@ const patternOptions: { id: EffusionPattern; label: string }[] = [
   { id: 'noDrainableEffusion', label: 'No drainable effusion' },
 ]
 
+function asEffusionPattern(value: string | null): EffusionPattern | null {
+  return patternOptions.some((option) => option.id === value) ? (value as EffusionPattern) : null
+}
+
 export function PleuralUltrasoundSimulator() {
-  const [caseData, setCaseData] = useState<PleuralSimulatorCase | null>(null)
-  const [volume, setVolume] = useState<PleuralVolume | null>(null)
-  const [probe, setProbe] = useState<PleuralProbeState | null>(null)
-  const [answer, setAnswer] = useState<EffusionPattern | null>(null)
-  const [revealed, setRevealed] = useState(false)
+  const [loaded, setLoaded] = useState<LoadedThoracicCase | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const listing = pleuralSimulatorCases[0]
 
-    async function loadCase() {
-      try {
-        const manifestResponse = await fetch(listing.manifestUrl)
-        if (!manifestResponse.ok) {
-          throw new Error(`Could not load case manifest (${manifestResponse.status}).`)
+    loadThoracicCase(listing.manifestUrl)
+      .then((result) => {
+        if (!cancelled) {
+          setLoaded(result)
         }
-        const manifest = (await manifestResponse.json()) as PleuralSimulatorCase
-
-        if (cancelled) {
-          return
-        }
-
-        setCaseData(manifest)
-        setProbe(manifest.probeDefaults)
-
-        const labelmapResponse = await fetch(manifest.labelmapUrl)
-        if (!labelmapResponse.ok) {
-          throw new Error(`Could not load labelmap (${labelmapResponse.status}).`)
-        }
-        const labelmap = new Uint8Array(await labelmapResponse.arrayBuffer())
-
-        if (cancelled) {
-          return
-        }
-
-        setVolume({
-          data: labelmap,
-          geometry: manifest.volume,
-          labels: manifest.labels,
-        })
-      } catch (loadError) {
+      })
+      .catch((loadError: unknown) => {
         if (!cancelled) {
           setError(
             loadError instanceof Error ? loadError.message : 'Could not load simulator case.',
           )
         }
-      }
-    }
-
-    loadCase()
+      })
 
     return () => {
       cancelled = true
     }
   }, [])
 
-  const frame = useMemo(() => {
-    if (!probe) {
-      return null
-    }
-
-    const atlasSelection = selectNearestReviewedAtlasFrame(caseData?.frameAtlas, probe)
-    if (atlasSelection) {
-      return null
-    }
-
-    if (!volume) {
-      return null
-    }
-
-    return simulatePleuralBMode({
-      volume,
-      probe,
-      width: 520,
-      height: 620,
-    })
-  }, [caseData?.frameAtlas, probe, volume])
-
-  const atlasSelection = useMemo(() => {
-    if (!caseData || !probe) {
-      return null
-    }
-
-    return selectNearestReviewedAtlasFrame(caseData.frameAtlas, probe)
-  }, [caseData, probe])
-
-  const activeMetrics = atlasSelection?.entry.metrics ?? frame?.metrics ?? null
-  const activeGroundTruth = atlasSelection?.entry.groundTruthPattern ?? caseData?.groundTruthPattern
-
-  const score: ProbeScore | null = useMemo(() => {
-    if (!activeMetrics || !activeGroundTruth) {
-      return null
-    }
-
-    return scoreProbeWindow(activeMetrics, answer, activeGroundTruth)
-  }, [activeGroundTruth, activeMetrics, answer])
-
-  const classification = useMemo(() => {
-    if (!activeGroundTruth || !answer || !revealed) {
-      return null
-    }
-
-    return scoreClassification(answer, activeGroundTruth)
-  }, [activeGroundTruth, answer, revealed])
+  const store = useMemo(
+    () => (loaded ? createProbeStore(activeProbePreset(loaded.manifest).defaults) : null),
+    [loaded],
+  )
 
   if (error) {
     return (
@@ -152,7 +92,7 @@ export function PleuralUltrasoundSimulator() {
     )
   }
 
-  if (!caseData || !probe) {
+  if (!loaded || !store) {
     return (
       <HandoffContent>
         {
@@ -166,32 +106,72 @@ export function PleuralUltrasoundSimulator() {
     )
   }
 
+  return <LoadedSimulator loaded={loaded} store={store} />
+}
+
+function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store: ProbeStore }) {
+  const { manifest, volume } = loaded
+  const probe = useProbeState(store)
+  const [answer, setAnswer] = useState<EffusionPattern | null>(null)
+  const [revealed, setRevealed] = useState(false)
+
+  const { frame, metrics, groundTruthKey } = useBModeFrame({
+    manifest,
+    volume,
+    probe,
+    width: 520,
+    height: 620,
+    model: pleuralTissueModel,
+  })
+
+  const groundTruth = asEffusionPattern(groundTruthKey)
+
+  const score: ProbeScore | null = useMemo(() => {
+    if (!metrics || !groundTruth) {
+      return null
+    }
+    return scoreProbeWindow(metrics, answer, groundTruth)
+  }, [metrics, answer, groundTruth])
+
+  const classification = useMemo(() => {
+    if (!groundTruth || !answer || !revealed) {
+      return null
+    }
+    return scoreClassification(answer, groundTruth)
+  }, [groundTruth, answer, revealed])
+
+  const objectives = useMemo(
+    () => manifest.learningTasks.map((task) => task.prompt),
+    [manifest.learningTasks],
+  )
+
   return (
     <HandoffContent>
       {
         <section className="container space-y-6">
           <Callout variant="warning" title="Educational simulation only">
-            {caseData.safetyLabel} The image is synthetic and should not be used for diagnosis,
+            {manifest.safetyLabel} The image is synthetic and should not be used for diagnosis,
             treatment, or real procedure guidance.
           </Callout>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(24rem,0.9fr)]">
             <div className="space-y-6">
-              <PleuralScene3D
-                caseData={caseData}
-                probe={probe}
+              <ThoracicScene3D
+                manifest={manifest}
+                store={store}
                 needleUnsafe={!(score?.needleTrajectorySafe ?? false)}
               />
-              <ProbeControls caseData={caseData} probe={probe} onChange={setProbe} />
+              <ThoracicProbeControls manifest={manifest} store={store} />
             </div>
 
             <div className="space-y-6">
-              <UltrasoundCanvas
+              <BModeFramePanel
                 frame={frame}
-                atlasFrame={atlasSelection?.entry ?? null}
                 depthCm={probe.depthCm}
+                title="Pleural B-mode"
+                metricsActive={Boolean(metrics)}
               />
-              <CaseObjectives caseData={caseData} metrics={activeMetrics} score={score} />
+              <CaseObjectives objectives={objectives} metrics={metrics} score={score} />
               <PatternClassifier
                 answer={answer}
                 revealed={revealed}
@@ -201,7 +181,7 @@ export function PleuralUltrasoundSimulator() {
                 }}
                 onReveal={() => setRevealed(true)}
                 classification={classification}
-                groundTruth={activeGroundTruth ?? caseData.groundTruthPattern}
+                groundTruth={groundTruth}
                 score={score}
               />
             </div>
@@ -218,7 +198,7 @@ interface PatternClassifierProps {
   onAnswer: (answer: EffusionPattern) => void
   onReveal: () => void
   classification: ReturnType<typeof scoreClassification> | null
-  groundTruth: EffusionPattern
+  groundTruth: EffusionPattern | null
   score: ProbeScore | null
 }
 
@@ -272,7 +252,7 @@ function PatternClassifier({
             Check classification
           </Button>
 
-          {revealed && classification ? (
+          {revealed && classification && groundTruth ? (
             <div
               className={
                 classification.correct

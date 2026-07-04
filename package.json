@@ -17,6 +17,7 @@
     "type-check": "tsc --noEmit",
     "sync:bronch-navigation-trainer": "node scripts/sync-bronch-navigation-trainer.mjs",
     "sync:socal-ebus-course": "node scripts/sync-socal-ebus-course.mjs",
+    "sync:scope-input": "node scripts/sync-scope-input.mjs",
     "airway-anatomy:assets": "python3 scripts/airway-anatomy/generate-assets.py",
     "rose:qupath": "tsx scripts/rapid-onsite-cytology/open-slide-in-qupath.ts",
     "rose:qupath:convert": "node scripts/rapid-onsite-cytology/qupath-geojson-to-shapes.mjs",

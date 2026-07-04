@@ -133,6 +133,12 @@ export function Navigation() {
         description: nav('items.bronchNavigation.description'),
       },
       {
+        title: nav('items.thermalAblation.title'),
+        shortTitle: nav('items.thermalAblation.shortTitle'),
+        href: '/thermal-ablation' as Route,
+        description: nav('items.thermalAblation.description'),
+      },
+      {
         title: nav('items.pleuralProcedures.title'),
         shortTitle: nav('items.pleuralProcedures.shortTitle'),
         href: '/pleural-procedures' as Route,

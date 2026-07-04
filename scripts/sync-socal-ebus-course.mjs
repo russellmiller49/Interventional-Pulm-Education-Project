@@ -4,6 +4,8 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import nextEnv from '@next/env'
 
+import { syncScopeInput } from './sync-scope-input.mjs'
+
 const { loadEnvConfig } = nextEnv
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -44,6 +46,8 @@ const embeddedEnv = {
 if (!existsSync(sourceAppDir)) {
   throw new Error(`Source app not found: ${sourceAppDir}`)
 }
+
+syncScopeInput()
 
 console.log('Building SoCal EBUS course app...')
 console.log(

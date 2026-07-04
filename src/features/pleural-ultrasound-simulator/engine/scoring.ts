@@ -7,50 +7,17 @@ import type {
 } from '../types'
 import type { EffusionPattern } from '@/features/pleural-ultrasound/engine/types'
 
-import { isSolidOrgan } from './labels'
-import { projectBeamToWorld } from './sectorGeometry'
-import { sampleLabel } from './sampleVolume'
+import { assessNeedlePath as thoracicAssessNeedlePath } from '@/features/thoracic-ultrasound-simulator/engine/needlePath'
+
+import { toThoracicVolume } from './sampleVolume'
+import { pleuralTissueModel } from './tissueModel'
 
 export function assessNeedlePath(
   volume: PleuralVolume,
   probe: PleuralProbeState,
   stepMm = 2,
 ): NeedlePathAssessment {
-  const maxDepthMm = probe.depthCm * 10
-  let ribHit = false
-  let diaphragmHit = false
-  let solidOrganHit = false
-  let lungHit = false
-  let currentFluidRun = 0
-  let bestFluidRun = 0
-  let firstFluidDepthMm: number | null = null
-
-  for (let depthMm = 0; depthMm <= maxDepthMm; depthMm += stepMm) {
-    const label = sampleLabel(volume, projectBeamToWorld(probe, probe.needleAngleDeg, depthMm))
-
-    if (label === 'rib') ribHit = true
-    if (label === 'diaphragm') diaphragmHit = true
-    if (isSolidOrgan(label)) solidOrganHit = true
-    if (label === 'lung' || label === 'atelectaticLung') lungHit = true
-
-    if (label === 'pleuralFluid') {
-      firstFluidDepthMm ??= depthMm
-      currentFluidRun += stepMm
-      bestFluidRun = Math.max(bestFluidRun, currentFluidRun)
-    } else {
-      currentFluidRun = 0
-    }
-  }
-
-  return {
-    ribHit,
-    diaphragmHit,
-    solidOrganHit,
-    lungHit,
-    fluidRunMm: bestFluidRun,
-    firstFluidDepthMm,
-    safeWindow: bestFluidRun >= 25 && !ribHit && !diaphragmHit && !solidOrganHit,
-  }
+  return thoracicAssessNeedlePath(toThoracicVolume(volume), probe, pleuralTissueModel, stepMm)
 }
 
 export function scoreProbeWindow(

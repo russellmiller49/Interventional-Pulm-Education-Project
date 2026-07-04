@@ -577,6 +577,9 @@
     "navigation": "guided along exported centerline polylines with curated station snaps",
     "scope_model": "GLB bronchoscope tip presentation model aligned to the active probe pose."
   },
+  "physics_snapshots": {
+    "station_4r_node_a::default": "physics_snapshots/station_4r_node_a__default.json"
+  },
   "presets": [
     {
       "approach": "default",
