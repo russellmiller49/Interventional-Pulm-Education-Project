@@ -71,6 +71,9 @@ export default async function BronchNavigationTrainerPage({
                   Pair With Board Review
                 </Link>
               </Button>
+              <Button asChild variant="outline">
+                <Link href="/hardware">Hardware Scope Setup</Link>
+              </Button>
             </div>
 
             <div className="rounded-3xl border border-border/70 bg-card/70 p-6">

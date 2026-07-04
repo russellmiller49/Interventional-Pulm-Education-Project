@@ -289,6 +289,7 @@ export function CourseEmbedShell({ locale }: CourseEmbedShellProps) {
           <iframe
             title="SoCal EBUS Course"
             src={embedSrc}
+            allow="gamepad"
             className="h-[calc(100vh-12rem)] min-h-[780px] w-full bg-white"
           />
         </div>
