@@ -21,6 +21,7 @@ OUT_POSTER = os.path.join(OUT_DIR, "airway-survey-poster-cropped.jpg")
 
 CROP_X, CROP_Y, CROP_W, CROP_H = 552, 0, 1368, 1080
 OUT_W, OUT_H = 912, 720
+OUT_FPS = 30
 POSTER_TIME_SECONDS = 8.5
 
 
@@ -34,16 +35,22 @@ def main():
         sys.exit(f"source video not found: {SRC_VIDEO}")
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    vf = f"crop={CROP_W}:{CROP_H}:{CROP_X}:{CROP_Y},scale={OUT_W}:{OUT_H}:flags=lanczos"
+    vf = (
+        f"crop={CROP_W}:{CROP_H}:{CROP_X}:{CROP_Y},"
+        f"scale={OUT_W}:{OUT_H}:flags=lanczos,"
+        f"fps={OUT_FPS}"
+    )
     run([
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-stats",
         "-i", SRC_VIDEO,
         "-vf", vf,
         "-c:v", "libx264",
-        "-profile:v", "high",
+        "-profile:v", "baseline",
+        "-level:v", "3.1",
         "-preset", "slow",
         "-crf", "22",
         "-pix_fmt", "yuv420p",
+        "-video_track_timescale", "90000",
         "-movflags", "+faststart",
         "-an",
         OUT_VIDEO,
