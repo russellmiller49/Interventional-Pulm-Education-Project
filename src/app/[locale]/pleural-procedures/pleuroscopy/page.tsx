@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  PleuroscopyNav,
-  pleuroscopyNavBase,
-} from '@/features/pleuroscopy/components/PleuroscopyNav'
+import { pleuroscopyNavBase } from '@/features/learning-module/moduleRoutes'
+import { PleuroscopyNav } from '@/features/pleuroscopy/components/PleuroscopyNav'
 import { getPleuroscopyObjectives } from '@/features/pleuroscopy/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

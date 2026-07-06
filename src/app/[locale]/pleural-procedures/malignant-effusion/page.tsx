@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  MalignantEffusionNav,
-  malignantEffusionNavBase,
-} from '@/features/malignant-effusion/components/MalignantEffusionNav'
+import { malignantEffusionNavBase } from '@/features/learning-module/moduleRoutes'
+import { MalignantEffusionNav } from '@/features/malignant-effusion/components/MalignantEffusionNav'
 import { getMpeObjectives } from '@/features/malignant-effusion/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

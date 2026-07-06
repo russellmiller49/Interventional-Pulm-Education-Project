@@ -3,20 +3,16 @@
 import { useTranslations } from 'next-intl'
 
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
+import { rigidBronchoscopyNavBase } from '@/features/learning-module/moduleRoutes'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 import { HandoffContent } from '@/i18n/handoff'
 
-const base = '/rigid-bronchoscopy'
-
-/** Section base href, exported for pages that need the overview's activeHref. */
-export const rigidBronchoscopyNavBase = base
-
 const sections = [
-  { key: 'overview', href: base },
-  { key: 'learn', href: `${base}/learn` },
-  { key: 'practice', href: `${base}/practice` },
-  { key: 'assessment', href: `${base}/assessment` },
-  { key: 'references', href: `${base}/references` },
+  { key: 'overview', href: rigidBronchoscopyNavBase },
+  { key: 'learn', href: `${rigidBronchoscopyNavBase}/learn` },
+  { key: 'practice', href: `${rigidBronchoscopyNavBase}/practice` },
+  { key: 'assessment', href: `${rigidBronchoscopyNavBase}/assessment` },
+  { key: 'references', href: `${rigidBronchoscopyNavBase}/references` },
 ] as const
 
 export function RigidBronchoscopyNav({ activeHref }: { activeHref: string }) {

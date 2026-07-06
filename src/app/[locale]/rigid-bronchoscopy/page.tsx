@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  RigidBronchoscopyNav,
-  rigidBronchoscopyNavBase,
-} from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyNav'
+import { rigidBronchoscopyNavBase } from '@/features/learning-module/moduleRoutes'
+import { RigidBronchoscopyNav } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyNav'
 import { getRigidObjectives } from '@/features/rigid-bronchoscopy/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

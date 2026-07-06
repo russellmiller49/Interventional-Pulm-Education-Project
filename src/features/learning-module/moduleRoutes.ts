@@ -1,0 +1,8 @@
+export const malignantEffusionNavBase = '/pleural-procedures/malignant-effusion'
+export const pleuralFluidAnalysisNavBase = '/pleural-procedures/pleural-fluid-analysis'
+export const pleuralInfectionNavBase = '/pleural-procedures/pleural-infection'
+export const pleuralUltrasoundNavBase = '/pleural-procedures/pleural-ultrasound'
+export const pleuroscopyNavBase = '/pleural-procedures/pleuroscopy'
+export const pneumothoraxNavBase = '/pleural-procedures/pneumothorax-pathway'
+export const rigidBronchoscopyNavBase = '/rigid-bronchoscopy'
+export const thoracentesisNavBase = '/pleural-procedures/thoracentesis-planner'

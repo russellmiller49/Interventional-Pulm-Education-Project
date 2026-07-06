@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  PleuralInfectionNav,
-  pleuralInfectionNavBase,
-} from '@/features/pleural-infection/components/PleuralInfectionNav'
+import { pleuralInfectionNavBase } from '@/features/learning-module/moduleRoutes'
+import { PleuralInfectionNav } from '@/features/pleural-infection/components/PleuralInfectionNav'
 import { getInfectionObjectives } from '@/features/pleural-infection/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

@@ -3,20 +3,16 @@
 import { useTranslations } from 'next-intl'
 
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
+import { pleuroscopyNavBase } from '@/features/learning-module/moduleRoutes'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 import { HandoffContent } from '@/i18n/handoff'
 
-const base = '/pleural-procedures/pleuroscopy'
-
-/** Section base href, exported for pages that need the overview's activeHref. */
-export const pleuroscopyNavBase = base
-
 const sections = [
-  { key: 'overview', href: base },
-  { key: 'learn', href: `${base}/learn` },
-  { key: 'practice', href: `${base}/practice` },
-  { key: 'assessment', href: `${base}/assessment` },
-  { key: 'references', href: `${base}/references` },
+  { key: 'overview', href: pleuroscopyNavBase },
+  { key: 'learn', href: `${pleuroscopyNavBase}/learn` },
+  { key: 'practice', href: `${pleuroscopyNavBase}/practice` },
+  { key: 'assessment', href: `${pleuroscopyNavBase}/assessment` },
+  { key: 'references', href: `${pleuroscopyNavBase}/references` },
 ] as const
 
 export function PleuroscopyNav({ activeHref }: { activeHref: string }) {

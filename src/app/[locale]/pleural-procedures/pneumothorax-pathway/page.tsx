@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  PneumothoraxNav,
-  pneumothoraxNavBase,
-} from '@/features/pneumothorax-pathway/components/PneumothoraxNav'
+import { pneumothoraxNavBase } from '@/features/learning-module/moduleRoutes'
+import { PneumothoraxNav } from '@/features/pneumothorax-pathway/components/PneumothoraxNav'
 import { getPneumothoraxObjectives } from '@/features/pneumothorax-pathway/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 
