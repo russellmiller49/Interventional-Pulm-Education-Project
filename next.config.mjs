@@ -11,7 +11,7 @@ const csp = [
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self'",
-  "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com blob:",
+  "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com https://pccmintro.s3.us-east-1.amazonaws.com blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -222,7 +222,7 @@ const nextConfig = {
       {
         // Apply security headers to HTML pages only, not static app assets.
         source:
-          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/).*)',
+          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/|peripheral-ablation/).*)',
         headers: securityHeaders,
       },
       {
@@ -233,6 +233,11 @@ const nextConfig = {
       {
         // Allow the admin-gated thermal ablation modules to render inside the same-site iframe.
         source: '/thermal-ablation/:path*',
+        headers: embeddedAppSecurityHeaders,
+      },
+      {
+        // Allow the admin-gated peripheral ablation module to render inside the same-site iframe.
+        source: '/peripheral-ablation/:path*',
         headers: embeddedAppSecurityHeaders,
       },
       {

@@ -10,6 +10,8 @@ import {
   isCtAlignmentSandboxPath,
   isPublicPath,
   isPublicTrainingEmbed,
+  isPccmIntroCourseAdminDashboardPath,
+  isPccmIntroCourseSharedModulePath,
   resolveLoginRedirectPath,
   type SiteEntitlement,
 } from '@/lib/site-auth/access'
@@ -24,6 +26,11 @@ import {
   hasValidLocalDevAuthCookie,
   LOCAL_DEV_AUTH_COOKIE_NAME,
 } from '@/lib/site-auth/local-dev-auth'
+
+const pccmIntroCourseAdminEntitlements: SiteEntitlement[] = [
+  'pccm_intro_course_admin_ucsd',
+  'pccm_intro_course_admin_loma_linda',
+]
 
 export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
@@ -125,8 +132,22 @@ export async function proxy(req: NextRequest) {
   }
 
   if (requiredEntitlement) {
-    const hasAccess =
+    let hasAccess =
       (await hasActiveSiteEntitlement(requiredEntitlement, user.id)) || hasLegacyEbusAccess
+
+    if (!hasAccess && requiredEntitlement === 'pccm_intro_course') {
+      hasAccess =
+        (await hasActiveSiteEntitlement('site_admin', user.id)) ||
+        (await hasAnyActiveSiteEntitlement(pccmIntroCourseAdminEntitlements, user.id))
+    }
+
+    if (
+      !hasAccess &&
+      requiredEntitlement === 'site_admin' &&
+      isPccmIntroCourseAdminDashboardPath(pathname)
+    ) {
+      hasAccess = await hasAnyActiveSiteEntitlement(pccmIntroCourseAdminEntitlements, user.id)
+    }
 
     if (!hasAccess) {
       const redirectUrl = new URL(localizePath('/dashboard', locale ?? defaultLocale), req.url)
@@ -135,6 +156,26 @@ export async function proxy(req: NextRequest) {
     }
 
     return res
+  }
+
+  if (
+    isPccmIntroCourseSharedModulePath(pathname) &&
+    !(await hasActiveSiteEntitlement('site_admin', user.id)) &&
+    !(await hasAnyActiveSiteEntitlement(pccmIntroCourseAdminEntitlements, user.id))
+  ) {
+    const pccmEnrollment = await getActivePccmIntroCourseEnrollment(user.id)
+
+    if (
+      pccmEnrollment?.institution === 'loma_linda' &&
+      !(await hasSubmittedBothPccmIntroPretests(user.id))
+    ) {
+      const redirectUrl = new URL(
+        localizePath('/pccm-intro-course', locale ?? defaultLocale),
+        req.url,
+      )
+      redirectUrl.searchParams.set('gate', 'pretests')
+      return redirectWithCookies(redirectUrl)
+    }
   }
 
   if (!isAuthPath(pathname)) {
@@ -173,6 +214,23 @@ export async function proxy(req: NextRequest) {
     return false
   }
 
+  async function hasAnyActiveSiteEntitlement(entitlements: SiteEntitlement[], userId: string) {
+    if (entitlements.length === 0) {
+      return false
+    }
+
+    const { data: siteEntitlement } = await supabase
+      .from('site_entitlements')
+      .select('entitlement')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .in('entitlement', entitlements)
+      .limit(1)
+      .maybeSingle()
+
+    return Boolean(siteEntitlement)
+  }
+
   async function hasApprovedLegacyEbusAccess(userId: string) {
     const { data: learnerProfile } = await supabase
       .from('learner_profiles')
@@ -182,6 +240,29 @@ export async function proxy(req: NextRequest) {
       .maybeSingle()
 
     return Boolean(learnerProfile)
+  }
+
+  async function getActivePccmIntroCourseEnrollment(userId: string) {
+    const { data: enrollment } = await supabase
+      .from('pccm_intro_course_enrollments')
+      .select('institution')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    return enrollment as { institution: string } | null
+  }
+
+  async function hasSubmittedBothPccmIntroPretests(userId: string) {
+    const { data: attempts } = await supabase
+      .from('pccm_intro_course_assessment_attempts')
+      .select('attempt_kind,submitted_at')
+      .eq('user_id', userId)
+      .in('attempt_kind', ['bronchoscopy_pre', 'pleural_pre'])
+      .not('submitted_at', 'is', null)
+
+    const submittedKinds = new Set((attempts ?? []).map((attempt) => attempt.attempt_kind))
+    return submittedKinds.has('bronchoscopy_pre') && submittedKinds.has('pleural_pre')
   }
 }
 

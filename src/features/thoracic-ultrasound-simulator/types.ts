@@ -23,6 +23,7 @@ export type ThoracicStructureLabel =
   | 'intercostalMuscle'
   | 'muscle'
   | 'rib'
+  | 'spine'
   // lung / pleura
   | 'lung'
   | 'atelectaticLung'
@@ -32,17 +33,25 @@ export type ThoracicStructureLabel =
   | 'pleuralNodule'
   | 'septation'
   | 'debris'
-  // diaphragm and sub-diaphragmatic organs
+  // diaphragm and abdominal organs
   | 'diaphragm'
   | 'liver'
   | 'spleen'
   | 'kidney'
-  // mediastinum / cardiac / vessels / airway
+  | 'pancreas'
+  | 'gallbladder'
+  | 'stomach'
+  // mediastinum / cardiac / vessels / airway / neck
   | 'heart'
   | 'pericardium'
   | 'greatVessel'
+  | 'aorta'
+  | 'venaCava'
+  | 'pulmonaryVessel'
+  | 'portalVein'
   | 'esophagus'
   | 'airway'
+  | 'thyroid'
   | 'thoracicCavity'
   | 'lymphNode'
 
@@ -50,6 +59,17 @@ export interface LabelBounds {
   min: [number, number, number]
   max: [number, number, number]
   voxels: number
+}
+
+/**
+ * A structure the learner has selected for identification. Shared by the 3D
+ * scene and the B-mode panel so a click in one view highlights the other.
+ * `displayName` is the precise anatomical name (from the GLB mesh where
+ * available, e.g. "Inferior vena cava"), which can be finer than the label.
+ */
+export interface SelectedStructure {
+  label: ThoracicStructureLabel
+  displayName: string
 }
 
 /**
@@ -84,6 +104,13 @@ export interface ThoracicProbeState {
   dynamicRangeDb: number
   sectorAngleDeg: number
   needleAngleDeg: number
+  /**
+   * Angle of the probe around the body's craniocaudal axis, controlling which
+   * surface it contacts and the inward direction the beam fires. 0 = posterior
+   * (the legacy behaviour), ±90 = lateral, 180 = anterior. Optional so existing
+   * poses (which omit it) keep the exact posterior-approach behaviour.
+   */
+  approachDeg?: number
 }
 
 export type ProbeStateKey = keyof ThoracicProbeState

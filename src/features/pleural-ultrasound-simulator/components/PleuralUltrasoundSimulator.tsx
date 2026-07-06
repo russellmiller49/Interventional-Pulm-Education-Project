@@ -18,6 +18,7 @@ import {
   ThoracicProbeControls,
 } from '@/features/thoracic-ultrasound-simulator/components/ThoracicProbeControls'
 import { ThoracicScene3D } from '@/features/thoracic-ultrasound-simulator/components/ThoracicScene3D'
+import type { SelectedStructure } from '@/features/thoracic-ultrasound-simulator/types'
 import type { LoadedThoracicCase } from '@/features/thoracic-ultrasound-simulator/loader/loadThoracicCase'
 import { loadThoracicCase } from '@/features/thoracic-ultrasound-simulator/loader/loadThoracicCase'
 import { useBModeFrame } from '@/features/thoracic-ultrasound-simulator/providers/useBModeFrame'
@@ -114,6 +115,7 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
   const probe = useProbeState(store)
   const [answer, setAnswer] = useState<EffusionPattern | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [selectedStructure, setSelectedStructure] = useState<SelectedStructure | null>(null)
 
   const { frame, metrics, groundTruthKey } = useBModeFrame({
     manifest,
@@ -160,6 +162,8 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
                 manifest={manifest}
                 store={store}
                 needleUnsafe={!(score?.needleTrajectorySafe ?? false)}
+                selected={selectedStructure}
+                onSelectStructure={setSelectedStructure}
               />
               <ThoracicProbeControls manifest={manifest} store={store} />
             </div>
@@ -170,6 +174,11 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
                 depthCm={probe.depthCm}
                 title="Pleural B-mode"
                 metricsActive={Boolean(metrics)}
+                volume={volume}
+                probe={probe}
+                structures={manifest.structures}
+                selected={selectedStructure}
+                onIdentify={setSelectedStructure}
               />
               <CaseObjectives objectives={objectives} metrics={metrics} score={score} />
               <PatternClassifier

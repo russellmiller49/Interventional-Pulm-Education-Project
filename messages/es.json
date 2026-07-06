@@ -259,6 +259,11 @@
         "shortTitle": "Térmica",
         "description": "Módulos interactivos de física del láser, electrocauterio y APC"
       },
+      "peripheralAblation": {
+        "title": "Ablación Periférica",
+        "shortTitle": "Periférica",
+        "description": "RFA, microondas, crio y campo eléctrico pulsado (PEF) en tumores pulmonares periféricos"
+      },
       "pleuralProcedures": {
         "title": "Procedimientos Pleurales",
         "shortTitle": "Pleural",
@@ -283,6 +288,11 @@
         "title": "Introducción a la Broncoscopia",
         "shortTitle": "Broncoscopia",
         "description": "Fundamentos sobre tamaño, alcance y compatibilidad de instrumentos"
+      },
+      "rigidBronchoscopy": {
+        "title": "Broncoscopia rígida",
+        "shortTitle": "Broncoscopia rígida",
+        "description": "Procedimientos de vía aérea rígida — coring, endoprótesis, hemostasia y seguridad frente al fuego"
       },
       "ipRegistry": {
         "title": "Registro de IP",
@@ -320,6 +330,7 @@
     "launchCatalog": "Catálogo de lanzamiento",
     "coreModules": "Módulos principales de aprendizaje",
     "coreModulesBody": "Comience con los módulos que ya están listos para los estudiantes: entrenamiento en EBUS, estadificación TNM-9, anatomía 3D, repaso para el examen, podcasts de club de revista, Nav Bronch, FluoroView y recursos docentes.",
+    "pccmIntroParticipants": "Participantes del curso introductorio de PCCM",
     "socalParticipants": "Participantes del curso EBUS del Sur de California",
     "participantCourse": "CURSO PARA PARTICIPANTES",
     "participantTitle": "Participantes del Curso EBUS del Sur de California",
@@ -384,6 +395,18 @@
         "description": "Herramientas fundamentales para selección del tamaño del broncoscopio, conceptos de alcance en la vía aérea y compatibilidad de instrumentos.",
         "cta": "Abrir Módulo Introductorio"
       },
+      "rigidBronchoscopy": {
+        "badge": "Vía aérea",
+        "title": "Broncoscopia rígida",
+        "description": "Procedimientos de vía aérea rígida: equipo, ventilación, coring, endoprótesis, hemostasia y seguridad frente al fuego — solo simulación.",
+        "cta": "Abrir broncoscopia rígida"
+      },
+      "pleuroscopy": {
+        "badge": "Pleura",
+        "title": "Pleuroscopia",
+        "description": "Toracoscopia médica: indicaciones, técnica de acceso y biopsia, pleurodesis con talco y gestión de complicaciones — solo simulación.",
+        "cta": "Abrir pleuroscopia"
+      },
       "pleural": {
         "badge": "PLEURAL",
         "title": "Procedimientos Pleurales",
@@ -408,6 +431,7 @@
     "seeComingSoon": "Ver próximos lanzamientos",
     "requiredAccess": {
       "ipRegistry": "Registro de IP",
+      "pccmIntroCourse": "Curso introductorio PCCM",
       "socalEbusCourse": "Curso EBUS del Sur de California",
       "fallback": "esa zona restringida"
     }
@@ -1217,6 +1241,180 @@
       "creatinine": "Relación creatinina LP/suero",
       "autoimmune": "Serologías autoinmunes interpretadas con microbiología e imagen",
       "branchPoint": "Dirige pruebas adicionales solo cuando la historia o el aspecto macroscópico del líquido cree un punto de ramificación"
+    }
+  },
+  "rigidBronchoscopy": {
+    "about": {
+      "title": "Acerca de este módulo",
+      "body": "Un módulo de enseñanza solo de simulación sobre broncoscopia rígida para neumólogos certificados o aptos para certificación y becarios de neumología intervencionista en un programa acreditado, utilizado bajo supervisión docente. Simula técnicas reconocidas conforme a la práctica estándar en dispositivos autorizados por la FDA o con marcado CE, coherentes con las guías de la AABIP/CHEST. No opera ningún dispositivo ni ofrece asesoramiento médico específico para el paciente, y no aborda la modificación de dispositivos, la improvisación fuera de indicación ni la práctica sin supervisión."
+    },
+    "overview": {
+      "metaTitle": "Broncoscopia rígida",
+      "metaDescription": "Aprenda el equipo, las indicaciones, la ventilación de vía aérea compartida y las modalidades terapéuticas de la broncoscopia rígida; practique flujos ordenados, escenarios de urgencias de la vía aérea y etiquetado de equipos; luego compruebe su razonamiento.",
+      "headerTitle": "Broncoscopia rígida",
+      "headerDescription": "Asegure una vía aérea central de gran calibre, coordine la ventilación de vía aérea compartida y aplique el conjunto terapéutico —coring, dilatación, endoprótesis, extracción de cuerpos extraños y hemostasia— con seguridad frente al fuego en la vía aérea en todo momento.",
+      "objectivesLead": "Al finalizar este módulo podrá",
+      "steps": {
+        "learn": {
+          "title": "Aprender",
+          "description": "Equipo, indicaciones, coordinación de la ventilación, terapéutica, hemostasia y seguridad frente al fuego en la vía aérea."
+        },
+        "practice": {
+          "title": "Practicar",
+          "description": "Ordene los flujos de intubación, coring y endoprótesis; trabaje escenarios de urgencias de la vía aérea; etiquete el equipo."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Diez preguntas sobre indicaciones, ventilación, coring, endoprótesis, hemostasia y seguridad frente al fuego."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de broncoscopia rígida",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y la ruta de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprender",
+        "description": "Equipo, ventilación y terapéutica"
+      },
+      "practice": {
+        "title": "Practicar",
+        "description": "Secuencias, escenarios y equipo"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Compruebe su razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de guías y revisiones"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprenda broncoscopia rígida",
+      "metaDescription": "Equipo del broncoscopio rígido, indicaciones y contraindicaciones, ventilación de vía aérea compartida, coring/dilatación/endoprótesis terapéuticos, hemostasia endobronquial y seguridad frente al fuego en el quirófano.",
+      "headerTitle": "Aprenda broncoscopia rígida",
+      "headerDescription": "Del equipo y las indicaciones a la ventilación de vía aérea compartida, el conjunto terapéutico, la hemostasia de la vía aérea central y la seguridad frente al fuego.",
+      "intro": "Los bloques principales le llevan del equipo a la seguridad frente al fuego. Abra «Profundizar» para la selección de modalidades ablativas y las consideraciones sobre endoprótesis.",
+      "progressLabel": "Marcar Aprender como completado"
+    },
+    "practice": {
+      "metaTitle": "Practique broncoscopia rígida",
+      "metaDescription": "Ordene los flujos de intubación, coring y endoprótesis, trabaje escenarios de urgencias de la vía aérea y etiquete el equipo de broncoscopia rígida.",
+      "headerTitle": "Práctica: flujos, escenarios y equipo",
+      "headerDescription": "Ordene los pasos del procedimiento, gestione urgencias simuladas de la vía aérea e identifique los instrumentos.",
+      "progressLabel": "Marcar Practicar como completado",
+      "sequencesHeading": "Flujos de trabajo ordenados",
+      "sequencesIntro": "Arrastre o use los controles de flecha para colocar cada flujo en el orden correcto y luego compruébelo para revelar la justificación.",
+      "scenariosHeading": "Escenarios de urgencias de la vía aérea",
+      "scenariosIntro": "Trabaje cada escenario ramificado. Las decisiones inseguras o tardías modifican las constantes simuladas; cada intento termina con un análisis.",
+      "equipmentHeading": "Etiquetado de equipos",
+      "equipmentIntro": "Coloque cada etiqueta en el marcador correcto. Las etiquetas colocadas correctamente revelan la nota didáctica de la pieza."
+    },
+    "assessment": {
+      "metaTitle": "Evaluación de broncoscopia rígida",
+      "metaDescription": "Compruebe su razonamiento sobre equipo, indicaciones, coordinación de la ventilación, coring, endoprótesis, hemostasia y seguridad frente al fuego.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Diez preguntas que comprueban si sabe seleccionar casos, coordinar la ventilación y gestionar urgencias de la vía aérea.",
+      "checkTitle": "Comprobación de broncoscopia rígida",
+      "checkIntro": "Responda cada pregunta y luego revele la explicación. Reflejan los objetivos de Aprender.",
+      "progressLabel": "Marcar Evaluación como completada"
+    },
+    "references": {
+      "metaTitle": "Referencias de broncoscopia rígida",
+      "metaDescription": "Fuentes de guías y revisiones tras la enseñanza del módulo de broncoscopia rígida.",
+      "headerTitle": "Referencias",
+      "headerDescription": "Las fuentes de guías y revisiones tras la enseñanza sobre equipo, ventilación, terapéutica, hemostasia y seguridad frente al fuego.",
+      "heading": "Referencias clínicas"
+    }
+  },
+  "pleuroscopy": {
+    "about": {
+      "title": "Acerca de este módulo",
+      "body": "Un módulo de enseñanza solo de simulación sobre toracoscopia médica (pleuroscopia) para neumólogos certificados o aptos para certificación y becarios de neumología intervencionista en un programa acreditado, utilizado bajo supervisión docente. Simula técnicas reconocidas conforme a la práctica estándar y coherentes con las guías publicadas. No opera ningún dispositivo ni ofrece asesoramiento médico específico para el paciente."
+    },
+    "overview": {
+      "metaTitle": "Pleuroscopia (toracoscopia médica)",
+      "metaDescription": "Aprenda las indicaciones de la toracoscopia médica, la técnica de acceso y biopsia y la pleurodesis con talco; practique flujos ordenados, escenarios de complicaciones y etiquetado de equipos; luego compruebe su razonamiento.",
+      "headerTitle": "Pleuroscopia (toracoscopia médica)",
+      "headerDescription": "Seleccione a los pacientes, obtenga un acceso seguro de puerto único, inspeccione y biopsie la pleura y realice pleurodesis con talco, anticipando y gestionando las complicaciones.",
+      "objectivesLead": "Al finalizar este módulo podrá",
+      "steps": {
+        "learn": {
+          "title": "Aprender",
+          "description": "Indicaciones, contraindicaciones, toracoscopios rígidos vs semirrígidos, sitio, técnica de biopsia y pleurodesis."
+        },
+        "practice": {
+          "title": "Practicar",
+          "description": "Ordene los flujos de entrada y pleurodesis, trabaje escenarios de complicaciones y etiquete el equipo."
+        },
+        "assessment": {
+          "title": "Evaluación",
+          "description": "Diez preguntas sobre selección, técnica, pleurodesis y gestión de complicaciones."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Secciones del módulo de pleuroscopia",
+      "overview": {
+        "title": "Resumen",
+        "description": "Objetivos y la ruta de aprendizaje"
+      },
+      "learn": {
+        "title": "Aprender",
+        "description": "Indicaciones, técnica y pleurodesis"
+      },
+      "practice": {
+        "title": "Practicar",
+        "description": "Secuencias, escenarios y equipo"
+      },
+      "assessment": {
+        "title": "Evaluación",
+        "description": "Compruebe su razonamiento"
+      },
+      "references": {
+        "title": "Referencias",
+        "description": "Fuentes de guías y ensayos"
+      }
+    },
+    "learn": {
+      "metaTitle": "Aprenda pleuroscopia",
+      "metaDescription": "Indicaciones y contraindicaciones de la toracoscopia médica, toracoscopios rígidos frente a semirrígidos, acceso guiado por ecografía, biopsia parietal sobre las costillas y pleurodesis con talco graduado.",
+      "headerTitle": "Aprenda pleuroscopia",
+      "headerDescription": "De la selección del paciente a la pleurodesis: para qué sirve la toracoscopia médica, cómo acceder y tomar muestras de la pleura de forma segura y cómo funciona la pleurodesis.",
+      "intro": "Los bloques principales le llevan de las indicaciones a la pleurodesis. Abra «Profundizar» para la criobiopsia y el pulmón no expansible.",
+      "progressLabel": "Marcar Aprender como completado"
+    },
+    "practice": {
+      "metaTitle": "Practique pleuroscopia",
+      "metaDescription": "Ordene los flujos de entrada y pleurodesis, trabaje escenarios de complicaciones y etiquete el equipo de toracoscopia.",
+      "headerTitle": "Práctica: flujos, escenarios y equipo",
+      "headerDescription": "Ordene los pasos del procedimiento, gestione complicaciones simuladas e identifique los instrumentos.",
+      "progressLabel": "Marcar Practicar como completado",
+      "sequencesHeading": "Flujos de trabajo ordenados",
+      "sequencesIntro": "Arrastre o use los controles de flecha para colocar cada flujo en el orden correcto y luego compruébelo para revelar la justificación.",
+      "scenariosHeading": "Escenarios de complicaciones",
+      "scenariosIntro": "Trabaje cada escenario ramificado. Las decisiones inseguras o tardías modifican las constantes simuladas; cada intento termina con un análisis.",
+      "equipmentHeading": "Etiquetado de equipos",
+      "equipmentIntro": "Coloque cada etiqueta en el marcador correcto. Las etiquetas colocadas correctamente revelan la nota didáctica de la pieza."
+    },
+    "assessment": {
+      "metaTitle": "Evaluación de pleuroscopia",
+      "metaDescription": "Compruebe su razonamiento sobre indicaciones, contraindicaciones, técnica de acceso y biopsia, pleurodesis y gestión de complicaciones.",
+      "headerTitle": "Evaluación",
+      "headerDescription": "Diez preguntas que comprueban si sabe seleccionar pacientes, acceder y tomar muestras de forma segura y gestionar complicaciones.",
+      "checkTitle": "Comprobación de pleuroscopia",
+      "checkIntro": "Responda cada pregunta y luego revele la explicación. Reflejan los objetivos de Aprender.",
+      "progressLabel": "Marcar Evaluación como completada"
+    },
+    "references": {
+      "metaTitle": "Referencias de pleuroscopia",
+      "metaDescription": "Fuentes de guías y ensayos tras la enseñanza del módulo de pleuroscopia.",
+      "headerTitle": "Referencias",
+      "headerDescription": "Las fuentes de guías y ensayos tras la enseñanza sobre indicaciones, técnica y pleurodesis.",
+      "heading": "Referencias clínicas"
     }
   },
   "pleuralInfection": {

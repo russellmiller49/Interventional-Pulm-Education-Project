@@ -9,7 +9,7 @@ import type {
 
 import { defaultThoracicTissueModel } from './tissueModel'
 import { assessNeedlePath } from './needlePath'
-import { beamDirection, probeOrigin, projectBeamToWorld } from './sectorGeometry'
+import { FACE_RADIUS_MM, beamDirection, probeOrigin, projectBeamToWorld } from './sectorGeometry'
 import { sampleLabel } from './sampleVolume'
 
 export interface SimulateBModeInput {
@@ -38,8 +38,6 @@ export interface RenderedBModeFrame extends SimulatedBModeFrame {
 
 const DEG2RAD = Math.PI / 180
 
-/** Curvature radius of the virtual curvilinear transducer face, in mm. */
-const FACE_RADIUS_MM = 45
 /** Soft-tissue attenuation the time-gain-compensation curve assumes. */
 const REFERENCE_ATTENUATION = 0.52
 /** Converts material attenuation units into per-mm log-amplitude loss. */
@@ -98,6 +96,16 @@ function findContactDepthMm(
   }
 
   return contact
+}
+
+/**
+ * Depth (mm) of the air standoff the renderer crops before the fan starts, for
+ * the current pose — i.e. the offset added to every ray in `marchPolarGrid`.
+ * The inverse mapping (`sectorImageToWorld`) needs this so a screen pixel maps
+ * back to the world point that pixel actually sampled. Returns 0 in contact.
+ */
+export function probeContactDepthMm(volume: ThoracicVolume, probe: ThoracicProbeState): number {
+  return findContactDepthMm(volume, probe, probe.depthCm * 10) ?? 0
 }
 
 /**
@@ -205,7 +213,9 @@ function marchPolarGrid(
       beamGray[sample] = logCompressToByte(rawEcho, probe.dynamicRangeDb)
       beamBoundary[sample] = boundaryEcho
       beamCortex[sample] =
-        label === 'rib' && (previousLabel !== 'rib' || boundaryEcho > 0.18) ? 1 : 0
+        (label === 'rib' || label === 'spine') && (previousLabel !== label || boundaryEcho > 0.18)
+          ? 1
+          : 0
 
       attenuation += material.attenuation * stepMm * ATTENUATION_SCALE
       if (material.castsShadow) {

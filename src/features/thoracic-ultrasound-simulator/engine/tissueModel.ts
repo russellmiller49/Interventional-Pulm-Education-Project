@@ -27,10 +27,20 @@ function defaultBackscatter(label: ThoracicStructureLabel) {
   switch (label) {
     case 'background':
       return 0
+    // Anechoic blood/fluid pools: essentially no internal scatter.
     case 'pleuralFluid':
-      return 0.0012
     case 'greatVessel':
+    case 'aorta':
+    case 'venaCava':
+    case 'pulmonaryVessel':
       return 0.0012
+    case 'portalVein':
+      // Anechoic lumen with a touch more internal echo than a clean vessel.
+      return 0.0016
+    case 'gallbladder':
+      // Anechoic bile pool (thin echogenic wall + distal enhancement come from
+      // the fluid-boundary display path and the material's posteriorEnhancement).
+      return 0.0014
     case 'septation':
       return 0.22
     case 'debris':
@@ -43,6 +53,7 @@ function defaultBackscatter(label: ThoracicStructureLabel) {
     case 'pericardium':
       return 0.036
     case 'rib':
+    case 'spine':
       return 0.006
     case 'lung':
     case 'airway':
@@ -50,11 +61,32 @@ function defaultBackscatter(label: ThoracicStructureLabel) {
     case 'atelectaticLung':
     case 'consolidation':
       return 0.064
+    // Solid organs, distinguished so parenchyma reads differently on screen.
     case 'liver':
+      return 0.04
     case 'spleen':
+      // Slightly finer / marginally less echogenic than liver.
+      return 0.037
     case 'kidney':
+      // Cortex is hypoechoic relative to adjacent liver/spleen.
+      return 0.03
+    case 'pancreas':
+      // Adult pancreas: homogeneous, mildly hyperechoic vs liver.
+      return 0.05
+    case 'thyroid':
+      // Fine, homogeneous, mildly hyperechoic parenchyma.
+      return 0.05
     case 'heart':
-      return 0.038
+      return 0.042
+    case 'stomach':
+      return 0.046
+    case 'esophagus':
+      return 0.044
+    case 'thoracicCavity':
+      // Mediastinal fat / connective tissue: soft mid-gray filler.
+      return 0.03
+    case 'lymphNode':
+      return 0.03
     case 'skin':
       return 0.048
     case 'intercostalMuscle':
@@ -67,8 +99,32 @@ function defaultBackscatter(label: ThoracicStructureLabel) {
   }
 }
 
+const fluidLikeLabels = new Set<ThoracicStructureLabel>([
+  'pleuralFluid',
+  'greatVessel',
+  'aorta',
+  'venaCava',
+  'pulmonaryVessel',
+  'portalVein',
+  'gallbladder',
+])
+
+/** Solid organs / soft-tissue parenchyma that share the gentle highlight knee. */
+const softTissueOrganLabels = new Set<ThoracicStructureLabel>([
+  'liver',
+  'spleen',
+  'kidney',
+  'heart',
+  'pancreas',
+  'thyroid',
+  'stomach',
+  'esophagus',
+  'thoracicCavity',
+  'lymphNode',
+])
+
 function isFluidLike(label: ThoracicStructureLabel) {
-  return label === 'pleuralFluid' || label === 'greatVessel'
+  return fluidLikeLabels.has(label)
 }
 
 function isFluidInterface(
@@ -86,7 +142,12 @@ function defaultInterfaceEcho(
     return 0
   }
 
-  if (nextLabel === 'rib' || previousLabel === 'rib') {
+  if (
+    nextLabel === 'rib' ||
+    previousLabel === 'rib' ||
+    nextLabel === 'spine' ||
+    previousLabel === 'spine'
+  ) {
     return 1.5
   }
 
@@ -128,10 +189,13 @@ function defaultTexture(worldPoint: Vec3, label: ThoracicStructureLabel, depthMm
     label === 'subcutaneousTissue'
       ? 0.028 * Math.max(0, Math.sin(worldPoint[0] * 0.08 + worldPoint[2] * 0.06))
       : 0
-  const organGrain =
-    label === 'liver' || label === 'spleen' || label === 'kidney'
-      ? 0.026 * fract(Math.sin(worldPoint[0] * 0.55 + worldPoint[2] * 0.47) * 9142.17)
-      : 0
+  // Homogeneous parenchymal grain; the per-label phase shift keeps liver,
+  // spleen, kidney, pancreas, thyroid, and heart from sharing an identical
+  // speckle pattern where they abut.
+  const organGrain = softTissueOrganLabels.has(label)
+    ? 0.026 *
+      fract(Math.sin(worldPoint[0] * 0.55 + worldPoint[2] * 0.47 + label.length * 2.3) * 9142.17)
+    : 0
   const nearFieldNoise =
     depthMm < 16 && !isFluidLike(label) ? 0.014 * stableSpeckle(worldPoint, 'skin') : 0
 
@@ -159,19 +223,19 @@ function defaultDisplayGray(fillLabel: ThoracicStructureLabel) {
     fluidBoundary,
     ribCortex,
   }: DisplayGrayContext) => {
-    if (label === 'pleuralFluid' || label === 'greatVessel') {
-      return fluidBoundary ? Math.min(Math.max(gray, 72), 148) : Math.min(gray, 13)
+    // Anechoic lumen (pleural fluid, aorta, cavae, pulmonary/portal vessels):
+    // near-black inside, a specular wall where the boundary is crossed.
+    if (isFluidLike(label)) {
+      const wallCeiling = label === 'portalVein' ? 176 : 148
+      return fluidBoundary ? Math.min(Math.max(gray, 72), wallCeiling) : Math.min(gray, 13)
     }
-    if (label === 'rib') {
+    if (label === 'rib' || label === 'spine') {
       return ribCortex ? Math.max(gray, 212) : Math.min(gray, 10)
     }
     if (label === 'diaphragm' || label === 'pericardium') {
       return Math.min(Math.max(gray, 158), 238)
     }
-    if (
-      (label === 'liver' || label === 'spleen' || label === 'kidney' || label === 'heart') &&
-      boundaryEcho < 0.16
-    ) {
+    if (softTissueOrganLabels.has(label) && boundaryEcho < 0.16) {
       return softKnee(gray, 118)
     }
     if (label === 'background' && renderLabel === fillLabel) {
@@ -189,7 +253,8 @@ export const defaultThoracicTissueModel: TissueModel = {
   fluidLabel: 'pleuralFluid',
   fillLabel: 'subcutaneousTissue',
   materials: acousticMaterials,
-  isSolidOrgan: (label) => label === 'liver' || label === 'spleen' || label === 'kidney',
+  isSolidOrgan: (label) =>
+    label === 'liver' || label === 'spleen' || label === 'kidney' || label === 'pancreas',
   backscatter: defaultBackscatter,
   interfaceEcho: defaultInterfaceEcho,
   texture: defaultTexture,

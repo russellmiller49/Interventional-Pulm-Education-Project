@@ -43,7 +43,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 const ADMIN_EMAIL = 'admin@interventionalpulm.com'
-const adminEntitlements = ['ip_registry', 'socal_ebus_course', 'site_admin'] as const
+const adminEntitlements = [
+  'ip_registry',
+  'pccm_intro_course',
+  'pccm_intro_course_admin_ucsd',
+  'pccm_intro_course_admin_loma_linda',
+  'socal_ebus_course',
+  'site_admin',
+] as const
 const ALL_INSTITUTIONS_FILTER = 'all'
 const NOT_RECORDED_INSTITUTION_FILTER = 'not_recorded'
 
@@ -53,6 +60,12 @@ const permissionFilterOptions = [
   { value: 'all', label: 'All permissions' },
   { value: 'ip_registry_active', label: 'IP Registry active' },
   { value: 'ip_registry_inactive', label: 'IP Registry off' },
+  { value: 'pccm_intro_course_active', label: 'PCCM Intro Course active' },
+  { value: 'pccm_intro_course_inactive', label: 'PCCM Intro Course off' },
+  { value: 'pccm_intro_course_admin_ucsd_active', label: 'PCCM UCSD Admin active' },
+  { value: 'pccm_intro_course_admin_ucsd_inactive', label: 'PCCM UCSD Admin off' },
+  { value: 'pccm_intro_course_admin_loma_linda_active', label: 'PCCM Loma Linda Admin active' },
+  { value: 'pccm_intro_course_admin_loma_linda_inactive', label: 'PCCM Loma Linda Admin off' },
   { value: 'socal_ebus_course_active', label: 'SoCal EBUS Course active' },
   { value: 'socal_ebus_course_inactive', label: 'SoCal EBUS Course off' },
   { value: 'site_admin_active', label: 'Site Admin active' },
@@ -313,6 +326,9 @@ const roleLabels: Map<string, string> = new Map(
 
 const entitlementLabels: Record<AdminEntitlement, string> = {
   ip_registry: 'IP Registry',
+  pccm_intro_course: 'PCCM Intro Course',
+  pccm_intro_course_admin_loma_linda: 'PCCM Loma Linda Admin',
+  pccm_intro_course_admin_ucsd: 'PCCM UCSD Admin',
   socal_ebus_course: 'SoCal EBUS Course',
   site_admin: 'Site Admin',
 }
@@ -323,6 +339,27 @@ const permissionFilterConfig: Record<
 > = {
   ip_registry_active: { active: true, entitlement: 'ip_registry' },
   ip_registry_inactive: { active: false, entitlement: 'ip_registry' },
+  pccm_intro_course_active: { active: true, entitlement: 'pccm_intro_course' },
+  pccm_intro_course_inactive: {
+    active: false,
+    entitlement: 'pccm_intro_course',
+  },
+  pccm_intro_course_admin_ucsd_active: {
+    active: true,
+    entitlement: 'pccm_intro_course_admin_ucsd',
+  },
+  pccm_intro_course_admin_ucsd_inactive: {
+    active: false,
+    entitlement: 'pccm_intro_course_admin_ucsd',
+  },
+  pccm_intro_course_admin_loma_linda_active: {
+    active: true,
+    entitlement: 'pccm_intro_course_admin_loma_linda',
+  },
+  pccm_intro_course_admin_loma_linda_inactive: {
+    active: false,
+    entitlement: 'pccm_intro_course_admin_loma_linda',
+  },
   socal_ebus_course_active: { active: true, entitlement: 'socal_ebus_course' },
   socal_ebus_course_inactive: {
     active: false,
@@ -645,7 +682,9 @@ function userHasEffectiveEntitlement(user: AdminUserRow, entitlement: AdminEntit
 function shouldExcludeUserFromUsageAnalytics(user: AdminUserRow) {
   return (
     user.email.trim().toLowerCase() === ADMIN_EMAIL ||
-    userHasEffectiveEntitlement(user, 'site_admin')
+    userHasEffectiveEntitlement(user, 'site_admin') ||
+    userHasEffectiveEntitlement(user, 'pccm_intro_course_admin_ucsd') ||
+    userHasEffectiveEntitlement(user, 'pccm_intro_course_admin_loma_linda')
   )
 }
 
@@ -886,6 +925,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
       summary: {
         activeAdminCount: 0,
         activeEbusCourseCount: 0,
+        activePccmIntroCourseCount: 0,
         activeRegistryCount: 0,
         analytics: getDefaultUsageAnalyticsSummary(),
         totalHours: 0,
@@ -949,6 +989,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
       summary: {
         activeAdminCount: 0,
         activeEbusCourseCount: 0,
+        activePccmIntroCourseCount: 0,
         activeRegistryCount: 0,
         analytics: getDefaultUsageAnalyticsSummary(),
         totalHours: 0,
@@ -1182,6 +1223,9 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
   const activeEbusCourseCount = users.filter((user) =>
     userHasEffectiveEntitlement(user, 'socal_ebus_course'),
   ).length
+  const activePccmIntroCourseCount = users.filter((user) =>
+    userHasEffectiveEntitlement(user, 'pccm_intro_course'),
+  ).length
   const analyticsUsers = users.filter((user) => !shouldExcludeUserFromUsageAnalytics(user))
   const analyticsUserIds = new Set(analyticsUsers.map((user) => user.id))
   const moduleUsageById = new Map<string, ModuleUsageSummaryAccumulator>()
@@ -1361,6 +1405,7 @@ async function loadAdminDashboardData(filters: AdminDashboardFilters) {
     summary: {
       activeAdminCount,
       activeEbusCourseCount,
+      activePccmIntroCourseCount,
       activeRegistryCount,
       analytics: analyticsSummary,
       totalHours: analyticsSummary.moduleHours,
@@ -1489,9 +1534,14 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                 Signed in as {currentUser.email ?? ADMIN_EMAIL}
               </p>
             </div>
-            <Button asChild variant="outline">
-              <Link href={'/dashboard' as Route}>Back to dashboard</Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href={'/admin/pccm-intro-course' as Route}>PCCM course dashboard</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={'/dashboard' as Route}>Back to dashboard</Link>
+              </Button>
+            </div>
           </header>
 
           {status && statusMessages[status] ? (
@@ -1506,7 +1556,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             </div>
           ) : null}
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
             <div className="rounded-lg border bg-card p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="h-4 w-4" aria-hidden />
@@ -1527,6 +1577,13 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                 EBUS course access
               </div>
               <p className="mt-2 text-2xl font-semibold">{summary.activeEbusCourseCount}</p>
+            </div>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ShieldCheck className="h-4 w-4" aria-hidden />
+                PCCM intro access
+              </div>
+              <p className="mt-2 text-2xl font-semibold">{summary.activePccmIntroCourseCount}</p>
             </div>
             <div className="rounded-lg border bg-card p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

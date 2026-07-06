@@ -134,6 +134,7 @@ Thumbs.db
 *.ply
 *.stl
 !public/bronch-navigation-trainer/app/**/*.stl
+!bronch_sim/Gen 2/cad/stl/*.stl
 *.gltf
 # *.glb (commented out to allow essential 3D models)
 *.usd

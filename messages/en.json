@@ -259,6 +259,11 @@
         "shortTitle": "Thermal",
         "description": "Laser, electrocautery & APC interactive physics modules"
       },
+      "peripheralAblation": {
+        "title": "Peripheral Ablation",
+        "shortTitle": "Peripheral",
+        "description": "RFA, microwave, cryo & pulsed-field ablation of peripheral lung tumors"
+      },
       "pleuralProcedures": {
         "title": "Pleural Procedures",
         "shortTitle": "Pleural",
@@ -283,6 +288,11 @@
         "title": "Intro Bronchoscopy",
         "shortTitle": "Intro Bronch",
         "description": "Foundational scope sizing, reach, and tool fit modules"
+      },
+      "rigidBronchoscopy": {
+        "title": "Rigid Bronchoscopy",
+        "shortTitle": "Rigid Bronch",
+        "description": "Rigid airway procedures — coring, stents, hemostasis, and fire safety"
       },
       "ipRegistry": {
         "title": "IP Registry",
@@ -320,6 +330,7 @@
     "launchCatalog": "Launch catalog",
     "coreModules": "Core learning modules",
     "coreModulesBody": "Start with the modules that are ready for learners now: EBUS training, TNM-9 staging, 3D anatomy, board review, journal club podcasts, Nav Bronch, FluoroView, and teaching resources.",
+    "pccmIntroParticipants": "PCCM Intro Course participants",
     "socalParticipants": "SoCal EBUS Course participants",
     "participantCourse": "Participant course",
     "participantTitle": "Southern California EBUS Course participants",
@@ -384,6 +395,18 @@
         "description": "Foundational tools for scope sizing, airway reach concepts, and instrument compatibility.",
         "cta": "Open Intro Module"
       },
+      "rigidBronchoscopy": {
+        "badge": "Airway",
+        "title": "Rigid Bronchoscopy",
+        "description": "Rigid airway procedures: equipment, ventilation, coring, stents, hemostasis, and airway-fire safety — simulation only.",
+        "cta": "Open Rigid Bronchoscopy"
+      },
+      "pleuroscopy": {
+        "badge": "Pleural",
+        "title": "Pleuroscopy",
+        "description": "Medical thoracoscopy: indications, access and biopsy technique, talc poudrage, and complication management — simulation only.",
+        "cta": "Open Pleuroscopy"
+      },
       "pleural": {
         "badge": "Pleural",
         "title": "Pleural Procedures",
@@ -408,6 +431,7 @@
     "seeComingSoon": "See what’s coming",
     "requiredAccess": {
       "ipRegistry": "IP Registry",
+      "pccmIntroCourse": "PCCM Intro Course",
       "socalEbusCourse": "SoCal EBUS Course",
       "fallback": "that restricted area"
     }
@@ -1217,6 +1241,180 @@
       "creatinine": "Pleural-to-serum creatinine ratio",
       "autoimmune": "Autoimmune serologies interpreted with microbiology and imaging",
       "branchPoint": "Target additional tests only when the story or gross fluid appearance creates a branch point"
+    }
+  },
+  "rigidBronchoscopy": {
+    "about": {
+      "title": "About this module",
+      "body": "A simulation-only teaching module on rigid bronchoscopy for board-certified or board-eligible pulmonologists and interventional pulmonology fellows in an accredited program, used under faculty supervision. It simulates recognized standard-of-care technique on FDA-cleared/CE-marked devices, consistent with published AABIP/CHEST guidance. It does not operate any device or provide patient-specific advice, and it does not cover device modification, off-label improvisation, or unsupervised practice."
+    },
+    "overview": {
+      "metaTitle": "Rigid Bronchoscopy",
+      "metaDescription": "Learn rigid bronchoscopy equipment, indications, shared-airway ventilation, and therapeutic modalities; practice ordered workflows, airway-emergency scenarios, and equipment labeling; then check your reasoning.",
+      "headerTitle": "Rigid bronchoscopy",
+      "headerDescription": "Secure a large-bore central airway, coordinate shared-airway ventilation, and apply the therapeutic toolkit — coring, dilation, stents, retrieval, and hemostasis — with airway-fire safety throughout.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Equipment, indications, ventilation coordination, therapeutics, hemostasis, and airway-fire safety."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Order intubation, coring, and stent workflows; work airway-emergency scenarios; label the equipment."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Ten questions on indications, ventilation, coring, stents, hemostasis, and fire safety."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Rigid bronchoscopy module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Equipment, ventilation, and therapeutics"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Sequences, scenarios, and equipment"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline and review sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Rigid Bronchoscopy",
+      "metaDescription": "Rigid bronchoscope equipment, indications and contraindications, shared-airway ventilation, therapeutic coring/dilation/stents, endobronchial hemostasis, and operating-room airway-fire safety.",
+      "headerTitle": "Learn rigid bronchoscopy",
+      "headerDescription": "From equipment and indications to shared-airway ventilation, the therapeutic toolkit, central-airway hemostasis, and airway-fire safety.",
+      "intro": "The core blocks take you from equipment to airway-fire safety. Open “Go deeper” for ablative-modality selection and stent considerations.",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Rigid Bronchoscopy",
+      "metaDescription": "Order the intubation, coring, and stent workflows, work through airway-emergency scenarios, and label the rigid bronchoscopy equipment.",
+      "headerTitle": "Practice: workflows, scenarios, and equipment",
+      "headerDescription": "Sequence the procedural steps, manage simulated airway emergencies, and identify the instruments.",
+      "progressLabel": "Mark Practice complete",
+      "sequencesHeading": "Ordered workflows",
+      "sequencesIntro": "Drag or use the arrow controls to put each procedural workflow in the correct order, then check it to reveal the rationale.",
+      "scenariosHeading": "Airway-emergency scenarios",
+      "scenariosIntro": "Work each branching scenario. Unsafe or delayed choices move the simulated vitals; every run ends in a debrief.",
+      "equipmentHeading": "Equipment labeling",
+      "equipmentIntro": "Place each label on the correct marker. Correctly placed labels reveal the part's teaching note."
+    },
+    "assessment": {
+      "metaTitle": "Rigid Bronchoscopy Assessment",
+      "metaDescription": "Check your reasoning on equipment, indications, ventilation coordination, coring, stents, hemostasis, and airway-fire safety.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Ten questions that check whether you can select cases, coordinate ventilation, and manage airway emergencies.",
+      "checkTitle": "Rigid bronchoscopy check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Rigid Bronchoscopy References",
+      "metaDescription": "Guideline and review sources behind the rigid bronchoscopy module teaching.",
+      "headerTitle": "References",
+      "headerDescription": "The guideline and review sources behind the equipment, ventilation, therapeutics, hemostasis, and fire-safety teaching.",
+      "heading": "Clinical references"
+    }
+  },
+  "pleuroscopy": {
+    "about": {
+      "title": "About this module",
+      "body": "A simulation-only teaching module on medical thoracoscopy (pleuroscopy) for board-certified or board-eligible pulmonologists and interventional pulmonology fellows in an accredited program, used under faculty supervision. It simulates recognized standard-of-care technique consistent with published guidance. It does not operate any device or provide patient-specific advice."
+    },
+    "overview": {
+      "metaTitle": "Pleuroscopy (Medical Thoracoscopy)",
+      "metaDescription": "Learn medical thoracoscopy indications, access and biopsy technique, and talc poudrage; practice ordered workflows, complication scenarios, and equipment labeling; then check your reasoning.",
+      "headerTitle": "Pleuroscopy (medical thoracoscopy)",
+      "headerDescription": "Select patients, gain safe single-port access, inspect and biopsy the pleura, and perform talc poudrage — anticipating and managing the complications along the way.",
+      "objectivesLead": "By the end of this module you can",
+      "steps": {
+        "learn": {
+          "title": "Learn",
+          "description": "Indications, contraindications, rigid vs semi-rigid scopes, siting, biopsy technique, and poudrage."
+        },
+        "practice": {
+          "title": "Practice",
+          "description": "Order the entry and poudrage workflows, work complication scenarios, and label the equipment."
+        },
+        "assessment": {
+          "title": "Assessment",
+          "description": "Ten questions on selection, technique, poudrage, and complication management."
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "Pleuroscopy module sections",
+      "overview": {
+        "title": "Overview",
+        "description": "Objectives and the learning path"
+      },
+      "learn": {
+        "title": "Learn",
+        "description": "Indications, technique, and poudrage"
+      },
+      "practice": {
+        "title": "Practice",
+        "description": "Sequences, scenarios, and equipment"
+      },
+      "assessment": {
+        "title": "Assessment",
+        "description": "Check your reasoning"
+      },
+      "references": {
+        "title": "References",
+        "description": "Guideline and trial sources"
+      }
+    },
+    "learn": {
+      "metaTitle": "Learn Pleuroscopy",
+      "metaDescription": "Medical thoracoscopy indications and contraindications, rigid versus semi-rigid scopes, ultrasound-guided access, parietal biopsy over ribs, and graded-talc poudrage.",
+      "headerTitle": "Learn pleuroscopy",
+      "headerDescription": "From patient selection to poudrage: what medical thoracoscopy is for, how to access and sample the pleura safely, and how pleurodesis works.",
+      "intro": "The core blocks take you from indications to poudrage. Open “Go deeper” for cryobiopsy and the non-expandable lung.",
+      "progressLabel": "Mark Learn complete"
+    },
+    "practice": {
+      "metaTitle": "Practice Pleuroscopy",
+      "metaDescription": "Order the entry and poudrage workflows, work through complication scenarios, and label the thoracoscopy equipment.",
+      "headerTitle": "Practice: workflows, scenarios, and equipment",
+      "headerDescription": "Sequence the procedural steps, manage simulated complications, and identify the instruments.",
+      "progressLabel": "Mark Practice complete",
+      "sequencesHeading": "Ordered workflows",
+      "sequencesIntro": "Drag or use the arrow controls to put each procedural workflow in the correct order, then check it to reveal the rationale.",
+      "scenariosHeading": "Complication scenarios",
+      "scenariosIntro": "Work each branching scenario. Unsafe or delayed choices move the simulated vitals; every run ends in a debrief.",
+      "equipmentHeading": "Equipment labeling",
+      "equipmentIntro": "Place each label on the correct marker. Correctly placed labels reveal the part's teaching note."
+    },
+    "assessment": {
+      "metaTitle": "Pleuroscopy Assessment",
+      "metaDescription": "Check your reasoning on indications, contraindications, access and biopsy technique, poudrage, and complication management.",
+      "headerTitle": "Assessment",
+      "headerDescription": "Ten questions that check whether you can select patients, access and sample safely, and manage complications.",
+      "checkTitle": "Pleuroscopy check",
+      "checkIntro": "Answer each question, then reveal the explanation. These mirror the Learn objectives.",
+      "progressLabel": "Mark Assessment complete"
+    },
+    "references": {
+      "metaTitle": "Pleuroscopy References",
+      "metaDescription": "Guideline and trial sources behind the pleuroscopy module teaching.",
+      "headerTitle": "References",
+      "headerDescription": "The guideline and trial sources behind the indications, technique, and poudrage teaching.",
+      "heading": "Clinical references"
     }
   },
   "pleuralInfection": {

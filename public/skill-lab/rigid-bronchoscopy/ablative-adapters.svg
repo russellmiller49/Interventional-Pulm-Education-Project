@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="Schematic of four slender probes side by side, each ending in a different tip: a fine point, a spray of short arcs, a rounded ball, and a pair of jaws">
+  <rect width="480" height="240" fill="none"/>
+
+  <!-- Probe 1: fine straight fibre with a bright point tip -->
+  <line x1="70" y1="40" x2="70" y2="146" stroke="#64748b" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="70" cy="152" r="5" fill="#0ea5e9"/>
+  <g stroke="#0ea5e9" stroke-width="2" stroke-linecap="round">
+    <line x1="70" y1="140" x2="70" y2="132"/>
+    <line x1="62" y1="152" x2="56" y2="152"/>
+    <line x1="78" y1="152" x2="84" y2="152"/>
+  </g>
+
+  <!-- Probe 2: shaft with a spray of short arcs at the tip -->
+  <line x1="185" y1="40" x2="185" y2="144" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>
+  <g stroke="#94a3b8" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M170 156 Q185 150 200 156"/>
+    <path d="M166 166 Q185 158 204 166"/>
+    <path d="M172 176 Q185 170 198 176"/>
+  </g>
+
+  <!-- Probe 3: shaft with a rounded ball tip and short radiating lines -->
+  <line x1="300" y1="40" x2="300" y2="142" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="300" cy="154" r="11" fill="#dbe4ee" stroke="#334155" stroke-width="2.5"/>
+  <g stroke="#94a3b8" stroke-width="2" stroke-linecap="round">
+    <line x1="300" y1="166" x2="300" y2="174"/>
+    <line x1="286" y1="154" x2="278" y2="154"/>
+    <line x1="314" y1="154" x2="322" y2="154"/>
+  </g>
+
+  <!-- Probe 4: shaft ending in a pair of open jaws -->
+  <line x1="410" y1="40" x2="410" y2="140" stroke="#64748b" stroke-width="6" stroke-linecap="round"/>
+  <path d="M410 140 L396 166 M410 140 L424 166" stroke="#334155" stroke-width="5" stroke-linecap="round" fill="none"/>
+</svg>

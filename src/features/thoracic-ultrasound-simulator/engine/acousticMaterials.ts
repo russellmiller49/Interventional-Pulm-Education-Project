@@ -38,6 +38,14 @@ export const acousticMaterials: Record<ThoracicStructureLabel, AcousticMaterial>
     reflectivity: 1,
     castsShadow: true,
   },
+  spine: {
+    // Vertebral bone behaves like rib cortex: bright specular surface with a
+    // clean acoustic shadow beneath.
+    scatter: 0.9,
+    attenuation: 2.6,
+    reflectivity: 1,
+    castsShadow: true,
+  },
   lung: {
     scatter: 0.5,
     attenuation: 1.5,
@@ -100,6 +108,31 @@ export const acousticMaterials: Record<ThoracicStructureLabel, AcousticMaterial>
     attenuation: 0.68,
     reflectivity: 0.38,
   },
+  pancreas: {
+    // Homogeneous; in adults slightly more echogenic than liver.
+    scatter: 0.58,
+    attenuation: 0.66,
+    reflectivity: 0.36,
+  },
+  gallbladder: {
+    // Anechoic bile with a thin echogenic wall and distal enhancement.
+    scatter: 0.03,
+    attenuation: 0.06,
+    reflectivity: 0.06,
+    posteriorEnhancement: 1.22,
+  },
+  stomach: {
+    // Gut wall + variable luminal content; treat as a mid-gray soft-tissue wall.
+    scatter: 0.44,
+    attenuation: 0.58,
+    reflectivity: 0.32,
+  },
+  thyroid: {
+    // Fine, homogeneous, mildly hyperechoic parenchyma.
+    scatter: 0.52,
+    attenuation: 0.56,
+    reflectivity: 0.33,
+  },
   heart: {
     scatter: 0.5,
     attenuation: 0.6,
@@ -115,6 +148,33 @@ export const acousticMaterials: Record<ThoracicStructureLabel, AcousticMaterial>
     attenuation: 0.08,
     reflectivity: 0.05,
     posteriorEnhancement: 1.2,
+  },
+  aorta: {
+    // Anechoic blood pool; thick, muscular, mildly echogenic wall.
+    scatter: 0.05,
+    attenuation: 0.08,
+    reflectivity: 0.32,
+    posteriorEnhancement: 1.22,
+  },
+  venaCava: {
+    // Anechoic, thin-walled, compressible; subtle wall reflection.
+    scatter: 0.05,
+    attenuation: 0.07,
+    reflectivity: 0.22,
+    posteriorEnhancement: 1.22,
+  },
+  pulmonaryVessel: {
+    scatter: 0.055,
+    attenuation: 0.08,
+    reflectivity: 0.24,
+    posteriorEnhancement: 1.18,
+  },
+  portalVein: {
+    // Classic brightly echogenic ("portal triad") walls around anechoic lumen.
+    scatter: 0.06,
+    attenuation: 0.09,
+    reflectivity: 0.55,
+    posteriorEnhancement: 1.15,
   },
   esophagus: {
     scatter: 0.45,

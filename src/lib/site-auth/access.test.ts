@@ -7,6 +7,8 @@ import {
   isCtAlignmentSandboxPath,
   isDevOnlyAirwayAnatomyPath,
   isLegacyEbusGatewayPath,
+  isPccmIntroCourseAdminDashboardPath,
+  isPccmIntroCourseSharedModulePath,
   isPublicPath,
   resolveLoginRedirectPath,
   resolveSiteModuleId,
@@ -53,10 +55,30 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/es/admin', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/zh-CN/admin/analytics', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/ip-registry', params())).toBe('ip_registry')
+    expect(getRequiredEntitlement('/pccm-intro-course', params())).toBe('pccm_intro_course')
+    expect(getRequiredEntitlement('/es/pccm-intro-course', params())).toBe('pccm_intro_course')
+    expect(
+      getRequiredEntitlement('/pccm-intro-course/assessments/bronchoscopy_pre', params()),
+    ).toBe('pccm_intro_course')
     expect(getRequiredEntitlement('/socal-ebus-course', params())).toBe('socal_ebus_course')
     expect(getRequiredEntitlement('/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/es/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/tnm-9-staging', params())).toBeNull()
+  })
+
+  it('recognizes the shared PCCM intro course module paths', () => {
+    expect(isPccmIntroCourseSharedModulePath('/intro-bronchoscopy')).toBe(true)
+    expect(isPccmIntroCourseSharedModulePath('/intro-bronchoscopy/airway-anatomy')).toBe(true)
+    expect(isPccmIntroCourseSharedModulePath('/pleural-procedures')).toBe(true)
+    expect(isPccmIntroCourseSharedModulePath('/es/pleural-procedures/clinical-review')).toBe(true)
+    expect(isPccmIntroCourseSharedModulePath('/pccm-intro-course')).toBe(false)
+  })
+
+  it('recognizes the scoped PCCM intro course admin dashboard path', () => {
+    expect(isPccmIntroCourseAdminDashboardPath('/admin/pccm-intro-course')).toBe(true)
+    expect(isPccmIntroCourseAdminDashboardPath('/es/admin/pccm-intro-course')).toBe(true)
+    expect(isPccmIntroCourseAdminDashboardPath('/admin/pccm-intro-course/users')).toBe(true)
+    expect(isPccmIntroCourseAdminDashboardPath('/admin')).toBe(false)
   })
 
   it('keeps public EBUS embeds open while gating the full generated app shell', () => {
@@ -173,6 +195,13 @@ describe('main site auth access helpers', () => {
   it('allows generated static assets without making generated html public', () => {
     expect(isPublicPath('/socal-ebus-course/app/assets/module.js')).toBe(true)
     expect(isPublicPath('/socal-ebus-course/app/other.html')).toBe(false)
+  })
+
+  it('tracks PCCM course routes as site modules', () => {
+    expect(resolveSiteModuleId('/pccm-intro-course')).toBe('pccm-intro-course')
+    expect(resolveSiteModuleId('/pccm-intro-course/assessments/pleural_post')).toBe(
+      'pccm-intro-course:assessments',
+    )
   })
 
   it('normalizes unsafe login redirects', () => {

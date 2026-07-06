@@ -1,6 +1,12 @@
 import { unlocalizedPathname } from '@/i18n/path'
 
-export type SiteEntitlement = 'ip_registry' | 'site_admin' | 'socal_ebus_course'
+export type SiteEntitlement =
+  | 'ip_registry'
+  | 'pccm_intro_course'
+  | 'pccm_intro_course_admin_loma_linda'
+  | 'pccm_intro_course_admin_ucsd'
+  | 'site_admin'
+  | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
   '/forgot-password',
@@ -69,6 +75,35 @@ export function isAdminOnlyThermalAblationPath(pathname: string) {
   )
 }
 
+export function isAdminOnlyPeripheralAblationPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/peripheral-ablation' ||
+    normalizedPathname.startsWith('/peripheral-ablation/')
+  )
+}
+
+export function isPccmIntroCourseSharedModulePath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/intro-bronchoscopy' ||
+    normalizedPathname.startsWith('/intro-bronchoscopy/') ||
+    normalizedPathname === '/pleural-procedures' ||
+    normalizedPathname.startsWith('/pleural-procedures/')
+  )
+}
+
+export function isPccmIntroCourseAdminDashboardPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/admin/pccm-intro-course' ||
+    normalizedPathname.startsWith('/admin/pccm-intro-course/')
+  )
+}
+
 export function isAdminOnlyEbusTrainingAssetPath(pathname: string) {
   const normalizedPathname = unlocalizedPathname(pathname)
 
@@ -90,7 +125,8 @@ export function isPublicPath(pathname: string) {
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
     isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
-    isAdminOnlyThermalAblationPath(normalizedPathname)
+    isAdminOnlyThermalAblationPath(normalizedPathname) ||
+    isAdminOnlyPeripheralAblationPath(normalizedPathname)
   ) {
     return false
   }
@@ -170,7 +206,8 @@ export function getRequiredEntitlement(
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
     isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
-    isAdminOnlyThermalAblationPath(normalizedPathname)
+    isAdminOnlyThermalAblationPath(normalizedPathname) ||
+    isAdminOnlyPeripheralAblationPath(normalizedPathname)
   ) {
     return 'site_admin'
   }
@@ -181,6 +218,10 @@ export function getRequiredEntitlement(
 
   if (normalizedPathname.startsWith('/ip-registry')) {
     return 'ip_registry'
+  }
+
+  if (normalizedPathname.startsWith('/pccm-intro-course')) {
+    return 'pccm_intro_course'
   }
 
   if (isAdminEbusPreviewEmbed(normalizedPathname, searchParams)) {
@@ -248,10 +289,12 @@ export function resolveSiteModuleId(pathname: string) {
   }
 
   if (
+    first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
     first === 'journal-club-podcasts' ||
+    first === 'peripheral-ablation' ||
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
     first === 'thermal-ablation' ||

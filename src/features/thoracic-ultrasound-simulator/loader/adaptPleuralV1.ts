@@ -67,6 +67,7 @@ const categoryByLabel: Partial<Record<ThoracicStructureLabel, StructureCategory>
   intercostalMuscle: 'chest-wall',
   muscle: 'chest-wall',
   rib: 'chest-wall',
+  spine: 'chest-wall',
   lung: 'lung',
   atelectaticLung: 'lung',
   consolidation: 'lung',
@@ -79,21 +80,40 @@ const categoryByLabel: Partial<Record<ThoracicStructureLabel, StructureCategory>
   liver: 'solid-organ',
   spleen: 'solid-organ',
   kidney: 'solid-organ',
+  pancreas: 'solid-organ',
+  gallbladder: 'solid-organ',
+  thyroid: 'solid-organ',
+  stomach: 'other',
   greatVessel: 'vessel',
+  aorta: 'vessel',
+  venaCava: 'vessel',
+  pulmonaryVessel: 'vessel',
+  portalVein: 'vessel',
   heart: 'cardiac',
   pericardium: 'cardiac',
+  esophagus: 'other',
   airway: 'airway',
+  thoracicCavity: 'other',
 }
 
 const hazardLabels = new Set<ThoracicStructureLabel>([
   'rib',
+  'spine',
   'diaphragm',
   'liver',
   'spleen',
   'kidney',
+  'pancreas',
   'heart',
   'greatVessel',
+  'aorta',
+  'venaCava',
+  'pulmonaryVessel',
+  'portalVein',
 ])
+
+/** Big container / clutter structures that ship toggled off in the 3D scene. */
+const defaultHiddenLabels = new Set<ThoracicStructureLabel>(['thoracicCavity'])
 
 const colorByLabel: Partial<Record<ThoracicStructureLabel, string>> = {
   skin: '#d4a373',
@@ -101,6 +121,7 @@ const colorByLabel: Partial<Record<ThoracicStructureLabel, string>> = {
   intercostalMuscle: '#bc4749',
   muscle: '#bc4749',
   rib: '#e5e7eb',
+  spine: '#cbd5e1',
   lung: '#94a3b8',
   atelectaticLung: '#64748b',
   consolidation: '#7c8aa0',
@@ -111,9 +132,19 @@ const colorByLabel: Partial<Record<ThoracicStructureLabel, string>> = {
   liver: '#b45309',
   spleen: '#7c3aed',
   kidney: '#8b5cf6',
+  pancreas: '#eab308',
+  gallbladder: '#22c55e',
+  stomach: '#f472b6',
+  thyroid: '#06b6d4',
   heart: '#dc2626',
   greatVessel: '#ef4444',
+  aorta: '#dc2626',
+  venaCava: '#3b82f6',
+  pulmonaryVessel: '#fb7185',
+  portalVein: '#8b5cf6',
+  esophagus: '#a78bfa',
   airway: '#38bdf8',
+  thoracicCavity: '#475569',
 }
 
 function humanizeLabel(label: string) {
@@ -132,7 +163,7 @@ function deriveStructures(legacy: LegacyPleuralCaseV1): ThoracicStructureLabelDe
       code,
       boundsLpsMm: legacy.labelBoundsLpsMm?.[label],
       color: colorByLabel[label],
-      defaultVisible: true,
+      defaultVisible: !defaultHiddenLabels.has(label),
       hazard: hazardLabels.has(label) || undefined,
     }))
 }
@@ -150,8 +181,9 @@ function deriveProbePreset(legacy: LegacyPleuralCaseV1): ProbePreset {
     label: 'Curvilinear (case default)',
     probeType: 'curvilinear',
     description: 'Default transducer position exported with the legacy case.',
-    defaults: legacy.probeDefaults,
+    defaults: { ...legacy.probeDefaults, approachDeg: legacy.probeDefaults.approachDeg ?? 0 },
     ranges: {
+      approachDeg: { min: -180, max: 180, step: 5 },
       lateralMm: {
         min: bounds ? Math.floor(bounds.min[0] - 50) : -160,
         max: bounds ? Math.ceil(bounds.max[0] + 50) : 170,

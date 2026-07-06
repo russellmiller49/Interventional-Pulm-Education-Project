@@ -139,6 +139,18 @@ export function Navigation() {
         description: nav('items.thermalAblation.description'),
       },
       {
+        title: nav('items.rigidBronchoscopy.title'),
+        shortTitle: nav('items.rigidBronchoscopy.shortTitle'),
+        href: '/rigid-bronchoscopy' as Route,
+        description: nav('items.rigidBronchoscopy.description'),
+      },
+      {
+        title: nav('items.peripheralAblation.title'),
+        shortTitle: nav('items.peripheralAblation.shortTitle'),
+        href: '/peripheral-ablation' as Route,
+        description: nav('items.peripheralAblation.description'),
+      },
+      {
         title: nav('items.pleuralProcedures.title'),
         shortTitle: nav('items.pleuralProcedures.shortTitle'),
         href: '/pleural-procedures' as Route,

@@ -123,7 +123,10 @@ describe('v1 -> v2 adapter over the real on-disk case', () => {
     const preset = manifest.probePresets[0]
 
     expect(manifest.defaultProbePresetId).toBe(preset.id)
-    expect(preset.defaults).toEqual(legacy.probeDefaults)
+    // The adapter now seeds the circumferential approach angle (0 = the legacy
+    // posterior approach) so the probe can also reach anterior windows.
+    expect(preset.defaults).toEqual({ ...legacy.probeDefaults, approachDeg: 0 })
+    expect(preset.ranges.approachDeg).toEqual({ min: -180, max: 180, step: 5 })
     expect(preset.ranges.lateralMm?.min).toBe(
       Math.floor(legacy.labelBoundsLpsMm.pleuralFluid.min[0] - 50),
     )
@@ -152,7 +155,12 @@ describe('mesh naming', () => {
     expect(structureForMeshName('diaphragm ', structures)?.label).toBe('diaphragm')
     expect(structureForMeshName('left pleural effusion', structures)?.label).toBe('pleuralFluid')
     expect(structureForMeshName('bone', structures)?.label).toBe('rib')
-    expect(structureForMeshName('stomach', structures)).toBeNull()
+    // The full-anatomy case exposes abdominal organs and distinguishes the
+    // spine from the rib cage as its own structure.
+    expect(structureForMeshName('stomach', structures)?.label).toBe('stomach')
+    expect(structureForMeshName('spine', structures)?.label).toBe('spine')
+    expect(structureForMeshName('superior vena cava', structures)?.label).toBe('venaCava')
+    expect(structureForMeshName('unrelated widget', structures)).toBeNull()
   })
 
   it('fills structure meshNames from a GLB node list', () => {
@@ -160,7 +168,9 @@ describe('mesh naming', () => {
     const fluid = matched.find((structure) => structure.label === 'pleuralFluid')
     expect(fluid?.meshNames).toEqual(['left pleural effusion', 'right pleural effusion'])
     const rib = matched.find((structure) => structure.label === 'rib')
-    expect(rib?.meshNames).toEqual(expect.arrayContaining(['bone', 'spine']))
+    expect(rib?.meshNames).toEqual(['bone'])
+    const spine = matched.find((structure) => structure.label === 'spine')
+    expect(spine?.meshNames).toEqual(['spine'])
   })
 })
 

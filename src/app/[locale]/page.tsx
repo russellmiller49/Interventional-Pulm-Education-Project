@@ -51,6 +51,14 @@ const featureHighlightDefinitions = [
     href: '/pleural-procedures',
   },
   {
+    key: 'pleuroscopy',
+    href: '/pleural-procedures/pleuroscopy',
+  },
+  {
+    key: 'rigidBronchoscopy',
+    href: '/rigid-bronchoscopy',
+  },
+  {
     key: 'resources',
     href: '/resources',
   },
@@ -102,9 +110,22 @@ export default async function HomePage({ params }: HomePageProps) {
                   {t('coreModulesBody')}
                 </p>
               </div>
-              <Button asChild variant="secondary" className="w-fit rounded-full px-6">
-                <Link href={'/socal-ebus-course' as Route}>{t('socalParticipants')}</Link>
-              </Button>
+              <div className="flex flex-wrap gap-2 md:max-w-xl md:justify-end">
+                <Button
+                  asChild
+                  variant="secondary"
+                  className="w-fit whitespace-nowrap rounded-full px-6"
+                >
+                  <Link href={'/pccm-intro-course' as Route}>{t('pccmIntroParticipants')}</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="secondary"
+                  className="w-fit whitespace-nowrap rounded-full px-6"
+                >
+                  <Link href={'/socal-ebus-course' as Route}>{t('socalParticipants')}</Link>
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

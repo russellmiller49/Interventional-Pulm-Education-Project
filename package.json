@@ -24,6 +24,7 @@
     "precompress:assets": "node scripts/precompress-module-assets.mjs",
     "upload:module-assets": "node scripts/upload-module-assets-to-supabase.mjs",
     "upload:journal-club-podcasts": "node scripts/upload-journal-club-podcasts.mjs",
+    "upload:pccm-intro-course-media": "node scripts/pccm-intro-course/upload-media.mjs",
     "prepare:standalone": "node scripts/prepare-standalone.mjs",
     "analyze": "ANALYZE=true next build --webpack",
     "prepare": "husky install",

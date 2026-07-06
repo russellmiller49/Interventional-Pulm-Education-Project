@@ -259,6 +259,11 @@
         "shortTitle": "热消融",
         "description": "激光、电灼与 APC 交互式物理教学模块"
       },
+      "peripheralAblation": {
+        "title": "外周消融",
+        "shortTitle": "外周消融",
+        "description": "外周肺肿瘤的射频、微波、冷冻与脉冲电场(PEF)消融交互模块"
+      },
       "pleuralProcedures": {
         "title": "胸膜操作",
         "shortTitle": "胸膜",
@@ -283,6 +288,11 @@
         "title": "支气管镜入门",
         "shortTitle": "支气管镜",
         "description": "镜体尺寸、到达范围与器械适配基础模块"
+      },
+      "rigidBronchoscopy": {
+        "title": "硬质支气管镜",
+        "shortTitle": "硬质支气管镜",
+        "description": "硬质气道操作——铲切、支架、止血和防火安全"
       },
       "ipRegistry": {
         "title": "IP 登记系统",
@@ -320,6 +330,7 @@
     "launchCatalog": "启动目录",
     "coreModules": "核心学习模块",
     "coreModulesBody": "从目前已可供学习者使用的模块开始：EBUS 培训、TNM-9 分期、3D 解剖、考试复习、期刊俱乐部播客、Nav Bronch、FluoroView 和教学资源。",
+    "pccmIntroParticipants": "PCCM 入门课程学员",
     "socalParticipants": "南加州 EBUS 课程学员",
     "participantCourse": "学员课程",
     "participantTitle": "南加州 EBUS 课程学员",
@@ -384,6 +395,18 @@
         "description": "提供支气管镜尺寸选择、气道可达性概念和器械兼容性的基础工具。",
         "cta": "打开入门模块"
       },
+      "rigidBronchoscopy": {
+        "badge": "气道",
+        "title": "硬质支气管镜",
+        "description": "硬质气道操作：器械、通气、铲切、支架、止血和气道防火安全——仅供模拟。",
+        "cta": "打开硬质支气管镜"
+      },
+      "pleuroscopy": {
+        "badge": "胸膜",
+        "title": "胸膜腔镜",
+        "description": "内科胸腔镜：适应证、入路与活检技术、滑石粉胸膜固定术和并发症处理——仅供模拟。",
+        "cta": "打开胸膜腔镜"
+      },
       "pleural": {
         "badge": "胸膜",
         "title": "胸膜操作",
@@ -408,6 +431,7 @@
     "seeComingSoon": "查看即将推出",
     "requiredAccess": {
       "ipRegistry": "IP 登记系统",
+      "pccmIntroCourse": "PCCM 入门课程",
       "socalEbusCourse": "南加州 EBUS 课程",
       "fallback": "该受限区域"
     }
@@ -1217,6 +1241,180 @@
       "creatinine": "积液/血清肌酐比值",
       "autoimmune": "自身免疫血清学，并结合微生物学和影像解读",
       "branchPoint": "仅当病史或大体积液外观形成分支点时，才有针对性地增加检查"
+    }
+  },
+  "rigidBronchoscopy": {
+    "about": {
+      "title": "关于本模块",
+      "body": "这是一个仅用于模拟的硬质支气管镜教学模块，面向经认证或具备认证资格的呼吸科医师以及在认证项目中的介入性肺病学专科医师，在带教监督下使用。它模拟在获FDA批准/CE认证设备上的公认标准技术，符合AABIP/CHEST已发表的指导意见。它不操作任何设备，也不提供针对具体患者的医疗建议，且不涉及设备改装、超说明书临时改用或无监督操作。"
+    },
+    "overview": {
+      "metaTitle": "硬质支气管镜",
+      "metaDescription": "学习硬质支气管镜的器械、适应证、共享气道通气和治疗方式；练习有序流程、气道急症情景和器械标注；然后检验你的推理。",
+      "headerTitle": "硬质支气管镜",
+      "headerDescription": "建立大口径的中央气道，协调共享气道通气，并运用治疗工具——铲切减容、扩张、支架、异物取出和止血——并全程保持气道防火安全。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "器械、适应证、通气协调、治疗、止血和气道防火安全。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "排列插入、铲切和支架流程；处理气道急症情景；标注器械。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "关于适应证、通气、铲切、支架、止血和防火安全的十道题。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "硬质支气管镜模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "器械、通气与治疗"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "序列、情景与器械"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南与综述来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习硬质支气管镜",
+      "metaDescription": "硬质支气管镜器械、适应证与禁忌证、共享气道通气、治疗性铲切/扩张/支架、支气管内止血以及手术室气道防火安全。",
+      "headerTitle": "学习硬质支气管镜",
+      "headerDescription": "从器械和适应证到共享气道通气、治疗工具、中央气道止血和气道防火安全。",
+      "intro": "核心内容带你从器械学到气道防火安全。展开“深入了解”查看消融方式的选择和支架的注意事项。",
+      "progressLabel": "标记“学习”为完成"
+    },
+    "practice": {
+      "metaTitle": "练习硬质支气管镜",
+      "metaDescription": "排列插入、铲切和支架流程，处理气道急症情景，并标注硬质支气管镜器械。",
+      "headerTitle": "练习：流程、情景与器械",
+      "headerDescription": "排列操作步骤，处理模拟的气道急症，并识别器械。",
+      "progressLabel": "标记“练习”为完成",
+      "sequencesHeading": "有序流程",
+      "sequencesIntro": "拖动或使用箭头控件将每个流程按正确顺序排列，然后检查以显示理由。",
+      "scenariosHeading": "气道急症情景",
+      "scenariosIntro": "完成每个分支情景。不安全或延迟的选择会改变模拟生命体征；每次都以复盘结束。",
+      "equipmentHeading": "器械标注",
+      "equipmentIntro": "将每个标签放到正确的标记上。放置正确的标签会显示该部件的教学说明。"
+    },
+    "assessment": {
+      "metaTitle": "硬质支气管镜评估",
+      "metaDescription": "检验你对器械、适应证、通气协调、铲切、支架、止血和气道防火安全的推理。",
+      "headerTitle": "评估",
+      "headerDescription": "十道题，检验你能否选择病例、协调通气并处理气道急症。",
+      "checkTitle": "硬质支气管镜检查",
+      "checkIntro": "回答每道题，然后显示解释。它们对应“学习”目标。",
+      "progressLabel": "标记“评估”为完成"
+    },
+    "references": {
+      "metaTitle": "硬质支气管镜参考文献",
+      "metaDescription": "硬质支气管镜模块教学背后的指南与综述来源。",
+      "headerTitle": "参考文献",
+      "headerDescription": "器械、通气、治疗、止血和防火安全教学背后的指南与综述来源。",
+      "heading": "临床参考文献"
+    }
+  },
+  "pleuroscopy": {
+    "about": {
+      "title": "关于本模块",
+      "body": "这是一个仅用于模拟的内科胸腔镜（胸膜腔镜）教学模块，面向经认证或具备认证资格的呼吸科医师以及在认证项目中的介入性肺病学专科医师，在带教监督下使用。它模拟符合已发表指导意见的公认标准技术。它不操作任何设备，也不提供针对具体患者的医疗建议。"
+    },
+    "overview": {
+      "metaTitle": "胸膜腔镜（内科胸腔镜）",
+      "metaDescription": "学习内科胸腔镜的适应证、入路与活检技术以及滑石粉胸膜固定术；练习有序流程、并发症情景和器械标注；然后检验你的推理。",
+      "headerTitle": "胸膜腔镜（内科胸腔镜）",
+      "headerDescription": "选择患者，安全建立单孔入路，检查并活检胸膜，实施滑石粉胸膜固定术，并预判和处理各种并发症。",
+      "objectivesLead": "完成本模块后，你将能够",
+      "steps": {
+        "learn": {
+          "title": "学习",
+          "description": "适应证、禁忌证、硬质与半硬质胸腔镜、定位、活检技术和胸膜固定术。"
+        },
+        "practice": {
+          "title": "练习",
+          "description": "排列入路和胸膜固定流程，处理并发症情景，并标注器械。"
+        },
+        "assessment": {
+          "title": "评估",
+          "description": "关于选择、技术、胸膜固定术和并发症处理的十道题。"
+        }
+      }
+    },
+    "nav": {
+      "ariaLabel": "胸膜腔镜模块章节",
+      "overview": {
+        "title": "概览",
+        "description": "目标与学习路径"
+      },
+      "learn": {
+        "title": "学习",
+        "description": "适应证、技术与胸膜固定术"
+      },
+      "practice": {
+        "title": "练习",
+        "description": "序列、情景与器械"
+      },
+      "assessment": {
+        "title": "评估",
+        "description": "检验你的推理"
+      },
+      "references": {
+        "title": "参考文献",
+        "description": "指南与试验来源"
+      }
+    },
+    "learn": {
+      "metaTitle": "学习胸膜腔镜",
+      "metaDescription": "内科胸腔镜的适应证与禁忌证、硬质与半硬质胸腔镜、超声引导入路、肋骨表面的壁层活检以及分级滑石粉胸膜固定术。",
+      "headerTitle": "学习胸膜腔镜",
+      "headerDescription": "从患者选择到胸膜固定术：内科胸腔镜的用途、如何安全进入并取样胸膜，以及胸膜固定术的原理。",
+      "intro": "核心内容带你从适应证学到胸膜固定术。展开“深入了解”查看冷冻活检和不可复张（陷闭）肺。",
+      "progressLabel": "标记“学习”为完成"
+    },
+    "practice": {
+      "metaTitle": "练习胸膜腔镜",
+      "metaDescription": "排列入路和胸膜固定流程，处理并发症情景，并标注胸腔镜器械。",
+      "headerTitle": "练习：流程、情景与器械",
+      "headerDescription": "排列操作步骤，处理模拟并发症，并识别器械。",
+      "progressLabel": "标记“练习”为完成",
+      "sequencesHeading": "有序流程",
+      "sequencesIntro": "拖动或使用箭头控件将每个流程按正确顺序排列，然后检查以显示理由。",
+      "scenariosHeading": "并发症情景",
+      "scenariosIntro": "完成每个分支情景。不安全或延迟的选择会改变模拟生命体征；每次都以复盘结束。",
+      "equipmentHeading": "器械标注",
+      "equipmentIntro": "将每个标签放到正确的标记上。放置正确的标签会显示该部件的教学说明。"
+    },
+    "assessment": {
+      "metaTitle": "胸膜腔镜评估",
+      "metaDescription": "检验你对适应证、禁忌证、入路与活检技术、胸膜固定术和并发症处理的推理。",
+      "headerTitle": "评估",
+      "headerDescription": "十道题，检验你能否选择患者、安全入路取样并处理并发症。",
+      "checkTitle": "胸膜腔镜检查",
+      "checkIntro": "回答每道题，然后显示解释。它们对应“学习”目标。",
+      "progressLabel": "标记“评估”为完成"
+    },
+    "references": {
+      "metaTitle": "胸膜腔镜参考文献",
+      "metaDescription": "胸膜腔镜模块教学背后的指南与试验来源。",
+      "headerTitle": "参考文献",
+      "headerDescription": "适应证、技术和胸膜固定术教学背后的指南与试验来源。",
+      "heading": "临床参考文献"
     }
   },
   "pleuralInfection": {

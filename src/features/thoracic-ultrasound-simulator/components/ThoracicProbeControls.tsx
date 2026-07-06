@@ -21,6 +21,7 @@ interface ControlDef {
 }
 
 const positionControls: ControlDef[] = [
+  { key: 'approachDeg', label: 'Approach (around body)', unit: 'deg' },
   { key: 'lateralMm', label: 'Lateral position', unit: 'mm' },
   { key: 'craniocaudalMm', label: 'Cranial/caudal position', unit: 'mm' },
   { key: 'tiltDeg', label: 'Cranial/caudal tilt', unit: 'deg' },
@@ -81,7 +82,7 @@ export function ThoracicProbeControls({ manifest, store }: ThoracicProbeControls
                 <Slider
                   key={control.key}
                   label={control.label}
-                  value={probe[control.key]}
+                  value={probe[control.key] ?? 0}
                   min={range.min}
                   max={range.max}
                   step={range.step}
@@ -100,7 +101,7 @@ export function ThoracicProbeControls({ manifest, store }: ThoracicProbeControls
                   <Slider
                     key={control.key}
                     label={control.label}
-                    value={probe[control.key]}
+                    value={probe[control.key] ?? 0}
                     min={range.min}
                     max={range.max}
                     step={range.step}

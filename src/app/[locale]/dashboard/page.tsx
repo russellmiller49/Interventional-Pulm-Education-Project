@@ -2,6 +2,7 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Link } from '@/i18n/navigation'
+import { PccmCodeRedeemForm } from '@/features/pccm-intro-course/components/PccmCodeRedeemForm'
 import { supabaseServer } from '@/lib/supabase/server'
 import { HandoffContent } from '@/i18n/handoff'
 
@@ -14,8 +15,12 @@ interface DashboardPageProps {
   }>
 }
 
-const requiredAccessLabelKeys: Record<string, 'ipRegistry' | 'socalEbusCourse'> = {
+const requiredAccessLabelKeys: Record<
+  string,
+  'ipRegistry' | 'pccmIntroCourse' | 'socalEbusCourse'
+> = {
   ip_registry: 'ipRegistry',
+  pccm_intro_course: 'pccmIntroCourse',
   socal_ebus_course: 'socalEbusCourse',
 }
 
@@ -66,6 +71,7 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
               </Link>
             </div>
           </div>
+          {user ? <PccmCodeRedeemForm /> : null}
         </div>
       }
     </HandoffContent>

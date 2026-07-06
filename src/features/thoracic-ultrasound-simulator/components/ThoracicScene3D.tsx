@@ -17,24 +17,39 @@ import * as THREE from 'three'
 import type {
   LabelBounds,
   ProbeStateKey,
+  SelectedStructure,
   ThoracicCaseManifest,
   ThoracicProbeState,
   ThoracicStructureLabelDef,
   StructureCategory,
 } from '../types'
 import {
+  approachFrame,
   beamDirection,
   needleEndpoint,
+  probeLateralAxis,
   probeOrigin,
   projectBeamToWorld,
+  scanPlaneNormal,
 } from '../engine/sectorGeometry'
 import { structureForMeshName } from '../loader/meshNaming'
+
+/** Half-thickness of the scan-plane slice slab, in mm (≈ real slice thickness). */
+const SCAN_SLICE_HALF_MM = 4
+const HOVER_EMISSIVE = 0.6
+const SELECTED_EMISSIVE = 0.42
+const BASE_EMISSIVE = 0.12
+
+/** "inferior vena cava" -> "Inferior vena cava". */
+function humanizeMeshName(name: string) {
+  const trimmed = name.trim()
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
 import type { ProbeStore } from '../state/probeStore'
 import { useProbeState } from '../state/probeStore'
 import { activeProbePreset } from './ThoracicProbeControls'
 import { HandoffContent } from '@/i18n/handoff'
 
-const degreesToRadians = Math.PI / 180
 const FAN_SEGMENTS = 24
 const FAN_RANGE_LINE_FRACTIONS = [0.25, 0.5, 0.75, 1] as const
 const FAN_GRID_VERTEX_COUNT = (3 + FAN_RANGE_LINE_FRACTIONS.length * FAN_SEGMENTS) * 2
@@ -49,6 +64,9 @@ interface ThoracicScene3DProps {
   manifest: ThoracicCaseManifest
   store: ProbeStore
   needleUnsafe: boolean
+  /** Structure currently selected for identification (shared with the B-mode). */
+  selected?: SelectedStructure | null
+  onSelectStructure?: (selection: SelectedStructure | null) => void
 }
 
 let webglDetectionCache: boolean | null = null
@@ -89,7 +107,13 @@ function volumeCenterAndRadius(manifest: ThoracicCaseManifest) {
   return { center, radius }
 }
 
-export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene3DProps) {
+export function ThoracicScene3D({
+  manifest,
+  store,
+  needleUnsafe,
+  selected = null,
+  onSelectStructure,
+}: ThoracicScene3DProps) {
   // useSyncExternalStore keeps the server snapshot (false → SVG surface map)
   // distinct from the client detection without hydration drift; jsdom stays on
   // the fallback path permanently.
@@ -99,6 +123,8 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
   const preset = activeProbePreset(manifest)
   const [visibility, setVisibility] = useState<Record<string, boolean>>({})
   const [availableLabels, setAvailableLabels] = useState<string[]>([])
+  const [sliceEnabled, setSliceEnabled] = useState(false)
+  const [hoveredName, setHoveredName] = useState<string | null>(null)
 
   const toggleStructures = useMemo(
     () => manifest.structures.filter((structure) => availableLabels.includes(structure.label)),
@@ -167,10 +193,22 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
                 Case model with probe pose, scan sector, and guide line
               </p>
             </div>
-            <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
-              <LegendSwatch color="#2563eb" label="Fluid" />
-              <LegendSwatch color="#38bdf8" label="Scan sector" />
-              <LegendSwatch color={pathColor} label="Path" />
+            <div className="flex items-center gap-3">
+              {webglReady ? (
+                <button
+                  type="button"
+                  aria-pressed={sliceEnabled}
+                  onClick={() => setSliceEnabled((value) => !value)}
+                  className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70 aria-pressed:border-sky-500 aria-pressed:bg-sky-500/10 aria-pressed:text-sky-600"
+                >
+                  {sliceEnabled ? 'Slicing at scan plane' : 'Slice at scan plane'}
+                </button>
+              ) : null}
+              <div className="hidden items-center gap-3 text-xs text-muted-foreground sm:flex">
+                <LegendSwatch color="#2563eb" label="Fluid" />
+                <LegendSwatch color="#38bdf8" label="Scan sector" />
+                <LegendSwatch color={pathColor} label="Path" />
+              </div>
             </div>
           </div>
 
@@ -182,7 +220,7 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
             tabIndex={0}
           >
             {webglReady ? (
-              <div className="h-[32rem] w-full">
+              <div className="relative h-[32rem] w-full">
                 <Canvas
                   camera={{
                     position: [0, 0, 0],
@@ -192,6 +230,10 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
                     fov: SCENE_CAMERA_BASE_FOV,
                   }}
                   dpr={[1, 2]}
+                  onCreated={({ gl }) => {
+                    // Required for per-material clipping planes (scan-plane slice).
+                    gl.localClippingEnabled = true
+                  }}
                 >
                   <Suspense fallback={null}>
                     <SceneContent
@@ -201,9 +243,31 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
                       visibility={visibility}
                       clampToRanges={clampToRanges}
                       onStructuresResolved={setAvailableLabels}
+                      sliceEnabled={sliceEnabled}
+                      selected={selected}
+                      onSelectStructure={onSelectStructure}
+                      onHoverStructure={setHoveredName}
                     />
                   </Suspense>
                 </Canvas>
+                {(hoveredName || selected) && (
+                  <div className="pointer-events-none absolute left-3 top-3 max-w-[70%] rounded-md bg-slate-900/85 px-3 py-1.5 text-xs text-slate-100 shadow-lg ring-1 ring-white/10">
+                    {hoveredName ? (
+                      <span>{hoveredName}</span>
+                    ) : (
+                      <span className="text-sky-300">Selected: {selected?.displayName}</span>
+                    )}
+                  </div>
+                )}
+                {selected && (
+                  <button
+                    type="button"
+                    onClick={() => onSelectStructure?.(null)}
+                    className="pointer-events-auto absolute right-3 top-3 rounded-md bg-slate-900/85 px-2.5 py-1 text-xs text-slate-200 shadow-lg ring-1 ring-white/10 hover:bg-slate-800"
+                  >
+                    Clear selection
+                  </button>
+                )}
               </div>
             ) : (
               <div className="px-3 py-4">
@@ -221,7 +285,7 @@ export function ThoracicScene3D({ manifest, store, needleUnsafe }: ThoracicScene
                 >
                   <input
                     type="checkbox"
-                    checked={visibility[structure.label] ?? true}
+                    checked={visibility[structure.label] ?? structure.defaultVisible ?? true}
                     onChange={(event) =>
                       setVisibility((previous) => ({
                         ...previous,
@@ -254,6 +318,10 @@ interface SceneContentProps {
   visibility: Record<string, boolean>
   clampToRanges: (partial: Partial<ThoracicProbeState>) => Partial<ThoracicProbeState>
   onStructuresResolved: (labels: string[]) => void
+  sliceEnabled: boolean
+  selected: SelectedStructure | null
+  onSelectStructure?: (selection: SelectedStructure | null) => void
+  onHoverStructure: (name: string | null) => void
 }
 
 function SceneContent({
@@ -263,14 +331,32 @@ function SceneContent({
   visibility,
   clampToRanges,
   onStructuresResolved,
+  sliceEnabled,
+  selected,
+  onSelectStructure,
+  onHoverStructure,
 }: SceneContentProps) {
   const caseGltf = useGLTF(manifest.meshUrl)
   const { center, radius } = useMemo(() => volumeCenterAndRadius(manifest), [manifest])
   const [dragging, setDragging] = useState(false)
   const probeGroupRef = useRef<THREE.Group>(null)
   const meshesByLabelRef = useRef<Map<string, THREE.Mesh[]>>(new Map())
+  const meshInfoRef = useRef<Map<THREE.Object3D, SelectedStructure>>(new Map())
+  const hoveredMeshRef = useRef<THREE.Object3D | null>(null)
+  const clipPlanesRef = useRef<[THREE.Plane, THREE.Plane]>([new THREE.Plane(), new THREE.Plane()])
 
   const caseScene = useMemo(() => caseGltf.scene, [caseGltf.scene])
+
+  // Structures may ship toggled off (e.g. the thoracic-cavity container that
+  // would otherwise occlude the interior). This is the visibility fallback when
+  // the learner hasn't explicitly toggled a structure.
+  const defaultVisibleByLabel = useMemo(() => {
+    const map: Record<string, boolean> = {}
+    for (const structure of manifest.structures) {
+      map[structure.label] = structure.defaultVisible !== false
+    }
+    return map
+  }, [manifest.structures])
 
   // Classify GLB meshes against the manifest's structure vocabulary once per
   // load: claimed meshes become toggleable, unclaimed meshes are hidden to keep
@@ -278,6 +364,7 @@ function SceneContent({
   // probe and interior structures stay visible.
   useEffect(() => {
     const claimed = new Map<string, THREE.Mesh[]>()
+    const meshInfo = new Map<THREE.Object3D, SelectedStructure>()
 
     normalizeCaseSceneToLpsMm(caseScene)
 
@@ -297,10 +384,14 @@ function SceneContent({
       meshes.push(mesh)
       claimed.set(structure.label, meshes)
 
-      applyStructureMaterial(mesh, structure)
+      applyStructureMaterial(mesh, structure, clipPlanesRef.current)
+      // The GLB mesh name is more specific than the acoustic label (e.g.
+      // "inferior vena cava" vs the venaCava label), so identification uses it.
+      meshInfo.set(mesh, { label: structure.label, displayName: humanizeMeshName(mesh.name) })
     })
 
     meshesByLabelRef.current = claimed
+    meshInfoRef.current = meshInfo
     onStructuresResolved(Array.from(claimed.keys()))
   }, [caseScene, manifest.structures, onStructuresResolved])
 
@@ -325,6 +416,8 @@ function SceneContent({
     })
     const mesh = new THREE.Mesh(geometry, material)
     mesh.renderOrder = FAN_FILL_RENDER_ORDER
+    // Overlay only: never intercept structure hover / click raycasts.
+    mesh.raycast = () => {}
     return mesh
   }, [])
 
@@ -343,6 +436,7 @@ function SceneContent({
     })
     const lines = new THREE.LineSegments(geometry, material)
     lines.renderOrder = FAN_GRID_RENDER_ORDER
+    lines.raycast = () => {}
     return lines
   }, [])
 
@@ -358,6 +452,7 @@ function SceneContent({
       }),
     )
     line.renderOrder = FAN_GRID_RENDER_ORDER + 1
+    line.raycast = () => {}
     return line
   }, [])
 
@@ -385,16 +480,28 @@ function SceneContent({
     }),
     [],
   )
+  const clipTemps = useMemo(
+    () => ({
+      normal: new THREE.Vector3(),
+      negNormal: new THREE.Vector3(),
+      origin: new THREE.Vector3(),
+      point: new THREE.Vector3(),
+    }),
+    [],
+  )
   const skinContactRaycastTempsRef = useRef({
     raycaster: new THREE.Raycaster(),
     origin: new THREE.Vector3(),
-    direction: new THREE.Vector3(0, -1, 0),
+    direction: new THREE.Vector3(),
     hits: [] as THREE.Intersection[],
   })
-  const skinContactRayStartY = center[1] + radius + SKIN_CONTACT_RAYCAST_PADDING_MM
   const skinContactRayFar = radius * 2 + SKIN_CONTACT_RAYCAST_PADDING_MM * 2
 
-  const skinContactPosteriorMm = useCallback(
+  // Snap the probe to the skin along its current approach direction: cast a ray
+  // from far outside the body (on the approach side) inward and take the first
+  // skin hit. At approachDeg 0 this is the legacy straight-down (posterior)
+  // snap; at other angles the probe rides the anterior/lateral surface instead.
+  const skinContactPoint = useCallback(
     (probe: ThoracicProbeState) => {
       const skinMeshes = meshesByLabelRef.current.get('skin')
       if (!skinMeshes?.length) {
@@ -402,52 +509,101 @@ function SceneContent({
       }
 
       const { raycaster, origin, direction, hits } = skinContactRaycastTempsRef.current
-      origin.set(probe.lateralMm, skinContactRayStartY, probe.craniocaudalMm)
+      const { outward, inward } = approachFrame(probe)
+      origin.set(
+        probe.lateralMm + outward[0] * skinContactRayFar,
+        probe.posteriorMm + outward[1] * skinContactRayFar,
+        probe.craniocaudalMm,
+      )
+      direction.set(inward[0], inward[1], inward[2])
       raycaster.set(origin, direction)
       raycaster.near = 0
-      raycaster.far = skinContactRayFar
+      raycaster.far = skinContactRayFar * 2
 
       raycaster.intersectObjects(skinMeshes, false, hits)
-      const posteriorMm = hits[0]?.point.y ?? null
+      const hit = hits[0]?.point
+      const result = hit ? { lateralMm: hit.x, posteriorMm: hit.y } : null
       hits.length = 0
 
-      return posteriorMm
+      return result
     },
-    [skinContactRayFar, skinContactRayStartY],
+    [skinContactRayFar],
   )
 
   // The scene reads the store imperatively every frame: dragging updates the
   // probe mesh, fan, and guide line without re-rendering the React tree.
   useFrame(() => {
     meshesByLabelRef.current.forEach((meshes, label) => {
-      const visible = visibility[label] ?? true
+      const visible = visibility[label] ?? defaultVisibleByLabel[label] ?? true
       meshes.forEach((mesh) => {
         mesh.visible = visible
       })
     })
 
-    let probe = store.getState()
-    const contactPosteriorMm = skinContactPosteriorMm(probe)
-    if (contactPosteriorMm !== null) {
-      const snappedPosteriorMm = contactPosteriorMm
-
-      if (Math.abs(snappedPosteriorMm - probe.posteriorMm) > SKIN_CONTACT_SNAP_EPSILON_MM) {
-        store.setState({ posteriorMm: snappedPosteriorMm })
+    // Hover and selection highlight: brighten the emissive term of the hovered
+    // mesh and every mesh sharing the selected structure's label.
+    const hoveredMesh = hoveredMeshRef.current
+    meshInfoRef.current.forEach((info, object) => {
+      const material = (object as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+      if (!material?.emissive) {
+        return
       }
-      probe = { ...probe, posteriorMm: snappedPosteriorMm }
+      material.emissiveIntensity =
+        object === hoveredMesh
+          ? HOVER_EMISSIVE
+          : info.label === selected?.label
+            ? SELECTED_EMISSIVE
+            : BASE_EMISSIVE
+    })
+
+    let probe = store.getState()
+    const contact = skinContactPoint(probe)
+    if (contact) {
+      const changed =
+        Math.abs(contact.lateralMm - probe.lateralMm) > SKIN_CONTACT_SNAP_EPSILON_MM ||
+        Math.abs(contact.posteriorMm - probe.posteriorMm) > SKIN_CONTACT_SNAP_EPSILON_MM
+      if (changed) {
+        store.setState({ lateralMm: contact.lateralMm, posteriorMm: contact.posteriorMm })
+      }
+      probe = { ...probe, lateralMm: contact.lateralMm, posteriorMm: contact.posteriorMm }
     }
 
     const origin = probeOrigin(probe)
     const maxDepthMm = probe.depthCm * 10
 
+    // Keep the scan-plane slice slab coincident with the imaging plane as the
+    // probe moves: two parallel clip planes SCAN_SLICE_HALF_MM either side of
+    // the plane through the probe origin with the fan's normal.
+    const [planeNear, planeFar] = clipPlanesRef.current
+    if (sliceEnabled) {
+      const normal = clipTemps.normal.fromArray(scanPlaneNormal(probe))
+      const originVec = clipTemps.origin.set(origin[0], origin[1], origin[2])
+      planeNear.setFromNormalAndCoplanarPoint(
+        normal,
+        clipTemps.point.copy(originVec).addScaledVector(normal, -SCAN_SLICE_HALF_MM),
+      )
+      clipTemps.negNormal.copy(normal).negate()
+      planeFar.setFromNormalAndCoplanarPoint(
+        clipTemps.negNormal,
+        clipTemps.point.copy(originVec).addScaledVector(normal, SCAN_SLICE_HALF_MM),
+      )
+    } else {
+      // Slicing off: push both planes far outside the model so they clip
+      // nothing (a unit normal keeps THREE's plane transform well-defined).
+      planeNear.normal.set(0, 1, 0)
+      planeNear.constant = 1e7
+      planeFar.normal.set(0, 1, 0)
+      planeFar.constant = 1e7
+    }
+
     const probeGroup = probeGroupRef.current
     if (probeGroup) {
       probeGroup.position.set(origin[0], origin[1], origin[2])
       const depth = beamDirection(probe, 0)
-      const markerRad = probe.rotationDeg * degreesToRadians
+      const lateral = probeLateralAxis(probe)
       const { matrix, xAxis, yAxis, zAxis } = basisTemps
       yAxis.set(-depth[0], -depth[1], -depth[2])
-      xAxis.set(Math.cos(markerRad), 0, Math.sin(markerRad))
+      xAxis.set(lateral[0], lateral[1], lateral[2])
       zAxis.crossVectors(xAxis, yAxis).normalize()
       xAxis.crossVectors(yAxis, zAxis).normalize()
       matrix.makeBasis(xAxis, yAxis, zAxis)
@@ -512,15 +668,21 @@ function SceneContent({
 
   const moveProbeToPoint = useCallback(
     (point: THREE.Vector3) => {
+      // Fire the beam from the clicked surface point toward the body interior:
+      // the approach angle is the point's bearing off the body's craniocaudal
+      // axis (0 = posterior, 180 = anterior), so clicking the front images
+      // anterior structures.
+      const approachDeg = (Math.atan2(point.x - center[0], point.y - center[1]) * 180) / Math.PI
       store.setState({
         ...clampToRanges({
           lateralMm: point.x,
           craniocaudalMm: point.z,
+          approachDeg,
         }),
         posteriorMm: point.y,
       })
     },
-    [store, clampToRanges],
+    [store, clampToRanges, center],
   )
 
   const handlePointerDown = useCallback(
@@ -551,6 +713,47 @@ function SceneContent({
     store.flushSync()
   }, [store])
 
+  const handlePointerOver = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      const info = meshInfoRef.current.get(event.object)
+      if (!info) {
+        return
+      }
+      event.stopPropagation()
+      hoveredMeshRef.current = event.object
+      onHoverStructure(info.displayName)
+    },
+    [onHoverStructure],
+  )
+
+  const handlePointerOut = useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      if (hoveredMeshRef.current === event.object) {
+        hoveredMeshRef.current = null
+        onHoverStructure(null)
+      }
+    },
+    [onHoverStructure],
+  )
+
+  const handleClick = useCallback(
+    (event: ThreeEvent<MouseEvent>) => {
+      const info = meshInfoRef.current.get(event.object)
+      if (!info) {
+        return
+      }
+      // Skin is the scan surface (drag to reposition the probe), not an ID target.
+      if (info.label === 'skin') {
+        return
+      }
+      event.stopPropagation()
+      const alreadySelected =
+        info.label === selected?.label && info.displayName === selected?.displayName
+      onSelectStructure?.(alreadySelected ? null : info)
+    },
+    [onSelectStructure, selected],
+  )
+
   const cameraPosition = useMemo<[number, number, number]>(
     () => [center[0] + radius * 0.9, center[1] + radius * 1.5, center[2] + radius * 0.4],
     [center, radius],
@@ -571,6 +774,9 @@ function SceneContent({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        onClick={handleClick}
       />
 
       <group ref={probeGroupRef}>
@@ -731,8 +937,9 @@ function structureOpacity(structure: ThoracicStructureLabelDef) {
   if (structure.label === 'skin') return 0.18
   if (structure.category === 'fluid') return 0.74
   if (structure.category === 'lung') return 0.3
-  if (structure.category === 'chest-wall' && structure.label !== 'rib') return 0.42
-  if (structure.label === 'rib') return 0.78
+  if (structure.label === 'rib' || structure.label === 'spine') return 0.78
+  if (structure.category === 'chest-wall') return 0.42
+  if (structure.category === 'vessel') return 0.85
   return 0.82
 }
 
@@ -744,6 +951,8 @@ function structureRenderOrder(category: StructureCategory) {
       return 25
     case 'diaphragm':
     case 'solid-organ':
+    case 'vessel':
+    case 'cardiac':
       return 20
     case 'chest-wall':
       return 10
@@ -752,22 +961,33 @@ function structureRenderOrder(category: StructureCategory) {
   }
 }
 
-function applyStructureMaterial(mesh: THREE.Mesh, structure: ThoracicStructureLabelDef) {
+function applyStructureMaterial(
+  mesh: THREE.Mesh,
+  structure: ThoracicStructureLabelDef,
+  clipPlanes: THREE.Plane[],
+) {
   const color = new THREE.Color(structure.color ?? '#94a3b8')
   const opacity = structureOpacity(structure)
   const material = new THREE.MeshStandardMaterial({
     color,
-    emissive: color.clone().multiplyScalar(0.12),
+    // Brightness is driven per-frame via emissiveIntensity for hover/selection.
+    emissive: color.clone(),
+    emissiveIntensity: BASE_EMISSIVE,
     metalness: 0,
     opacity,
     roughness: 0.72,
     side: THREE.DoubleSide,
     transparent: opacity < 1,
     depthWrite: opacity >= 0.78,
+    // The scan-plane slab is always attached; when slicing is off the planes
+    // are pushed to infinity each frame so nothing is clipped (avoids the
+    // shader recompile that toggling the array length would force).
+    clippingPlanes: clipPlanes,
   })
 
   mesh.material = material
   mesh.renderOrder = structureRenderOrder(structure.category)
+  return material
 }
 
 /* ------------------------------------------------------------------ */

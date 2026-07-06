@@ -1,8 +1,12 @@
 import {
+  FACE_RADIUS_MM,
+  approachFrame,
   beamDirection,
   needleEndpoint,
   probeOrigin,
   projectBeamToWorld,
+  scanPlaneNormal,
+  sectorImageToWorld,
 } from '../engine/sectorGeometry'
 import {
   containsWorldPoint,
@@ -19,6 +23,124 @@ import { installImageDataPolyfill } from '../testSupport/imageDataPolyfill'
 import { makeTestVolume, testProbe } from '../testSupport/fixtures'
 
 installImageDataPolyfill()
+
+describe('scan-plane geometry (3D slice + in-image identification)', () => {
+  const probe = {
+    lateralMm: -20,
+    posteriorMm: -30,
+    craniocaudalMm: -420,
+    tiltDeg: -4,
+    rotationDeg: 12,
+    depthCm: 14,
+    gain: 1.1,
+    dynamicRangeDb: 56,
+    sectorAngleDeg: 66,
+    needleAngleDeg: 0,
+  }
+  const width = 520
+  const height = 620
+  const DEG2RAD = Math.PI / 180
+
+  it('scan-plane normal is perpendicular to every beam in the fan', () => {
+    const normal = scanPlaneNormal(probe)
+    expect(Math.hypot(...normal)).toBeCloseTo(1)
+    for (const angleDeg of [-33, -10, 0, 15, 33]) {
+      const beam = beamDirection(probe, angleDeg)
+      const dot = normal[0] * beam[0] + normal[1] * beam[1] + normal[2] * beam[2]
+      expect(dot).toBeCloseTo(0)
+    }
+  })
+
+  it('sectorImageToWorld inverts the renderer scan conversion', () => {
+    const maxDepthMm = probe.depthCm * 10
+    const halfRad = (probe.sectorAngleDeg / 2) * DEG2RAD
+    const scale = Math.min(
+      (height - 14) / (maxDepthMm + FACE_RADIUS_MM * (1 - Math.cos(halfRad))),
+      (width / 2 - 4) / ((FACE_RADIUS_MM + maxDepthMm) * Math.sin(halfRad)),
+    )
+    const apexY = 8 - FACE_RADIUS_MM * scale * Math.cos(halfRad)
+    const centerX = width / 2
+
+    for (const angleDeg of [-30, -12, 0, 18, 30]) {
+      for (const depthMm of [8, 45, 95, 138]) {
+        const radiusPx = (FACE_RADIUS_MM + depthMm) * scale
+        const imageX = centerX + radiusPx * Math.sin(angleDeg * DEG2RAD)
+        const imageY = apexY + radiusPx * Math.cos(angleDeg * DEG2RAD)
+        const recovered = sectorImageToWorld(probe, width, height, imageX, imageY)
+        const expected = projectBeamToWorld(probe, angleDeg, depthMm)
+        expect(recovered).not.toBeNull()
+        expect(Math.hypot(...recovered!.map((value, i) => value - expected[i]))).toBeLessThan(0.05)
+
+        // A cropped air standoff shifts the sampled world point deeper by
+        // exactly the crop distance (matches marchPolarGrid's rayDepth).
+        const cropMm = 21
+        const recoveredCropped = sectorImageToWorld(probe, width, height, imageX, imageY, cropMm)
+        const expectedCropped = projectBeamToWorld(probe, angleDeg, cropMm + depthMm)
+        expect(recoveredCropped).not.toBeNull()
+        expect(
+          Math.hypot(...recoveredCropped!.map((value, i) => value - expectedCropped[i])),
+        ).toBeLessThan(0.05)
+      }
+    }
+  })
+
+  it('returns null for pixels outside the sector', () => {
+    expect(sectorImageToWorld(probe, width, height, 5, 5)).toBeNull()
+  })
+})
+
+describe('circumferential approach (reach anterior structures)', () => {
+  const baseProbe = {
+    lateralMm: 0,
+    posteriorMm: 0,
+    craniocaudalMm: 0,
+    tiltDeg: 0,
+    rotationDeg: 0,
+    depthCm: 12,
+    gain: 1,
+    dynamicRangeDb: 56,
+    sectorAngleDeg: 60,
+    needleAngleDeg: 0,
+  }
+
+  it('approachDeg 0 reproduces the legacy posterior beam (fires anterior)', () => {
+    const legacy = beamDirection(baseProbe, 0)
+    const explicit = beamDirection({ ...baseProbe, approachDeg: 0 }, 0)
+    expect(legacy[0]).toBeCloseTo(0)
+    expect(legacy[1]).toBeCloseTo(-1)
+    expect(legacy[2]).toBeCloseTo(0)
+    expect(explicit).toEqual(legacy)
+  })
+
+  it('approachDeg 180 fires the beam posteriorly (anterior window)', () => {
+    const direction = beamDirection({ ...baseProbe, approachDeg: 180 }, 0)
+    expect(direction[0]).toBeCloseTo(0)
+    expect(direction[1]).toBeCloseTo(1)
+    expect(direction[2]).toBeCloseTo(0)
+  })
+
+  it('approachDeg 90 fires the beam laterally toward the body centre', () => {
+    const direction = beamDirection({ ...baseProbe, approachDeg: 90 }, 0)
+    expect(direction[0]).toBeCloseTo(-1)
+    expect(direction[1]).toBeCloseTo(0)
+    expect(direction[2]).toBeCloseTo(0)
+  })
+
+  it('the approach frame is orthonormal and the scan plane tracks the rotated fan', () => {
+    const probe = { ...baseProbe, approachDeg: 140, tiltDeg: 6, rotationDeg: -20 }
+    const { outward, inward, tangent } = approachFrame(probe)
+    expect(Math.hypot(...outward)).toBeCloseTo(1)
+    expect(outward.map((v, i) => v + inward[i]).every((v) => Math.abs(v) < 1e-9)).toBe(true)
+    expect(outward[0] * tangent[0] + outward[1] * tangent[1] + outward[2] * tangent[2]).toBeCloseTo(
+      0,
+    )
+    const normal = scanPlaneNormal(probe)
+    for (const angleDeg of [-25, 0, 25]) {
+      const beam = beamDirection(probe, angleDeg)
+      expect(normal[0] * beam[0] + normal[1] * beam[1] + normal[2] * beam[2]).toBeCloseTo(0)
+    }
+  })
+})
 
 describe('beam-plane mapping', () => {
   it('places the probe origin at the transform position', () => {
