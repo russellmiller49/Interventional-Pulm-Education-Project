@@ -150,4 +150,20 @@ describe('AirwayVideoAtlas', () => {
       expect(screen.getByText(/Correct - this is RUL apical segment/)).toBeInTheDocument()
     })
   })
+
+  it('surfaces browser playback failures', async () => {
+    const playMock = HTMLMediaElement.prototype.play as jest.MockedFunction<
+      HTMLMediaElement['play']
+    >
+    playMock.mockRejectedValueOnce(new Error('Playback blocked'))
+
+    render(<AirwayVideoAtlas />)
+
+    await screen.findByText('Click a marker to identify the airway')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }))
+
+    await screen.findByText('Unable to start the bronchoscopy video: Playback blocked')
+    expect(playMock).toHaveBeenCalled()
+  })
 })

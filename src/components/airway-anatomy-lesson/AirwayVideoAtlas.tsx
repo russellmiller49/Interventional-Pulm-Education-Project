@@ -132,6 +132,7 @@ export function AirwayVideoAtlas({
   const [question, setQuestion] = useState<MarkerQuestion | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const [score, setScore] = useState({ correct: 0, total: 0 })
+  const [playbackError, setPlaybackError] = useState<string | null>(null)
 
   const stageRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -416,35 +417,65 @@ export function AirwayVideoAtlas({
     const video = videoRef.current
     if (!video) return
     const onPlay = () => {
+      setPlaybackError(null)
       setIsPlaying(true)
       setQuestion(null)
       setPicked(null)
       setHovered(null)
     }
     const onPause = () => setIsPlaying(false)
+    const onError = () => {
+      setIsPlaying(false)
+      setPlaybackError(
+        video.error?.message ||
+          'The bronchoscopy video could not be played. Refresh the page and try again.',
+      )
+    }
     const onSeeked = () => syncTo(video.currentTime)
     const onLoaded = () => {
+      setPlaybackError(null)
       resizeCanvas()
       syncTo(video.currentTime)
     }
     video.addEventListener('play', onPlay)
     video.addEventListener('pause', onPause)
+    video.addEventListener('error', onError)
     video.addEventListener('seeked', onSeeked)
     video.addEventListener('loadeddata', onLoaded)
     return () => {
       video.removeEventListener('play', onPlay)
       video.removeEventListener('pause', onPause)
+      video.removeEventListener('error', onError)
       video.removeEventListener('seeked', onSeeked)
       video.removeEventListener('loadeddata', onLoaded)
     }
   }, [resizeCanvas, syncTo])
 
-  const togglePlay = useCallback(() => {
+  const togglePlay = useCallback(async () => {
     const video = videoRef.current
-    if (!video) return
-    if (video.paused) void video.play()
-    else video.pause()
-  }, [])
+    if (!video || status !== 'ready') return
+
+    if (!video.paused) {
+      video.pause()
+      return
+    }
+
+    try {
+      setPlaybackError(null)
+      if (video.readyState < 2) {
+        video.load()
+      }
+      await video.play()
+      setIsPlaying(true)
+    } catch (error) {
+      setIsPlaying(false)
+      setPlaybackError(
+        error instanceof Error && error.message
+          ? `Unable to start the bronchoscopy video: ${error.message}`
+          : 'Unable to start the bronchoscopy video. Refresh the page and try again.',
+      )
+    }
+  }, [status])
 
   const seekToFrame = useCallback(
     (frame: number) => {
@@ -656,8 +687,9 @@ export function AirwayVideoAtlas({
             <button
               type="button"
               onClick={togglePlay}
+              disabled={status !== 'ready'}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-105"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
             </button>
@@ -702,6 +734,11 @@ export function AirwayVideoAtlas({
               {formatTime(duration)}
             </span>
           </div>
+          {playbackError ? (
+            <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {playbackError}
+            </p>
+          ) : null}
 
           <div className="flex flex-wrap gap-1.5">
             {ATLAS_CHAPTERS.map((chapter) => {

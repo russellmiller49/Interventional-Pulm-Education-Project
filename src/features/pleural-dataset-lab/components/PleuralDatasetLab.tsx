@@ -20,10 +20,6 @@ type SourceFilter = 'all' | PleuralDatasetSourceId
 const sourceFilters: readonly { id: SourceFilter; label: string }[] = [
   { id: 'all', label: 'All raw cases' },
   { id: 'mendeley-lus-raw-snapshot-2026-06-03', label: 'Mendeley LUS' },
-  {
-    id: 'figshare-lung-ultrasound-raw-snapshot-2026-06-03',
-    label: 'figshare tumor',
-  },
 ] as const
 
 function formatBytes(bytes: number) {
@@ -99,7 +95,7 @@ export function PleuralDatasetLab() {
           title="Raw dataset teaching-use lab"
           objectives={[
             'Use raw CC BY images and safe metadata to choose a pleural teaching bucket.',
-            'Separate a large simple effusion from lung findings and tumor-context images.',
+            'Separate a large simple effusion from lung findings and normal-lung distractors.',
             'Trace every embedded case back to source URL, archive, original path, license, and checksum.',
           ]}
           howToUse={[

@@ -60,19 +60,18 @@ describe('pleural dataset lab cases', () => {
     }
   })
 
-  it('covers the currently imported Mendeley and figshare source labels', () => {
+  it('covers the currently imported Mendeley source labels', () => {
+    expect(pleuralDatasetCollections).toHaveLength(1)
+    expect(pleuralDatasetCases).toHaveLength(4)
     expect(new Set(pleuralDatasetCases.map((caseItem) => caseItem.groundTruth))).toEqual(
       new Set([
         'large-simple-effusion',
         'consolidation-no-pleural-target',
         'b-lines-no-pleural-target',
         'normal-no-pleural-target',
-        'benign-lesion-context',
-        'adenocarcinoma-context',
-        'squamous-carcinoma-context',
-        'small-cell-carcinoma-context',
       ]),
     )
+    expect(JSON.stringify(pleuralDatasetCases)).not.toContain('figshare')
   })
 
   it('keeps source metadata labels separate from pleural teaching targets', () => {
