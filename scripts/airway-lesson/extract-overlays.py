@@ -6,7 +6,7 @@ video atlas (src/components/airway-anatomy-lesson/AirwayVideoAtlas.tsx):
 
   1. Annotate a normal diagnostic bronchoscopy in CVAT (interpolation mode).
      The lesson now uses two CVAT exports:
-       - updated_airway_annotations.zip: visible structures from the scope view.
+       - updated_airway_annotations_7_6.zip: visible structures from the scope view.
        - Current_scope_segment.zip: the airway segment the scope is currently in.
   2. Re-encode the de-identified learner-facing video:
        python3 scripts/airway-lesson/render-video-assets.py
@@ -31,7 +31,7 @@ from collections import defaultdict
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DEFAULT_ZIP = os.path.join(
-    REPO, "normal_airway_anotated_video", "updated_airway_annotations.zip"
+    REPO, "normal_airway_anotated_video", "updated_airway_annotations_7_6.zip"
 )
 FALLBACK_XML = os.path.join(
     REPO, "normal_airway_anotated_video", "extracted", "annotations.xml"

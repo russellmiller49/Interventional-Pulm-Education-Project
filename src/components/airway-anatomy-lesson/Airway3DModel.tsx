@@ -46,7 +46,7 @@ interface Airway3DModelProps {
 }
 
 useGLTF.preload(MODEL_URL, DRACO_PATH)
-useGLTF.preload(LARYNX_URL)
+useGLTF.preload(LARYNX_URL, DRACO_PATH)
 
 /** Normalize a loaded scene into a ~TARGET_SIZE box centered at the origin. */
 function fitScene(scene: THREE.Object3D) {
@@ -65,7 +65,7 @@ function fitScene(scene: THREE.Object3D) {
 /** Laryngeal anatomy view — cartilages, epiglottis, and vocal ligaments tinted
  *  as tissue, shown when the larynx node is selected. */
 function LarynxModel() {
-  const gltf = useGLTF(LARYNX_URL)
+  const gltf = useGLTF(LARYNX_URL, DRACO_PATH)
 
   useEffect(() => {
     gltf.scene.traverse((obj) => {
