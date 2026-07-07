@@ -72,14 +72,6 @@
     "storagePath": "v1/loma_linda/bronchoscopy/09-icu-bronchoscopy-selected-scenarios.mp4"
   },
   {
-    "id": "loma-linda-bronch-10-test-review",
-    "title": "Basic Bronchoscopy Test Review",
-    "courseSection": "bronchoscopy",
-    "audience": "loma_linda",
-    "sourcePath": "Loma_Linda_bronch videos/Basic bronch test review_2025 video.mp4",
-    "storagePath": "v1/loma_linda/bronchoscopy/10-basic-bronchoscopy-test-review.mp4"
-  },
-  {
     "id": "ucsd-bronch-anatomy",
     "title": "Bronch and Bronchoscope Anatomy",
     "courseSection": "bronchoscopy",

@@ -1,5 +1,6 @@
 import {
   buildPccmAssessmentOrder,
+  buildPccmAssessmentPreviewAttempt,
   sanitizePccmAssessmentAttempt,
 } from '@/features/pccm-intro-course/assessment'
 import { pccmBronchoscopyQuestions } from '@/features/pccm-intro-course/content/assessmentItems'
@@ -71,5 +72,18 @@ describe('PCCM intro course assessments', () => {
       explanation: question.explanation,
       isCorrect: true,
     })
+  })
+
+  it('builds admin preview attempts without preselecting or revealing answers', () => {
+    const preview = buildPccmAssessmentPreviewAttempt('bronchoscopy_post', 'admin-1')
+    const firstQuestion = preview.questions[0]
+
+    expect(preview.id).toBe('admin-preview:bronchoscopy_post')
+    expect(preview.submittedAt).toBeNull()
+    expect(preview.answeredCount).toBe(0)
+    expect(firstQuestion?.selectedOptionId).toBeUndefined()
+    expect(firstQuestion?.reveal).toBeUndefined()
+    expect(firstQuestion?.previewReveal?.correctOptionId).toEqual(expect.any(String))
+    expect(firstQuestion?.previewReveal?.explanation).toEqual(expect.any(String))
   })
 })

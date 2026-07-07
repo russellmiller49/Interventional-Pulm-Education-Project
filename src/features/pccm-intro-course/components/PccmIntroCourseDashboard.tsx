@@ -155,50 +155,49 @@ export function PccmIntroCourseDashboard({
             </div>
           </section>
 
-          {adminMode ? null : (
-            <section className="space-y-4">
-              <div>
-                <h2 className="text-xl font-semibold">Tests</h2>
-                <p className="text-sm text-muted-foreground">
-                  Pretests record baseline knowledge without revealing answers. Posttests reveal
-                  correctness and explanations after each response.
-                </p>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {assessmentKinds.map((kind) => {
-                  const attempt = attemptsByKind.get(kind)
-                  const submitted = Boolean(attempt?.submitted_at)
-                  const answered = Object.keys(attempt?.answers ?? {}).length
-                  const total = attempt?.total ?? 15
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">Tests</h2>
+              <p className="text-sm text-muted-foreground">
+                {adminMode
+                  ? 'Open pretests and posttests in preview mode without changing learner records.'
+                  : 'Pretests record baseline knowledge without revealing answers. Posttests reveal correctness and explanations after each response.'}
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {assessmentKinds.map((kind) => {
+                const attempt = adminMode ? undefined : attemptsByKind.get(kind)
+                const submitted = Boolean(attempt?.submitted_at)
+                const answered = Object.keys(attempt?.answers ?? {}).length
+                const total = attempt?.total ?? 15
 
-                  return (
-                    <article className="rounded-lg border bg-card p-4" key={kind}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-sm font-semibold">
-                            {formatPccmAssessmentKind(kind)}
-                          </h3>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {submitted
+                return (
+                  <article className="rounded-lg border bg-card p-4" key={kind}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold">{formatPccmAssessmentKind(kind)}</h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {adminMode
+                            ? 'Preview module'
+                            : submitted
                               ? `Score: ${attempt?.score ?? 0}/${total}`
                               : `${answered}/${total} answered`}
-                          </p>
-                        </div>
-                        <Badge variant={submitted ? 'success' : 'outline'}>
-                          {submitted ? 'Submitted' : 'Open'}
-                        </Badge>
+                        </p>
                       </div>
-                      <Button asChild className="mt-4 w-full" variant="outline">
-                        <Link href={`/pccm-intro-course/assessments/${kind}` as Route}>
-                          {submitted ? 'Review' : 'Start'}
-                        </Link>
-                      </Button>
-                    </article>
-                  )
-                })}
-              </div>
-            </section>
-          )}
+                      <Badge variant={adminMode ? 'info' : submitted ? 'success' : 'outline'}>
+                        {adminMode ? 'Preview' : submitted ? 'Submitted' : 'Open'}
+                      </Badge>
+                    </div>
+                    <Button asChild className="mt-4 w-full" variant="outline">
+                      <Link href={`/pccm-intro-course/assessments/${kind}` as Route}>
+                        {adminMode ? 'Preview' : submitted ? 'Review' : 'Start'}
+                      </Link>
+                    </Button>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
 
           <section className="space-y-4">
             <div>

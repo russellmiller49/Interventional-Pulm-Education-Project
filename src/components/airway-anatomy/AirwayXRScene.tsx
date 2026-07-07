@@ -21,6 +21,9 @@ import type {
   ScopePoseSnapshot,
   Vec3,
 } from '@/lib/airway-anatomy/types'
+import { XrButton, XrText } from './xr-widgets'
+import { XrGameHud, XrGameWorld } from './AirwayXRGameLayer'
+import type { AirwayGameController } from './AirwayGameLayer'
 
 // LPS millimetres -> metres of headset world space. The airway tree is ~360 mm tall; we shrink it
 // to ~0.36 m so it sits comfortably at arm's length, then place it front-and-centre at eye level
@@ -44,6 +47,8 @@ export interface AirwayXRSceneProps {
   onMove: (deltaMm: number) => void
   onSteer: (dxUnit: number, dyUpUnit: number) => void
   onRecenter: () => void
+  /** When present (challenge mode), overlays the "Bronch Quest VR" game layer. */
+  game?: AirwayGameController | null
 }
 
 interface GraphBounds {
@@ -113,12 +118,12 @@ export function AirwayXRScene(props: AirwayXRSceneProps) {
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Spatial (VR) correlation
+            {props.game ? 'Bronch Quest VR — challenge' : 'Spatial (VR) correlation'}
           </div>
           <p className="mt-0.5 max-w-2xl text-xs text-slate-400">
-            Drive the scope with the controllers and watch the tip travel through the 3D airway with
-            the CT slice tracking alongside the live bronchoscopy panel. Desktop preview: drag to
-            orbit; put on a Quest 3 / Vision Pro and press Enter VR for the immersive view.
+            {props.game
+              ? 'Steer to the called segment before the clock runs out — a beacon, the glowing ostium and a proximity meter guide you. Start and replay from the panel on your left; press Enter VR for the immersive game.'
+              : 'Drive the scope with the controllers and watch the tip travel through the 3D airway with the CT slice tracking alongside the live bronchoscopy panel. Desktop preview: drag to orbit; put on a Quest 3 / Vision Pro and press Enter VR for the immersive view.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -204,6 +209,7 @@ function AirwayXRWorld({
   onMove,
   onSteer,
   onRecenter,
+  game,
 }: AirwayXRSceneProps) {
   const worldRef = useRef<THREE.Group>(null)
   const bounds = useMemo(() => boundsForGraph(graph), [graph])
@@ -211,6 +217,9 @@ function AirwayXRWorld({
   const stlUrl = manifest.assets.airwayStl
     ? resolveAdminAirwayAssetPath(manifest.assets.airwayStl)
     : null
+
+  const gameTarget = game?.view.currentTarget ?? null
+  const gameActive = game?.view.status === 'playing' || game?.view.status === 'countdown'
 
   return (
     <>
@@ -228,6 +237,17 @@ function AirwayXRWorld({
               opacity={ctPlaneOpacity}
             />
             <ScopeProbe graph={graph} pose={pose} />
+            {/* Game beacon / destination glow / celebration ride inside the LPS group so they
+                track and scale with the (grabbable) airway model. */}
+            {game ? (
+              <XrGameWorld
+                graph={graph}
+                target={gameTarget}
+                hitPulse={game.hitPulse}
+                hitAnchor={game.hitAnchor}
+                active={gameActive}
+              />
+            ) : null}
           </group>
         </group>
       </GrabbableGroup>
@@ -242,6 +262,9 @@ function AirwayXRWorld({
         onSteer={onSteer}
         onRecenter={onRecenter}
       />
+
+      {/* The spatial game HUD (start / stats / results) — world-fixed like the feed panel. */}
+      {game ? <XrGameHud view={game.view} actions={game.actions} pose={pose} /> : null}
     </>
   )
 }
@@ -690,141 +713,5 @@ function GrabbableGroup({
     >
       {children}
     </group>
-  )
-}
-
-/** In-scene button (plane + label). `repeat` holds-to-repeat via pointer capture + an interval. */
-function XrButton({
-  label,
-  position,
-  size,
-  primary = false,
-  repeat = false,
-  onTrigger,
-}: {
-  label: string
-  position: [number, number, number]
-  size: [number, number]
-  primary?: boolean
-  repeat?: boolean
-  onTrigger: () => void
-}) {
-  const heldRef = useRef(false)
-  const accumRef = useRef(0)
-  const triggerRef = useRef(onTrigger)
-  useEffect(() => {
-    triggerRef.current = onTrigger
-  })
-
-  useFrame((_, delta) => {
-    if (!repeat || !heldRef.current) return
-    accumRef.current += delta
-    while (accumRef.current >= 0.11) {
-      accumRef.current -= 0.11
-      triggerRef.current()
-    }
-  })
-
-  const handleDown = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation()
-    ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
-      event.pointerId,
-    )
-    triggerRef.current()
-    if (repeat) {
-      heldRef.current = true
-      accumRef.current = 0
-    }
-  }
-
-  const handleUp = (event: ThreeEvent<PointerEvent>) => {
-    heldRef.current = false
-    ;(event.target as { releasePointerCapture?: (id: number) => void }).releasePointerCapture?.(
-      event.pointerId,
-    )
-  }
-
-  const bg = primary ? '#0e7490' : '#1e293b'
-  return (
-    <group
-      position={position}
-      onPointerDown={handleDown}
-      onPointerUp={handleUp}
-      onPointerCancel={handleUp}
-    >
-      <mesh>
-        <planeGeometry args={size} />
-        <meshBasicMaterial color={bg} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-      <mesh position={[0, 0, 0.004]}>
-        <planeGeometry args={[size[0] + 0.006, size[1] + 0.006]} />
-        <meshBasicMaterial
-          color={primary ? '#67e8f9' : '#93c5fd'}
-          opacity={0.35}
-          transparent
-          toneMapped={false}
-        />
-      </mesh>
-      <XrText
-        text={label}
-        position={[0, 0, 0.008]}
-        width={size[0] * 0.9}
-        height={size[1] * 0.7}
-        fontSize={48}
-      />
-    </group>
-  )
-}
-
-/** Unlit canvas-texture text plane (toneMapped off keeps it bright against ACES tone mapping). */
-function XrText({
-  text,
-  position,
-  width,
-  height,
-  fontSize = 44,
-}: {
-  text: string
-  position: [number, number, number]
-  width: number
-  height: number
-  fontSize?: number
-}) {
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 1024
-    canvas.height = 256
-    const context = canvas.getContext('2d')
-    if (context) {
-      context.clearRect(0, 0, canvas.width, canvas.height)
-      context.fillStyle = '#f8fafc'
-      context.font = `700 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`
-      context.textAlign = 'center'
-      context.textBaseline = 'middle'
-      context.lineJoin = 'round'
-      context.lineWidth = Math.max(6, Math.round(fontSize * 0.16))
-      context.strokeStyle = 'rgba(2, 6, 23, 0.9)'
-      context.strokeText(text, canvas.width / 2, canvas.height / 2, canvas.width - 48)
-      context.fillText(text, canvas.width / 2, canvas.height / 2, canvas.width - 48)
-    }
-    const next = new THREE.CanvasTexture(canvas)
-    next.colorSpace = THREE.SRGBColorSpace
-    next.anisotropy = 8
-    return next
-  }, [text, fontSize])
-
-  useEffect(() => () => texture.dispose(), [texture])
-
-  return (
-    <mesh position={position} raycast={() => null}>
-      <planeGeometry args={[width, height]} />
-      <meshBasicMaterial
-        map={texture}
-        transparent
-        depthWrite={false}
-        side={THREE.DoubleSide}
-        toneMapped={false}
-      />
-    </mesh>
   )
 }

@@ -77,6 +77,8 @@ describe('main site auth access helpers', () => {
   it('recognizes the scoped PCCM intro course admin dashboard path', () => {
     expect(isPccmIntroCourseAdminDashboardPath('/admin/pccm-intro-course')).toBe(true)
     expect(isPccmIntroCourseAdminDashboardPath('/es/admin/pccm-intro-course')).toBe(true)
+    expect(isPccmIntroCourseAdminDashboardPath('/admin/pccm-intro-course/ucsd')).toBe(true)
+    expect(isPccmIntroCourseAdminDashboardPath('/admin/pccm-intro-course/loma-linda')).toBe(true)
     expect(isPccmIntroCourseAdminDashboardPath('/admin/pccm-intro-course/users')).toBe(true)
     expect(isPccmIntroCourseAdminDashboardPath('/admin')).toBe(false)
   })

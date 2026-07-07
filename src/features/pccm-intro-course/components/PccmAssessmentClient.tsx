@@ -15,13 +15,19 @@ import {
 } from '@/features/pccm-intro-course/types'
 
 interface PccmAssessmentClientProps {
+  adminPreview?: boolean
   attemptKind: PccmAssessmentKind
+  initialAttempt?: PccmPublicAssessmentAttempt
 }
 
-export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps) {
-  const [attempt, setAttempt] = useState<PccmPublicAssessmentAttempt | null>(null)
+export function PccmAssessmentClient({
+  adminPreview = false,
+  attemptKind,
+  initialAttempt,
+}: PccmAssessmentClientProps) {
+  const [attempt, setAttempt] = useState<PccmPublicAssessmentAttempt | null>(initialAttempt ?? null)
   const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(!initialAttempt)
   const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -30,6 +36,13 @@ export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps)
   const title = useMemo(() => formatPccmAssessmentKind(attemptKind), [attemptKind])
 
   useEffect(() => {
+    if (adminPreview && initialAttempt) {
+      setAttempt(initialAttempt)
+      setError(null)
+      setIsLoading(false)
+      return
+    }
+
     let active = true
 
     async function loadAttempt() {
@@ -61,10 +74,17 @@ export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps)
     return () => {
       active = false
     }
-  }, [attemptKind])
+  }, [adminPreview, attemptKind, initialAttempt])
 
   async function chooseAnswer(questionId: string, optionId: string) {
     if (attempt?.submittedAt) {
+      return
+    }
+
+    if (adminPreview) {
+      setAttempt((currentAttempt) =>
+        currentAttempt ? updatePreviewAnswer(currentAttempt, questionId, optionId) : null,
+      )
       return
     }
 
@@ -95,6 +115,11 @@ export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps)
   }
 
   async function submitAttempt() {
+    if (adminPreview) {
+      setAttempt((currentAttempt) => (currentAttempt ? submitPreviewAttempt(currentAttempt) : null))
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
     try {
@@ -124,11 +149,14 @@ export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps)
           <Badge variant={attempt?.phase === 'post' ? 'info' : 'outline'}>
             {attempt?.phase === 'post' ? 'Posttest' : 'Pretest'}
           </Badge>
+          {adminPreview ? <Badge variant="info">Admin preview</Badge> : null}
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
           <p className="max-w-3xl text-sm text-muted-foreground">
-            {attempt?.phase === 'post'
-              ? 'Answer choices reveal the correct response and explanation after selection.'
-              : 'Pretest responses are saved without revealing correctness or explanations.'}
+            {adminPreview
+              ? 'Preview responses stay in this browser and are not saved to learner records.'
+              : attempt?.phase === 'post'
+                ? 'Answer choices reveal the correct response and explanation after selection.'
+                : 'Pretest responses are saved without revealing correctness or explanations.'}
           </p>
         </div>
         <Button asChild variant="outline">
@@ -227,7 +255,9 @@ export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps)
                     })}
                   </div>
                   {pendingQuestionId === question.id ? (
-                    <p className="text-xs text-muted-foreground">Saving response...</p>
+                    <p className="text-xs text-muted-foreground">
+                      {adminPreview ? 'Updating preview...' : 'Saving response...'}
+                    </p>
                   ) : null}
                   {question.reveal ? (
                     <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm">
@@ -262,4 +292,53 @@ export function PccmAssessmentClient({ attemptKind }: PccmAssessmentClientProps)
       ) : null}
     </main>
   )
+}
+
+function updatePreviewAnswer(
+  attempt: PccmPublicAssessmentAttempt,
+  questionId: string,
+  optionId: string,
+): PccmPublicAssessmentAttempt {
+  const questions = attempt.questions.map((question) => {
+    if (question.id !== questionId) {
+      return question
+    }
+
+    return {
+      ...question,
+      reveal:
+        attempt.phase === 'post' && question.previewReveal
+          ? {
+              ...question.previewReveal,
+              isCorrect: optionId === question.previewReveal.correctOptionId,
+            }
+          : undefined,
+      selectedOptionId: optionId,
+    }
+  })
+
+  return {
+    ...attempt,
+    answeredCount: questions.filter((question) => Boolean(question.selectedOptionId)).length,
+    questions,
+  }
+}
+
+function submitPreviewAttempt(attempt: PccmPublicAssessmentAttempt): PccmPublicAssessmentAttempt {
+  const score = attempt.questions.reduce((total, question) => {
+    if (
+      question.previewReveal &&
+      question.selectedOptionId === question.previewReveal.correctOptionId
+    ) {
+      return total + 1
+    }
+
+    return total
+  }, 0)
+
+  return {
+    ...attempt,
+    score,
+    submittedAt: new Date().toISOString(),
+  }
 }

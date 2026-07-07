@@ -114,7 +114,11 @@ export function getEmbeddedCourseModuleSrc(module: EmbeddedTrainingModule, local
     return buildEmbeddedAppSrc(
       socalEbusCourseAppPath,
       locale,
-      { adminPreview: '1' },
+      {
+        publicTraining: '1',
+        publicScope: module.publicScope,
+        adminPreview: '1',
+      },
       module.appHashPath,
     )
   }

@@ -8,6 +8,7 @@ import { Activity, ArrowLeft, CheckCircle2, ClipboardCheck, PlayCircle } from 'l
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { getPccmQuestionMap, normalizePccmAnswers } from '@/features/pccm-intro-course/assessment'
 import { getPccmVideosForInstitution } from '@/features/pccm-intro-course/content/videos'
 import {
   loadPccmIntroCourseAdminScope,
@@ -32,6 +33,12 @@ const handoffMetadata: Metadata = {
   },
 }
 
+interface PccmIntroCourseAdminPageProps {
+  searchParams?: Promise<{
+    cohort?: string
+  }>
+}
+
 interface PccmEnrollmentRow {
   id: string
   user_id: string
@@ -41,6 +48,7 @@ interface PccmEnrollmentRow {
 }
 
 interface PccmAttemptRow {
+  answers: unknown
   attempt_kind: PccmAssessmentKind
   score: number | null
   submitted_at: string | null
@@ -100,13 +108,21 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return localizeHandoffServerValue(locale, handoffMetadata)
 }
 
-export default async function PccmIntroCourseAdminPage() {
+export default async function PccmIntroCourseAdminPage({
+  searchParams,
+}: PccmIntroCourseAdminPageProps) {
   const { scope } = await requirePccmAdminUser()
+  const query = await searchParams
+  const requestedInstitution = parsePccmAdminCohortParam(query?.cohort)
   const allowedInstitutions = scope.canAccessAll ? [...pccmInstitutions] : scope.institutions
-  const { cohortSummaries, error, learners } = await loadPccmAdminDashboardData(allowedInstitutions)
-  const pageDescription = scope.canAccessAll
-    ? 'UCSD and Loma Linda cohorts are tracked separately while sharing the same bronchoscopy and pleural course materials.'
-    : `Showing ${formatInstitutionList(allowedInstitutions)} learner data for scoped course admins.`
+  const visibleInstitutions = resolveVisibleInstitutions(allowedInstitutions, requestedInstitution)
+  const { cohortSummaries, error, learners } = await loadPccmAdminDashboardData(visibleInstitutions)
+  const pageDescription = getPageDescription({
+    allowedInstitutions,
+    requestedInstitution,
+    scope,
+    visibleInstitutions,
+  })
 
   return (
     <HandoffContent>
@@ -120,12 +136,30 @@ export default async function PccmIntroCourseAdminPage() {
               </h1>
               <p className="max-w-3xl text-sm text-muted-foreground">{pageDescription}</p>
             </div>
-            <Button asChild variant="outline">
-              <Link href={(scope.canAccessAll ? '/admin' : '/dashboard') as Route}>
-                <ArrowLeft className="h-4 w-4" aria-hidden />
-                {scope.canAccessAll ? 'Back to admin' : 'Back to dashboard'}
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              {allowedInstitutions.length > 1 ? (
+                <Button asChild variant={requestedInstitution ? 'outline' : 'default'}>
+                  <Link href={'/admin/pccm-intro-course' as Route}>All cohorts</Link>
+                </Button>
+              ) : null}
+              {allowedInstitutions.map((institution) => (
+                <Button
+                  asChild
+                  key={institution}
+                  variant={requestedInstitution === institution ? 'default' : 'outline'}
+                >
+                  <Link href={getPccmCohortDashboardHref(institution) as Route}>
+                    {formatPccmInstitution(institution)}
+                  </Link>
+                </Button>
+              ))}
+              <Button asChild variant="outline">
+                <Link href={(scope.canAccessAll ? '/admin' : '/dashboard') as Route}>
+                  <ArrowLeft className="h-4 w-4" aria-hidden />
+                  {scope.canAccessAll ? 'Back to admin' : 'Back to dashboard'}
+                </Link>
+              </Button>
+            </div>
           </header>
 
           {error ? (
@@ -260,6 +294,59 @@ export default async function PccmIntroCourseAdminPage() {
   )
 }
 
+function parsePccmAdminCohortParam(value: string | undefined): PccmInstitution | null {
+  if (value === 'ucsd') {
+    return 'ucsd'
+  }
+
+  if (value === 'loma_linda' || value === 'loma-linda') {
+    return 'loma_linda'
+  }
+
+  return null
+}
+
+function resolveVisibleInstitutions(
+  allowedInstitutions: readonly PccmInstitution[],
+  requestedInstitution: PccmInstitution | null,
+) {
+  if (!requestedInstitution) {
+    return allowedInstitutions
+  }
+
+  if (!allowedInstitutions.includes(requestedInstitution)) {
+    redirect('/dashboard?required=site_admin' as Route)
+  }
+
+  return [requestedInstitution]
+}
+
+function getPageDescription({
+  allowedInstitutions,
+  requestedInstitution,
+  scope,
+  visibleInstitutions,
+}: {
+  allowedInstitutions: readonly PccmInstitution[]
+  requestedInstitution: PccmInstitution | null
+  scope: PccmIntroCourseAdminScope
+  visibleInstitutions: readonly PccmInstitution[]
+}) {
+  if (requestedInstitution) {
+    return `${formatPccmInstitution(requestedInstitution)} PCCM intro course dashboard for learner progress, pretests, posttests, videos, and shared module activity.`
+  }
+
+  if (scope.canAccessAll && allowedInstitutions.length > 1) {
+    return 'UCSD and Loma Linda cohorts are tracked separately while sharing the same bronchoscopy and pleural course materials.'
+  }
+
+  return `Showing ${formatInstitutionList(visibleInstitutions)} learner data for scoped course admins.`
+}
+
+function getPccmCohortDashboardHref(institution: PccmInstitution) {
+  return `/admin/pccm-intro-course/${institution === 'loma_linda' ? 'loma-linda' : 'ucsd'}`
+}
+
 async function requirePccmAdminUser(): Promise<{
   scope: PccmIntroCourseAdminScope
   user: User
@@ -308,7 +395,7 @@ async function loadPccmAdminDashboardData(allowedInstitutions: readonly PccmInst
       .order('enrolled_at', { ascending: false }),
     supabaseAdmin
       .from('pccm_intro_course_assessment_attempts')
-      .select('user_id,attempt_kind,score,total,submitted_at,updated_at'),
+      .select('user_id,attempt_kind,answers,score,total,submitted_at,updated_at'),
     supabaseAdmin
       .from('pccm_intro_course_video_progress')
       .select('user_id,video_id,max_percent_complete,completed_at,last_activity_at'),
@@ -587,7 +674,86 @@ function AssessmentMiniSummary({
       <ProgressBadge complete={complete} label={complete ? 'Complete' : 'Incomplete'} />
       <p>Bronch: {formatScore(bronchoscopy)}</p>
       <p>Pleural: {formatScore(pleural)}</p>
+      <AssessmentAttemptDetails
+        attempt={bronchoscopy}
+        label="Bronch answers"
+        kind={bronchoscopy?.attempt_kind}
+      />
+      <AssessmentAttemptDetails
+        attempt={pleural}
+        label="Pleural answers"
+        kind={pleural?.attempt_kind}
+      />
     </div>
+  )
+}
+
+function AssessmentAttemptDetails({
+  attempt,
+  kind,
+  label,
+}: {
+  attempt: PccmAttemptRow | null
+  kind: PccmAssessmentKind | undefined
+  label: string
+}) {
+  if (!attempt?.submitted_at || !kind) {
+    return null
+  }
+
+  const answers = normalizePccmAnswers(attempt.answers)
+  const questionMap = getPccmQuestionMap(kind)
+  const answeredQuestions = Object.entries(answers)
+    .map(([questionId, selectedOptionId]) => {
+      const question = questionMap.get(questionId)
+      const selectedOption = question?.options.find((option) => option.id === selectedOptionId)
+      const correctOption = question?.options.find((option) => option.id === question.correctId)
+
+      return question && selectedOption
+        ? {
+            correctLabel: correctOption?.text ?? question.correctId,
+            isCorrect: selectedOptionId === question.correctId,
+            questionStem: question.stem,
+            selectedLabel: selectedOption.text,
+          }
+        : null
+    })
+    .filter(
+      (
+        answer,
+      ): answer is {
+        correctLabel: string
+        isCorrect: boolean
+        questionStem: string
+        selectedLabel: string
+      } => Boolean(answer),
+    )
+
+  if (answeredQuestions.length === 0) {
+    return null
+  }
+
+  return (
+    <details className="mt-2 rounded-md border bg-muted/20 p-2">
+      <summary className="cursor-pointer font-medium text-foreground">{label}</summary>
+      <div className="mt-2 space-y-2">
+        {answeredQuestions.map((answer, index) => (
+          <div className="rounded-md border bg-background p-2" key={`${label}-${index}`}>
+            <p className="font-medium text-foreground">Q{index + 1}</p>
+            <p className="mt-1 line-clamp-3">{answer.questionStem}</p>
+            <p className="mt-1">
+              Selected: <span className="text-foreground">{answer.selectedLabel}</span>
+            </p>
+            <p>
+              Correct: <span className="text-foreground">{answer.correctLabel}</span>
+            </p>
+            <Badge variant={answer.isCorrect ? 'success' : 'outline'} className="mt-1">
+              {answer.isCorrect ? 'Correct' : 'Incorrect'}
+            </Badge>
+          </div>
+        ))}
+      </div>
+    </details>
   )
 }
 

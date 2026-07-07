@@ -1536,7 +1536,13 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             </div>
             <div className="flex flex-wrap gap-2">
               <Button asChild variant="outline">
-                <Link href={'/admin/pccm-intro-course' as Route}>PCCM course dashboard</Link>
+                <Link href={'/admin/pccm-intro-course' as Route}>All PCCM cohorts</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={'/admin/pccm-intro-course/ucsd' as Route}>UCSD PCCM</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={'/admin/pccm-intro-course/loma-linda' as Route}>Loma Linda PCCM</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href={'/dashboard' as Route}>Back to dashboard</Link>

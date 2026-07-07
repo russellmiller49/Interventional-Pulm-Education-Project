@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
+import { buildPccmAssessmentPreviewAttempt } from '@/features/pccm-intro-course/assessment'
 import { PccmAssessmentClient } from '@/features/pccm-intro-course/components/PccmAssessmentClient'
+import { loadPccmIntroCourseAdminScope } from '@/features/pccm-intro-course/server'
 import { formatPccmAssessmentKind, isPccmAssessmentKind } from '@/features/pccm-intro-course/types'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
+import { supabaseServer } from '@/lib/supabase/server'
 
 interface PccmAssessmentPageProps {
   params: Promise<{
@@ -34,6 +37,28 @@ export default async function PccmAssessmentPage({ params }: PccmAssessmentPageP
 
   if (!isPccmAssessmentKind(attemptKind)) {
     notFound()
+  }
+
+  const supabase = await supabaseServer()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login?next=/pccm-intro-course')
+  }
+
+  const adminScope = await loadPccmIntroCourseAdminScope(supabase, user.id)
+  const adminPreview = adminScope.canAccessAll || adminScope.institutions.length > 0
+
+  if (adminPreview) {
+    return (
+      <PccmAssessmentClient
+        adminPreview
+        attemptKind={attemptKind}
+        initialAttempt={buildPccmAssessmentPreviewAttempt(attemptKind, user.id)}
+      />
+    )
   }
 
   return <PccmAssessmentClient attemptKind={attemptKind} />

@@ -20,7 +20,7 @@ describe('getEmbeddedCourseModuleSrc', () => {
 
   it('preserves admin preview mode with localized simulator route', () => {
     expect(getEmbeddedCourseModuleSrc(adminEbusTrainingModules[0], 'zh-CN')).toBe(
-      '/socal-ebus-course/app/index.html?locale=zh-CN&adminPreview=1#/simulator',
+      '/socal-ebus-course/app/index.html?locale=zh-CN&publicTraining=1&publicScope=ebus&adminPreview=1#/simulator',
     )
   })
 

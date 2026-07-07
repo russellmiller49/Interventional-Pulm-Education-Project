@@ -26,6 +26,10 @@ export interface PccmPublicAssessmentQuestion {
   id: string
   imageUrl?: string
   options: PccmPublicAssessmentOption[]
+  previewReveal?: {
+    correctOptionId: string
+    explanation: string
+  }
   reveal?: {
     correctOptionId: string
     explanation: string
@@ -85,6 +89,48 @@ export function buildPccmAssessmentOrder(
   return {
     choice_order,
     question_order,
+  }
+}
+
+export function buildPccmAssessmentPreviewAttempt(
+  kind: PccmAssessmentKind,
+  userId = 'admin-preview',
+): PccmPublicAssessmentAttempt {
+  const order = buildPccmAssessmentOrder(kind, userId)
+  const previewRow: PccmAssessmentAttemptRow = {
+    answers: {},
+    attempt_kind: kind,
+    choice_order: order.choice_order,
+    created_at: new Date(0).toISOString(),
+    enrollment_id: 'admin-preview',
+    id: `admin-preview:${kind}`,
+    question_order: order.question_order,
+    score: null,
+    submitted_at: null,
+    total: order.question_order.length,
+    updated_at: new Date(0).toISOString(),
+    user_id: userId,
+  }
+  const questionMap = getPccmQuestionMap(kind)
+  const sanitized = sanitizePccmAssessmentAttempt(previewRow)
+
+  return {
+    ...sanitized,
+    questions: sanitized.questions.map((question) => {
+      const sourceQuestion = questionMap.get(question.id)
+
+      if (!sourceQuestion) {
+        return question
+      }
+
+      return {
+        ...question,
+        previewReveal: {
+          correctOptionId: sourceQuestion.correctId,
+          explanation: sourceQuestion.explanation,
+        },
+      }
+    }),
   }
 }
 
