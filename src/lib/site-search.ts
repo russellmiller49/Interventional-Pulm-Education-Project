@@ -114,6 +114,13 @@ const localizedSearchOverrides: Partial<
       section: 'Procedimientos pleurales',
       keywords: ['pleura', 'pleural', 'derrame', 'toracocentesis', 'ecografía', 'neumotórax'],
     },
+    '/tracheostomy': {
+      title: 'Laboratorio de Traqueostomía',
+      description:
+        'Anatomía 3D, mecánica del manguito, selección de tubos, cuidados, rescate de emergencias y preparación para la decanulación.',
+      section: 'Vía aérea',
+      keywords: ['traqueostomía', 'manguito', 'válvula fonatoria', 'decanulación', 'succión'],
+    },
     '/learn/anatomy': {
       title: 'Visor anatómico interactivo 3D',
       description:
@@ -197,6 +204,12 @@ const localizedSearchOverrides: Partial<
       description: '胸膜疾病、超声模式识别、胸水分析、气胸路径和引流系统。',
       section: '胸膜操作',
       keywords: ['胸膜', '胸水', '胸腔穿刺', '超声', '气胸', '引流'],
+    },
+    '/tracheostomy': {
+      title: '气管切开知识实验室',
+      description: '三维解剖、套囊气流、套管选择、日常护理、急救演练与拔管准备度。',
+      section: '气道',
+      keywords: ['气管切开', '套囊', '发声阀', '拔管', '吸痰'],
     },
     '/learn/anatomy': {
       title: '交互式 3D 解剖查看器',
@@ -342,6 +355,24 @@ const allStaticResults: SiteSearchResult[] = [
       'endobronchial hemostasis',
       'airway fire',
       'jet ventilation',
+    ],
+  },
+  {
+    title: 'Tracheostomy Knowledge Lab',
+    description:
+      'Interactive adult tracheostomy education with a 3D tube model, cuff and airflow animation, tube selection, care sequencing, emergency rescue, and decannulation readiness.',
+    href: '/tracheostomy',
+    section: 'Airway',
+    type: 'page',
+    keywords: [
+      'tracheostomy',
+      'trach tube',
+      'cuff pressure',
+      'speaking valve',
+      'suctioning',
+      'blocked tracheostomy',
+      'decannulation',
+      'tracheoinnominate fistula',
     ],
   },
   {

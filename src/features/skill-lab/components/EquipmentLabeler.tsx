@@ -42,9 +42,14 @@ function shuffle<T extends { id: string }>(items: readonly T[]): T[] {
   if (items.length < 2) {
     return [...items]
   }
+  let state = items.reduce((hash, item) => {
+    for (const char of item.id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+    return hash >>> 0
+  }, 2166136261)
   const next = [...items]
   for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    const j = state % (i + 1)
     ;[next[i], next[j]] = [next[j], next[i]]
   }
   const unchanged = next.every((item, index) => item.id === items[index].id)
@@ -68,8 +73,8 @@ export function EquipmentLabeler({ map, labels }: EquipmentLabelerProps) {
   const [activeLabel, setActiveLabel] = useState<string | null>(null)
   const [graded, setGraded] = useState(false)
 
-  // Stable per-mount marker numbering follows authored order; token bank order
-  // is shuffled so the list does not mirror the marker sequence.
+  // Stable per-mount marker numbering follows authored order; the deterministic
+  // shuffle keeps the token bank from mirroring it without causing SSR hydration drift.
   const shuffledTokens = useMemo(() => shuffle(map.hotspots), [map.hotspots])
 
   const placedLabelIds = useMemo(

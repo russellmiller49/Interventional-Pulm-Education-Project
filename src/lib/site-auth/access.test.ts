@@ -206,6 +206,11 @@ describe('main site auth access helpers', () => {
     )
   })
 
+  it('tracks tracheostomy section routes as one site module family', () => {
+    expect(resolveSiteModuleId('/tracheostomy')).toBe('tracheostomy')
+    expect(resolveSiteModuleId('/es/tracheostomy/practice')).toBe('tracheostomy:practice')
+  })
+
   it('normalizes unsafe login redirects', () => {
     expect(resolveLoginRedirectPath('/resources', '?topic=rose')).toBe('/resources?topic=rose')
     expect(resolveLoginRedirectPath('//evil.example', '')).toBe('/')

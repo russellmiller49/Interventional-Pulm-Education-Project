@@ -294,6 +294,11 @@
         "shortTitle": "硬质支气管镜",
         "description": "硬质气道操作——铲切、支架、止血和防火安全"
       },
+      "tracheostomy": {
+        "title": "气管切开知识实验室",
+        "shortTitle": "气管切开",
+        "description": "成人气管切开解剖、护理、急救与拔管的互动学习"
+      },
       "ipRegistry": {
         "title": "IP 登记系统",
         "shortTitle": "IP 登记",
@@ -400,6 +405,12 @@
         "title": "硬质支气管镜",
         "description": "硬质气道操作：器械、通气、铲切、支架、止血和气道防火安全——仅供模拟。",
         "cta": "打开硬质支气管镜"
+      },
+      "tracheostomy": {
+        "badge": "气道",
+        "title": "气管切开知识实验室",
+        "description": "探索三维套管，观察套囊和发声阀气流，演练护理与急救，并评估拔管准备度。",
+        "cta": "打开气管切开实验室"
       },
       "pleuroscopy": {
         "badge": "胸膜",

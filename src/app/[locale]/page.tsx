@@ -59,6 +59,10 @@ const featureHighlightDefinitions = [
     href: '/rigid-bronchoscopy',
   },
   {
+    key: 'tracheostomy',
+    href: '/tracheostomy',
+  },
+  {
     key: 'resources',
     href: '/resources',
   },

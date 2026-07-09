@@ -298,6 +298,7 @@ export function resolveSiteModuleId(pathname: string) {
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
     first === 'thermal-ablation' ||
+    first === 'tracheostomy' ||
     first === 'tnm-9-staging' ||
     first === 'xr'
   ) {

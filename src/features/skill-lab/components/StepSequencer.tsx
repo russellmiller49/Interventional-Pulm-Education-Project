@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ArrowDown, ArrowUp, CheckCircle2, GripVertical, RotateCcw, XCircle } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -42,14 +42,22 @@ const defaultLabels: SequencerLabels = {
   correctOrderHeading: 'Correct sequence',
 }
 
-/** Deterministic-enough shuffle that is guaranteed not to equal the input order. */
-function shuffleSteps(steps: readonly SequenceStep[]): SequenceStep[] {
+/** Seeded shuffle that is stable across server/client hydration. */
+function shuffleSteps(steps: readonly SequenceStep[], round = 0): SequenceStep[] {
   if (steps.length < 2) {
     return [...steps]
   }
+  let state = steps.reduce(
+    (hash, step) => {
+      for (const char of step.id) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+      return hash >>> 0
+    },
+    (2166136261 ^ Math.imul(round + 1, 2654435761)) >>> 0,
+  )
   const next = [...steps]
   for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    const j = state % (i + 1)
     ;[next[i], next[j]] = [next[j], next[i]]
   }
   const unchanged = next.every((step, index) => step.id === steps[index].id)
@@ -72,6 +80,7 @@ export function StepSequencer({ sequence, labels }: StepSequencerProps) {
   const [order, setOrder] = useState<SequenceStep[]>(() => shuffleSteps(sequence.steps))
   const [score, setScore] = useState<SequenceScore | null>(null)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const shuffleRound = useRef(0)
 
   const correctOrder = useMemo(() => sequence.steps.map((step) => step.id), [sequence.steps])
   const passed = score?.passed ?? false
@@ -99,7 +108,8 @@ export function StepSequencer({ sequence, labels }: StepSequencerProps) {
   }
 
   function reset() {
-    setOrder(shuffleSteps(sequence.steps))
+    shuffleRound.current += 1
+    setOrder(shuffleSteps(sequence.steps, shuffleRound.current))
     setScore(null)
   }
 

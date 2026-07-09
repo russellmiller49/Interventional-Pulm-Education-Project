@@ -3,7 +3,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { Link } from '@/i18n/navigation'
 import { PccmCodeRedeemForm } from '@/features/pccm-intro-course/components/PccmCodeRedeemForm'
-import { loadPccmIntroCourseAdminScope } from '@/features/pccm-intro-course/server'
+import {
+  loadActivePccmEnrollment,
+  loadPccmIntroCourseAdminScope,
+} from '@/features/pccm-intro-course/server'
 import {
   formatPccmInstitution,
   pccmInstitutions,
@@ -43,8 +46,16 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const pccmAdminScope = user ? await loadPccmIntroCourseAdminScope(supabase, user.id) : null
+  const [pccmAdminScope, pccmEnrollment] = user
+    ? await Promise.all([
+        loadPccmIntroCourseAdminScope(supabase, user.id),
+        loadActivePccmEnrollment(supabase, user.id),
+      ])
+    : [null, null]
   const pccmAdminLinks = getPccmAdminDashboardLinks(pccmAdminScope)
+  const hasPersistentPccmCourseAccess =
+    Boolean(pccmEnrollment) ||
+    Boolean(pccmAdminScope?.canAccessAll || pccmAdminScope?.institutions.length)
 
   return (
     <HandoffContent>
@@ -103,7 +114,26 @@ export default async function DashboardPage({ params, searchParams }: DashboardP
               </div>
             </section>
           ) : null}
-          {user ? <PccmCodeRedeemForm /> : null}
+          {pccmEnrollment ? (
+            <section className="max-w-2xl rounded-lg border bg-card p-4">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <h2 className="text-base font-semibold">PCCM intro course access saved</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Your {formatPccmInstitution(pccmEnrollment.institution)} course access is linked
+                    to this account for future sessions.
+                  </p>
+                </div>
+                <Link
+                  className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  href={'/pccm-intro-course' as Route}
+                >
+                  Continue course
+                </Link>
+              </div>
+            </section>
+          ) : null}
+          {user && !hasPersistentPccmCourseAccess ? <PccmCodeRedeemForm /> : null}
         </div>
       }
     </HandoffContent>

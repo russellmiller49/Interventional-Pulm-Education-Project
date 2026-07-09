@@ -294,6 +294,11 @@
         "shortTitle": "Broncoscopia rígida",
         "description": "Procedimientos de vía aérea rígida — coring, endoprótesis, hemostasia y seguridad frente al fuego"
       },
+      "tracheostomy": {
+        "title": "Laboratorio de Traqueostomía",
+        "shortTitle": "Traqueostomía",
+        "description": "Anatomía, cuidados, rescate y decanulación interactivos para adultos"
+      },
       "ipRegistry": {
         "title": "Registro de IP",
         "shortTitle": "Registro de IP",
@@ -400,6 +405,12 @@
         "title": "Broncoscopia rígida",
         "description": "Procedimientos de vía aérea rígida: equipo, ventilación, coring, endoprótesis, hemostasia y seguridad frente al fuego — solo simulación.",
         "cta": "Abrir broncoscopia rígida"
+      },
+      "tracheostomy": {
+        "badge": "Vía aérea",
+        "title": "Laboratorio de Traqueostomía",
+        "description": "Explora un tubo 3D, visualiza el flujo con manguito y válvula fonatoria, practica cuidados y emergencias, y razona la preparación para la decanulación.",
+        "cta": "Abrir laboratorio de traqueostomía"
       },
       "pleuroscopy": {
         "badge": "Pleura",

@@ -145,6 +145,12 @@ export function Navigation() {
         description: nav('items.rigidBronchoscopy.description'),
       },
       {
+        title: nav('items.tracheostomy.title'),
+        shortTitle: nav('items.tracheostomy.shortTitle'),
+        href: '/tracheostomy' as Route,
+        description: nav('items.tracheostomy.description'),
+      },
+      {
         title: nav('items.peripheralAblation.title'),
         shortTitle: nav('items.peripheralAblation.shortTitle'),
         href: '/peripheral-ablation' as Route,

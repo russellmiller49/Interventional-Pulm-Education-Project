@@ -10,6 +10,7 @@ const draftModulePathPrefixes = [
   '/rapid-onsite-cytology',
   '/rigid-bronchoscopy',
   '/thermal-ablation',
+  '/tracheostomy',
 ] as const
 
 interface DraftModuleVisibilityOptions {

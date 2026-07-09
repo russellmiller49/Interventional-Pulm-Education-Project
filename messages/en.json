@@ -294,6 +294,11 @@
         "shortTitle": "Rigid Bronch",
         "description": "Rigid airway procedures — coring, stents, hemostasis, and fire safety"
       },
+      "tracheostomy": {
+        "title": "Tracheostomy Knowledge Lab",
+        "shortTitle": "Tracheostomy",
+        "description": "Interactive adult tracheostomy anatomy, care, rescue, and decannulation"
+      },
       "ipRegistry": {
         "title": "IP Registry",
         "shortTitle": "Registry",
@@ -400,6 +405,12 @@
         "title": "Rigid Bronchoscopy",
         "description": "Rigid airway procedures: equipment, ventilation, coring, stents, hemostasis, and airway-fire safety — simulation only.",
         "cta": "Open Rigid Bronchoscopy"
+      },
+      "tracheostomy": {
+        "badge": "Airway",
+        "title": "Tracheostomy Knowledge Lab",
+        "description": "Explore a 3D tube, animate cuff and speaking-valve airflow, rehearse care and emergencies, and reason through decannulation readiness.",
+        "cta": "Open Tracheostomy Lab"
       },
       "pleuroscopy": {
         "badge": "Pleural",
