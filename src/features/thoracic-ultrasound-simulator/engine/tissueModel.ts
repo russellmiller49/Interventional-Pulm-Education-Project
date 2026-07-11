@@ -41,6 +41,9 @@ function defaultBackscatter(label: ThoracicStructureLabel) {
       // Anechoic bile pool (thin echogenic wall + distal enhancement come from
       // the fluid-boundary display path and the material's posteriorEnhancement).
       return 0.0014
+    case 'cardiacBlood':
+      // Anechoic chamber blood with only a faint electronic/suspended-cell echo.
+      return 0.001
     case 'septation':
       return 0.22
     case 'debris':
@@ -78,6 +81,10 @@ function defaultBackscatter(label: ThoracicStructureLabel) {
       return 0.05
     case 'heart':
       return 0.042
+    case 'myocardium':
+      return 0.06
+    case 'cardiacValve':
+      return 0.16
     case 'stomach':
       return 0.046
     case 'esophagus':
@@ -107,6 +114,7 @@ const fluidLikeLabels = new Set<ThoracicStructureLabel>([
   'pulmonaryVessel',
   'portalVein',
   'gallbladder',
+  'cardiacBlood',
 ])
 
 /** Solid organs / soft-tissue parenchyma that share the gentle highlight knee. */
@@ -115,6 +123,7 @@ const softTissueOrganLabels = new Set<ThoracicStructureLabel>([
   'spleen',
   'kidney',
   'heart',
+  'myocardium',
   'pancreas',
   'thyroid',
   'stomach',
@@ -149,6 +158,24 @@ function defaultInterfaceEcho(
     previousLabel === 'spine'
   ) {
     return 1.5
+  }
+
+  if (nextLabel === 'cardiacValve' || previousLabel === 'cardiacValve') {
+    return 1.35
+  }
+
+  if (
+    (nextLabel === 'cardiacBlood' && previousLabel === 'myocardium') ||
+    (previousLabel === 'cardiacBlood' && nextLabel === 'myocardium')
+  ) {
+    return 1.05
+  }
+
+  if (
+    (nextLabel === 'myocardium' && previousLabel !== 'myocardium') ||
+    (previousLabel === 'myocardium' && nextLabel !== 'myocardium')
+  ) {
+    return 0.72
   }
 
   if (nextLabel === 'diaphragm' || previousLabel === 'diaphragm') {
@@ -196,6 +223,14 @@ function defaultTexture(worldPoint: Vec3, label: ThoracicStructureLabel, depthMm
     ? 0.026 *
       fract(Math.sin(worldPoint[0] * 0.55 + worldPoint[2] * 0.47 + label.length * 2.3) * 9142.17)
     : 0
+  const myocardialFibers =
+    label === 'myocardium'
+      ? 0.034 *
+        Math.pow(
+          0.5 + 0.5 * Math.sin(worldPoint[0] * 0.34 + worldPoint[1] * 0.18 - worldPoint[2] * 0.27),
+          2,
+        )
+      : 0
   const nearFieldNoise =
     depthMm < 16 && !isFluidLike(label) ? 0.014 * stableSpeckle(worldPoint, 'skin') : 0
 
@@ -205,6 +240,7 @@ function defaultTexture(worldPoint: Vec3, label: ThoracicStructureLabel, depthMm
     defaultBackscatter(label) * (0.22 + 1.45 * Math.pow(speckle, 1.7)) +
     fascialBand +
     organGrain +
+    myocardialFibers +
     nearFieldNoise
   )
 }
@@ -225,17 +261,20 @@ function defaultDisplayGray(fillLabel: ThoracicStructureLabel) {
   }: DisplayGrayContext) => {
     // Anechoic lumen (pleural fluid, aorta, cavae, pulmonary/portal vessels):
     // near-black inside, a specular wall where the boundary is crossed.
-    if (isFluidLike(label)) {
-      const wallCeiling = label === 'portalVein' ? 176 : 148
+    if (isFluidLike(renderLabel)) {
+      const wallCeiling = renderLabel === 'portalVein' ? 176 : 168
       return fluidBoundary ? Math.min(Math.max(gray, 72), wallCeiling) : Math.min(gray, 13)
     }
-    if (label === 'rib' || label === 'spine') {
+    if (renderLabel === 'rib' || renderLabel === 'spine') {
       return ribCortex ? Math.max(gray, 212) : Math.min(gray, 10)
     }
-    if (label === 'diaphragm' || label === 'pericardium') {
+    if (renderLabel === 'cardiacValve') {
+      return Math.min(Math.max(gray, 188), 244)
+    }
+    if (renderLabel === 'diaphragm' || renderLabel === 'pericardium') {
       return Math.min(Math.max(gray, 158), 238)
     }
-    if (softTissueOrganLabels.has(label) && boundaryEcho < 0.16) {
+    if (softTissueOrganLabels.has(renderLabel) && boundaryEcho < 0.16) {
       return softKnee(gray, 118)
     }
     if (label === 'background' && renderLabel === fillLabel) {
@@ -254,7 +293,12 @@ export const defaultThoracicTissueModel: TissueModel = {
   fillLabel: 'subcutaneousTissue',
   materials: acousticMaterials,
   isSolidOrgan: (label) =>
-    label === 'liver' || label === 'spleen' || label === 'kidney' || label === 'pancreas',
+    label === 'liver' ||
+    label === 'spleen' ||
+    label === 'kidney' ||
+    label === 'pancreas' ||
+    label === 'heart',
+  isFluidLike,
   backscatter: defaultBackscatter,
   interfaceEcho: defaultInterfaceEcho,
   texture: defaultTexture,

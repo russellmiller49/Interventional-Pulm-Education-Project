@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 
-import { RapidOnsiteCytologyModule } from '@/features/rapid-onsite-cytology/components/RapidOnsiteCytologyModule'
+import { RoseLearningModule } from '@/features/rapid-onsite-cytology/components/RoseLearningModule'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Rapid Onsite Cytology Interpretation',
+  title: 'ROSE: Adequacy, Triage & Cytology',
   description:
-    'Interactive ROSE and Diff-Quik cytology teaching module with curated cell-level hotspots and quiz mode.',
+    'High-yield rapid on-site evaluation module for target representativeness, specimen adequacy, triage, communication, and pulmonary cytology practice.',
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -16,5 +16,5 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default function RapidOnsiteCytologyPage() {
-  return <HandoffContent>{<RapidOnsiteCytologyModule />}</HandoffContent>
+  return <HandoffContent>{<RoseLearningModule />}</HandoffContent>
 }

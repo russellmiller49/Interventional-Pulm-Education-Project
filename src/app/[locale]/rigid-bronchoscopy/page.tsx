@@ -47,6 +47,7 @@ export default async function RigidBronchoscopyPage({ params }: PageProps) {
             eyebrow={nav('items.rigidBronchoscopy.title')}
             title={t('overview.headerTitle')}
             description={t('overview.headerDescription')}
+            disclaimer={t('about.body')}
           />
           <RigidBronchoscopyNav activeHref={base} />
 

@@ -138,6 +138,27 @@ export const acousticMaterials: Record<ThoracicStructureLabel, AcousticMaterial>
     attenuation: 0.6,
     reflectivity: 0.4,
   },
+  myocardium: {
+    // Muscular wall: heterogeneous mid-gray backscatter with a crisp
+    // endocardial interface against the procedural blood pools.
+    scatter: 0.58,
+    attenuation: 0.64,
+    reflectivity: 0.52,
+  },
+  cardiacBlood: {
+    // Blood is nearly anechoic in this B-mode approximation. It is deliberately
+    // separate from pleuralFluid so it never contributes to effusion scoring.
+    scatter: 0.012,
+    attenuation: 0.055,
+    reflectivity: 0.025,
+    posteriorEnhancement: 1.12,
+  },
+  cardiacValve: {
+    // Thin, collagen-rich leaflet reflector.
+    scatter: 0.82,
+    attenuation: 0.38,
+    reflectivity: 0.94,
+  },
   pericardium: {
     scatter: 0.6,
     attenuation: 0.5,

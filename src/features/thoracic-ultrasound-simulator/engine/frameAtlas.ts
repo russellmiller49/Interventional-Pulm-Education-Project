@@ -2,7 +2,9 @@ import type { FrameAtlas, FrameAtlasEntry, FrameAtlasTolerance, ThoracicProbeSta
 
 export const defaultFrameAtlasTolerance: FrameAtlasTolerance = {
   lateralMm: 8,
+  posteriorMm: 12,
   craniocaudalMm: 8,
+  approachDeg: 8,
   tiltDeg: 4,
   rotationDeg: 6,
   depthCm: 0.6,
@@ -16,6 +18,11 @@ export interface AtlasFrameSelection<T> {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
+}
+
+function circularAngleDeltaDeg(a = 0, b = 0) {
+  const wrapped = ((a - b + 540) % 360) - 180
+  return Math.abs(wrapped)
 }
 
 export function hasProbeState(value: unknown): value is ThoracicProbeState {
@@ -46,7 +53,9 @@ export function poseDistanceWithinTolerance(
 ) {
   const deltas = [
     Math.abs(probe.lateralMm - reference.lateralMm) / tolerance.lateralMm,
+    Math.abs(probe.posteriorMm - reference.posteriorMm) / tolerance.posteriorMm,
     Math.abs(probe.craniocaudalMm - reference.craniocaudalMm) / tolerance.craniocaudalMm,
+    circularAngleDeltaDeg(probe.approachDeg, reference.approachDeg) / tolerance.approachDeg,
     Math.abs(probe.tiltDeg - reference.tiltDeg) / tolerance.tiltDeg,
     Math.abs(probe.rotationDeg - reference.rotationDeg) / tolerance.rotationDeg,
     Math.abs(probe.depthCm - reference.depthCm) / tolerance.depthCm,

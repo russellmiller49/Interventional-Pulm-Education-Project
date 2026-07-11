@@ -3,6 +3,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
 import { RigidBronchoscopyNav } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyNav'
+import { assemblySourceIds } from '@/features/rigid-bronchoscopy/content/assemblyParts'
+import { ventilationSourceIds } from '@/features/rigid-bronchoscopy/content/assemblyVentilation'
 import { airwayReferences } from '@/features/rigid-bronchoscopy/content/references'
 import { rigidBronchoscopyLessons } from '@/features/rigid-bronchoscopy/content/lessons'
 import { HandoffContent } from '@/i18n/handoff'
@@ -22,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 function referencedIds(): string[] {
-  const ids = new Set<string>()
+  const ids = new Set<string>([...assemblySourceIds, ...ventilationSourceIds])
   for (const lesson of rigidBronchoscopyLessons) {
     for (const statement of lesson.statements) {
       statement.referenceIds.forEach((id) => ids.add(id))
@@ -48,6 +50,7 @@ export default async function RigidBronchoscopyReferencesPage({ params }: PagePr
             eyebrow={nav('items.rigidBronchoscopy.title')}
             title={t('references.headerTitle')}
             description={t('references.headerDescription')}
+            disclaimer={t('about.body')}
           />
           <RigidBronchoscopyNav activeHref="/rigid-bronchoscopy/references" />
 

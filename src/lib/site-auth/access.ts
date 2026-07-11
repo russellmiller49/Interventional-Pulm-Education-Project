@@ -84,6 +84,12 @@ export function isAdminOnlyPeripheralAblationPath(pathname: string) {
   )
 }
 
+export function isAdminOnlyAirwayStentMechanicsAssetPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return normalizedPathname.startsWith('/airway-stent-mechanics/models/')
+}
+
 export function isPccmIntroCourseSharedModulePath(pathname: string) {
   const normalizedPathname = unlocalizedPathname(pathname)
 
@@ -124,6 +130,7 @@ export function isPublicPath(pathname: string) {
 
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
+    isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
     isAdminOnlyThermalAblationPath(normalizedPathname) ||
     isAdminOnlyPeripheralAblationPath(normalizedPathname)
@@ -205,6 +212,7 @@ export function getRequiredEntitlement(
 
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
+    isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
     isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
     isAdminOnlyThermalAblationPath(normalizedPathname) ||
     isAdminOnlyPeripheralAblationPath(normalizedPathname)
@@ -289,6 +297,7 @@ export function resolveSiteModuleId(pathname: string) {
   }
 
   if (
+    first === 'airway-stent-mechanics' ||
     first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
     first === 'fluoroview' ||
@@ -297,6 +306,7 @@ export function resolveSiteModuleId(pathname: string) {
     first === 'peripheral-ablation' ||
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
+    first === 'rigid-bronchoscopy' ||
     first === 'thermal-ablation' ||
     first === 'tracheostomy' ||
     first === 'tnm-9-staging' ||

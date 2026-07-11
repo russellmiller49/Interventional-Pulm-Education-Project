@@ -1,4 +1,5 @@
 import type {
+  CardiacModelSpec,
   FrameAtlas,
   FrameSource,
   LabelBounds,
@@ -45,6 +46,7 @@ export interface LegacyPleuralCaseV1 {
   }
   objectives?: string[]
   groundTruthPattern?: string
+  cardiacModel?: CardiacModelSpec
 }
 
 export function isLegacyPleuralCase(value: unknown): value is LegacyPleuralCaseV1 {
@@ -90,6 +92,9 @@ const categoryByLabel: Partial<Record<ThoracicStructureLabel, StructureCategory>
   pulmonaryVessel: 'vessel',
   portalVein: 'vessel',
   heart: 'cardiac',
+  myocardium: 'cardiac',
+  cardiacBlood: 'cardiac',
+  cardiacValve: 'cardiac',
   pericardium: 'cardiac',
   esophagus: 'other',
   airway: 'airway',
@@ -137,6 +142,9 @@ const colorByLabel: Partial<Record<ThoracicStructureLabel, string>> = {
   stomach: '#f472b6',
   thyroid: '#06b6d4',
   heart: '#dc2626',
+  myocardium: '#b91c1c',
+  cardiacBlood: '#7f1d1d',
+  cardiacValve: '#f8fafc',
   greatVessel: '#ef4444',
   aorta: '#dc2626',
   venaCava: '#3b82f6',
@@ -200,7 +208,7 @@ function deriveProbePreset(legacy: LegacyPleuralCaseV1): ProbePreset {
         step: 2,
       },
       tiltDeg: { min: -28, max: 28, step: 1 },
-      rotationDeg: { min: -55, max: 55, step: 1 },
+      rotationDeg: { min: -90, max: 90, step: 1 },
       needleAngleDeg: { min: -25, max: 25, step: 1 },
       depthCm: { min: 6, max: 18, step: 0.5 },
       gain: { min: 0.7, max: 2.4, step: 0.05 },
@@ -311,7 +319,9 @@ export function adaptPleuralV1(
     description: legacy.description,
     safetyLabel: legacy.safetyLabel,
     anatomicRegion: 'pleural',
-    supportedApplications: ['pleural-effusion'],
+    supportedApplications: legacy.cardiacModel
+      ? ['pleural-effusion', 'cardiac']
+      : ['pleural-effusion'],
     meshUrl: legacy.meshUrl,
     probeModelUrl: legacy.probeModelUrl,
     primaryLabelVolume: {
@@ -337,6 +347,7 @@ export function adaptPleuralV1(
         'Adapted from a v1 pleural case manifest. The live browser render is displayed (quality: acceptable) so the image follows the probe; every frame is labeled as synthetic educational imagery.',
       ],
     },
+    cardiacModel: legacy.cardiacModel,
     learningTasks: deriveLearningTasks(legacy),
     source: legacy.source as ThoracicCaseManifest['source'],
   }

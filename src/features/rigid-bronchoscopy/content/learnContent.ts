@@ -4,8 +4,9 @@ import type { LearnBlock } from '@/features/learning-module/types'
 /**
  * Didactic content for the Rigid Bronchoscopy "Learn" section. Paraphrased
  * teaching in our own words; recommendations trace to the module references
- * (chest-ip-2003, ernst-cao-2004, sakr-dutau-2010, asa-or-fire-2013,
- * folch-stents-2018). Simulation and professional-education framing only.
+ * (chest-ip-2003, diaz-jimenez-interventions-2023, yang-jet-model-2025,
+ * ernst-cao-2004, sakr-dutau-2010, asa-or-fire-2013, folch-stents-2018).
+ * Simulation and professional-education framing only.
  *
  * English is authored here; `pickLocaleContent` falls back to English for
  * locales without a translated variant yet.
@@ -14,7 +15,7 @@ import type { LearnBlock } from '@/features/learning-module/types'
 export const rigidObjectives = [
   'Identify the parts of a ventilating rigid bronchoscope and the ablative and hemostatic instruments.',
   'State the indications and contraindications for rigid bronchoscopy and assess the airway.',
-  'Coordinate ventilation in the shared airway (controlled vs jet, apnoeic oxygenation) and anticipate barotrauma.',
+  'Compare conventional, spontaneous-assisted, low-frequency jet, and high-frequency jet ventilation in the shared airway and anticipate leak, gas trapping, and barotrauma.',
   'Describe therapeutic coring, dilation, stents, foreign-body retrieval, and endobronchial hemostasis, and apply airway-fire safety.',
 ] as const
 
@@ -42,14 +43,16 @@ export const rigidCoreBlocks: LearnBlock[] = [
   },
   {
     id: 'anesthesia-ventilation',
-    title: 'Anesthesia and ventilation coordination',
+    title: 'Anesthesia and shared-airway ventilation',
     paragraphs: [
       'Rigid bronchoscopy is a shared-airway procedure: the operator and the anaesthesia team use the same airway at the same time, so communication is continuous.',
     ],
     bullets: [
-      'Usually total intravenous anaesthesia (TIVA) so there is no reliance on a sealed circuit for volatile agents.',
-      'Ventilation options include controlled (through the side port) and jet ventilation, supplemented by apnoeic oxygenation for brief pauses.',
-      'Jet ventilation requires adequate expiratory egress — jetting against an obstructed distal airway causes gas trapping and barotrauma.',
+      'Conventional controlled ventilation delivers positive-pressure breaths through the ventilation connection with the proximal instrument ports sealed; the uncuffed rigid tube can still leak around the larynx.',
+      'Spontaneous-assisted ventilation preserves patient-generated breathing and adds intermittent manual or pressure assistance when spontaneous effort is inadequate.',
+      'Low-frequency jet ventilation produces discrete, lower-frequency gas pulses; high-frequency jet ventilation produces rapid, smaller pulses. Both are open-system strategies with passive expiration and require device-specific monitoring.',
+      'Jet ventilation requires adequate expiratory egress — jetting against an obstructed distal airway causes gas trapping and barotrauma. Apnoeic oxygenation is an adjunct for brief procedural pauses, not a substitute for ventilation.',
+      'Long bronchial tubes have distal fenestrations that can preserve a route toward the contralateral lung after mainstem entry. Short nonfenestrated tracheal tubes reduce side leakage for proximal tracheal work; a long tube positioned too shallowly can leave its fenestrations above the cords and create a major leak.',
     ],
   },
   {

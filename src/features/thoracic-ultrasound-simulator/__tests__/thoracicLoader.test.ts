@@ -67,6 +67,8 @@ describe('v1 -> v2 adapter over the real on-disk case', () => {
     expect(manifest.id).toBe(legacy.id)
     expect(manifest.primaryLabelVolume.url).toBe(legacy.labelmapUrl)
     expect(manifest.primaryLabelVolume.labelCodes['7']).toBe('pleuralFluid')
+    expect(manifest.cardiacModel?.kind).toBe('parametric-cardiac-v1')
+    expect(manifest.supportedApplications).toContain('cardiac')
 
     const fluid = manifest.structures.find((structure) => structure.label === 'pleuralFluid')
     expect(fluid?.code).toBe(7)
@@ -218,6 +220,7 @@ describe('loadThoracicCase', () => {
     expect(loaded.manifest.id).toBe('test-case')
     expect(loaded.volume.data[0]).toBe(7)
     expect(loaded.volume.resolveLabel(loaded.volume.data[0])).toBe('pleuralFluid')
+    expect(loaded.volume.cardiacModel).toBe(manifest.cardiacModel)
   })
 
   it('surfaces manifest and labelmap fetch failures', async () => {

@@ -1,6 +1,7 @@
 import { unlocalizedPathname } from '@/i18n/path'
 
 const draftModulePathPrefixes = [
+  '/airway-stent-mechanics',
   '/ebus-training/virtual-bronchoscopy',
   '/education/chest-drainage',
   '/intro-bronchoscopy',

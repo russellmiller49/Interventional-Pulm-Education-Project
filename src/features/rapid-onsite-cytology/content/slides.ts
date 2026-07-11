@@ -7,6 +7,8 @@ const commonsAdenocarcinomaSource: CytologySlideSource = {
   license: 'CC BY-SA 3.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0',
   attribution: 'Librepath, via Wikimedia Commons',
+  modificationNote:
+    'The source image is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source image.',
 }
 
 const commonsAdenocarcinomaVeryHighSource: CytologySlideSource = {
@@ -16,6 +18,8 @@ const commonsAdenocarcinomaVeryHighSource: CytologySlideSource = {
   license: 'CC BY-SA 3.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-sa/3.0',
   attribution: 'Librepath, via Wikimedia Commons',
+  modificationNote:
+    'The source image is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source image.',
 }
 
 const whoCytopathologySource: CytologySlideSource = {
@@ -25,6 +29,8 @@ const whoCytopathologySource: CytologySlideSource = {
   license: 'CC BY-NC 4.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-nc/4.0/',
   attribution: 'Dolezal et al., Journal of Clinical and Translational Pathology, 2024',
+  modificationNote:
+    'Figure 7 is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source figure.',
 }
 
 const roseSource: CytologySlideSource = {
@@ -34,40 +40,47 @@ const roseSource: CytologySlideSource = {
   license: 'CC BY-NC 4.0',
   licenseUrl: 'https://creativecommons.org/licenses/by-nc/4.0/',
   attribution: 'Yuan et al., Journal of International Medical Research, 2021',
+  modificationNote:
+    'Figure 2 is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source figure.',
 }
 
-const liloSource: CytologySlideSource = {
-  articleTitle:
-    'The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings',
-  articleUrl: 'https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886',
-  license: 'Wiley Online Library OA Creative Commons notice',
-  licenseUrl: 'https://onlinelibrary.wiley.com/terms-and-conditions',
-  attribution:
-    'Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata.',
-}
-
-const coreChoices = [
-  { id: 'adenocarcinoma', label: 'Adenocarcinoma / gland-forming malignant epithelial cells' },
-  { id: 'squamous', label: 'Squamous cell carcinoma with keratinizing cytoplasm' },
-  { id: 'small-cell', label: 'Small cell carcinoma / high-grade neuroendocrine pattern' },
-  { id: 'granuloma', label: 'Granulomatous inflammation / histiocytes' },
-  { id: 'infection', label: 'Infectious organism or infection-associated finding' },
-  { id: 'benign-background', label: 'Benign background or adequacy element' },
+const broadMorphologyChoices = [
+  { id: 'malignant-epithelial', label: 'Malignant epithelial pattern' },
+  { id: 'high-grade-small-cell', label: 'High-grade small-cell pattern' },
+  {
+    id: 'granulomatous-inflammatory',
+    label: 'Granulomatous or infection-associated inflammatory pattern',
+  },
+  { id: 'background', label: 'Benign or nonspecific background element' },
 ]
+
+function rotatedChoices(seed: string, correctChoiceId: string) {
+  const offset =
+    [...seed].reduce((sum, character) => sum + character.charCodeAt(0), 0) %
+    broadMorphologyChoices.length
+  const rotated = broadMorphologyChoices.map(
+    (_, index) => broadMorphologyChoices[(index + offset) % broadMorphologyChoices.length],
+  )
+
+  if (rotated[0]?.id !== correctChoiceId) {
+    return rotated
+  }
+
+  return [...rotated.slice(1), rotated[0]]
+}
 
 function annotation(
   input: Omit<CytologyAnnotation, 'quiz'> & {
-    quizPrompt: string
     correctChoiceId: string
   },
 ): CytologyAnnotation {
-  const { correctChoiceId, quizPrompt, ...annotationInput } = input
+  const { correctChoiceId, ...annotationInput } = input
 
   return {
     ...annotationInput,
     quiz: {
-      prompt: quizPrompt,
-      choices: coreChoices,
+      prompt: 'Which broad morphology category best fits the marked region?',
+      choices: rotatedChoices(input.id, correctChoiceId),
       correctChoiceId,
     },
   }
@@ -77,640 +90,300 @@ export const cytologySlides: CytologySlide[] = [
   {
     id: 'diff-quik-adenocarcinoma-high',
     title: 'Lung adenocarcinoma: Diff-Quik high magnification',
+    quizTitle: 'Direct-smear morphology exercise 1',
     shortTitle: 'Adenocarcinoma high mag',
     diagnosisTheme: 'Malignant glandular cytology',
     stain: 'Diff-Quik',
+    preparation: 'Direct cytology smear, Diff-Quik stain; high-magnification source image.',
     imageUrl:
       'https://upload.wikimedia.org/wikipedia/commons/d/de/Lung_adenocarcinoma_-_Diff-Quik_--_high_mag.jpg',
     imageAlt: 'Diff-Quik cytology smear showing lung adenocarcinoma at high magnification.',
+    quizImageAlt: 'Unlabeled high-magnification Diff-Quik cytology image for morphology practice.',
     source: commonsAdenocarcinomaSource,
     learningObjectives: [
-      'Recognize crowded three-dimensional epithelial groups.',
-      'Separate malignant glandular clusters from dispersed benign background cells.',
-      'Name nuclear features that support rapid malignant interpretation.',
+      'Recognize a cohesive, crowded malignant epithelial population.',
+      'Compare lesional groups with smaller dispersed background cells.',
+      'Separate representative morphology from adequacy for downstream testing.',
     ],
     annotations: [
       annotation({
         id: 'adeno-high-3d-cluster',
-        label: '3D malignant cluster',
-        cellType: 'Adenocarcinoma cluster',
+        label: 'Crowded three-dimensional epithelial group',
+        cellType: 'Malignant glandular epithelial cells',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 69, yPct: 55, radiusXPct: 12, radiusYPct: 13 },
-        featureTags: ['3D group', 'nuclear overlap', 'glandular pattern'],
+        featureTags: ['three-dimensional group', 'nuclear overlap', 'epithelial cohesion'],
         explanation:
-          'The cohesive blue group forms a crowded three-dimensional cluster, a useful ROSE clue for malignant epithelial cells in adenocarcinoma.',
+          'This cohesive blue group is crowded and three-dimensional, supporting a malignant epithelial pattern in this source case.',
         diagnosticSignificance:
-          'A crowded malignant cluster supports lesional sampling and can justify requesting additional material for cell block and molecular testing.',
+          'The group supports representative, interpretable lesional sampling for a morphology endpoint. It does not by itself prove that enough material remains for cell block, immunostains, or molecular testing.',
         pitfall:
-          'Bronchial epithelium may also be cohesive; malignant groups show more nuclear crowding, contour irregularity, and architectural disorder.',
-        quizPrompt: 'This crowded cohesive group is most consistent with which interpretation?',
-        correctChoiceId: 'adenocarcinoma',
+          'Reactive bronchial epithelium can also be cohesive. Confirm architectural disorder and nuclear atypia in interpretable, thinner areas before making an onsite category call.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'adeno-high-nuclear-crowding',
-        label: 'Nuclear crowding',
-        cellType: 'Malignant epithelial cells',
+        label: 'Nuclear crowding and overlap',
+        cellType: 'Atypical epithelial population',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 59, yPct: 47, radiusXPct: 7, radiusYPct: 8 },
-        featureTags: ['overlap', 'hyperchromasia', 'high N:C ratio'],
+        featureTags: ['overlap', 'hyperchromasia', 'architectural disorder'],
         explanation:
-          'Overlapping hyperchromatic nuclei make the group look darker and denser than the surrounding benign background.',
+          'Overlapping hyperchromatic nuclei make this portion of the group darker and denser than the surrounding cells.',
         diagnosticSignificance:
-          'Nuclear crowding helps distinguish a diagnostic malignant group from loose macrophages or reactive cells during onsite adequacy assessment.',
+          'Crowding adds support for a lesional epithelial population when the nuclei remain interpretable and the finding is reproducible elsewhere on the smear.',
         pitfall:
-          'Crush, thick smears, and air-drying can exaggerate crowding, so the feature should be interpreted with architecture and cytoplasm.',
-        quizPrompt: 'Which category best explains this dense overlapping nuclear focus?',
-        correctChoiceId: 'adenocarcinoma',
+          'Thick smears, crush, and air-drying can manufacture apparent crowding. Do not equate a dark blue focus with malignancy when nuclear detail is obscured.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'adeno-high-background',
-        label: 'Background cells',
-        cellType: 'Background inflammatory/benign cells',
+        label: 'Dispersed background cells',
+        cellType: 'Benign or inflammatory background elements',
         category: 'background',
         shape: { type: 'ellipse', xPct: 30, yPct: 45, radiusXPct: 10, radiusYPct: 11 },
-        featureTags: ['background', 'small cells', 'comparison point'],
+        featureTags: ['background', 'size comparison', 'field assessment'],
         explanation:
-          'The dispersed smaller cells provide a size and density comparison for the malignant cluster.',
+          'The smaller dispersed cells provide an internal comparison for the crowded epithelial group elsewhere in the field.',
         diagnosticSignificance:
-          'Comparing lesional cells with background elements sharpens recognition of true epithelial atypia.',
+          'Background elements can help calibrate size and chromasia, but their presence alone does not establish target representation or endpoint-specific adequacy.',
         pitfall:
-          'Do not overcall scattered background cells; ROSE interpretation depends on finding a reproducible lesional population.',
-        quizPrompt: 'This dispersed field is best used as what kind of ROSE clue?',
-        correctChoiceId: 'benign-background',
-      }),
-      annotation({
-        id: 'adeno-high-acinar-edge',
-        label: 'Cluster edge',
-        cellType: 'Adenocarcinoma edge cells',
-        category: 'adenocarcinoma',
-        shape: { type: 'ellipse', xPct: 77, yPct: 65, radiusXPct: 7, radiusYPct: 8 },
-        featureTags: ['irregular edge', 'epithelial cohesion', 'cell group'],
-        explanation:
-          'Cells at the edge of the group still hold together, reinforcing the epithelial nature of the lesion.',
-        diagnosticSignificance:
-          'Cohesion plus nuclear atypia is a rapid clue for carcinoma rather than isolated inflammation.',
-        pitfall:
-          'A single cohesive group should be interpreted with smear cellularity and clinical/radiographic context.',
-        quizPrompt: 'What is the best classification for this cohesive atypical edge?',
-        correctChoiceId: 'adenocarcinoma',
+          'A busy background can distract from the central question: is there a reproducible, interpretable population that represents the sampled target?',
+        correctChoiceId: 'background',
       }),
     ],
   },
   {
     id: 'diff-quik-adenocarcinoma-very-high',
     title: 'Lung adenocarcinoma: Diff-Quik very high magnification',
+    quizTitle: 'Direct-smear morphology exercise 2',
     shortTitle: 'Adenocarcinoma very high',
-    diagnosisTheme: 'Nuclear detail and cytoplasm',
+    diagnosisTheme: 'Nuclear and cytoplasmic detail',
     stain: 'Diff-Quik',
+    preparation: 'Direct cytology smear, Diff-Quik stain; very-high-magnification source image.',
     imageUrl:
       'https://upload.wikimedia.org/wikipedia/commons/5/59/Lung_adenocarcinoma_-_Diff-Quik_--_very_high_mag.jpg',
     imageAlt: 'Very high magnification Diff-Quik cytology smear of lung adenocarcinoma.',
+    quizImageAlt:
+      'Unlabeled very-high-magnification Diff-Quik cytology image for morphology practice.',
     source: commonsAdenocarcinomaVeryHighSource,
     learningObjectives: [
-      'Inspect nuclear enlargement and irregularity.',
-      'Identify cytoplasmic volume and vacuolated glandular character.',
-      'Practice comparing malignant groups with nearby single cells.',
+      'Integrate architecture, nuclear detail, and cytoplasm rather than one isolated feature.',
+      'Distinguish a vacuolated epithelial group from macrophages using cohesion and atypia.',
+      'Use thin, interpretable areas when thick regions obscure detail.',
     ],
     annotations: [
       annotation({
         id: 'adeno-vh-cytoplasm',
-        label: 'Vacuolated cytoplasm',
-        cellType: 'Adenocarcinoma cells',
+        label: 'Vacuolated cohesive epithelial group',
+        cellType: 'Malignant glandular epithelial cells',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 71, yPct: 43, radiusXPct: 12, radiusYPct: 16 },
-        featureTags: ['cytoplasm', 'vacuoles', 'glandular differentiation'],
+        featureTags: ['vacuolated cytoplasm', 'cohesion', 'nuclear atypia'],
         explanation:
-          'The lesional cells show relatively abundant blue cytoplasm with vacuolated/glandular quality.',
+          'Relatively abundant blue, vacuolated cytoplasm is present within a cohesive atypical epithelial group.',
         diagnosticSignificance:
-          'Cytoplasmic vacuolation and cohesive clusters can support adenocarcinoma over small cell carcinoma in a rapid smear assessment.',
+          'In combination with architecture and nuclear atypia, this supports a malignant epithelial category in the source case and confirms lesional representation for rapid communication.',
         pitfall:
-          'Macrophages can be vacuolated; malignant epithelial cells should also show nuclear atypia and cohesive architecture.',
-        quizPrompt: 'Which interpretation best fits this vacuolated cohesive epithelial group?',
-        correctChoiceId: 'adenocarcinoma',
+          'Macrophages may be vacuolated. Cohesion and epithelial nuclear atypia are needed before treating vacuolation as a tumor clue.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'adeno-vh-nucleoli',
-        label: 'Prominent nuclei',
+        label: 'Enlarged atypical nuclei',
         cellType: 'Atypical glandular nuclei',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 62, yPct: 34, radiusXPct: 8, radiusYPct: 9 },
-        featureTags: ['nuclear enlargement', 'nucleoli', 'atypia'],
+        featureTags: ['nuclear enlargement', 'nucleolar detail', 'atypia'],
         explanation:
-          'Enlarged nuclei and visible nucleolar detail add weight to the malignant interpretation.',
+          'The enlarged nuclei and visible nucleolar detail add weight to a malignant epithelial interpretation in this cohesive group.',
         diagnosticSignificance:
-          'Nuclear detail is especially helpful when the smear has limited cellularity but a suspicious epithelial group is present.',
+          'Preserved nuclear detail makes the group interpretable. Quantity for ancillary testing must still be assessed separately in the material reserved for that endpoint.',
         pitfall:
-          'Reactive bronchial cells can have nucleoli; architecture and cytoplasmic pattern keep the interpretation grounded.',
-        quizPrompt: 'This nuclear detail most strongly supports which category?',
-        correctChoiceId: 'adenocarcinoma',
+          'Reactive bronchial cells can show nucleoli. Interpret nuclear detail together with architectural disorder, cytoplasm, and the sampled target.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'adeno-vh-single-cells',
-        label: 'Single-cell comparison',
+        label: 'Single-cell comparison field',
         cellType: 'Background cells',
         category: 'background',
         shape: { type: 'ellipse', xPct: 34, yPct: 55, radiusXPct: 8, radiusYPct: 11 },
-        featureTags: ['background', 'comparison', 'cell size'],
+        featureTags: ['background', 'internal comparison', 'field scan'],
         explanation:
-          'Nearby smaller cells help calibrate cell size and chromasia against the lesional cluster.',
+          'Nearby smaller cells provide an internal comparison for size and chromasia against the lesional group.',
         diagnosticSignificance:
-          'Relative comparison makes rapid interpretation more reliable than judging one cluster in isolation.',
+          'Relative comparison supports disciplined pattern recognition, but this field alone is not evidence of target representation.',
         pitfall:
-          'Avoid letting one striking cluster distract from the overall smear adequacy and representativeness.',
-        quizPrompt: 'In ROSE teaching, this area is most useful as what?',
-        correctChoiceId: 'benign-background',
-      }),
-      annotation({
-        id: 'adeno-vh-dark-cluster',
-        label: 'Dense tumor focus',
-        cellType: 'Adenocarcinoma cluster',
-        category: 'adenocarcinoma',
-        shape: { type: 'ellipse', xPct: 52, yPct: 39, radiusXPct: 7, radiusYPct: 8 },
-        featureTags: ['dense cluster', 'hyperchromasia', 'malignant group'],
-        explanation:
-          'This darker portion of the group reflects nuclear overlap and hyperchromasia within the tumor cluster.',
-        diagnosticSignificance:
-          'A dense tumor focus can be enough to mark the specimen adequate when it matches the clinical target.',
-        pitfall:
-          'Thick smear artifact can create dense blue areas; a true tumor group should preserve interpretable cell borders and nuclei.',
-        quizPrompt: 'This dense blue cluster is most consistent with what?',
-        correctChoiceId: 'adenocarcinoma',
+          'Do not let one striking group replace a full smear scan or the separate assessment of material available for downstream tests.',
+        correctChoiceId: 'background',
       }),
     ],
   },
   {
     id: 'who-adenocarcinoma-patterns',
-    title: 'WHO lung cytopathology adenocarcinoma patterns',
+    title: 'WHO review: adenocarcinoma cytomorphologic patterns',
+    quizTitle: 'Multipanel morphology exercise 3',
     shortTitle: 'Adenocarcinoma patterns',
-    diagnosisTheme: 'Pattern recognition across preparations',
-    stain: 'Papanicolaou and Diff-Quik panels',
+    diagnosisTheme: 'Variation across cytology preparations',
+    stain: 'Papanicolaou and Diff-Quik',
+    preparation:
+      'Source Figure 7: (a) Pap, liquid-based; (b) Diff-Quik smear; (c) Pap smear; (d) Pap, liquid-based.',
     imageUrl:
       'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/d1a6/11086742/167b54f03ccf/nihms-1985348-f0007.jpg',
-    imageAlt: 'Panel of cytology patterns of lung adenocarcinoma.',
+    imageAlt:
+      'Four-panel source figure showing cytomorphologic patterns of lung adenocarcinoma across Papanicolaou and Diff-Quik preparations.',
+    quizImageAlt:
+      'Unlabeled four-panel lung cytology source figure using Papanicolaou and Diff-Quik preparations.',
     source: whoCytopathologySource,
     learningObjectives: [
-      'Compare single cells, three-dimensional groups, and dense cell clusters.',
-      'Recognize that adenocarcinoma may present in multiple cytologic patterns.',
-      'Link pattern recognition to triage for cell block and molecular studies.',
+      'Recognize that one tumor category can appear dispersed, cohesive, or sheet-like.',
+      'Account for preparation and stain before comparing cytoplasmic and nuclear detail.',
+      'Avoid treating cellularity alone as proof of adequacy for every clinical endpoint.',
     ],
     annotations: [
       annotation({
         id: 'who-adeno-panel-a',
-        label: 'Discohesive atypical cells',
-        cellType: 'Adenocarcinoma cells',
+        label: 'Dispersed well-differentiated tumor cells',
+        cellType: 'Malignant glandular epithelial cells',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 21, yPct: 23, radiusXPct: 13, radiusYPct: 12 },
-        featureTags: ['discohesive cells', 'atypia', 'Pap stain'],
+        featureTags: ['dispersed cells', 'conspicuous nucleoli', 'Pap liquid-based'],
         explanation:
-          'Adenocarcinoma may appear as loose atypical cells rather than only obvious glandular clusters.',
+          'Panel A shows dispersed tumor cells with relatively regular round nuclei and conspicuous nucleoli on a Pap-stained liquid-based preparation.',
         diagnosticSignificance:
-          'Loose malignant cells can still establish onsite adequacy when cytologic atypia is convincing.',
+          'A malignant epithelial population may be dispersed rather than overtly gland-forming; interpretability and reproducibility matter more than one stereotyped architecture.',
         pitfall:
-          'Single atypical cells should be separated from macrophages and reactive bronchial cells.',
-        quizPrompt: 'Which category best fits these atypical discohesive cells?',
-        correctChoiceId: 'adenocarcinoma',
+          'Macrophages and reactive bronchial cells may also be dispersed. Use the full cytomorphologic pattern and final preparation for classification.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'who-adeno-panel-b',
-        label: '3D cluster',
-        cellType: 'Adenocarcinoma cluster',
+        label: 'Cohesive vacuolated tumor fragment',
+        cellType: 'Malignant glandular epithelial cells',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 72, yPct: 25, radiusXPct: 13, radiusYPct: 12 },
-        featureTags: ['3D cluster', 'Diff-Quik', 'nuclear crowding'],
+        featureTags: ['cohesive fragment', 'vacuolated cytoplasm', 'Diff-Quik smear'],
         explanation:
-          'The three-dimensional clustered arrangement is a common rapid clue to malignant epithelial sampling.',
+          'Panel B shows a cohesive tumor fragment with peripherally placed nuclei and vacuolated cytoplasm on a Diff-Quik smear.',
         diagnosticSignificance:
-          'Clustered tumor can be prioritized for cell block preparation when ROSE confirms lesional material.',
+          'The architecture supports representative lesional sampling, while the amount reserved for cell block or molecular studies remains a separate adequacy question.',
         pitfall:
-          'Do not mistake mucus or stain precipitate for cell groups; nuclei should be visible within the cluster.',
-        quizPrompt: 'This clustered arrangement supports which interpretation?',
-        correctChoiceId: 'adenocarcinoma',
+          'Confirm that nuclei are present and interpretable; mucus, stain precipitate, or thick material can simulate a blue cellular focus.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'who-adeno-panel-c',
-        label: 'Papillary-like group',
-        cellType: 'Adenocarcinoma group',
+        label: 'Atypical tumor cells in inflammation',
+        cellType: 'Malignant glandular epithelial cells',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 27, yPct: 70, radiusXPct: 15, radiusYPct: 12 },
-        featureTags: ['papillary group', 'cohesion', 'glandular pattern'],
+        featureTags: ['enlarged round nuclei', 'delicate cytoplasm', 'Pap smear'],
         explanation:
-          'This cohesive group illustrates how glandular tumors can form larger architectural fragments.',
+          'Panel C shows tumor cells with enlarged round nuclei and delicate cytoplasm admixed with inflammatory cells on a Pap smear.',
         diagnosticSignificance:
-          'Architectural fragments can make ROSE more confident than rare isolated atypical cells.',
+          'Lesional cells can be present in an inflammatory background. The onsite call should describe the broad category and reserve definitive classification for complete review.',
         pitfall:
-          'Benign bronchial sheets are flatter and more orderly; malignant groups often have crowding and irregular contour.',
-        quizPrompt: 'What is the best classification for this cohesive atypical group?',
-        correctChoiceId: 'adenocarcinoma',
+          'Inflammation can produce reactive atypia. Seek a reproducible epithelial population with convincing architectural or nuclear abnormality.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'who-adeno-panel-d',
-        label: 'Dense tumor sheet',
-        cellType: 'Adenocarcinoma cell sheet',
+        label: 'Crowded poorly differentiated tumor sheet',
+        cellType: 'Malignant epithelial cell sheet',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 73, yPct: 75, radiusXPct: 17, radiusYPct: 12 },
-        featureTags: ['tumor sheet', 'cellularity', 'diagnostic material'],
+        featureTags: ['loss of polarity', 'pleomorphism', 'Pap liquid-based'],
         explanation:
-          'The dense cellular sheet provides abundant lesional material, but details may be harder to inspect in thick areas.',
+          'Panel D shows a crowded sheet with loss of polarity, pleomorphism, and hyperchromasia on a Pap-stained liquid-based preparation.',
         diagnosticSignificance:
-          'A cellular tumor sheet usually indicates adequacy, while additional passes may be triaged for ancillary testing.',
+          'Abundant lesional cells support morphology adequacy, but ancillary-test sufficiency depends on how much viable material is preserved outside the teaching field.',
         pitfall:
-          'Very thick fragments can obscure detail; use thinner areas of the smear to confirm nuclear features.',
-        quizPrompt: 'This dense cellular region is most consistent with what?',
-        correctChoiceId: 'adenocarcinoma',
+          'Very thick or crowded areas can obscure detail. Confirm the impression in a thinner, interpretable area before communicating a rapid category.',
+        correctChoiceId: 'malignant-epithelial',
       }),
     ],
   },
   {
     id: 'rose-diff-quik-montage',
-    title: 'ROSE Diff-Quik examples: carcinoma and infection',
+    title: 'ROSE Diff-Quik examples: carcinoma and granulomatous inflammation',
+    quizTitle: 'Multipanel morphology exercise 4',
     shortTitle: 'ROSE montage',
-    diagnosisTheme: 'Rapid differential pattern recognition',
+    diagnosisTheme: 'Broad-pattern recognition across four cases',
     stain: 'Diff-Quik',
+    preparation:
+      'Four source-case direct smears stained with Diff-Quik: panels a-c at 100x and panel d at 40x.',
     imageUrl:
       'https://cdn.ncbi.nlm.nih.gov/pmc/blobs/09d8/7871052/7ed5a4311152/10.1177_0300060520982687-fig2.jpg',
     imageAlt:
-      'ROSE Diff-Quik examples showing adenocarcinoma, squamous cell carcinoma, small cell carcinoma, and tuberculosis.',
+      'Four-panel ROSE Diff-Quik source figure showing adenocarcinoma, squamous cell carcinoma, small cell carcinoma, and tuberculosis-associated granulomatous inflammation.',
+    quizImageAlt: 'Unlabeled four-panel Diff-Quik ROSE source figure for broad-pattern practice.',
     source: roseSource,
     learningObjectives: [
-      'Practice switching between carcinoma patterns on a single ROSE montage.',
-      'Recognize high-grade small cell pattern and granulomatous/infectious pattern.',
-      'Use broad categories rather than over-specific diagnoses during onsite triage.',
+      'Classify a rapid smear into a broad epithelial, small-cell, inflammatory, or background pattern.',
+      'Use multiple features rather than a single color or cell-size clue.',
+      'Translate morphology into specimen triage without overcalling a final diagnosis.',
     ],
     annotations: [
       annotation({
         id: 'rose-adeno-panel',
-        label: 'Adenocarcinoma pattern',
-        cellType: 'Adenocarcinoma cells',
+        label: 'Cohesive glandular epithelial pattern',
+        cellType: 'Malignant epithelial cells',
         category: 'adenocarcinoma',
         shape: { type: 'ellipse', xPct: 24, yPct: 23, radiusXPct: 12, radiusYPct: 12 },
-        featureTags: ['glandular cluster', 'nucleoli', 'malignant epithelial'],
+        featureTags: ['small cohesive clusters', 'delicate cytoplasm', 'panel a'],
         explanation:
-          'Panel A shows a malignant epithelial pattern with glandular cytology suitable for rapid adenocarcinoma recognition.',
+          'Panel A shows small clusters of relatively uniform-appearing glandular cells with delicate cytoplasm in the source adenocarcinoma case.',
         diagnosticSignificance:
-          'ROSE can confirm lesional material and help route subsequent passes to cell block or molecular testing.',
+          'The safe rapid category is malignant epithelial. Confirming lesional cells can guide preservation of additional material for final typing and biomarkers.',
         pitfall:
-          'ROSE subtype calls should remain appropriately cautious when only a small amount of material is present.',
-        quizPrompt: 'Which ROSE category best fits this panel?',
-        correctChoiceId: 'adenocarcinoma',
+          'Do not force a definitive subtype from scant or poorly preserved material; final classification requires the complete specimen and appropriate ancillary studies.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'rose-squamous-panel',
-        label: 'Squamous carcinoma pattern',
-        cellType: 'Squamous cell carcinoma cells',
+        label: 'Malignant epithelial pattern in necrotic background',
+        cellType: 'Malignant epithelial cells with squamous features',
         category: 'squamous-cell-carcinoma',
         shape: { type: 'ellipse', xPct: 75, yPct: 22, radiusXPct: 12, radiusYPct: 12 },
-        featureTags: ['dense cytoplasm', 'cluster', 'squamous differentiation'],
+        featureTags: ['large nuclei', 'macronucleoli', 'dirty necrotic background'],
         explanation:
-          'Panel B shows a cohesive malignant group with denser cytoplasm, supporting squamous differentiation.',
+          'Panel B shows malignant epithelial cells with large nuclei, macronucleoli, variable nuclear-to-cytoplasmic ratios, and a dirty necrotic background.',
         diagnosticSignificance:
-          'Recognizing squamous morphology can inform immediate communication while final classification awaits full review.',
+          'A malignant epithelial onsite category is sufficient for immediate triage; squamous classification should remain preliminary until full review.',
         pitfall:
-          'Keratin debris and reactive squamous metaplasia can confuse interpretation; nuclear atypia remains key.',
-        quizPrompt: 'Which category best matches this dense cohesive malignant group?',
-        correctChoiceId: 'squamous',
+          'Necrosis and reactive squamous metaplasia can mislead. Require convincing malignant nuclei and target-concordant lesional material.',
+        correctChoiceId: 'malignant-epithelial',
       }),
       annotation({
         id: 'rose-small-cell-panel',
-        label: 'Small cell pattern',
-        cellType: 'Small cell carcinoma cells',
+        label: 'High-grade small-cell pattern',
+        cellType: 'Small malignant cells',
         category: 'small-cell-carcinoma',
         shape: { type: 'ellipse', xPct: 26, yPct: 72, radiusXPct: 12, radiusYPct: 12 },
-        featureTags: ['high N:C ratio', 'nuclear molding', 'fragile cells'],
+        featureTags: ['scant cytoplasm', 'nuclear molding', 'granular chromatin'],
         explanation:
-          'Panel C shows small hyperchromatic cells with high nuclear-to-cytoplasmic ratio, a rapid clue to small cell carcinoma.',
+          'Panel C shows small cells with scant cytoplasm, nuclear molding, and dispersed granular chromatin in the source small cell carcinoma case.',
         diagnosticSignificance:
-          'A suspected small cell pattern should trigger careful triage for confirmatory immunostains and staging context.',
+          'A high-grade small-cell pattern should trigger careful preservation for confirmatory immunostains and final classification rather than a stand-alone definitive ROSE diagnosis.',
         pitfall:
-          'Crush artifact and lymphocytes may mimic small blue cells; evaluate molding, chromatin, and clinical context.',
-        quizPrompt: 'Which interpretation best fits these small hyperchromatic cells?',
-        correctChoiceId: 'small-cell',
+          'Lymphocytes and crush artifact may mimic a small-cell neoplasm. Confirm molding and chromatin in preserved cells and correlate with the complete specimen.',
+        correctChoiceId: 'high-grade-small-cell',
       }),
       annotation({
         id: 'rose-tb-panel',
-        label: 'Granulomatous/infectious pattern',
-        cellType: 'Granulomatous inflammation',
+        label: 'Granulomatous inflammatory pattern',
+        cellType: 'Epithelioid histiocyte aggregates with inflammation',
         category: 'granuloma',
         shape: { type: 'ellipse', xPct: 76, yPct: 72, radiusXPct: 13, radiusYPct: 13 },
-        featureTags: ['granuloma', 'infection context', 'inflammation'],
+        featureTags: ['epithelioid histiocytes', 'necrotic background', 'panel d'],
         explanation:
-          'Panel D demonstrates a granulomatous/infectious pattern rather than carcinoma.',
+          'Panel D shows aggregates of epithelioid histiocytes with necrosis and lymphocytes in the source tuberculosis case.',
         diagnosticSignificance:
-          'Finding granulomatous inflammation onsite can redirect specimen handling toward microbiology and special stains.',
+          'The rapid finding supports a granulomatous or infection-associated inflammatory category and may prompt dedicated microbiology material when clinically indicated.',
         pitfall:
-          'Necrotic tumors can coexist with inflammation; a benign/infectious impression must fit the sampled target and final stains.',
-        quizPrompt: 'Which broad ROSE category best fits this pattern?',
-        correctChoiceId: 'granuloma',
-      }),
-    ],
-  },
-  {
-    id: 'lilo-ebus-adenocarcinoma',
-    title: 'EBUS-TBNA metastatic adenocarcinoma',
-    shortTitle: 'EBUS adeno',
-    diagnosisTheme: 'Metastatic adenocarcinoma in lymph node',
-    stain: 'Diff-Quik and H&E cell block',
-    imageUrl:
-      '/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig3-metastatic-adenocarcinoma-cytology.jpg',
-    imageAlt: 'EBUS-TBNA cytology and cell block showing metastatic lung adenocarcinoma.',
-    source: liloSource,
-    learningObjectives: [
-      'Compare Diff-Quik smear and cell block confirmation.',
-      'Identify malignant glandular cytology in a lymph node sampling context.',
-      'Recognize why ROSE adequacy matters for staging and ancillary testing.',
-    ],
-    annotations: [
-      annotation({
-        id: 'lilo-adeno-diff-quik-cluster',
-        label: 'Diff-Quik tumor cluster',
-        cellType: 'Metastatic adenocarcinoma cells',
-        category: 'adenocarcinoma',
-        shape: { type: 'ellipse', xPct: 24, yPct: 43, radiusXPct: 13, radiusYPct: 18 },
-        featureTags: ['Diff-Quik', 'tumor cluster', 'lymph node'],
-        explanation:
-          'The left panel shows a blue malignant cell cluster sampled by EBUS-TBNA from a PET-positive lymph node.',
-        diagnosticSignificance:
-          'A tumor cluster in a mediastinal node is staging-relevant and usually warrants preserving material for cell block.',
-        pitfall:
-          'ROSE should communicate adequacy and preliminary category without replacing final integrated pathology review.',
-        quizPrompt: 'This Diff-Quik cluster is best classified as what?',
-        correctChoiceId: 'adenocarcinoma',
-      }),
-      annotation({
-        id: 'lilo-adeno-cell-block',
-        label: 'Cell block correlate',
-        cellType: 'Adenocarcinoma on cell block',
-        category: 'adenocarcinoma',
-        shape: { type: 'ellipse', xPct: 72, yPct: 42, radiusXPct: 13, radiusYPct: 17 },
-        featureTags: ['cell block', 'acinar architecture', 'H&E'],
-        explanation:
-          'The right panel cell block shows a tissue correlate with glandular/acinar architecture.',
-        diagnosticSignificance:
-          'Cell block material supports immunohistochemistry and molecular testing after rapid onsite adequacy.',
-        pitfall:
-          'A smear may be diagnostic while the cell block is scant; onsite triage can reduce that mismatch.',
-        quizPrompt: 'The cell block correlate most strongly supports which diagnosis category?',
-        correctChoiceId: 'adenocarcinoma',
-      }),
-      annotation({
-        id: 'lilo-adeno-nuclear-detail',
-        label: 'Nuclear atypia',
-        cellType: 'Malignant glandular nuclei',
-        category: 'adenocarcinoma',
-        shape: { type: 'ellipse', xPct: 34, yPct: 37, radiusXPct: 7, radiusYPct: 11 },
-        featureTags: ['nuclear atypia', 'prominent nuclei', 'malignant'],
-        explanation:
-          'The tumor focus shows enlarged atypical nuclei within the clustered blue group.',
-        diagnosticSignificance:
-          'Nuclear atypia anchors the rapid interpretation as malignant rather than merely reactive.',
-        pitfall:
-          'Do not rely on color intensity alone; thick areas may be dark without clear malignant nuclear detail.',
-        quizPrompt: 'Which category best explains this atypical nuclear focus?',
-        correctChoiceId: 'adenocarcinoma',
-      }),
-      annotation({
-        id: 'lilo-adeno-lymph-node-context',
-        label: 'Lymph node staging context',
-        cellType: 'Metastatic tumor context',
-        category: 'adequacy',
-        shape: { type: 'ellipse', xPct: 58, yPct: 57, radiusXPct: 10, radiusYPct: 14 },
-        featureTags: ['staging', 'adequacy', 'cell block'],
-        explanation:
-          'The paired smear/cell block view emphasizes that adequacy is not just diagnostic; it affects staging and downstream tests.',
-        diagnosticSignificance:
-          'ROSE can help the operator decide whether additional passes are needed from the same nodal station.',
-        pitfall:
-          'Adequacy standards vary by clinical question: diagnosis, staging, cultures, flow cytometry, or molecular testing may need different material.',
-        quizPrompt: 'This paired smear/cell-block context is most useful for what ROSE decision?',
-        correctChoiceId: 'benign-background',
-      }),
-    ],
-  },
-  {
-    id: 'lilo-ebus-squamous-granuloma',
-    title: 'EBUS-TBNA squamous carcinoma versus granuloma',
-    shortTitle: 'Squamous vs granuloma',
-    diagnosisTheme: 'Malignant squamous cells and benign granulomatous mimic',
-    stain: 'Diff-Quik, Papanicolaou, and H&E cell block',
-    imageUrl:
-      '/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig4-metastatic-squamous-cell-carcinoma-cytology.jpg',
-    imageAlt: 'EBUS-TBNA cytology and cell block showing metastatic squamous cell carcinoma.',
-    source: liloSource,
-    learningObjectives: [
-      'Recognize squamous cell carcinoma cytology in a node sample.',
-      'Use dense cytoplasm and two-dimensional clusters as subtype clues.',
-      'Contrast malignant epithelial features with granulomatous inflammation on a companion slide.',
-    ],
-    annotations: [
-      annotation({
-        id: 'lilo-squamous-dq-cluster',
-        label: 'Squamous tumor cluster',
-        cellType: 'Metastatic squamous cell carcinoma',
-        category: 'squamous-cell-carcinoma',
-        shape: { type: 'ellipse', xPct: 22, yPct: 43, radiusXPct: 13, radiusYPct: 17 },
-        featureTags: ['dense cytoplasm', 'malignant cluster', 'Diff-Quik'],
-        explanation:
-          'The left panel shows a malignant epithelial cluster with denser cytoplasm than the adenocarcinoma examples.',
-        diagnosticSignificance:
-          'A squamous pattern can be communicated preliminarily while conserving material for final classification.',
-        pitfall:
-          'Squamous metaplasia and contamination can mimic squamous cells; malignant nuclear atypia and clinical target matter.',
-        quizPrompt: 'Which broad interpretation best fits this malignant cluster?',
-        correctChoiceId: 'squamous',
-      }),
-      annotation({
-        id: 'lilo-squamous-keratin-cytoplasm',
-        label: 'Dense cytoplasm',
-        cellType: 'Squamous carcinoma cells',
-        category: 'squamous-cell-carcinoma',
-        shape: { type: 'ellipse', xPct: 31, yPct: 46, radiusXPct: 7, radiusYPct: 10 },
-        featureTags: ['keratinizing cytoplasm', 'squamous differentiation', 'cytoplasm'],
-        explanation:
-          'Dense cytoplasm within atypical cells is a helpful clue toward squamous differentiation.',
-        diagnosticSignificance:
-          'Subtype clues can shape triage, but final typing should integrate cell block morphology and immunostains.',
-        pitfall:
-          'Necrotic debris can look dense and blue; look for intact atypical cells rather than stain alone.',
-        quizPrompt: 'Dense cytoplasm in this atypical group points most toward which category?',
-        correctChoiceId: 'squamous',
-      }),
-      annotation({
-        id: 'lilo-squamous-cell-block',
-        label: 'Cell block confirmation',
-        cellType: 'Squamous carcinoma on cell block',
-        category: 'squamous-cell-carcinoma',
-        shape: { type: 'ellipse', xPct: 70, yPct: 43, radiusXPct: 15, radiusYPct: 17 },
-        featureTags: ['cell block', 'keratinization', 'H&E'],
-        explanation:
-          'The cell block panel shows tissue architecture that supports the smear impression.',
-        diagnosticSignificance:
-          'Cell block confirmation is important for ancillary stains when ROSE suggests carcinoma.',
-        pitfall: 'ROSE adequacy should ensure enough material remains after smear preparation.',
-        quizPrompt: 'Which category best matches this paired cell block correlate?',
-        correctChoiceId: 'squamous',
-      }),
-    ],
-  },
-  {
-    id: 'lilo-ebus-granuloma',
-    title: 'EBUS-TBNA granuloma in PET-positive lymph node',
-    shortTitle: 'Granuloma',
-    diagnosisTheme: 'Benign granulomatous inflammation as PET-positive mimic',
-    stain: 'Diff-Quik, Papanicolaou, and H&E cell block',
-    imageUrl: '/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig5-granuloma-cytology.jpg',
-    imageAlt: 'EBUS-TBNA cytology and cell block showing granulomatous inflammation.',
-    source: liloSource,
-    learningObjectives: [
-      'Identify cohesive epithelioid histiocyte clusters.',
-      'Recognize granulomatous inflammation as a PET-positive mimic of malignancy.',
-      'Use ROSE to direct microbiology or special stain triage when appropriate.',
-    ],
-    annotations: [
-      annotation({
-        id: 'lilo-granuloma-dq',
-        label: 'Epithelioid histiocyte cluster',
-        cellType: 'Granulomatous inflammation',
-        category: 'granuloma',
-        shape: { type: 'ellipse', xPct: 24, yPct: 24, radiusXPct: 13, radiusYPct: 13 },
-        featureTags: ['epithelioid histiocytes', 'granuloma', 'Diff-Quik'],
-        explanation:
-          'The Diff-Quik panel shows a cohesive histiocyte cluster compatible with granulomatous inflammation.',
-        diagnosticSignificance:
-          'Granulomas in PET-positive nodes are a major benign mimic of metastatic cancer.',
-        pitfall:
-          'Granulomatous inflammation can coexist with malignancy; final correlation and adequate sampling remain essential.',
-        quizPrompt: 'Which category best fits this cohesive histiocyte cluster?',
-        correctChoiceId: 'granuloma',
-      }),
-      annotation({
-        id: 'lilo-granuloma-pap',
-        label: 'Pap-stained granuloma',
-        cellType: 'Granuloma',
-        category: 'granuloma',
-        shape: { type: 'ellipse', xPct: 67, yPct: 25, radiusXPct: 13, radiusYPct: 12 },
-        featureTags: ['Pap stain', 'granuloma', 'histiocytes'],
-        explanation:
-          'The Pap-stained panel shows a second preparation with similar granulomatous architecture.',
-        diagnosticSignificance:
-          'Seeing the same pattern across preparations supports a non-carcinoma interpretation.',
-        pitfall:
-          'A granuloma diagnosis should prompt consideration of infection, sarcoidosis, treatment effect, and clinical context.',
-        quizPrompt: 'This pattern is most consistent with which broad ROSE category?',
-        correctChoiceId: 'granuloma',
-      }),
-      annotation({
-        id: 'lilo-granuloma-cell-block',
-        label: 'Cell block granuloma',
-        cellType: 'Granuloma on cell block',
-        category: 'granuloma',
-        shape: { type: 'ellipse', xPct: 55, yPct: 70, radiusXPct: 16, radiusYPct: 12 },
-        featureTags: ['cell block', 'histiocytes', 'nonmalignant'],
-        explanation:
-          'The cell block component shows a compact granulomatous focus rather than malignant epithelial architecture.',
-        diagnosticSignificance:
-          'Cell block tissue can be used for special stains when infection is in the differential.',
-        pitfall:
-          'Negative ROSE for carcinoma does not automatically end sampling when the clinical question requires cultures or more tissue.',
-        quizPrompt: 'Which classification best fits this cell block focus?',
-        correctChoiceId: 'granuloma',
-      }),
-      annotation({
-        id: 'lilo-granuloma-background',
-        label: 'Inflammatory background',
-        cellType: 'Mixed inflammatory cells',
-        category: 'background',
-        shape: { type: 'ellipse', xPct: 39, yPct: 37, radiusXPct: 8, radiusYPct: 8 },
-        featureTags: ['background', 'inflammation', 'not tumor'],
-        explanation:
-          'The background inflammatory cells reinforce the inflammatory context of the specimen.',
-        diagnosticSignificance:
-          'Background context helps prevent overcalling granulomatous inflammation as carcinoma.',
-        pitfall:
-          'Inflammatory backgrounds can accompany necrotic tumors, so the interpretation should remain specimen-wide.',
-        quizPrompt: 'This background is best categorized as what?',
-        correctChoiceId: 'benign-background',
-      }),
-    ],
-  },
-  {
-    id: 'lilo-ebus-mai-infection',
-    title: 'EBUS-TBNA Mycobacterium avium-intracellulare infection',
-    shortTitle: 'MAI infection',
-    diagnosisTheme: 'Infectious mimic in PET-positive lymph node',
-    stain: 'Diff-Quik, Papanicolaou, H&E, and special stain correlate',
-    imageUrl:
-      '/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig6-mycobacterium-avium-intracellulare-cytology.jpg',
-    imageAlt:
-      'EBUS-TBNA cytology and cell block showing Mycobacterium avium-intracellulare infection.',
-    source: liloSource,
-    learningObjectives: [
-      'Recognize infection-associated cytology as a malignant mimic in PET-positive nodes.',
-      'Connect ROSE impression with microbiology and special-stain triage.',
-      'Avoid overcalling inflammatory or organism-rich material as carcinoma.',
-    ],
-    annotations: [
-      annotation({
-        id: 'lilo-mai-dq-inflammation',
-        label: 'Inflammatory Diff-Quik field',
-        cellType: 'Infection-associated inflammation',
-        category: 'infection',
-        shape: { type: 'ellipse', xPct: 25, yPct: 26, radiusXPct: 13, radiusYPct: 13 },
-        featureTags: ['Diff-Quik', 'inflammation', 'infectious mimic'],
-        explanation:
-          'The smear field emphasizes inflammatory material rather than cohesive malignant epithelial groups.',
-        diagnosticSignificance:
-          'During ROSE, an inflammatory/infectious pattern can change specimen handling toward cultures or organism stains.',
-        pitfall:
-          'Inflammation does not exclude malignancy; the onsite call should be matched with target sampling and final review.',
-        quizPrompt: 'Which broad ROSE category best fits this inflammatory field?',
-        correctChoiceId: 'infection',
-      }),
-      annotation({
-        id: 'lilo-mai-histiocyte-cluster',
-        label: 'Histiocyte-rich focus',
-        cellType: 'Granulomatous/infectious inflammation',
-        category: 'infection',
-        shape: { type: 'ellipse', xPct: 69, yPct: 27, radiusXPct: 13, radiusYPct: 12 },
-        featureTags: ['histiocytes', 'granulomatous pattern', 'infection'],
-        explanation:
-          'Histiocyte-rich inflammatory material is compatible with infection-associated granulomatous inflammation.',
-        diagnosticSignificance:
-          'Recognizing this pattern helps the team save material for stains or microbiology rather than exhausting it on smears.',
-        pitfall:
-          'Histiocytes and necrotic debris can be visually busy; avoid diagnosing carcinoma without a lesional epithelial population.',
-        quizPrompt: 'This histiocyte-rich focus should most strongly raise which triage category?',
-        correctChoiceId: 'infection',
-      }),
-      annotation({
-        id: 'lilo-mai-cell-block-correlate',
-        label: 'Cell block correlate',
-        cellType: 'Infection correlate on cell block',
-        category: 'infection',
-        shape: { type: 'ellipse', xPct: 56, yPct: 68, radiusXPct: 15, radiusYPct: 12 },
-        featureTags: ['cell block', 'organism workup', 'special stains'],
-        explanation:
-          'The cell block component provides material for confirmatory stains when an infectious etiology is suspected.',
-        diagnosticSignificance:
-          'ROSE can help preserve cell block material for special stains and final organism-directed interpretation.',
-        pitfall:
-          'A negative or nonspecific smear impression should not stop additional microbiology triage when infection remains clinically important.',
-        quizPrompt: 'This correlate is most useful for which downstream workup?',
-        correctChoiceId: 'infection',
-      }),
-      annotation({
-        id: 'lilo-mai-adequacy-triage',
-        label: 'Adequacy triage point',
-        cellType: 'Specimen triage context',
-        category: 'adequacy',
-        shape: { type: 'ellipse', xPct: 38, yPct: 61, radiusXPct: 9, radiusYPct: 10 },
-        featureTags: ['adequacy', 'microbiology', 'ROSE triage'],
-        explanation:
-          'The key onsite decision is not just benign versus malignant; it is whether the sample supports the clinical question and needed studies.',
-        diagnosticSignificance:
-          'When infection is in the differential, adequate ROSE handling may mean allocating material for cultures or special stains.',
-        pitfall:
-          'Adequacy for cytology alone may be inadequate for microbiology, molecular testing, or flow cytometry depending on the case.',
-        quizPrompt: 'What ROSE decision does this paired-material context emphasize?',
-        correctChoiceId: 'infection',
+          'Morphology alone does not identify an organism or exclude coexisting malignancy. Final stains, cultures, molecular tests, and target-concordant sampling determine the endpoint.',
+        correctChoiceId: 'granulomatous-inflammatory',
       }),
     ],
   },

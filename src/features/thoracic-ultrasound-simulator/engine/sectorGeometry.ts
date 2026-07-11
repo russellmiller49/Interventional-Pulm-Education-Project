@@ -1,4 +1,4 @@
-import type { ThoracicProbeState, Vec3 } from '../types'
+import type { ProbeType, ThoracicProbeState, Vec3 } from '../types'
 
 const degreesToRadians = Math.PI / 180
 
@@ -8,6 +8,12 @@ const degreesToRadians = Math.PI / 180
  * the same world ray the beam marched.
  */
 export const FACE_RADIUS_MM = 45
+/** Small virtual face produces the classic near-apex sector of a phased array. */
+export const PHASED_FACE_RADIUS_MM = 3
+
+export function transducerFaceRadiusMm(probeType: ProbeType = 'curvilinear') {
+  return probeType === 'phased' ? PHASED_FACE_RADIUS_MM : FACE_RADIUS_MM
+}
 
 /**
  * Probe contact point in the LPS millimetre frame. This is the image apex (the
@@ -143,17 +149,19 @@ export function sectorImageToWorld(
   imageX: number,
   imageY: number,
   contactDepthMm = 0,
+  probeType: ProbeType = 'curvilinear',
 ): Vec3 | null {
   const maxDepthMm = probe.depthCm * 10
   const halfRad = (probe.sectorAngleDeg / 2) * degreesToRadians
   const sinHalf = Math.sin(halfRad)
   const cosHalf = Math.cos(halfRad)
 
+  const faceRadiusMm = transducerFaceRadiusMm(probeType)
   const scale = Math.min(
-    (height - 14) / (maxDepthMm + FACE_RADIUS_MM * (1 - cosHalf)),
-    (width / 2 - 4) / ((FACE_RADIUS_MM + maxDepthMm) * sinHalf),
+    (height - 14) / (maxDepthMm + faceRadiusMm * (1 - cosHalf)),
+    (width / 2 - 4) / ((faceRadiusMm + maxDepthMm) * sinHalf),
   )
-  const apexY = 8 - FACE_RADIUS_MM * scale * cosHalf
+  const apexY = 8 - faceRadiusMm * scale * cosHalf
   const centerX = width / 2
 
   const dx = imageX - centerX
@@ -164,14 +172,14 @@ export function sectorImageToWorld(
   if (Math.abs(angleRad) > halfRad) {
     return null
   }
-  if (radiusMm < FACE_RADIUS_MM || radiusMm > FACE_RADIUS_MM + maxDepthMm) {
+  if (radiusMm < faceRadiusMm || radiusMm > faceRadiusMm + maxDepthMm) {
     return null
   }
 
   return projectBeamToWorld(
     probe,
     angleRad / degreesToRadians,
-    contactDepthMm + (radiusMm - FACE_RADIUS_MM),
+    contactDepthMm + (radiusMm - faceRadiusMm),
   )
 }
 

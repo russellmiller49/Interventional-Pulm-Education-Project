@@ -23,6 +23,7 @@ import path from 'node:path'
 import os from 'node:os'
 
 import { generateCasePackage } from './generate-thoracic-case-assets.mjs'
+import { pleuralEffusion001CardiacModel } from './pleural-effusion-001-cardiac-model.mjs'
 
 const repoRoot = process.cwd()
 const sourceDir = path.join(repoRoot, 'Pleural_effusion_simulation')
@@ -187,6 +188,7 @@ function main() {
   live.labels = labels
   live.labelCounts = labelCounts
   live.labelBoundsLpsMm = staged.labelBoundsLpsMm
+  live.cardiacModel = pleuralEffusion001CardiacModel
   live.description =
     'Derived educational case from a de-identified chest-CT Slicer segmentation: ' +
     'chest wall, ribs and spine, both lungs, bilateral pleural effusions, diaphragm, ' +

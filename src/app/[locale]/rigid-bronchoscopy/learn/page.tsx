@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
 import { LearnSection } from '@/features/learning-module/components/LearnSection'
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
+import { RigidBronchoscopyLearnDemos } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyLearnDemos'
 import { RigidBronchoscopyNav } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyNav'
 import {
   getRigidCoreBlocks,
@@ -39,6 +40,7 @@ export default async function RigidBronchoscopyLearnPage({ params }: PageProps) 
             eyebrow={nav('items.rigidBronchoscopy.title')}
             title={t('learn.headerTitle')}
             description={t('learn.headerDescription')}
+            disclaimer={t('about.body')}
           />
           <RigidBronchoscopyNav activeHref="/rigid-bronchoscopy/learn" />
 
@@ -47,6 +49,8 @@ export default async function RigidBronchoscopyLearnPage({ params }: PageProps) 
             coreBlocks={getRigidCoreBlocks(locale)}
             goDeeperBlocks={getRigidGoDeeperBlocks(locale)}
           />
+
+          <RigidBronchoscopyLearnDemos />
 
           <ModuleProgressToggle
             moduleId="rigid-bronchoscopy"

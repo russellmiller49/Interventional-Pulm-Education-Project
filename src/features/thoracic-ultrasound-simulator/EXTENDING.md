@@ -37,7 +37,7 @@ node scripts/thoracic-ultrasound/generate-thoracic-case-assets.mjs \
   --mesh="my model.glb"
 # → public/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-002/
 
-# 2. Visually verify the B-mode render offline (the app route is auth-gated)
+# 2. Visually verify the B-mode render offline (the experimental route is public for smoke QA)
 npx tsx scripts/thoracic-ultrasound/render-case-poses.mts \
   public/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-002
 # writes PNGs to a temp dir; open them and check speckle/fluid/shadows/pose
@@ -86,3 +86,21 @@ The renderer must stay **deterministic** (no `Math.random` — hash functions
 only; a test asserts identical bytes for a fixed pose) and the metrics loop in
 `engine/simulateBMode.ts` is scoring-critical: a test asserts metrics parity
 between the metrics-only and rendered paths.
+
+## Cardiac fallback and cine QA
+
+A whole-heart CT label does not contain chambers, valves, or myocardium. Cases
+that need live cardiac teaching must therefore provide a case-calibrated
+`cardiacModel` (`parametric-cardiac-v1`) in the manifest. It defines the LPS
+heart centre, an orthonormal left/anterior/base frame, four chamber blood-pool
+ellipsoids, valve reflectors, illustrative rate, and respiratory excursion.
+The model is sampled only inside source voxels labelled `heart`; it never
+creates cardiac anatomy outside the patient segmentation.
+
+When a cardiac model is in the beam, the runtime uses phased-array sector
+geometry and a reduced-resolution worker cine. Pleural scoring remains cached
+from the static source labelmap. Every cardiac view must stay labeled as a
+procedural educational approximation, and representative views require expert
+review before promotion beyond `qualityStatus.browserRaymarch: 'acceptable'`.
+For true patient-specific echo, prefer reviewed pose-indexed cine frames or a
+chamber-resolved 4D source rather than further tuning the parametric fallback.

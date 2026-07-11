@@ -121,6 +121,20 @@ const localizedSearchOverrides: Partial<
       section: 'Vía aérea',
       keywords: ['traqueostomía', 'manguito', 'válvula fonatoria', 'decanulación', 'succión'],
     },
+    '/airway-stent-mechanics': {
+      title: 'Laboratorio de mecánica de stents de vía aérea',
+      description:
+        'Modelos 3D, curvas de fuerza radial, conformabilidad, migración, interacción tisular, fatiga y lectura de pruebas de banco.',
+      section: 'Vía aérea',
+      keywords: [
+        'stent de vía aérea',
+        'fuerza radial',
+        'nitinol',
+        'silicona',
+        'migración',
+        'fatiga',
+      ],
+    },
     '/learn/anatomy': {
       title: 'Visor anatómico interactivo 3D',
       description:
@@ -210,6 +224,12 @@ const localizedSearchOverrides: Partial<
       description: '三维解剖、套囊气流、套管选择、日常护理、急救演练与拔管准备度。',
       section: '气道',
       keywords: ['气管切开', '套囊', '发声阀', '拔管', '吸痰'],
+    },
+    '/airway-stent-mechanics': {
+      title: '气道支架力学实验室',
+      description: '3D 模型、径向力曲线、顺应性、迁移、组织相互作用、疲劳与台架测试解读。',
+      section: '气道',
+      keywords: ['气道支架', '径向力', '镍钛合金', '硅胶', '迁移', '疲劳'],
     },
     '/learn/anatomy': {
       title: '交互式 3D 解剖查看器',
@@ -355,6 +375,26 @@ const allStaticResults: SiteSearchResult[] = [
       'endobronchial hemostasis',
       'airway fire',
       'jet ventilation',
+    ],
+  },
+  {
+    title: 'Airway Stent Mechanics Lab',
+    description:
+      'Interactive 3D deep dive into chronic outward force, compression resistance, axial force, conformability, migration, contact distribution, tissue interaction, and fatigue.',
+    href: '/airway-stent-mechanics',
+    section: 'Airway',
+    type: 'page',
+    keywords: [
+      'airway stent',
+      'radial force',
+      'chronic outward force',
+      'compression resistance',
+      'axial force',
+      'nitinol',
+      'silicone stent',
+      'migration',
+      'granulation',
+      'fatigue',
     ],
   },
   {

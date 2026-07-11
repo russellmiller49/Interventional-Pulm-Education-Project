@@ -1,0 +1,493 @@
+{
+  "generatedBy": "scripts/tracheostomy/repair_meshy_models.py",
+  "sourceDirectory": "3D assets/Tracheostomy",
+  "notes": [
+    "Original source files are preserved unchanged.",
+    "Models are normalized individually and are not anatomically registered to one another.",
+    "The larynx derivative retains its CC BY-NC-SA 4.0 attribution and license metadata."
+  ],
+  "models": [
+    {
+      "id": "patient-context",
+      "displayName": "Patient positioning context",
+      "sourceFile": "Patient.glb",
+      "sourceSha256": "ed00fa5a09a69fad3a7a7fbb622d1dd2be9de48a0c4471ea6f008a1acbce8839",
+      "url": "/tracheostomy/models/patient-context.glb",
+      "outputBytes": 521692,
+      "meshCount": 1,
+      "triangles": {
+        "original": 395736,
+        "afterCleanup": 395736,
+        "optimized": 78000,
+        "target": 78000
+      },
+      "decimationRatio": 0.1971,
+      "normalizationScale": 1.05305391,
+      "originalDimensions": [1.485752, 1.112864, 1.899238],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Reviewed authoring reference; not a precise internal anatomy reference.",
+      "learnerFacing": false,
+      "attribution": null,
+      "sourceUrl": null,
+      "license": null,
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    },
+    {
+      "id": "pilot-balloon",
+      "displayName": "Pilot balloon and inflation line",
+      "sourceFile": "Pilot balloon.glb",
+      "sourceSha256": "c37ce7c451438b11a3f670c46c306edb4fbb21cf5f9b26c164fcc67f55c192fc",
+      "url": "/tracheostomy/models/pilot-balloon.glb",
+      "outputBytes": 306180,
+      "meshCount": 1,
+      "triangles": {
+        "original": 48700,
+        "afterCleanup": 48700,
+        "optimized": 18000,
+        "target": 18000
+      },
+      "decimationRatio": 0.36961,
+      "normalizationScale": 1.05298848,
+      "originalDimensions": [1.899356, 0.369671, 0.173417],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Source-repaired review asset only; the generated valve/disc geometry remains semantically unreliable and is excluded from learner-facing views.",
+      "learnerFacing": false,
+      "attribution": null,
+      "sourceUrl": null,
+      "license": null,
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    },
+    {
+      "id": "cuffed-tube",
+      "displayName": "Cuffed tracheostomy tube",
+      "sourceFile": "cuffed_tracheostomy_tube.glb",
+      "sourceSha256": "00df3a41e7bc6016ac82a7a73a594a179be1f05ad8dcbb999221ddeef7aad213",
+      "url": "/tracheostomy/models/cuffed-tube.glb",
+      "outputBytes": 668960,
+      "meshCount": 1,
+      "triangles": {
+        "original": 494312,
+        "afterCleanup": 494312,
+        "optimized": 82000,
+        "target": 82000
+      },
+      "decimationRatio": 0.16589,
+      "normalizationScale": 1.05296912,
+      "originalDimensions": [1.361268, 1.899391, 1.735144],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Reviewed authoring reference; fused geometry prevents component animation.",
+      "learnerFacing": false,
+      "attribution": null,
+      "sourceUrl": null,
+      "license": null,
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    },
+    {
+      "id": "cuffless-tube",
+      "displayName": "Cuffless tracheostomy tube",
+      "sourceFile": "cuffless tracheostomy.glb",
+      "sourceSha256": "252bd558de3750bd2b6abe2987406544a69e0dc96b984dc8b257f3680c112978",
+      "url": "/tracheostomy/models/cuffless-tube.glb",
+      "outputBytes": 467892,
+      "meshCount": 1,
+      "triangles": {
+        "original": 295408,
+        "afterCleanup": 295408,
+        "optimized": 62000,
+        "target": 62000
+      },
+      "decimationRatio": 0.20988,
+      "normalizationScale": 1.05298075,
+      "originalDimensions": [1.201042, 1.022811, 1.89937],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Reviewed authoring reference; not used in the segmented animation.",
+      "learnerFacing": false,
+      "attribution": null,
+      "sourceUrl": null,
+      "license": null,
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    },
+    {
+      "id": "inner-cannula",
+      "displayName": "Removable inner cannula",
+      "sourceFile": "inner cannula.glb",
+      "sourceSha256": "6dd44f801d5d39002343782cf9ffbc47be7e9af70eb48acf0a5f0d92bad4aefb",
+      "url": "/tracheostomy/models/inner-cannula.glb",
+      "outputBytes": 259028,
+      "meshCount": 1,
+      "triangles": {
+        "original": 229914,
+        "afterCleanup": 229914,
+        "optimized": 42000,
+        "target": 42000
+      },
+      "decimationRatio": 0.18268,
+      "normalizationScale": 1.05295194,
+      "originalDimensions": [0.488843, 1.899422, 1.210028],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Reviewed authoring reference; hub details remain illustrative.",
+      "learnerFacing": false,
+      "attribution": null,
+      "sourceUrl": null,
+      "license": null,
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    },
+    {
+      "id": "larynx-anatomy",
+      "displayName": "Larynx with muscles and ligaments",
+      "sourceFile": "larynx_with_muscles_and_ligaments.glb",
+      "sourceSha256": "12da3292186ff86e2554802b9398cc96d2395da81e16b2f0b4ac96b9995e7715",
+      "url": "/tracheostomy/models/larynx-anatomy.glb",
+      "outputBytes": 1560388,
+      "meshCount": 10,
+      "triangles": {
+        "original": 619699,
+        "afterCleanup": 619698,
+        "optimized": 164989,
+        "target": 165000
+      },
+      "decimationRatio": 0.26626,
+      "normalizationScale": 0.03170852,
+      "originalDimensions": [31.910021, 33.177406, 63.074539],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_10",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_11",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_12",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_13",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_14",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_4",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_5",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_6",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_7",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_8",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_9",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Reviewed orientation reference; not registered to the procedural tube geometry.",
+      "learnerFacing": false,
+      "attribution": "University of Dundee School of Medicine",
+      "sourceUrl": "https://sketchfab.com/3d-models/larynx-with-muscles-and-ligaments-3b247ff11b104e24acbb1c453f5bad46",
+      "license": "CC BY-NC-SA 4.0",
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    },
+    {
+      "id": "obturator",
+      "displayName": "Insertion obturator",
+      "sourceFile": "obterator.glb",
+      "sourceSha256": "4d69ed34c7e21efe5b51a3143da328c2731e2ee76d9a8cce39653e940a3d6f53",
+      "url": "/tracheostomy/models/obturator.glb",
+      "outputBytes": 132360,
+      "meshCount": 1,
+      "triangles": {
+        "original": 54568,
+        "afterCleanup": 54568,
+        "optimized": 18000,
+        "target": 18000
+      },
+      "decimationRatio": 0.32986,
+      "normalizationScale": 1.0530167,
+      "originalDimensions": [0.477532, 1.899305, 0.412631],
+      "normalizedMaxDimension": 2.0,
+      "textures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "optimized": [1024, 1024]
+        },
+        {
+          "name": "Viewer Node",
+          "original": [256, 256],
+          "optimized": [256, 256]
+        }
+      ],
+      "role": "Source-repaired review asset only; the generated handle and curvature do not match the supplied tubes and are excluded from learner-facing views.",
+      "learnerFacing": false,
+      "attribution": null,
+      "sourceUrl": null,
+      "license": null,
+      "repairs": [
+        "flattened transforms",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied conservative triangle budget",
+        "limited embedded textures to 1024px",
+        "renamed generic mesh nodes"
+      ]
+    }
+  ]
+}

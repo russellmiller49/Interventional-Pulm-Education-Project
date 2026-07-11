@@ -1,0 +1,749 @@
+{
+  "schema_version": 1,
+  "generated_with": "5.1.0",
+  "source_filename": "Rigid bronch 3d model - EFER-DUMON corrected 2026-07-09.glb",
+  "source_size_bytes": 2053308,
+  "source_sha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff",
+  "metadata_qualifications": [
+    {
+      "top_level_component_id": "Autoclavable_Bronchial_Endoscope_BX5500_FA",
+      "field": "working_length_mm",
+      "qualification": "The 490 mm shaft length is an educational geometry estimate from the source model. Current manufacturer pages publish 5.5 mm diameter and 0-degree direction of view, but do not publish this working length."
+    }
+  ],
+  "source_set_top_level_id": "EFER_DUMON_Rigid_Bronchoscopy_Teaching_Set",
+  "source_set_custom_properties": {
+    "education_only": true,
+    "units": "meters",
+    "source_ordering_information": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+    "source_user_manual": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+    "source_catalog": "https://hoodlabs.com/wp-content/uploads/hood-labs-F973-Airway-catalog-6-2022.pdf",
+    "source_regulatory_ifu": "https://medical.haradacorp.co.jp/wp-content/uploads/2022/01/%E6%B7%BB%E6%96%8730002-A-06-EFER%EF%BE%8C%EF%BE%9E%EF%BE%9B%EF%BE%9D%EF%BD%BA%EF%BD%BD%EF%BD%BA%EF%BD%B0%EF%BE%8C%EF%BE%9F.pdf",
+    "geometry_note": "Tube dimensions are manufacturer-specified. Universal-base dimensions and port angles are photo-derived educational approximations and are not manufacturing drawings."
+  },
+  "coordinate_and_units": {
+    "glb_coordinate_system": "glTF 2.0 right-handed Y-up",
+    "reported_bounds_coordinate_system": "Blender right-handed Z-up after reimport",
+    "reported_bounds_units": "meters"
+  },
+  "export_policy": {
+    "selection": "each direct semantic child of the source teaching-set root plus all descendants",
+    "origin": "rebase component semantic root translation to world origin",
+    "hierarchy": "preserve component root, descendant object names, local transforms, and materials",
+    "metadata": "preserve glTF node extras imported as Blender custom properties"
+  },
+  "excluded_components": [
+    {
+      "top_level_component_id": "Teaching_Demo_Assembled_BT2103_3_with_BD2410_3",
+      "reason": "duplicate assembled teaching demo; reusable assembly should compose the separately exported tube and base"
+    }
+  ],
+  "component_count": 18,
+  "components": [
+    {
+      "top_level_component_id": "Adult_Universal_Base_BD2410_3",
+      "filename": "bd2410-3-adult-universal-base.glb",
+      "part_number": "BD2410-3",
+      "component_type": "adult_universal_base",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.340000004, 0.07],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 16,
+      "mesh_node_count": 14,
+      "unique_mesh_count": 14,
+      "triangle_count": 9242,
+      "material_names": ["Polished stainless steel", "Red silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.01515, -0.050000001, -0.046884954],
+        "max": [0.01515, 0.053000014, 0.046134423],
+        "size": [0.030300001, 0.103000015, 0.093019381],
+        "center": [0.0, 0.001500007, -0.000375265]
+      },
+      "object_names": [
+        "Adult_Universal_Base_BD2410_3",
+        "BB2403_3_Patent_Bore",
+        "Jet_Ventilation_Obturator_BB2403_3",
+        "Universal_Base_BD2410_3_Accessory_Port_Connected_Lumen",
+        "Universal_Base_BD2410_3_Accessory_Port_End_Collar",
+        "Universal_Base_BD2410_3_Anesthesia_Port_End_Collar",
+        "Universal_Base_BD2410_3_Anesthesia_Ventilation_Port_Connected_Lumen",
+        "Universal_Base_BD2410_3_Base_Red_Alignment_Dot",
+        "Universal_Base_BD2410_3_Connected_Main_Lumen",
+        "Universal_Base_BD2410_3_Fixed_Jet_Venturi_Port_Connected_Lumen",
+        "Universal_Base_BD2410_3_Front_Tube_Lock_Collar",
+        "Universal_Base_BD2410_3_Jet_Port_End_Collar",
+        "Universal_Base_BD2410_3_Large_90_Degree_Tube_Lock_Ring",
+        "Universal_Base_BD2410_3_Rear_Main_Port_Collar",
+        "Universal_Base_BD2410_3_Small_360_Degree_Ribbed_Ring",
+        "Universal_Base_BD2410_3_Tube_Red_Alignment_Dot"
+      ],
+      "root_custom_properties": {
+        "part_number": "BD2410-3",
+        "component_type": "adult_universal_base",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "port_geometry_source": "photo-derived from user manual and catalog",
+        "main_axial_lumen_patent": true,
+        "lateral_port_lumens_patent": true
+      },
+      "file_size_bytes": 264580,
+      "sha256": "f87ee307741e1ddb4963ac9b157ac36d3ce9f1f8e7311014e529035c3cc7a196"
+    },
+    {
+      "top_level_component_id": "Autoclavable_Bronchial_Endoscope_BX5500_FA",
+      "filename": "bx-5500-fa-rigid-telescope.glb",
+      "part_number": "BX-5500-FA",
+      "component_type": "rigid_telescope",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.455000013, 0.347000003],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 7,
+      "mesh_node_count": 6,
+      "unique_mesh_count": 6,
+      "triangle_count": 1320,
+      "material_names": ["Black polymer", "Optical lens", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.0115, -0.054000016, -0.033000015],
+        "max": [0.0115, 0.490999997, 0.011500003],
+        "size": [0.023, 0.545000017, 0.044500016],
+        "center": [0.0, 0.218499988, -0.010750006]
+      },
+      "object_names": [
+        "Autoclavable_Bronchial_Endoscope_BX5500_FA",
+        "BX5500_FA_Black_Flared_Eyepiece",
+        "BX5500_FA_Distal_Objective_Lens",
+        "BX5500_FA_Light_Guide_Black_Coupling",
+        "BX5500_FA_Light_Guide_Connector",
+        "BX5500_FA_Proximal_Metal_Housing",
+        "BX5500_FA_Sealed_Rod_Lens_Shaft"
+      ],
+      "root_custom_properties": {
+        "part_number": "BX-5500-FA",
+        "component_type": "rigid_telescope",
+        "outer_diameter_mm": 5.5,
+        "working_length_mm": 490,
+        "direction_of_view_degrees": 0,
+        "sealed_optical_shaft_not_airway_lumen": true,
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/"
+      },
+      "file_size_bytes": 59992,
+      "sha256": "f8558b4cda287af0629c4b87b362bd40de731677af583eaac99d64711e522bf9"
+    },
+    {
+      "top_level_component_id": "BT2000_3_Adult_bronchial_tube_13.20_12.20_mm",
+      "filename": "bt2000-3-bronchial-tube-od13p20-id12p20mm.glb",
+      "part_number": "BT2000-3",
+      "component_type": "bronchial_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.284999996],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 4696,
+      "material_names": ["Etched stainless scale", "Orange silicone", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00995, -0.014, -0.00995],
+        "max": [0.00995, 0.360000014, 0.00995],
+        "size": [0.0199, 0.374000013, 0.0199],
+        "center": [0.0, 0.173000008, 0.0]
+      },
+      "object_names": [
+        "BT2000_3_Adult_bronchial_tube_13.20_12.20_mm",
+        "BT2000_3_Hollow_Beveled_Tube",
+        "BT2000_3_Internal_Distal_Safety_Stop",
+        "BT2000_3_Locking_Lug_1",
+        "BT2000_3_Locking_Lug_2",
+        "BT2000_3_Metric_Depth_Scale",
+        "BT2000_3_Orange_Size_Ring",
+        "BT2000_3_Quarter_Turn_Connector"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2000-3",
+        "display_name": "Adult bronchial tube 13.20/12.20 mm",
+        "component_type": "bronchial_tube",
+        "outer_diameter_mm": 13.2,
+        "inner_diameter_mm": 12.2,
+        "working_length_mm": 360,
+        "ventilated": true,
+        "color_code": "orange",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 165476,
+      "sha256": "e871d790bb04e5894068f5c14b700367d7af4257900f66db9aea1bb3e5fb2972"
+    },
+    {
+      "top_level_component_id": "BT2101_3_Adult_bronchial_tube_12.00_11.00_mm",
+      "filename": "bt2101-3-bronchial-tube-od12p00-id11p00mm.glb",
+      "part_number": "BT2101-3",
+      "component_type": "bronchial_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.245000005],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 4696,
+      "material_names": ["Black polymer", "Etched stainless scale", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00935, -0.014, -0.00935],
+        "max": [0.00935, 0.360000014, 0.00935],
+        "size": [0.0187, 0.374000013, 0.0187],
+        "center": [0.0, 0.173000008, 0.0]
+      },
+      "object_names": [
+        "BT2101_3_Adult_bronchial_tube_12.00_11.00_mm",
+        "BT2101_3_Black_Size_Ring",
+        "BT2101_3_Hollow_Beveled_Tube",
+        "BT2101_3_Internal_Distal_Safety_Stop",
+        "BT2101_3_Locking_Lug_1",
+        "BT2101_3_Locking_Lug_2",
+        "BT2101_3_Metric_Depth_Scale",
+        "BT2101_3_Quarter_Turn_Connector"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2101-3",
+        "display_name": "Adult bronchial tube 12.00/11.00 mm",
+        "component_type": "bronchial_tube",
+        "outer_diameter_mm": 12.0,
+        "inner_diameter_mm": 11.0,
+        "working_length_mm": 360,
+        "ventilated": true,
+        "color_code": "black",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 163928,
+      "sha256": "b6110fae576b9616d7666c167fbddc89013d3efb90c1a26a4e491fc2f833d5a1"
+    },
+    {
+      "top_level_component_id": "BT2103_3_Adult_bronchial_tube_10.00_9.20_mm",
+      "filename": "bt2103-3-bronchial-tube-od10p00-id9p20mm.glb",
+      "part_number": "BT2103-3",
+      "component_type": "bronchial_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.204999998],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 4696,
+      "material_names": ["Etched stainless scale", "Polished stainless steel", "Red silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00835, -0.014, -0.00835],
+        "max": [0.00835, 0.360000014, 0.00835],
+        "size": [0.0167, 0.374000013, 0.0167],
+        "center": [0.0, 0.173000008, 0.0]
+      },
+      "object_names": [
+        "BT2103_3_Adult_bronchial_tube_10.00_9.20_mm",
+        "BT2103_3_Hollow_Beveled_Tube",
+        "BT2103_3_Internal_Distal_Safety_Stop",
+        "BT2103_3_Locking_Lug_1",
+        "BT2103_3_Locking_Lug_2",
+        "BT2103_3_Metric_Depth_Scale",
+        "BT2103_3_Quarter_Turn_Connector",
+        "BT2103_3_Red_Size_Ring"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2103-3",
+        "display_name": "Adult bronchial tube 10.00/9.20 mm",
+        "component_type": "bronchial_tube",
+        "outer_diameter_mm": 10.0,
+        "inner_diameter_mm": 9.2,
+        "working_length_mm": 360,
+        "ventilated": true,
+        "color_code": "red",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 163460,
+      "sha256": "23286bfa8254965d9453817f7dacaff937719b1850c143d9d87b631e14cd8998"
+    },
+    {
+      "top_level_component_id": "BT2105_3_Adult_bronchial_tube_8.00_7.00_mm",
+      "filename": "bt2105-3-bronchial-tube-od8p00-id7p00mm.glb",
+      "part_number": "BT2105-3",
+      "component_type": "bronchial_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.165000007],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 4696,
+      "material_names": ["Etched stainless scale", "Green silicone", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00735, -0.014, -0.00735],
+        "max": [0.00735, 0.360000014, 0.00735],
+        "size": [0.0147, 0.374000013, 0.0147],
+        "center": [0.0, 0.173000008, 0.0]
+      },
+      "object_names": [
+        "BT2105_3_Adult_bronchial_tube_8.00_7.00_mm",
+        "BT2105_3_Green_Size_Ring",
+        "BT2105_3_Hollow_Beveled_Tube",
+        "BT2105_3_Internal_Distal_Safety_Stop",
+        "BT2105_3_Locking_Lug_1",
+        "BT2105_3_Locking_Lug_2",
+        "BT2105_3_Metric_Depth_Scale",
+        "BT2105_3_Quarter_Turn_Connector"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2105-3",
+        "display_name": "Adult bronchial tube 8.00/7.00 mm",
+        "component_type": "bronchial_tube",
+        "outer_diameter_mm": 8.0,
+        "inner_diameter_mm": 7.0,
+        "working_length_mm": 360,
+        "ventilated": true,
+        "color_code": "green",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 167340,
+      "sha256": "74be57fae5089fdfd0a760d1d2b3f9582a67b6a469b6c0d3ca7d822c30c5b6a8"
+    },
+    {
+      "top_level_component_id": "BT2106_3_Adult_bronchial_tube_7.00_6.50_mm",
+      "filename": "bt2106-3-bronchial-tube-od7p00-id6p50mm.glb",
+      "part_number": "BT2106-3",
+      "component_type": "bronchial_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.125],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 4728,
+      "material_names": ["Blue silicone", "Etched stainless scale", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00685, -0.014, -0.00685],
+        "max": [0.00685, 0.360000014, 0.00685],
+        "size": [0.0137, 0.374000013, 0.0137],
+        "center": [0.0, 0.173000008, 0.0]
+      },
+      "object_names": [
+        "BT2106_3_Adult_bronchial_tube_7.00_6.50_mm",
+        "BT2106_3_Blue_Size_Ring",
+        "BT2106_3_Hollow_Beveled_Tube",
+        "BT2106_3_Internal_Distal_Safety_Stop",
+        "BT2106_3_Locking_Lug_1",
+        "BT2106_3_Locking_Lug_2",
+        "BT2106_3_Metric_Depth_Scale",
+        "BT2106_3_Quarter_Turn_Connector"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2106-3",
+        "display_name": "Adult bronchial tube 7.00/6.50 mm",
+        "component_type": "bronchial_tube",
+        "outer_diameter_mm": 7.0,
+        "inner_diameter_mm": 6.5,
+        "working_length_mm": 360,
+        "ventilated": true,
+        "color_code": "blue",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 168276,
+      "sha256": "ea92055e0f690eb88505359d77d8974b771278947ec1ded7fe24bcee90c08fbf"
+    },
+    {
+      "top_level_component_id": "BT2201_3_Adult_tracheal_tube_12.00_11.00_mm",
+      "filename": "bt2201-3-tracheal-tube-od12p00-id11p00mm.glb",
+      "part_number": "BT2201-3",
+      "component_type": "tracheal_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.025],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 3736,
+      "material_names": ["Black polymer", "Etched stainless scale", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00935, -0.014, -0.00935],
+        "max": [0.00935, 0.25999999, 0.00935],
+        "size": [0.0187, 0.273999989, 0.0187],
+        "center": [0.0, 0.122999996, 0.0]
+      },
+      "object_names": [
+        "BT2201_3_Adult_tracheal_tube_12.00_11.00_mm",
+        "BT2201_3_Black_Size_Ring",
+        "BT2201_3_Hollow_Beveled_Tube",
+        "BT2201_3_Internal_Distal_Safety_Stop",
+        "BT2201_3_Locking_Lug_1",
+        "BT2201_3_Locking_Lug_2",
+        "BT2201_3_Metric_Depth_Scale",
+        "BT2201_3_Quarter_Turn_Connector"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2201-3",
+        "display_name": "Adult tracheal tube 12.00/11.00 mm",
+        "component_type": "tracheal_tube",
+        "outer_diameter_mm": 12.0,
+        "inner_diameter_mm": 11.0,
+        "working_length_mm": 260,
+        "ventilated": false,
+        "color_code": "black",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 124100,
+      "sha256": "0bfa964b394adfa834010c15e7d26a366e798c45787a93101648e2c2b2474e19"
+    },
+    {
+      "top_level_component_id": "BT2203_3_Adult_tracheal_tube_10.00_9.20_mm",
+      "filename": "bt2203-3-tracheal-tube-od10p00-id9p20mm.glb",
+      "part_number": "BT2203-3",
+      "component_type": "tracheal_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, -0.015],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 3736,
+      "material_names": ["Etched stainless scale", "Polished stainless steel", "Red silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00835, -0.014, -0.00835],
+        "max": [0.00835, 0.25999999, 0.00835],
+        "size": [0.0167, 0.273999989, 0.0167],
+        "center": [0.0, 0.122999996, 0.0]
+      },
+      "object_names": [
+        "BT2203_3_Adult_tracheal_tube_10.00_9.20_mm",
+        "BT2203_3_Hollow_Beveled_Tube",
+        "BT2203_3_Internal_Distal_Safety_Stop",
+        "BT2203_3_Locking_Lug_1",
+        "BT2203_3_Locking_Lug_2",
+        "BT2203_3_Metric_Depth_Scale",
+        "BT2203_3_Quarter_Turn_Connector",
+        "BT2203_3_Red_Size_Ring"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2203-3",
+        "display_name": "Adult tracheal tube 10.00/9.20 mm",
+        "component_type": "tracheal_tube",
+        "outer_diameter_mm": 10.0,
+        "inner_diameter_mm": 9.2,
+        "working_length_mm": 260,
+        "ventilated": false,
+        "color_code": "red",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 125120,
+      "sha256": "04b0e1f211f772725abf57dbbefb03e61985500824c1409347e01d78633f0b17"
+    },
+    {
+      "top_level_component_id": "BT2205_3_Adult_tracheal_tube_8.00_7.00_mm",
+      "filename": "bt2205-3-tracheal-tube-od8p00-id7p00mm.glb",
+      "part_number": "BT2205-3",
+      "component_type": "tracheal_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, -0.055],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 3736,
+      "material_names": ["Etched stainless scale", "Green silicone", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00735, -0.014, -0.00735],
+        "max": [0.00735, 0.25999999, 0.00735],
+        "size": [0.0147, 0.273999989, 0.0147],
+        "center": [0.0, 0.122999996, 0.0]
+      },
+      "object_names": [
+        "BT2205_3_Adult_tracheal_tube_8.00_7.00_mm",
+        "BT2205_3_Green_Size_Ring",
+        "BT2205_3_Hollow_Beveled_Tube",
+        "BT2205_3_Internal_Distal_Safety_Stop",
+        "BT2205_3_Locking_Lug_1",
+        "BT2205_3_Locking_Lug_2",
+        "BT2205_3_Metric_Depth_Scale",
+        "BT2205_3_Quarter_Turn_Connector"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2205-3",
+        "display_name": "Adult tracheal tube 8.00/7.00 mm",
+        "component_type": "tracheal_tube",
+        "outer_diameter_mm": 8.0,
+        "inner_diameter_mm": 7.0,
+        "working_length_mm": 260,
+        "ventilated": false,
+        "color_code": "green",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 125856,
+      "sha256": "0c3ad3a019dc73cefefa2290e70920132e0c10a5271deed98b905d6d8de887e0"
+    },
+    {
+      "top_level_component_id": "BT2210_3_Adult_tracheal_tube_13.20_12.20_mm",
+      "filename": "bt2210-3-tracheal-tube-od13p20-id12p20mm.glb",
+      "part_number": "BT2210-3",
+      "component_type": "tracheal_tube",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.02, 0.064999998],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 8,
+      "mesh_node_count": 7,
+      "unique_mesh_count": 7,
+      "triangle_count": 3736,
+      "material_names": ["Etched stainless scale", "Polished stainless steel", "Yellow silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.00995, -0.014, -0.00995],
+        "max": [0.00995, 0.25999999, 0.00995],
+        "size": [0.0199, 0.273999989, 0.0199],
+        "center": [0.0, 0.122999996, 0.0]
+      },
+      "object_names": [
+        "BT2210_3_Adult_tracheal_tube_13.20_12.20_mm",
+        "BT2210_3_Hollow_Beveled_Tube",
+        "BT2210_3_Internal_Distal_Safety_Stop",
+        "BT2210_3_Locking_Lug_1",
+        "BT2210_3_Locking_Lug_2",
+        "BT2210_3_Metric_Depth_Scale",
+        "BT2210_3_Quarter_Turn_Connector",
+        "BT2210_3_Yellow_Size_Ring"
+      ],
+      "root_custom_properties": {
+        "part_number": "BT2210-3",
+        "display_name": "Adult tracheal tube 13.20/12.20 mm",
+        "component_type": "tracheal_tube",
+        "outer_diameter_mm": 13.2,
+        "inner_diameter_mm": 12.2,
+        "working_length_mm": 260,
+        "ventilated": false,
+        "color_code": "yellow",
+        "dimension_source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "is_duplicate_assembly_demo": false
+      },
+      "file_size_bytes": 125000,
+      "sha256": "1136ec77f666881bce8c7862037271e92bb05410f42e4db45612e3c39ab5a923"
+    },
+    {
+      "top_level_component_id": "Compact_Base_BD2501_3",
+      "filename": "bd2501-3-compact-base.glb",
+      "part_number": "BD2501-3",
+      "component_type": "compact_base",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.340000004, -0.045000002],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 6,
+      "mesh_node_count": 5,
+      "unique_mesh_count": 5,
+      "triangle_count": 2744,
+      "material_names": ["Polished stainless steel", "Red silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.0151, -0.032000002, -0.0151],
+        "max": [0.0151, 0.034000002, 0.0152],
+        "size": [0.030200001, 0.066, 0.030300001],
+        "center": [0.0, 0.001, 5e-5]
+      },
+      "object_names": [
+        "Compact_Base_BD2501_3",
+        "Compact_Base_BD2501_3_Central_Patent_Lumen",
+        "Compact_Base_BD2501_3_Front_Tube_Connector",
+        "Compact_Base_BD2501_3_Quarter_Turn_Ribbed_Ring",
+        "Compact_Base_BD2501_3_Rear_Main_Opening",
+        "Compact_Base_BD2501_3_Red_Alignment_Dot"
+      ],
+      "root_custom_properties": {
+        "part_number": "BD2501-3",
+        "component_type": "compact_base",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "geometry_source": "photo-derived from user manual and catalog",
+        "main_axial_lumen_patent": true
+      },
+      "file_size_bytes": 91988,
+      "sha256": "6a435fdb73a5239f45844441533a50b9a9b9a313e3d02ddfe9ad909099052597"
+    },
+    {
+      "top_level_component_id": "Lateral_Obturator_One_Gate_BB2401_3",
+      "filename": "bb2401-3-lateral-obturator-single-gate.glb",
+      "part_number": "BB2401-3",
+      "component_type": "lateral_obturator_single_gate",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.414999992, 0.177000001],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 4,
+      "mesh_node_count": 3,
+      "unique_mesh_count": 3,
+      "triangle_count": 1216,
+      "material_names": ["Blue silicone", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.010638463, -0.012623147, -0.0062],
+        "max": [0.017936822, 0.029803578, 0.0062],
+        "size": [0.028575286, 0.042426724, 0.0124],
+        "center": [0.003649179, 0.008590216, 0.0]
+      },
+      "object_names": [
+        "BB2401_3_Blue_2mm_Cap",
+        "BB2401_3_Main_Patent_Lumen",
+        "BB2401_3_Single_Instrument_Gate",
+        "Lateral_Obturator_One_Gate_BB2401_3"
+      ],
+      "root_custom_properties": {
+        "part_number": "BB2401-3",
+        "component_type": "lateral_obturator_single_gate",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "functional_lumens": 1
+      },
+      "file_size_bytes": 39740,
+      "sha256": "1cc6c19032eb5c8eb62b982be1141f2915e80f6d384b5cf086ee3e420d6fe50c"
+    },
+    {
+      "top_level_component_id": "Lateral_Obturator_Two_Gates_BB2402_3",
+      "filename": "bb2402-3-lateral-obturator-double-gate.glb",
+      "part_number": "BB2402-3",
+      "component_type": "lateral_obturator_double_gate",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.36500001, 0.215000004],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 6,
+      "mesh_node_count": 5,
+      "unique_mesh_count": 5,
+      "triangle_count": 1856,
+      "material_names": ["Blue silicone", "Polished stainless steel"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.010138086, -0.012570768, -0.0062],
+        "max": [0.016768852, 0.03046203, 0.0062],
+        "size": [0.026906937, 0.043032799, 0.0124],
+        "center": [0.003315383, 0.008945631, 0.0]
+      },
+      "object_names": [
+        "BB2402_3_Blue_Gate_Cap_1",
+        "BB2402_3_Blue_Gate_Cap_2",
+        "BB2402_3_Instrument_Gate_1",
+        "BB2402_3_Instrument_Gate_2",
+        "BB2402_3_Main_Patent_Lumen",
+        "Lateral_Obturator_Two_Gates_BB2402_3"
+      ],
+      "root_custom_properties": {
+        "part_number": "BB2402-3",
+        "component_type": "lateral_obturator_double_gate",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "functional_lumens": 2
+      },
+      "file_size_bytes": 53868,
+      "sha256": "30a40be86f8a16fb8b86b1c1416b60f7aea4fcb9452d59cd4a758bf93b04c184"
+    },
+    {
+      "top_level_component_id": "Main_Cap_BS2303_3_Red_5_5mm",
+      "filename": "bs2303-3-main-cap-red-5p5mm.glb",
+      "part_number": "BS2303-3",
+      "component_type": "silicone_cap",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.460000008, 0.07],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 2,
+      "mesh_node_count": 1,
+      "unique_mesh_count": 1,
+      "triangle_count": 480,
+      "material_names": ["Red silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.002500003, -0.0125, -0.012500002],
+        "max": [0.002500003, 0.0125, 0.012500002],
+        "size": [0.005000007, 0.025, 0.025000004],
+        "center": [0.0, 0.0, 0.0]
+      },
+      "object_names": [
+        "Main_Cap_BS2303_3_Red_5_5mm",
+        "Main_Cap_BS2303_3_Red_5_5mm_Functional_Geometry"
+      ],
+      "root_custom_properties": {
+        "part_number": "BS2303-3",
+        "component_type": "silicone_cap",
+        "nominal_diameter_mm": 25,
+        "intended_opening": "5.5 mm telescope",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/"
+      },
+      "file_size_bytes": 20080,
+      "sha256": "57bcacde064c7221fab6472671b72b45c75425f6aa8f592fd5f1b0d67dbc69da"
+    },
+    {
+      "top_level_component_id": "Main_Cap_BS2310_3_Green_Dual_4mm",
+      "filename": "bs2310-3-main-cap-green-dual-4mm.glb",
+      "part_number": "BS2310-3",
+      "component_type": "silicone_cap",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.430000007, 0.015],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 2,
+      "mesh_node_count": 1,
+      "unique_mesh_count": 1,
+      "triangle_count": 684,
+      "material_names": ["Green silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.002500003, -0.0125, -0.012500002],
+        "max": [0.002500003, 0.0125, 0.012500002],
+        "size": [0.005000007, 0.025, 0.025000004],
+        "center": [0.0, 0.0, 0.0]
+      },
+      "object_names": [
+        "Main_Cap_BS2310_3_Green_Dual_4mm",
+        "Main_Cap_BS2310_3_Green_Dual_4mm_Functional_Geometry"
+      ],
+      "root_custom_properties": {
+        "part_number": "BS2310-3",
+        "component_type": "silicone_cap",
+        "nominal_diameter_mm": 25,
+        "intended_opening": "4 mm telescope plus 4 mm instrument",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/"
+      },
+      "file_size_bytes": 27900,
+      "sha256": "0db7daf08800d468b97aa0c541ed719fc1ff7c185c828c9406b2cd1dfcaf83b5"
+    },
+    {
+      "top_level_component_id": "Side_Cap_BS2101_3_Blue_Solid",
+      "filename": "bs2101-3-side-cap-blue-solid.glb",
+      "part_number": "BS2101-3",
+      "component_type": "silicone_cap",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.409999996, 0.140000001],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 2,
+      "mesh_node_count": 1,
+      "unique_mesh_count": 1,
+      "triangle_count": 284,
+      "material_names": ["Blue silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.002500002, -0.006000001, -0.006000001],
+        "max": [0.002500002, 0.006000001, 0.006000001],
+        "size": [0.005000004, 0.012000001, 0.012000003],
+        "center": [0.0, 0.0, 0.0]
+      },
+      "object_names": [
+        "Side_Cap_BS2101_3_Blue_Solid",
+        "Side_Cap_BS2101_3_Blue_Solid_Functional_Geometry"
+      ],
+      "root_custom_properties": {
+        "part_number": "BS2101-3",
+        "component_type": "silicone_cap",
+        "nominal_diameter_mm": 12,
+        "intended_opening": "solid side cap",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/"
+      },
+      "file_size_bytes": 12696,
+      "sha256": "5ce4312f2b47c5e184089d4a72c8665e50b047c0def58b2eb6b6c2139b1eee11"
+    },
+    {
+      "top_level_component_id": "Side_Cap_BS2102_3_Blue_2mm",
+      "filename": "bs2102-3-side-cap-blue-2mm.glb",
+      "part_number": "BS2102-3",
+      "component_type": "silicone_cap",
+      "source_showcase_translation_blender_z_up_m": [0.0, -0.379999995, 0.140000001],
+      "export_origin_policy": "component semantic root rebased to [0,0,0]; child-local transforms preserved",
+      "node_count": 2,
+      "mesh_node_count": 1,
+      "unique_mesh_count": 1,
+      "triangle_count": 480,
+      "material_names": ["Blue silicone"],
+      "bounds_blender_z_up_m": {
+        "min": [-0.002500002, -0.006000001, -0.006000001],
+        "max": [0.002500002, 0.006000001, 0.006000001],
+        "size": [0.005000004, 0.012000001, 0.012000003],
+        "center": [0.0, 0.0, 0.0]
+      },
+      "object_names": [
+        "Side_Cap_BS2102_3_Blue_2mm",
+        "Side_Cap_BS2102_3_Blue_2mm_Functional_Geometry"
+      ],
+      "root_custom_properties": {
+        "part_number": "BS2102-3",
+        "component_type": "silicone_cap",
+        "nominal_diameter_mm": 12,
+        "intended_opening": "2 mm instrument",
+        "source": "https://hoodlabs.com/efer-bronchoscope-ordering-information/"
+      },
+      "file_size_bytes": 20076,
+      "sha256": "5b5b2c8c42a7d7fca4ce5cd7855125e49036a3c7937a7f388888c42fce70d42b"
+    }
+  ]
+}

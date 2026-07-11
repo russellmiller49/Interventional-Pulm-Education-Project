@@ -145,6 +145,12 @@ export function Navigation() {
         description: nav('items.rigidBronchoscopy.description'),
       },
       {
+        title: nav('items.airwayStentMechanics.title'),
+        shortTitle: nav('items.airwayStentMechanics.shortTitle'),
+        href: '/airway-stent-mechanics' as Route,
+        description: nav('items.airwayStentMechanics.description'),
+      },
+      {
         title: nav('items.tracheostomy.title'),
         shortTitle: nav('items.tracheostomy.shortTitle'),
         href: '/tracheostomy' as Route,

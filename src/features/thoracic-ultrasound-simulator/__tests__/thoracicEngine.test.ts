@@ -1,5 +1,6 @@
 import {
   FACE_RADIUS_MM,
+  PHASED_FACE_RADIUS_MM,
   approachFrame,
   beamDirection,
   needleEndpoint,
@@ -86,6 +87,28 @@ describe('scan-plane geometry (3D slice + in-image identification)', () => {
 
   it('returns null for pixels outside the sector', () => {
     expect(sectorImageToWorld(probe, width, height, 5, 5)).toBeNull()
+  })
+
+  it('uses matching near-apex geometry for phased-array scan conversion and hit testing', () => {
+    const maxDepthMm = probe.depthCm * 10
+    const halfRad = (probe.sectorAngleDeg / 2) * DEG2RAD
+    const scale = Math.min(
+      (height - 14) / (maxDepthMm + PHASED_FACE_RADIUS_MM * (1 - Math.cos(halfRad))),
+      (width / 2 - 4) / ((PHASED_FACE_RADIUS_MM + maxDepthMm) * Math.sin(halfRad)),
+    )
+    const apexY = 8 - PHASED_FACE_RADIUS_MM * scale * Math.cos(halfRad)
+    const angleDeg = 22
+    const depthMm = 84
+    const radiusPx = (PHASED_FACE_RADIUS_MM + depthMm) * scale
+    const imageX = width / 2 + radiusPx * Math.sin(angleDeg * DEG2RAD)
+    const imageY = apexY + radiusPx * Math.cos(angleDeg * DEG2RAD)
+
+    const recovered = sectorImageToWorld(probe, width, height, imageX, imageY, 0, 'phased')
+    const expected = projectBeamToWorld(probe, angleDeg, depthMm)
+    expect(recovered).not.toBeNull()
+    expect(Math.hypot(...recovered!.map((value, index) => value - expected[index]))).toBeLessThan(
+      0.05,
+    )
   })
 })
 

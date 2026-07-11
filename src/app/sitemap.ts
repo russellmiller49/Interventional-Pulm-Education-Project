@@ -79,6 +79,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const draftRoutes: MetadataRoute.Sitemap = areDraftModulesEnabled
     ? [
         {
+          url: `${baseUrl}/airway-stent-mechanics`,
+          lastModified: new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.8,
+        },
+        {
           url: `${baseUrl}/rapid-onsite-cytology`,
           lastModified: new Date(),
           changeFrequency: 'weekly',

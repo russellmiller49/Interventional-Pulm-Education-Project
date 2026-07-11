@@ -57,4 +57,20 @@ describe('StepSequencer', () => {
     expect(screen.getByText(/Not quite/)).toBeInTheDocument()
     expect(screen.queryByText('Because the order matters here.')).not.toBeInTheDocument()
   })
+
+  it('presents the authored order and rationale without quiz controls in demonstration mode', () => {
+    render(<StepSequencer sequence={sequence} experience="demonstration" />)
+
+    const items = screen.getAllByRole('listitem')
+    expect(within(items[0]).getByText('First step')).toBeInTheDocument()
+    expect(within(items[0]).getByText('Detail A')).toBeInTheDocument()
+    expect(within(items[1]).getByText('Second step')).toBeInTheDocument()
+    expect(within(items[1]).getByText('Detail B')).toBeInTheDocument()
+    expect(screen.getByText('Because the order matters here.')).toBeInTheDocument()
+
+    expect(screen.queryByText('Order these steps')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Check order' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reshuffle' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Move step/ })).not.toBeInTheDocument()
+  })
 })

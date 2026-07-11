@@ -49,9 +49,13 @@ export const rigidBronchoscopyLessons: PleuralLesson[] = [
       {
         id: 'shared-airway',
         statement:
-          'Rigid bronchoscopy is taught as a shared-airway procedure requiring explicit coordination with anaesthesia (commonly total intravenous anaesthesia) using controlled or jet ventilation and apnoeic oxygenation; jetting against obstructed expiratory egress can cause barotrauma.',
-        referenceIds: ['chest-ip-2003'],
-        lastReviewed: '2026-07-04',
+          'Rigid bronchoscopy is taught as a shared-airway procedure requiring explicit coordination with anaesthesia. Conventional controlled, spontaneous-assisted, low-frequency jet, and high-frequency jet ventilation have different flow and leak patterns; jet ventilation depends on adequate expiratory egress, and bronchial-tube fenestrations can preserve a contralateral route after mainstem entry.',
+        referenceIds: [
+          'diaz-jimenez-interventions-2023',
+          'yang-jet-model-2025',
+          'efer-ordering-information',
+        ],
+        lastReviewed: '2026-07-10',
         reviewer: 'Pending clinical review',
       },
       {

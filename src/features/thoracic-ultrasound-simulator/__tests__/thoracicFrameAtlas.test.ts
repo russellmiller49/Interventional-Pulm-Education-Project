@@ -47,6 +47,22 @@ describe('generic frame atlas selection', () => {
     expect(outside.withinTolerance).toBe(false)
   })
 
+  it('does not match opposite chest surfaces and wraps approach angles at 180 degrees', () => {
+    const oppositeSurface = poseDistanceWithinTolerance(
+      { ...testProbe, posteriorMm: testProbe.posteriorMm - 120, approachDeg: 180 },
+      { ...testProbe, approachDeg: 0 },
+      defaultFrameAtlasTolerance,
+    )
+    expect(oppositeSurface.withinTolerance).toBe(false)
+
+    const wrapped = poseDistanceWithinTolerance(
+      { ...testProbe, approachDeg: -179 },
+      { ...testProbe, approachDeg: 179 },
+      defaultFrameAtlasTolerance,
+    )
+    expect(wrapped.withinTolerance).toBe(true)
+  })
+
   it('selects the nearest reviewed entry within tolerance', () => {
     const selection = selectNearestReviewedFrame(
       {

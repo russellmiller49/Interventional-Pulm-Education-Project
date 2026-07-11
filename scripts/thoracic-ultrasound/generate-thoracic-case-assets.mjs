@@ -323,6 +323,7 @@ export function generateCasePackage(options) {
     resolveSegmentLabel,
     strideXyz = [2, 2, 2],
     plusToolkit,
+    cardiacModel,
     log = console.log,
   } = options
 
@@ -493,6 +494,7 @@ export function generateCasePackage(options) {
       labelCounts: counts,
       labelBoundsLpsMm: boundsByLabel,
       ...(plusToolkit ? { plusToolkit } : {}),
+      ...(cardiacModel ? { cardiacModel } : {}),
       source,
       volume,
       probeDefaults,
@@ -559,7 +561,7 @@ export function generateCasePackage(options) {
               step: 2,
             },
             tiltDeg: { min: -28, max: 28, step: 1 },
-            rotationDeg: { min: -55, max: 55, step: 1 },
+            rotationDeg: { min: -90, max: 90, step: 1 },
             needleAngleDeg: { min: -25, max: 25, step: 1 },
             depthCm: { min: 6, max: 18, step: 0.5 },
             gain: { min: 0.7, max: 2.4, step: 0.05 },
@@ -596,6 +598,7 @@ export function generateCasePackage(options) {
           'Freshly generated case package; live browser render is displayed, no reviewed frames yet.',
         ],
       },
+      ...(cardiacModel ? { cardiacModel } : {}),
       learningTasks: resolvedObjectives.map((objective, index) => {
         const lower = objective.toLowerCase()
         const kind = lower.includes('classif')

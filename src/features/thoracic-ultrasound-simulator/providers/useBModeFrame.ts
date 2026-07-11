@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type {
+  ProbeType,
   ThoracicCaseManifest,
   ThoracicFrameMetrics,
   ThoracicProbeState,
@@ -11,6 +12,7 @@ import type {
 } from '../types'
 
 import { simulateBMode } from '../engine/simulateBMode'
+import { DEFAULT_CARDIAC_CINE_FPS, probeIntersectsCardiacModel } from '../engine/cardiacModel'
 import { createBrowserRaymarchProvider } from './browserRaymarchProvider'
 import { createPlaceholderProvider } from './placeholderProvider'
 import { createPlusAtlasProvider } from './plusAtlasProvider'
@@ -103,6 +105,7 @@ export interface UseBModeFrameInput {
   width?: number
   height?: number
   model?: TissueModel
+  cardiacMotionEnabled?: boolean
 }
 
 export interface UseBModeFrameResult {
@@ -113,6 +116,10 @@ export interface UseBModeFrameResult {
   /** Hidden ground truth for the current frame/case; not for direct display. */
   groundTruthKey: string | null
   pending: boolean
+  cardiacInPlane: boolean
+  cardiacMotionActive: boolean
+  heartRateBpm: number | null
+  probeType: ProbeType
 }
 
 export function useBModeFrame({
@@ -122,8 +129,51 @@ export function useBModeFrame({
   width = 520,
   height = 620,
   model,
+  cardiacMotionEnabled = true,
 }: UseBModeFrameInput): UseBModeFrameResult {
   const providers = useMemo(() => (manifest ? buildFrameProviders(manifest) : []), [manifest])
+
+  const cardiacInPlane = useMemo(() => probeIntersectsCardiacModel(volume, probe), [volume, probe])
+  const cardiacMotionActive = cardiacInPlane && cardiacMotionEnabled
+  const [simulationTimeSec, setSimulationTimeSec] = useState(0)
+  const cineTimeRef = useRef(0)
+
+  useEffect(() => {
+    if (!cardiacMotionActive || typeof requestAnimationFrame !== 'function') {
+      return
+    }
+
+    const intervalMs = 1000 / DEFAULT_CARDIAC_CINE_FPS
+    let animationFrame = 0
+    let lastClockMs = performance.now()
+    let lastRenderedMs = lastClockMs - intervalMs
+
+    const tick = (nowMs: number) => {
+      const elapsedSec = Math.min(0.2, Math.max(0, nowMs - lastClockMs) / 1000)
+      lastClockMs = nowMs
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        cineTimeRef.current += elapsedSec
+        if (nowMs - lastRenderedMs >= intervalMs) {
+          lastRenderedMs = nowMs
+          setSimulationTimeSec(cineTimeRef.current)
+        }
+      }
+      animationFrame = requestAnimationFrame(tick)
+    }
+
+    animationFrame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animationFrame)
+  }, [cardiacMotionActive])
+
+  const probeType = useMemo<ProbeType>(() => {
+    if (cardiacInPlane) {
+      return 'phased'
+    }
+    const preset = manifest?.probePresets.find(
+      (candidate) => candidate.id === manifest.defaultProbePresetId,
+    )
+    return preset?.probeType ?? 'curvilinear'
+  }, [cardiacInPlane, manifest])
 
   useEffect(() => {
     return () => {
@@ -138,8 +188,31 @@ export function useBModeFrame({
     if (!manifest || !probe) {
       return null
     }
-    return { manifest, volume, probe, width, height, model }
-  }, [manifest, volume, probe, width, height, model])
+    const renderWidth = cardiacMotionActive ? Math.min(width, 360) : width
+    const renderHeight = cardiacMotionActive ? Math.round(renderWidth * 1.2) : height
+    return {
+      manifest,
+      volume,
+      probe,
+      width: renderWidth,
+      height: renderHeight,
+      model,
+      probeType,
+      simulationTimeSec: cardiacInPlane ? simulationTimeSec : undefined,
+      renderOnly: cardiacMotionActive,
+    }
+  }, [
+    manifest,
+    volume,
+    probe,
+    width,
+    height,
+    model,
+    probeType,
+    cardiacInPlane,
+    cardiacMotionActive,
+    simulationTimeSec,
+  ])
 
   const syncFrame = useMemo(
     () => (request ? trySyncResolve(providers, request) : null),
@@ -212,5 +285,9 @@ export function useBModeFrame({
     metrics,
     groundTruthKey: frame?.entry?.groundTruthKey ?? caseGroundTruthKey(manifest),
     pending: request !== null && syncFrame === null && asyncResult?.request !== request,
+    cardiacInPlane,
+    cardiacMotionActive,
+    heartRateBpm: cardiacInPlane ? (volume?.cardiacModel?.defaultHeartRateBpm ?? null) : null,
+    probeType,
   }
 }

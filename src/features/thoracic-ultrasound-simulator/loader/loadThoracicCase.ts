@@ -55,6 +55,9 @@ const knownLabels = new Set<ThoracicStructureLabel>([
   'gallbladder',
   'stomach',
   'heart',
+  'myocardium',
+  'cardiacBlood',
+  'cardiacValve',
   'pericardium',
   'greatVessel',
   'aorta',
@@ -90,6 +93,7 @@ export function buildLabelResolver(
 export function buildThoracicVolume(
   data: Uint8Array,
   spec: ThoracicLabelVolumeSpec,
+  cardiacModel?: ThoracicCaseManifest['cardiacModel'],
 ): ThoracicVolume {
   const [sizeX, sizeY, sizeZ] = spec.geometry.sizeXyz
   const expectedLength = sizeX * sizeY * sizeZ
@@ -104,6 +108,7 @@ export function buildThoracicVolume(
     data,
     geometry: spec.geometry,
     resolveLabel: buildLabelResolver(spec.labelCodes),
+    cardiacModel,
   }
 }
 
@@ -136,6 +141,6 @@ export async function loadThoracicCase(
 
   return {
     manifest,
-    volume: buildThoracicVolume(labelmap, manifest.primaryLabelVolume),
+    volume: buildThoracicVolume(labelmap, manifest.primaryLabelVolume, manifest.cardiacModel),
   }
 }

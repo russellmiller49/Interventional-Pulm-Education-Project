@@ -7,5 +7,10 @@ import { createTissueModel } from '@/features/thoracic-ultrasound-simulator/engi
  * set, so the shared loops reproduce the original output exactly.
  */
 export const pleuralTissueModel: TissueModel = createTissueModel({
-  isSolidOrgan: (label) => label === 'liver' || label === 'spleen',
+  isSolidOrgan: (label) =>
+    label === 'liver' ||
+    label === 'spleen' ||
+    label === 'kidney' ||
+    label === 'pancreas' ||
+    label === 'heart',
 })

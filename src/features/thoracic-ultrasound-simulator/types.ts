@@ -43,6 +43,12 @@ export type ThoracicStructureLabel =
   | 'stomach'
   // mediastinum / cardiac / vessels / airway / neck
   | 'heart'
+  /** Procedural or segmented myocardial wall. */
+  | 'myocardium'
+  /** Procedural or segmented intracardiac blood pool (not pleural fluid). */
+  | 'cardiacBlood'
+  /** Thin, strongly reflecting procedural or segmented valve tissue. */
+  | 'cardiacValve'
   | 'pericardium'
   | 'greatVessel'
   | 'aorta'
@@ -59,6 +65,51 @@ export interface LabelBounds {
   min: [number, number, number]
   max: [number, number, number]
   voxels: number
+}
+
+export type CardiacChamberId = 'left-ventricle' | 'right-ventricle' | 'left-atrium' | 'right-atrium'
+
+export interface CardiacChamberSpec {
+  id: CardiacChamberId
+  /** Chamber centre in the model's [left, anterior, base] millimetre frame. */
+  centerLocalMm: Vec3
+  /** Blood-pool radii at ventricular end diastole. */
+  endDiastolicRadiiMm: Vec3
+  /** Blood-pool radii at peak ventricular systole. Atria may be larger here. */
+  endSystolicRadiiMm: Vec3
+  /** Optional RV-like crescent shaping; 0 is an ellipsoid, 1 is strongly crescentic. */
+  crescent?: number
+}
+
+export interface CardiacValveSpec {
+  id: 'mitral' | 'tricuspid' | 'aortic'
+  centerLocalMm: Vec3
+  normalLocal: Vec3
+  radiusMm: number
+  thicknessMm: number
+  timing: 'atrioventricular' | 'semilunar'
+}
+
+/**
+ * Serializable, case-calibrated cardiac fallback used only inside voxels whose
+ * source label is `heart`. The basis columns are unit LPS vectors for the local
+ * left, anterior, and base directions; keeping this in case data avoids
+ * pretending an axis-aligned whole-heart bound contains chamber orientation.
+ */
+export interface CardiacModelSpec {
+  kind: 'parametric-cardiac-v1'
+  sourceLabel: 'heart'
+  centerLpsMm: Vec3
+  basis: {
+    leftAxis: Vec3
+    anteriorAxis: Vec3
+    baseAxis: Vec3
+  }
+  defaultHeartRateBpm: number
+  respiratoryRateBpm: number
+  respiratoryExcursionMm: number
+  chambers: CardiacChamberSpec[]
+  valves: CardiacValveSpec[]
 }
 
 /**
@@ -217,7 +268,9 @@ export type FrameReviewStatus = 'reviewed' | 'needs-review'
 
 export interface FrameAtlasTolerance {
   lateralMm: number
+  posteriorMm: number
   craniocaudalMm: number
+  approachDeg: number
   tiltDeg: number
   rotationDeg: number
   depthCm: number
@@ -356,6 +409,8 @@ export interface ThoracicCaseManifest {
   frameSources: FrameSource[]
   frameAtlas?: FrameAtlas
   qualityStatus: QualityStatus
+  /** Optional case-calibrated beating-heart fallback for live browser frames. */
+  cardiacModel?: CardiacModelSpec
   learningTasks: SimulationTask[]
   source?: ThoracicCaseSource
 }
@@ -365,6 +420,8 @@ export interface ThoracicVolume {
   data: Uint8Array
   geometry: VolumeGeometry
   resolveLabel: (code: number) => ThoracicStructureLabel
+  /** Serializable dynamic anatomy copied into the ray-march worker once. */
+  cardiacModel?: CardiacModelSpec
 }
 
 /**
@@ -379,6 +436,8 @@ export interface TissueModel {
   fillLabel: ThoracicStructureLabel
   materials: Record<string, AcousticMaterial>
   isSolidOrgan: (label: ThoracicStructureLabel) => boolean
+  /** Fluid-like display behavior without conflating cardiac blood with scoring fluid. */
+  isFluidLike: (label: ThoracicStructureLabel) => boolean
   backscatter: (label: ThoracicStructureLabel) => number
   interfaceEcho: (previous: ThoracicStructureLabel, next: ThoracicStructureLabel) => number
   texture: (worldPoint: Vec3, label: ThoracicStructureLabel, depthMm: number) => number

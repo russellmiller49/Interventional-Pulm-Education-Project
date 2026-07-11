@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ExternalLink, FileText, ShieldCheck } from 'lucide-react'
+import { Box, ExternalLink, FileText, ShieldCheck } from 'lucide-react'
 import { setRequestLocale } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,14 @@ const sourceTypeLabel = {
   review: 'Review',
   study: 'Study',
   'source-brief': 'Authoring brief',
+} as const
+
+const larynxAssetAttribution = {
+  author: 'University of Dundee School of Medicine',
+  sourceUrl:
+    'https://sketchfab.com/3d-models/larynx-with-muscles-and-ligaments-3b247ff11b104e24acbb1c453f5bad46',
+  license: 'CC BY-NC-SA 4.0',
+  licenseUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
 } as const
 
 export default async function TracheostomyReferencesPage({ params }: PageProps) {
@@ -62,13 +70,59 @@ export default async function TracheostomyReferencesPage({ params }: PageProps) 
                     The supplied July 2026 Word knowledge base defined the adult scope, sixteen-part
                     curriculum, tube taxonomy, procedure and care sequences, simulation cases,
                     competency targets, and seventeen primary literature anchors. It contained no
-                    instructional images or 3D assets, so every visual in this module was created or
-                    modeled for the learning experience.
+                    instructional images or 3D assets. The interactive model is an original,
+                    manufacturer-neutral teaching model; later user-supplied exports were reviewed
+                    as supporting references and are documented below.
                   </p>
                 </div>
                 <Badge variant="info" className="w-fit rounded-full px-3 py-1">
                   Primary authoring brief
                 </Badge>
+              </div>
+            </article>
+
+            <article className="rounded-3xl border border-cyan-500/30 bg-cyan-500/5 p-6 shadow-sm">
+              <div className="flex items-start gap-3">
+                <Box
+                  className="mt-0.5 h-5 w-5 shrink-0 text-cyan-700 dark:text-cyan-300"
+                  aria-hidden
+                />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300">
+                    3D model provenance
+                  </p>
+                  <h2 className="mt-2 text-xl font-semibold text-foreground">
+                    Reviewed supporting 3D assets
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    The supplied tube, inner-cannula, and patient-context exports were repaired and
+                    retained as authoring references. Because the generated meshes fuse unrelated
+                    components and are not anatomically registered, the learner-facing animation
+                    uses newly modeled, independently selectable parts instead of those surfaces.
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    The laryngeal anatomy is adapted from{' '}
+                    <a
+                      href={larynxAssetAttribution.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-cyan-700 underline underline-offset-2 dark:text-cyan-300"
+                    >
+                      {larynxAssetAttribution.author}
+                    </a>{' '}
+                    and remains licensed under{' '}
+                    <a
+                      href={larynxAssetAttribution.licenseUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-cyan-700 underline underline-offset-2 dark:text-cyan-300"
+                    >
+                      {larynxAssetAttribution.license}
+                    </a>
+                    . The derivative remains a reviewed supporting asset and is not used in the
+                    segmented animation because it is not spatially registered to the tube geometry.
+                  </p>
+                </div>
               </div>
             </article>
 

@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
+import { Pause, Play } from 'lucide-react'
 
 import type { ResolvedBModeFrame } from '../providers/types'
 import type {
+  ProbeType,
   SelectedStructure,
   ThoracicProbeState,
   ThoracicStructureLabel,
@@ -29,6 +31,13 @@ interface BModeFramePanelProps {
   /** Structure selected in either view; labeled here when it is in the plane. */
   selected?: SelectedStructure | null
   onIdentify?: (selection: SelectedStructure | null) => void
+  probeType?: ProbeType
+  cardiacMotion?: {
+    enabled: boolean
+    active: boolean
+    heartRateBpm: number | null
+    onToggle: () => void
+  }
 }
 
 /**
@@ -48,6 +57,8 @@ export function BModeFramePanel({
   structures,
   selected = null,
   onIdentify,
+  probeType = 'curvilinear',
+  cardiacMotion,
 }: BModeFramePanelProps) {
   const identifiable = Boolean(frame?.imageData && volume && probe && structures)
 
@@ -73,6 +84,7 @@ export function BModeFramePanel({
           ((gx + 0.5) / 20) * width,
           ((gy + 0.5) / 24) * height,
           contactDepthMm,
+          probeType,
         )
         if (world && sampleLabel(volume, world) === selected.label) {
           return true
@@ -80,15 +92,37 @@ export function BModeFramePanel({
       }
     }
     return false
-  }, [selected, volume, probe, frame, contactDepthMm])
+  }, [selected, volume, probe, frame, contactDepthMm, probeType])
 
   return (
     <HandoffContent>
       {
         <div className="overflow-hidden rounded-lg border border-slate-700 bg-black shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
             <span>{title}</span>
-            <span>{depthCm.toFixed(1)} cm</span>
+            <div className="flex items-center gap-3">
+              {cardiacMotion ? (
+                <button
+                  type="button"
+                  aria-label={
+                    cardiacMotion.enabled ? 'Pause cardiac motion' : 'Play cardiac motion'
+                  }
+                  aria-pressed={cardiacMotion.enabled}
+                  onClick={cardiacMotion.onToggle}
+                  className="inline-flex items-center gap-1.5 rounded border border-sky-400/40 px-2 py-1 text-[10px] tracking-normal text-sky-100 transition-colors hover:bg-sky-500/20"
+                >
+                  {cardiacMotion.active ? (
+                    <Pause className="h-3 w-3" aria-hidden />
+                  ) : (
+                    <Play className="h-3 w-3" aria-hidden />
+                  )}
+                  {cardiacMotion.heartRateBpm
+                    ? `${cardiacMotion.heartRateBpm.toFixed(0)} bpm`
+                    : 'Cardiac motion'}
+                </button>
+              ) : null}
+              <span>{depthCm.toFixed(1)} cm</span>
+            </div>
           </div>
           <div className="relative bg-black p-3">
             {frame?.imageUrl ? (
@@ -108,6 +142,7 @@ export function BModeFramePanel({
                 volume={volume as ThoracicVolume}
                 structures={structures as ThoracicStructureLabelDef[]}
                 contactDepthMm={contactDepthMm}
+                probeType={probeType}
                 selected={selected}
                 onIdentify={onIdentify}
               />
@@ -153,9 +188,8 @@ export function BModeFramePanel({
                   <p className="mt-1 text-slate-400">
                     Hover the image to name a structure; click it to highlight it in 3D.
                   </p>
-                ) : frame.educationalUse ? (
-                  <p className="mt-1">{frame.educationalUse}</p>
                 ) : null}
+                {frame.educationalUse ? <p className="mt-1">{frame.educationalUse}</p> : null}
               </>
             ) : (
               <>
@@ -189,6 +223,7 @@ interface InteractiveBModeCanvasProps {
   volume: ThoracicVolume
   structures: ThoracicStructureLabelDef[]
   contactDepthMm: number
+  probeType: ProbeType
   selected: SelectedStructure | null
   onIdentify?: (selection: SelectedStructure | null) => void
 }
@@ -199,6 +234,7 @@ function InteractiveBModeCanvas({
   volume,
   structures,
   contactDepthMm,
+  probeType,
   onIdentify,
 }: InteractiveBModeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -210,8 +246,8 @@ function InteractiveBModeCanvas({
     if (!canvas || !context) {
       return
     }
-    canvas.width = imageData.width
-    canvas.height = imageData.height
+    if (canvas.width !== imageData.width) canvas.width = imageData.width
+    if (canvas.height !== imageData.height) canvas.height = imageData.height
     context.putImageData(imageData, 0, 0)
   }, [imageData])
 
@@ -239,6 +275,7 @@ function InteractiveBModeCanvas({
       imageX,
       imageY,
       contactDepthMm,
+      probeType,
     )
     if (!world) {
       return null
@@ -290,8 +327,8 @@ function ImageDataCanvas({ imageData }: { imageData: ImageData }) {
     if (!canvas || !context) {
       return
     }
-    canvas.width = imageData.width
-    canvas.height = imageData.height
+    if (canvas.width !== imageData.width) canvas.width = imageData.width
+    if (canvas.height !== imageData.height) canvas.height = imageData.height
     context.putImageData(imageData, 0, 0)
   }, [imageData])
 

@@ -11,6 +11,8 @@ import type { EquipmentHotspot, EquipmentMap } from '../engine/types'
 
 interface EquipmentLabelerProps {
   map: EquipmentMap
+  /** Practice asks learners to place labels; demonstration presents every authored callout. */
+  experience?: 'practice' | 'demonstration'
   labels?: Partial<EquipmentLabelerLabels>
 }
 
@@ -22,6 +24,7 @@ interface EquipmentLabelerLabels {
   score: (correct: number, total: number) => string
   allCorrect: string
   placePrompt: string
+  demonstrationInstruction: string
 }
 
 const defaultLabels: EquipmentLabelerLabels = {
@@ -33,6 +36,7 @@ const defaultLabels: EquipmentLabelerLabels = {
   score: (correct, total) => `${correct} of ${total} labels placed correctly.`,
   allCorrect: 'All labels placed correctly.',
   placePrompt: 'Now click the marker this label belongs to.',
+  demonstrationInstruction: 'Review each numbered component and its function.',
 }
 
 /** A label token corresponds one-to-one with a hotspot (token id === hotspot id). */
@@ -66,7 +70,64 @@ function shuffle<T extends { id: string }>(items: readonly T[]): T[] {
  * reveal the part's teaching description. Keyboard-operable: label tokens and
  * markers are focusable buttons, so Tab + Enter drives the whole exercise.
  */
-export function EquipmentLabeler({ map, labels }: EquipmentLabelerProps) {
+export function EquipmentLabeler({ map, experience = 'practice', labels }: EquipmentLabelerProps) {
+  if (experience === 'demonstration') {
+    return <EquipmentMapDemonstration map={map} labels={labels} />
+  }
+
+  return <EquipmentLabelerPractice map={map} labels={labels} />
+}
+
+function EquipmentMapDemonstration({ map, labels }: Pick<EquipmentLabelerProps, 'map' | 'labels'>) {
+  const text = { ...defaultLabels, ...labels }
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-border/70 bg-card/70 p-5">
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold tracking-tight text-foreground">{map.title}</h3>
+        <p className="text-xs text-muted-foreground">{text.demonstrationInstruction}</p>
+      </div>
+
+      <div className="relative overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={map.imageSrc}
+          alt={map.imageAlt}
+          className="w-full bg-background object-contain"
+        />
+        {map.hotspots.map((hotspot, index) => (
+          <span
+            key={hotspot.id}
+            aria-hidden
+            style={{ left: `${hotspot.xPct}%`, top: `${hotspot.yPct}%` }}
+            className="-translate-x-1/2 -translate-y-1/2 absolute flex h-7 w-7 items-center justify-center rounded-full border-2 border-sky-500 bg-sky-500 text-xs font-bold text-white shadow-md"
+          >
+            {index + 1}
+          </span>
+        ))}
+      </div>
+
+      <ol className="grid gap-2 text-sm sm:grid-cols-2" aria-label={text.bankHeading}>
+        {map.hotspots.map((hotspot, index) => (
+          <li
+            key={hotspot.id}
+            className="flex items-start gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-2"
+          >
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-sky-500/40 bg-sky-500/10 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+              {index + 1}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground">{hotspot.label}</p>
+              <p className="text-xs leading-5 text-muted-foreground">{hotspot.description}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+function EquipmentLabelerPractice({ map, labels }: Pick<EquipmentLabelerProps, 'map' | 'labels'>) {
   const text = { ...defaultLabels, ...labels }
 
   const [assignments, setAssignments] = useState<Assignments>({})

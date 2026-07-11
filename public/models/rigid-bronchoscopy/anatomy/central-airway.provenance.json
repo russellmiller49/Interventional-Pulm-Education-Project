@@ -1,0 +1,34 @@
+{
+  "schema": "rigid_bronchoscopy_airway_asset/v1",
+  "generatedOn": "2026-07-11",
+  "educationalUseOnly": true,
+  "redistributionStatus": "Internal de-identified case-derived geometry; review before external redistribution.",
+  "source": {
+    "glb": "new_anatomy_module/Airway.glb",
+    "glbSha256": "c10f704bc4fcd67333a9836f0987bef2b3d06e49e254ae92c7070420cf07c17d",
+    "airwayGraph": "public/airway-anatomy/case-001/metadata/airway_graph.json",
+    "airwayGraphSha256": "e87014177ec28b34306caafa2567a0aeab9a244dbf5dbb7e745ce2a651b1cfa4",
+    "coordinateSystem": "LPS",
+    "units": "mm",
+    "meshName": "Final_airway_target"
+  },
+  "teachingTransform": {
+    "worldUnitsPerMm": 0.009,
+    "carinaWorld": [1.22, -0.3, 0.0],
+    "rootLpsMm": [-8.448784828186035, -180.82493591308594, -55.21790313720703],
+    "carinaLpsMm": [-11.958318710327148, -155.96243286132812, -172.42062377929688],
+    "rightMainstemLpsMm": [-33.10675048828125, -158.19485473632812, -185.75762939453125],
+    "forwardBasisLps": [-0.02927974712031579, 0.20742577977033982, -0.9778124780832145],
+    "rightTransverseBasisLps": [-0.9723258780002613, -0.23274878211304678, -0.020258119259062294],
+    "depthBasisLps": [-0.2317867195928, 0.9501592236628343, 0.20850027891791606]
+  },
+  "output": {
+    "path": "public/models/rigid-bronchoscopy/anatomy/central-airway.glb",
+    "vertexCount": 33664,
+    "triangleCount": 67320,
+    "boundsWorld": [
+      [0.130291113123991, -1.4013444163913886, -1.1446202049805134],
+      [2.733054994184032, 0.8380799980763631, 0.7408267252789054]
+    ]
+  }
+}

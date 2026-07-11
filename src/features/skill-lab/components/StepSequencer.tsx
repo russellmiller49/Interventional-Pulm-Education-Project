@@ -12,6 +12,8 @@ import type { SequenceScore, SequenceStep, StepSequence } from '../engine/types'
 
 interface StepSequencerProps {
   sequence: StepSequence
+  /** Practice shuffles and grades; demonstration presents the authored sequence as teaching. */
+  experience?: 'practice' | 'demonstration'
   /** Optional labels so the drill localizes with its host module. */
   labels?: Partial<SequencerLabels>
 }
@@ -75,7 +77,65 @@ function shuffleSteps(steps: readonly SequenceStep[], round = 0): SequenceStep[]
  * are revealed. Fully keyboard-operable through the up/down controls on each
  * row, so it does not depend on pointer drag.
  */
-export function StepSequencer({ sequence, labels }: StepSequencerProps) {
+export function StepSequencer({ sequence, experience = 'practice', labels }: StepSequencerProps) {
+  if (experience === 'demonstration') {
+    return <StepSequenceDemonstration sequence={sequence} labels={labels} />
+  }
+
+  return <StepSequencePractice sequence={sequence} labels={labels} />
+}
+
+function StepSequenceDemonstration({
+  sequence,
+  labels,
+}: Pick<StepSequencerProps, 'sequence' | 'labels'>) {
+  const text = { ...defaultLabels, ...labels }
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-border/70 bg-card/70 p-5">
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold tracking-tight text-foreground">{sequence.title}</h3>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {text.correctOrderHeading}
+        </p>
+      </div>
+
+      <ol className="space-y-2" aria-label={text.correctOrderHeading}>
+        {sequence.steps.map((step, index) => (
+          <li
+            key={step.id}
+            className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/70 p-3"
+          >
+            <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-sky-500/40 bg-sky-500/10 text-xs font-semibold text-sky-700 dark:text-sky-300">
+              {index + 1}
+            </span>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-sm font-medium text-foreground">{step.label}</p>
+              {step.detail ? (
+                <p className="text-xs leading-5 text-muted-foreground">{step.detail}</p>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div className="space-y-2 rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
+        <Badge
+          variant="outline"
+          className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide"
+        >
+          {text.rationaleHeading}
+        </Badge>
+        <p className="text-sm leading-6 text-foreground">{sequence.rationale}</p>
+      </div>
+    </div>
+  )
+}
+
+function StepSequencePractice({
+  sequence,
+  labels,
+}: Pick<StepSequencerProps, 'sequence' | 'labels'>) {
   const text = { ...defaultLabels, ...labels }
   const [order, setOrder] = useState<SequenceStep[]>(() => shuffleSteps(sequence.steps))
   const [score, setScore] = useState<SequenceScore | null>(null)

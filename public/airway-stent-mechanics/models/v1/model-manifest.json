@@ -1,0 +1,587 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/airway-stent-mechanics/prepare-model-assets.py",
+  "generatedWith": "Blender 5.1.0",
+  "sourceDirectory": "3D assets/Stents",
+  "assetPrefix": "/airway-stent-mechanics/models/v1/",
+  "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+  "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+  "notes": [
+    "Original source files are preserved unchanged.",
+    "Models are individually normalized and are not anatomically registered to one another.",
+    "Morph targets prescribe educational deformation and do not encode measured mechanics.",
+    "Named labels follow user-supplied filenames and do not imply manufacturer validation or endorsement."
+  ],
+  "models": [
+    {
+      "id": "aero-laser-cut-covered",
+      "displayName": "AERO laser-cut covered specimen",
+      "family": "laser-cut self-expanding lattice",
+      "coverage": "covered",
+      "sourceFile": "AERO_LaserCut_Covered.glb",
+      "sourceSha256": "3b381d88f75faa62bcc05321eb177467c68343001a3191c8b56e95f3f8708ec0",
+      "url": "/airway-stent-mechanics/models/v1/aero-laser-cut-covered.glb",
+      "outputSha256": "f565f6a0e49dc71be0d7e7c95849a10cb60ba45be0259c921edcdac021a58192",
+      "outputBytes": 3498792,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 664468,
+        "optimized": 55234
+      },
+      "triangles": {
+        "original": 1297370,
+        "afterCleanup": 1297370,
+        "optimized": 109999,
+        "target": 110000
+      },
+      "decimationRatio": 0.084787,
+      "normalizationScale": 1.05317145,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.747869, 0.74815, 1.899026],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "aero-laser-cut-uncovered",
+      "displayName": "AERO laser-cut uncovered specimen",
+      "family": "laser-cut self-expanding lattice",
+      "coverage": "uncovered",
+      "sourceFile": "AERO_LaserCut_Uncovered.glb",
+      "sourceSha256": "d857965349d35e4daadd3cb26ae773aecaea8cb1421763581e1c0e1c0600db3f",
+      "url": "/airway-stent-mechanics/models/v1/aero-laser-cut-uncovered.glb",
+      "outputSha256": "384d63e7e515bf6f78f0858322907688129b1130ddd9f018ab4afb64dc5945d5",
+      "outputBytes": 4349020,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 359525,
+        "optimized": 59776
+      },
+      "triangles": {
+        "original": 665676,
+        "afterCleanup": 665676,
+        "optimized": 120000,
+        "target": 120000
+      },
+      "decimationRatio": 0.180268,
+      "normalizationScale": 1.05316537,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.86809, 0.867158, 1.899037],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "bonastent-hook-cross-covered",
+      "displayName": "BONASTENT hook-and-cross covered specimen",
+      "family": "captured-cell braided scaffold",
+      "coverage": "covered",
+      "sourceFile": "Bonastent_HookCross_Covered.glb",
+      "sourceSha256": "0d5f7f32b566aee0d3de372f439ed380de2690d1be38813a12107ae0b53ac3ea",
+      "url": "/airway-stent-mechanics/models/v1/bonastent-hook-cross-covered.glb",
+      "outputSha256": "c6c0bb24c8b208986e1e37bcd972c4173ed53432ff135d79fa756fb2126ff08e",
+      "outputBytes": 4342968,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 559709,
+        "optimized": 54436
+      },
+      "triangles": {
+        "original": 1019853,
+        "afterCleanup": 1019853,
+        "optimized": 109999,
+        "target": 110000
+      },
+      "decimationRatio": 0.107859,
+      "normalizationScale": 1.05308829,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.804612, 0.790314, 1.899176],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "bonastent-hook-cross-uncovered",
+      "displayName": "BONASTENT hook-and-cross uncovered specimen",
+      "family": "captured-cell braided scaffold",
+      "coverage": "uncovered",
+      "sourceFile": "Bonastent_HookCross_Uncovered.glb",
+      "sourceSha256": "bd9587c47875d2c82c89cdba07c04d47968792d33839dedae7a2fc5798463e24",
+      "url": "/airway-stent-mechanics/models/v1/bonastent-hook-cross-uncovered.glb",
+      "outputSha256": "de53c16254b5486d19f19443e176c26bf93f16d9947e943aec3678f02812f961",
+      "outputBytes": 4969908,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 432520,
+        "optimized": 58694
+      },
+      "triangles": {
+        "original": 752610,
+        "afterCleanup": 752610,
+        "optimized": 120000,
+        "target": 120000
+      },
+      "decimationRatio": 0.159445,
+      "normalizationScale": 1.0531454,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.973521, 0.974995, 1.899073],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "ultraflex-woven-covered",
+      "displayName": "Ultraflex woven covered specimen",
+      "family": "single-wire knitted scaffold",
+      "coverage": "covered",
+      "sourceFile": "Ultraflex_Woven_Covered.glb",
+      "sourceSha256": "bc2deab8c753092c067ebf2578b02ec5aa2335878bcd32fe3f2b0ec5abc6f9ee",
+      "url": "/airway-stent-mechanics/models/v1/ultraflex-woven-covered.glb",
+      "outputSha256": "ad3b6eea5095db156c7b975488e4a7535e2b6c6bc72297bb93641c90ef90be7b",
+      "outputBytes": 3997156,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 538136,
+        "optimized": 54528
+      },
+      "triangles": {
+        "original": 1016078,
+        "afterCleanup": 1016078,
+        "optimized": 110000,
+        "target": 110000
+      },
+      "decimationRatio": 0.108259,
+      "normalizationScale": 1.05289147,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.619512, 0.618537, 1.899531],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "ultraflex-woven-uncovered",
+      "displayName": "Ultraflex woven uncovered specimen",
+      "family": "single-wire knitted scaffold",
+      "coverage": "uncovered",
+      "sourceFile": "Ultraflex_Woven_Uncov.glb",
+      "sourceSha256": "227e7e75516593d4486d7f5c912c8895f604117f3129968a703b7a4820bc33d8",
+      "url": "/airway-stent-mechanics/models/v1/ultraflex-woven-uncovered.glb",
+      "outputSha256": "36848c09a35993615d409d2846b3348fe1d57d42755bf146384fddfdb1b1b6e5",
+      "outputBytes": 5125980,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 477393,
+        "optimized": 58002
+      },
+      "triangles": {
+        "original": 821110,
+        "afterCleanup": 821110,
+        "optimized": 120000,
+        "target": 120000
+      },
+      "decimationRatio": 0.146144,
+      "normalizationScale": 1.0528848,
+      "sourceLongAxis": "X",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.603779, 0.718855, 1.899543],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "silicone-y-stent",
+      "displayName": "Silicone Y-stent specimen",
+      "family": "bifurcated molded silicone",
+      "coverage": "continuous wall",
+      "sourceFile": "Silicone Y-stent.glb",
+      "sourceSha256": "da83f22a67cac0a48a79bdf43702b23c277da8003f6a0ee43a88670fef767740",
+      "url": "/airway-stent-mechanics/models/v1/silicone-y-stent.glb",
+      "outputSha256": "48b8106149525dae6a29ae8b0fa2d5df5d62cb29ace43b4d881e1c82a7281699",
+      "outputBytes": 1018804,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 198400,
+        "optimized": 32998
+      },
+      "triangles": {
+        "original": 66378,
+        "afterCleanup": 66378,
+        "optimized": 66000,
+        "target": 66000
+      },
+      "decimationRatio": 0.994305,
+      "normalizationScale": 2.0630078,
+      "sourceLongAxis": "Y",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.597497, 0.185607, 0.969458],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [],
+      "morphTargets": ["RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "trachea-openface-stenosis",
+      "displayName": "Open-face trachea with stenotic segment",
+      "family": "educational airway context",
+      "coverage": "not applicable",
+      "sourceFile": "Trachea_openface_with_stenosis.glb",
+      "sourceSha256": "fbe6b7c52071832ee194d9ac82571dd65ab86f902a8b50980bae05896cd6093e",
+      "url": "/airway-stent-mechanics/models/v1/trachea-openface-stenosis.glb",
+      "outputSha256": "3b78d350f8b099edc0a2cf26ca856d0959f052e127846e0ba84a71f8d50f0668",
+      "outputBytes": 2293508,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 147290,
+        "optimized": 52947
+      },
+      "triangles": {
+        "original": 282409,
+        "afterCleanup": 282409,
+        "optimized": 100000,
+        "target": 100000
+      },
+      "decimationRatio": 0.354096,
+      "normalizationScale": 1.06281453,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [1.090997, 0.305135, 1.881796],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [
+        {
+          "name": "Image_0",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_1",
+          "original": [2048, 2048],
+          "retained": false
+        },
+        {
+          "name": "Image_2",
+          "original": [4096, 4096],
+          "retained": false
+        },
+        {
+          "name": "Image_3",
+          "original": [2048, 2048],
+          "retained": false
+        }
+      ],
+      "morphTargets": ["CoughOvalization", "StenosisRelief"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    },
+    {
+      "id": "wall-stent",
+      "displayName": "Wall-type braided stent specimen",
+      "family": "multiwire braided scaffold",
+      "coverage": "uncovered",
+      "sourceFile": "Wall_stent.glb",
+      "sourceSha256": "2f5560401c66e0622a35097e6d62ea71e5c021cc8792dfbf0c73323aca0b518b",
+      "url": "/airway-stent-mechanics/models/v1/wall-stent.glb",
+      "outputSha256": "f67d3455b3f1fd81076d86b525d52da64abad64c79169fcf58f693fb8099c374",
+      "outputBytes": 2231104,
+      "meshCount": 1,
+      "materialCount": 1,
+      "vertices": {
+        "original": 254770,
+        "optimized": 41808
+      },
+      "triangles": {
+        "original": 84934,
+        "afterCleanup": 84934,
+        "optimized": 84000,
+        "target": 84000
+      },
+      "decimationRatio": 0.989003,
+      "normalizationScale": 2.80988682,
+      "sourceLongAxis": "Z",
+      "outputLongAxis": "Y (glTF export)",
+      "originalDimensions": [0.162825, 0.17395, 0.711772],
+      "normalizedMaxDimension": 2.0,
+      "discardedSourceTextures": [],
+      "morphTargets": ["Bend", "Ovalization", "RadialCompression"],
+      "rightsStatus": "User-supplied repository asset; production publication rights and exact product provenance are not documented in the source folder.",
+      "validationStatus": "Illustrative geometry specimen; not manufacturer-validated, dimensionally registered, bench-calibrated, or suitable for patient-specific prediction.",
+      "repairs": [
+        "flattened source transforms",
+        "aligned the primary long axis before glTF Y-up export",
+        "centered and normalized scale",
+        "welded coincident vertices",
+        "removed unreferenced loose vertices",
+        "recalculated face normals",
+        "applied a conservative triangle budget",
+        "replaced source texture inputs with an audited neutral PBR material",
+        "removed source emissive and visually flat normal-map dependencies",
+        "added prescribed educational morph targets",
+        "renamed generic scene nodes",
+        "exported self-contained Draco-compressed GLB"
+      ]
+    }
+  ]
+}

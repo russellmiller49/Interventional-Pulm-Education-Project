@@ -26,6 +26,8 @@ import type {
 
 interface DecisionScenarioProps {
   scenario: DecisionScenarioType
+  /** Practice branches and times decisions; demonstration follows the first authored safe path. */
+  experience?: 'practice' | 'demonstration'
   labels?: Partial<DecisionScenarioLabels>
 }
 
@@ -38,6 +40,9 @@ interface DecisionScenarioLabels {
   restart: string
   debriefHeading: string
   decisionLogHeading: string
+  demonstrationHeading: string
+  recommendedActionHeading: string
+  teachingPointHeading: string
   safeTag: string
   unsafeTag: string
   outcomeLabel: Record<'rescued' | 'harm' | 'mixed', string>
@@ -52,6 +57,9 @@ const defaultLabels: DecisionScenarioLabels = {
   restart: 'Restart scenario',
   debriefHeading: 'Debrief',
   decisionLogHeading: 'Your decisions',
+  demonstrationHeading: 'Guided response',
+  recommendedActionHeading: 'Recommended action',
+  teachingPointHeading: 'Why this step matters',
   safeTag: 'Appropriate',
   unsafeTag: 'Unsafe / delayed',
   outcomeLabel: {
@@ -84,7 +92,120 @@ const outcomeStyles: Record<'rescued' | 'harm' | 'mixed', string> = {
  * All logic is delegated to the pure engine (`initScenario`, `advanceScenario`,
  * `timeoutScenario`); this component only renders and drives the timer.
  */
-export function DecisionScenario({ scenario, labels }: DecisionScenarioProps) {
+export function DecisionScenario({
+  scenario,
+  experience = 'practice',
+  labels,
+}: DecisionScenarioProps) {
+  if (experience === 'demonstration') {
+    return <DecisionScenarioDemonstration scenario={scenario} labels={labels} />
+  }
+
+  return <DecisionScenarioPractice scenario={scenario} labels={labels} />
+}
+
+interface ScenarioGuidanceStep {
+  choice: ScenarioNode['choices'][number]
+  node: ScenarioNode
+}
+
+function buildCanonicalGuidance(scenario: DecisionScenarioType) {
+  const nodesById = new Map(scenario.nodes.map((node) => [node.id, node] as const))
+  const visited = new Set<string>()
+  const steps: ScenarioGuidanceStep[] = []
+  let currentNode = nodesById.get(scenario.startNodeId)
+
+  while (currentNode && !currentNode.terminal && !visited.has(currentNode.id)) {
+    visited.add(currentNode.id)
+    const recommendedChoice = currentNode.choices.find((choice) => choice.isSafe)
+    if (!recommendedChoice) break
+
+    steps.push({ choice: recommendedChoice, node: currentNode })
+    currentNode = recommendedChoice.nextNodeId
+      ? nodesById.get(recommendedChoice.nextNodeId)
+      : undefined
+  }
+
+  return { steps, terminal: currentNode?.terminal }
+}
+
+function DecisionScenarioDemonstration({
+  scenario,
+  labels,
+}: Pick<DecisionScenarioProps, 'scenario' | 'labels'>) {
+  const text = {
+    ...defaultLabels,
+    ...labels,
+    outcomeLabel: { ...defaultLabels.outcomeLabel, ...labels?.outcomeLabel },
+  }
+  const guidance = useMemo(() => buildCanonicalGuidance(scenario), [scenario])
+
+  return (
+    <div className="space-y-5 rounded-2xl border border-border/70 bg-card/70 p-5">
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold tracking-tight text-foreground">{scenario.title}</h3>
+        <div className="flex items-start gap-2 rounded-xl border border-sky-500/30 bg-sky-500/5 p-3">
+          <Activity className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" aria-hidden />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {text.briefingHeading}
+            </p>
+            <p className="text-sm leading-6 text-foreground">{scenario.briefing}</p>
+          </div>
+        </div>
+      </div>
+
+      <section className="space-y-3" aria-label={text.demonstrationHeading}>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {text.demonstrationHeading}
+        </p>
+        <ol className="space-y-3">
+          {guidance.steps.map(({ choice, node }, index) => (
+            <li key={node.id} className="rounded-xl border border-border/60 bg-background/60 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-sky-500/40 bg-sky-500/10 text-xs font-semibold text-sky-700 dark:text-sky-300">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1 space-y-3">
+                  <p className="text-sm leading-6 text-foreground">{node.situation}</p>
+                  <div className="rounded-lg border border-emerald-500/35 bg-emerald-500/5 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                      {text.recommendedActionHeading}
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-foreground">{choice.label}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {text.teachingPointHeading}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {choice.feedback}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {guidance.terminal ? (
+        <div className="space-y-2 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-4">
+          <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+            <ShieldCheck className="h-4 w-4" aria-hidden />
+            <span className="text-sm font-semibold">{text.debriefHeading}</span>
+          </div>
+          <p className="text-sm leading-6 text-foreground">{guidance.terminal.debrief}</p>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function DecisionScenarioPractice({
+  scenario,
+  labels,
+}: Pick<DecisionScenarioProps, 'scenario' | 'labels'>) {
   const text = {
     ...defaultLabels,
     ...labels,

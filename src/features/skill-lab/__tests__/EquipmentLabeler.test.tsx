@@ -54,4 +54,19 @@ describe('EquipmentLabeler', () => {
 
     expect(screen.getByText('0 of 2 labels placed correctly.')).toBeInTheDocument()
   })
+
+  it('shows every authored callout without placement or grading controls in demonstration mode', () => {
+    render(<EquipmentLabeler map={map} experience="demonstration" />)
+
+    expect(screen.getByText('Review each numbered component and its function.')).toBeInTheDocument()
+    expect(screen.getByText('Part one')).toBeInTheDocument()
+    expect(screen.getByText('Function of part one.')).toBeInTheDocument()
+    expect(screen.getByText('Part two')).toBeInTheDocument()
+    expect(screen.getByText('Function of part two.')).toBeInTheDocument()
+
+    expect(screen.queryByRole('button', { name: 'Part one' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Check labels' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/labels placed correctly/i)).not.toBeInTheDocument()
+  })
 })

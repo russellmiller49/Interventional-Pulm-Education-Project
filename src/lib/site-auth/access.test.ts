@@ -1,4 +1,5 @@
 import {
+  isAdminOnlyAirwayStentMechanicsAssetPath,
   isAdminOnlyEbusTrainingAssetPath,
   isAdminOnlyThermalAblationPath,
   isAdminEbusPreviewEmbed,
@@ -209,6 +210,34 @@ describe('main site auth access helpers', () => {
   it('tracks tracheostomy section routes as one site module family', () => {
     expect(resolveSiteModuleId('/tracheostomy')).toBe('tracheostomy')
     expect(resolveSiteModuleId('/es/tracheostomy/practice')).toBe('tracheostomy:practice')
+  })
+
+  it('tracks localized rigid bronchoscopy section routes as one site module family', () => {
+    expect(resolveSiteModuleId('/rigid-bronchoscopy')).toBe('rigid-bronchoscopy')
+    expect(resolveSiteModuleId('/en/rigid-bronchoscopy/learn')).toBe('rigid-bronchoscopy:learn')
+    expect(resolveSiteModuleId('/es/rigid-bronchoscopy/practice')).toBe(
+      'rigid-bronchoscopy:practice',
+    )
+    expect(resolveSiteModuleId('/zh-CN/rigid-bronchoscopy/assessment')).toBe(
+      'rigid-bronchoscopy:assessment',
+    )
+  })
+
+  it('tracks the airway stent mechanics lab without adding a special course entitlement', () => {
+    expect(resolveSiteModuleId('/airway-stent-mechanics')).toBe('airway-stent-mechanics')
+    expect(resolveSiteModuleId('/es/airway-stent-mechanics')).toBe('airway-stent-mechanics')
+    expect(getRequiredEntitlement('/airway-stent-mechanics', params())).toBeNull()
+    expect(isPublicPath('/airway-stent-mechanics')).toBe(false)
+  })
+
+  it('keeps airway stent model derivatives behind the site-admin asset gate', () => {
+    const modelPath = '/airway-stent-mechanics/models/v1/aero-laser-cut-covered.glb'
+
+    expect(isAdminOnlyAirwayStentMechanicsAssetPath(modelPath)).toBe(true)
+    expect(isAdminOnlyAirwayStentMechanicsAssetPath(`/es${modelPath}`)).toBe(true)
+    expect(isAdminOnlyAirwayStentMechanicsAssetPath('/airway-stent-mechanics')).toBe(false)
+    expect(getRequiredEntitlement(modelPath, params())).toBe('site_admin')
+    expect(isPublicPath(modelPath)).toBe(false)
   })
 
   it('normalizes unsafe login redirects', () => {

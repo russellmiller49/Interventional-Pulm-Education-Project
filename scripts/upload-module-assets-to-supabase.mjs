@@ -33,6 +33,7 @@ function matchesOnlyFilter(relativePath) {
 
 const uploadPrefixes = [
   'airway-anatomy',
+  'airway-stent-mechanics',
   'bronch-navigation-trainer/app/cases',
   'draco',
   'fluoroview',
@@ -195,10 +196,7 @@ function getCredentialError() {
 const credentialError = getCredentialError()
 if (!dryRun && (!supabaseUrl || credentialError)) {
   throw new Error(
-    [
-      !supabaseUrl ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required.' : null,
-      credentialError,
-    ]
+    [!supabaseUrl ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required.' : null, credentialError]
       .filter(Boolean)
       .join(' '),
   )

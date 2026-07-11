@@ -85,4 +85,20 @@ describe('DecisionScenario', () => {
     expect(screen.getByText(/Debrief: Preventable harm/)).toBeInTheDocument()
     expect(screen.getByText('Preventable harm occurred.')).toBeInTheDocument()
   })
+
+  it('shows the canonical safe guidance without decisions, timers, or wrong feedback', () => {
+    render(<DecisionScenario scenario={scenario} experience="demonstration" />)
+
+    expect(screen.getByText('Guided response')).toBeInTheDocument()
+    expect(screen.getByText('Decide now.')).toBeInTheDocument()
+    expect(screen.getByText('Take the safe action')).toBeInTheDocument()
+    expect(screen.getByText('Correct recognition and response.')).toBeInTheDocument()
+    expect(screen.getByText('You rescued the patient.')).toBeInTheDocument()
+
+    expect(screen.queryByText('Delay and observe')).not.toBeInTheDocument()
+    expect(screen.queryByText('Delay allows deterioration.')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Decision window/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Monitored vitals (simulated)')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
 })

@@ -36,6 +36,7 @@ export default async function RigidBronchoscopyAssessmentPage({ params }: PagePr
             eyebrow={nav('items.rigidBronchoscopy.title')}
             title={t('assessment.headerTitle')}
             description={t('assessment.headerDescription')}
+            disclaimer={t('about.body')}
           />
           <RigidBronchoscopyNav activeHref="/rigid-bronchoscopy/assessment" />
 

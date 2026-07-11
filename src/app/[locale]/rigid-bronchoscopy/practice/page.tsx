@@ -3,8 +3,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
 import { ModuleProgressToggle } from '@/features/learning-module/components/ModuleProgressToggle'
+import { RigidBronchoscopyAssemblyLabDynamic } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyAssemblyLabDynamic'
 import { RigidBronchoscopyNav } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyNav'
 import { RigidBronchoscopyPractice } from '@/features/rigid-bronchoscopy/components/RigidBronchoscopyPractice'
+import { buildRigidBronchoscopyAssemblyCopy } from '@/features/rigid-bronchoscopy/components/assemblyLabCopy'
 import { HandoffContent } from '@/i18n/handoff'
 
 interface PageProps {
@@ -35,8 +37,15 @@ export default async function RigidBronchoscopyPracticePage({ params }: PageProp
             eyebrow={nav('items.rigidBronchoscopy.title')}
             title={t('practice.headerTitle')}
             description={t('practice.headerDescription')}
+            disclaimer={t('about.body')}
           />
           <RigidBronchoscopyNav activeHref="/rigid-bronchoscopy/practice" />
+
+          <div className="container max-w-6xl">
+            <RigidBronchoscopyAssemblyLabDynamic
+              copy={buildRigidBronchoscopyAssemblyCopy((key) => t(key))}
+            />
+          </div>
 
           <RigidBronchoscopyPractice />
 
