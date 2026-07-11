@@ -12,7 +12,7 @@ import {
   Wind,
   Zap,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 import {
   deviceArchitectureProfiles,
@@ -36,18 +36,20 @@ const loadModeIcons: Record<DeviceLoadMode, typeof Activity> = {
   rest: Activity,
 }
 
+const reducedMotionQuery = '(prefers-reduced-motion: reduce)'
+
+function subscribeToReducedMotion(callback: () => void) {
+  const mediaQuery = window.matchMedia(reducedMotionQuery)
+  mediaQuery.addEventListener('change', callback)
+  return () => mediaQuery.removeEventListener('change', callback)
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia(reducedMotionQuery).matches
+}
+
 function usePrefersReducedMotion() {
-  const [reducedMotion, setReducedMotion] = useState(false)
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const updatePreference = () => setReducedMotion(mediaQuery.matches)
-    updatePreference()
-    mediaQuery.addEventListener('change', updatePreference)
-    return () => mediaQuery.removeEventListener('change', updatePreference)
-  }, [])
-
-  return reducedMotion
+  return useSyncExternalStore(subscribeToReducedMotion, getReducedMotionSnapshot, () => false)
 }
 
 function couplingLabel(profile: DeviceArchitectureProfile) {
@@ -69,10 +71,7 @@ export function DeviceArchitectureLab() {
   const selectedMode =
     deviceLoadModes.find((candidate) => candidate.id === mode) ?? deviceLoadModes[0]!
   const canAnimate = !reducedMotion && mode !== 'rest'
-
-  useEffect(() => {
-    if (reducedMotion) setPlaying(false)
-  }, [reducedMotion])
+  const isPlaying = playing && canAnimate
 
   return (
     <section className="overflow-hidden rounded-[2rem] border border-slate-700 bg-slate-950 text-white shadow-2xl">
@@ -215,12 +214,12 @@ export function DeviceArchitectureLab() {
               disabled={!canAnimate}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-300 px-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {playing && canAnimate ? (
+              {isPlaying ? (
                 <Pause className="h-4 w-4" aria-hidden />
               ) : (
                 <Play className="h-4 w-4" aria-hidden />
               )}
-              {mode === 'rest' ? 'Static state' : playing ? 'Pause cycle' : 'Play cycle'}
+              {mode === 'rest' ? 'Static state' : isPlaying ? 'Pause cycle' : 'Play cycle'}
             </button>
             <button
               type="button"
@@ -243,7 +242,7 @@ export function DeviceArchitectureLab() {
             <DeviceArchitectureViewport
               loadAmplitude={loadAmplitude}
               mode={mode}
-              playing={playing}
+              playing={isPlaying}
               profile={profile}
               reduceMotion={reducedMotion}
               showAirway={showAirway}
