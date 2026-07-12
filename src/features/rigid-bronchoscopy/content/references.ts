@@ -26,6 +26,33 @@ export const airwayReferences: PleuralReference[] = [
       'Clinical review basis for distinguishing conventional controlled ventilation, assisted spontaneous ventilation, and low- versus high-frequency jet ventilation, including the need for an unobstructed expiratory pathway.',
   },
   {
+    id: 'sarkiss-eapen-airway-management-2022',
+    citation:
+      'Sarkiss M, Eapen GA. Airway management for central airway and transbronchial lung procedures. Curr Anesthesiol Rep. 2022;12:390-397.',
+    sourceType: 'peer-reviewed',
+    url: 'https://doi.org/10.1007/s40140-022-00535-z',
+    useNote:
+      'Principal storyboard source for the separate anaesthesia-circuit and jet connections, controlled/spontaneous-assisted ventilation through the breathing circuit, proximal leak, passive expiration, and breath-to-breath trapping behind a ball-valve obstruction.',
+  },
+  {
+    id: 'chest-cao-guideline-2025',
+    citation:
+      'Mahmood K, Frazer-Green L, Gonzalez AV, et al. Management of central airway obstruction: an American College of Chest Physicians clinical practice guideline. Chest. 2025;167(1):283-295. Published online July 17, 2024.',
+    sourceType: 'guideline',
+    url: 'https://doi.org/10.1016/j.chest.2024.06.3804',
+    useNote:
+      'Neutral ventilation-mode framing: for rigid therapeutic bronchoscopy under general anaesthesia, either jet or controlled/spontaneous-assisted ventilation is conditionally suggested with very low certainty of evidence.',
+  },
+  {
+    id: 'putz-jet-ventilation-2016',
+    citation:
+      'Putz L, Mayné A, Dincq AS. Jet ventilation during rigid bronchoscopy in adults: a focused review. Biomed Res Int. 2016;2016:4234861.',
+    sourceType: 'peer-reviewed',
+    url: 'https://doi.org/10.1155/2016/4234861',
+    useNote:
+      'Review basis for qualitative low- and high-frequency jet pulse teaching, open-system entrainment, passive expiration, and the importance of unobstructed expiratory egress.',
+  },
+  {
     id: 'yang-jet-model-2025',
     citation:
       'Yang M, Deng Z, He X, et al. Jet ventilation dynamics in rigid bronchoscope: insights from a simulated experimental model. BMC Anesthesiol. 2025;25:332.',

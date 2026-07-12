@@ -1,0 +1,224 @@
+{
+  "schema": "rigid_bronchoscopy_blender_import_validation/v2",
+  "validatedOn": "2026-07-11",
+  "manifest": "public/models/rigid-bronchoscopy/v2/asset-manifest.json",
+  "manifestBuildId": "f768081bdbeed4a3",
+  "blenderVersion": "5.1.0",
+  "passed": true,
+  "assetCount": 35,
+  "importedWithoutFailure": 35,
+  "triangleCount": 200968,
+  "assetSummaries": [
+    {
+      "id": "accessory-anesthesia-circuit-hose",
+      "path": "/models/rigid-bronchoscopy/v2/accessories/anesthesia-circuit-hose-proxy-3b5beb67f27a.glb",
+      "meshCount": 2,
+      "triangleCount": 3072
+    },
+    {
+      "id": "accessory-generic-endoscopic-camera-head",
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-endoscopic-camera-head-45bd3036d544.glb",
+      "meshCount": 11,
+      "triangleCount": 3936
+    },
+    {
+      "id": "accessory-generic-fiberoptic-light-cable",
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-fiberoptic-light-cable-198ddcb36aa3.glb",
+      "meshCount": 5,
+      "triangleCount": 8204
+    },
+    {
+      "id": "accessory-generic-light-guide-adapter-c1",
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-light-guide-adapter-c1-358aa4368199.glb",
+      "meshCount": 3,
+      "triangleCount": 1664
+    },
+    {
+      "id": "accessory-generic-light-guide-adapter-c2",
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-light-guide-adapter-c2-13eaae9a892b.glb",
+      "meshCount": 4,
+      "triangleCount": 2112
+    },
+    {
+      "id": "accessory-jet-ventilation-hose",
+      "path": "/models/rigid-bronchoscopy/v2/accessories/jet-ventilation-hose-proxy-bcb7954bbd8c.glb",
+      "meshCount": 2,
+      "triangleCount": 2672
+    },
+    {
+      "id": "anatomy-central-airway-cutaway",
+      "path": "/models/rigid-bronchoscopy/v2/anatomy/central-airway-cutaway-3f7b0ebe5576.glb",
+      "meshCount": 2,
+      "triangleCount": 3972
+    },
+    {
+      "id": "anatomy-central-airway-full",
+      "path": "/models/rigid-bronchoscopy/v2/anatomy/central-airway-full-1b655fb75a36.glb",
+      "meshCount": 2,
+      "triangleCount": 7944
+    },
+    {
+      "id": "cap-bs2309-3-telescope-plus-2mm-instrument",
+      "path": "/models/rigid-bronchoscopy/v2/accessories/bs2309-3-cap-proxy-2548ba53aff6.glb",
+      "meshCount": 1,
+      "triangleCount": 776
+    },
+    {
+      "id": "cap-bs2311-3-telescope-plus-4mm-instrument",
+      "path": "/models/rigid-bronchoscopy/v2/accessories/bs2311-3-cap-proxy-bcacf19d2131.glb",
+      "meshCount": 1,
+      "triangleCount": 776
+    },
+    {
+      "id": "cap-bs2319-3-optical-forceps",
+      "path": "/models/rigid-bronchoscopy/v2/accessories/bs2319-3-optical-forceps-cap-proxy-b42465dc8ca8.glb",
+      "meshCount": 1,
+      "triangleCount": 776
+    },
+    {
+      "id": "efer-bb2401-3-lateral-obturator-single-gate",
+      "path": "/models/rigid-bronchoscopy/v2/components/bb2401-3-lateral-obturator-single-gate-1cc6c19032eb.glb",
+      "meshCount": 3,
+      "triangleCount": 1216
+    },
+    {
+      "id": "efer-bb2402-3-lateral-obturator-double-gate",
+      "path": "/models/rigid-bronchoscopy/v2/components/bb2402-3-lateral-obturator-double-gate-30a40be86f8a.glb",
+      "meshCount": 5,
+      "triangleCount": 1856
+    },
+    {
+      "id": "efer-bd2410-3-adult-universal-base",
+      "path": "/models/rigid-bronchoscopy/v2/components/bd2410-3-adult-universal-base-f87ee307741e.glb",
+      "meshCount": 14,
+      "triangleCount": 9242
+    },
+    {
+      "id": "efer-bd2501-3-compact-base",
+      "path": "/models/rigid-bronchoscopy/v2/components/bd2501-3-compact-base-6a435fdb73a5.glb",
+      "meshCount": 5,
+      "triangleCount": 2744
+    },
+    {
+      "id": "efer-bs2101-3-silicone-cap",
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2101-3-side-cap-blue-solid-5ce4312f2b47.glb",
+      "meshCount": 1,
+      "triangleCount": 284
+    },
+    {
+      "id": "efer-bs2102-3-silicone-cap",
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2102-3-side-cap-blue-2mm-5b5b2c8c42a7.glb",
+      "meshCount": 1,
+      "triangleCount": 480
+    },
+    {
+      "id": "efer-bs2303-3-silicone-cap",
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2303-3-main-cap-red-5p5mm-57bcacde064c.glb",
+      "meshCount": 1,
+      "triangleCount": 480
+    },
+    {
+      "id": "efer-bs2310-3-silicone-cap",
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2310-3-main-cap-green-dual-4mm-0db7daf08800.glb",
+      "meshCount": 1,
+      "triangleCount": 684
+    },
+    {
+      "id": "efer-bt2000-3-bronchial-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2000-3-bronchial-tube-od13p20-id12p20mm-e871d790bb04.glb",
+      "meshCount": 7,
+      "triangleCount": 4696
+    },
+    {
+      "id": "efer-bt2101-3-bronchial-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2101-3-bronchial-tube-od12p00-id11p00mm-b6110fae576b.glb",
+      "meshCount": 7,
+      "triangleCount": 4696
+    },
+    {
+      "id": "efer-bt2103-3-bronchial-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2103-3-bronchial-tube-od10p00-id9p20mm-23286bfa8254.glb",
+      "meshCount": 7,
+      "triangleCount": 4696
+    },
+    {
+      "id": "efer-bt2105-3-bronchial-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2105-3-bronchial-tube-od8p00-id7p00mm-74be57fae508.glb",
+      "meshCount": 7,
+      "triangleCount": 4696
+    },
+    {
+      "id": "efer-bt2106-3-bronchial-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2106-3-bronchial-tube-od7p00-id6p50mm-ea92055e0f69.glb",
+      "meshCount": 7,
+      "triangleCount": 4728
+    },
+    {
+      "id": "efer-bt2201-3-tracheal-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2201-3-tracheal-tube-od12p00-id11p00mm-0bfa964b394a.glb",
+      "meshCount": 7,
+      "triangleCount": 3736
+    },
+    {
+      "id": "efer-bt2203-3-tracheal-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2203-3-tracheal-tube-od10p00-id9p20mm-04b0e1f211f7.glb",
+      "meshCount": 7,
+      "triangleCount": 3736
+    },
+    {
+      "id": "efer-bt2205-3-tracheal-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2205-3-tracheal-tube-od8p00-id7p00mm-0c3ad3a019dc.glb",
+      "meshCount": 7,
+      "triangleCount": 3736
+    },
+    {
+      "id": "efer-bt2210-3-tracheal-tube",
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2210-3-tracheal-tube-od13p20-id12p20mm-1136ec77f666.glb",
+      "meshCount": 7,
+      "triangleCount": 3736
+    },
+    {
+      "id": "efer-bx-5500-fa-rigid-telescope",
+      "path": "/models/rigid-bronchoscopy/v2/components/bx-5500-fa-rigid-telescope-f8558b4cda28.glb",
+      "meshCount": 6,
+      "triangleCount": 1320
+    },
+    {
+      "id": "efer-rigid-bronchoscopy-assembly-kit",
+      "path": "/models/rigid-bronchoscopy/v2/components/rigid-bronchoscopy-assembly-kit-f3a58f90df9a.glb",
+      "meshCount": 153,
+      "triangleCount": 89978
+    },
+    {
+      "id": "tool-optical-grasping-forceps",
+      "path": "/models/rigid-bronchoscopy/v2/components/optical-grasping-forceps-32-3230-430hm-691e68fe4f25.glb",
+      "meshCount": 10,
+      "triangleCount": 5172
+    },
+    {
+      "id": "tool-semi-rigid-biopsy-forceps",
+      "path": "/models/rigid-bronchoscopy/v2/components/semi-rigid-biopsy-forceps-bps2001-e0b0460fe254.glb",
+      "meshCount": 9,
+      "triangleCount": 5212
+    },
+    {
+      "id": "tool-semi-rigid-grasping-forceps",
+      "path": "/models/rigid-bronchoscopy/v2/components/semi-rigid-grasping-forceps-bps2002-15c7d0d8bd6c.glb",
+      "meshCount": 9,
+      "triangleCount": 4612
+    },
+    {
+      "id": "tool-semi-rigid-suction-catheter-3mm",
+      "path": "/models/rigid-bronchoscopy/v2/components/semi-rigid-suction-catheter-3mm-cfc9948f6d89.glb",
+      "meshCount": 2,
+      "triangleCount": 2304
+    },
+    {
+      "id": "tool-stent-introducer",
+      "path": "/models/rigid-bronchoscopy/v2/accessories/generic-stent-introducer-proxy-5f7d2644d4a6.glb",
+      "meshCount": 3,
+      "triangleCount": 1024
+    }
+  ],
+  "failures": []
+}

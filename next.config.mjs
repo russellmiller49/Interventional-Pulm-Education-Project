@@ -370,6 +370,20 @@ const nextConfig = {
       fallback: moduleAssetFallbackRewrites,
     }
   },
+  async redirects() {
+    return [
+      {
+        source: '/airway-stent-mechanics/force-lab',
+        destination: '/airway-stent-mechanics?lesson=force-lab',
+        permanent: false,
+      },
+      {
+        source: '/airway-stent-mechanics/force-lab/index.html',
+        destination: '/airway-stent-mechanics?lesson=force-lab',
+        permanent: false,
+      },
+    ]
+  },
   // Ensure static files are served correctly
   trailingSlash: false,
   generateEtags: false,

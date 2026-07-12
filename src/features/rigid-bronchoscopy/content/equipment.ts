@@ -6,31 +6,48 @@ import type { EquipmentMap } from '@/features/skill-lab/engine/types'
  * generic alt text that does not name the parts a learner must place. Hotspot
  * coordinates are tuned to the schematic geometry.
  *
- * References: chest-ip-2003, ernst-cao-2004.
+ * References: efer-user-manual, efer-ordering-information, chest-ip-2003,
+ * chest-cao-guideline-2025.
  */
 export const rigidBronchoscopyEquipment: EquipmentMap[] = [
   {
     id: 'rigid-barrel',
-    title: 'Rigid (ventilating) bronchoscope',
+    title: 'EFER ventilating rigid bronchoscope',
     imageSrc: '/skill-lab/rigid-bronchoscopy/rigid-barrel.svg',
     imageAlt:
-      'Schematic of a long rigid tube with a proximal multiport head, a lower side connector, an inline rod, and a bevelled distal end',
+      'Simplified schematic of an EFER-style rigid tube with a proximal multiport head, axial telescope route, lateral connections, rigid barrel, and bevelled distal end',
     hotspots: [
       {
-        id: 'telescope',
-        label: 'Telescope / optics',
-        xPct: 6,
+        id: 'main-axial-port',
+        label: 'Main axial working port',
+        xPct: 10,
         yPct: 50,
         description:
-          'The rod-lens telescope passed down the barrel to give the operator a magnified view of the airway.',
+          'The large horizontal route for the telescope plus compatible optical forceps, suction, or other configuration-specific axial instruments through the selected main cap.',
       },
       {
-        id: 'ventilation-port',
-        label: 'Ventilation side port',
-        xPct: 20,
+        id: 'accessory-port',
+        label: 'BB2401/BB2402 accessory port',
+        xPct: 14,
+        yPct: 35,
+        description:
+          'The smaller lateral port accepts a one- or two-gate obturator for compatible slender accessories; it is not the fixed jet gate.',
+      },
+      {
+        id: 'anesthesia-circuit-port',
+        label: 'Anaesthesia-circuit port',
+        xPct: 14,
+        yPct: 64,
+        description:
+          'The larger lateral ventilation port connects to the breathing circuit for controlled or spontaneous-assisted ventilation.',
+      },
+      {
+        id: 'jet-ventilation-port',
+        label: 'Fixed jet-ventilation port',
+        xPct: 21,
         yPct: 72,
         description:
-          'The side port through which the anaesthesia circuit or a jet ventilator connects to ventilate through the barrel.',
+          'The dedicated inlet for jet pulses. Instruments must not be routed through this port.',
       },
       {
         id: 'barrel',
@@ -38,7 +55,7 @@ export const rigidBronchoscopyEquipment: EquipmentMap[] = [
         xPct: 54,
         yPct: 50,
         description:
-          'The hollow rigid tube that maintains the airway and passes instruments; its lumen is the working channel.',
+          'The straight hollow tube that maintains the airway and carries gas, optics, and compatible instruments from the selected proximal interfaces.',
       },
       {
         id: 'distal-bevel',

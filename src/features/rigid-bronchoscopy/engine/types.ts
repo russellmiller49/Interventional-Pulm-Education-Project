@@ -18,3 +18,20 @@ export type {
   StepSequence,
   Vitals,
 } from '@/features/skill-lab/engine/types'
+
+export type {
+  InstrumentEntryPortId,
+  InstrumentRoute,
+  InstrumentRouteId,
+  LumenClearanceResult,
+  ProceduralPose,
+  ProceduralPoseId,
+  RespiratoryPhaseDefinition,
+  RespiratoryPhaseId,
+  RigidAssetManifest,
+  RigidPortDefinition,
+  RigidPortId,
+  VentilationModeId,
+  VentilationObstructionState,
+  VentilationSetup,
+} from '../content/assemblyTopology'

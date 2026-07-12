@@ -378,9 +378,9 @@ const allStaticResults: SiteSearchResult[] = [
     ],
   },
   {
-    title: 'Airway Stent Mechanics Lab',
+    title: 'Airway Stent Learning Lab',
     description:
-      'Interactive 3D deep dive into chronic outward force, compression resistance, axial force, conformability, migration, contact distribution, tissue interaction, and fatigue.',
+      'Learners begin with a guided Force Lab and later return for case-based practice in airway stent topology, mechanics, tissue interaction, evidence, and clinical tradeoffs.',
     href: '/airway-stent-mechanics',
     section: 'Airway',
     type: 'page',

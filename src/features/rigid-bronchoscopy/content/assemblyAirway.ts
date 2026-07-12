@@ -1,75 +1,139 @@
-import type { AssemblyVector3 } from '@/features/rigid-bronchoscopy/content/assemblyParts'
-import { resolveModuleAssetPath } from '@/lib/module-assets'
+import {
+  bronchoscopeTubeOptions,
+  type AssemblyPartDefinition,
+  type AssemblyVector3,
+} from '@/features/rigid-bronchoscopy/content/assemblyParts'
+import type {
+  ProceduralPose,
+  ProceduralPoseId,
+} from '@/features/rigid-bronchoscopy/content/assemblyTopology'
+import {
+  getRigidV2AssetPath,
+  getRigidV2AssetRecord,
+  RIGID_V2_ASSET_IDS,
+} from '@/features/rigid-bronchoscopy/content/rigidAssetManifest'
+import {
+  getTubeAxialLandmarks,
+  millimetersToWorldUnits,
+  RIGID_WORLD_UNITS_PER_MM,
+} from '@/features/rigid-bronchoscopy/engine/dimensions'
 
-export type VentilationScopePositionId = 'proximal-trachea' | 'at-carina' | 'past-carina'
+export type CanonicalVentilationScopePositionId =
+  | 'proximal-trachea'
+  | 'mid-trachea'
+  | 'at-carina'
+  | 'past-carina'
+  | 'right-mainstem'
+  | 'left-mainstem'
 
-export const RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH =
-  '/models/rigid-bronchoscopy/anatomy/central-airway.glb'
-export const RIGID_BRONCHOSCOPY_AIRWAY_ASSET_PATH = resolveModuleAssetPath(
-  RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH,
+/** @deprecated Both positions are canonical v2 teaching positions; retained as a source alias. */
+export type LegacyVentilationScopePositionId = 'proximal-trachea' | 'past-carina'
+export type VentilationScopePositionId = CanonicalVentilationScopePositionId
+
+export const RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH = getRigidV2AssetRecord(
+  RIGID_V2_ASSET_IDS.airwayFull,
+).path
+export const RIGID_BRONCHOSCOPY_AIRWAY_ASSET_PATH = getRigidV2AssetPath(
+  RIGID_V2_ASSET_IDS.airwayFull,
+)
+export const RIGID_BRONCHOSCOPY_AIRWAY_CUTAWAY_PUBLIC_PATH = getRigidV2AssetRecord(
+  RIGID_V2_ASSET_IDS.airwayCutaway,
+).path
+export const RIGID_BRONCHOSCOPY_AIRWAY_CUTAWAY_ASSET_PATH = getRigidV2AssetPath(
+  RIGID_V2_ASSET_IDS.airwayCutaway,
 )
 
-export const VENTILATION_FENESTRATION_LOCAL_XS = [1.042, 1.168, 1.294, 1.42] as const
+export const RIGID_BRONCHOSCOPY_V2_MANIFEST_PUBLIC_PATH =
+  '/models/rigid-bronchoscopy/v2/asset-manifest.json'
+
+const DEFAULT_BRONCHIAL_BEVEL_X = 1.6
+const FENESTRATION_PROXIMAL_OFFSETS_MM = [62, 48, 34, 20] as const
+
+/** Compatibility positions for the original BT2103 teaching tube. */
+export const VENTILATION_FENESTRATION_LOCAL_XS = FENESTRATION_PROXIMAL_OFFSETS_MM.map(
+  (offsetMm) => DEFAULT_BRONCHIAL_BEVEL_X - millimetersToWorldUnits(offsetMm),
+) as readonly number[]
 
 type QuaternionTuple = readonly [number, number, number, number]
 
 export interface VentilationScopePose {
+  positionId: VentilationScopePositionId
   localTip: AssemblyVector3
+  localBevel: AssemblyVector3
+  localSafetyStop: AssemblyVector3
+  localTelescopeObjective: AssemblyVector3
   quaternion: QuaternionTuple
   steeringAnchor: AssemblyVector3
   worldTip: AssemblyVector3
+  worldBevel: AssemblyVector3
+  worldSafetyStop: AssemblyVector3
+  worldTelescopeObjective: AssemblyVector3
 }
 
-const WORLD_UNITS_PER_MM = 0.009
+export const RIGID_BRONCHOSCOPY_WORLD_UNITS_PER_MM = RIGID_WORLD_UNITS_PER_MM
+
 const TEACHING_CARINA: AssemblyVector3 = [1.22, -0.3, 0]
 
-// Distilled central landmarks from the tracked synchronized-bronchoscopy
-// centerline graph. Keeping only edges 0, 1, 2, 4, and 5 avoids shipping the
-// full 8,300-point graph in this client bundle.
-const SOURCE_ROOT: AssemblyVector3 = [-8.448784828186035, -180.82493591308594, -55.21790313720703]
-const SOURCE_CARINA: AssemblyVector3 = [
-  -11.958318710327148, -155.96243286132812, -172.42062377929688,
-]
-const SOURCE_RIGHT_MAINSTEM: AssemblyVector3 = [
-  -33.10675048828125, -158.19485473632812, -185.75762939453125,
-]
+/**
+ * Public-safe, purpose-built central-airway centerlines in model millimeters.
+ * +X runs from proximal trachea to carina; right is -Y and left is +Y.
+ */
+const CENTRAL_AIRWAY_MODEL_MM = {
+  trachea: [
+    [-135, 0, 0],
+    [-90, 0, 0],
+    [-45, 0, 0],
+    [0, 0, 0],
+  ],
+  rightMainstem: [
+    [-4, 0, 0],
+    [20, -8, -1],
+    [40, -21, -3],
+    [62, -34, -4],
+  ],
+  leftMainstem: [
+    [-4, 0, 0],
+    [20, 10, 1],
+    [42, 25, 2],
+    [69, 44, 3],
+  ],
+} as const satisfies Record<string, readonly AssemblyVector3[]>
 
-const SOURCE_TRACHEA: readonly AssemblyVector3[] = [
-  SOURCE_ROOT,
-  [-8.40467643737793, -180.0928497314453, -56.505592346191406],
-  [-10.309097290039062, -163.3567352294922, -64.8386001586914],
-  [-11.588726043701172, -160.33457946777344, -99.12882995605469],
-  [-12.107720375061035, -156.9423065185547, -124.26361083984375],
-  [-12.287195205688477, -154.30735778808594, -149.5109100341797],
-  SOURCE_CARINA,
-]
+export function transformCentralAirwayModelMmPoint(point: AssemblyVector3): AssemblyVector3 {
+  return [
+    TEACHING_CARINA[0] + point[0] * RIGID_WORLD_UNITS_PER_MM,
+    TEACHING_CARINA[1] + point[1] * RIGID_WORLD_UNITS_PER_MM,
+    TEACHING_CARINA[2] + point[2] * RIGID_WORLD_UNITS_PER_MM,
+  ]
+}
 
-const SOURCE_INSTRUMENTED_MAINSTEM: readonly AssemblyVector3[] = [
-  SOURCE_CARINA,
-  [-20.941179275512695, -157.0724334716797, -177.6588897705078],
-  [-25.81014633178711, -157.70396423339844, -181.14956665039062],
-  [-30.533950805664062, -157.8944854736328, -183.8279266357422],
-  SOURCE_RIGHT_MAINSTEM,
-  [-31.836301803588867, -158.05755615234375, -194.18807983398438],
-  [-34.28709411621094, -158.5131378173828, -198.82672119140625],
-  [-35.47322082519531, -159.18670654296875, -201.9161376953125],
-  [-37.44120788574219, -159.616943359375, -205.1513671875],
-  [-39.131309509277344, -160.20150756835938, -208.1127471923828],
-  [-41.3557243347168, -160.81927490234375, -210.92237854003906],
-]
+const trachea = CENTRAL_AIRWAY_MODEL_MM.trachea.map(transformCentralAirwayModelMmPoint)
+const rightMainstem = [
+  transformCentralAirwayModelMmPoint([0, 0, 0]),
+  ...CENTRAL_AIRWAY_MODEL_MM.rightMainstem.slice(1).map(transformCentralAirwayModelMmPoint),
+] as const
+const leftMainstem = [
+  transformCentralAirwayModelMmPoint([0, 0, 0]),
+  ...CENTRAL_AIRWAY_MODEL_MM.leftMainstem.slice(1).map(transformCentralAirwayModelMmPoint),
+] as const
 
-const SOURCE_OPPOSITE_MAINSTEM: readonly AssemblyVector3[] = [
-  SOURCE_CARINA,
-  [-1.3562870025634766, -155.6378173828125, -179.0387725830078],
-  [4.310861110687256, -157.10655212402344, -184.1034393310547],
-  [9.031033515930176, -157.88954162597656, -188.0054931640625],
-  [18.7166748046875, -159.4135284423828, -193.9962158203125],
-  [25.804346084594727, -161.33468627929688, -196.5807342529297],
-  [32.44121551513672, -162.0923309326172, -198.90786743164062],
-  [35.57036590576172, -158.89019775390625, -203.1833953857422],
-  [37.72312545776367, -157.0836944580078, -205.73590087890625],
-  [39.42020034790039, -154.9595947265625, -207.95469665527344],
-]
+export const centralAirwayGeometry = {
+  airwayY: TEACHING_CARINA[1],
+  boundsMax: [1.94, 0.19, 0.13] as const satisfies AssemblyVector3,
+  boundsMin: [-0.08, -0.7, -0.13] as const satisfies AssemblyVector3,
+  carina: transformCentralAirwayModelMmPoint([0, 0, 0]),
+  carinaX: TEACHING_CARINA[0],
+  glottis: transformCentralAirwayModelMmPoint([-135, 0, 0]),
+  glottisX: transformCentralAirwayModelMmPoint([-135, 0, 0])[0],
+  instrumentedMainstem: rightMainstem,
+  leftMainstem,
+  oppositeMainstem: leftMainstem,
+  rightMainstem,
+  trachea,
+} as const
+
+/** Compatibility export retained for the current scene component. */
+export const realisticAirwayGeometry = centralAirwayGeometry
 
 function subtract(a: AssemblyVector3, b: AssemblyVector3): AssemblyVector3 {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
@@ -101,39 +165,6 @@ function normalize(vector: AssemblyVector3): AssemblyVector3 {
   return multiply(vector, 1 / magnitude)
 }
 
-const FORWARD_BASIS = normalize(subtract(SOURCE_CARINA, SOURCE_ROOT))
-const rightVector = subtract(SOURCE_RIGHT_MAINSTEM, SOURCE_CARINA)
-const RIGHT_TRANSVERSE_BASIS = normalize(
-  subtract(rightVector, multiply(FORWARD_BASIS, dot(rightVector, FORWARD_BASIS))),
-)
-const DEPTH_BASIS = normalize(cross(FORWARD_BASIS, RIGHT_TRANSVERSE_BASIS))
-
-export function transformAirwayLpsPoint(point: AssemblyVector3): AssemblyVector3 {
-  const delta = subtract(point, SOURCE_CARINA)
-  return [
-    TEACHING_CARINA[0] + dot(delta, FORWARD_BASIS) * WORLD_UNITS_PER_MM,
-    TEACHING_CARINA[1] - dot(delta, RIGHT_TRANSVERSE_BASIS) * WORLD_UNITS_PER_MM,
-    TEACHING_CARINA[2] + dot(delta, DEPTH_BASIS) * WORLD_UNITS_PER_MM,
-  ]
-}
-
-const trachea = SOURCE_TRACHEA.map(transformAirwayLpsPoint)
-const instrumentedMainstem = SOURCE_INSTRUMENTED_MAINSTEM.map(transformAirwayLpsPoint)
-const oppositeMainstem = SOURCE_OPPOSITE_MAINSTEM.map(transformAirwayLpsPoint)
-
-export const realisticAirwayGeometry = {
-  airwayY: TEACHING_CARINA[1],
-  boundsMax: [2.733055, 0.83808, 0.740827] as const satisfies AssemblyVector3,
-  boundsMin: [0.130291, -1.401344, -1.14462] as const satisfies AssemblyVector3,
-  carina: transformAirwayLpsPoint(SOURCE_CARINA),
-  carinaX: TEACHING_CARINA[0],
-  glottis: transformAirwayLpsPoint(SOURCE_ROOT),
-  glottisX: transformAirwayLpsPoint(SOURCE_ROOT)[0],
-  instrumentedMainstem,
-  oppositeMainstem,
-  trachea,
-} as const
-
 function quaternionFromXAxis(direction: AssemblyVector3): QuaternionTuple {
   const unit = normalize(direction)
   const raw: QuaternionTuple = [0, -unit[2], unit[1], 1 + unit[0]]
@@ -150,41 +181,103 @@ function rotateByQuaternion(vector: AssemblyVector3, quaternion: QuaternionTuple
   return add(vector, add(multiply(firstCross, 2 * qw), multiply(secondCross, 2)))
 }
 
-// Seat the bevel just inside the entered main bronchus. A deeper target would
-// force the straight rigid shaft through the lateral carinal wall in this
-// non-deforming anatomy model.
-const PAST_CARINA_TIP = instrumentedMainstem[1]
-const PAST_CARINA_STEERING_ANCHOR: AssemblyVector3 = [
-  realisticAirwayGeometry.glottis[0],
-  realisticAirwayGeometry.glottis[1] + 0.045,
-  realisticAirwayGeometry.glottis[2] + 0.02,
-]
+interface AuthoredScopeTarget {
+  positionId: VentilationScopePositionId
+  worldBevel: AssemblyVector3
+  steeringAnchor: AssemblyVector3
+  axis: AssemblyVector3
+}
 
-const targetTipByPosition: Record<VentilationScopePositionId, AssemblyVector3> = {
-  'proximal-trachea': [0.38, realisticAirwayGeometry.airwayY, 0],
-  'at-carina': [1.15, realisticAirwayGeometry.airwayY, 0],
-  'past-carina': PAST_CARINA_TIP,
+const AXIAL_STEERING_ANCHOR: AssemblyVector3 = [centralAirwayGeometry.glottisX, -0.3, 0]
+
+/** Discrete poses prevent a straight rigid tube from being bent along a centerline. */
+const AUTHORED_SCOPE_TARGETS: Record<VentilationScopePositionId, AuthoredScopeTarget> = {
+  'proximal-trachea': {
+    positionId: 'proximal-trachea',
+    worldBevel: [0.28, -0.3, 0],
+    steeringAnchor: AXIAL_STEERING_ANCHOR,
+    axis: [1, 0, 0],
+  },
+  'mid-trachea': {
+    positionId: 'mid-trachea',
+    worldBevel: transformCentralAirwayModelMmPoint([-50, 0, 0]),
+    steeringAnchor: transformCentralAirwayModelMmPoint([-120, 0, 0]),
+    axis: [1, 0, 0],
+  },
+  'at-carina': {
+    positionId: 'at-carina',
+    worldBevel: transformCentralAirwayModelMmPoint([-8, 0, 0]),
+    steeringAnchor: transformCentralAirwayModelMmPoint([-110, 0, 0]),
+    axis: [1, 0, 0],
+  },
+  'right-mainstem': {
+    positionId: 'right-mainstem',
+    worldBevel: transformCentralAirwayModelMmPoint([28, -9, -1.5]),
+    steeringAnchor: transformCentralAirwayModelMmPoint([-55, 0, 0]),
+    axis: [0.9939, -0.1078, -0.018],
+  },
+  'left-mainstem': {
+    positionId: 'left-mainstem',
+    worldBevel: transformCentralAirwayModelMmPoint([23, 9, 1]),
+    steeringAnchor: transformCentralAirwayModelMmPoint([-50, 0, 0]),
+    axis: [0.9924, 0.1223, 0.0136],
+  },
+  'past-carina': {
+    positionId: 'past-carina',
+    worldBevel: transformCentralAirwayModelMmPoint([28, -9, -1.5]),
+    steeringAnchor: transformCentralAirwayModelMmPoint([-55, 0, 0]),
+    axis: [0.9939, -0.1078, -0.018],
+  },
+}
+
+export function getVentilationFenestrationLocalXs(tube: AssemblyPartDefinition): readonly number[] {
+  if (!tube.hasDistalFenestrations) return []
+  const { bevel } = getTubeAxialLandmarks(tube)
+  const numericScale = typeof tube.target.scale === 'number' ? tube.target.scale : 9
+  return FENESTRATION_PROXIMAL_OFFSETS_MM.map(
+    (offsetMm) => bevel[0] - millimetersToWorldUnits(offsetMm, numericScale),
+  )
 }
 
 export function getVentilationScopePose(
-  tubeDistalX: number,
+  tubeBevelX: number,
   position: VentilationScopePositionId,
 ): VentilationScopePose {
-  const worldTip = targetTipByPosition[position]
-  const steeringAnchor = position === 'past-carina' ? PAST_CARINA_STEERING_ANCHOR : worldTip
-  const direction =
-    position === 'past-carina' ? subtract(worldTip, steeringAnchor) : ([1, 0, 0] as const)
+  const target = AUTHORED_SCOPE_TARGETS[position]
+  const localBevel: AssemblyVector3 = [tubeBevelX, centralAirwayGeometry.airwayY, 0]
+  const localSafetyStop: AssemblyVector3 = [
+    tubeBevelX - millimetersToWorldUnits(10.4),
+    centralAirwayGeometry.airwayY,
+    0,
+  ]
+  const localTelescopeObjective: AssemblyVector3 = [
+    tubeBevelX - millimetersToWorldUnits(1),
+    centralAirwayGeometry.airwayY,
+    0,
+  ]
+  const quaternion = quaternionFromXAxis(target.axis)
+  const partialPose = {
+    localTip: localBevel,
+    localBevel,
+    localSafetyStop,
+    localTelescopeObjective,
+    positionId: position,
+    quaternion,
+    steeringAnchor: target.steeringAnchor,
+    worldTip: target.worldBevel,
+    worldBevel: target.worldBevel,
+  }
+
   return {
-    localTip: [tubeDistalX, realisticAirwayGeometry.airwayY, 0],
-    quaternion: quaternionFromXAxis(direction),
-    steeringAnchor,
-    worldTip,
+    ...partialPose,
+    worldSafetyStop: transformVentilationScopePoint(localSafetyStop, partialPose),
+    worldTelescopeObjective: transformVentilationScopePoint(localTelescopeObjective, partialPose),
   }
 }
 
 export function transformVentilationScopePoint(
   point: AssemblyVector3,
-  pose: VentilationScopePose,
+  pose: Pick<VentilationScopePose, 'localTip' | 'quaternion' | 'worldTip'>,
 ): AssemblyVector3 {
   return add(pose.worldTip, rotateByQuaternion(subtract(point, pose.localTip), pose.quaternion))
 }
@@ -196,3 +289,84 @@ export function getVentilationScopeAngleDegrees(pose: VentilationScopePose) {
     yaw: (Math.atan2(direction[1], direction[0]) * 180) / Math.PI,
   }
 }
+
+const poseTubeId: Record<ProceduralPoseId, string> = {
+  midTrachea: 'tube-bt2203-3',
+  carina: 'tube-bt2203-3',
+  rightMainstem: 'tube-bt2105-3',
+  leftMainstem: 'tube-bt2105-3',
+}
+
+const proceduralToScopePosition: Record<ProceduralPoseId, CanonicalVentilationScopePositionId> = {
+  midTrachea: 'mid-trachea',
+  carina: 'at-carina',
+  rightMainstem: 'right-mainstem',
+  leftMainstem: 'left-mainstem',
+}
+
+const proceduralAnatomyPose: Record<ProceduralPoseId, ProceduralPose['anatomyPose']> = {
+  midTrachea: 'tracheal',
+  carina: 'carinal',
+  rightMainstem: 'right-mainstem',
+  leftMainstem: 'left-mainstem',
+}
+
+const validatedPoseRadialClearanceMm: Record<ProceduralPoseId, number> = {
+  midTrachea: 4.997,
+  carina: 4.997,
+  rightMainstem: 0.828,
+  leftMainstem: 0.81,
+}
+
+const POSE_CLEARANCE_VALIDATION_METHOD =
+  '80 longitudinal x 32 radial swept-surface samples against the authored lumen mesh'
+
+function requiredTube(id: string): AssemblyPartDefinition {
+  const tube = bronchoscopeTubeOptions.find((candidate) => candidate.id === id)
+  if (!tube) throw new Error(`Missing procedural-pose tube: ${id}`)
+  return tube
+}
+
+export function createProceduralPose(id: ProceduralPoseId): ProceduralPose {
+  const tube = requiredTube(poseTubeId[id])
+  const landmarks = getTubeAxialLandmarks(tube)
+  const scopePose = getVentilationScopePose(landmarks.bevel[0], proceduralToScopePosition[id])
+  const radialClearanceMm = validatedPoseRadialClearanceMm[id]
+  const tubeOuterDiameterMm = tube.outerDiameterMm ?? 0
+  const clearance = {
+    allowed: radialClearanceMm >= 0.5,
+    availableDiameterMm: tubeOuterDiameterMm + radialClearanceMm * 2,
+    occupiedDiameterMm: tubeOuterDiameterMm,
+    diametricClearanceMm: radialClearanceMm * 2,
+    minimumClearanceMm: 0.5,
+    reason: radialClearanceMm >= 0.5 ? ('fits' as const) : ('insufficient-clearance' as const),
+    measurement: 'radial-swept-mesh' as const,
+    radialClearanceMm,
+    validationMethod: POSE_CLEARANCE_VALIDATION_METHOD,
+  }
+  const mainstem = id === 'rightMainstem' || id === 'leftMainstem'
+  const target = mainstem ? scopePose.worldBevel : centralAirwayGeometry.carina
+
+  return {
+    id,
+    tubeId: tube.id,
+    anatomyPose: proceduralAnatomyPose[id],
+    tubeBevelPosition: scopePose.worldBevel,
+    safetyStopPosition: scopePose.worldSafetyStop,
+    telescopeObjectivePosition: scopePose.worldTelescopeObjective,
+    lumenClearance: clearance,
+    cameraPreset: {
+      id: mainstem ? 'selectedMainstem' : id === 'carina' ? 'carina' : 'trueScale',
+      target,
+      position: [target[0], target[1] + 1.7, target[2] + 4.8],
+      magnified: false,
+    },
+  }
+}
+
+export const proceduralPoses = {
+  midTrachea: createProceduralPose('midTrachea'),
+  carina: createProceduralPose('carina'),
+  rightMainstem: createProceduralPose('rightMainstem'),
+  leftMainstem: createProceduralPose('leftMainstem'),
+} as const satisfies Record<ProceduralPoseId, ProceduralPose>

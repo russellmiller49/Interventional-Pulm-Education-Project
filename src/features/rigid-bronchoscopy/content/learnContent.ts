@@ -1,19 +1,30 @@
 import { pickLocaleContent } from '@/i18n/content'
 import type { LearnBlock } from '@/features/learning-module/types'
 
+import {
+  rigidCoreBlocksEs,
+  rigidCoreBlocksZhCn,
+  rigidGoDeeperBlocksEs,
+  rigidGoDeeperBlocksZhCn,
+  rigidObjectivesEs,
+  rigidObjectivesZhCn,
+} from './learnContentLocalized'
+
 /**
  * Didactic content for the Rigid Bronchoscopy "Learn" section. Paraphrased
  * teaching in our own words; recommendations trace to the module references
- * (chest-ip-2003, diaz-jimenez-interventions-2023, yang-jet-model-2025,
- * ernst-cao-2004, sakr-dutau-2010, asa-or-fire-2013, folch-stents-2018).
+ * (chest-ip-2003, chest-cao-guideline-2025,
+ * diaz-jimenez-interventions-2023, sarkiss-eapen-airway-management-2022,
+ * putz-jet-ventilation-2016, yang-jet-model-2025, ernst-cao-2004,
+ * sakr-dutau-2010, asa-or-fire-2013, folch-stents-2018).
  * Simulation and professional-education framing only.
  *
- * English is authored here; `pickLocaleContent` falls back to English for
- * locales without a translated variant yet.
+ * English is authored here, with Spanish and Simplified Chinese variants in
+ * `learnContentLocalized.ts`; unsupported locales fall back to English.
  */
 
 export const rigidObjectives = [
-  'Identify the parts of a ventilating rigid bronchoscope and the ablative and hemostatic instruments.',
+  'Identify the four interfaces of the EFER universal barrel and choose the main axial or lateral accessory route for a compatible instrument configuration.',
   'State the indications and contraindications for rigid bronchoscopy and assess the airway.',
   'Compare conventional, spontaneous-assisted, low-frequency jet, and high-frequency jet ventilation in the shared airway and anticipate leak, gas trapping, and barotrauma.',
   'Describe therapeutic coring, dilation, stents, foreign-body retrieval, and endobronchial hemostasis, and apply airway-fire safety.',
@@ -24,11 +35,13 @@ export const rigidCoreBlocks: LearnBlock[] = [
     id: 'equipment',
     title: 'Equipment familiarization',
     paragraphs: [
-      'The rigid bronchoscope is a hollow metal tube that both secures a large-bore airway and serves as a working channel. Knowing the parts is the foundation for everything else.',
+      'The rigid bronchoscope is a hollow metal tube that secures a large-bore airway and serves as a working platform. This lab models the EFER universal barrel; other systems can place and configure their ports differently.',
     ],
     bullets: [
-      'Ventilating rigid barrel with a side port for the anaesthesia circuit or a jet ventilator, and a bevelled distal tip used to intubate and to core tumour.',
-      'Rod-lens telescope for a magnified view, and optical (telescope-aligned) forceps for grasping, biopsy, and foreign-body retrieval.',
+      'The EFER barrel has four distinct interfaces: a main horizontal/axial working port, a smaller lateral accessory port, a larger lateral anaesthesia-circuit port, and a fixed jet-ventilation gate.',
+      'The main axial port accepts configuration-specific caps for the telescope with compatible optical forceps, suction, or other large axial instruments. The smaller accessory port accepts a BB2401 or BB2402 obturator for compatible slender accessories.',
+      'The anaesthesia-circuit and jet ports are ventilation inlets, not instrument routes. Controlled and spontaneous-assisted ventilation use the anaesthesia-circuit port; jet ventilation uses the dedicated jet gate.',
+      'The rod-lens telescope provides a magnified view, while the bevelled distal tube tip is used for intubation and mechanical coring. The telescope objective, tube bevel, and instrument endpoint are separate landmarks.',
       'Adapters for the ablative and hemostatic modalities: Nd:YAG laser, argon plasma coagulation (APC), cryotherapy, and mechanical instruments.',
     ],
   },
@@ -48,11 +61,14 @@ export const rigidCoreBlocks: LearnBlock[] = [
       'Rigid bronchoscopy is a shared-airway procedure: the operator and the anaesthesia team use the same airway at the same time, so communication is continuous.',
     ],
     bullets: [
-      'Conventional controlled ventilation delivers positive-pressure breaths through the ventilation connection with the proximal instrument ports sealed; the uncuffed rigid tube can still leak around the larynx.',
-      'Spontaneous-assisted ventilation preserves patient-generated breathing and adds intermittent manual or pressure assistance when spontaneous effort is inadequate.',
-      'Low-frequency jet ventilation produces discrete, lower-frequency gas pulses; high-frequency jet ventilation produces rapid, smaller pulses. Both are open-system strategies with passive expiration and require device-specific monitoring.',
+      'Conventional controlled ventilation delivers positive-pressure inspiration and receives expiration through the large anaesthesia-circuit port with the selected proximal instrument caps sealed. The uncuffed rigid tube can still leak around the larynx or proximal interfaces.',
+      'Spontaneous-assisted ventilation preserves patient-generated inspiration through the breathing circuit and adds clearly separate manual or pressure-assist events through that same anaesthesia-circuit port when effort is inadequate. It does not ventilate through the main axial instrument port.',
+      'Low-frequency jet ventilation produces discrete, lower-frequency pulses through the fixed jet gate; high-frequency jet ventilation produces more rapid, smaller pulses through the same dedicated inlet. Both use passive egress through an open system and require device-specific monitoring.',
+      'CHEST conditionally suggests either jet ventilation or controlled/spontaneous-assisted ventilation for rigid therapeutic bronchoscopy under general anaesthesia, with very low certainty of evidence. The lab therefore compares modes without ranking one as universally preferred.',
       'Jet ventilation requires adequate expiratory egress — jetting against an obstructed distal airway causes gas trapping and barotrauma. Apnoeic oxygenation is an adjunct for brief procedural pauses, not a substitute for ventilation.',
-      'Long bronchial tubes have distal fenestrations that can preserve a route toward the contralateral lung after mainstem entry. Short nonfenestrated tracheal tubes reduce side leakage for proximal tracheal work; a long tube positioned too shallowly can leave its fenestrations above the cords and create a major leak.',
+      'A ball-valve lesion may admit inspired gas but restrict passive expiration, so retained distal volume can increase breath by breath. A fixed complete obstruction instead blocks distal inspiration as well as expiration.',
+      'Long bronchial tubes have distal fenestrations that can preserve a route toward the contralateral mainstem only when both depth and rotation align the openings appropriately. A shallow bronchial tube can leave fenestrations above the cords and create a major leak.',
+      'A short nonfenestrated tracheal tube has no contralateral fenestration route after mainstem entry, but “nonfenestrated” does not mean leak-free: an uncuffed system can still leak around the larynx or through an incompletely sealed proximal interface.',
     ],
   },
   {
@@ -114,13 +130,25 @@ export const rigidGoDeeperBlocks: LearnBlock[] = [
 ]
 
 export function getRigidObjectives(locale: string): readonly string[] {
-  return pickLocaleContent(locale, { en: rigidObjectives as readonly string[] })
+  return pickLocaleContent(locale, {
+    en: rigidObjectives as readonly string[],
+    es: rigidObjectivesEs,
+    'zh-CN': rigidObjectivesZhCn,
+  })
 }
 
 export function getRigidCoreBlocks(locale: string): LearnBlock[] {
-  return pickLocaleContent(locale, { en: rigidCoreBlocks })
+  return pickLocaleContent(locale, {
+    en: rigidCoreBlocks,
+    es: rigidCoreBlocksEs,
+    'zh-CN': rigidCoreBlocksZhCn,
+  })
 }
 
 export function getRigidGoDeeperBlocks(locale: string): LearnBlock[] {
-  return pickLocaleContent(locale, { en: rigidGoDeeperBlocks })
+  return pickLocaleContent(locale, {
+    en: rigidGoDeeperBlocks,
+    es: rigidGoDeeperBlocksEs,
+    'zh-CN': rigidGoDeeperBlocksZhCn,
+  })
 }

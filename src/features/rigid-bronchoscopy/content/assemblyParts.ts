@@ -1,4 +1,7 @@
-import { resolveModuleAssetPath } from '@/lib/module-assets'
+import {
+  getRigidV2AssetPath,
+  RIGID_V2_ASSET_IDS,
+} from '@/features/rigid-bronchoscopy/content/rigidAssetManifest'
 
 export type AssemblyPartId = string
 
@@ -51,12 +54,11 @@ export interface AssemblyPartDefinition {
   individualAssetPath: string
 }
 
-export const ASSEMBLY_KIT_ASSET_PATH = resolveModuleAssetPath(
-  '/models/rigid-bronchoscopy/assembly/rigid-bronchoscopy-assembly-kit.glb',
-)
+export const ASSEMBLY_KIT_ASSET_PATH = getRigidV2AssetPath(RIGID_V2_ASSET_IDS.assemblyKit)
 
 export const ASSEMBLY_BASE_PART_ID = 'adult-universal-base'
 export const ANY_TUBE_PREREQUISITE_ID = 'any-tube'
+export const DEFAULT_RIGID_BRONCHOSCOPY_TUBE_ID = 'tube-bt2203-3'
 
 export const assemblySourceIds = [
   'efer-ordering-information',
@@ -67,7 +69,6 @@ export const assemblySourceIds = [
   'karl-storz-light-cable',
 ] as const
 
-const COMPONENT_ASSET_ROOT = '/models/rigid-bronchoscopy/assembly/components'
 const HOOD_ORDERING_URL = 'https://hoodlabs.com/efer-bronchoscope-ordering-information/'
 const HOOD_USER_MANUAL_URL =
   'https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf'
@@ -107,10 +108,11 @@ const adultUniversalBase: AssemblyPartDefinition = {
     'Port identity, cap selection, and ventilation setup must be confirmed against the exact device IFU before clinical use.',
   sourceType: 'manufacturer-dimensions-photo-derived-geometry',
   source: baseSource,
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/bd2410-3-adult-universal-base.glb`,
+  individualAssetPath: getRigidV2AssetPath('efer-bd2410-3-adult-universal-base'),
 }
 
 interface TubePartInput {
+  assetId: string
   id: AssemblyPartId
   nodeName: string
   partNumber: string
@@ -120,7 +122,6 @@ interface TubePartInput {
   workingLengthMm: number
   colorName: string
   color: string
-  filename: string
 }
 
 function createTubePart(input: TubePartInput): AssemblyPartDefinition {
@@ -161,16 +162,17 @@ function createTubePart(input: TubePartInput): AssemblyPartDefinition {
       url: HOOD_ORDERING_URL,
       note: 'Tube dimensions and color coding are manufacturer-published values.',
     },
-    individualAssetPath: `${COMPONENT_ASSET_ROOT}/${input.filename}`,
+    individualAssetPath: getRigidV2AssetPath(input.assetId),
   }
 }
 
 /**
  * All nine ventilating tubes segmented from the corrected teaching set.
- * BT2103-3 is the initial UI selection, but no option is presented as clinically preferred.
+ * BT2203-3 is the safe mid-tracheal baseline; no option is presented as universally preferred.
  */
 export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
   createTubePart({
+    assetId: 'efer-bt2000-3-bronchial-tube',
     id: 'tube-bt2000-3',
     nodeName: 'BT2000_3_Adult_bronchial_tube_13.20_12.20_mm',
     partNumber: 'BT2000-3',
@@ -180,9 +182,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 360,
     colorName: 'orange',
     color: '#f97316',
-    filename: 'bt2000-3-bronchial-tube-od13p20-id12p20mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2101-3-bronchial-tube',
     id: 'tube-bt2101-3',
     nodeName: 'BT2101_3_Adult_bronchial_tube_12.00_11.00_mm',
     partNumber: 'BT2101-3',
@@ -192,9 +194,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 360,
     colorName: 'black',
     color: '#27272a',
-    filename: 'bt2101-3-bronchial-tube-od12p00-id11p00mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2103-3-bronchial-tube',
     id: 'tube-bt2103-3',
     nodeName: 'BT2103_3_Adult_bronchial_tube_10.00_9.20_mm',
     partNumber: 'BT2103-3',
@@ -204,9 +206,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 360,
     colorName: 'red',
     color: '#dc2626',
-    filename: 'bt2103-3-bronchial-tube-od10p00-id9p20mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2105-3-bronchial-tube',
     id: 'tube-bt2105-3',
     nodeName: 'BT2105_3_Adult_bronchial_tube_8.00_7.00_mm',
     partNumber: 'BT2105-3',
@@ -216,9 +218,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 360,
     colorName: 'green',
     color: '#16a34a',
-    filename: 'bt2105-3-bronchial-tube-od8p00-id7p00mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2106-3-bronchial-tube',
     id: 'tube-bt2106-3',
     nodeName: 'BT2106_3_Adult_bronchial_tube_7.00_6.50_mm',
     partNumber: 'BT2106-3',
@@ -228,9 +230,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 360,
     colorName: 'blue',
     color: '#2563eb',
-    filename: 'bt2106-3-bronchial-tube-od7p00-id6p50mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2201-3-tracheal-tube',
     id: 'tube-bt2201-3',
     nodeName: 'BT2201_3_Adult_tracheal_tube_12.00_11.00_mm',
     partNumber: 'BT2201-3',
@@ -240,9 +242,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 260,
     colorName: 'black',
     color: '#27272a',
-    filename: 'bt2201-3-tracheal-tube-od12p00-id11p00mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2203-3-tracheal-tube',
     id: 'tube-bt2203-3',
     nodeName: 'BT2203_3_Adult_tracheal_tube_10.00_9.20_mm',
     partNumber: 'BT2203-3',
@@ -252,9 +254,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 260,
     colorName: 'red',
     color: '#dc2626',
-    filename: 'bt2203-3-tracheal-tube-od10p00-id9p20mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2205-3-tracheal-tube',
     id: 'tube-bt2205-3',
     nodeName: 'BT2205_3_Adult_tracheal_tube_8.00_7.00_mm',
     partNumber: 'BT2205-3',
@@ -264,9 +266,9 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 260,
     colorName: 'green',
     color: '#16a34a',
-    filename: 'bt2205-3-tracheal-tube-od8p00-id7p00mm.glb',
   }),
   createTubePart({
+    assetId: 'efer-bt2210-3-tracheal-tube',
     id: 'tube-bt2210-3',
     nodeName: 'BT2210_3_Adult_tracheal_tube_13.20_12.20_mm',
     partNumber: 'BT2210-3',
@@ -276,7 +278,6 @@ export const bronchoscopeTubeOptions: readonly AssemblyPartDefinition[] = [
     workingLengthMm: 260,
     colorName: 'yellow',
     color: '#eab308',
-    filename: 'bt2210-3-tracheal-tube-od13p20-id12p20mm.glb',
   }),
 ]
 
@@ -306,7 +307,7 @@ const doubleGateLateralObturator: AssemblyPartDefinition = {
   safetyNote: 'Gate configuration and sealing must be checked against the exact device and IFU.',
   sourceType: 'manufacturer',
   source: baseSource,
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/bb2402-3-lateral-obturator-double-gate.glb`,
+  individualAssetPath: getRigidV2AssetPath('efer-bb2402-3-lateral-obturator-double-gate'),
 }
 
 const redMainCap: AssemblyPartDefinition = {
@@ -327,7 +328,7 @@ const redMainCap: AssemblyPartDefinition = {
   safetyNote: 'Cap choice is configuration-specific; verify the telescope and cap combination.',
   sourceType: 'manufacturer',
   source: baseSource,
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/bs2303-3-main-cap-red-5p5mm.glb`,
+  individualAssetPath: getRigidV2AssetPath('efer-bs2303-3-silicone-cap'),
 }
 
 const rigidTelescope: AssemblyPartDefinition = {
@@ -352,7 +353,7 @@ const rigidTelescope: AssemblyPartDefinition = {
     url: HOOD_ENDOSCOPE_URL,
     note: 'Manufacturer source supports the 5.5 mm diameter and 0° view; shaft length in this model is approximate.',
   },
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/bx-5500-fa-rigid-telescope.glb`,
+  individualAssetPath: getRigidV2AssetPath('efer-bx-5500-fa-rigid-telescope'),
 }
 
 const genericCameraHead: AssemblyPartDefinition = {
@@ -378,7 +379,7 @@ const genericCameraHead: AssemblyPartDefinition = {
     url: STRYKER_CAMERA_URL,
     note: 'The supplied branded photograph informs visual form only; the teaching model is intentionally generic and unbranded.',
   },
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/generic-endoscopic-camera-head.glb`,
+  individualAssetPath: getRigidV2AssetPath('accessory-generic-endoscopic-camera-head'),
 }
 
 const lightGuideAdapterSource: AssemblyPartSource = {
@@ -414,7 +415,7 @@ const lightGuideAdapterC1: AssemblyPartDefinition = {
     'The C1/C2 labels do not establish a specific STORZ/Olympus, WOLF, or ACMI configuration. Verify the exact adapter chain and IFU.',
   sourceType: 'reference-photo-educational-approximation',
   source: lightGuideAdapterSource,
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/generic-light-guide-adapter-c1.glb`,
+  individualAssetPath: getRigidV2AssetPath('accessory-generic-light-guide-adapter-c1'),
 }
 
 const lightGuideAdapterC2: AssemblyPartDefinition = {
@@ -445,7 +446,7 @@ const lightGuideAdapterC2: AssemblyPartDefinition = {
     'The C1/C2 labels do not establish a specific STORZ/Olympus, WOLF, or ACMI configuration. Verify the exact adapter chain and IFU.',
   sourceType: 'reference-photo-educational-approximation',
   source: lightGuideAdapterSource,
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/generic-light-guide-adapter-c2.glb`,
+  individualAssetPath: getRigidV2AssetPath('accessory-generic-light-guide-adapter-c2'),
 }
 
 const genericLightCable: AssemblyPartDefinition = {
@@ -475,7 +476,7 @@ const genericLightCable: AssemblyPartDefinition = {
     url: KARL_STORZ_LIGHT_CABLE_URL,
     note: 'Exemplar dimensions inform scale; the supplied photograph and connectors are not claimed to be this exact model.',
   },
-  individualAssetPath: `${COMPONENT_ASSET_ROOT}/generic-fiberoptic-light-cable.glb`,
+  individualAssetPath: getRigidV2AssetPath('accessory-generic-fiberoptic-light-cable'),
 }
 
 const toolSource: AssemblyPartSource = {
@@ -505,7 +506,7 @@ export const assemblyToolParts: readonly AssemblyPartDefinition[] = [
       'Instrument fit and use depend on the selected tube, exact accessory, target, and manufacturer instructions.',
     sourceType: 'manufacturer-dimensions-photo-derived-geometry',
     source: toolSource,
-    individualAssetPath: `${COMPONENT_ASSET_ROOT}/optical-grasping-forceps-32-3230-430hm.glb`,
+    individualAssetPath: getRigidV2AssetPath('tool-optical-grasping-forceps'),
   },
   {
     id: 'tool-semi-rigid-grasping-forceps',
@@ -524,7 +525,7 @@ export const assemblyToolParts: readonly AssemblyPartDefinition[] = [
       'Instrument fit and use depend on the selected tube, exact accessory, target, and manufacturer instructions.',
     sourceType: 'manufacturer-dimensions-photo-derived-geometry',
     source: toolSource,
-    individualAssetPath: `${COMPONENT_ASSET_ROOT}/semi-rigid-grasping-forceps-bps2002.glb`,
+    individualAssetPath: getRigidV2AssetPath('tool-semi-rigid-grasping-forceps'),
   },
   {
     id: 'tool-semi-rigid-biopsy-forceps',
@@ -543,7 +544,7 @@ export const assemblyToolParts: readonly AssemblyPartDefinition[] = [
       'Instrument fit and use depend on the selected tube, exact accessory, target, and manufacturer instructions.',
     sourceType: 'manufacturer-dimensions-photo-derived-geometry',
     source: toolSource,
-    individualAssetPath: `${COMPONENT_ASSET_ROOT}/semi-rigid-biopsy-forceps-bps2001.glb`,
+    individualAssetPath: getRigidV2AssetPath('tool-semi-rigid-biopsy-forceps'),
   },
   {
     id: 'tool-suction-catheter-3mm',
@@ -567,7 +568,39 @@ export const assemblyToolParts: readonly AssemblyPartDefinition[] = [
       url: HOOD_ORDERING_URL,
       note: 'Published size and working length inform a simplified hollow educational model.',
     },
-    individualAssetPath: `${COMPONENT_ASSET_ROOT}/semi-rigid-suction-catheter-3mm.glb`,
+    individualAssetPath: getRigidV2AssetPath('tool-semi-rigid-suction-catheter-3mm'),
+  },
+  {
+    id: 'tool-stent-introducer',
+    nodeName: 'Stent_Introducer_Hollow_Shaft',
+    label: 'Generic rigid stent introducer teaching proxy',
+    shortLabel: 'Stent introducer proxy',
+    description:
+      'A hollow 7.5 mm educational introducer proxy for demonstrating main-axial stent-system access after the required telescope and cap change.',
+    function:
+      'Demonstrates that a large stent introducer follows the main axial lumen, never a ventilation port.',
+    category: 'tool',
+    prerequisites: [ASSEMBLY_BASE_PART_ID, ANY_TUBE_PREREQUISITE_ID],
+    start: { position: [0.2, -1.75, -1.3], rotation: AXIAL_ROTATION, scale: 9 },
+    target: { position: [-2.65, -0.3, 0], rotation: AXIAL_ROTATION, scale: 9 },
+    snapDistance: 0.8,
+    outerDiameterMm: 7.5,
+    innerDiameterMm: 6.3,
+    workingLengthMm: 450,
+    specs: [
+      '450 mm estimated working length',
+      '7.5 mm estimated outer diameter',
+      '6.3 mm estimated inner diameter',
+    ],
+    safetyNote:
+      'All introducer dimensions and distal geometry are estimates. Confirm the exact stent system, tube, cap, and manufacturer instructions before clinical use.',
+    sourceType: 'manufacturer-exemplar-generic-geometry',
+    source: {
+      label: 'Hood Laboratories EFER-DUMON ordering information',
+      url: HOOD_ORDERING_URL,
+      note: 'The source lists stent-placement systems but does not publish the dimensions used by this educational proxy.',
+    },
+    individualAssetPath: getRigidV2AssetPath(RIGID_V2_ASSET_IDS.stentIntroducer),
   },
 ]
 
@@ -576,7 +609,8 @@ export const assemblyToolParts: readonly AssemblyPartDefinition[] = [
  * tube selection should replace `assemblySteps[0]` with that selected option.
  */
 export const assemblySteps: readonly AssemblyPartDefinition[] = [
-  bronchoscopeTubeOptions[2],
+  bronchoscopeTubeOptions.find((part) => part.id === DEFAULT_RIGID_BRONCHOSCOPY_TUBE_ID) ??
+    bronchoscopeTubeOptions[0],
   doubleGateLateralObturator,
   redMainCap,
   rigidTelescope,

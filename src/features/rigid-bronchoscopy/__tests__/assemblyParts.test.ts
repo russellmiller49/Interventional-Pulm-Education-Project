@@ -25,8 +25,8 @@ const expectedTubeNodes = [
 
 describe('rigid bronchoscopy assembly content', () => {
   it('points to the request-efficient assembly-kit model', () => {
-    expect(ASSEMBLY_KIT_ASSET_PATH).toContain(
-      '/models/rigid-bronchoscopy/assembly/rigid-bronchoscopy-assembly-kit.glb',
+    expect(ASSEMBLY_KIT_ASSET_PATH).toMatch(
+      /\/models\/rigid-bronchoscopy\/v2\/components\/rigid-bronchoscopy-assembly-kit-[a-f0-9]{12}\.glb$/,
     )
   })
 
@@ -54,7 +54,7 @@ describe('rigid bronchoscopy assembly content', () => {
 
   it('authors the requested eight-piece assembly puzzle', () => {
     expect(assemblySteps.map((part) => part.id)).toEqual([
-      'tube-bt2103-3',
+      'tube-bt2203-3',
       'double-gate-lateral-obturator',
       'red-main-cap-5p5mm',
       'rigid-telescope-bx5500-fa',
@@ -120,12 +120,13 @@ describe('rigid bronchoscopy assembly content', () => {
     expect(camera?.target.scale).toBe(6)
   })
 
-  it('includes the four requested optional tool models', () => {
+  it('includes all five configuration-specific tool models', () => {
     expect(assemblyToolParts.map((part) => part.nodeName)).toEqual([
       'Optical_Grasping_Forceps_32_3230_430HM',
       'Semi_Rigid_Grasping_Forceps_BPS2002',
       'Semi_Rigid_Biopsy_Forceps_BPS2001',
       'Semi_Rigid_Suction_Catheter_3mm',
+      'Stent_Introducer_Hollow_Shaft',
     ])
 
     for (const tool of assemblyToolParts) {

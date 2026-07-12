@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { Object3D, PropertyBinding } from 'three'
 
 import {
@@ -60,15 +60,16 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     const cutawayAirway = getAirwayMaterialVisibilityProfile(true)
 
     expect(solidDevice.opacity).toBe(1)
-    expect(cutawayDevice.opacity).toBeGreaterThanOrEqual(0.5)
+    expect(cutawayDevice.opacity).toBeGreaterThanOrEqual(0.35)
     expect(cutawayDevice.opacity).toBeLessThan(solidDevice.opacity)
     expect(cutawayDevice.depthWrite).toBe(false)
     expect(cutawayDevice.metalnessCap).toBeLessThan(solidDevice.metalnessCap)
     expect(cutawayDevice.emissiveScale).toBeGreaterThan(solidDevice.emissiveScale)
 
-    expect(cutawayAirway.opacity).toBeGreaterThanOrEqual(0.35)
-    expect(cutawayAirway.opacity).toBeLessThan(solidAirway.opacity)
-    expect(cutawayAirway.emissiveIntensity).toBeGreaterThan(solidAirway.emissiveIntensity)
+    expect(cutawayAirway.opacity).toBeGreaterThanOrEqual(0.95)
+    expect(cutawayAirway.opacity).toBeGreaterThan(solidAirway.opacity)
+    expect(cutawayAirway.depthWrite).toBe(true)
+    expect(cutawayAirway.transparent).toBe(false)
   })
 
   it('finds tube roots after Three.js sanitizes periods in glTF node names', () => {
@@ -89,7 +90,7 @@ describe('RigidBronchoscopyAssemblyLab', () => {
 
     expect(screen.getByRole('heading', { name: 'Assemble a rigid bronchoscopy set' })).toBeVisible()
     expect(screen.getByRole('combobox', { name: 'Select interchangeable tube' })).toHaveValue(
-      'tube-bt2103-3',
+      'tube-bt2203-3',
     )
     expect(screen.getAllByRole('option')).toHaveLength(9)
     expect(screen.getByText('0 of 8 pieces seated')).toBeVisible()
@@ -99,7 +100,7 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Place selected part' }))
 
     expect(screen.getByText('1 of 8 pieces seated')).toBeVisible()
-    expect(screen.getAllByText(/BT2103-3 adult bronchial tube.*seated/i)).toHaveLength(2)
+    expect(screen.getAllByText(/BT2203-3 adult tracheal tube.*seated/i)).toHaveLength(2)
     expect(screen.getByText('Double-gate obturator')).toBeVisible()
   })
 
@@ -121,7 +122,7 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Center view' }))
 
     expect(screen.getByText('0 of 8 pieces seated')).toBeVisible()
-    expect(screen.getByRole('button', { name: /BT2103-3 · 10.0\/9.2 mm/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /BT2203-3 · 10.0\/9.2 mm/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
@@ -144,25 +145,20 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(instrument).toHaveAttribute('aria-pressed', 'false')
     expect(optics).toHaveAttribute('aria-pressed', 'false')
 
-    expect(
-      screen.getByRole('button', { name: /Conventional.*controlled positive-pressure/i }),
-    ).toHaveAttribute('aria-pressed', 'true')
-    expect(
-      screen.getByRole('button', { name: /Spontaneous ventilation with assistance/i }),
-    ).toBeVisible()
-    expect(screen.getByRole('button', { name: /Low-frequency jet ventilation/i })).toBeVisible()
-    expect(screen.getByRole('button', { name: /High-frequency jet ventilation/i })).toBeVisible()
-    expect(
-      screen.getByRole('button', { name: /Bronchoscope.*long bronchial pattern/i }),
-    ).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: /Tracheoscope.*short/i })).toBeVisible()
-    expect(
-      screen.queryByRole('button', { name: /Bronchoscope.*distal fenestrations/i }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Past the carina/i })).toHaveAttribute(
+    expect(screen.getByRole('combobox', { name: 'Clinically coherent scenario' })).toHaveValue(
+      'safe-default-controlled-mid-trachea',
+    )
+    expect(screen.getByRole('button', { name: /Tracheoscope.*BT2203-3/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
+    expect(screen.getByRole('button', { name: /Mid trachea/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getAllByText('Main axial working lumen').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Anesthesia-circuit port').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Fixed jet-ventilation port').length).toBeGreaterThan(0)
     expect(screen.queryByText('Anatomical route result')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Play animation' })).not.toBeInTheDocument()
 
@@ -173,7 +169,7 @@ describe('RigidBronchoscopyAssemblyLab', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: /opposite main bronchus remains reachable through bronchoscope fenestrations/i,
+        name: /Both main bronchi remain downstream/i,
       }),
     )
     expect(commit).toBeEnabled()
@@ -184,7 +180,9 @@ describe('RigidBronchoscopyAssemblyLab', () => {
 
     expect(screen.getByText('Anatomical route result')).toBeVisible()
     expect(screen.getByText('Your prediction matches this schematic.')).toBeVisible()
-    expect(screen.getByText(/correctly aligned long bronchoscope fenestration/i)).toBeVisible()
+    expect(
+      screen.getByRole('heading', { name: /both main bronchi remain downstream/i }),
+    ).toBeVisible()
     expect(screen.getByText('Intermittent controlled positive-pressure breaths')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Pause animation' })).toBeVisible()
     expect(screen.getByRole('status', { name: 'Animation status' })).toHaveTextContent(
@@ -192,31 +190,36 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     )
 
     const cutaway = screen.getByRole('button', { name: 'Cutaway view' })
-    expect(cutaway).toHaveAttribute('aria-pressed', 'false')
-    fireEvent.click(cutaway)
     expect(cutaway).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(cutaway)
+    expect(cutaway).toHaveAttribute('aria-pressed', 'false')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Blocked egress' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Clinically coherent scenario' }), {
+      target: { value: 'fixed-complete-obstruction' },
+    })
     expect(screen.queryByText('Anatomical route result')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reveal modeled flow' })).toBeDisabled()
     fireEvent.click(
       screen.getByRole('button', {
-        name: /opposite main bronchus remains reachable through bronchoscope fenestrations/i,
+        name: /Both main bronchi remain downstream/i,
       }),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
     fireEvent.click(screen.getByRole('button', { name: 'Reveal modeled flow' }))
     expect(screen.getByText('Anatomical route result')).toBeVisible()
     expect(
-      screen.getByRole('heading', { name: /Anatomically, the distal lumen serves/i }),
+      screen.getByRole('heading', { name: /both main bronchi remain downstream/i }),
     ).toBeVisible()
-    expect(screen.getAllByText(/Gas remains trapped on the lung side/i)).not.toHaveLength(0)
+    expect(screen.getAllByText(/fixed distal occlusion prevents gas passage/i)).not.toHaveLength(0)
 
     fireEvent.click(instrument)
     expect(instrument).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getAllByText(/lateral gate through the shared working lumen/i)).not.toHaveLength(
-      0,
-    )
+    expect(screen.queryByText('Main axial route')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Main axial working lumen' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal modeled flow' }))
+    expect(screen.getByText('Your prediction matches this schematic.')).toBeVisible()
+    expect(screen.getAllByText(/Main axial route/).length).toBeGreaterThan(0)
     fireEvent.click(optics)
     expect(optics).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getAllByText(/returning image through the telescope/i)).not.toHaveLength(0)
@@ -225,28 +228,122 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(screen.getByText('1 of 8 pieces seated')).toBeVisible()
   })
 
-  it('teaches proximal fenestration leak and preserves assembly progress while comparing tubes', () => {
+  it('keeps mode, tube, and complete depth choices visible and resets reveal after changes', () => {
+    render(<RigidBronchoscopyAssemblyLab />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Pathway lab/i }))
+
+    const modeGroup = screen.getByRole('group', { name: 'Ventilation mode' })
+    const tubeGroup = screen.getByRole('group', { name: 'Rigid tube pattern' })
+    const depthGroup = screen.getByRole('group', { name: 'Distal tip position' })
+
+    expect(within(modeGroup).getAllByRole('button')).toHaveLength(4)
+    expect(within(tubeGroup).getAllByRole('button')).toHaveLength(3)
+    expect(within(depthGroup).getAllByRole('button')).toHaveLength(6)
+    expect(
+      within(tubeGroup).getByRole('button', { name: /^Bronchoscope.*BT2105-3/i }),
+    ).toBeVisible()
+    expect(
+      within(tubeGroup).getByRole('button', {
+        name: /^Tracheoscope.*matched.*BT2205-3/i,
+      }),
+    ).toBeVisible()
+    expect(
+      within(tubeGroup).getByRole('button', { name: /^Tracheoscope.*BT2203-3/i }),
+    ).toBeVisible()
+    expect(within(depthGroup).getByRole('button', { name: /Proximal trachea/i })).toBeVisible()
+    expect(within(depthGroup).getByRole('button', { name: /Mid trachea/i })).toBeVisible()
+    expect(within(depthGroup).getByRole('button', { name: /At the carina/i })).toBeVisible()
+    expect(within(depthGroup).getByRole('button', { name: /Past the carina/i })).toBeVisible()
+    expect(within(depthGroup).getByRole('button', { name: /Right main bronchus/i })).toBeVisible()
+    expect(within(depthGroup).getByRole('button', { name: /Left main bronchus/i })).toBeVisible()
+    const presetSelect = screen.getByRole('combobox', { name: 'Clinically coherent scenario' })
+    for (const presetOption of within(presetSelect).getAllByRole('option')) {
+      expect(presetOption).toHaveTextContent(/BT\d{4}-3/)
+    }
+
+    fireEvent.click(within(tubeGroup).getByRole('button', { name: /^Bronchoscope.*BT2105-3/i }))
+    fireEvent.click(within(depthGroup).getByRole('button', { name: /Proximal trachea/i }))
+    expect(
+      within(tubeGroup).getByRole('button', { name: /^Bronchoscope.*BT2105-3/i }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(within(depthGroup).getByRole('button', { name: /Proximal trachea/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('combobox', { name: 'Clinically coherent scenario' })).toHaveValue(
+      'controlled-long-bronchial-shallow-fenestration-leak',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Both main bronchi remain downstream/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal modeled flow' }))
+    expect(screen.getByText(/distal fenestrations lie above the cords/i)).toBeVisible()
+
+    fireEvent.click(
+      within(modeGroup).getByRole('button', { name: /High-frequency jet ventilation/i }),
+    )
+    expect(screen.queryByText('Anatomical route result')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reveal modeled flow' })).toBeDisabled()
+
+    fireEvent.click(
+      within(tubeGroup).getByRole('button', {
+        name: /^Tracheoscope.*matched.*BT2205-3/i,
+      }),
+    )
+    fireEvent.click(within(depthGroup).getByRole('button', { name: /Past the carina/i }))
+    expect(
+      within(tubeGroup).getByRole('button', {
+        name: /^Tracheoscope.*matched.*BT2205-3/i,
+      }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(within(depthGroup).getByRole('button', { name: /Past the carina/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByText(/Counterfactual comparison/i)).toBeVisible()
+
+    fireEvent.click(within(depthGroup).getByRole('button', { name: /Right main bronchus/i }))
+    expect(
+      within(tubeGroup).getByRole('button', { name: /^Bronchoscope.*BT2105-3/i }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(
+      within(tubeGroup).getByRole('button', {
+        name: /^Tracheoscope.*matched.*BT2205-3/i,
+      }),
+    )
+    expect(within(depthGroup).getByRole('button', { name: /Mid trachea/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('uses the validated BT2105 mainstem preset and preserves assembly progress', () => {
     render(<RigidBronchoscopyAssemblyLab />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Place selected part' }))
     fireEvent.click(screen.getByRole('button', { name: /Pathway lab/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Proximal trachea/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Both main bronchi remain downstream/i }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Clinically coherent scenario' }), {
+      target: { value: 'controlled-right-mainstem' },
+    })
+
+    expect(
+      screen.getByRole('button', { name: /Bronchoscope.*long bronchial pattern/i }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Right main bronchus/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /opposite main bronchus remains reachable through bronchoscope fenestrations/i,
+      }),
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
     fireEvent.click(screen.getByRole('button', { name: 'Reveal modeled flow' }))
 
-    expect(
-      screen.getByText(/distal fenestrations lie above the cords and add an escape route/i),
-    ).toBeVisible()
-
-    fireEvent.click(screen.getByRole('button', { name: /Tracheoscope.*short/i }))
-    expect(
-      screen.queryByText(/distal fenestrations lie above the cords and add an escape route/i),
-    ).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /Both main bronchi remain downstream/i }))
-    fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Reveal modeled flow' }))
-    expect(screen.getByText(/conventional setup caps the proximal opening/i)).toBeVisible()
+    expect(screen.getByText('Your prediction matches this schematic.')).toBeVisible()
+    expect(screen.getByText(/only at the correct depth and rotation/i)).toBeVisible()
 
     fireEvent.click(screen.getByRole('button', { name: /Assembly puzzle/i }))
     expect(screen.getByText('1 of 8 pieces seated')).toBeVisible()
@@ -267,17 +364,19 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(screen.getByText('Compare your prediction with the highlighted route.')).toBeVisible()
   })
 
-  it('labels past-carina tracheoscope placement as counterfactual and reveals mainstem-only flow', () => {
+  it('blocks a tracheoscope-mainstem mismatch by switching to the validated bronchial tube', () => {
     render(<RigidBronchoscopyAssemblyLab />)
 
     fireEvent.click(screen.getByRole('button', { name: /Pathway lab/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Tracheoscope.*short tracheal pattern/i }))
-
-    expect(screen.getByText(/Counterfactual comparison.*short tracheal tube/i)).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: /Right main bronchus/i }))
+    expect(
+      screen.getByRole('button', { name: /Bronchoscope.*long bronchial pattern/i }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText(/Counterfactual comparison/i)).not.toBeInTheDocument()
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: /Only the entered main bronchus has a direct distal route/i,
+        name: /opposite main bronchus remains reachable through bronchoscope fenestrations/i,
       }),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
@@ -285,10 +384,10 @@ describe('RigidBronchoscopyAssemblyLab', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /after mainstem entry only the entered main bronchus/i,
+        name: /distal lumen serves the entered main bronchus/i,
       }),
     ).toBeVisible()
-    expect(screen.getByText(/no distal fenestration route toward the opposite/i)).toBeVisible()
+    expect(screen.getByText(/only at the correct depth and rotation/i)).toBeVisible()
   })
 
   it('announces every scenario change before requiring a new prediction', () => {
@@ -298,21 +397,22 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     const resetNotice = 'Scenario changed. Make a new prediction before revealing flow.'
     const choosePrediction = () =>
       fireEvent.click(screen.getByRole('button', { name: /Both main bronchi remain downstream/i }))
+    const presetSelect = screen.getByRole('combobox', { name: 'Clinically coherent scenario' })
 
-    fireEvent.click(screen.getByRole('button', { name: /High-frequency jet ventilation/i }))
+    fireEvent.change(presetSelect, { target: { value: 'high-frequency-jet-carina' } })
     expect(screen.getByText(resetNotice)).toBeInTheDocument()
     choosePrediction()
     expect(screen.queryByText(resetNotice)).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Tracheoscope.*short tracheal pattern/i }))
+    fireEvent.change(presetSelect, { target: { value: 'spontaneous-assisted-mid-trachea' } })
     expect(screen.getByText(resetNotice)).toBeInTheDocument()
     choosePrediction()
 
-    fireEvent.click(screen.getByRole('button', { name: /At the carina/i }))
+    fireEvent.change(presetSelect, { target: { value: 'low-frequency-jet-carina' } })
     expect(screen.getByText(resetNotice)).toBeInTheDocument()
     choosePrediction()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Blocked egress' }))
+    fireEvent.change(presetSelect, { target: { value: 'fixed-complete-obstruction' } })
     expect(screen.getByText(resetNotice)).toBeInTheDocument()
   })
 
@@ -378,7 +478,7 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(hintButton).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('switches to the four-item tool explorer and supports localized chrome overrides', () => {
+  it('switches to the five-item tool explorer and supports localized chrome overrides', () => {
     render(
       <RigidBronchoscopyAssemblyLab
         copy={{ title: 'Laboratorio de montaje', toolMode: 'Explorar instrumentos' }}
@@ -397,6 +497,7 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     ).toBeVisible()
     expect(screen.getByRole('button', { name: /BPS2001 semi-rigid biopsy forceps/i })).toBeVisible()
     expect(screen.getByRole('button', { name: /3 mm semi-rigid suction catheter/i })).toBeVisible()
+    expect(screen.getByRole('button', { name: /Generic rigid stent introducer/i })).toBeVisible()
   })
 
   it('turns the shared lab into an answer-visible Learn demonstration', () => {
@@ -415,11 +516,9 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(screen.queryByRole('button', { name: 'Reveal modeled flow' })).not.toBeInTheDocument()
     expect(screen.queryByText('Your prediction matches this schematic.')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /Proximal trachea/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Right main bronchus/i }))
     expect(screen.getByText('Anatomical route result')).toBeVisible()
-    expect(
-      screen.getByText(/distal fenestrations lie above the cords and add an escape route/i),
-    ).toBeVisible()
+    expect(screen.getByText(/only at the correct depth and rotation/i)).toBeVisible()
 
     fireEvent.click(screen.getByRole('button', { name: /Tool explorer/i }))
     expect(screen.getByText('Selected instrument')).toBeVisible()

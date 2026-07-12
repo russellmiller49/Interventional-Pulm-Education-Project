@@ -92,6 +92,24 @@ describe('static translation bundles', () => {
     expect(esMessages.rigidBronchoscopy.practice.assembly.revealModeledFlow).toBe(
       'Mostrar flujo modelado',
     )
+    expect(esMessages.rigidBronchoscopy.practice.assembly.mainAxialPortLabel).toBe(
+      'Puerto de trabajo axial principal',
+    )
+    expect(esMessages.rigidBronchoscopy.practice.assembly.anesthesiaCircuitPortLabel).toBe(
+      'Puerto del circuito de anestesia',
+    )
+    expect(esMessages.rigidBronchoscopy.practice.assembly.obstructionBallValve).toContain(
+      'válvula de bola',
+    )
+    expect(
+      esMessages.rigidBronchoscopy.practice.assembly.spontaneousAssistVentilationDescription,
+    ).toContain('mismo puerto del circuito de anestesia')
+    expect(esMessages.rigidBronchoscopy.practice.assembly.pairedTracheoscopePattern).toContain(
+      'emparejado',
+    )
+    expect(
+      esMessages.rigidBronchoscopy.practice.assembly.pairedTracheoscopePatternDescription,
+    ).toContain('BT2205-3')
 
     expect(zhCnMessages.rigidBronchoscopy.practice.assembly.pathwayMode).toBe('路径演示')
     expect(zhCnMessages.rigidBronchoscopy.practice.assembly.instrumentRoute).toBe('器械路径')
@@ -108,6 +126,22 @@ describe('static translation bundles', () => {
     expect(zhCnMessages.rigidBronchoscopy.practice.assembly.sidePortUnavailable).toContain(
       '没有经远端侧孔',
     )
+    expect(zhCnMessages.rigidBronchoscopy.practice.assembly.jetVentilationPortLabel).toBe(
+      '固定喷射通气口',
+    )
+    expect(zhCnMessages.rigidBronchoscopy.practice.assembly.routeTypeLabel).toBe('器械进入路径')
+    expect(zhCnMessages.rigidBronchoscopy.practice.assembly.obstructionBallValve).toContain(
+      '球阀样梗阻',
+    )
+    expect(zhCnMessages.rigidBronchoscopy.practice.assembly.magnifiedNotCommonScale).toContain(
+      '不按同一比例',
+    )
+    expect(zhCnMessages.rigidBronchoscopy.practice.assembly.pairedTracheoscopePattern).toContain(
+      '配对',
+    )
+    expect(
+      zhCnMessages.rigidBronchoscopy.practice.assembly.pairedTracheoscopePatternDescription,
+    ).toContain('BT2205-3')
   })
 
   it('keeps the shared rigid-bronchoscopy assembly copy builder complete', () => {

@@ -59,7 +59,7 @@ describe('rigid bronchoscopy assembly engine', () => {
   })
 
   it('finds the next incomplete step and treats an alternate tube as completing step one', () => {
-    expect(getNextAssemblyStep([ASSEMBLY_BASE_PART_ID], assemblySteps)?.id).toBe('tube-bt2103-3')
+    expect(getNextAssemblyStep([ASSEMBLY_BASE_PART_ID], assemblySteps)?.id).toBe('tube-bt2203-3')
 
     const placed = [
       ASSEMBLY_BASE_PART_ID,
@@ -113,6 +113,24 @@ describe('rigid bronchoscopy assembly engine', () => {
   it('uses the authored target transform after placement', () => {
     const telescope = requiredPart('rigid-telescope-bx5500-fa')
     expect(getPlacedTransform(telescope)).toBe(telescope.target)
+  })
+
+  it('withdraws the telescope chain to match the selected tube while keeping its parts connected', () => {
+    const telescope = requiredPart('rigid-telescope-bx5500-fa')
+    const camera = requiredPart('generic-camera-head')
+    const shortTube = requiredPart('tube-bt2203-3')
+    const longTube = requiredPart('tube-bt2105-3')
+    const shortTelescopeTransform = getPlacedTransform(telescope, shortTube)
+    const longTelescopeTransform = getPlacedTransform(telescope, longTube)
+    const shortCameraTransform = getPlacedTransform(camera, shortTube)
+    const telescopeShortShift = shortTelescopeTransform.position[0] - telescope.target.position[0]
+    const cameraShortShift = shortCameraTransform.position[0] - camera.target.position[0]
+
+    expect(shortTelescopeTransform.position[0]).toBeCloseTo(-3.7235, 9)
+    expect(longTelescopeTransform.position[0]).toBeCloseTo(-2.8235, 9)
+    expect(cameraShortShift).toBeCloseTo(telescopeShortShift, 9)
+    expect(isWithinSnapDistance(shortTelescopeTransform.position, telescope, shortTube)).toBe(true)
+    expect(isWithinSnapDistance(telescope.target.position, telescope, shortTube)).toBe(false)
   })
 
   it('checks three-dimensional snap distance including the exact boundary', () => {

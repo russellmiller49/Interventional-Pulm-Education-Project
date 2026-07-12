@@ -1,0 +1,1935 @@
+{
+  "schema": "rigid_bronchoscopy_asset_manifest/v2",
+  "version": 2,
+  "buildId": "f768081bdbeed4a3",
+  "generatedOn": "2026-07-11",
+  "generatedWith": {
+    "python": "3.13.12",
+    "trimesh": "4.12.2",
+    "generator": "scripts/rigid-bronchoscopy/build-v2-assets.py",
+    "validator": "scripts/rigid-bronchoscopy/validate-v2-assets.py"
+  },
+  "educationalUseOnly": true,
+  "disclaimer": "Generic educational geometry and reference-based device proxies; not manufacturing CAD, patient-specific anatomy, procedural planning, or a substitute for the current IFU and supervised training.",
+  "units": {
+    "authoredDimensions": "millimeters",
+    "glbGeometry": "meters",
+    "metersPerMillimeter": 0.001
+  },
+  "coordinateSystem": {
+    "glb": "glTF 2.0 right-handed Y-up",
+    "longitudinalAxis": "+X from proximal trachea toward the carina",
+    "lateralityAxis": "right is -Y; left is +Y",
+    "anteriorAxis": "+Z"
+  },
+  "presentation": {
+    "worldUnitsPerMillimeter": 0.009,
+    "assetScaleWorldUnitsPerMeter": 9.0,
+    "carinaWorld": [1.22, -0.3, 0.0],
+    "policy": "keep every GLB meter-native and apply one shared presentation scale at runtime"
+  },
+  "sources": [
+    {
+      "id": "efer-ordering-information",
+      "type": "manufacturer",
+      "url": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+      "supports": "part numbers, tube dimensions, cap diameters/openings/colors, tool dimensions"
+    },
+    {
+      "id": "efer-user-manual",
+      "type": "manufacturer user manual",
+      "url": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+      "supports": "main/accessory/anesthesia/jet interface roles"
+    }
+  ],
+  "airwayModel": {
+    "modelId": "generic-adult-central-airway-v2",
+    "modelType": "public-safe educational geometry; not patient-derived",
+    "coordinateConvention": {
+      "longitudinalAxis": "+X from proximal trachea toward the carina",
+      "lateralityAxis": "right is -Y; left is +Y",
+      "anteriorAxis": "+Z"
+    },
+    "junction": {
+      "centerMm": [0.0, 0.0, 0.0],
+      "innerBlendRadiusMm": 13.0,
+      "outerBlendRadiusMm": 15.0
+    },
+    "branches": [
+      {
+        "id": "trachea",
+        "label": "Trachea",
+        "innerRadiusMm": 10.0,
+        "outerRadiusMm": 12.0,
+        "centerlineMm": [
+          [-135.0, 0.0, 0.0],
+          [-90.0, 0.0, 0.0],
+          [-45.0, 0.0, 0.0],
+          [0.0, 0.0, 0.0]
+        ],
+        "innerBooleanCenterlineMm": [
+          [-138.0, 0.0, 0.0],
+          [-90.0, 0.0, 0.0],
+          [-45.0, 0.0, 0.0],
+          [4.0, 0.0, 0.0]
+        ]
+      },
+      {
+        "id": "rightMainstem",
+        "label": "Right main bronchus",
+        "innerRadiusMm": 8.0,
+        "outerRadiusMm": 10.0,
+        "centerlineMm": [
+          [-4.0, 0.0, 0.0],
+          [20.0, -8.0, -1.0],
+          [40.0, -21.0, -3.0],
+          [62.0, -34.0, -4.0]
+        ],
+        "innerBooleanCenterlineMm": [
+          [-6.0, 0.0, 0.0],
+          [20.0, -8.0, -1.0],
+          [40.0, -21.0, -3.0],
+          [65.0, -36.0, -4.4]
+        ]
+      },
+      {
+        "id": "leftMainstem",
+        "label": "Left main bronchus",
+        "innerRadiusMm": 8.0,
+        "outerRadiusMm": 10.0,
+        "centerlineMm": [
+          [-4.0, 0.0, 0.0],
+          [20.0, 10.0, 1.0],
+          [42.0, 25.0, 2.0],
+          [69.0, 44.0, 3.0]
+        ],
+        "innerBooleanCenterlineMm": [
+          [-6.0, 0.0, 0.0],
+          [20.0, 10.0, 1.0],
+          [42.0, 25.0, 2.0],
+          [72.0, 46.0, 3.2]
+        ]
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "accessory-anesthesia-circuit-hose",
+      "kind": "ventilationAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/accessories/anesthesia-circuit-hose-proxy-3b5beb67f27a.glb",
+      "sha256": "3b5beb67f27a4fd188c4f3ef695ce94a034e8b12c1636e67499ceac83580344f",
+      "sizeBytes": 76184,
+      "geometry": {
+        "meshCount": 2,
+        "triangleCount": 3072,
+        "boundsMm": {
+          "min": [-0.0, -82.991, -11.0],
+          "max": [220.98, 11.0, 30.965],
+          "size": [220.98, 93.991, 41.965]
+        },
+        "semanticNodes": ["Anesthesia_Circuit_Connector", "Anesthesia_Circuit_Hose"],
+        "materialNames": ["Connector polymer", "Translucent anesthesia circuit hose"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "dimensionsMm": {
+        "outerDiameter": 22.0,
+        "innerDiameter": 18.0,
+        "connectorOuterDiameter": 22.0,
+        "connectorInnerDiameter": 15.0
+      },
+      "anchors": {
+        "connector": {
+          "positionMm": [0.0, 0.0, 0.0],
+          "direction": [1.0, 0.0, 0.0],
+          "connectsToPort": "anesthesiaCircuit"
+        }
+      },
+      "provenance": {
+        "sourceType": "manual-supported port function; educational proxy geometry",
+        "sourceUrl": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf"
+      },
+      "estimatedFields": [
+        "hose length and curvature",
+        "hose wall thickness",
+        "connector diameter and profile",
+        "material appearance"
+      ]
+    },
+    {
+      "id": "accessory-generic-endoscopic-camera-head",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-endoscopic-camera-head-45bd3036d544.glb",
+      "sha256": "45bd3036d544af368e3d258f9eef8b7a4a25652350743423329308c0b4a63577",
+      "sizeBytes": 139716,
+      "geometry": {
+        "meshCount": 11,
+        "triangleCount": 3936,
+        "boundsMm": {
+          "min": [-45.0, -63.446, -24.0],
+          "max": [45.0, 45.0, 257.813],
+          "size": [90.0, 108.446, 281.813]
+        },
+        "semanticNodes": [
+          "Camera_Cable_Strain_Relief",
+          "Camera_Control_Button_1",
+          "Camera_Control_Button_2",
+          "Camera_Coupler_Metal_Insert",
+          "Camera_Integral_CCU_Cable",
+          "Camera_Ocular_Coupler",
+          "Camera_Optical_Window",
+          "Camera_Round_Front_Grip_Collar",
+          "Camera_Round_Main_Housing",
+          "Camera_Round_Metal_Trim_Ring",
+          "Camera_Round_Rear_End_Cap"
+        ],
+        "materialNames": [
+          "Camera connector metal",
+          "Camera grip",
+          "Camera housing",
+          "Camera optical glass"
+        ],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "reference_photo_and_manufacturer_manual_educational_approximation",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/generic-endoscopic-camera-head.glb",
+        "sourceSha256": "45bd3036d544af368e3d258f9eef8b7a4a25652350743423329308c0b4a63577",
+        "sourceUrl": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "secondarySourceUrl": "https://www.stryker.com/us/en/portfolios/medical-surgical-equipment/surgical-visualization/camera-systems.html"
+      },
+      "estimatedFields": [
+        "Generic unbranded round/cylindrical C-mount camera proxy; the supplied images and manual do not establish an exact camera model or manufacturing dimensions."
+      ]
+    },
+    {
+      "id": "accessory-generic-fiberoptic-light-cable",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-fiberoptic-light-cable-198ddcb36aa3.glb",
+      "sha256": "198ddcb36aa382023b6aa0759d36e97aad99ad6962c6fc9df1c1e7394b0e0a53",
+      "sizeBytes": 207852,
+      "geometry": {
+        "meshCount": 5,
+        "triangleCount": 8204,
+        "boundsMm": {
+          "min": [-113.397, -6.8, -318.399],
+          "max": [120.9, 6.8, 10.0],
+          "size": [234.297, 13.6, 328.399]
+        },
+        "semanticNodes": [
+          "Fiberoptic_Cable_Jacket",
+          "Light_Source_End_Connector",
+          "Light_Source_End_Strain_Relief",
+          "Scope_End_Light_Connector",
+          "Scope_End_Strain_Relief"
+        ],
+        "materialNames": [
+          "Light cable connectors",
+          "Light cable jacket",
+          "Light cable strain relief"
+        ],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "reference_photo_with_manufacturer_exemplar",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/generic-fiberoptic-light-cable.glb",
+        "sourceSha256": "198ddcb36aa382023b6aa0759d36e97aad99ad6962c6fc9df1c1e7394b0e0a53",
+        "sourceUrl": "https://www.karlstorz.com/us/en/product-detail-page.htm?cat=1000071971&productID=1000060267",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": [
+        "Cable dimensions use a current exemplar; connector shapes remain generic."
+      ]
+    },
+    {
+      "id": "accessory-generic-light-guide-adapter-c1",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-light-guide-adapter-c1-358aa4368199.glb",
+      "sha256": "358aa43681995770c046ebe3a1d7dc4048ef9dab70f7a1f7ce410bc2512b3611",
+      "sizeBytes": 49732,
+      "geometry": {
+        "meshCount": 3,
+        "triangleCount": 1664,
+        "boundsMm": {
+          "min": [-5.5, -5.5, -10.0],
+          "max": [5.5, 5.5, 0.0],
+          "size": [11.0, 11.0, 10.0]
+        },
+        "semanticNodes": [
+          "C1_Distal_Male_Interface",
+          "C1_Identification_Band",
+          "C1_Optic_Post_Socket"
+        ],
+        "materialNames": ["C1 adapter identification band", "C1 adapter stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "reference_photo_educational_approximation",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/generic-light-guide-adapter-c1.glb",
+        "sourceSha256": "358aa43681995770c046ebe3a1d7dc4048ef9dab70f7a1f7ce410bc2512b3611",
+        "sourceUrl": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": [
+        "Photo-derived C1 teaching proxy. The supplied composite does not establish an exact part number or whether it represents the STORZ/Olympus, WOLF, or ACMI interface."
+      ]
+    },
+    {
+      "id": "accessory-generic-light-guide-adapter-c2",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/generic-light-guide-adapter-c2-13eaae9a892b.glb",
+      "sha256": "13eaae9a892b95c5e5f8041c8b6d17251652c041d5807720bd9c722be82acbfe",
+      "sizeBytes": 60292,
+      "geometry": {
+        "meshCount": 4,
+        "triangleCount": 2112,
+        "boundsMm": {
+          "min": [-5.65, -5.65, -16.0],
+          "max": [5.65, 5.65, 0.0],
+          "size": [11.3, 11.3, 16.0]
+        },
+        "semanticNodes": [
+          "C2_Distal_Cable_Spigot",
+          "C2_Identification_Band",
+          "C2_Main_Adapter_Body",
+          "C2_Proximal_C1_Receiver"
+        ],
+        "materialNames": ["C2 adapter identification band", "C2 adapter stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "reference_photo_educational_approximation",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/generic-light-guide-adapter-c2.glb",
+        "sourceSha256": "13eaae9a892b95c5e5f8041c8b6d17251652c041d5807720bd9c722be82acbfe",
+        "sourceUrl": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": [
+        "Photo-derived C2 teaching proxy. The supplied composite does not establish an exact part number or whether it represents the STORZ/Olympus, WOLF, or ACMI interface."
+      ]
+    },
+    {
+      "id": "accessory-jet-ventilation-hose",
+      "kind": "ventilationAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/accessories/jet-ventilation-hose-proxy-bcb7954bbd8c.glb",
+      "sha256": "bcb7954bbd8c99b91d2b08a990bd2ea61785f0937dd59b6e54e2684276ec44fc",
+      "sizeBytes": 66548,
+      "geometry": {
+        "meshCount": 2,
+        "triangleCount": 2672,
+        "boundsMm": {
+          "min": [-0.0, -3.0, -3.0],
+          "max": [185.179, 33.97, 14.993],
+          "size": [185.179, 36.97, 17.993]
+        },
+        "semanticNodes": ["Jet_Ventilation_Connector", "Jet_Ventilation_Hose"],
+        "materialNames": ["Connector polymer", "Jet hose blue polymer"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "dimensionsMm": {
+        "outerDiameter": 4.0,
+        "innerDiameter": 2.0,
+        "connectorOuterDiameter": 6.0,
+        "connectorInnerDiameter": 2.4
+      },
+      "anchors": {
+        "connector": {
+          "positionMm": [0.0, 0.0, 0.0],
+          "direction": [1.0, 0.0, 0.0],
+          "connectsToPort": "jet"
+        }
+      },
+      "provenance": {
+        "sourceType": "manual-supported port function; educational proxy geometry",
+        "sourceUrl": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf"
+      },
+      "estimatedFields": [
+        "hose length and curvature",
+        "hose wall thickness",
+        "connector diameter and profile",
+        "material appearance"
+      ]
+    },
+    {
+      "id": "anatomy-central-airway-cutaway",
+      "kind": "anatomyCutaway",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/anatomy/central-airway-cutaway-3f7b0ebe5576.glb",
+      "sha256": "3f7b0ebe5576bdca88d4c225dc93cb0a58788b6bcb889e493848232fe41e3173",
+      "sizeBytes": 105028,
+      "geometry": {
+        "meshCount": 2,
+        "triangleCount": 3972,
+        "boundsMm": {
+          "min": [-135.0, -42.609, -15.0],
+          "max": [74.759, 52.178, 3.654],
+          "size": [209.759, 94.787, 18.654]
+        },
+        "semanticNodes": ["Airway_Cutaway_Inner_Lumen", "Airway_Cutaway_Outer_Wall"],
+        "materialNames": ["Airway inner lumen", "Airway outer wall"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "public-safe purpose-built educational geometry",
+        "patientDerived": false,
+        "sourceNotes": "Generic adult central-airway proportions authored for true-scale rigid bronchoscopy teaching; not segmented from an individual or intended for planning."
+      },
+      "estimatedFields": [
+        "all airway centerline points",
+        "all airway wall and lumen radii",
+        "carinal blending radii",
+        "surface material appearance"
+      ]
+    },
+    {
+      "id": "anatomy-central-airway-full",
+      "kind": "anatomyFull",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/anatomy/central-airway-full-1b655fb75a36.glb",
+      "sha256": "1b655fb75a36ac5d38bd6b17111a136580e1bb728d4cac06cd80074ff0837a74",
+      "sizeBytes": 204556,
+      "geometry": {
+        "meshCount": 2,
+        "triangleCount": 7944,
+        "boundsMm": {
+          "min": [-135.0, -42.609, -15.0],
+          "max": [74.759, 52.178, 15.0],
+          "size": [209.759, 94.787, 30.0]
+        },
+        "semanticNodes": ["Airway_Inner_Lumen", "Airway_Outer_Wall"],
+        "materialNames": ["Airway inner lumen", "Airway outer wall"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "public-safe purpose-built educational geometry",
+        "patientDerived": false,
+        "sourceNotes": "Generic adult central-airway proportions authored for true-scale rigid bronchoscopy teaching; not segmented from an individual or intended for planning."
+      },
+      "estimatedFields": [
+        "all airway centerline points",
+        "all airway wall and lumen radii",
+        "carinal blending radii",
+        "surface material appearance"
+      ]
+    },
+    {
+      "id": "cap-bs2309-3-telescope-plus-2mm-instrument",
+      "kind": "capProxy",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/accessories/bs2309-3-cap-proxy-2548ba53aff6.glb",
+      "sha256": "2548ba53aff69e60304307e0e75105aa39879180d7d2f400e12942c87e407df9",
+      "sizeBytes": 19880,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 776,
+        "boundsMm": {
+          "min": [-12.5, -12.5, -3.0],
+          "max": [12.5, 12.5, 3.0],
+          "size": [25.0, 25.0, 6.0]
+        },
+        "semanticNodes": ["BS2309-3_Cap_Body"],
+        "materialNames": ["EFER red cap proxy"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "partNumber": "BS2309-3",
+      "label": "5.5 mm endoscope plus 2 mm instrument cap",
+      "dimensionsMm": {
+        "publishedOuterDiameter": 25.0,
+        "estimatedDepth": 6.0
+      },
+      "anchors": {
+        "capOpenings": [
+          {
+            "id": "telescope5p5",
+            "positionMm": [-3.2, 0.0, 3.0],
+            "direction": [0.0, 0.0, -1.0],
+            "diameterMm": 5.5,
+            "estimated": false
+          },
+          {
+            "id": "instrument2",
+            "positionMm": [4.2, 0.0, 3.0],
+            "direction": [0.0, 0.0, -1.0],
+            "diameterMm": 2.0,
+            "estimated": false
+          }
+        ]
+      },
+      "provenance": {
+        "sourceType": "manufacturer-published cap diameter/use plus educational proxy geometry",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "publishedFields": [
+          "part number",
+          "25 mm cap diameter",
+          "color code",
+          "compatible opening diameters/use"
+        ]
+      },
+      "estimatedFields": [
+        "cap depth and edge profile",
+        "opening center offsets",
+        "material appearance"
+      ]
+    },
+    {
+      "id": "cap-bs2311-3-telescope-plus-4mm-instrument",
+      "kind": "capProxy",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/accessories/bs2311-3-cap-proxy-bcacf19d2131.glb",
+      "sha256": "bcacf19d213103b3bfeca56a82a8bea258c570df78de65d32baa7ce3a56f2ce1",
+      "sizeBytes": 19880,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 776,
+        "boundsMm": {
+          "min": [-12.5, -12.5, -3.0],
+          "max": [12.5, 12.5, 3.0],
+          "size": [25.0, 25.0, 6.0]
+        },
+        "semanticNodes": ["BS2311-3_Cap_Body"],
+        "materialNames": ["EFER red cap proxy"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "partNumber": "BS2311-3",
+      "label": "5.5 mm endoscope plus 4 mm instrument cap",
+      "dimensionsMm": {
+        "publishedOuterDiameter": 25.0,
+        "estimatedDepth": 6.0
+      },
+      "anchors": {
+        "capOpenings": [
+          {
+            "id": "telescope5p5",
+            "positionMm": [-3.8, 0.0, 3.0],
+            "direction": [0.0, 0.0, -1.0],
+            "diameterMm": 5.5,
+            "estimated": false
+          },
+          {
+            "id": "instrument4",
+            "positionMm": [4.4, 0.0, 3.0],
+            "direction": [0.0, 0.0, -1.0],
+            "diameterMm": 4.0,
+            "estimated": false
+          }
+        ]
+      },
+      "provenance": {
+        "sourceType": "manufacturer-published cap diameter/use plus educational proxy geometry",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "publishedFields": [
+          "part number",
+          "25 mm cap diameter",
+          "color code",
+          "compatible opening diameters/use"
+        ]
+      },
+      "estimatedFields": [
+        "cap depth and edge profile",
+        "opening center offsets",
+        "material appearance"
+      ]
+    },
+    {
+      "id": "cap-bs2319-3-optical-forceps",
+      "kind": "capProxy",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/accessories/bs2319-3-optical-forceps-cap-proxy-b42465dc8ca8.glb",
+      "sha256": "b42465dc8ca892a1af593b80d33aa8f1091a8d2d48a357bd02566b3e051291f5",
+      "sizeBytes": 19880,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 776,
+        "boundsMm": {
+          "min": [-12.5, -12.5, -3.0],
+          "max": [12.5, 12.5, 3.0],
+          "size": [25.0, 25.0, 6.0]
+        },
+        "semanticNodes": ["BS2319-3_Cap_Body"],
+        "materialNames": ["EFER blue cap proxy"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "partNumber": "BS2319-3",
+      "label": "Optical forceps plus 5.5 mm endoscope cap",
+      "dimensionsMm": {
+        "publishedOuterDiameter": 25.0,
+        "estimatedDepth": 6.0
+      },
+      "anchors": {
+        "capOpenings": [
+          {
+            "id": "telescope5p5",
+            "positionMm": [-3.8, 0.0, 3.0],
+            "direction": [0.0, 0.0, -1.0],
+            "diameterMm": 5.5,
+            "estimated": false
+          },
+          {
+            "id": "opticalForcepsGuide",
+            "positionMm": [4.4, 0.0, 3.0],
+            "direction": [0.0, 0.0, -1.0],
+            "diameterMm": 4.0,
+            "estimated": true
+          }
+        ]
+      },
+      "provenance": {
+        "sourceType": "manufacturer-published cap diameter/use plus educational proxy geometry",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "publishedFields": [
+          "part number",
+          "25 mm cap diameter",
+          "color code",
+          "compatible opening diameters/use"
+        ]
+      },
+      "estimatedFields": [
+        "cap depth and edge profile",
+        "opening center offsets",
+        "material appearance",
+        "opticalForcepsGuide"
+      ]
+    },
+    {
+      "id": "efer-bb2401-3-lateral-obturator-single-gate",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bb2401-3-lateral-obturator-single-gate-1cc6c19032eb.glb",
+      "sha256": "1cc6c19032eb5c8eb62b982be1141f2915e80f6d384b5cf086ee3e420d6fe50c",
+      "sizeBytes": 39740,
+      "geometry": {
+        "meshCount": 3,
+        "triangleCount": 1216,
+        "boundsMm": {
+          "min": [-10.638, -6.2, -29.804],
+          "max": [17.937, 6.2, 12.623],
+          "size": [28.575, 12.4, 42.427]
+        },
+        "semanticNodes": [
+          "BB2401_3_Blue_2mm_Cap",
+          "BB2401_3_Main_Patent_Lumen",
+          "BB2401_3_Single_Instrument_Gate"
+        ],
+        "materialNames": ["Blue silicone", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bb2401-3-lateral-obturator-single-gate.glb",
+        "sourceSha256": "1cc6c19032eb5c8eb62b982be1141f2915e80f6d384b5cf086ee3e420d6fe50c",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bb2402-3-lateral-obturator-double-gate",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bb2402-3-lateral-obturator-double-gate-30a40be86f8a.glb",
+      "sha256": "30a40be86f8a16fb8b86b1c1416b60f7aea4fcb9452d59cd4a758bf93b04c184",
+      "sizeBytes": 53868,
+      "geometry": {
+        "meshCount": 5,
+        "triangleCount": 1856,
+        "boundsMm": {
+          "min": [-10.138, -6.2, -30.462],
+          "max": [16.769, 6.2, 12.571],
+          "size": [26.907, 12.4, 43.033]
+        },
+        "semanticNodes": [
+          "BB2402_3_Blue_Gate_Cap_1",
+          "BB2402_3_Blue_Gate_Cap_2",
+          "BB2402_3_Instrument_Gate_1",
+          "BB2402_3_Instrument_Gate_2",
+          "BB2402_3_Main_Patent_Lumen"
+        ],
+        "materialNames": ["Blue silicone", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bb2402-3-lateral-obturator-double-gate.glb",
+        "sourceSha256": "30a40be86f8a16fb8b86b1c1416b60f7aea4fcb9452d59cd4a758bf93b04c184",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bd2410-3-adult-universal-base",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bd2410-3-adult-universal-base-f87ee307741e.glb",
+      "sha256": "f87ee307741e1ddb4963ac9b157ac36d3ce9f1f8e7311014e529035c3cc7a196",
+      "sizeBytes": 264580,
+      "geometry": {
+        "meshCount": 14,
+        "triangleCount": 9242,
+        "boundsMm": {
+          "min": [-15.15, -46.885, -53.0],
+          "max": [15.15, 46.134, 50.0],
+          "size": [30.3, 93.019, 103.0]
+        },
+        "semanticNodes": [
+          "BB2403_3_Patent_Bore",
+          "Universal_Base_BD2410_3_Accessory_Port_Connected_Lumen",
+          "Universal_Base_BD2410_3_Accessory_Port_End_Collar",
+          "Universal_Base_BD2410_3_Anesthesia_Port_End_Collar",
+          "Universal_Base_BD2410_3_Anesthesia_Ventilation_Port_Connected_Lumen",
+          "Universal_Base_BD2410_3_Base_Red_Alignment_Dot",
+          "Universal_Base_BD2410_3_Connected_Main_Lumen",
+          "Universal_Base_BD2410_3_Fixed_Jet_Venturi_Port_Connected_Lumen",
+          "Universal_Base_BD2410_3_Front_Tube_Lock_Collar",
+          "Universal_Base_BD2410_3_Jet_Port_End_Collar",
+          "Universal_Base_BD2410_3_Large_90_Degree_Tube_Lock_Ring",
+          "Universal_Base_BD2410_3_Rear_Main_Port_Collar",
+          "Universal_Base_BD2410_3_Small_360_Degree_Ribbed_Ring",
+          "Universal_Base_BD2410_3_Tube_Red_Alignment_Dot"
+        ],
+        "materialNames": ["Polished stainless steel", "Red silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bd2410-3-adult-universal-base.glb",
+        "sourceSha256": "f87ee307741e1ddb4963ac9b157ac36d3ce9f1f8e7311014e529035c3cc7a196",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bd2501-3-compact-base",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bd2501-3-compact-base-6a435fdb73a5.glb",
+      "sha256": "6a435fdb73a5239f45844441533a50b9a9b9a313e3d02ddfe9ad909099052597",
+      "sizeBytes": 91988,
+      "geometry": {
+        "meshCount": 5,
+        "triangleCount": 2744,
+        "boundsMm": {
+          "min": [-15.1, -15.1, -34.0],
+          "max": [15.1, 15.2, 32.0],
+          "size": [30.2, 30.3, 66.0]
+        },
+        "semanticNodes": [
+          "Compact_Base_BD2501_3_Central_Patent_Lumen",
+          "Compact_Base_BD2501_3_Front_Tube_Connector",
+          "Compact_Base_BD2501_3_Quarter_Turn_Ribbed_Ring",
+          "Compact_Base_BD2501_3_Rear_Main_Opening",
+          "Compact_Base_BD2501_3_Red_Alignment_Dot"
+        ],
+        "materialNames": ["Polished stainless steel", "Red silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bd2501-3-compact-base.glb",
+        "sourceSha256": "6a435fdb73a5239f45844441533a50b9a9b9a313e3d02ddfe9ad909099052597",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bs2101-3-silicone-cap",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2101-3-side-cap-blue-solid-5ce4312f2b47.glb",
+      "sha256": "5ce4312f2b47c5e184089d4a72c8665e50b047c0def58b2eb6b6c2139b1eee11",
+      "sizeBytes": 12696,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 284,
+        "boundsMm": {
+          "min": [-2.5, -6.0, -6.0],
+          "max": [2.5, 6.0, 6.0],
+          "size": [5.0, 12.0, 12.0]
+        },
+        "semanticNodes": ["Side_Cap_BS2101_3_Blue_Solid_Functional_Geometry"],
+        "materialNames": ["Blue silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bs2101-3-side-cap-blue-solid.glb",
+        "sourceSha256": "5ce4312f2b47c5e184089d4a72c8665e50b047c0def58b2eb6b6c2139b1eee11",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bs2102-3-silicone-cap",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2102-3-side-cap-blue-2mm-5b5b2c8c42a7.glb",
+      "sha256": "5b5b2c8c42a7d7fca4ce5cd7855125e49036a3c7937a7f388888c42fce70d42b",
+      "sizeBytes": 20076,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 480,
+        "boundsMm": {
+          "min": [-2.5, -6.0, -6.0],
+          "max": [2.5, 6.0, 6.0],
+          "size": [5.0, 12.0, 12.0]
+        },
+        "semanticNodes": ["Side_Cap_BS2102_3_Blue_2mm_Functional_Geometry"],
+        "materialNames": ["Blue silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bs2102-3-side-cap-blue-2mm.glb",
+        "sourceSha256": "5b5b2c8c42a7d7fca4ce5cd7855125e49036a3c7937a7f388888c42fce70d42b",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bs2303-3-silicone-cap",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2303-3-main-cap-red-5p5mm-57bcacde064c.glb",
+      "sha256": "57bcacde064c7221fab6472671b72b45c75425f6aa8f592fd5f1b0d67dbc69da",
+      "sizeBytes": 20080,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 480,
+        "boundsMm": {
+          "min": [-2.5, -12.5, -12.5],
+          "max": [2.5, 12.5, 12.5],
+          "size": [5.0, 25.0, 25.0]
+        },
+        "semanticNodes": ["Main_Cap_BS2303_3_Red_5_5mm_Functional_Geometry"],
+        "materialNames": ["Red silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bs2303-3-main-cap-red-5p5mm.glb",
+        "sourceSha256": "57bcacde064c7221fab6472671b72b45c75425f6aa8f592fd5f1b0d67dbc69da",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bs2310-3-silicone-cap",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bs2310-3-main-cap-green-dual-4mm-0db7daf08800.glb",
+      "sha256": "0db7daf08800d468b97aa0c541ed719fc1ff7c185c828c9406b2cd1dfcaf83b5",
+      "sizeBytes": 27900,
+      "geometry": {
+        "meshCount": 1,
+        "triangleCount": 684,
+        "boundsMm": {
+          "min": [-2.5, -12.5, -12.5],
+          "max": [2.5, 12.5, 12.5],
+          "size": [5.0, 25.0, 25.0]
+        },
+        "semanticNodes": ["Main_Cap_BS2310_3_Green_Dual_4mm_Functional_Geometry"],
+        "materialNames": ["Green silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bs2310-3-main-cap-green-dual-4mm.glb",
+        "sourceSha256": "0db7daf08800d468b97aa0c541ed719fc1ff7c185c828c9406b2cd1dfcaf83b5",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2000-3-bronchial-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2000-3-bronchial-tube-od13p20-id12p20mm-e871d790bb04.glb",
+      "sha256": "e871d790bb04e5894068f5c14b700367d7af4257900f66db9aea1bb3e5fb2972",
+      "sizeBytes": 165476,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 4696,
+        "boundsMm": {
+          "min": [-9.95, -9.95, -360.0],
+          "max": [9.95, 9.95, 14.0],
+          "size": [19.9, 19.9, 374.0]
+        },
+        "semanticNodes": [
+          "BT2000_3_Hollow_Beveled_Tube",
+          "BT2000_3_Internal_Distal_Safety_Stop",
+          "BT2000_3_Locking_Lug_1",
+          "BT2000_3_Locking_Lug_2",
+          "BT2000_3_Metric_Depth_Scale",
+          "BT2000_3_Orange_Size_Ring",
+          "BT2000_3_Quarter_Turn_Connector"
+        ],
+        "materialNames": ["Etched stainless scale", "Orange silicone", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2000-3-bronchial-tube-od13p20-id12p20mm.glb",
+        "sourceSha256": "e871d790bb04e5894068f5c14b700367d7af4257900f66db9aea1bb3e5fb2972",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2101-3-bronchial-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2101-3-bronchial-tube-od12p00-id11p00mm-b6110fae576b.glb",
+      "sha256": "b6110fae576b9616d7666c167fbddc89013d3efb90c1a26a4e491fc2f833d5a1",
+      "sizeBytes": 163928,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 4696,
+        "boundsMm": {
+          "min": [-9.35, -9.35, -360.0],
+          "max": [9.35, 9.35, 14.0],
+          "size": [18.7, 18.7, 374.0]
+        },
+        "semanticNodes": [
+          "BT2101_3_Black_Size_Ring",
+          "BT2101_3_Hollow_Beveled_Tube",
+          "BT2101_3_Internal_Distal_Safety_Stop",
+          "BT2101_3_Locking_Lug_1",
+          "BT2101_3_Locking_Lug_2",
+          "BT2101_3_Metric_Depth_Scale",
+          "BT2101_3_Quarter_Turn_Connector"
+        ],
+        "materialNames": ["Black polymer", "Etched stainless scale", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2101-3-bronchial-tube-od12p00-id11p00mm.glb",
+        "sourceSha256": "b6110fae576b9616d7666c167fbddc89013d3efb90c1a26a4e491fc2f833d5a1",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2103-3-bronchial-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2103-3-bronchial-tube-od10p00-id9p20mm-23286bfa8254.glb",
+      "sha256": "23286bfa8254965d9453817f7dacaff937719b1850c143d9d87b631e14cd8998",
+      "sizeBytes": 163460,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 4696,
+        "boundsMm": {
+          "min": [-8.35, -8.35, -360.0],
+          "max": [8.35, 8.35, 14.0],
+          "size": [16.7, 16.7, 374.0]
+        },
+        "semanticNodes": [
+          "BT2103_3_Hollow_Beveled_Tube",
+          "BT2103_3_Internal_Distal_Safety_Stop",
+          "BT2103_3_Locking_Lug_1",
+          "BT2103_3_Locking_Lug_2",
+          "BT2103_3_Metric_Depth_Scale",
+          "BT2103_3_Quarter_Turn_Connector",
+          "BT2103_3_Red_Size_Ring"
+        ],
+        "materialNames": ["Etched stainless scale", "Polished stainless steel", "Red silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2103-3-bronchial-tube-od10p00-id9p20mm.glb",
+        "sourceSha256": "23286bfa8254965d9453817f7dacaff937719b1850c143d9d87b631e14cd8998",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2105-3-bronchial-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2105-3-bronchial-tube-od8p00-id7p00mm-74be57fae508.glb",
+      "sha256": "74be57fae5089fdfd0a760d1d2b3f9582a67b6a469b6c0d3ca7d822c30c5b6a8",
+      "sizeBytes": 167340,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 4696,
+        "boundsMm": {
+          "min": [-7.35, -7.35, -360.0],
+          "max": [7.35, 7.35, 14.0],
+          "size": [14.7, 14.7, 374.0]
+        },
+        "semanticNodes": [
+          "BT2105_3_Green_Size_Ring",
+          "BT2105_3_Hollow_Beveled_Tube",
+          "BT2105_3_Internal_Distal_Safety_Stop",
+          "BT2105_3_Locking_Lug_1",
+          "BT2105_3_Locking_Lug_2",
+          "BT2105_3_Metric_Depth_Scale",
+          "BT2105_3_Quarter_Turn_Connector"
+        ],
+        "materialNames": ["Etched stainless scale", "Green silicone", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2105-3-bronchial-tube-od8p00-id7p00mm.glb",
+        "sourceSha256": "74be57fae5089fdfd0a760d1d2b3f9582a67b6a469b6c0d3ca7d822c30c5b6a8",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2106-3-bronchial-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2106-3-bronchial-tube-od7p00-id6p50mm-ea92055e0f69.glb",
+      "sha256": "ea92055e0f690eb88505359d77d8974b771278947ec1ded7fe24bcee90c08fbf",
+      "sizeBytes": 168276,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 4728,
+        "boundsMm": {
+          "min": [-6.85, -6.85, -360.0],
+          "max": [6.85, 6.85, 14.0],
+          "size": [13.7, 13.7, 374.0]
+        },
+        "semanticNodes": [
+          "BT2106_3_Blue_Size_Ring",
+          "BT2106_3_Hollow_Beveled_Tube",
+          "BT2106_3_Internal_Distal_Safety_Stop",
+          "BT2106_3_Locking_Lug_1",
+          "BT2106_3_Locking_Lug_2",
+          "BT2106_3_Metric_Depth_Scale",
+          "BT2106_3_Quarter_Turn_Connector"
+        ],
+        "materialNames": ["Blue silicone", "Etched stainless scale", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2106-3-bronchial-tube-od7p00-id6p50mm.glb",
+        "sourceSha256": "ea92055e0f690eb88505359d77d8974b771278947ec1ded7fe24bcee90c08fbf",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2201-3-tracheal-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2201-3-tracheal-tube-od12p00-id11p00mm-0bfa964b394a.glb",
+      "sha256": "0bfa964b394adfa834010c15e7d26a366e798c45787a93101648e2c2b2474e19",
+      "sizeBytes": 124100,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 3736,
+        "boundsMm": {
+          "min": [-9.35, -9.35, -260.0],
+          "max": [9.35, 9.35, 14.0],
+          "size": [18.7, 18.7, 274.0]
+        },
+        "semanticNodes": [
+          "BT2201_3_Black_Size_Ring",
+          "BT2201_3_Hollow_Beveled_Tube",
+          "BT2201_3_Internal_Distal_Safety_Stop",
+          "BT2201_3_Locking_Lug_1",
+          "BT2201_3_Locking_Lug_2",
+          "BT2201_3_Metric_Depth_Scale",
+          "BT2201_3_Quarter_Turn_Connector"
+        ],
+        "materialNames": ["Black polymer", "Etched stainless scale", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2201-3-tracheal-tube-od12p00-id11p00mm.glb",
+        "sourceSha256": "0bfa964b394adfa834010c15e7d26a366e798c45787a93101648e2c2b2474e19",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2203-3-tracheal-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2203-3-tracheal-tube-od10p00-id9p20mm-04b0e1f211f7.glb",
+      "sha256": "04b0e1f211f772725abf57dbbefb03e61985500824c1409347e01d78633f0b17",
+      "sizeBytes": 125120,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 3736,
+        "boundsMm": {
+          "min": [-8.35, -8.35, -260.0],
+          "max": [8.35, 8.35, 14.0],
+          "size": [16.7, 16.7, 274.0]
+        },
+        "semanticNodes": [
+          "BT2203_3_Hollow_Beveled_Tube",
+          "BT2203_3_Internal_Distal_Safety_Stop",
+          "BT2203_3_Locking_Lug_1",
+          "BT2203_3_Locking_Lug_2",
+          "BT2203_3_Metric_Depth_Scale",
+          "BT2203_3_Quarter_Turn_Connector",
+          "BT2203_3_Red_Size_Ring"
+        ],
+        "materialNames": ["Etched stainless scale", "Polished stainless steel", "Red silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2203-3-tracheal-tube-od10p00-id9p20mm.glb",
+        "sourceSha256": "04b0e1f211f772725abf57dbbefb03e61985500824c1409347e01d78633f0b17",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2205-3-tracheal-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2205-3-tracheal-tube-od8p00-id7p00mm-0c3ad3a019dc.glb",
+      "sha256": "0c3ad3a019dc73cefefa2290e70920132e0c10a5271deed98b905d6d8de887e0",
+      "sizeBytes": 125856,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 3736,
+        "boundsMm": {
+          "min": [-7.35, -7.35, -260.0],
+          "max": [7.35, 7.35, 14.0],
+          "size": [14.7, 14.7, 274.0]
+        },
+        "semanticNodes": [
+          "BT2205_3_Green_Size_Ring",
+          "BT2205_3_Hollow_Beveled_Tube",
+          "BT2205_3_Internal_Distal_Safety_Stop",
+          "BT2205_3_Locking_Lug_1",
+          "BT2205_3_Locking_Lug_2",
+          "BT2205_3_Metric_Depth_Scale",
+          "BT2205_3_Quarter_Turn_Connector"
+        ],
+        "materialNames": ["Etched stainless scale", "Green silicone", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2205-3-tracheal-tube-od8p00-id7p00mm.glb",
+        "sourceSha256": "0c3ad3a019dc73cefefa2290e70920132e0c10a5271deed98b905d6d8de887e0",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bt2210-3-tracheal-tube",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bt2210-3-tracheal-tube-od13p20-id12p20mm-1136ec77f666.glb",
+      "sha256": "1136ec77f666881bce8c7862037271e92bb05410f42e4db45612e3c39ab5a923",
+      "sizeBytes": 125000,
+      "geometry": {
+        "meshCount": 7,
+        "triangleCount": 3736,
+        "boundsMm": {
+          "min": [-9.95, -9.95, -260.0],
+          "max": [9.95, 9.95, 14.0],
+          "size": [19.9, 19.9, 274.0]
+        },
+        "semanticNodes": [
+          "BT2210_3_Hollow_Beveled_Tube",
+          "BT2210_3_Internal_Distal_Safety_Stop",
+          "BT2210_3_Locking_Lug_1",
+          "BT2210_3_Locking_Lug_2",
+          "BT2210_3_Metric_Depth_Scale",
+          "BT2210_3_Quarter_Turn_Connector",
+          "BT2210_3_Yellow_Size_Ring"
+        ],
+        "materialNames": ["Etched stainless scale", "Polished stainless steel", "Yellow silicone"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bt2210-3-tracheal-tube-od13p20-id12p20mm.glb",
+        "sourceSha256": "1136ec77f666881bce8c7862037271e92bb05410f42e4db45612e3c39ab5a923",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": ["mesh geometry beyond published nominal dimensions"]
+    },
+    {
+      "id": "efer-bx-5500-fa-rigid-telescope",
+      "kind": "eferComponent",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/bx-5500-fa-rigid-telescope-f8558b4cda28.glb",
+      "sha256": "f8558b4cda287af0629c4b87b362bd40de731677af583eaac99d64711e522bf9",
+      "sizeBytes": 59992,
+      "geometry": {
+        "meshCount": 6,
+        "triangleCount": 1320,
+        "boundsMm": {
+          "min": [-11.5, -33.0, -491.0],
+          "max": [11.5, 11.5, 54.0],
+          "size": [23.0, 44.5, 545.0]
+        },
+        "semanticNodes": [
+          "BX5500_FA_Black_Flared_Eyepiece",
+          "BX5500_FA_Distal_Objective_Lens",
+          "BX5500_FA_Light_Guide_Black_Coupling",
+          "BX5500_FA_Light_Guide_Connector",
+          "BX5500_FA_Proximal_Metal_Housing",
+          "BX5500_FA_Sealed_Rod_Lens_Shaft"
+        ],
+        "materialNames": ["Black polymer", "Optical lens", "Polished stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "Blender-generated EFER teaching component",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/bx-5500-fa-rigid-telescope.glb",
+        "sourceSha256": "f8558b4cda287af0629c4b87b362bd40de731677af583eaac99d64711e522bf9",
+        "manufacturerSourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceTeachingSetSha256": "efed6c33b0eb7fb5cb4498504ade8daa3c39543e6ff96e18c2185894b7b173ff"
+      },
+      "estimatedFields": [
+        "mesh geometry beyond published nominal dimensions",
+        "490 mm working-length geometry"
+      ]
+    },
+    {
+      "id": "efer-rigid-bronchoscopy-assembly-kit",
+      "kind": "assemblyPack",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/rigid-bronchoscopy-assembly-kit-f3a58f90df9a.glb",
+      "sha256": "f3a58f90df9a8bdb364c2fceb039855fa199d6db0af193c5d8cf2023482735ad",
+      "sizeBytes": 2782524,
+      "geometry": {
+        "meshCount": 153,
+        "triangleCount": 89978,
+        "boundsMm": {
+          "min": [-113.397, -63.446, -613.633],
+          "max": [120.9, 46.134, 257.813],
+          "size": [234.297, 109.58, 871.446]
+        },
+        "semanticNodes": [
+          "BB2401_3_Blue_2mm_Cap",
+          "BB2401_3_Main_Patent_Lumen",
+          "BB2401_3_Single_Instrument_Gate",
+          "BB2402_3_Blue_Gate_Cap_1",
+          "BB2402_3_Blue_Gate_Cap_2",
+          "BB2402_3_Instrument_Gate_1",
+          "BB2402_3_Instrument_Gate_2",
+          "BB2402_3_Main_Patent_Lumen",
+          "BB2403_3_Patent_Bore",
+          "BT2000_3_Hollow_Beveled_Tube",
+          "BT2000_3_Internal_Distal_Safety_Stop",
+          "BT2000_3_Locking_Lug_1",
+          "BT2000_3_Locking_Lug_2",
+          "BT2000_3_Metric_Depth_Scale",
+          "BT2000_3_Orange_Size_Ring",
+          "BT2000_3_Quarter_Turn_Connector",
+          "BT2101_3_Black_Size_Ring",
+          "BT2101_3_Hollow_Beveled_Tube",
+          "BT2101_3_Internal_Distal_Safety_Stop",
+          "BT2101_3_Locking_Lug_1",
+          "BT2101_3_Locking_Lug_2",
+          "BT2101_3_Metric_Depth_Scale",
+          "BT2101_3_Quarter_Turn_Connector",
+          "BT2103_3_Hollow_Beveled_Tube",
+          "BT2103_3_Internal_Distal_Safety_Stop",
+          "BT2103_3_Locking_Lug_1",
+          "BT2103_3_Locking_Lug_2",
+          "BT2103_3_Metric_Depth_Scale",
+          "BT2103_3_Quarter_Turn_Connector",
+          "BT2103_3_Red_Size_Ring",
+          "BT2105_3_Green_Size_Ring",
+          "BT2105_3_Hollow_Beveled_Tube",
+          "BT2105_3_Internal_Distal_Safety_Stop",
+          "BT2105_3_Locking_Lug_1",
+          "BT2105_3_Locking_Lug_2",
+          "BT2105_3_Metric_Depth_Scale",
+          "BT2105_3_Quarter_Turn_Connector",
+          "BT2106_3_Blue_Size_Ring",
+          "BT2106_3_Hollow_Beveled_Tube",
+          "BT2106_3_Internal_Distal_Safety_Stop",
+          "BT2106_3_Locking_Lug_1",
+          "BT2106_3_Locking_Lug_2",
+          "BT2106_3_Metric_Depth_Scale",
+          "BT2106_3_Quarter_Turn_Connector",
+          "BT2201_3_Black_Size_Ring",
+          "BT2201_3_Hollow_Beveled_Tube",
+          "BT2201_3_Internal_Distal_Safety_Stop",
+          "BT2201_3_Locking_Lug_1",
+          "BT2201_3_Locking_Lug_2",
+          "BT2201_3_Metric_Depth_Scale",
+          "BT2201_3_Quarter_Turn_Connector",
+          "BT2203_3_Hollow_Beveled_Tube",
+          "BT2203_3_Internal_Distal_Safety_Stop",
+          "BT2203_3_Locking_Lug_1",
+          "BT2203_3_Locking_Lug_2",
+          "BT2203_3_Metric_Depth_Scale",
+          "BT2203_3_Quarter_Turn_Connector",
+          "BT2203_3_Red_Size_Ring",
+          "BT2205_3_Green_Size_Ring",
+          "BT2205_3_Hollow_Beveled_Tube",
+          "BT2205_3_Internal_Distal_Safety_Stop",
+          "BT2205_3_Locking_Lug_1",
+          "BT2205_3_Locking_Lug_2",
+          "BT2205_3_Metric_Depth_Scale",
+          "BT2205_3_Quarter_Turn_Connector",
+          "BT2210_3_Hollow_Beveled_Tube",
+          "BT2210_3_Internal_Distal_Safety_Stop",
+          "BT2210_3_Locking_Lug_1",
+          "BT2210_3_Locking_Lug_2",
+          "BT2210_3_Metric_Depth_Scale",
+          "BT2210_3_Quarter_Turn_Connector",
+          "BT2210_3_Yellow_Size_Ring",
+          "BX5500_FA_Black_Flared_Eyepiece",
+          "BX5500_FA_Distal_Objective_Lens",
+          "BX5500_FA_Light_Guide_Black_Coupling",
+          "BX5500_FA_Light_Guide_Connector",
+          "BX5500_FA_Proximal_Metal_Housing",
+          "BX5500_FA_Sealed_Rod_Lens_Shaft",
+          "Biopsy_Cup_L",
+          "Biopsy_Cup_R",
+          "C1_Distal_Male_Interface",
+          "C1_Identification_Band",
+          "C1_Optic_Post_Socket",
+          "C2_Distal_Cable_Spigot",
+          "C2_Identification_Band",
+          "C2_Main_Adapter_Body",
+          "C2_Proximal_C1_Receiver",
+          "Camera_Cable_Strain_Relief",
+          "Camera_Control_Button_1",
+          "Camera_Control_Button_2",
+          "Camera_Coupler_Metal_Insert",
+          "Camera_Integral_CCU_Cable",
+          "Camera_Ocular_Coupler",
+          "Camera_Optical_Window",
+          "Camera_Round_Front_Grip_Collar",
+          "Camera_Round_Main_Housing",
+          "Camera_Round_Metal_Trim_Ring",
+          "Camera_Round_Rear_End_Cap",
+          "Compact_Base_BD2501_3_Central_Patent_Lumen",
+          "Compact_Base_BD2501_3_Front_Tube_Connector",
+          "Compact_Base_BD2501_3_Quarter_Turn_Ribbed_Ring",
+          "Compact_Base_BD2501_3_Rear_Main_Opening",
+          "Compact_Base_BD2501_3_Red_Alignment_Dot",
+          "Distal_Jaw_Left",
+          "Distal_Jaw_Left.001",
+          "Distal_Jaw_Right",
+          "Distal_Jaw_Right.001",
+          "Fiberoptic_Cable_Jacket",
+          "Finger_Ring_L",
+          "Finger_Ring_L.001",
+          "Finger_Ring_L.002",
+          "Finger_Ring_R",
+          "Finger_Ring_R.001",
+          "Finger_Ring_R.002",
+          "Forceps_Distal_Hub",
+          "Forceps_Distal_Hub.001",
+          "Forceps_Handle_Hub",
+          "Forceps_Handle_Hub.001",
+          "Forceps_Handle_Hub.002",
+          "Forceps_Semi_Rigid_Shaft",
+          "Forceps_Semi_Rigid_Shaft.001",
+          "Handle_Arm_L",
+          "Handle_Arm_L.001",
+          "Handle_Arm_L.002",
+          "Handle_Arm_R",
+          "Handle_Arm_R.001",
+          "Handle_Arm_R.002",
+          "Light_Source_End_Connector",
+          "Light_Source_End_Strain_Relief",
+          "Main_Cap_BS2303_3_Red_5_5mm_Functional_Geometry",
+          "Main_Cap_BS2310_3_Green_Dual_4mm_Functional_Geometry",
+          "Optical_Forceps_Control_Rod",
+          "Optical_Forceps_Proximal_Coupler",
+          "Optical_Forceps_Telescope_Guide",
+          "Scope_End_Light_Connector",
+          "Scope_End_Strain_Relief",
+          "Side_Cap_BS2101_3_Blue_Solid_Functional_Geometry",
+          "Side_Cap_BS2102_3_Blue_2mm_Functional_Geometry",
+          "Suction_Catheter_Patent_Lumen",
+          "Suction_Connector",
+          "Universal_Base_BD2410_3_Accessory_Port_Connected_Lumen",
+          "Universal_Base_BD2410_3_Accessory_Port_End_Collar",
+          "Universal_Base_BD2410_3_Anesthesia_Port_End_Collar",
+          "Universal_Base_BD2410_3_Anesthesia_Ventilation_Port_Connected_Lumen",
+          "Universal_Base_BD2410_3_Base_Red_Alignment_Dot",
+          "Universal_Base_BD2410_3_Connected_Main_Lumen",
+          "Universal_Base_BD2410_3_Fixed_Jet_Venturi_Port_Connected_Lumen",
+          "Universal_Base_BD2410_3_Front_Tube_Lock_Collar",
+          "Universal_Base_BD2410_3_Jet_Port_End_Collar",
+          "Universal_Base_BD2410_3_Large_90_Degree_Tube_Lock_Ring",
+          "Universal_Base_BD2410_3_Rear_Main_Port_Collar",
+          "Universal_Base_BD2410_3_Small_360_Degree_Ribbed_Ring",
+          "Universal_Base_BD2410_3_Tube_Red_Alignment_Dot"
+        ],
+        "materialNames": [
+          "Black polymer",
+          "Black polymer.001",
+          "Black polymer.002",
+          "Blue silicone",
+          "Blue silicone.001",
+          "Blue silicone.002",
+          "Blue silicone.003",
+          "Blue silicone.004",
+          "C1 adapter identification band",
+          "C1 adapter stainless steel",
+          "C2 adapter identification band",
+          "C2 adapter stainless steel",
+          "Camera connector metal",
+          "Camera grip",
+          "Camera housing",
+          "Camera optical glass",
+          "Etched stainless scale",
+          "Etched stainless scale.001",
+          "Etched stainless scale.002",
+          "Etched stainless scale.003",
+          "Etched stainless scale.004",
+          "Etched stainless scale.005",
+          "Etched stainless scale.006",
+          "Etched stainless scale.007",
+          "Etched stainless scale.008",
+          "Green silicone",
+          "Green silicone.001",
+          "Green silicone.002",
+          "Light cable connectors",
+          "Light cable jacket",
+          "Light cable strain relief",
+          "Optical forceps ocular trim",
+          "Optical forceps stainless steel",
+          "Optical lens",
+          "Orange silicone",
+          "Polished stainless steel",
+          "Polished stainless steel.001",
+          "Polished stainless steel.002",
+          "Polished stainless steel.003",
+          "Polished stainless steel.004",
+          "Polished stainless steel.005",
+          "Polished stainless steel.006",
+          "Polished stainless steel.007",
+          "Polished stainless steel.008",
+          "Polished stainless steel.009",
+          "Polished stainless steel.010",
+          "Polished stainless steel.011",
+          "Polished stainless steel.012",
+          "Polished stainless steel.013",
+          "Red silicone",
+          "Red silicone.001",
+          "Red silicone.002",
+          "Red silicone.003",
+          "Red silicone.004",
+          "Semi-rigid forceps stainless steel",
+          "Semi-rigid forceps stainless steel.001",
+          "Suction catheter connector",
+          "Suction catheter stainless steel",
+          "Yellow silicone"
+        ],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "request-efficient pack generated by the tracked Blender tool-asset builder",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/rigid-bronchoscopy-assembly-kit.glb",
+        "sourceSha256": "f3a58f90df9a8bdb364c2fceb039855fa199d6db0af193c5d8cf2023482735ad"
+      },
+      "estimatedFields": ["contains the estimated fields declared by its individual components"]
+    },
+    {
+      "id": "tool-optical-grasping-forceps",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/optical-grasping-forceps-32-3230-430hm-691e68fe4f25.glb",
+      "sha256": "691e68fe4f25176d41eaedb3317e582ab26424ccf41f90afec44145b60e1263e",
+      "sizeBytes": 175484,
+      "geometry": {
+        "meshCount": 10,
+        "triangleCount": 5172,
+        "boundsMm": {
+          "min": [-46.5, -11.0, -483.633],
+          "max": [46.5, 11.0, 86.5],
+          "size": [93.0, 22.0, 570.133]
+        },
+        "semanticNodes": [
+          "Distal_Jaw_Left",
+          "Distal_Jaw_Right",
+          "Finger_Ring_L",
+          "Finger_Ring_R",
+          "Forceps_Handle_Hub",
+          "Handle_Arm_L",
+          "Handle_Arm_R",
+          "Optical_Forceps_Control_Rod",
+          "Optical_Forceps_Proximal_Coupler",
+          "Optical_Forceps_Telescope_Guide"
+        ],
+        "materialNames": ["Optical forceps ocular trim", "Optical forceps stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "manufacturer_dimensions_photo_derived_handle",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/optical-grasping-forceps-32-3230-430hm.glb",
+        "sourceSha256": "691e68fe4f25176d41eaedb3317e582ab26424ccf41f90afec44145b60e1263e",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-forceps/",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": [
+        "Guide-tube and handle proportions are educational approximations, not manufacturing tolerances."
+      ]
+    },
+    {
+      "id": "tool-semi-rigid-biopsy-forceps",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/semi-rigid-biopsy-forceps-bps2001-e0b0460fe254.glb",
+      "sha256": "e0b0460fe25452631cc9dd2f2c8986e294fbd766ebcdd3524c6459b72fac92cb",
+      "sizeBytes": 199428,
+      "geometry": {
+        "meshCount": 9,
+        "triangleCount": 5212,
+        "boundsMm": {
+          "min": [-46.5, -8.0, -609.038],
+          "max": [46.5, 8.0, 86.5],
+          "size": [93.0, 16.0, 695.538]
+        },
+        "semanticNodes": [
+          "Biopsy_Cup_L",
+          "Biopsy_Cup_R",
+          "Finger_Ring_L",
+          "Finger_Ring_R",
+          "Forceps_Distal_Hub",
+          "Forceps_Handle_Hub",
+          "Forceps_Semi_Rigid_Shaft",
+          "Handle_Arm_L",
+          "Handle_Arm_R"
+        ],
+        "materialNames": ["Semi-rigid forceps stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "manufacturer_dimensions_photo_derived_handle",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/semi-rigid-biopsy-forceps-bps2001.glb",
+        "sourceSha256": "e0b0460fe25452631cc9dd2f2c8986e294fbd766ebcdd3524c6459b72fac92cb",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-forceps/",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": ["non-published handle and surface geometry"]
+    },
+    {
+      "id": "tool-semi-rigid-grasping-forceps",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/semi-rigid-grasping-forceps-bps2002-15c7d0d8bd6c.glb",
+      "sha256": "15c7d0d8bd6c51774ab5040ca4e37a970025239afd6268f0c5c0b42e835f3fa8",
+      "sizeBytes": 156100,
+      "geometry": {
+        "meshCount": 9,
+        "triangleCount": 4612,
+        "boundsMm": {
+          "min": [-46.5, -8.0, -613.633],
+          "max": [46.5, 8.0, 86.5],
+          "size": [93.0, 16.0, 700.133]
+        },
+        "semanticNodes": [
+          "Distal_Jaw_Left",
+          "Distal_Jaw_Right",
+          "Finger_Ring_L",
+          "Finger_Ring_R",
+          "Forceps_Distal_Hub",
+          "Forceps_Handle_Hub",
+          "Forceps_Semi_Rigid_Shaft",
+          "Handle_Arm_L",
+          "Handle_Arm_R"
+        ],
+        "materialNames": ["Semi-rigid forceps stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "manufacturer_dimensions_photo_derived_handle",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/semi-rigid-grasping-forceps-bps2002.glb",
+        "sourceSha256": "15c7d0d8bd6c51774ab5040ca4e37a970025239afd6268f0c5c0b42e835f3fa8",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-forceps/",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": ["non-published handle and surface geometry"]
+    },
+    {
+      "id": "tool-semi-rigid-suction-catheter-3mm",
+      "kind": "toolOrAccessory",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/components/semi-rigid-suction-catheter-3mm-cfc9948f6d89.glb",
+      "sha256": "cfc9948f6d894a2f899738dc188e56911b44f3d9d26e013edafc8e1e2303f836",
+      "sizeBytes": 48544,
+      "geometry": {
+        "meshCount": 2,
+        "triangleCount": 2304,
+        "boundsMm": {
+          "min": [-6.0, -6.0, -550.723],
+          "max": [29.314, 6.0, 32.0],
+          "size": [35.314, 12.0, 582.723]
+        },
+        "semanticNodes": ["Suction_Catheter_Patent_Lumen", "Suction_Connector"],
+        "materialNames": ["Suction catheter connector", "Suction catheter stainless steel"],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "provenance": {
+        "sourceType": "manufacturer_dimensions_educational_geometry",
+        "sourceAsset": "public/models/rigid-bronchoscopy/assembly/components/semi-rigid-suction-catheter-3mm.glb",
+        "sourceSha256": "cfc9948f6d894a2f899738dc188e56911b44f3d9d26e013edafc8e1e2303f836",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "secondarySourceUrl": null
+      },
+      "estimatedFields": ["non-published handle and surface geometry"]
+    },
+    {
+      "id": "tool-stent-introducer",
+      "kind": "instrumentProxy",
+      "runtime": true,
+      "path": "/models/rigid-bronchoscopy/v2/accessories/generic-stent-introducer-proxy-5f7d2644d4a6.glb",
+      "sha256": "5f7d2644d4a6e9d8fd8b9ccdd0bed0a88d07aa7db63ac22b4651d69a5152d112",
+      "sizeBytes": 24876,
+      "geometry": {
+        "meshCount": 3,
+        "triangleCount": 1024,
+        "boundsMm": {
+          "min": [-10.0, -10.0, -450.0],
+          "max": [10.0, 10.0, 24.0],
+          "size": [20.0, 20.0, 474.0]
+        },
+        "semanticNodes": [
+          "Stent_Introducer_Distal_Tip",
+          "Stent_Introducer_Hollow_Shaft",
+          "Stent_Introducer_Proximal_Collar"
+        ],
+        "materialNames": [
+          "Red stent-system identification collar",
+          "Stainless steel teaching proxy"
+        ],
+        "allWindingConsistent": true,
+        "allFinite": true,
+        "allPrimitivesHaveVertexNormals": true
+      },
+      "dimensionsMm": {
+        "estimatedWorkingLength": 450.0,
+        "estimatedOuterDiameter": 7.5,
+        "estimatedInnerDiameter": 6.3,
+        "estimatedProximalCollarDiameter": 20.0
+      },
+      "anchors": {
+        "entry": {
+          "positionMm": [0.0, 0.0, 0.0],
+          "direction": [0.0, 0.0, -1.0]
+        },
+        "toolEndpoint": {
+          "positionMm": [0.0, 0.0, -450.0],
+          "direction": [0.0, 0.0, -1.0]
+        }
+      },
+      "provenance": {
+        "sourceType": "manufacturer-listed stent-system concept; educational proxy geometry",
+        "sourceUrl": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "sourceNotes": "The ordering page confirms BR/BP/BI stent-placement systems and color families but does not publish these proxy dimensions. This is not a model of a specific part number."
+      },
+      "estimatedFields": [
+        "working length",
+        "shaft outer and inner diameters",
+        "collar dimensions",
+        "distal profile",
+        "material appearance"
+      ]
+    }
+  ],
+  "semanticAnchors": {
+    "ports": {
+      "mainAxial": {
+        "assetId": "efer-bd2410-3-adult-universal-base",
+        "positionMm": [0.0, 0.0, 50.0],
+        "direction": [0.0, 0.0, -1.0],
+        "source": "named rear-main-port geometry in the source EFER teaching model",
+        "estimated": false
+      },
+      "accessory": {
+        "assetId": "efer-bd2410-3-adult-universal-base",
+        "positionMm": [-1.0, 46.13, 29.15],
+        "direction": [0.0, 0.866, 0.5],
+        "source": "named accessory-port end collar in the source EFER teaching model",
+        "estimated": true
+      },
+      "anesthesiaCircuit": {
+        "assetId": "efer-bd2410-3-adult-universal-base",
+        "positionMm": [0.0, -46.88, -24.2],
+        "direction": [0.0, -0.966, -0.259],
+        "source": "named anesthesia-port end collar in the source EFER teaching model",
+        "estimated": true
+      },
+      "jet": {
+        "assetId": "efer-bd2410-3-adult-universal-base",
+        "positionMm": [0.0, -24.0, 1.0],
+        "direction": [0.0, -1.0, 0.0],
+        "source": "named fixed-jet-port end collar in the source EFER teaching model",
+        "estimated": false
+      }
+    },
+    "tubeFeatures": {
+      "bt2203Bevel": {
+        "assetId": "efer-bt2203-3-tracheal-tube",
+        "positionMm": [0.0, 0.0, -260.0],
+        "direction": [0.0, 0.0, -1.0],
+        "estimated": false
+      },
+      "bt2203SafetyStop": {
+        "assetId": "efer-bt2203-3-tracheal-tube",
+        "positionMm": [0.0, 0.0, -249.6],
+        "direction": [0.0, 0.0, -1.0],
+        "estimated": false
+      },
+      "bt2105Bevel": {
+        "assetId": "efer-bt2105-3-bronchial-tube",
+        "positionMm": [0.0, 0.0, -360.0],
+        "direction": [0.0, 0.0, -1.0],
+        "estimated": false
+      },
+      "bt2105SafetyStop": {
+        "assetId": "efer-bt2105-3-bronchial-tube",
+        "positionMm": [0.0, 0.0, -349.6],
+        "direction": [0.0, 0.0, -1.0],
+        "estimated": false
+      },
+      "bt2105FenestrationRight": {
+        "assetId": "efer-bt2105-3-bronchial-tube",
+        "positionMm": [0.0, -4.0, -330.0],
+        "direction": [0.0, -1.0, 0.0],
+        "source": "educational feature anchor; exact fenestration geometry is not semantically separated in the source mesh",
+        "estimated": true
+      },
+      "bt2105FenestrationLeft": {
+        "assetId": "efer-bt2105-3-bronchial-tube",
+        "positionMm": [0.0, 4.0, -330.0],
+        "direction": [0.0, 1.0, 0.0],
+        "source": "educational feature anchor; exact fenestration geometry is not semantically separated in the source mesh",
+        "estimated": true
+      }
+    },
+    "telescopeObjective": {
+      "assetId": "efer-bx-5500-fa-rigid-telescope",
+      "positionMm": [0.0, 0.0, -490.5],
+      "direction": [0.0, 0.0, -1.0],
+      "estimated": false
+    },
+    "toolEndpoints": {
+      "opticalForceps": {
+        "assetId": "tool-optical-grasping-forceps",
+        "positionMm": [0.0, 0.0, -477.0],
+        "direction": [0.0, 0.0, -1.0],
+        "estimated": false
+      },
+      "threeMillimeterSuction": {
+        "assetId": "tool-semi-rigid-suction-catheter-3mm",
+        "positionMm": [29.31, 0.0, -550.72],
+        "direction": [0.12, 0.0, -0.993],
+        "estimated": true
+      },
+      "semiRigidGraspingForceps": {
+        "assetId": "tool-semi-rigid-grasping-forceps",
+        "positionMm": [0.0, 0.0, -607.0],
+        "direction": [0.0, 0.0, -1.0],
+        "estimated": false
+      },
+      "stentIntroducer": {
+        "assetId": "tool-stent-introducer",
+        "positionMm": [0.0, 0.0, -450.0],
+        "direction": [0.0, 0.0, -1.0],
+        "source": "generic educational proxy informed by the EFER stent-placement system listing",
+        "estimated": true
+      }
+    },
+    "anatomy": {
+      "proximalTrachea": {
+        "positionMm": [-135.0, 0.0, 0.0]
+      },
+      "midTrachea": {
+        "positionMm": [-67.5, 0.0, 0.0]
+      },
+      "carina": {
+        "positionMm": [0.0, 0.0, 0.0]
+      },
+      "rightMainstemDistal": {
+        "positionMm": [62.0, -34.0, -4.0]
+      },
+      "leftMainstemDistal": {
+        "positionMm": [69.0, 44.0, 3.0]
+      }
+    }
+  },
+  "proceduralPoses": [
+    {
+      "id": "tracheal",
+      "label": "Mid-tracheal true-scale view",
+      "tubeAssetId": "efer-bt2203-3-tracheal-tube",
+      "tubeOuterDiameterMm": 10.0,
+      "visibleSweepStartMm": [-120.0, 0.0, 0.0],
+      "bevelMm": [-50.0, 0.0, 0.0],
+      "telescopeObjectiveMm": [-51.0, 0.0, 0.0],
+      "axis": [1.0, 0.0, 0.0],
+      "anatomyTarget": "trachea",
+      "cameraPreset": "trueScale",
+      "validatedMinimumRadialClearanceMm": 4.997,
+      "validationMethod": "80 longitudinal x 32 radial swept-surface samples against the authored lumen mesh"
+    },
+    {
+      "id": "carinal",
+      "label": "Carinal inspection view",
+      "tubeAssetId": "efer-bt2203-3-tracheal-tube",
+      "tubeOuterDiameterMm": 10.0,
+      "visibleSweepStartMm": [-110.0, 0.0, 0.0],
+      "bevelMm": [-8.0, 0.0, 0.0],
+      "telescopeObjectiveMm": [-9.0, 0.0, 0.0],
+      "axis": [1.0, 0.0, 0.0],
+      "anatomyTarget": "carina",
+      "cameraPreset": "carina",
+      "validatedMinimumRadialClearanceMm": 4.997,
+      "validationMethod": "80 longitudinal x 32 radial swept-surface samples against the authored lumen mesh"
+    },
+    {
+      "id": "rightMainstem",
+      "label": "Initial right-mainstem position",
+      "tubeAssetId": "efer-bt2105-3-bronchial-tube",
+      "tubeOuterDiameterMm": 8.0,
+      "visibleSweepStartMm": [-55.0, 0.0, 0.0],
+      "bevelMm": [28.0, -9.0, -1.5],
+      "telescopeObjectiveMm": [27.0, -8.89, -1.48],
+      "axis": [0.9939, -0.1078, -0.018],
+      "anatomyTarget": "rightMainstem",
+      "cameraPreset": "selectedMainstem",
+      "validatedMinimumRadialClearanceMm": 0.828,
+      "validationMethod": "80 longitudinal x 32 radial swept-surface samples against the authored lumen mesh"
+    },
+    {
+      "id": "leftMainstem",
+      "label": "Initial left-mainstem position",
+      "tubeAssetId": "efer-bt2105-3-bronchial-tube",
+      "tubeOuterDiameterMm": 8.0,
+      "visibleSweepStartMm": [-50.0, 0.0, 0.0],
+      "bevelMm": [23.0, 9.0, 1.0],
+      "telescopeObjectiveMm": [22.01, 8.88, 0.99],
+      "axis": [0.9924, 0.1223, 0.0136],
+      "anatomyTarget": "leftMainstem",
+      "cameraPreset": "selectedMainstem",
+      "validatedMinimumRadialClearanceMm": 0.81,
+      "validationMethod": "80 longitudinal x 32 radial swept-surface samples against the authored lumen mesh"
+    }
+  ],
+  "assemblyStates": {
+    "openMainAxial": {
+      "mainAxialCapAssetId": null
+    },
+    "telescopeOnly5p5": {
+      "mainAxialCapAssetId": "efer-bs2303-3-silicone-cap"
+    },
+    "opticalForceps": {
+      "mainAxialCapAssetId": "cap-bs2319-3-optical-forceps"
+    },
+    "telescopePlus2mmInstrument": {
+      "mainAxialCapAssetId": "cap-bs2309-3-telescope-plus-2mm-instrument"
+    },
+    "telescopePlus4mmInstrument": {
+      "mainAxialCapAssetId": "cap-bs2311-3-telescope-plus-4mm-instrument"
+    }
+  },
+  "validationRequirements": {
+    "contentHashFilenamePrefixCharacters": 12,
+    "criticalDimensionToleranceMm": 0.1,
+    "anchorToleranceMm": 1.0,
+    "minimumPoseRadialClearanceMm": 0.5,
+    "requiredAirwaySemanticNodes": [
+      "Airway_Outer_Wall",
+      "Airway_Inner_Lumen",
+      "Airway_Cutaway_Outer_Wall",
+      "Airway_Cutaway_Inner_Lumen"
+    ]
+  }
+}

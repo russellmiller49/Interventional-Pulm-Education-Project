@@ -7,8 +7,10 @@ import type {
 import {
   ANY_TUBE_PREREQUISITE_ID,
   ASSEMBLY_BASE_PART_ID,
+  getAssemblyPart,
   isBronchoscopeTubePartId,
 } from '../content/assemblyParts'
+import { getTelescopePlacementTransform } from './dimensions'
 
 export interface AssemblyPlacementCheck {
   allowed: boolean
@@ -16,6 +18,14 @@ export interface AssemblyPlacementCheck {
 }
 
 const DEFAULT_SNAP_DISTANCE = 0.6
+const RIGID_TELESCOPE_PART_ID = 'rigid-telescope-bx5500-fa'
+const TELESCOPE_MOUNTED_PART_IDS = new Set<AssemblyPartId>([
+  RIGID_TELESCOPE_PART_ID,
+  'generic-camera-head',
+  'light-guide-adapter-c1',
+  'light-guide-adapter-c2',
+  'generic-fiberoptic-light-cable',
+])
 
 function hasPrerequisite(
   prerequisiteId: AssemblyPartId,
@@ -71,17 +81,39 @@ export function getNextAssemblyStep(
 }
 
 /** The transform used after a successful snap. */
-export function getPlacedTransform(part: AssemblyPartDefinition): AssemblyTransform {
-  return part.target
+export function getPlacedTransform(
+  part: AssemblyPartDefinition,
+  tube?: AssemblyPartDefinition,
+): AssemblyTransform {
+  if (!tube || !TELESCOPE_MOUNTED_PART_IDS.has(part.id)) return part.target
+
+  const telescope = getAssemblyPart(RIGID_TELESCOPE_PART_ID)
+  if (!telescope) return part.target
+  const correctedTelescope = getTelescopePlacementTransform(tube, telescope)
+  const translation: AssemblyVector3 = [
+    correctedTelescope.position[0] - telescope.target.position[0],
+    correctedTelescope.position[1] - telescope.target.position[1],
+    correctedTelescope.position[2] - telescope.target.position[2],
+  ]
+
+  return {
+    ...part.target,
+    position: [
+      part.target.position[0] + translation[0],
+      part.target.position[1] + translation[1],
+      part.target.position[2] + translation[2],
+    ],
+  }
 }
 
 /** Euclidean snap check in assembly-scene coordinates. */
 export function isWithinSnapDistance(
   position: AssemblyVector3,
   part: AssemblyPartDefinition,
+  tube?: AssemblyPartDefinition,
 ): boolean {
   const [x, y, z] = position
-  const [targetX, targetY, targetZ] = part.target.position
+  const [targetX, targetY, targetZ] = getPlacedTransform(part, tube).position
   const distance = Math.hypot(x - targetX, y - targetY, z - targetZ)
 
   return distance <= (part.snapDistance ?? DEFAULT_SNAP_DISTANCE)

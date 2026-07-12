@@ -3,42 +3,26 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 
 import {
+  centralAirwayGeometry,
   getVentilationScopeAngleDegrees,
   getVentilationScopePose,
+  proceduralPoses,
   realisticAirwayGeometry,
+  RIGID_BRONCHOSCOPY_AIRWAY_CUTAWAY_PUBLIC_PATH,
   RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH,
+  RIGID_BRONCHOSCOPY_V2_MANIFEST_PUBLIC_PATH,
   transformVentilationScopePoint,
   VENTILATION_FENESTRATION_LOCAL_XS,
 } from '../content/assemblyAirway'
 import { bronchoscopeTubeOptions, type AssemblyVector3 } from '../content/assemblyParts'
+import type { RigidAssetManifest } from '../content/assemblyTopology'
 import { getTubeDistalX } from '../content/assemblyPathways'
 
-interface AirwayAssetProvenance {
-  schema: string
-  educationalUseOnly: boolean
-  source: {
-    glb: string
-    glbSha256: string
-    airwayGraph: string
-    airwayGraphSha256: string
-    coordinateSystem: string
-    units: string
-    meshName: string
-  }
-  teachingTransform: {
-    worldUnitsPerMm: number
-    carinaWorld: AssemblyVector3
-  }
-  output: {
-    path: string
-    vertexCount: number
-    triangleCount: number
-    boundsWorld: readonly [AssemblyVector3, AssemblyVector3]
-  }
-}
-
-const anatomyDirectory = path.join(process.cwd(), 'public/models/rigid-bronchoscopy/anatomy')
-const provenancePath = path.join(anatomyDirectory, 'central-airway.provenance.json')
+const manifestPath = path.join(
+  process.cwd(),
+  'public',
+  RIGID_BRONCHOSCOPY_V2_MANIFEST_PUBLIC_PATH.replace(/^\//, ''),
+)
 
 function sha256(filePath: string) {
   return createHash('sha256').update(readFileSync(filePath)).digest('hex')
@@ -114,6 +98,13 @@ describe('rigid bronchoscopy realistic airway and scope pose', () => {
     expect(enteredBranch[1]).toBeLessThan(carina[1])
     expect(oppositeBranch[1]).toBeGreaterThan(carina[1])
     expect((enteredBranch[1] - carina[1]) * (oppositeBranch[1] - carina[1])).toBeLessThan(0)
+  })
+
+  it('uses public-safe purpose-built central geometry rather than a patient airway tree', () => {
+    expect(centralAirwayGeometry.trachea).toHaveLength(4)
+    expect(centralAirwayGeometry.rightMainstem.length).toBeLessThanOrEqual(5)
+    expect(centralAirwayGeometry.leftMainstem.length).toBeLessThanOrEqual(5)
+    expect(centralAirwayGeometry.carina).toEqual([1.22, -0.3, 0])
   })
 
   it('uses a nonzero rigid angle after the tip passes the carina', () => {
@@ -210,16 +201,22 @@ describe('rigid bronchoscopy realistic airway and scope pose', () => {
     expect(dot(transformedDeviceSpan, transformedAxis)).toBeCloseTo(expectedFenestrationSpacing, 10)
   })
 
-  it('packages the generated airway with verifiable source provenance', () => {
+  it('packages hashed full and cutaway airways with a validated v2 manifest', () => {
     const assetPath = path.join(
       process.cwd(),
       'public',
       RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH.replace(/^\//, ''),
     )
+    const cutawayPath = path.join(
+      process.cwd(),
+      'public',
+      RIGID_BRONCHOSCOPY_AIRWAY_CUTAWAY_PUBLIC_PATH.replace(/^\//, ''),
+    )
 
     expect(existsSync(assetPath)).toBe(true)
-    expect(existsSync(provenancePath)).toBe(true)
-    expect(statSync(assetPath).size).toBeGreaterThan(1_000_000)
+    expect(existsSync(cutawayPath)).toBe(true)
+    expect(existsSync(manifestPath)).toBe(true)
+    expect(statSync(assetPath).size).toBeGreaterThan(100_000)
     expect(readFileSync(assetPath).toString('utf8', 0, 4)).toBe('glTF')
     const gltf = parseGlbJson(assetPath)
     expect(
@@ -228,30 +225,43 @@ describe('rigid bronchoscopy realistic airway and scope pose', () => {
       ),
     ).toBe(true)
 
-    const provenance = JSON.parse(readFileSync(provenancePath, 'utf8')) as AirwayAssetProvenance
-    expect(provenance.schema).toBe('rigid_bronchoscopy_airway_asset/v1')
-    expect(provenance.educationalUseOnly).toBe(true)
-    expect(provenance.source).toMatchObject({
-      glb: 'new_anatomy_module/Airway.glb',
-      airwayGraph: 'public/airway-anatomy/case-001/metadata/airway_graph.json',
-      coordinateSystem: 'LPS',
-      units: 'mm',
-      meshName: 'Final_airway_target',
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as RigidAssetManifest
+    expect(manifest.schema).toBe('rigid_bronchoscopy_asset_manifest/v2')
+    expect(manifest.educationalUseOnly).toBe(true)
+    expect(manifest.units).toEqual({
+      authoredDimensions: 'millimeters',
+      glbGeometry: 'meters',
+      metersPerMillimeter: 0.001,
     })
-    expect(provenance.source.glbSha256).toMatch(/^[a-f0-9]{64}$/)
-    expect(provenance.source.airwayGraphSha256).toMatch(/^[a-f0-9]{64}$/)
-    expect(sha256(path.join(process.cwd(), provenance.source.glb))).toBe(
-      provenance.source.glbSha256,
+    expect(manifest.presentation.worldUnitsPerMillimeter).toBe(0.009)
+    expectVectorClose(manifest.presentation.carinaWorld, realisticAirwayGeometry.carina)
+
+    const fullAsset = manifest.assets.find((asset) => asset.id === 'anatomy-central-airway-full')
+    const cutawayAsset = manifest.assets.find(
+      (asset) => asset.id === 'anatomy-central-airway-cutaway',
     )
-    expect(sha256(path.join(process.cwd(), provenance.source.airwayGraph))).toBe(
-      provenance.source.airwayGraphSha256,
-    )
-    expect(provenance.output.path).toBe(`public${RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH}`)
-    expect(provenance.output.vertexCount).toBe(33_664)
-    expect(provenance.output.triangleCount).toBe(67_320)
-    expect(provenance.teachingTransform.worldUnitsPerMm).toBe(0.009)
-    expectVectorClose(provenance.teachingTransform.carinaWorld, realisticAirwayGeometry.carina)
-    expectVectorClose(provenance.output.boundsWorld[0], realisticAirwayGeometry.boundsMin, 5)
-    expectVectorClose(provenance.output.boundsWorld[1], realisticAirwayGeometry.boundsMax, 5)
+    expect(fullAsset?.path).toBe(RIGID_BRONCHOSCOPY_AIRWAY_PUBLIC_PATH)
+    expect(cutawayAsset?.path).toBe(RIGID_BRONCHOSCOPY_AIRWAY_CUTAWAY_PUBLIC_PATH)
+    expect(fullAsset?.sha256).toBe(sha256(assetPath))
+    expect(cutawayAsset?.sha256).toBe(sha256(cutawayPath))
+    expect(
+      manifest.proceduralPoses.every((pose) => pose.validatedMinimumRadialClearanceMm >= 0.5),
+    ).toBe(true)
+  })
+
+  it('keeps bevel, safety stop, and telescope objective as distinct validated anchors', () => {
+    expect(proceduralPoses.midTrachea.tubeId).toBe('tube-bt2203-3')
+    expect(proceduralPoses.rightMainstem.tubeId).toBe('tube-bt2105-3')
+    expect(proceduralPoses.rightMainstem.lumenClearance).toMatchObject({
+      allowed: true,
+      measurement: 'radial-swept-mesh',
+      radialClearanceMm: 0.828,
+    })
+    expect(proceduralPoses.leftMainstem.lumenClearance.radialClearanceMm).toBe(0.81)
+
+    for (const pose of Object.values(proceduralPoses)) {
+      expect(pose.tubeBevelPosition).not.toEqual(pose.safetyStopPosition)
+      expect(pose.tubeBevelPosition).not.toEqual(pose.telescopeObjectivePosition)
+    }
   })
 })
