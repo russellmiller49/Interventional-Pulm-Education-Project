@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { BoardReviewChapterContent } from '@/components/board-review/BoardReviewChapterContent'
+import { BoardReviewInteractiveModuleCard } from '@/components/board-review/BoardReviewInteractiveModuleCard'
 import { BoardReviewProgressToggle } from '@/components/board-review/BoardReviewProgressToggle'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -13,6 +14,8 @@ import { activeLocales, defaultLocale, isActiveLocale } from '@/i18n/locale'
 import { localizePath } from '@/i18n/path'
 import { formatDuration } from '@/lib/format-duration'
 import { loadBoardReviewChapter, listBoardReviewChapters } from '@/lib/board-review-loader'
+import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
+import { isVisibleModulePath } from '@/lib/draft-modules'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
@@ -66,9 +69,15 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
 
   const categoryLabel = boardReviewCategoryLabels[chapter.category]
   const allChapters = listBoardReviewChapters(locale)
+  const canViewDrafts = await canCurrentUserViewDraftModules()
   const peerChapters = allChapters.filter(
     (item) => item.category === chapter.category && item.slug !== chapter.slug,
   )
+  const interactiveModule =
+    chapter.interactiveModule &&
+    isVisibleModulePath(chapter.interactiveModule.href, { isAdmin: canViewDrafts })
+      ? chapter.interactiveModule
+      : null
 
   return (
     <HandoffContent>
@@ -130,6 +139,13 @@ export default async function BoardPrepModulePage({ params }: BoardPrepModulePag
               />
             </div>
             <aside className="min-w-0 space-y-6">
+              {interactiveModule ? (
+                <BoardReviewInteractiveModuleCard
+                  interactiveModule={interactiveModule}
+                  locale={locale}
+                />
+              ) : null}
+
               <Card className="border-emerald-500/40 bg-emerald-500/10">
                 <CardContent className="space-y-3 p-6">
                   <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600">

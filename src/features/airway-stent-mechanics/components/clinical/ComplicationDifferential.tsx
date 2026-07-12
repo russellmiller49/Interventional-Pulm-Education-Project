@@ -4,9 +4,17 @@ import { useState } from 'react'
 
 import { complicationRegistry } from '../../content/complicationRegistry'
 
-export function ComplicationDifferential({ onComplete }: { onComplete?: () => void }) {
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [committed, setCommitted] = useState(false)
+export function ComplicationDifferential({
+  completed = false,
+  initialSelectedIds = [],
+  onComplete,
+}: {
+  completed?: boolean
+  initialSelectedIds?: readonly string[]
+  onComplete?: (selectedIds: readonly string[]) => void
+}) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([...initialSelectedIds])
+  const [committed, setCommitted] = useState(completed)
 
   return (
     <section
@@ -80,14 +88,14 @@ export function ComplicationDifferential({ onComplete }: { onComplete?: () => vo
       <button
         type="button"
         onClick={() => {
-          if (committed) return
+          if (completed || committed) return
           setCommitted(true)
-          onComplete?.()
+          onComplete?.([...selectedIds])
         }}
-        disabled={selectedIds.length < 2 || committed}
+        disabled={selectedIds.length < 2 || completed || committed}
         className="mt-5 min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-45"
       >
-        {committed ? 'Differential committed' : 'Commit differential'}
+        {completed || committed ? 'Differential committed' : 'Commit differential'}
       </button>
     </section>
   )

@@ -17,6 +17,8 @@ the hands-on bootcamp coordination together.
       overall treatment plan, anatomy, local resources, and operator expertise.
 - [ ] Confirm that stenting is not presented as automatic after debulking or as a substitute for
       tumor-directed therapy.
+- [ ] Confirm the aerodigestive-fistula case compares airway-only, esophageal-only, combined, and
+      no-airway-stent pathways before assigning an airway device a sealing job.
 - [ ] Confirm that the selected dynamic-collapse vignette is explicitly a defined temporary trial,
       not a general recommendation.
 
@@ -35,6 +37,11 @@ Primary source: WABIP benign central-airway-obstruction stenting guideline.
 
 ## 3. Sizing and fit statements
 
+- [ ] Confirm the lumen-budget cross-sections use one true drawing scale and that inner diameter,
+      circular lumen area, inner-to-outer diameter ratio, and lumen-area fraction are calculated
+      correctly from the displayed illustrative wall geometry.
+- [ ] Confirm the thicker-wall silicone comparison is qualitative and is not converted into an
+      unsupported airflow, symptom, complication, or patient-outcome model.
 - [ ] Confirm that the required path teaches landing zones, disease length, taper, curvature,
       branches, dynamic change, and future remodeling without providing a universal oversizing or
       margin rule.
@@ -44,6 +51,10 @@ Primary source: WABIP benign central-airway-obstruction stenting guideline.
       stents and is not converted into a universal cutoff or patient-level risk equation.
 - [ ] Review all architecture-registry claims about deployment, apposition, customization, and
       removal against current instructions for use before publication.
+- [ ] Confirm the curved-airway solid-silicone scene shows straightening, sliding, gapping, or
+      central involution rather than braid-angle foreshortening.
+- [ ] Confirm the whole-Y scenario includes the tracheal segment, saddle, both limb diameters and
+      lengths, branch angles, distal orifices, and architecture-specific staged deployment.
 
 ## 4. Surveillance recommendations
 
@@ -72,6 +83,14 @@ Primary source: WABIP benign central-airway-obstruction stenting guideline.
       exchange, repositioning, removal, or another strategy as clinically appropriate.
 - [ ] Confirm that the module never presents a debridement modality as a complete response by
       itself.
+- [ ] Confirm the cough scene allows diameter-length coupling and axial end excursion only for a
+      braided scaffold and does not depict solid silicone as braid-foreshortening.
+- [ ] Confirm progressive tissue response is not revealed until end contact,
+      secretions/infection, dwell time, and host response have all been considered.
+- [ ] Confirm the longitudinal sequence includes mucus obstruction, infection, migration,
+      granulation, tumor ingrowth or overgrowth, fracture, cover failure, and branch obstruction.
+- [ ] Confirm technical patency, symptoms and quality of life, reintervention burden, and
+      underlying-disease outcome remain separate outcome domains.
 
 ## 6. Architecture and branded-device descriptions
 
@@ -81,6 +100,10 @@ Primary source: WABIP benign central-airway-obstruction stenting guideline.
 - [ ] Verify current manufacturer and FDA source pages before publication.
 - [ ] Resolve publication rights, provenance, and manufacturer-validation limitations before any
       branded GLB asset is added to the required clinical path.
+- [ ] Confirm unresolved model derivatives remain behind the site-admin asset gate and outside the
+      ordinary learner path until those limitations are resolved.
+- [ ] If `MODULE_ASSET_ORIGIN` is configured, verify equivalent private-origin or CDN controls;
+      the app-origin proxy gate does not authorize a separately public asset URL.
 - [ ] Confirm that generic schematics are labeled as educational architecture families rather than
       exact product CAD.
 
@@ -101,6 +124,8 @@ Primary source: WABIP benign central-airway-obstruction stenting guideline.
 - [ ] Confirm that curve and cough scenes do not calculate tissue pressure, prove causation, or
       assign an individual risk.
 - [ ] Confirm that reduced-motion and text-only learners receive equivalent instructional content.
+- [ ] Confirm completion remains possible without WebGL and that each required code-native SVG has
+      an equivalent static text description.
 - [ ] Confirm that the archived standalone prototype is not presented as the primary curriculum.
 
 ## 9. Assessment and analytics
@@ -109,9 +134,22 @@ Primary source: WABIP benign central-airway-obstruction stenting guideline.
       surveillance, and changing-anatomy cases.
 - [ ] Confirm that no branded product is the sole correct answer.
 - [ ] Confirm that assessment totals remain data-driven and the old assessment mastery is not
-      carried into progress version 2.
+      carried into progress version 3 from version 1 or version 2.
+- [ ] Confirm every missed domain requires rationale review and a defensible revised plan before
+      module completion, including a 5/6 attempt that otherwise meets the mastery threshold.
 - [ ] Confirm that analytics payloads contain only module, lesson, case, decision, choice, and
       completion identifiers—no free text or patient-identifying information.
+
+## 10. Localization and release state
+
+- [ ] Clinically approve the English source before changing `clinicalReviewStatus` to `reviewed`.
+- [ ] Confirm Spanish and Simplified Chinese show an explicit English-fallback review badge until
+      their translated clinical review is complete.
+- [ ] Confirm the route gate and visible review badge both derive from `clinicalReviewStatus`.
+- [ ] Confirm the Board Prep airway-stent chapter links to the localized Clinical Decision Lab and
+      remains a concise reference rather than a duplicate course.
+- [ ] Confirm the Board Prep bridge is hidden from ordinary users while the lab is draft-gated and
+      becomes public from the same `clinicalReviewStatus` release transition.
 
 ## Sign-off
 

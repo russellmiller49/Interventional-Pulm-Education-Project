@@ -2,9 +2,11 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { BoxGeometry, Mesh, MeshStandardMaterial, Object3D, PropertyBinding } from 'three'
 
 import {
+  claimPartDragPointer,
   cloneSemanticNode,
   cloneToolViewerScene,
   getAirwayMaterialVisibilityProfile,
+  getPartInteractionBounds,
   getViewerMaterialVisibilityProfile,
   isPartDragGesture,
   RigidBronchoscopyAssemblyLab,
@@ -52,6 +54,30 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(isPartDragGesture({ ...pointer, ctrlKey: true })).toBe(false)
     expect(isPartDragGesture({ ...pointer, metaKey: true })).toBe(false)
     expect(isPartDragGesture({ ...pointer, pointerType: 'touch' })).toBe(true)
+  })
+
+  it('claims a loose-part pointer before canvas orbit controls can start', () => {
+    const preventDefault = jest.fn()
+    const stopImmediatePropagation = jest.fn()
+
+    claimPartDragPointer({ preventDefault, stopImmediatePropagation })
+
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(stopImmediatePropagation).toHaveBeenCalledTimes(1)
+  })
+
+  it('gives thin instrument geometry a usable transparent drag hit box', () => {
+    const model = new Object3D()
+    const geometry = new BoxGeometry(2, 0.01, 0.01)
+    model.add(new Mesh(geometry))
+
+    const interactionBounds = getPartInteractionBounds(model)
+
+    expect(interactionBounds.size[0]).toBeCloseTo(2)
+    expect(interactionBounds.size[1]).toBeCloseTo(0.04)
+    expect(interactionBounds.size[2]).toBeCloseTo(0.04)
+
+    geometry.dispose()
   })
 
   it('keeps anatomy and device materials visible while preserving cutaway transparency', () => {
@@ -124,15 +150,20 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(screen.getByText('Double-gate obturator')).toBeVisible()
   })
 
-  it('offers orbit, pan, zoom, and centering without changing puzzle progress', () => {
+  it('defaults to moving parts and offers explicit orbit, pan, zoom, and centering controls', () => {
     render(<RigidBronchoscopyAssemblyLab />)
 
     expect(screen.getByRole('toolbar', { name: '3D view controls' })).toBeVisible()
+    const movePartsButton = screen.getByRole('button', { name: 'Move parts' })
     const orbitButton = screen.getByRole('button', { name: 'Orbit' })
     const panButton = screen.getByRole('button', { name: 'Pan' })
 
-    expect(orbitButton).toHaveAttribute('aria-pressed', 'true')
+    expect(movePartsButton).toHaveAttribute('aria-pressed', 'true')
+    expect(orbitButton).toHaveAttribute('aria-pressed', 'false')
     expect(panButton).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(orbitButton)
+    expect(movePartsButton).toHaveAttribute('aria-pressed', 'false')
+    expect(orbitButton).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(panButton)
     expect(orbitButton).toHaveAttribute('aria-pressed', 'false')
     expect(panButton).toHaveAttribute('aria-pressed', 'true')

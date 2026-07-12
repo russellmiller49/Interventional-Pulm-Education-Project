@@ -230,7 +230,7 @@ export const clinicalModuleCopy: ClinicalModuleCopy = {
     'Begin with a clinical problem, build a defensible stent plan, and use mechanics only when it clarifies architecture, fit, tissue interaction, or change over time.',
   audience:
     'Interventional pulmonology fellows and practicing bronchoscopists, with resident scaffolding',
-  estimatedMinutes: 60,
+  estimatedMinutes: 65,
   disclaimer:
     'This module is for professional education only. It does not provide patient-specific medical advice, force or tissue-pressure estimates, complication-risk predictions, universal sizing or management rules, procedural credentialing, or product rankings. Selection, placement, surveillance, exchange, and removal depend on patient goals, anatomy, pathology, disease trajectory, device instructions for use, multidisciplinary judgment, local resources, and operator expertise.',
   evidenceLimitations: [
@@ -271,6 +271,7 @@ export const clinicalModuleCopy: ClinicalModuleCopy = {
         'chest-cao-guideline-2024',
         'wabip-malignant-stenting-2024',
         'wabip-benign-stenting-2025',
+        'textbook-stent-placement',
       ),
     },
     {
@@ -289,6 +290,8 @@ export const clinicalModuleCopy: ClinicalModuleCopy = {
         'wabip-malignant-stenting-2024',
         'wabip-benign-stenting-2025',
         'ratnovsky-airway-mechanics-2015',
+        'textbook-silicone-stents-2025',
+        'textbook-airway-stents-primer-2025',
       ),
     },
     {
@@ -307,6 +310,8 @@ export const clinicalModuleCopy: ClinicalModuleCopy = {
         'wabip-malignant-stenting-2024',
         'wabip-benign-stenting-2025',
         'ratnovsky-airway-mechanics-2015',
+        'textbook-silicone-stents-2025',
+        'textbook-y-stenting-2025',
       ),
     },
     {
@@ -327,6 +332,8 @@ export const clinicalModuleCopy: ClinicalModuleCopy = {
         'ost-infection-granulation-2012',
         'hu-granulation-diameter-2011',
         'gupta-granulation-review-2025',
+        'textbook-y-stenting-2025',
+        'textbook-airway-stents-primer-2025',
       ),
     },
     {

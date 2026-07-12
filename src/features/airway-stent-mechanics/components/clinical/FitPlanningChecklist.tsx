@@ -5,8 +5,15 @@ import { useState } from 'react'
 
 import { fitPlanningItems } from '../../content/clinicalDecisionFramework'
 
-export function FitPlanningChecklist() {
+export function FitPlanningChecklist({
+  completed = false,
+  onComplete,
+}: {
+  completed?: boolean
+  onComplete?: () => void
+}) {
   const [checkedIds, setCheckedIds] = useState<string[]>([])
+  const [committed, setCommitted] = useState(completed)
 
   return (
     <section
@@ -70,6 +77,18 @@ export function FitPlanningChecklist() {
           )
         })}
       </div>
+      <button
+        type="button"
+        onClick={() => {
+          if (completed || committed || checkedIds.length !== fitPlanningItems.length) return
+          setCommitted(true)
+          onComplete?.()
+        }}
+        disabled={completed || committed || checkedIds.length !== fitPlanningItems.length}
+        className="mt-5 min-h-11 rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {completed || committed ? 'Whole-airway fit inspection recorded' : 'Record fit inspection'}
+      </button>
     </section>
   )
 }

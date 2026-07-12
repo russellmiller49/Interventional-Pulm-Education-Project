@@ -1,7 +1,13 @@
 import { unlocalizedPathname } from '@/i18n/path'
+import { clinicalModuleCopy } from '@/features/airway-stent-mechanics/content/clinicalModuleCopy'
+
+const airwayStentDraftPathPrefixes =
+  clinicalModuleCopy.clinicalReviewStatus === 'reviewed'
+    ? ([] as const)
+    : (['/airway-stent-mechanics'] as const)
 
 const draftModulePathPrefixes = [
-  '/airway-stent-mechanics',
+  ...airwayStentDraftPathPrefixes,
   '/ebus-training/virtual-bronchoscopy',
   '/education/chest-drainage',
   '/intro-bronchoscopy',

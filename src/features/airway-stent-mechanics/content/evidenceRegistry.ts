@@ -11,6 +11,8 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'clinical-guideline',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use for high-level central-airway-obstruction decision framing; preserve the stated evidence certainty and do not turn conditional guidance into a patient-specific directive.',
     transferLimitation:
@@ -26,6 +28,8 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'clinical-guideline',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Apply only to malignant central airway obstruction; retain recommendation grades and patient, airway, local-resource, and operator context.',
     transferLimitation:
@@ -41,6 +45,8 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'clinical-guideline',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Apply only to benign central airway obstruction and preserve etiology-specific uncertainty, removability considerations, and the need for an exit plan.',
     transferLimitation:
@@ -56,6 +62,8 @@ export const evidenceRegistry = [
     applicability: 'airway-device-mechanics',
     claimScope: 'airway-bench',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Keep GINA-Dumon results tied to the tested designs, sizes, fixtures, directions, and endpoints; do not convert them into clinical thresholds or a product ranking.',
     transferLimitation:
@@ -71,6 +79,8 @@ export const evidenceRegistry = [
     applicability: 'airway-device-mechanics',
     claimScope: 'airway-bench',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use only as device- and fixture-specific mechanics evidence; do not map measured force or modeled stress to mucosal pressure, injury, or patient risk.',
     transferLimitation:
@@ -85,6 +95,8 @@ export const evidenceRegistry = [
     applicability: 'device-topology',
     claimScope: 'regulatory-construction',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use for cleared construction and labeled-use description only; verify current labeling before making a regulatory or use statement.',
     transferLimitation:
@@ -99,6 +111,8 @@ export const evidenceRegistry = [
     applicability: 'device-topology',
     claimScope: 'regulatory-construction',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use for cleared construction and labeled-use description only; verify current labeling before making a regulatory, removal, or use statement.',
     transferLimitation:
@@ -113,6 +127,8 @@ export const evidenceRegistry = [
     applicability: 'device-topology',
     claimScope: 'manufacturer-construction',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use for manufacturer-stated construction and labeled features only; do not use it to support comparative outcomes or an architecture recommendation.',
     transferLimitation:
@@ -128,6 +144,8 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'clinical-trial',
     verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'This is randomized, population-specific outcome evidence; physician review is required before transferring symptom or reintervention findings beyond the studied strategy and population.',
     transferLimitation:
@@ -143,6 +161,8 @@ export const evidenceRegistry = [
     applicability: 'transferred-engineering',
     claimScope: 'transferred-engineering',
     verifiedOn: '2026-07-11',
+    supportLevel: 'conceptual-model',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use only to explain generic braid-and-cover mechanics; do not present its finite-element outputs as airway-device performance or clinical evidence.',
     transferLimitation:
@@ -158,6 +178,8 @@ export const evidenceRegistry = [
     applicability: 'airway-device-mechanics',
     claimScope: 'clinical-observational',
     verifiedOn: '2026-07-11',
+    supportLevel: 'association',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Treat reported factors as retrospective associations from one platform; do not predict an individual fracture location, probability, or dwell-time threshold.',
     transferLimitation:
@@ -173,6 +195,8 @@ export const evidenceRegistry = [
     applicability: 'transferred-engineering',
     claimScope: 'transferred-engineering',
     verifiedOn: '2026-07-11',
+    supportLevel: 'conceptual-model',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use as a general nitinol-fatigue framework only; airway loading, fixtures, cycle counts, and clinical consequences require separate evidence.',
     transferLimitation:
@@ -188,6 +212,8 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'clinical-observational',
     verifiedOn: '2026-07-11',
+    supportLevel: 'association',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use as observational evidence that infection may contribute to later granulation in malignant airway obstruction; do not imply deterministic causation or generalize the effect estimate to every patient or stent.',
     transferLimitation:
@@ -203,6 +229,8 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'clinical-observational',
     verifiedOn: '2026-07-11',
+    supportLevel: 'association',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use as a study-specific association between stent-to-airway diameter relationship and granulation; do not encode its reported 90% cutoff as a sizing rule for other devices, anatomies, or patients.',
     transferLimitation:
@@ -218,10 +246,99 @@ export const evidenceRegistry = [
     applicability: 'clinical-guidance',
     claimScope: 'review-mechanistic',
     verifiedOn: '2026-07-11',
+    supportLevel: 'conceptual-model',
+    clinicalReviewStatus: 'draft',
     clinicalReviewNote:
       'Use this mechanistic review to support a multifactorial tissue-response model involving persistent injury, surface and microbial factors, geometry, biomechanics, time, and host response; do not convert the model into a causal score.',
     transferLimitation:
       'This contemporary narrative review synthesizes plausible mechanisms across lung implantable devices; it does not validate an airway-stent-specific causal equation, cutoff, or individual risk prediction.',
+  },
+  {
+    id: 'textbook-sems-2025',
+    citation:
+      'Gonuguntla HK, Varunn MD. Self-Expandable Metallic Stenting for Airway Management. In: Principles and Practice of Interventional Pulmonology. Springer Nature; 2025. doi:10.1007/978-3-031-49583-0_39-3.',
+    url: 'https://doi.org/10.1007/978-3-031-49583-0_39-3',
+    doi: '10.1007/978-3-031-49583-0_39-3',
+    sourceType: 'textbook-chapter',
+    applicability: 'curriculum-authoring',
+    claimScope: 'secondary-chapter',
+    verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    sourcePages: ['3–15'],
+    clinicalReviewStatus: 'draft',
+    clinicalReviewNote:
+      'Use to structure SEMS deployment, complication, removal, and follow-up teaching; attach primary guidance or current instructions for use to learner-facing clinical rules.',
+    transferLimitation:
+      'This secondary chapter synthesizes heterogeneous studies and author practice. It is not a current device instruction, comparative-effectiveness standard, or universal management protocol.',
+  },
+  {
+    id: 'textbook-silicone-stents-2025',
+    citation:
+      'Dutau H, Guibert N. Endobronchial Silicone Stents for Airway Management. In: Principles and Practice of Interventional Pulmonology. Springer Nature; 2025. doi:10.1007/978-3-031-49583-0_40-1.',
+    url: 'https://doi.org/10.1007/978-3-031-49583-0_40-1',
+    doi: '10.1007/978-3-031-49583-0_40-1',
+    sourceType: 'textbook-chapter',
+    applicability: 'curriculum-authoring',
+    claimScope: 'secondary-chapter',
+    verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    sourcePages: ['2', '8–11'],
+    clinicalReviewStatus: 'draft',
+    clinicalReviewNote:
+      'Use for the inner-to-outer diameter tradeoff, compression-dependent length behavior, silicone sizing workflow, and central involution in curved airways.',
+    transferLimitation:
+      'The chapter supplies qualitative relationships and author practice, not a validated airflow equation, buckling threshold, universal sizing rule, or product-independent force value.',
+  },
+  {
+    id: 'textbook-y-stenting-2025',
+    citation:
+      'Gompelmann D. Y-Stenting Techniques. In: Principles and Practice of Interventional Pulmonology. Springer Nature; 2025. doi:10.1007/978-3-031-49583-0_41-1.',
+    url: 'https://doi.org/10.1007/978-3-031-49583-0_41-1',
+    doi: '10.1007/978-3-031-49583-0_41-1',
+    sourceType: 'textbook-chapter',
+    applicability: 'curriculum-authoring',
+    claimScope: 'secondary-chapter',
+    verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    sourcePages: ['3', '5–7'],
+    clinicalReviewStatus: 'draft',
+    clinicalReviewNote:
+      'Use for whole-Y geometry, silicone and metallic deployment sequences, secretion burden, localized contact, and cohort-context outcome teaching.',
+    transferLimitation:
+      'Historical cohorts and author sizing or surveillance practices must retain population, device, and follow-up context and must not become universal rules.',
+  },
+  {
+    id: 'textbook-stent-placement',
+    citation:
+      'Argento AC, Smith SB. Stent Placement. In: Practical Guide to Interventional Pulmonology. Chapter 10; pp. 101–111. Supplied chapter used for curriculum authoring.',
+    sourceType: 'textbook-chapter',
+    applicability: 'curriculum-authoring',
+    claimScope: 'secondary-chapter',
+    verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    sourcePages: ['101–111'],
+    clinicalReviewStatus: 'draft',
+    clinicalReviewNote:
+      'Use for measurement, delivery, repositioning, immediate verification, and complication-response workflow.',
+    transferLimitation:
+      'The chapter includes source-specific heuristics and regulatory wording that require primary-source verification before learner-facing use.',
+  },
+  {
+    id: 'textbook-airway-stents-primer-2025',
+    citation:
+      'Amjad MA, Jani PP, Cherian SV. Airway Stents: A Primer. In: International Textbook of Interventional Pulmonology. 2025; pp. 185–214.',
+    url: 'https://cdn.wabip.com/wp-content/uploads/institute/ipi_textbook.pdf',
+    sourceType: 'textbook-chapter',
+    applicability: 'curriculum-authoring',
+    claimScope: 'secondary-chapter',
+    verifiedOn: '2026-07-11',
+    supportLevel: 'explicit',
+    sourcePages: ['185–214'],
+    clinicalReviewStatus: 'draft',
+    clinicalReviewNote:
+      'Use for device-family comparison, buckling/angulation, longitudinal complications, symptom outcomes, and clinically contextualized examples.',
+    transferLimitation:
+      'Reported complication rates, surveillance schedules, and material comparisons reflect heterogeneous sources and must not be pooled into patient-level predictions or universal superiority claims.',
   },
 ] as const satisfies readonly EvidenceReference[]
 

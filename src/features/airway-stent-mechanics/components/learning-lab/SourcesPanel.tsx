@@ -22,6 +22,18 @@ function SourceCard({ reference }: { reference: EvidenceReference }) {
         <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-indigo-800 dark:text-indigo-200">
           {reference.claimScope.replaceAll('-', ' ')}
         </span>
+        {reference.supportLevel ? (
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-800 dark:text-emerald-200">
+            {reference.supportLevel.replaceAll('-', ' ')}
+          </span>
+        ) : null}
+        {reference.clinicalReviewStatus ? (
+          <span className="rounded-full border px-2.5 py-1 text-muted-foreground">
+            {reference.clinicalReviewStatus === 'reviewed'
+              ? 'clinically reviewed'
+              : 'review pending'}
+          </span>
+        ) : null}
       </div>
       <p className="mt-3 text-sm leading-6 text-foreground">{reference.citation}</p>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
@@ -29,17 +41,24 @@ function SourceCard({ reference }: { reference: EvidenceReference }) {
       </p>
       <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
         Verified {reference.verifiedOn}
+        {reference.sourcePages?.length ? ` · Pages ${reference.sourcePages.join(', ')}` : ''}
         {reference.clinicalReviewNote ? ` · ${reference.clinicalReviewNote}` : ''}
       </p>
-      <a
-        href={reference.url}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-      >
-        Open source
-        <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-      </a>
+      {reference.url ? (
+        <a
+          href={reference.url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg border px-3 text-xs font-semibold text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+        >
+          Open source
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+        </a>
+      ) : (
+        <p className="mt-3 text-xs font-medium text-muted-foreground">
+          Authoring source only · source file is not distributed with the module
+        </p>
+      )}
     </article>
   )
 }

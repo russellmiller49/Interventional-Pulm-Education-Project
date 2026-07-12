@@ -69,6 +69,7 @@ export const rigidBronchoscopyAssemblyCopyKeys = [
   'majorFenestrationLeak',
   'modelLabel',
   'modeledResultLabel',
+  'moveParts',
   'nominalResidualLumenArea',
   'obstructionBallValve',
   'obstructionBallValveDescription',

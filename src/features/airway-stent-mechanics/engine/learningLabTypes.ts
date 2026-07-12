@@ -62,12 +62,14 @@ export type EvidenceSourceType =
   | 'peer-reviewed'
   | 'regulatory'
   | 'manufacturer'
+  | 'textbook-chapter'
 
 export type EvidenceApplicability =
   | 'clinical-guidance'
   | 'airway-device-mechanics'
   | 'device-topology'
   | 'transferred-engineering'
+  | 'curriculum-authoring'
 
 export type EvidenceClaimScope =
   | 'clinical-guideline'
@@ -79,16 +81,22 @@ export type EvidenceClaimScope =
   | 'transferred-engineering'
   | 'regulatory-construction'
   | 'manufacturer-construction'
+  | 'secondary-chapter'
+
+export type EvidenceSupportLevel = 'explicit' | 'association' | 'conceptual-model'
 
 export interface EvidenceReference {
   id: string
   citation: string
-  url: string
+  url?: string
   doi?: string
   sourceType: EvidenceSourceType
   applicability: EvidenceApplicability
   claimScope: EvidenceClaimScope
   verifiedOn: string
+  supportLevel: EvidenceSupportLevel
+  sourcePages?: readonly string[]
+  clinicalReviewStatus: 'draft' | 'reviewed'
   clinicalReviewNote?: string
   transferLimitation: string
 }
@@ -228,6 +236,10 @@ export interface StentClinicalCase {
   finalTakeaway: string
   evidenceRefs: readonly string[]
   clinicalReviewStatus: 'draft' | 'reviewed'
+  /** Defaults to true. Optional contrast cases must opt out explicitly. */
+  requiredForLesson?: boolean
+  /** No-device cases use a disease-reassessment plan instead of device surveillance. */
+  surveillancePlanMode?: 'device' | 'no-device'
 }
 
 export interface ComplicationPathway {
@@ -449,7 +461,31 @@ export interface StentAssessmentProgress {
   mastery: boolean
 }
 
+export interface StentCaseProgress {
+  caseId: string
+  committedDecisionIds: string[]
+  revisedDecisionIds: string[]
+  completedInteractionIds: string[]
+  observationCommitmentIds: string[]
+  complicationSelectionIds: string[]
+  outcomeStateIds: string[]
+  surveillancePlanCommitted: boolean
+  complete: boolean
+}
+
 export interface StentProgressState {
+  version: 3
+  lastLessonId: StentLessonId
+  lastCaseId: string | null
+  completedLessonIds: StentLessonId[]
+  completedOptionalLabIds: string[]
+  caseProgress: Record<string, StentCaseProgress>
+  assessment: StentAssessmentProgress
+  migratedFromV1?: boolean
+  migratedFromV2?: boolean
+}
+
+export interface LegacyStentProgressStateV2 {
   version: 2
   lastLessonId: StentLessonId
   completedLessonIds: StentLessonId[]

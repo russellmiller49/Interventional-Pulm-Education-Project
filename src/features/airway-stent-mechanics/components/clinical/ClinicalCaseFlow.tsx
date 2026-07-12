@@ -7,10 +7,15 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ClinicalDecisionPrompt, StentClinicalCase } from '../../engine/learningLabTypes'
 import { ClinicalDebrief } from './ClinicalDebrief'
 import { PhysicsLensDrawer } from './PhysicsLensDrawer'
+import { SurveillancePlanBuilder } from './SurveillancePlanBuilder'
 
 interface ClinicalCaseFlowProps {
   caseData: StentClinicalCase
   children?: ReactNode
+  completedInteractionIds?: readonly string[]
+  initiallyCompleted?: boolean
+  requiredInteractionIds?: readonly string[]
+  surveillancePlanCompleted?: boolean
   onCaseStarted?: (caseId: string) => void
   onComplete?: (caseId: string) => void
   onDecisionCommitted?: (details: {
@@ -21,21 +26,39 @@ interface ClinicalCaseFlowProps {
     revised: boolean
   }) => void
   onPhysicsLensOpen?: (caseId: string) => void
+  onSurveillancePlanCompleted?: () => void
 }
 
 export function ClinicalCaseFlow({
   caseData,
   children,
+  completedInteractionIds = [],
+  initiallyCompleted = false,
+  requiredInteractionIds = [],
   onCaseStarted,
   onComplete,
   onDecisionCommitted,
   onPhysicsLensOpen,
+  onSurveillancePlanCompleted,
+  surveillancePlanCompleted = false,
 }: ClinicalCaseFlowProps) {
-  const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({})
-  const [committedChoices, setCommittedChoices] = useState<Record<string, string>>({})
-  const [completed, setCompleted] = useState(false)
+  const defensibleChoices = useMemo(
+    () =>
+      Object.fromEntries(
+        caseData.decisions.map((decision) => [decision.id, decision.correctChoiceId]),
+      ),
+    [caseData.decisions],
+  )
+  const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>(() =>
+    initiallyCompleted ? { ...defensibleChoices } : {},
+  )
+  const [committedChoices, setCommittedChoices] = useState<Record<string, string>>(() =>
+    initiallyCompleted ? { ...defensibleChoices } : {},
+  )
+  const [completed, setCompleted] = useState(initiallyCompleted)
   const initialDecision = caseData.decisions[0]
   const initialCommitted = Boolean(initialDecision && committedChoices[initialDecision.id])
+  const requiresSurveillancePlan = caseData.requiredForLesson !== false
 
   useEffect(() => {
     onCaseStarted?.(caseData.id)
@@ -50,6 +73,18 @@ export function ClinicalCaseFlow({
       ),
     [caseData.decisions, committedChoices, selectedChoices],
   )
+  const allDecisionsDefensible = useMemo(
+    () =>
+      allDecisionsCurrent &&
+      caseData.decisions.every(
+        (decision) => committedChoices[decision.id] === decision.correctChoiceId,
+      ),
+    [allDecisionsCurrent, caseData.decisions, committedChoices],
+  )
+  const requiredInteractionsComplete = requiredInteractionIds.every((interactionId) =>
+    completedInteractionIds.includes(interactionId),
+  )
+  const surveillanceRequirementComplete = !requiresSurveillancePlan || surveillancePlanCompleted
 
   function commitDecision(decision: ClinicalDecisionPrompt, initial: boolean) {
     const choiceId = selectedChoices[decision.id]
@@ -67,7 +102,14 @@ export function ClinicalCaseFlow({
   }
 
   function completeCase() {
-    if (!allDecisionsCurrent || completed) return
+    if (
+      !allDecisionsDefensible ||
+      !requiredInteractionsComplete ||
+      !surveillanceRequirementComplete ||
+      completed
+    ) {
+      return
+    }
     setCompleted(true)
     onComplete?.(caseData.id)
   }
@@ -84,7 +126,9 @@ export function ClinicalCaseFlow({
               Clinical case
             </span>
             <span className="rounded-full border px-3 py-1 text-xs font-semibold text-muted-foreground">
-              Draft · clinical review required
+              {caseData.clinicalReviewStatus === 'reviewed'
+                ? 'Clinically reviewed'
+                : 'Draft · clinical review required'}
             </span>
           </div>
           <h3
@@ -173,18 +217,42 @@ export function ClinicalCaseFlow({
             />
           ))}
 
+          {requiresSurveillancePlan ? (
+            <SurveillancePlanBuilder
+              completed={surveillancePlanCompleted}
+              mode={caseData.surveillancePlanMode}
+              onComplete={onSurveillancePlanCompleted}
+            />
+          ) : null}
+
           <section className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h3 className="text-xl font-bold">Finalize the defensible plan</h3>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Commit every decision. Opening the optional physics lens is not required.
+                  Commit every decision and revise any choice that the debrief identifies as
+                  incomplete. Required cases also need a committed surveillance or exit plan.
+                  Optional visualization never gates completion.
                 </p>
+                {requiredInteractionIds.length ? (
+                  <p className="mt-2 text-xs font-semibold text-cyan-700 dark:text-cyan-200">
+                    {
+                      requiredInteractionIds.filter((id) => completedInteractionIds.includes(id))
+                        .length
+                    }{' '}
+                    of {requiredInteractionIds.length} required clinical interactions complete
+                  </p>
+                ) : null}
               </div>
               <button
                 type="button"
                 onClick={completeCase}
-                disabled={!allDecisionsCurrent || completed}
+                disabled={
+                  !allDecisionsDefensible ||
+                  !requiredInteractionsComplete ||
+                  !surveillanceRequirementComplete ||
+                  completed
+                }
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-cyan-500 px-5 text-sm font-semibold text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <CheckCircle2 className="h-4 w-4" aria-hidden />

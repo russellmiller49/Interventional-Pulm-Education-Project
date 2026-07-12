@@ -632,6 +632,7 @@ export const handoffMessageIds: Readonly<Record<string, string>> = {
     'h_236f119c40cb',
   'Bronchoscopic & Surgical Treatment for COPD and Chronic Bronchitis': 'h_239aa61e8e1d',
   'Choose an answer to reveal the teaching explanation.': 'h_23ca80822027',
+  'Practice in the Clinical Decision Lab': 'h_23dbdd0ae8ac',
   'Classify fluid with Light criteria and reconcile pseudoexudates.': 'h_23e4d082a591',
   'Nodal station map and case-based staging decisions independent of the EBUS course.':
     'h_23e82ec63adc',
@@ -2053,6 +2054,8 @@ export const handoffMessageIds: Readonly<Record<string, string>> = {
   'What is the best classification for this cohesive atypical edge?': 'h_70b7c7be4db6',
   'Copy-ready planning, debugging, workbench, research dashboard, and teaching app prompts.':
     'h_70c137f8d47a',
+  'Apply indication, architecture, lumen, fit, complication, surveillance, and exit decisions in the full interactive airway-stent course.':
+    'h_70c6b3508bc2',
   'CT target markers stay hidden until the answer is locked.': 'h_70ee6d61fd81',
   'Lung cryobiopsy (H&E and ex-vivo confocal microscopy)': 'h_70f3afc322ff',
   'Necrotic tumors can coexist with inflammation; a benign/infectious impression must fit the sampled target and final stains.':

@@ -69,6 +69,15 @@ describe('static translation bundles', () => {
     expect(zhCnMessages.handoff.h_c4989ed26b59).toBe('从中央气道标志点向外周目标推进虚拟支气管镜。')
   })
 
+  it('localizes the Board Prep bridge to the airway-stent decision lab', () => {
+    expect(esMessages.handoff.h_23dbdd0ae8ac).toBe(
+      'Practique en el Laboratorio de Decisiones Clínicas',
+    )
+    expect(esMessages.handoff.h_70c6b3508bc2).toMatch(/indicación.*vigilancia/i)
+    expect(zhCnMessages.handoff.h_23dbdd0ae8ac).toBe('在临床决策实验室中练习')
+    expect(zhCnMessages.handoff.h_70c6b3508bc2).toMatch(/适应证.*随访/)
+  })
+
   it('localizes the rigid bronchoscopy 3D pathway lab', () => {
     expect(esMessages.rigidBronchoscopy.practice.assembly.pathwayMode).toBe(
       'Laboratorio de recorridos',

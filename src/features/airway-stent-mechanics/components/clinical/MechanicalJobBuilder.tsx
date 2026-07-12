@@ -4,8 +4,15 @@ import { useMemo, useState } from 'react'
 
 import { mechanicalJobs, stentPlanModel } from '../../content/clinicalDecisionFramework'
 
-export function MechanicalJobBuilder() {
+export function MechanicalJobBuilder({
+  completed = false,
+  onComplete,
+}: {
+  completed?: boolean
+  onComplete?: () => void
+}) {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([])
+  const [committed, setCommitted] = useState(completed)
 
   const selectedJobs = useMemo(
     () => mechanicalJobs.filter((job) => selectedJobIds.includes(job.id)),
@@ -92,6 +99,18 @@ export function MechanicalJobBuilder() {
           </li>
         ))}
       </ol>
+      <button
+        type="button"
+        onClick={() => {
+          if (completed || committed || selectedJobIds.length === 0) return
+          setCommitted(true)
+          onComplete?.()
+        }}
+        disabled={completed || committed || selectedJobIds.length === 0}
+        className="mt-5 min-h-11 rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {completed || committed ? 'Mechanical job recorded' : 'Record mechanical job'}
+      </button>
     </section>
   )
 }

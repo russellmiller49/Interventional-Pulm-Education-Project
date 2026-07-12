@@ -1,17 +1,27 @@
 import {
   ENGINEERING_DEEP_DIVE_ID,
   LEGACY_STENT_PROGRESS_STORAGE_KEY,
+  PREVIOUS_STENT_PROGRESS_STORAGE_KEY,
   STENT_PROGRESS_STORAGE_KEY,
   createDefaultStentProgress,
   getExplicitLessonFromSearchParams,
+  isCaseCompleted,
   isModuleComplete,
+  markCaseCompleted,
+  markCaseInteractionCompleted,
+  markCaseSurveillanceCommitted,
   markLessonCompleted,
   markOptionalLabCompleted,
   parseStentProgress,
   readStentProgress,
   recordAssessmentResult,
+  recordCaseDecision,
+  recordCaseObservationCommitment,
   resolveInitialLessonId,
   resolveStentLessonRequest,
+  setCaseComplicationSelections,
+  setCaseOutcomeState,
+  setLastCase,
   setLastLesson,
   writeStentProgress,
 } from '../engine/learningLabProgress'
@@ -49,12 +59,14 @@ function legacyProgress(
 }
 
 describe('airway stent clinical-lab progress', () => {
-  it('creates a version 2 default at the first clinical lesson', () => {
+  it('creates a version 3 default at the first clinical lesson', () => {
     expect(createDefaultStentProgress()).toEqual({
-      version: 2,
+      version: 3,
       lastLessonId: 'indication',
+      lastCaseId: null,
       completedLessonIds: [],
       completedOptionalLabIds: [],
+      caseProgress: {},
       assessment: {
         attempts: 0,
         lastScore: null,
@@ -65,22 +77,39 @@ describe('airway stent clinical-lab progress', () => {
     })
   })
 
-  it('round-trips valid progress through the v2 storage key only', () => {
+  it('round-trips valid v3 case progress through the current storage key only', () => {
     const storage = new MemoryStorage()
-    const progress = markLessonCompleted(createDefaultStentProgress(), 'indication')
+    let progress = markLessonCompleted(createDefaultStentProgress(), 'indication')
+    progress = recordCaseDecision(progress, 'residual-extrinsic', 'stent-after-debulking', false)
+    progress = markCaseInteractionCompleted(progress, 'residual-extrinsic', 'inspect-distal-airway')
 
     expect(writeStentProgress(progress, storage)).toBe(true)
     expect(storage.values.get(STENT_PROGRESS_STORAGE_KEY)).toBe(JSON.stringify(progress))
+    expect(storage.values.has(PREVIOUS_STENT_PROGRESS_STORAGE_KEY)).toBe(false)
     expect(storage.values.has(LEGACY_STENT_PROGRESS_STORAGE_KEY)).toBe(false)
     expect(readStentProgress(storage)).toEqual(progress)
   })
 
-  it('parses v2 progress defensively and keeps assessment totals dynamic', () => {
+  it('parses v3 progress defensively, normalizes IDs, and keeps case progress', () => {
     const serialized = JSON.stringify({
-      version: 2,
+      version: 3,
       lastLessonId: 'fit-behavior',
+      lastCaseId: 'curved-silicone',
       completedLessonIds: ['indication', 'indication', 'not-a-lesson', 'clinical-job'],
       completedOptionalLabIds: [ENGINEERING_DEEP_DIVE_ID, ENGINEERING_DEEP_DIVE_ID, 42],
+      caseProgress: {
+        'curved-silicone': {
+          caseId: 'curved-silicone',
+          committedDecisionIds: ['initial-fit', 'initial-fit'],
+          revisedDecisionIds: ['revise-fit', 'revise-fit'],
+          completedInteractionIds: ['inspect-buckling', 'inspect-buckling'],
+          observationCommitmentIds: ['inspect-end', 'inspect-end'],
+          complicationSelectionIds: ['migration', 'mucus-obstruction', 'migration'],
+          outcomeStateId: 'central-involution',
+          surveillancePlanCommitted: true,
+          complete: true,
+        },
+      },
       assessment: {
         attempts: 1,
         lastScore: 3,
@@ -89,13 +118,28 @@ describe('airway stent clinical-lab progress', () => {
         mastery: false,
       },
       migratedFromV1: true,
+      migratedFromV2: true,
     })
 
     expect(parseStentProgress(serialized)).toEqual({
-      version: 2,
+      version: 3,
       lastLessonId: 'fit-behavior',
+      lastCaseId: 'curved-silicone',
       completedLessonIds: ['indication', 'clinical-job'],
       completedOptionalLabIds: [ENGINEERING_DEEP_DIVE_ID],
+      caseProgress: {
+        'curved-silicone': {
+          caseId: 'curved-silicone',
+          committedDecisionIds: ['initial-fit'],
+          revisedDecisionIds: ['revise-fit'],
+          completedInteractionIds: ['inspect-buckling'],
+          observationCommitmentIds: ['inspect-end'],
+          complicationSelectionIds: ['migration', 'mucus-obstruction'],
+          outcomeStateIds: ['central-involution'],
+          surveillancePlanCommitted: true,
+          complete: true,
+        },
+      },
       assessment: {
         attempts: 1,
         lastScore: 3,
@@ -104,23 +148,15 @@ describe('airway stent clinical-lab progress', () => {
         mastery: false,
       },
       migratedFromV1: true,
+      migratedFromV2: true,
     })
     expect(parseStentProgress('{bad json')).toBeNull()
-    expect(parseStentProgress(JSON.stringify({ version: 1 }))).toBeNull()
+    expect(parseStentProgress(JSON.stringify({ version: 2 }))).toBeNull()
     expect(
       parseStentProgress(
         JSON.stringify({
-          version: 2,
+          ...createDefaultStentProgress(),
           lastLessonId: 'not-a-lesson',
-          completedLessonIds: [],
-          completedOptionalLabIds: [],
-          assessment: {
-            attempts: 0,
-            lastScore: null,
-            lastTotal: null,
-            bestPercent: null,
-            mastery: false,
-          },
         }),
       ),
     ).toBeNull()
@@ -138,20 +174,104 @@ describe('airway stent clinical-lab progress', () => {
         }),
       ),
     ).toBeNull()
+    expect(
+      parseStentProgress(
+        JSON.stringify({
+          ...createDefaultStentProgress(),
+          caseProgress: {
+            'case-map-key': {
+              caseId: 'different-case-id',
+              committedDecisionIds: [],
+              revisedDecisionIds: [],
+              completedInteractionIds: [],
+              outcomeStateId: null,
+              surveillancePlanCommitted: false,
+              complete: false,
+            },
+          },
+        }),
+      ),
+    ).toBeNull()
+    expect(
+      parseStentProgress(
+        JSON.stringify({
+          ...createDefaultStentProgress(),
+          caseProgress: {
+            invalid: {
+              caseId: 'invalid',
+              committedDecisionIds: ['choice', 42],
+              revisedDecisionIds: [],
+              completedInteractionIds: [],
+              outcomeStateId: null,
+              surveillancePlanCommitted: false,
+              complete: false,
+            },
+          },
+        }),
+      ),
+    ).toBeNull()
   })
 
-  it('migrates incomplete v1 progress to the nearest clinical lessons', () => {
+  it('migrates v2 to v3 while preserving resume and optional-lab state only', () => {
+    const storage = new MemoryStorage()
+    storage.values.set(
+      PREVIOUS_STENT_PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        version: 2,
+        lastLessonId: 'fit-behavior',
+        completedLessonIds: [
+          'indication',
+          'clinical-job',
+          'architecture-choice',
+          'fit-behavior',
+          'complications-surveillance',
+          'assessment',
+        ],
+        completedOptionalLabIds: [ENGINEERING_DEEP_DIVE_ID, 'glb-gallery'],
+        assessment: {
+          attempts: 2,
+          lastScore: 6,
+          lastTotal: 6,
+          bestPercent: 100,
+          mastery: true,
+        },
+        migratedFromV1: true,
+      }),
+    )
+
+    const migrated = readStentProgress(storage)
+
+    expect(migrated).toEqual({
+      ...createDefaultStentProgress(),
+      lastLessonId: 'fit-behavior',
+      completedOptionalLabIds: [ENGINEERING_DEEP_DIVE_ID, 'glb-gallery'],
+      migratedFromV1: true,
+      migratedFromV2: true,
+    })
+    expect(migrated.completedLessonIds).toEqual([])
+    expect(migrated.caseProgress).toEqual({})
+    expect(migrated.assessment.mastery).toBe(false)
+    expect(storage.values.get(STENT_PROGRESS_STORAGE_KEY)).toBe(JSON.stringify(migrated))
+  })
+
+  it('migrates v1 to v3 while preserving the nearest lesson and optional deep dive only', () => {
     const storage = new MemoryStorage()
     const legacy = legacyProgress({
       lastLessonId: 'force-lab',
-      completedLessonIds: ['orient', 'architectures'],
+      completedLessonIds: ['orient', 'architectures', 'force-lab'],
+      assessment: {
+        attempts: 2,
+        lastScore: 6,
+        bestScore: 6,
+        mastery: true,
+      },
     })
     storage.values.set(LEGACY_STENT_PROGRESS_STORAGE_KEY, JSON.stringify(legacy))
 
     expect(readStentProgress(storage)).toEqual({
       ...createDefaultStentProgress(),
       lastLessonId: 'architecture-choice',
-      completedLessonIds: ['indication', 'architecture-choice'],
+      completedOptionalLabIds: [ENGINEERING_DEEP_DIVE_ID],
       migratedFromV1: true,
     })
   })
@@ -180,10 +300,12 @@ describe('airway stent clinical-lab progress', () => {
     const migrated = readStentProgress(storage)
 
     expect(migrated).toEqual({
-      version: 2,
+      version: 3,
       lastLessonId: 'assessment',
-      completedLessonIds: ['indication', 'architecture-choice', 'complications-surveillance'],
+      lastCaseId: null,
+      completedLessonIds: [],
       completedOptionalLabIds: [ENGINEERING_DEEP_DIVE_ID],
+      caseProgress: {},
       assessment: {
         attempts: 0,
         lastScore: null,
@@ -212,7 +334,7 @@ describe('airway stent clinical-lab progress', () => {
     expect(storage.writes).toHaveLength(0)
   })
 
-  it('persists a legacy migration once and reuses v2 state on repeated reads', () => {
+  it('persists a legacy migration once and reuses v3 state on repeated reads', () => {
     const storage = new MemoryStorage()
     storage.values.set(
       LEGACY_STENT_PROGRESS_STORAGE_KEY,
@@ -267,7 +389,12 @@ describe('airway stent clinical-lab progress', () => {
   )
 
   it('gives canonical and legacy deep links precedence over resume state', () => {
-    const progress = setLastLesson(createDefaultStentProgress(), 'fit-behavior')
+    const progress = setLastCase(
+      setLastLesson(createDefaultStentProgress(), 'fit-behavior'),
+      'curved-mainstem-fit-failure',
+    )
+
+    expect(progress.lastCaseId).toBe('curved-mainstem-fit-failure')
 
     expect(resolveInitialLessonId('clinical-job', progress)).toBe('clinical-job')
     expect(resolveInitialLessonId('force-lab', progress)).toBe('architecture-choice')
@@ -296,7 +423,61 @@ describe('airway stent clinical-lab progress', () => {
     expect(isModuleComplete(twice)).toBe(false)
   })
 
-  it('requires only the six clinical lessons for module completion', () => {
+  it('records each case workflow stage idempotently through the case progress helpers', () => {
+    const initial = createDefaultStentProgress()
+    let progress = recordCaseDecision(initial, 'curved-silicone', 'fit-plan', false)
+    progress = recordCaseDecision(progress, 'curved-silicone', 'fit-plan', true)
+    progress = recordCaseDecision(progress, 'curved-silicone', 'fit-plan', true)
+    progress = markCaseInteractionCompleted(progress, 'curved-silicone', 'inspect-buckling')
+    progress = markCaseInteractionCompleted(progress, 'curved-silicone', 'inspect-buckling')
+    progress = recordCaseObservationCommitment(progress, 'curved-silicone', 'inspect-end')
+    progress = recordCaseObservationCommitment(progress, 'curved-silicone', 'inspect-end')
+    progress = setCaseComplicationSelections(progress, 'curved-silicone', [
+      'migration',
+      'mucus-obstruction',
+      'migration',
+    ])
+    progress = setCaseOutcomeState(
+      progress,
+      'curved-silicone',
+      'silicone-curve-involution:solid-silicone-tube:central-involution',
+    )
+    progress = setCaseOutcomeState(
+      progress,
+      'curved-silicone',
+      'cough-interface-response:solid-silicone-tube:multifactorial-response',
+    )
+    progress = setCaseOutcomeState(
+      progress,
+      'curved-silicone',
+      'silicone-curve-involution:solid-silicone-tube:central-involution',
+    )
+    progress = markCaseSurveillanceCommitted(progress, 'curved-silicone')
+
+    expect(initial.caseProgress).toEqual({})
+    expect(isCaseCompleted(progress, 'curved-silicone')).toBe(false)
+    expect(progress.caseProgress['curved-silicone']).toEqual({
+      caseId: 'curved-silicone',
+      committedDecisionIds: ['fit-plan'],
+      revisedDecisionIds: ['fit-plan'],
+      completedInteractionIds: ['inspect-buckling'],
+      observationCommitmentIds: ['inspect-end'],
+      complicationSelectionIds: ['migration', 'mucus-obstruction'],
+      outcomeStateIds: [
+        'silicone-curve-involution:solid-silicone-tube:central-involution',
+        'cough-interface-response:solid-silicone-tube:multifactorial-response',
+      ],
+      surveillancePlanCommitted: true,
+      complete: false,
+    })
+
+    progress = markCaseCompleted(progress, 'curved-silicone')
+
+    expect(isCaseCompleted(progress, 'curved-silicone')).toBe(true)
+    expect(progress.caseProgress['curved-silicone'].complete).toBe(true)
+  })
+
+  it('completes the assessment lesson and module only after mastery', () => {
     let progress = createDefaultStentProgress()
     for (const lessonId of [
       'indication',
@@ -309,14 +490,26 @@ describe('airway stent clinical-lab progress', () => {
     }
 
     expect(isModuleComplete(progress)).toBe(false)
-    progress = recordAssessmentResult(progress, 4, 5)
+    progress = recordAssessmentResult(progress, 4, 6)
     expect(progress.assessment).toEqual({
       attempts: 1,
       lastScore: 4,
-      lastTotal: 5,
-      bestPercent: 80,
+      lastTotal: 6,
+      bestPercent: (4 / 6) * 100,
+      mastery: false,
+    })
+    expect(progress.completedLessonIds).not.toContain('assessment')
+    expect(isModuleComplete(progress)).toBe(false)
+
+    progress = recordAssessmentResult(progress, 5, 6)
+    expect(progress.assessment).toEqual({
+      attempts: 2,
+      lastScore: 5,
+      lastTotal: 6,
+      bestPercent: (5 / 6) * 100,
       mastery: true,
     })
+    expect(progress.completedLessonIds).toContain('assessment')
     expect(isModuleComplete(progress)).toBe(true)
     expect(progress.completedOptionalLabIds).toEqual([])
   })

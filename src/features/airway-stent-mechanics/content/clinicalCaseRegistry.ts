@@ -17,9 +17,17 @@ export const clinicalCaseRegistry = [
   {
     id: 'post-debulking-no-stent',
     lessonId: 'indication',
+    surveillancePlanMode: 'no-device',
     title: 'Stable airway after treatment of intrinsic obstruction',
     stem: 'A patient with symptomatic malignant central-airway obstruction undergoes successful removal of a purely intraluminal lesion. The treated segment remains patent during observation, no important external compression is seen, and the distal lung appears potentially functional. The oncology plan can now proceed.',
     findings: [
+      {
+        id: 'attributable-symptoms',
+        label: 'Attributable symptom signal',
+        value:
+          'Dyspnea and functional limitation improved after the obstructing intraluminal lesion was removed',
+        emphasis: 'important',
+      },
       {
         id: 'morphology',
         label: 'Obstruction pattern',
@@ -38,9 +46,20 @@ export const clinicalCaseRegistry = [
         value: 'No important residual compression identified',
       },
       {
-        id: 'distal-function',
+        id: 'distal-airway-patency',
+        label: 'Distal airways',
+        value: 'Downstream pathways remain patent after treatment',
+      },
+      {
+        id: 'viable-distal-lung',
         label: 'Downstream lung',
-        value: 'Potentially functional and connected to the broader treatment plan',
+        value: 'Potentially functional lung remains connected to the treated airway',
+      },
+      {
+        id: 'trajectory-and-goal',
+        label: 'Treatment trajectory and goal',
+        value:
+          'Proceed with tumor-directed therapy while preserving the achieved symptom and functional benefit',
       },
     ],
     decisions: [
@@ -116,6 +135,13 @@ export const clinicalCaseRegistry = [
     stem: 'A left-mainstem malignant obstruction has both intraluminal and extrinsic components. Bronchoscopic treatment clears the intraluminal component, but substantial external compression persists across a curved segment. Both left-lobar pathways can be identified, the distal lung appears potentially recruitable, and tumor-directed therapy is planned.',
     findings: [
       {
+        id: 'attributable-symptoms',
+        label: 'Attributable symptom signal',
+        value:
+          'Persistent dyspnea and exercise limitation remain concordant with the residual left-mainstem narrowing',
+        emphasis: 'important',
+      },
+      {
         id: 'morphology',
         label: 'Obstruction pattern',
         value: 'Mixed before treatment; predominantly extrinsic afterward',
@@ -133,9 +159,20 @@ export const clinicalCaseRegistry = [
         value: 'Curved target segment with two distal lobar pathways to preserve',
       },
       {
+        id: 'viable-distal-lung',
+        label: 'Downstream lung',
+        value: 'Potentially recruitable lung lies beyond patent left-lobar pathways',
+      },
+      {
         id: 'time-horizon',
         label: 'Expected change',
         value: 'Airway geometry may change as tumor-directed therapy takes effect',
+      },
+      {
+        id: 'clinical-goal',
+        label: 'Intended benefit',
+        value:
+          'Improve breathing and function enough to support the patient’s treatment plan while preserving a feasible reassessment and exit',
       },
     ],
     decisions: [
@@ -273,6 +310,36 @@ export const clinicalCaseRegistry = [
     ],
     decisions: [
       {
+        id: 'fistula-coordinated-strategy',
+        question: 'Before choosing an airway device, which strategy decision is most defensible?',
+        options: [
+          {
+            id: 'compare-coordinated-pathways',
+            label:
+              'Compare airway-only, esophageal-only, combined, and no-airway-stent pathways against anatomy, aspiration risk, treatment sequence, and goals',
+            rationale:
+              'A patent airway does not by itself establish that an airway stent is required. The defect, landing zones, adjacent-organ plan, treatment trajectory, and consequences of each pathway must be reviewed together before assigning the airway device a sealing job.',
+            domains: ['indication', 'mechanical-job', 'fit', 'surveillance'],
+          },
+          {
+            id: 'airway-stent-by-diagnosis',
+            label: 'Place an airway stent whenever an aerodigestive fistula is diagnosed',
+            rationale:
+              'Diagnosis alone does not resolve whether airway-only, esophageal-only, combined, or nonstent management best addresses this defect and treatment plan.',
+            domains: ['indication', 'mechanical-job'],
+          },
+          {
+            id: 'esophageal-plan-independent',
+            label: 'Choose the airway architecture independently of the esophageal strategy',
+            rationale:
+              'Uncoordinated devices can alter landing zones, apposition, pressure interfaces, and the feasibility of later revision or removal.',
+            domains: ['fit', 'architecture', 'surveillance'],
+          },
+        ],
+        correctChoiceId: 'compare-coordinated-pathways',
+        evidenceRefs: evidenceRefs('chest-cao-guideline-2024', 'wabip-malignant-stenting-2024'),
+      },
+      {
         id: 'fistula-job-statement',
         question: 'Which statement defines the mechanical job?',
         options: [
@@ -402,7 +469,7 @@ export const clinicalCaseRegistry = [
     ],
     physicsLens: physicsLensRegistry['coverage-interface'],
     finalTakeaway:
-      'A fistula changes the job from opening a lumen to creating and maintaining a seal. Surface continuity, defect coverage, landing zones, adjacent-organ coordination, secretions, and a revision or removal strategy must be considered together.',
+      'A fistula does not automatically require an airway stent. First compare airway-only, esophageal-only, combined, and no-airway-stent pathways; if an airway device is chosen, its job changes from opening a lumen to creating and maintaining a seal. Surface continuity, defect coverage, landing zones, adjacent-organ coordination, secretions, and a revision or removal strategy must be considered together.',
     evidenceRefs: evidenceRefs(
       'chest-cao-guideline-2024',
       'wabip-malignant-stenting-2024',
@@ -413,6 +480,7 @@ export const clinicalCaseRegistry = [
   {
     id: 'selected-dynamic-collapse-trial',
     lessonId: 'clinical-job',
+    requiredForLesson: false,
     title: 'A defined temporary trial for selected dynamic collapse',
     stem: 'A patient with symptomatic dynamic central-airway collapse has persistent activity limitation despite evaluation and optimization of important coexisting conditions. Symptoms correlate with dynamic airway narrowing, and a multidisciplinary team is considering a temporary stent trial to answer whether stabilizing the involved segment produces meaningful benefit before another strategy is chosen.',
     findings: [
@@ -899,13 +967,14 @@ export const clinicalCaseRegistry = [
   {
     id: 'curved-mainstem-fit-failure',
     lessonId: 'fit-behavior',
-    title: 'A reasonable architecture with a curved-fit failure',
-    stem: 'A covered tubular stent is placed for residual extrinsic compression in a curved left mainstem. The central lumen opens, but inspection shows inner-curve gapping, outer-curve contact, proximal-end motion with cough, and partial crowding of a lobar orifice. The intended treatment horizon still makes later removal important.',
+    title: 'A straight silicone tube with central involution in a curve',
+    stem: 'A removable straight silicone tube is placed for residual extrinsic compression in a curved left mainstem. The target initially opens, but the tube tends to preserve a straight configuration. Inspection now shows an inward central fold with local lumen loss, inner-curve gapping, outer-curve contact, proximal-end motion with cough, and partial crowding of a lobar orifice.',
     findings: [
       {
         id: 'central-lumen',
         label: 'Central appearance',
-        value: 'The compressed midsection is open',
+        value: 'The silicone wall involutes inward at the bend and reduces the usable lumen',
+        emphasis: 'warning',
       },
       {
         id: 'curve',
@@ -936,21 +1005,21 @@ export const clinicalCaseRegistry = [
             label:
               'The geometry and fit plan failed at the curve, device end, and branch relationship',
             rationale:
-              'Central opening can coexist with gapping, focal contact, relative motion, and distal branch compromise.',
+              'Initial opening can coexist with central involution, gapping, focal contact, relative motion, and distal branch compromise when a straight tube does not conform to a curve.',
             domains: ['fit', 'complication'],
           },
           {
             id: 'insufficient-opening-only',
             label: 'Only central radial support is inadequate',
             rationale:
-              'The midsection is open; the important findings are curve mismatch, end motion, and branch crowding.',
+              'The dominant findings are central involution from curve mismatch, end motion, and branch crowding—not a single support value.',
             domains: ['mechanical-job'],
           },
           {
             id: 'no-failure',
             label: 'There is no fit problem because the central lumen is open',
             rationale:
-              'Lumen opening alone does not establish acceptable apposition, contact, end position, or branch patency.',
+              'A prior open appearance does not establish current lumen preservation, apposition, end position, or branch patency.',
             domains: ['fit'],
           },
         ],
@@ -958,6 +1027,7 @@ export const clinicalCaseRegistry = [
         evidenceRefs: evidenceRefs(
           'ratnovsky-airway-mechanics-2015',
           'wabip-malignant-stenting-2024',
+          'textbook-silicone-stents-2025',
         ),
       },
       {
@@ -1062,11 +1132,12 @@ export const clinicalCaseRegistry = [
     ],
     physicsLens: physicsLensRegistry['curve-end-loading'],
     finalTakeaway:
-      'A device can open the target and still fail because the whole-segment fit is wrong. Curvature, gapping, focal contact, ends, branches, removability, and secretion burden must be reassessed before changing architecture.',
+      'A removable silicone tube can open the target yet involute centrally when a straight tube does not conform to a curved airway. Lumen preservation, gapping, focal contact, ends, branches, removability, and secretion burden must all be reassessed before changing the plan.',
     evidenceRefs: evidenceRefs(
       'wabip-malignant-stenting-2024',
       'ratnovsky-airway-mechanics-2015',
       'gupta-granulation-review-2025',
+      'textbook-silicone-stents-2025',
     ),
     clinicalReviewStatus: 'draft',
   },
@@ -1275,6 +1346,7 @@ export const clinicalCaseRegistry = [
   {
     id: 'post-treatment-migration-mucus-assessment',
     lessonId: 'assessment',
+    requiredForLesson: false,
     title: 'Changing anatomy with migration and mucus obstruction',
     stem: 'A patient received a covered removable airway stent for malignant extrinsic compression and initially improved. After tumor-directed therapy, cough and secretion burden increase. Imaging suggests less external compression and a larger airway than at baseline. Bronchoscopy shows device migration, dependent mucus, and partial branch obstruction without an obvious fracture.',
     findings: [
@@ -1457,6 +1529,16 @@ export function getClinicalCase(caseId: string): StentClinicalCase {
 
 export function getCasesForLesson(lessonId: StentLessonId): StentClinicalCase[] {
   return clinicalCaseRegistry.filter((clinicalCase) => clinicalCase.lessonId === lessonId)
+}
+
+export function getRequiredCasesForLesson(lessonId: StentLessonId): StentClinicalCase[] {
+  return getCasesForLesson(lessonId).filter(
+    (clinicalCase) => clinicalCase.requiredForLesson !== false,
+  )
+}
+
+export function getRequiredCaseIdsForLesson(lessonId: StentLessonId): string[] {
+  return getRequiredCasesForLesson(lessonId).map((clinicalCase) => clinicalCase.id)
 }
 
 export function getPrimaryCaseForLesson(lessonId: StentLessonId): StentClinicalCase | undefined {

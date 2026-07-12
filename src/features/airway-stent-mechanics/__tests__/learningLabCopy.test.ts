@@ -20,7 +20,7 @@ describe('airway stent learning-lab curriculum', () => {
     )
     expect(clinicalModuleCopy.lessons.map((lesson) => lesson.id)).toEqual(STENT_LESSON_IDS)
     expect(clinicalModuleCopy.lessons.map((lesson) => lesson.step)).toEqual([1, 2, 3, 4, 5, 6])
-    expect(clinicalModuleCopy.estimatedMinutes).toBe(60)
+    expect(clinicalModuleCopy.estimatedMinutes).toBe(65)
     expect(clinicalModuleCopy.disclaimer).toMatch(/education|patient-specific/i)
 
     expect(clinicalModuleCopy.lessons[0]).toMatchObject({

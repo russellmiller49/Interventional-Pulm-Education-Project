@@ -4,16 +4,36 @@ import { useState } from 'react'
 
 import { surveillancePlanColumns } from '../../content/clinicalDecisionFramework'
 
-const examplePlan = [
-  'Proximal tissue response or secretion-related obstruction',
-  'New cough, wheeze, secretion change, imaging change, or bronchoscopic narrowing',
-  'Restore patency and evaluate infection or secretion burden',
-  'Reassess end position, fit, motion, ongoing indication, and exchange or removal options',
-] as const
+export type SurveillancePlanMode = 'device' | 'no-device'
 
-export function SurveillancePlanBuilder({ onComplete }: { onComplete?: () => void }) {
-  const [confirmedColumns, setConfirmedColumns] = useState<string[]>([])
-  const [committed, setCommitted] = useState(false)
+const examplePlans: Readonly<Record<SurveillancePlanMode, readonly string[]>> = {
+  device: [
+    'Loss of patency, secretion burden, migration, tissue response, branch compromise, or a change in the ongoing indication',
+    'New or worsening symptoms, secretion change, imaging change, planned clinical review, or bronchoscopic concern',
+    'Evaluate airway patency and the device-disease interface; restore patency or treat infection when indicated',
+    'Reassess fit, position, treatment trajectory, ongoing benefit, and exchange or removal options',
+  ],
+  'no-device': [
+    'Recurrent obstruction, new instability, or loss of the initial clinical benefit',
+    'New or worsening symptoms, imaging change, or a change in the treatment trajectory',
+    'Reassess morphology, distal-airway patency, viable lung, attributable symptoms, and goals',
+    'Continue without a device unless a new residual structural job and expected downstream benefit are demonstrated',
+  ],
+}
+
+export function SurveillancePlanBuilder({
+  completed = false,
+  mode = 'device',
+  onComplete,
+}: {
+  completed?: boolean
+  mode?: SurveillancePlanMode
+  onComplete?: () => void
+}) {
+  const [confirmedColumns, setConfirmedColumns] = useState<string[]>(
+    completed ? [...surveillancePlanColumns] : [],
+  )
+  const [committed, setCommitted] = useState(completed)
 
   return (
     <section
@@ -24,11 +44,14 @@ export function SurveillancePlanBuilder({ onComplete }: { onComplete?: () => voi
         Surveillance and exit
       </p>
       <h3 id="surveillance-plan-title" className="mt-2 text-2xl font-bold tracking-tight">
-        Prescribe follow-up with the stent plan
+        {mode === 'no-device'
+          ? 'Prescribe reassessment and the conditions for reconsidering a stent'
+          : 'Prescribe follow-up with the stent plan'}
       </h3>
       <p className="mt-2 max-w-4xl text-sm leading-6 text-muted-foreground">
-        Define what failure might look like, how it will be recognized, how patency will be
-        restored, and which underlying driver must be corrected.
+        {mode === 'no-device'
+          ? 'Define what recurrence would look like, how it will be recognized, and which new finding would justify reopening the device decision.'
+          : 'Define what failure might look like, how it will be recognized, how patency will be restored, and when the device should be revised, exchanged, or removed.'}
       </p>
 
       <div className="mt-5 overflow-hidden rounded-2xl border">
@@ -58,7 +81,7 @@ export function SurveillancePlanBuilder({ onComplete }: { onComplete?: () => voi
                       {column}
                     </span>
                     <span className="mt-2 block text-xs leading-5 text-muted-foreground">
-                      {examplePlan[index]}
+                      {examplePlans[mode][index]}
                     </span>
                   </span>
                 </span>
@@ -69,22 +92,23 @@ export function SurveillancePlanBuilder({ onComplete }: { onComplete?: () => voi
       </div>
 
       <p className="mt-4 text-xs leading-5 text-muted-foreground" role="note">
-        Context-specific evidence: the malignant-airway-stenting WABIP guideline suggests
-        surveillance bronchoscopy even without symptoms and, when stronger evidence is absent,
-        suggests an initial examination at approximately 4–6 weeks. This conditional guidance is not
-        a universal schedule for every benign and malignant case.
+        {mode === 'no-device'
+          ? 'A no-device plan follows the treated disease, symptoms, distal function, and overall treatment trajectory. It does not create a device-surveillance obligation.'
+          : 'Context-specific evidence: the malignant-airway-stenting WABIP guideline suggests surveillance bronchoscopy even without symptoms and, when stronger evidence is absent, suggests an initial examination at approximately 4–6 weeks. This conditional guidance is not a universal schedule for every benign and malignant case.'}
       </p>
       <button
         type="button"
         onClick={() => {
-          if (committed) return
+          if (completed || committed) return
           setCommitted(true)
           onComplete?.()
         }}
-        disabled={confirmedColumns.length !== surveillancePlanColumns.length || committed}
+        disabled={
+          confirmedColumns.length !== surveillancePlanColumns.length || completed || committed
+        }
         className="mt-4 min-h-11 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-45"
       >
-        {committed ? 'Surveillance plan committed' : 'Commit surveillance plan'}
+        {completed || committed ? 'Surveillance plan committed' : 'Commit surveillance plan'}
       </button>
     </section>
   )

@@ -6,6 +6,9 @@ import {
   resolveEvidenceReferences,
   validateEvidenceRefs,
 } from '../content/evidenceRegistry'
+import { clinicalCaseRegistry } from '../content/clinicalCaseRegistry'
+import { clinicalModuleCopy } from '../content/clinicalModuleCopy'
+import { mechanismScenarioRegistry } from '../content/mechanismScenarioRegistry'
 import { forceLabMissions, guidedForceScenes, stentModuleCopy } from '../content/learningLabCopy'
 
 function collectEvidenceRefs(value: unknown): string[] {
@@ -28,9 +31,14 @@ describe('airway stent learning-lab evidence registry', () => {
 
     for (const reference of evidenceRegistry) {
       expect(reference.citation.length).toBeGreaterThan(40)
-      expect(reference.url).toMatch(/^https:\/\//)
+      if ('url' in reference && reference.url) {
+        expect(reference.url).toMatch(/^https:\/\//)
+      } else {
+        expect(reference.sourceType).toBe('textbook-chapter')
+        expect(reference.applicability).toBe('curriculum-authoring')
+      }
       expect(reference.claimScope).toMatch(
-        /^(clinical-guideline|clinical-observational|clinical-trial|review-mechanistic|airway-bench|preclinical|transferred-engineering|regulatory-construction|manufacturer-construction)$/,
+        /^(clinical-guideline|clinical-observational|clinical-trial|review-mechanistic|airway-bench|preclinical|transferred-engineering|regulatory-construction|manufacturer-construction|secondary-chapter)$/,
       )
       expect(reference.verifiedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       expect(reference.clinicalReviewNote.length).toBeGreaterThan(40)
@@ -55,8 +63,47 @@ describe('airway stent learning-lab evidence registry', () => {
       ]),
     )
     expect(new Set(evidenceRegistry.map((reference) => reference.sourceType))).toEqual(
-      new Set(['clinical-guideline', 'peer-reviewed', 'regulatory', 'manufacturer']),
+      new Set([
+        'clinical-guideline',
+        'peer-reviewed',
+        'regulatory',
+        'manufacturer',
+        'textbook-chapter',
+      ]),
     )
+  })
+
+  it('keeps textbook chapters authoring-only with page anchors and review state', () => {
+    const textbookChapters = evidenceRegistry.filter(
+      (reference) => reference.sourceType === 'textbook-chapter',
+    )
+
+    expect(textbookChapters).toHaveLength(5)
+    for (const reference of textbookChapters) {
+      expect(reference.applicability).toBe('curriculum-authoring')
+      expect(reference.claimScope).toBe('secondary-chapter')
+      expect(reference.supportLevel).toMatch(/^(explicit|association|conceptual-model)$/)
+      expect(reference.sourcePages?.length).toBeGreaterThan(0)
+      expect(reference.sourcePages?.every((anchor) => anchor.trim().length > 0)).toBe(true)
+      expect(reference.clinicalReviewStatus).toMatch(/^(draft|reviewed)$/)
+    }
+  })
+
+  it('cannot publish a reviewed module with unresolved evidence or authored scenarios', () => {
+    if (clinicalModuleCopy.clinicalReviewStatus !== 'reviewed') {
+      expect(clinicalModuleCopy.clinicalReviewStatus).toBe('draft')
+      return
+    }
+
+    expect(new Set(evidenceRegistry.map((reference) => reference.clinicalReviewStatus))).toEqual(
+      new Set(['reviewed']),
+    )
+    expect(
+      new Set(clinicalCaseRegistry.map((clinicalCase) => clinicalCase.clinicalReviewStatus)),
+    ).toEqual(new Set(['reviewed']))
+    expect(
+      new Set(mechanismScenarioRegistry.map((scenario) => scenario.clinicalReviewStatus)),
+    ).toEqual(new Set(['reviewed']))
   })
 
   it('resolves every reference used anywhere in the module copy', () => {

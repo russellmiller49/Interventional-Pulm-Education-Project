@@ -120,7 +120,7 @@ import { cn } from '@/lib/cn'
 
 type LabMode = 'assembly' | 'pathways' | 'tools'
 type PositionTuple = readonly [number, number, number]
-type ViewDragMode = 'orbit' | 'pan'
+type ViewDragMode = 'move' | 'orbit' | 'pan'
 type ViewAction = 'center' | 'zoom-in' | 'zoom-out'
 type AnimationStatus = 'ready' | 'playing' | 'paused' | 'complete'
 
@@ -146,6 +146,29 @@ export function isPartDragGesture(
     event.pointerType !== 'mouse' ||
     (event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey)
   )
+}
+
+export function claimPartDragPointer(
+  event: Pick<PointerEvent, 'preventDefault' | 'stopImmediatePropagation'>,
+) {
+  event.preventDefault()
+  event.stopImmediatePropagation()
+}
+
+export function getPartInteractionBounds(model: Object3D, interactionRadius?: number) {
+  const bounds = new Box3().setFromObject(model)
+  const size = bounds.getSize(new Vector3())
+  const center = bounds.getCenter(new Vector3())
+  const minimumAxis = Math.max(0.04, (interactionRadius ?? 0) * 2)
+
+  return {
+    center: center.toArray() as PositionTuple,
+    size: [
+      Math.max(size.x, minimumAxis),
+      Math.max(size.y, minimumAxis),
+      Math.max(size.z, minimumAxis),
+    ] as PositionTuple,
+  }
 }
 
 export interface RigidBronchoscopyAssemblyLabCopy {
@@ -191,6 +214,7 @@ export interface RigidBronchoscopyAssemblyLabCopy {
   majorFenestrationLeak: string
   modelLabel: string
   modeledResultLabel: string
+  moveParts: string
   orbitView: string
   opticsLight: string
   opticsLightDescription: string
@@ -352,7 +376,7 @@ const defaultCopy: RigidBronchoscopyAssemblyLabCopy = {
   description:
     'Build a ventilating rigid bronchoscope, compare conventional, spontaneous-assisted, and low- or high-frequency jet ventilation, and inspect instruments that pass through the working lumen.',
   dragHelp:
-    'All loose pieces are on the field. Select and drag one to its connector; Hint reveals its target.',
+    'All loose pieces are on the field. Choose Move parts, then select and drag one to its connector; Hint reveals its target.',
   egressBlocked: 'Blocked egress',
   egressBlockedDescription:
     'Gas remains trapped on the lung side of the distal obstruction, illustrating gas-trapping and barotrauma risk.',
@@ -382,6 +406,7 @@ const defaultCopy: RigidBronchoscopyAssemblyLabCopy = {
     'In this shallow position, distal fenestrations lie above the cords and add an escape route. This may increase leak and reduce distal delivery; the magnitude is not calculated.',
   modelLabel: 'EFER-DUMON educational reconstruction',
   modeledResultLabel: 'Anatomical route result',
+  moveParts: 'Move parts',
   orbitView: 'Orbit',
   opticsLight: 'Optics and light',
   opticsLightDescription:
@@ -905,6 +930,7 @@ function TargetGhost({
 }
 
 function DraggablePart({
+  dragEnabled,
   part,
   reducedMotion,
   resetVersion,
@@ -913,6 +939,7 @@ function DraggablePart({
   onDrop,
   onSelect,
 }: {
+  dragEnabled: boolean
   part: AssemblyPartDefinition
   reducedMotion: boolean
   resetVersion: number
@@ -929,6 +956,10 @@ function DraggablePart({
   } | null>(null)
   const returning = useRef(false)
   const model = useVisibleSemanticNode(scene, part.nodeName)
+  const interactionBounds = useMemo(
+    () => (model ? getPartInteractionBounds(model, part.interactionRadius) : null),
+    [model, part.interactionRadius],
+  )
   const start = part.start.position
 
   useEffect(() => {
@@ -959,8 +990,9 @@ function DraggablePart({
 
   function beginDrag(event: ThreeEvent<PointerEvent>) {
     const target = group.current
-    if (!target || !isPartDragGesture(event.nativeEvent)) return
+    if (!dragEnabled || !target || !isPartDragGesture(event.nativeEvent)) return
     event.stopPropagation()
+    claimPartDragPointer(event.nativeEvent)
     onSelect()
     ;(event.target as { setPointerCapture?: (id: number) => void }).setPointerCapture?.(
       event.pointerId,
@@ -1010,15 +1042,15 @@ function DraggablePart({
       position={part.start.position}
       rotation={part.start.rotation}
       scale={part.start.scale ?? 1}
-      onPointerDown={beginDrag}
-      onPointerMove={moveDrag}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
+      onPointerDown={dragEnabled ? beginDrag : undefined}
+      onPointerMove={dragEnabled ? moveDrag : undefined}
+      onPointerUp={dragEnabled ? endDrag : undefined}
+      onPointerCancel={dragEnabled ? endDrag : undefined}
     >
-      {part.interactionRadius ? (
-        <mesh>
-          <sphereGeometry args={[part.interactionRadius, 16, 12]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      {interactionBounds ? (
+        <mesh position={interactionBounds.center}>
+          <boxGeometry args={interactionBounds.size} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
         </mesh>
       ) : null}
       <primitive object={model} />
@@ -1077,6 +1109,7 @@ function AssemblyScene({
       {remainingParts.map((part) => (
         <DraggablePart
           key={`${part.id}-${resetVersion}`}
+          dragEnabled={viewDragMode === 'move'}
           part={part}
           reducedMotion={reducedMotion}
           resetVersion={resetVersion}
@@ -1090,7 +1123,7 @@ function AssemblyScene({
       <gridHelper args={[12, 24, VIEWER_GRID_MAJOR, VIEWER_GRID_MINOR]} position={[0, -1.08, 0]} />
       <InteractiveOrbitControls
         dragMode={viewDragMode}
-        enabled={!dragging}
+        enabled={!dragging && viewDragMode !== 'move'}
         initialPosition={DEFAULT_CAMERA_POSITION}
         minDistance={1.35}
         maxDistance={14}
@@ -1919,7 +1952,7 @@ export function RigidBronchoscopyAssemblyLab({
   )
   const [hintVisible, setHintVisible] = useState(false)
   const [resetVersion, setResetVersion] = useState(0)
-  const [viewDragMode, setViewDragMode] = useState<ViewDragMode>('orbit')
+  const [viewDragMode, setViewDragMode] = useState<ViewDragMode>(demonstration ? 'orbit' : 'move')
   const [viewCommand, setViewCommand] = useState<ViewCommand | null>(null)
   const [selectedPathwayId, setSelectedPathwayId] = useState<AssemblyPathwayId>('ventilation')
   const [animationStatus, setAnimationStatus] = useState<AnimationStatus>('ready')
@@ -2196,7 +2229,7 @@ export function RigidBronchoscopyAssemblyLab({
 
   function changeMode(nextMode: LabMode) {
     setMode(nextMode)
-    setViewDragMode('orbit')
+    setViewDragMode(nextMode === 'assembly' && !demonstration ? 'move' : 'orbit')
     issueViewCommand('center')
     setAnimationStatus('ready')
     setAnimationResetVersion((version) => version + 1)
@@ -2447,6 +2480,7 @@ export function RigidBronchoscopyAssemblyLab({
   }
 
   function selectPart(partId: AssemblyPartId) {
+    if (!demonstration) setViewDragMode('move')
     if (partId === selectedPartId) return
     setSelectedPartId(partId)
     setHintVisible(false)
@@ -2491,6 +2525,7 @@ export function RigidBronchoscopyAssemblyLab({
     setSelectedPartId(nextSelectedPartId)
     setFeedback(message)
     setHintVisible(false)
+    if (!demonstration) setViewDragMode('move')
     setResetVersion((version) => version + 1)
   }
 
@@ -2512,6 +2547,7 @@ export function RigidBronchoscopyAssemblyLab({
     setSelectedPartId(removedPartId ?? selectedTubeId)
     setFeedback('Last component removed. Replace it to continue.')
     setHintVisible(false)
+    if (!demonstration) setViewDragMode('move')
     setResetVersion((version) => version + 1)
   }
 
@@ -2661,6 +2697,22 @@ export function RigidBronchoscopyAssemblyLab({
               role="toolbar"
               aria-label={copy.viewControlsLabel}
             >
+              {mode === 'assembly' && !demonstration ? (
+                <button
+                  type="button"
+                  aria-pressed={viewDragMode === 'move'}
+                  onClick={() => setViewDragMode('move')}
+                  className={cn(
+                    'inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300',
+                    viewDragMode === 'move'
+                      ? 'border-cyan-300/60 bg-cyan-400/20 text-cyan-50'
+                      : 'border-slate-600 bg-slate-900/85 text-slate-200 hover:bg-slate-800',
+                  )}
+                >
+                  <Hand className="h-3.5 w-3.5" aria-hidden />
+                  {copy.moveParts}
+                </button>
+              ) : null}
               <button
                 type="button"
                 aria-pressed={viewDragMode === 'orbit'}

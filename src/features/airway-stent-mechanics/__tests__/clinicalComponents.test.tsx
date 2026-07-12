@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { ClinicalCaseFlow } from '../components/clinical/ClinicalCaseFlow'
@@ -34,6 +34,7 @@ const physicsLens: PhysicsLensConfig = {
 const caseWithLens: StentClinicalCase = {
   id: 'test-curved-airway',
   lessonId: 'fit-behavior',
+  requiredForLesson: false,
   title: 'Curved-airway fit check',
   stem: 'A supported main bronchus curves between two usable landing zones.',
   findings: [
@@ -168,7 +169,7 @@ describe('airway-stent clinical case components', () => {
     })
   })
 
-  it('allows completion without opening the optional lens and gates a revised choice on recommit', async () => {
+  it('requires every committed plan to be defensible while keeping the lens optional', async () => {
     const user = userEvent.setup()
     const onComplete = jest.fn()
     const onDecisionCommitted = jest.fn()
@@ -221,6 +222,26 @@ describe('airway-stent clinical case components', () => {
       initial: true,
       revised: true,
     })
+    expect(completeButton).toBeDisabled()
+
+    await user.click(
+      screen.getByRole('radio', {
+        name: 'Inspect fit, landing zones, and branch relationships',
+      }),
+    )
+    const correctRecommit = screen
+      .getAllByRole('button', { name: 'Revise and recommit' })
+      .find((button) => !button.hasAttribute('disabled'))
+    expect(correctRecommit).toBeDefined()
+    await user.click(correctRecommit as HTMLButtonElement)
+
+    expect(onDecisionCommitted).toHaveBeenLastCalledWith({
+      caseId: 'test-curved-airway',
+      choiceId: 'fit-first',
+      decisionId: 'opening-plan',
+      initial: true,
+      revised: true,
+    })
     expect(completeButton).toBeEnabled()
 
     await user.click(completeButton)
@@ -233,6 +254,114 @@ describe('airway-stent clinical case components', () => {
         'Fit, surveillance, and an exit strategy remain linked throughout the plan.',
       ),
     ).toBeVisible()
+  })
+
+  it('gates completion on required manipulate and surveillance interactions', async () => {
+    const user = userEvent.setup()
+    const onComplete = jest.fn()
+    const { rerender } = render(
+      <ClinicalCaseFlow
+        caseData={caseWithLens}
+        completedInteractionIds={['inspect-deformation']}
+        requiredInteractionIds={['inspect-deformation', 'surveillance-plan']}
+        onComplete={onComplete}
+      />,
+    )
+
+    await commitOpeningDecision(user)
+    await user.click(
+      screen.getByRole('radio', {
+        name: 'Reassess fit, symptoms, patency, and the ongoing indication',
+      }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
+
+    const completeButton = screen.getByRole('button', { name: 'Complete clinical case' })
+    expect(screen.getByText('1 of 2 required clinical interactions complete')).toBeVisible()
+    expect(completeButton).toBeDisabled()
+
+    rerender(
+      <ClinicalCaseFlow
+        caseData={caseWithLens}
+        completedInteractionIds={['inspect-deformation', 'surveillance-plan']}
+        requiredInteractionIds={['inspect-deformation', 'surveillance-plan']}
+        onComplete={onComplete}
+      />,
+    )
+
+    expect(screen.getByText('2 of 2 required clinical interactions complete')).toBeVisible()
+    expect(completeButton).toBeEnabled()
+    await user.click(completeButton)
+    expect(onComplete).toHaveBeenCalledWith('test-curved-airway')
+  })
+
+  it('requires a controlled surveillance or exit commitment for every required case', async () => {
+    const user = userEvent.setup()
+    const onComplete = jest.fn()
+    const onSurveillancePlanCompleted = jest.fn()
+    const requiredNoDeviceCase: StentClinicalCase = {
+      ...caseWithLens,
+      id: 'required-no-device-case',
+      requiredForLesson: true,
+      surveillancePlanMode: 'no-device',
+    }
+    const { rerender } = render(
+      <ClinicalCaseFlow
+        caseData={requiredNoDeviceCase}
+        onComplete={onComplete}
+        onSurveillancePlanCompleted={onSurveillancePlanCompleted}
+      />,
+    )
+
+    await commitOpeningDecision(user)
+    await user.click(
+      screen.getByRole('radio', {
+        name: 'Reassess fit, symptoms, patency, and the ongoing indication',
+      }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
+
+    const surveillanceHeading = screen.getByRole('heading', {
+      name: 'Prescribe reassessment and the conditions for reconsidering a stent',
+    })
+    const surveillanceSection = surveillanceHeading.closest('section')
+    expect(surveillanceSection).not.toBeNull()
+    expect(
+      within(surveillanceSection as HTMLElement).getByText(
+        /does not create a device-surveillance obligation/i,
+      ),
+    ).toBeVisible()
+    expect(
+      screen.queryByText(/initial examination at approximately 4–6 weeks/i),
+    ).not.toBeInTheDocument()
+
+    const completeButton = screen.getByRole('button', { name: 'Complete clinical case' })
+    expect(completeButton).toBeDisabled()
+
+    for (const checkbox of within(surveillanceSection as HTMLElement).getAllByRole('checkbox')) {
+      await user.click(checkbox)
+    }
+    await user.click(
+      within(surveillanceSection as HTMLElement).getByRole('button', {
+        name: 'Commit surveillance plan',
+      }),
+    )
+
+    expect(onSurveillancePlanCompleted).toHaveBeenCalledTimes(1)
+    expect(completeButton).toBeDisabled()
+
+    rerender(
+      <ClinicalCaseFlow
+        caseData={requiredNoDeviceCase}
+        onComplete={onComplete}
+        onSurveillancePlanCompleted={onSurveillancePlanCompleted}
+        surveillancePlanCompleted
+      />,
+    )
+
+    expect(completeButton).toBeEnabled()
+    await user.click(completeButton)
+    expect(onComplete).toHaveBeenCalledWith('required-no-device-case')
   })
 
   it('keeps the lens collapsed by default and opening it does not complete the case', async () => {
@@ -262,6 +391,23 @@ describe('airway-stent clinical case components', () => {
     expect(onPhysicsLensOpen).toHaveBeenCalledWith('test-curved-airway')
     expect(onComplete).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Complete clinical case' })).toBeDisabled()
+  })
+
+  it('rehydrates a completed case with its defensible decisions and debrief', () => {
+    const onDecisionCommitted = jest.fn()
+    render(
+      <ClinicalCaseFlow
+        caseData={caseWithLens}
+        initiallyCompleted
+        onDecisionCommitted={onDecisionCommitted}
+      />,
+    )
+
+    expect(screen.getByText('The target segment has a pronounced curve.')).toBeVisible()
+    expect(screen.getAllByText('Defensible choice')).toHaveLength(caseWithLens.decisions.length)
+    expect(screen.getByRole('button', { name: 'Case completed' })).toBeDisabled()
+    expect(screen.getByText(caseWithLens.finalTakeaway)).toBeVisible()
+    expect(onDecisionCommitted).not.toHaveBeenCalled()
   })
 })
 
@@ -317,7 +463,8 @@ describe('PhysicsLensDrawer', () => {
 describe('GranulationCase', () => {
   it('teaches a multifactorial differential without presenting a deterministic equation', async () => {
     const user = userEvent.setup()
-    render(<GranulationCase />)
+    const onDifferentialCompleted = jest.fn()
+    render(<GranulationCase onDifferentialCompleted={onDifferentialCompleted} />)
 
     expect(screen.getByText('Plausible multifactorial pathway')).toBeVisible()
     expect(screen.getByText('Fit, contact, and motion')).toBeVisible()
@@ -338,5 +485,8 @@ describe('GranulationCase', () => {
       screen.getByRole('heading', { name: 'Infection or biofilm-associated obstruction' }),
     ).toBeVisible()
     expect(screen.getByText(/More than one process can coexist/i)).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: 'Commit differential' }))
+    expect(onDifferentialCompleted).toHaveBeenCalledWith(['granulation', 'infection'])
   })
 })

@@ -9,7 +9,12 @@ import {
 import {
   STENT_PROGRESS_STORAGE_KEY,
   createDefaultStentProgress,
+  markCaseCompleted,
+  markCaseInteractionCompleted,
+  markCaseSurveillanceCommitted,
   markLessonCompleted,
+  setLastCase,
+  setLastLesson,
 } from '../engine/learningLabProgress'
 import { STENT_LESSON_IDS } from '../engine/learningLabTypes'
 
@@ -78,6 +83,43 @@ async function selectMixedIndicationCase(user: ReturnType<typeof userEvent.setup
   expect(screen.getByTestId('clinical-case-mixed-residual-extrinsic-compression')).toBeVisible()
 }
 
+async function completeIndicationBenefitChecklist(user: ReturnType<typeof userEvent.setup>) {
+  const heading = screen.getByRole('heading', {
+    name: 'Inspect whether a device can deliver a meaningful clinical benefit',
+  })
+  const section = heading.closest('section')
+  expect(section).not.toBeNull()
+  for (const label of [
+    'Attributable symptoms and response',
+    'Morphology after treatable obstruction',
+    'Distal-airway patency',
+    'Potentially functional distal lung',
+    'Treatment trajectory and time horizon',
+    'Patient goals and intended benefit',
+  ]) {
+    await user.click(
+      within(section as HTMLElement).getByRole('checkbox', { name: new RegExp(label, 'i') }),
+    )
+  }
+  await user.click(
+    within(section as HTMLElement).getByRole('button', { name: 'Record benefit assessment' }),
+  )
+}
+
+async function commitSurveillancePlan(user: ReturnType<typeof userEvent.setup>) {
+  const heading = screen.getByRole('heading', {
+    name: /Prescribe (?:follow-up with the stent plan|reassessment and the conditions)/i,
+  })
+  const section = heading.closest('section')
+  expect(section).not.toBeNull()
+  for (const checkbox of within(section as HTMLElement).getAllByRole('checkbox')) {
+    await user.click(checkbox)
+  }
+  await user.click(
+    within(section as HTMLElement).getByRole('button', { name: 'Commit surveillance plan' }),
+  )
+}
+
 describe('AirwayStentLearningLab clinical-first shell', () => {
   beforeEach(() => {
     window.localStorage.clear()
@@ -105,7 +147,47 @@ describe('AirwayStentLearningLab clinical-first shell', () => {
     expect(screen.getByRole('radio', { name: 'No stent now' })).toBeVisible()
   })
 
-  it('completes an indication case without opening its optional physics lens', async () => {
+  it('resumes the saved active case within the last lesson', async () => {
+    const saved = setLastCase(
+      setLastLesson(createDefaultStentProgress(), 'indication'),
+      'mixed-residual-extrinsic-compression',
+    )
+    window.localStorage.setItem(STENT_PROGRESS_STORAGE_KEY, JSON.stringify(saved))
+
+    render(<AirwayStentLearningLab />)
+
+    await waitForHydration()
+    expect(screen.getByTestId('clinical-case-mixed-residual-extrinsic-compression')).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /Mixed obstruction with a residual external load/i }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('rehydrates a completed case with defensible choices and its debrief visible', async () => {
+    let saved = setLastCase(
+      setLastLesson(createDefaultStentProgress(), 'indication'),
+      'post-debulking-no-stent',
+    )
+    saved = markCaseInteractionCompleted(saved, 'post-debulking-no-stent', 'indication-benefit')
+    saved = markCaseSurveillanceCommitted(saved, 'post-debulking-no-stent')
+    saved = markCaseCompleted(saved, 'post-debulking-no-stent')
+    window.localStorage.setItem(STENT_PROGRESS_STORAGE_KEY, JSON.stringify(saved))
+
+    render(<AirwayStentLearningLab />)
+
+    await waitForHydration()
+    expect(
+      await screen.findByText('Patent lumen with no demonstrated residual structural instability'),
+    ).toBeVisible()
+    expect(screen.getAllByText('Defensible choice')).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Case completed' })).toBeDisabled()
+    expect(
+      screen.getByText(/A prior obstruction does not create a standing indication/i),
+    ).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Surveillance plan committed' })).toBeDisabled()
+  })
+
+  it('requires both indication cases while keeping the optional physics lens non-gating', async () => {
     const user = userEvent.setup()
     render(<AirwayStentLearningLab requestedLessonId="indication" />)
 
@@ -127,12 +209,34 @@ describe('AirwayStentLearningLab clinical-first shell', () => {
       user,
       'Reassess patency, fit, symptoms, and ongoing indication as treatment changes anatomy',
     )
+    await completeIndicationBenefitChecklist(user)
+    await commitSurveillancePlan(user)
+    await user.click(screen.getByRole('button', { name: 'Complete clinical case' }))
+
+    expect(screen.queryByText('Lesson completed')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('mock-stent-viewport')).not.toBeInTheDocument()
+
+    let saved = JSON.parse(window.localStorage.getItem(STENT_PROGRESS_STORAGE_KEY) ?? '{}') as {
+      completedLessonIds?: string[]
+    }
+    expect(saved.completedLessonIds).not.toContain('indication')
+    expect(recordSiteModuleEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'section_completed', section: 'indication' }),
+    )
+
+    await user.click(
+      screen.getByRole('button', {
+        name: /Stable airway after treatment of intrinsic obstruction/i,
+      }),
+    )
+    await chooseAndCommit(user, 'No stent now')
+    await chooseAndCommit(user, 'Document the achieved benefit and reassess if obstruction recurs')
+    await completeIndicationBenefitChecklist(user)
+    await commitSurveillancePlan(user)
     await user.click(screen.getByRole('button', { name: 'Complete clinical case' }))
 
     expect(screen.getByText('Lesson completed')).toBeVisible()
-    expect(screen.queryByTestId('mock-stent-viewport')).not.toBeInTheDocument()
-
-    const saved = JSON.parse(window.localStorage.getItem(STENT_PROGRESS_STORAGE_KEY) ?? '{}') as {
+    saved = JSON.parse(window.localStorage.getItem(STENT_PROGRESS_STORAGE_KEY) ?? '{}') as {
       completedLessonIds?: string[]
     }
     expect(saved.completedLessonIds).toContain('indication')
@@ -142,8 +246,10 @@ describe('AirwayStentLearningLab clinical-first shell', () => {
         moduleId: 'airway-stent-mechanics',
         section: 'indication',
         eventPayload: {
-          caseId: 'mixed-residual-extrinsic-compression',
-          interaction: 'clinical_case_completed',
+          caseId: 'post-debulking-no-stent',
+          interaction: 'required_cases_completed',
+          completionId: 'indication-required-cases-complete',
+          requiredCaseIds: ['post-debulking-no-stent', 'mixed-residual-extrinsic-compression'],
         },
       }),
     )
@@ -293,24 +399,19 @@ describe('AirwayStentLearningLab clinical-first shell', () => {
     expect(recordSiteModuleEvent).toHaveBeenCalledWith({
       eventType: 'quiz_submitted',
       moduleId: 'airway-stent-mechanics',
-      percentComplete: 100,
       eventPayload: {
         interaction: 'assessment_submitted',
-        score: clinicalAssessmentItems.length,
-        total: clinicalAssessmentItems.length,
-        attempt: 1,
-        mastery: true,
+        assessmentId: 'integrated-airway-stent-assessment',
+        attemptId: 'assessment-attempt-1',
+        completionId: 'mastery-achieved',
       },
     })
     expect(recordSiteModuleEvent).toHaveBeenCalledWith({
       eventType: 'module_completed',
       moduleId: 'airway-stent-mechanics',
-      percentComplete: 100,
       eventPayload: {
         interaction: 'module_completed',
-        mastery: true,
-        bestPercent: 100,
-        attempts: 1,
+        completionId: 'module-mastery-complete',
       },
     })
   })

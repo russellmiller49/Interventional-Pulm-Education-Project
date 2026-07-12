@@ -1,14 +1,16 @@
-import { ScanSearch } from 'lucide-react'
+import { CheckCircle2, ScanSearch } from 'lucide-react'
 
 import type { StentClinicalCase } from '../../engine/learningLabTypes'
 
 export function ClinicalCaseSummary({
   active,
   caseData,
+  completed = false,
   onSelect,
 }: {
   active: boolean
   caseData: StentClinicalCase
+  completed?: boolean
   onSelect: () => void
 }) {
   return (
@@ -22,8 +24,17 @@ export function ClinicalCaseSummary({
           : 'w-full rounded-2xl border bg-card p-4 text-left hover:border-cyan-500/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500'
       }
     >
-      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
-        {caseData.decisions.length} decision{caseData.decisions.length === 1 ? '' : 's'}
+      <span className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-700 dark:text-cyan-200">
+        <span>
+          {caseData.decisions.length} decision{caseData.decisions.length === 1 ? '' : 's'} ·{' '}
+          {caseData.requiredForLesson === false ? 'optional contrast' : 'required'}
+        </span>
+        {completed ? (
+          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-200">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+            Completed
+          </span>
+        ) : null}
       </span>
       <span className="mt-2 block text-sm font-semibold leading-5">{caseData.title}</span>
       {caseData.physicsLens ? (

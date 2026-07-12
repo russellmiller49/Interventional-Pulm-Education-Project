@@ -1,20 +1,25 @@
 import { complicationById } from '../../content/complicationRegistry'
 import { ComplicationDifferential } from './ComplicationDifferential'
 import { ComplicationPathwayMap } from './ComplicationPathwayMap'
-import { SurveillancePlanBuilder } from './SurveillancePlanBuilder'
 
 export function GranulationCase({
+  complicationSelectionIds,
+  differentialCompleted,
   onDifferentialCompleted,
-  onSurveillancePlanCompleted,
 }: {
-  onDifferentialCompleted?: () => void
-  onSurveillancePlanCompleted?: () => void
+  complicationSelectionIds?: readonly string[]
+  differentialCompleted?: boolean
+  onDifferentialCompleted?: (selectedIds: readonly string[]) => void
 }) {
   const granulation = complicationById.granulation
 
   return (
     <div className="space-y-6">
-      <ComplicationDifferential onComplete={onDifferentialCompleted} />
+      <ComplicationDifferential
+        completed={differentialCompleted}
+        initialSelectedIds={complicationSelectionIds}
+        onComplete={onDifferentialCompleted}
+      />
       <ComplicationPathwayMap pathway={granulation} />
       <section
         className="rounded-3xl border bg-card p-5 shadow-sm sm:p-6"
@@ -42,7 +47,6 @@ export function GranulationCase({
           remain part of the response.
         </p>
       </section>
-      <SurveillancePlanBuilder onComplete={onSurveillancePlanCompleted} />
     </div>
   )
 }
