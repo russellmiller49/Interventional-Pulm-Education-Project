@@ -1,4 +1,15 @@
 export const STENT_LESSON_IDS = [
+  'indication',
+  'clinical-job',
+  'architecture-choice',
+  'fit-behavior',
+  'complications-surveillance',
+  'assessment',
+] as const
+
+export type StentLessonId = (typeof STENT_LESSON_IDS)[number]
+
+export const LEGACY_STENT_LESSON_IDS = [
   'orient',
   'architectures',
   'force-lab',
@@ -7,7 +18,7 @@ export const STENT_LESSON_IDS = [
   'assessment',
 ] as const
 
-export type StentLessonId = (typeof STENT_LESSON_IDS)[number]
+export type LegacyStentLessonId = (typeof LEGACY_STENT_LESSON_IDS)[number]
 
 export const STENT_LOAD_MODES = [
   'rest',
@@ -33,7 +44,13 @@ export const STENT_ARCHITECTURE_IDS = [
 
 export type StentArchitectureId = (typeof STENT_ARCHITECTURE_IDS)[number]
 
-export type StentLabExperience = 'guided-force' | 'architecture-explorer' | 'force-practice'
+export type StentLabExperience =
+  | 'clinical-case'
+  | 'complication-explainer'
+  | 'architecture-explorer'
+  | 'engineering-deep-dive'
+  | 'guided-force'
+  | 'force-practice'
 
 export interface StentLabExperienceProgress {
   completedIds: string[]
@@ -52,6 +69,17 @@ export type EvidenceApplicability =
   | 'device-topology'
   | 'transferred-engineering'
 
+export type EvidenceClaimScope =
+  | 'clinical-guideline'
+  | 'clinical-observational'
+  | 'clinical-trial'
+  | 'review-mechanistic'
+  | 'airway-bench'
+  | 'preclinical'
+  | 'transferred-engineering'
+  | 'regulatory-construction'
+  | 'manufacturer-construction'
+
 export interface EvidenceReference {
   id: string
   citation: string
@@ -59,6 +87,9 @@ export interface EvidenceReference {
   doi?: string
   sourceType: EvidenceSourceType
   applicability: EvidenceApplicability
+  claimScope: EvidenceClaimScope
+  verifiedOn: string
+  clinicalReviewNote?: string
   transferLimitation: string
 }
 
@@ -120,6 +151,102 @@ export interface StentArchitectureProfile {
   strengths: readonly string[]
   tradeoffs: readonly string[]
   limitations: readonly string[]
+  clinicalConsiderations: ClinicalArchitectureConsiderations
+  evidenceRefs: readonly string[]
+}
+
+export interface ClinicalArchitectureConsiderations {
+  commonRoles: readonly string[]
+  deploymentConsiderations: readonly string[]
+  removalConsiderations: readonly string[]
+  tissueInterfaceConsiderations: readonly string[]
+  secretionConsiderations: readonly string[]
+  fitConsiderations: readonly string[]
+  failureModesToAnticipate: readonly string[]
+  caseExclusions?: readonly string[]
+  teachingOnly?: boolean
+}
+
+export type ClinicalDecisionDomain =
+  | 'indication'
+  | 'mechanical-job'
+  | 'architecture'
+  | 'fit'
+  | 'complication'
+  | 'surveillance'
+
+export type PhysicsLensPreset =
+  | 'residual-extrinsic-load'
+  | 'curve-end-loading'
+  | 'eccentric-ovalization'
+  | 'bifurcation-mismatch'
+  | 'cough-micromotion'
+  | 'coverage-interface'
+
+export interface ClinicalCaseFinding {
+  id: string
+  label: string
+  value: string
+  emphasis?: 'normal' | 'important' | 'warning'
+}
+
+export interface ClinicalDecisionOption {
+  id: string
+  label: string
+  rationale: string
+  domains: readonly ClinicalDecisionDomain[]
+}
+
+export interface ClinicalDecisionPrompt {
+  id: string
+  question: string
+  instruction?: string
+  options: readonly ClinicalDecisionOption[]
+  correctChoiceId: string
+  evidenceRefs: readonly string[]
+}
+
+export interface PhysicsLensConfig {
+  preset: PhysicsLensPreset
+  architectureIds: readonly StentArchitectureId[]
+  loadMode: StentLoadMode
+  clinicalQuestion: string
+  observationPrompts: readonly string[]
+  debrief: string
+  evidenceBoundary: string
+  evidenceRefs: readonly string[]
+}
+
+export interface StentClinicalCase {
+  id: string
+  lessonId: StentLessonId
+  title: string
+  stem: string
+  findings: readonly ClinicalCaseFinding[]
+  decisions: readonly ClinicalDecisionPrompt[]
+  physicsLens?: PhysicsLensConfig
+  finalTakeaway: string
+  evidenceRefs: readonly string[]
+  clinicalReviewStatus: 'draft' | 'reviewed'
+}
+
+export interface ComplicationPathway {
+  id:
+    | 'granulation'
+    | 'mucus'
+    | 'migration'
+    | 'ingrowth'
+    | 'infection'
+    | 'structural'
+    | 'cover-failure'
+    | 'malposition'
+    | 'recurrent-obstruction'
+  label: string
+  recognitionPatterns: readonly string[]
+  plausibleContributors: readonly string[]
+  contributorDomains: readonly ('mechanical' | 'infectious-secretory' | 'biologic-time')[]
+  reassessmentQuestions: readonly string[]
+  responseDomains: readonly string[]
   evidenceRefs: readonly string[]
 }
 
@@ -231,7 +358,7 @@ export interface LearningSection {
 }
 
 interface StentLessonBase {
-  id: StentLessonId
+  id: LegacyStentLessonId
   step: number
   eyebrow: string
   title: string
@@ -242,7 +369,7 @@ interface StentLessonBase {
 
 export interface InstructionalLessonCopy extends StentLessonBase {
   kind: 'instructional'
-  id: Exclude<StentLessonId, 'assessment'>
+  id: Exclude<LegacyStentLessonId, 'assessment'>
   prediction: PredictionPrompt
   checkpoint: CheckpointPrompt
 }
@@ -317,15 +444,30 @@ export interface GinaDumonBenchDatum {
 export interface StentAssessmentProgress {
   attempts: number
   lastScore: number | null
-  bestScore: number | null
+  lastTotal: number | null
+  bestPercent: number | null
   mastery: boolean
 }
 
 export interface StentProgressState {
-  version: 1
+  version: 2
   lastLessonId: StentLessonId
   completedLessonIds: StentLessonId[]
+  completedOptionalLabIds: string[]
   assessment: StentAssessmentProgress
+  migratedFromV1?: boolean
+}
+
+export interface LegacyStentProgressStateV1 {
+  version: 1
+  lastLessonId: LegacyStentLessonId
+  completedLessonIds: LegacyStentLessonId[]
+  assessment: {
+    attempts: number
+    lastScore: number | null
+    bestScore: number | null
+    mastery: boolean
+  }
 }
 
 export interface StentProgressStorage {
@@ -335,6 +477,10 @@ export interface StentProgressStorage {
 
 export function isStentLessonId(value: unknown): value is StentLessonId {
   return typeof value === 'string' && (STENT_LESSON_IDS as readonly string[]).includes(value)
+}
+
+export function isLegacyStentLessonId(value: unknown): value is LegacyStentLessonId {
+  return typeof value === 'string' && (LEGACY_STENT_LESSON_IDS as readonly string[]).includes(value)
 }
 
 export function isStentLoadMode(value: unknown): value is StentLoadMode {

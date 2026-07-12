@@ -295,9 +295,9 @@
         "description": "硬质气道操作——铲切、支架、止血和防火安全"
       },
       "airwayStentMechanics": {
-        "title": "气道支架力学",
-        "shortTitle": "支架力学",
-        "description": "3D 径向力、顺应性、组织相互作用与疲劳实验室"
+        "title": "气道支架临床决策实验室",
+        "shortTitle": "支架决策",
+        "description": "基于病例学习适应证、结构、匹配、并发症与随访"
       },
       "tracheostomy": {
         "title": "气管切开知识实验室",

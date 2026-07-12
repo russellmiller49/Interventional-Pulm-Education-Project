@@ -70,6 +70,36 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'The generic schematic is not exact Dumon CAD and does not encode product-specific durometer, wall thickness, stud geometry, or size.',
       'Visible deformation represents imposed motion, not measured force or clinical performance.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Removable central-airway support when a continuous wall and an ingrowth barrier are relevant to the defined job',
+        'A customizable tubular architecture when anatomy, landing zones, and a future exit strategy have been considered together',
+      ],
+      deploymentConsiderations: [
+        'Deployment approach, customization, and repositioning depend on device instructions, airway access, and local rigid-bronchoscopy expertise.',
+        'Confirm that the selected length, diameter, and stud-bearing landing zones preserve nearby branch orifices.',
+      ],
+      removalConsiderations: [
+        'Continuous silicone is generally considered removable, but dwell time, granulation, infection, and difficult access can increase removal complexity.',
+        'A planned removal horizon should be documented before placement and revisited during surveillance.',
+      ],
+      tissueInterfaceConsiderations: [
+        'The continuous wall broadens much of the tissue-facing surface while studs create discrete contact and anchoring regions.',
+        'Curvature or landing-zone mismatch can shift contact toward studs, edges, or device ends.',
+      ],
+      secretionConsiderations: [
+        'A continuous wall interrupts mucociliary transport and can contribute to retained secretions.',
+        'The airway-clearance and surveillance plan should anticipate mucus at the wall, ends, and any adjacent pockets.',
+      ],
+      fitConsiderations: [
+        'Assess landing-zone diameter, disease length, taper, curvature, and adjacent branches rather than treating nominal diameter as sufficient.',
+        'Inspect apposition and both ends after the architecture is placed in the intended airway geometry.',
+      ],
+      failureModesToAnticipate: [
+        'Migration or malposition when anchoring and fit are inadequate',
+        'Mucus obstruction, focal end granulation, branch obstruction, or pressure-related mucosal injury',
+      ],
+    },
     evidenceRefs: ['chest-cao-guideline-2024', 'wabip-benign-stenting-2025', 'jung-gina-2021'],
   },
   {
@@ -114,6 +144,36 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'GINA and Dumon measurements shown in this module belong to the cited sizes and fixtures.',
       'The animation exaggerates shape change for teaching and is not a validated airway simulation.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Removable continuous-wall support when directional geometry is relevant to the airway and the mechanical job',
+        'An architecture for comparing directional anchoring and compliance without reducing the choice to a whole-body compression value',
+      ],
+      deploymentConsiderations: [
+        'Orientation is part of deployment because the supported arc and compliant posterior segment are not interchangeable.',
+        'Confirm rotational position, landing-zone contact, and branch patency using the selected device instructions and local expertise.',
+      ],
+      removalConsiderations: [
+        'The continuous silicone wall supports a planned retrieval strategy, while dwell time and tissue response can still complicate removal.',
+        'Reassessment should include whether directional orientation and the original indication remain appropriate as anatomy changes.',
+      ],
+      tissueInterfaceConsiderations: [
+        'Directional rings, ridges, and the supported arc create a nonuniform interface that depends on rotational alignment.',
+        'A stiffness transition or misorientation can shift contact toward ridges, edges, or device ends.',
+      ],
+      secretionConsiderations: [
+        'The continuous wall can interrupt secretion transport despite its directional compliance.',
+        'Inspect dependent surfaces, ends, and any gap created by cross-sectional mismatch for retained secretions.',
+      ],
+      fitConsiderations: [
+        'Match the noncircular cross-section and orientation to airway shape, curvature, taper, and dynamic change.',
+        'Nominal diameter alone does not establish alignment, apposition, or preservation of adjacent orifices.',
+      ],
+      failureModesToAnticipate: [
+        'Rotational malposition, migration, or loss of intended directional support',
+        'Focal ridge or end contact, mucus obstruction, granulation, or branch compromise',
+      ],
+    },
     evidenceRefs: ['jung-gina-2021', 'wabip-benign-stenting-2025'],
   },
   {
@@ -165,6 +225,36 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'Straight-tube diameter-retention and length-change metrics are intentionally hidden.',
       'The generic Y schematic is not an exact CAD model and does not encode patient anatomy.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Support across the main carina when tracheal and both main-bronchial pathways belong to the mechanical job',
+        'Bifurcated coverage when carinal fixation, branch preservation, and removability must be considered together',
+      ],
+      deploymentConsiderations: [
+        'The deployment plan must account for the tracheal limb, both bronchial limbs, and the carinal saddle as one coupled geometry.',
+        'Confirm limb orientation, distal patency, and the relationship of each end to lobar and segmental orifices.',
+      ],
+      removalConsiderations: [
+        'Molded silicone permits a planned retrieval strategy, but carinal seating, secretions, granulation, and dwell time can complicate manipulation.',
+        'Surveillance should reassess the continuing need for all three limbs rather than only the tracheal segment.',
+      ],
+      tissueInterfaceConsiderations: [
+        'The carinal saddle, junction, and three limb ends create distinct contact zones.',
+        'Angle or length mismatch can transmit bending and torsion to the carina or distal landing zones.',
+      ],
+      secretionConsiderations: [
+        'The saddle and limb junctions can form secretion pockets while each continuous wall interrupts local clearance.',
+        'The airway-clearance plan should address both main bronchi and the central junction.',
+      ],
+      fitConsiderations: [
+        'Assess tracheal and bronchial diameters, limb lengths, branch angles, the carinal saddle, and distal airway patency as a whole-Y fit.',
+        'A satisfactory tracheal fit does not establish appropriate bronchial-limb alignment or length.',
+      ],
+      failureModesToAnticipate: [
+        'Carinal or limb mismatch with focal contact, malposition, or distal branch obstruction',
+        'Mucus obstruction, end granulation, migration, or loss of patency in one limb',
+      ],
+    },
     evidenceRefs: [
       'chest-cao-guideline-2024',
       'wabip-malignant-stenting-2024',
@@ -220,7 +310,43 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'The educational braid relation assumes inextensible wires and idealized constant turns.',
       'No force, tissue pressure, friction coefficient, or device-specific wire dimension is modeled.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Open-cell self-expanding support when a continuous sealing surface is not part of the defined job',
+        'A teaching architecture for examining how braid angle, sliding crossings, and tissue incorporation affect the plan',
+      ],
+      deploymentConsiderations: [
+        'Diameter change is coupled to length change, so deployment planning must anticipate final end position and branch relationships.',
+        'Expansion, crossing motion, and final apposition should be assessed under the intended airway curvature and constraint.',
+      ],
+      removalConsiderations: [
+        'Exposed cells permit tissue incorporation that can make later removal increasingly difficult.',
+        'The expected time horizon and feasibility of retrieval are central constraints rather than follow-up details.',
+      ],
+      tissueInterfaceConsiderations: [
+        'Individual wires, crossings, and uncovered cells create a discontinuous contact surface with pathways for ingrowth.',
+        'Sliding crossings can redistribute deformation while adding friction, fretting, and repeated local motion.',
+      ],
+      secretionConsiderations: [
+        'Open cells do not remove secretion risk; retained material can still collect around irregular contact zones and incorporated tissue.',
+        'Surveillance should consider mucus, infection, and tissue overgrowth together when patency worsens.',
+      ],
+      fitConsiderations: [
+        'Account for diameter-length coupling, taper, curvature, landing zones, and the location of exposed cells relative to disease and branches.',
+        'A straight unloaded appearance does not establish conformity or stable end position in a curved airway.',
+      ],
+      failureModesToAnticipate: [
+        'Tissue ingrowth or overgrowth, difficult removal, migration, or deployment-related end mismatch',
+        'Fretting or fracture, focal wire or end contact, mucus obstruction, or branch compromise',
+      ],
+      caseExclusions: [
+        'This uncovered architecture should not be treated as a default answer when planned retrieval or a continuous sealing surface is required.',
+      ],
+      teachingOnly: true,
+    },
     evidenceRefs: [
+      'wabip-malignant-stenting-2024',
+      'wabip-benign-stenting-2025',
       'ratnovsky-airway-mechanics-2015',
       'mckenna-covered-braid-2021',
       'pelton-nitinol-fatigue-2008',
@@ -276,7 +402,39 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'The schematic illustrates the hook-and-cross concept and is not exact BONASTENT CAD.',
       'FDA device descriptions establish topology and labeled use, not comparative superiority.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Covered self-expanding support when a continuous surface is relevant to sealing or limiting ingrowth through the scaffold',
+        'An architecture for considering captured-cell stability, membrane behavior, airway fit, and a future retrieval strategy together',
+      ],
+      deploymentConsiderations: [
+        'Captured crossings and the cover can couple diameter, length, and final end position during deployment.',
+        'Confirm apposition, cover integrity, branch patency, and landing-zone position using device-specific instructions.',
+      ],
+      removalConsiderations: [
+        'Full coverage limits ingrowth through the cells but does not prevent end granulation or other tissue responses that can complicate retrieval.',
+        'Dwell time, infection, fit, and the ongoing indication should be reassessed before exchange or removal planning.',
+      ],
+      tissueInterfaceConsiderations: [
+        'The membrane creates a continuous tissue-facing surface while captured junctions and device ends remain possible focal-transition zones.',
+        'Cover creasing, junction stiffness, or curvature mismatch can redistribute contact and repeated motion.',
+      ],
+      secretionConsiderations: [
+        'The covered surface interrupts mucociliary transport and can retain secretions along the wall or at the ends.',
+        'Inspection should include cover folds, dependent regions, and any gaps between the device and airway.',
+      ],
+      fitConsiderations: [
+        'Assess taper, curvature, eccentric compression, landing zones, and diameter-length coupling rather than relying on nominal dimensions alone.',
+        'A covered scaffold that opens centrally can still gap, straighten, or contact an end in a curved segment.',
+      ],
+      failureModesToAnticipate: [
+        'Migration, malposition, focal end granulation, mucus obstruction, or branch obstruction',
+        'Cover crease, abrasion, tear, delamination, or cyclic scaffold failure',
+      ],
+    },
     evidenceRefs: [
+      'wabip-malignant-stenting-2024',
+      'wabip-benign-stenting-2025',
       'fda-bonastent-k140472',
       'ratnovsky-airway-mechanics-2015',
       'mckenna-covered-braid-2021',
@@ -332,7 +490,39 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'The generic ring lattice is not exact AERO CAD and does not reproduce proprietary dimensions.',
       'Manufacturer feature descriptions are labeled as sourced examples, not independent rankings.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Covered self-expanding support when a continuous surface and segmental ring-and-connector behavior are relevant to the job',
+        'An architecture for comparing predictable cell placement with curvature, interface, secretion, and retrieval tradeoffs',
+      ],
+      deploymentConsiderations: [
+        'Ring and connector geometry can create segmental expansion and bending behavior during release.',
+        'Confirm final end position, apposition, cover integrity, and adjacent branch patency using device-specific instructions.',
+      ],
+      removalConsiderations: [
+        'Coverage limits ingrowth through the lattice, while end response, dwell time, infection, and access can still complicate retrieval.',
+        'A retrieval or exchange strategy should remain linked to surveillance and the expected treatment horizon.',
+      ],
+      tissueInterfaceConsiderations: [
+        'The cover broadens the tissue-facing surface, while rings, connectors, and device ends create stiffness transitions beneath it.',
+        'Connector layout and straightening tendency can shift contact in curves even when the central lumen remains open.',
+      ],
+      secretionConsiderations: [
+        'A continuous covered surface can impair local clearance and collect secretions at folds, gaps, or ends.',
+        'Recurrent obstruction should prompt evaluation for mucus and infection as well as structural or tissue causes.',
+      ],
+      fitConsiderations: [
+        'Assess curvature, taper, eccentric compression, landing zones, and connector behavior across the full treated segment.',
+        'Inspect inner-curve gapping, outer-curve contact, straightening, and both ends rather than inferring fit from radial opening alone.',
+      ],
+      failureModesToAnticipate: [
+        'Migration, end granulation, mucus obstruction, branch compromise, or curve-related gapping and contact',
+        'Connector or strut fracture, cover tear or delamination, and loss of intended support',
+      ],
+    },
     evidenceRefs: [
+      'wabip-malignant-stenting-2024',
+      'wabip-benign-stenting-2025',
       'merit-aero-official',
       'ratnovsky-airway-mechanics-2015',
       'chung-airway-fracture-2008',
@@ -389,7 +579,42 @@ export const architectureRegistry: readonly StentArchitectureProfile[] = [
       'The schematic demonstrates continuity and partial coverage; it is not exact Ultraflex CAD.',
       'The FDA summary supports construction and labeled indication, not cross-device outcomes.',
     ],
+    clinicalConsiderations: {
+      commonRoles: [
+        'Partially covered self-expanding support when a central barrier and intentionally exposed end interfaces are both considered',
+        'An architecture for examining how one continuous wire path and coverage transitions affect fit, tissue response, and removability',
+      ],
+      deploymentConsiderations: [
+        'Loop deformation and diameter-length coupling can change final end position during release.',
+        'Confirm where the covered midsection, cover transitions, and exposed ends lie relative to disease, landing zones, and branches.',
+      ],
+      removalConsiderations: [
+        'Exposed end cells can incorporate into tissue and make later removal more difficult despite central coverage.',
+        'The time horizon and consequences of end incorporation should be explicit in the initial plan and surveillance strategy.',
+      ],
+      tissueInterfaceConsiderations: [
+        'The covered midsection, cover transitions, and exposed knitted ends form three distinct tissue interfaces.',
+        'Local loop opening and continuous-wire load transmission can move deformation beyond the visibly loaded segment.',
+      ],
+      secretionConsiderations: [
+        'The covered midsection can impair secretion transport, while transition zones and exposed loops can create irregular collection sites.',
+        'Mucus, infection, ingrowth, and granulation may coexist when patency worsens.',
+      ],
+      fitConsiderations: [
+        'Assess the full length, curvature, taper, landing zones, and placement of both coverage transitions and exposed ends.',
+        'Central apposition does not establish acceptable end contact, branch preservation, or later removability.',
+      ],
+      failureModesToAnticipate: [
+        'End ingrowth or granulation, difficult removal, migration, mucus obstruction, or branch compromise',
+        'Cover-transition wear, cover failure, loop deformation, or continuous-wire fatigue',
+      ],
+      caseExclusions: [
+        'Central coverage should not be interpreted as a fully covered or readily removable interface when end cells remain exposed.',
+      ],
+    },
     evidenceRefs: [
+      'wabip-malignant-stenting-2024',
+      'wabip-benign-stenting-2025',
       'fda-ultraflex-k230269',
       'chung-airway-fracture-2008',
       'pelton-nitinol-fatigue-2008',

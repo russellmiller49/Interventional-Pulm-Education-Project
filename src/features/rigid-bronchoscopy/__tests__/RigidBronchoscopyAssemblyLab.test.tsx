@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { Object3D, PropertyBinding } from 'three'
+import { BoxGeometry, Mesh, MeshStandardMaterial, Object3D, PropertyBinding } from 'three'
 
 import {
   cloneSemanticNode,
+  cloneToolViewerScene,
   getAirwayMaterialVisibilityProfile,
   getViewerMaterialVisibilityProfile,
   isPartDragGesture,
@@ -70,6 +71,25 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(cutawayAirway.opacity).toBeGreaterThan(solidAirway.opacity)
     expect(cutawayAirway.depthWrite).toBe(true)
     expect(cutawayAirway.transparent).toBe(false)
+  })
+
+  it('preserves single-material tool meshes so Three.js can render them without geometry groups', () => {
+    const scene = new Object3D()
+    const sourceMaterial = new MeshStandardMaterial({ color: '#94a3b8' })
+    const sourceMesh = new Mesh(new BoxGeometry(1, 1, 1), sourceMaterial)
+    scene.add(sourceMesh)
+
+    const clone = cloneToolViewerScene(scene)
+    const clonedMesh = clone.model.children.find((child): child is Mesh => child instanceof Mesh)
+
+    expect(clonedMesh).toBeDefined()
+    expect(Array.isArray(clonedMesh?.material)).toBe(false)
+    expect(clonedMesh?.material).not.toBe(sourceMaterial)
+    expect(clone.ownedMaterials).toHaveLength(1)
+
+    sourceMesh.geometry.dispose()
+    sourceMaterial.dispose()
+    clone.ownedMaterials.forEach((material) => material.dispose())
   })
 
   it('finds tube roots after Three.js sanitizes periods in glTF node names', () => {
@@ -185,6 +205,14 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     ).toBeVisible()
     expect(screen.getByText('Intermittent controlled positive-pressure breaths')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Pause animation' })).toBeVisible()
+    const threeDimensionalView = screen.getByTestId('rigid-bronchoscopy-3d-view')
+    expect(
+      within(threeDimensionalView).getByRole('button', { name: 'Pause animation' }),
+    ).toBeVisible()
+    expect(
+      within(threeDimensionalView).getByRole('button', { name: 'Reset animation' }),
+    ).toBeVisible()
+    expect(within(threeDimensionalView).getByRole('button', { name: 'Cutaway view' })).toBeVisible()
     expect(screen.getByRole('status', { name: 'Animation status' })).toHaveTextContent(
       'Animation playing.',
     )

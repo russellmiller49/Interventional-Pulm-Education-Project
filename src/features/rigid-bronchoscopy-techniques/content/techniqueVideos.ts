@@ -203,6 +203,13 @@ export const techniqueClips: RigidBronchoscopyClip[] = [
     cameraOrientation: 'External three-quarter / overhead; scope centered; no advancement.',
     durationSeconds: 5,
     promptVersion: 'mainstem-direction@v1',
+    // Generated + inspected 2026-07-12 (Kling 3.0 Turbo image-to-video from a
+    // Nano Banana Pro hero frame). DRAFT — awaiting physician review.
+    reviewStatus: 'generated-draft',
+    videoPath: '/module-assets/v1/rigid-bronchoscopy-techniques/clips/draft/RB-NAV-001.mp4',
+    posterPath: '/module-assets/v1/rigid-bronchoscopy-techniques/posters/RB-NAV-001.jpg',
+    higgsfieldGenerationId: '12d76694-9818-4ead-b28b-7731b94297cd',
+    model: 'kling3_0_turbo',
   }),
   planned({
     id: 'RB-NAV-L-001',

@@ -295,9 +295,9 @@
         "description": "Rigid airway procedures — coring, stents, hemostasis, and fire safety"
       },
       "airwayStentMechanics": {
-        "title": "Airway Stent Mechanics",
-        "shortTitle": "Stent Mechanics",
-        "description": "3D radial force, conformability, tissue interaction, and fatigue lab"
+        "title": "Airway Stent Clinical Decision Lab",
+        "shortTitle": "Stent Decisions",
+        "description": "Case-based indication, architecture, fit, complications, and surveillance"
       },
       "tracheostomy": {
         "title": "Tracheostomy Knowledge Lab",

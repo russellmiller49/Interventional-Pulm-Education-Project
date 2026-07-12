@@ -38,6 +38,48 @@ describe('airway stent learning-lab architecture registry', () => {
     }
   })
 
+  it('provides clinically legible, nonpromotional considerations for every family', () => {
+    const requiredFields = [
+      'commonRoles',
+      'deploymentConsiderations',
+      'removalConsiderations',
+      'tissueInterfaceConsiderations',
+      'secretionConsiderations',
+      'fitConsiderations',
+      'failureModesToAnticipate',
+    ] as const
+
+    for (const profile of architectureRegistry) {
+      for (const field of requiredFields) {
+        expect(profile.clinicalConsiderations[field].length).toBeGreaterThanOrEqual(2)
+        expect(profile.clinicalConsiderations[field].every((item) => item.trim().length > 0)).toBe(
+          true,
+        )
+      }
+
+      const clinicalCopy = Object.values(profile.clinicalConsiderations)
+        .flatMap((value) => (Array.isArray(value) ? value : []))
+        .join(' ')
+
+      expect(clinicalCopy).not.toMatch(/\b(best|safest|superior|always|never)\b/i)
+      expect(clinicalCopy).not.toMatch(/\b(GINA|BONASTENT|AERO|Ultraflex|Dumon)\b/i)
+    }
+
+    expect(
+      getArchitectureProfile('silicone-y').clinicalConsiderations.fitConsiderations.join(' '),
+    ).toMatch(/whole-Y|limb|carinal/i)
+    expect(
+      getArchitectureProfile(
+        'free-crossing-braid',
+      ).clinicalConsiderations.removalConsiderations.join(' '),
+    ).toMatch(/incorporation|removal/i)
+    expect(
+      getArchitectureProfile(
+        'single-wire-knit-partial-cover',
+      ).clinicalConsiderations.removalConsiderations.join(' '),
+    ).toMatch(/exposed|incorporate/i)
+  })
+
   it('exposes controls only when topology supports them', () => {
     const laser = getArchitectureProfile('laser-cut-covered')
     const y = getArchitectureProfile('silicone-y')

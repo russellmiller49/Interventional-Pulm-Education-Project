@@ -29,6 +29,11 @@ describe('airway stent learning-lab evidence registry', () => {
     for (const reference of evidenceRegistry) {
       expect(reference.citation.length).toBeGreaterThan(40)
       expect(reference.url).toMatch(/^https:\/\//)
+      expect(reference.claimScope).toMatch(
+        /^(clinical-guideline|clinical-observational|clinical-trial|review-mechanistic|airway-bench|preclinical|transferred-engineering|regulatory-construction|manufacturer-construction)$/,
+      )
+      expect(reference.verifiedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(reference.clinicalReviewNote.length).toBeGreaterThan(40)
       expect(reference.transferLimitation.length).toBeGreaterThan(40)
     }
   })
@@ -44,6 +49,9 @@ describe('airway stent learning-lab evidence registry', () => {
         'fda-bonastent-k140472',
         'fda-ultraflex-k230269',
         'merit-aero-official',
+        'ost-infection-granulation-2012',
+        'hu-granulation-diameter-2011',
+        'gupta-granulation-review-2025',
       ]),
     )
     expect(new Set(evidenceRegistry.map((reference) => reference.sourceType))).toEqual(

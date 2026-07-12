@@ -1770,6 +1770,34 @@ function PathwayScene({
   )
 }
 
+export function cloneToolViewerScene(scene: Object3D) {
+  const model = scene.clone(true)
+  const ownedMaterials: Material[] = []
+  const profile = getViewerMaterialVisibilityProfile(false)
+
+  model.traverse((child) => {
+    if (!(child instanceof Mesh)) return
+    const sourceWasArray = Array.isArray(child.material)
+    const sourceMaterials: Material[] = Array.isArray(child.material)
+      ? child.material
+      : [child.material]
+    const materials = sourceMaterials.map((material) => {
+      const next = material.clone()
+      if (next instanceof MeshStandardMaterial) {
+        next.emissive.copy(next.color).multiplyScalar(profile.emissiveScale)
+        next.metalness = Math.min(next.metalness, profile.metalnessCap)
+        next.roughness = Math.max(next.roughness, profile.roughnessFloor)
+      }
+      next.needsUpdate = true
+      ownedMaterials.push(next)
+      return next
+    })
+    child.material = sourceWasArray ? materials : materials[0]
+  })
+
+  return { model, ownedMaterials }
+}
+
 function ToolScene({
   part,
   viewCommand,
@@ -1780,27 +1808,13 @@ function ToolScene({
   viewDragMode: ViewDragMode
 }) {
   const { scene } = useGLTF(part.individualAssetPath)
-  const visibleModel = useMemo(() => {
-    const clone = scene.clone(true)
-    const profile = getViewerMaterialVisibilityProfile(false)
-    clone.traverse((child) => {
-      if (!(child instanceof Mesh)) return
-      const materials = Array.isArray(child.material) ? child.material : [child.material]
-      child.material = materials.map((material) => {
-        const next = material.clone()
-        if (next instanceof MeshStandardMaterial) {
-          next.emissive.copy(next.color).multiplyScalar(profile.emissiveScale)
-          next.metalness = Math.min(next.metalness, profile.metalnessCap)
-          next.roughness = Math.max(next.roughness, profile.roughnessFloor)
-        }
-        next.needsUpdate = true
-        return next
-      })
-    })
-    return clone
-  }, [scene])
+  const visibleModel = useMemo(() => cloneToolViewerScene(scene), [scene])
+  useEffect(
+    () => () => visibleModel.ownedMaterials.forEach((material) => material.dispose()),
+    [visibleModel],
+  )
   const normalized = useMemo(() => {
-    const model = visibleModel
+    const model = visibleModel.model
     const bounds = new Box3().setFromObject(model)
     const size = bounds.getSize(new Vector3())
     const center = bounds.getCenter(new Vector3())
@@ -1810,7 +1824,7 @@ function ToolScene({
       offset: center.multiplyScalar(-1),
       scale: 4.7 / maxDimension,
     }
-  }, [visibleModel])
+  }, [visibleModel.model])
 
   return (
     <>
@@ -2128,6 +2142,12 @@ export function RigidBronchoscopyAssemblyLab({
         ]
       : []
   const showVentilation = demonstration || ventilationRevealed
+  const pathwayAnimationAvailable =
+    selectedPathwayId === 'ventilation'
+      ? showVentilation
+      : selectedPathwayId === 'instrument'
+        ? demonstration || instrumentRouteRevealed
+        : true
   const visiblePathwaySegments =
     selectedPathwayId === 'ventilation'
       ? showVentilation
@@ -2523,7 +2543,10 @@ export function RigidBronchoscopyAssemblyLab({
       </header>
 
       <div className="grid items-start lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-        <div className="relative h-[318px] overflow-hidden border-b border-slate-700/70 sm:h-[560px] lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:max-h-[760px] lg:min-h-[620px] lg:border-b-0 lg:border-r">
+        <div
+          className="relative h-[318px] overflow-hidden border-b border-slate-700/70 sm:h-[560px] lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)] lg:max-h-[760px] lg:min-h-[620px] lg:border-b-0 lg:border-r"
+          data-testid="rigid-bronchoscopy-3d-view"
+        >
           <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
             {feedback}
           </p>
@@ -2605,7 +2628,12 @@ export function RigidBronchoscopyAssemblyLab({
             </Canvas>
           </CanvasErrorBoundary>
 
-          <div className="absolute left-2 top-2 max-w-[calc(100%-1rem)] rounded-xl border border-white/10 bg-slate-950/90 px-2.5 py-2 backdrop-blur sm:left-4 sm:top-4 sm:max-w-[min(320px,calc(100%-2rem))] sm:px-4 sm:py-3">
+          <div
+            className={cn(
+              'absolute left-2 top-2 rounded-xl border border-white/10 bg-slate-950/90 px-2.5 py-2 backdrop-blur sm:left-4 sm:top-4 sm:max-w-[min(320px,calc(100%-2rem))] sm:px-4 sm:py-3',
+              mode === 'pathways' ? 'max-w-[calc(100%-6rem)]' : 'max-w-[calc(100%-1rem)]',
+            )}
+          >
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
               {copy.modelLabel}
             </p>
@@ -2731,6 +2759,74 @@ export function RigidBronchoscopyAssemblyLab({
               </div>
             ) : null}
           </div>
+
+          {mode === 'pathways' ? (
+            <div
+              className="absolute right-2 top-2 z-10 flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-slate-950/90 p-1.5 shadow-lg backdrop-blur sm:right-4 sm:top-4 sm:flex-row"
+              role="group"
+              aria-label={copy.animationControlsLabel}
+            >
+              {!reducedMotion && pathwayAnimationAvailable ? (
+                <>
+                  <Button
+                    type="button"
+                    size="sm"
+                    aria-label={
+                      displayedAnimationStatus === 'playing'
+                        ? copy.pauseAnimation
+                        : copy.playAnimation
+                    }
+                    title={
+                      displayedAnimationStatus === 'playing'
+                        ? copy.pauseAnimation
+                        : copy.playAnimation
+                    }
+                    onClick={toggleAnimation}
+                    className="h-9 min-w-9 bg-cyan-500 px-2 text-slate-950 hover:bg-cyan-400 sm:px-3"
+                  >
+                    {displayedAnimationStatus === 'playing' ? (
+                      <Pause className="h-4 w-4" aria-hidden />
+                    ) : (
+                      <Play className="h-4 w-4" aria-hidden />
+                    )}
+                    <span className="hidden sm:inline">
+                      {displayedAnimationStatus === 'playing'
+                        ? copy.pauseAnimation
+                        : copy.playAnimation}
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-label={copy.resetAnimation}
+                    title={copy.resetAnimation}
+                    onClick={resetAnimation}
+                    className="h-9 min-w-9 border-slate-600 bg-slate-950 px-2 text-white hover:bg-slate-800 sm:px-3"
+                  >
+                    <RefreshCw className="h-4 w-4" aria-hidden />
+                    <span className="hidden sm:inline">{copy.resetAnimation}</span>
+                  </Button>
+                </>
+              ) : null}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                aria-label={copy.cutawayView}
+                title={copy.cutawayView}
+                aria-pressed={cutaway}
+                onClick={() => setCutaway((value) => !value)}
+                className={cn(
+                  'h-9 min-w-9 border-slate-600 bg-slate-950 px-2 text-white hover:bg-slate-800 sm:px-3',
+                  cutaway && 'border-cyan-300/60 bg-cyan-400/15 text-cyan-50',
+                )}
+              >
+                <Scan className="h-4 w-4" aria-hidden />
+                <span className="hidden sm:inline">{copy.cutawayView}</span>
+              </Button>
+            </div>
+          ) : null}
 
           {mode === 'assembly' && selectedPart ? (
             <div className="absolute bottom-2 left-2 right-2 rounded-2xl border border-cyan-400/25 bg-slate-950/90 p-2 backdrop-blur sm:bottom-4 sm:left-4 sm:right-4 sm:p-3">
@@ -3498,55 +3594,6 @@ export function RigidBronchoscopyAssemblyLab({
                         </div>
                       ) : null}
 
-                      <div
-                        className="mt-4 flex flex-wrap gap-2"
-                        role="group"
-                        aria-label={copy.animationControlsLabel}
-                      >
-                        {!reducedMotion ? (
-                          <>
-                            <Button
-                              type="button"
-                              size="sm"
-                              onClick={toggleAnimation}
-                              className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                            >
-                              {displayedAnimationStatus === 'playing' ? (
-                                <Pause className="h-4 w-4" aria-hidden />
-                              ) : (
-                                <Play className="h-4 w-4" aria-hidden />
-                              )}
-                              {displayedAnimationStatus === 'playing'
-                                ? copy.pauseAnimation
-                                : copy.playAnimation}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={resetAnimation}
-                              className="border-slate-600 bg-slate-950 text-white hover:bg-slate-800"
-                            >
-                              <RefreshCw className="h-4 w-4" aria-hidden />
-                              {copy.resetAnimation}
-                            </Button>
-                          </>
-                        ) : null}
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          aria-pressed={cutaway}
-                          onClick={() => setCutaway((value) => !value)}
-                          className={cn(
-                            'border-slate-600 bg-slate-950 text-white hover:bg-slate-800',
-                            cutaway && 'border-cyan-300/60 bg-cyan-400/15 text-cyan-50',
-                          )}
-                        >
-                          <Scan className="h-4 w-4" aria-hidden />
-                          {copy.cutawayView}
-                        </Button>
-                      </div>
                       <p
                         className="mt-3 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
                         role="status"
@@ -3579,52 +3626,6 @@ export function RigidBronchoscopyAssemblyLab({
                     <Scan className="mt-1 h-5 w-5 text-cyan-200" aria-hidden />
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-300">{pathwayDescription}</p>
-
-                  <div
-                    className="mt-4 flex flex-wrap gap-2"
-                    role="group"
-                    aria-label={copy.animationControlsLabel}
-                  >
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={toggleAnimation}
-                      className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
-                    >
-                      {displayedAnimationStatus === 'playing' ? (
-                        <Pause className="h-4 w-4" aria-hidden />
-                      ) : (
-                        <Play className="h-4 w-4" aria-hidden />
-                      )}
-                      {displayedAnimationStatus === 'playing'
-                        ? copy.pauseAnimation
-                        : copy.playAnimation}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={resetAnimation}
-                      className="border-slate-600 bg-slate-950 text-white hover:bg-slate-800"
-                    >
-                      <RefreshCw className="h-4 w-4" aria-hidden />
-                      {copy.resetAnimation}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      aria-pressed={cutaway}
-                      onClick={() => setCutaway((value) => !value)}
-                      className={cn(
-                        'border-slate-600 bg-slate-950 text-white hover:bg-slate-800',
-                        cutaway && 'border-cyan-300/60 bg-cyan-400/15 text-cyan-50',
-                      )}
-                    >
-                      <Scan className="h-4 w-4" aria-hidden />
-                      {copy.cutawayView}
-                    </Button>
-                  </div>
 
                   <p
                     className="mt-3 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"

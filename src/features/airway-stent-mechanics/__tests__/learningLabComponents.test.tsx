@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { AssessmentPanel } from '../components/learning-lab/AssessmentPanel'
 import { LessonStepper } from '../components/learning-lab/LessonStepper'
 import { PredictionCard } from '../components/learning-lab/PredictionCard'
-import { stentAssessmentItems } from '../content/learningLabCopy'
+import { clinicalAssessmentItems as stentAssessmentItems } from '../content/clinicalModuleCopy'
 
 const prompt = {
   id: 'test-prediction',
@@ -72,17 +72,21 @@ describe('airway stent learning lab interactions', () => {
 
     render(
       <LessonStepper
-        activeLessonId="orient"
-        completedLessonIds={['orient']}
+        activeLessonId="indication"
+        completedLessonIds={['indication']}
         lessons={[
-          { id: 'orient', label: 'Orient', shortLabel: 'Orient' },
-          { id: 'architectures', label: 'Architectures', shortLabel: 'Architectures' },
-          { id: 'force-lab', label: 'Force lab', shortLabel: 'Force lab' },
-          { id: 'tissue-time', label: 'Tissue and time', shortLabel: 'Tissue + time' },
+          { id: 'indication', label: 'Indication', shortLabel: 'Indication' },
+          { id: 'clinical-job', label: 'Clinical job', shortLabel: 'Clinical job' },
           {
-            id: 'evidence-decisions',
-            label: 'Evidence to decisions',
-            shortLabel: 'Evidence',
+            id: 'architecture-choice',
+            label: 'Architecture',
+            shortLabel: 'Architecture',
+          },
+          { id: 'fit-behavior', label: 'Fit and behavior', shortLabel: 'Fit' },
+          {
+            id: 'complications-surveillance',
+            label: 'Complications and surveillance',
+            shortLabel: 'Complications',
           },
           { id: 'assessment', label: 'Assessment', shortLabel: 'Assessment' },
         ]}
@@ -90,12 +94,12 @@ describe('airway stent learning lab interactions', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /Orient Completed/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /Indication Completed/i })).toHaveAttribute(
       'aria-current',
       'step',
     )
-    await user.click(screen.getByRole('button', { name: /Force lab Open lesson/i }))
-    expect(onSelect).toHaveBeenCalledWith('force-lab')
+    await user.click(screen.getByRole('button', { name: /Architecture Open lesson/i }))
+    expect(onSelect).toHaveBeenCalledWith('architecture-choice')
   })
 
   it('scores all six committed cases, awards mastery at five, and permits retry', async () => {

@@ -64,7 +64,7 @@ export function AssessmentPanel({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-200">
               Integrated assessment · attempt {attempt}
             </p>
-            <h3 className="mt-2 text-2xl font-semibold">Commit to all six decisions</h3>
+            <h3 className="mt-2 text-2xl font-semibold">Commit to all {items.length} decisions</h3>
           </div>
           <div className="rounded-2xl border bg-muted/40 px-4 py-3 text-sm">
             Mastery: {masteryThreshold}/{items.length}

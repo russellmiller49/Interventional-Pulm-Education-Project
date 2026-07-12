@@ -9,6 +9,10 @@ export const evidenceRegistry = [
     doi: '10.1016/j.chest.2024.06.3804',
     sourceType: 'clinical-guideline',
     applicability: 'clinical-guidance',
+    claimScope: 'clinical-guideline',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use for high-level central-airway-obstruction decision framing; preserve the stated evidence certainty and do not turn conditional guidance into a patient-specific directive.',
     transferLimitation:
       'The guideline repeatedly notes very-low-certainty evidence; recommendations require multidisciplinary judgment, local expertise, and patient-specific assessment.',
   },
@@ -20,6 +24,10 @@ export const evidenceRegistry = [
     doi: '10.1111/resp.14764',
     sourceType: 'clinical-guideline',
     applicability: 'clinical-guidance',
+    claimScope: 'clinical-guideline',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Apply only to malignant central airway obstruction; retain recommendation grades and patient, airway, local-resource, and operator context.',
     transferLimitation:
       'Recommendations apply to malignant central airway obstruction and should not be generalized to benign disease or used as a product ranking.',
   },
@@ -31,6 +39,10 @@ export const evidenceRegistry = [
     doi: '10.1111/resp.70068',
     sourceType: 'clinical-guideline',
     applicability: 'clinical-guidance',
+    claimScope: 'clinical-guideline',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Apply only to benign central airway obstruction and preserve etiology-specific uncertainty, removability considerations, and the need for an exit plan.',
     transferLimitation:
       'Benign stenoses are heterogeneous. The guideline does not establish one device or dwell strategy for every etiology, anatomy, or center.',
   },
@@ -42,6 +54,10 @@ export const evidenceRegistry = [
     doi: '10.1038/s41598-021-87142-w',
     sourceType: 'peer-reviewed',
     applicability: 'airway-device-mechanics',
+    claimScope: 'airway-bench',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Keep GINA-Dumon results tied to the tested designs, sizes, fixtures, directions, and endpoints; do not convert them into clinical thresholds or a product ranking.',
     transferLimitation:
       'Bench fixtures and a short porcine evaluation compare two particular silicone designs; measured forces are not universal clinical thresholds.',
   },
@@ -53,6 +69,10 @@ export const evidenceRegistry = [
     doi: '10.1016/j.medengphy.2015.02.008',
     sourceType: 'peer-reviewed',
     applicability: 'airway-device-mechanics',
+    claimScope: 'airway-bench',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use only as device- and fixture-specific mechanics evidence; do not map measured force or modeled stress to mucosal pressure, injury, or patient risk.',
     transferLimitation:
       'The selected stents, fixtures, and numerical assumptions do not define a single stiffness or tissue-pressure ranking for all airway stents.',
   },
@@ -63,6 +83,10 @@ export const evidenceRegistry = [
     url: 'https://www.accessdata.fda.gov/cdrh_docs/pdf14/K140472.pdf',
     sourceType: 'regulatory',
     applicability: 'device-topology',
+    claimScope: 'regulatory-construction',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use for cleared construction and labeled-use description only; verify current labeling before making a regulatory or use statement.',
     transferLimitation:
       'A 510(k) summary documents the cleared device and substantial-equivalence review; it is not comparative clinical-effectiveness evidence.',
   },
@@ -73,6 +97,10 @@ export const evidenceRegistry = [
     url: 'https://www.accessdata.fda.gov/cdrh_docs/pdf23/K230269.pdf',
     sourceType: 'regulatory',
     applicability: 'device-topology',
+    claimScope: 'regulatory-construction',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use for cleared construction and labeled-use description only; verify current labeling before making a regulatory, removal, or use statement.',
     transferLimitation:
       'The summary supports the single-strand interwoven-loop and coverage descriptions; it does not support off-label use or superiority claims.',
   },
@@ -83,6 +111,10 @@ export const evidenceRegistry = [
     url: 'https://www.merit.com/product/aero-tracheobronchial-stent/',
     sourceType: 'manufacturer',
     applicability: 'device-topology',
+    claimScope: 'manufacturer-construction',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use for manufacturer-stated construction and labeled features only; do not use it to support comparative outcomes or an architecture recommendation.',
     transferLimitation:
       'Manufacturer descriptions identify construction and labeled features, not independent comparative outcomes or a recommendation for an individual patient.',
   },
@@ -94,6 +126,10 @@ export const evidenceRegistry = [
     doi: '10.1159/000506601',
     sourceType: 'peer-reviewed',
     applicability: 'clinical-guidance',
+    claimScope: 'clinical-trial',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'This is randomized, population-specific outcome evidence; physician review is required before transferring symptom or reintervention findings beyond the studied strategy and population.',
     transferLimitation:
       'This randomized study addresses a defined malignant-obstruction population and silicone-stent strategy; it does not establish a universal indication for stenting.',
   },
@@ -105,6 +141,10 @@ export const evidenceRegistry = [
     doi: '10.1016/j.jmbbm.2020.104305',
     sourceType: 'peer-reviewed',
     applicability: 'transferred-engineering',
+    claimScope: 'transferred-engineering',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use only to explain generic braid-and-cover mechanics; do not present its finite-element outputs as airway-device performance or clinical evidence.',
     transferLimitation:
       'This is a finite-element study of generic braided stents, not an airway clinical study; it supports mechanism-level teaching only.',
   },
@@ -116,6 +156,10 @@ export const evidenceRegistry = [
     doi: '10.1016/j.jtcvs.2008.05.039',
     sourceType: 'peer-reviewed',
     applicability: 'airway-device-mechanics',
+    claimScope: 'clinical-observational',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Treat reported factors as retrospective associations from one platform; do not predict an individual fracture location, probability, or dwell-time threshold.',
     transferLimitation:
       'Retrospective associations from one metallic-stent platform do not predict fracture for every architecture, location, or dwell period.',
   },
@@ -127,8 +171,57 @@ export const evidenceRegistry = [
     doi: '10.1016/j.jmbbm.2007.08.001',
     sourceType: 'peer-reviewed',
     applicability: 'transferred-engineering',
+    claimScope: 'transferred-engineering',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use as a general nitinol-fatigue framework only; airway loading, fixtures, cycle counts, and clinical consequences require separate evidence.',
     transferLimitation:
       'This general nitinol fatigue framework is not airway-specific and does not provide an airway dwell-time or failure threshold.',
+  },
+  {
+    id: 'ost-infection-granulation-2012',
+    citation:
+      'Ost DE, Shah AM, Lei X, et al. Respiratory Infections Increase the Risk of Granulation Tissue Formation Following Airway Stenting in Patients With Malignant Airway Obstruction. Chest. 2012;141(6):1473-1481. doi:10.1378/chest.11-2005.',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4694180/',
+    doi: '10.1378/chest.11-2005',
+    sourceType: 'peer-reviewed',
+    applicability: 'clinical-guidance',
+    claimScope: 'clinical-observational',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use as observational evidence that infection may contribute to later granulation in malignant airway obstruction; do not imply deterministic causation or generalize the effect estimate to every patient or stent.',
+    transferLimitation:
+      'This retrospective malignant-airway-obstruction cohort supports an association between lower-respiratory infection and subsequent granulation, not a universal causal pathway or patient-specific risk estimate.',
+  },
+  {
+    id: 'hu-granulation-diameter-2011',
+    citation:
+      'Hu HC, Liu YH, Wu YC, et al. Granulation tissue formation following Dumon airway stenting: the influence of stent diameter. Thoracic and Cardiovascular Surgeon. 2011;59(3):163-168. doi:10.1055/s-0030-1250667.',
+    url: 'https://pubmed.ncbi.nlm.nih.gov/21480137/',
+    doi: '10.1055/s-0030-1250667',
+    sourceType: 'peer-reviewed',
+    applicability: 'clinical-guidance',
+    claimScope: 'clinical-observational',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use as a study-specific association between stent-to-airway diameter relationship and granulation; do not encode its reported 90% cutoff as a sizing rule for other devices, anatomies, or patients.',
+    transferLimitation:
+      'The small observational study evaluated Dumon stent edge regions in a specific cohort; its reported diameter-ratio cutoff is not a universal oversizing threshold or validated patient-level risk equation.',
+  },
+  {
+    id: 'gupta-granulation-review-2025',
+    citation:
+      'Gupta A, Slebos DJ, Pouwels SD. Lung implantable devices: the issue with granulation tissue. Breathe. 2025;21(3):240243. doi:10.1183/20734735.0243-2024.',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC12260914/',
+    doi: '10.1183/20734735.0243-2024',
+    sourceType: 'peer-reviewed',
+    applicability: 'clinical-guidance',
+    claimScope: 'review-mechanistic',
+    verifiedOn: '2026-07-11',
+    clinicalReviewNote:
+      'Use this mechanistic review to support a multifactorial tissue-response model involving persistent injury, surface and microbial factors, geometry, biomechanics, time, and host response; do not convert the model into a causal score.',
+    transferLimitation:
+      'This contemporary narrative review synthesizes plausible mechanisms across lung implantable devices; it does not validate an airway-stent-specific causal equation, cutoff, or individual risk prediction.',
   },
 ] as const satisfies readonly EvidenceReference[]
 

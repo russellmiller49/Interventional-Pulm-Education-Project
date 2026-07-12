@@ -9,29 +9,29 @@ import {
   stentModuleCopy,
   tissueMechanisms,
 } from '../content/learningLabCopy'
+import { clinicalModuleCopy } from '../content/clinicalModuleCopy'
 import { validateEvidenceRefs } from '../content/evidenceRegistry'
 import { STENT_LESSON_IDS } from '../engine/learningLabTypes'
 
 describe('airway stent learning-lab curriculum', () => {
-  it('provides the six ordered, linkable lessons', () => {
-    expect(stentModuleCopy.title).toBe(
-      'Airway Stent Learning Lab: Architecture, Mechanics & Clinical Tradeoffs',
+  it('provides the six ordered, linkable clinical lessons', () => {
+    expect(clinicalModuleCopy.title).toBe(
+      'Airway Stent Clinical Decision Lab: Indication, Architecture, Fit & Complications',
     )
-    expect(stentModuleCopy.lessons.map((lesson) => lesson.id)).toEqual(STENT_LESSON_IDS)
-    expect(stentModuleCopy.lessons.map((lesson) => lesson.step)).toEqual([1, 2, 3, 4, 5, 6])
-    expect(stentModuleCopy.estimatedMinutes).toBe(60)
-    expect(stentModuleCopy.disclaimer).toMatch(/education|patient-specific/i)
-    expect(stentModuleCopy.comparisonModelNote).toMatch(/displacement, not force/i)
+    expect(clinicalModuleCopy.lessons.map((lesson) => lesson.id)).toEqual(STENT_LESSON_IDS)
+    expect(clinicalModuleCopy.lessons.map((lesson) => lesson.step)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(clinicalModuleCopy.estimatedMinutes).toBe(60)
+    expect(clinicalModuleCopy.disclaimer).toMatch(/education|patient-specific/i)
 
-    expect(stentModuleCopy.lessons[0]).toMatchObject({
-      id: 'orient',
-      eyebrow: 'Guided Force Lab',
-      title: 'Start with the mechanical job',
+    expect(clinicalModuleCopy.lessons[0]).toMatchObject({
+      id: 'indication',
+      eyebrow: 'Clinical Case 1 · Indication',
+      title: 'Should this airway be stented?',
     })
-    expect(stentModuleCopy.lessons[2]).toMatchObject({
-      id: 'force-lab',
-      eyebrow: 'Force Lab Practice',
-      title: 'Choose the constraint, then defend the claim',
+    expect(clinicalModuleCopy.lessons[2]).toMatchObject({
+      id: 'architecture-choice',
+      eyebrow: 'Clinical Case 3 · Architecture',
+      title: 'Choose an architecture, not merely a material',
     })
   })
 

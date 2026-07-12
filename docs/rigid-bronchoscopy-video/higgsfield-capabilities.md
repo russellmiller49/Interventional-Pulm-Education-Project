@@ -1,90 +1,91 @@
 # Higgsfield MCP Capability Audit (Phase 0.2)
 
-**Status: BLOCKED — authentication required. No tools have been enumerated and no
-media has been generated.**
+**Status: CONNECTED.** The Higgsfield MCP server is authenticated and its tools
+are enumerated below. Generation of the `mainstem-direction` prototype has begun
+(draft only — nothing approved; see `production-plan.md` and the generation
+history manifest).
 
-## Connection status (as of this audit)
+## Connection / account
 
-`claude mcp list` reports the Higgsfield MCP server as configured but **not
-authenticated**:
+- Server: `higgsfield: https://mcp.higgsfield.ai/mcp (HTTP) - ✔ Connected`
+- Plan: **Plus**. Workspace: single private workspace (selected as the billing
+  target). Balance at audit time: **1180 credits**.
 
-```
-claude.ai Higgsfield: https://mcp.higgsfield.ai/mcp - ! Needs authentication
-```
+## Tools (enumerated from the live server)
 
-Because the server is not authenticated, its tools are **not exposed** to the
-assistant. A tool search for Higgsfield returns nothing, so the tool names,
-parameter schemas, supported durations/resolutions, and credit costs **cannot be
-inspected yet**. Per the project instructions, we do **not** fabricate tool
-names or generation results.
+| Capability                                 | MCP tool                                                       | Notes                                                                                                  |
+| ------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| List / search / get / **recommend** models | `models_explore`                                               | `action` ∈ list/search/get/recommend; filter by `type` (image/video/audio/3d) and `input` (text/image) |
+| Text-to-image / image-to-image             | `generate_image`                                               | top-level `model`, `params.{aspect_ratio,resolution,count≤4,medias[]}`; `get_cost:true` preflights     |
+| Text/image-to-video                        | `generate_video`                                               | `params.{aspect_ratio,resolution,duration,count≤4,medias[],preset_id}`; `get_cost:true` preflights     |
+| Audio generation                           | `generate_audio`                                               | (not used — narration is authored + recorded deterministically)                                        |
+| Image→3D (GLB)                             | `generate_3d`                                                  | candidate for validated-3D internal shots later                                                        |
+| Camera / motion presets                    | `presets_show`, `motion_control`                               | image-to-video presets; motion transfer / recast                                                       |
+| Video analysis                             | `video_analysis_create` / `_status` / `_jobs`                  | optional QA of generated clips                                                                         |
+| Generation history                         | `show_generations`                                             | past non-Marketing-Studio generations                                                                  |
+| Async job polling                          | `job_status`                                                   | `sync:true` waits ~25s; else obey `poll_after_seconds`                                                 |
+| Asset download                             | (from `job_status`)                                            | `results.rawUrl` (full) + `results.minUrl` (webp preview) → HTTP GET                                   |
+| Upscaling                                  | `upscale_image`, `upscale_video`                               | enhance to 2K/4K (use for approved finals)                                                             |
+| Reframe / outpaint / cutout                | `reframe`, `outpaint_image`, `remove_background`               | aspect change / expand / transparent                                                                   |
+| Reusable identity / elements               | `show_characters` (Soul), `show_reference_elements`, `soul_id` | reusable operator/instrument identity if needed                                                        |
+| Credits / billing                          | `balance`, `show_plans_and_credits`, `transactions`            |                                                                                                        |
+| Workspaces                                 | `list_workspaces`, `select_workspace`                          | billing target                                                                                         |
+| Rights reveal (`ip_detected`)              | `reveal_generation`                                            | seedance-family only                                                                                   |
 
-> This document must be completed by re-running the audit **after** the server is
-> authenticated. Do not begin Phase 5 (prototype generation) until the capability
-> table below is filled in from the live tool schemas.
+## Formats & constraints (from live model schemas)
 
-## How to authenticate (physician / owner action)
+- **Aspect ratio 16:9**: supported by the chosen models. ✅
+- **Resolutions**: images `1k / 2k / 4k` (`nano_banana_pro`); video `720p / 1080p`
+  (`kling3_0_turbo`), up to `4k` (`seedance_2_0` std, `kling3_0` pro/4k).
+- **Start + end frames**: supported by `seedance_2_0` and `kling3_0`
+  (`medias` roles `start_image` + `end_image`) — use end frames for directional
+  reliability on the L/R maneuver clips. `kling3_0_turbo` is `start_image` only.
+- **Multiple reference images**: supported (`medias[]`; `image_references` role on
+  `seedance_2_0` / `gemini_omni`).
+- **Negative prompts**: `nano_banana_pro` has **no** negative-prompt field →
+  per plan, the global rejection constraints are appended into the prompt text.
+- **Disable audio**: `seedance_2_0` `generate_audio:false`; `kling3_0` `sound:'off'`;
+  `kling3_0_turbo` is silent. Generation audio is disabled (narration added later).
+- **`medias[].value`** must be a `media_id`/`job_id` (a prior generation id), never
+  a raw URL. Prior generations are reused by passing their id.
 
-The assistant cannot complete the OAuth flow. The owner must do one of:
+## Selected models (prototype)
 
-1. In an interactive `claude` terminal, run `/mcp`, select **Higgsfield**, and
-   complete the browser sign-in; **or**
-2. Authenticate Higgsfield from the Claude **Connectors** UI
-   (claude.ai / desktop app → Settings → Connectors → Higgsfield).
+- **Hero stills:** `nano_banana_pro` (resolves internally to `nano_banana_2`) —
+  best hands/instrument coherence and prompt adherence. 16:9, 2k. **~2 credits/image.**
+- **Draft image→video:** `kling3_0_turbo`, 720p, 5s, `start_image` = hero frame.
+  **~7.5 credits/clip.** (Seedance 2.0 fast 720p = ~17.5.) Approved finals will be
+  re-rendered at 1080p and may use `seedance_2_0`/`kling3_0` with start+end frames.
 
-When `claude mcp list` shows `✔ Connected`, re-run the capability audit.
+## Credit costs observed (preflight via `get_cost`)
 
-## Capabilities to document once connected
+| Generation | Model             | Settings                     | Credits |
+| ---------- | ----------------- | ---------------------------- | ------- |
+| Image      | `nano_banana_pro` | 16:9, 2k                     | 2       |
+| Video      | `kling3_0_turbo`  | 16:9, 720p, 5s               | 7.5     |
+| Video      | `seedance_2_0`    | 16:9, 720p, 5s, fast, silent | 17.5    |
 
-The audit must enumerate the exact MCP tool names and schemas and record the
-following. Every cell is **UNKNOWN — pending authentication** today.
+Draft prototype (stills + ~5 short clips) is well under 100 credits. Approved
+1080p re-renders and upscales cost more and are done only after physician review.
 
-| Capability                                       | Tool name | Notes / params | Status                 |
-| ------------------------------------------------ | --------- | -------------- | ---------------------- |
-| List available models                            | —         | —              | UNKNOWN (pending auth) |
-| Text-to-image generation                         | —         | —              | UNKNOWN (pending auth) |
-| Image editing                                    | —         | —              | UNKNOWN (pending auth) |
-| Multi-reference image generation                 | —         | —              | UNKNOWN (pending auth) |
-| Image-to-video generation                        | —         | —              | UNKNOWN (pending auth) |
-| Text-to-video generation                         | —         | —              | UNKNOWN (pending auth) |
-| Camera / motion presets                          | —         | —              | UNKNOWN (pending auth) |
-| Video analysis                                   | —         | —              | UNKNOWN (pending auth) |
-| Generation-history retrieval                     | —         | —              | UNKNOWN (pending auth) |
-| Job-status polling                               | —         | —              | UNKNOWN (pending auth) |
-| Asset downloading                                | —         | —              | UNKNOWN (pending auth) |
-| Video upscaling                                  | —         | —              | UNKNOWN (pending auth) |
-| Image upscaling                                  | —         | —              | UNKNOWN (pending auth) |
-| Character / location / reusable-element creation | —         | —              | UNKNOWN (pending auth) |
+## Standing rules honored
 
-Also record, from the live schemas:
-
-- Supported video durations
-- Supported aspect ratios (target **16:9**)
-- Supported resolutions (final **1080p**; drafts lowest practical preview res)
-- Whether start **and** end frames are supported (needed for directional reliability)
-- Whether multiple reference images are supported
-- Whether negative prompts are supported (else append the global rejection
-  constraints — see `prompts/global-style.md`)
-- Whether audio can be disabled (it must be — no generated speech/dialogue)
-- Which tool returns generation history
-- Which tool polls asynchronous jobs
-- How generated files are retrieved (download path/URL)
-- Any credit-cost information exposed by the tools
-
-## Confirmation
-
-- ✅ No clinical media have been generated.
-- ✅ No Higgsfield tool names have been invented.
-- ✅ The blocker (authentication) has been reported to the owner.
+- No Higgsfield tool names invented (all verified against the live server).
+- No generation is claimed unless its result was retrieved and inspected.
+- All generated media is DRAFT; nothing is approved. Internal airway anatomy is
+  not generated free-form (validated-3D only).
 
 ## Baseline (recorded during Phase 0)
 
 Recorded on branch `ebus_update` (working directly on this branch per owner
-decision; no separate feature branch was created). The working tree already
-contained unrelated in-progress changes when this baseline was taken.
+decision; no separate feature branch).
 
 - `npm run type-check` → **pass** (exit 0)
-- `npm test` (jest) → **2 pre-existing failures**, 677 passed / 679 total. The
-  failures are in
+- `npm test` (jest) → all pass on a clean run. An initial background baseline run
+  showed 2 flaky failures in
   `src/features/airway-stent-mechanics/__tests__/StentArchitectureLab.learningLab.test.tsx`
-  (a reduced-motion Play-button assertion) and are **unrelated** to this module.
+  that pass on isolated/clean re-run (flaky under parallel load; unrelated).
 - `npm run lint` → **pass** (0 errors, 13 pre-existing warnings)
+
+After this module was added: **130 suites / 712 tests pass** (31 new tests across
+5 suites), type-check clean, lint clean on the new files.

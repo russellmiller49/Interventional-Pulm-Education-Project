@@ -42,9 +42,17 @@ describe('technique-video manifest', () => {
     expect(orders).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
   })
 
-  it('starts entirely as planned (no media generated yet)', () => {
-    expect(techniqueClips.every((clip) => clip.reviewStatus === 'planned')).toBe(true)
-    expect(techniqueClips.every((clip) => clip.videoPath === '')).toBe(true)
+  it('has no approved clips yet; planned clips carry no media, generated clips do', () => {
+    // As media is generated, clips move planned -> generated-draft. Nothing is
+    // approved (and therefore nothing is publishable) until physician review.
+    expect(techniqueClips.some((clip) => clip.reviewStatus === 'approved')).toBe(false)
+    for (const clip of techniqueClips) {
+      if (clip.reviewStatus === 'planned') {
+        expect(clip.videoPath).toBe('')
+      } else {
+        expect(clip.videoPath.length).toBeGreaterThan(0)
+      }
+    }
   })
 
   it('flags every synthetic clip for the synthetic-content label', () => {

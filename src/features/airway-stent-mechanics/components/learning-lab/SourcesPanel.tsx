@@ -19,10 +19,17 @@ function SourceCard({ reference }: { reference: EvidenceReference }) {
         <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
           {reference.applicability.replaceAll('-', ' ')}
         </span>
+        <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-indigo-800 dark:text-indigo-200">
+          {reference.claimScope.replaceAll('-', ' ')}
+        </span>
       </div>
       <p className="mt-3 text-sm leading-6 text-foreground">{reference.citation}</p>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
         <strong className="text-foreground">Boundary:</strong> {reference.transferLimitation}
+      </p>
+      <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+        Verified {reference.verifiedOn}
+        {reference.clinicalReviewNote ? ` · ${reference.clinicalReviewNote}` : ''}
       </p>
       <a
         href={reference.url}

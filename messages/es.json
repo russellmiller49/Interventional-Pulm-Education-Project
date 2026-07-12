@@ -295,9 +295,9 @@
         "description": "Procedimientos de vía aérea rígida — coring, endoprótesis, hemostasia y seguridad frente al fuego"
       },
       "airwayStentMechanics": {
-        "title": "Mecánica de stents de vía aérea",
-        "shortTitle": "Mecánica de stents",
-        "description": "Laboratorio 3D de fuerza radial, conformabilidad, interacción tisular y fatiga"
+        "title": "Decisiones clínicas sobre stents de vía aérea",
+        "shortTitle": "Decisiones sobre stents",
+        "description": "Casos sobre indicación, arquitectura, ajuste, complicaciones y vigilancia"
       },
       "tracheostomy": {
         "title": "Laboratorio de Traqueostomía",

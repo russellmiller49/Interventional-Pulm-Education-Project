@@ -374,12 +374,12 @@ const nextConfig = {
     return [
       {
         source: '/airway-stent-mechanics/force-lab',
-        destination: '/airway-stent-mechanics?lesson=force-lab',
+        destination: '/airway-stent-mechanics?lesson=architecture-choice&panel=mechanics',
         permanent: false,
       },
       {
         source: '/airway-stent-mechanics/force-lab/index.html',
-        destination: '/airway-stent-mechanics?lesson=force-lab',
+        destination: '/airway-stent-mechanics?lesson=architecture-choice&panel=mechanics',
         permanent: false,
       },
     ]

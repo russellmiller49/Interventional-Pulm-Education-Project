@@ -122,12 +122,16 @@ const localizedSearchOverrides: Partial<
       keywords: ['traqueostomía', 'manguito', 'válvula fonatoria', 'decanulación', 'succión'],
     },
     '/airway-stent-mechanics': {
-      title: 'Laboratorio de mecánica de stents de vía aérea',
+      title: 'Laboratorio de decisiones clínicas sobre stents de vía aérea',
       description:
-        'Modelos 3D, curvas de fuerza radial, conformabilidad, migración, interacción tisular, fatiga y lectura de pruebas de banco.',
+        'Casos sobre indicación, objetivo mecánico, arquitectura, ajuste anatómico, complicaciones, vigilancia y estrategia de retirada.',
       section: 'Vía aérea',
       keywords: [
         'stent de vía aérea',
+        'indicación',
+        'ajuste anatómico',
+        'granulación',
+        'vigilancia',
         'fuerza radial',
         'nitinol',
         'silicona',
@@ -226,10 +230,10 @@ const localizedSearchOverrides: Partial<
       keywords: ['气管切开', '套囊', '发声阀', '拔管', '吸痰'],
     },
     '/airway-stent-mechanics': {
-      title: '气道支架力学实验室',
-      description: '3D 模型、径向力曲线、顺应性、迁移、组织相互作用、疲劳与台架测试解读。',
+      title: '气道支架临床决策实验室',
+      description: '通过病例学习适应证、机械目标、支架结构、解剖匹配、并发症、随访与退出策略。',
       section: '气道',
-      keywords: ['气道支架', '径向力', '镍钛合金', '硅胶', '迁移', '疲劳'],
+      keywords: ['气道支架', '适应证', '解剖匹配', '肉芽组织', '随访', '径向力', '迁移'],
     },
     '/learn/anatomy': {
       title: '交互式 3D 解剖查看器',
@@ -378,14 +382,18 @@ const allStaticResults: SiteSearchResult[] = [
     ],
   },
   {
-    title: 'Airway Stent Learning Lab',
+    title: 'Airway Stent Clinical Decision Lab',
     description:
-      'Learners begin with a guided Force Lab and later return for case-based practice in airway stent topology, mechanics, tissue interaction, evidence, and clinical tradeoffs.',
+      'Clinical cases on indication, mechanical job, architecture, anatomic fit, complications, surveillance, and exit planning, with optional just-in-time physics lenses.',
     href: '/airway-stent-mechanics',
     section: 'Airway',
     type: 'page',
     keywords: [
       'airway stent',
+      'indication',
+      'anatomic fit',
+      'surveillance',
+      'exit strategy',
       'radial force',
       'chronic outward force',
       'compression resistance',

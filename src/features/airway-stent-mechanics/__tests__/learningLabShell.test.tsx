@@ -2,12 +2,16 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { AirwayStentLearningLab } from '../components/learning-lab/AirwayStentLearningLab'
-import { stentAssessmentItems } from '../content/learningLabCopy'
+import {
+  clinicalAssessmentItems,
+  clinicalAssessmentMasteryThreshold,
+} from '../content/clinicalModuleCopy'
 import {
   STENT_PROGRESS_STORAGE_KEY,
   createDefaultStentProgress,
   markLessonCompleted,
 } from '../engine/learningLabProgress'
+import { STENT_LESSON_IDS } from '../engine/learningLabTypes'
 
 const push = jest.fn()
 const replace = jest.fn()
@@ -49,7 +53,32 @@ jest.mock('../components/learning-lab/StentArchitectureLabDynamic', () => ({
   ),
 }))
 
-describe('AirwayStentLearningLab shell', () => {
+jest.mock('../components/learning-lab/StentArchitectureViewport', () => ({
+  StentArchitectureViewport: () => <div data-testid="mock-stent-viewport" />,
+}))
+
+async function waitForHydration() {
+  await waitFor(() => {
+    expect(screen.queryByText('Restoring saved clinical progress…')).not.toBeInTheDocument()
+  })
+}
+
+async function chooseAndCommit(user: ReturnType<typeof userEvent.setup>, label: string) {
+  const radio = screen.getByRole('radio', { name: label })
+  await user.click(radio)
+  const decision = radio.closest('section')
+  expect(decision).not.toBeNull()
+  await user.click(within(decision as HTMLElement).getByRole('button', { name: /commit/i }))
+}
+
+async function selectMixedIndicationCase(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    screen.getByRole('button', { name: /Mixed obstruction with a residual external load/i }),
+  )
+  expect(screen.getByTestId('clinical-case-mixed-residual-extrinsic-compression')).toBeVisible()
+}
+
+describe('AirwayStentLearningLab clinical-first shell', () => {
   beforeEach(() => {
     window.localStorage.clear()
     push.mockClear()
@@ -57,182 +86,177 @@ describe('AirwayStentLearningLab shell', () => {
     recordSiteModuleEvent.mockClear()
   })
 
-  it('makes the guided Force Lab prominent on a fresh page and scrolls its CTA to the lab', async () => {
-    const user = userEvent.setup()
+  it('starts a fresh learner with a clinical case and no required mechanics lab', async () => {
     render(<AirwayStentLearningLab />)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Restoring saved lesson progress…')).not.toBeInTheDocument()
-    })
+    await waitForHydration()
 
-    expect(screen.getByRole('heading', { name: 'Start in the Force Lab' })).toBeVisible()
-    expect(screen.getByText('Guided first · case practice later')).toBeVisible()
-    expect(screen.getByText(/Amplitude represents displacement, not force/i)).toBeVisible()
-    expect(screen.getByTestId('mock-lab-guided-force')).toBeVisible()
-
-    const guidedAnchor = screen.getByTestId('mock-lab-guided-force').parentElement
-    expect(guidedAnchor).toHaveAttribute('id', 'airway-stent-guided-force-lab')
-    const scrollIntoView = jest.fn()
-    Object.defineProperty(guidedAnchor, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    })
-
-    await user.click(screen.getByRole('button', { name: 'Start guided Force Lab' }))
-
-    expect(push).toHaveBeenCalledWith('/en/airway-stent-mechanics?lesson=orient', {
-      scroll: false,
-    })
-    await waitFor(() => {
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' })
-    })
+    expect(screen.getByRole('button', { name: 'Start a clinical case' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Should this airway be stented?' })).toBeVisible()
+    expect(screen.queryByTestId(/mock-lab-/)).not.toBeInTheDocument()
+    expect(screen.queryByTestId('mock-stent-viewport')).not.toBeInTheDocument()
   })
 
-  it('requires all guided scenes plus prediction and checkpoint before completing orient', async () => {
+  it('offers a no-stent decision in the opening case', async () => {
+    render(<AirwayStentLearningLab requestedLessonId="indication" />)
+
+    await waitForHydration()
+
+    expect(screen.getByRole('radio', { name: 'No stent now' })).toBeVisible()
+  })
+
+  it('completes an indication case without opening its optional physics lens', async () => {
     const user = userEvent.setup()
-    render(<AirwayStentLearningLab requestedLessonId="orient" />)
+    render(<AirwayStentLearningLab requestedLessonId="indication" />)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Restoring saved lesson progress…')).not.toBeInTheDocument()
-    })
-    expect(screen.getByTestId('mock-lab-guided-force')).toBeVisible()
-    expect(screen.queryByText('Name the obstruction morphology')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('radio', { name: 'The residual mechanical job, if any' }))
-    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
-
-    expect(screen.getByText('Name the obstruction morphology')).toBeVisible()
-    expect(screen.queryByRole('heading', { name: 'Lesson checkpoint' })).not.toBeInTheDocument()
-    expect(screen.getByText(/Complete 3 remaining guided scenes/i)).toBeVisible()
-    expect(screen.queryByText('Lesson completed')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: 'Complete guided-force experience' }))
-
-    expect(screen.getByRole('heading', { name: 'Lesson checkpoint' })).toBeVisible()
-
-    await user.click(
-      screen.getByRole('radio', {
-        name: 'What architecture can support the residual wall while fitting its landing zones?',
-      }),
+    await waitForHydration()
+    await selectMixedIndicationCase(user)
+    await chooseAndCommit(
+      user,
+      'Stenting is reasonable if the residual job and clinical benefit are explicit',
     )
-    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
+
+    expect(screen.getByTestId('physics-lens-drawer')).toBeVisible()
+    expect(screen.queryByTestId('physics-lens-residual-extrinsic-load')).not.toBeInTheDocument()
+
+    await chooseAndCommit(
+      user,
+      'Maintain left-mainstem patency while preserving both lobar pathways',
+    )
+    await chooseAndCommit(
+      user,
+      'Reassess patency, fit, symptoms, and ongoing indication as treatment changes anatomy',
+    )
+    await user.click(screen.getByRole('button', { name: 'Complete clinical case' }))
 
     expect(screen.getByText('Lesson completed')).toBeVisible()
+    expect(screen.queryByTestId('mock-stent-viewport')).not.toBeInTheDocument()
+
     const saved = JSON.parse(window.localStorage.getItem(STENT_PROGRESS_STORAGE_KEY) ?? '{}') as {
       completedLessonIds?: string[]
     }
-    expect(saved.completedLessonIds).toContain('orient')
+    expect(saved.completedLessonIds).toContain('indication')
     expect(recordSiteModuleEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         eventType: 'section_completed',
         moduleId: 'airway-stent-mechanics',
-        section: 'orient',
+        section: 'indication',
         eventPayload: {
-          experience: 'guided-force',
-          completedSceneCount: 3,
+          caseId: 'mixed-residual-extrinsic-compression',
+          interaction: 'clinical_case_completed',
         },
       }),
     )
   })
 
-  it('uses the architecture explorer in lesson 2 after its opening prediction', async () => {
+  it('does not complete a lesson merely because the physics lens was opened', async () => {
     const user = userEvent.setup()
-    render(<AirwayStentLearningLab requestedLessonId="architectures" />)
+    render(<AirwayStentLearningLab requestedLessonId="indication" />)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Restoring saved lesson progress…')).not.toBeInTheDocument()
-    })
-    expect(screen.queryByTestId('mock-lab-architecture-explorer')).not.toBeInTheDocument()
-
-    await user.click(
-      screen.getByRole('radio', { name: 'No—trace crossings, rings, and connectors first' }),
+    await waitForHydration()
+    await selectMixedIndicationCase(user)
+    await chooseAndCommit(
+      user,
+      'Stenting is reasonable if the residual job and clinical benefit are explicit',
     )
-    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
+    await user.click(
+      within(screen.getByTestId('physics-lens-drawer')).getByRole('button', {
+        name: /Optional physics lens/i,
+      }),
+    )
 
-    expect(screen.getByTestId('mock-lab-architecture-explorer')).toBeVisible()
+    expect(screen.getByTestId('physics-lens-residual-extrinsic-load')).toBeVisible()
+    expect(await screen.findByTestId('mock-stent-viewport')).toBeVisible()
+    expect(screen.queryByText('Lesson completed')).not.toBeInTheDocument()
+
+    const saved = JSON.parse(window.localStorage.getItem(STENT_PROGRESS_STORAGE_KEY) ?? '{}') as {
+      completedLessonIds?: string[]
+    }
+    expect(saved.completedLessonIds).not.toContain('indication')
+    expect(recordSiteModuleEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        eventPayload: expect.objectContaining({ interaction: 'physics_lens_opened' }),
+      }),
+    )
+    expect(recordSiteModuleEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'section_completed', section: 'indication' }),
+    )
   })
 
-  it('keeps Force Lab practice and its debrief gated in the force-lab deep link', async () => {
+  it('lets a learner revise the opening choice after inspecting the physics lens', async () => {
     const user = userEvent.setup()
-    render(<AirwayStentLearningLab requestedLessonId="force-lab" />)
+    render(<AirwayStentLearningLab requestedLessonId="indication" />)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Restoring saved lesson progress…')).not.toBeInTheDocument()
-    })
-    expect(
-      screen.getByRole('heading', { name: 'Choose the constraint, then defend the claim' }),
-    ).toBeVisible()
-    expect(screen.queryByTestId('mock-lab-force-practice')).not.toBeInTheDocument()
-
+    await waitForHydration()
+    await selectMixedIndicationCase(user)
+    await chooseAndCommit(user, 'Do not consider a stent because debulking was completed')
     await user.click(
-      screen.getByRole('radio', { name: 'A difference in displayed geometric response' }),
+      within(screen.getByTestId('physics-lens-drawer')).getByRole('button', {
+        name: /Optional physics lens/i,
+      }),
     )
-    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
-
-    expect(screen.getByTestId('mock-lab-force-practice')).toBeVisible()
-    expect(screen.queryByText('Use the metric and method together')).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Lesson checkpoint' })).not.toBeInTheDocument()
-    expect(screen.getByText(/Complete 3 remaining practice missions/i)).toBeVisible()
-
-    await user.click(screen.getByRole('button', { name: 'Complete force-practice experience' }))
-
-    expect(screen.getByText('Use the metric and method together')).toBeVisible()
-    expect(screen.getByRole('heading', { name: 'Lesson checkpoint' })).toBeVisible()
+    expect(await screen.findByTestId('mock-stent-viewport')).toBeVisible()
 
     await user.click(
       screen.getByRole('radio', {
-        name: /RRF is read during compression; COF is read on expansion\/unloading/i,
+        name: 'Stenting is reasonable if the residual job and clinical benefit are explicit',
       }),
     )
-    await user.click(screen.getByRole('button', { name: 'Commit and reveal' }))
+    expect(screen.getByText(/A revised choice is selected/i)).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Revise and recommit' }))
 
-    expect(screen.getByText('Lesson completed')).toBeVisible()
+    expect(screen.getByText('Defensible choice')).toBeVisible()
     expect(recordSiteModuleEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        eventType: 'section_completed',
-        moduleId: 'airway-stent-mechanics',
-        section: 'force-lab',
-        eventPayload: {
-          experience: 'force-practice',
-          completedMissionCount: 3,
-        },
+        eventPayload: expect.objectContaining({
+          interaction: 'decision_revised',
+          caseId: 'mixed-residual-extrinsic-compression',
+          choiceId: 'reasonable-with-defined-benefit',
+        }),
       }),
     )
   })
 
-  it('lets an explicit deep link override saved progress and keeps lesson navigation open', async () => {
-    const saved = markLessonCompleted(createDefaultStentProgress(), 'tissue-time')
-    window.localStorage.setItem(STENT_PROGRESS_STORAGE_KEY, JSON.stringify(saved))
-    const user = userEvent.setup()
-
+  it('maps the legacy force-lab deep link to architecture choice and opens engineering', async () => {
     render(<AirwayStentLearningLab requestedLessonId="force-lab" />)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Restoring saved lesson progress…')).not.toBeInTheDocument()
-    })
-    expect(
-      screen.getByRole('heading', { name: 'Choose the constraint, then defend the claim' }),
-    ).toBeVisible()
-
-    await user.click(screen.getByRole('button', { name: /Assessment Open lesson/i }))
+    await waitForHydration()
 
     expect(
-      screen.getByRole('heading', { name: 'Commit across mechanics, tissue, and time' }),
+      screen.getByRole('heading', { name: 'Choose an architecture, not merely a material' }),
     ).toBeVisible()
-    expect(push).toHaveBeenCalledWith('/en/airway-stent-mechanics?lesson=assessment', {
-      scroll: false,
-    })
+    expect(
+      screen.getByRole('button', {
+        name: /Optional · does not affect module completion.*Advanced mechanics/i,
+      }),
+    ).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId('mock-lab-architecture-explorer')).toBeVisible()
   })
 
-  it('submits assessment analytics and records module completion after a full attempt', async () => {
+  it('lets an explicit canonical deep link override saved v2 progress', async () => {
+    const saved = markLessonCompleted(createDefaultStentProgress(), 'complications-surveillance')
+    window.localStorage.setItem(STENT_PROGRESS_STORAGE_KEY, JSON.stringify(saved))
+
+    render(<AirwayStentLearningLab requestedLessonId="architecture-choice" />)
+
+    await waitForHydration()
+
+    expect(
+      screen.getByRole('heading', { name: 'Choose an architecture, not merely a material' }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('heading', { name: 'When the airway worsens, identify what failed' }),
+    ).not.toBeInTheDocument()
+
+    const persisted = JSON.parse(
+      window.localStorage.getItem(STENT_PROGRESS_STORAGE_KEY) ?? '{}',
+    ) as { lastLessonId?: string }
+    expect(persisted.lastLessonId).toBe('architecture-choice')
+  })
+
+  it('records dynamic assessment analytics and full module completion', async () => {
     let saved = createDefaultStentProgress()
-    for (const lessonId of [
-      'orient',
-      'architectures',
-      'force-lab',
-      'tissue-time',
-      'evidence-decisions',
-    ] as const) {
+    for (const lessonId of STENT_LESSON_IDS.filter((lessonId) => lessonId !== 'assessment')) {
       saved = markLessonCompleted(saved, lessonId)
     }
     window.localStorage.setItem(STENT_PROGRESS_STORAGE_KEY, JSON.stringify(saved))
@@ -240,11 +264,19 @@ describe('AirwayStentLearningLab shell', () => {
 
     render(<AirwayStentLearningLab requestedLessonId="assessment" />)
 
-    await waitFor(() => {
-      expect(screen.queryByText('Restoring saved lesson progress…')).not.toBeInTheDocument()
-    })
+    await waitForHydration()
+    expect(
+      screen.getByRole('heading', {
+        name: `Commit to all ${clinicalAssessmentItems.length} decisions`,
+      }),
+    ).toBeVisible()
+    expect(
+      screen.getByText(
+        `Mastery: ${clinicalAssessmentMasteryThreshold}/${clinicalAssessmentItems.length}`,
+      ),
+    ).toBeVisible()
 
-    for (const item of stentAssessmentItems) {
+    for (const item of clinicalAssessmentItems) {
       const correct = item.choices.find((choice) => choice.id === item.correctChoiceId)
       expect(correct).toBeDefined()
       const radio = screen.getByRole('radio', { name: correct?.label })
@@ -263,8 +295,9 @@ describe('AirwayStentLearningLab shell', () => {
       moduleId: 'airway-stent-mechanics',
       percentComplete: 100,
       eventPayload: {
-        score: 6,
-        total: 6,
+        interaction: 'assessment_submitted',
+        score: clinicalAssessmentItems.length,
+        total: clinicalAssessmentItems.length,
         attempt: 1,
         mastery: true,
       },
@@ -274,8 +307,9 @@ describe('AirwayStentLearningLab shell', () => {
       moduleId: 'airway-stent-mechanics',
       percentComplete: 100,
       eventPayload: {
+        interaction: 'module_completed',
         mastery: true,
-        bestScore: 6,
+        bestPercent: 100,
         attempts: 1,
       },
     })
