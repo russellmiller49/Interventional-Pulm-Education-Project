@@ -13,6 +13,7 @@ interface StentPredictionPanelProps {
   onReset: () => void
   onSelect: (choiceId: string) => void
   onSkip: () => void
+  reducedMotion?: boolean
   selectedChoiceId: string | null
   skipped: boolean
   station: StentExplorerStation
@@ -25,6 +26,7 @@ export function StentPredictionPanel({
   onReset,
   onSelect,
   onSkip,
+  reducedMotion = false,
   selectedChoiceId,
   skipped,
   station,
@@ -109,7 +111,9 @@ export function StentPredictionPanel({
               onClick={onCommit}
               className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto"
             >
-              Commit prediction and animate
+              {reducedMotion
+                ? 'Commit prediction and reveal static states'
+                : 'Commit prediction and animate'}
             </button>
             <button
               type="button"

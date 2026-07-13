@@ -8,6 +8,7 @@ interface StentPlayPromptProps {
   onSelfCheck: () => void
   onSkipAndPlay: () => void
   open: boolean
+  reducedMotion?: boolean
   stationTitle: string
 }
 
@@ -16,6 +17,7 @@ export function StentPlayPrompt({
   onSelfCheck,
   onSkipAndPlay,
   open,
+  reducedMotion = false,
   stationTitle,
 }: StentPlayPromptProps) {
   const dialogRef = useRef<HTMLElement>(null)
@@ -100,8 +102,10 @@ export function StentPlayPrompt({
             id="stent-play-prompt-description"
             className="mt-3 text-sm leading-6 text-muted-foreground"
           >
-            Playback reveals the modeled consequence for <strong>{stationTitle}</strong>. Use the
-            optional self-check to commit a prediction, or skip it and start exploring immediately.
+            Playback reveals the modeled consequence for <strong>{stationTitle}</strong>.{' '}
+            {reducedMotion
+              ? 'Your device currently requests reduced motion; use the self-check to reveal static states, or explicitly play the full animation.'
+              : 'Use the optional self-check to commit a prediction, or skip it and start exploring immediately.'}
           </p>
         </header>
 
@@ -116,7 +120,9 @@ export function StentPlayPrompt({
             <ListChecks className="h-5 w-5 text-indigo-600 dark:text-indigo-300" aria-hidden />
             <span className="mt-3 block text-sm font-bold">Go to self-check</span>
             <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-              Make an unscored prediction, then animate the result.
+              {reducedMotion
+                ? 'Make an unscored prediction, then reveal representative static states.'
+                : 'Make an unscored prediction, then animate the result.'}
             </span>
           </button>
           <button

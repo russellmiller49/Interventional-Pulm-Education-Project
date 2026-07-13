@@ -30,6 +30,7 @@ jest.mock('@/lib/analytics', () => ({
 
 jest.mock('../components/explorer/StentExplorerViewportDynamic', () => ({
   StentExplorerViewportDynamic: ({
+    playing,
     progress,
     reducedMotion,
     showHotspots,
@@ -37,6 +38,7 @@ jest.mock('../components/explorer/StentExplorerViewportDynamic', () => ({
     viewMode,
     modifiers,
   }: {
+    playing: boolean
     progress: number
     reducedMotion: boolean
     showHotspots: boolean
@@ -47,6 +49,7 @@ jest.mock('../components/explorer/StentExplorerViewportDynamic', () => ({
     <div
       data-testid="mock-stent-explorer-viewport"
       data-hotspots={String(showHotspots)}
+      data-playing={String(playing)}
       data-progress={String(progress)}
       data-reduced-motion={String(reducedMotion)}
       data-saddle-mismatch={String(modifiers?.saddleMismatch ?? 0)}
@@ -78,7 +81,7 @@ async function commitFirstPrediction(user: ReturnType<typeof userEvent.setup>) {
   await user.click(within(predictionPanel as HTMLElement).getAllByRole('radio')[0])
   await user.click(
     within(predictionPanel as HTMLElement).getByRole('button', {
-      name: 'Commit prediction and animate',
+      name: /Commit prediction and/,
     }),
   )
 }
@@ -548,14 +551,42 @@ describe('StentMechanicsExplorer shell', () => {
       'true',
     )
     expect(screen.getByText(/Reduced motion is active/i)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Play' })).toBeEnabled()
 
     await commitFirstPrediction(user)
 
     expect(screen.getByTestId('mock-stent-explorer-viewport')).toHaveAttribute('data-progress', '1')
     expect(screen.getByText(station.phases.at(-1)!.textEquivalent)).toBeVisible()
-    expect(screen.getByRole('button', { name: 'Show baseline' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Replay' })).toBeEnabled()
     await user.click(within(interactionDock()).getByRole('tab', { name: 'Inspect' }))
     expect(screen.getByText('Clinical debrief revealed')).toBeVisible()
+  })
+
+  it('plays the full animation when a reduced-motion learner explicitly selects Play', async () => {
+    mockReducedMotion = true
+    const user = userEvent.setup()
+    render(<StentMechanicsExplorer initialStationId="cough-motion" />)
+
+    await user.click(screen.getByRole('button', { name: 'Play' }))
+    expect(screen.getByText(/reveal representative static states/i)).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Skip prediction & play' }))
+
+    const viewport = screen.getByTestId('mock-stent-explorer-viewport')
+    expect(viewport).toHaveAttribute('data-reduced-motion', 'false')
+    expect(viewport).toHaveAttribute('data-playing', 'true')
+    expect(viewport).toHaveAttribute('data-progress', '0')
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeEnabled()
+    expect(screen.getByText(/Animation is enabled for this module/i)).toBeVisible()
+    expect(
+      screen.queryByRole('group', { name: 'Reduced-motion static state' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Use static states' }))
+
+    expect(viewport).toHaveAttribute('data-reduced-motion', 'true')
+    expect(viewport).toHaveAttribute('data-playing', 'false')
+    expect(viewport).toHaveAttribute('data-progress', '1')
+    expect(screen.getByRole('group', { name: 'Reduced-motion static state' })).toBeVisible()
   })
 
   it('offers static baseline, loaded, and recovered states for metallic reduced motion', async () => {

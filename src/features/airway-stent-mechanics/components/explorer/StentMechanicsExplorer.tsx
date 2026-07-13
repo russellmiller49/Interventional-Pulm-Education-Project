@@ -125,7 +125,7 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
-  const reducedMotion = Boolean(useReducedMotion())
+  const systemReducedMotion = Boolean(useReducedMotion())
   const firstStationId = initialStationId ?? stentExplorerStations[0].id
   const initialStation = getStentExplorerStation(firstStationId)
   const [activeStationId, setActiveStationId] = useState<StentExplorerStationId>(firstStationId)
@@ -147,6 +147,7 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
   const [interactionDockTab, setInteractionDockTab] = useState<InteractionDockTab>('details')
   const [focusWorkspace, setFocusWorkspace] = useState(false)
   const [showPlayPrompt, setShowPlayPrompt] = useState(false)
+  const [motionOverride, setMotionOverride] = useState(false)
   const progressRef = useRef(0)
   const completionRecordedRef = useRef(false)
   const initialStationRecordedRef = useRef(false)
@@ -166,6 +167,7 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
   const phaseIndex = phaseIndexForProgress(progress, station.phases.length)
   const activePhase = station.phases[phaseIndex]
   const interactionUnlocked = committed || predictionSkipped
+  const reducedMotion = systemReducedMotion && !motionOverride
   const visibleHotspots = interactionUnlocked && showHotspots
   const mechanicsModifiers = useMemo(
     () => deriveStentMechanicsModifiers(station, controlState, architectureId),
@@ -409,16 +411,10 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
     setCommitted(false)
     completionRecordedRef.current = false
     setInteractionDockTab('explore')
-    if (reducedMotion) {
-      const staticProgress = reducedMotionRevealProgress(activeStationId)
-      setProgress(staticProgress)
-      progressRef.current = staticProgress
-      setPlaying(false)
-    } else {
-      setProgress(0)
-      progressRef.current = 0
-      setPlaying(true)
-    }
+    if (systemReducedMotion) setMotionOverride(true)
+    setProgress(0)
+    progressRef.current = 0
+    setPlaying(true)
     recordSiteModuleEvent({
       eventType: 'module_interaction',
       moduleId: MODULE_ID,
@@ -446,10 +442,11 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
       return
     }
     if (reducedMotion) {
-      const next = progressRef.current >= 0.999 ? 0 : 1
-      progressRef.current = next
-      setProgress(next)
-      setPlaying(false)
+      setMotionOverride(true)
+      progressRef.current = 0
+      setProgress(0)
+      completionRecordedRef.current = false
+      setPlaying(true)
       return
     }
     if (playing) {
@@ -801,15 +798,7 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
                             ) : (
                               <Play className="h-4 w-4" aria-hidden />
                             )}
-                            {reducedMotion
-                              ? progress >= 1
-                                ? 'Show baseline'
-                                : 'Reveal result'
-                              : playing
-                                ? 'Pause'
-                                : progress >= 1
-                                  ? 'Replay'
-                                  : 'Play'}
+                            {playing ? 'Pause' : progress >= 1 ? 'Replay' : 'Play'}
                           </button>
                           <button
                             type="button"
@@ -859,12 +848,32 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
                         <strong className="text-foreground">Text equivalent:</strong>{' '}
                         {activePhase.textEquivalent}
                       </p>
-                      {reducedMotion ? (
+                      {systemReducedMotion && motionOverride ? (
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-300/50 bg-cyan-50/70 p-3 dark:border-cyan-300/20 dark:bg-cyan-300/5">
+                          <p className="text-xs leading-5 text-cyan-900 dark:text-cyan-100">
+                            Animation is enabled for this module even though your device requests
+                            reduced motion.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const staticProgress = reducedMotionRevealProgress(activeStationId)
+                              setMotionOverride(false)
+                              setPlaying(false)
+                              setProgress(staticProgress)
+                              progressRef.current = staticProgress
+                            }}
+                            className="min-h-9 rounded-lg border bg-background px-3 text-[11px] font-semibold hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+                          >
+                            Use static states
+                          </button>
+                        </div>
+                      ) : reducedMotion ? (
                         <div className="mt-3 rounded-xl border border-amber-300/50 bg-amber-50/70 p-3 dark:border-amber-300/20 dark:bg-amber-300/5">
                           <p className="text-xs leading-5 text-amber-800 dark:text-amber-200">
-                            Reduced motion is active. Commit or skip the optional prediction, then
-                            inspect baseline, representative loaded, and recovered or consequence
-                            states without cyclic playback.
+                            Reduced motion is active by default. Commit or skip the optional
+                            prediction to inspect static states, or select Play to run the full
+                            animation for this module.
                           </p>
                           <div
                             aria-label="Reduced-motion static state"
@@ -1015,6 +1024,7 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
                         <StentPredictionPanel
                           compact
                           committed={committed}
+                          reducedMotion={reducedMotion}
                           skipped={predictionSkipped}
                           selectedChoiceId={selectedChoiceId}
                           station={station}
@@ -1121,6 +1131,7 @@ export function StentMechanicsExplorer({ initialStationId }: StentMechanicsExplo
 
               <StentPlayPrompt
                 open={showPlayPrompt}
+                reducedMotion={reducedMotion}
                 stationTitle={station.title}
                 onClose={() => setShowPlayPrompt(false)}
                 onSelfCheck={openSelfCheckFromPlayPrompt}

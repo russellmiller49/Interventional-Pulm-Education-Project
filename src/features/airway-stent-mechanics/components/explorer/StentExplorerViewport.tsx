@@ -79,7 +79,9 @@ export function StentExplorerViewport(props: StentExplorerViewportProps) {
   const [visibleOnScreen, setVisibleOnScreen] = useState(true)
   const containerRef = useRef<HTMLElement>(null)
   const systemReducedMotion = usePrefersReducedMotion()
-  const effectiveReducedMotion = Boolean(props.reducedMotion || systemReducedMotion)
+  // The shell owns any explicit learner override. Fall back to the device preference only when
+  // this viewport is rendered without an explicit motion setting.
+  const effectiveReducedMotion = props.reducedMotion ?? systemReducedMotion
   const crossSectionVisible = props.viewMode === 'cross-section'
   const updateRenderedScene = !crossSectionVisible && visibleOnScreen
   const renderedSceneProgress = updateRenderedScene ? props.progress : 0
