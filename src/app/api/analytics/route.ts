@@ -10,6 +10,7 @@ const analyticsPayloadSchema = z.object({
   eventPayload: z.record(z.unknown()).optional(),
   eventType: z.enum([
     'module_completed',
+    'module_interaction',
     'module_opened',
     'quiz_submitted',
     'section_completed',
@@ -122,6 +123,11 @@ export async function POST(request: Request) {
 
     await updateModuleProgress({ totalTimeDeltaSeconds: 0 })
 
+    return NextResponse.json({ status: 'ok' })
+  }
+
+  if (event.eventType === 'module_interaction') {
+    await recordModuleEvent(event.eventType)
     return NextResponse.json({ status: 'ok' })
   }
 

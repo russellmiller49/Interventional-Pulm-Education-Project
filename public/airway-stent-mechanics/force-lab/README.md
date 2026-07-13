@@ -1,15 +1,16 @@
-# Airway Stent Force Lab
+# Archived Airway Stent Force Lab
 
-A self-contained, guided teaching module (Learn → Practice → Assess) on airway-stent
+A retained, self-contained teaching prototype (Learn → Practice → Assess) on airway-stent
 **architecture, deformation, and foreshortening**, built for the interventional-pulmonology
 education platform. A persistent three.js canvas generates six stent architectures
 procedurally in-browser and deforms them live; a six-section stepper wraps the interactive
 force lab in teaching narrative and a self-check.
 
-Open it on the static/dev server (no auth gate — it lives under `public/`):
+The deployed routes below now redirect through the normal module authentication boundary to the
+current explorer's Architecture & lumen station:
 
 ```
-/airway-stent-mechanics/force-lab/index.html
+/airway-stent-mechanics?station=architecture-lumen
 ```
 
 ## Sections

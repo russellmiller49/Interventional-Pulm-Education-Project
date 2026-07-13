@@ -1,161 +1,200 @@
-# Airway Stent Clinical Decision Lab — Clinical Review Checklist
+# Airway Stent Mechanics & Failure Explorer — Clinical Review Checklist
 
-Status: **Draft · clinical review required**
+Status: **Published educational module · clinical review remains draft**
 
 Primary route: `/[locale]/airway-stent-mechanics`
 
-This checklist is the release gate for changing `clinicalReviewStatus` from `draft` to `reviewed`.
-Review the visible learner experience, source boundaries, optional physics lenses, assessment, and
-the hands-on bootcamp coordination together.
+This checklist governs the separate change from `clinicalReviewStatus: draft` to `reviewed`.
+Public availability was approved by the site owner on 2026-07-13, but that editorial publication
+decision does not represent clinical-review sign-off. Review the visible learner experience, all
+eleven stations, evidence boundaries, original visuals, asset provenance, accessibility, and
+inbound site copy together before labeling the explorer clinically reviewed.
 
-## 1. Indication statements
+## 1. Explorer experience
 
-- [ ] Confirm the no-stent case accurately frames a stable airway after successful treatment of
-      purely intrinsic malignant obstruction.
-- [ ] Confirm that mixed obstruction with important residual extrinsic compression is framed as a
-      possible structural indication, contingent on symptoms, intended benefit, downstream lung,
-      overall treatment plan, anatomy, local resources, and operator expertise.
-- [ ] Confirm that stenting is not presented as automatic after debulking or as a substitute for
-      tumor-directed therapy.
-- [ ] Confirm the aerodigestive-fistula case compares airway-only, esophageal-only, combined, and
-      no-airway-stent pathways before assigning an airway device a sealing job.
-- [ ] Confirm that the selected dynamic-collapse vignette is explicitly a defined temporary trial,
-      not a general recommendation.
+- [ ] Confirm all eleven stations are immediately available from the explorer hub and through
+      `?station=<station-id>` deep links; no station requires completion of another station.
+- [ ] Confirm predictions are optional, unscored, and reveal the teaching explanation only after
+      the learner commits an answer.
+- [ ] Confirm the module does not show or persist lesson completion, progress, mastery scores,
+      surveillance commitments, required remediation, or course-certificate state.
+- [ ] Confirm learner-facing copy describes a freely navigable explorer, not a full course,
+      required prework, assessment pathway, or Clinical Decision Lab.
+- [ ] Confirm each station provides a clinical vignette, architecture or anatomy presets,
+      animation/scrubbing, inspectable hotspots, a concise debrief, adjacent citations, an evidence
+      boundary, and a complete reduced-motion text equivalent.
+- [ ] Confirm the five reusable presets remain clinically coherent across stations: curved
+      left-mainstem silicone failure, post-treatment migration, uncovered-SEMS restenosis,
+      tortuous-airway fracture, and whole-Y carinal mismatch.
 
-Primary sources: CHEST CAO guideline; WABIP malignant and benign airway-stenting guidelines.
+## 2. Station-by-station clinical review
 
-## 2. Benign-disease statements
+### Architecture & lumen (`architecture-lumen`)
 
-- [ ] Review every statement about definitive therapy, temporary support, removability, dwell
-      horizon, tissue incorporation, and exit planning.
-- [ ] Confirm that no architecture is presented as a default permanent solution for heterogeneous
-      benign disease.
-- [ ] Confirm that the uncovered and partially covered teaching families do not imply easy later
-      removal.
+- [ ] Confirm same-outer-diameter comparisons use one true drawing scale and accurately display
+      outer diameter, wall thickness, inner diameter, inner/outer ratio, and lumen-area fraction
+      `(ID/OD)^2`.
+- [ ] Confirm thicker-wall silicone is presented as an architecture tradeoff, not as an unsupported
+      airflow, symptom, complication, or patient-outcome calculation.
 
-Primary source: WABIP benign central-airway-obstruction stenting guideline.
+### Metal scaffold & material (`metal-architecture`)
 
-## 3. Sizing and fit statements
+- [ ] Confirm the free-crossing multiwire braid, captured hook-and-cross braid, laser-cut
+      ring-and-connector lattice, and single-wire knitted scaffold remain visually and
+      mechanically distinct; laser-cut and knitted configurations must never receive free-braid
+      controls.
+- [ ] Confirm full, partial, and absent coverage are shown as different longitudinal interfaces,
+      including the covered body, cover transitions, and exposed end cells of the partial-cover
+      knit.
+- [ ] Confirm superelastic recovery and the historical balloon-expanded stainless-steel reference
+      are paired construction examples—not a material-only experiment or a universal
+      nitinol-versus-steel ranking.
+- [ ] Confirm no visual calibration coefficient is labeled as force, stiffness, radial strength,
+      fatigue life, tissue pressure, clinical performance, or product superiority.
 
-- [ ] Confirm the lumen-budget cross-sections use one true drawing scale and that inner diameter,
-      circular lumen area, inner-to-outer diameter ratio, and lumen-area fraction are calculated
-      correctly from the displayed illustrative wall geometry.
-- [ ] Confirm the thicker-wall silicone comparison is qualitative and is not converted into an
-      unsupported airflow, symptom, complication, or patient-outcome model.
-- [ ] Confirm that the required path teaches landing zones, disease length, taper, curvature,
-      branches, dynamic change, and future remodeling without providing a universal oversizing or
-      margin rule.
-- [ ] Confirm that the Y-stent case requires whole-device review: tracheal segment, saddle, both
-      limb diameters and lengths, branch angles, device ends, and distal patency.
-- [ ] Confirm that Hu et al. is described only as a study-specific association involving Dumon
-      stents and is not converted into a universal cutoff or patient-level risk equation.
-- [ ] Review all architecture-registry claims about deployment, apposition, customization, and
-      removal against current instructions for use before publication.
-- [ ] Confirm the curved-airway solid-silicone scene shows straightening, sliding, gapping, or
-      central involution rather than braid-angle foreshortening.
-- [ ] Confirm the whole-Y scenario includes the tracheal segment, saddle, both limb diameters and
-      lengths, branch angles, distal orifices, and architecture-specific staged deployment.
+### Cough & motion (`cough-motion`)
 
-## 4. Surveillance recommendations
+- [ ] Confirm diameter-length coupling and foreshortening are shown only for architectures that
+      exhibit those behaviors; solid silicone may slide, straighten, or move but must not behave
+      like a braid.
+- [ ] Confirm end excursion/contact is described as one plausible contributor in a multifactorial
+      pathway. The station must never state or imply that cough or foreshortening deterministically
+      causes granulation or predicts an individual's risk.
 
-- [ ] Confirm that surveillance and an exit strategy are part of the initial prescription in each
-      case where a stent is considered.
-- [ ] Review the statement that the malignant WABIP guideline conditionally suggests surveillance
-      bronchoscopy in asymptomatic patients and, absent stronger evidence, an initial examination at
-      approximately 4–6 weeks.
-- [ ] Confirm that the module explicitly states this is not a universal schedule for every benign
-      and malignant case.
-- [ ] Confirm that symptom, imaging, bronchoscopic, secretion, position, disease-response, and
-      ongoing-indication triggers are framed as context dependent.
+### Curve, buckle & kink (`curve-buckle`)
 
-## 5. Complication and management statements
+- [ ] Confirm the curved-airway silicone sequence distinguishes straightening, inner-curve gapping,
+      focal outer-curve contact, central involution/buckling, lumen loss, and branch crowding.
+- [ ] Confirm the qualitative animation does not calculate tissue pressure or claim a universal
+      diameter, curvature, force, or buckling threshold.
 
-- [ ] Confirm that recurrent obstruction includes mucus, granulation, tumor ingrowth or overgrowth,
-      migration, malposition or branch obstruction, recurrent external compression, infection,
-      fracture, cover failure, and fistula progression or failure to seal.
-- [ ] Confirm that granulation is presented as multifactorial: fit/contact/motion,
-      secretions/infection, foreign-body and wound-healing biology, dwell time, disease, and host
-      factors.
-- [ ] Confirm that Ost et al. supports an association—not deterministic causation—between lower
-      respiratory infection and later granulation in the studied malignant-airway cohort.
-- [ ] Confirm that restoring patency is paired with evaluation of infection and secretions,
-      reassessment of fit/position/architecture and ongoing indication, and consideration of
-      exchange, repositioning, removal, or another strategy as clinically appropriate.
-- [ ] Confirm that the module never presents a debridement modality as a complete response by
-      itself.
-- [ ] Confirm the cough scene allows diameter-length coupling and axial end excursion only for a
-      braided scaffold and does not depict solid silicone as braid-foreshortening.
-- [ ] Confirm progressive tissue response is not revealed until end contact,
-      secretions/infection, dwell time, and host response have all been considered.
-- [ ] Confirm the longitudinal sequence includes mucus obstruction, infection, migration,
-      granulation, tumor ingrowth or overgrowth, fracture, cover failure, and branch obstruction.
-- [ ] Confirm technical patency, symptoms and quality of life, reintervention burden, and
-      underlying-disease outcome remain separate outcome domains.
+### Migration (`migration`)
 
-## 6. Architecture and branded-device descriptions
+- [ ] Confirm reduced apposition from illustrative undersizing or changing tumor burden precedes
+      displacement relative to fixed airway landmarks.
+- [ ] Confirm migration is not attributed to radial force alone and that management language remains
+      conceptual and context dependent.
 
-- [ ] Review all seven architecture families for construction accuracy and neutral language.
-- [ ] Confirm that branded examples appear only in sourced engineering details, never as a correct
-      clinical answer or product ranking.
-- [ ] Verify current manufacturer and FDA source pages before publication.
-- [ ] Resolve publication rights, provenance, and manufacturer-validation limitations before any
-      branded GLB asset is added to the required clinical path.
-- [ ] Confirm unresolved model derivatives remain behind the site-admin asset gate and outside the
-      ordinary learner path until those limitations are resolved.
-- [ ] If `MODULE_ASSET_ORIGIN` is configured, verify equivalent private-origin or CDN controls;
-      the app-origin proxy gate does not authorize a separately public asset URL.
-- [ ] Confirm that generic schematics are labeled as educational architecture families rather than
-      exact product CAD.
+### Mucus obstruction (`mucus-obstruction`)
 
-## 7. Regulatory and off-label implications
+- [ ] Confirm the sequence differentiates surface coating, retention pocket, plug, lumen compromise,
+      and possible infection context without asserting a universal surveillance schedule.
+- [ ] Confirm secretion transport is presented as dependent on airway, device, host, and care
+      factors rather than as an absolute property of one material.
 
-- [ ] Verify current labeling and instructions for use for every device-specific construction,
-      deployment, retrieval, or use statement.
-- [ ] Confirm that regulatory documents are used only for construction and labeled-use description,
-      not comparative clinical effectiveness.
-- [ ] Add explicit review language before any off-label application is discussed.
+### Granulation (`granulation`)
 
-## 8. Images, physics lenses, and captions
+- [ ] Confirm the station presents fit/contact/motion, secretions or infection, dwell time,
+      foreign-body and wound-healing biology, disease, and host response before revealing tissue
+      encroachment.
+- [ ] Confirm Ost et al. is used only for observational association in its studied cohort and Hu et
+      al. only for a study-specific Dumon-stent diameter association; neither may become a causal
+      model, universal cutoff, percentage rule, or patient-level prediction.
 
-- [ ] Review all six authored physics presets and observation prompts.
-- [ ] Confirm that the required lenses do not expose raw displacement controls, force units,
-      normalized geometry readouts, COF/RRF vocabulary, or bench values.
-- [ ] Confirm that every lens states its clinical question and an evidence boundary.
-- [ ] Confirm that curve and cough scenes do not calculate tissue pressure, prove causation, or
-      assign an individual risk.
-- [ ] Confirm that reduced-motion and text-only learners receive equivalent instructional content.
-- [ ] Confirm completion remains possible without WebGL and that each required code-native SVG has
-      an equivalent static text description.
-- [ ] Confirm that the archived standalone prototype is not presented as the primary curriculum.
+### Tumor ingrowth & overgrowth (`tumor-ingrowth-overgrowth`)
 
-## 9. Assessment and analytics
+- [ ] Confirm tumor passing through an uncovered scaffold is visually distinct from tumor growing
+      around the ends of a covered scaffold.
+- [ ] Confirm covered architecture is not described as absolute protection from recurrent tumor
+      obstruction and uncovered architecture is not described as universally inappropriate.
 
-- [ ] Review every correct answer and rationale for indication, architecture, fit, complication,
-      surveillance, and changing-anatomy cases.
-- [ ] Confirm that no branded product is the sole correct answer.
-- [ ] Confirm that assessment totals remain data-driven and the old assessment mastery is not
-      carried into progress version 3 from version 1 or version 2.
-- [ ] Confirm every missed domain requires rationale review and a defensible revised plan before
-      module completion, including a 5/6 attempt that otherwise meets the mastery threshold.
-- [ ] Confirm that analytics payloads contain only module, lesson, case, decision, choice, and
-      completion identifiers—no free text or patient-identifying information.
+### Fracture & cover failure (`fracture-cover-failure`)
 
-## 10. Localization and release state
+- [ ] Confirm repeated loading at a tortuous or curved segment leads to a qualitative structural
+      hotspot before wire discontinuity or cover failure appears.
+- [ ] Confirm tortuosity and repeated multiaxial load—not cough alone—are presented as possible
+      fracture contributors, and wire fracture, cover tear, obstruction, and tissue injury remain
+      distinct findings.
 
+### Carina & Y-stent fit (`y-stent`)
+
+- [ ] Confirm whole-device review includes the tracheal segment, saddle, both limb diameters and
+      lengths, branch angles, posterior-wall motion, distal orifices, secretion pockets, and branch
+      patency.
+- [ ] Confirm geometry is illustrative and does not provide universal sizing, oversizing, landing
+      margin, or branch-angle rules.
+
+### Deploy, inspect & rescue (`deploy-rescue`)
+
+- [ ] Confirm silicone and SEMS deployment, immediate inspection, repositioning limits, removal,
+      exchange, and complication-response pathways stay conceptual and do not function as
+      unsupervised procedural instructions.
+- [ ] Confirm post-deployment inspection includes position, expansion, landing zones, branch
+      patency, secretion clearance, tissue contact, and whether the original indication still
+      applies.
+
+## 3. Evidence and safety boundaries
+
+- [ ] Confirm the five supplied textbook chapters inform original teaching copy and animations;
+      do not publish, trace, reproduce, or closely imitate textbook screenshots, figures, tables,
+      or other copyrighted artwork.
+- [ ] Confirm every visual is original, code-native, procedurally generated, or separately
+      rights-cleared, with its source/provenance recorded.
+- [ ] Confirm architecture-dependent behavior is not reduced to material labels; finished geometry,
+      construction, cover, ends, and surface features may change contact and deformation.
+- [ ] Confirm fracture claims follow Chung et al. and related sources without presenting cough alone
+      as the mechanism, and mechanics claims follow Ratnovsky et al. without turning bench geometry
+      into a clinical device ranking.
+- [ ] Confirm all animations are labeled qualitative unless the displayed dimensions or behavior
+      are directly sourced, and no station encodes universal sizing, surveillance, airflow, force,
+      complication-rate, or device-ranking rules.
+- [ ] Confirm the professional-education disclaimer is visible and no station provides
+      patient-specific advice or presents one architecture or product as universally best.
+
+## 4. Visuals, controls, and accessibility
+
+- [ ] Confirm the persistent viewport preserves station state while external, cutaway,
+      endoscopic-style, and true-scale cross-section views remain synchronized.
+- [ ] Confirm orbit/pan, camera presets, play/pause, scrubbing, reset, and hotspot toggles are
+      keyboard operable and expose their state through accessible names and ARIA attributes.
+- [ ] Confirm findings never rely on color alone and hotspots have equivalent visible or
+      screen-reader text.
+- [ ] Confirm reduced-motion mode provides the complete clinical sequence as static states and
+      text, and WebGL failure does not block access to the vignette, prediction, findings, sources,
+      or debrief.
+- [ ] Confirm paused and offscreen scenes use demand rendering and that selected-station assets are
+      lazy-loaded rather than preloading the full model library.
+- [ ] Complete visual review on desktop, tablet, and mobile for all four view modes.
+
+## 5. Asset provenance and access policy
+
+- [ ] Confirm learner-facing 3D assets are generic and rights-cleared; branded or product-like v1
+      model derivatives remain optional, outside the learner path, and site-admin-only under
+      `/airway-stent-mechanics/models/v1/*`.
+- [ ] Confirm reviewed generic v2 assets under `/airway-stent-mechanics/models/v2/*` require the
+      normal authenticated-site boundary but do not require a `site_admin` entitlement.
+- [ ] Confirm unknown, unversioned, or future asset versions default to the site-admin gate until a
+      rights and release policy is explicitly added.
+- [ ] Validate every v2 manifest entry for content hash, provenance metadata, semantic node IDs,
+      required morph targets, no product branding, no more than 120,000 triangles, and no more than
+      5 MiB per GLB.
+- [ ] If `MODULE_ASSET_ORIGIN` or a direct CDN URL is configured, verify equivalent origin-side
+      access controls. The app-origin proxy gate does not authorize a separately public asset URL.
+
+## 6. Analytics, localization, and release state
+
+- [ ] Confirm analytics contain identifiers only, such as station selected, prediction committed,
+      animation completed, and source opened; do not send answers as mastery, free text, patient
+      data, course progress, or completion state.
 - [ ] Clinically approve the English source before changing `clinicalReviewStatus` to `reviewed`.
-- [ ] Confirm Spanish and Simplified Chinese show an explicit English-fallback review badge until
-      their translated clinical review is complete.
-- [ ] Confirm the route gate and visible review badge both derive from `clinicalReviewStatus`.
-- [ ] Confirm the Board Prep airway-stent chapter links to the localized Clinical Decision Lab and
-      remains a concise reference rather than a duplicate course.
-- [ ] Confirm the Board Prep bridge is hidden from ordinary users while the lab is draft-gated and
-      becomes public from the same `clinicalReviewStatus` release transition.
+- [ ] Confirm Spanish and Simplified Chinese clearly identify the reviewed-English fallback until
+      translated clinical review is complete.
+- [ ] Confirm publication status and clinical-review status remain separate: publication controls
+      route visibility, while clinical-review status controls whether the module may claim to be
+      clinically reviewed.
+- [ ] Confirm Board Prep, site search, navigation, and the stent bootcamp link to the localized
+      Airway Stent Mechanics & Failure Explorer with exploratory—not required-course—language.
+- [ ] Confirm the Board Prep bridge follows the explorer's publication status without implying
+      that public availability equals completed clinical review.
 
 ## Sign-off
 
 - Physician reviewer:
 - Review date:
 - Evidence review completed:
+- Rights/provenance review completed:
 - Visual/caption review completed:
+- Accessibility review completed:
 - Required corrections:
 - Approved status (`draft` or `reviewed`):
+- Editorial publication authorization: Site owner request, 2026-07-13

@@ -12,9 +12,9 @@ describe('BoardReviewInteractiveModuleCard', () => {
   it('configures the airway-stents chapter as the only Board Prep interactive bridge', () => {
     expect(boardReviewChapterMap['airway-stents'].interactiveModule).toEqual({
       href: '/airway-stent-mechanics',
-      label: 'Practice in the Clinical Decision Lab',
+      label: 'Airway Stent Mechanics & Failure Explorer',
       description:
-        'Apply indication, architecture, lumen, fit, complication, surveillance, and exit decisions in the full interactive airway-stent course.',
+        'Explore how architecture, lumen geometry, fit, motion, and changing airway conditions can produce clinically important failure patterns across freely navigable interactive stations.',
     })
 
     expect(
@@ -33,15 +33,15 @@ describe('BoardReviewInteractiveModuleCard', () => {
     render(<BoardReviewInteractiveModuleCard interactiveModule={interactiveModule} locale="es" />)
 
     expect(
-      screen.getByRole('region', { name: 'Practice in the Clinical Decision Lab' }),
+      screen.getByRole('region', { name: 'Airway Stent Mechanics & Failure Explorer' }),
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        'Apply indication, architecture, lumen, fit, complication, surveillance, and exit decisions in the full interactive airway-stent course.',
+        'Explore how architecture, lumen geometry, fit, motion, and changing airway conditions can produce clinically important failure patterns across freely navigable interactive stations.',
       ),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('link', { name: 'Practice in the Clinical Decision Lab' }),
+      screen.getByRole('link', { name: 'Airway Stent Mechanics & Failure Explorer' }),
     ).toHaveAttribute('href', '/es/airway-stent-mechanics')
   })
 })

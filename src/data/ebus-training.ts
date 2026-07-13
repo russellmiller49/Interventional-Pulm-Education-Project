@@ -9,7 +9,6 @@ export interface EmbeddedTrainingModule {
   appHashPath: string
   publicScope: 'ebus' | 'tnm'
   href: string
-  requiresAdmin?: boolean
   highlights: string[]
   keywords: string[]
 }
@@ -51,45 +50,32 @@ export const publicEbusTrainingModules: EmbeddedTrainingModule[] = [
   },
   {
     slug: 'simulator',
-    title: 'EBUS Simulator',
+    title: 'EBUS Simulator + Virtual Bronchoscopy',
     shortTitle: 'Simulator',
-    kicker: 'EBUS training',
+    kicker: 'Updated EBUS training',
     description:
-      'Use the static anatomy-correlation simulator to rehearse guided centerline motion, airway orientation, and station snap targets.',
+      'Navigate the updated simulator with synchronized external anatomy, first-person virtual bronchoscopy, and EBUS sector views.',
     appHashPath: '/simulator',
     publicScope: 'ebus',
     href: '/ebus-training/simulator',
     highlights: [
-      'Navigate a simplified airway centerline with EBUS station targets.',
-      'Correlate airway position with station-specific ultrasound snapshots.',
-      'Practice spatial relationships before hands-on EBUS simulation.',
+      'Drive the scope through a synchronized external airway and first-person endoluminal view.',
+      'Correlate scope position with station-specific EBUS sector imaging and anatomy targets.',
+      'Use the updated three-pane workspace to rehearse spatial orientation before hands-on simulation.',
     ],
-    keywords: ['ebus', 'simulator', 'airway', 'stations', 'ultrasound', 'navigation'],
+    keywords: [
+      'ebus',
+      'simulator',
+      'virtual bronchoscopy',
+      'airway',
+      'stations',
+      'ultrasound',
+      'navigation',
+    ],
   },
 ]
 
-export const adminEbusTrainingModules: EmbeddedTrainingModule[] = [
-  {
-    slug: 'virtual-bronchoscopy',
-    title: 'EBUS Simulator with Virtual Bronchoscopy',
-    shortTitle: 'Virtual Bronch',
-    kicker: 'Admin preview',
-    description:
-      'Review the simulator build that adds a synchronized first-person virtual bronchoscopy pane to the external anatomy and EBUS sector views.',
-    appHashPath: '/simulator',
-    publicScope: 'ebus',
-    href: '/ebus-training/virtual-bronchoscopy',
-    requiresAdmin: true,
-    highlights: [
-      'Keeps the public simulator pathway separate from the virtual-bronchoscopy preview.',
-      'Synchronizes the endoluminal camera with the same scope pose used by the anatomy and sector panes.',
-      'Available only to active site administrators while the feature remains under review.',
-    ],
-    keywords: ['ebus', 'simulator', 'virtual bronchoscopy', 'admin', 'airway', 'endoluminal'],
-  },
-]
-
-export const allEbusTrainingModules = [...publicEbusTrainingModules, ...adminEbusTrainingModules]
+export const allEbusTrainingModules = publicEbusTrainingModules
 
 export const tnm9TrainingModule: EmbeddedTrainingModule = {
   slug: 'tnm-9-staging',
@@ -110,19 +96,6 @@ export const tnm9TrainingModule: EmbeddedTrainingModule = {
 }
 
 export function getEmbeddedCourseModuleSrc(module: EmbeddedTrainingModule, locale: string) {
-  if (module.requiresAdmin) {
-    return buildEmbeddedAppSrc(
-      socalEbusCourseAppPath,
-      locale,
-      {
-        publicTraining: '1',
-        publicScope: module.publicScope,
-        adminPreview: '1',
-      },
-      module.appHashPath,
-    )
-  }
-
   return buildEmbeddedAppSrc(
     socalEbusCourseAppPath,
     locale,
@@ -142,19 +115,6 @@ export function getAnyEbusTrainingModule(slug: string) {
   return allEbusTrainingModules.find((module) => module.slug === slug)
 }
 
-export function getEbusTrainingModule(
-  slug: string,
-  options: { canViewAdminModules?: boolean } = {},
-) {
-  const publicModule = getPublicEbusTrainingModule(slug)
-
-  if (publicModule) {
-    return publicModule
-  }
-
-  if (!options.canViewAdminModules) {
-    return undefined
-  }
-
-  return adminEbusTrainingModules.find((module) => module.slug === slug)
+export function getEbusTrainingModule(slug: string) {
+  return getPublicEbusTrainingModule(slug)
 }

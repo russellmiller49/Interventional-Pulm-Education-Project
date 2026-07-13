@@ -217,12 +217,7 @@
       "ebusTraining": {
         "title": "EBUS Training",
         "shortTitle": "EBUS",
-        "description": "Knobology, stations, and simulator modules"
-      },
-      "ebusVirtualBronch": {
-        "title": "EBUS Virtual Bronch",
-        "shortTitle": "EBUS VB",
-        "description": "Admin preview of the synchronized virtual bronchoscopy simulator"
+        "description": "Knobology, stations, and the updated simulator with virtual bronchoscopy"
       },
       "podcastLibrary": {
         "title": "Podcast Library",
@@ -253,6 +248,11 @@
         "title": "Bronch Navigation",
         "shortTitle": "Nav Bronch",
         "description": "CT-to-bronchoscope navigation simulator"
+      },
+      "therapeuticBronchoscopy": {
+        "title": "Therapeutic Bronchoscopy",
+        "shortTitle": "Therapeutic Bronch",
+        "description": "Rigid bronchoscopy, thermal and peripheral ablation, and airway stents"
       },
       "thermalAblation": {
         "title": "Thermal Ablation",
@@ -295,9 +295,9 @@
         "description": "Rigid airway procedures — coring, stents, hemostasis, and fire safety"
       },
       "airwayStentMechanics": {
-        "title": "Airway Stent Clinical Decision Lab",
-        "shortTitle": "Stent Decisions",
-        "description": "Case-based indication, architecture, fit, complications, and surveillance"
+        "title": "Airway Stent Mechanics & Failure Explorer",
+        "shortTitle": "Stent Explorer",
+        "description": "Explore architecture, lumen, motion, fit, failure modes, and rescue concepts"
       },
       "tracheostomy": {
         "title": "Tracheostomy Knowledge Lab",
@@ -312,7 +312,7 @@
       "comingSoon": {
         "title": "Coming Soon",
         "shortTitle": "Coming Soon",
-        "description": "Upcoming pleural, bronchoscopy, and rigid bronchoscopy modules"
+        "description": "Upcoming pleural and bronchoscopy learning modules"
       }
     }
   },
@@ -332,14 +332,22 @@
     "introToBronchoscopy": "Intro to Bronchoscopy"
   },
   "home": {
-    "heroEyebrow": "Interventional Pulmonology Education",
-    "heroTitle": "Education & Innovation in Interventional Pulmonology",
-    "heroBody": "Explore EBUS training, podcast journal clubs, 3D anatomy, Nav Bronch, board review, and FluoroView simulation modules built for interventional pulmonology learners and educators.",
+    "heroEyebrow": "New modules & recent updates",
+    "heroTitle": "Explore what is new in the IP learning lab",
+    "heroBody": "Now live: the Tracheostomy Knowledge Lab and a new Therapeutic Bronchoscopy collection with Rigid Bronchoscopy, Thermal Ablation, Peripheral Ablation, and Airway Stents. The EBUS Simulator now includes synchronized virtual bronchoscopy, and the Podcast Library is newly expanded.",
     "openEbus": "Open EBUS Training",
     "browsePodcasts": "Browse Podcast Library",
+    "exploreTherapeuticBronchoscopy": "Explore Therapeutic Bronchoscopy",
+    "openUpdatedEbus": "Open Updated EBUS Simulator",
+    "heroHighlights": {
+      "ebusSimulator": "Updated EBUS Simulator",
+      "therapeuticBronchoscopy": "Therapeutic Bronchoscopy · 4 modules",
+      "tracheostomy": "New Tracheostomy Lab",
+      "podcastLibrary": "Podcast Library"
+    },
     "launchCatalog": "Launch catalog",
     "coreModules": "Core learning modules",
-    "coreModulesBody": "Start with the modules that are ready for learners now: EBUS training, TNM-9 staging, 3D anatomy, board review, journal club podcasts, Nav Bronch, FluoroView, and teaching resources.",
+    "coreModulesBody": "Start with learner-ready EBUS training, Therapeutic Bronchoscopy, Tracheostomy, TNM-9 staging, 3D anatomy, board review, journal club podcasts, Nav Bronch, FluoroView, and teaching resources.",
     "pccmIntroParticipants": "PCCM Intro Course participants",
     "socalParticipants": "SoCal EBUS Course participants",
     "participantCourse": "Participant course",
@@ -348,7 +356,7 @@
     "openCoursePortal": "Open Course Portal",
     "roadmap": "Roadmap",
     "upcomingModules": "Upcoming modules",
-    "upcomingBody": "The next public releases focus on intro pleural disease, rigid bronchoscopy foundations, and intro bronchoscopy.",
+    "upcomingBody": "The next public releases focus on intro pleural disease and intro bronchoscopy.",
     "viewComingSoon": "View Coming Soon",
     "cards": {
       "podcast": {
@@ -360,14 +368,14 @@
       "ebus": {
         "badge": "EBUS",
         "title": "EBUS Training",
-        "description": "Open knobology, mediastinal station, and EBUS simulator modules without course-participant lockout.",
+        "description": "Open knobology, mediastinal stations, and the updated EBUS simulator with synchronized virtual bronchoscopy.",
         "cta": "Open EBUS Training"
       },
-      "adminPreview": {
-        "badge": "Admin preview",
-        "title": "EBUS Simulator + Virtual Bronchoscopy",
-        "description": "Review the synchronized virtual bronchoscopy pane alongside the EBUS simulator before it is production-ready.",
-        "cta": "Open Admin Preview"
+      "therapeuticBronchoscopy": {
+        "badge": "New collection",
+        "title": "Therapeutic Bronchoscopy",
+        "description": "Explore Rigid Bronchoscopy, Thermal Ablation, Peripheral Ablation, and Airway Stent Mechanics from one learning hub.",
+        "cta": "Explore 4 Submodules"
       },
       "tnm": {
         "badge": "Staging",
@@ -405,12 +413,6 @@
         "description": "Foundational tools for scope sizing, airway reach concepts, and instrument compatibility.",
         "cta": "Open Intro Module"
       },
-      "rigidBronchoscopy": {
-        "badge": "Airway",
-        "title": "Rigid Bronchoscopy",
-        "description": "Rigid airway procedures: equipment, ventilation, coring, stents, hemostasis, and airway-fire safety — simulation only.",
-        "cta": "Open Rigid Bronchoscopy"
-      },
       "tracheostomy": {
         "badge": "Airway",
         "title": "Tracheostomy Knowledge Lab",
@@ -434,6 +436,44 @@
         "title": "Resource Library",
         "description": "Browse Creative Commons medical images and clinician-builder learning guides for teaching and development.",
         "cta": "Browse Resources"
+      }
+    }
+  },
+  "therapeuticBronchoscopy": {
+    "metaTitle": "Therapeutic Bronchoscopy",
+    "metaDescription": "One learning hub for rigid bronchoscopy, thermal ablation, peripheral lung tumor ablation, and airway stent mechanics.",
+    "eyebrow": "New learning collection",
+    "title": "Therapeutic Bronchoscopy",
+    "description": "Explore four complementary interactive modules spanning central-airway access, tissue ablation, peripheral tumor therapy, and airway-stent mechanics.",
+    "collectionLabel": "Four submodules · one collection",
+    "chooseTitle": "Choose a submodule to explore",
+    "chooseBody": "Start with the topic that matches your learning goal. Each submodule remains independently navigable, and you can return here to move across the collection.",
+    "disclaimerTitle": "Clinician education and simulation only",
+    "disclaimerBody": "These modules do not credential independent procedural practice or replace patient-specific assessment, device instructions, local protocols, supervision, or multidisciplinary clinical judgment.",
+    "modules": {
+      "rigidBronchoscopy": {
+        "badge": "Airway foundation",
+        "title": "Rigid Bronchoscopy",
+        "description": "Learn equipment, shared-airway ventilation, coring, dilation, stenting, hemostasis, and airway-fire safety through simulation-focused lessons and practice.",
+        "cta": "Open Rigid Bronchoscopy"
+      },
+      "thermalAblation": {
+        "badge": "Central airway therapy",
+        "title": "Thermal Ablation",
+        "description": "Explore laser physics, electrosurgery, argon plasma coagulation, tissue effects, modality tradeoffs, and airway-fire prevention.",
+        "cta": "Open Thermal Ablation"
+      },
+      "peripheralAblation": {
+        "badge": "Peripheral therapy",
+        "title": "Peripheral Ablation",
+        "description": "Compare radiofrequency, microwave, cryoablation, and pulsed-field approaches with margin, heat-sink, route, and imaging-confirmation concepts.",
+        "cta": "Open Peripheral Ablation"
+      },
+      "airwayStents": {
+        "badge": "Airway devices",
+        "title": "Airway Stents",
+        "description": "Explore stent architecture, lumen geometry, motion, anatomic fit, clinically relevant failure modes, inspection, and rescue concepts.",
+        "cta": "Open Airway Stent Explorer"
       }
     }
   },

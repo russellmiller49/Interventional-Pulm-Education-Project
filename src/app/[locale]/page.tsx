@@ -19,8 +19,12 @@ const featureHighlightDefinitions = [
     href: '/ebus-training',
   },
   {
-    key: 'adminPreview',
-    href: '/ebus-training/virtual-bronchoscopy',
+    key: 'therapeuticBronchoscopy',
+    href: '/therapeutic-bronchoscopy',
+  },
+  {
+    key: 'tracheostomy',
+    href: '/tracheostomy',
   },
   {
     key: 'tnm',
@@ -53,14 +57,6 @@ const featureHighlightDefinitions = [
   {
     key: 'pleuroscopy',
     href: '/pleural-procedures/pleuroscopy',
-  },
-  {
-    key: 'rigidBronchoscopy',
-    href: '/rigid-bronchoscopy',
-  },
-  {
-    key: 'tracheostomy',
-    href: '/tracheostomy',
   },
   {
     key: 'resources',

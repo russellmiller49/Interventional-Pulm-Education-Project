@@ -81,6 +81,13 @@ const localizedSearchOverrides: Partial<
       section: 'Simulación',
       keywords: ['broncoscopía', 'navegación', 'tc', 'vía aérea', 'simulación'],
     },
+    '/therapeutic-bronchoscopy': {
+      title: 'Broncoscopia terapéutica',
+      description:
+        'Centro de aprendizaje con broncoscopia rígida, ablación térmica, ablación periférica y stents de vía aérea.',
+      section: 'Broncoscopia',
+      keywords: ['broncoscopia terapéutica', 'broncoscopia rígida', 'ablación', 'stents'],
+    },
     '/thermal-ablation': {
       title: 'Módulos interactivos de ablación térmica',
       description:
@@ -122,9 +129,9 @@ const localizedSearchOverrides: Partial<
       keywords: ['traqueostomía', 'manguito', 'válvula fonatoria', 'decanulación', 'succión'],
     },
     '/airway-stent-mechanics': {
-      title: 'Laboratorio de decisiones clínicas sobre stents de vía aérea',
+      title: 'Explorador de mecánica y fallos de stents de la vía aérea',
       description:
-        'Casos sobre indicación, objetivo mecánico, arquitectura, ajuste anatómico, complicaciones, vigilancia y estrategia de retirada.',
+        'Estaciones interactivas de libre exploración sobre arquitectura, lumen, movimiento, ajuste anatómico y patrones de fallo clínicamente relevantes.',
       section: 'Vía aérea',
       keywords: [
         'stent de vía aérea',
@@ -190,6 +197,12 @@ const localizedSearchOverrides: Partial<
       section: '模拟',
       keywords: ['支气管镜', '导航', 'ct', '气道', '模拟'],
     },
+    '/therapeutic-bronchoscopy': {
+      title: '治疗性支气管镜',
+      description: '整合硬质支气管镜、热消融、外周消融和气道支架的学习中心。',
+      section: '支气管镜',
+      keywords: ['治疗性支气管镜', '硬质支气管镜', '消融', '气道支架'],
+    },
     '/thermal-ablation': {
       title: '热消融交互模块',
       description:
@@ -230,8 +243,8 @@ const localizedSearchOverrides: Partial<
       keywords: ['气管切开', '套囊', '发声阀', '拔管', '吸痰'],
     },
     '/airway-stent-mechanics': {
-      title: '气道支架临床决策实验室',
-      description: '通过病例学习适应证、机械目标、支架结构、解剖匹配、并发症、随访与退出策略。',
+      title: '气道支架力学与失效探索器',
+      description: '自由探索支架结构、管腔、运动、解剖匹配及具有临床意义的失效模式的互动学习站。',
       section: '气道',
       keywords: ['气道支架', '适应证', '解剖匹配', '肉芽组织', '随访', '径向力', '迁移'],
     },
@@ -343,6 +356,21 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
   },
   {
+    title: 'Therapeutic Bronchoscopy',
+    description:
+      'A single learning hub for rigid bronchoscopy, thermal ablation, peripheral lung tumor ablation, and airway stent mechanics.',
+    href: '/therapeutic-bronchoscopy',
+    section: 'Bronchoscopy',
+    type: 'page',
+    keywords: [
+      'therapeutic bronchoscopy',
+      'rigid bronchoscopy',
+      'thermal ablation',
+      'peripheral ablation',
+      'airway stents',
+    ],
+  },
+  {
     title: 'Thermal Ablation Interactive Modules',
     description:
       'Laser physics, power density, electrocautery waveforms on a simulated ERBE VIO 3 console, APC, and airway-fire safety with case-based self-assessment.',
@@ -382,9 +410,9 @@ const allStaticResults: SiteSearchResult[] = [
     ],
   },
   {
-    title: 'Airway Stent Clinical Decision Lab',
+    title: 'Airway Stent Mechanics & Failure Explorer',
     description:
-      'Clinical cases on indication, mechanical job, architecture, anatomic fit, complications, surveillance, and exit planning, with optional just-in-time physics lenses.',
+      'Freely explore interactive stations on architecture, lumen geometry, motion, anatomic fit, failure modes, inspection, and conceptual rescue pathways.',
     href: '/airway-stent-mechanics',
     section: 'Airway',
     type: 'page',

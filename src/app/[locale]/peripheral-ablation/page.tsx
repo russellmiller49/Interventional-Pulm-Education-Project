@@ -10,7 +10,6 @@ const handoffMetadata: Metadata = {
   title: 'Peripheral Lung Tumor Ablation Interactive Module',
   description:
     'Interactive physics of peripheral lung tumor ablation in one flowing module: RFA, microwave, and cryoablation energy–tissue mechanisms, an ablation-zone simulator with heat-sink and the 5 mm margin, tool-in-lesion confirmation, modality and route selection, and complications.',
-  robots: { index: false, follow: false },
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -45,12 +44,6 @@ export default async function PeripheralAblationPage({ params }: PeripheralAblat
                   className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
                 >
                   Simulation · Image-Guided Tumor Ablation
-                </Badge>
-                <Badge
-                  variant="destructive"
-                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-                >
-                  Admin Preview
                 </Badge>
               </div>
               <h1 className="text-4xl font-bold tracking-tight md:text-5xl">

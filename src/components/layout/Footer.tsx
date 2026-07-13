@@ -23,6 +23,8 @@ type InternalFooterHref =
   | '/coming-soon'
   | '/privacy'
   | '/terms'
+  | '/therapeutic-bronchoscopy'
+  | '/tracheostomy'
   | '/community/code-of-conduct'
 
 type FooterLink =
@@ -105,6 +107,16 @@ export async function Footer() {
           route: '/intro-bronchoscopy',
         },
         {
+          label: nav('items.therapeuticBronchoscopy.title'),
+          href: '/therapeutic-bronchoscopy',
+          route: '/therapeutic-bronchoscopy',
+        },
+        {
+          label: nav('items.tracheostomy.title'),
+          href: '/tracheostomy',
+          route: '/tracheostomy',
+        },
+        {
           label: nav('items.pleuralProcedures.title'),
           href: '/pleural-procedures',
           route: '/pleural-procedures',
@@ -121,11 +133,6 @@ export async function Footer() {
       links: [
         {
           label: footer('introPleuralDisease'),
-          href: '/coming-soon',
-          route: '/coming-soon',
-        },
-        {
-          label: footer('rigidBronchoscopyFoundations'),
           href: '/coming-soon',
           route: '/coming-soon',
         },

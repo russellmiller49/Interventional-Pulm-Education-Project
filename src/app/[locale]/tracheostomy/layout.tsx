@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react'
 
-import { assertDraftModulesEnabled } from '@/lib/draft-module-guard'
-
-export default async function TracheostomyLayout({ children }: { children: ReactNode }) {
-  await assertDraftModulesEnabled()
+export default function TracheostomyLayout({ children }: { children: ReactNode }) {
   return children
 }

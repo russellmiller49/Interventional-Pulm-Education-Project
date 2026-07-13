@@ -11,6 +11,7 @@ import { complicationRegistry } from '../content/complicationRegistry'
 import { findMissingEvidenceRefs } from '../content/evidenceRegistry'
 import { physicsLensRegistry } from '../content/physicsLensRegistry'
 import { mechanismScenarioRegistry } from '../content/mechanismScenarioRegistry'
+import { stentExplorerPublicationStatus, stentExplorerReleaseStatus } from '../explorer/release'
 import {
   STENT_LESSON_IDS,
   type ClinicalDecisionOption,
@@ -59,10 +60,10 @@ function escapeRegex(value: string): string {
 }
 
 describe('airway stent clinical-content integrity', () => {
-  it('drives route release state from the clinical review status', () => {
-    expect(isDraftModulePath('/airway-stent-mechanics')).toBe(
-      clinicalModuleCopy.clinicalReviewStatus !== 'reviewed',
-    )
+  it('publishes the explorer without mislabeling its clinical review state', () => {
+    expect(stentExplorerReleaseStatus).toBe('draft')
+    expect(stentExplorerPublicationStatus).toBe('published')
+    expect(isDraftModulePath('/airway-stent-mechanics')).toBe(false)
   })
 
   it('gives every required lesson at least one clinical case', () => {

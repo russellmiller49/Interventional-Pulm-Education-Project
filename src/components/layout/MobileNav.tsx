@@ -87,7 +87,10 @@ export function MobileNav({
                   {items.map((item) => {
                     const isActive =
                       normalizedPath === item.href ||
-                      (normalizedPath.startsWith(item.href) && String(item.href) !== '/')
+                      (normalizedPath.startsWith(item.href) && String(item.href) !== '/') ||
+                      item.activePaths?.some(
+                        (path) => normalizedPath === path || normalizedPath.startsWith(`${path}/`),
+                      ) === true
 
                     return (
                       <Link

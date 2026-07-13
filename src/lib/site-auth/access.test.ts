@@ -1,7 +1,7 @@
 import {
   isAdminOnlyAirwayStentMechanicsAssetPath,
   isAdminOnlyEbusTrainingAssetPath,
-  isAdminOnlyThermalAblationPath,
+  isAuthenticatedAirwayStentMechanicsAssetPath,
   isAdminEbusPreviewEmbed,
   canUseLegacyEbusApproval,
   getRequiredEntitlement,
@@ -150,19 +150,18 @@ describe('main site auth access helpers', () => {
     expect(isPublicPath('/airway-anatomy/case-001/case_manifest.json')).toBe(false)
   })
 
-  it('requires site admin for the thermal ablation module route and static assets', () => {
-    expect(isAdminOnlyThermalAblationPath('/thermal-ablation')).toBe(true)
-    expect(isAdminOnlyThermalAblationPath('/thermal-ablation/index.html')).toBe(true)
-    expect(isAdminOnlyThermalAblationPath('/thermal-ablation/any-asset.js')).toBe(true)
-    expect(isAdminOnlyThermalAblationPath('/es/thermal-ablation')).toBe(true)
-    expect(isAdminOnlyThermalAblationPath('/thermal-ablation-extra')).toBe(false)
-    expect(getRequiredEntitlement('/thermal-ablation', params())).toBe('site_admin')
-    expect(getRequiredEntitlement('/zh-CN/thermal-ablation', params())).toBe('site_admin')
-    expect(getRequiredEntitlement('/thermal-ablation/index.html', params())).toBe('site_admin')
-    expect(getRequiredEntitlement('/thermal-ablation/any-asset.js', params())).toBe('site_admin')
+  it('allows signed-in learners to open the released thermal and peripheral ablation modules', () => {
+    expect(getRequiredEntitlement('/thermal-ablation', params())).toBeNull()
+    expect(getRequiredEntitlement('/zh-CN/thermal-ablation', params())).toBeNull()
+    expect(getRequiredEntitlement('/thermal-ablation/index.html', params())).toBeNull()
+    expect(getRequiredEntitlement('/peripheral-ablation', params())).toBeNull()
+    expect(getRequiredEntitlement('/es/peripheral-ablation/index.html', params())).toBeNull()
+    expect(isPublicPath('/thermal-ablation')).toBe(false)
     expect(isPublicPath('/thermal-ablation/index.html')).toBe(false)
-    expect(isPublicPath('/thermal-ablation/any-asset.js')).toBe(false)
+    expect(isPublicPath('/thermal-ablation/any-asset.js')).toBe(true)
+    expect(isPublicPath('/peripheral-ablation/any-asset.js')).toBe(true)
     expect(resolveSiteModuleId('/thermal-ablation')).toBe('thermal-ablation')
+    expect(resolveSiteModuleId('/peripheral-ablation')).toBe('peripheral-ablation')
   })
 
   it('keeps virtual EBUS simulator artifacts out of public static access', () => {
@@ -223,21 +222,45 @@ describe('main site auth access helpers', () => {
     )
   })
 
-  it('tracks the airway stent mechanics lab without adding a special course entitlement', () => {
-    expect(resolveSiteModuleId('/airway-stent-mechanics')).toBe('airway-stent-mechanics')
-    expect(resolveSiteModuleId('/es/airway-stent-mechanics')).toBe('airway-stent-mechanics')
+  it('tracks the therapeutic bronchoscopy hub without replacing child module identities', () => {
+    expect(resolveSiteModuleId('/therapeutic-bronchoscopy')).toBe('therapeutic-bronchoscopy')
+    expect(resolveSiteModuleId('/es/therapeutic-bronchoscopy')).toBe('therapeutic-bronchoscopy')
+    expect(resolveSiteModuleId('/rigid-bronchoscopy')).toBe('rigid-bronchoscopy')
+    expect(resolveSiteModuleId('/thermal-ablation')).toBe('thermal-ablation')
+  })
+
+  it('excludes the explorer from generic session progress without adding a course entitlement', () => {
+    expect(resolveSiteModuleId('/airway-stent-mechanics')).toBeNull()
+    expect(resolveSiteModuleId('/es/airway-stent-mechanics')).toBeNull()
     expect(getRequiredEntitlement('/airway-stent-mechanics', params())).toBeNull()
     expect(isPublicPath('/airway-stent-mechanics')).toBe(false)
   })
 
-  it('keeps airway stent model derivatives behind the site-admin asset gate', () => {
+  it('keeps legacy and unreviewed airway stent model derivatives behind the site-admin gate', () => {
     const modelPath = '/airway-stent-mechanics/models/v1/aero-laser-cut-covered.glb'
 
     expect(isAdminOnlyAirwayStentMechanicsAssetPath(modelPath)).toBe(true)
     expect(isAdminOnlyAirwayStentMechanicsAssetPath(`/es${modelPath}`)).toBe(true)
+    expect(
+      isAdminOnlyAirwayStentMechanicsAssetPath('/airway-stent-mechanics/models/v3/unreviewed.glb'),
+    ).toBe(true)
     expect(isAdminOnlyAirwayStentMechanicsAssetPath('/airway-stent-mechanics')).toBe(false)
     expect(getRequiredEntitlement(modelPath, params())).toBe('site_admin')
     expect(isPublicPath(modelPath)).toBe(false)
+  })
+
+  it('allows signed-in learners to request rights-cleared v2 airway stent assets', () => {
+    const modelPath = '/airway-stent-mechanics/models/v2/generic-silicone-tube.abc123.glb'
+    const manifestPath = '/airway-stent-mechanics/models/v2/model-manifest.json'
+
+    expect(isAuthenticatedAirwayStentMechanicsAssetPath(modelPath)).toBe(true)
+    expect(isAuthenticatedAirwayStentMechanicsAssetPath(`/zh-CN${modelPath}`)).toBe(true)
+    expect(isAuthenticatedAirwayStentMechanicsAssetPath(manifestPath)).toBe(true)
+    expect(isAdminOnlyAirwayStentMechanicsAssetPath(modelPath)).toBe(false)
+    expect(getRequiredEntitlement(modelPath, params())).toBeNull()
+    expect(getRequiredEntitlement(manifestPath, params())).toBeNull()
+    expect(isPublicPath(modelPath)).toBe(false)
+    expect(isPublicPath(manifestPath)).toBe(false)
   })
 
   it('normalizes unsafe login redirects', () => {

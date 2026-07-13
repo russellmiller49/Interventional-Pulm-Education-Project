@@ -39,24 +39,42 @@ describe('static translation bundles', () => {
     expect(searchSite('胸膜', 10, { locale: 'zh-CN' }).map((item) => item.href)).toContain(
       '/pleural-procedures',
     )
+    expect(searchSite('broncoscopia terapéutica', 10, { locale: 'es' })[0]?.href).toBe(
+      '/therapeutic-bronchoscopy',
+    )
+    expect(searchSite('治疗性支气管镜', 10, { locale: 'zh-CN' })[0]?.href).toBe(
+      '/therapeutic-bronchoscopy',
+    )
   })
 
   it('keeps curated homepage and chrome copy localized for Spanish and Mandarin', () => {
-    expect(esMessages.home.heroTitle).toBe('Educación e innovación en neumología intervencionista')
+    expect(esMessages.home.heroTitle).toBe(
+      'Descubra las novedades del laboratorio de aprendizaje de IP',
+    )
     expect(esMessages.home.launchCatalog).toBe('Catálogo de lanzamiento')
     expect(esMessages.home.participantCourse).toBe('CURSO PARA PARTICIPANTES')
     expect(esMessages.home.viewComingSoon).toBe('Ver Próximamente')
-    expect(esMessages.home.cards.adminPreview.title).toBe('Simulador EBUS + Broncoscopia Virtual')
+    expect(esMessages.home.cards.therapeuticBronchoscopy.title).toBe('Broncoscopia terapéutica')
     expect(esMessages.footer.introPleuralDisease).toBe('Introducción a la Enfermedad Pleural')
     expect(esMessages.common.darkMode).toBe('Modo oscuro')
+    expect(esMessages.navigation.items.airwayStentMechanics.title).toBe(
+      'Explorador de mecánica y fallos de stents de la vía aérea',
+    )
 
-    expect(zhCnMessages.home.heroTitle).toBe('介入呼吸病学的教育与创新')
+    expect(zhCnMessages.home.heroTitle).toBe('探索介入呼吸学习实验室的新内容')
     expect(zhCnMessages.home.launchCatalog).toBe('启动目录')
     expect(zhCnMessages.home.participantCourse).toBe('学员课程')
     expect(zhCnMessages.home.viewComingSoon).toBe('查看即将推出')
-    expect(zhCnMessages.home.cards.adminPreview.title).toBe('EBUS 模拟器 + 虚拟支气管镜')
+    expect(zhCnMessages.home.cards.therapeuticBronchoscopy.title).toBe('治疗性支气管镜')
     expect(zhCnMessages.footer.introPleuralDisease).toBe('胸膜疾病入门')
     expect(zhCnMessages.common.darkMode).toBe('深色模式')
+    expect(zhCnMessages.navigation.items.airwayStentMechanics.title).toBe(
+      '气道支架力学与失效探索器',
+    )
+    expect(esMessages.navigation.items.therapeuticBronchoscopy.title).toBe(
+      'Broncoscopia terapéutica',
+    )
+    expect(zhCnMessages.navigation.items.therapeuticBronchoscopy.title).toBe('治疗性支气管镜')
   })
 
   it('keeps Bronch Navigation wrapper copy localized for Spanish and Mandarin', () => {
@@ -69,13 +87,18 @@ describe('static translation bundles', () => {
     expect(zhCnMessages.handoff.h_c4989ed26b59).toBe('从中央气道标志点向外周目标推进虚拟支气管镜。')
   })
 
-  it('localizes the Board Prep bridge to the airway-stent decision lab', () => {
-    expect(esMessages.handoff.h_23dbdd0ae8ac).toBe(
-      'Practique en el Laboratorio de Decisiones Clínicas',
-    )
-    expect(esMessages.handoff.h_70c6b3508bc2).toMatch(/indicación.*vigilancia/i)
-    expect(zhCnMessages.handoff.h_23dbdd0ae8ac).toBe('在临床决策实验室中练习')
-    expect(zhCnMessages.handoff.h_70c6b3508bc2).toMatch(/适应证.*随访/)
+  it('localizes airway-stent explorer search copy without course language', () => {
+    const spanishResult = searchSite('fallos de stents', 10, {
+      canViewDrafts: true,
+      locale: 'es',
+    }).find((item) => item.href === '/airway-stent-mechanics')
+    const chineseResult = searchSite('支架力学', 10, {
+      canViewDrafts: true,
+      locale: 'zh-CN',
+    }).find((item) => item.href === '/airway-stent-mechanics')
+
+    expect(spanishResult?.title).toBe('Explorador de mecánica y fallos de stents de la vía aérea')
+    expect(chineseResult?.title).toBe('气道支架力学与失效探索器')
   })
 
   it('localizes the rigid bronchoscopy 3D pathway lab', () => {

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 import { publicEbusTrainingModules } from '@/data/ebus-training'
+import { therapeuticBronchoscopyModules } from '@/data/therapeutic-bronchoscopy'
 import { areDraftModulesEnabled } from '@/lib/draft-modules'
 import { env } from '@/lib/env'
 
@@ -45,6 +46,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/therapeutic-bronchoscopy`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    ...therapeuticBronchoscopyModules.map((module) => ({
+      url: `${baseUrl}${module.href}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
+    {
+      url: `${baseUrl}/tracheostomy`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
       url: `${baseUrl}/learn/anatomy`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -78,12 +97,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const draftRoutes: MetadataRoute.Sitemap = areDraftModulesEnabled
     ? [
-        {
-          url: `${baseUrl}/airway-stent-mechanics`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly',
-          priority: 0.8,
-        },
         {
           url: `${baseUrl}/rapid-onsite-cytology`,
           lastModified: new Date(),
@@ -125,12 +138,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
           lastModified: new Date(),
           changeFrequency: 'weekly',
           priority: 0.75,
-        },
-        {
-          url: `${baseUrl}/tracheostomy`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly',
-          priority: 0.8,
         },
       ]
     : []

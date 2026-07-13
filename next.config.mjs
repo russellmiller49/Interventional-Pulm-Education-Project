@@ -91,12 +91,32 @@ const shortAssetManifestHeaders = [
 
 const moduleAssetPrefixes = [
   '/airway-anatomy',
-  '/airway-stent-mechanics',
   '/models',
   '/draco',
   '/socal-ebus-course/app',
   '/bronch-navigation-trainer/app',
   '/module-assets/v1',
+]
+
+const airwayStentProtectedAssetHeaderRules = [
+  {
+    source: '/airway-stent-mechanics/models/v1/:path*',
+    headers: [
+      {
+        key: 'Cache-Control',
+        value: 'private, no-store, max-age=0',
+      },
+    ],
+  },
+  {
+    source: '/airway-stent-mechanics/models/v2/:path*',
+    headers: [
+      {
+        key: 'Cache-Control',
+        value: 'private, max-age=31536000, immutable',
+      },
+    ],
+  },
 ]
 
 const immutableModuleAssetExtensions = [
@@ -236,12 +256,12 @@ const nextConfig = {
         headers: embeddedAppSecurityHeaders,
       },
       {
-        // Allow the admin-gated thermal ablation modules to render inside the same-site iframe.
+        // Allow the bundled thermal ablation modules to render inside the same-site iframe.
         source: '/thermal-ablation/:path*',
         headers: embeddedAppSecurityHeaders,
       },
       {
-        // Allow the admin-gated peripheral ablation module to render inside the same-site iframe.
+        // Allow the bundled peripheral ablation module to render inside the same-site iframe.
         source: '/peripheral-ablation/:path*',
         headers: embeddedAppSecurityHeaders,
       },
@@ -255,6 +275,7 @@ const nextConfig = {
         source: '/fluoroview/:path*',
         headers: securityHeaders,
       },
+      ...airwayStentProtectedAssetHeaderRules,
       ...moduleAssetHeaderRules,
       ...moduleManifestHeaderRules,
       {
@@ -374,12 +395,12 @@ const nextConfig = {
     return [
       {
         source: '/airway-stent-mechanics/force-lab',
-        destination: '/airway-stent-mechanics?lesson=architecture-choice&panel=mechanics',
+        destination: '/airway-stent-mechanics?station=architecture-lumen',
         permanent: false,
       },
       {
         source: '/airway-stent-mechanics/force-lab/index.html',
-        destination: '/airway-stent-mechanics?lesson=architecture-choice&panel=mechanics',
+        destination: '/airway-stent-mechanics?station=architecture-lumen',
         permanent: false,
       },
     ]

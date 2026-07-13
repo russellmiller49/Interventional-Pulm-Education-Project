@@ -284,13 +284,13 @@ export const trainingModules: TrainingModule[] = [
     difficulty: 'intermediate',
     durationMinutes: 140,
     summary:
-      'Hands-on companion to the Airway Stent Clinical Decision Lab, focused on measurement, deployment simulation, troubleshooting, and team debrief.',
+      'Hands-on bootcamp that complements the Airway Stent Mechanics & Failure Explorer with measurement, deployment simulation, troubleshooting, and team debrief.',
     objectives: [
       'Translate a defined indication, mechanical job, anatomy, and exit strategy into an architecture and fit plan',
       'Deploy stents using rigid and flexible techniques with ventilation strategies to maintain oxygenation',
       'Develop context-specific surveillance and complication-response plans that address underlying drivers',
     ],
-    prerequisites: ['Rigid Bronchoscopy Foundations', 'Airway Stent Clinical Decision Lab'],
+    prerequisites: ['Rigid Bronchoscopy Foundations'],
     equipment: ['Rigid and flexible scopes', 'Stent demo kits', '3D printed airway models'],
     tags: ['stents', 'airway', 'multidisciplinary'],
     outcomes: [
@@ -305,7 +305,7 @@ export const trainingModules: TrainingModule[] = [
           'Use calipers and digital imaging to size stents on printed airway models and review sizing pitfalls.',
         durationMinutes: 45,
         resources: [
-          { label: 'Clinical decision prework', href: '/airway-stent-mechanics' },
+          { label: 'Optional mechanics & failure explorer', href: '/airway-stent-mechanics' },
           { label: 'Sizing worksheet', href: '/downloads/stent-sizing-sheet.pdf' },
         ],
       },

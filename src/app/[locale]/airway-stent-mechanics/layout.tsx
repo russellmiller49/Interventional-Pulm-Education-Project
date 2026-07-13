@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 
-import { clinicalModuleCopy } from '@/features/airway-stent-mechanics/content/clinicalModuleCopy'
+import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanics/explorer/release'
 import { assertDraftModulesEnabled } from '@/lib/draft-module-guard'
 
 export default async function AirwayStentMechanicsLayout({ children }: { children: ReactNode }) {
-  if (clinicalModuleCopy.clinicalReviewStatus !== 'reviewed') {
+  if (stentExplorerPublicationStatus !== 'published') {
     await assertDraftModulesEnabled()
   }
   return children

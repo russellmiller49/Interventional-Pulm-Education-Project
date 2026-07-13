@@ -1,6 +1,6 @@
-type ClinicalReviewStatus = 'draft' | 'reviewed'
+type PublicationStatus = 'draft' | 'published'
 
-const clinicalModuleCopyPath = '@/features/airway-stent-mechanics/content/clinicalModuleCopy'
+const stentExplorerReleasePath = '@/features/airway-stent-mechanics/explorer/release'
 
 function setNodeEnv(value: string | undefined) {
   if (value === undefined) {
@@ -16,12 +16,12 @@ function setNodeEnv(value: string | undefined) {
   })
 }
 
-async function loadDraftModulePolicy(clinicalReviewStatus: ClinicalReviewStatus) {
+async function loadDraftModulePolicy(publicationStatus: PublicationStatus) {
   let policy: typeof import('./draft-modules') | undefined
 
   await jest.isolateModulesAsync(async () => {
-    jest.doMock(clinicalModuleCopyPath, () => ({
-      clinicalModuleCopy: { clinicalReviewStatus },
+    jest.doMock(stentExplorerReleasePath, () => ({
+      stentExplorerPublicationStatus: publicationStatus,
     }))
     policy = await import('./draft-modules')
   })
@@ -30,7 +30,7 @@ async function loadDraftModulePolicy(clinicalReviewStatus: ClinicalReviewStatus)
   return policy
 }
 
-describe('airway-stent release visibility', () => {
+describe('published module visibility', () => {
   const originalNodeEnv = process.env.NODE_ENV
   const originalShowDraftModules = process.env.NEXT_PUBLIC_SHOW_DRAFT_MODULES
 
@@ -46,11 +46,11 @@ describe('airway-stent release visibility', () => {
     } else {
       process.env.NEXT_PUBLIC_SHOW_DRAFT_MODULES = originalShowDraftModules
     }
-    jest.unmock(clinicalModuleCopyPath)
+    jest.unmock(stentExplorerReleasePath)
     jest.resetModules()
   })
 
-  it('hides a draft lab from ordinary production users while retaining admin preview', async () => {
+  it('hides a draft airway-stent explorer while retaining admin preview', async () => {
     const policy = await loadDraftModulePolicy('draft')
     const path = '/airway-stent-mechanics'
 
@@ -60,12 +60,29 @@ describe('airway-stent release visibility', () => {
     expect(policy.isVisibleModulePath(path, { isAdmin: true })).toBe(true)
   })
 
-  it('makes the lab visible to ordinary production users after clinical review', async () => {
-    const policy = await loadDraftModulePolicy('reviewed')
+  it('makes the airway-stent explorer visible after the editorial publication decision', async () => {
+    const policy = await loadDraftModulePolicy('published')
     const path = '/airway-stent-mechanics'
 
     expect(policy.areDraftModulesEnabled).toBe(false)
     expect(policy.isDraftModulePath(path)).toBe(false)
     expect(policy.isVisibleModulePath(path)).toBe(true)
+  })
+
+  it('keeps every released therapeutic module and tracheostomy visible in production', async () => {
+    const policy = await loadDraftModulePolicy('published')
+    const releasedPaths = [
+      '/rigid-bronchoscopy',
+      '/thermal-ablation',
+      '/peripheral-ablation',
+      '/airway-stent-mechanics',
+      '/tracheostomy',
+      '/therapeutic-bronchoscopy',
+    ]
+
+    for (const path of releasedPaths) {
+      expect(policy.isDraftModulePath(path)).toBe(false)
+      expect(policy.isVisibleModulePath(path)).toBe(true)
+    }
   })
 })

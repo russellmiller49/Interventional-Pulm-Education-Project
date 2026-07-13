@@ -217,12 +217,7 @@
       "ebusTraining": {
         "title": "EBUS 培训",
         "shortTitle": "EBUS",
-        "description": "设备操作、淋巴结分站和模拟训练模块"
-      },
-      "ebusVirtualBronch": {
-        "title": "EBUS 虚拟支气管镜",
-        "shortTitle": "EBUS 虚拟镜",
-        "description": "同步虚拟支气管镜模拟器的管理员预览"
+        "description": "设备操作、淋巴结分站及带虚拟支气管镜的更新版模拟器"
       },
       "podcastLibrary": {
         "title": "播客库",
@@ -253,6 +248,11 @@
         "title": "支气管导航",
         "shortTitle": "导航",
         "description": "从 CT 到支气管镜视图的导航模拟器"
+      },
+      "therapeuticBronchoscopy": {
+        "title": "治疗性支气管镜",
+        "shortTitle": "治疗性支气管镜",
+        "description": "硬质支气管镜、热消融、外周消融和气道支架"
       },
       "thermalAblation": {
         "title": "热消融",
@@ -295,9 +295,9 @@
         "description": "硬质气道操作——铲切、支架、止血和防火安全"
       },
       "airwayStentMechanics": {
-        "title": "气道支架临床决策实验室",
-        "shortTitle": "支架决策",
-        "description": "基于病例学习适应证、结构、匹配、并发症与随访"
+        "title": "气道支架力学与失效探索器",
+        "shortTitle": "支架探索器",
+        "description": "探索支架结构、管腔、运动、匹配、失效模式与救援概念"
       },
       "tracheostomy": {
         "title": "气管切开知识实验室",
@@ -312,7 +312,7 @@
       "comingSoon": {
         "title": "即将推出",
         "shortTitle": "即将推出",
-        "description": "即将推出的胸膜、支气管镜和硬质支气管镜模块"
+        "description": "即将推出的胸膜与支气管镜学习模块"
       }
     }
   },
@@ -332,14 +332,22 @@
     "introToBronchoscopy": "支气管镜入门"
   },
   "home": {
-    "heroEyebrow": "介入肺脏病教育",
-    "heroTitle": "介入呼吸病学的教育与创新",
-    "heroBody": "探索面向介入呼吸病学学习者与教育者的 EBUS 培训、文献研讨播客、3D 解剖、导航支气管镜、专科认证复习和 FluoroView 模拟模块。",
+    "heroEyebrow": "新模块与近期更新",
+    "heroTitle": "探索介入呼吸学习实验室的新内容",
+    "heroBody": "现已上线气管切开知识实验室，以及包含硬质支气管镜、热消融、外周消融和气道支架的全新治疗性支气管镜课程集。EBUS 模拟器现已加入同步虚拟支气管镜视图，播客库也已扩充。",
     "openEbus": "打开 EBUS 培训",
     "browsePodcasts": "浏览播客库",
+    "exploreTherapeuticBronchoscopy": "探索治疗性支气管镜",
+    "openUpdatedEbus": "打开更新版 EBUS 模拟器",
+    "heroHighlights": {
+      "ebusSimulator": "更新版 EBUS 模拟器",
+      "therapeuticBronchoscopy": "治疗性支气管镜 · 4 个模块",
+      "tracheostomy": "全新气管切开实验室",
+      "podcastLibrary": "播客库"
+    },
     "launchCatalog": "启动目录",
     "coreModules": "核心学习模块",
-    "coreModulesBody": "从目前已可供学习者使用的模块开始：EBUS 培训、TNM-9 分期、3D 解剖、考试复习、期刊俱乐部播客、Nav Bronch、FluoroView 和教学资源。",
+    "coreModulesBody": "从现已面向学习者开放的 EBUS 培训、治疗性支气管镜、气管切开、TNM-9 分期、3D 解剖、考试复习、期刊俱乐部播客、支气管导航、FluoroView 和教学资源开始。",
     "pccmIntroParticipants": "PCCM 入门课程学员",
     "socalParticipants": "南加州 EBUS 课程学员",
     "participantCourse": "学员课程",
@@ -348,7 +356,7 @@
     "openCoursePortal": "打开课程门户",
     "roadmap": "路线图",
     "upcomingModules": "即将推出的模块",
-    "upcomingBody": "下一批公开发布内容将重点介绍胸膜疾病入门、硬质支气管镜基础和支气管镜入门。",
+    "upcomingBody": "下一批公开发布内容将重点介绍胸膜疾病入门和支气管镜入门。",
     "viewComingSoon": "查看即将推出",
     "cards": {
       "podcast": {
@@ -360,14 +368,14 @@
       "ebus": {
         "badge": "EBUS",
         "title": "EBUS 培训",
-        "description": "开放超声设备操作、纵隔淋巴结分站和 EBUS 模拟器模块，不限制课程学员访问。",
+        "description": "开放超声设备操作、纵隔淋巴结分站及带同步虚拟支气管镜的更新版 EBUS 模拟器。",
         "cta": "打开 EBUS 培训"
       },
-      "adminPreview": {
-        "badge": "管理员预览",
-        "title": "EBUS 模拟器 + 虚拟支气管镜",
-        "description": "在正式上线前，预览与 EBUS 模拟器同步显示的虚拟支气管镜界面。",
-        "cta": "打开管理员预览"
+      "therapeuticBronchoscopy": {
+        "badge": "全新课程集",
+        "title": "治疗性支气管镜",
+        "description": "从一个学习中心探索硬质支气管镜、热消融、外周消融和气道支架力学。",
+        "cta": "探索 4 个子模块"
       },
       "tnm": {
         "badge": "分期",
@@ -405,12 +413,6 @@
         "description": "提供支气管镜尺寸选择、气道可达性概念和器械兼容性的基础工具。",
         "cta": "打开入门模块"
       },
-      "rigidBronchoscopy": {
-        "badge": "气道",
-        "title": "硬质支气管镜",
-        "description": "硬质气道操作：器械、通气、铲切、支架、止血和气道防火安全——仅供模拟。",
-        "cta": "打开硬质支气管镜"
-      },
       "tracheostomy": {
         "badge": "气道",
         "title": "气管切开知识实验室",
@@ -434,6 +436,44 @@
         "title": "资源库",
         "description": "浏览知识共享许可的医学图像，以及面向临床开发者的教学和开发学习指南。",
         "cta": "浏览资源"
+      }
+    }
+  },
+  "therapeuticBronchoscopy": {
+    "metaTitle": "治疗性支气管镜",
+    "metaDescription": "整合硬质支气管镜、热消融、外周肺肿瘤消融和气道支架力学的学习中心。",
+    "eyebrow": "全新学习课程集",
+    "title": "治疗性支气管镜",
+    "description": "探索四个相互补充的互动模块，涵盖中央气道通路、组织消融、外周肿瘤治疗和气道支架力学。",
+    "collectionLabel": "四个子模块 · 一个课程集",
+    "chooseTitle": "选择一个子模块开始探索",
+    "chooseBody": "可从最符合您学习目标的主题开始。每个子模块都可独立浏览，并可随时返回此处继续探索整个课程集。",
+    "disclaimerTitle": "仅供临床教育与模拟",
+    "disclaimerBody": "这些模块不能授予独立操作资质，也不能替代患者个体化评估、器械说明、当地流程、监督或多学科临床判断。",
+    "modules": {
+      "rigidBronchoscopy": {
+        "badge": "气道基础",
+        "title": "硬质支气管镜",
+        "description": "通过模拟课程与练习学习器械、共享气道通气、铲切、扩张、支架置入、止血和气道防火安全。",
+        "cta": "打开硬质支气管镜"
+      },
+      "thermalAblation": {
+        "badge": "中央气道治疗",
+        "title": "热消融",
+        "description": "探索激光物理、电外科、氩等离子凝固、组织效应、方式取舍和气道火灾预防。",
+        "cta": "打开热消融"
+      },
+      "peripheralAblation": {
+        "badge": "外周治疗",
+        "title": "外周消融",
+        "description": "比较射频、微波、冷冻和脉冲电场方法，并学习消融边界、热沉效应、入路和影像确认概念。",
+        "cta": "打开外周消融"
+      },
+      "airwayStents": {
+        "badge": "气道器械",
+        "title": "气道支架",
+        "description": "探索支架结构、管腔几何、运动、解剖匹配、具有临床意义的失效模式、检查和救援概念。",
+        "cta": "打开气道支架探索器"
       }
     }
   },

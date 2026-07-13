@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { AirwayStentLearningLab } from '@/features/airway-stent-mechanics/components/learning-lab/AirwayStentLearningLab'
+import { StentMechanicsExplorer } from '@/features/airway-stent-mechanics/components/explorer/StentMechanicsExplorer'
+import { resolveExplorerStationRequest } from '@/features/airway-stent-mechanics/explorer/routing'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Airway Stent Clinical Decision Lab: Indication, Architecture, Fit & Complications',
+  title: 'Airway Stent Mechanics & Failure Explorer',
   description:
-    'A case-based airway stent module for deciding whether a stent is indicated, defining its mechanical job, comparing architecture and fit, anticipating complications, and planning surveillance and exit. Optional physics scenes explain selected tradeoffs.',
+    'A freely navigable, case-grounded 3D explorer for airway-stent lumen, motion, fit, migration, obstruction, granulation, tumor ingrowth, fracture, Y-stent behavior, deployment, and rescue concepts.',
 }
 
 export async function generateMetadata({ params }: Pick<PageProps, 'params'>): Promise<Metadata> {
@@ -17,7 +18,11 @@ export async function generateMetadata({ params }: Pick<PageProps, 'params'>): P
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ lesson?: string | string[]; panel?: string | string[] }>
+  searchParams: Promise<{
+    lesson?: string | string[]
+    panel?: string | string[]
+    station?: string | string[]
+  }>
 }
 
 export default async function AirwayStentMechanicsPage({ params, searchParams }: PageProps) {
@@ -25,8 +30,12 @@ export default async function AirwayStentMechanicsPage({ params, searchParams }:
   setRequestLocale(locale)
   const requestedLessonId = Array.isArray(query.lesson) ? query.lesson[0] : query.lesson
   const requestedPanel = Array.isArray(query.panel) ? query.panel[0] : query.panel
+  const requestedStationId = Array.isArray(query.station) ? query.station[0] : query.station
+  const initialStationId = resolveExplorerStationRequest({
+    lesson: requestedLessonId,
+    panel: requestedPanel,
+    station: requestedStationId,
+  })
 
-  return (
-    <AirwayStentLearningLab requestedLessonId={requestedLessonId} requestedPanel={requestedPanel} />
-  )
+  return <StentMechanicsExplorer initialStationId={initialStationId} />
 }

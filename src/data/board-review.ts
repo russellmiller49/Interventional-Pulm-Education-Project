@@ -242,9 +242,9 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     order: 13,
     interactiveModule: {
       href: '/airway-stent-mechanics',
-      label: 'Practice in the Clinical Decision Lab',
+      label: 'Airway Stent Mechanics & Failure Explorer',
       description:
-        'Apply indication, architecture, lumen, fit, complication, surveillance, and exit decisions in the full interactive airway-stent course.',
+        'Explore how architecture, lumen geometry, fit, motion, and changing airway conditions can produce clinically important failure patterns across freely navigable interactive stations.',
     },
   },
   {

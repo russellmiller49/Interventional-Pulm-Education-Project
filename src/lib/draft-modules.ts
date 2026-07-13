@@ -1,23 +1,18 @@
 import { unlocalizedPathname } from '@/i18n/path'
-import { clinicalModuleCopy } from '@/features/airway-stent-mechanics/content/clinicalModuleCopy'
+import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanics/explorer/release'
 
 const airwayStentDraftPathPrefixes =
-  clinicalModuleCopy.clinicalReviewStatus === 'reviewed'
+  stentExplorerPublicationStatus === 'published'
     ? ([] as const)
     : (['/airway-stent-mechanics'] as const)
 
 const draftModulePathPrefixes = [
   ...airwayStentDraftPathPrefixes,
-  '/ebus-training/virtual-bronchoscopy',
   '/education/chest-drainage',
   '/intro-bronchoscopy',
   '/learn/anatomy/airway',
-  '/peripheral-ablation',
   '/pleural-procedures',
   '/rapid-onsite-cytology',
-  '/rigid-bronchoscopy',
-  '/thermal-ablation',
-  '/tracheostomy',
 ] as const
 
 interface DraftModuleVisibilityOptions {

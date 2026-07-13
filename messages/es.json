@@ -217,12 +217,7 @@
       "ebusTraining": {
         "title": "Entrenamiento en EBUS",
         "shortTitle": "EBUS",
-        "description": "Controles del equipo, estaciones ganglionares y módulos de simulación"
-      },
-      "ebusVirtualBronch": {
-        "title": "Broncoscopia virtual EBUS",
-        "shortTitle": "EBUS virtual",
-        "description": "Vista previa para administradores del simulador sincronizado de broncoscopia virtual"
+        "description": "Controles del equipo, estaciones y simulador actualizado con broncoscopia virtual"
       },
       "podcastLibrary": {
         "title": "Biblioteca de Podcasts",
@@ -253,6 +248,11 @@
         "title": "Navegación Bronquial",
         "shortTitle": "Navegación",
         "description": "Simulador de navegación de la TC al broncoscopio"
+      },
+      "therapeuticBronchoscopy": {
+        "title": "Broncoscopia terapéutica",
+        "shortTitle": "Broncoscopia terapéutica",
+        "description": "Broncoscopia rígida, ablación térmica y periférica, y stents de vía aérea"
       },
       "thermalAblation": {
         "title": "Ablación Térmica",
@@ -295,9 +295,9 @@
         "description": "Procedimientos de vía aérea rígida — coring, endoprótesis, hemostasia y seguridad frente al fuego"
       },
       "airwayStentMechanics": {
-        "title": "Decisiones clínicas sobre stents de vía aérea",
-        "shortTitle": "Decisiones sobre stents",
-        "description": "Casos sobre indicación, arquitectura, ajuste, complicaciones y vigilancia"
+        "title": "Explorador de mecánica y fallos de stents de la vía aérea",
+        "shortTitle": "Explorador de stents",
+        "description": "Explore la arquitectura, el lumen, el movimiento, el ajuste, los modos de fallo y los conceptos de rescate"
       },
       "tracheostomy": {
         "title": "Laboratorio de Traqueostomía",
@@ -312,7 +312,7 @@
       "comingSoon": {
         "title": "Próximamente",
         "shortTitle": "Próximamente",
-        "description": "Próximos módulos de pleura, broncoscopia y broncoscopia rígida"
+        "description": "Próximos módulos de aprendizaje sobre pleura y broncoscopia"
       }
     }
   },
@@ -332,14 +332,22 @@
     "introToBronchoscopy": "Introducción a la Broncoscopia"
   },
   "home": {
-    "heroEyebrow": "Educación en Neumología Intervencionista",
-    "heroTitle": "Educación e innovación en neumología intervencionista",
-    "heroBody": "Explora módulos de formación en EBUS, pódcasts del club de revistas, anatomía 3D, broncoscopia navegacional, repaso para la certificación y simulación FluoroView, diseñados para profesionales en formación y docentes de neumología intervencionista.",
+    "heroEyebrow": "Nuevos módulos y actualizaciones recientes",
+    "heroTitle": "Descubra las novedades del laboratorio de aprendizaje de IP",
+    "heroBody": "Ya están disponibles el Laboratorio de Traqueostomía y una nueva colección de Broncoscopia Terapéutica con Broncoscopia Rígida, Ablación Térmica, Ablación Periférica y Stents de Vía Aérea. El simulador EBUS ahora incluye broncoscopia virtual sincronizada y la Biblioteca de Podcasts se ha ampliado.",
     "openEbus": "Abrir Entrenamiento en EBUS",
     "browsePodcasts": "Explorar la biblioteca de pódcasts",
+    "exploreTherapeuticBronchoscopy": "Explorar Broncoscopia Terapéutica",
+    "openUpdatedEbus": "Abrir Simulador EBUS Actualizado",
+    "heroHighlights": {
+      "ebusSimulator": "Simulador EBUS actualizado",
+      "therapeuticBronchoscopy": "Broncoscopia terapéutica · 4 módulos",
+      "tracheostomy": "Nuevo laboratorio de traqueostomía",
+      "podcastLibrary": "Biblioteca de podcasts"
+    },
     "launchCatalog": "Catálogo de lanzamiento",
     "coreModules": "Módulos principales de aprendizaje",
-    "coreModulesBody": "Comience con los módulos que ya están listos para los estudiantes: entrenamiento en EBUS, estadificación TNM-9, anatomía 3D, repaso para el examen, podcasts de club de revista, Nav Bronch, FluoroView y recursos docentes.",
+    "coreModulesBody": "Comience con EBUS, Broncoscopia Terapéutica, Traqueostomía, estadificación TNM-9, anatomía 3D, repaso para el examen, podcasts de club de revista, navegación bronquial, FluoroView y recursos docentes.",
     "pccmIntroParticipants": "Participantes del curso introductorio de PCCM",
     "socalParticipants": "Participantes del curso EBUS del Sur de California",
     "participantCourse": "CURSO PARA PARTICIPANTES",
@@ -348,7 +356,7 @@
     "openCoursePortal": "Abrir Portal del Curso",
     "roadmap": "HOJA DE RUTA",
     "upcomingModules": "Próximos módulos",
-    "upcomingBody": "Los próximos lanzamientos públicos se centran en introducción a la enfermedad pleural, fundamentos de broncoscopia rígida e introducción a la broncoscopia.",
+    "upcomingBody": "Los próximos lanzamientos públicos se centran en introducción a la enfermedad pleural e introducción a la broncoscopia.",
     "viewComingSoon": "Ver Próximamente",
     "cards": {
       "podcast": {
@@ -360,14 +368,14 @@
       "ebus": {
         "badge": "EBUS",
         "title": "Entrenamiento en EBUS",
-        "description": "Acceda a módulos de manejo del equipo, estaciones mediastínicas y simulador EBUS sin restricción para participantes de cursos.",
+        "description": "Acceda al manejo del equipo, las estaciones mediastínicas y el simulador EBUS actualizado con broncoscopia virtual sincronizada.",
         "cta": "Abrir Entrenamiento en EBUS"
       },
-      "adminPreview": {
-        "badge": "VISTA PREVIA ADMINISTRATIVA",
-        "title": "Simulador EBUS + Broncoscopia Virtual",
-        "description": "Revise el panel de broncoscopia virtual sincronizado junto con el simulador EBUS antes de su lanzamiento definitivo.",
-        "cta": "Abrir Vista Previa Administrativa"
+      "therapeuticBronchoscopy": {
+        "badge": "Nueva colección",
+        "title": "Broncoscopia terapéutica",
+        "description": "Explore Broncoscopia Rígida, Ablación Térmica, Ablación Periférica y Mecánica de Stents de Vía Aérea desde un solo centro de aprendizaje.",
+        "cta": "Explorar 4 submódulos"
       },
       "tnm": {
         "badge": "ESTADIFICACIÓN",
@@ -405,12 +413,6 @@
         "description": "Herramientas fundamentales para selección del tamaño del broncoscopio, conceptos de alcance en la vía aérea y compatibilidad de instrumentos.",
         "cta": "Abrir Módulo Introductorio"
       },
-      "rigidBronchoscopy": {
-        "badge": "Vía aérea",
-        "title": "Broncoscopia rígida",
-        "description": "Procedimientos de vía aérea rígida: equipo, ventilación, coring, endoprótesis, hemostasia y seguridad frente al fuego — solo simulación.",
-        "cta": "Abrir broncoscopia rígida"
-      },
       "tracheostomy": {
         "badge": "Vía aérea",
         "title": "Laboratorio de Traqueostomía",
@@ -434,6 +436,44 @@
         "title": "Biblioteca de Recursos",
         "description": "Explore imágenes médicas con licencia Creative Commons y guías de aprendizaje para médicos desarrolladores orientadas a enseñanza y desarrollo.",
         "cta": "Explorar Recursos"
+      }
+    }
+  },
+  "therapeuticBronchoscopy": {
+    "metaTitle": "Broncoscopia terapéutica",
+    "metaDescription": "Un centro de aprendizaje para broncoscopia rígida, ablación térmica, ablación de tumores pulmonares periféricos y mecánica de stents de vía aérea.",
+    "eyebrow": "Nueva colección de aprendizaje",
+    "title": "Broncoscopia terapéutica",
+    "description": "Explore cuatro módulos interactivos complementarios que abarcan el acceso a la vía aérea central, la ablación tisular, el tratamiento de tumores periféricos y la mecánica de los stents de vía aérea.",
+    "collectionLabel": "Cuatro submódulos · una colección",
+    "chooseTitle": "Elija un submódulo para explorar",
+    "chooseBody": "Comience por el tema que corresponda a su objetivo de aprendizaje. Cada submódulo se puede recorrer de forma independiente y puede volver aquí para continuar con la colección.",
+    "disclaimerTitle": "Solo para educación clínica y simulación",
+    "disclaimerBody": "Estos módulos no acreditan la práctica independiente ni sustituyen la evaluación individual del paciente, las instrucciones del dispositivo, los protocolos locales, la supervisión o el juicio clínico multidisciplinario.",
+    "modules": {
+      "rigidBronchoscopy": {
+        "badge": "Fundamento de vía aérea",
+        "title": "Broncoscopia rígida",
+        "description": "Aprenda sobre equipo, ventilación de vía aérea compartida, coring, dilatación, stents, hemostasia y seguridad frente al fuego mediante lecciones y práctica de simulación.",
+        "cta": "Abrir broncoscopia rígida"
+      },
+      "thermalAblation": {
+        "badge": "Terapia de vía aérea central",
+        "title": "Ablación térmica",
+        "description": "Explore física del láser, electrocirugía, coagulación con plasma de argón, efectos tisulares, ventajas y limitaciones, y prevención de incendios de la vía aérea.",
+        "cta": "Abrir ablación térmica"
+      },
+      "peripheralAblation": {
+        "badge": "Terapia periférica",
+        "title": "Ablación periférica",
+        "description": "Compare radiofrecuencia, microondas, crioablación y campo pulsado con conceptos de margen, efecto sumidero, vía de acceso y confirmación por imagen.",
+        "cta": "Abrir ablación periférica"
+      },
+      "airwayStents": {
+        "badge": "Dispositivos de vía aérea",
+        "title": "Stents de vía aérea",
+        "description": "Explore arquitectura, geometría del lumen, movimiento, ajuste anatómico, modos de fallo clínicamente relevantes, inspección y conceptos de rescate.",
+        "cta": "Abrir explorador de stents"
       }
     }
   },

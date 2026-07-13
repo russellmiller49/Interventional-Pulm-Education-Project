@@ -2,6 +2,7 @@ import { resolveSiteModuleId } from './site-auth/access'
 
 export type SiteAnalyticsEventType =
   | 'module_completed'
+  | 'module_interaction'
   | 'module_opened'
   | 'quiz_submitted'
   | 'section_completed'
