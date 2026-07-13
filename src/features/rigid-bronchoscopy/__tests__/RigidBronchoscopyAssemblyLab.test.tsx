@@ -150,6 +150,30 @@ describe('RigidBronchoscopyAssemblyLab', () => {
     expect(screen.getByText('Double-gate obturator')).toBeVisible()
   })
 
+  it('lets the learner seat any piece whose mating interface is ready', () => {
+    render(<RigidBronchoscopyAssemblyLab />)
+
+    expect(
+      screen.getAllByText('Choose any loose piece whose mating interface is available.'),
+    ).toHaveLength(2)
+
+    fireEvent.click(screen.getByRole('button', { name: /Red telescope cap/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Place selected part' }))
+    expect(screen.getByText('1 of 8 pieces seated')).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: /Rigid telescope/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Place selected part' }))
+    expect(screen.getByText('2 of 8 pieces seated')).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: /Double-gate obturator/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Place selected part' }))
+    expect(screen.getByText('3 of 8 pieces seated')).toBeVisible()
+
+    fireEvent.click(screen.getByRole('button', { name: /BT2203-3 · 10.0\/9.2 mm/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Place selected part' }))
+    expect(screen.getByText('4 of 8 pieces seated')).toBeVisible()
+  })
+
   it('defaults to moving parts and offers explicit orbit, pan, zoom, and centering controls', () => {
     render(<RigidBronchoscopyAssemblyLab />)
 

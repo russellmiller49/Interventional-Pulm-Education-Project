@@ -1,5 +1,4 @@
 import {
-  ANY_TUBE_PREREQUISITE_ID,
   ASSEMBLY_BASE_PART_ID,
   ASSEMBLY_KIT_ASSET_PATH,
   assemblyParts,
@@ -64,10 +63,11 @@ describe('rigid bronchoscopy assembly content', () => {
       'generic-fiberoptic-light-cable',
     ])
 
-    expect(assemblySteps[1].prerequisites).toContain(ANY_TUBE_PREREQUISITE_ID)
-    expect(assemblySteps[2].prerequisites).toContain('double-gate-lateral-obturator')
-    expect(assemblySteps[3].prerequisites).toContain('red-main-cap-5p5mm')
-    expect(assemblySteps[4].prerequisites).toContain('rigid-telescope-bx5500-fa')
+    expect(assemblySteps[0].prerequisites).toEqual([ASSEMBLY_BASE_PART_ID])
+    expect(assemblySteps[1].prerequisites).toEqual([ASSEMBLY_BASE_PART_ID])
+    expect(assemblySteps[2].prerequisites).toEqual([ASSEMBLY_BASE_PART_ID])
+    expect(assemblySteps[3].prerequisites).toEqual(['red-main-cap-5p5mm'])
+    expect(assemblySteps[4].prerequisites).toEqual(['rigid-telescope-bx5500-fa'])
     expect(assemblySteps[5].prerequisites).toEqual(['rigid-telescope-bx5500-fa'])
     expect(assemblySteps[6].prerequisites).toEqual(['light-guide-adapter-c1'])
     expect(assemblySteps[7].prerequisites).toEqual(['light-guide-adapter-c2'])

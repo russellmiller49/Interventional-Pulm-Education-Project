@@ -35,26 +35,51 @@ describe('rigid bronchoscopy assembly engine', () => {
     })
   })
 
-  it('accepts any of the nine tubes for the shared tube prerequisite', () => {
+  it('accepts every base-connected piece in any order', () => {
     const obturator = requiredPart('double-gate-lateral-obturator')
+    const cap = requiredPart('red-main-cap-5p5mm')
     const alternateTube = bronchoscopeTubeOptions[7]
 
-    expect(canPlacePart(obturator, [ASSEMBLY_BASE_PART_ID])).toEqual({
-      allowed: false,
-      missing: ['any-tube'],
-    })
-    expect(canPlacePart(obturator, [ASSEMBLY_BASE_PART_ID, alternateTube.id])).toEqual({
-      allowed: true,
-      missing: [],
-    })
+    for (const part of [obturator, cap, alternateTube]) {
+      expect(canPlacePart(part, [])).toEqual({
+        allowed: false,
+        missing: [ASSEMBLY_BASE_PART_ID],
+      })
+      expect(canPlacePart(part, [ASSEMBLY_BASE_PART_ID])).toEqual({
+        allowed: true,
+        missing: [],
+      })
+    }
   })
 
-  it('reports every missing prerequisite in authored order', () => {
-    const cap = requiredPart('red-main-cap-5p5mm')
+  it('allows an alternate complete order while retaining direct mating dependencies', () => {
+    const alternateOrder = [
+      'red-main-cap-5p5mm',
+      'rigid-telescope-bx5500-fa',
+      'light-guide-adapter-c1',
+      'light-guide-adapter-c2',
+      'generic-fiberoptic-light-cable',
+      'generic-camera-head',
+      'double-gate-lateral-obturator',
+      bronchoscopeTubeOptions[7].id,
+    ]
+    const placed = [ASSEMBLY_BASE_PART_ID]
 
-    expect(canPlacePart(cap, [])).toEqual({
+    for (const partId of alternateOrder) {
+      const part = requiredPart(partId)
+      expect(canPlacePart(part, placed)).toEqual({ allowed: true, missing: [] })
+      placed.push(part.id)
+    }
+
+    expect(getRemainingAssemblyParts(placed, assemblySteps)).toHaveLength(0)
+  })
+
+  it('reports the directly mated part when a connection is not ready', () => {
+    const telescope = requiredPart('rigid-telescope-bx5500-fa')
+
+    expect(canPlacePart(telescope, [ASSEMBLY_BASE_PART_ID])).toEqual({
       allowed: false,
-      missing: [ASSEMBLY_BASE_PART_ID, 'any-tube', 'double-gate-lateral-obturator'],
+      missing: ['red-main-cap-5p5mm'],
     })
   })
 

@@ -365,7 +365,7 @@ const defaultCopy: RigidBronchoscopyAssemblyLabCopy = {
   ambientEntrainmentLegend: 'Ambient entrainment',
   centerView: 'Center view',
   commitPrediction: 'Commit prediction',
-  complete: 'Assembly complete. Review the connection order before moving to the instruments.',
+  complete: 'Assembly complete. Review each connection before moving to the instruments.',
   controlledProximalLeak:
     'The conventional setup caps the proximal opening and uses circuit seals. No distal fenestration escape route lies above the cords; any residual leak is not quantified.',
   conventionalPulsePattern: 'Intermittent controlled positive-pressure breaths',
@@ -1894,16 +1894,13 @@ function TextFallback({
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
         {copy.fallbackTitle}
       </p>
-      <ol className="mt-4 space-y-3 text-sm leading-6">
-        {steps.map((part, index) => (
+      <ul className="mt-4 space-y-3 text-sm leading-6">
+        {steps.map((part) => (
           <li key={part.id} className="rounded-xl border border-slate-700 bg-slate-900/70 p-3">
-            <span className="font-semibold text-white">
-              {index + 1}. {part.label}
-            </span>{' '}
-            {part.description}
+            <span className="font-semibold text-white">{part.label}</span> {part.description}
           </li>
         ))}
-      </ol>
+      </ul>
       <p className="mt-5 text-xs leading-5 text-amber-100">{copy.safetyNote}</p>
     </div>
   )
@@ -1948,7 +1945,7 @@ export function RigidBronchoscopyAssemblyLab({
   const [instrumentRouteRevealed, setInstrumentRouteRevealed] = useState(false)
   const [placedIds, setPlacedIds] = useState<AssemblyPartId[]>([ASSEMBLY_BASE_PART_ID])
   const [feedback, setFeedback] = useState(
-    'Start by selecting and seating an interchangeable tube.',
+    'Choose any loose piece whose mating interface is available.',
   )
   const [hintVisible, setHintVisible] = useState(false)
   const [resetVersion, setResetVersion] = useState(0)
@@ -3132,8 +3129,8 @@ export function RigidBronchoscopyAssemblyLab({
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
                   {copy.sequenceTitle}
                 </p>
-                <ol className="mt-3 space-y-2">
-                  {activeSteps.map((part, index) => {
+                <ul className="mt-3 space-y-2">
+                  {activeSteps.map((part) => {
                     const isPlaced = placedIds.includes(part.id)
                     const isSelected = selectedPart?.id === part.id
                     return (
@@ -3159,7 +3156,11 @@ export function RigidBronchoscopyAssemblyLab({
                                 : 'bg-slate-700 text-slate-300',
                             )}
                           >
-                            {isPlaced ? <Check className="h-3 w-3" aria-hidden /> : index + 1}
+                            {isPlaced ? (
+                              <Check className="h-3 w-3" aria-hidden />
+                            ) : (
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+                            )}
                           </span>
                           <span className="min-w-0 flex-1">
                             <span>{part.shortLabel ?? part.label}</span>
@@ -3173,7 +3174,7 @@ export function RigidBronchoscopyAssemblyLab({
                       </li>
                     )
                   })}
-                </ol>
+                </ul>
               </div>
             </>
           ) : mode === 'pathways' ? (
@@ -3754,18 +3755,15 @@ export function RigidBronchoscopyAssemblyLab({
 
           <details className="rounded-2xl border border-slate-700 bg-slate-900/45 p-4">
             <summary className="cursor-pointer text-sm font-semibold text-slate-100">
-              Read the assembly sequence without 3D
+              Review the assembly connections without 3D
             </summary>
-            <ol className="mt-3 space-y-2 text-xs leading-5 text-slate-300">
-              {activeSteps.map((part, index) => (
+            <ul className="mt-3 space-y-2 text-xs leading-5 text-slate-300">
+              {activeSteps.map((part) => (
                 <li key={part.id}>
-                  <span className="font-semibold text-white">
-                    {index + 1}. {part.label}:
-                  </span>{' '}
-                  {part.description}
+                  <span className="font-semibold text-white">{part.label}:</span> {part.description}
                 </li>
               ))}
-            </ol>
+            </ul>
           </details>
 
           <p className="rounded-xl border border-amber-300/20 bg-amber-300/5 p-3 text-xs leading-5 text-amber-100">

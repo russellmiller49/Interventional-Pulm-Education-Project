@@ -290,7 +290,7 @@ const doubleGateLateralObturator: AssemblyPartDefinition = {
     'A removable lateral adapter with two patent instrument gates that mates with the small angled port on the universal base.',
   function: 'Provides two valved lateral access pathways while helping limit gas leakage.',
   category: 'core',
-  prerequisites: [ASSEMBLY_BASE_PART_ID, ANY_TUBE_PREREQUISITE_ID],
+  prerequisites: [ASSEMBLY_BASE_PART_ID],
   start: {
     position: [-3.25, 1.25, 0],
     rotation: DOUBLE_GATE_OBTURATOR_ROTATION,
@@ -319,7 +319,7 @@ const redMainCap: AssemblyPartDefinition = {
     'A 25 mm red silicone cap with a 5.5 mm telescope opening, shown on the rear axial port for this guided configuration.',
   function: 'Seals around the telescope shaft at the axial port.',
   category: 'core',
-  prerequisites: [ASSEMBLY_BASE_PART_ID, ANY_TUBE_PREREQUISITE_ID, doubleGateLateralObturator.id],
+  prerequisites: [ASSEMBLY_BASE_PART_ID],
   start: { position: [-3.6, 0.55, 0], rotation: MAIN_CAP_ROTATION, scale: 9 },
   target: { position: [-2.5725, -0.3, 0], rotation: MAIN_CAP_ROTATION, scale: 9 },
   snapDistance: 0.52,
@@ -605,8 +605,10 @@ export const assemblyToolParts: readonly AssemblyPartDefinition[] = [
 ]
 
 /**
- * The guided sequence begins with the default selected tube. A UI that changes
- * tube selection should replace `assemblySteps[0]` with that selected option.
+ * The default display order begins with the selected tube, but placement is
+ * governed by each part's direct mating interface rather than this array order.
+ * A UI that changes tube selection should replace `assemblySteps[0]` with that
+ * selected option.
  */
 export const assemblySteps: readonly AssemblyPartDefinition[] = [
   bronchoscopeTubeOptions.find((part) => part.id === DEFAULT_RIGID_BRONCHOSCOPY_TUBE_ID) ??
