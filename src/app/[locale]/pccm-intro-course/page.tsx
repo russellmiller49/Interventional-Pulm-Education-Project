@@ -9,8 +9,10 @@ import {
   loadActivePccmEnrollment,
   loadPccmIntroCourseAdminScope,
   loadPccmAssessmentAttempts,
+  loadPccmCohortSettings,
   loadPccmVideoProgress,
   pccmCourseContentUnlocked,
+  pccmPosttestsUnlocked,
 } from '@/features/pccm-intro-course/server'
 import {
   formatPccmInstitution,
@@ -80,8 +82,9 @@ export default async function PccmIntroCoursePage({
     )
   }
 
-  const [attempts, videoProgress, query] = await Promise.all([
+  const [attempts, cohortSettings, videoProgress, query] = await Promise.all([
     loadPccmAssessmentAttempts(supabase, user.id),
+    enrollment ? loadPccmCohortSettings(supabase, enrollment.institution) : null,
     loadPccmVideoProgress(supabase, user.id),
     searchParams,
   ])
@@ -90,13 +93,17 @@ export default async function PccmIntroCoursePage({
   const videoScope = resolveAdminVideoScope(adminScope.institutions, adminScope.canAccessAll)
   const videosUnlocked =
     adminMode || pccmCourseContentUnlocked(dashboardEnrollment.institution, attempts)
+  const posttestsUnlocked =
+    adminMode || pccmPosttestsUnlocked(dashboardEnrollment.institution, cohortSettings)
   const gateMessage = adminMode
     ? undefined
-    : query?.gate === 'pretests'
-      ? 'Loma Linda participants must submit both Bronchoscopy and Pleural pretests before opening shared modules or videos.'
-      : !videosUnlocked && dashboardEnrollment.institution === 'loma_linda'
-        ? 'Submit both pretests to unlock videos and shared module links.'
-        : undefined
+    : query?.gate === 'posttests'
+      ? 'Loma Linda posttests remain locked until the course administrator releases them after course completion.'
+      : query?.gate === 'pretests'
+        ? 'Loma Linda participants must submit both Bronchoscopy and Pleural pretests before opening shared modules or videos.'
+        : !videosUnlocked && dashboardEnrollment.institution === 'loma_linda'
+          ? 'Submit both pretests to unlock videos and shared module links.'
+          : undefined
 
   return (
     <PccmIntroCourseDashboard
@@ -104,6 +111,7 @@ export default async function PccmIntroCoursePage({
       attempts={attempts}
       enrollment={dashboardEnrollment}
       gateMessage={gateMessage}
+      posttestsUnlocked={posttestsUnlocked}
       previewLabel={
         adminMode
           ? formatAdminPreviewLabel(adminScope.institutions, adminScope.canAccessAll)

@@ -1,10 +1,19 @@
 import type { Metadata } from 'next'
 import type { Route } from 'next'
+import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { Activity, ArrowLeft, CheckCircle2, ClipboardCheck, PlayCircle } from 'lucide-react'
+import {
+  Activity,
+  ArrowLeft,
+  CheckCircle2,
+  ClipboardCheck,
+  Lock,
+  PlayCircle,
+  Unlock,
+} from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,6 +22,7 @@ import { getPccmVideosForInstitution } from '@/features/pccm-intro-course/conten
 import {
   loadPccmIntroCourseAdminScope,
   type PccmIntroCourseAdminScope,
+  userCanAdministerPccmInstitution,
 } from '@/features/pccm-intro-course/server'
 import {
   formatPccmInstitution,
@@ -36,6 +46,8 @@ const handoffMetadata: Metadata = {
 interface PccmIntroCourseAdminPageProps {
   searchParams?: Promise<{
     cohort?: string
+    confirm?: string
+    status?: string
   }>
 }
 
@@ -73,6 +85,11 @@ interface SiteModuleProgressAdminRow {
   user_id: string
 }
 
+interface PccmCohortSettingAdminRow {
+  institution: PccmInstitution
+  posttests_released_at: string | null
+}
+
 interface PccmAdminLearnerRow {
   bothPosttestsComplete: boolean
   bothPretestsComplete: boolean
@@ -99,6 +116,7 @@ interface CohortSummary {
   enrolled: number
   institution: PccmInstitution
   moduleAveragePercent: number
+  posttestsReleasedAt: string | null
   videoCompleted: number
   videoTotal: number
 }
@@ -168,6 +186,18 @@ export default async function PccmIntroCourseAdminPage({
             </div>
           ) : null}
 
+          {query?.status === 'posttests_released' ? (
+            <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-950 dark:border-emerald-500/50 dark:bg-emerald-500/10 dark:text-emerald-100">
+              Loma Linda posttests are now open to enrolled learners.
+            </div>
+          ) : null}
+
+          {query?.status === 'posttest_release_failed' ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              The Loma Linda posttests could not be released. Please try again.
+            </div>
+          ) : null}
+
           <section className="grid gap-4 md:grid-cols-2">
             {cohortSummaries.map((cohort) => (
               <article className="rounded-lg border bg-card p-4" key={cohort.institution}>
@@ -202,6 +232,59 @@ export default async function PccmIntroCourseAdminPage({
                     value={`${cohort.moduleAveragePercent}% avg`}
                   />
                 </div>
+                {cohort.institution === 'loma_linda' ? (
+                  <div className="mt-4 flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        {cohort.posttestsReleasedAt ? (
+                          <Unlock className="h-4 w-4" aria-hidden />
+                        ) : (
+                          <Lock className="h-4 w-4" aria-hidden />
+                        )}
+                        Loma Linda posttest release
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {cohort.posttestsReleasedAt
+                          ? `Released ${formatDate(cohort.posttestsReleasedAt)}`
+                          : 'Locked for every learner until a course admin releases it after course completion.'}
+                      </p>
+                    </div>
+                    {cohort.posttestsReleasedAt ? (
+                      <Badge variant="success">Released</Badge>
+                    ) : query?.confirm === 'posttests' ? (
+                      <div className="flex flex-col gap-2">
+                        <p className="max-w-xs text-xs font-medium">
+                          Confirm release of both posttests for every Loma Linda learner.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <form action={releaseLomaLindaPosttestsAction}>
+                            <input type="hidden" name="institution" value="loma_linda" />
+                            <Button type="submit" size="sm">
+                              <Unlock className="h-4 w-4" aria-hidden />
+                              Confirm release
+                            </Button>
+                          </form>
+                          <Button asChild size="sm" variant="outline">
+                            <Link href={'/admin/pccm-intro-course?cohort=loma_linda' as Route}>
+                              Cancel
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button asChild size="sm">
+                        <Link
+                          href={
+                            '/admin/pccm-intro-course?cohort=loma_linda&confirm=posttests' as Route
+                          }
+                        >
+                          <Unlock className="h-4 w-4" aria-hidden />
+                          Release posttests
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                ) : null}
               </article>
             ))}
           </section>
@@ -369,6 +452,39 @@ async function requirePccmAdminUser(): Promise<{
   return { scope, user }
 }
 
+async function releaseLomaLindaPosttestsAction(formData: FormData) {
+  'use server'
+
+  const { scope, user } = await requirePccmAdminUser()
+  const institution = String(formData.get('institution') ?? '').trim()
+
+  if (institution !== 'loma_linda' || !userCanAdministerPccmInstitution(scope, 'loma_linda')) {
+    redirect('/dashboard?required=site_admin' as Route)
+  }
+
+  if (!supabaseAdmin) {
+    redirect('/admin/pccm-intro-course?cohort=loma_linda&status=posttest_release_failed' as Route)
+  }
+
+  const now = new Date().toISOString()
+  const { error } = await supabaseAdmin
+    .from('pccm_intro_course_cohort_settings')
+    .update({
+      posttests_released_at: now,
+      posttests_released_by: user.id,
+      updated_at: now,
+    })
+    .eq('institution', 'loma_linda')
+    .is('posttests_released_at', null)
+
+  if (error) {
+    redirect('/admin/pccm-intro-course?cohort=loma_linda&status=posttest_release_failed' as Route)
+  }
+
+  revalidatePath('/admin/pccm-intro-course')
+  redirect('/admin/pccm-intro-course?cohort=loma_linda&status=posttests_released' as Route)
+}
+
 async function loadPccmAdminDashboardData(allowedInstitutions: readonly PccmInstitution[]) {
   if (!supabaseAdmin) {
     return {
@@ -383,6 +499,7 @@ async function loadPccmAdminDashboardData(allowedInstitutions: readonly PccmInst
     profilesResult,
     enrollmentsResult,
     attemptsResult,
+    cohortSettingsResult,
     videoProgressResult,
     moduleProgressResult,
   ] = await Promise.all([
@@ -397,6 +514,9 @@ async function loadPccmAdminDashboardData(allowedInstitutions: readonly PccmInst
       .from('pccm_intro_course_assessment_attempts')
       .select('user_id,attempt_kind,answers,score,total,submitted_at,updated_at'),
     supabaseAdmin
+      .from('pccm_intro_course_cohort_settings')
+      .select('institution,posttests_released_at'),
+    supabaseAdmin
       .from('pccm_intro_course_video_progress')
       .select('user_id,video_id,max_percent_complete,completed_at,last_activity_at'),
     supabaseAdmin
@@ -410,6 +530,7 @@ async function loadPccmAdminDashboardData(allowedInstitutions: readonly PccmInst
     profilesResult.error,
     enrollmentsResult.error,
     attemptsResult.error,
+    cohortSettingsResult.error,
     videoProgressResult.error,
     moduleProgressResult.error,
   ]
@@ -456,7 +577,11 @@ async function loadPccmAdminDashboardData(allowedInstitutions: readonly PccmInst
     .sort((a, b) => (b.lastActivityAt ?? '').localeCompare(a.lastActivityAt ?? ''))
 
   return {
-    cohortSummaries: buildCohortSummaries(learners, allowedInstitutions),
+    cohortSummaries: buildCohortSummaries(
+      learners,
+      allowedInstitutions,
+      (cohortSettingsResult.data ?? []) as PccmCohortSettingAdminRow[],
+    ),
     error,
     learners,
   }
@@ -527,7 +652,10 @@ function buildLearnerRow({
 function buildCohortSummaries(
   learners: PccmAdminLearnerRow[],
   institutions: readonly PccmInstitution[],
+  settings: readonly PccmCohortSettingAdminRow[],
 ): CohortSummary[] {
+  const settingsByInstitution = new Map(settings.map((setting) => [setting.institution, setting]))
+
   return institutions.map((institution) => {
     const cohortLearners = learners.filter((learner) => learner.institution === institution)
     const videoTotal = cohortLearners.reduce((total, learner) => total + learner.videoTotalCount, 0)
@@ -545,6 +673,10 @@ function buildCohortSummaries(
                 cohortLearners.length,
             )
           : 0,
+      posttestsReleasedAt:
+        institution === 'ucsd'
+          ? null
+          : (settingsByInstitution.get(institution)?.posttests_released_at ?? null),
       videoCompleted: cohortLearners.reduce(
         (total, learner) => total + learner.videoCompletedCount,
         0,
@@ -555,7 +687,7 @@ function buildCohortSummaries(
 }
 
 function emptyCohortSummaries(institutions: readonly PccmInstitution[]) {
-  return buildCohortSummaries([], institutions)
+  return buildCohortSummaries([], institutions, [])
 }
 
 function formatInstitutionList(institutions: readonly PccmInstitution[]) {

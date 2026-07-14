@@ -13,7 +13,9 @@ jest.mock('@/lib/supabase/server', () => ({
 const {
   getPccmIntroCourseAdminEntitlement,
   hashPccmAccessCode,
+  pccmAssessmentAnswerIsLocked,
   pccmCourseContentUnlocked,
+  pccmPosttestsUnlocked,
   userCanAdministerPccmInstitution,
 } = jest.requireActual(
   '@/features/pccm-intro-course/server',
@@ -63,6 +65,36 @@ describe('PCCM intro course server helpers', () => {
 
   it('does not gate UCSD content on pretest completion', () => {
     expect(pccmCourseContentUnlocked('ucsd', [])).toBe(true)
+  })
+
+  it('keeps Loma Linda posttests locked until the cohort release is recorded', () => {
+    expect(pccmPosttestsUnlocked('loma_linda', null)).toBe(false)
+    expect(
+      pccmPosttestsUnlocked('loma_linda', {
+        institution: 'loma_linda',
+        posttests_released_at: null,
+        posttests_released_by: null,
+      }),
+    ).toBe(false)
+    expect(
+      pccmPosttestsUnlocked('loma_linda', {
+        institution: 'loma_linda',
+        posttests_released_at: '2026-07-20T18:00:00.000Z',
+        posttests_released_by: 'admin-1',
+      }),
+    ).toBe(true)
+    expect(pccmPosttestsUnlocked('ucsd', null)).toBe(true)
+  })
+
+  it('locks each posttest response after its first saved answer without locking pretests', () => {
+    const posttest = attempt('bronchoscopy_post', null)
+    posttest.answers = { 'bronch-q1': 'option-a' }
+    const pretest = attempt('bronchoscopy_pre', null)
+    pretest.answers = { 'bronch-q1': 'option-a' }
+
+    expect(pccmAssessmentAnswerIsLocked(posttest, 'bronch-q1')).toBe(true)
+    expect(pccmAssessmentAnswerIsLocked(posttest, 'bronch-q2')).toBe(false)
+    expect(pccmAssessmentAnswerIsLocked(pretest, 'bronch-q1')).toBe(false)
   })
 
   it('maps institution-scoped PCCM admin entitlements', () => {
