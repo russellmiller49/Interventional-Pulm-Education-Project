@@ -112,6 +112,21 @@ describe('rigid bronchoscopy assembly content', () => {
     expect(c2?.source.note).toMatch(/dimensions are educational approximations/i)
   })
 
+  it('stages both loose light-guide adapters clear of the seated camera', () => {
+    const camera = getAssemblyPart('generic-camera-head')
+    const adapters = [
+      getAssemblyPart('light-guide-adapter-c1'),
+      getAssemblyPart('light-guide-adapter-c2'),
+    ]
+
+    expect(camera).toBeDefined()
+    for (const adapter of adapters) {
+      expect(adapter).toBeDefined()
+      expect(adapter!.start.position[0]).toBeGreaterThan(camera!.target.position[0] + 2)
+      expect(adapter!.start.position[1]).toBeGreaterThan(1)
+    }
+  })
+
   it('centers the round camera coupler over the telescope eyepiece', () => {
     const camera = getAssemblyPart('generic-camera-head')
 

@@ -9,6 +9,28 @@ import {
 } from '../explorer/controlState'
 import { getStentExplorerStation } from '../explorer/stations'
 
+describe('cough-motion hotspot layout', () => {
+  const station = getStentExplorerStation('cough-motion')
+
+  it('keeps the endpoint markers at opposite stent ends and the load path central', () => {
+    const hotspots = getStationHotspots(station, station.defaultArchitectureId)
+
+    expect(hotspots.map(({ id }) => id)).toEqual([
+      'proximal-end-marker',
+      'distal-end-marker',
+      'crossing-or-wall',
+    ])
+
+    const proximal = hotspots.find(({ id }) => id === 'proximal-end-marker')
+    const distal = hotspots.find(({ id }) => id === 'distal-end-marker')
+    const loadPath = hotspots.find(({ id }) => id === 'crossing-or-wall')
+
+    expect(proximal?.position[1]).toBeGreaterThan(2)
+    expect(distal?.position[1]).toBeLessThan(-2)
+    expect(Math.abs(loadPath?.position[1] ?? Number.POSITIVE_INFINITY)).toBeLessThan(0.5)
+  })
+})
+
 describe('metallic explorer synchronized views', () => {
   const station = getStentExplorerStation('metal-architecture')
 

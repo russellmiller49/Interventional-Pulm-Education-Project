@@ -26,6 +26,7 @@ interface PccmIntroCourseDashboardProps {
   attempts: PccmAssessmentAttemptRow[]
   enrollment: PccmEnrollment
   gateMessage?: string
+  posttestsUnlocked: boolean
   previewLabel?: string
   videosUnlocked: boolean
   videoProgress: PccmVideoProgressRow[]
@@ -58,6 +59,7 @@ export function PccmIntroCourseDashboard({
   attempts,
   enrollment,
   gateMessage,
+  posttestsUnlocked,
   previewLabel,
   videosUnlocked,
   videoProgress,
@@ -161,7 +163,7 @@ export function PccmIntroCourseDashboard({
               <p className="text-sm text-muted-foreground">
                 {adminMode
                   ? 'Open pretests and posttests in preview mode without changing learner records.'
-                  : 'Pretests record baseline knowledge without revealing answers. Posttests reveal correctness and explanations after each response.'}
+                  : 'Pretests record baseline knowledge without revealing answers. Posttest answers are final after selection and reveal correctness immediately.'}
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -170,6 +172,7 @@ export function PccmIntroCourseDashboard({
                 const submitted = Boolean(attempt?.submitted_at)
                 const answered = Object.keys(attempt?.answers ?? {}).length
                 const total = attempt?.total ?? 15
+                const locked = !adminMode && kind.endsWith('_post') && !posttestsUnlocked
 
                 return (
                   <article className="rounded-lg border bg-card p-4" key={kind}>
@@ -179,19 +182,39 @@ export function PccmIntroCourseDashboard({
                         <p className="mt-1 text-xs text-muted-foreground">
                           {adminMode
                             ? 'Preview module'
-                            : submitted
-                              ? `Score: ${attempt?.score ?? 0}/${total}`
-                              : `${answered}/${total} answered`}
+                            : locked
+                              ? 'Awaiting course admin release'
+                              : submitted
+                                ? `Score: ${attempt?.score ?? 0}/${total}`
+                                : `${answered}/${total} answered`}
                         </p>
                       </div>
                       <Badge variant={adminMode ? 'info' : submitted ? 'success' : 'outline'}>
-                        {adminMode ? 'Preview' : submitted ? 'Submitted' : 'Open'}
+                        {adminMode
+                          ? 'Preview'
+                          : submitted
+                            ? 'Submitted'
+                            : locked
+                              ? 'Locked'
+                              : 'Open'}
                       </Badge>
                     </div>
-                    <Button asChild className="mt-4 w-full" variant="outline">
-                      <Link href={`/pccm-intro-course/assessments/${kind}` as Route}>
-                        {adminMode ? 'Preview' : submitted ? 'Review' : 'Start'}
-                      </Link>
+                    <Button
+                      asChild={!locked}
+                      className="mt-4 w-full"
+                      disabled={locked}
+                      variant="outline"
+                    >
+                      {locked ? (
+                        <span>
+                          <Lock className="h-4 w-4" aria-hidden />
+                          Locked
+                        </span>
+                      ) : (
+                        <Link href={`/pccm-intro-course/assessments/${kind}` as Route}>
+                          {adminMode ? 'Preview' : submitted ? 'Review' : 'Start'}
+                        </Link>
+                      )}
                     </Button>
                   </article>
                 )

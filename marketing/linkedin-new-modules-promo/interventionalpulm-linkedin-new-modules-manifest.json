@@ -1,0 +1,197 @@
+{
+  "generatedAt": "2026-07-14T00:33:47.703Z",
+  "output": "marketing/linkedin-new-modules-promo/interventionalpulm-linkedin-new-modules.mp4",
+  "poster": "marketing/linkedin-new-modules-promo/interventionalpulm-linkedin-new-modules-poster.png",
+  "contactSheet": "marketing/linkedin-new-modules-promo/interventionalpulm-linkedin-new-modules-contact-sheet.png",
+  "spec": {
+    "width": 1080,
+    "height": 1350,
+    "fps": 30,
+    "durationSeconds": 39,
+    "videoCodec": "H.264 High",
+    "pixelFormat": "yuv420p",
+    "audio": "AAC 48 kHz, 160 kbps"
+  },
+  "audio": {
+    "source": "/Users/russellmiller/Movies/promption_audio.mp3",
+    "sha256": "e1c0cf6ff4ea91f7618f6da532d18ea28d2c5ea49f297aead0d87d76bd0cb1ba"
+  },
+  "scenes": [
+    {
+      "id": "hero",
+      "start": 0,
+      "duration": 3.2,
+      "captures": []
+    },
+    {
+      "id": "therapeutic-hub",
+      "start": 3.2,
+      "duration": 2.6,
+      "eyebrow": "THERAPEUTIC BRONCHOSCOPY",
+      "title": ["Four modules.", "One new collection."],
+      "body": [
+        "Rigid foundations, thermal ablation, peripheral therapy,",
+        "and airway-stent mechanics—built as one learning path."
+      ],
+      "tag": "NEW COLLECTION",
+      "note": "Four independently navigable therapeutic modules",
+      "captures": [
+        {
+          "id": "therapeutic-hub",
+          "duration": 2.6
+        }
+      ]
+    },
+    {
+      "id": "stent",
+      "start": 5.8,
+      "duration": 3.8,
+      "eyebrow": "3D AIRWAY STENT MECHANICS",
+      "title": ["Orbit a Y-stent.", "Watch fit become consequence."],
+      "body": [
+        "Qualitative 3D models connect device architecture,",
+        "deformation, airway fit, and lumen behavior."
+      ],
+      "tag": "LIVE 3D INTERACTION",
+      "note": "Qualitative educational model • not patient-specific",
+      "captures": [
+        {
+          "id": "stent-y-orbit",
+          "duration": 3.8
+        }
+      ]
+    },
+    {
+      "id": "vio3",
+      "start": 9.6,
+      "duration": 8,
+      "eyebrow": "THERMAL ABLATION • ELECTROSURGERY",
+      "title": ["Drive a simulated", "VIO 3 console."],
+      "body": [
+        "Switch modes, compare live waveforms, and visualize",
+        "argon plasma coagulation at the tissue surface."
+      ],
+      "tag": "APC • LIVE TISSUE EFFECT",
+      "note": "Schematic teaching replica • not an Erbe product",
+      "captures": [
+        {
+          "id": "vio3-apc",
+          "duration": 2.5
+        },
+        {
+          "id": "vio3-tissue",
+          "duration": 5.5
+        }
+      ]
+    },
+    {
+      "id": "ebus",
+      "start": 17.6,
+      "duration": 8,
+      "eyebrow": "UPDATED EBUS SIMULATOR",
+      "title": ["Navigate anatomy, scope view,", "and a live EBUS sector."],
+      "body": [
+        "Advance through the airway, snap to a nodal station,",
+        "then roll the ultrasound plane—all in sync."
+      ],
+      "tag": "SYNCHRONIZED TRI-VIEW",
+      "note": "Orientation-training simulation • not diagnostic imaging",
+      "captures": [
+        {
+          "id": "ebus-advance",
+          "duration": 3
+        },
+        {
+          "id": "ebus-station7",
+          "duration": 2.2
+        },
+        {
+          "id": "ebus-roll",
+          "duration": 2.8
+        }
+      ]
+    },
+    {
+      "id": "tracheostomy",
+      "start": 25.6,
+      "duration": 8,
+      "eyebrow": "TRACHEOSTOMY KNOWLEDGE LAB",
+      "title": ["Rotate the tube.", "Explode every component."],
+      "body": [
+        "Connect cuff, cannula, obturator, flange, and pilot system",
+        "to the shared airway mental model."
+      ],
+      "tag": "SEGMENTED 3D MODEL",
+      "note": "Adult professional education and simulation",
+      "captures": [
+        {
+          "id": "tracheostomy-rotate",
+          "duration": 3.3
+        },
+        {
+          "id": "tracheostomy-explode",
+          "duration": 4.7
+        }
+      ]
+    },
+    {
+      "id": "cta",
+      "start": 33.6,
+      "duration": 5.4,
+      "captures": []
+    }
+  ],
+  "captures": {
+    "therapeutic-hub": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/therapeutic-hub",
+      "frameCount": 1,
+      "route": "/en/therapeutic-bronchoscopy"
+    },
+    "stent-y-orbit": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/stent-y-orbit",
+      "frameCount": 24,
+      "route": "/en/airway-stent-mechanics"
+    },
+    "vio3-apc": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/vio3-apc",
+      "frameCount": 30,
+      "route": "/thermal-ablation/index.html#sim"
+    },
+    "vio3-tissue": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/vio3-tissue",
+      "frameCount": 32,
+      "route": "/thermal-ablation/index.html#sim"
+    },
+    "ebus-advance": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/ebus-advance",
+      "frameCount": 28,
+      "route": "/socal-ebus-course/app/index.html?locale=en&publicTraining=1&publicScope=ebus#/simulator"
+    },
+    "ebus-station7": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/ebus-station7",
+      "frameCount": 28,
+      "route": "/socal-ebus-course/app/index.html?locale=en&publicTraining=1&publicScope=ebus#/simulator"
+    },
+    "ebus-roll": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/ebus-roll",
+      "frameCount": 26,
+      "route": "/socal-ebus-course/app/index.html?locale=en&publicTraining=1&publicScope=ebus#/simulator"
+    },
+    "tracheostomy-rotate": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/tracheostomy-rotate",
+      "frameCount": 24,
+      "route": "/en/tracheostomy/learn"
+    },
+    "tracheostomy-explode": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/tracheostomy-explode",
+      "frameCount": 28,
+      "route": "/en/tracheostomy/learn"
+    }
+  },
+  "notes": [
+    "All on-screen copy is burned in for muted autoplay.",
+    "The VIO 3 scene is explicitly labeled as a schematic teaching replica and not an Erbe product.",
+    "The EBUS embed is a generated sync output captured from the current sibling EBUS-course build.",
+    "Clinical visuals are educational simulations and not patient-specific or diagnostic tools."
+  ]
+}

@@ -21,6 +21,12 @@ export interface PccmEnrollment {
   enrolled_at: string
 }
 
+export interface PccmCohortSettings {
+  institution: PccmInstitution
+  posttests_released_at: string | null
+  posttests_released_by: string | null
+}
+
 export interface PccmAssessmentAttemptRow {
   id: string
   user_id: string

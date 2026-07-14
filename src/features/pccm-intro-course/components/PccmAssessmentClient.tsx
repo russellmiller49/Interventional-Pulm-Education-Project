@@ -104,6 +104,9 @@ export function PccmAssessmentClient({
       } | null
 
       if (!response.ok || !payload?.attempt) {
+        if (payload?.attempt) {
+          setAttempt(payload.attempt)
+        }
         setError(payload?.error ?? 'Unable to save that answer.')
         return
       }
@@ -155,7 +158,7 @@ export function PccmAssessmentClient({
             {adminPreview
               ? 'Preview responses stay in this browser and are not saved to learner records.'
               : attempt?.phase === 'post'
-                ? 'Answer choices reveal the correct response and explanation after selection.'
+                ? 'Your first response to each question is final. The correct response and explanation appear after selection.'
                 : 'Pretest responses are saved without revealing correctness or explanations.'}
           </p>
         </div>
@@ -239,7 +242,11 @@ export function PccmAssessmentClient({
                             showCorrect ? 'border-emerald-500 bg-emerald-500/10' : '',
                             showIncorrect ? 'border-destructive bg-destructive/10' : '',
                           ].join(' ')}
-                          disabled={Boolean(attempt.submittedAt || pendingQuestionId)}
+                          disabled={Boolean(
+                            attempt.submittedAt ||
+                            pendingQuestionId ||
+                            (!adminPreview && question.reveal),
+                          )}
                           key={option.id}
                           onClick={() => chooseAnswer(question.id, option.id)}
                           type="button"
@@ -265,6 +272,11 @@ export function PccmAssessmentClient({
                         {question.reveal.isCorrect ? 'Correct' : 'Not quite'}
                       </p>
                       <p className="mt-1 text-muted-foreground">{question.reveal.explanation}</p>
+                      {!adminPreview ? (
+                        <p className="mt-2 text-xs font-medium text-muted-foreground">
+                          Answer locked. It cannot be changed after the result is shown.
+                        </p>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

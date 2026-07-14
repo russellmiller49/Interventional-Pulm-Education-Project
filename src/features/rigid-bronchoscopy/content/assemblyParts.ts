@@ -398,7 +398,10 @@ const lightGuideAdapterC1: AssemblyPartDefinition = {
   function: 'Forms the first mechanical interface in the telescope-to-light-cable adapter chain.',
   category: 'core',
   prerequisites: [rigidTelescope.id],
-  start: { position: [-3.6, -0.05, 0], rotation: LIGHT_GUIDE_ROTATION, scale: 9 },
+  // Keep the two small adapters in the open upper-right staging area. The
+  // seated camera spans the left side of the field and otherwise occludes
+  // both their visible geometry and their drag targets.
+  start: { position: [2.35, 1.55, 0], rotation: LIGHT_GUIDE_ROTATION, scale: 9 },
   target: {
     position: [-2.794000024, -0.543000143, 0],
     rotation: LIGHT_GUIDE_ROTATION,
@@ -429,7 +432,7 @@ const lightGuideAdapterC2: AssemblyPartDefinition = {
     'Completes the mechanical transition from the telescope light post to the cable connector.',
   category: 'core',
   prerequisites: [lightGuideAdapterC1.id],
-  start: { position: [-3.15, -0.05, 0], rotation: LIGHT_GUIDE_ROTATION, scale: 9 },
+  start: { position: [2.8, 1.55, 0], rotation: LIGHT_GUIDE_ROTATION, scale: 9 },
   target: {
     position: [-2.794000024, -0.597000143, 0],
     rotation: LIGHT_GUIDE_ROTATION,

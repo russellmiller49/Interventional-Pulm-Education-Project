@@ -9,8 +9,10 @@ import {
   scorePccmAssessmentAttempt,
 } from './assessment'
 import {
+  getPccmAssessmentPhase,
   type PccmAssessmentAttemptRow,
   type PccmAssessmentKind,
+  type PccmCohortSettings,
   type PccmEnrollment,
   type PccmInstitution,
   type PccmVideoProgressRow,
@@ -149,6 +151,23 @@ export async function loadPccmAssessmentAttempts(
   return ((data ?? []) as PccmAssessmentAttemptRow[]).map(normalizeAttemptRow)
 }
 
+export async function loadPccmCohortSettings(
+  supabase: SupabaseClient,
+  institution: PccmInstitution,
+): Promise<PccmCohortSettings | null> {
+  const { data, error } = await supabase
+    .from('pccm_intro_course_cohort_settings')
+    .select('institution,posttests_released_at,posttests_released_by')
+    .eq('institution', institution)
+    .maybeSingle()
+
+  if (error || !data) {
+    return null
+  }
+
+  return data as PccmCohortSettings
+}
+
 export async function loadPccmVideoProgress(
   supabase: SupabaseClient,
   userId: string,
@@ -217,7 +236,7 @@ export async function savePccmAssessmentAnswer(
   questionId: string,
   optionId: string,
 ) {
-  if (attempt.submitted_at) {
+  if (attempt.submitted_at || pccmAssessmentAnswerIsLocked(attempt, questionId)) {
     return attempt
   }
 
@@ -244,6 +263,16 @@ export async function savePccmAssessmentAnswer(
   }
 
   return normalizeAttemptRow(data as PccmAssessmentAttemptRow)
+}
+
+export function pccmAssessmentAnswerIsLocked(
+  attempt: PccmAssessmentAttemptRow,
+  questionId: string,
+) {
+  return (
+    getPccmAssessmentPhase(attempt.attempt_kind) === 'post' &&
+    Object.prototype.hasOwnProperty.call(attempt.answers, questionId)
+  )
 }
 
 export async function submitPccmAssessmentAttempt(
@@ -294,6 +323,13 @@ export function pccmCourseContentUnlocked(
   attempts: readonly PccmAssessmentAttemptRow[],
 ) {
   return institution === 'ucsd' || lomaLindaPretestsComplete(attempts)
+}
+
+export function pccmPosttestsUnlocked(
+  institution: PccmInstitution,
+  settings: PccmCohortSettings | null,
+) {
+  return institution === 'ucsd' || Boolean(settings?.posttests_released_at)
 }
 
 function normalizeAttemptRow(row: PccmAssessmentAttemptRow): PccmAssessmentAttemptRow {

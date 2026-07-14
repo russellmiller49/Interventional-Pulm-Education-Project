@@ -9,11 +9,14 @@ import {
 import {
   getOrCreatePccmAssessmentAttempt,
   loadActivePccmEnrollment,
+  loadPccmCohortSettings,
+  pccmAssessmentAnswerIsLocked,
+  pccmPosttestsUnlocked,
   requirePccmApiUser,
   savePccmAssessmentAnswer,
   submitPccmAssessmentAttempt,
 } from '@/features/pccm-intro-course/server'
-import { isPccmAssessmentKind } from '@/features/pccm-intro-course/types'
+import { getPccmAssessmentPhase, isPccmAssessmentKind } from '@/features/pccm-intro-course/types'
 import { createSupabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -54,6 +57,16 @@ export async function PATCH(request: Request, context: AssessmentRouteContext) {
   const question = getPccmQuestionMap(loaded.kind).get(payload.data.questionId)
   if (!question || !question.options.some((option) => option.id === payload.data.optionId)) {
     return jsonNoStore({ error: 'That answer does not belong to this assessment.' }, 400)
+  }
+
+  if (pccmAssessmentAnswerIsLocked(loaded.attempt, payload.data.questionId)) {
+    return jsonNoStore(
+      {
+        attempt: sanitizePccmAssessmentAttempt(loaded.attempt),
+        error: 'Posttest answers are final once correctness is shown.',
+      },
+      409,
+    )
   }
 
   const attempt = await savePccmAssessmentAnswer(
@@ -131,6 +144,23 @@ async function loadAssessmentContext(context: AssessmentRouteContext) {
     return {
       ok: false as const,
       response: jsonNoStore({ error: 'PCCM intro course enrollment required.' }, 403),
+    }
+  }
+
+  if (getPccmAssessmentPhase(attemptKind) === 'post') {
+    const cohortSettings = await loadPccmCohortSettings(supabase, enrollment.institution)
+
+    if (!pccmPosttestsUnlocked(enrollment.institution, cohortSettings)) {
+      return {
+        ok: false as const,
+        response: jsonNoStore(
+          {
+            error:
+              'Loma Linda posttests are locked until the course administrator releases them after course completion.',
+          },
+          403,
+        ),
+      }
     }
   }
 

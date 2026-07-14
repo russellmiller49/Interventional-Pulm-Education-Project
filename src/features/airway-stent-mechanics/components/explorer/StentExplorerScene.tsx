@@ -61,7 +61,9 @@ export interface StentExplorerCameraCommand {
 
 export interface StentExplorerHotspot {
   description: string
+  fixedLabelSize?: boolean
   id: string
+  labelOffset?: readonly [number, number]
   label: string
   position: readonly [number, number, number]
 }
@@ -109,18 +111,31 @@ const HOTSPOTS: Record<StentExplorerStationId, readonly StentExplorerHotspot[]> 
   ],
   'cough-motion': [
     {
-      id: 'end-excursion',
-      label: 'End excursion',
+      id: 'proximal-end-marker',
+      label: 'Proximal end',
       description:
-        'Architecture-specific length change or sliding can alter where an end contacts tissue.',
-      position: [0.95, 2.35, 0.12],
+        'A fixed airway marker makes relative proximal-end excursion visible during the pulse.',
+      fixedLabelSize: true,
+      labelOffset: [-60, 18],
+      // Slightly inset from the baseline end plane so the label remains visible at tight crops.
+      position: [1.02, 2.2, 0.18],
     },
     {
-      id: 'fixed-landmark',
-      label: 'Airway landmark',
+      id: 'distal-end-marker',
+      label: 'Distal end',
       description:
-        'Compare the moving stent end with the fixed airway ring; motion alone does not predict granulation.',
-      position: [-1.45, 2.55, 0],
+        'A fixed airway marker makes relative distal-end excursion visible during the pulse.',
+      fixedLabelSize: true,
+      labelOffset: [-42, -18],
+      position: [-1.02, -2.2, 0.18],
+    },
+    {
+      id: 'crossing-or-wall',
+      label: 'Architecture load path',
+      description: 'Compare mobile braid crossings with deformation of a continuous solid wall.',
+      fixedLabelSize: true,
+      labelOffset: [42, 14],
+      position: [0, 0.05, 1.05],
     },
   ],
   'curve-buckle': [
@@ -261,6 +276,8 @@ export function getStationHotspots(
     const positionedHotspot = layout.find((candidate) => candidate.id === hotspot.id)
     return {
       ...hotspot,
+      fixedLabelSize: positionedHotspot?.fixedLabelSize,
+      labelOffset: positionedHotspot?.labelOffset,
       position:
         positionedHotspot?.position ??
         ([
@@ -987,7 +1004,8 @@ function HotspotMarkers({ hotspots }: { hotspots: readonly StentExplorerHotspot[
   return (
     <group>
       {hotspots.map((hotspot, index) => {
-        const [offsetX, offsetY] = HOTSPOT_LABEL_OFFSETS[index % HOTSPOT_LABEL_OFFSETS.length]
+        const [offsetX, offsetY] =
+          hotspot.labelOffset ?? HOTSPOT_LABEL_OFFSETS[index % HOTSPOT_LABEL_OFFSETS.length]
 
         return (
           <group key={hotspot.id} position={[...hotspot.position]}>
@@ -995,7 +1013,11 @@ function HotspotMarkers({ hotspots }: { hotspots: readonly StentExplorerHotspot[
               <sphereGeometry args={[0.09, 16, 12]} />
               <meshBasicMaterial color="#fde047" depthTest={false} />
             </mesh>
-            <Html center distanceFactor={7.5} zIndexRange={[30, 10]}>
+            <Html
+              center
+              distanceFactor={hotspot.fixedLabelSize ? undefined : 7.5}
+              zIndexRange={[30, 10]}
+            >
               <span
                 aria-hidden="true"
                 className="pointer-events-none inline-block whitespace-nowrap rounded-full border border-amber-200/60 bg-slate-950/90 px-2 py-1 text-[10px] font-bold text-amber-100 shadow-lg backdrop-blur"
