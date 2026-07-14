@@ -10,7 +10,7 @@ const csp = [
   "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://upload.wikimedia.org https://*.supabase.co https://*.storage.supabase.co",
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net",
   "font-src 'self' https://cdn.scite.ai",
-  "frame-src 'self'",
+  "frame-src 'self' https://www.youtube-nocookie.com",
   "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com https://pccmintro.s3.us-east-1.amazonaws.com blob:",
   "object-src 'none'",
   "base-uri 'self'",

@@ -10,6 +10,8 @@ import {
   pccmCourseVideos,
 } from '@/features/pccm-intro-course/content/videos'
 import { PccmCourseVideoCard } from '@/features/pccm-intro-course/components/PccmCourseVideoCard'
+import { PccmTechnicalProcedureVideoCard } from '@/features/pccm-intro-course/components/PccmTechnicalProcedureVideoCard'
+import { pccmPleuralTechnicalProcedureVideos } from '@/features/pccm-intro-course/content/technicalProcedureVideos'
 import {
   type PccmCourseSection,
   formatPccmAssessmentKind,
@@ -291,6 +293,29 @@ export function PccmIntroCourseDashboard({
                   key={video.id}
                   locked={!videosUnlocked}
                   progress={progressByVideoId.get(video.id)}
+                  video={video}
+                />
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">Technical Procedure Videos</h2>
+              <p className="text-sm text-muted-foreground">
+                Supplemental pleural procedure demonstrations shared by both cohorts. These videos
+                are not included in course-completion totals.
+              </p>
+            </div>
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-500/50 dark:bg-amber-500/10 dark:text-amber-100">
+              For clinician education only. Procedure videos supplement supervised training; follow
+              local protocols, equipment instructions, and patient-specific clinical judgment.
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {pccmPleuralTechnicalProcedureVideos.map((video) => (
+                <PccmTechnicalProcedureVideoCard
+                  key={video.id}
+                  locked={!videosUnlocked}
                   video={video}
                 />
               ))}
