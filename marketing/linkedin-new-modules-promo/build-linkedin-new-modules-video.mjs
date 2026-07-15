@@ -10,6 +10,7 @@ import sharp from 'sharp'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '../..')
 const captureDir = path.join(__dirname, 'captures')
+const sourceDir = path.join(__dirname, 'sources')
 const tempDir = path.join(__dirname, '.tmp')
 const preparedDir = path.join(tempDir, 'prepared')
 const segmentDir = path.join(tempDir, 'segments')
@@ -30,7 +31,7 @@ const audioPath = process.env.LINKEDIN_PROMO_AUDIO || defaultAudioPath
 const width = 1080
 const height = 1350
 const fps = 30
-const totalDuration = 39
+const totalDuration = 48.8
 
 const captureCard = {
   x: 60,
@@ -63,40 +64,74 @@ const scenes = [
   {
     id: 'hero',
     start: 0,
-    duration: 3.2,
+    duration: 3,
   },
   {
-    id: 'therapeutic-hub',
-    start: 3.2,
-    duration: 2.6,
-    eyebrow: 'THERAPEUTIC BRONCHOSCOPY',
-    title: ['Four modules.', 'One new collection.'],
+    id: 'rigid',
+    start: 3,
+    duration: 6.8,
+    eyebrow: 'RIGID BRONCHOSCOPY • 3D LAB',
+    title: ['Assemble. Orient. Navigate.'],
     body: [
-      'Rigid foundations, thermal ablation, peripheral therapy,',
-      'and airway-stent mechanics—built as one learning path.',
+      'Connect the components, then translate scope orientation',
+      'into deliberate airway positioning at the carina.',
     ],
-    tag: 'NEW COLLECTION',
-    note: 'Four independently navigable therapeutic modules',
-    captureSegments: [{ id: 'therapeutic-hub', duration: 2.6 }],
+    tag: 'EXPLODED VIEW • AIRWAY PLACEMENT',
+    note: 'Conceptual educational model • device setups vary',
+    clipSegments: [
+      {
+        id: 'rigid-assembly',
+        inputStart: 4.6,
+        inputDuration: 6.2,
+        duration: 3.4,
+      },
+      {
+        id: 'rigid-airway',
+        inputStart: 12.73,
+        inputDuration: 6.42,
+        duration: 3.4,
+      },
+    ],
   },
   {
     id: 'stent',
-    start: 5.8,
-    duration: 3.8,
-    eyebrow: '3D AIRWAY STENT MECHANICS',
-    title: ['Orbit a Y-stent.', 'Watch fit become consequence.'],
+    start: 9.8,
+    duration: 6.8,
+    eyebrow: 'AIRWAY STENTS • 3D EXPLORER',
+    title: ['Compare architectures.', 'Reveal mechanics.'],
     body: [
-      'Qualitative 3D models connect device architecture,',
-      'deformation, airway fit, and lumen behavior.',
+      'Inspect deformation, wall contact, and design landmarks',
+      'across silicone and self-expanding stent types.',
     ],
-    tag: 'LIVE 3D INTERACTION',
-    note: 'Qualitative educational model • not patient-specific',
-    captureSegments: [{ id: 'stent-y-orbit', duration: 3.8 }],
+    tag: 'SILICONE • SELF-EXPANDING • PLACEMENT CUES',
+    note: 'Qualitative educational models • not patient-specific',
+    clipSegments: [
+      {
+        id: 'stent-comparison',
+        inputStart: 0.2,
+        inputDuration: 8,
+        duration: 6.8,
+      },
+    ],
+  },
+  {
+    id: 'laser',
+    start: 16.6,
+    duration: 4.2,
+    eyebrow: 'LASER ABLATION • PHYSICS LAB',
+    title: ['Aim the fiber.', 'Watch tissue respond.'],
+    body: [
+      'Change wavelength, power density, and distance, then',
+      'sweep across simulated tissue to compare effects.',
+    ],
+    tag: 'KTP • POWER DENSITY • LIVE TISSUE RESPONSE',
+    note: 'Schematic educational model • not procedural guidance',
+    captureSegments: [{ id: 'laser-tissue-sweep', duration: 4.2 }],
   },
   {
     id: 'vio3',
-    start: 9.6,
-    duration: 8,
+    start: 20.8,
+    duration: 6,
     eyebrow: 'THERMAL ABLATION • ELECTROSURGERY',
     title: ['Drive a simulated', 'VIO 3 console.'],
     body: [
@@ -106,14 +141,31 @@ const scenes = [
     tag: 'APC • LIVE TISSUE EFFECT',
     note: 'Schematic teaching replica • not an Erbe product',
     captureSegments: [
-      { id: 'vio3-apc', duration: 2.5 },
-      { id: 'vio3-tissue', duration: 5.5 },
+      { id: 'vio3-apc', duration: 1.9 },
+      { id: 'vio3-tissue', duration: 4.1 },
+    ],
+  },
+  {
+    id: 'peripheral',
+    start: 26.8,
+    duration: 4.6,
+    eyebrow: 'PERIPHERAL ABLATION • ZONE SIMULATOR',
+    title: ['Build the zone.', 'Protect the margin.'],
+    body: [
+      'Compare RFA and PEF, reveal heat-sink, and test',
+      'whether the model clears a 5 mm target margin.',
+    ],
+    tag: 'RFA • PEF • HEAT-SINK • 5 MM MARGIN',
+    note: 'Schematic model • PEF and transbronchial delivery remain investigational',
+    captureSegments: [
+      { id: 'peripheral-rfa-vessel', duration: 1.4 },
+      { id: 'peripheral-pef-zone', duration: 3.2 },
     ],
   },
   {
     id: 'ebus',
-    start: 17.6,
-    duration: 8,
+    start: 31.4,
+    duration: 6,
     eyebrow: 'UPDATED EBUS SIMULATOR',
     title: ['Navigate anatomy, scope view,', 'and a live EBUS sector.'],
     body: [
@@ -123,15 +175,15 @@ const scenes = [
     tag: 'SYNCHRONIZED TRI-VIEW',
     note: 'Orientation-training simulation • not diagnostic imaging',
     captureSegments: [
-      { id: 'ebus-advance', duration: 3 },
-      { id: 'ebus-station7', duration: 2.2 },
-      { id: 'ebus-roll', duration: 2.8 },
+      { id: 'ebus-advance', duration: 2.2 },
+      { id: 'ebus-station7', duration: 1.6 },
+      { id: 'ebus-roll', duration: 2.2 },
     ],
   },
   {
     id: 'tracheostomy',
-    start: 25.6,
-    duration: 8,
+    start: 37.4,
+    duration: 6,
     eyebrow: 'TRACHEOSTOMY KNOWLEDGE LAB',
     title: ['Rotate the tube.', 'Explode every component.'],
     body: [
@@ -141,23 +193,23 @@ const scenes = [
     tag: 'SEGMENTED 3D MODEL',
     note: 'Adult professional education and simulation',
     captureSegments: [
-      { id: 'tracheostomy-rotate', duration: 3.3 },
-      { id: 'tracheostomy-explode', duration: 4.7 },
+      { id: 'tracheostomy-rotate', duration: 2.6 },
+      { id: 'tracheostomy-explode', duration: 3.4 },
     ],
   },
   {
     id: 'cta',
-    start: 33.6,
+    start: 43.4,
     duration: 5.4,
   },
 ]
 
 const captureRoutes = {
-  'therapeutic-hub': '/en/therapeutic-bronchoscopy',
-  'stent-y-orbit': '/en/airway-stent-mechanics',
-  'stent-y-play': '/en/airway-stent-mechanics',
+  'laser-tissue-sweep': '/thermal-ablation/index.html#power',
   'vio3-apc': '/thermal-ablation/index.html#sim',
   'vio3-tissue': '/thermal-ablation/index.html#sim',
+  'peripheral-rfa-vessel': '/peripheral-ablation/index.html#simulator',
+  'peripheral-pef-zone': '/peripheral-ablation/index.html#simulator',
   'ebus-advance':
     '/socal-ebus-course/app/index.html?locale=en&publicTraining=1&publicScope=ebus#/simulator',
   'ebus-station7':
@@ -166,6 +218,18 @@ const captureRoutes = {
     '/socal-ebus-course/app/index.html?locale=en&publicTraining=1&publicScope=ebus#/simulator',
   'tracheostomy-rotate': '/en/tracheostomy/learn',
   'tracheostomy-explode': '/en/tracheostomy/learn',
+}
+
+const sourceClips = {
+  'rigid-assembly': {
+    sourcePath: path.join(sourceDir, 'rigid-demo.mp4'),
+  },
+  'rigid-airway': {
+    sourcePath: path.join(sourceDir, 'rigid-demo.mp4'),
+  },
+  'stent-comparison': {
+    sourcePath: path.join(sourceDir, 'stent.mp4'),
+  },
 }
 
 function escapeXml(value) {
@@ -270,6 +334,37 @@ function capturedSceneOverlay(scene, globalProgress) {
   `
 }
 
+function immersiveClipOverlay(scene, globalProgress) {
+  const tagWidth = Math.min(900, Math.max(260, scene.tag.length * 12.4 + 48))
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <defs>
+        <linearGradient id="clipTop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#020910" stop-opacity="0.98" />
+          <stop offset="72%" stop-color="#020910" stop-opacity="0.72" />
+          <stop offset="100%" stop-color="#020910" stop-opacity="0" />
+        </linearGradient>
+        <linearGradient id="clipBottom" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#020910" stop-opacity="0" />
+          <stop offset="30%" stop-color="#020910" stop-opacity="0.78" />
+          <stop offset="100%" stop-color="#020910" stop-opacity="0.99" />
+        </linearGradient>
+      </defs>
+      <rect width="${width}" height="390" fill="url(#clipTop)" />
+      <rect y="960" width="${width}" height="390" fill="url(#clipBottom)" />
+      ${brandHeader()}
+      <text x="60" y="154" fill="${scene.id === 'rigid' ? colors.cyan : colors.mint}" font-family="${fontStack}" font-size="21" font-weight="850" letter-spacing="2.1">${escapeXml(scene.eyebrow)}</text>
+      ${textLines(scene.title, 60, 222, { fontSize: scene.id === 'rigid' ? 58 : 52, lineHeight: 1.02 })}
+      <rect x="60" y="1022" width="${tagWidth}" height="42" rx="21" fill="#06131f" fill-opacity="0.92" stroke="#34766f" />
+      <circle cx="84" cy="1043" r="6" fill="${scene.id === 'rigid' ? colors.cyan : colors.mint}" />
+      <text x="102" y="1050" fill="${colors.ink}" font-family="${fontStack}" font-size="17" font-weight="820" letter-spacing="0.7">${escapeXml(scene.tag)}</text>
+      ${textLines(scene.body, 60, 1112, { fontSize: 22, lineHeight: 1.28, weight: 560, fill: colors.muted })}
+      <text x="60" y="1204" fill="${colors.muted}" font-family="${fontStack}" font-size="19" font-weight="700">${escapeXml(scene.note)}</text>
+      ${footer(globalProgress)}
+    </svg>
+  `
+}
+
 function heroOverlay(globalProgress) {
   return `
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
@@ -286,7 +381,7 @@ function heroOverlay(globalProgress) {
       ${brandHeader()}
       <text x="60" y="205" fill="${colors.cyan}" font-family="${fontStack}" font-size="23" font-weight="850" letter-spacing="2.3">NEW INTERACTIVE MODULES</text>
       ${textLines(['Therapeutic bronchoscopy.'], 60, 318, { fontSize: 69, lineHeight: 1.02, weight: 900 })}
-      ${textLines(['EBUS. Tracheostomy.'], 60, 402, { fontSize: 69, lineHeight: 1.02, weight: 900, fill: colors.mint })}
+      ${textLines(['Ablation. EBUS. Tracheostomy.'], 60, 402, { fontSize: 57, lineHeight: 1.02, weight: 900, fill: colors.mint })}
       ${textLines(['Hands-on learning built for visual, practice-first', 'interventional pulmonology education.'], 60, 520, { fontSize: 28, lineHeight: 1.38, weight: 540, fill: colors.muted })}
       <g filter="url(#heroShadow)">
         <rect x="60" y="650" width="960" height="328" rx="40" fill="#081a2a" stroke="#27455f" />
@@ -331,7 +426,7 @@ function ctaOverlay(globalProgress) {
         <rect x="306" y="890" width="468" height="72" rx="36" fill="${colors.teal}" />
         <text x="540" y="935" fill="#03151d" font-family="${fontStack}" font-size="27" font-weight="920" text-anchor="middle">Create a free account</text>
       </g>
-      <text x="540" y="1112" fill="${colors.muted}" font-family="${fontStack}" font-size="24" font-weight="700" text-anchor="middle">Therapeutic bronchoscopy • EBUS • Tracheostomy</text>
+      <text x="540" y="1112" fill="${colors.muted}" font-family="${fontStack}" font-size="21" font-weight="700" text-anchor="middle">Therapeutic • Peripheral ablation • EBUS • Tracheostomy</text>
       ${footer(globalProgress)}
     </svg>
   `
@@ -472,6 +567,74 @@ async function encodeSceneCapture(scene, captureCounts) {
   return outputPath
 }
 
+function encodeClipSegment(segment, outputPath) {
+  const clip = sourceClips[segment.id]
+  if (!clip) throw new Error(`Missing source clip configuration: ${segment.id}`)
+  if (!existsSync(clip.sourcePath)) throw new Error(`Missing source clip: ${clip.sourcePath}`)
+
+  const timelineScale = segment.duration / segment.inputDuration
+  runFfmpeg(
+    [
+      '-ss',
+      String(segment.inputStart),
+      '-t',
+      String(segment.inputDuration),
+      '-i',
+      clip.sourcePath,
+      '-vf',
+      `setpts=(PTS-STARTPTS)*${timelineScale.toFixed(8)},fps=${fps},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=0x020910,setsar=1,format=yuv420p`,
+      '-t',
+      String(segment.duration),
+      '-an',
+      '-c:v',
+      'libx264',
+      '-profile:v',
+      'high',
+      '-level',
+      '4.1',
+      '-pix_fmt',
+      'yuv420p',
+      '-r',
+      String(fps),
+      '-crf',
+      '16',
+      '-preset',
+      'fast',
+      '-movflags',
+      '+faststart',
+      outputPath,
+    ],
+    `Source clip segment ${segment.id}`,
+  )
+}
+
+async function encodeSceneClip(scene) {
+  const segmentPaths = []
+  for (let index = 0; index < scene.clipSegments.length; index += 1) {
+    const segment = scene.clipSegments[index]
+    const segmentPath = path.join(
+      segmentDir,
+      `${scene.id}-clip-${String(index).padStart(2, '0')}.mp4`,
+    )
+    encodeClipSegment(segment, segmentPath)
+    segmentPaths.push(segmentPath)
+  }
+
+  if (segmentPaths.length === 1) return segmentPaths[0]
+
+  const listPath = path.join(segmentDir, `${scene.id}-clip.concat.txt`)
+  await fs.writeFile(
+    listPath,
+    `${segmentPaths.map((segmentPath) => `file '${segmentPath.replaceAll("'", "'\\''")}'`).join('\n')}\n`,
+  )
+  const outputPath = path.join(segmentDir, `${scene.id}-clip.mp4`)
+  runFfmpeg(
+    ['-f', 'concat', '-safe', '0', '-i', listPath, '-an', '-c:v', 'copy', outputPath],
+    `Concatenate ${scene.id} source clips`,
+  )
+  return outputPath
+}
+
 async function writeOverlay(scene, outputPath) {
   const progress = Math.min(1, (scene.start + scene.duration) / totalDuration)
   const overlay =
@@ -479,11 +642,13 @@ async function writeOverlay(scene, outputPath) {
       ? heroOverlay(progress)
       : scene.id === 'cta'
         ? ctaOverlay(progress)
-        : capturedSceneOverlay(scene, progress)
+        : scene.clipSegments
+          ? immersiveClipOverlay(scene, progress)
+          : capturedSceneOverlay(scene, progress)
   await sharp(Buffer.from(overlay)).png({ compressionLevel: 9 }).toFile(outputPath)
 }
 
-function composeScene(scene, basePath, overlayPath, capturePath) {
+function composeScene(scene, basePath, overlayPath, capturePath, clipPath) {
   const outputPath = path.join(sceneDir, `${scene.id}.mp4`)
   const sharedEncoding = [
     '-t',
@@ -499,6 +664,14 @@ function composeScene(scene, basePath, overlayPath, capturePath) {
     'yuv420p',
     '-r',
     String(fps),
+    '-g',
+    String(fps),
+    '-keyint_min',
+    String(fps),
+    '-sc_threshold',
+    '0',
+    '-x264-params',
+    'open-gop=0',
     '-crf',
     '18',
     '-preset',
@@ -508,7 +681,26 @@ function composeScene(scene, basePath, overlayPath, capturePath) {
     outputPath,
   ]
 
-  if (capturePath) {
+  if (clipPath) {
+    runFfmpeg(
+      [
+        '-i',
+        clipPath,
+        '-loop',
+        '1',
+        '-framerate',
+        String(fps),
+        '-i',
+        overlayPath,
+        '-filter_complex',
+        '[0:v][1:v]overlay=0:0:shortest=1,format=yuv420p[v]',
+        '-map',
+        '[v]',
+        ...sharedEncoding,
+      ],
+      `Compose ${scene.id}`,
+    )
+  } else if (capturePath) {
     runFfmpeg(
       [
         '-loop',
@@ -576,7 +768,27 @@ async function concatenateScenes(scenePaths) {
       concatListPath,
       '-an',
       '-c:v',
-      'copy',
+      'libx264',
+      '-profile:v',
+      'high',
+      '-level',
+      '4.1',
+      '-pix_fmt',
+      'yuv420p',
+      '-r',
+      String(fps),
+      '-g',
+      String(fps),
+      '-keyint_min',
+      String(fps),
+      '-sc_threshold',
+      '0',
+      '-x264-params',
+      'open-gop=0',
+      '-crf',
+      '16',
+      '-preset',
+      'medium',
       '-movflags',
       '+faststart',
       silentVideoPath,
@@ -628,7 +840,7 @@ function addAudio() {
 
 function extractFrame(seconds, outputPath) {
   runFfmpeg(
-    ['-ss', String(seconds), '-i', videoPath, '-frames:v', '1', '-update', '1', outputPath],
+    ['-i', videoPath, '-ss', String(seconds), '-frames:v', '1', '-update', '1', outputPath],
     `Extract review frame at ${seconds}s`,
   )
 }
@@ -637,7 +849,7 @@ async function writeContactSheet(reviewFrames) {
   const cellWidth = 360
   const cellHeight = 450
   const columns = 4
-  const rows = 2
+  const rows = Math.ceil(reviewFrames.length / columns)
   const sheet = sharp({
     create: {
       width: columns * cellWidth,
@@ -704,6 +916,8 @@ async function main() {
       scenes.flatMap((scene) => scene.captureSegments?.map((segment) => segment.id) ?? []),
     ),
   ]
+  const clipSegments = scenes.flatMap((scene) => scene.clipSegments ?? [])
+  const clipIds = [...new Set(clipSegments.map((segment) => segment.id))]
   const captureCounts = {}
   for (const captureId of captureIds) {
     captureCounts[captureId] = await prepareCapture(captureId)
@@ -717,7 +931,8 @@ async function main() {
     const capturePath = scene.captureSegments
       ? await encodeSceneCapture(scene, captureCounts)
       : undefined
-    const scenePath = composeScene(scene, basePath, overlayPath, capturePath)
+    const clipPath = scene.clipSegments ? await encodeSceneClip(scene) : undefined
+    const scenePath = composeScene(scene, basePath, overlayPath, capturePath, clipPath)
     scenePaths.push(scenePath)
     console.log(`Composed scene: ${scene.id}`)
   }
@@ -728,12 +943,16 @@ async function main() {
   extractFrame(1.1, posterPath)
   const reviewFrames = [
     { id: 'hero', time: 1.1 },
-    { id: 'therapeutic-hub', time: 4.5 },
-    { id: 'stent', time: 7.6 },
-    { id: 'vio3', time: 13.7 },
-    { id: 'ebus', time: 21.6 },
-    { id: 'tracheostomy', time: 29.8 },
-    { id: 'cta', time: 36.2 },
+    { id: 'rigid-assembly', time: 5.2 },
+    { id: 'rigid-airway', time: 8.3 },
+    { id: 'stent', time: 13.3 },
+    { id: 'laser', time: 18.7 },
+    { id: 'vio3', time: 23.8 },
+    { id: 'peripheral-rfa', time: 27.5 },
+    { id: 'peripheral-pef', time: 29.8 },
+    { id: 'ebus', time: 34.4 },
+    { id: 'tracheostomy', time: 40.4 },
+    { id: 'cta', time: 46.1 },
   ].map((entry, index) => ({
     ...entry,
     path: path.join(reviewDir, `${String(index + 1).padStart(2, '0')}-${entry.id}.png`),
@@ -764,9 +983,10 @@ async function main() {
           sha256: await sha256(audioPath),
         }
       : null,
-    scenes: scenes.map(({ captureSegments, ...scene }) => ({
+    scenes: scenes.map(({ captureSegments, clipSegments: sceneClipSegments, ...scene }) => ({
       ...scene,
       captures: captureSegments ?? [],
+      clips: sceneClipSegments ?? [],
     })),
     captures: Object.fromEntries(
       captureIds.map((captureId) => [
@@ -778,9 +998,30 @@ async function main() {
         },
       ]),
     ),
+    sourceClips: Object.fromEntries(
+      await Promise.all(
+        clipIds.map(async (clipId) => {
+          const clip = sourceClips[clipId]
+          const segment = clipSegments.find((entry) => entry.id === clipId)
+          return [
+            clipId,
+            {
+              file: path.relative(rootDir, clip.sourcePath),
+              sha256: await sha256(clip.sourcePath),
+              inputStart: segment.inputStart,
+              inputDuration: segment.inputDuration,
+              outputDuration: segment.duration,
+            },
+          ]
+        }),
+      ),
+    ),
     notes: [
       'All on-screen copy is burned in for muted autoplay.',
+      'The supplied rigid-bronchoscopy and airway-stent clips are used full-frame with source audio removed.',
+      'The laser scene uses the live KTP power-density lab and is labeled as a schematic educational model.',
       'The VIO 3 scene is explicitly labeled as a schematic teaching replica and not an Erbe product.',
+      'The peripheral-ablation scene contrasts an RFA heat-sink result with a PEF margin animation; PEF and transbronchial delivery are labeled investigational.',
       'The EBUS embed is a generated sync output captured from the current sibling EBUS-course build.',
       'Clinical visuals are educational simulations and not patient-specific or diagnostic tools.',
     ],

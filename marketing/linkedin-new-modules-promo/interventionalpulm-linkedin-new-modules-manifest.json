@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-14T00:33:47.703Z",
+  "generatedAt": "2026-07-14T05:07:05.601Z",
   "output": "marketing/linkedin-new-modules-promo/interventionalpulm-linkedin-new-modules.mp4",
   "poster": "marketing/linkedin-new-modules-promo/interventionalpulm-linkedin-new-modules-poster.png",
   "contactSheet": "marketing/linkedin-new-modules-promo/interventionalpulm-linkedin-new-modules-contact-sheet.png",
@@ -7,7 +7,7 @@
     "width": 1080,
     "height": 1350,
     "fps": 30,
-    "durationSeconds": 39,
+    "durationSeconds": 48.8,
     "videoCodec": "H.264 High",
     "pixelFormat": "yuv420p",
     "audio": "AAC 48 kHz, 160 kbps"
@@ -20,51 +20,84 @@
     {
       "id": "hero",
       "start": 0,
-      "duration": 3.2,
-      "captures": []
+      "duration": 3,
+      "captures": [],
+      "clips": []
     },
     {
-      "id": "therapeutic-hub",
-      "start": 3.2,
-      "duration": 2.6,
-      "eyebrow": "THERAPEUTIC BRONCHOSCOPY",
-      "title": ["Four modules.", "One new collection."],
+      "id": "rigid",
+      "start": 3,
+      "duration": 6.8,
+      "eyebrow": "RIGID BRONCHOSCOPY • 3D LAB",
+      "title": ["Assemble. Orient. Navigate."],
       "body": [
-        "Rigid foundations, thermal ablation, peripheral therapy,",
-        "and airway-stent mechanics—built as one learning path."
+        "Connect the components, then translate scope orientation",
+        "into deliberate airway positioning at the carina."
       ],
-      "tag": "NEW COLLECTION",
-      "note": "Four independently navigable therapeutic modules",
-      "captures": [
+      "tag": "EXPLODED VIEW • AIRWAY PLACEMENT",
+      "note": "Conceptual educational model • device setups vary",
+      "captures": [],
+      "clips": [
         {
-          "id": "therapeutic-hub",
-          "duration": 2.6
+          "id": "rigid-assembly",
+          "inputStart": 4.6,
+          "inputDuration": 6.2,
+          "duration": 3.4
+        },
+        {
+          "id": "rigid-airway",
+          "inputStart": 12.73,
+          "inputDuration": 6.42,
+          "duration": 3.4
         }
       ]
     },
     {
       "id": "stent",
-      "start": 5.8,
-      "duration": 3.8,
-      "eyebrow": "3D AIRWAY STENT MECHANICS",
-      "title": ["Orbit a Y-stent.", "Watch fit become consequence."],
+      "start": 9.8,
+      "duration": 6.8,
+      "eyebrow": "AIRWAY STENTS • 3D EXPLORER",
+      "title": ["Compare architectures.", "Reveal mechanics."],
       "body": [
-        "Qualitative 3D models connect device architecture,",
-        "deformation, airway fit, and lumen behavior."
+        "Inspect deformation, wall contact, and design landmarks",
+        "across silicone and self-expanding stent types."
       ],
-      "tag": "LIVE 3D INTERACTION",
-      "note": "Qualitative educational model • not patient-specific",
-      "captures": [
+      "tag": "SILICONE • SELF-EXPANDING • PLACEMENT CUES",
+      "note": "Qualitative educational models • not patient-specific",
+      "captures": [],
+      "clips": [
         {
-          "id": "stent-y-orbit",
-          "duration": 3.8
+          "id": "stent-comparison",
+          "inputStart": 0.2,
+          "inputDuration": 8,
+          "duration": 6.8
         }
       ]
     },
     {
+      "id": "laser",
+      "start": 16.6,
+      "duration": 4.2,
+      "eyebrow": "LASER ABLATION • PHYSICS LAB",
+      "title": ["Aim the fiber.", "Watch tissue respond."],
+      "body": [
+        "Change wavelength, power density, and distance, then",
+        "sweep across simulated tissue to compare effects."
+      ],
+      "tag": "KTP • POWER DENSITY • LIVE TISSUE RESPONSE",
+      "note": "Schematic educational model • not procedural guidance",
+      "captures": [
+        {
+          "id": "laser-tissue-sweep",
+          "duration": 4.2
+        }
+      ],
+      "clips": []
+    },
+    {
       "id": "vio3",
-      "start": 9.6,
-      "duration": 8,
+      "start": 20.8,
+      "duration": 6,
       "eyebrow": "THERMAL ABLATION • ELECTROSURGERY",
       "title": ["Drive a simulated", "VIO 3 console."],
       "body": [
@@ -76,18 +109,43 @@
       "captures": [
         {
           "id": "vio3-apc",
-          "duration": 2.5
+          "duration": 1.9
         },
         {
           "id": "vio3-tissue",
-          "duration": 5.5
+          "duration": 4.1
         }
-      ]
+      ],
+      "clips": []
+    },
+    {
+      "id": "peripheral",
+      "start": 26.8,
+      "duration": 4.6,
+      "eyebrow": "PERIPHERAL ABLATION • ZONE SIMULATOR",
+      "title": ["Build the zone.", "Protect the margin."],
+      "body": [
+        "Compare RFA and PEF, reveal heat-sink, and test",
+        "whether the model clears a 5 mm target margin."
+      ],
+      "tag": "RFA • PEF • HEAT-SINK • 5 MM MARGIN",
+      "note": "Schematic model • PEF and transbronchial delivery remain investigational",
+      "captures": [
+        {
+          "id": "peripheral-rfa-vessel",
+          "duration": 1.4
+        },
+        {
+          "id": "peripheral-pef-zone",
+          "duration": 3.2
+        }
+      ],
+      "clips": []
     },
     {
       "id": "ebus",
-      "start": 17.6,
-      "duration": 8,
+      "start": 31.4,
+      "duration": 6,
       "eyebrow": "UPDATED EBUS SIMULATOR",
       "title": ["Navigate anatomy, scope view,", "and a live EBUS sector."],
       "body": [
@@ -99,22 +157,23 @@
       "captures": [
         {
           "id": "ebus-advance",
-          "duration": 3
-        },
-        {
-          "id": "ebus-station7",
           "duration": 2.2
         },
         {
+          "id": "ebus-station7",
+          "duration": 1.6
+        },
+        {
           "id": "ebus-roll",
-          "duration": 2.8
+          "duration": 2.2
         }
-      ]
+      ],
+      "clips": []
     },
     {
       "id": "tracheostomy",
-      "start": 25.6,
-      "duration": 8,
+      "start": 37.4,
+      "duration": 6,
       "eyebrow": "TRACHEOSTOMY KNOWLEDGE LAB",
       "title": ["Rotate the tube.", "Explode every component."],
       "body": [
@@ -126,31 +185,28 @@
       "captures": [
         {
           "id": "tracheostomy-rotate",
-          "duration": 3.3
+          "duration": 2.6
         },
         {
           "id": "tracheostomy-explode",
-          "duration": 4.7
+          "duration": 3.4
         }
-      ]
+      ],
+      "clips": []
     },
     {
       "id": "cta",
-      "start": 33.6,
+      "start": 43.4,
       "duration": 5.4,
-      "captures": []
+      "captures": [],
+      "clips": []
     }
   ],
   "captures": {
-    "therapeutic-hub": {
-      "directory": "marketing/linkedin-new-modules-promo/captures/therapeutic-hub",
-      "frameCount": 1,
-      "route": "/en/therapeutic-bronchoscopy"
-    },
-    "stent-y-orbit": {
-      "directory": "marketing/linkedin-new-modules-promo/captures/stent-y-orbit",
-      "frameCount": 24,
-      "route": "/en/airway-stent-mechanics"
+    "laser-tissue-sweep": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/laser-tissue-sweep",
+      "frameCount": 18,
+      "route": "/thermal-ablation/index.html#power"
     },
     "vio3-apc": {
       "directory": "marketing/linkedin-new-modules-promo/captures/vio3-apc",
@@ -161,6 +217,16 @@
       "directory": "marketing/linkedin-new-modules-promo/captures/vio3-tissue",
       "frameCount": 32,
       "route": "/thermal-ablation/index.html#sim"
+    },
+    "peripheral-rfa-vessel": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/peripheral-rfa-vessel",
+      "frameCount": 12,
+      "route": "/peripheral-ablation/index.html#simulator"
+    },
+    "peripheral-pef-zone": {
+      "directory": "marketing/linkedin-new-modules-promo/captures/peripheral-pef-zone",
+      "frameCount": 42,
+      "route": "/peripheral-ablation/index.html#simulator"
     },
     "ebus-advance": {
       "directory": "marketing/linkedin-new-modules-promo/captures/ebus-advance",
@@ -188,9 +254,35 @@
       "route": "/en/tracheostomy/learn"
     }
   },
+  "sourceClips": {
+    "rigid-assembly": {
+      "file": "marketing/linkedin-new-modules-promo/sources/rigid-demo.mp4",
+      "sha256": "18ebd5807bb7dbf6c2d49796791025bd4a8562317399c04add4ee59ced7bb437",
+      "inputStart": 4.6,
+      "inputDuration": 6.2,
+      "outputDuration": 3.4
+    },
+    "rigid-airway": {
+      "file": "marketing/linkedin-new-modules-promo/sources/rigid-demo.mp4",
+      "sha256": "18ebd5807bb7dbf6c2d49796791025bd4a8562317399c04add4ee59ced7bb437",
+      "inputStart": 12.73,
+      "inputDuration": 6.42,
+      "outputDuration": 3.4
+    },
+    "stent-comparison": {
+      "file": "marketing/linkedin-new-modules-promo/sources/stent.mp4",
+      "sha256": "c2ff91399aab071e14640bf5662745c5c0d617c233be44026b0e02a383fa4bc5",
+      "inputStart": 0.2,
+      "inputDuration": 8,
+      "outputDuration": 6.8
+    }
+  },
   "notes": [
     "All on-screen copy is burned in for muted autoplay.",
+    "The supplied rigid-bronchoscopy and airway-stent clips are used full-frame with source audio removed.",
+    "The laser scene uses the live KTP power-density lab and is labeled as a schematic educational model.",
     "The VIO 3 scene is explicitly labeled as a schematic teaching replica and not an Erbe product.",
+    "The peripheral-ablation scene contrasts an RFA heat-sink result with a PEF margin animation; PEF and transbronchial delivery are labeled investigational.",
     "The EBUS embed is a generated sync output captured from the current sibling EBUS-course build.",
     "Clinical visuals are educational simulations and not patient-specific or diagnostic tools."
   ]
