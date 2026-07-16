@@ -380,7 +380,9 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
             <button
               type="button"
               role="radio"
+              aria-label={`${profile.displayName}, ${profile.softwareVersion} · ${profile.modeLabels[state.ventilator.settings.mode]}`}
               aria-checked={state.deviceId === profile.id}
+              data-device-id={profile.id}
               data-selected={state.deviceId === profile.id}
               key={profile.id}
               onClick={() => {
@@ -602,7 +604,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
           </div>
           <BedsidePanel state={state} definition={definition} compact />
           <MechanicalVentilatorConsole
-            key={state.deviceId}
+            key={`${state.deviceId}:${state.ventilator.settings.mode}`}
             state={state}
             dispatch={dispatch}
             controlsEnabled={controlsEnabled}

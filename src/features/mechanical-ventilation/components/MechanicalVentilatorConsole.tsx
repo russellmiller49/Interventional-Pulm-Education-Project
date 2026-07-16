@@ -151,11 +151,6 @@ export function MechanicalVentilatorConsole({
   const therapyDisabled = !controlsEnabled || state.ventilator.locked
 
   useEffect(() => {
-    setPendingControl(null)
-    setActiveControlKey('peepCmH2O')
-  }, [state.deviceId, settings.mode])
-
-  useEffect(() => {
     if (state.deviceId !== 'carefusion-avea' || !pendingControl) return
     const timeout = window.setTimeout(() => setPendingControl(null), 15_000)
     return () => window.clearTimeout(timeout)

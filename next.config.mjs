@@ -394,6 +394,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/:locale(en|es|zh-CN)/hamilton-c6-ventilation',
+        destination: '/:locale/mechanical-ventilation',
+        permanent: true,
+      },
+      {
         source: '/airway-stent-mechanics/force-lab',
         destination: '/airway-stent-mechanics?station=architecture-lumen',
         permanent: false,
