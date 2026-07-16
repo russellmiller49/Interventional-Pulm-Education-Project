@@ -296,11 +296,14 @@ export function resolveSiteModuleId(pathname: string) {
     return segments.slice(0, 3).join(':')
   }
 
+  if (first === 'mechanical-ventilation' || first === 'hamilton-c6-ventilation') {
+    return 'mechanical-ventilation'
+  }
+
   if (
     first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
     first === 'cardiohelp-ecmo' ||
-    first === 'hamilton-c6-ventilation' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
     first === 'journal-club-podcasts' ||

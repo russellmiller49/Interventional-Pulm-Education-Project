@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type Dispatch, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useState, type Dispatch, type KeyboardEvent } from 'react'
 import {
   Activity,
   AlarmClock,
@@ -19,17 +19,22 @@ import {
   Wind,
 } from 'lucide-react'
 
+import {
+  adaptControlDescriptor,
+  canonicalToNativeControlValue,
+  getVentilatorDeviceProfile,
+  nativeToCanonicalControlValue,
+} from '../content'
 import type {
-  C6Mode,
-  C6Screen,
+  VentilatorScreen,
   VentilationAction,
   VentilationSimulationState,
   VentilatorControlKey,
 } from '../engine'
 import { WaveformLoops, WaveformStrip } from './WaveformStrip'
-import styles from './hamilton-c6-ventilation.module.css'
+import styles from './mechanical-ventilation.module.css'
 
-interface HamiltonC6ConsoleProps {
+interface MechanicalVentilatorConsoleProps {
   state: VentilationSimulationState
   dispatch: Dispatch<VentilationAction>
   controlsEnabled: boolean
@@ -43,22 +48,17 @@ interface NumericControl {
   minimum: number
   maximum: number
   step: number
+  rangeNote?: string
 }
 
-const modeLabels: Record<C6Mode, string> = {
-  scmv: '(S)CMV',
-  'pcv-plus': 'PCV+',
-  spont: 'SPONT',
+interface PendingSetting {
+  key: VentilatorControlKey
+  value: number | string | boolean
+  label: string
+  displayValue: string
+  unit?: string
+  nativeNumeric: boolean
 }
-
-const screenItems: readonly { id: C6Screen; label: string }[] = [
-  { id: 'main', label: 'Monitoring' },
-  { id: 'modes', label: 'Modes' },
-  { id: 'controls', label: 'Controls' },
-  { id: 'alarms', label: 'Alarms' },
-  { id: 'graphics', label: 'Graphics' },
-  { id: 'tools', label: 'Tools' },
-]
 
 function NumericControlTile({
   control,
@@ -130,10 +130,36 @@ function DynamicLungPanel({ state }: { state: VentilationSimulationState }) {
   )
 }
 
-export function HamiltonC6Console({ state, dispatch, controlsEnabled }: HamiltonC6ConsoleProps) {
+export function MechanicalVentilatorConsole({
+  state,
+  dispatch,
+  controlsEnabled,
+}: MechanicalVentilatorConsoleProps) {
   const settings = state.ventilator.settings
+  const profile = getVentilatorDeviceProfile(state.deviceId)
+  const modeLabels = profile.modeLabels
+  const screenItems = useMemo<readonly { id: VentilatorScreen; label: string }[]>(
+    () =>
+      (['main', 'modes', 'controls', 'alarms', 'graphics', 'tools'] as const).map((id) => ({
+        id,
+        label: profile.navigationLabels[id],
+      })),
+    [profile],
+  )
   const [activeControlKey, setActiveControlKey] = useState<VentilatorControlKey>('peepCmH2O')
+  const [pendingControl, setPendingControl] = useState<PendingSetting | null>(null)
   const therapyDisabled = !controlsEnabled || state.ventilator.locked
+
+  useEffect(() => {
+    setPendingControl(null)
+    setActiveControlKey('peepCmH2O')
+  }, [state.deviceId, settings.mode])
+
+  useEffect(() => {
+    if (state.deviceId !== 'carefusion-avea' || !pendingControl) return
+    const timeout = window.setTimeout(() => setPendingControl(null), 15_000)
+    return () => window.clearTimeout(timeout)
+  }, [pendingControl, state.deviceId])
 
   const numericControls = useMemo<NumericControl[]>(() => {
     const controls: NumericControl[] = [
@@ -163,7 +189,8 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
             ? settings.trigger.thresholdLMin
             : settings.trigger.thresholdCmH2O,
         unit: settings.trigger.type === 'flow' ? 'L/min' : 'cmH₂O',
-        minimum: settings.trigger.type === 'flow' ? (settings.mode === 'spont' ? 0.5 : 1) : -15,
+        minimum:
+          settings.trigger.type === 'flow' ? (settings.mode === 'pressure-support' ? 0.5 : 1) : -15,
         maximum: settings.trigger.type === 'flow' ? 10 : -0.1,
         step: settings.trigger.type === 'flow' ? 0.5 : 0.5,
       },
@@ -177,7 +204,7 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
         step: 1,
       },
     ]
-    if (settings.mode === 'scmv') {
+    if (settings.mode === 'volume-ac') {
       controls.splice(
         0,
         0,
@@ -219,7 +246,7 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
         },
       )
     }
-    if (settings.mode === 'pcv-plus') {
+    if (settings.mode === 'pressure-ac') {
       controls.splice(
         0,
         0,
@@ -261,7 +288,7 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
         },
       )
     }
-    if (settings.mode === 'spont') {
+    if (settings.mode === 'pressure-support') {
       controls.splice(
         0,
         0,
@@ -312,16 +339,109 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
         },
       )
     }
-    return controls
-  }, [settings])
+    return controls.map((control) => {
+      const descriptor = adaptControlDescriptor(state.deviceId, settings, control)
+      const triggerLabel =
+        control.key === 'triggerThreshold' && settings.trigger.type === 'pressure'
+          ? 'Pressure trigger'
+          : descriptor.label
+      return {
+        ...control,
+        ...descriptor,
+        label: triggerLabel,
+        value: canonicalToNativeControlValue(state.deviceId, settings, control.key, control.value),
+      }
+    })
+  }, [settings, state.deviceId])
+
+  const displayedControls = numericControls.map((control) =>
+    pendingControl?.key === control.key && typeof pendingControl.value === 'number'
+      ? { ...control, value: pendingControl.value }
+      : control,
+  )
 
   const activeControl =
-    numericControls.find((control) => control.key === activeControlKey) ?? numericControls[0]
+    displayedControls.find((control) => control.key === activeControlKey) ?? displayedControls[0]
 
   const changeControl = (control: NumericControl, value: number) => {
     const bounded = Math.min(control.maximum, Math.max(control.minimum, value))
     const rounded = Math.round(bounded / control.step) * control.step
-    dispatch({ type: 'SET_CONTROL', control: control.key, value: Number(rounded.toFixed(2)) })
+    const nativeValue = Number(rounded.toFixed(2))
+    if (profile.commitBehavior !== 'immediate') {
+      setPendingControl({
+        key: control.key,
+        value: nativeValue,
+        label: control.label,
+        displayValue: String(nativeValue),
+        unit: control.unit,
+        nativeNumeric: true,
+      })
+      return
+    }
+    const canonicalValue = nativeToCanonicalControlValue(
+      state.deviceId,
+      settings,
+      control.key,
+      nativeValue,
+    )
+    dispatch({
+      type: 'SET_CONTROL',
+      control: control.key,
+      value: Number(canonicalValue.toFixed(2)),
+    })
+  }
+
+  const commitPendingControl = () => {
+    if (!pendingControl) return
+    const canonicalValue =
+      pendingControl.nativeNumeric && typeof pendingControl.value === 'number'
+        ? Number(
+            nativeToCanonicalControlValue(
+              state.deviceId,
+              settings,
+              pendingControl.key,
+              pendingControl.value,
+            ).toFixed(2),
+          )
+        : pendingControl.value
+    dispatch({
+      type: 'SET_CONTROL',
+      control: pendingControl.key,
+      value: canonicalValue,
+    })
+    setPendingControl(null)
+  }
+
+  const changeDiscreteControl = (
+    key: VentilatorControlKey,
+    value: string | boolean,
+    label: string,
+    displayValue: string,
+  ) => {
+    if (profile.commitBehavior === 'immediate') {
+      dispatch({ type: 'SET_CONTROL', control: key, value })
+      return
+    }
+    setPendingControl({
+      key,
+      value,
+      label,
+      displayValue,
+      nativeNumeric: false,
+    })
+  }
+
+  const selectControl = (key: VentilatorControlKey) => {
+    if (
+      state.deviceId === 'carefusion-avea' &&
+      pendingControl?.key === key &&
+      pendingControl.nativeNumeric
+    ) {
+      commitPendingControl()
+      return
+    }
+    if (pendingControl && pendingControl.key !== key) setPendingControl(null)
+    setActiveControlKey(key)
   }
 
   const adjustActive = (direction: -1 | 1) => {
@@ -334,12 +454,18 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
   const latest = state.waveforms.at(-1)
 
   return (
-    <section className={styles.consoleShell} aria-label="C6 functional training facsimile">
+    <section
+      className={styles.consoleShell}
+      data-device={state.deviceId}
+      aria-label={`${profile.displayName} functional training facsimile`}
+    >
       <div className={styles.consoleBezel}>
         <header className={styles.consoleHeader}>
           <div>
-            <span className={styles.consoleModel}>C6 TRAINING</span>
-            <span>Adult/Ped · {modeLabels[settings.mode]}</span>
+            <span className={styles.consoleModel}>{profile.shortName} TRAINING</span>
+            <span>
+              {profile.patientGroup} · {modeLabels[settings.mode]}
+            </span>
           </div>
           <div className={styles.consoleStatus}>
             {state.ventilator.frozen ? (
@@ -451,7 +577,7 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                 <small>Changes apply after confirmation at a breath boundary.</small>
               </div>
               <div className={styles.modeGrid}>
-                {(['scmv', 'pcv-plus', 'spont'] as const).map((mode) => (
+                {(['volume-ac', 'pressure-ac', 'pressure-support'] as const).map((mode) => (
                   <button
                     key={mode}
                     type="button"
@@ -465,13 +591,7 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                     onClick={() => dispatch({ type: 'SELECT_MODE', mode })}
                   >
                     <strong>{modeLabels[mode]}</strong>
-                    <span>
-                      {mode === 'scmv'
-                        ? 'Volume-targeted mandatory ventilation'
-                        : mode === 'pcv-plus'
-                          ? 'Pressure-controlled mandatory ventilation'
-                          : 'Spontaneous pressure support with apnea backup'}
-                    </span>
+                    <span>{profile.modeDescriptions[mode]}</span>
                   </button>
                 ))}
               </div>
@@ -481,12 +601,11 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                 disabled={!state.ventilator.pendingMode || therapyDisabled}
                 onClick={() => dispatch({ type: 'CONFIRM_MODE' })}
               >
-                Confirm{' '}
+                {state.deviceId === 'carefusion-avea' ? 'MODE ACCEPT ' : 'Confirm '}
                 {state.ventilator.pendingMode ? modeLabels[state.ventilator.pendingMode] : 'mode'}
               </button>
               <p className={styles.deviceNote}>
-                ASV, INTELLiVENT-ASV, and IntelliSync+ are intentionally outside this v1 training
-                profile.
+                Not simulated in this shared-core profile: {profile.deferredModes.join(', ')}.
               </p>
             </div>
           ) : null}
@@ -501,17 +620,23 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                 <small>Select a tile, then use the physical knob or arrow keys.</small>
               </div>
               <div className={styles.controlGrid}>
-                {numericControls.map((control) => (
+                {displayedControls.map((control) => (
                   <NumericControlTile
                     key={control.key}
                     control={control}
                     selected={activeControl?.key === control.key}
                     disabled={therapyDisabled}
-                    onSelect={() => setActiveControlKey(control.key)}
-                    onChange={(value) => changeControl(control, value)}
+                    onSelect={() => selectControl(control.key)}
+                    onChange={(value) => {
+                      setActiveControlKey(control.key)
+                      changeControl(control, value)
+                    }}
                   />
                 ))}
               </div>
+              {activeControl?.rangeNote ? (
+                <p className={styles.deviceNote}>{activeControl.rangeNote}</p>
+              ) : null}
               <div className={styles.inlineDeviceFields}>
                 <label>
                   Trigger type
@@ -519,29 +644,33 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                     value={settings.trigger.type}
                     disabled={therapyDisabled}
                     onChange={(event) =>
-                      dispatch({
-                        type: 'SET_CONTROL',
-                        control: 'triggerType',
-                        value: event.target.value,
-                      })
+                      changeDiscreteControl(
+                        'triggerType',
+                        event.target.value,
+                        'Trigger type',
+                        event.target.options[event.target.selectedIndex]?.text ??
+                          event.target.value,
+                      )
                     }
                   >
                     <option value="flow">Flow</option>
                     <option value="pressure">Pressure</option>
                   </select>
                 </label>
-                {settings.mode === 'scmv' ? (
+                {settings.mode === 'volume-ac' ? (
                   <label>
                     Flow pattern
                     <select
                       value={settings.flowPattern}
                       disabled={therapyDisabled}
                       onChange={(event) =>
-                        dispatch({
-                          type: 'SET_CONTROL',
-                          control: 'flowPattern',
-                          value: event.target.value,
-                        })
+                        changeDiscreteControl(
+                          'flowPattern',
+                          event.target.value,
+                          'Flow pattern',
+                          event.target.options[event.target.selectedIndex]?.text ??
+                            event.target.value,
+                        )
                       }
                     >
                       <option value="square">Square</option>
@@ -551,21 +680,22 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                     </select>
                   </label>
                 ) : null}
-                {settings.mode === 'spont' ? (
+                {settings.mode === 'pressure-support' ? (
                   <label className={styles.checkField}>
                     <input
                       type="checkbox"
                       checked={settings.apneaBackupEnabled}
                       disabled={therapyDisabled}
                       onChange={(event) =>
-                        dispatch({
-                          type: 'SET_CONTROL',
-                          control: 'apneaBackupEnabled',
-                          value: event.target.checked,
-                        })
+                        changeDiscreteControl(
+                          'apneaBackupEnabled',
+                          event.target.checked,
+                          `${profile.shortName} apnea backup`,
+                          event.target.checked ? 'On' : 'Off',
+                        )
                       }
                     />
-                    Apnea backup
+                    {profile.shortName} apnea backup
                   </label>
                 ) : null}
                 <label className={styles.checkField}>
@@ -574,14 +704,15 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
                     checked={settings.trcEnabled}
                     disabled={therapyDisabled}
                     onChange={(event) =>
-                      dispatch({
-                        type: 'SET_CONTROL',
-                        control: 'trcEnabled',
-                        value: event.target.checked,
-                      })
+                      changeDiscreteControl(
+                        'trcEnabled',
+                        event.target.checked,
+                        profile.controlLabels.trcEnabled ?? 'Tube compensation',
+                        event.target.checked ? 'On' : 'Off',
+                      )
                     }
                   />
-                  TRC compensation
+                  {profile.controlLabels.trcEnabled ?? 'Tube compensation'}
                 </label>
               </div>
             </div>
@@ -629,16 +760,17 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
               </div>
               <div className={styles.alarmLimitRow}>
                 <NumericControlTile
-                  control={numericControls.find((item) => item.key === 'highPressureLimitCmH2O')!}
+                  control={displayedControls.find((item) => item.key === 'highPressureLimitCmH2O')!}
                   selected={activeControl?.key === 'highPressureLimitCmH2O'}
                   disabled={therapyDisabled}
-                  onSelect={() => setActiveControlKey('highPressureLimitCmH2O')}
-                  onChange={(value) =>
+                  onSelect={() => selectControl('highPressureLimitCmH2O')}
+                  onChange={(value) => {
+                    setActiveControlKey('highPressureLimitCmH2O')
                     changeControl(
-                      numericControls.find((item) => item.key === 'highPressureLimitCmH2O')!,
+                      displayedControls.find((item) => item.key === 'highPressureLimitCmH2O')!,
                       value,
                     )
-                  }
+                  }}
                 />
               </div>
             </div>
@@ -714,7 +846,7 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
           ) : null}
         </div>
 
-        <nav className={styles.consoleNav} aria-label="C6 screen navigation">
+        <nav className={styles.consoleNav} aria-label={`${profile.shortName} screen navigation`}>
           {screenItems.map((item) => (
             <button
               type="button"
@@ -733,6 +865,23 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
           ))}
         </nav>
       </div>
+
+      {pendingControl ? (
+        <div className={styles.pendingControlBar} role="status" aria-live="polite">
+          <div>
+            <span>Pending {pendingControl.label}</span>
+            <strong>
+              {pendingControl.displayValue} {pendingControl.unit}
+            </strong>
+          </div>
+          <button type="button" onClick={commitPendingControl}>
+            {state.deviceId === 'carefusion-avea' ? 'ACCEPT' : 'Press knob to confirm'}
+          </button>
+          <button type="button" onClick={() => setPendingControl(null)}>
+            CANCEL
+          </button>
+        </div>
+      ) : null}
 
       <div className={styles.physicalControls}>
         <button type="button" onClick={() => dispatch({ type: 'ACK_ALARM' })}>
@@ -768,11 +917,17 @@ export function HamiltonC6Console({ state, dispatch, controlsEnabled }: Hamilton
             type="button"
             className={styles.rotaryKnob}
             disabled={therapyDisabled}
-            onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'controls' })}
+            onClick={() =>
+              pendingControl
+                ? commitPendingControl()
+                : dispatch({ type: 'SET_SCREEN', screen: 'controls' })
+            }
           >
             <span>{activeControl?.label ?? 'Control'}</span>
             <strong>{activeControl?.value ?? '—'}</strong>
-            <small>press / turn</small>
+            <small>
+              {profile.commitBehavior === 'immediate' ? 'press / turn' : 'turn / confirm'}
+            </small>
           </button>
           <button
             type="button"

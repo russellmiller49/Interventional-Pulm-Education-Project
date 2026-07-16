@@ -1,7 +1,10 @@
 import { mechanicalVentilationSource } from './schema'
+import { ventilatorDeviceSources } from './deviceProfiles'
+import type { VentilatorDeviceId } from '../engine/types'
 
 export interface VentilationEvidenceReference {
   id: string
+  deviceId?: VentilatorDeviceId
   sourceClass: 'manufacturer' | 'curriculum' | 'clinical-reference' | 'educational-model'
   title: string
   citation: string
@@ -11,22 +14,16 @@ export interface VentilationEvidenceReference {
 }
 
 export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
-  {
-    id: 'hamilton-c6-manual-1.2.x',
-    sourceClass: 'manufacturer',
-    title: 'HAMILTON-C6 Operator’s Manual',
-    citation:
-      'Hamilton Medical. HAMILTON-C6 Operator’s Manual. Software version 1.2.x; document 10197564/00; 31 March 2022.',
-    pages: '44, 91-112, 123-183, 195-225, 229-235, 311-317',
-    supports: [
-      'Original educational facsimile layout and physical controls',
-      '(S)CMV, PCV+, and SPONT mode naming and control behavior',
-      'Trigger, ETS, P-ramp, apnea backup, TRC, holds, graphics, and alarm workflows',
-      'Adult/Ped control ranges encoded by the simulator',
-    ],
-    limitations:
-      'The supplied revision is the locked device profile for this module. Optional features and market-specific configurations are excluded unless explicitly listed.',
-  },
+  ...ventilatorDeviceSources.map((source) => ({
+    id: source.id,
+    deviceId: source.deviceId,
+    sourceClass: 'manufacturer' as const,
+    title: source.title,
+    citation: `${source.citation} Source snapshot SHA-256: ${source.sourceSha256}.`,
+    pages: source.pages,
+    supports: [source.intendedUse],
+    limitations: source.limitations,
+  })),
   {
     id: 'supplied-casebook-2026',
     sourceClass: 'curriculum',
@@ -40,7 +37,7 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'Tutorial, assessment, rapid-response, and randomized teaching patterns',
     ],
     limitations:
-      'Curriculum source rather than independent validation. Device-specific settings are normalized to the locked C6 profile and remain draft pending review.',
+      'Curriculum source rather than independent validation. Device-specific settings are normalized through bounded educational profiles and remain draft pending review.',
   },
   ...mechanicalVentilationSource.sources.map((source) => ({
     id: `casebook-source-${source.id}`,

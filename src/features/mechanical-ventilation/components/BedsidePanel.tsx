@@ -3,7 +3,7 @@
 import { ClipboardPlus, HeartPulse, Stethoscope, TestTube2, UserRound } from 'lucide-react'
 
 import type { VentilationCaseDefinition, VentilationSimulationState } from '../engine'
-import styles from './hamilton-c6-ventilation.module.css'
+import styles from './mechanical-ventilation.module.css'
 
 function performed(state: VentilationSimulationState, interventionId: string): boolean {
   return state.interventions.some((record) => record.interventionId === interventionId)

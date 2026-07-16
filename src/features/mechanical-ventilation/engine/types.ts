@@ -1,15 +1,53 @@
-export type C6Mode = 'scmv' | 'pcv-plus' | 'spont'
+export type CanonicalVentilationMode = 'volume-ac' | 'pressure-ac' | 'pressure-support'
+export const ventilatorDeviceIds = [
+  'hamilton-c6',
+  'drager-evita-v800-v600',
+  'puritan-bennett-980',
+  'carefusion-avea',
+] as const
+export type VentilatorDeviceId = (typeof ventilatorDeviceIds)[number]
 export type LearningExperience = 'learn' | 'practice'
 export type ChallengeMode = 'untimed' | 'timed'
 export type SimulationSpeed = 1 | 5 | 30
-export type C6Screen = 'main' | 'modes' | 'controls' | 'alarms' | 'graphics' | 'tools'
+export type VentilatorScreen = 'main' | 'modes' | 'controls' | 'alarms' | 'graphics' | 'tools'
 export type AlarmPriority = 'low' | 'medium' | 'high'
 export type FlowPattern = 'square' | 'decelerating-50' | 'sine' | 'decelerating-100'
 export type TriggerSetting =
   | { type: 'flow'; thresholdLMin: number }
   | { type: 'pressure'; thresholdCmH2O: number }
 
-export interface C6CommonSettings {
+export type ControlCommitBehavior = 'immediate' | 'rotary-confirm' | 'touch-or-accept'
+
+export interface VentilatorControlDescriptor {
+  key: VentilatorControlKey
+  label: string
+  unit: string
+  minimum: number
+  maximum: number
+  step: number
+  rangeNote?: string
+}
+
+export interface VentilatorDeviceProfile {
+  id: VentilatorDeviceId
+  displayName: string
+  shortName: string
+  manufacturer: string
+  softwareVersion: string
+  manualProfile: string
+  patientGroup: string
+  commitBehavior: ControlCommitBehavior
+  modeLabels: Record<CanonicalVentilationMode, string>
+  modeDescriptions: Record<CanonicalVentilationMode, string>
+  navigationLabels: Record<VentilatorScreen, string>
+  orientationSteps: readonly string[]
+  deferredModes: readonly string[]
+  sourceIds: readonly string[]
+  controlLabels: Partial<Record<VentilatorControlKey, string>>
+  educationalUseOnly: true
+}
+
+export interface MechanicalVentilationCommonSettings {
   oxygenPercent: number
   peepCmH2O: number
   trigger: TriggerSetting
@@ -19,8 +57,8 @@ export interface C6CommonSettings {
   tubeInnerDiameterMm: number
 }
 
-export interface C6ScmvSettings extends C6CommonSettings {
-  mode: 'scmv'
+export interface VolumeAssistControlSettings extends MechanicalVentilationCommonSettings {
+  mode: 'volume-ac'
   vtMl: number
   ratePerMin: number
   peakFlowLMin: number
@@ -28,16 +66,16 @@ export interface C6ScmvSettings extends C6CommonSettings {
   pausePercent: number
 }
 
-export interface C6PcvSettings extends C6CommonSettings {
-  mode: 'pcv-plus'
+export interface PressureAssistControlSettings extends MechanicalVentilationCommonSettings {
+  mode: 'pressure-ac'
   deltaPControlCmH2O: number
   ratePerMin: number
   inspiratoryTimeSeconds: number
   pRampMs: number
 }
 
-export interface C6SpontSettings extends C6CommonSettings {
-  mode: 'spont'
+export interface PressureSupportSettings extends MechanicalVentilationCommonSettings {
+  mode: 'pressure-support'
   pressureSupportCmH2O: number
   pRampMs: number
   etsPercent: number
@@ -46,12 +84,15 @@ export interface C6SpontSettings extends C6CommonSettings {
   apneaRatePerMin: number
 }
 
-export type C6VentilatorSettings = C6ScmvSettings | C6PcvSettings | C6SpontSettings
+export type MechanicalVentilationSettings =
+  | VolumeAssistControlSettings
+  | PressureAssistControlSettings
+  | PressureSupportSettings
 
-export interface C6VentilatorState {
-  screen: C6Screen
-  settings: C6VentilatorSettings
-  pendingMode: C6Mode | null
+export interface MechanicalVentilatorState {
+  screen: VentilatorScreen
+  settings: MechanicalVentilationSettings
+  pendingMode: CanonicalVentilationMode | null
   locked: boolean
   frozen: boolean
   alarmAudioEnabled: boolean
@@ -295,7 +336,7 @@ export interface VentilationCaseDefinition {
   predictedBodyWeightKg: number
   patientDescription: string
   learningObjectives: readonly string[]
-  initialSettings: C6VentilatorSettings
+  initialSettings: MechanicalVentilationSettings
   initialPatient: PatientModelState
   visibleFindings: readonly string[]
   mechanismOptions: readonly PredictionOption[]
@@ -319,7 +360,7 @@ export interface VentilationCaseDefinition {
   sourceBasis: readonly number[]
   branchOptions: readonly string[]
   baselineSeconds: number
-  c6AdaptationNotes: readonly string[]
+  deviceAdaptationNotes: readonly string[]
 }
 
 export interface InterventionRecord {
@@ -345,6 +386,7 @@ export interface ReassessmentState {
 
 export interface VentilationSimulationState {
   version: 1
+  deviceId: VentilatorDeviceId
   caseId: string
   experience: LearningExperience
   challengeMode: ChallengeMode
@@ -355,7 +397,7 @@ export interface VentilationSimulationState {
   seed: number
   branch: string
   showEducatorOverlay: boolean
-  ventilator: C6VentilatorState
+  ventilator: MechanicalVentilatorState
   patient: PatientModelState
   measurements: VentilatorMeasurements
   waveforms: readonly WaveformSample[]
@@ -410,14 +452,21 @@ export type VentilatorControlKey =
   | 'tubeInnerDiameterMm'
 
 export type VentilationAction =
-  | { type: 'LOAD_CASE'; caseId: string; experience: LearningExperience; attempt?: number }
+  | {
+      type: 'LOAD_CASE'
+      caseId: string
+      experience: LearningExperience
+      attempt?: number
+      deviceId?: VentilatorDeviceId
+    }
+  | { type: 'CHANGE_DEVICE'; deviceId: VentilatorDeviceId; attempt?: number }
   | { type: 'TICK'; seconds?: number }
   | { type: 'SET_PAUSED'; paused: boolean }
   | { type: 'SET_SPEED'; speed: SimulationSpeed }
   | { type: 'SET_CHALLENGE_MODE'; challengeMode: ChallengeMode }
   | { type: 'STEP_BREATH' }
-  | { type: 'SET_SCREEN'; screen: C6Screen }
-  | { type: 'SELECT_MODE'; mode: C6Mode }
+  | { type: 'SET_SCREEN'; screen: VentilatorScreen }
+  | { type: 'SELECT_MODE'; mode: CanonicalVentilationMode }
   | { type: 'CONFIRM_MODE' }
   | { type: 'SET_CONTROL'; control: VentilatorControlKey; value: number | string | boolean }
   | { type: 'TOGGLE_LOCK' }

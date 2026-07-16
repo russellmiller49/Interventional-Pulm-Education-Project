@@ -1,5 +1,9 @@
 import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content/runtimeCases'
-import { createDefaultC6Settings } from '../content/deviceProfile'
+import {
+  adaptInitialSettingsForDevice,
+  createDefaultMechanicalVentilationSettings,
+  defaultVentilatorDeviceId,
+} from '../content/deviceProfiles'
 import {
   clamp,
   deriveEffectivePatient,
@@ -17,13 +21,14 @@ import {
 import type {
   AlarmEvent,
   CaseOutcome,
-  C6VentilatorSettings,
+  MechanicalVentilationSettings,
   InterventionDefinition,
   LearningExperience,
   PatientModelState,
   RiskState,
   VentilationCaseDefinition,
   VentilationSimulationState,
+  VentilatorDeviceId,
   VentilatorMeasurements,
   WaveformSample,
 } from './types'
@@ -68,8 +73,8 @@ function hashSeed(value: string): number {
   return hash >>> 0
 }
 
-function cloneSettings(settings: C6VentilatorSettings): C6VentilatorSettings {
-  return { ...settings, trigger: { ...settings.trigger } } as C6VentilatorSettings
+function cloneSettings(settings: MechanicalVentilationSettings): MechanicalVentilationSettings {
+  return { ...settings, trigger: { ...settings.trigger } } as MechanicalVentilationSettings
 }
 
 function clonePatient(patient: PatientModelState): PatientModelState {
@@ -113,12 +118,14 @@ function baseState(
   definition: VentilationCaseDefinition,
   experience: LearningExperience,
   attempt: number,
+  deviceId: VentilatorDeviceId,
 ): VentilationSimulationState {
   const seed = hashSeed(`${definition.id}:${experience}:${attempt}`)
   const branch = definition.branchOptions[seed % definition.branchOptions.length]
   const patient = configureBranch(definition, definition.initialPatient, branch)
   const state: VentilationSimulationState = {
     version: SIMULATION_VERSION,
+    deviceId,
     caseId: definition.id,
     experience,
     challengeMode: 'untimed',
@@ -131,7 +138,7 @@ function baseState(
     showEducatorOverlay: experience === 'learn',
     ventilator: {
       screen: 'main',
-      settings: cloneSettings(definition.initialSettings),
+      settings: cloneSettings(adaptInitialSettingsForDevice(definition.initialSettings, deviceId)),
       pendingMode: null,
       locked: false,
       frozen: false,
@@ -169,9 +176,10 @@ export function createInitialSimulationState(
   caseId = DEFAULT_CASE_ID,
   experience: LearningExperience = 'learn',
   attempt = 1,
+  deviceId: VentilatorDeviceId = defaultVentilatorDeviceId,
 ): VentilationSimulationState {
   const definition = mechanicalVentilationCaseById.get(caseId) ?? mechanicalVentilationCases[0]
-  const initial = baseState(definition, experience, attempt)
+  const initial = baseState(definition, experience, attempt, deviceId)
   const primed = advanceSimulation({ ...initial, paused: false }, 4, definition)
   return {
     ...primed,
@@ -186,7 +194,7 @@ export function createInitialSimulationState(
 }
 
 function flowProfile(
-  settings: Extract<C6VentilatorSettings, { mode: 'scmv' }>,
+  settings: Extract<MechanicalVentilationSettings, { mode: 'volume-ac' }>,
   phase: number,
   ti: number,
 ) {
@@ -208,7 +216,7 @@ function effortAt(
   let phase = time % neuralPeriod
   if (definition.phenotype === 'reverse-triggering') {
     const machineRate =
-      state.ventilator.settings.mode === 'spont'
+      state.ventilator.settings.mode === 'pressure-support'
         ? patient.drive.neuralRatePerMin
         : state.ventilator.settings.ratePerMin
     const machinePeriod = 60 / Math.max(1, machineRate)
@@ -269,13 +277,15 @@ function nextWaveformSample(
   const holdActive = state.ventilator.holdUntil !== null && state.ventilator.holdUntil > time
   let flowLps = 0
   if (!holdActive && timing.inspiration) {
-    if (settings.mode === 'scmv') {
+    if (settings.mode === 'volume-ac') {
       flowLps = flowProfile(settings, timing.phase, measurements.mechanicalInspiratoryTimeSeconds)
       const targetVolume = settings.vtMl / 1000 + patient.mechanics.endExpiratoryVolumeL
       if (volumeL >= targetVolume) flowLps = 0
     } else {
       const pressureAbovePeep =
-        settings.mode === 'pcv-plus' ? settings.deltaPControlCmH2O : settings.pressureSupportCmH2O
+        settings.mode === 'pressure-ac'
+          ? settings.deltaPControlCmH2O
+          : settings.pressureSupportCmH2O
       const pRampMs = Math.max(10, settings.pRampMs)
       const targetPressure =
         settings.peepCmH2O + pressureAbovePeep * (1 - Math.exp(-timing.phase / (pRampMs / 1000)))
@@ -317,9 +327,9 @@ function nextWaveformSample(
     complianceLPerCmH2O: patient.mechanics.complianceLPerCmH2O,
     inspiratoryEffortCmH2O: effort,
   })
-  if (settings.mode !== 'scmv' && timing.inspiration) {
+  if (settings.mode !== 'volume-ac' && timing.inspiration) {
     const pressureAbovePeep =
-      settings.mode === 'pcv-plus' ? settings.deltaPControlCmH2O : settings.pressureSupportCmH2O
+      settings.mode === 'pressure-ac' ? settings.deltaPControlCmH2O : settings.pressureSupportCmH2O
     paw = Math.min(
       paw,
       settings.peepCmH2O + pressureAbovePeep + measurements.pressureOvershootCmH2O,
@@ -348,19 +358,19 @@ function nextWaveformSample(
 
 function baselineMinuteVentilation(definition: VentilationCaseDefinition): number {
   const settings = definition.initialSettings
-  if (settings.mode === 'scmv') {
+  if (settings.mode === 'volume-ac') {
     return (
       (settings.vtMl / 1000) *
       Math.max(settings.ratePerMin, definition.initialPatient.drive.neuralRatePerMin)
     )
   }
   const drivingPressure =
-    settings.mode === 'pcv-plus'
+    settings.mode === 'pressure-ac'
       ? settings.deltaPControlCmH2O
       : settings.pressureSupportCmH2O + definition.initialPatient.drive.effortAmplitudeCmH2O * 0.35
   const vt = drivingPressure * definition.initialPatient.mechanics.complianceLPerCmH2O
   const rate =
-    settings.mode === 'pcv-plus'
+    settings.mode === 'pressure-ac'
       ? Math.max(settings.ratePerMin, definition.initialPatient.drive.neuralRatePerMin)
       : definition.initialPatient.drive.neuralRatePerMin
   return Math.max(1, vt * rate)
@@ -461,7 +471,7 @@ function updateSlowPhysiology(
     ) * 4,
   )
   const assistBurden =
-    settings.mode === 'spont' ? Math.abs(settings.pressureSupportCmH2O - 11) * 0.22 : 0
+    settings.mode === 'pressure-support' ? Math.abs(settings.pressureSupportCmH2O - 11) * 0.22 : 0
   let targetDyspnea = clamp(
     next.human.painScore * 0.35 +
       next.human.anxietyScore * 0.25 +
@@ -820,6 +830,6 @@ export function selectCaseOutcome(
   }
 }
 
-export function defaultSettingsForMode(mode: C6VentilatorSettings['mode']) {
-  return createDefaultC6Settings(mode)
+export function defaultSettingsForMode(mode: MechanicalVentilationSettings['mode']) {
+  return createDefaultMechanicalVentilationSettings(mode)
 }

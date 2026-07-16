@@ -1,14 +1,16 @@
 import { BookOpen, FileCheck2, FileWarning, FlaskConical, ShieldCheck } from 'lucide-react'
 
 import {
-  hamiltonC6DeviceProfile,
-  hamiltonC6PublicationStatus,
+  getVentilatorDeviceProfile,
+  mechanicalVentilationPublicationStatus,
   ventilationEvidence,
+  ventilatorDeviceSources,
 } from '../content'
-import styles from './hamilton-c6-ventilation.module.css'
+import type { VentilatorDeviceId } from '../engine'
+import styles from './mechanical-ventilation.module.css'
 
 const sourceLabels = {
-  manufacturer: 'Manufacturer manual',
+  manufacturer: 'Manufacturer source',
   curriculum: 'Supplied curriculum',
   'clinical-reference': 'Casebook clinical source',
   'educational-model': 'Educational model',
@@ -21,18 +23,23 @@ const sourceIcons = {
   'educational-model': FlaskConical,
 } as const
 
-export function SourcesPanel() {
-  const primaryEvidence = ventilationEvidence.slice(0, 2)
-  const supportingEvidence = ventilationEvidence.slice(2)
+export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
+  const profile = getVentilatorDeviceProfile(deviceId)
+  const selectedSources = ventilatorDeviceSources.filter((source) => source.deviceId === deviceId)
+  const supportingEvidence = ventilationEvidence.filter(
+    (reference) => reference.sourceClass !== 'manufacturer',
+  )
   return (
     <section className={styles.sourcesSection} aria-labelledby="ventilation-sources-heading">
       <div className={styles.sectionTitleRow}>
         <div>
           <span>Evidence boundary & release safety</span>
-          <h2 id="ventilation-sources-heading">Draft profile locked to the supplied C6 manual</h2>
+          <h2 id="ventilation-sources-heading">
+            Draft profile locked to the supplied {profile.shortName} sources
+          </h2>
         </div>
         <span className={styles.draftBadge}>
-          {hamiltonC6PublicationStatus === 'published'
+          {mechanicalVentilationPublicationStatus === 'published'
             ? 'PUBLISHED · REVIEW APPROVED'
             : 'DRAFT · REVIEW REQUIRED'}
         </span>
@@ -44,33 +51,33 @@ export function SourcesPanel() {
           <strong>Educational simulation—not a clinical device or validated digital twin.</strong>
           <p>
             This original functional facsimile teaches recognition, ventilator reasoning, and
-            reassessment. It does not reproduce every C6 behavior, replace the operator’s manual,
+            reassessment. It does not reproduce every device behavior, replace an operator manual,
             prescribe care, or verify procedural competency. It is not manufactured, sponsored, or
-            endorsed by Hamilton Medical.
+            endorsed by {profile.manufacturer}.
           </p>
         </div>
       </div>
 
       <dl className={styles.deviceProfile}>
         <div>
-          <dt>Device vocabulary</dt>
-          <dd>{hamiltonC6DeviceProfile.displayName}</dd>
+          <dt>Selected console</dt>
+          <dd>{profile.displayName}</dd>
         </div>
         <div>
-          <dt>Manual profile</dt>
-          <dd>{hamiltonC6DeviceProfile.manualNumber}</dd>
+          <dt>Source profile</dt>
+          <dd>{profile.manualProfile}</dd>
         </div>
         <div>
-          <dt>Software</dt>
-          <dd>{hamiltonC6DeviceProfile.softwareVersion}</dd>
+          <dt>Software / revision</dt>
+          <dd>{profile.softwareVersion}</dd>
         </div>
         <div>
           <dt>Simulated modes</dt>
-          <dd>(S)CMV · PCV+ · SPONT</dd>
+          <dd>{Object.values(profile.modeLabels).join(' · ')}</dd>
         </div>
         <div>
           <dt>Patient group</dt>
-          <dd>{hamiltonC6DeviceProfile.patientGroup}</dd>
+          <dd>{profile.patientGroup}</dd>
         </div>
         <div>
           <dt>Publication</dt>
@@ -79,31 +86,32 @@ export function SourcesPanel() {
       </dl>
 
       <div className={styles.evidenceGrid}>
-        {primaryEvidence.map((reference) => {
-          const Icon = sourceIcons[reference.sourceClass]
-          return (
-            <article key={reference.id}>
-              <span>
-                <Icon aria-hidden="true" /> {sourceLabels[reference.sourceClass]}
-              </span>
-              <h3>{reference.title}</h3>
-              <p>{reference.citation}</p>
-              {reference.pages ? (
-                <p>
-                  <strong>Relevant pages:</strong> {reference.pages}
-                </p>
-              ) : null}
-              <ul>
-                {reference.supports.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-              <p>
-                <strong>Boundary:</strong> {reference.limitations}
-              </p>
-            </article>
-          )
-        })}
+        {selectedSources.map((source) => (
+          <article key={source.id}>
+            <span>
+              <ShieldCheck aria-hidden="true" /> Manufacturer source
+            </span>
+            <h3>{source.title}</h3>
+            <p>{source.citation}</p>
+            <p>
+              <strong>Revision:</strong> {source.revision} · {source.date}
+            </p>
+            <p>
+              <strong>Relevant pages:</strong> {source.pages}
+            </p>
+            <p>
+              <strong>Used for:</strong> {source.intendedUse}
+            </p>
+            <p>
+              <strong>Source snapshot:</strong> {source.sourceFilename}
+              <br />
+              <code>SHA-256 {source.sourceSha256}</code>
+            </p>
+            <p>
+              <strong>Boundary:</strong> {source.limitations}
+            </p>
+          </article>
+        ))}
       </div>
 
       <details className={styles.supportingSources}>
@@ -140,20 +148,25 @@ export function SourcesPanel() {
             signature, accepted path, threshold, and critical-error rule.
           </li>
           <li>
-            <span aria-hidden="true">□</span> A C6-trained device reviewer verifies mode vocabulary,
-            controls, alarm/message behavior, and operational boundaries against manual 10197564/00.
+            <span aria-hidden="true">□</span> C6-, Evita-, PB980-, and AVEA-trained reviewers verify
+            the respective mode vocabulary, controls, alarms, maneuvers, and documented limits.
+          </li>
+          <li>
+            <span aria-hidden="true">□</span> PB980 and AVEA review includes the applicable operator
+            manuals; the supplied service/modes guides alone are not treated as complete
+            instructions.
           </li>
           <li>
             <span aria-hidden="true">□</span> Accessibility review covers keyboard operation, text
-            alarm severity, waveform text equivalents, reduced motion, zoom, and responsive reflow.
+            alarm severity, waveform equivalents, reduced motion, zoom, and responsive reflow.
           </li>
           <li>
             <span aria-hidden="true">□</span> Clinical translations receive independent review
-            before English fallback is removed from non-English routes.
+            before the reviewed-English fallback is removed.
           </li>
           <li>
             <span aria-hidden="true">□</span> Faculty confirms high-risk actions remain
-            non-procedural and point to local supervised protocols.
+            recognition-and-priority exercises tied to local supervised protocols.
           </li>
         </ul>
       </div>

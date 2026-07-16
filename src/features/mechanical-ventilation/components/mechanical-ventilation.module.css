@@ -2293,6 +2293,370 @@
   color: #614c28;
 }
 
+.deviceSelector {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.65fr) minmax(0, 1.35fr);
+  gap: 1rem;
+  align-items: stretch;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 16px 42px rgba(18, 43, 59, 0.08);
+}
+
+.deviceSelector > div:first-child {
+  display: grid;
+  align-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+}
+
+.deviceSelector > div:first-child > span {
+  color: var(--teal);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.deviceSelector h2,
+.deviceDialog h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.2rem;
+}
+
+.deviceSelector p,
+.deviceDialog p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.deviceChoices {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.deviceChoices button {
+  display: grid;
+  gap: 0.35rem;
+  align-content: center;
+  min-height: 108px;
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  color: var(--ink);
+  text-align: left;
+  background: var(--surface-raised);
+}
+
+.deviceChoices button[data-selected='true'] {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+  box-shadow: inset 0 0 0 2px rgba(12, 111, 112, 0.28);
+}
+
+.deviceChoices span,
+.deviceChoices small {
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+
+.deviceChoices strong {
+  color: var(--navy);
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.deviceDialogBackdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 18, 24, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.deviceDialog {
+  width: min(100%, 480px);
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.35);
+}
+
+.deviceDialog > span {
+  color: var(--amber);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.deviceDialog h2 {
+  margin-top: 0.35rem;
+}
+
+.deviceDialog p {
+  margin-top: 0.65rem;
+}
+
+.deviceDialog > div {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.deviceDialog button,
+.pendingControlBar button {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.deviceDialog button:last-child,
+.pendingControlBar button:first-of-type {
+  border-color: var(--teal);
+  color: #ffffff;
+  background: var(--teal);
+}
+
+.pendingControlBar {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.65rem;
+  margin-top: 0.7rem;
+  border: 1px solid #e2a63c;
+  border-radius: 0.65rem;
+  background: #fff2ce;
+}
+
+.pendingControlBar > div {
+  display: grid;
+  gap: 0.08rem;
+  margin-right: auto;
+}
+
+.pendingControlBar span {
+  color: #75501a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.pendingControlBar strong {
+  color: #3f2a0c;
+  font-size: 0.84rem;
+}
+
+/* Original, brand-free device-recognizable training shells. */
+.consoleShell[data-device='drager-evita-v800-v600'] {
+  --screen: #f8fbfd;
+  --screen-panel: #edf4f8;
+  --screen-line: #c9d9e2;
+  --screen-text: #16354a;
+  --wave: #176ba2;
+  --wave-two: #1c82b9;
+  --pmus: #c36c00;
+  border: 1px solid #d7dfe4;
+  background: linear-gradient(150deg, #ffffff, #e9eef1);
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleBezel {
+  display: grid;
+  grid-template-areas:
+    'header header'
+    'alarm alarm'
+    'screen nav';
+  grid-template-columns: minmax(0, 1fr) 112px;
+  border-color: #d2dce2;
+  border-radius: 0.35rem;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 2px #f5f7f8;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleHeader {
+  grid-area: header;
+  color: #17374a;
+  background: #f7fafb;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleModel {
+  color: #0066a4;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .alarmBar {
+  grid-area: alarm;
+  color: #15374b;
+  background: #cdeaf2;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleScreen {
+  grid-area: screen;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleNav {
+  grid-area: nav;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(6, 1fr);
+  border-top: 0;
+  border-left: 1px solid #c9d9e2;
+  background: #eef4f7;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleNav button {
+  min-height: 0;
+  border-right: 0;
+  border-bottom: 1px solid #c9d9e2;
+  color: #33586d;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .consoleNav button[aria-current='page'] {
+  color: #ffffff;
+  background: #096ca8;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .mmpPanel,
+.consoleShell[data-device='drager-evita-v800-v600'] .controlTile,
+.consoleShell[data-device='drager-evita-v800-v600'] .modeCard,
+.consoleShell[data-device='drager-evita-v800-v600'] .toolGrid button {
+  color: #18384d;
+  background: #f0f5f8;
+}
+
+.consoleShell[data-device='drager-evita-v800-v600'] .controlTile[data-selected='true'],
+.consoleShell[data-device='drager-evita-v800-v600'] .modeCard[data-selected='true'] {
+  border-color: #f39a22;
+  background: #fff1d8;
+  box-shadow: inset 0 0 0 2px #f39a22;
+}
+
+.consoleShell[data-device='puritan-bennett-980'] {
+  --screen: #081422;
+  --screen-panel: #0c2034;
+  --screen-line: #28435c;
+  --screen-text: #e9f5ff;
+  --wave: #7df5b0;
+  --wave-two: #67c9ff;
+  --pmus: #ffd166;
+  border-color: #24364f;
+  background: linear-gradient(150deg, #263a57, #111d32);
+}
+
+.consoleShell[data-device='puritan-bennett-980'] .consoleBezel {
+  border: 5px solid #263a58;
+  border-radius: 1.35rem 1.35rem 0.65rem 0.65rem;
+  background: #07121e;
+  box-shadow: inset 0 0 0 2px #405571;
+}
+
+.consoleShell[data-device='puritan-bennett-980'] .consoleHeader,
+.consoleShell[data-device='puritan-bennett-980'] .consoleNav {
+  background: #152943;
+}
+
+.consoleShell[data-device='puritan-bennett-980'] .consoleModel {
+  color: #dfeaff;
+}
+
+.consoleShell[data-device='puritan-bennett-980'] .consoleNav button[aria-current='page'] {
+  background: #315e8d;
+}
+
+.consoleShell[data-device='puritan-bennett-980'] .physicalControls > button {
+  color: #eff5ff;
+  background: linear-gradient(#324b6c, #172943);
+  box-shadow: 0 3px 0 #07121e;
+}
+
+.consoleShell[data-device='carefusion-avea'] {
+  --screen: #1c1c20;
+  --screen-panel: #29282e;
+  --screen-line: #535159;
+  --screen-text: #f4f3f5;
+  --wave: #9df06b;
+  --wave-two: #70d3ff;
+  --pmus: #ffcd57;
+  border-color: #77747c;
+  background: linear-gradient(145deg, #dddce0, #a9a7ad);
+}
+
+.consoleShell[data-device='carefusion-avea'] .consoleBezel {
+  display: grid;
+  grid-template-areas:
+    'header header'
+    'alarm alarm'
+    'nav screen';
+  grid-template-columns: 105px minmax(0, 1fr);
+  border: 4px solid #76737a;
+  border-radius: 0.45rem;
+  background: #343238;
+  box-shadow: inset 0 0 0 2px #b9b7bb;
+}
+
+.consoleShell[data-device='carefusion-avea'] .consoleHeader {
+  grid-area: header;
+  background: #48464d;
+}
+
+.consoleShell[data-device='carefusion-avea'] .alarmBar {
+  grid-area: alarm;
+}
+
+.consoleShell[data-device='carefusion-avea'] .consoleScreen {
+  grid-area: screen;
+}
+
+.consoleShell[data-device='carefusion-avea'] .consoleNav {
+  grid-area: nav;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(6, 1fr);
+  border-top: 0;
+  border-right: 1px solid #5c5961;
+  background: #4b4950;
+}
+
+.consoleShell[data-device='carefusion-avea'] .consoleNav button {
+  min-height: 0;
+  border-right: 0;
+  border-bottom: 1px solid #69666d;
+  color: #f0eff1;
+}
+
+.consoleShell[data-device='carefusion-avea'] .consoleNav button[aria-current='page'] {
+  background: #6e4d8c;
+}
+
+.consoleShell[data-device='carefusion-avea'] .modeCard[data-selected='true'],
+.consoleShell[data-device='carefusion-avea'] .controlTile[data-selected='true'] {
+  border-color: #d7a9ff;
+  background: #4d3561;
+  box-shadow: inset 0 0 0 2px #d7a9ff;
+}
+
+.consoleShell[data-device='carefusion-avea'] .rotaryKnob {
+  color: #222126;
+  background: radial-gradient(circle at 38% 30%, #ffffff, #a4a2a7 68%);
+}
+
+.consoleShell[data-device='carefusion-avea'] .rotaryKnob strong {
+  color: #3f205c;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
@@ -2382,6 +2746,10 @@
     max-width: 760px;
   }
 
+  .deviceSelector {
+    grid-template-columns: 1fr;
+  }
+
   .workflowLayout {
     grid-template-columns: 1fr;
   }
@@ -2445,6 +2813,29 @@
     min-width: 0;
   }
 
+  .deviceChoices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .consoleShell[data-device='drager-evita-v800-v600'] .consoleBezel,
+  .consoleShell[data-device='carefusion-avea'] .consoleBezel {
+    grid-template-areas:
+      'header'
+      'alarm'
+      'screen'
+      'nav';
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .consoleShell[data-device='drager-evita-v800-v600'] .consoleNav,
+  .consoleShell[data-device='carefusion-avea'] .consoleNav {
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: 1fr;
+    border-top: 1px solid var(--screen-line);
+    border-right: 0;
+    border-left: 0;
+  }
+
   .consoleScreen,
   .monitoringScreen,
   .menuScreen,
@@ -2493,6 +2884,24 @@
 
   .experienceTabs {
     display: grid;
+  }
+
+  .deviceSelector {
+    padding: 0.75rem;
+  }
+
+  .deviceChoices {
+    grid-template-columns: 1fr;
+  }
+
+  .deviceChoices button {
+    min-height: 82px;
+  }
+
+  .pendingControlBar,
+  .deviceDialog > div {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .caseButtons button {

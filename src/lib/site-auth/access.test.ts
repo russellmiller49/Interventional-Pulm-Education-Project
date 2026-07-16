@@ -63,12 +63,17 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
   })
 
-  it('keeps the HAMILTON-C6 ventilation simulator authenticated and resolves aggregate analytics', () => {
+  it('keeps the mechanical ventilation simulator authenticated and resolves both URLs to one module', () => {
+    expect(isPublicPath('/mechanical-ventilation')).toBe(false)
+    expect(isPublicPath('/es/mechanical-ventilation')).toBe(false)
     expect(isPublicPath('/hamilton-c6-ventilation')).toBe(false)
     expect(isPublicPath('/es/hamilton-c6-ventilation')).toBe(false)
+    expect(getRequiredEntitlement('/mechanical-ventilation', params())).toBeNull()
     expect(getRequiredEntitlement('/hamilton-c6-ventilation', params())).toBeNull()
-    expect(resolveSiteModuleId('/hamilton-c6-ventilation')).toBe('hamilton-c6-ventilation')
-    expect(resolveSiteModuleId('/zh-CN/hamilton-c6-ventilation')).toBe('hamilton-c6-ventilation')
+    expect(resolveSiteModuleId('/mechanical-ventilation')).toBe('mechanical-ventilation')
+    expect(resolveSiteModuleId('/zh-CN/mechanical-ventilation')).toBe('mechanical-ventilation')
+    expect(resolveSiteModuleId('/hamilton-c6-ventilation')).toBe('mechanical-ventilation')
+    expect(resolveSiteModuleId('/zh-CN/hamilton-c6-ventilation')).toBe('mechanical-ventilation')
   })
 
   it('requires entitlements only for restricted website areas', () => {

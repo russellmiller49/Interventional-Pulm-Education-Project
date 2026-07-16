@@ -1,5 +1,6 @@
 import {
-  c6SettingsSchema,
+  adaptInitialSettingsForDevice,
+  mechanicalVentilationSettingsSchema,
   mechanicalVentilationCases,
   mechanicalVentilationCasesByStation,
   mechanicalVentilationSource,
@@ -10,13 +11,13 @@ import {
 } from '../content'
 
 const expectedModeBySourceMode = {
-  'VC-A/C': 'scmv',
-  'PC-A/C': 'pcv-plus',
-  PSV: 'spont',
-  'PSV with apnea backup': 'spont',
+  'VC-A/C': 'volume-ac',
+  'PC-A/C': 'pressure-ac',
+  PSV: 'pressure-support',
+  'PSV with apnea backup': 'pressure-support',
 } as const
 
-describe('HAMILTON-C6 ventilation case registry', () => {
+describe('mechanical ventilation case registry', () => {
   it('preserves the supplied 15-case source as a versioned provenance snapshot', () => {
     expect(mechanicalVentilationSource.schema_version).toBe('1.0')
     expect(mechanicalVentilationSource.cases).toHaveLength(15)
@@ -30,11 +31,13 @@ describe('HAMILTON-C6 ventilation case registry', () => {
     })
   })
 
-  it('validates all runtime definitions and their C6 setting discriminants', () => {
+  it('validates all runtime definitions and their canonical setting discriminants', () => {
     expect(mechanicalVentilationCases).toHaveLength(15)
     expect(validateMechanicalVentilationCaseRegistry()).toEqual([])
     for (const definition of mechanicalVentilationCases) {
-      expect(() => c6SettingsSchema.parse(definition.initialSettings)).not.toThrow()
+      expect(() =>
+        mechanicalVentilationSettingsSchema.parse(definition.initialSettings),
+      ).not.toThrow()
       expect(definition.sourceCaseId).toBe(definition.id)
       expect(definition.mechanismOptions).toHaveLength(3)
       expect(definition.priorityOptions).toHaveLength(3)
@@ -44,7 +47,7 @@ describe('HAMILTON-C6 ventilation case registry', () => {
     }
   })
 
-  it('maps generic source modes into the locked C6 vocabulary', () => {
+  it('maps source modes into device-independent canonical modes', () => {
     for (const definition of mechanicalVentilationCases) {
       const source = mechanicalVentilationSource.cases.find((item) => item.id === definition.id)!
       const genericMode = String(
@@ -52,8 +55,8 @@ describe('HAMILTON-C6 ventilation case registry', () => {
       ) as keyof typeof expectedModeBySourceMode
       expect(definition.initialSettings.mode).toBe(expectedModeBySourceMode[genericMode])
       if (genericMode === 'PSV with apnea backup') {
-        expect(definition.initialSettings.mode).toBe('spont')
-        if (definition.initialSettings.mode === 'spont') {
+        expect(definition.initialSettings.mode).toBe('pressure-support')
+        if (definition.initialSettings.mode === 'pressure-support') {
           expect(definition.initialSettings.apneaBackupEnabled).toBe(true)
         }
       }
@@ -74,18 +77,29 @@ describe('HAMILTON-C6 ventilation case registry', () => {
     }
   })
 
-  it('locks the five engine-validation cases and C6-specific MV-11 P-ramp adaptation', () => {
+  it('keeps MV-11 canonical while applying the C6-specific P-ramp cap at the adapter boundary', () => {
     expect(pilotCaseIds).toEqual(['MV-01', 'MV-04', 'MV-06', 'MV-11', 'MV-15'])
     const mv11 = mechanicalVentilationCases.find((item) => item.id === 'MV-11')!
-    expect(mv11.initialSettings.mode).toBe('spont')
-    if (mv11.initialSettings.mode === 'spont') {
-      expect(mv11.initialSettings.pRampMs).toBe(200)
+    expect(mv11.initialSettings.mode).toBe('pressure-support')
+    if (mv11.initialSettings.mode === 'pressure-support') {
+      expect(mv11.initialSettings.pRampMs).toBe(600)
+      const c6Settings = adaptInitialSettingsForDevice(mv11.initialSettings, 'hamilton-c6')
+      const evitaSettings = adaptInitialSettingsForDevice(
+        mv11.initialSettings,
+        'drager-evita-v800-v600',
+      )
+      expect(c6Settings.mode).toBe('pressure-support')
+      expect(evitaSettings.mode).toBe('pressure-support')
+      if (c6Settings.mode === 'pressure-support' && evitaSettings.mode === 'pressure-support') {
+        expect(c6Settings.pRampMs).toBe(200)
+        expect(evitaSettings.pRampMs).toBe(600)
+      }
     }
-    expect(mv11.c6AdaptationNotes.join(' ')).toMatch(/70–120 ms/)
-    expect(mv11.c6AdaptationNotes.join(' ')).toMatch(/30 ms/)
+    expect(mv11.deviceAdaptationNotes.join(' ')).toMatch(/70–120 ms/)
+    expect(mv11.deviceAdaptationNotes.join(' ')).toMatch(/30 ms/)
     for (const definition of mechanicalVentilationCases) {
-      if (definition.initialSettings.mode === 'spont') {
-        expect(definition.initialSettings.pRampMs).toBeLessThanOrEqual(200)
+      if (definition.initialSettings.mode === 'pressure-support') {
+        expect(definition.initialSettings.pRampMs).toBeLessThanOrEqual(2000)
       }
     }
   })

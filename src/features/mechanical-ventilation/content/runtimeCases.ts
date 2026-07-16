@@ -1,5 +1,5 @@
 import type {
-  C6VentilatorSettings,
+  MechanicalVentilationSettings,
   InterventionDefinition,
   InterventionEffectId,
   MetricCondition,
@@ -596,7 +596,7 @@ const caseProfiles: Record<string, CaseProfile> = {
       { metric: 'measurements.pressureOvershootCmH2O', comparator: 'lte', value: 2 },
       { metric: 'patient.human.dyspneaScore', comparator: 'lte', value: 4 },
     ],
-    branchOptions: ['c6-pramp'],
+    branchOptions: ['rise-time-mismatch'],
     baselineSeconds: 30,
   },
   'MV-12': {
@@ -730,7 +730,7 @@ function parseTrigger(value: unknown) {
   return { type: 'flow' as const, thresholdLMin: Math.min(20, Math.max(0.5, threshold)) }
 }
 
-function buildSettings(sourceId: string): C6VentilatorSettings {
+function buildSettings(sourceId: string): MechanicalVentilationSettings {
   const source = sourceCaseById.get(sourceId)!
   const initial = source.initial_ventilator
   const common = {
@@ -745,7 +745,7 @@ function buildSettings(sourceId: string): C6VentilatorSettings {
   const sourceMode = String(initial.mode)
   if (sourceMode === 'PC-A/C') {
     return {
-      mode: 'pcv-plus',
+      mode: 'pressure-ac',
       ...common,
       deltaPControlCmH2O: numeric(initial, 'inspiratory_pressure_above_PEEP_cmH2O', 15),
       ratePerMin: numeric(initial, 'RR_min', 16),
@@ -755,10 +755,10 @@ function buildSettings(sourceId: string): C6VentilatorSettings {
   }
   if (/PSV/.test(sourceMode)) {
     return {
-      mode: 'spont',
+      mode: 'pressure-support',
       ...common,
       pressureSupportCmH2O: numeric(initial, 'pressure_support_cmH2O', 10),
-      pRampMs: Math.min(200, numeric(initial, 'rise_time_ms', 100)),
+      pRampMs: Math.min(2000, numeric(initial, 'rise_time_ms', 100)),
       etsPercent: numeric(initial, 'flow_cycle_percent', 25),
       tiMaxSeconds: 1.5,
       apneaBackupEnabled: /apnea backup/i.test(sourceMode),
@@ -766,7 +766,7 @@ function buildSettings(sourceId: string): C6VentilatorSettings {
     }
   }
   return {
-    mode: 'scmv',
+    mode: 'volume-ac',
     ...common,
     vtMl: numeric(initial, 'VT_mL', 420),
     ratePerMin: numeric(initial, 'RR_min', 18),
@@ -910,18 +910,25 @@ const responseDistractors: readonly PredictionOption[] = [
 
 function adaptationNotes(sourceId: string): readonly string[] {
   const source = sourceCaseById.get(sourceId)!
+  const canonicalMode = buildSettings(sourceId).mode
+  const canonicalLabel =
+    canonicalMode === 'volume-ac'
+      ? 'volume assist/control'
+      : canonicalMode === 'pressure-ac'
+        ? 'pressure assist/control'
+        : 'CPAP/pressure support'
   const notes = [
-    `${String(source.initial_ventilator.mode)} is mapped to ${buildSettings(sourceId).mode === 'scmv' ? '(S)CMV' : buildSettings(sourceId).mode === 'pcv-plus' ? 'PCV+' : 'SPONT'}.`,
+    `${String(source.initial_ventilator.mode)} is normalized to the ${canonicalLabel} profile and displayed with the selected device’s vocabulary.`,
   ]
   const riseTime = numeric(source.initial_ventilator, 'rise_time_ms', 0)
   if (riseTime > 200) {
     notes.push(
-      `The generic ${riseTime} ms rise-time starting point is recalibrated to the C6 SPONT P-ramp maximum of 200 ms.`,
+      `The ${riseTime} ms source rise-time is bounded by the selected device profile; the HAMILTON-C6 SPONT profile is capped at 200 ms.`,
     )
   }
   if (sourceId === 'MV-11') {
     notes.push(
-      'C6-specific target P-ramp is 70–120 ms; values below 30 ms generate the educational overshoot branch.',
+      'The educational target rise time is 70–120 ms; values below 30 ms generate the overshoot branch and are displayed in native device units.',
     )
   }
   return notes
@@ -973,7 +980,7 @@ const builtCases: VentilationCaseDefinition[] = mechanicalVentilationSource.case
     sourceBasis: source.source_basis,
     branchOptions: profile.branchOptions,
     baselineSeconds: profile.baselineSeconds,
-    c6AdaptationNotes: adaptationNotes(source.id),
+    deviceAdaptationNotes: adaptationNotes(source.id),
   }
 })
 

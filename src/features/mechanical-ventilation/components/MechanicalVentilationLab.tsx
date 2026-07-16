@@ -21,38 +21,39 @@ import {
 import { recordSiteModuleEvent } from '@/lib/analytics'
 
 import {
-  hamiltonC6PublicationStatus,
+  getVentilatorDeviceProfile,
   mechanicalVentilationCaseById,
   mechanicalVentilationCases,
   mechanicalVentilationCasesByStation,
+  mechanicalVentilationPublicationStatus,
   pilotCaseIds,
+  ventilatorDeviceProfiles,
   ventilationStations,
 } from '../content'
 import {
   createDefaultProgress,
   createInitialSimulationState,
   hasCaseMastery,
+  nextCaseAttempt,
   readProgress,
   recordCaseResult,
+  setLastDevice,
   setLastStation,
   ventilationSimulationReducer,
   writeProgress,
   type CaseOutcome,
-  type HamiltonC6ProgressV1,
   type LearningExperience,
+  type MechanicalVentilationProgressV2,
   type VentilationCaseDefinition,
+  type VentilatorDeviceId,
 } from '../engine'
 import { BedsidePanel } from './BedsidePanel'
 import { CaseWorkflow } from './CaseWorkflow'
-import { HamiltonC6Console } from './HamiltonC6Console'
+import { MechanicalVentilatorConsole } from './MechanicalVentilatorConsole'
 import { SourcesPanel } from './SourcesPanel'
-import styles from './hamilton-c6-ventilation.module.css'
+import styles from './mechanical-ventilation.module.css'
 
-const MODULE_ID = 'hamilton-c6-ventilation'
-
-function caseAttempt(progress: HamiltonC6ProgressV1, caseId: string): number {
-  return (progress.attempts[caseId] ?? 0) + 1
-}
+const MODULE_ID = 'mechanical-ventilation'
 
 function CalibrationPanel({
   definition,
@@ -123,13 +124,14 @@ function CalibrationPanel({
   )
 }
 
-export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: string }) {
+export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: string }) {
   const [state, dispatch] = useReducer(ventilationSimulationReducer, undefined, () =>
     createInitialSimulationState(),
   )
-  const [progress, setProgress] = useState<HamiltonC6ProgressV1>(createDefaultProgress)
+  const [progress, setProgress] = useState<MechanicalVentilationProgressV2>(createDefaultProgress)
   const [experience, setExperience] = useState<LearningExperience>('learn')
   const [workspaceView, setWorkspaceView] = useState<'case' | 'vent'>('case')
+  const [requestedDeviceId, setRequestedDeviceId] = useState<VentilatorDeviceId | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const lastAudibleAlarm = useRef<string | null>(null)
   const definition =
@@ -137,6 +139,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
   const station =
     ventilationStations.find((item) => item.id === definition.stationId) ?? ventilationStations[0]
   const controlsEnabled = experience === 'learn' || state.prediction.committed
+  const deviceProfile = getVentilatorDeviceProfile(state.deviceId)
 
   const completedCount = progress.completedCases.length
   const masteryCount = useMemo(
@@ -148,6 +151,9 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
     const frame = window.requestAnimationFrame(() => {
       const stored = readProgress()
       setProgress(stored)
+      if (stored.lastDeviceId !== 'hamilton-c6') {
+        dispatch({ type: 'CHANGE_DEVICE', deviceId: stored.lastDeviceId })
+      }
       setHydrated(true)
     })
     return () => window.cancelAnimationFrame(frame)
@@ -201,11 +207,41 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
         type: 'LOAD_CASE',
         caseId,
         experience: nextExperience,
-        attempt: nextExperience === 'practice' ? caseAttempt(progress, caseId) : 1,
+        attempt:
+          nextExperience === 'practice' ? nextCaseAttempt(progress, caseId, state.deviceId) : 1,
+        deviceId: state.deviceId,
       })
     },
-    [experience, hydrated, progress],
+    [experience, hydrated, progress, state.deviceId],
   )
+
+  const confirmDeviceChange = () => {
+    if (!requestedDeviceId || requestedDeviceId === state.deviceId) {
+      setRequestedDeviceId(null)
+      return
+    }
+    const previousDeviceId = state.deviceId
+    const attempt =
+      experience === 'practice' ? nextCaseAttempt(progress, state.caseId, requestedDeviceId) : 1
+    const nextProgress = setLastDevice(progress, requestedDeviceId)
+    setProgress(nextProgress)
+    if (hydrated) writeProgress(nextProgress)
+    dispatch({ type: 'CHANGE_DEVICE', deviceId: requestedDeviceId, attempt })
+    setWorkspaceView('case')
+    setRequestedDeviceId(null)
+    recordSiteModuleEvent({
+      eventType: 'module_interaction',
+      moduleId: MODULE_ID,
+      section: definition.stationId,
+      eventPayload: {
+        interaction: 'device_changed',
+        fromDeviceId: previousDeviceId,
+        deviceId: requestedDeviceId,
+        caseId: state.caseId,
+        pathway: experience,
+      },
+    })
+  }
 
   const switchExperience = (nextExperience: LearningExperience) => {
     setExperience(nextExperience)
@@ -216,6 +252,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
       section: nextExperience,
       eventPayload: {
         caseId: state.caseId,
+        deviceId: state.deviceId,
         station: definition.stationId,
         pathway: nextExperience,
         completion: false,
@@ -228,7 +265,11 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
   const handleResult = useCallback(
     (outcome: CaseOutcome) => {
       setProgress((current) => {
-        const next = recordCaseResult(current, { caseId: definition.id, outcome })
+        const next = recordCaseResult(current, {
+          caseId: definition.id,
+          deviceId: state.deviceId,
+          outcome,
+        })
         writeProgress(next)
         return next
       })
@@ -241,6 +282,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
         section: definition.stationId,
         eventPayload: {
           caseId: definition.id,
+          deviceId: state.deviceId,
           station: definition.stationId,
           pathway: 'practice',
           completion: true,
@@ -249,11 +291,15 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
         },
       })
     },
-    [completedCount, definition.id, definition.stationId],
+    [completedCount, definition.id, definition.stationId, state.deviceId],
   )
 
   return (
-    <main className={styles.moduleRoot} data-publication={hamiltonC6PublicationStatus}>
+    <main
+      className={styles.moduleRoot}
+      data-publication={mechanicalVentilationPublicationStatus}
+      data-device={state.deviceId}
+    >
       <header className={styles.hero}>
         <div className={styles.heroCopy}>
           <div className={styles.heroBadges}>
@@ -266,10 +312,11 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
             <span>15 cases · 5 stations</span>
           </div>
           <p className={styles.eyebrow}>Mechanical ventilation · Learn → Practice → reassess</p>
-          <h1>HAMILTON-C6 ventilation Learn & Practice simulator</h1>
+          <h1>Mechanical ventilation Learn & Practice simulator</h1>
           <p>
-            Read the patient, commit to a mechanism, adjust a functional C6 training facsimile, and
-            prove the response with waveforms, mechanics, gas exchange, examination, and comfort.
+            Read the patient, commit to a mechanism, then practice on a functional{' '}
+            {deviceProfile.displayName} training facsimile and prove the response with waveforms,
+            mechanics, gas exchange, examination, and comfort.
           </p>
           <div className={styles.heroStats}>
             <div>
@@ -288,24 +335,14 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
         </div>
         <div className={styles.orientationCard}>
           <span>
-            <BookOpenCheck aria-hidden="true" /> C6 orientation
+            <BookOpenCheck aria-hidden="true" /> {deviceProfile.shortName} orientation
           </span>
           <ol>
-            <li>
-              <strong>1.</strong> Navigate mode, control, alarm, graphics, and tools screens.
-            </li>
-            <li>
-              <strong>2.</strong> Select a setting, then press-and-turn with the physical knob
-              controls.
-            </li>
-            <li>
-              <strong>3.</strong> Separate trigger, target/flow, cycle, and expiration on all three
-              waveforms.
-            </li>
-            <li>
-              <strong>4.</strong> Use bedside data to decide whether the ventilator is the cause,
-              the response, or neither.
-            </li>
+            {deviceProfile.orientationSteps.map((step, index) => (
+              <li key={step}>
+                <strong>{index + 1}.</strong> {step}
+              </li>
+            ))}
           </ol>
         </div>
       </header>
@@ -315,7 +352,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
         <p>
           <strong>Training only.</strong> Not a clinical device, validated digital twin, treatment
           recommendation, or substitute for the operator’s manual and local supervised practice. Not
-          manufactured, sponsored, or endorsed by Hamilton Medical.
+          manufactured, sponsored, or endorsed by {deviceProfile.manufacturer}.
         </p>
       </div>
 
@@ -328,6 +365,37 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
           </p>
         </div>
       ) : null}
+
+      <section className={styles.deviceSelector} aria-labelledby="ventilator-selector-heading">
+        <div>
+          <span>Ventilator library</span>
+          <h2 id="ventilator-selector-heading">Choose a training console</h2>
+          <p>
+            The patient model and clinical scoring stay shared. Changing consoles reloads this case
+            from a clean baseline.
+          </p>
+        </div>
+        <div className={styles.deviceChoices} role="radiogroup" aria-label="Ventilator profile">
+          {ventilatorDeviceProfiles.map((profile) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={state.deviceId === profile.id}
+              data-selected={state.deviceId === profile.id}
+              key={profile.id}
+              onClick={() => {
+                if (profile.id !== state.deviceId) setRequestedDeviceId(profile.id)
+              }}
+            >
+              <span>{profile.manufacturer}</span>
+              <strong>{profile.displayName}</strong>
+              <small>
+                {profile.softwareVersion} · {profile.modeLabels[state.ventilator.settings.mode]}
+              </small>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className={styles.experienceBar} aria-label="Learning pathway">
         <div className={styles.experienceTabs} role="tablist" aria-label="Learn or Practice">
@@ -476,7 +544,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
 
         <section className={styles.workflowColumn} aria-label="Case guidance and interventions">
           <CaseWorkflow
-            key={`${state.caseId}:${experience}`}
+            key={`${state.caseId}:${experience}:${state.deviceId}`}
             state={state}
             definition={definition}
             dispatch={dispatch}
@@ -506,10 +574,11 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
             <section>
               <Wind aria-hidden="true" />
               <div>
-                <strong>C6 vocabulary is deliberate</strong>
+                <strong>{deviceProfile.shortName} vocabulary is deliberate</strong>
                 <p>
-                  (S)CMV replaces generic VC-A/C, PCV+ replaces PC-A/C, and SPONT supplies pressure
-                  support with optional apnea backup.
+                  Volume A/C is labeled {deviceProfile.modeLabels['volume-ac']}; pressure A/C is{' '}
+                  {deviceProfile.modeLabels['pressure-ac']}; CPAP/pressure support is{' '}
+                  {deviceProfile.modeLabels['pressure-support']}.
                 </p>
               </div>
             </section>
@@ -532,12 +601,51 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
             </button>
           </div>
           <BedsidePanel state={state} definition={definition} compact />
-          <HamiltonC6Console state={state} dispatch={dispatch} controlsEnabled={controlsEnabled} />
+          <MechanicalVentilatorConsole
+            key={state.deviceId}
+            state={state}
+            dispatch={dispatch}
+            controlsEnabled={controlsEnabled}
+          />
           <CalibrationPanel definition={definition} state={state} />
         </section>
       </section>
 
-      <SourcesPanel />
+      <SourcesPanel deviceId={state.deviceId} />
+
+      {requestedDeviceId ? (
+        <div
+          className={styles.deviceDialogBackdrop}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setRequestedDeviceId(null)
+          }}
+        >
+          <section
+            className={styles.deviceDialog}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="device-change-heading"
+            aria-describedby="device-change-description"
+          >
+            <span>Reset required</span>
+            <h2 id="device-change-heading">
+              Switch to {getVentilatorDeviceProfile(requestedDeviceId).displayName}?
+            </h2>
+            <p id="device-change-description">
+              The current case will restart at time zero. Shared mastery and completed-case progress
+              will be preserved.
+            </p>
+            <div>
+              <button type="button" onClick={() => setRequestedDeviceId(null)}>
+                Keep {deviceProfile.shortName}
+              </button>
+              <button type="button" autoFocus onClick={confirmDeviceChange}>
+                Switch and reset case
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   )
 }

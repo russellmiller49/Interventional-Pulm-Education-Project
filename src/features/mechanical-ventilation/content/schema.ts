@@ -64,9 +64,9 @@ const commonSettingsSchema = {
   tubeInnerDiameterMm: z.number().min(3).max(10),
 }
 
-export const c6SettingsSchema = z.discriminatedUnion('mode', [
+export const mechanicalVentilationSettingsSchema = z.discriminatedUnion('mode', [
   z.object({
-    mode: z.literal('scmv'),
+    mode: z.literal('volume-ac'),
     ...commonSettingsSchema,
     vtMl: z.number().min(20).max(2000),
     ratePerMin: z.number().min(4).max(80),
@@ -75,7 +75,7 @@ export const c6SettingsSchema = z.discriminatedUnion('mode', [
     pausePercent: z.number().min(0).max(70),
   }),
   z.object({
-    mode: z.literal('pcv-plus'),
+    mode: z.literal('pressure-ac'),
     ...commonSettingsSchema,
     deltaPControlCmH2O: z.number().min(1).max(100),
     ratePerMin: z.number().min(4).max(80),
@@ -83,12 +83,12 @@ export const c6SettingsSchema = z.discriminatedUnion('mode', [
     pRampMs: z.number().min(0).max(2000),
   }),
   z.object({
-    mode: z.literal('spont'),
+    mode: z.literal('pressure-support'),
     ...commonSettingsSchema,
     pressureSupportCmH2O: z.number().min(0).max(100),
-    pRampMs: z.number().min(0).max(200),
+    pRampMs: z.number().min(0).max(2000),
     etsPercent: z.number().min(5).max(80),
-    tiMaxSeconds: z.number().min(0.5).max(3),
+    tiMaxSeconds: z.number().min(0.5).max(5),
     apneaBackupEnabled: z.boolean(),
     apneaRatePerMin: z.number().min(5).max(80),
   }),
@@ -194,7 +194,7 @@ export const runtimeCaseSchema = z.object({
   predictedBodyWeightKg: z.number().min(30).max(140),
   patientDescription: z.string(),
   learningObjectives: z.array(z.string()).min(1),
-  initialSettings: c6SettingsSchema,
+  initialSettings: mechanicalVentilationSettingsSchema,
   initialPatient: patientModelSchema,
   visibleFindings: z.array(z.string()).min(1),
   mechanismOptions: z.array(optionSchema).min(2),
@@ -218,7 +218,7 @@ export const runtimeCaseSchema = z.object({
   sourceBasis: z.array(z.number().int().positive()),
   branchOptions: z.array(z.string()).min(1),
   baselineSeconds: z.number().min(5).max(120),
-  c6AdaptationNotes: z.array(z.string()),
+  deviceAdaptationNotes: z.array(z.string()),
 })
 
 export const mechanicalVentilationSource = sourceRootSchema.parse(sourceData)

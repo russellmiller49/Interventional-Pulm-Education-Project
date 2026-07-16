@@ -3,8 +3,11 @@ import {
   advanceSimulation,
   createDefaultProgress,
   createInitialSimulationState,
+  deviceCaseAttemptKey,
   hasCaseMastery,
-  HAMILTON_C6_PROGRESS_STORAGE_KEY,
+  LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY,
+  MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY,
+  nextCaseAttempt,
   parseProgress,
   readProgress,
   recordCaseResult,
@@ -32,7 +35,7 @@ function commitCorrect(state: VentilationSimulationState): VentilationSimulation
   })
 }
 
-describe('HAMILTON-C6 reducer and progress boundary', () => {
+describe('mechanical ventilation reducer and progress boundary', () => {
   beforeEach(() => window.localStorage.clear())
 
   it('blocks ventilator and bedside therapy until a Practice prediction is committed', () => {
@@ -79,9 +82,67 @@ describe('HAMILTON-C6 reducer and progress boundary', () => {
     expect(practice.experience).toBe('practice')
     expect(practice.prediction.committed).toBe(false)
     expect(practice.interventions).toHaveLength(0)
-    expect(practice.ventilator.settings.mode).toBe('spont')
-    if (practice.ventilator.settings.mode === 'spont') {
+    expect(practice.ventilator.settings.mode).toBe('pressure-support')
+    if (practice.ventilator.settings.mode === 'pressure-support') {
       expect(practice.ventilator.settings.pRampMs).toBe(200)
+    }
+  })
+
+  it('reloads the same case and pathway at time zero when the device changes', () => {
+    const definition = mechanicalVentilationCaseById.get('MV-11')!
+    let state = createInitialSimulationState('MV-11', 'practice')
+    state = ventilationSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      mechanismId: definition.correctMechanismId,
+      priorityId: definition.correctPriorityId,
+      responseId: definition.correctResponseId,
+    })
+    state = ventilationSimulationReducer(state, {
+      type: 'PERFORM_INTERVENTION',
+      interventionId: 'review-waveforms',
+    })
+    state = ventilationSimulationReducer(state, {
+      type: 'SELECT_MODE',
+      mode: 'volume-ac',
+    })
+    const staleAlarm = {
+      id: 'stale-device-alarm',
+      code: 'STALE',
+      message: 'Must not cross device boundary',
+      priority: 'high' as const,
+      startedAt: 99,
+      active: true,
+    }
+    state = { ...state, alarms: [staleAlarm], alarmHistory: [staleAlarm] }
+    const previousWaveforms = state.waveforms
+
+    const changed = ventilationSimulationReducer(state, {
+      type: 'CHANGE_DEVICE',
+      deviceId: 'drager-evita-v800-v600',
+      attempt: 2,
+    })
+    expect(changed.deviceId).toBe('drager-evita-v800-v600')
+    expect(changed.caseId).toBe('MV-11')
+    expect(changed.experience).toBe('practice')
+    expect(changed.simulationTime).toBe(0)
+    expect(changed.interventions).toEqual([])
+    expect(changed.prediction).toEqual({
+      committed: false,
+      mechanismId: null,
+      priorityId: null,
+      responseId: null,
+    })
+    expect(changed.reassessment).toEqual({ committed: false, actionIds: [] })
+    expect(changed.alarms.some((alarm) => alarm.id === staleAlarm.id)).toBe(false)
+    expect(changed.alarmHistory.some((alarm) => alarm.id === staleAlarm.id)).toBe(false)
+    expect(changed.ventilator.pendingMode).toBeNull()
+    expect(changed.criticalErrors).toEqual([])
+    expect(changed.lastResponse).toBeNull()
+    expect(changed.waveforms).not.toBe(previousWaveforms)
+    expect(Math.max(...changed.waveforms.map((sample) => sample.time))).toBeCloseTo(0, 6)
+    expect(changed.ventilator.settings.mode).toBe('pressure-support')
+    if (changed.ventilator.settings.mode === 'pressure-support') {
+      expect(changed.ventilator.settings.pRampMs).toBe(600)
     }
   })
 
@@ -92,8 +153,8 @@ describe('HAMILTON-C6 reducer and progress boundary', () => {
       { type: 'SET_CONTROL', control: 'triggerType', value: 'pressure' },
       { type: 'SET_CONTROL', control: 'triggerThreshold', value: -99 },
     ])
-    expect(state.ventilator.settings.mode).toBe('spont')
-    if (state.ventilator.settings.mode === 'spont') {
+    expect(state.ventilator.settings.mode).toBe('pressure-support')
+    if (state.ventilator.settings.mode === 'pressure-support') {
       expect(state.ventilator.settings.pRampMs).toBe(200)
       expect(state.ventilator.settings.trigger).toEqual({
         type: 'pressure',
@@ -112,27 +173,27 @@ describe('HAMILTON-C6 reducer and progress boundary', () => {
     expect(state.ventilator.settings.trigger).toEqual({ type: 'flow', thresholdLMin: 1 })
 
     state = dispatchMany(state, [
-      { type: 'SELECT_MODE', mode: 'pcv-plus' },
+      { type: 'SELECT_MODE', mode: 'pressure-ac' },
       { type: 'CONFIRM_MODE' },
       { type: 'SET_CONTROL', control: 'deltaPControlCmH2O', value: 0 },
       { type: 'SET_CONTROL', control: 'inspiratoryTimeSeconds', value: 0.3 },
       { type: 'SET_CONTROL', control: 'pRampMs', value: 1000 },
     ])
-    expect(state.ventilator.settings.mode).toBe('pcv-plus')
-    if (state.ventilator.settings.mode === 'pcv-plus') {
+    expect(state.ventilator.settings.mode).toBe('pressure-ac')
+    if (state.ventilator.settings.mode === 'pressure-ac') {
       expect(state.ventilator.settings.deltaPControlCmH2O).toBe(5)
       expect(state.ventilator.settings.pRampMs).toBe(100)
     }
 
     state = dispatchMany(state, [
-      { type: 'SELECT_MODE', mode: 'spont' },
+      { type: 'SELECT_MODE', mode: 'pressure-support' },
       { type: 'CONFIRM_MODE' },
       { type: 'SET_CONTROL', control: 'triggerThreshold', value: 0 },
       { type: 'SET_CONTROL', control: 'apneaRatePerMin', value: 0 },
       { type: 'SET_CONTROL', control: 'tubeInnerDiameterMm', value: 0 },
     ])
-    expect(state.ventilator.settings.mode).toBe('spont')
-    if (state.ventilator.settings.mode === 'spont') {
+    expect(state.ventilator.settings.mode).toBe('pressure-support')
+    if (state.ventilator.settings.mode === 'pressure-support') {
       expect(state.ventilator.settings.trigger).toEqual({ type: 'flow', thresholdLMin: 0.5 })
       expect(state.ventilator.settings.apneaRatePerMin).toBe(5)
       expect(state.ventilator.settings.tubeInnerDiameterMm).toBe(3)
@@ -146,12 +207,12 @@ describe('HAMILTON-C6 reducer and progress boundary', () => {
       control: 'oxygenPercent',
       value: 55,
     })
-    state = ventilationSimulationReducer(state, { type: 'SELECT_MODE', mode: 'spont' })
-    expect(state.ventilator.settings.mode).toBe('scmv')
-    expect(state.ventilator.pendingMode).toBe('spont')
+    state = ventilationSimulationReducer(state, { type: 'SELECT_MODE', mode: 'pressure-support' })
+    expect(state.ventilator.settings.mode).toBe('volume-ac')
+    expect(state.ventilator.pendingMode).toBe('pressure-support')
     state = ventilationSimulationReducer(state, { type: 'CONFIRM_MODE' })
     expect(state.ventilator.pendingMode).toBeNull()
-    expect(state.ventilator.settings.mode).toBe('spont')
+    expect(state.ventilator.settings.mode).toBe('pressure-support')
     expect(state.ventilator.settings.oxygenPercent).toBe(55)
     expect(state.lastResponse).toMatch(/breath boundary/i)
   })
@@ -275,9 +336,13 @@ describe('HAMILTON-C6 reducer and progress boundary', () => {
         communicationComfort: 10,
       },
     }
-    const progress = recordCaseResult(createDefaultProgress(), { caseId: 'MV-01', outcome })
+    const progress = recordCaseResult(createDefaultProgress(), {
+      caseId: 'MV-01',
+      deviceId: 'hamilton-c6',
+      outcome,
+    })
     writeProgress(progress)
-    const raw = window.localStorage.getItem(HAMILTON_C6_PROGRESS_STORAGE_KEY)
+    const raw = window.localStorage.getItem(MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY)
     expect(raw).not.toBeNull()
     expect(raw).not.toMatch(/waveform|physiology|patient|freeText/i)
     expect(readProgress()).toEqual(progress)
@@ -291,5 +356,69 @@ describe('HAMILTON-C6 reducer and progress boundary', () => {
     expect(parseProgress(withForbiddenExtras)).toEqual(progress)
     expect(parseProgress('{"version":2}')).toBeNull()
     expect(parseProgress('not json')).toBeNull()
+  })
+
+  it('migrates v1 C6 progress non-destructively and defaults the learner to C6', () => {
+    const legacy = {
+      version: 1,
+      lastStation: 'pressure-support-timing',
+      completedCases: ['MV-01', 'MV-11'],
+      attempts: { 'MV-01': 3, 'MV-11': 1 },
+      bestScores: { 'MV-01': 91, 'MV-11': 78 },
+      criticalErrorStatus: { 'MV-01': false, 'MV-11': true },
+    }
+    const serialized = JSON.stringify(legacy)
+    window.localStorage.setItem(LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY, serialized)
+
+    const migrated = readProgress()
+    expect(migrated).toEqual({
+      version: 2,
+      lastStation: 'pressure-support-timing',
+      lastDeviceId: 'hamilton-c6',
+      completedCases: ['MV-01', 'MV-11'],
+      attemptsByDeviceCase: {
+        [deviceCaseAttemptKey('hamilton-c6', 'MV-01')]: 3,
+        [deviceCaseAttemptKey('hamilton-c6', 'MV-11')]: 1,
+      },
+      bestScores: { 'MV-01': 91, 'MV-11': 78 },
+      criticalErrorStatus: { 'MV-01': false, 'MV-11': true },
+    })
+    expect(window.localStorage.getItem(LEGACY_HAMILTON_C6_PROGRESS_STORAGE_KEY)).toBe(serialized)
+    expect(window.localStorage.getItem(MECHANICAL_VENTILATION_PROGRESS_STORAGE_KEY)).not.toBeNull()
+    expect(nextCaseAttempt(migrated, 'MV-01', 'hamilton-c6')).toBe(4)
+    expect(nextCaseAttempt(migrated, 'MV-01', 'puritan-bennett-980')).toBe(1)
+  })
+
+  it('shares mastery while counting attempts independently by device and case', () => {
+    const outcome = {
+      score: 90,
+      mastery: true,
+      resolved: true,
+      criticalErrors: [],
+      domains: {
+        safety: 20,
+        mechanism: 20,
+        correctiveActions: 20,
+        reassessment: 20,
+        communicationComfort: 10,
+      },
+    }
+    let progress = recordCaseResult(createDefaultProgress(), {
+      caseId: 'MV-01',
+      deviceId: 'hamilton-c6',
+      outcome,
+    })
+    progress = recordCaseResult(progress, {
+      caseId: 'MV-01',
+      deviceId: 'carefusion-avea',
+      outcome: { ...outcome, score: 84 },
+    })
+    expect(progress.completedCases).toEqual(['MV-01'])
+    expect(progress.bestScores['MV-01']).toBe(90)
+    expect(hasCaseMastery(progress, 'MV-01')).toBe(true)
+    expect(progress.attemptsByDeviceCase).toEqual({
+      [deviceCaseAttemptKey('hamilton-c6', 'MV-01')]: 1,
+      [deviceCaseAttemptKey('carefusion-avea', 'MV-01')]: 1,
+    })
   })
 })

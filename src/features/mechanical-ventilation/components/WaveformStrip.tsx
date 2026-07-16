@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 
 import type { WaveformSample } from '../engine'
-import styles from './hamilton-c6-ventilation.module.css'
+import styles from './mechanical-ventilation.module.css'
 
 type WaveformField = 'pawCmH2O' | 'flowLMin' | 'volumeMl'
 

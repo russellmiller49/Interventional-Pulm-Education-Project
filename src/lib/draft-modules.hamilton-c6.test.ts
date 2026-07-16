@@ -1,24 +1,24 @@
-type HamiltonPublicationStatus = 'draft' | 'published'
+type MechanicalVentilationPublicationStatus = 'draft' | 'published'
 
 export {}
 
 const stentReleasePath = '@/features/airway-stent-mechanics/explorer/release'
 const cardiohelpReleasePath = '@/features/cardiohelp-ecmo/content/deviceProfile'
-const hamiltonReleasePath = '@/features/hamilton-c6-ventilation/content/deviceProfile'
+const hamiltonReleasePath = '@/features/mechanical-ventilation/content/deviceProfiles'
 
-async function loadPolicy(status: HamiltonPublicationStatus) {
+async function loadPolicy(status: MechanicalVentilationPublicationStatus) {
   let policy: typeof import('./draft-modules') | undefined
   await jest.isolateModulesAsync(async () => {
     jest.doMock(stentReleasePath, () => ({ stentExplorerPublicationStatus: 'published' }))
     jest.doMock(cardiohelpReleasePath, () => ({ cardiohelpEcmoPublicationStatus: 'published' }))
-    jest.doMock(hamiltonReleasePath, () => ({ hamiltonC6PublicationStatus: status }))
+    jest.doMock(hamiltonReleasePath, () => ({ mechanicalVentilationPublicationStatus: status }))
     policy = await import('./draft-modules')
   })
-  if (!policy) throw new Error('Unable to load HAMILTON-C6 draft policy.')
+  if (!policy) throw new Error('Unable to load mechanical ventilation draft policy.')
   return policy
 }
 
-describe('HAMILTON-C6 release gating', () => {
+describe('mechanical ventilation release gating', () => {
   afterEach(() => {
     jest.unmock(stentReleasePath)
     jest.unmock(cardiohelpReleasePath)
@@ -28,12 +28,15 @@ describe('HAMILTON-C6 release gating', () => {
 
   it('recognizes the localized route while the review status is draft', async () => {
     const policy = await loadPolicy('draft')
+    expect(policy.isDraftModulePath('/mechanical-ventilation')).toBe(true)
+    expect(policy.isDraftModulePath('/es/mechanical-ventilation')).toBe(true)
     expect(policy.isDraftModulePath('/hamilton-c6-ventilation')).toBe(true)
     expect(policy.isDraftModulePath('/es/hamilton-c6-ventilation')).toBe(true)
   })
 
   it('removes the draft gate after a reviewed publication decision', async () => {
     const policy = await loadPolicy('published')
+    expect(policy.isDraftModulePath('/mechanical-ventilation')).toBe(false)
     expect(policy.isDraftModulePath('/hamilton-c6-ventilation')).toBe(false)
   })
 })

@@ -1,5 +1,5 @@
 import type {
-  C6VentilatorSettings,
+  MechanicalVentilationSettings,
   InterventionEffectId,
   MetricCondition,
   MetricKey,
@@ -62,10 +62,10 @@ export function passiveExpiratoryFlowLps(
 }
 
 export function deriveMechanicalInspiratoryTime(
-  settings: C6VentilatorSettings,
+  settings: MechanicalVentilationSettings,
   patient: PatientModelState,
 ): number {
-  if (settings.mode === 'scmv') {
+  if (settings.mode === 'volume-ac') {
     const patternFactor =
       settings.flowPattern === 'square'
         ? 1
@@ -76,7 +76,7 @@ export function deriveMechanicalInspiratoryTime(
             : 0.72
     return clamp(settings.vtMl / Math.max(1, settings.peakFlowLMin * patternFactor * 16.67), 0.2, 3)
   }
-  if (settings.mode === 'pcv-plus') return settings.inspiratoryTimeSeconds
+  if (settings.mode === 'pressure-ac') return settings.inspiratoryTimeSeconds
   const tau = Math.max(
     0.08,
     patient.mechanics.resistanceCmH2OPerLps * patient.mechanics.complianceLPerCmH2O,
@@ -225,18 +225,18 @@ export function deriveEffectivePatient(
       patient.gasExchange.shuntFraction = 0.24
     }
   }
-  if (definition.phenotype === 'rise-time-mismatch' && settings.mode === 'spont') {
+  if (definition.phenotype === 'rise-time-mismatch' && settings.mode === 'pressure-support') {
     patient.human.dyspneaScore = settings.pRampMs > 120 ? 8 : settings.pRampMs < 30 ? 6 : 3
   }
-  if (definition.phenotype === 'over-assistance' && settings.mode === 'spont') {
+  if (definition.phenotype === 'over-assistance' && settings.mode === 'pressure-support') {
     if (settings.pressureSupportCmH2O >= 18) patient.drive.neuralRatePerMin = 8
     if (settings.pressureSupportCmH2O >= 18) patient.drive.effortAmplitudeCmH2O *= 0.25
   }
   return patient
 }
 
-function modeRate(settings: C6VentilatorSettings, patient: PatientModelState): number {
-  if (settings.mode === 'spont') {
+function modeRate(settings: MechanicalVentilationSettings, patient: PatientModelState): number {
+  if (settings.mode === 'pressure-support') {
     if (patient.drive.neuralRatePerMin <= 0 && settings.apneaBackupEnabled) {
       return settings.apneaRatePerMin
     }
@@ -258,10 +258,10 @@ export function deriveMeasurements(
     patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps
   let vtMl: number
   let peakFlowLMin: number
-  if (settings.mode === 'scmv') {
+  if (settings.mode === 'volume-ac') {
     vtMl = settings.vtMl * (1 - patient.mechanics.airwayLeakFraction)
     peakFlowLMin = settings.peakFlowLMin
-  } else if (settings.mode === 'pcv-plus') {
+  } else if (settings.mode === 'pressure-ac') {
     vtMl = clamp(settings.deltaPControlCmH2O * compliance * 1000, 100, 1200)
     peakFlowLMin = clamp((settings.deltaPControlCmH2O / resistance) * 60, 10, 180)
   } else {
@@ -275,9 +275,9 @@ export function deriveMeasurements(
   // time on every fixed step. Feeding the prior derived value back into this
   // calculation would falsely compound trapped pressure at 50 Hz.
   let intrinsicPeep = definition.initialPatient.mechanics.intrinsicPeepCmH2O
-  if (definition.phenotype === 'copd-ineffective-efforts' && settings.mode === 'spont') {
+  if (definition.phenotype === 'copd-ineffective-efforts' && settings.mode === 'pressure-support') {
     const initialSettings = definition.initialSettings
-    if (initialSettings.mode === 'spont') {
+    if (initialSettings.mode === 'pressure-support') {
       intrinsicPeep -=
         Math.max(0, initialSettings.pressureSupportCmH2O - settings.pressureSupportCmH2O) * 0.6
       intrinsicPeep -= Math.max(0, settings.etsPercent - initialSettings.etsPercent) * 0.15
@@ -290,27 +290,29 @@ export function deriveMeasurements(
   if (timeConstant > expiratoryTime) {
     intrinsicPeep += clamp((timeConstant - expiratoryTime) * 7, 0, 24)
   }
-  if (definition.phenotype === 'copd-ineffective-efforts' && settings.mode === 'spont') {
+  if (definition.phenotype === 'copd-ineffective-efforts' && settings.mode === 'pressure-support') {
     intrinsicPeep += Math.max(0, (settings.pressureSupportCmH2O - 12) * 0.45)
     intrinsicPeep += Math.max(0, (35 - settings.etsPercent) * 0.08)
   }
-  if (definition.phenotype === 'asthma-obstructive-shock' && settings.mode === 'scmv') {
+  if (definition.phenotype === 'asthma-obstructive-shock' && settings.mode === 'volume-ac') {
     intrinsicPeep += Math.max(0, (settings.ratePerMin - 12) * 0.8)
     intrinsicPeep += Math.max(0, (80 - settings.peakFlowLMin) * 0.05)
   }
-  if (definition.phenotype === 'delayed-cycling' && settings.mode === 'spont') {
+  if (definition.phenotype === 'delayed-cycling' && settings.mode === 'pressure-support') {
     intrinsicPeep += Math.max(0, (40 - settings.etsPercent) * 0.12)
   }
   if (hasPerformedEffect(state, definition, 'disconnect-bag')) intrinsicPeep *= 0.35
 
   const plateau = settings.peepCmH2O + intrinsicPeep + vtMl / 1000 / compliance
   const pressureOvershoot =
-    settings.mode !== 'scmv' && settings.pRampMs < 30 ? clamp((30 - settings.pRampMs) / 5, 0, 6) : 0
+    settings.mode !== 'volume-ac' && settings.pRampMs < 30
+      ? clamp((30 - settings.pRampMs) / 5, 0, 6)
+      : 0
   const peak =
-    settings.mode === 'scmv'
+    settings.mode === 'volume-ac'
       ? plateau + resistance * (peakFlowLMin / 60)
       : settings.peepCmH2O +
-        (settings.mode === 'pcv-plus'
+        (settings.mode === 'pressure-ac'
           ? settings.deltaPControlCmH2O
           : settings.pressureSupportCmH2O) +
         pressureOvershoot
@@ -344,7 +346,7 @@ export function deriveMeasurements(
     stackedVolumeMl = mismatch > 0.15 ? vtMl * 1.85 : vtMl
   }
   if (definition.phenotype === 'reverse-triggering') {
-    const rateChanged = settings.mode === 'pcv-plus' && Math.abs(settings.ratePerMin - 18) >= 3
+    const rateChanged = settings.mode === 'pressure-ac' && Math.abs(settings.ratePerMin - 18) >= 3
     const variabilityRestored = hasPerformedEffect(state, definition, 'reduce-sedation')
     stackedVolumeMl = rateChanged || variabilityRestored ? vtMl : vtMl * 1.55
   }
@@ -388,20 +390,22 @@ export function isCaseResolved(
       return settings.peepCmH2O >= 8 && settings.peepCmH2O <= 12 && m.plateauPressureCmH2O <= 30
     case 'flow-starvation':
       return (
-        settings.mode !== 'scmv' || settings.peakFlowLMin >= 60 || settings.flowPattern !== 'square'
+        settings.mode !== 'volume-ac' ||
+        settings.peakFlowLMin >= 60 ||
+        settings.flowPattern !== 'square'
       )
     case 'double-triggering':
       return m.mechanicalInspiratoryTimeSeconds >= 0.7 && m.stackedVolumeMl <= m.exhaledVtMl * 1.2
     case 'reverse-triggering':
       return (
-        (settings.mode === 'pcv-plus' && Math.abs(settings.ratePerMin - 18) >= 3) ||
+        (settings.mode === 'pressure-ac' && Math.abs(settings.ratePerMin - 18) >= 3) ||
         effects.has('reduce-sedation')
       )
     case 'copd-ineffective-efforts':
       return m.intrinsicPeepCmH2O <= 7 && m.ineffectiveEffortFraction <= 0.15
     case 'asthma-obstructive-shock':
       return (
-        settings.mode === 'scmv' &&
+        settings.mode === 'volume-ac' &&
         settings.ratePerMin <= 12 &&
         settings.peakFlowLMin >= 80 &&
         effects.has('disconnect-bag') &&
@@ -412,19 +416,25 @@ export function isCaseResolved(
     case 'autotriggering':
       return branchCorrected(state, definition) && m.autotriggerFraction <= 0.1
     case 'premature-cycling':
-      return settings.mode === 'spont' && settings.etsPercent >= 15 && settings.etsPercent <= 25
+      return (
+        settings.mode === 'pressure-support' &&
+        settings.etsPercent >= 15 &&
+        settings.etsPercent <= 25
+      )
     case 'delayed-cycling':
       return (
-        settings.mode === 'spont' &&
+        settings.mode === 'pressure-support' &&
         settings.etsPercent >= 40 &&
         settings.etsPercent <= 60 &&
         settings.pressureSupportCmH2O <= 14
       )
     case 'rise-time-mismatch':
-      return settings.mode === 'spont' && settings.pRampMs >= 70 && settings.pRampMs <= 120
+      return (
+        settings.mode === 'pressure-support' && settings.pRampMs >= 70 && settings.pRampMs <= 120
+      )
     case 'over-assistance':
       return (
-        settings.mode === 'spont' &&
+        settings.mode === 'pressure-support' &&
         settings.pressureSupportCmH2O >= 10 &&
         settings.pressureSupportCmH2O <= 12
       )
@@ -436,7 +446,7 @@ export function isCaseResolved(
       return effects.has('decompress-pneumothorax') && !state.patient.airway.pneumothorax
     case 'dyspnea-human-factors':
       return (
-        settings.mode === 'spont' &&
+        settings.mode === 'pressure-support' &&
         settings.pressureSupportCmH2O >= 11 &&
         settings.pressureSupportCmH2O <= 12 &&
         settings.pRampMs >= 70 &&

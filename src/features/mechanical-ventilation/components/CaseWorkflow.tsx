@@ -29,7 +29,7 @@ import {
   type VentilationCaseDefinition,
   type VentilationSimulationState,
 } from '../engine'
-import styles from './hamilton-c6-ventilation.module.css'
+import styles from './mechanical-ventilation.module.css'
 
 const categoryLabels: Record<InterventionCategory, string> = {
   assessment: 'Assessment & reassessment',
@@ -520,9 +520,9 @@ export function CaseWorkflow({
                   <dd>{state.waveforms.length} / 600 samples</dd>
                 </div>
               </dl>
-              {definition.c6AdaptationNotes.length ? (
+              {definition.deviceAdaptationNotes.length ? (
                 <ul>
-                  {definition.c6AdaptationNotes.map((note) => (
+                  {definition.deviceAdaptationNotes.map((note) => (
                     <li key={note}>{note}</li>
                   ))}
                 </ul>

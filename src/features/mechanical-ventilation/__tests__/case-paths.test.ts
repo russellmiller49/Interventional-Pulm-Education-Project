@@ -7,6 +7,8 @@ import {
   ventilationSimulationReducer,
   type VentilationAction,
   type VentilationSimulationState,
+  type VentilatorDeviceId,
+  ventilatorDeviceIds,
 } from '../engine'
 
 function reduce(
@@ -86,9 +88,13 @@ function performIfAvailable(
   return ventilationSimulationReducer(state, { type: 'PERFORM_INTERVENTION', interventionId })
 }
 
-function solve(caseId: string, attempt = 1): VentilationSimulationState {
+function solve(
+  caseId: string,
+  attempt = 1,
+  deviceId: VentilatorDeviceId = 'hamilton-c6',
+): VentilationSimulationState {
   const definition = mechanicalVentilationCaseById.get(caseId)!
-  let state = createInitialSimulationState(caseId, 'practice', attempt)
+  let state = createInitialSimulationState(caseId, 'practice', attempt, deviceId)
   state = ventilationSimulationReducer(state, {
     type: 'COMMIT_PREDICTION',
     mechanismId: definition.correctMechanismId,
@@ -111,20 +117,22 @@ function solve(caseId: string, attempt = 1): VentilationSimulationState {
   return state
 }
 
-describe('HAMILTON-C6 case solvability and branch safety', () => {
-  it.each(mechanicalVentilationCases.map((item) => item.id))(
-    '%s retains a safe physiologic endpoint and mastery path',
-    (caseId) => {
-      const definition = mechanicalVentilationCaseById.get(caseId)!
-      const state = solve(caseId)
-      const outcome = selectCaseOutcome(state, definition)
-      expect(isCaseResolved(state, definition)).toBe(true)
-      expect(outcome.resolved).toBe(true)
-      expect(outcome.criticalErrors).toEqual([])
-      expect(outcome.score).toBeGreaterThanOrEqual(80)
-      expect(outcome.mastery).toBe(true)
-    },
-  )
+describe('multi-device case solvability and branch safety', () => {
+  it.each(
+    ventilatorDeviceIds.flatMap((deviceId) =>
+      mechanicalVentilationCases.map((item) => [deviceId, item.id] as const),
+    ),
+  )('%s · %s retains a safe physiologic endpoint and mastery path', (deviceId, caseId) => {
+    const definition = mechanicalVentilationCaseById.get(caseId)!
+    const state = solve(caseId, 1, deviceId)
+    const outcome = selectCaseOutcome(state, definition)
+    expect(state.deviceId).toBe(deviceId)
+    expect(isCaseResolved(state, definition)).toBe(true)
+    expect(outcome.resolved).toBe(true)
+    expect(outcome.criticalErrors).toEqual([])
+    expect(outcome.score).toBeGreaterThanOrEqual(80)
+    expect(outcome.mastery).toBe(true)
+  })
 
   it('keeps deterministic case-ID/attempt branches reproducible', () => {
     for (const caseId of ['MV-04', 'MV-05', 'MV-08', 'MV-13', 'MV-14']) {

@@ -7,10 +7,11 @@ import {
   MAX_WAVEFORM_SAMPLES,
   passiveExpiratoryFlowLps,
   ventilationSimulationReducer,
+  ventilatorDeviceIds,
   type VentilationCaseDefinition,
 } from '../engine'
 
-describe('HAMILTON-C6 fixed-step physiology and waveform engine', () => {
+describe('device-independent fixed-step physiology and waveform engine', () => {
   it('uses a consistent positive inspiratory-effort equation-of-motion convention', () => {
     expect(
       equationOfMotionPressure({
@@ -57,16 +58,16 @@ describe('HAMILTON-C6 fixed-step physiology and waveform engine', () => {
   it('uses pressure targeting and P-ramp in PCV+ and SPONT', () => {
     const pcv = createInitialSimulationState('MV-04', 'learn')
     const spont = createInitialSimulationState('MV-11', 'learn')
-    expect(pcv.ventilator.settings.mode).toBe('pcv-plus')
-    expect(spont.ventilator.settings.mode).toBe('spont')
+    expect(pcv.ventilator.settings.mode).toBe('pressure-ac')
+    expect(spont.ventilator.settings.mode).toBe('pressure-support')
     expect(pcv.measurements.peakPressureCmH2O).toBeLessThanOrEqual(
       pcv.ventilator.settings.peepCmH2O +
-        (pcv.ventilator.settings.mode === 'pcv-plus'
+        (pcv.ventilator.settings.mode === 'pressure-ac'
           ? pcv.ventilator.settings.deltaPControlCmH2O
           : 0) +
         6,
     )
-    if (spont.ventilator.settings.mode === 'spont') {
+    if (spont.ventilator.settings.mode === 'pressure-support') {
       const initialTi = deriveMechanicalInspiratoryTime(spont.ventilator.settings, spont.patient)
       const fasterSettings = { ...spont.ventilator.settings, pRampMs: 70 }
       expect(deriveMechanicalInspiratoryTime(fasterSettings, spont.patient)).toBeLessThan(initialTi)
@@ -125,9 +126,13 @@ describe('HAMILTON-C6 fixed-step physiology and waveform engine', () => {
   })
 
   it.each(
-    mechanicalVentilationCases.map((definition) => [definition.id, definition.phenotype] as const),
-  )('%s produces a bounded, case-specific %s signature', (caseId, phenotype) => {
-    const state = createInitialSimulationState(caseId, 'practice', 1)
+    ventilatorDeviceIds.flatMap((deviceId) =>
+      mechanicalVentilationCases.map(
+        (definition) => [deviceId, definition.id, definition.phenotype] as const,
+      ),
+    ),
+  )('%s · %s produces a bounded, case-specific %s signature', (deviceId, caseId, phenotype) => {
+    const state = createInitialSimulationState(caseId, 'practice', 1, deviceId)
     expect(state.waveforms.length).toBeGreaterThan(100)
     expect(state.measurements.peakPressureCmH2O).toBeGreaterThan(0)
     expect(state.measurements.peakPressureCmH2O).toBeLessThanOrEqual(100)
@@ -156,8 +161,11 @@ describe('HAMILTON-C6 fixed-step physiology and waveform engine', () => {
         state.patient.drive.neuralInspiratoryTimeSeconds,
       )
     }
-    if (phenotype === 'rise-time-mismatch' && state.ventilator.settings.mode === 'spont') {
-      expect(state.ventilator.settings.pRampMs).toBe(200)
+    if (
+      phenotype === 'rise-time-mismatch' &&
+      state.ventilator.settings.mode === 'pressure-support'
+    ) {
+      expect(state.ventilator.settings.pRampMs).toBe(deviceId === 'hamilton-c6' ? 200 : 600)
     }
     if (phenotype === 'high-resistance') {
       expect(

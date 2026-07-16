@@ -1,15 +1,19 @@
-import { c6ControlRanges, createDefaultC6Settings } from '../content/deviceProfile'
+import {
+  simulationControlRanges,
+  createDefaultMechanicalVentilationSettings,
+} from '../content/deviceProfiles'
 import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content/runtimeCases'
 import { clamp, deriveEffectivePatient, deriveMeasurements } from './physics'
 import { advanceSimulation, applyIntervention, createInitialSimulationState } from './simulation'
 import type {
-  C6CommonSettings,
-  C6Mode,
-  C6VentilatorSettings,
+  MechanicalVentilationCommonSettings,
+  CanonicalVentilationMode,
+  MechanicalVentilationSettings,
   VentilationAction,
   VentilationCaseDefinition,
   VentilationSimulationState,
   VentilatorControlKey,
+  VentilatorDeviceId,
 } from './types'
 
 function caseDefinition(state: VentilationSimulationState): VentilationCaseDefinition {
@@ -35,12 +39,14 @@ function bounded(
 
 function maxControlledPRampMs(inspiratoryTimeSeconds: number): number {
   return Math.min(
-    c6ControlRanges.pRampControlledMs[1],
+    simulationControlRanges.pRampControlledMs[1],
     Math.floor((inspiratoryTimeSeconds * 1000) / 3),
   )
 }
 
-function commonSettings(settings: C6VentilatorSettings): C6CommonSettings {
+function commonSettings(
+  settings: MechanicalVentilationSettings,
+): MechanicalVentilationCommonSettings {
   return {
     oxygenPercent: settings.oxygenPercent,
     peepCmH2O: settings.peepCmH2O,
@@ -52,28 +58,31 @@ function commonSettings(settings: C6VentilatorSettings): C6CommonSettings {
   }
 }
 
-function settingsForMode(mode: C6Mode, previous: C6VentilatorSettings): C6VentilatorSettings {
+function settingsForMode(
+  mode: CanonicalVentilationMode,
+  previous: MechanicalVentilationSettings,
+): MechanicalVentilationSettings {
   return {
-    ...createDefaultC6Settings(mode),
+    ...createDefaultMechanicalVentilationSettings(mode),
     ...commonSettings(previous),
-  } as C6VentilatorSettings
+  } as MechanicalVentilationSettings
 }
 
 function updateCommonControl(
-  settings: C6VentilatorSettings,
+  settings: MechanicalVentilationSettings,
   control: VentilatorControlKey,
   value: number | string | boolean,
-): C6VentilatorSettings | null {
+): MechanicalVentilationSettings | null {
   if (control === 'oxygenPercent') {
     return {
       ...settings,
-      oxygenPercent: bounded(value, c6ControlRanges.oxygenPercent, settings.oxygenPercent),
+      oxygenPercent: bounded(value, simulationControlRanges.oxygenPercent, settings.oxygenPercent),
     }
   }
   if (control === 'peepCmH2O') {
     return {
       ...settings,
-      peepCmH2O: bounded(value, c6ControlRanges.peepCmH2O, settings.peepCmH2O),
+      peepCmH2O: bounded(value, simulationControlRanges.peepCmH2O, settings.peepCmH2O),
     }
   }
   if (control === 'highPressureLimitCmH2O') {
@@ -81,7 +90,7 @@ function updateCommonControl(
       ...settings,
       highPressureLimitCmH2O: bounded(
         value,
-        c6ControlRanges.highPressureLimitCmH2O,
+        simulationControlRanges.highPressureLimitCmH2O,
         settings.highPressureLimitCmH2O,
       ),
     }
@@ -104,9 +113,9 @@ function updateCommonControl(
               type: 'flow',
               thresholdLMin: bounded(
                 value,
-                settings.mode === 'spont'
-                  ? c6ControlRanges.flowTriggerLMin
-                  : c6ControlRanges.flowTriggerMandatoryLMin,
+                settings.mode === 'pressure-support'
+                  ? simulationControlRanges.flowTriggerLMin
+                  : simulationControlRanges.flowTriggerMandatoryLMin,
                 settings.trigger.thresholdLMin,
               ),
             }
@@ -114,7 +123,7 @@ function updateCommonControl(
               type: 'pressure',
               thresholdCmH2O: bounded(
                 value,
-                c6ControlRanges.pressureTriggerCmH2O,
+                simulationControlRanges.pressureTriggerCmH2O,
                 settings.trigger.thresholdCmH2O,
               ),
             },
@@ -124,7 +133,7 @@ function updateCommonControl(
   if (control === 'trcPercent') {
     return {
       ...settings,
-      trcPercent: bounded(value, c6ControlRanges.trcPercent, settings.trcPercent),
+      trcPercent: bounded(value, simulationControlRanges.trcPercent, settings.trcPercent),
     }
   }
   if (control === 'tubeInnerDiameterMm') {
@@ -132,7 +141,7 @@ function updateCommonControl(
       ...settings,
       tubeInnerDiameterMm: bounded(
         value,
-        c6ControlRanges.adultTubeInnerDiameterMm,
+        simulationControlRanges.adultTubeInnerDiameterMm,
         settings.tubeInnerDiameterMm,
       ),
     }
@@ -141,27 +150,32 @@ function updateCommonControl(
 }
 
 export function updateVentilatorControl(
-  settings: C6VentilatorSettings,
+  settings: MechanicalVentilationSettings,
   control: VentilatorControlKey,
   value: number | string | boolean,
-): C6VentilatorSettings {
+  deviceId: VentilatorDeviceId = 'hamilton-c6',
+): MechanicalVentilationSettings {
   const common = updateCommonControl(settings, control, value)
   if (common) return common
 
-  if (settings.mode === 'scmv') {
+  if (settings.mode === 'volume-ac') {
     if (control === 'vtMl') {
-      return { ...settings, vtMl: bounded(value, c6ControlRanges.vtMl, settings.vtMl) }
+      return { ...settings, vtMl: bounded(value, simulationControlRanges.vtMl, settings.vtMl) }
     }
     if (control === 'ratePerMin') {
       return {
         ...settings,
-        ratePerMin: bounded(value, c6ControlRanges.mandatoryRatePerMin, settings.ratePerMin),
+        ratePerMin: bounded(
+          value,
+          simulationControlRanges.mandatoryRatePerMin,
+          settings.ratePerMin,
+        ),
       }
     }
     if (control === 'peakFlowLMin') {
       return {
         ...settings,
-        peakFlowLMin: bounded(value, c6ControlRanges.peakFlowLMin, settings.peakFlowLMin),
+        peakFlowLMin: bounded(value, simulationControlRanges.peakFlowLMin, settings.peakFlowLMin),
       }
     }
     if (
@@ -173,18 +187,18 @@ export function updateVentilatorControl(
     if (control === 'pausePercent') {
       return {
         ...settings,
-        pausePercent: bounded(value, c6ControlRanges.pausePercent, settings.pausePercent),
+        pausePercent: bounded(value, simulationControlRanges.pausePercent, settings.pausePercent),
       }
     }
   }
 
-  if (settings.mode === 'pcv-plus') {
+  if (settings.mode === 'pressure-ac') {
     if (control === 'deltaPControlCmH2O') {
       return {
         ...settings,
         deltaPControlCmH2O: bounded(
           value,
-          c6ControlRanges.deltaPControlCmH2O,
+          simulationControlRanges.deltaPControlCmH2O,
           settings.deltaPControlCmH2O,
         ),
       }
@@ -192,13 +206,17 @@ export function updateVentilatorControl(
     if (control === 'ratePerMin') {
       return {
         ...settings,
-        ratePerMin: bounded(value, c6ControlRanges.mandatoryRatePerMin, settings.ratePerMin),
+        ratePerMin: bounded(
+          value,
+          simulationControlRanges.mandatoryRatePerMin,
+          settings.ratePerMin,
+        ),
       }
     }
     if (control === 'inspiratoryTimeSeconds') {
       const inspiratoryTimeSeconds = bounded(
         value,
-        c6ControlRanges.inspiratoryTimeSeconds,
+        simulationControlRanges.inspiratoryTimeSeconds,
         settings.inspiratoryTimeSeconds,
       )
       return {
@@ -212,40 +230,44 @@ export function updateVentilatorControl(
         ...settings,
         pRampMs: clamp(
           numeric(value, settings.pRampMs),
-          c6ControlRanges.pRampControlledMs[0],
+          simulationControlRanges.pRampControlledMs[0],
           maxControlledPRampMs(settings.inspiratoryTimeSeconds),
         ),
       }
     }
   }
 
-  if (settings.mode === 'spont') {
+  if (settings.mode === 'pressure-support') {
     if (control === 'pressureSupportCmH2O') {
       return {
         ...settings,
         pressureSupportCmH2O: bounded(
           value,
-          c6ControlRanges.pressureSupportCmH2O,
+          simulationControlRanges.pressureSupportCmH2O,
           settings.pressureSupportCmH2O,
         ),
       }
     }
     if (control === 'pRampMs') {
+      const range =
+        deviceId === 'hamilton-c6'
+          ? ([0, 200] as const)
+          : simulationControlRanges.pRampPressureSupportMs
       return {
         ...settings,
-        pRampMs: bounded(value, c6ControlRanges.pRampSpontMs, settings.pRampMs),
+        pRampMs: bounded(value, range, settings.pRampMs),
       }
     }
     if (control === 'etsPercent') {
       return {
         ...settings,
-        etsPercent: bounded(value, c6ControlRanges.etsPercent, settings.etsPercent),
+        etsPercent: bounded(value, simulationControlRanges.etsPercent, settings.etsPercent),
       }
     }
     if (control === 'tiMaxSeconds') {
       return {
         ...settings,
-        tiMaxSeconds: bounded(value, c6ControlRanges.tiMaxSeconds, settings.tiMaxSeconds),
+        tiMaxSeconds: bounded(value, simulationControlRanges.tiMaxSeconds, settings.tiMaxSeconds),
       }
     }
     if (control === 'apneaBackupEnabled') {
@@ -254,7 +276,11 @@ export function updateVentilatorControl(
     if (control === 'apneaRatePerMin') {
       return {
         ...settings,
-        apneaRatePerMin: bounded(value, c6ControlRanges.apneaRatePerMin, settings.apneaRatePerMin),
+        apneaRatePerMin: bounded(
+          value,
+          simulationControlRanges.apneaRatePerMin,
+          settings.apneaRatePerMin,
+        ),
       }
     }
   }
@@ -301,7 +327,20 @@ export function ventilationSimulationReducer(
   action: VentilationAction,
 ): VentilationSimulationState {
   if (action.type === 'LOAD_CASE') {
-    return createInitialSimulationState(action.caseId, action.experience, action.attempt ?? 1)
+    return createInitialSimulationState(
+      action.caseId,
+      action.experience,
+      action.attempt ?? 1,
+      action.deviceId ?? state.deviceId,
+    )
+  }
+  if (action.type === 'CHANGE_DEVICE') {
+    return createInitialSimulationState(
+      state.caseId,
+      state.experience,
+      action.attempt ?? 1,
+      action.deviceId,
+    )
   }
   if (action.type === 'TICK') {
     if (state.paused) return state
@@ -315,7 +354,9 @@ export function ventilationSimulationReducer(
   if (action.type === 'STEP_BREATH') {
     const settings = state.ventilator.settings
     const rate =
-      settings.mode === 'spont' ? state.patient.drive.neuralRatePerMin : settings.ratePerMin
+      settings.mode === 'pressure-support'
+        ? state.patient.drive.neuralRatePerMin
+        : settings.ratePerMin
     return advanceSimulation({ ...state, paused: true }, 60 / Math.max(1, rate))
   }
   if (action.type === 'SET_SCREEN') {
@@ -334,7 +375,7 @@ export function ventilationSimulationReducer(
       return state
     }
     const currentRate =
-      state.ventilator.settings.mode === 'spont'
+      state.ventilator.settings.mode === 'pressure-support'
         ? state.patient.drive.neuralRatePerMin
         : state.ventilator.settings.ratePerMin
     const cycle = 60 / Math.max(1, currentRate)
@@ -359,6 +400,7 @@ export function ventilationSimulationReducer(
       state.ventilator.settings,
       action.control,
       action.value,
+      state.deviceId,
     )
     return refreshMeasurements({
       ...state,
