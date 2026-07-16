@@ -12,9 +12,9 @@ const cardiohelpEcmoDraftPathPrefixes =
   cardiohelpEcmoPublicationStatus === 'published' ? ([] as const) : (['/cardiohelp-ecmo'] as const)
 
 const mechanicalVentilationDraftPathPrefixes =
-  mechanicalVentilationPublicationStatus === 'published'
-    ? ([] as const)
-    : (['/mechanical-ventilation', '/hamilton-c6-ventilation'] as const)
+  mechanicalVentilationPublicationStatus === 'draft'
+    ? (['/mechanical-ventilation', '/hamilton-c6-ventilation'] as const)
+    : ([] as const)
 
 const draftModulePathPrefixes = [
   ...airwayStentDraftPathPrefixes,
@@ -27,7 +27,11 @@ const draftModulePathPrefixes = [
   '/rapid-onsite-cytology',
 ] as const
 
-const unlistedModulePathPrefixes = ['/cardiohelp-ecmo'] as const
+const unlistedModulePathPrefixes = [
+  '/cardiohelp-ecmo',
+  '/mechanical-ventilation',
+  '/hamilton-c6-ventilation',
+] as const
 
 interface DraftModuleVisibilityOptions {
   isAdmin?: boolean

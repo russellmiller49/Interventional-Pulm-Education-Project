@@ -4,7 +4,7 @@ import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ve
 import { assertDraftModulesEnabled } from '@/lib/draft-module-guard'
 
 export default async function MechanicalVentilationLayout({ children }: { children: ReactNode }) {
-  if (mechanicalVentilationPublicationStatus !== 'published') {
+  if (mechanicalVentilationPublicationStatus === 'draft') {
     await assertDraftModulesEnabled()
   }
 

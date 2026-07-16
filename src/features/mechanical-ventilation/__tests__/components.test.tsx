@@ -43,6 +43,7 @@ describe('multi-device mechanical ventilation learner interface', () => {
 
   it('supports keyboard adjustment through the selected press-and-turn control', () => {
     render(<MechanicalVentilationLab />)
+    expect(screen.getByText('Unlisted tester preview')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Controls' }))
     const peep = screen.getByRole('button', { name: /PEEP\/CPAP, 5 cmH₂O/i })
     fireEvent.keyDown(peep, { key: 'ArrowUp' })

@@ -9,7 +9,14 @@ export const metadata: Metadata = {
   description:
     mechanicalVentilationPublicationStatus === 'published'
       ? 'Case-based mechanical ventilation practice with selectable HAMILTON-C6, Dräger Evita, Puritan Bennett 980, and CareFusion AVEA training facsimiles.'
-      : 'Draft-gated case-based mechanical ventilation practice with selectable HAMILTON-C6, Dräger Evita, Puritan Bennett 980, and CareFusion AVEA training facsimiles.',
+      : mechanicalVentilationPublicationStatus === 'tester-preview'
+        ? 'Unlisted tester preview for case-based mechanical ventilation practice with selectable HAMILTON-C6, Dräger Evita, Puritan Bennett 980, and CareFusion AVEA training facsimiles.'
+        : 'Draft-gated case-based mechanical ventilation practice with selectable HAMILTON-C6, Dräger Evita, Puritan Bennett 980, and CareFusion AVEA training facsimiles.',
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
 }
 
 interface PageProps {

@@ -1,29 +1,24 @@
 import { searchSite } from './site-search'
 
 describe('multi-device mechanical ventilation site search', () => {
-  it('indexes the draft simulator in the local draft-enabled search environment', () => {
-    expect(searchSite('mechanical ventilation', 10)).toEqual(
+  it('does not expose the unlisted tester route in ordinary or draft-preview search', () => {
+    expect(searchSite('mechanical ventilation', 10)).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ href: '/mechanical-ventilation' })]),
     )
-  })
-
-  it('indexes the simulator for an authorized draft viewer', () => {
-    expect(searchSite('mechanical ventilation', 10, { canViewDrafts: true })).toEqual(
+    expect(searchSite('mechanical ventilation', 10, { canViewDrafts: true })).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           href: '/mechanical-ventilation',
-          title: expect.stringContaining('Multi-Device'),
         }),
       ]),
     )
   })
 
-  it('keeps reviewed-English search copy on non-English routes', () => {
-    expect(searchSite('hamilton', 10, { canViewDrafts: true, locale: 'es' })).toEqual(
+  it('does not leak the route through localized search', () => {
+    expect(searchSite('hamilton', 10, { canViewDrafts: true, locale: 'es' })).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           href: '/mechanical-ventilation',
-          section: 'Simulation',
         }),
       ]),
     )

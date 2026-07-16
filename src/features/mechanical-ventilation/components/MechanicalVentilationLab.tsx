@@ -7,6 +7,7 @@ import {
   BookOpenCheck,
   CheckCircle2,
   ClipboardCheck,
+  EyeOff,
   FlaskConical,
   GraduationCap,
   Languages,
@@ -54,6 +55,13 @@ import { SourcesPanel } from './SourcesPanel'
 import styles from './mechanical-ventilation.module.css'
 
 const MODULE_ID = 'mechanical-ventilation'
+const publicationBadge =
+  mechanicalVentilationPublicationStatus === 'published'
+    ? { Icon: BadgeCheck, label: 'Reviewed release' }
+    : mechanicalVentilationPublicationStatus === 'tester-preview'
+      ? { Icon: EyeOff, label: 'Unlisted tester preview' }
+      : { Icon: LockKeyhole, label: 'Authenticated draft' }
+const PublicationBadgeIcon = publicationBadge.Icon
 
 function CalibrationPanel({
   definition,
@@ -304,7 +312,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
         <div className={styles.heroCopy}>
           <div className={styles.heroBadges}>
             <span>
-              <LockKeyhole aria-hidden="true" /> Authenticated draft
+              <PublicationBadgeIcon aria-hidden="true" /> {publicationBadge.label}
             </span>
             <span>
               <FlaskConical aria-hidden="true" /> Educational simulation

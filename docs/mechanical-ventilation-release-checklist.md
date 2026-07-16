@@ -2,12 +2,15 @@
 
 Canonical module: `/mechanical-ventilation`  
 Legacy redirect: `/hamilton-c6-ventilation`  
-Current status: authenticated draft
+Current status: unlisted public tester preview
 
-The publication status in `src/features/mechanical-ventilation/content/deviceProfiles.ts` must remain
-`draft` until every required sign-off below is recorded. The supplied PB980 service manual and AVEA
-modes guide are not complete operator manuals; neither profile may be published until the applicable
-operator manual and an independent device-trained reviewer are added to the review set.
+The tester preview is intentionally absent from site navigation and search, is marked `noindex`, and
+is reachable without authentication only by direct URL. The publication status in
+`src/features/mechanical-ventilation/content/deviceProfiles.ts` must not be changed from
+`tester-preview` to `published` until every required sign-off below is recorded. The supplied PB980
+service manual and AVEA modes guide are not complete operator manuals; neither profile may be marked
+review-approved until the applicable operator manual and an independent device-trained reviewer are
+added to the review set.
 
 ## Independent clinical review
 
@@ -50,8 +53,8 @@ operator manual and an independent device-trained reviewer are added to the revi
 
 ## Routing, progress, analytics, privacy, and safety
 
-- [ ] The canonical route, search result, draft guard, authentication resolver, and analytics module ID
-      all use `mechanical-ventilation`.
+- [ ] The canonical route, unlisted policy, authentication resolver, and analytics module ID all use
+      `mechanical-ventilation`; site search and navigation do not expose the tester preview.
 - [ ] Every locale-aware legacy URL permanently redirects to the corresponding canonical URL.
 - [ ] V1 local progress migrates non-destructively to `mechanical-ventilation-progress-v2`, defaults to
       HAMILTON-C6, preserves shared completion/mastery, and retains the legacy storage record.

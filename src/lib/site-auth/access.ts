@@ -20,7 +20,11 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/auth/update-password',
 ])
 
-const PUBLIC_UNLISTED_EXACT_PATHS = new Set(['/cardiohelp-ecmo'])
+const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
+  '/cardiohelp-ecmo',
+  '/mechanical-ventilation',
+  '/hamilton-c6-ventilation',
+])
 
 const PUBLIC_PREFIXES = [
   '/_next/',

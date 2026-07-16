@@ -35,13 +35,15 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
         <div>
           <span>Evidence boundary & release safety</span>
           <h2 id="ventilation-sources-heading">
-            Draft profile locked to the supplied {profile.shortName} sources
+            Source-bound profile locked to the supplied {profile.shortName} sources
           </h2>
         </div>
         <span className={styles.draftBadge}>
           {mechanicalVentilationPublicationStatus === 'published'
             ? 'PUBLISHED · REVIEW APPROVED'
-            : 'DRAFT · REVIEW REQUIRED'}
+            : mechanicalVentilationPublicationStatus === 'tester-preview'
+              ? 'UNLISTED · TESTER PREVIEW'
+              : 'DRAFT · REVIEW REQUIRED'}
         </span>
       </div>
 
@@ -81,7 +83,13 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
         </div>
         <div>
           <dt>Publication</dt>
-          <dd>Authenticated draft</dd>
+          <dd>
+            {mechanicalVentilationPublicationStatus === 'published'
+              ? 'Reviewed public release'
+              : mechanicalVentilationPublicationStatus === 'tester-preview'
+                ? 'Unlisted public tester preview'
+                : 'Authenticated draft'}
+          </dd>
         </div>
       </dl>
 

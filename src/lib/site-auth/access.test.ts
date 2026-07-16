@@ -63,11 +63,16 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
   })
 
-  it('keeps the mechanical ventilation simulator authenticated and resolves both URLs to one module', () => {
-    expect(isPublicPath('/mechanical-ventilation')).toBe(false)
-    expect(isPublicPath('/es/mechanical-ventilation')).toBe(false)
-    expect(isPublicPath('/hamilton-c6-ventilation')).toBe(false)
-    expect(isPublicPath('/es/hamilton-c6-ventilation')).toBe(false)
+  it('keeps the mechanical ventilation tester route public but unlisted and resolves both URLs to one module', () => {
+    expect(isPublicPath('/mechanical-ventilation')).toBe(true)
+    expect(isPublicPath('/es/mechanical-ventilation')).toBe(true)
+    expect(isPublicPath('/hamilton-c6-ventilation')).toBe(true)
+    expect(isPublicPath('/es/hamilton-c6-ventilation')).toBe(true)
+    expect(isPublicUnlistedPath('/mechanical-ventilation')).toBe(true)
+    expect(isPublicUnlistedPath('/es/mechanical-ventilation')).toBe(true)
+    expect(isPublicUnlistedPath('/hamilton-c6-ventilation')).toBe(true)
+    expect(isPublicUnlistedPath('/es/hamilton-c6-ventilation')).toBe(true)
+    expect(isPublicUnlistedPath('/mechanical-ventilation/extra')).toBe(false)
     expect(getRequiredEntitlement('/mechanical-ventilation', params())).toBeNull()
     expect(getRequiredEntitlement('/hamilton-c6-ventilation', params())).toBeNull()
     expect(resolveSiteModuleId('/mechanical-ventilation')).toBe('mechanical-ventilation')

@@ -1,4 +1,4 @@
-type MechanicalVentilationPublicationStatus = 'draft' | 'published'
+type MechanicalVentilationPublicationStatus = 'draft' | 'tester-preview' | 'published'
 
 export {}
 
@@ -38,5 +38,16 @@ describe('mechanical ventilation release gating', () => {
     const policy = await loadPolicy('published')
     expect(policy.isDraftModulePath('/mechanical-ventilation')).toBe(false)
     expect(policy.isDraftModulePath('/hamilton-c6-ventilation')).toBe(false)
+  })
+
+  it('makes the tester route reachable but keeps both URLs unlisted', async () => {
+    const policy = await loadPolicy('tester-preview')
+    expect(policy.isDraftModulePath('/mechanical-ventilation')).toBe(false)
+    expect(policy.isDraftModulePath('/hamilton-c6-ventilation')).toBe(false)
+    expect(policy.isUnlistedModulePath('/mechanical-ventilation')).toBe(true)
+    expect(policy.isUnlistedModulePath('/es/mechanical-ventilation')).toBe(true)
+    expect(policy.isUnlistedModulePath('/hamilton-c6-ventilation')).toBe(true)
+    expect(policy.isVisibleModulePath('/mechanical-ventilation')).toBe(false)
+    expect(policy.isVisibleModulePath('/mechanical-ventilation', { isAdmin: true })).toBe(false)
   })
 })

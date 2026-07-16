@@ -8,10 +8,10 @@ import type {
 } from '../engine/types'
 import { ventilatorDeviceIds } from '../engine/types'
 
-export type MechanicalVentilationPublicationStatus = 'draft' | 'published'
+export type MechanicalVentilationPublicationStatus = 'draft' | 'tester-preview' | 'published'
 
 export const mechanicalVentilationPublicationStatus: MechanicalVentilationPublicationStatus =
-  'draft'
+  'tester-preview'
 
 export interface VentilatorDeviceSource {
   id: string
