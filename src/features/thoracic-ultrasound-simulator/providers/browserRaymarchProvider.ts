@@ -1,6 +1,6 @@
 import type { ThoracicStructureLabel, ThoracicVolume } from '../types'
 
-import { simulateBMode } from '../engine/simulateBMode'
+import { renderBModeImage, simulateBMode } from '../engine/simulateBMode'
 import type { RaymarchFrameMessage, RaymarchRenderMessage } from './raymarch.worker'
 import type { BModeFrameRequest, ResolvedBModeFrame, ThoracicFrameProvider } from './types'
 
@@ -82,6 +82,7 @@ export function createBrowserRaymarchProvider(
           data: copy,
           geometry: volume.geometry,
           labelCodes,
+          cardiacModel: volume.cardiacModel,
         },
         [copy],
       )
@@ -92,6 +93,25 @@ export function createBrowserRaymarchProvider(
   }
 
   function renderSync(request: BModeFrameRequest, volume: ThoracicVolume): ResolvedBModeFrame {
+    if (request.renderOnly) {
+      return {
+        kind: 'browser-raymarch',
+        quality: request.manifest.qualityStatus.browserRaymarch,
+        sourceLabel: 'Live procedural cardiac cine',
+        imageData: renderBModeImage({
+          volume,
+          probe: request.probe,
+          width: request.width,
+          height: request.height,
+          model: request.model,
+          simulationTimeSec: request.simulationTimeSec,
+          probeType: request.probeType,
+        }),
+        educationalUse:
+          'Procedural chamber and wall motion for educational orientation only; not a patient-specific or diagnostic echocardiogram.',
+      }
+    }
+
     const { imageData, metrics } = simulateBMode({
       volume,
       probe: request.probe,
@@ -99,12 +119,17 @@ export function createBrowserRaymarchProvider(
       height: request.height,
       model: request.model,
       renderImage: true,
+      simulationTimeSec: request.simulationTimeSec,
+      probeType: request.probeType,
     })
 
     return {
       kind: 'browser-raymarch',
       quality: request.manifest.qualityStatus.browserRaymarch,
-      sourceLabel: 'Live synthetic render',
+      sourceLabel:
+        request.simulationTimeSec === undefined
+          ? 'Live synthetic render'
+          : 'Live procedural cardiac frame',
       imageData: imageData ?? undefined,
       metrics,
       educationalUse:
@@ -133,6 +158,9 @@ export function createBrowserRaymarchProvider(
         width: request.width,
         height: request.height,
         renderImage: true,
+        simulationTimeSec: request.simulationTimeSec,
+        probeType: request.probeType,
+        renderOnly: request.renderOnly,
       }
       activeWorker.postMessage(message)
     })
@@ -146,7 +174,11 @@ export function createBrowserRaymarchProvider(
     return {
       kind: 'browser-raymarch',
       quality: request.manifest.qualityStatus.browserRaymarch,
-      sourceLabel: 'Live synthetic render',
+      sourceLabel: request.renderOnly
+        ? 'Live procedural cardiac cine'
+        : request.simulationTimeSec === undefined
+          ? 'Live synthetic render'
+          : 'Live procedural cardiac frame',
       imageData: response.image
         ? new ImageData(
             new Uint8ClampedArray(response.image.buffer),
@@ -154,9 +186,11 @@ export function createBrowserRaymarchProvider(
             response.image.height,
           )
         : undefined,
-      metrics: response.metrics,
+      metrics: response.metrics ?? undefined,
       educationalUse:
-        'Synthetic browser-generated frame for educational simulation only; not for diagnosis or clinical use.',
+        request.simulationTimeSec === undefined
+          ? 'Synthetic browser-generated frame for educational simulation only; not for diagnosis or clinical use.'
+          : 'Procedural chamber and wall motion for educational orientation only; not a patient-specific or diagnostic echocardiogram.',
     }
   }
 

@@ -190,12 +190,35 @@ function lerp(min, max, fraction) {
   return min + (max - min) * fraction
 }
 
-function chooseOutputLabel(payload, header, labelCodes, labelPriority, targetLabelForName) {
+function chooseOutputLabel(
+  payload,
+  header,
+  labelCodes,
+  labelPriority,
+  targetLabelForName,
+  resolveSegmentLabel,
+) {
   const [layerCount, sourceSizeX, sourceSizeY] = header.sizes
   const segmentLookup = new Map()
 
   for (const segment of header.segments) {
-    const label = targetLabelForName(segment.name, labelCodes)
+    // A case may supply an explicit per-segment resolver (needed when leaf
+    // segment names are ambiguous and reused across layers, e.g. "right" is a
+    // kidney in one layer and a pleural effusion in another). It receives the
+    // full segment {name, layer, labelValue} and may return a label name, a
+    // numeric code, or null/undefined to fall back to name matching.
+    let label
+    if (resolveSegmentLabel) {
+      const resolved = resolveSegmentLabel(segment, labelCodes)
+      if (typeof resolved === 'number') {
+        label = resolved
+      } else if (typeof resolved === 'string') {
+        label = labelCodes[resolved] ?? labelCodes.background
+      }
+    }
+    if (label === undefined) {
+      label = targetLabelForName(segment.name, labelCodes)
+    }
     if (label === labelCodes.background) {
       continue
     }
@@ -297,8 +320,10 @@ export function generateCasePackage(options) {
     labelCodes = defaultLabelCodes,
     labelPriority = defaultLabelPriority,
     targetLabelForName = defaultTargetLabelForName,
+    resolveSegmentLabel,
     strideXyz = [2, 2, 2],
     plusToolkit,
+    cardiacModel,
     log = console.log,
   } = options
 
@@ -337,7 +362,14 @@ export function generateCasePackage(options) {
     Math.ceil(sourceSizeZ / stride[2]),
   ]
   const output = new Uint8Array(outputSize[0] * outputSize[1] * outputSize[2])
-  const labelAt = chooseOutputLabel(payload, header, labelCodes, labelPriority, targetLabelForName)
+  const labelAt = chooseOutputLabel(
+    payload,
+    header,
+    labelCodes,
+    labelPriority,
+    targetLabelForName,
+    resolveSegmentLabel,
+  )
   const bounds = {}
   const counts = Object.fromEntries(Object.values(labelCodes).map((code) => [code, 0]))
 
@@ -414,6 +446,7 @@ export function generateCasePackage(options) {
     dynamicRangeDb: 56,
     sectorAngleDeg: 62,
     needleAngleDeg: 0,
+    approachDeg: 0,
   }
 
   const volume = {
@@ -461,6 +494,7 @@ export function generateCasePackage(options) {
       labelCounts: counts,
       labelBoundsLpsMm: boundsByLabel,
       ...(plusToolkit ? { plusToolkit } : {}),
+      ...(cardiacModel ? { cardiacModel } : {}),
       source,
       volume,
       probeDefaults,
@@ -510,6 +544,7 @@ export function generateCasePackage(options) {
           description: 'Default transducer position derived from the segmented fluid bounds.',
           defaults: probeDefaults,
           ranges: {
+            approachDeg: { min: -180, max: 180, step: 5 },
             lateralMm: {
               min: fluidBox ? Math.floor(fluidBox.min[0] - 50) : -160,
               max: fluidBox ? Math.ceil(fluidBox.max[0] + 50) : 170,
@@ -526,7 +561,7 @@ export function generateCasePackage(options) {
               step: 2,
             },
             tiltDeg: { min: -28, max: 28, step: 1 },
-            rotationDeg: { min: -55, max: 55, step: 1 },
+            rotationDeg: { min: -90, max: 90, step: 1 },
             needleAngleDeg: { min: -25, max: 25, step: 1 },
             depthCm: { min: 6, max: 18, step: 0.5 },
             gain: { min: 0.7, max: 2.4, step: 0.05 },
@@ -563,6 +598,7 @@ export function generateCasePackage(options) {
           'Freshly generated case package; live browser render is displayed, no reviewed frames yet.',
         ],
       },
+      ...(cardiacModel ? { cardiacModel } : {}),
       learningTasks: resolvedObjectives.map((objective, index) => {
         const lower = objective.toLowerCase()
         const kind = lower.includes('classif')

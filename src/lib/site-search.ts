@@ -4,6 +4,8 @@ import {
   type BoardReviewCategory,
 } from '@/data/board-review'
 import { allEbusTrainingModules } from '@/data/ebus-training'
+import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
+import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ventilation/content/deviceProfiles'
 import { localizeSearchText } from '@/i18n/handoff-search'
 import type { ActiveLocale } from '@/i18n/locale'
 import { isVisibleModulePath } from '@/lib/draft-modules'
@@ -81,6 +83,13 @@ const localizedSearchOverrides: Partial<
       section: 'Simulación',
       keywords: ['broncoscopía', 'navegación', 'tc', 'vía aérea', 'simulación'],
     },
+    '/therapeutic-bronchoscopy': {
+      title: 'Broncoscopia terapéutica',
+      description:
+        'Centro de aprendizaje con broncoscopia rígida, ablación térmica, ablación periférica y stents de vía aérea.',
+      section: 'Broncoscopia',
+      keywords: ['broncoscopia terapéutica', 'broncoscopia rígida', 'ablación', 'stents'],
+    },
     '/thermal-ablation': {
       title: 'Módulos interactivos de ablación térmica',
       description:
@@ -88,12 +97,56 @@ const localizedSearchOverrides: Partial<
       section: 'Simulación',
       keywords: ['ablación térmica', 'láser', 'electrocauterio', 'apc', 'vio 3', 'incendio'],
     },
+    '/peripheral-ablation': {
+      title: 'Ablación de tumores pulmonares periféricos',
+      description:
+        'Física energía–tejido de RFA, microondas, crioablación y campo eléctrico pulsado (PEF, no térmico); simulador de zona de ablación con efecto sumidero de calor y el margen de 5 mm; confirmación de instrumento en la lesión; selección de modalidad y vía.',
+      section: 'Simulación',
+      keywords: [
+        'ablación periférica',
+        'rfa',
+        'radiofrecuencia',
+        'microondas',
+        'crioablación',
+        'campo eléctrico pulsado',
+        'pef',
+        'electroporación',
+        'bola de hielo',
+        'sumidero de calor',
+        'margen de ablación',
+      ],
+    },
     '/pleural-procedures': {
       title: 'Procedimientos pleurales',
       description:
         'Enfermedad pleural, reconocimiento ecográfico, análisis de líquido pleural, neumotórax y drenajes.',
       section: 'Procedimientos pleurales',
       keywords: ['pleura', 'pleural', 'derrame', 'toracocentesis', 'ecografía', 'neumotórax'],
+    },
+    '/tracheostomy': {
+      title: 'Laboratorio de Traqueostomía',
+      description:
+        'Anatomía 3D, mecánica del manguito, selección de tubos, cuidados, rescate de emergencias y preparación para la decanulación.',
+      section: 'Vía aérea',
+      keywords: ['traqueostomía', 'manguito', 'válvula fonatoria', 'decanulación', 'succión'],
+    },
+    '/airway-stent-mechanics': {
+      title: 'Explorador de mecánica y fallos de stents de la vía aérea',
+      description:
+        'Estaciones interactivas de libre exploración sobre arquitectura, lumen, movimiento, ajuste anatómico y patrones de fallo clínicamente relevantes.',
+      section: 'Vía aérea',
+      keywords: [
+        'stent de vía aérea',
+        'indicación',
+        'ajuste anatómico',
+        'granulación',
+        'vigilancia',
+        'fuerza radial',
+        'nitinol',
+        'silicona',
+        'migración',
+        'fatiga',
+      ],
     },
     '/learn/anatomy': {
       title: 'Visor anatómico interactivo 3D',
@@ -146,6 +199,12 @@ const localizedSearchOverrides: Partial<
       section: '模拟',
       keywords: ['支气管镜', '导航', 'ct', '气道', '模拟'],
     },
+    '/therapeutic-bronchoscopy': {
+      title: '治疗性支气管镜',
+      description: '整合硬质支气管镜、热消融、外周消融和气道支架的学习中心。',
+      section: '支气管镜',
+      keywords: ['治疗性支气管镜', '硬质支气管镜', '消融', '气道支架'],
+    },
     '/thermal-ablation': {
       title: '热消融交互模块',
       description:
@@ -153,11 +212,43 @@ const localizedSearchOverrides: Partial<
       section: '模拟',
       keywords: ['热消融', '激光', '电灼', 'apc', 'vio 3', '气道火灾'],
     },
+    '/peripheral-ablation': {
+      title: '外周肺肿瘤消融',
+      description:
+        '射频、微波、冷冻与非热的脉冲电场(PEF)消融的能量-组织物理；消融区模拟器，演示热沉效应与 5 毫米安全边缘；器械到位确认；模式与路径选择；免疫效应；并发症与自测。',
+      section: '模拟',
+      keywords: [
+        '外周消融',
+        '射频消融',
+        '微波消融',
+        '冷冻消融',
+        '脉冲电场',
+        'pef',
+        '电穿孔',
+        '冰球',
+        '热沉',
+        '消融边缘',
+        '经支气管消融',
+        '免疫治疗',
+      ],
+    },
     '/pleural-procedures': {
       title: '胸膜操作',
       description: '胸膜疾病、超声模式识别、胸水分析、气胸路径和引流系统。',
       section: '胸膜操作',
       keywords: ['胸膜', '胸水', '胸腔穿刺', '超声', '气胸', '引流'],
+    },
+    '/tracheostomy': {
+      title: '气管切开知识实验室',
+      description: '三维解剖、套囊气流、套管选择、日常护理、急救演练与拔管准备度。',
+      section: '气道',
+      keywords: ['气管切开', '套囊', '发声阀', '拔管', '吸痰'],
+    },
+    '/airway-stent-mechanics': {
+      title: '气道支架力学与失效探索器',
+      description: '自由探索支架结构、管腔、运动、解剖匹配及具有临床意义的失效模式的互动学习站。',
+      section: '气道',
+      keywords: ['气道支架', '适应证', '解剖匹配', '肉芽组织', '随访', '径向力', '迁移'],
     },
     '/learn/anatomy': {
       title: '交互式 3D 解剖查看器',
@@ -169,6 +260,78 @@ const localizedSearchOverrides: Partial<
 }
 
 const allStaticResults: SiteSearchResult[] = [
+  {
+    title: 'Multi-Device Mechanical Ventilation Learn & Practice Simulator',
+    description:
+      mechanicalVentilationPublicationStatus === 'published'
+        ? 'Reviewed case-based practice across HAMILTON-C6, Dräger Evita, Puritan Bennett 980, and CareFusion AVEA training facsimiles with real-time physiology and waveforms.'
+        : 'Draft-gated case-based practice across HAMILTON-C6, Dräger Evita, Puritan Bennett 980, and CareFusion AVEA training facsimiles with real-time physiology and waveforms.',
+    href: '/mechanical-ventilation',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'hamilton c6',
+      'drager evita',
+      'dräger evita v800',
+      'evita v600',
+      'puritan bennett 980',
+      'pb980',
+      'carefusion avea',
+      'avea ventilator',
+      'mechanical ventilation',
+      'ventilator simulator',
+      'ventilator waveforms',
+      'patient ventilator dyssynchrony',
+      'intrinsic peep',
+      'auto peep',
+      'ards',
+      'asthma',
+      'copd',
+      'pressure support',
+      'scmv',
+      'pcv plus',
+      'vc ac',
+      'pc ac',
+      'volume a c',
+      'pressure a c',
+      'cpap psv',
+      'spont',
+      'trigger',
+      'ets',
+      'p ramp',
+    ],
+  },
+  {
+    title: 'CARDIOHELP-i Adult VV & VA ECMO Learn & Practice Lab',
+    description:
+      cardiohelpEcmoPublicationStatus === 'published'
+        ? 'Reviewed step-by-step learning and independent console, circuit, pressure, sweep, alarm, transport, VV, and peripheral VA troubleshooting practice.'
+        : 'Draft-gated step-by-step learning and independent console, circuit, pressure, sweep, alarm, transport, VV, and peripheral VA troubleshooting practice.',
+    href: '/cardiohelp-ecmo',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'cardiohelp',
+      'ecmo',
+      'learn',
+      'practice',
+      'guided walkthrough',
+      'vv ecmo',
+      'va ecmo',
+      'peripheral va ecmo',
+      'differential hypoxemia',
+      'lv loading',
+      'extracorporeal membrane oxygenation',
+      'sweep gas',
+      'blood flow',
+      'pven',
+      'pint',
+      'part',
+      'recirculation',
+      'bubble alarm',
+      'transport',
+    ],
+  },
   {
     title: 'Resource Library',
     description:
@@ -267,6 +430,21 @@ const allStaticResults: SiteSearchResult[] = [
     keywords: ['bronchoscopy', 'navigation', 'ct', 'airway', 'nodule', 'simulation'],
   },
   {
+    title: 'Therapeutic Bronchoscopy',
+    description:
+      'A single learning hub for rigid bronchoscopy, thermal ablation, peripheral lung tumor ablation, and airway stent mechanics.',
+    href: '/therapeutic-bronchoscopy',
+    section: 'Bronchoscopy',
+    type: 'page',
+    keywords: [
+      'therapeutic bronchoscopy',
+      'rigid bronchoscopy',
+      'thermal ablation',
+      'peripheral ablation',
+      'airway stents',
+    ],
+  },
+  {
     title: 'Thermal Ablation Interactive Modules',
     description:
       'Laser physics, power density, electrocautery waveforms on a simulated ERBE VIO 3 console, APC, and airway-fire safety with case-based self-assessment.',
@@ -283,6 +461,110 @@ const allStaticResults: SiteSearchResult[] = [
       'apc',
       'argon plasma',
       'airway fire',
+    ],
+  },
+  {
+    title: 'Rigid Bronchoscopy',
+    description:
+      'Simulation-only rigid bronchoscopy training: equipment, indications, shared-airway ventilation, tumor coring, dilation, stents, foreign-body retrieval, endobronchial hemostasis, and operating-room airway-fire safety.',
+    href: '/rigid-bronchoscopy',
+    section: 'Bronchoscopy',
+    type: 'page',
+    keywords: [
+      'rigid bronchoscopy',
+      'central airway obstruction',
+      'tumor coring',
+      'debulking',
+      'airway stent',
+      'foreign body',
+      'hemoptysis',
+      'endobronchial hemostasis',
+      'airway fire',
+      'jet ventilation',
+    ],
+  },
+  {
+    title: 'Airway Stent Mechanics & Failure Explorer',
+    description:
+      'Freely explore interactive stations on architecture, lumen geometry, motion, anatomic fit, failure modes, inspection, and conceptual rescue pathways.',
+    href: '/airway-stent-mechanics',
+    section: 'Airway',
+    type: 'page',
+    keywords: [
+      'airway stent',
+      'indication',
+      'anatomic fit',
+      'surveillance',
+      'exit strategy',
+      'radial force',
+      'chronic outward force',
+      'compression resistance',
+      'axial force',
+      'nitinol',
+      'silicone stent',
+      'migration',
+      'granulation',
+      'fatigue',
+    ],
+  },
+  {
+    title: 'Tracheostomy Knowledge Lab',
+    description:
+      'Interactive adult tracheostomy education with a 3D tube model, cuff and airflow animation, tube selection, care sequencing, emergency rescue, and decannulation readiness.',
+    href: '/tracheostomy',
+    section: 'Airway',
+    type: 'page',
+    keywords: [
+      'tracheostomy',
+      'trach tube',
+      'cuff pressure',
+      'speaking valve',
+      'suctioning',
+      'blocked tracheostomy',
+      'decannulation',
+      'tracheoinnominate fistula',
+    ],
+  },
+  {
+    title: 'Pleuroscopy (Medical Thoracoscopy)',
+    description:
+      'Simulation-only medical thoracoscopy training: indications and contraindications, rigid vs semi-rigid scopes, ultrasound-guided access, parietal biopsy, talc poudrage pleurodesis, and complication management.',
+    href: '/pleural-procedures/pleuroscopy',
+    section: 'Pleural Procedures',
+    type: 'page',
+    keywords: [
+      'pleuroscopy',
+      'medical thoracoscopy',
+      'thoracoscopy',
+      'pleural biopsy',
+      'talc poudrage',
+      'pleurodesis',
+      'malignant pleural effusion',
+      'semi-rigid thoracoscope',
+    ],
+  },
+  {
+    title: 'Peripheral Lung Tumor Ablation',
+    description:
+      'Energy–tissue physics of RFA, microwave, cryo, and non-thermal PEF (pulsed electric field); an ablation-zone simulator with heat-sink and the 5 mm margin; tool-in-lesion confirmation; modality/route selection; immune effects; complications and self-assessment.',
+    href: '/peripheral-ablation',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'peripheral ablation',
+      'lung tumor ablation',
+      'rfa',
+      'radiofrequency ablation',
+      'microwave ablation',
+      'cryoablation',
+      'pulsed electric field',
+      'pef',
+      'electroporation',
+      'ice ball',
+      'heat sink',
+      'ablation margin',
+      'transbronchial ablation',
+      'immunotherapy',
     ],
   },
   {
@@ -442,6 +724,10 @@ function localizeSearchResult(
         keywords: override.keywords ?? item.keywords,
       }
     : item
+
+  if (merged.href === '/mechanical-ventilation') {
+    return merged
+  }
 
   if (locale === 'en') {
     return merged

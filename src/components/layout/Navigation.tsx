@@ -91,12 +91,6 @@ export function Navigation() {
         description: nav('items.ebusTraining.description'),
       },
       {
-        title: nav('items.ebusVirtualBronch.title'),
-        shortTitle: nav('items.ebusVirtualBronch.shortTitle'),
-        href: '/ebus-training/virtual-bronchoscopy' as Route,
-        description: nav('items.ebusVirtualBronch.description'),
-      },
-      {
         title: nav('items.podcastLibrary.title'),
         shortTitle: nav('items.podcastLibrary.shortTitle'),
         href: '/journal-club-podcasts' as Route,
@@ -133,10 +127,22 @@ export function Navigation() {
         description: nav('items.bronchNavigation.description'),
       },
       {
-        title: nav('items.thermalAblation.title'),
-        shortTitle: nav('items.thermalAblation.shortTitle'),
-        href: '/thermal-ablation' as Route,
-        description: nav('items.thermalAblation.description'),
+        title: nav('items.therapeuticBronchoscopy.title'),
+        shortTitle: nav('items.therapeuticBronchoscopy.shortTitle'),
+        href: '/therapeutic-bronchoscopy' as Route,
+        description: nav('items.therapeuticBronchoscopy.description'),
+        activePaths: [
+          '/rigid-bronchoscopy',
+          '/thermal-ablation',
+          '/peripheral-ablation',
+          '/airway-stent-mechanics',
+        ],
+      },
+      {
+        title: nav('items.tracheostomy.title'),
+        shortTitle: nav('items.tracheostomy.shortTitle'),
+        href: '/tracheostomy' as Route,
+        description: nav('items.tracheostomy.description'),
       },
       {
         title: nav('items.pleuralProcedures.title'),

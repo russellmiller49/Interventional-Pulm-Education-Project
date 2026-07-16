@@ -7,7 +7,14 @@ import { supabaseServer } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-const adminEntitlements = ['ip_registry', 'socal_ebus_course', 'site_admin'] as const
+const adminEntitlements = [
+  'ip_registry',
+  'pccm_intro_course',
+  'pccm_intro_course_admin_ucsd',
+  'pccm_intro_course_admin_loma_linda',
+  'socal_ebus_course',
+  'site_admin',
+] as const
 const ALL_INSTITUTIONS_FILTER = 'all'
 const NOT_RECORDED_INSTITUTION_FILTER = 'not_recorded'
 
@@ -16,6 +23,12 @@ type PermissionFilter =
   | 'all'
   | 'ip_registry_active'
   | 'ip_registry_inactive'
+  | 'pccm_intro_course_active'
+  | 'pccm_intro_course_inactive'
+  | 'pccm_intro_course_admin_ucsd_active'
+  | 'pccm_intro_course_admin_ucsd_inactive'
+  | 'pccm_intro_course_admin_loma_linda_active'
+  | 'pccm_intro_course_admin_loma_linda_inactive'
   | 'socal_ebus_course_active'
   | 'socal_ebus_course_inactive'
   | 'site_admin_active'
@@ -88,6 +101,9 @@ const roleLabels: Map<string, string> = new Map(
 
 const entitlementLabels: Record<AdminEntitlement, string> = {
   ip_registry: 'IP Registry',
+  pccm_intro_course: 'PCCM Intro Course',
+  pccm_intro_course_admin_loma_linda: 'PCCM Loma Linda Admin',
+  pccm_intro_course_admin_ucsd: 'PCCM UCSD Admin',
   socal_ebus_course: 'SoCal EBUS Course',
   site_admin: 'Site Admin',
 }
@@ -98,6 +114,27 @@ const permissionFilterConfig: Record<
 > = {
   ip_registry_active: { active: true, entitlement: 'ip_registry' },
   ip_registry_inactive: { active: false, entitlement: 'ip_registry' },
+  pccm_intro_course_active: { active: true, entitlement: 'pccm_intro_course' },
+  pccm_intro_course_inactive: {
+    active: false,
+    entitlement: 'pccm_intro_course',
+  },
+  pccm_intro_course_admin_ucsd_active: {
+    active: true,
+    entitlement: 'pccm_intro_course_admin_ucsd',
+  },
+  pccm_intro_course_admin_ucsd_inactive: {
+    active: false,
+    entitlement: 'pccm_intro_course_admin_ucsd',
+  },
+  pccm_intro_course_admin_loma_linda_active: {
+    active: true,
+    entitlement: 'pccm_intro_course_admin_loma_linda',
+  },
+  pccm_intro_course_admin_loma_linda_inactive: {
+    active: false,
+    entitlement: 'pccm_intro_course_admin_loma_linda',
+  },
   socal_ebus_course_active: { active: true, entitlement: 'socal_ebus_course' },
   socal_ebus_course_inactive: {
     active: false,
@@ -120,6 +157,12 @@ function normalizePermissionFilter(value: string | null): PermissionFilter {
     'all',
     'ip_registry_active',
     'ip_registry_inactive',
+    'pccm_intro_course_active',
+    'pccm_intro_course_inactive',
+    'pccm_intro_course_admin_ucsd_active',
+    'pccm_intro_course_admin_ucsd_inactive',
+    'pccm_intro_course_admin_loma_linda_active',
+    'pccm_intro_course_admin_loma_linda_inactive',
     'socal_ebus_course_active',
     'socal_ebus_course_inactive',
     'site_admin_active',
@@ -532,6 +575,15 @@ function buildCsvRows(users: ExportUserRow[]) {
     'ip_registry_status',
     'ip_registry_granted_at',
     'ip_registry_expires_at',
+    'pccm_intro_course_status',
+    'pccm_intro_course_granted_at',
+    'pccm_intro_course_expires_at',
+    'pccm_intro_course_admin_ucsd_status',
+    'pccm_intro_course_admin_ucsd_granted_at',
+    'pccm_intro_course_admin_ucsd_expires_at',
+    'pccm_intro_course_admin_loma_linda_status',
+    'pccm_intro_course_admin_loma_linda_granted_at',
+    'pccm_intro_course_admin_loma_linda_expires_at',
     'socal_ebus_course_status',
     'socal_ebus_course_granted_at',
     'socal_ebus_course_expires_at',
@@ -546,6 +598,12 @@ function buildCsvRows(users: ExportUserRow[]) {
 
   const rows = users.map((user) => {
     const ipRegistry = getEntitlementRecord(user, 'ip_registry')
+    const pccmIntroCourse = getEntitlementRecord(user, 'pccm_intro_course')
+    const pccmIntroCourseAdminUcsd = getEntitlementRecord(user, 'pccm_intro_course_admin_ucsd')
+    const pccmIntroCourseAdminLomaLinda = getEntitlementRecord(
+      user,
+      'pccm_intro_course_admin_loma_linda',
+    )
     const socalEbusCourse = getEntitlementRecord(user, 'socal_ebus_course')
     const siteAdmin = getEntitlementRecord(user, 'site_admin')
 
@@ -569,6 +627,15 @@ function buildCsvRows(users: ExportUserRow[]) {
       getEntitlementExportStatus(user, 'ip_registry'),
       ipRegistry?.granted_at ?? '',
       ipRegistry?.expires_at ?? '',
+      getEntitlementExportStatus(user, 'pccm_intro_course'),
+      pccmIntroCourse?.granted_at ?? '',
+      pccmIntroCourse?.expires_at ?? '',
+      getEntitlementExportStatus(user, 'pccm_intro_course_admin_ucsd'),
+      pccmIntroCourseAdminUcsd?.granted_at ?? '',
+      pccmIntroCourseAdminUcsd?.expires_at ?? '',
+      getEntitlementExportStatus(user, 'pccm_intro_course_admin_loma_linda'),
+      pccmIntroCourseAdminLomaLinda?.granted_at ?? '',
+      pccmIntroCourseAdminLomaLinda?.expires_at ?? '',
       getEntitlementExportStatus(user, 'socal_ebus_course'),
       socalEbusCourse?.granted_at ?? '',
       socalEbusCourse?.expires_at ?? '',

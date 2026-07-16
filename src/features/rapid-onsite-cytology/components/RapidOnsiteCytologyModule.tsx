@@ -55,12 +55,12 @@ const workflowLinks = [
   { label: 'HISTAI', href: 'https://huggingface.co/papers/2505.12120' },
 ] as const
 
-export function RapidOnsiteCytologyModule() {
+export function RapidOnsiteCytologyModule({ embedded = false }: { embedded?: boolean } = {}) {
   const [activeSlideId, setActiveSlideId] = React.useState(defaultCytologySlideId)
   const [selectedAnnotationId, setSelectedAnnotationId] = React.useState(
     cytologySlides[0]?.annotations[0]?.id ?? '',
   )
-  const [mode, setMode] = React.useState<CytologyMode>('learn')
+  const [mode, setMode] = React.useState<CytologyMode>(embedded ? 'quiz' : 'learn')
   const [showAnnotations, setShowAnnotations] = React.useState(true)
   const [zoom, setZoom] = React.useState(1)
   const [pan, setPan] = React.useState({ x: 0, y: 0 })
@@ -76,6 +76,7 @@ export function RapidOnsiteCytologyModule() {
   const selectedAnnotation =
     getAnnotationById(activeSlide, selectedAnnotationId) ?? getInitialAnnotation(activeSlide)
   const selectedChoiceId = selectedAnnotation ? quizAnswers[selectedAnnotation.id] : undefined
+  const answerRevealed = mode === 'learn' || Boolean(selectedChoiceId)
 
   const selectSlide = (slide: CytologySlide) => {
     setActiveSlideId(slide.id)
@@ -117,41 +118,45 @@ export function RapidOnsiteCytologyModule() {
     <HandoffContent>
       {
         <div className="space-y-8">
-          <section className="container space-y-6 pt-8">
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="info">ROSE trainer</Badge>
-                  <Badge variant="outline">Diff-Quik cytology</Badge>
-                  <Badge variant="success">{cytologySlides.length} teaching slides</Badge>
+          {!embedded ? (
+            <section className="container space-y-6 pt-8">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="info">ROSE trainer</Badge>
+                    <Badge variant="outline">Diff-Quik cytology</Badge>
+                    <Badge variant="success">{cytologySlides.length} teaching slides</Badge>
+                  </div>
+                  <div className="max-w-4xl space-y-3">
+                    <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
+                      Rapid onsite cytology interpretation
+                    </h2>
+                    <p className="text-base leading-7 text-muted-foreground md:text-lg">
+                      Hover, focus, or tap curated cells in ROSE and Diff-Quik examples to connect
+                      cell type, morphologic features, adequacy decisions, and common pitfalls.
+                    </p>
+                  </div>
                 </div>
-                <div className="max-w-4xl space-y-3">
-                  <h2 className="text-3xl font-semibold tracking-tight md:text-5xl">
-                    Rapid onsite cytology interpretation
-                  </h2>
-                  <p className="text-base leading-7 text-muted-foreground md:text-lg">
-                    Hover, focus, or tap curated cells in ROSE and Diff-Quik examples to connect
-                    cell type, morphologic features, adequacy decisions, and common pitfalls.
-                  </p>
-                </div>
-              </div>
 
-              <div className="rounded-lg border border-amber-300/70 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-500/40 dark:bg-amber-950/30 dark:text-amber-100">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
-                  <p>
-                    This module is for education and slide-interpretation practice only. It is not a
-                    diagnostic tool, does not provide patient-specific advice, and does not replace
-                    final cytopathology review.
-                  </p>
+                <div className="rounded-lg border border-amber-300/70 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-500/40 dark:bg-amber-950/30 dark:text-amber-100">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+                    <p>
+                      This module is for education and slide-interpretation practice only. It is not
+                      a diagnostic tool, does not provide patient-specific advice, and does not
+                      replace final cytopathology review.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          ) : null}
 
           <section className="container grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
             <SlideSelector
               activeSlide={activeSlide}
+              embedded={embedded}
+              mode={mode}
               onSelectSlide={selectSlide}
               slides={cytologySlides}
             />
@@ -161,10 +166,16 @@ export function RapidOnsiteCytologyModule() {
                 <CardHeader className="gap-4">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 space-y-2">
-                      <CardTitle className="text-2xl">{activeSlide.title}</CardTitle>
+                      <CardTitle className="text-2xl">
+                        {answerRevealed ? activeSlide.title : activeSlide.quizTitle}
+                      </CardTitle>
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="outline">{activeSlide.stain}</Badge>
-                        <Badge variant="default">{activeSlide.diagnosisTheme}</Badge>
+                        <Badge variant="default">
+                          {answerRevealed
+                            ? activeSlide.diagnosisTheme
+                            : 'Unlabeled morphology exercise'}
+                        </Badge>
                         <Badge variant="outline">{activeSlide.annotations.length} hotspots</Badge>
                       </div>
                     </div>
@@ -187,17 +198,24 @@ export function RapidOnsiteCytologyModule() {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 rounded-lg border border-border/70 bg-muted/40 p-3 text-sm text-muted-foreground md:grid-cols-3">
-                    {activeSlide.learningObjectives.map((objective) => (
-                      <div key={objective} className="flex min-w-0 gap-2">
-                        <CheckCircle2
-                          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-                          aria-hidden
-                        />
-                        <span>{objective}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {answerRevealed ? (
+                    <div className="grid gap-3 rounded-lg border border-border/70 bg-muted/40 p-3 text-sm text-muted-foreground md:grid-cols-3">
+                      {activeSlide.learningObjectives.map((objective) => (
+                        <div key={objective} className="flex min-w-0 gap-2">
+                          <CheckCircle2
+                            className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                            aria-hidden
+                          />
+                          <span>{objective}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-border/70 bg-muted/40 p-3 text-sm leading-6 text-muted-foreground">
+                      Select a hotspot, commit to one broad morphology category, then reveal the
+                      source interpretation and endpoint-specific adequacy lesson.
+                    </div>
+                  )}
                 </CardHeader>
 
                 <CardContent className="gap-5">
@@ -230,6 +248,7 @@ export function RapidOnsiteCytologyModule() {
 
                   <CytologyViewer
                     activeAnnotation={selectedAnnotation}
+                    answerRevealed={answerRevealed}
                     mode={mode}
                     onPanChange={setPan}
                     onSelectAnnotation={selectAnnotation}
@@ -253,37 +272,39 @@ export function RapidOnsiteCytologyModule() {
             </div>
           </section>
 
-          <section className="container pb-12">
-            <Card className="rounded-lg">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Microscope className="h-5 w-5 text-primary" aria-hidden />
-                  <CardTitle>Annotation workflow notes</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="gap-4 text-sm leading-6 text-muted-foreground">
-                <p>
-                  V1 uses curated teaching hotspots. QuPath, Cellpose-SAM, TIA Toolbox, CONCH, and
-                  HISTAI are listed as future offline annotation or research aids, not runtime
-                  diagnostic engines in this browser module.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {workflowLinks.map((link) => (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                    >
-                      {link.label}
-                      <ExternalLink className="h-3 w-3" aria-hidden />
-                    </a>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+          {!embedded ? (
+            <section className="container pb-12">
+              <Card className="rounded-lg">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Microscope className="h-5 w-5 text-primary" aria-hidden />
+                    <CardTitle>Annotation workflow notes</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="gap-4 text-sm leading-6 text-muted-foreground">
+                  <p>
+                    V1 uses curated teaching hotspots. QuPath, Cellpose-SAM, TIA Toolbox, CONCH, and
+                    HISTAI are listed as future offline annotation or research aids, not runtime
+                    diagnostic engines in this browser module.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {workflowLinks.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                      >
+                        {link.label}
+                        <ExternalLink className="h-3 w-3" aria-hidden />
+                      </a>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+          ) : null}
         </div>
       }
     </HandoffContent>
@@ -292,17 +313,23 @@ export function RapidOnsiteCytologyModule() {
 
 function SlideSelector({
   activeSlide,
+  embedded,
+  mode,
   onSelectSlide,
   slides,
 }: {
   activeSlide: CytologySlide
+  embedded: boolean
+  mode: CytologyMode
   onSelectSlide: (slide: CytologySlide) => void
   slides: CytologySlide[]
 }) {
   return (
     <HandoffContent>
       {
-        <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
+        <aside
+          className={cn('space-y-3 xl:sticky xl:self-start', embedded ? 'xl:top-52' : 'xl:top-24')}
+        >
           <div>
             <h3 className="text-lg font-semibold">Slide set</h3>
             <p className="text-sm leading-6 text-muted-foreground">
@@ -333,9 +360,11 @@ function SlideSelector({
                       {slide.annotations.length}
                     </span>
                   </span>
-                  <span className="mt-2 block font-semibold leading-5">{slide.shortTitle}</span>
+                  <span className="mt-2 block font-semibold leading-5">
+                    {mode === 'quiz' ? `Morphology slide ${index + 1}` : slide.shortTitle}
+                  </span>
                   <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {slide.diagnosisTheme}
+                    {mode === 'quiz' ? 'Classify the marked regions' : slide.diagnosisTheme}
                   </span>
                 </button>
               )
@@ -406,6 +435,7 @@ function ViewerButton({
 
 function CytologyViewer({
   activeAnnotation,
+  answerRevealed,
   dragStateRef,
   mode,
   onPanChange,
@@ -416,6 +446,7 @@ function CytologyViewer({
   zoom,
 }: {
   activeAnnotation?: CytologyAnnotation
+  answerRevealed: boolean
   dragStateRef: React.MutableRefObject<{
     pointerId: number
     x: number
@@ -491,7 +522,7 @@ function CytologyViewer({
             >
               <img
                 src={slide.imageUrl}
-                alt={slide.imageAlt}
+                alt={answerRevealed ? slide.imageAlt : slide.quizImageAlt}
                 className="block h-auto w-full rounded-md object-contain"
                 draggable={false}
               />
@@ -506,7 +537,11 @@ function CytologyViewer({
                         key={annotation.id}
                         type="button"
                         data-cytology-hotspot="true"
-                        aria-label={`Inspect ${annotation.label}: ${annotation.cellType}`}
+                        aria-label={
+                          mode === 'quiz'
+                            ? `Inspect quiz hotspot ${index + 1}`
+                            : `Inspect ${annotation.label}: ${annotation.cellType}`
+                        }
                         aria-pressed={isActive}
                         onClick={(event) => {
                           event.stopPropagation()
@@ -572,6 +607,13 @@ function InterpretationPanel({
 }) {
   const isAnswered = Boolean(selectedChoiceId)
   const isCorrect = annotation ? isQuizAnswerCorrect(annotation, selectedChoiceId) : false
+  const revealInterpretation = mode === 'learn' || isAnswered
+  const annotationNumber = annotation
+    ? Math.max(
+        1,
+        activeSlide.annotations.findIndex((candidate) => candidate.id === annotation.id) + 1,
+      )
+    : 1
 
   return (
     <HandoffContent>
@@ -592,20 +634,32 @@ function InterpretationPanel({
               {annotation ? (
                 <>
                   <div className="space-y-2">
-                    <Badge variant={annotation.category === 'background' ? 'outline' : 'info'}>
-                      {annotation.cellType}
+                    <Badge
+                      variant={
+                        revealInterpretation && annotation.category !== 'background'
+                          ? 'info'
+                          : 'outline'
+                      }
+                    >
+                      {revealInterpretation ? annotation.cellType : 'Unanswered hotspot'}
                     </Badge>
-                    <h3 className="text-xl font-semibold leading-7">{annotation.label}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {annotation.featureTags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                    <h3 className="text-xl font-semibold leading-7">
+                      {revealInterpretation
+                        ? annotation.label
+                        : `Classify hotspot ${annotationNumber}`}
+                    </h3>
+                    {revealInterpretation ? (
+                      <div className="flex flex-wrap gap-2">
+                        {annotation.featureTags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   {mode === 'quiz' ? (
@@ -637,7 +691,14 @@ function InterpretationPanel({
                                   'border-border bg-background hover:border-primary/50',
                               )}
                             >
-                              {choice.label}
+                              <span className="flex items-center justify-between gap-3">
+                                <span>{choice.label}</span>
+                                {isAnswered && isRightChoice ? (
+                                  <span className="text-xs font-semibold">Correct answer</span>
+                                ) : isAnswered && isSelected ? (
+                                  <span className="text-xs font-semibold">Your choice</span>
+                                ) : null}
+                              </span>
                             </button>
                           )
                         })}
@@ -664,7 +725,7 @@ function InterpretationPanel({
                     </div>
                   ) : null}
 
-                  {mode === 'learn' || isAnswered ? (
+                  {revealInterpretation ? (
                     <div className="space-y-4 text-sm leading-6">
                       <InfoBlock title="Morphologic read" body={annotation.explanation} />
                       <InfoBlock
@@ -690,15 +751,23 @@ function InterpretationPanel({
               <CardTitle>Source and license</CardTitle>
             </CardHeader>
             <CardContent className="gap-3 text-sm leading-6">
-              <a
-                href={activeSlide.source.articleUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-start gap-1 font-medium text-primary hover:underline"
-              >
-                {activeSlide.source.articleTitle}
-                <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0" aria-hidden />
-              </a>
+              <p>
+                <span className="font-semibold">Preparation: </span>
+                {activeSlide.preparation}
+              </p>
+              {revealInterpretation ? (
+                <a
+                  href={activeSlide.source.articleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-start gap-1 font-medium text-primary hover:underline"
+                >
+                  {activeSlide.source.articleTitle}
+                  <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0" aria-hidden />
+                </a>
+              ) : (
+                <p className="font-medium">Licensed source link appears after answer submission.</p>
+              )}
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-950 dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-100">
                 <p>
                   <span className="font-semibold">License: </span>
@@ -714,6 +783,10 @@ function InterpretationPanel({
                 <p className="mt-2">
                   <span className="font-semibold">Attribution: </span>
                   {activeSlide.source.attribution}
+                </p>
+                <p className="mt-2">
+                  <span className="font-semibold">Modifications: </span>
+                  {activeSlide.source.modificationNote}
                 </p>
               </div>
             </CardContent>

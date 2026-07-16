@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Activity, Stethoscope, Telescope } from 'lucide-react'
+import { Stethoscope, Telescope } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,14 +16,6 @@ const roadmapSections = [
     icon: Stethoscope,
   },
   {
-    id: 'rigid-bronchoscopy-foundations',
-    label: 'Airway',
-    title: 'Rigid Bronchoscopy Foundations',
-    description:
-      'Core rigid bronchoscopy curriculum for indications, airway control, instrumentation, stents, debulking, and simulation lab preparation.',
-    icon: Activity,
-  },
-  {
     id: 'intro-bronchoscopy',
     label: 'Bronchoscopy',
     title: 'Intro to Bronchoscopy',
@@ -35,8 +27,7 @@ const roadmapSections = [
 
 const handoffMetadata: Metadata = {
   title: 'Coming Soon | Interventional Pulmonology Collaborative',
-  description:
-    'Preview upcoming modules for intro pleural disease, rigid bronchoscopy foundations, and intro bronchoscopy.',
+  description: 'Preview upcoming modules for intro pleural disease and intro bronchoscopy.',
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -59,8 +50,8 @@ export default function ComingSoonPage() {
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tight md:text-5xl">Upcoming modules</h1>
               <p className="mx-auto max-w-3xl text-base text-muted-foreground md:text-lg">
-                The next launches focus on foundational pleural disease, rigid bronchoscopy, and
-                early bronchoscopy training.
+                The next launches focus on foundational pleural disease and early bronchoscopy
+                training.
               </p>
             </div>
           </section>

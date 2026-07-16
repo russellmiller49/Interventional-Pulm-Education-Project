@@ -3,20 +3,16 @@
 import { useTranslations } from 'next-intl'
 
 import { ModuleNav } from '@/features/learning-module/components/ModuleNav'
+import { pleuralUltrasoundNavBase } from '@/features/learning-module/moduleRoutes'
 import type { ModuleNavItem } from '@/features/learning-module/types'
 import { HandoffContent } from '@/i18n/handoff'
 
-const base = '/pleural-procedures/pleural-ultrasound'
-
-/** Section base href, exported for pages that need the overview's activeHref. */
-export const pleuralUltrasoundNavBase = base
-
 const sections = [
-  { key: 'overview', href: base },
-  { key: 'learn', href: `${base}/learn` },
-  { key: 'practice', href: `${base}/practice` },
-  { key: 'assessment', href: `${base}/assessment` },
-  { key: 'references', href: `${base}/references` },
+  { key: 'overview', href: pleuralUltrasoundNavBase },
+  { key: 'learn', href: `${pleuralUltrasoundNavBase}/learn` },
+  { key: 'practice', href: `${pleuralUltrasoundNavBase}/practice` },
+  { key: 'assessment', href: `${pleuralUltrasoundNavBase}/assessment` },
+  { key: 'references', href: `${pleuralUltrasoundNavBase}/references` },
 ] as const
 
 export function PleuralUltrasoundNav({ activeHref }: { activeHref: string }) {

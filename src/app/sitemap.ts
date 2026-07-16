@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 import { publicEbusTrainingModules } from '@/data/ebus-training'
+import { therapeuticBronchoscopyModules } from '@/data/therapeutic-bronchoscopy'
 import { areDraftModulesEnabled } from '@/lib/draft-modules'
 import { env } from '@/lib/env'
 
@@ -40,6 +41,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/bronch-navigation-trainer`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/therapeutic-bronchoscopy`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    ...therapeuticBronchoscopyModules.map((module) => ({
+      url: `${baseUrl}${module.href}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
+    {
+      url: `${baseUrl}/tracheostomy`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,

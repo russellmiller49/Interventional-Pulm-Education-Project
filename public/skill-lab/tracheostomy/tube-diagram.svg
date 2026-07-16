@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">Neutral tracheostomy tube component diagram</title>
+  <desc id="desc">A side-view medical equipment diagram with an unlabeled tube, neck flange, removable inner tube, inflatable seal, inflation line, and pilot balloon.</desc>
+  <defs>
+    <linearGradient id="tube" x1="0" x2="1">
+      <stop offset="0" stop-color="#dbeafe"/>
+      <stop offset="0.5" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="cuff" x1="0" x2="1">
+      <stop offset="0" stop-color="#99f6e4" stop-opacity=".6"/>
+      <stop offset=".5" stop-color="#ccfbf1" stop-opacity=".82"/>
+      <stop offset="1" stop-color="#5eead4" stop-opacity=".62"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0f172a" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="680" rx="36" fill="#f8fafc"/>
+  <g opacity=".55" stroke="#cbd5e1" stroke-width="2">
+    <path d="M80 568H1120"/>
+    <path d="M80 112H1120"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M393 245 C520 242 667 286 785 399 C828 440 849 493 851 548" fill="none" stroke="#94a3b8" stroke-width="106" stroke-linecap="round"/>
+    <path d="M393 245 C520 242 667 286 785 399 C828 440 849 493 851 548" fill="none" stroke="url(#tube)" stroke-width="78" stroke-linecap="round"/>
+    <path d="M397 245 C532 244 659 290 773 400 C809 435 827 482 831 541" fill="none" stroke="#0ea5e9" stroke-opacity=".28" stroke-width="14" stroke-linecap="round"/>
+    <rect x="168" y="203" width="252" height="84" rx="34" fill="#e2e8f0" stroke="#64748b" stroke-width="8"/>
+    <rect x="88" y="217" width="118" height="56" rx="24" fill="url(#tube)" stroke="#64748b" stroke-width="7"/>
+    <rect x="353" y="133" width="92" height="224" rx="28" fill="#f1f5f9" stroke="#64748b" stroke-width="8"/>
+    <path d="M374 159h50M374 331h50" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+    <ellipse cx="805" cy="474" rx="96" ry="76" transform="rotate(54 805 474)" fill="url(#cuff)" stroke="#0f766e" stroke-width="8"/>
+    <path d="M410 331 C496 395 532 469 602 521 C665 568 722 585 812 590" fill="none" stroke="#38bdf8" stroke-width="10"/>
+    <path d="M811 590 C887 591 940 563 972 527" fill="none" stroke="#38bdf8" stroke-width="10"/>
+    <path d="M972 527 C1006 487 1065 490 1080 536 C1092 574 1065 614 1024 611 C981 608 955 562 972 527Z" fill="#dbeafe" stroke="#0284c7" stroke-width="8"/>
+    <path d="M1014 611v30" stroke="#0284c7" stroke-width="12" stroke-linecap="round"/>
+    <rect x="990" y="635" width="50" height="24" rx="8" fill="#e2e8f0" stroke="#64748b" stroke-width="6"/>
+    <path d="M124 245h635" stroke="#e0f2fe" stroke-opacity=".75" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g fill="#334155" font-family="ui-sans-serif, system-ui" font-size="24">
+    <text x="92" y="95">Explore the parts, then place each label on its marker.</text>
+    <text x="92" y="620" fill="#64748b" font-size="20">Simplified, non-brand-specific educational model • not shown to scale</text>
+  </g>
+</svg>

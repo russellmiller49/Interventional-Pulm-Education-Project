@@ -7,13 +7,15 @@
  * model — cases needing a custom model must render on the main thread.
  */
 import type {
+  CardiacModelSpec,
+  ProbeType,
   ThoracicProbeState,
   ThoracicStructureLabel,
   ThoracicVolume,
   VolumeGeometry,
 } from '../types'
 
-import { simulateBMode } from '../engine/simulateBMode'
+import { renderBModeImage, simulateBMode } from '../engine/simulateBMode'
 import { createTissueModel } from '../engine/tissueModel'
 import { buildLabelResolver } from '../loader/loadThoracicCase'
 
@@ -22,6 +24,7 @@ export interface RaymarchInitMessage {
   data: ArrayBuffer
   geometry: VolumeGeometry
   labelCodes: Record<string, ThoracicStructureLabel>
+  cardiacModel?: CardiacModelSpec
 }
 
 export interface RaymarchRenderMessage {
@@ -31,6 +34,9 @@ export interface RaymarchRenderMessage {
   width: number
   height: number
   renderImage: boolean
+  simulationTimeSec?: number
+  probeType?: ProbeType
+  renderOnly?: boolean
 }
 
 export type RaymarchRequestMessage = RaymarchInitMessage | RaymarchRenderMessage
@@ -38,7 +44,7 @@ export type RaymarchRequestMessage = RaymarchInitMessage | RaymarchRenderMessage
 export interface RaymarchFrameMessage {
   type: 'frame'
   id: number
-  metrics: ReturnType<typeof simulateBMode>['metrics']
+  metrics: ReturnType<typeof simulateBMode>['metrics'] | null
   image: { width: number; height: number; buffer: ArrayBuffer } | null
 }
 
@@ -58,11 +64,34 @@ workerScope.onmessage = (event) => {
       data: new Uint8Array(message.data),
       geometry: message.geometry,
       resolveLabel: buildLabelResolver(message.labelCodes),
+      cardiacModel: message.cardiacModel,
     }
     return
   }
 
   if (message.type === 'render' && volume) {
+    if (message.renderOnly) {
+      const imageData = renderBModeImage({
+        volume,
+        probe: message.probe,
+        width: message.width,
+        height: message.height,
+        simulationTimeSec: message.simulationTimeSec,
+        probeType: message.probeType,
+      })
+      const buffer = imageData.data.buffer as ArrayBuffer
+      workerScope.postMessage(
+        {
+          type: 'frame',
+          id: message.id,
+          metrics: null,
+          image: { width: imageData.width, height: imageData.height, buffer },
+        },
+        [buffer],
+      )
+      return
+    }
+
     const { imageData, metrics } = simulateBMode({
       volume,
       probe: message.probe,
@@ -70,6 +99,8 @@ workerScope.onmessage = (event) => {
       height: message.height,
       model,
       renderImage: message.renderImage,
+      simulationTimeSec: message.simulationTimeSec,
+      probeType: message.probeType,
     })
 
     if (imageData) {

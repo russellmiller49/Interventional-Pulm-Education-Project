@@ -1,0 +1,440 @@
+{
+  "meta": {
+    "width": 1368,
+    "height": 1080,
+    "note": "Endoscopic still frames for the identify quiz, cropped to the scope image."
+  },
+  "structures": {
+    "larynx": {
+      "img": "/airway-lesson/quiz/larynx.jpg",
+      "frame": 220,
+      "poly": [
+        1350, 559, 1348, 683, 1345, 735, 1346, 836, 1195, 1050, 1077, 1040, 1023, 970, 954, 853,
+        916, 745, 828, 638, 764, 413, 736, 303, 717, 256, 658, 71, 874, 83, 1108, 190, 1219, 265,
+        1351, 384
+      ],
+      "name": "Vocal cords",
+      "short": "Cords",
+      "lobe": "central",
+      "group": "larynx",
+      "isOrifice": false,
+      "hasCt": true
+    },
+    "trachea": {
+      "img": "/airway-lesson/quiz/trachea.jpg",
+      "frame": 276,
+      "poly": [
+        754, 553, 821, 550, 930, 573, 984, 596, 1100, 663, 1202, 742, 1251, 845, 1280, 940, 1161,
+        1079, 401, 1079, 402, 955, 416, 874, 415, 818, 440, 686, 456, 653, 496, 608, 581, 589, 590,
+        581, 604, 583, 653, 567, 736, 552
+      ],
+      "name": "Trachea",
+      "short": "Trachea",
+      "lobe": "central",
+      "group": "central",
+      "isOrifice": false,
+      "hasCt": true
+    },
+    "rmb": {
+      "img": "/airway-lesson/quiz/rmb.jpg",
+      "frame": 588,
+      "poly": [
+        873, 172, 817, 151, 524, 207, 455, 243, 380, 267, 259, 469, 284, 771, 448, 948, 537, 969,
+        739, 960, 787, 949, 965, 901, 1096, 814, 1114, 788, 1158, 692, 1176, 634, 1205, 430, 1157,
+        263, 1091, 197, 911, 171
+      ],
+      "name": "Right main bronchus",
+      "short": "RMB",
+      "lobe": "central",
+      "group": "central",
+      "isOrifice": false,
+      "hasCt": true
+    },
+    "lmb": {
+      "img": "/airway-lesson/quiz/lmb.jpg",
+      "frame": 512,
+      "poly": [278, 22, 212, 90, 146, 190, 257, 290, 454, 290, 555, 138, 535, 31, 405, 2, 324, 11],
+      "name": "Left main bronchus",
+      "short": "LMB",
+      "lobe": "central",
+      "group": "central",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "bronchus-intermedius": {
+      "img": "/airway-lesson/quiz/bronchus-intermedius.jpg",
+      "frame": 644,
+      "poly": [
+        446, 594, 325, 618, 267, 637, 231, 664, 214, 689, 187, 779, 184, 865, 198, 947, 237, 992,
+        252, 1020, 276, 1028, 848, 1028, 867, 1023, 893, 977, 894, 933, 859, 799, 838, 757, 813,
+        735, 768, 667, 636, 614, 503, 593
+      ],
+      "name": "Bronchus intermedius",
+      "short": "BI",
+      "lobe": "central",
+      "group": "central",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rul": {
+      "img": "/airway-lesson/quiz/rul.jpg",
+      "frame": 650,
+      "poly": [
+        416, 3, 890, 4, 1049, 17, 1081, 69, 1084, 203, 1011, 363, 966, 407, 862, 470, 800, 479, 622,
+        464, 485, 436, 399, 389, 353, 332, 275, 299, 246, 217, 227, 91, 235, 30, 248, 7, 397, 3
+      ],
+      "name": "Right upper lobe bronchus",
+      "short": "RUL",
+      "lobe": "RUL",
+      "group": "RUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb3": {
+      "img": "/airway-lesson/quiz/rb3.jpg",
+      "frame": 694,
+      "poly": [
+        101, 379, 117, 478, 130, 509, 155, 534, 209, 585, 267, 626, 301, 639, 335, 648, 368, 641,
+        391, 615, 402, 579, 404, 543, 402, 426, 395, 354, 357, 287, 299, 238, 265, 233, 231, 240,
+        198, 253, 164, 271, 117, 328, 104, 359
+      ],
+      "name": "RB3 \u00b7 Anterior",
+      "short": "RB3",
+      "lobe": "RUL",
+      "group": "RUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb2": {
+      "img": "/airway-lesson/quiz/rb2.jpg",
+      "frame": 698,
+      "poly": [
+        877, 587, 941, 558, 999, 508, 1069, 408, 1079, 348, 1015, 287, 913, 262, 826, 255, 735, 259,
+        669, 282, 641, 305, 622, 337, 596, 440, 628, 503, 684, 556, 716, 573, 842, 594, 870, 590
+      ],
+      "name": "RB2 \u00b7 Posterior",
+      "short": "RB2",
+      "lobe": "RUL",
+      "group": "RUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb1": {
+      "img": "/airway-lesson/quiz/rb1.jpg",
+      "frame": 688,
+      "poly": [
+        658, 41, 590, 48, 575, 56, 573, 72, 586, 83, 671, 107, 784, 119, 839, 118, 855, 109, 882,
+        102, 930, 75, 929, 59, 922, 44, 890, 29, 850, 19, 755, 21, 737, 18, 689, 32
+      ],
+      "name": "RB1 \u00b7 Apical",
+      "short": "RB1",
+      "lobe": "RUL",
+      "group": "RUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rll": {
+      "img": "/airway-lesson/quiz/rll.jpg",
+      "frame": 784,
+      "poly": [
+        301, 520, 268, 617, 237, 741, 345, 909, 450, 993, 564, 1004, 677, 1012, 792, 961, 871, 872,
+        906, 754, 936, 674, 931, 556, 893, 439, 830, 367, 755, 336, 641, 312, 557, 316, 468, 326,
+        415, 382, 370, 449
+      ],
+      "name": "Right lower lobe bronchus",
+      "short": "RLL",
+      "lobe": "RLL",
+      "group": "RLL",
+      "isOrifice": false,
+      "hasCt": true
+    },
+    "rml": {
+      "img": "/airway-lesson/quiz/rml.jpg",
+      "frame": 842,
+      "poly": [
+        489, 160, 411, 295, 426, 484, 444, 556, 579, 689, 684, 696, 1000, 618, 1086, 475, 1082, 377,
+        996, 199, 891, 95, 803, 60, 578, 68
+      ],
+      "name": "Right middle lobe bronchus",
+      "short": "RML",
+      "lobe": "RML",
+      "group": "RML",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb7": {
+      "img": "/airway-lesson/quiz/rb7.jpg",
+      "frame": 786,
+      "poly": [
+        447, 645, 479, 657, 504, 682, 525, 691, 535, 706, 541, 720, 551, 730, 558, 744, 559, 757,
+        576, 782, 584, 814, 581, 831, 567, 836, 534, 841, 469, 822, 440, 804, 427, 772, 413, 754,
+        396, 706, 396, 679, 401, 658, 432, 641
+      ],
+      "name": "RB7 \u00b7 Medial basal",
+      "short": "RB7",
+      "lobe": "RLL",
+      "group": "RLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb6": {
+      "img": "/airway-lesson/quiz/rb6.jpg",
+      "frame": 822,
+      "poly": [
+        1178, 858, 1167, 874, 1164, 908, 1143, 966, 1115, 1012, 1108, 1030, 1106, 1065, 1121, 1073,
+        1137, 1071, 1171, 1048, 1189, 1031, 1199, 1018, 1209, 984, 1225, 952, 1234, 919, 1235, 903,
+        1235, 885, 1230, 868, 1219, 855, 1204, 849, 1193, 850, 1183, 858
+      ],
+      "name": "RB6 \u00b7 Superior",
+      "short": "RB6",
+      "lobe": "RLL",
+      "group": "RLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb4": {
+      "img": "/airway-lesson/quiz/rb4.jpg",
+      "frame": 876,
+      "poly": [
+        729, 234, 684, 255, 645, 297, 638, 359, 641, 420, 694, 478, 811, 460, 864, 338, 834, 247,
+        782, 230
+      ],
+      "name": "RB4 \u00b7 Lateral",
+      "short": "RB4",
+      "lobe": "RML",
+      "group": "RML",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb5": {
+      "img": "/airway-lesson/quiz/rb5.jpg",
+      "frame": 880,
+      "poly": [
+        584, 177, 576, 161, 561, 152, 545, 154, 528, 162, 500, 183, 476, 212, 447, 259, 433, 290,
+        424, 325, 422, 362, 431, 395, 440, 410, 454, 418, 489, 422, 506, 416, 534, 387, 554, 356,
+        577, 285, 587, 233, 587, 200, 582, 183
+      ],
+      "name": "RB5 \u00b7 Medial",
+      "short": "RB5",
+      "lobe": "RML",
+      "group": "RML",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb8": {
+      "img": "/airway-lesson/quiz/rb8.jpg",
+      "frame": 1080,
+      "poly": [
+        863, 444, 856, 428, 813, 401, 745, 397, 630, 406, 580, 429, 557, 455, 540, 488, 534, 538,
+        518, 567, 508, 644, 522, 786, 544, 862, 567, 893, 604, 913, 629, 914, 698, 893, 728, 860,
+        857, 614, 878, 531, 879, 488, 872, 457
+      ],
+      "name": "RB8 \u00b7 Anterior basal",
+      "short": "RB8",
+      "lobe": "RLL",
+      "group": "RLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb9": {
+      "img": "/airway-lesson/quiz/rb9.jpg",
+      "frame": 1054,
+      "poly": [
+        862, 729, 838, 812, 853, 863, 865, 876, 918, 883, 975, 869, 1058, 794, 1091, 714, 1093, 679,
+        1108, 628, 1100, 588, 1072, 554, 1049, 537, 1016, 535, 998, 541, 949, 579, 872, 711
+      ],
+      "name": "RB9 \u00b7 Lateral basal",
+      "short": "RB9",
+      "lobe": "RLL",
+      "group": "RLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "rb10": {
+      "img": "/airway-lesson/quiz/rb10.jpg",
+      "frame": 928,
+      "poly": [
+        1058, 760, 1087, 743, 1121, 714, 1105, 762, 1073, 780, 1045, 801, 978, 824, 935, 826, 919,
+        822, 905, 814, 905, 800, 923, 797, 955, 796, 969, 788, 989, 786, 1021, 775, 1037, 773
+      ],
+      "name": "RB10 \u00b7 Posterior basal",
+      "short": "RB10",
+      "lobe": "RLL",
+      "group": "RLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lul": {
+      "img": "/airway-lesson/quiz/lul.jpg",
+      "frame": 1428,
+      "poly": [
+        589, 94, 703, 21, 878, 0, 1146, 8, 1238, 121, 1306, 218, 1329, 351, 1338, 482, 1327, 664,
+        1290, 821, 1180, 956, 1003, 1027, 972, 1026, 770, 1006, 568, 914, 508, 831, 464, 708, 445,
+        607, 427, 390, 446, 257, 484, 160
+      ],
+      "name": "Left upper lobe bronchus",
+      "short": "LUL",
+      "lobe": "LUL",
+      "group": "LUL",
+      "isOrifice": false,
+      "hasCt": true
+    },
+    "lll": {
+      "img": "/airway-lesson/quiz/lll.jpg",
+      "frame": 1412,
+      "poly": [
+        395, 809, 464, 815, 506, 837, 547, 876, 555, 903, 585, 947, 603, 1016, 604, 1056, 592, 1080,
+        384, 1069, 348, 1048, 325, 1023, 276, 921, 275, 858, 293, 834, 321, 817, 351, 804, 381, 804
+      ],
+      "name": "Left lower lobe bronchus",
+      "short": "LLL",
+      "lobe": "LLL",
+      "group": "LLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lingula": {
+      "img": "/airway-lesson/quiz/lingula.jpg",
+      "frame": 1446,
+      "poly": [
+        764, 698, 754, 765, 780, 900, 803, 937, 837, 973, 893, 987, 1034, 1006, 1105, 984, 1188,
+        923, 1247, 815, 1251, 793, 1245, 729, 1229, 655, 1222, 633, 1164, 556, 1021, 541, 904, 548,
+        777, 633, 757, 675
+      ],
+      "name": "Lingular bronchus",
+      "short": "Lingula",
+      "lobe": "lingula",
+      "group": "lingula",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb4": {
+      "img": "/airway-lesson/quiz/lb4.jpg",
+      "frame": 1446,
+      "poly": [
+        989, 704, 952, 709, 930, 735, 910, 766, 898, 802, 900, 827, 931, 849, 982, 850, 1035, 841,
+        1066, 805, 1062, 766, 1042, 731, 1019, 710
+      ],
+      "name": "LB4 \u00b7 Superior lingula",
+      "short": "LB4",
+      "lobe": "lingula",
+      "group": "lingula",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lul-upper": {
+      "img": "/airway-lesson/quiz/lul-upper.jpg",
+      "frame": 1462,
+      "poly": [
+        990, 21, 1021, 27, 1038, 52, 1066, 203, 1054, 297, 1052, 444, 1010, 589, 968, 631, 888, 654,
+        714, 669, 644, 663, 577, 640, 535, 597, 510, 541, 493, 452, 576, 216, 639, 75, 643, 10, 653,
+        0, 802, 0, 1002, 16
+      ],
+      "name": "Left upper division",
+      "short": "LUL div",
+      "lobe": "LUL",
+      "group": "LUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb5": {
+      "img": "/airway-lesson/quiz/lb5.jpg",
+      "frame": 1452,
+      "poly": [
+        1005, 1006, 972, 1015, 943, 1030, 931, 1039, 923, 1052, 937, 1059, 987, 1068, 1021, 1069,
+        1035, 1066, 1048, 1058, 1059, 1046, 1068, 1046, 1108, 1014, 1114, 1001, 1106, 987, 1072,
+        978, 1057, 978, 1043, 982, 1016, 1000
+      ],
+      "name": "LB5 \u00b7 Inferior lingula",
+      "short": "LB5",
+      "lobe": "lingula",
+      "group": "lingula",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb3": {
+      "img": "/airway-lesson/quiz/lb3.jpg",
+      "frame": 1534,
+      "poly": [
+        480, 285, 406, 340, 333, 413, 300, 484, 306, 566, 348, 631, 417, 620, 566, 503, 652, 404,
+        665, 307, 588, 273
+      ],
+      "name": "LB3 \u00b7 Anterior",
+      "short": "LB3",
+      "lobe": "LUL",
+      "group": "LUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb1-2": {
+      "img": "/airway-lesson/quiz/lb1-2.jpg",
+      "frame": 1524,
+      "poly": [
+        201, 79, 135, 129, 48, 218, 28, 259, 12, 315, 4, 421, 64, 451, 142, 450, 184, 425, 413, 236,
+        430, 160, 439, 49, 344, 17
+      ],
+      "name": "LB1+2 \u00b7 Apicoposterior",
+      "short": "LB1+2",
+      "lobe": "LUL",
+      "group": "LUL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb6": {
+      "img": "/airway-lesson/quiz/lb6.jpg",
+      "frame": 1658,
+      "poly": [
+        238, 823, 260, 874, 285, 904, 310, 945, 349, 986, 372, 1018, 382, 1051, 379, 1080, 265,
+        1080, 252, 1076, 238, 1059, 189, 1023, 161, 981, 141, 932, 134, 884, 131, 793, 138, 761,
+        147, 746, 161, 738, 195, 752, 229, 807
+      ],
+      "name": "LB6 \u00b7 Superior",
+      "short": "LB6",
+      "lobe": "LLL",
+      "group": "LLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb10": {
+      "img": "/airway-lesson/quiz/lb10.jpg",
+      "frame": 1658,
+      "poly": [
+        651, 913, 625, 958, 595, 1000, 585, 1023, 585, 1039, 591, 1053, 602, 1063, 615, 1068, 676,
+        1080, 725, 1080, 740, 1072, 726, 1031, 686, 952, 677, 939, 668, 933
+      ],
+      "name": "LB10 \u00b7 Posterior basal",
+      "short": "LB10",
+      "lobe": "LLL",
+      "group": "LLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb9": {
+      "img": "/airway-lesson/quiz/lb9.jpg",
+      "frame": 1688,
+      "poly": [
+        563, 876, 549, 869, 508, 804, 500, 756, 513, 728, 543, 705, 576, 698, 643, 699, 675, 708,
+        709, 739, 714, 786, 709, 821, 689, 869, 665, 894, 633, 905, 601, 906, 571, 894
+      ],
+      "name": "LB9 \u00b7 Lateral basal",
+      "short": "LB9",
+      "lobe": "LLL",
+      "group": "LLL",
+      "isOrifice": true,
+      "hasCt": true
+    },
+    "lb7-8": {
+      "img": "/airway-lesson/quiz/lb7-8.jpg",
+      "frame": 1906,
+      "poly": [
+        5, 455, -2, 852, 176, 1080, 911, 1077, 955, 870, 953, 621, 823, 637, 515, 596, 356, 528
+      ],
+      "name": "LB7+8 \u00b7 Anteromedial basal",
+      "short": "LB7+8",
+      "lobe": "LLL",
+      "group": "LLL",
+      "isOrifice": false,
+      "hasCt": true
+    }
+  }
+}

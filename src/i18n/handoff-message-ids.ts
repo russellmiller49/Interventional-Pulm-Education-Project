@@ -632,6 +632,7 @@ export const handoffMessageIds: Readonly<Record<string, string>> = {
     'h_236f119c40cb',
   'Bronchoscopic & Surgical Treatment for COPD and Chronic Bronchitis': 'h_239aa61e8e1d',
   'Choose an answer to reveal the teaching explanation.': 'h_23ca80822027',
+  'Practice in the Clinical Decision Lab': 'h_23dbdd0ae8ac',
   'Classify fluid with Light criteria and reconcile pseudoexudates.': 'h_23e4d082a591',
   'Nodal station map and case-based staging decisions independent of the EBUS course.':
     'h_23e82ec63adc',
@@ -2053,6 +2054,8 @@ export const handoffMessageIds: Readonly<Record<string, string>> = {
   'What is the best classification for this cohesive atypical edge?': 'h_70b7c7be4db6',
   'Copy-ready planning, debugging, workbench, research dashboard, and teaching app prompts.':
     'h_70c137f8d47a',
+  'Apply indication, architecture, lumen, fit, complication, surveillance, and exit decisions in the full interactive airway-stent course.':
+    'h_70c6b3508bc2',
   'CT target markers stay hidden until the answer is locked.': 'h_70ee6d61fd81',
   'Lung cryobiopsy (H&E and ex-vivo confocal microscopy)': 'h_70f3afc322ff',
   'Necrotic tumors can coexist with inflammation; a benign/infectious impression must fit the sampled target and final stains.':
@@ -4665,4 +4668,930 @@ export const handoffMessageIds: Readonly<Record<string, string>> = {
     'h_79946be76bdf',
   'This is a single-case research prototype that generates synthetic B-mode images from a 3D model. It is not a validated teaching tool. For the core ultrasound curriculum, use the Pleural Ultrasound module (Learn → Practice → Assess).':
     'h_6df300a26f54',
+  'Specimen-level representation is not procedure-level staging; the systematic staging plan and local pass protocol still govern the procedure.':
+    'h_01095e19adc6',
+  'Dispersed background cells': 'h_016b829e5fa4',
+  'Continue systematic staging; keep each station separately labeled and preserve material per local protocol':
+    'h_01e0612f9fc0',
+  'Panel D shows a crowded sheet with loss of polarity, pleomorphism, and hyperchromasia on a Pap-stained liquid-based preparation.':
+    'h_0267264357e2',
+  'High-grade small-cell pattern': 'h_02f51954f092',
+  'The smaller dispersed cells provide an internal comparison for the crowded epithelial group elsewhere in the field.':
+    'h_0507d680149a',
+  'CAP multidisciplinary thoracic specimen guideline': 'h_0522bf6512d9',
+  'What is the most useful rapid category?': 'h_05dec37c874a',
+  'enlarged round nuclei': 'h_0634b1ec608d',
+  'Used here:': 'h_065e2af8087a',
+  'Supports systematic rather than target-only nodal staging as the minimal standard and combined EBUS plus EUS(-B) when appropriate.':
+    'h_0785a54c1dac',
+  'delicate cytoplasm': 'h_09363e9bf814',
+  'Three adequacy checks. Six moves. One clear call.': 'h_094fb33bc5d5',
+  '“The specimen contains granulomatous inflammation. Morphology and special stains alone do not establish or exclude infection. If infection is in the clinical differential, please allocate fresh sterile material for microbiology and retain cytology material per local protocol.”':
+    'h_09e6f847f2ba',
+  'Blood and benign ciliated cells do not provide an atypical or malignant lesional population.':
+    'h_0a328aacf910',
+  'Does the sample require a lymphoma-specific triage pathway?': 'h_0a52882705f1',
+  'dirty necrotic background': 'h_0a5e1a15a16b',
+  'ERS/ESGE/ESTS lung-cancer endosonography guideline': 'h_0a78f270b6f2',
+  'panel a': 'h_0a92fdc846b4',
+  'Relatively abundant blue, vacuolated cytoplasm is present within a cohesive atypical epithelial group.':
+    'h_0b21fe048034',
+  'Which triage move has the highest immediate value?': 'h_0d1d0775dd21',
+  'Stop because the lymph node is represented': 'h_0e2c12697866',
+  'Four source-case direct smears stained with Diff-Quik: panels a-c at 100x and panel d at 40x.':
+    'h_0ec716e506e2',
+  'WHO review: adenocarcinoma cytomorphologic patterns': 'h_0edd46402b37',
+  'Decision 2 · Specimen action': 'h_0fe6c86b4a35',
+  'Continue to morphology lab': 'h_10094fd964f2',
+  'The morphology may suggest glandular differentiation, but final type and biomarker status require additional material and testing.':
+    'h_1040da4a71ba',
+  'architectural disorder': 'h_10e9f81af6e1',
+  'Unlabeled high-magnification Diff-Quik cytology image for morphology practice.':
+    'h_111254069235',
+  'Decision lab': 'h_115815b58d85',
+  'The mental model': 'h_11c592a28d39',
+  'Open CAP multidisciplinary thoracic specimen guideline': 'h_1316ae8ae7b7',
+  'Relative comparison supports disciplined pattern recognition, but this field alone is not evidence of target representation.':
+    'h_1379e7a6757c',
+  'Dolezal et al., Journal of Clinical and Translational Pathology, 2024; composite figure displayed responsively with interactive teaching context added':
+    'h_137ab8243f1c',
+  'The World Health Organization Reporting System for Lung Cytopathology - A Review of the First Edition':
+    'h_13c66b55a5a4',
+  'Granulomas are a pattern, not an etiology. Infection, sarcoidosis, treatment effect, foreign material, and malignancy-associated reactions may overlap.':
+    'h_14d25c23b091',
+  'Representation alone does not explain away a monomorphic atypical lymphoid population.':
+    'h_1579e2083db9',
+  'Where should the next material go?': 'h_17703ab99a2e',
+  'Clinical question': 'h_17ff0874c414',
+  'Nuclear and cytoplasmic detail': 'h_180c10320fb2',
+  'scant cytoplasm': 'h_1a135f819e6f',
+  'Morphology slide 3': 'h_1a7610530739',
+  'Active evidence-based guideline': 'h_1b2f0cad5656',
+  'Efficacy of rapid on-site cytological evaluation (ROSE) by a pulmonologist in determining specimen adequacy and diagnostic accuracy in interventional diagnosis of lung lesions':
+    'h_1b79c8cdb009',
+  'Use multiple features rather than a single color or cell-size clue.': 'h_1ba31ac7a123',
+  'A diagnostic rapid smear may still leave the final specimen inadequate for immunostains or biomarkers.':
+    'h_1c1409f436fa',
+  'Use every subsequent pass to make more rapid smears': 'h_1c4577b1c0a1',
+  '“Blood and benign bronchial cells only; the targeted nodule is not represented on this rapid smear. Additional sampling is needed if clinically appropriate.”':
+    'h_1c9891500fd9',
+  'Definitive lung adenocarcinoma with actionable mutation': 'h_1d52e9670f48',
+  'Diff-Quik smear showing crowded cohesive three-dimensional groups of atypical epithelial cells consistent with adenocarcinoma.':
+    'h_1dda1bd343b1',
+  'Retry this case': 'h_1eacff88c3dc',
+  'Benign or nonspecific background element': 'h_1eec7dd1905b',
+  'Crowded three-dimensional epithelial group': 'h_1efd591abb42',
+  'Compare lesional groups with smaller dispersed background cells.': 'h_1f4ea12e0b2e',
+  'Open CHEST guideline: EBUS-TBNA acquisition and handling': 'h_1f52113c9ace',
+  'Atypical lymphoid population; lymphoma cannot be excluded': 'h_1fd4838468e8',
+  Pattern: 'h_1fff6a31661b',
+  'Representative lymphoid tissue; no malignant cells seen on this rapid smear': 'h_20026be690fe',
+  '5 commit-first cases': 'h_201e46f5da83',
+  'The six-move loop': 'h_203506db28e0',
+  'Atypical epithelial population': 'h_20929b4a1d81',
+  'Classify the marked regions': 'h_20b41e242415',
+  'field assessment': 'h_20c3403df573',
+  'Next case': 'h_20db05007541',
+  'Cohesive epithelioid histiocyte aggregates are present in an inflammatory background. No reproducible malignant epithelial population is identified on the rapid slide.':
+    'h_20f9f548a017',
+  'Avoid treating cellularity alone as proof of adequacy for every clinical endpoint.':
+    'h_2134e75214f6',
+  'Atypical tumor cells in inflammation': 'h_2335876a8c44',
+  'Reactive bronchial epithelium can also be cohesive. Confirm architectural disorder and nuclear atypia in interpretable, thinner areas before making an onsite category call.':
+    'h_23e66aa8bc0a',
+  'Modifications:': 'h_24288ea51e00',
+  'The enlarged nuclei and visible nucleolar detail add weight to a malignant epithelial interpretation in this cohesive group.':
+    'h_24576a992faa',
+  'Macrophages may be vacuolated. Cohesion and epithelial nuclear atypia are needed before treating vacuolation as a tumor clue.':
+    'h_248b64854ab6',
+  'Discard the needle rinse because the smear is already adequate': 'h_24e05c68d09d',
+  'Reset all cases': 'h_27a64124b2d3',
+  'Wikimedia Commons - File:Lung adenocarcinoma - Diff-Quik -- high mag.jpg': 'h_2856f5767e51',
+  'Granular debris and inflammation are present, but no preserved lesional population is found.':
+    'h_2894f91906ce',
+  'Benign bronchial cells can be real cells from the wrong place.': 'h_28a7b08bc697',
+  'Small malignant cells': 'h_28bc4663781c',
+  'Malignant epithelial pattern': 'h_296f92405003',
+  'CHEST recommends four or more passes for suspected malignant EBUS-TBNA (strong recommendation, very-low-certainty evidence), but feasibility, local protocol, and ancillary needs still govern.':
+    'h_2a47d4808e0f',
+  'Separate representative morphology from adequacy for downstream testing.': 'h_2a58b29452fa',
+  'Supports ROSE-directed triage for microbiologic culture, flow cytometry, immunocytochemistry, and molecular testing while recognizing multiple validated cytology preparations.':
+    'h_2aba1b496a04',
+  'The architecture supports representative lesional sampling, while the amount reserved for cell block or molecular studies remains a separate adequacy question.':
+    'h_2b1b80946d12',
+  'Case queue': 'h_2b85409c1943',
+  'Unanswered hotspot': 'h_2baa026a5d2a',
+  'Teaching image · diagnosis and source label reveal after commitment': 'h_2c15c1722065',
+  'Evidence & limits': 'h_2d7629738a60',
+  'The safe rapid category is malignant epithelial. Confirming lesional cells can guide preservation of additional material for final typing and biomarkers.':
+    'h_2dae57bf20fa',
+  'Repeated lesional groups are more reliable than one isolated atypical cluster.':
+    'h_2db5c397e1dc',
+  'Classify hotspot 2': 'h_2df0d152d4e1',
+  'State that the smear is blood-diluted, inspect clot/tissue fragments, and coordinate a technique or target adjustment while preserving material for the laboratory workflow.':
+    'h_2e61e42f1dac',
+  'Pass strategy is a separate decision': 'h_2eb1b60908bd',
+  'Definitive small cell carcinoma': 'h_2f06dadfc3a1',
+  'A busy background can distract from the central question: is there a reproducible, interpretable population that represents the sampled target?':
+    'h_2fb035b6bfc8',
+  'Direct cytology smear, Diff-Quik stain; very-high-magnification source image.': 'h_303a6829c6f2',
+  'Blood-dominant smear': 'h_3060ff8b3bd7',
+  'Microbiology routing is conditional on the clinical differential and local protocol; when tuberculosis is suspected, coordinate mycobacterial smear and culture plus TB PCR when available.':
+    'h_310414b517fb',
+  correct: 'h_3179a65eff25',
+  'Unlabeled four-panel lung cytology source figure using Papanicolaou and Diff-Quik preparations.':
+    'h_31a861e437fb',
+  'Preserve validated morphologic and ancillary preparations; consider lymphoid and other mimics.':
+    'h_3264d5bfad31',
+  'Use thin, interpretable areas when thick regions obscure detail.': 'h_3347ecfc5f63',
+  'Both decisions align': 'h_349201bb7002',
+  'Treat the target as unproven unless target-specific material is also present; the immediate problem is acquisition, not more stains on the contaminant.':
+    'h_35b392e565eb',
+  'What should happen to subsequent material?': 'h_363764d96001',
+  'Epithelioid histiocytes, giant cells, necrosis, and acute inflammation can redirect the differential.':
+    'h_3661921b3ab1',
+  'Say the target and the downstream need before the first pass so the team can prepare the right containers and priorities.':
+    'h_3662b2576a6c',
+  'three-dimensional group': 'h_36cf8fe6abab',
+  'Diff-Quik smear with cohesive three-dimensional groups of blue cells and scattered background cells.':
+    'h_36f7f34b3807',
+  'Nuclear crowding and overlap': 'h_37c93c9ade8c',
+  'Open CAP/ASCP adult lymphoma workup guideline': 'h_3810193031f2',
+  'Name the clinical question': 'h_382c70f4f7be',
+  'Reactive bronchial epithelium': 'h_3835374a1c62',
+  'Decide what this proves about the target, then decide what the next material needs to accomplish.':
+    'h_386814baf008',
+  'Do not force a definitive subtype from scant or poorly preserved material; final classification requires the complete specimen and appropriate ancillary studies.':
+    'h_38b2d94bc6c5',
+  'The rapid pattern is actionable even before an etiology is known.': 'h_38e00b6ff084',
+  'Representative benign lymph node': 'h_38ff9cabdb5f',
+  'If the target is absent, improve acquisition before spending the specimen on downstream tests.':
+    'h_394991f589e0',
+  'Correct. This describes the observed process and preserves the etiologic differential.':
+    'h_398812105938',
+  'Useful response': 'h_3a440e8e355a',
+  'granular chromatin': 'h_3af74e006f27',
+  'This cohesive blue group is crowded and three-dimensional, supporting a malignant epithelial pattern in this source case.':
+    'h_3afea945a223',
+  'The smear contains abundant small mature-appearing lymphocytes with scattered anthracotic macrophages. No reproducible malignant population is seen on the rapid slide.':
+    'h_3c1df0db95db',
+  'Annotated visual practice': 'h_3ca278dfd509',
+  'Cells from the airway can look reassuring while the lesion remains completely unsampled.':
+    'h_3cba99919558',
+  'Atypical lymphoid morphology should trigger triage, not an unsupported final subtype.':
+    'h_3d66282e4f18',
+  'Report nonrepresentation; re-check targeting and obtain more material if appropriate':
+    'h_3e4667f68bb1',
+  'Give a short structured call and confirm that the proceduralist heard the implication for the next pass or station.':
+    'h_3e65999f218e',
+  'Open ERS/ESGE/ESTS lung-cancer endosonography guideline': 'h_3e852de22732',
+  'Do not let one striking group replace a full smear scan or the separate assessment of material available for downstream tests.':
+    'h_3ea249bc7856',
+  'The smear is dominated by a relatively monomorphic discohesive lymphoid population with cytologic atypia. No cohesive epithelial groups are identified.':
+    'h_3ef1f26f09ef',
+  'Active ROSE learning section': 'h_3f7b26f137be',
+  'Wikimedia Commons - File:Lung adenocarcinoma - Diff-Quik -- very high mag.jpg': 'h_3fa9b77147bd',
+  'There is no single universal adequacy count for every pulmonary cytology specimen and endpoint.':
+    'h_407dd20e4c66',
+  'large nuclei': 'h_41614627085c',
+  'Dark heaped groups, streaking, bare nuclei, or loss of interpretable cell detail.':
+    'h_41bca700f3a5',
+  '“Inadequate” is more useful when the room also hears why: blood dilution, crush, necrosis-only material, or cells from the access path rather than the target.':
+    'h_424900c50af3',
+  'Can you interpret what is on the slide?': 'h_43e75f054e24',
+  'Broad-pattern recognition across four cases': 'h_440bc401285d',
+  'Open Pulmonary Pathology Society perspective on EBUS ROSE': 'h_4434d5e194cb',
+  'What should the ROSE call change next?': 'h_447afab1bd1a',
+  'ROSE: Adequacy, Triage & Cytology': 'h_44b2d2610b31',
+  'Granulomatous / inflammatory pattern': 'h_44bc8d1cdf9a',
+  'Suspicious for malignancy': 'h_44ed6bf66ff0',
+  'The group supports representative, interpretable lesional sampling for a morphology endpoint. It does not by itself prove that enough material remains for cell block, immunostains, or molecular testing.':
+    'h_450ce989e6c0',
+  'Is the station represented, and what can ROSE safely communicate?': 'h_457006509e2e',
+  'Communicate the limitation and, if clinically appropriate, redirect sampling toward a viable region while preserving material for relevant ancillary studies.':
+    'h_45c39cb240c0',
+  'A granulomatous process may need microbiology and can coexist with malignancy; a broad “negative” call hides both issues.':
+    'h_45e74ba76520',
+  'Specimen routing': 'h_45f56086cc78',
+  'Variation across cytology preparations': 'h_4793004542b6',
+  'Why this works': 'h_47f4442d8fba',
+  'Cohesive glandular epithelial pattern': 'h_482e37cabb15',
+  'This may exhaust material that should have been routed fresh for microbiology or preserved for validated cytology preparations.':
+    'h_495d5b9226bd',
+  'The downstream endpoint—not merely a positive smear—determines whether enough tissue has been collected.':
+    'h_499be01fc6f2',
+  'nucleolar detail': 'h_49e9e6b6ba82',
+  'Preparation:': 'h_49fa90b3e636',
+  'Negative for malignancy; no further workup needed': 'h_4a2f203909ae',
+  'Stop immediately because the rapid smear is diagnostic': 'h_4bd117de49d8',
+  'Both case decisions are correct. Expert feedback is now visible.': 'h_4ccadfecc01e',
+  'Ciliated or orderly bronchial cells are present in a sample from a peripheral target.':
+    'h_4cd20ad33baf',
+  'The rapid finding supports a granulomatous or infection-associated inflammatory category and may prompt dedicated microbiology material when clinically indicated.':
+    'h_4d003883071d',
+  'Insufficient / non-diagnostic': 'h_4ddc059a68a9',
+  'Benign bronchial cells identify airway contamination, not the biology of the targeted nodule.':
+    'h_5013f53b398d',
+  'Panel B shows a cohesive tumor fragment with peripherally placed nuclei and vacuolated cytoplasm on a Diff-Quik smear.':
+    'h_501a15bcb89d',
+  'cases ·': 'h_50376051468f',
+  'Supports ancillary testing with morphology, warns against FNA cytomorphology alone, and identifies entities that require architectural assessment.':
+    'h_50a439eeb705',
+  'Source Figure 7: (a) Pap, liquid-based; (b) Diff-Quik smear; (c) Pap smear; (d) Pap, liquid-based.':
+    'h_510f7755225b',
+  'Malignant epithelial cell sheet': 'h_5162b54022ce',
+  'ROSE decision lab': 'h_51930a1a463c',
+  'Flow cytometry is not the default destination for a cohesive malignant epithelial pattern.':
+    'h_51953e717e3d',
+  'Request immunostains to subtype the bronchial cells': 'h_51a00659aabf',
+  'End the staging procedure because this station is negative': 'h_51d1e3751947',
+  'Morphology slide 2': 'h_524ddeb6bb68',
+  'Abundant cells can still be nonrepresentative; benign airway cells do not prove a peripheral lesion was sampled.':
+    'h_5379f9a1aac9',
+  'The call avoids equating granulomas with either sarcoidosis or tuberculosis.': 'h_53f546e15e1d',
+  'The clinical question includes lymphoma. An atypical lymphoid population is relevant lesional material, not an empty specimen.':
+    'h_54278f374db3',
+  'Pap liquid-based': 'h_547ad4d8ae97',
+  'Diagnosis, nodal staging, lymphoma, infection, or biomarker tissue?': 'h_558626cc5d19',
+  'A high-grade small-cell pattern should trigger careful preservation for confirmatory immunostains and final classification rather than a stand-alone definitive ROSE diagnosis.':
+    'h_56f1984bee07',
+  'Crowded poorly differentiated tumor sheet': 'h_57006bec2d2e',
+  'panel d': 'h_5885cca620df',
+  'Bronchial contamination': 'h_597cb3bc15f5',
+  'Technical cellularity and target representativeness are different questions.': 'h_59bfda908559',
+  'Correct. ROSE confirms representation of this labeled specimen without collapsing the rest of the staging map or specimen plan.':
+    'h_59cba4e8b334',
+  'both correct': 'h_5a1b91cc7363',
+  'Lung adenocarcinoma — Diff-Quik, high magnification': 'h_5aa3a4deccb9',
+  'Practice the decisions': 'h_5ab4db8c59d3',
+  'The rapid category is strong enough to direct triage without overpromising a subtype.':
+    'h_5afcac545c79',
+  overlap: 'h_5b0fe021bfa5',
+  'Lesional cells can be present in an inflammatory background. The onsite call should describe the broad category and reserve definitive classification for complete review.':
+    'h_5b12fe73ec25',
+  'The next useful action is to improve acquisition, not to spend limited material on ancillary testing.':
+    'h_5bd0b6de0809',
+  'Provides a practical framework for target representation, broad preliminary categories, and triage for immunohistochemistry, microbiology, flow cytometry, and molecular assays.':
+    'h_5d1003dd2a4d',
+  'A malignant epithelial population may be dispersed rather than overtly gland-forming; interpretability and reproducibility matter more than one stereotyped architecture.':
+    'h_5d3c0dc9d430',
+  'Four-panel source figure showing cytomorphologic patterns of lung adenocarcinoma across Papanicolaou and Diff-Quik preparations.':
+    'h_5d8c17d24b30',
+  'Small blue-cell patterns require chromatin, cytoplasm, molding, crush pattern, clinical context, and ancillary correlation; cohesion is not required for small cell carcinoma.':
+    'h_5dfaee1c2bb1',
+  'Cohesive vacuolated tumor fragment': 'h_5e0b7fa3dfe0',
+  'Recognize that one tumor category can appear dispersed, cohesive, or sheet-like.':
+    'h_5e65447238c3',
+  'Enlarged atypical nuclei': 'h_5e8d1779382a',
+  'Paired cytology and cell-block panels showing epithelioid histiocyte aggregates and non-necrotizing granulomatous inflammation.':
+    'h_6066030c86d0',
+  'Sufficient for the endpoint': 'h_60c3a5dcd0c0',
+  'Necrosis and reactive squamous metaplasia can mislead. Require convincing malignant nuclei and target-concordant lesional material.':
+    'h_61201fd2de32',
+  Target: 'h_61ad50a9b918',
+  'conspicuous nucleoli': 'h_622f21248279',
+  'The anthracotic 4L sample': 'h_62c00ff19a5e',
+  'EBUS + pulmonary cytology': 'h_631c3af99fee',
+  'Lymphocytes and crush artifact may mimic a small-cell neoplasm. Confirm molding and chromatin in preserved cells and correlate with the complete specimen.':
+    'h_63dde8a13898',
+  'dispersed cells': 'h_64011e8c3e78',
+  'Good decision.': 'h_648ae677e8db',
+  'What is the best next-step communication?': 'h_64fb92362f8a',
+  'Pap smear': 'h_659ad3c10cab',
+  'Panel A shows small clusters of relatively uniform-appearing glandular cells with delicate cytoplasm in the source adenocarcinoma case.':
+    'h_6612f2c20b94',
+  'Correct. The reproducible atypical cohesive population supports a malignant epithelial category on the rapid smear.':
+    'h_6653cec4b23b',
+  'Correct. The slide contains cells, but nothing establishes that the nodule itself was sampled.':
+    'h_6670b355558f',
+  Representative: 'h_66842a7d7df6',
+  'PET-avid subcarinal lymph node': 'h_66f646aa2466',
+  'small cohesive clusters': 'h_678287655410',
+  'CAP/ASCP adult lymphoma workup guideline': 'h_6784210fe85f',
+  'Preserve validated cytology preparations and, when infection is suspected, sterile microbiology material; morphology alone does not establish etiology.':
+    'h_68cbc2aa039d',
+  'Nodal staging': 'h_68f124fec8d5',
+  'A malignant epithelial onsite category is sufficient for immediate triage; squamous classification should remain preliminary until full review.':
+    'h_695580f7ee46',
+  'Do not count your way to false certainty': 'h_6982e2898d0c',
+  'Representation is only the first adequacy axis; the specimen must also support the suspected disease pathway.':
+    'h_699182145610',
+  'Mediastinal node in a patient with a suspicious lung mass': 'h_69db06375b9d',
+  'Persistent or high suspicion may require core, excisional, or other architecture-preserving tissue through a multidisciplinary pathway.':
+    'h_69f0026d72fe',
+  'Classify hotspot 1': 'h_6a505e3e5182',
+  'ROSE essentials': 'h_6ad17495aaa1',
+  'Formalin-only handling can remove the option for standard flow cytometry on fresh viable cells.':
+    'h_6b44d3d199ad',
+  "“The target is represented and malignant epithelial cells are present. Please preserve additional material in the laboratory's validated tumor and biomarker preparation(s); final typing and ancillary adequacy are pending.”":
+    'h_6bd6fb6091f0',
+  'The problem is sampling, not subtyping. More stains cannot make the wrong material representative.':
+    'h_6c51549b06e9',
+  'Multiple cohesive three-dimensional groups show nuclear crowding, irregular contours, and enlarged nuclei. The finding is reproducible across the smear.':
+    'h_6c89cb8f12c6',
+  'Check smear quality': 'h_6e302ceff971',
+  'Morphology alone does not identify an organism or exclude coexisting malignancy. Final stains, cultures, molecular tests, and target-concordant sampling determine the endpoint.':
+    'h_6e3b912d2133',
+  'Molecular testing on nonrepresentative material can produce an unhelpful false-negative result.':
+    'h_6eb7f66087bf',
+  'Necrotizing granulomatous inflammation can raise infection, but organisms and microbiologic confirmation are not established by this rapid image alone.':
+    'h_6f5afff28255',
+  'Which broad morphology category best fits the marked region?': 'h_6f7361d41da4',
+  'Classify hotspot 3': 'h_70edea79f403',
+  'Use the narrowest safe bucket': 'h_7154b8f371ac',
+  'What broad process is present, and what material may be lost if the team waits?':
+    'h_722fbdd5737a',
+  'Preserved nuclear detail makes the group interpretable. Quantity for ancillary testing must still be assessed separately in the material reserved for that endpoint.':
+    'h_72391b48a28d',
+  'Vacuolated cohesive epithelial group': 'h_72b6b0385ba2',
+  'Macrophages and reactive bronchial cells may also be dispersed. Use the full cytomorphologic pattern and final preparation for classification.':
+    'h_739978cadae6',
+  'Direct-smear morphology exercise 2': 'h_73aa862ef5bb',
+  'Librepath, via Wikimedia Commons': 'h_761ab225c552',
+  'Rapid-smear finding': 'h_768f99de32c7',
+  'This module supports education and team communication. It is not a diagnostic instrument, does not authorize independent ROSE interpretation, and cannot define whether a real patient’s specimen is adequate. Use institutional procedures, receiving-laboratory requirements, qualified cytopathology review, and clinical judgment.':
+    'h_76a2b00e4d4f',
+  'Avoid unqualified words such as “adequate,” “negative,” or a definitive stage. The room needs to know what you saw and what to do with the next material.':
+    'h_76cb5a8754fe',
+  'Collection media, preparation types, molecular workflows, and pass strategies require local validation and protocol alignment.':
+    'h_7700091020e4',
+  Representativeness: 'h_770cdab02c62',
+  'Multisociety clinical practice guideline': 'h_77412c8f3e1c',
+  'Inspect quiz hotspot 3': 'h_7782b83b7914',
+  'The PET-avid subcarinal node': 'h_79a7e6f60fbc',
+  'Consensus recommendations': 'h_7a32a2f06fe3',
+  "A diagnostic smear can coexist with inadequate material in the laboratory's validated final or biomarker preparation.":
+    'h_7b01cc3a5389',
+  'Is lesional material present, and is the procedure finished?': 'h_7b9b95764502',
+  'This module does not confer cytopathology competency or replace institutional protocols, credentialing, or final pathology review. Specimen handling and ancillary-test requirements vary by laboratory.':
+    'h_7bbb4632a7c2',
+  'Calling every lymphocyte-rich aspirate “representative node”—or treating negative flow as exclusion—can miss lymphoma and delay architecture-preserving sampling.':
+    'h_7bbdd78652dd',
+  '“Adequate” has no meaning until the endpoint is named.': 'h_7c52e8d88d97',
+  'In combination with architecture and nuclear atypia, this supports a malignant epithelial category in the source case and confirms lesional representation for rapid communication.':
+    'h_7cc58ec3ef20',
+  'Final safety boundary': 'h_7cd3d3e0ed77',
+  'A node with a different downstream need': 'h_7cd9015859e8',
+  'Panel D shows aggregates of epithelioid histiocytes with necrosis and lymphocytes in the source tuberculosis case.':
+    'h_7ce960c5e258',
+  'Did the sample reach the intended target?': 'h_7d0f525bc522',
+  'WHO lung cytopathology review — insufficient/inadequate examples': 'h_7d4d61eea501',
+  'The source image is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source image.':
+    'h_7d51c6c278e0',
+  'Morphology lab': 'h_7dd6d47ae02c',
+  'Name the failure so the next pass can improve': 'h_7df768d1d847',
+  'Smear rescue': 'h_7e2c77a15564',
+  'Two lung cytology panels: one with distorted dark cellular material and one with an orderly sheet of ciliated cells.':
+    'h_7e8ac8db0e1f',
+  'Paired cytology and cell-block panels with compact cohesive cell aggregates in an inflammatory background.':
+    'h_7eb82a6eb11e',
+  pleomorphism: 'h_7ecc49c290d5',
+  'This curriculum prioritizes recent EBUS specimen-handling guidance, the active CAP thoracic-specimen guideline, and the WHO lung-cytopathology reporting framework.':
+    'h_803c0efa0c9e',
+  'Integrate architecture, nuclear detail, and cytoplasm rather than one isolated feature.':
+    'h_81398c85025e',
+  "Material has been preserved in the laboratory's validated preparation(s); adequacy for IHC, PD-L1, molecular testing, flow cytometry, or microbiology remains endpoint- and assay-specific and may not be knowable onsite.":
+    'h_82031ed93d26',
+  'Representative vs nonrepresentative': 'h_823bf7c2f182',
+  'Traceable teaching': 'h_8261414a75dc',
+  'Expert perspective': 'h_827ec64fcab7',
+  'Send all material for bacterial culture': 'h_829a15279a00',
+  'Account for preparation and stain before comparing cytoplasmic and nuclear detail.':
+    'h_830876e6aea8',
+  'Non-diagnostic because no tumor is present': 'h_83e9bc296af8',
+  'Clinical practice guideline': 'h_846db1d43647',
+  'Core playbook': 'h_84ac8b774207',
+  'Uncertain subtype does not erase clear lesional and malignant evidence at the broader category level.':
+    'h_84ad32c25c88',
+  'Granulomatous or infection-associated inflammatory pattern': 'h_8552a5b66eb5',
+  'Figure 2 is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source figure.':
+    'h_85b913f77509',
+  'Open WHO reporting system for lung cytopathology': 'h_86fa56428328',
+  'Overlapping hyperchromatic nuclei make this portion of the group darker and denser than the surrounding cells.':
+    'h_88366d864e53',
+  'Send all material for tumor molecular profiling': 'h_888eceef67c4',
+  'Granulomatous inflammatory pattern': 'h_89478ef578c3',
+  'Decision 1 · Assessment': 'h_8997cdedee5a',
+  'Illustrative reference image—not from this vignette.': 'h_89bf71818dc5',
+  'Representative lymphoid tissue can establish that a staging node was sampled even when malignant cells are not seen.':
+    'h_8a4816fee238',
+  'Select one assessment and one specimen action. Feedback stays hidden until you commit.':
+    'h_8beb3a65e929',
+  'The clinical differential changes what “adequate” requires.': 'h_8c3bbdfaccd9',
+  'Distinguish a vacuolated epithelial group from macrophages using cohesion and atypia.':
+    'h_8d042ac309a5',
+  Interpretable: 'h_8d1878eedcd9',
+  'Recognize a cohesive, crowded malignant epithelial population.': 'h_8daa8bedce2e',
+  'What the evidence does not settle': 'h_8e01db6e5cf7',
+  'It limits the negative finding to the rapid slide rather than promising a final result.':
+    'h_8e4c74066a27',
+  'Adequacy, triage, and the next pass': 'h_8e5b84b84318',
+  'Direct-smear morphology exercise 1': 'h_8f7e2c25f4b3',
+  'Station 4L during systematic mediastinal staging': 'h_90cafddd3e81',
+  'Multipanel morphology exercise 4': 'h_90f20b46bc05',
+  'Non-diagnostic because carcinoma is absent': 'h_91edde81b18e',
+  'High-risk pitfall': 'h_921760963c36',
+  'Malignant glandular epithelial cells': 'h_9237e6efd80f',
+  'ROSE cannot replace complete slide review, evaluation of validated final preparations, or the final integrated pathology report.':
+    'h_926fb0ac35d0',
+  'Use systematic rather than PET-target-only staging. When applicable, sample the highest-stage stations first (N3, then N2, then N1), label every station separately, and prevent carryover. A representative station does not complete mediastinal staging, and ROSE cannot assign overall TNM stage. A positive high-stage node may sometimes let the proceduralist avoid a higher-risk lesion biopsy, but it does not automatically end systematic staging or prove biomarker sufficiency.':
+    'h_92942de1b969',
+  'Background elements can help calibrate size and chromasia, but their presence alone does not establish target representation or endpoint-specific adequacy.':
+    'h_92f3d129e3bc',
+  'Remaining material may be important for validated final preparations and review even when the rapid smear is representative.':
+    'h_93115b27492b',
+  'vacuolated cytoplasm': 'h_931183d5c5dc',
+  'Benign cells from the access path are reported as a benign lesion.': 'h_932c4fff0b97',
+  'What is the most useful rapid assessment?': 'h_93dec46b3320',
+  Benign: 'h_93dfdcc6c47c',
+  'Correct. When infection is in the clinical differential, fresh sterile material cannot be reconstructed later; validated cytology preparations support final interpretation.':
+    'h_93f7dabc7cbe',
+  'Malignant epithelial cells with squamous features': 'h_9543190e242a',
+  'Benign or inflammatory background elements': 'h_95965ea1a923',
+  'Panel C shows small cells with scant cytoplasm, nuclear molding, and dispersed granular chromatin in the source small cell carcinoma case.':
+    'h_95f68d1fbb4e',
+  'ROSE Diff-Quik examples: carcinoma and granulomatous inflammation': 'h_96b8e88177cf',
+  'sections visited': 'h_96bfa068506a',
+  'Non-diagnostic because the exact subtype is uncertain': 'h_96d97ef6301b',
+  macronucleoli: 'h_9790620564d4',
+  'The trap': 'h_98d7cc1e45f4',
+  'Recognize enough to triage': 'h_98e5280bb50f',
+  'Definitive sarcoidosis': 'h_9932c898862c',
+  'Papanicolaou Society respiratory ancillary-testing consensus': 'h_997586260882',
+  'Insufficient lung cytology examples showing severe crush artifact and benign ciliated bronchial cells without a lesional population.':
+    'h_99973911a26a',
+  'Mediastinal node with lymphoma in the clinical differential': 'h_99a093e3fe8c',
+  'Epithelioid histiocyte aggregates with inflammation': 'h_99c007ad4226',
+  'Unlabeled four-panel Diff-Quik ROSE source figure for broad-pattern practice.': 'h_9a0b2ab623df',
+  'Panel A shows dispersed tumor cells with relatively regular round nuclei and conspicuous nucleoli on a Pap-stained liquid-based preparation.':
+    'h_9a42a4365ddd',
+  'Thick or crushed smear': 'h_9ae09f0f43a8',
+  'First prove that the intended target—not merely the airway or blood—appears on the slide.':
+    'h_9aff473f872f',
+  "Coordinate allocation to the laboratory's validated tumor-preserving preparations, fresh material for flow cytometry, or sterile material for microbiology according to the differential and local protocol.":
+    'h_9b363f662938',
+  'Clinical differential': 'h_9bdd15cfb2d3',
+  'internal comparison': 'h_9da0884364b1',
+  'Benign nodule': 'h_9e1c79b5c68e',
+  'WHO reporting system for lung cytopathology': 'h_9eb96a28701e',
+  'ROSE is a decision service—not a race to name every cell. Learn to prove the target, choose the narrowest safe category, protect downstream testing, and give the room a call that changes what happens next.':
+    'h_a09aeb3cd5c8',
+  'For suspected malignant EBUS-TBNA, CHEST recommends four or more needle passes (strong recommendation, very-low-certainty evidence). Clinical feasibility, local protocol, and ancillary needs still govern. This procedure-level strategy is not a universal cytology cell-count threshold.':
+    'h_a12f08d7c723',
+  'When applicable, highest-stage nodes are sampled first (N3, then N2, then N1), with each station separately labeled to reduce carryover and preserve the staging map.':
+    'h_a13261f48c0f',
+  'Supports endpoint-specific collection, careful use of small samples, and ROSE when ancillary studies are anticipated.':
+    'h_a1a1fc33757c',
+  'Scan for cellularity, distribution, blood, mucus, crush, drying, stain quality, and a thin area with preserved cells.':
+    'h_a1cb61ab3851',
+  'A thick blue focus or a bloody smear is not automatically lesional material.': 'h_a2a18681a0a4',
+  'Reconsider.': 'h_a2fcc4be35d7',
+  'decision cases': 'h_a361921bd0db',
+  'necrotic background': 'h_a50535655d3c',
+  '“The specimen labeled station 4L contains representative lymphoid tissue. No malignant cells are identified on this rapid preparation; final cytology is pending.”':
+    'h_a56994db4b7c',
+  'Rapid on-site evaluation': 'h_a6072e1146e4',
+  'Definitive tuberculosis': 'h_a6286e814bec',
+  'Commit before reveal': 'h_a68b376d5ae4',
+  'Correct. Fresh viable cells and complementary morphology are useful, but negative flow or FNA does not exclude lymphoma and some entities require architecture.':
+    'h_a80ead33feeb',
+  'The most common premature finish is “diagnostic on slide” without confirming material remains for the tests that will guide care.':
+    'h_a9a835ee4f92',
+  'Send all subsequent material for microbiology': 'h_aaebdc3393ca',
+  'Target-specific elements or a reproducible lesional population are present and fit the sampled site.':
+    'h_ab3208938f07',
+  cohesion: 'h_abd57b03b925',
+  'Papanicolaou and Diff-Quik': 'h_ac67088ddf80',
+  'Blood, crush, poor spreading, stain precipitate, and thick groups can create false confidence or hide the target.':
+    'h_ac838f094f9a',
+  'Multipanel morphology exercise 3': 'h_acab411a6d3e',
+  'Compare your choices with the expert frame': 'h_acef0b8b1e69',
+  'Librepath, via Wikimedia Commons; image displayed responsively with interactive teaching context added':
+    'h_ad1685699ea2',
+  'If infection is clinically suspected, coordinate sterile microbiology material and preserve cytology material per local protocol':
+    'h_ad70b938e29e',
+  'Use a smaller drop and gentle pull-apart or feathering according to local practice; examine thinner edges and avoid grinding material between slides.':
+    'h_ae2fd6414faf',
+  'Close the loop out loud': 'h_ae44893255a5',
+  'Protect validated preparations for final typing and biomarkers; avoid consuming every pass on smears.':
+    'h_ae7153dd7a83',
+  'Translate morphology into specimen triage without overcalling a final diagnosis.':
+    'h_b073c3495dc9',
+  'High cellularity is mistaken for target representation.': 'h_b0b8d994eba6',
+  'Lymphoma because many lymphocytes are present': 'h_b21539b2ae78',
+  'ROSE communicates findings and specimen needs; the proceduralist retains responsibility for whether further sampling is safe and clinically appropriate.':
+    'h_b23b806898d4',
+  'Correct. The value of ROSE here is immediate feedback that the clinical target is not yet demonstrated.':
+    'h_b2b8410b72c1',
+  'Figure 7 is displayed without image edits. Interactive hotspot overlays and teaching text were added by InterventionalPulm.com and are not part of the source figure.':
+    'h_b44c661feea9',
+  'Send the remaining sample directly for molecular testing': 'h_b47438f459b9',
+  'Lab rule:': 'h_b556055008df',
+  'Avoid a bare “adequate” or “negative”—both hide the clinical meaning.': 'h_b585fbaebd40',
+  'Necrosis alone is overcalled as a specific tumor or infection.': 'h_b5dad8a6e51f',
+  'Protect the next test': 'h_b6becaa77148',
+  'Correct. Diagnostic cells on one smear do not guarantee enough preserved tumor for typing and biomarkers; validated smears, liquid cytology, or cell block may be used locally.':
+    'h_b79854b45d5a',
+  'Reproducible crowded three-dimensional atypical groups argue against a purely reactive population.':
+    'h_b823ebb063f3',
+  'Is enough useful material preserved for what comes next?': 'h_ba39e296576d',
+  'Morphology slide 4': 'h_bb554d5842f3',
+  'Diagnostic on ROSE does not automatically mean sufficient for immunostains, molecular testing, or every ancillary study.':
+    'h_bbb2fae56ba2',
+  'Nearby smaller cells provide an internal comparison for size and chromasia against the lesional group.':
+    'h_bbd9b2fa6956',
+  'Send all remaining material for flow cytometry': 'h_bbdd46398688',
+  'Inspect quiz hotspot 1': 'h_bc2e77329165',
+  'Prove target representation': 'h_bc39f9b5b041',
+  'Stop because benign cells are present': 'h_bd81ff469c03',
+  'Stop because granulomas fully explain the PET finding': 'h_bddf9fccc4f8',
+  'The call states what proves representation.': 'h_be9b01ee2406',
+  'What you see': 'h_bfa7440fe011',
+  'Frames ROSE as immediate feedback for adequacy, preliminary information, and specimen triage, and distinguishes the four-or-more-pass strategy for suspected malignant EBUS-TBNA from cytology adequacy thresholds.':
+    'h_bfceaea9adc8',
+  'A rapid “benign” label would overstate what this specimen can answer.': 'h_bfe958936bc2',
+  'Morphology slide 1': 'h_c0f8684677b6',
+  'The rapid smear is heavily bloody with scattered ciliated bronchial cells. No reproducible lesional population is identified.':
+    'h_c101c86fd13f',
+  Malignant: 'h_c15cae65b74d',
+  'Granulomatous inflammation; infection remains in the differential': 'h_c20453ea1a46',
+  'Make rapid smears from all remaining material': 'h_c30d9b2b8eb4',
+  'start in Quiz mode. Titles, source links, diagnostic labels, and explanations stay hidden until you answer. Switch to Learn mode when you want guided annotation review.':
+    'h_c396e9077495',
+  'Single-cell comparison field': 'h_c43ab4343c80',
+  'Target + representation + broad finding + limitation + requested action. Final pathology pending.':
+    'h_c4e629c1367b',
+  'Cells are present—but is the target?': 'h_c553fbab85e6',
+  'Say this to the room': 'h_c5a00252174e',
+  '“Adequate and negative” can be heard as a final diagnosis or a completed mediastinal stage; ROSE establishes neither.':
+    'h_c5f16826c609',
+  'Educational scope': 'h_c69e41332473',
+  'Correct. This communicates the concern without making a lymphoma diagnosis from limited rapid morphology.':
+    'h_c6edcdace241',
+  'For each case, commit to both the rapid assessment and the specimen action. Diagnostic titles, answer colors, and source labels stay hidden until you check the case.':
+    'h_c79a465be8e3',
+  'What should happen before the opportunity is lost?': 'h_c79d80f247a5',
+  'If all material is fixed, the opportunity for culture is permanently lost; granulomas and negative stains still do not exclude a coexisting infection or malignancy.':
+    'h_c87d00c0a52d',
+  'A negative malignancy statement is premature because target representation has not been established.':
+    'h_c87de9ef2cbb',
+  'What is represented, what is seen, what remains uncertain, and what changes next?':
+    'h_c92361d91c1b',
+  'Reactive bronchial cells can show nucleoli. Interpret nuclear detail together with architectural disorder, cytoplasm, and the sampled target.':
+    'h_c941416aa480',
+  'Yuan et al., Journal of International Medical Research, 2021': 'h_ca5b574255b5',
+  'Trap:': 'h_ca7a70639522',
+  'Confirm that nuclei are present and interpretable; mucus, stain precipitate, or thick material can simulate a blue cellular focus.':
+    'h_cc7fa2a23eb7',
+  'There is no infectious pattern in the vignette to make culture the sole priority.':
+    'h_cd728aadf6c0',
+  'Guidelines and safety': 'h_cd9396681b4a',
+  'Thick smears, crush, and air-drying can manufacture apparent crowding. Do not equate a dark blue focus with malignancy when nuclear detail is obscured.':
+    'h_ce7f09cad121',
+  'WHO categories are final-report vocabulary': 'h_ce9b4aadb55b',
+  'Look for target-specific material: lymphoid tissue in a node, a reproducible lesional population in a mass, or the expected inflammatory process.':
+    'h_ce9b74485ac0',
+  'High-yield rapid on-site evaluation module for target representativeness, specimen adequacy, triage, communication, and pulmonary cytology practice.':
+    'h_cece56152a1f',
+  hyperchromasia: 'h_cf0fc7aed9cb',
+  'size comparison': 'h_cfc71d95f593',
+  'Stopping would confuse benign contamination with a benign target and risks a false-negative procedure.':
+    'h_cfcabf031c46',
+  'The goal is a useful preliminary category plus a specimen action—not a forced final diagnosis.':
+    'h_d0041f0db0d4',
+  'At least part of the smear has preserved, well-distributed cells with enough detail for a preliminary category.':
+    'h_d097288ca8b1',
+  'They are useful shared language, but a rapid call should not pretend to be the final integrated report. At ROSE, say what proves representation, the broad finding, the limitation, and the requested specimen action.':
+    'h_d0b01001bbd9',
+  'Review evidence and limits': 'h_d0f550403030',
+  'ROSE is not a contest to force a final subtype from one field.': 'h_d13388710e15',
+  'Select a hotspot, commit to one broad morphology category, then reveal the source interpretation and endpoint-specific adequacy lesson.':
+    'h_d1519ed1518d',
+  'Very thick or crowded areas can obscure detail. Confirm the impression in a thinner, interpretable area before communicating a rapid category.':
+    'h_d2229cfca39b',
+  'The original hotspot atlas now sits after the decision framework. Use it to connect visual features with broad patterns and pitfalls—not to substitute a hotspot label for an adequacy decision.':
+    'h_d23ed2071a1e',
+  'Pulmonary Pathology Society perspective on EBUS ROSE': 'h_d2af9f86efb3',
+  'There is no infectious or granulomatous cue in this vignette to justify abandoning the staging plan.':
+    'h_d330cf361b59',
+  'Lymphocytes are expected in a lymph node. A lymphoma concern requires an atypical population and appropriate ancillary workup.':
+    'h_d49023357eef',
+  'loss of polarity': 'h_d4a4b5dc5e5c',
+  'Inflammation can produce reactive atypia. Seek a reproducible epithelial population with convincing architectural or nuclear abnormality.':
+    'h_d517107da9fd',
+  'Is the nodule represented, and should sampling continue?': 'h_d546dee7d9d9',
+  'Non-diagnostic, negative/benign, atypical, suspicious, malignant, or a specific inflammatory pattern?':
+    'h_d5b736cc9404',
+  'Correct answer': 'h_d670c2f75974',
+  'WHO lung cytopathology review — sarcoidosis granuloma example': 'h_d69fb2ed280f',
+  'Direct cytology smear, Diff-Quik stain; high-magnification source image.': 'h_d7e6b6005d5e',
+  'Granulomas do not by themselves establish etiology or exclude a coexisting malignant process.':
+    'h_d7fe3f5d30dd',
+  'field scan': 'h_d8e5b684ae00',
+  'Correct. This answers representation while keeping the negative statement limited to the rapid preparation.':
+    'h_d9309db2fa0c',
+  'Crowding adds support for a lesional epithelial population when the nuclei remain interpretable and the finding is reproducible elsewhere on the smear.':
+    'h_d9c3c71d56a4',
+  'Nonrepresentative / non-diagnostic for the targeted nodule': 'h_d9ea60251fca',
+  'Review the decisions': 'h_da51345d7751',
+  'Representative and negative for malignancy': 'h_dc0287ab956f',
+  'Is the rapid preparation technically readable?': 'h_dc195492485e',
+  '“The specimen contains an atypical lymphoid population. Lymphoma cannot be excluded; please obtain fresh material for flow cytometry and preserve complementary morphology according to laboratory protocol. Final classification and the need for architecture-preserving tissue remain pending.”':
+    'h_dd3f18f70921',
+  'International reporting-system review': 'h_dd96daa3b734',
+  'Reproducible crowded, cohesive atypical groups support a broad epithelial malignancy call.':
+    'h_dd9eb24836eb',
+  'Overproducing smears can deplete material needed for validated final preparations and ancillary studies.':
+    'h_de8cf5265481',
+  'ROSE module sections': 'h_dea44dae8a7c',
+  'Diff-Quik': 'h_e0fa9ef6961e',
+  'Definitively negative lymph node': 'h_e159a3c82166',
+  'Inspect quiz hotspot 4': 'h_e1962f23c96b',
+  'Suspicious for carcinoma': 'h_e1f17f73f25f',
+  'The crowded blue groups': 'h_e2a96a3c19d9',
+  'What is the narrowest safe rapid category?': 'h_e353667a790a',
+  'Inspect quiz hotspot 2': 'h_e3b63250703f',
+  'Necrosis without viable cells': 'h_e3cbfbbe90dc',
+  'Dispersed well-differentiated tumor cells': 'h_e5ddd725d43d',
+  'ROSE communicates what is represented, what is seen, and what specimen need remains. The proceduralist decides whether another pass or target is safe based on the indication, complications, patient tolerance, and clinical feasibility.':
+    'h_e688bb8a6966',
+  'Artifact is mistaken for hyperchromasia, molding, or true crowding.': 'h_e72cbc4c200a',
+  'Your choice': 'h_e7332f9619f9',
+  'What element shows that the needle sampled the intended target?': 'h_e78af92baa50',
+  'Fresh viable material is time-sensitive, but negative flow cytometry or FNA/ROSE does not exclude lymphoma, especially Hodgkin lymphoma.':
+    'h_e8fe6864d586',
+  'Abundant lesional cells support morphology adequacy, but ancillary-test sufficiency depends on how much viable material is preserved outside the teaching field.':
+    'h_e91a2d6ad9a4',
+  'Classify hotspot 4': 'h_ea31bf3e7be4',
+  'State representativeness separately, then communicate the broad pattern that the rapid preparation can support. Reserve definitive typing for integrated final pathology when needed.':
+    'h_ebc2f5f19206',
+  'One representative station does not substitute for the planned systematic staging strategy.':
+    'h_ec5b61802c3e',
+  'Supports standardized categories, the distinction between benign and nonrepresentative material, and the absence of one universal adequacy threshold.':
+    'h_ec6e00a44e1d',
+  'Panel C shows tumor cells with enlarged round nuclei and delicate cytoplasm admixed with inflammatory cells on a Pap smear.':
+    'h_ecc4d1216843',
+  'Answers hidden': 'h_ed021601b711',
+  'Red cells dominate; diagnostic groups are rare, trapped in clot, or absent.': 'h_ed15e9aabdd6',
+  Atypical: 'h_ee4661ac50f7',
+  'Both decisions correct': 'h_ee74a408ae22',
+  'Downstream sufficiency': 'h_ef3c4393b87e',
+  atypia: 'h_f06fe197f577',
+  'Licensed source link appears after answer submission.': 'h_f0a921ea9d19',
+  'The current pattern prioritizes inflammatory/infectious triage, not an unproven tumor profile.':
+    'h_f0ffd88926ef',
+  'Protect the staging map': 'h_f11d7d8fb7c4',
+  'A specimen can be technically readable but from the wrong place, or diagnostic on the rapid smear but insufficient for the tests that follow. Keep those judgments separate.':
+    'h_f19af5c2e2e7',
+  'The one-sentence call': 'h_f1fd7c289c1d',
+  'Malignant epithelial-cell pattern': 'h_f2168af584eb',
+  'Check both decisions': 'h_f21a305fc4be',
+  'Lung-cytology adequacy has no single universal cell-count threshold across specimen types and clinical questions. Proposed lymph-node benchmarks can inform local practice, but morphology, site, clinical intent, preparation quality, and the laboratory’s validated criteria still matter.':
+    'h_f25df01557f5',
+  'Classify a rapid smear into a broad epithelial, small-cell, inflammatory, or background pattern.':
+    'h_f2d94a97091f',
+  'Practice:': 'h_f34f67bcfcea',
+  'Four-panel ROSE Diff-Quik source figure showing adenocarcinoma, squamous cell carcinoma, small cell carcinoma, and tuberculosis-associated granulomatous inflammation.':
+    'h_f3f9ad4e6501',
+  'High N:C ratio, molding, fine chromatin, apoptosis, necrosis, and crush form a pattern—not a final subtype by themselves.':
+    'h_f456e76e8b5c',
+  'Unlabeled morphology exercise': 'h_f526d4ca4962',
+  'Peripheral pulmonary nodule, first needle-aspiration pass': 'h_f5a9df84d1ed',
+  'CHEST guideline: EBUS-TBNA acquisition and handling': 'h_f70a6d8354e5',
+  'Diff-Quik smear': 'h_f77a5c614f7f',
+  'Prioritize locally validated tumor-preserving preparation(s) for final typing and biomarkers':
+    'h_f78307cb9b9b',
+  'Unlabeled very-high-magnification Diff-Quik cytology image for morphology practice.':
+    'h_f7c830e66d99',
+  'Open Papanicolaou Society respiratory ancillary-testing consensus': 'h_f7cfefc4555e',
+  'cohesive fragment': 'h_f7d9e9605c6d',
+  'Panel B shows malignant epithelial cells with large nuclei, macronucleoli, variable nuclear-to-cytoplasmic ratios, and a dirty necrotic background.':
+    'h_f8396108af5a',
+  'Dolezal et al., Journal of Clinical and Translational Pathology, 2024': 'h_f99d99d53286',
+  'Exploration:': 'h_f9cf43db67fc',
+  'One or more case decisions need review. Expert feedback is now visible.': 'h_fa1a0ad04b83',
+  'Route fresh material for flow and preserve complementary morphology; consider architecture-preserving tissue if suspicion remains':
+    'h_fa1d75bfcf1e',
+  'Place all remaining material in formalin': 'h_fa9b027ec730',
+  'What to think before saying “adequate”': 'h_fc16157ce386',
+  'Team boundary:': 'h_fccac5dd8933',
+  'Evidence, uncertainty, and safe use': 'h_fcf69cf21202',
+  'Adequacy and communication': 'h_fedc283797bc',
+  'Malignant epithelial pattern in necrotic background': 'h_ff3927d5df7d',
+  'Small blue-cell pattern': 'h_ffff8d6d0bd7',
+  'Mature red cells are anucleate, unlike every other population in this comparison.':
+    'h_009b46f8152d',
+  'Many uniform discs indicate blood dilution rather than a lesional population.': 'h_02fc3232716a',
+  'Only a narrow blue rim separates the nucleus from the cell border.': 'h_03a37a541b8f',
+  '6 schematic populations': 'h_0400da247eab',
+  'Cohesive sheets or strips with polarity; cilia and terminal bars favor benign airway origin.':
+    'h_04e3b743e325',
+  'Dense round nucleus': 'h_04f327ca6892',
+  Nucleus: 'h_05862e2b5fe4',
+  'Lung cytopathology: bronchial and aspiration cytology': 'h_077740d0abe1',
+  'Bronchial cells': 'h_09421d01f830',
+  'Learn the cell populations': 'h_09e87f2ee211',
+  'Cilia and terminal bar': 'h_0b7a96fcf31c',
+  '6 populations + practice': 'h_0bfa876aeaa0',
+  'Variable; often larger and less uniform than background lymphocytes': 'h_0cabde45e922',
+  'Choose one population': 'h_0cae69ed9a0b',
+  'Interactive schematic': 'h_0e2a93e2f7a2',
+  'Which population best fits the illustrated combination of nucleus, cytoplasm, and arrangement?':
+    'h_0f526465bd59',
+  'Numerous separate discs that may dominate a blood-diluted aspirate.': 'h_0f69f9bd1a2b',
+  'The nucleus is displaced from center and is usually less densely stained than a lymphocyte nucleus.':
+    'h_11bf019f1a2c',
+  'Acute inflammatory cell': 'h_16fc7339b94d',
+  'Click the anatomy': 'h_180809df994e',
+  Population: 'h_182d37ec74bf',
+  'Wide cytoplasm is the dominant visual feature of the cell.': 'h_19d529926f8f',
+  'A reproducible crowded or three-dimensional epithelial group with nuclear abnormality.':
+    'h_1aaf2e71d7c8',
+  'Continue to ROSE decision cases': 'h_1ad08d119c70',
+  'Correct identification': 'h_1bb84a616c3b',
+  'Vacuoles or ingested material': 'h_1cc0d7f64bfc',
+  'Schematic alveolar macrophage with abundant foamy vacuolated cytoplasm and an eccentric oval nucleus.':
+    'h_1e1169182f06',
+  'Next population': 'h_1fdf8e871e05',
+  'Discohesive population': 'h_20bb656fa574',
+  Neutrophil: 'h_2105afc37842',
+  'Overlap, crowding, and loss of polarity distinguish the group from an orderly bronchial sheet.':
+    'h_21c5a3573552',
+  'Single cells, cohesive sheet, three-dimensional group, mixed inflammation, or blood?':
+    'h_239b4fa54514',
+  'Histiocytic cell': 'h_239b8223eb54',
+  'Subtle granules sit in a pale cytoplasmic background.': 'h_23c5374a3155',
+  'Fine cytoplasmic granules': 'h_2501abfb91f2',
+  'Cell populations': 'h_2526fdcee4be',
+  'of 6': 'h_25a0abe416ab',
+  'Often cohesive and disordered, but some malignancies are discohesive. Reproducibility matters more than one striking cell.':
+    'h_2b758136ef1d',
+  'Variable from scant to abundant; may be vacuolated, dense, or fragile.': 'h_2dbe3b61186b',
+  'Connected nuclear lobes are the fastest clue to a mature neutrophil.': 'h_2ed613a19453',
+  'Selected component': 'h_2f9f4e587bf4',
+  'Inflammatory context': 'h_3083831ca8f1',
+  Cytoplasm: 'h_3097e5b5c77c',
+  'Small like a lymphocyte, larger like a macrophage, or variable across a cluster?':
+    'h_317d903bb9f2',
+  'A cohesive strip of columnar cells with aligned nuclei and a ciliated edge.': 'h_31ecd248464b',
+  'Degenerated neutrophils can look dark and smudged. Do not mistake inflammation or necrosis for a specific organism or tumor.':
+    'h_31f236a7912b',
+  'Prominent nucleoli or coarse chromatin can support atypia but are not interpreted alone.':
+    'h_32023a3bf142',
+  'A coordinated apical fringe and terminal bar strongly support benign respiratory epithelium.':
+    'h_32b60f32da5e',
+  'Li QK, Khalbuss WE. Lung Cytopathology. 2015. doi:10.1007/978-1-4939-1477-7_1.':
+    'h_33611164f535',
+  'Schematic neutrophil with a connected multilobed nucleus and pale granular cytoplasm.':
+    'h_36d8bb4643a3',
+  'Red cells help calibrate scale and identify blood dilution. Abundant blood is cellular material, not proof of target representation.':
+    'h_3b5b4b5357ea',
+  Lymphocyte: 'h_3d73efdd845a',
+  'Compare the defining features': 'h_40d801023da4',
+  'Round, segmented, eccentric, molded, irregular, or absent?': 'h_4134429f9dda',
+  'Ciliated bronchial epithelial cells': 'h_415780fe1c61',
+  'Read the nucleus': 'h_459e95b0ff7c',
+  'Reset cell identification practice': 'h_45c8beb219ca',
+  'A segmented multilobed nucleus in pale, finely granular cytoplasm.': 'h_4ad4fd97450a',
+  'Segmented nucleus': 'h_4bbb591d762b',
+  'Scant cytoplasmic rim': 'h_510f2585b71e',
+  'Mature lymphocytes appear as separate cells rather than an epithelial sheet.': 'h_512c16dbe2ed',
+  'ROSE meaning': 'h_51739ad36894',
+  'Interpret the population with necrosis, organisms, mucus, and other cells across the smear.':
+    'h_52df86277ace',
+  'Taller and more elongated than a lymphocyte': 'h_54667d60f59e',
+  'Disordered three-dimensional group': 'h_546de2000ab1',
+  'Schematic group of red blood cells shown as smooth anucleate discs with central pallor.':
+    'h_54f3507a8c1b',
+  'Compare before classifying': 'h_550ee5d14f75',
+  'Moderate, delicate cytoplasm extending toward the luminal surface.': 'h_59443fe7cb16',
+  'Reactive bronchial cells may enlarge and show nucleoli, while injury can reduce cilia. Use polarity, terminal bars, and the full population rather than one feature.':
+    'h_5967673981d0',
+  'Round, oval, or bean-shaped; usually less dark than a small lymphocyte and often eccentric.':
+    'h_59b1c0b67461',
+  'Cell ID lab: know the population before naming the process': 'h_5a3c94c56ff1',
+  'Read the chromatin': 'h_5b9803fe4907',
+  'Aligned oval nuclei': 'h_5c08d5d032a5',
+  'Relative size:': 'h_5d60fa4eb1db',
+  'Scant, granular, foamy, vacuolated, dense, ciliated, or not visible?': 'h_5dc5418047a0',
+  'Morphology teaching sources': 'h_6342b53c0f79',
+  'Very scant and usually seen as a narrow blue rim.': 'h_657771570b28',
+  'Choose a population, then select a numbered hotspot to connect the visual component with its cytologic meaning.':
+    'h_68d8e8157f5b',
+  'Not to scale': 'h_6a604a364a01',
+  'Crushed lymphocytes can mimic a small-cell malignancy; blood can also contribute lymphocytes without proving target representation.':
+    'h_6a82e0ff485b',
+  'A very bloody smear can hide rare diagnostic groups. Search clot and thin edges without equating blood cellularity with adequacy.':
+    'h_6c0c52c13ca0',
+  'Dolezal D, Kholová I, Cai G. J Clin Transl Pathol. 2024;4(1):18-35. doi:10.14218/JCTP.2023.00068.':
+    'h_7041fd28ec4d',
+  'Orderly cohesion': 'h_750cd23d922b',
+  'Cell population answer needs review. Teaching explanation is visible.': 'h_7563efabdbd4',
+  'A reproducible lymphoid population supports sampling of a lymphoid target, but ROSE still cannot exclude lymphoma or assign a final nodal result.':
+    'h_784fe6a66c87',
+  'Schematic · not to scale': 'h_785c49b5fd2f',
+  'The cells remain attached in a flat, organized strip rather than a crowded three-dimensional group.':
+    'h_7901990fccab',
+  'Schematic small mature lymphocyte with a large round dense nucleus and a thin rim of cytoplasm.':
+    'h_79da27462159',
+  'Nucleoli and chromatin': 'h_7d330a6f4318',
+  'Small and relatively uniform': 'h_7d7518c79518',
+  'Central pallor': 'h_7ee522536808',
+  'Learn the nucleus, cytoplasm, surface, arrangement, and ROSE meaning of common pulmonary cytology populations. Then identify each population from an unlabeled schematic before moving to real slide images.':
+    'h_7ef4bd8645f5',
+  'Vacuolated macrophages can mimic glandular tumor cells. Look for true epithelial cohesion, nuclear atypia, and a reproducible lesional population.':
+    'h_80f6e7d28079',
+  'Red cells': 'h_80f8ba1b8834',
+  'The lighter center helps create the familiar disc appearance.': 'h_81a120795b8d',
+  'Explore six common populations': 'h_83def9553ddf',
+  'WHO reporting system for lung cytopathology review': 'h_85f40226c016',
+  'Eccentric softer nucleus': 'h_86413e82095c',
+  'Evidence notes': 'h_86bd97a204a3',
+  'Schematic—not a photomicrograph:': 'h_87843605f7bd',
+  'Retry this population': 'h_8a4f6bdd3df2',
+  'Inspect cytoplasm and surface': 'h_8afcb8c27929',
+  'A large single cell with abundant foamy or vacuolated cytoplasm and an eccentric nucleus.':
+    'h_910ccecf4477',
+  'A repeatable five-look sequence': 'h_9264407723aa',
+  'Two to five connected lobes in a mature cell; degeneration can blur this pattern.':
+    'h_92dea0d427cd',
+  'Round, smooth, and densely stained; it occupies most of the cell.': 'h_9424c101c166',
+  'Variation in size, contour, and chromatin creates architectural disorder.': 'h_9521f8913da4',
+  'Enlarged and irregular with crowding, overlap, coarse chromatin, or prominent nucleoli depending on the tumor.':
+    'h_9570c779820d',
+  'Cell population identified correctly. Teaching explanation is visible.': 'h_987ff44819c8',
+  'Robledano R, Argueta A, Labiano T, Lozano MD. Cancer Cytopathol. 2025;e70039. doi:10.1002/cncy.70039.':
+    'h_98c44175efdd',
+  'Irregular crowded nuclei': 'h_994725c12607',
+  'Do not overcall:': 'h_99aba7960b11',
+  'Malignant epithelial population': 'h_9bbf270bdd17',
+  'Alveolar macrophage': 'h_9e2282fa4cbd',
+  'Benign airway epithelium': 'h_a1f8df09e965',
+  'Usually uniform and oval, often aligned toward the basal half of the cells.': 'h_a3cd5fa8df95',
+  'features are intentionally simplified and exaggerated. Stain, preparation, activation, degeneration, crush, and thickness change how real cells appear. Identify populations from several concordant features across the field, not from one cell or one color.':
+    'h_a3e346f944b3',
+  'Large and often several times the size of a small lymphocyte': 'h_a4f697738ccc',
+  'No nucleus': 'h_a643e0a7de1f',
+  'Use relative size, nucleus, cytoplasm, and arrangement. The diagnostic label and explanation remain hidden until you commit.':
+    'h_a6e4ae642000',
+  '/6': 'h_a884a1a57414',
+  'Schematic crowded malignant epithelial cell group with irregular overlapping nuclei, variable cytoplasm, and visible nucleoli.':
+    'h_a92139e69489',
+  'Read every field in the same order': 'h_adb0433adf62',
+  'A malignant epithelial pattern can support a broad ROSE category and guide specimen preservation. Final type and biomarker adequacy remain pending.':
+    'h_ae30c52c56e5',
+  'Relatively uniform nuclei preserve polarity within the cell strip.': 'h_af7750f632c9',
+  'Uniform pink to salmon-colored material with central pallor depending on the stain.':
+    'h_af9a6e040cf3',
+  'Usually discohesive single cells; a lymph-node aspirate often contains many.': 'h_b3ff3d5c3734',
+  'A dark round nucleus with only a thin rim of blue cytoplasm.': 'h_b47360ced728',
+  'Common trap:': 'h_b4ef8eaaffa6',
+  'Abundant foamy cytoplasm': 'h_b641754873f1',
+  'Schematic cohesive strip of ciliated bronchial epithelial cells with aligned oval nuclei and apical cilia.':
+    'h_b64759e30ebf',
+  'Pale with fine granules that may be subtle on a rapid stain.': 'h_b6deda6f01c5',
+  'Dense and smooth, finely granular, coarse, or interrupted by nucleoli?': 'h_bd33406ecab8',
+  'Clear spaces and pigment reflect phagocytic activity but are not disease-specific.':
+    'h_bf39831f88c7',
+  'Small; often a useful internal size reference': 'h_c1f33092332d',
+  '. The illustrated population is': 'h_c2cc1fa14d75',
+  'Abundant and variable—foamy, vacuolated, pigmented, or filled with ingested material.':
+    'h_c3fe7dc8e39a',
+  'Broad lesional pattern': 'h_c5014c5b99d4',
+  'Calibrate size': 'h_c66a7783fb47',
+  'Usually discohesive single cells; size and cytoplasmic contents may vary widely.':
+    'h_c7a24b6ae5ed',
+  'What it changes onsite': 'h_c92400731a7b',
+  'High-yield population matrix': 'h_c96bcbb08536',
+  'Identify the population': 'h_cc80725358e6',
+  'Usually single cells, often numerous in acute inflammation or a necrotic background.':
+    'h_ced59a2ac2f9',
+  'The nucleus is smooth and occupies nearly the entire cell.': 'h_cf4e30e4098b',
+  'Non-neoplastic mimics of lung cancer': 'h_d312b3d205b3',
+  'Blood-dominant field': 'h_d3c7a1d1014e',
+  'Build a visual vocabulary': 'h_d5027d391a7a',
+  'Multiple smooth anucleate discs with central pallor.': 'h_d8b80c4feabb',
+  Arrangement: 'h_d9b949cc8611',
+  'Lymphoid cell': 'h_dcde6a706d0a',
+  'Interactive cell components': 'h_deb5037db616',
+  'Reveal cell identity': 'h_dfeacf4f3a20',
+  'Blood background / scale clue': 'h_e034500cf465',
+  'Reactive bronchial cells, macrophages, crush, and thick smears can mimic malignancy. One atypical cell or one dark cluster is not enough.':
+    'h_e0cf402ba70a',
+  'Unlabeled schematic cell population for identification practice.': 'h_e901201d7cad',
+  'Slightly larger than a small mature lymphocyte': 'h_e99eaf6366ee',
+  Round: 'h_ec7b59833520',
+  'Neutrophils support an acute inflammatory pattern but do not identify the cause. Infection, tissue injury, and necrotic tumor can overlap.':
+    'h_ecb36ea2bc2f',
+  'Red blood cells': 'h_f0eefaeda51f',
+  Macrophage: 'h_f35b374bfb93',
+  'Absent in mature red blood cells.': 'h_f82a89cb99f1',
+  'Small mature lymphocyte': 'h_f8bb0df67916',
+  'Zoom back out': 'h_f8d4482363aa',
+  'Cell ID lab': 'h_fa6829855866',
+  'These cells show airway sampling or contamination. They do not prove that a peripheral nodule or other intended lesion was sampled.':
+    'h_fabbfd7dcca5',
+  'Macrophages may support pulmonary or alveolar sampling and can carry pigment or debris, but they do not by themselves establish lesion representation.':
+    'h_fb0d5a2892b7',
+  'One-look clue': 'h_fe6add79dadd',
 } as const

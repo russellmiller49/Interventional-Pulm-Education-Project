@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "generated_with": "5.1.0",
+  "assets": [
+    {
+      "filename": "generic-endoscopic-camera-head.glb",
+      "root_node": "Generic_Endoscopic_Camera_Head",
+      "metadata": {
+        "component_type": "generic_endoscopic_camera_head",
+        "source_type": "reference_photo_and_manufacturer_manual_educational_approximation",
+        "source_url": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "secondary_source_url": "https://www.stryker.com/us/en/portfolios/medical-surgical-equipment/surgical-visualization/camera-systems.html",
+        "geometry_note": "Generic unbranded round/cylindrical C-mount camera proxy; the supplied images and manual do not establish an exact camera model or manufacturing dimensions.",
+        "connector_role": "telescope_ocular_camera_coupler"
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.045, -0.257813, -0.063446],
+        "max": [0.045, 0.024, 0.045],
+        "size": [0.09, 0.281813, 0.108446]
+      },
+      "mesh_count": 11,
+      "triangle_count": 3936,
+      "size_bytes": 139716,
+      "sha256": "45bd3036d544af368e3d258f9eef8b7a4a25652350743423329308c0b4a63577"
+    },
+    {
+      "filename": "generic-light-guide-adapter-c1.glb",
+      "root_node": "Generic_Light_Guide_Adapter_C1",
+      "metadata": {
+        "component_type": "generic_light_guide_adapter_c1",
+        "adapter_stage": "C1",
+        "source_type": "reference_photo_educational_approximation",
+        "source_url": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "nominal_length_mm": 10,
+        "connector_role": "telescope_light_guide_post_to_c2_adapter",
+        "lumen_patent": true,
+        "geometry_note": "Photo-derived C1 teaching proxy. The supplied composite does not establish an exact part number or whether it represents the STORZ/Olympus, WOLF, or ACMI interface."
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.0055, 0.0, -0.0055],
+        "max": [0.0055, 0.01, 0.0055],
+        "size": [0.011, 0.01, 0.011]
+      },
+      "mesh_count": 3,
+      "triangle_count": 1664,
+      "size_bytes": 49732,
+      "sha256": "358aa43681995770c046ebe3a1d7dc4048ef9dab70f7a1f7ce410bc2512b3611"
+    },
+    {
+      "filename": "generic-light-guide-adapter-c2.glb",
+      "root_node": "Generic_Light_Guide_Adapter_C2",
+      "metadata": {
+        "component_type": "generic_light_guide_adapter_c2",
+        "adapter_stage": "C2",
+        "source_type": "reference_photo_educational_approximation",
+        "source_url": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+        "nominal_length_mm": 16,
+        "connector_role": "c1_adapter_to_generic_fiberoptic_light_cable",
+        "lumen_patent": true,
+        "geometry_note": "Photo-derived C2 teaching proxy. The supplied composite does not establish an exact part number or whether it represents the STORZ/Olympus, WOLF, or ACMI interface."
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.00565, 0.0, -0.00565],
+        "max": [0.00565, 0.016, 0.00565],
+        "size": [0.0113, 0.016, 0.0113]
+      },
+      "mesh_count": 4,
+      "triangle_count": 2112,
+      "size_bytes": 60292,
+      "sha256": "13eaae9a892b95c5e5f8041c8b6d17251652c041d5807720bd9c722be82acbfe"
+    },
+    {
+      "filename": "generic-fiberoptic-light-cable.glb",
+      "root_node": "Generic_Fiberoptic_Light_Cable",
+      "metadata": {
+        "component_type": "generic_fiberoptic_light_cable",
+        "source_type": "reference_photo_with_manufacturer_exemplar",
+        "source_url": "https://www.karlstorz.com/us/en/product-detail-page.htm?cat=1000071971&productID=1000060267",
+        "nominal_length_mm": 2300,
+        "nominal_diameter_mm": 3.5,
+        "geometry_note": "Cable dimensions use a current exemplar; connector shapes remain generic."
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.113397, -0.01, -0.00693],
+        "max": [0.121273, 0.318399, 0.00693],
+        "size": [0.234671, 0.328399, 0.01386]
+      },
+      "mesh_count": 5,
+      "triangle_count": 8204,
+      "size_bytes": 207852,
+      "sha256": "198ddcb36aa382023b6aa0759d36e97aad99ad6962c6fc9df1c1e7394b0e0a53"
+    },
+    {
+      "filename": "optical-grasping-forceps-32-3230-430hm.glb",
+      "root_node": "Optical_Grasping_Forceps_32_3230_430HM",
+      "metadata": {
+        "component_type": "optical_grasping_forceps",
+        "part_number": "32-3230-430HM",
+        "working_length_mm": 470,
+        "head_diameter_mm": 3,
+        "source_type": "manufacturer_dimensions_photo_derived_handle",
+        "source_url": "https://hoodlabs.com/efer-bronchoscope-forceps/",
+        "geometry_note": "Guide-tube and handle proportions are educational approximations, not manufacturing tolerances."
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.0465, -0.0865, -0.011],
+        "max": [0.0465, 0.48371, 0.011],
+        "size": [0.093, 0.57021, 0.022]
+      },
+      "mesh_count": 10,
+      "triangle_count": 5172,
+      "size_bytes": 175484,
+      "sha256": "691e68fe4f25176d41eaedb3317e582ab26424ccf41f90afec44145b60e1263e"
+    },
+    {
+      "filename": "semi-rigid-grasping-forceps-bps2002.glb",
+      "root_node": "Semi_Rigid_Grasping_Forceps_BPS2002",
+      "metadata": {
+        "component_type": "semi_rigid_grasping_forceps",
+        "part_number": "BPS2002",
+        "working_length_mm": 600,
+        "shaft_diameter_mm": 1.5,
+        "head_diameter_mm": 3,
+        "source_type": "manufacturer_dimensions_photo_derived_handle",
+        "source_url": "https://hoodlabs.com/efer-bronchoscope-forceps/"
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.0465, -0.0865, -0.008],
+        "max": [0.0465, 0.61371, 0.008],
+        "size": [0.093, 0.70021, 0.016]
+      },
+      "mesh_count": 9,
+      "triangle_count": 4612,
+      "size_bytes": 156100,
+      "sha256": "15c7d0d8bd6c51774ab5040ca4e37a970025239afd6268f0c5c0b42e835f3fa8"
+    },
+    {
+      "filename": "semi-rigid-biopsy-forceps-bps2001.glb",
+      "root_node": "Semi_Rigid_Biopsy_Forceps_BPS2001",
+      "metadata": {
+        "component_type": "semi_rigid_biopsy_forceps",
+        "part_number": "BPS2001",
+        "working_length_mm": 600,
+        "shaft_diameter_mm": 1.5,
+        "head_diameter_mm": 3,
+        "source_type": "manufacturer_dimensions_photo_derived_handle",
+        "source_url": "https://hoodlabs.com/efer-bronchoscope-forceps/"
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.0465, -0.0865, -0.008],
+        "max": [0.0465, 0.609487, 0.008],
+        "size": [0.093, 0.695987, 0.016]
+      },
+      "mesh_count": 9,
+      "triangle_count": 5212,
+      "size_bytes": 199428,
+      "sha256": "e0b0460fe25452631cc9dd2f2c8986e294fbd766ebcdd3524c6459b72fac92cb"
+    },
+    {
+      "filename": "semi-rigid-suction-catheter-3mm.glb",
+      "root_node": "Semi_Rigid_Suction_Catheter_3mm",
+      "metadata": {
+        "component_type": "semi_rigid_suction_catheter",
+        "nominal_outer_diameter_mm": 3,
+        "working_length_mm": 550,
+        "source_type": "manufacturer_dimensions_educational_geometry",
+        "source_url": "https://hoodlabs.com/efer-bronchoscope-ordering-information/",
+        "lumen_patent": true
+      },
+      "bounds_blender_z_up_m": {
+        "min": [-0.006, -0.032, -0.006],
+        "max": [0.029314, 0.550723, 0.006],
+        "size": [0.035314, 0.582723, 0.012]
+      },
+      "mesh_count": 2,
+      "triangle_count": 2304,
+      "size_bytes": 48544,
+      "sha256": "cfc9948f6d894a2f899738dc188e56911b44f3d9d26e013edafc8e1e2303f836"
+    }
+  ],
+  "reference_images": [
+    "endoscopic camera.jpg",
+    "light source tube.webp",
+    "optical forcepts.png",
+    "rigid optic.png",
+    "rigid componenets.png"
+  ],
+  "reference_documents": [
+    {
+      "filename": "EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+      "url": "https://hoodlabs.com/wp-content/uploads/EFER-BRONCHOSCOPE-USER-MANUAL.pdf",
+      "use_note": "Supports the universal C-mount relationship and the existence of light-cable adapter families; C1/C2 shapes remain photo-derived teaching approximations."
+    }
+  ],
+  "assembly_pack": {
+    "filename": "rigid-bronchoscopy-assembly-kit.glb",
+    "root_node": "Rigid_Bronchoscopy_Assembly_Kit",
+    "component_file_count": 26,
+    "size_bytes": 2782524,
+    "sha256": "f3a58f90df9a8bdb364c2fceb039855fa199d6db0af193c5d8cf2023482735ad"
+  }
+}

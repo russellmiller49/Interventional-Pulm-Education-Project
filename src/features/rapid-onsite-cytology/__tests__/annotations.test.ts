@@ -63,4 +63,39 @@ describe('rapid onsite cytology annotation helpers', () => {
       width: `${annotation.shape.radiusXPct * 2}%`,
     })
   })
+
+  it('exports only explicitly licensed learner images with preparation and modification notes', () => {
+    expect(cytologySlides).toHaveLength(4)
+
+    for (const candidateSlide of cytologySlides) {
+      expect(candidateSlide.source.license).toMatch(/^CC /)
+      expect(candidateSlide.imageUrl).not.toMatch(/lilo-2017|cncy\.21886/i)
+      expect(candidateSlide.preparation).not.toHaveLength(0)
+      expect(candidateSlide.source.modificationNote).toMatch(/hotspot overlays/i)
+      expect(candidateSlide.quizImageAlt).not.toMatch(
+        /adenocarcinoma|squamous cell carcinoma|small cell carcinoma|tuberculosis/i,
+      )
+    }
+  })
+
+  it('uses broad, rotated quiz categories without placing the correct answer first', () => {
+    const expectedChoiceIds = [
+      'background',
+      'granulomatous-inflammatory',
+      'high-grade-small-cell',
+      'malignant-epithelial',
+    ]
+    const choiceOrders = new Set<string>()
+
+    for (const candidateSlide of cytologySlides) {
+      for (const candidateAnnotation of candidateSlide.annotations) {
+        const choiceIds = candidateAnnotation.quiz.choices.map((choice) => choice.id)
+        expect([...choiceIds].sort()).toEqual(expectedChoiceIds)
+        expect(choiceIds[0]).not.toBe(candidateAnnotation.quiz.correctChoiceId)
+        choiceOrders.add(choiceIds.join('|'))
+      }
+    }
+
+    expect(choiceOrders.size).toBeGreaterThan(1)
+  })
 })

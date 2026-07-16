@@ -46,6 +46,7 @@ export function listBoardReviewChapters(locale?: string): BoardReviewChapterMeta
         focus: module.focus,
         sourceFile: module._raw.sourceFileName,
         audioFile: boardReviewChapterMap[module.slug]?.audioFile,
+        interactiveModule: boardReviewChapterMap[module.slug]?.interactiveModule,
         order: module.order,
         published: true as const,
       }
@@ -80,6 +81,7 @@ export function loadBoardReviewChapter(slug: string, locale?: string): BoardRevi
     tags: boardModule.tags,
     focus: boardModule.focus,
     sourceFile: boardModule._raw.sourceFileName,
+    interactiveModule: boardReviewChapterMap[boardModule.slug]?.interactiveModule,
     order: boardModule.order,
     published: true,
     intro: parsed.intro,

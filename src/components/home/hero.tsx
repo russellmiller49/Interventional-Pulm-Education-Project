@@ -10,7 +10,25 @@ import { HandoffContent } from '@/i18n/handoff'
 
 export function Hero() {
   const t = useTranslations('home')
-  const nav = useTranslations('navigation')
+
+  const highlights = [
+    {
+      href: '/ebus-training/simulator',
+      label: t('heroHighlights.ebusSimulator'),
+    },
+    {
+      href: '/therapeutic-bronchoscopy',
+      label: t('heroHighlights.therapeuticBronchoscopy'),
+    },
+    {
+      href: '/tracheostomy',
+      label: t('heroHighlights.tracheostomy'),
+    },
+    {
+      href: '/journal-club-podcasts',
+      label: t('heroHighlights.podcastLibrary'),
+    },
+  ] as const
 
   return (
     <HandoffContent>
@@ -26,7 +44,7 @@ export function Hero() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_55%)]" />
               <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_bottom,_rgba(20,184,166,0.25),_transparent_65%)] blur-3xl" />
             </div>
-            <div className="max-w-xl space-y-6">
+            <div className="max-w-4xl space-y-6">
               <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-sky-200">
                 {t('heroEyebrow')}
               </span>
@@ -40,7 +58,9 @@ export function Hero() {
                   size="lg"
                   className="h-11 rounded-full bg-white text-sky-900 hover:bg-sky-100"
                 >
-                  <Link href={'/ebus-training' as Route}>{t('openEbus')}</Link>
+                  <Link href={'/therapeutic-bronchoscopy' as Route}>
+                    {t('exploreTherapeuticBronchoscopy')}
+                  </Link>
                 </Button>
                 <Button
                   asChild
@@ -48,59 +68,20 @@ export function Hero() {
                   variant="outline"
                   className="h-11 rounded-full border-white/60 bg-transparent text-white hover:border-white hover:bg-white/10"
                 >
-                  <Link href={'/journal-club-podcasts' as Route}>{t('browsePodcasts')}</Link>
+                  <Link href={'/ebus-training/simulator' as Route}>{t('openUpdatedEbus')}</Link>
                 </Button>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-8">
-              <Link
-                href={'/ebus-training' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.ebusTraining.title')}
-              </Link>
-              <Link
-                href={'/journal-club-podcasts' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.podcastLibrary.title')}
-              </Link>
-              <Link
-                href={'/tnm-9-staging' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.tnm9.shortTitle')}
-              </Link>
-              <Link
-                href={'/learn/anatomy' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.anatomy.title')}
-              </Link>
-              <Link
-                href={'/bronch-navigation-trainer' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.bronchNavigation.shortTitle')}
-              </Link>
-              <Link
-                href={'/fluoroview' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.fluoroview.title')}
-              </Link>
-              <Link
-                href={'/board-prep' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.boardPrep.shortTitle')}
-              </Link>
-              <Link
-                href={'/resources' as Route}
-                className="px-4 py-2 text-sm rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
-              >
-                {nav('items.resources.title')}
-              </Link>
+            <div className="mt-8 flex flex-wrap gap-3">
+              {highlights.map((highlight) => (
+                <Link
+                  key={highlight.href}
+                  href={highlight.href as Route}
+                  className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20"
+                >
+                  {highlight.label}
+                </Link>
+              ))}
             </div>
           </section>
         </div>

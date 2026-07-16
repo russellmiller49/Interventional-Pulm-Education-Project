@@ -14,6 +14,7 @@ export interface NavItem {
   href: Route
   description?: string
   shortTitle?: string
+  activePaths?: readonly string[]
 }
 
 interface DesktopNavProps {
@@ -81,7 +82,10 @@ export function DesktopNav({ items, activePath }: DesktopNavProps) {
 
   const isItemActive = (item: NavItem) =>
     normalizedPath === item.href ||
-    (normalizedPath.startsWith(item.href) && String(item.href) !== '/')
+    (normalizedPath.startsWith(item.href) && String(item.href) !== '/') ||
+    item.activePaths?.some(
+      (path) => normalizedPath === path || normalizedPath.startsWith(`${path}/`),
+    ) === true
 
   const quickItems = items.filter((item) => quickNavHrefs.has(item.href))
   const hasActiveOverflowItem = items.some(isItemActive) && !quickItems.some(isItemActive)

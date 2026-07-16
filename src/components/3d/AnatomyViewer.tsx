@@ -3,7 +3,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { AdaptiveDpr, Html, OrbitControls, PerspectiveCamera } from '@react-three/drei'
 import { XR } from '@react-three/xr'
-import { Camera, Maximize2, Minimize2, RotateCcw } from 'lucide-react'
+import { Camera, Maximize2, Minimize2, RotateCcw, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode, RefObject, WheelEvent } from 'react'
@@ -550,18 +550,42 @@ function resetDesktopPlacement(group: Group) {
   group.quaternion.identity()
 }
 
-function getSegmentLabel(object: Object3D) {
+interface SegmentSelection {
+  id: string | null
+  label: string
+}
+
+function getSegmentSelection(object: Object3D): SegmentSelection {
   let current: Object3D | null = object
   while (current) {
-    if (typeof current.userData.segmentLabel === 'string') {
-      return current.userData.segmentLabel
-    }
-    if (typeof current.userData.segmentId === 'string') {
-      return current.userData.segmentId
+    const segmentId =
+      typeof current.userData.segmentId === 'string' ? current.userData.segmentId : null
+    const segmentLabel =
+      typeof current.userData.segmentLabel === 'string' ? current.userData.segmentLabel : null
+    if (segmentId || segmentLabel) {
+      return { id: segmentId, label: segmentLabel ?? segmentId ?? 'Anatomy segment' }
     }
     current = current.parent
   }
-  return object.name || 'Anatomy segment'
+  return { id: null, label: object.name || 'Anatomy segment' }
+}
+
+function setSegmentHighlight(meshes: Mesh[], active: boolean) {
+  meshes.forEach((mesh) => {
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+    materials.forEach((material) => {
+      if (!(material instanceof MeshStandardMaterial)) {
+        return
+      }
+      if (active) {
+        material.emissive.copy(material.color)
+        material.emissiveIntensity = 0.5
+      } else if (material.emissiveIntensity !== 0) {
+        material.emissive.set('#000000')
+        material.emissiveIntensity = 0
+      }
+    })
+  })
 }
 
 function formatXRPercent(value: number) {
@@ -1548,7 +1572,7 @@ function XRGrabbableModel({
 }: {
   enabled: boolean
   targetRef: RefObject<Group | null>
-  onSelectSegment: (label: string | null) => void
+  onSelectSegment: (selection: SegmentSelection) => void
   children: ReactNode
 }) {
   const grabRef = useRef<ActivePointerGrab | null>(null)
@@ -1574,7 +1598,7 @@ function XRGrabbableModel({
       anchorToModel: target.position.clone().sub(anchor),
       startQuaternion: target.quaternion.clone(),
     }
-    onSelectSegment(getSegmentLabel(event.object))
+    onSelectSegment(getSegmentSelection(event.object))
   }
 
   const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
@@ -1603,6 +1627,22 @@ function XRGrabbableModel({
     )
   }
 
+  // Desktop (non-XR) identify: a plain click on a structure reports its segment. `delta` (pixels
+  // between pointerdown and pointerup) filters out OrbitControls rotate/pan drags that happen to
+  // end on the model; invisible meshes are skipped so hidden structures can't be picked through
+  // the ones still shown.
+  const handleIdentifyClick = (event: ThreeEvent<MouseEvent>) => {
+    if (event.delta > 5 || !event.object.visible) {
+      return
+    }
+    const selection = getSegmentSelection(event.object)
+    if (!selection.id) {
+      return
+    }
+    event.stopPropagation()
+    onSelectSegment(selection)
+  }
+
   const interactionHandlers = enabled
     ? {
         onPointerDown: handlePointerDown,
@@ -1610,11 +1650,84 @@ function XRGrabbableModel({
         onPointerUp: handlePointerUp,
         onPointerCancel: handlePointerUp,
       }
-    : {}
+    : { onClick: handleIdentifyClick }
 
   return (
     <group ref={targetRef} {...interactionHandlers}>
       {children}
+    </group>
+  )
+}
+
+/**
+ * In-scene name tag for the last-selected structure. DOM overlays are invisible inside an
+ * immersive session, so the name must be a mesh: a small billboarded plate that floats just above
+ * the model's bounding sphere and re-anchors from the model group's live matrix every frame, so it
+ * tracks the anatomy through placement, grab, rotation, and scaling. Yaw-only facing keeps it
+ * upright (same convention as the control panels). No pointer handlers — R3F never raycasts it, so
+ * it cannot block grabs of the model behind it.
+ */
+function XRSegmentNameplate({
+  localCenter,
+  localRadius,
+  targetRef,
+  text,
+}: {
+  localCenter: Vector3
+  localRadius: number
+  targetRef: RefObject<Group | null>
+  text: string
+}) {
+  const { gl } = useThree()
+  const plateRef = useRef<Group | null>(null)
+  const anchorTmp = useMemo(() => new Vector3(), [])
+  const scaleTmp = useMemo(() => new Vector3(), [])
+  const headTmp = useMemo(() => new Vector3(), [])
+
+  useFrame(() => {
+    const plate = plateRef.current
+    const target = targetRef.current
+    if (!plate || !target) {
+      return
+    }
+    target.updateMatrixWorld()
+    anchorTmp.copy(localCenter).applyMatrix4(target.matrixWorld)
+    const worldScale = target.getWorldScale(scaleTmp).x
+    plate.position.set(anchorTmp.x, anchorTmp.y + localRadius * worldScale + 0.09, anchorTmp.z)
+    headTmp.setFromMatrixPosition(gl.xr.getCamera().matrixWorld)
+    plate.rotation.set(0, Math.atan2(headTmp.x - plate.position.x, headTmp.z - plate.position.z), 0)
+  })
+
+  return (
+    <group ref={plateRef}>
+      <mesh position={[0, 0, -0.004]}>
+        <planeGeometry args={[0.66, 0.15]} />
+        <meshBasicMaterial
+          color="#22d3ee"
+          opacity={0.18}
+          side={DoubleSide}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+      <mesh>
+        <planeGeometry args={[0.62, 0.13]} />
+        <meshBasicMaterial
+          color="#020617"
+          opacity={0.92}
+          side={DoubleSide}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+      <XRTextPlane
+        fontSize={46}
+        fontWeight={700}
+        height={0.1}
+        position={[0, 0, 0.006]}
+        text={text}
+        width={0.58}
+      />
     </group>
   )
 }
@@ -1780,6 +1893,7 @@ export function AnatomyViewer({
   })
   const [xrSessionActive, setXrSessionActive] = useState(false)
   const [spatialSelection, setSpatialSelection] = useState<string | null>(null)
+  const [selectedSegment, setSelectedSegment] = useState<SegmentSelection | null>(null)
   const [showStructuresPanel, setShowStructuresPanel] = useState(false)
   const [xrControlAxis, setXrControlAxis] = useState<AnatomyAxis>(ctClipAxis)
   const [debugCoords, setDebugCoords] = useState({
@@ -1846,6 +1960,7 @@ export function AnatomyViewer({
     ctWheelRemainderRef.current = createEmptyWheelRemainders()
     setVolumeInfo(resetInfo)
     ctSliceRefs.current = {}
+    setSelectedSegment(null)
   }, [model.id])
 
   useEffect(() => {
@@ -1931,6 +2046,13 @@ export function AnatomyViewer({
     },
     [onCtPlaneSliceChange, onVolumeSliceChange],
   )
+
+  // Shared by desktop click and XR grab: remember which structure was picked (drives the desktop
+  // info card, the XR nameplate, and the highlight) and mirror the name into the XR status line.
+  const handleSelectSegment = useCallback((selection: SegmentSelection) => {
+    setSelectedSegment(selection)
+    setSpatialSelection(selection.label)
+  }, [])
 
   const handleXrToggleCtPlanes = useCallback(() => {
     if (!onShowCtPlanesChange) {
@@ -2102,7 +2224,7 @@ export function AnatomyViewer({
       (session) => {
         if (session) {
           setSpatialSelection(
-            'Point at the anatomy and select to grab it. Use the panel to adjust.',
+            'Point at the anatomy and select to grab it — the structure name appears above the model. Use the panel to adjust.',
           )
         }
       },
@@ -2243,6 +2365,30 @@ export function AnatomyViewer({
     }
     return computeSpatialPlacement(preparedScene.boundingBox)
   }, [preparedScene])
+
+  const modelLocalCenter = useMemo(() => {
+    if (!preparedScene) {
+      return null
+    }
+    return preparedScene.boundingBox.getCenter(new Vector3())
+  }, [preparedScene])
+
+  const selectedSegmentDetails = useMemo(() => {
+    if (!selectedSegment) {
+      return null
+    }
+    const segment = selectedSegment.id
+      ? (preparedScene?.segments.find((entry) => entry.id === selectedSegment.id) ?? null)
+      : null
+    const description = segment?.description?.trim() ?? ''
+    return {
+      name: segment?.name ?? selectedSegment.label,
+      color: segment?.color ?? null,
+      // Auto-derived segments carry a bookkeeping description ("Derived from mesh …") that adds
+      // nothing for learners — surface authored descriptions only.
+      description: description && !description.startsWith('Derived from mesh') ? description : null,
+    }
+  }, [preparedScene, selectedSegment])
 
   useEffect(() => {
     const root = spatialRootRef.current
@@ -2470,6 +2616,19 @@ export function AnatomyViewer({
       })
     })
   }, [preparedScene, visibleSegments])
+
+  // Emissive glow on the picked structure so the name card / XR nameplate visibly maps to a part
+  // of the model. Materials are cloned per mesh in applySegmentColors, so this cannot bleed into
+  // other segments.
+  useEffect(() => {
+    if (!preparedScene) {
+      return
+    }
+    const activeId = selectedSegment?.id ?? null
+    Object.entries(preparedScene.segmentMeshes).forEach(([segmentId, meshes]) => {
+      setSegmentHighlight(meshes, segmentId === activeId)
+    })
+  }, [preparedScene, selectedSegment])
 
   const clipMaterials = useMemo(() => {
     if (!preparedScene) {
@@ -2865,7 +3024,7 @@ export function AnatomyViewer({
                   <XRGrabbableModel
                     enabled={xrSessionActive}
                     targetRef={spatialRootRef}
-                    onSelectSegment={setSpatialSelection}
+                    onSelectSegment={handleSelectSegment}
                   >
                     <primitive object={preparedScene.group} />
                     <OrthogonalVolumePlanes
@@ -2886,6 +3045,14 @@ export function AnatomyViewer({
                     materials={clipMaterials}
                     targetRef={spatialRootRef}
                   />
+                  {xrSessionActive && selectedSegmentDetails && modelLocalCenter ? (
+                    <XRSegmentNameplate
+                      localCenter={modelLocalCenter}
+                      localRadius={radius}
+                      targetRef={spatialRootRef}
+                      text={selectedSegmentDetails.name}
+                    />
+                  ) : null}
                   {xrSessionActive ? (
                     <XRControlPanel
                       activeAxis={xrControlAxis}
@@ -2949,13 +3116,46 @@ export function AnatomyViewer({
 
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4">
             <div className="pointer-events-auto w-fit max-w-[min(420px,calc(100%_-_1rem))] rounded-full border border-cyan-300/25 bg-slate-950/70 px-3 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur">
-              Drag rotates. Scroll zooms. Shift + drag pans.
+              Drag rotates. Scroll zooms. Shift + drag pans. Click a structure to identify it.
             </div>
             <div className="flex flex-col gap-3">
               {xrSessionActive && spatialSelection ? (
                 <div className="pointer-events-auto max-w-sm rounded-2xl border border-cyan-400/30 bg-slate-950/85 px-3 py-2 text-xs text-slate-300 shadow-lg backdrop-blur">
                   <span className="font-semibold text-white">Spatial mode: </span>
                   {spatialSelection}
+                </div>
+              ) : null}
+              {!xrSessionActive && selectedSegmentDetails ? (
+                <div
+                  data-testid="anatomy-selected-structure"
+                  className="pointer-events-auto flex max-w-sm items-start gap-2.5 rounded-2xl border border-cyan-400/30 bg-slate-950/85 px-3 py-2 text-xs text-slate-300 shadow-lg backdrop-blur"
+                >
+                  <span
+                    aria-hidden
+                    className="mt-1 h-3 w-3 flex-none rounded-full border border-white/30"
+                    style={{ backgroundColor: selectedSegmentDetails.color ?? '#22d3ee' }}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-200/70">
+                      Selected structure
+                    </div>
+                    <div className="mt-0.5 text-sm font-semibold text-white">
+                      {selectedSegmentDetails.name}
+                    </div>
+                    {selectedSegmentDetails.description ? (
+                      <p className="mt-1 leading-snug text-slate-400">
+                        {selectedSegmentDetails.description}
+                      </p>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSegment(null)}
+                    aria-label="Clear selected structure"
+                    className="ml-1 flex-none rounded-full p-1 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
                 </div>
               ) : null}
               {showDebugHelpers ? (

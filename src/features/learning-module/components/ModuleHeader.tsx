@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { Badge } from '@/components/ui/badge'
 import { EducationalDisclaimer } from '@/features/pleural-procedures/components/EducationalDisclaimer'
 
@@ -5,6 +7,7 @@ interface ModuleHeaderProps {
   eyebrow?: string
   title: string
   description: string
+  disclaimer?: ReactNode
   showDisclaimer?: boolean
 }
 
@@ -17,6 +20,7 @@ export function ModuleHeader({
   eyebrow = 'Pleural procedures',
   title,
   description,
+  disclaimer,
   showDisclaimer = true,
 }: ModuleHeaderProps) {
   return (
@@ -35,7 +39,7 @@ export function ModuleHeader({
           </p>
         </div>
       </div>
-      {showDisclaimer ? <EducationalDisclaimer /> : null}
+      {showDisclaimer ? <EducationalDisclaimer>{disclaimer}</EducationalDisclaimer> : null}
     </section>
   )
 }

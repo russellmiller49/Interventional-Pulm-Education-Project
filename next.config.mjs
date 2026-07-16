@@ -10,8 +10,8 @@ const csp = [
   "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://upload.wikimedia.org https://*.supabase.co https://*.storage.supabase.co",
   "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net",
   "font-src 'self' https://cdn.scite.ai",
-  "frame-src 'self'",
-  "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com blob:",
+  "frame-src 'self' https://www.youtube-nocookie.com",
+  "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com https://pccmintro.s3.us-east-1.amazonaws.com blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -98,6 +98,27 @@ const moduleAssetPrefixes = [
   '/module-assets/v1',
 ]
 
+const airwayStentProtectedAssetHeaderRules = [
+  {
+    source: '/airway-stent-mechanics/models/v1/:path*',
+    headers: [
+      {
+        key: 'Cache-Control',
+        value: 'private, no-store, max-age=0',
+      },
+    ],
+  },
+  {
+    source: '/airway-stent-mechanics/models/v2/:path*',
+    headers: [
+      {
+        key: 'Cache-Control',
+        value: 'private, max-age=31536000, immutable',
+      },
+    ],
+  },
+]
+
 const immutableModuleAssetExtensions = [
   'bin',
   'br',
@@ -141,6 +162,10 @@ const moduleAssetFallbackRewrites = moduleAssetOrigin
       {
         source: '/airway-anatomy/:path*',
         destination: `${moduleAssetOrigin}/airway-anatomy/:path*`,
+      },
+      {
+        source: '/airway-stent-mechanics/models/:path*',
+        destination: `${moduleAssetOrigin}/airway-stent-mechanics/models/:path*`,
       },
       {
         source: '/bronch-navigation-trainer/app/cases/:path*',
@@ -222,7 +247,7 @@ const nextConfig = {
       {
         // Apply security headers to HTML pages only, not static app assets.
         source:
-          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/).*)',
+          '/((?!fluoroview|socal-ebus-course/app|bronch-navigation-trainer/app|thermal-ablation/|peripheral-ablation/).*)',
         headers: securityHeaders,
       },
       {
@@ -231,8 +256,13 @@ const nextConfig = {
         headers: embeddedAppSecurityHeaders,
       },
       {
-        // Allow the admin-gated thermal ablation modules to render inside the same-site iframe.
+        // Allow the bundled thermal ablation modules to render inside the same-site iframe.
         source: '/thermal-ablation/:path*',
+        headers: embeddedAppSecurityHeaders,
+      },
+      {
+        // Allow the bundled peripheral ablation module to render inside the same-site iframe.
+        source: '/peripheral-ablation/:path*',
         headers: embeddedAppSecurityHeaders,
       },
       {
@@ -245,6 +275,7 @@ const nextConfig = {
         source: '/fluoroview/:path*',
         headers: securityHeaders,
       },
+      ...airwayStentProtectedAssetHeaderRules,
       ...moduleAssetHeaderRules,
       ...moduleManifestHeaderRules,
       {
@@ -359,6 +390,25 @@ const nextConfig = {
       ],
       fallback: moduleAssetFallbackRewrites,
     }
+  },
+  async redirects() {
+    return [
+      {
+        source: '/:locale(en|es|zh-CN)/hamilton-c6-ventilation',
+        destination: '/:locale/mechanical-ventilation',
+        permanent: true,
+      },
+      {
+        source: '/airway-stent-mechanics/force-lab',
+        destination: '/airway-stent-mechanics?station=architecture-lumen',
+        permanent: false,
+      },
+      {
+        source: '/airway-stent-mechanics/force-lab/index.html',
+        destination: '/airway-stent-mechanics?station=architecture-lumen',
+        permanent: false,
+      },
+    ]
   },
   // Ensure static files are served correctly
   trailingSlash: false,

@@ -1,0 +1,234 @@
+{
+  "meta": {
+    "source": "airway-anatomy/case-001 preview volume",
+    "window": { "low": -1000, "high": -300, "label": "Lung" },
+    "sizeXyz": [256, 256, 212],
+    "note": "Educational CT correlation. Axial/coronal slices pre-rendered offline."
+  },
+  "structures": {
+    "trachea": {
+      "axial": "/airway-lesson/ct/trachea-axial.jpg",
+      "coronal": "/airway-lesson/ct/trachea-coronal.jpg",
+      "lps": [-11.54, -160.57, -97.84],
+      "axialSlice": 180,
+      "coronalSlice": 155
+    },
+    "rmb": {
+      "axial": "/airway-lesson/ct/rmb-axial.jpg",
+      "coronal": "/airway-lesson/ct/rmb-coronal.jpg",
+      "lps": [-23.67, -157.43, -179.61],
+      "axialSlice": 126,
+      "coronalSlice": 157
+    },
+    "rul": {
+      "axial": "/airway-lesson/ct/rul-axial.jpg",
+      "coronal": "/airway-lesson/ct/rul-coronal.jpg",
+      "lps": [-37.89, -158.74, -179.04],
+      "axialSlice": 126,
+      "coronalSlice": 156
+    },
+    "rb1": {
+      "axial": "/airway-lesson/ct/rb1-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb1-coronal.jpg",
+      "lps": [-48.21, -160.76, -167.99],
+      "axialSlice": 134,
+      "coronalSlice": 155
+    },
+    "rb2": {
+      "axial": "/airway-lesson/ct/rb2-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb2-coronal.jpg",
+      "lps": [-49.93, -153.13, -172.42],
+      "axialSlice": 131,
+      "coronalSlice": 160
+    },
+    "rb3": {
+      "axial": "/airway-lesson/ct/rb3-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb3-coronal.jpg",
+      "lps": [-48.73, -163.96, -176.35],
+      "axialSlice": 128,
+      "coronalSlice": 152
+    },
+    "bronchus-intermedius": {
+      "axial": "/airway-lesson/ct/bronchus-intermedius-axial.jpg",
+      "coronal": "/airway-lesson/ct/bronchus-intermedius-coronal.jpg",
+      "lps": [-34.37, -158.56, -199.05],
+      "axialSlice": 113,
+      "coronalSlice": 156
+    },
+    "rml": {
+      "axial": "/airway-lesson/ct/rml-axial.jpg",
+      "coronal": "/airway-lesson/ct/rml-coronal.jpg",
+      "lps": [-44.94, -168.56, -214.0],
+      "axialSlice": 103,
+      "coronalSlice": 149
+    },
+    "rb4": {
+      "axial": "/airway-lesson/ct/rb4-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb4-coronal.jpg",
+      "lps": [-62.34, -178.09, -214.95],
+      "axialSlice": 102,
+      "coronalSlice": 142
+    },
+    "rb5": {
+      "axial": "/airway-lesson/ct/rb5-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb5-coronal.jpg",
+      "lps": [-55.01, -183.9, -215.16],
+      "axialSlice": 102,
+      "coronalSlice": 138
+    },
+    "rll": {
+      "axial": "/airway-lesson/ct/rll-axial.jpg",
+      "coronal": "/airway-lesson/ct/rll-coronal.jpg",
+      "lps": [-43.28, -157.94, -213.03],
+      "axialSlice": 104,
+      "coronalSlice": 157
+    },
+    "rb6": {
+      "axial": "/airway-lesson/ct/rb6-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb6-coronal.jpg",
+      "lps": [-46.2, -151.56, -215.02],
+      "axialSlice": 102,
+      "coronalSlice": 161
+    },
+    "rb7": {
+      "axial": "/airway-lesson/ct/rb7-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb7-coronal.jpg",
+      "lps": [-43.54, -153.05, -227.87],
+      "axialSlice": 94,
+      "coronalSlice": 160
+    },
+    "rb8": {
+      "axial": "/airway-lesson/ct/rb8-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb8-coronal.jpg",
+      "lps": [-59.2, -155.34, -233.56],
+      "axialSlice": 90,
+      "coronalSlice": 159
+    },
+    "rb9": {
+      "axial": "/airway-lesson/ct/rb9-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb9-coronal.jpg",
+      "lps": [-60.36, -147.55, -238.2],
+      "axialSlice": 87,
+      "coronalSlice": 164
+    },
+    "rb10": {
+      "axial": "/airway-lesson/ct/rb10-axial.jpg",
+      "coronal": "/airway-lesson/ct/rb10-coronal.jpg",
+      "lps": [-53.92, -146.5, -241.45],
+      "axialSlice": 85,
+      "coronalSlice": 165
+    },
+    "lmb": {
+      "axial": "/airway-lesson/ct/lmb-axial.jpg",
+      "coronal": "/airway-lesson/ct/lmb-coronal.jpg",
+      "lps": [9.04, -157.89, -188.01],
+      "axialSlice": 120,
+      "coronalSlice": 157
+    },
+    "lul": {
+      "axial": "/airway-lesson/ct/lul-axial.jpg",
+      "coronal": "/airway-lesson/ct/lul-coronal.jpg",
+      "lps": [38.81, -166.98, -197.4],
+      "axialSlice": 114,
+      "coronalSlice": 150
+    },
+    "lul-upper": {
+      "axial": "/airway-lesson/ct/lul-upper-axial.jpg",
+      "coronal": "/airway-lesson/ct/lul-upper-coronal.jpg",
+      "lps": [47.31, -171.28, -181.02],
+      "axialSlice": 125,
+      "coronalSlice": 147
+    },
+    "lb1-2": {
+      "axial": "/airway-lesson/ct/lb1-2-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb1-2-coronal.jpg",
+      "lps": [47.3, -169.92, -178.73],
+      "axialSlice": 127,
+      "coronalSlice": 148
+    },
+    "lb1": {
+      "axial": "/airway-lesson/ct/lb1-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb1-coronal.jpg",
+      "lps": [47.3, -169.92, -178.73],
+      "axialSlice": 127,
+      "coronalSlice": 148
+    },
+    "lb2": {
+      "axial": "/airway-lesson/ct/lb2-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb2-coronal.jpg",
+      "lps": [47.3, -169.92, -178.73],
+      "axialSlice": 127,
+      "coronalSlice": 148
+    },
+    "lb3": {
+      "axial": "/airway-lesson/ct/lb3-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb3-coronal.jpg",
+      "lps": [49.33, -175.48, -182.27],
+      "axialSlice": 124,
+      "coronalSlice": 144
+    },
+    "lingula": {
+      "axial": "/airway-lesson/ct/lingula-axial.jpg",
+      "coronal": "/airway-lesson/ct/lingula-coronal.jpg",
+      "lps": [50.07, -175.11, -199.58],
+      "axialSlice": 113,
+      "coronalSlice": 144
+    },
+    "lb4": {
+      "axial": "/airway-lesson/ct/lb4-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb4-coronal.jpg",
+      "lps": [56.89, -180.57, -200.41],
+      "axialSlice": 112,
+      "coronalSlice": 140
+    },
+    "lb5": {
+      "axial": "/airway-lesson/ct/lb5-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb5-coronal.jpg",
+      "lps": [56.39, -180.13, -205.71],
+      "axialSlice": 109,
+      "coronalSlice": 141
+    },
+    "lll": {
+      "axial": "/airway-lesson/ct/lll-axial.jpg",
+      "coronal": "/airway-lesson/ct/lll-coronal.jpg",
+      "lps": [35.89, -158.63, -203.57],
+      "axialSlice": 110,
+      "coronalSlice": 156
+    },
+    "lb6": {
+      "axial": "/airway-lesson/ct/lb6-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb6-coronal.jpg",
+      "lps": [39.15, -151.96, -205.98],
+      "axialSlice": 108,
+      "coronalSlice": 161
+    },
+    "lb7-8": {
+      "axial": "/airway-lesson/ct/lb7-8-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb7-8-coronal.jpg",
+      "lps": [58.0, -155.64, -229.22],
+      "axialSlice": 93,
+      "coronalSlice": 158
+    },
+    "lb9": {
+      "axial": "/airway-lesson/ct/lb9-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb9-coronal.jpg",
+      "lps": [54.38, -152.1, -232.78],
+      "axialSlice": 90,
+      "coronalSlice": 161
+    },
+    "lb10": {
+      "axial": "/airway-lesson/ct/lb10-axial.jpg",
+      "coronal": "/airway-lesson/ct/lb10-coronal.jpg",
+      "lps": [48.28, -149.94, -228.62],
+      "axialSlice": 93,
+      "coronalSlice": 163
+    },
+    "larynx": {
+      "axial": "/airway-lesson/ct/larynx-axial.jpg",
+      "coronal": "/airway-lesson/ct/larynx-coronal.jpg",
+      "lps": [-8.45, -180.82, -55.22],
+      "axialSlice": 209,
+      "coronalSlice": 140
+    }
+  }
+}

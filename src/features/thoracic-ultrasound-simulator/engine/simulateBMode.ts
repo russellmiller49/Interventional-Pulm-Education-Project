@@ -1,4 +1,5 @@
 import type {
+  ProbeType,
   ThoracicFrameMetrics,
   ThoracicProbeState,
   ThoracicStructureLabel,
@@ -8,8 +9,18 @@ import type {
 } from '../types'
 
 import { defaultThoracicTissueModel } from './tissueModel'
+import {
+  createCardiacRenderState,
+  sampleCardiacAnatomy,
+  type CardiacRenderState,
+} from './cardiacModel'
 import { assessNeedlePath } from './needlePath'
-import { beamDirection, probeOrigin, projectBeamToWorld } from './sectorGeometry'
+import {
+  beamDirection,
+  probeOrigin,
+  projectBeamToWorld,
+  transducerFaceRadiusMm,
+} from './sectorGeometry'
 import { sampleLabel } from './sampleVolume'
 
 export interface SimulateBModeInput {
@@ -18,6 +29,10 @@ export interface SimulateBModeInput {
   width: number
   height: number
   model?: TissueModel
+  /** Seconds on the deterministic simulation clock; omitted/static callers use phase zero. */
+  simulationTimeSec?: number
+  /** Transducer scan-conversion geometry. Cardiac windows use a phased sector. */
+  probeType?: ProbeType
   /**
    * When false the beam loop only accumulates metrics (cheap, synchronous, no
    * pixel writes or smoothing) so scoring can run on every probe move without
@@ -38,8 +53,6 @@ export interface RenderedBModeFrame extends SimulatedBModeFrame {
 
 const DEG2RAD = Math.PI / 180
 
-/** Curvature radius of the virtual curvilinear transducer face, in mm. */
-const FACE_RADIUS_MM = 45
 /** Soft-tissue attenuation the time-gain-compensation curve assumes. */
 const REFERENCE_ATTENUATION = 0.52
 /** Converts material attenuation units into per-mm log-amplitude loss. */
@@ -101,6 +114,16 @@ function findContactDepthMm(
 }
 
 /**
+ * Depth (mm) of the air standoff the renderer crops before the fan starts, for
+ * the current pose — i.e. the offset added to every ray in `marchPolarGrid`.
+ * The inverse mapping (`sectorImageToWorld`) needs this so a screen pixel maps
+ * back to the world point that pixel actually sampled. Returns 0 in contact.
+ */
+export function probeContactDepthMm(volume: ThoracicVolume, probe: ThoracicProbeState): number {
+  return findContactDepthMm(volume, probe, probe.depthCm * 10) ?? 0
+}
+
+/**
  * March every scanline through the volume once, producing a polar (beam x
  * depth) grid of display intensities. Working in the acquisition domain first
  * — and only scan-converting to screen space at the end — is what real systems
@@ -114,6 +137,7 @@ function marchPolarGrid(
   model: TissueModel,
   beams: number,
   samples: number,
+  cardiacState: CardiacRenderState | null,
 ) {
   const maxDepthMm = probe.depthCm * 10
   const stepMm = maxDepthMm / Math.max(1, samples - 1)
@@ -137,7 +161,7 @@ function marchPolarGrid(
     const beamGain = 0.96 + 0.08 * pixelHash(beam * 1.31, 7.7)
     let attenuation = 0
     let shadow = 1
-    let previousLabel: ThoracicStructureLabel = 'background'
+    let previousRenderLabel: ThoracicStructureLabel = 'background'
     let airSurfaceDepthMm: number | null = null
 
     for (let sample = 0; sample < samples; sample += 1) {
@@ -164,12 +188,14 @@ function marchPolarGrid(
         origin[2] + direction[2] * rayDepthMm + jitterZ,
       ]
       const label = sampleLabel(volume, world)
+      const cardiacSample = sampleCardiacAnatomy(label, world, cardiacState)
       // Once the probe has contact, the whole fan is in tissue: unlabeled
       // voxels render as fill. With no contact at all the fan stays dark.
-      const renderLabel = label === 'background' && inContact ? model.fillLabel : label
+      const renderLabel =
+        label === 'background' && inContact ? model.fillLabel : cardiacSample.label
       const material = model.materials[renderLabel] ?? model.materials.background
-      let boundaryEcho = model.interfaceEcho(previousLabel, renderLabel)
-      if (previousLabel === 'background' && renderLabel !== 'background' && sample > 0) {
+      let boundaryEcho = model.interfaceEcho(previousRenderLabel, renderLabel)
+      if (previousRenderLabel === 'background' && renderLabel !== 'background' && sample > 0) {
         // Entry into tissue: strong specular line where the beam meets skin.
         boundaryEcho = Math.max(boundaryEcho, 0.85)
       }
@@ -187,7 +213,7 @@ function marchPolarGrid(
       // (fluid) come out brighter behind — posterior enhancement for free.
       const timeGain = Math.exp(REFERENCE_ATTENUATION * ATTENUATION_SCALE * depthMm)
       const depthGain = Math.min(MAX_DEPTH_GAIN, timeGain * Math.exp(-attenuation))
-      const scatterAmp = model.texture(world, renderLabel, depthMm)
+      const scatterAmp = model.texture(cardiacSample.textureWorld, renderLabel, depthMm)
       const noiseAmp =
         0.0009 *
         (0.3 + 0.7 * pixelHash(beam * 3.1, sample * 1.7)) *
@@ -205,7 +231,10 @@ function marchPolarGrid(
       beamGray[sample] = logCompressToByte(rawEcho, probe.dynamicRangeDb)
       beamBoundary[sample] = boundaryEcho
       beamCortex[sample] =
-        label === 'rib' && (previousLabel !== 'rib' || boundaryEcho > 0.18) ? 1 : 0
+        (label === 'rib' || label === 'spine') &&
+        (previousRenderLabel !== renderLabel || boundaryEcho > 0.18)
+          ? 1
+          : 0
 
       attenuation += material.attenuation * stepMm * ATTENUATION_SCALE
       if (material.castsShadow) {
@@ -215,20 +244,21 @@ function marchPolarGrid(
         // Dirty air shadow: gradual decay leaves reverberation haze visible.
         shadow *= Math.exp(-stepMm * 0.085)
       }
-      previousLabel = renderLabel
+      previousRenderLabel = renderLabel
     }
 
     for (let sample = 0; sample < samples; sample += 1) {
       const label = beamLabels[sample]
+      const renderLabel = beamRenderLabels[sample]
       const fluidBoundary =
-        label === model.fluidLabel &&
+        model.isFluidLike(renderLabel) &&
         (beamBoundary[sample] > 0.16 ||
-          (sample > 0 && beamLabels[sample - 1] !== model.fluidLabel) ||
-          (sample + 1 < samples && beamLabels[sample + 1] !== model.fluidLabel))
+          (sample > 0 && beamRenderLabels[sample - 1] !== renderLabel) ||
+          (sample + 1 < samples && beamRenderLabels[sample + 1] !== renderLabel))
 
       display[beam * samples + sample] = model.displayGray({
         label,
-        renderLabel: beamRenderLabels[sample],
+        renderLabel,
         gray: beamGray[sample],
         boundaryEcho: beamBoundary[sample],
         fluidBoundary,
@@ -323,6 +353,7 @@ function scanConvert(
   probe: ThoracicProbeState,
   width: number,
   height: number,
+  probeType: ProbeType,
 ) {
   const image = new ImageData(width, height)
   const maxDepthMm = probe.depthCm * 10
@@ -331,11 +362,12 @@ function scanConvert(
   const sinHalf = Math.sin(halfRad)
   const cosHalf = Math.cos(halfRad)
 
+  const faceRadiusMm = transducerFaceRadiusMm(probeType)
   const scale = Math.min(
-    (height - 14) / (maxDepthMm + FACE_RADIUS_MM * (1 - cosHalf)),
-    (width / 2 - 4) / ((FACE_RADIUS_MM + maxDepthMm) * sinHalf),
+    (height - 14) / (maxDepthMm + faceRadiusMm * (1 - cosHalf)),
+    (width / 2 - 4) / ((faceRadiusMm + maxDepthMm) * sinHalf),
   )
-  const apexY = 8 - FACE_RADIUS_MM * scale * cosHalf
+  const apexY = 8 - faceRadiusMm * scale * cosHalf
   const centerX = width / 2
 
   for (let y = 0; y < height; y += 1) {
@@ -350,14 +382,14 @@ function scanConvert(
       // Distance (in px) to the nearest sector edge, for a soft boundary.
       const edge = Math.min(
         (halfRad - Math.abs(angle)) * radiusPx,
-        (radiusMm - FACE_RADIUS_MM) * scale,
-        (FACE_RADIUS_MM + maxDepthMm - radiusMm) * scale,
+        (radiusMm - faceRadiusMm) * scale,
+        (faceRadiusMm + maxDepthMm - radiusMm) * scale,
       )
 
       let value = 0
       if (edge > 0) {
         const beamPos = (angle / sectorRad + 0.5) * (beams - 1)
-        const samplePos = ((radiusMm - FACE_RADIUS_MM) / maxDepthMm) * (samples - 1)
+        const samplePos = ((radiusMm - faceRadiusMm) / maxDepthMm) * (samples - 1)
         const b0 = Math.max(0, Math.min(beams - 2, Math.floor(beamPos)))
         const s0 = Math.max(0, Math.min(samples - 2, Math.floor(samplePos)))
         const bt = Math.max(0, Math.min(1, beamPos - b0))
@@ -379,7 +411,7 @@ function scanConvert(
 
   // Centimetre depth ticks down the right edge, aligned with the fan.
   for (let cm = 0; cm <= Math.floor(probe.depthCm); cm += 1) {
-    const y = Math.round(apexY + (FACE_RADIUS_MM + cm * 10) * scale)
+    const y = Math.round(apexY + (faceRadiusMm + cm * 10) * scale)
     if (y < 1 || y >= height - 1) continue
     const major = cm % 5 === 0
     for (let dx = major ? -2 : -1; dx <= 0; dx += 1) {
@@ -394,21 +426,35 @@ function scanConvert(
   return image
 }
 
-function renderBModeImage(
-  volume: ThoracicVolume,
-  probe: ThoracicProbeState,
-  model: TissueModel,
-  width: number,
-  height: number,
-) {
+export interface RenderBModeImageInput {
+  volume: ThoracicVolume
+  probe: ThoracicProbeState
+  model?: TissueModel
+  width: number
+  height: number
+  simulationTimeSec?: number
+  probeType?: ProbeType
+}
+
+/** Image-only path used by cine frames so static scoring is not recomputed. */
+export function renderBModeImage({
+  volume,
+  probe,
+  model = defaultThoracicTissueModel,
+  width,
+  height,
+  simulationTimeSec = 0,
+  probeType = 'curvilinear',
+}: RenderBModeImageInput) {
   const beams = Math.max(96, Math.min(224, Math.round(width * 0.45)))
   const samples = Math.max(160, Math.min(384, Math.round(height * 0.6)))
+  const cardiacState = createCardiacRenderState(volume.cardiacModel, simulationTimeSec)
   const display = applyPointSpread(
-    marchPolarGrid(volume, probe, model, beams, samples),
+    marchPolarGrid(volume, probe, model, beams, samples, cardiacState),
     beams,
     samples,
   )
-  return scanConvert(display, beams, samples, probe, width, height)
+  return scanConvert(display, beams, samples, probe, width, height, probeType)
 }
 
 export function simulateBMode(input: SimulateBModeInput & { renderImage: true }): RenderedBModeFrame
@@ -420,6 +466,8 @@ export function simulateBMode({
   height,
   model = defaultThoracicTissueModel,
   renderImage = false,
+  simulationTimeSec = 0,
+  probeType = 'curvilinear',
 }: SimulateBModeInput): SimulatedBModeFrame {
   const maxDepthMm = probe.depthCm * 10
   const stepMm = maxDepthMm / Math.max(1, height - 1)
@@ -485,7 +533,17 @@ export function simulateBMode({
     Math.max(1, fluidRunsAboveNoise.length)
 
   return {
-    imageData: renderImage ? renderBModeImage(volume, probe, model, width, height) : null,
+    imageData: renderImage
+      ? renderBModeImage({
+          volume,
+          probe,
+          model,
+          width,
+          height,
+          simulationTimeSec,
+          probeType,
+        })
+      : null,
     metrics: {
       maxFluidPocketMm,
       meanFluidPocketMm,

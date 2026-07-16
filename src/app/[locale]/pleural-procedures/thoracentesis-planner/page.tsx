@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  ThoracentesisNav,
-  thoracentesisNavBase,
-} from '@/features/thoracentesis-planner/components/ThoracentesisNav'
+import { thoracentesisNavBase } from '@/features/learning-module/moduleRoutes'
+import { ThoracentesisNav } from '@/features/thoracentesis-planner/components/ThoracentesisNav'
 import { getThoracentesisObjectives } from '@/features/thoracentesis-planner/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

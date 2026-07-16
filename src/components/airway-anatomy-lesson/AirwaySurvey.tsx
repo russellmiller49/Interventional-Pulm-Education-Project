@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { Boxes, ChevronLeft, ChevronRight, Eye, Gauge, Lightbulb, RotateCcw } from 'lucide-react'
 
 import { SURVEY_STEPS } from '@/data/airway-anatomy-lesson/airway-map'
 import { getAncestry, getNode, lobeColor } from '@/lib/airway-anatomy-lesson/airway-graph'
@@ -9,28 +9,21 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/cn'
 
 import { AirwayTreeDiagram } from './AirwayTreeDiagram'
-import { EndoscopicView } from './EndoscopicView'
-
-const STEP_DURATION_MS = 7000
+import { CtCorrelationView } from './CtCorrelationView'
+import { GuidedScopeStage } from './GuidedScopeStage'
 
 interface AirwaySurveyProps {
   onOpenStructure?: (id: string) => void
   className?: string
 }
 
-/**
- * Guided, auto-advancing walk-through of a normal airway survey. Each stop
- * shows the generated endoscopic view for that airway with the downstream
- * openings, synchronized narration, and the tree diagram lit along the path
- * travelled so far.
- */
+const SPEEDS = [0.5, 0.25, 1] as const
+
 export function AirwaySurvey({ onOpenStructure, className }: AirwaySurveyProps) {
   const [stepIndex, setStepIndex] = useState(0)
-  const [playing, setPlaying] = useState(false)
-
+  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(0.5)
   const step = SURVEY_STEPS[stepIndex]
   const node = getNode(step.nodeId)
-  const atEnd = stepIndex >= SURVEY_STEPS.length - 1
 
   const nodeIdToStep = useMemo(() => {
     const map: Record<string, number> = {}
@@ -41,10 +34,9 @@ export function AirwaySurvey({ onOpenStructure, className }: AirwaySurveyProps) 
   }, [])
 
   const trailIds = useMemo(() => {
-    // Everything visited so far, plus the ancestry of the current node.
     const ids = new Set<string>()
     for (let i = 0; i <= stepIndex; i += 1) {
-      getAncestry(SURVEY_STEPS[i].nodeId).forEach((n) => ids.add(n.id))
+      getAncestry(SURVEY_STEPS[i].nodeId).forEach((ancestor) => ids.add(ancestor.id))
     }
     return ids
   }, [stepIndex])
@@ -53,169 +45,139 @@ export function AirwaySurvey({ onOpenStructure, className }: AirwaySurveyProps) 
     setStepIndex(((index % SURVEY_STEPS.length) + SURVEY_STEPS.length) % SURVEY_STEPS.length)
   }, [])
 
-  // Auto-advance while playing; simply stop scheduling at the last step (the
-  // Play button flips to "Replay" via `atEnd`, so no setState in the effect).
-  useEffect(() => {
-    if (!playing || stepIndex >= SURVEY_STEPS.length - 1) return
-    const timer = setTimeout(() => setStepIndex((prev) => prev + 1), STEP_DURATION_MS)
-    return () => clearTimeout(timer)
-  }, [playing, stepIndex])
-
   const handleDiagramSelect = useCallback(
     (id: string) => {
-      if (id in nodeIdToStep) {
-        setPlaying(false)
-        setStepIndex(nodeIdToStep[id])
-      }
-      onOpenStructure?.(id)
+      if (id in nodeIdToStep) setStepIndex(nodeIdToStep[id])
+      else onOpenStructure?.(id)
     },
     [nodeIdToStep, onOpenStructure],
   )
 
   if (!node) return null
   const color = lobeColor(node.lobe)
+  const orientation =
+    node.endoscopicView?.orientation ??
+    (node.kind === 'segmental'
+      ? 'Terminal segment - withdraw and inspect the mucosa after identifying the orifice.'
+      : "Keep anterior at 12 o'clock and the flat membranous wall at 6 o'clock to stay oriented.")
 
   return (
     <div className={cn('space-y-4', className)}>
-      <style>{`
-        @keyframes airway-advance {
-          0% { opacity: 0; transform: scale(0.88); filter: brightness(0.7); }
-          100% { opacity: 1; transform: scale(1); filter: brightness(1); }
-        }
-      `}</style>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span
+            className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+            style={{ backgroundColor: `${color}22`, color }}
+          >
+            {step.stage}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Stop {stepIndex + 1} of {SURVEY_STEPS.length}
+          </span>
+        </div>
+        <div className="h-1.5 w-40 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${((stepIndex + 1) / SURVEY_STEPS.length) * 100}%` }}
+          />
+        </div>
+      </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-        {/* Endoscopic view */}
-        <div className="space-y-3">
-          <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-slate-950 p-3 shadow-inner">
-            <div
-              key={stepIndex}
-              style={{ animation: 'airway-advance 0.6s ease-out' }}
-              className="mx-auto max-w-[320px]"
-            >
-              <EndoscopicView node={node} onSelectOpening={handleDiagramSelect} />
-            </div>
-            <span className="pointer-events-none absolute left-4 top-4 rounded bg-black/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-200">
-              Endoscopic view
-            </span>
-          </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-2">
+          <GuidedScopeStage focusNodeId={node.id} playbackRate={speed} />
           <p className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2 text-xs leading-5 text-muted-foreground">
             <span className="font-semibold text-foreground">Orientation: </span>
-            {node.endoscopicView?.orientation ??
-              'Terminal segment — advance no further; withdraw and inspect the mucosa.'}
+            {orientation}
           </p>
         </div>
+        <CtCorrelationView focusNodeId={node.id} />
+      </div>
 
-        {/* Narration + progress */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <span
-              className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
-              style={{ backgroundColor: `${color}22`, color }}
-            >
-              {step.stage}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Stop {stepIndex + 1} of {SURVEY_STEPS.length}
-            </span>
-          </div>
+      <div className="space-y-4 rounded-2xl border border-border/70 bg-card/50 p-5">
+        <div className="space-y-2">
+          <h3 className="text-2xl font-bold tracking-tight text-foreground">{step.title}</h3>
+          {step.narration.map((paragraph) => (
+            <p key={paragraph} className="text-sm leading-6 text-muted-foreground">
+              {paragraph}
+            </p>
+          ))}
+        </div>
 
+        {node.whatYouSee.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-2xl font-bold tracking-tight text-foreground">{step.title}</h3>
-            <div className="space-y-2">
-              {step.narration.map((paragraph) => (
-                <p key={paragraph} className="text-sm leading-6 text-muted-foreground">
-                  {paragraph}
-                </p>
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <Eye className="h-3.5 w-3.5" aria-hidden /> What you see through the scope
+            </p>
+            <ul className="grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+              {node.whatYouSee.map((item) => (
+                <li key={item} className="flex gap-2 text-sm leading-6 text-muted-foreground">
+                  <span
+                    className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: color }}
+                    aria-hidden
+                  />
+                  <span>{item}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
+        )}
 
-          <button
-            type="button"
-            onClick={() => onOpenStructure?.(node.id)}
-            className="self-start text-xs font-semibold text-primary underline-offset-4 hover:underline"
-          >
-            Open {node.shortLabel} in the explorer →
-          </button>
+        {node.pearls.length > 0 && (
+          <div className="flex gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3">
+            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+            <p className="text-sm leading-6 text-muted-foreground">{node.pearls[0]}</p>
+          </div>
+        )}
 
-          {/* Controls */}
-          <div className="mt-auto space-y-3">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${((stepIndex + 1) / SURVEY_STEPS.length) * 100}%` }}
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
+        <button
+          type="button"
+          onClick={() => onOpenStructure?.(node.id)}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          <Boxes className="h-3.5 w-3.5" aria-hidden /> Open {node.shortLabel} in the explorer
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" size="sm" variant="outline" onClick={() => goTo(stepIndex - 1)}>
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+          Previous
+        </Button>
+        <Button type="button" size="sm" onClick={() => goTo(stepIndex + 1)}>
+          Next
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => goTo(0)}>
+          <RotateCcw className="h-4 w-4" aria-hidden /> Restart
+        </Button>
+
+        <div className="ml-auto flex items-center gap-1.5">
+          <Gauge className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+          <div className="flex gap-0.5 rounded-lg border border-border/70 bg-card/60 p-0.5">
+            {SPEEDS.map((candidate) => (
+              <button
+                key={candidate}
                 type="button"
-                size="sm"
-                onClick={() => {
-                  if (atEnd) {
-                    setStepIndex(0)
-                    setPlaying(true)
-                  } else {
-                    setPlaying((prev) => !prev)
-                  }
-                }}
-              >
-                {playing && !atEnd ? (
-                  <>
-                    <Pause className="h-4 w-4" aria-hidden /> Pause
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4" aria-hidden />
-                    {atEnd ? 'Replay survey' : 'Play survey'}
-                  </>
+                onClick={() => setSpeed(candidate)}
+                className={cn(
+                  'rounded-md px-2 py-0.5 text-[11px] font-medium tabular-nums transition-colors',
+                  speed === candidate
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setPlaying(false)
-                  goTo(stepIndex - 1)
-                }}
-                aria-label="Previous stop"
               >
-                <ChevronLeft className="h-4 w-4" aria-hidden />
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setPlaying(false)
-                  goTo(stepIndex + 1)
-                }}
-                aria-label="Next stop"
-              >
-                <ChevronRight className="h-4 w-4" aria-hidden />
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setPlaying(false)
-                  setStepIndex(0)
-                }}
-                aria-label="Restart"
-              >
-                <RotateCcw className="h-4 w-4" aria-hidden /> Restart
-              </Button>
-            </div>
+                {candidate}x
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Synchronized tree diagram */}
       <div className="rounded-2xl border border-border/70 bg-card/50 p-4">
         <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Position in the tree — tap any stop to jump there
+          Position in the tree - tap any stop to jump there
         </p>
         <AirwayTreeDiagram
           selectedId={node.id}

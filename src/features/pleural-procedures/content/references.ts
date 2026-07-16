@@ -89,6 +89,23 @@ export const pleuralReferences: PleuralReference[] = [
     useNote: 'Talc poudrage and slurry comparison for MPE pleurodesis teaching.',
   },
   {
+    id: 'bts-lat-2010',
+    citation:
+      'Rahman NM, Ali NJ, Brown G, et al. Local anaesthetic thoracoscopy: British Thoracic Society Pleural Disease Guideline 2010. Thorax. 2010;65(Suppl 2):ii54-ii60.',
+    sourceType: 'guideline',
+    url: 'https://thorax.bmj.com/content/65/Suppl_2/ii54',
+    useNote:
+      'Medical (local-anaesthetic) thoracoscopy indications, patient selection, technique, and contraindication framing.',
+  },
+  {
+    id: 'talc-safety-2007',
+    citation:
+      'Janssen JP, Collier G, Astoul P, et al. Safety of pleurodesis with talc poudrage in malignant pleural effusion: a prospective cohort study. Lancet. 2007;369(9572):1535-1539.',
+    sourceType: 'trial',
+    url: 'https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(07)60708-9/fulltext',
+    useNote: 'Graded (large-particle) talc poudrage safety teaching for pleurodesis.',
+  },
+  {
     id: 'asap-2017',
     citation:
       'Wahidi MM, Reddy C, Yarmus L, et al. Randomized trial of pleural fluid drainage frequency in malignant pleural effusions. Am J Respir Crit Care Med. 2017;195:1050-1057.',

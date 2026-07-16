@@ -1,5 +1,5 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import type { Metadata, Route } from 'next'
+import { notFound, redirect } from 'next/navigation'
 import { setRequestLocale } from 'next-intl/server'
 
 import { EmbeddedTrainingModuleFrame } from '@/components/ebus-training/EmbeddedTrainingModuleFrame'
@@ -8,7 +8,6 @@ import {
   getAnyEbusTrainingModule,
   getEbusTrainingModule,
 } from '@/data/ebus-training'
-import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 import { defaultLocale, isActiveLocale } from '@/i18n/locale'
@@ -48,10 +47,11 @@ export default async function EbusTrainingModulePage({ params }: EbusTrainingMod
   const { locale, module: moduleSlug } = await params
   setRequestLocale(locale)
 
-  const canViewAdminModules = await canCurrentUserViewDraftModules()
-  const trainingModule = getEbusTrainingModule(moduleSlug, {
-    canViewAdminModules,
-  })
+  if (moduleSlug === 'virtual-bronchoscopy') {
+    redirect('/ebus-training/simulator' as Route)
+  }
+
+  const trainingModule = getEbusTrainingModule(moduleSlug)
 
   if (!trainingModule) {
     notFound()

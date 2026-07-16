@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { Boxes, ClipboardCheck, Compass, Network } from 'lucide-react'
+import { Boxes, ClipboardCheck, Compass, Network, Video } from 'lucide-react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LEGEND_LOBES, LOBE_LABELS, lobeColor } from '@/lib/airway-anatomy-lesson/airway-graph'
@@ -10,10 +10,14 @@ import { cn } from '@/lib/cn'
 import { Airway3DModel } from './Airway3DModel'
 import { AirwaySurvey } from './AirwaySurvey'
 import { AirwayTreeDiagram } from './AirwayTreeDiagram'
+import { AirwayVideoAtlas } from './AirwayVideoAtlas'
 import { AirwayAnatomyQuiz } from './AirwayAnatomyQuiz'
+import { AirwayIdentifyQuiz } from './AirwayIdentifyQuiz'
+import { AirwayStructureMediaPanel } from './AirwayStructureMediaPanel'
+import { CtCorrelationView } from './CtCorrelationView'
 import { SegmentDetailPanel } from './SegmentDetailPanel'
 
-type TabKey = 'overview' | 'survey' | 'explore' | 'assess'
+type TabKey = 'video' | 'overview' | 'survey' | 'explore' | 'assess'
 
 const STATS = [
   { value: '2', label: 'Lungs' },
@@ -56,7 +60,7 @@ function LobeLegend({ className }: { className?: string }) {
 }
 
 export function AirwayAnatomyLesson() {
-  const [activeTab, setActiveTab] = useState<TabKey>('overview')
+  const [activeTab, setActiveTab] = useState<TabKey>('video')
   const [selectedId, setSelectedId] = useState<string | null>('trachea')
 
   const openInExplorer = useCallback((id: string) => {
@@ -67,6 +71,9 @@ export function AirwayAnatomyLesson() {
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabKey)}>
       <TabsList className="flex flex-wrap gap-1">
+        <TabsTrigger value="video" className="min-w-0 flex-1 gap-2">
+          <Video className="h-4 w-4" aria-hidden /> Real bronchoscopy
+        </TabsTrigger>
         <TabsTrigger value="overview" className="min-w-0 flex-1 gap-2">
           <Network className="h-4 w-4" aria-hidden /> Overview
         </TabsTrigger>
@@ -80,6 +87,25 @@ export function AirwayAnatomyLesson() {
           <ClipboardCheck className="h-4 w-4" aria-hidden /> Test yourself
         </TabsTrigger>
       </TabsList>
+
+      {/* ---- Real bronchoscopy video atlas ---- */}
+      <TabsContent value="video" className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-foreground">
+              Pause-and-reveal bronchoscopy atlas
+            </h3>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Play a focused, cropped normal airway survey without moving labels. Pause anywhere to
+              reveal unlabeled markers, turn labels on when you want the atlas view, or click a
+              marker to identify the airway before opening the same structure in CT, 3D, and the
+              tree explorer.
+            </p>
+          </div>
+          <LobeLegend />
+        </div>
+        <AirwayVideoAtlas onOpenStructure={openInExplorer} />
+      </TabsContent>
 
       {/* ---- Overview / Learn ---- */}
       <TabsContent value="overview" className="space-y-6">
@@ -210,7 +236,7 @@ export function AirwayAnatomyLesson() {
 
       {/* ---- Explore ---- */}
       <TabsContent value="explore" className="space-y-5">
-        <div className="rounded-2xl border border-border/70 bg-card/50 p-4">
+        <div className="rounded-xl border border-border/70 bg-card/50 p-4">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Labeled tree — click any structure
@@ -219,15 +245,31 @@ export function AirwayAnatomyLesson() {
           </div>
           <AirwayTreeDiagram selectedId={selectedId} onSelect={setSelectedId} />
         </div>
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Airway3DModel selectedId={selectedId} onSelect={setSelectedId} />
-          <SegmentDetailPanel nodeId={selectedId} onSelect={setSelectedId} />
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-1">
+            <AirwayStructureMediaPanel nodeId={selectedId} />
+            {selectedId && <CtCorrelationView focusNodeId={selectedId} />}
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-1">
+            <Airway3DModel selectedId={selectedId} onSelect={setSelectedId} />
+            <SegmentDetailPanel nodeId={selectedId} onSelect={setSelectedId} />
+          </div>
         </div>
       </TabsContent>
 
       {/* ---- Assess ---- */}
-      <TabsContent value="assess">
-        <AirwayAnatomyQuiz onOpenStructure={openInExplorer} />
+      <TabsContent value="assess" className="space-y-8">
+        <AirwayIdentifyQuiz onOpenStructure={openInExplorer} />
+        <div className="space-y-3 border-t border-border/60 pt-6">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-foreground">Knowledge check</h3>
+            <p className="text-sm text-muted-foreground">
+              Test the concepts behind the anatomy — orientation, branching patterns, and clinical
+              correlations.
+            </p>
+          </div>
+          <AirwayAnatomyQuiz onOpenStructure={openInExplorer} />
+        </div>
       </TabsContent>
     </Tabs>
   )

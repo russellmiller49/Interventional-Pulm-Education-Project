@@ -1,0 +1,145 @@
+'use client'
+
+import { useMemo } from 'react'
+
+import type { WaveformSample } from '../engine'
+import styles from './mechanical-ventilation.module.css'
+
+type WaveformField = 'pawCmH2O' | 'flowLMin' | 'volumeMl'
+
+interface WaveformStripProps {
+  samples: readonly WaveformSample[]
+  field: WaveformField
+  label: string
+  unit: string
+  minimum: number
+  maximum: number
+  showPmus?: boolean
+}
+
+function linePoints(
+  samples: readonly WaveformSample[],
+  field: WaveformField | 'pmusCmH2O',
+  minimum: number,
+  maximum: number,
+): string {
+  if (samples.length === 0) return ''
+  const firstTime = samples[0].time
+  const lastTime = samples[samples.length - 1].time
+  const duration = Math.max(0.02, lastTime - firstTime)
+  return samples
+    .map((sample) => {
+      const x = ((sample.time - firstTime) / duration) * 1000
+      const normalized = Math.max(0, Math.min(1, (sample[field] - minimum) / (maximum - minimum)))
+      const y = 112 - normalized * 104
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+}
+
+export function WaveformStrip({
+  samples,
+  field,
+  label,
+  unit,
+  minimum,
+  maximum,
+  showPmus = false,
+}: WaveformStripProps) {
+  const values = useMemo(() => samples.map((sample) => sample[field]), [field, samples])
+  const points = useMemo(
+    () => linePoints(samples, field, minimum, maximum),
+    [field, maximum, minimum, samples],
+  )
+  const pmusPoints = useMemo(
+    () => (showPmus ? linePoints(samples, 'pmusCmH2O', -25, 5) : ''),
+    [samples, showPmus],
+  )
+  const current = values.at(-1) ?? 0
+  const observedMin = values.length ? Math.min(...values) : 0
+  const observedMax = values.length ? Math.max(...values) : 0
+
+  return (
+    <figure className={styles.waveformFigure}>
+      <div className={styles.waveformLabel} aria-hidden="true">
+        <strong>{label}</strong>
+        <span>
+          {current.toFixed(field === 'volumeMl' ? 0 : 1)} {unit}
+        </span>
+      </div>
+      <svg
+        className={styles.waveformSvg}
+        viewBox="0 0 1000 120"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={`${label} waveform. Current ${current.toFixed(1)} ${unit}; observed range ${observedMin.toFixed(1)} to ${observedMax.toFixed(1)} ${unit}.`}
+      >
+        <title>{`${label} waveform over the most recent 12 simulated seconds`}</title>
+        <desc>{`Current ${current.toFixed(1)} ${unit}. Minimum ${observedMin.toFixed(1)} and maximum ${observedMax.toFixed(1)} ${unit} in the visible buffer.`}</desc>
+        <g className={styles.waveformGrid} aria-hidden="true">
+          {[0, 1, 2, 3, 4, 5].map((tick) => (
+            <line key={`vertical-${tick}`} x1={tick * 200} y1="0" x2={tick * 200} y2="120" />
+          ))}
+          {[0, 1, 2, 3].map((tick) => (
+            <line key={`horizontal-${tick}`} x1="0" y1={tick * 40} x2="1000" y2={tick * 40} />
+          ))}
+        </g>
+        <polyline
+          className={styles.waveformPrimary}
+          points={points}
+          vectorEffect="non-scaling-stroke"
+        />
+        {showPmus ? (
+          <polyline
+            className={styles.waveformPmus}
+            points={pmusPoints}
+            vectorEffect="non-scaling-stroke"
+          />
+        ) : null}
+      </svg>
+      <figcaption className={styles.srOnly}>
+        {label}: current {current.toFixed(1)} {unit}; minimum {observedMin.toFixed(1)}; maximum{' '}
+        {observedMax.toFixed(1)}.{' '}
+        {showPmus ? 'Educator Pmus overlay is shown as a dashed trace.' : ''}
+      </figcaption>
+    </figure>
+  )
+}
+
+export function WaveformLoops({ samples }: { samples: readonly WaveformSample[] }) {
+  const recent = samples.slice(-250)
+  const pressureVolume = recent
+    .map((sample) => {
+      const x = 24 + Math.max(0, Math.min(70, sample.volumeMl / 12))
+      const y = 108 - Math.max(0, Math.min(95, sample.pawCmH2O * 2.1))
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+  const flowVolume = recent
+    .map((sample) => {
+      const x = 24 + Math.max(0, Math.min(70, sample.volumeMl / 12))
+      const y = 60 - Math.max(-48, Math.min(48, sample.flowLMin * 0.8))
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+  return (
+    <div className={styles.loopGrid}>
+      <figure>
+        <span>Pressure / volume</span>
+        <svg viewBox="0 0 120 120" role="img" aria-label="Pressure-volume loop">
+          <title>Pressure-volume loop</title>
+          <path className={styles.loopAxes} d="M20 8V108H112" />
+          <polyline className={styles.loopPrimary} points={pressureVolume} />
+        </svg>
+      </figure>
+      <figure>
+        <span>Flow / volume</span>
+        <svg viewBox="0 0 120 120" role="img" aria-label="Flow-volume loop">
+          <title>Flow-volume loop</title>
+          <path className={styles.loopAxes} d="M20 8V108M20 60H112" />
+          <polyline className={styles.loopSecondary} points={flowVolume} />
+        </svg>
+      </figure>
+    </div>
+  )
+}

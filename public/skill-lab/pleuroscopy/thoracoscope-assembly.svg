@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="Schematic of a rigid endoscope assembly with an eyepiece, an angled side post, a proximal port, an outer sleeve, and a distal end">
+  <rect width="480" height="240" fill="none"/>
+  <!-- main shaft -->
+  <rect x="70" y="106" width="360" height="28" rx="14" fill="#e2e8f0" stroke="#475569" stroke-width="2.5"/>
+  <!-- eyepiece / optics (proximal lens) -->
+  <circle cx="45" cy="120" r="24" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>
+  <circle cx="45" cy="120" r="11" fill="#94a3b8" stroke="#334155" stroke-width="1.5"/>
+  <!-- angled side post -->
+  <line x1="100" y1="106" x2="118" y2="66" stroke="#475569" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="120" cy="60" r="9" fill="#94a3b8" stroke="#334155" stroke-width="2"/>
+  <!-- proximal port / stopcock -->
+  <path d="M96 134 L96 168 L124 168 L124 134 Z" fill="#cbd5e1" stroke="#475569" stroke-width="2.5"/>
+  <circle cx="110" cy="176" r="7" fill="#94a3b8" stroke="#334155" stroke-width="2"/>
+  <!-- outer sleeve / cannula around distal shaft -->
+  <rect x="330" y="98" width="86" height="44" rx="8" fill="#dbe4ee" stroke="#334155" stroke-width="2.5"/>
+  <!-- distal end / objective -->
+  <rect x="430" y="110" width="24" height="20" rx="6" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>
+</svg>

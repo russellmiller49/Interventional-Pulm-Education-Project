@@ -20,6 +20,7 @@ const copiedBoardReviewTranslationsDir = path.join(standaloneDir, 'board_review_
 
 const remoteAssetPrefixes = [
   'airway-anatomy',
+  'airway-stent-mechanics',
   'bronch-navigation-trainer/app/cases',
   'fluoroview/cases',
   'models',

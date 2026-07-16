@@ -1,0 +1,1295 @@
+{
+  "schema_version": "1.0",
+  "title": "Virtual Mechanical Ventilation Simulator Case Set",
+  "disclaimer": "Educational simulation content only. The starting settings, physiologic targets, and acceptable actions are illustrative and should be configurable to local practice, device capabilities, patient population, and faculty intent. The cases are designed to reward mechanism-based reasoning, safety, and reassessment rather than a single rigid answer.",
+  "engine_recommendations": {
+    "equation_of_motion": "Paw(t) + Pmus(t) = Rrs * Flow(t) + V(t)/Crs + PEEPi",
+    "minimum_patient_state": [
+      "Rrs, Crs, intrinsic PEEP, dead space, shunt, CO2 production, oxygen consumption",
+      "neural respiratory rate, neural inspiratory time, Pmus amplitude, drive variability",
+      "pain, anxiety, delirium, sedation, and ability to communicate"
+    ],
+    "minimum_ventilator_state": [
+      "trigger type and threshold",
+      "target/control variable and flow profile",
+      "cycle variable and threshold",
+      "rise time, inspiratory time, pressure/volume limits, leak compensation, alarms"
+    ],
+    "simulation_modes": ["tutorial", "assessment", "team", "rapid-response", "adaptive-randomized"],
+    "scoring_domains": [
+      "safety-first actions",
+      "mechanism recognition",
+      "appropriate ventilator adjustment",
+      "treatment of patient/circuit cause",
+      "reassessment",
+      "communication and comfort"
+    ]
+  },
+  "cases": [
+    {
+      "id": "MV-01",
+      "title": "ARDS hypoxemia: recruitment versus overdistension",
+      "category": "Physiology / lung-protective ventilation",
+      "difficulty": "Foundational to intermediate",
+      "run_time_min": 12,
+      "learning_objectives": [
+        "Separate oxygenation goals from ventilation goals.",
+        "Use FiO2 and PEEP while monitoring plateau pressure, compliance, and hemodynamics.",
+        "Recognize that more PEEP can recruit lung in one range and overdistend lung in another.",
+        "Accept a configurable degree of hypercapnia rather than sacrificing lung protection."
+      ],
+      "patient": {
+        "description": "A 62-year-old woman with pneumonia-associated moderate-to-severe ARDS, predicted body weight 70 kg.",
+        "vitals": {
+          "HR": 112,
+          "BP": "108/62",
+          "SpO2": 84,
+          "temperature_C": 38.3
+        },
+        "abg": {
+          "pH": 7.28,
+          "PaCO2_mmHg": 52,
+          "PaO2_mmHg": 54,
+          "HCO3_mEq_L": 24
+        }
+      },
+      "initial_ventilator": {
+        "mode": "VC-A/C",
+        "VT_mL": 420,
+        "RR_min": 24,
+        "inspiratory_flow_L_min": 55,
+        "flow_waveform": "square",
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.6,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 25,
+        "airway_resistance_cmH2O_L_s": 10,
+        "shunt_fraction": 0.3,
+        "recruitment_curve": "PEEP 5-12 improves aerated fraction; PEEP above 14 causes overdistension and falling compliance",
+        "baseline_Ppeak_cmH2O": 34,
+        "baseline_Pplat_cmH2O": 27
+      },
+      "visible_findings": [
+        "Low SpO2 and PaO2 despite FiO2 0.60.",
+        "Ppeak 34 and Pplat 27 cm H2O; expiratory flow reaches zero.",
+        "Pressure-volume behavior initially improves when PEEP is raised modestly.",
+        "If PEEP is raised too aggressively, Pplat rises, compliance falls, and blood pressure decreases."
+      ],
+      "expected_actions": [
+        "Increase PEEP in measured steps while adjusting FiO2 and reassessing oxygenation, Pplat, compliance, and blood pressure.",
+        "Perform an inspiratory hold after meaningful changes.",
+        "If Pplat becomes excessive, reduce VT toward 4-6 mL/kg predicted body weight and accept configurable permissive hypercapnia.",
+        "Stop escalating PEEP when compliance worsens or hemodynamics deteriorate."
+      ],
+      "accepted_alternatives": [
+        "A lower-PEEP strategy with more FiO2 can receive partial or full credit if lung-protection and oxygenation goals are met.",
+        "Proning or escalation planning can be included as an advanced branch, but the core case should remain ventilator-focused."
+      ],
+      "unsafe_actions": [
+        "Increasing VT substantially to improve oxygenation.",
+        "Continuing to raise PEEP despite worsening compliance and hypotension.",
+        "Ignoring plateau pressure after an apparently successful SpO2 response."
+      ],
+      "success_criteria": [
+        "Configurable oxygenation target achieved without sustained hypotension.",
+        "Pplat at or below the faculty-set safety threshold, commonly around 30 cm H2O.",
+        "Learner explicitly reassesses after each major change."
+      ],
+      "simulation_logic": [
+        "PEEP 8-12: SpO2 rises, shunt falls, Pplat rises only slightly, and compliance improves.",
+        "PEEP 14-18: Pplat rises steeply, compliance falls, and MAP decreases 10-25 mm Hg.",
+        "VT reduction lowers Pplat but increases PaCO2 over 5-10 simulated minutes.",
+        "Increasing RR is effective only while expiratory flow still reaches zero."
+      ],
+      "hint_ladder": [
+        "Which settings primarily change oxygenation?",
+        "Compare the change in Pplat and compliance after each PEEP step.",
+        "You may need to lower VT even if PaCO2 rises."
+      ],
+      "debrief": "The central tradeoff is recruitment versus overdistension. The learner should not chase a single SpO2 value without watching mechanics and blood pressure. The case also teaches that the same PEEP increment can be beneficial at one point on the compliance curve and harmful at another.",
+      "run_tips": "Run first as a tutorial with visible Pplat and compliance trends. For assessment, hide compliance until the learner performs an inspiratory hold. Randomize the PEEP level at which overdistension begins.",
+      "source_basis": [2, 5, 8]
+    },
+    {
+      "id": "MV-02",
+      "title": "Volume-control flow starvation during high respiratory drive",
+      "category": "Dyssynchrony / inadequate inspiratory flow",
+      "difficulty": "Intermediate",
+      "run_time_min": 10,
+      "learning_objectives": [
+        "Recognize pressure scooping and prolonged inspiratory effort as inadequate flow delivery.",
+        "Distinguish high respiratory drive from inadequate ventilator support.",
+        "Correct the cause without reflexively increasing tidal volume or suppressing drive."
+      ],
+      "patient": {
+        "description": "A 55-year-old man with septic shock and metabolic acidosis who is awake enough to trigger breaths.",
+        "vitals": {
+          "HR": 128,
+          "BP": "104/58 on vasopressor",
+          "SpO2": 94,
+          "RR_observed": 34
+        },
+        "abg": {
+          "pH": 7.24,
+          "PaCO2_mmHg": 30,
+          "PaO2_mmHg": 82,
+          "HCO3_mEq_L": 13
+        }
+      },
+      "initial_ventilator": {
+        "mode": "VC-A/C",
+        "VT_mL": 390,
+        "RR_min": 18,
+        "inspiratory_flow_L_min": 40,
+        "flow_waveform": "square",
+        "PEEP_cmH2O": 8,
+        "FiO2": 0.4,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 35,
+        "airway_resistance_cmH2O_L_s": 10,
+        "patient_drive": "high",
+        "Pmus_peak_cmH2O": -16,
+        "neural_inspiratory_time_s": 0.85,
+        "patient_demand_peak_flow_L_min": 85
+      },
+      "visible_findings": [
+        "Marked concavity or scooping in the pressure-time waveform during constant-flow inspiration.",
+        "Accessory muscle use and a patient statement of 'not enough air.'",
+        "Patient respiratory rate remains high despite acceptable oxygenation.",
+        "Pplat is not excessively high, so the problem is not primarily low compliance."
+      ],
+      "expected_actions": [
+        "Increase inspiratory flow or select a decelerating-flow/pressure-targeted mode that better matches demand.",
+        "Treat fever, pain, agitation, and metabolic acidosis rather than assuming the respiratory rate should normalize immediately.",
+        "Reassess neural-versus-machine inspiratory timing and total minute ventilation.",
+        "Avoid increasing VT solely to erase waveform scooping."
+      ],
+      "accepted_alternatives": [
+        "Pressure control, appropriately adjusted pressure support, PAV, or NAVA can receive credit if lung-protective limits are maintained.",
+        "A modest increase in assist can receive credit when it reduces effort without causing over-assistance."
+      ],
+      "unsafe_actions": [
+        "Large VT increase despite adequate Pplat and oxygenation.",
+        "Deep sedation or paralysis before addressing the metabolic driver and flow mismatch.",
+        "Interpreting the persistent tachypnea as automatic failure after waveform synchrony improves."
+      ],
+      "success_criteria": [
+        "Pressure waveform becomes smooth or minimally concave.",
+        "Accessory muscle activity and dyspnea score fall.",
+        "VT and Pplat remain within instructor-defined protective limits."
+      ],
+      "simulation_logic": [
+        "Flow 60-80 L/min or a decelerating waveform reduces pressure scooping and Pmus within two breaths.",
+        "The RR remains 26-32 until the acidosis is treated, preventing a false 'perfect' endpoint.",
+        "A large VT increase improves the appearance briefly but raises Pplat and injury score."
+      ],
+      "hint_ladder": [
+        "Look at the contour of Paw during inspiration.",
+        "Is the set flow lower than the patient's demanded flow?",
+        "The patient has a reason to breathe rapidly that the ventilator cannot cure."
+      ],
+      "debrief": "In volume control, fixed flow can be inadequate even when VT is reasonable. The learner must match flow and timing to demand while treating the underlying drive. A normalized respiratory rate is not the sole goal in metabolic acidosis.",
+      "run_tips": "For a novice version, display a patient-demand flow overlay. For an advanced version, remove the overlay and provide only Paw and flow. Randomize whether the best solution is higher flow, decelerating flow, or pressure control.",
+      "source_basis": [1, 2, 5]
+    },
+    {
+      "id": "MV-03",
+      "title": "Double triggering and breath stacking in ARDS",
+      "category": "Dyssynchrony / premature cycling",
+      "difficulty": "Intermediate to advanced",
+      "run_time_min": 12,
+      "learning_objectives": [
+        "Identify two machine inflations within one neural inspiration.",
+        "Recognize hidden stacked VT despite an apparently acceptable exhaled VT display.",
+        "Lengthen mechanical inspiration or shorten excessive neural inspiration without abandoning lung protection."
+      ],
+      "patient": {
+        "description": "A 46-year-old man with ARDS whose sedation has just been lightened.",
+        "vitals": {
+          "HR": 118,
+          "BP": "116/68",
+          "SpO2": 91,
+          "RR_observed": 32
+        },
+        "abg": {
+          "pH": 7.29,
+          "PaCO2_mmHg": 50,
+          "PaO2_mmHg": 70
+        }
+      },
+      "initial_ventilator": {
+        "mode": "VC-A/C",
+        "VT_mL": 350,
+        "RR_min": 24,
+        "inspiratory_flow_L_min": 60,
+        "flow_waveform": "square",
+        "PEEP_cmH2O": 10,
+        "FiO2": 0.5,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 28,
+        "airway_resistance_cmH2O_L_s": 9,
+        "neural_inspiratory_time_s": 1.0,
+        "mechanical_inspiratory_time_s": 0.35,
+        "Pmus_peak_cmH2O": -14,
+        "stacked_inflated_volume_mL": 650
+      },
+      "visible_findings": [
+        "Two consecutive inspiratory flow pulses separated by little or no exhalation.",
+        "A single prolonged patient effort spans both ventilator breaths.",
+        "The ventilator may report an exhaled VT near the set VT for each breath while total end-inspiratory lung volume is much higher.",
+        "Pplat and stress index rise after stacked events."
+      ],
+      "expected_actions": [
+        "Confirm that mechanical Ti is shorter than neural Ti.",
+        "Lengthen inspiratory time without simply increasing VT: reduce flow carefully, use a decelerating waveform, add a brief pause, or use pressure control with an appropriate Ti.",
+        "Treat pain, fever, acidosis, and agitation that prolong or intensify neural inspiration.",
+        "Use analgesia/sedation or short-term neuromuscular blockade only when needed to immediately protect the lung while the cause is addressed."
+      ],
+      "accepted_alternatives": [
+        "A proportional mode can receive full credit when available and appropriately configured.",
+        "A small VT increase can receive partial credit only if it remains within faculty-set lung-protective limits and eliminates stacking."
+      ],
+      "unsafe_actions": [
+        "Ignoring stacked breaths because the displayed VT appears acceptable.",
+        "Increasing the set RR, which can worsen crowding and dynamic strain.",
+        "Using large VT as the primary treatment."
+      ],
+      "success_criteria": [
+        "Double-trigger frequency falls below the faculty-set threshold.",
+        "Inflated volume per neural effort is no longer approximately twice the set VT.",
+        "Pplat and oxygenation remain acceptable."
+      ],
+      "simulation_logic": [
+        "Extending Ti toward 0.7-0.9 seconds reduces double triggering if flow demand is also met.",
+        "Too-low flow produces flow starvation, forcing the learner to balance timing and flow.",
+        "Deep sedation stops events but incurs a sedation penalty unless the learner also corrects timing and drive."
+      ],
+      "hint_ladder": [
+        "Count neural efforts, not just ventilator breaths.",
+        "How much time passes between the two inspiratory flow pulses?",
+        "The patient's inspiratory effort is longer than the machine inflation."
+      ],
+      "debrief": "Double triggering is a timing problem with a volume-injury consequence. The simulator should calculate inflated volume per neural effort, not only per machine breath, so learners see why breath stacking can defeat a low-VT strategy.",
+      "run_tips": "Start with EAdi or Pes visible in tutorial mode. Hide it in assessment mode and use a pressure dip or flow distortion as the clue. Add a counter showing cumulative stacked volume during debrief, not during the live case.",
+      "source_basis": [1, 2, 5]
+    },
+    {
+      "id": "MV-04",
+      "title": "Reverse triggering in a deeply sedated patient",
+      "category": "Dyssynchrony / respiratory entrainment",
+      "difficulty": "Advanced",
+      "run_time_min": 15,
+      "learning_objectives": [
+        "Recognize a fixed machine-to-patient phase relationship rather than a patient-triggered breath.",
+        "Distinguish reverse triggering from flow starvation and ordinary double triggering.",
+        "Use sedation and ventilator timing deliberately rather than reflexively."
+      ],
+      "patient": {
+        "description": "A 59-year-old man with early ARDS receiving deep propofol and opioid sedation.",
+        "vitals": {
+          "HR": 88,
+          "BP": "112/64",
+          "SpO2": 93,
+          "RR_observed": 18
+        },
+        "sedation": "RASS -4"
+      },
+      "initial_ventilator": {
+        "mode": "PC-A/C",
+        "inspiratory_pressure_above_PEEP_cmH2O": 16,
+        "RR_min": 18,
+        "inspiratory_time_s": 0.9,
+        "PEEP_cmH2O": 10,
+        "FiO2": 0.5,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 32,
+        "airway_resistance_cmH2O_L_s": 10,
+        "reverse_trigger_delay_s": 0.35,
+        "entrainment_ratio": "1:1",
+        "Pmus_peak_cmH2O": -10,
+        "probability_of_secondary_trigger": 0.25
+      },
+      "visible_findings": [
+        "A small Paw notch or flow distortion appears a fixed interval after every mandatory inflation.",
+        "In advanced mode, EAdi rises after the machine breath rather than before it.",
+        "Occasional patient efforts trigger a second breath and stack volume.",
+        "Breathing variability is unusually low."
+      ],
+      "expected_actions": [
+        "Identify machine-triggered neural effort with a fixed phase relationship.",
+        "Reduce deep sedation when clinically appropriate to restore spontaneous variability, or alter mandatory rate/Ti to break entrainment.",
+        "Consider transitioning to an assisted or proportional mode if the patient can participate safely.",
+        "If stacking is immediately dangerous, use temporary deeper sedation or neuromuscular blockade while ventilator timing and underlying drive are corrected."
+      ],
+      "accepted_alternatives": [
+        "Changing RR upward or downward can receive credit if it breaks the fixed phase relationship and avoids new dyssynchrony.",
+        "A short controlled period of paralysis can receive partial credit only when paired with a plan to reassess and lighten."
+      ],
+      "unsafe_actions": [
+        "Calling every second breath 'patient-triggered' without checking timing.",
+        "Increasing VT or pressure to suppress the notch.",
+        "Leaving repeated breath stacking untreated."
+      ],
+      "success_criteria": [
+        "Fixed 1:1 entrainment is broken or no longer produces injurious stacking.",
+        "Sedation plan and ventilator plan are explicitly reassessed.",
+        "VT and pressure remain within set safety limits."
+      ],
+      "simulation_logic": [
+        "Reducing sedation gradually increases variability and may convert to ordinary patient-triggered breaths.",
+        "A rate change of roughly 20% changes the phase relationship; some rates worsen stacking, which makes the response patient-specific.",
+        "Simply increasing sedation removes visible effort but incurs a diaphragm/sedation penalty and does not demonstrate mechanism correction."
+      ],
+      "hint_ladder": [
+        "Does the patient effort occur before or after machine inflation?",
+        "Measure the time interval between the mandatory breath and the effort.",
+        "The fixed 1:1 relationship is the key clue."
+      ],
+      "debrief": "Reverse triggering is ventilator-to-patient entrainment. It is often difficult to recognize without effort monitoring, so the case should teach indirect clues and the importance of phase relationships. Management is context-dependent and should not be reduced to 'more sedation' or 'less sedation' alone.",
+      "run_tips": "Use EAdi in a tutorial version and remove it in the examination version. Randomize the entrainment ratio between 1:1 and 1:2. Include an event log that shows machine onset and neural onset after the case.",
+      "source_basis": [1]
+    },
+    {
+      "id": "MV-05",
+      "title": "COPD: dynamic hyperinflation with ineffective efforts",
+      "category": "Dyssynchrony / obstructive physiology",
+      "difficulty": "Intermediate",
+      "run_time_min": 12,
+      "learning_objectives": [
+        "Recognize expiratory flow that fails to return to zero and missed efforts during expiration.",
+        "Understand intrinsic PEEP as an inspiratory threshold load.",
+        "Reduce hyperinflation rather than increasing pressure support reflexively."
+      ],
+      "patient": {
+        "description": "A 71-year-old man with severe COPD recovering from an exacerbation on pressure support.",
+        "vitals": {
+          "HR": 108,
+          "BP": "124/70",
+          "SpO2": 92,
+          "RR_observed": 28
+        },
+        "abg": {
+          "pH": 7.33,
+          "PaCO2_mmHg": 62,
+          "PaO2_mmHg": 68
+        }
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 18,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.35,
+        "flow_cycle_percent": 25,
+        "rise_time_ms": 200,
+        "trigger": "flow 3 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 80,
+        "airway_resistance_cmH2O_L_s": 22,
+        "time_constant_s": 1.76,
+        "intrinsic_PEEP_cmH2O": 10,
+        "true_neural_RR_min": 28,
+        "ventilator_displayed_RR_min": 16
+      },
+      "visible_findings": [
+        "Expiratory flow remains below zero when the next breath begins.",
+        "Small transient decreases in expiratory flow and Paw are not followed by supported breaths.",
+        "Large assisted VT and delayed cycling occur before missed efforts.",
+        "An expiratory hold reveals total PEEP well above set PEEP."
+      ],
+      "expected_actions": [
+        "Reduce minute ventilation and hyperinflation by lowering pressure support and, if needed, mandatory rate or VT in a controlled mode.",
+        "Cycle earlier by increasing the flow-cycle threshold, and use a faster rise time when appropriate.",
+        "Make the trigger more sensitive without causing autotriggering.",
+        "Apply external PEEP cautiously below the level that worsens hyperinflation, while treating bronchospasm and secretions."
+      ],
+      "accepted_alternatives": [
+        "Switching to a controlled mode with a long expiratory time can receive credit if the patient is unstable or exhausted.",
+        "NAVA or PAV can receive credit when available and correctly configured."
+      ],
+      "unsafe_actions": [
+        "Increasing pressure support to treat every missed effort.",
+        "Increasing RR to normalize PaCO2.",
+        "Setting external PEEP at or above total intrinsic PEEP without monitoring hemodynamics and lung volume."
+      ],
+      "success_criteria": [
+        "Expiratory flow approaches zero before the next breath.",
+        "Measured intrinsic PEEP and ineffective-effort frequency decrease.",
+        "True neural RR and displayed RR converge."
+      ],
+      "simulation_logic": [
+        "Reducing PS from 18 to 10-12 lowers VT and intrinsic PEEP over several breaths.",
+        "Raising cycle threshold toward 40-60% shortens mechanical Ti and lengthens Te.",
+        "External PEEP around 60-80% of intrinsic PEEP reduces trigger work in the flow-limited model; higher values worsen hyperinflation and BP."
+      ],
+      "hint_ladder": [
+        "Look at expiratory flow immediately before inspiration.",
+        "The ventilator RR may not be the patient's true RR.",
+        "A larger supported breath can make the next trigger harder."
+      ],
+      "debrief": "The missed efforts are often caused by hyperinflation, not weak effort. High support can create larger VT, shorter expiratory time, more intrinsic PEEP, and more missed triggers. The corrective direction may therefore be less support, earlier cycling, and more expiratory time.",
+      "run_tips": "In tutorial mode, display Pes/EAdi and total PEEP. In assessment mode, require the learner to request an expiratory hold. Randomize whether excessive PS, delayed cycling, or insensitive trigger is the dominant contributor.",
+      "source_basis": [1, 2, 5]
+    },
+    {
+      "id": "MV-06",
+      "title": "Severe asthma: auto-PEEP with obstructive shock",
+      "category": "Emergency physiology / dynamic hyperinflation",
+      "difficulty": "Advanced rapid-response drill",
+      "run_time_min": 7,
+      "learning_objectives": [
+        "Recognize dynamic hyperinflation as a cause of hypotension or peri-arrest physiology.",
+        "Use an immediate exhalation maneuver and then reduce minute ventilation.",
+        "Differentiate high resistive pressure from high alveolar pressure."
+      ],
+      "patient": {
+        "description": "A 32-year-old woman intubated for status asthmaticus who becomes profoundly hypotensive shortly after ventilation begins.",
+        "vitals": {
+          "HR": 142,
+          "BP": "68/38",
+          "SpO2": 94,
+          "RR_observed": 24
+        },
+        "abg": {
+          "pH": 7.12,
+          "PaCO2_mmHg": 85,
+          "PaO2_mmHg": 96
+        }
+      },
+      "initial_ventilator": {
+        "mode": "VC-A/C",
+        "VT_mL": 500,
+        "RR_min": 24,
+        "inspiratory_flow_L_min": 50,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.6,
+        "trigger": "pressure -2 cm H2O"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 70,
+        "airway_resistance_cmH2O_L_s": 35,
+        "Ppeak_cmH2O": 56,
+        "Pplat_cmH2O": 23,
+        "intrinsic_PEEP_cmH2O": 18,
+        "hemodynamic_effect": "venous return falls as end-expiratory lung volume rises"
+      },
+      "visible_findings": [
+        "Expiratory flow remains markedly negative at the next machine breath.",
+        "Ppeak is very high, but Pplat is near normal when measured.",
+        "Chest is hyperinflated and manual ventilation feels progressively harder.",
+        "Blood pressure improves transiently if the circuit is disconnected and the lungs are allowed to empty."
+      ],
+      "expected_actions": [
+        "Immediately disconnect or pause ventilation long enough to permit exhalation if shock is severe, while oxygenation and airway patency are maintained.",
+        "Reduce RR substantially, increase inspiratory flow to shorten Ti, and accept permissive hypercapnia.",
+        "Use a VT compatible with adequate ventilation and safe Pplat rather than chasing normal PaCO2.",
+        "Administer bronchodilator therapy, treat secretions, and monitor total PEEP and hemodynamics."
+      ],
+      "accepted_alternatives": [
+        "Pressure control can receive credit if it produces a short Ti, long Te, and safe Pplat/VT.",
+        "External PEEP can be low or zero in this model; faculty can configure a small amount if spontaneous triggering is present."
+      ],
+      "unsafe_actions": [
+        "Increasing RR to correct hypercapnia.",
+        "Using high external PEEP without measuring its effect on total PEEP and blood pressure.",
+        "Treating the high Ppeak as alveolar overdistension without checking Pplat."
+      ],
+      "success_criteria": [
+        "MAP improves promptly after decompression of trapped gas.",
+        "Expiratory flow returns much closer to zero and intrinsic PEEP falls.",
+        "Pplat remains within the instructor-defined limit despite persistent hypercapnia."
+      ],
+      "simulation_logic": [
+        "If RR is increased, intrinsic PEEP and hypotension worsen rapidly and can progress to PEA.",
+        "Circuit disconnection for 20-40 simulated seconds causes a visible prolonged exhalation and immediate BP rise.",
+        "RR 8-12 with flow 80-100 L/min lengthens Te and gradually lowers PEEPi.",
+        "Bronchodilation reduces resistance over 5-15 simulated minutes, not instantaneously."
+      ],
+      "hint_ladder": [
+        "What is the expiratory flow doing when the next breath starts?",
+        "Compare Ppeak with Pplat.",
+        "The blood pressure may improve if the patient is allowed to exhale."
+      ],
+      "debrief": "This is a time-critical obstructive shock case. The key is to unload trapped gas first, then deliberately accept low minute ventilation. The simulator should make the harmful effect of increasing RR immediate and unmistakable.",
+      "run_tips": "Run as a 5-7 minute drill with no initial ABG if desired. A team version can assign one learner to manual ventilation, one to ventilator changes, and one to medications/hemodynamics.",
+      "source_basis": [2, 5]
+    },
+    {
+      "id": "MV-07",
+      "title": "Neuromuscular weakness with trigger delay and missed efforts",
+      "category": "Dyssynchrony / low-effort triggering",
+      "difficulty": "Intermediate",
+      "run_time_min": 10,
+      "learning_objectives": [
+        "Identify small ineffective efforts in a patient without major auto-PEEP.",
+        "Adjust trigger sensitivity and imposed load safely.",
+        "Recognize the narrow window between missed triggers and autotriggering."
+      ],
+      "patient": {
+        "description": "A 43-year-old man with Guillain-Barre syndrome during early weaning.",
+        "vitals": {
+          "HR": 96,
+          "BP": "118/66",
+          "SpO2": 96,
+          "RR_observed": 26
+        },
+        "abg": {
+          "pH": 7.36,
+          "PaCO2_mmHg": 48,
+          "PaO2_mmHg": 92
+        }
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 8,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.3,
+        "flow_cycle_percent": 25,
+        "rise_time_ms": 250,
+        "trigger": "flow 4 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 45,
+        "airway_resistance_cmH2O_L_s": 12,
+        "intrinsic_PEEP_cmH2O": 1,
+        "Pmus_peak_cmH2O": -3.5,
+        "true_neural_RR_min": 26,
+        "ventilator_displayed_RR_min": 15
+      },
+      "visible_findings": [
+        "Small dips in Paw and transient movement of expiratory flow toward zero without a supported breath.",
+        "Expiratory flow otherwise reaches zero, arguing against major hyperinflation.",
+        "Low VT, weak cough, and modest accessory muscle activity.",
+        "Trigger delay is long on successful breaths."
+      ],
+      "expected_actions": [
+        "Make the trigger more sensitive in small steps while watching for autotriggering.",
+        "Increase support enough to reduce excessive work, or return to an assist-control mode if fatigue is developing.",
+        "Reduce avoidable imposed load from a narrow or obstructed tube, circuit, or HME; consider automatic tube compensation when appropriate.",
+        "Review sedation, alkalemia, and neuromuscular disease progression."
+      ],
+      "accepted_alternatives": [
+        "NAVA can receive full credit because neural triggering bypasses weak pressure/flow transmission.",
+        "Pressure triggering can receive credit if it improves triggering on the simulated device."
+      ],
+      "unsafe_actions": [
+        "Assuming every missed effort is caused by auto-PEEP.",
+        "Setting the trigger so sensitive that cardiogenic oscillations trigger breaths.",
+        "Leaving the patient on marginal support while fatigue markers worsen."
+      ],
+      "success_criteria": [
+        "Trigger delay and missed-effort frequency decrease without sustained autotriggering.",
+        "VT and dyspnea improve without excessive assist.",
+        "The learner reassesses strength and liberation readiness rather than focusing only on the ventilator."
+      ],
+      "simulation_logic": [
+        "Flow trigger 1-2 L/min improves capture; below 0.5 L/min produces cardiogenic autotriggering.",
+        "PS 12-14 improves VT but PS above 18 suppresses drive and creates over-assistance.",
+        "NAVA produces immediate trigger synchrony in the advanced device branch."
+      ],
+      "hint_ladder": [
+        "Does expiratory flow return to zero between breaths?",
+        "Look for tiny Paw or flow deflections that do not trigger a breath.",
+        "The patient's effort may be too weak to cross the current trigger threshold."
+      ],
+      "debrief": "Missed triggers can arise from low effort as well as intrinsic PEEP. The waveform context matters. The learner should improve sensitivity and reduce load while avoiding the opposite error of autotriggering.",
+      "run_tips": "Use cardiogenic oscillations as a hidden distractor. In a higher-level run, make the optimal trigger differ between flow and pressure triggering to emphasize ventilator-specific behavior.",
+      "source_basis": [1, 2]
+    },
+    {
+      "id": "MV-08",
+      "title": "Autotriggering from condensate or circuit leak",
+      "category": "Dyssynchrony / equipment interaction",
+      "difficulty": "Foundational to intermediate",
+      "run_time_min": 8,
+      "learning_objectives": [
+        "Recognize machine breaths occurring without patient effort.",
+        "Inspect the circuit and interface before escalating drugs or support.",
+        "Understand how an overly sensitive trigger converts artifact into ventilation."
+      ],
+      "patient": {
+        "description": "A postoperative patient with low spontaneous drive who suddenly appears tachypneic on the ventilator.",
+        "vitals": {
+          "HR": 82,
+          "BP": "126/72",
+          "SpO2": 98,
+          "RR_observed": 8
+        },
+        "abg": {
+          "pH": 7.51,
+          "PaCO2_mmHg": 29,
+          "PaO2_mmHg": 110
+        }
+      },
+      "initial_ventilator": {
+        "mode": "PSV with apnea backup",
+        "pressure_support_cmH2O": 10,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.3,
+        "flow_cycle_percent": 25,
+        "rise_time_ms": 200,
+        "trigger": "flow 0.5 L/min"
+      },
+      "hidden_model": {
+        "patient_neural_RR_min": 8,
+        "ventilator_RR_min": 28,
+        "branch_A": "condensate oscillates in circuit and crosses flow threshold",
+        "branch_B": "cuff or circuit leak produces flow perturbations and delayed cycling",
+        "effort_channel": "flat before autotriggered breaths"
+      },
+      "visible_findings": [
+        "No pre-trigger Paw dip and no EAdi/Pes effort before many breaths.",
+        "Autotriggered flow shape differs from true patient-triggered breaths.",
+        "Circuit tubing visibly contains water in branch A; inspired-expired VT mismatch or audible leak appears in branch B.",
+        "Ventilator RR is much higher than observed chest effort."
+      ],
+      "expected_actions": [
+        "Inspect and correct the circuit/interface: drain condensate safely, repair a disconnection, or assess cuff/tube position and leak.",
+        "Make the trigger less sensitive or change trigger type while preserving capture of real efforts.",
+        "Reassess the patient's actual respiratory drive and blood gas after the artifact is removed.",
+        "Use manual ventilation as a diagnostic and therapeutic step if the patient becomes unstable."
+      ],
+      "accepted_alternatives": [
+        "Changing from flow to pressure triggering can receive credit if it eliminates artifact on the simulated ventilator.",
+        "Temporary controlled ventilation can receive partial credit while the leak or condensate is corrected."
+      ],
+      "unsafe_actions": [
+        "Increasing sedation for apparent tachypnea without checking for patient effort.",
+        "Increasing support or RR.",
+        "Ignoring a low-pressure/low-VT alarm in the leak branch."
+      ],
+      "success_criteria": [
+        "Ventilator RR approximates true neural RR.",
+        "Respiratory alkalosis stops worsening.",
+        "Leak or condensate is explicitly identified and corrected."
+      ],
+      "simulation_logic": [
+        "Trigger threshold 1.5-2 L/min eliminates most artifact while preserving true breaths.",
+        "Draining water or correcting the leak immediately removes the false triggers.",
+        "If the learner deepens sedation, the neural RR falls but autotriggering continues, highlighting the wrong diagnosis.",
+        "Optional inject: a complete Y-piece disconnect causes low pressure and low VT; bagging restores ventilation and confirms a circuit problem."
+      ],
+      "hint_ladder": [
+        "Is there evidence of patient effort before every breath?",
+        "Compare chest movement with the displayed ventilator RR.",
+        "Inspect the circuit and leak indicators."
+      ],
+      "debrief": "Autotriggering is a machine interpretation problem. The case rewards checking the circuit and the patient-effort signal before treating an apparent respiratory drive problem.",
+      "run_tips": "Randomly assign condensate, cardiogenic oscillation, or leak so learners cannot memorize one visual clue. Make the complete disconnect an optional rapid-response extension.",
+      "source_basis": [1, 2]
+    },
+    {
+      "id": "MV-09",
+      "title": "Premature cycling on pressure support",
+      "category": "Dyssynchrony / cycling too early",
+      "difficulty": "Intermediate",
+      "run_time_min": 10,
+      "learning_objectives": [
+        "Recognize mechanical inspiration ending before neural inspiration.",
+        "Use flow-cycle threshold, rise time, support, and maximum Ti to align cycling.",
+        "Prevent progression to double triggering."
+      ],
+      "patient": {
+        "description": "A 64-year-old woman with restrictive mechanics after major abdominal surgery and persistent pain.",
+        "vitals": {
+          "HR": 116,
+          "BP": "132/74",
+          "SpO2": 95,
+          "RR_observed": 30
+        },
+        "dyspnea": "7/10, 'breaths stop too soon'"
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 8,
+        "PEEP_cmH2O": 8,
+        "FiO2": 0.35,
+        "flow_cycle_percent": 50,
+        "rise_time_ms": 100,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 20,
+        "airway_resistance_cmH2O_L_s": 8,
+        "neural_inspiratory_time_s": 1.1,
+        "mechanical_inspiratory_time_s": 0.45,
+        "Pmus_peak_cmH2O": -12
+      },
+      "visible_findings": [
+        "Inspiratory flow terminates while effort continues.",
+        "Early expiratory flow briefly falls toward zero or reverses as inspiratory muscles remain active.",
+        "Occasional immediate second triggers occur.",
+        "The patient reports that breaths are not long enough."
+      ],
+      "expected_actions": [
+        "Lower the flow-cycle threshold to cycle later.",
+        "Increase support modestly or slow rise time if this lengthens mechanical inspiration without excessive VT.",
+        "Use a maximum inspiratory-time setting or a pressure-control/assist mode if needed.",
+        "Treat pain and other causes of prolonged neural inspiration."
+      ],
+      "accepted_alternatives": [
+        "Switching to PAV/NAVA can receive credit.",
+        "A controlled mode with an appropriate Ti can receive credit if spontaneous effort is not currently desired."
+      ],
+      "unsafe_actions": [
+        "Increasing the cycle percentage further.",
+        "Ignoring repeated double triggers.",
+        "Using a large pressure-support increase that causes excessive VT."
+      ],
+      "success_criteria": [
+        "Mechanical Ti approaches neural Ti.",
+        "Premature expiratory flow distortion and double triggering resolve.",
+        "Dyspnea and effort decrease without excessive VT."
+      ],
+      "simulation_logic": [
+        "Cycle threshold 15-25% lengthens Ti and reduces double triggering.",
+        "PS 10-12 may help; PS above 18 causes over-assistance and delayed cycling.",
+        "Analgesia shortens neural Ti and lowers drive over several simulated minutes."
+      ],
+      "hint_ladder": [
+        "Is the patient still inspiring when the ventilator opens the expiratory valve?",
+        "What does a high flow-cycle percentage do to inspiratory time?",
+        "The patient says the breath ends too soon."
+      ],
+      "debrief": "Premature cycling is common when a short time constant and a high cycle threshold cause flow to fall rapidly. The learner should align timing rather than simply increasing VT.",
+      "run_tips": "Use a patient statement as an early clue. For advanced learners, remove the statement and require interpretation of the transition from inspiratory to expiratory flow.",
+      "source_basis": [1, 2, 4]
+    },
+    {
+      "id": "MV-10",
+      "title": "Delayed cycling on pressure support in COPD",
+      "category": "Dyssynchrony / cycling too late",
+      "difficulty": "Intermediate",
+      "run_time_min": 10,
+      "learning_objectives": [
+        "Recognize mechanical inspiration extending into neural expiration.",
+        "Relate a long respiratory time constant to delayed flow cycling.",
+        "Shorten mechanical Ti and protect expiratory time."
+      ],
+      "patient": {
+        "description": "A 69-year-old woman with COPD on high pressure support who appears to actively exhale against the ventilator.",
+        "vitals": {
+          "HR": 110,
+          "BP": "120/66",
+          "SpO2": 93,
+          "RR_observed": 24
+        },
+        "dyspnea": "6/10, 'the ventilator will not let me breathe out'"
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 18,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.35,
+        "flow_cycle_percent": 10,
+        "rise_time_ms": 400,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 80,
+        "airway_resistance_cmH2O_L_s": 20,
+        "neural_inspiratory_time_s": 0.65,
+        "mechanical_inspiratory_time_s": 1.4,
+        "expiratory_muscle_activation": "begins 0.7 s before ventilator cycling"
+      },
+      "visible_findings": [
+        "An end-inspiratory Paw spike or abrupt flow change appears as the patient relaxes inspiratory muscles or activates expiratory muscles.",
+        "Inspiratory flow decays slowly and takes too long to reach the 10% cycle threshold.",
+        "Expiratory time is shortened and intrinsic PEEP begins to rise.",
+        "The patient visibly contracts abdominal muscles before flow cycling occurs."
+      ],
+      "expected_actions": [
+        "Increase the flow-cycle threshold, often toward 40-60%, to cycle earlier.",
+        "Reduce excessive pressure support and use a faster rise time when appropriate.",
+        "Treat bronchospasm, secretions, and other causes of high resistance.",
+        "Reassess intrinsic PEEP and ineffective triggering after cycling improves."
+      ],
+      "accepted_alternatives": [
+        "A controlled mode with a shorter Ti can receive credit in an unstable patient.",
+        "NAVA can receive credit because cycling follows EAdi."
+      ],
+      "unsafe_actions": [
+        "Lowering the cycle threshold further.",
+        "Increasing pressure support to treat the patient's distress.",
+        "Adding an end-inspiratory pause in this obstructive pattern."
+      ],
+      "success_criteria": [
+        "Mechanical cycling occurs close to the end of neural inspiration.",
+        "End-inspiratory pressure spike and expiratory muscle conflict resolve.",
+        "Expiratory time lengthens and intrinsic PEEP falls."
+      ],
+      "simulation_logic": [
+        "Cycle threshold 40-60% reduces mechanical Ti to approximately 0.7-0.9 s.",
+        "Lower PS reduces peak flow and VT, which further shortens cycling delay.",
+        "If the learner lowers the cycle threshold, mechanical Ti and intrinsic PEEP worsen."
+      ],
+      "hint_ladder": [
+        "When does the patient begin to exhale relative to ventilator cycling?",
+        "A long time constant delays the fall of inspiratory flow.",
+        "Cycle earlier by using a higher percentage of peak flow."
+      ],
+      "debrief": "Delayed cycling is especially likely in obstructive lungs because flow decays slowly. High support and a low cycle threshold can make the ventilator continue inflating after neural inspiration has ended.",
+      "run_tips": "Pair this case immediately after the premature-cycling case to force learners to reason about directionality rather than memorize a single cycle setting.",
+      "source_basis": [1, 2]
+    },
+    {
+      "id": "MV-11",
+      "title": "Rise-time mismatch: too slow, then too fast",
+      "category": "Dyssynchrony / pressurization profile",
+      "difficulty": "Foundational to intermediate",
+      "run_time_min": 10,
+      "learning_objectives": [
+        "Recognize slow pressurization as air hunger and excessive effort.",
+        "Recognize overly rapid pressurization as overshoot and 'too much pressure.'",
+        "Use patient feedback and waveform morphology to find a comfortable middle setting."
+      ],
+      "patient": {
+        "description": "A 58-year-old man with pneumonia who is awake, anxious, and receiving pressure support.",
+        "vitals": {
+          "HR": 114,
+          "BP": "128/70",
+          "SpO2": 95,
+          "RR_observed": 28
+        },
+        "dyspnea": "8/10 initially"
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 12,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.35,
+        "flow_cycle_percent": 25,
+        "rise_time_ms": 600,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 35,
+        "airway_resistance_cmH2O_L_s": 12,
+        "patient_drive": "moderately high",
+        "preferred_rise_time_ms": 180,
+        "overshoot_if_rise_time_below_ms": 60
+      },
+      "visible_findings": [
+        "Slow rise: Paw reaches target late, inspiratory flow is rounded, and the patient reports air hunger.",
+        "Overcorrection: very fast rise produces pressure overshoot, a sharp high flow spike, and the report 'too much pressure.'",
+        "The best setting produces smooth pressurization, less effort, and lower dyspnea."
+      ],
+      "expected_actions": [
+        "Shorten rise time from the very slow baseline in measured steps.",
+        "Ask the patient whether the breath feels too slow, too forceful, too short, or too long.",
+        "Stop at a middle setting that reduces effort without overshoot.",
+        "Reassess VT and cycling because rise time can change both."
+      ],
+      "accepted_alternatives": [
+        "A modest pressure-support adjustment can receive credit if the learner explains that rise time remains the primary problem.",
+        "A pressure-control mode with an adjustable slope can receive credit."
+      ],
+      "unsafe_actions": [
+        "Setting the fastest possible rise time and ignoring overshoot.",
+        "Escalating sedation instead of adjusting pressurization.",
+        "Judging comfort only by RR without asking the patient."
+      ],
+      "success_criteria": [
+        "Dyspnea score falls by at least 3 points.",
+        "No sustained pressure overshoot.",
+        "Paw and flow morphology are compatible with the patient's drive."
+      ],
+      "simulation_logic": [
+        "Rise time 150-250 ms is the preferred range for this virtual patient.",
+        "Rise time below 60 ms generates 4-6 cm H2O overshoot and early cycling.",
+        "Rise time above 450 ms increases Pmus and air-hunger score."
+      ],
+      "hint_ladder": [
+        "How quickly does Paw reach the set support?",
+        "Ask whether the breath is too slow or too forceful.",
+        "Both extremes of rise time can be uncomfortable."
+      ],
+      "debrief": "Rise time is not a cosmetic setting. It changes peak flow, effort, mechanical Ti, and comfort. The desired value depends on respiratory drive and mechanics, so the simulator should avoid presenting one universal number.",
+      "run_tips": "Use a two-stage design: the initial problem is slow rise; the case then penalizes an extreme overcorrection. This produces a richer learning loop than a single correct click.",
+      "source_basis": [1, 4]
+    },
+    {
+      "id": "MV-12",
+      "title": "Over-assistance with low drive and periodic breathing",
+      "category": "Dyssynchrony / excessive assist",
+      "difficulty": "Intermediate",
+      "run_time_min": 12,
+      "learning_objectives": [
+        "Recognize excessive pressure support despite a calm patient and low respiratory rate.",
+        "Link large VT, hypocapnia, delayed cycling, apnea, and ineffective efforts to over-assistance.",
+        "Titrate support to a reasonable work-sharing zone rather than the lowest possible RR."
+      ],
+      "patient": {
+        "description": "A 67-year-old woman improving from sepsis during a spontaneous breathing phase.",
+        "vitals": {
+          "HR": 78,
+          "BP": "118/64",
+          "SpO2": 97,
+          "RR_observed": 8
+        },
+        "abg": {
+          "pH": 7.51,
+          "PaCO2_mmHg": 28,
+          "PaO2_mmHg": 105
+        },
+        "sedation": "RASS -2"
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 22,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.3,
+        "flow_cycle_percent": 25,
+        "rise_time_ms": 150,
+        "trigger": "flow 1 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 45,
+        "airway_resistance_cmH2O_L_s": 8,
+        "VT_mL": 900,
+        "drive": "low because of alkalemia, sedation, and excessive unloading",
+        "apnea_cycle": "20-40 s apnea followed by several assisted breaths",
+        "ineffective_efforts_after_large_breaths": true
+      },
+      "visible_findings": [
+        "Large VT, low RR, square Paw, rapid fall of inspiratory flow, and delayed cycling.",
+        "Apnea or periodic breathing after overventilation.",
+        "Small ineffective efforts after large assisted breaths.",
+        "Very low effort signal despite apparent stability."
+      ],
+      "expected_actions": [
+        "Reduce pressure support in steps and reassess VT, RR, effort, comfort, and gas exchange.",
+        "Review sedation and alkalemia.",
+        "Avoid using a low RR as the sole sign of adequate support.",
+        "Consider PAV/NAVA or a backup-capable mode if periodic breathing persists."
+      ],
+      "accepted_alternatives": [
+        "Switching to a mode with a controlled backup rate can receive credit while support is retitrated.",
+        "A spontaneous awakening approach can receive credit when safe."
+      ],
+      "unsafe_actions": [
+        "Increasing pressure support because of apnea.",
+        "Treating apnea with sedation escalation.",
+        "Ignoring very large VT because Pplat is not displayed in PSV."
+      ],
+      "success_criteria": [
+        "VT falls into a faculty-defined reasonable range, commonly around 6-8 mL/kg for a non-ARDS weaning patient or lower when indicated.",
+        "PaCO2 and breathing variability normalize over time.",
+        "Periodic apnea and ineffective efforts decrease."
+      ],
+      "simulation_logic": [
+        "PS 10-12 produces VT 450-550 mL, RR 16-22, and moderate effort.",
+        "PS below 6 causes distress and high Pmus, creating a titration window rather than a one-way reduction.",
+        "Sedation reduction increases drive but does not fully correct over-assistance until PS is lowered."
+      ],
+      "hint_ladder": [
+        "Is the ventilator doing almost all of the work?",
+        "Look at VT, PaCO2, and the breathing pattern rather than RR alone.",
+        "Excessive support can cause both apnea and missed efforts."
+      ],
+      "debrief": "Over-assistance may look comfortable in the moment but can produce alkalemia, periodic breathing, missed efforts, sleep disruption, and diaphragmatic unloading. The target is shared work, not zero effort.",
+      "run_tips": "Make this a slow-evolution case. The learner should wait for a gas exchange and breathing-pattern response after each PS reduction. Add sleep/wake variability in an advanced version.",
+      "source_basis": [1, 2, 4]
+    },
+    {
+      "id": "MV-13",
+      "title": "High airway pressure: secretions, tube obstruction, or bronchospasm",
+      "category": "Troubleshooting / high resistance",
+      "difficulty": "Foundational to intermediate",
+      "run_time_min": 8,
+      "learning_objectives": [
+        "Use peak-versus-plateau pressure to identify a resistive problem.",
+        "Recognize sawtooth flow and other clues to secretions.",
+        "Inspect the airway and circuit before changing lung-protective settings."
+      ],
+      "patient": {
+        "description": "A 60-year-old man with pneumonia develops a sudden high-pressure alarm after a turn.",
+        "vitals": {
+          "HR": 122,
+          "BP": "132/76",
+          "SpO2": 88,
+          "RR_observed": 20
+        }
+      },
+      "initial_ventilator": {
+        "mode": "VC-A/C",
+        "VT_mL": 450,
+        "RR_min": 20,
+        "inspiratory_flow_L_min": 60,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.4,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "baseline_Ppeak_cmH2O": 30,
+        "event_Ppeak_cmH2O": 50,
+        "event_Pplat_cmH2O": 24,
+        "random_branch": [
+          "retained secretions with sawtooth waveform",
+          "ETT kink or HME obstruction with difficult catheter passage",
+          "bronchospasm with diffuse wheeze and prolonged expiratory flow"
+        ]
+      },
+      "visible_findings": [
+        "Ppeak rises markedly while Pplat changes little.",
+        "Secretions branch: sawtooth flow/pressure and coarse airway sounds.",
+        "Tube/HME branch: suction catheter does not pass easily or pressure improves when HME is removed.",
+        "Bronchospasm branch: diffuse wheeze, high resistive pressure, and prolonged expiratory flow."
+      ],
+      "expected_actions": [
+        "If unstable, disconnect and manually ventilate with oxygen while assessing airway patency.",
+        "Perform an inspiratory hold to distinguish resistance from low compliance.",
+        "Pass a suction catheter, inspect the ETT, bite block, HME, tubing, and circuit.",
+        "Suction or replace an obstructed component; give bronchodilator therapy for bronchospasm."
+      ],
+      "accepted_alternatives": [
+        "Bronchoscopy planning receives credit when a mucus plug persists after routine suction.",
+        "Reducing inspiratory flow may lower Ppeak but receives only partial credit unless the obstruction is addressed."
+      ],
+      "unsafe_actions": [
+        "Assuming the high Ppeak proves alveolar overdistension.",
+        "Lowering VT and walking away without checking the airway.",
+        "Forcing a suction catheter through a suspected kink without stabilizing the airway."
+      ],
+      "success_criteria": [
+        "The resistive cause is identified correctly.",
+        "Ppeak falls while Pplat remains stable.",
+        "Oxygenation and delivered/exhaled VT recover."
+      ],
+      "simulation_logic": [
+        "Suction clears the secretion branch over 1-3 attempts and removes sawtooth oscillations.",
+        "Removing a blocked HME produces an immediate pressure drop.",
+        "Bronchodilator reduces resistance gradually; a completely kinked ETT requires repositioning or exchange.",
+        "Manual ventilation improves only if the ventilator circuit is the problem; it remains difficult with airway obstruction."
+      ],
+      "hint_ladder": [
+        "What happens to pressure when flow is stopped?",
+        "Compare Ppeak with Pplat.",
+        "Check whether a suction catheter passes and inspect the circuit."
+      ],
+      "debrief": "Peak pressure contains resistive and elastic components. A large peak-to-plateau gap directs the learner toward airway or circuit resistance. The randomized branch prevents rote pattern matching.",
+      "run_tips": "Use three randomized versions under the same case number. In team mode, require closed-loop communication between the clinician and respiratory therapist during manual ventilation and airway checks.",
+      "source_basis": [2, 4, 5]
+    },
+    {
+      "id": "MV-14",
+      "title": "Sudden loss of compliance: tension pneumothorax",
+      "category": "Emergency troubleshooting / low compliance",
+      "difficulty": "Intermediate rapid-response drill",
+      "run_time_min": 6,
+      "learning_objectives": [
+        "Recognize simultaneous increases in peak and plateau pressure as a compliance problem.",
+        "Integrate waveform, examination, oxygenation, and hemodynamics.",
+        "Prioritize immediate stabilization over prolonged diagnostic testing in a crashing patient."
+      ],
+      "patient": {
+        "description": "A 50-year-old man with ARDS on moderate PEEP suddenly becomes hypoxemic and hypotensive.",
+        "vitals": {
+          "HR": 138,
+          "BP": "60/34",
+          "SpO2": 76,
+          "RR_observed": 24
+        }
+      },
+      "initial_ventilator": {
+        "mode": "VC-A/C",
+        "VT_mL": 420,
+        "RR_min": 24,
+        "inspiratory_flow_L_min": 60,
+        "PEEP_cmH2O": 12,
+        "FiO2": 0.6,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "baseline_Ppeak_cmH2O": 32,
+        "baseline_Pplat_cmH2O": 26,
+        "event_Ppeak_cmH2O": 50,
+        "event_Pplat_cmH2O": 44,
+        "event_compliance_mL_cmH2O": 10,
+        "side": "right",
+        "obstructive_shock": true
+      },
+      "visible_findings": [
+        "Ppeak and Pplat rise together.",
+        "Right-sided breath sounds are absent, the chest is hyperresonant, and SpO2 falls.",
+        "Hypotension progresses rapidly.",
+        "Manual ventilation remains difficult, supporting a patient-side problem rather than a ventilator malfunction."
+      ],
+      "expected_actions": [
+        "Ensure oxygen delivery and rapidly disconnect/bag if needed to separate ventilator from patient causes.",
+        "Recognize likely tension pneumothorax from the combined mechanics, examination, and shock.",
+        "Perform immediate decompression according to local emergency practice, followed by definitive pleural drainage.",
+        "Reassess pressure, VT, oxygenation, and blood pressure immediately after intervention."
+      ],
+      "accepted_alternatives": [
+        "Point-of-care ultrasound can receive credit only if it does not delay decompression in the crashing version.",
+        "A stable variant may require imaging before chest-tube placement."
+      ],
+      "unsafe_actions": [
+        "Increasing PEEP or VT to correct hypoxemia.",
+        "Waiting for a chest radiograph in the unstable branch.",
+        "Treating the problem as bronchospasm because Ppeak is high."
+      ],
+      "success_criteria": [
+        "Decompression occurs within the faculty-set time window.",
+        "Pplat, oxygenation, and blood pressure improve.",
+        "The learner states why the event is a compliance problem."
+      ],
+      "simulation_logic": [
+        "FiO2 alone produces minimal improvement.",
+        "Additional PEEP worsens BP and Pplat.",
+        "Correct decompression causes an abrupt increase in compliance, fall in Pplat, and recovery of MAP.",
+        "Needle or finger decompression without definitive drainage produces only temporary improvement."
+      ],
+      "hint_ladder": [
+        "Did Pplat rise along with Ppeak?",
+        "What does the unilateral chest examination show?",
+        "This patient is too unstable for a delayed diagnosis."
+      ],
+      "debrief": "This case reinforces the emergency split between patient and ventilator causes and the distinction between resistance and compliance. The learner must integrate mechanics with bedside examination rather than treat the waveform in isolation.",
+      "run_tips": "Use a stable and an unstable version. In the stable version, ultrasound or radiography is appropriate; in the crashing version, delay should be penalized.",
+      "source_basis": [2]
+    },
+    {
+      "id": "MV-15",
+      "title": "Air hunger, anxiety, pain, and delirium in an awake ventilated patient",
+      "category": "Patient-centered ventilation / human factors",
+      "difficulty": "Intermediate team case",
+      "run_time_min": 15,
+      "learning_objectives": [
+        "Ask the patient directly about dyspnea intensity and quality.",
+        "Differentiate air hunger, excessive effort, pain, anxiety, and delirium.",
+        "Correct ventilator and nonventilator causes before using deep sedation.",
+        "Use communication and nonpharmacologic support as active treatments."
+      ],
+      "patient": {
+        "description": "A 73-year-old man on PSV after abdominal sepsis is awake, pulling at lines, and repeatedly mouthing that he cannot breathe.",
+        "vitals": {
+          "HR": 124,
+          "BP": "146/82",
+          "SpO2": 94,
+          "RR_observed": 31
+        },
+        "dyspnea": "8/10: 'not deep enough' and 'too much effort'",
+        "pain": "7/10",
+        "neurobehavioral": "sleep deprived, disoriented, fluctuating attention; CAM-ICU positive if assessed"
+      },
+      "initial_ventilator": {
+        "mode": "PSV",
+        "pressure_support_cmH2O": 8,
+        "PEEP_cmH2O": 5,
+        "FiO2": 0.35,
+        "flow_cycle_percent": 25,
+        "rise_time_ms": 350,
+        "trigger": "flow 2 L/min"
+      },
+      "hidden_model": {
+        "respiratory_system_compliance_mL_cmH2O": 30,
+        "airway_resistance_cmH2O_L_s": 12,
+        "patient_drive": "high from pain, fever, anxiety, and mild under-assistance",
+        "Pmus_peak_cmH2O": -14,
+        "additional_stressors": ["distended bladder", "nighttime noise", "inability to communicate"]
+      },
+      "visible_findings": [
+        "Slightly rounded inspiratory flow and a Paw dip indicate under-assistance, but no single catastrophic waveform abnormality is present.",
+        "The patient can answer yes/no questions and point to a 0-10 dyspnea scale.",
+        "He reports air hunger and effort rather than chest tightness.",
+        "Pain, urinary retention, disorientation, and poor sleep are discoverable only if assessed."
+      ],
+      "expected_actions": [
+        "Establish communication with a board, pointing scale, blink response, or writing aid; ask intensity and quality of dyspnea.",
+        "Increase support or improve rise time modestly while monitoring VT, Pplat surrogate, and synchrony.",
+        "Treat pain, fever, urinary retention, positioning, and other reversible sources of drive.",
+        "Assess RASS and delirium, reorient the patient, reduce nighttime disruption, and involve family or a consistent caregiver when appropriate.",
+        "Use the least sedating effective analgesic/anxiolytic strategy; reserve deep sedation for a clear indication."
+      ],
+      "accepted_alternatives": [
+        "Opioid analgesia can receive credit when pain and air hunger are prominent, with monitoring for respiratory effects.",
+        "A mode change can receive credit if it improves support and preserves communication.",
+        "A short-acting sedative can receive partial credit for an urgent procedure, but not as the sole treatment."
+      ],
+      "unsafe_actions": [
+        "Treating agitation with deep sedation before assessing dyspnea, pain, and delirium.",
+        "Assuming normal SpO2 means the patient is comfortable.",
+        "Ignoring the patient's report because physical signs are nonspecific."
+      ],
+      "success_criteria": [
+        "Dyspnea falls by at least 3 points and the patient can communicate a sense of control.",
+        "Pain and reversible stressors are addressed.",
+        "Ventilator synchrony improves without excessive VT or unnecessary deep sedation.",
+        "Delirium prevention/management actions are documented."
+      ],
+      "simulation_logic": [
+        "PS 11-12 and rise time 180-250 ms reduce effort and dyspnea, but only partially until pain and bladder distension are treated.",
+        "Deep propofol suppresses visible agitation and RR but does not earn full credit; later liberation and delirium metrics worsen.",
+        "Reorientation, family voice, lighting/noise correction, and a communication board reduce anxiety and delirium score over time.",
+        "If support is increased excessively, the case transitions to over-assistance with large VT and apnea."
+      ],
+      "hint_ladder": [
+        "Ask the patient what breathing feels like, not just whether he is anxious.",
+        "Use a 0-10 scale and descriptors such as not enough air, too much effort, or chest tightness.",
+        "Look for pain, urinary retention, sleep disruption, and delirium in addition to ventilator settings."
+      ],
+      "debrief": "Dyspnea, anxiety, pain, and delirium reinforce one another. Physical signs and oxygen saturation can underestimate suffering. The case should reward direct patient assessment, small physiology-based ventilator changes, communication, and treatment of reversible stressors before deep sedation.",
+      "run_tips": "Use a standardized patient voice or on-screen communication prompts. In team mode, assign a nurse role to discover pain, bladder distension, and delirium while the respiratory therapist and physician optimize support.",
+      "source_basis": [2, 3, 4]
+    }
+  ],
+  "optional_extensions": [
+    "Massive pulmonary embolism with right-ventricular failure: positive pressure or excessive PEEP precipitates hypotension.",
+    "NIV COPD exacerbation with mask leak from facial hair: optimize interface and pressure support, then reassess quickly.",
+    "Cardiogenic pulmonary edema: CPAP improves oxygenation and loading conditions; contrast with high-flow nasal cannula.",
+    "Adaptive pressure-targeted volume mode under-assistance: patient effort causes the algorithm to reduce machine pressure, worsening P-SILI risk.",
+    "Care-activity dyspnea: turning, suctioning, or transport precipitates distress and requires anticipatory oxygenation, analgesia, and temporary support."
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "citation": "Antonogiannaki EM, Georgopoulos D, Akoumianaki E. Patient-Ventilator Dyssynchrony. Korean J Crit Care Med. 2017;32(4):307-322.",
+      "use": "Definitions, waveform recognition, causes, and corrective strategies for trigger, flow, cycling, reverse-triggering, and assist-level dyssynchrony."
+    },
+    {
+      "id": 2,
+      "citation": "Tobin MJ, Jubran A, Laghi F. Chapter 53: Fighting the Ventilator. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+      "use": "Emergency approach, peak-versus-plateau reasoning, airway/circuit problems, dynamic hyperinflation, and acute deterioration."
+    },
+    {
+      "id": 3,
+      "citation": "Skrobik Y. Chapter 54: Psychological Problems in the Ventilated Patient. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+      "use": "Delirium, communication barriers, anxiety, reorientation, and nonpharmacologic management."
+    },
+    {
+      "id": 4,
+      "citation": "Banzett RB, Similowski T, Brown R. Chapter 55: Addressing Respiratory Discomfort in the Ventilated Patient. In: Principles and Practice of Mechanical Ventilation, 3rd ed.",
+      "use": "Dyspnea assessment, air hunger versus effort, patient-centered ventilation, and minimizing reflexive deep sedation."
+    },
+    {
+      "id": 5,
+      "citation": "Ventilation transcripts supplied by the user: case-based NIV, ARDS, severe asthma, waveform interpretation, respiratory mechanics, and troubleshooting lectures.",
+      "use": "Practical case staging, learner prompts, and bedside waveform teaching patterns."
+    },
+    {
+      "id": 6,
+      "citation": "van Diepen A, et al. A Model-Based Approach to Synthetic Data Set Generation for Patient-Ventilator Waveforms for Machine Learning and Educational Use. arXiv:2103.15684 (2021).",
+      "use": "Support for a physiology-based patient-plus-ventilator model that can generate realistic asynchrony waveforms across disease archetypes."
+    },
+    {
+      "id": 7,
+      "citation": "Hennigs C, et al. Validation of a Computational Respiratory System Model for Mechanical Ventilation. arXiv:2607.06210 (2026 preprint).",
+      "use": "Context-of-use, calibration, physiologic plausibility, population testing, and emergent-behavior validation framework."
+    },
+    {
+      "id": 8,
+      "citation": "Rixner M, et al. Patient-specific prediction of regional lung mechanics in ARDS patients with physics-based models: A validation study. arXiv:2408.14607 (2024).",
+      "use": "Optional advanced modeling of heterogeneous regional mechanics and patient-specific responses."
+    }
+  ]
+}

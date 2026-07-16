@@ -73,6 +73,7 @@ const labelmapBytes = fs.readFileSync(labelmapPath)
 const volume = buildThoracicVolume(
   new Uint8Array(labelmapBytes.buffer, labelmapBytes.byteOffset, labelmapBytes.byteLength),
   manifest.primaryLabelVolume,
+  manifest.cardiacModel,
 )
 
 const preset =
@@ -93,6 +94,25 @@ if (posesFlag) {
     'caudal-40': { craniocaudalMm: defaults.craniocaudalMm - 40 },
     'rotated-45': { rotationDeg: 45 },
     'shallow-8cm': { depthCm: 8 },
+  }
+  if (manifest.cardiacModel) {
+    const skin = manifest.structures.find((structure) => structure.label === 'skin')
+    const heartCenter = manifest.cardiacModel.centerLpsMm
+    const cardiacPose = {
+      lateralMm: heartCenter[0] - 8,
+      posteriorMm: (skin?.boundsLpsMm?.min[1] ?? heartCenter[1] - 100) - 3,
+      craniocaudalMm: heartCenter[2] - 6,
+      approachDeg: 180,
+      tiltDeg: 0,
+      rotationDeg: 60,
+      depthCm: 18,
+      gain: 1.2,
+      dynamicRangeDb: 60,
+      sectorAngleDeg: 70,
+      needleAngleDeg: 0,
+    }
+    poses['cardiac-diastole'] = cardiacPose
+    poses['cardiac-systole'] = cardiacPose
   }
 }
 
@@ -137,6 +157,11 @@ for (const [name, overrides] of Object.entries(poses)) {
     width: 520,
     height: 620,
     renderImage: true,
+    probeType: name.startsWith('cardiac-') ? 'phased' : preset.probeType,
+    simulationTimeSec:
+      name === 'cardiac-systole' && manifest.cardiacModel
+        ? (0.3 * 60) / manifest.cardiacModel.defaultHeartRateBpm
+        : 0,
   })
   const bmpPath = path.join(outDir, `${name}.bmp`)
   writeBmp(bmpPath, imageData)

@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  PleuralUltrasoundNav,
-  pleuralUltrasoundNavBase,
-} from '@/features/pleural-ultrasound/components/PleuralUltrasoundNav'
+import { pleuralUltrasoundNavBase } from '@/features/learning-module/moduleRoutes'
+import { PleuralUltrasoundNav } from '@/features/pleural-ultrasound/components/PleuralUltrasoundNav'
 import { getUltrasoundObjectives } from '@/features/pleural-ultrasound/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

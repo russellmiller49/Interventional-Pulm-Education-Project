@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 240" role="img" aria-label="Schematic of a long rigid tube with a proximal multiport head, a lower side connector, an inline rod, and a bevelled distal end">
+  <rect width="480" height="240" fill="none"/>
+  <!-- inline rod + proximal round fitting -->
+  <line x1="30" y1="120" x2="120" y2="120" stroke="#475569" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="30" cy="120" r="16" fill="#cbd5e1" stroke="#334155" stroke-width="2.5"/>
+  <!-- proximal multiport head -->
+  <rect x="55" y="90" width="46" height="60" rx="8" fill="#dbe4ee" stroke="#334155" stroke-width="2.5"/>
+  <!-- lower side connector -->
+  <path d="M70 150 L70 172 L90 172" fill="none" stroke="#475569" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="96" cy="172" r="8" fill="#94a3b8" stroke="#334155" stroke-width="2"/>
+  <!-- main barrel -->
+  <rect x="100" y="106" width="322" height="28" rx="6" fill="#e2e8f0" stroke="#475569" stroke-width="2.5"/>
+  <!-- bevelled distal end -->
+  <polygon points="420,104 464,120 420,136" fill="#94a3b8" stroke="#334155" stroke-width="2.5"/>
+</svg>

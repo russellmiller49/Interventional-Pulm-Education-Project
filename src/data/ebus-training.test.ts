@@ -1,5 +1,4 @@
 import {
-  adminEbusTrainingModules,
   getEmbeddedCourseModuleSrc,
   publicEbusTrainingModules,
   tnm9TrainingModule,
@@ -18,9 +17,9 @@ describe('getEmbeddedCourseModuleSrc', () => {
     )
   })
 
-  it('preserves admin preview mode with localized simulator route', () => {
-    expect(getEmbeddedCourseModuleSrc(adminEbusTrainingModules[0], 'zh-CN')).toBe(
-      '/socal-ebus-course/app/index.html?locale=zh-CN&adminPreview=1#/simulator',
+  it('opens the updated public simulator without elevating the embed to admin preview', () => {
+    expect(getEmbeddedCourseModuleSrc(publicEbusTrainingModules[2], 'zh-CN')).toBe(
+      '/socal-ebus-course/app/index.html?locale=zh-CN&publicTraining=1&publicScope=ebus#/simulator',
     )
   })
 

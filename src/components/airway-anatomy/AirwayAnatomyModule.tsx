@@ -3,7 +3,19 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
-import { ArrowDown, ArrowUp, Crosshair, Eye, EyeOff, Headset, RotateCcw } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  Compass,
+  Crosshair,
+  Eye,
+  EyeOff,
+  Gamepad2,
+  Headset,
+  RotateCcw,
+  Save,
+  SlidersHorizontal,
+} from 'lucide-react'
 import * as THREE from 'three'
 
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +40,15 @@ import {
 } from '@/lib/airway-anatomy/airway-render'
 import { AirwayXRSceneDynamic } from '@/components/airway-anatomy/AirwayXRSceneDynamic'
 import {
+  GameHudOverlay,
+  GameIntroOverlay,
+  SuccessBurst,
+  TargetBeacon,
+  useAirwayGame,
+  type AirwayGameController,
+} from '@/components/airway-anatomy/AirwayGameLayer'
+import { LOBE_COLORS, type GameTarget } from '@/lib/airway-anatomy/airway-game'
+import {
   alignViewToBranch,
   buildScopePathLps,
   buildScopePoseSnapshot,
@@ -40,6 +61,19 @@ import {
   type AirwayGraphIndex,
   type ScopeState,
 } from '@/lib/airway-anatomy/scope-state'
+import {
+  DEFAULT_SCOPE_ORIENTATION_PROFILE,
+  SCOPE_ORIENTATION_PROFILE_IDS,
+  applyScopeOrientationToPose,
+  createEmptyScopeOrientationCalibration,
+  normalizeRollDeg,
+  normalizeScopeOrientationCalibration,
+  parseScopeOrientationProfileId,
+  scopeOrientationAdjustmentFor,
+  updateScopeOrientationAdjustment,
+  type ScopeOrientationCalibration,
+  type ScopeOrientationProfileId,
+} from '@/lib/airway-anatomy/scope-orientation'
 import type {
   AirwayAnatomyCaseManifest,
   AirwayGraph,
@@ -52,6 +86,12 @@ import type {
 import { HandoffContent } from '@/i18n/handoff'
 
 const MANIFEST_URL = resolveAdminAirwayAssetPath('/airway-anatomy/case-001/case_manifest.json')
+const ORIENTATION_CALIBRATION_URL = resolveAdminAirwayAssetPath(
+  '/airway-anatomy/case-001/scope_orientation_calibration.json',
+)
+const ORIENTATION_WRITE_ENDPOINT = '/api/airway-anatomy/scope-orientation'
+const AIRWAY_CALIBRATION_QUERY_PARAM = 'airwayCalibration'
+const SCOPE_ORIENTATION_PROFILE_QUERY_PARAM = 'scopeProfile'
 const VIEWPORT_CLASS =
   'relative min-h-[360px] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950'
 
@@ -91,12 +131,24 @@ export function AirwayAnatomyModule() {
   const [loadedCase, setLoadedCase] = useState<LoadedCase | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [scopeState, setScopeState] = useState<ScopeState | null>(null)
+  const [scopeOrientationProfile, setScopeOrientationProfile] = useState<ScopeOrientationProfileId>(
+    DEFAULT_SCOPE_ORIENTATION_PROFILE,
+  )
+  const [scopeOrientationCalibration, setScopeOrientationCalibration] =
+    useState<ScopeOrientationCalibration>(() => createEmptyScopeOrientationCalibration())
+  const [orientationSaveStatus, setOrientationSaveStatus] = useState('')
   const [ctAxis, setCtAxis] = useState<CtAxis>('axial')
   const [windowPresetId, setWindowPresetId] = useState('lung')
   const [showAnatomyPins, setShowAnatomyPins] = useState(false)
   const [showBranchLabels, setShowBranchLabels] = useState(true)
   const [ctPlaneOpacity, setCtPlaneOpacity] = useState(0.28)
   const [showXr, setShowXr] = useState(false)
+  const [mode, setMode] = useState<'explore' | 'challenge'>('explore')
+  const [calibrationMode, setCalibrationMode] = useState(false)
+
+  useEffect(() => {
+    setCalibrationMode(isAirwayOrientationCalibrationMode())
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -120,20 +172,26 @@ export function AirwayAnatomyModule() {
           throw new Error(`Unable to load airway labels (${labelsResponse.status}).`)
         if (!ctResponse.ok) throw new Error(`Unable to load CT preview (${ctResponse.status}).`)
 
-        const [graph, labels, ctBuffer] = await Promise.all([
+        const [graph, labels, ctBuffer, orientationCalibration] = await Promise.all([
           graphResponse.json() as Promise<AirwayGraph>,
           labelsResponse.json() as Promise<CenterlineLabels>,
           ctResponse.arrayBuffer(),
+          fetchScopeOrientationCalibration(manifest.id),
         ])
 
         if (cancelled) return
 
+        const requestedProfile = parseScopeOrientationProfileId(
+          new URLSearchParams(window.location.search).get(SCOPE_ORIENTATION_PROFILE_QUERY_PARAM),
+        )
         setLoadedCase({
           manifest,
           graph,
           labels,
           ctVolume: new Int16Array(ctBuffer),
         })
+        setScopeOrientationCalibration(orientationCalibration)
+        setScopeOrientationProfile(requestedProfile ?? orientationCalibration.defaultProfile)
         setScopeState(
           createInitialScopeState(
             graph,
@@ -162,7 +220,7 @@ export function AirwayAnatomyModule() {
     [loadedCase],
   )
 
-  const snapshot = useMemo(() => {
+  const rawSnapshot = useMemo(() => {
     if (!loadedCase || !scopeState) return null
     return buildScopePoseSnapshot({
       state: scopeState,
@@ -171,6 +229,15 @@ export function AirwayAnatomyModule() {
       lookAheadMm: loadedCase.manifest.interaction.lookAheadMm,
     })
   }, [loadedCase, scopeState])
+
+  const snapshot = useMemo(() => {
+    if (!rawSnapshot) return null
+    return applyScopeOrientationToPose(
+      rawSnapshot,
+      scopeOrientationCalibration,
+      scopeOrientationProfile,
+    )
+  }, [rawSnapshot, scopeOrientationCalibration, scopeOrientationProfile])
 
   const currentWindow = useMemo(() => {
     const presets = loadedCase?.manifest.ct.windowPresets ?? []
@@ -270,9 +337,75 @@ export function AirwayAnatomyModule() {
     )
   }, [loadedCase])
 
+  const game = useAirwayGame({
+    enabled: mode === 'challenge',
+    graph: loadedCase?.graph ?? null,
+    labels: loadedCase?.labels ?? null,
+    snapshot,
+    onResetScope: handleReset,
+  })
+
+  // In challenge mode the named ostia labels double as an optional hint; the
+  // free-drive toggle governs them everywhere else.
+  const effectiveShowBranchLabels = mode === 'challenge' ? game.view.hintsOn : showBranchLabels
+
   const handleRollChange = (rollDeg: number) => {
     setScopeState((state) => (state ? updateLookOffset(state, { rollDeg }) : state))
   }
+
+  const handleScopeOrientationProfileChange = useCallback(
+    (profileId: ScopeOrientationProfileId) => {
+      setScopeOrientationProfile(profileId)
+      updateScopeOrientationProfileUrl(profileId)
+    },
+    [],
+  )
+
+  const saveCurrentFlexibleOrientation = useCallback(async () => {
+    if (!snapshot) return
+    const rollDeg = normalizeRollDeg(snapshot.rollDeg)
+    const nextCalibration = updateScopeOrientationAdjustment(
+      scopeOrientationCalibration,
+      'flexible',
+      snapshot.edgeId,
+      { rollDeg },
+    )
+    setScopeOrientationCalibration(nextCalibration)
+    setScopeOrientationProfile('flexible')
+    setScopeState((state) => (state ? updateLookOffset(state, { rollDeg: 0 }) : state))
+    setOrientationSaveStatus(`Saving Edge ${snapshot.edgeId} flexible roll...`)
+
+    try {
+      await saveScopeOrientationAdjustment(snapshot.edgeId, 'flexible', { rollDeg })
+      setOrientationSaveStatus(`Saved Edge ${snapshot.edgeId} flexible roll (${rollDeg} deg).`)
+    } catch (error) {
+      setOrientationSaveStatus(
+        `Local only: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }, [scopeOrientationCalibration, snapshot])
+
+  const resetCurrentFlexibleOrientation = useCallback(async () => {
+    if (!snapshot) return
+    const nextCalibration = updateScopeOrientationAdjustment(
+      scopeOrientationCalibration,
+      'flexible',
+      snapshot.edgeId,
+      null,
+    )
+    setScopeOrientationCalibration(nextCalibration)
+    setScopeState((state) => (state ? updateLookOffset(state, { rollDeg: 0 }) : state))
+    setOrientationSaveStatus(`Removing Edge ${snapshot.edgeId} flexible roll...`)
+
+    try {
+      await saveScopeOrientationAdjustment(snapshot.edgeId, 'flexible', null)
+      setOrientationSaveStatus(`Removed Edge ${snapshot.edgeId} flexible roll default.`)
+    } catch (error) {
+      setOrientationSaveStatus(
+        `Local only: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }, [scopeOrientationCalibration, snapshot])
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (!loadedCase) return
@@ -332,11 +465,21 @@ export function AirwayAnatomyModule() {
     )
   }
 
+  const flexibleOrientationAdjustment = scopeOrientationAdjustmentFor(
+    scopeOrientationCalibration,
+    'flexible',
+    snapshot.edgeId,
+  )
+  const flexibleRollDeg = flexibleOrientationAdjustment.rollDeg ?? 0
+  const liveRollDeg = scopeState?.rollDeg ?? 0
+  const activeProfileLabel =
+    scopeOrientationCalibration.profiles[scopeOrientationProfile]?.label ?? scopeOrientationProfile
+
   return (
     <HandoffContent>
       {
         <section
-          className="overflow-hidden rounded-lg border border-slate-700 bg-slate-950 text-white shadow-sm outline-none"
+          className="relative overflow-hidden rounded-lg border border-slate-700 bg-slate-950 text-white shadow-sm outline-none"
           tabIndex={0}
           onKeyDown={handleKeyDown}
         >
@@ -356,6 +499,59 @@ export function AirwayAnatomyModule() {
                 </h2>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5"
+                  aria-label="Scope orientation profile"
+                >
+                  {SCOPE_ORIENTATION_PROFILE_IDS.map((profileId) => (
+                    <button
+                      key={profileId}
+                      type="button"
+                      onClick={() => handleScopeOrientationProfileChange(profileId)}
+                      className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                        scopeOrientationProfile === profileId
+                          ? profileId === 'flexible'
+                            ? 'bg-cyan-500 text-slate-950'
+                            : 'bg-slate-700 text-white'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                      aria-pressed={scopeOrientationProfile === profileId}
+                    >
+                      {scopeOrientationCalibration.profiles[profileId].label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900/80 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('explore')
+                      game.actions.stop()
+                    }}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                      mode === 'explore'
+                        ? 'bg-slate-700 text-white'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    aria-pressed={mode === 'explore'}
+                  >
+                    <Compass className="h-4 w-4" />
+                    Explore
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('challenge')}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                      mode === 'challenge'
+                        ? 'bg-cyan-500 text-slate-950'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    aria-pressed={mode === 'challenge'}
+                  >
+                    <Gamepad2 className="h-4 w-4" />
+                    Challenge
+                  </button>
+                </div>
                 <Button
                   type="button"
                   variant="secondary"
@@ -385,8 +581,9 @@ export function AirwayAnatomyModule() {
               </div>
             </div>
             <p className="mt-3 max-w-4xl text-sm text-slate-300">
-              Drive the scope freely: steer toward an ostium and advance — the scope follows the
-              branch you are pointing at, and the 3D model and CT track the tip in real time.{' '}
+              {mode === 'challenge'
+                ? 'Challenge mode: we name a target segment and start the clock — steer to its ostium and drive in. The 3D beacon and proximity meter guide you; clean, fast runs stack a combo bonus. '
+                : 'Drive the scope freely: steer toward an ostium and advance — the scope follows the branch you are pointing at, and the 3D model and CT track the tip in real time. '}
               {loadedCase.manifest.safetyLabel} For education and anatomy correlation only.
             </p>
           </div>
@@ -397,10 +594,12 @@ export function AirwayAnatomyModule() {
                 manifest={loadedCase.manifest}
                 pose={snapshot}
                 ostia={upcomingOstia}
-                showBranchLabels={showBranchLabels}
+                showBranchLabels={effectiveShowBranchLabels}
                 location={currentLocation}
                 onLookDrag={handleLookDrag}
                 onAlignBranch={handleAlignBranch}
+                game={mode === 'challenge' ? game : null}
+                fovDeg={BRONCH_FOV_DEG}
               />
               <AirwayTreeViewport
                 manifest={loadedCase.manifest}
@@ -412,6 +611,9 @@ export function AirwayAnatomyModule() {
                 windowLow={currentWindow.low}
                 windowHigh={currentWindow.high}
                 ctPlaneOpacity={ctPlaneOpacity}
+                gameTarget={mode === 'challenge' ? game.view.currentTarget : null}
+                hitPulse={game.hitPulse}
+                hitAnchor={game.hitAnchor}
               />
             </div>
 
@@ -431,8 +633,17 @@ export function AirwayAnatomyModule() {
                 ctPlaneOpacity={ctPlaneOpacity}
                 onCtPlaneOpacityChange={setCtPlaneOpacity}
                 onRollChange={handleRollChange}
+                liveRollDeg={liveRollDeg}
+                totalRollDeg={snapshot.rollDeg}
                 showBranchLabels={showBranchLabels}
                 onShowBranchLabelsChange={setShowBranchLabels}
+                calibrationMode={calibrationMode}
+                orientationProfile={scopeOrientationProfile}
+                orientationProfileLabel={activeProfileLabel}
+                flexibleRollDeg={flexibleRollDeg}
+                orientationSaveStatus={orientationSaveStatus}
+                onSaveFlexibleOrientation={saveCurrentFlexibleOrientation}
+                onResetFlexibleOrientation={resetCurrentFlexibleOrientation}
               />
               <CtSliceViewport
                 ct={loadedCase.manifest.ct}
@@ -460,8 +671,15 @@ export function AirwayAnatomyModule() {
                 onMove={handleMove}
                 onSteer={handleSteer}
                 onRecenter={handleRecenter}
+                game={mode === 'challenge' ? game : null}
               />
             </div>
+          ) : null}
+
+          {/* The desktop start/results card. While the VR view is open the in-headset HUD owns
+              the start/results flow (and keeps the Enter VR button reachable), so suppress it. */}
+          {mode === 'challenge' && !showXr ? (
+            <GameIntroOverlay view={game.view} actions={game.actions} />
           ) : null}
         </section>
       }
@@ -484,8 +702,17 @@ function ControlPanel({
   ctPlaneOpacity,
   onCtPlaneOpacityChange,
   onRollChange,
+  liveRollDeg,
+  totalRollDeg,
   showBranchLabels,
   onShowBranchLabelsChange,
+  calibrationMode,
+  orientationProfile,
+  orientationProfileLabel,
+  flexibleRollDeg,
+  orientationSaveStatus,
+  onSaveFlexibleOrientation,
+  onResetFlexibleOrientation,
 }: {
   pose: ScopePoseSnapshot
   location: CurrentLocation
@@ -501,8 +728,17 @@ function ControlPanel({
   ctPlaneOpacity: number
   onCtPlaneOpacityChange: (opacity: number) => void
   onRollChange: (rollDeg: number) => void
+  liveRollDeg: number
+  totalRollDeg: number
   showBranchLabels: boolean
   onShowBranchLabelsChange: (value: boolean) => void
+  calibrationMode: boolean
+  orientationProfile: ScopeOrientationProfileId
+  orientationProfileLabel: string
+  flexibleRollDeg: number
+  orientationSaveStatus: string
+  onSaveFlexibleOrientation: () => void
+  onResetFlexibleOrientation: () => void
 }) {
   const branchProgress =
     pose.edgeLengthMm > 0 ? clamp(pose.distanceMm / pose.edgeLengthMm, 0, 1) : 0
@@ -522,7 +758,8 @@ function ControlPanel({
               </div>
             </div>
             <div className="shrink-0 rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
-              yaw {Math.round(pose.yawDeg)}° · pitch {Math.round(pose.pitchDeg)}°
+              yaw {Math.round(pose.yawDeg)}° · pitch {Math.round(pose.pitchDeg)}° · roll{' '}
+              {Math.round(totalRollDeg)}°
             </div>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-800">
@@ -614,19 +851,66 @@ function ControlPanel({
             </label>
             <label className="grid gap-2">
               <span className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
-                <span>Scope roll</span>
-                <span>{Math.round(pose.rollDeg)} deg</span>
+                <span>Scope roll trim</span>
+                <span>{Math.round(liveRollDeg)} deg</span>
               </span>
               <input
                 type="range"
                 min={-90}
                 max={90}
                 step={1}
-                value={pose.rollDeg}
+                value={liveRollDeg}
                 onChange={(event) => onRollChange(Number(event.target.value))}
                 className="w-full accent-cyan-300"
               />
             </label>
+            {calibrationMode ? (
+              <div className="rounded-md border border-cyan-400/30 bg-cyan-400/10 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-cyan-100">
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      Orientation calibration
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                      {orientationProfile === 'flexible'
+                        ? `Edge ${pose.edgeId}: current flexible default ${Math.round(
+                            flexibleRollDeg,
+                          )} deg.`
+                        : `${orientationProfileLabel} preserves the baseline view; switch to Flexible before saving defaults.`}
+                    </p>
+                  </div>
+                  <span className="rounded bg-slate-950 px-2 py-1 text-xs text-slate-300">
+                    Edge {pose.edgeId}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={onSaveFlexibleOrientation}
+                    disabled={orientationProfile !== 'flexible'}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Save view
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={onResetFlexibleOrientation}
+                    disabled={orientationProfile !== 'flexible'}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset edge
+                  </Button>
+                </div>
+                {orientationSaveStatus ? (
+                  <p className="mt-2 text-xs text-cyan-100">{orientationSaveStatus}</p>
+                ) : null}
+              </div>
+            ) : null}
             <label className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-400">
               <span>Branch labels in view</span>
               <input
@@ -792,6 +1076,56 @@ function useHoldRepeat(action: () => void, intervalMs = 90, delayMs = 260) {
   return { start, stop }
 }
 
+async function fetchScopeOrientationCalibration(caseId: string) {
+  try {
+    const response = await fetch(ORIENTATION_CALIBRATION_URL, { cache: 'no-store' })
+    if (!response.ok) {
+      return createEmptyScopeOrientationCalibration(caseId)
+    }
+    return normalizeScopeOrientationCalibration(await response.json(), caseId)
+  } catch {
+    return createEmptyScopeOrientationCalibration(caseId)
+  }
+}
+
+async function saveScopeOrientationAdjustment(
+  edgeId: number,
+  profileId: ScopeOrientationProfileId,
+  adjustment: { rollDeg: number } | null,
+) {
+  const response = await fetch(ORIENTATION_WRITE_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      profileId,
+      edgeId,
+      adjustment,
+    }),
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `orientation save failed with ${response.status}`)
+  }
+}
+
+function isAirwayOrientationCalibrationMode() {
+  if (typeof window === 'undefined') return false
+  return new URLSearchParams(window.location.search).get(AIRWAY_CALIBRATION_QUERY_PARAM) === '1'
+}
+
+function updateScopeOrientationProfileUrl(profileId: ScopeOrientationProfileId) {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  if (profileId === DEFAULT_SCOPE_ORIENTATION_PROFILE) {
+    url.searchParams.delete(SCOPE_ORIENTATION_PROFILE_QUERY_PARAM)
+  } else {
+    url.searchParams.set(SCOPE_ORIENTATION_PROFILE_QUERY_PARAM, profileId)
+  }
+  window.history.replaceState({}, '', url)
+}
+
 function VirtualBronchoscopyViewport({
   manifest,
   pose,
@@ -800,6 +1134,8 @@ function VirtualBronchoscopyViewport({
   location,
   onLookDrag,
   onAlignBranch,
+  game,
+  fovDeg,
 }: {
   manifest: AirwayAnatomyCaseManifest
   pose: ScopePoseSnapshot
@@ -808,6 +1144,8 @@ function VirtualBronchoscopyViewport({
   location: CurrentLocation
   onLookDrag: (dxPx: number, dyPx: number) => void
   onAlignBranch: (edgeId: number) => void
+  game: AirwayGameController | null
+  fovDeg: number
 }) {
   const pointerRef = useRef<{ x: number; y: number } | null>(null)
   const { ref: containerRef, size } = useElementSize<HTMLDivElement>()
@@ -880,9 +1218,11 @@ function VirtualBronchoscopyViewport({
               onAlignBranch={onAlignBranch}
             />
           )}
-          <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
-            Virtual bronchoscopy
-          </div>
+          {!game && (
+            <div className="pointer-events-none absolute left-3 top-3 rounded bg-slate-950/80 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-200">
+              Virtual bronchoscopy
+            </div>
+          )}
           <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-baseline gap-1.5 whitespace-nowrap rounded-full border border-cyan-300/25 bg-slate-950/85 px-3 py-1 text-xs">
             <span className="font-bold text-cyan-200">{location.abbr}</span>
             <span className="text-slate-300">{location.name}</span>
@@ -891,6 +1231,15 @@ function VirtualBronchoscopyViewport({
           <div className="pointer-events-none absolute bottom-3 right-3 rounded bg-slate-950/75 px-2 py-1 text-[11px] text-slate-400">
             drag to look
           </div>
+          {game ? (
+            <GameHudOverlay
+              view={game.view}
+              actions={game.actions}
+              pose={pose}
+              aspect={aspect}
+              fovDeg={fovDeg}
+            />
+          ) : null}
         </div>
       }
     </HandoffContent>
@@ -985,6 +1334,9 @@ function AirwayTreeViewport({
   windowLow,
   windowHigh,
   ctPlaneOpacity,
+  gameTarget,
+  hitPulse,
+  hitAnchor,
 }: {
   manifest: AirwayAnatomyCaseManifest
   graph: AirwayGraph
@@ -995,8 +1347,13 @@ function AirwayTreeViewport({
   windowLow: number
   windowHigh: number
   ctPlaneOpacity: number
+  gameTarget: GameTarget | null
+  hitPulse: number
+  hitAnchor: Vec3 | null
 }) {
   const bounds = useMemo(() => boundsForGraph(graph), [graph])
+  const targetEdgeSet = useMemo(() => new Set(gameTarget?.edgeIds ?? []), [gameTarget])
+  const targetColor = gameTarget ? LOBE_COLORS[gameTarget.lobe] : null
   const cameraPosition: Vec3 = [
     bounds.center[0] + bounds.radius * 0.95,
     bounds.center[1] - bounds.radius * 1.35,
@@ -1040,15 +1397,29 @@ function AirwayTreeViewport({
                 opacity={ctPlaneOpacity}
               />
               <group>
-                {graph.edges.map((edge) => (
-                  <Polyline
-                    key={edge.id}
-                    points={edge.pointsLps}
-                    color={edge.id === pose.edgeId ? '#fbbf24' : '#38bdf8'}
-                    opacity={edge.id === pose.edgeId ? 0.85 : 0.2}
-                  />
-                ))}
+                {graph.edges.map((edge) => {
+                  const isCurrent = edge.id === pose.edgeId
+                  const isTarget = targetEdgeSet.has(edge.id)
+                  return (
+                    <Polyline
+                      key={edge.id}
+                      points={edge.pointsLps}
+                      color={
+                        isCurrent ? '#fbbf24' : isTarget && targetColor ? targetColor : '#38bdf8'
+                      }
+                      opacity={isCurrent ? 0.9 : isTarget ? 0.85 : 0.2}
+                    />
+                  )
+                })}
                 <ScopeBody graph={graph} pose={pose} />
+                {gameTarget ? <TargetBeacon target={gameTarget} /> : null}
+                {gameTarget && targetColor ? (
+                  <SuccessBurst
+                    triggerKey={hitPulse}
+                    origin={hitAnchor ?? gameTarget.anchorLps}
+                    colorHex={targetColor}
+                  />
+                ) : null}
               </group>
               {showAnatomyPins && <SceneLabels targets={targets} />}
             </Suspense>

@@ -57,16 +57,20 @@ export interface CytologySlideSource {
   license: string
   licenseUrl: string
   attribution: string
+  modificationNote: string
 }
 
 export interface CytologySlide {
   id: string
   title: string
+  quizTitle: string
   shortTitle: string
   diagnosisTheme: string
   stain: string
+  preparation: string
   imageUrl: string
   imageAlt: string
+  quizImageAlt: string
   source: CytologySlideSource
   learningObjectives: string[]
   annotations: CytologyAnnotation[]

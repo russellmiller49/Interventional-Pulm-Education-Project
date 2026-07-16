@@ -1,10 +1,17 @@
 'use client'
 
-import { RotateCcw } from 'lucide-react'
+import { useMemo } from 'react'
+import { HeartPulse, RotateCcw, Waves } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 
-import type { ProbeControlRange, ProbePreset, ProbeStateKey, ThoracicCaseManifest } from '../types'
+import type {
+  ProbeControlRange,
+  ProbePreset,
+  ProbeStateKey,
+  ThoracicCaseManifest,
+  ThoracicProbeState,
+} from '../types'
 import type { ProbeStore } from '../state/probeStore'
 import { useProbeState } from '../state/probeStore'
 import { HandoffContent } from '@/i18n/handoff'
@@ -21,6 +28,7 @@ interface ControlDef {
 }
 
 const positionControls: ControlDef[] = [
+  { key: 'approachDeg', label: 'Approach (around body)', unit: 'deg' },
   { key: 'lateralMm', label: 'Lateral position', unit: 'mm' },
   { key: 'craniocaudalMm', label: 'Cranial/caudal position', unit: 'mm' },
   { key: 'tiltDeg', label: 'Cranial/caudal tilt', unit: 'deg' },
@@ -41,9 +49,45 @@ export function activeProbePreset(manifest: ThoracicCaseManifest): ProbePreset {
   )
 }
 
+/**
+ * Case-calibrated anterior window that intersects the procedural heart model.
+ * The 3D scene performs the final skin snap along approach 180 degrees.
+ */
+export function cardiacProbeView(manifest: ThoracicCaseManifest): ThoracicProbeState | null {
+  const model = manifest.cardiacModel
+  const heart = manifest.structures.find((structure) => structure.label === 'heart')
+  const skin = manifest.structures.find((structure) => structure.label === 'skin')
+  if (!model || !heart?.boundsLpsMm) {
+    return null
+  }
+
+  const preset = activeProbePreset(manifest)
+  const depthRange = preset.ranges.depthCm
+  const desiredDepthCm = 18
+  const depthCm = depthRange
+    ? Math.min(depthRange.max, Math.max(depthRange.min, desiredDepthCm))
+    : desiredDepthCm
+
+  return {
+    ...preset.defaults,
+    lateralMm: model.centerLpsMm[0] - 8,
+    posteriorMm: (skin?.boundsLpsMm?.min[1] ?? heart.boundsLpsMm.min[1] - 25) - 3,
+    craniocaudalMm: model.centerLpsMm[2] - 6,
+    approachDeg: 180,
+    tiltDeg: 0,
+    rotationDeg: 60,
+    depthCm,
+    gain: 1.2,
+    dynamicRangeDb: 60,
+    sectorAngleDeg: 70,
+    needleAngleDeg: 0,
+  }
+}
+
 export function ThoracicProbeControls({ manifest, store }: ThoracicProbeControlsProps) {
   const probe = useProbeState(store)
   const preset = activeProbePreset(manifest)
+  const cardiacView = useMemo(() => cardiacProbeView(manifest), [manifest])
 
   function controlRange(key: ProbeStateKey): ProbeControlRange | null {
     return preset.ranges[key] ?? null
@@ -71,6 +115,32 @@ export function ThoracicProbeControls({ manifest, store }: ThoracicProbeControls
             </Button>
           </div>
 
+          {cardiacView ? (
+            <div className="mt-5 rounded-lg border border-border/80 bg-muted/35 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Quick windows
+              </p>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => store.replaceState(preset.defaults)}
+                  className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  <Waves className="h-4 w-4 text-sky-600" aria-hidden />
+                  Pleural default
+                </button>
+                <button
+                  type="button"
+                  onClick={() => store.replaceState(cardiacView)}
+                  className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  <HeartPulse className="h-4 w-4 text-rose-600" aria-hidden />
+                  Cardiac (phased)
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-5 grid gap-4">
             {positionControls.map((control) => {
               const range = controlRange(control.key)
@@ -81,7 +151,7 @@ export function ThoracicProbeControls({ manifest, store }: ThoracicProbeControls
                 <Slider
                   key={control.key}
                   label={control.label}
-                  value={probe[control.key]}
+                  value={probe[control.key] ?? 0}
                   min={range.min}
                   max={range.max}
                   step={range.step}
@@ -100,7 +170,7 @@ export function ThoracicProbeControls({ manifest, store }: ThoracicProbeControls
                   <Slider
                     key={control.key}
                     label={control.label}
-                    value={probe[control.key]}
+                    value={probe[control.key] ?? 0}
                     min={range.min}
                     max={range.max}
                     step={range.step}

@@ -42,7 +42,14 @@ tmp-*.bin
 # Remote module payloads are uploaded to Supabase Storage and served through rewrites.
 public/bronch-navigation-trainer/app/cases
 public/fluoroview/cases
-public/models
+# Keep remote model payloads out of the upload, but retain the rigid-bronchoscopy
+# manifest because webpack imports it at build time.
+public/models/*
+!public/models/rigid-bronchoscopy/
+public/models/rigid-bronchoscopy/*
+!public/models/rigid-bronchoscopy/v2/
+public/models/rigid-bronchoscopy/v2/*
+!public/models/rigid-bronchoscopy/v2/asset-manifest.json
 public/socal-ebus-course/app/media
 public/socal-ebus-course/app/pipelines
 public/socal-ebus-course/app/simulator

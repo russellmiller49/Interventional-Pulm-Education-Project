@@ -33,6 +33,7 @@ function matchesOnlyFilter(relativePath) {
 
 const uploadPrefixes = [
   'airway-anatomy',
+  'airway-stent-mechanics',
   'bronch-navigation-trainer/app/cases',
   'draco',
   'fluoroview',
@@ -130,6 +131,10 @@ function getContentType(filePath) {
   return contentTypes.get(path.extname(filePath).toLowerCase()) || 'application/octet-stream'
 }
 
+function getCacheControl(filePath) {
+  return path.extname(filePath).toLowerCase() === '.json' ? '300' : '31536000'
+}
+
 async function collectFiles() {
   const files = []
   for await (const filePath of walk(publicDir)) {
@@ -195,10 +200,7 @@ function getCredentialError() {
 const credentialError = getCredentialError()
 if (!dryRun && (!supabaseUrl || credentialError)) {
   throw new Error(
-    [
-      !supabaseUrl ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required.' : null,
-      credentialError,
-    ]
+    [!supabaseUrl ? 'SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL is required.' : null, credentialError]
       .filter(Boolean)
       .join(' '),
   )
@@ -239,7 +241,9 @@ for (const file of files) {
   const storagePath = `${prefix}/${relativePath}`
   const body = await readFile(file.filePath)
   const { error } = await supabase.storage.from(bucket).upload(storagePath, body, {
-    cacheControl: '31536000',
+    // Simulator manifests use stable URLs and must refresh after an upsert.
+    // Binary/media assets are content-addressed or otherwise immutable in practice.
+    cacheControl: getCacheControl(file.filePath),
     contentType: getContentType(file.filePath),
     upsert,
   })

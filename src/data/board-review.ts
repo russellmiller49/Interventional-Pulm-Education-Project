@@ -8,6 +8,12 @@ export type BoardReviewCategory =
   | 'navigation'
   | 'ablation'
 
+export interface BoardReviewInteractiveModule {
+  href: string
+  label: string
+  description: string
+}
+
 export interface BoardReviewChapterMeta {
   slug: string
   title: string
@@ -22,6 +28,7 @@ export interface BoardReviewChapterMeta {
   audioFile?: string
   order: number
   published?: boolean
+  interactiveModule?: BoardReviewInteractiveModule
 }
 
 export const boardReviewChapters: BoardReviewChapterMeta[] = [
@@ -233,6 +240,12 @@ export const boardReviewChapters: BoardReviewChapterMeta[] = [
     sourceFile: 'airway-stents.mdx',
     audioFile: 'Airway Stent Selection & Troubleshooting_complete.mp3',
     order: 13,
+    interactiveModule: {
+      href: '/airway-stent-mechanics',
+      label: 'Airway Stent Mechanics & Failure Explorer',
+      description:
+        'Explore how architecture, lumen geometry, fit, motion, and changing airway conditions can produce clinically important failure patterns across freely navigable interactive stations.',
+    },
   },
   {
     slug: 'non-malignant-cao',

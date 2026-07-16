@@ -1,0 +1,178 @@
+[
+  {
+    "id": "loma-linda-bronch-01-intro-history",
+    "title": "Intro and History of Bronchoscopy",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/1-BIP-Intro and history of bronchoscopy.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/01-intro-and-history-of-bronchoscopy.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-02-approach",
+    "title": "Approach to Bronchoscopy",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/2-BIP-Approach to bronchoscopy.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/02-approach-to-bronchoscopy.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-03-bronchoscope",
+    "title": "Bronchoscope",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/3-BIP-Bronchoscope.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/03-bronchoscope.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-04-airway-inspection",
+    "title": "Airway Inspection and Anatomy",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/4-BIP-Airway inspection_anatomy.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/04-airway-inspection-anatomy.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-05-airway-pathology",
+    "title": "Airway Pathology",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/5-BIP-Airway pathology.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/05-airway-pathology.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-06-diagnostic-tools",
+    "title": "Diagnostic Techniques and Tools",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/6-BIP-Diagnostic techs and tools.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/06-diagnostic-techniques-and-tools.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-07-therapeutic-tools",
+    "title": "Therapeutic Techniques and Tools",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/7-BIP-therapeutic techs, tools.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/07-therapeutic-techniques-and-tools.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-08-icu-common",
+    "title": "ICU Bronchoscopy: Common Scenarios",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/8-BIP-ICU bronch-1-common scenarios.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/08-icu-bronchoscopy-common-scenarios.mp4"
+  },
+  {
+    "id": "loma-linda-bronch-09-icu-selected",
+    "title": "ICU Bronchoscopy: Selected Scenarios",
+    "courseSection": "bronchoscopy",
+    "audience": "loma_linda",
+    "sourcePath": "Loma_Linda_bronch videos/9-BIP-ICU bronch-2-selected scenarios.mp4",
+    "storagePath": "v1/loma_linda/bronchoscopy/09-icu-bronchoscopy-selected-scenarios.mp4"
+  },
+  {
+    "id": "ucsd-bronch-anatomy",
+    "title": "Bronch and Bronchoscope Anatomy",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/Bronch and Bronchoscope Anatomy [bdt final].mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/bronch-and-bronchoscope-anatomy.mp4"
+  },
+  {
+    "id": "ucsd-bronch-patient-selection",
+    "title": "Patient Selection and the Alphabet Soup",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/Patient Selection and the Alphabet Soup (BAL-EBBX-TBBX-Brushing)  2025-07-09.mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/patient-selection-and-the-alphabet-soup.mp4"
+  },
+  {
+    "id": "ucsd-bronch-sedation",
+    "title": "Sedation for Bronchoscopy",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/SedationBronchoscopy_KVN.mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/sedation-for-bronchoscopy.mp4"
+  },
+  {
+    "id": "ucsd-bronch-hemoptysis",
+    "title": "Management of Hemoptysis",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/Management of Hemoptysis UCSD course.mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/management-of-hemoptysis.mp4"
+  },
+  {
+    "id": "ucsd-bronch-difficult-airway",
+    "title": "Difficult Airway",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/Difficult Airway 2025.mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/difficult-airway.mp4"
+  },
+  {
+    "id": "ucsd-bronch-foreign-body",
+    "title": "Foreign Body Removal",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/Foreign Body Removal.mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/foreign-body-removal.mp4"
+  },
+  {
+    "id": "ucsd-bronch-trach-peg",
+    "title": "Tracheostomy and PEG",
+    "courseSection": "bronchoscopy",
+    "audience": "ucsd",
+    "sourcePath": "UCSD_bronch_videos/2025 Trach PEG.mp4",
+    "storagePath": "v1/ucsd/bronchoscopy/tracheostomy-and-peg.mp4"
+  },
+  {
+    "id": "pleural-effusion",
+    "title": "Pleural Effusion",
+    "courseSection": "pleural",
+    "audience": "shared",
+    "sourcePath": "Pleural Course Lectures/PleuralEffusion.mp4",
+    "storagePath": "v1/shared/pleural/pleural-effusion.mp4"
+  },
+  {
+    "id": "pleural-thoracentesis-outpatient",
+    "title": "Thoracentesis and Outpatient Management",
+    "courseSection": "pleural",
+    "audience": "shared",
+    "sourcePath": "Pleural Course Lectures/Thoracentesis & Outpatient Management.mp4",
+    "storagePath": "v1/shared/pleural/thoracentesis-and-outpatient-management.mp4"
+  },
+  {
+    "id": "pleural-chest-tube",
+    "title": "Chest Tube Management",
+    "courseSection": "pleural",
+    "audience": "shared",
+    "sourcePath": "Pleural Course Lectures/chest tube 25.mp4",
+    "storagePath": "v1/shared/pleural/chest-tube-management.mp4"
+  },
+  {
+    "id": "pleural-infections",
+    "title": "Pleural Space Infections",
+    "courseSection": "pleural",
+    "audience": "shared",
+    "sourcePath": "Pleural Course Lectures/Pleural Space Infections.mp4",
+    "storagePath": "v1/shared/pleural/pleural-space-infections.mp4"
+  },
+  {
+    "id": "pleural-pneumothorax",
+    "title": "Pneumothorax Evaluation and Management",
+    "courseSection": "pleural",
+    "audience": "shared",
+    "sourcePath": "Pleural Course Lectures/PTX Evaluation and Management (BTRAN with rec).mp4",
+    "storagePath": "v1/shared/pleural/pneumothorax-evaluation-and-management.mp4"
+  },
+  {
+    "id": "pleural-cancer-tpc-pleuroscopy",
+    "title": "Cancer, TPC, and Pleuroscopy",
+    "courseSection": "pleural",
+    "audience": "shared",
+    "sourcePath": "Pleural Course Lectures/Cancer, TPC, and Pleuroscopy – What, Where, Why, and How  2025-07-16.mp4",
+    "storagePath": "v1/shared/pleural/cancer-tpc-and-pleuroscopy.mp4"
+  }
+]

@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Gauge, Map, Radar, ScanEye } from 'lucide-react'
+import { Gauge, Map, Radar } from 'lucide-react'
 import { setRequestLocale } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
-import { adminEbusTrainingModules, publicEbusTrainingModules } from '@/data/ebus-training'
-import { canCurrentUserViewDraftModules } from '@/lib/draft-module-guard'
+import { publicEbusTrainingModules } from '@/data/ebus-training'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
@@ -25,7 +24,6 @@ const moduleIcons = {
   knobology: Gauge,
   stations: Map,
   simulator: Radar,
-  'virtual-bronchoscopy': ScanEye,
 } as const
 
 interface EbusTrainingPageProps {
@@ -35,11 +33,6 @@ interface EbusTrainingPageProps {
 export default async function EbusTrainingPage({ params }: EbusTrainingPageProps) {
   const { locale } = await params
   setRequestLocale(locale)
-
-  const canViewAdminModules = await canCurrentUserViewDraftModules()
-  const modules = canViewAdminModules
-    ? [...publicEbusTrainingModules, ...adminEbusTrainingModules]
-    : publicEbusTrainingModules
 
   return (
     <HandoffContent>
@@ -63,7 +56,7 @@ export default async function EbusTrainingPage({ params }: EbusTrainingPageProps
           </section>
 
           <section className="container grid gap-4 md:grid-cols-3">
-            {modules.map((module) => {
+            {publicEbusTrainingModules.map((module) => {
               const Icon = moduleIcons[module.slug as keyof typeof moduleIcons]
 
               return (

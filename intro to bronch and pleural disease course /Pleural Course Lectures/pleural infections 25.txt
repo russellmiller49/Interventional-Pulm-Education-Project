@@ -1,0 +1,212 @@
+00:00:01:14 - 00:00:34:05
+Unknown
+Hello everyone. My name is George and I'm one of the interventional pulmonologists here at UCSD. Today we're going to be talking about plural space infections. The objectives for today's talk will be to review the mechanisms and stages of a plural space infection, to understand the medical management of these infections, to identify the various interventions within the management algorithm, and to understand the role for surgical management in plural infection.
+
+00:00:34:07 - 00:01:00:03
+Unknown
+We'll start with the diagnostic diagnostic approach to plural effusions. As you all know, the backbone of our diagnostic approach is the analysis of the plural fluid that we evacuate via percutaneous drainage. We're looking at all these different elements within that pleural fluid analysis, including things like the appearance is the fluid I'm draining cirrus. Is it bloody. Is it Frank pus I'm drawing out the cell count.
+
+00:01:00:03 - 00:01:24:13
+Unknown
+And what is the predominance of that cell count. What are the chemistries look like? And how do they help me differentiate between transit dates and exit dates? And what additional information do they give me? Am I growing anything on the cultures that I'm growing from the plural fluid? And what am I seeing? Any atypical cells under cytology evaluation.
+
+00:01:24:15 - 00:01:53:11
+Unknown
+In terms of the cell count differential? It's important to remember that monastic is the normal plural predominance. Neutrophil is when the neutrophils exceed 50% of that cell count, and this is typically suggestive of bacterial infection or inflammation. Lymphocytic predominance is greater than 50%. Lymphocytes in. This is typically suggestive of malignancy or atypical infection, and plural use in Ofelia is defined as.
+
+00:01:53:12 - 00:02:21:01
+Unknown
+Eosinophilia is greater than 10% in the plural fluid, with a differential that includes things like prior instrumentation. Exposure to asbestos drugs can cause this malignancy, PE, and occasionally atypical infections. Now, regarding chemistries, as you will all remember, the one of the predominant points of analyzing the plural fluid chemistries is to differentiate an infusion as a transitive versus an exit date.
+
+00:02:21:03 - 00:02:46:12
+Unknown
+This can be done with a variety of different criteria, including the historical use of lights. Criteria. This has been very widely used among the medical practice, and it is done so because of its high sensitivity for exit dates up to 98%. However, it does have a low specificity, with a range that varies between 72 and 83% in the literature.
+
+00:02:46:15 - 00:03:16:15
+Unknown
+There's modified lights criteria, which is what we typically use most frequently here at UCSD, and this maintains a very high sensitivity for identifying exudates similar to the traditional lights criteria, up to 98%. However, with a better specificity on the order of 76 to 92%, again, the ranges in the literature, the additional advantage of modified lights is that it only requires pleural fluid chemistries, obviating the need for comparison with serum values.
+
+00:03:16:18 - 00:03:28:21
+Unknown
+Additional criteria include things like the plural fluid only two tests, or the plural fluid only three tests. Again, things we won't belabor within the scope of this lecture.
+
+00:03:28:24 - 00:03:51:06
+Unknown
+So to make sure we're all on the same page, a plural space infection is typically a situation where we're seeing an predominant in the case of bacterial or lymphocytic predominant in the case of a typical infection effusion, which is an exit date. It can have occasionally microbial growth on cultures, and this is all within the appropriate clinical context.
+
+00:03:51:09 - 00:04:05:19
+Unknown
+So this can be in the setting of someone who's crashing and burning with septic shock from a plural source. However, it can be a more subacute presentation with more subtle signs of infection in your patient.
+
+00:04:05:22 - 00:04:32:03
+Unknown
+In terms of etiologies for plural space infection, there's typically three mechanisms through which we believe that we can develop plural space infection. One would be contiguous spread from an adjacent infection, with pneumonia being by far the most common scenario, but skin and soft tissue infection, peritoneal infection, even mediastinum infections, etc. that can cause contiguous spread of the infection into the plural fluid.
+
+00:04:32:06 - 00:04:42:22
+Unknown
+Penetrating trauma is an additional method, as well as seeding from a systemic infection in the way of bacteremia.
+
+00:04:42:24 - 00:05:06:22
+Unknown
+So let's start talking about the evolution of these pleural space infections. So stage one we typically think of as uncomplicated in the way of time frame. This is on typically on the order of days. And this tends to be a sterile exudate with more simple chemistries. The management for these uncomplicated effusions tends to be antibiotics. And occasionally you can consider drainage for stage two.
+
+00:05:06:23 - 00:05:28:16
+Unknown
+This is complicated. This is more of a complicated fibro diffusion. The time frame for this is a little bit later on the order of days to weeks. This is an exit date of effusion with abnormal chemistries. And occasionally you can have bacterial growth on this as well. The treatment strategy for for this type of fusion is antibiotics and drainage.
+
+00:05:28:16 - 00:05:58:07
+Unknown
+With the consideration consideration of adjunctive interventions. Lastly, the stage three or complicated or organizing plural space infection is an even later time frame. Weeks to months. In these scenarios, the fluid can become difficult to obtain due to its organizing nature. The chemistries can be quite deranged and organisms may not be identified. This degree of organization is frequently accompanied by plural thickening and even a rind.
+
+00:05:58:10 - 00:06:07:09
+Unknown
+Treatment is antibiotic and drainage, and these are the scenarios where you're more likely to need more advanced interventions.
+
+00:06:07:11 - 00:06:29:27
+Unknown
+So to ensure we have the same definitions, a simple effusion is going to be a paramount of confusion. That is, an exadata of effusion by chemistries with normal glucose and normal page and LDH that will be elevated but less than 1000. And this is always a sterile effusion. You're not going to be growing your microorganisms in this scenario.
+
+00:06:29:29 - 00:06:45:24
+Unknown
+Sonography speaking these types of effusion tend to be small to moderate. The fluid tends to be free flowing and not located, as well as anechoic or hypo colloque in its nature.
+
+00:06:45:27 - 00:07:10:21
+Unknown
+By contrast, a complicated parent fusion is one where your labs are going to show an exit of a fusion that, in addition, meets one of three criteria the fins less than 7.2. The glucose is less than 40, where the LDH is greater than 1000. It's important to remember that MP is a subset of a complicated paramount confusion, and this is defined by all of the above.
+
+00:07:10:22 - 00:07:34:06
+Unknown
+In addition to having a positive gram stain or withdrawing frank pus with your percutaneous drainage sonography speaking, these effusions tend to be a bit larger, moderate to large. Though they can be small, they frequently have their lockey they think, be anechoic or even hyper in their nature.
+
+00:07:34:09 - 00:08:02:23
+Unknown
+So let's move on to management of these pleural space infections. Standard of care dictates that antibiotics and percutaneous drainage are the mainstay of this management technique. If we're talking about treatment failure, then we're talking about consideration of interpersonal enzymatic therapy, plural things like plural irrigation or even thorough copy. So how does this fit into a our treatment algorithm.
+
+00:08:02:29 - 00:08:31:25
+Unknown
+Here we can see the Pts plural infection treatment pathway, where the first step in management is what we already discuss a standard of care which includes antibiotics as well as percutaneous drainage. Thereafter, they're assessing the clinical progress that the patient is seeing with these standard care treatments. And if that clinical progress is poor, then the next question you're asking yourself is, is the patient a surgical candidate?
+
+00:08:31:28 - 00:08:44:02
+Unknown
+If they are not a surgical candidate, then you start talking about things like Alta plays and Dawn's therapy, as well as plural irrigation.
+
+00:08:44:04 - 00:09:18:07
+Unknown
+In terms of antibiotics for management of plural infection. I think it's important to highlight the tour trial that was done in 2022, where they identified the bacteriology of plural infections based on RNA sequencing of 243 infected pleural fluid samples. What their studies showed is that pleural space infections are poorly microbial, the vast majority of times up to 80% of cases in this study, with the NER and anaerobic predominance, which argues for broad coverage even when you don't identify a bug culprit bug in your cultures.
+
+00:09:18:10 - 00:09:46:07
+Unknown
+That being said, this study also showed that when the infections are mono microbial, if the culprit organism will staff aureus or enter a backdoor, this did carry an increased mortality risk, which does argue for a more aggressive and targeted antibiotic treatment strategy. When you have a micro infection and identification of any of these organisms, typically we will administer IV antibiotics until we see clinical improvement, at which time we transition to Po.
+
+00:09:46:10 - 00:10:06:15
+Unknown
+The duration of antibiotics will vary depending on the degree of complication from the effusion, with uncomplicated paranormal warranting antibiotics for up to two weeks. Complicated paranormal 2 to 4 weeks versus which typically will require a more prolonged course of 4 to 6 weeks.
+
+00:10:06:17 - 00:10:47:26
+Unknown
+Let's talk about drainage. We know that drainage is indicated for all complicated paranormal effusions at MPE, and this should be done with a chest tube that is on the order of 10 to 14 French, as these have been shown to be equally efficacious. A surgical test tubes, but associated with less pain. These chest tubes will almost always be put to suction to promote drainage, and we define treatment success as full evacuation of the infection with a low output from the chest tube and radiographic resolution or dramatic improvement of the plural space, but most importantly, resolved parameters of infection and showing clinical improvement in your patient.
+
+00:10:47:28 - 00:11:14:14
+Unknown
+Again, if we talk about treatment failure for standard of care, we're talking about the possibility of additional percutaneous drainage. So does that does your patient and does that complicated plural of space require a second a third and sometimes even a fourth chest tube. Are you thinking about administering Interpol enzymatic therapy? Are you considering plural irrigation and or what is the role of thoracotomy?
+
+00:11:14:16 - 00:11:27:19
+Unknown
+It's impossible to talk about plural space infections without referencing the missed two trial, which was the second of the multicenter Interpol sepsis trial run out of the UK by Doctor Ramon.
+
+00:11:27:21 - 00:12:02:10
+Unknown
+The miss two trial was a pivotal trial where the clinical question was does all to place and Dawn's improve resolution of MPE molecular. This was a multicenter, double blind, placebo controlled trial with a total of 210 subjects that they very beautifully designed into a 1 to 1 to 1 to 1 randomization with the groups as follows ten milligrams of all to place in placebo, five milligrams of dawn and placebo ten milligrams all to place, and five milligrams of dawn or double placebo.
+
+00:12:02:12 - 00:12:26:17
+Unknown
+Val comes they looked at were the following. Radiographic change infusion. This showed a significant reduction in the TPA dawn group, one that was not seen in TPA or Dawn's alone. In addition, surgical referral also saw a decrease in TPA and Dawn group, which was not seen in the TPA group and actually increased surgical referral in the DNA group.
+
+00:12:26:20 - 00:12:37:13
+Unknown
+Lastly, length of stay was shown to be decreased in the combination group as well. Again, a difference that was not seen in either of the groups alone.
+
+00:12:37:16 - 00:13:12:08
+Unknown
+So here we can see the table which references all of the statistical significant improvements in the primary outcomes that they looked at. Change in baseline in an area occupied by the fusion surgical referral and hospital stay. Now, this was a pivotal trial that tremendously changed how we manage pleural space infections. The big question that laid ahead was with the administration of Alta Place, a blood clot buster, into a space that is infected and highly inflamed.
+
+00:13:12:09 - 00:13:35:08
+Unknown
+What is the bleeding risk that we're going to encounter when we apply this on a large scale? So this is precisely the question that was addressed in this study, where they looked at the bleeding risk with the combination of ventral pleural enzymatic therapy in plural infection. This was a very large, international, multicenter study that was designed as a retrospective cohort.
+
+00:13:35:10 - 00:14:04:18
+Unknown
+In total, they enrolled more than 1800 patients with pleural space infection, and the primary outcome they were looking at was the overall incidence of plural bleeding. The incidence that they found was 4.1% with therapy. Overall, however, the presence of therapeutic anticoagulation did more than double this bleeding risk. This was a risk that was mitigated by holding into coagulation and importantly, half dose use.
+
+00:14:04:18 - 00:14:36:15
+Unknown
+A faulty place did not change this risk. That being said, that was a very small subset in this large patient population. This is a conversation that's relevant because of the implications of these plural bleeds. What they saw was that in greater than 50% of these plural bleeds, the patients did require blood transfusion, as well as up to a quarter of these patients required surgical exploration and or transfer to higher level care.
+
+00:14:36:18 - 00:14:52:26
+Unknown
+So what do we do if we can't mitigate these risks? What do we do if we might be too high risk because of the patient substrate? I think that's where we start talking about plural irrigation in the Pit trial.
+
+00:14:52:29 - 00:15:21:08
+Unknown
+With the Pit trial looked at was disabling pleural irrigation, improved pleural fluid drainage, and resolution of sepsis compared to non-surgical standard of care in patients with complicated paranormal confusions. This was a single center study also based out of the UK, and it was a pilot randomized control trial. They were looking at empire or complicated paranormal confusions, and they excluded prior thoracic surgery or plural enzymatic therapy for the same.
+
+00:15:21:11 - 00:15:47:25
+Unknown
+In total, they recruited 38 patients and they administered standard of care, which, as we've previously reviewed, includes IV antibiotics according to hospital guidelines, as well as the placement of an ultrasound guided 12 French chest tube. They then obtained a CT chest 12 hours after chest tube placement, and if there was a residual plural fluid, patients were randomized 1 to 1 to control versus trial group.
+
+00:15:47:27 - 00:16:16:19
+Unknown
+In the trial group, the patients received pleural irrigation with 250 cc bags of normal saline that was administered via the chest tube over one hour. This was done tied for three days, with the chest of being to suctioning of 20. Between installations, the control group had the exact same variables, but just a sham irrigation with just flushing. They obtained a CT scan after intervention.
+
+00:16:16:21 - 00:16:41:06
+Unknown
+The primary endpoint that they were looking at was percentage change in plural fluid volume on CT, with secondary endpoints including decrease in inflammatory markers, time to AP, proportion of patients referred for thoracic surgery. Duration of hospital stay, total volume drained. All all cause mortality at one and three months, as well as adverse events.
+
+00:16:41:08 - 00:17:00:13
+Unknown
+What they saw was that there was a statistically significant difference in their primary endpoint, where saline irrigation resulted in larger reduction of CT pleural volume compared to standard of care 32 versus 15% reduction with a P that was less than 0.04.
+
+00:17:00:15 - 00:17:17:14
+Unknown
+Regarding their secondary endpoints, they also saw a statistically significant difference in the need for thoracic surgery. Referral, with only two of 18 in the trial group and eight of 17 in the control group, with an odds ratio of 7.1.
+
+00:17:17:17 - 00:17:43:26
+Unknown
+They did not see any difference between the groups and the other secondary end points that they looked at, including total volume removed, reduction of inflammatory markers, time to April mortality, or adverse events in either group. They did see a trend towards lower towards reduction in length of stay, with 14 days in the control group versus eight days in the trial group, though this was not a statistically significant difference.
+
+00:17:43:28 - 00:18:13:17
+Unknown
+So what the Pit trial showed us was that plural irrigation showed statistically significant reduction in a fusion volume and surgical referrals with a trend towards decreased length of stay. It showed an association between improved graphic resolution and superior clinical outcomes, similar to the to what the missed two trial had shown us. Optimal irrigation volume and frequency is unknown, though this does appear to be safe with no adverse outcomes in the irrigation group.
+
+00:18:13:19 - 00:18:46:29
+Unknown
+The proposed mechanisms for this include things like dilution of bacteria, cytokines, inflammatory cells, and pro fibrinogen factors which can propagate organization of a fusion, as well as reduction in stasis of plural contents, which can also promote reduction of organization of these effusions. The limitations of the study are obviously that it was a single center trial pilot trial, with a very small number of patients enrolled with patients and clinical team not blinded to the treatment allocation.
+
+00:18:47:02 - 00:19:09:23
+Unknown
+So let's revisit the RTS plural infection management algorithm. As we discussed, if the patient is having poor clinical progress and they are either a surgical candidate or you've already exhausted non-surgical modalities, the next step is to look at Vats for management of their infections.
+
+00:19:09:25 - 00:19:37:23
+Unknown
+So what is the role of an infection? It's usually reserved for factory cases. Vats is preferred over open thoracotomy due to equivalent outcomes with reduced morbidity and length of stay. The conversion from vast to thoracotomy is on average 10%, though it is quoted as high as 44% in some studies. A delayed referral of greater than two weeks and Nyima did predict conversion to open thoracotomy.
+
+00:19:37:23 - 00:20:00:06
+Unknown
+In these studies, Vats is not clearly shown superiority in outcomes versus standard of care with tubular tube thoracotomy and enzymatic therapy, though there might be a trend towards decreased length of stay with an average of 12 days instead of 15 days with the latter.
+
+00:20:00:08 - 00:20:23:14
+Unknown
+So this brings us to the miss three trial. This will be a continuation of the missed two trial, where they're still looking at plural space infection. Once the plural space infection is confirmed, the patient will undergo standard of care with IV antibiotics and chest tube placement. If on day one, post chest tube placement, there is residual collection or persistent sepsis.
+
+00:20:23:16 - 00:20:49:28
+Unknown
+The patients will be randomized to either early plural enzymatic therapy, continue standard of care, or early thoracic surgery. This will be the pivotal trial that will help us evaluate head to head. How does that store or thoracotomy compared to plural enzymatic therapy early on in the management of plural space infection? So stay tuned for the results of this trial.
+
+00:20:50:00 - 00:21:08:21
+Unknown
+With that, I will conclude my talk, and I'd like to give a big thank you to you all for tuning in to visit this lecture, for coming to the course, and a big thank you to all of my partners, as well as Kelly or nurse practitioner, who is the backbone of our program, Bryce Duckman, soon to be our next faculty member to join us.
+
+00:21:08:23 - 00:21:17:01
+Unknown
+Steve, from scripts for all of his help and support throughout the years with these courses, as well as Brian Tran, our current IP fellow. Thank you.
+

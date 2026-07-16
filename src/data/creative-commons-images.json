@@ -1755,66 +1755,6 @@
   },
   {
     "Category": "Pathology",
-    "Image_url": "/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig1-diagnostic-flowchart.jpg",
-    "Image Description": "EBUS-TBNA staging - PET-positive lymph node diagnostic flowchart",
-    "article_title": "The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings",
-    "article_url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886",
-    "license": "Wiley Online Library OA Creative Commons notice",
-    "license_url": "https://onlinelibrary.wiley.com/terms-and-conditions",
-    "attribution": "Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata."
-  },
-  {
-    "Category": "Pathology",
-    "Image_url": "/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig2-ct-pet-mediastinal-node.jpg",
-    "Image Description": "CT/PET - Enlarged right paratracheal lymph node with FDG uptake",
-    "article_title": "The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings",
-    "article_url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886",
-    "license": "Wiley Online Library OA Creative Commons notice",
-    "license_url": "https://onlinelibrary.wiley.com/terms-and-conditions",
-    "attribution": "Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata."
-  },
-  {
-    "Category": "Pathology",
-    "Image_url": "/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig3-metastatic-adenocarcinoma-cytology.jpg",
-    "Image Description": "Cytology - EBUS-TBNA metastatic lung adenocarcinoma in PET-positive lymph node",
-    "article_title": "The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings",
-    "article_url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886",
-    "license": "Wiley Online Library OA Creative Commons notice",
-    "license_url": "https://onlinelibrary.wiley.com/terms-and-conditions",
-    "attribution": "Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata."
-  },
-  {
-    "Category": "Pathology",
-    "Image_url": "/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig4-metastatic-squamous-cell-carcinoma-cytology.jpg",
-    "Image Description": "Cytology - EBUS-TBNA metastatic squamous cell carcinoma in PET-positive lymph node",
-    "article_title": "The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings",
-    "article_url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886",
-    "license": "Wiley Online Library OA Creative Commons notice",
-    "license_url": "https://onlinelibrary.wiley.com/terms-and-conditions",
-    "attribution": "Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata."
-  },
-  {
-    "Category": "Pathology",
-    "Image_url": "/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig5-granuloma-cytology.jpg",
-    "Image Description": "Cytology - EBUS-TBNA granuloma in PET-positive lymph node",
-    "article_title": "The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings",
-    "article_url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886",
-    "license": "Wiley Online Library OA Creative Commons notice",
-    "license_url": "https://onlinelibrary.wiley.com/terms-and-conditions",
-    "attribution": "Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata."
-  },
-  {
-    "Category": "Pathology",
-    "Image_url": "/images/creative-commons/pathology/lilo-2017-ebus-tbna-fig6-mycobacterium-avium-intracellulare-cytology.jpg",
-    "Image Description": "Cytology - EBUS-TBNA Mycobacterium avium-intracellulare infection in PET-positive lymph node",
-    "article_title": "The critical role of EBUS-TBNA cytology in the staging of mediastinal lymph nodes in lung cancer patients: A correlation study with positron emission tomography findings",
-    "article_url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.1002/cncy.21886",
-    "license": "Wiley Online Library OA Creative Commons notice",
-    "license_url": "https://onlinelibrary.wiley.com/terms-and-conditions",
-    "attribution": "Lilo et al., Cancer Cytopathology, 2017. PDF sidebar states OA articles are governed by the applicable Creative Commons License; exact CC subtype was not stated in PDF/Crossref metadata."
-  },
-  {
-    "Category": "Pathology",
     "Image_url": "/images/creative-commons/pathology/karunamurthy-2014-ebus-fna-fig1-cll-sll-false-negative.jpg",
     "Image Description": "Cytology/Histology - False-negative EBUS-FNA from CLL/SLL lymph node",
     "article_title": "Evaluation of endobronchial ultrasound-guided fine-needle aspirations (EBUS-FNA): Correlation with adequacy and histologic follow-up",

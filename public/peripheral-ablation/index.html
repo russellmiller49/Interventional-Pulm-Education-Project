@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Peripheral Lung Tumor Ablation — IP Fellow Module</title>
+<style>
+  :root{
+    --bg:#eef2f7;
+    --surface:#ffffff;
+    --surface-2:#f4f7fb;
+    --surface-3:#e9f1f8;
+    --ink:#12202e;
+    --ink-2:#2b4459;
+    --muted:#5f7488;
+    --line:#d8e2ec;
+    --line-2:#c3d2e0;
+    --brand:#1f5fa0;
+    --brand-d:#154272;
+    --brand-l:#3d86d6;
+    --accent:#0e7fb8;
+    --ok:#15803d;      --ok-soft:#e7f6ec;
+    --warn:#b45309;    --warn-soft:#fdf4e3;
+    --danger:#c92a2a;  --danger-soft:#fdecec; --danger-d:#8f1d1d;
+    --invest:#7c3aed;  --invest-soft:#f2ecfe; --invest-d:#5b21b6;
+    /* modality accents */
+    --rfa:#d6453d;   --rfa-d:#a3231c;
+    --mwa:#e07b28;   --mwa-d:#b85f14;
+    --cryo:#1f9bd6;  --cryo-d:#136a97;
+    --pef:#8a5cc4;   --pef-d:#5f3a9e;
+    /* thermal-zone palette */
+    --hot-core:#b3231a; --hot-mid:#ef6a2b; --hot-edge:#f7bd7d;
+    /* cryo palette */
+    --ice-0:#d6ecff; --ice-20:#7cc2ee; --ice-40:#2f7fd0; --ice-core:#123f77;
+    --tissue:#e7cdb6; --tissue-d:#d3ad8e;
+    --shadow:0 1px 2px rgba(16,42,60,.06),0 8px 24px rgba(16,42,60,.07);
+    --shadow-lg:0 10px 40px rgba(16,42,60,.14);
+    --radius:16px; --radius-s:10px; --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans",sans-serif;
+    color:var(--ink-2); background:var(--bg); line-height:1.6;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4{color:var(--ink);line-height:1.25;margin:0}
+  a{color:var(--brand)}
+  p{margin:0 0 14px}
+  code,.mono{font-family:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  :focus-visible{outline:3px solid var(--brand-l);outline-offset:2px;border-radius:6px}
+
+  /* ---------- header / nav ---------- */
+  header.top{position:sticky;top:0;z-index:50;
+    background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.94));
+    backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--line);}
+  .top-inner{max-width:var(--maxw);margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brandmark{display:flex;align-items:center;gap:11px;min-width:0}
+  .brandmark .logo{width:38px;height:38px;border-radius:10px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--brand-l),var(--brand-d));
+    display:grid;place-items:center;box-shadow:0 3px 10px rgba(31,95,160,.4);}
+  .brandmark .logo svg{width:22px;height:22px}
+  .brandmark .t1{font-weight:800;font-size:15px;color:var(--ink);letter-spacing:-.2px;line-height:1.15}
+  .brandmark .t2{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+  nav.pills{margin-left:auto;display:flex;gap:6px;overflow-x:auto;max-width:100%;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  nav.pills a{white-space:nowrap;font-size:13px;font-weight:650;color:var(--ink-2);text-decoration:none;
+    padding:7px 12px;border-radius:999px;border:1px solid transparent;transition:.15s;}
+  nav.pills a:hover{background:var(--surface-3);color:var(--brand-d)}
+  nav.pills a.active{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(31,95,160,.35)}
+  .notebar{background:linear-gradient(90deg,var(--invest-soft),#fff);border-top:1px solid var(--line);
+    font-size:12px;color:var(--ink-2);}
+  .notebar .ni{max-width:var(--maxw);margin:0 auto;padding:6px 20px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .notebar b{color:var(--invest-d)}
+  .notebar .dot{width:7px;height:7px;border-radius:50%;background:var(--invest);flex:0 0 auto;box-shadow:0 0 0 3px var(--invest-soft)}
+
+  /* ---------- layout ---------- */
+  main{max-width:var(--maxw);margin:0 auto;padding:0 20px 80px}
+  section{scroll-margin-top:96px;padding:34px 0 8px}
+  .hero{margin:26px 0 8px;padding:34px 34px 30px;border-radius:22px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#123f77 0%,#1f5fa0 52%,#3d86d6 128%);color:#eaf3fb;box-shadow:var(--shadow-lg);}
+  .hero:after{content:"";position:absolute;right:-80px;top:-90px;width:340px;height:340px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.16),transparent 62%)}
+  .hero .eyebrow{font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;opacity:.85}
+  .hero h1{color:#fff;font-size:clamp(23px,4.4vw,36px);letter-spacing:-.6px;margin:8px 0 12px;max-width:22ch}
+  .hero p{color:#dceaf7;max-width:70ch;margin:0;font-size:15.5px}
+  .hero .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .hero .chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);color:#f0f7fd;
+    font-size:12px;font-weight:650;padding:5px 11px;border-radius:999px}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px}
+  .card + .card{margin-top:18px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .sec-kicker{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--brand);
+    display:inline-flex;align-items:center;gap:8px}
+  .sec-kicker .num{background:var(--brand);color:#fff;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px}
+  h2.sec-title{font-size:clamp(20px,3vw,27px);letter-spacing:-.4px;margin:6px 0 10px}
+  .lead{font-size:16px;color:var(--ink-2);max-width:74ch}
+  .subhead{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+
+  ul.clean{margin:0 0 4px;padding-left:0;list-style:none}
+  ul.clean li{position:relative;padding-left:26px;margin-bottom:9px}
+  ul.clean li:before{content:"";position:absolute;left:4px;top:9px;width:8px;height:8px;border-radius:50%;
+    background:var(--brand-l);box-shadow:0 0 0 4px rgba(61,134,214,.14)}
+  strong{color:var(--ink);font-weight:700}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:860px){.grid-2,.grid-3{grid-template-columns:1fr}}
+
+  .pearl{border-left:4px solid var(--brand-l);background:var(--surface-2);border-radius:0 12px 12px 0;padding:14px 16px;margin:16px 0}
+  .pearl.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+  .pearl.danger{border-left-color:var(--danger);background:var(--danger-soft)}
+  .pearl.invest{border-left-color:var(--invest);background:var(--invest-soft)}
+  .pearl.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+  .pearl .lab{font-size:11.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--brand-d);margin-bottom:3px}
+  .pearl.warn .lab{color:var(--warn)} .pearl.danger .lab{color:var(--danger-d)}
+  .pearl.invest .lab{color:var(--invest-d)} .pearl.ok .lab{color:var(--ok)}
+  .pearl p{margin:0;font-size:14.5px}
+
+  .objectives{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:8px}
+  .objectives .o{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px 15px}
+  .objectives .o .n{font-weight:800;color:var(--brand);font-size:13px}
+  .objectives .o p{margin:5px 0 0;font-size:14px}
+
+  .tagpill{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;border:1px solid transparent;vertical-align:middle}
+  .tag-est{background:var(--ok-soft);color:var(--ok);border-color:#bfe3ca}
+  .tag-inv{background:var(--invest-soft);color:var(--invest-d);border-color:#ddccf6}
+
+  /* ---------- generic controls ---------- */
+  .btn{font:inherit;cursor:pointer;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);
+    border-radius:10px;padding:9px 14px;font-weight:650;font-size:14px;transition:.15s}
+  .btn:hover{border-color:var(--brand-l);color:var(--brand-d)}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn.primary:hover{background:var(--brand-d);color:#fff}
+  .btn:disabled{opacity:.5;cursor:default}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;
+    background:linear-gradient(90deg,var(--brand-l),var(--brand));outline-offset:4px;margin:8px 0 2px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+    background:#fff;border:2px solid var(--brand);box-shadow:0 1px 4px rgba(16,42,60,.3);cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--brand);cursor:pointer}
+
+  .ctrl{margin-bottom:16px}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .ctrl label{font-weight:700;color:var(--ink);font-size:14px}
+  .ctrl .val{font-variant-numeric:tabular-nums;font-weight:800;color:var(--brand-d);font-size:15px}
+  .ctrl .hint{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  .readouts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ro{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+  .ro .k{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+  .ro .v{font-size:20px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2}
+  .ro .u{font-size:12px;color:var(--muted);font-weight:600}
+
+  .svg-cap{font-size:11.5px;color:var(--muted);text-align:center;margin-top:8px;font-style:italic}
+
+  /* ---------- physics primer cards ---------- */
+  .mech{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:18px}
+  @media(max-width:900px){.mech{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.mech{grid-template-columns:1fr}}
+  .mcard{border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column}
+  .mcard .mtop{padding:13px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+  .mcard .mdot{width:14px;height:14px;border-radius:5px;flex:0 0 auto}
+  .mcard .mname{font-weight:800;color:var(--ink);font-size:15.5px;line-height:1.15}
+  .mcard .msub{font-size:11.5px;color:var(--muted);font-weight:650}
+  .mcard.rfa .mtop{background:linear-gradient(180deg,#fdeceb,#fff)} .mcard.rfa .mdot{background:var(--rfa)}
+  .mcard.mwa .mtop{background:linear-gradient(180deg,#fdf0e3,#fff)} .mcard.mwa .mdot{background:var(--mwa)}
+  .mcard.cryo .mtop{background:linear-gradient(180deg,#e6f4fd,#fff)} .mcard.cryo .mdot{background:var(--cryo)}
+  .mcard.pef .mtop{background:linear-gradient(180deg,#f0e9fa,#fff)} .mcard.pef .mdot{background:var(--pef)}
+  .mcard .manim{background:#0f1f2b;position:relative}
+  .mcard .manim svg{display:block;width:100%;height:auto}
+  .mcard .mbody{padding:14px 16px;font-size:14px}
+  .mcard .mbody p{margin:0 0 9px}
+  .mcard .conseq{margin-top:auto;padding:12px 16px;border-top:1px dashed var(--line);font-size:13px;background:var(--surface-2)}
+  .mcard .conseq b{display:block;font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--brand-d);margin-bottom:2px}
+
+  /* ---------- simulator ---------- */
+  .sim{display:grid;grid-template-columns:1fr 1.15fr;gap:22px;align-items:start}
+  @media(max-width:900px){.sim{grid-template-columns:1fr}}
+  .modpick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+  @media(max-width:560px){.modpick{grid-template-columns:1fr 1fr}}
+  .mod-btn{cursor:pointer;font:inherit;border:1.5px solid var(--line-2);background:var(--surface);border-radius:12px;
+    padding:10px 6px;text-align:center;transition:.15s;display:flex;flex-direction:column;gap:2px;align-items:center}
+  .mod-btn .mb-n{font-weight:800;font-size:14px;color:var(--ink)}
+  .mod-btn .mb-s{font-size:10.5px;color:var(--muted);font-weight:650}
+  .mod-btn .mb-sw{width:26px;height:5px;border-radius:99px;margin-bottom:3px}
+  .mod-btn[data-mod=rfa] .mb-sw{background:var(--rfa)} .mod-btn[data-mod=mwa] .mb-sw{background:var(--mwa)} .mod-btn[data-mod=cryo] .mb-sw{background:var(--cryo)} .mod-btn[data-mod=pef] .mb-sw{background:var(--pef)}
+  .mod-btn:hover{border-color:var(--brand-l)}
+  .mod-btn.active{border-color:var(--brand);background:var(--surface-3);box-shadow:0 2px 10px rgba(31,95,160,.18)}
+  .mod-btn.active[data-mod=rfa]{border-color:var(--rfa)} .mod-btn.active[data-mod=mwa]{border-color:var(--mwa)} .mod-btn.active[data-mod=cryo]{border-color:var(--cryo)} .mod-btn.active[data-mod=pef]{border-color:var(--pef)}
+
+  .toggles{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+  .tog{cursor:pointer;font:inherit;border:1.5px solid var(--line-2);background:var(--surface);border-radius:10px;
+    padding:8px 12px;font-weight:700;font-size:13px;color:var(--ink-2);display:flex;gap:8px;align-items:center;transition:.15s}
+  .tog .box{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line-2);display:grid;place-items:center;font-size:11px;color:#fff}
+  .tog.on{border-color:var(--brand);color:var(--brand-d);background:var(--surface-3)}
+  .tog.on .box{background:var(--brand);border-color:var(--brand)}
+  .simbtns{display:flex;gap:8px;margin-top:6px}
+  .simbtns .btn{flex:1}
+
+  .canvas-card{background:#0e1e2b;border:1px solid var(--line-2);border-radius:15px;overflow:hidden;position:relative}
+  canvas.stage{display:block;width:100%;height:auto;touch-action:none}
+  .marginbadge{position:absolute;left:12px;top:12px;padding:7px 12px;border-radius:10px;font-size:12.5px;font-weight:800;
+    letter-spacing:.3px;display:flex;gap:8px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.25);max-width:70%}
+  .marginbadge .mi{font-size:14px}
+  .mb-pass{background:var(--ok);color:#fff} .mb-marg{background:var(--warn);color:#fff} .mb-fail{background:var(--danger);color:#fff}
+  .mb-idle{background:rgba(255,255,255,.9);color:var(--ink-2)}
+  .simmsg{font-size:13px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 13px;margin-top:12px;min-height:42px}
+  .simmsg b{color:var(--brand-d)}
+  .zlegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted)}
+  .zlegend .li{display:flex;gap:6px;align-items:center}
+  .zlegend .sw{width:16px;height:10px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.12)}
+
+  /* ---------- guidance ---------- */
+  .guide-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:start}
+  @media(max-width:900px){.guide-wrap{grid-template-columns:1fr}}
+  .checklist{list-style:none;margin:0;padding:0}
+  .checklist li{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+  .checklist li:last-child{border-bottom:0}
+  .checklist .ck{width:24px;height:24px;border-radius:7px;flex:0 0 auto;display:grid;place-items:center;
+    background:var(--surface-3);color:var(--muted);font-weight:800;border:1px solid var(--line-2);font-size:13px}
+  .checklist li.ok .ck{background:var(--ok);color:#fff;border-color:var(--ok)}
+  .checklist li.no .ck{background:var(--danger-soft);color:var(--danger);border-color:#f0c9c9}
+  .checklist .ci b{color:var(--ink);font-size:14px}
+  .checklist .ci p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  .dpad{display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px);gap:5px;margin-top:12px;justify-content:start}
+  .dpad button{border:1px solid var(--line-2);background:var(--surface);border-radius:9px;cursor:pointer;font-size:15px;font-weight:700;color:var(--ink-2)}
+  .dpad button:hover{border-color:var(--brand-l);color:var(--brand-d)}
+  .dpad .sp{visibility:hidden}
+
+  /* ---------- recognize / act cards ---------- */
+  .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+  @media(max-width:860px){.rgrid{grid-template-columns:1fr}}
+  .rcard{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+  .rcard .rh{padding:13px 16px;font-weight:800;color:var(--ink);font-size:15px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:9px;background:var(--surface-2)}
+  .rcard .rh .sev{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:999px;margin-left:auto}
+  .sev-hi{background:var(--danger-soft);color:var(--danger-d)} .sev-md{background:var(--warn-soft);color:var(--warn)} .sev-lo{background:var(--surface-3);color:var(--brand-d)}
+  .rcard .rb{padding:13px 16px}
+  .rcard .rrow{display:flex;gap:10px;font-size:13.5px;margin-bottom:10px}
+  .rcard .rrow:last-child{margin-bottom:0}
+  .rcard .rk{flex:0 0 74px;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding-top:2px}
+  .rcard .rk.rec{color:var(--brand-d)} .rcard .rk.act{color:var(--ok)}
+  .rcard .rv{color:var(--ink-2)}
+
+  /* ---------- cases + quiz ---------- */
+  .scorebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:12px;padding:12px 16px}
+  .scorebar .sc{font-size:22px;font-weight:800;color:var(--brand-d);font-variant-numeric:tabular-nums}
+  .scorebar .sl{font-size:13px;color:var(--muted);font-weight:650}
+  .case{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px;background:var(--surface)}
+  .case .chead{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;
+    background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .case .chead .ct{font-weight:800;color:var(--ink);font-size:15px}
+  .case .chead .cx{font-size:12px;color:var(--muted);font-weight:700}
+  .case .cbody{padding:16px 18px}
+  .case .stem{font-size:14.5px;margin-bottom:14px}
+  .case .stem .vitals{display:inline-block;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;
+    padding:2px 8px;margin:2px 4px 2px 0;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+  .opts{display:flex;flex-direction:column;gap:9px}
+  .opt{cursor:pointer;text-align:left;border:1.5px solid var(--line-2);background:var(--surface);border-radius:11px;
+    padding:12px 14px;display:flex;gap:11px;align-items:flex-start;font:inherit;font-size:14px;color:var(--ink-2);transition:.12s}
+  .opt:hover{border-color:var(--brand-l);background:var(--surface-2)}
+  .opt .lt{flex:0 0 auto;width:24px;height:24px;border-radius:7px;background:var(--surface-3);display:grid;place-items:center;
+    font-weight:800;font-size:13px;color:var(--ink-2)}
+  .opt.correct{border-color:var(--ok);background:var(--ok-soft)} .opt.correct .lt{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--danger);background:var(--danger-soft)} .opt.wrong .lt{background:var(--danger);color:#fff}
+  .opt.picked{box-shadow:0 0 0 2px rgba(31,95,160,.2)}
+  .opt.dim{opacity:.55} .opt:disabled{cursor:default}
+  .fb{margin-top:12px;font-size:13.5px;border-radius:11px;padding:0 14px;max-height:0;overflow:hidden;transition:.2s;opacity:0}
+  .fb.show{max-height:400px;opacity:1;padding:13px 14px}
+  .fb.ok{background:var(--ok-soft);border:1px solid #bfe3ca} .fb.no{background:var(--danger-soft);border:1px solid #f0c9c9}
+  .fb .fh{font-weight:800;margin-bottom:5px;color:var(--ink)}
+  .fb .src{margin-top:7px;font-size:12px;color:var(--muted);font-style:italic}
+  .multi-actions{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+
+  /* report card */
+  .report{border:1.5px solid var(--brand);border-radius:16px;overflow:hidden;margin-top:20px;background:linear-gradient(180deg,var(--surface-3),#fff)}
+  .report .rt{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+  .report .rt h3{font-size:18px;margin:0}
+  .report .grade{margin-left:auto;font-size:26px;font-weight:800;color:var(--brand-d);font-variant-numeric:tabular-nums}
+  .report .rrows{padding:8px 20px 18px}
+  .report .prow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .report .prow:last-child{border-bottom:0}
+  .report .picon{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;font-weight:800;color:#fff;font-size:14px}
+  .report .pdone{background:var(--ok)} .report .ppart{background:var(--warn)} .report .ptodo{background:var(--line-2)}
+  .report .pl{font-weight:700;color:var(--ink);font-size:14px}
+  .report .pd{font-size:12.5px;color:var(--muted)}
+  .report .pv{margin-left:auto;font-weight:800;color:var(--brand-d);font-variant-numeric:tabular-nums}
+
+  /* references + footer */
+  footer{max-width:var(--maxw);margin:0 auto;padding:26px 20px 60px;color:var(--muted);font-size:12.5px}
+  .refs ol{margin:6px 0 0;padding-left:20px}
+  .refs li{margin-bottom:7px;font-size:13px;color:var(--ink-2)}
+  .disc{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:8px}
+  .disc h4{font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--brand-d);margin:0 0 6px}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.05s !important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brandmark">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.6" opacity=".55"/>
+          <circle cx="12" cy="12" r="5.4" fill="rgba(255,255,255,.22)" stroke="#fff" stroke-width="1.4"/>
+          <circle cx="12" cy="12" r="1.9" fill="#ffd36b"/>
+          <path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="t1">Peripheral Lung Tumor Ablation</div>
+        <div class="t2">IP &amp; Thoracic-Oncology Fellowship · Interactive Module</div>
+      </div>
+    </div>
+    <nav class="pills" id="nav" aria-label="Section navigation">
+      <a href="#overview" class="active">Overview</a>
+      <a href="#physics">Physics</a>
+      <a href="#simulator">Zone Simulator</a>
+      <a href="#guidance">Image Guidance</a>
+      <a href="#selection">Selection</a>
+      <a href="#safety">Safety</a>
+      <a href="#quiz">Self-Assessment</a>
+      <a href="#refs">References</a>
+    </nav>
+  </div>
+  <div class="notebar">
+    <div class="ni">
+      <span class="dot" aria-hidden="true"></span>
+      <span><b>About this module — educational use only.</b> Supervised graduate-medical-education for licensed fellows. Schematic teaching simulations, not dosimetry. <b>Percutaneous CT-guided</b> RFA/MWA/cryoablation are established in selected patients; <b>bronchoscopic / transbronchial</b> thermal ablation is <b>emerging / largely investigational</b> and is labeled as such in-module.</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== HERO ===================== -->
+  <div class="hero">
+    <div class="eyebrow">Interventional Pulmonology · Image-Guided Tumor Ablation</div>
+    <h1>Energy, Ice &amp; Margin: Ablation of Peripheral Lung Tumors</h1>
+    <p>A hands-on primer on the four ablation platforms used for small, peripheral lung tumors — <strong style="color:#fff">radiofrequency</strong>, <strong style="color:#fff">microwave</strong>, <strong style="color:#fff">cryoablation</strong>, and non-thermal <strong style="color:#fff">pulsed electric field</strong> (PEF). Manipulate the energy–tissue physics, grow an ablation zone against a 5&nbsp;mm margin, watch a vessel steal a thermal zone but not a non-thermal one, then choose the right modality and route for the lesion in front of you.</p>
+    <div class="meta">
+      <span class="chip">Energy–tissue physics</span>
+      <span class="chip">Ablation-zone simulator</span>
+      <span class="chip">Heat-sink &amp; the 5&nbsp;mm margin</span>
+      <span class="chip">Tool-in-lesion confirmation</span>
+      <span class="chip">Modality &amp; route selection</span>
+    </div>
+  </div>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section id="overview">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">1</span>Overview</span></div>
+      <h2 class="sec-title">Why ablate a peripheral nodule — and when</h2>
+      <p class="lead">Image-guided thermal and cryo ablation destroy a small tumor <em>in situ</em> with a needle-shaped applicator rather than a scalpel. For the right patient they preserve lung function and can be repeated. The whole game is <strong>covering the tumor plus a margin</strong> with a lethal dose of energy while sparing what sits next to it.</p>
+
+      <div class="grid-3" style="margin-top:18px">
+        <div class="pearl ok" style="margin:0"><div class="lab">Who it is for</div><p>Medically <strong>inoperable</strong> early-stage NSCLC, selected <strong>oligometastatic</strong> disease, or patients declining resection — decided in a multidisciplinary tumor board.</p></div>
+        <div class="pearl" style="margin:0"><div class="lab">The unifying goal</div><p>A confirmed <strong>ablative margin ≥ 5&nbsp;mm</strong> in every direction. Local control tracks with margin, and margin tracks with lesion size, geometry, and nearby heat-sinks.</p></div>
+        <div class="pearl warn" style="margin:0"><div class="lab">The catch</div><p>Adjacent <strong>vessels and airways</strong> distort the zone, larger tumors outgrow single-applicator zones, and each modality fails in a different, predictable way.</p></div>
+      </div>
+
+      <div class="pearl invest" style="margin-top:16px">
+        <div class="lab">Evidence maturity — be honest on-screen</div>
+        <p><span class="tagpill tag-est">Established</span> <strong>Percutaneous CT-guided</strong> RFA, MWA, and cryoablation of selected lung tumors are guideline-reflected, routine interventional care. &nbsp; <span class="tagpill tag-inv">Investigational</span> <strong>Bronchoscopic / transbronchial</strong> delivery of any modality — and <strong>PEF (pulsed electric field) for lung by any route</strong> — is <strong>emerging</strong>: small, mostly safety/feasibility cohorts, not standard of care. This module flags the route and PEF wherever it matters and never implies routine adoption that does not exist.</p>
+      </div>
+
+      <div class="grid-2" style="margin-top:16px">
+        <div class="pearl" style="margin:0"><div class="lab">Endoscopic vs percutaneous — the first decision</div><p><strong>Percutaneous</strong> CT-guided ablation is the more widely used, better-evidenced route, but crossing the pleura drives <strong>pneumothorax (~30–40%, about 13% needing a chest tube)</strong>, effusion, and bleeding. A <strong>transbronchial</strong> approach reaches the lesion through the airways without intentionally crossing the pleura — aiming to avoid that burden — and can potentially <strong>diagnose, stage, and treat in one session</strong> and overlap zones for multiple nodules. It remains investigational.</p></div>
+        <div class="pearl" style="margin:0"><div class="lab">Ablation as an in-situ vaccine</div><p>Dying tumor cells release neoantigens that <em>can</em> prime a systemic anti-tumor (<strong>abscopal</strong>) response and may synergize with checkpoint inhibitors. <strong>PEF</strong> is notable — being non-thermal it releases <em>intact</em> antigen (heat denatures it) and has been linked to a marked rise in intratumoral <strong>tertiary lymphoid structures</strong> (seen in 29 of 30 treated <strong>patients</strong> in an early-stage, resected cohort). Promising but <strong>investigational</strong>.</p></div>
+      </div>
+
+      <div class="subhead">What you should be able to do after this module</div>
+      <div class="objectives">
+        <div class="o"><div class="n">01</div><p>Explain the tissue-killing mechanism of RFA, MWA, cryoablation, and non-thermal PEF — and what defines a “lethal” dose, isotherm, or field.</p></div>
+        <div class="o"><div class="n">02</div><p>Predict ablation-zone geometry per modality and why a 5&nbsp;mm margin is the target for local control.</p></div>
+        <div class="o"><div class="n">03</div><p>Recognize how an adjacent vessel or airway deforms a thermal zone (heat-sink) — and why a cryo ice ball or a non-thermal PEF zone behaves differently.</p></div>
+        <div class="o"><div class="n">04</div><p>Confirm probe position — tool-in-lesion — under cone-beam CT / augmented fluoroscopy or percutaneous CT.</p></div>
+        <div class="o"><div class="n">05</div><p>Select modality and route (percutaneous vs transbronchial) for a given nodule and patient.</p></div>
+        <div class="o"><div class="n">06</div><p>Recognize and initiate first-line management of the major complications.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PHYSICS ===================== -->
+  <section id="physics">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">2</span>Physics</span></div>
+      <h2 class="sec-title">Energy–tissue physics, per modality</h2>
+      <p class="lead">Four ways to kill a nodule: shake ions until tissue heats (RFA), flip water molecules until they boil (MWA), freeze and thaw until cells rupture (cryo) — or, non-thermally, pulse an electric field until membranes fail (PEF). Three are <strong>thermal</strong> and one is <strong>non-thermal</strong>; each mechanism sets the zone’s size, shape, speed, and its characteristic failure.</p>
+
+      <div class="mech" id="mechCards"><!-- rendered by JS with animated schematics --></div>
+
+      <div class="subhead">Thermal dose &amp; the anatomy of a thermal zone</div>
+      <p style="font-size:14.5px;max-width:74ch">A thermal ablation is a <strong>dose of temperature × time</strong>. Below ~42&nbsp;°C little happens; 42–60&nbsp;°C injures tissue only with sustained exposure; above <strong>~60&nbsp;°C</strong> coagulative necrosis is near-instant; ~100&nbsp;°C vaporizes and chars — and for RFA, driving the tip too hot paradoxically raises impedance and <em>shrinks</em> the zone (roll-off). That gradient stacks into three concentric bands:</p>
+      <div class="grid-3" style="margin-top:6px">
+        <div class="pearl danger" style="margin:0"><div class="lab">Central / char zone</div><p>Nearest the applicator — desiccated, sometimes carbonized. Highest temperatures and complete kill, but the source of char and the impedance rise that limits RFA.</p></div>
+        <div class="pearl" style="margin:0"><div class="lab">Coagulation zone (~60–100 °C)</div><p>The true <strong>kill zone</strong> of coagulative necrosis. The teaching target is to enclose the tumor <em>plus a 5&nbsp;mm margin</em> inside this band.</p></div>
+        <div class="pearl warn" style="margin:0"><div class="lab">Transitional / congestion rim (~42–60 °C)</div><p>Partial, inconsistent kill — it cannot be counted as margin — though this sub-lethal heat may <strong>sensitize tumor to chemo/radiation</strong>.</p></div>
+      </div>
+      <div class="pearl invest" style="margin-top:14px"><div class="lab">Thermal vs non-thermal</div><p><strong>RFA, MWA, and cryo are thermal</strong> — they drive tissue to a lethal temperature, so they are subject to heat-sink (and, for RFA, impedance limits). <strong>PEF is non-thermal</strong>: it kills by electric-field intensity crossing a threshold, so it has no hot core, no char, no roll-off, and no heat-sink — instead of a wide transitional rim it makes a <strong>sharp, threshold-defined edge</strong> that spares the matrix, vessels, and airways within it.</p></div>
+
+      <div class="pearl" style="margin-top:14px">
+        <div class="lab">The through-line</div>
+        <p><strong>“Lethal” is not the visible edge.</strong> For heat, cells die reliably above ~60&nbsp;°C — a thin sub-lethal rim (50–60&nbsp;°C) surrounds the kill zone. For cryo, the ice ball’s visible edge is <strong>0&nbsp;°C</strong>, but reliable cell death needs the <strong>−20 to −40&nbsp;°C</strong> isotherm, several millimetres <em>inside</em> the ice edge. For PEF the edge is sharp (a field threshold), but low-density <strong>aerated lung can disrupt delivery</strong>, and imaged/predicted zones can overstate the true kill. Whatever the modality: push the imaged zone <em>beyond</em> the tumor and <strong>confirm the margin rather than assume it</strong>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SIMULATOR ===================== -->
+  <section id="simulator">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">3</span>Zone Simulator</span></div>
+      <h2 class="sec-title">Ablation-zone simulator</h2>
+      <p class="lead">A schematic axial cross-section through a peripheral nodule. Pick a <strong>modality</strong>, set the <strong>energy</strong> and <strong>time</strong>, size the <strong>nodule</strong>, then drop in an adjacent <strong>vessel</strong> or <strong>airway</strong> and <strong>ablate</strong>. Watch where the lethal zone actually reaches and whether it banks a 5&nbsp;mm margin. Ranges are conceptual teaching values — physics intuition, not a dose recipe.</p>
+
+      <div class="sim" style="margin-top:18px">
+        <div>
+          <div class="subhead" style="margin-top:0">Modality</div>
+          <div class="modpick" id="modPick" role="group" aria-label="Ablation modality">
+            <button class="mod-btn active" data-mod="rfa"><span class="mb-sw"></span><span class="mb-n">RFA</span><span class="mb-s">radiofrequency</span></button>
+            <button class="mod-btn" data-mod="mwa"><span class="mb-sw"></span><span class="mb-n">MWA</span><span class="mb-s">microwave</span></button>
+            <button class="mod-btn" data-mod="cryo"><span class="mb-sw"></span><span class="mb-n">Cryo</span><span class="mb-s">cryoablation</span></button>
+            <button class="mod-btn" data-mod="pef"><span class="mb-sw"></span><span class="mb-n">PEF</span><span class="mb-s">non-thermal</span></button>
+          </div>
+
+          <div class="ctrl">
+            <div class="row"><label for="noduleR">Nodule diameter</label><span class="val" id="noduleRVal">2.0 cm</span></div>
+            <input type="range" id="noduleR" min="1.0" max="3.5" step="0.1" value="2.0" />
+            <div class="hint">Local control falls as tumors outgrow a single applicator’s zone.</div>
+          </div>
+          <div class="ctrl">
+            <div class="row"><label for="power" id="powerLabel">Generator power</label><span class="val" id="powerVal">120 W</span></div>
+            <input type="range" id="power" min="20" max="200" step="10" value="120" />
+            <div class="hint" id="powerHint">More power → a larger zone, but for RFA too much too fast chars tissue and rolls off.</div>
+          </div>
+          <div class="ctrl">
+            <div class="row"><label for="atime" id="timeLabel">Ablation time</label><span class="val" id="timeVal">8 min</span></div>
+            <input type="range" id="atime" min="2" max="12" step="1" value="8" />
+            <div class="hint" id="timeHint">Zone growth is fast early, then plateaus toward an asymptote.</div>
+          </div>
+
+          <div class="subhead">Adjacent structures</div>
+          <div class="toggles">
+            <button class="tog" id="vesselTog" aria-pressed="false"><span class="box">✓</span>Vessel (patent, flowing)</button>
+            <button class="tog" id="airwayTog" aria-pressed="false"><span class="box">✓</span>Airway (bronchus)</button>
+          </div>
+
+          <div class="simbtns">
+            <button class="btn primary" id="ablateBtn">▶ Ablate</button>
+            <button class="btn" id="resetSim">Reset</button>
+          </div>
+
+          <div class="readouts" id="simReadouts">
+            <div class="ro"><div class="k" id="k1">Tip temp</div><div class="v" id="v1">37<span class="u"> °C</span></div></div>
+            <div class="ro"><div class="k" id="k2">Impedance</div><div class="v" id="v2">48<span class="u"> Ω</span></div></div>
+            <div class="ro"><div class="k" id="k3">Zone Ø</div><div class="v" id="v3">0.0<span class="u"> cm</span></div></div>
+            <div class="ro"><div class="k" id="k4">Min margin</div><div class="v" id="v4">—</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="canvas-card">
+            <div class="marginbadge mb-idle" id="marginBadge" role="status" aria-live="polite"><span class="mi">◐</span><span id="marginTxt">Set up and ablate</span></div>
+            <canvas class="stage" id="zoneCv" width="620" height="440" aria-label="Ablation-zone cross-section: nodule, 5 mm margin ring, ablation zone, and any adjacent vessel or airway"></canvas>
+          </div>
+          <div class="simmsg" id="simMsg" aria-live="polite">Choose a modality and press <b>Ablate</b>. The dashed ring is the tumor + 5&nbsp;mm target margin; the zone must reach it in every direction.</div>
+          <div class="zlegend" id="zlegend"></div>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:20px">
+        <div class="pearl" style="margin:0"><div class="lab">Heat-sink — thermal only</div><p>Flowing blood in a vessel ≥3&nbsp;mm carries heat away, scalloping a <em>thermal</em> zone toward the vessel and under-treating the margin. <strong>RFA is most vulnerable; MWA less so; non-thermal PEF is immune.</strong> Toggle the vessel and re-ablate with RFA vs PEF to see the bite appear and disappear.</p></div>
+        <div class="pearl" style="margin:0"><div class="lab">Architecture preservation</div><p>Collagenous walls are comparatively spared by <strong>cryo</strong>, and even more by <strong>PEF</strong> (non-thermal — matrix, vessels, and airways preserved; watch the wall run intact through the zone). Cryo’s <strong>lethal isotherm still lags the visible ice edge</strong>, and a flowing vessel limits ice.</p></div>
+        <div class="pearl warn" style="margin:0"><div class="lab">RFA roll-off</div><p>Push RFA power high and the zone can end up <em>smaller</em>: charred, desiccated tissue spikes impedance, current stops, and growth halts. Watch the impedance readout climb and the badge flip to <strong>ROLL-OFF</strong>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GUIDANCE ===================== -->
+  <section id="guidance">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">4</span>Image Guidance</span></div>
+      <h2 class="sec-title">Tool-in-lesion confirmation</h2>
+      <p class="lead">A lethal margin is only as good as your targeting. Before energy is delivered, the applicator tip must be confirmed <strong>within</strong> the lesion and centered enough to project the margin in every direction. Drag the tip (or use the arrows / keyboard) to seat it, then confirm.</p>
+
+      <div class="guide-wrap" style="margin-top:18px">
+        <div>
+          <div class="canvas-card">
+            <div class="marginbadge mb-idle" id="guideBadge" role="status" aria-live="polite"><span class="mi">◎</span><span id="guideBadgeTxt">Seat the tip</span></div>
+            <canvas class="stage" id="guideCv" width="620" height="420" tabindex="0" aria-label="Cone-beam CT view: drag the applicator tip into the nodule to confirm tool-in-lesion" aria-describedby="guideMsg"></canvas>
+          </div>
+          <div class="dpad" aria-hidden="false" role="group" aria-label="Nudge applicator tip">
+            <button class="sp"></button><button data-nudge="up" aria-label="Nudge up">▲</button><button class="sp"></button>
+            <button data-nudge="left" aria-label="Nudge left">◀</button><button data-nudge="center" aria-label="Recenter tip" title="Recenter">◎</button><button data-nudge="right" aria-label="Nudge right">▶</button>
+            <button class="sp"></button><button data-nudge="down" aria-label="Nudge down">▼</button><button class="sp"></button>
+          </div>
+          <div class="simmsg" id="guideMsg" aria-live="polite" style="margin-top:12px">Drag the tip onto the nodule. The faint ring previews the ablation the tip would deliver from here.</div>
+        </div>
+        <div>
+          <div class="subhead" style="margin-top:0">Confirmation checklist</div>
+          <ul class="checklist" id="guideChecklist">
+            <li id="chkTip"><span class="ck">1</span><span class="ci"><b>Tool-in-lesion</b><p>Tip sits inside the nodule, not tangential to it.</p></span></li>
+            <li id="chkCenter"><span class="ck">2</span><span class="ci"><b>Centered</b><p>Tip near the nodule core so energy projects symmetrically.</p></span></li>
+            <li id="chkMargin"><span class="ck">3</span><span class="ci"><b>Margin projects</b><p>Predicted zone covers the tumor + 5&nbsp;mm from this position.</p></span></li>
+          </ul>
+          <button class="btn primary" id="guideConfirm" style="margin-top:14px;width:100%">Confirm position</button>
+          <div class="pearl" style="margin-top:16px"><div class="lab">Workflow, consistent with this platform</div><p>This mirrors navigational bronchoscopy plus <strong>cone-beam CT / augmented fluoroscopy</strong> (see the FluoroView / CBCT module) to prove <em>tool-in-lesion</em> before ablating. The alternative pathway is <strong>percutaneous CT guidance</strong>, where the applicator is advanced under CT and confirmed on the same axial plane.</p></div>
+          <div class="pearl invest" style="margin-top:12px"><div class="lab">Route note</div><p>Transbronchial energy delivery to peripheral lesions is <strong>investigational</strong>; the confirmation logic (center, then project the margin) is identical regardless of route.</p></div>
+          <div class="pearl" style="margin-top:12px"><div class="lab">Getting there &amp; reaching more</div><p>Placement drives success: <strong>electromagnetic navigation</strong> or <strong>shape-sensing robotic bronchoscopy</strong> plus intraprocedural <strong>cone-beam CT / radial EBUS</strong> confirms tool-in-lesion, adds reach and stability, and allows overlapping ablations in one session. When intratumoral placement isn’t feasible, a <strong>bracketing</strong> technique seats the applicator along opposing tumor margins for overlapping zones.</p></div>
+          <div class="pearl warn" style="margin-top:12px"><div class="lab">Don’t trust the predicted zone in aerated lung</div><p>Zone-prediction charts are largely derived from ex-vivo / solid-organ heating and <strong>overestimate</strong> real zones in air-filled lung — <em>confirm</em> coverage, don’t assume it. On follow-up, the surrounding ground-glass halo also overstates true necrosis, and residual tumor tends to sit <strong>outside</strong> the treated zone.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SELECTION ===================== -->
+  <section id="selection">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">5</span>Selection</span></div>
+      <h2 class="sec-title">Modality &amp; approach — case decisions</h2>
+      <p class="lead">Pick the best <strong>modality</strong> and <strong>route</strong> for each lesion. You get teaching feedback either way — the reasoning matters more than the letter.</p>
+      <div class="pearl" style="margin-top:12px"><div class="lab">What drives the choice</div><p>Selection is not standardized — it is a case-by-case, multidisciplinary tumor-board decision. Anchor on: <strong>size &amp; location</strong> (RFA is most effective for lesions ≤3&nbsp;cm; bronchoscopic MWA feasibility is largely ≤2&nbsp;cm; central/peri-hilar lesions raise margin and adjacent-structure risk; ground-glass/lepidic tumors defeat predictable spherical zones), <strong>heat-sink</strong> (RFA most vulnerable, MWA less, PEF immune), and <strong>architecture preservation</strong> (cryo and especially non-thermal PEF spare bronchovascular structures; PEF also spares matrix and may add an immune effect — while remaining investigational).</p></div>
+
+      <div class="scorebar" style="margin-top:14px">
+        <span class="sc" id="scoreNum">0 / 0</span>
+        <span class="sl" id="scoreLbl">Answer the cases below — choose the single best option.</span>
+        <button class="btn" id="resetCases" style="margin-left:auto">Reset</button>
+      </div>
+      <div id="caseList" style="margin-top:16px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== SAFETY ===================== -->
+  <section id="safety">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">6</span>Safety</span></div>
+      <h2 class="sec-title">Complications — recognize &amp; act</h2>
+      <p class="lead">Every ablation carries a predictable set of complications. Recognize the pattern early; the first move is usually simple. These are concise teaching cards, not a substitute for institutional protocols.</p>
+      <div class="rgrid" id="compGrid" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== SELF-ASSESSMENT ===================== -->
+  <section id="quiz">
+    <div class="card">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">7</span>Self-Assessment</span></div>
+      <h2 class="sec-title">Knowledge check</h2>
+      <p class="lead">Fourteen questions across the four modalities, margin logic, selection, immune effects, and safety. Some are select-all — read the prompt. Each answer carries a teaching explanation and a pointer to the governing evidence.</p>
+
+      <div class="scorebar" style="margin-top:14px">
+        <span class="sc" id="quizScore">0 / 0</span>
+        <span class="sl" id="quizLbl">Answer the questions below.</span>
+        <button class="btn" id="resetQuiz" style="margin-left:auto">Reset</button>
+      </div>
+      <div id="quizList" style="margin-top:16px"></div>
+
+      <div class="report" id="reportCard">
+        <div class="rt"><h3>Module report card</h3><span class="grade" id="reportGrade">—</span></div>
+        <div class="rrows" id="reportRows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REFERENCES ===================== -->
+  <section id="refs">
+    <div class="card refs">
+      <div class="sec-head"><span class="sec-kicker"><span class="num">8</span>References</span></div>
+      <h2 class="sec-title">Sources &amp; further reading</h2>
+      <p class="lead">Guidance is paraphrased in original wording; verify against the current version of each source before clinical use. Device behavior reflects published operator-manual ranges, kept conceptual for teaching.</p>
+      <ol id="refList"></ol>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="disc">
+    <h4>Educational use &amp; disclaimer</h4>
+    <p style="margin:0 0 10px">Graduate medical education for licensed physicians in an ACGME-accredited interventional pulmonology / thoracic-oncology fellowship. Temperatures, isotherms, powers, times, and zone sizes are typical published ranges for physics intuition — actual parameters are <strong>device-, lesion-, and institution-specific</strong>. Simulations are schematic teaching aids, not dosimetric or thermal-diffusion models. Percutaneous CT-guided RFA, MWA, and cryoablation of selected lung tumors are established therapies; <strong>bronchoscopic/transbronchial thermal ablation is emerging and largely investigational</strong>. Device names are representative and used descriptively; this module is not affiliated with or endorsed by any manufacturer, and names should be verified against current labeling. Nothing here replaces supervised hands-on training, multidisciplinary decision-making, institutional protocols, or manufacturer instructions for use.</p>
+  </div>
+  <p style="text-align:center;margin-top:16px">Interventional Pulmonology Education Project · Peripheral Lung Tumor Ablation · interactive companion to the central-airway thermal-ablation module.</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const $=(s,r)=>(r||document).querySelector(s);
+  const $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const REDUCED = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || false;
+
+  /* progress state, aggregated into the report card */
+  const progress = { physics:false, sim:false, guide:false, cases:{done:0,right:0,total:0}, quiz:{done:0,right:0,total:0} };
+
+  /* ============ NAV active highlight ============ */
+  (function(){
+    const links=$$('#nav a');
+    const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+    const secs=$$('main section');
+    const obs=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          links.forEach(l=>l.classList.remove('active'));
+          const a=map[e.target.id]; if(a){a.classList.add('active');a.scrollIntoView({block:'nearest',inline:'nearest'});}
+        }
+      });
+    },{rootMargin:'-45% 0px -50% 0px',threshold:0});
+    secs.forEach(s=>obs.observe(s));
+  })();
+
+  /* ============ SHARED MODALITY CONFIG ============ */
+  const MOD = {
+    rfa:{
+      key:'rfa', name:'RFA', full:'Radiofrequency ablation', color:'#d6453d', colorD:'#a3231c',
+      mech:'~375–500 kHz alternating current', tissue:'resistive (Joule) heating',
+      powerLabel:'Generator power', pUnit:'W', pMin:20, pMax:200, pStep:10, pDef:120,
+      powerHint:'More power → a larger zone, but for RFA too much too fast chars tissue and rolls off.',
+      timeLabel:'Ablation time', tUnit:'min', tMin:2, tMax:12, tStep:1, tDef:8,
+      timeHint:'Growth is fast early, then plateaus — until impedance rise (roll-off) halts it.',
+      rMin:1.45, rMax:2.00, k:0.52, lethalFrac:0.86, elong:1.20,
+      hsVessel:0.52, hsAirway:0.30, rollOff:true,
+      readouts:['Tip temp','Impedance','Zone Ø','Min margin'],
+      legend:[['#f7bd7d','coagulation rim (50–60 °C)'],['#b3231a','lethal zone (>60 °C)'],['#241d19','char / desiccation']]
+    },
+    mwa:{
+      key:'mwa', name:'MWA', full:'Microwave ablation', color:'#e07b28', colorD:'#b85f14',
+      mech:'915 MHz / 2.45 GHz field', tissue:'dielectric (water-dipole) heating',
+      powerLabel:'Generator power', pUnit:'W', pMin:20, pMax:100, pStep:5, pDef:65,
+      powerHint:'MWA drives a larger, rounder, hotter zone and resists charring and impedance limits.',
+      timeLabel:'Ablation time', tUnit:'min', tMin:2, tMax:12, tStep:1, tDef:8,
+      timeHint:'Fast active heating over a volume — bigger and more uniform than RFA at similar time.',
+      rMin:1.50, rMax:2.35, k:0.62, lethalFrac:0.90, elong:1.08,
+      hsVessel:0.30, hsAirway:0.18, rollOff:false,
+      readouts:['Peak temp','Zone Ø','Roundness','Min margin'],
+      legend:[['#f7bd7d','transition rim'],['#b3231a','lethal zone (>60 °C)'],['#e07b28','MWA field core']]
+    },
+    cryo:{
+      key:'cryo', name:'Cryo', full:'Cryoablation', color:'#1f9bd6', colorD:'#136a97',
+      mech:'Joule–Thomson gas expansion', tissue:'ice-crystal + apoptotic cell death',
+      powerLabel:'Freeze cycles', pUnit:'×', pMin:1, pMax:3, pStep:1, pDef:2,
+      powerHint:'Freeze–thaw–refreeze. More cycles → a larger, more lethal ice ball.',
+      timeLabel:'Freeze time (per plan)', tUnit:'min', tMin:4, tMax:15, tStep:1, tDef:10,
+      timeHint:'Ice grows with time; the −20 to −40 °C lethal front lags the 0 °C edge by several mm.',
+      iceMin:1.15, iceMax:2.15, kIce:0.34, lethalOffset:0.55, elong:1.05,
+      hsVessel:0.34, hsAirway:0.12, rollOff:false,
+      readouts:['Ice edge Ø','Lethal Ø','Core temp','Min margin'],
+      legend:[['#d6ecff','0 °C ice edge'],['#7cc2ee','−20 °C isotherm'],['#2f7fd0','lethal −40 °C zone']]
+    },
+    pef:{
+      key:'pef', name:'PEF', full:'Pulsed electric field ablation', color:'#8a5cc4', colorD:'#5f3a9e',
+      mech:'high-voltage electroporating pulses', tissue:'non-thermal membrane permeabilization',
+      powerLabel:'Applications', pUnit:'', pMin:1, pMax:4, pStep:1, pDef:2,
+      powerHint:'PEF fires a high field (≈300 kV/cm nanosecond pulses — a device spec; delivered effect also depends on pulse amplitude, duration, frequency, and tissue). You enlarge the territory by adding overlapping needle applications, not by turning up power.',
+      timeLabel:'Pulse trains', tUnit:'', tMin:1, tMax:8, tStep:1, tDef:4,
+      timeHint:'Non-thermal fields establish fast; the depleted zone fills in over the delivered pulse trains, then plateaus.',
+      rMin:1.55, rMax:2.30, k:0.70, lethalFrac:0.94, elong:1.02,
+      hsVessel:0, hsAirway:0, rollOff:false, nonThermal:true,
+      readouts:['Peak field','Applications','Depleted-zone Ø','Min margin'],
+      legend:[['#c9b3e6','sub-threshold field (spared rim)'],['#8a5cc4','lethal-field front'],['#4a2d78','depleted-zone core']]
+    }
+  };
+
+  /* ============ PHYSICS PRIMER — animated schematic cards ============ */
+  (function(){
+    const host=$('#mechCards');
+    const anim = k => REDUCED ? '' : k;
+    const cards=[
+      { key:'rfa', name:'Radiofrequency (RFA)', sub:'resistive / Joule heating',
+        svg:`<svg viewBox="0 0 220 130" role="img" aria-label="Schematic: alternating current agitates ions around an electrode, heating tissue">
+          <rect x="0" y="0" width="220" height="130" fill="#0f1f2b"/>
+          <rect x="0" y="70" width="220" height="60" fill="#3a2a20" opacity=".5"/>
+          <rect x="104" y="8" width="12" height="72" rx="3" fill="#8fa1ad"/>
+          <rect x="106" y="8" width="8" height="72" rx="2" fill="#c2cfd7"/>
+          <circle cx="110" cy="82" r="4" fill="#ffd36b"/>
+          ${anim(`<g>
+            <circle cx="110" cy="82" r="10" fill="none" stroke="#d6453d" stroke-width="2" opacity=".8"><animate attributeName="r" values="10;44" dur="1.9s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="1.9s" repeatCount="indefinite"/></circle>
+            <circle cx="110" cy="82" r="10" fill="none" stroke="#ef6a2b" stroke-width="2" opacity=".7"><animate attributeName="r" values="10;44" dur="1.9s" begin="0.9s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;0" dur="1.9s" begin="0.9s" repeatCount="indefinite"/></circle>
+          </g>`)}
+          <g fill="#ffb15c">
+            ${[ [86,96],[132,92],[96,110],[124,112],[78,80],[140,104] ].map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.4">${anim(`<animate attributeName="cx" values="${p[0]};${p[0]+(i%2?5:-5)};${p[0]}" dur="0.5s" repeatCount="indefinite"/><animate attributeName="cy" values="${p[1]};${p[1]+(i%2?-4:4)};${p[1]}" dur="0.45s" repeatCount="indefinite"/>`)}</circle>`).join('')}
+          </g>
+          <text x="8" y="20" fill="#9fb6c0" font-size="10" font-weight="700">electrode</text>
+          <text x="8" y="124" fill="#c99" font-size="10" font-weight="700">ground pads complete the circuit</text>
+        </svg>`,
+        body:`<p>High-frequency AC drives ions back and forth; their frictional agitation heats the tissue itself — the electrode is not “hot.” <strong>Coagulative necrosis at ~60–100&nbsp;°C.</strong></p><p>Above ~100&nbsp;°C tissue chars and desiccates → <strong>impedance rises → roll-off</strong>. Internally-cooled (monopolar) tips and multi-tined electrodes fight this.</p>`,
+        conseq:`<b>Clinical consequence</b> Smaller, char-limited zones; the most <strong>heat-sink-sensitive</strong> modality near flowing vessels.` },
+      { key:'mwa', name:'Microwave (MWA)', sub:'dielectric / water-dipole heating',
+        svg:`<svg viewBox="0 0 220 130" role="img" aria-label="Schematic: microwave field oscillates water dipoles, heating a large volume">
+          <rect x="0" y="0" width="220" height="130" fill="#0f1f2b"/>
+          <rect x="104" y="6" width="12" height="66" rx="3" fill="#9aa7ad"/><rect x="106" y="6" width="8" height="66" rx="2" fill="#d0d8dc"/>
+          <circle cx="110" cy="74" r="3.5" fill="#ffd36b"/>
+          ${anim(`<g fill="none" stroke="#e07b28" stroke-width="2">
+            <ellipse cx="110" cy="80" rx="14" ry="12" opacity=".9"><animate attributeName="rx" values="14;62" dur="1.6s" repeatCount="indefinite"/><animate attributeName="ry" values="12;54" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.6s" repeatCount="indefinite"/></ellipse>
+            <ellipse cx="110" cy="80" rx="14" ry="12" opacity=".8"><animate attributeName="rx" values="14;62" dur="1.6s" begin="0.8s" repeatCount="indefinite"/><animate attributeName="ry" values="12;54" dur="1.6s" begin="0.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="1.6s" begin="0.8s" repeatCount="indefinite"/></ellipse>
+          </g>`)}
+          <g stroke="#7fd4ff" stroke-width="2" stroke-linecap="round">
+            ${[[84,92],[136,88],[92,108],[128,110],[110,98]].map((p,i)=>`<line x1="${p[0]-5}" y1="${p[1]}" x2="${p[0]+5}" y2="${p[1]}">${anim(`<animateTransform attributeName="transform" type="rotate" from="0 ${p[0]} ${p[1]}" to="360 ${p[0]} ${p[1]}" dur="${0.5+i*0.08}s" repeatCount="indefinite"/>`)}</line>`).join('')}
+          </g>
+          <text x="8" y="18" fill="#9fb6c0" font-size="10" font-weight="700">antenna</text>
+          <text x="8" y="124" fill="#7fd4ff" font-size="10" font-weight="700">water dipoles flip — no ground pad needed</text>
+        </svg>`,
+        body:`<p>An oscillating EM field flips polar water molecules billions of times per second — <strong>dielectric heating over a volume</strong>, not conduction through the tissue.</p><p>Faster, hotter (often &gt;100&nbsp;°C), and a <strong>larger, rounder, more uniform zone</strong>; comparatively resistant to charring and impedance limits.</p>`,
+        conseq:`<b>Clinical consequence</b> Bigger predictable zones and <strong>less heat-sink</strong> than RFA — favored for larger or peri-vascular lesions (large vessels still limit it).` },
+      { key:'cryo', name:'Cryoablation', sub:'freeze–thaw, ice-ball formation',
+        svg:`<svg viewBox="0 0 220 130" role="img" aria-label="Schematic: cryoprobe forms an ice ball with an inner lethal isotherm">
+          <rect x="0" y="0" width="220" height="130" fill="#0f1f2b"/>
+          <rect x="104" y="4" width="12" height="60" rx="3" fill="#9fb4c2"/><rect x="106" y="4" width="8" height="60" rx="2" fill="#d7e6f0"/>
+          <ellipse cx="110" cy="82" rx="52" ry="42" fill="#d6ecff" opacity=".18"/>
+          <ellipse cx="110" cy="82" rx="52" ry="42" fill="none" stroke="#d6ecff" stroke-width="2" opacity=".7"/>
+          <ellipse cx="110" cy="82" rx="38" ry="30" fill="#7cc2ee" opacity=".22" stroke="#7cc2ee" stroke-width="1.5"/>
+          <ellipse cx="110" cy="82" rx="22" ry="17" fill="#2f7fd0" opacity=".5"/>
+          <circle cx="110" cy="66" r="3.5" fill="#bfe6ff"/>
+          ${anim(`<g fill="#eaf6ff"><circle cx="110" cy="82" r="1.6"><animate attributeName="r" values="0;2.2;0" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="92" cy="74" r="1.3"><animate attributeName="opacity" values="1;.2;1" dur="1.4s" repeatCount="indefinite"/></circle>
+            <circle cx="130" cy="90" r="1.3"><animate attributeName="opacity" values=".2;1;.2" dur="1.6s" repeatCount="indefinite"/></circle></g>`)}
+          <text x="8" y="16" fill="#9fb6c0" font-size="10" font-weight="700">cryoprobe</text>
+          <text x="150" y="52" fill="#d6ecff" font-size="9" font-weight="700">0 °C edge</text>
+          <text x="120" y="86" fill="#eaf6ff" font-size="9" font-weight="700">−40 °C</text>
+        </svg>`,
+        body:`<p>Rapid Joule–Thomson gas expansion cools the tip below −140&nbsp;°C, growing an <strong>ice ball</strong>. Freeze–thaw cycles cause direct ice-crystal injury plus delayed microvascular thrombosis and apoptosis.</p><p>Collagenous walls are comparatively spared — relatively <strong>architecture-preserving</strong> — and the ice ball is <strong>visible on CT</strong>.</p>`,
+        conseq:`<b>Clinical consequence</b> Good near central airways/vessels, but the <strong>lethal −20 to −40&nbsp;°C isotherm sits inside the 0&nbsp;°C edge</strong> — grow ice well past the tumor.` },
+      { key:'pef', name:'Pulsed electric field (PEF)', sub:'non-thermal electroporation',
+        svg:`<svg viewBox="0 0 220 130" role="img" aria-label="Schematic: a monopolar needle delivers high-voltage pulses that open pores in tumor-cell membranes">
+          <rect x="0" y="0" width="220" height="130" fill="#0f1f2b"/>
+          <rect x="104" y="6" width="12" height="70" rx="3" fill="#9a90ad"/><rect x="106" y="6" width="8" height="70" rx="2" fill="#cabfe0"/>
+          <circle cx="110" cy="78" r="3.5" fill="#e9d8ff"/>
+          ${anim(`<g fill="none" stroke="#8a5cc4" stroke-width="2">
+            <circle cx="110" cy="80" r="12" opacity=".9"><animate attributeName="r" values="12;46" dur="1.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.4s" repeatCount="indefinite"/></circle>
+            <circle cx="110" cy="80" r="12" opacity=".8"><animate attributeName="r" values="12;46" dur="1.4s" begin="0.7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="1.4s" begin="0.7s" repeatCount="indefinite"/></circle>
+          </g>`)}
+          <path d="M110 58 l-7 12 l6 0 l-6 12" fill="none" stroke="#d8b7ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${anim(`<animate attributeName="opacity" values="1;.15;1" dur="0.35s" repeatCount="indefinite"/>`)}</path>
+          <g stroke="#c9b3e6" stroke-width="1.5" fill="none">
+            ${[[86,98],[134,94],[96,114],[126,112]].map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="6"/><circle cx="${p[0]+4}" cy="${p[1]-3}" r="1.2" fill="#0f1f2b" stroke="none">${anim(`<animate attributeName="opacity" values="0;1;0" dur="${(0.8+i*0.15).toFixed(2)}s" repeatCount="indefinite"/>`)}</circle>`).join('')}
+          </g>
+          <text x="8" y="18" fill="#b6a6cf" font-size="10" font-weight="700">monopolar needle</text>
+          <text x="8" y="124" fill="#c9b3e6" font-size="10" font-weight="700">high-voltage pulses — no heat</text>
+        </svg>`,
+        body:`<p>Short, high-voltage pulses through a single needle drive the cell-membrane potential past a <strong>lethal electric-field threshold</strong>, permanently permeabilizing tumor-cell membranes — an <strong>electroporation, non-thermal</strong> mechanism (no coagulation core, no char, no impedance roll-off).</p><p>It <strong>spares the extracellular matrix, vessels, and airway walls</strong>, is <strong>immune to heat-sink</strong>, and releases <strong>intact tumor antigen</strong> that can prime an immune response. <span class="tagpill tag-inv">Investigational</span> for lung.</p>`,
+        conseq:`<b>Clinical consequence</b> A sharp, threshold-defined margin with architecture preservation and no heat-sink — attractive near vessels/airways; energy/dose and efficacy are <strong>not yet established</strong>.` }
+    ];
+    host.innerHTML = cards.map(c=>`
+      <div class="mcard ${c.key}">
+        <div class="mtop"><span class="mdot"></span><div><div class="mname">${c.name}</div><div class="msub">${c.sub}</div></div></div>
+        <div class="manim">${c.svg}</div>
+        <div class="mbody">${c.body}</div>
+        <div class="conseq">${c.conseq}</div>
+      </div>`).join('');
+    progress.physics=true;
+  })();
+
+  /* ============ FLAGSHIP: ABLATION-ZONE SIMULATOR ============ */
+  (function(){
+    const cv=$('#zoneCv'), ctx=cv.getContext('2d');
+    const badge=$('#marginBadge'), marginTxt=$('#marginTxt'), simMsg=$('#simMsg');
+    const ANIM_SEC = REDUCED ? 0.25 : 2.8;
+    const PPCM = 40;                       // pixels per cm
+    let CX=cv.width*0.5, CY=cv.height*0.54;
+
+    const state={ mod:'rfa', nodule:2.0, power:MOD.rfa.pDef, time:MOD.rfa.tDef,
+      vessel:false, airway:false, phase:'idle', play:0, elapsed:0 };
+    let last={ margin:NaN, verdict:'idle', dir:'' };
+
+    /* nodule wobble (deterministic tumor-ish outline) */
+    const NW=[]; for(let i=0;i<48;i++){ NW.push(0.86+0.14*(0.5+0.5*Math.sin(i*1.7)*Math.cos(i*0.9))); }
+
+    /* ---- controls ---- */
+    const pwr=$('#power'), pwrVal=$('#powerVal'), pwrLabel=$('#powerLabel'), pwrHint=$('#powerHint');
+    const tm=$('#atime'), tmVal=$('#timeVal'), tmLabel=$('#timeLabel'), tmHint=$('#timeHint');
+    const nd=$('#noduleR'), ndVal=$('#noduleRVal');
+
+    function syncControlsForMod(){
+      const m=MOD[state.mod];
+      pwr.min=m.pMin; pwr.max=m.pMax; pwr.step=m.pStep;
+      state.power=clamp(state.power,m.pMin,m.pMax);
+      // snap to a sensible default when switching families
+      pwr.value=state.power;
+      pwrLabel.textContent=m.powerLabel; pwrHint.textContent=m.powerHint;
+      tm.min=m.tMin; tm.max=m.tMax; tm.step=m.tStep;
+      state.time=clamp(state.time,m.tMin,m.tMax); tm.value=state.time;
+      tmLabel.textContent=m.timeLabel; tmHint.textContent=m.timeHint;
+      updatePwrVal(); updateTmVal();
+      $$('#simReadouts .k').forEach((el,i)=>el.textContent=m.readouts[i]);
+      renderLegend();
+    }
+    function updatePwrVal(){ const m=MOD[state.mod]; pwrVal.textContent=state.power+' '+m.pUnit; }
+    function updateTmVal(){ const m=MOD[state.mod]; tmVal.textContent=state.time+' '+m.tUnit; }
+
+    function renderLegend(){
+      const m=MOD[state.mod];
+      $('#zlegend').innerHTML = m.legend.map(l=>`<span class="li"><span class="sw" style="background:${l[0]}"></span>${l[1]}</span>`).join('')
+        + `<span class="li"><span class="sw" style="background:#fff;border:1px dashed #999"></span>tumor + 5 mm margin</span>`;
+    }
+
+    $$('#modPick .mod-btn').forEach(b=>b.addEventListener('click',()=>{
+      $$('#modPick .mod-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); state.mod=b.dataset.mod;
+      // choose the family default power when switching
+      state.power=MOD[state.mod].pDef; state.time=MOD[state.mod].tDef;
+      resetRun(); syncControlsForMod(); renderStatic();
+    }));
+    pwr.addEventListener('input',()=>{ state.power=+pwr.value; updatePwrVal(); if(state.phase!=='running'){resetRun();renderStatic();} });
+    tm.addEventListener('input',()=>{ state.time=+tm.value; updateTmVal(); if(state.phase!=='running'){resetRun();renderStatic();} });
+    nd.addEventListener('input',()=>{ state.nodule=+nd.value; ndVal.textContent=state.nodule.toFixed(1)+' cm'; if(state.phase!=='running'){resetRun();renderStatic();} });
+
+    function toggleBtn(btn,key){
+      btn.addEventListener('click',()=>{ state[key]=!state[key]; btn.classList.toggle('on',state[key]);
+        btn.setAttribute('aria-pressed',state[key]?'true':'false'); if(state.phase!=='running'){resetRun();} renderStatic(); });
+    }
+    toggleBtn($('#vesselTog'),'vessel'); toggleBtn($('#airwayTog'),'airway');
+
+    $('#ablateBtn').addEventListener('click',ablate);
+    $('#resetSim').addEventListener('click',()=>{ resetRun(); renderStatic();
+      simMsg.innerHTML='Reset. The dashed ring is the tumor + 5&nbsp;mm target margin; the zone must reach it in every direction.'; });
+
+    function resetRun(){ state.phase='idle'; state.play=0; state.elapsed=0; setBadge('idle','◐','Set up and ablate'); }
+    function ablate(){ if(state.phase==='running')return; state.phase='running'; state.play=0; state.elapsed=0;
+      progress.sim=true; syncReport(); ensureLoop();
+      simMsg.innerHTML='<b>Ablating…</b> watching the lethal zone grow against the 5&nbsp;mm margin.'; }
+
+    /* ---- physics: compute zone radii (cm) ---- */
+    function zoneModel(){
+      const m=MOD[state.mod]; const el=state.elapsed; let baseR,lethalR,rolled=false,mid=0;
+      if(state.mod==='cryo'){
+        const cyc=state.power;
+        const iceMaxR=m.iceMin+(cyc-1)/(3-1)*(m.iceMax-m.iceMin);
+        const grow=1-Math.exp(-m.kIce*el);
+        baseR=iceMaxR*grow;
+        lethalR=Math.max(0,baseR-m.lethalOffset);
+        mid=Math.max(0,baseR-m.lethalOffset*0.5);          // -20 C isotherm
+      } else {
+        const pf=(state.power-m.pMin)/(m.pMax-m.pMin);
+        const Rmax=m.rMin+pf*(m.rMax-m.rMin);
+        let effEl=el;
+        if(m.rollOff){ const tRoll=3.0+Math.pow(1-pf,1.1)*16; if(el>tRoll){effEl=tRoll;rolled=true;} }
+        const grow=1-Math.exp(-m.k*effEl);
+        baseR=Rmax*grow; lethalR=baseR*m.lethalFrac; mid=baseR;
+      }
+      return {m,baseR,lethalR,mid,rolled};
+    }
+    function angDist(a,b){ let d=Math.abs(a-b)%(2*Math.PI); if(d>Math.PI)d=2*Math.PI-d; return d; }
+    function falloff(d,w){ return d<w ? Math.pow(Math.cos(d/w*Math.PI/2),2) : 0; }
+
+    /* directional reach (cm) at angle theta, given a base radius */
+    function reachAt(theta,R){
+      const m=MOD[state.mod];
+      const a=1,b=m.elong;
+      const ell=1/Math.sqrt(Math.pow(Math.cos(theta)/a,2)+Math.pow(Math.sin(theta)/b,2));
+      let r=R*ell;
+      if(state.vessel){ const hs=m.hsVessel*falloff(angDist(theta,0),0.62); r*=(1-hs); }
+      if(state.airway){ const hs=m.hsAirway*falloff(angDist(theta,Math.PI),0.52); r*=(1-hs); }
+      return r;
+    }
+
+    /* margin evaluation using the LETHAL reach */
+    function evalMargin(z){
+      const Rn=state.nodule/2; let minM=Infinity, worst=0;
+      for(let i=0;i<144;i++){ const th=i/144*2*Math.PI; const Lr=reachAt(th,z.lethalR); const mrg=Lr-Rn;
+        if(mrg<minM){minM=mrg;worst=th;} }
+      let verdict,dir='';
+      const near=(t,c)=>angDist(t,c)<0.7;
+      if(state.mod!=='pef' && near(worst,0)&&state.vessel) dir=' toward the vessel (heat-sink)';
+      else if(state.mod!=='pef' && near(worst,Math.PI)&&state.airway) dir=' toward the airway';
+      else dir=' circumferentially';
+      if(minM>=0.5) verdict='pass'; else if(minM>=0) verdict='marg'; else verdict='fail';
+      return {minM,worst,verdict,dir};
+    }
+
+    /* ---- readouts ---- */
+    function updateReadouts(z){
+      const m=MOD[state.mod], el=state.elapsed, r=evalMargin(z);
+      last={margin:r.minM,verdict:r.verdict,dir:r.dir};
+      const v=[$('#v1'),$('#v2'),$('#v3'),$('#v4')];
+      const mm=(x)=>(x*10).toFixed(0);
+      if(state.mod==='rfa'){
+        const pf=(state.power-m.pMin)/(m.pMax-m.pMin);
+        const tRoll=3.0+Math.pow(1-pf,1.1)*16;
+        let temp=37+(96-37)*(1-Math.exp(-0.55*Math.min(el,tRoll)));
+        let imp=46+34*(1-Math.exp(-0.5*el));
+        if(z.rolled){ imp=180+ (el-tRoll)*90; temp=Math.max(60,temp-12); }
+        v[0].innerHTML=temp.toFixed(0)+'<span class="u"> °C</span>';
+        v[1].innerHTML=(z.rolled?'▲ '+imp.toFixed(0):imp.toFixed(0))+'<span class="u"> Ω</span>';
+        v[2].innerHTML=(z.baseR*2).toFixed(1)+'<span class="u"> cm</span>';
+      } else if(state.mod==='mwa'){
+        let temp=37+(145-37)*(1-Math.exp(-0.6*el));
+        const round=Math.round(100-(m.elong-1)*140 - (state.vessel?9:0));
+        v[0].innerHTML=temp.toFixed(0)+'<span class="u"> °C</span>';
+        v[1].innerHTML=(z.baseR*2).toFixed(1)+'<span class="u"> cm</span>';
+        v[2].innerHTML=clamp(round,60,99)+'<span class="u"> %</span>';
+      } else if(state.mod==='cryo'){
+        let core=37-(37+140)*(1-Math.exp(-0.7*el));
+        v[0].innerHTML=(z.baseR*2).toFixed(1)+'<span class="u"> cm</span>';
+        v[1].innerHTML=(z.lethalR*2).toFixed(1)+'<span class="u"> cm</span>';
+        v[2].innerHTML=core.toFixed(0)+'<span class="u"> °C</span>';
+      } else { /* pef — non-thermal; peak field is a fixed device spec, not a dose dial */
+        v[0].innerHTML='≈300<span class="u"> kV/cm</span>';
+        v[1].innerHTML=state.power+'<span class="u"> ×</span>';
+        v[2].innerHTML=(z.baseR*2).toFixed(1)+'<span class="u"> cm</span>';
+      }
+      // margin readout (shared slot 4)
+      const mtxt = r.minM<0 ? '−'+mm(-r.minM)+' mm' : mm(r.minM)+' mm';
+      v[3].innerHTML=(state.elapsed<=0?'—':mtxt);
+      v[3].style.color = state.elapsed<=0?'':(r.verdict==='pass'?'var(--ok)':r.verdict==='marg'?'var(--warn)':'var(--danger)');
+      // badge
+      if(state.elapsed<=0){ setBadge('idle','◐','Set up and ablate'); return; }
+      if(r.verdict==='pass'){ setBadge('pass','✓','Margin ≥ 5 mm — complete'); }
+      else if(z.rolled && state.mod==='rfa'){ setBadge(r.verdict==='fail'?'fail':'marg','■','ROLL-OFF limited the zone'+(r.verdict==='fail'?r.dir:' ('+mm(Math.max(0,r.minM))+' mm)')); }
+      else if(r.verdict==='marg'){ setBadge('marg','◐','Marginal: '+mm(r.minM)+' mm'+r.dir); }
+      else { setBadge('fail','✕','Under-treated'+r.dir); }
+    }
+    function setBadge(kind,icon,txt){
+      badge.className='marginbadge mb-'+(kind==='idle'?'idle':kind==='pass'?'pass':kind==='marg'?'marg':'fail');
+      badge.querySelector('.mi').textContent=icon; marginTxt.textContent=txt;
+    }
+
+    function finalMessage(z){
+      const m=MOD[state.mod], r=evalMargin(z);
+      const rolledNote = (state.mod==='rfa' && z.rolled) ? ' Impedance rolled off (char/desiccation halted growth), so this was the most this setup could reach.' : '';
+      let s='';
+      if(r.verdict==='pass'){ s='<b>Complete.</b> The lethal zone banks ≥ 5 mm all around the '+state.nodule.toFixed(1)+' cm nodule.';
+        if(state.mod==='pef'){ if(state.vessel||state.airway) s+=' The '+(state.vessel&&state.airway?'vessel and airway walls run':state.vessel?'vessel wall runs':'airway wall runs')+' through the zone intact — non-thermal PEF is not stolen by flow and spares the matrix and walls.'; s+=' PEF also releases intact tumor antigen — an investigational immune rationale.'; }
+        else { if(state.vessel) s+=' Even with the vessel alongside, this modality held the margin.'; if(state.mod==='rfa'&&z.rolled) s+=' (Growth had just rolled off — the margin was banked first.)'; } }
+      else if(state.mod==='rfa' && z.rolled){ s='<b>Roll-off limited the zone.</b> Charred, desiccated tissue spiked impedance and current stopped; the zone froze at '+(z.baseR*2).toFixed(1)+' cm ('+(r.minM*10).toFixed(0)+' mm margin'+r.dir+'). Back off the power and treat longer at a controlled rate, use an internally-cooled / tined electrode, or switch to MWA.'; }
+      else if(r.verdict==='marg'){ s='<b>Marginal ('+(r.minM*10).toFixed(0)+' mm)'+r.dir+'.</b> '+(state.vessel&&r.dir.indexOf('vessel')>-1?'Heat-sink from the flowing vessel thinned the margin — consider MWA, an extra applicator, or repositioning.':(state.mod==='pef'?'Add overlapping needle applications to enlarge the depleted zone.':'Increase energy/time, upsize the zone, or add an applicator.')); }
+      else { s='<b>Incomplete coverage'+r.dir+'.</b> The tumor ('+state.nodule.toFixed(1)+' cm) outgrew the lethal zone.'+rolledNote+' '+(state.mod==='cryo'?'Remember the lethal −40 °C front lags the visible ice edge — grow the ice larger or add probes.':state.mod==='pef'?'Add overlapping needle applications to enlarge the depleted zone; note that low-density aerated lung can disrupt pulse delivery.':'Upsize with MWA, more time, or multiple applicators.'); }
+      simMsg.innerHTML=s;
+    }
+
+    /* ---- rendering ---- */
+    function lungBg(){
+      ctx.fillStyle='#12232f'; ctx.fillRect(0,0,cv.width,cv.height);
+      // faint parenchymal stipple
+      ctx.fillStyle='rgba(150,175,190,.05)';
+      for(let i=0;i<170;i++){ const x=(i*97+((i*i)%53))%cv.width, y=(i*57+((i*i)%71))%cv.height; ctx.fillRect(x,y,1.5,1.5); }
+    }
+    function drawVessel(){
+      const x=CX + (state.nodule/2+0.95)*PPCM;
+      const w=0.5*PPCM;
+      // wall + lumen
+      ctx.fillStyle='#8f2c2c'; roundRect(x-w/2-3,0,w+6,cv.height,7); ctx.fill();
+      ctx.fillStyle='#c0392b'; roundRect(x-w/2,0,w,cv.height,5); ctx.fill();
+      // flow arrows
+      ctx.strokeStyle='rgba(255,220,220,.75)'; ctx.lineWidth=2; ctx.lineCap='round';
+      for(let i=0;i<5;i++){ const y=40+i*80+((flowT*46)%80); ctx.beginPath(); ctx.moveTo(x,y-9); ctx.lineTo(x,y+7);
+        ctx.moveTo(x-4,y+2); ctx.lineTo(x,y+7); ctx.lineTo(x+4,y+2); ctx.stroke(); }
+      ctx.fillStyle='rgba(255,225,225,.9)'; ctx.font='700 11px -apple-system,Segoe UI,sans-serif';
+      ctx.fillText('vessel',x-16,16);
+    }
+    function drawAirway(){
+      const x=CX - (state.nodule/2+0.95)*PPCM; const w=0.62*PPCM;
+      ctx.fillStyle='#d9e2e8'; roundRect(x-w/2-4,0,w+8,cv.height,8); ctx.fill();   // cartilage wall
+      ctx.fillStyle='#243642'; roundRect(x-w/2,0,w,cv.height,5); ctx.fill();       // lumen (air)
+      ctx.fillStyle='rgba(180,205,220,.85)'; ctx.font='700 11px -apple-system,Segoe UI,sans-serif';
+      ctx.fillText('airway',x-18,16);
+    }
+    function polygon(R){ const pts=[]; for(let i=0;i<=120;i++){ const th=i/120*2*Math.PI; const r=reachAt(th,R)*PPCM;
+        pts.push([CX+r*Math.cos(th), CY - r*Math.sin(th)]); } return pts; }
+    function fillPoly(pts,style){ ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fillStyle=style; ctx.fill(); }
+    function strokePoly(pts,style,w,dash){ ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath();
+      ctx.setLineDash(dash||[]); ctx.strokeStyle=style; ctx.lineWidth=w; ctx.stroke(); ctx.setLineDash([]); }
+
+    function drawZone(z){
+      if(z.baseR<=0.02) return;
+      if(state.mod==='cryo'){
+        fillPoly(polygon(z.baseR),'rgba(214,236,255,.30)');           // 0 C ice
+        strokePoly(polygon(z.baseR),'rgba(214,236,255,.9)',2);
+        if(z.mid>0.05) fillPoly(polygon(z.mid),'rgba(124,194,238,.35)'); // -20 C
+        if(z.lethalR>0.05){ fillPoly(polygon(z.lethalR),'rgba(47,127,208,.55)');   // lethal -40
+          strokePoly(polygon(z.lethalR),'rgba(18,63,119,.9)',1.5,[5,4]); }
+      } else if(state.mod==='pef'){
+        // NON-THERMAL: spared sub-threshold rim, SHARP lethal-field front, depleted core — no hot/char/ice
+        fillPoly(polygon(z.baseR),'rgba(201,179,230,.26)');            // sub-threshold / reversible (spared) rim
+        strokePoly(polygon(z.baseR),'rgba(201,179,230,.8)',1.3);
+        fillPoly(polygon(z.lethalR),'rgba(138,92,196,.5)');            // lethal-field (irreversible) zone
+        strokePoly(polygon(z.lethalR),'rgba(95,58,158,.95)',2);        // sharp solid boundary — threshold-defined edge
+        if(z.lethalR>0.05) fillPoly(polygon(z.lethalR*0.5),'rgba(74,45,120,.55)');   // depleted core
+      } else {
+        // coag rim (sub-lethal) then lethal core with a hot gradient
+        fillPoly(polygon(z.baseR),'rgba(247,189,125,.30)');
+        const g=ctx.createRadialGradient(CX,CY,2,CX,CY,z.lethalR*PPCM*MOD[state.mod].elong);
+        g.addColorStop(0,'rgba(179,35,26,.62)'); g.addColorStop(.7,'rgba(239,106,43,.5)'); g.addColorStop(1,'rgba(239,106,43,.18)');
+        fillPoly(polygon(z.lethalR),g);
+        strokePoly(polygon(z.lethalR),'rgba(179,35,26,.85)',1.5,[5,4]);   // lethal boundary
+        // char core on roll-off
+        if(z.rolled){ fillPoly(polygon(z.lethalR*0.45),'rgba(30,24,20,.7)'); }
+      }
+    }
+    function drawNodule(){
+      const Rn=state.nodule/2*PPCM;
+      ctx.beginPath();
+      for(let i=0;i<=48;i++){ const th=i/48*2*Math.PI; const r=Rn*NW[i%48];
+        const x=CX+r*Math.cos(th), y=CY - r*Math.sin(th); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.closePath(); ctx.fillStyle='rgba(60,74,92,.45)'; ctx.fill();
+      ctx.strokeStyle='rgba(230,238,246,.85)'; ctx.lineWidth=1.6; ctx.stroke();
+      // margin ring
+      ctx.beginPath(); ctx.arc(CX,CY,Rn+0.5*PPCM,0,7); ctx.setLineDash([6,5]);
+      ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.lineWidth=1.6; ctx.stroke(); ctx.setLineDash([]);
+    }
+    function drawProbe(){
+      const m=MOD[state.mod];
+      ctx.save(); ctx.translate(CX,CY); ctx.rotate(-Math.PI*0.72);
+      ctx.strokeStyle='#c8d4dc'; ctx.lineWidth=6; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-cv.height); ctx.stroke();
+      ctx.strokeStyle=m.color; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-26); ctx.stroke();
+      if(state.mod==='rfa' && state.power>140){ // tines hint
+        ctx.strokeStyle=m.color; ctx.lineWidth=1.6;
+        [-1,1].forEach(s=>{ ctx.beginPath(); ctx.moveTo(0,-6); ctx.quadraticCurveTo(s*14,-18,s*10,-34); ctx.stroke(); });
+      }
+      ctx.restore();
+      ctx.fillStyle=m.color; ctx.beginPath(); ctx.arc(CX,CY,3.5,0,7); ctx.fill();
+    }
+    function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+    let flowT=0;
+    function renderStatic(){ const z=zoneModel(); draw(z); updateReadouts(z); }
+    function draw(z){
+      lungBg();
+      if(state.airway) drawAirway();
+      if(state.vessel) drawVessel();
+      drawZone(z);
+      // architecture-preserving modalities: redraw the wall INTACT over the zone (PEF & cryo spare collagenous walls)
+      if(state.mod==='pef'||state.mod==='cryo'){ if(state.airway) drawAirway(); if(state.vessel) drawVessel(); }
+      drawNodule();
+      drawProbe();
+      // modality tag
+      const m=MOD[state.mod];
+      ctx.fillStyle=m.color; ctx.font='800 13px -apple-system,Segoe UI,sans-serif';
+      ctx.fillText(m.full, 14, cv.height-14);
+    }
+
+    /* ---- rAF loop (idle-stopping) ---- */
+    let looping=false,lastT=0;
+    function ensureLoop(){ if(!looping){looping=true;lastT=performance.now();requestAnimationFrame(loop);} }
+    function loop(now){ if(tick(now)){requestAnimationFrame(loop);}else{looping=false;} }
+    function tick(now){
+      const dt=Math.min(0.05,(now-lastT)/1000); lastT=now; flowT+=dt;
+      let active=false;
+      if(state.phase==='running'){
+        state.play+=dt; const frac=clamp(state.play/ANIM_SEC,0,1);
+        state.elapsed=state.time*frac;
+        if(frac>=1){ state.phase='done'; }
+        active=true;
+      }
+      const z=zoneModel(); draw(z); updateReadouts(z);
+      if(state.phase==='done'){ finalMessage(z); syncReport(); }
+      return active || state.vessel; // keep animating flow arrows while a vessel is shown
+    }
+
+    /* ---- test / throttled-tab hooks ---- */
+    window.__sim={
+      state, MOD,
+      setMod:(k)=>{ const b=$('#modPick .mod-btn[data-mod="'+k+'"]'); if(b)b.click(); },
+      set:(o)=>{ Object.assign(state,o); if('power'in o){pwr.value=state.power;updatePwrVal();} if('time'in o){tm.value=state.time;updateTmVal();}
+        if('nodule'in o){nd.value=state.nodule;ndVal.textContent=state.nodule.toFixed(1)+' cm';}
+        if('vessel'in o){$('#vesselTog').classList.toggle('on',state.vessel);} if('airway'in o){$('#airwayTog').classList.toggle('on',state.airway);}
+        resetRun(); renderStatic(); },
+      ablate,
+      step:(sec)=>{ if(state.phase==='idle'||state.phase==='done'){state.phase='running';state.play=0;}
+        const n=48,d=sec/n; for(let i=0;i<n;i++){ state.play+=d; const f=clamp(state.play/ANIM_SEC,0,1);
+          state.elapsed=state.time*f; if(f>=1)state.phase='done'; }
+        const z=zoneModel(); draw(z); updateReadouts(z); if(state.phase==='done')finalMessage(z);
+        return {mod:state.mod,elapsed:+state.elapsed.toFixed(2),marginMM:+(last.margin*10).toFixed(1),verdict:last.verdict,rolled:z.rolled}; },
+      finish:()=>window.__sim.step(ANIM_SEC+0.1),
+      eval:()=>({...last, marginMM:+(last.margin*10).toFixed(1)})
+    };
+
+    syncControlsForMod(); ndVal.textContent=state.nodule.toFixed(1)+' cm'; renderStatic();
+  })();
+
+  /* ============ IMAGE-GUIDANCE: TOOL-IN-LESION ============ */
+  (function(){
+    const cv=$('#guideCv'), ctx=cv.getContext('2d');
+    const badge=$('#guideBadge'), badgeTxt=$('#guideBadgeTxt'), msg=$('#guideMsg');
+    const PPCM=42;
+    const CX=cv.width*0.52, CY=cv.height*0.5;
+    const Rn=1.1;                    // nodule radius cm (fixed here)
+    const projR=1.8;                 // projected lethal radius from a well-seated tip (cm)
+    const tip={ x:CX-120, y:CY-70 }; // px
+    const NW=[]; for(let i=0;i<40;i++){ NW.push(0.85+0.15*(0.5+0.5*Math.sin(i*1.9)*Math.cos(i*0.7))); }
+    let confirmed=false;
+
+    function evalPos(){
+      const dx=(tip.x-CX)/PPCM, dy=(tip.y-CY)/PPCM, d=Math.hypot(dx,dy); // cm from center
+      const inLesion=d<=Rn*0.96;
+      const centered=d<=Rn*0.45;
+      // projected margin ok if projR covers Rn+0.5 from this offset in worst direction: projR - (Rn + d) >= 0.5
+      const marginOK=inLesion && (projR-(Rn+d)>=0.5);
+      return {d,inLesion,centered,marginOK};
+    }
+    function setChk(id,ok){ const li=$(id); li.classList.toggle('ok',ok); li.classList.toggle('no',!ok);
+      li.querySelector('.ck').textContent=ok?'✓':'✕'; }
+
+    function render(){
+      // CBCT-ish background
+      ctx.fillStyle='#0c1a24'; ctx.fillRect(0,0,cv.width,cv.height);
+      ctx.fillStyle='rgba(150,175,190,.06)'; for(let i=0;i<150;i++){ const x=(i*89+((i*i)%61))%cv.width, y=(i*63+((i*i)%67))%cv.height; ctx.fillRect(x,y,1.4,1.4); }
+      // crosshair reticle
+      ctx.strokeStyle='rgba(120,180,210,.18)'; ctx.lineWidth=1; ctx.setLineDash([4,6]);
+      ctx.beginPath(); ctx.moveTo(0,CY); ctx.lineTo(cv.width,CY); ctx.moveTo(CX,0); ctx.lineTo(CX,cv.height); ctx.stroke(); ctx.setLineDash([]);
+      const p=evalPos();
+      // projected ablation preview from tip
+      const g=ctx.createRadialGradient(tip.x,tip.y,2,tip.x,tip.y,projR*PPCM);
+      g.addColorStop(0,'rgba(61,134,214,.28)'); g.addColorStop(1,'rgba(61,134,214,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(tip.x,tip.y,projR*PPCM,0,7); ctx.fill();
+      ctx.strokeStyle='rgba(120,190,240,.5)'; ctx.lineWidth=1.4; ctx.setLineDash([5,5]);
+      ctx.beginPath(); ctx.arc(tip.x,tip.y,projR*PPCM,0,7); ctx.stroke(); ctx.setLineDash([]);
+      // nodule
+      ctx.beginPath(); for(let i=0;i<=40;i++){ const th=i/40*2*Math.PI, r=Rn*PPCM*NW[i%40], x=CX+r*Math.cos(th), y=CY-r*Math.sin(th); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.closePath(); ctx.fillStyle='rgba(90,110,130,.5)'; ctx.fill(); ctx.strokeStyle='rgba(235,242,248,.9)'; ctx.lineWidth=1.6; ctx.stroke();
+      // margin ring
+      ctx.beginPath(); ctx.arc(CX,CY,(Rn+0.5)*PPCM,0,7); ctx.setLineDash([6,5]); ctx.strokeStyle='rgba(255,255,255,.7)'; ctx.lineWidth=1.4; ctx.stroke(); ctx.setLineDash([]);
+      // applicator shaft to tip
+      ctx.strokeStyle='#c8d4dc'; ctx.lineWidth=5; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(cv.width+10,cv.height+10); ctx.lineTo(tip.x,tip.y); ctx.stroke();
+      ctx.strokeStyle=confirmed?'#15803d':(p.inLesion?'#3d86d6':'#d6453d'); ctx.lineWidth=3;
+      ctx.beginPath(); const ang=Math.atan2(cv.height+10-tip.y,cv.width+10-tip.x);
+      ctx.moveTo(tip.x,tip.y); ctx.lineTo(tip.x+22*Math.cos(ang),tip.y+22*Math.sin(ang)); ctx.stroke();
+      // tip marker
+      ctx.fillStyle=confirmed?'#15803d':(p.inLesion?'#3d86d6':'#d6453d');
+      ctx.beginPath(); ctx.arc(tip.x,tip.y,5.5,0,7); ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+      // labels + checklist
+      setChk('#chkTip',p.inLesion); setChk('#chkCenter',p.centered); setChk('#chkMargin',p.marginOK);
+      if(p.inLesion){ badge.className='marginbadge '+(p.marginOK?'mb-pass':'mb-marg'); badge.querySelector('.mi').textContent=p.marginOK?'✓':'◐';
+        badgeTxt.textContent=p.marginOK?'Tool-in-lesion · margin projects':'Tool-in-lesion · off-center'; }
+      else { badge.className='marginbadge mb-fail'; badge.querySelector('.mi').textContent='✕'; badgeTxt.textContent='Tool-adjacent'; }
+      return p;
+    }
+    function update(){ confirmed=false; const p=render();
+      if(!p.inLesion) msg.innerHTML='<b>Tool-adjacent.</b> The tip is outside the nodule — energy would miss. Drag it into the lesion.';
+      else if(!p.centered) msg.innerHTML='<b>In the lesion, but off-center.</b> The projected margin is asymmetric; recenter so the zone covers all sides.';
+      else if(!p.marginOK) msg.innerHTML='<b>Centered.</b> From here the projected zone barely covers the margin — a larger applicator/zone would be needed for a bigger tumor.';
+      else msg.innerHTML='<b>Tool-in-lesion, centered, margin projects.</b> Safe to proceed to ablation in the simulator above.';
+    }
+
+    // dragging
+    function cvPos(e){ const r=cv.getBoundingClientRect(); const sx=cv.width/r.width, sy=cv.height/r.height;
+      const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*sx, y:(t.clientY-r.top)*sy}; }
+    let drag=false;
+    cv.addEventListener('pointerdown',e=>{ drag=true; const p=cvPos(e); tip.x=clamp(p.x,8,cv.width-8); tip.y=clamp(p.y,8,cv.height-8); progress.guide=true; syncReport(); update(); cv.setPointerCapture&&cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove',e=>{ if(!drag)return; const p=cvPos(e); tip.x=clamp(p.x,8,cv.width-8); tip.y=clamp(p.y,8,cv.height-8); update(); });
+    window.addEventListener('pointerup',()=>{drag=false;});
+    // keyboard
+    cv.addEventListener('keydown',e=>{ const step=e.shiftKey?12:5; let used=true;
+      if(e.key==='ArrowUp')tip.y-=step; else if(e.key==='ArrowDown')tip.y+=step;
+      else if(e.key==='ArrowLeft')tip.x-=step; else if(e.key==='ArrowRight')tip.x+=step; else used=false;
+      if(used){ e.preventDefault(); tip.x=clamp(tip.x,8,cv.width-8); tip.y=clamp(tip.y,8,cv.height-8); progress.guide=true; syncReport(); update(); } });
+    // dpad
+    $$('.dpad button[data-nudge]').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.nudge, s=6;
+      if(k==='up')tip.y-=s; else if(k==='down')tip.y+=s; else if(k==='left')tip.x-=s; else if(k==='right')tip.x+=s;
+      else if(k==='center'){tip.x=CX;tip.y=CY;} tip.x=clamp(tip.x,8,cv.width-8); tip.y=clamp(tip.y,8,cv.height-8); progress.guide=true; syncReport(); update(); }));
+    $('#guideConfirm').addEventListener('click',()=>{ const p=render(); progress.guide=true; syncReport();
+      if(p.inLesion&&p.centered&&p.marginOK){ confirmed=true; render(); msg.innerHTML='<b>✓ Position confirmed — tool-in-lesion.</b> Center verified and margin projected. In practice you would re-image (CBCT/CT) to document before delivering energy.'; }
+      else if(p.inLesion){ msg.innerHTML='<b>Not yet.</b> Tool is in the lesion but not centered enough to project a full margin — recenter, then confirm.'; }
+      else { msg.innerHTML='<b>Tool-adjacent — do not fire.</b> Reposition into the nodule first.'; } });
+
+    window.__guide={ tip, setTip:(cx,cy)=>{ tip.x=CX+cx*PPCM; tip.y=CY+cy*PPCM; update(); }, eval:evalPos, confirm:()=>$('#guideConfirm').click() };
+    update();
+  })();
+
+  /* ============ SELECTION CASES ============ */
+  (function(){
+    const CASES=[
+      { title:'Inoperable 1.8 cm RUL nodule', tag:'Case 1 · patient selection',
+        stem:'A 74-year-old with severe COPD (FEV₁ 34%) has a biopsy-proven <span class="vitals">cT1b N0 M0</span> adenocarcinoma in the <span class="vitals">right upper lobe, subpleural, 1.8 cm</span>. Cardiothoracic surgery deems him <span class="vitals">medically inoperable</span>. No vessel &gt;3 mm abuts the lesion.',
+        q:'Best next step?',
+        opts:[
+          {t:'Percutaneous CT-guided ablation (MWA or RFA) after tumor-board review', ok:true,
+            fb:'Correct. Medically inoperable early-stage NSCLC is a guideline-reflected indication for percutaneous image-guided ablation. A peripheral 1.8 cm lesion with no large adjacent vessel is well suited; MWA or RFA both reasonable, decided with the multidisciplinary team.',
+            src:'NCCN NSCLC; CIRSE/SIR standards on image-guided lung ablation'},
+          {t:'Lobectomy', ok:false, fb:'He was judged medically inoperable — resection is off the table for physiologic reasons. Ablation (or SBRT) is the parenchymal-sparing alternative.'},
+          {t:'Transbronchial microwave ablation as standard therapy', ok:false, fb:'Bronchoscopic/transbronchial ablation is investigational and not standard of care. It should not be offered as routine therapy outside a trial; the established route here is percutaneous.'},
+          {t:'Observation with serial CT', ok:false, fb:'A biopsy-proven early-stage cancer warrants definitive local therapy in a fit-enough patient. Surveillance forfeits the window for cure.'}
+        ]},
+      { title:'2.6 cm lesion hugging a segmental artery', tag:'Case 2 · heat-sink & modality',
+        stem:'A <span class="vitals">2.6 cm</span> oligometastatic deposit sits <span class="vitals">against a 5 mm segmental pulmonary artery</span>. The patient is a candidate for ablation.',
+        q:'Which choice best manages the heat-sink risk while still covering margin?',
+        opts:[
+          {t:'Microwave ablation (larger, hotter, more heat-sink-resistant zone)', ok:true,
+            fb:'Correct. Flowing blood in a vessel ≥3 mm is a heat-sink that under-treats the adjacent margin. MWA’s faster, hotter, larger zone is comparatively resistant to heat-sink versus RFA, improving the odds of margin coverage next to the vessel.',
+            src:'Brace CL, dielectric heating; CIRSE/SIR ablation standards'},
+          {t:'Standard monopolar RFA at low power', ok:false, fb:'RFA is the most heat-sink-sensitive modality; a perivascular margin is exactly where it fails. Low power makes the under-treatment worse.'},
+          {t:'Do not ablate — the vessel is an absolute contraindication', ok:false, fb:'Proximity to a patent vessel raises heat-sink and bleeding concerns but is not an absolute bar; modality choice (MWA or cryo), technique, and possibly extra applicators address it.'},
+          {t:'Single-probe cryoablation with a small ice ball', ok:false, fb:'Cryo preserves the vessel wall (an advantage) but a flowing vessel still limits the ice, and a small ice ball won’t bank margin on a 2.6 cm lesion — you would need a larger ice ball / multiple probes.'}
+        ]},
+      { title:'Central lesion abutting the bronchus', tag:'Case 3 · architecture preservation',
+        stem:'A <span class="vitals">2.0 cm</span> tumor abuts a <span class="vitals">central segmental bronchus</span> and a lobar vessel. The team worries about bronchial injury and fistula from heat.',
+        q:'Which modality best preserves the airway/vessel architecture?',
+        opts:[
+          {t:'Cryoablation — collagenous walls are comparatively spared by freezing', ok:true,
+            fb:'Correct. Cryoablation is relatively architecture-preserving: collagenous bronchial and vascular walls tolerate freezing better than they tolerate heat, lowering the risk of airway injury/bronchopleural fistula near central structures. (A flowing vessel still limits the ice, and the lethal isotherm lags the ice edge.)',
+            src:'Hinshaw & Lee, cryobiology; interventional oncology reviews'},
+          {t:'High-power microwave ablation directly on the bronchus', ok:false, fb:'MWA delivers the most heat and near a central bronchus raises the risk of airway injury, stenosis, and bronchopleural fistula. Architecture preservation is not its strength.'},
+          {t:'RFA with an internally-cooled electrode', ok:false, fb:'Cooling protects the electrode tip from charring but the thermal kill zone still injures collagenous airway walls; heat is the wrong tool when architecture preservation is the priority.'},
+          {t:'No ablation is safe near a bronchus', ok:false, fb:'Central proximity demands caution and the right modality, not abandonment — cryo’s wall-sparing profile exists precisely for this scenario.'}
+        ]},
+      { title:'Subpleural 1.5 cm nodule', tag:'Case 4 · route & pneumothorax',
+        stem:'A <span class="vitals">1.5 cm</span> nodule sits <span class="vitals">immediately subpleural</span> in a patient with prior contralateral pneumonectomy — limited pulmonary reserve, so a large pneumothorax would be dangerous.',
+        q:'What is the most important peri-procedural consideration?',
+        opts:[
+          {t:'Pneumothorax risk from pleural puncture — plan trajectory, monitor closely, and weigh a lower-pneumothorax route', ok:true,
+            fb:'Correct. Subpleural lesions and crossing aerated lung raise pneumothorax risk — the dominant complication of percutaneous lung ablation — and this patient tolerates it poorly. Trajectory planning, vigilance, and readiness to manage a pneumothorax are key; cryo can also cause pleural cracking and post-procedure pain to anticipate.',
+            src:'SIR/CIRSE quality standards; percutaneous lung ablation complication series'},
+          {t:'Heat-sink from the pleura', ok:false, fb:'The pleura is not the heat-sink issue here; the subpleural location’s dominant risk is pneumothorax (and, for cryo, pleural pain).'},
+          {t:'Roll-off is guaranteed, so avoid RFA entirely', ok:false, fb:'Roll-off relates to power/technique, not subpleural location. The location’s key issue is pleural puncture and pneumothorax.'},
+          {t:'Nothing special — subpleural lesions are the safest', ok:false, fb:'The opposite: pleural apposition raises pneumothorax and pain risk, and it matters more in a patient with one lung.'}
+        ]},
+      { title:'3.4 cm tumor, single applicator', tag:'Case 5 · size & margin',
+        stem:'A <span class="vitals">3.4 cm</span> peripheral tumor is proposed for ablation with a <span class="vitals">single applicator</span> whose typical zone tops out near 3 cm.',
+        q:'Why is local control likely to fail, and what fixes it?',
+        opts:[
+          {t:'The tumor + 5 mm margin exceeds a single zone → use multiple/overlapping applicators, MWA’s larger zone, or reconsider candidacy', ok:true,
+            fb:'Correct. Local control tracks with a ≥5 mm ablative margin. A 3.4 cm tumor needs a lethal zone ≥ ~4.4 cm across — beyond a single small applicator. Multiple/overlapping antennas, MWA’s larger zone, or a different therapy (e.g., SBRT) are the options; larger tumors have higher recurrence after ablation.',
+            src:'CIRSE/SIR ablation standards; ablation size–outcome literature'},
+          {t:'It will fail only if a vessel is nearby', ok:false, fb:'Even with no heat-sink, a 3.4 cm tumor plus 5 mm margin outstrips a single ~3 cm zone. Size alone is the problem here.'},
+          {t:'Just increase RFA power to 300 W', ok:false, fb:'Beyond raising char/roll-off risk, pushing power does not linearly enlarge the zone; you cannot brute-force a single small applicator to cover a 3.4 cm tumor with margin.'},
+          {t:'Margin does not matter for ablation', ok:false, fb:'Margin is the whole point — incomplete margins are the leading driver of local recurrence after thermal ablation.'}
+        ]},
+      { title:'Enrolling a transbronchial ablation trial', tag:'Case 6 · investigational route',
+        stem:'A fellow proposes offering <span class="vitals">transbronchial microwave ablation</span> to a patient with a peripheral nodule reachable by navigation bronchoscopy, citing convenience and avoidance of pleural puncture.',
+        q:'How should this be framed to the patient?',
+        opts:[
+          {t:'As investigational — appropriate only within an IRB-approved trial with informed consent, not as established therapy', ok:true,
+            fb:'Correct. Bronchoscopic/transbronchial thermal ablation is emerging and largely investigational: potential upsides (no pleural puncture → possibly less pneumothorax, tool-in-lesion navigation) are being studied, but it is not standard of care. Offer it transparently within a trial, not as proven treatment.',
+            src:'AABIP/interventional bronchoscopy reviews; active clinical trials'},
+          {t:'As equivalent, established alternative to percutaneous ablation', ok:false, fb:'It is not established or proven equivalent — presenting it that way misrepresents the evidence and the module’s honesty requirement.'},
+          {t:'As superior because it avoids the pleura', ok:false, fb:'Avoiding pleural puncture is a plausible advantage under study, but superiority is unproven. Do not overstate.'},
+          {t:'Never mention it', ok:false, fb:'Trials are a legitimate, valuable option — the point is honest framing (investigational, consented), not silence.'}
+        ]},
+      { title:'Peri-vascular nodule hugging a segmental artery', tag:'Case 7 · non-thermal near a vessel',
+        stem:'A 71-year-old with severe emphysema and a prior lobectomy (not a re-resection or SABR candidate) has a growing <span class="vitals">1.8 cm</span> solid NSCLC in the right lower lobe <span class="vitals">abutting a 4 mm segmental pulmonary artery</span>. Navigation confirms a reachable airway.',
+        q:'Which consideration should most drive modality choice — and what does it favor?',
+        opts:[
+          {t:'RFA at high generator power to force a larger zone across the vessel', ok:false,
+            fb:'RFA is the most heat-sink-sensitive modality; flow in the adjacent artery conducts heat away and under-treats the vessel-side margin. Pushing power invites impedance roll-off, which can leave an even smaller zone — the opposite of what you need.',
+            src:'Fernandez-Bussy 2026; Miller & Cheng 2024 (heat-sink; RFA roll-off)'},
+          {t:'A non-thermal approach (PEF): immune to heat-sink and spares the vessel wall — recognizing it is investigational', ok:true,
+            fb:'Correct in principle. PEF kills by an electric-field threshold, not a temperature gradient, so it is not subject to heat-sink and preserves the vessel/airway wall and matrix — conceptually ideal for a peri-vascular target. Keep the framing honest: PEF for lung is investigational, with small safety/feasibility cohorts and no established dose or efficacy.',
+            src:'Rangamuwa & Steinfort 2025; Fernandez-Bussy 2026'},
+          {t:'MWA, since it is completely immune to heat-sink like PEF', ok:false,
+            fb:'MWA is LESS heat-sink-sensitive than RFA and gives larger, rounder zones, but it is not immune — large vessels still limit it. Only a non-thermal mechanism (PEF) removes heat-sink entirely.',
+            src:'Fernandez-Bussy 2026; Miller & Cheng 2024'},
+          {t:'No ablation is safe next to a vessel', ok:false,
+            fb:'Peri-vascular proximity demands the right modality and technique, not abandonment. Cryo and especially PEF preserve bronchovascular architecture for exactly this scenario.',
+            src:'Miller & Cheng 2024'}
+        ]},
+      { title:'Stage IV NSCLC progressing on immunotherapy', tag:'Case 8 · immune synergy, honest framing',
+        stem:'A 63-year-old with <span class="vitals">stage IV NSCLC</span> is progressing on a checkpoint inhibitor. A shape-sensing robotic bronchoscopy can reach an accessible index lesion. The oncologist asks whether local ablation could re-sensitize the tumor to immunotherapy, and which modality has the strongest immune rationale.',
+        q:'How should you counsel the team?',
+        opts:[
+          {t:'Any thermal ablation is equivalent because all ablation releases the same antigens', ok:false,
+            fb:'Not equivalent. Thermal methods can trigger an immune response but denature protein/antigen; PEF’s non-thermal mechanism releases intact antigen and preferentially drives tertiary lymphoid structures. The mechanism shapes the immune signal.',
+            src:'Fernandez-Bussy 2026'},
+          {t:'Proceed with PEF as established salvage therapy for immunotherapy-resistant disease', ok:false,
+            fb:'Overstated. The stage IV PEF data are a small retrospective series with encouraging but preliminary survival signals and no established dose or efficacy standard — this remains investigational and belongs in a trial or tumor-board-governed pathway.',
+            src:'Rangamuwa & Steinfort 2025 (recalcitrant stage IV cohort)'},
+          {t:'PEF has a distinctive immune rationale — intact-antigen release and tertiary lymphoid structures — and is being studied with immunotherapy, though benefit is not established', ok:true,
+            fb:'Correct. Unlike thermal ablation, which denatures antigen, PEF releases intact antigen and has been associated with a striking rise in tertiary lymphoid structures — in an early-stage, resected cohort, seen in 29 of 30 treated patients (~50 per tumor versus 3 in an untreated specimen). Human data in stage IV / post-checkpoint disease are limited to case reports, so here the immune rationale is extrapolated rather than demonstrated — a promising, investigational rationale, not proven benefit.',
+            src:'Fernandez-Bussy 2026; Rangamuwa & Steinfort 2025'},
+          {t:'Avoid ablation entirely because it cannot affect distant disease', ok:false,
+            fb:'Incorrect — the rationale is precisely a potential systemic (abscopal) effect and immunotherapy synergy from in-situ antigen release. The honest caveat is maturity of evidence, not absence of a mechanism.',
+            src:'Fernandez-Bussy 2026'}
+        ]}
+    ];
+    const list=$('#caseList'), scoreNum=$('#scoreNum'), scoreLbl=$('#scoreLbl');
+    const answered=new Array(CASES.length).fill(false), correct=new Array(CASES.length).fill(false);
+    const letters=['A','B','C','D','E'];
+    progress.cases.total=CASES.length;
+
+    function refresh(){ const done=answered.filter(Boolean).length, right=correct.filter(Boolean).length;
+      scoreNum.textContent=right+' / '+done;
+      scoreLbl.textContent = done===0 ? 'Answer the cases below — choose the single best option.'
+        : done<CASES.length ? done+' of '+CASES.length+' answered. Keep going.'
+        : (right===CASES.length ? 'Perfect — every lesion matched to the right modality and route.' : 'All '+CASES.length+' answered. Review the feedback on any you missed.');
+      progress.cases.done=done; progress.cases.right=right; syncReport(); }
+    function build(){ list.innerHTML='';
+      CASES.forEach((c,ci)=>{ const card=document.createElement('div'); card.className='case';
+        let opts=''; c.opts.forEach((o,oi)=>{ opts+='<button class="opt" data-c="'+ci+'" data-o="'+oi+'"><span class="lt">'+letters[oi]+'</span><span>'+o.t+'</span></button>'; });
+        card.innerHTML='<div class="chead"><span class="ct">'+c.title+'</span><span class="cx">'+c.tag+'</span></div>'
+          +'<div class="cbody"><div class="stem">'+c.stem+'</div><div style="font-weight:750;color:var(--ink);margin-bottom:10px">'+c.q+'</div><div class="opts">'+opts+'</div><div class="fb" id="cfb-'+ci+'"></div></div>';
+        list.appendChild(card); });
+      $$('.opt',list).forEach(b=>b.addEventListener('click',()=>choose(b))); }
+    function choose(btn){ const ci=+btn.dataset.c, oi=+btn.dataset.o; if(answered[ci])return; answered[ci]=true;
+      const c=CASES[ci], picked=c.opts[oi]; correct[ci]=!!picked.ok; const card=btn.closest('.case');
+      $$('.opt',card).forEach(b=>{ const o=c.opts[+b.dataset.o]; b.disabled=true; if(o.ok)b.classList.add('correct'); else if(b===btn)b.classList.add('wrong'); else b.classList.add('dim'); });
+      const cl=letters[c.opts.findIndex(o=>o.ok)]; const fb=$('#cfb-'+ci);
+      fb.className='fb show '+(picked.ok?'ok':'no');
+      fb.innerHTML='<div class="fh">'+(picked.ok?'✓ Correct':'✕ Best answer: '+cl)+'</div><div>'+picked.fb+'</div>'+(picked.src?'<div class="src">Source: '+picked.src+'</div>':''); refresh(); }
+    $('#resetCases').addEventListener('click',()=>{ answered.fill(false); correct.fill(false); build(); refresh(); });
+    build(); refresh();
+  })();
+
+  /* ============ COMPLICATIONS ============ */
+  (function(){
+    const C=[
+      {name:'Pneumothorax', sev:'md', rec:'Rising resistance/cough, chest pain, desaturation; new pleural air on CBCT/CT. The most common complication of percutaneous lung ablation, higher when crossing aerated lung or subpleural lesions.',
+        act:'Small/asymptomatic → observe with serial imaging and O₂. Enlarging/symptomatic → aspiration or small-bore chest tube. Have the kit ready before you start in low-reserve patients.'},
+      {name:'Hemoptysis / pulmonary hemorrhage', sev:'hi', rec:'Blood at the airway or along the tract, opacity around the applicator, falling saturations. More associated with cryo (heat does not cauterize as it goes) and with vascular or central lesions.',
+        act:'Position bleeding side down, protect the airway, suction; correct coagulopathy. Persistent/massive → bronchoscopic control, balloon tamponade, or bronchial-artery embolization. Anticipate in perivascular targets.'},
+      {name:'Bronchopleural / bronchovascular fistula', sev:'hi', rec:'Persistent air leak, recurrent pneumothorax, empyema, or systemic infection days–weeks out; higher after heat near a central airway.',
+        act:'Drain the space, treat infection, involve thoracic surgery/IP for closure. Prevention is modality/route choice — cryo’s architecture-sparing profile is favored near central airways.'},
+      {name:'Post-ablation syndrome', sev:'lo', rec:'Low-grade fever, malaise, pleuritic pain, and flu-like symptoms in the days after ablation — an inflammatory response to necrotic tissue, not necessarily infection.',
+        act:'Supportive: antipyretics, analgesia, reassurance; it is usually self-limited over days to ~1–2 weeks. Reassess for infection/abscess if fever is high, rising, or prolonged.'},
+      {name:'Bronchial / vascular thermal injury', sev:'md', rec:'Airway stenosis, wall necrosis, or vessel-wall injury when a thermal zone reaches a central bronchus or large vessel; phrenic-adjacent lesions risk nerve heating.',
+        act:'Respect proximity: shift toward MWA/cryo, reposition, or reduce delivered energy near critical structures. Map the phrenic, recurrent laryngeal, and brachial-plexus territories before energy near them.'},
+      {name:'Nerve injury (phrenic / others by location)', sev:'md', rec:'New diaphragm elevation/paralysis (phrenic), hoarseness (recurrent laryngeal), or limb symptoms (brachial plexus) with lesions near those nerve territories.',
+        act:'Know the location-specific nerves before ablating. Consider hydrodissection/thermal monitoring or an alternative modality; document a baseline. Many thermal nerve injuries are partial and may recover.'},
+      {name:'Incomplete ablation / local recurrence', sev:'md', rec:'Residual or new nodular enhancement, growth, or FDG uptake at the ablation margin on follow-up imaging — the leading late failure, driven by inadequate margin, heat-sink, or large tumor size.',
+        act:'Structured imaging follow-up (contrast CT ± PET on a defined schedule). Treat confirmed recurrence with re-ablation, SBRT, or systemic therapy per tumor board. Bank a ≥5 mm margin the first time.'},
+      {name:'Cryo-specific: pleural pain & cryoshock', sev:'lo', rec:'Pleural/chest-wall pain with subpleural freezing; rarely a systemic response after large-volume freezing. Ice ball is CT-visible, aiding real-time monitoring.',
+        act:'Analgesia and controlled ice-ball size for subpleural lesions; limit total frozen volume and stage large ablations. The CT-visible ice ball is an advantage — use it to keep the lethal front off critical structures.'},
+      {name:'Massive hemoptysis / sudden death after bronchoscopic thermal ablation', sev:'hi', rec:'Bronchoscopic thermal ablation is not risk-free: isolated fatal events have been reported — fatal massive hemoptysis ~8 days after RFA of a peri-vascular nodule adjacent to a cavity, and sudden death ~day 15 after MWA (that trial was stopped early), both with a large cavitating lesion at the ablation site on follow-up CT. Warning signs are peri-vascular or central targets, cavitation, new fever/pain within 24 h, and sentinel or rising hemoptysis in the days after ablation — worse on antiplatelet/anticoagulation.',
+        act:'Protect the airway and position the bleeding side down; secure large-bore access and reverse/correct coagulopathy or antiplatelet effect; urgent bronchoscopy for localization and tamponade (balloon/blocker) with interventional radiology (bronchial-artery embolization) and thoracic surgery on standby. Prevent by avoiding or de-escalating energy near large vessels/cavities and by structured early post-ablation CT surveillance.'},
+      {name:'PEF procedural setup — neuromuscular blockade & cardiac safety', sev:'md', rec:'Bronchoscopic PEF is delivered under general anesthesia with muscular paralysis (neuromuscular blockade) to eliminate motion during pulse delivery. Long, multi-application procedures make overall cardiovascular/procedure-duration stability a consideration; whether the specific device requires ECG synchronization/gating is a device-specific question, not a documented PEF-pulse arrhythmia risk in the reviewed sources.',
+        act:'Plan the case with anesthesia for paralysis and continuous hemodynamic/rhythm monitoring; verify the specific device’s cardiac synchronization/gating and paralysis requirements against current instructions for use rather than assuming; keep procedure duration and cumulative applications in view. (Reviewed sources do not fully specify PEF cardiac-gating protocols for lung — treat exact requirements as device-specific and confirm.)'}
+    ];
+    $('#compGrid').innerHTML=C.map(c=>`
+      <div class="rcard">
+        <div class="rh">${c.name}<span class="sev sev-${c.sev}">${c.sev==='hi'?'High acuity':c.sev==='md'?'Watch':'Usually mild'}</span></div>
+        <div class="rb">
+          <div class="rrow"><span class="rk rec">Recognize</span><span class="rv">${c.rec}</span></div>
+          <div class="rrow"><span class="rk act">Act</span><span class="rv">${c.act}</span></div>
+        </div>
+      </div>`).join('');
+  })();
+
+  /* ============ SELF-ASSESSMENT QUIZ ============ */
+  (function(){
+    const Q=[
+      { type:'single', q:'RFA produces tissue heating primarily by which mechanism?',
+        opts:['Resistive (Joule) heating as high-frequency AC agitates tissue ions','Dielectric heating of water dipoles by a microwave field','Direct conduction from a heated electrode filament','Photothermal absorption of laser light'],
+        ans:[0], why:'RFA passes ~375–500 kHz alternating current through tissue; the tissue’s resistance to ionic movement generates frictional heat. The electrode itself is not the heat source (indeed it is often internally cooled).', src:'Ahmed/Brace/Lee/Goldberg — principles of thermal ablation'},
+      { type:'single', q:'The visible edge of a cryoablation ice ball corresponds to which temperature — and where is the reliably lethal zone?',
+        opts:['0 °C at the edge; lethal −20 to −40 °C isotherm sits several mm inside','−40 °C at the edge; everything inside is lethal','−140 °C at the edge; lethal zone is outside the ice','37 °C at the edge; lethal zone equals the ice edge'],
+        ans:[0], why:'The ice-ball margin is the 0 °C front, but dependable cell death requires roughly −20 to −40 °C, which lies inside the visible edge. Practically, grow the ice ball well beyond the tumor so the lethal isotherm banks the margin.', src:'Cryobiology literature (Hinshaw & Lee)'},
+      { type:'single', q:'Compared with RFA, microwave ablation characteristically produces zones that are:',
+        opts:['Larger, hotter, faster, and more resistant to heat-sink and charring','Smaller and more dependent on grounding pads','Colder and slower but more spherical','Identical in every respect'],
+        ans:[0], why:'MWA heats a volume by flipping water dipoles, reaching higher temperatures quickly with larger, more uniform zones and less susceptibility to charring/impedance limits and heat-sink than RFA.', src:'Brace CL — microwave vs RF physics'},
+      { type:'single', q:'“Roll-off” during RFA refers to:',
+        opts:['Impedance rising as tissue chars/desiccates, stopping current flow and halting zone growth','The electrode physically rolling off the target','A drop in the patient’s blood pressure','The ice ball detaching from the probe'],
+        ans:[0], why:'As tissue near the electrode carbonizes and dries, impedance climbs and current can no longer flow, so the zone stops growing — sometimes ending up smaller if power was pushed too high too fast. Cooled/tined electrodes and controlled power mitigate it.', src:'RFA generator operator principles'},
+      { type:'single', q:'A patent 5 mm pulmonary artery abuts the target. Which statement about heat-sink is correct?',
+        opts:['Flowing blood carries heat away, under-treating the adjacent margin; RFA is most affected, MWA less','Heat-sink only matters for cryoablation','Heat-sink makes the ablation zone larger toward the vessel','Vessels smaller than 3 mm dominate heat-sink'],
+        ans:[0], why:'Convective loss from flowing blood (typically vessels ≥3 mm) cools the perivascular margin and is a classic cause of local recurrence next to vessels. RFA is the most vulnerable; MWA’s larger, hotter zone resists it better.', src:'CIRSE/SIR ablation standards'},
+      { type:'single', q:'Which profile makes cryoablation attractive next to a central bronchus or large vessel?',
+        opts:['Relative architecture preservation — collagenous walls tolerate freezing better than heat','It cauterizes vessels as it freezes, preventing all bleeding','It has no heat-sink effect whatsoever','It requires no imaging confirmation'],
+        ans:[0], why:'Collagen-rich bronchial and vascular walls are comparatively spared by freezing, lowering airway-injury/fistula risk near central structures. Caveats: flowing vessels still limit the ice, and cryo does not cauterize — bleeding risk is actually a concern.', src:'Interventional oncology reviews'},
+      { type:'single', q:'For durable local control, the target ablative margin around a lung tumor is generally:',
+        opts:['At least ~5 mm in every direction','0 mm — reaching the tumor edge is enough','At least 3 cm regardless of tumor size','Only relevant for surgery, not ablation'],
+        ans:[0], why:'Like a surgical margin, a circumferential ablative margin of roughly ≥5 mm is associated with lower local recurrence. Achieving it depends on tumor size, geometry, and nearby heat-sinks.', src:'CIRSE/SIR standards; ablation margin–outcome data'},
+      { type:'multi', q:'Select ALL that are established (not investigational) indications/routes for peripheral lung tumor ablation:',
+        opts:['Percutaneous CT-guided ablation of medically inoperable early-stage NSCLC','Percutaneous ablation of selected oligometastatic lung lesions','Transbronchial microwave ablation as routine standard-of-care therapy','Ablation offered to any operable patient in place of resection'],
+        ans:[0,1], why:'Percutaneous CT-guided RFA/MWA/cryo for inoperable early NSCLC and selected oligometastases are established, guideline-reflected uses. Transbronchial ablation remains investigational, and ablation does not replace resection in operable candidates as a default.', src:'NCCN NSCLC; CIRSE/SIR standards'},
+      { type:'single', q:'A patient develops rising cough resistance, pleuritic pain, and desaturation during percutaneous ablation. Most likely complication?',
+        opts:['Pneumothorax','Post-ablation syndrome','Bronchopleural fistula (chronic)','Local recurrence'],
+        ans:[0], why:'Pneumothorax is the most common acute complication of percutaneous lung ablation, especially when aerated lung is traversed or the lesion is subpleural. Manage by observation, aspiration, or chest tube per size/symptoms.', src:'Percutaneous lung ablation complication series'},
+      { type:'multi', q:'Which findings on structured follow-up imaging should raise concern for incomplete ablation / local recurrence? (Select all)',
+        opts:['New or growing nodular enhancement at the ablation margin','New FDG-avid focus at the treated site','Expected involuting ground-glass/consolidation that shrinks over time','Progressive size increase of the ablation zone after initial involution'],
+        ans:[0,1,3], why:'Nodular peripheral enhancement, new FDG uptake, and a zone that grows after its expected early involution all suggest residual/recurrent tumor. A normal ablation zone should be stable-to-shrinking over months; the initial post-ablation zone is expected to be larger than the tumor.', src:'Post-ablation imaging follow-up guidelines'},
+      { type:'single', q:'How does pulsed electric field (PEF) ablation kill tumor cells?',
+        opts:['Resistive heating to 60–100 °C causing coagulative necrosis','Short high-voltage pulses that permeabilize the cell membrane (electroporation) — a non-thermal mechanism','Rapid Joule–Thomson gas expansion freezing tissue to −20 to −40 °C','Microwave excitation of water dipoles generating frictional heat'],
+        ans:[1], why:'PEF is non-thermal: high-voltage pulses drive the transmembrane potential past a lethal field threshold that permeabilizes the membrane (electroporation), producing a cellular-depleted zone with no coagulation core or char. The other options describe RFA, cryo, and MWA respectively.', src:'Fernandez-Bussy 2026; Rangamuwa & Steinfort 2025'},
+      { type:'multi', q:'Select ALL statements that are true of PEF relative to thermal ablation (RFA/MWA/cryo):',
+        opts:['It is immune to the heat-sink effect from adjacent flowing vessels','It preferentially spares the extracellular matrix, vessels, and airway walls','It is an established, guideline-endorsed routine therapy for lung tumors','It can release intact tumor antigen and induce tertiary lymphoid structures','It shows the same impedance roll-off that limits high-power RFA'],
+        ans:[0,1,3], why:'PEF is non-thermal, so it is immune to heat-sink and preserves matrix/vessel/airway architecture, and it releases intact antigen with a rise in tertiary lymphoid structures. It is NOT established/routine for lung (it is investigational), and having no thermal or resistive-current mechanism it does not exhibit RFA-style impedance roll-off.', src:'Fernandez-Bussy 2026; Rangamuwa & Steinfort 2025'},
+      { type:'single', q:'What best captures the current evidence maturity and safety of PEF for lung tumors?',
+        opts:['Multiple large randomized trials show superiority over surgery and SABR','Investigational: small, largely safety/feasibility cohorts (complete ablation often not the goal), no established dose, favorable early safety with no reported PEF deaths — mainly pneumothorax','It is contraindicated because it causes frequent fatal hemoptysis','It has longer follow-up and stronger efficacy data than percutaneous thermal ablation'],
+        ans:[1], why:'PEF cohorts (e.g. INCITE-ES treat-and-resect, AFFINITY neoadjuvant, a recalcitrant stage IV series) are small and feasibility/safety-focused — complete ablation was often not the intent — and dose/efficacy are not established; early safety is favorable with no reported PEF deaths, pneumothorax being the main event. Absence of harm in small cohorts is not proof of efficacy.', src:'Fernandez-Bussy 2026; Rangamuwa & Steinfort 2025'},
+      { type:'single', q:'A 1.9 cm NSCLC sits against a 4 mm pulmonary artery. Which mechanistic point most explains why a non-thermal modality could protect the vessel-side margin?',
+        opts:['Blood flow conducts heat away from a thermal zone (heat-sink), under-treating that margin; a field-threshold non-thermal zone is not stolen by flow','Non-thermal ablation heats faster, so it beats the blood flow','Vessels raise tissue impedance, which enlarges a PEF zone','The vessel physically blocks microwaves but not radiofrequency current'],
+        ans:[0], why:'Heat-sink is convective heat loss into flowing blood that under-treats the adjacent thermal margin (worst for RFA, less for MWA). PEF deposits an electric field rather than heat, so flow does not steal the kill — and it spares the vessel wall.', src:'Fernandez-Bussy 2026; Miller & Cheng 2024'}
+    ];
+    const list=$('#quizList'), scoreEl=$('#quizScore'), lblEl=$('#quizLbl');
+    const answered=new Array(Q.length).fill(false), correct=new Array(Q.length).fill(false);
+    const letters=['A','B','C','D','E'];
+    progress.quiz.total=Q.length;
+
+    function refresh(){ const done=answered.filter(Boolean).length, right=correct.filter(Boolean).length;
+      scoreEl.textContent=right+' / '+done;
+      lblEl.textContent= done===0?'Answer the questions below.'
+        : done<Q.length? done+' of '+Q.length+' answered. Keep going.'
+        : (right===Q.length?'Perfect score — you have the physics and the margins down.':'All '+Q.length+' answered. Review the explanations you missed.');
+      progress.quiz.done=done; progress.quiz.right=right; syncReport(); }
+    function build(){ list.innerHTML='';
+      Q.forEach((q,qi)=>{ const card=document.createElement('div'); card.className='case';
+        let opts=''; q.opts.forEach((o,oi)=>{ opts+='<button class="opt" data-q="'+qi+'" data-o="'+oi+'"><span class="lt">'+letters[oi]+'</span><span>'+o+'</span></button>'; });
+        const tag=q.type==='multi'?'Select all that apply':'Single best answer';
+        card.innerHTML='<div class="chead"><span class="ct">Q'+(qi+1)+'</span><span class="cx">'+tag+'</span></div>'
+          +'<div class="cbody"><div style="font-weight:750;color:var(--ink);margin-bottom:12px">'+q.q+'</div><div class="opts">'+opts+'</div>'
+          +(q.type==='multi'?'<div class="multi-actions"><button class="btn primary" data-submit="'+qi+'">Submit answer</button></div>':'')
+          +'<div class="fb" id="qfb-'+qi+'"></div></div>';
+        list.appendChild(card); });
+      $$('.opt',list).forEach(b=>b.addEventListener('click',()=>onOpt(b)));
+      $$('[data-submit]',list).forEach(b=>b.addEventListener('click',()=>submitMulti(+b.dataset.submit))); }
+    function onOpt(btn){ const qi=+btn.dataset.q; if(answered[qi])return;
+      if(Q[qi].type==='single'){ grade(qi,[+btn.dataset.o]); }
+      else { btn.classList.toggle('picked'); } }
+    function submitMulti(qi){ if(answered[qi])return; const card=list.children[qi];
+      const picks=$$('.opt.picked',card).map(b=>+b.dataset.o); if(!picks.length)return; grade(qi,picks); }
+    function grade(qi,picks){ answered[qi]=true; const q=Q[qi];
+      const ansSet=new Set(q.ans), pickSet=new Set(picks);
+      const isRight = ansSet.size===pickSet.size && [...ansSet].every(a=>pickSet.has(a));
+      correct[qi]=isRight; const card=list.children[qi];
+      $$('.opt',card).forEach(b=>{ const oi=+b.dataset.o; b.disabled=true; b.classList.remove('picked');
+        if(ansSet.has(oi))b.classList.add('correct'); else if(pickSet.has(oi))b.classList.add('wrong'); else b.classList.add('dim'); });
+      const sb=$('[data-submit="'+qi+'"]',card); if(sb)sb.disabled=true;
+      const correctLetters=q.ans.map(a=>letters[a]).join(', ');
+      const fb=$('#qfb-'+qi); fb.className='fb show '+(isRight?'ok':'no');
+      fb.innerHTML='<div class="fh">'+(isRight?'✓ Correct':'✕ Answer: '+correctLetters)+'</div><div>'+q.why+'</div>'+(q.src?'<div class="src">Source: '+q.src+'</div>':''); refresh(); }
+    $('#resetQuiz').addEventListener('click',()=>{ answered.fill(false); correct.fill(false); build(); refresh(); });
+    build(); refresh();
+  })();
+
+  /* ============ REPORT CARD + REFERENCES ============ */
+  function syncReport(){
+    const rows=[
+      {k:'physics', label:'Physics primer', done:progress.physics, detail:progress.physics?'Reviewed all three mechanisms':'Scroll the mechanism cards', val:progress.physics?'✓':'—'},
+      {k:'sim', label:'Zone simulator', done:progress.sim, detail:progress.sim?'Ran at least one ablation':'Ablate a nodule to explore margin & heat-sink', val:progress.sim?'✓':'—'},
+      {k:'guide', label:'Image guidance', done:progress.guide, detail:progress.guide?'Practiced tool-in-lesion':'Seat the applicator tip', val:progress.guide?'✓':'—'},
+      {k:'cases', label:'Case decisions', done:progress.cases.done===progress.cases.total&&progress.cases.total>0, part:progress.cases.done>0,
+        detail:progress.cases.total?progress.cases.done+' of '+progress.cases.total+' answered':'', val:progress.cases.right+' / '+progress.cases.total},
+      {k:'quiz', label:'Self-assessment', done:progress.quiz.done===progress.quiz.total&&progress.quiz.total>0, part:progress.quiz.done>0,
+        detail:progress.quiz.total?progress.quiz.done+' of '+progress.quiz.total+' answered':'', val:progress.quiz.right+' / '+progress.quiz.total}
+    ];
+    const rc=$('#reportRows'); if(!rc)return;
+    rc.innerHTML=rows.map(r=>{ const cls=r.done?'pdone':(r.part?'ppart':'ptodo'); const icon=r.done?'✓':(r.part?'◐':'·');
+      return '<div class="prow"><span class="picon '+cls+'">'+icon+'</span><div><div class="pl">'+r.label+'</div><div class="pd">'+r.detail+'</div></div><span class="pv">'+r.val+'</span></div>'; }).join('');
+    const totalScore=progress.cases.right+progress.quiz.right, totalAns=progress.cases.done+progress.quiz.done;
+    const g=$('#reportGrade'); g.textContent = totalAns>0 ? Math.round(totalScore/(progress.cases.total+progress.quiz.total)*100)+'%' : '—';
+  }
+  syncReport();
+
+  (function(){
+    const R=[
+      'National Comprehensive Cancer Network. NCCN Clinical Practice Guidelines in Oncology — Non-Small Cell Lung Cancer (current version). Sections on ablation for medically inoperable disease.',
+      'Cardiovascular and Interventional Radiological Society of Europe (CIRSE). Standards of Practice on Thermal Ablation of Primary and Secondary Lung Tumours. Cardiovasc Intervent Radiol.',
+      'Society of Interventional Radiology (SIR). Research/quality-improvement consensus on image-guided tumor ablation (terminology and reporting criteria).',
+      'Ahmed M, Brace CL, Lee FT Jr, Goldberg SN. Principles of and advances in percutaneous ablation. Radiology. 2011.',
+      'Brace CL. Radiofrequency and microwave ablation of the liver, lung, kidney and bone — physical mechanisms and comparison. Curr Probl Diagn Radiol.',
+      'Hinshaw JL, Lee FT Jr. Cryoablation for lung and other tumors — cryobiology and technique. (Interventional oncology reviews.)',
+      'de Baère T, et al. Prospective multicenter outcomes of percutaneous thermal ablation of lung tumors. Ann Oncol / J Vasc Interv Radiol.',
+      'Dupuy DE, et al. Radiofrequency ablation of medically inoperable stage IA NSCLC (incl. ACOSOG/RTOG experience).',
+      'Wolf FJ, Dupuy DE, et al. Microwave ablation of lung malignancies — outcomes and complications.',
+      'Steinfort DP, Herth FJF, et al. Bronchoscopic thermal ablation of peripheral lung tumors — feasibility (investigational).',
+      'AABIP / interventional bronchoscopy reviews and active trials on transbronchial microwave/RF ablation (emerging, non-standard).',
+      'Manufacturer operator manuals (representative): microwave (NeuWave/Emprint), RF (Cool-tip/LeVeen), cryoablation (Galil/IceCure) — verify parameters against current labeling.',
+      'Fernandez-Bussy S, Gutierrez-Gallegos P, Yu Lee-Mateus A, et al. Endoscopic Ablation for Malignant Lung Lesions: Current Techniques, Unmet Needs, and Future Directions. Respiration 2026;105(3):381–396. doi:10.1159/000549189.',
+      'Rangamuwa K, Steinfort D. Bronchoscopic ablation for non-small cell lung cancer. J Thorac Dis 2025;17(12):11478–11487. doi:10.21037/jtd-2025-1849.',
+      'Miller R, Cheng G. Transbronchial Tumor Ablation. Curr Pulmonol Rep 2024;13:103–115. doi:10.1007/s13665-023-00329-6.',
+      'PEF devices & trials (verify against current FDA labeling / ClinicalTrials.gov): Aliya System and INUMI Flex Needle (Galvanize Therapeutics) for pulsed-electric-field delivery; trials incl. INCITE-ES (NCT04732520) and AFFINITY. Field/pulse figures (≈300 kV/cm, nanosecond) are as reported and kept conceptual for teaching.'
+    ];
+    $('#refList').innerHTML=R.map(r=>'<li>'+r+'</li>').join('');
+  })();
+
+})();
+</script>
+</body>
+</html>

@@ -10,7 +10,6 @@ const handoffMetadata: Metadata = {
   title: 'Thermal Ablation Interactive Module',
   description:
     'Interactive physics of hot endobronchial ablation in one flowing module: laser wavelengths and power density, a simulated ERBE VIO 3 console with electrosurgery modes and argon plasma coagulation, and airway-fire safety.',
-  robots: { index: false, follow: false },
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -45,12 +44,6 @@ export default async function ThermalAblationPage({ params }: ThermalAblationPag
                   className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
                 >
                   Simulation · Therapeutic Bronchoscopy
-                </Badge>
-                <Badge
-                  variant="destructive"
-                  className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-                >
-                  Admin Preview
                 </Badge>
               </div>
               <h1 className="text-4xl font-bold tracking-tight md:text-5xl">

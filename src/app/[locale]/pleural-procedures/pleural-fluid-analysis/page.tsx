@@ -4,10 +4,8 @@ import type { Route } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ModuleHeader } from '@/features/learning-module/components/ModuleHeader'
-import {
-  PleuralFluidAnalysisNav,
-  pleuralFluidAnalysisNavBase,
-} from '@/features/pleural-fluid-analysis/components/PleuralFluidAnalysisNav'
+import { pleuralFluidAnalysisNavBase } from '@/features/learning-module/moduleRoutes'
+import { PleuralFluidAnalysisNav } from '@/features/pleural-fluid-analysis/components/PleuralFluidAnalysisNav'
 import { getFluidObjectives } from '@/features/pleural-fluid-analysis/content/learnContent'
 import { HandoffContent } from '@/i18n/handoff'
 

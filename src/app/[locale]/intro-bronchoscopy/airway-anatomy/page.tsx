@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 
 import { AirwayAnatomyLessonDynamic } from '@/components/airway-anatomy-lesson/AirwayAnatomyLessonDynamic'
 import { Badge } from '@/components/ui/badge'
+import { IntroBronchoscopyProgressToggle } from '@/features/intro-bronchoscopy/components/IntroBronchoscopyProgressToggle'
 import { HandoffContent } from '@/i18n/handoff'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
@@ -79,6 +80,26 @@ export default function AirwayAnatomyIntroPage() {
 
           <section className="container">
             <AirwayAnatomyLessonDynamic />
+          </section>
+
+          <section className="container max-w-4xl">
+            <div className="flex flex-wrap gap-2 rounded-lg border border-border/70 bg-card/70 p-4">
+              <IntroBronchoscopyProgressToggle
+                moduleId="airway-anatomy"
+                section="learn"
+                label="Mark anatomy learning"
+              />
+              <IntroBronchoscopyProgressToggle
+                moduleId="airway-anatomy"
+                section="practice"
+                label="Mark anatomy practice"
+              />
+              <IntroBronchoscopyProgressToggle
+                moduleId="airway-anatomy"
+                section="assessment"
+                label="Mark anatomy assessment"
+              />
+            </div>
           </section>
         </div>
       }

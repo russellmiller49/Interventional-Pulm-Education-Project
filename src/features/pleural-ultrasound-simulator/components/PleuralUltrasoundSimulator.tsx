@@ -18,6 +18,7 @@ import {
   ThoracicProbeControls,
 } from '@/features/thoracic-ultrasound-simulator/components/ThoracicProbeControls'
 import { ThoracicScene3D } from '@/features/thoracic-ultrasound-simulator/components/ThoracicScene3D'
+import type { SelectedStructure } from '@/features/thoracic-ultrasound-simulator/types'
 import type { LoadedThoracicCase } from '@/features/thoracic-ultrasound-simulator/loader/loadThoracicCase'
 import { loadThoracicCase } from '@/features/thoracic-ultrasound-simulator/loader/loadThoracicCase'
 import { useBModeFrame } from '@/features/thoracic-ultrasound-simulator/providers/useBModeFrame'
@@ -114,14 +115,29 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
   const probe = useProbeState(store)
   const [answer, setAnswer] = useState<EffusionPattern | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [selectedStructure, setSelectedStructure] = useState<SelectedStructure | null>(null)
+  const [cardiacMotionEnabled, setCardiacMotionEnabled] = useState(
+    () =>
+      typeof window === 'undefined' ||
+      !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+  )
 
-  const { frame, metrics, groundTruthKey } = useBModeFrame({
+  const {
+    frame,
+    metrics,
+    groundTruthKey,
+    cardiacInPlane,
+    cardiacMotionActive,
+    heartRateBpm,
+    probeType,
+  } = useBModeFrame({
     manifest,
     volume,
     probe,
     width: 520,
     height: 620,
     model: pleuralTissueModel,
+    cardiacMotionEnabled,
   })
 
   const groundTruth = asEffusionPattern(groundTruthKey)
@@ -160,6 +176,8 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
                 manifest={manifest}
                 store={store}
                 needleUnsafe={!(score?.needleTrajectorySafe ?? false)}
+                selected={selectedStructure}
+                onSelectStructure={setSelectedStructure}
               />
               <ThoracicProbeControls manifest={manifest} store={store} />
             </div>
@@ -168,27 +186,96 @@ function LoadedSimulator({ loaded, store }: { loaded: LoadedThoracicCase; store:
               <BModeFramePanel
                 frame={frame}
                 depthCm={probe.depthCm}
-                title="Pleural B-mode"
+                title={cardiacInPlane ? 'Cardiac phased-array B-mode' : 'Thoracic B-mode'}
                 metricsActive={Boolean(metrics)}
+                volume={volume}
+                probe={probe}
+                structures={manifest.structures}
+                selected={selectedStructure}
+                onIdentify={setSelectedStructure}
+                probeType={probeType}
+                cardiacMotion={
+                  cardiacInPlane
+                    ? {
+                        enabled: cardiacMotionEnabled,
+                        active: cardiacMotionActive,
+                        heartRateBpm,
+                        onToggle: () => setCardiacMotionEnabled((enabled) => !enabled),
+                      }
+                    : undefined
+                }
               />
-              <CaseObjectives objectives={objectives} metrics={metrics} score={score} />
-              <PatternClassifier
-                answer={answer}
-                revealed={revealed}
-                onAnswer={(next) => {
-                  setAnswer(next)
-                  setRevealed(false)
-                }}
-                onReveal={() => setRevealed(true)}
-                classification={classification}
-                groundTruth={groundTruth}
-                score={score}
-              />
+              {cardiacInPlane ? (
+                <CardiacWindowGuide
+                  heartRateBpm={heartRateBpm}
+                  motionEnabled={cardiacMotionEnabled}
+                />
+              ) : (
+                <>
+                  <CaseObjectives objectives={objectives} metrics={metrics} score={score} />
+                  <PatternClassifier
+                    answer={answer}
+                    revealed={revealed}
+                    onAnswer={(next) => {
+                      setAnswer(next)
+                      setRevealed(false)
+                    }}
+                    onReveal={() => setRevealed(true)}
+                    classification={classification}
+                    groundTruth={groundTruth}
+                    score={score}
+                  />
+                </>
+              )}
             </div>
           </div>
         </section>
       }
     </HandoffContent>
+  )
+}
+
+function CardiacWindowGuide({
+  heartRateBpm,
+  motionEnabled,
+}: {
+  heartRateBpm: number | null
+  motionEnabled: boolean
+}) {
+  return (
+    <article className="rounded-lg border border-border/80 bg-card p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Cardiac window</h3>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Explore how probe position and rotation change a phased-array view of the heart.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline">Phased array</Badge>
+          <Badge variant={motionEnabled ? 'success' : 'outline'}>
+            {motionEnabled ? 'Cine running' : 'Cine paused'}
+          </Badge>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 text-sm leading-6 text-muted-foreground sm:grid-cols-2">
+        <div className="rounded-lg border border-border/70 bg-muted/35 p-3">
+          <p className="font-semibold text-foreground">What the image represents</p>
+          <p className="mt-1">
+            Dark spaces are procedural chamber blood pools. The granular muscular wall and bright
+            endocardial or valve echoes move through an illustrative
+            {heartRateBpm ? ` ${heartRateBpm.toFixed(0)} bpm` : ''} cycle.
+          </p>
+        </div>
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+          <p className="font-semibold text-foreground">Interpretation limit</p>
+          <p className="mt-1">
+            This is not a patient-specific echo and must not be used to estimate chamber size,
+            ejection fraction, valve function, or clinical findings.
+          </p>
+        </div>
+      </div>
+    </article>
   )
 }
 

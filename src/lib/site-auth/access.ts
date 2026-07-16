@@ -1,6 +1,12 @@
 import { unlocalizedPathname } from '@/i18n/path'
 
-export type SiteEntitlement = 'ip_registry' | 'site_admin' | 'socal_ebus_course'
+export type SiteEntitlement =
+  | 'ip_registry'
+  | 'pccm_intro_course'
+  | 'pccm_intro_course_admin_loma_linda'
+  | 'pccm_intro_course_admin_ucsd'
+  | 'site_admin'
+  | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
   '/forgot-password',
@@ -12,6 +18,12 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/signup',
   '/verify-email',
   '/auth/update-password',
+])
+
+const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
+  '/cardiohelp-ecmo',
+  '/mechanical-ventilation',
+  '/hamilton-c6-ventilation',
 ])
 
 const PUBLIC_PREFIXES = [
@@ -60,12 +72,41 @@ export function isDevOnlyAirwayAnatomyPath(pathname: string) {
   )
 }
 
-export function isAdminOnlyThermalAblationPath(pathname: string) {
+export function isAdminOnlyAirwayStentMechanicsAssetPath(pathname: string) {
   const normalizedPathname = unlocalizedPathname(pathname)
 
   return (
-    normalizedPathname === '/thermal-ablation' ||
-    normalizedPathname.startsWith('/thermal-ablation/')
+    normalizedPathname.startsWith('/airway-stent-mechanics/models/') &&
+    !isAuthenticatedAirwayStentMechanicsAssetPath(normalizedPathname)
+  )
+}
+
+export function isAuthenticatedAirwayStentMechanicsAssetPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/airway-stent-mechanics/models/v2' ||
+    normalizedPathname.startsWith('/airway-stent-mechanics/models/v2/')
+  )
+}
+
+export function isPccmIntroCourseSharedModulePath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/intro-bronchoscopy' ||
+    normalizedPathname.startsWith('/intro-bronchoscopy/') ||
+    normalizedPathname === '/pleural-procedures' ||
+    normalizedPathname.startsWith('/pleural-procedures/')
+  )
+}
+
+export function isPccmIntroCourseAdminDashboardPath(pathname: string) {
+  const normalizedPathname = unlocalizedPathname(pathname)
+
+  return (
+    normalizedPathname === '/admin/pccm-intro-course' ||
+    normalizedPathname.startsWith('/admin/pccm-intro-course/')
   )
 }
 
@@ -89,13 +130,17 @@ export function isPublicPath(pathname: string) {
 
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
-    isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
-    isAdminOnlyThermalAblationPath(normalizedPathname)
+    isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
+    isAuthenticatedAirwayStentMechanicsAssetPath(normalizedPathname) ||
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
   ) {
     return false
   }
 
-  if (PUBLIC_EXACT_PATHS.has(normalizedPathname)) {
+  if (
+    PUBLIC_EXACT_PATHS.has(normalizedPathname) ||
+    PUBLIC_UNLISTED_EXACT_PATHS.has(normalizedPathname)
+  ) {
     return true
   }
 
@@ -122,6 +167,10 @@ export function isPublicPath(pathname: string) {
   }
 
   return isStaticAssetPath(normalizedPathname)
+}
+
+export function isPublicUnlistedPath(pathname: string) {
+  return PUBLIC_UNLISTED_EXACT_PATHS.has(unlocalizedPathname(pathname))
 }
 
 export function isAuthPath(pathname: string) {
@@ -169,8 +218,8 @@ export function getRequiredEntitlement(
 
   if (
     isDevOnlyAirwayAnatomyPath(normalizedPathname) ||
-    isAdminOnlyEbusTrainingAssetPath(normalizedPathname) ||
-    isAdminOnlyThermalAblationPath(normalizedPathname)
+    isAdminOnlyAirwayStentMechanicsAssetPath(normalizedPathname) ||
+    isAdminOnlyEbusTrainingAssetPath(normalizedPathname)
   ) {
     return 'site_admin'
   }
@@ -181,6 +230,10 @@ export function getRequiredEntitlement(
 
   if (normalizedPathname.startsWith('/ip-registry')) {
     return 'ip_registry'
+  }
+
+  if (normalizedPathname.startsWith('/pccm-intro-course')) {
+    return 'pccm_intro_course'
   }
 
   if (isAdminEbusPreviewEmbed(normalizedPathname, searchParams)) {
@@ -247,14 +300,24 @@ export function resolveSiteModuleId(pathname: string) {
     return segments.slice(0, 3).join(':')
   }
 
+  if (first === 'mechanical-ventilation' || first === 'hamilton-c6-ventilation') {
+    return 'mechanical-ventilation'
+  }
+
   if (
+    first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
+    first === 'cardiohelp-ecmo' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
     first === 'journal-club-podcasts' ||
+    first === 'peripheral-ablation' ||
     first === 'rapid-onsite-cytology' ||
     first === 'resources' ||
+    first === 'rigid-bronchoscopy' ||
+    first === 'therapeutic-bronchoscopy' ||
     first === 'thermal-ablation' ||
+    first === 'tracheostomy' ||
     first === 'tnm-9-staging' ||
     first === 'xr'
   ) {

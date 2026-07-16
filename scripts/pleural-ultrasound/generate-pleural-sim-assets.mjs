@@ -50,6 +50,8 @@ generateCasePackage({
       'diaphragm.stl',
       'liver.stl',
       'spleen.stl',
+      'heart.stl',
+      'great-vessels.stl',
     ],
     notes: [
       'PLUS is a native C++/PlusServer workflow, so this browser module should consume cached images or atlases generated offline rather than attempting to run PlusLib in Next.js.',

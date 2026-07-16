@@ -1,7 +1,7 @@
 {
   "id": "pleural-effusion-001",
   "name": "Patient-specific pleural effusion ultrasound simulator",
-  "description": "Derived educational case from a Slicer segmentation with skin, diaphragm, pleural effusion, lungs, chest wall, and upper abdominal structures.",
+  "description": "Derived educational case from a de-identified chest-CT Slicer segmentation: chest wall, ribs and spine, both lungs, bilateral pleural effusions, diaphragm, liver, spleen, both kidneys, pancreas, gallbladder, stomach, adrenal-level vessels (aorta, SVC/IVC, pulmonary and portal/splenic veins), heart, esophagus, trachea, and thyroid.",
   "safetyLabel": "Educational simulation only; not for diagnosis, treatment, or procedure guidance.",
   "meshUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/pleural-effusion-001.glb",
   "probeModelUrl": "/module-assets/v1/pleural-ultrasound-simulator/pleural-effusion-001/ultrasound-probe.glb",
@@ -10,32 +10,52 @@
   "labels": {
     "0": "background",
     "1": "skin",
-    "2": "subcutaneousTissue",
-    "3": "intercostalMuscle",
     "4": "rib",
     "5": "lung",
-    "6": "atelectaticLung",
     "7": "pleuralFluid",
-    "8": "septation",
-    "9": "debris",
     "10": "diaphragm",
     "11": "liver",
-    "12": "spleen"
+    "12": "spleen",
+    "13": "kidney",
+    "14": "pancreas",
+    "15": "gallbladder",
+    "16": "stomach",
+    "17": "esophagus",
+    "18": "thyroid",
+    "19": "heart",
+    "20": "airway",
+    "21": "aorta",
+    "22": "venaCava",
+    "23": "pulmonaryVessel",
+    "24": "portalVein",
+    "25": "spine",
+    "26": "thoracicCavity",
+    "27": "muscle"
   },
   "labelCounts": {
-    "0": 15406127,
+    "0": 13918058,
     "1": 1774415,
-    "2": 0,
-    "3": 323790,
-    "4": 408538,
-    "5": 2224363,
-    "6": 0,
-    "7": 588885,
-    "8": 0,
-    "9": 0,
-    "10": 288355,
-    "11": 836668,
-    "12": 103419
+    "4": 133776,
+    "5": 2063763,
+    "7": 573129,
+    "10": 304111,
+    "11": 835188,
+    "12": 103419,
+    "13": 70673,
+    "14": 33392,
+    "15": 5125,
+    "16": 78492,
+    "17": 24013,
+    "18": 8105,
+    "19": 433065,
+    "20": 48570,
+    "21": 149581,
+    "22": 47480,
+    "23": 263454,
+    "24": 10091,
+    "25": 274762,
+    "26": 478108,
+    "27": 323790
   },
   "labelBoundsLpsMm": {
     "skin": {
@@ -43,40 +63,110 @@
       "max": [202.89231920242304, -28.82644033432007, -176.89940139651293],
       "voxels": 1774415
     },
-    "intercostalMuscle": {
-      "min": [-79.86930823326112, -161.7170224189758, -509.3992429077624],
-      "max": [81.81423330307004, -39.16237449645996, -175.90090337395662],
-      "voxels": 323790
-    },
     "rib": {
-      "min": [-162.55678153038025, -263.59980201721186, -509.3992429077624],
-      "max": [179.26732683181757, -43.592060565948486, -175.90090337395662],
-      "voxels": 408538
+      "min": [-162.55678153038025, -263.59980201721186, -335.1613379716872],
+      "max": [179.26732683181757, -105.60766553878784, -175.90090337395662],
+      "voxels": 133776
     },
     "lung": {
       "min": [-137.45522713661194, -293.1310424804687, -442.99912440776814],
       "max": [157.11889648437494, -93.79516935348511, -190.8783737123012],
-      "voxels": 2224363
+      "voxels": 2063763
     },
     "pleuralFluid": {
       "min": [-150.0060043334961, -189.03341984748837, -470.4578200280665],
       "max": [157.11889648437494, -67.21705293655396, -200.86335393786425],
-      "voxels": 588885
+      "voxels": 573129
     },
     "diaphragm": {
       "min": [-144.83803725242615, -313.06462979316706, -509.3992429077624],
       "max": [157.11889648437494, -71.64673900604248, -389.5794802010058],
-      "voxels": 288355
+      "voxels": 304111
     },
     "liver": {
       "min": [-151.48256635665894, -309.37322473525995, -508.89999389648426],
       "max": [47.85330677032468, -77.55298709869385, -404.5569505393504],
-      "voxels": 836668
+      "voxels": 835188
     },
     "spleen": {
       "min": [44.900182723998995, -187.55685782432553, -481.940547287464],
       "max": [158.59545850753778, -102.65454149246216, -418.53592285513866],
       "voxels": 103419
+    },
+    "kidney": {
+      "min": [-40.00213360786441, -156.54905533790586, -508.89999389648426],
+      "max": [140.87671422958368, -68.6936149597168, -442.49987539649],
+      "voxels": 70673
+    },
+    "pancreas": {
+      "min": [-34.09588551521304, -224.47090840339658, -508.89999389648426],
+      "max": [117.25172185897821, -141.04515409469602, -461.4713378250598],
+      "voxels": 33392
+    },
+    "gallbladder": {
+      "min": [-97.58805251121522, -237.75996661186215, -508.89999389648426],
+      "max": [-62.88884496688844, -192.72482490539548, -490.4277804791926],
+      "voxels": 5125
+    },
+    "stomach": {
+      "min": [-61.4122829437256, -297.5607285499572, -508.89999389648426],
+      "max": [72.95486116409299, -164.67014646530149, -426.5239070355891],
+      "voxels": 78492
+    },
+    "esophagus": {
+      "min": [2.079884052276583, -212.65841221809384, -429.519401103258],
+      "max": [33.08768653869626, -142.52171611785886, -188.8813776671886],
+      "voxels": 24013
+    },
+    "thyroid": {
+      "min": [-18.591984272003202, -242.18965268135068, -215.84082427620882],
+      "max": [34.5642485618591, -204.5373210906982, -184.88738557696337],
+      "voxels": 8105
+    },
+    "heart": {
+      "min": [-35.57244753837588, -292.3927614688873, -420.5329189002513],
+      "max": [111.34547376632685, -160.24046039581296, -307.7026423513888],
+      "voxels": 433065
+    },
+    "airway": {
+      "min": [-110.87711071968079, -270.98261213302607, -408.5509426295756],
+      "max": [127.58765602111811, -114.46703767776489, -176.89940139651293],
+      "voxels": 48570
+    },
+    "aorta": {
+      "min": [-14.900579214096098, -253.263867855072, -509.3992429077624],
+      "max": [49.32986879348752, -118.89672374725342, -245.79576495289797],
+      "voxels": 149581
+    },
+    "venaCava": {
+      "min": [-36.310728549957304, -237.75996661186215, -509.3992429077624],
+      "max": [3.5564460754394247, -148.42796421051023, -255.780745178461],
+      "voxels": 47480
+    },
+    "pulmonaryVessel": {
+      "min": [-129.3341360092163, -284.27167034149164, -430.0186501145362],
+      "max": [149.73608636856073, -102.65454149246216, -203.85884800553316],
+      "voxels": 263454
+    },
+    "portalVein": {
+      "min": [-69.53337407112123, -244.40449571609494, -492.42477652430523],
+      "max": [98.05641555786127, -149.90452623367307, -460.4728398025035],
+      "voxels": 10091
+    },
+    "spine": {
+      "min": [-40.00213360786441, -204.5373210906982, -509.3992429077624],
+      "max": [44.900182723998995, -43.592060565948486, -176.89940139651293],
+      "voxels": 274762
+    },
+    "thoracicCavity": {
+      "min": [-158.86537647247314, -315.2794728279113, -508.89999389648426],
+      "max": [170.40795469284052, -59.834242820739746, -175.90090337395662],
+      "voxels": 478108
+    },
+    "muscle": {
+      "min": [-79.86930823326112, -161.7170224189758, -509.3992429077624],
+      "max": [81.81423330307004, -39.16237449645996, -175.90090337395662],
+      "voxels": 323790
     }
   },
   "plusToolkit": {
@@ -96,12 +186,80 @@
       "pleural-fluid.stl",
       "diaphragm.stl",
       "liver.stl",
-      "spleen.stl"
+      "spleen.stl",
+      "heart.stl",
+      "great-vessels.stl"
     ],
     "notes": [
       "PLUS is a native C++/PlusServer workflow, so this browser module should consume cached images or atlases generated offline rather than attempting to run PlusLib in Next.js.",
       "The Plus UsSimulator device models B-mode from surface meshes with acoustic material parameters and scan conversion; export one STL per relevant Slicer segment for that pipeline.",
       "Generated Plus frames can be indexed by the same probe pose fields used by this module and substituted ahead of the educational browser ray marcher."
+    ]
+  },
+  "cardiacModel": {
+    "kind": "parametric-cardiac-v1",
+    "sourceLabel": "heart",
+    "centerLpsMm": [37.89, -226.32, -364.12],
+    "basis": {
+      "leftAxis": [0.958, 0.24, 0.156],
+      "anteriorAxis": [0.223, -0.967, 0.12],
+      "baseAxis": [-0.18, 0.08, 0.98]
+    },
+    "defaultHeartRateBpm": 72,
+    "respiratoryRateBpm": 15,
+    "respiratoryExcursionMm": 3,
+    "chambers": [
+      {
+        "id": "left-ventricle",
+        "centerLocalMm": [17, -4, -13],
+        "endDiastolicRadiiMm": [22, 23, 41],
+        "endSystolicRadiiMm": [15, 16, 31]
+      },
+      {
+        "id": "right-ventricle",
+        "centerLocalMm": [-16, 12, -10],
+        "endDiastolicRadiiMm": [27, 17, 37],
+        "endSystolicRadiiMm": [19, 11, 28],
+        "crescent": 0.52
+      },
+      {
+        "id": "left-atrium",
+        "centerLocalMm": [15, -8, 31],
+        "endDiastolicRadiiMm": [19, 16, 17],
+        "endSystolicRadiiMm": [22, 18, 19]
+      },
+      {
+        "id": "right-atrium",
+        "centerLocalMm": [-17, 2, 29],
+        "endDiastolicRadiiMm": [21, 17, 18],
+        "endSystolicRadiiMm": [24, 19, 20]
+      }
+    ],
+    "valves": [
+      {
+        "id": "mitral",
+        "centerLocalMm": [15, -6, 13],
+        "normalLocal": [0, 0, 1],
+        "radiusMm": 14,
+        "thicknessMm": 1.8,
+        "timing": "atrioventricular"
+      },
+      {
+        "id": "tricuspid",
+        "centerLocalMm": [-16, 7, 12],
+        "normalLocal": [0, 0, 1],
+        "radiusMm": 15,
+        "thicknessMm": 1.8,
+        "timing": "atrioventricular"
+      },
+      {
+        "id": "aortic",
+        "centerLocalMm": [5, -1, 26],
+        "normalLocal": [0.22, -0.12, 0.97],
+        "radiusMm": 8,
+        "thicknessMm": 1.6,
+        "timing": "semilunar"
+      }
     ]
   },
   "source": {

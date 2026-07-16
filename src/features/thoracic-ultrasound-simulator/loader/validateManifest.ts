@@ -1,4 +1,5 @@
 import type {
+  CardiacModelSpec,
   FrameSource,
   ProbePreset,
   ThoracicCaseManifest,
@@ -139,6 +140,45 @@ function validateFrameSources(sources: FrameSource[] | undefined, errors: string
   })
 }
 
+function validateCardiacModel(model: CardiacModelSpec | undefined, errors: string[]) {
+  if (!model) {
+    return
+  }
+  if (model.kind !== 'parametric-cardiac-v1' || model.sourceLabel !== 'heart') {
+    errors.push('cardiacModel must be a parametric-cardiac-v1 model sourced from heart')
+  }
+  if (
+    !isVec3(model.centerLpsMm) ||
+    !isVec3(model.basis?.leftAxis) ||
+    !isVec3(model.basis?.anteriorAxis) ||
+    !isVec3(model.basis?.baseAxis)
+  ) {
+    errors.push('cardiacModel needs a centerLpsMm and three finite basis axes')
+  }
+  if (!Number.isFinite(model.defaultHeartRateBpm) || model.defaultHeartRateBpm <= 0) {
+    errors.push('cardiacModel.defaultHeartRateBpm must be positive')
+  }
+  if (!Array.isArray(model.chambers) || model.chambers.length < 2) {
+    errors.push('cardiacModel.chambers must contain at least two chamber definitions')
+  } else {
+    model.chambers.forEach((chamber, index) => {
+      if (
+        !isVec3(chamber?.centerLocalMm) ||
+        !isVec3(chamber?.endDiastolicRadiiMm) ||
+        !isVec3(chamber?.endSystolicRadiiMm) ||
+        [...chamber.endDiastolicRadiiMm, ...chamber.endSystolicRadiiMm].some(
+          (radius) => radius <= 0,
+        )
+      ) {
+        errors.push(`cardiacModel.chambers[${index}] needs positive finite radii and a center`)
+      }
+    })
+  }
+  if (!Array.isArray(model.valves)) {
+    errors.push('cardiacModel.valves must be an array')
+  }
+}
+
 export function validateThoracicManifest(value: unknown): ManifestValidationResult {
   const errors: string[] = []
   const manifest = value as ThoracicCaseManifest
@@ -175,6 +215,7 @@ export function validateThoracicManifest(value: unknown): ManifestValidationResu
   validateStructures(manifest.structures, errors)
   validateProbePresets(manifest.probePresets, manifest.defaultProbePresetId, errors)
   validateFrameSources(manifest.frameSources, errors)
+  validateCardiacModel(manifest.cardiacModel, errors)
 
   const quality = manifest.qualityStatus
   if (!quality || typeof quality !== 'object') {

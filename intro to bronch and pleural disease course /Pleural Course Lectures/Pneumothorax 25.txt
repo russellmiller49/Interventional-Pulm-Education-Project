@@ -1,0 +1,156 @@
+00:00:01:22 - 00:00:25:08
+Unknown
+Hello, my name is Brian Tran and I am the Interventional Pulmonology Fellow for the 2025 2026 academic year. Today we'll be discussing pneumothorax evaluation and management. First some definitions. The term pneumothorax describes air in the plural space. Typically there are three ways in which this can happen. Either there is a communication between the alveolar space and the pleura.
+
+00:00:25:13 - 00:00:59:14
+Unknown
+There is a communication between the atmosphere and the plural space, or there is a gas producing organism within the plural space. Spontaneous pneumothorax describes a pneumothorax that occurs on its own and not because of trauma or any cause. In primary spontaneous pneumothorax, there is no precipitating event and no clinically apparent lung disorder. The incidence for primary pneumothorax is about 7.4 to 18 cases per 100,000 patients per year for males, and 1.2 to 6 cases per 100,000 patients per year for females.
+
+00:00:59:16 - 00:01:22:22
+Unknown
+These typically occur in younger patients at rest and have a recurrence rate of about 30%, depending on which literature you look at. Recurrence is most often in the first 30 days. It can be up to two years or more later in secondary spontaneously, whether there's an underlying lung disease present. These typically occur in older patients who are 50 to 60 years old or older with emphysema.
+
+00:01:22:24 - 00:01:47:21
+Unknown
+Recurrence in the case of secondary spontaneous pneumothorax are higher than primary spontaneous pneumothorax and can be up to 80%. We will commonly identify pneumothorax on imaging, such as the chest X-ray displayed here, where there is a clear gap of air between the lung and chest wall, but oftentimes it may be less obvious in these less clear cut instances.
+
+00:01:47:22 - 00:02:11:27
+Unknown
+Ultrasound can help identify if and were a new with is located. The usual appearance of lung ultrasound is depicted here. The linear or phased array probes are used, and you can see rib shadowing on the left and right hand side of the image. There is a line which distinguishes the pleura. As the patient breathes, you should be able to see plural sliding if there is no sliding, this can be an indicator of pneumothorax.
+
+00:02:11:28 - 00:02:38:10
+Unknown
+There are some limitations like obesity, edema, and subcutaneous emphysema, which may impair your assessment. Also there are non pneumothorax causes of the absence of lung sliding. These can include bullet pleural disease and mainstem bronchial occlusion like mucus plugging or indeed bronchial tumor. Sometimes as you move your probe around, you may identify a lung point where there is a plural sliding on one side of the point and absence of sliding on the other.
+
+00:02:38:11 - 00:03:09:06
+Unknown
+This is consistent with the weather and demonstrated on the right hand image. Lastly, mode can help identify the presence of pneumothorax with normal plural sliding, displaying a waves on the beach or seashore sign, and pneumothorax displaying a barcode sign. With regard to the management of pneumothorax, there are two major guidelines that are used to dictate care. The American College of Trust Physicians published their guidelines in 2001.
+
+00:03:09:08 - 00:03:28:19
+Unknown
+They divide spontaneous Nemo's into large and small. Based on the distance of the apex of the lung to the cupola. The Old British Thoracic Society guidelines used the distance of the lung to the chest wall at the level of the hilum, to define large versus small. Both are depicted here.
+
+00:03:28:21 - 00:04:09:11
+Unknown
+First, it's important to note that the ACC guidelines define clinically stable patients as those who had respirations less than 24, a heart rate between 60 and 120 beats per minute SpO2 of greater than 90% of room air, normal blood pressure, and the ability to speak in whole sentences between breaths. Normal blood pressure wasn't really defined as far as I could find, so for PSP that is small again, less than three centimeters from the apex to the cupola where the patient is clinically stable, they can be observed, usually in the Ed setting for 3 to 6 hours, and if a repeat chest x ray demonstrates stability or resolution of the pneumothorax, they can be discharged with
+
+00:04:09:11 - 00:04:32:13
+Unknown
+close interval of follow up within 48 hours. These patients should be compliant patients who are asymptomatic, and they should be able to obtain a repeat chest x ray at the time of their follow up, and should have easy ability to return to the Ed if they develop chest pain, shortness of breath, decompensation, etc.. For patients with large numerous who are stable, a procedure can be performed to reexported the lung.
+
+00:04:32:16 - 00:04:54:22
+Unknown
+Either small bore catheter or chest tube could be placed. The guidelines say that suction can be used if the lung does not expand quickly, and the patient should be hospitalized. Interestingly, they do note that for reliable patients, a Heimlich valve or water seal device could be connected to the catheter and the patient can be discharged with close interval follow up within two days.
+
+00:04:54:24 - 00:05:17:13
+Unknown
+The picture on the right shows a Heimlich device, which is essentially a one way valve that lets air without allowing air to entrain back into the patient. For clinically unstable patients, the guidelines recommend lung re and hospitalization. It doesn't matter if you use a small bore catheter or larger chest tube, but for patient comfort, smaller is probably the better way to go.
+
+00:05:17:18 - 00:05:35:22
+Unknown
+If there is a concern for a big reason for a leak like a broncho plural fistula, or the patient ends up on positive pressure ventilation, a larger chest tube is recommended in terms of chest tube removal. This should be done with a chest x ray that demonstrates resolution of the pneumothorax, and that there is no air leak present.
+
+00:05:35:23 - 00:05:42:20
+Unknown
+The chest x ray should be obtained 5 to 12 hours after the last evidence of air leak.
+
+00:05:42:22 - 00:06:04:03
+Unknown
+For persistent air leaks, the patient should undergo continued observation. But if the air leak has been present for 3 to 5 days, surgical intervention or pleural disease should be considered. The guideline panel varied in their practice between observing between 3 and 5 days for primary spontaneous new model rocks patients. Generally speaking. No action is required to prevent recurrence.
+
+00:06:04:04 - 00:06:24:20
+Unknown
+The exception to this in the guidelines is for patients with persistent air leaks, where procedures to prevent recurrence can be considered. However, generally speaking, this is usually done after the second pneumothorax, not the first. If patients have apical bullet on a CT scan, then it is recommended that they undergo beloved IMI due to the increased risk of recurrence.
+
+00:06:24:20 - 00:06:50:20
+Unknown
+But for these patients, they're not really primary spontaneous. They're secondary spontaneous. For secondary spontaneous pneumothorax, patients who are stable and have a small pneumothorax, they should be hospitalized and observed. They can undergo aspiration or chest tube placement depending on if they respond. For patients who are clinically stable with large pneumothorax. They should be hospitalized and banded for those at risk of air leaks.
+
+00:06:50:21 - 00:07:17:23
+Unknown
+A larger chest tube should be used for others not at risk. A smaller test tube can be used. The use of a water seal device versus suction is based on clinical circumstances, and if you get in with just water, seal alone to prevent recurrence. In these cases, staple Bollettieri or medical surgical thoracotomy with pleura disease is employed. Basically, these secondary spontaneous pneumothorax are managed more aggressively to prevent recurrence.
+
+00:07:17:25 - 00:07:46:12
+Unknown
+More recently, the British Thoracic Society updated their guidelines for plural disease, including pneumothorax, in 2023. This was an update from their prior guidelines, which were published in 2010. The updated RTS guidelines no longer use the size of the new method acts as a breakpoint for invasive management. Their focus was more on a personalized, patient centered approach. The guidelines advocate for conservative, noninvasive management for patients who are asymptomatic or minimally symptomatic.
+
+00:07:46:15 - 00:08:12:08
+Unknown
+If the patient is otherwise doing well, they recommended ambulatory management for initial primary spontaneous pneumothorax. As long as patients have good support and can be seen in close follow up at a center with the appropriate resources and expertise to reevaluate the patient. For those not meeting criteria for conservative ambulatory management, needle aspiration or an intercostal drain was recommended for secondary spontaneous pneumothorax.
+
+00:08:12:08 - 00:08:41:07
+Unknown
+Clinical produces was recommended for prevention of recurrence. The surgery was recommended for prevention of recurrence for initial primary spontaneous pneumothorax in cases where prevention is critical. For example, high risk occupations like pilots or divers, or where the patient had tension physiology. For patients with persistent air leaks, the RTS guidelines recommend surgical consultation after 5 to 7 days for those air leaks treated non surgically.
+
+00:08:41:08 - 00:09:11:28
+Unknown
+Autologous blood player thesis was considered just as good as ender bronchial valve therapy. Based on the evidence and experience of the authors, and no recommendation was made for one modality over the other. Similarly, for patients who were deemed to require surgery for their persistent air leak, no recommendation was made for Vats or over the economy. Patients who were deemed to require surgery included those with tension physiology had a second ipsilateral pneumothorax or a first contralateral pneumothorax.
+
+00:09:12:01 - 00:09:46:09
+Unknown
+This table summarizes the management options according to the RTS guidelines based on the evidence. The interventions are across the top, while various measures are outlined along the left, including hospital length of stay. Pneumothorax, recurrence rate, readmission rate, need for additional procedures and complications, amongst others. Display it. Here is the RTS algorithm for pneumothorax management. As previously discussed, it is interesting that at the dead center it takes into account the patient's preference for treatment, assuming they have no high risk characteristics.
+
+00:09:46:11 - 00:10:00:25
+Unknown
+These next slides are side by side summary of the RTS guidelines versus the Acpi guidelines. There's no new information here. It's just displayed differently.
+
+00:10:00:27 - 00:10:19:27
+Unknown
+There are some clinical entities that predispose patients to recurrent spontaneous pneumothorax. Using our prior definitions. These would be secondary spontaneous Nemo's. Some of these are rare entities that you may or may not encounter in your practice, but all of them are good cases for testing on board exams.
+
+00:10:20:00 - 00:10:48:02
+Unknown
+Thoracic involvement of endometriosis can cause something called ketamine pneumothorax. In this process, ectopic implants of endometrial tissue are found outside the uterine cavity and musculature. The picture to the left has nests of dark endometrial tissue as seen during bats. 3 to 6% of these patients with endometriosis will develop pneumothorax. Classic signs and symptoms of thoracic endometriosis can include pneumothorax, chest pain, and hemo thorax.
+
+00:10:48:04 - 00:11:16:29
+Unknown
+Interestingly, the symptoms patients experience can be recurrent on a monthly basis with their menses. The Leo ptosis, or Lam for short, is a cystic lung disease that affects women of childbearing age. 50% of patients can present within with racks, and two thirds of patients will have recurrent pneumothorax, which can also be bilateral. Land can be associated with tuberous sclerosis complex, and mutations in the TSC 1 or 2 genes.
+
+00:11:17:01 - 00:11:48:01
+Unknown
+Imaging of these patients will reveal multiple small says, predominantly in the mid and lower lung fields. These patients can have extra pulmonary involvement of their disease in the form of renal angioedema. Lipoma is the key stain for diagnosis is the HMP 45 stage. For melanocytic markers. Bert Bay syndrome is a rare autosomal dominant disease. Patients present with benign skin tumors cut fibro follicular Mas, which are hematoma tumors of hair follicles.
+
+00:11:48:03 - 00:12:01:22
+Unknown
+These patients are at higher risk for developing renal cancers and develop pulmonary cysts, which can predispose them to pneumothorax. This syndrome occurs due to a mutation in the follicular gene on chromosome 17.
+
+00:12:01:24 - 00:12:24:10
+Unknown
+We'll now cover some areas of practical pneumothorax and chest tube management. Thus far we have discussed connecting chest tubes to water seal or suction. But what does that entail and what devices are used? A classic schematic for this is the three bottle system that you see at the upper left. The bottle on the right is the fluid collection bottle, where blood or pus or pleural effusion may be collected.
+
+00:12:24:10 - 00:12:49:07
+Unknown
+In the case of pure pneumothorax, you might not have any of this, and there may just be scant plural fluid. The bottle in the middle is the water seal. If you followed air from the patient to this bottle up until the bubble exits the water, you could theoretically suck the air backward into the patient. Once the air exits the water, there is no way for the air to get back into the patient, effectively creating a one way exit system.
+
+00:12:49:10 - 00:13:12:21
+Unknown
+The last bottle on the left is a pressure regulation system that sets the degree of suction for the system. Below the bottles, you have a cartoon that demonstrates the typical setup of our atrium or pleural vac boxes that we connect to our chest tubes. And to the right you have a picture of an actual atrium. I have highlighted the portions of each part of the ATM that corresponds to the three bottle system.
+
+00:13:12:23 - 00:13:22:29
+Unknown
+The columns on the right of the box correspond to the fluid collection model.
+
+00:13:23:02 - 00:13:31:26
+Unknown
+The bottom left of the box is where the water sale is located.
+
+00:13:31:28 - 00:13:50:23
+Unknown
+And the upper left is where the pressure to the system and to the patient are regulated. Some other things to note here are that there is an orange accordion device that will indicate when the suction is on. Additionally, the wall suction can be turned up as high as it can go. However, the dial on the upper left of the box will regulate what the system actually gets.
+
+00:13:50:26 - 00:14:15:09
+Unknown
+This also serves as a safety measure to protect the patient when reporting on chest tubes. There are a few things that you should describe in your documentation and during your presentations on rounds. These include 24 hour chest tube output as indicated by the collection columns. Whether or not the chest tube is titling. Sometimes this is indicated by a ball within the water column that rises and falls with the plural.
+
+00:14:15:09 - 00:14:42:10
+Unknown
+Pressure changes during the patient's respiratory cycle. Make sure that the suction is off before you assess for titling, because you won't see titling with active suction. If there is no titling, you need to troubleshoot either from the wall to the patient or the patient to the wall to assess the entirety of the system. Common causes for non-title included kink in the tube, clot, or debris occluding the tubing or the chest tube may have accidentally dislodged from the patient's plural space.
+
+00:14:42:15 - 00:15:04:02
+Unknown
+Lastly, you should report on if there is an air leak present. You can identify this by noting any bubbling at the water seal is a continuous or present only during certain parts of respiration. Not only can we comment on if an air leak is present, but you can quantify it depending on how much it juts out and what number it gets to.
+
+00:15:04:04 - 00:15:21:27
+Unknown
+So to recap, we covered different definitions for pneumothorax identification methods, including on chest x ray and ultrasound findings. The Acpi and RTS guidelines, recurrent spontaneous pneumothorax and practical management, including the three bottle system in the atrium.
+

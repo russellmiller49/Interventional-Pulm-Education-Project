@@ -54,6 +54,12 @@ function matchDynamicText(t: HandoffRawTranslator, value: string): DynamicMatch 
       },
     }
   }
+  if ((match = value.match(/^Inspect (.+)$/))) {
+    return {
+      key: 'd_inspect_label',
+      values: { label: exactTranslation(t, match[1]) },
+    }
+  }
   if ((match = value.match(/^Open publication for (.+) in a new tab$/))) {
     return { key: 'd_open_publication', values: { title: match[1] } }
   }

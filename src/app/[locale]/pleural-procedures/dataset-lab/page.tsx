@@ -8,7 +8,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 const handoffMetadata: Metadata = {
   title: 'Pleural Dataset Source Lab',
   description:
-    'Raw CC BY Mendeley and figshare lung ultrasound source-label lab for pleural education module review.',
+    'Raw CC BY Mendeley lung ultrasound source-label lab for pleural education module review.',
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -23,7 +23,7 @@ export default function PleuralDatasetLabPage() {
         <div className="space-y-10 py-16">
           <PleuralModuleHeader
             title="Pleural dataset source lab"
-            description="Review raw CC BY lung ultrasound examples from Mendeley and figshare, commit to source labels, and trace each embedded image back to its dataset, archive path, license, and checksum."
+            description="Review raw CC BY lung ultrasound examples from Mendeley, commit to source labels, and trace each embedded image back to its dataset, archive path, license, and checksum."
           />
           <PleuralDatasetLab />
         </div>

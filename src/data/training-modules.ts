@@ -284,11 +284,11 @@ export const trainingModules: TrainingModule[] = [
     difficulty: 'intermediate',
     durationMinutes: 140,
     summary:
-      'Covers selection, deployment, and complication management for silicone and metallic airway stents with scenario-driven practice.',
+      'Hands-on bootcamp that complements the Airway Stent Mechanics & Failure Explorer with measurement, deployment simulation, troubleshooting, and team debrief.',
     objectives: [
-      'Select appropriate stent type and size based on airway measurements and pathology',
+      'Translate a defined indication, mechanical job, anatomy, and exit strategy into an architecture and fit plan',
       'Deploy stents using rigid and flexible techniques with ventilation strategies to maintain oxygenation',
-      'Develop protocols for post-placement surveillance and managing common complications',
+      'Develop context-specific surveillance and complication-response plans that address underlying drivers',
     ],
     prerequisites: ['Rigid Bronchoscopy Foundations'],
     equipment: ['Rigid and flexible scopes', 'Stent demo kits', '3D printed airway models'],
@@ -304,7 +304,10 @@ export const trainingModules: TrainingModule[] = [
         description:
           'Use calipers and digital imaging to size stents on printed airway models and review sizing pitfalls.',
         durationMinutes: 45,
-        resources: [{ label: 'Sizing worksheet', href: '/downloads/stent-sizing-sheet.pdf' }],
+        resources: [
+          { label: 'Optional mechanics & failure explorer', href: '/airway-stent-mechanics' },
+          { label: 'Sizing worksheet', href: '/downloads/stent-sizing-sheet.pdf' },
+        ],
       },
       {
         title: 'Deployment Lab',
@@ -339,24 +342,29 @@ export const trainingModules: TrainingModule[] = [
       questions: [
         {
           prompt:
-            'What is the first step when encountering granulation tissue obstructing a silicone stent?',
+            'A patient has focal tissue, purulent secretions, and recurrent obstruction near a stent end. Which response plan is most complete?',
           options: [
-            'Remove the stent immediately',
-            'Perform argon plasma coagulation before removal',
-            'Switch to jet ventilation',
-            'Increase suction to clear tissue',
+            'Treat the visible tissue and end the evaluation',
+            'Restore patency, evaluate infection and secretions, and reassess fit, position, architecture, ongoing indication, and follow-up',
+            'Assume the finding is caused by one force variable',
+            'Wait for structural failure before reassessing the device',
           ],
           answerIndex: 1,
           explanation:
-            'Ablating granulation tissue prior to removal reduces bleeding risk and facilitates controlled extraction of the stent.',
+            'Granulation and recurrent obstruction can be multifactorial. The response must restore patency while addressing infectious, secretory, mechanical, disease-related, and time-dependent contributors.',
         },
         {
           prompt:
-            'Which follow-up interval is most appropriate after deploying a new silicone airway stent in a benign stricture?',
-          options: ['24 hours', '1 week', '4–6 weeks', '6 months'],
+            'Which statement best describes a defensible surveillance prescription after airway stenting?',
+          options: [
+            'Use one interval for every benign and malignant indication',
+            'Wait for severe symptoms before defining follow-up',
+            'Link follow-up to the indication, expected failure modes, recognition triggers, evidence context, and an exchange or removal plan',
+            'Base the schedule only on the stent material label',
+          ],
           answerIndex: 2,
           explanation:
-            'A 4–6 week bronchoscopy allows for early detection of granulation tissue and migration while limiting unnecessary procedures.',
+            'Surveillance and exit planning are part of the initial prescription. Timing remains dependent on the indication, patient, airway, device, disease course, and applicable evidence.',
         },
       ],
     },

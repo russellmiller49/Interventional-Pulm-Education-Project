@@ -7,6 +7,7 @@ import type {
   ThoracicProbeState,
   ThoracicVolume,
   TissueModel,
+  ProbeType,
 } from '../types'
 
 export interface BModeFrameRequest {
@@ -16,6 +17,10 @@ export interface BModeFrameRequest {
   model?: TissueModel
   width: number
   height: number
+  simulationTimeSec?: number
+  probeType?: ProbeType
+  /** Cine frames rasterize pixels only; static metrics are cached by probe pose. */
+  renderOnly?: boolean
 }
 
 /**
