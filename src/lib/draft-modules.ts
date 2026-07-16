@@ -1,13 +1,18 @@
 import { unlocalizedPathname } from '@/i18n/path'
 import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanics/explorer/release'
+import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
 
 const airwayStentDraftPathPrefixes =
   stentExplorerPublicationStatus === 'published'
     ? ([] as const)
     : (['/airway-stent-mechanics'] as const)
 
+const cardiohelpEcmoDraftPathPrefixes =
+  cardiohelpEcmoPublicationStatus === 'published' ? ([] as const) : (['/cardiohelp-ecmo'] as const)
+
 const draftModulePathPrefixes = [
   ...airwayStentDraftPathPrefixes,
+  ...cardiohelpEcmoDraftPathPrefixes,
   '/education/chest-drainage',
   '/intro-bronchoscopy',
   '/learn/anatomy/airway',

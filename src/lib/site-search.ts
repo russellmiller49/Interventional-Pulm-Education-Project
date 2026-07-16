@@ -4,6 +4,7 @@ import {
   type BoardReviewCategory,
 } from '@/data/board-review'
 import { allEbusTrainingModules } from '@/data/ebus-training'
+import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
 import { localizeSearchText } from '@/i18n/handoff-search'
 import type { ActiveLocale } from '@/i18n/locale'
 import { isVisibleModulePath } from '@/lib/draft-modules'
@@ -258,6 +259,37 @@ const localizedSearchOverrides: Partial<
 }
 
 const allStaticResults: SiteSearchResult[] = [
+  {
+    title: 'CARDIOHELP-i Adult VV & VA ECMO Learn & Practice Lab',
+    description:
+      cardiohelpEcmoPublicationStatus === 'published'
+        ? 'Reviewed step-by-step learning and independent console, circuit, pressure, sweep, alarm, transport, VV, and peripheral VA troubleshooting practice.'
+        : 'Draft-gated step-by-step learning and independent console, circuit, pressure, sweep, alarm, transport, VV, and peripheral VA troubleshooting practice.',
+    href: '/cardiohelp-ecmo',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'cardiohelp',
+      'ecmo',
+      'learn',
+      'practice',
+      'guided walkthrough',
+      'vv ecmo',
+      'va ecmo',
+      'peripheral va ecmo',
+      'differential hypoxemia',
+      'lv loading',
+      'extracorporeal membrane oxygenation',
+      'sweep gas',
+      'blood flow',
+      'pven',
+      'pint',
+      'part',
+      'recirculation',
+      'bubble alarm',
+      'transport',
+    ],
+  },
   {
     title: 'Resource Library',
     description:

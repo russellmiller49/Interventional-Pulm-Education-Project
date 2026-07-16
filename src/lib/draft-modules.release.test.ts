@@ -1,6 +1,7 @@
 type PublicationStatus = 'draft' | 'published'
 
 const stentExplorerReleasePath = '@/features/airway-stent-mechanics/explorer/release'
+const cardiohelpEcmoReleasePath = '@/features/cardiohelp-ecmo/content/deviceProfile'
 
 function setNodeEnv(value: string | undefined) {
   if (value === undefined) {
@@ -30,6 +31,23 @@ async function loadDraftModulePolicy(publicationStatus: PublicationStatus) {
   return policy
 }
 
+async function loadCardiohelpDraftModulePolicy(publicationStatus: PublicationStatus) {
+  let policy: typeof import('./draft-modules') | undefined
+
+  await jest.isolateModulesAsync(async () => {
+    jest.doMock(stentExplorerReleasePath, () => ({
+      stentExplorerPublicationStatus: 'published',
+    }))
+    jest.doMock(cardiohelpEcmoReleasePath, () => ({
+      cardiohelpEcmoPublicationStatus: publicationStatus,
+    }))
+    policy = await import('./draft-modules')
+  })
+
+  if (!policy) throw new Error('Unable to load the isolated CARDIOHELP draft-module policy.')
+  return policy
+}
+
 describe('published module visibility', () => {
   const originalNodeEnv = process.env.NODE_ENV
   const originalShowDraftModules = process.env.NEXT_PUBLIC_SHOW_DRAFT_MODULES
@@ -47,6 +65,7 @@ describe('published module visibility', () => {
       process.env.NEXT_PUBLIC_SHOW_DRAFT_MODULES = originalShowDraftModules
     }
     jest.unmock(stentExplorerReleasePath)
+    jest.unmock(cardiohelpEcmoReleasePath)
     jest.resetModules()
   })
 
@@ -67,6 +86,22 @@ describe('published module visibility', () => {
     expect(policy.areDraftModulesEnabled).toBe(false)
     expect(policy.isDraftModulePath(path)).toBe(false)
     expect(policy.isVisibleModulePath(path)).toBe(true)
+  })
+
+  it('keeps the CARDIOHELP ECMO lab hidden except for admin preview while review is pending', async () => {
+    const policy = await loadCardiohelpDraftModulePolicy('draft')
+    const path = '/cardiohelp-ecmo'
+
+    expect(policy.isDraftModulePath(path)).toBe(true)
+    expect(policy.isDraftModulePath('/es/cardiohelp-ecmo')).toBe(true)
+    expect(policy.isVisibleModulePath(path)).toBe(false)
+    expect(policy.isVisibleModulePath(path, { isAdmin: true })).toBe(true)
+  })
+
+  it('supports a reviewed publication decision without changing route code', async () => {
+    const policy = await loadCardiohelpDraftModulePolicy('published')
+    expect(policy.isDraftModulePath('/cardiohelp-ecmo')).toBe(false)
+    expect(policy.isVisibleModulePath('/cardiohelp-ecmo')).toBe(true)
   })
 
   it('keeps every released therapeutic module and tracheostomy visible in production', async () => {

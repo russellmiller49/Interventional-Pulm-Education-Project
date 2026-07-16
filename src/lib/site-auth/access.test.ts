@@ -50,6 +50,14 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/journal-club-podcasts')).toBe('journal-club-podcasts')
   })
 
+  it('keeps the CARDIOHELP ECMO lab authenticated and resolves aggregate analytics', () => {
+    expect(isPublicPath('/cardiohelp-ecmo')).toBe(false)
+    expect(isPublicPath('/es/cardiohelp-ecmo')).toBe(false)
+    expect(getRequiredEntitlement('/cardiohelp-ecmo', params())).toBeNull()
+    expect(resolveSiteModuleId('/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
+    expect(resolveSiteModuleId('/zh-CN/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
+  })
+
   it('requires entitlements only for restricted website areas', () => {
     expect(getRequiredEntitlement('/admin', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/admin/analytics', params())).toBe('site_admin')

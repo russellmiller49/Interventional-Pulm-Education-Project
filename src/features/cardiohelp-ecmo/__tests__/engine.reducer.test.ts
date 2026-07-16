@@ -1,0 +1,612 @@
+import {
+  createInitialSimulationState,
+  ecmoSimulationReducer,
+  selectScenarioOutcome,
+  type AlarmEvent,
+  type EcmoSimulationState,
+  type SimulationAction,
+} from '../engine'
+import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
+
+function dispatchMany(
+  initial: EcmoSimulationState,
+  actions: readonly SimulationAction[],
+): EcmoSimulationState {
+  return actions.reduce(ecmoSimulationReducer, initial)
+}
+
+describe('CARDIOHELP ECMO simulation reducer', () => {
+  it('is deterministic for an identical one-second action sequence', () => {
+    const actions: SimulationAction[] = [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'improve-acidemia',
+        control: 'sweep',
+        direction: 'increase',
+      },
+      { type: 'SET_SWEEP', sweep: 5 },
+      { type: 'SET_PAUSED', paused: false },
+      { type: 'TICK', seconds: 12 },
+    ]
+    const first = dispatchMany(createInitialSimulationState('acute-hypercapnia'), actions)
+    const second = dispatchMany(createInitialSimulationState('acute-hypercapnia'), actions)
+
+    expect(first).toEqual(second)
+    expect(first.simulationTime).toBe(12)
+    expect(first.patient.paCO2).toBeLessThan(68)
+  })
+
+  it('loads support mode from the scenario and resets cleanly between VA and VV', () => {
+    let state = createInitialSimulationState('va-differential-hypoxemia')
+    expect(state.supportMode).toBe('va')
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.simulationTime).toBe(1)
+
+    state = ecmoSimulationReducer(state, {
+      type: 'LOAD_SCENARIO',
+      scenarioId: 'startup-sensor-orientation',
+      mode: 'guided',
+    })
+    expect(state.supportMode).toBe('vv')
+    expect(state.simulationTime).toBe(0)
+    expect(state.scenario.prediction.committed).toBe(false)
+    expect(state.scenario.activeFaults).toEqual(['startup-inspection'])
+  })
+
+  it('models bounded VA differential oxygenation and clears only after reviewed escalation', () => {
+    let state = createInitialSimulationState('va-differential-hypoxemia')
+    expect(state.patient.rightRadialSpo2).toBeLessThan(88)
+    expect(state.patient.femoralArterialSpo2).toBeGreaterThan(95)
+    expect(state.trends.at(-1)?.spo2).toBe(state.patient.rightRadialSpo2)
+    expect(state.alarms.some((alarm) => alarm.code === 'RIGHT_RADIAL_LOW')).toBe(true)
+
+    state = dispatchMany(state, [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'protect-upper-body',
+        control: 'assess-upper-body',
+        direction: 'inspect',
+      },
+      { type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' },
+      { type: 'SET_PAUSED', paused: false },
+      { type: 'TICK', seconds: 12 },
+    ])
+    expect(state.scenario.activeFaults).not.toContain('differential-hypoxemia')
+    expect(state.patient.rightRadialSpo2).toBeGreaterThan(88)
+    expect(state.patient.femoralArterialSpo2).toBeLessThanOrEqual(100)
+    expect(state.trends.at(-1)?.spo2).toBe(state.patient.rightRadialSpo2)
+  })
+
+  it('makes VA LV-loading cues independently observable without changing console flow into a diagnosis', () => {
+    let state = createInitialSimulationState('va-lv-loading')
+    expect(state.circuit.bloodFlow).toBeGreaterThan(3)
+    expect(state.patient.pulsePressure).toBeLessThan(10)
+    expect(state.patient.aorticValveOpening).toBe(false)
+    expect(state.patient.pulmonaryCongestion).toBe('marked')
+
+    state = dispatchMany(state, [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'protect-left-heart',
+        control: 'assess-lv-loading',
+        direction: 'inspect',
+      },
+      { type: 'CORRECT_FAULT', fault: 'lv-loading' },
+      { type: 'STEP' },
+    ])
+    expect(state.patient.aorticValveOpening).toBe(true)
+    expect(state.patient.pulmonaryCongestion).toBe('mild')
+    expect(state.patient.pulsePressure).toBeGreaterThan(5)
+  })
+
+  it('does not transfer the VV off-sweep work-of-breathing rule into VA', () => {
+    let state = createInitialSimulationState('va-startup-sensor-orientation')
+    state = dispatchMany(state, [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'safe-startup',
+        control: 'inspect-circuit',
+        direction: 'inspect',
+      },
+      { type: 'SET_SWEEP', sweep: 0 },
+      { type: 'SET_PAUSED', paused: false },
+      { type: 'TICK', seconds: 25 },
+    ])
+    expect(state.supportMode).toBe('va')
+    expect(state.patient.workOfBreathing).toBe('low')
+  })
+
+  it('holds corrective controls until a prediction is committed', () => {
+    const initial = createInitialSimulationState('preload-drainage-collapse')
+    const blocked = ecmoSimulationReducer(initial, { type: 'SET_RPM', rpm: 2800 })
+
+    expect(blocked.device.rpmSetpoint).toBe(initial.device.rpmSetpoint)
+    expect(blocked.history.at(-1)?.label).toContain('commit a prediction')
+  })
+
+  it('keeps simulated values within documented display bounds', () => {
+    let state = createInitialSimulationState('preload-drainage-collapse')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'restore-drainage',
+      control: 'rpm',
+      direction: 'decrease',
+    })
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 99_999 })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+
+    expect(state.device.rpmSetpoint).toBeLessThanOrEqual(5000)
+    expect(state.circuit.bloodFlow).toBeGreaterThanOrEqual(-9.99)
+    expect(state.circuit.bloodFlow).toBeLessThanOrEqual(9.99)
+    expect(state.circuit.pVen).toBeGreaterThanOrEqual(-500)
+    expect(state.circuit.pInt).toBeLessThanOrEqual(900)
+    expect(state.patient.pH).toBeGreaterThanOrEqual(6.8)
+    expect(state.patient.pH).toBeLessThanOrEqual(7.7)
+  })
+
+  it('switches from LPM to RPM while preserving RPM when the flow sensor fails', () => {
+    let state = createInitialSimulationState('startup-sensor-orientation')
+    state = ecmoSimulationReducer(state, { type: 'SET_PUMP_MODE', mode: 'lpm' })
+    const rpmBefore = state.device.rpmSetpoint
+    state = ecmoSimulationReducer(state, { type: 'DISCONNECT_FLOW_SENSOR' })
+
+    expect(state.device.pumpMode).toBe('rpm')
+    expect(state.device.rpmSetpoint).toBe(rpmBefore)
+    expect(state.circuit.flowSensorConnected).toBe(false)
+    expect(state.alarms.some((alarm) => alarm.code === 'FLOW_SENSOR')).toBe(true)
+  })
+
+  it('applies pressure intervention and pump stop beyond the modeled intervention band', () => {
+    let state = createInitialSimulationState('preload-drainage-collapse')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'restore-drainage',
+      control: 'rpm',
+      direction: 'decrease',
+    })
+    state = {
+      ...state,
+      device: {
+        ...state.device,
+        limits: { ...state.device.limits, pVenAlarmLow: -140 },
+      },
+    }
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 5000 })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+
+    expect(state.circuit.pVen).toBeLessThan(state.device.limits.pVenAlarmLow - 10)
+    expect(state.device.pumpRunning).toBe(false)
+    expect(state.alarms[0]?.priority).toBe('high')
+  })
+
+  it('retains only the latest six alarm-history events', () => {
+    const initial = createInitialSimulationState('startup-sensor-orientation')
+    const alarm = (index: number): AlarmEvent => ({
+      id: `alarm-${index}`,
+      code: `CODE_${index}`,
+      message: `Alarm ${index}`,
+      priority: 'low',
+      source: 'device',
+      startedAt: index,
+      active: false,
+    })
+    const withHistory: EcmoSimulationState = {
+      ...initial,
+      alarmHistory: Array.from({ length: 9 }, (_, index) => alarm(index)),
+    }
+    const advanced = ecmoSimulationReducer(withHistory, { type: 'STEP' })
+
+    expect(advanced.alarmHistory).toHaveLength(6)
+  })
+
+  it('auto-locks after three simulated minutes without a learner action', () => {
+    let state = createInitialSimulationState('acute-hypercapnia')
+    state = ecmoSimulationReducer(state, { type: 'SET_PAUSED', paused: false })
+    state = ecmoSimulationReducer(state, { type: 'TICK', seconds: 60 })
+    state = ecmoSimulationReducer(state, { type: 'TICK', seconds: 60 })
+    state = ecmoSimulationReducer(state, { type: 'TICK', seconds: 60 })
+
+    expect(state.simulationTime).toBe(180)
+    expect(state.device.locked).toBe(true)
+  })
+
+  it('requires the separate safety control for zero flow and Global Override', () => {
+    let state = createInitialSimulationState('acute-hypercapnia')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'improve-acidemia',
+      control: 'sweep',
+      direction: 'increase',
+    })
+
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_ZERO_FLOW' })
+    expect(state.device.zeroFlowActive).toBe(false)
+    expect(state.history.at(-1)?.label).toContain('requires Safety')
+
+    state = ecmoSimulationReducer(state, { type: 'PRESS_SAFETY' })
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_ZERO_FLOW' })
+    expect(state.device.zeroFlowActive).toBe(true)
+    expect(state.device.pumpRunning).toBe(true)
+    expect(state.device.safetyHeld).toBe(false)
+
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_GLOBAL_OVERRIDE' })
+    expect(state.device.globalOverride).toBe(false)
+    state = ecmoSimulationReducer(state, { type: 'PRESS_SAFETY' })
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_GLOBAL_OVERRIDE' })
+    expect(state.device.globalOverride).toBe(true)
+    expect(state.scenario.criticalErrors).toContain('global-override')
+  })
+
+  it('keeps editable alarm limits bounded and in safe warning/alarm order', () => {
+    let state = createInitialSimulationState('startup-sensor-orientation')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'safe-startup',
+      control: 'inspect-circuit',
+      direction: 'inspect',
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'ADJUST_LIMIT',
+      parameter: 'pVenAlarmLow',
+      delta: 1000,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'ADJUST_LIMIT',
+      parameter: 'flowLow',
+      delta: 100,
+    })
+
+    expect(state.device.limits.pVenAlarmLow).toBeLessThanOrEqual(state.device.limits.pVenWarningLow)
+    expect(state.device.limits.flowLow).toBeLessThanOrEqual(state.device.limits.flowHigh)
+    expect(state.device.limits.flowLow).toBeLessThanOrEqual(9.9)
+  })
+
+  it('pauses an alarm without resolving its cause and penalizes failure to correct it', () => {
+    let state = createInitialSimulationState('gas-source-interruption')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'restore-gas-transfer',
+      control: 'restore-gas',
+      direction: 'restore',
+    })
+    state = ecmoSimulationReducer(state, { type: 'INJECT_FAULT', fault: 'gas-source-interruption' })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    state = ecmoSimulationReducer(state, { type: 'ACK_ALARM' })
+
+    expect(state.gas.sourceConnected).toBe(false)
+    expect(state.scenario.activeFaults).toContain('gas-source-interruption')
+    expect(state.scenario.criticalErrors).not.toContain('ack-without-correction')
+
+    state = ecmoSimulationReducer(state, { type: 'SET_PAUSED', paused: false })
+    state = ecmoSimulationReducer(state, { type: 'TICK', seconds: 60 })
+    expect(state.scenario.criticalErrors).not.toContain('ack-without-correction')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_REASSESSMENT',
+      device: 'The alarm sound resumed after the pause.',
+      circuit: 'The gas source remains interrupted.',
+      patient: 'PaCO2 and pH remain abnormal.',
+    })
+    expect(state.scenario.criticalErrors).toContain('ack-without-correction')
+    expect(state.scenario.credit.cause).toBe(false)
+  })
+
+  it('models pInt high-pressure intervention and truthful bypass alarm copy', () => {
+    let state = createInitialSimulationState('afterload-oxygenator-resistance')
+    state = {
+      ...state,
+      device: {
+        ...state.device,
+        limits: { ...state.device.limits, pIntAlarmHigh: 250, pIntWarningHigh: 200 },
+      },
+    }
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.device.pumpRunning).toBe(false)
+    expect(state.alarms.some((alarm) => alarm.code === 'PINT_STOP')).toBe(true)
+
+    const bypassed = ecmoSimulationReducer(
+      {
+        ...state,
+        device: { ...state.device, pumpRunning: true, globalOverride: true },
+      },
+      { type: 'STEP' },
+    )
+    expect(bypassed.device.pumpRunning).toBe(true)
+    expect(bypassed.alarms.find((alarm) => alarm.code === 'PINT_STOP')?.message).toContain(
+      'bypassed',
+    )
+    expect(bypassed.alarms.find((alarm) => alarm.code === 'PINT_STOP')?.priority).toBe('low')
+  })
+
+  it('uses low-priority alarms when bubble intervention is disabled', () => {
+    let state = createInitialSimulationState('arterial-bubble-stop')
+    state = {
+      ...state,
+      device: { ...state.device, bubbleInterventionEnabled: false },
+    }
+    state = ecmoSimulationReducer(state, { type: 'INJECT_FAULT', fault: 'arterial-bubble' })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+
+    expect(state.device.pumpRunning).toBe(true)
+    expect(state.alarms.find((alarm) => alarm.code === 'ART_BUBBLE')).toMatchObject({
+      priority: 'low',
+      message: expect.stringContaining('bypassed'),
+    })
+  })
+
+  it('activates zero-flow protection after sustained backflow', () => {
+    let state = createInitialSimulationState('preload-drainage-collapse')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'restore-drainage',
+      control: 'rpm',
+      direction: 'decrease',
+    })
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 100 })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.device.zeroFlowActive).toBe(false)
+    expect(state.alarms.find((alarm) => alarm.code === 'BACKFLOW')?.priority).toBe('medium')
+    for (let second = 0; second < 5; second += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+
+    expect(state.device.zeroFlowActive).toBe(true)
+    expect(state.device.pumpRunning).toBe(true)
+    expect(state.circuit.bloodFlow).toBe(0)
+    expect(state.alarms.some((alarm) => alarm.code === 'BACKFLOW')).toBe(true)
+    expect(state.alarms.find((alarm) => alarm.code === 'BACKFLOW')?.priority).toBe('high')
+  })
+
+  it('keeps sustained backflow alarm-only during Global Override', () => {
+    let state = createInitialSimulationState('preload-drainage-collapse')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'restore-drainage',
+      control: 'rpm',
+      direction: 'decrease',
+    })
+    state = { ...state, device: { ...state.device, globalOverride: true } }
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 100 })
+    for (let second = 0; second < 6; second += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+
+    expect(state.device.zeroFlowActive).toBe(false)
+    expect(state.alarms.find((alarm) => alarm.code === 'BACKFLOW')).toMatchObject({
+      priority: 'high',
+      message: expect.stringContaining('bypassed'),
+    })
+  })
+
+  it('restarts the six-second backflow timer after zero-flow protection is released', () => {
+    let state = createInitialSimulationState('preload-drainage-collapse')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'restore-drainage',
+      control: 'rpm',
+      direction: 'decrease',
+    })
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 100 })
+    for (let second = 0; second < 6; second += 1) {
+      state = ecmoSimulationReducer(state, { type: 'STEP' })
+    }
+    expect(state.device.zeroFlowActive).toBe(true)
+
+    state = ecmoSimulationReducer(state, { type: 'PRESS_SAFETY' })
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_ZERO_FLOW' })
+    expect(state.device.zeroFlowActive).toBe(false)
+    expect(state.circuit.backflowSeconds).toBe(0)
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.device.zeroFlowActive).toBe(false)
+    expect(state.circuit.backflowSeconds).toBe(1)
+  })
+
+  it('starts, stops, and resets console timers explicitly', () => {
+    let state = createInitialSimulationState('startup-sensor-orientation')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'safe-startup',
+      control: 'inspect-circuit',
+      direction: 'inspect',
+    })
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_TIMER', timerIndex: 0 })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.device.timers[0]).toBe(1)
+    state = ecmoSimulationReducer(state, { type: 'TOGGLE_TIMER', timerIndex: 0 })
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.device.timers[0]).toBe(1)
+    state = ecmoSimulationReducer(state, { type: 'RESET_TIMER', timerIndex: 0 })
+    expect(state.device.timers[0]).toBe(0)
+  })
+
+  it('requires bubble cause correction before reset', () => {
+    let state = createInitialSimulationState('arterial-bubble-stop')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'prevent-air-return',
+      control: 'correct-cause',
+      direction: 'inspect',
+    })
+    state = ecmoSimulationReducer(state, { type: 'INJECT_FAULT', fault: 'arterial-bubble' })
+    state = ecmoSimulationReducer(state, { type: 'RESET_BUBBLE' })
+
+    expect(state.circuit.bubbleResetRequired).toBe(true)
+    expect(state.scenario.criticalErrors).toContain('premature-bubble-reset')
+
+    state = ecmoSimulationReducer(state, { type: 'CORRECT_FAULT', fault: 'arterial-bubble' })
+    state = ecmoSimulationReducer(state, { type: 'RESET_BUBBLE' })
+    expect(state.circuit.bubbleResetRequired).toBe(false)
+    expect(state.device.pumpRunning).toBe(true)
+  })
+
+  it('does not let an unrelated inspection silently correct the scenario cause', () => {
+    let state = createInitialSimulationState('startup-sensor-orientation')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'safe-startup',
+      control: 'inspect-circuit',
+      direction: 'inspect',
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'PERFORM_CHECK',
+      checkId: 'unrelated-check',
+    })
+
+    expect(state.scenario.activeFaults).toContain('startup-inspection')
+    expect(state.scenario.credit.cause).toBe(false)
+    expect(state.circuit.circuitInspected).toBe(true)
+  })
+
+  it('enforces maintained blood flow and ordered delayed reassessment in the capstone', () => {
+    let safe = createInitialSimulationState('vv-off-sweep-capstone')
+    safe = ecmoSimulationReducer(safe, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'test-native-lung',
+      control: 'off-sweep-trial',
+      direction: 'off',
+    })
+    safe = ecmoSimulationReducer(safe, { type: 'SET_SWEEP', sweep: 0 })
+    safe = ecmoSimulationReducer(safe, {
+      type: 'COMMIT_REASSESSMENT',
+      device: 'RPM and blood flow remain stable.',
+      circuit: 'Sweep gas is off while circuit flow continues.',
+      patient: 'SpO2 first, work of breathing second, then PaCO2 and pH third.',
+    })
+    expect(safe.scenario.credit.reassessment).toBe(false)
+
+    safe = ecmoSimulationReducer(safe, { type: 'SET_PAUSED', paused: false })
+    safe = ecmoSimulationReducer(safe, { type: 'TICK', seconds: 20 })
+    safe = ecmoSimulationReducer(safe, {
+      type: 'COMMIT_REASSESSMENT',
+      device: 'RPM and blood flow remain stable.',
+      circuit: 'Sweep gas is off while circuit flow continues.',
+      patient: 'SpO2 first, work of breathing second, then PaCO2 and pH third.',
+    })
+    expect(safe.scenario.credit.reassessment).toBe(true)
+    expect(selectScenarioOutcome(safe).mastery).toBe(true)
+
+    let unsafe = createInitialSimulationState('vv-off-sweep-capstone')
+    unsafe = ecmoSimulationReducer(unsafe, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'test-native-lung',
+      control: 'off-sweep-trial',
+      direction: 'off',
+    })
+    unsafe = ecmoSimulationReducer(unsafe, { type: 'SET_RPM', rpm: 2500 })
+    expect(unsafe.scenario.criticalErrors).toContain('capstone-flow-reduction')
+  })
+
+  it('enforces VA capstone sweep safety and a delayed multi-domain reassessment', () => {
+    let safe = createInitialSimulationState('va-mixed-circulation-capstone')
+    safe = ecmoSimulationReducer(safe, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'protect-upper-body',
+      control: 'assess-upper-body',
+      direction: 'inspect',
+    })
+    safe = ecmoSimulationReducer(safe, {
+      type: 'CORRECT_FAULT',
+      fault: 'differential-hypoxemia',
+    })
+    safe = ecmoSimulationReducer(safe, { type: 'SET_PAUSED', paused: false })
+    safe = ecmoSimulationReducer(safe, { type: 'TICK', seconds: 10 })
+    safe = ecmoSimulationReducer(safe, {
+      type: 'COMMIT_REASSESSMENT',
+      device: 'Circuit flow and pressure remain stable.',
+      circuit: 'Post-oxygenator transfer and femoral lower-body return remain reassuring.',
+      patient:
+        'Right radial oxygenation, pulse pressure and native ejection, native lung oxygenation, and systemic and limb perfusion were reassessed.',
+    })
+    expect(safe.scenario.credit.reassessment).toBe(true)
+    expect(selectScenarioOutcome(safe).mastery).toBe(true)
+
+    let unsafe = createInitialSimulationState('va-mixed-circulation-capstone')
+    unsafe = ecmoSimulationReducer(unsafe, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'protect-upper-body',
+      control: 'assess-upper-body',
+      direction: 'inspect',
+    })
+    unsafe = ecmoSimulationReducer(unsafe, { type: 'SET_SWEEP', sweep: 0 })
+    expect(unsafe.scenario.criticalErrors).toContain('va-sweep-off')
+
+    unsafe = ecmoSimulationReducer(unsafe, {
+      type: 'CORRECT_FAULT',
+      fault: 'differential-hypoxemia',
+    })
+    unsafe = ecmoSimulationReducer(unsafe, { type: 'SET_PAUSED', paused: false })
+    unsafe = ecmoSimulationReducer(unsafe, { type: 'TICK', seconds: 10 })
+    unsafe = ecmoSimulationReducer(unsafe, {
+      type: 'COMMIT_REASSESSMENT',
+      device: 'abc',
+      circuit: 'abc',
+      patient: 'right radial',
+    })
+    expect(unsafe.scenario.credit.reassessment).toBe(false)
+    expect(selectScenarioOutcome(unsafe).mastery).toBe(false)
+  })
+
+  it('records a complete reassessment submission even when its content does not earn credit', () => {
+    let state = createInitialSimulationState('va-clinical-differential-hypoxemia')
+    state = dispatchMany(state, [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'protect-upper-body',
+        control: 'assess-upper-body',
+        direction: 'gas-exchange',
+      },
+      { type: 'CORRECT_FAULT', fault: 'differential-hypoxemia' },
+      { type: 'SET_PAUSED', paused: false },
+      { type: 'TICK', seconds: 4 },
+      {
+        type: 'COMMIT_REASSESSMENT',
+        device: 'Mixing point causing differential hypoxia',
+        circuit: 'Low R radial SpO2',
+        patient: 'SpO2',
+      },
+    ])
+
+    expect(state.scenario.reassessment).toContain('Mixing point causing differential hypoxia')
+    expect(state.scenario.phase).toBe('debrief')
+    expect(state.scenario.credit.reassessment).toBe(false)
+
+    state = ecmoSimulationReducer(state, { type: 'REVEAL_DEBRIEF' })
+    expect(state.scenario.phase).toBe('complete')
+    expect(selectScenarioOutcome(state).mastery).toBe(false)
+  })
+
+  it('scores all five objectives and blocks mastery after a critical error', () => {
+    let safe = createInitialSimulationState('startup-sensor-orientation')
+    safe = dispatchMany(safe, [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'safe-startup',
+        control: 'inspect-circuit',
+        direction: 'inspect',
+      },
+      { type: 'PERFORM_CHECK', checkId: 'tip-to-tip' },
+      { type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID },
+      { type: 'STEP' },
+      {
+        type: 'COMMIT_REASSESSMENT',
+        device: 'Self-test passed on the console.',
+        circuit: 'Circuit and sensor orientation verified.',
+        patient: 'Independent patient data reassessed.',
+      },
+      { type: 'REVEAL_DEBRIEF' },
+    ])
+    expect(selectScenarioOutcome(safe)).toMatchObject({ score: 100, mastery: true })
+
+    let unsafe = createInitialSimulationState('preload-drainage-collapse')
+    unsafe = dispatchMany(unsafe, [
+      {
+        type: 'COMMIT_PREDICTION',
+        goalId: 'restore-drainage',
+        control: 'rpm',
+        direction: 'decrease',
+      },
+      { type: 'SET_RPM', rpm: 3900 },
+    ])
+    expect(selectScenarioOutcome(unsafe).mastery).toBe(false)
+    expect(selectScenarioOutcome(unsafe).criticalErrors).toContain('rpm-during-collapse')
+  })
+})

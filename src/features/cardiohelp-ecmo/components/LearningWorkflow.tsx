@@ -1,0 +1,1351 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Activity,
+  AlertOctagon,
+  ArrowRight,
+  CheckCircle2,
+  CirclePause,
+  CirclePlay,
+  Clock3,
+  Eye,
+  Gauge,
+  Lightbulb,
+  ListChecks,
+  MousePointerClick,
+  Play,
+  RotateCcw,
+  StepForward,
+  Target,
+} from 'lucide-react'
+
+import { cardiohelpScenarioById, predictionGoals, TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
+import {
+  clinicalPracticeScenarioById,
+  clinicalPracticeScenarios,
+  clinicalPracticeStations,
+} from '../content/clinicalCases'
+import type {
+  EcmoSimulationState,
+  FaultId,
+  PredictionControl,
+  PredictionDirection,
+  ProgressV1,
+  ScenarioDefinition,
+  ScenarioOutcome,
+  SimulationAction,
+  SupportMode,
+} from '../engine'
+import styles from './cardiohelp-ecmo.module.css'
+
+interface LearningWorkflowProps {
+  state: EcmoSimulationState
+  scenario: ScenarioDefinition
+  progress: ProgressV1
+  outcome: ScenarioOutcome
+  dispatch: (action: SimulationAction) => void
+  onLoadScenario: (scenarioId: string, mode?: EcmoSimulationState['simulationMode']) => void
+  onReveal: () => void
+}
+
+const predictionControls: readonly {
+  value: PredictionControl
+  label: string
+  supportModes: readonly SupportMode[]
+}[] = [
+  { value: 'inspect-circuit', label: 'Inspect circuit / sensors', supportModes: ['vv', 'va'] },
+  {
+    value: 'assess-upper-body',
+    label: 'Assess right-arm oxygenation and mixed circulation',
+    supportModes: ['va'],
+  },
+  {
+    value: 'assess-lv-loading',
+    label: 'Assess pulsatility, aortic valve, LV, and lungs',
+    supportModes: ['va'],
+  },
+  { value: 'rpm', label: 'Pump RPM', supportModes: ['vv', 'va'] },
+  { value: 'sweep', label: 'External sweep flow', supportModes: ['vv', 'va'] },
+  { value: 'gas-fio2', label: 'External sweep-gas FiO₂', supportModes: ['vv', 'va'] },
+  { value: 'restore-gas', label: 'Restore gas source', supportModes: ['vv', 'va'] },
+  { value: 'correct-cause', label: 'Correct cause before reset', supportModes: ['vv', 'va'] },
+  { value: 'restore-power', label: 'Restore verified AC power', supportModes: ['vv', 'va'] },
+  { value: 'off-sweep-trial', label: 'VV off-sweep trial', supportModes: ['vv'] },
+  {
+    value: 'initiate-support',
+    label: 'Initiate ECMO with verified settings',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'resuscitate-preload',
+    label: 'Restore preload while finding the cause',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'transfuse-and-control',
+    label: 'Transfuse and control hemorrhage',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'decompress-chest',
+    label: 'Relieve obstructive thoracic/cardiac pressure',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'reposition-cannula',
+    label: 'Assess and correct cannula position',
+    supportModes: ['vv'],
+  },
+  {
+    value: 'exchange-oxygenator',
+    label: 'Prepare and exchange the failing component',
+    supportModes: ['vv', 'va'],
+  },
+  {
+    value: 'vasopressor',
+    label: 'Treat vascular tone and reassess perfusion',
+    supportModes: ['va'],
+  },
+  {
+    value: 'restore-distal-perfusion',
+    label: 'Restore cannulated-limb perfusion',
+    supportModes: ['va'],
+  },
+]
+
+const predictionDirections: readonly { value: PredictionDirection; label: string }[] = [
+  { value: 'increase', label: 'Increase' },
+  { value: 'decrease', label: 'Decrease' },
+  { value: 'hold', label: 'Hold / do not chase the number' },
+  { value: 'inspect', label: 'Inspect and localize first' },
+  { value: 'restore', label: 'Restore source' },
+  { value: 'off', label: 'Turn off while maintaining blood flow' },
+  { value: 'gas-exchange', label: 'Improve oxygenation / CO₂ clearance' },
+  { value: 'perfusion', label: 'Improve systemic perfusion' },
+  { value: 'drainage', label: 'Restore effective venous drainage' },
+  { value: 'temporary', label: 'Temporize while the cause remains' },
+  { value: 'definitive', label: 'Definitively correct the cause' },
+]
+
+const faultLabels: Record<FaultId, string> = {
+  'startup-inspection': 'Complete self-test, circuit, sensor, and backup check',
+  'preload-limited': 'Correct the identified drainage limitation',
+  'return-obstruction': 'Remove the identified return-side obstruction',
+  'oxygenator-resistance': 'Escalate the identified oxygenator/circuit resistance',
+  recirculation: 'Correct the cannula/recirculation cause',
+  'acute-hypercapnia': 'Apply the predicted phase-aware sweep change',
+  'compensated-hypercapnia': 'Confirm the compensated state and avoid blind normalization',
+  'gas-source-interruption': 'Restore the verified gas source',
+  'arterial-bubble': 'Correct and clear the source of air',
+  'ac-power-loss': 'Restore verified AC power and backup readiness',
+  'flow-sensor-failure': 'Restore or replace the flow measurement',
+  'differential-hypoxemia': 'Verify upper-body oxygenation, assess both circulations, and escalate',
+  'lv-loading': 'Recognize LV-loading cues and escalate for expert evaluation',
+  'ecmo-not-initiated': 'Complete readiness, configure support, and start ECMO',
+  'hemorrhagic-hypovolemia': 'Control hemorrhage and restore effective preload',
+  'tension-pneumothorax': 'Relieve the obstructive thoracic cause',
+  vasoplegia: 'Treat vascular tone and the underlying shock cause',
+  tamponade: 'Relieve cardiac compression',
+  'distal-limb-ischemia': 'Restore cannulated-limb perfusion',
+}
+
+type WorkflowSectionId =
+  | 'practice-plan'
+  | 'practice-treatment'
+  | 'practice-reassessment'
+  | 'practice-round-selector'
+
+type SimulatorControlId =
+  | 'cardiohelp-rpm-control'
+  | 'cardiohelp-sweep-control'
+  | 'cardiohelp-fio2-control'
+
+interface ObservationProgress {
+  anchor: number | null
+  elapsedSeconds: number
+  minimumSeconds: number
+  remainingSeconds: number
+  responseObserved: boolean
+}
+
+function getObservationProgress(
+  state: EcmoSimulationState,
+  scenario: ScenarioDefinition,
+): ObservationProgress {
+  const correctedAt = state.scenario.causeCorrectedAt
+  const lastClinicalActionAt = state.scenario.clinical?.appliedInterventions.at(-1)?.time ?? null
+  const acknowledgedAt = state.alarms.reduce<number | null>(
+    (latest, alarm) =>
+      alarm.acknowledgedAt === undefined
+        ? latest
+        : Math.max(latest ?? alarm.acknowledgedAt, alarm.acknowledgedAt),
+    null,
+  )
+  const anchor = correctedAt ?? lastClinicalActionAt ?? acknowledgedAt
+  const minimumSeconds = scenario.assessmentPolicy?.minimumObservationSeconds ?? 1
+  const elapsedSeconds = anchor === null ? 0 : Math.max(0, state.simulationTime - anchor)
+  const remainingSeconds = Math.max(0, minimumSeconds - elapsedSeconds)
+  return {
+    anchor,
+    elapsedSeconds,
+    minimumSeconds,
+    remainingSeconds,
+    responseObserved: anchor !== null && remainingSeconds === 0,
+  }
+}
+
+function navigateToWorkflowSection(sectionId: WorkflowSectionId) {
+  const section = document.getElementById(sectionId)
+  if (!section) return
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  section.focus({ preventScroll: true })
+  section.scrollIntoView({
+    behavior: reduceMotion ? 'auto' : 'smooth',
+    block: 'start',
+  })
+}
+
+function navigateToSimulatorControl(controlId: SimulatorControlId) {
+  const control = document.getElementById(controlId)
+  if (!control) return
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  control.focus({ preventScroll: true })
+  control.scrollIntoView?.({
+    behavior: reduceMotion ? 'auto' : 'smooth',
+    block: 'center',
+  })
+}
+
+function advanceSimulation(dispatch: LearningWorkflowProps['dispatch'], seconds: number) {
+  const boundedSeconds = Math.min(60, Math.max(1, Math.ceil(seconds)))
+  for (let index = 0; index < boundedSeconds; index += 1) {
+    dispatch({ type: 'STEP' })
+  }
+}
+
+function StationNavigator({
+  scenario,
+  progress,
+  onLoadScenario,
+}: Pick<LearningWorkflowProps, 'scenario' | 'progress' | 'onLoadScenario'>) {
+  return (
+    <nav
+      className={styles.stationNavigator}
+      aria-label="CARDIOHELP ECMO clinical practice stations"
+    >
+      {clinicalPracticeStations.map((station, index) => {
+        const stationScenarios = clinicalPracticeScenarios.filter(
+          (item) => item.stationId === station.id && item.supportMode === scenario.supportMode,
+        )
+        const completeCount = stationScenarios.filter((item) =>
+          progress.completedLabs.includes(item.id),
+        ).length
+        const isActive = scenario.stationId === station.id
+        const firstScenario = stationScenarios[0]
+        return (
+          <button
+            type="button"
+            key={station.id}
+            data-active={isActive}
+            aria-current={isActive ? 'step' : undefined}
+            onClick={() => firstScenario && onLoadScenario(firstScenario.id)}
+          >
+            <span>{index + 1}</span>
+            <span>
+              <strong>{station.label}</strong>
+              <small>{station.description}</small>
+            </span>
+            <em>
+              {completeCount}/{stationScenarios.length}
+            </em>
+          </button>
+        )
+      })}
+    </nav>
+  )
+}
+
+function WorkflowGuide({
+  state,
+  scenario,
+  dispatch,
+  onReveal,
+}: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch' | 'onReveal'>) {
+  const observation = getObservationProgress(state, scenario)
+  const planComplete = state.scenario.prediction.committed
+  const treatmentAttempted = observation.anchor !== null
+  const causeCorrected = state.scenario.correctedFaults.includes(
+    scenario.expectation.correctiveFault,
+  )
+  const reassessmentSubmitted = state.scenario.reassessment !== null
+  const debriefRevealed = state.scenario.phase === 'complete'
+
+  const currentStep = !planComplete
+    ? 'plan'
+    : reassessmentSubmitted
+      ? 'debrief'
+      : causeCorrected
+        ? 'reassess'
+        : 'treat'
+
+  const steps = [
+    {
+      id: 'plan',
+      number: 1,
+      label: 'Plan',
+      complete: planComplete,
+      target: 'practice-plan' as const,
+    },
+    {
+      id: 'treat',
+      number: 2,
+      label: 'Treat',
+      complete: causeCorrected,
+      started: treatmentAttempted,
+      target: 'practice-treatment' as const,
+    },
+    {
+      id: 'reassess',
+      number: 3,
+      label: 'Reassess',
+      complete: reassessmentSubmitted,
+      started: observation.responseObserved,
+      target: 'practice-reassessment' as const,
+    },
+    {
+      id: 'debrief',
+      number: 4,
+      label: 'Debrief',
+      complete: debriefRevealed,
+      started: reassessmentSubmitted,
+      target: 'practice-reassessment' as const,
+    },
+  ]
+
+  let nextTitle = 'Choose and apply an intervention'
+  let nextDescription = treatmentAttempted
+    ? 'Continue treating if another action is needed. When this is your final decision, observe the response and reassess.'
+    : 'Use the intervention cards, ECMO console, circuit, or gas controls. Practice does not mark the correct choice in advance.'
+  let primaryLabel = 'Go to treatment choices'
+  let primaryAction = () => navigateToWorkflowSection('practice-treatment')
+
+  if (!planComplete) {
+    nextTitle = 'Complete the three planning fields'
+    nextDescription =
+      'Choose a goal, first priority, and expected physiologic effect, then click Commit before action.'
+    primaryLabel = 'Go to clinical plan'
+    primaryAction = () => navigateToWorkflowSection('practice-plan')
+  } else if (reassessmentSubmitted && !debriefRevealed) {
+    nextTitle = 'Your reassessment is submitted'
+    nextDescription =
+      'Select reveal to see the diagnosis, teaching explanation, and how your observations were scored.'
+    primaryLabel = 'Reveal diagnosis and score'
+    primaryAction = onReveal
+  } else if (debriefRevealed) {
+    nextTitle = 'Round complete'
+    nextDescription =
+      'Review the debrief, then select another round from this station or choose a different station.'
+    primaryLabel = 'Choose another round'
+    primaryAction = () => navigateToWorkflowSection('practice-round-selector')
+  } else if (causeCorrected && !observation.responseObserved) {
+    nextTitle = `Observe the response for ${observation.remainingSeconds} more second${observation.remainingSeconds === 1 ? '' : 's'}`
+    nextDescription =
+      'The cause is corrected. Advance the simulation so the circuit and patient can visibly respond before documenting reassessment.'
+    primaryLabel = `Advance ${observation.remainingSeconds} second${observation.remainingSeconds === 1 ? '' : 's'} now`
+    primaryAction = () => advanceSimulation(dispatch, observation.remainingSeconds)
+  } else if (causeCorrected && observation.responseObserved) {
+    nextTitle = 'Document what changed in all three domains'
+    nextDescription =
+      'Record one device/console observation, one circuit/gas observation, and one patient observation.'
+    primaryLabel = 'Go to reassessment'
+    primaryAction = () => navigateToWorkflowSection('practice-reassessment')
+  }
+
+  return (
+    <section
+      className={styles.workflowGuide}
+      aria-labelledby="workflow-guide-heading"
+      data-current-step={currentStep}
+    >
+      <div className={styles.workflowGuideHeading}>
+        <span>What to do next</span>
+        <h3 id="workflow-guide-heading">{nextTitle}</h3>
+        <p>{nextDescription}</p>
+      </div>
+      <nav className={styles.workflowStepNav} aria-label="Practice workflow steps">
+        {steps.map((step) => {
+          const stateLabel = step.complete
+            ? 'complete'
+            : step.id === currentStep
+              ? 'current'
+              : step.started
+                ? 'started'
+                : 'pending'
+          return (
+            <button
+              type="button"
+              key={step.id}
+              data-state={stateLabel}
+              aria-current={step.id === currentStep ? 'step' : undefined}
+              onClick={() => navigateToWorkflowSection(step.target)}
+            >
+              <span>{step.complete ? '✓' : step.number}</span>
+              <strong>{step.label}</strong>
+              <small>{stateLabel}</small>
+            </button>
+          )
+        })}
+      </nav>
+      <div className={styles.workflowGuideActions}>
+        <button type="button" className={styles.workflowNextAction} onClick={primaryAction}>
+          <ArrowRight aria-hidden="true" /> {primaryLabel}
+        </button>
+        {planComplete && !causeCorrected && treatmentAttempted ? (
+          <button
+            type="button"
+            onClick={() =>
+              observation.responseObserved
+                ? navigateToWorkflowSection('practice-reassessment')
+                : advanceSimulation(dispatch, observation.remainingSeconds)
+            }
+          >
+            <StepForward aria-hidden="true" />
+            {observation.responseObserved
+              ? 'Reassess current response'
+              : `Observe current response (${observation.remainingSeconds}s)`}
+          </button>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+function PredictionPanel({
+  state,
+  dispatch,
+  onCommitted,
+}: Pick<LearningWorkflowProps, 'state' | 'dispatch'> & { onCommitted: () => void }) {
+  const [goalId, setGoalId] = useState('')
+  const [control, setControl] = useState<PredictionControl | ''>('')
+  const [direction, setDirection] = useState<PredictionDirection | ''>('')
+
+  const complete = Boolean(goalId && control && direction)
+  const committed = state.scenario.prediction.committed
+  const availableGoals = predictionGoals.filter((goal) =>
+    (goal.supportModes as readonly SupportMode[]).includes(state.supportMode),
+  )
+  const availableControls = predictionControls.filter((item) =>
+    item.supportModes.includes(state.supportMode),
+  )
+
+  return (
+    <section
+      id="practice-plan"
+      className={styles.predictionPanel}
+      data-committed={committed}
+      aria-labelledby="prediction-heading"
+      tabIndex={-1}
+    >
+      <div className={styles.workflowHeading}>
+        <span>1</span>
+        <div>
+          <h3 id="prediction-heading">Commit your initial clinical plan</h3>
+          <p>
+            Name the goal, first move, and expected physiologic effect before interventions unlock.
+          </p>
+        </div>
+      </div>
+      <div className={styles.predictionGrid}>
+        <label>
+          Goal
+          <select
+            value={goalId}
+            disabled={committed}
+            onChange={(event) => setGoalId(event.target.value)}
+          >
+            <option value="">Choose the endpoint…</option>
+            {availableGoals.map((goal) => (
+              <option key={goal.id} value={goal.id}>
+                {goal.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          First priority
+          <select
+            value={control}
+            disabled={committed}
+            onChange={(event) => setControl(event.target.value as PredictionControl)}
+          >
+            <option value="">Choose one…</option>
+            {availableControls.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Expected immediate effect
+          <select
+            value={direction}
+            disabled={committed}
+            onChange={(event) => setDirection(event.target.value as PredictionDirection)}
+          >
+            <option value="">Choose one…</option>
+            {predictionDirections.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <button
+        type="button"
+        className={styles.primaryAction}
+        disabled={!complete || committed}
+        onClick={() => {
+          if (control && direction) {
+            dispatch({ type: 'COMMIT_PREDICTION', goalId, control, direction })
+            window.requestAnimationFrame(onCommitted)
+          }
+        }}
+      >
+        {committed ? <CheckCircle2 aria-hidden="true" /> : <Target aria-hidden="true" />}
+        {committed ? 'Prediction committed' : 'Commit before action'}
+      </button>
+    </section>
+  )
+}
+
+function ClinicalCaseBrief({ state, scenario }: Pick<LearningWorkflowProps, 'state' | 'scenario'>) {
+  const clinicalCase = scenario.clinicalCase
+  const clinical = state.scenario.clinical
+  if (!clinicalCase || !clinical) return null
+
+  return (
+    <section className={styles.clinicalCaseBrief} aria-labelledby="clinical-case-heading">
+      <div className={styles.clinicalCaseMeta}>
+        <span>
+          {clinicalCase.kind === 'initiation'
+            ? 'ECMO initiation'
+            : clinicalCase.kind === 'deterioration'
+              ? 'Patient deterioration'
+              : 'ECMO complication'}
+        </span>
+        <span data-status={clinical.supportStatus}>
+          {clinical.supportStatus.replaceAll('-', ' ')}
+        </span>
+        <span data-trajectory={clinical.trajectory}>
+          {clinical.trajectory.replaceAll('-', ' ')}
+        </span>
+      </div>
+      <span className={styles.kicker}>{clinicalCase.setting}</span>
+      <h3 id="clinical-case-heading">{clinicalCase.patientLabel}</h3>
+      <p>{clinicalCase.openingNarrative}</p>
+      <dl className={styles.clinicalDataGrid}>
+        {clinicalCase.data.map((item) => (
+          <div key={item.label} data-trend={item.trend ?? 'stable'}>
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className={styles.clinicalDecisionPrompt}>
+        <Activity aria-hidden="true" />
+        <div>
+          <strong>Your task</strong>
+          <span>{clinicalCase.decisionPrompt}</span>
+        </div>
+      </div>
+      {clinical.revealedFindings.length ? (
+        <div className={styles.revealedFindings} role="status" aria-live="polite">
+          <strong>New findings</strong>
+          <ul>
+            {clinical.revealedFindings.map((finding) => (
+              <li key={finding}>{finding}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function SimulationControls({
+  state,
+  scenario,
+  dispatch,
+  onLoadScenario,
+}: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch' | 'onLoadScenario'>) {
+  return (
+    <section className={styles.simulationControls} aria-label="Simulation clock and mode">
+      <div>
+        <Clock3 aria-hidden="true" />
+        <span>
+          <strong>{state.simulationTime}s</strong> deterministic clock
+          <small>{state.paused ? 'Paused · use Run clock or Step' : 'Running automatically'}</small>
+        </span>
+      </div>
+      <div className={styles.segmentedButtons}>
+        <button
+          type="button"
+          data-active={state.simulationMode === 'guided'}
+          onClick={() => onLoadScenario(scenario.id, 'guided')}
+        >
+          Untimed practice
+        </button>
+        <button
+          type="button"
+          data-active={state.simulationMode === 'challenge'}
+          onClick={() => onLoadScenario(scenario.id, 'challenge')}
+        >
+          Timed challenge
+        </button>
+      </div>
+      <button type="button" onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}>
+        {state.paused ? <CirclePlay aria-hidden="true" /> : <CirclePause aria-hidden="true" />}
+        {state.paused ? 'Run clock' : 'Pause clock'}
+      </button>
+      <button type="button" onClick={() => dispatch({ type: 'STEP' })}>
+        <StepForward aria-hidden="true" /> Step 1 second
+      </button>
+      <button type="button" onClick={() => onLoadScenario(scenario.id, state.simulationMode)}>
+        <RotateCcw aria-hidden="true" /> Reset round
+      </button>
+      <small className={styles.simulationResetNote}>
+        Changing mode or resetting starts this round over.
+      </small>
+    </section>
+  )
+}
+
+function ClinicalActionPanel({
+  state,
+  scenario,
+  dispatch,
+}: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch'>) {
+  const clinicalCase = scenario.clinicalCase
+  const clinical = state.scenario.clinical
+  if (!clinicalCase || !clinical) return null
+  const enabled = state.scenario.prediction.committed
+  const appliedIds = new Set(clinical.appliedInterventions.map((record) => record.interventionId))
+  const targets = clinicalCase.initiationTargets
+  const initiationControlItems = targets
+    ? [
+        {
+          id: 'rpm',
+          label: 'CARDIOHELP RPM',
+          ordered: `${targets.rpm} RPM`,
+          current: `${state.device.rpmSetpoint} RPM`,
+          location: 'console',
+          controlId: 'cardiohelp-rpm-control' as const,
+          matched: Math.abs(state.device.rpmSetpoint - targets.rpm) <= (targets.rpmTolerance ?? 50),
+        },
+        {
+          id: 'sweep',
+          label: 'Sweep flow',
+          ordered: `${targets.sweepLpm.toFixed(1)} L/min`,
+          current: `${state.gas.sweepLpm.toFixed(1)} L/min`,
+          location: 'gas blender',
+          controlId: 'cardiohelp-sweep-control' as const,
+          matched:
+            Math.abs(state.gas.sweepLpm - targets.sweepLpm) <= (targets.sweepTolerance ?? 0.1),
+        },
+        {
+          id: 'fio2',
+          label: 'Sweep-gas FiO₂',
+          ordered: `${Math.round(targets.fio2 * 100)}%`,
+          current: `${Math.round(state.gas.fio2 * 100)}%`,
+          location: 'gas blender',
+          controlId: 'cardiohelp-fio2-control' as const,
+          matched: Math.abs(state.gas.fio2 - targets.fio2) <= (targets.fio2Tolerance ?? 0.01),
+        },
+      ]
+    : []
+  const initiationSettingsMatched =
+    initiationControlItems.length > 0 && initiationControlItems.every((item) => item.matched)
+
+  return (
+    <section
+      id="practice-treatment"
+      className={styles.actionPanel}
+      aria-labelledby="action-heading"
+      tabIndex={-1}
+    >
+      <div className={styles.workflowHeading}>
+        <span>2</span>
+        <div>
+          <h3 id="action-heading">Intervene and watch the patient respond</h3>
+          <p>
+            Use the simulated machine, circuit, gas panel, and case interventions. Helpful,
+            temporary, and harmful actions produce different responses.
+          </p>
+        </div>
+      </div>
+
+      <div className={styles.interactionInstructions} role="note">
+        <MousePointerClick aria-hidden="true" />
+        <div>
+          <strong>How to use this step</strong>
+          <span>
+            Click an intervention card to apply it. Applied cards turn green. You may choose
+            multiple actions; unsafe or ineffective choices remain available and affect the score.
+          </span>
+        </div>
+      </div>
+
+      {targets ? (
+        <div className={styles.initiationSettings}>
+          <div>
+            <span className={styles.kicker}>Simulated initiation orders</span>
+            <strong>Configure on the simulator before starting support</strong>
+            <p>
+              Set RPM on the CARDIOHELP console. Set sweep and sweep-gas FiO₂ on the separate gas
+              blender. These case orders are not universal clinical targets.
+            </p>
+          </div>
+          <ul className={styles.initiationSettingsGrid} aria-label="Initiation setting checklist">
+            {initiationControlItems.map((item) => (
+              <li key={item.id} data-matched={item.matched}>
+                <div>
+                  <span>{item.label}</span>
+                  <strong>Order · {item.ordered}</strong>
+                  <small>Current · {item.current}</small>
+                </div>
+                <button
+                  type="button"
+                  disabled={!enabled}
+                  aria-label={`Go to ${item.label} control`}
+                  onClick={() => navigateToSimulatorControl(item.controlId)}
+                >
+                  {item.matched ? (
+                    <CheckCircle2 aria-hidden="true" />
+                  ) : (
+                    <ArrowRight aria-hidden="true" />
+                  )}
+                  {item.matched ? 'Review control' : `Adjust on ${item.location}`}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className={styles.initiationSettingsStatus} role="status" aria-live="polite">
+            {initiationSettingsMatched
+              ? 'All three case orders match. Complete readiness and connection, then start support.'
+              : 'Use the adjustment buttons to move to each simulator control. Current values update here automatically.'}
+          </p>
+        </div>
+      ) : null}
+
+      <div className={styles.clinicalInterventionGrid}>
+        {clinicalCase.interventions.map((item) => {
+          const completed = appliedIds.has(item.id)
+          return (
+            <button
+              type="button"
+              key={item.id}
+              data-category={item.category}
+              data-completed={completed}
+              disabled={!enabled || (completed && !item.repeatable)}
+              onClick={() =>
+                dispatch({ type: 'APPLY_CLINICAL_INTERVENTION', interventionId: item.id })
+              }
+            >
+              <span>{item.category}</span>
+              <strong>
+                {completed ? 'Completed · ' : ''}
+                {item.label}
+              </strong>
+              <small>{item.description}</small>
+              <em>{completed ? 'Applied' : 'Click to apply'}</em>
+            </button>
+          )
+        })}
+      </div>
+
+      {targets ? (
+        <button
+          type="button"
+          className={styles.primaryAction}
+          disabled={!enabled || clinical.supportStatus === 'on-ecmo'}
+          onClick={() => dispatch({ type: 'START_ECMO' })}
+        >
+          <Play aria-hidden="true" />
+          {clinical.supportStatus === 'ready-to-start'
+            ? 'Start ECMO after correcting settings'
+            : 'Start ECMO with current settings'}
+        </button>
+      ) : null}
+
+      <div
+        className={styles.clinicalResponsePanel}
+        data-trajectory={clinical.trajectory}
+        role="status"
+        aria-live="polite"
+      >
+        <Activity aria-hidden="true" />
+        <div>
+          <strong>Patient trajectory · {clinical.trajectory.replaceAll('-', ' ')}</strong>
+          <span>
+            {clinical.lastResponse ??
+              (enabled
+                ? clinicalCase.deteriorationResponse
+                : 'Commit your initial plan to unlock interventions.')}
+          </span>
+        </div>
+      </div>
+
+      {clinical.appliedInterventions.length ? (
+        <div className={styles.interventionTimeline}>
+          <div className={styles.interventionTimelineHeading}>
+            <ListChecks aria-hidden="true" />
+            <strong>Intervention timeline</strong>
+          </div>
+          <ol>
+            {clinical.appliedInterventions.map((record) => (
+              <li key={record.id} data-effect={record.effect}>
+                <time>{record.time}s</time>
+                <span>
+                  <strong>{record.label}</strong>
+                  <small>{record.response}</small>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function ActionPanel({
+  state,
+  scenario,
+  dispatch,
+}: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch'>) {
+  if (scenario.clinicalCase) {
+    return <ClinicalActionPanel state={state} scenario={scenario} dispatch={dispatch} />
+  }
+  const enabled = state.scenario.prediction.committed
+  const correctiveFault = scenario.expectation.correctiveFault
+  const corrected = state.scenario.correctedFaults.includes(correctiveFault)
+
+  return (
+    <section
+      id="practice-treatment"
+      className={styles.actionPanel}
+      aria-labelledby="action-heading"
+      tabIndex={-1}
+    >
+      <div className={styles.workflowHeading}>
+        <span>2</span>
+        <div>
+          <h3 id="action-heading">Act, advance time, and inspect the response</h3>
+          <p>
+            Controls remain available for deliberate wrong turns; safety-critical shortcuts are
+            scored.
+          </p>
+        </div>
+      </div>
+
+      <div className={styles.actionButtons}>
+        {correctiveFault === 'startup-inspection' ? (
+          <button
+            type="button"
+            disabled={!enabled || corrected}
+            onClick={() => dispatch({ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID })}
+          >
+            <Eye aria-hidden="true" /> Complete startup + tip-to-tip check
+          </button>
+        ) : null}
+        {correctiveFault === 'preload-limited' ? (
+          <>
+            <button
+              type="button"
+              disabled={!enabled}
+              onClick={() => dispatch({ type: 'SET_RPM', rpm: state.device.rpmSetpoint - 300 })}
+            >
+              <Gauge aria-hidden="true" /> Reduce RPM 300
+            </button>
+            <button
+              type="button"
+              className={styles.unsafeAction}
+              disabled={!enabled}
+              onClick={() => dispatch({ type: 'SET_RPM', rpm: state.device.rpmSetpoint + 300 })}
+            >
+              <AlertOctagon aria-hidden="true" /> Increase RPM 300
+            </button>
+          </>
+        ) : null}
+        {scenario.id === 'compensated-hypercapnia' ? (
+          <button
+            type="button"
+            disabled={!enabled || corrected}
+            onClick={() => dispatch({ type: 'SET_SWEEP', sweep: state.gas.sweepLpm })}
+          >
+            <CheckCircle2 aria-hidden="true" /> Hold sweep and reassess the compensated state
+          </button>
+        ) : null}
+        {[
+          'startup-inspection',
+          'acute-hypercapnia',
+          'compensated-hypercapnia',
+          'gas-source-interruption',
+          'ac-power-loss',
+        ].includes(correctiveFault) ? null : (
+          <button
+            type="button"
+            disabled={!enabled || corrected}
+            onClick={() => dispatch({ type: 'CORRECT_FAULT', fault: correctiveFault })}
+          >
+            <CheckCircle2 aria-hidden="true" /> {faultLabels[correctiveFault]}
+          </button>
+        )}
+        {correctiveFault === 'gas-source-interruption' ? (
+          <button
+            type="button"
+            disabled={!enabled || state.gas.sourceConnected}
+            onClick={() => dispatch({ type: 'RESTORE_GAS_SOURCE' })}
+          >
+            <CheckCircle2 aria-hidden="true" /> Restore verified gas source
+          </button>
+        ) : null}
+        {correctiveFault === 'ac-power-loss' ? (
+          <button
+            type="button"
+            disabled={!enabled || state.device.powerSource === 'ac'}
+            onClick={() => dispatch({ type: 'RESTORE_AC_POWER' })}
+          >
+            <CheckCircle2 aria-hidden="true" /> Restore AC power + verify backup
+          </button>
+        ) : null}
+        {scenario.id === 'vv-off-sweep-capstone' ? (
+          <button
+            type="button"
+            disabled={!enabled || corrected}
+            onClick={() => dispatch({ type: 'SET_SWEEP', sweep: 0 })}
+          >
+            <CheckCircle2 aria-hidden="true" /> Set sweep to zero; maintain circuit blood flow
+          </button>
+        ) : null}
+        {correctiveFault === 'arterial-bubble' ? (
+          <button
+            type="button"
+            disabled={!enabled || !corrected}
+            onClick={() => dispatch({ type: 'RESET_BUBBLE' })}
+          >
+            <RotateCcw aria-hidden="true" /> Reset after circuit is clear
+          </button>
+        ) : null}
+        {state.alarms[0] ? (
+          <button
+            type="button"
+            disabled={!enabled}
+            onClick={() => dispatch({ type: 'ACK_ALARM', alarmId: state.alarms[0]?.id })}
+          >
+            Pause alarm audio; cause remains active
+          </button>
+        ) : null}
+      </div>
+
+      <div className={styles.actionCue} role="status" aria-live="polite">
+        <Lightbulb aria-hidden="true" />
+        <span>
+          {enabled
+            ? 'Use the console, circuit check, gas panel, and independent patient data. Then advance time before reassessment.'
+            : 'Commit your prediction to unlock actions.'}
+        </span>
+      </div>
+    </section>
+  )
+}
+
+function ReassessmentPanel({
+  state,
+  scenario,
+  dispatch,
+  onReveal,
+  outcome,
+}: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch' | 'onReveal' | 'outcome'>) {
+  const [deviceObservation, setDeviceObservation] = useState('')
+  const [circuitObservation, setCircuitObservation] = useState('')
+  const [patientObservation, setPatientObservation] = useState('')
+  const revealButtonRef = useRef<HTMLButtonElement>(null)
+  const submitted = state.scenario.reassessment !== null
+  const revealed = state.scenario.phase === 'complete'
+  const minimumObservationSeconds = scenario.assessmentPolicy?.minimumObservationSeconds ?? 1
+  const reassessmentGuidance = scenario.assessmentPolicy?.reassessmentGuidance
+  const correctedAt = state.scenario.causeCorrectedAt
+  const acknowledgedAt = state.alarms.reduce<number | null>(
+    (latest, alarm) =>
+      alarm.acknowledgedAt === undefined
+        ? latest
+        : Math.max(latest ?? alarm.acknowledgedAt, alarm.acknowledgedAt),
+    null,
+  )
+  const acknowledgementOnly = correctedAt === null && acknowledgedAt !== null
+  const observation = getObservationProgress(state, scenario)
+  const deviceObservationComplete = deviceObservation.trim().length >= 3
+  const circuitObservationComplete = circuitObservation.trim().length >= 3
+  const patientObservationComplete = patientObservation.trim().length >= 3
+  const domainsComplete =
+    deviceObservationComplete && circuitObservationComplete && patientObservationComplete
+  const commitReady =
+    state.scenario.prediction.committed &&
+    observation.responseObserved &&
+    domainsComplete &&
+    !submitted
+  const commitLabel = submitted
+    ? 'Reassessment submitted'
+    : !state.scenario.prediction.committed
+      ? 'Commit reassessment · commit the clinical plan first'
+      : observation.anchor === null
+        ? 'Commit reassessment · take an action first'
+        : !observation.responseObserved
+          ? `Commit reassessment · observe ${observation.remainingSeconds}s first`
+          : !domainsComplete
+            ? 'Commit reassessment · complete all three observations'
+            : 'Commit reassessment'
+
+  useEffect(() => {
+    if (submitted && !revealed) revealButtonRef.current?.focus()
+  }, [submitted, revealed])
+
+  return (
+    <section
+      id="practice-reassessment"
+      className={styles.reassessmentPanel}
+      aria-labelledby="reassessment-heading"
+      tabIndex={-1}
+    >
+      <div className={styles.workflowHeading}>
+        <span>3</span>
+        <div>
+          <h3 id="reassessment-heading">Reassess before reveal</h3>
+          <p>
+            Document observable device, circuit/gas, and patient responses—not only what you
+            changed.
+          </p>
+        </div>
+      </div>
+      <div
+        id="reassessment-unlock-checklist"
+        className={styles.reassessmentChecklist}
+        aria-label="Requirements to unlock Commit reassessment"
+      >
+        <strong>Commit reassessment unlocks when every item is checked</strong>
+        <ul>
+          <li data-complete={state.scenario.prediction.committed}>
+            <span aria-hidden="true">{state.scenario.prediction.committed ? '✓' : '○'}</span>
+            Initial clinical plan committed
+          </li>
+          <li data-complete={observation.anchor !== null}>
+            <span aria-hidden="true">{observation.anchor !== null ? '✓' : '○'}</span>
+            At least one intervention or corrective action completed
+          </li>
+          <li data-complete={observation.responseObserved}>
+            <span aria-hidden="true">{observation.responseObserved ? '✓' : '○'}</span>
+            Response observed for {Math.min(observation.elapsedSeconds, minimumObservationSeconds)}/
+            {minimumObservationSeconds} seconds
+          </li>
+          <li data-complete={deviceObservationComplete}>
+            <span aria-hidden="true">{deviceObservationComplete ? '✓' : '○'}</span>
+            Device/console observation entered
+          </li>
+          <li data-complete={circuitObservationComplete}>
+            <span aria-hidden="true">{circuitObservationComplete ? '✓' : '○'}</span>
+            Circuit/gas observation entered
+          </li>
+          <li data-complete={patientObservationComplete}>
+            <span aria-hidden="true">{patientObservationComplete ? '✓' : '○'}</span>
+            Patient observation entered
+          </li>
+        </ul>
+      </div>
+      {reassessmentGuidance ? (
+        <div className={styles.assessmentGuidance} role="note">
+          <strong>Required assessment domains</strong>
+          <span>
+            <b>Device:</b> {reassessmentGuidance.device}
+          </span>
+          <span>
+            <b>Circuit/gas:</b> {reassessmentGuidance.circuit}
+          </span>
+          <span>
+            <b>Patient:</b> {reassessmentGuidance.patient}
+          </span>
+        </div>
+      ) : null}
+      <div className={styles.reassessmentGrid}>
+        <label>
+          Device / console observation
+          <textarea
+            rows={2}
+            value={deviceObservation}
+            disabled={!state.scenario.prediction.committed || submitted}
+            placeholder={
+              reassessmentGuidance?.device ?? 'Alarm, setpoint, power, or intervention response…'
+            }
+            onChange={(event) => setDeviceObservation(event.target.value)}
+          />
+        </label>
+        <label>
+          Circuit / gas observation
+          <textarea
+            rows={2}
+            value={circuitObservation}
+            disabled={!state.scenario.prediction.committed || submitted}
+            placeholder={
+              reassessmentGuidance?.circuit ?? 'Flow, pressures, tubing, oxygenator, or gas path…'
+            }
+            onChange={(event) => setCircuitObservation(event.target.value)}
+          />
+        </label>
+        <label>
+          Patient observation
+          <textarea
+            rows={2}
+            value={patientObservation}
+            disabled={!state.scenario.prediction.committed || submitted}
+            placeholder={
+              reassessmentGuidance?.patient ??
+              'SpO2, blood gas, work of breathing, or other bedside response…'
+            }
+            onChange={(event) => setPatientObservation(event.target.value)}
+          />
+        </label>
+      </div>
+      {!observation.responseObserved ? (
+        <div className={styles.observationGate}>
+          <span role="status">
+            {observation.anchor === null
+              ? 'Take an intervention or corrective action before reassessing.'
+              : `Advance ${observation.remainingSeconds} more simulated second${observation.remainingSeconds === 1 ? '' : 's'} to observe the response.`}
+          </span>
+          {observation.anchor !== null ? (
+            <button
+              type="button"
+              onClick={() => advanceSimulation(dispatch, observation.remainingSeconds)}
+            >
+              <StepForward aria-hidden="true" />
+              Advance {observation.remainingSeconds}s now
+            </button>
+          ) : (
+            <button type="button" onClick={() => navigateToWorkflowSection('practice-treatment')}>
+              <ArrowRight aria-hidden="true" /> Return to treatment step
+            </button>
+          )}
+        </div>
+      ) : null}
+      {acknowledgementOnly ? (
+        <p className={styles.observationGate} role="alert">
+          Acknowledgement paused the alarm sound but did not correct the cause. Completing the round
+          now records a critical acknowledgement-without-correction error.
+        </p>
+      ) : null}
+      <div className={styles.reassessmentActions}>
+        <button
+          type="button"
+          className={styles.primaryAction}
+          disabled={!commitReady}
+          aria-describedby="reassessment-unlock-checklist"
+          onClick={() =>
+            dispatch({
+              type: 'COMMIT_REASSESSMENT',
+              device: deviceObservation,
+              circuit: circuitObservation,
+              patient: patientObservation,
+            })
+          }
+        >
+          <CheckCircle2 aria-hidden="true" /> {commitLabel}
+        </button>
+        <button
+          ref={revealButtonRef}
+          type="button"
+          disabled={!submitted || revealed}
+          onClick={onReveal}
+        >
+          <ArrowRight aria-hidden="true" /> Reveal diagnosis and score
+        </button>
+      </div>
+
+      {submitted && !revealed ? (
+        <p className={styles.acceptedCue} role="status">
+          Reassessment submitted. Select “Reveal diagnosis and score” to continue.
+        </p>
+      ) : null}
+
+      {revealed ? (
+        <div className={styles.debriefPanel}>
+          <div className={styles.debriefScore} data-mastery={outcome.mastery}>
+            <span>Round score</span>
+            <strong>{outcome.score}%</strong>
+            <em>{outcome.mastery ? 'Mastery standard met' : 'Review and retry'}</em>
+          </div>
+          <div
+            className={styles.reassessmentScoreCue}
+            data-earned={state.scenario.credit.reassessment}
+            role="note"
+            aria-label="Reassessment scoring"
+          >
+            <strong>
+              Reassessment credit {state.scenario.credit.reassessment ? 'earned' : 'not earned'}
+            </strong>
+            <span>
+              {state.scenario.credit.reassessment
+                ? 'Your submitted notes included scenario-relevant device, circuit or gas, and patient evidence after the response.'
+                : 'Your notes were submitted, but they did not include enough scenario-relevant evidence to earn this objective. Compare them with the workflow below, then retry the round.'}
+            </span>
+          </div>
+          <div>
+            <span className={styles.kicker}>Diagnosis</span>
+            <h4>{scenario.debrief.diagnosis}</h4>
+            <ol>
+              {scenario.debrief.causalChain.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          </div>
+          {scenario.clinicalCase && state.scenario.clinical ? (
+            <div className={styles.clinicalDebriefTimeline}>
+              <span className={styles.kicker}>Your clinical course</span>
+              <p>
+                {state.scenario.correctedFaults.includes(scenario.expectation.correctiveFault)
+                  ? scenario.clinicalCase.completionResponse
+                  : (state.scenario.clinical.lastResponse ??
+                    scenario.clinicalCase.deteriorationResponse)}
+              </p>
+              <ol>
+                {state.scenario.clinical.appliedInterventions.map((record) => (
+                  <li key={record.id} data-effect={record.effect}>
+                    <strong>
+                      {record.time}s · {record.label}
+                    </strong>
+                    <span>{record.response}</span>
+                  </li>
+                ))}
+              </ol>
+              <small>Curriculum source: {scenario.clinicalCase.sourceCase}</small>
+            </div>
+          ) : null}
+          <div>
+            <span className={styles.kicker}>
+              {scenario.clinicalCase
+                ? 'What should have been done—and why'
+                : 'Cause-before-reset workflow'}
+            </span>
+            <ol>
+              {scenario.debrief.correctWorkflow.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          </div>
+          <div className={styles.safetyDebrief}>
+            <strong>Safety notes</strong>
+            <ul>
+              {scenario.debrief.safetyNotes.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          {outcome.criticalErrors.length ? (
+            <div className={styles.criticalErrors} role="alert">
+              <AlertOctagon aria-hidden="true" />
+              <div>
+                <strong>Critical safety error</strong>
+                <span>{outcome.criticalErrors.join(', ')}</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+export function LearningWorkflow(props: LearningWorkflowProps) {
+  const { state, scenario, progress, outcome, dispatch, onLoadScenario, onReveal } = props
+  const challengePromptHidden =
+    state.simulationMode === 'challenge' && state.scenario.phase !== 'complete'
+  const stationScenarios = useMemo(
+    () =>
+      clinicalPracticeScenarios.filter(
+        (item) =>
+          item.stationId === scenario.stationId && item.supportMode === scenario.supportMode,
+      ),
+    [scenario.stationId, scenario.supportMode],
+  )
+  const station = clinicalPracticeStations.find((item) => item.id === scenario.stationId)
+
+  return (
+    <aside className={styles.learningColumn} aria-label="Scenario learning workflow">
+      <StationNavigator scenario={scenario} progress={progress} onLoadScenario={onLoadScenario} />
+
+      <section id="practice-round-selector" className={styles.scenarioHeader} tabIndex={-1}>
+        <div className={styles.scenarioMeta}>
+          <span>{station?.label}</span>
+          <span>{scenario.clinicalPhase}</span>
+          <span>Adult {scenario.supportMode.toUpperCase()}</span>
+        </div>
+        <h2>
+          {challengePromptHidden
+            ? (scenario.clinicalCase?.patientLabel ?? 'Challenge: interpret the observable pattern')
+            : scenario.title}
+        </h2>
+        <p>
+          {challengePromptHidden
+            ? (scenario.clinicalCase?.openingNarrative ??
+              'Diagnosis and corrective cues remain hidden. Use all available data to commit your plan.')
+            : scenario.summary}
+        </p>
+        <label>
+          Round
+          <select value={scenario.id} onChange={(event) => onLoadScenario(event.target.value)}>
+            {stationScenarios.map((item, index) => (
+              <option key={item.id} value={item.id}>
+                {challengePromptHidden ? `Clinical challenge ${index + 1}` : item.title}
+                {progress.completedLabs.includes(item.id) ? ' · completed' : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      <ClinicalCaseBrief state={state} scenario={scenario} />
+      <WorkflowGuide state={state} scenario={scenario} dispatch={dispatch} onReveal={onReveal} />
+      <PredictionPanel
+        key={`prediction-${scenario.id}`}
+        state={state}
+        dispatch={dispatch}
+        onCommitted={() => navigateToWorkflowSection('practice-treatment')}
+      />
+      <SimulationControls
+        state={state}
+        scenario={scenario}
+        dispatch={dispatch}
+        onLoadScenario={onLoadScenario}
+      />
+      <ActionPanel state={state} scenario={scenario} dispatch={dispatch} />
+      <ReassessmentPanel
+        key={`reassessment-${scenario.id}`}
+        state={state}
+        scenario={scenario}
+        dispatch={dispatch}
+        onReveal={onReveal}
+        outcome={outcome}
+      />
+    </aside>
+  )
+}
+
+export function resolveScenarioDefinition(scenarioId: string): ScenarioDefinition {
+  return (
+    clinicalPracticeScenarioById.get(scenarioId) ??
+    cardiohelpScenarioById.get(scenarioId) ??
+    clinicalPracticeScenarios[0]
+  )
+}

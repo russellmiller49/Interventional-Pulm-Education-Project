@@ -290,6 +290,7 @@ export function resolveSiteModuleId(pathname: string) {
   if (
     first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
+    first === 'cardiohelp-ecmo' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
     first === 'journal-club-podcasts' ||
