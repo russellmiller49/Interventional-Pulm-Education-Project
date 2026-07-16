@@ -20,6 +20,8 @@ const draftModulePathPrefixes = [
   '/rapid-onsite-cytology',
 ] as const
 
+const unlistedModulePathPrefixes = ['/cardiohelp-ecmo'] as const
+
 interface DraftModuleVisibilityOptions {
   isAdmin?: boolean
 }
@@ -39,9 +41,21 @@ export function canViewDraftModules(options: DraftModuleVisibilityOptions = {}):
   return areDraftModulesEnabled || options.isAdmin === true
 }
 
+export function isUnlistedModulePath(path: string): boolean {
+  const normalizedPath = unlocalizedPathname(path)
+
+  return unlistedModulePathPrefixes.some(
+    (prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`),
+  )
+}
+
 export function isVisibleModulePath(
   path: string,
   options: DraftModuleVisibilityOptions = {},
 ): boolean {
+  if (isUnlistedModulePath(path)) {
+    return false
+  }
+
   return canViewDraftModules(options) || !isDraftModulePath(path)
 }

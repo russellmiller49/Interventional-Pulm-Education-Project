@@ -88,20 +88,20 @@ describe('published module visibility', () => {
     expect(policy.isVisibleModulePath(path)).toBe(true)
   })
 
-  it('keeps the CARDIOHELP ECMO lab hidden except for admin preview while review is pending', async () => {
+  it('keeps the CARDIOHELP ECMO testing route unlisted while review is pending', async () => {
     const policy = await loadCardiohelpDraftModulePolicy('draft')
     const path = '/cardiohelp-ecmo'
 
     expect(policy.isDraftModulePath(path)).toBe(true)
     expect(policy.isDraftModulePath('/es/cardiohelp-ecmo')).toBe(true)
     expect(policy.isVisibleModulePath(path)).toBe(false)
-    expect(policy.isVisibleModulePath(path, { isAdmin: true })).toBe(true)
+    expect(policy.isVisibleModulePath(path, { isAdmin: true })).toBe(false)
   })
 
-  it('supports a reviewed publication decision without changing route code', async () => {
+  it('keeps publication status separate from link-only discoverability', async () => {
     const policy = await loadCardiohelpDraftModulePolicy('published')
     expect(policy.isDraftModulePath('/cardiohelp-ecmo')).toBe(false)
-    expect(policy.isVisibleModulePath('/cardiohelp-ecmo')).toBe(true)
+    expect(policy.isVisibleModulePath('/cardiohelp-ecmo')).toBe(false)
   })
 
   it('keeps every released therapeutic module and tracheostomy visible in production', async () => {

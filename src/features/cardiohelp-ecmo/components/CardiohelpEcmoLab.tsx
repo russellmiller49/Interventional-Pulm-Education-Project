@@ -13,10 +13,10 @@ import {
   BadgeCheck,
   BookOpenCheck,
   ClipboardCheck,
+  EyeOff,
   GraduationCap,
   HeartPulse,
   Languages,
-  LockKeyhole,
   ShieldAlert,
   SlidersHorizontal,
   Stethoscope,
@@ -512,10 +512,10 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
             </p>
             <div className={styles.heroBadges}>
               <span>
-                <LockKeyhole aria-hidden="true" />{' '}
+                <EyeOff aria-hidden="true" />{' '}
                 {cardiohelpEcmoPublicationStatus === 'published'
-                  ? 'Authenticated reviewed release'
-                  : 'Authenticated draft'}
+                  ? 'Reviewed release'
+                  : 'Unlisted tester access'}
               </span>
               {cardiohelpEcmoPublicationStatus === 'published' ? (
                 <span>
