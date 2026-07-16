@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { cardiohelpScenarios } from '../content/scenarios'
+import { resolveScenarioReassessment } from '../content/practiceSupport'
 import { clinicalPracticeScenarios } from '../content/clinicalCases'
 import {
   createDefaultProgress,
@@ -62,7 +63,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(learnTab).toHaveAttribute('aria-selected', 'true')
     expect(practiceTab).toHaveAttribute('aria-selected', 'false')
     expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
-    expect(screen.getByText(/Learn focus: circuit and sensors/i)).toBeInTheDocument()
+    expect(screen.getByText(/Guided focus: circuit and sensors/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
@@ -209,8 +210,8 @@ describe('CARDIOHELP ECMO learner interface', () => {
       control: definition.expectation.control,
       direction: definition.expectation.direction,
     })
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 3200 })
     for (const interventionId of [
-      'hemorrhage-reduce-rpm',
       'hemorrhage-search',
       'hemorrhage-prbc',
       'hemorrhage-source-control',
@@ -274,9 +275,9 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const checklist = screen.getByLabelText(/Requirements to unlock Commit reassessment/i)
     expect(checklist).toHaveTextContent(/Initial clinical plan committed/i)
     expect(checklist).toHaveTextContent(/intervention or corrective action completed/i)
-    expect(checklist).toHaveTextContent(/Device\/console observation entered/i)
-    expect(checklist).toHaveTextContent(/Circuit\/gas observation entered/i)
-    expect(checklist).toHaveTextContent(/Patient observation entered/i)
+    expect(checklist).toHaveTextContent(/Device\/console response selected/i)
+    expect(checklist).toHaveTextContent(/Circuit\/gas response selected/i)
+    expect(checklist).toHaveTextContent(/Patient response selected/i)
     expect(
       screen.getByRole('button', {
         name: /Commit reassessment · commit the clinical plan first/i,
@@ -284,6 +285,68 @@ describe('CARDIOHELP ECMO learner interface', () => {
     ).toBeDisabled()
     expect(screen.getByRole('button', { name: /Go to clinical plan/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Return to treatment step/i })).toBeInTheDocument()
+  })
+
+  it('uses objective reassessment choices and exposes scored clues', () => {
+    const definition = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-tension-pneumothorax',
+    )!
+    const state = createInitialSimulationState(definition.id, 'guided')
+    const dispatch = jest.fn()
+
+    render(
+      <LearningWorkflow
+        state={state}
+        scenario={definition}
+        progress={createDefaultProgress()}
+        outcome={selectScenarioOutcome(state)}
+        dispatch={dispatch}
+        onLoadScenario={jest.fn()}
+        onReveal={jest.fn()}
+      />,
+    )
+
+    expect(screen.getAllByRole('radio')).toHaveLength(9)
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    const clueButton = screen.getByRole('button', { name: /Give me a clue.*5 points/i })
+    fireEvent.click(clueButton)
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'REQUEST_HINT',
+      hintId: definition.hints?.[0].id,
+    })
+  })
+
+  it('directs required machine changes to the real simulator control', () => {
+    const definition = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-occult-hemorrhage',
+    )!
+    let state = createInitialSimulationState(definition.id, 'guided')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: definition.expectation.goalId,
+      control: definition.expectation.control,
+      direction: definition.expectation.direction,
+    })
+
+    render(
+      <LearningWorkflow
+        state={state}
+        scenario={definition}
+        progress={createDefaultProgress()}
+        outcome={selectScenarioOutcome(state)}
+        dispatch={jest.fn()}
+        onLoadScenario={jest.fn()}
+        onReveal={jest.fn()}
+      />,
+    )
+
+    expect(
+      screen.getByText(/Machine changes cannot be applied from this side panel/i),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Go to simulator control/i })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /Temporarily reduce pump demand/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('navigates the clinical Practice stations without mixing VV and VA rounds', () => {
@@ -361,6 +424,10 @@ describe('CARDIOHELP ECMO learner interface', () => {
 
   it('makes the debrief action explicit after a reassessment is submitted', () => {
     let state = createInitialSimulationState('va-clinical-differential-hypoxemia')
+    const definition = clinicalPracticeScenarios.find(
+      (item) => item.id === 'va-clinical-differential-hypoxemia',
+    )!
+    const reassessment = resolveScenarioReassessment(definition)
     state = [
       {
         type: 'COMMIT_PREDICTION' as const,
@@ -373,9 +440,17 @@ describe('CARDIOHELP ECMO learner interface', () => {
       { type: 'TICK' as const, seconds: 4 },
       {
         type: 'COMMIT_REASSESSMENT' as const,
-        device: 'Mixing point causing differential hypoxia',
-        circuit: 'Low R radial SpO2',
-        patient: 'SpO2',
+        answers: {
+          deviceOptionId: reassessment.device.options.find(
+            (item) => item.id !== reassessment.device.correctOptionId,
+          )!.id,
+          circuitOptionId: reassessment.circuit.options.find(
+            (item) => item.id !== reassessment.circuit.correctOptionId,
+          )!.id,
+          patientOptionId: reassessment.patient.options.find(
+            (item) => item.id !== reassessment.patient.correctOptionId,
+          )!.id,
+        },
       },
     ].reduce(ecmoSimulationReducer, state)
     const scenario = clinicalPracticeScenarios.find(
@@ -424,7 +499,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       />,
     )
     expect(screen.getByRole('note', { name: /Reassessment scoring/i })).toHaveTextContent(
-      /Reassessment credit not earned.*did not include enough scenario-relevant evidence/i,
+      /Reassessment credit not earned.*did not match the expected post-intervention evidence/i,
     )
   })
 

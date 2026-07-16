@@ -87,4 +87,17 @@ describe('CARDIOHELP clinical Practice registry', () => {
       ),
     ).toBe(true)
   })
+
+  it('gives every case objective reassessment choices and scored clues', () => {
+    for (const scenario of clinicalPracticeScenarios) {
+      expect(scenario.reassessment).toBeDefined()
+      for (const domain of ['device', 'circuit', 'patient'] as const) {
+        const question = scenario.reassessment?.[domain]
+        expect(question?.options.length).toBeGreaterThanOrEqual(3)
+        expect(question?.options.some((item) => item.id === question.correctOptionId)).toBe(true)
+      }
+      expect(scenario.hints).toHaveLength(2)
+      expect(scenario.hints?.every((hint) => hint.penalty > 0)).toBe(true)
+    }
+  })
 })

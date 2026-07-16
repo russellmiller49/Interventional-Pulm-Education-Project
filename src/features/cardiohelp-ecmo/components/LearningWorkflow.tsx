@@ -26,12 +26,16 @@ import {
   clinicalPracticeScenarios,
   clinicalPracticeStations,
 } from '../content/clinicalCases'
+import { resolveScenarioReassessment } from '../content/practiceSupport'
 import type {
+  ClinicalInterventionDefinition,
   EcmoSimulationState,
   FaultId,
   PredictionControl,
   PredictionDirection,
   ProgressV1,
+  ReassessmentQuestion,
+  ReassessmentSubmission,
   ScenarioDefinition,
   ScenarioOutcome,
   SimulationAction,
@@ -156,11 +160,6 @@ type WorkflowSectionId =
   | 'practice-reassessment'
   | 'practice-round-selector'
 
-type SimulatorControlId =
-  | 'cardiohelp-rpm-control'
-  | 'cardiohelp-sweep-control'
-  | 'cardiohelp-fio2-control'
-
 interface ObservationProgress {
   anchor: number | null
   elapsedSeconds: number
@@ -206,7 +205,7 @@ function navigateToWorkflowSection(sectionId: WorkflowSectionId) {
   })
 }
 
-function navigateToSimulatorControl(controlId: SimulatorControlId) {
+function navigateToSimulatorControl(controlId: string) {
   const control = document.getElementById(controlId)
   if (!control) return
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -355,9 +354,9 @@ function WorkflowGuide({
     primaryLabel = `Advance ${observation.remainingSeconds} second${observation.remainingSeconds === 1 ? '' : 's'} now`
     primaryAction = () => advanceSimulation(dispatch, observation.remainingSeconds)
   } else if (causeCorrected && observation.responseObserved) {
-    nextTitle = 'Document what changed in all three domains'
+    nextTitle = 'Select the observed response in all three domains'
     nextDescription =
-      'Record one device/console observation, one circuit/gas observation, and one patient observation.'
+      'Choose one device/console response, one circuit/gas response, and one patient response.'
     primaryLabel = 'Go to reassessment'
     primaryAction = () => navigateToWorkflowSection('practice-reassessment')
   }
@@ -575,6 +574,61 @@ function ClinicalCaseBrief({ state, scenario }: Pick<LearningWorkflowProps, 'sta
   )
 }
 
+function HintPanel({
+  state,
+  scenario,
+  dispatch,
+}: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch'>) {
+  const hints = scenario.hints ?? []
+  if (!hints.length) return null
+  const usedHints = hints.filter((hint) => state.scenario.usedHintIds.includes(hint.id))
+  const nextHint = hints.find((hint) => !state.scenario.usedHintIds.includes(hint.id))
+  const maximumScore = Math.max(0, 100 - state.scenario.penalties)
+
+  return (
+    <section className={styles.hintPanel} aria-labelledby="practice-hint-heading">
+      <div>
+        <Lightbulb aria-hidden="true" />
+        <span>
+          <strong id="practice-hint-heading">Stuck?</strong>
+          <small>Clues are optional and reduce the maximum round score.</small>
+        </span>
+        <em>Current score ceiling · {maximumScore}%</em>
+      </div>
+      {usedHints.length ? (
+        <ol aria-live="polite">
+          {usedHints.map((hint) => (
+            <li key={hint.id}>
+              <strong>
+                {hint.title} · −{hint.penalty} points
+              </strong>
+              <span>{hint.text}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+      {nextHint ? (
+        <button
+          type="button"
+          disabled={state.scenario.phase === 'complete'}
+          onClick={() => {
+            dispatch({ type: 'REQUEST_HINT', hintId: nextHint.id })
+            if (nextHint.focusId) {
+              window.requestAnimationFrame(() => navigateToSimulatorControl(nextHint.focusId!))
+            }
+          }}
+        >
+          <Lightbulb aria-hidden="true" />
+          {usedHints.length ? 'Show a stronger clue' : 'Give me a clue'} (−{nextHint.penalty}{' '}
+          points)
+        </button>
+      ) : (
+        <p>All available clues have been shown. Maximum score: {maximumScore}%.</p>
+      )}
+    </section>
+  )
+}
+
 function SimulationControls({
   state,
   scenario,
@@ -623,6 +677,21 @@ function SimulationControls({
   )
 }
 
+function simulatorActionCurrentValue(
+  state: EcmoSimulationState,
+  intervention: ClinicalInterventionDefinition,
+) {
+  const action = intervention.simulatorAction
+  if (!action) return ''
+  if (action.control === 'rpm') return `${state.device.rpmSetpoint} RPM`
+  if (action.control === 'sweep') return `${state.gas.sweepLpm.toFixed(1)} L/min`
+  if (action.control === 'gas-fio2') return `${Math.round(state.gas.fio2 * 100)}%`
+  if (action.control === 'restore-gas') {
+    return state.gas.sourceConnected ? 'Gas source connected' : 'Gas source disconnected'
+  }
+  return state.device.powerSource === 'ac' ? 'AC connected' : 'Battery power'
+}
+
 function ClinicalActionPanel({
   state,
   scenario,
@@ -633,6 +702,10 @@ function ClinicalActionPanel({
   if (!clinicalCase || !clinical) return null
   const enabled = state.scenario.prediction.committed
   const appliedIds = new Set(clinical.appliedInterventions.map((record) => record.interventionId))
+  const simulatorTasks = clinicalCase.interventions.filter(
+    (item) => item.simulatorAction?.visibility === 'prompted',
+  )
+  const interventionCards = clinicalCase.interventions.filter((item) => !item.simulatorAction)
   const targets = clinicalCase.initiationTargets
   const initiationControlItems = targets
     ? [
@@ -692,8 +765,9 @@ function ClinicalActionPanel({
         <div>
           <strong>How to use this step</strong>
           <span>
-            Click an intervention card to apply it. Applied cards turn green. You may choose
-            multiple actions; unsafe or ineffective choices remain available and affect the score.
+            Apply bedside interventions from the cards. Machine-setting tasks send you to the actual
+            console or gas control and complete automatically there. Unsafe console choices and
+            ineffective interventions still affect the score.
           </span>
         </div>
       </div>
@@ -740,8 +814,49 @@ function ClinicalActionPanel({
         </div>
       ) : null}
 
+      {simulatorTasks.length ? (
+        <div className={styles.simulatorActionTasks}>
+          <div>
+            <span className={styles.kicker}>Complete on the simulator</span>
+            <strong>Machine changes cannot be applied from this side panel</strong>
+            <p>
+              Open the indicated console or gas control and make the change there. This checklist
+              updates automatically when the simulated control reaches the required state.
+            </p>
+          </div>
+          <ul aria-label="Required simulator actions">
+            {simulatorTasks.map((item) => {
+              const completed = appliedIds.has(item.id)
+              const simulatorAction = item.simulatorAction!
+              return (
+                <li key={item.id} data-completed={completed}>
+                  <span aria-hidden="true">{completed ? '✓' : '○'}</span>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <small>{simulatorAction.instruction}</small>
+                    <em>Current · {simulatorActionCurrentValue(state, item)}</em>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!enabled}
+                    onClick={() => navigateToSimulatorControl(simulatorAction.controlId)}
+                  >
+                    {completed ? (
+                      <CheckCircle2 aria-hidden="true" />
+                    ) : (
+                      <ArrowRight aria-hidden="true" />
+                    )}
+                    {completed ? 'Review simulator control' : 'Go to simulator control'}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ) : null}
+
       <div className={styles.clinicalInterventionGrid}>
-        {clinicalCase.interventions.map((item) => {
+        {interventionCards.map((item) => {
           const completed = appliedIds.has(item.id)
           return (
             <button
@@ -963,6 +1078,67 @@ function ActionPanel({
   )
 }
 
+function ReassessmentQuestionField({
+  domain,
+  question,
+  value,
+  disabled,
+  revealed,
+  onChange,
+}: {
+  domain: 'device' | 'circuit' | 'patient'
+  question: ReassessmentQuestion
+  value: string
+  disabled: boolean
+  revealed: boolean
+  onChange: (optionId: string) => void
+}) {
+  const selectedIsCorrect = value === question.correctOptionId
+  const correctOption = question.options.find((item) => item.id === question.correctOptionId)
+  const legend =
+    domain === 'device'
+      ? 'Device / console response'
+      : domain === 'circuit'
+        ? 'Circuit / gas response'
+        : 'Patient response'
+
+  return (
+    <fieldset className={styles.reassessmentQuestion} data-domain={domain}>
+      <legend>{legend}</legend>
+      <p>{question.prompt}</p>
+      <div>
+        {question.options.map((item) => {
+          const selected = value === item.id
+          const showCorrect = revealed && item.id === question.correctOptionId
+          const showIncorrect = revealed && selected && !showCorrect
+          return (
+            <label
+              key={item.id}
+              data-selected={selected}
+              data-result={showCorrect ? 'correct' : showIncorrect ? 'incorrect' : 'unscored'}
+            >
+              <input
+                type="radio"
+                name={`reassessment-${domain}`}
+                value={item.id}
+                checked={selected}
+                disabled={disabled}
+                onChange={() => onChange(item.id)}
+              />
+              <span>{item.label}</span>
+            </label>
+          )
+        })}
+      </div>
+      {revealed && !selectedIsCorrect ? (
+        <small className={styles.expectedReassessmentAnswer}>
+          Expected response: {correctOption?.label}
+        </small>
+      ) : null}
+    </fieldset>
+  )
+}
+
 function ReassessmentPanel({
   state,
   scenario,
@@ -970,9 +1146,14 @@ function ReassessmentPanel({
   onReveal,
   outcome,
 }: Pick<LearningWorkflowProps, 'state' | 'scenario' | 'dispatch' | 'onReveal' | 'outcome'>) {
-  const [deviceObservation, setDeviceObservation] = useState('')
-  const [circuitObservation, setCircuitObservation] = useState('')
-  const [patientObservation, setPatientObservation] = useState('')
+  const reassessment = useMemo(() => resolveScenarioReassessment(scenario), [scenario])
+  const [answers, setAnswers] = useState<ReassessmentSubmission>(
+    state.scenario.reassessment ?? {
+      deviceOptionId: '',
+      circuitOptionId: '',
+      patientOptionId: '',
+    },
+  )
   const revealButtonRef = useRef<HTMLButtonElement>(null)
   const submitted = state.scenario.reassessment !== null
   const revealed = state.scenario.phase === 'complete'
@@ -988,9 +1169,9 @@ function ReassessmentPanel({
   )
   const acknowledgementOnly = correctedAt === null && acknowledgedAt !== null
   const observation = getObservationProgress(state, scenario)
-  const deviceObservationComplete = deviceObservation.trim().length >= 3
-  const circuitObservationComplete = circuitObservation.trim().length >= 3
-  const patientObservationComplete = patientObservation.trim().length >= 3
+  const deviceObservationComplete = Boolean(answers.deviceOptionId)
+  const circuitObservationComplete = Boolean(answers.circuitOptionId)
+  const patientObservationComplete = Boolean(answers.patientOptionId)
   const domainsComplete =
     deviceObservationComplete && circuitObservationComplete && patientObservationComplete
   const commitReady =
@@ -1007,7 +1188,7 @@ function ReassessmentPanel({
         : !observation.responseObserved
           ? `Commit reassessment · observe ${observation.remainingSeconds}s first`
           : !domainsComplete
-            ? 'Commit reassessment · complete all three observations'
+            ? 'Commit reassessment · select all three responses'
             : 'Commit reassessment'
 
   useEffect(() => {
@@ -1026,8 +1207,8 @@ function ReassessmentPanel({
         <div>
           <h3 id="reassessment-heading">Reassess before reveal</h3>
           <p>
-            Document observable device, circuit/gas, and patient responses—not only what you
-            changed.
+            Choose the observed device, circuit/gas, and patient responses. All three selections are
+            graded against scenario-specific evidence.
           </p>
         </div>
       </div>
@@ -1053,15 +1234,15 @@ function ReassessmentPanel({
           </li>
           <li data-complete={deviceObservationComplete}>
             <span aria-hidden="true">{deviceObservationComplete ? '✓' : '○'}</span>
-            Device/console observation entered
+            Device/console response selected
           </li>
           <li data-complete={circuitObservationComplete}>
             <span aria-hidden="true">{circuitObservationComplete ? '✓' : '○'}</span>
-            Circuit/gas observation entered
+            Circuit/gas response selected
           </li>
           <li data-complete={patientObservationComplete}>
             <span aria-hidden="true">{patientObservationComplete ? '✓' : '○'}</span>
-            Patient observation entered
+            Patient response selected
           </li>
         </ul>
       </div>
@@ -1079,44 +1260,32 @@ function ReassessmentPanel({
           </span>
         </div>
       ) : null}
+      <p className={styles.reassessmentInstruction}>{reassessment.instruction}</p>
       <div className={styles.reassessmentGrid}>
-        <label>
-          Device / console observation
-          <textarea
-            rows={2}
-            value={deviceObservation}
-            disabled={!state.scenario.prediction.committed || submitted}
-            placeholder={
-              reassessmentGuidance?.device ?? 'Alarm, setpoint, power, or intervention response…'
-            }
-            onChange={(event) => setDeviceObservation(event.target.value)}
-          />
-        </label>
-        <label>
-          Circuit / gas observation
-          <textarea
-            rows={2}
-            value={circuitObservation}
-            disabled={!state.scenario.prediction.committed || submitted}
-            placeholder={
-              reassessmentGuidance?.circuit ?? 'Flow, pressures, tubing, oxygenator, or gas path…'
-            }
-            onChange={(event) => setCircuitObservation(event.target.value)}
-          />
-        </label>
-        <label>
-          Patient observation
-          <textarea
-            rows={2}
-            value={patientObservation}
-            disabled={!state.scenario.prediction.committed || submitted}
-            placeholder={
-              reassessmentGuidance?.patient ??
-              'SpO2, blood gas, work of breathing, or other bedside response…'
-            }
-            onChange={(event) => setPatientObservation(event.target.value)}
-          />
-        </label>
+        <ReassessmentQuestionField
+          domain="device"
+          question={reassessment.device}
+          value={answers.deviceOptionId}
+          disabled={!state.scenario.prediction.committed || submitted}
+          revealed={revealed}
+          onChange={(deviceOptionId) => setAnswers((current) => ({ ...current, deviceOptionId }))}
+        />
+        <ReassessmentQuestionField
+          domain="circuit"
+          question={reassessment.circuit}
+          value={answers.circuitOptionId}
+          disabled={!state.scenario.prediction.committed || submitted}
+          revealed={revealed}
+          onChange={(circuitOptionId) => setAnswers((current) => ({ ...current, circuitOptionId }))}
+        />
+        <ReassessmentQuestionField
+          domain="patient"
+          question={reassessment.patient}
+          value={answers.patientOptionId}
+          disabled={!state.scenario.prediction.committed || submitted}
+          revealed={revealed}
+          onChange={(patientOptionId) => setAnswers((current) => ({ ...current, patientOptionId }))}
+        />
       </div>
       {!observation.responseObserved ? (
         <div className={styles.observationGate}>
@@ -1155,9 +1324,7 @@ function ReassessmentPanel({
           onClick={() =>
             dispatch({
               type: 'COMMIT_REASSESSMENT',
-              device: deviceObservation,
-              circuit: circuitObservation,
-              patient: patientObservation,
+              answers,
             })
           }
         >
@@ -1185,6 +1352,12 @@ function ReassessmentPanel({
             <span>Round score</span>
             <strong>{outcome.score}%</strong>
             <em>{outcome.mastery ? 'Mastery standard met' : 'Review and retry'}</em>
+            {outcome.hintPenalty ? (
+              <small>
+                Clues used: −{outcome.hintPenalty} points · maximum after clues{' '}
+                {outcome.maximumScoreAfterHints}%
+              </small>
+            ) : null}
           </div>
           <div
             className={styles.reassessmentScoreCue}
@@ -1197,8 +1370,8 @@ function ReassessmentPanel({
             </strong>
             <span>
               {state.scenario.credit.reassessment
-                ? 'Your submitted notes included scenario-relevant device, circuit or gas, and patient evidence after the response.'
-                : 'Your notes were submitted, but they did not include enough scenario-relevant evidence to earn this objective. Compare them with the workflow below, then retry the round.'}
+                ? 'All three selected responses matched the scenario-specific device, circuit or gas, and patient evidence.'
+                : 'One or more selected responses did not match the expected post-intervention evidence, or the underlying cause was not corrected. Review the marked choices and the workflow below, then retry the round.'}
             </span>
           </div>
           <div>
@@ -1316,6 +1489,7 @@ export function LearningWorkflow(props: LearningWorkflowProps) {
       </section>
 
       <ClinicalCaseBrief state={state} scenario={scenario} />
+      <HintPanel state={state} scenario={scenario} dispatch={dispatch} />
       <WorkflowGuide state={state} scenario={scenario} dispatch={dispatch} onReveal={onReveal} />
       <PredictionPanel
         key={`prediction-${scenario.id}`}

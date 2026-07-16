@@ -7,6 +7,7 @@ import type {
   SupportMode,
   UnsafeActionPenalty,
 } from '../engine/types'
+import { getClinicalPracticeSupport } from './practiceSupport'
 
 const clinicalObjectives: readonly ScenarioObjective[] = [
   { id: 'goal', category: 'goal', label: 'Identify the immediate patient goal', points: 15 },
@@ -77,6 +78,7 @@ const clinicalActions: readonly SimulationAction['type'][] = [
   'START_ECMO',
   'COMMIT_PREDICTION',
   'COMMIT_REASSESSMENT',
+  'REQUEST_HINT',
   'REVEAL_DEBRIEF',
   'TOGGLE_ALARM_AUDIO',
 ]
@@ -95,6 +97,7 @@ function clinicalScenario(
     | 'terminalRules'
   >,
 ): ScenarioDefinition {
+  const practiceSupport = getClinicalPracticeSupport(definition.id)
   return {
     ...definition,
     allowedActions: clinicalActions,
@@ -110,6 +113,8 @@ function clinicalScenario(
       'The debrief explains both the preferred sequence and the consequences of the learner actions.',
       'Mastery requires at least 80% with no critical safety error.',
     ],
+    reassessment: practiceSupport?.reassessment,
+    hints: practiceSupport?.hints ?? [],
   }
 }
 
@@ -346,6 +351,16 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           response:
             'pVen becomes less negative and chatter eases, but the patient remains hypovolemic.',
           patch: { device: { rpmSetpoint: 3200 } },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 3200,
+            tolerance: 50,
+            comparison: 'at-most',
+            visibility: 'prompted',
+            instruction: 'Reduce pump demand to 3200 RPM on the CARDIOHELP console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'hemorrhage-search',
@@ -631,6 +646,15 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
             'More oxygenated return blood is recaptured; systemic saturation falls further.',
           patch: { device: { rpmSetpoint: 3900 }, patient: { spo2: 74 } },
           penalty: { id: 'unsafe-clinical-shortcut', points: 40, critical: true },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 3900,
+            comparison: 'at-least',
+            visibility: 'hidden',
+            instruction: 'Increase RPM on the console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'recirc-reposition',
@@ -735,6 +759,15 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
             'PaCO₂ does not meaningfully improve and drainage pressure becomes more negative.',
           patch: { device: { rpmSetpoint: 3800 } },
           penalty: { id: 'unsafe-clinical-shortcut', points: 40, critical: true },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 3800,
+            comparison: 'at-least',
+            visibility: 'hidden',
+            instruction: 'Increase RPM on the console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'gas-reconnect',
@@ -743,11 +776,37 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           description: 'Restore the gas pathway and confirm flow at the oxygenator.',
           effect: 'definitive',
           response: 'Gas transfer resumes; PaCO₂ and pH begin a controlled recovery.',
-          patch: { gas: { sourceConnected: true, sweepLpm: 4 } },
+          patch: { gas: { sourceConnected: true } },
           prerequisites: ['gas-inspect-path'],
+          simulatorAction: {
+            control: 'restore-gas',
+            visibility: 'prompted',
+            instruction: 'Reconnect the verified gas source on the external gas panel.',
+            target: 'gas-panel',
+            controlId: 'cardiohelp-restore-gas-source',
+          },
+        }),
+        intervention({
+          id: 'gas-set-sweep',
+          label: 'Set the supplied sweep flow',
+          category: 'ecmo',
+          description: 'Use the external gas blender to restore the case-specific sweep flow.',
+          effect: 'supportive',
+          response: 'Verified sweep flow is present and membrane CO₂ clearance resumes.',
+          patch: { gas: { sweepLpm: 4 } },
+          simulatorAction: {
+            control: 'sweep',
+            targetValue: 4,
+            tolerance: 0.1,
+            comparison: 'within',
+            visibility: 'prompted',
+            instruction: 'Set sweep to 4.0 L/min on the external gas blender.',
+            target: 'gas-panel',
+            controlId: 'cardiohelp-sweep-control',
+          },
         }),
       ],
-      requiredInterventionIds: ['gas-inspect-path', 'gas-reconnect'],
+      requiredInterventionIds: ['gas-inspect-path', 'gas-reconnect', 'gas-set-sweep'],
       completionResponse:
         'Sweep gas is restored and PaCO₂ begins improving over simulated time rather than instantly.',
       deteriorationResponse:
@@ -834,6 +893,15 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           response: 'pInt rises further with little flow benefit and more hemolysis concern.',
           patch: { device: { rpmSetpoint: 4000 } },
           penalty: { id: 'unsafe-clinical-shortcut', points: 40, critical: true },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 4000,
+            comparison: 'at-least',
+            visibility: 'hidden',
+            instruction: 'Increase RPM on the console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'oxygenator-prepare-exchange',
@@ -1010,6 +1078,15 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
             'Femoral oxygenation remains excellent while right-arm oxygenation remains critically low.',
           patch: { device: { rpmSetpoint: 3900 } },
           penalty: { id: 'ineffective-treatment-delay', points: 20, critical: false },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 3900,
+            comparison: 'at-least',
+            visibility: 'hidden',
+            instruction: 'Increase RPM on the console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'differential-native-lung',
@@ -1246,6 +1323,15 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
             'pVen becomes more negative and chatter begins without meaningful MAP improvement.',
           patch: { device: { rpmSetpoint: 4200 } },
           penalty: { id: 'unsafe-clinical-shortcut', points: 40, critical: true },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 4200,
+            comparison: 'at-least',
+            visibility: 'hidden',
+            instruction: 'Increase RPM on the console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'vasoplegia-pressors',
@@ -1365,6 +1451,15 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
           response: 'Systemic flow rises slightly, but distal-limb perfusion remains threatened.',
           patch: { device: { rpmSetpoint: 3900 } },
           penalty: { id: 'ineffective-treatment-delay', points: 20, critical: false },
+          simulatorAction: {
+            control: 'rpm',
+            targetValue: 3900,
+            comparison: 'at-least',
+            visibility: 'hidden',
+            instruction: 'Increase RPM on the console.',
+            target: 'console',
+            controlId: 'cardiohelp-rpm-control',
+          },
         }),
         intervention({
           id: 'limb-restore-perfusion',
@@ -1574,6 +1669,29 @@ export function validateClinicalPracticeRegistry(): string[] {
     for (const requiredId of definition.clinicalCase?.requiredInterventionIds ?? []) {
       if (!interventionIds.has(requiredId))
         errors.push(`${definition.id}: missing required intervention ${requiredId}`)
+    }
+    if (!definition.reassessment) {
+      errors.push(`${definition.id}: missing structured reassessment`)
+    } else {
+      for (const domain of ['device', 'circuit', 'patient'] as const) {
+        const question = definition.reassessment[domain]
+        const optionIds = new Set(question.options.map((item) => item.id))
+        if (question.options.length < 3) {
+          errors.push(`${definition.id}: ${domain} reassessment needs at least three options`)
+        }
+        if (optionIds.size !== question.options.length) {
+          errors.push(`${definition.id}: duplicate ${domain} reassessment option`)
+        }
+        if (!optionIds.has(question.correctOptionId)) {
+          errors.push(`${definition.id}: missing correct ${domain} reassessment option`)
+        }
+      }
+    }
+    if ((definition.hints?.length ?? 0) < 2) {
+      errors.push(`${definition.id}: requires at least two scored clues`)
+    }
+    for (const hint of definition.hints ?? []) {
+      if (hint.penalty <= 0) errors.push(`${definition.id}: clue penalties must be positive`)
     }
     if (definition.objectives.reduce((sum, objective) => sum + objective.points, 0) !== 100) {
       errors.push(`${definition.id}: objective points must total 100`)

@@ -246,6 +246,21 @@ export interface ClinicalInterventionDefinition {
     points: number
     critical: boolean
   }
+  /**
+   * When present, this intervention can only be completed through the simulated
+   * console or gas panel. Hidden requirements detect unsafe machine choices
+   * without advertising them as intervention cards.
+   */
+  simulatorAction?: {
+    control: 'rpm' | 'sweep' | 'gas-fio2' | 'restore-gas' | 'restore-power'
+    targetValue?: number
+    tolerance?: number
+    comparison?: 'within' | 'at-least' | 'at-most'
+    visibility: 'prompted' | 'hidden'
+    instruction: string
+    target: GuidedTarget
+    controlId: GuidedControlId
+  }
 }
 
 export interface ClinicalCaseDataPoint {
@@ -318,6 +333,42 @@ export interface ScenarioCredit {
   reassessment: boolean
 }
 
+export type ReassessmentDomain = 'device' | 'circuit' | 'patient'
+
+export interface ReassessmentOption {
+  id: string
+  label: string
+}
+
+export interface ReassessmentQuestion {
+  prompt: string
+  options: readonly ReassessmentOption[]
+  correctOptionId: string
+}
+
+export interface ScenarioReassessmentDefinition {
+  instruction: string
+  device: ReassessmentQuestion
+  circuit: ReassessmentQuestion
+  patient: ReassessmentQuestion
+}
+
+export interface ReassessmentSubmission {
+  deviceOptionId: string
+  circuitOptionId: string
+  patientOptionId: string
+}
+
+export interface ScenarioHint {
+  id: string
+  title: string
+  text: string
+  penalty: number
+  target?: GuidedTarget
+  controlId?: GuidedControlId
+  focusId?: GuidedControlId | 'practice-plan' | 'practice-treatment' | 'practice-reassessment'
+}
+
 export interface ScenarioRuntime {
   scenarioId: string
   family: ScenarioFamily
@@ -331,9 +382,11 @@ export interface ScenarioRuntime {
     control: PredictionControl | null
     direction: PredictionDirection | null
   }
-  reassessment: string | null
+  reassessment: ReassessmentSubmission | null
   credit: ScenarioCredit
   penalties: number
+  hintPenalty: number
+  usedHintIds: readonly string[]
   criticalErrors: readonly string[]
   completedObjectiveIds: readonly string[]
   attempts: number
@@ -438,6 +491,8 @@ export interface ScenarioDefinition {
   objectives: readonly ScenarioObjective[]
   expectation: ScenarioExpectation
   assessmentPolicy?: ScenarioAssessmentPolicy
+  reassessment?: ScenarioReassessmentDefinition
+  hints?: readonly ScenarioHint[]
   unsafeActionPenalties: readonly UnsafeActionPenalty[]
   successPredicates: readonly string[]
   terminalRules: readonly string[]
@@ -505,7 +560,8 @@ export type SimulationAction =
       control: PredictionControl
       direction: PredictionDirection
     }
-  | { type: 'COMMIT_REASSESSMENT'; device: string; circuit: string; patient: string }
+  | { type: 'COMMIT_REASSESSMENT'; answers: ReassessmentSubmission }
+  | { type: 'REQUEST_HINT'; hintId: string }
   | { type: 'REVEAL_DEBRIEF' }
   | { type: 'TOGGLE_ALARM_AUDIO' }
   | { type: 'INJECT_FAULT'; fault: FaultId; eventId?: string }

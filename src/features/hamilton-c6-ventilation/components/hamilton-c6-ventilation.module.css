@@ -24,6 +24,7 @@
   --wave: #65efb1;
   --wave-two: #62c8ff;
   --pmus: #f2c969;
+  box-sizing: border-box;
   width: min(100%, 1720px);
   margin: 0 auto;
   padding: 2rem clamp(1rem, 3vw, 3rem) 5rem;
@@ -325,11 +326,19 @@
   background: var(--surface-soft);
 }
 
-.simulatorWorkspace {
+.caseWorkspace {
   display: grid;
-  grid-template-columns: minmax(220px, 0.34fr) minmax(650px, 1.3fr) minmax(285px, 0.46fr);
+  grid-template-areas: 'curriculum workflow live';
+  grid-template-columns: minmax(190px, 0.3fr) minmax(370px, 0.58fr) minmax(640px, 1.2fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
+  height: clamp(700px, calc(100dvh - 6rem), 900px);
+  min-height: 0;
+  scroll-margin-top: 5.5rem;
+}
+
+.workspaceViewToggle {
+  display: none;
 }
 
 .curriculumRail,
@@ -344,7 +353,58 @@
 }
 
 .curriculumRail {
-  overflow: hidden;
+  grid-area: curriculum;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.workflowColumn,
+.liveWorkspace {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #9bb4b4 transparent;
+  scrollbar-width: thin;
+}
+
+.workflowColumn {
+  grid-area: workflow;
+  display: block;
+  padding-right: 0.2rem;
+}
+
+.workflowColumn > .workflowNotes {
+  margin-top: 1rem;
+}
+
+.liveWorkspace {
+  grid-area: live;
+  display: block;
+  padding-right: 0.2rem;
+}
+
+.liveWorkspace > .bedsidePanel,
+.liveWorkspace > .consoleShell,
+.liveWorkspace > .calibrationPanel {
+  margin-top: 0.65rem;
+}
+
+.liveWorkspace .caseToolbar {
+  border-radius: 1rem;
+}
+
+.liveWorkspace .bedsidePanel {
+  position: sticky;
+  z-index: 5;
+  top: 0;
+  box-shadow: 0 14px 34px rgba(20, 52, 58, 0.14);
+}
+
+.liveWorkspace .consoleShell {
+  border-top: 1px solid #aeb8b8;
+  border-radius: 1.15rem;
 }
 
 .curriculumHeading,
@@ -1374,6 +1434,141 @@
   color: var(--teal);
 }
 
+.bedsidePanel[data-compact='true'] .panelHeading {
+  padding: 0.6rem 0.75rem;
+}
+
+.bedsidePanel[data-compact='true'] .panelHeading h2 {
+  font-size: 0.92rem;
+}
+
+.bedsidePanel[data-compact='true'] .panelHeading > svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.bedsidePanel[data-compact='true'] .vitalMonitor {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.bedsidePanel[data-compact='true'] .vitalMonitor > div {
+  padding: 0.48rem 0.6rem;
+  border-bottom: 0;
+}
+
+.bedsidePanel[data-compact='true'] .vitalMonitor > div:last-child {
+  border-right: 0;
+}
+
+.bedsidePanel[data-compact='true'] .vitalMonitor strong {
+  font-size: 1rem;
+}
+
+.compactComfortGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  background: #102f34;
+}
+
+.compactComfortGrid > div {
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 0.36rem 0.6rem;
+  border-top: 1px solid #2c4a54;
+  border-right: 1px solid #2c4a54;
+}
+
+.compactComfortGrid > div:last-child {
+  border-right: 0;
+}
+
+.compactComfortGrid dt {
+  overflow: hidden;
+  color: #86b4b7;
+  font-size: 0.58rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compactComfortGrid dd {
+  margin: 0;
+  color: #d9f2ef;
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.bedsidePanel[data-compact='true'] .bedsideSections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bedsidePanel[data-compact='true'] .bedsideSections details {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 0;
+}
+
+.bedsidePanel[data-compact='true'] .bedsideSections details:last-child {
+  border-right: 0;
+}
+
+.bedsidePanel[data-compact='true'] .bedsideSections details[open] {
+  grid-column: 1 / -1;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.bedsidePanel[data-compact='true'] .bedsideSections summary {
+  min-height: 2.55rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.68rem;
+}
+
+.bedsidePanel[data-compact='true'] .bedsideSections details > div {
+  max-height: 125px;
+  padding: 0 0.75rem 0.65rem;
+  overflow-y: auto;
+}
+
+.liveWorkspace .consoleScreen,
+.liveWorkspace .monitoringScreen,
+.liveWorkspace .menuScreen,
+.liveWorkspace .graphicsScreen {
+  min-height: 345px;
+}
+
+.liveWorkspace .waveformFigure,
+.liveWorkspace .waveformSvg {
+  min-height: 105px;
+}
+
+.liveWorkspace .consoleNav button {
+  min-height: 3.15rem;
+}
+
+.liveWorkspace .physicalControls {
+  gap: 0.4rem;
+  padding-top: 0.5rem;
+}
+
+.liveWorkspace .physicalControls > button {
+  min-height: 54px;
+}
+
+.liveWorkspace .rotaryKnob {
+  min-height: 64px;
+}
+
+.liveWorkspace .waveformTextEquivalent {
+  padding-block: 0.42rem;
+  margin-top: 0.45rem;
+}
+
 .workflowLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.34fr);
@@ -1384,6 +1579,33 @@
 
 .workflowPanel {
   overflow: hidden;
+}
+
+.workflowColumn .workflowPanel .panelHeading {
+  display: grid;
+  justify-content: stretch;
+}
+
+.workflowColumn .difficultyBadge {
+  justify-self: start;
+  white-space: normal;
+}
+
+.workflowColumn .workflowStepper {
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: 0.65rem;
+}
+
+.workflowColumn .workflowStepper li:nth-child(3)::after,
+.workflowColumn .workflowStepper li:nth-child(6)::after {
+  display: none;
+}
+
+.workflowColumn .predictionFields,
+.workflowColumn .interventionGrid,
+.workflowColumn .debriefColumns,
+.workflowColumn .workflowNotes {
+  grid-template-columns: 1fr;
 }
 
 .workflowStepper {
@@ -2082,31 +2304,72 @@
   border: 0;
 }
 
-@media (max-width: 1420px) {
-  .simulatorWorkspace {
-    grid-template-columns: 220px minmax(0, 1fr);
+@media (max-width: 1280px) {
+  .caseWorkspace {
+    grid-template-areas:
+      'curriculum'
+      'switcher'
+      'workflow'
+      'live';
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    height: auto;
   }
 
-  .bedsidePanel {
-    grid-column: 1 / -1;
+  .curriculumRail {
+    max-height: 240px;
   }
 
-  .bedsidePanel .vitalMonitor {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .bedsideSections {
+  .workspaceViewToggle {
+    position: sticky;
+    z-index: 10;
+    top: 0.5rem;
+    grid-area: switcher;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.35rem;
+    padding: 0.35rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 28px rgba(20, 52, 58, 0.14);
+    backdrop-filter: blur(10px);
   }
 
-  .bedsideSections details {
-    border-right: 1px solid var(--line);
-    border-bottom: 0;
+  .workspaceViewToggle button {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.7rem;
+    padding: 0.55rem 0.75rem;
+    border: 0;
+    border-radius: 0.55rem;
+    color: var(--muted);
+    background: transparent;
+    font-size: 0.76rem;
+    font-weight: 800;
   }
 
-  .bedsideSections details:last-child {
-    border-right: 0;
+  .workspaceViewToggle button[aria-pressed='true'] {
+    color: #ffffff;
+    background: var(--teal);
+  }
+
+  .workspaceViewToggle svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .workflowColumn,
+  .liveWorkspace {
+    height: min(840px, calc(100dvh - 5rem));
+    min-height: 560px;
+  }
+
+  .caseWorkspace[data-compact-view='case'] .liveWorkspace,
+  .caseWorkspace[data-compact-view='vent'] .workflowColumn {
+    display: none;
   }
 }
 
@@ -2121,6 +2384,16 @@
 
   .workflowLayout {
     grid-template-columns: 1fr;
+  }
+
+  .physicalControls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .rotaryControl {
+    grid-column: 1 / -1;
+    width: min(100%, 280px);
+    justify-self: center;
   }
 
   .workflowNotes {
@@ -2170,68 +2443,6 @@
   .experienceTabs button {
     flex: 1;
     min-width: 0;
-  }
-
-  .simulatorWorkspace {
-    grid-template-columns: 1fr;
-  }
-
-  .curriculumRail {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .curriculumHeading {
-    grid-column: 1 / -1;
-  }
-
-  .curriculumRail > section {
-    border-right: 1px solid var(--line);
-    border-bottom: 0;
-  }
-
-  .curriculumRail > section:last-child {
-    border-right: 0;
-  }
-
-  .stationButton {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-
-  .stationButton small {
-    display: none;
-  }
-
-  .caseButtons {
-    position: absolute;
-    z-index: 3;
-    right: 0.75rem;
-    left: 0.75rem;
-    grid-template-columns: repeat(3, 1fr);
-    padding: 0.65rem;
-    border: 1px solid var(--line);
-    border-radius: 0.65rem;
-    background: var(--surface);
-    box-shadow: 0 15px 35px rgba(23, 49, 54, 0.18);
-  }
-
-  .simulationColumn {
-    margin-top: 7.5rem;
-  }
-
-  .bedsidePanel {
-    grid-column: auto;
-  }
-
-  .bedsideSections {
-    grid-template-columns: 1fr;
-  }
-
-  .bedsideSections details {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
   }
 
   .consoleScreen,
@@ -2284,6 +2495,23 @@
     display: grid;
   }
 
+  .caseButtons button {
+    align-content: start;
+    padding: 0.5rem;
+  }
+
+  .caseButtons button > span:nth-child(2) {
+    display: -webkit-box;
+    min-height: 2.6em;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .caseButtons small {
+    display: none;
+  }
+
   .caseToolbar {
     align-items: flex-start;
   }
@@ -2291,11 +2519,47 @@
   .caseToolbar button {
     width: 2.35rem;
     overflow: hidden;
+    font-size: 0;
     white-space: nowrap;
   }
 
   .caseToolbar button svg {
     flex: 0 0 auto;
+  }
+
+  .bedsidePanel .vitalMonitor {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .compactComfortGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .compactComfortGrid > div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .bedsidePanel[data-compact='true'] .bedsideSections {
+    grid-template-columns: 1fr;
+  }
+
+  .bedsidePanel[data-compact='true'] .bedsideSections details {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bedsidePanel[data-compact='true'] .bedsideSections details:last-child {
+    border-bottom: 0;
+  }
+
+  .workflowPanel .panelHeading {
+    display: grid;
+    justify-content: stretch;
+  }
+
+  .workflowPanel .difficultyBadge {
+    justify-self: start;
+    white-space: normal;
   }
 
   .consoleShell {

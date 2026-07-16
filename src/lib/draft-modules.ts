@@ -1,6 +1,7 @@
 import { unlocalizedPathname } from '@/i18n/path'
 import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanics/explorer/release'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
+import { hamiltonC6PublicationStatus } from '@/features/hamilton-c6-ventilation/content/deviceProfile'
 
 const airwayStentDraftPathPrefixes =
   stentExplorerPublicationStatus === 'published'
@@ -10,9 +11,15 @@ const airwayStentDraftPathPrefixes =
 const cardiohelpEcmoDraftPathPrefixes =
   cardiohelpEcmoPublicationStatus === 'published' ? ([] as const) : (['/cardiohelp-ecmo'] as const)
 
+const hamiltonC6DraftPathPrefixes =
+  hamiltonC6PublicationStatus === 'published'
+    ? ([] as const)
+    : (['/hamilton-c6-ventilation'] as const)
+
 const draftModulePathPrefixes = [
   ...airwayStentDraftPathPrefixes,
   ...cardiohelpEcmoDraftPathPrefixes,
+  ...hamiltonC6DraftPathPrefixes,
   '/education/chest-drainage',
   '/intro-bronchoscopy',
   '/learn/anatomy/airway',

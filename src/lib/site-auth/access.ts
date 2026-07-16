@@ -300,6 +300,7 @@ export function resolveSiteModuleId(pathname: string) {
     first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
     first === 'cardiohelp-ecmo' ||
+    first === 'hamilton-c6-ventilation' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
     first === 'journal-club-podcasts' ||

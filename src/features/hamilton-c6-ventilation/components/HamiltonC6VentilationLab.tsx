@@ -129,6 +129,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
   )
   const [progress, setProgress] = useState<HamiltonC6ProgressV1>(createDefaultProgress)
   const [experience, setExperience] = useState<LearningExperience>('learn')
+  const [workspaceView, setWorkspaceView] = useState<'case' | 'vent'>('case')
   const [hydrated, setHydrated] = useState(false)
   const lastAudibleAlarm = useRef<string | null>(null)
   const definition =
@@ -192,6 +193,7 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
     (caseId: string, nextExperience = experience) => {
       const nextDefinition = mechanicalVentilationCaseById.get(caseId)
       if (!nextDefinition) return
+      setWorkspaceView('case')
       const nextProgress = setLastStation(progress, nextDefinition.stationId)
       setProgress(nextProgress)
       if (hydrated) writeProgress(nextProgress)
@@ -383,7 +385,11 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
         )}
       </section>
 
-      <section className={styles.simulatorWorkspace} aria-label="Ventilation simulator workspace">
+      <section
+        className={styles.caseWorkspace}
+        data-compact-view={workspaceView}
+        aria-label="Active clinical case workspace"
+      >
         <aside className={styles.curriculumRail} aria-label="Case stations">
           <div className={styles.curriculumHeading}>
             <div>
@@ -447,7 +453,73 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
           })}
         </aside>
 
-        <div className={styles.simulationColumn}>
+        <div
+          className={styles.workspaceViewToggle}
+          role="group"
+          aria-label="Choose case workspace surface"
+        >
+          <button
+            type="button"
+            aria-pressed={workspaceView === 'case'}
+            onClick={() => setWorkspaceView('case')}
+          >
+            <ClipboardCheck aria-hidden="true" /> Case guidance
+          </button>
+          <button
+            type="button"
+            aria-pressed={workspaceView === 'vent'}
+            onClick={() => setWorkspaceView('vent')}
+          >
+            <Activity aria-hidden="true" /> Vent + patient
+          </button>
+        </div>
+
+        <section className={styles.workflowColumn} aria-label="Case guidance and interventions">
+          <CaseWorkflow
+            key={`${state.caseId}:${experience}`}
+            state={state}
+            definition={definition}
+            dispatch={dispatch}
+            onResult={handleResult}
+          />
+          <aside className={styles.workflowNotes} aria-label="Simulation principles">
+            <section>
+              <SlidersHorizontal aria-hidden="true" />
+              <div>
+                <strong>Immediate versus delayed response</strong>
+                <p>
+                  Waveforms and mechanics respond first. SpO₂, ABGs, medication effects, and disease
+                  physiology move on slower simulated time constants.
+                </p>
+              </div>
+            </section>
+            <section>
+              <Stethoscope aria-hidden="true" />
+              <div>
+                <strong>Physiologic endpoints score better than exact settings</strong>
+                <p>
+                  Accepted paths can differ if the safety priority, mechanism, response direction,
+                  and reassessment are sound.
+                </p>
+              </div>
+            </section>
+            <section>
+              <Wind aria-hidden="true" />
+              <div>
+                <strong>C6 vocabulary is deliberate</strong>
+                <p>
+                  (S)CMV replaces generic VC-A/C, PCV+ replaces PC-A/C, and SPONT supplies pressure
+                  support with optional apnea backup.
+                </p>
+              </div>
+            </section>
+          </aside>
+        </section>
+
+        <section
+          className={styles.liveWorkspace}
+          aria-label="Persistent ventilator and patient physiology"
+        >
           <div className={styles.caseToolbar}>
             <div>
               <span>{station.label}</span>
@@ -459,53 +531,11 @@ export default function HamiltonC6VentilationLab({ locale = 'en' }: { locale?: s
               <RotateCcw aria-hidden="true" /> Reload clean case
             </button>
           </div>
+          <BedsidePanel state={state} definition={definition} compact />
           <HamiltonC6Console state={state} dispatch={dispatch} controlsEnabled={controlsEnabled} />
           <CalibrationPanel definition={definition} state={state} />
-        </div>
-
-        <BedsidePanel state={state} definition={definition} />
+        </section>
       </section>
-
-      <div className={styles.workflowLayout}>
-        <CaseWorkflow
-          state={state}
-          definition={definition}
-          dispatch={dispatch}
-          onResult={handleResult}
-        />
-        <aside className={styles.workflowNotes}>
-          <section>
-            <SlidersHorizontal aria-hidden="true" />
-            <div>
-              <strong>Immediate versus delayed response</strong>
-              <p>
-                Waveforms and mechanics respond first. SpO₂, ABGs, medication effects, and disease
-                physiology move on slower simulated time constants.
-              </p>
-            </div>
-          </section>
-          <section>
-            <Stethoscope aria-hidden="true" />
-            <div>
-              <strong>Physiologic endpoints score better than exact settings</strong>
-              <p>
-                Accepted paths can differ if the safety priority, mechanism, response direction, and
-                reassessment are sound.
-              </p>
-            </div>
-          </section>
-          <section>
-            <Wind aria-hidden="true" />
-            <div>
-              <strong>C6 vocabulary is deliberate</strong>
-              <p>
-                (S)CMV replaces generic VC-A/C, PCV+ replaces PC-A/C, and SPONT supplies pressure
-                support with optional apnea backup.
-              </p>
-            </div>
-          </section>
-        </aside>
-      </div>
 
       <SourcesPanel />
     </main>

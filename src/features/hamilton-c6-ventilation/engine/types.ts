@@ -328,6 +328,7 @@ export interface InterventionRecord {
   label: string
   response: string
   time: number
+  effectiveAt: number
 }
 
 export interface PredictionState {

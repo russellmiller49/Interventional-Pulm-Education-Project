@@ -5,6 +5,7 @@ import {
 } from '@/data/board-review'
 import { allEbusTrainingModules } from '@/data/ebus-training'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
+import { hamiltonC6PublicationStatus } from '@/features/hamilton-c6-ventilation/content/deviceProfile'
 import { localizeSearchText } from '@/i18n/handoff-search'
 import type { ActiveLocale } from '@/i18n/locale'
 import { isVisibleModulePath } from '@/lib/draft-modules'
@@ -259,6 +260,35 @@ const localizedSearchOverrides: Partial<
 }
 
 const allStaticResults: SiteSearchResult[] = [
+  {
+    title: 'HAMILTON-C6 Mechanical Ventilation Learn & Practice Simulator',
+    description:
+      hamiltonC6PublicationStatus === 'published'
+        ? 'Reviewed case-based mechanical ventilation practice with a functional C6 training facsimile, real-time physiology, waveforms, bedside interventions, and reassessment.'
+        : 'Draft-gated case-based mechanical ventilation practice with a functional C6 training facsimile, real-time physiology, waveforms, bedside interventions, and reassessment.',
+    href: '/hamilton-c6-ventilation',
+    section: 'Simulation',
+    type: 'page',
+    keywords: [
+      'hamilton c6',
+      'mechanical ventilation',
+      'ventilator simulator',
+      'ventilator waveforms',
+      'patient ventilator dyssynchrony',
+      'intrinsic peep',
+      'auto peep',
+      'ards',
+      'asthma',
+      'copd',
+      'pressure support',
+      'scmv',
+      'pcv plus',
+      'spont',
+      'trigger',
+      'ets',
+      'p ramp',
+    ],
+  },
   {
     title: 'CARDIOHELP-i Adult VV & VA ECMO Learn & Practice Lab',
     description:
@@ -682,6 +712,10 @@ function localizeSearchResult(
         keywords: override.keywords ?? item.keywords,
       }
     : item
+
+  if (merged.href === '/hamilton-c6-ventilation') {
+    return merged
+  }
 
   if (locale === 'en') {
     return merged

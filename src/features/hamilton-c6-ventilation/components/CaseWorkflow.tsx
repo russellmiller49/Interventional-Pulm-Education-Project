@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type Dispatch } from 'react'
+import { useEffect, useMemo, useRef, useState, type Dispatch } from 'react'
 import {
   BadgeCheck,
   BookOpenCheck,
@@ -96,7 +96,7 @@ export function CaseWorkflow({
   const [mechanismId, setMechanismId] = useState('')
   const [priorityId, setPriorityId] = useState('')
   const [responseId, setResponseId] = useState('')
-  const [resultRecorded, setResultRecorded] = useState(false)
+  const recordedResultKey = useRef<string | null>(null)
   const outcome = useMemo(() => selectCaseOutcome(state, definition), [definition, state])
   const groupedInterventions = useMemo(() => {
     const groups = new Map<InterventionCategory, typeof definition.interventions>()
@@ -107,20 +107,20 @@ export function CaseWorkflow({
       ])
     }
     return groups
-  }, [definition.interventions])
+  }, [definition])
 
   useEffect(() => {
-    setMechanismId('')
-    setPriorityId('')
-    setResponseId('')
-    setResultRecorded(false)
-  }, [definition.id, state.experience])
-
-  useEffect(() => {
-    if (state.phase !== 'debrief' || resultRecorded || state.experience !== 'practice') return
-    setResultRecorded(true)
+    const resultKey = `${state.caseId}:${state.seed}`
+    if (
+      state.phase !== 'debrief' ||
+      recordedResultKey.current === resultKey ||
+      state.experience !== 'practice'
+    ) {
+      return
+    }
+    recordedResultKey.current = resultKey
     onResult(outcome)
-  }, [onResult, outcome, resultRecorded, state.experience, state.phase])
+  }, [onResult, outcome, state.caseId, state.experience, state.phase, state.seed])
 
   const performedIds = new Set(state.interventions.map((record) => record.interventionId))
   const predictionReady = Boolean(mechanismId && priorityId && responseId)

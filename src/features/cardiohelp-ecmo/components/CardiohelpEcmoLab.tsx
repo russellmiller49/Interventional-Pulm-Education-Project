@@ -122,6 +122,17 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
   )
   const learnLesson = useMemo(() => resolveGuidedLesson(learnScenarioId), [learnScenarioId])
   const outcome = useMemo(() => selectScenarioOutcome(state), [state])
+  const latestPracticeHint = useMemo(
+    () =>
+      [...(scenario.hints ?? [])]
+        .reverse()
+        .find((hint) => state.scenario.usedHintIds.includes(hint.id)),
+    [scenario.hints, state.scenario.usedHintIds],
+  )
+  const activeGuidedTarget =
+    experience === 'learn' ? guidedTarget : (latestPracticeHint?.target ?? null)
+  const activeGuidedControlId =
+    experience === 'learn' ? guidedControlId : (latestPracticeHint?.controlId ?? null)
   const supportMode = state.supportMode
   const modeScenarios = clinicalPracticeScenariosBySupportMode[supportMode]
   const modeLearnLessons = cardiohelpLearnLessonsBySupportMode[supportMode]
@@ -783,8 +794,8 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
                 state={state}
                 dispatch={dispatch}
                 controlsEnabled={controlsEnabled}
-                guidedTarget={experience === 'learn' ? guidedTarget : null}
-                guidedControlId={experience === 'learn' ? guidedControlId : null}
+                guidedTarget={activeGuidedTarget}
+                guidedControlId={activeGuidedControlId}
                 initiationTargets={
                   experience === 'practice'
                     ? (scenario.clinicalCase?.initiationTargets ?? null)
@@ -795,8 +806,8 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
                 state={state}
                 dispatch={dispatch}
                 controlsEnabled={controlsEnabled}
-                guidedTarget={experience === 'learn' ? guidedTarget : null}
-                guidedControlId={experience === 'learn' ? guidedControlId : null}
+                guidedTarget={activeGuidedTarget}
+                guidedControlId={activeGuidedControlId}
                 initiationTargets={
                   experience === 'practice'
                     ? (scenario.clinicalCase?.initiationTargets ?? null)

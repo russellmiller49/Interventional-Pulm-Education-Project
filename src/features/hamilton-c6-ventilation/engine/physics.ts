@@ -92,6 +92,7 @@ function performedEffectIds(
   const interventionById = new Map(definition.interventions.map((item) => [item.id, item]))
   return new Set(
     state.interventions
+      .filter((record) => record.effectiveAt <= state.simulationTime)
       .map((record) => interventionById.get(record.interventionId)?.effectId)
       .filter((effectId): effectId is InterventionEffectId => effectId !== undefined),
   )
@@ -144,12 +145,21 @@ export function deriveEffectivePatient(
     airway: { ...state.patient.airway },
   }
 
+  if (state.branch === 'leak' && patient.airway.circuitLeak) {
+    patient.mechanics.airwayLeakFraction = Math.max(patient.mechanics.airwayLeakFraction, 0.12)
+  }
+  if (definition.phenotype === 'high-resistance') {
+    patient.mechanics.resistanceCmH2OPerLps =
+      state.branch === 'bronchospasm' ? 30 : Math.max(26, patient.mechanics.resistanceCmH2OPerLps)
+  }
+
   if (effects.has('bronchodilator')) {
-    patient.mechanics.resistanceCmH2OPerLps *= 0.62
+    patient.mechanics.resistanceCmH2OPerLps *=
+      definition.phenotype === 'high-resistance' ? 0.4 : 0.62
     patient.airway.bronchospasm = false
   }
   if (effects.has('suction-airway')) {
-    patient.mechanics.resistanceCmH2OPerLps *= state.branch === 'secretions' ? 0.48 : 0.86
+    patient.mechanics.resistanceCmH2OPerLps *= state.branch === 'secretions' ? 0.4 : 0.86
     patient.airway.secretions = false
   }
   if (effects.has('remove-hme') || effects.has('reposition-ett')) {
@@ -261,7 +271,19 @@ export function deriveMeasurements(
     peakFlowLMin = clamp((unloadingPressure / resistance) * 60, 10, 180)
   }
 
-  let intrinsicPeep = patient.mechanics.intrinsicPeepCmH2O
+  // Dynamic PEEPi is recomputed from the case baseline and the current expiratory
+  // time on every fixed step. Feeding the prior derived value back into this
+  // calculation would falsely compound trapped pressure at 50 Hz.
+  let intrinsicPeep = definition.initialPatient.mechanics.intrinsicPeepCmH2O
+  if (definition.phenotype === 'copd-ineffective-efforts' && settings.mode === 'spont') {
+    const initialSettings = definition.initialSettings
+    if (initialSettings.mode === 'spont') {
+      intrinsicPeep -=
+        Math.max(0, initialSettings.pressureSupportCmH2O - settings.pressureSupportCmH2O) * 0.6
+      intrinsicPeep -= Math.max(0, settings.etsPercent - initialSettings.etsPercent) * 0.15
+      intrinsicPeep = Math.max(0, intrinsicPeep)
+    }
+  }
   const cycleTime = 60 / Math.max(1, rate)
   const expiratoryTime = Math.max(0.08, cycleTime - mechanicalTi)
   const timeConstant = resistance * compliance

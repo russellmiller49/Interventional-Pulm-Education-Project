@@ -85,8 +85,20 @@ describe('CARDIOHELP clinical Practice response engine', () => {
     ).toBe(false)
     expect(state.scenario.activeFaults).toContain('hemorrhagic-hypovolemia')
 
+    state = ecmoSimulationReducer(state, {
+      type: 'APPLY_CLINICAL_INTERVENTION',
+      interventionId: 'hemorrhage-reduce-rpm',
+    })
+    expect(state.device.rpmSetpoint).toBe(3600)
+    expect(state.scenario.clinical?.lastResponse).toMatch(/completed on the simulator/i)
+    expect(
+      state.scenario.clinical?.appliedInterventions.some(
+        (record) => record.interventionId === 'hemorrhage-reduce-rpm',
+      ),
+    ).toBe(false)
+
     state = dispatchMany(state, [
-      { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-reduce-rpm' },
+      { type: 'SET_RPM', rpm: 3200 },
       { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-search' },
       { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-prbc' },
     ])
@@ -104,6 +116,39 @@ describe('CARDIOHELP clinical Practice response engine', () => {
     expect(state.patient.centralVenousPressure).toBeGreaterThanOrEqual(7)
     expect(state.circuit.drainageChatter).toBe(false)
     expect(state.circuit.pVen).toBeGreaterThan(-75)
+  })
+
+  it('requires gas-source and sweep corrections through the external simulator controls', () => {
+    let state = commitExpectedPrediction('clinical-vv-gas-disconnection')
+
+    state = ecmoSimulationReducer(state, {
+      type: 'APPLY_CLINICAL_INTERVENTION',
+      interventionId: 'gas-inspect-path',
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'APPLY_CLINICAL_INTERVENTION',
+      interventionId: 'gas-reconnect',
+    })
+    expect(state.gas.sourceConnected).toBe(false)
+    expect(state.scenario.clinical?.lastResponse).toMatch(/completed on the simulator/i)
+
+    state = ecmoSimulationReducer(state, { type: 'RESTORE_GAS_SOURCE' })
+    expect(state.gas.sourceConnected).toBe(true)
+    expect(
+      state.scenario.clinical?.appliedInterventions.some(
+        (record) => record.interventionId === 'gas-reconnect',
+      ),
+    ).toBe(true)
+    expect(state.scenario.activeFaults).toContain('gas-source-interruption')
+
+    state = ecmoSimulationReducer(state, { type: 'SET_SWEEP', sweep: 4 })
+    expect(
+      state.scenario.clinical?.appliedInterventions.some(
+        (record) => record.interventionId === 'gas-set-sweep',
+      ),
+    ).toBe(true)
+    expect(state.scenario.activeFaults).not.toContain('gas-source-interruption')
+    expect(state.scenario.clinical?.trajectory).toBe('improving')
   })
 
   it('keeps tension physiology active after temporizing volume and clears it after decompression', () => {
@@ -150,10 +195,7 @@ describe('CARDIOHELP clinical Practice response engine', () => {
   it('penalizes blind RPM escalation during recirculation without resolving the cause', () => {
     let state = commitExpectedPrediction('clinical-vv-recirculation-migration')
 
-    state = ecmoSimulationReducer(state, {
-      type: 'APPLY_CLINICAL_INTERVENTION',
-      interventionId: 'recirc-increase-rpm',
-    })
+    state = ecmoSimulationReducer(state, { type: 'SET_RPM', rpm: 3900 })
 
     expect(state.device.rpmSetpoint).toBe(3900)
     expect(state.patient.spo2).toBe(74)
@@ -169,7 +211,7 @@ describe('CARDIOHELP clinical Practice response engine', () => {
     let state = commitExpectedPrediction('clinical-vv-occult-hemorrhage')
 
     state = dispatchMany(state, [
-      { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-reduce-rpm' },
+      { type: 'SET_RPM', rpm: 3200 },
       { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-search' },
       { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-prbc' },
       { type: 'APPLY_CLINICAL_INTERVENTION', interventionId: 'hemorrhage-source-control' },

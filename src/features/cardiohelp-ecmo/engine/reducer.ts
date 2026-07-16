@@ -1,5 +1,6 @@
 import { cardiohelpScenarioById, cardiohelpScenarios } from '../content/scenarios'
 import { clinicalPracticeScenarioById } from '../content/clinicalCases'
+import { resolveScenarioReassessment } from '../content/practiceSupport'
 import {
   applyClinicalIntervention,
   attemptClinicalEcmoStart,
@@ -66,6 +67,7 @@ const actionLabels: Partial<Record<SimulationAction['type'], string>> = {
   ADJUST_LIMIT: 'Adjusted parameter alarm limit',
   APPLY_CLINICAL_INTERVENTION: 'Applied clinical intervention',
   START_ECMO: 'Attempted ECMO initiation',
+  REQUEST_HINT: 'Requested a scored clue',
   TOGGLE_TIMER: 'Changed timer state',
   RESET_TIMER: 'Reset timer',
 }
@@ -150,6 +152,73 @@ function addPenalty(
       penalties: state.scenario.penalties + points,
     },
   }
+}
+
+function applyClinicalInterventionAndResolve(
+  state: EcmoSimulationState,
+  definition: ScenarioDefinition,
+  interventionId: string,
+) {
+  const result = applyClinicalIntervention(state, definition, interventionId)
+  let next = result.state
+  if (result.penalty) {
+    next = addPenalty(next, result.penalty.id, result.penalty.points, result.penalty.critical)
+  }
+  if (result.resolutionReady) {
+    next = next.scenario.activeFaults.includes(definition.expectation.correctiveFault)
+      ? correctFault(next, definition.expectation.correctiveFault)
+      : markClinicalImproving(next, definition)
+    next = deriveSimulation(next)
+    next = updateCredit(next, { control: true })
+  }
+  return { state: next, result }
+}
+
+function simulatorTargetMatches(
+  value: number,
+  targetValue: number,
+  comparison: 'within' | 'at-least' | 'at-most',
+  tolerance: number,
+) {
+  if (comparison === 'at-least') return value >= targetValue - tolerance
+  if (comparison === 'at-most') return value <= targetValue + tolerance
+  return Math.abs(value - targetValue) <= tolerance
+}
+
+function findMatchingSimulatorIntervention(
+  state: EcmoSimulationState,
+  definition: ScenarioDefinition,
+  action: SimulationAction,
+) {
+  const clinicalCase = definition.clinicalCase
+  const clinical = state.scenario.clinical
+  if (!clinicalCase || !clinical) return null
+  const appliedIds = new Set(clinical.appliedInterventions.map((record) => record.interventionId))
+
+  return (
+    clinicalCase.interventions.find((intervention) => {
+      const requirement = intervention.simulatorAction
+      if (!requirement || appliedIds.has(intervention.id)) return false
+      if (requirement.control === 'restore-gas') return action.type === 'RESTORE_GAS_SOURCE'
+      if (requirement.control === 'restore-power') return action.type === 'RESTORE_AC_POWER'
+
+      const actionValue =
+        requirement.control === 'rpm' && action.type === 'SET_RPM'
+          ? action.rpm
+          : requirement.control === 'sweep' && action.type === 'SET_SWEEP'
+            ? action.sweep
+            : requirement.control === 'gas-fio2' && action.type === 'SET_GAS_FIO2'
+              ? action.fio2
+              : null
+      if (actionValue === null || requirement.targetValue === undefined) return false
+      return simulatorTargetMatches(
+        actionValue,
+        requirement.targetValue,
+        requirement.comparison ?? 'within',
+        requirement.tolerance ?? 0,
+      )
+    }) ?? null
+  )
 }
 
 function markFaultCorrected(state: EcmoSimulationState, fault: FaultId): EcmoSimulationState {
@@ -395,36 +464,6 @@ function blockedBeforePrediction(state: EcmoSimulationState, action: SimulationA
   return !state.scenario.prediction.committed && gatedActionTypes.has(action.type)
 }
 
-function includesEveryTermGroup(
-  observation: string,
-  groups: readonly (readonly string[])[] | undefined,
-): boolean {
-  if (!groups?.length) return true
-  const normalized = observation.toLocaleLowerCase()
-  return groups.every((group) =>
-    group.some((term) => normalized.includes(term.toLocaleLowerCase())),
-  )
-}
-
-function includesTermGroupsInOrder(
-  observation: string,
-  groups: readonly (readonly string[])[] | undefined,
-): boolean {
-  if (!groups?.length) return true
-  const normalized = observation.toLocaleLowerCase()
-  let previousIndex = -1
-  for (const group of groups) {
-    const indexes = group
-      .map((term) => normalized.indexOf(term.toLocaleLowerCase()))
-      .filter((index) => index >= 0)
-    if (!indexes.length) return false
-    const nextIndex = Math.min(...indexes)
-    if (nextIndex <= previousIndex) return false
-    previousIndex = nextIndex
-  }
-  return true
-}
-
 export function ecmoSimulationReducer(
   state: EcmoSimulationState,
   action: SimulationAction,
@@ -533,6 +572,10 @@ export function ecmoSimulationReducer(
       ) {
         next = addCriticalError(next, 'capstone-flow-reduction', 50)
       }
+      const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
+      if (simulatorIntervention) {
+        next = applyClinicalInterventionAndResolve(next, definition, simulatorIntervention.id).state
+      }
       return appendHistory(
         applyControlCredit(state, next, action),
         'action',
@@ -569,6 +612,10 @@ export function ecmoSimulationReducer(
       ) {
         next = addCriticalError(next, 'va-sweep-off', 50)
       }
+      const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
+      if (simulatorIntervention) {
+        next = applyClinicalInterventionAndResolve(next, definition, simulatorIntervention.id).state
+      }
       return appendHistory(
         applyControlCredit(state, next, action),
         'action',
@@ -576,7 +623,12 @@ export function ecmoSimulationReducer(
       )
     }
     case 'SET_GAS_FIO2': {
-      const next = { ...state, gas: { ...state.gas, fio2: clamp(action.fio2, 0.21, 1) } }
+      const definition = getDefinition(state)
+      let next = { ...state, gas: { ...state.gas, fio2: clamp(action.fio2, 0.21, 1) } }
+      const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
+      if (simulatorIntervention) {
+        next = applyClinicalInterventionAndResolve(next, definition, simulatorIntervention.id).state
+      }
       return appendHistory(
         applyControlCredit(state, next, action),
         'action',
@@ -584,10 +636,14 @@ export function ecmoSimulationReducer(
       )
     }
     case 'RESTORE_GAS_SOURCE': {
-      const next = correctFault(
-        { ...state, gas: { ...state.gas, sourceConnected: true } },
-        'gas-source-interruption',
-      )
+      const definition = getDefinition(state)
+      const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
+      const next = simulatorIntervention
+        ? applyClinicalInterventionAndResolve(state, definition, simulatorIntervention.id).state
+        : correctFault(
+            { ...state, gas: { ...state.gas, sourceConnected: true } },
+            'gas-source-interruption',
+          )
       return appendHistory(
         applyControlCredit(state, next, action),
         'action',
@@ -779,18 +835,34 @@ export function ecmoSimulationReducer(
     }
     case 'APPLY_CLINICAL_INTERVENTION': {
       const definition = getDefinition(state)
-      const result = applyClinicalIntervention(state, definition, action.interventionId)
-      let next = result.state
-      if (result.penalty) {
-        next = addPenalty(next, result.penalty.id, result.penalty.points, result.penalty.critical)
+      const selected = definition.clinicalCase?.interventions.find(
+        (intervention) => intervention.id === action.interventionId,
+      )
+      if (selected?.simulatorAction) {
+        const clinical = state.scenario.clinical
+        const next = clinical
+          ? {
+              ...state,
+              scenario: {
+                ...state.scenario,
+                clinical: {
+                  ...clinical,
+                  lastResponse: `${selected.simulatorAction.instruction} This action must be completed on the simulator.`,
+                },
+              },
+            }
+          : state
+        return appendHistory(
+          next,
+          'system',
+          `Action held: use ${selected.simulatorAction.control} on the simulator`,
+        )
       }
-      if (result.resolutionReady) {
-        next = next.scenario.activeFaults.includes(definition.expectation.correctiveFault)
-          ? correctFault(next, definition.expectation.correctiveFault)
-          : markClinicalImproving(next, definition)
-        next = deriveSimulation(next)
-        next = updateCredit(next, { control: true })
-      }
+      const { state: next, result } = applyClinicalInterventionAndResolve(
+        state,
+        definition,
+        action.interventionId,
+      )
       return appendHistory(
         next,
         'action',
@@ -838,19 +910,37 @@ export function ecmoSimulationReducer(
         `${actionLabels.PERFORM_CHECK}: ${action.checkId}`,
       )
     }
+    case 'REQUEST_HINT': {
+      const definition = getDefinition(state)
+      const hint = definition.hints?.find((item) => item.id === action.hintId)
+      if (!hint || state.scenario.usedHintIds.includes(action.hintId)) return state
+      return appendHistory(
+        {
+          ...state,
+          scenario: {
+            ...state.scenario,
+            usedHintIds: [...state.scenario.usedHintIds, action.hintId],
+            hintPenalty: state.scenario.hintPenalty + hint.penalty,
+            penalties: state.scenario.penalties + hint.penalty,
+          },
+        },
+        'action',
+        `${actionLabels.REQUEST_HINT}: ${hint.title} (−${hint.penalty} points)`,
+      )
+    }
     case 'COMMIT_REASSESSMENT': {
       const definition = getDefinition(state)
-      const deviceObservation = action.device.trim()
-      const circuitObservation = action.circuit.trim()
-      const patientObservation = action.patient.trim()
-      const summary = `Device: ${deviceObservation}\nCircuit: ${circuitObservation}\nPatient: ${patientObservation}`
-      const normalized = summary.toLocaleLowerCase()
-      const includesObservation = definition.expectation.acceptableReassessmentTerms.some((term) =>
-        normalized.includes(term.toLocaleLowerCase()),
-      )
-      const hasAllDomains = [deviceObservation, circuitObservation, patientObservation].every(
-        (observation) => observation.length >= 3,
-      )
+      const reassessment = resolveScenarioReassessment(definition)
+      const answers = action.answers
+      const hasAllDomains = [
+        answers.deviceOptionId,
+        answers.circuitOptionId,
+        answers.patientOptionId,
+      ].every(Boolean)
+      const answersCorrect =
+        answers.deviceOptionId === reassessment.device.correctOptionId &&
+        answers.circuitOptionId === reassessment.circuit.correctOptionId &&
+        answers.patientOptionId === reassessment.patient.correctOptionId
       const correctedAt = state.scenario.causeCorrectedAt
       const clinicalActionAt = state.scenario.clinical?.appliedInterventions.at(-1)?.time ?? null
       const acknowledgedAt = state.alarms.reduce<number | null>(
@@ -867,19 +957,12 @@ export function ecmoSimulationReducer(
       const observedAfterAction =
         observationAnchor !== null &&
         state.simulationTime - observationAnchor >= minimumObservationSeconds
-      const requiredTerms = assessmentPolicy?.requiredTermGroupsByDomain
-      const requiredTermsPresent =
-        includesEveryTermGroup(deviceObservation, requiredTerms?.device) &&
-        includesEveryTermGroup(circuitObservation, requiredTerms?.circuit) &&
-        includesEveryTermGroup(patientObservation, requiredTerms?.patient)
-      const patientOrderValid = includesTermGroupsInOrder(
-        patientObservation,
-        assessmentPolicy?.orderedPatientTermGroups,
-      )
       const submissionReady =
         state.scenario.prediction.committed && hasAllDomains && observedAfterAction
-      const valid =
-        submissionReady && includesObservation && requiredTermsPresent && patientOrderValid
+      const causeCorrected = state.scenario.correctedFaults.includes(
+        definition.expectation.correctiveFault,
+      )
+      const valid = submissionReady && causeCorrected && answersCorrect
       const assessmentState =
         submissionReady && acknowledgementOnlyAttempt
           ? addCriticalError(state, 'ack-without-correction', 30)
@@ -890,7 +973,7 @@ export function ecmoSimulationReducer(
             ...assessmentState,
             scenario: {
               ...assessmentState.scenario,
-              reassessment: submissionReady ? summary : assessmentState.scenario.reassessment,
+              reassessment: submissionReady ? answers : assessmentState.scenario.reassessment,
               phase: submissionReady ? 'debrief' : 'reassess',
             },
           },
@@ -900,8 +983,8 @@ export function ecmoSimulationReducer(
         valid
           ? 'Committed reassessment'
           : submissionReady
-            ? 'Committed reassessment; content credit will be shown in the debrief'
-            : 'Reassessment requires device, circuit/gas, and patient observations after the corrective action',
+            ? 'Committed reassessment; response-selection credit will be shown in the debrief'
+            : 'Reassessment requires one device, circuit/gas, and patient response after the corrective action',
       )
     }
     case 'REVEAL_DEBRIEF':
@@ -925,6 +1008,9 @@ export function ecmoSimulationReducer(
 export interface ScenarioOutcome {
   score: number
   mastery: boolean
+  totalPenalty: number
+  hintPenalty: number
+  maximumScoreAfterHints: number
   criticalErrors: readonly string[]
   completedObjectiveIds: readonly string[]
 }
@@ -939,6 +1025,9 @@ export function selectScenarioOutcome(state: EcmoSimulationState): ScenarioOutco
   return {
     score,
     mastery: score >= 80 && state.scenario.criticalErrors.length === 0,
+    totalPenalty: state.scenario.penalties,
+    hintPenalty: state.scenario.hintPenalty,
+    maximumScoreAfterHints: clamp(100 - state.scenario.hintPenalty, 0, 100),
     criticalErrors: state.scenario.criticalErrors,
     completedObjectiveIds: state.scenario.completedObjectiveIds,
   }

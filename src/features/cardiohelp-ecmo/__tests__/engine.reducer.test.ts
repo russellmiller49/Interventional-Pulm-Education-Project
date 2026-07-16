@@ -7,12 +7,31 @@ import {
   type SimulationAction,
 } from '../engine'
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
+import { cardiohelpScenarioById } from '../content/scenarios'
+import { clinicalPracticeScenarioById } from '../content/clinicalCases'
+import { resolveScenarioReassessment } from '../content/practiceSupport'
 
 function dispatchMany(
   initial: EcmoSimulationState,
   actions: readonly SimulationAction[],
 ): EcmoSimulationState {
   return actions.reduce(ecmoSimulationReducer, initial)
+}
+
+function reassessmentAnswers(scenarioId: string, correct = true) {
+  const definition =
+    clinicalPracticeScenarioById.get(scenarioId) ?? cardiohelpScenarioById.get(scenarioId)
+  if (!definition) throw new Error(`Missing scenario: ${scenarioId}`)
+  const reassessment = resolveScenarioReassessment(definition)
+  const answerFor = (question: typeof reassessment.device) =>
+    correct
+      ? question.correctOptionId
+      : (question.options.find((item) => item.id !== question.correctOptionId)?.id ?? '')
+  return {
+    deviceOptionId: answerFor(reassessment.device),
+    circuitOptionId: answerFor(reassessment.circuit),
+    patientOptionId: answerFor(reassessment.patient),
+  }
 }
 
 describe('CARDIOHELP ECMO simulation reducer', () => {
@@ -282,9 +301,7 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     expect(state.scenario.criticalErrors).not.toContain('ack-without-correction')
     state = ecmoSimulationReducer(state, {
       type: 'COMMIT_REASSESSMENT',
-      device: 'The alarm sound resumed after the pause.',
-      circuit: 'The gas source remains interrupted.',
-      patient: 'PaCO2 and pH remain abnormal.',
+      answers: reassessmentAnswers('gas-source-interruption'),
     })
     expect(state.scenario.criticalErrors).toContain('ack-without-correction')
     expect(state.scenario.credit.cause).toBe(false)
@@ -467,9 +484,7 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     safe = ecmoSimulationReducer(safe, { type: 'SET_SWEEP', sweep: 0 })
     safe = ecmoSimulationReducer(safe, {
       type: 'COMMIT_REASSESSMENT',
-      device: 'RPM and blood flow remain stable.',
-      circuit: 'Sweep gas is off while circuit flow continues.',
-      patient: 'SpO2 first, work of breathing second, then PaCO2 and pH third.',
+      answers: reassessmentAnswers('vv-off-sweep-capstone'),
     })
     expect(safe.scenario.credit.reassessment).toBe(false)
 
@@ -477,9 +492,7 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     safe = ecmoSimulationReducer(safe, { type: 'TICK', seconds: 20 })
     safe = ecmoSimulationReducer(safe, {
       type: 'COMMIT_REASSESSMENT',
-      device: 'RPM and blood flow remain stable.',
-      circuit: 'Sweep gas is off while circuit flow continues.',
-      patient: 'SpO2 first, work of breathing second, then PaCO2 and pH third.',
+      answers: reassessmentAnswers('vv-off-sweep-capstone'),
     })
     expect(safe.scenario.credit.reassessment).toBe(true)
     expect(selectScenarioOutcome(safe).mastery).toBe(true)
@@ -511,10 +524,7 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     safe = ecmoSimulationReducer(safe, { type: 'TICK', seconds: 10 })
     safe = ecmoSimulationReducer(safe, {
       type: 'COMMIT_REASSESSMENT',
-      device: 'Circuit flow and pressure remain stable.',
-      circuit: 'Post-oxygenator transfer and femoral lower-body return remain reassuring.',
-      patient:
-        'Right radial oxygenation, pulse pressure and native ejection, native lung oxygenation, and systemic and limb perfusion were reassessed.',
+      answers: reassessmentAnswers('va-mixed-circulation-capstone'),
     })
     expect(safe.scenario.credit.reassessment).toBe(true)
     expect(selectScenarioOutcome(safe).mastery).toBe(true)
@@ -537,9 +547,7 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     unsafe = ecmoSimulationReducer(unsafe, { type: 'TICK', seconds: 10 })
     unsafe = ecmoSimulationReducer(unsafe, {
       type: 'COMMIT_REASSESSMENT',
-      device: 'abc',
-      circuit: 'abc',
-      patient: 'right radial',
+      answers: reassessmentAnswers('va-mixed-circulation-capstone', false),
     })
     expect(unsafe.scenario.credit.reassessment).toBe(false)
     expect(selectScenarioOutcome(unsafe).mastery).toBe(false)
@@ -559,19 +567,51 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
       { type: 'TICK', seconds: 4 },
       {
         type: 'COMMIT_REASSESSMENT',
-        device: 'Mixing point causing differential hypoxia',
-        circuit: 'Low R radial SpO2',
-        patient: 'SpO2',
+        answers: reassessmentAnswers('va-clinical-differential-hypoxemia', false),
       },
     ])
 
-    expect(state.scenario.reassessment).toContain('Mixing point causing differential hypoxia')
+    expect(state.scenario.reassessment).toEqual(
+      reassessmentAnswers('va-clinical-differential-hypoxemia', false),
+    )
     expect(state.scenario.phase).toBe('debrief')
     expect(state.scenario.credit.reassessment).toBe(false)
 
     state = ecmoSimulationReducer(state, { type: 'REVEAL_DEBRIEF' })
     expect(state.scenario.phase).toBe('complete')
     expect(selectScenarioOutcome(state).mastery).toBe(false)
+  })
+
+  it('deducts scored clues once and reports the reduced maximum score', () => {
+    const definition = clinicalPracticeScenarioById.get('clinical-vv-occult-hemorrhage')!
+    let state = createInitialSimulationState(definition.id)
+    state = {
+      ...state,
+      scenario: {
+        ...state.scenario,
+        credit: { goal: true, control: true, direction: true, cause: true, reassessment: true },
+      },
+    }
+    const firstHint = definition.hints![0]
+    const secondHint = definition.hints![1]
+
+    state = ecmoSimulationReducer(state, { type: 'REQUEST_HINT', hintId: firstHint.id })
+    state = ecmoSimulationReducer(state, { type: 'REQUEST_HINT', hintId: firstHint.id })
+    expect(state.scenario.usedHintIds).toEqual([firstHint.id])
+    expect(state.scenario.hintPenalty).toBe(5)
+    expect(selectScenarioOutcome(state)).toMatchObject({
+      score: 95,
+      hintPenalty: 5,
+      maximumScoreAfterHints: 95,
+    })
+
+    state = ecmoSimulationReducer(state, { type: 'REQUEST_HINT', hintId: secondHint.id })
+    expect(selectScenarioOutcome(state)).toMatchObject({
+      score: 85,
+      hintPenalty: 15,
+      maximumScoreAfterHints: 85,
+      mastery: true,
+    })
   })
 
   it('scores all five objectives and blocks mastery after a critical error', () => {
@@ -588,9 +628,7 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
       { type: 'STEP' },
       {
         type: 'COMMIT_REASSESSMENT',
-        device: 'Self-test passed on the console.',
-        circuit: 'Circuit and sensor orientation verified.',
-        patient: 'Independent patient data reassessed.',
+        answers: reassessmentAnswers('startup-sensor-orientation'),
       },
       { type: 'REVEAL_DEBRIEF' },
     ])

@@ -432,7 +432,7 @@ export function CardiohelpConsole({
     >
       {guidedTarget === 'console' ? (
         <div className={styles.guidedFocusFlag} role="status">
-          <span aria-hidden="true">●</span> Learn focus: device console
+          <span aria-hidden="true">●</span> Guided focus: device console
         </div>
       ) : null}
       <div className={styles.sectionTitleRow}>

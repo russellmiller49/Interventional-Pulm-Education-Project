@@ -131,6 +131,8 @@ function createScenarioRuntime(definition: ScenarioDefinition): ScenarioRuntime 
     reassessment: null,
     credit: { goal: false, control: false, direction: false, cause: false, reassessment: false },
     penalties: 0,
+    hintPenalty: 0,
+    usedHintIds: [],
     criticalErrors: [],
     completedObjectiveIds: [],
     attempts: 1,

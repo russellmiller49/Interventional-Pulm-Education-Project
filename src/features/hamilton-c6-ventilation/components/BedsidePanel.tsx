@@ -41,9 +41,11 @@ function circuitFinding(state: VentilationSimulationState): string {
 export function BedsidePanel({
   state,
   definition,
+  compact = false,
 }: {
   state: VentilationSimulationState
   definition: VentilationCaseDefinition
+  compact?: boolean
 }) {
   const assessed = state.experience === 'learn' || performed(state, 'assess-patient')
   const circuitInspected = state.experience === 'learn' || performed(state, 'inspect-circuit')
@@ -52,11 +54,17 @@ export function BedsidePanel({
   const mean = state.patient.hemodynamics.mapMmHg
 
   return (
-    <aside className={styles.bedsidePanel} aria-labelledby="bedside-heading">
+    <aside
+      className={styles.bedsidePanel}
+      data-compact={compact || undefined}
+      aria-labelledby="bedside-heading"
+    >
       <div className={styles.panelHeading}>
         <div>
-          <span>Independent bedside surface</span>
-          <h2 id="bedside-heading">Patient, not just ventilator</h2>
+          <span>{compact ? 'Persistent patient physiology' : 'Independent bedside surface'}</span>
+          <h2 id="bedside-heading">
+            {compact ? 'Live patient status' : 'Patient, not just ventilator'}
+          </h2>
         </div>
         <UserRound aria-hidden="true" />
       </div>
@@ -87,8 +95,29 @@ export function BedsidePanel({
         </div>
       </section>
 
+      {compact ? (
+        <dl className={styles.compactComfortGrid} aria-label="Current comfort and sedation">
+          <div>
+            <dt>Dyspnea</dt>
+            <dd>{state.patient.human.dyspneaScore.toFixed(1)} / 10</dd>
+          </div>
+          <div>
+            <dt>Sedation</dt>
+            <dd>RASS {state.patient.human.sedationScore}</dd>
+          </div>
+          <div>
+            <dt>Pain</dt>
+            <dd>{state.patient.human.painScore.toFixed(0)} / 10</dd>
+          </div>
+          <div>
+            <dt>Delirium</dt>
+            <dd>{state.patient.human.deliriumScore.toFixed(0)} / 10</dd>
+          </div>
+        </dl>
+      ) : null}
+
       <div className={styles.bedsideSections}>
-        <details open>
+        <details open={!compact}>
           <summary>
             <Stethoscope aria-hidden="true" /> Examination and comfort
           </summary>
@@ -105,24 +134,26 @@ export function BedsidePanel({
             ) : (
               <p>Repeat a bedside assessment to reveal dynamic examination findings.</p>
             )}
-            <dl className={styles.comfortGrid}>
-              <div>
-                <dt>Dyspnea</dt>
-                <dd>{state.patient.human.dyspneaScore.toFixed(1)} / 10</dd>
-              </div>
-              <div>
-                <dt>Sedation</dt>
-                <dd>RASS {state.patient.human.sedationScore}</dd>
-              </div>
-              <div>
-                <dt>Pain</dt>
-                <dd>{state.patient.human.painScore.toFixed(0)} / 10</dd>
-              </div>
-              <div>
-                <dt>Delirium burden</dt>
-                <dd>{state.patient.human.deliriumScore.toFixed(0)} / 10</dd>
-              </div>
-            </dl>
+            {!compact ? (
+              <dl className={styles.comfortGrid}>
+                <div>
+                  <dt>Dyspnea</dt>
+                  <dd>{state.patient.human.dyspneaScore.toFixed(1)} / 10</dd>
+                </div>
+                <div>
+                  <dt>Sedation</dt>
+                  <dd>RASS {state.patient.human.sedationScore}</dd>
+                </div>
+                <div>
+                  <dt>Pain</dt>
+                  <dd>{state.patient.human.painScore.toFixed(0)} / 10</dd>
+                </div>
+                <div>
+                  <dt>Delirium burden</dt>
+                  <dd>{state.patient.human.deliriumScore.toFixed(0)} / 10</dd>
+                </div>
+              </dl>
+            ) : null}
           </div>
         </details>
 

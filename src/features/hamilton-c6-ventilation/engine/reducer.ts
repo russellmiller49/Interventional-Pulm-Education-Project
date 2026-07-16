@@ -33,6 +33,13 @@ function bounded(
   return clamp(numeric(value, fallback), range[0], range[1])
 }
 
+function maxControlledPRampMs(inspiratoryTimeSeconds: number): number {
+  return Math.min(
+    c6ControlRanges.pRampControlledMs[1],
+    Math.floor((inspiratoryTimeSeconds * 1000) / 3),
+  )
+}
+
 function commonSettings(settings: C6VentilatorSettings): C6CommonSettings {
   return {
     oxygenPercent: settings.oxygenPercent,
@@ -72,7 +79,11 @@ function updateCommonControl(
   if (control === 'highPressureLimitCmH2O') {
     return {
       ...settings,
-      highPressureLimitCmH2O: clamp(numeric(value, settings.highPressureLimitCmH2O), 10, 100),
+      highPressureLimitCmH2O: bounded(
+        value,
+        c6ControlRanges.highPressureLimitCmH2O,
+        settings.highPressureLimitCmH2O,
+      ),
     }
   }
   if (control === 'triggerType' && (value === 'flow' || value === 'pressure')) {
@@ -93,7 +104,9 @@ function updateCommonControl(
               type: 'flow',
               thresholdLMin: bounded(
                 value,
-                c6ControlRanges.flowTriggerLMin,
+                settings.mode === 'spont'
+                  ? c6ControlRanges.flowTriggerLMin
+                  : c6ControlRanges.flowTriggerMandatoryLMin,
                 settings.trigger.thresholdLMin,
               ),
             }
@@ -111,13 +124,17 @@ function updateCommonControl(
   if (control === 'trcPercent') {
     return {
       ...settings,
-      trcPercent: clamp(numeric(value, settings.trcPercent), 0, 100),
+      trcPercent: bounded(value, c6ControlRanges.trcPercent, settings.trcPercent),
     }
   }
   if (control === 'tubeInnerDiameterMm') {
     return {
       ...settings,
-      tubeInnerDiameterMm: clamp(numeric(value, settings.tubeInnerDiameterMm), 2.5, 12),
+      tubeInnerDiameterMm: bounded(
+        value,
+        c6ControlRanges.adultTubeInnerDiameterMm,
+        settings.tubeInnerDiameterMm,
+      ),
     }
   }
   return null
@@ -154,7 +171,10 @@ export function updateVentilatorControl(
       return { ...settings, flowPattern: value as typeof settings.flowPattern }
     }
     if (control === 'pausePercent') {
-      return { ...settings, pausePercent: clamp(numeric(value, settings.pausePercent), 0, 70) }
+      return {
+        ...settings,
+        pausePercent: bounded(value, c6ControlRanges.pausePercent, settings.pausePercent),
+      }
     }
   }
 
@@ -162,7 +182,11 @@ export function updateVentilatorControl(
     if (control === 'deltaPControlCmH2O') {
       return {
         ...settings,
-        deltaPControlCmH2O: clamp(numeric(value, settings.deltaPControlCmH2O), 3, 60),
+        deltaPControlCmH2O: bounded(
+          value,
+          c6ControlRanges.deltaPControlCmH2O,
+          settings.deltaPControlCmH2O,
+        ),
       }
     }
     if (control === 'ratePerMin') {
@@ -172,15 +196,25 @@ export function updateVentilatorControl(
       }
     }
     if (control === 'inspiratoryTimeSeconds') {
+      const inspiratoryTimeSeconds = bounded(
+        value,
+        c6ControlRanges.inspiratoryTimeSeconds,
+        settings.inspiratoryTimeSeconds,
+      )
       return {
         ...settings,
-        inspiratoryTimeSeconds: clamp(numeric(value, settings.inspiratoryTimeSeconds), 0.1, 12),
+        inspiratoryTimeSeconds,
+        pRampMs: Math.min(settings.pRampMs, maxControlledPRampMs(inspiratoryTimeSeconds)),
       }
     }
     if (control === 'pRampMs') {
       return {
         ...settings,
-        pRampMs: bounded(value, c6ControlRanges.pRampControlledMs, settings.pRampMs),
+        pRampMs: clamp(
+          numeric(value, settings.pRampMs),
+          c6ControlRanges.pRampControlledMs[0],
+          maxControlledPRampMs(settings.inspiratoryTimeSeconds),
+        ),
       }
     }
   }
@@ -189,7 +223,11 @@ export function updateVentilatorControl(
     if (control === 'pressureSupportCmH2O') {
       return {
         ...settings,
-        pressureSupportCmH2O: clamp(numeric(value, settings.pressureSupportCmH2O), 0, 50),
+        pressureSupportCmH2O: bounded(
+          value,
+          c6ControlRanges.pressureSupportCmH2O,
+          settings.pressureSupportCmH2O,
+        ),
       }
     }
     if (control === 'pRampMs') {
@@ -216,11 +254,7 @@ export function updateVentilatorControl(
     if (control === 'apneaRatePerMin') {
       return {
         ...settings,
-        apneaRatePerMin: bounded(
-          value,
-          c6ControlRanges.mandatoryRatePerMin,
-          settings.apneaRatePerMin,
-        ),
+        apneaRatePerMin: bounded(value, c6ControlRanges.apneaRatePerMin, settings.apneaRatePerMin),
       }
     }
   }

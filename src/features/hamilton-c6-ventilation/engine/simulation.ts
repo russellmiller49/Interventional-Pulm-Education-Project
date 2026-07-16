@@ -5,6 +5,7 @@ import {
   deriveEffectivePatient,
   deriveMeasurements,
   equationOfMotionPressure,
+  hasPerformedEffect,
   isCaseResolved,
   MAX_TREND_SAMPLES,
   MAX_WAVEFORM_SAMPLES,
@@ -432,6 +433,12 @@ function updateSlowPhysiology(
     (definition.phenotype === 'asthma-obstructive-shock' ? 2.4 : 1.1)
   targetMap -= Math.max(0, measurements.meanAirwayPressureCmH2O - 18) * 0.8
   if (definition.phenotype === 'ards-recruitment' && settings.peepCmH2O >= 14) targetMap -= 15
+  if (
+    definition.phenotype === 'asthma-obstructive-shock' &&
+    hasPerformedEffect(state, definition, 'disconnect-bag')
+  ) {
+    targetMap = Math.max(targetMap, 72)
+  }
   if (next.hemodynamics.obstructiveShock) targetMap = Math.min(targetMap, 42)
   if (isCaseResolved({ ...state, patient: next, measurements }, definition)) {
     targetMap = Math.max(targetMap, 68)
@@ -599,9 +606,17 @@ function reconcileAlarms(
 
 function withCriticalErrors(state: VentilationSimulationState): VentilationSimulationState {
   const errors = new Set(state.criticalErrors)
+  const timelyHemodynamicRescue = state.interventions.some(
+    (record) =>
+      (record.interventionId === 'disconnect-bag' ||
+        record.interventionId === 'decompress-pneumothorax') &&
+      record.time <= 15,
+  )
   if (state.risk.highPlateau >= 15) errors.add('Sustained excessive plateau pressure')
   if (state.risk.dynamicHyperinflation >= 15) errors.add('Sustained severe dynamic hyperinflation')
-  if (state.risk.hypotension >= 20) errors.add('Prolonged severe hypotension')
+  if (state.risk.hypotension >= 45 && !timelyHemodynamicRescue) {
+    errors.add('Prolonged severe hypotension')
+  }
   if (state.risk.stackedVolume >= 20) errors.add('Repeated stacked inflation')
   return { ...state, criticalErrors: [...errors] }
 }
@@ -630,6 +645,7 @@ export function advanceSimulation(
   for (let index = 0; index < steps; index += 1) {
     time += actualStep
     working = { ...working, simulationTime: time, patient, measurements }
+    patient = deriveEffectivePatient(working, definition)
     const frame = nextWaveformSample(working, definition, patient, measurements, time, volumeL)
     volumeL = frame.volumeL
     if (!state.ventilator.frozen) {
@@ -720,23 +736,14 @@ export function applyIntervention(
     label: intervention.label,
     response: intervention.response,
     time: state.simulationTime,
+    effectiveAt:
+      intervention.category === 'assessment' || intervention.category === 'ventilator'
+        ? state.simulationTime
+        : state.simulationTime + intervention.latencySeconds,
   }
-  const patient = clonePatient(state.patient)
   let ventilator = { ...state.ventilator }
   let lastAbgAt = state.lastAbgAt
   const errors = new Set(state.criticalErrors)
-  if (intervention.effectId === 'disconnect-bag') {
-    patient.mechanics.endExpiratoryVolumeL = 0
-    patient.mechanics.intrinsicPeepCmH2O = 0
-  }
-  if (intervention.effectId === 'decompress-pneumothorax') {
-    patient.airway.pneumothorax = false
-    patient.mechanics.complianceLPerCmH2O = Math.max(patient.mechanics.complianceLPerCmH2O, 0.028)
-    patient.hemodynamics.obstructiveShock = false
-  }
-  if (intervention.effectId === 'pleural-drainage') {
-    patient.mechanics.complianceLPerCmH2O = Math.max(patient.mechanics.complianceLPerCmH2O, 0.035)
-  }
   if (intervention.effectId === 'inspiratory-hold' || intervention.effectId === 'expiratory-hold') {
     ventilator = {
       ...ventilator,
@@ -746,14 +753,12 @@ export function applyIntervention(
   }
   if (intervention.effectId === 'order-abg') lastAbgAt = state.simulationTime + 60
   if (intervention.effectId === 'deepen-sedation') {
-    patient.human.sedationScore = -5
     if (definition.id === 'MV-15')
       errors.add('Deep sedation before assessing pain, dyspnea, and delirium')
   }
   if (intervention.unsafe && intervention.critical) errors.add(intervention.label)
   const next: VentilationSimulationState = {
     ...state,
-    patient,
     ventilator,
     interventions: [...state.interventions, record],
     phase: 'reassess',

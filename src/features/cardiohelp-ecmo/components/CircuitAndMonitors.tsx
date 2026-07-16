@@ -83,7 +83,7 @@ function CircuitSchematic({
     >
       {guidedTarget === 'circuit' ? (
         <div className={styles.guidedFocusFlag} role="status">
-          <span aria-hidden="true">●</span> Learn focus: circuit and sensors
+          <span aria-hidden="true">●</span> Guided focus: circuit and sensors
         </div>
       ) : null}
       <div className={styles.panelHeading}>
@@ -594,7 +594,7 @@ function GasBlenderPanel({
     >
       {guidedTarget === 'gas-panel' ? (
         <div className={styles.guidedFocusFlag} role="status">
-          <span aria-hidden="true">●</span> Learn focus: separate gas panel
+          <span aria-hidden="true">●</span> Guided focus: separate gas panel
         </div>
       ) : null}
       <div className={styles.externalPanelHeader}>
@@ -769,7 +769,7 @@ function PatientMonitor({
     >
       {guidedTarget === 'patient-monitor' ? (
         <div className={styles.guidedFocusFlag} role="status">
-          <span aria-hidden="true">●</span> Learn focus: independent patient monitor
+          <span aria-hidden="true">●</span> Guided focus: independent patient monitor
         </div>
       ) : null}
       <div className={styles.externalPanelHeader}>
@@ -958,7 +958,7 @@ function TrendPanel({
     >
       {guidedTarget === 'trend-panel' ? (
         <div className={styles.guidedFocusFlag} role="status">
-          <span aria-hidden="true">●</span> Learn focus: device and patient trends
+          <span aria-hidden="true">●</span> Guided focus: device and patient trends
         </div>
       ) : null}
       <div className={styles.panelHeading}>

@@ -100,6 +100,7 @@ const allActions: readonly SimulationAction['type'][] = [
   'PERFORM_CHECK',
   'COMMIT_PREDICTION',
   'COMMIT_REASSESSMENT',
+  'REQUEST_HINT',
   'REVEAL_DEBRIEF',
   'TOGGLE_ALARM_AUDIO',
 ] as const

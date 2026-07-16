@@ -63,6 +63,14 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
   })
 
+  it('keeps the HAMILTON-C6 ventilation simulator authenticated and resolves aggregate analytics', () => {
+    expect(isPublicPath('/hamilton-c6-ventilation')).toBe(false)
+    expect(isPublicPath('/es/hamilton-c6-ventilation')).toBe(false)
+    expect(getRequiredEntitlement('/hamilton-c6-ventilation', params())).toBeNull()
+    expect(resolveSiteModuleId('/hamilton-c6-ventilation')).toBe('hamilton-c6-ventilation')
+    expect(resolveSiteModuleId('/zh-CN/hamilton-c6-ventilation')).toBe('hamilton-c6-ventilation')
+  })
+
   it('requires entitlements only for restricted website areas', () => {
     expect(getRequiredEntitlement('/admin', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/admin/analytics', params())).toBe('site_admin')

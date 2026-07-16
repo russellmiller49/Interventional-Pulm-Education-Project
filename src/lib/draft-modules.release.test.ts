@@ -1,5 +1,7 @@
 type PublicationStatus = 'draft' | 'published'
 
+export {}
+
 const stentExplorerReleasePath = '@/features/airway-stent-mechanics/explorer/release'
 const cardiohelpEcmoReleasePath = '@/features/cardiohelp-ecmo/content/deviceProfile'
 

@@ -74,11 +74,8 @@ export function WaveformStrip({
         role="img"
         aria-label={`${label} waveform. Current ${current.toFixed(1)} ${unit}; observed range ${observedMin.toFixed(1)} to ${observedMax.toFixed(1)} ${unit}.`}
       >
-        <title>{label} waveform over the most recent 12 simulated seconds</title>
-        <desc>
-          Current {current.toFixed(1)} {unit}. Minimum {observedMin.toFixed(1)} and maximum{' '}
-          {observedMax.toFixed(1)} {unit} in the visible buffer.
-        </desc>
+        <title>{`${label} waveform over the most recent 12 simulated seconds`}</title>
+        <desc>{`Current ${current.toFixed(1)} ${unit}. Minimum ${observedMin.toFixed(1)} and maximum ${observedMax.toFixed(1)} ${unit} in the visible buffer.`}</desc>
         <g className={styles.waveformGrid} aria-hidden="true">
           {[0, 1, 2, 3, 4, 5].map((tick) => (
             <line key={`vertical-${tick}`} x1={tick * 200} y1="0" x2={tick * 200} y2="120" />
