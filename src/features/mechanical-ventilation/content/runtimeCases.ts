@@ -9,6 +9,7 @@ import type {
   StationId,
   VentilationCaseDefinition,
 } from '../engine/types'
+import { createDefaultAdvancedVentilationSettings } from '../engine/modes'
 import { mechanicalVentilationSource, validateRuntimeCaseRegistry } from './schema'
 
 const sourceCaseById = new Map(
@@ -734,6 +735,8 @@ function buildSettings(sourceId: string): MechanicalVentilationSettings {
   const source = sourceCaseById.get(sourceId)!
   const initial = source.initial_ventilator
   const common = {
+    deviceMode: 'volume-ac' as const,
+    advanced: createDefaultAdvancedVentilationSettings(),
     oxygenPercent: numeric(initial, 'FiO2', 0.4) * 100,
     peepCmH2O: numeric(initial, 'PEEP_cmH2O', 5),
     trigger: parseTrigger(initial.trigger),
@@ -747,6 +750,7 @@ function buildSettings(sourceId: string): MechanicalVentilationSettings {
     return {
       mode: 'pressure-ac',
       ...common,
+      deviceMode: 'pressure-ac',
       deltaPControlCmH2O: numeric(initial, 'inspiratory_pressure_above_PEEP_cmH2O', 15),
       ratePerMin: numeric(initial, 'RR_min', 16),
       inspiratoryTimeSeconds: numeric(initial, 'inspiratory_time_s', 0.9),
@@ -757,6 +761,7 @@ function buildSettings(sourceId: string): MechanicalVentilationSettings {
     return {
       mode: 'pressure-support',
       ...common,
+      deviceMode: 'pressure-support',
       pressureSupportCmH2O: numeric(initial, 'pressure_support_cmH2O', 10),
       pRampMs: Math.min(2000, numeric(initial, 'rise_time_ms', 100)),
       etsPercent: numeric(initial, 'flow_cycle_percent', 25),

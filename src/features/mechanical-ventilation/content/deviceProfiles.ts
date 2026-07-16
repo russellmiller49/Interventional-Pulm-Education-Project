@@ -5,8 +5,16 @@ import type {
   VentilatorControlKey,
   VentilatorDeviceId,
   VentilatorDeviceProfile,
+  VentilatorModeAvailability,
+  VentilatorModeDescriptor,
+  VentilatorModeId,
 } from '../engine/types'
 import { ventilatorDeviceIds } from '../engine/types'
+import {
+  canonicalModeForVentilatorMode,
+  cloneMechanicalVentilationSettings,
+  createDefaultAdvancedVentilationSettings,
+} from '../engine/modes'
 
 export type MechanicalVentilationPublicationStatus = 'draft' | 'tester-preview' | 'published'
 
@@ -43,6 +51,22 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
       'Mode vocabulary, control ranges, navigation, graphics, alarms, maneuvers, and physical-control workflow.',
     limitations:
       'Optional features and market-specific configurations are excluded unless explicitly listed.',
+  },
+  {
+    id: 'hamilton-c6-intellivent-asv-1.2.x',
+    deviceId: 'hamilton-c6',
+    title: 'HAMILTON-C6 INTELLiVENT-ASV Operator’s Manual',
+    citation:
+      'Hamilton Medical. HAMILTON-C6 INTELLiVENT-ASV Operator’s Manual. Software version 1.2.x; document 624954/05.',
+    revision: '624954/05 · software 1.2.x',
+    date: '2025-05-12',
+    pages: '13-25, 63-80, 113-118',
+    sourceFilename: 'HAMILTON-C6_Intellivent-ASV_ops-manual_v1.2.x_en_624954.05.pdf',
+    sourceSha256: 'd2690200f69d7298542714d2663515ad575a5d014d4a46fadc1d95e45bdc3927',
+    intendedUse:
+      'INTELLiVENT-ASV setup, controller state, target ranges, %MinVol, PEEP/Oxygen automation, and safety-boundary workflow.',
+    limitations:
+      'The simulator implements a bounded educational controller, not the proprietary device algorithm or a validated closed-loop controller.',
   },
   {
     id: 'evita-v800-v600-ifu-3.1n',
@@ -135,10 +159,43 @@ export const ventilatorDeviceSources: readonly VentilatorDeviceSource[] = [
   },
 ] as const
 
-const commonModeDescriptions: Record<CanonicalVentilationMode, string> = {
+const modeDescriptions: Record<VentilatorModeId, string> = {
   'volume-ac': 'Volume-targeted assist/control ventilation',
   'pressure-ac': 'Pressure-targeted assist/control ventilation',
   'pressure-support': 'Spontaneous breathing with CPAP and pressure support',
+  'volume-simv':
+    'Volume-targeted synchronized mandatory breaths with supported spontaneous breaths',
+  'pressure-simv':
+    'Pressure-targeted synchronized mandatory breaths with supported spontaneous breaths',
+  'adaptive-pressure-ac':
+    'Adaptive pressure-targeted mandatory breaths adjusted toward a tidal-volume target',
+  'adaptive-pressure-simv':
+    'Adaptive volume-targeted mandatory breaths alternating with supported spontaneous breaths',
+  aprv: 'Two pressure levels with a brief pressure release and unrestricted spontaneous breathing',
+  bilevel: 'Two time-cycled pressure levels with spontaneous breathing available at either level',
+  'proportional-assist': 'Patient-triggered proportional unloading based on measured mechanics',
+  'volume-support': 'Patient-triggered pressure support adjusted toward a target tidal volume',
+  asv: 'Adaptive support targeting a clinician-set percentage of predicted minute ventilation',
+  'intellivent-asv':
+    'ASV-based ventilation with bounded educational ventilation and oxygenation controllers',
+  'tcpl-ac': 'Neonatal time-cycled, pressure-limited assist/control ventilation',
+  'tcpl-simv': 'Neonatal time-cycled, pressure-limited synchronized mandatory ventilation',
+}
+
+function mode(
+  id: VentilatorModeId,
+  label: string,
+  availability: VentilatorModeAvailability = 'simulated',
+  availabilityNote?: string,
+): VentilatorModeDescriptor {
+  return {
+    id,
+    canonicalMode: canonicalModeForVentilatorMode(id),
+    label,
+    description: modeDescriptions[id],
+    availability,
+    availabilityNote,
+  }
 }
 
 const profiles: readonly VentilatorDeviceProfile[] = [
@@ -151,8 +208,36 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     manualProfile: '10197564/00',
     patientGroup: 'Adult/Ped',
     commitBehavior: 'immediate',
-    modeLabels: { 'volume-ac': '(S)CMV', 'pressure-ac': 'PCV+', 'pressure-support': 'SPONT' },
-    modeDescriptions: commonModeDescriptions,
+    modes: [
+      mode('volume-ac', '(S)CMV'),
+      mode('pressure-ac', 'PCV+'),
+      mode('pressure-support', 'SPONT'),
+      mode('volume-simv', 'SIMV'),
+      mode('pressure-simv', 'PSIMV+'),
+      mode('adaptive-pressure-ac', 'APVcmv'),
+      mode('adaptive-pressure-simv', 'APVsimv / SIMV+'),
+      mode('bilevel', 'DuoPAP'),
+      mode('aprv', 'APRV'),
+      mode('asv', 'ASV'),
+      mode('intellivent-asv', 'INTELLiVENT-ASV'),
+    ],
+    features: [
+      {
+        id: 'intellisync-plus',
+        label: 'IntelliSync+',
+        description: 'Automated inspiratory and expiratory trigger synchronization.',
+        compatibleModes: [
+          'volume-simv',
+          'pressure-simv',
+          'adaptive-pressure-simv',
+          'bilevel',
+          'pressure-support',
+          'asv',
+          'intellivent-asv',
+        ],
+        availability: 'simulated',
+      },
+    ],
     navigationLabels: {
       main: 'Monitoring',
       modes: 'Modes',
@@ -167,8 +252,8 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Separate trigger, target or flow, cycle, and expiration on all three waveforms.',
       'Use bedside data to decide whether the ventilator is the cause, the response, or neither.',
     ],
-    deferredModes: ['ASV', 'INTELLiVENT-ASV', 'IntelliSync+'],
-    sourceIds: ['hamilton-c6-manual-1.2.x'],
+    deferredModes: ['NIV', 'NIV-ST', 'nCPAP-PS'],
+    sourceIds: ['hamilton-c6-manual-1.2.x', 'hamilton-c6-intellivent-asv-1.2.x'],
     controlLabels: {
       oxygenPercent: 'Oxygen',
       peepCmH2O: 'PEEP/CPAP',
@@ -181,6 +266,18 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       highPressureLimitCmH2O: 'High pressure',
       triggerThreshold: 'Flow trigger',
       trcEnabled: 'TRC compensation',
+      targetVtMl: 'Target Vt',
+      spontaneousPressureSupportCmH2O: 'Psupport',
+      spontaneousRampMs: 'P-ramp',
+      spontaneousCyclePercent: 'ETS',
+      pHighCmH2O: 'P high',
+      pLowCmH2O: 'P low',
+      tHighSeconds: 'T high',
+      tLowSeconds: 'T low',
+      minuteVolumePercent: '%MinVol',
+      targetSpO2LowPercent: 'Target SpO₂ low',
+      targetPetCO2MmHg: 'Target PetCO₂',
+      intelliSyncEnabled: 'IntelliSync+',
     },
     educationalUseOnly: true,
   },
@@ -193,12 +290,34 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     manualProfile: '9513888 · Edition 1',
     patientGroup: 'Adult/Pediatric',
     commitBehavior: 'rotary-confirm',
-    modeLabels: {
-      'volume-ac': 'VC-AC',
-      'pressure-ac': 'PC-AC',
-      'pressure-support': 'SPN-CPAP/PS',
-    },
-    modeDescriptions: commonModeDescriptions,
+    modes: [
+      mode('volume-ac', 'VC-AC'),
+      mode('pressure-ac', 'PC-AC'),
+      mode('pressure-support', 'SPN-CPAP/PS'),
+      mode('volume-simv', 'VC-SIMV'),
+      mode('pressure-simv', 'PC-SIMV'),
+      mode('aprv', 'PC-APRV'),
+      mode('volume-support', 'SPN-CPAP/VS'),
+    ],
+    features: [
+      {
+        id: 'autoflow',
+        label: 'AutoFlow',
+        description:
+          'Adapts inspiratory pressure and decelerating flow toward the set tidal volume.',
+        compatibleModes: ['volume-ac', 'volume-simv'],
+        availability: 'simulated',
+      },
+      {
+        id: 'volume-guarantee',
+        label: 'Volume Guarantee',
+        description: 'Neonatal adaptive pressure delivery toward a target tidal volume.',
+        compatibleModes: ['volume-ac', 'volume-simv'],
+        availability: 'requires-neonatal',
+        availabilityNote:
+          'Source-listed only: the current casebook is adult-only. A neonatal test-lung pathway is required before activation.',
+      },
+    ],
     navigationLabels: {
       main: 'Main screen',
       modes: 'Other modes',
@@ -213,7 +332,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Turn the rotary knob, then press it to confirm before the patient model changes.',
       'Use Alarms, Views, Trends/data, and Procedures without losing the live monitoring view.',
     ],
-    deferredModes: ['VC-SIMV', 'PC-SIMV', 'PC-APRV', 'AutoFlow', 'Volume guarantee'],
+    deferredModes: ['VC-MMV', 'PC-BIPAP / SIMV+', 'SPN-PPS', 'SmartCare/PS'],
     sourceIds: [
       'evita-v800-v600-ifu-3.1n',
       'evita-v800-v600-pocket-guide-1n',
@@ -232,6 +351,15 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       highPressureLimitCmH2O: 'Paw high',
       triggerThreshold: 'Trigger',
       trcEnabled: 'ATC',
+      targetVtMl: 'VT',
+      spontaneousPressureSupportCmH2O: 'ΔPsupp',
+      spontaneousRampMs: 'Slope',
+      spontaneousCyclePercent: 'Insp term',
+      pHighCmH2O: 'Phigh',
+      pLowCmH2O: 'Plow',
+      tHighSeconds: 'Thigh',
+      tLowSeconds: 'Tlow',
+      autoFlowEnabled: 'AutoFlow',
     },
     educationalUseOnly: true,
   },
@@ -244,12 +372,19 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     manualProfile: '10078090 Rev C',
     patientGroup: 'Adult/Pediatric',
     commitBehavior: 'rotary-confirm',
-    modeLabels: {
-      'volume-ac': 'A/C + VC',
-      'pressure-ac': 'A/C + PC',
-      'pressure-support': 'SPONT + PS',
-    },
-    modeDescriptions: commonModeDescriptions,
+    modes: [
+      mode('volume-ac', 'A/C + VC'),
+      mode('pressure-ac', 'A/C + PC'),
+      mode('pressure-support', 'SPONT + PS'),
+      mode('volume-simv', 'SIMV + VC'),
+      mode('pressure-simv', 'SIMV + PC'),
+      mode('adaptive-pressure-ac', 'A/C + VC+'),
+      mode('adaptive-pressure-simv', 'SIMV + VC+'),
+      mode('bilevel', 'BiLevel'),
+      mode('proportional-assist', 'SPONT + PAV+'),
+      mode('volume-support', 'SPONT + VS'),
+    ],
+    features: [],
     navigationLabels: {
       main: 'Home',
       modes: 'Vent Setup',
@@ -264,7 +399,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Touch a parameter, turn the central knob, and confirm before applying it.',
       'Use the bezel keys for manual inspiration, holds, alarm reset, silence, and screen lock.',
     ],
-    deferredModes: ['SIMV', 'VC+', 'BiLevel', 'PAV+', 'VS', 'Tube Compensation'],
+    deferredModes: ['NIV+', 'Leak Sync advanced setup'],
     sourceIds: ['pb980-service-manual-rev-c', 'pb980-icu-brochure-2023'],
     controlLabels: {
       oxygenPercent: 'O₂%',
@@ -279,6 +414,15 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       highPressureLimitCmH2O: '2PPEAK',
       triggerThreshold: 'VSENS',
       trcEnabled: 'Tube compensation',
+      targetVtMl: 'VT / VT SUPP',
+      spontaneousPressureSupportCmH2O: 'PSUPP',
+      spontaneousRampMs: 'Rise Time',
+      spontaneousCyclePercent: 'ESENS',
+      pHighCmH2O: 'PH',
+      pLowCmH2O: 'PL',
+      tHighSeconds: 'TH',
+      tLowSeconds: 'TL',
+      proportionalSupportPercent: '% Supp',
     },
     educationalUseOnly: true,
   },
@@ -291,12 +435,39 @@ const profiles: readonly VentilatorDeviceProfile[] = [
     manualProfile: 'RC3859',
     patientGroup: 'Adult/Pediatric',
     commitBehavior: 'touch-or-accept',
-    modeLabels: {
-      'volume-ac': 'Volume A/C',
-      'pressure-ac': 'Pressure A/C',
-      'pressure-support': 'CPAP/PSV',
-    },
-    modeDescriptions: commonModeDescriptions,
+    modes: [
+      mode('volume-ac', 'Volume A/C'),
+      mode('pressure-ac', 'Pressure A/C'),
+      mode('pressure-support', 'CPAP/PSV'),
+      mode('volume-simv', 'Volume SIMV'),
+      mode('pressure-simv', 'Pressure SIMV'),
+      mode('adaptive-pressure-ac', 'PRVC A/C'),
+      mode('adaptive-pressure-simv', 'PRVC SIMV'),
+      mode('aprv', 'APRV/BiPhasic'),
+      mode(
+        'tcpl-ac',
+        'TCPL A/C',
+        'requires-neonatal',
+        'Neonatal-only mode. The current 15-case adult pathway cannot activate it.',
+      ),
+      mode(
+        'tcpl-simv',
+        'TCPL SIMV',
+        'requires-neonatal',
+        'Neonatal-only mode. The current 15-case adult pathway cannot activate it.',
+      ),
+    ],
+    features: [
+      {
+        id: 'volume-guarantee',
+        label: 'Volume Guarantee',
+        description: 'Neonatal adaptive pressure delivery toward a target tidal volume.',
+        compatibleModes: ['pressure-ac', 'pressure-simv', 'tcpl-ac', 'tcpl-simv'],
+        availability: 'requires-neonatal',
+        availabilityNote:
+          'Source-listed only: the current casebook is adult-only. A neonatal test-lung pathway is required before activation.',
+      },
+    ],
     navigationLabels: {
       main: 'Main',
       modes: 'Mode Select',
@@ -311,7 +482,7 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       'Use ADV SETTINGS for rise, cycling, waveform, bias-flow, and trigger refinements.',
       'Use ALARM LIMITS and the physical maneuver keys while retaining the active mode view.',
     ],
-    deferredModes: ['Volume SIMV', 'Pressure SIMV', 'PRVC', 'APRV/BiPhasic', 'TCPL'],
+    deferredModes: ['nCPAP/IMV', 'Independent lung ventilation'],
     sourceIds: ['avea-modes-guide-2014'],
     controlLabels: {
       oxygenPercent: '%O₂',
@@ -326,6 +497,14 @@ const profiles: readonly VentilatorDeviceProfile[] = [
       pausePercent: 'Insp Pause',
       highPressureLimitCmH2O: 'High Peak',
       triggerThreshold: 'Flow Trig',
+      targetVtMl: 'Tidal Volume',
+      spontaneousPressureSupportCmH2O: 'PSV',
+      spontaneousRampMs: 'PSV Rise',
+      spontaneousCyclePercent: 'PSV Cycle',
+      pHighCmH2O: 'Pressure High',
+      pLowCmH2O: 'Pressure Low',
+      tHighSeconds: 'Time High',
+      tLowSeconds: 'Time Low',
     },
     educationalUseOnly: true,
   },
@@ -343,7 +522,28 @@ export function getVentilatorDeviceProfile(deviceId: VentilatorDeviceId): Ventil
   return ventilatorDeviceProfileById.get(deviceId) ?? profiles[0]
 }
 
+export function getVentilatorModeDescriptor(
+  deviceId: VentilatorDeviceId,
+  modeId: VentilatorModeId,
+): VentilatorModeDescriptor {
+  const profile = getVentilatorDeviceProfile(deviceId)
+  return (
+    profile.modes.find((candidate) => candidate.id === modeId) ??
+    profile.modes.find((candidate) => candidate.id === canonicalModeForVentilatorMode(modeId)) ??
+    profile.modes[0]
+  )
+}
+
+export function getVentilatorModeLabel(
+  deviceId: VentilatorDeviceId,
+  modeId: VentilatorModeId,
+): string {
+  return getVentilatorModeDescriptor(deviceId, modeId).label
+}
+
 const commonSettings = {
+  deviceMode: 'volume-ac' as const,
+  advanced: createDefaultAdvancedVentilationSettings(),
   oxygenPercent: 40,
   peepCmH2O: 5,
   trigger: { type: 'flow', thresholdLMin: 2 } as const,
@@ -356,10 +556,15 @@ const commonSettings = {
 export function createDefaultMechanicalVentilationSettings(
   mode: CanonicalVentilationMode,
 ): MechanicalVentilationSettings {
+  const modeCommon = {
+    ...commonSettings,
+    deviceMode: mode,
+    advanced: createDefaultAdvancedVentilationSettings(),
+  }
   if (mode === 'pressure-ac') {
     return {
       mode,
-      ...commonSettings,
+      ...modeCommon,
       deltaPControlCmH2O: 15,
       ratePerMin: 16,
       inspiratoryTimeSeconds: 0.9,
@@ -369,7 +574,7 @@ export function createDefaultMechanicalVentilationSettings(
   if (mode === 'pressure-support') {
     return {
       mode,
-      ...commonSettings,
+      ...modeCommon,
       pressureSupportCmH2O: 10,
       pRampMs: 100,
       etsPercent: 25,
@@ -380,7 +585,7 @@ export function createDefaultMechanicalVentilationSettings(
   }
   return {
     mode,
-    ...commonSettings,
+    ...modeCommon,
     vtMl: 420,
     ratePerMin: 18,
     peakFlowLMin: 60,
@@ -393,7 +598,12 @@ export function adaptInitialSettingsForDevice(
   settings: MechanicalVentilationSettings,
   deviceId: VentilatorDeviceId,
 ): MechanicalVentilationSettings {
-  const cloned = { ...settings, trigger: { ...settings.trigger } } as MechanicalVentilationSettings
+  const cloned = cloneMechanicalVentilationSettings(settings)
+  cloned.deviceMode = cloned.mode
+  cloned.advanced.spontaneousRampMs = clamp(
+    cloned.advanced.spontaneousRampMs,
+    ...riseTimeBounds(deviceId, cloned, 'spontaneousRampMs'),
+  )
   if (cloned.mode === 'pressure-support') {
     const [, maximum] = riseTimeBounds(deviceId, cloned)
     return {
@@ -430,6 +640,18 @@ export const simulationControlRanges = Object.freeze({
   pressureTriggerCmH2O: [-15, -0.1],
   trcPercent: [0, 100],
   adultTubeInnerDiameterMm: [3, 10],
+  targetVtMl: [100, 1000],
+  spontaneousPressureSupportCmH2O: [0, 30],
+  spontaneousRampMs: [0, 2000],
+  spontaneousCyclePercent: [5, 80],
+  pHighCmH2O: [5, 50],
+  pLowCmH2O: [0, 20],
+  tHighSeconds: [0.2, 15],
+  tLowSeconds: [0.1, 3],
+  proportionalSupportPercent: [5, 95],
+  minuteVolumePercent: [25, 350],
+  targetSpO2LowPercent: [85, 98],
+  targetPetCO2MmHg: [25, 80],
 } as const)
 
 function riseTimeMaximumMs(settings: MechanicalVentilationSettings): number {
@@ -442,9 +664,15 @@ function riseTimeMaximumMs(settings: MechanicalVentilationSettings): number {
 function riseTimeBounds(
   deviceId: VentilatorDeviceId,
   settings: MechanicalVentilationSettings,
+  key: 'pRampMs' | 'spontaneousRampMs' = 'pRampMs',
 ): readonly [number, number] {
-  const maximum = riseTimeMaximumMs(settings)
-  if (deviceId === 'hamilton-c6' && settings.mode === 'pressure-support') return [0, 200]
+  const maximum = key === 'spontaneousRampMs' ? 2000 : riseTimeMaximumMs(settings)
+  if (
+    deviceId === 'hamilton-c6' &&
+    (settings.mode === 'pressure-support' || key === 'spontaneousRampMs')
+  ) {
+    return [0, 200]
+  }
   return [0, maximum]
 }
 
@@ -461,8 +689,8 @@ export function canonicalToNativeControlValue(
   if (deviceId === 'drager-evita-v800-v600' && key === 'deltaPControlCmH2O') {
     return value + settings.peepCmH2O
   }
-  if (key !== 'pRampMs') return value
-  const [minimum, maximum] = riseTimeBounds(deviceId, settings)
+  if (key !== 'pRampMs' && key !== 'spontaneousRampMs') return value
+  const [minimum, maximum] = riseTimeBounds(deviceId, settings, key)
   const bounded = clamp(value, minimum, maximum)
   if (deviceId === 'drager-evita-v800-v600') return Number((bounded / 1000).toFixed(2))
   if (deviceId === 'puritan-bennett-980') {
@@ -485,8 +713,8 @@ export function nativeToCanonicalControlValue(
   if (deviceId === 'drager-evita-v800-v600' && key === 'deltaPControlCmH2O') {
     return value - settings.peepCmH2O
   }
-  if (key !== 'pRampMs') return value
-  const [minimum, maximum] = riseTimeBounds(deviceId, settings)
+  if (key !== 'pRampMs' && key !== 'spontaneousRampMs') return value
+  const [minimum, maximum] = riseTimeBounds(deviceId, settings, key)
   if (deviceId === 'drager-evita-v800-v600') return clamp(value * 1000, minimum, maximum)
   if (deviceId === 'puritan-bennett-980') {
     const percent = clamp(value, 1, 100)
@@ -516,14 +744,14 @@ export function adaptControlDescriptor(
         'Pinsp is displayed as an absolute upper pressure; the model retains Pinsp − PEEP.',
     }
   }
-  if (descriptor.key === 'pRampMs') {
+  if (descriptor.key === 'pRampMs' || descriptor.key === 'spontaneousRampMs') {
     if (deviceId === 'drager-evita-v800-v600') {
       return {
         ...descriptor,
         label,
         unit: 's',
         minimum: 0,
-        maximum: Number((riseTimeBounds(deviceId, settings)[1] / 1000).toFixed(2)),
+        maximum: Number((riseTimeBounds(deviceId, settings, descriptor.key)[1] / 1000).toFixed(2)),
         step: 0.01,
       }
     }

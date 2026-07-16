@@ -917,6 +917,17 @@
   line-height: 1.45;
 }
 
+.modeCard small {
+  color: #f2c879;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.modeCard[data-availability='requires-neonatal'] {
+  border-style: dashed;
+  opacity: 0.72;
+}
+
 .confirmModeButton {
   display: block;
   min-width: 220px;
@@ -1007,6 +1018,56 @@
   padding: 0.35rem 0.55rem;
   border: 1px solid #456168;
   border-radius: 0.35rem;
+}
+
+.modeFeatures {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.8rem;
+}
+
+.modeFeatures h4 {
+  margin: 0;
+  color: #9fb5b7;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.featureField {
+  display: flex;
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #456168;
+  border-radius: 0.4rem;
+  color: #b7c9cb;
+  background: #10282d;
+}
+
+.featureField > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.featureField strong,
+.featureField small,
+.featureField em {
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.featureField small {
+  color: #91aaac;
+}
+
+.featureField em {
+  color: #f2c879;
+  font-style: normal;
+}
+
+.featureField[data-availability='requires-neonatal'] {
+  border-style: dashed;
+  opacity: 0.78;
 }
 
 .alarmList {
@@ -2754,6 +2815,10 @@
   .liveWorkspace {
     height: min(840px, calc(100dvh - 5rem));
     min-height: 560px;
+  }
+
+  .liveWorkspace .bedsidePanel {
+    position: static;
   }
 
   .caseWorkspace[data-compact-view='case'] .liveWorkspace,

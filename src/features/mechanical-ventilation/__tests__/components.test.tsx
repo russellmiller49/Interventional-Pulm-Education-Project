@@ -84,6 +84,50 @@ describe('multi-device mechanical ventilation learner interface', () => {
     expect(screen.getByText(/Adult\/Ped · SPONT/i)).toBeInTheDocument()
   })
 
+  it('selects an advanced native mode and reveals its dedicated controls and features', () => {
+    render(<MechanicalVentilationLab />)
+    fireEvent.click(screen.getByRole('button', { name: 'Modes' }))
+    fireEvent.click(screen.getByRole('button', { name: /^ASV Adaptive support targeting/i }))
+    expect(screen.getByText(/Adult\/Ped · \(S\)CMV/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm ASV' }))
+    expect(screen.getByText(/Adult\/Ped · ASV/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Controls' }))
+    expect(screen.getByRole('button', { name: /%MinVol, 100 %/i })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: /IntelliSync\+/i })).toBeEnabled()
+  })
+
+  it('shows neonatal-only AVEA modes and Volume Guarantee without allowing activation', () => {
+    const initial = createInitialSimulationState('MV-01', 'learn', 1, 'carefusion-avea')
+    const modesState = {
+      ...initial,
+      ventilator: { ...initial.ventilator, screen: 'modes' as const },
+    }
+    const dispatch = jest.fn()
+    const { rerender } = render(
+      <MechanicalVentilatorConsole state={modesState} dispatch={dispatch} controlsEnabled />,
+    )
+
+    expect(screen.getByRole('button', { name: /TCPL A\/C/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /TCPL SIMV/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /PRVC A\/C/i })).toBeEnabled()
+    expect(screen.getAllByText(/current 15-case adult pathway/i).length).toBeGreaterThan(0)
+
+    const pressureInitial = createInitialSimulationState('MV-04', 'learn', 1, 'carefusion-avea')
+    rerender(
+      <MechanicalVentilatorConsole
+        state={{
+          ...pressureInitial,
+          ventilator: { ...pressureInitial.ventilator, screen: 'controls' as const },
+        }}
+        dispatch={dispatch}
+        controlsEnabled
+      />,
+    )
+    expect(screen.getByRole('checkbox', { name: /Volume Guarantee/i })).toBeDisabled()
+    expect(screen.getByText(/neonatal test-lung pathway is required/i)).toBeInTheDocument()
+  })
+
   it('requires commit-before-action in Practice and hides guided answer labels', () => {
     const definition = mechanicalVentilationCaseById.get('MV-01')!
     render(<MechanicalVentilationLab />)
@@ -213,6 +257,26 @@ describe('multi-device mechanical ventilation learner interface', () => {
       type: 'SET_CONTROL',
       control: 'triggerType',
       value: 'pressure',
+    })
+  })
+
+  it('keeps Evita AutoFlow pending until rotary confirmation', () => {
+    const initial = createInitialSimulationState('MV-01', 'learn', 1, 'drager-evita-v800-v600')
+    const state = {
+      ...initial,
+      ventilator: { ...initial.ventilator, screen: 'controls' as const },
+    }
+    const dispatch = jest.fn()
+    render(<MechanicalVentilatorConsole state={state} dispatch={dispatch} controlsEnabled />)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /AutoFlow/i }))
+    expect(dispatch).not.toHaveBeenCalled()
+    expect(screen.getByText('Pending AutoFlow')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Press knob to confirm' }))
+    expect(dispatch).toHaveBeenLastCalledWith({
+      type: 'SET_CONTROL',
+      control: 'autoFlowEnabled',
+      value: true,
     })
   })
 

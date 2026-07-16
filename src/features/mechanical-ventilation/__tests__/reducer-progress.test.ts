@@ -217,6 +217,69 @@ describe('mechanical ventilation reducer and progress boundary', () => {
     expect(state.lastResponse).toMatch(/breath boundary/i)
   })
 
+  it('confirms advanced native modes while retaining a canonical physiology base', () => {
+    let state = createInitialSimulationState('MV-01', 'learn', 1, 'puritan-bennett-980')
+    state = ventilationSimulationReducer(state, {
+      type: 'SELECT_MODE',
+      mode: 'adaptive-pressure-simv',
+    })
+    expect(state.ventilator.pendingMode).toBe('adaptive-pressure-simv')
+    expect(state.ventilator.settings.deviceMode).toBe('volume-ac')
+
+    state = ventilationSimulationReducer(state, { type: 'CONFIRM_MODE' })
+    expect(state.ventilator.pendingMode).toBeNull()
+    expect(state.ventilator.settings.deviceMode).toBe('adaptive-pressure-simv')
+    expect(state.ventilator.settings.mode).toBe('pressure-ac')
+    expect(state.ventilator.settings.advanced.targetVtMl).toBeGreaterThan(0)
+
+    state = dispatchMany(state, [
+      { type: 'SET_CONTROL', control: 'targetVtMl', value: 5000 },
+      { type: 'SET_CONTROL', control: 'spontaneousPressureSupportCmH2O', value: -20 },
+      { type: 'SET_CONTROL', control: 'spontaneousCyclePercent', value: 200 },
+    ])
+    expect(state.ventilator.settings.advanced.targetVtMl).toBe(1000)
+    expect(state.ventilator.settings.advanced.spontaneousPressureSupportCmH2O).toBe(0)
+    expect(state.ventilator.settings.advanced.spontaneousCyclePercent).toBe(80)
+  })
+
+  it('rejects device-incompatible and neonatal-only mode activation', () => {
+    let avea = createInitialSimulationState('MV-01', 'learn', 1, 'carefusion-avea')
+    avea = ventilationSimulationReducer(avea, { type: 'SELECT_MODE', mode: 'tcpl-ac' })
+    expect(avea.ventilator.pendingMode).toBeNull()
+    expect(avea.ventilator.settings.deviceMode).toBe('volume-ac')
+    expect(avea.lastResponse).toMatch(/Neonatal-only/i)
+
+    let pb980 = createInitialSimulationState('MV-01', 'learn', 1, 'puritan-bennett-980')
+    pb980 = ventilationSimulationReducer(pb980, {
+      type: 'SELECT_MODE',
+      mode: 'intellivent-asv',
+    })
+    expect(pb980.ventilator.pendingMode).toBeNull()
+    expect(pb980.lastResponse).toMatch(/not available/i)
+  })
+
+  it('applies the C6 spontaneous P-ramp cap to SIMV support breaths', () => {
+    let state = createInitialSimulationState('MV-01', 'learn', 1, 'hamilton-c6')
+    state = dispatchMany(state, [
+      { type: 'SELECT_MODE', mode: 'volume-simv' },
+      { type: 'CONFIRM_MODE' },
+      { type: 'SET_CONTROL', control: 'spontaneousRampMs', value: 900 },
+    ])
+    expect(state.ventilator.settings.advanced.spontaneousRampMs).toBe(200)
+  })
+
+  it('keeps two-level pressure controls ordered while clamping them', () => {
+    let state = createInitialSimulationState('MV-01', 'learn', 1, 'puritan-bennett-980')
+    state = dispatchMany(state, [
+      { type: 'SELECT_MODE', mode: 'bilevel' },
+      { type: 'CONFIRM_MODE' },
+      { type: 'SET_CONTROL', control: 'pLowCmH2O', value: 50 },
+      { type: 'SET_CONTROL', control: 'pHighCmH2O', value: 5 },
+    ])
+    expect(state.ventilator.settings.advanced.pLowCmH2O).toBe(20)
+    expect(state.ventilator.settings.advanced.pHighCmH2O).toBe(21)
+  })
+
   it('supports pause, one-breath stepping, 1x/5x/30x speed, and freeze', () => {
     let state = createInitialSimulationState('MV-01', 'learn')
     const before = state.simulationTime

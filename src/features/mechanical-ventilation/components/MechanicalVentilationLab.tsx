@@ -23,6 +23,7 @@ import { recordSiteModuleEvent } from '@/lib/analytics'
 
 import {
   getVentilatorDeviceProfile,
+  getVentilatorModeLabel,
   mechanicalVentilationCaseById,
   mechanicalVentilationCases,
   mechanicalVentilationCasesByStation,
@@ -388,7 +389,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
             <button
               type="button"
               role="radio"
-              aria-label={`${profile.displayName}, ${profile.softwareVersion} · ${profile.modeLabels[state.ventilator.settings.mode]}`}
+              aria-label={`${profile.displayName}, ${profile.softwareVersion} · ${getVentilatorModeLabel(profile.id, state.ventilator.settings.deviceMode)}`}
               aria-checked={state.deviceId === profile.id}
               data-device-id={profile.id}
               data-selected={state.deviceId === profile.id}
@@ -400,7 +401,8 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
               <span>{profile.manufacturer}</span>
               <strong>{profile.displayName}</strong>
               <small>
-                {profile.softwareVersion} · {profile.modeLabels[state.ventilator.settings.mode]}
+                {profile.softwareVersion} ·{' '}
+                {getVentilatorModeLabel(profile.id, state.ventilator.settings.deviceMode)}
               </small>
             </button>
           ))}
@@ -586,9 +588,11 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
               <div>
                 <strong>{deviceProfile.shortName} vocabulary is deliberate</strong>
                 <p>
-                  Volume A/C is labeled {deviceProfile.modeLabels['volume-ac']}; pressure A/C is{' '}
-                  {deviceProfile.modeLabels['pressure-ac']}; CPAP/pressure support is{' '}
-                  {deviceProfile.modeLabels['pressure-support']}.
+                  Volume A/C is labeled {getVentilatorModeLabel(state.deviceId, 'volume-ac')};
+                  pressure A/C is {getVentilatorModeLabel(state.deviceId, 'pressure-ac')};
+                  CPAP/pressure support is{' '}
+                  {getVentilatorModeLabel(state.deviceId, 'pressure-support')}. Advanced modes keep
+                  their device-native names.
                 </p>
               </div>
             </section>
@@ -612,7 +616,7 @@ export default function MechanicalVentilationLab({ locale = 'en' }: { locale?: s
           </div>
           <BedsidePanel state={state} definition={definition} compact />
           <MechanicalVentilatorConsole
-            key={`${state.deviceId}:${state.ventilator.settings.mode}`}
+            key={`${state.deviceId}:${state.ventilator.settings.deviceMode}`}
             state={state}
             dispatch={dispatch}
             controlsEnabled={controlsEnabled}

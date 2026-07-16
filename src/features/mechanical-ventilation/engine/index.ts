@@ -1,4 +1,5 @@
 export * from './physics'
+export * from './modes'
 export * from './progress'
 export * from './reducer'
 export * from './simulation'

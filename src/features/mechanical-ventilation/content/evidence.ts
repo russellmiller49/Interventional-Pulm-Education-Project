@@ -8,6 +8,7 @@ export interface VentilationEvidenceReference {
   sourceClass: 'manufacturer' | 'curriculum' | 'clinical-reference' | 'educational-model'
   title: string
   citation: string
+  sourceUrl?: string
   pages?: string
   supports: readonly string[]
   limitations: string
@@ -24,6 +25,23 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     supports: [source.intendedUse],
     limitations: source.limitations,
   })),
+  {
+    id: 'pb980-operator-manual-pt00101843a00-online',
+    deviceId: 'puritan-bennett-980',
+    sourceClass: 'manufacturer',
+    title: 'Puritan Bennett 980 Series Ventilator Operator’s Manual',
+    citation:
+      'Covidien. Puritan Bennett 980 Series Ventilator Operator’s Manual. Part PT00101843A00.',
+    sourceUrl:
+      'https://asiapac.medtronic.com/content/dam/covidien/library/us/en/product/acute-care-ventilation/PuritanBennett980Ventilator_OperatorsManual_en_US_PT00101843A00.pdf',
+    pages: 'Mode setup, breath-type descriptions, and technical specifications reviewed online',
+    supports: [
+      'SIMV with VC, PC, and VC+ mandatory breath types',
+      'BiLevel, PAV+, Volume Support, and device-native control vocabulary',
+    ],
+    limitations:
+      'Consulted as an online corroborating source. A revision-locked local snapshot has not yet been archived and hashed, so complete operator-workflow verification remains a publication blocker.',
+  },
   {
     id: 'supplied-casebook-2026',
     sourceClass: 'curriculum',
@@ -60,9 +78,10 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
       'Deterministic fixed-step waveforms and trigger/target/cycle interactions',
       'Bounded gas-exchange, hemodynamic, comfort, and intervention responses',
       'Seeded repeatable branch variation and regression testing',
+      'Simplified SIMV, adaptive pressure, two-level, proportional-assist, volume-support, ASV, INTELLiVENT-ASV, AutoFlow, and IntelliSync+ response adapters',
     ],
     limitations:
-      'Not a validated patient digital twin, clinical prediction system, ventilator, or treatment guide.',
+      'Not a validated patient digital twin, clinical prediction system, ventilator, or treatment guide. Adaptive and closed-loop behaviors are original bounded teaching approximations and do not reproduce proprietary manufacturer algorithms.',
   },
 ] as const
 
