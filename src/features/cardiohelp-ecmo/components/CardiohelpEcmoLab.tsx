@@ -45,6 +45,7 @@ import {
   setLastStation,
   withMastery,
   writeProgress,
+  type GuidedControlId,
   type GuidedTarget,
   type LearningExperience,
   type ProgressV1,
@@ -99,6 +100,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
     () => new Set(),
   )
   const [guidedTarget, setGuidedTarget] = useState<GuidedTarget | null>('circuit')
+  const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const lastAudibleAlarmId = useRef<string | null>(null)
   const lastPracticeScenarioId = useRef<Record<SupportMode, string>>({
@@ -123,7 +125,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
   const supportMode = state.supportMode
   const modeScenarios = clinicalPracticeScenariosBySupportMode[supportMode]
   const modeLearnLessons = cardiohelpLearnLessonsBySupportMode[supportMode]
-  const controlsEnabled = experience === 'practice' && state.scenario.prediction.committed
+  const controlsEnabled = experience === 'learn' || state.scenario.prediction.committed
   const practicePercentComplete = Math.round(
     (modeScenarios.filter((item) => progress.completedLabs.includes(item.id)).length /
       modeScenarios.length) *
@@ -138,6 +140,9 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
   const percentComplete = experience === 'learn' ? learnPercentComplete : practicePercentComplete
   const handleGuidedTargetChange = useCallback((target: GuidedTarget) => {
     setGuidedTarget(target)
+  }, [])
+  const handleGuidedControlHelpChange = useCallback((controlId: GuidedControlId | null) => {
+    setGuidedControlId(controlId)
   }, [])
 
   useEffect(() => {
@@ -267,6 +272,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
     mode: typeof state.simulationMode = state.simulationMode,
   ) {
     const definition = resolveScenarioDefinition(scenarioId)
+    setGuidedControlId(null)
     lastPracticeScenarioId.current[definition.supportMode] = definition.id
     dispatch({ type: 'LOAD_SCENARIO', scenarioId: definition.id, mode })
     setProgress((current) => {
@@ -294,6 +300,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
     lastLearnScenarioId.current[lesson.supportMode] = lesson.scenarioId
     setLearnScenarioId(lesson.scenarioId)
     setGuidedTarget(lesson.steps[0]?.target ?? 'console')
+    setGuidedControlId(null)
     dispatch({ type: 'LOAD_SCENARIO', scenarioId: lesson.scenarioId, mode: 'guided' })
     recordSiteModuleEvent({
       eventType: 'module_interaction',
@@ -343,6 +350,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
   function openPractice(scenarioId = lastPracticeScenarioId.current[supportMode]) {
     setExperience('practice')
     setGuidedTarget(null)
+    setGuidedControlId(null)
     loadPracticeScenario(scenarioId, 'guided')
     focusExperiencePanel()
     recordSiteModuleEvent({
@@ -757,6 +765,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
                 onCompleteLesson={completeLearnLesson}
                 onTryPractice={openPractice}
                 onTargetChange={handleGuidedTargetChange}
+                onControlHelpChange={handleGuidedControlHelpChange}
               />
             ) : (
               <LearningWorkflow
@@ -775,6 +784,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
                 dispatch={dispatch}
                 controlsEnabled={controlsEnabled}
                 guidedTarget={experience === 'learn' ? guidedTarget : null}
+                guidedControlId={experience === 'learn' ? guidedControlId : null}
                 initiationTargets={
                   experience === 'practice'
                     ? (scenario.clinicalCase?.initiationTargets ?? null)
@@ -786,6 +796,7 @@ export default function CardiohelpEcmoLab({ locale = 'en' }: CardiohelpEcmoLabPr
                 dispatch={dispatch}
                 controlsEnabled={controlsEnabled}
                 guidedTarget={experience === 'learn' ? guidedTarget : null}
+                guidedControlId={experience === 'learn' ? guidedControlId : null}
                 initiationTargets={
                   experience === 'practice'
                     ? (scenario.clinicalCase?.initiationTargets ?? null)

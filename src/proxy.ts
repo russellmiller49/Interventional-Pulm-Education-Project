@@ -9,6 +9,7 @@ import {
   isAuthPath,
   isCtAlignmentSandboxPath,
   isPublicPath,
+  isPublicUnlistedPath,
   isPublicTrainingEmbed,
   isPccmIntroCourseAdminDashboardPath,
   isPccmIntroCourseSharedModulePath,
@@ -64,6 +65,10 @@ export async function proxy(req: NextRequest) {
 
   if (pathname.startsWith('/auth')) {
     res.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  }
+
+  if (isPublicUnlistedPath(pathname)) {
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
   }
 
   if (

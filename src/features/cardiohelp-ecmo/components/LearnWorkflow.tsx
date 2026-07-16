@@ -1,15 +1,17 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
   BookOpenCheck,
   Check,
   CheckCircle2,
+  CircleHelp,
   CircleDot,
   GraduationCap,
   ListChecks,
+  LocateFixed,
   RotateCcw,
   SlidersHorizontal,
   Target,
@@ -21,9 +23,12 @@ import {
   cardiohelpLearnLessonsBySupportMode,
 } from '../content/learnLessons'
 import type {
+  ConsoleScreen,
   EcmoSimulationState,
+  GuidedControlId,
   GuidedLessonDefinition,
   GuidedTarget,
+  GuidedWalkthroughStep,
   SimulationAction,
 } from '../engine'
 import styles from './cardiohelp-ecmo.module.css'
@@ -37,6 +42,7 @@ interface LearnWorkflowProps {
   onCompleteLesson: (scenarioId: string) => void
   onTryPractice: (scenarioId: string) => void
   onTargetChange: (target: GuidedTarget) => void
+  onControlHelpChange: (controlId: GuidedControlId | null) => void
 }
 
 const targetLabels: Record<GuidedTarget, string> = {
@@ -56,6 +62,191 @@ const phaseLabels = {
   transfer: 'Transfer',
 } as const
 
+const panelControlIds: Record<GuidedTarget, GuidedControlId> = {
+  console: 'cardiohelp-console',
+  circuit: 'cardiohelp-circuit-panel',
+  'gas-panel': 'cardiohelp-gas-panel',
+  'patient-monitor': 'cardiohelp-patient-monitor',
+  'trend-panel': 'cardiohelp-trend-panel',
+}
+
+const screenControlIds: Partial<Record<ConsoleScreen, GuidedControlId>> = {
+  parameters: 'cardiohelp-screen-parameters',
+  blood: 'cardiohelp-screen-blood',
+  transport: 'cardiohelp-screen-transport',
+  interventions: 'cardiohelp-screen-interventions',
+  timers: 'cardiohelp-screen-timers',
+}
+
+interface GuidedSimulatorTask {
+  controlId: GuidedControlId
+  instruction: string
+  satisfied: boolean
+}
+
+function guidedActionSatisfied(action: SimulationAction, state: EcmoSimulationState): boolean {
+  switch (action.type) {
+    case 'SET_SCREEN':
+      return state.device.screen === action.screen
+    case 'SET_RPM':
+      return state.device.pumpMode === 'rpm' && state.device.rpmSetpoint === action.rpm
+    case 'SET_FLOW_TARGET':
+      return (
+        state.device.pumpMode === 'lpm' && Math.abs(state.device.lpmSetpoint - action.flow) < 0.001
+      )
+    case 'SET_SWEEP':
+      return Math.abs(state.gas.sweepLpm - action.sweep) < 0.001
+    case 'SET_GAS_FIO2':
+      return Math.abs(state.gas.fio2 - action.fio2) < 0.001
+    case 'SET_PUMP_MODE':
+      return state.device.pumpMode === action.mode
+    case 'RESTORE_GAS_SOURCE':
+      return state.gas.sourceConnected
+    case 'RESTORE_AC_POWER':
+      return state.device.powerSource === 'ac'
+    case 'RESET_BUBBLE':
+      return (
+        !state.circuit.bubbleResetRequired &&
+        state.scenario.correctedFaults.includes('arterial-bubble')
+      )
+    case 'PERFORM_CHECK':
+      return (
+        state.circuit.circuitInspected &&
+        state.scenario.correctedFaults.includes('startup-inspection')
+      )
+    default:
+      return false
+  }
+}
+
+function resolveGuidedSimulatorTask(
+  guidedStep: GuidedWalkthroughStep,
+  state: EcmoSimulationState,
+): GuidedSimulatorTask | null {
+  if (guidedStep.actions.length !== 1) return null
+  const action = guidedStep.actions[0]
+  const satisfied = guidedActionSatisfied(action, state)
+
+  switch (action.type) {
+    case 'SET_SCREEN': {
+      if (action.screen === 'startup') {
+        return {
+          controlId: 'cardiohelp-home-button',
+          instruction: 'On the console toolbar, select Home to return to the START screen.',
+          satisfied,
+        }
+      }
+      if (action.screen === 'alarm-history') {
+        return state.device.screen === 'menu'
+          ? {
+              controlId: 'cardiohelp-alarm-list-button',
+              instruction: 'In the console Menu, select Alarm list.',
+              satisfied,
+            }
+          : {
+              controlId: 'cardiohelp-menu-button',
+              instruction: 'On the console toolbar, select Menu. Then choose Alarm list.',
+              satisfied,
+            }
+      }
+      const controlId = screenControlIds[action.screen]
+      if (!controlId) return null
+      const screenLabels: Partial<Record<ConsoleScreen, string>> = {
+        parameters: 'PARAM',
+        blood: 'BLOOD',
+        transport: 'TRANS',
+        interventions: 'INTERV',
+        timers: 'TIME',
+      }
+      return {
+        controlId,
+        instruction: `On the CARDIOHELP touchscreen, select ${screenLabels[action.screen] ?? action.screen}.`,
+        satisfied,
+      }
+    }
+    case 'SET_RPM':
+      return state.device.pumpMode === 'rpm'
+        ? {
+            controlId: 'cardiohelp-rpm-control',
+            instruction: `Use the physical rotary control to set ${action.rpm} RPM.`,
+            satisfied,
+          }
+        : {
+            controlId: 'cardiohelp-pump-mode-rpm',
+            instruction: 'On the physical console panel, select RPM mode first.',
+            satisfied,
+          }
+    case 'SET_FLOW_TARGET':
+      return state.device.pumpMode === 'lpm'
+        ? {
+            controlId: 'cardiohelp-rpm-control',
+            instruction: `Use the physical rotary control to set ${action.flow.toFixed(1)} L/min.`,
+            satisfied,
+          }
+        : {
+            controlId: 'cardiohelp-pump-mode-lpm',
+            instruction: 'On the physical console panel, select LPM mode first.',
+            satisfied,
+          }
+    case 'SET_PUMP_MODE':
+      return {
+        controlId: action.mode === 'rpm' ? 'cardiohelp-pump-mode-rpm' : 'cardiohelp-pump-mode-lpm',
+        instruction: `On the physical console panel, select ${action.mode.toUpperCase()} mode.`,
+        satisfied,
+      }
+    case 'SET_SWEEP':
+      return {
+        controlId: 'cardiohelp-sweep-control',
+        instruction: `On the separate gas blender, set sweep flow to ${action.sweep.toFixed(1)} L/min.`,
+        satisfied,
+      }
+    case 'SET_GAS_FIO2':
+      return {
+        controlId: 'cardiohelp-fio2-control',
+        instruction: `On the separate gas blender, set sweep-gas FiO₂ to ${Math.round(action.fio2 * 100)}%.`,
+        satisfied,
+      }
+    case 'PERFORM_CHECK':
+      return {
+        controlId: 'cardiohelp-circuit-check',
+        instruction: 'In the circuit panel, perform the tip-to-tip circuit and sensor check.',
+        satisfied,
+      }
+    case 'RESTORE_GAS_SOURCE':
+      return {
+        controlId: 'cardiohelp-restore-gas-source',
+        instruction: 'On the separate gas panel, select Restore verified gas source.',
+        satisfied,
+      }
+    case 'RESET_BUBBLE':
+      return state.device.screen === 'interventions'
+        ? {
+            controlId: 'cardiohelp-reset-bubble',
+            instruction: 'On the Interventions screen, reset the bubble intervention.',
+            satisfied,
+          }
+        : {
+            controlId: 'cardiohelp-screen-interventions',
+            instruction: 'Open INTERV on the console, then use the bubble reset control.',
+            satisfied,
+          }
+    case 'RESTORE_AC_POWER':
+      return state.device.screen === 'transport'
+        ? {
+            controlId: 'cardiohelp-restore-ac-power',
+            instruction: 'On the Transport screen, reconnect the verified AC source.',
+            satisfied,
+          }
+        : {
+            controlId: 'cardiohelp-screen-transport',
+            instruction: 'Open TRANS on the console, then reconnect the verified AC source.',
+            satisfied,
+          }
+    default:
+      return null
+  }
+}
+
 export function resolveGuidedLesson(scenarioId: string): GuidedLessonDefinition {
   return cardiohelpLearnLessonByScenarioId.get(scenarioId) ?? cardiohelpLearnLessons[0]
 }
@@ -69,13 +260,19 @@ export function LearnWorkflow({
   onCompleteLesson,
   onTryPractice,
   onTargetChange,
+  onControlHelpChange,
 }: LearnWorkflowProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
   const [lessonFinished, setLessonFinished] = useState(false)
+  const [helpRequestCount, setHelpRequestCount] = useState(0)
   const activePanelRef = useRef<HTMLDivElement>(null)
   const activeStep = lesson.steps[activeStepIndex] ?? lesson.steps[0]
   const stepPerformed = completedStepIds.has(activeStep.id)
+  const simulatorTask = resolveGuidedSimulatorTask(activeStep, state)
+  const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
+  const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
+  const helpRequested = helpRequestCount > 0
   const modeLessons = cardiohelpLearnLessonsBySupportMode[state.supportMode]
   const lessonIndex = modeLessons.findIndex((item) => item.id === lesson.id)
   const nextLesson = modeLessons[lessonIndex + 1]
@@ -100,21 +297,68 @@ export function LearnWorkflow({
 
   useEffect(() => {
     onTargetChange(activeStep.target)
+    onControlHelpChange(null)
     window.requestAnimationFrame(() => activePanelRef.current?.focus({ preventScroll: true }))
-  }, [activeStep.id, activeStep.target, onTargetChange])
+  }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange])
 
-  function performStep() {
-    for (const action of activeStep.actions) dispatch(action)
+  useEffect(
+    () => () => {
+      onControlHelpChange(null)
+    },
+    [onControlHelpChange],
+  )
+
+  const completeActiveStep = useCallback(() => {
+    if (stepPerformed) return
     setCompletedStepIds((current) => new Set(current).add(activeStep.id))
+    setHelpRequestCount(0)
+    onControlHelpChange(null)
     if (activeStepIndex === lesson.steps.length - 1) {
       setLessonFinished(true)
       onCompleteLesson(lesson.scenarioId)
     }
+  }, [
+    activeStep.id,
+    activeStepIndex,
+    lesson.scenarioId,
+    lesson.steps.length,
+    onCompleteLesson,
+    onControlHelpChange,
+    stepPerformed,
+  ])
+
+  useEffect(() => {
+    if (!simulatorTask || !simulatorTaskSatisfied || stepPerformed) return
+    const frame = window.requestAnimationFrame(completeActiveStep)
+    return () => window.cancelAnimationFrame(frame)
+  }, [completeActiveStep, simulatorTask, simulatorTaskSatisfied, stepPerformed])
+
+  useEffect(() => {
+    if (!helpRequested) return
+    onControlHelpChange(helpControlId)
+    const frame = window.requestAnimationFrame(() => {
+      const control = document.getElementById(helpControlId)
+      if (!control) return
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+      control.focus({ preventScroll: true })
+      control.scrollIntoView?.({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'center',
+      })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [helpControlId, helpRequestCount, helpRequested, onControlHelpChange])
+
+  function performStep() {
+    for (const action of activeStep.actions) dispatch(action)
+    completeActiveStep()
   }
 
   function goToStep(index: number) {
     if (index < 0 || index >= lesson.steps.length) return
     if (index > activeStepIndex && !stepPerformed) return
+    setHelpRequestCount(0)
+    onControlHelpChange(null)
     setActiveStepIndex(index)
     setLessonFinished(false)
   }
@@ -123,6 +367,8 @@ export function LearnWorkflow({
     setActiveStepIndex(0)
     setCompletedStepIds(new Set())
     setLessonFinished(false)
+    setHelpRequestCount(0)
+    onControlHelpChange(null)
     onSelectLesson(lesson.scenarioId)
   }
 
@@ -298,10 +544,40 @@ export function LearnWorkflow({
           )}
         </div>
 
-        {!stepPerformed ? (
-          <button type="button" className={styles.guidedPerformAction} onClick={performStep}>
-            <SlidersHorizontal aria-hidden="true" /> {activeStep.actionLabel}
-          </button>
+        {!stepPerformed && simulatorTask ? (
+          <div className={styles.guidedSimulatorTask} role="status" aria-live="polite">
+            <LocateFixed aria-hidden="true" />
+            <div>
+              <strong>Do this on the simulator</strong>
+              <p>{simulatorTask.instruction}</p>
+              <small>
+                Waiting for: {activeStep.actionLabel}. This step completes automatically when the
+                simulator reaches the requested state.
+              </small>
+            </div>
+            <button
+              type="button"
+              className={styles.guidedHelpAction}
+              onClick={() => setHelpRequestCount((count) => count + 1)}
+            >
+              <CircleHelp aria-hidden="true" />
+              {helpRequested ? 'Highlight it again' : 'Show me where'}
+            </button>
+          </div>
+        ) : !stepPerformed ? (
+          <div className={styles.guidedManualActions}>
+            <button type="button" className={styles.guidedPerformAction} onClick={performStep}>
+              <SlidersHorizontal aria-hidden="true" /> {activeStep.actionLabel}
+            </button>
+            <button
+              type="button"
+              className={styles.guidedHelpAction}
+              onClick={() => setHelpRequestCount((count) => count + 1)}
+            >
+              <CircleHelp aria-hidden="true" />
+              {helpRequested ? 'Highlight it again' : 'I need help finding it'}
+            </button>
+          </div>
         ) : (
           <div className={styles.guidedExpectedResponse} role="status">
             <CheckCircle2 aria-hidden="true" />

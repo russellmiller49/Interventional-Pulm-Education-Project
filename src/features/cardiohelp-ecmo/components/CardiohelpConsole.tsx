@@ -25,6 +25,7 @@ import type {
   ClinicalInitiationTargets,
   ConsoleScreen,
   EcmoSimulationState,
+  GuidedControlId,
   GuidedTarget,
   PressureLimits,
   SimulationAction,
@@ -36,6 +37,7 @@ interface CardiohelpConsoleProps {
   dispatch: (action: SimulationAction) => void
   controlsEnabled: boolean
   guidedTarget?: GuidedTarget | null
+  guidedControlId?: GuidedControlId | null
   initiationTargets?: ClinicalInitiationTargets | null
 }
 
@@ -81,7 +83,7 @@ function ParameterTile({
   )
 }
 
-function ScreenBody({ state, dispatch, controlsEnabled }: CardiohelpConsoleProps) {
+function ScreenBody({ state, dispatch, controlsEnabled, guidedControlId }: CardiohelpConsoleProps) {
   const { screen } = state.device
   const alarmFor = (parameter: string) =>
     state.alarms.find(
@@ -113,7 +115,9 @@ function ScreenBody({ state, dispatch, controlsEnabled }: CardiohelpConsoleProps
           Recording: educational log
         </button>
         <button
+          id="cardiohelp-alarm-list-button"
           type="button"
+          data-guided-help={guidedControlId === 'cardiohelp-alarm-list-button'}
           onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'alarm-history' })}
         >
           <History aria-hidden="true" /> Alarm list
@@ -222,6 +226,18 @@ function ScreenBody({ state, dispatch, controlsEnabled }: CardiohelpConsoleProps
         <ParameterTile label="pVen" value={state.circuit.pVen} unit="mmHg" />
         <ParameterTile label="pArt" value={state.circuit.pArt} unit="mmHg" />
         <ParameterTile label="Battery" value={state.device.batteryPercent.toFixed(0)} unit="%" />
+        {state.device.powerSource !== 'ac' ? (
+          <button
+            id="cardiohelp-restore-ac-power"
+            type="button"
+            className={styles.screenActionButton}
+            disabled={!controlsEnabled}
+            data-guided-help={guidedControlId === 'cardiohelp-restore-ac-power'}
+            onClick={() => dispatch({ type: 'RESTORE_AC_POWER' })}
+          >
+            <Zap aria-hidden="true" /> Reconnect verified AC source
+          </button>
+        ) : null}
       </div>
     )
   }
@@ -242,8 +258,10 @@ function ScreenBody({ state, dispatch, controlsEnabled }: CardiohelpConsoleProps
           <strong>{state.circuit.bubbleResetRequired ? 'RESET REQUIRED' : 'CLEAR'}</strong>
         </div>
         <button
+          id="cardiohelp-reset-bubble"
           type="button"
           disabled={!controlsEnabled || !state.circuit.bubbleResetRequired}
+          data-guided-help={guidedControlId === 'cardiohelp-reset-bubble'}
           onClick={() => dispatch({ type: 'RESET_BUBBLE' })}
         >
           <RotateCcw aria-hidden="true" /> Reset bubble intervention
@@ -358,6 +376,7 @@ export function CardiohelpConsole({
   dispatch,
   controlsEnabled,
   guidedTarget = null,
+  guidedControlId = null,
   initiationTargets = null,
 }: CardiohelpConsoleProps) {
   const topAlarm = state.alarms[0]
@@ -404,9 +423,12 @@ export function CardiohelpConsole({
 
   return (
     <section
+      id="cardiohelp-console"
       className={styles.consoleSection}
       aria-labelledby="console-heading"
       data-guided-focus={guidedTarget === 'console'}
+      data-guided-help={guidedControlId === 'cardiohelp-console'}
+      tabIndex={-1}
     >
       {guidedTarget === 'console' ? (
         <div className={styles.guidedFocusFlag} role="status">
@@ -465,19 +487,28 @@ export function CardiohelpConsole({
 
             <div className={styles.screenWorkArea}>
               <div className={styles.screenBody}>
-                <ScreenBody state={state} dispatch={dispatch} controlsEnabled={controlsEnabled} />
+                <ScreenBody
+                  state={state}
+                  dispatch={dispatch}
+                  controlsEnabled={controlsEnabled}
+                  guidedControlId={guidedControlId}
+                />
               </div>
               <nav className={styles.screenToolbar} aria-label="Touchscreen toolbar">
                 <button
+                  id="cardiohelp-home-button"
                   type="button"
                   aria-label="Home"
+                  data-guided-help={guidedControlId === 'cardiohelp-home-button'}
                   onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'startup' })}
                 >
                   <House aria-hidden="true" />
                 </button>
                 <button
+                  id="cardiohelp-menu-button"
                   type="button"
                   aria-label="Menu"
+                  data-guided-help={guidedControlId === 'cardiohelp-menu-button'}
                   onClick={() => dispatch({ type: 'SET_SCREEN', screen: 'menu' })}
                 >
                   <Menu aria-hidden="true" />
@@ -516,11 +547,13 @@ export function CardiohelpConsole({
             <nav className={styles.screenTabs} aria-label="CARDIOHELP screens">
               {screenTabs.map((tab) => (
                 <button
+                  id={`cardiohelp-screen-${tab.id}`}
                   type="button"
                   key={tab.id}
                   aria-label={tab.label}
                   aria-current={state.device.screen === tab.id ? 'page' : undefined}
                   data-active={state.device.screen === tab.id}
+                  data-guided-help={guidedControlId === `cardiohelp-screen-${tab.id}`}
                   onClick={() => dispatch({ type: 'SET_SCREEN', screen: tab.id })}
                 >
                   {tab.short}
@@ -624,16 +657,20 @@ export function CardiohelpConsole({
 
             <div className={styles.modeSwitch} aria-label="Pump control mode">
               <button
+                id="cardiohelp-pump-mode-rpm"
                 type="button"
                 data-active={state.device.pumpMode === 'rpm'}
+                data-guided-help={guidedControlId === 'cardiohelp-pump-mode-rpm'}
                 disabled={!controlsEnabled || state.device.locked}
                 onClick={() => dispatch({ type: 'SET_PUMP_MODE', mode: 'rpm' })}
               >
                 RPM
               </button>
               <button
+                id="cardiohelp-pump-mode-lpm"
                 type="button"
                 data-active={state.device.pumpMode === 'lpm'}
+                data-guided-help={guidedControlId === 'cardiohelp-pump-mode-lpm'}
                 disabled={
                   !controlsEnabled || state.device.locked || !state.circuit.flowSensorConnected
                 }
@@ -681,6 +718,7 @@ export function CardiohelpConsole({
                 aria-valuenow={knobValue}
                 data-initiation-target={Boolean(initiationTargets)}
                 data-target-matched={rpmTargetMatched}
+                data-guided-help={guidedControlId === 'cardiohelp-rpm-control'}
                 onKeyDown={(event) => {
                   if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
                     event.preventDefault()

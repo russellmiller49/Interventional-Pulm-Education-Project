@@ -11,6 +11,7 @@ import {
   isPccmIntroCourseAdminDashboardPath,
   isPccmIntroCourseSharedModulePath,
   isPublicPath,
+  isPublicUnlistedPath,
   resolveLoginRedirectPath,
   resolveSiteModuleId,
 } from './access'
@@ -50,9 +51,13 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/journal-club-podcasts')).toBe('journal-club-podcasts')
   })
 
-  it('keeps the CARDIOHELP ECMO lab authenticated and resolves aggregate analytics', () => {
-    expect(isPublicPath('/cardiohelp-ecmo')).toBe(false)
-    expect(isPublicPath('/es/cardiohelp-ecmo')).toBe(false)
+  it('keeps the CARDIOHELP ECMO lab public but unlisted and resolves aggregate analytics', () => {
+    expect(isPublicPath('/cardiohelp-ecmo')).toBe(true)
+    expect(isPublicPath('/es/cardiohelp-ecmo')).toBe(true)
+    expect(isPublicPath('/zh-CN/cardiohelp-ecmo')).toBe(true)
+    expect(isPublicUnlistedPath('/cardiohelp-ecmo')).toBe(true)
+    expect(isPublicUnlistedPath('/es/cardiohelp-ecmo')).toBe(true)
+    expect(isPublicUnlistedPath('/cardiohelp-ecmo/extra')).toBe(false)
     expect(getRequiredEntitlement('/cardiohelp-ecmo', params())).toBeNull()
     expect(resolveSiteModuleId('/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
     expect(resolveSiteModuleId('/zh-CN/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')

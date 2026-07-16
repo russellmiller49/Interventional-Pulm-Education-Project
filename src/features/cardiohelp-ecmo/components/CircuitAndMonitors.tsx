@@ -15,6 +15,7 @@ import {
 import type {
   ClinicalInitiationTargets,
   EcmoSimulationState,
+  GuidedControlId,
   GuidedTarget,
   SimulationAction,
   TrendParameter,
@@ -27,6 +28,7 @@ interface SimulationPanelProps {
   dispatch: (action: SimulationAction) => void
   controlsEnabled: boolean
   guidedTarget?: GuidedTarget | null
+  guidedControlId?: GuidedControlId | null
   initiationTargets?: ClinicalInitiationTargets | null
 }
 
@@ -35,6 +37,7 @@ function CircuitSchematic({
   dispatch,
   controlsEnabled,
   guidedTarget,
+  guidedControlId,
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)
   const lowFlow = state.circuit.bloodFlow < state.device.limits.flowLow
@@ -71,9 +74,12 @@ function CircuitSchematic({
 
   return (
     <section
+      id="cardiohelp-circuit-panel"
       className={styles.circuitPanel}
       aria-labelledby="circuit-heading"
       data-guided-focus={guidedTarget === 'circuit'}
+      data-guided-help={guidedControlId === 'cardiohelp-circuit-panel'}
+      tabIndex={-1}
     >
       {guidedTarget === 'circuit' ? (
         <div className={styles.guidedFocusFlag} role="status">
@@ -521,9 +527,11 @@ function CircuitSchematic({
       </div>
 
       <button
+        id="cardiohelp-circuit-check"
         type="button"
         className={styles.primaryAction}
         disabled={!controlsEnabled || state.circuit.circuitInspected}
+        data-guided-help={guidedControlId === 'cardiohelp-circuit-check'}
         onClick={() => dispatch({ type: 'PERFORM_CHECK', checkId: TIP_TO_TIP_CHECK_ID })}
       >
         {state.circuit.circuitInspected ? (
@@ -564,6 +572,7 @@ function GasBlenderPanel({
   dispatch,
   controlsEnabled,
   guidedTarget,
+  guidedControlId,
   initiationTargets = null,
 }: SimulationPanelProps) {
   const sweepTargetMatched = initiationTargets
@@ -576,9 +585,12 @@ function GasBlenderPanel({
 
   return (
     <section
+      id="cardiohelp-gas-panel"
       className={styles.gasPanel}
       aria-labelledby="gas-panel-heading"
       data-guided-focus={guidedTarget === 'gas-panel'}
+      data-guided-help={guidedControlId === 'cardiohelp-gas-panel'}
+      tabIndex={-1}
     >
       {guidedTarget === 'gas-panel' ? (
         <div className={styles.guidedFocusFlag} role="status">
@@ -631,6 +643,7 @@ function GasBlenderPanel({
           }
           data-initiation-target={Boolean(initiationTargets)}
           data-target-matched={sweepTargetMatched}
+          data-guided-help={guidedControlId === 'cardiohelp-sweep-control'}
           onKeyDown={(event) => {
             const keyTargets: Partial<Record<string, number>> = {
               ArrowDown: state.gas.sweepLpm - 0.5,
@@ -690,6 +703,7 @@ function GasBlenderPanel({
           }
           data-initiation-target={Boolean(initiationTargets)}
           data-target-matched={fio2TargetMatched}
+          data-guided-help={guidedControlId === 'cardiohelp-fio2-control'}
           onKeyDown={(event) => {
             const keyTargets: Partial<Record<string, number>> = {
               ArrowDown: state.gas.fio2 - 0.01,
@@ -725,9 +739,11 @@ function GasBlenderPanel({
       </div>
       {!state.gas.sourceConnected ? (
         <button
+          id="cardiohelp-restore-gas-source"
           type="button"
           className={styles.primaryAction}
           disabled={!controlsEnabled}
+          data-guided-help={guidedControlId === 'cardiohelp-restore-gas-source'}
           onClick={() => dispatch({ type: 'RESTORE_GAS_SOURCE' })}
         >
           <RotateCcw aria-hidden="true" /> Restore verified gas source
@@ -740,12 +756,16 @@ function GasBlenderPanel({
 function PatientMonitor({
   state,
   guidedTarget,
-}: Pick<SimulationPanelProps, 'state' | 'guidedTarget'>) {
+  guidedControlId,
+}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'>) {
   return (
     <section
+      id="cardiohelp-patient-monitor"
       className={styles.patientMonitor}
       aria-labelledby="patient-monitor-heading"
       data-guided-focus={guidedTarget === 'patient-monitor'}
+      data-guided-help={guidedControlId === 'cardiohelp-patient-monitor'}
+      tabIndex={-1}
     >
       {guidedTarget === 'patient-monitor' ? (
         <div className={styles.guidedFocusFlag} role="status">
@@ -903,7 +923,11 @@ const trendMeta: Record<TrendParameter, { label: string; unit: string; color: st
   lactate: { label: 'Lactate', unit: 'mmol/L', color: '#ff9b7a' },
 }
 
-function TrendPanel({ state, guidedTarget }: Pick<SimulationPanelProps, 'state' | 'guidedTarget'>) {
+function TrendPanel({
+  state,
+  guidedTarget,
+  guidedControlId,
+}: Pick<SimulationPanelProps, 'state' | 'guidedTarget' | 'guidedControlId'>) {
   const [parameter, setParameter] = useState<TrendParameter>('flow')
   const samples = state.trends.slice(-60)
   const values = samples.map((sample) => sample[parameter])
@@ -925,9 +949,12 @@ function TrendPanel({ state, guidedTarget }: Pick<SimulationPanelProps, 'state' 
 
   return (
     <section
+      id="cardiohelp-trend-panel"
       className={styles.trendPanel}
       aria-labelledby="trend-heading"
       data-guided-focus={guidedTarget === 'trend-panel'}
+      data-guided-help={guidedControlId === 'cardiohelp-trend-panel'}
+      tabIndex={-1}
     >
       {guidedTarget === 'trend-panel' ? (
         <div className={styles.guidedFocusFlag} role="status">
@@ -997,9 +1024,17 @@ export function CircuitAndMonitors(props: SimulationPanelProps) {
       <CircuitSchematic {...props} />
       <div className={styles.externalPanelGrid}>
         <GasBlenderPanel {...props} />
-        <PatientMonitor state={props.state} guidedTarget={props.guidedTarget} />
+        <PatientMonitor
+          state={props.state}
+          guidedTarget={props.guidedTarget}
+          guidedControlId={props.guidedControlId}
+        />
       </div>
-      <TrendPanel state={props.state} guidedTarget={props.guidedTarget} />
+      <TrendPanel
+        state={props.state}
+        guidedTarget={props.guidedTarget}
+        guidedControlId={props.guidedControlId}
+      />
     </div>
   )
 }

@@ -530,6 +530,8 @@ export type GuidedControlId =
   | 'cardiohelp-screen-transport'
   | 'cardiohelp-screen-interventions'
   | 'cardiohelp-screen-timers'
+  | 'cardiohelp-pump-mode-rpm'
+  | 'cardiohelp-pump-mode-lpm'
   | 'cardiohelp-rpm-control'
   | 'cardiohelp-sweep-control'
   | 'cardiohelp-fio2-control'

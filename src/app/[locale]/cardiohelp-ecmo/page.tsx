@@ -10,7 +10,12 @@ const handoffMetadata: Metadata = {
   description:
     cardiohelpEcmoPublicationStatus === 'published'
       ? 'Reviewed step-by-step learning and independent adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting practice.'
-      : 'Draft-gated step-by-step learning and independent adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting practice.',
+      : 'Unlisted testing version of the step-by-step adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting lab.',
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
 }
 
 interface PageProps {

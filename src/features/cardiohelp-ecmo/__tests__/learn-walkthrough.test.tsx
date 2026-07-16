@@ -1,8 +1,15 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useReducer, useState } from 'react'
 
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
-import { createInitialSimulationState, ecmoSimulationReducer, type GuidedTarget } from '../engine'
+import {
+  createInitialSimulationState,
+  ecmoSimulationReducer,
+  type GuidedControlId,
+  type GuidedTarget,
+} from '../engine'
+import { CardiohelpConsole } from '../components/CardiohelpConsole'
+import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { LearnWorkflow, resolveGuidedLesson } from '../components/LearnWorkflow'
 
 function LearnHarness({
@@ -10,17 +17,21 @@ function LearnHarness({
   onCompleteLesson = jest.fn(),
   onTryPractice = jest.fn(),
   onTargetChange = jest.fn(),
+  onControlHelpChange = jest.fn(),
 }: {
   initialScenarioId: string
   onCompleteLesson?: (scenarioId: string) => void
   onTryPractice?: (scenarioId: string) => void
   onTargetChange?: (target: GuidedTarget) => void
+  onControlHelpChange?: (controlId: GuidedControlId | null) => void
 }) {
   const [scenarioId, setScenarioId] = useState(initialScenarioId)
   const [state, dispatch] = useReducer(ecmoSimulationReducer, initialScenarioId, (id) =>
     createInitialSimulationState(id, 'guided'),
   )
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(() => new Set())
+  const [guidedTarget, setGuidedTarget] = useState<GuidedTarget>('circuit')
+  const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
   const lesson = resolveGuidedLesson(scenarioId)
 
   function selectLesson(nextScenarioId: string) {
@@ -47,7 +58,28 @@ function LearnHarness({
           onCompleteLesson(completedScenarioId)
         }}
         onTryPractice={onTryPractice}
-        onTargetChange={onTargetChange}
+        onTargetChange={(target) => {
+          setGuidedTarget(target)
+          onTargetChange(target)
+        }}
+        onControlHelpChange={(controlId) => {
+          setGuidedControlId(controlId)
+          onControlHelpChange(controlId)
+        }}
+      />
+      <CardiohelpConsole
+        state={state}
+        dispatch={dispatch}
+        controlsEnabled
+        guidedTarget={guidedTarget}
+        guidedControlId={guidedControlId}
+      />
+      <CircuitAndMonitors
+        state={state}
+        dispatch={dispatch}
+        controlsEnabled
+        guidedTarget={guidedTarget}
+        guidedControlId={guidedControlId}
       />
     </>
   )
@@ -58,8 +90,16 @@ function performAndAdvance(actionName: string | RegExp) {
   fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
 }
 
+async function useConsoleScreenAndAdvance(buttonName: string) {
+  fireEvent.click(screen.getByRole('button', { name: buttonName }))
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled()
+  })
+  fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+}
+
 describe('CARDIOHELP ECMO Learn walkthrough', () => {
-  it('presents one ordered step at a time with a named visual target', () => {
+  it('directs learners to the real console and automatically accepts the completed task', async () => {
     const onTargetChange = jest.fn()
     render(
       <LearnHarness
@@ -83,24 +123,95 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
 
     expect(screen.getByRole('heading', { name: 'Open the parameter list' })).toBeInTheDocument()
     expect(screen.getByText('Focus: Device console')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Open Parameter list$/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/This step completes automatically/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const parameterButton = screen.getByRole('button', { name: 'Parameter list' })
+    await waitFor(() => {
+      expect(parameterButton).toHaveFocus()
+      expect(parameterButton).toHaveAttribute('data-guided-help', 'true')
+    })
+
+    fireEvent.click(parameterButton)
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('screen')).toHaveTextContent('parameters')
+    expect(screen.getByRole('button', { name: /Next step/i })).toBeEnabled()
     expect(onTargetChange).toHaveBeenCalledWith('circuit')
     expect(onTargetChange).toHaveBeenCalledWith('console')
   })
 
-  it('uses the real reducer for the demonstrated safe action without showing a score', () => {
+  it('uses the real RPM rotary for the demonstrated safe action without showing a score', async () => {
     render(<LearnHarness initialScenarioId="preload-drainage-collapse" />)
 
     performAndAdvance(/Inspect the starting pattern/i)
     performAndAdvance(/Commit the guided prediction/i)
-    fireEvent.click(screen.getByRole('button', { name: /Reduce RPM from 3600 to 3300/i }))
+    expect(
+      screen.queryByRole('button', { name: /Reduce RPM from 3600 to 3300/i }),
+    ).not.toBeInTheDocument()
+    const decreaseSetpoint = screen.getByRole('button', { name: /Decrease setpoint/i })
+    for (let index = 0; index < 6; index += 1) fireEvent.click(decreaseSetpoint)
 
     expect(screen.getByTestId('rpm')).toHaveTextContent('3300')
     expect(screen.queryByText(/Round score/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/No critical RPM-escalation error/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/No critical RPM-escalation error/i)).toBeInTheDocument()
+    })
 
     fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
     fireEvent.click(screen.getByRole('button', { name: /Correct the identified drainage cause/i }))
     expect(screen.getByTestId('faults')).not.toHaveTextContent('preload-limited')
+  })
+
+  it('provides progressive help for the Menu to Alarm list path', async () => {
+    render(<LearnHarness initialScenarioId="startup-sensor-orientation" />)
+
+    performAndAdvance(/identify all four domains/i)
+    await useConsoleScreenAndAdvance('Parameter list')
+    await useConsoleScreenAndAdvance('Blood parameters')
+    await useConsoleScreenAndAdvance('Transport')
+    await useConsoleScreenAndAdvance('Interventions')
+    await useConsoleScreenAndAdvance('Timers')
+
+    expect(
+      screen.getByRole('heading', { name: /Use alarm history as context/i }),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+
+    const menuButton = screen.getByRole('button', { name: 'Menu' })
+    await waitFor(() => {
+      expect(menuButton).toHaveFocus()
+      expect(menuButton).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(menuButton)
+
+    await waitFor(() => {
+      const alarmList = screen.getByRole('button', { name: /Alarm list/i })
+      expect(alarmList).toHaveAttribute('data-guided-help', 'true')
+      expect(alarmList).toHaveFocus()
+    })
+    const alarmListButton = screen.getByRole('button', { name: /Alarm list/i })
+    fireEvent.click(alarmListButton)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('screen')).toHaveTextContent('alarm-history')
+
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const homeButton = screen.getByRole('button', { name: 'Home' })
+    await waitFor(() => {
+      expect(homeButton).toHaveFocus()
+      expect(homeButton).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(homeButton)
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('screen')).toHaveTextContent('startup')
   })
 
   it('advances timed teaching events deterministically while the walkthrough is paused', () => {
@@ -111,14 +222,105 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     )
     expect(screen.getByTestId('clock')).toHaveTextContent('5')
     expect(screen.getByTestId('gas-source')).toHaveTextContent('false')
-    expect(screen.getByText(/Gas source interrupted/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Gas source interrupted/i).length).toBeGreaterThan(0)
   })
 
-  it('resets to the first step and clean simulation state when the lesson changes', () => {
+  it('guides a sweep change on the external gas control and accepts the new setting', async () => {
+    render(<LearnHarness initialScenarioId="acute-hypercapnia" />)
+
+    performAndAdvance(/Inspect the starting pattern/i)
+    performAndAdvance(/Commit the guided prediction/i)
+
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const sweepControl = screen.getByRole('slider', { name: 'Sweep flow control' })
+    await waitFor(() => {
+      expect(sweepControl).toHaveFocus()
+      expect(sweepControl).toHaveAttribute('data-guided-help', 'true')
+    })
+
+    fireEvent.change(sweepControl, { target: { value: '3' } })
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('button', { name: /Increase sweep to 3.0/i })).not.toBeInTheDocument()
+  })
+
+  it('guides restoration through the real gas-source control', async () => {
+    render(<LearnHarness initialScenarioId="gas-source-interruption" />)
+
+    performAndAdvance(/Advance 5 simulated seconds to the event/i)
+    performAndAdvance(/Commit the guided prediction/i)
+
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const restoreGas = screen.getByRole('button', { name: /Restore verified gas source/i })
+    await waitFor(() => {
+      expect(restoreGas).toHaveFocus()
+      expect(restoreGas).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(restoreGas)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('gas-source')).toHaveTextContent('true')
+  })
+
+  it('highlights and accepts the AC restore control on the Transport screen', async () => {
+    render(<LearnHarness initialScenarioId="transport-power-loss" />)
+
+    performAndAdvance(/Advance .* simulated seconds to the event/i)
+    performAndAdvance(/Commit the guided prediction/i)
+
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const restorePower = await screen.findByRole('button', {
+      name: /Reconnect verified AC source/i,
+    })
+    await waitFor(() => {
+      expect(restorePower).toHaveFocus()
+      expect(restorePower).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(restorePower)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+  })
+
+  it('progressively guides the cause-before-reset workflow into Interventions', async () => {
+    render(<LearnHarness initialScenarioId="arterial-bubble-stop" />)
+
+    performAndAdvance(/Advance 4 simulated seconds to the event/i)
+    performAndAdvance(/Commit the guided prediction/i)
+    performAndAdvance(/Correct the source and clear the circuit/i)
+
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const interventionsTab = screen.getByRole('button', { name: 'Interventions' })
+    await waitFor(() => {
+      expect(interventionsTab).toHaveFocus()
+      expect(interventionsTab).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(interventionsTab)
+
+    const resetBubble = screen.getByRole('button', { name: /Reset bubble intervention/i })
+    await waitFor(() => {
+      expect(resetBubble).toHaveFocus()
+      expect(resetBubble).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(resetBubble)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+  })
+
+  it('resets to the first step and clean simulation state when the lesson changes', async () => {
     render(<LearnHarness initialScenarioId="startup-sensor-orientation" />)
 
     performAndAdvance(/identify all four domains/i)
-    fireEvent.click(screen.getByRole('button', { name: /Open Parameter list/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Parameter list' }))
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
     expect(screen.getByTestId('screen')).toHaveTextContent('parameters')
 
     fireEvent.change(screen.getByLabelText('Lesson'), {

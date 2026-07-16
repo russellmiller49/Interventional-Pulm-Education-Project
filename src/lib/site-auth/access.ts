@@ -20,6 +20,8 @@ const PUBLIC_EXACT_PATHS = new Set([
   '/auth/update-password',
 ])
 
+const PUBLIC_UNLISTED_EXACT_PATHS = new Set(['/cardiohelp-ecmo'])
+
 const PUBLIC_PREFIXES = [
   '/_next/',
   '/api/auth/callback',
@@ -131,7 +133,10 @@ export function isPublicPath(pathname: string) {
     return false
   }
 
-  if (PUBLIC_EXACT_PATHS.has(normalizedPathname)) {
+  if (
+    PUBLIC_EXACT_PATHS.has(normalizedPathname) ||
+    PUBLIC_UNLISTED_EXACT_PATHS.has(normalizedPathname)
+  ) {
     return true
   }
 
@@ -158,6 +163,10 @@ export function isPublicPath(pathname: string) {
   }
 
   return isStaticAssetPath(normalizedPathname)
+}
+
+export function isPublicUnlistedPath(pathname: string) {
+  return PUBLIC_UNLISTED_EXACT_PATHS.has(unlocalizedPathname(pathname))
 }
 
 export function isAuthPath(pathname: string) {

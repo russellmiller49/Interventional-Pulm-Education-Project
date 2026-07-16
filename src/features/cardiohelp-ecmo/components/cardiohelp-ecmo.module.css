@@ -1100,6 +1100,70 @@
   width: 1rem;
 }
 
+.guidedSimulatorTask {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(113, 225, 229, 0.34);
+  border-radius: 12px;
+  background: rgba(31, 104, 112, 0.14);
+}
+
+.guidedSimulatorTask > svg {
+  width: 1.2rem;
+  color: var(--cyan-bright);
+}
+
+.guidedSimulatorTask strong,
+.guidedSimulatorTask small {
+  display: block;
+}
+
+.guidedSimulatorTask strong {
+  font-size: 0.8rem;
+}
+
+.guidedSimulatorTask p {
+  margin-top: 0.2rem;
+}
+
+.guidedSimulatorTask small {
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.guidedSimulatorTask .guidedHelpAction {
+  grid-column: 1 / -1;
+}
+
+.guidedManualActions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.guidedHelpAction {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  color: #dff8fa;
+  border: 1px solid rgba(113, 225, 229, 0.36);
+  border-radius: 10px;
+  background: rgba(12, 57, 64, 0.72);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.guidedHelpAction svg {
+  width: 1rem;
+}
+
 .guidedExpectedResponse {
   border-color: rgba(118, 214, 155, 0.32);
   background: rgba(37, 111, 68, 0.16);
@@ -1168,6 +1232,42 @@
   box-shadow:
     0 0 0 3px rgba(113, 225, 229, 0.14),
     0 18px 44px rgba(0, 0, 0, 0.2);
+}
+
+.moduleShell [data-guided-help='true'] {
+  position: relative;
+  z-index: 8;
+  outline: 4px solid #fff !important;
+  outline-offset: 4px;
+  box-shadow:
+    0 0 0 8px rgba(113, 225, 229, 0.32),
+    0 0 30px rgba(113, 225, 229, 0.58) !important;
+  animation: guidedHelpPulse 1.1s ease-in-out infinite;
+  scroll-margin: 25vh 0;
+}
+
+.moduleShell .screenTabs button[data-guided-help='true'],
+.moduleShell .screenToolbar button[data-guided-help='true'],
+.moduleShell .menuGrid button[data-guided-help='true'],
+.moduleShell .interventionList button[data-guided-help='true'],
+.moduleShell .screenActionButton[data-guided-help='true'] {
+  outline-offset: -4px;
+  box-shadow:
+    inset 0 0 0 4px #fff,
+    inset 0 0 0 8px rgba(113, 225, 229, 0.55),
+    0 0 24px rgba(113, 225, 229, 0.65) !important;
+}
+
+@keyframes guidedHelpPulse {
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moduleShell [data-guided-help='true'] {
+    animation: none;
+  }
 }
 
 .scenarioHeader,
@@ -1922,6 +2022,26 @@
 
 .transportGrid {
   grid-template-columns: repeat(2, 1fr);
+}
+
+.screenActionButton {
+  display: inline-flex;
+  grid-column: 1 / -1;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.45rem;
+  color: #e9f4f8;
+  border: 1px solid rgba(176, 221, 238, 0.28);
+  background: rgba(22, 93, 133, 0.84);
+  font-size: clamp(0.55rem, 0.8vw, 0.75rem);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.screenActionButton svg {
+  width: 1rem;
 }
 
 .parameterTile {
