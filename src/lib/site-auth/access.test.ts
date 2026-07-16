@@ -81,6 +81,16 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/hamilton-c6-ventilation')).toBe('mechanical-ventilation')
   })
 
+  it('keeps Baxter CRRT authenticated, non-public, and on one localized analytics ID', () => {
+    for (const path of ['/baxter-crrt', '/es/baxter-crrt', '/zh-CN/baxter-crrt']) {
+      expect(isPublicPath(path)).toBe(false)
+      expect(isPublicUnlistedPath(path)).toBe(false)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('baxter-crrt')
+    }
+    expect(resolveSiteModuleId('/en/baxter-crrt/orientation')).toBe('baxter-crrt')
+  })
+
   it('requires entitlements only for restricted website areas', () => {
     expect(getRequiredEntitlement('/admin', params())).toBe('site_admin')
     expect(getRequiredEntitlement('/admin/analytics', params())).toBe('site_admin')

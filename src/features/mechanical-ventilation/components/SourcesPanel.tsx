@@ -26,6 +26,13 @@ const sourceIcons = {
 export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
   const profile = getVentilatorDeviceProfile(deviceId)
   const selectedSources = ventilatorDeviceSources.filter((source) => source.deviceId === deviceId)
+  const selectedSourceIds = new Set(selectedSources.map((source) => source.id))
+  const supplementalManufacturerEvidence = ventilationEvidence.filter(
+    (reference) =>
+      reference.deviceId === deviceId &&
+      reference.sourceClass === 'manufacturer' &&
+      !selectedSourceIds.has(reference.id),
+  )
   const supportingEvidence = ventilationEvidence.filter(
     (reference) => reference.sourceClass !== 'manufacturer',
   )
@@ -75,7 +82,26 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
         </div>
         <div>
           <dt>Simulated modes</dt>
-          <dd>{Object.values(profile.modeLabels).join(' · ')}</dd>
+          <dd>
+            {profile.modes
+              .filter((mode) => mode.availability === 'simulated')
+              .map((mode) => mode.label)
+              .join(' · ')}
+          </dd>
+        </div>
+        <div>
+          <dt>Source-listed only</dt>
+          <dd>
+            {[
+              ...profile.modes
+                .filter((mode) => mode.availability !== 'simulated')
+                .map((mode) => mode.label),
+              ...profile.features
+                .filter((feature) => feature.availability !== 'simulated')
+                .map((feature) => feature.label),
+              ...profile.deferredModes,
+            ].join(' · ') || 'None in this profile'}
+          </dd>
         </div>
         <div>
           <dt>Patient group</dt>
@@ -120,6 +146,33 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
             </p>
           </article>
         ))}
+        {supplementalManufacturerEvidence.map((reference) => (
+          <article key={reference.id}>
+            <span>
+              <FileWarning aria-hidden="true" /> Manufacturer source · provenance pending
+            </span>
+            <h3>{reference.title}</h3>
+            <p>{reference.citation}</p>
+            {reference.sourceUrl ? (
+              <p>
+                <a href={reference.sourceUrl} target="_blank" rel="noreferrer">
+                  Open manufacturer reference
+                </a>
+              </p>
+            ) : null}
+            {reference.pages ? (
+              <p>
+                <strong>Reviewed sections:</strong> {reference.pages}
+              </p>
+            ) : null}
+            <p>
+              <strong>Used for:</strong> {reference.supports.join(' ')}
+            </p>
+            <p>
+              <strong>Boundary:</strong> {reference.limitations}
+            </p>
+          </article>
+        ))}
       </div>
 
       <details className={styles.supportingSources}>
@@ -157,12 +210,22 @@ export function SourcesPanel({ deviceId }: { deviceId: VentilatorDeviceId }) {
           </li>
           <li>
             <span aria-hidden="true">□</span> C6-, Evita-, PB980-, and AVEA-trained reviewers verify
-            the respective mode vocabulary, controls, alarms, maneuvers, and documented limits.
+            the core and advanced mode vocabulary, controls, alarms, maneuvers, and documented
+            limits.
           </li>
           <li>
             <span aria-hidden="true">□</span> PB980 and AVEA review includes the applicable operator
             manuals; the supplied service/modes guides alone are not treated as complete
             instructions.
+          </li>
+          <li>
+            <span aria-hidden="true">□</span> Adaptive, proportional, and closed-loop responses are
+            reviewed as bounded teaching approximations; no reviewer treats them as reproductions of
+            proprietary device algorithms.
+          </li>
+          <li>
+            <span aria-hidden="true">□</span> Adult-only cases keep TCPL and Volume Guarantee locked
+            until a separately reviewed neonatal test-lung pathway exists.
           </li>
           <li>
             <span aria-hidden="true">□</span> Accessibility review covers keyboard operation, text

@@ -4,8 +4,11 @@ import {
   createDefaultMechanicalVentilationSettings,
   defaultVentilatorDeviceId,
 } from '../content/deviceProfiles'
+import { cloneMechanicalVentilationSettings, isSimvMode, isTwoLevelMode } from './modes'
 import {
   clamp,
+  effectiveBaselinePressureCmH2O,
+  effectivePressureAboveBaselineCmH2O,
   deriveEffectivePatient,
   deriveMeasurements,
   equationOfMotionPressure,
@@ -16,6 +19,8 @@ import {
   moveTowardExp,
   passiveExpiratoryFlowLps,
   round,
+  targetTidalVolumeMl,
+  usesPressureTargetedDelivery,
   WAVEFORM_STEP_SECONDS,
 } from './physics'
 import type {
@@ -71,10 +76,6 @@ function hashSeed(value: string): number {
     hash = Math.imul(hash, 16777619)
   }
   return hash >>> 0
-}
-
-function cloneSettings(settings: MechanicalVentilationSettings): MechanicalVentilationSettings {
-  return { ...settings, trigger: { ...settings.trigger } } as MechanicalVentilationSettings
 }
 
 function clonePatient(patient: PatientModelState): PatientModelState {
@@ -138,7 +139,9 @@ function baseState(
     showEducatorOverlay: experience === 'learn',
     ventilator: {
       screen: 'main',
-      settings: cloneSettings(adaptInitialSettingsForDevice(definition.initialSettings, deviceId)),
+      settings: cloneMechanicalVentilationSettings(
+        adaptInitialSettingsForDevice(definition.initialSettings, deviceId),
+      ),
       pendingMode: null,
       locked: false,
       frozen: false,
@@ -240,12 +243,49 @@ function machineTiming(
   patient: PatientModelState,
   measurements: VentilatorMeasurements,
   time: number,
-): { inspiration: boolean; phase: number; triggered: boolean } {
+): { inspiration: boolean; phase: number; triggered: boolean; spontaneous: boolean } {
+  if (isTwoLevelMode(state.ventilator.settings.deviceMode)) {
+    const settings = state.ventilator.settings
+    const period = Math.max(0.3, settings.advanced.tHighSeconds + settings.advanced.tLowSeconds)
+    const phase = time % period
+    return {
+      inspiration: phase < settings.advanced.tHighSeconds,
+      phase,
+      triggered: phase < WAVEFORM_STEP_SECONDS * 1.5,
+      spontaneous: false,
+    }
+  }
   let rate = Math.max(1, measurements.totalRatePerMin)
   if (definition.phenotype === 'double-triggering') rate = patient.drive.neuralRatePerMin
   const period = 60 / rate
   const phase = time % period
-  let inspiration = phase < measurements.mechanicalInspiratoryTimeSeconds
+  const settings = state.ventilator.settings
+  let spontaneous = false
+  if (
+    isSimvMode(settings.deviceMode) &&
+    settings.mode !== 'pressure-support' &&
+    rate > settings.ratePerMin + 0.5
+  ) {
+    const breathIndex = Math.floor(time / period)
+    const mandatoryFraction = clamp(settings.ratePerMin / rate, 0, 1)
+    const mandatoryBefore = Math.floor((breathIndex + 1) * mandatoryFraction)
+    const mandatoryAfter = Math.floor((breathIndex + 2) * mandatoryFraction)
+    spontaneous = mandatoryAfter === mandatoryBefore
+  }
+  const spontaneousTi = spontaneous
+    ? clamp(
+        -Math.max(
+          0.08,
+          (patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps) *
+            patient.mechanics.complianceLPerCmH2O,
+        ) *
+          Math.log(clamp(settings.advanced.spontaneousCyclePercent / 100, 0.05, 0.8)) +
+          settings.advanced.spontaneousRampMs / 2000,
+        0.2,
+        3,
+      )
+    : measurements.mechanicalInspiratoryTimeSeconds
+  let inspiration = phase < spontaneousTi
   if (definition.phenotype === 'double-triggering') {
     const gap = 0.12
     const secondStart = measurements.mechanicalInspiratoryTimeSeconds + gap
@@ -259,8 +299,14 @@ function machineTiming(
   }
   if (state.ventilator.manualBreathUntil && state.ventilator.manualBreathUntil > time) {
     inspiration = true
+    spontaneous = false
   }
-  return { inspiration, phase, triggered: phase < WAVEFORM_STEP_SECONDS * 1.5 }
+  return {
+    inspiration,
+    phase,
+    triggered: phase < WAVEFORM_STEP_SECONDS * 1.5,
+    spontaneous,
+  }
 }
 
 function nextWaveformSample(
@@ -275,26 +321,45 @@ function nextWaveformSample(
   const timing = machineTiming(state, definition, patient, measurements, time)
   const effort = effortAt(state, definition, patient, time)
   const holdActive = state.ventilator.holdUntil !== null && state.ventilator.holdUntil > time
+  const pressureTargeted = usesPressureTargetedDelivery(settings)
+  const baselinePressure = effectiveBaselinePressureCmH2O(settings)
+  const pressureAboveBaseline = effectivePressureAboveBaselineCmH2O(
+    settings,
+    patient,
+    definition.predictedBodyWeightKg,
+  )
+  const breathPressureAboveBaseline = timing.spontaneous
+    ? settings.advanced.spontaneousPressureSupportCmH2O
+    : pressureAboveBaseline
+  const pressureTargetedBreath = pressureTargeted || timing.spontaneous
   let flowLps = 0
   if (!holdActive && timing.inspiration) {
-    if (settings.mode === 'volume-ac') {
+    if (settings.mode === 'volume-ac' && !pressureTargetedBreath) {
       flowLps = flowProfile(settings, timing.phase, measurements.mechanicalInspiratoryTimeSeconds)
-      const targetVolume = settings.vtMl / 1000 + patient.mechanics.endExpiratoryVolumeL
+      const targetVolume =
+        targetTidalVolumeMl(settings, patient, definition.predictedBodyWeightKg) / 1000 +
+        patient.mechanics.endExpiratoryVolumeL
       if (volumeL >= targetVolume) flowLps = 0
     } else {
-      const pressureAbovePeep =
-        settings.mode === 'pressure-ac'
-          ? settings.deltaPControlCmH2O
-          : settings.pressureSupportCmH2O
-      const pRampMs = Math.max(10, settings.pRampMs)
+      const pRampMs = Math.max(
+        10,
+        isTwoLevelMode(settings.deviceMode)
+          ? 50
+          : timing.spontaneous
+            ? settings.advanced.spontaneousRampMs
+            : settings.mode === 'volume-ac'
+              ? 70
+              : settings.pRampMs,
+      )
       const targetPressure =
-        settings.peepCmH2O + pressureAbovePeep * (1 - Math.exp(-timing.phase / (pRampMs / 1000)))
+        baselinePressure +
+        breathPressureAboveBaseline * (1 - Math.exp(-timing.phase / (pRampMs / 1000)))
       const resistance =
         patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps
       flowLps =
         (targetPressure +
           effort -
-          settings.peepCmH2O -
+          baselinePressure -
           volumeL / Math.max(0.005, patient.mechanics.complianceLPerCmH2O)) /
         Math.max(2, resistance)
       flowLps = clamp(flowLps, 0, 3)
@@ -318,7 +383,7 @@ function nextWaveformSample(
   if (holdActive && state.ventilator.holdType === 'expiratory')
     nextVolume = Math.min(nextVolume, 0.03)
   let paw = equationOfMotionPressure({
-    peepCmH2O: settings.peepCmH2O,
+    peepCmH2O: baselinePressure,
     intrinsicPeepCmH2O: measurements.intrinsicPeepCmH2O,
     resistanceCmH2OPerLps:
       patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps,
@@ -327,12 +392,10 @@ function nextWaveformSample(
     complianceLPerCmH2O: patient.mechanics.complianceLPerCmH2O,
     inspiratoryEffortCmH2O: effort,
   })
-  if (settings.mode !== 'volume-ac' && timing.inspiration) {
-    const pressureAbovePeep =
-      settings.mode === 'pressure-ac' ? settings.deltaPControlCmH2O : settings.pressureSupportCmH2O
+  if (pressureTargetedBreath && timing.inspiration) {
     paw = Math.min(
       paw,
-      settings.peepCmH2O + pressureAbovePeep + measurements.pressureOvershootCmH2O,
+      baselinePressure + breathPressureAboveBaseline + measurements.pressureOvershootCmH2O,
     )
   }
   if (
@@ -413,12 +476,26 @@ function updateSlowPhysiology(
     7.75,
   )
 
-  const oxygenPercent =
+  let oxygenPercent =
     state.ventilator.oxygenEnrichmentUntil &&
     state.ventilator.oxygenEnrichmentUntil > state.simulationTime
       ? 100
       : settings.oxygenPercent
-  const recruitmentBonus = settings.peepCmH2O <= 12 ? settings.peepCmH2O * 2 : 20
+  let effectivePeepCmH2O = settings.peepCmH2O
+  if (
+    settings.deviceMode === 'intellivent-asv' &&
+    settings.advanced.automaticOxygenationController &&
+    oxygenPercent < 100
+  ) {
+    const lowTarget = settings.advanced.targetSpO2LowPercent
+    const oxygenationGap =
+      next.gasExchange.spo2Percent < lowTarget
+        ? lowTarget - next.gasExchange.spo2Percent
+        : Math.min(0, lowTarget + 3 - next.gasExchange.spo2Percent)
+    oxygenPercent = clamp(oxygenPercent + oxygenationGap * 3, 21, 100)
+    effectivePeepCmH2O = clamp(settings.peepCmH2O + oxygenationGap * 0.5, 0, 18)
+  }
+  const recruitmentBonus = effectivePeepCmH2O <= 12 ? effectivePeepCmH2O * 2 : 20
   const targetPaO2 = clamp(
     35 + (oxygenPercent - 21) * 2.2 + recruitmentBonus - next.gasExchange.shuntFraction * 180,
     35,

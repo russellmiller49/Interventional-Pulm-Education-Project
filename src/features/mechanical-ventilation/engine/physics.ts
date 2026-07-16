@@ -8,6 +8,7 @@ import type {
   VentilationSimulationState,
   VentilatorMeasurements,
 } from './types'
+import { isAdaptivePressureMode, isAdaptiveSupportMode, isSimvMode, isTwoLevelMode } from './modes'
 
 export const WAVEFORM_SAMPLE_HZ = 50
 export const WAVEFORM_STEP_SECONDS = 1 / WAVEFORM_SAMPLE_HZ
@@ -65,6 +66,10 @@ export function deriveMechanicalInspiratoryTime(
   settings: MechanicalVentilationSettings,
   patient: PatientModelState,
 ): number {
+  if (isTwoLevelMode(settings.deviceMode)) return settings.advanced.tHighSeconds
+  if (settings.advanced.intelliSyncEnabled) {
+    return clamp(patient.drive.neuralInspiratoryTimeSeconds, 0.2, 3)
+  }
   if (settings.mode === 'volume-ac') {
     const patternFactor =
       settings.flowPattern === 'square'
@@ -83,6 +88,142 @@ export function deriveMechanicalInspiratoryTime(
   )
   const etsFraction = clamp(settings.etsPercent / 100, 0.05, 0.8)
   return clamp(-tau * Math.log(etsFraction) + settings.pRampMs / 2000, 0.2, settings.tiMaxSeconds)
+}
+
+function asvTargets(
+  settings: MechanicalVentilationSettings,
+  patient: PatientModelState,
+  predictedBodyWeightKg: number,
+): { minuteVentilationLMin: number; ratePerMin: number; vtMl: number } {
+  const timeConstant = Math.max(
+    0.08,
+    (patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps) *
+      patient.mechanics.complianceLPerCmH2O,
+  )
+  let minuteVentilationLMin =
+    Math.max(25, predictedBodyWeightKg) * 0.1 * (settings.advanced.minuteVolumePercent / 100)
+  if (
+    settings.deviceMode === 'intellivent-asv' &&
+    settings.advanced.automaticVentilationController
+  ) {
+    minuteVentilationLMin *= clamp(
+      patient.gasExchange.paCO2MmHg / Math.max(25, settings.advanced.targetPetCO2MmHg),
+      0.7,
+      1.4,
+    )
+  }
+  minuteVentilationLMin = clamp(minuteVentilationLMin, 2, 25)
+  const ratePerMin = clamp(60 / (1 + 6 * timeConstant), 8, 30)
+  const vtMl = clamp((minuteVentilationLMin * 1000) / ratePerMin, 250, 900)
+  return { minuteVentilationLMin, ratePerMin, vtMl }
+}
+
+export function deriveEffectiveVentilationRate(
+  settings: MechanicalVentilationSettings,
+  patient: PatientModelState,
+  predictedBodyWeightKg = 70,
+): number {
+  if (isTwoLevelMode(settings.deviceMode)) {
+    const releaseRate =
+      60 / Math.max(0.3, settings.advanced.tHighSeconds + settings.advanced.tLowSeconds)
+    return Math.max(releaseRate, patient.drive.neuralRatePerMin)
+  }
+  if (isAdaptiveSupportMode(settings.deviceMode)) {
+    if (
+      settings.deviceMode === 'intellivent-asv' &&
+      !settings.advanced.automaticVentilationController &&
+      settings.mode === 'pressure-ac'
+    ) {
+      return Math.max(settings.ratePerMin, patient.drive.neuralRatePerMin)
+    }
+    return Math.max(
+      asvTargets(settings, patient, predictedBodyWeightKg).ratePerMin,
+      patient.drive.neuralRatePerMin,
+    )
+  }
+  if (settings.mode === 'pressure-support') {
+    if (patient.drive.neuralRatePerMin <= 0 && settings.apneaBackupEnabled) {
+      return settings.apneaRatePerMin
+    }
+    return Math.max(1, patient.drive.neuralRatePerMin)
+  }
+  return Math.max(settings.ratePerMin, patient.drive.neuralRatePerMin)
+}
+
+export function effectiveBaselinePressureCmH2O(settings: MechanicalVentilationSettings): number {
+  return isTwoLevelMode(settings.deviceMode) ? settings.advanced.pLowCmH2O : settings.peepCmH2O
+}
+
+export function targetTidalVolumeMl(
+  settings: MechanicalVentilationSettings,
+  patient: PatientModelState,
+  predictedBodyWeightKg = 70,
+): number {
+  if (settings.deviceMode === 'volume-support' || isAdaptivePressureMode(settings.deviceMode)) {
+    return settings.advanced.targetVtMl
+  }
+  if (settings.advanced.autoFlowEnabled && settings.mode === 'volume-ac') return settings.vtMl
+  if (isAdaptiveSupportMode(settings.deviceMode)) {
+    return asvTargets(settings, patient, predictedBodyWeightKg).vtMl
+  }
+  if (settings.mode === 'volume-ac') return settings.vtMl
+  const pressureAboveBaseline = effectivePressureAboveBaselineCmH2O(
+    settings,
+    patient,
+    predictedBodyWeightKg,
+  )
+  return clamp(
+    pressureAboveBaseline * Math.max(0.005, patient.mechanics.complianceLPerCmH2O) * 1000,
+    100,
+    1400,
+  )
+}
+
+export function effectivePressureAboveBaselineCmH2O(
+  settings: MechanicalVentilationSettings,
+  patient: PatientModelState,
+  predictedBodyWeightKg = 70,
+): number {
+  const compliance = Math.max(0.005, patient.mechanics.complianceLPerCmH2O)
+  const patientContribution = patient.drive.effortAmplitudeCmH2O * 0.35
+  if (isTwoLevelMode(settings.deviceMode)) {
+    return Math.max(1, settings.advanced.pHighCmH2O - settings.advanced.pLowCmH2O)
+  }
+  if (settings.deviceMode === 'proportional-assist') {
+    const supportFraction = clamp(settings.advanced.proportionalSupportPercent / 100, 0.05, 0.95)
+    return clamp(
+      (patient.drive.effortAmplitudeCmH2O * supportFraction) / Math.max(0.15, 1 - supportFraction),
+      2,
+      30,
+    )
+  }
+  if (settings.deviceMode === 'volume-support') {
+    return clamp(settings.advanced.targetVtMl / 1000 / compliance - patientContribution, 2, 35)
+  }
+  if (
+    isAdaptivePressureMode(settings.deviceMode) ||
+    (settings.advanced.autoFlowEnabled && settings.mode === 'volume-ac')
+  ) {
+    const target = settings.mode === 'volume-ac' ? settings.vtMl : settings.advanced.targetVtMl
+    return clamp(target / 1000 / compliance, 5, 40)
+  }
+  if (isAdaptiveSupportMode(settings.deviceMode)) {
+    const target = asvTargets(settings, patient, predictedBodyWeightKg).vtMl
+    return clamp(target / 1000 / compliance - patientContribution, 5, 35)
+  }
+  if (settings.mode === 'pressure-ac') return settings.deltaPControlCmH2O
+  if (settings.mode === 'pressure-support') return settings.pressureSupportCmH2O
+  return clamp(settings.vtMl / 1000 / compliance, 5, 40)
+}
+
+export function usesPressureTargetedDelivery(settings: MechanicalVentilationSettings): boolean {
+  return (
+    settings.mode !== 'volume-ac' ||
+    settings.advanced.autoFlowEnabled ||
+    isAdaptivePressureMode(settings.deviceMode) ||
+    isTwoLevelMode(settings.deviceMode) ||
+    isAdaptiveSupportMode(settings.deviceMode)
+  )
 }
 
 function performedEffectIds(
@@ -235,16 +376,6 @@ export function deriveEffectivePatient(
   return patient
 }
 
-function modeRate(settings: MechanicalVentilationSettings, patient: PatientModelState): number {
-  if (settings.mode === 'pressure-support') {
-    if (patient.drive.neuralRatePerMin <= 0 && settings.apneaBackupEnabled) {
-      return settings.apneaRatePerMin
-    }
-    return Math.max(1, patient.drive.neuralRatePerMin)
-  }
-  return Math.max(settings.ratePerMin, patient.drive.neuralRatePerMin)
-}
-
 export function deriveMeasurements(
   state: VentilationSimulationState,
   definition: VentilationCaseDefinition,
@@ -252,23 +383,52 @@ export function deriveMeasurements(
 ): VentilatorMeasurements {
   const settings = state.ventilator.settings
   const mechanicalTi = deriveMechanicalInspiratoryTime(settings, patient)
-  const rate = modeRate(settings, patient)
+  const rate = deriveEffectiveVentilationRate(settings, patient, definition.predictedBodyWeightKg)
   const compliance = Math.max(0.005, patient.mechanics.complianceLPerCmH2O)
   const resistance =
     patient.mechanics.resistanceCmH2OPerLps + patient.mechanics.tubeResistanceCmH2OPerLps
+  const baselinePressure = effectiveBaselinePressureCmH2O(settings)
+  const pressureAboveBaseline = effectivePressureAboveBaselineCmH2O(
+    settings,
+    patient,
+    definition.predictedBodyWeightKg,
+  )
+  const pressureTargeted = usesPressureTargetedDelivery(settings)
   let vtMl: number
   let peakFlowLMin: number
-  if (settings.mode === 'volume-ac') {
+  if (settings.mode === 'volume-ac' && !pressureTargeted) {
     vtMl = settings.vtMl * (1 - patient.mechanics.airwayLeakFraction)
     peakFlowLMin = settings.peakFlowLMin
+  } else if (
+    isAdaptivePressureMode(settings.deviceMode) ||
+    settings.deviceMode === 'volume-support' ||
+    isAdaptiveSupportMode(settings.deviceMode) ||
+    (settings.advanced.autoFlowEnabled && settings.mode === 'volume-ac')
+  ) {
+    const targetVtMl = targetTidalVolumeMl(settings, patient, definition.predictedBodyWeightKg)
+    const effortContribution =
+      settings.deviceMode === 'volume-support' || isAdaptiveSupportMode(settings.deviceMode)
+        ? patient.drive.effortAmplitudeCmH2O * 0.35
+        : 0
+    const achievableVtMl = (pressureAboveBaseline + effortContribution) * compliance * 1000
+    vtMl = Math.min(targetVtMl, achievableVtMl) * (1 - patient.mechanics.airwayLeakFraction)
+    peakFlowLMin = clamp((pressureAboveBaseline / resistance) * 60, 10, 180)
   } else if (settings.mode === 'pressure-ac') {
-    vtMl = clamp(settings.deltaPControlCmH2O * compliance * 1000, 100, 1200)
-    peakFlowLMin = clamp((settings.deltaPControlCmH2O / resistance) * 60, 10, 180)
+    vtMl = clamp(pressureAboveBaseline * compliance * 1000, 100, 1200)
+    peakFlowLMin = clamp((pressureAboveBaseline / resistance) * 60, 10, 180)
   } else {
-    const unloadingPressure =
-      settings.pressureSupportCmH2O + patient.drive.effortAmplitudeCmH2O * 0.35
+    const unloadingPressure = pressureAboveBaseline + patient.drive.effortAmplitudeCmH2O * 0.35
     vtMl = clamp(unloadingPressure * compliance * 1000, 100, 1400)
     peakFlowLMin = clamp((unloadingPressure / resistance) * 60, 10, 180)
+  }
+
+  if (isSimvMode(settings.deviceMode) && settings.mode !== 'pressure-support') {
+    const spontaneousFraction = clamp((rate - settings.ratePerMin) / Math.max(1, rate), 0, 0.75)
+    const spontaneousPressure =
+      settings.advanced.spontaneousPressureSupportCmH2O + patient.drive.effortAmplitudeCmH2O * 0.35
+    const spontaneousVtMl = clamp(spontaneousPressure * compliance * 1000, 100, 1400)
+    vtMl = vtMl * (1 - spontaneousFraction) + spontaneousVtMl * spontaneousFraction
+    peakFlowLMin = Math.max(peakFlowLMin, clamp((spontaneousPressure / resistance) * 60, 10, 180))
   }
 
   // Dynamic PEEPi is recomputed from the case baseline and the current expiratory
@@ -284,8 +444,12 @@ export function deriveMeasurements(
       intrinsicPeep = Math.max(0, intrinsicPeep)
     }
   }
-  const cycleTime = 60 / Math.max(1, rate)
-  const expiratoryTime = Math.max(0.08, cycleTime - mechanicalTi)
+  const cycleTime = isTwoLevelMode(settings.deviceMode)
+    ? settings.advanced.tHighSeconds + settings.advanced.tLowSeconds
+    : 60 / Math.max(1, rate)
+  const expiratoryTime = isTwoLevelMode(settings.deviceMode)
+    ? settings.advanced.tLowSeconds
+    : Math.max(0.08, cycleTime - mechanicalTi)
   const timeConstant = resistance * compliance
   if (timeConstant > expiratoryTime) {
     intrinsicPeep += clamp((timeConstant - expiratoryTime) * 7, 0, 24)
@@ -303,19 +467,18 @@ export function deriveMeasurements(
   }
   if (hasPerformedEffect(state, definition, 'disconnect-bag')) intrinsicPeep *= 0.35
 
-  const plateau = settings.peepCmH2O + intrinsicPeep + vtMl / 1000 / compliance
+  const plateau = baselinePressure + intrinsicPeep + vtMl / 1000 / compliance
+  const riseTimeMs =
+    settings.mode === 'pressure-ac'
+      ? settings.pRampMs
+      : settings.mode === 'pressure-support'
+        ? settings.pRampMs
+        : 70
   const pressureOvershoot =
-    settings.mode !== 'volume-ac' && settings.pRampMs < 30
-      ? clamp((30 - settings.pRampMs) / 5, 0, 6)
-      : 0
-  const peak =
-    settings.mode === 'volume-ac'
-      ? plateau + resistance * (peakFlowLMin / 60)
-      : settings.peepCmH2O +
-        (settings.mode === 'pressure-ac'
-          ? settings.deltaPControlCmH2O
-          : settings.pressureSupportCmH2O) +
-        pressureOvershoot
+    pressureTargeted && riseTimeMs < 30 ? clamp((30 - riseTimeMs) / 5, 0, 6) : 0
+  const peak = !pressureTargeted
+    ? plateau + resistance * (peakFlowLMin / 60)
+    : baselinePressure + pressureAboveBaseline + pressureOvershoot
 
   let ineffectiveFraction = 0
   let autotriggerFraction = 0
@@ -339,6 +502,11 @@ export function deriveMeasurements(
       settings.trigger.type === 'flow' && settings.trigger.thresholdLMin < 1.5
     autotriggerFraction = branchCorrected(state, definition) || !triggerSensitive ? 0.04 : 0.68
   }
+  if (settings.advanced.intelliSyncEnabled) {
+    ineffectiveFraction *= 0.25
+    autotriggerFraction *= 0.25
+    triggerDelayMs = Math.min(triggerDelayMs, 55)
+  }
 
   let stackedVolumeMl = 0
   if (definition.phenotype === 'double-triggering') {
@@ -360,7 +528,7 @@ export function deriveMeasurements(
     peakPressureCmH2O: round(peak),
     plateauPressureCmH2O: round(plateau),
     meanAirwayPressureCmH2O: round(
-      settings.peepCmH2O + ((peak - settings.peepCmH2O) * mechanicalTi) / cycleTime,
+      baselinePressure + ((peak - baselinePressure) * mechanicalTi) / Math.max(0.1, cycleTime),
     ),
     exhaledVtMl: round(vtMl, 0),
     minuteVentilationLMin: round((vtMl / 1000) * observedRate),

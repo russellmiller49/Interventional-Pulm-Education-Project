@@ -1,4 +1,8 @@
-import { mechanicalVentilationCaseById, mechanicalVentilationCases } from '../content'
+import {
+  mechanicalVentilationCaseById,
+  mechanicalVentilationCases,
+  ventilatorDeviceProfiles,
+} from '../content'
 import {
   advanceSimulation,
   createInitialSimulationState,
@@ -10,6 +14,12 @@ import {
   ventilatorDeviceIds,
   type VentilationCaseDefinition,
 } from '../engine'
+
+const simulatedDeviceModes = ventilatorDeviceProfiles.flatMap((profile) =>
+  profile.modes
+    .filter((mode) => mode.availability === 'simulated')
+    .map((mode) => [profile.id, mode.id, mode.label] as const),
+)
 
 describe('device-independent fixed-step physiology and waveform engine', () => {
   it('uses a consistent positive inspiratory-effort equation-of-motion convention', () => {
@@ -179,6 +189,110 @@ describe('device-independent fixed-step physiology and waveform engine', () => {
     if (phenotype === 'dyspnea-human-factors') {
       expect(state.patient.human.dyspneaScore).toBeGreaterThanOrEqual(6)
     }
+  })
+
+  it.each(simulatedDeviceModes)(
+    '%s · %s (%s) initializes every adult case with bounded physiology',
+    (deviceId, modeId) => {
+      for (const definition of mechanicalVentilationCases) {
+        let state = createInitialSimulationState(definition.id, 'learn', 1, deviceId)
+        state = ventilationSimulationReducer(state, { type: 'SELECT_MODE', mode: modeId })
+        state = ventilationSimulationReducer(state, { type: 'CONFIRM_MODE' })
+        state = advanceSimulation(state, 2)
+        expect(state.ventilator.settings.deviceMode).toBe(modeId)
+        expect(Number.isFinite(state.measurements.peakPressureCmH2O)).toBe(true)
+        expect(state.measurements.peakPressureCmH2O).toBeGreaterThan(0)
+        expect(state.measurements.peakPressureCmH2O).toBeLessThanOrEqual(100)
+        expect(state.measurements.exhaledVtMl).toBeGreaterThan(0)
+        expect(state.measurements.exhaledVtMl).toBeLessThanOrEqual(1400)
+        expect(state.measurements.totalRatePerMin).toBeGreaterThan(0)
+        expect(state.waveforms.length).toBeLessThanOrEqual(MAX_WAVEFORM_SAMPLES)
+      }
+    },
+  )
+
+  it('gives adaptive pressure, two-level, proportional, and ASV controls distinct effects', () => {
+    let vcPlus = createInitialSimulationState('MV-01', 'learn', 1, 'puritan-bennett-980')
+    vcPlus = ventilationSimulationReducer(vcPlus, {
+      type: 'SELECT_MODE',
+      mode: 'adaptive-pressure-ac',
+    })
+    vcPlus = ventilationSimulationReducer(vcPlus, { type: 'CONFIRM_MODE' })
+    const lowTarget = ventilationSimulationReducer(vcPlus, {
+      type: 'SET_CONTROL',
+      control: 'targetVtMl',
+      value: 300,
+    })
+    const highTarget = ventilationSimulationReducer(vcPlus, {
+      type: 'SET_CONTROL',
+      control: 'targetVtMl',
+      value: 700,
+    })
+    expect(lowTarget.measurements.exhaledVtMl).toBeCloseTo(300, 0)
+    expect(highTarget.measurements.exhaledVtMl).toBeCloseTo(700, 0)
+
+    let aprv = createInitialSimulationState('MV-01', 'learn', 1, 'carefusion-avea')
+    aprv = ventilationSimulationReducer(aprv, { type: 'SELECT_MODE', mode: 'aprv' })
+    aprv = ventilationSimulationReducer(aprv, { type: 'CONFIRM_MODE' })
+    aprv = ventilationSimulationReducer(aprv, {
+      type: 'SET_CONTROL',
+      control: 'tHighSeconds',
+      value: 4.5,
+    })
+    aprv = ventilationSimulationReducer(aprv, {
+      type: 'SET_CONTROL',
+      control: 'pHighCmH2O',
+      value: 28,
+    })
+    expect(aprv.measurements.mechanicalInspiratoryTimeSeconds).toBe(4.5)
+    expect(aprv.measurements.peakPressureCmH2O).toBeCloseTo(28, 0)
+
+    let pav = createInitialSimulationState('MV-11', 'learn', 1, 'puritan-bennett-980')
+    pav = ventilationSimulationReducer(pav, { type: 'SELECT_MODE', mode: 'proportional-assist' })
+    pav = ventilationSimulationReducer(pav, { type: 'CONFIRM_MODE' })
+    const lowPav = ventilationSimulationReducer(pav, {
+      type: 'SET_CONTROL',
+      control: 'proportionalSupportPercent',
+      value: 20,
+    })
+    const highPav = ventilationSimulationReducer(pav, {
+      type: 'SET_CONTROL',
+      control: 'proportionalSupportPercent',
+      value: 80,
+    })
+    expect(highPav.measurements.exhaledVtMl).toBeGreaterThan(lowPav.measurements.exhaledVtMl)
+
+    let asv = createInitialSimulationState('MV-01', 'learn', 1, 'hamilton-c6')
+    asv = ventilationSimulationReducer(asv, { type: 'SELECT_MODE', mode: 'asv' })
+    asv = ventilationSimulationReducer(asv, { type: 'CONFIRM_MODE' })
+    const lowMinVol = ventilationSimulationReducer(asv, {
+      type: 'SET_CONTROL',
+      control: 'minuteVolumePercent',
+      value: 50,
+    })
+    const highMinVol = ventilationSimulationReducer(asv, {
+      type: 'SET_CONTROL',
+      control: 'minuteVolumePercent',
+      value: 150,
+    })
+    expect(highMinVol.measurements.minuteVentilationLMin).toBeGreaterThan(
+      lowMinVol.measurements.minuteVentilationLMin,
+    )
+  })
+
+  it('uses IntelliSync+ to reduce modeled trigger delay without mutating the patient model', () => {
+    let state = createInitialSimulationState('MV-07', 'learn', 1, 'hamilton-c6')
+    state = ventilationSimulationReducer(state, { type: 'SELECT_MODE', mode: 'asv' })
+    state = ventilationSimulationReducer(state, { type: 'CONFIRM_MODE' })
+    const delayBefore = state.measurements.triggerDelayMs
+    const patientBefore = state.patient
+    state = ventilationSimulationReducer(state, {
+      type: 'SET_CONTROL',
+      control: 'intelliSyncEnabled',
+      value: true,
+    })
+    expect(state.measurements.triggerDelayMs).toBeLessThan(delayBefore)
+    expect(state.patient.drive).toEqual(patientBefore.drive)
   })
 
   it('remains bounded across resistance, compliance, and respiratory-drive parameter sweeps', () => {

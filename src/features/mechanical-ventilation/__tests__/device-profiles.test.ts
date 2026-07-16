@@ -4,6 +4,7 @@ import {
   canonicalToNativeControlValue,
   createDefaultMechanicalVentilationSettings,
   getVentilatorDeviceProfile,
+  getVentilatorModeLabel,
   nativeToCanonicalControlValue,
   ventilatorDeviceProfiles,
   ventilatorDeviceSources,
@@ -33,11 +34,17 @@ describe('ventilator device profiles', () => {
       expect(profile.deferredModes.length).toBeGreaterThan(0)
       expect(profile.sourceIds.length).toBeGreaterThan(0)
       expect(profile.sourceIds.every((sourceId) => sourceIds.has(sourceId))).toBe(true)
-      expect(Object.keys(profile.modeLabels)).toEqual([
+      expect(profile.modes.length).toBeGreaterThanOrEqual(7)
+      expect(new Set(profile.modes.map((mode) => mode.id)).size).toBe(profile.modes.length)
+      expect(profile.modes.slice(0, 3).map((mode) => mode.id)).toEqual([
         'volume-ac',
         'pressure-ac',
         'pressure-support',
       ])
+      for (const mode of profile.modes) {
+        expect(mode.label).not.toHaveLength(0)
+        expect(mode.description.length).toBeGreaterThan(20)
+      }
     }
     for (const source of ventilatorDeviceSources) {
       expect(source.sourceSha256).toMatch(/^[a-f0-9]{64}$/)
@@ -47,26 +54,75 @@ describe('ventilator device profiles', () => {
   })
 
   it('uses the required device-native vocabulary for the three shared modes', () => {
-    expect(getVentilatorDeviceProfile('hamilton-c6').modeLabels).toEqual({
-      'volume-ac': '(S)CMV',
-      'pressure-ac': 'PCV+',
-      'pressure-support': 'SPONT',
+    expect(
+      ventilatorDeviceProfiles.map((profile) => [
+        getVentilatorModeLabel(profile.id, 'volume-ac'),
+        getVentilatorModeLabel(profile.id, 'pressure-ac'),
+        getVentilatorModeLabel(profile.id, 'pressure-support'),
+      ]),
+    ).toEqual([
+      ['(S)CMV', 'PCV+', 'SPONT'],
+      ['VC-AC', 'PC-AC', 'SPN-CPAP/PS'],
+      ['A/C + VC', 'A/C + PC', 'SPONT + PS'],
+      ['Volume A/C', 'Pressure A/C', 'CPAP/PSV'],
+    ])
+  })
+
+  it('maps each requested advanced mode to the device that actually exposes it', () => {
+    expect(getVentilatorDeviceProfile('hamilton-c6').modes.map((mode) => mode.label)).toEqual(
+      expect.arrayContaining([
+        'SIMV',
+        'PSIMV+',
+        'APVcmv',
+        'APVsimv / SIMV+',
+        'DuoPAP',
+        'APRV',
+        'ASV',
+        'INTELLiVENT-ASV',
+      ]),
+    )
+    expect(
+      getVentilatorDeviceProfile('drager-evita-v800-v600').modes.map((mode) => mode.label),
+    ).toEqual(expect.arrayContaining(['VC-SIMV', 'PC-SIMV', 'PC-APRV', 'SPN-CPAP/VS']))
+    expect(
+      getVentilatorDeviceProfile('puritan-bennett-980').modes.map((mode) => mode.label),
+    ).toEqual(
+      expect.arrayContaining([
+        'SIMV + VC',
+        'SIMV + PC',
+        'A/C + VC+',
+        'SIMV + VC+',
+        'BiLevel',
+        'SPONT + PAV+',
+        'SPONT + VS',
+      ]),
+    )
+    expect(getVentilatorDeviceProfile('carefusion-avea').modes.map((mode) => mode.label)).toEqual(
+      expect.arrayContaining([
+        'Volume SIMV',
+        'Pressure SIMV',
+        'PRVC A/C',
+        'PRVC SIMV',
+        'APRV/BiPhasic',
+        'TCPL A/C',
+        'TCPL SIMV',
+      ]),
+    )
+  })
+
+  it('keeps neonatal-only TCPL and Volume Guarantee source-listed but locked', () => {
+    const avea = getVentilatorDeviceProfile('carefusion-avea')
+    expect(
+      avea.modes.filter((mode) => mode.id.startsWith('tcpl')).map((mode) => mode.availability),
+    ).toEqual(['requires-neonatal', 'requires-neonatal'])
+    expect(avea.features.find((feature) => feature.id === 'volume-guarantee')).toMatchObject({
+      availability: 'requires-neonatal',
     })
-    expect(getVentilatorDeviceProfile('drager-evita-v800-v600').modeLabels).toEqual({
-      'volume-ac': 'VC-AC',
-      'pressure-ac': 'PC-AC',
-      'pressure-support': 'SPN-CPAP/PS',
-    })
-    expect(getVentilatorDeviceProfile('puritan-bennett-980').modeLabels).toEqual({
-      'volume-ac': 'A/C + VC',
-      'pressure-ac': 'A/C + PC',
-      'pressure-support': 'SPONT + PS',
-    })
-    expect(getVentilatorDeviceProfile('carefusion-avea').modeLabels).toEqual({
-      'volume-ac': 'Volume A/C',
-      'pressure-ac': 'Pressure A/C',
-      'pressure-support': 'CPAP/PSV',
-    })
+    expect(
+      getVentilatorDeviceProfile('drager-evita-v800-v600').features.find(
+        (feature) => feature.id === 'volume-guarantee',
+      ),
+    ).toMatchObject({ availability: 'requires-neonatal' })
   })
 
   it('converts Evita absolute Pinsp and seconds back to canonical driving pressure and milliseconds', () => {
@@ -97,6 +153,12 @@ describe('ventilator device profiles', () => {
     expect(canonicalToNativeControlValue('carefusion-avea', support, 'pRampMs', 0)).toBe(1)
     expect(canonicalToNativeControlValue('carefusion-avea', support, 'pRampMs', 2000)).toBe(9)
     expect(nativeToCanonicalControlValue('carefusion-avea', support, 'pRampMs', 99)).toBe(2000)
+    expect(
+      canonicalToNativeControlValue('puritan-bennett-980', support, 'spontaneousRampMs', 0),
+    ).toBe(100)
+    expect(
+      canonicalToNativeControlValue('carefusion-avea', support, 'spontaneousRampMs', 2000),
+    ).toBe(9)
   })
 
   it('keeps C6 as the regression cap and explicitly labels undocumented AVEA simulator ranges', () => {

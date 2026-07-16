@@ -1,4 +1,40 @@
 export type CanonicalVentilationMode = 'volume-ac' | 'pressure-ac' | 'pressure-support'
+export type VentilatorModeId =
+  | CanonicalVentilationMode
+  | 'volume-simv'
+  | 'pressure-simv'
+  | 'adaptive-pressure-ac'
+  | 'adaptive-pressure-simv'
+  | 'aprv'
+  | 'bilevel'
+  | 'proportional-assist'
+  | 'volume-support'
+  | 'asv'
+  | 'intellivent-asv'
+  | 'tcpl-ac'
+  | 'tcpl-simv'
+
+export type VentilatorModeAvailability = 'simulated' | 'requires-neonatal'
+
+export interface VentilatorModeDescriptor {
+  id: VentilatorModeId
+  canonicalMode: CanonicalVentilationMode
+  label: string
+  description: string
+  availability: VentilatorModeAvailability
+  availabilityNote?: string
+}
+
+export type VentilatorFeatureId = 'autoflow' | 'volume-guarantee' | 'intellisync-plus'
+
+export interface VentilatorFeatureDescriptor {
+  id: VentilatorFeatureId
+  label: string
+  description: string
+  compatibleModes: readonly VentilatorModeId[]
+  availability: VentilatorModeAvailability
+  availabilityNote?: string
+}
 export const ventilatorDeviceIds = [
   'hamilton-c6',
   'drager-evita-v800-v600',
@@ -37,8 +73,8 @@ export interface VentilatorDeviceProfile {
   manualProfile: string
   patientGroup: string
   commitBehavior: ControlCommitBehavior
-  modeLabels: Record<CanonicalVentilationMode, string>
-  modeDescriptions: Record<CanonicalVentilationMode, string>
+  modes: readonly VentilatorModeDescriptor[]
+  features: readonly VentilatorFeatureDescriptor[]
   navigationLabels: Record<VentilatorScreen, string>
   orientationSteps: readonly string[]
   deferredModes: readonly string[]
@@ -47,7 +83,28 @@ export interface VentilatorDeviceProfile {
   educationalUseOnly: true
 }
 
+export interface AdvancedVentilationSettings {
+  targetVtMl: number
+  spontaneousPressureSupportCmH2O: number
+  spontaneousRampMs: number
+  spontaneousCyclePercent: number
+  pHighCmH2O: number
+  pLowCmH2O: number
+  tHighSeconds: number
+  tLowSeconds: number
+  proportionalSupportPercent: number
+  minuteVolumePercent: number
+  targetSpO2LowPercent: number
+  targetPetCO2MmHg: number
+  automaticVentilationController: boolean
+  automaticOxygenationController: boolean
+  autoFlowEnabled: boolean
+  intelliSyncEnabled: boolean
+}
+
 export interface MechanicalVentilationCommonSettings {
+  deviceMode: VentilatorModeId
+  advanced: AdvancedVentilationSettings
   oxygenPercent: number
   peepCmH2O: number
   trigger: TriggerSetting
@@ -92,7 +149,7 @@ export type MechanicalVentilationSettings =
 export interface MechanicalVentilatorState {
   screen: VentilatorScreen
   settings: MechanicalVentilationSettings
-  pendingMode: CanonicalVentilationMode | null
+  pendingMode: VentilatorModeId | null
   locked: boolean
   frozen: boolean
   alarmAudioEnabled: boolean
@@ -450,6 +507,22 @@ export type VentilatorControlKey =
   | 'trcEnabled'
   | 'trcPercent'
   | 'tubeInnerDiameterMm'
+  | 'targetVtMl'
+  | 'spontaneousPressureSupportCmH2O'
+  | 'spontaneousRampMs'
+  | 'spontaneousCyclePercent'
+  | 'pHighCmH2O'
+  | 'pLowCmH2O'
+  | 'tHighSeconds'
+  | 'tLowSeconds'
+  | 'proportionalSupportPercent'
+  | 'minuteVolumePercent'
+  | 'targetSpO2LowPercent'
+  | 'targetPetCO2MmHg'
+  | 'automaticVentilationController'
+  | 'automaticOxygenationController'
+  | 'autoFlowEnabled'
+  | 'intelliSyncEnabled'
 
 export type VentilationAction =
   | {
@@ -466,7 +539,7 @@ export type VentilationAction =
   | { type: 'SET_CHALLENGE_MODE'; challengeMode: ChallengeMode }
   | { type: 'STEP_BREATH' }
   | { type: 'SET_SCREEN'; screen: VentilatorScreen }
-  | { type: 'SELECT_MODE'; mode: CanonicalVentilationMode }
+  | { type: 'SELECT_MODE'; mode: VentilatorModeId }
   | { type: 'CONFIRM_MODE' }
   | { type: 'SET_CONTROL'; control: VentilatorControlKey; value: number | string | boolean }
   | { type: 'TOGGLE_LOCK' }

@@ -23,8 +23,15 @@ import {
   adaptControlDescriptor,
   canonicalToNativeControlValue,
   getVentilatorDeviceProfile,
+  getVentilatorModeDescriptor,
   nativeToCanonicalControlValue,
 } from '../content'
+import {
+  isAdaptivePressureMode,
+  isAdaptiveSupportMode,
+  isSimvMode,
+  isTwoLevelMode,
+} from '../engine'
 import type {
   VentilatorScreen,
   VentilationAction,
@@ -137,15 +144,20 @@ export function MechanicalVentilatorConsole({
 }: MechanicalVentilatorConsoleProps) {
   const settings = state.ventilator.settings
   const profile = getVentilatorDeviceProfile(state.deviceId)
-  const modeLabels = profile.modeLabels
-  const screenItems = useMemo<readonly { id: VentilatorScreen; label: string }[]>(
-    () =>
-      (['main', 'modes', 'controls', 'alarms', 'graphics', 'tools'] as const).map((id) => ({
-        id,
-        label: profile.navigationLabels[id],
-      })),
-    [profile],
+  const activeMode = getVentilatorModeDescriptor(state.deviceId, settings.deviceMode)
+  const pendingMode = state.ventilator.pendingMode
+    ? getVentilatorModeDescriptor(state.deviceId, state.ventilator.pendingMode)
+    : null
+  const simvActive = isSimvMode(settings.deviceMode)
+  const adaptivePressureActive = isAdaptivePressureMode(settings.deviceMode)
+  const twoLevelActive = isTwoLevelMode(settings.deviceMode)
+  const adaptiveSupportActive = isAdaptiveSupportMode(settings.deviceMode)
+  const activeFeatures = profile.features.filter((feature) =>
+    feature.compatibleModes.includes(settings.deviceMode),
   )
+  const screenItems: readonly { id: VentilatorScreen; label: string }[] = (
+    ['main', 'modes', 'controls', 'alarms', 'graphics', 'tools'] as const
+  ).map((id) => ({ id, label: profile.navigationLabels[id] }))
   const [activeControlKey, setActiveControlKey] = useState<VentilatorControlKey>('peepCmH2O')
   const [pendingControl, setPendingControl] = useState<PendingSetting | null>(null)
   const therapyDisabled = !controlsEnabled || state.ventilator.locked
@@ -221,27 +233,38 @@ export function MechanicalVentilatorConsole({
           maximum: 40,
           step: 1,
         },
-        {
-          key: 'peakFlowLMin',
-          label: 'Peak flow',
-          value: settings.peakFlowLMin,
-          unit: 'L/min',
-          minimum: 10,
-          maximum: 150,
-          step: 5,
-        },
-        {
-          key: 'pausePercent',
-          label: 'Tip pause',
-          value: settings.pausePercent,
-          unit: '%',
-          minimum: 0,
-          maximum: 50,
-          step: 5,
-        },
       )
+      if (!settings.advanced.autoFlowEnabled) {
+        controls.splice(
+          2,
+          0,
+          {
+            key: 'peakFlowLMin',
+            label: 'Peak flow',
+            value: settings.peakFlowLMin,
+            unit: 'L/min',
+            minimum: 10,
+            maximum: 150,
+            step: 5,
+          },
+          {
+            key: 'pausePercent',
+            label: 'Tip pause',
+            value: settings.pausePercent,
+            unit: '%',
+            minimum: 0,
+            maximum: 50,
+            step: 5,
+          },
+        )
+      }
     }
-    if (settings.mode === 'pressure-ac') {
+    if (
+      settings.mode === 'pressure-ac' &&
+      !twoLevelActive &&
+      !adaptiveSupportActive &&
+      !adaptivePressureActive
+    ) {
       controls.splice(
         0,
         0,
@@ -283,7 +306,42 @@ export function MechanicalVentilatorConsole({
         },
       )
     }
-    if (settings.mode === 'pressure-support') {
+    if (adaptivePressureActive && settings.mode === 'pressure-ac') {
+      controls.unshift(
+        {
+          key: 'ratePerMin',
+          label: 'Rate',
+          value: settings.ratePerMin,
+          unit: '/min',
+          minimum: 4,
+          maximum: 40,
+          step: 1,
+        },
+        {
+          key: 'inspiratoryTimeSeconds',
+          label: 'TI',
+          value: settings.inspiratoryTimeSeconds,
+          unit: 's',
+          minimum: 0.2,
+          maximum: 3,
+          step: 0.1,
+        },
+        {
+          key: 'pRampMs',
+          label: 'P-ramp',
+          value: settings.pRampMs,
+          unit: 'ms',
+          minimum: 0,
+          maximum: Math.min(1000, Math.floor((settings.inspiratoryTimeSeconds * 1000) / 3)),
+          step: 10,
+        },
+      )
+    }
+    if (
+      settings.mode === 'pressure-support' &&
+      settings.deviceMode !== 'proportional-assist' &&
+      settings.deviceMode !== 'volume-support'
+    ) {
       controls.splice(
         0,
         0,
@@ -334,6 +392,141 @@ export function MechanicalVentilatorConsole({
         },
       )
     }
+    if (adaptivePressureActive || settings.deviceMode === 'volume-support') {
+      controls.unshift({
+        key: 'targetVtMl',
+        label: 'Target Vt',
+        value: settings.advanced.targetVtMl,
+        unit: 'mL',
+        minimum: 100,
+        maximum: 1000,
+        step: 10,
+      })
+    }
+    if (simvActive) {
+      controls.push(
+        {
+          key: 'spontaneousPressureSupportCmH2O',
+          label: 'Spontaneous PS',
+          value: settings.advanced.spontaneousPressureSupportCmH2O,
+          unit: 'cmH₂O',
+          minimum: 0,
+          maximum: 30,
+          step: 1,
+        },
+        {
+          key: 'spontaneousRampMs',
+          label: 'Spontaneous rise',
+          value: settings.advanced.spontaneousRampMs,
+          unit: 'ms',
+          minimum: 0,
+          maximum: 2000,
+          step: 10,
+        },
+        {
+          key: 'spontaneousCyclePercent',
+          label: 'Spontaneous cycle',
+          value: settings.advanced.spontaneousCyclePercent,
+          unit: '%',
+          minimum: 5,
+          maximum: 80,
+          step: 5,
+        },
+      )
+    }
+    if (twoLevelActive) {
+      controls.unshift(
+        {
+          key: 'pHighCmH2O',
+          label: 'P high',
+          value: settings.advanced.pHighCmH2O,
+          unit: 'cmH₂O',
+          minimum: 5,
+          maximum: 50,
+          step: 1,
+        },
+        {
+          key: 'pLowCmH2O',
+          label: 'P low',
+          value: settings.advanced.pLowCmH2O,
+          unit: 'cmH₂O',
+          minimum: 0,
+          maximum: 20,
+          step: 1,
+        },
+        {
+          key: 'tHighSeconds',
+          label: 'T high',
+          value: settings.advanced.tHighSeconds,
+          unit: 's',
+          minimum: 0.2,
+          maximum: 15,
+          step: 0.1,
+        },
+        {
+          key: 'tLowSeconds',
+          label: 'T low',
+          value: settings.advanced.tLowSeconds,
+          unit: 's',
+          minimum: 0.1,
+          maximum: 3,
+          step: 0.1,
+        },
+        {
+          key: 'spontaneousPressureSupportCmH2O',
+          label: 'Spontaneous PS',
+          value: settings.advanced.spontaneousPressureSupportCmH2O,
+          unit: 'cmH₂O',
+          minimum: 0,
+          maximum: 30,
+          step: 1,
+        },
+      )
+    }
+    if (settings.deviceMode === 'proportional-assist') {
+      controls.unshift({
+        key: 'proportionalSupportPercent',
+        label: 'Proportional support',
+        value: settings.advanced.proportionalSupportPercent,
+        unit: '%',
+        minimum: 5,
+        maximum: 95,
+        step: 5,
+      })
+    }
+    if (adaptiveSupportActive) {
+      controls.unshift({
+        key: 'minuteVolumePercent',
+        label: '%MinVol',
+        value: settings.advanced.minuteVolumePercent,
+        unit: '%',
+        minimum: 25,
+        maximum: 350,
+        step: 5,
+      })
+    }
+    if (settings.deviceMode === 'intellivent-asv') {
+      controls.unshift(
+        {
+          key: 'targetSpO2LowPercent',
+          label: 'Target SpO₂ low',
+          value: settings.advanced.targetSpO2LowPercent,
+          unit: '%',
+          minimum: 85,
+          maximum: 98,
+          step: 1,
+        },
+        {
+          key: 'targetPetCO2MmHg',
+          label: 'Target PetCO₂',
+          value: settings.advanced.targetPetCO2MmHg,
+          unit: 'mm Hg',
+          minimum: 25,
+          maximum: 80,
+          step: 1,
+        },
+      )
+    }
     return controls.map((control) => {
       const descriptor = adaptControlDescriptor(state.deviceId, settings, control)
       const triggerLabel =
@@ -347,7 +540,14 @@ export function MechanicalVentilatorConsole({
         value: canonicalToNativeControlValue(state.deviceId, settings, control.key, control.value),
       }
     })
-  }, [settings, state.deviceId])
+  }, [
+    adaptivePressureActive,
+    adaptiveSupportActive,
+    settings,
+    simvActive,
+    state.deviceId,
+    twoLevelActive,
+  ])
 
   const displayedControls = numericControls.map((control) =>
     pendingControl?.key === control.key && typeof pendingControl.value === 'number'
@@ -459,7 +659,7 @@ export function MechanicalVentilatorConsole({
           <div>
             <span className={styles.consoleModel}>{profile.shortName} TRAINING</span>
             <span>
-              {profile.patientGroup} · {modeLabels[settings.mode]}
+              {profile.patientGroup} · {activeMode.label}
             </span>
           </div>
           <div className={styles.consoleStatus}>
@@ -572,21 +772,25 @@ export function MechanicalVentilatorConsole({
                 <small>Changes apply after confirmation at a breath boundary.</small>
               </div>
               <div className={styles.modeGrid}>
-                {(['volume-ac', 'pressure-ac', 'pressure-support'] as const).map((mode) => (
+                {profile.modes.map((mode) => (
                   <button
-                    key={mode}
+                    key={mode.id}
                     type="button"
                     className={styles.modeCard}
                     data-selected={
-                      state.ventilator.pendingMode === mode ||
-                      (!state.ventilator.pendingMode && settings.mode === mode)
+                      state.ventilator.pendingMode === mode.id ||
+                      (!state.ventilator.pendingMode && settings.deviceMode === mode.id)
                     }
-                    aria-pressed={state.ventilator.pendingMode === mode}
-                    disabled={therapyDisabled}
-                    onClick={() => dispatch({ type: 'SELECT_MODE', mode })}
+                    data-availability={mode.availability}
+                    aria-pressed={state.ventilator.pendingMode === mode.id}
+                    disabled={therapyDisabled || mode.availability !== 'simulated'}
+                    onClick={() => dispatch({ type: 'SELECT_MODE', mode: mode.id })}
                   >
-                    <strong>{modeLabels[mode]}</strong>
-                    <span>{profile.modeDescriptions[mode]}</span>
+                    <strong>{mode.label}</strong>
+                    <span>{mode.description}</span>
+                    {mode.availability !== 'simulated' ? (
+                      <small>{mode.availabilityNote ?? 'Source-listed only'}</small>
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -597,11 +801,14 @@ export function MechanicalVentilatorConsole({
                 onClick={() => dispatch({ type: 'CONFIRM_MODE' })}
               >
                 {state.deviceId === 'carefusion-avea' ? 'MODE ACCEPT ' : 'Confirm '}
-                {state.ventilator.pendingMode ? modeLabels[state.ventilator.pendingMode] : 'mode'}
+                {pendingMode?.label ?? 'mode'}
               </button>
-              <p className={styles.deviceNote}>
-                Not simulated in this shared-core profile: {profile.deferredModes.join(', ')}.
-              </p>
+              {profile.deferredModes.length ? (
+                <p className={styles.deviceNote}>
+                  Additional source-listed modes outside this release:{' '}
+                  {profile.deferredModes.join(', ')}.
+                </p>
+              ) : null}
             </div>
           ) : null}
 
@@ -610,7 +817,7 @@ export function MechanicalVentilatorConsole({
               <div className={styles.screenHeading}>
                 <div>
                   <span>Controls</span>
-                  <h3>{modeLabels[settings.mode]} settings</h3>
+                  <h3>{activeMode.label} settings</h3>
                 </div>
                 <small>Select a tile, then use the physical knob or arrow keys.</small>
               </div>
@@ -652,7 +859,7 @@ export function MechanicalVentilatorConsole({
                     <option value="pressure">Pressure</option>
                   </select>
                 </label>
-                {settings.mode === 'volume-ac' ? (
+                {settings.mode === 'volume-ac' && !settings.advanced.autoFlowEnabled ? (
                   <label>
                     Flow pattern
                     <select
@@ -709,7 +916,91 @@ export function MechanicalVentilatorConsole({
                   />
                   {profile.controlLabels.trcEnabled ?? 'Tube compensation'}
                 </label>
+                {settings.deviceMode === 'intellivent-asv' ? (
+                  <>
+                    <label className={styles.checkField}>
+                      <input
+                        type="checkbox"
+                        checked={settings.advanced.automaticVentilationController}
+                        disabled={therapyDisabled}
+                        onChange={(event) =>
+                          changeDiscreteControl(
+                            'automaticVentilationController',
+                            event.target.checked,
+                            'Ventilation controller',
+                            event.target.checked ? 'Automatic' : 'Manual',
+                          )
+                        }
+                      />
+                      Automatic ventilation controller
+                    </label>
+                    <label className={styles.checkField}>
+                      <input
+                        type="checkbox"
+                        checked={settings.advanced.automaticOxygenationController}
+                        disabled={therapyDisabled}
+                        onChange={(event) =>
+                          changeDiscreteControl(
+                            'automaticOxygenationController',
+                            event.target.checked,
+                            'Oxygenation controller',
+                            event.target.checked ? 'Automatic' : 'Manual',
+                          )
+                        }
+                      />
+                      Automatic PEEP / Oxygen controller
+                    </label>
+                  </>
+                ) : null}
               </div>
+              {activeFeatures.length ? (
+                <section className={styles.modeFeatures} aria-label="Mode features">
+                  <h4>Mode features</h4>
+                  {activeFeatures.map((feature) => {
+                    const enabled =
+                      feature.id === 'autoflow'
+                        ? settings.advanced.autoFlowEnabled
+                        : feature.id === 'intellisync-plus'
+                          ? settings.advanced.intelliSyncEnabled
+                          : false
+                    const controlKey =
+                      feature.id === 'autoflow'
+                        ? ('autoFlowEnabled' as const)
+                        : feature.id === 'intellisync-plus'
+                          ? ('intelliSyncEnabled' as const)
+                          : null
+                    return (
+                      <label
+                        key={feature.id}
+                        className={styles.featureField}
+                        data-availability={feature.availability}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={enabled}
+                          disabled={
+                            therapyDisabled || feature.availability !== 'simulated' || !controlKey
+                          }
+                          onChange={(event) => {
+                            if (!controlKey) return
+                            changeDiscreteControl(
+                              controlKey,
+                              event.target.checked,
+                              feature.label,
+                              event.target.checked ? 'On' : 'Off',
+                            )
+                          }}
+                        />
+                        <span>
+                          <strong>{feature.label}</strong>
+                          <small>{feature.description}</small>
+                          {feature.availabilityNote ? <em>{feature.availabilityNote}</em> : null}
+                        </span>
+                      </label>
+                    )
+                  })}
+                </section>
+              ) : null}
             </div>
           ) : null}
 

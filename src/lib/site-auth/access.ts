@@ -304,6 +304,10 @@ export function resolveSiteModuleId(pathname: string) {
     return 'mechanical-ventilation'
   }
 
+  if (first === 'baxter-crrt') {
+    return 'baxter-crrt'
+  }
+
   if (
     first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||

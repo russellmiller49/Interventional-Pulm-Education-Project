@@ -23,18 +23,29 @@ added to the review set.
 
 ## Independent device review
 
-- [ ] A C6-trained reviewer verifies `(S)CMV`, `PCV+`, `SPONT`, controls, alarms, maneuvers, and the
-      immediate press-and-turn behavior against manual 10197564/00.
-- [ ] An Evita V800/V600-trained reviewer verifies `VC-AC`, `PC-AC`, `SPN-CPAP/PS`, absolute `Pinsp`,
-      `Slope` in seconds, the white-screen layout, and touch-turn-confirm behavior against software 3.1n.
-- [ ] A PB980-trained reviewer verifies `A/C + VC`, `A/C + PC`, `SPONT + PS`, `Rise Time %`, `ESENS`,
-      constant-access controls, and knob confirmation against the applicable operator manual.
-- [ ] An AVEA-trained reviewer verifies `Volume A/C`, `Pressure A/C`, `CPAP/PSV`, rise 1–9, `PSV Cycle`,
-      advanced settings, and Touch-Turn-Touch/Accept against the applicable operator manual.
+- [ ] A C6-trained reviewer verifies `(S)CMV`, `PCV+`, `SPONT`, `SIMV`, `PSIMV+`, `APVcmv`,
+      `APVsimv/SIMV+`, `DuoPAP`, `APRV`, `ASV`, `INTELLiVENT-ASV`, `IntelliSync+`, controls,
+      alarms, maneuvers, and immediate press-and-turn behavior against manuals 10197564/00 and
+      624954/05.
+- [ ] An Evita V800/V600-trained reviewer verifies `VC-AC`, `PC-AC`, `SPN-CPAP/PS`, `VC-SIMV`,
+      `PC-SIMV`, `PC-APRV`, `SPN-CPAP/VS`, `AutoFlow`, absolute `Pinsp`, `Slope` in seconds, the
+      white-screen layout, and touch-turn-confirm behavior against software 3.1n.
+- [ ] A PB980-trained reviewer verifies `A/C + VC`, `A/C + PC`, `SPONT + PS`, `SIMV + VC`,
+      `SIMV + PC`, `A/C + VC+`, `SIMV + VC+`, `BiLevel`, `SPONT + PAV+`, `SPONT + VS`,
+      `Rise Time %`, `ESENS`, constant-access controls, and knob confirmation against the applicable
+      operator manual.
+- [ ] An AVEA-trained reviewer verifies `Volume A/C`, `Pressure A/C`, `CPAP/PSV`, `Volume SIMV`,
+      `Pressure SIMV`, `PRVC A/C`, `PRVC SIMV`, `APRV/BiPhasic`, rise 1–9, `PSV Cycle`, advanced
+      settings, and Touch-Turn-Touch/Accept against the applicable operator manual.
 - [ ] PB980 and AVEA operator manuals are cited, revision-locked, hashed, and reviewed; the supplied
       service manual, brochure, and modes guide remain clearly labeled as incomplete source sets.
-- [ ] Deferred modes—including SIMV, PRVC/VC+, APRV/BiLevel, PAV+, ASV, and other advanced modes—are
-      source-listed but cannot be selected.
+- [ ] TCPL and Volume Guarantee remain visibly source-listed but locked for the adult casebook; they
+      cannot be activated until a separately sourced, modeled, and independently reviewed neonatal
+      test-lung pathway exists.
+- [ ] AutoFlow and IntelliSync+ are presented as adjunct features rather than standalone modes.
+- [ ] Reviewers explicitly acknowledge that adaptive pressure, proportional support, ASV,
+      INTELLiVENT-ASV, AutoFlow, and IntelliSync+ use bounded original educational response adapters
+      rather than proprietary manufacturer algorithms or validated closed-loop control logic.
 - [ ] Every console is an original brand-free CSS/SVG training facsimile with no copied screenshots,
       logos, manufacturer artwork, or endorsement implication.
 
@@ -47,6 +58,8 @@ added to the review set.
       cancellation work with pointer and keyboard input.
 - [ ] Paw, flow, volume, and educator-only Pmus polarity and units are correct.
 - [ ] All 15 baseline phenotypes remain recognizable on all four devices.
+- [ ] Every adult-selectable mode initializes all 15 cases with finite, bounded pressure, tidal volume,
+      rate, waveforms, gas exchange, and hemodynamics.
 - [ ] Immediate waveform effects precede slower gas-exchange, medication, and disease responses.
 - [ ] 1x, 5x, and 30x advancement remain equivalent, waveform samples remain bounded at 600, and the
       development calibration panel is absent from production output.
@@ -81,8 +94,9 @@ added to the review set.
 
 ## Verification
 
-- [ ] Targeted Jest tests pass for profiles, adapters, clamping, pending confirmation, all 60 device-case
-      initializations/paths, reset behavior, migration, analytics, redirect, draft visibility, auth, and search.
+- [ ] Targeted Jest tests pass for profiles, adapters, clamping, pending confirmation, all 60 baseline
+      device-case paths, every adult-selectable mode across all 15 cases, reset behavior, migration,
+      analytics, redirect, preview visibility, auth bypass, and hidden search/navigation behavior.
 - [ ] Full `npm test`, `npm run type-check`, `npm run lint`, `npm run build`, and `git diff --check` pass.
 
 ## Approval record
