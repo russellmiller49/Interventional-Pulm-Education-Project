@@ -1,6 +1,7 @@
 export * from './deviceProfiles'
 export * from './engineFixtureBoundary'
 export * from './pathways'
+export * from './pilotCases'
 export * from './protocolProfiles'
 export * from './provenance'
 export * from './runtimeCaseNormalization'

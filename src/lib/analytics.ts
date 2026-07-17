@@ -36,6 +36,10 @@ export function postSiteAnalytics(payload: SiteAnalyticsPayload, options?: { bea
     return
   }
 
+  if (typeof fetch !== 'function') {
+    return
+  }
+
   void fetch('/api/analytics', {
     body,
     cache: 'no-store',

@@ -84,14 +84,16 @@ const emptyCircuit: CircuitState = Object.freeze({
   },
 })
 
-const emptyDevice: CrrtDeviceState = Object.freeze({
-  deliveryState: 'idle',
-  bloodPumpRunning: false,
-  fluidPumpsRunning: false,
-  patientConnected: false,
-  returnClampClosed: true,
-  adapterStatus: 'not-connected-phase-2',
-})
+function createEmptyDevice(deviceId: CrrtSimulationState['deviceId']): CrrtDeviceState {
+  return {
+    deliveryState: 'idle',
+    bloodPumpRunning: false,
+    fluidPumpsRunning: false,
+    patientConnected: false,
+    returnClampClosed: true,
+    adapterStatus: deviceId === 'prismax-aw8035-2xx' ? 'available-phase-3' : 'deferred',
+  }
+}
 
 const emptyDowntime: Readonly<Record<DowntimeReason, number>> = Object.freeze({
   'not-started': 0,
@@ -285,7 +287,7 @@ export function createInitialCrrtSimulationState(
           reviewStatus: 'pending',
           sourceIds: [],
         },
-    device: { ...emptyDevice },
+    device: createEmptyDevice(deviceId),
     deliveredTherapy: createDeliveredTherapyState(options, deviceId),
     scenario: cloneScenario(options, seed),
     alarms: [],

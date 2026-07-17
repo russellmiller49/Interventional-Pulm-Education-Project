@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import {
+  BAXTER_CRRT_ANALYTICS_MODULE_ID,
+  validateBaxterCrrtAnalyticsEventPayload,
+} from '@/lib/baxter-crrt-analytics'
 import { supabaseServer } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -33,6 +37,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid analytics payload.' }, { status: 400 })
   }
 
+  const event = payload.data
+  let validatedEventPayload = event.eventPayload
+  if (event.moduleId === BAXTER_CRRT_ANALYTICS_MODULE_ID) {
+    const payloadOptionalForSessionLifecycle =
+      event.eventType === 'session_start' ||
+      event.eventType === 'session_heartbeat' ||
+      event.eventType === 'session_end' ||
+      event.eventType === 'module_opened'
+    if (event.eventPayload === undefined && !payloadOptionalForSessionLifecycle) {
+      return NextResponse.json({ error: 'Invalid Baxter CRRT analytics payload.' }, { status: 400 })
+    }
+    if (event.eventPayload !== undefined) {
+      const crrtPayload = validateBaxterCrrtAnalyticsEventPayload(event.eventPayload)
+      if (!crrtPayload.success) {
+        return NextResponse.json(
+          { error: 'Invalid Baxter CRRT analytics payload.' },
+          { status: 400 },
+        )
+      }
+      validatedEventPayload = crrtPayload.data
+    }
+  }
+
   const supabase = await supabaseServer()
   const {
     data: { user },
@@ -44,10 +71,9 @@ export async function POST(request: Request) {
   }
 
   const userId = user.id
-  const event = payload.data
   const now = new Date().toISOString()
   const durationSeconds = event.durationSeconds ?? 0
-  const eventPayload = event.eventPayload ?? {}
+  const eventPayload = validatedEventPayload ?? {}
 
   if (event.eventType === 'session_start') {
     if (!event.sessionId) {

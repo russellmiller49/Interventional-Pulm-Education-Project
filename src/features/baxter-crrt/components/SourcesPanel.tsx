@@ -2,6 +2,7 @@ import { BookOpenCheck, FileWarning, LockKeyhole, ShieldCheck } from 'lucide-rea
 
 import {
   baxterCrrtPublicationStatus,
+  baxterCrrtPilotSourceReferences,
   baxterCrrtReleaseReviews,
   baxterCrrtSourceDocuments,
   baxterCrrtSourceRecords,
@@ -12,6 +13,10 @@ import styles from './baxter-crrt.module.css'
 export function SourcesPanel() {
   const primarySource = baxterCrrtSourceDocuments.find((source) => source.role === 'primary')
   const inactiveSources = baxterCrrtSourceDocuments.filter((source) => source.role !== 'primary')
+  const pilotContextSources = baxterCrrtPilotSourceReferences.filter(
+    (source) =>
+      source.sourceType === 'peer-reviewed' || source.sourceType === 'synthetic-calibration',
+  )
 
   if (!primarySource) {
     throw new Error('Baxter CRRT primary source is not configured.')
@@ -34,11 +39,16 @@ export function SourcesPanel() {
       <div className={styles.scopeBoundary}>
         <FileWarning aria-hidden="true" />
         <div>
-          <strong>No clinical evidence registry or executable clinical claim is active.</strong>
+          <strong>
+            Three synthetic teaching cases are active only inside this authenticated draft.
+          </strong>
           <p>
-            Phase 2 adds review-pending pure calculations and model contracts below this workspace.
-            It does not activate prescriptions, flow ranges, alarms, patient values, dose
-            calculations, troubleshooting, or competency decisions in the learner interface.
+            Phase 4–5 connects the source-mapped PrisMax workflow to deterministic cases, response
+            models, and formative scoring. The published studies provide teaching context only;
+            every exact case value, condition band, threshold, coefficient, score, critical-error
+            rule, and alarm behavior is synthetic and pending clinical and device review. Nothing
+            here is a patient-specific recommendation, clinical target, verified device limit, or
+            competency decision.
           </p>
         </div>
       </div>
@@ -46,7 +56,7 @@ export function SourcesPanel() {
       <dl className={styles.sourceProfile}>
         <div>
           <dt>Evidence class</dt>
-          <dd>Device operator manual</dd>
+          <dd>Device manual + clinical context</dd>
         </div>
         <div>
           <dt>Primary source</dt>
@@ -88,6 +98,37 @@ export function SourcesPanel() {
         ))}
       </div>
 
+      <div className={styles.sourceSubheading}>
+        <span className={styles.kicker}>Phase 4–5 case evidence</span>
+        <h3>Clinical context and synthetic calibration</h3>
+        <p>
+          Context sources support the teaching distinction being explored. They do not validate the
+          pilot&apos;s authored numbers or define success criteria.
+        </p>
+      </div>
+
+      <div className={styles.sourceClaimGrid}>
+        {pilotContextSources.map((source) => (
+          <article key={source.id} className={styles.sourceClaim}>
+            <span>
+              <ShieldCheck aria-hidden="true" /> {source.sourceType.replaceAll('-', ' ')}
+            </span>
+            <h3>{source.sourceTitle}</h3>
+            <p className={styles.sourceIdentity}>{source.documentVersion}</p>
+            <p>
+              <strong>Relevant section:</strong> {source.pageOrSection}
+            </p>
+            <p>{source.claim}</p>
+            <p className={styles.sourceLimitation}>
+              <strong>Boundary:</strong> {source.value}
+            </p>
+            <small>
+              Record {source.id} · review {source.reviewStatus} · {source.implementationLocation}
+            </small>
+          </article>
+        ))}
+      </div>
+
       <details className={styles.inactiveSources}>
         <summary>
           <BookOpenCheck aria-hidden="true" />
@@ -105,7 +146,7 @@ export function SourcesPanel() {
               <p className={styles.sourceLimitation}>
                 <strong>Boundary:</strong> {source.limitation}
               </p>
-              <small>Review {source.reviewStatus} · inactive in Phase 1</small>
+              <small>Review {source.reviewStatus} · inactive in the Phase 4–5 pilot</small>
             </article>
           ))}
         </div>

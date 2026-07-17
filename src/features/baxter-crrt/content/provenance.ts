@@ -113,6 +113,78 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     limitation: sourceLimitation,
     reviewStatus: 'pending',
   },
+  {
+    id: 'DEV-PM-003',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual page 11 · PDF page 12',
+    claim:
+      'The Operations screen separates the flow path, pressure/status measurements, treatment status, and recent message center.',
+    limitation:
+      'Orientation leaves pressure and dose signals blank; Phase 4–5 cases supply only synthetic, pending-review engine signals.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PM-005',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 39–64 · PDF pages 40–65',
+    claim:
+      'The new-patient setup sequence proceeds through Patient, Therapy, Prescription, Sets, Fluids, Prime, Review, and Connect Patient.',
+    limitation:
+      'Orientation verifies interface order only; CRRT-04 connects a synthetic model after the gated sequence and does not select a commercial set or run a real prime.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PM-006',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 65–90 · PDF pages 66–91',
+    claim:
+      'Therapy operation includes flow review, bag and syringe change concepts, and a stop/end workflow.',
+    limitation:
+      'Bag-change execution, return blood, recirculation, and local-policy decisions remain excluded from the Phase 4–5 vertical slice.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PM-007',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 93–100 · PDF pages 94–101',
+    claim:
+      'PrisMax uses an alarm window and priority presentation distinct from the deferred Prismaflex adapter.',
+    limitation:
+      'Generic engine alerts may appear, but exact device alarm names, priorities, thresholds, reactions, and correction steps remain unmapped.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PM-011',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 206–212 · PDF pages 207–213',
+    claim:
+      'The cited source describes distinct CRRT flow paths, including the CVVHD topology used by the pilot interface.',
+    limitation:
+      'The pilot does not establish clinical eligibility, installed-device availability, or any therapy beyond its CVVHD surface.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PM-014',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 252–262 · PDF pages 253–263',
+    claim:
+      'The device layout identifies pumps, pressure sites, detectors, clamp, and four color-and-shape-coded scale positions.',
+    limitation:
+      'The learner surface uses original schematic artwork and does not copy a manual figure, product photograph, or manufacturer logo.',
+    reviewStatus: 'pending',
+  },
 ])
 
 export const baxterCrrtEngineSourceDetails: readonly BaxterCrrtEngineSourceDetail[] = Object.freeze(
@@ -287,4 +359,156 @@ export const baxterCrrtEngineSourceRecords: readonly BaxterCrrtEngineSourceRecor
       reviewStatus: detail.reviewStatus,
     }),
   ),
+)
+
+/**
+ * SourceReference records allowed in the three-case pilot registry. Clinical
+ * publications provide teaching context only. Every exact case value and model
+ * coefficient is attributed to a separate synthetic-calibration record and
+ * remains pending clinical and device review.
+ */
+export const baxterCrrtPilotSourceReferences: readonly SourceReference[] = Object.freeze(
+  [
+    {
+      id: 'DEV-PM-005',
+      claim:
+        'The PrisMax new-patient workflow orders Patient, Therapy, Prescription, Sets, Fluids, Prime, Review, and Connect Patient before treatment operation.',
+      value: 'Device workflow only; no clinical prescription target is supplied.',
+      sourceTitle: "PrisMax Operator's Manual",
+      sourceType: 'device-manual' as const,
+      documentVersion: 'AW8035 Rev B JUN2019 · program 2.XX',
+      pageOrSection: 'Manual pp39–64 · PDF pp40–65',
+      market: 'Market/configuration not established from supplied copy',
+      implementationLocation: 'content/pilotCases.ts',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'MATH-PM-001',
+      claim:
+        'PrisMax describes its CRRT effluent-pump target as the sum of the profile-enabled patient-removal and circuit-fluid flow terms.',
+      value: 'Qeff = Qpfr + Qpbp + Qrep + Qdial + Qsyr + Qmakeup',
+      unit: 'mL/h for every term',
+      sourceTitle: "PrisMax Operator's Manual",
+      sourceType: 'device-manual' as const,
+      documentVersion: 'AW8035 Rev B JUN2019 · program 2.XX',
+      pageOrSection: 'Manual p217 · PDF p218',
+      market: 'Market/configuration not established from supplied copy',
+      implementationLocation: 'engine/clinicalMath.ts and content/pilotCases.ts',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'DOSE-PM-001',
+      claim: 'PrisMax displays an effluent-rate concept normalized by patient body weight.',
+      value: 'DCRRT-eff = Qeff / BW; no clinical target range is supplied by this record.',
+      unit: 'mL/kg/h',
+      sourceTitle: "PrisMax Operator's Manual",
+      sourceType: 'device-manual' as const,
+      documentVersion: 'AW8035 Rev B JUN2019 · program 2.XX',
+      pageOrSection: 'Manual pp219–220 · PDF pp220–221',
+      market: 'Market/configuration not established from supplied copy',
+      implementationLocation: 'engine/clinicalMath.ts and content/pilotCases.ts',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'FLUID-PM-001',
+      claim:
+        'Machine patient-fluid removal excludes external patient inputs and outputs, so it is distinct from whole-patient fluid balance.',
+      value: 'Device distinction only; it does not prescribe a removal rate.',
+      sourceTitle: "PrisMax Operator's Manual",
+      sourceType: 'device-manual' as const,
+      documentVersion: 'AW8035 Rev B JUN2019 · program 2.XX',
+      pageOrSection: 'Manual p219 · PDF p220',
+      market: 'Market/configuration not established from supplied copy',
+      implementationLocation: 'engine/fluidModel.ts and content/pilotCases.ts',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'DEV-PM-009',
+      claim:
+        'Access, filter, and return pressure behavior depends on flow, resistance, and the device operating point rather than a universal normal value.',
+      value: 'Directional model context only; no alarm threshold or clinical normal is supplied.',
+      sourceTitle: "PrisMax Operator's Manual",
+      sourceType: 'device-manual' as const,
+      documentVersion: 'AW8035 Rev B JUN2019 · program 2.XX',
+      pageOrSection: 'Manual pp197–204 · PDF pp198–205',
+      market: 'Market/configuration not established from supplied copy',
+      implementationLocation: 'engine/pressureModel.ts and content/pilotCases.ts',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'DEV-PM-013',
+      claim: 'PrisMax fluid management uses pumps, scales, and measured bag changes.',
+      value: 'No default bag size, stop threshold, or local configuration is inferred.',
+      sourceTitle: "PrisMax Operator's Manual",
+      sourceType: 'device-manual' as const,
+      documentVersion: 'AW8035 Rev B JUN2019 · program 2.XX',
+      pageOrSection: 'Manual pp241–244 · PDF pp242–245',
+      market: 'Market/configuration not established from supplied copy',
+      implementationLocation: 'engine/fluidModel.ts and content/pilotCases.ts',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'RENAL-2009',
+      claim:
+        'The RENAL trial compared weight-normalized CRRT effluent intensities and found no 90-day mortality benefit from the higher-intensity strategy.',
+      value:
+        'Research context for prescribed-versus-delivered and weight-normalized intensity; not a patient-specific target or case success threshold.',
+      sourceTitle: 'Intensity of Continuous Renal-Replacement Therapy in Critically Ill Patients',
+      sourceType: 'peer-reviewed' as const,
+      documentVersion: 'N Engl J Med. 2009;361:1627–1638',
+      pageOrSection: 'DOI 10.1056/NEJMoa0902413',
+      implementationLocation: 'content/pilotCases.ts · CRRT-04',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'WHITE-2024',
+      claim:
+        'Observed whole-patient fluid balance during CRRT included material contributions from net ultrafiltration, residual urine, crystalloid administration, and nutrition.',
+      value:
+        'Observational context for separating machine removal from all patient inputs and outputs; published cohort values are not copied into the synthetic case.',
+      sourceTitle:
+        'Current Fluid Management Practice in Critically Ill Adults on Continuous Renal Replacement Therapy: A Binational, Observational Study',
+      sourceType: 'peer-reviewed' as const,
+      documentVersion: 'Blood Purif. 2024;53:624–633 · PMID 38626729',
+      pageOrSection: 'DOI 10.1159/000538421',
+      implementationLocation: 'content/pilotCases.ts · CRRT-10',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    {
+      id: 'GONEUTRAL-2024',
+      claim:
+        'The GO NEUTRAL randomized trial evaluated hemodynamic-guided fluid-balance neutralization and accounted for multiple fluid inputs and outputs when calculating balance.',
+      value:
+        'Context for reassessing hemodynamic tolerance while adjusting fluid removal; no trial protocol value is used as a simulator recommendation.',
+      sourceTitle:
+        'Fluid balance neutralization secured by hemodynamic monitoring versus protocolized standard of care in patients with acute circulatory failure requiring continuous renal replacement therapy: results of the GO NEUTRAL randomized controlled trial',
+      sourceType: 'peer-reviewed' as const,
+      documentVersion: 'Intensive Care Med. 2024;50:2061–2072 · PMID 39417870',
+      pageOrSection: 'DOI 10.1007/s00134-024-07676-1',
+      implementationLocation: 'content/pilotCases.ts · CRRT-10',
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    },
+    ...(['04', '10', '13'] as const).map((caseNumber) => ({
+      id: `SYNTH-CRRT-${caseNumber}`,
+      claim: `All exact patient values, flow settings, timings, condition bands, resistance values, and model coefficients in CRRT-${caseNumber} are synthetic teaching calibration.`,
+      value:
+        'Not sourced clinical targets, normal values, alarm thresholds, device limits, or patient-specific recommendations.',
+      sourceTitle: 'Baxter CRRT pilot synthetic calibration record',
+      sourceType: 'synthetic-calibration' as const,
+      documentVersion: 'Phase 5 draft.1',
+      pageOrSection: `CRRT-${caseNumber} authored fixture`,
+      implementationLocation: `content/pilotCases.ts · CRRT-${caseNumber}`,
+      reviewer: null,
+      reviewStatus: 'pending' as const,
+    })),
+  ].map((record) => Object.freeze(record)),
 )

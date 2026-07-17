@@ -1,0 +1,23 @@
+{
+  "title": "Predict the route of airflow",
+  "created": "2026-07-16",
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "aspectRatio": "16:9"
+  },
+  "files": {
+    "promptPng": "airflow-route-prompt.png",
+    "revealPng": "airflow-route-reveal.png",
+    "promptSvg": "airflow-route-prompt.svg",
+    "revealSvg": "airflow-route-reveal.svg",
+    "video": "airflow-route-predict-reveal.mp4",
+    "powerpoint": "predict-the-route-of-airflow.pptx"
+  },
+  "source": {
+    "visual": "src/features/tracheostomy/components/AirflowAndCuffLab.tsx",
+    "wording": "src/features/tracheostomy/content/learnContent.ts",
+    "referenceScreenshot": "codex-clipboard-1f83c93e-6123-4019-9d88-ac1a11292b02.png"
+  },
+  "state": "One-way speaking valve with cuff fully deflated"
+}

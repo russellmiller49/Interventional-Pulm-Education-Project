@@ -36,7 +36,14 @@ export const sourceReferenceSchema = z
     value: z.union([finiteNumberSchema, z.string().min(1)]).optional(),
     unit: z.string().min(1).optional(),
     sourceTitle: z.string().min(1),
-    sourceType: z.enum(['device-manual', 'ifu', 'guideline', 'peer-reviewed', 'local-protocol']),
+    sourceType: z.enum([
+      'device-manual',
+      'ifu',
+      'guideline',
+      'peer-reviewed',
+      'local-protocol',
+      'synthetic-calibration',
+    ]),
     documentVersion: z.string().min(1).optional(),
     pageOrSection: z.string().min(1),
     market: z.string().min(1).optional(),
@@ -217,7 +224,7 @@ export const engineModelConfigurationSchema = z
 export const statePathSchema = z
   .string()
   .min(1)
-  .regex(/^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/)
+  .regex(/^(?:simulationTimeSeconds|[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9-]*)+)$/)
 
 export const stateEffectSchema = z.discriminatedUnion('valueType', [
   z
@@ -410,7 +417,15 @@ export const hintSchema = z
 export const causalDebriefSchema = z
   .object({
     summary: z.string().min(1),
+    statedGoalReview: z.string().min(1),
+    predictionReview: z.string().min(1),
+    actionTimelineReview: z.string().min(1),
     causalChain: z.array(z.string().min(1)).min(1),
+    trendReview: z.string().min(1),
+    requiredActionsReview: z.string().min(1),
+    criticalErrorsReview: z.string().min(1),
+    acceptedAlternativesReview: z.string().min(1),
+    machineNavigationPoint: z.string().min(1),
     transferQuestion: z.string().min(1),
     sourceIds: sourceIdListSchema,
     reviewStatus: crrtReviewStatusSchema,
@@ -529,11 +544,39 @@ export function collectCrrtCaseSemanticIssues(definition: SemanticCase): string[
     ) {
       issues.push('A Phase 2 engine fixture must be compatible only with the PrisMax profile')
     }
-    if (
-      definition.initialDeviceOverrides !== undefined &&
-      Object.keys(definition.initialDeviceOverrides).length > 0
-    ) {
-      issues.push('Initial device overrides cannot be normalized before the Phase 3 device adapter')
+    const deviceOverrides = definition.initialDeviceOverrides
+    if (deviceOverrides) {
+      if (
+        deviceOverrides.activeAlarmIds !== undefined &&
+        deviceOverrides.activeAlarmIds.length > 0
+      ) {
+        issues.push(
+          'Initial device alarm IDs remain disabled until device alarm mapping is reviewed',
+        )
+      }
+      if (
+        deviceOverrides.workflowPhase === 'operations' &&
+        deviceOverrides.treatmentState !== 'running' &&
+        deviceOverrides.treatmentState !== 'paused'
+      ) {
+        issues.push('An Operations start requires an explicit running or paused treatment state')
+      }
+      if (
+        deviceOverrides.treatmentState === 'running' &&
+        (deviceOverrides.connectedToPatient !== true || deviceOverrides.pumpsPaused !== false)
+      ) {
+        issues.push(
+          'A running case start requires a simulated connection and explicitly unpaused pumps',
+        )
+      }
+      if (
+        (deviceOverrides.workflowPhase === 'new-patient' ||
+          deviceOverrides.workflowPhase === 'setup') &&
+        deviceOverrides.treatmentState !== undefined &&
+        deviceOverrides.treatmentState !== 'not-started'
+      ) {
+        issues.push('A new-patient or setup start must use the not-started treatment state')
+      }
     }
     if (definition.initialPatient.solutes.advanced.length > 0) {
       issues.push('Advanced solutes cannot be normalized by the Phase 2 engine')

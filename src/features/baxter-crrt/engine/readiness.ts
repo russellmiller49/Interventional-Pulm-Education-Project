@@ -12,6 +12,7 @@ export interface EngineReadiness {
 export function evaluateEngineReadiness(state: CrrtSimulationState): EngineReadiness {
   const missing: string[] = []
   if (state.deviceId !== 'prismax-aw8035-2xx') missing.push('implemented device adapter')
+  if (state.device.adapterStatus !== 'available-phase-3') missing.push('available device adapter')
   if (state.scenario.status !== 'loaded') missing.push('authored fixture')
   if (state.patient.status !== 'configured') missing.push('simulated patient state')
   if (state.access.status !== 'configured') missing.push('access model')

@@ -4,7 +4,7 @@ import { selectEngineReadiness, selectNextScheduledEvent } from '../selectors'
 import type { ConfiguredPrescriptionState, CrrtScheduledEventDefinition } from '../types'
 import { createSyntheticFixture } from '../testSupport/syntheticFixture'
 
-describe('CRRT Phase 2 reducer and initial state', () => {
+describe('CRRT shared reducer and initial state', () => {
   it('starts unconfigured, idle, protocol-disabled, and without clinical values', () => {
     const state = createInitialCrrtSimulationState()
     expect(state).toMatchObject({
@@ -16,7 +16,7 @@ describe('CRRT Phase 2 reducer and initial state', () => {
       patient: { status: 'unconfigured', synthetic: true },
       access: { status: 'unconfigured' },
       prescription: { status: 'unconfigured', modality: null },
-      device: { deliveryState: 'idle', adapterStatus: 'not-connected-phase-2' },
+      device: { deliveryState: 'idle', adapterStatus: 'available-phase-3' },
       circuit: { citrate: { status: 'disabled-pending-local-protocol' } },
     })
     expect(state.trends).toEqual([])

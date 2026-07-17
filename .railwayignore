@@ -40,6 +40,8 @@ Imports
 tmp-*.bin
 
 # Remote module payloads are uploaded to Supabase Storage and served through rewrites.
+public/airway-anatomy
+public/airway-stent-mechanics
 public/bronch-navigation-trainer/app/cases
 public/fluoroview/cases
 # Keep remote model payloads out of the upload, but retain the rigid-bronchoscopy

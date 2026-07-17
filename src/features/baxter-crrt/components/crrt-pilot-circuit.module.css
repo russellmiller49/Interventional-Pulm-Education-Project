@@ -1,0 +1,580 @@
+.panel {
+  --circuit-ink: #ecf8fb;
+  --circuit-muted: #a8c1c8;
+  --circuit-line: rgba(159, 205, 214, 0.24);
+  --circuit-panel: #0b252c;
+  --circuit-panel-strong: #071a20;
+  --blood: #e85e73;
+  --blood-dark: #9f3d50;
+  --dialysate: #53d18f;
+  --effluent: #f2c84b;
+  color: var(--circuit-ink);
+  border: 1px solid var(--circuit-line);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(13, 43, 50, 0.98), rgba(6, 25, 30, 0.98));
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.25);
+  padding: clamp(0.9rem, 2vw, 1.5rem);
+}
+
+.panel *,
+.panel *::before,
+.panel *::after {
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.header h2,
+.subheading h3 {
+  margin: 0.2rem 0 0;
+  line-height: 1.15;
+}
+
+.header h2 {
+  font-size: clamp(1.2rem, 2.3vw, 1.85rem);
+}
+
+.eyebrow,
+.subheading > span {
+  display: block;
+  color: #75dce3;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.runStatus {
+  display: inline-flex;
+  min-height: 44px;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: #dce8eb;
+  background: #27393e;
+  white-space: nowrap;
+}
+
+.runStatus > span {
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.runStatus[data-running='true'] {
+  color: #071d15;
+  border-color: #82e2a9;
+  background: #82e2a9;
+}
+
+.runStatus[data-running='true'] > span {
+  background: currentColor;
+}
+
+.readinessGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.8rem;
+}
+
+.readinessGrid > div,
+.pressureGrid > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+  padding: 0.72rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 12px;
+  background: rgba(18, 56, 65, 0.8);
+}
+
+.readinessGrid > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.readinessGrid span,
+.pressureGrid span {
+  color: var(--circuit-muted);
+  font-size: 0.72rem;
+}
+
+.readinessGrid strong,
+.pressureGrid strong {
+  overflow-wrap: normal;
+  word-break: normal;
+  font-size: 0.92rem;
+}
+
+.readinessGrid small,
+.pressureGrid small {
+  color: var(--circuit-muted);
+  font-size: 0.67rem;
+}
+
+.readinessGrid [data-ready='true'] {
+  border-color: rgba(114, 222, 159, 0.55);
+  background: rgba(38, 112, 72, 0.34);
+}
+
+.readinessGrid [data-ready='false'] {
+  border-color: rgba(241, 193, 83, 0.45);
+  background: rgba(104, 75, 18, 0.28);
+}
+
+.textSummary {
+  margin: 0 0 0.8rem;
+  padding: 0.8rem 0.95rem;
+  color: #cfe2e6;
+  border-left: 4px solid #75dce3;
+  background: rgba(8, 28, 34, 0.76);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.diagramViewport {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--circuit-line);
+  border-radius: 18px;
+  background:
+    linear-gradient(rgba(108, 169, 179, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 169, 179, 0.06) 1px, transparent 1px), #061a20;
+  background-size: 24px 24px;
+  scrollbar-color: #31535b #061a20;
+}
+
+.diagramViewport:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.circuitSvg {
+  display: block;
+  width: 100%;
+  min-width: 1040px;
+  height: auto;
+  min-height: 430px;
+}
+
+.circuitSvg text {
+  fill: #c7dce0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.backdrop {
+  fill: rgba(7, 28, 34, 0.72);
+  stroke: rgba(117, 220, 227, 0.2);
+  stroke-width: 2;
+}
+
+.sectionLabel {
+  fill: #75dce3 !important;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.patientNode {
+  fill: #173a43;
+  stroke: #75dce3;
+  stroke-width: 3;
+}
+
+.patientGlyph {
+  fill: #e85e73;
+  stroke: #ffc1cb;
+  stroke-width: 2;
+}
+
+.tube,
+.fluidLine {
+  fill: none;
+  stroke-width: 16;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.accessTube {
+  stroke: #9f3d50;
+}
+
+.preFilterTube,
+.returnTube {
+  stroke: #be4a60;
+}
+
+.dialysateLine {
+  stroke: #226d4a;
+}
+
+.effluentLine {
+  stroke: #8b7424;
+}
+
+.flowTrace {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 10 11;
+}
+
+.accessFlow,
+.preFilterFlow,
+.returnFlow {
+  stroke: #ff91a2;
+}
+
+.dialysateFlow {
+  stroke: #7cf0ad;
+}
+
+.effluentFlow {
+  stroke: #ffe477;
+}
+
+.circuitSvg[data-running='true'] .flowTrace {
+  animation: crrt-flow 1.05s linear infinite;
+}
+
+.circuitSvg[data-running='true'] .pumpRotor {
+  animation: crrt-pump 1.4s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.bloodArrow {
+  fill: #ff91a2;
+}
+
+.fluidArrow {
+  fill: #7cf0ad;
+}
+
+.effluentArrow {
+  fill: #ffe477;
+}
+
+.componentLabel,
+.pathLabel,
+.bagLabel {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.componentSubLabel {
+  fill: #91afb6 !important;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.pathLabel {
+  fill: #ffb4bf !important;
+}
+
+.pumpBody {
+  fill: #112d35;
+  stroke: #8faab0;
+  stroke-width: 4;
+}
+
+.pumpRing {
+  fill: #173e48;
+  stroke: #75dce3;
+  stroke-width: 2;
+}
+
+.pumpRotor {
+  fill: #ca4f64;
+  stroke: #ff9aaa;
+  stroke-width: 2;
+}
+
+.pumpHub {
+  fill: #ecf8fb;
+}
+
+.pressureSite circle {
+  fill: #143841;
+  stroke: #75dce3;
+  stroke-width: 4;
+}
+
+.pressureSite text {
+  fill: #aeeaf0 !important;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.filterBody {
+  fill: rgba(36, 75, 83, 0.92);
+  stroke: #9ac7cf;
+  stroke-width: 4;
+}
+
+.filterFiber {
+  stroke: #a8cbd1;
+  stroke-width: 4;
+  opacity: 0.55;
+}
+
+.filterBloodPath {
+  stroke: #ef7186;
+  stroke-width: 14;
+}
+
+.filterFluidPath {
+  stroke: #75d8aa;
+  stroke-width: 6;
+  stroke-dasharray: 8 8;
+}
+
+.deaerationBody {
+  fill: #173a43;
+  stroke: #9ac7cf;
+  stroke-width: 4;
+}
+
+.deaerationPath {
+  fill: none;
+  stroke: #f77a8f;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.airBubble {
+  fill: #9be8ed;
+  stroke: #e8ffff;
+  stroke-width: 2;
+}
+
+.detectorBody {
+  fill: #102f37;
+  stroke: #9ac7cf;
+  stroke-width: 3;
+}
+
+.detectorLens {
+  fill: #75dce3;
+}
+
+.bloodLeakLens {
+  fill: #f2c84b;
+  stroke: #fff2ac;
+  stroke-width: 2;
+}
+
+.clampBody {
+  fill: #253c42;
+  stroke: #d0e1e4;
+  stroke-width: 3;
+}
+
+.dialysateBag {
+  fill: rgba(40, 133, 84, 0.76);
+  stroke: #7cf0ad;
+  stroke-width: 3;
+}
+
+.effluentBag {
+  fill: rgba(136, 112, 31, 0.8);
+  stroke: #ffe477;
+  stroke-width: 3;
+}
+
+.bagPort {
+  fill: #c2d9dd;
+}
+
+.bagLabel {
+  fill: #fff !important;
+}
+
+.motionStatus {
+  fill: #b9d0d5 !important;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.panHint {
+  margin: 0.45rem 0 0;
+  color: var(--circuit-muted);
+  font-size: 0.74rem;
+}
+
+.dataGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.pressurePanel,
+.scalePanel {
+  padding: 0.9rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 16px;
+  background: rgba(7, 27, 33, 0.78);
+}
+
+.subheading {
+  margin-bottom: 0.7rem;
+}
+
+.subheading h3 {
+  font-size: 1rem;
+}
+
+.pressureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.scaleGrid {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.scaleGrid > div {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 58px;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--circuit-line);
+  border-radius: 12px;
+  background: rgba(18, 56, 65, 0.65);
+}
+
+.scaleGrid > div[data-active='false'] {
+  background: rgba(31, 42, 45, 0.72);
+}
+
+.scaleGrid span {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.scaleGrid small {
+  color: var(--circuit-muted);
+  font-size: 0.66rem;
+}
+
+.scaleGrid em {
+  color: #9be8b8;
+  font-size: 0.65rem;
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.scaleGrid [data-active='false'] em {
+  color: #c7d2d4;
+}
+
+.scaleMarker {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: auto;
+}
+
+.scaleMarker[data-scale='effluent'] {
+  border-radius: 999px;
+  background: #f2c84b;
+}
+
+.scaleMarker[data-scale='pbp'] {
+  background: #fff;
+  clip-path: polygon(50% 4%, 96% 92%, 4% 92%);
+}
+
+.scaleMarker[data-scale='dialysate'] {
+  background: #53d18f;
+}
+
+.scaleMarker[data-scale='replacement'] {
+  background: #9d65d6;
+  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+}
+
+@keyframes crrt-flow {
+  to {
+    stroke-dashoffset: -42;
+  }
+}
+
+@keyframes crrt-pump {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1050px) {
+  .readinessGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dataGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .readinessGrid,
+  .pressureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .circuitSvg {
+    min-width: 1040px;
+  }
+
+  .scaleGrid > div {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .scaleGrid em {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
+@media (max-width: 420px) {
+  .readinessGrid,
+  .pressureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .circuitSvg[data-running='true'] .flowTrace,
+  .circuitSvg[data-running='true'] .pumpRotor {
+    animation: none !important;
+  }
+}

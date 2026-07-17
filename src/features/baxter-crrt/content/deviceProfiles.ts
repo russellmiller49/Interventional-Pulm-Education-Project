@@ -12,20 +12,23 @@ export interface BaxterCrrtDraftDeviceProfile {
   readonly manualRevision: string
   readonly sourceProgramFamily: string
   readonly marketConfiguration: string
-  readonly availability: 'orientation-scaffold' | 'deferred'
+  readonly availability: 'orientation-scaffold' | 'pilot-interface' | 'deferred'
   readonly enabledTherapies: readonly string[]
   readonly enabledSetsAndAccessories: readonly string[]
   readonly pumpAndScaleInventory: Readonly<{
-    status: 'pending-local-configuration' | 'deferred'
+    status: 'pending-local-configuration' | 'source-mapped-pilot-surface' | 'deferred'
     items: readonly string[]
   }>
   readonly flowRateRanges: Readonly<{
     status: 'pending-set-and-configuration-review' | 'deferred'
     ranges: readonly string[]
   }>
-  readonly setupSequenceStatus: 'phase-3-not-implemented' | 'deferred'
+  readonly setupSequenceStatus: 'phase-3-not-implemented' | 'phase-3-pilot-interface' | 'deferred'
   readonly screenVocabulary: readonly string[]
-  readonly alarmBehaviorStatus: 'pending-device-adapter' | 'deferred'
+  readonly alarmBehaviorStatus:
+    | 'pending-device-adapter'
+    | 'phase-3-window-pending-mapping'
+    | 'deferred'
   readonly pressureCalculationSourceIds: readonly string[]
   readonly fluidCalculationSourceIds: readonly string[]
   readonly unresolvedFormulaGates: readonly ('CONFLICT-001' | 'CONFLICT-002')[]
@@ -51,27 +54,48 @@ export const baxterCrrtReleaseReviews = Object.freeze([
 
 export const prismaxDraftDeviceProfile: Readonly<BaxterCrrtDraftDeviceProfile> = Object.freeze({
   id: 'prismax-aw8035-2xx',
-  profileVersion: 'prismax-aw8035-rb-2xx-draft.1',
+  profileVersion: 'prismax-aw8035-rb-2xx-draft.2',
   displayName: 'PrisMax educational profile',
   manufacturerDisclosure: 'Baxter',
   manualNumber: 'AW8035',
   manualRevision: 'Rev B · JUN2019',
   sourceProgramFamily: 'Manual for program 2.XX',
   marketConfiguration: 'Not established from supplied copy',
-  availability: 'orientation-scaffold',
-  enabledTherapies: Object.freeze([]),
+  availability: 'pilot-interface',
+  enabledTherapies: Object.freeze(['CVVHD pilot interface (configuration review pending)']),
   enabledSetsAndAccessories: Object.freeze([]),
   pumpAndScaleInventory: Object.freeze({
-    status: 'pending-local-configuration',
-    items: Object.freeze([]),
+    status: 'source-mapped-pilot-surface',
+    items: Object.freeze([
+      'Blood pump',
+      'PBP pump (inactive in pilot)',
+      'Dialysate/replacement 2 pump',
+      'Replacement pump (inactive in pilot)',
+      'Syringe pump (inactive in pilot)',
+      'Effluent pump',
+      'Effluent, PBP, dialysate, and replacement scale positions',
+    ]),
   }),
   flowRateRanges: Object.freeze({
     status: 'pending-set-and-configuration-review',
     ranges: Object.freeze([]),
   }),
-  setupSequenceStatus: 'phase-3-not-implemented',
-  screenVocabulary: Object.freeze(['Procedure', 'Operations']),
-  alarmBehaviorStatus: 'pending-device-adapter',
+  setupSequenceStatus: 'phase-3-pilot-interface',
+  screenVocabulary: Object.freeze([
+    'Start',
+    'Procedure',
+    'Patient',
+    'Therapy',
+    'Prescription',
+    'Sets',
+    'Fluids',
+    'Prime',
+    'Review',
+    'Connect Patient',
+    'Operations',
+    'Alarm window',
+  ]),
+  alarmBehaviorStatus: 'phase-3-window-pending-mapping',
   pressureCalculationSourceIds: Object.freeze(['DEV-PM-009', 'DEV-PM-010', 'MATH-PM-002']),
   fluidCalculationSourceIds: Object.freeze([
     'MATH-PM-001',
@@ -85,13 +109,28 @@ export const prismaxDraftDeviceProfile: Readonly<BaxterCrrtDraftDeviceProfile> =
   unresolvedFormulaGates: Object.freeze(['CONFLICT-001', 'CONFLICT-002'] as const),
   deviceReviewStatus: 'pending',
   clinicalReviewStatus: 'pending',
-  sourceRecordIds: Object.freeze(['DEV-PM-001', 'DEV-PM-002']),
+  sourceRecordIds: Object.freeze([
+    'DEV-PM-001',
+    'DEV-PM-002',
+    'DEV-PM-003',
+    'DEV-PM-005',
+    'DEV-PM-006',
+    'DEV-PM-007',
+    'DEV-PM-009',
+    'DEV-PM-010',
+    'DEV-PM-011',
+    'DEV-PM-013',
+    'DEV-PM-014',
+  ]),
   excludedSurfaceGroups: Object.freeze([
-    'Clinical prescription controls',
-    'Alarm response and troubleshooting',
+    'Set-specific flow ranges, increments, compatibility, and solution selection',
+    'Exact alarm names, priorities, thresholds, and automatic reactions',
     'Administrator and service configuration',
     'Citrate and calcium dosing',
-    'Set, solution, accessory, and Auto Effluent selection',
+    'Return-blood and recirculation decisions',
+    'All patient cases, targets, scoring, hints, and debriefs',
+    'Therapies beyond the CVVHD pilot surface',
+    'Auto Effluent and optional regional features',
   ]),
 })
 

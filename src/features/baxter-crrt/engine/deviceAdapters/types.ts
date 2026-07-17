@@ -46,8 +46,8 @@ export interface DeviceDisplayModel {
 }
 
 /**
- * Phase 2 contract only. Concrete PrisMax and Prismaflex implementations are
- * intentionally deferred to their separately approved phases.
+ * Shared device contract. Phase 3 supplies the review-pending PrisMax pilot
+ * implementation; Prismaflex remains deferred to its separately approved phase.
  */
 export interface CrrtDeviceAdapter {
   readonly id: BaxterCrrtDeviceId

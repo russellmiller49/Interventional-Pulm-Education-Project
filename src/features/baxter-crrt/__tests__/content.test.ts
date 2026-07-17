@@ -12,15 +12,20 @@ import {
   sourceReferenceSchema,
 } from '../content'
 
-describe('Baxter CRRT Phase 1 and 2 content boundaries', () => {
-  it('keeps the initial profile immutable, draft-only, and clinically inactive', () => {
+describe('Baxter CRRT Phase 1 through 3 content boundaries', () => {
+  it('keeps the pilot profile immutable, draft-only, and clinically bounded', () => {
     expect(baxterCrrtPublicationStatus).toBe('draft')
     expect(initialBaxterCrrtDeviceId).toBe('prismax-aw8035-2xx')
     expect(Object.isFrozen(prismaxDraftDeviceProfile)).toBe(true)
     expect(Object.isFrozen(prismaxDraftDeviceProfile.enabledTherapies)).toBe(true)
     expect(Object.isFrozen(prismaxDraftDeviceProfile.pumpAndScaleInventory)).toBe(true)
-    expect(prismaxDraftDeviceProfile.enabledTherapies).toEqual([])
+    expect(prismaxDraftDeviceProfile.availability).toBe('pilot-interface')
+    expect(prismaxDraftDeviceProfile.enabledTherapies).toEqual([
+      'CVVHD pilot interface (configuration review pending)',
+    ])
     expect(prismaxDraftDeviceProfile.enabledSetsAndAccessories).toEqual([])
+    expect(prismaxDraftDeviceProfile.flowRateRanges.ranges).toEqual([])
+    expect(prismaxDraftDeviceProfile.alarmBehaviorStatus).toBe('phase-3-window-pending-mapping')
     expect(prismaxDraftDeviceProfile.deviceReviewStatus).toBe('pending')
     expect(prismaxDraftDeviceProfile.marketConfiguration).toMatch(/not established/i)
   })
@@ -33,7 +38,10 @@ describe('Baxter CRRT Phase 1 and 2 content boundaries', () => {
   })
 
   it('resolves profile source IDs and keeps supporting sources inactive', () => {
-    const recordIds = new Set(baxterCrrtSourceRecords.map((record) => record.id))
+    const recordIds = new Set([
+      ...baxterCrrtSourceRecords.map((record) => record.id),
+      ...baxterCrrtEngineSourceRecords.map((record) => record.id),
+    ])
     for (const sourceRecordId of prismaxDraftDeviceProfile.sourceRecordIds) {
       expect(recordIds.has(sourceRecordId)).toBe(true)
     }

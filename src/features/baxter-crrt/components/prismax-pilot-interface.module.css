@@ -1,0 +1,1010 @@
+.interfaceFrame {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.controlFieldset {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.predictionLock {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.8rem;
+  border: 1px solid rgba(240, 168, 62, 0.55);
+  border-radius: 0.8rem;
+  color: #f7e5c9;
+  background: rgba(86, 56, 20, 0.72);
+}
+
+.predictionLock > svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+  color: #f5bb65;
+}
+
+.predictionLock span,
+.predictionLock strong {
+  display: block;
+}
+
+.predictionLock span {
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.controlFieldset:disabled .consoleShell {
+  filter: saturate(0.72);
+  opacity: 0.78;
+}
+
+.consoleShell {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(190, 220, 218, 0.34);
+  border-radius: 1.3rem;
+  color: #102a2e;
+  background: linear-gradient(155deg, #d9e1df, #aebdbb 52%, #879896);
+  box-shadow:
+    0 1.5rem 3.5rem rgba(0, 0, 0, 0.3),
+    inset 0 1px rgba(255, 255, 255, 0.75);
+}
+
+.consoleTop,
+.consoleFooter {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  color: #17383c;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.consoleTop {
+  min-height: 2.4rem;
+  padding: 0.25rem 0.45rem 0.65rem;
+}
+
+.consoleTop > div,
+.consoleTop > span,
+.consoleFooter > span {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.consoleTop svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.consoleTop > span::before {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #d68c24;
+  box-shadow: 0 0 0 0.25rem rgba(214, 140, 36, 0.18);
+  content: '';
+}
+
+.consoleTop > span[data-state='running']::before {
+  background: #1eac77;
+  box-shadow: 0 0 0 0.25rem rgba(30, 172, 119, 0.2);
+}
+
+.consoleTop > span[data-state='ended']::before {
+  background: #bf443b;
+  box-shadow: 0 0 0 0.25rem rgba(191, 68, 59, 0.18);
+}
+
+.touchscreen {
+  position: relative;
+  min-height: 35rem;
+  overflow: hidden;
+  border: 0.42rem solid #22373a;
+  border-radius: 0.75rem;
+  background: #e7f0ed;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    inset 0 0.6rem 1.6rem rgba(31, 63, 66, 0.1);
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 3.1rem;
+  border-bottom: 1px solid #9cadab;
+  color: #536c6d;
+  background: #f5f9f7;
+}
+
+.toolbar > span {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.15rem 0.4rem;
+  place-content: center;
+  min-width: 0;
+  border-right: 1px solid #c3cecc;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.toolbar > span:last-child {
+  border-right: 0;
+}
+
+.toolbar svg {
+  grid-row: 1 / 3;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.toolbar small {
+  color: #7b8d8d;
+  font-size: 0.57rem;
+  font-weight: 650;
+}
+
+.startScreen {
+  display: grid;
+  align-content: center;
+  min-height: 30.8rem;
+  padding: clamp(1.1rem, 4vw, 3rem);
+  text-align: center;
+}
+
+.startScreen > div:first-child {
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+.startScreen > div:first-child > span,
+.screenCopy > span,
+.readyCard > div > span,
+.operationsHeader > div > span,
+.alarmWindow > div > span,
+.messageCenter span,
+.stopDialog > div > span {
+  color: #197d76;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.startScreen h3 {
+  margin: 0.5rem 0 0;
+  font-size: clamp(1.5rem, 3vw, 2.45rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.startScreen p,
+.screenCopy p,
+.readyCard p,
+.stopDialog p {
+  margin: 0.65rem 0 0;
+  color: #4a6364;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.startChoices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 12rem));
+  gap: 0.8rem;
+  justify-content: center;
+  margin-top: 1.8rem;
+}
+
+.startChoices button,
+.choiceCard {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 6rem;
+  padding: 1rem;
+  border: 1px solid #7f9998;
+  border-radius: 0.6rem;
+  color: #17383c;
+  background: linear-gradient(150deg, #fff, #dce8e5);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 0.45rem 1rem rgba(34, 66, 68, 0.12);
+}
+
+.startChoices button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.startChoices button span,
+.choiceCard span {
+  color: #587071;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.startScreen > small {
+  display: block;
+  max-width: 35rem;
+  margin: 1rem auto 0;
+  color: #6d7d7d;
+  font-size: 0.65rem;
+  line-height: 1.5;
+}
+
+.procedureScreen {
+  display: grid;
+  grid-template-columns: 10.5rem minmax(0, 1fr);
+  min-height: 30.8rem;
+}
+
+.stepRail {
+  display: grid;
+  align-content: start;
+  margin: 0;
+  padding: 0.7rem 0;
+  border-right: 1px solid #9baead;
+  background: #d4e0dd;
+  list-style: none;
+}
+
+.stepRail li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 3.4rem;
+  padding: 0.5rem 0.7rem;
+  border-left: 0.22rem solid transparent;
+  color: #637879;
+}
+
+.stepRail li[data-status='current'] {
+  border-left-color: #16887e;
+  color: #123c3e;
+  background: #eef5f2;
+}
+
+.stepRail li[data-status='complete'] {
+  color: #1d6f66;
+}
+
+.stepRail li > span {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.stepRail svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.stepRail strong,
+.stepRail small {
+  display: block;
+}
+
+.stepRail strong {
+  font-size: 0.72rem;
+}
+
+.stepRail small {
+  margin-top: 0.15rem;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.procedureBody {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.procedureCard,
+.prescriptionForm {
+  display: grid;
+  align-content: start;
+  min-height: 100%;
+}
+
+.screenCopy h4,
+.readyCard h4,
+.operationsHeader strong,
+.stopDialog h4 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.25rem, 2.3vw, 1.8rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.choiceCard {
+  width: min(100%, 20rem);
+  margin-top: 1.4rem;
+  border-color: #258c83;
+}
+
+.primaryAction,
+.startAction,
+.stopAction,
+.dialogActions button,
+.resetDock button,
+.alarmWindow button {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #146d66;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #157e75;
+  font-size: 0.77rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.primaryAction {
+  width: fit-content;
+  margin-top: auto;
+}
+
+.primaryAction:disabled,
+.startAction:disabled,
+.alarmWindow button:disabled {
+  color: #697979;
+  border-color: #9dacab;
+  background: #d2ddda;
+  cursor: not-allowed;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1.1rem 0;
+}
+
+.flowField {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #b3c1bf;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.flowField > span:first-child {
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.inputShell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.inputShell input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid #7f9897;
+  border-radius: 0.35rem;
+  color: #143436;
+  background: #fff;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.inputShell input:disabled {
+  background: #e4e9e7;
+}
+
+.inputShell b {
+  color: #587071;
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.flowField small {
+  color: #5f7171;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.pendingNotice {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding: 0.65rem;
+  border: 1px solid #d1a868;
+  border-radius: 0.5rem;
+  color: #75522b;
+  background: #fff3dd;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.pendingNotice svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.procedureCard progress {
+  width: min(100%, 28rem);
+  height: 0.75rem;
+  margin: 1.4rem 0;
+  accent-color: #16887e;
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 1.2rem 0;
+}
+
+.reviewGrid > div {
+  padding: 0.7rem;
+  border: 1px solid #b3c2bf;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.reviewGrid dt,
+.statusList dt {
+  color: #5e7373;
+  font-size: 0.62rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.reviewGrid dd,
+.statusList dd {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.readyCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  align-content: center;
+  min-height: 24rem;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  border: 1px solid #79aaa5;
+  border-radius: 0.7rem;
+  background: linear-gradient(150deg, #eef8f4, #d6ebe6);
+}
+
+.readyCard > svg {
+  width: 2rem;
+  height: 2rem;
+  padding: 0.35rem;
+  border-radius: 50%;
+  color: #fff;
+  background: #16887e;
+}
+
+.startAction {
+  grid-column: 2;
+  width: fit-content;
+  margin-top: 1rem;
+}
+
+.startAction svg,
+.stopAction svg,
+.resetDock svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.operationsScreen {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 11rem;
+  gap: 0.7rem;
+  min-height: 30.8rem;
+  padding: 0.75rem;
+}
+
+.operationsHeader,
+.pumpStrip,
+.messageCenter,
+.alarmWindow {
+  grid-column: 1 / -1;
+}
+
+.alarmWindow[data-active='true'] {
+  border-color: #b74037;
+  background: #fff0ed;
+  box-shadow: inset 0 0 0 2px rgba(183, 64, 55, 0.16);
+}
+
+.operationsHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #9dafad;
+  border-radius: 0.55rem;
+  background: #f7fbf9;
+}
+
+.operationsHeader strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.runState {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  color: #667978;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.runState i {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: #9aacab;
+}
+
+.operationsScreen[data-running='true'] .runState i {
+  background: #13a474;
+  box-shadow: 0 0 0 0.25rem rgba(19, 164, 116, 0.15);
+  animation: pumpPulse 1.6s ease-in-out infinite;
+}
+
+.pumpStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #9eb0ae;
+  border-radius: 0.55rem;
+  background: #d4e2df;
+}
+
+.pumpStrip > div {
+  min-width: 0;
+  padding: 0.55rem;
+  border-right: 1px solid #9eb0ae;
+}
+
+.pumpStrip > div:last-child {
+  border-right: 0;
+}
+
+.pumpStrip span,
+.pumpStrip strong {
+  display: block;
+}
+
+.pumpStrip span {
+  color: #58706f;
+  font-size: 0.57rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.pumpStrip strong {
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.operationsBody {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.operationsBody > section,
+.alarmWindow,
+.messageCenter {
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid #a4b6b4;
+  border-radius: 0.55rem;
+  background: rgba(249, 252, 250, 0.82);
+}
+
+.subscreenHeading {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.subscreenHeading svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: #167c73;
+}
+
+.subscreenHeading h4 {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.pressureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.pressureGrid > div {
+  padding: 0.45rem;
+  border: 1px solid #cad4d1;
+  border-radius: 0.35rem;
+  background: #edf2f0;
+}
+
+.pressureGrid span,
+.pressureGrid strong,
+.pressureGrid small {
+  display: block;
+}
+
+.pressureGrid span {
+  color: #657776;
+  font-size: 0.56rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.pressureGrid strong {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pressureGrid small {
+  margin-top: 0.15rem;
+  color: #7b8a89;
+  font-size: 0.52rem;
+}
+
+.statusList {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
+}
+
+.statusList > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem;
+  border-bottom: 1px solid #cbd5d2;
+}
+
+.statusList dd {
+  text-align: right;
+}
+
+.statusList dd small {
+  display: block;
+  color: #718180;
+  font-size: 0.52rem;
+  font-weight: 600;
+}
+
+.alarmWindow {
+  display: grid;
+  align-content: start;
+  border-color: #d2a45e;
+  background: #fff3dc;
+}
+
+.alarmWindow > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.2rem 0.5rem;
+  align-items: center;
+}
+
+.alarmWindow svg {
+  grid-row: 1 / 3;
+  width: 1.05rem;
+  height: 1.05rem;
+  color: #aa711d;
+}
+
+.alarmWindow p {
+  margin: 0.55rem 0;
+  color: #715b37;
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+.alarmWindow button {
+  justify-self: start;
+  min-height: 38px;
+  font-size: 0.64rem;
+}
+
+.messageCenter {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 3.4rem;
+}
+
+.messageCenter svg {
+  width: 1rem;
+  height: 1rem;
+  color: #197d76;
+}
+
+.messageCenter span,
+.messageCenter strong {
+  display: block;
+}
+
+.messageCenter strong {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+}
+
+.stopAction {
+  position: absolute;
+  right: 1.35rem;
+  bottom: 1.35rem;
+  border-color: #95352e;
+  background: #b74037;
+}
+
+.dialogBackdrop {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(16, 40, 43, 0.62);
+}
+
+.stopDialog {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  width: min(100%, 34rem);
+  padding: 1.1rem;
+  border: 1px solid #8fa3a2;
+  border-radius: 0.7rem;
+  background: #f7fbf9;
+  box-shadow: 0 1.4rem 3rem rgba(7, 30, 32, 0.36);
+}
+
+.stopDialog > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #b74037;
+}
+
+.dialogActions {
+  display: flex;
+  grid-column: 2;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.dialogActions button:first-child {
+  color: #244345;
+  border-color: #8fa2a0;
+  background: #e4ece9;
+}
+
+.dialogActions button:last-child {
+  border-color: #95352e;
+  background: #b74037;
+}
+
+.consoleFooter {
+  min-height: 2.4rem;
+  padding: 0.65rem 0.45rem 0.2rem;
+  font-size: 0.59rem;
+}
+
+.resetDock {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem;
+  border: 1px solid rgba(245, 187, 101, 0.45);
+  border-radius: 0.8rem;
+  color: #f5e3c8;
+  background: rgba(83, 54, 19, 0.62);
+}
+
+.resetDock > div {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.resetDock span,
+.resetDock strong {
+  display: block;
+}
+
+.resetDock span {
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.resetDock button {
+  flex: 0 0 auto;
+  border-color: #d39b48;
+  color: #2a1d0c;
+  background: #f5bb65;
+}
+
+.consoleShell button:focus-visible,
+.consoleShell input:focus-visible,
+.resetDock button:focus-visible {
+  outline: 3px solid #f0a83e;
+  outline-offset: 3px;
+}
+
+@keyframes pumpPulse {
+  50% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 760px) {
+  .procedureScreen {
+    grid-template-columns: 1fr;
+  }
+
+  .stepRail {
+    grid-template-columns: repeat(8, minmax(5.8rem, 1fr));
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #9baead;
+  }
+
+  .stepRail li {
+    border-bottom: 0.22rem solid transparent;
+    border-left: 0;
+  }
+
+  .stepRail li[data-status='current'] {
+    border-bottom-color: #16887e;
+  }
+
+  .fieldGrid,
+  .operationsBody {
+    grid-template-columns: 1fr;
+  }
+
+  .operationsScreen {
+    grid-template-columns: 1fr;
+  }
+
+  .alarmWindow {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .consoleShell {
+    padding: 0.45rem;
+    border-radius: 0.9rem;
+  }
+
+  .consoleTop,
+  .consoleFooter,
+  .operationsHeader,
+  .resetDock {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .touchscreen {
+    min-height: 39rem;
+    border-width: 0.28rem;
+  }
+
+  .toolbar > span {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .toolbar svg {
+    grid-row: auto;
+  }
+
+  .startChoices,
+  .reviewGrid,
+  .pressureGrid,
+  .pumpStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .pumpStrip > div {
+    border-right: 0;
+    border-bottom: 1px solid #9eb0ae;
+  }
+
+  .pumpStrip > div:last-child {
+    border-bottom: 0;
+  }
+
+  .readyCard {
+    grid-template-columns: 1fr;
+  }
+
+  .startAction {
+    grid-column: 1;
+  }
+
+  .stopDialog {
+    grid-template-columns: 1fr;
+  }
+
+  .dialogActions {
+    grid-column: 1;
+  }
+
+  .resetDock button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interfaceFrame *,
+  .interfaceFrame *::before,
+  .interfaceFrame *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}

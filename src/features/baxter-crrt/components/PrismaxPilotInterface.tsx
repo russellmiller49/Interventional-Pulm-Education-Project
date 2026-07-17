@@ -1,0 +1,757 @@
+'use client'
+
+import {
+  AlertTriangle,
+  Check,
+  CircleStop,
+  FileClock,
+  Gauge,
+  HelpCircle,
+  History,
+  LockKeyhole,
+  MonitorCog,
+  Play,
+  Power,
+  RotateCcw,
+  Settings,
+  ShieldAlert,
+} from 'lucide-react'
+import type { Dispatch, FormEvent } from 'react'
+
+import {
+  selectPrismaxPilotInterface,
+  selectPrismaxPilotOperationsDisplay,
+  type PrismaxPilotInterfaceAction,
+  type PrismaxPilotInterfaceState,
+  type PrismaxPilotOperationsDisplay,
+  type PrismaxPrescriptionDraft,
+  type PrismaxSetupStepId,
+} from '../engine/deviceAdapters/prismax'
+import styles from './prismax-pilot-interface.module.css'
+
+export interface PrismaxPilotCaseContext {
+  readonly caseId: string
+  readonly title: string
+  readonly pathway: 'learn' | 'practice'
+}
+
+interface PrismaxPilotInterfaceProps {
+  state: PrismaxPilotInterfaceState
+  dispatch: Dispatch<PrismaxPilotInterfaceAction>
+  controlsEnabled?: boolean
+  operationsDisplay?: PrismaxPilotOperationsDisplay
+  caseContext?: PrismaxPilotCaseContext
+}
+
+const prescriptionFields = [
+  {
+    field: 'bloodFlowMlMin',
+    label: 'Blood flow',
+    unit: 'mL/min',
+    note: 'Enter first. Set-specific minimum and increments are not encoded.',
+  },
+  {
+    field: 'dialysateFlowMlHour',
+    label: 'Dialysate flow',
+    unit: 'mL/h',
+    note: 'Pilot CVVHD control. No device/set range is encoded.',
+  },
+  {
+    field: 'patientFluidRemovalMlHour',
+    label: 'Patient fluid removal',
+    unit: 'mL/h',
+    note: 'Machine setting only; it is not whole-patient balance.',
+  },
+] as const satisfies readonly {
+  field: keyof PrismaxPrescriptionDraft
+  label: string
+  unit: string
+  note: string
+}[]
+
+function formatFlow(value: number | null, unit: string) {
+  return value === null ? '—' : `${value.toLocaleString()} ${unit}`
+}
+
+function formatMetric(value: number | null, unit: string, digits = 1) {
+  return value === null ? '—' : `${value.toFixed(digits)} ${unit}`
+}
+
+function formatStepLabel(stepId: PrismaxSetupStepId) {
+  return stepId === 'connect-patient'
+    ? 'Connect Patient'
+    : stepId.charAt(0).toUpperCase() + stepId.slice(1)
+}
+
+function PrescriptionStep({
+  state,
+  dispatch,
+}: {
+  state: PrismaxPilotInterfaceState
+  dispatch: Dispatch<PrismaxPilotInterfaceAction>
+}) {
+  const view = selectPrismaxPilotInterface(state)
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    dispatch({ type: 'COMMIT_PRESCRIPTION' })
+    dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'prescription' })
+  }
+
+  return (
+    <form className={styles.prescriptionForm} onSubmit={handleSubmit}>
+      <div className={styles.screenCopy}>
+        <span>Step 3 · Prescription</span>
+        <h4>Enter the three pilot controls</h4>
+        <p>
+          These are blank training inputs, not defaults or recommendations. Blood flow is entered
+          first; exact ranges and increments remain disabled pending set/configuration review.
+        </p>
+      </div>
+
+      <div className={styles.fieldGrid}>
+        {prescriptionFields.map(({ field, label, unit, note }, index) => {
+          const disabled = index > 0 && !view.canSetDialysateAndPatientFluidRemoval
+          return (
+            <label key={field} className={styles.flowField}>
+              <span>{label}</span>
+              <span className={styles.inputShell}>
+                <input
+                  aria-describedby={`${field}-note`}
+                  disabled={disabled}
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  type="number"
+                  value={state.prescriptionDraft[field] ?? ''}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_PRESCRIPTION_VALUE',
+                      field,
+                      value: event.target.value === '' ? null : Number(event.target.value),
+                    })
+                  }
+                />
+                <b>{unit}</b>
+              </span>
+              <small id={`${field}-note`}>{disabled ? 'Enter blood flow first.' : note}</small>
+            </label>
+          )
+        })}
+      </div>
+
+      <div className={styles.pendingNotice} role="note">
+        <ShieldAlert aria-hidden="true" />
+        <span>
+          Replacement, PBP, syringe, citrate, solution selection, and set-specific validation are
+          inactive in this pilot.
+        </span>
+      </div>
+
+      <button className={styles.primaryAction} disabled={!view.canCommitPrescription} type="submit">
+        Review and apply pilot values
+      </button>
+    </form>
+  )
+}
+
+function SetupStepContent({
+  state,
+  dispatch,
+  caseContext,
+}: {
+  state: PrismaxPilotInterfaceState
+  dispatch: Dispatch<PrismaxPilotInterfaceAction>
+  caseContext?: PrismaxPilotCaseContext
+}) {
+  const view = selectPrismaxPilotInterface(state)
+  const activeStep = view.activeStep?.id
+
+  if (activeStep === 'patient') {
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 1 · Patient</span>
+          <h4>Confirm a synthetic checkout context</h4>
+          <p>
+            {caseContext
+              ? `${caseContext.caseId} loads synthetic, review-pending physiology without collecting identifiers or patient-entered data.`
+              : 'Orientation does not collect identifiers or load patient physiology.'}
+          </p>
+        </div>
+        <button
+          className={styles.primaryAction}
+          type="button"
+          onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'patient' })}
+        >
+          Confirm case-free context
+        </button>
+      </div>
+    )
+  }
+
+  if (activeStep === 'therapy') {
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 2 · Therapy</span>
+          <h4>Select the pilot workflow</h4>
+          <p>
+            CVVHD is the only active pilot surface. This does not establish availability on a local
+            installed device or suitability for a patient.
+          </p>
+        </div>
+        <button
+          className={styles.choiceCard}
+          type="button"
+          onClick={() => dispatch({ type: 'SELECT_CVVHD' })}
+        >
+          <strong>CVVHD</strong>
+          <span>Diffusive pilot interface · review pending</span>
+        </button>
+        {state.selectedModality === 'cvvhd' ? (
+          <button
+            className={styles.primaryAction}
+            type="button"
+            onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'therapy' })}
+          >
+            Continue with CVVHD pilot
+          </button>
+        ) : null}
+      </div>
+    )
+  }
+
+  if (activeStep === 'prescription') {
+    return <PrescriptionStep state={state} dispatch={dispatch} />
+  }
+
+  if (activeStep === 'sets') {
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 4 · Sets</span>
+          <h4>Verify the training flow path</h4>
+          <p>
+            The original schematic shows the required pilot topology. No commercial set, catalog
+            number, compatibility claim, or disposable-specific range is selected.
+          </p>
+        </div>
+        <button
+          className={styles.primaryAction}
+          type="button"
+          onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'sets' })}
+        >
+          Confirm training set path
+        </button>
+      </div>
+    )
+  }
+
+  if (activeStep === 'fluids') {
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 5 · Fluids</span>
+          <h4>Verify pilot bag positions</h4>
+          <p>
+            Dialysate and effluent positions are active for the CVVHD checkout. PBP and replacement
+            positions remain visible but inactive; no solution composition is encoded.
+          </p>
+        </div>
+        <button
+          className={styles.primaryAction}
+          type="button"
+          onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'fluids' })}
+        >
+          Confirm bag and scale positions
+        </button>
+      </div>
+    )
+  }
+
+  if (activeStep === 'prime') {
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 6 · Prime</span>
+          <h4>Run the educational prime check</h4>
+          <p>
+            This interaction verifies sequence only. It does not simulate a disposable, fluid
+            volume, priming duration, detector response, or real machine action.
+          </p>
+        </div>
+        <progress
+          aria-label="Educational prime progress"
+          max={2}
+          value={state.primeState === 'complete' ? 2 : state.primeState === 'in-progress' ? 1 : 0}
+        />
+        {state.primeState === 'not-started' ? (
+          <button
+            className={styles.primaryAction}
+            type="button"
+            onClick={() => dispatch({ type: 'START_PRIME' })}
+          >
+            Start prime sequence check
+          </button>
+        ) : state.primeState === 'in-progress' ? (
+          <button
+            className={styles.primaryAction}
+            type="button"
+            onClick={() => {
+              dispatch({ type: 'COMPLETE_PRIME' })
+              dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'prime' })
+            }}
+          >
+            Complete prime verification
+          </button>
+        ) : null}
+      </div>
+    )
+  }
+
+  if (activeStep === 'review') {
+    const prescription = state.committedPrescription
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 7 · Review</span>
+          <h4>Confirm the entered pilot values</h4>
+          <p>
+            Values are synthetic learner entries. No target, normal range, or clinical approval is
+            implied.
+          </p>
+        </div>
+        <dl className={styles.reviewGrid}>
+          <div>
+            <dt>Therapy</dt>
+            <dd>CVVHD · pilot surface</dd>
+          </div>
+          <div>
+            <dt>Blood flow</dt>
+            <dd>{formatFlow(prescription?.flows.bloodFlowMlMin ?? null, 'mL/min')}</dd>
+          </div>
+          <div>
+            <dt>Dialysate</dt>
+            <dd>{formatFlow(prescription?.flows.dialysateFlowMlHour ?? null, 'mL/h')}</dd>
+          </div>
+          <div>
+            <dt>Machine PFR</dt>
+            <dd>{formatFlow(prescription?.flows.patientFluidRemovalMlHour ?? null, 'mL/h')}</dd>
+          </div>
+        </dl>
+        <button
+          className={styles.primaryAction}
+          type="button"
+          onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'review' })}
+        >
+          Confirm review
+        </button>
+      </div>
+    )
+  }
+
+  if (activeStep === 'connect-patient') {
+    return (
+      <div className={styles.procedureCard}>
+        <div className={styles.screenCopy}>
+          <span>Step 8 · Connect Patient</span>
+          <h4>Confirm the simulated access and return path</h4>
+          <p>
+            {caseContext
+              ? 'This gate connects only the synthetic case model after the training setup and review sequence is complete.'
+              : 'No patient model is connected in Orientation. This gate confirms only that the case-free interface sequence reached its final setup step.'}
+          </p>
+        </div>
+        <button
+          className={styles.primaryAction}
+          type="button"
+          onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'connect-patient' })}
+        >
+          Confirm simulated line path
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.readyCard}>
+      <Check aria-hidden="true" />
+      <div>
+        <span>All eight setup gates complete</span>
+        <h4>Ready for interface checkout</h4>
+        <p>
+          {caseContext
+            ? 'Starting opens Operations and runs the active synthetic case through the deterministic engine.'
+            : 'Starting opens Operations without loading a patient case or clinical model.'}
+        </p>
+      </div>
+      <button
+        className={styles.startAction}
+        disabled={!view.canStartTreatment}
+        type="button"
+        onClick={() => dispatch({ type: 'START_TREATMENT' })}
+      >
+        <Play aria-hidden="true" /> Start interface run
+      </button>
+    </div>
+  )
+}
+
+function OperationsScreen({
+  state,
+  dispatch,
+  operations,
+  caseContext,
+}: {
+  state: PrismaxPilotInterfaceState
+  dispatch: Dispatch<PrismaxPilotInterfaceAction>
+  operations: PrismaxPilotOperationsDisplay
+  caseContext?: PrismaxPilotCaseContext
+}) {
+  const pressures = [
+    ['Access', operations.pressures.accessPressureMmHg],
+    ['Filter', operations.pressures.filterPressureMmHg],
+    ['Return', operations.pressures.returnPressureMmHg],
+    ['Effluent', operations.pressures.effluentPressureMmHg],
+    ['TMP', operations.pressures.transmembranePressureMmHg],
+    ['ΔP', operations.pressures.filterPressureDropMmHg],
+  ] as const
+  const running = operations.treatmentState === 'running'
+  const ended = operations.treatmentState === 'ended'
+
+  return (
+    <div className={styles.operationsScreen} data-running={running}>
+      <div className={styles.operationsHeader}>
+        <div>
+          <span>
+            Therapy Operations ·{' '}
+            {caseContext ? `${caseContext.caseId} synthetic case` : 'CVVHD pilot'}
+          </span>
+          <strong>
+            {running
+              ? 'Interface run active'
+              : ended
+                ? 'Interface run ended'
+                : 'Therapy paused · pumps stopped'}
+          </strong>
+        </div>
+        <span className={styles.runState}>
+          <i aria-hidden="true" /> {running ? 'Pumps active' : 'Pumps stopped'}
+        </span>
+      </div>
+
+      <div className={styles.pumpStrip} aria-label="Pilot flow displays">
+        <div>
+          <span>BFR</span>
+          <strong>{formatFlow(operations.flows?.bloodFlowMlMin ?? null, 'mL/min')}</strong>
+        </div>
+        <div>
+          <span>Dialysate</span>
+          <strong>{formatFlow(operations.flows?.dialysateFlowMlHour ?? null, 'mL/h')}</strong>
+        </div>
+        <div>
+          <span>PFR</span>
+          <strong>{formatFlow(operations.flows?.patientFluidRemovalMlHour ?? null, 'mL/h')}</strong>
+        </div>
+        <div>
+          <span>Effluent target</span>
+          <strong>{formatFlow(operations.effluentPumpTargetMlHour, 'mL/h')}</strong>
+        </div>
+      </div>
+
+      <div className={styles.operationsBody}>
+        <section aria-labelledby="phase3-pressure-heading">
+          <div className={styles.subscreenHeading}>
+            <Gauge aria-hidden="true" />
+            <h4 id="phase3-pressure-heading">Pressure display</h4>
+          </div>
+          <div className={styles.pressureGrid}>
+            {pressures.map(([label, value]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value === null ? '—' : `${value.toFixed(0)} mmHg`}</strong>
+                <small>{value === null ? 'No case signal' : 'Synthetic engine signal'}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="phase3-dose-heading">
+          <div className={styles.subscreenHeading}>
+            <MonitorCog aria-hidden="true" />
+            <h4 id="phase3-dose-heading">Treatment status</h4>
+          </div>
+          <dl className={styles.statusList}>
+            <div>
+              <dt>Prescribed dose</dt>
+              <dd>
+                {formatMetric(operations.effluentDoseMlKgHour, 'mL/kg/h')}{' '}
+                <small>{caseContext ? 'synthetic case value' : 'case weight required'}</small>
+              </dd>
+            </div>
+            <div>
+              <dt>Delivered dose</dt>
+              <dd>
+                {formatMetric(operations.deliveredDoseMlKgHour, 'mL/kg/h')}{' '}
+                <small>
+                  {caseContext ? 'includes simulated downtime' : 'simulation not running'}
+                </small>
+              </dd>
+            </div>
+            <div>
+              <dt>Machine removal / whole balance</dt>
+              <dd>
+                {formatMetric(operations.cumulativeMachinePatientFluidRemovalMl, 'mL', 0)} /{' '}
+                {formatMetric(operations.cumulativeWholePatientBalanceMl, 'mL', 0)}{' '}
+                <small>{caseContext ? 'distinct model outputs' : 'no elapsed case time'}</small>
+              </dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <section
+        className={styles.alarmWindow}
+        aria-labelledby="phase3-alarm-heading"
+        aria-live={operations.activeAlarmCodes.length > 0 ? 'assertive' : 'polite'}
+        data-active={operations.activeAlarmCodes.length > 0}
+      >
+        <div>
+          <AlertTriangle aria-hidden="true" />
+          <span>Alarm window</span>
+          <strong id="phase3-alarm-heading">
+            {operations.activeAlarmCodes.length > 0
+              ? operations.activeAlarmCodes.join(', ')
+              : 'No active alarms'}
+          </strong>
+        </div>
+        <p>
+          {operations.activeAlarmCodes.length > 0
+            ? 'Generic engine alarm shown. Device-specific name, priority, threshold, and reaction remain pending mapping. Correct the cause; acknowledgement alone does not resolve it.'
+            : 'Exact names, priorities, thresholds, pump/clamp reactions, and correction actions remain pending device mapping. Acknowledgement will never equal cause correction.'}
+        </p>
+        <button disabled type="button">
+          Acknowledge unavailable
+        </button>
+      </section>
+
+      <div className={styles.messageCenter} role="status" aria-live="polite">
+        <FileClock aria-hidden="true" />
+        <div>
+          <span>Most recent interface event</span>
+          <strong>
+            {running
+              ? caseContext
+                ? `${caseContext.caseId} deterministic simulation active`
+                : 'Case-free equipment checkout started'
+              : ended
+                ? 'Interface run ended; reload outside the facsimile'
+                : 'Simulation delivery paused; use the case intervention to resume'}
+          </strong>
+        </div>
+      </div>
+
+      {running ? (
+        <button
+          className={styles.stopAction}
+          type="button"
+          onClick={() => dispatch({ type: 'OPEN_STOP_DIALOG' })}
+        >
+          <CircleStop aria-hidden="true" /> Stop
+        </button>
+      ) : null}
+
+      {state.stopDialogOpen ? (
+        <div className={styles.dialogBackdrop}>
+          <section
+            className={styles.stopDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="phase3-stop-dialog-title"
+          >
+            <CircleStop aria-hidden="true" />
+            <div>
+              <span>Stop interface run</span>
+              <h4 id="phase3-stop-dialog-title">End this equipment checkout?</h4>
+              <p>
+                End is irreversible until a clean reload. Return-blood and recirculation decisions
+                are deliberately not simulated without reviewed policy and case context.
+              </p>
+            </div>
+            <div className={styles.dialogActions}>
+              <button type="button" onClick={() => dispatch({ type: 'CLOSE_STOP_DIALOG' })}>
+                Resume interface
+              </button>
+              <button type="button" onClick={() => dispatch({ type: 'END_TREATMENT' })}>
+                End interface run
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export function PrismaxPilotInterface({
+  state,
+  dispatch,
+  controlsEnabled = true,
+  operationsDisplay,
+  caseContext,
+}: PrismaxPilotInterfaceProps) {
+  const view = selectPrismaxPilotInterface(state)
+  const operations = operationsDisplay ?? selectPrismaxPilotOperationsDisplay(state)
+
+  return (
+    <div className={styles.interfaceFrame}>
+      {!controlsEnabled ? (
+        <div className={styles.predictionLock} role="status">
+          <LockKeyhole aria-hidden="true" />
+          <span>
+            <strong>Prediction commitment required</strong>
+            Complete and commit all five prediction fields to unlock treatment and machine actions.
+          </span>
+        </div>
+      ) : null}
+
+      <fieldset className={styles.controlFieldset} disabled={!controlsEnabled}>
+        <legend className={styles.visuallyHidden}>
+          {controlsEnabled ? 'Educational device controls' : 'Locked educational device controls'}
+        </legend>
+        <section
+          className={styles.consoleShell}
+          aria-label="Original PrisMax functional educational facsimile"
+        >
+          <div className={styles.consoleTop}>
+            <div>
+              <Power aria-hidden="true" />
+              <span>Independent educational interface</span>
+            </div>
+            <span data-state={state.treatmentState}>
+              {state.treatmentState === 'running'
+                ? 'RUNNING'
+                : state.treatmentState === 'ended'
+                  ? 'ENDED'
+                  : state.screen === 'operations'
+                    ? 'PAUSED'
+                    : 'SETUP'}
+            </span>
+          </div>
+
+          <div className={styles.touchscreen}>
+            <nav className={styles.toolbar} aria-label="Educational device toolbar">
+              <span>
+                <History aria-hidden="true" /> History <small>Pilot timeline</small>
+              </span>
+              <span>
+                <Settings aria-hidden="true" /> Tools <small>Excluded</small>
+              </span>
+              <span>
+                <LockKeyhole aria-hidden="true" /> Lock <small>Excluded</small>
+              </span>
+              <span>
+                <HelpCircle aria-hidden="true" /> Help <small>Sources below</small>
+              </span>
+            </nav>
+
+            {state.screen === 'start' ? (
+              <div className={styles.startScreen}>
+                <div>
+                  <span>
+                    {caseContext
+                      ? 'Phase 4-5 · synthetic case'
+                      : 'Orientation · source-mapped pilot'}
+                  </span>
+                  <h3>
+                    {caseContext
+                      ? `Start ${caseContext.caseId}: ${caseContext.title}`
+                      : 'Start a case-free interface checkout'}
+                  </h3>
+                  <p>
+                    {caseContext
+                      ? 'No patient identifiers or patient-entered data are used. All physiology, pressure, alarm, and response values are synthetic and review-pending.'
+                      : 'No patient identifiers, default prescription, physiology, pressure, alarm fault, or clinical target is loaded.'}
+                  </p>
+                </div>
+                <div className={styles.startChoices}>
+                  <button type="button" onClick={() => dispatch({ type: 'SELECT_NEW_PATIENT' })}>
+                    <strong>New Patient</strong>
+                    <span>
+                      {caseContext
+                        ? 'Begin a clean synthetic attempt'
+                        : 'Begin a blank educational setup'}
+                    </span>
+                  </button>
+                  <button
+                    aria-describedby="same-patient-unavailable"
+                    disabled={!view.samePatientAvailable}
+                    type="button"
+                  >
+                    <strong>Same Patient</strong>
+                    <span>No prior simulated case</span>
+                  </button>
+                </div>
+                <small id="same-patient-unavailable">
+                  Same Patient timing is intentionally unencoded because the supplied manual
+                  conflicts.
+                </small>
+              </div>
+            ) : state.screen === 'setup' ? (
+              <div className={styles.procedureScreen}>
+                <ol className={styles.stepRail} aria-label="PrisMax pilot setup sequence">
+                  {view.stepStatuses.map(({ step, status }, index) => (
+                    <li
+                      key={step.id}
+                      data-status={status}
+                      aria-current={status === 'current' ? 'step' : undefined}
+                    >
+                      <span>
+                        {status === 'complete' ? <Check aria-hidden="true" /> : index + 1}
+                      </span>
+                      <div>
+                        <strong>{formatStepLabel(step.id as PrismaxSetupStepId)}</strong>
+                        <small>{status}</small>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <div className={styles.procedureBody}>
+                  <SetupStepContent state={state} dispatch={dispatch} caseContext={caseContext} />
+                </div>
+              </div>
+            ) : (
+              <OperationsScreen
+                state={state}
+                dispatch={dispatch}
+                operations={operations}
+                caseContext={caseContext}
+              />
+            )}
+          </div>
+
+          <footer className={styles.consoleFooter}>
+            <span>Educational facsimile · not a medical device</span>
+            <span>AW8035 Rev B source profile · Phase 4-5 review pending</span>
+          </footer>
+        </section>
+
+        {state.treatmentState === 'ended' ? (
+          <aside className={styles.resetDock} aria-label="Simulator clean reload">
+            <div>
+              <RotateCcw aria-hidden="true" />
+              <span>
+                <strong>Run ended</strong>
+                Reloading creates a fresh interface state and does not invoke Same Patient.
+              </span>
+            </div>
+            <button type="button" onClick={() => dispatch({ type: 'RESET_INTERFACE' })}>
+              Reload clean interface
+            </button>
+          </aside>
+        ) : null}
+      </fieldset>
+    </div>
+  )
+}

@@ -13,29 +13,29 @@ export const baxterCrrtPathways: readonly BaxterCrrtPathwayScaffold[] = Object.f
   {
     id: 'orientation',
     label: 'Orientation',
-    eyebrow: 'See the workspace',
+    eyebrow: 'Operate the pilot interface',
     summary:
-      'Map the patient, reasoning rail, educational device surface, circuit, trends, and source boundary before live simulation is added.',
+      'Run the case-free PrisMax equipment checkout from setup through operations, inspect the original circuit, and reload a clean interface state.',
     status: 'scaffold',
-    statusLabel: 'Phase 1 scaffold',
+    statusLabel: 'Available',
   },
   {
     id: 'learn',
     label: 'Learn',
-    eyebrow: 'Guidance planned',
+    eyebrow: 'Guided cases',
     summary:
-      'Guided worked examples will use the same deterministic engine as Practice, with prediction before action and causal reassessment.',
+      'Run the three source-mapped pilot cases with staged hints, prediction before action, immediate and delayed response, required reassessment, and an unscored causal debrief.',
     status: 'scaffold',
-    statusLabel: 'Engine not connected',
+    statusLabel: 'Phase 4-5 pilot',
   },
   {
     id: 'practice',
     label: 'Practice',
-    eyebrow: 'Independent cases planned',
+    eyebrow: 'Independent cases',
     summary:
-      'Independent cases will begin from clean state and keep machine controls locked until a complete prediction commitment.',
+      'Run the same three cases from isolated clean state. Machine controls remain locked until a five-field prediction commitment; scoring allows explicit safe alternatives.',
     status: 'scaffold',
-    statusLabel: 'Cases not loaded',
+    statusLabel: 'Scored pilot',
   },
   {
     id: 'mastery',

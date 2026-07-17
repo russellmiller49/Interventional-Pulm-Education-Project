@@ -1,0 +1,885 @@
+.learningWorkflow {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.learningWorkflow button,
+.learningWorkflow select,
+.learningWorkflow input {
+  font: inherit;
+}
+
+.learningWorkflow button,
+.learningWorkflow select {
+  min-height: 44px;
+}
+
+.learningWorkflow button:focus-visible,
+.learningWorkflow select:focus-visible,
+.learningWorkflow input:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 3px;
+}
+
+.reasoningRibbon {
+  position: sticky;
+  z-index: 8;
+  top: 0.5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: center;
+  width: min(100%, 1720px);
+  margin: 0 auto 0.9rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(117, 188, 180, 0.42);
+  border-radius: 0.9rem;
+  color: #dceceb;
+  background: rgba(5, 24, 28, 0.96);
+  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
+}
+
+.reasoningRibbon > span {
+  color: #f5bb65;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.reasoningRibbon ol {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reasoningRibbon li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.3rem;
+  align-items: center;
+  min-width: 0;
+  color: #819a98;
+  font-size: 0.66rem;
+}
+
+.reasoningRibbon li > i {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border: 1px solid rgba(148, 196, 191, 0.34);
+  border-radius: 50%;
+  font-size: 0.56rem;
+  font-style: normal;
+}
+
+.reasoningRibbon li > svg,
+.reasoningRibbon li > i svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.reasoningRibbon li[data-status='complete'] {
+  color: #8ce2d7;
+}
+
+.reasoningRibbon li[data-status='current'] {
+  color: #fff1d7;
+}
+
+.reasoningRibbon li[data-status='current'] > i {
+  color: #10201e;
+  border-color: #f5bb65;
+  background: #f5bb65;
+  box-shadow: 0 0 0 0.2rem rgba(245, 187, 101, 0.16);
+}
+
+.caseWorkflow,
+.debriefSection {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.contextControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.contextControls label,
+.predictionForm > label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.contextControls label > span,
+.predictionForm > label > span,
+.predictionForm legend,
+.reassessmentSection legend {
+  color: #8ce2d7;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contextControls select,
+.predictionForm select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem;
+  border: 1px solid rgba(148, 196, 191, 0.38);
+  border-radius: 0.55rem;
+  color: #e7f2f0;
+  background: #0a252a;
+}
+
+.resetButton,
+.commitButton,
+.hintSection > button,
+.reassessmentSection fieldset > button {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(117, 215, 204, 0.55);
+  border-radius: 0.55rem;
+  color: #06201f;
+  background: #74d7cc;
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.resetButton svg,
+.commitButton svg,
+.hintSection > button svg,
+.reassessmentSection fieldset > button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.learningWorkflow button:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.35);
+  opacity: 0.55;
+}
+
+.caseHeader {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.85rem;
+  border: 1px solid rgba(117, 188, 180, 0.32);
+  border-radius: 0.8rem;
+  background: rgba(8, 32, 37, 0.78);
+}
+
+.caseHeader span,
+.workflowHeading span {
+  color: #74d7cc;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.caseHeader h3 {
+  margin: 0.25rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.caseHeader > strong {
+  flex: 0 0 auto;
+  color: #f5c071;
+  font-size: 0.68rem;
+}
+
+.syntheticNotice,
+.criticalBanner,
+.guidedCallout,
+.completedNotice,
+.lockedCopy {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.65rem;
+  border: 1px solid rgba(240, 168, 62, 0.35);
+  border-radius: 0.65rem;
+  background: rgba(72, 51, 21, 0.38);
+}
+
+.syntheticNotice svg,
+.criticalBanner svg,
+.guidedCallout svg,
+.completedNotice svg,
+.lockedCopy svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+  color: #f5c071;
+}
+
+.syntheticNotice p,
+.criticalBanner p,
+.guidedCallout p,
+.completedNotice {
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.syntheticNotice p,
+.criticalBanner p,
+.guidedCallout p {
+  margin: 0;
+}
+
+.findingsSection,
+.predictionSection,
+.actionSection,
+.hintSection,
+.reassessmentSection,
+.debriefSection {
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.8rem;
+  background: rgba(8, 29, 33, 0.66);
+}
+
+.workflowHeading {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
+
+.workflowHeading > svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  color: #74d7cc;
+}
+
+.workflowHeading h4 {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+}
+
+.findingsSection > p,
+.hintSection > p,
+.reassessmentSection > small {
+  color: #bdcecc;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.findingsSection ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.65rem 0;
+  padding-left: 1.2rem;
+  color: #d9e8e6;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.guidedCallout {
+  border-color: rgba(117, 215, 204, 0.34);
+  background: rgba(16, 67, 69, 0.42);
+}
+
+.guidedCallout svg {
+  color: #74d7cc;
+}
+
+.predictionForm {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.predictionForm fieldset,
+.reassessmentSection fieldset {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0.65rem;
+  border: 1px solid rgba(148, 196, 191, 0.23);
+  border-radius: 0.6rem;
+}
+
+.predictionForm fieldset label,
+.reassessmentSection fieldset label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  min-height: 2.75rem;
+  padding: 0.45rem;
+  border-radius: 0.45rem;
+  color: #d9e8e6;
+  background: rgba(4, 21, 24, 0.52);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.predictionForm input,
+.reassessmentSection input {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.05rem;
+  accent-color: #57d0c1;
+}
+
+.predictionSummary,
+.debriefGrid {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+}
+
+.predictionSummary div,
+.debriefGrid div {
+  padding: 0.55rem;
+  border-left: 0.18rem solid #57d0c1;
+  background: rgba(14, 52, 57, 0.55);
+}
+
+.predictionSummary dt,
+.debriefGrid dt {
+  color: #8ce2d7;
+  font-size: 0.58rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.predictionSummary dd,
+.debriefGrid dd {
+  margin: 0.2rem 0 0;
+  color: #d7e4e2;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.actionList {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.actionList article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: start;
+  padding: 0.65rem;
+  border: 1px solid rgba(148, 196, 191, 0.23);
+  border-radius: 0.65rem;
+  background: rgba(5, 24, 28, 0.72);
+}
+
+.actionList article[data-performed='true'] {
+  border-color: rgba(87, 208, 193, 0.5);
+}
+
+.actionList article span {
+  color: #f5c071;
+  font-size: 0.56rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.actionList article strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.73rem;
+}
+
+.actionList article p,
+.actionList article small {
+  color: #aebfbd;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.actionList article p {
+  margin: 0.25rem 0 0;
+}
+
+.actionList article button,
+.timeControls button {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.3rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(117, 215, 204, 0.45);
+  border-radius: 0.5rem;
+  color: #dff6f2;
+  background: #123f43;
+  font-size: 0.64rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.actionList article button svg,
+.timeControls svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.actionResponse {
+  grid-column: 1 / -1;
+  padding: 0.5rem;
+  border-left: 0.18rem solid #f5bb65;
+  color: #e6d4b7 !important;
+  background: rgba(71, 49, 20, 0.34);
+}
+
+.timeControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(148, 196, 191, 0.18);
+}
+
+.timeControls > div {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  min-width: 10rem;
+  margin-right: auto;
+  color: #aebfbd;
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
+.timeControls span,
+.timeControls strong {
+  display: block;
+}
+
+.timeControls strong {
+  color: #f5c071;
+  font-size: 0.7rem;
+}
+
+.usedHints,
+.causalChain {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.65rem 0;
+  padding-left: 1.25rem;
+  color: #d7e4e2;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.hintSection > button {
+  color: #2a1d0c;
+  border-color: #d39b48;
+  background: #f5bb65;
+}
+
+.hintSection > small {
+  display: block;
+  margin-top: 0.45rem;
+  color: #d4b98f;
+  font-size: 0.6rem;
+}
+
+.reassessmentSection fieldset {
+  margin-top: 0.7rem;
+}
+
+.reassessmentSection fieldset > button {
+  margin-top: 0.3rem;
+}
+
+.lockedCopy {
+  align-items: center;
+  margin-top: 0.7rem;
+  color: #d5c09e;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.criticalBanner {
+  border-color: rgba(241, 141, 121, 0.62);
+  background: rgba(106, 38, 34, 0.55);
+}
+
+.criticalBanner svg {
+  color: #ffab99;
+}
+
+.debriefSummary,
+.learnOutcome {
+  padding: 0.65rem;
+  border-left: 0.2rem solid #57d0c1;
+  color: #d8e6e4;
+  background: rgba(14, 52, 57, 0.54);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.scoreCard {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.65fr) minmax(0, 1fr);
+  gap: 0.7rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(245, 187, 101, 0.38);
+  border-radius: 0.7rem;
+  background: rgba(68, 47, 18, 0.4);
+}
+
+.scoreCard > div span,
+.scoreCard > div strong,
+.scoreCard > div small {
+  display: block;
+}
+
+.scoreCard > div span {
+  color: #f5c071;
+  font-size: 0.6rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.scoreCard > div strong {
+  margin-top: 0.2rem;
+  font-size: 1.65rem;
+}
+
+.scoreCard > div small {
+  color: #d4b98f;
+  font-size: 0.58rem;
+  line-height: 1.4;
+}
+
+.scoreCard dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.scoreCard dl div {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.35rem;
+  border-bottom: 1px solid rgba(245, 187, 101, 0.18);
+  font-size: 0.6rem;
+}
+
+.scoreCard dd {
+  margin: 0;
+  color: #f5c071;
+  font-weight: 850;
+}
+
+.causalChain li::marker {
+  color: #57d0c1;
+  font-weight: 900;
+}
+
+.debriefBody blockquote {
+  margin: 0.7rem 0 0;
+  padding: 0.7rem;
+  border: 1px solid rgba(117, 215, 204, 0.34);
+  border-radius: 0.6rem;
+  color: #dff6f2;
+  background: rgba(16, 67, 69, 0.42);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.responsePanel,
+.calibrationPanel {
+  min-width: 0;
+  border: 1px solid rgba(117, 188, 180, 0.32);
+  border-radius: 1.15rem;
+  color: #dceceb;
+  background: linear-gradient(160deg, rgba(12, 41, 47, 0.96), rgba(5, 23, 27, 0.98));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+}
+
+.responsePanel {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.responseHeading {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.responseHeading span,
+.responseCards span {
+  color: #74d7cc;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.responseHeading h3 {
+  margin: 0.2rem 0 0;
+  font-size: 1rem;
+}
+
+.responseHeading > strong {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex: 0 0 auto;
+  color: #f5c071;
+  font-size: 0.72rem;
+}
+
+.responseHeading svg,
+.responseCards svg,
+.calibrationPanel svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.responseCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.responseCards article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid rgba(148, 196, 191, 0.23);
+  border-radius: 0.8rem;
+  background: rgba(9, 31, 35, 0.76);
+}
+
+.responseCards svg {
+  grid-row: 1 / 4;
+  color: #74d7cc;
+}
+
+.responseCards strong,
+.responseCards small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.responseCards strong {
+  font-size: 0.8rem;
+}
+
+.responseCards small {
+  color: #a8bfbd;
+  font-size: 0.65rem;
+  line-height: 1.4;
+}
+
+.responseSummaries {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.responseSummaries p {
+  margin: 0;
+  padding: 0.65rem;
+  border-left: 0.2rem solid #2fb9aa;
+  color: #bed0ce;
+  background: rgba(22, 62, 66, 0.48);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.trendTableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.trendTableWrap table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+
+.trendTableWrap caption {
+  padding-bottom: 0.5rem;
+  color: #a8bfbd;
+  text-align: left;
+}
+
+.trendTableWrap th,
+.trendTableWrap td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(148, 196, 191, 0.2);
+  text-align: left;
+}
+
+.trendTableWrap thead th {
+  color: #74d7cc;
+}
+
+.calibrationPanel {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border-color: rgba(240, 168, 62, 0.42);
+}
+
+.calibrationPanel summary {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.75rem;
+  color: #f5c071;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.calibrationPanel > p {
+  color: #bdcecc;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.calibrationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.calibrationGrid section {
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid rgba(240, 168, 62, 0.24);
+  border-radius: 0.75rem;
+  background: rgba(21, 30, 31, 0.72);
+}
+
+.calibrationGrid h4 {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin: 0 0 0.55rem;
+  color: #f5c071;
+  font-size: 0.75rem;
+}
+
+.calibrationGrid dl {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.calibrationGrid dl div {
+  display: grid;
+  gap: 0.15rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(240, 168, 62, 0.14);
+}
+
+.calibrationGrid dt {
+  color: #9eb5b3;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.calibrationGrid dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+}
+
+.calibrationSources {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (max-width: 780px) {
+  .reasoningRibbon {
+    position: static;
+    grid-template-columns: 1fr;
+  }
+
+  .reasoningRibbon ol {
+    grid-template-columns: repeat(7, minmax(4.6rem, 1fr));
+    overflow-x: auto;
+    padding: 0.2rem 0.1rem 0.45rem;
+  }
+
+  .contextControls {
+    grid-template-columns: 1fr;
+  }
+
+  .caseWorkflow[data-mobile-active='false'],
+  .debriefSection[data-mobile-active='false'] {
+    display: none;
+  }
+
+  .scoreCard {
+    grid-template-columns: 1fr;
+  }
+
+  .calibrationGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .caseHeader,
+  .actionList article {
+    grid-template-columns: 1fr;
+  }
+
+  .caseHeader {
+    flex-direction: column;
+  }
+
+  .actionList article button {
+    width: 100%;
+  }
+
+  .scoreCard dl {
+    grid-template-columns: 1fr;
+  }
+
+  .responseHeading {
+    flex-direction: column;
+  }
+
+  .responseCards {
+    grid-template-columns: 1fr;
+  }
+}

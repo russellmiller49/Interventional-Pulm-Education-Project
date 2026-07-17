@@ -212,7 +212,7 @@ export interface CrrtDeviceState {
   readonly fluidPumpsRunning: boolean
   readonly patientConnected: boolean
   readonly returnClampClosed: boolean
-  readonly adapterStatus: 'not-connected-phase-2'
+  readonly adapterStatus: 'available-phase-3' | 'deferred'
 }
 
 export interface ExternalFluidRates {

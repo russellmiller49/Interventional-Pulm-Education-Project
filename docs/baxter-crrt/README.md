@@ -1,17 +1,74 @@
 # Baxter CRRT simulator design record
 
-Status: Phase 2 pure engine and schemas implemented; review pending; no functional interface or cases exist  
-Current base commit: 0d488175 on origin/ebus_update  
-Feature branch: feature/baxter-crrt-simulator  
-Canonical route: /[locale]/baxter-crrt  
-Canonical module ID: baxter-crrt  
-Initial release device: PrisMax AW8035 Rev B, program 2.XX  
+Status: Phase 4-5 three-case PrisMax vertical slice implemented in the authenticated draft; all review and release gates remain pending
+
+Current base commit: ec2e8b77 on main
+
+Current branch: main
+
+Canonical route: /[locale]/baxter-crrt
+
+Canonical module ID: baxter-crrt
+
+Initial release device: PrisMax AW8035 Rev B, program 2.XX
+
 Deferred device adapter: Prismaflex G5036003 Revision 05.2011, program 6.xx
 
 This directory is the design and governance record for an authenticated, unlisted, draft CRRT
-Learn & Practice simulator. Phase 2 adds a disconnected, deterministic TypeScript engine and strict
-content boundaries beneath the Phase 1 route. The functional device interface, learning workflows,
-and cases remain outside the implementation boundary.
+Learn & Practice simulator. Phases 4 and 5 connect the source-mapped PrisMax interface to one atomic
+learning-session reducer and the exact three-case pilot registry. All clinical values and model
+coefficients remain synthetic and review-pending; publication and competency use remain outside the
+implementation boundary.
+
+## Phase 4-5 outcome
+
+The combined vertical slice is described in [phase-4-5-pilot.md](./phase-4-5-pilot.md) and adds:
+
+- A persistent `Read -> Define -> Select -> Predict -> Run -> Reassess -> Reflect` ribbon.
+- A reducer-enforced five-field prediction commitment before any case intervention, device action,
+  or time advancement in both Learn and Practice.
+- Guided, unscored Learn and independent, scored Practice using the same case fixtures and engine.
+- The exact `CRRT-04`, `CRRT-10`, and `CRRT-13` registry with source mappings, safe paths, explicit
+  alternatives, draft unsafe actions, draft critical-error candidates, and deterministic tests.
+- Immediate device/circuit response separated from delayed simulated patient response, prescribed
+  from delivered dose, machine PFR from whole-patient balance, and acknowledgement from cause
+  correction.
+- A bounded hint ladder, required reassessment, a complete causal debrief, and the fixed
+  15/20/20/20/15/10 Practice rubric.
+- Atomic case/interface/engine state with clean case, pathway, role, and attempt reloads.
+- Versioned local non-PHI progress plus strictly allowlisted aggregate analytics at both client and
+  server boundaries.
+- A development-only calibration panel and generated, unchecked clinical and PrisMax-device review
+  intake checklists.
+- Responsive mobile Case, Machine, Circuit, Patient/trends, and Debrief surfaces with a persistent
+  global generic-alarm summary.
+
+Mastery, Prismaflex execution, regional citrate-calcium dosing, the remaining 15 cases, local
+competency credit, broader pilot entitlement, and publication remain unavailable.
+
+## Phase 3 outcome
+
+The Phase 3 implementation adds the functional interface boundary defined in
+[phase-3-interface.md](./phase-3-interface.md):
+
+- A case-free, original PrisMax educational console with New Patient start and an intentionally
+  unavailable Same Patient path.
+- The source-mapped Patient, Therapy, Prescription, Sets, Fluids, Prime, Review, and Connect Patient
+  sequence with reducer-owned gating.
+- A CVVHD-only pilot surface whose BFR, dialysate, and PFR fields begin blank and do not encode
+  set-specific defaults, ranges, increments, or clinical targets.
+- A source-mapped Operations surface showing only learner-entered flow values and the engine-derived
+  effluent-pump target; pressure, dose, bag, physiology, and alarm signals remain unavailable.
+- Original responsive SVG/CSS circuit artwork with the blood, dialysate, and effluent topology;
+  four color-and-shape-coded scale positions; and blank pressure nodes.
+- A visible but inactive alarm window that does not invent an alarm, priority, reaction, threshold,
+  or correction sequence.
+- Stop, Resume, irreversible End, and a separate clean simulator reload that reconstructs neutral
+  state without retaining interface values or setup completion.
+
+Prismaflex, replacement flow, citrate/calcium, blood return, recirculation, detailed bag changes,
+clinical cases, prediction, hints, scoring, debriefs, analytics, and competency decisions remain
+deferred.
 
 ## Phase 2 outcome
 
@@ -259,21 +316,48 @@ remediation is outside Phase 0 and must be handled separately so it is not confl
 | Unauthenticated production-build request to `http://localhost:3001/en/baxter-crrt` | `307` to `/en/login?next=%2Fen%2Fbaxter-crrt`, as required                                               |
 | Authenticated development request after Phase 2                                    | `200 OK`; Phase 2 gate, pure-engine status, and independent-education copy present                       |
 
-The verified production build is serving the canonical localhost URL on port 3001. A separate
-pre-existing development process currently occupies port 3002; its authenticated render was used
-to verify the Phase 2 copy because the local development bypass is intentionally not a production
-authentication mechanism.
+## Phase 3 verification
 
-The branch was created while the local ebus_update ref was at 8c051a2f. During the audit, the
-HAMILTON tester-preview change 0d488175 became the current origin/ebus_update base and the feature
-branch advanced to the same commit. The local ebus_update ref remains stale at 8c051a2f, but the
-feature branch is aligned with the current remote base. The Phase 0 files do not modify that
-HAMILTON work.
+| Check                                                  | Result                                                                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Focused CRRT test run                                  | Passed: 18 suites, 113 tests                                                                              |
+| `npm run type-check`                                   | Passed                                                                                                    |
+| CRRT-scoped ESLint with zero warnings allowed          | Passed                                                                                                    |
+| `npm run lint`                                         | Passed with 13 pre-existing warnings outside CRRT and no errors                                           |
+| `npm test -- --runInBand`                              | Passed: 194 suites, 1,323 tests                                                                           |
+| `npm run build`                                        | Passed; `/[locale]/baxter-crrt` emitted with existing Mermaid dynamic-require and metadata-base warnings  |
+| Scoped Prettier and `git diff --check`                 | Passed                                                                                                    |
+| Desktop in-app browser setup-to-operations walkthrough | Passed with blank start, entered flows, running circuit, no fabricated alarm, Stop, End, and clean reload |
+| Mobile in-app browser pass at 390 by 844 CSS pixels    | Passed with functional tap/progression, horizontally scrollable schematic, and no page-level overflow     |
+| In-app browser console error check after interaction   | Passed with no error-level console entries                                                                |
+
+The Phase 3 walkthrough used `http://localhost:3002/en/baxter-crrt` in the authenticated local
+environment. That port remains a local review endpoint, not a publication or pilot-entitlement
+decision.
+
+## Phase 4-5 verification
+
+| Check                                                       | Result                                                                                                                                                                          |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Focused CRRT, learning-workflow, analytics, and route tests | Passed: 24 suites, 157 tests                                                                                                                                                    |
+| `npm run type-check`                                        | Passed                                                                                                                                                                          |
+| CRRT-scoped ESLint                                          | Passed with no errors                                                                                                                                                           |
+| `npm run lint`                                              | Passed with 13 pre-existing warnings outside CRRT and no errors                                                                                                                 |
+| `npm test -- --runInBand`                                   | Passed: 200 suites, 1,367 tests                                                                                                                                                 |
+| `npm run build`                                             | Passed; `/[locale]/baxter-crrt` emitted with the existing Mermaid dynamic-require and metadata-base warnings                                                                    |
+| Scoped Prettier and `git diff --check`                      | Passed                                                                                                                                                                          |
+| Desktop in-app browser Learn walkthrough                    | Passed five-field commitment, control unlock, safe action, hint, reassessment, and unscored causal debrief; CRRT-10 and CRRT-13 loaded distinct running fluid/pressure fixtures |
+| Desktop in-app browser Practice walkthrough                 | Passed isolated clean start, machine lock/unlock, scored debrief, bounded hint penalty, and absence of competency language                                                      |
+| Mobile in-app browser pass at 390 by 844 CSS pixels         | Passed all five workspace-surface tabs with internal tab-strip scrolling and no page-level horizontal overflow                                                                  |
+| In-app browser console error check after interaction        | Passed with no error-level console entries                                                                                                                                      |
+
+The current Phase 4-5 development render is available at
+`http://localhost:3002/en/baxter-crrt` in the authenticated local environment.
 
 ## Human inputs still required
 
-These decisions do not block the Phase 2 pure engine, but they block release of the
-affected behavior:
+These decisions did not block the source-mapped, synthetic Phase 4-5 draft vertical slice, but they
+block formal review disposition, expanded access, competency use, and release:
 
 - Exact PrisMax market/configuration and locally installed program version.
 - Enabled disposable sets, accessories, Auto Effluent availability, and solution inventory.
@@ -293,7 +377,8 @@ certificate may imply independent clinical competence.
 
 ## Phase gate
 
-Phase 2 is complete at the pure-engine/schema boundary. Phase 3 may add only the functional PrisMax
-pilot interface described in the coding instructions and requires separate approval before work
-begins. No Phase 3 interface, pilot case, Learn/Practice workflow, analytics event, or publication
+Phases 4 and 5 are complete at the authenticated three-case draft boundary. Work stops before Phase
+6 independent accessibility, clinical, device, localization, and publication review. The generated
+checklists are unchecked intake artifacts, not completed review. No Prismaflex execution, citrate
+workflow, additional case, Mastery capstone, competency claim, entitlement expansion, or publication
 change is authorized by this record.
