@@ -3,6 +3,7 @@ import {
   prismaflexDeferredDeviceProfile,
   prismaxDraftDeviceProfile,
 } from '../content/deviceProfiles'
+import { BAXTER_CRRT_PILOT_CONTENT_VERSION } from '../content/versions'
 import { getCrrtDeviceCalculationAdapter } from './deviceAdapters/calculations'
 import { emptyExternalFluidRates, emptyFluidLedgerTotals } from './fluidModel'
 import { buildSeededEventQueue, deriveDeterministicSeed } from './seededRandom'
@@ -19,9 +20,9 @@ import type {
   ScenarioState,
 } from './types'
 
-export const CRRT_ENGINE_VERSION = '0.2.0-draft'
-export const CRRT_SCHEMA_VERSION = '1.0.0-draft'
-export const CRRT_CONTENT_VERSION = '0.0.0-phase2-no-cases'
+export const CRRT_ENGINE_VERSION = '0.4.0-phase7-review'
+export const CRRT_SCHEMA_VERSION = '1.1.0-phase7-draft'
+export const CRRT_CONTENT_VERSION = BAXTER_CRRT_PILOT_CONTENT_VERSION
 export const CRRT_PRISMAX_PROFILE_VERSION = prismaxDraftDeviceProfile.profileVersion
 export const CRRT_PRISMAFLEX_PROFILE_VERSION = prismaflexDeferredDeviceProfile.profileVersion
 

@@ -6,13 +6,15 @@ import type {
   DisplayAlarm,
   SetupStepDefinition,
 } from './types'
-import type {
-  ActiveAlarm,
-  ConfiguredPrescriptionState,
-  CrrtDeviceState,
-  CrrtFlowRates,
-  CrrtSimulationState,
-  PrescriptionState,
+import {
+  crrtFlowRateKeys,
+  type ActiveAlarm,
+  type ConfiguredPrescriptionState,
+  type CrrtDeviceState,
+  type CrrtFlowRates,
+  type CrrtModality,
+  type CrrtSimulationState,
+  type PrescriptionState,
 } from '../types'
 
 export const PRISMAX_SETUP_SOURCE_ID = 'DEV-PM-005' as const
@@ -82,8 +84,8 @@ function validatePrismaxPilotPrescription(input: PrescriptionState): DeviceValid
     )
   }
 
-  const flowEntries = Object.entries(input.flows) as [keyof CrrtFlowRates, number][]
-  for (const [field, value] of flowEntries) {
+  for (const field of crrtFlowRateKeys) {
+    const value = input.flows[field]
     if (!isFiniteNonnegative(value)) {
       errors.push(
         validationError(
@@ -190,7 +192,13 @@ export interface PrismaxPilotInterfaceState {
   readonly version: 1
   readonly screen: 'start' | 'setup' | 'operations'
   readonly startSelection: 'new-patient' | null
-  readonly selectedModality: 'cvvhd' | null
+  /**
+   * The learner-facing pilot reducer can still select only CVVHD. The wider
+   * type lets an authored, reviewer-only Phase 7 case project its already
+   * configured modality without pretending that the pilot setup UI supports
+   * selecting that modality.
+   */
+  readonly selectedModality: CrrtModality | null
   readonly completedStepIds: readonly PrismaxSetupStepId[]
   readonly prescriptionDraft: PrismaxPrescriptionDraft
   readonly committedPrescription: ConfiguredPrescriptionState | null
@@ -236,7 +244,7 @@ export interface PrismaxPilotInterfaceViewModel {
 
 export interface PrismaxPilotOperationsDisplay {
   readonly treatmentState: PrismaxPilotInterfaceState['treatmentState']
-  readonly modality: 'cvvhd' | null
+  readonly modality: CrrtModality | null
   readonly flows: CrrtFlowRates | null
   readonly effluentPumpTargetMlHour: number | null
   readonly effluentDoseMlKgHour: number | null
@@ -460,7 +468,7 @@ export function selectPrismaxPilotOperationsDisplay(
   const prescription = state.committedPrescription
   return Object.freeze({
     treatmentState: state.treatmentState,
-    modality: prescription?.modality === 'cvvhd' ? 'cvvhd' : null,
+    modality: prescription?.modality ?? null,
     flows: prescription ? { ...prescription.flows } : null,
     effluentPumpTargetMlHour: prescription
       ? prismaxCalculationAdapter.calculateEffluentPumpTargetMlPerHour(prescription.flows)
@@ -483,7 +491,7 @@ export function selectPrismaxPilotCaseOperationsDisplay(
   const pressure = simulation.circuit.pressures
   return Object.freeze({
     treatmentState: interfaceState.treatmentState,
-    modality: prescription.modality === 'cvvhd' ? 'cvvhd' : null,
+    modality: prescription.status === 'configured' ? prescription.modality : null,
     flows: prescription.status === 'configured' ? { ...prescription.flows } : null,
     effluentPumpTargetMlHour: simulation.deliveredTherapy.prescribedEffluentRateMlHour,
     effluentDoseMlKgHour: simulation.deliveredTherapy.prescribedEffluentDoseMlKgHour,

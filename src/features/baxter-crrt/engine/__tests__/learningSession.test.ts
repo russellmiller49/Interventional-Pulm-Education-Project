@@ -3,6 +3,7 @@ import {
   createCrrtLearningSession,
   crrtLearningSessionReducer,
   UnsupportedCrrtLearningEffectError,
+  type CrrtLearningExperience,
   type CrrtLearningSessionState,
   type CrrtPredictionCommitment,
 } from '../learningSession'
@@ -26,6 +27,7 @@ function buildCase(
 ): RuntimeCrrtCase {
   return {
     id,
+    contentVersion: 'test-mastery.1',
     initialDeviceOverrides,
     goalOptions: [option('goal-correct'), option('goal-other')],
     mechanismOptions: [option('mechanism-correct'), option('mechanism-other')],
@@ -79,6 +81,30 @@ function buildCase(
             valueType: 'number',
             value: 0.3,
             unit: 'mmHg/(mL/min)',
+            sourceId: 'TEST-P4-001',
+          },
+          {
+            target: 'access.returnResistanceMmHgPerMlMin',
+            operation: 'set',
+            valueType: 'number',
+            value: 0.4,
+            unit: 'mmHg/(mL/min)',
+            sourceId: 'TEST-P4-001',
+          },
+          {
+            target: 'circuit.filter.procoagulantBurdenFraction',
+            operation: 'set',
+            valueType: 'number',
+            value: 0.3,
+            unit: 'fraction',
+            sourceId: 'TEST-P4-001',
+          },
+          {
+            target: 'circuit.filter.lowEffectiveBloodFlowFraction',
+            operation: 'set',
+            valueType: 'number',
+            value: 0.2,
+            unit: 'fraction',
             sourceId: 'TEST-P4-001',
           },
         ],
@@ -190,6 +216,48 @@ function buildCase(
           },
         ],
       },
+      {
+        id: 'set-return-obstruction',
+        label: 'Set generic return obstruction',
+        category: 'access-circuit',
+        description: 'Synthetic engine-fault fixture only',
+        response: 'Generic fault is active',
+        latencySeconds: 0,
+        prerequisites: [],
+        repeatable: false,
+        sourceIds: ['TEST-P4-001'],
+        reviewStatus: 'pending',
+        effects: [
+          {
+            target: 'scenario.activeFaults.return-obstruction',
+            operation: 'set',
+            valueType: 'boolean',
+            value: true,
+            sourceId: 'TEST-P4-001',
+          },
+        ],
+      },
+      {
+        id: 'clear-return-obstruction',
+        label: 'Clear generic return obstruction',
+        category: 'access-circuit',
+        description: 'Synthetic engine-fault fixture only',
+        response: 'Generic fault is cleared',
+        latencySeconds: 0,
+        prerequisites: ['set-return-obstruction'],
+        repeatable: false,
+        sourceIds: ['TEST-P4-001'],
+        reviewStatus: 'pending',
+        effects: [
+          {
+            target: 'scenario.activeFaults.return-obstruction',
+            operation: 'set',
+            valueType: 'boolean',
+            value: false,
+            sourceId: 'TEST-P4-001',
+          },
+        ],
+      },
     ],
     requiredActionIds: ['adjust-prescription'],
     requiredReassessmentIds: ['reassess-correct'],
@@ -241,14 +309,14 @@ function buildCase(
   } as unknown as RuntimeCrrtCase
 }
 
-function create(experience: 'learn' | 'practice' = 'practice', attempt = 1) {
+function create(experience: CrrtLearningExperience = 'practice', attempt = 1) {
   const caseDefinition = buildCase()
   return createFromDefinition(caseDefinition, experience, attempt)
 }
 
 function createFromDefinition(
   caseDefinition: RuntimeCrrtCase,
-  experience: 'learn' | 'practice' = 'practice',
+  experience: CrrtLearningExperience = 'practice',
   attempt = 1,
 ) {
   return createCrrtLearningSession({
@@ -257,10 +325,34 @@ function createFromDefinition(
     experience,
     roleLens: 'integrated',
     attempt,
+    audience: 'reviewer',
   })
 }
 
+function advanceToPrediction(state: CrrtLearningSessionState) {
+  if (state.reasoningPhase === 'read') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'define',
+    })
+  }
+  if (state.reasoningPhase === 'define') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'select',
+    })
+  }
+  if (state.reasoningPhase === 'select') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'predict',
+    })
+  }
+  return state
+}
+
 function commit(state: CrrtLearningSessionState) {
+  state = advanceToPrediction(state)
   return crrtLearningSessionReducer(state, {
     type: 'COMMIT_PREDICTION',
     prediction: correctPrediction,
@@ -278,6 +370,154 @@ function deviceAction(
 }
 
 describe('CRRT Phase 4 learning-session reducer', () => {
+  it('owns the ordered pre-commit reasoning progression and resets it on reset or load', () => {
+    let state = create()
+    expect(state.reasoningPhase).toBe('read')
+
+    expect(
+      crrtLearningSessionReducer(state, {
+        type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+        phase: 'predict',
+      }),
+    ).toBe(state)
+
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'define',
+    })
+    expect(state.reasoningPhase).toBe('define')
+    expect(
+      crrtLearningSessionReducer(state, {
+        type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+        phase: 'predict',
+      }),
+    ).toBe(state)
+
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'select',
+    })
+    expect(state.reasoningPhase).toBe('select')
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'predict',
+    })
+    expect(state.reasoningPhase).toBe('predict')
+
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'define',
+    })
+    expect(state.reasoningPhase).toBe('define')
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'select',
+    })
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'predict',
+    })
+    expect(state.reasoningPhase).toBe('predict')
+
+    state = commit(state)
+    expect(state.reasoningPhase).toBe('run')
+    expect(
+      crrtLearningSessionReducer(state, {
+        type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+        phase: 'define',
+      }),
+    ).toBe(state)
+
+    const reset = crrtLearningSessionReducer(state, { type: 'RESET' })
+    expect(reset.reasoningPhase).toBe('read')
+
+    const loadedCase = buildCase('CRRT-13')
+    const loaded = crrtLearningSessionReducer(state, {
+      type: 'LOAD_CASE',
+      caseDefinition: loadedCase,
+      fixture: { ...createSyntheticFixture(), id: loadedCase.id },
+      experience: 'learn',
+      roleLens: 'integrated',
+      attempt: 2,
+      audience: 'reviewer',
+    })
+    expect(loaded.reasoningPhase).toBe('read')
+  })
+
+  it('rejects direct prediction and reassessment bypasses until canonical phases are reached', () => {
+    const initial = create()
+    expect(
+      crrtLearningSessionReducer(initial, {
+        type: 'COMMIT_PREDICTION',
+        prediction: correctPrediction,
+      }),
+    ).toBe(initial)
+
+    let state = crrtLearningSessionReducer(initial, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'define',
+    })
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'select',
+    })
+    expect(
+      crrtLearningSessionReducer(state, {
+        type: 'COMMIT_PREDICTION',
+        prediction: correctPrediction,
+      }),
+    ).toBe(state)
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'predict',
+    })
+    state = crrtLearningSessionReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      prediction: correctPrediction,
+    })
+    expect(state.reasoningPhase).toBe('run')
+
+    state = crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
+    expect(state.reasoningPhase).toBe('run')
+
+    state = crrtLearningSessionReducer(state, {
+      type: 'PERFORM_INTERVENTION',
+      interventionId: 'adjust-prescription',
+    })
+    expect(
+      crrtLearningSessionReducer(state, {
+        type: 'COMMIT_REASSESSMENT',
+        optionIds: ['reassess-correct'],
+      }),
+    ).toBe(state)
+    expect(crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 0 })).toBe(state)
+
+    state = crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
+    expect(state.reasoningPhase).toBe('reassess')
+    expect(
+      crrtLearningSessionReducer(state, {
+        type: 'COMMIT_REASSESSMENT',
+        optionIds: ['reassess-correct'],
+      }).reassessment.committed,
+    ).toBe(true)
+  })
+
+  it('keeps Mastery locked while the immutable activation registry has no runtime case', () => {
+    const caseDefinition = buildCase()
+    const fixture = { ...createSyntheticFixture(), id: caseDefinition.id }
+    const createMastery = () =>
+      createCrrtLearningSession({
+        caseDefinition,
+        fixture,
+        experience: 'mastery',
+        roleLens: 'integrated',
+        attempt: 1,
+        audience: 'reviewer',
+      })
+
+    expect(() => createMastery()).toThrow(/Mastery is locked/i)
+  })
+
   it('uses an identical clinical seed across pathways and reducer-enforces the prediction lock', () => {
     const learn = create('learn', 3)
     const practice = create('practice', 3)
@@ -301,6 +541,24 @@ describe('CRRT Phase 4 learning-session reducer', () => {
     expect(crrtLearningSessionReducer(learn, { type: 'ADVANCE_TIME', seconds: 60 })).toBe(learn)
   })
 
+  it('allows only canonical generic engine-fault IDs and clears the cause separately', () => {
+    let state = commit(create())
+    state = crrtLearningSessionReducer(state, {
+      type: 'PERFORM_INTERVENTION',
+      interventionId: 'set-return-obstruction',
+    })
+    expect(state.simulation.scenario.activeFaults).toContain('return-obstruction')
+    expect(state.simulation.alarms.map((alarm) => alarm.code)).toContain('RETURN_OBSTRUCTION')
+
+    state = crrtLearningSessionReducer(state, {
+      type: 'PERFORM_INTERVENTION',
+      interventionId: 'clear-return-obstruction',
+    })
+    expect(state.simulation.scenario.activeFaults).not.toContain('return-obstruction')
+    expect(state.simulation.alarms.map((alarm) => alarm.code)).not.toContain('RETURN_OBSTRUCTION')
+    expect(state.simulation.alarmHistory.map((alarm) => alarm.code)).toContain('RETURN_OBSTRUCTION')
+  })
+
   it('commits an immutable five-field prediction and resets every state domain cleanly', () => {
     let state = commit(create())
     expect(Object.isFrozen(state.prediction)).toBe(true)
@@ -313,6 +571,7 @@ describe('CRRT Phase 4 learning-session reducer', () => {
     state = crrtLearningSessionReducer(state, { type: 'USE_HINT' })
     state = crrtLearningSessionReducer(state, { type: 'USE_HINT' })
     expect(state.usedHintIds).toEqual(['hint-1', 'hint-2'])
+    state = crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
     state = crrtLearningSessionReducer(state, {
       type: 'COMMIT_REASSESSMENT',
       optionIds: ['reassess-correct'],
@@ -330,6 +589,39 @@ describe('CRRT Phase 4 learning-session reducer', () => {
     expect(reset.timeline).toEqual([])
     expect(reset.criticalErrorIds).toEqual([])
     expect(reset.debriefRevealed).toBe(false)
+    expect(reset.reasoningPhase).toBe('read')
+  })
+
+  it('rejects RESET and LOAD_CASE attempts that try to enter locked Mastery', () => {
+    let practice = commit(create('practice', 2))
+    practice = crrtLearningSessionReducer(practice, { type: 'USE_HINT' })
+    practice = crrtLearningSessionReducer(practice, {
+      type: 'PERFORM_INTERVENTION',
+      interventionId: 'adjust-prescription',
+    })
+    expect(practice.usedHintIds).toEqual(['hint-1'])
+    expect(practice.performedInterventionIds).toEqual(['adjust-prescription'])
+
+    expect(() =>
+      crrtLearningSessionReducer(practice, {
+        type: 'RESET',
+        experience: 'mastery',
+        attempt: 3,
+      }),
+    ).toThrow(/Mastery is locked/i)
+
+    const caseDefinition = buildCase('CRRT-13')
+    expect(() =>
+      crrtLearningSessionReducer(practice, {
+        type: 'LOAD_CASE',
+        caseDefinition,
+        fixture: { ...createSyntheticFixture(), id: caseDefinition.id },
+        experience: 'mastery',
+        roleLens: 'operator',
+        attempt: 1,
+        audience: 'reviewer',
+      }),
+    ).toThrow(/Mastery is locked/i)
   })
 
   it.each(['CRRT-10', 'CRRT-13'])(
@@ -390,6 +682,75 @@ describe('CRRT Phase 4 learning-session reducer', () => {
     },
   )
 
+  it('projects an authored non-CVVHD prescription into a reviewer-only Operations state', () => {
+    const definition = buildCase('CRRT-06', {
+      workflowPhase: 'operations',
+      treatmentState: 'running',
+      connectedToPatient: true,
+      pumpsPaused: false,
+      activeAlarmIds: [],
+    })
+    const baseFixture = createSyntheticFixture()
+    const baseBags = baseFixture.bags ?? []
+    const sourceBag = baseBags.find((bag) => bag.direction === 'source')
+    if (!sourceBag) throw new Error('Synthetic fixture must include a source bag.')
+    const fixture = {
+      ...baseFixture,
+      id: definition.id,
+      prescription: {
+        ...baseFixture.prescription,
+        modality: 'cvvhdf' as const,
+        flows: {
+          ...baseFixture.prescription.flows,
+          dialysateFlowMlHour: 1_000,
+          preReplacementFlowMlHour: 500,
+          postReplacementFlowMlHour: 500,
+        },
+      },
+      bags: [
+        ...baseBags,
+        {
+          ...sourceBag,
+          id: 'synthetic-pre-replacement-bag',
+          label: 'Synthetic pre-replacement source',
+          flowTerm: 'pre-replacement' as const,
+        },
+        {
+          ...sourceBag,
+          id: 'synthetic-post-replacement-bag',
+          label: 'Synthetic post-replacement source',
+          flowTerm: 'post-replacement' as const,
+        },
+      ],
+    }
+
+    const state = createCrrtLearningSession({
+      caseDefinition: definition,
+      fixture,
+      experience: 'practice',
+      roleLens: 'integrated',
+      attempt: 1,
+      audience: 'reviewer',
+    })
+
+    expect(state.interfaceState).toMatchObject({
+      screen: 'operations',
+      selectedModality: 'cvvhdf',
+      treatmentState: 'running',
+    })
+    expect(state.interfaceState.committedPrescription).toEqual(state.simulation.prescription)
+    expect(state.audience).toBe('reviewer')
+    expect(() =>
+      createCrrtLearningSession({
+        caseDefinition: definition,
+        fixture,
+        experience: 'practice',
+        roleLens: 'integrated',
+        attempt: 1,
+      }),
+    ).toThrow(/reviewer-only/i)
+  })
+
   it('keeps CRRT-04 new-patient/setup starts fresh and reconstructs that screen on reset', () => {
     const newPatientDefinition = buildCase('CRRT-04', {
       workflowPhase: 'new-patient',
@@ -447,6 +808,12 @@ describe('CRRT Phase 4 learning-session reducer', () => {
       type: 'PERFORM_INTERVENTION',
       interventionId: 'adjust-prescription',
     })
+    const bypass = crrtLearningSessionReducer(state, {
+      type: 'COMMIT_REASSESSMENT',
+      optionIds: ['reassess-correct'],
+    })
+    expect(bypass).toBe(state)
+    state = crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
     state = crrtLearningSessionReducer(state, {
       type: 'COMMIT_REASSESSMENT',
       optionIds: ['reassess-correct'],
@@ -465,7 +832,12 @@ describe('CRRT Phase 4 learning-session reducer', () => {
     expect(state.simulation.access.status).toBe('configured')
     if (state.simulation.access.status === 'configured') {
       expect(state.simulation.access.accessResistanceMmHgPerMlMin).toBe(0.3)
+      expect(state.simulation.access.returnResistanceMmHgPerMlMin).toBe(0.4)
     }
+    expect(state.simulation.circuit.filter).toMatchObject({
+      procoagulantBurdenFraction: 0.3,
+      lowEffectiveBloodFlowFraction: 0.2,
+    })
     state = crrtLearningSessionReducer(state, {
       type: 'PERFORM_INTERVENTION',
       interventionId: 'advance-response',

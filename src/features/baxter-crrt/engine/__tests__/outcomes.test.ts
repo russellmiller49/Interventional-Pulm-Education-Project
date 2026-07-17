@@ -2,11 +2,13 @@ import type { RuntimeCrrtCase } from '../../content/schema'
 import {
   createCrrtLearningSession,
   crrtLearningSessionReducer,
+  type CrrtLearningExperience,
   type CrrtLearningSessionState,
   type CrrtPredictionCommitment,
 } from '../learningSession'
 import {
   CRRT_OUTCOME_DOMAIN_MAXIMUMS,
+  CRRT_MASTERY_MINIMUM_SCORE,
   evaluateCrrtMetricCondition,
   readAllowlistedCrrtMetric,
   selectCrrtDebriefProjection,
@@ -57,9 +59,14 @@ function intervention(id: string, category: 'assessment' | 'communication', seco
 function buildCase(): RuntimeCrrtCase {
   return {
     id: 'CRRT-10',
+    contentVersion: 'test-mastery.1',
     goalOptions: [option('goal-correct'), option('goal-other')],
     mechanismOptions: [option('mechanism-correct'), option('mechanism-other')],
-    controlOptions: [option('control-correct'), option('control-other')],
+    controlOptions: [
+      option('control-correct'),
+      option('control-alternative'),
+      option('control-other'),
+    ],
     responseOptions: [option('response-correct'), option('response-other')],
     reassessmentOptions: [option('reassess-correct'), option('reassess-other')],
     hiddenMechanism: {
@@ -86,6 +93,7 @@ function buildCase(): RuntimeCrrtCase {
       {
         id: 'reviewed-alternative',
         label: 'Reviewed alternative',
+        predictionControlOptionIds: ['control-alternative'],
         actionIds: ['alternative-action'],
         reassessmentIds: ['reassess-correct'],
         successConditionIds: ['elapsed-response'],
@@ -160,7 +168,7 @@ function buildCase(): RuntimeCrrtCase {
   } as unknown as RuntimeCrrtCase
 }
 
-function create(experience: 'learn' | 'practice' = 'practice') {
+function create(experience: CrrtLearningExperience = 'practice') {
   const caseDefinition = buildCase()
   return createCrrtLearningSession({
     caseDefinition,
@@ -168,11 +176,41 @@ function create(experience: 'learn' | 'practice' = 'practice') {
     experience,
     roleLens: 'integrated',
     attempt: 1,
+    audience: 'reviewer',
   })
 }
 
-function commit(state: CrrtLearningSessionState) {
-  return crrtLearningSessionReducer(state, { type: 'COMMIT_PREDICTION', prediction })
+function advanceToPrediction(state: CrrtLearningSessionState) {
+  if (state.reasoningPhase === 'read') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'define',
+    })
+  }
+  if (state.reasoningPhase === 'define') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'select',
+    })
+  }
+  if (state.reasoningPhase === 'select') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'predict',
+    })
+  }
+  return state
+}
+
+function commit(
+  state: CrrtLearningSessionState,
+  committedPrediction: CrrtPredictionCommitment = prediction,
+) {
+  state = advanceToPrediction(state)
+  return crrtLearningSessionReducer(state, {
+    type: 'COMMIT_PREDICTION',
+    prediction: committedPrediction,
+  })
 }
 
 function perform(state: CrrtLearningSessionState, interventionId: string) {
@@ -180,6 +218,7 @@ function perform(state: CrrtLearningSessionState, interventionId: string) {
 }
 
 function reassess(state: CrrtLearningSessionState) {
+  state = crrtLearningSessionReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
   return crrtLearningSessionReducer(state, {
     type: 'COMMIT_REASSESSMENT',
     optionIds: ['reassess-correct'],
@@ -187,7 +226,24 @@ function reassess(state: CrrtLearningSessionState) {
 }
 
 describe('CRRT Phase 4 outcomes', () => {
-  it('keeps the fixed six-domain rubric at 100 and scores endpoints plus required actions', () => {
+  it('carries deterministic replay identity without expanding persisted progress', () => {
+    const session = create()
+    const outcome = selectCrrtLearningOutcome(session)
+
+    expect(outcome.resultIdentity).toEqual({
+      caseId: session.caseDefinition.id,
+      attempt: session.attempt,
+      seed: session.simulation.seed,
+      engineVersion: session.simulation.engineVersion,
+      engineSchemaVersion: session.simulation.schemaVersion,
+      simulationContentVersion: session.simulation.contentVersion,
+      caseContentVersion: session.caseDefinition.contentVersion,
+      deviceProfileVersion: session.simulation.deviceProfileVersion,
+      protocolProfileVersion: session.simulation.protocolProfileVersion,
+    })
+  })
+
+  it('keeps the fixed six-domain rubric at 100 and scores Practice without awarding Mastery', () => {
     expect(Object.values(CRRT_OUTCOME_DOMAIN_MAXIMUMS).reduce((sum, value) => sum + value, 0)).toBe(
       100,
     )
@@ -200,23 +256,58 @@ describe('CRRT Phase 4 outcomes', () => {
       expect.objectContaining({
         scored: true,
         score: 100,
-        mastery: true,
+        mastery: false,
         matchedRequiredPath: true,
         criticalErrorIds: [],
       }),
     )
   })
 
-  it('gives a reviewed alternative full path credit without exact-action matching', () => {
-    let state = commit(create())
-    state = perform(state, 'alternative-action')
-    state = perform(state, 'communicate-action')
-    state = reassess(state)
-    const outcome = selectCrrtLearningOutcome(state)
+  it('keeps the Mastery threshold defined but rejects creation while no capstone is active', () => {
+    expect(CRRT_MASTERY_MINIMUM_SCORE).toBe(80)
+    expect(() => create('mastery')).toThrow(/Mastery is locked/i)
+  })
 
-    expect(outcome.matchedRequiredPath).toBe(false)
-    expect(outcome.matchedAcceptedPathIds).toEqual(['reviewed-alternative'])
-    expect(outcome.score).toBe(100)
+  it('refuses to score a forged Mastery projection of a Practice session', () => {
+    const practice = create('practice')
+    const forged = {
+      ...practice,
+      experience: 'mastery' as const,
+      masteryCapstoneId: 'MASTERY-PRISMAX-01',
+    }
+    expect(selectCrrtLearningOutcome(forged)).toMatchObject({
+      scored: false,
+      score: null,
+      mastery: false,
+      domains: null,
+    })
+  })
+
+  it('requires the planned control to match the reviewed alternative that was performed', () => {
+    const completeAlternative = (state: CrrtLearningSessionState) => {
+      state = perform(state, 'alternative-action')
+      state = perform(state, 'communicate-action')
+      return reassess(state)
+    }
+
+    const primaryPlan = selectCrrtLearningOutcome(completeAlternative(commit(create())))
+    expect(primaryPlan.matchedRequiredPath).toBe(false)
+    expect(primaryPlan.matchedAcceptedPathIds).toEqual(['reviewed-alternative'])
+    expect(primaryPlan.domains?.modalityAndPrescription).toBe(0)
+    expect(primaryPlan.score).toBe(80)
+
+    const alternativePlan = selectCrrtLearningOutcome(
+      completeAlternative(
+        commit(create(), {
+          ...prediction,
+          controlOptionIds: ['control-alternative'],
+        }),
+      ),
+    )
+    expect(alternativePlan.domains?.modalityAndPrescription).toBe(
+      CRRT_OUTCOME_DOMAIN_MAXIMUMS.modalityAndPrescription,
+    )
+    expect(alternativePlan.score).toBe(100)
   })
 
   it('caps the hint ladder, penalizes Practice only, and leaves Learn unscored', () => {
@@ -241,8 +332,8 @@ describe('CRRT Phase 4 outcomes', () => {
     })
   })
 
-  it('triggers draft critical rules and blocks mastery', () => {
-    let state = commit(create())
+  it('triggers draft critical rules and blocks Mastery promotion from Practice', () => {
+    let state = commit(create('practice'))
     state = perform(state, 'required-action')
     state = perform(state, 'communicate-action')
     state = perform(state, 'unsafe-action')
@@ -256,6 +347,28 @@ describe('CRRT Phase 4 outcomes', () => {
 
   it('fails closed for unsupported condition paths and projects the causal debrief', () => {
     const state = create()
+    const simulation = state.simulation
+    expect(readAllowlistedCrrtMetric(simulation, 'prescription.flows.dialysateFlowMlHour')).toBe(
+      simulation.prescription.flows.dialysateFlowMlHour,
+    )
+    expect(
+      readAllowlistedCrrtMetric(simulation, 'patient.solutes.potassium.concentrationPerLiter'),
+    ).toBe(
+      simulation.patient.status === 'configured'
+        ? simulation.patient.solutes.potassium?.concentrationPerLiter
+        : undefined,
+    )
+    expect(readAllowlistedCrrtMetric(simulation, 'circuit.pressures.returnPressureMmHg')).toBe(
+      simulation.circuit.pressures.returnPressureMmHg,
+    )
+    expect(readAllowlistedCrrtMetric(simulation, 'circuit.filter.procoagulantBurdenFraction')).toBe(
+      simulation.circuit.filter.procoagulantBurdenFraction,
+    )
+    expect(readAllowlistedCrrtMetric(simulation, 'access.returnResistanceMmHgPerMlMin')).toBe(
+      simulation.access.status === 'configured'
+        ? simulation.access.returnResistanceMmHgPerMlMin
+        : null,
+    )
     expect(readAllowlistedCrrtMetric(state.simulation, 'patient.unreviewedValue')).toBeNull()
     expect(
       evaluateCrrtMetricCondition(state.simulation, {

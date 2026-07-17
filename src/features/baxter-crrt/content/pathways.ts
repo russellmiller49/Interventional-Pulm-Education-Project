@@ -26,7 +26,7 @@ export const baxterCrrtPathways: readonly BaxterCrrtPathwayScaffold[] = Object.f
     summary:
       'Run the three source-mapped pilot cases with staged hints, prediction before action, immediate and delayed response, required reassessment, and an unscored causal debrief.',
     status: 'scaffold',
-    statusLabel: 'Phase 4-5 pilot',
+    statusLabel: 'Protected pilot',
   },
   {
     id: 'practice',
@@ -42,9 +42,9 @@ export const baxterCrrtPathways: readonly BaxterCrrtPathwayScaffold[] = Object.f
     label: 'Mastery',
     eyebrow: 'Unavailable',
     summary:
-      'Unseen capstones remain unavailable until the three-case pilot, clinical review, and device review are complete.',
+      'Mastery creation, scoring, and persistence are locked in the engine until an exact multi-hit capstone, problem domains, scoring, and required reviews are approved.',
     status: 'locked',
-    statusLabel: 'Future phase',
+    statusLabel: 'Review gated',
   },
 ])
 

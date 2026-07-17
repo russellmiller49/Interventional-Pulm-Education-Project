@@ -13,21 +13,24 @@ import {
   ShieldAlert,
   Sparkles,
 } from 'lucide-react'
-import { useState, type Dispatch } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type FormEvent } from 'react'
 
-import type { RuntimeCrrtCase } from '../content'
+import { baxterCrrtMasteryManifest } from '../content/mastery'
+import type { RuntimeCrrtCase } from '../content/schema'
 import {
   selectCrrtDebriefProjection,
   selectCrrtLearningOutcome,
   type CrrtLearningOutcome,
 } from '../engine/outcomes'
+import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
 import type {
   CrrtLearningSessionAction,
   CrrtLearningSessionState,
+  CrrtPrecommitReasoningPhase,
   CrrtPredictionCommitment,
   CrrtReasoningPhase,
 } from '../engine/learningSession'
-import type { CrrtRoleLens } from '../engine/types'
+import { crrtSoluteIds, type CrrtRoleLens } from '../engine/types'
 import styles from './crrt-learning-workflow.module.css'
 
 const reasoningPhases = [
@@ -46,6 +49,15 @@ const roleLabels: Readonly<Record<CrrtRoleLens, string>> = {
   prescriber: 'Prescriber',
 }
 
+const simulationTimeAdvanceOptions = [
+  { seconds: 60, label: '+1 min' },
+  { seconds: 300, label: '+5 min' },
+  { seconds: 900, label: '+15 min' },
+  { seconds: 1_800, label: '+30 min' },
+  { seconds: 3_600, label: '+1 hr' },
+  { seconds: 21_600, label: '+6 hr' },
+] as const
+
 const outcomeDomainLabels: Readonly<
   Record<keyof NonNullable<CrrtLearningOutcome['domains']>, string>
 > = {
@@ -55,6 +67,18 @@ const outcomeDomainLabels: Readonly<
   safetyAndTroubleshooting: 'Safety / troubleshooting',
   monitoringAndReassessment: 'Monitoring / reassessment',
   communicationAndCoordination: 'Communication / team',
+}
+
+const timelineEventLabels: Readonly<
+  Record<CrrtLearningSessionState['timeline'][number]['type'], string>
+> = {
+  'prediction-committed': 'Prediction committed',
+  'intervention-performed': 'Intervention performed',
+  'device-action': 'Device action',
+  'time-advanced': 'Time advanced',
+  'hint-used': 'Hint used',
+  'reassessment-committed': 'Reassessment committed',
+  'debrief-revealed': 'Debrief revealed',
 }
 
 export type CrrtMobileSurface = 'case' | 'machine' | 'circuit' | 'patient' | 'debrief'
@@ -72,21 +96,23 @@ interface CrrtLearningWorkflowProps {
   readonly onFirstSafeAction?: (interventionId: string) => void
   readonly onReassessmentCommitted?: () => void
   readonly onDebriefRevealed?: (outcome: CrrtLearningOutcome) => void
-}
-
-function currentRibbonPhase(session: CrrtLearningSessionState): CrrtReasoningPhase {
-  if (session.debriefRevealed || session.reassessment.committed) return 'reflect'
-  if (session.performedInterventionIds.length > 0) return 'reassess'
-  if (session.prediction) return 'run'
-  return 'predict'
+  /** Prefixes every authored DOM ID so multiple workflow instances can coexist. */
+  readonly idNamespace?: string
 }
 
 export function CrrtReasoningRibbon({ session }: { session: CrrtLearningSessionState }) {
-  const current = currentRibbonPhase(session)
+  const current = session.reasoningPhase
   const currentIndex = reasoningPhases.findIndex(([id]) => id === current)
 
   return (
-    <nav className={styles.reasoningRibbon} aria-label="CRRT reasoning sequence">
+    <nav
+      className={styles.reasoningRibbon}
+      aria-label={
+        session.audience === 'reviewer'
+          ? 'CRRT reviewer reasoning sequence'
+          : 'CRRT reasoning sequence'
+      }
+    >
       <span>Reasoning loop</span>
       <ol>
         {reasoningPhases.map(([id, label], index) => (
@@ -114,9 +140,41 @@ function selectedLabel(
   return options.find((option) => option.id === id)?.label ?? id
 }
 
+function formatSimulationTime(seconds: number): string {
+  if (seconds === 0) return '0 min'
+  if (seconds % 3_600 === 0) return `${seconds / 3_600} hr`
+  if (seconds % 60 === 0) return `${seconds / 60} min`
+  return `${seconds} sec`
+}
+
+function formatTrendValue(value: number | null | undefined, unit: string): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'Unavailable'
+  const rounded = Math.round(value * 100) / 100
+  return `${rounded} ${unit}`
+}
+
+function timelineReferenceLabel(
+  definition: RuntimeCrrtCase,
+  entry: CrrtLearningSessionState['timeline'][number],
+): string | null {
+  const referenceId = entry.referenceId
+  if (referenceId === null) return null
+  if (entry.type === 'time-advanced') {
+    const seconds = Number(referenceId)
+    return Number.isFinite(seconds) ? `+${formatSimulationTime(seconds)}` : referenceId
+  }
+  const intervention = definition.interventions.find(({ id }) => id === referenceId)
+  if (intervention) return intervention.label
+  const hint = definition.hintLadder.find(({ id }) => id === referenceId)
+  if (hint) return `Hint ${hint.sequence}`
+  return referenceId.replaceAll('-', ' ')
+}
+
 function toggleId(current: readonly string[], id: string): string[] {
   return current.includes(id) ? current.filter((value) => value !== id) : [...current, id]
 }
+
+type CrrtPredictionFieldId = 'goal' | 'mechanism' | 'control' | 'response' | 'reassessment'
 
 export function CrrtLearningWorkflow({
   session,
@@ -131,32 +189,171 @@ export function CrrtLearningWorkflow({
   onFirstSafeAction,
   onReassessmentCommitted,
   onDebriefRevealed,
+  idNamespace,
 }: CrrtLearningWorkflowProps) {
   const definition = session.caseDefinition
+  const isMastery = session.experience === 'mastery'
+  const isReviewer = session.audience === 'reviewer'
+  const scopedId = (id: string) => (idNamespace ? `${idNamespace}-${id}` : id)
+  const experienceLabel =
+    session.experience === 'learn'
+      ? 'Guided Learn'
+      : session.experience === 'practice'
+        ? isReviewer
+          ? 'Reviewer score preview'
+          : 'Scored Practice'
+        : 'Mastery attempt'
+  const visibleCaseTitle =
+    isMastery && !session.debriefRevealed
+      ? baxterCrrtMasteryManifest.learnerTitleBeforeDebrief
+      : definition.title
   const [goalOptionId, setGoalOptionId] = useState('')
   const [mechanismOptionId, setMechanismOptionId] = useState('')
   const [controlOptionIds, setControlOptionIds] = useState<readonly string[]>([])
   const [responseOptionId, setResponseOptionId] = useState('')
   const [plannedReassessmentIds, setPlannedReassessmentIds] = useState<readonly string[]>([])
   const [actualReassessmentIds, setActualReassessmentIds] = useState<readonly string[]>([])
+  const [predictionSubmitAttempt, setPredictionSubmitAttempt] = useState(0)
+  const predictionValidationSummaryRef = useRef<HTMLDivElement>(null)
+  const goalSelectRef = useRef<HTMLSelectElement>(null)
+  const mechanismSelectRef = useRef<HTMLSelectElement>(null)
+  const controlCheckboxRef = useRef<HTMLInputElement>(null)
+  const responseSelectRef = useRef<HTMLSelectElement>(null)
+  const reassessmentCheckboxRef = useRef<HTMLInputElement>(null)
   const outcome = selectCrrtLearningOutcome(session)
   const debrief = session.debriefRevealed ? selectCrrtDebriefProjection(session) : null
   const usedHintSet = new Set(session.usedHintIds)
   const performedSet = new Set(session.performedInterventionIds)
+  const completedRequiredActions = definition.requiredActionIds.filter((id) => performedSet.has(id))
+  const missedRequiredActions = definition.requiredActionIds.filter((id) => !performedSet.has(id))
+  const matchedAcceptedPaths = definition.acceptedAlternativePaths.filter((path) =>
+    outcome.matchedAcceptedPathIds.includes(path.id),
+  )
+  const firstTrend = session.simulation.trends[0]
+  const latestTrend = session.simulation.trends.at(-1)
+  const trendEvidenceRows =
+    firstTrend && latestTrend
+      ? [
+          {
+            label: 'Prescribed effluent dose',
+            first: formatTrendValue(firstTrend.prescribedEffluentDoseMlKgHour, 'mL/kg/h'),
+            latest: formatTrendValue(latestTrend.prescribedEffluentDoseMlKgHour, 'mL/kg/h'),
+          },
+          {
+            label: 'Delivered dose',
+            first: formatTrendValue(firstTrend.deliveredDoseMlKgHour, 'mL/kg/h'),
+            latest: formatTrendValue(latestTrend.deliveredDoseMlKgHour, 'mL/kg/h'),
+          },
+          {
+            label: 'Whole-patient balance',
+            first: formatTrendValue(firstTrend.cumulativeWholePatientBalanceMl, 'mL'),
+            latest: formatTrendValue(latestTrend.cumulativeWholePatientBalanceMl, 'mL'),
+          },
+          {
+            label: 'Access pressure',
+            first: formatTrendValue(firstTrend.accessPressureMmHg, 'mmHg'),
+            latest: formatTrendValue(latestTrend.accessPressureMmHg, 'mmHg'),
+          },
+          {
+            label: 'Filter pressure',
+            first: formatTrendValue(firstTrend.filterPressureMmHg, 'mmHg'),
+            latest: formatTrendValue(latestTrend.filterPressureMmHg, 'mmHg'),
+          },
+          {
+            label: 'Return pressure',
+            first: formatTrendValue(firstTrend.returnPressureMmHg, 'mmHg'),
+            latest: formatTrendValue(latestTrend.returnPressureMmHg, 'mmHg'),
+          },
+          {
+            label: 'Transmembrane pressure',
+            first: formatTrendValue(firstTrend.transmembranePressureMmHg, 'mmHg'),
+            latest: formatTrendValue(latestTrend.transmembranePressureMmHg, 'mmHg'),
+          },
+          ...crrtSoluteIds.flatMap((id) => {
+            const first = firstTrend.soluteConcentrationsPerLiter[id]
+            const latest = latestTrend.soluteConcentrationsPerLiter[id]
+            if (first === undefined && latest === undefined) return []
+            const pool =
+              session.simulation.patient.status === 'configured'
+                ? session.simulation.patient.solutes[id]
+                : undefined
+            const unit = pool?.concentrationUnit ?? 'per L'
+            return [
+              {
+                label: id.replaceAll('-', ' '),
+                first: formatTrendValue(first, unit),
+                latest: formatTrendValue(latest, unit),
+              },
+            ]
+          }),
+        ]
+      : []
   const unsafeActionIds = new Set(definition.unsafeActions.map((unsafe) => unsafe.actionId))
-  const nextHint = definition.hintLadder
-    .slice()
-    .sort((left, right) => left.sequence - right.sequence)
-    .find((hint) => !usedHintSet.has(hint.id))
+  const nextHint = isMastery
+    ? undefined
+    : definition.hintLadder
+        .slice()
+        .sort((left, right) => left.sequence - right.sequence)
+        .find((hint) => !usedHintSet.has(hint.id))
+  const definedGoal = goalOptionId !== ''
+  const selectedMechanismAndControl =
+    definedGoal && mechanismOptionId !== '' && controlOptionIds.length > 0
   const completePrediction =
-    goalOptionId !== '' &&
-    mechanismOptionId !== '' &&
-    controlOptionIds.length > 0 &&
-    responseOptionId !== '' &&
-    plannedReassessmentIds.length > 0
+    selectedMechanismAndControl && responseOptionId !== '' && plannedReassessmentIds.length > 0
+  const hasPerformedIntervention = session.performedInterventionIds.length > 0
+  const canReassess = hasPerformedIntervention && session.reasoningPhase === 'reassess'
+  const timeControlsLocked = !session.prediction || session.debriefRevealed
+  const secondsUntilNextScheduledEvent = selectSecondsUntilNextScheduledEvent(session.simulation)
+  const predictionValidationAttempted = predictionSubmitAttempt > 0
+  const missingPredictionFields: readonly {
+    readonly id: CrrtPredictionFieldId
+    readonly label: string
+  }[] = [
+    ...(goalOptionId === '' ? [{ id: 'goal' as const, label: '1 · Goal' }] : []),
+    ...(mechanismOptionId === '' ? [{ id: 'mechanism' as const, label: '2 · Mechanism' }] : []),
+    ...(controlOptionIds.length === 0
+      ? [{ id: 'control' as const, label: '3 · Planned control' }]
+      : []),
+    ...(responseOptionId === ''
+      ? [{ id: 'response' as const, label: '4 · Expected response' }]
+      : []),
+    ...(plannedReassessmentIds.length === 0
+      ? [{ id: 'reassessment' as const, label: '5 · Reassessment plan' }]
+      : []),
+  ]
+  const goalInvalid = predictionValidationAttempted && goalOptionId === ''
+  const mechanismInvalid = predictionValidationAttempted && mechanismOptionId === ''
+  const controlInvalid = predictionValidationAttempted && controlOptionIds.length === 0
+  const responseInvalid = predictionValidationAttempted && responseOptionId === ''
+  const reassessmentInvalid = predictionValidationAttempted && plannedReassessmentIds.length === 0
 
-  function commitPrediction() {
-    if (!completePrediction || session.prediction) return
+  useEffect(() => {
+    if (predictionSubmitAttempt > 0) predictionValidationSummaryRef.current?.focus()
+  }, [predictionSubmitAttempt])
+
+  function focusPredictionField(fieldId: CrrtPredictionFieldId) {
+    const fieldRefs = {
+      goal: goalSelectRef,
+      mechanism: mechanismSelectRef,
+      control: controlCheckboxRef,
+      response: responseSelectRef,
+      reassessment: reassessmentCheckboxRef,
+    } as const
+    fieldRefs[fieldId].current?.focus()
+  }
+
+  function enterPrecommitReasoningPhase(phase: CrrtPrecommitReasoningPhase) {
+    dispatch({ type: 'ENTER_PRECOMMIT_REASONING_PHASE', phase })
+  }
+
+  function commitPrediction(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (session.prediction) return
+    if (!completePrediction) {
+      setPredictionSubmitAttempt((attempt) => attempt + 1)
+      return
+    }
+    if (session.reasoningPhase !== 'predict') return
     const prediction: CrrtPredictionCommitment = {
       goalOptionId,
       mechanismOptionId,
@@ -176,7 +373,9 @@ export function CrrtLearningWorkflow({
   }
 
   function commitReassessment() {
-    if (actualReassessmentIds.length === 0 || session.reassessment.committed) return
+    if (actualReassessmentIds.length === 0 || session.reassessment.committed || !canReassess) {
+      return
+    }
     dispatch({ type: 'COMMIT_REASSESSMENT', optionIds: actualReassessmentIds })
     onReassessmentCommitted?.()
   }
@@ -190,19 +389,35 @@ export function CrrtLearningWorkflow({
   return (
     <div className={styles.learningWorkflow}>
       <div
+        id={scopedId('baxter-crrt-mobile-panel-case')}
         className={styles.caseWorkflow}
+        role="tabpanel"
+        aria-labelledby={scopedId('baxter-crrt-mobile-tab-case')}
         data-mobile-active={mobileSurface === 'case'}
         data-testid="crrt-case-workflow"
       >
         <div className={styles.contextControls}>
           <label>
-            <span>Pilot case</span>
-            <select value={definition.id} onChange={(event) => onCaseChange(event.target.value)}>
-              {availableCases.map((caseDefinition) => (
-                <option key={caseDefinition.id} value={caseDefinition.id}>
-                  {caseDefinition.id} · {caseDefinition.title}
+            <span>
+              {isMastery ? 'Mastery capstone' : isReviewer ? 'Review case candidate' : 'Pilot case'}
+            </span>
+            <select
+              disabled={isMastery}
+              value={isMastery ? 'mastery-masked' : definition.id}
+              aria-describedby={isMastery ? scopedId('crrt-mastery-boundary') : undefined}
+              onChange={(event) => onCaseChange(event.target.value)}
+            >
+              {isMastery ? (
+                <option value="mastery-masked">
+                  {baxterCrrtMasteryManifest.learnerTitleBeforeDebrief}
                 </option>
-              ))}
+              ) : (
+                availableCases.map((caseDefinition) => (
+                  <option key={caseDefinition.id} value={caseDefinition.id}>
+                    {caseDefinition.id} · {caseDefinition.title}
+                  </option>
+                ))
+              )}
             </select>
           </label>
           <label>
@@ -223,13 +438,28 @@ export function CrrtLearningWorkflow({
           </button>
         </div>
 
+        {isMastery ? (
+          <div
+            id={scopedId('crrt-mastery-boundary')}
+            className={styles.masteryBoundary}
+            role="note"
+            aria-labelledby={scopedId('crrt-mastery-boundary-heading')}
+          >
+            <LockKeyhole aria-hidden="true" />
+            <p>
+              <strong id={scopedId('crrt-mastery-boundary-heading')}>Mastery safeguards.</strong>{' '}
+              Case identity remains masked until causal debrief. Guided assistance is unavailable,
+              and Clean attempt starts a new, unassisted attempt.
+            </p>
+          </div>
+        ) : null}
+
         <header className={styles.caseHeader}>
           <div>
             <span>
-              {definition.id} ·{' '}
-              {session.experience === 'learn' ? 'Guided Learn' : 'Scored Practice'}
+              {isMastery ? 'Masked case' : definition.id} · {experienceLabel}
             </span>
-            <h3>{definition.title}</h3>
+            <h3>{visibleCaseTitle}</h3>
           </div>
           <strong>Attempt {session.attempt}</strong>
         </header>
@@ -239,15 +469,23 @@ export function CrrtLearningWorkflow({
           <p>
             <strong>Synthetic case · review pending.</strong> Exact values, thresholds, scoring, and
             critical-error rules are educational calibration—not clinical targets.
+            {isReviewer
+              ? ' This reviewer preview produces no analytics, progress, persistence, competency, or learner activation.'
+              : null}
           </p>
         </div>
 
-        <section className={styles.findingsSection} aria-labelledby="crrt-case-findings">
+        <section
+          className={styles.findingsSection}
+          aria-labelledby={scopedId('crrt-case-findings')}
+        >
           <div className={styles.workflowHeading}>
             <BrainCircuit aria-hidden="true" />
             <div>
               <span>Read</span>
-              <h4 id="crrt-case-findings">Patient, access, circuit, and delivered treatment</h4>
+              <h4 id={scopedId('crrt-case-findings')}>
+                Patient, access, circuit, and delivered treatment
+              </h4>
             </div>
           </div>
           <p>{definition.patientDescription}</p>
@@ -268,12 +506,15 @@ export function CrrtLearningWorkflow({
           ) : null}
         </section>
 
-        <section className={styles.predictionSection} aria-labelledby="crrt-prediction-heading">
+        <section
+          className={styles.predictionSection}
+          aria-labelledby={scopedId('crrt-prediction-heading')}
+        >
           <div className={styles.workflowHeading}>
             {session.prediction ? <Check aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}
             <div>
               <span>Define · Select · Predict</span>
-              <h4 id="crrt-prediction-heading">Commit before controls unlock</h4>
+              <h4 id={scopedId('crrt-prediction-heading')}>Commit before controls unlock</h4>
             </div>
           </div>
 
@@ -313,12 +554,66 @@ export function CrrtLearningWorkflow({
               </div>
             </dl>
           ) : (
-            <div className={styles.predictionForm}>
+            <form className={styles.predictionForm} noValidate onSubmit={commitPrediction}>
+              {predictionValidationAttempted && missingPredictionFields.length > 0 ? (
+                <div
+                  ref={predictionValidationSummaryRef}
+                  className={styles.predictionValidationSummary}
+                  role="alert"
+                  tabIndex={-1}
+                  aria-labelledby={scopedId('crrt-prediction-validation-heading')}
+                >
+                  <strong id={scopedId('crrt-prediction-validation-heading')}>
+                    Prediction not committed
+                  </strong>
+                  <p>Complete every required field, then commit the prediction again.</p>
+                  <ul>
+                    {missingPredictionFields.map((field) => (
+                      <li key={field.id}>{field.label}</li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={() => focusPredictionField(missingPredictionFields[0].id)}
+                  >
+                    Go to first missing field: {missingPredictionFields[0].label}
+                  </button>
+                </div>
+              ) : null}
               <label>
-                <span>1 · Goal</span>
+                <span id={scopedId('crrt-prediction-goal-label')}>1 · Goal</span>
+                <small
+                  id={scopedId('crrt-prediction-goal-instructions')}
+                  className={styles.predictionInstruction}
+                >
+                  Required. Choose one goal.
+                </small>
+                {goalInvalid ? (
+                  <small
+                    id={scopedId('crrt-prediction-goal-error')}
+                    className={styles.predictionFieldError}
+                  >
+                    Choose a goal before committing.
+                  </small>
+                ) : null}
                 <select
+                  ref={goalSelectRef}
+                  required
                   value={goalOptionId}
-                  onChange={(event) => setGoalOptionId(event.target.value)}
+                  aria-labelledby={scopedId('crrt-prediction-goal-label')}
+                  aria-describedby={`${scopedId('crrt-prediction-goal-instructions')}${
+                    goalInvalid ? ` ${scopedId('crrt-prediction-goal-error')}` : ''
+                  }`}
+                  aria-invalid={goalInvalid ? 'true' : undefined}
+                  onFocus={() => enterPrecommitReasoningPhase('define')}
+                  onChange={(event) => {
+                    setGoalOptionId(event.target.value)
+                    setMechanismOptionId('')
+                    setControlOptionIds([])
+                    setResponseOptionId('')
+                    setPlannedReassessmentIds([])
+                    enterPrecommitReasoningPhase('define')
+                  }}
                 >
                   <option value="">Choose the exact goal…</option>
                   {definition.goalOptions.map((option) => (
@@ -329,10 +624,38 @@ export function CrrtLearningWorkflow({
                 </select>
               </label>
               <label>
-                <span>2 · Mechanism</span>
+                <span id={scopedId('crrt-prediction-mechanism-label')}>2 · Mechanism</span>
+                <small
+                  id={scopedId('crrt-prediction-mechanism-instructions')}
+                  className={styles.predictionInstruction}
+                >
+                  Required. After defining a goal, choose one mechanism.
+                </small>
+                {mechanismInvalid ? (
+                  <small
+                    id={scopedId('crrt-prediction-mechanism-error')}
+                    className={styles.predictionFieldError}
+                  >
+                    Choose a mechanism before committing.
+                  </small>
+                ) : null}
                 <select
+                  ref={mechanismSelectRef}
+                  required
+                  disabled={!definedGoal}
                   value={mechanismOptionId}
-                  onChange={(event) => setMechanismOptionId(event.target.value)}
+                  aria-labelledby={scopedId('crrt-prediction-mechanism-label')}
+                  aria-describedby={`${scopedId('crrt-prediction-mechanism-instructions')}${
+                    mechanismInvalid ? ` ${scopedId('crrt-prediction-mechanism-error')}` : ''
+                  }`}
+                  aria-invalid={mechanismInvalid ? 'true' : undefined}
+                  onFocus={() => enterPrecommitReasoningPhase('select')}
+                  onChange={(event) => {
+                    setMechanismOptionId(event.target.value)
+                    setResponseOptionId('')
+                    setPlannedReassessmentIds([])
+                    enterPrecommitReasoningPhase('select')
+                  }}
                 >
                   <option value="">Choose the mechanism…</option>
                   {definition.mechanismOptions.map((option) => (
@@ -342,24 +665,82 @@ export function CrrtLearningWorkflow({
                   ))}
                 </select>
               </label>
-              <fieldset>
+              <fieldset
+                disabled={!definedGoal}
+                data-invalid={controlInvalid || undefined}
+                aria-describedby={`${scopedId('crrt-prediction-control-instructions')}${
+                  controlInvalid ? ` ${scopedId('crrt-prediction-control-error')}` : ''
+                }`}
+              >
                 <legend>3 · Planned control</legend>
-                {definition.controlOptions.map((option) => (
+                <p
+                  id={scopedId('crrt-prediction-control-instructions')}
+                  className={styles.predictionInstruction}
+                >
+                  Required. After defining a goal, select at least one planned control.
+                </p>
+                {controlInvalid ? (
+                  <p
+                    id={scopedId('crrt-prediction-control-error')}
+                    className={styles.predictionFieldError}
+                  >
+                    Select a planned control before committing.
+                  </p>
+                ) : null}
+                {definition.controlOptions.map((option, index) => (
                   <label key={option.id}>
                     <input
+                      ref={index === 0 ? controlCheckboxRef : undefined}
                       checked={controlOptionIds.includes(option.id)}
                       type="checkbox"
-                      onChange={() => setControlOptionIds(toggleId(controlOptionIds, option.id))}
+                      aria-describedby={`${scopedId('crrt-prediction-control-instructions')}${
+                        controlInvalid ? ` ${scopedId('crrt-prediction-control-error')}` : ''
+                      }`}
+                      aria-invalid={controlInvalid ? 'true' : undefined}
+                      onFocus={() => enterPrecommitReasoningPhase('select')}
+                      onChange={() => {
+                        setControlOptionIds(toggleId(controlOptionIds, option.id))
+                        setResponseOptionId('')
+                        setPlannedReassessmentIds([])
+                        enterPrecommitReasoningPhase('select')
+                      }}
                     />
                     <span>{option.label}</span>
                   </label>
                 ))}
               </fieldset>
               <label>
-                <span>4 · Expected response</span>
+                <span id={scopedId('crrt-prediction-response-label')}>4 · Expected response</span>
+                <small
+                  id={scopedId('crrt-prediction-response-instructions')}
+                  className={styles.predictionInstruction}
+                >
+                  Required. After choosing a mechanism and planned control, choose one expected
+                  response.
+                </small>
+                {responseInvalid ? (
+                  <small
+                    id={scopedId('crrt-prediction-response-error')}
+                    className={styles.predictionFieldError}
+                  >
+                    Choose an expected response before committing.
+                  </small>
+                ) : null}
                 <select
+                  ref={responseSelectRef}
+                  required
+                  disabled={!selectedMechanismAndControl}
                   value={responseOptionId}
-                  onChange={(event) => setResponseOptionId(event.target.value)}
+                  aria-labelledby={scopedId('crrt-prediction-response-label')}
+                  aria-describedby={`${scopedId('crrt-prediction-response-instructions')}${
+                    responseInvalid ? ` ${scopedId('crrt-prediction-response-error')}` : ''
+                  }`}
+                  aria-invalid={responseInvalid ? 'true' : undefined}
+                  onFocus={() => enterPrecommitReasoningPhase('predict')}
+                  onChange={(event) => {
+                    setResponseOptionId(event.target.value)
+                    enterPrecommitReasoningPhase('predict')
+                  }}
                 >
                   <option value="">Choose immediate and delayed response…</option>
                   {definition.responseOptions.map((option) => (
@@ -369,39 +750,71 @@ export function CrrtLearningWorkflow({
                   ))}
                 </select>
               </label>
-              <fieldset>
+              <fieldset
+                disabled={!selectedMechanismAndControl}
+                data-invalid={reassessmentInvalid || undefined}
+                aria-describedby={`${scopedId('crrt-prediction-reassessment-instructions')}${
+                  reassessmentInvalid ? ` ${scopedId('crrt-prediction-reassessment-error')}` : ''
+                }`}
+              >
                 <legend>5 · Reassessment plan</legend>
-                {definition.reassessmentOptions.map((option) => (
+                <p
+                  id={scopedId('crrt-prediction-reassessment-instructions')}
+                  className={styles.predictionInstruction}
+                >
+                  Required. After choosing a mechanism and planned control, select at least one
+                  reassessment.
+                </p>
+                {reassessmentInvalid ? (
+                  <p
+                    id={scopedId('crrt-prediction-reassessment-error')}
+                    className={styles.predictionFieldError}
+                  >
+                    Select a reassessment before committing.
+                  </p>
+                ) : null}
+                {definition.reassessmentOptions.map((option, index) => (
                   <label key={option.id}>
                     <input
+                      ref={index === 0 ? reassessmentCheckboxRef : undefined}
                       checked={plannedReassessmentIds.includes(option.id)}
                       type="checkbox"
-                      onChange={() =>
+                      aria-describedby={`${scopedId('crrt-prediction-reassessment-instructions')}${
+                        reassessmentInvalid
+                          ? ` ${scopedId('crrt-prediction-reassessment-error')}`
+                          : ''
+                      }`}
+                      aria-invalid={reassessmentInvalid ? 'true' : undefined}
+                      onFocus={() => enterPrecommitReasoningPhase('predict')}
+                      onChange={() => {
                         setPlannedReassessmentIds(toggleId(plannedReassessmentIds, option.id))
-                      }
+                        enterPrecommitReasoningPhase('predict')
+                      }}
                     />
                     <span>{option.label}</span>
                   </label>
                 ))}
               </fieldset>
-              <button
-                type="button"
-                className={styles.commitButton}
-                disabled={!completePrediction}
-                onClick={commitPrediction}
-              >
+              <button type="submit" className={styles.commitButton}>
                 Commit prediction <ArrowRight aria-hidden="true" />
               </button>
-            </div>
+            </form>
           )}
         </section>
 
-        <section className={styles.actionSection} aria-labelledby="crrt-actions-heading">
+        <section
+          className={styles.actionSection}
+          aria-labelledby={scopedId('crrt-actions-heading')}
+        >
           <div className={styles.workflowHeading}>
             <ArrowRight aria-hidden="true" />
             <div>
               <span>Run</span>
-              <h4 id="crrt-actions-heading">Intervene through the case and machine</h4>
+              <h4 id={scopedId('crrt-actions-heading')}>
+                {session.audience === 'reviewer'
+                  ? 'Intervene through the authored case actions'
+                  : 'Intervene through the case and machine'}
+              </h4>
             </div>
           </div>
 
@@ -453,7 +866,7 @@ export function CrrtLearningWorkflow({
             </div>
           )}
 
-          <div className={styles.timeControls}>
+          <div className={styles.timeControls} role="group" aria-label="Advance simulated time">
             <div>
               <Clock3 aria-hidden="true" />
               <span>
@@ -461,65 +874,88 @@ export function CrrtLearningWorkflow({
                 Separate immediate device response from delayed simulated response.
               </span>
             </div>
-            {[5, 30, 60].map((minutes) => (
+            {simulationTimeAdvanceOptions.map((option) => (
               <button
-                key={minutes}
+                key={option.seconds}
                 type="button"
-                disabled={!session.prediction || session.debriefRevealed}
-                onClick={() => dispatch({ type: 'ADVANCE_TIME', seconds: minutes * 60 })}
+                disabled={timeControlsLocked}
+                onClick={() => dispatch({ type: 'ADVANCE_TIME', seconds: option.seconds })}
               >
-                +{minutes} min
+                {option.label}
               </button>
             ))}
+            {secondsUntilNextScheduledEvent !== null ? (
+              <button
+                type="button"
+                className={styles.nextEventButton}
+                disabled={timeControlsLocked}
+                onClick={() =>
+                  dispatch({ type: 'ADVANCE_TIME', seconds: secondsUntilNextScheduledEvent })
+                }
+              >
+                Advance to next scheduled event
+              </button>
+            ) : null}
           </div>
         </section>
 
-        <section className={styles.hintSection} aria-labelledby="crrt-hint-heading">
-          <div className={styles.workflowHeading}>
-            <Lightbulb aria-hidden="true" />
-            <div>
-              <span>Hint ladder</span>
-              <h4 id="crrt-hint-heading">
-                {session.experience === 'learn'
-                  ? 'Reveal guidance one step at a time'
-                  : 'Optional, scored support'}
-              </h4>
+        {!isMastery ? (
+          <section className={styles.hintSection} aria-labelledby={scopedId('crrt-hint-heading')}>
+            <div className={styles.workflowHeading}>
+              <Lightbulb aria-hidden="true" />
+              <div>
+                <span>Hint ladder</span>
+                <h4 id={scopedId('crrt-hint-heading')}>
+                  {session.experience === 'learn'
+                    ? 'Reveal guidance one step at a time'
+                    : 'Optional, scored support'}
+                </h4>
+              </div>
             </div>
-          </div>
-          {session.usedHintIds.length > 0 ? (
-            <ol className={styles.usedHints}>
-              {definition.hintLadder
-                .filter((hint) => usedHintSet.has(hint.id))
-                .sort((left, right) => left.sequence - right.sequence)
-                .map((hint) => (
-                  <li key={hint.id}>{hint.text}</li>
-                ))}
-            </ol>
-          ) : (
-            <p>No hints revealed.</p>
-          )}
-          <button
-            type="button"
-            disabled={!nextHint || session.debriefRevealed}
-            onClick={() => {
-              dispatch({ type: 'USE_HINT' })
-              onHintUsed?.()
-            }}
-          >
-            <Lightbulb aria-hidden="true" />
-            {nextHint ? `Reveal hint ${nextHint.sequence}` : 'All hints used'}
-          </button>
-          {session.experience === 'practice' ? (
-            <small>Each revealed hint subtracts 5 points, capped by the scoring engine.</small>
-          ) : null}
-        </section>
+            {session.usedHintIds.length > 0 ? (
+              <ol className={styles.usedHints}>
+                {definition.hintLadder
+                  .filter((hint) => usedHintSet.has(hint.id))
+                  .sort((left, right) => left.sequence - right.sequence)
+                  .map((hint) => (
+                    <li key={hint.id}>{hint.text}</li>
+                  ))}
+              </ol>
+            ) : (
+              <p>No hints revealed.</p>
+            )}
+            <button
+              type="button"
+              disabled={!nextHint || session.debriefRevealed}
+              onClick={() => {
+                dispatch({ type: 'USE_HINT' })
+                onHintUsed?.()
+              }}
+            >
+              <Lightbulb aria-hidden="true" />
+              {nextHint ? `Reveal hint ${nextHint.sequence}` : 'All hints used'}
+            </button>
+            {session.experience === 'practice' ? (
+              <small>
+                {isReviewer
+                  ? 'Each revealed hint subtracts 5 candidate-preview points; this result is not saved.'
+                  : 'Each revealed hint subtracts 5 points, capped by the scoring engine.'}
+              </small>
+            ) : null}
+          </section>
+        ) : null}
 
-        <section className={styles.reassessmentSection} aria-labelledby="crrt-reassess-heading">
+        <section
+          className={styles.reassessmentSection}
+          aria-labelledby={scopedId('crrt-reassess-heading')}
+        >
           <div className={styles.workflowHeading}>
             <MessageSquareText aria-hidden="true" />
             <div>
               <span>Reassess</span>
-              <h4 id="crrt-reassess-heading">Compare prediction with actual response</h4>
+              <h4 id={scopedId('crrt-reassess-heading')}>
+                Compare prediction with actual response
+              </h4>
             </div>
           </div>
           {session.reassessment.committed ? (
@@ -527,7 +963,10 @@ export function CrrtLearningWorkflow({
               <Check aria-hidden="true" /> Reassessment committed. Continue to causal debrief.
             </p>
           ) : (
-            <fieldset disabled={session.performedInterventionIds.length === 0}>
+            <fieldset
+              disabled={!canReassess}
+              aria-describedby={canReassess ? undefined : scopedId('crrt-reassess-prerequisite')}
+            >
               <legend>Select every reassessment you actually completed</legend>
               {definition.reassessmentOptions.map((option) => (
                 <label key={option.id}>
@@ -550,8 +989,12 @@ export function CrrtLearningWorkflow({
               </button>
             </fieldset>
           )}
-          {session.performedInterventionIds.length === 0 ? (
-            <small>Perform at least one intervention before reassessment.</small>
+          {!canReassess ? (
+            <small id={scopedId('crrt-reassess-prerequisite')}>
+              {hasPerformedIntervention
+                ? 'Advance simulated time by a positive interval before reassessment.'
+                : 'Perform at least one intervention, then advance simulated time by a positive interval before reassessment.'}
+            </small>
           ) : null}
         </section>
 
@@ -567,15 +1010,17 @@ export function CrrtLearningWorkflow({
       </div>
 
       <section
+        id={scopedId('baxter-crrt-mobile-panel-debrief')}
         className={styles.debriefSection}
+        role="tabpanel"
+        aria-labelledby={scopedId('baxter-crrt-mobile-tab-debrief')}
         data-mobile-active={mobileSurface === 'debrief'}
-        aria-labelledby="crrt-debrief-heading"
       >
         <div className={styles.workflowHeading}>
           <Sparkles aria-hidden="true" />
           <div>
             <span>Reflect</span>
-            <h4 id="crrt-debrief-heading">Causal debrief</h4>
+            <h4 id={scopedId('crrt-debrief-heading')}>Causal debrief</h4>
           </div>
         </div>
 
@@ -592,12 +1037,31 @@ export function CrrtLearningWorkflow({
           <div className={styles.debriefBody}>
             <p className={styles.debriefSummary}>{debrief.summary}</p>
             {debrief.outcome.scored && debrief.outcome.score !== null ? (
-              <section className={styles.scoreCard} aria-label="Practice score">
+              <section
+                className={styles.scoreCard}
+                aria-label={
+                  isMastery
+                    ? 'Mastery score'
+                    : isReviewer
+                      ? 'Candidate score preview'
+                      : 'Practice score'
+                }
+              >
                 <div>
-                  <span>Practice score</span>
+                  <span>
+                    {isMastery
+                      ? 'Mastery score'
+                      : isReviewer
+                        ? 'Candidate score preview'
+                        : 'Practice score'}
+                  </span>
                   <strong>{debrief.outcome.score}/100</strong>
                   <small>
-                    Draft educational score · {debrief.outcome.hintPenalty} hint-penalty points
+                    {isMastery
+                      ? 'Draft Mastery result · no competency or release claim'
+                      : isReviewer
+                        ? `Reviewer-only rubric output · ${debrief.outcome.hintPenalty} hint-penalty points · not saved or competency-bearing`
+                        : `Draft educational score · ${debrief.outcome.hintPenalty} hint-penalty points`}
                   </small>
                 </div>
                 {debrief.outcome.domains ? (
@@ -616,6 +1080,160 @@ export function CrrtLearningWorkflow({
                 Guided Learn is intentionally unscored. No mastery or competency decision is made.
               </p>
             )}
+
+            <section
+              className={styles.attemptEvidence}
+              aria-labelledby={scopedId('crrt-actual-attempt-evidence')}
+            >
+              <h5 id={scopedId('crrt-actual-attempt-evidence')}>Actual attempt evidence</h5>
+              <dl className={styles.attemptEvidenceGrid}>
+                <div>
+                  <dt>Committed control plan</dt>
+                  <dd>
+                    {debrief.prediction
+                      ? debrief.prediction.controlOptionIds
+                          .map((id) => selectedLabel(definition.controlOptions, id))
+                          .join('; ')
+                      : 'No prediction recorded'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Performed interventions</dt>
+                  <dd>
+                    {session.performedInterventionIds.length > 0
+                      ? session.performedInterventionIds
+                          .map((id) => selectedLabel(definition.interventions, id))
+                          .join('; ')
+                      : 'None'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Completed required actions</dt>
+                  <dd>
+                    {completedRequiredActions.length > 0
+                      ? completedRequiredActions
+                          .map((id) => selectedLabel(definition.interventions, id))
+                          .join('; ')
+                      : 'None'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Missed required actions</dt>
+                  <dd>
+                    {missedRequiredActions.length > 0
+                      ? missedRequiredActions
+                          .map((id) => selectedLabel(definition.interventions, id))
+                          .join('; ')
+                      : 'None'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Actual reassessment</dt>
+                  <dd>
+                    {session.reassessment.optionIds.length > 0
+                      ? session.reassessment.optionIds
+                          .map((id) => selectedLabel(definition.reassessmentOptions, id))
+                          .join('; ')
+                      : 'None'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Matched accepted path</dt>
+                  <dd>
+                    {matchedAcceptedPaths.length > 0
+                      ? matchedAcceptedPaths.map(({ label }) => label).join('; ')
+                      : outcome.matchedRequiredPath
+                        ? 'Required path'
+                        : 'None'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Triggered critical candidates</dt>
+                  <dd>
+                    {outcome.criticalErrorIds.length > 0
+                      ? outcome.criticalErrorIds
+                          .map((id) => selectedLabel(definition.criticalErrors, id))
+                          .join('; ')
+                      : 'None'}
+                  </dd>
+                </div>
+              </dl>
+
+              <h6>Recorded action timeline</h6>
+              <ol className={styles.attemptTimeline}>
+                {debrief.timeline.map((entry) => {
+                  const referenceLabel = timelineReferenceLabel(definition, entry)
+                  return (
+                    <li key={entry.sequence}>
+                      <time>{formatSimulationTime(entry.atSeconds)}</time>
+                      <span>{timelineEventLabels[entry.type]}</span>
+                      {referenceLabel ? <small>{referenceLabel}</small> : null}
+                    </li>
+                  )
+                })}
+              </ol>
+
+              <h6>Sampled pressure, dose, fluid, and laboratory evidence</h6>
+              {firstTrend && latestTrend ? (
+                <div
+                  className={styles.trendEvidenceRegion}
+                  role="region"
+                  aria-label="Actual attempt sampled trend evidence; horizontally scrollable"
+                  tabIndex={0}
+                >
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Signal</th>
+                        <th scope="col">First · {formatSimulationTime(firstTrend.timeSeconds)}</th>
+                        <th scope="col">
+                          Latest · {formatSimulationTime(latestTrend.timeSeconds)}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {trendEvidenceRows.map((row) => (
+                        <tr key={row.label}>
+                          <th scope="row">{row.label}</th>
+                          <td>{row.first}</td>
+                          <td>{row.latest}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p>No five-minute trend sample was recorded before debrief.</p>
+              )}
+
+              {isReviewer ? (
+                <details className={styles.replayIdentity}>
+                  <summary>Deterministic replay identity</summary>
+                  <dl>
+                    <div>
+                      <dt>Seed</dt>
+                      <dd>{debrief.outcome.resultIdentity.seed}</dd>
+                    </div>
+                    <div>
+                      <dt>Engine</dt>
+                      <dd>{debrief.outcome.resultIdentity.engineVersion}</dd>
+                    </div>
+                    <div>
+                      <dt>Engine schema</dt>
+                      <dd>{debrief.outcome.resultIdentity.engineSchemaVersion}</dd>
+                    </div>
+                    <div>
+                      <dt>Simulation content</dt>
+                      <dd>{debrief.outcome.resultIdentity.simulationContentVersion}</dd>
+                    </div>
+                    <div>
+                      <dt>Case content</dt>
+                      <dd>{debrief.outcome.resultIdentity.caseContentVersion}</dd>
+                    </div>
+                  </dl>
+                </details>
+              ) : null}
+            </section>
 
             <dl className={styles.debriefGrid}>
               <div>

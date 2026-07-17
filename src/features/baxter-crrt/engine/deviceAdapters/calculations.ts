@@ -83,8 +83,8 @@ export const prismaxCalculationAdapter: CrrtDeviceCalculationAdapter = Object.fr
 })
 
 /**
- * Resolves the approved Phase 2 calculation surface. Prismaflex deliberately
- * has no fallback to PrisMax math because its runtime work is deferred.
+ * Resolves the learner/runtime calculation surface. Prismaflex deliberately
+ * has no fallback to PrisMax math or a reviewer-only implementation.
  */
 export function getCrrtDeviceCalculationAdapter(
   deviceId: BaxterCrrtDeviceId,
@@ -92,7 +92,7 @@ export function getCrrtDeviceCalculationAdapter(
   if (deviceId === 'prismax-aw8035-2xx') return prismaxCalculationAdapter
   if (deviceId === 'prismaflex-g5036003-6xx') {
     throw new Error(
-      'Prismaflex runtime calculations are deferred until its separate adapter phase.',
+      'Prismaflex calculations remain reviewer-only and are not registered in learner runtime.',
     )
   }
   return assertNever(deviceId)

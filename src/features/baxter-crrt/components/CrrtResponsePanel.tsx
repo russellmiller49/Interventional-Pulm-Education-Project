@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { Activity, Clock3, Droplets, FlaskConical, HeartPulse } from 'lucide-react'
 
 import {
@@ -21,6 +22,8 @@ function formatNumber(value: number | null | undefined, digits = 1): string {
 }
 
 export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
+  const idPrefix = `crrt-response-${useId().replaceAll(':', '')}`
+  const trendSummaryId = `${idPrefix}-trend-summary`
   const prescription = selectPrescriptionSummary(state)
   const fluid = selectFluidBalanceLedger(state)
   const pressure = selectPressureSummary(state)
@@ -28,6 +31,12 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
   const potassium = patient?.solutes.potassium?.concentrationPerLiter
   const bicarbonate = patient?.solutes.bicarbonate?.concentrationPerLiter
   const recentTrends = state.trends.slice(-4)
+  const firstTrend = recentTrends[0]
+  const lastTrend = recentTrends.at(-1)
+  const trendSummary =
+    firstTrend && lastTrend
+      ? `Trend summary: ${recentTrends.length} simulated sample${recentTrends.length === 1 ? '' : 's'} from ${Math.round(firstTrend.timeSeconds / 60)} to ${Math.round(lastTrend.timeSeconds / 60)} minutes. Access pressure changed from ${formatNumber(firstTrend.accessPressureMmHg, 0)} to ${formatNumber(lastTrend.accessPressureMmHg, 0)} millimeters of mercury; hemodynamic stress changed from ${formatNumber(firstTrend.hemodynamicStressIndex, 2)} to ${formatNumber(lastTrend.hemodynamicStressIndex, 2)}; whole-patient balance changed from ${formatNumber(firstTrend.cumulativeWholePatientBalanceMl, 0)} to ${formatNumber(lastTrend.cumulativeWholePatientBalanceMl, 0)} milliliters.`
+      : 'Trend summary: no simulated trend samples are available yet. Advance simulated time to create a sample.'
 
   return (
     <section className={styles.responsePanel} aria-labelledby="crrt-response-heading">
@@ -81,8 +90,17 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
         </p>
       </div>
 
-      <div className={styles.trendTableWrap}>
-        <table>
+      <p id={trendSummaryId} className={styles.trendSummary}>
+        {trendSummary}
+      </p>
+
+      <div
+        className={styles.trendTableWrap}
+        role="region"
+        aria-label="Recent simulated trend table; horizontally scrollable on narrow screens"
+        tabIndex={0}
+      >
+        <table aria-describedby={trendSummaryId}>
           <caption>
             Recent simulated trend samples. Values are synthetic, pending review, and unsuitable for
             patient care.

@@ -2,6 +2,11 @@ import {
   getCrrtDeviceCalculationAdapter,
   prismaxCalculationAdapter,
 } from '../deviceAdapters/calculations'
+import {
+  calculatePrismaflexDoseSectionEffluentFlowMlPerHour,
+  calculatePrismaflexEffluentPumpTargetMlPerHour,
+  prismaflexCalculationAdapter,
+} from '../deviceAdapters/prismaflexCalculations'
 import type { CrrtFlowRates } from '../types'
 
 const flows: CrrtFlowRates = {
@@ -44,7 +49,52 @@ describe('Phase 2 device-calculation adapter boundary', () => {
     })
   })
 
+  it('keeps Prismaflex pump-target and dose-section Qeff definitions separate', () => {
+    const prismaflexFlows: CrrtFlowRates = { ...flows, makeupFlowMlHour: 0 }
+
+    expect(calculatePrismaflexEffluentPumpTargetMlPerHour(prismaflexFlows)).toBe(2_110)
+    expect(calculatePrismaflexDoseSectionEffluentFlowMlPerHour(prismaflexFlows)).toBe(2_100)
+    expect(
+      prismaflexCalculationAdapter.calculateDoseSectionEffluentDoseMlPerKgHour(prismaflexFlows, 70),
+    ).toBe(30)
+    expect(prismaflexCalculationAdapter.unresolvedConflictIds).toEqual(['CONFLICT-010'])
+    expect(prismaflexCalculationAdapter.sourceIds).toEqual({
+      effluentPumpTarget: ['DEV-PF-006'],
+      doseSectionEffluentFlow: ['DEV-PF-006'],
+      effluentDose: ['DEV-PF-006'],
+      transmembranePressure: ['DEV-PF-006'],
+      filterPressureDrop: ['DEV-PF-005'],
+    })
+    expect(Object.isFrozen(prismaflexCalculationAdapter)).toBe(true)
+    expect(Object.isFrozen(prismaflexCalculationAdapter.sourceIds)).toBe(true)
+  })
+
+  it('implements Prismaflex pressure displays independently and rejects unsourced makeup flow', () => {
+    expect(
+      prismaflexCalculationAdapter.calculateDisplayedPressures({
+        rawFilterPressureMmHg: 150,
+        rawReturnPressureMmHg: 90,
+        rawEffluentPressureMmHg: -20,
+      }),
+    ).toEqual({
+      transmembranePressureMmHg: 122,
+      rawFilterPressureDropMmHg: 60,
+      displayedFilterPressureDropMmHg: 35,
+    })
+
+    expect(() => calculatePrismaflexEffluentPumpTargetMlPerHour(flows)).toThrow(/makeup-flow/i)
+    expect(() =>
+      calculatePrismaflexDoseSectionEffluentFlowMlPerHour({
+        ...flows,
+        makeupFlowMlHour: 0,
+        dialysateFlowMlHour: -1,
+      }),
+    ).toThrow(/zero or greater/i)
+  })
+
   it('fails closed instead of applying PrisMax math to deferred Prismaflex', () => {
-    expect(() => getCrrtDeviceCalculationAdapter('prismaflex-g5036003-6xx')).toThrow(/deferred/i)
+    expect(() => getCrrtDeviceCalculationAdapter('prismaflex-g5036003-6xx')).toThrow(
+      /reviewer-only|deferred/i,
+    )
   })
 })

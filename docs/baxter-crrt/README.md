@@ -1,24 +1,176 @@
 # Baxter CRRT simulator design record
 
-Status: Phase 4-5 three-case PrisMax vertical slice implemented in the authenticated draft; all review and release gates remain pending
+Status: Phase 7/8 reviewer scaffolds implemented; only the three-case pilot is learner-runnable,
+the full curriculum and Prismaflex runtime are incomplete, and every formal activation/release gate
+remains pending
 
-Current base commit: ec2e8b77 on main
+Phase 6 working base: 26949257 on main
 
 Current branch: main
 
 Canonical route: /[locale]/baxter-crrt
 
+Reviewer route: /[locale]/baxter-crrt/review (always draft/admin guarded)
+
 Canonical module ID: baxter-crrt
 
 Initial release device: PrisMax AW8035 Rev B, program 2.XX
 
-Deferred device adapter: Prismaflex G5036003 Revision 05.2011, program 6.xx
+Reviewer-only device candidate: Prismaflex G5036003 Revision 05.2011, program 6.xx
 
 This directory is the design and governance record for an authenticated, unlisted, draft CRRT
-Learn & Practice simulator. Phases 4 and 5 connect the source-mapped PrisMax interface to one atomic
-learning-session reducer and the exact three-case pilot registry. All clinical values and model
-coefficients remain synthetic and review-pending; publication and competency use remain outside the
-implementation boundary.
+Learn & Practice simulator. Phase 7 now has a fail-closed catalog, evidence, instructional-tool,
+rapid-drill, Mastery, and progress foundation around the protected three-case pilot. Seven added
+cases, five rapid-drill previews, a Mastery composition planner, and selected instructional tools
+have reviewer-only draft behavior on a separate guarded route. A separate Prismaflex profile,
+adapter/calculation candidate, softkey review console, and cross-device transfer plan are also
+isolated there. None can enter a learner selector, learner scoring record, analytics stream, or
+progress store. All clinical values and model coefficients remain
+synthetic and review-pending; publication and competency use remain outside the implementation
+boundary.
+
+## Phase 7 protected-foundation outcome
+
+The exact implementation and gate boundary are recorded in
+[phase-7-status.md](./phase-7-status.md). The draft foundation adds:
+
+- engine `0.4.0-phase7-review` and authored/runtime schema `1.1.0-phase7-draft`;
+- separate protected-pilot content `0.5.0-pilot-draft.1` and Phase 7 manifest content
+  `0.7.0-phase7-draft.2`;
+- the exact ordered `CRRT-01` through `CRRT-18` catalog while keeping only `CRRT-04`, `CRRT-10`,
+  and `CRRT-13` in the learner runtime;
+- reviewer-only, non-persistent runtime candidates for `CRRT-01`, `CRRT-02`, `CRRT-05`, `CRRT-06`,
+  `CRRT-07`, `CRRT-11`, and `CRRT-15`, with every exact value mapped to a pending per-case synthetic record and an isolated
+  interactive review runner on the guarded `/review` route that emits no analytics or learner progress;
+- six stable instructional-tool IDs and six reviewer surfaces behind collapsed disclosures on that
+  guarded route, with learner/scoring/progress flags fixed false; the citrate dashboard is a
+  non-actionable domain scaffold and remains protocol-blocked;
+- explicit protocol blocks for `CRRT-09` and `CRRT-17`, with no actionable anticoagulation or
+  citrate/calcium pathway;
+- seven non-runnable rapid-drill manifests, including five non-actionable cause-first reviewer
+  previews and two policy-blocked topics;
+- a locked Mastery engine boundary that rejects session creation, scoring, and progress persistence
+  while no approved multi-hit runtime/capstone mapping exists, plus an ephemeral reviewer-only
+  composition planner that creates no session or result;
+- a separately versioned Prismaflex reviewer profile, setup/alarm metadata, display calculations,
+  softkey review console, and cross-device composition plan that remain absent from learner runtime;
+- progress v2 at `baxter-crrt-progress-v2`, with exact learner-ID/composite-key allowlists, separate
+  Practice/Mastery records, and a clean fail-reset boundary instead of promoting v1 results; and
+- a derived publication gate that rejects a status-only release flip unless an exact frozen
+  candidate and manifest digest, approved local configuration, all ten mandatory reviews bound to
+  that candidate, manifest, canonical findings ledger, and each expected domain-scope digest, plus
+  a separate publication authorization bound to the deployable artifact; Phase 8 publication
+  additionally requires its separate authorization and stable PrisMax prerequisite bindings;
+- schema-v2 deterministic candidate-manifest tooling that binds the Git tree, scoped blob/file
+  identities, versions, and verified source hashes while marking every dirty-tree result provisional
+  and un-signable; output must stay outside the repository, and verification rejects noncanonical,
+  internally inconsistent, provisional, dirty, or source-unverified recorded manifests;
+- a guarded reviewer build-identity banner that rejects malformed/missing candidate declarations
+  and never grants formal-review eligibility; and
+- typed Phase 7, Phase 8, and publication authorization-ingestion records that bind candidate,
+  manifest, findings/scope digests, authenticated receipt metadata, and phase-specific prerequisite
+  artifacts, plus canonical packet templates; every domain review also binds the canonical findings
+  ledger and its exact per-domain scope digest, and publication requires the exact four-artifact
+  learner composition. Every live authorization value remains null/pending.
+
+These are implementation contracts, not formal Phase 7 activation. All reviewer identities,
+exact-version dispositions, local configuration inputs, evidence gaps, pilot acceptance, product
+authorization, and publication decisions remain pending.
+
+## Completion boundary
+
+The module is not complete under the supplied implementation brief:
+
+- Phase 6 still requires exact-candidate clinical, device, keyboard, screen-reader, 200% zoom,
+  320-pixel reflow, tablet, localization, privacy, entitlement, product, and publication review.
+- Phase 7 requires all 15 nonpilot cases, seven drills, six tools, and a PrisMax Mastery capstone to
+  become fully authored, reviewed, tested, and explicitly activated. Seven cases and five drills
+  currently have reviewer previews only; the remaining cases are manifest- or protocol-blocked.
+- Phase 8 requires a stable reviewed PrisMax v1, exact Prismaflex configuration, operational
+  device adapter/workflows, separate trained-device review, approved equivalence protocol and
+  tolerances, cross-device tests, and transfer capstone. The current Phase 8 surface is a
+  non-runnable reviewer scaffold.
+- A self-stated reviewer role, green engineering checks, or an accessible guarded route is not a
+  formal exact-version disposition or authorization.
+
+## Phase 8 reviewer-scaffold outcome
+
+The implementation and fail-closed boundary are recorded in
+[phase-8-status.md](./phase-8-status.md). The guarded reviewer route now includes:
+
+- a separate immutable `prismaflex-g5036003-6xx` reviewer profile whose therapies, sets,
+  accessories, ranges, local configuration, and learner availability remain empty or deferred;
+- materialized `DEV-PF-001` through `DEV-PF-008` records for the supplied G5036003 manual;
+- independent Prismaflex pump-target/dose-section `Qeff`, TMP, and filter-drop calculations, with
+  `CONFLICT-010` preserving the two printed `Qeff` contexts;
+- a reviewer-only adapter contract with a source-mapped setup sequence, taxonomy-only alarm
+  categories, always-fail-closed configuration validation, and throwing runtime actions;
+- an original keyboard-operable softkey review console; and
+- a cross-device composition plan with no runtime case, score, outcome tolerance, equivalence
+  claim, progress, analytics, or competency behavior.
+
+This source-mapped scaffold is not formal Phase 8 activation. The stable reviewed PrisMax v1,
+target Prismaflex configuration, Prismaflex-trained reviewer, approved equivalence protocol, and
+all exact-version release dispositions remain absent.
+
+## Phase 6 outcome
+
+The exact status and gate evidence are recorded in [phase-6-status.md](./phase-6-status.md). Phase 6
+adds:
+
+- Roving keyboard tabs for the five mobile surfaces, a focus-managed stop/end dialog, clean-reload
+  focus, accessible circuit/pressure/trend summaries, explicit unmapped-priority text, a persistent
+  mobile global alarm boundary, 44-pixel alarm targeting, and responsive/reduced-motion hardening.
+- A refreshed [engine validation record](./engine-validation.md) covering calculations,
+  invariants, state machines, deterministic equivalence, case paths, privacy, access, and the exact
+  boundary between engineering evidence and independent validation.
+- Unchecked clinical, PrisMax, future Prismaflex, and accessibility/release review intakes.
+- A stable [curriculum blueprint](./curriculum-blueprint.md) and original
+  [educational capability matrix](./competency-matrix.md) that map the pilot while keeping the
+  remaining curriculum and any competency claim gated.
+- A [pilot study plan](./pilot-study-plan.md) and
+  [pilot feedback form](./pilot-feedback-form.md) that are planning artifacts only; neither is
+  approved for recruitment, entitlement expansion, or data collection.
+- A fail-closed [PrisMax local configuration worksheet](./prismax-local-configuration-worksheet.md)
+  and [pilot acceptance/Phase 7 authorization record](./pilot-acceptance-and-phase-7-authorization.md)
+  that make every missing site input, exact-version review, and authorization boundary explicit.
+- On 2026-07-16, the repository user explicitly authorized moving to Phase 7 draft development and
+  stated that they are a critical care physician. Their identity, credentials, reviewer scope, and
+  exact-candidate disposition remain pending, so this is development direction only—not pilot
+  acceptance, clinical sign-off, publication approval, or approval for another review domain.
+- One canonical `0.5.0-pilot-draft.1` content version for pilot cases, engine state, and local
+  progress so later consequential changes fail stale results closed.
+- A fresh visual check of the exact PrisMax source pages used for operations, setup, alarm boundary,
+  effluent/TMP calculations, and pressure/fluid context. Source inspection is not device approval.
+
+No human review disposition is inferred. The route remains authenticated, unlisted, draft, noindex,
+and unable to award Mastery or competency.
+
+## Documentation map
+
+- Controlling completion boundary: [completion-audit.md](./completion-audit.md), which separates
+  proven engineering from unfinished implementation and required external evidence.
+- Product and curriculum: [product-requirements.md](./product-requirements.md),
+  [curriculum-blueprint.md](./curriculum-blueprint.md), and
+  [competency-matrix.md](./competency-matrix.md), with the current foundation state in
+  [phase-7-status.md](./phase-7-status.md) and the Prismaflex reviewer boundary in
+  [phase-8-status.md](./phase-8-status.md).
+- Engine and evidence: [engine-model.md](./engine-model.md),
+  [engine-validation.md](./engine-validation.md), [source-matrix.md](./source-matrix.md), and
+  [source-usage-policy.md](./source-usage-policy.md).
+- Exact-candidate and review governance:
+  [review-candidate-freeze-procedure.md](./review-candidate-freeze-procedure.md) and the canonical
+  [review-packet](./review-packet/README.md). These are fail-closed tooling/templates; no formal
+  candidate or approval has been recorded.
+- Review intake: [clinical-review-checklist.md](./clinical-review-checklist.md),
+  [phase-7-critical-care-review-record.md](./phase-7-critical-care-review-record.md),
+  [prismax-device-review-checklist.md](./prismax-device-review-checklist.md),
+  [prismax-local-configuration-worksheet.md](./prismax-local-configuration-worksheet.md),
+  [prismaflex-device-review-checklist.md](./prismaflex-device-review-checklist.md), and
+  [accessibility-release-checklist.md](./accessibility-release-checklist.md).
+- Pilot governance: [pilot-study-plan.md](./pilot-study-plan.md) and
+  [pilot-feedback-form.md](./pilot-feedback-form.md), plus the fail-closed
+  [pilot acceptance and Phase 7 authorization record](./pilot-acceptance-and-phase-7-authorization.md).
 
 ## Phase 4-5 outcome
 
@@ -43,8 +195,10 @@ The combined vertical slice is described in [phase-4-5-pilot.md](./phase-4-5-pil
 - Responsive mobile Case, Machine, Circuit, Patient/trends, and Debrief surfaces with a persistent
   global generic-alarm summary.
 
-Mastery, Prismaflex execution, regional citrate-calcium dosing, the remaining 15 cases, local
-competency credit, broader pilot entitlement, and publication remain unavailable.
+Mastery, Prismaflex execution, regional citrate-calcium dosing, all 15 nonpilot cases in the learner
+runtime, local competency credit, broader pilot entitlement, and publication remain unavailable.
+Seven of those cases now have isolated reviewer-only runtime fixtures; they do not broaden this Phase
+4-5 learner runtime.
 
 ## Phase 3 outcome
 
@@ -198,20 +352,20 @@ coding brief.
 
 ## Naming and boundary decisions
 
-| Item                      | Decision                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------- |
-| Feature root              | src/features/baxter-crrt                                                      |
-| Route                     | src/app/[locale]/baxter-crrt                                                  |
-| Module analytics ID       | baxter-crrt                                                                   |
-| Local progress key        | baxter-crrt-progress-v1                                                       |
-| PrisMax device ID         | prismax-aw8035-2xx                                                            |
-| Prismaflex device ID      | prismaflex-g5036003-6xx                                                       |
-| Initial population        | Adult ICU CRRT; synthetic cases only                                          |
-| Initial pathways          | Orientation shell, Learn, and Practice; Mastery unavailable                   |
-| Initial active modalities | SCUF, CVVH, CVVHD, and CVVHDF only where source and review status permit      |
-| Citrate                   | Types and disabled scaffold only until a versioned local protocol is approved |
-| Prismaflex                | Profile/source scaffold only until the PrisMax pilot is accepted              |
-| Publication               | Authenticated, unlisted, draft, noindex                                       |
+| Item                      | Decision                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| Feature root              | src/features/baxter-crrt                                                           |
+| Route                     | src/app/[locale]/baxter-crrt                                                       |
+| Module analytics ID       | baxter-crrt                                                                        |
+| Local progress key        | baxter-crrt-progress-v2                                                            |
+| PrisMax device ID         | prismax-aw8035-2xx                                                                 |
+| Prismaflex device ID      | prismaflex-g5036003-6xx                                                            |
+| Initial population        | Adult ICU CRRT; synthetic cases only                                               |
+| Initial pathways          | Orientation shell, Learn, and Practice; Mastery unavailable                        |
+| Initial active modalities | SCUF, CVVH, CVVHD, and CVVHDF only where source and review status permit           |
+| Citrate                   | Types and disabled scaffold only until a versioned local protocol is approved      |
+| Prismaflex                | Reviewer-only profile/adapter/UI scaffold; no learner runtime or equivalence claim |
+| Publication               | Authenticated, unlisted, draft, noindex                                            |
 
 The phrase Baxter CRRT is a repository feature name, not a claim of sponsorship. Learner-facing
 copy must describe an independent educational facsimile and must not display Baxter logos.
@@ -354,9 +508,89 @@ decision.
 The current Phase 4-5 development render is available at
 `http://localhost:3002/en/baxter-crrt` in the authenticated local environment.
 
+## Phase 6 verification
+
+| Check                                                     | Result                                                                                                   |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Focused accessibility test selection                      | Passed: 4 suites, 21 tests                                                                               |
+| All `src/features/baxter-crrt` tests                      | Passed: 24 suites, 152 tests                                                                             |
+| Focused CRRT, route, analytics, access, search, and tests | Passed: 28 suites, 169 tests                                                                             |
+| `npm run type-check`                                      | Passed                                                                                                   |
+| CRRT-scoped ESLint                                        | Passed with no output                                                                                    |
+| `npm run lint`                                            | Passed with 13 pre-existing warnings outside CRRT and no errors                                          |
+| `npm test -- --runInBand`                                 | Passed: 201 suites, 1,372 tests                                                                          |
+| `npm run build`                                           | Passed; `/[locale]/baxter-crrt` emitted with existing Mermaid dynamic-require and metadata-base warnings |
+| Scoped Prettier and `git diff --check`                    | Passed                                                                                                   |
+| Live 320 px, 200% zoom, tablet, screen reader             | Pending; the Phase 6 browser runtime blocked localhost navigation/reload under its URL policy            |
+
+This recorded Phase 6 engineering run verified its then-current working tree but is not a clinical, device,
+accessibility, pilot, or publication approval. The approved manual browser/assistive-technology
+matrix must still be completed on the exact reviewed revision.
+
+## Phase 7 protected-foundation historical baseline
+
+| Check                                                                       | Result                                                                                              |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Catalog, activation, source-ID integrity, drill, and Mastery manifest tests | Passed: `phase7Registry.test.ts`, 8 tests                                                           |
+| Focused registry/progress/session/outcome/scaffold/UI selection             | Passed: 6 suites / 50 tests                                                                         |
+| Learner runtime catalog                                                     | Passed: exactly `CRRT-04`, `CRRT-10`, and `CRRT-13`                                                 |
+| Protocol-gated cases                                                        | Passed: `CRRT-09` and `CRRT-17` remain non-runnable                                                 |
+| Rapid-drill manifests                                                       | Passed: seven registered, all non-runnable and pending                                              |
+| Mastery manifest and engine boundary                                        | Passed: locked at session, outcome, persistence, composed UI, and learner-pathway boundaries        |
+| Progress migration boundary                                                 | Passed: v2 separation; best-safe scores cannot combine with critical attempts; invalid shapes reset |
+| All CRRT feature and localized-route tests                                  | Passed: 25 suites / 170 tests                                                                       |
+| Full repository lint/test/build                                             | Passed: 202 suites / 1,390 tests; build emitted the route; lint had only 13 pre-existing warnings   |
+
+These totals record the protected-foundation baseline before the reviewer case/tool expansion. The
+focused run is engineering evidence for the fail-closed implementation only. It does not
+approve the catalog focus statements, clinical mechanisms, device behavior, scoring candidates,
+local policy, pilot use, or publication.
+
+## Phase 7/8 final reviewer-candidate engineering verification
+
+The latest unfrozen working tree completed this engineering run on 2026-07-17:
+
+| Check                                                    | Result                                                                                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| CRRT feature plus candidate-manifest tests               | Passed: 48 suites / 342 tests                                                                                              |
+| Adversarial workflow/focus affected set                  | Passed: 9 suites / 81 tests                                                                                                |
+| Focused activation/publication authorization gates       | Passed: 2 suites / 28 tests                                                                                                |
+| Candidate-manifest integrity tooling                     | Passed: 1 suite / 11 tests                                                                                                 |
+| `npm run type-check`                                     | Passed                                                                                                                     |
+| `npm run lint`                                           | Passed with 13 pre-existing warnings outside CRRT and no errors                                                            |
+| `npm test -- --runInBand`                                | Passed: 228 suites / 1,575 tests                                                                                           |
+| `npm run build`                                          | Passed; 516 static pages generated and both CRRT routes emitted                                                            |
+| Scoped Prettier, `git diff --check`, and whitespace scan | Passed                                                                                                                     |
+| Integrated learner/reviewer boundary                     | Passed; the learner graph excludes reviewer modules, and reviewer IDs cannot enter learner analytics, progress, or Mastery |
+| Authenticated learner/reviewer reflow smoke              | Passed at 320 × 800 and 768 × 1024; full manual accessibility matrix remains pending                                       |
+
+This run verifies the protected pilot plus the isolated Phase 7 and Phase 8 reviewer candidates at
+the current working-tree revision. It does not freeze an exact review candidate or grant clinical,
+device, accessibility, local-configuration, pilot, product, or publication approval.
+
+It supersedes the earlier 44-suite/299-test integrated run. The later adversarial pass found and
+fixed additional workflow-phase, focus, review-digest, authorization-reference, release-composition,
+and candidate-manifest integrity gaps. Runtime validators enforce normalized structure and exact
+bindings; receipt identity and immutable authorization records must still be authenticated and
+resolved by an approved external system.
+
+The current learner-release composition is exactly `CRRT-04`, `CRRT-10`, `CRRT-13`, and
+`prismax-aw8035-2xx`. No Phase 7 or Phase 8 reviewer artifact can enter that composition without a
+new code revision, clean candidate, affected reviews, and the required authorizations.
+
+The 2026-07-17 authenticated local browser smoke reached both learner and reviewer routes at
+320 × 800 and 768 × 1024. Both routes had `clientWidth === scrollWidth`; at 320 pixels,
+module-owned controls measured at least 44 CSS pixels, excluding native reviewer inputs when their
+associated label is the intended target. Open case, tool, Mastery, Prismaflex, and transfer
+disclosures remained contained. A rapid-drill implicit-grid clipping defect was found, CSS-fixed,
+reverified with zero overflowing children, and covered by a new static accessibility regression
+test. No error-level browser logs were observed. Full tab-order traversal, 200% zoom,
+VoiceOver/second-AT, OS-level reduced motion, contrast, and exact-candidate accessibility review
+remain pending.
+
 ## Human inputs still required
 
-These decisions did not block the source-mapped, synthetic Phase 4-5 draft vertical slice, but they
+These decisions did not block the source-mapped, synthetic Phase 6 draft vertical slice, but they
 block formal review disposition, expanded access, competency use, and release:
 
 - Exact PrisMax market/configuration and locally installed program version.
@@ -364,8 +598,10 @@ block formal review disposition, expanded access, competency use, and release:
 - Approved systemic anticoagulation approaches.
 - Versioned local citrate/calcium protocol and responsible protocol owner.
 - Expected roles and whether any local competency credit is intended.
-- Named nephrology, critical care, nurse-educator, PrisMax-device, accessibility, localization, and
-  product reviewers.
+- Named reviewers and separate candidate-bound attestations for nephrology, critical care, CRRT
+  nurse education, PrisMax device, accessibility, localization, privacy/data governance,
+  entitlement/security, product owner, and publication approval; conditional domains must also be
+  assigned when their scope is present.
 - Whether detailed CRRT outcome progress remains local-only or later syncs to an authenticated
   learning record. The existing site already stores per-user module percentage, completed sections,
   and time separately from the detailed local CRRT record.
@@ -377,8 +613,19 @@ certificate may imply independent clinical competence.
 
 ## Phase gate
 
-Phases 4 and 5 are complete at the authenticated three-case draft boundary. Work stops before Phase
-6 independent accessibility, clinical, device, localization, and publication review. The generated
-checklists are unchecked intake artifacts, not completed review. No Prismaflex execution, citrate
-workflow, additional case, Mastery capstone, competency claim, entitlement expansion, or publication
-change is authorized by this record.
+Phase 6 engineering and review-intake deliverables are assembled at the authenticated three-case
+draft boundary. Formal pilot and release progression remains blocked until all ten mandatory
+candidate-bound review domains, every applicable conditional domain, and the separate pilot and
+publication authorizations are complete. The checklists are unchecked intake artifacts, not
+completed review.
+
+Draft Phase 7 development may proceed under the repository user's recorded 2026-07-16 direction,
+but formal Phase 7 disposition cannot occur until the exact pilot is accepted and the separate,
+itemized Phase 7 authorization is authenticated against the same frozen candidate and required
+domain records. A product-owner record alone cannot authorize the phase. Any additional case, drill,
+tool, or capstone remains unpublished, review-pending draft content and cannot unlock Mastery, pilot
+access, or competency use. Formal Phase 8 activation cannot start until reviewed PrisMax v1 is
+stable and the separate Prismaflex-device, cross-device-equivalence, configuration, review, and
+authorization prerequisites are satisfied. The source-mapped reviewer scaffold does not satisfy
+that gate. No Prismaflex learner execution, actionable citrate workflow, competency claim,
+entitlement expansion, data collection, or publication change is authorized by this record.

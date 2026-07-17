@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { postSiteAnalytics, resolveSiteModuleId } from '@/lib/analytics'
 
 const HEARTBEAT_INTERVAL_MS = 30_000
+const GENERIC_LIFECYCLE_EXCLUDED_MODULE_IDS = new Set(['baxter-crrt'])
 
 function makeSessionId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -26,7 +27,7 @@ export function SiteUsageTracker() {
     const routePath = pathname
     const moduleId = resolveSiteModuleId(routePath)
 
-    if (!moduleId) {
+    if (!moduleId || GENERIC_LIFECYCLE_EXCLUDED_MODULE_IDS.has(moduleId)) {
       return
     }
 

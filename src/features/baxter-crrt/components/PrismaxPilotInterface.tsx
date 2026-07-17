@@ -16,7 +16,7 @@ import {
   Settings,
   ShieldAlert,
 } from 'lucide-react'
-import type { Dispatch, FormEvent } from 'react'
+import { useEffect, useRef, type Dispatch, type FormEvent, type KeyboardEvent } from 'react'
 
 import {
   selectPrismaxPilotInterface,
@@ -29,11 +29,22 @@ import {
 } from '../engine/deviceAdapters/prismax'
 import styles from './prismax-pilot-interface.module.css'
 
-export interface PrismaxPilotCaseContext {
+interface RevealedPrismaxPilotCaseContext {
+  readonly identityMasked?: false
   readonly caseId: string
   readonly title: string
-  readonly pathway: 'learn' | 'practice'
+  readonly pathway: 'learn' | 'practice' | 'mastery'
 }
+
+interface MaskedPrismaxPilotCaseContext {
+  readonly identityMasked: true
+  readonly learnerLabel: string
+  readonly pathway: 'mastery'
+}
+
+export type PrismaxPilotCaseContext =
+  | RevealedPrismaxPilotCaseContext
+  | MaskedPrismaxPilotCaseContext
 
 interface PrismaxPilotInterfaceProps {
   state: PrismaxPilotInterfaceState
@@ -81,6 +92,14 @@ function formatStepLabel(stepId: PrismaxSetupStepId) {
   return stepId === 'connect-patient'
     ? 'Connect Patient'
     : stepId.charAt(0).toUpperCase() + stepId.slice(1)
+}
+
+function caseIdentifier(caseContext: PrismaxPilotCaseContext): string {
+  return caseContext.identityMasked ? 'Masked case' : caseContext.caseId
+}
+
+function caseTitle(caseContext: PrismaxPilotCaseContext): string {
+  return caseContext.identityMasked ? caseContext.learnerLabel : caseContext.title
 }
 
 function PrescriptionStep({
@@ -175,7 +194,7 @@ function SetupStepContent({
           <h4>Confirm a synthetic checkout context</h4>
           <p>
             {caseContext
-              ? `${caseContext.caseId} loads synthetic, review-pending physiology without collecting identifiers or patient-entered data.`
+              ? `${caseIdentifier(caseContext)} loads synthetic, review-pending physiology without collecting identifiers or patient-entered data.`
               : 'Orientation does not collect identifiers or load patient physiology.'}
           </p>
         </div>
@@ -419,6 +438,78 @@ function OperationsScreen({
   ] as const
   const running = operations.treatmentState === 'running'
   const ended = operations.treatmentState === 'ended'
+  const stopButtonRef = useRef<HTMLButtonElement>(null)
+  const resumeButtonRef = useRef<HTMLButtonElement>(null)
+  const endButtonRef = useRef<HTMLButtonElement>(null)
+  const stopDialogRef = useRef<HTMLElement>(null)
+  const wasStopDialogOpen = useRef(false)
+
+  useEffect(() => {
+    if (state.stopDialogOpen) {
+      wasStopDialogOpen.current = true
+      resumeButtonRef.current?.focus()
+      return
+    }
+
+    if (wasStopDialogOpen.current) {
+      wasStopDialogOpen.current = false
+      stopButtonRef.current?.focus()
+    }
+  }, [state.stopDialogOpen])
+
+  useEffect(() => {
+    if (!state.stopDialogOpen) return
+
+    function isOutsideDialog(event: Event) {
+      const target = event.target
+      return target instanceof Node && !stopDialogRef.current?.contains(target)
+    }
+
+    function blockOutsidePointerInteraction(event: Event) {
+      if (!isOutsideDialog(event)) return
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
+    function keepFocusInDialog(event: FocusEvent) {
+      if (!isOutsideDialog(event)) return
+      resumeButtonRef.current?.focus()
+    }
+
+    document.addEventListener('pointerdown', blockOutsidePointerInteraction, true)
+    document.addEventListener('click', blockOutsidePointerInteraction, true)
+    document.addEventListener('focusin', keepFocusInDialog, true)
+    return () => {
+      document.removeEventListener('pointerdown', blockOutsidePointerInteraction, true)
+      document.removeEventListener('click', blockOutsidePointerInteraction, true)
+      document.removeEventListener('focusin', keepFocusInDialog, true)
+    }
+  }, [state.stopDialogOpen])
+
+  function closeStopDialog() {
+    dispatch({ type: 'CLOSE_STOP_DIALOG' })
+  }
+
+  function handleStopDialogKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      closeStopDialog()
+      return
+    }
+
+    if (event.key !== 'Tab') return
+    const firstControl = resumeButtonRef.current
+    const lastControl = endButtonRef.current
+    if (!firstControl || !lastControl) return
+
+    if (event.shiftKey && document.activeElement === firstControl) {
+      event.preventDefault()
+      lastControl.focus()
+    } else if (!event.shiftKey && document.activeElement === lastControl) {
+      event.preventDefault()
+      firstControl.focus()
+    }
+  }
 
   return (
     <div className={styles.operationsScreen} data-running={running}>
@@ -426,7 +517,7 @@ function OperationsScreen({
         <div>
           <span>
             Therapy Operations ·{' '}
-            {caseContext ? `${caseContext.caseId} synthetic case` : 'CVVHD pilot'}
+            {caseContext ? `${caseIdentifier(caseContext)} synthetic case` : 'CVVHD pilot'}
           </span>
           <strong>
             {running
@@ -466,9 +557,9 @@ function OperationsScreen({
             <Gauge aria-hidden="true" />
             <h4 id="phase3-pressure-heading">Pressure display</h4>
           </div>
-          <div className={styles.pressureGrid}>
+          <div className={styles.pressureGrid} role="list" aria-label="Synthetic pressure signals">
             {pressures.map(([label, value]) => (
-              <div key={label}>
+              <div key={label} role="listitem">
                 <span>{label}</span>
                 <strong>{value === null ? '—' : `${value.toFixed(0)} mmHg`}</strong>
                 <small>{value === null ? 'No case signal' : 'Synthetic engine signal'}</small>
@@ -531,6 +622,9 @@ function OperationsScreen({
             ? 'Generic engine alarm shown. Device-specific name, priority, threshold, and reaction remain pending mapping. Correct the cause; acknowledgement alone does not resolve it.'
             : 'Exact names, priorities, thresholds, pump/clamp reactions, and correction actions remain pending device mapping. Acknowledgement will never equal cause correction.'}
         </p>
+        <p className={styles.alarmPriority}>
+          <strong>Priority status:</strong> not mapped — independent device review required.
+        </p>
         <button disabled type="button">
           Acknowledge unavailable
         </button>
@@ -543,7 +637,7 @@ function OperationsScreen({
           <strong>
             {running
               ? caseContext
-                ? `${caseContext.caseId} deterministic simulation active`
+                ? `${caseIdentifier(caseContext)} deterministic simulation active`
                 : 'Case-free equipment checkout started'
               : ended
                 ? 'Interface run ended; reload outside the facsimile'
@@ -554,6 +648,7 @@ function OperationsScreen({
 
       {running ? (
         <button
+          ref={stopButtonRef}
           className={styles.stopAction}
           type="button"
           onClick={() => dispatch({ type: 'OPEN_STOP_DIALOG' })}
@@ -565,25 +660,32 @@ function OperationsScreen({
       {state.stopDialogOpen ? (
         <div className={styles.dialogBackdrop}>
           <section
+            ref={stopDialogRef}
             className={styles.stopDialog}
             role="dialog"
             aria-modal="true"
             aria-labelledby="phase3-stop-dialog-title"
+            aria-describedby="phase3-stop-dialog-description"
+            onKeyDown={handleStopDialogKeyDown}
           >
             <CircleStop aria-hidden="true" />
             <div>
               <span>Stop interface run</span>
               <h4 id="phase3-stop-dialog-title">End this equipment checkout?</h4>
-              <p>
+              <p id="phase3-stop-dialog-description">
                 End is irreversible until a clean reload. Return-blood and recirculation decisions
                 are deliberately not simulated without reviewed policy and case context.
               </p>
             </div>
             <div className={styles.dialogActions}>
-              <button type="button" onClick={() => dispatch({ type: 'CLOSE_STOP_DIALOG' })}>
+              <button ref={resumeButtonRef} type="button" onClick={closeStopDialog}>
                 Resume interface
               </button>
-              <button type="button" onClick={() => dispatch({ type: 'END_TREATMENT' })}>
+              <button
+                ref={endButtonRef}
+                type="button"
+                onClick={() => dispatch({ type: 'END_TREATMENT' })}
+              >
                 End interface run
               </button>
             </div>
@@ -661,12 +763,12 @@ export function PrismaxPilotInterface({
                 <div>
                   <span>
                     {caseContext
-                      ? 'Phase 4-5 · synthetic case'
+                      ? 'Protected pilot · synthetic case'
                       : 'Orientation · source-mapped pilot'}
                   </span>
                   <h3>
                     {caseContext
-                      ? `Start ${caseContext.caseId}: ${caseContext.title}`
+                      ? `Start ${caseIdentifier(caseContext)}: ${caseTitle(caseContext)}`
                       : 'Start a case-free interface checkout'}
                   </h3>
                   <p>
@@ -733,7 +835,7 @@ export function PrismaxPilotInterface({
 
           <footer className={styles.consoleFooter}>
             <span>Educational facsimile · not a medical device</span>
-            <span>AW8035 Rev B source profile · Phase 4-5 review pending</span>
+            <span>AW8035 Rev B source profile · Phase 6 independent review pending</span>
           </footer>
         </section>
 
@@ -746,7 +848,7 @@ export function PrismaxPilotInterface({
                 Reloading creates a fresh interface state and does not invoke Same Patient.
               </span>
             </div>
-            <button type="button" onClick={() => dispatch({ type: 'RESET_INTERFACE' })}>
+            <button autoFocus type="button" onClick={() => dispatch({ type: 'RESET_INTERFACE' })}>
               Reload clean interface
             </button>
           </aside>

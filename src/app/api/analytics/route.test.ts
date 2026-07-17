@@ -22,19 +22,23 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
     supabaseServerMock.mockResolvedValue(database.client)
 
     const eventPayload = validCrrtCaseCompletion()
-    const response = await POST(analyticsRequest('baxter-crrt', eventPayload))
+    const response = await POST(
+      analyticsRequest('baxter-crrt', eventPayload, { eventType: 'quiz_submitted' }),
+    )
 
     expect(response.status).toBe(200)
     expect(database.from).toHaveBeenCalledWith('site_module_events')
     expect(database.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         event_payload: eventPayload,
-        event_type: 'module_interaction',
+        event_type: 'quiz_submitted',
         module_id: 'baxter-crrt',
         route_path: '/en/baxter-crrt',
         user_id: 'user-1',
       }),
     )
+    expect(database.from).not.toHaveBeenCalledWith('site_module_progress')
+    expect(database.from).not.toHaveBeenCalledWith('site_module_sessions')
   })
 
   it.each([
@@ -46,10 +50,18 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
     ['unknown interaction', { ...validCrrtCaseCompletion(), interaction: 'case_replayed' }],
     ['invalid score', { ...validCrrtCaseCompletion(), score: 101 }],
     ['invalid case ID', { ...validCrrtCaseCompletion(), caseId: 'patient-123' }],
+    ['reviewer-only case ID', { ...validCrrtCaseCompletion(), caseId: 'CRRT-01' }],
+    ['locked Mastery pathway', { ...validCrrtCaseCompletion(), pathway: 'mastery' }],
+    [
+      'deferred Prismaflex device identity',
+      { ...validCrrtCaseCompletion(), device: 'prismaflex-g5036003-6xx' },
+    ],
   ])(
     'rejects a CRRT payload containing an %s before authentication or storage',
     async (_, body) => {
-      const response = await POST(analyticsRequest('baxter-crrt', body))
+      const response = await POST(
+        analyticsRequest('baxter-crrt', body, { eventType: 'quiz_submitted' }),
+      )
 
       expect(response.status).toBe(400)
       await expect(response.json()).resolves.toEqual({
@@ -58,6 +70,49 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
       expect(supabaseServerMock).not.toHaveBeenCalled()
     },
   )
+
+  it.each([
+    ['mismatched event type', validCrrtCaseCompletion(), { eventType: 'module_completed' }],
+    [
+      'generic percent completion',
+      validCrrtCaseCompletion(),
+      { eventType: 'quiz_submitted', percentComplete: 100 },
+    ],
+    [
+      'generic session metadata',
+      validCrrtCaseCompletion(),
+      {
+        durationSeconds: 60,
+        eventType: 'quiz_submitted',
+        sessionId: '3cf4a73a-d143-4ed4-874a-e494e5d2e729',
+      },
+    ],
+    [
+      'route outside the CRRT module',
+      validCrrtCaseCompletion(),
+      { eventType: 'quiz_submitted', routePath: '/en/cardiohelp-ecmo' },
+    ],
+  ])('rejects CRRT %s before authentication or storage', async (_, body, overrides) => {
+    const response = await POST(analyticsRequest('baxter-crrt', body, overrides))
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: 'Invalid Baxter CRRT analytics payload.',
+    })
+    expect(supabaseServerMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects generic CRRT lifecycle events without a learner interaction payload', async () => {
+    const response = await POST(
+      analyticsRequest('baxter-crrt', undefined, {
+        eventType: 'session_start',
+        sessionId: '3cf4a73a-d143-4ed4-874a-e494e5d2e729',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    expect(supabaseServerMock).not.toHaveBeenCalled()
+  })
 
   it('preserves the existing open event-payload behavior for non-CRRT modules', async () => {
     const database = authenticatedAnalyticsDatabase()
@@ -96,13 +151,18 @@ function validCrrtCaseCompletion() {
   }
 }
 
-function analyticsRequest(moduleId: string, eventPayload: Record<string, unknown> | undefined) {
+function analyticsRequest(
+  moduleId: string,
+  eventPayload: Record<string, unknown> | undefined,
+  overrides: Record<string, unknown> = {},
+) {
   return new Request('http://localhost/api/analytics', {
     body: JSON.stringify({
       eventType: 'module_interaction',
       moduleId,
       routePath: moduleId === 'baxter-crrt' ? '/en/baxter-crrt' : '/en/cardiohelp-ecmo',
       ...(eventPayload === undefined ? {} : { eventPayload }),
+      ...overrides,
     }),
     headers: { 'content-type': 'application/json' },
     method: 'POST',

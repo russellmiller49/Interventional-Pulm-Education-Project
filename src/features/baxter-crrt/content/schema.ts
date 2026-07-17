@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { CRRT_CASE_ARTIFACT_IDS } from './artifactRegistry'
 import { engineFixtureNormalizationSchema } from './engineFixtureBoundary'
 
 const finiteNumberSchema = z.number().finite()
@@ -372,6 +373,7 @@ export const acceptedPathSchema = z
   .object({
     id: identifierSchema,
     label: z.string().min(1),
+    predictionControlOptionIds: z.array(identifierSchema).min(1),
     actionIds: z.array(identifierSchema).min(1),
     reassessmentIds: z.array(identifierSchema).min(1),
     successConditionIds: z.array(identifierSchema).min(1),
@@ -671,6 +673,12 @@ export function collectCrrtCaseSemanticIssues(definition: SemanticCase): string[
     issues.push(`Duplicate success-condition ID: ${id}`)
   }
   for (const path of definition.acceptedAlternativePaths) {
+    for (const id of duplicateValues(path.predictionControlOptionIds)) {
+      issues.push(`Accepted path ${path.id} has duplicate prediction control option ID: ${id}`)
+    }
+    for (const id of unresolvedValues(path.predictionControlOptionIds, controlIds)) {
+      issues.push(`Accepted path ${path.id} has unresolved prediction control option ID: ${id}`)
+    }
     for (const id of unresolvedValues(path.actionIds, interventionIdSet)) {
       issues.push(`Accepted path ${path.id} has unresolved intervention ID: ${id}`)
     }
@@ -712,6 +720,9 @@ export function collectCrrtCaseSemanticIssues(definition: SemanticCase): string[
 
   const referencedSources: { id: string; location: string }[] = []
   const addSources = (ids: readonly string[], location: string) => {
+    for (const id of duplicateValues(ids)) {
+      issues.push(`Duplicate source ID ${id} at ${location}`)
+    }
     for (const id of ids) referencedSources.push({ id, location })
   }
   addSources(definition.initialPatient.sourceIds, 'initialPatient')
@@ -783,6 +794,12 @@ export function collectCrrtCaseSemanticIssues(definition: SemanticCase): string[
       issues.push(`Unresolved source ID ${reference.id} at ${reference.location}`)
     }
   }
+  const referencedSourceIdSet = new Set(referencedSources.map((reference) => reference.id))
+  for (const id of sourceIds) {
+    if (!referencedSourceIdSet.has(id)) {
+      issues.push(`Unreferenced source basis ID: ${id}`)
+    }
+  }
 
   return [...new Set(issues)]
 }
@@ -798,14 +815,43 @@ export const runtimeCrrtCaseSchema = runtimeCrrtCaseBaseSchema.superRefine(addSe
 export const runtimeCrrtCaseRegistrySchema = z.array(runtimeCrrtCaseSchema)
 
 export const CRRT_PILOT_CASE_IDS = ['CRRT-04', 'CRRT-10', 'CRRT-13'] as const
+export const CRRT_PROTOCOL_GATED_CASE_IDS = ['CRRT-09', 'CRRT-17'] as const
+export const CRRT_PHASE_7_DRAFT_CASE_IDS = [
+  'CRRT-01',
+  'CRRT-02',
+  'CRRT-03',
+  'CRRT-05',
+  'CRRT-06',
+  'CRRT-07',
+  'CRRT-08',
+  'CRRT-11',
+  'CRRT-12',
+  'CRRT-14',
+  'CRRT-15',
+  'CRRT-16',
+  'CRRT-18',
+] as const
+export const CRRT_ALL_CASE_IDS = CRRT_CASE_ARTIFACT_IDS
+
+export type CrrtCaseId = (typeof CRRT_ALL_CASE_IDS)[number]
 
 export interface PilotRegistryValidationOptions {
   readonly requireExactPilotCases?: boolean
 }
 
-export function validatePilotCrrtCaseRegistry(
+export interface CrrtRegistryValidationOptions {
+  readonly expectedCaseIds?: readonly CrrtCaseId[]
+  readonly registryLabel?: string
+}
+
+/**
+ * Validates a runtime registry without silently treating protocol-gated case
+ * plans as executable content. Callers choose the exact expected IDs for the
+ * registry they are assembling.
+ */
+export function validateCrrtCaseRegistry(
   input: unknown,
-  options: PilotRegistryValidationOptions = {},
+  options: CrrtRegistryValidationOptions = {},
 ): string[] {
   const parsed = runtimeCrrtCaseRegistrySchema.safeParse(input)
   if (!parsed.success) {
@@ -819,23 +865,31 @@ export function validatePilotCrrtCaseRegistry(
   const caseIds = parsed.data.map((definition) => definition.id)
   for (const id of duplicateValues(caseIds)) issues.push(`Duplicate case ID: ${id}`)
 
-  if (options.requireExactPilotCases) {
-    const expected = new Set<string>(CRRT_PILOT_CASE_IDS)
-    const actual = new Set(caseIds)
-    const missing = CRRT_PILOT_CASE_IDS.filter((id) => !actual.has(id))
-    const unexpected = [...actual].filter((id) => !expected.has(id))
-    if (missing.length > 0) issues.push(`Missing pilot case IDs: ${missing.join(', ')}`)
-    if (unexpected.length > 0) issues.push(`Unexpected pilot case IDs: ${unexpected.join(', ')}`)
-    if (
-      caseIds.length !== CRRT_PILOT_CASE_IDS.length &&
-      missing.length === 0 &&
-      unexpected.length === 0
-    ) {
-      issues.push('Pilot registry must contain each required case exactly once.')
-    }
+  const expectedIds = options.expectedCaseIds
+  if (!expectedIds) return issues
+
+  const label = options.registryLabel ?? 'CRRT runtime'
+  const expected = new Set<string>(expectedIds)
+  const actual = new Set(caseIds)
+  const missing = expectedIds.filter((id) => !actual.has(id))
+  const unexpected = [...actual].filter((id) => !expected.has(id))
+  if (missing.length > 0) issues.push(`Missing ${label} case IDs: ${missing.join(', ')}`)
+  if (unexpected.length > 0) issues.push(`Unexpected ${label} case IDs: ${unexpected.join(', ')}`)
+  if (caseIds.length !== expectedIds.length && missing.length === 0 && unexpected.length === 0) {
+    issues.push(`${label} registry must contain each required case exactly once.`)
   }
 
   return issues
+}
+
+export function validatePilotCrrtCaseRegistry(
+  input: unknown,
+  options: PilotRegistryValidationOptions = {},
+): string[] {
+  return validateCrrtCaseRegistry(input, {
+    ...(options.requireExactPilotCases ? { expectedCaseIds: CRRT_PILOT_CASE_IDS } : {}),
+    registryLabel: 'pilot',
+  })
 }
 
 export const protocolParameterSchema = z

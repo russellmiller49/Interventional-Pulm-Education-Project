@@ -99,6 +99,16 @@ describe('CRRT canonical time advancement', () => {
     expect(oneHour.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl).toBeCloseTo(100, 10)
     expect(oneHour.deliveredTherapy.cumulativeWholePatientBalanceMl).toBeCloseTo(0, 10)
     expect(oneHour.trends).toHaveLength(12)
+    expect(oneHour.trends.at(-1)).toMatchObject({
+      prescribedEffluentDoseMlKgHour: oneHour.deliveredTherapy.prescribedEffluentDoseMlKgHour,
+      deliveredDoseMlKgHour: oneHour.deliveredTherapy.deliveredDoseMlKgHour,
+      soluteConcentrationsPerLiter: {
+        potassium:
+          oneHour.patient.status === 'configured'
+            ? oneHour.patient.solutes.potassium?.concentrationPerLiter
+            : undefined,
+      },
+    })
   })
 
   it('uses actual delivery for dose and keeps external inputs running through downtime', () => {

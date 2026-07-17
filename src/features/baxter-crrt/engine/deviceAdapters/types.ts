@@ -46,8 +46,9 @@ export interface DeviceDisplayModel {
 }
 
 /**
- * Shared device contract. Phase 3 supplies the review-pending PrisMax pilot
- * implementation; Prismaflex remains deferred to its separately approved phase.
+ * Shared device contract. PrisMax is the only learner-registered adapter.
+ * Prismaflex may satisfy this contract as a reviewer-only candidate while its
+ * device state remains deferred and its runtime actions fail closed.
  */
 export interface CrrtDeviceAdapter {
   readonly id: BaxterCrrtDeviceId

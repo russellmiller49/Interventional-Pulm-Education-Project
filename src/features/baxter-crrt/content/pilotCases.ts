@@ -8,8 +8,9 @@ import {
   type RuntimeCrrtCase,
   type SourceReference,
 } from './schema'
+import { BAXTER_CRRT_PILOT_CONTENT_VERSION } from './versions'
 
-export const BAXTER_CRRT_PILOT_CONTENT_VERSION = '0.5.0-pilot-draft.1' as const
+export { BAXTER_CRRT_PILOT_CONTENT_VERSION } from './versions'
 
 export type BaxterCrrtPilotCaseId = (typeof CRRT_PILOT_CASE_IDS)[number]
 
@@ -747,6 +748,7 @@ const crrt04 = {
     {
       id: 'crrt04-primary-path',
       label: 'Primary reviewed synthetic CVVHD path',
+      predictionControlOptionIds: ['crrt04-control-cvvhd-reviewed-workflow'],
       actionIds: [
         'crrt04-assess-goal',
         'crrt04-enter-blood-flow',
@@ -771,6 +773,7 @@ const crrt04 = {
     {
       id: 'crrt04-alternative-path',
       label: 'Alternative reviewed synthetic CVVHD path',
+      predictionControlOptionIds: ['crrt04-control-cvvhd-reviewed-workflow'],
       actionIds: [
         'crrt04-assess-goal',
         'crrt04-enter-blood-flow',
@@ -1336,6 +1339,7 @@ const crrt10 = {
     {
       id: 'crrt10-tolerance-guided-removal-path',
       label: 'Tolerance-guided synthetic removal adjustment',
+      predictionControlOptionIds: ['crrt10-control-reconcile-and-titrate'],
       actionIds: [
         'crrt10-assess-tolerance',
         'crrt10-review-fluid-ledger',
@@ -1357,6 +1361,7 @@ const crrt10 = {
     {
       id: 'crrt10-input-coordination-alternative',
       label: 'Multidisciplinary external-input coordination',
+      predictionControlOptionIds: ['crrt10-control-reconcile-and-titrate'],
       actionIds: [
         'crrt10-assess-tolerance',
         'crrt10-review-fluid-ledger',
@@ -1933,6 +1938,7 @@ const crrt13 = {
     {
       id: 'crrt13-cause-first-path',
       label: 'Direct cause-first access correction',
+      predictionControlOptionIds: ['crrt13-control-assess-inspect-correct'],
       actionIds: [
         'crrt13-assess-patient-device',
         'crrt13-advance-to-pattern',
@@ -1954,6 +1960,7 @@ const crrt13 = {
     {
       id: 'crrt13-pause-correct-resume-alternative',
       label: 'Pause, correct, and resume alternative',
+      predictionControlOptionIds: ['crrt13-control-assess-inspect-correct'],
       actionIds: [
         'crrt13-assess-patient-device',
         'crrt13-advance-to-pattern',

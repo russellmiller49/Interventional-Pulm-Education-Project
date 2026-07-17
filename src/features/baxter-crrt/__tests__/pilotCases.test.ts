@@ -2,12 +2,17 @@ import {
   baxterCrrtPilotCases,
   baxterCrrtPilotFixtures,
   baxterCrrtPilotSourceReferences,
+  BAXTER_CRRT_PILOT_CONTENT_VERSION,
   getBaxterCrrtPilotCase,
   getBaxterCrrtPilotFixture,
 } from '../content'
 import { CRRT_PILOT_CASE_IDS, validatePilotCrrtCaseRegistry } from '../content/schema'
 import { createInitialCrrtSimulationState } from '../engine/initialState'
-import { createCrrtLearningSession, crrtLearningSessionReducer } from '../engine/learningSession'
+import {
+  createCrrtLearningSession,
+  crrtLearningSessionReducer,
+  type CrrtLearningSessionState,
+} from '../engine/learningSession'
 import { selectCrrtLearningOutcome } from '../engine/outcomes'
 import { crrtSimulationReducer } from '../engine/reducer'
 
@@ -49,6 +54,28 @@ const requiredDebriefKeys = [
   'transferQuestion',
 ] as const
 
+function advanceToPrediction(state: CrrtLearningSessionState) {
+  if (state.reasoningPhase === 'read') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'define',
+    })
+  }
+  if (state.reasoningPhase === 'define') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'select',
+    })
+  }
+  if (state.reasoningPhase === 'select') {
+    state = crrtLearningSessionReducer(state, {
+      type: 'ENTER_PRECOMMIT_REASONING_PHASE',
+      phase: 'predict',
+    })
+  }
+  return state
+}
+
 describe('Baxter CRRT Phase 5 pilot case registry', () => {
   it('exports exactly the ordered CRRT-04, CRRT-10, and CRRT-13 pilot registry', () => {
     expect(baxterCrrtPilotCases.map(({ id }) => id)).toEqual([...CRRT_PILOT_CASE_IDS])
@@ -60,8 +87,19 @@ describe('Baxter CRRT Phase 5 pilot case registry', () => {
     expect(Object.isFrozen(baxterCrrtPilotFixtures)).toBe(true)
 
     for (const caseId of CRRT_PILOT_CASE_IDS) {
-      expect(getBaxterCrrtPilotCase(caseId).id).toBe(caseId)
+      expect(getBaxterCrrtPilotCase(caseId)).toMatchObject({
+        id: caseId,
+        contentVersion: BAXTER_CRRT_PILOT_CONTENT_VERSION,
+      })
       expect(getBaxterCrrtPilotFixture(caseId).id).toBe(caseId)
+      expect(
+        createCrrtLearningSession({
+          caseDefinition: getBaxterCrrtPilotCase(caseId),
+          experience: 'learn',
+          roleLens: 'integrated',
+          attempt: 1,
+        }).simulation.contentVersion,
+      ).toBe(BAXTER_CRRT_PILOT_CONTENT_VERSION)
     }
   })
 
@@ -171,6 +209,7 @@ describe('Baxter CRRT Phase 5 pilot case registry', () => {
           roleLens: 'integrated',
           attempt: pathIndex + 1,
         })
+        session = advanceToPrediction(session)
 
         session = crrtLearningSessionReducer(session, {
           type: 'COMMIT_PREDICTION',
@@ -189,6 +228,10 @@ describe('Baxter CRRT Phase 5 pilot case registry', () => {
           })
           expect(session.performedInterventionIds).toContain(interventionId)
         }
+        session = crrtLearningSessionReducer(session, {
+          type: 'ADVANCE_TIME',
+          seconds: 60,
+        })
         session = crrtLearningSessionReducer(session, {
           type: 'COMMIT_REASSESSMENT',
           optionIds: path.reassessmentIds,

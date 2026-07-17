@@ -1,4 +1,4 @@
-import type { CrrtSoluteId, SolutePoolState } from './types'
+import { crrtSoluteIds, type CrrtSoluteId, type SolutePoolState } from './types'
 
 function nonnegative(value: number, label: string): number {
   if (!Number.isFinite(value) || value < 0) {
@@ -94,7 +94,9 @@ export function advanceSolutePools(
   durationSeconds: number,
 ): Readonly<Partial<Record<CrrtSoluteId, SolutePoolState>>> {
   const next: Partial<Record<CrrtSoluteId, SolutePoolState>> = {}
-  for (const [id, pool] of Object.entries(pools) as [CrrtSoluteId, SolutePoolState][]) {
+  for (const id of crrtSoluteIds) {
+    const pool = pools[id]
+    if (!pool) continue
     const clearance = calculateDeliveredSoluteClearanceMlMin(
       actualEffluentFlowMlHour,
       pool.filterPermeabilityFraction,

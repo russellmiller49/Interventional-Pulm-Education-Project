@@ -103,12 +103,37 @@ describe('CRRT Phase 3 pilot circuit', () => {
   })
 
   it('communicates running and readiness states with visible text', () => {
-    renderCircuit({ running: true, setReady: true, fluidsReady: true })
+    renderCircuit({
+      running: true,
+      setReady: true,
+      fluidsReady: true,
+      bloodFlowMlMin: 180,
+      dialysateFlowMlHour: 1_200,
+      patientFluidRemovalMlHour: 75,
+      pressure: {
+        access: -82,
+        filter: 144,
+        return: 71,
+        effluent: 18,
+        TMP: 63,
+        filterDrop: 73,
+      },
+    })
 
-    expect(screen.getByRole('status')).toHaveTextContent('Circuit running')
+    expect(screen.getByText('Circuit running').closest('[role="status"]')).toHaveTextContent(
+      'Circuit running',
+    )
     const readiness = screen.getByLabelText('Circuit readiness status')
     expect(within(readiness).getAllByText('Ready')).toHaveLength(2)
     expect(screen.getByText('FLOW MOTION: ACTIVE')).toBeInTheDocument()
+    const stateSummary = screen.getByText(/^Circuit state: running\./)
+    expect(stateSummary).not.toHaveAttribute('aria-live')
+    expect(stateSummary).not.toHaveAttribute('role', 'status')
+    expect(stateSummary).toHaveTextContent('Training set ready; fluids ready')
+    expect(stateSummary).toHaveTextContent('Blood flow 180 milliliters per minute')
+    expect(stateSummary).toHaveTextContent('Pressure state: access -82 millimeters of mercury')
+    const viewport = screen.getByRole('group', { name: /horizontally scrollable/i })
+    expect(viewport.getAttribute('aria-describedby')).toContain(stateSummary.id)
   })
 
   it('encodes focus visibility, running-only motion, and reduced-motion suppression', () => {

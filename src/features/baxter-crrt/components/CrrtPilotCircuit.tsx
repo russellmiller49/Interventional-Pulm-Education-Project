@@ -86,6 +86,10 @@ function SignalValue({ value, unit }: { value: number | null; unit: string }) {
   )
 }
 
+function accessibleSignal(value: number | null, unit: string): string {
+  return value === null ? 'no case signal' : `${value.toLocaleString('en-US')} ${unit}`
+}
+
 export function CrrtPilotCircuit({
   running,
   setReady,
@@ -99,10 +103,17 @@ export function CrrtPilotCircuit({
   const titleId = `${idPrefix}-title`
   const descriptionId = `${idPrefix}-description`
   const summaryId = `${idPrefix}-summary`
+  const stateSummaryId = `${idPrefix}-state-summary`
   const bloodArrowId = `${idPrefix}-blood-arrow`
   const fluidArrowId = `${idPrefix}-fluid-arrow`
   const effluentArrowId = `${idPrefix}-effluent-arrow`
   const viewportRef = useRef<HTMLDivElement>(null)
+  const circuitStateSummary = [
+    `Circuit state: ${running ? 'running' : 'stopped'}.`,
+    `Training set ${setReady ? 'ready' : 'not ready'}; fluids ${fluidsReady ? 'ready' : 'not ready'}.`,
+    `Blood flow ${accessibleSignal(bloodFlowMlMin, 'milliliters per minute')}; dialysate flow ${accessibleSignal(dialysateFlowMlHour, 'milliliters per hour')}; patient fluid removal ${accessibleSignal(patientFluidRemovalMlHour, 'milliliters per hour')}.`,
+    `Pressure state: access ${accessibleSignal(pressure.access, 'millimeters of mercury')}; filter ${accessibleSignal(pressure.filter, 'millimeters of mercury')}; return ${accessibleSignal(pressure.return, 'millimeters of mercury')}; effluent ${accessibleSignal(pressure.effluent, 'millimeters of mercury')}; transmembrane pressure ${accessibleSignal(pressure.TMP, 'millimeters of mercury')}; filter pressure drop ${accessibleSignal(pressure.filterDrop, 'millimeters of mercury')}.`,
+  ].join(' ')
 
   function panDiagram(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
@@ -160,13 +171,16 @@ export function CrrtPilotCircuit({
         side. Effluent leaves through the effluent-pressure site and blood-leak detector to the
         effluent scale.
       </p>
+      <p id={stateSummaryId} className={styles.visuallyHidden}>
+        {circuitStateSummary}
+      </p>
 
       <div
         ref={viewportRef}
         className={styles.diagramViewport}
         role="group"
         aria-label="CRRT circuit schematic; horizontally scrollable on narrow screens"
-        aria-describedby={summaryId}
+        aria-describedby={`${summaryId} ${stateSummaryId}`}
         tabIndex={0}
         onKeyDown={panDiagram}
       >

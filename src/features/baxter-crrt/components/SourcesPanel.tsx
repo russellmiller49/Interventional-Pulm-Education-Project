@@ -2,15 +2,18 @@ import { BookOpenCheck, FileWarning, LockKeyhole, ShieldCheck } from 'lucide-rea
 
 import {
   baxterCrrtPublicationStatus,
-  baxterCrrtPilotSourceReferences,
   baxterCrrtReleaseReviews,
+  prismaxDraftDeviceProfile,
+} from '../content/deviceProfiles'
+import {
+  baxterCrrtPilotSourceReferences,
   baxterCrrtSourceDocuments,
   baxterCrrtSourceRecords,
-  prismaxDraftDeviceProfile,
-} from '../content'
+} from '../content/provenance'
 import styles from './baxter-crrt.module.css'
 
 export function SourcesPanel() {
+  const isPublished = baxterCrrtPublicationStatus === 'published'
   const primarySource = baxterCrrtSourceDocuments.find((source) => source.role === 'primary')
   const inactiveSources = baxterCrrtSourceDocuments.filter((source) => source.role !== 'primary')
   const pilotContextSources = baxterCrrtPilotSourceReferences.filter(
@@ -27,7 +30,11 @@ export function SourcesPanel() {
       <div className={styles.sectionHeading}>
         <div>
           <span className={styles.kicker}>Source boundary & release safety</span>
-          <h2 id="baxter-crrt-sources-heading">What this draft can—and cannot—claim</h2>
+          <h2 id="baxter-crrt-sources-heading">
+            {isPublished
+              ? 'Reviewed source and release boundary'
+              : 'What this draft can—and cannot—claim'}
+          </h2>
         </div>
         <span className={styles.reviewBadge} data-status={baxterCrrtPublicationStatus}>
           {baxterCrrtPublicationStatus === 'published'
@@ -39,17 +46,32 @@ export function SourcesPanel() {
       <div className={styles.scopeBoundary}>
         <FileWarning aria-hidden="true" />
         <div>
-          <strong>
-            Three synthetic teaching cases are active only inside this authenticated draft.
-          </strong>
-          <p>
-            Phase 4–5 connects the source-mapped PrisMax workflow to deterministic cases, response
-            models, and formative scoring. The published studies provide teaching context only;
-            every exact case value, condition band, threshold, coefficient, score, critical-error
-            rule, and alarm behavior is synthetic and pending clinical and device review. Nothing
-            here is a patient-specific recommendation, clinical target, verified device limit, or
-            competency decision.
-          </p>
+          {isPublished ? (
+            <>
+              <strong>Published scope is bound to one exact reviewed learner candidate.</strong>
+              <p>
+                The fail-closed publication gate requires the exact v2 frozen candidate identity,
+                local-configuration disposition, and a candidate-bound attestation from each of the
+                ten mandatory publication-review domains before this state can render. Prismaflex
+                device review is additionally required if Phase 8 is activated. The source
+                limitations below remain part of the released educational claim boundary.
+              </p>
+            </>
+          ) : (
+            <>
+              <strong>
+                Three synthetic teaching cases are active only inside this authenticated draft.
+              </strong>
+              <p>
+                The three-case pilot connects the source-mapped PrisMax workflow to deterministic
+                cases, response models, and formative scoring. The published studies provide
+                teaching context only; every exact case value, condition band, threshold,
+                coefficient, score, critical-error rule, and alarm behavior is synthetic and pending
+                clinical and device review. Nothing here is a patient-specific recommendation,
+                clinical target, verified device limit, or competency decision.
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -99,7 +121,7 @@ export function SourcesPanel() {
       </div>
 
       <div className={styles.sourceSubheading}>
-        <span className={styles.kicker}>Phase 4–5 case evidence</span>
+        <span className={styles.kicker}>Three-case pilot evidence</span>
         <h3>Clinical context and synthetic calibration</h3>
         <p>
           Context sources support the teaching distinction being explored. They do not validate the
@@ -146,7 +168,7 @@ export function SourcesPanel() {
               <p className={styles.sourceLimitation}>
                 <strong>Boundary:</strong> {source.limitation}
               </p>
-              <small>Review {source.reviewStatus} · inactive in the Phase 4–5 pilot</small>
+              <small>Review {source.reviewStatus} · inactive in the current pilot</small>
             </article>
           ))}
         </div>
@@ -156,10 +178,10 @@ export function SourcesPanel() {
         <h3>Release reviews</h3>
         <ul>
           {baxterCrrtReleaseReviews.map((review) => (
-            <li key={review.id}>
+            <li key={review.domain}>
               <span aria-hidden="true">○</span>
               <strong>{review.label}</strong>
-              <small>{review.status}</small>
+              <small>{review.reviewStatus}</small>
             </li>
           ))}
         </ul>

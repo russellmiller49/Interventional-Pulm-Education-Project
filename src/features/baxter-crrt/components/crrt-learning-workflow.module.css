@@ -208,6 +208,7 @@
 }
 
 .syntheticNotice,
+.masteryBoundary,
 .criticalBanner,
 .guidedCallout,
 .completedNotice,
@@ -223,6 +224,7 @@
 }
 
 .syntheticNotice svg,
+.masteryBoundary svg,
 .criticalBanner svg,
 .guidedCallout svg,
 .completedNotice svg,
@@ -235,6 +237,7 @@
 }
 
 .syntheticNotice p,
+.masteryBoundary p,
 .criticalBanner p,
 .guidedCallout p,
 .completedNotice {
@@ -243,9 +246,24 @@
 }
 
 .syntheticNotice p,
+.masteryBoundary p,
 .criticalBanner p,
 .guidedCallout p {
   margin: 0;
+}
+
+.masteryBoundary {
+  border-color: rgba(117, 215, 204, 0.38);
+  background: rgba(16, 67, 69, 0.42);
+}
+
+.masteryBoundary svg {
+  color: #74d7cc;
+}
+
+.masteryBoundary p {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .findingsSection,
@@ -312,6 +330,79 @@
   margin-top: 0.75rem;
 }
 
+.predictionValidationSummary {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(245, 187, 101, 0.68);
+  border-radius: 0.6rem;
+  color: #fff1d7;
+  background: rgba(72, 51, 21, 0.56);
+}
+
+.predictionValidationSummary:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 3px;
+}
+
+.predictionValidationSummary p,
+.predictionValidationSummary ul {
+  margin: 0;
+}
+
+.predictionValidationSummary p {
+  color: #e7d7bc;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.predictionValidationSummary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  list-style: none;
+}
+
+.predictionValidationSummary button {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgba(245, 187, 101, 0.52);
+  border-radius: 0.45rem;
+  color: #fff1d7;
+  background: rgba(8, 29, 33, 0.74);
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.predictionInstruction,
+.predictionFieldError {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.predictionInstruction {
+  color: #aebfbd;
+}
+
+.predictionFieldError {
+  color: #ffd49a;
+  font-weight: 750;
+}
+
+.predictionForm select[aria-invalid='true'],
+.predictionForm fieldset[data-invalid='true'] {
+  border-color: #f5bb65;
+  box-shadow: 0 0 0 0.12rem rgba(245, 187, 101, 0.18);
+}
+
+.predictionForm select:disabled,
+.predictionForm fieldset:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .predictionForm fieldset,
 .reassessmentSection fieldset {
   display: grid;
@@ -375,6 +466,148 @@
   color: #d7e4e2;
   font-size: 0.68rem;
   line-height: 1.45;
+}
+
+.attemptEvidence {
+  margin-top: 0.8rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(117, 215, 204, 0.28);
+  border-radius: 0.75rem;
+  background: rgba(5, 24, 28, 0.58);
+}
+
+.attemptEvidence h5,
+.attemptEvidence h6 {
+  margin: 0;
+  color: #dff6f2;
+}
+
+.attemptEvidence h5 {
+  font-size: 0.82rem;
+}
+
+.attemptEvidence h6 {
+  margin-top: 0.8rem;
+  font-size: 0.68rem;
+}
+
+.attemptEvidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0.65rem 0 0;
+}
+
+.attemptEvidenceGrid div,
+.replayIdentity dl div {
+  padding: 0.5rem;
+  border-left: 0.16rem solid rgba(245, 187, 101, 0.72);
+  background: rgba(68, 47, 18, 0.24);
+}
+
+.attemptEvidenceGrid dt,
+.replayIdentity dt {
+  color: #f5c071;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.attemptEvidenceGrid dd,
+.replayIdentity dd {
+  margin: 0.2rem 0 0;
+  color: #d7e4e2;
+  font-size: 0.64rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.attemptTimeline {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
+  padding-left: 1.3rem;
+}
+
+.attemptTimeline li {
+  padding: 0.4rem;
+  color: #d7e4e2;
+  background: rgba(14, 52, 57, 0.38);
+  font-size: 0.62rem;
+}
+
+.attemptTimeline time,
+.attemptTimeline span,
+.attemptTimeline small {
+  display: inline;
+}
+
+.attemptTimeline time {
+  margin-right: 0.45rem;
+  color: #8ce2d7;
+  font-weight: 850;
+}
+
+.attemptTimeline small::before {
+  content: ' · ';
+}
+
+.trendEvidenceRegion {
+  max-width: 100%;
+  margin-top: 0.55rem;
+  overflow-x: auto;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.55rem;
+}
+
+.trendEvidenceRegion:focus-visible {
+  outline: 0.18rem solid #f5c071;
+  outline-offset: 0.12rem;
+}
+
+.trendEvidenceRegion table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  font-size: 0.6rem;
+}
+
+.trendEvidenceRegion th,
+.trendEvidenceRegion td {
+  padding: 0.42rem;
+  border-bottom: 1px solid rgba(148, 196, 191, 0.16);
+  text-align: left;
+}
+
+.trendEvidenceRegion thead th {
+  color: #8ce2d7;
+  background: rgba(14, 52, 57, 0.76);
+}
+
+.trendEvidenceRegion tbody th {
+  color: #f5c071;
+}
+
+.replayIdentity {
+  margin-top: 0.7rem;
+}
+
+.replayIdentity summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: #8ce2d7;
+  font-size: 0.64rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.replayIdentity dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0;
 }
 
 .actionList {
@@ -465,9 +698,10 @@
 
 .timeControls > div {
   display: flex;
+  flex: 1 1 14rem;
   gap: 0.45rem;
   align-items: center;
-  min-width: 10rem;
+  min-width: 0;
   margin-right: auto;
   color: #aebfbd;
   font-size: 0.6rem;
@@ -482,6 +716,10 @@
 .timeControls strong {
   color: #f5c071;
   font-size: 0.7rem;
+}
+
+.timeControls .nextEventButton {
+  flex: 1 1 12rem;
 }
 
 .usedHints,
@@ -726,6 +964,21 @@
   overflow-x: auto;
 }
 
+.trendTableWrap:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 3px;
+}
+
+.trendSummary {
+  margin: 0;
+  padding: 0.65rem;
+  border-left: 0.2rem solid #f5bb65;
+  color: #d7e4e2;
+  background: rgba(72, 51, 21, 0.34);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
 .trendTableWrap table {
   width: 100%;
   min-width: 34rem;
@@ -834,9 +1087,8 @@
   }
 
   .reasoningRibbon ol {
-    grid-template-columns: repeat(7, minmax(4.6rem, 1fr));
-    overflow-x: auto;
-    padding: 0.2rem 0.1rem 0.45rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.2rem 0.1rem;
   }
 
   .contextControls {
@@ -857,6 +1109,12 @@
   }
 }
 
+@media (max-width: 420px) {
+  .reasoningRibbon ol {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 520px) {
   .caseHeader,
   .actionList article {
@@ -872,6 +1130,11 @@
   }
 
   .scoreCard dl {
+    grid-template-columns: 1fr;
+  }
+
+  .attemptEvidenceGrid,
+  .replayIdentity dl {
     grid-template-columns: 1fr;
   }
 

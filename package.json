@@ -15,6 +15,7 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch --passWithNoTests",
     "type-check": "tsc --noEmit",
+    "crrt:review-candidate": "node --import tsx scripts/baxter-crrt/create-review-candidate-manifest.ts",
     "sync:bronch-navigation-trainer": "node scripts/sync-bronch-navigation-trainer.mjs",
     "sync:socal-ebus-course": "node scripts/sync-socal-ebus-course.mjs",
     "sync:scope-input": "node scripts/sync-scope-input.mjs",

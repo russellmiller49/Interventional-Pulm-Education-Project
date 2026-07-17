@@ -106,16 +106,18 @@ export interface ConfiguredAccessState {
 
 export type AccessState = UnconfiguredAccessState | ConfiguredAccessState
 
-export interface CrrtFlowRates {
-  readonly bloodFlowMlMin: number
-  readonly dialysateFlowMlHour: number
-  readonly pbpFlowMlHour: number
-  readonly preReplacementFlowMlHour: number
-  readonly postReplacementFlowMlHour: number
-  readonly patientFluidRemovalMlHour: number
-  readonly syringeFlowMlHour: number
-  readonly makeupFlowMlHour: number
-}
+export const crrtFlowRateKeys = [
+  'bloodFlowMlMin',
+  'dialysateFlowMlHour',
+  'pbpFlowMlHour',
+  'preReplacementFlowMlHour',
+  'postReplacementFlowMlHour',
+  'patientFluidRemovalMlHour',
+  'syringeFlowMlHour',
+  'makeupFlowMlHour',
+] as const
+export type CrrtFlowRateKey = (typeof crrtFlowRateKeys)[number]
+export type CrrtFlowRates = Readonly<Record<CrrtFlowRateKey, number>>
 
 export interface UnconfiguredPrescriptionState {
   readonly status: 'unconfigured'
@@ -417,6 +419,8 @@ export interface InterventionRecord {
 
 export interface TrendSample {
   readonly timeSeconds: number
+  readonly prescribedEffluentDoseMlKgHour: number | null
+  readonly deliveredDoseMlKgHour: number | null
   readonly cumulativeActualEffluentMl: number
   readonly cumulativeMachinePatientFluidRemovalMl: number
   readonly cumulativeWholePatientBalanceMl: number
@@ -427,6 +431,7 @@ export interface TrendSample {
   readonly foulingBurdenFraction: number
   readonly clotBurdenFraction: number
   readonly hemodynamicStressIndex: number | null
+  readonly soluteConcentrationsPerLiter: Readonly<Partial<Record<CrrtSoluteId, number>>>
 }
 
 export interface CrrtSimulationState {

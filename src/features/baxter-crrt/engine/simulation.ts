@@ -10,17 +10,19 @@ import { advancePatientFluidTolerance } from './patientModel'
 import { canEnterRunningState } from './readiness'
 import { calculateSyntheticBloodCircuitPressures } from './pressureModel'
 import { advanceSolutePools } from './soluteModel'
-import type {
-  ConfiguredAccessState,
-  CrrtDeviceState,
-  CrrtEngineFaultId,
-  CrrtScheduledEvent,
-  CrrtScheduledEventAction,
-  CrrtSimulationState,
-  DowntimeReason,
-  InterventionRecord,
-  PressureModelParameters,
-  TrendSample,
+import {
+  crrtSoluteIds,
+  type ConfiguredAccessState,
+  type CrrtDeviceState,
+  type CrrtEngineFaultId,
+  type CrrtScheduledEvent,
+  type CrrtScheduledEventAction,
+  type CrrtSimulationState,
+  type CrrtSoluteId,
+  type DowntimeReason,
+  type InterventionRecord,
+  type PressureModelParameters,
+  type TrendSample,
 } from './types'
 
 export const CRRT_CANONICAL_STEP_SECONDS = 60
@@ -349,8 +351,17 @@ function derivePressures(
 function appendTrendIfDue(state: CrrtSimulationState): CrrtSimulationState {
   const quotient = state.simulationTimeSeconds / CRRT_TREND_INTERVAL_SECONDS
   if (Math.abs(quotient - Math.round(quotient)) > 1e-9) return state
+  const soluteConcentrationsPerLiter: Partial<Record<CrrtSoluteId, number>> = {}
+  if (state.patient.status === 'configured') {
+    for (const id of crrtSoluteIds) {
+      const pool = state.patient.solutes[id]
+      if (pool) soluteConcentrationsPerLiter[id] = pool.concentrationPerLiter
+    }
+  }
   const sample: TrendSample = {
     timeSeconds: state.simulationTimeSeconds,
+    prescribedEffluentDoseMlKgHour: state.deliveredTherapy.prescribedEffluentDoseMlKgHour,
+    deliveredDoseMlKgHour: state.deliveredTherapy.deliveredDoseMlKgHour,
     cumulativeActualEffluentMl: state.deliveredTherapy.cumulativeActualEffluentMl,
     cumulativeMachinePatientFluidRemovalMl:
       state.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl,
@@ -363,6 +374,7 @@ function appendTrendIfDue(state: CrrtSimulationState): CrrtSimulationState {
     clotBurdenFraction: state.circuit.filter.clotBurdenFraction,
     hemodynamicStressIndex:
       state.patient.status === 'configured' ? state.patient.hemodynamicStressIndex : null,
+    soluteConcentrationsPerLiter,
   }
   const trends =
     state.trends.at(-1)?.timeSeconds === state.simulationTimeSeconds

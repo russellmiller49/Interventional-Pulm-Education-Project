@@ -19,7 +19,8 @@ describe('Baxter CRRT localized route', () => {
       follow: false,
       noarchive: true,
     })
-    expect(metadata.description).toMatch(/authenticated draft scaffold/i)
+    expect(metadata.description).toMatch(/protected three-case pilot/i)
+    expect(metadata.description).toMatch(/Phase 7 curriculum registry/i)
   })
 
   it.each(['en', 'es', 'zh-CN'])('sets and passes the %s locale', async (locale) => {

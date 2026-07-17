@@ -435,7 +435,7 @@ Store only:
 - Version.
 - Device and role lens.
 - Completed lesson/case IDs.
-- Attempts and best scores.
+- Attempts, best non-critical scores, and critical-error attempt counts.
 - Critical-error status.
 - Hint counts.
 - Last station.
@@ -460,11 +460,11 @@ they do not make the server the canonical CRRT progress store. Events are associ
 authenticated user and may be reported in aggregate; they are not anonymous aggregate records at
 ingestion.
 
-Do not send free text, simulated laboratory arrays, detailed trends, or action logs. Client-side
-typed builders are insufficient because the current analytics API accepts an arbitrary eventPayload
-record. Before Phase 4 sends any CRRT interaction or outcome payload, the implementation must add
-server-side CRRT event schemas or sanitization that rejects non-allowlisted keys and values. Tests
-must cover both the builder and API boundary.
+Do not send free text, simulated laboratory arrays, detailed trends, or action logs. The implemented
+client builders and server boundary now apply CRRT-specific event allowlists, bounded values, and
+unknown-key rejection, with tests at both boundaries. That engineering control does not approve the
+telemetry purpose, identity association, retention, access, export, deletion, or future schema
+expansion; those remain privacy/data-governance and product decisions for the exact candidate.
 
 Before pilot access expands, the product owner must document telemetry retention, access, export,
 and deletion expectations. Detailed CRRT outcome sync requires a separate privacy and product
@@ -496,7 +496,9 @@ Before release:
 
 ## 13. Publication and access gate
 
-The route remains draft and noindex until all applicable reviewers sign. Access states are explicit:
+The route remains draft and noindex until all mandatory and applicable conditional reviewers submit
+valid exact-candidate attestations and the separate authorizations are complete. Access states are
+explicit:
 
 | State               | Production access and listing behavior                                                                            |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -508,17 +510,15 @@ The route must never be added to the current public-unlisted exception merely to
 X-Robots-Tag header. Phase 1 must verify noindex, nofollow, and noarchive metadata while preserving
 authentication.
 
-Required reviewers:
+Mandatory canonical reviewer domains are `nephrology`, `critical-care`, `crrt-nurse-education`,
+`prismax-device`, `accessibility`, `localization`, `privacy-data-governance`,
+`entitlement-security`, `product-owner`, and `publication-approval`. Each requires a distinct,
+accepted, candidate-bound attestation; one broad sign-off cannot satisfy multiple records.
 
-- CRRT-experienced nephrologist.
-- Critical care physician.
-- CRRT nurse educator.
-- PrisMax-trained device reviewer.
-- Prismaflex-trained reviewer before that adapter is released.
-- Pharmacist and nutrition specialist for affected content.
-- Accessibility reviewer.
-- Localization reviewer.
-- Product owner/publication approver.
+Conditional domains are `prismaflex-device` and `cross-device-equivalence` for Phase 8,
+`protocol-owner` for an affected controlled local protocol/profile, and `pharmacy` or `nutrition`
+when their content is present. Formal pilot, Phase 7, Phase 8, competency, and publication decisions
+remain separate authorization records.
 
 No unresolved numeric threshold, device action, critical-error rule, citrate control, or
 market-specific feature may be active in a published pathway.

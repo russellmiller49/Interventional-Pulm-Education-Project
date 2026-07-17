@@ -1,8 +1,80 @@
 import type { RuntimeCrrtCase } from '../content/schema'
 import type { CrrtLearningSessionState, CrrtPredictionCommitment } from './learningSession'
-import type { CrrtSimulationState, ExternalFluidRateKey } from './types'
+import {
+  crrtSoluteIds,
+  type CrrtFlowRates,
+  type CrrtSimulationState,
+  type CrrtSoluteId,
+  type ExternalFluidRateKey,
+} from './types'
 
 export const CRRT_PRACTICE_HINT_PENALTY_POINTS = 5
+export const CRRT_MASTERY_MINIMUM_SCORE = 80
+
+interface ActivatedCrrtMasteryRuntime {
+  readonly capstoneId: string
+  readonly runtimeCaseId: RuntimeCrrtCase['id']
+  readonly contentVersion: string
+  readonly problemDomainIds: readonly string[]
+  readonly activationState: 'learner-active'
+  readonly reviewDisposition: 'approved'
+}
+
+const masteryIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/
+
+function isBoundedMasteryIdentifier(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= 128 &&
+    masteryIdentifierPattern.test(value)
+  )
+}
+
+/**
+ * Intentionally empty while the Phase 7 Mastery manifest is locked and has no
+ * runtime case. A future reviewed content-owned activation registry must be
+ * wired here; each record is still revalidated at the engine boundary.
+ */
+const activatedCrrtMasteryRuntimes: readonly ActivatedCrrtMasteryRuntime[] = Object.freeze([])
+
+function isValidMasteryActivationRecord(record: ActivatedCrrtMasteryRuntime): boolean {
+  const distinctProblemDomains = new Set(record.problemDomainIds)
+  return (
+    record.activationState === 'learner-active' &&
+    record.reviewDisposition === 'approved' &&
+    isBoundedMasteryIdentifier(record.capstoneId) &&
+    isBoundedMasteryIdentifier(record.runtimeCaseId) &&
+    isBoundedMasteryIdentifier(record.contentVersion) &&
+    distinctProblemDomains.size >= 2 &&
+    [...distinctProblemDomains].every(isBoundedMasteryIdentifier)
+  )
+}
+
+export function isCrrtMasteryRuntimeCaseActivated(
+  caseDefinition: Pick<RuntimeCrrtCase, 'id' | 'contentVersion'>,
+): boolean {
+  return selectCrrtMasteryCapstoneId(caseDefinition) !== null
+}
+
+export function selectCrrtMasteryCapstoneId(
+  caseDefinition: Pick<RuntimeCrrtCase, 'id' | 'contentVersion'>,
+): string | null {
+  return (
+    activatedCrrtMasteryRuntimes.find(
+      (record) =>
+        isValidMasteryActivationRecord(record) &&
+        record.runtimeCaseId === caseDefinition.id &&
+        record.contentVersion === caseDefinition.contentVersion,
+    )?.capstoneId ?? null
+  )
+}
+
+export function isCrrtMasteryCapstoneActivated(capstoneId: string): boolean {
+  return activatedCrrtMasteryRuntimes.some(
+    (record) => isValidMasteryActivationRecord(record) && record.capstoneId === capstoneId,
+  )
+}
 
 export const CRRT_OUTCOME_DOMAIN_MAXIMUMS = Object.freeze({
   indicationAndTreatmentGoal: 15,
@@ -22,7 +94,21 @@ export interface CrrtOutcomeDomainScores {
   readonly communicationAndCoordination: number
 }
 
+export interface CrrtOutcomeIdentity {
+  readonly caseId: RuntimeCrrtCase['id']
+  readonly attempt: number
+  readonly seed: number
+  readonly engineVersion: string
+  readonly engineSchemaVersion: string
+  readonly simulationContentVersion: string
+  readonly caseContentVersion: string
+  readonly deviceProfileVersion: string
+  readonly protocolProfileVersion: string | null
+}
+
 export interface CrrtLearningOutcome {
+  /** Ephemeral replay identity; never included in progress or analytics payloads. */
+  readonly resultIdentity: CrrtOutcomeIdentity
   readonly scored: boolean
   readonly score: number | null
   readonly mastery: boolean
@@ -39,14 +125,14 @@ export interface CrrtDebriefProjection {
   readonly summary: string
   readonly causalChain: readonly string[]
   readonly transferQuestion: string
-  readonly statedGoalReview: string | null
-  readonly predictionReview: string | null
-  readonly actionTimelineReview: string | null
-  readonly trendReview: string | null
-  readonly requiredActionsReview: string | null
-  readonly criticalErrorsReview: string | null
-  readonly acceptedAlternativesReview: string | null
-  readonly machineNavigationPoint: string | null
+  readonly statedGoalReview: string
+  readonly predictionReview: string
+  readonly actionTimelineReview: string
+  readonly trendReview: string
+  readonly requiredActionsReview: string
+  readonly criticalErrorsReview: string
+  readonly acceptedAlternativesReview: string
+  readonly machineNavigationPoint: string
   readonly prediction: CrrtPredictionCommitment | null
   readonly timeline: CrrtLearningSessionState['timeline']
   readonly outcome: CrrtLearningOutcome
@@ -63,6 +149,19 @@ const externalFluidRateKeys = new Set<ExternalFluidRateKey>([
   'drainOutputMlHour',
   'otherOutputMlHour',
 ])
+
+const prescriptionFlowKeys = new Set<keyof CrrtFlowRates>([
+  'bloodFlowMlMin',
+  'dialysateFlowMlHour',
+  'pbpFlowMlHour',
+  'preReplacementFlowMlHour',
+  'postReplacementFlowMlHour',
+  'patientFluidRemovalMlHour',
+  'syringeFlowMlHour',
+  'makeupFlowMlHour',
+])
+
+const soluteIds = new Set<CrrtSoluteId>(crrtSoluteIds)
 
 function finiteOrNull(value: number | null | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
@@ -87,22 +186,89 @@ export function readAllowlistedCrrtMetric(
       return finiteOrNull(state.deliveredTherapy.cumulativeWholePatientBalanceMl)
     case 'deliveredTherapy.cumulativeMachinePatientFluidRemovalMl':
       return finiteOrNull(state.deliveredTherapy.cumulativeMachinePatientFluidRemovalMl)
+    case 'deliveredTherapy.filtrationFraction':
+      return finiteOrNull(state.deliveredTherapy.filtrationFraction)
+    case 'deliveredTherapy.cumulativeDowntimeSeconds':
+      return finiteOrNull(state.deliveredTherapy.cumulativeDowntimeSeconds)
+    case 'deliveredTherapy.treatmentTimeSeconds':
+      return finiteOrNull(state.deliveredTherapy.treatmentTimeSeconds)
     case 'patient.hemodynamicStressIndex':
       return state.patient.status === 'configured'
         ? finiteOrNull(state.patient.hemodynamicStressIndex)
         : null
+    case 'patient.bodyWeightKg':
+      return state.patient.status === 'configured' ? finiteOrNull(state.patient.bodyWeightKg) : null
+    case 'patient.hematocritFraction':
+      return state.patient.status === 'configured'
+        ? finiteOrNull(state.patient.hematocritFraction)
+        : null
+    case 'patient.meanArterialPressureMmHg':
+      return state.patient.status === 'configured'
+        ? finiteOrNull(state.patient.meanArterialPressureMmHg)
+        : null
+    case 'patient.temperatureCelsius':
+      return state.patient.status === 'configured'
+        ? finiteOrNull(state.patient.temperatureCelsius)
+        : null
+    case 'patient.pH':
+      return state.patient.status === 'configured' ? finiteOrNull(state.patient.pH) : null
     case 'circuit.pressures.accessPressureMmHg':
       return finiteOrNull(state.circuit.pressures.accessPressureMmHg)
+    case 'circuit.pressures.filterPressureMmHg':
+      return finiteOrNull(state.circuit.pressures.filterPressureMmHg)
+    case 'circuit.pressures.returnPressureMmHg':
+      return finiteOrNull(state.circuit.pressures.returnPressureMmHg)
+    case 'circuit.pressures.effluentPressureMmHg':
+      return finiteOrNull(state.circuit.pressures.effluentPressureMmHg)
+    case 'circuit.pressures.prismaxTransmembranePressureMmHg':
+      return finiteOrNull(state.circuit.pressures.prismaxTransmembranePressureMmHg)
+    case 'circuit.pressures.prismaxFilterPressureDropMmHg':
+      return finiteOrNull(state.circuit.pressures.prismaxFilterPressureDropMmHg)
+    case 'circuit.filter.foulingBurdenFraction':
+      return finiteOrNull(state.circuit.filter.foulingBurdenFraction)
+    case 'circuit.filter.clotBurdenFraction':
+      return finiteOrNull(state.circuit.filter.clotBurdenFraction)
+    case 'circuit.filter.lowEffectiveBloodFlowFraction':
+      return finiteOrNull(state.circuit.filter.lowEffectiveBloodFlowFraction)
+    case 'circuit.filter.procoagulantBurdenFraction':
+      return finiteOrNull(state.circuit.filter.procoagulantBurdenFraction)
     case 'access.accessResistanceMmHgPerMlMin':
       return state.access.status === 'configured'
         ? finiteOrNull(state.access.accessResistanceMmHgPerMlMin)
         : null
+    case 'access.returnResistanceMmHgPerMlMin':
+      return state.access.status === 'configured'
+        ? finiteOrNull(state.access.returnResistanceMmHgPerMlMin)
+        : null
     default: {
-      const prefix = 'scenario.externalFluidRates.'
-      if (!metric.startsWith(prefix)) return null
-      const key = metric.slice(prefix.length)
-      if (!externalFluidRateKeys.has(key as ExternalFluidRateKey)) return null
-      return finiteOrNull(state.scenario.externalFluidRates[key as ExternalFluidRateKey])
+      const externalPrefix = 'scenario.externalFluidRates.'
+      if (metric.startsWith(externalPrefix)) {
+        const key = metric.slice(externalPrefix.length)
+        if (!externalFluidRateKeys.has(key as ExternalFluidRateKey)) return null
+        return finiteOrNull(state.scenario.externalFluidRates[key as ExternalFluidRateKey])
+      }
+
+      const flowPrefix = 'prescription.flows.'
+      if (metric.startsWith(flowPrefix)) {
+        if (state.prescription.status !== 'configured') return null
+        const key = metric.slice(flowPrefix.length)
+        if (!prescriptionFlowKeys.has(key as keyof CrrtFlowRates)) return null
+        return finiteOrNull(state.prescription.flows[key as keyof CrrtFlowRates])
+      }
+
+      const solutePrefix = 'patient.solutes.'
+      const concentrationSuffix = '.concentrationPerLiter'
+      if (
+        metric.startsWith(solutePrefix) &&
+        metric.endsWith(concentrationSuffix) &&
+        state.patient.status === 'configured'
+      ) {
+        const id = metric.slice(solutePrefix.length, -concentrationSuffix.length)
+        if (!soluteIds.has(id as CrrtSoluteId)) return null
+        return finiteOrNull(state.patient.solutes[id as CrrtSoluteId]?.concentrationPerLiter)
+      }
+
+      return null
     }
   }
 }
@@ -218,16 +384,36 @@ export function selectTriggeredCriticalErrorIds(
   return [...triggered].sort()
 }
 
-function hasCorrectPrediction(session: CrrtLearningSessionState): boolean {
+function hasCorrectPrediction(
+  session: CrrtLearningSessionState,
+  matchedRequiredPath: boolean,
+  matchedAcceptedPathIds: readonly string[],
+): boolean {
   const prediction = session.prediction
   if (!prediction) return false
   const hidden = session.caseDefinition.hiddenMechanism
   const selectedControls = new Set(prediction.controlOptionIds)
-  return (
-    prediction.mechanismOptionId === hidden.correctMechanismOptionId &&
-    prediction.responseOptionId === hidden.correctResponseOptionId &&
-    allIncluded(hidden.correctControlOptionIds, selectedControls)
-  )
+  if (
+    prediction.mechanismOptionId !== hidden.correctMechanismOptionId ||
+    prediction.responseOptionId !== hidden.correctResponseOptionId
+  ) {
+    return false
+  }
+
+  if (matchedRequiredPath && allIncluded(hidden.correctControlOptionIds, selectedControls)) {
+    return true
+  }
+
+  const matchedPathIds = new Set(matchedAcceptedPathIds)
+  if (matchedPathIds.size > 0) {
+    return session.caseDefinition.acceptedAlternativePaths.some(
+      (path) =>
+        matchedPathIds.has(path.id) &&
+        allIncluded(path.predictionControlOptionIds, selectedControls),
+    )
+  }
+
+  return allIncluded(hidden.correctControlOptionIds, selectedControls)
 }
 
 function hasCompleteReassessment(session: CrrtLearningSessionState): boolean {
@@ -237,6 +423,17 @@ function hasCompleteReassessment(session: CrrtLearningSessionState): boolean {
 }
 
 export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): CrrtLearningOutcome {
+  const resultIdentity: CrrtOutcomeIdentity = {
+    caseId: session.caseDefinition.id,
+    attempt: session.attempt,
+    seed: session.simulation.seed,
+    engineVersion: session.simulation.engineVersion,
+    engineSchemaVersion: session.simulation.schemaVersion,
+    simulationContentVersion: session.simulation.contentVersion,
+    caseContentVersion: session.caseDefinition.contentVersion,
+    deviceProfileVersion: session.simulation.deviceProfileVersion,
+    protocolProfileVersion: session.simulation.protocolProfileVersion,
+  }
   const matchedRequiredPath = matchesRequiredPath(session)
   const matchedAcceptedPathIds = selectMatchedAcceptedPathIds(session)
   const acceptedEndpoint = matchedRequiredPath || matchedAcceptedPathIds.length > 0
@@ -251,6 +448,28 @@ export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): Cr
 
   if (session.experience === 'learn') {
     return {
+      resultIdentity,
+      scored: false,
+      score: null,
+      mastery: false,
+      domains: null,
+      hintPenalty: 0,
+      matchedRequiredPath,
+      matchedAcceptedPathIds,
+      satisfiedConditionIds,
+      criticalErrorIds,
+      reassessmentComplete,
+    }
+  }
+
+  const activatedMasteryCapstoneId = selectCrrtMasteryCapstoneId(session.caseDefinition)
+  if (
+    session.experience === 'mastery' &&
+    (activatedMasteryCapstoneId === null ||
+      activatedMasteryCapstoneId !== session.masteryCapstoneId)
+  ) {
+    return {
+      resultIdentity,
       scored: false,
       score: null,
       mastery: false,
@@ -274,7 +493,11 @@ export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): Cr
       prediction?.goalOptionId === session.caseDefinition.hiddenMechanism.correctGoalOptionId
         ? CRRT_OUTCOME_DOMAIN_MAXIMUMS.indicationAndTreatmentGoal
         : 0,
-    modalityAndPrescription: hasCorrectPrediction(session)
+    modalityAndPrescription: hasCorrectPrediction(
+      session,
+      matchedRequiredPath,
+      matchedAcceptedPathIds,
+    )
       ? CRRT_OUTCOME_DOMAIN_MAXIMUMS.modalityAndPrescription
       : 0,
     machineAndCircuitOperation: acceptedEndpoint
@@ -290,13 +513,21 @@ export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): Cr
       : 0,
   }
   const rawScore = Object.values(domains).reduce((sum, value) => sum + value, 0)
-  const hintPenalty = Math.min(100, session.usedHintIds.length * CRRT_PRACTICE_HINT_PENALTY_POINTS)
+  const hintPenalty =
+    session.experience === 'practice'
+      ? Math.min(100, session.usedHintIds.length * CRRT_PRACTICE_HINT_PENALTY_POINTS)
+      : 0
   const score = Math.max(0, rawScore - hintPenalty)
 
   return {
+    resultIdentity,
     scored: true,
     score,
-    mastery: score >= 80 && criticalErrorIds.length === 0 && reassessmentComplete,
+    mastery:
+      session.experience === 'mastery' &&
+      score >= CRRT_MASTERY_MINIMUM_SCORE &&
+      criticalErrorIds.length === 0 &&
+      reassessmentComplete,
     domains,
     hintPenalty,
     matchedRequiredPath,
@@ -307,11 +538,6 @@ export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): Cr
   }
 }
 
-function optionalDebriefField(debrief: RuntimeCrrtCase['debrief'], field: string): string | null {
-  const value = (debrief as unknown as Readonly<Record<string, unknown>>)[field]
-  return typeof value === 'string' ? value : null
-}
-
 export function selectCrrtDebriefProjection(
   session: CrrtLearningSessionState,
 ): CrrtDebriefProjection {
@@ -320,14 +546,14 @@ export function selectCrrtDebriefProjection(
     summary: debrief.summary,
     causalChain: [...debrief.causalChain],
     transferQuestion: debrief.transferQuestion,
-    statedGoalReview: optionalDebriefField(debrief, 'statedGoalReview'),
-    predictionReview: optionalDebriefField(debrief, 'predictionReview'),
-    actionTimelineReview: optionalDebriefField(debrief, 'actionTimelineReview'),
-    trendReview: optionalDebriefField(debrief, 'trendReview'),
-    requiredActionsReview: optionalDebriefField(debrief, 'requiredActionsReview'),
-    criticalErrorsReview: optionalDebriefField(debrief, 'criticalErrorsReview'),
-    acceptedAlternativesReview: optionalDebriefField(debrief, 'acceptedAlternativesReview'),
-    machineNavigationPoint: optionalDebriefField(debrief, 'machineNavigationPoint'),
+    statedGoalReview: debrief.statedGoalReview,
+    predictionReview: debrief.predictionReview,
+    actionTimelineReview: debrief.actionTimelineReview,
+    trendReview: debrief.trendReview,
+    requiredActionsReview: debrief.requiredActionsReview,
+    criticalErrorsReview: debrief.criticalErrorsReview,
+    acceptedAlternativesReview: debrief.acceptedAlternativesReview,
+    machineNavigationPoint: debrief.machineNavigationPoint,
     prediction: session.prediction,
     timeline: session.timeline,
     outcome: selectCrrtLearningOutcome(session),

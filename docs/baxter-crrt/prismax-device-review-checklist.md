@@ -94,6 +94,8 @@ Review state: formal Phase 6 device review has not started; every box is intenti
       recirculation, blood return, set/solution compatibility, and alarm consequences for later review.
 - [ ] Attach findings with source ID, exact manual page, code/test reference, severity, owner, and
       required change; consequential changes must reset the affected record to `pending`.
-- [ ] Recommend `reviewed` only after all applicable findings are resolved and the exact revision is
-      rechecked; `approved` publication requires separate clinical, accessibility, localization,
-      product, and release decisions.
+- [ ] Record any completed device disposition in a
+      [canonical `prismax-device` domain record](./review-packet/domain-review.template.md), including
+      exact candidate/profile/configuration binding, scope/findings digests, normalized
+      disposition, authenticated receipt, timestamp, and receipt SHA-256. This intake itself never
+      changes activation or publication state.

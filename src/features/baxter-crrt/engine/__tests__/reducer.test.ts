@@ -1,6 +1,10 @@
 import { createInitialCrrtSimulationState } from '../initialState'
 import { crrtSimulationReducer } from '../reducer'
-import { selectEngineReadiness, selectNextScheduledEvent } from '../selectors'
+import {
+  selectEngineReadiness,
+  selectNextScheduledEvent,
+  selectSecondsUntilNextScheduledEvent,
+} from '../selectors'
 import type { ConfiguredPrescriptionState, CrrtScheduledEventDefinition } from '../types'
 import { createSyntheticFixture } from '../testSupport/syntheticFixture'
 
@@ -88,17 +92,20 @@ describe('CRRT shared reducer and initial state', () => {
     }
     let state = createInitialCrrtSimulationState({ fixture: createSyntheticFixture([event]) })
     expect(selectNextScheduledEvent(state)?.scheduledAtSeconds).toBe(350)
+    expect(selectSecondsUntilNextScheduledEvent(state)).toBe(350)
     state = crrtSimulationReducer(state, {
       type: 'SET_DELIVERY_STATE',
       deliveryState: 'running',
     })
     state = crrtSimulationReducer(state, { type: 'ADVANCE_TIME', seconds: 349 })
     expect(state.scenario.activeFaults).not.toContain('access-obstruction')
+    expect(selectSecondsUntilNextScheduledEvent(state)).toBe(1)
     state = crrtSimulationReducer(state, { type: 'ADVANCE_TIME', seconds: 1 })
     expect(state.simulationTimeSeconds).toBe(350)
     expect(state.scenario.activeFaults).toContain('access-obstruction')
     expect(state.alarms[0].code).toBe('ACCESS_OBSTRUCTION')
     expect(state.scenario.appliedEventIds).toEqual(['synthetic-access-event'])
+    expect(selectSecondsUntilNextScheduledEvent(state)).toBeNull()
   })
 
   it('rejects attempts to activate citrate without a reviewed local protocol', () => {

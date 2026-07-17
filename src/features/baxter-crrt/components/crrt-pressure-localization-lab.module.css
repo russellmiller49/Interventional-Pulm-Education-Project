@@ -1,0 +1,587 @@
+.lab {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border: 1px solid rgba(117, 188, 180, 0.34);
+  border-radius: 1.05rem;
+  color: #e7f2f0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(44, 119, 117, 0.2), transparent 28rem), #071c21;
+}
+
+.lab button,
+.lab input {
+  font: inherit;
+}
+
+.lab button:focus-visible,
+.lab input:focus-visible,
+.diagramViewport:focus-visible,
+.tableRegion:focus-visible {
+  outline: 3px solid #f5bb65;
+  outline-offset: 3px;
+}
+
+.header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.header h3,
+.resultPanel h4 {
+  margin: 0;
+  color: #f4fbfa;
+}
+
+.header h3 {
+  margin-top: 0.2rem;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  line-height: 1.15;
+}
+
+.kicker {
+  color: #8ce2d7;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pendingBadge {
+  flex: none;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid rgba(245, 187, 101, 0.52);
+  border-radius: 999px;
+  color: #fff1d7;
+  background: rgba(111, 72, 19, 0.34);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.reviewBoundary {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(245, 187, 101, 0.44);
+  border-left-width: 0.32rem;
+  border-radius: 0.7rem;
+  color: #f9e8ca;
+  background: rgba(77, 51, 17, 0.28);
+}
+
+.reviewBoundary strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.sourceNote {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.72rem 0.8rem;
+  border: 1px dashed rgba(140, 226, 215, 0.38);
+  border-radius: 0.62rem;
+  color: #d8ebe8;
+  background: rgba(5, 30, 34, 0.6);
+}
+
+.sourceNote strong {
+  color: #8ce2d7;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sourceNote p,
+.sourceNote small {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.sourceNote p {
+  color: #f6e2bd;
+  font-size: 0.72rem;
+}
+
+.sourceNote code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.sourceNote small {
+  color: #adc1be;
+  font-size: 0.68rem;
+}
+
+.reviewBoundary p,
+.intro,
+.diagramSummary,
+.resultPanel p,
+.predictionFieldset > p,
+.commitStatus,
+.resultBoundary {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.reviewBoundary p,
+.intro,
+.predictionFieldset > p,
+.resultPanel > p {
+  color: #c8d9d7;
+}
+
+.scenarioGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.choiceFieldset,
+.predictionFieldset,
+.signalPrediction {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid rgba(148, 196, 191, 0.3);
+  border-radius: 0.75rem;
+}
+
+.choiceFieldset,
+.predictionFieldset {
+  padding: 0.85rem;
+}
+
+.choiceFieldset > legend,
+.predictionFieldset > legend {
+  padding: 0 0.35rem;
+  color: #f5bb65;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.segmentedChoices,
+.siteChoices {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.segmentedChoices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.siteChoices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.segmentedChoices label,
+.siteChoices label,
+.signalPrediction label {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.segmentedChoices input,
+.siteChoices input,
+.signalPrediction input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.segmentedChoices label > span,
+.siteChoices label > span,
+.signalPrediction label > span {
+  display: grid;
+  min-height: 44px;
+  place-items: center;
+  padding: 0.48rem 0.55rem;
+  border: 1px solid rgba(148, 196, 191, 0.34);
+  border-radius: 0.5rem;
+  color: #dcebea;
+  background: #09282d;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.segmentedChoices input:focus-visible + span,
+.siteChoices input:focus-visible + span,
+.signalPrediction input:focus-visible + span {
+  outline: 3px solid #f5bb65;
+  outline-offset: 3px;
+}
+
+.segmentedChoices input:checked + span,
+.siteChoices input:checked + span,
+.signalPrediction input:checked + span {
+  border-color: #8ce2d7;
+  color: #06201f;
+  background: #8ce2d7;
+}
+
+.segmentedChoices label[data-supported='false'],
+.siteChoices label[data-supported='false'] {
+  cursor: not-allowed;
+}
+
+.segmentedChoices label[data-supported='false'] > span,
+.siteChoices label[data-supported='false'] > span {
+  color: #93a6a4;
+  background: rgba(7, 27, 31, 0.72);
+  opacity: 0.72;
+}
+
+.segmentedChoices small,
+.siteChoices small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #d8b77e;
+  font-size: 0.62rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.diagramPanel {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.diagramSummary {
+  color: #d6e8e6;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.diagramViewport {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid rgba(148, 196, 191, 0.26);
+  border-radius: 0.8rem;
+  background: rgba(3, 19, 22, 0.62);
+  scrollbar-color: #487b78 #06181b;
+}
+
+.diagramViewport svg {
+  display: block;
+  width: 100%;
+  min-width: 650px;
+  height: auto;
+}
+
+.patient,
+.catheter,
+.filter {
+  fill: #0d3439;
+  stroke: #86cbc3;
+  stroke-width: 2;
+}
+
+.filter {
+  fill: #113b40;
+}
+
+.filterFiber {
+  fill: none;
+  stroke: #6ba9a2;
+  stroke-width: 2;
+}
+
+.bloodPath,
+.returnPath,
+.effluentPath {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.bloodPath {
+  stroke: #d26976;
+}
+
+.returnPath {
+  stroke: #cf8a93;
+}
+
+.effluentPath {
+  stroke: #d9b64d;
+}
+
+.flowArrow {
+  fill: #e4f1ef;
+}
+
+.diagramLabel,
+.diagramNote,
+.placementMarker text {
+  fill: #eaf5f3;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.diagramLabel {
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.diagramNote {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.placementMarker {
+  filter: drop-shadow(0 0 7px rgba(245, 187, 101, 0.8));
+  transition: transform 180ms ease;
+}
+
+.placementMarker circle {
+  fill: #8b5413;
+  stroke: #ffd48e;
+  stroke-width: 4;
+}
+
+.placementMarker text {
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.predictionFieldset {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.predictionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.signalPrediction {
+  padding: 0.65rem;
+}
+
+.signalPrediction legend {
+  padding: 0 0.25rem;
+  color: #e8f5f3;
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.signalPrediction > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.signalPrediction label > span {
+  min-height: 40px;
+  padding: 0.35rem;
+  font-size: 0.68rem;
+}
+
+.choiceFieldset:disabled,
+.predictionFieldset:disabled {
+  opacity: 0.82;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.actions button {
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #8ce2d7;
+  border-radius: 0.58rem;
+  color: #06201f;
+  background: #8ce2d7;
+  font-size: 0.76rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.actions button:disabled {
+  border-color: rgba(148, 196, 191, 0.25);
+  color: #8fa5a2;
+  background: #132d31;
+  cursor: not-allowed;
+}
+
+.actions .secondaryButton {
+  color: #e5f2f0;
+  background: transparent;
+}
+
+.commitStatus {
+  padding: 0.7rem 0.8rem;
+  border-left: 0.25rem solid #8ce2d7;
+  border-radius: 0.35rem;
+  color: #d8e9e7;
+  background: rgba(9, 49, 54, 0.68);
+}
+
+.resultPanel {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid rgba(140, 226, 215, 0.4);
+  border-radius: 0.8rem;
+  background: rgba(3, 19, 22, 0.7);
+}
+
+.resultPanel header > span {
+  color: #8ce2d7;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.resultPanel h4 {
+  margin-top: 0.2rem;
+  font-size: 1rem;
+}
+
+.tableRegion {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.65rem;
+  scrollbar-color: #487b78 #06181b;
+}
+
+.tableRegion table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.tableRegion caption {
+  padding: 0.65rem;
+  color: #c9dcda;
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.tableRegion th,
+.tableRegion td {
+  padding: 0.62rem;
+  border-top: 1px solid rgba(148, 196, 191, 0.17);
+  color: #dcebea;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tableRegion thead th,
+.tableRegion tbody th {
+  color: #f3fbfa;
+  font-weight: 850;
+}
+
+.resultBoundary {
+  padding: 0.72rem 0.8rem;
+  border: 1px dashed rgba(245, 187, 101, 0.4);
+  border-radius: 0.55rem;
+  color: #f4dfbd;
+  background: rgba(72, 47, 14, 0.24);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 760px) {
+  .scenarioGrid,
+  .predictionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .siteChoices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    display: grid;
+  }
+
+  .pendingBadge {
+    justify-self: start;
+  }
+
+  .segmentedChoices,
+  .siteChoices,
+  .signalPrediction > div {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    display: grid;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmentedChoices label > span,
+  .siteChoices label > span,
+  .signalPrediction label > span,
+  .placementMarker {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .lab,
+  .reviewBoundary,
+  .sourceNote,
+  .choiceFieldset,
+  .predictionFieldset,
+  .signalPrediction,
+  .diagramViewport,
+  .resultPanel,
+  .tableRegion,
+  .resultBoundary {
+    border: 1px solid CanvasText;
+  }
+
+  .segmentedChoices input:checked + span,
+  .siteChoices input:checked + span,
+  .signalPrediction input:checked + span,
+  .actions button,
+  .placementMarker circle {
+    color: HighlightText;
+    background: Highlight;
+    fill: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .bloodPath,
+  .returnPath,
+  .effluentPath,
+  .filterFiber,
+  .patient,
+  .catheter,
+  .filter {
+    stroke: CanvasText;
+  }
+}

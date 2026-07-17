@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     baxterCrrtPublicationStatus === 'published'
       ? 'Reviewed adult CRRT learning and case-practice workspace.'
-      : 'Authenticated draft scaffold for a source-bound adult CRRT learning and case-practice workspace.',
+      : 'Authenticated PrisMax CRRT draft with a protected three-case pilot and fail-closed Phase 7 curriculum registry.',
   robots: {
     index: false,
     follow: false,

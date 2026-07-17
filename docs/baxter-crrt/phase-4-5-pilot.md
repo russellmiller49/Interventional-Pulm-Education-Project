@@ -20,7 +20,9 @@ the three approved pilot cases:
   verify restored delivery.
 
 Mastery, Prismaflex, regional citrate-calcium dosing, patient-specific recommendations, local
-competency credit, and the remaining curriculum stations remain unavailable.
+competency credit, and the remaining curriculum stations remain unavailable to learners. The later
+[Phase 7 protected foundation](./phase-7-status.md) registers review-only IDs and gates but does not
+expand this vertical slice.
 
 ## Shared learner contract
 
@@ -92,10 +94,11 @@ critical errors to reviewers. It is omitted outside development builds.
 
 ## Privacy and analytics
 
-Local progress uses `baxter-crrt-progress-v1` and stores only versioned stable IDs, context,
-attempts, best scores, critical-error status, hint counts, station, and engine/content versions.
-It stores no PHI, patient-entered data, free-text reasoning, detailed action logs, trend arrays, or
-screenshots.
+Local progress now uses the v2 DTO at `baxter-crrt-progress-v2` and stores only versioned stable IDs,
+context, separate Practice/Mastery completion sets and attempt keys, best non-critical scores,
+critical-error attempt counts, hint counts, station, and engine/content versions. It does not read or promote the former v1
+key; an absent or invalid v2 value starts clean. It stores no PHI, patient-entered data, free-text
+reasoning, detailed action logs, trend arrays, or screenshots.
 
 CRRT analytics pass through a strict client and server allowlist. Events contain only enumerated
 interaction, case or lesson ID, pathway, device, role, bounded aggregate score/count/time values,

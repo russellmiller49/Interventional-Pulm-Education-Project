@@ -65,6 +65,11 @@ export function selectNextScheduledEvent(state: CrrtSimulationState): CrrtSchedu
   )
 }
 
+export function selectSecondsUntilNextScheduledEvent(state: CrrtSimulationState): number | null {
+  const nextEvent = selectNextScheduledEvent(state)
+  return nextEvent ? nextEvent.scheduledAtSeconds - state.simulationTimeSeconds : null
+}
+
 export function selectFirstAlarmPendingDeviceMapping(
   state: CrrtSimulationState,
 ): ActiveAlarm | null {

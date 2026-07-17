@@ -760,9 +760,17 @@
   line-height: 1.45;
 }
 
+.alarmWindow .alarmPriority {
+  margin-top: 0;
+  padding: 0.45rem;
+  border-left: 0.2rem solid #aa711d;
+  color: #563c15;
+  background: rgba(210, 164, 94, 0.2);
+}
+
 .alarmWindow button {
   justify-self: start;
-  min-height: 38px;
+  min-height: 44px;
   font-size: 0.64rem;
 }
 
@@ -798,8 +806,8 @@
 }
 
 .dialogBackdrop {
-  position: absolute;
-  z-index: 10;
+  position: fixed;
+  z-index: 1000;
   inset: 0;
   display: grid;
   place-items: center;
@@ -904,8 +912,7 @@
   }
 
   .stepRail {
-    grid-template-columns: repeat(8, minmax(5.8rem, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     border-right: 0;
     border-bottom: 1px solid #9baead;
   }
@@ -956,6 +963,10 @@
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
+  }
+
+  .stepRail {
+    grid-template-columns: 1fr;
   }
 
   .toolbar svg {

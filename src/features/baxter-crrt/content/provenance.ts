@@ -23,6 +23,16 @@ export interface BaxterCrrtSourceDocument {
   readonly reviewStatus: BaxterCrrtReviewStatus
 }
 
+export interface PrismaflexSourceConflictRecord {
+  readonly id: 'CONFLICT-010'
+  readonly sourceRecordIds: readonly ['DEV-PF-006']
+  readonly pageOrSection: string
+  readonly observation: string
+  readonly requiredDisposition: string
+  readonly status: 'unresolved-contextual-definition-conflict'
+  readonly reviewStatus: 'pending'
+}
+
 interface BaxterCrrtEngineSourceDetail {
   readonly id:
     | 'DEV-PM-009'
@@ -71,9 +81,9 @@ export const baxterCrrtSourceDocuments: readonly BaxterCrrtSourceDocument[] = Ob
     title: "Prismaflex Operator's Manual",
     documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
     role: 'deferred',
-    intendedUse: 'Deferred source for the future Prismaflex adapter.',
+    intendedUse: 'Primary source for the reviewer-only Prismaflex adapter candidate.',
     limitation:
-      'This older, separate device generation is not active in Phase 1 and must not be merged into the PrisMax profile.',
+      'This older, separate device generation is not learner-active and must not be merged into the PrisMax profile.',
     sourceSha256: '6d311624ec075c86ff539d3a86f3ed77cd2ca467346168ee4985af09f0a9224b',
     reviewStatus: 'pending',
   },
@@ -122,7 +132,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'The Operations screen separates the flow path, pressure/status measurements, treatment status, and recent message center.',
     limitation:
-      'Orientation leaves pressure and dose signals blank; Phase 4–5 cases supply only synthetic, pending-review engine signals.',
+      'Orientation leaves pressure and dose signals blank; the three-case pilot supplies only synthetic, pending-review engine signals.',
     reviewStatus: 'pending',
   },
   {
@@ -146,7 +156,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'Therapy operation includes flow review, bag and syringe change concepts, and a stop/end workflow.',
     limitation:
-      'Bag-change execution, return blood, recirculation, and local-policy decisions remain excluded from the Phase 4–5 vertical slice.',
+      'Bag-change execution, return blood, recirculation, and local-policy decisions remain excluded from the three-case pilot.',
     reviewStatus: 'pending',
   },
   {
@@ -162,6 +172,18 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     reviewStatus: 'pending',
   },
   {
+    id: 'DEV-PM-008',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 101–169 · PDF pages 102–170',
+    claim:
+      'The cited manual contains device alarm tables and troubleshooting information that can be mapped to curriculum alarm families during device review.',
+    limitation:
+      'No alarm priority, threshold, pump or clamp consequence, correction sequence, escalation rule, or scoring consequence is activated from this broad source range.',
+    reviewStatus: 'pending',
+  },
+  {
     id: 'DEV-PM-011',
     evidenceClass: 'device-operator-manual',
     sourceTitle: "PrisMax Operator's Manual",
@@ -171,6 +193,18 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
       'The cited source describes distinct CRRT flow paths, including the CVVHD topology used by the pilot interface.',
     limitation:
       'The pilot does not establish clinical eligibility, installed-device availability, or any therapy beyond its CVVHD surface.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PM-012',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "PrisMax Operator's Manual",
+    documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
+    pageOrSection: 'Manual pages 215–217 · PDF pages 216–218',
+    claim:
+      'The cited manual distinguishes prescribed patient-fluid-removal behavior from device gain/loss and catch-up concepts.',
+    limitation:
+      'This record does not establish a clinical fluid goal, acceptable variance, catch-up response, escalation threshold, or local configuration.',
     reviewStatus: 'pending',
   },
   {
@@ -185,7 +219,118 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
       'The learner surface uses original schematic artwork and does not copy a manual figure, product photograph, or manufacturer logo.',
     reviewStatus: 'pending',
   },
+  {
+    id: 'DEV-PF-001',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Title and front matter · PDF page 1',
+    claim:
+      'The supplied manual identifies Gambro Lundia AB as manufacturer and defines the G5036003 Revision 05.2011, program 6.xx source family.',
+    limitation:
+      'The source identity does not establish the market, installed software build, enabled therapies, disposable sets, accessories, or local configuration of a target device.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-002',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual sections 4:2–4:16 · PDF pages 62–76',
+    claim:
+      'Prismaflex uses context-dependent touch-screen softkeys, arrow controls, and a device-specific Setup, Standby, Run, and End workflow.',
+    limitation:
+      'Only a reviewer-only setup sequence is represented; no protected screen artwork, learner control, exact local workflow, or runnable end-treatment behavior is activated.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-003',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual sections 3:8–3:11 · PDF pages 52–55',
+    claim:
+      'The source describes four occlusive peristaltic fluid pumps and four scales whose functions depend on the selected therapy.',
+    limitation:
+      'No therapy/set-specific pump assignment, bag identity, capacity, empty/full behavior, or scale threshold is activated without target-configuration review.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-004',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual sections 3:5–3:7 · PDF pages 49–51',
+    claim:
+      'Prismaflex establishes pressure operating points after flow stabilizes and re-establishes them after documented flow, restart, continuation, and self-test events.',
+    limitation:
+      'No operating point, trending limit, alarm threshold, automatic reaction, or disconnection response is encoded by the reviewer-only adapter.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-005',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual section 3:7 · PDF page 51',
+    claim:
+      'Prismaflex defines raw filter pressure drop as filter pressure minus return pressure and displays a hydrostatically corrected value with a −25 mmHg correction.',
+    limitation:
+      'This is a device-display calculation only; it is not a universal normal, alarm limit, or clinical target.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-006',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual sections 5:3–5:19 · PDF pages 97–113',
+    claim:
+      'The Prismaflex CRRT section defines device-generation-specific flow paths, effluent-pump control, TMP, predilution, filtration fraction, patient-fluid removal, and dose concepts.',
+    limitation:
+      'The pump-control and dose sections print different Qeff expressions; they remain separate under CONFLICT-010, and no set-specific range, clinical target, or cross-device equivalence claim is supplied.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-007',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual sections 10:2–10:7 · PDF pages 166–171',
+    claim:
+      'Prismaflex defines the device-specific alarm categories Warning, Malfunction, Caution, and Advisory.',
+    limitation:
+      'The reviewer-only adapter does not assign a category, label, priority, stopped-pump reaction, clamp response, correction sequence, clearing rule, or escalation consequence to any engine alarm.',
+    reviewStatus: 'pending',
+  },
+  {
+    id: 'DEV-PF-008',
+    evidenceClass: 'device-operator-manual',
+    sourceTitle: "Prismaflex Operator's Manual",
+    documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
+    pageOrSection: 'Manual sections 13:3–13:11 · PDF pages 265–273',
+    claim:
+      'The manual specifications show that flow, scale, and pressure characteristics depend on device, therapy, disposable set, and configuration.',
+    limitation:
+      'No numeric range, increment, tolerance, bag limit, alarm threshold, or compatibility value is copied into the profile before exact target-configuration review.',
+    reviewStatus: 'pending',
+  },
 ])
+
+export const prismaflexSourceConflictRecords: readonly PrismaflexSourceConflictRecord[] =
+  Object.freeze([
+    Object.freeze({
+      id: 'CONFLICT-010',
+      sourceRecordIds: Object.freeze(['DEV-PF-006'] as const),
+      pageOrSection: 'Manual p5:12 / PDF p106 and manual p5:19 / PDF p113',
+      observation:
+        'The CRRT effluent-pump equation includes syringe flow, while the later CRRT dose-section Qeff equation omits syringe flow.',
+      requiredDisposition:
+        'Keep pump-target Qeff and dose-section Qeff as separately named calculations; do not substitute one for the other or claim that the supplied manual resolves the difference.',
+      status: 'unresolved-contextual-definition-conflict',
+      reviewStatus: 'pending',
+    }),
+  ])
 
 export const baxterCrrtEngineSourceDetails: readonly BaxterCrrtEngineSourceDetail[] = Object.freeze(
   [

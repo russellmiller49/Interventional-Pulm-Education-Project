@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import BaxterCrrtLab from '../components/BaxterCrrtLab'
+import { CrrtPhase7ReviewPanel } from '../components/CrrtPhase7ReviewPanel'
 
 describe('Baxter CRRT pilot interface scaffold', () => {
   beforeEach(() => window.localStorage.clear())
@@ -27,6 +28,13 @@ describe('Baxter CRRT pilot interface scaffold', () => {
     expect(
       screen.getByRole('heading', { name: 'CVVHD circuit, bags, scales, and pressures' }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open CRRT reviewer workspace' })).toHaveAttribute(
+      'href',
+      '/en/baxter-crrt/review',
+    )
+    expect(
+      screen.queryByRole('heading', { name: 'Full PrisMax curriculum—mapped, not activated' }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'What this draft can—and cannot—claim' }),
     ).toBeInTheDocument()
@@ -43,7 +51,7 @@ describe('Baxter CRRT pilot interface scaffold', () => {
 
     expect(orientation).toHaveAttribute('aria-selected', 'true')
     expect(mastery).toBeDisabled()
-    expect(screen.getByRole('tabpanel')).toHaveAttribute(
+    expect(screen.getByRole('tabpanel', { name: /Orientation/i })).toHaveAttribute(
       'aria-labelledby',
       'baxter-crrt-pathway-tab-orientation',
     )
@@ -52,8 +60,8 @@ describe('Baxter CRRT pilot interface scaffold', () => {
     fireEvent.keyDown(orientation, { key: 'ArrowRight' })
     expect(learn).toHaveFocus()
     expect(learn).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Phase 4-5 pilot')
-    expect(screen.getByRole('tabpanel')).toHaveAttribute(
+    expect(screen.getByRole('tabpanel', { name: /Learn/i })).toHaveTextContent('Protected pilot')
+    expect(screen.getByRole('tabpanel', { name: /Learn/i })).toHaveAttribute(
       'aria-labelledby',
       'baxter-crrt-pathway-tab-learn',
     )
@@ -61,7 +69,7 @@ describe('Baxter CRRT pilot interface scaffold', () => {
     fireEvent.keyDown(learn, { key: 'End' })
     expect(practice).toHaveFocus()
     expect(practice).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Scored pilot')
+    expect(screen.getByRole('tabpanel', { name: /Practice/i })).toHaveTextContent('Scored pilot')
 
     expect(window.localStorage.length).toBe(0)
   })
@@ -73,6 +81,92 @@ describe('Baxter CRRT pilot interface scaffold', () => {
     expect(
       screen.getByRole('heading', { name: 'CRRT Learn & Practice workspace' }),
     ).toBeInTheDocument()
+  })
+
+  it('mounts bounded tools only inside the collapsed Phase 7 reviewer disclosure', () => {
+    render(<CrrtPhase7ReviewPanel />)
+
+    const registry = screen.getByRole('region', {
+      name: 'Full PrisMax curriculum—mapped, not activated',
+    })
+    const reviewerToolsSummary = within(registry)
+      .getByText('Reviewer-only instructional tools')
+      .closest('summary')
+    const reviewerToolsDisclosure = reviewerToolsSummary?.closest('details')
+    const reviewerToolsContent = document.getElementById('baxter-crrt-phase7-reviewer-tools')
+
+    if (!reviewerToolsSummary || !reviewerToolsDisclosure || !reviewerToolsContent) {
+      throw new Error('Expected the Phase 7 reviewer-tool disclosure and content.')
+    }
+    expect(reviewerToolsDisclosure).toHaveAttribute('data-reviewer-only', 'true')
+    expect(reviewerToolsDisclosure).toHaveAttribute('data-progress-write', 'none')
+    expect(reviewerToolsDisclosure).toHaveAttribute('data-scoring', 'none')
+    expect(reviewerToolsDisclosure).not.toHaveAttribute('open')
+    expect(reviewerToolsContent).not.toBeVisible()
+    expect(screen.queryByRole('tabpanel')).not.toBeInTheDocument()
+
+    fireEvent.click(reviewerToolsSummary)
+
+    expect(reviewerToolsDisclosure).toHaveAttribute('open')
+    expect(reviewerToolsContent).toBeVisible()
+    expect(
+      within(reviewerToolsContent).getByRole('region', {
+        name: 'Concept labs—isolated from learner runtime',
+      }),
+    ).toHaveAttribute('data-progress-write', 'none')
+    expect(
+      within(reviewerToolsContent).getByRole('region', { name: 'Pressure Localization Lab' }),
+    ).toHaveAttribute('data-persistence', 'none')
+    expect(
+      within(reviewerToolsContent).getByRole('region', { name: 'Full Prescription Workbench' }),
+    ).toHaveAttribute('data-progress-write', 'none')
+    expect(window.localStorage).toHaveLength(0)
+
+    fireEvent.click(reviewerToolsSummary)
+    expect(reviewerToolsDisclosure).not.toHaveAttribute('open')
+    expect(reviewerToolsContent).not.toBeVisible()
+    expect(
+      within(reviewerToolsContent).queryByRole('region', { name: 'Pressure Localization Lab' }),
+    ).not.toBeInTheDocument()
+    expect(window.localStorage).toHaveLength(0)
+  })
+
+  it('mounts reviewer cases only inside their isolated non-persistent disclosure', () => {
+    render(<CrrtPhase7ReviewPanel />)
+
+    const registry = screen.getByRole('region', {
+      name: 'Full PrisMax curriculum—mapped, not activated',
+    })
+    const summary = within(registry).getByText('Reviewer-only case candidates').closest('summary')
+    const disclosure = summary?.closest('details')
+    const content = document.getElementById('baxter-crrt-phase7-reviewer-cases')
+
+    if (!summary || !disclosure || !content) {
+      throw new Error('Expected the Phase 7 reviewer-case disclosure and content.')
+    }
+    expect(disclosure).toHaveAttribute('data-reviewer-only', 'true')
+    expect(disclosure).toHaveAttribute('data-analytics', 'none')
+    expect(disclosure).toHaveAttribute('data-progress-write', 'none')
+    expect(disclosure).not.toHaveAttribute('open')
+    expect(screen.queryByTestId('crrt-phase7-case-review')).not.toBeInTheDocument()
+
+    fireEvent.click(summary)
+
+    expect(disclosure).toHaveAttribute('open')
+    expect(content).toBeVisible()
+    expect(screen.getByTestId('crrt-phase7-case-review')).toHaveAttribute(
+      'data-runtime-audience',
+      'reviewer',
+    )
+    expect(within(content).getByRole('combobox', { name: 'Review case candidate' })).toHaveValue(
+      'CRRT-01',
+    )
+    expect(window.localStorage).toHaveLength(0)
+
+    fireEvent.click(summary)
+    expect(disclosure).not.toHaveAttribute('open')
+    expect(screen.queryByTestId('crrt-phase7-case-review')).not.toBeInTheDocument()
+    expect(window.localStorage).toHaveLength(0)
   })
 
   it('runs all eight setup gates, stops, and reloads a clean interface', () => {

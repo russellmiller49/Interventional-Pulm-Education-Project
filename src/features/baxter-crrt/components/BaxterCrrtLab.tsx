@@ -21,19 +21,19 @@ import { recordSiteModuleEvent } from '@/lib/analytics'
 import type { BaxterCrrtAnalyticsEventPayload } from '@/lib/baxter-crrt-analytics'
 
 import { buildBaxterCrrtAnalyticsEvent } from '../analytics'
+import { baxterCrrtPublicationStatus, prismaxDraftDeviceProfile } from '../content/deviceProfiles'
+import { baxterCrrtMasteryManifest } from '../content/mastery'
 import {
   baxterCrrtPathways,
-  baxterCrrtPublicationStatus,
   getBaxterCrrtPathway,
-  prismaxDraftDeviceProfile,
   type BaxterCrrtPathwayId,
-  type RuntimeCrrtCase,
-} from '../content'
+} from '../content/pathways'
 import {
   baxterCrrtPilotCases,
   getBaxterCrrtPilotCase,
   isBaxterCrrtPilotCaseId,
 } from '../content/pilotCases'
+import type { RuntimeCrrtCase } from '../content/schema'
 import {
   createCrrtLearningSession,
   createDefaultProgress,
@@ -45,7 +45,7 @@ import {
   selectCrrtLearningOutcome,
   setProgressContext,
   writeProgress,
-  type BaxterCrrtProgressV1,
+  type BaxterCrrtProgressV2,
   type CrrtLearningExperience,
   type CrrtLearningOutcome,
   type CrrtRoleLens,
@@ -64,6 +64,7 @@ import {
   type CrrtMobileSurface,
 } from './CrrtLearningWorkflow'
 import { CrrtPilotCircuit } from './CrrtPilotCircuit'
+import { CrrtReferenceDrawer } from './CrrtReferenceDrawer'
 import { CrrtResponsePanel } from './CrrtResponsePanel'
 import { PrismaxPilotInterface } from './PrismaxPilotInterface'
 import { SourcesPanel } from './SourcesPanel'
@@ -87,6 +88,14 @@ const mobileSurfaces: readonly { readonly id: CrrtMobileSurface; readonly label:
   { id: 'patient', label: 'Patient / trends' },
   { id: 'debrief', label: 'Debrief' },
 ]
+
+const mobileSurfacePanelIds: Readonly<Record<CrrtMobileSurface, string>> = {
+  case: 'baxter-crrt-mobile-panel-case',
+  machine: 'baxter-crrt-mobile-panel-machine',
+  circuit: 'baxter-crrt-mobile-panel-circuit',
+  patient: 'baxter-crrt-mobile-panel-patient',
+  debrief: 'baxter-crrt-mobile-panel-debrief',
+}
 
 const initialPilotCase = baxterCrrtPilotCases[0]
 
@@ -118,7 +127,8 @@ function progressCaseId(caseId: string): string {
 export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
   const [activePathwayId, setActivePathwayId] = useState<BaxterCrrtPathwayId>('orientation')
   const [mobileSurface, setMobileSurface] = useState<CrrtMobileSurface>('case')
-  const [progress, setProgress] = useState<BaxterCrrtProgressV1>(() => createDefaultProgress())
+  const [workflowFocusRequest, setWorkflowFocusRequest] = useState(0)
+  const [progress, setProgress] = useState<BaxterCrrtProgressV2>(() => createDefaultProgress())
   const [pilotState, pilotDispatch] = useReducer(
     prismaxPilotInterfaceReducer,
     undefined,
@@ -136,6 +146,8 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
       }),
   )
   const tabRefs = useRef<Partial<Record<BaxterCrrtPathwayId, HTMLButtonElement | null>>>({})
+  const mobileTabRefs = useRef<Partial<Record<CrrtMobileSurface, HTMLButtonElement | null>>>({})
+  const workflowHeadingRef = useRef<HTMLHeadingElement>(null)
   const activePathway = getBaxterCrrtPathway(activePathwayId)
   const orientationOperations = selectPrismaxPilotOperationsDisplay(pilotState)
   const caseOperations = selectPrismaxPilotCaseOperationsDisplay(
@@ -144,11 +156,26 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
   )
   const learningOutcome = selectCrrtLearningOutcome(learningSession)
   const isLearningPathway = activePathwayId === 'learn' || activePathwayId === 'practice'
+  const isMasteryIdentityMasked =
+    learningSession.experience === 'mastery' && !learningSession.debriefRevealed
+  const reasoningPanelHeading =
+    learningSession.experience === 'mastery'
+      ? 'Masked case · Mastery attempt'
+      : `${learningSession.caseDefinition.id} · ${
+          learningSession.experience === 'learn' ? 'Guided Learn' : 'Scored Practice'
+        }`
   const activeAlarms = learningSession.simulation.alarms.filter((alarm) => alarm.active)
 
   useEffect(() => {
     setProgress(readProgress())
   }, [])
+
+  useEffect(() => {
+    if (workflowFocusRequest > 0 && isLearningPathway) {
+      workflowHeadingRef.current?.focus()
+      setWorkflowFocusRequest(0)
+    }
+  }, [isLearningPathway, workflowFocusRequest])
 
   function emitAnalytics(eventPayload: BaxterCrrtAnalyticsEventPayload) {
     const event = buildBaxterCrrtAnalyticsEvent({ eventPayload })
@@ -156,8 +183,6 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
       eventType: event.eventType,
       moduleId: event.moduleId,
       eventPayload: { ...event.eventPayload },
-      ...(event.percentComplete === undefined ? {} : { percentComplete: event.percentComplete }),
-      ...(event.section === undefined ? {} : { section: event.section }),
     })
   }
 
@@ -171,6 +196,8 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     } = {},
   ) {
     const experience = context.experience ?? learningSession.experience
+    if (experience !== 'learn' && experience !== 'practice') return
+
     const caseDefinition = context.caseDefinition ?? learningSession.caseDefinition
     const roleLens = context.roleLens ?? learningSession.roleLens
     const identity =
@@ -180,7 +207,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     emitAnalytics({
       interaction,
       pathway: experience,
-      device: learningSession.simulation.deviceId,
+      device: 'prismax-aw8035-2xx',
       role: roleLens,
       ...identity,
       ...metrics,
@@ -203,10 +230,15 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     )
   }
 
-  function attemptFor(caseDefinition: RuntimeCrrtCase, roleLens: CrrtRoleLens): number {
+  function attemptFor(
+    caseDefinition: RuntimeCrrtCase,
+    roleLens: CrrtRoleLens,
+    experience: CrrtLearningExperience = learningSession.experience,
+  ): number {
     const key = progressAttemptKey(
       'prismax-aw8035-2xx',
       roleLens,
+      experience,
       progressCaseId(caseDefinition.id),
     )
     return (progress.attempts[key] ?? 0) + 1
@@ -216,7 +248,8 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     caseDefinition: RuntimeCrrtCase,
     experience: CrrtLearningExperience,
     roleLens: CrrtRoleLens,
-    attempt = attemptFor(caseDefinition, roleLens),
+    attempt = attemptFor(caseDefinition, roleLens, experience),
+    restoreWorkflowFocus = true,
   ) {
     learningDispatch({
       type: 'LOAD_CASE',
@@ -226,6 +259,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
       attempt,
     })
     setMobileSurface('case')
+    if (restoreWorkflowFocus) setWorkflowFocusRequest((request) => request + 1)
   }
 
   function selectPathway(pathwayId: BaxterCrrtPathwayId) {
@@ -235,7 +269,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     emitAnalytics({
       interaction: 'pathway_selected',
       pathway: pathwayId,
-      device: learningSession.simulation.deviceId,
+      device: 'prismax-aw8035-2xx',
       role: learningSession.roleLens,
     })
     if (pathwayId === 'learn' || pathwayId === 'practice') {
@@ -244,6 +278,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
         pathwayId,
         learningSession.roleLens,
         learningSession.attempt,
+        false,
       )
       emitOpenEvent(pathwayId, learningSession.caseDefinition)
     }
@@ -277,6 +312,34 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     selectAndFocus(selectablePathwayIds[nextIndex])
   }
 
+  function selectAndFocusMobileSurface(surfaceId: CrrtMobileSurface) {
+    setMobileSurface(surfaceId)
+    mobileTabRefs.current[surfaceId]?.focus()
+  }
+
+  function handleMobileSurfaceKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    surfaceId: CrrtMobileSurface,
+  ) {
+    const currentIndex = mobileSurfaces.findIndex((surface) => surface.id === surfaceId)
+    if (currentIndex < 0) return
+
+    let nextIndex: number | null = null
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = (currentIndex + 1) % mobileSurfaces.length
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = (currentIndex - 1 + mobileSurfaces.length) % mobileSurfaces.length
+    } else if (event.key === 'Home') {
+      nextIndex = 0
+    } else if (event.key === 'End') {
+      nextIndex = mobileSurfaces.length - 1
+    }
+
+    if (nextIndex === null) return
+    event.preventDefault()
+    selectAndFocusMobileSurface(mobileSurfaces[nextIndex].id)
+  }
+
   function handleCaseChange(caseId: string) {
     if (!isBaxterCrrtPilotCaseId(caseId)) return
     const caseDefinition = getBaxterCrrtPilotCase(caseId)
@@ -293,18 +356,21 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
     })
     setProgress(nextProgress)
     writeProgress(nextProgress)
-    emitAnalytics({
-      interaction: 'role_selected',
-      pathway: learningSession.experience,
-      device: learningSession.simulation.deviceId,
-      role: roleLens,
-    })
+    if (learningSession.experience !== 'mastery') {
+      emitAnalytics({
+        interaction: 'role_selected',
+        pathway: learningSession.experience,
+        device: 'prismax-aw8035-2xx',
+        role: roleLens,
+      })
+    }
     emitOpenEvent(learningSession.experience, learningSession.caseDefinition, roleLens)
   }
 
   function handleCleanAttempt() {
     learningDispatch({ type: 'RESET', attempt: learningSession.attempt + 1 })
     setMobileSurface('case')
+    setWorkflowFocusRequest((request) => request + 1)
     emitOpenEvent(learningSession.experience, learningSession.caseDefinition)
   }
 
@@ -338,14 +404,24 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
       return
     }
 
-    const score = outcome.score ?? 0
+    if (!outcome.scored || outcome.score === null) return
+    const resultId =
+      learningSession.experience === 'mastery'
+        ? learningSession.masteryCapstoneId
+        : progressCaseId(learningSession.caseDefinition.id)
+    if (resultId === null) return
+
+    const score = outcome.score
     const nextProgress = recordCaseResult(contextProgress, {
-      caseId: progressCaseId(learningSession.caseDefinition.id),
+      caseId: resultId,
       device: 'prismax-aw8035-2xx',
       roleLens: learningSession.roleLens,
+      pathway: learningSession.experience,
       score,
       criticalError: outcome.criticalErrorIds.length > 0,
       hintCount: learningSession.usedHintIds.length,
+      reassessmentCompleted: outcome.reassessmentComplete,
+      masteryCompleted: outcome.mastery,
     })
     setProgress(nextProgress)
     writeProgress(nextProgress)
@@ -383,31 +459,48 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
             <p className={styles.eyebrow}>Adult ICU CRRT · independent educational pilot</p>
             <h1>CRRT Learn &amp; Practice workspace</h1>
             <p className={styles.heroLead}>
-              Phases 4 and 5 connect prediction-gated Learn and Practice workflows to three
-              source-mapped synthetic cases, one deterministic engine, the PrisMax pilot interface,
-              and an original circuit and response surface.
+              The Phase 7 draft-development candidate preserves the three-case protected pilot while
+              adding a fail-closed 18-case curriculum registry, rapid-drill manifests, and isolated
+              Mastery engine semantics for exact-version review.
             </p>
           </div>
 
-          <aside className={styles.phaseGate} aria-label="Current implementation phase">
-            <span>Phase 4-5 vertical slice</span>
-            <strong>Three pilot cases active in draft</strong>
-            <ul>
-              <li>
-                <span aria-hidden="true">✓</span> Prediction-gated Learn and Practice
-              </li>
-              <li>
-                <span aria-hidden="true">✓</span> CRRT-04, CRRT-10, and CRRT-13
-              </li>
-              <li>
-                <span aria-hidden="true">✓</span> Scoring, hints, debrief, progress &amp; aggregate
-                analytics
-              </li>
-              <li>
-                <span aria-hidden="true">○</span> Phase 6 independent review and release QA pending
-              </li>
-            </ul>
-          </aside>
+          {!isMasteryIdentityMasked ? (
+            <aside className={styles.phaseGate} aria-label="Current implementation phase">
+              <span>Phase 7 draft development</span>
+              <strong>Curriculum architecture implemented; content activation pending</strong>
+              <ul>
+                <li>
+                  <span aria-hidden="true">✓</span> Prediction-gated Learn and Practice
+                </li>
+                <li>
+                  <span aria-hidden="true">✓</span> CRRT-04, CRRT-10, and CRRT-13
+                </li>
+                <li>
+                  <span aria-hidden="true">✓</span> Scoring, hints, debrief, progress &amp;
+                  aggregate analytics
+                </li>
+                <li>
+                  <span aria-hidden="true">✓</span> Accessibility engineering and review package
+                  assembled
+                </li>
+                <li>
+                  <span aria-hidden="true">✓</span> All 18 case IDs, seven rapid-drill IDs, and
+                  fail-closed Mastery rules registered
+                </li>
+                <li>
+                  <span aria-hidden="true">○</span> Clinical, device, accessibility, localization,
+                  privacy/data-governance, entitlement/security, product-owner &amp; publication
+                  approval pending
+                </li>
+              </ul>
+              {baxterCrrtPublicationStatus !== 'published' ? (
+                <a className={styles.reviewerWorkspaceLink} href={`/${locale}/baxter-crrt/review`}>
+                  Open CRRT reviewer workspace
+                </a>
+              ) : null}
+            </aside>
+          ) : null}
         </header>
 
         <section className={styles.safetyBanner} aria-label="Educational safety boundary">
@@ -464,7 +557,10 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
           </div>
           <div>
             <dt>Review</dt>
-            <dd>Device, clinical, accessibility &amp; localization pending</dd>
+            <dd>
+              Device, clinical, accessibility, localization, privacy/data-governance,
+              entitlement/security, product-owner &amp; publication pending
+            </dd>
           </div>
         </dl>
 
@@ -541,7 +637,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
             </div>
             <span className={styles.scaffoldLabel}>
               <Layers3 aria-hidden="true" />
-              {isLearningPathway ? 'Functional Phase 4-5 pilot' : 'Functional Orientation'}
+              {isLearningPathway ? 'Protected three-case pilot' : 'Functional Orientation'}
             </span>
           </div>
 
@@ -554,10 +650,17 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                   {mobileSurfaces.map((surface) => (
                     <button
                       key={surface.id}
+                      id={`baxter-crrt-mobile-tab-${surface.id}`}
+                      ref={(node) => {
+                        mobileTabRefs.current[surface.id] = node
+                      }}
                       type="button"
                       role="tab"
+                      aria-controls={mobileSurfacePanelIds[surface.id]}
                       aria-selected={mobileSurface === surface.id}
+                      tabIndex={mobileSurface === surface.id ? 0 : -1}
                       onClick={() => setMobileSurface(surface.id)}
+                      onKeyDown={(event) => handleMobileSurfaceKeyDown(event, surface.id)}
                     >
                       {surface.label}
                     </button>
@@ -566,7 +669,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                 <p role={activeAlarms.length > 0 ? 'alert' : 'status'}>
                   <ShieldAlert aria-hidden="true" />
                   {activeAlarms.length > 0
-                    ? `${activeAlarms.length} active generic engine alarm${activeAlarms.length === 1 ? '' : 's'}: ${activeAlarms.map((alarm) => alarm.code).join(', ')}`
+                    ? `${activeAlarms.length} active generic engine alarm${activeAlarms.length === 1 ? '' : 's'}: ${activeAlarms.map((alarm) => alarm.code).join(', ')}. Device-specific priority is not mapped.`
                     : 'No active generic engine alarms'}
                 </p>
               </div>
@@ -581,11 +684,13 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                     <BrainCircuit aria-hidden="true" />
                     <div>
                       <span>Patient &amp; reasoning</span>
-                      <h3 id="reasoning-panel-heading">
-                        {learningSession.caseDefinition.id} ·{' '}
-                        {learningSession.experience === 'learn'
-                          ? 'Guided Learn'
-                          : 'Scored Practice'}
+                      <h3
+                        ref={workflowHeadingRef}
+                        id="reasoning-panel-heading"
+                        tabIndex={-1}
+                        aria-label={`${reasoningPanelHeading}. Attempt ${learningSession.attempt}.`}
+                      >
+                        {reasoningPanelHeading}
                       </h3>
                     </div>
                   </div>
@@ -622,8 +727,10 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                 </article>
 
                 <article
+                  id={mobileSurfacePanelIds.machine}
                   className={[styles.workbenchPanel, styles.devicePanel].join(' ')}
-                  aria-labelledby="device-panel-heading"
+                  role="tabpanel"
+                  aria-labelledby="baxter-crrt-mobile-tab-machine"
                   data-mobile-active={mobileSurface === 'machine'}
                 >
                   <div className={styles.panelHeading}>
@@ -640,11 +747,20 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                       Boolean(learningSession.prediction) && !learningSession.debriefRevealed
                     }
                     operationsDisplay={caseOperations}
-                    caseContext={{
-                      caseId: learningSession.caseDefinition.id,
-                      title: learningSession.caseDefinition.title,
-                      pathway: learningSession.experience,
-                    }}
+                    caseContext={
+                      isMasteryIdentityMasked
+                        ? {
+                            identityMasked: true,
+                            learnerLabel: baxterCrrtMasteryManifest.learnerTitleBeforeDebrief,
+                            pathway: 'mastery',
+                          }
+                        : {
+                            identityMasked: false,
+                            caseId: learningSession.caseDefinition.id,
+                            title: learningSession.caseDefinition.title,
+                            pathway: learningSession.experience,
+                          }
+                    }
                   />
                 </article>
 
@@ -652,7 +768,12 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                   className={styles.responseColumn}
                   data-mobile-active={mobileSurface === 'circuit' || mobileSurface === 'patient'}
                 >
-                  <div data-mobile-active={mobileSurface === 'circuit'}>
+                  <div
+                    id={mobileSurfacePanelIds.circuit}
+                    role="tabpanel"
+                    aria-labelledby="baxter-crrt-mobile-tab-circuit"
+                    data-mobile-active={mobileSurface === 'circuit'}
+                  >
                     <CrrtPilotCircuit
                       running={learningSession.simulation.device.deliveryState === 'running'}
                       setReady={learningSession.interfaceState.completedStepIds.includes('sets')}
@@ -674,22 +795,36 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
                       }}
                     />
                   </div>
-                  <div data-mobile-active={mobileSurface === 'patient'}>
+                  <div
+                    id={mobileSurfacePanelIds.patient}
+                    role="tabpanel"
+                    aria-labelledby="baxter-crrt-mobile-tab-patient"
+                    data-mobile-active={mobileSurface === 'patient'}
+                  >
                     <CrrtResponsePanel state={learningSession.simulation} />
                   </div>
                 </div>
               </div>
 
-              <CrrtCalibrationPanel
-                state={learningSession.simulation}
-                attempt={learningSession.attempt}
-                matchedPathId={
-                  learningOutcome.matchedRequiredPath
-                    ? 'required-path'
-                    : (learningOutcome.matchedAcceptedPathIds[0] ?? null)
-                }
-                criticalErrorIds={learningOutcome.criticalErrorIds}
-              />
+              {!isMasteryIdentityMasked ? (
+                <CrrtReferenceDrawer
+                  key={`${learningSession.caseDefinition.id}-${learningSession.experience}-${learningSession.roleLens}-${learningSession.attempt}`}
+                  session={learningSession}
+                />
+              ) : null}
+
+              {!isMasteryIdentityMasked ? (
+                <CrrtCalibrationPanel
+                  state={learningSession.simulation}
+                  attempt={learningSession.attempt}
+                  matchedPathId={
+                    learningOutcome.matchedRequiredPath
+                      ? 'required-path'
+                      : (learningOutcome.matchedAcceptedPathIds[0] ?? null)
+                  }
+                  criticalErrorIds={learningOutcome.criticalErrorIds}
+                />
+              ) : null}
             </>
           ) : (
             <div className={styles.workbench}>
@@ -758,7 +893,7 @@ export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
           )}
         </section>
 
-        <SourcesPanel />
+        {!isMasteryIdentityMasked ? <SourcesPanel /> : null}
       </main>
     </HandoffContent>
   )

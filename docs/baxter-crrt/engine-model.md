@@ -1,8 +1,14 @@
 # Baxter CRRT engine model
 
-Document status: Phase 2 draft implementation; pure engine disconnected from React  
-Clinical validation status: pending  
+Document status: Phase 7 reviewer candidate; engine `0.4.0-phase7-review`, schema `1.1.0-phase7-draft`
+
+Clinical validation status: pending
+
 Device validation status: pending
+
+The protected learner runtime remains the three-case pilot. Four additional fixtures use a separate
+reviewer audience and cannot enter learner selection, analytics, progress, competency, or published
+learner composition.
 
 ## 1. Design goals
 
@@ -64,8 +70,8 @@ Every simulation state, replay, and case result must include:
 - deterministic seed
 
 The detailed local progress DTO follows the narrower privacy allowlist from the coding brief. It may
-store its own progress schema version, device, role, completed IDs, attempts, best scores,
-critical-error status, hint use, last station, engine version, and content version. It does not store
+store its own progress schema version, device, role, completed IDs, attempts, best non-critical
+scores, critical-error attempt counts, hint use, last station, engine version, and content version. It does not store
 the deterministic seed, protocol profile, live state, trend data, or action sequence. A result may
 be reproduced only from a separate in-memory or explicitly exported development replay record, not
 from learner progress.
@@ -285,16 +291,18 @@ The pilot does not need a patient-specific vascular model. It needs source-revie
 patterns:
 
 - Increasing access resistance or blood flow makes central-venous access pressure more negative.
-- An access obstruction differs from an access disconnection.
+- An access obstruction differs conceptually from an access disconnection.
 - Filter pressure is positive and rises with pre-/in-filter resistance.
 - Return pressure rises with return-line or return-catheter resistance.
-- Return disconnection produces a fall and an adapter-specific safety response.
+- Return disconnection would require a reviewed adapter-specific safety response.
 - Effluent obstruction alters effluent pressure and TMP.
 - Fouling can raise TMP and/or filter pressure drop depending on where resistance accumulates.
 
 Device-displayed calculations belong in adapters. For example, AW8035 p217 describes a PrisMax TMP
 expression with a device correction, while G5036003 section 3:7 documents Prismaflex filter-drop
 behavior and its own correction. Alarm operating points and limits are never universal normals.
+The Phase 7 Pressure Localization Lab exposes obstruction patterns only. Every disconnection
+selection/model fails closed pending exact device review; no disconnection response is simulated.
 
 ### 8.6 Bag and scale model
 
@@ -420,6 +428,21 @@ The reducer should use an exhaustive discriminated action union. Expected catego
 Practice controls remain locked until a valid prediction commitment. Learn help state is not part of
 the Practice initial state. Mastery cannot inherit hints or progress state.
 
+Phase 7 adds an explicit runtime audience boundary. A learner session accepts only the exact
+immutable objects in the protected pilot registry. A reviewer session may exercise a separately
+immutable pending fixture, but it has no
+learner selector, progress write, analytics entitlement, activation authority, or competency claim.
+Reset preserves the original audience, and changing the displayed label cannot promote a review
+fixture into learner runtime. Reviewer components live only on the always-guarded
+`/[locale]/baxter-crrt/review` route and are absent from the learner client graph. No exact review
+candidate or build is frozen yet.
+
+Prediction commits only from `predict`; reassessment commits only from `reassess`. Reassessment
+unlocks only after an intervention and positive time advance, while zero-time advances are inert.
+Editing goal, mechanism, or control regresses the precommit sequence and clears dependent
+selections. Case, role, and clean-attempt changes focus the labeled workflow heading, pathway tabs
+retain focus, and reviewer instances do not auto-focus or steal focus.
+
 ## 11. Device adapter contract
 
 Each adapter should provide:
@@ -452,7 +475,8 @@ The adapter may not:
 Source cases pass through strict Zod validation into normalized runtime cases. Cross-record
 validators must ensure:
 
-- Exactly CRRT-04, CRRT-10, and CRRT-13 during the pilot.
+- Exactly `CRRT-04`, `CRRT-10`, and `CRRT-13` in the protected learner registry; any Phase 7
+  reviewer fixture must remain in the separate non-activating registry.
 - All option, intervention, requirement, alternative, hint, source, and review-status references
   resolve.
 - Every case has a deterministic safe path.
@@ -463,6 +487,11 @@ validators must ensure:
 
 Scoring consumes normalized outcome metrics and source-reviewed rules. React components cannot
 assign correctness.
+
+Authored intervention effects and outcome metrics use explicit path allowlists. Phase 7 reviewer
+fixtures may use only those enumerated patient, pressure, filter-risk, resistance, prescription-flow,
+delivery, and configured-solute paths; an arbitrary authored target throws instead of being applied
+or scored.
 
 ## 13. Selectors
 
@@ -569,6 +598,6 @@ The following stay configurable or disabled:
 - Clinical model constants, thresholds, and success targets.
 - The two ambiguous AW8035 formula passages recorded in the source matrix.
 
-The Phase 2 implementation does not convert these missing inputs into defaults. Caller-supplied
+The current implementation does not convert these missing inputs into defaults. Caller-supplied
 test calibration is explicit, source-labeled as synthetic, review-pending, and isolated from the
 learner UI.

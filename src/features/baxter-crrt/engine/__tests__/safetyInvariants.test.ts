@@ -63,19 +63,49 @@ describe('CRRT Phase 2 fail-closed safety invariants', () => {
     expect(state.circuit.pressures.returnPressureMmHg).toBe(5)
   })
 
-  it('does not reconnect access when correcting a disconnect fault that was never active', () => {
-    const fixture = createSyntheticFixture()
-    const disconnected = {
-      ...fixture,
-      access: { ...fixture.access, accessConnected: false },
-    }
-    const state = createInitialCrrtSimulationState({ fixture: disconnected })
-    const corrected = crrtSimulationReducer(state, {
-      type: 'CORRECT_FAULT',
-      fault: 'access-disconnection',
-    })
-    expect(corrected.access.status === 'configured' && corrected.access.accessConnected).toBe(false)
-  })
+  it.each([
+    ['access-disconnection', 'accessConnected'],
+    ['return-disconnection', 'returnConnected'],
+  ] as const)(
+    'models and corrects an active %s without inventing a device reaction',
+    (fault, connectionField) => {
+      let state = createInitialCrrtSimulationState({ fixture: createSyntheticFixture() })
+      state = crrtSimulationReducer(state, { type: 'SET_DELIVERY_STATE', deliveryState: 'running' })
+      state = crrtSimulationReducer(state, { type: 'SET_FAULT', fault, active: true })
+      expect(state.access.status === 'configured' && state.access[connectionField]).toBe(false)
+      expect(state.scenario.activeFaults).toContain(fault)
+      expect(state.alarms).toEqual([
+        expect.objectContaining({ cause: fault, urgency: null, active: true }),
+      ])
+
+      state = crrtSimulationReducer(state, { type: 'ADVANCE_TIME', seconds: 60 })
+      expect(state.deliveredTherapy.downtimeSecondsByReason.access).toBe(60)
+
+      state = crrtSimulationReducer(state, { type: 'CORRECT_FAULT', fault })
+      expect(state.access.status === 'configured' && state.access[connectionField]).toBe(true)
+      expect(state.scenario.activeFaults).not.toContain(fault)
+      expect(state.alarms).toEqual([])
+    },
+  )
+
+  it.each([
+    ['access-disconnection', 'accessConnected'],
+    ['return-disconnection', 'returnConnected'],
+  ] as const)(
+    'does not reconnect %s when correcting a fault that was never active',
+    (fault, connectionField) => {
+      const fixture = createSyntheticFixture()
+      const disconnected = {
+        ...fixture,
+        access: { ...fixture.access, [connectionField]: false },
+      }
+      const state = createInitialCrrtSimulationState({ fixture: disconnected })
+      const corrected = crrtSimulationReducer(state, { type: 'CORRECT_FAULT', fault })
+      expect(corrected.access.status === 'configured' && corrected.access[connectionField]).toBe(
+        false,
+      )
+    },
+  )
 
   it('uses unique deterministic alarm occurrence IDs and caps immediate history', () => {
     let state = createInitialCrrtSimulationState({ fixture: createSyntheticFixture() })

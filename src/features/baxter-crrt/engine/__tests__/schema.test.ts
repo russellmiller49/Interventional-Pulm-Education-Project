@@ -169,6 +169,7 @@ function buildAuthoredCase(id = 'CRRT-04') {
       {
         id: 'path-a',
         label: 'Synthetic path',
+        predictionControlOptionIds: ['control-a'],
         actionIds: ['action-a'],
         reassessmentIds: ['reassess-a'],
         successConditionIds: ['condition-a'],
@@ -474,6 +475,53 @@ describe('Baxter CRRT authored-content schema boundary', () => {
     expect(issues).toContain('Unresolved required reassessment ID: missing-reassessment')
     expect(issues).toContain('Duplicate required reassessment ID: missing-reassessment')
     expect(issues).toContain(`Duplicate source ID: ${SOURCE_ID}`)
+    expect(authoredCrrtCaseSchema.safeParse(invalid).success).toBe(false)
+  })
+
+  it('rejects duplicate claim mappings and unused source-basis records', () => {
+    const authored = buildAuthoredCase()
+    const unusedSourceId = 'TEST-UNUSED-001'
+    const invalid = {
+      ...authored,
+      hiddenMechanism: {
+        ...authored.hiddenMechanism,
+        sourceIds: [SOURCE_ID, SOURCE_ID],
+      },
+      sourceBasis: [
+        ...authored.sourceBasis,
+        {
+          ...authored.sourceBasis[0],
+          id: unusedSourceId,
+          implementationLocation: 'unused test evidence record',
+        },
+      ],
+    }
+
+    const issues = collectCrrtCaseSemanticIssues(invalid)
+    expect(issues).toContain(`Duplicate source ID ${SOURCE_ID} at hiddenMechanism`)
+    expect(issues).toContain(`Unreferenced source basis ID: ${unusedSourceId}`)
+    expect(authoredCrrtCaseSchema.safeParse(invalid).success).toBe(false)
+  })
+
+  it('rejects duplicate or unresolved accepted-path prediction controls', () => {
+    const authored = buildAuthoredCase()
+    const invalid = {
+      ...authored,
+      acceptedAlternativePaths: [
+        {
+          ...authored.acceptedAlternativePaths[0],
+          predictionControlOptionIds: ['missing-control', 'missing-control'],
+        },
+      ],
+    }
+
+    const issues = collectCrrtCaseSemanticIssues(invalid)
+    expect(issues).toContain(
+      'Accepted path path-a has duplicate prediction control option ID: missing-control',
+    )
+    expect(issues).toContain(
+      'Accepted path path-a has unresolved prediction control option ID: missing-control',
+    )
     expect(authoredCrrtCaseSchema.safeParse(invalid).success).toBe(false)
   })
 

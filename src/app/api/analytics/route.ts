@@ -3,8 +3,10 @@ import { z } from 'zod'
 
 import {
   BAXTER_CRRT_ANALYTICS_MODULE_ID,
+  expectedBaxterCrrtAnalyticsEventType,
   validateBaxterCrrtAnalyticsEventPayload,
 } from '@/lib/baxter-crrt-analytics'
+import { resolveSiteModuleId } from '@/lib/site-auth/access'
 import { supabaseServer } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -39,25 +41,29 @@ export async function POST(request: Request) {
 
   const event = payload.data
   let validatedEventPayload = event.eventPayload
-  if (event.moduleId === BAXTER_CRRT_ANALYTICS_MODULE_ID) {
-    const payloadOptionalForSessionLifecycle =
-      event.eventType === 'session_start' ||
-      event.eventType === 'session_heartbeat' ||
-      event.eventType === 'session_end' ||
-      event.eventType === 'module_opened'
-    if (event.eventPayload === undefined && !payloadOptionalForSessionLifecycle) {
+  const isBaxterCrrtEvent = event.moduleId === BAXTER_CRRT_ANALYTICS_MODULE_ID
+  if (isBaxterCrrtEvent) {
+    if (event.eventPayload === undefined) {
       return NextResponse.json({ error: 'Invalid Baxter CRRT analytics payload.' }, { status: 400 })
     }
-    if (event.eventPayload !== undefined) {
-      const crrtPayload = validateBaxterCrrtAnalyticsEventPayload(event.eventPayload)
-      if (!crrtPayload.success) {
-        return NextResponse.json(
-          { error: 'Invalid Baxter CRRT analytics payload.' },
-          { status: 400 },
-        )
-      }
-      validatedEventPayload = crrtPayload.data
+
+    const crrtPayload = validateBaxterCrrtAnalyticsEventPayload(event.eventPayload)
+    const hasGenericProgressOrSessionFields =
+      event.durationSeconds !== undefined ||
+      event.percentComplete !== undefined ||
+      event.section !== undefined ||
+      event.sessionId !== undefined
+    if (
+      !crrtPayload.success ||
+      hasGenericProgressOrSessionFields ||
+      resolveSiteModuleId(event.routePath) !== BAXTER_CRRT_ANALYTICS_MODULE_ID ||
+      (crrtPayload.success &&
+        event.eventType !== expectedBaxterCrrtAnalyticsEventType(crrtPayload.data.interaction))
+    ) {
+      return NextResponse.json({ error: 'Invalid Baxter CRRT analytics payload.' }, { status: 400 })
     }
+
+    validatedEventPayload = crrtPayload.data
   }
 
   const supabase = await supabaseServer()
@@ -74,6 +80,14 @@ export async function POST(request: Request) {
   const now = new Date().toISOString()
   const durationSeconds = event.durationSeconds ?? 0
   const eventPayload = validatedEventPayload ?? {}
+
+  // CRRT maintains its protected learner progress locally. During the Phase 7 review boundary,
+  // the server records only allowlisted learner interaction summaries and never derives generic
+  // session time, section completion, module percentage, or completion from them.
+  if (isBaxterCrrtEvent) {
+    await recordModuleEvent(event.eventType)
+    return NextResponse.json({ status: 'ok' })
+  }
 
   if (event.eventType === 'session_start') {
     if (!event.sessionId) {

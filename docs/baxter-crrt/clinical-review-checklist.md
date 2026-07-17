@@ -8,8 +8,10 @@ Review state: formal Phase 6 clinical review has not started; every box is inten
 
 - [ ] Record reviewer names, roles, review date, code revision, content version, engine version, and
       source-matrix revision.
-- [ ] Include a CRRT-experienced nephrologist, a critical care physician, and a CRRT nurse educator;
-      record any dissent or requested specialty review.
+- [ ] Assign a CRRT-experienced nephrologist, a critical-care physician, and a CRRT nurse educator.
+      Each must complete a separate candidate-bound canonical domain record for `nephrology`,
+      `critical-care`, or `crrt-nurse-education`; this combined intake cannot substitute for those
+      three independent attestations.
 - [ ] Confirm every exact patient value, flow, time, condition band, coefficient, and score trigger is
       labeled synthetic, deterministic, `reviewStatus: pending`, and not a clinical target or device
       limit.
@@ -102,6 +104,7 @@ Review state: formal Phase 6 clinical review has not started; every box is inten
 
 - [ ] Attach findings with source ID, code/test reference, severity, owner, and required change;
       consequential changes must reset the affected record to `pending`.
-- [ ] Recommend `reviewed` only after all applicable findings are resolved and the exact revision is
-      rechecked; `approved` publication requires separate clinical, device, accessibility,
-      localization, product, and release decisions.
+- [ ] Transfer each completed review into a separate
+      [canonical domain record](./review-packet/domain-review.template.md), including the exact
+      candidate, scope/findings digests, normalized disposition, authenticated receipt, timestamp,
+      and receipt SHA-256. This intake itself never changes activation or publication state.

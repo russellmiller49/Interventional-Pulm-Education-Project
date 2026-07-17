@@ -1,9 +1,14 @@
 import { initialBaxterCrrtDeviceId, type BaxterCrrtDeviceId } from '../content/deviceProfiles'
+import {
+  isBaxterCrrtLearnerLessonId,
+  isBaxterCrrtLearnerProgressCaseId,
+} from '../content/learnerRegistry'
 import { CRRT_CONTENT_VERSION, CRRT_ENGINE_VERSION } from './initialState'
+import { isCrrtMasteryCapstoneActivated } from './outcomes'
 import { crrtRoleLenses, crrtStationIds, type CrrtRoleLens, type CrrtStationId } from './types'
 
-export const BAXTER_CRRT_PROGRESS_STORAGE_KEY = 'baxter-crrt-progress-v1'
-export const BAXTER_CRRT_PROGRESS_VERSION = 1 as const
+export const BAXTER_CRRT_PROGRESS_STORAGE_KEY = 'baxter-crrt-progress-v2'
+export const BAXTER_CRRT_PROGRESS_VERSION = 2 as const
 export const BAXTER_CRRT_ENGINE_VERSION = CRRT_ENGINE_VERSION
 export const BAXTER_CRRT_CONTENT_VERSION = CRRT_CONTENT_VERSION
 
@@ -17,16 +22,19 @@ const MAX_VERSION_ID_LENGTH = 64
 
 export type BaxterCrrtRoleLens = CrrtRoleLens
 export type BaxterCrrtProgressStation = CrrtStationId
+export type BaxterCrrtProgressPathway = 'learn' | 'practice' | 'mastery'
 
-export interface BaxterCrrtProgressV1 {
-  readonly version: 1
+export interface BaxterCrrtProgressV2 {
+  readonly version: 2
   readonly lastDevice: BaxterCrrtDeviceId
   readonly lastRoleLens: BaxterCrrtRoleLens
   readonly completedLessonIds: readonly string[]
-  readonly completedCaseIds: readonly string[]
+  readonly completedPracticeCaseIds: readonly string[]
+  readonly completedMasteryCapstoneIds: readonly string[]
   readonly attempts: Readonly<Record<string, number>>
-  readonly bestScores: Readonly<Record<string, number>>
-  readonly criticalErrorStatus: Readonly<Record<string, boolean>>
+  /** Best score from a non-critical attempt only; unsafe scores are never mixed in. */
+  readonly bestSafeScores: Readonly<Record<string, number>>
+  readonly criticalErrorAttempts: Readonly<Record<string, number>>
   readonly hintUse: Readonly<Record<string, number>>
   readonly lastStation: BaxterCrrtProgressStation
   readonly engineVersion: string
@@ -38,17 +46,15 @@ export interface BaxterCrrtProgressStorage {
   setItem(key: string, value: string): void
 }
 
-const validDeviceIds = new Set<BaxterCrrtDeviceId>([
-  'prismax-aw8035-2xx',
-  'prismaflex-g5036003-6xx',
-])
+const validDeviceIds = new Set<BaxterCrrtDeviceId>([initialBaxterCrrtDeviceId])
 
 const validRoleLenses = new Set<BaxterCrrtRoleLens>(crrtRoleLenses)
 
 const validStations = new Set<BaxterCrrtProgressStation>(crrtStationIds)
+const validProgressPathways = new Set<BaxterCrrtProgressPathway>(['learn', 'practice', 'mastery'])
 
 function isValidDeviceId(value: unknown): value is BaxterCrrtDeviceId {
-  return value === 'prismax-aw8035-2xx' || value === 'prismaflex-g5036003-6xx'
+  return value === initialBaxterCrrtDeviceId
 }
 
 function isValidRoleLens(value: unknown): value is BaxterCrrtRoleLens {
@@ -67,7 +73,7 @@ function isValidStation(value: unknown): value is BaxterCrrtProgressStation {
   )
 }
 
-const stableIdPattern = /^[a-z0-9][a-z0-9._:-]*$/
+const stableIdPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/
 const versionIdPattern = /^[A-Za-z0-9][A-Za-z0-9._+:-]*$/
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -101,10 +107,29 @@ function isCompositeKey(value: unknown): value is string {
   )
 }
 
-function parseIdList(value: unknown): string[] | null {
+function parseIdList(value: unknown, isAllowedId: (id: string) => boolean): string[] | null {
   if (!Array.isArray(value) || value.length > BAXTER_CRRT_PROGRESS_MAX_IDS) return null
-  if (value.some((id) => !isStableId(id))) return null
+  if (value.some((id) => !isStableId(id) || !isAllowedId(id))) return null
   return [...new Set(value as string[])].sort()
+}
+
+function isAllowedProgressIdentifier(pathway: BaxterCrrtProgressPathway, id: string): boolean {
+  if (pathway === 'learn' || pathway === 'practice') {
+    return isBaxterCrrtLearnerProgressCaseId(id)
+  }
+  return isCrrtMasteryCapstoneActivated(id)
+}
+
+function isAllowedProgressCompositeKey(value: unknown): value is string {
+  if (!isCompositeKey(value)) return false
+  const [device, roleLens, pathway, id, ...remainder] = value.split(':')
+  return (
+    remainder.length === 0 &&
+    isValidDeviceId(device) &&
+    isValidRoleLens(roleLens) &&
+    validProgressPathways.has(pathway as BaxterCrrtProgressPathway) &&
+    isAllowedProgressIdentifier(pathway as BaxterCrrtProgressPathway, id)
+  )
 }
 
 function parseNumberRecord(value: unknown, maximum: number): Record<string, number> | null {
@@ -114,24 +139,11 @@ function parseNumberRecord(value: unknown, maximum: number): Record<string, numb
 
   const parsed: Record<string, number> = {}
   for (const [id, raw] of entries.sort(([left], [right]) => left.localeCompare(right))) {
-    if (!isCompositeKey(id)) return null
+    if (!isAllowedProgressCompositeKey(id)) return null
     if (!Number.isSafeInteger(raw) || (raw as number) < 0 || (raw as number) > maximum) {
       return null
     }
     parsed[id] = raw as number
-  }
-  return parsed
-}
-
-function parseBooleanRecord(value: unknown): Record<string, boolean> | null {
-  if (!isRecord(value)) return null
-  const entries = Object.entries(value)
-  if (entries.length > BAXTER_CRRT_PROGRESS_MAX_RECORD_ENTRIES) return null
-
-  const parsed: Record<string, boolean> = {}
-  for (const [id, raw] of entries.sort(([left], [right]) => left.localeCompare(right))) {
-    if (!isCompositeKey(id) || typeof raw !== 'boolean') return null
-    parsed[id] = raw
   }
   return parsed
 }
@@ -145,16 +157,17 @@ function browserStorage(): BaxterCrrtProgressStorage | null {
   }
 }
 
-export function createDefaultProgress(): BaxterCrrtProgressV1 {
+export function createDefaultProgress(): BaxterCrrtProgressV2 {
   return {
     version: BAXTER_CRRT_PROGRESS_VERSION,
     lastDevice: initialBaxterCrrtDeviceId,
     lastRoleLens: 'integrated',
     completedLessonIds: [],
-    completedCaseIds: [],
+    completedPracticeCaseIds: [],
+    completedMasteryCapstoneIds: [],
     attempts: {},
-    bestScores: {},
-    criticalErrorStatus: {},
+    bestSafeScores: {},
+    criticalErrorAttempts: {},
     hintUse: {},
     lastStation: 'orientation',
     engineVersion: BAXTER_CRRT_ENGINE_VERSION,
@@ -166,7 +179,7 @@ export function createDefaultProgress(): BaxterCrrtProgressV1 {
  * Projects unknown data onto the complete, non-PHI progress allowlist.
  * Unknown properties are intentionally discarded and invalid required fields fail closed.
  */
-export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV1 | null {
+export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV2 | null {
   if (!isRecord(value) || value.version !== BAXTER_CRRT_PROGRESS_VERSION) return null
   if (!isValidDeviceId(value.lastDevice)) return null
   if (!isValidRoleLens(value.lastRoleLens)) return null
@@ -179,20 +192,43 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV1 | nul
     return null
   }
 
-  const completedLessonIds = parseIdList(value.completedLessonIds)
-  const completedCaseIds = parseIdList(value.completedCaseIds)
+  const completedLessonIds = parseIdList(value.completedLessonIds, isBaxterCrrtLearnerLessonId)
+  const completedPracticeCaseIds = parseIdList(
+    value.completedPracticeCaseIds,
+    isBaxterCrrtLearnerProgressCaseId,
+  )
+  const completedMasteryCapstoneIds = parseIdList(
+    value.completedMasteryCapstoneIds,
+    isCrrtMasteryCapstoneActivated,
+  )
   const attempts = parseNumberRecord(value.attempts, BAXTER_CRRT_PROGRESS_MAX_COUNTER)
-  const bestScores = parseNumberRecord(value.bestScores, 100)
-  const criticalErrorStatus = parseBooleanRecord(value.criticalErrorStatus)
+  const bestSafeScores = parseNumberRecord(value.bestSafeScores, 100)
+  const criticalErrorAttempts = parseNumberRecord(
+    value.criticalErrorAttempts,
+    BAXTER_CRRT_PROGRESS_MAX_COUNTER,
+  )
   const hintUse = parseNumberRecord(value.hintUse, BAXTER_CRRT_PROGRESS_MAX_COUNTER)
 
   if (
     !completedLessonIds ||
-    !completedCaseIds ||
+    !completedPracticeCaseIds ||
+    !completedMasteryCapstoneIds ||
     !attempts ||
-    !bestScores ||
-    !criticalErrorStatus ||
+    !bestSafeScores ||
+    !criticalErrorAttempts ||
     !hintUse
+  ) {
+    return null
+  }
+
+  const attemptKeys = new Set(Object.keys(attempts))
+  if (
+    [
+      ...Object.keys(bestSafeScores),
+      ...Object.keys(criticalErrorAttempts),
+      ...Object.keys(hintUse),
+    ].some((key) => !attemptKeys.has(key)) ||
+    Object.entries(criticalErrorAttempts).some(([key, count]) => count > (attempts[key] ?? 0))
   ) {
     return null
   }
@@ -202,10 +238,11 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV1 | nul
     lastDevice: value.lastDevice,
     lastRoleLens: value.lastRoleLens,
     completedLessonIds,
-    completedCaseIds,
+    completedPracticeCaseIds,
+    completedMasteryCapstoneIds,
     attempts,
-    bestScores,
-    criticalErrorStatus,
+    bestSafeScores,
+    criticalErrorAttempts,
     hintUse,
     lastStation: value.lastStation,
     engineVersion: value.engineVersion,
@@ -213,7 +250,7 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV1 | nul
   }
 }
 
-export function parseProgress(serialized: string | null | undefined): BaxterCrrtProgressV1 | null {
+export function parseProgress(serialized: string | null | undefined): BaxterCrrtProgressV2 | null {
   if (!serialized) return null
   try {
     return canonicalizeProgress(JSON.parse(serialized) as unknown)
@@ -230,24 +267,31 @@ export function serializeProgress(value: unknown): string | null {
 export function progressAttemptKey(
   device: BaxterCrrtDeviceId,
   roleLens: BaxterCrrtRoleLens,
+  pathway: BaxterCrrtProgressPathway,
   caseId: string,
 ): string {
-  if (!validDeviceIds.has(device) || !validRoleLenses.has(roleLens) || !isStableId(caseId)) {
-    throw new Error('Progress attempt keys require valid device, role, and case IDs.')
+  if (
+    !validDeviceIds.has(device) ||
+    !validRoleLenses.has(roleLens) ||
+    !validProgressPathways.has(pathway) ||
+    !isStableId(caseId) ||
+    !isAllowedProgressIdentifier(pathway, caseId)
+  ) {
+    throw new Error('Progress attempt keys require valid device, role, pathway, and case IDs.')
   }
-  const key = `${device}:${roleLens}:${caseId}`
+  const key = `${device}:${roleLens}:${pathway}:${caseId}`
   if (!isCompositeKey(key)) throw new Error('Progress attempt key exceeds the storage boundary.')
   return key
 }
 
 export function setProgressContext(
-  progress: BaxterCrrtProgressV1,
+  progress: BaxterCrrtProgressV2,
   context: {
     readonly device: BaxterCrrtDeviceId
     readonly roleLens: BaxterCrrtRoleLens
     readonly station: BaxterCrrtProgressStation
   },
-): BaxterCrrtProgressV1 {
+): BaxterCrrtProgressV2 {
   const canonical = canonicalizeProgress(progress)
   if (!canonical) throw new Error('Progress must use the current canonical version.')
   if (
@@ -266,12 +310,14 @@ export function setProgressContext(
 }
 
 export function recordLessonCompletion(
-  progress: BaxterCrrtProgressV1,
+  progress: BaxterCrrtProgressV2,
   lessonId: string,
-): BaxterCrrtProgressV1 {
+): BaxterCrrtProgressV2 {
   const canonical = canonicalizeProgress(progress)
   if (!canonical) throw new Error('Progress must use the current canonical version.')
-  if (!isStableId(lessonId)) throw new Error('Lesson ID is invalid.')
+  if (!isStableId(lessonId) || !isBaxterCrrtLearnerLessonId(lessonId)) {
+    throw new Error('Lesson progress is available only for an activated learner lesson.')
+  }
   const completedLessonIds = [...new Set([...canonical.completedLessonIds, lessonId])].sort()
   if (completedLessonIds.length > BAXTER_CRRT_PROGRESS_MAX_IDS) {
     throw new Error('Completed lesson limit exceeded.')
@@ -280,56 +326,98 @@ export function recordLessonCompletion(
 }
 
 export function recordCaseResult(
-  progress: BaxterCrrtProgressV1,
+  progress: BaxterCrrtProgressV2,
   result: {
     readonly caseId: string
     readonly device: BaxterCrrtDeviceId
     readonly roleLens: BaxterCrrtRoleLens
+    readonly pathway: 'practice' | 'mastery'
     readonly score: number
     readonly criticalError: boolean
     readonly hintCount: number
+    readonly reassessmentCompleted: boolean
+    readonly masteryCompleted: boolean
   },
-): BaxterCrrtProgressV1 {
+): BaxterCrrtProgressV2 {
   const canonical = canonicalizeProgress(progress)
   if (!canonical) throw new Error('Progress must use the current canonical version.')
   if (!Number.isFinite(result.score)) throw new RangeError('Score must be finite.')
   if (typeof result.criticalError !== 'boolean') {
     throw new TypeError('Critical-error status must be boolean.')
   }
+  if (
+    typeof result.reassessmentCompleted !== 'boolean' ||
+    typeof result.masteryCompleted !== 'boolean'
+  ) {
+    throw new TypeError('Reassessment and Mastery completion statuses must be boolean.')
+  }
   if (!Number.isSafeInteger(result.hintCount) || result.hintCount < 0) {
     throw new RangeError('Hint count must be a nonnegative integer.')
   }
-  const key = progressAttemptKey(result.device, result.roleLens, result.caseId)
+  if (result.pathway === 'practice' && result.masteryCompleted) {
+    throw new Error('Practice results cannot complete Mastery.')
+  }
+  if (result.pathway === 'practice' && !isBaxterCrrtLearnerProgressCaseId(result.caseId)) {
+    throw new Error('Practice progress is available only for an activated learner runtime case.')
+  }
+  if (result.pathway === 'mastery' && !isCrrtMasteryCapstoneActivated(result.caseId)) {
+    throw new Error(
+      'CRRT Mastery progress is locked until the exact approved capstone is activated.',
+    )
+  }
   const score = Math.round(Math.min(100, Math.max(0, result.score)))
+  const meetsMasteryCriteria =
+    result.pathway === 'mastery' &&
+    score >= 80 &&
+    !result.criticalError &&
+    result.hintCount === 0 &&
+    result.reassessmentCompleted
+  if (result.masteryCompleted && !meetsMasteryCriteria) {
+    throw new Error('Mastery completion does not satisfy the fail-closed criteria.')
+  }
+
+  const key = progressAttemptKey(result.device, result.roleLens, result.pathway, result.caseId)
   const previousAttemptCount = canonical.attempts[key] ?? 0
   const previousHintCount = canonical.hintUse[key] ?? 0
+  const previousCriticalErrorAttempts = canonical.criticalErrorAttempts[key] ?? 0
   if (
     previousAttemptCount >= BAXTER_CRRT_PROGRESS_MAX_COUNTER ||
-    previousHintCount + result.hintCount > BAXTER_CRRT_PROGRESS_MAX_COUNTER
+    previousHintCount + result.hintCount > BAXTER_CRRT_PROGRESS_MAX_COUNTER ||
+    previousCriticalErrorAttempts + (result.criticalError ? 1 : 0) >
+      BAXTER_CRRT_PROGRESS_MAX_COUNTER
   ) {
     throw new Error('Progress counter limit exceeded.')
   }
-  const previouslySafe =
-    (canonical.bestScores[key] ?? 0) >= 80 && canonical.criticalErrorStatus[key] === false
-  const safelyMasteredNow = score >= 80 && !result.criticalError
-  const completedCaseIds = [...new Set([...canonical.completedCaseIds, result.caseId])].sort()
-  if (completedCaseIds.length > BAXTER_CRRT_PROGRESS_MAX_IDS) {
-    throw new Error('Completed case limit exceeded.')
+  const completedPracticeCaseIds =
+    result.pathway === 'practice'
+      ? [...new Set([...canonical.completedPracticeCaseIds, result.caseId])].sort()
+      : canonical.completedPracticeCaseIds
+  const completedMasteryCapstoneIds = result.masteryCompleted
+    ? [...new Set([...canonical.completedMasteryCapstoneIds, result.caseId])].sort()
+    : canonical.completedMasteryCapstoneIds
+  if (
+    completedPracticeCaseIds.length > BAXTER_CRRT_PROGRESS_MAX_IDS ||
+    completedMasteryCapstoneIds.length > BAXTER_CRRT_PROGRESS_MAX_IDS
+  ) {
+    throw new Error('Completed progress identifier limit exceeded.')
   }
 
-  const updated: BaxterCrrtProgressV1 = {
+  const updated: BaxterCrrtProgressV2 = {
     ...canonical,
     lastDevice: result.device,
     lastRoleLens: result.roleLens,
-    completedCaseIds,
+    completedPracticeCaseIds,
+    completedMasteryCapstoneIds,
     attempts: { ...canonical.attempts, [key]: previousAttemptCount + 1 },
-    bestScores: {
-      ...canonical.bestScores,
-      [key]: Math.max(canonical.bestScores[key] ?? 0, score),
-    },
-    criticalErrorStatus: {
-      ...canonical.criticalErrorStatus,
-      [key]: safelyMasteredNow ? false : previouslySafe ? false : result.criticalError,
+    bestSafeScores: result.criticalError
+      ? canonical.bestSafeScores
+      : {
+          ...canonical.bestSafeScores,
+          [key]: Math.max(canonical.bestSafeScores[key] ?? 0, score),
+        },
+    criticalErrorAttempts: {
+      ...canonical.criticalErrorAttempts,
+      [key]: previousCriticalErrorAttempts + (result.criticalError ? 1 : 0),
     },
     hintUse: { ...canonical.hintUse, [key]: previousHintCount + result.hintCount },
   }
@@ -340,7 +428,7 @@ export function recordCaseResult(
 
 export function readProgress(
   storage: BaxterCrrtProgressStorage | null = browserStorage(),
-): BaxterCrrtProgressV1 {
+): BaxterCrrtProgressV2 {
   if (!storage) return createDefaultProgress()
   try {
     return (
@@ -352,7 +440,7 @@ export function readProgress(
 }
 
 export function writeProgress(
-  progress: BaxterCrrtProgressV1,
+  progress: BaxterCrrtProgressV2,
   storage: BaxterCrrtProgressStorage | null = browserStorage(),
 ): boolean {
   const serialized = serializeProgress(progress)

@@ -1,4 +1,5 @@
 import type { BaxterCrrtDeviceId } from '../content/deviceProfiles'
+import { isBaxterCrrtLearnerCaseDefinition } from '../content/learnerRegistry'
 import { normalizeRuntimeCrrtCaseToEngineFixture } from '../content/runtimeCaseNormalization'
 import type { RuntimeCrrtCase } from '../content/schema'
 import {
@@ -10,19 +11,22 @@ import {
   type PrismaxSetupStepId,
 } from './deviceAdapters/prismax'
 import { createInitialCrrtSimulationState } from './initialState'
-import { selectTriggeredCriticalErrorIds } from './outcomes'
+import { selectCrrtMasteryCapstoneId, selectTriggeredCriticalErrorIds } from './outcomes'
 import { crrtSimulationReducer } from './reducer'
 import { deriveDeterministicSeed } from './seededRandom'
 import { applyScheduledEventAction, recomputeCrrtDerivedState } from './simulation'
-import type {
-  CrrtEngineFixture,
-  CrrtFlowRates,
-  CrrtRoleLens,
-  CrrtSimulationState,
-  ExternalFluidRateKey,
+import {
+  crrtEngineFaultIds,
+  type CrrtEngineFaultId,
+  type CrrtEngineFixture,
+  type CrrtFlowRates,
+  type CrrtRoleLens,
+  type CrrtSimulationState,
+  type ExternalFluidRateKey,
 } from './types'
 
-export type CrrtLearningExperience = 'learn' | 'practice'
+export type CrrtLearningExperience = 'learn' | 'practice' | 'mastery'
+export type CrrtRuntimeAudience = 'learner' | 'reviewer'
 
 export type CrrtReasoningPhase =
   | 'read'
@@ -32,6 +36,18 @@ export type CrrtReasoningPhase =
   | 'run'
   | 'reassess'
   | 'reflect'
+
+export type CrrtPrecommitReasoningPhase = Extract<
+  CrrtReasoningPhase,
+  'define' | 'select' | 'predict'
+>
+
+const crrtPrecommitReasoningPhases = [
+  'read',
+  'define',
+  'select',
+  'predict',
+] as const satisfies readonly CrrtReasoningPhase[]
 
 export interface CrrtPredictionCommitment {
   readonly goalOptionId: string
@@ -68,6 +84,10 @@ export interface CrrtLearningSessionState {
   readonly simulation: CrrtSimulationState
   readonly interfaceState: PrismaxPilotInterfaceState
   readonly experience: CrrtLearningExperience
+  /** Reviewer sessions may exercise draft fixtures but are never learner-selectable. */
+  readonly audience: CrrtRuntimeAudience
+  /** Approved capstone identity; null for every non-Mastery or locked session. */
+  readonly masteryCapstoneId: string | null
   readonly roleLens: CrrtRoleLens
   readonly attempt: number
   readonly prediction: CrrtPredictionCommitment | null
@@ -85,6 +105,7 @@ export interface CreateCrrtLearningSessionOptions {
   readonly experience: CrrtLearningExperience
   readonly roleLens: CrrtRoleLens
   readonly attempt: number
+  readonly audience?: CrrtRuntimeAudience
   readonly deviceId?: BaxterCrrtDeviceId
   readonly seed?: number
   /** A registry may cache the already validated normalization result. */
@@ -98,6 +119,10 @@ export type CrrtLearningSessionAction =
       readonly experience?: CrrtLearningExperience
       readonly roleLens?: CrrtRoleLens
       readonly attempt?: number
+    }
+  | {
+      readonly type: 'ENTER_PRECOMMIT_REASONING_PHASE'
+      readonly phase: CrrtPrecommitReasoningPhase
     }
   | { readonly type: 'COMMIT_PREDICTION'; readonly prediction: CrrtPredictionCommitment }
   | { readonly type: 'PERFORM_INTERVENTION'; readonly interventionId: string }
@@ -136,6 +161,8 @@ const externalFluidRateKeys = new Set<ExternalFluidRateKey>([
   'drainOutputMlHour',
   'otherOutputMlHour',
 ])
+
+const engineFaultIds = new Set<CrrtEngineFaultId>(crrtEngineFaultIds)
 
 type CaseEffect = RuntimeCrrtCase['interventions'][number]['effects'][number]
 type NumericCaseEffect = Extract<CaseEffect, { valueType: 'number' }>
@@ -243,9 +270,6 @@ function configuredInitialPrescription(
   if (simulation.prescription.status !== 'configured') {
     throw new Error('An in-progress CRRT device workflow requires a configured prescription.')
   }
-  if (simulation.prescription.modality !== 'cvvhd') {
-    throw new Error('The PrisMax pilot interface can initialize only a CVVHD prescription.')
-  }
   return {
     ...simulation.prescription,
     flows: { ...simulation.prescription.flows },
@@ -279,7 +303,7 @@ function createCaseInitialInterfaceState(
     ...fresh,
     screen: phase === 'operations' || phase === 'stop' ? 'operations' : 'setup',
     startSelection: 'new-patient',
-    selectedModality: prescriptionLoaded ? 'cvvhd' : null,
+    selectedModality: committedPrescription?.modality ?? null,
     completedStepIds,
     prescriptionDraft: committedPrescription
       ? {
@@ -346,6 +370,19 @@ export function createCrrtLearningSession(
   if (!Number.isSafeInteger(options.attempt) || options.attempt < 1) {
     throw new RangeError('CRRT learning-session attempt must be a positive integer.')
   }
+  const audience = options.audience ?? 'learner'
+  if (audience === 'learner' && !isBaxterCrrtLearnerCaseDefinition(options.caseDefinition)) {
+    throw new Error(
+      `CRRT case ${options.caseDefinition.id} is reviewer-only until its exact candidate is activated.`,
+    )
+  }
+  const masteryCapstoneId =
+    options.experience === 'mastery' ? selectCrrtMasteryCapstoneId(options.caseDefinition) : null
+  if (options.experience === 'mastery' && masteryCapstoneId === null) {
+    throw new Error(
+      'CRRT Mastery is locked until an approved capstone runtime with at least two problem domains is activated.',
+    )
+  }
   const fixture = options.fixture ?? normalizeRuntimeCrrtCaseToEngineFixture(options.caseDefinition)
   if (fixture.id !== options.caseDefinition.id) {
     throw new Error('CRRT learning-session fixture ID must match the runtime case ID.')
@@ -368,6 +405,8 @@ export function createCrrtLearningSession(
     simulation,
     interfaceState,
     experience: options.experience,
+    audience,
+    masteryCapstoneId,
     roleLens: options.roleLens,
     attempt: options.attempt,
     prediction: null,
@@ -461,6 +500,41 @@ function applyAllowlistedEffect(
     })
   }
 
+  if (effect.target === 'patient.bodyWeightKg' || effect.target === 'patient.hematocritFraction') {
+    if (
+      effect.valueType !== 'number' ||
+      simulation.patient.status !== 'configured' ||
+      simulation.prescription.status !== 'configured'
+    ) {
+      throw new UnsupportedCrrtLearningEffectError(
+        effect.target,
+        'configured numeric patient input required',
+      )
+    }
+    const current =
+      effect.target === 'patient.bodyWeightKg'
+        ? simulation.patient.bodyWeightKg
+        : simulation.patient.hematocritFraction
+    const nextValue = applyNumberOperation(current, effect)
+    if (effect.target === 'patient.bodyWeightKg' && nextValue <= 0) {
+      throw new RangeError('Synthetic body weight must remain positive.')
+    }
+    if (effect.target === 'patient.hematocritFraction' && nextValue > 1) {
+      throw new RangeError('Synthetic hematocrit fraction must remain between zero and one.')
+    }
+    const patient = {
+      ...simulation.patient,
+      ...(effect.target === 'patient.bodyWeightKg'
+        ? { bodyWeightKg: nextValue }
+        : { hematocritFraction: nextValue }),
+    }
+    const nextSimulation = { ...simulation, patient }
+    return crrtSimulationReducer(nextSimulation, {
+      type: 'SET_PRESCRIPTION',
+      prescription: simulation.prescription,
+    })
+  }
+
   if (effect.target === 'access.accessResistanceMmHgPerMlMin') {
     if (effect.valueType !== 'number' || simulation.access.status !== 'configured') {
       throw new UnsupportedCrrtLearningEffectError(
@@ -479,13 +553,65 @@ function applyAllowlistedEffect(
     )
   }
 
-  if (effect.target === 'scenario.activeFaults.access-obstruction') {
+  if (effect.target === 'access.returnResistanceMmHgPerMlMin') {
+    if (effect.valueType !== 'number' || simulation.access.status !== 'configured') {
+      throw new UnsupportedCrrtLearningEffectError(
+        effect.target,
+        'configured numeric return resistance required',
+      )
+    }
+    return recomputeCrrtDerivedState(
+      applyScheduledEventAction(simulation, {
+        type: 'SET_RETURN_RESISTANCE',
+        resistanceMmHgPerMlMin: applyNumberOperation(
+          simulation.access.returnResistanceMmHgPerMlMin,
+          effect,
+        ),
+      }),
+    )
+  }
+
+  if (
+    effect.target === 'circuit.filter.procoagulantBurdenFraction' ||
+    effect.target === 'circuit.filter.lowEffectiveBloodFlowFraction'
+  ) {
+    if (effect.valueType !== 'number') {
+      throw new UnsupportedCrrtLearningEffectError(effect.target, 'numeric filter risk required')
+    }
+    const filter = simulation.circuit.filter
+    const nextValue = applyNumberOperation(
+      effect.target === 'circuit.filter.procoagulantBurdenFraction'
+        ? filter.procoagulantBurdenFraction
+        : filter.lowEffectiveBloodFlowFraction,
+      effect,
+    )
+    return recomputeCrrtDerivedState(
+      applyScheduledEventAction(simulation, {
+        type: 'SET_FILTER_RISK',
+        procoagulantBurdenFraction:
+          effect.target === 'circuit.filter.procoagulantBurdenFraction'
+            ? nextValue
+            : filter.procoagulantBurdenFraction,
+        lowEffectiveBloodFlowFraction:
+          effect.target === 'circuit.filter.lowEffectiveBloodFlowFraction'
+            ? nextValue
+            : filter.lowEffectiveBloodFlowFraction,
+      }),
+    )
+  }
+
+  const faultPrefix = 'scenario.activeFaults.'
+  if (effect.target.startsWith(faultPrefix)) {
     if (effect.valueType !== 'boolean' || effect.operation !== 'set') {
       throw new UnsupportedCrrtLearningEffectError(effect.target, 'boolean set required')
     }
+    const fault = effect.target.slice(faultPrefix.length)
+    if (!engineFaultIds.has(fault as CrrtEngineFaultId)) {
+      throw new UnsupportedCrrtLearningEffectError(effect.target, 'unknown engine fault')
+    }
     return crrtSimulationReducer(simulation, {
       type: 'SET_FAULT',
-      fault: 'access-obstruction',
+      fault: fault as CrrtEngineFaultId,
       active: effect.value,
     })
   }
@@ -602,10 +728,28 @@ export function crrtLearningSessionReducer(
         experience: action.experience ?? state.experience,
         roleLens: action.roleLens ?? state.roleLens,
         attempt: action.attempt ?? state.attempt,
+        audience: state.audience,
         deviceId: state.simulation.deviceId,
       })
-    case 'COMMIT_PREDICTION': {
+    case 'ENTER_PRECOMMIT_REASONING_PHASE': {
       if (state.prediction || state.debriefRevealed) return state
+      const currentIndex = crrtPrecommitReasoningPhases.findIndex(
+        (phase) => phase === state.reasoningPhase,
+      )
+      const requestedIndex = crrtPrecommitReasoningPhases.indexOf(action.phase)
+      if (
+        currentIndex < 0 ||
+        requestedIndex === currentIndex ||
+        requestedIndex > currentIndex + 1
+      ) {
+        return state
+      }
+      return { ...state, reasoningPhase: action.phase }
+    }
+    case 'COMMIT_PREDICTION': {
+      if (state.prediction || state.debriefRevealed || state.reasoningPhase !== 'predict') {
+        return state
+      }
       const prediction = validatePrediction(state.caseDefinition, action.prediction)
       if (!prediction) return state
       return {
@@ -671,6 +815,7 @@ export function crrtLearningSessionReducer(
       if (!Number.isFinite(action.seconds) || action.seconds < 0) {
         throw new RangeError('CRRT learning-session time advance must be finite and nonnegative.')
       }
+      if (action.seconds === 0) return state
       const simulation = crrtSimulationReducer(state.simulation, {
         type: 'ADVANCE_TIME',
         seconds: action.seconds,
@@ -684,12 +829,12 @@ export function crrtLearningSessionReducer(
         ...state,
         simulation,
         interfaceState,
-        reasoningPhase: 'reassess',
+        reasoningPhase: state.performedInterventionIds.length > 0 ? 'reassess' : 'run',
         timeline: appendTimeline(state, 'time-advanced', String(action.seconds)),
       })
     }
     case 'USE_HINT': {
-      if (state.debriefRevealed) return state
+      if (state.experience === 'mastery' || state.debriefRevealed) return state
       const nextHint = state.caseDefinition.hintLadder
         .slice()
         .sort((left, right) => left.sequence - right.sequence)
@@ -705,6 +850,7 @@ export function crrtLearningSessionReducer(
       if (
         !canAct(state) ||
         state.performedInterventionIds.length === 0 ||
+        state.reasoningPhase !== 'reassess' ||
         state.reassessment.committed
       ) {
         return state

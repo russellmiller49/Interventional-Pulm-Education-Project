@@ -2,6 +2,13 @@ import { z } from 'zod'
 
 export const BAXTER_CRRT_ANALYTICS_MODULE_ID = 'baxter-crrt' as const
 
+export const baxterCrrtAnalyticsLearnerCaseIds = ['CRRT-04', 'CRRT-10', 'CRRT-13'] as const
+export const baxterCrrtAnalyticsLearnerLessonIds = [
+  'crrt-04.learn',
+  'crrt-10.learn',
+  'crrt-13.learn',
+] as const
+
 export const baxterCrrtAnalyticsInteractions = [
   'pathway_selected',
   'device_selected',
@@ -15,18 +22,12 @@ export const baxterCrrtAnalyticsInteractions = [
   'reassessment_completed',
   'case_completed',
   'station_completed',
-  'mastery_completed',
 ] as const
 
-const stableIdSchema = z
-  .string()
-  .min(1)
-  .max(128)
-  .regex(/^[A-Za-z0-9]+(?:[-_.:][A-Za-z0-9]+)*$/)
-
-const caseIdSchema = z.string().regex(/^CRRT-(0[1-9]|1[0-8])$/)
-const pathwaySchema = z.enum(['orientation', 'learn', 'practice', 'mastery'])
-const deviceSchema = z.enum(['prismax-aw8035-2xx', 'prismaflex-g5036003-6xx'])
+const caseIdSchema = z.enum(baxterCrrtAnalyticsLearnerCaseIds)
+const lessonIdSchema = z.enum(baxterCrrtAnalyticsLearnerLessonIds)
+const pathwaySchema = z.enum(['orientation', 'learn', 'practice'])
+const deviceSchema = z.literal('prismax-aw8035-2xx')
 const roleSchema = z.enum(['prescriber', 'operator', 'integrated'])
 const boundedScoreSchema = z.number().int().min(0).max(100)
 const boundedCountSchema = z.number().int().min(0).max(100)
@@ -36,7 +37,7 @@ export const baxterCrrtAnalyticsEventPayloadSchema = z
   .object({
     interaction: z.enum(baxterCrrtAnalyticsInteractions),
     caseId: caseIdSchema.optional(),
-    lessonId: stableIdSchema.optional(),
+    lessonId: lessonIdSchema.optional(),
     pathway: pathwaySchema,
     device: deviceSchema,
     role: roleSchema,
@@ -79,8 +80,8 @@ export const baxterCrrtAnalyticsEventPayloadSchema = z
     if (caseInteraction && (!hasCaseId || hasLessonId)) {
       addIssue('caseId', 'Case events require one CRRT case ID and no lesson ID.')
     }
-    if (caseInteraction && payload.pathway !== 'practice' && payload.pathway !== 'mastery') {
-      addIssue('pathway', 'Case events are limited to Practice or Mastery.')
+    if (caseInteraction && payload.pathway !== 'practice') {
+      addIssue('pathway', 'Case events are limited to the protected Practice pathway.')
     }
     if (attemptInteraction && hasCaseId === hasLessonId) {
       addIssue('caseId', 'Attempt events require exactly one case or lesson ID.')
@@ -92,8 +93,7 @@ export const baxterCrrtAnalyticsEventPayloadSchema = z
     const completionInteraction =
       payload.interaction === 'lesson_completed' ||
       payload.interaction === 'case_completed' ||
-      payload.interaction === 'station_completed' ||
-      payload.interaction === 'mastery_completed'
+      payload.interaction === 'station_completed'
     if (completionInteraction && payload.completed !== true) {
       addIssue('completed', 'Completion events must set completed to true.')
     }
@@ -152,13 +152,17 @@ export const baxterCrrtAnalyticsEventPayloadSchema = z
         'First-safe-action events require a bounded elapsed-time metric.',
       )
     }
-
-    if (payload.interaction === 'mastery_completed' && payload.pathway !== 'mastery') {
-      addIssue('pathway', 'Mastery completion requires the Mastery pathway.')
-    }
   })
 
 export type BaxterCrrtAnalyticsEventPayload = z.infer<typeof baxterCrrtAnalyticsEventPayloadSchema>
+
+export function expectedBaxterCrrtAnalyticsEventType(
+  interaction: BaxterCrrtAnalyticsEventPayload['interaction'],
+) {
+  if (interaction === 'case_completed') return 'quiz_submitted' as const
+  if (interaction === 'station_completed') return 'section_completed' as const
+  return 'module_interaction' as const
+}
 
 export function validateBaxterCrrtAnalyticsEventPayload(value: unknown) {
   return baxterCrrtAnalyticsEventPayloadSchema.safeParse(value)
