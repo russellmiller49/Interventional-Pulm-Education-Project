@@ -45,8 +45,11 @@ public/airway-stent-mechanics
 public/bronch-navigation-trainer/app/cases
 public/fluoroview/cases
 # Keep remote model payloads out of the upload, but retain the rigid-bronchoscopy
-# manifest because webpack imports it at build time.
+# manifest because webpack imports it at build time. CARDIOHELP ECMO's compact
+# runtime models ship with the Railway app and are copied into the standalone bundle.
 public/models/*
+!public/models/cardiohelp-ecmo/
+!public/models/cardiohelp-ecmo/**
 !public/models/rigid-bronchoscopy/
 public/models/rigid-bronchoscopy/*
 !public/models/rigid-bronchoscopy/v2/
