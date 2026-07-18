@@ -24,7 +24,7 @@ export interface PrismaflexDeviceCalculationAdapter extends Omit<
   'id' | 'status' | 'sourceIds'
 > {
   readonly id: 'prismaflex-g5036003-6xx'
-  readonly status: 'reviewer-only-phase-8-calculation-candidate'
+  readonly status: 'operational-v1'
   readonly sourceIds: DeviceCalculationSourceMap &
     Readonly<{
       doseSectionEffluentFlow: readonly string[]
@@ -157,10 +157,10 @@ export function calculatePrismaflexDisplayedPressures(
   })
 }
 
-/** Reviewer-only calculation candidate, intentionally outside the learner engine graph. */
+/** Operational manual-reference calculation adapter with both Qeff contexts preserved. */
 export const prismaflexCalculationAdapter: PrismaflexDeviceCalculationAdapter = Object.freeze({
   id: 'prismaflex-g5036003-6xx',
-  status: 'reviewer-only-phase-8-calculation-candidate',
+  status: 'operational-v1',
   sourceIds: Object.freeze({
     effluentPumpTarget: Object.freeze([PRISMAFLEX_EFFLUENT_PUMP_TARGET_SOURCE_ID]),
     doseSectionEffluentFlow: Object.freeze([PRISMAFLEX_DOSE_SECTION_EFFLUENT_SOURCE_ID]),

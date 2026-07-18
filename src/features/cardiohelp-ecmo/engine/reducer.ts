@@ -39,6 +39,7 @@ const gatedActionTypes = new Set<SimulationAction['type']>([
   'RESET_TIMER',
   'ACK_ALARM',
   'RESET_BUBBLE',
+  'TOGGLE_CIRCUIT_CLAMP',
   'CORRECT_FAULT',
   'PERFORM_CHECK',
   'ROTARY_DELTA',
@@ -57,6 +58,7 @@ const actionLabels: Partial<Record<SimulationAction['type'], string>> = {
   TOGGLE_GLOBAL_OVERRIDE: 'Changed Global Override state',
   ACK_ALARM: 'Acknowledged alarm',
   RESET_BUBBLE: 'Attempted bubble reset',
+  TOGGLE_CIRCUIT_CLAMP: 'Changed circuit clamp state',
   CORRECT_FAULT: 'Corrected scenario cause',
   PERFORM_CHECK: 'Performed circuit/device check',
   ROTARY_DELTA: 'Turned rotary control',
@@ -824,6 +826,35 @@ export function ecmoSimulationReducer(
         },
       }
       return appendHistory(next, 'action', 'Bubble intervention reset after cause correction')
+    }
+    case 'TOGGLE_CIRCUIT_CLAMP': {
+      const clampKey = action.limb === 'drainage' ? 'drainageClampClosed' : 'returnClampClosed'
+      const closing = !state.circuit[clampKey]
+      const definition = getDefinition(state)
+      const circuit = {
+        ...state.circuit,
+        [clampKey]: closing,
+      }
+      const canResumeAfterOpening =
+        !closing &&
+        !circuit.drainageClampClosed &&
+        !circuit.returnClampClosed &&
+        !circuit.bubbleResetRequired &&
+        !state.device.zeroFlowActive &&
+        state.device.rpmSetpoint > 0
+      let next = deriveSimulation({
+        ...state,
+        device: canResumeAfterOpening ? { ...state.device, pumpRunning: true } : state.device,
+        circuit,
+      })
+      if (closing && definition.assessmentPolicy?.preserveCircuitBloodFlow) {
+        next = addCriticalError(next, 'capstone-flow-reduction', 50)
+      }
+      return appendHistory(
+        next,
+        'action',
+        `${actionLabels.TOGGLE_CIRCUIT_CLAMP}: ${action.limb} ${closing ? 'closed' : 'open'}`,
+      )
     }
     case 'CORRECT_FAULT': {
       const next = correctFault(state, action.fault)

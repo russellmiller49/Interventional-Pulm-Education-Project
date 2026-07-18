@@ -1,12 +1,12 @@
-import { prismaflexReviewCandidateDeviceProfile } from '../../content/deviceProfiles'
+import { prismaflexDeviceProfile } from '../../content/deviceProfiles'
 import { createInitialCrrtSimulationState } from '../initialState'
-import { evaluateEngineReadiness } from '../readiness'
 import type { ActiveAlarm, ConfiguredPrescriptionState } from '../types'
 import {
   prismaflexAlarmCategoryCandidates,
   prismaflexDeviceAdapter,
   prismaflexSetupSteps,
 } from '../deviceAdapters/prismaflex'
+import { getBaxterCrrtDeviceAdapter } from '../deviceAdapters/registry'
 
 const configuredPrescription: ConfiguredPrescriptionState = {
   status: 'configured',
@@ -22,7 +22,6 @@ const configuredPrescription: ConfiguredPrescriptionState = {
     makeupFlowMlHour: 0,
   },
   anticoagulation: 'none',
-  citrateRequestedButDisabled: false,
   reviewStatus: 'pending',
   sourceIds: ['DEV-PF-006'],
 }
@@ -31,15 +30,15 @@ const alarm: ActiveAlarm = {
   id: 'ACCESS_OBSTRUCTION:0:1',
   code: 'ACCESS_OBSTRUCTION',
   cause: 'access-obstruction',
-  urgency: null,
+  urgency: 'therapy-interruption',
   startedAtSeconds: 0,
   active: true,
   deviceMappingStatus: 'pending-device-adapter',
   reviewStatus: 'pending',
 }
 
-describe('Prismaflex reviewer-only Phase 8 adapter candidate', () => {
-  it('exposes an immutable, source-mapped setup sequence in manual order', () => {
+describe('operational Prismaflex manual-reference adapter', () => {
+  it('exposes the sourced setup sequence and four-category alarm vocabulary', () => {
     expect(prismaflexSetupSteps.map((step) => step.id)).toEqual([
       'choose-patient',
       'enter-patient-information',
@@ -59,49 +58,26 @@ describe('Prismaflex reviewer-only Phase 8 adapter candidate', () => {
       'verify-patient-connection',
       'start-treatment',
     ])
-    expect(Object.isFrozen(prismaflexSetupSteps)).toBe(true)
-    expect(prismaflexSetupSteps.every(Object.isFrozen)).toBe(true)
-    expect(prismaflexSetupSteps.every((step) => Object.isFrozen(step.sourceIds))).toBe(true)
-    expect(
-      prismaflexSetupSteps.every(
-        (step) => step.reviewStatus === 'pending' && step.sourceIds[0] === 'DEV-PF-002',
-      ),
-    ).toBe(true)
-  })
-
-  it('represents the four manual alarm categories without assigning one to an engine alarm', () => {
     expect(prismaflexAlarmCategoryCandidates.map((category) => category.label)).toEqual([
       'Warning',
       'Malfunction',
       'Caution',
       'Advisory',
     ])
-    expect(Object.isFrozen(prismaflexAlarmCategoryCandidates)).toBe(true)
-    expect(prismaflexAlarmCategoryCandidates.every(Object.isFrozen)).toBe(true)
-
-    expect(prismaflexDeviceAdapter.mapEngineAlarm(alarm)).toEqual({
+    expect(prismaflexDeviceAdapter.mapEngineAlarm(alarm)).toMatchObject({
       engineAlarmId: alarm.id,
       code: alarm.code,
-      label: 'Engine condition: ACCESS_OBSTRUCTION',
-      priorityLabel: 'Prismaflex category mapping pending',
-      mappingReviewStatus: 'pending',
+      priorityLabel: 'Caution',
     })
   })
 
-  it('satisfies the adapter contract while keeping every prescription fail-closed', () => {
-    expect(prismaflexDeviceAdapter.profile).toBe(prismaflexReviewCandidateDeviceProfile)
-    expect(prismaflexDeviceAdapter.candidateStatus).toBe('reviewer-only-not-runtime-registered')
-    expect(prismaflexDeviceAdapter.getSetupSteps()).toBe(prismaflexSetupSteps)
-
+  it('validates all representable modalities while rejecting unsourced extensions', () => {
+    expect(prismaflexDeviceAdapter.profile).toBe(prismaflexDeviceProfile)
+    expect(prismaflexDeviceAdapter.runtimeStatus).toBe('operational-v1')
+    expect(getBaxterCrrtDeviceAdapter('prismaflex-g5036003-6xx')).toBe(prismaflexDeviceAdapter)
     expect(prismaflexDeviceAdapter.validatePrescription(configuredPrescription)).toEqual({
-      valid: false,
-      errors: [
-        expect.objectContaining({
-          code: 'TARGET_CONFIGURATION_REVIEW_REQUIRED',
-          sourceIds: ['DEV-PF-006', 'DEV-PF-008'],
-          reviewStatus: 'pending',
-        }),
-      ],
+      valid: true,
+      errors: [],
     })
 
     const invalid = prismaflexDeviceAdapter.validatePrescription({
@@ -113,54 +89,80 @@ describe('Prismaflex reviewer-only Phase 8 adapter candidate', () => {
       valid: false,
       errors: expect.arrayContaining([
         expect.objectContaining({ code: 'UNSOURCED_MAKEUP_FLOW' }),
-        expect.objectContaining({ code: 'ANTICOAGULATION_NOT_ACTIVATED' }),
-        expect.objectContaining({ code: 'TARGET_CONFIGURATION_REVIEW_REQUIRED' }),
+        expect.objectContaining({ code: 'CLINICAL_PROTOCOL_REQUIRED' }),
       ]),
     })
   })
 
-  it('keeps device state deferred and refuses all runtime delivery actions', () => {
+  it('supports running, interruption, and end transitions', () => {
     const engineState = createInitialCrrtSimulationState({
       deviceId: 'prismaflex-g5036003-6xx',
     })
-    const deviceState = prismaflexDeviceAdapter.createInitialDeviceState()
+    const initial = prismaflexDeviceAdapter.createInitialDeviceState()
+    expect(initial.adapterStatus).toBe('operational-v1')
 
-    expect(deviceState).toEqual({
-      deliveryState: 'idle',
+    const running = prismaflexDeviceAdapter.reduceDeviceAction(
+      initial,
+      { type: 'SET_DELIVERY_STATE', deliveryState: 'running' },
+      { simulationTimeSeconds: 0, engineState },
+    )
+    expect(running).toMatchObject({
+      deliveryState: 'running',
+      bloodPumpRunning: true,
+      fluidPumpsRunning: true,
+      patientConnected: true,
+      returnClampClosed: false,
+    })
+
+    const paused = prismaflexDeviceAdapter.reduceDeviceAction(
+      running,
+      { type: 'SET_DELIVERY_STATE', deliveryState: 'paused' },
+      { simulationTimeSeconds: 60, engineState },
+    )
+    expect(paused).toMatchObject({
+      deliveryState: 'paused',
       bloodPumpRunning: false,
       fluidPumpsRunning: false,
-      patientConnected: false,
-      returnClampClosed: true,
-      adapterStatus: 'deferred',
     })
-    expect(evaluateEngineReadiness(engineState)).toMatchObject({
-      readyForDraftSimulation: false,
-      missing: expect.arrayContaining(['available device adapter']),
-    })
-    expect(() =>
+
+    const ended = prismaflexDeviceAdapter.reduceDeviceAction(
+      paused,
+      { type: 'SET_DELIVERY_STATE', deliveryState: 'ended' },
+      { simulationTimeSeconds: 90, engineState },
+    )
+    expect(ended.deliveryState).toBe('ended')
+    expect(
       prismaflexDeviceAdapter.reduceDeviceAction(
-        deviceState,
+        ended,
         { type: 'SET_DELIVERY_STATE', deliveryState: 'running' },
-        { simulationTimeSeconds: 0, engineState },
+        { simulationTimeSeconds: 120, engineState },
       ),
-    ).toThrow(/not registered in learner runtime/i)
+    ).toBe(ended)
   })
 
-  it('selects only a pending display model for an unloaded Prismaflex review state', () => {
-    const prismaflexState = createInitialCrrtSimulationState({
+  it('projects the softkey, four-scale, history, calculation, alarm, and stop/end display', () => {
+    const state = createInitialCrrtSimulationState({
       deviceId: 'prismaflex-g5036003-6xx',
     })
-    expect(
-      prismaflexDeviceAdapter.selectDisplayModel({ ...prismaflexState, alarms: [alarm] }),
-    ).toMatchObject({
-      deviceId: 'prismaflex-g5036003-6xx',
-      deliveryState: 'idle',
-      adapterStatus: 'deferred',
-      alarms: [{ priorityLabel: 'Prismaflex category mapping pending' }],
-    })
-
+    expect(prismaflexDeviceAdapter.selectDisplayModel({ ...state, alarms: [alarm] })).toMatchObject(
+      {
+        deviceId: 'prismaflex-g5036003-6xx',
+        adapterStatus: 'operational-v1',
+        navigationParadigm: 'softkey-workflow',
+        scaleLayout: ['Dialysate scale', 'Replacement scale', 'PBP scale', 'Effluent scale'],
+        displayedCalculationContexts: [
+          expect.stringMatching(/pump target Qeff/i),
+          expect.stringMatching(/dose-section Qeff/i),
+          'TMP',
+          'Filter pressure drop',
+        ],
+        historyAvailable: true,
+        stopEndOptions: expect.arrayContaining(['Stop treatment', 'End treatment']),
+        alarms: [{ priorityLabel: 'Caution' }],
+      },
+    )
     expect(() =>
       prismaflexDeviceAdapter.selectDisplayModel(createInitialCrrtSimulationState()),
-    ).toThrow(/requires an unloaded Prismaflex review state/i)
+    ).toThrow(/requires a Prismaflex simulation state/i)
   })
 })

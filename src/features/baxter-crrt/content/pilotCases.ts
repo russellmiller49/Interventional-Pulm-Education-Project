@@ -8,9 +8,7 @@ import {
   type RuntimeCrrtCase,
   type SourceReference,
 } from './schema'
-import { BAXTER_CRRT_PILOT_CONTENT_VERSION } from './versions'
-
-export { BAXTER_CRRT_PILOT_CONTENT_VERSION } from './versions'
+import { BAXTER_CRRT_CONTENT_VERSION } from './versions'
 
 export type BaxterCrrtPilotCaseId = (typeof CRRT_PILOT_CASE_IDS)[number]
 
@@ -211,10 +209,10 @@ function cvvhdBags(sourceId: string) {
 function engineModelConfiguration(caseId: BaxterCrrtPilotCaseId, sourceId: string) {
   return {
     id: `${caseId.toLowerCase()}-synthetic-model`,
-    version: BAXTER_CRRT_PILOT_CONTENT_VERSION,
+    version: BAXTER_CRRT_CONTENT_VERSION,
     internalStepSeconds: 60 as const,
     internalStepRationale:
-      'One-minute canonical integration is deterministic; exact coefficients are synthetic teaching calibration pending review.',
+      'One-minute canonical integration is deterministic; exact coefficients are synthetic educational calibration.',
     maximumTrendSamples: 288 as const,
     enabledModelIds: [
       'source-mapped-device-math',
@@ -925,7 +923,7 @@ const crrt04 = {
   sourceBasis: sourceBasis(crtt04SourceIds),
   reviewStatus: PENDING,
   sourceCaseId: 'CRRT-04',
-  contentVersion: BAXTER_CRRT_PILOT_CONTENT_VERSION,
+  contentVersion: BAXTER_CRRT_CONTENT_VERSION,
   engineModelConfiguration: engineModelConfiguration('CRRT-04', 'SYNTH-CRRT-04'),
   engineFixtureConfiguration: engineFixtureConfiguration({
     sourceId: 'SYNTH-CRRT-04',
@@ -1511,7 +1509,7 @@ const crrt10 = {
   sourceBasis: sourceBasis(crtt10SourceIds),
   reviewStatus: PENDING,
   sourceCaseId: 'CRRT-10',
-  contentVersion: BAXTER_CRRT_PILOT_CONTENT_VERSION,
+  contentVersion: BAXTER_CRRT_CONTENT_VERSION,
   engineModelConfiguration: engineModelConfiguration('CRRT-10', 'SYNTH-CRRT-10'),
   engineFixtureConfiguration: engineFixtureConfiguration({
     sourceId: 'SYNTH-CRRT-10',
@@ -1627,7 +1625,7 @@ const crrt13 = {
   visibleFindings: [
     'Access pressure becomes progressively more negative after a deterministic event.',
     'Filter and return pressure signals remain available for localization context.',
-    'The alarm remains a generic engine alert with device priority and automatic reaction pending review.',
+    'The alarm remains a generic engine alert; unmapped device priority and automatic reaction are not inferred.',
   ],
   timedEvents: [
     {
@@ -2129,7 +2127,7 @@ const crrt13 = {
   sourceBasis: sourceBasis(crtt13SourceIds),
   reviewStatus: PENDING,
   sourceCaseId: 'CRRT-13',
-  contentVersion: BAXTER_CRRT_PILOT_CONTENT_VERSION,
+  contentVersion: BAXTER_CRRT_CONTENT_VERSION,
   engineModelConfiguration: engineModelConfiguration('CRRT-13', 'SYNTH-CRRT-13'),
   engineFixtureConfiguration: engineFixtureConfiguration({
     sourceId: 'SYNTH-CRRT-13',

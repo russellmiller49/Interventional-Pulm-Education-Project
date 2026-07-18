@@ -1,29 +1,40 @@
-import {
-  canActivateCrrtRecord,
-  pendingReviewRequirements,
-  requiredCrrtReviewerDomainsForArtifacts,
-  type CrrtActivationRecord,
-} from './activation'
-import { CRRT_RAPID_DRILL_ARTIFACT_IDS } from './artifactRegistry'
 import type { CrrtEngineFaultId } from '../engine/types'
-import { BAXTER_CRRT_PHASE_7_CONTENT_VERSION } from './versions'
+import { CRRT_RAPID_DRILL_ARTIFACT_IDS } from './artifactRegistry'
+import { BAXTER_CRRT_CONTENT_VERSION } from './versions'
 
 export const CRRT_RAPID_DRILL_IDS = CRRT_RAPID_DRILL_ARTIFACT_IDS
-
 export type CrrtRapidDrillId = (typeof CRRT_RAPID_DRILL_IDS)[number]
 
-export interface CrrtRapidDrillManifest extends CrrtActivationRecord {
+export interface CrrtRapidDrillPredictionOption {
+  readonly id: string
+  readonly disposition: 'safe' | 'accepted-alternative' | 'unsafe'
+  readonly label: string
+  readonly description: string
+}
+
+export interface CrrtRapidDrillDefinition {
   readonly id: CrrtRapidDrillId
-  readonly contentVersion: typeof BAXTER_CRRT_PHASE_7_CONTENT_VERSION
+  readonly contentVersion: typeof BAXTER_CRRT_CONTENT_VERSION
   readonly title: string
   readonly engineFaultIds: readonly CrrtEngineFaultId[]
+  readonly openingSignal: string
+  readonly predictionPrompt: string
+  readonly predictionOptions: readonly CrrtRapidDrillPredictionOption[]
+  readonly candidateCauseOptionId: string
+  readonly acceptedAlternativeOptionId: string
+  readonly unsafeOptionId: string
+  readonly criticalErrorCandidate: string
+  readonly deviceResponseBoundary: string
+  readonly inspectionDomain: string
+  readonly correctionBoundary: string
+  readonly reassessmentDomain: string
   readonly sourceRecordIds: readonly string[]
-  readonly reviewQuestion: string
-  readonly reviewerPreviewAvailable: boolean
-  readonly runnable: false
-  readonly scoringAvailable: false
-  readonly analyticsAvailable: false
-  readonly progressPersistenceAvailable: false
+  readonly reviewStatus: 'pending'
+  readonly learnerRunnable: true
+  readonly runnable: true
+  readonly scoringAvailable: true
+  readonly analyticsAvailable: true
+  readonly progressPersistenceAvailable: true
   readonly competencyAvailable: false
 }
 
@@ -31,129 +42,186 @@ interface DrillSeed {
   readonly id: CrrtRapidDrillId
   readonly title: string
   readonly engineFaultIds: readonly CrrtEngineFaultId[]
+  readonly openingSignal: string
+  readonly safeLabel: string
+  readonly alternativeLabel: string
+  readonly unsafeLabel: string
+  readonly inspectionDomain: string
+  readonly correctionBoundary: string
+  readonly reassessmentDomain: string
   readonly sourceRecordIds: readonly string[]
-  readonly reviewQuestion: string
-  readonly blockingInputs: readonly string[]
-  readonly reviewerPreviewAvailable: boolean
-  readonly policyBlocked?: boolean
 }
 
-const drillSeeds: readonly DrillSeed[] = [
+const seeds: readonly DrillSeed[] = [
   {
     id: 'DRILL-AIR',
     title: 'Air detection',
     engineFaultIds: ['air-detected'],
-    sourceRecordIds: ['DEV-PM-008', 'SAFETY-006', 'SYNTH-DRILL-AIR-001'],
-    reviewQuestion:
-      'What exact cause-first action, escalation, and reassessment sequence is approved?',
-    blockingInputs: [
-      'Map the exact target-device alarm, priority, reaction, and correction workflow.',
-    ],
-    reviewerPreviewAvailable: true,
+    openingSignal: 'A synthetic air-detection condition interrupts therapy.',
+    safeLabel: 'Assess the patient and inspect the return-path safety domain',
+    alternativeLabel: 'Keep therapy stopped and escalate when the cause cannot be verified',
+    unsafeLabel: 'Acknowledge the signal and continue without inspection',
+    inspectionDomain: 'patient, return line, detector, clamp, and visible circuit',
+    correctionBoundary:
+      'Verify correction or escalation without teaching an air-removal or restart procedure.',
+    reassessmentDomain: 'patient safety, circuit state, delivery, interruption, and recurrence',
+    sourceRecordIds: ['DEV-PM-008', 'SYNTH-DRILL-AIR-001'],
   },
   {
     id: 'DRILL-BLOOD-LEAK',
     title: 'Blood-leak detection',
     engineFaultIds: ['blood-leak-detected'],
-    sourceRecordIds: ['DEV-PM-008', 'SAFETY-006', 'SYNTH-DRILL-BLOOD-LEAK-001'],
-    reviewQuestion: 'What exact device response and supervised escalation sequence is approved?',
-    blockingInputs: [
-      'Map the exact target-device alarm, priority, reaction, and correction workflow.',
-    ],
-    reviewerPreviewAvailable: true,
+    openingSignal: 'A synthetic blood-leak detection condition produces a safety stop.',
+    safeLabel: 'Assess the patient and inspect the filter, effluent, detector, and circuit',
+    alternativeLabel: 'Maintain the safety stop and escalate when the signal remains unresolved',
+    unsafeLabel: 'Reset repeatedly until the message disappears',
+    inspectionDomain: 'patient, filter, effluent path, detector, and circuit integrity',
+    correctionBoundary:
+      'Disposition and restart decisions remain device-instruction and local-policy matters.',
+    reassessmentDomain: 'patient safety, filter/effluent state, delivery, and recurrence',
+    sourceRecordIds: ['DEV-PM-008', 'SYNTH-DRILL-BLOOD-LEAK-001'],
   },
   {
     id: 'DRILL-GAIN-LOSS',
     title: 'Fluid gain or loss',
     engineFaultIds: ['fluid-gain-loss'],
-    sourceRecordIds: ['DEV-PM-012', 'SAFETY-007', 'SYNTH-DRILL-GAIN-LOSS-001'],
-    reviewQuestion: 'Which checks distinguish a machine fluid event from whole-patient balance?',
-    blockingInputs: ['Review target-configuration fluid-accuracy and escalation behavior.'],
-    reviewerPreviewAvailable: true,
+    openingSignal:
+      'A synthetic device-fluid variance appears while whole-patient balance remains a separate ledger.',
+    safeLabel: 'Separate device variance from the complete patient fluid ledger',
+    alternativeLabel: 'Pause delivery and escalate while preserving both ledgers',
+    unsafeLabel: 'Treat the device signal as the whole-patient balance',
+    inspectionDomain: 'pumps, scales, bags, lines, device variance, and patient inputs/outputs',
+    correctionBoundary: 'No override count, catch-up behavior, or local restart rule is supplied.',
+    reassessmentDomain: 'device variance, patient balance, delivery, downtime, and recurrence',
+    sourceRecordIds: ['DEV-PM-012', 'SYNTH-DRILL-GAIN-LOSS-001'],
   },
   {
     id: 'DRILL-BAG-SCALE',
     title: 'Bag or scale error',
     engineFaultIds: ['supply-bag-empty', 'effluent-bag-full', 'scale-open'],
-    sourceRecordIds: ['DEV-PM-013', 'SAFETY-007', 'SAFETY-013', 'SYNTH-DRILL-BAG-SCALE-001'],
-    reviewQuestion: 'What exact bag, line, scale, and restart verification sequence is approved?',
-    blockingInputs: ['Supply the exact local bag, line, scale, and solution configuration.'],
-    reviewerPreviewAvailable: true,
+    openingSignal: 'A synthetic bag/scale topology condition interrupts fluid delivery.',
+    safeLabel: 'Verify bag identity, line path, scale position, connection, and measured state',
+    alternativeLabel: 'Keep the workflow paused and escalate an unavailable local expression',
+    unsafeLabel: 'Swap any bag and restart without verification',
+    inspectionDomain: 'selected bag, connected line, assigned scale, clamp, and neighboring bags',
+    correctionBoundary:
+      'Use generic teaching labels; never invent a stocked solution, set, or local assignment.',
+    reassessmentDomain: 'bag/scale topology, fluid delivery, variance, and recurrence',
+    sourceRecordIds: ['DEV-PM-013', 'SYNTH-DRILL-BAG-SCALE-001'],
   },
   {
     id: 'DRILL-POWER',
     title: 'Power interruption',
     engineFaultIds: ['power-interruption'],
-    sourceRecordIds: ['DEV-PM-008', 'SAFETY-010', 'SYNTH-DRILL-POWER-001'],
-    reviewQuestion:
-      'What device-state, circuit, and escalation checks are required before continuation?',
-    blockingInputs: ['Map the exact target-device interruption and recovery workflow.'],
-    reviewerPreviewAvailable: true,
+    openingSignal: 'A synthetic power interruption pauses delivery.',
+    safeLabel: 'Assess patient, power, device state, circuit, downtime, and delivery',
+    alternativeLabel: 'Maintain the paused state and escalate incomplete recovery information',
+    unsafeLabel: 'Resume immediately because power is visible',
+    inspectionDomain: 'patient, power source, device state, circuit, downtime, and messages',
+    correctionBoundary:
+      'Battery duration, recovery, and restart instructions remain device- and configuration-specific.',
+    reassessmentDomain: 'patient, device/circuit readiness, delivered therapy, and recurrence',
+    sourceRecordIds: ['DEV-PM-008', 'SYNTH-DRILL-POWER-001'],
   },
   {
     id: 'DRILL-WRONG-SOLUTION',
-    title: 'Wrong solution',
+    title: 'Wrong solution verification',
     engineFaultIds: [],
-    sourceRecordIds: ['SAFETY-005'],
-    reviewQuestion: 'Which local solution/set combinations and mismatch responses are approved?',
-    blockingInputs: ['Supply the reviewed local solution and compatible-set registry.'],
-    reviewerPreviewAvailable: false,
-    policyBlocked: true,
+    openingSignal:
+      'An independent check finds that a solution label does not match the authored plan.',
+    safeLabel: 'Stop, isolate the mismatch, verify the order and labels, and escalate',
+    alternativeLabel: 'Keep therapy paused until an authorized local verification is available',
+    unsafeLabel: 'Assume similar packaging means the solution is interchangeable',
+    inspectionDomain:
+      'order, bag label, line destination, set compatibility, and independent check',
+    correctionBoundary:
+      'Never invent a commercial solution substitution or local mismatch procedure.',
+    reassessmentDomain:
+      'patient, exposure history, verified configuration, communication, and follow-up',
+    sourceRecordIds: ['DEV-PM-013', 'GUID-RRT-ICU-2026'],
   },
   {
     id: 'DRILL-BLOOD-RETURN',
-    title: 'Blood-return decision',
+    title: 'Blood-disposition decision',
     engineFaultIds: [],
-    sourceRecordIds: ['SAFETY-003'],
-    reviewQuestion: 'Which stop/end and blood-return decisions are permitted by local policy?',
-    blockingInputs: [
-      'Supply reviewed local blood-return, clotting, stop/end, and escalation policy.',
-    ],
-    reviewerPreviewAvailable: false,
-    policyBlocked: true,
+    openingSignal:
+      'A synthetic end-treatment state requires a blood-disposition decision with incomplete context.',
+    safeLabel:
+      'Stop, verify patient/circuit context, and escalate to device instructions and local policy',
+    alternativeLabel:
+      'Maintain the safe stopped state until the responsible clinician resolves the decision',
+    unsafeLabel: 'Choose return or discard from the simulator alone',
+    inspectionDomain:
+      'patient status, circuit integrity, clot/air concerns, stop/end state, and policy',
+    correctionBoundary:
+      'The drill teaches verification and escalation, never a universal return/discard instruction.',
+    reassessmentDomain:
+      'patient, circuit disposition, treatment closure, documentation, and escalation',
+    sourceRecordIds: ['DEV-PM-014', 'GUID-RRT-ICU-2026'],
   },
-] as const
+]
 
-export const baxterCrrtRapidDrillManifest: readonly CrrtRapidDrillManifest[] = Object.freeze(
-  drillSeeds.map((seed) => {
-    const domains = requiredCrrtReviewerDomainsForArtifacts([seed.id])
-    if (domains === null) throw new Error(`Unknown CRRT activation artifact: ${seed.id}`)
-    return Object.freeze({
-      ...seed,
-      contentVersion: BAXTER_CRRT_PHASE_7_CONTENT_VERSION,
-      exactCandidateIdentity: null,
-      candidateManifestSha256: null,
-      expectedFindingsLedgerSha256: null,
-      expectedAuthorizationScopeSha256: null,
-      expectedReviewScopeSha256ByDomain: null,
-      expectedPilotAcceptanceReference: null,
-      expectedPhase8StablePrismaxPrerequisite: null,
-      reviewScope: 'prismax' as const,
-      activationAuthorization: null,
-      activationState: seed.policyBlocked
-        ? ('policy-blocked' as const)
-        : ('draft-reviewer-only' as const),
-      reviewStatus: 'pending' as const,
-      requiredReviews: pendingReviewRequirements(domains),
-      blockingInputs: Object.freeze([...seed.blockingInputs]),
-      sourceRecordIds: Object.freeze([...seed.sourceRecordIds]),
-      engineFaultIds: Object.freeze([...seed.engineFaultIds]),
-      runnable: false as const,
-      scoringAvailable: false as const,
-      analyticsAvailable: false as const,
-      progressPersistenceAvailable: false as const,
-      competencyAvailable: false as const,
-    })
-  }),
+function freezeDrill(seed: DrillSeed): CrrtRapidDrillDefinition {
+  const prefix = seed.id.toLowerCase()
+  return Object.freeze({
+    ...seed,
+    contentVersion: BAXTER_CRRT_CONTENT_VERSION,
+    predictionPrompt: 'Which cause-first response best preserves patient safety and verification?',
+    predictionOptions: Object.freeze([
+      Object.freeze({
+        id: `${prefix}-safe`,
+        disposition: 'safe' as const,
+        label: seed.safeLabel,
+        description: 'Safe path: assess, inspect, verify, communicate, and reassess.',
+      }),
+      Object.freeze({
+        id: `${prefix}-alternative`,
+        disposition: 'accepted-alternative' as const,
+        label: seed.alternativeLabel,
+        description: 'Accepted alternative: preserve the safe state and escalate uncertainty.',
+      }),
+      Object.freeze({
+        id: `${prefix}-unsafe`,
+        disposition: 'unsafe' as const,
+        label: seed.unsafeLabel,
+        description: 'Unsafe path retained for immediate feedback and causal debrief.',
+      }),
+    ]),
+    candidateCauseOptionId: `${prefix}-safe`,
+    acceptedAlternativeOptionId: `${prefix}-alternative`,
+    unsafeOptionId: `${prefix}-unsafe`,
+    criticalErrorCandidate:
+      'Continuing or making a disposition decision without required patient assessment, verification, and escalation.',
+    deviceResponseBoundary:
+      'Use the selected device adapter for vocabulary and display behavior; exact local actions remain governed by device instructions and local policy.',
+    sourceRecordIds: Object.freeze([...seed.sourceRecordIds]),
+    engineFaultIds: Object.freeze([...seed.engineFaultIds]),
+    reviewStatus: 'pending' as const,
+    learnerRunnable: true as const,
+    runnable: true as const,
+    scoringAvailable: true as const,
+    analyticsAvailable: true as const,
+    progressPersistenceAvailable: true as const,
+    competencyAvailable: false as const,
+  })
+}
+
+export const baxterCrrtRapidDrills: readonly CrrtRapidDrillDefinition[] = Object.freeze(
+  seeds.map(freezeDrill),
 )
 
-if (
-  baxterCrrtRapidDrillManifest.length !== CRRT_RAPID_DRILL_IDS.length ||
-  new Set(baxterCrrtRapidDrillManifest.map((drill) => drill.id)).size !==
-    CRRT_RAPID_DRILL_IDS.length
-) {
-  throw new Error('CRRT rapid-drill manifest must contain every stable drill ID exactly once.')
+export const baxterCrrtRapidDrillManifest = baxterCrrtRapidDrills
+
+if (baxterCrrtRapidDrills.map((drill) => drill.id).join('|') !== CRRT_RAPID_DRILL_IDS.join('|')) {
+  throw new Error('CRRT rapid-drill registry must contain every stable drill exactly once.')
 }
-if (baxterCrrtRapidDrillManifest.some((drill) => canActivateCrrtRecord(drill))) {
-  throw new Error('An unreviewed CRRT rapid drill cannot be learner-active.')
+
+export function getBaxterCrrtRapidDrill(drillId: CrrtRapidDrillId): CrrtRapidDrillDefinition {
+  const drill = baxterCrrtRapidDrills.find((candidate) => candidate.id === drillId)
+  if (!drill) throw new Error(`Unknown CRRT rapid drill: ${drillId}`)
+  return drill
+}
+
+export function isBaxterCrrtRapidDrillId(value: string): value is CrrtRapidDrillId {
+  return (CRRT_RAPID_DRILL_IDS as readonly string[]).includes(value)
 }

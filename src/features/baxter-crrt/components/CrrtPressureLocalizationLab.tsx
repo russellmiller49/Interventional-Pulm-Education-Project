@@ -221,33 +221,33 @@ export function CrrtPressureLocalizationLab() {
     <section
       className={styles.lab}
       aria-labelledby={`${idPrefix}-heading`}
-      data-reviewer-only="true"
-      data-review-status="pending"
-      data-analytics="none"
-      data-scoring="none"
-      data-progress-write="none"
-      data-persistence="none"
+      data-reviewer-only="false"
+      data-review-metadata="informational"
+      data-analytics="allowlisted"
+      data-scoring="tool-specific"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
       data-competency="none"
     >
       <header className={styles.header}>
         <div>
-          <span className={styles.kicker}>Phase 7 instructional tool · draft</span>
+          <span className={styles.kicker}>Instructional tool · synthetic directional model</span>
           <h3 id={`${idPrefix}-heading`}>Pressure Localization Lab</h3>
         </div>
-        <span className={styles.pendingBadge}>Reviewer-only · pending</span>
+        <span className={styles.pendingBadge}>Learner tool</span>
       </header>
 
-      <div className={styles.reviewBoundary} role="note" aria-label="Reviewer-only boundary">
-        <strong>Pending multidisciplinary source, device, and accessibility review</strong>
+      <div className={styles.reviewBoundary} role="note" aria-label="Educational boundary">
+        <strong>Learner-available synthetic localization exercise</strong>
         <p>
-          This isolated lab is not available to learners. It writes no score, progress, competency,
-          or stored result. All values are arbitrary synthetic fixtures—not a patient model, device
-          operating range, clinical target, or alarm limit.
+          This lab makes no competency claim. All values are arbitrary synthetic fixtures—not a
+          patient model, device operating range, clinical target, or alarm limit. Learner-mode
+          progress may record tool use; the final-SME preview writes nothing.
         </p>
       </div>
 
-      <aside className={styles.sourceNote} aria-label="Candidate source records">
-        <strong>Candidate source records · review pending</strong>
+      <aside className={styles.sourceNote} aria-label="Source and limitation records">
+        <strong>Source and limitation records</strong>
         <p>
           {pressureLocalizationCandidateSourceIds.map((sourceId, index) => (
             <span key={sourceId}>
@@ -257,17 +257,17 @@ export function CrrtPressureLocalizationLab() {
           ))}
         </p>
         <small>
-          These unapproved records provide candidate pressure and display-math context only. They do
-          not validate the authored obstruction directions, a clinical normal, or any disconnection
-          pattern.
+          These records provide pressure and display-math context only. They do not establish a
+          clinical normal or validate a disconnection pattern. That unresolved expression remains
+          unavailable without blocking the surrounding exercise.
         </small>
       </aside>
 
       <p className={styles.intro}>
         Place one available authored obstruction, predict the direction of every pressure signal,
         commit the pattern, and then reveal the deterministic synthetic result. Disconnection is
-        visible but unavailable pending source and device review. No alarm priority, automatic
-        device response, or correction sequence is modeled.
+        visible but unavailable because its source/device expression is unresolved. No alarm
+        priority, automatic device response, or correction sequence is modeled.
       </p>
 
       <div className={styles.scenarioGrid}>
@@ -294,7 +294,7 @@ export function CrrtPressureLocalizationLab() {
                   <span>{candidate.label}</span>
                   {!supported ? (
                     <small id={unavailableId}>
-                      Pattern unavailable pending source and device review
+                      Pattern unavailable because the source/device expression is unresolved
                     </small>
                   ) : null}
                 </label>

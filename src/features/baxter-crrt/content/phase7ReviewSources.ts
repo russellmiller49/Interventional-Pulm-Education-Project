@@ -3,10 +3,9 @@ import type { SourceReference } from './schema'
 const PENDING = 'pending' as const
 
 /**
- * Candidate authoritative sources for Phase 7 reviewer-only content. Inclusion
- * is not approval: every record remains pending and cannot activate a case.
- * Exact scenario numbers and scoring bands must reference a separate
- * SYNTH-CRRT record instead of being presented as guideline thresholds.
+ * Supplemental clinical-context and synthetic-calibration records. Review
+ * status is informational; exact scenario numbers and scoring bands reference
+ * a separate SYNTH-CRRT record rather than guideline thresholds.
  */
 const candidateClinicalSources = [
   {
@@ -147,9 +146,9 @@ const syntheticReviewerCaseSources = phase7ReviewerRuntimeCaseNumbers.map(
       claim: `Every exact patient value, flow, timing, event magnitude, condition band, and model coefficient in the CRRT-${caseNumber} reviewer candidate is synthetic teaching calibration.`,
       value:
         'Not a clinical target, normal range, alarm threshold, device limit, or patient-specific recommendation.',
-      sourceTitle: 'Baxter CRRT Phase 7 synthetic calibration record',
+      sourceTitle: 'Baxter CRRT v1 synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
-      documentVersion: 'Phase 7 reviewer draft.1',
+      documentVersion: 'v1 SME-review build',
       pageOrSection: `CRRT-${caseNumber} authored reviewer fixture`,
       implementationLocation: `content/phase7ReviewCases.ts · CRRT-${caseNumber}`,
       reviewer: null,
@@ -164,9 +163,9 @@ const reservedManifestCaseSources = phase7ManifestOnlyCaseNumbers.map(
       claim: `Reserved synthetic-calibration identity for a possible future CRRT-${caseNumber} reviewer candidate; no runtime fixture or exact scenario values are authored.`,
       value:
         'Manifest-only placeholder. It supplies no clinical target, normal range, alarm threshold, device limit, simulator behavior, or patient-specific recommendation.',
-      sourceTitle: 'Baxter CRRT Phase 7 reserved synthetic calibration record',
+      sourceTitle: 'Baxter CRRT v1 synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
-      documentVersion: 'Phase 7 reviewer draft.1',
+      documentVersion: 'v1 SME-review build',
       pageOrSection: `CRRT-${caseNumber} manifest-only reserved record`,
       implementationLocation: `content/curriculum.ts · CRRT-${caseNumber} manifest`,
       reviewer: null,
@@ -181,7 +180,7 @@ const syntheticRapidDrillSources = [
       'The air-detection signal, response state, prediction choices, and cause-first review gates are generic synthetic reviewer content.',
     value:
       'Not an alarm name, priority, threshold, detector specification, pump or clamp behavior, air-removal instruction, restart procedure, or patient recommendation.',
-    pageOrSection: 'DRILL-AIR reviewer-only preview',
+    pageOrSection: 'DRILL-AIR v1 rapid drill',
   },
   {
     id: 'SYNTH-DRILL-BLOOD-LEAK-001',
@@ -189,7 +188,7 @@ const syntheticRapidDrillSources = [
       'The blood-leak signal, response state, prediction choices, and cause-first review gates are generic synthetic reviewer content.',
     value:
       'Not an alarm name, priority, threshold, detector specification, discard or blood-return decision, correction sequence, restart procedure, or patient recommendation.',
-    pageOrSection: 'DRILL-BLOOD-LEAK reviewer-only preview',
+    pageOrSection: 'DRILL-BLOOD-LEAK v1 rapid drill',
   },
   {
     id: 'SYNTH-DRILL-GAIN-LOSS-001',
@@ -197,7 +196,7 @@ const syntheticRapidDrillSources = [
       'The device-fluid variance signal, prediction choices, and separate-ledger review gates are generic synthetic reviewer content.',
     value:
       'Not an alarm name, priority, threshold, accuracy specification, catch-up behavior, override rule, correction sequence, or whole-patient fluid target.',
-    pageOrSection: 'DRILL-GAIN-LOSS reviewer-only preview',
+    pageOrSection: 'DRILL-GAIN-LOSS v1 rapid drill',
   },
   {
     id: 'SYNTH-DRILL-BAG-SCALE-001',
@@ -205,7 +204,7 @@ const syntheticRapidDrillSources = [
       'The selectable bag/scale signal, topology choices, and cause-first review gates are generic synthetic reviewer content.',
     value:
       'Not an alarm name, priority, threshold, scale assignment, stocked solution or set, bag-change instruction, restart procedure, or patient recommendation.',
-    pageOrSection: 'DRILL-BAG-SCALE reviewer-only preview',
+    pageOrSection: 'DRILL-BAG-SCALE v1 rapid drill',
   },
   {
     id: 'SYNTH-DRILL-POWER-001',
@@ -213,15 +212,15 @@ const syntheticRapidDrillSources = [
       'The power-interruption signal, paused-delivery state, prediction choices, and cause-first review gates are generic synthetic reviewer content.',
     value:
       'Not an alarm name, priority, battery duration, recovery behavior, continuation instruction, escalation rule, restart procedure, or patient recommendation.',
-    pageOrSection: 'DRILL-POWER reviewer-only preview',
+    pageOrSection: 'DRILL-POWER v1 rapid drill',
   },
 ].map(
   (record) =>
     ({
       ...record,
-      sourceTitle: 'Baxter CRRT Phase 7 rapid-drill synthetic calibration record',
+      sourceTitle: 'Baxter CRRT v1 rapid-drill synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
-      documentVersion: 'Phase 7 reviewer draft.1',
+      documentVersion: 'v1 SME-review build',
       implementationLocation: 'content/rapidDrillReview.ts and components/CrrtRapidDrillReview.tsx',
       reviewer: null,
       reviewStatus: PENDING,
@@ -235,9 +234,9 @@ const candidateToolCalibrationSources = [
       'Every unitless coefficient, starting position, comparison band, and qualitative output in the Transport Mechanism Lab is an authored teaching abstraction.',
     value:
       'Not a clearance estimate, membrane performance specification, clinical target, device output, or patient prediction.',
-    sourceTitle: 'Baxter CRRT Phase 7 instructional-tool synthetic calibration record',
+    sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'Phase 7 reviewer draft.2',
+    documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-TRANSPORT reviewer prototype',
     implementationLocation:
       'instructionalToolsModel.ts and components/CrrtPhase7InstructionalTools.tsx',
@@ -250,9 +249,9 @@ const candidateToolCalibrationSources = [
       'Every initial rate, duration, and editable example value in the Fluid Balance Ledger is synthetic teaching calibration.',
     value:
       'Not a prescribed removal rate, patient fluid goal, device accuracy claim, or recommendation.',
-    sourceTitle: 'Baxter CRRT Phase 7 instructional-tool synthetic calibration record',
+    sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'Phase 7 reviewer draft.2',
+    documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-FLUID-LEDGER reviewer prototype',
     implementationLocation:
       'instructionalToolsModel.ts and components/CrrtPhase7InstructionalTools.tsx',
@@ -265,9 +264,9 @@ const candidateToolCalibrationSources = [
       'Every baseline resistance, synthetic pressure value, direction classification, and obstruction magnitude in the Pressure Localization Lab is authored teaching calibration.',
     value:
       'Not an alarm threshold, expected patient value, device limit, diagnostic rule, correction sequence, or disconnection model.',
-    sourceTitle: 'Baxter CRRT Phase 7 instructional-tool synthetic calibration record',
+    sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'Phase 7 reviewer draft.2',
+    documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-PRESSURE-LOCALIZATION reviewer prototype',
     implementationLocation:
       'pressureLocalizationLabModel.ts and components/CrrtPressureLocalizationLab.tsx',
@@ -280,9 +279,9 @@ const candidateToolCalibrationSources = [
       'Every initial editable entry and arithmetic example in the Full Prescription Workbench is synthetic teaching calibration.',
     value:
       'Not a prescription default, target, device limit, delivered-clearance estimate, or patient recommendation.',
-    sourceTitle: 'Baxter CRRT Phase 7 instructional-tool synthetic calibration record',
+    sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'Phase 7 reviewer draft.2',
+    documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-PRESCRIPTION reviewer prototype',
     implementationLocation:
       'prescriptionWorkbenchModel.ts and components/CrrtPrescriptionWorkbench.tsx',
@@ -295,9 +294,9 @@ const candidateToolCalibrationSources = [
       'Every unitless split index and qualitative comparison label in the pre/post-dilution experiment is an authored teaching proxy.',
     value:
       'Not quantitative filtration fraction, effective clearance, clotting risk, filter-life prediction, or a preferred clinical split.',
-    sourceTitle: 'Baxter CRRT Phase 7 instructional-tool synthetic calibration record',
+    sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
-    documentVersion: 'Phase 7 reviewer draft.2',
+    documentVersion: 'v1 SME-review build',
     pageOrSection: 'LAB-PREPOST-DILUTION reviewer prototype',
     implementationLocation:
       'prescriptionWorkbenchModel.ts and components/CrrtPrescriptionWorkbench.tsx',
@@ -306,7 +305,7 @@ const candidateToolCalibrationSources = [
   },
 ] satisfies readonly SourceReference[]
 
-export const baxterCrrtPhase7SourceReferences: readonly SourceReference[] = Object.freeze(
+export const baxterCrrtSupplementalSourceReferences: readonly SourceReference[] = Object.freeze(
   [
     ...candidateClinicalSources,
     ...phase7DeviceSources,
@@ -318,8 +317,8 @@ export const baxterCrrtPhase7SourceReferences: readonly SourceReference[] = Obje
 )
 
 if (
-  new Set(baxterCrrtPhase7SourceReferences.map((record) => record.id)).size !==
-  baxterCrrtPhase7SourceReferences.length
+  new Set(baxterCrrtSupplementalSourceReferences.map((record) => record.id)).size !==
+  baxterCrrtSupplementalSourceReferences.length
 ) {
-  throw new Error('Phase 7 source-reference IDs must be unique.')
+  throw new Error('Supplemental CRRT source-reference IDs must be unique.')
 }

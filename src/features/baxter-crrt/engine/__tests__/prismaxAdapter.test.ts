@@ -64,7 +64,7 @@ function reachReadyToStart(): PrismaxPilotInterfaceState {
   )
 }
 
-describe('PrisMax Phase 3 pilot adapter', () => {
+describe('operational PrisMax manual-reference adapter', () => {
   it('exposes the immutable source-mapped setup sequence in manual order', () => {
     expect(prismaxSetupSteps.map((step) => step.label)).toEqual([
       'Patient',
@@ -140,7 +140,6 @@ describe('PrisMax Phase 3 pilot adapter', () => {
     expect(state.committedPrescription).toMatchObject({
       modality: 'cvvhd',
       anticoagulation: 'none',
-      citrateRequestedButDisabled: false,
     })
     expect(prismaxDeviceAdapter.validatePrescription(state.committedPrescription!)).toEqual({
       valid: true,
@@ -266,7 +265,9 @@ describe('PrisMax Phase 3 pilot adapter', () => {
     expect(display).toMatchObject({
       deviceId: 'prismax-aw8035-2xx',
       deliveryState: 'idle',
-      adapterStatus: 'available-phase-3',
+      adapterStatus: 'operational-v1',
+      navigationParadigm: 'procedure-workflow',
+      historyAvailable: true,
       alarms: [{ priorityLabel: 'Device mapping pending', mappingReviewStatus: 'pending' }],
     })
 
@@ -277,19 +278,35 @@ describe('PrisMax Phase 3 pilot adapter', () => {
     expect(Object.values(operations.pressures).every((value) => value === null)).toBe(true)
   })
 
-  it('rejects non-pilot modalities and disabled flow terms at the adapter boundary', () => {
+  it('accepts all four v1 modalities at the adapter boundary', () => {
     const configured = commitPilotPrescription(reachPrescription()).committedPrescription!
-    const unsupported: ConfiguredPrescriptionState = {
-      ...configured,
-      modality: 'cvvhdf',
-      flows: { ...configured.flows, preReplacementFlowMlHour: 10 },
+    const prescriptions: readonly ConfiguredPrescriptionState[] = [
+      {
+        ...configured,
+        modality: 'scuf',
+        flows: { ...configured.flows, dialysateFlowMlHour: 0 },
+      },
+      {
+        ...configured,
+        modality: 'cvvh',
+        flows: {
+          ...configured.flows,
+          dialysateFlowMlHour: 0,
+          preReplacementFlowMlHour: 10,
+        },
+      },
+      configured,
+      {
+        ...configured,
+        modality: 'cvvhdf',
+        flows: { ...configured.flows, preReplacementFlowMlHour: 10 },
+      },
+    ]
+    for (const prescription of prescriptions) {
+      expect(prismaxDeviceAdapter.validatePrescription(prescription)).toEqual({
+        valid: true,
+        errors: [],
+      })
     }
-    expect(prismaxDeviceAdapter.validatePrescription(unsupported)).toMatchObject({
-      valid: false,
-      errors: expect.arrayContaining([
-        expect.objectContaining({ code: 'PILOT_MODALITY_ONLY' }),
-        expect.objectContaining({ code: 'PILOT_FLOW_TERMS_DISABLED' }),
-      ]),
-    })
   })
 })

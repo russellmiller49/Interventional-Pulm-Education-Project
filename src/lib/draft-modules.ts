@@ -1,6 +1,6 @@
 import { unlocalizedPathname } from '@/i18n/path'
 import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanics/explorer/release'
-import { baxterCrrtPublicationStatus } from '@/features/baxter-crrt/content'
+import { baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
 import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ventilation/content/deviceProfiles'
 
@@ -13,7 +13,12 @@ const cardiohelpEcmoDraftPathPrefixes =
   cardiohelpEcmoPublicationStatus === 'published' ? ([] as const) : (['/cardiohelp-ecmo'] as const)
 
 const baxterCrrtDraftPathPrefixes =
-  baxterCrrtPublicationStatus === 'published' ? ([] as const) : (['/baxter-crrt'] as const)
+  baxterCrrtReleaseStage === 'published' ? ([] as const) : (['/baxter-crrt'] as const)
+
+const baxterCrrtUnlistedPathPrefixes =
+  baxterCrrtReleaseStage === 'published'
+    ? (['/baxter-crrt/review'] as const)
+    : (['/baxter-crrt'] as const)
 
 const mechanicalVentilationDraftPathPrefixes =
   mechanicalVentilationPublicationStatus === 'draft'
@@ -33,7 +38,7 @@ const draftModulePathPrefixes = [
 ] as const
 
 const unlistedModulePathPrefixes = [
-  '/baxter-crrt',
+  ...baxterCrrtUnlistedPathPrefixes,
   '/cardiohelp-ecmo',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',

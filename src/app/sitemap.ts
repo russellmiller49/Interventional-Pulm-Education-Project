@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 
 import { publicEbusTrainingModules } from '@/data/ebus-training'
 import { therapeuticBronchoscopyModules } from '@/data/therapeutic-bronchoscopy'
+import { baxterCrrtIsPublic, baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
 import { areDraftModulesEnabled } from '@/lib/draft-modules'
 import { env } from '@/lib/env'
 
@@ -94,6 +95,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
   ]
+
+  if (baxterCrrtIsPublic(baxterCrrtReleaseStage)) {
+    publicRoutes.push({
+      url: `${baseUrl}/baxter-crrt`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    })
+  }
 
   const draftRoutes: MetadataRoute.Sitemap = areDraftModulesEnabled
     ? [

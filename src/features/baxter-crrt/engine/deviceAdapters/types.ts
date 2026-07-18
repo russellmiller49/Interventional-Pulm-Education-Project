@@ -43,15 +43,21 @@ export interface DeviceDisplayModel {
   readonly deliveryState: CrrtDeviceState['deliveryState']
   readonly adapterStatus: CrrtDeviceState['adapterStatus']
   readonly alarms: readonly DisplayAlarm[]
+  readonly navigationParadigm: 'procedure-workflow' | 'softkey-workflow'
+  readonly scaleLayout: readonly string[]
+  readonly displayedCalculationContexts: readonly string[]
+  readonly historyAvailable: true
+  readonly stopEndOptions: readonly string[]
 }
 
 /**
- * Shared device contract. PrisMax is the only learner-registered adapter.
- * Prismaflex may satisfy this contract as a reviewer-only candidate while its
- * device state remains deferred and its runtime actions fail closed.
+ * Shared operational device contract. Adapters project one canonical engine
+ * state into device-specific navigation, vocabulary, calculations, alarms,
+ * scale topology, history, and stop/end controls.
  */
 export interface CrrtDeviceAdapter {
   readonly id: BaxterCrrtDeviceId
+  readonly runtimeStatus: 'operational-v1'
   readonly profile: Readonly<BaxterCrrtDraftDeviceProfile>
 
   createInitialDeviceState(): CrrtDeviceState

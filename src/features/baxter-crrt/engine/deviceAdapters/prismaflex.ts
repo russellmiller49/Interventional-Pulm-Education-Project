@@ -1,7 +1,8 @@
-import { prismaflexReviewCandidateDeviceProfile } from '../../content/deviceProfiles'
+import { prismaflexDeviceProfile } from '../../content/deviceProfiles'
 import { prismaflexCalculationAdapter } from './prismaflexCalculations'
 import type {
   CrrtDeviceAdapter,
+  CrrtDeviceAction,
   DeviceValidationResult,
   DisplayAlarm,
   SetupStepDefinition,
@@ -107,27 +108,21 @@ function isFiniteNonnegative(value: number): boolean {
 }
 
 /**
- * Structural reviewer validation only. It always retains the configuration
- * gate, so no prescription is declared runnable or locally compatible.
+ * Manual-reference structural validation. Passing this check means only that
+ * the synthetic educational prescription is internally representable; it is
+ * not a claim about an institution's configuration or patient-care protocol.
  */
-export function validatePrismaflexReviewCandidatePrescription(
-  input: PrescriptionState,
-): DeviceValidationResult {
+export function validatePrismaflexPrescription(input: PrescriptionState): DeviceValidationResult {
   const errors: ReturnType<typeof validationError>[] = []
 
   if (input.status !== 'configured') {
-    errors.push(
-      validationError('PRESCRIPTION_REQUIRED', 'A configured prescription is required for review.'),
-    )
+    errors.push(validationError('PRESCRIPTION_REQUIRED', 'A configured prescription is required.'))
   } else {
     for (const field of prismaflexFlowFields) {
       const value = input.flows[field]
       if (!isFiniteNonnegative(value)) {
         errors.push(
-          validationError(
-            'INVALID_FLOW_VALUE',
-            `${field} must be a finite, nonnegative value for structural review.`,
-          ),
+          validationError('INVALID_FLOW_VALUE', `${field} must be a finite, nonnegative value.`),
         )
       }
     }
@@ -144,50 +139,62 @@ export function validatePrismaflexReviewCandidatePrescription(
         ),
       )
     }
-    if (input.anticoagulation !== 'none' || input.citrateRequestedButDisabled) {
+    const replacementFlow =
+      input.flows.preReplacementFlowMlHour + input.flows.postReplacementFlowMlHour
+    if (
+      (input.modality === 'cvvhd' || input.modality === 'cvvhdf') &&
+      !(input.flows.dialysateFlowMlHour > 0)
+    ) {
+      errors.push(validationError('DIALYSATE_REQUIRED', 'This modality requires dialysate flow.'))
+    }
+    if ((input.modality === 'cvvh' || input.modality === 'cvvhdf') && !(replacementFlow > 0)) {
+      errors.push(
+        validationError('REPLACEMENT_REQUIRED', 'This modality requires replacement-fluid flow.'),
+      )
+    }
+    if (input.anticoagulation !== 'none') {
       errors.push(
         validationError(
-          'ANTICOAGULATION_NOT_ACTIVATED',
-          'No actionable anticoagulation or citrate profile is activated for this reviewer candidate.',
+          'CLINICAL_PROTOCOL_REQUIRED',
+          'Medication workflows require a separate authorized local protocol; this adapter provides conceptual verification only.',
         ),
       )
     }
   }
 
-  errors.push(
-    validationError(
-      'TARGET_CONFIGURATION_REVIEW_REQUIRED',
-      'Target market, software, therapy, set, accessory, solution, and local configuration review is required before runtime activation.',
-    ),
-  )
-
-  return Object.freeze({ valid: false, errors: Object.freeze(errors) })
+  return Object.freeze({ valid: errors.length === 0, errors: Object.freeze(errors) })
 }
 
-function createInitialPrismaflexReviewerDeviceState(): CrrtDeviceState {
+function createInitialPrismaflexDeviceState(): CrrtDeviceState {
   return {
     deliveryState: 'idle',
     bloodPumpRunning: false,
     fluidPumpsRunning: false,
     patientConnected: false,
     returnClampClosed: true,
-    adapterStatus: 'deferred',
+    adapterStatus: 'operational-v1',
   }
 }
 
-function mapPrismaflexEngineAlarmPending(alarm: ActiveAlarm): DisplayAlarm {
+function mapPrismaflexEngineAlarm(alarm: ActiveAlarm): DisplayAlarm {
+  const priorityLabel =
+    alarm.urgency === 'safety-stop'
+      ? 'Warning'
+      : alarm.urgency === 'therapy-interruption'
+        ? 'Caution'
+        : 'Advisory'
   return Object.freeze({
     engineAlarmId: alarm.id,
     code: alarm.code,
     label: `Engine condition: ${alarm.code}`,
-    priorityLabel: 'Prismaflex category mapping pending',
+    priorityLabel,
     mappingReviewStatus: 'pending',
   })
 }
 
-export interface PrismaflexReviewerOnlyDeviceAdapter extends CrrtDeviceAdapter {
+export interface PrismaflexOperationalDeviceAdapter extends CrrtDeviceAdapter {
   readonly id: 'prismaflex-g5036003-6xx'
-  readonly candidateStatus: 'reviewer-only-not-runtime-registered'
+  readonly runtimeStatus: 'operational-v1'
   readonly sourceIds: readonly [
     'DEV-PF-001',
     'DEV-PF-002',
@@ -202,13 +209,13 @@ export interface PrismaflexReviewerOnlyDeviceAdapter extends CrrtDeviceAdapter {
 }
 
 /**
- * Phase 8 reviewer-only contract implementation. It exposes sourced metadata,
- * structural validation, and display candidates but deliberately cannot reduce
- * a delivery action and is not registered in the learner runtime.
+ * Operational manual-reference Prismaflex adapter. The adapter owns its
+ * softkey workflow, four-scale presentation, distinct Qeff contexts,
+ * alarm/help vocabulary, and stop/end framing.
  */
-export const prismaflexDeviceAdapter: PrismaflexReviewerOnlyDeviceAdapter = Object.freeze({
+export const prismaflexDeviceAdapter: PrismaflexOperationalDeviceAdapter = Object.freeze({
   id: 'prismaflex-g5036003-6xx',
-  candidateStatus: 'reviewer-only-not-runtime-registered',
+  runtimeStatus: 'operational-v1',
   sourceIds: Object.freeze([
     'DEV-PF-001',
     'DEV-PF-002',
@@ -219,28 +226,58 @@ export const prismaflexDeviceAdapter: PrismaflexReviewerOnlyDeviceAdapter = Obje
     'DEV-PF-007',
     'DEV-PF-008',
   ] as const),
-  profile: prismaflexReviewCandidateDeviceProfile,
+  profile: prismaflexDeviceProfile,
   calculations: prismaflexCalculationAdapter,
-  createInitialDeviceState: createInitialPrismaflexReviewerDeviceState,
+  createInitialDeviceState: createInitialPrismaflexDeviceState,
   getSetupSteps() {
     return prismaflexSetupSteps
   },
-  validatePrescription: validatePrismaflexReviewCandidatePrescription,
-  reduceDeviceAction() {
-    throw new Error(
-      'Prismaflex delivery actions remain reviewer-only and are not registered in learner runtime.',
-    )
+  validatePrescription: validatePrismaflexPrescription,
+  reduceDeviceAction(state: CrrtDeviceState, action: CrrtDeviceAction) {
+    if (action.type === 'ACKNOWLEDGE_ALARM' || state.deliveryState === 'ended') return state
+    const deliveryState = action.deliveryState
+    const running = deliveryState === 'running'
+    return {
+      ...state,
+      deliveryState,
+      bloodPumpRunning: running,
+      fluidPumpsRunning: running,
+      patientConnected: running ? true : state.patientConnected,
+      returnClampClosed: running ? false : state.returnClampClosed,
+    }
   },
-  mapEngineAlarm: mapPrismaflexEngineAlarmPending,
+  mapEngineAlarm: mapPrismaflexEngineAlarm,
   selectDisplayModel(state: CrrtSimulationState) {
     if (state.deviceId !== 'prismaflex-g5036003-6xx') {
-      throw new Error('Prismaflex display selection requires an unloaded Prismaflex review state.')
+      throw new Error('Prismaflex display selection requires a Prismaflex simulation state.')
     }
     return Object.freeze({
       deviceId: 'prismaflex-g5036003-6xx' as const,
       deliveryState: state.device.deliveryState,
       adapterStatus: state.device.adapterStatus,
-      alarms: Object.freeze(state.alarms.map(mapPrismaflexEngineAlarmPending)),
+      alarms: Object.freeze(state.alarms.map(mapPrismaflexEngineAlarm)),
+      navigationParadigm: 'softkey-workflow' as const,
+      scaleLayout: Object.freeze([
+        'Dialysate scale',
+        'Replacement scale',
+        'PBP scale',
+        'Effluent scale',
+      ]),
+      displayedCalculationContexts: Object.freeze([
+        'Effluent-pump target Qeff (includes syringe flow)',
+        'Dose-section Qeff (omits syringe flow)',
+        'TMP',
+        'Filter pressure drop',
+      ]),
+      historyAvailable: true as const,
+      stopEndOptions: Object.freeze([
+        'Stop treatment',
+        'End treatment',
+        'Frame blood disposition using device instructions and local policy',
+      ]),
     })
   },
 })
+
+/** Compatibility alias for imports from the pre-v1 review build. */
+export const validatePrismaflexReviewCandidatePrescription = validatePrismaflexPrescription

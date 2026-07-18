@@ -2664,6 +2664,261 @@
   text-align: center;
 }
 
+.circuitViewTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(2, 18, 22, 0.64);
+}
+
+.circuitViewTabs button {
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  color: #9fb4b7;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 0.74rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.circuitViewTabs button[aria-selected='true'] {
+  color: #06191c;
+  border-color: var(--cyan-bright);
+  background: var(--cyan-bright);
+  box-shadow: 0 6px 18px rgba(54, 195, 202, 0.18);
+}
+
+.circuit3dShell {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.circuit3dViewport {
+  position: relative;
+  height: clamp(420px, 46vw, 610px);
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid rgba(113, 225, 229, 0.24);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 55% 42%, rgba(54, 195, 202, 0.11), transparent 42%), #061317;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 38px rgba(0, 0, 0, 0.22);
+}
+
+.circuit3dViewport canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.circuit3dFallback {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  padding: 2rem;
+  color: #b7cbcd;
+  background:
+    linear-gradient(rgba(80, 141, 146, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(80, 141, 146, 0.06) 1px, transparent 1px), #071c20;
+  background-size: 24px 24px;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.circuit3dHud {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  display: grid;
+  max-width: min(300px, calc(100% - 1.6rem));
+  gap: 0.14rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(113, 225, 229, 0.26);
+  border-radius: 12px;
+  background: rgba(3, 20, 24, 0.86);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.circuit3dHud span {
+  width: fit-content;
+  padding: 0.18rem 0.45rem;
+  color: #052015;
+  border-radius: 999px;
+  background: var(--green);
+  font-size: 0.56rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.circuit3dHud span[data-state='ISOLATED'] {
+  color: #27090b;
+  background: var(--red);
+}
+
+.circuit3dHud span[data-state='PUMP STOPPED'] {
+  color: #271805;
+  background: var(--amber);
+}
+
+.circuit3dHud strong {
+  margin-top: 0.18rem;
+  color: #e9ffff;
+  font-size: 1.25rem;
+}
+
+.circuit3dHud small {
+  color: #91a9ac;
+  font-size: 0.6rem;
+  line-height: 1.35;
+}
+
+.circuit3dLabels {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  left: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.circuit3dLabels span {
+  padding: 0.32rem 0.52rem;
+  color: #cfe0e1;
+  border: 1px solid rgba(159, 180, 183, 0.25);
+  border-radius: 999px;
+  background: rgba(3, 20, 24, 0.8);
+  font-size: 0.58rem;
+  font-weight: 750;
+  backdrop-filter: blur(6px);
+}
+
+.clampControlPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 0.8rem 1rem;
+  align-items: center;
+  padding: 0.9rem;
+  border: 1px solid rgba(255, 191, 98, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(59, 39, 14, 0.35), rgba(5, 27, 31, 0.8));
+}
+
+.clampControlPanel h3,
+.clampControlPanel p {
+  margin: 0;
+}
+
+.clampControlPanel h3 {
+  margin-top: 0.18rem;
+  font-size: 0.95rem;
+}
+
+.clampControlPanel p {
+  margin-top: 0.35rem;
+  color: #c3b99f;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.clampControlGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.clampControl {
+  display: flex;
+  min-width: 0;
+  min-height: 68px;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.6rem;
+  text-align: left;
+  border: 1px solid rgba(118, 214, 155, 0.4);
+  border-radius: 11px;
+  background: rgba(27, 82, 51, 0.2);
+  cursor: pointer;
+}
+
+.clampControl[data-closed='true'] {
+  border-color: rgba(255, 107, 115, 0.64);
+  background: rgba(116, 28, 35, 0.28);
+  box-shadow: 0 0 0 2px rgba(255, 107, 115, 0.08);
+}
+
+.clampControlIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #061a10;
+  border-radius: 50%;
+  background: var(--green);
+  font-size: 1.1rem;
+  font-weight: 950;
+}
+
+.clampControl[data-closed='true'] .clampControlIcon {
+  color: #2c080b;
+  background: var(--red);
+}
+
+.clampControl > span:last-child {
+  min-width: 0;
+}
+
+.clampControl strong,
+.clampControl small {
+  display: block;
+}
+
+.clampControl strong {
+  font-size: 0.72rem;
+}
+
+.clampControl small {
+  margin-top: 0.16rem;
+  color: #aabdc0;
+  font-size: 0.58rem;
+  line-height: 1.35;
+}
+
+.clampStatus {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 0.55rem;
+  align-items: baseline;
+  padding-top: 0.65rem;
+  color: #acd8bd;
+  border-top: 1px solid var(--line);
+  font-size: 0.67rem;
+}
+
+.clampStatus[data-alert='true'] {
+  color: #ffabb0;
+}
+
+.clampStatus strong {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
 .circuitDiagramScroll {
   width: 100%;
   overflow-x: auto;
@@ -3165,6 +3420,15 @@
   border: 1px solid var(--line);
   border-radius: 10px;
   background: rgba(4, 24, 28, 0.56);
+}
+
+.circuitReadoutGrid > div[data-alert='true'] {
+  border-color: rgba(255, 107, 115, 0.55);
+  background: rgba(108, 27, 34, 0.24);
+}
+
+.circuitReadoutGrid > div[data-alert='true'] strong {
+  color: #ff9ba2;
 }
 
 .circuitReadoutGrid span,
@@ -4205,6 +4469,10 @@
   .deviceProfile {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .clampControlPanel {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -4332,6 +4600,15 @@
     min-width: 1040px;
   }
 
+  .circuit3dViewport {
+    height: 430px;
+    min-height: 430px;
+  }
+
+  .circuit3dLabels {
+    display: none;
+  }
+
   .circuitPanel {
     overflow: hidden;
   }
@@ -4392,6 +4669,25 @@
   .circuitReadoutGrid,
   .deviceProfile {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .circuitViewTabs,
+  .clampControlGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .circuit3dViewport {
+    height: 360px;
+    min-height: 360px;
+  }
+
+  .circuit3dHud {
+    right: 0.6rem;
+    left: 0.6rem;
+  }
+
+  .clampStatus {
+    display: grid;
   }
 }
 

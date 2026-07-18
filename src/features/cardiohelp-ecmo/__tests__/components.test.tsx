@@ -516,6 +516,37 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getByText(/Sweep-gas path through simplified hollow fibers/i)).toBeInTheDocument()
   })
 
+  it('provides accessible circuit-view switching and independent clamp controls', () => {
+    const state = ecmoSimulationReducer(createInitialSimulationState('acute-hypercapnia'), {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'improve-acidemia',
+      control: 'sweep',
+      direction: 'increase',
+    })
+    const dispatch = jest.fn()
+    render(<CircuitAndMonitors state={state} dispatch={dispatch} controlsEnabled />)
+
+    expect(screen.getByRole('tab', { name: 'Bedside 3D circuit' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    const diagnosticTab = screen.getByRole('tab', { name: 'Pressure-zone map' })
+    fireEvent.click(diagnosticTab)
+    expect(diagnosticTab).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Bedside 3D circuit' }))
+    fireEvent.click(screen.getByRole('button', { name: /Drainage clamp.*Open/i }))
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Return clamp.*Open/i }))
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+    })
+  })
+
   it('masks answer-bearing scenario titles and summaries in Challenge mode', () => {
     const state = createInitialSimulationState('gas-source-interruption', 'challenge')
     const scenario = cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)!

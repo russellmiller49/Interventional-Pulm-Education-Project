@@ -17,9 +17,6 @@ function updatePrescription(
   action: Extract<CrrtEngineAction, { type: 'SET_PRESCRIPTION' }>,
 ): CrrtSimulationState {
   const calculations = getCrrtDeviceCalculationAdapter(state.deviceId)
-  if (action.prescription.citrateRequestedButDisabled) {
-    throw new Error('Regional citrate remains disabled until a reviewed local protocol is loaded.')
-  }
   const flows = action.prescription.flows
   const prescribedEffluentRateMlHour = calculations.calculateEffluentPumpTargetMlPerHour(flows)
   const prescribedEffluentDoseMlKgHour =

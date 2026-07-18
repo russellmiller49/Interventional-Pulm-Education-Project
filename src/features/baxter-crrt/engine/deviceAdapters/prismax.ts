@@ -1,4 +1,4 @@
-import { prismaxDraftDeviceProfile } from '../../content/deviceProfiles'
+import { prismaxDeviceProfile } from '../../content/deviceProfiles'
 import { prismaxCalculationAdapter } from './calculations'
 import type {
   CrrtDeviceAdapter,
@@ -51,7 +51,7 @@ export const prismaxStartOptions = Object.freeze([
     id: 'same-patient' as const,
     label: 'Same Patient',
     available: false as const,
-    availabilityNote: 'Not available in the Phase 3 pilot interface.',
+    availabilityNote: 'Unavailable because the source timing expression is unresolved.',
   }),
 ])
 
@@ -70,28 +70,19 @@ function isFiniteNonnegative(value: number): boolean {
   return Number.isFinite(value) && value >= 0
 }
 
-function validatePrismaxPilotPrescription(input: PrescriptionState): DeviceValidationResult {
+export function validatePrismaxPrescription(input: PrescriptionState): DeviceValidationResult {
   const errors: ReturnType<typeof validationError>[] = []
 
   if (input.status !== 'configured') {
-    errors.push(validationError('PRESCRIPTION_REQUIRED', 'Complete the pilot prescription first.'))
+    errors.push(validationError('PRESCRIPTION_REQUIRED', 'Complete the prescription first.'))
     return Object.freeze({ valid: false, errors: Object.freeze(errors) })
-  }
-
-  if (input.modality !== 'cvvhd') {
-    errors.push(
-      validationError('PILOT_MODALITY_ONLY', 'Only CVVHD is available in the Phase 3 pilot.'),
-    )
   }
 
   for (const field of crrtFlowRateKeys) {
     const value = input.flows[field]
     if (!isFiniteNonnegative(value)) {
       errors.push(
-        validationError(
-          'INVALID_FLOW_VALUE',
-          `${field} must be a finite, nonnegative value for this interface pilot.`,
-        ),
+        validationError('INVALID_FLOW_VALUE', `${field} must be a finite, nonnegative value.`),
       )
     }
   }
@@ -99,28 +90,24 @@ function validatePrismaxPilotPrescription(input: PrescriptionState): DeviceValid
   if (!(input.flows.bloodFlowMlMin > 0)) {
     errors.push(validationError('BLOOD_FLOW_REQUIRED', 'Enter blood flow before continuing.'))
   }
-  if (!(input.flows.dialysateFlowMlHour > 0)) {
-    errors.push(validationError('DIALYSATE_REQUIRED', 'Enter dialysate flow before continuing.'))
-  }
+  const replacementFlow =
+    input.flows.preReplacementFlowMlHour + input.flows.postReplacementFlowMlHour
   if (
-    input.flows.pbpFlowMlHour !== 0 ||
-    input.flows.preReplacementFlowMlHour !== 0 ||
-    input.flows.postReplacementFlowMlHour !== 0 ||
-    input.flows.syringeFlowMlHour !== 0 ||
-    input.flows.makeupFlowMlHour !== 0
+    (input.modality === 'cvvhd' || input.modality === 'cvvhdf') &&
+    !(input.flows.dialysateFlowMlHour > 0)
   ) {
+    errors.push(validationError('DIALYSATE_REQUIRED', 'This modality requires dialysate flow.'))
+  }
+  if ((input.modality === 'cvvh' || input.modality === 'cvvhdf') && !(replacementFlow > 0)) {
     errors.push(
-      validationError(
-        'PILOT_FLOW_TERMS_DISABLED',
-        'PBP, replacement, syringe, and makeup flows remain unavailable in this pilot.',
-      ),
+      validationError('REPLACEMENT_REQUIRED', 'This modality requires replacement-fluid flow.'),
     )
   }
-  if (input.anticoagulation !== 'none' || input.citrateRequestedButDisabled) {
+  if (input.anticoagulation !== 'none') {
     errors.push(
       validationError(
-        'PILOT_ANTICOAGULATION_DISABLED',
-        'Anticoagulation and citrate are not enabled in this pilot interface.',
+        'CLINICAL_PROTOCOL_REQUIRED',
+        'Medication workflows require a separate authorized local protocol; this adapter provides conceptual verification only.',
       ),
     )
   }
@@ -135,7 +122,7 @@ function createInitialPrismaxDeviceState(): CrrtDeviceState {
     fluidPumpsRunning: false,
     patientConnected: false,
     returnClampClosed: true,
-    adapterStatus: 'available-phase-3',
+    adapterStatus: 'operational-v1',
   }
 }
 
@@ -151,12 +138,13 @@ function mapPrismaxEngineAlarm(alarm: ActiveAlarm): DisplayAlarm {
 
 export const prismaxDeviceAdapter = Object.freeze({
   id: 'prismax-aw8035-2xx',
-  profile: prismaxDraftDeviceProfile,
+  runtimeStatus: 'operational-v1',
+  profile: prismaxDeviceProfile,
   createInitialDeviceState: createInitialPrismaxDeviceState,
   getSetupSteps() {
     return prismaxSetupSteps
   },
-  validatePrescription: validatePrismaxPilotPrescription,
+  validatePrescription: validatePrismaxPrescription,
   reduceDeviceAction(state, action, context) {
     void context
     if (action.type === 'ACKNOWLEDGE_ALARM' || state.deliveryState === 'ended') return state
@@ -178,6 +166,20 @@ export const prismaxDeviceAdapter = Object.freeze({
       deliveryState: state.device.deliveryState,
       adapterStatus: state.device.adapterStatus,
       alarms: Object.freeze(state.alarms.map(mapPrismaxEngineAlarm)),
+      navigationParadigm: 'procedure-workflow' as const,
+      scaleLayout: Object.freeze(['Effluent', 'PBP', 'Dialysate', 'Replacement']),
+      displayedCalculationContexts: Object.freeze([
+        'Effluent pump target',
+        'Effluent dose section',
+        'TMP',
+        'Filter pressure drop',
+      ]),
+      historyAvailable: true as const,
+      stopEndOptions: Object.freeze([
+        'Pause treatment',
+        'End treatment',
+        'Frame blood disposition using device instructions and local policy',
+      ]),
     })
   },
 } satisfies CrrtDeviceAdapter)
@@ -194,7 +196,7 @@ export interface PrismaxPilotInterfaceState {
   readonly startSelection: 'new-patient' | null
   /**
    * The learner-facing pilot reducer can still select only CVVHD. The wider
-   * type lets an authored, reviewer-only Phase 7 case project its already
+   * type lets an authored learning case project its already
    * configured modality without pretending that the pilot setup UI supports
    * selecting that modality.
    */
@@ -342,7 +344,6 @@ function configuredPrescriptionFromDraft(
       makeupFlowMlHour: 0,
     },
     anticoagulation: 'none',
-    citrateRequestedButDisabled: false,
     reviewStatus: 'pending',
     sourceIds: [...prismaxCalculationAdapter.sourceIds.effluentPumpTarget],
   }
@@ -514,5 +515,5 @@ export function selectPrismaxPilotCaseOperationsDisplay(
 }
 
 function assertNever(value: never): never {
-  throw new Error(`Unhandled PrisMax pilot interface action: ${JSON.stringify(value)}`)
+  throw new Error(`Unhandled PrisMax interface action: ${JSON.stringify(value)}`)
 }

@@ -1,10 +1,7 @@
 import { BookOpenCheck, FileWarning, LockKeyhole, ShieldCheck } from 'lucide-react'
 
-import {
-  baxterCrrtPublicationStatus,
-  baxterCrrtReleaseReviews,
-  prismaxDraftDeviceProfile,
-} from '../content/deviceProfiles'
+import { baxterCrrtSmeReviewItems, prismaxDeviceProfile } from '../content/deviceProfiles'
+import { baxterCrrtPublicationStatus, baxterCrrtReleaseStage } from '../content/release'
 import {
   baxterCrrtPilotSourceReferences,
   baxterCrrtSourceDocuments,
@@ -13,7 +10,6 @@ import {
 import styles from './baxter-crrt.module.css'
 
 export function SourcesPanel() {
-  const isPublished = baxterCrrtPublicationStatus === 'published'
   const primarySource = baxterCrrtSourceDocuments.find((source) => source.role === 'primary')
   const inactiveSources = baxterCrrtSourceDocuments.filter((source) => source.role !== 'primary')
   const pilotContextSources = baxterCrrtPilotSourceReferences.filter(
@@ -29,49 +25,33 @@ export function SourcesPanel() {
     <section className={styles.sourcesSection} aria-labelledby="baxter-crrt-sources-heading">
       <div className={styles.sectionHeading}>
         <div>
-          <span className={styles.kicker}>Source boundary & release safety</span>
+          <span className={styles.kicker}>Evidence, provenance &amp; limitations</span>
           <h2 id="baxter-crrt-sources-heading">
-            {isPublished
-              ? 'Reviewed source and release boundary'
-              : 'What this draft can—and cannot—claim'}
+            What this educational module can—and cannot—claim
           </h2>
         </div>
         <span className={styles.reviewBadge} data-status={baxterCrrtPublicationStatus}>
           {baxterCrrtPublicationStatus === 'published'
-            ? 'PUBLISHED · REVIEW APPROVED'
-            : 'DRAFT · REVIEW REQUIRED'}
+            ? 'PUBLISHED'
+            : `${baxterCrrtReleaseStage.toUpperCase()} · PRIVATE`}
         </span>
       </div>
 
       <div className={styles.scopeBoundary}>
         <FileWarning aria-hidden="true" />
         <div>
-          {isPublished ? (
-            <>
-              <strong>Published scope is bound to one exact reviewed learner candidate.</strong>
-              <p>
-                The fail-closed publication gate requires the exact v2 frozen candidate identity,
-                local-configuration disposition, and a candidate-bound attestation from each of the
-                ten mandatory publication-review domains before this state can render. Prismaflex
-                device review is additionally required if Phase 8 is activated. The source
-                limitations below remain part of the released educational claim boundary.
-              </p>
-            </>
-          ) : (
-            <>
-              <strong>
-                Three synthetic teaching cases are active only inside this authenticated draft.
-              </strong>
-              <p>
-                The three-case pilot connects the source-mapped PrisMax workflow to deterministic
-                cases, response models, and formative scoring. The published studies provide
-                teaching context only; every exact case value, condition band, threshold,
-                coefficient, score, critical-error rule, and alarm behavior is synthetic and pending
-                clinical and device review. Nothing here is a patient-specific recommendation,
-                clinical target, verified device limit, or competency decision.
-              </p>
-            </>
-          )}
+          <strong>
+            Device-manual claims, clinical context, and synthetic teaching calibration remain
+            visibly separate.
+          </strong>
+          <p>
+            The 18 cases, seven drills, six tools, and capstones are active in this private build.
+            Source and reviewer fields are informational provenance for the final SME pass; missing
+            review metadata does not disable private functionality. Exact case values, scoring,
+            condition bands, coefficients, and critical-error rules are synthetic educational
+            calibration—not patient-specific recommendations, clinical targets, verified device
+            limits, local operating policy, or proof of competency.
+          </p>
         </div>
       </div>
 
@@ -90,11 +70,11 @@ export function SourcesPanel() {
         </div>
         <div>
           <dt>Market/configuration</dt>
-          <dd>{prismaxDraftDeviceProfile.marketConfiguration}</dd>
+          <dd>{prismaxDeviceProfile.marketConfiguration}</dd>
         </div>
         <div>
           <dt>Review state</dt>
-          <dd>Pending</dd>
+          <dd>Final SME feedback open · runtime available</dd>
         </div>
       </dl>
 
@@ -121,11 +101,11 @@ export function SourcesPanel() {
       </div>
 
       <div className={styles.sourceSubheading}>
-        <span className={styles.kicker}>Three-case pilot evidence</span>
+        <span className={styles.kicker}>Clinical context and calibration evidence</span>
         <h3>Clinical context and synthetic calibration</h3>
         <p>
           Context sources support the teaching distinction being explored. They do not validate the
-          pilot&apos;s authored numbers or define success criteria.
+          authored synthetic numbers or define success criteria.
         </p>
       </div>
 
@@ -154,7 +134,7 @@ export function SourcesPanel() {
       <details className={styles.inactiveSources}>
         <summary>
           <BookOpenCheck aria-hidden="true" />
-          Inactive supporting sources ({inactiveSources.length})
+          Supporting references not used for device behavior ({inactiveSources.length})
         </summary>
         <div>
           {inactiveSources.map((source) => (
@@ -168,16 +148,16 @@ export function SourcesPanel() {
               <p className={styles.sourceLimitation}>
                 <strong>Boundary:</strong> {source.limitation}
               </p>
-              <small>Review {source.reviewStatus} · inactive in the current pilot</small>
+              <small>Review {source.reviewStatus} · not used for runtime device behavior</small>
             </article>
           ))}
         </div>
       </details>
 
       <div className={styles.reviewStatusPanel}>
-        <h3>Release reviews</h3>
+        <h3>Informational final-SME feedback domains</h3>
         <ul>
-          {baxterCrrtReleaseReviews.map((review) => (
+          {baxterCrrtSmeReviewItems.map((review) => (
             <li key={review.domain}>
               <span aria-hidden="true">○</span>
               <strong>{review.label}</strong>

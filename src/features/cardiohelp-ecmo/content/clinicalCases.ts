@@ -73,6 +73,7 @@ const clinicalActions: readonly SimulationAction['type'][] = [
   'PRESS_SAFETY',
   'RELEASE_SAFETY',
   'ACK_ALARM',
+  'TOGGLE_CIRCUIT_CLAMP',
   'PERFORM_CHECK',
   'APPLY_CLINICAL_INTERVENTION',
   'START_ECMO',

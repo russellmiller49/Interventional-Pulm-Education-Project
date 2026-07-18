@@ -124,7 +124,6 @@ export interface UnconfiguredPrescriptionState {
   readonly modality: null
   readonly flows: CrrtFlowRates
   readonly anticoagulation: 'none'
-  readonly citrateRequestedButDisabled: false
   readonly reviewStatus: 'pending'
   readonly sourceIds: readonly string[]
 }
@@ -134,7 +133,6 @@ export interface ConfiguredPrescriptionState {
   readonly modality: CrrtModality
   readonly flows: CrrtFlowRates
   readonly anticoagulation: CrrtAnticoagulationMethod
-  readonly citrateRequestedButDisabled: boolean
   readonly reviewStatus: BaxterCrrtReviewStatus
   readonly sourceIds: readonly string[]
 }
@@ -186,14 +184,31 @@ export interface CrrtPressureState {
   readonly prismaxFilterPressureDropMmHg: number | null
 }
 
-export interface DisabledCitrateState {
-  readonly status: 'disabled-pending-local-protocol'
-  readonly protocolProfileId: null
-  readonly citrateDeliveryRate: null
-  readonly calciumReplacementRate: null
-  readonly postFilterIonizedCalcium: null
+export type CrrtConceptualTrendDirection = 'unknown' | 'stable' | 'rising' | 'falling'
+
+/**
+ * Direction-only citrate-calcium education. This type intentionally has no
+ * medication quantity, numeric goal, adjustment, or actionable protocol
+ * fields. It can support recognition, verification, reassessment, and
+ * escalation without becoming a prescribing interface.
+ */
+export interface ConceptualCitrateState {
+  readonly status: 'conceptual-direction-only'
+  readonly linkedTrendDirections: Readonly<{
+    systemicIonizedCalcium: CrrtConceptualTrendDirection
+    totalCalciumRelationship: CrrtConceptualTrendDirection
+    acidBase: CrrtConceptualTrendDirection
+    circuitDelivery: CrrtConceptualTrendDirection
+  }>
+  readonly safetyChecks: readonly [
+    'verify-sampling-and-timing',
+    'verify-circuit-and-delivery-context',
+    'verify-authorized-local-protocol-context',
+  ]
+  readonly reassessmentRequired: true
+  readonly escalationBoundary: 'responsible-clinical-team-and-local-protocol'
   readonly reviewStatus: 'pending'
-  readonly sourceIds: readonly ['PROTO-001']
+  readonly sourceIds: readonly ['REVIEW-CKRT-CORE-2025']
 }
 
 export interface CircuitState {
@@ -205,7 +220,7 @@ export interface CircuitState {
   readonly bloodLeakDetected: boolean
   readonly bags: readonly BagState[]
   readonly pressures: CrrtPressureState
-  readonly citrate: DisabledCitrateState
+  readonly citrate: ConceptualCitrateState
 }
 
 export interface CrrtDeviceState {
@@ -214,7 +229,7 @@ export interface CrrtDeviceState {
   readonly fluidPumpsRunning: boolean
   readonly patientConnected: boolean
   readonly returnClampClosed: boolean
-  readonly adapterStatus: 'available-phase-3' | 'deferred'
+  readonly adapterStatus: 'operational-v1'
 }
 
 export interface ExternalFluidRates {

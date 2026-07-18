@@ -28,11 +28,13 @@ function renderCircuit(overrides: Partial<CrrtPilotCircuitProps> = {}) {
   )
 }
 
-describe('CRRT Phase 3 pilot circuit', () => {
+describe('CRRT educational circuit', () => {
   it('renders an accessible original schematic and the confirmed topology in text', () => {
     renderCircuit()
 
-    expect(screen.getByRole('img', { name: /^CVVHD pilot circuit topology/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: /^CVVHD educational circuit topology/i }),
+    ).toBeInTheDocument()
     const textSummary = screen.getByText(/Blood path: patient access/i, { selector: 'p' })
     expect(textSummary).toHaveTextContent(/patient access → blood pump → filter-pressure site/i)
     expect(textSummary).toHaveTextContent(
@@ -59,16 +61,16 @@ describe('CRRT Phase 3 pilot circuit', () => {
     expect(cards).toHaveLength(4)
     expect(within(cards[0]).getByText('Effluent')).toBeInTheDocument()
     expect(within(cards[0]).getByText('Yellow circle')).toBeInTheDocument()
-    expect(within(cards[0]).getByText('Active in CVVHD pilot')).toBeInTheDocument()
+    expect(within(cards[0]).getByText('Active in this CVVHD case')).toBeInTheDocument()
     expect(within(cards[1]).getByText('PBP')).toBeInTheDocument()
     expect(within(cards[1]).getByText('White triangle')).toBeInTheDocument()
-    expect(within(cards[1]).getByText('Inactive in CVVHD pilot')).toBeInTheDocument()
+    expect(within(cards[1]).getByText('Inactive in this CVVHD case')).toBeInTheDocument()
     expect(within(cards[2]).getByText('Dialysate')).toBeInTheDocument()
     expect(within(cards[2]).getByText('Green square')).toBeInTheDocument()
-    expect(within(cards[2]).getByText('Active in CVVHD pilot')).toBeInTheDocument()
+    expect(within(cards[2]).getByText('Active in this CVVHD case')).toBeInTheDocument()
     expect(within(cards[3]).getByText('Replacement')).toBeInTheDocument()
     expect(within(cards[3]).getByText('Purple octagon')).toBeInTheDocument()
-    expect(within(cards[3]).getByText('Inactive in CVVHD pilot')).toBeInTheDocument()
+    expect(within(cards[3]).getByText('Inactive in this CVVHD case')).toBeInTheDocument()
   })
 
   it('uses an em dash and No case signal for every absent pressure', () => {

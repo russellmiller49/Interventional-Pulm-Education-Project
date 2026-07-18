@@ -40,28 +40,28 @@ const scales = [
     id: 'effluent',
     label: 'Effluent',
     marker: 'Yellow circle',
-    status: 'Active in CVVHD pilot',
+    status: 'Active in this CVVHD case',
     active: true,
   },
   {
     id: 'pbp',
     label: 'PBP',
     marker: 'White triangle',
-    status: 'Inactive in CVVHD pilot',
+    status: 'Inactive in this CVVHD case',
     active: false,
   },
   {
     id: 'dialysate',
     label: 'Dialysate',
     marker: 'Green square',
-    status: 'Active in CVVHD pilot',
+    status: 'Active in this CVVHD case',
     active: true,
   },
   {
     id: 'replacement',
     label: 'Replacement',
     marker: 'Purple octagon',
-    status: 'Inactive in CVVHD pilot',
+    status: 'Inactive in this CVVHD case',
     active: false,
   },
 ] as const
@@ -133,7 +133,7 @@ export function CrrtPilotCircuit({
     <section className={styles.panel} aria-labelledby={`${idPrefix}-heading`}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}>Functional pilot surface</span>
+          <span className={styles.eyebrow}>Functional educational surface</span>
           <h2 id={`${idPrefix}-heading`}>CVVHD circuit, bags, scales, and pressures</h2>
         </div>
         <div className={styles.runStatus} data-running={running} role="status" aria-live="polite">
@@ -192,7 +192,7 @@ export function CrrtPilotCircuit({
           data-running={running}
           preserveAspectRatio="xMidYMid meet"
         >
-          <title id={titleId}>CVVHD pilot circuit topology</title>
+          <title id={titleId}>CVVHD educational circuit topology</title>
           <desc id={descriptionId}>
             An original educational schematic. The blood path runs from patient access to a blood
             pump, filter-pressure site, filter, deaeration and return path, air detector and return

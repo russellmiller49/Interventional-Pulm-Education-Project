@@ -20,33 +20,31 @@ function chooseEveryPrediction(direction: 'Lower' | 'Unchanged' | 'Higher') {
   }
 }
 
-describe('reviewer-only Pressure Localization Lab UI', () => {
+describe('learner Pressure Localization Lab UI', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('states the pending boundary and remains isolated from progress and persistence', () => {
+  it('states the educational boundary and keeps source limitations informational', () => {
     render(<CrrtPressureLocalizationLab />)
 
     const lab = screen.getByRole('region', { name: 'Pressure Localization Lab' })
-    expect(lab).toHaveAttribute('data-reviewer-only', 'true')
-    expect(lab).toHaveAttribute('data-review-status', 'pending')
-    expect(lab).toHaveAttribute('data-scoring', 'none')
-    expect(lab).toHaveAttribute('data-progress-write', 'none')
-    expect(lab).toHaveAttribute('data-persistence', 'none')
-    expect(within(lab).getByRole('note', { name: 'Reviewer-only boundary' })).toHaveTextContent(
-      'not available to learners',
+    expect(lab).toHaveAttribute('data-reviewer-only', 'false')
+    expect(lab).toHaveAttribute('data-review-metadata', 'informational')
+    expect(lab).toHaveAttribute('data-scoring', 'tool-specific')
+    expect(lab).toHaveAttribute('data-progress-write', 'learner-mode-only')
+    expect(lab).toHaveAttribute('data-persistence', 'learner-mode-only')
+    expect(within(lab).getByRole('note', { name: 'Educational boundary' })).toHaveTextContent(
+      'Learner-available synthetic localization exercise',
     )
     expect(
       within(lab).getByText(/no alarm priority, automatic device response/i),
     ).toBeInTheDocument()
-    expect(within(lab).getByLabelText('Candidate source records')).toHaveTextContent(
-      'Candidate source records · review pending',
+    expect(within(lab).getByLabelText('Source and limitation records')).toHaveTextContent(
+      'Source and limitation records',
     )
     for (const sourceId of pressureLocalizationCandidateSourceIds) {
       expect(within(lab).getByText(sourceId)).toBeVisible()
     }
-    expect(
-      within(lab).getByText(/do not validate the authored obstruction directions/i),
-    ).toBeVisible()
+    expect(within(lab).getByText(/unresolved expression remains unavailable/i)).toBeVisible()
     expect(lab.querySelector('form')).not.toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })
@@ -77,9 +75,11 @@ describe('reviewer-only Pressure Localization Lab UI', () => {
     const disconnection = screen.getByRole('radio', { name: /^Disconnection/i })
     expect(disconnection).toBeDisabled()
     expect(disconnection).toHaveAccessibleDescription(
-      'Pattern unavailable pending source and device review',
+      'Pattern unavailable because the source/device expression is unresolved',
     )
-    expect(screen.getByText('Pattern unavailable pending source and device review')).toBeVisible()
+    expect(
+      screen.getByText('Pattern unavailable because the source/device expression is unresolved'),
+    ).toBeVisible()
     expect(screen.getByRole('radio', { name: 'Access catheter' })).toBeEnabled()
     expect(screen.getByRole('radio', { name: 'Access line' })).toBeEnabled()
     expect(screen.getByRole('radio', { name: 'Filter' })).toBeEnabled()

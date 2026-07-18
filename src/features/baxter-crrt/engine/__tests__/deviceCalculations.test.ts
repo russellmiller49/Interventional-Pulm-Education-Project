@@ -20,7 +20,7 @@ const flows: CrrtFlowRates = {
   makeupFlowMlHour: 20,
 }
 
-describe('Phase 2 device-calculation adapter boundary', () => {
+describe('v1 device-calculation adapter boundary', () => {
   it('maps canonical flows to the source-backed PrisMax Qeff calculation', () => {
     const adapter = getCrrtDeviceCalculationAdapter('prismax-aw8035-2xx')
 
@@ -92,9 +92,12 @@ describe('Phase 2 device-calculation adapter boundary', () => {
     ).toThrow(/zero or greater/i)
   })
 
-  it('fails closed instead of applying PrisMax math to deferred Prismaflex', () => {
-    expect(() => getCrrtDeviceCalculationAdapter('prismaflex-g5036003-6xx')).toThrow(
-      /reviewer-only|deferred/i,
+  it('registers the operational Prismaflex adapter without falling back to PrisMax math', () => {
+    expect(getCrrtDeviceCalculationAdapter('prismaflex-g5036003-6xx')).toBe(
+      prismaflexCalculationAdapter,
+    )
+    expect(getCrrtDeviceCalculationAdapter('prismaflex-g5036003-6xx')).not.toBe(
+      prismaxCalculationAdapter,
     )
   })
 })

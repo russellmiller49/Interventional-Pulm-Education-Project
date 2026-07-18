@@ -226,7 +226,6 @@ export function normalizeRuntimeCrrtCaseToEngineFixture(
         makeupFlowMlHour: authoredPrescription.makeupFlowMlPerHour,
       },
       anticoagulation: 'none',
-      citrateRequestedButDisabled: false,
       reviewStatus: configuration.prescription.reviewStatus,
       sourceIds: [...authoredPrescription.sourceIds],
     },

@@ -12,6 +12,7 @@ import {
   PRISMAX_TMP_SOURCE_ID,
 } from '../pressureModel'
 import type { CrrtFlowRates } from '../types'
+import { prismaflexCalculationAdapter } from './prismaflexCalculations'
 
 export interface DeviceCalculationSourceMap {
   readonly effluentPumpTarget: readonly string[]
@@ -39,7 +40,7 @@ export interface DeviceDisplayedPressureCalculations {
  */
 export interface CrrtDeviceCalculationAdapter {
   readonly id: BaxterCrrtDeviceId
-  readonly status: 'phase-2-source-calculations-only'
+  readonly status: 'operational-v1'
   readonly sourceIds: DeviceCalculationSourceMap
 
   calculateEffluentPumpTargetMlPerHour(flows: CrrtFlowRates): number
@@ -51,7 +52,7 @@ export interface CrrtDeviceCalculationAdapter {
 
 export const prismaxCalculationAdapter: CrrtDeviceCalculationAdapter = Object.freeze({
   id: 'prismax-aw8035-2xx',
-  status: 'phase-2-source-calculations-only',
+  status: 'operational-v1',
   sourceIds: Object.freeze({
     effluentPumpTarget: Object.freeze([PRISMAX_EFFLUENT_TARGET_SOURCE_ID]),
     effluentDose: Object.freeze([PRISMAX_EFFLUENT_DOSE_SOURCE_ID]),
@@ -83,18 +84,15 @@ export const prismaxCalculationAdapter: CrrtDeviceCalculationAdapter = Object.fr
 })
 
 /**
- * Resolves the learner/runtime calculation surface. Prismaflex deliberately
- * has no fallback to PrisMax math or a reviewer-only implementation.
+ * Resolves the device-specific calculation surface. The two implementations
+ * remain separate so ambiguous manual passages cannot silently fall back to
+ * another device's arithmetic.
  */
 export function getCrrtDeviceCalculationAdapter(
   deviceId: BaxterCrrtDeviceId,
 ): CrrtDeviceCalculationAdapter {
   if (deviceId === 'prismax-aw8035-2xx') return prismaxCalculationAdapter
-  if (deviceId === 'prismaflex-g5036003-6xx') {
-    throw new Error(
-      'Prismaflex calculations remain reviewer-only and are not registered in learner runtime.',
-    )
-  }
+  if (deviceId === 'prismaflex-g5036003-6xx') return prismaflexCalculationAdapter
   return assertNever(deviceId)
 }
 

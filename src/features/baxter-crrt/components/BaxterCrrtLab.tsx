@@ -1,85 +1,62 @@
 'use client'
 
-import { useEffect, useReducer, useRef, useState, type KeyboardEvent } from 'react'
-import {
-  BookOpen,
-  BrainCircuit,
-  ClipboardCheck,
-  Compass,
-  EyeOff,
-  FileClock,
-  Languages,
-  Layers3,
-  LockKeyhole,
-  MonitorCog,
-  ShieldAlert,
-  Sparkles,
-} from 'lucide-react'
+import { BookOpen, BrainCircuit, ClipboardCheck, FlaskConical, ShieldAlert } from 'lucide-react'
+import { useEffect, useMemo, useReducer, useRef, useState, type KeyboardEvent } from 'react'
 
-import { HandoffContent } from '@/i18n/handoff'
-import { recordSiteModuleEvent } from '@/lib/analytics'
-import type { BaxterCrrtAnalyticsEventPayload } from '@/lib/baxter-crrt-analytics'
-
-import { buildBaxterCrrtAnalyticsEvent } from '../analytics'
-import { baxterCrrtPublicationStatus, prismaxDraftDeviceProfile } from '../content/deviceProfiles'
-import { baxterCrrtMasteryManifest } from '../content/mastery'
 import {
-  baxterCrrtPathways,
-  getBaxterCrrtPathway,
-  type BaxterCrrtPathwayId,
-} from '../content/pathways'
-import {
-  baxterCrrtPilotCases,
-  getBaxterCrrtPilotCase,
-  isBaxterCrrtPilotCaseId,
-} from '../content/pilotCases'
-import type { RuntimeCrrtCase } from '../content/schema'
+  BAXTER_CRRT_DEVICE_IDS,
+  baxterCrrtCaseCatalog,
+  baxterCrrtLearnerCases,
+  baxterCrrtMasteryManifest,
+  baxterCrrtPublicationStatus,
+  baxterCrrtReleaseStage,
+  baxterCrrtStationLabels,
+  getBaxterCrrtCase,
+  getBaxterCrrtDeviceProfile,
+  type BaxterCrrtDeviceId,
+  type CrrtCaseId,
+} from '../content'
 import {
   createCrrtLearningSession,
   createDefaultProgress,
   crrtLearningSessionReducer,
-  progressAttemptKey,
+  getBaxterCrrtDeviceAdapter,
   readProgress,
   recordCaseResult,
   recordLessonCompletion,
   selectCrrtLearningOutcome,
-  setProgressContext,
   writeProgress,
-  type BaxterCrrtProgressV2,
+  type BaxterCrrtProgressV3,
   type CrrtLearningExperience,
-  type CrrtLearningOutcome,
   type CrrtRoleLens,
+  type CrrtRuntimeSessionMode,
 } from '../engine'
-import {
-  createInitialPrismaxPilotInterfaceState,
-  prismaxPilotInterfaceReducer,
-  selectPrismaxPilotCaseOperationsDisplay,
-  selectPrismaxPilotOperationsDisplay,
-  type PrismaxPilotInterfaceAction,
-} from '../engine/deviceAdapters/prismax'
-import { CrrtCalibrationPanel } from './CrrtCalibrationPanel'
-import {
-  CrrtLearningWorkflow,
-  CrrtReasoningRibbon,
-  type CrrtMobileSurface,
-} from './CrrtLearningWorkflow'
-import { CrrtPilotCircuit } from './CrrtPilotCircuit'
-import { CrrtReferenceDrawer } from './CrrtReferenceDrawer'
-import { CrrtResponsePanel } from './CrrtResponsePanel'
-import { PrismaxPilotInterface } from './PrismaxPilotInterface'
+import { CrrtLearningWorkflow, type CrrtMobileSurface } from './CrrtLearningWorkflow'
+import { CrrtCrossDeviceTransferReview } from './CrrtCrossDeviceTransferReview'
+import { CrrtPhase7InstructionalTools } from './CrrtPhase7InstructionalTools'
+import { CrrtRapidDrillReview } from './CrrtRapidDrillReview'
 import { SourcesPanel } from './SourcesPanel'
 import styles from './baxter-crrt.module.css'
 
-const selectablePathwayIds = baxterCrrtPathways
-  .filter((pathway) => pathway.status === 'scaffold')
-  .map((pathway) => pathway.id)
+type WorkspaceTab = 'learn' | 'practice' | 'mastery' | 'drills' | 'tools'
 
-const pathwayIcons = {
-  orientation: Compass,
-  learn: BookOpen,
-  practice: ClipboardCheck,
-  mastery: LockKeyhole,
-} as const
+interface BaxterCrrtLabProps {
+  readonly locale?: string
+  readonly sessionMode?: CrrtRuntimeSessionMode
+}
+
+const workspaceTabs: readonly {
+  readonly id: WorkspaceTab
+  readonly label: string
+  readonly summary: string
+  readonly icon: typeof BookOpen
+}[] = [
+  { id: 'learn', label: 'Learn', summary: '18 guided cases', icon: BookOpen },
+  { id: 'practice', label: 'Practice', summary: 'Scored clean attempts', icon: ClipboardCheck },
+  { id: 'mastery', label: 'Mastery', summary: 'Masked PrisMax capstone', icon: BrainCircuit },
+  { id: 'drills', label: 'Drills', summary: '7 cause-first drills', icon: ShieldAlert },
+  { id: 'tools', label: 'Tools', summary: '6 instructional labs', icon: FlaskConical },
+]
 
 const mobileSurfaces: readonly { readonly id: CrrtMobileSurface; readonly label: string }[] = [
   { id: 'case', label: 'Case' },
@@ -89,812 +66,401 @@ const mobileSurfaces: readonly { readonly id: CrrtMobileSurface; readonly label:
   { id: 'debrief', label: 'Debrief' },
 ]
 
-const mobileSurfacePanelIds: Readonly<Record<CrrtMobileSurface, string>> = {
-  case: 'baxter-crrt-mobile-panel-case',
-  machine: 'baxter-crrt-mobile-panel-machine',
-  circuit: 'baxter-crrt-mobile-panel-circuit',
-  patient: 'baxter-crrt-mobile-panel-patient',
-  debrief: 'baxter-crrt-mobile-panel-debrief',
+const roleLabels: Readonly<Record<CrrtRoleLens, string>> = {
+  integrated: 'Integrated team',
+  operator: 'Operator',
+  prescriber: 'Prescriber',
 }
 
-const initialPilotCase = baxterCrrtPilotCases[0]
-
-interface BaxterCrrtLabProps {
-  locale?: string
+function experienceForTab(tab: WorkspaceTab): CrrtLearningExperience {
+  if (tab === 'mastery') return 'mastery'
+  return tab === 'practice' ? 'practice' : 'learn'
 }
 
-type AttemptMetricFields = Partial<
-  Pick<
-    BaxterCrrtAnalyticsEventPayload,
-    | 'score'
-    | 'criticalErrorCount'
-    | 'hintCount'
-    | 'elapsedSeconds'
-    | 'timeToFirstSafeActionSeconds'
-    | 'completed'
-    | 'reassessmentCompleted'
-  >
->
-
-function analyticsLessonId(caseId: string): string {
-  return `${caseId.toLowerCase()}.learn`
+function isCrrtCaseId(value: string): value is CrrtCaseId {
+  return baxterCrrtLearnerCases.some((definition) => definition.id === value)
 }
 
-function progressCaseId(caseId: string): string {
-  return caseId.toLowerCase()
-}
-
-export default function BaxterCrrtLab({ locale = 'en' }: BaxterCrrtLabProps) {
-  const [activePathwayId, setActivePathwayId] = useState<BaxterCrrtPathwayId>('orientation')
+export default function BaxterCrrtLab({
+  locale = 'en',
+  sessionMode = 'learner',
+}: BaxterCrrtLabProps) {
+  const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>('learn')
+  const [deviceId, setDeviceId] = useState<BaxterCrrtDeviceId>('prismax-aw8035-2xx')
+  const [roleLens, setRoleLens] = useState<CrrtRoleLens>('integrated')
+  const [selectedCaseId, setSelectedCaseId] = useState<CrrtCaseId>('CRRT-01')
   const [mobileSurface, setMobileSurface] = useState<CrrtMobileSurface>('case')
-  const [workflowFocusRequest, setWorkflowFocusRequest] = useState(0)
-  const [progress, setProgress] = useState<BaxterCrrtProgressV2>(() => createDefaultProgress())
-  const [pilotState, pilotDispatch] = useReducer(
-    prismaxPilotInterfaceReducer,
-    undefined,
-    createInitialPrismaxPilotInterfaceState,
-  )
-  const [learningSession, learningDispatch] = useReducer(
-    crrtLearningSessionReducer,
-    undefined,
-    () =>
-      createCrrtLearningSession({
-        caseDefinition: initialPilotCase,
-        experience: 'learn',
-        roleLens: 'integrated',
-        attempt: 1,
-      }),
-  )
-  const tabRefs = useRef<Partial<Record<BaxterCrrtPathwayId, HTMLButtonElement | null>>>({})
-  const mobileTabRefs = useRef<Partial<Record<CrrtMobileSurface, HTMLButtonElement | null>>>({})
-  const workflowHeadingRef = useRef<HTMLHeadingElement>(null)
-  const activePathway = getBaxterCrrtPathway(activePathwayId)
-  const orientationOperations = selectPrismaxPilotOperationsDisplay(pilotState)
-  const caseOperations = selectPrismaxPilotCaseOperationsDisplay(
-    learningSession.interfaceState,
-    learningSession.simulation,
-  )
-  const learningOutcome = selectCrrtLearningOutcome(learningSession)
-  const isLearningPathway = activePathwayId === 'learn' || activePathwayId === 'practice'
-  const isMasteryIdentityMasked =
-    learningSession.experience === 'mastery' && !learningSession.debriefRevealed
-  const reasoningPanelHeading =
-    learningSession.experience === 'mastery'
-      ? 'Masked case · Mastery attempt'
-      : `${learningSession.caseDefinition.id} · ${
-          learningSession.experience === 'learn' ? 'Guided Learn' : 'Scored Practice'
-        }`
-  const activeAlarms = learningSession.simulation.alarms.filter((alarm) => alarm.active)
+  const [progress, setProgress] = useState<BaxterCrrtProgressV3>(() => createDefaultProgress())
+  const [progressHydrated, setProgressHydrated] = useState(false)
+  const workspaceTabRefs = useRef<Partial<Record<WorkspaceTab, HTMLButtonElement>>>({})
+  const mobileTabRefs = useRef<Partial<Record<CrrtMobileSurface, HTMLButtonElement>>>({})
 
-  useEffect(() => {
-    setProgress(readProgress())
-  }, [])
+  const experience = experienceForTab(workspaceTab)
+  const effectiveCaseId = experience === 'mastery' ? 'CRRT-16' : selectedCaseId
+  const caseDefinition = getBaxterCrrtCase(effectiveCaseId)
+  const effectiveDeviceId = experience === 'mastery' ? baxterCrrtMasteryManifest.deviceId : deviceId
+  const profile = getBaxterCrrtDeviceProfile(effectiveDeviceId)
+  const adapter = getBaxterCrrtDeviceAdapter(effectiveDeviceId)
 
-  useEffect(() => {
-    if (workflowFocusRequest > 0 && isLearningPathway) {
-      workflowHeadingRef.current?.focus()
-      setWorkflowFocusRequest(0)
-    }
-  }, [isLearningPathway, workflowFocusRequest])
-
-  function emitAnalytics(eventPayload: BaxterCrrtAnalyticsEventPayload) {
-    const event = buildBaxterCrrtAnalyticsEvent({ eventPayload })
-    recordSiteModuleEvent({
-      eventType: event.eventType,
-      moduleId: event.moduleId,
-      eventPayload: { ...event.eventPayload },
-    })
-  }
-
-  function emitLearningEvent(
-    interaction: BaxterCrrtAnalyticsEventPayload['interaction'],
-    metrics: AttemptMetricFields = {},
-    context: {
-      readonly experience?: CrrtLearningExperience
-      readonly caseDefinition?: RuntimeCrrtCase
-      readonly roleLens?: CrrtRoleLens
-    } = {},
-  ) {
-    const experience = context.experience ?? learningSession.experience
-    if (experience !== 'learn' && experience !== 'practice') return
-
-    const caseDefinition = context.caseDefinition ?? learningSession.caseDefinition
-    const roleLens = context.roleLens ?? learningSession.roleLens
-    const identity =
-      experience === 'learn'
-        ? { lessonId: analyticsLessonId(caseDefinition.id) }
-        : { caseId: caseDefinition.id }
-    emitAnalytics({
-      interaction,
-      pathway: experience,
-      device: 'prismax-aw8035-2xx',
-      role: roleLens,
-      ...identity,
-      ...metrics,
-    } as BaxterCrrtAnalyticsEventPayload)
-  }
-
-  function emitOpenEvent(
-    experience: CrrtLearningExperience,
-    caseDefinition: RuntimeCrrtCase,
-    roleLens = learningSession.roleLens,
-  ) {
-    emitLearningEvent(
-      experience === 'learn' ? 'lesson_opened' : 'case_opened',
-      {},
-      {
-        experience,
-        caseDefinition,
-        roleLens,
-      },
-    )
-  }
-
-  function attemptFor(
-    caseDefinition: RuntimeCrrtCase,
-    roleLens: CrrtRoleLens,
-    experience: CrrtLearningExperience = learningSession.experience,
-  ): number {
-    const key = progressAttemptKey(
-      'prismax-aw8035-2xx',
-      roleLens,
+  const initialSessionOptions = useMemo(
+    () => ({
+      caseDefinition,
       experience,
-      progressCaseId(caseDefinition.id),
-    )
-    return (progress.attempts[key] ?? 0) + 1
-  }
+      roleLens,
+      attempt: 1,
+      deviceId: effectiveDeviceId,
+      mode: sessionMode,
+    }),
+    // The reducer is explicitly reloaded by the effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const [session, dispatch] = useReducer(
+    crrtLearningSessionReducer,
+    initialSessionOptions,
+    createCrrtLearningSession,
+  )
 
-  function loadLearningCase(
-    caseDefinition: RuntimeCrrtCase,
-    experience: CrrtLearningExperience,
-    roleLens: CrrtRoleLens,
-    attempt = attemptFor(caseDefinition, roleLens, experience),
-    restoreWorkflowFocus = true,
-  ) {
-    learningDispatch({
+  useEffect(() => {
+    if (sessionMode === 'learner') setProgress(readProgress())
+    setProgressHydrated(true)
+  }, [sessionMode])
+
+  useEffect(() => {
+    if (workspaceTab === 'drills' || workspaceTab === 'tools') return
+    dispatch({
       type: 'LOAD_CASE',
       caseDefinition,
       experience,
       roleLens,
-      attempt,
+      attempt: 1,
+      deviceId: effectiveDeviceId,
+      mode: sessionMode,
     })
     setMobileSurface('case')
-    if (restoreWorkflowFocus) setWorkflowFocusRequest((request) => request + 1)
+  }, [caseDefinition, effectiveDeviceId, experience, roleLens, sessionMode, workspaceTab])
+
+  function chooseTab(tab: WorkspaceTab) {
+    setWorkspaceTab(tab)
+    if (tab === 'mastery') setDeviceId('prismax-aw8035-2xx')
   }
 
-  function selectPathway(pathwayId: BaxterCrrtPathwayId) {
-    if (pathwayId === 'mastery') return
-    if (pathwayId === activePathwayId) return
-    setActivePathwayId(pathwayId)
-    emitAnalytics({
-      interaction: 'pathway_selected',
-      pathway: pathwayId,
-      device: 'prismax-aw8035-2xx',
-      role: learningSession.roleLens,
-    })
-    if (pathwayId === 'learn' || pathwayId === 'practice') {
-      loadLearningCase(
-        learningSession.caseDefinition,
-        pathwayId,
-        learningSession.roleLens,
-        learningSession.attempt,
-        false,
-      )
-      emitOpenEvent(pathwayId, learningSession.caseDefinition)
-    }
-  }
-
-  function selectAndFocus(pathwayId: BaxterCrrtPathwayId) {
-    selectPathway(pathwayId)
-    tabRefs.current[pathwayId]?.focus()
-  }
-
-  function handlePathwayKeyDown(
+  function moveTabFocus<T extends string>(
     event: KeyboardEvent<HTMLButtonElement>,
-    pathwayId: BaxterCrrtPathwayId,
+    ids: readonly T[],
+    currentId: T,
+    select: (id: T) => void,
+    refs: Readonly<Partial<Record<T, HTMLButtonElement>>>,
   ) {
-    const currentIndex = selectablePathwayIds.indexOf(pathwayId)
-    if (currentIndex < 0) return
-
+    const currentIndex = ids.indexOf(currentId)
     let nextIndex: number | null = null
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      nextIndex = (currentIndex + 1) % selectablePathwayIds.length
+      nextIndex = (currentIndex + 1) % ids.length
     } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      nextIndex = (currentIndex - 1 + selectablePathwayIds.length) % selectablePathwayIds.length
+      nextIndex = (currentIndex - 1 + ids.length) % ids.length
     } else if (event.key === 'Home') {
       nextIndex = 0
     } else if (event.key === 'End') {
-      nextIndex = selectablePathwayIds.length - 1
+      nextIndex = ids.length - 1
     }
-
     if (nextIndex === null) return
     event.preventDefault()
-    selectAndFocus(selectablePathwayIds[nextIndex])
+    const nextId = ids[nextIndex]
+    select(nextId)
+    refs[nextId]?.focus()
   }
 
-  function selectAndFocusMobileSurface(surfaceId: CrrtMobileSurface) {
-    setMobileSurface(surfaceId)
-    mobileTabRefs.current[surfaceId]?.focus()
+  function chooseCase(caseId: string) {
+    if (!isCrrtCaseId(caseId)) return
+    setSelectedCaseId(caseId)
   }
 
-  function handleMobileSurfaceKeyDown(
-    event: KeyboardEvent<HTMLButtonElement>,
-    surfaceId: CrrtMobileSurface,
-  ) {
-    const currentIndex = mobileSurfaces.findIndex((surface) => surface.id === surfaceId)
-    if (currentIndex < 0) return
-
-    let nextIndex: number | null = null
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      nextIndex = (currentIndex + 1) % mobileSurfaces.length
-    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      nextIndex = (currentIndex - 1 + mobileSurfaces.length) % mobileSurfaces.length
-    } else if (event.key === 'Home') {
-      nextIndex = 0
-    } else if (event.key === 'End') {
-      nextIndex = mobileSurfaces.length - 1
-    }
-
-    if (nextIndex === null) return
-    event.preventDefault()
-    selectAndFocusMobileSurface(mobileSurfaces[nextIndex].id)
+  function persistProgress(next: BaxterCrrtProgressV3) {
+    setProgress(next)
+    if (progressHydrated) writeProgress(next, undefined, sessionMode)
   }
 
-  function handleCaseChange(caseId: string) {
-    if (!isBaxterCrrtPilotCaseId(caseId)) return
-    const caseDefinition = getBaxterCrrtPilotCase(caseId)
-    loadLearningCase(caseDefinition, learningSession.experience, learningSession.roleLens)
-    emitOpenEvent(learningSession.experience, caseDefinition)
-  }
-
-  function handleRoleChange(roleLens: CrrtRoleLens) {
-    loadLearningCase(learningSession.caseDefinition, learningSession.experience, roleLens)
-    const nextProgress = setProgressContext(progress, {
-      device: 'prismax-aw8035-2xx',
-      roleLens,
-      station: learningSession.caseDefinition.stationId,
-    })
-    setProgress(nextProgress)
-    writeProgress(nextProgress)
-    if (learningSession.experience !== 'mastery') {
-      emitAnalytics({
-        interaction: 'role_selected',
-        pathway: learningSession.experience,
-        device: 'prismax-aw8035-2xx',
-        role: roleLens,
-      })
-    }
-    emitOpenEvent(learningSession.experience, learningSession.caseDefinition, roleLens)
-  }
-
-  function handleCleanAttempt() {
-    learningDispatch({ type: 'RESET', attempt: learningSession.attempt + 1 })
-    setMobileSurface('case')
-    setWorkflowFocusRequest((request) => request + 1)
-    emitOpenEvent(learningSession.experience, learningSession.caseDefinition)
-  }
-
-  function handleCaseDeviceAction(action: PrismaxPilotInterfaceAction) {
-    if (action.type === 'RESET_INTERFACE') {
-      handleCleanAttempt()
-      return
-    }
-    learningDispatch({ type: 'DEVICE_ACTION', action })
-  }
-
-  function handleDebriefRevealed(outcome: CrrtLearningOutcome) {
-    const elapsedSeconds = Math.min(
-      86_400,
-      Math.max(0, Math.round(learningSession.simulation.simulationTimeSeconds)),
-    )
-    const contextProgress = setProgressContext(progress, {
-      device: 'prismax-aw8035-2xx',
-      roleLens: learningSession.roleLens,
-      station: learningSession.caseDefinition.stationId,
-    })
-
-    if (learningSession.experience === 'learn') {
-      const nextProgress = recordLessonCompletion(
-        contextProgress,
-        analyticsLessonId(learningSession.caseDefinition.id),
+  function recordDebrief() {
+    if (!session.persistenceEnabled) return
+    const outcome = selectCrrtLearningOutcome(session)
+    if (session.experience === 'learn') {
+      persistProgress(
+        recordLessonCompletion(progress, `${session.caseDefinition.id.toLowerCase()}.learn`),
       )
-      setProgress(nextProgress)
-      writeProgress(nextProgress)
-      emitLearningEvent('lesson_completed', { completed: true, elapsedSeconds })
       return
     }
-
     if (!outcome.scored || outcome.score === null) return
     const resultId =
-      learningSession.experience === 'mastery'
-        ? learningSession.masteryCapstoneId
-        : progressCaseId(learningSession.caseDefinition.id)
-    if (resultId === null) return
-
-    const score = outcome.score
-    const nextProgress = recordCaseResult(contextProgress, {
-      caseId: resultId,
-      device: 'prismax-aw8035-2xx',
-      roleLens: learningSession.roleLens,
-      pathway: learningSession.experience,
-      score,
-      criticalError: outcome.criticalErrorIds.length > 0,
-      hintCount: learningSession.usedHintIds.length,
-      reassessmentCompleted: outcome.reassessmentComplete,
-      masteryCompleted: outcome.mastery,
-    })
-    setProgress(nextProgress)
-    writeProgress(nextProgress)
-    emitLearningEvent('case_completed', {
-      score,
-      criticalErrorCount: outcome.criticalErrorIds.length,
-      hintCount: learningSession.usedHintIds.length,
-      elapsedSeconds,
-      completed: true,
-      reassessmentCompleted: outcome.reassessmentComplete,
-    })
+      session.experience === 'mastery'
+        ? baxterCrrtMasteryManifest.id
+        : session.caseDefinition.id.toLowerCase()
+    persistProgress(
+      recordCaseResult(progress, {
+        caseId: resultId,
+        device: session.simulation.deviceId,
+        roleLens: session.roleLens,
+        pathway: session.experience === 'mastery' ? 'mastery' : 'practice',
+        score: outcome.score,
+        criticalError: outcome.criticalErrorIds.length > 0,
+        hintCount: session.usedHintIds.length,
+        reassessmentCompleted: outcome.reassessmentComplete,
+        masteryCompleted: outcome.mastery,
+      }),
+    )
   }
 
+  const caseGroups = ([1, 2, 3, 4, 5, 6] as const).map((station) => ({
+    station,
+    label: baxterCrrtStationLabels[station],
+    cases: baxterCrrtCaseCatalog.filter((entry) => entry.station === station),
+  }))
+
   return (
-    <HandoffContent>
-      <main
-        className={styles.moduleShell}
-        data-no-handoff-translate={locale !== 'en'}
-        data-publication-status={baxterCrrtPublicationStatus}
-      >
-        <header className={styles.hero}>
-          <div className={styles.heroGlow} aria-hidden="true" />
-          <div className={styles.heroCopy}>
-            <div className={styles.heroBadges}>
-              <span>
-                <EyeOff aria-hidden="true" /> Authenticated draft
-              </span>
-              <span>
-                <FileClock aria-hidden="true" /> PrisMax AW8035 Rev B
-              </span>
-              <span>
-                <ShieldAlert aria-hidden="true" /> Review pending
-              </span>
-            </div>
-            <p className={styles.eyebrow}>Adult ICU CRRT · independent educational pilot</p>
-            <h1>CRRT Learn &amp; Practice workspace</h1>
-            <p className={styles.heroLead}>
-              The Phase 7 draft-development candidate preserves the three-case protected pilot while
-              adding a fail-closed 18-case curriculum registry, rapid-drill manifests, and isolated
-              Mastery engine semantics for exact-version review.
-            </p>
+    <main
+      className={styles.moduleShell}
+      data-release-stage={baxterCrrtReleaseStage}
+      data-publication-status={baxterCrrtPublicationStatus}
+      data-session-mode={sessionMode}
+      data-analytics={sessionMode === 'review-preview' ? 'suppressed' : 'allowlisted'}
+      data-progress-write={sessionMode === 'review-preview' ? 'suppressed' : 'v3'}
+      data-no-handoff-translate={locale === 'en' ? undefined : 'true'}
+    >
+      <section className={styles.hero} aria-labelledby="baxter-crrt-heading">
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>Adult ICU CRRT · private educational workspace</p>
+          <h1 id="baxter-crrt-heading">Baxter CRRT Learn, Practice &amp; Mastery</h1>
+          <p className={styles.heroLead}>
+            Build causal reasoning across 18 cases, seven rapid drills, six instructional tools, two
+            manual-reference device profiles, and a masked PrisMax capstone.
+          </p>
+          <div className={styles.heroBadges}>
+            <span>{baxterCrrtReleaseStage}</span>
+            <span>
+              {sessionMode === 'review-preview' ? 'SME preview · no writes' : 'progress v3'}
+            </span>
+            <span>English source content</span>
           </div>
+        </div>
+      </section>
 
-          {!isMasteryIdentityMasked ? (
-            <aside className={styles.phaseGate} aria-label="Current implementation phase">
-              <span>Phase 7 draft development</span>
-              <strong>Curriculum architecture implemented; content activation pending</strong>
-              <ul>
-                <li>
-                  <span aria-hidden="true">✓</span> Prediction-gated Learn and Practice
-                </li>
-                <li>
-                  <span aria-hidden="true">✓</span> CRRT-04, CRRT-10, and CRRT-13
-                </li>
-                <li>
-                  <span aria-hidden="true">✓</span> Scoring, hints, debrief, progress &amp;
-                  aggregate analytics
-                </li>
-                <li>
-                  <span aria-hidden="true">✓</span> Accessibility engineering and review package
-                  assembled
-                </li>
-                <li>
-                  <span aria-hidden="true">✓</span> All 18 case IDs, seven rapid-drill IDs, and
-                  fail-closed Mastery rules registered
-                </li>
-                <li>
-                  <span aria-hidden="true">○</span> Clinical, device, accessibility, localization,
-                  privacy/data-governance, entitlement/security, product-owner &amp; publication
-                  approval pending
-                </li>
-              </ul>
-              {baxterCrrtPublicationStatus !== 'published' ? (
-                <a className={styles.reviewerWorkspaceLink} href={`/${locale}/baxter-crrt/review`}>
-                  Open CRRT reviewer workspace
-                </a>
-              ) : null}
-            </aside>
-          ) : null}
-        </header>
+      <section className={styles.safetyBanner} role="note" aria-label="Educational safety notice">
+        <ShieldAlert aria-hidden="true" />
+        <div>
+          <strong>Education only—never patient-specific advice or a local operating policy.</strong>
+          <p>
+            Synthetic scenario values are not treatment recommendations, clinical goals, alarm
+            limits, or proof of competency. Use current device instructions, authorized local
+            protocols, supervision, and clinical judgment for patient care.
+          </p>
+        </div>
+      </section>
 
-        <section className={styles.safetyBanner} aria-label="Educational safety boundary">
-          <ShieldAlert aria-hidden="true" />
+      {locale !== 'en' ? (
+        <section className={styles.languageFallback} role="note">
+          <BookOpen aria-hidden="true" />
           <div>
-            <strong>Professional education only.</strong>
-            <p>
-              This is not a clinical device, validated digital twin, certification program,
-              patient-specific treatment guide, or substitute for the current operator&apos;s
-              manual, local protocol, supervised hands-on training, or multidisciplinary clinical
-              judgment. This independent educational module is not manufactured, sponsored,
-              validated, or endorsed by Baxter.
-            </p>
-            <small>
-              All case values, model coefficients, thresholds, accepted paths, scores, and
-              critical-error candidates are synthetic and review-pending. They are not clinical
-              defaults, targets, recommendations, or validated device behavior.
-            </small>
+            <strong>Reviewed-English fallback</strong>
+            <p>English remains authoritative while localized CRRT content is unavailable.</p>
           </div>
         </section>
+      ) : null}
 
-        {locale !== 'en' ? (
-          <div className={styles.languageFallback} data-no-handoff-translate={true} role="note">
-            <Languages aria-hidden="true" />
-            <p>
-              <strong>Reviewed-English fallback:</strong> CRRT clinical and device copy remains in
-              English until independent translation review is complete.
-            </p>
-          </div>
-        ) : null}
+      <dl className={styles.profileStrip} aria-label="CRRT workspace controls">
+        <div>
+          <dt>Device</dt>
+          <dd>
+            <select
+              aria-label="Device profile"
+              value={effectiveDeviceId}
+              disabled={experience === 'mastery'}
+              onChange={(event) => setDeviceId(event.target.value as BaxterCrrtDeviceId)}
+            >
+              {BAXTER_CRRT_DEVICE_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {getBaxterCrrtDeviceProfile(id).displayName}
+                </option>
+              ))}
+            </select>
+          </dd>
+        </div>
+        <div>
+          <dt>Role lens</dt>
+          <dd>
+            <select
+              aria-label="Role lens"
+              value={roleLens}
+              onChange={(event) => setRoleLens(event.target.value as CrrtRoleLens)}
+            >
+              {Object.entries(roleLabels).map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </dd>
+        </div>
+        <div>
+          <dt>Reference</dt>
+          <dd>
+            {profile.manualNumber} · {profile.manualRevision}
+          </dd>
+        </div>
+        <div>
+          <dt>Configuration claim</dt>
+          <dd>None · optional local extension not loaded</dd>
+        </div>
+      </dl>
 
-        <dl className={styles.profileStrip} aria-label="Locked draft device profile">
+      <section className={styles.pathwaySection} aria-labelledby="workspace-pathways-heading">
+        <div className={styles.sectionHeading}>
           <div>
-            <dt>Profile</dt>
-            <dd>{prismaxDraftDeviceProfile.displayName}</dd>
+            <span className={styles.kicker}>Workspace</span>
+            <h2 id="workspace-pathways-heading">Choose a learning experience</h2>
           </div>
-          <div>
-            <dt>Source revision</dt>
-            <dd>
-              {prismaxDraftDeviceProfile.manualNumber} · {prismaxDraftDeviceProfile.manualRevision}
-            </dd>
-          </div>
-          <div>
-            <dt>Source software</dt>
-            <dd>{prismaxDraftDeviceProfile.sourceProgramFamily}</dd>
-          </div>
-          <div>
-            <dt>Market/configuration</dt>
-            <dd>{prismaxDraftDeviceProfile.marketConfiguration}</dd>
-          </div>
-          <div>
-            <dt>Availability</dt>
-            <dd>Orientation + three-case CVVHD pilot</dd>
-          </div>
-          <div>
-            <dt>Review</dt>
-            <dd>
-              Device, clinical, accessibility, localization, privacy/data-governance,
-              entitlement/security, product-owner &amp; publication pending
-            </dd>
-          </div>
-        </dl>
+        </div>
+        <div className={styles.pathwayTabs} role="tablist" aria-label="CRRT learning experiences">
+          {workspaceTabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                id={`baxter-crrt-workspace-tab-${tab.id}`}
+                ref={(node) => {
+                  if (node) workspaceTabRefs.current[tab.id] = node
+                }}
+                type="button"
+                role="tab"
+                aria-selected={workspaceTab === tab.id}
+                aria-controls={`baxter-crrt-${tab.id}-panel`}
+                tabIndex={workspaceTab === tab.id ? 0 : -1}
+                onClick={() => chooseTab(tab.id)}
+                onKeyDown={(event) =>
+                  moveTabFocus(
+                    event,
+                    workspaceTabs.map(({ id }) => id),
+                    tab.id,
+                    chooseTab,
+                    workspaceTabRefs.current,
+                  )
+                }
+              >
+                <Icon aria-hidden="true" />
+                <span>
+                  <strong>{tab.label}</strong>
+                  <small>{tab.summary}</small>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
 
-        <section className={styles.pathwaySection} aria-labelledby="crrt-pathway-heading">
-          <div className={styles.sectionHeading}>
-            <div>
-              <span className={styles.kicker}>Learning pathway</span>
-              <h2 id="crrt-pathway-heading">
-                Orient, learn with guidance, then practice independently
-              </h2>
+      {workspaceTab === 'drills' ? (
+        <section
+          id="baxter-crrt-drills-panel"
+          role="tabpanel"
+          aria-labelledby="baxter-crrt-workspace-tab-drills"
+        >
+          <CrrtRapidDrillReview />
+        </section>
+      ) : workspaceTab === 'tools' ? (
+        <section
+          id="baxter-crrt-tools-panel"
+          role="tabpanel"
+          aria-labelledby="baxter-crrt-workspace-tab-tools"
+        >
+          <CrrtPhase7InstructionalTools />
+        </section>
+      ) : (
+        <section
+          id={`baxter-crrt-${workspaceTab}-panel`}
+          className={styles.workbenchSection}
+          role="tabpanel"
+          aria-labelledby={`baxter-crrt-workspace-tab-${workspaceTab}`}
+          aria-label={`${workspaceTab} workspace`}
+        >
+          <div className={styles.workspaceControls}>
+            <label>
+              <span>Station-grouped case</span>
+              <select
+                value={effectiveCaseId}
+                disabled={experience === 'mastery'}
+                onChange={(event) => chooseCase(event.target.value)}
+              >
+                {caseGroups.map((group) => (
+                  <optgroup key={group.station} label={`${group.station}. ${group.label}`}>
+                    {group.cases.map((entry) => (
+                      <option key={entry.id} value={entry.id}>
+                        {entry.id} · {entry.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <div className={styles.deviceSummary}>
+              <strong>{profile.displayName}</strong>
+              <span>
+                {adapter.getSetupSteps().length} setup steps ·{' '}
+                {effectiveDeviceId === 'prismax-aw8035-2xx'
+                  ? 'procedure workflow'
+                  : 'softkey workflow'}
+              </span>
+              <small>{profile.marketConfiguration}</small>
             </div>
-            <span className={styles.scaffoldLabel}>
-              <Sparkles aria-hidden="true" /> Three-case draft pilot
-            </span>
-          </div>
-
-          <div className={styles.pathwayTabs} role="tablist" aria-label="CRRT learning pathway">
-            {baxterCrrtPathways.map((pathway) => {
-              const Icon = pathwayIcons[pathway.id]
-              const locked = pathway.status === 'locked'
-              const selected = pathway.id === activePathwayId
-              return (
-                <button
-                  key={pathway.id}
-                  id={`baxter-crrt-pathway-tab-${pathway.id}`}
-                  ref={(node) => {
-                    tabRefs.current[pathway.id] = node
-                  }}
-                  type="button"
-                  role="tab"
-                  aria-controls="baxter-crrt-pathway-panel"
-                  aria-selected={selected}
-                  aria-disabled={locked}
-                  disabled={locked}
-                  tabIndex={selected ? 0 : -1}
-                  onClick={() => selectPathway(pathway.id)}
-                  onKeyDown={(event) => handlePathwayKeyDown(event, pathway.id)}
-                >
-                  <Icon aria-hidden="true" />
-                  <span>
-                    <strong>{pathway.label}</strong>
-                    <small>{pathway.eyebrow}</small>
-                  </span>
-                  <em>{pathway.statusLabel}</em>
-                </button>
-              )
-            })}
           </div>
 
           <div
-            id="baxter-crrt-pathway-panel"
-            className={styles.pathwayPanel}
-            role="tabpanel"
-            aria-labelledby={`baxter-crrt-pathway-tab-${activePathwayId}`}
-            aria-live="polite"
+            className={styles.mobileSurfaceTabs}
+            role="tablist"
+            aria-label="CRRT mobile workspace surface"
           >
-            <div>
-              <span>{activePathway.label}</span>
-              <strong>{activePathway.statusLabel}</strong>
-            </div>
-            <p>{activePathway.summary}</p>
-          </div>
-        </section>
-
-        <section className={styles.workbenchSection} aria-labelledby="crrt-workbench-heading">
-          <div className={styles.sectionHeading}>
-            <div>
-              <span className={styles.kicker}>Three-domain workbench</span>
-              <h2 id="crrt-workbench-heading">
-                {isLearningPathway
-                  ? 'Predict, act, reassess, and explain the causal chain'
-                  : 'Run the device checkout and inspect the live surface'}
-              </h2>
-            </div>
-            <span className={styles.scaffoldLabel}>
-              <Layers3 aria-hidden="true" />
-              {isLearningPathway ? 'Protected three-case pilot' : 'Functional Orientation'}
-            </span>
-          </div>
-
-          {isLearningPathway ? (
-            <>
-              <CrrtReasoningRibbon session={learningSession} />
-
-              <div className={styles.mobileSurfaceTabs}>
-                <div role="tablist" aria-label="CRRT mobile workspace surface">
-                  {mobileSurfaces.map((surface) => (
-                    <button
-                      key={surface.id}
-                      id={`baxter-crrt-mobile-tab-${surface.id}`}
-                      ref={(node) => {
-                        mobileTabRefs.current[surface.id] = node
-                      }}
-                      type="button"
-                      role="tab"
-                      aria-controls={mobileSurfacePanelIds[surface.id]}
-                      aria-selected={mobileSurface === surface.id}
-                      tabIndex={mobileSurface === surface.id ? 0 : -1}
-                      onClick={() => setMobileSurface(surface.id)}
-                      onKeyDown={(event) => handleMobileSurfaceKeyDown(event, surface.id)}
-                    >
-                      {surface.label}
-                    </button>
-                  ))}
-                </div>
-                <p role={activeAlarms.length > 0 ? 'alert' : 'status'}>
-                  <ShieldAlert aria-hidden="true" />
-                  {activeAlarms.length > 0
-                    ? `${activeAlarms.length} active generic engine alarm${activeAlarms.length === 1 ? '' : 's'}: ${activeAlarms.map((alarm) => alarm.code).join(', ')}. Device-specific priority is not mapped.`
-                    : 'No active generic engine alarms'}
-                </p>
-              </div>
-
-              <div className={styles.workbench} data-learning-workbench="true">
-                <article
-                  className={styles.workbenchPanel}
-                  aria-labelledby="reasoning-panel-heading"
-                  data-mobile-active={mobileSurface === 'case' || mobileSurface === 'debrief'}
-                >
-                  <div className={styles.panelHeading}>
-                    <BrainCircuit aria-hidden="true" />
-                    <div>
-                      <span>Patient &amp; reasoning</span>
-                      <h3
-                        ref={workflowHeadingRef}
-                        id="reasoning-panel-heading"
-                        tabIndex={-1}
-                        aria-label={`${reasoningPanelHeading}. Attempt ${learningSession.attempt}.`}
-                      >
-                        {reasoningPanelHeading}
-                      </h3>
-                    </div>
-                  </div>
-                  <CrrtLearningWorkflow
-                    key={`${learningSession.caseDefinition.id}-${learningSession.experience}-${learningSession.roleLens}-${learningSession.attempt}`}
-                    session={learningSession}
-                    dispatch={learningDispatch}
-                    availableCases={baxterCrrtPilotCases}
-                    mobileSurface={mobileSurface}
-                    onCaseChange={handleCaseChange}
-                    onRoleChange={handleRoleChange}
-                    onReset={handleCleanAttempt}
-                    onPredictionCommitted={() => emitLearningEvent('prediction_committed')}
-                    onHintUsed={() => emitLearningEvent('hint_requested')}
-                    onFirstSafeAction={() => {
-                      if (learningSession.experience === 'practice') {
-                        const seconds = Math.min(
-                          86_400,
-                          Math.max(0, Math.round(learningSession.simulation.simulationTimeSeconds)),
-                        )
-                        emitLearningEvent('first_safe_action', {
-                          elapsedSeconds: seconds,
-                          timeToFirstSafeActionSeconds: seconds,
-                        })
-                      }
-                    }}
-                    onReassessmentCommitted={() =>
-                      emitLearningEvent('reassessment_completed', {
-                        reassessmentCompleted: true,
-                      })
-                    }
-                    onDebriefRevealed={handleDebriefRevealed}
-                  />
-                </article>
-
-                <article
-                  id={mobileSurfacePanelIds.machine}
-                  className={[styles.workbenchPanel, styles.devicePanel].join(' ')}
-                  role="tabpanel"
-                  aria-labelledby="baxter-crrt-mobile-tab-machine"
-                  data-mobile-active={mobileSurface === 'machine'}
-                >
-                  <div className={styles.panelHeading}>
-                    <MonitorCog aria-hidden="true" />
-                    <div>
-                      <span>Educational device surface</span>
-                      <h3 id="device-panel-heading">Functional PrisMax pilot</h3>
-                    </div>
-                  </div>
-                  <PrismaxPilotInterface
-                    state={learningSession.interfaceState}
-                    dispatch={handleCaseDeviceAction}
-                    controlsEnabled={
-                      Boolean(learningSession.prediction) && !learningSession.debriefRevealed
-                    }
-                    operationsDisplay={caseOperations}
-                    caseContext={
-                      isMasteryIdentityMasked
-                        ? {
-                            identityMasked: true,
-                            learnerLabel: baxterCrrtMasteryManifest.learnerTitleBeforeDebrief,
-                            pathway: 'mastery',
-                          }
-                        : {
-                            identityMasked: false,
-                            caseId: learningSession.caseDefinition.id,
-                            title: learningSession.caseDefinition.title,
-                            pathway: learningSession.experience,
-                          }
-                    }
-                  />
-                </article>
-
-                <div
-                  className={styles.responseColumn}
-                  data-mobile-active={mobileSurface === 'circuit' || mobileSurface === 'patient'}
-                >
-                  <div
-                    id={mobileSurfacePanelIds.circuit}
-                    role="tabpanel"
-                    aria-labelledby="baxter-crrt-mobile-tab-circuit"
-                    data-mobile-active={mobileSurface === 'circuit'}
-                  >
-                    <CrrtPilotCircuit
-                      running={learningSession.simulation.device.deliveryState === 'running'}
-                      setReady={learningSession.interfaceState.completedStepIds.includes('sets')}
-                      fluidsReady={learningSession.interfaceState.completedStepIds.includes(
-                        'fluids',
-                      )}
-                      bloodFlowMlMin={caseOperations.flows?.bloodFlowMlMin ?? null}
-                      dialysateFlowMlHour={caseOperations.flows?.dialysateFlowMlHour ?? null}
-                      patientFluidRemovalMlHour={
-                        caseOperations.flows?.patientFluidRemovalMlHour ?? null
-                      }
-                      pressure={{
-                        access: caseOperations.pressures.accessPressureMmHg,
-                        filter: caseOperations.pressures.filterPressureMmHg,
-                        return: caseOperations.pressures.returnPressureMmHg,
-                        effluent: caseOperations.pressures.effluentPressureMmHg,
-                        TMP: caseOperations.pressures.transmembranePressureMmHg,
-                        filterDrop: caseOperations.pressures.filterPressureDropMmHg,
-                      }}
-                    />
-                  </div>
-                  <div
-                    id={mobileSurfacePanelIds.patient}
-                    role="tabpanel"
-                    aria-labelledby="baxter-crrt-mobile-tab-patient"
-                    data-mobile-active={mobileSurface === 'patient'}
-                  >
-                    <CrrtResponsePanel state={learningSession.simulation} />
-                  </div>
-                </div>
-              </div>
-
-              {!isMasteryIdentityMasked ? (
-                <CrrtReferenceDrawer
-                  key={`${learningSession.caseDefinition.id}-${learningSession.experience}-${learningSession.roleLens}-${learningSession.attempt}`}
-                  session={learningSession}
-                />
-              ) : null}
-
-              {!isMasteryIdentityMasked ? (
-                <CrrtCalibrationPanel
-                  state={learningSession.simulation}
-                  attempt={learningSession.attempt}
-                  matchedPathId={
-                    learningOutcome.matchedRequiredPath
-                      ? 'required-path'
-                      : (learningOutcome.matchedAcceptedPathIds[0] ?? null)
-                  }
-                  criticalErrorIds={learningOutcome.criticalErrorIds}
-                />
-              ) : null}
-            </>
-          ) : (
-            <div className={styles.workbench}>
-              <article className={styles.workbenchPanel} aria-labelledby="reasoning-panel-heading">
-                <div className={styles.panelHeading}>
-                  <BrainCircuit aria-hidden="true" />
-                  <div>
-                    <span>Patient &amp; reasoning</span>
-                    <h3 id="reasoning-panel-heading">No case loaded</h3>
-                  </div>
-                </div>
-                <p>
-                  Orientation remains case-free so learners can inspect the interface sequence,
-                  original circuit topology, blank controls, and clean reload without physiology or
-                  scoring.
-                </p>
-                <ul className={styles.caseBoundaryList} aria-label="Orientation case boundary">
-                  <li>
-                    <span aria-hidden="true">—</span> No patient identifiers or physiology
-                  </li>
-                  <li>
-                    <span aria-hidden="true">—</span> No case values, targets, or thresholds
-                  </li>
-                  <li>
-                    <span aria-hidden="true">—</span> No prediction, hints, scoring, or debrief
-                  </li>
-                  <li>
-                    <span aria-hidden="true">✓</span> Blank, learner-entered interface values only
-                  </li>
-                </ul>
-              </article>
-
-              <article
-                className={[styles.workbenchPanel, styles.devicePanel].join(' ')}
-                aria-labelledby="device-panel-heading"
-              >
-                <div className={styles.panelHeading}>
-                  <MonitorCog aria-hidden="true" />
-                  <div>
-                    <span>Educational device surface</span>
-                    <h3 id="device-panel-heading">Functional PrisMax pilot</h3>
-                  </div>
-                </div>
-                <PrismaxPilotInterface state={pilotState} dispatch={pilotDispatch} />
-              </article>
-
-              <CrrtPilotCircuit
-                running={pilotState.treatmentState === 'running'}
-                setReady={pilotState.completedStepIds.includes('sets')}
-                fluidsReady={pilotState.completedStepIds.includes('fluids')}
-                bloodFlowMlMin={orientationOperations.flows?.bloodFlowMlMin ?? null}
-                dialysateFlowMlHour={orientationOperations.flows?.dialysateFlowMlHour ?? null}
-                patientFluidRemovalMlHour={
-                  orientationOperations.flows?.patientFluidRemovalMlHour ?? null
-                }
-                pressure={{
-                  access: orientationOperations.pressures.accessPressureMmHg,
-                  filter: orientationOperations.pressures.filterPressureMmHg,
-                  return: orientationOperations.pressures.returnPressureMmHg,
-                  effluent: orientationOperations.pressures.effluentPressureMmHg,
-                  TMP: orientationOperations.pressures.transmembranePressureMmHg,
-                  filterDrop: orientationOperations.pressures.filterPressureDropMmHg,
+            {mobileSurfaces.map((surface) => (
+              <button
+                key={surface.id}
+                id={`${workspaceTab}-${effectiveDeviceId}-baxter-crrt-mobile-tab-${surface.id}`}
+                ref={(node) => {
+                  if (node) mobileTabRefs.current[surface.id] = node
                 }}
-              />
-            </div>
-          )}
-        </section>
+                type="button"
+                role="tab"
+                aria-selected={mobileSurface === surface.id}
+                aria-controls={`${workspaceTab}-${effectiveDeviceId}-baxter-crrt-mobile-panel-${surface.id}`}
+                tabIndex={mobileSurface === surface.id ? 0 : -1}
+                onClick={() => setMobileSurface(surface.id)}
+                onKeyDown={(event) =>
+                  moveTabFocus(
+                    event,
+                    mobileSurfaces.map(({ id }) => id),
+                    surface.id,
+                    setMobileSurface,
+                    mobileTabRefs.current,
+                  )
+                }
+              >
+                {surface.label}
+              </button>
+            ))}
+          </div>
 
-        {!isMasteryIdentityMasked ? <SourcesPanel /> : null}
-      </main>
-    </HandoffContent>
+          <CrrtLearningWorkflow
+            session={session}
+            dispatch={dispatch}
+            availableCases={
+              experience === 'mastery' ? [getBaxterCrrtCase('CRRT-16')] : baxterCrrtLearnerCases
+            }
+            mobileSurface={mobileSurface}
+            onCaseChange={chooseCase}
+            onRoleChange={setRoleLens}
+            onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
+            onDebriefRevealed={recordDebrief}
+            idNamespace={`${workspaceTab}-${effectiveDeviceId}`}
+          />
+          {workspaceTab === 'mastery' ? <CrrtCrossDeviceTransferReview /> : null}
+        </section>
+      )}
+
+      <SourcesPanel />
+    </main>
   )
 }

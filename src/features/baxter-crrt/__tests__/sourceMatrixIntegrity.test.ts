@@ -1,14 +1,12 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-describe('Baxter CRRT source-matrix implementation paths', () => {
-  const sourceMatrixPath = join(process.cwd(), 'docs/baxter-crrt/source-matrix.md')
+describe('Baxter CRRT consolidated evidence record', () => {
+  const evidencePath = join(process.cwd(), 'docs/baxter-crrt/evidence.md')
 
-  it('resolves every candidate-scoped implementation path recorded in the matrix', () => {
-    const sourceMatrix = readFileSync(sourceMatrixPath, 'utf8')
-    const recordedPaths = [...sourceMatrix.matchAll(/`(src\/features\/baxter-crrt\/[^`]+)`/gu)].map(
-      (match) => match[1],
-    )
+  it('resolves every implementation path recorded in the evidence map', () => {
+    const evidence = readFileSync(evidencePath, 'utf8')
+    const recordedPaths = [...evidence.matchAll(/`(src\/[^`]+)`/gu)].map((match) => match[1])
     const uniquePaths = [...new Set(recordedPaths)]
 
     expect(uniquePaths.length).toBeGreaterThan(20)
@@ -19,49 +17,25 @@ describe('Baxter CRRT source-matrix implementation paths', () => {
     }
   })
 
-  it('does not retain the superseded component names that never existed in this module', () => {
-    const sourceMatrix = readFileSync(sourceMatrixPath, 'utf8')
+  it('records the active sources, formula conflicts, and non-authoritative draft boundary', () => {
+    const evidence = readFileSync(evidencePath, 'utf8')
 
-    for (const staleLocation of [
-      'device/PrisMaxConsole.tsx',
-      'device/OperationsScreen.tsx',
-      'device/HistoryScreen.tsx',
-      'device/StopTreatmentDialog.tsx',
-      'device/PrisMaxSetup.tsx',
-      'device/AlarmWindow.tsx',
-      'circuit/FlowPath.tsx',
-      'circuit/BagAndScale.tsx',
-      'citrateModel.ts',
-    ]) {
-      expect(sourceMatrix).not.toContain(staleLocation)
-    }
+    expect(evidence).toContain('AW8035 Rev B')
+    expect(evidence).toContain('G5036003 Revision 05.2011')
+    expect(evidence).toContain('NICE NG148')
+    expect(evidence).toContain('2026 multidisciplinary ICU RRT guideline')
+    expect(evidence).toContain('2025 CKRT Core Curriculum')
+    expect(evidence).toContain('CONFLICT-001')
+    expect(evidence).toContain('CONFLICT-002')
+    expect(evidence).toMatch(/KDIGO 2026[\s\S]*not authority for runtime rules/i)
   })
 
-  it('keeps every claim row structurally complete with an explicit pending disposition', () => {
-    const sourceMatrix = readFileSync(sourceMatrixPath, 'utf8')
-    const claimTable = sourceMatrix.slice(
-      sourceMatrix.indexOf('| Record ID'),
-      sourceMatrix.indexOf('### 2.1 Numeric metadata'),
-    )
-    const rows = claimTable
-      .split('\n')
-      .filter((line) =>
-        /^\| (?:DEV|MATH|FLUID|DOSE|SAFETY|RENAL|WHITE|GONEUTRAL|SYNTH|CLIN|PROTO|BRIEF)-/u.test(
-          line,
-        ),
-      )
+  it('states that provenance is informational and never a runtime activation switch', () => {
+    const evidence = readFileSync(evidencePath, 'utf8')
 
-    expect(rows.length).toBeGreaterThan(50)
-    for (const row of rows) {
-      const cells = row
-        .split('|')
-        .slice(1, -1)
-        .map((cell) => cell.trim())
-      expect(cells).toHaveLength(6)
-      expect(cells[2]).not.toBe('')
-      expect(cells[3]).not.toBe('')
-      expect(cells[4]).toBe('null')
-      expect(cells[5]).toBe('pending')
-    }
+    expect(evidence).toMatch(/informational[\s\S]*do not activate or\s+deactivate runtime content/i)
+    expect(evidence).not.toContain('candidate-manifest')
+    expect(evidence).not.toContain('signed attestation')
+    expect(evidence).not.toContain('phase authorization')
   })
 })

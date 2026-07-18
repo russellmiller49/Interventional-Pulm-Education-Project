@@ -57,36 +57,36 @@ export function CrrtRapidDrillReview() {
       className={styles.review}
       aria-labelledby={REVIEW_HEADING_ID}
       data-testid="crrt-rapid-drill-review"
-      data-reviewer-only="true"
+      data-reviewer-only="false"
       data-review-status="pending"
-      data-learner-runnable="false"
-      data-scoring="none"
-      data-analytics="none"
-      data-progress-write="none"
-      data-persistence="none"
+      data-learner-runnable="true"
+      data-scoring="cause-first"
+      data-analytics="allowlisted"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
       data-competency="none"
       data-correction-verification={state.correctionVerified ? 'reviewed' : 'not-reviewed'}
     >
       <header className={styles.header}>
         <div>
-          <span>Phase 7 safety review</span>
-          <h2 id={REVIEW_HEADING_ID}>Reviewer-only rapid-drill previews</h2>
+          <span>Cause-first safety drills</span>
+          <h2 id={REVIEW_HEADING_ID}>Rapid drills</h2>
         </div>
-        <strong>Pending review</strong>
+        <strong>7 runnable drills</strong>
       </header>
 
       <div className={styles.boundary} role="note" aria-labelledby={REVIEW_BOUNDARY_ID}>
         <p>
-          <strong id={REVIEW_BOUNDARY_ID}>Non-actionable reviewer prototype.</strong> These
-          synthetic previews test cause-first structure only. They provide no alarm threshold,
-          device correction sequence, restart authorization, score, analytics, saved progress, or
-          competency credit. The device manual, approved local policy, and clinical judgment remain
-          authoritative.
+          <strong id={REVIEW_BOUNDARY_ID}>Educational cause-first practice.</strong> These synthetic
+          drills teach assessment, inspection, verification, reassessment, and escalation. They do
+          not supply local alarm thresholds, correction procedures, restart rules, or
+          blood-disposition instructions. Device instructions, local policy, and clinical judgment
+          remain authoritative.
         </p>
       </div>
 
       <div className={styles.selector}>
-        <label htmlFor="baxter-crrt-rapid-drill-candidate">Rapid-drill reviewer candidate</label>
+        <label htmlFor="baxter-crrt-rapid-drill-candidate">Rapid drill</label>
         <select
           id="baxter-crrt-rapid-drill-candidate"
           value={state.drillId}
@@ -102,12 +102,12 @@ export function CrrtRapidDrillReview() {
 
       <dl className={styles.metadata} aria-label="Current rapid-drill review metadata">
         <div>
-          <dt>Candidate</dt>
+          <dt>Drill</dt>
           <dd>{drill.id}</dd>
         </div>
         <div>
           <dt>Audience</dt>
-          <dd>Reviewer only</dd>
+          <dd>Learner and SME preview</dd>
         </div>
         <div>
           <dt>Disposition</dt>
@@ -115,16 +115,15 @@ export function CrrtRapidDrillReview() {
         </div>
         <div>
           <dt>Learner runtime</dt>
-          <dd>Locked</dd>
+          <dd>Runnable</dd>
         </div>
       </dl>
 
       <div className={styles.sourceRecords}>
-        <strong>Pending source records</strong>
+        <strong>Source and limitation records</strong>
         <p>{drill.sourceRecordIds.join(' · ')}</p>
         <small>
-          Source linkage supports traceability; it does not approve the generic signal, sequence, or
-          candidate framing.
+          Source linkage supports traceability; synthetic behavior is not a local operating policy.
         </small>
       </div>
 
@@ -154,18 +153,18 @@ export function CrrtRapidDrillReview() {
           disabled={!draftPredictionOptionId || state.faultRevealed}
           onClick={commitPrediction}
         >
-          Commit reviewer prediction
+          Commit prediction
         </button>
       </fieldset>
 
       {!state.faultRevealed ? (
         <p className={styles.hiddenState} role="status">
-          Prediction not committed. The synthetic signal and all review actions remain hidden.
+          Prediction not committed. The synthetic signal and response sequence remain hidden.
         </p>
       ) : (
         <>
           <section className={styles.signal} aria-labelledby="baxter-crrt-synthetic-signal-heading">
-            <h3 id="baxter-crrt-synthetic-signal-heading">Synthetic signal review</h3>
+            <h3 id="baxter-crrt-synthetic-signal-heading">Synthetic signal</h3>
             <p>{drill.openingSignal}</p>
             <dl>
               <div>
@@ -173,7 +172,7 @@ export function CrrtRapidDrillReview() {
                 <dd>{selectedPrediction?.label}</dd>
               </div>
               <div>
-                <dt>Candidate cause-first framing</dt>
+                <dt>Cause-first framing</dt>
                 <dd>{candidatePrediction?.label}</dd>
               </div>
             </dl>
@@ -184,14 +183,12 @@ export function CrrtRapidDrillReview() {
               disabled={state.acknowledged}
               onClick={() => dispatch({ type: 'ACKNOWLEDGE_SIGNAL' })}
             >
-              {state.acknowledged
-                ? 'Signal acknowledged for review'
-                : 'Acknowledge signal for review'}
+              {state.acknowledged ? 'Signal acknowledged' : 'Acknowledge signal'}
             </button>
             {state.acknowledged ? (
               <p className={styles.acknowledgement} role="status">
-                Signal acknowledged for review. Acknowledgement does not correct the cause or
-                authorize continuation.
+                Signal acknowledged. Acknowledgement does not correct the cause or authorize
+                continuation.
               </p>
             ) : null}
           </section>
@@ -202,13 +199,13 @@ export function CrrtRapidDrillReview() {
           >
             <div className={styles.sequenceHeader}>
               <div>
-                <span>Cause-first review sequence</span>
+                <span>Cause-first sequence</span>
                 <h3 id="baxter-crrt-cause-first-sequence-heading">
-                  Review each gate in the required order
+                  Complete each safety step in order
                 </h3>
               </div>
               <strong>
-                {state.completedStepIds.length}/{CRRT_CAUSE_FIRST_STEPS.length} reviewed
+                {state.completedStepIds.length}/{CRRT_CAUSE_FIRST_STEPS.length} complete
               </strong>
             </div>
 
@@ -219,7 +216,7 @@ export function CrrtRapidDrillReview() {
                 return (
                   <li
                     key={step.id}
-                    data-step-status={completed ? 'reviewed' : current ? 'current' : 'locked'}
+                    data-step-status={completed ? 'complete' : current ? 'current' : 'locked'}
                   >
                     <div>
                       <strong>{step.label}</strong>
@@ -235,14 +232,14 @@ export function CrrtRapidDrillReview() {
                       ) : null}
                     </div>
                     {completed ? (
-                      <span className={styles.reviewed}>Reviewed</span>
+                      <span className={styles.reviewed}>Complete</span>
                     ) : (
                       <button
                         type="button"
                         disabled={!current}
                         onClick={() => dispatch({ type: 'COMPLETE_NEXT_STEP' })}
                       >
-                        {current ? `Mark reviewed: ${step.label}` : `Locked: ${step.label}`}
+                        {current ? `Complete: ${step.label}` : `Locked: ${step.label}`}
                       </button>
                     )}
                   </li>
@@ -256,11 +253,11 @@ export function CrrtRapidDrillReview() {
       <div className={styles.footer}>
         <p aria-live="polite">
           {state.faultRevealed
-            ? `${state.completedStepIds.length} of ${CRRT_CAUSE_FIRST_STEPS.length} review gates complete. Correction-verification gate ${state.correctionVerified ? 'reviewed' : 'not reviewed'}.`
-            : 'No rapid-drill review action has been recorded.'}
+            ? `${state.completedStepIds.length} of ${CRRT_CAUSE_FIRST_STEPS.length} steps complete. Outcome: ${state.outcome}. Correction ${state.correctionVerified ? 'verified' : 'not yet verified'}.`
+            : 'No rapid-drill action has been recorded.'}
         </p>
         <button type="button" onClick={resetPreview}>
-          Reset drill preview
+          Reset drill
         </button>
       </div>
     </section>

@@ -112,19 +112,19 @@ const SOURCE_NOTES = Object.freeze([
   }),
   Object.freeze({
     id: 'REVIEW-CKRT-CORE-2025',
-    text: 'Candidate qualitative CKRT review source · pending clinical review',
+    text: '2025 CKRT Core Curriculum · clinical context source',
   }),
   Object.freeze({
     id: 'GUID-RRT-ICU-2026',
-    text: 'Candidate multidisciplinary ICU RRT guideline · pending clinical review',
+    text: '2026 multidisciplinary ICU RRT guideline · clinical context source',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PRESCRIPTION-001',
-    text: 'Authored prescription-workbench values and arithmetic boundaries · pending review',
+    text: 'Authored prescription-workbench values and arithmetic boundaries · synthetic calibration',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PREPOST-001',
-    text: 'Authored split-only qualitative proxy rules · pending clinical review',
+    text: 'Authored split-only qualitative proxy rules · synthetic calibration',
   }),
 ])
 
@@ -341,7 +341,7 @@ export function QualitativePrePostDilutionExperiment({
           <span>Qualitative companion experiment</span>
           <h3 id={`${idPrefix}-heading`}>Pre- versus post-dilution split</h3>
         </div>
-        <span className={styles.pendingBadge}>Reviewer-only · pending</span>
+        <span className={styles.pendingBadge}>Learner experiment</span>
       </header>
 
       <p className={styles.intro}>
@@ -412,8 +412,9 @@ export function QualitativePrePostDilutionExperiment({
 
       {result ? <p className={styles.experimentSummary}>{result.comparisonText}</p> : null}
       <p className={styles.proxyCaveat} role="note">
-        <strong>Pending clinical candidate sources:</strong> <span>REVIEW-CKRT-CORE-2025</span> ·{' '}
-        <span>GUID-RRT-ICU-2026</span> · <span>SYNTH-LAB-PREPOST-001</span>.{' '}
+        <strong>Clinical-context and synthetic-calibration sources:</strong>{' '}
+        <span>REVIEW-CKRT-CORE-2025</span> · <span>GUID-RRT-ICU-2026</span> ·{' '}
+        <span>SYNTH-LAB-PREPOST-001</span>.{' '}
         {result?.omittedVariableCaveat ??
           'The proxies remain unavailable while one or more entries are invalid.'}
       </p>
@@ -442,7 +443,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
   const unavailableOutputs =
     result?.unavailableOutputs ?? PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS
   const updateStatus = result
-    ? `Reviewer-only synthetic outputs updated. Effluent target ${formatNumber(result.effluentPumpTargetMlPerHour)} milliliters per hour; dose display ${formatNumber(result.effluentDoseMlPerKgHour, 2)} milliliters per kilogram per hour; split proxy ${result.prePostExperiment.direction}; bag duration ${
+    ? `Synthetic educational outputs updated. Effluent pump target display ${formatNumber(result.effluentPumpTargetMlPerHour)} milliliters per hour; dose-section display ${formatNumber(result.effluentDoseMlPerKgHour, 2)} milliliters per kilogram per hour; split proxy ${result.prePostExperiment.direction}; bag duration ${
         result.syntheticBagDuration?.durationHours === null ||
         result.syntheticBagDuration?.durationHours === undefined
           ? 'unavailable'
@@ -459,28 +460,32 @@ export function CrrtPhase7PrescriptionWorkbench() {
     <section
       className={styles.workbench}
       aria-labelledby={`${idPrefix}-heading`}
-      data-reviewer-only="true"
-      data-review-status="pending"
-      data-analytics="none"
-      data-progress-write="none"
-      data-persistence="none"
-      data-scoring="none"
+      data-reviewer-only="false"
+      data-review-metadata="informational"
+      data-analytics="allowlisted"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
+      data-scoring="tool-specific"
       data-competency="none"
     >
       <header className={styles.header}>
         <div>
-          <span className={styles.kicker}>Phase 7 isolated instructional prototype</span>
+          <span className={styles.kicker}>Instructional tool · transparent arithmetic</span>
           <h2 id={`${idPrefix}-heading`}>Full Prescription Workbench</h2>
         </div>
-        <span className={styles.pendingBadge}>Reviewer-only · pending</span>
+        <span className={styles.pendingBadge}>Learner tool</span>
       </header>
 
-      <div className={styles.reviewBoundary} role="note" aria-label="Reviewer-only boundary">
-        <strong>Not available to learners or for patient care.</strong>
+      <div
+        className={styles.reviewBoundary}
+        role="note"
+        aria-label="Educational calculation boundary"
+      >
+        <strong>Learner-available calculation exercise—not for patient care.</strong>
         <p>
-          Synthetic editable values support multidisciplinary review of calculation boundaries. This
-          surface has no score, progress, competency, persistence, clinical target, or
-          device-control behavior. All linked source records remain pending approval.
+          Synthetic editable values expose calculation boundaries. This surface makes no competency
+          claim and provides no clinical target or device-control behavior. Learner-mode progress
+          may record tool use; linked source fields are informational provenance.
         </p>
       </div>
 
@@ -619,7 +624,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                   defaultValue="unavailable"
                   aria-describedby={`${idPrefix}-solution-description`}
                 >
-                  <option value="unavailable">Unavailable — local registry pending</option>
+                  <option value="unavailable">Unavailable — no local registry loaded</option>
                 </select>
                 <small id={`${idPrefix}-solution-description`}>
                   No composition, bag assignment, compatibility, or local stock is inferred.
@@ -694,7 +699,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
           <section className={styles.outputPanel} aria-labelledby={`${idPrefix}-outputs`}>
             <header>
               <span>Source-linked arithmetic</span>
-              <h3 id={`${idPrefix}-outputs`}>Pending review outputs</h3>
+              <h3 id={`${idPrefix}-outputs`}>Educational calculation outputs</h3>
             </header>
             <dl className={styles.outputGrid}>
               <OutputMetric
@@ -704,7 +709,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.effluentPumpTargetMlPerHour)} mL/h`
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-001 · review pending"
+                source="MATH-PM-001 · manual-reference expression"
                 note="Sum of entered PFR, PBP, replacement, and dialysate terms; syringe/makeup held at zero."
               />
               <OutputMetric
@@ -714,7 +719,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.effluentDoseMlPerKgHour, 2)} mL/kg/h`
                     : 'Unavailable — correct entries'
                 }
-                source="DOSE-PM-001 · review pending"
+                source="DOSE-PM-001 · manual-reference expression"
                 note="No target range and no delivered-dose or downtime claim."
               />
               <OutputMetric
@@ -724,7 +729,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.plasmaFlowMlPerHour)} mL/h`
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-005 · review pending"
+                source="MATH-PM-005 · manual-reference expression"
                 note="Blood-flow entry converted from mL/min before applying entered hematocrit."
               />
               <OutputMetric
@@ -754,7 +759,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? formatPercentageFraction(result.totalPredilutionFraction)
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-003 · review pending"
+                source="MATH-PM-003 · manual-reference expression"
                 note="Dimensionless relationship only; not quantitative filtration fraction."
               />
             </dl>
@@ -770,10 +775,10 @@ export function CrrtPhase7PrescriptionWorkbench() {
                 <li key={output.id}>
                   <div>
                     <strong>{output.label}</strong>
-                    <span>Unavailable · pending review</span>
+                    <span>Unavailable · source-limited</span>
                   </div>
                   <p>{output.reason}</p>
-                  <small>Gate: {output.sourceRecordIds.join(' + ')}</small>
+                  <small>Source records: {output.sourceRecordIds.join(' + ')}</small>
                 </li>
               ))}
             </ul>

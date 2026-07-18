@@ -4,6 +4,234 @@
   min-width: 0;
 }
 
+.simulatorWorkbench {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.7fr) minmax(34rem, 1.55fr);
+  gap: 1rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.hardwarePanel {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid rgba(117, 188, 180, 0.34);
+  border-radius: 1.1rem;
+  color: #dceceb;
+  background: linear-gradient(155deg, rgba(8, 34, 40, 0.98), rgba(2, 15, 19, 0.98));
+  box-shadow: 0 1.2rem 2.8rem rgba(0, 0, 0, 0.24);
+}
+
+.hardwareHeading > span {
+  color: #74d7cc;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hardwareHeading h3 {
+  margin: 0.3rem 0 0;
+  font-size: 1.05rem;
+}
+
+.hardwareHeading p {
+  margin: 0.4rem 0 0;
+  color: #b8ccca;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.machineVisual {
+  position: relative;
+  width: min(100%, 24rem);
+  aspect-ratio: 2 / 3;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid rgba(148, 196, 191, 0.3);
+  border-radius: 0.8rem;
+  background: #031116;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.machineVisual > img {
+  object-fit: cover;
+}
+
+.machineStateBadge {
+  position: absolute;
+  z-index: 2;
+  top: 0.65rem;
+  left: 0.65rem;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  max-width: calc(100% - 1.3rem);
+  padding: 0.38rem 0.5rem;
+  border: 1px solid rgba(245, 187, 101, 0.55);
+  border-radius: 999px;
+  color: #ffe4b7;
+  background: rgba(29, 22, 11, 0.88);
+  font-size: 0.59rem;
+  font-weight: 850;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.machineStateBadge::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #f5bb65;
+  content: '';
+}
+
+.machineStateBadge[data-state='running'] {
+  color: #bff7df;
+  border-color: rgba(84, 220, 157, 0.58);
+  background: rgba(5, 40, 29, 0.9);
+}
+
+.machineStateBadge[data-state='running']::before {
+  background: #4ed598;
+}
+
+.machineStateBadge[data-state='ended'] {
+  color: #ffd2cc;
+  border-color: rgba(236, 108, 94, 0.58);
+  background: rgba(52, 15, 13, 0.9);
+}
+
+.machineStateBadge[data-state='ended']::before {
+  background: #ec6c5e;
+}
+
+.hotspotLayer {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hotspotLayer button {
+  position: absolute;
+  display: grid;
+  width: 2.8rem;
+  min-width: 44px;
+  height: 2.8rem;
+  min-height: 44px;
+  padding: 0;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff4dc;
+  border-radius: 50%;
+  color: #092322;
+  background: #f5bb65;
+  font-size: 0.8rem;
+  font-weight: 950;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow:
+    0 0 0 0.3rem rgba(245, 187, 101, 0.22),
+    0 0.5rem 1.1rem rgba(0, 0, 0, 0.45);
+}
+
+.hotspotLayer button[aria-pressed='true'] {
+  color: #03201e;
+  border-color: #fff;
+  background: #74d7cc;
+  box-shadow:
+    0 0 0 0.38rem rgba(116, 215, 204, 0.3),
+    0 0.6rem 1.3rem rgba(0, 0, 0, 0.5);
+}
+
+.hardwareDetail {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  min-height: 8.25rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(116, 215, 204, 0.28);
+  border-radius: 0.75rem;
+  background: rgba(12, 52, 57, 0.7);
+}
+
+.hardwareDetail > span,
+.hardwareKey button > span {
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #06201f;
+  background: #74d7cc;
+  font-size: 0.68rem;
+  font-weight: 950;
+}
+
+.hardwareDetail h4 {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.hardwareDetail p {
+  margin: 0.35rem 0 0;
+  color: #c1d2d0;
+  font-size: 0.68rem;
+  line-height: 1.48;
+}
+
+.hardwareDetail small {
+  display: block;
+  margin-top: 0.45rem;
+  color: #f1c883;
+  font-size: 0.58rem;
+  line-height: 1.4;
+}
+
+.hardwareKey {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.hardwareKey button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.45rem;
+  border: 1px solid rgba(148, 196, 191, 0.24);
+  border-radius: 0.55rem;
+  color: #dcebea;
+  background: rgba(4, 24, 28, 0.74);
+  font-size: 0.62rem;
+  font-weight: 780;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hardwareKey button[aria-pressed='true'] {
+  color: #fff5e5;
+  border-color: rgba(245, 187, 101, 0.64);
+  background: rgba(72, 49, 17, 0.7);
+}
+
+.hardwareKey button[aria-pressed='true'] > span {
+  background: #f5bb65;
+}
+
+.artworkNote {
+  color: #91aaa8;
+  font-size: 0.56rem;
+  line-height: 1.45;
+}
+
 .controlFieldset {
   display: grid;
   gap: 0.8rem;
@@ -636,6 +864,7 @@
 
 .operationsBody {
   display: grid;
+  grid-column: 1 / -1;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.7rem;
 }
@@ -714,7 +943,7 @@
 
 .statusList > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(7rem, 0.75fr) minmax(0, 1.25fr);
   gap: 0.5rem;
   align-items: center;
   padding: 0.45rem;
@@ -722,6 +951,8 @@
 }
 
 .statusList dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: right;
 }
 
@@ -892,6 +1123,7 @@
   background: #f5bb65;
 }
 
+.hardwarePanel button:focus-visible,
 .consoleShell button:focus-visible,
 .consoleShell input:focus-visible,
 .resetDock button:focus-visible {
@@ -906,7 +1138,52 @@
   }
 }
 
+@media (max-width: 1100px) {
+  .simulatorWorkbench {
+    grid-template-columns: 1fr;
+  }
+
+  .hardwarePanel {
+    grid-template-columns: minmax(17rem, 0.8fr) minmax(16rem, 1fr);
+    align-items: start;
+  }
+
+  .hardwareHeading,
+  .machineVisual {
+    grid-row: span 3;
+  }
+
+  .machineVisual {
+    grid-column: 1;
+    grid-row: 2 / span 4;
+  }
+
+  .hardwareHeading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .hardwareDetail,
+  .hardwareKey,
+  .artworkNote {
+    grid-column: 2;
+  }
+}
+
 @media (max-width: 760px) {
+  .hardwarePanel {
+    grid-template-columns: 1fr;
+  }
+
+  .hardwareHeading,
+  .machineVisual,
+  .hardwareDetail,
+  .hardwareKey,
+  .artworkNote {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .procedureScreen {
     grid-template-columns: 1fr;
   }
@@ -931,6 +1208,14 @@
     grid-template-columns: 1fr;
   }
 
+  .statusList > div {
+    grid-template-columns: 1fr;
+  }
+
+  .statusList dd {
+    text-align: left;
+  }
+
   .operationsScreen {
     grid-template-columns: 1fr;
   }
@@ -941,6 +1226,10 @@
 }
 
 @media (max-width: 520px) {
+  .hardwareKey {
+    grid-template-columns: 1fr;
+  }
+
   .consoleShell {
     padding: 0.45rem;
     border-radius: 0.9rem;

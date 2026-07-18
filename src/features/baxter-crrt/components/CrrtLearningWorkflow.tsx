@@ -23,6 +23,7 @@ import {
   type CrrtLearningOutcome,
 } from '../engine/outcomes'
 import { selectSecondsUntilNextScheduledEvent } from '../engine/selectors'
+import { selectPrismaxPilotCaseOperationsDisplay } from '../engine/deviceAdapters/prismax'
 import type {
   CrrtLearningSessionAction,
   CrrtLearningSessionState,
@@ -31,6 +32,7 @@ import type {
   CrrtReasoningPhase,
 } from '../engine/learningSession'
 import { crrtSoluteIds, type CrrtRoleLens } from '../engine/types'
+import { PrismaxPilotInterface, type PrismaxPilotCaseContext } from './PrismaxPilotInterface'
 import styles from './crrt-learning-workflow.module.css'
 
 const reasoningPhases = [
@@ -207,6 +209,19 @@ export function CrrtLearningWorkflow({
     isMastery && !session.debriefRevealed
       ? baxterCrrtMasteryManifest.learnerTitleBeforeDebrief
       : definition.title
+  const machineControlsEnabled = session.prediction !== null && !session.debriefRevealed
+  const prismaxCaseContext: PrismaxPilotCaseContext =
+    isMastery && !session.debriefRevealed
+      ? {
+          identityMasked: true,
+          learnerLabel: baxterCrrtMasteryManifest.learnerTitleBeforeDebrief,
+          pathway: 'mastery',
+        }
+      : {
+          caseId: definition.id,
+          title: visibleCaseTitle,
+          pathway: session.experience,
+        }
   const [goalOptionId, setGoalOptionId] = useState('')
   const [mechanismOptionId, setMechanismOptionId] = useState('')
   const [controlOptionIds, setControlOptionIds] = useState<readonly string[]>([])
@@ -399,7 +414,7 @@ export function CrrtLearningWorkflow({
         <div className={styles.contextControls}>
           <label>
             <span>
-              {isMastery ? 'Mastery capstone' : isReviewer ? 'Review case candidate' : 'Pilot case'}
+              {isMastery ? 'Mastery capstone' : isReviewer ? 'SME preview case' : 'Learning case'}
             </span>
             <select
               disabled={isMastery}
@@ -449,7 +464,9 @@ export function CrrtLearningWorkflow({
             <p>
               <strong id={scopedId('crrt-mastery-boundary-heading')}>Mastery safeguards.</strong>{' '}
               Case identity remains masked until causal debrief. Guided assistance is unavailable,
-              and Clean attempt starts a new, unassisted attempt.
+              and Clean attempt starts a new, unassisted attempt. Passing requires a score of at
+              least {baxterCrrtMasteryManifest.minimumScore}, no critical error, and completed
+              reassessment.
             </p>
           </div>
         ) : null}
@@ -467,10 +484,10 @@ export function CrrtLearningWorkflow({
         <div className={styles.syntheticNotice} role="note">
           <ShieldAlert aria-hidden="true" />
           <p>
-            <strong>Synthetic case · review pending.</strong> Exact values, thresholds, scoring, and
+            <strong>Synthetic educational case.</strong> Exact values, thresholds, scoring, and
             critical-error rules are educational calibration—not clinical targets.
             {isReviewer
-              ? ' This reviewer preview produces no analytics, progress, persistence, competency, or learner activation.'
+              ? ' This final-SME preview produces no analytics, progress writes, persistence, or competency record.'
               : null}
           </p>
         </div>
@@ -938,7 +955,7 @@ export function CrrtLearningWorkflow({
             {session.experience === 'practice' ? (
               <small>
                 {isReviewer
-                  ? 'Each revealed hint subtracts 5 candidate-preview points; this result is not saved.'
+                  ? 'Each revealed hint subtracts 5 preview points; this result is not saved.'
                   : 'Each revealed hint subtracts 5 points, capped by the scoring engine.'}
               </small>
             ) : null}
@@ -1002,12 +1019,135 @@ export function CrrtLearningWorkflow({
           <div className={styles.criticalBanner} role="alert">
             <ShieldAlert aria-hidden="true" />
             <p>
-              <strong>Draft critical-error candidate triggered</strong>
-              {outcome.criticalErrorIds.join(', ')}. This rule remains pending independent review.
+              <strong>Educational critical-error rule triggered</strong>{' '}
+              {outcome.criticalErrorIds.join(', ')}. This synthetic scoring rule is not a clinical
+              threshold or competency decision.
             </p>
           </div>
         ) : null}
       </div>
+
+      <section
+        id={scopedId('baxter-crrt-mobile-panel-machine')}
+        className={`${styles.surfaceSummary} ${styles.machineSurface}`}
+        role="tabpanel"
+        aria-labelledby={scopedId('baxter-crrt-mobile-tab-machine')}
+        data-mobile-active={mobileSurface === 'machine'}
+      >
+        {session.simulation.deviceId === 'prismax-aw8035-2xx' ? (
+          <>
+            <div className={styles.machineSurfaceHeading}>
+              <div>
+                <span>Interactive equipment station</span>
+                <h4>PrisMax machine simulator</h4>
+              </div>
+              <strong data-unlocked={machineControlsEnabled}>
+                {machineControlsEnabled ? 'Machine actions unlocked' : 'Prediction gate locked'}
+              </strong>
+            </div>
+            <p className={styles.machineSurfaceIntro}>
+              Explore the generated hardware map at any time. Commit the five-part prediction on the
+              Case surface to unlock setup and Operations controls; synthetic case state stays
+              synchronized with the shared CRRT engine.
+            </p>
+            <PrismaxPilotInterface
+              state={session.interfaceState}
+              dispatch={(action) => dispatch({ type: 'DEVICE_ACTION', action })}
+              controlsEnabled={machineControlsEnabled}
+              operationsDisplay={selectPrismaxPilotCaseOperationsDisplay(
+                session.interfaceState,
+                session.simulation,
+              )}
+              caseContext={prismaxCaseContext}
+              onReset={onReset}
+            />
+          </>
+        ) : (
+          <>
+            <h4>Prismaflex machine state</h4>
+            <dl>
+              <div>
+                <dt>Device</dt>
+                <dd>{session.simulation.deviceId}</dd>
+              </div>
+              <div>
+                <dt>Delivery</dt>
+                <dd>{session.simulation.device.deliveryState}</dd>
+              </div>
+              <div>
+                <dt>Simulation time</dt>
+                <dd>{formatSimulationTime(session.simulation.simulationTimeSeconds)}</dd>
+              </div>
+              <div>
+                <dt>Active alarms</dt>
+                <dd>{session.simulation.alarms.length}</dd>
+              </div>
+            </dl>
+            <p>
+              The generated physical-machine simulator is scoped to the PrisMax reference profile.
+              Return to Case for Prismaflex-authored interventions and its active device controls.
+            </p>
+          </>
+        )}
+      </section>
+
+      <section
+        id={scopedId('baxter-crrt-mobile-panel-circuit')}
+        className={styles.surfaceSummary}
+        role="tabpanel"
+        aria-labelledby={scopedId('baxter-crrt-mobile-tab-circuit')}
+        data-mobile-active={mobileSurface === 'circuit'}
+      >
+        <h4>Circuit and fluid state</h4>
+        <dl>
+          <div>
+            <dt>Modality</dt>
+            <dd>{session.simulation.circuit.modality ?? 'Unavailable'}</dd>
+          </div>
+          <div>
+            <dt>Connected bags</dt>
+            <dd>{session.simulation.circuit.bags.length}</dd>
+          </div>
+          <div>
+            <dt>Access pressure</dt>
+            <dd>{formatTrendValue(latestTrend?.accessPressureMmHg, 'mmHg')}</dd>
+          </div>
+          <div>
+            <dt>Filter pressure</dt>
+            <dd>{formatTrendValue(latestTrend?.filterPressureMmHg, 'mmHg')}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section
+        id={scopedId('baxter-crrt-mobile-panel-patient')}
+        className={styles.surfaceSummary}
+        role="tabpanel"
+        aria-labelledby={scopedId('baxter-crrt-mobile-tab-patient')}
+        data-mobile-active={mobileSurface === 'patient'}
+      >
+        <h4>Patient and delivered-therapy state</h4>
+        <dl>
+          <div>
+            <dt>Delivered dose</dt>
+            <dd>{formatTrendValue(latestTrend?.deliveredDoseMlKgHour, 'mL/kg/h')}</dd>
+          </div>
+          <div>
+            <dt>Whole-patient balance</dt>
+            <dd>{formatTrendValue(latestTrend?.cumulativeWholePatientBalanceMl, 'mL')}</dd>
+          </div>
+          <div>
+            <dt>Downtime</dt>
+            <dd>
+              {formatSimulationTime(session.simulation.deliveredTherapy.cumulativeDowntimeSeconds)}
+            </dd>
+          </div>
+          <div>
+            <dt>Reassessment</dt>
+            <dd>{session.reassessment.committed ? 'Completed' : 'Required'}</dd>
+          </div>
+        </dl>
+      </section>
 
       <section
         id={scopedId('baxter-crrt-mobile-panel-debrief')}
@@ -1040,11 +1180,7 @@ export function CrrtLearningWorkflow({
               <section
                 className={styles.scoreCard}
                 aria-label={
-                  isMastery
-                    ? 'Mastery score'
-                    : isReviewer
-                      ? 'Candidate score preview'
-                      : 'Practice score'
+                  isMastery ? 'Mastery score' : isReviewer ? 'SME score preview' : 'Practice score'
                 }
               >
                 <div>
@@ -1052,16 +1188,16 @@ export function CrrtLearningWorkflow({
                     {isMastery
                       ? 'Mastery score'
                       : isReviewer
-                        ? 'Candidate score preview'
+                        ? 'SME score preview'
                         : 'Practice score'}
                   </span>
                   <strong>{debrief.outcome.score}/100</strong>
                   <small>
                     {isMastery
-                      ? 'Draft Mastery result · no competency or release claim'
+                      ? 'Educational Mastery result · no competency or certification claim'
                       : isReviewer
-                        ? `Reviewer-only rubric output · ${debrief.outcome.hintPenalty} hint-penalty points · not saved or competency-bearing`
-                        : `Draft educational score · ${debrief.outcome.hintPenalty} hint-penalty points`}
+                        ? `Final-SME preview rubric · ${debrief.outcome.hintPenalty} hint-penalty points · not saved or competency-bearing`
+                        : `Educational score · ${debrief.outcome.hintPenalty} hint-penalty points`}
                   </small>
                 </div>
                 {debrief.outcome.domains ? (
@@ -1148,7 +1284,7 @@ export function CrrtLearningWorkflow({
                   </dd>
                 </div>
                 <div>
-                  <dt>Triggered critical candidates</dt>
+                  <dt>Triggered educational critical errors</dt>
                   <dd>
                     {outcome.criticalErrorIds.length > 0
                       ? outcome.criticalErrorIds

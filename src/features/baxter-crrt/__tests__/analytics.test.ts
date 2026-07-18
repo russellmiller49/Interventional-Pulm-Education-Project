@@ -1,4 +1,8 @@
-import { buildBaxterCrrtAnalyticsEvent, buildBaxterCrrtAnalyticsPayload } from '../analytics'
+import {
+  buildBaxterCrrtAnalyticsEvent,
+  buildBaxterCrrtAnalyticsEventForSession,
+  buildBaxterCrrtAnalyticsPayload,
+} from '../analytics'
 import type { BaxterCrrtAnalyticsEventPayload } from '@/lib/baxter-crrt-analytics'
 
 const context = {
@@ -131,17 +135,28 @@ describe('Baxter CRRT analytics builders', () => {
     expect(() => buildBaxterCrrtAnalyticsEvent(unsafeEvent)).toThrow()
   })
 
-  it('rejects reviewer-only cases, Mastery, and the deferred Prismaflex identity', () => {
-    for (const unsafePayload of [
+  it('accepts the full case registry, Mastery, and both device identities', () => {
+    for (const validPayload of [
       { ...completedCasePayload(), caseId: 'CRRT-01' },
       { ...completedCasePayload(), pathway: 'mastery' },
       { ...completedCasePayload(), device: 'prismaflex-g5036003-6xx' },
     ]) {
-      expect(() =>
-        buildBaxterCrrtAnalyticsPayload(
-          unsafePayload as unknown as BaxterCrrtAnalyticsEventPayload,
-        ),
-      ).toThrow()
+      expect(
+        buildBaxterCrrtAnalyticsPayload(validPayload as unknown as BaxterCrrtAnalyticsEventPayload),
+      ).toEqual(validPayload)
     }
+  })
+
+  it('suppresses event creation in final-SME review-preview sessions', () => {
+    expect(
+      buildBaxterCrrtAnalyticsEventForSession('review-preview', {
+        eventPayload: completedCasePayload(),
+      }),
+    ).toBeNull()
+    expect(
+      buildBaxterCrrtAnalyticsEventForSession('learner', {
+        eventPayload: completedCasePayload(),
+      }),
+    ).toMatchObject({ moduleId: 'baxter-crrt' })
   })
 })

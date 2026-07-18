@@ -1,43 +1,35 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import { CrrtCrossDeviceTransferReview } from '../components/CrrtCrossDeviceTransferReview'
+import { baxterCrrtCrossDeviceTransferCapstone } from '../content'
 
-describe('CrrtCrossDeviceTransferReview', () => {
-  it('renders a reviewer-only, fail-closed comparison plan', () => {
-    const { container } = render(<CrrtCrossDeviceTransferReview />)
-    const shell = container.querySelector('[data-reviewer-only="true"]')
-
-    expect(shell).not.toBeNull()
-    expect(shell).toHaveAttribute('data-learner-runtime', 'disabled')
-    expect(shell).toHaveAttribute('data-scoring', 'none')
-    expect(shell).toHaveAttribute('data-progress-write', 'none')
-    expect(shell).toHaveAttribute('data-analytics', 'none')
-    expect(shell).toHaveAttribute('data-competency', 'none')
-    expect(screen.getByText('No equivalence claim is available.')).toBeInTheDocument()
-    expect(screen.getByText('Learner runtime locked')).toBeInTheDocument()
-  })
-
-  it('keeps the two device questions distinct for every planned domain', () => {
+describe('cross-device transfer capstone UI', () => {
+  it('renders five device-distinct workflow-translation domains', () => {
     render(<CrrtCrossDeviceTransferReview />)
 
-    const domainHeadings = screen
-      .getAllByRole('heading', { level: 4 })
-      .filter((heading) => /translation$/.test(heading.textContent ?? ''))
-    expect(domainHeadings).toHaveLength(5)
-
-    for (const heading of domainHeadings) {
-      const card = heading.closest('article')
-      expect(card).not.toBeNull()
-      expect(within(card as HTMLElement).getByText('PrisMax')).toBeInTheDocument()
-      expect(within(card as HTMLElement).getByText('Prismaflex')).toBeInTheDocument()
-      expect(within(card as HTMLElement).getByText('Boundary')).toBeInTheDocument()
-    }
+    const capstone = screen.getByRole('region', {
+      name: 'Cross-device workflow translation capstone',
+    })
+    expect(capstone).toHaveAttribute('data-reviewer-only', 'false')
+    expect(capstone).toHaveAttribute('data-clinically-interchangeable', 'false')
+    expect(within(capstone).getByText(/does not claim.*clinically interchangeable/i)).toBeVisible()
+    expect(within(capstone).getAllByRole('listitem')).toHaveLength(5)
+    expect(within(capstone).getAllByText('PrisMax')).toHaveLength(5)
+    expect(within(capstone).getAllByText('Prismaflex')).toHaveLength(5)
   })
 
-  it('shows every prerequisite as pending without offering an activation control', () => {
-    const { container } = render(<CrrtCrossDeviceTransferReview />)
-    expect(screen.getAllByText('Pending')).toHaveLength(5)
-    expect(screen.queryByRole('button')).not.toBeInTheDocument()
-    expect(container.querySelector('form')).toBeNull()
+  it('scores a complete correct transfer attempt at 100 percent', () => {
+    render(<CrrtCrossDeviceTransferReview />)
+    const capstone = screen.getByRole('region', {
+      name: 'Cross-device workflow translation capstone',
+    })
+    for (const domain of baxterCrrtCrossDeviceTransferCapstone.domains) {
+      const option = domain.options.find(({ id }) => id === domain.correctOptionId)
+      if (!option) throw new Error(`Missing correct option for ${domain.id}`)
+      fireEvent.click(within(capstone).getByRole('radio', { name: option.label }))
+    }
+    expect(within(capstone).getByRole('status')).toHaveTextContent(
+      'Score 100%. Transfer capstone complete.',
+    )
   })
 })

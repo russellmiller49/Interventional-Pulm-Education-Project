@@ -50,12 +50,6 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
     ['unknown interaction', { ...validCrrtCaseCompletion(), interaction: 'case_replayed' }],
     ['invalid score', { ...validCrrtCaseCompletion(), score: 101 }],
     ['invalid case ID', { ...validCrrtCaseCompletion(), caseId: 'patient-123' }],
-    ['reviewer-only case ID', { ...validCrrtCaseCompletion(), caseId: 'CRRT-01' }],
-    ['locked Mastery pathway', { ...validCrrtCaseCompletion(), pathway: 'mastery' }],
-    [
-      'deferred Prismaflex device identity',
-      { ...validCrrtCaseCompletion(), device: 'prismaflex-g5036003-6xx' },
-    ],
   ])(
     'rejects a CRRT payload containing an %s before authentication or storage',
     async (_, body) => {
@@ -70,6 +64,22 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
       expect(supabaseServerMock).not.toHaveBeenCalled()
     },
   )
+
+  it.each([
+    ['full learner case registry', { ...validCrrtCaseCompletion(), caseId: 'CRRT-01' }],
+    [
+      'operational Prismaflex identity',
+      { ...validCrrtCaseCompletion(), device: 'prismaflex-g5036003-6xx' },
+    ],
+  ])('accepts %s summary events', async (_, body) => {
+    const database = authenticatedAnalyticsDatabase()
+    supabaseServerMock.mockResolvedValue(database.client)
+    const response = await POST(
+      analyticsRequest('baxter-crrt', body, { eventType: 'quiz_submitted' }),
+    )
+    expect(response.status).toBe(200)
+    expect(database.insert).toHaveBeenCalledWith(expect.objectContaining({ event_payload: body }))
+  })
 
   it.each([
     ['mismatched event type', validCrrtCaseCompletion(), { eventType: 'module_completed' }],

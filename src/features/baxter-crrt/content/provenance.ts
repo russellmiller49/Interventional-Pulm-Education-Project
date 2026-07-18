@@ -80,10 +80,10 @@ export const baxterCrrtSourceDocuments: readonly BaxterCrrtSourceDocument[] = Ob
     id: 'PRISMAFLEX-G5036003-R05',
     title: "Prismaflex Operator's Manual",
     documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
-    role: 'deferred',
-    intendedUse: 'Primary source for the reviewer-only Prismaflex adapter candidate.',
+    role: 'supporting',
+    intendedUse: 'Primary source for the Prismaflex manual-reference educational adapter.',
     limitation:
-      'This older, separate device generation is not learner-active and must not be merged into the PrisMax profile.',
+      'This older, separate device generation is learner-active through its own adapter and must not be merged into the PrisMax profile.',
     sourceSha256: '6d311624ec075c86ff539d3a86f3ed77cd2ca467346168ee4985af09f0a9224b',
     reviewStatus: 'pending',
   },
@@ -132,7 +132,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'The Operations screen separates the flow path, pressure/status measurements, treatment status, and recent message center.',
     limitation:
-      'Orientation leaves pressure and dose signals blank; the three-case pilot supplies only synthetic, pending-review engine signals.',
+      'Orientation leaves pressure and dose signals blank; cases supply only synthetic educational engine signals.',
     reviewStatus: 'pending',
   },
   {
@@ -156,7 +156,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'Therapy operation includes flow review, bag and syringe change concepts, and a stop/end workflow.',
     limitation:
-      'Bag-change execution, return blood, recirculation, and local-policy decisions remain excluded from the three-case pilot.',
+      'Commercial bag-change execution, return-blood disposition, recirculation, and local-policy decisions are not inferred.',
     reviewStatus: 'pending',
   },
   {
@@ -190,9 +190,9 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
     pageOrSection: 'Manual pages 206–212 · PDF pages 207–213',
     claim:
-      'The cited source describes distinct CRRT flow paths, including the CVVHD topology used by the pilot interface.',
+      'The cited source describes distinct CRRT flow paths, including the CVVHD topology used by the educational interface.',
     limitation:
-      'The pilot does not establish clinical eligibility, installed-device availability, or any therapy beyond its CVVHD surface.',
+      'The interface does not establish clinical eligibility or installed-device availability; other modalities use the shared adapter rather than this CVVHD case surface.',
     reviewStatus: 'pending',
   },
   {
@@ -240,7 +240,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'Prismaflex uses context-dependent touch-screen softkeys, arrow controls, and a device-specific Setup, Standby, Run, and End workflow.',
     limitation:
-      'Only a reviewer-only setup sequence is represented; no protected screen artwork, learner control, exact local workflow, or runnable end-treatment behavior is activated.',
+      'The setup sequence is a manual-reference educational representation; no protected screen artwork or exact local workflow is claimed.',
     reviewStatus: 'pending',
   },
   {
@@ -252,7 +252,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'The source describes four occlusive peristaltic fluid pumps and four scales whose functions depend on the selected therapy.',
     limitation:
-      'No therapy/set-specific pump assignment, bag identity, capacity, empty/full behavior, or scale threshold is activated without target-configuration review.',
+      'No therapy/set-specific local pump assignment, commercial bag identity, capacity, or local scale threshold is inferred.',
     reviewStatus: 'pending',
   },
   {
@@ -264,7 +264,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'Prismaflex establishes pressure operating points after flow stabilizes and re-establishes them after documented flow, restart, continuation, and self-test events.',
     limitation:
-      'No operating point, trending limit, alarm threshold, automatic reaction, or disconnection response is encoded by the reviewer-only adapter.',
+      'No operating point, trending limit, alarm threshold, automatic reaction, or unsupported disconnection response is inferred by the adapter.',
     reviewStatus: 'pending',
   },
   {
@@ -300,7 +300,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     claim:
       'Prismaflex defines the device-specific alarm categories Warning, Malfunction, Caution, and Advisory.',
     limitation:
-      'The reviewer-only adapter does not assign a category, label, priority, stopped-pump reaction, clamp response, correction sequence, clearing rule, or escalation consequence to any engine alarm.',
+      'The adapter does not invent a category, label, priority, stopped-pump reaction, clamp response, correction sequence, clearing rule, or escalation consequence for an unmapped engine alarm.',
     reviewStatus: 'pending',
   },
   {
@@ -507,10 +507,9 @@ export const baxterCrrtEngineSourceRecords: readonly BaxterCrrtEngineSourceRecor
 )
 
 /**
- * SourceReference records allowed in the three-case pilot registry. Clinical
+ * SourceReference records used by the original case templates. Clinical
  * publications provide teaching context only. Every exact case value and model
- * coefficient is attributed to a separate synthetic-calibration record and
- * remains pending clinical and device review.
+ * coefficient is attributed to a separate synthetic-calibration record.
  */
 export const baxterCrrtPilotSourceReferences: readonly SourceReference[] = Object.freeze(
   [

@@ -5,6 +5,7 @@ import {
 } from '@/data/board-review'
 import { allEbusTrainingModules } from '@/data/ebus-training'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
+import { baxterCrrtIsPublic, baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
 import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ventilation/content/deviceProfiles'
 import { localizeSearchText } from '@/i18n/handoff-search'
 import type { ActiveLocale } from '@/i18n/locale'
@@ -260,6 +261,19 @@ const localizedSearchOverrides: Partial<
 }
 
 const allStaticResults: SiteSearchResult[] = [
+  ...(baxterCrrtIsPublic(baxterCrrtReleaseStage)
+    ? [
+        {
+          title: 'Baxter CRRT Learn, Practice & Mastery',
+          description:
+            'Adult CRRT education with 18 cases, rapid drills, concept labs, PrisMax, Prismaflex, and a masked capstone.',
+          href: '/baxter-crrt',
+          section: 'Critical Care Education',
+          type: 'page' as const,
+          keywords: ['crrt', 'prismax', 'prismaflex', 'dialysis', 'critical care'],
+        },
+      ]
+    : []),
   {
     title: 'Multi-Device Mechanical Ventilation Learn & Practice Simulator',
     description:

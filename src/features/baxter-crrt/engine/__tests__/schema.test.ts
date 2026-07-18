@@ -2,14 +2,12 @@ import {
   authoredCrrtCaseSchema,
   collectCrrtCaseSemanticIssues,
   configuredPatientSchema,
-  CRRT_PILOT_CASE_IDS,
-  crrtProtocolProfileSchema,
+  CRRT_ALL_CASE_IDS,
   prescriptionSchema,
   runtimeCrrtCaseSchema,
-  validatePilotCrrtCaseRegistry,
+  validateCrrtCaseRegistry,
 } from '../../content/schema'
 import { parseRuntimeCrrtCaseToEngineFixture } from '../../content/runtimeCaseNormalization'
-import { disabledCitrateProtocolProfile } from '../../content/protocolProfiles'
 import { createInitialCrrtSimulationState } from '../initialState'
 
 const SOURCE_ID = 'TEST-001'
@@ -437,14 +435,14 @@ describe('Baxter CRRT authored-content schema boundary', () => {
     ).toBe(false)
   })
 
-  it('rejects Prismaflex compatibility at the Phase 2 runtime boundary', () => {
+  it('accepts both operational device identities at the v1 runtime boundary', () => {
     const runtimeCase = buildRuntimeCase()
     expect(
       runtimeCrrtCaseSchema.safeParse({
         ...runtimeCase,
         compatibleDevices: ['prismax-aw8035-2xx' as const, 'prismaflex-g5036003-6xx' as const],
       }).success,
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('rejects unknown nested fields and impossible mathematical values', () => {
@@ -525,32 +523,32 @@ describe('Baxter CRRT authored-content schema boundary', () => {
     expect(authoredCrrtCaseSchema.safeParse(invalid).success).toBe(false)
   })
 
-  it('permits an empty Phase 2 registry and can later require the exact pilot IDs', () => {
-    expect(validatePilotCrrtCaseRegistry([])).toEqual([])
-    expect(validatePilotCrrtCaseRegistry([], { requireExactPilotCases: true })).toEqual([
-      `Missing pilot case IDs: ${CRRT_PILOT_CASE_IDS.join(', ')}`,
-    ])
-    const pilot = CRRT_PILOT_CASE_IDS.map((id) => buildRuntimeCase(id))
-    expect(validatePilotCrrtCaseRegistry(pilot, { requireExactPilotCases: true })).toEqual([])
+  it('validates an exact 18-case registry boundary', () => {
+    expect(
+      validateCrrtCaseRegistry([], {
+        expectedCaseIds: CRRT_ALL_CASE_IDS,
+        registryLabel: 'v1',
+      }),
+    ).toEqual([`Missing v1 case IDs: ${CRRT_ALL_CASE_IDS.join(', ')}`])
   })
 
-  it('keeps the citrate protocol fail-closed with no dose or target parameters', () => {
-    expect(crrtProtocolProfileSchema.parse(disabledCitrateProtocolProfile)).toEqual(
-      disabledCitrateProtocolProfile,
-    )
-    expect(disabledCitrateProtocolProfile).toMatchObject({
-      id: 'PROTO-001',
-      kind: 'regional-citrate-calcium',
-      protocolVersion: null,
-      enabled: false,
-      reviewStatus: 'pending',
-      sourceRecordIds: [],
-      parameterValues: [],
+  it('keeps citrate education direction-only with no dose, target, rate, or adjustment fields', () => {
+    const citrate = createInitialCrrtSimulationState().circuit.citrate
+    expect(citrate).toMatchObject({
+      status: 'conceptual-direction-only',
+      reassessmentRequired: true,
+      escalationBoundary: 'responsible-clinical-team-and-local-protocol',
     })
-    expect(Object.isFrozen(disabledCitrateProtocolProfile)).toBe(true)
-    expect(Object.isFrozen(disabledCitrateProtocolProfile.parameterValues)).toBe(true)
-    expect(Object.isFrozen(disabledCitrateProtocolProfile.missingRequirements)).toBe(true)
-    expect(disabledCitrateProtocolProfile.parameterValues).toHaveLength(0)
+    const keys: string[] = []
+    const visit = (value: unknown) => {
+      if (value === null || typeof value !== 'object') return
+      for (const [key, nested] of Object.entries(value)) {
+        keys.push(key)
+        visit(nested)
+      }
+    }
+    visit(citrate)
+    expect(keys.join(' ')).not.toMatch(/dose|target|adjust|rate|amount|concentration/i)
 
     const basePrescription = buildAuthoredCase().initialPrescription
     expect(
@@ -560,29 +558,6 @@ describe('Baxter CRRT authored-content schema boundary', () => {
           method: 'regional-citrate-calcium',
           protocolProfileId: 'PROTO-001',
         },
-      }).success,
-    ).toBe(false)
-
-    expect(
-      crrtProtocolProfileSchema.safeParse({
-        id: 'LOCAL-PROTOCOL-001',
-        displayName: 'Synthetic unapproved parameter profile',
-        kind: 'regional-citrate-calcium',
-        protocolVersion: '1',
-        enabled: true,
-        reviewStatus: 'approved',
-        sourceRecordIds: ['LOCAL-SOURCE-001'],
-        parameterValues: [
-          {
-            id: 'citrate-rate',
-            value: 1,
-            unit: 'synthetic-unit',
-            sourceId: 'LOCAL-SOURCE-001',
-            reviewStatus: 'pending',
-          },
-        ],
-        missingRequirements: [],
-        blockedReason: null,
       }).success,
     ).toBe(false)
   })

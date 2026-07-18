@@ -122,6 +122,10 @@
 }
 
 .reviewerRouteNav {
+  --crrt-deep: #06171b;
+  --crrt-muted: #496966;
+  --crrt-teal-soft: #8ce2d7;
+  --crrt-amber: #f5bb65;
   display: flex;
   width: min(100%, 1720px);
   margin: 0 auto 1rem;
@@ -137,6 +141,10 @@
 }
 
 .reviewCandidateIdentity {
+  --crrt-ink: #ecf7f5;
+  --crrt-muted: #a9c2c0;
+  --crrt-line: rgba(175, 222, 215, 0.2);
+  --crrt-amber: #f5bb65;
   display: grid;
   width: min(100%, 1720px);
   margin: 0 auto 1rem;
@@ -187,6 +195,36 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.78rem;
   line-height: 1.5;
+}
+
+.smeChecklist {
+  display: grid;
+  width: min(100%, 1720px);
+  margin: 0 auto 1rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  border: 1px solid rgba(175, 222, 215, 0.32);
+  border-radius: 1rem;
+  color: #ecf7f5;
+  background: #0d252a;
+}
+
+.smeChecklist h2,
+.smeChecklist p {
+  margin: 0;
+}
+
+.smeChecklist p + h2,
+.smeChecklist h2 + p {
+  margin-top: 0.5rem;
+}
+
+.smeChecklist ul {
+  display: grid;
+  margin: 0;
+  padding-left: 1.25rem;
+  gap: 0.55rem;
 }
 
 .heroBadges {
@@ -540,6 +578,45 @@
   align-items: stretch;
 }
 
+.workspaceControls {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(16rem, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.workspaceControls label,
+.deviceSummary {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  border: 1px solid rgb(148 163 184 / 28%);
+  border-radius: 1rem;
+  background: rgb(15 23 42 / 48%);
+}
+
+.workspaceControls select,
+.profileStrip select {
+  min-height: 44px;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgb(148 163 184 / 42%);
+  border-radius: 0.65rem;
+  color: inherit;
+  background: #111827;
+}
+
+.deviceSummary span,
+.deviceSummary small {
+  color: #cbd5e1;
+}
+
+@media (max-width: 720px) {
+  .workspaceControls {
+    grid-template-columns: 1fr;
+  }
+}
+
 .workbench[data-learning-workbench='true'] {
   grid-template-columns: minmax(21rem, 0.98fr) minmax(26rem, 1.25fr) minmax(20rem, 0.92fr);
   align-items: start;
@@ -556,7 +633,33 @@
 }
 
 .mobileSurfaceTabs {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem;
+  border: 1px solid var(--crrt-line);
+  border-radius: 0.85rem;
+  background: rgba(5, 24, 28, 0.92);
+}
+
+.mobileSurfaceTabs button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid rgba(175, 222, 215, 0.24);
+  border-radius: 0.5rem;
+  color: var(--crrt-muted);
+  background: rgba(13, 48, 53, 0.72);
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mobileSurfaceTabs button[aria-selected='true'] {
+  color: #06201f;
+  border-color: var(--crrt-teal);
+  background: var(--crrt-teal);
 }
 
 .workbenchPanel {
@@ -1490,7 +1593,8 @@
     grid-template-columns: 1fr;
   }
 
-  .reviewCandidateIdentity {
+  .reviewCandidateIdentity,
+  .smeChecklist {
     grid-template-columns: 1fr;
   }
 
@@ -1692,7 +1796,9 @@
 @media (max-width: 780px) {
   .mobileSurfaceTabs {
     display: grid;
+    grid-template-columns: repeat(5, minmax(5.6rem, 1fr));
     gap: 0.55rem;
+    overflow-x: auto;
     margin-bottom: 0.75rem;
     padding: 0.65rem;
     border: 1px solid var(--crrt-line);

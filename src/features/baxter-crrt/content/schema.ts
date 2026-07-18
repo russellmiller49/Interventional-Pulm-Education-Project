@@ -540,12 +540,10 @@ export function collectCrrtCaseSemanticIssues(definition: SemanticCase): string[
         'Every runtime timed event must contain exactly one effect for Phase 2 normalization',
       )
     }
-    if (
-      definition.compatibleDevices.length !== 1 ||
-      definition.compatibleDevices[0] !== 'prismax-aw8035-2xx'
-    ) {
-      issues.push('A Phase 2 engine fixture must be compatible only with the PrisMax profile')
-    }
+    // Canonical patient, circuit, fluid, solute, filter, and outcome state is
+    // device-neutral. Device compatibility is declared by the case and the
+    // selected adapter owns navigation, vocabulary, displays, alarms, and
+    // controls; review metadata never narrows runtime availability.
     const deviceOverrides = definition.initialDeviceOverrides
     if (deviceOverrides) {
       if (
@@ -892,103 +890,6 @@ export function validatePilotCrrtCaseRegistry(
   })
 }
 
-export const protocolParameterSchema = z
-  .object({
-    id: identifierSchema,
-    value: finiteNumberSchema,
-    unit: z.string().min(1),
-    sourceId: sourceIdSchema,
-    reviewStatus: crrtReviewStatusSchema,
-  })
-  .strict()
-
-export const crrtProtocolProfileSchema = z
-  .object({
-    id: sourceIdSchema,
-    displayName: z.string().min(1),
-    kind: z.enum(['systemic-anticoagulation', 'regional-citrate-calcium']),
-    protocolVersion: z.string().min(1).nullable(),
-    enabled: z.boolean(),
-    reviewStatus: crrtReviewStatusSchema,
-    sourceRecordIds: z.array(sourceIdSchema),
-    parameterValues: z.array(protocolParameterSchema),
-    missingRequirements: z.array(z.string().min(1)),
-    blockedReason: z.string().min(1).nullable(),
-  })
-  .strict()
-  .superRefine((profile, context) => {
-    if (new Set(profile.sourceRecordIds).size !== profile.sourceRecordIds.length) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['sourceRecordIds'],
-        message: 'Protocol source-record IDs must be unique.',
-      })
-    }
-    if (
-      new Set(profile.parameterValues.map((parameter) => parameter.id)).size !==
-      profile.parameterValues.length
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['parameterValues'],
-        message: 'Protocol parameter IDs must be unique.',
-      })
-    }
-    if (!profile.enabled) return
-    if (profile.protocolVersion === null) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['protocolVersion'],
-        message: 'An enabled protocol profile requires a version.',
-      })
-    }
-    if (profile.reviewStatus !== 'approved') {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['reviewStatus'],
-        message: 'An enabled protocol profile must be approved.',
-      })
-    }
-    if (profile.sourceRecordIds.length === 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['sourceRecordIds'],
-        message: 'An enabled protocol profile requires a local-protocol source record.',
-      })
-    }
-    if (profile.parameterValues.length === 0) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['parameterValues'],
-        message: 'An enabled protocol profile requires reviewed parameter values.',
-      })
-    }
-    if (profile.parameterValues.some((parameter) => parameter.reviewStatus !== 'approved')) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['parameterValues'],
-        message: 'Every enabled protocol parameter must be approved.',
-      })
-    }
-    if (
-      profile.parameterValues.some(
-        (parameter) => !profile.sourceRecordIds.includes(parameter.sourceId),
-      )
-    ) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['parameterValues'],
-        message: 'Every enabled protocol parameter must resolve to a protocol source record.',
-      })
-    }
-    if (profile.missingRequirements.length > 0 || profile.blockedReason !== null) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'An enabled protocol profile cannot retain unresolved requirements.',
-      })
-    }
-  })
-
 export type SourceReference = Readonly<z.infer<typeof sourceReferenceSchema>>
 export type ConfiguredPatient = Readonly<z.infer<typeof configuredPatientSchema>>
 export type ConfiguredAccess = Readonly<z.infer<typeof configuredAccessSchema>>
@@ -997,4 +898,3 @@ export type EngineModelConfiguration = Readonly<z.infer<typeof engineModelConfig
 export type TimedEventDefinition = Readonly<z.infer<typeof timedEventSchema>>
 export type AuthoredCrrtCase = Readonly<z.infer<typeof authoredCrrtCaseSchema>>
 export type RuntimeCrrtCase = Readonly<z.infer<typeof runtimeCrrtCaseSchema>>
-export type CrrtProtocolProfile = Readonly<z.infer<typeof crrtProtocolProfileSchema>>

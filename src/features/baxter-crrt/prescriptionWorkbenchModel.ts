@@ -29,9 +29,9 @@ export interface PrescriptionWorkbenchInputs {
   readonly preReplacementMlPerHour: number
   readonly postReplacementMlPerHour: number
   readonly patientFluidRemovalMlPerHour: number
-  /** Phase 7 remains fail-closed until a versioned protocol is approved. */
+  /** Medication-specific instructions are outside this general educational tool. */
   readonly anticoagulationConcept: 'none'
-  /** Phase 7 remains fail-closed until a versioned local solution registry is approved. */
+  /** The default build never infers a local solution inventory or configuration. */
   readonly solutionProfileId: null
   /** Optional teaching-only capacity. Null means no bag-duration result is produced. */
   readonly syntheticBagCapacityMl: number | null
@@ -59,7 +59,7 @@ export interface QualitativePrePostDilutionResult {
   readonly filtrationFractionBurdenProxy: QualitativeComparisonLevel
   readonly effectiveClearanceTendencyProxy: QualitativeComparisonLevel
   readonly foulingTendencyProxy: QualitativeComparisonLevel
-  readonly proxyStatus: 'authored-qualitative-proxy-pending-clinical-review'
+  readonly proxyStatus: 'authored-qualitative-proxy-source-limited'
   readonly sourceRecordIds: readonly [
     'REVIEW-CKRT-CORE-2025',
     'GUID-RRT-ICU-2026',
@@ -86,7 +86,7 @@ export interface UnavailableWorkbenchOutput {
     | 'quantitative-ff'
     | 'whole-patient-net-removal'
   readonly label: string
-  readonly status: 'unavailable-pending-review'
+  readonly status: 'unavailable-source-limited'
   readonly sourceRecordIds: readonly string[]
   readonly reason: string
 }
@@ -126,7 +126,7 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
     Object.freeze({
       id: 'effective-clearance',
       label: 'Estimated effective clearance',
-      status: 'unavailable-pending-review',
+      status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze(['MATH-PM-004', 'MATH-PM-006']),
       reason:
         'No approved solute/filter/solution model is bound to this workbench, and disputed circuit-flow expressions cannot be substituted.',
@@ -134,14 +134,14 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
     Object.freeze({
       id: 'total-circuit-ultrafiltration',
       label: 'Total-circuit ultrafiltration',
-      status: 'unavailable-pending-review',
+      status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze([PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.sourceRecordId]),
       reason: `${PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.sourceRecordId} remains disabled: ${PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.reason}`,
     }),
     Object.freeze({
       id: 'quantitative-ff',
       label: 'Quantitative filtration fraction',
-      status: 'unavailable-pending-review',
+      status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze([
         'MATH-PM-003',
         PRISMAX_PRE_INFUSION_FLOW_GATE.sourceRecordId,
@@ -151,7 +151,7 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
     Object.freeze({
       id: 'whole-patient-net-removal',
       label: 'Whole-patient net fluid removal',
-      status: 'unavailable-pending-review',
+      status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze(['FLUID-PM-001', 'FLUID-PM-002']),
       reason:
         'External patient inputs and outputs, actual delivered machine removal, downtime, and unintended device gain or loss are not bound to this workbench.',
@@ -240,7 +240,7 @@ export function calculateQualitativePrePostDilution(
       filtrationFractionBurdenProxy: 'not-applicable',
       effectiveClearanceTendencyProxy: 'not-applicable',
       foulingTendencyProxy: 'not-applicable',
-      proxyStatus: 'authored-qualitative-proxy-pending-clinical-review',
+      proxyStatus: 'authored-qualitative-proxy-source-limited',
       sourceRecordIds: QUALITATIVE_PROXY_SOURCE_RECORD_IDS,
       omittedVariableCaveat: QUALITATIVE_PROXY_OMITTED_VARIABLE_CAVEAT,
       comparisonText:
@@ -261,7 +261,7 @@ export function calculateQualitativePrePostDilution(
       filtrationFractionBurdenProxy: 'middle',
       effectiveClearanceTendencyProxy: 'middle',
       foulingTendencyProxy: 'middle',
-      proxyStatus: 'authored-qualitative-proxy-pending-clinical-review',
+      proxyStatus: 'authored-qualitative-proxy-source-limited',
       sourceRecordIds: QUALITATIVE_PROXY_SOURCE_RECORD_IDS,
       omittedVariableCaveat: QUALITATIVE_PROXY_OMITTED_VARIABLE_CAVEAT,
       comparisonText:
@@ -279,7 +279,7 @@ export function calculateQualitativePrePostDilution(
     filtrationFractionBurdenProxy: preDominant ? 'lower' : 'higher',
     effectiveClearanceTendencyProxy: preDominant ? 'lower' : 'higher',
     foulingTendencyProxy: preDominant ? 'lower' : 'higher',
-    proxyStatus: 'authored-qualitative-proxy-pending-clinical-review',
+    proxyStatus: 'authored-qualitative-proxy-source-limited',
     sourceRecordIds: QUALITATIVE_PROXY_SOURCE_RECORD_IDS,
     omittedVariableCaveat: QUALITATIVE_PROXY_OMITTED_VARIABLE_CAVEAT,
     comparisonText: preDominant
@@ -289,7 +289,7 @@ export function calculateQualitativePrePostDilution(
 }
 
 /**
- * Reviewer-only source-linked summary. It intentionally provides no clinical
+ * Learner-available source-linked summary. It intentionally provides no clinical
  * target range, anticoagulation prescription, solution recommendation,
  * delivered-dose estimate, or competency decision.
  */
@@ -297,10 +297,14 @@ export function calculatePrescriptionWorkbench(
   inputs: PrescriptionWorkbenchInputs,
 ): PrescriptionWorkbenchResult {
   if (inputs.anticoagulationConcept !== 'none') {
-    throw new RangeError('anticoagulationConcept must remain none until a protocol is approved')
+    throw new RangeError(
+      'anticoagulationConcept must remain none because this tool provides no medication protocol',
+    )
   }
   if (inputs.solutionProfileId !== null) {
-    throw new RangeError('solutionProfileId must remain null until a local registry is approved')
+    throw new RangeError(
+      'solutionProfileId must remain null because the default build has no local solution registry',
+    )
   }
 
   const simulatedWeightKg = assertPositiveNumber(inputs.simulatedWeightKg, 'simulatedWeightKg')

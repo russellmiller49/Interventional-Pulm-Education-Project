@@ -13,14 +13,14 @@ describe('Baxter CRRT localized route', () => {
 
   beforeEach(() => setRequestLocaleMock.mockClear())
 
-  it('exports fail-closed robots metadata for the draft', () => {
+  it('derives noindex metadata from the private SME-review release stage', () => {
     expect(metadata.robots).toEqual({
       index: false,
       follow: false,
       noarchive: true,
     })
-    expect(metadata.description).toMatch(/protected three-case pilot/i)
-    expect(metadata.description).toMatch(/Phase 7 curriculum registry/i)
+    expect(metadata.description).toMatch(/18 cases/i)
+    expect(metadata.description).toMatch(/PrisMax Mastery/i)
   })
 
   it.each(['en', 'es', 'zh-CN'])('sets and passes the %s locale', async (locale) => {

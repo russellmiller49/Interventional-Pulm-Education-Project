@@ -86,6 +86,8 @@ export const defaultCircuitState: CircuitState = {
   bubbleResetRequired: false,
   circuitInspected: false,
   backflowSeconds: 0,
+  drainageClampClosed: false,
+  returnClampClosed: false,
 }
 
 export const defaultGasState: GasState = {
@@ -271,6 +273,20 @@ function alarmDescriptors(state: EcmoSimulationState): AlarmDescriptor[] {
       priority: device.bubbleInterventionEnabled && !device.globalOverride ? 'high' : 'low',
       source: 'device',
       parameter: 'Bubble',
+    })
+  }
+
+  if (circuit.drainageClampClosed || circuit.returnClampClosed) {
+    const closedLimbs = [
+      circuit.drainageClampClosed ? 'drainage' : null,
+      circuit.returnClampClosed ? 'return' : null,
+    ].filter(Boolean)
+    descriptors.push({
+      code: 'CIRCUIT_CLAMP',
+      message: `${closedLimbs.join(' and ')} circuit clamp${closedLimbs.length > 1 ? 's' : ''} closed - forward flow interrupted${device.pumpRunning ? ' with pump demand present' : ''}`,
+      priority: device.pumpRunning ? 'high' : 'medium',
+      source: 'device',
+      parameter: 'Flow',
     })
   }
 
@@ -493,7 +509,14 @@ function reconcileAlarms(
 }
 
 function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
-  if (!state.device.pumpRunning || state.device.zeroFlowActive || rpm <= 0) return 0
+  if (
+    !state.device.pumpRunning ||
+    state.device.zeroFlowActive ||
+    state.circuit.drainageClampClosed ||
+    state.circuit.returnClampClosed ||
+    rpm <= 0
+  )
+    return 0
   if (rpm < 200) return -0.2
 
   let flow = clamp(rpm / 790, 0, 9.9)
@@ -531,6 +554,13 @@ function calculatePressures(state: EcmoSimulationState, flow: number, rpm: numbe
   if (hasFault(state, 'oxygenator-resistance')) {
     pArt = 165 + flow * 8
     pInt = pArt + 110 + flow * 8
+  }
+  if (state.circuit.drainageClampClosed && state.device.pumpRunning && rpm > 0) {
+    pVen = -350
+  }
+  if (state.circuit.returnClampClosed && state.device.pumpRunning && rpm > 0) {
+    pArt = 620
+    pInt = 690
   }
 
   return {
@@ -570,6 +600,8 @@ function applyPressureIntervention(
   if (
     !circuit.bubbleResetRequired &&
     !device.zeroFlowActive &&
+    !circuit.drainageClampClosed &&
+    !circuit.returnClampClosed &&
     device.rpmSetpoint > 0 &&
     circuit.pVen >= device.limits.pVenAlarmLow &&
     circuit.pInt <= device.limits.pIntAlarmHigh &&

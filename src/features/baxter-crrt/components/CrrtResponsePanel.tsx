@@ -42,7 +42,7 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
     <section className={styles.responsePanel} aria-labelledby="crrt-response-heading">
       <div className={styles.responseHeading}>
         <div>
-          <span>Simulated response · review pending</span>
+          <span>Simulated response · synthetic teaching data</span>
           <h3 id="crrt-response-heading">Patient, delivery, and reassessment</h3>
         </div>
         <strong>
@@ -102,8 +102,8 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
       >
         <table aria-describedby={trendSummaryId}>
           <caption>
-            Recent simulated trend samples. Values are synthetic, pending review, and unsuitable for
-            patient care.
+            Recent simulated trend samples. Values are synthetic teaching calibration and unsuitable
+            for patient care.
           </caption>
           <thead>
             <tr>

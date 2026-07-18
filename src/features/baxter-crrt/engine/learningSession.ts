@@ -26,6 +26,8 @@ import {
 } from './types'
 
 export type CrrtLearningExperience = 'learn' | 'practice' | 'mastery'
+export type CrrtRuntimeSessionMode = 'learner' | 'review-preview'
+/** @deprecated Use CrrtRuntimeSessionMode. */
 export type CrrtRuntimeAudience = 'learner' | 'reviewer'
 
 export type CrrtReasoningPhase =
@@ -84,7 +86,10 @@ export interface CrrtLearningSessionState {
   readonly simulation: CrrtSimulationState
   readonly interfaceState: PrismaxPilotInterfaceState
   readonly experience: CrrtLearningExperience
-  /** Reviewer sessions may exercise draft fixtures but are never learner-selectable. */
+  readonly mode: CrrtRuntimeSessionMode
+  readonly persistenceEnabled: boolean
+  readonly telemetryEnabled: boolean
+  /** Compatibility projection for pre-v1 components. */
   readonly audience: CrrtRuntimeAudience
   /** Approved capstone identity; null for every non-Mastery or locked session. */
   readonly masteryCapstoneId: string | null
@@ -106,6 +111,7 @@ export interface CreateCrrtLearningSessionOptions {
   readonly roleLens: CrrtRoleLens
   readonly attempt: number
   readonly audience?: CrrtRuntimeAudience
+  readonly mode?: CrrtRuntimeSessionMode
   readonly deviceId?: BaxterCrrtDeviceId
   readonly seed?: number
   /** A registry may cache the already validated normalization result. */
@@ -370,17 +376,22 @@ export function createCrrtLearningSession(
   if (!Number.isSafeInteger(options.attempt) || options.attempt < 1) {
     throw new RangeError('CRRT learning-session attempt must be a positive integer.')
   }
-  const audience = options.audience ?? 'learner'
-  if (audience === 'learner' && !isBaxterCrrtLearnerCaseDefinition(options.caseDefinition)) {
+  const mode = options.mode ?? (options.audience === 'reviewer' ? 'review-preview' : 'learner')
+  const audience: CrrtRuntimeAudience = mode === 'review-preview' ? 'reviewer' : 'learner'
+  if (mode === 'learner' && !isBaxterCrrtLearnerCaseDefinition(options.caseDefinition)) {
     throw new Error(
-      `CRRT case ${options.caseDefinition.id} is reviewer-only until its exact candidate is activated.`,
+      `CRRT case ${options.caseDefinition.id} is not registered in the unified learner curriculum.`,
     )
+  }
+  const deviceId = options.deviceId ?? 'prismax-aw8035-2xx'
+  if (!options.caseDefinition.compatibleDevices.includes(deviceId)) {
+    throw new Error(`CRRT case ${options.caseDefinition.id} is not compatible with ${deviceId}.`)
   }
   const masteryCapstoneId =
     options.experience === 'mastery' ? selectCrrtMasteryCapstoneId(options.caseDefinition) : null
   if (options.experience === 'mastery' && masteryCapstoneId === null) {
     throw new Error(
-      'CRRT Mastery is locked until an approved capstone runtime with at least two problem domains is activated.',
+      'CRRT Mastery is locked to its content-owned capstone case with at least two problem domains.',
     )
   }
   const fixture = options.fixture ?? normalizeRuntimeCrrtCaseToEngineFixture(options.caseDefinition)
@@ -393,7 +404,7 @@ export function createCrrtLearningSession(
       experience: options.experience,
       roleLens: options.roleLens,
       attempt: options.attempt,
-      deviceId: options.deviceId,
+      deviceId,
       seed: sessionSeed(options),
     }),
     options.caseDefinition.initialDeviceOverrides,
@@ -405,6 +416,9 @@ export function createCrrtLearningSession(
     simulation,
     interfaceState,
     experience: options.experience,
+    mode,
+    persistenceEnabled: mode === 'learner',
+    telemetryEnabled: mode === 'learner',
     audience,
     masteryCapstoneId,
     roleLens: options.roleLens,
@@ -678,7 +692,7 @@ function syncInterfaceActionToEngine(
 }
 
 /**
- * The Phase 3 pilot interface has no paused enum. Project paused to idle so the
+ * The legacy PrisMax facsimile state has no paused enum. Project paused to idle so the
  * Operations facsimile fails safe as not running without locking the session as
  * ended; a later authored resume can project it back to running.
  */
@@ -729,6 +743,7 @@ export function crrtLearningSessionReducer(
         roleLens: action.roleLens ?? state.roleLens,
         attempt: action.attempt ?? state.attempt,
         audience: state.audience,
+        mode: state.mode,
         deviceId: state.simulation.deviceId,
       })
     case 'ENTER_PRECOMMIT_REASONING_PHASE': {

@@ -2,50 +2,35 @@ import { render, screen } from '@testing-library/react'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
-jest.mock('../content/deviceProfiles', () => ({
-  ...jest.requireActual('../content/deviceProfiles'),
-  baxterCrrtPublicationStatus: 'published',
-}))
-
-jest.mock('@/lib/analytics', () => ({
-  recordSiteModuleEvent: jest.fn(),
-}))
-
 import BaxterCrrtLab from '../components/BaxterCrrtLab'
 
-describe('Baxter CRRT published learner composition', () => {
-  beforeEach(() => window.localStorage.clear())
+describe('Baxter CRRT v1 private composition', () => {
+  it('mounts complete functionality in SME review without an activation registry', () => {
+    render(<BaxterCrrtLab sessionMode="review-preview" />)
 
-  it('does not mount the Phase 7 reviewer registry, cases, or tools when publication is enabled', () => {
-    render(<BaxterCrrtLab />)
-
-    expect(
-      screen.queryByRole('heading', { name: 'Full PrisMax curriculum—mapped, not activated' }),
-    ).not.toBeInTheDocument()
-    expect(screen.queryByText('Reviewer-only case candidates')).not.toBeInTheDocument()
-    expect(screen.queryByText('Reviewer-only instructional tools')).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('link', { name: 'Open CRRT reviewer workspace' }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', { name: 'Reviewed source and release boundary' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('main')).toHaveAttribute('data-release-stage', 'sme-review')
+    expect(screen.getByRole('tab', { name: /^Mastery/ })).toBeEnabled()
+    expect(screen.getByRole('combobox', { name: 'Device profile' })).toHaveLength(2)
+    expect(screen.getByRole('combobox', { name: 'Station-grouped case' })).toHaveLength(18)
   })
 
-  it('keeps reviewer components out of the full transitive learner client graph', () => {
+  it('includes operational v1 artifacts while excluding retired authorization machinery', () => {
     const entry = join(process.cwd(), 'src/features/baxter-crrt/components/BaxterCrrtLab.tsx')
     const reachable = collectLocalTypeScriptDependencies(entry)
+    const graph = [...reachable].join('\n')
 
-    expect(reachable.size).toBeGreaterThan(40)
-    expect([...reachable].join('\n')).not.toMatch(
-      /CrrtPhase7ReviewPanel|CrrtPhase8ReviewPanel|phase7ReviewCases|instructionalToolsModel|prescriptionWorkbenchModel|pressureLocalizationLabModel|PrismaflexReviewerConsole|prismaflexReviewConsoleModel|prismaflexCalculations|deviceAdapters\/prismaflex|crossDeviceTransfer/,
+    expect(graph).toMatch(/deviceAdapters\/registry/)
+    expect(graph).toMatch(/deviceAdapters\/prismaflex/)
+    expect(graph).toMatch(/crossDeviceTransfer/)
+    expect(graph).toMatch(/instructionalTools/)
+    expect(graph).not.toMatch(
+      /content\/(activation|authorization|candidateIdentity|reviewAttestation|phase7Evidence|masteryReviewPlanner)|reviewBuildIdentity/,
     )
   })
 })
 
 function collectLocalTypeScriptDependencies(entry: string): Set<string> {
   const visited = new Set<string>()
-
   function visit(file: string) {
     if (visited.has(file)) return
     visited.add(file)
@@ -55,7 +40,6 @@ function collectLocalTypeScriptDependencies(entry: string): Set<string> {
       if (dependency) visit(dependency)
     }
   }
-
   visit(entry)
   return visited
 }
@@ -67,13 +51,9 @@ function resolveLocalTypeScriptImport(fromFile: string, specifier: string): stri
       ? join(process.cwd(), 'src', specifier.slice(2))
       : null
   if (!base) return null
-
   const candidates =
     base.endsWith('.ts') || base.endsWith('.tsx')
       ? [base]
       : [`${base}.ts`, `${base}.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')]
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate
-  }
-  return null
+  return candidates.find(existsSync) ?? null
 }

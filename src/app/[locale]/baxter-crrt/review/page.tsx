@@ -2,20 +2,15 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { setRequestLocale } from 'next-intl/server'
 
-import { CrrtPhase7ReviewPanel } from '@/features/baxter-crrt/components/CrrtPhase7ReviewPanel'
-import { CrrtPhase8ReviewPanel } from '@/features/baxter-crrt/components/CrrtPhase8ReviewPanel'
+import BaxterCrrtLab from '@/features/baxter-crrt/components/BaxterCrrtLab'
 import styles from '@/features/baxter-crrt/components/baxter-crrt.module.css'
-import { resolveBaxterCrrtReviewBuildIdentity } from '@/features/baxter-crrt/reviewBuildIdentity'
+import { BAXTER_CRRT_CONTENT_VERSION, baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
 
 export const metadata: Metadata = {
-  title: 'CRRT Reviewer Workspace',
+  title: 'CRRT Final SME Preview',
   description:
-    'Guarded reviewer-only CRRT cases, tools, device adapters, manifests, and activation boundaries.',
-  robots: {
-    index: false,
-    follow: false,
-    noarchive: true,
-  },
+    'Protected full-function Baxter CRRT v1 preview with sources, limitations, and write suppression.',
+  robots: { index: false, follow: false, noarchive: true },
 }
 
 interface PageProps {
@@ -25,55 +20,63 @@ interface PageProps {
 export default async function BaxterCrrtReviewPage({ params }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
-  const reviewBuild = resolveBaxterCrrtReviewBuildIdentity(process.env)
-  const declaredCandidate =
-    reviewBuild.state === 'declared-candidate-requires-manifest-verification'
 
   return (
-    <main
-      className={styles.moduleShell}
-      data-reviewer-route="true"
-      data-analytics="none"
-      data-progress-write="none"
-      data-candidate-state={reviewBuild.state}
-    >
+    <>
       <nav className={styles.reviewerRouteNav} aria-label="CRRT workspace navigation">
         <Link href={`/${locale}/baxter-crrt`}>← Return to protected learner workspace</Link>
-        <span>Reviewer/admin route · pending content only</span>
+        <span>Final SME preview · full functionality · no telemetry or progress writes</span>
       </nav>
       <section
         className={styles.reviewCandidateIdentity}
-        aria-labelledby="crrt-review-candidate-heading"
-        data-formal-review-eligible="false"
+        aria-labelledby="crrt-sme-preview-heading"
       >
         <div>
-          <p className={styles.eyebrow}>Exact review build</p>
-          <h1 id="crrt-review-candidate-heading">
-            {declaredCandidate ? 'Declared candidate — verify manifest' : 'Unfrozen working build'}
-          </h1>
+          <p className={styles.eyebrow}>Lightweight final SME pass</p>
+          <h1 id="crrt-sme-preview-heading">Baxter CRRT v1 preview</h1>
           <p>
-            {declaredCandidate
-              ? 'Compare every value below with the independently supplied manifest before recording findings. This banner alone is not a freeze or approval.'
-              : 'Do not sign this build. A clean candidate ID and manifest digest have not been supplied to the guarded review environment.'}
+            Exercise the complete private module, inspect claim-level sources and limitations, and
+            record feedback using the final-SME checklist. Review metadata is informational and does
+            not disable any preview feature.
           </p>
         </div>
         <dl>
           <div>
-            <dt>Candidate ID</dt>
-            <dd>{reviewBuild.candidateId ?? 'Not supplied'}</dd>
+            <dt>Release stage</dt>
+            <dd>{baxterCrrtReleaseStage}</dd>
           </div>
           <div>
-            <dt>Manifest SHA-256</dt>
-            <dd>{reviewBuild.manifestSha256 ?? 'Not supplied'}</dd>
+            <dt>Build version</dt>
+            <dd>{BAXTER_CRRT_CONTENT_VERSION}</dd>
           </div>
           <div>
-            <dt>Build ID</dt>
-            <dd>{reviewBuild.buildId ?? 'Not supplied'}</dd>
+            <dt>Persistence</dt>
+            <dd>Suppressed</dd>
+          </div>
+          <div>
+            <dt>Telemetry</dt>
+            <dd>Suppressed</dd>
           </div>
         </dl>
       </section>
-      <CrrtPhase7ReviewPanel />
-      <CrrtPhase8ReviewPanel />
-    </main>
+      <section className={styles.smeChecklist} aria-labelledby="crrt-sme-checklist-heading">
+        <div>
+          <p className={styles.eyebrow}>Feedback guide · no signature or approval record</p>
+          <h2 id="crrt-sme-checklist-heading">Final SME review prompts</h2>
+          <p>
+            Note the artifact/location, observed issue, clinical or educational rationale, suggested
+            correction, and whether it should block a later public release.
+          </p>
+        </div>
+        <ul>
+          <li>Clinical coherence of safe, alternative, unsafe, reassessment, and debrief paths</li>
+          <li>PrisMax and Prismaflex manual-reference fidelity and visible limitations</li>
+          <li>No implied institutional configuration or cross-device interchangeability</li>
+          <li>Citrate content remains recognition, checks, reassessment, and escalation only</li>
+          <li>Source clarity, accessibility, responsive behavior, and educational boundaries</li>
+        </ul>
+      </section>
+      <BaxterCrrtLab locale={locale} sessionMode="review-preview" />
+    </>
   )
 }

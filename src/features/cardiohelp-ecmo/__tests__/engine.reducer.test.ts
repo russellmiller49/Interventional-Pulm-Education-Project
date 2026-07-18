@@ -198,6 +198,41 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     expect(state.alarms[0]?.priority).toBe('high')
   })
 
+  it('models independent drainage and return clamps as immediate flow isolation', () => {
+    let state = createInitialSimulationState('acute-hypercapnia')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'improve-acidemia',
+      control: 'sweep',
+      direction: 'increase',
+    })
+
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+    })
+    expect(state.circuit.drainageClampClosed).toBe(true)
+    expect(state.circuit.bloodFlow).toBe(0)
+    expect(state.device.pumpRunning).toBe(false)
+    expect(state.alarms.some((alarm) => alarm.code === 'CIRCUIT_CLAMP')).toBe(true)
+
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+    })
+    expect(state.circuit.drainageClampClosed).toBe(false)
+    expect(state.device.pumpRunning).toBe(true)
+    expect(state.circuit.bloodFlow).toBeGreaterThan(0)
+
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+    })
+    expect(state.circuit.returnClampClosed).toBe(true)
+    expect(state.circuit.bloodFlow).toBe(0)
+    expect(state.circuit.pArt).toBeGreaterThan(state.device.limits.pArtAlarmHigh)
+  })
+
   it('retains only the latest six alarm-history events', () => {
     const initial = createInitialSimulationState('startup-sensor-orientation')
     const alarm = (index: number): AlarmEvent => ({

@@ -2,11 +2,62 @@ import { z } from 'zod'
 
 export const BAXTER_CRRT_ANALYTICS_MODULE_ID = 'baxter-crrt' as const
 
-export const baxterCrrtAnalyticsLearnerCaseIds = ['CRRT-04', 'CRRT-10', 'CRRT-13'] as const
+export const baxterCrrtAnalyticsLearnerCaseIds = [
+  'CRRT-01',
+  'CRRT-02',
+  'CRRT-03',
+  'CRRT-04',
+  'CRRT-05',
+  'CRRT-06',
+  'CRRT-07',
+  'CRRT-08',
+  'CRRT-09',
+  'CRRT-10',
+  'CRRT-11',
+  'CRRT-12',
+  'CRRT-13',
+  'CRRT-14',
+  'CRRT-15',
+  'CRRT-16',
+  'CRRT-17',
+  'CRRT-18',
+] as const
 export const baxterCrrtAnalyticsLearnerLessonIds = [
+  'crrt-01.learn',
+  'crrt-02.learn',
+  'crrt-03.learn',
   'crrt-04.learn',
+  'crrt-05.learn',
+  'crrt-06.learn',
+  'crrt-07.learn',
+  'crrt-08.learn',
+  'crrt-09.learn',
   'crrt-10.learn',
+  'crrt-11.learn',
+  'crrt-12.learn',
   'crrt-13.learn',
+  'crrt-14.learn',
+  'crrt-15.learn',
+  'crrt-16.learn',
+  'crrt-17.learn',
+  'crrt-18.learn',
+] as const
+export const baxterCrrtAnalyticsDrillIds = [
+  'DRILL-AIR',
+  'DRILL-BLOOD-LEAK',
+  'DRILL-GAIN-LOSS',
+  'DRILL-BAG-SCALE',
+  'DRILL-POWER',
+  'DRILL-WRONG-SOLUTION',
+  'DRILL-BLOOD-RETURN',
+] as const
+export const baxterCrrtAnalyticsToolIds = [
+  'LAB-TRANSPORT',
+  'LAB-PRESCRIPTION',
+  'LAB-PREPOST-DILUTION',
+  'LAB-PRESSURE-LOCALIZATION',
+  'LAB-FLUID-LEDGER',
+  'LAB-CITRATE-DASHBOARD',
 ] as const
 
 export const baxterCrrtAnalyticsInteractions = [
@@ -21,14 +72,14 @@ export const baxterCrrtAnalyticsInteractions = [
   'first_safe_action',
   'reassessment_completed',
   'case_completed',
+  'drill_opened',
+  'drill_completed',
+  'tool_opened',
+  'tool_completed',
+  'mastery_completed',
   'station_completed',
 ] as const
 
-const caseIdSchema = z.enum(baxterCrrtAnalyticsLearnerCaseIds)
-const lessonIdSchema = z.enum(baxterCrrtAnalyticsLearnerLessonIds)
-const pathwaySchema = z.enum(['orientation', 'learn', 'practice'])
-const deviceSchema = z.literal('prismax-aw8035-2xx')
-const roleSchema = z.enum(['prescriber', 'operator', 'integrated'])
 const boundedScoreSchema = z.number().int().min(0).max(100)
 const boundedCountSchema = z.number().int().min(0).max(100)
 const boundedSecondsSchema = z.number().int().min(0).max(86_400)
@@ -36,11 +87,14 @@ const boundedSecondsSchema = z.number().int().min(0).max(86_400)
 export const baxterCrrtAnalyticsEventPayloadSchema = z
   .object({
     interaction: z.enum(baxterCrrtAnalyticsInteractions),
-    caseId: caseIdSchema.optional(),
-    lessonId: lessonIdSchema.optional(),
-    pathway: pathwaySchema,
-    device: deviceSchema,
-    role: roleSchema,
+    caseId: z.enum(baxterCrrtAnalyticsLearnerCaseIds).optional(),
+    lessonId: z.enum(baxterCrrtAnalyticsLearnerLessonIds).optional(),
+    drillId: z.enum(baxterCrrtAnalyticsDrillIds).optional(),
+    toolId: z.enum(baxterCrrtAnalyticsToolIds).optional(),
+    masteryId: z.literal('MASTERY-PRISMAX-01').optional(),
+    pathway: z.enum(['orientation', 'learn', 'practice', 'mastery']),
+    device: z.enum(['prismax-aw8035-2xx', 'prismaflex-g5036003-6xx']),
+    role: z.enum(['prescriber', 'operator', 'integrated']),
     score: boundedScoreSchema.optional(),
     criticalErrorCount: boundedCountSchema.optional(),
     hintCount: boundedCountSchema.optional(),
@@ -51,106 +105,87 @@ export const baxterCrrtAnalyticsEventPayloadSchema = z
   })
   .strict()
   .superRefine((payload, context) => {
-    const hasCaseId = payload.caseId !== undefined
-    const hasLessonId = payload.lessonId !== undefined
     const addIssue = (path: string, message: string) =>
       context.addIssue({ code: z.ZodIssueCode.custom, path: [path], message })
+    const identityCount = [
+      payload.caseId,
+      payload.lessonId,
+      payload.drillId,
+      payload.toolId,
+      payload.masteryId,
+    ].filter((value) => value !== undefined).length
+    if (identityCount > 1) addIssue('caseId', 'CRRT events accept at most one artifact identity.')
 
-    if (hasCaseId && hasLessonId) {
-      addIssue('caseId', 'CRRT analytics events cannot identify both a case and a lesson.')
+    const requires = (
+      interactions: readonly (typeof baxterCrrtAnalyticsInteractions)[number][],
+      key: 'caseId' | 'lessonId' | 'drillId' | 'toolId' | 'masteryId',
+    ) => {
+      if (interactions.includes(payload.interaction) && !payload[key]) {
+        addIssue(key, `${payload.interaction} requires ${key}.`)
+      }
+    }
+    requires(['lesson_opened', 'lesson_completed'], 'lessonId')
+    requires(
+      [
+        'case_opened',
+        'prediction_committed',
+        'hint_requested',
+        'first_safe_action',
+        'reassessment_completed',
+        'case_completed',
+      ],
+      'caseId',
+    )
+    requires(['drill_opened', 'drill_completed'], 'drillId')
+    requires(['tool_opened', 'tool_completed'], 'toolId')
+    requires(['mastery_completed'], 'masteryId')
+
+    if (payload.lessonId && payload.pathway !== 'learn') {
+      addIssue('pathway', 'Lesson events use the Learn pathway.')
+    }
+    if (payload.caseId && !['learn', 'practice', 'mastery'].includes(payload.pathway)) {
+      addIssue('pathway', 'Case events require Learn, Practice, or Mastery.')
+    }
+    if (payload.masteryId && payload.pathway !== 'mastery') {
+      addIssue('pathway', 'Mastery events use the Mastery pathway.')
     }
 
-    const lessonInteraction =
-      payload.interaction === 'lesson_opened' || payload.interaction === 'lesson_completed'
-    const caseInteraction =
-      payload.interaction === 'case_opened' ||
-      payload.interaction === 'case_completed' ||
-      payload.interaction === 'first_safe_action'
-    const attemptInteraction =
-      payload.interaction === 'prediction_committed' ||
-      payload.interaction === 'hint_requested' ||
-      payload.interaction === 'reassessment_completed'
-
-    if (lessonInteraction && (!hasLessonId || hasCaseId)) {
-      addIssue('lessonId', 'Lesson events require one lesson ID and no case ID.')
-    }
-    if (lessonInteraction && payload.pathway !== 'learn') {
-      addIssue('pathway', 'Lesson events are limited to the Learn pathway.')
-    }
-    if (caseInteraction && (!hasCaseId || hasLessonId)) {
-      addIssue('caseId', 'Case events require one CRRT case ID and no lesson ID.')
-    }
-    if (caseInteraction && payload.pathway !== 'practice') {
-      addIssue('pathway', 'Case events are limited to the protected Practice pathway.')
-    }
-    if (attemptInteraction && hasCaseId === hasLessonId) {
-      addIssue('caseId', 'Attempt events require exactly one case or lesson ID.')
-    }
-    if (attemptInteraction && payload.pathway === 'orientation') {
-      addIssue('pathway', 'Orientation cannot emit prediction, hint, or reassessment events.')
-    }
-
-    const completionInteraction =
-      payload.interaction === 'lesson_completed' ||
-      payload.interaction === 'case_completed' ||
-      payload.interaction === 'station_completed'
-    if (completionInteraction && payload.completed !== true) {
+    const completion = [
+      'lesson_completed',
+      'case_completed',
+      'drill_completed',
+      'tool_completed',
+      'mastery_completed',
+      'station_completed',
+    ].includes(payload.interaction)
+    if (completion && payload.completed !== true) {
       addIssue('completed', 'Completion events must set completed to true.')
     }
-    if (!completionInteraction && payload.completed !== undefined) {
+    if (!completion && payload.completed !== undefined) {
       addIssue('completed', 'Only completion events may include completed.')
     }
 
-    if (payload.interaction === 'reassessment_completed') {
-      if (payload.reassessmentCompleted !== true) {
-        addIssue(
-          'reassessmentCompleted',
-          'Reassessment completion events must set reassessmentCompleted to true.',
-        )
-      }
-    } else if (
-      payload.interaction !== 'case_completed' &&
-      payload.reassessmentCompleted !== undefined
+    if (
+      payload.interaction === 'reassessment_completed' &&
+      payload.reassessmentCompleted !== true
     ) {
-      addIssue(
-        'reassessmentCompleted',
-        'Only reassessment or case completion events may include reassessmentCompleted.',
-      )
+      addIssue('reassessmentCompleted', 'Reassessment completion must be true.')
     }
-
-    const caseOutcomeFields = [payload.score, payload.criticalErrorCount, payload.hintCount]
-    if (payload.interaction === 'case_completed') {
-      if (caseOutcomeFields.some((value) => value === undefined)) {
-        addIssue('score', 'Case completion requires score, critical-error count, and hint count.')
-      }
-      if (payload.reassessmentCompleted === undefined) {
-        addIssue(
-          'reassessmentCompleted',
-          'Case completion must report whether reassessment was completed.',
-        )
-      }
-    } else if (caseOutcomeFields.some((value) => value !== undefined)) {
-      addIssue('score', 'Only case completion events may include outcome scores or counts.')
+    const outcomeEvent =
+      payload.interaction === 'case_completed' || payload.interaction === 'mastery_completed'
+    const outcomeFields = [payload.score, payload.criticalErrorCount, payload.hintCount]
+    if (outcomeEvent && outcomeFields.some((value) => value === undefined)) {
+      addIssue('score', 'Case and Mastery completion require score, critical errors, and hints.')
     }
-
+    if (!outcomeEvent && outcomeFields.some((value) => value !== undefined)) {
+      addIssue('score', 'Outcome fields are limited to case or Mastery completion.')
+    }
     if (
       payload.timeToFirstSafeActionSeconds !== undefined &&
       payload.interaction !== 'first_safe_action' &&
       payload.interaction !== 'case_completed'
     ) {
-      addIssue(
-        'timeToFirstSafeActionSeconds',
-        'Only first-safe-action or case-completion events may include this metric.',
-      )
-    }
-    if (
-      payload.interaction === 'first_safe_action' &&
-      payload.timeToFirstSafeActionSeconds === undefined
-    ) {
-      addIssue(
-        'timeToFirstSafeActionSeconds',
-        'First-safe-action events require a bounded elapsed-time metric.',
-      )
+      addIssue('timeToFirstSafeActionSeconds', 'This metric is limited to case safety events.')
     }
   })
 
@@ -159,7 +194,9 @@ export type BaxterCrrtAnalyticsEventPayload = z.infer<typeof baxterCrrtAnalytics
 export function expectedBaxterCrrtAnalyticsEventType(
   interaction: BaxterCrrtAnalyticsEventPayload['interaction'],
 ) {
-  if (interaction === 'case_completed') return 'quiz_submitted' as const
+  if (interaction === 'case_completed' || interaction === 'mastery_completed') {
+    return 'quiz_submitted' as const
+  }
   if (interaction === 'station_completed') return 'section_completed' as const
   return 'module_interaction' as const
 }

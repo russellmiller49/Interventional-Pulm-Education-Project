@@ -87,7 +87,6 @@ export function createSyntheticFixture(
         makeupFlowMlHour: 0,
       },
       anticoagulation: 'none',
-      citrateRequestedButDisabled: false,
       reviewStatus: 'pending',
       sourceIds: [TEST_SOURCE_ID],
     },

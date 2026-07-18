@@ -176,6 +176,8 @@ export interface CircuitState {
   bubbleResetRequired: boolean
   circuitInspected: boolean
   backflowSeconds: number
+  drainageClampClosed: boolean
+  returnClampClosed: boolean
 }
 
 export interface GasState {
@@ -550,6 +552,7 @@ export type SimulationAction =
   | { type: 'RESET_TIMER'; timerIndex: number }
   | { type: 'ACK_ALARM'; alarmId?: string }
   | { type: 'RESET_BUBBLE' }
+  | { type: 'TOGGLE_CIRCUIT_CLAMP'; limb: 'drainage' | 'return' }
   | { type: 'CORRECT_FAULT'; fault: FaultId }
   | { type: 'PERFORM_CHECK'; checkId: string }
   | { type: 'APPLY_CLINICAL_INTERVENTION'; interventionId: string }

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import {
   AlertTriangle,
   Check,
@@ -16,8 +17,20 @@ import {
   Settings,
   ShieldAlert,
 } from 'lucide-react'
-import { useEffect, useRef, type Dispatch, type FormEvent, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react'
 
+import {
+  prismaxSimulatorArtwork,
+  prismaxSimulatorHotspots,
+  type PrismaxSimulatorHotspotId,
+} from '../content/prismaxSimulator'
 import {
   selectPrismaxPilotInterface,
   selectPrismaxPilotOperationsDisplay,
@@ -52,6 +65,7 @@ interface PrismaxPilotInterfaceProps {
   controlsEnabled?: boolean
   operationsDisplay?: PrismaxPilotOperationsDisplay
   caseContext?: PrismaxPilotCaseContext
+  onReset?: () => void
 }
 
 const prescriptionFields = [
@@ -121,10 +135,10 @@ function PrescriptionStep({
     <form className={styles.prescriptionForm} onSubmit={handleSubmit}>
       <div className={styles.screenCopy}>
         <span>Step 3 · Prescription</span>
-        <h4>Enter the three pilot controls</h4>
+        <h4>Enter the three case controls</h4>
         <p>
           These are blank training inputs, not defaults or recommendations. Blood flow is entered
-          first; exact ranges and increments remain disabled pending set/configuration review.
+          first; no local set-specific ranges or increments are inferred.
         </p>
       </div>
 
@@ -163,12 +177,12 @@ function PrescriptionStep({
         <ShieldAlert aria-hidden="true" />
         <span>
           Replacement, PBP, syringe, citrate, solution selection, and set-specific validation are
-          inactive in this pilot.
+          outside this CVVHD case surface.
         </span>
       </div>
 
       <button className={styles.primaryAction} disabled={!view.canCommitPrescription} type="submit">
-        Review and apply pilot values
+        Review and apply case values
       </button>
     </form>
   )
@@ -214,10 +228,10 @@ function SetupStepContent({
       <div className={styles.procedureCard}>
         <div className={styles.screenCopy}>
           <span>Step 2 · Therapy</span>
-          <h4>Select the pilot workflow</h4>
+          <h4>Select the learning workflow</h4>
           <p>
-            CVVHD is the only active pilot surface. This does not establish availability on a local
-            installed device or suitability for a patient.
+            CVVHD is the active workflow for this case surface. This does not establish availability
+            on a local installed device or suitability for a patient.
           </p>
         </div>
         <button
@@ -226,7 +240,7 @@ function SetupStepContent({
           onClick={() => dispatch({ type: 'SELECT_CVVHD' })}
         >
           <strong>CVVHD</strong>
-          <span>Diffusive pilot interface · review pending</span>
+          <span>Diffusive educational interface · AW8035 manual reference</span>
         </button>
         {state.selectedModality === 'cvvhd' ? (
           <button
@@ -234,7 +248,7 @@ function SetupStepContent({
             type="button"
             onClick={() => dispatch({ type: 'COMPLETE_SETUP_STEP', stepId: 'therapy' })}
           >
-            Continue with CVVHD pilot
+            Continue with CVVHD workflow
           </button>
         ) : null}
       </div>
@@ -252,8 +266,8 @@ function SetupStepContent({
           <span>Step 4 · Sets</span>
           <h4>Verify the training flow path</h4>
           <p>
-            The original schematic shows the required pilot topology. No commercial set, catalog
-            number, compatibility claim, or disposable-specific range is selected.
+            The original schematic shows the required educational topology. No commercial set,
+            catalog number, compatibility claim, or disposable-specific range is selected.
           </p>
         </div>
         <button
@@ -272,7 +286,7 @@ function SetupStepContent({
       <div className={styles.procedureCard}>
         <div className={styles.screenCopy}>
           <span>Step 5 · Fluids</span>
-          <h4>Verify pilot bag positions</h4>
+          <h4>Verify case bag positions</h4>
           <p>
             Dialysate and effluent positions are active for the CVVHD checkout. PBP and replacement
             positions remain visible but inactive; no solution composition is encoded.
@@ -335,7 +349,7 @@ function SetupStepContent({
       <div className={styles.procedureCard}>
         <div className={styles.screenCopy}>
           <span>Step 7 · Review</span>
-          <h4>Confirm the entered pilot values</h4>
+          <h4>Confirm the entered case values</h4>
           <p>
             Values are synthetic learner entries. No target, normal range, or clinical approval is
             implied.
@@ -344,7 +358,7 @@ function SetupStepContent({
         <dl className={styles.reviewGrid}>
           <div>
             <dt>Therapy</dt>
-            <dd>CVVHD · pilot surface</dd>
+            <dd>CVVHD · educational case surface</dd>
           </div>
           <div>
             <dt>Blood flow</dt>
@@ -517,7 +531,7 @@ function OperationsScreen({
         <div>
           <span>
             Therapy Operations ·{' '}
-            {caseContext ? `${caseIdentifier(caseContext)} synthetic case` : 'CVVHD pilot'}
+            {caseContext ? `${caseIdentifier(caseContext)} synthetic case` : 'CVVHD orientation'}
           </span>
           <strong>
             {running
@@ -696,12 +710,99 @@ function OperationsScreen({
   )
 }
 
+function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceState }) {
+  const [selectedHotspotId, setSelectedHotspotId] = useState<PrismaxSimulatorHotspotId>(
+    prismaxSimulatorHotspots[0].id,
+  )
+  const selectedHotspot =
+    prismaxSimulatorHotspots.find(({ id }) => id === selectedHotspotId) ??
+    prismaxSimulatorHotspots[0]
+  const stateLabel =
+    state.treatmentState === 'running'
+      ? 'Synthetic run active'
+      : state.treatmentState === 'ended'
+        ? 'Run ended'
+        : state.screen === 'operations'
+          ? 'Operations paused'
+          : state.screen === 'setup'
+            ? `Setup · ${state.completedStepIds.length} of 8 gates`
+            : 'Ready for new attempt'
+
+  return (
+    <section className={styles.hardwarePanel} aria-labelledby="prismax-hardware-heading">
+      <header className={styles.hardwareHeading}>
+        <span>Generated equipment orientation</span>
+        <h3 id="prismax-hardware-heading">Explore the physical machine</h3>
+        <p>
+          Select a numbered region to connect the hardware layout with the functional touchscreen
+          simulator.
+        </p>
+      </header>
+
+      <div className={styles.machineVisual}>
+        <Image
+          alt={prismaxSimulatorArtwork.alt}
+          fill
+          sizes="(max-width: 1100px) 100vw, 32vw"
+          src={prismaxSimulatorArtwork.src}
+        />
+        <span className={styles.machineStateBadge} data-state={state.treatmentState}>
+          {stateLabel}
+        </span>
+        <div className={styles.hotspotLayer} role="group" aria-label="CRRT machine regions">
+          {prismaxSimulatorHotspots.map((hotspot) => (
+            <button
+              key={hotspot.id}
+              type="button"
+              aria-controls="prismax-hardware-detail"
+              aria-label={`Explore ${hotspot.label}`}
+              aria-pressed={selectedHotspot.id === hotspot.id}
+              style={{ left: `${hotspot.xPercent}%`, top: `${hotspot.yPercent}%` }}
+              onClick={() => setSelectedHotspotId(hotspot.id)}
+            >
+              {hotspot.ordinal}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div id="prismax-hardware-detail" className={styles.hardwareDetail} aria-live="polite">
+        <span>{selectedHotspot.ordinal}</span>
+        <div>
+          <h4>{selectedHotspot.label}</h4>
+          <p>{selectedHotspot.description}</p>
+          <small>Manual-reference orientation · {selectedHotspot.sourceRecordIds.join(', ')}</small>
+        </div>
+      </div>
+
+      <div className={styles.hardwareKey} role="group" aria-label="Machine region key">
+        {prismaxSimulatorHotspots.map((hotspot) => (
+          <button
+            key={hotspot.id}
+            type="button"
+            aria-pressed={selectedHotspot.id === hotspot.id}
+            onClick={() => setSelectedHotspotId(hotspot.id)}
+          >
+            <span>{hotspot.ordinal}</span>
+            {hotspot.shortLabel}
+          </button>
+        ))}
+      </div>
+
+      <small className={styles.artworkNote}>
+        {prismaxSimulatorArtwork.generationMethod} No product logo or copied screen artwork.
+      </small>
+    </section>
+  )
+}
+
 export function PrismaxPilotInterface({
   state,
   dispatch,
   controlsEnabled = true,
   operationsDisplay,
   caseContext,
+  onReset,
 }: PrismaxPilotInterfaceProps) {
   const view = selectPrismaxPilotInterface(state)
   const operations = operationsDisplay ?? selectPrismaxPilotOperationsDisplay(state)
@@ -718,142 +819,150 @@ export function PrismaxPilotInterface({
         </div>
       ) : null}
 
-      <fieldset className={styles.controlFieldset} disabled={!controlsEnabled}>
-        <legend className={styles.visuallyHidden}>
-          {controlsEnabled ? 'Educational device controls' : 'Locked educational device controls'}
-        </legend>
-        <section
-          className={styles.consoleShell}
-          aria-label="Original PrisMax functional educational facsimile"
-        >
-          <div className={styles.consoleTop}>
-            <div>
-              <Power aria-hidden="true" />
-              <span>Independent educational interface</span>
+      <div className={styles.simulatorWorkbench}>
+        <PrismaxHardwareOrientation state={state} />
+
+        <fieldset className={styles.controlFieldset} disabled={!controlsEnabled}>
+          <legend className={styles.visuallyHidden}>
+            {controlsEnabled ? 'Educational device controls' : 'Locked educational device controls'}
+          </legend>
+          <section
+            className={styles.consoleShell}
+            aria-label="Original PrisMax functional educational facsimile"
+          >
+            <div className={styles.consoleTop}>
+              <div>
+                <Power aria-hidden="true" />
+                <span>Independent educational interface</span>
+              </div>
+              <span data-state={state.treatmentState}>
+                {state.treatmentState === 'running'
+                  ? 'RUNNING'
+                  : state.treatmentState === 'ended'
+                    ? 'ENDED'
+                    : state.screen === 'operations'
+                      ? 'PAUSED'
+                      : 'SETUP'}
+              </span>
             </div>
-            <span data-state={state.treatmentState}>
-              {state.treatmentState === 'running'
-                ? 'RUNNING'
-                : state.treatmentState === 'ended'
-                  ? 'ENDED'
-                  : state.screen === 'operations'
-                    ? 'PAUSED'
-                    : 'SETUP'}
-            </span>
-          </div>
 
-          <div className={styles.touchscreen}>
-            <nav className={styles.toolbar} aria-label="Educational device toolbar">
-              <span>
-                <History aria-hidden="true" /> History <small>Pilot timeline</small>
-              </span>
-              <span>
-                <Settings aria-hidden="true" /> Tools <small>Excluded</small>
-              </span>
-              <span>
-                <LockKeyhole aria-hidden="true" /> Lock <small>Excluded</small>
-              </span>
-              <span>
-                <HelpCircle aria-hidden="true" /> Help <small>Sources below</small>
-              </span>
-            </nav>
+            <div className={styles.touchscreen}>
+              <nav className={styles.toolbar} aria-label="Educational device toolbar">
+                <span>
+                  <History aria-hidden="true" /> History <small>Pilot timeline</small>
+                </span>
+                <span>
+                  <Settings aria-hidden="true" /> Tools <small>Excluded</small>
+                </span>
+                <span>
+                  <LockKeyhole aria-hidden="true" /> Lock <small>Excluded</small>
+                </span>
+                <span>
+                  <HelpCircle aria-hidden="true" /> Help <small>Sources below</small>
+                </span>
+              </nav>
 
-            {state.screen === 'start' ? (
-              <div className={styles.startScreen}>
-                <div>
-                  <span>
-                    {caseContext
-                      ? 'Protected pilot · synthetic case'
-                      : 'Orientation · source-mapped pilot'}
-                  </span>
-                  <h3>
-                    {caseContext
-                      ? `Start ${caseIdentifier(caseContext)}: ${caseTitle(caseContext)}`
-                      : 'Start a case-free interface checkout'}
-                  </h3>
-                  <p>
-                    {caseContext
-                      ? 'No patient identifiers or patient-entered data are used. All physiology, pressure, alarm, and response values are synthetic and review-pending.'
-                      : 'No patient identifiers, default prescription, physiology, pressure, alarm fault, or clinical target is loaded.'}
-                  </p>
-                </div>
-                <div className={styles.startChoices}>
-                  <button type="button" onClick={() => dispatch({ type: 'SELECT_NEW_PATIENT' })}>
-                    <strong>New Patient</strong>
+              {state.screen === 'start' ? (
+                <div className={styles.startScreen}>
+                  <div>
                     <span>
                       {caseContext
-                        ? 'Begin a clean synthetic attempt'
-                        : 'Begin a blank educational setup'}
+                        ? 'Protected curriculum · synthetic case'
+                        : 'Orientation · manual-reference workflow'}
                     </span>
-                  </button>
-                  <button
-                    aria-describedby="same-patient-unavailable"
-                    disabled={!view.samePatientAvailable}
-                    type="button"
-                  >
-                    <strong>Same Patient</strong>
-                    <span>No prior simulated case</span>
-                  </button>
-                </div>
-                <small id="same-patient-unavailable">
-                  Same Patient timing is intentionally unencoded because the supplied manual
-                  conflicts.
-                </small>
-              </div>
-            ) : state.screen === 'setup' ? (
-              <div className={styles.procedureScreen}>
-                <ol className={styles.stepRail} aria-label="PrisMax pilot setup sequence">
-                  {view.stepStatuses.map(({ step, status }, index) => (
-                    <li
-                      key={step.id}
-                      data-status={status}
-                      aria-current={status === 'current' ? 'step' : undefined}
-                    >
+                    <h3>
+                      {caseContext
+                        ? `Start ${caseIdentifier(caseContext)}: ${caseTitle(caseContext)}`
+                        : 'Start a case-free interface checkout'}
+                    </h3>
+                    <p>
+                      {caseContext
+                        ? 'No patient identifiers or patient-entered data are used. All physiology, pressure, alarm, and response values are synthetic educational calibration.'
+                        : 'No patient identifiers, default prescription, physiology, pressure, alarm fault, or clinical target is loaded.'}
+                    </p>
+                  </div>
+                  <div className={styles.startChoices}>
+                    <button type="button" onClick={() => dispatch({ type: 'SELECT_NEW_PATIENT' })}>
+                      <strong>New Patient</strong>
                       <span>
-                        {status === 'complete' ? <Check aria-hidden="true" /> : index + 1}
+                        {caseContext
+                          ? 'Begin a clean synthetic attempt'
+                          : 'Begin a blank educational setup'}
                       </span>
-                      <div>
-                        <strong>{formatStepLabel(step.id as PrismaxSetupStepId)}</strong>
-                        <small>{status}</small>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-                <div className={styles.procedureBody}>
-                  <SetupStepContent state={state} dispatch={dispatch} caseContext={caseContext} />
+                    </button>
+                    <button
+                      aria-describedby="same-patient-unavailable"
+                      disabled={!view.samePatientAvailable}
+                      type="button"
+                    >
+                      <strong>Same Patient</strong>
+                      <span>No prior simulated case</span>
+                    </button>
+                  </div>
+                  <small id="same-patient-unavailable">
+                    Same Patient timing is intentionally unencoded because the supplied manual
+                    conflicts.
+                  </small>
                 </div>
-              </div>
-            ) : (
-              <OperationsScreen
-                state={state}
-                dispatch={dispatch}
-                operations={operations}
-                caseContext={caseContext}
-              />
-            )}
-          </div>
-
-          <footer className={styles.consoleFooter}>
-            <span>Educational facsimile · not a medical device</span>
-            <span>AW8035 Rev B source profile · Phase 6 independent review pending</span>
-          </footer>
-        </section>
-
-        {state.treatmentState === 'ended' ? (
-          <aside className={styles.resetDock} aria-label="Simulator clean reload">
-            <div>
-              <RotateCcw aria-hidden="true" />
-              <span>
-                <strong>Run ended</strong>
-                Reloading creates a fresh interface state and does not invoke Same Patient.
-              </span>
+              ) : state.screen === 'setup' ? (
+                <div className={styles.procedureScreen}>
+                  <ol className={styles.stepRail} aria-label="PrisMax educational setup sequence">
+                    {view.stepStatuses.map(({ step, status }, index) => (
+                      <li
+                        key={step.id}
+                        data-status={status}
+                        aria-current={status === 'current' ? 'step' : undefined}
+                      >
+                        <span>
+                          {status === 'complete' ? <Check aria-hidden="true" /> : index + 1}
+                        </span>
+                        <div>
+                          <strong>{formatStepLabel(step.id as PrismaxSetupStepId)}</strong>
+                          <small>{status}</small>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className={styles.procedureBody}>
+                    <SetupStepContent state={state} dispatch={dispatch} caseContext={caseContext} />
+                  </div>
+                </div>
+              ) : (
+                <OperationsScreen
+                  state={state}
+                  dispatch={dispatch}
+                  operations={operations}
+                  caseContext={caseContext}
+                />
+              )}
             </div>
-            <button autoFocus type="button" onClick={() => dispatch({ type: 'RESET_INTERFACE' })}>
-              Reload clean interface
-            </button>
-          </aside>
-        ) : null}
-      </fieldset>
+
+            <footer className={styles.consoleFooter}>
+              <span>Educational facsimile · not a medical device</span>
+              <span>AW8035 Rev B manual-reference profile · no local override loaded</span>
+            </footer>
+          </section>
+
+          {state.treatmentState === 'ended' ? (
+            <aside className={styles.resetDock} aria-label="Simulator clean reload">
+              <div>
+                <RotateCcw aria-hidden="true" />
+                <span>
+                  <strong>Run ended</strong>
+                  Reloading creates a fresh interface state and does not invoke Same Patient.
+                </span>
+              </div>
+              <button
+                autoFocus
+                type="button"
+                onClick={() => (onReset ? onReset() : dispatch({ type: 'RESET_INTERFACE' }))}
+              >
+                Reload clean interface
+              </button>
+            </aside>
+          ) : null}
+        </fieldset>
+      </div>
     </div>
   )
 }

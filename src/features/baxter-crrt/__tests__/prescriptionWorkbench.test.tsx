@@ -22,7 +22,7 @@ const VALID_INPUTS: PrescriptionWorkbenchInputs = Object.freeze({
   syntheticBagStream: 'dialysate',
 })
 
-describe('Phase 7 reviewer-only prescription workbench model', () => {
+describe('learner prescription workbench model', () => {
   it('reuses source-backed math and keeps the requested output boundaries explicit', () => {
     const result = calculatePrescriptionWorkbench(VALID_INPUTS)
 
@@ -113,7 +113,7 @@ describe('Phase 7 reviewer-only prescription workbench model', () => {
       filtrationFractionBurdenProxy: 'lower',
       effectiveClearanceTendencyProxy: 'lower',
       foulingTendencyProxy: 'lower',
-      proxyStatus: 'authored-qualitative-proxy-pending-clinical-review',
+      proxyStatus: 'authored-qualitative-proxy-source-limited',
     })
     expect(calculateQualitativePrePostDilution(200, 600)).toMatchObject({
       direction: 'post-dominant',
@@ -143,22 +143,22 @@ describe('Phase 7 reviewer-only prescription workbench model', () => {
   })
 })
 
-describe('Phase 7 reviewer-only prescription workbench UI', () => {
+describe('learner prescription workbench UI', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('marks the entire surface pending and creates no score, competency, progress, or persistence', () => {
+  it('is learner-available with informational provenance and no competency claim', () => {
     render(<CrrtPhase7PrescriptionWorkbench />)
 
     const workbench = screen.getByRole('region', { name: 'Full Prescription Workbench' })
-    expect(workbench).toHaveAttribute('data-reviewer-only', 'true')
-    expect(workbench).toHaveAttribute('data-review-status', 'pending')
-    expect(workbench).toHaveAttribute('data-progress-write', 'none')
-    expect(workbench).toHaveAttribute('data-persistence', 'none')
-    expect(workbench).toHaveAttribute('data-scoring', 'none')
+    expect(workbench).toHaveAttribute('data-reviewer-only', 'false')
+    expect(workbench).toHaveAttribute('data-review-metadata', 'informational')
+    expect(workbench).toHaveAttribute('data-progress-write', 'learner-mode-only')
+    expect(workbench).toHaveAttribute('data-persistence', 'learner-mode-only')
+    expect(workbench).toHaveAttribute('data-scoring', 'tool-specific')
     expect(workbench).toHaveAttribute('data-competency', 'none')
     expect(
-      within(workbench).getByRole('note', { name: 'Reviewer-only boundary' }),
-    ).toHaveTextContent(/not available to learners or for patient care/i)
+      within(workbench).getByRole('note', { name: 'Educational calculation boundary' }),
+    ).toHaveTextContent(/learner-available.*not for patient care/i)
     expect(window.localStorage).toHaveLength(0)
   })
 
@@ -175,7 +175,7 @@ describe('Phase 7 reviewer-only prescription workbench UI', () => {
 
     const solution = screen.getByRole('combobox', { name: 'Versioned solution profile' })
     expect(solution).toBeDisabled()
-    expect(solution).toHaveTextContent(/local registry pending/i)
+    expect(solution).toHaveTextContent(/no local registry loaded/i)
     expect(solution).toHaveAccessibleDescription(
       'No composition, bag assignment, compatibility, or local stock is inferred.',
     )
@@ -192,10 +192,10 @@ describe('Phase 7 reviewer-only prescription workbench UI', () => {
     expect(screen.getByText('30 mL/kg/h')).toBeInTheDocument()
     expect(screen.getByText('4,200 mL/h')).toBeInTheDocument()
     expect(screen.getByText('48 L/day')).toBeInTheDocument()
-    expect(screen.getAllByText('Unavailable · pending review')).toHaveLength(4)
-    expect(screen.getByText('Gate: MATH-PM-004')).toBeInTheDocument()
-    expect(screen.getByText(/Gate: MATH-PM-003 \+ MATH-PM-006/)).toBeInTheDocument()
-    expect(screen.getByText(/Gate: FLUID-PM-001 \+ FLUID-PM-002/)).toBeInTheDocument()
+    expect(screen.getAllByText('Unavailable · source-limited')).toHaveLength(4)
+    expect(screen.getByText('Source records: MATH-PM-004')).toBeInTheDocument()
+    expect(screen.getByText(/Source records: MATH-PM-003 \+ MATH-PM-006/)).toBeInTheDocument()
+    expect(screen.getByText(/Source records: FLUID-PM-001 \+ FLUID-PM-002/)).toBeInTheDocument()
     expect(screen.getByText(/No target range and no delivered-dose/i)).toBeInTheDocument()
     expect(screen.getByText('Aggregate source-pump/bag throughput')).toBeInTheDocument()
     expect(

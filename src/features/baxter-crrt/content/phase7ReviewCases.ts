@@ -1,7 +1,7 @@
-import { baxterCrrtPhase7SourceReferences } from './phase7ReviewSources'
+import { baxterCrrtSupplementalSourceReferences } from './phase7ReviewSources'
 import { baxterCrrtPilotSourceReferences } from './provenance'
 import { runtimeCrrtCaseRegistrySchema, type RuntimeCrrtCase, type SourceReference } from './schema'
-import { BAXTER_CRRT_PHASE_7_CONTENT_VERSION } from './versions'
+import { BAXTER_CRRT_CONTENT_VERSION } from './versions'
 
 const PENDING = 'pending' as const
 const PRISMAX_DEVICE = 'prismax-aw8035-2xx' as const
@@ -131,7 +131,7 @@ interface ReviewCaseSpec {
 }
 
 const sourceRecordById = new Map<string, SourceReference>(
-  [...baxterCrrtPhase7SourceReferences, ...baxterCrrtPilotSourceReferences].map((record) => [
+  [...baxterCrrtSupplementalSourceReferences, ...baxterCrrtPilotSourceReferences].map((record) => [
     record.id,
     record,
   ]),
@@ -284,7 +284,7 @@ function buildReviewCase(spec: ReviewCaseSpec) {
   return {
     id: spec.id,
     sourceCaseId: spec.id,
-    contentVersion: BAXTER_CRRT_PHASE_7_CONTENT_VERSION,
+    contentVersion: BAXTER_CRRT_CONTENT_VERSION,
     title: spec.title,
     stationId: spec.stationId,
     difficulty: spec.difficulty,
@@ -624,7 +624,7 @@ function buildReviewCase(spec: ReviewCaseSpec) {
     reviewStatus: PENDING,
     engineModelConfiguration: {
       id: `${prefix}-synthetic-model`,
-      version: BAXTER_CRRT_PHASE_7_CONTENT_VERSION,
+      version: BAXTER_CRRT_CONTENT_VERSION,
       internalStepSeconds: 60 as const,
       internalStepRationale:
         'One-minute deterministic integration is synthetic teaching calibration pending review.',
@@ -1723,18 +1723,6 @@ const parsedReviewCases = runtimeCrrtCaseRegistrySchema.parse(
   reviewCaseSpecs.map(buildReviewCase).sort((left, right) => left.id.localeCompare(right.id)),
 )
 
-/**
- * Frozen draft runtime fixtures for human review only. This registry has no
- * learner selector, activation path, progress persistence, or competency claim.
- */
-export const baxterCrrtPhase7ReviewCases = deepFreeze({
-  kind: 'crrt-phase7-reviewer-only-runtime-candidates' as const,
-  audience: 'reviewer-only' as const,
-  activationAllowed: false as const,
-  learnerSelectionAllowed: false as const,
-  progressPersistenceAllowed: false as const,
-  competencyClaimAllowed: false as const,
-  reviewStatus: PENDING,
-  contentVersion: BAXTER_CRRT_PHASE_7_CONTENT_VERSION,
-  cases: parsedReviewCases,
-})
+/** Authored source templates promoted into the unified learner registry. */
+export const baxterCrrtAuthoredCaseTemplates: readonly RuntimeCrrtCase[] =
+  deepFreeze(parsedReviewCases)

@@ -28,6 +28,7 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(screen.getAllByRole('option')).toHaveLength(
       cardiohelpLearnLessonsBySupportMode.vv.length,
     )
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
     expect(
       screen.getByRole('img', { name: /VV ECMO femoral-femoral circuit schematic/i }),
     ).toBeInTheDocument()
@@ -93,6 +94,7 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
   it('renders mode-specific cannulation and supports keyboard panning of the schematic', () => {
     const state = createInitialSimulationState('va-differential-hypoxemia')
     render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
 
     expect(screen.getByText(/femoral artery → arterial circulation/i)).toBeInTheDocument()
     expect(screen.getByText(/MIXING REGION VARIES/i)).toBeInTheDocument()
@@ -115,6 +117,7 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     })
     const state = createInitialSimulationState('startup-sensor-orientation')
     render(<CircuitAndMonitors state={state} dispatch={jest.fn()} controlsEnabled={false} />)
+    fireEvent.click(screen.getByRole('tab', { name: /Pressure-zone map/i }))
 
     const viewport = screen.getByRole('group', { name: /horizontally scrollable/i })
     const scrollBy = jest.fn()

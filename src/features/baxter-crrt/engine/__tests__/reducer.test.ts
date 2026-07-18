@@ -5,11 +5,11 @@ import {
   selectNextScheduledEvent,
   selectSecondsUntilNextScheduledEvent,
 } from '../selectors'
-import type { ConfiguredPrescriptionState, CrrtScheduledEventDefinition } from '../types'
+import type { CrrtScheduledEventDefinition } from '../types'
 import { createSyntheticFixture } from '../testSupport/syntheticFixture'
 
 describe('CRRT shared reducer and initial state', () => {
-  it('starts unconfigured, idle, protocol-disabled, and without clinical values', () => {
+  it('starts unconfigured, idle, direction-only for citrate, and without clinical values', () => {
     const state = createInitialCrrtSimulationState()
     expect(state).toMatchObject({
       simulationTimeSeconds: 0,
@@ -20,8 +20,8 @@ describe('CRRT shared reducer and initial state', () => {
       patient: { status: 'unconfigured', synthetic: true },
       access: { status: 'unconfigured' },
       prescription: { status: 'unconfigured', modality: null },
-      device: { deliveryState: 'idle', adapterStatus: 'available-phase-3' },
-      circuit: { citrate: { status: 'disabled-pending-local-protocol' } },
+      device: { deliveryState: 'idle', adapterStatus: 'operational-v1' },
+      circuit: { citrate: { status: 'conceptual-direction-only' } },
     })
     expect(state.trends).toEqual([])
     expect(state.alarms).toEqual([])
@@ -51,12 +51,12 @@ describe('CRRT shared reducer and initial state', () => {
     })
     expect(prismax.seed).toBe(prismaflex.seed)
     expect(prismax.deviceProfileVersion).not.toBe(prismaflex.deviceProfileVersion)
-    expect(() =>
+    expect(
       createInitialCrrtSimulationState({
         fixture,
         deviceId: 'prismaflex-g5036003-6xx',
-      }),
-    ).toThrow(/deferred/i)
+      }).device.adapterStatus,
+    ).toBe('operational-v1')
 
     let progressed = createInitialCrrtSimulationState({
       fixture,
@@ -108,18 +108,16 @@ describe('CRRT shared reducer and initial state', () => {
     expect(selectSecondsUntilNextScheduledEvent(state)).toBeNull()
   })
 
-  it('rejects attempts to activate citrate without a reviewed local protocol', () => {
+  it('keeps conceptual citrate state separate from prescription updates', () => {
     const state = createInitialCrrtSimulationState({ fixture: createSyntheticFixture() })
-    const citratePrescription: ConfiguredPrescriptionState = {
-      ...createSyntheticFixture().prescription,
-      citrateRequestedButDisabled: true,
-    }
-    expect(() =>
-      crrtSimulationReducer(state, {
-        type: 'SET_PRESCRIPTION',
-        prescription: citratePrescription,
-      }),
-    ).toThrow(/disabled/i)
+    const updated = crrtSimulationReducer(state, {
+      type: 'SET_PRESCRIPTION',
+      prescription: createSyntheticFixture().prescription,
+    })
+    expect(updated.circuit.citrate).toEqual(state.circuit.citrate)
+    expect(Object.keys(updated.prescription)).not.toEqual(
+      expect.arrayContaining(['citrateDose', 'calciumTarget', 'adjustmentInstruction']),
+    )
   })
 
   it('rejects invalid time and fluid-rate inputs instead of creating NaN', () => {

@@ -22,6 +22,7 @@ import type {
 } from '../engine'
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
 import styles from './cardiohelp-ecmo.module.css'
+import { EcmoCircuit3D } from './EcmoCircuit3D'
 
 interface SimulationPanelProps {
   state: EcmoSimulationState
@@ -40,6 +41,7 @@ function CircuitSchematic({
   guidedControlId,
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)
+  const [circuitView, setCircuitView] = useState<'bedside' | 'diagnostic'>('bedside')
   const lowFlow = state.circuit.bloodFlow < state.device.limits.flowLow
   const diagnosisRevealed = state.scenario.phase === 'complete'
   const isVa = state.supportMode === 'va'
@@ -109,383 +111,431 @@ function CircuitSchematic({
         <span className={styles.modePill}>{supportModeLabel}</span>
       </div>
 
-      <div
-        ref={diagramScrollRef}
-        className={styles.circuitDiagramScroll}
-        role="group"
-        aria-label={`${supportModeLabel} ECMO circuit diagram; horizontally scrollable on narrow screens`}
-        tabIndex={0}
-        onKeyDown={(event) => {
-          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-          event.preventDefault()
-          const diagram = diagramScrollRef.current
-          if (!diagram) return
-          const delta = event.key === 'ArrowRight' ? 120 : -120
-          if (typeof diagram.scrollBy === 'function') {
-            const reduceMotion =
-              window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-            diagram.scrollBy({ left: delta, behavior: reduceMotion ? 'auto' : 'smooth' })
-          } else {
-            diagram.scrollLeft += delta
-          }
-        }}
-      >
-        <svg
-          className={styles.circuitSvg}
-          viewBox="0 0 1120 590"
-          role="img"
-          aria-labelledby="circuit-svg-title circuit-svg-desc"
-          preserveAspectRatio="xMidYMid meet"
+      <div className={styles.circuitViewTabs} role="tablist" aria-label="Circuit view">
+        <button
+          type="button"
+          role="tab"
+          id="cardiohelp-bedside-view-tab"
+          aria-selected={circuitView === 'bedside'}
+          aria-controls="cardiohelp-bedside-view"
+          tabIndex={circuitView === 'bedside' ? 0 : -1}
+          onClick={() => setCircuitView('bedside')}
         >
-          <title id="circuit-svg-title">{`${supportModeLabel} ECMO femoral-femoral circuit schematic`}</title>
-          <desc id="circuit-svg-desc">{circuitDescription}</desc>
-          <defs>
-            <linearGradient id="cardiohelp-post-pump-gradient" x1="0" x2="1">
-              <stop offset="0" stopColor="#467f9b" />
-              <stop offset="0.62" stopColor="#a64359" />
-              <stop offset="1" stopColor="#e15d69" />
-            </linearGradient>
-            <marker
-              id="cardiohelp-flow-arrow"
-              markerWidth="9"
-              markerHeight="9"
-              refX="7"
-              refY="4.5"
-              orient="auto"
-            >
-              <path d="M0 0 L0 9 L8 4.5 Z" className={styles.flowArrowMarker} />
-            </marker>
-            <marker
-              id="cardiohelp-venous-arrow"
-              markerWidth="9"
-              markerHeight="9"
-              refX="7"
-              refY="4.5"
-              orient="auto"
-            >
-              <path d="M0 0 L0 9 L8 4.5 Z" className={styles.venousArrowMarker} />
-            </marker>
-            <marker
-              id="cardiohelp-return-arrow"
-              markerWidth="9"
-              markerHeight="9"
-              refX="7"
-              refY="4.5"
-              orient="auto"
-            >
-              <path d="M0 0 L0 9 L8 4.5 Z" className={styles.returnArrowMarker} />
-            </marker>
-            <marker
-              id="cardiohelp-gas-arrow"
-              markerWidth="9"
-              markerHeight="9"
-              refX="7"
-              refY="4.5"
-              orient="auto"
-            >
-              <path d="M0 0 L0 9 L8 4.5 Z" className={styles.gasArrowMarker} />
-            </marker>
-          </defs>
+          Bedside 3D circuit
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="cardiohelp-diagnostic-view-tab"
+          aria-selected={circuitView === 'diagnostic'}
+          aria-controls="cardiohelp-diagnostic-view"
+          tabIndex={circuitView === 'diagnostic' ? 0 : -1}
+          onClick={() => setCircuitView('diagnostic')}
+        >
+          Pressure-zone map
+        </button>
+      </div>
 
-          <rect x="18" y="22" width="294" height="500" rx="30" className={styles.anatomyBackdrop} />
-          <text x="42" y="55" className={styles.svgSectionLabel}>
-            PATIENT / CANNULATION
-          </text>
-          <text x="42" y="76" className={styles.svgSectionSubLabel}>
-            Simplified anterior anatomy
-          </text>
+      <div
+        id="cardiohelp-bedside-view"
+        role="tabpanel"
+        aria-labelledby="cardiohelp-bedside-view-tab"
+        hidden={circuitView !== 'bedside'}
+      >
+        <EcmoCircuit3D state={state} dispatch={dispatch} controlsEnabled={controlsEnabled} />
+      </div>
 
-          <circle cx="164" cy="103" r="35" className={styles.anatomyOutline} />
-          <path
-            d="M124 145 Q164 123 204 145 L224 247 Q234 320 218 405 L244 484 H199 L169 410 L138 484 H93 L111 405 Q95 319 105 247 Z"
-            className={styles.anatomyOutline}
-          />
-          <path d="M113 167 Q76 226 68 294" className={styles.anatomyArm} />
-          <path d="M214 167 Q252 226 260 294" className={styles.anatomyArm} />
+      <div
+        id="cardiohelp-diagnostic-view"
+        role="tabpanel"
+        aria-labelledby="cardiohelp-diagnostic-view-tab"
+        hidden={circuitView !== 'diagnostic'}
+      >
+        <div
+          ref={diagramScrollRef}
+          className={styles.circuitDiagramScroll}
+          role="group"
+          aria-label={`${supportModeLabel} ECMO circuit diagram; horizontally scrollable on narrow screens`}
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+            event.preventDefault()
+            const diagram = diagramScrollRef.current
+            if (!diagram) return
+            const delta = event.key === 'ArrowRight' ? 120 : -120
+            if (typeof diagram.scrollBy === 'function') {
+              const reduceMotion =
+                window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+              diagram.scrollBy({ left: delta, behavior: reduceMotion ? 'auto' : 'smooth' })
+            } else {
+              diagram.scrollLeft += delta
+            }
+          }}
+        >
+          <svg
+            className={styles.circuitSvg}
+            viewBox="0 0 1120 590"
+            role="img"
+            aria-labelledby="circuit-svg-title circuit-svg-desc"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            <title id="circuit-svg-title">{`${supportModeLabel} ECMO femoral-femoral circuit schematic`}</title>
+            <desc id="circuit-svg-desc">{circuitDescription}</desc>
+            <defs>
+              <linearGradient id="cardiohelp-post-pump-gradient" x1="0" x2="1">
+                <stop offset="0" stopColor="#467f9b" />
+                <stop offset="0.62" stopColor="#a64359" />
+                <stop offset="1" stopColor="#e15d69" />
+              </linearGradient>
+              <marker
+                id="cardiohelp-flow-arrow"
+                markerWidth="9"
+                markerHeight="9"
+                refX="7"
+                refY="4.5"
+                orient="auto"
+              >
+                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.flowArrowMarker} />
+              </marker>
+              <marker
+                id="cardiohelp-venous-arrow"
+                markerWidth="9"
+                markerHeight="9"
+                refX="7"
+                refY="4.5"
+                orient="auto"
+              >
+                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.venousArrowMarker} />
+              </marker>
+              <marker
+                id="cardiohelp-return-arrow"
+                markerWidth="9"
+                markerHeight="9"
+                refX="7"
+                refY="4.5"
+                orient="auto"
+              >
+                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.returnArrowMarker} />
+              </marker>
+              <marker
+                id="cardiohelp-gas-arrow"
+                markerWidth="9"
+                markerHeight="9"
+                refX="7"
+                refY="4.5"
+                orient="auto"
+              >
+                <path d="M0 0 L0 9 L8 4.5 Z" className={styles.gasArrowMarker} />
+              </marker>
+            </defs>
 
-          <path
-            d="M149 181 C144 230 144 324 145 388 M145 358 C126 389 109 418 96 447 M145 358 C164 390 190 420 214 447"
-            className={styles.venousAnatomy}
-          />
-          <path
-            d="M191 181 C200 232 197 326 195 388 M195 358 C178 392 161 420 147 451 M195 358 C213 391 230 420 244 447"
-            className={styles.arterialAnatomy}
-          />
-          <path
-            d="M157 166 C145 150 149 137 163 141 C176 125 194 138 190 155 C187 169 170 181 164 185 C160 181 158 174 157 166 Z"
-            className={styles.heartShape}
-          />
-
-          <path
-            d="M146 245 C132 295 110 366 96 447"
-            className={`${styles.drainageCannula} ${bloodMoving ? styles.cannulaFlowMoving : ''}`}
-            markerEnd="url(#cardiohelp-venous-arrow)"
-          />
-          {isVa ? (
-            <path
-              d="M244 447 C226 411 207 379 197 335 C195 299 194 247 193 213"
-              className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
-              markerEnd="url(#cardiohelp-return-arrow)"
+            <rect
+              x="18"
+              y="22"
+              width="294"
+              height="500"
+              rx="30"
+              className={styles.anatomyBackdrop}
             />
-          ) : (
+            <text x="42" y="55" className={styles.svgSectionLabel}>
+              PATIENT / CANNULATION
+            </text>
+            <text x="42" y="76" className={styles.svgSectionSubLabel}>
+              Simplified anterior anatomy
+            </text>
+
+            <circle cx="164" cy="103" r="35" className={styles.anatomyOutline} />
             <path
-              d="M214 447 C199 384 181 291 170 185"
-              className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
-              markerEnd="url(#cardiohelp-return-arrow)"
+              d="M124 145 Q164 123 204 145 L224 247 Q234 320 218 405 L244 484 H199 L169 410 L138 484 H93 L111 405 Q95 319 105 247 Z"
+              className={styles.anatomyOutline}
             />
-          )}
-          {isVa ? (
-            <g aria-label="VA native ejection, mixing, and monitoring cues">
+            <path d="M113 167 Q76 226 68 294" className={styles.anatomyArm} />
+            <path d="M214 167 Q252 226 260 294" className={styles.anatomyArm} />
+
+            <path
+              d="M149 181 C144 230 144 324 145 388 M145 358 C126 389 109 418 96 447 M145 358 C164 390 190 420 214 447"
+              className={styles.venousAnatomy}
+            />
+            <path
+              d="M191 181 C200 232 197 326 195 388 M195 358 C178 392 161 420 147 451 M195 358 C213 391 230 420 244 447"
+              className={styles.arterialAnatomy}
+            />
+            <path
+              d="M157 166 C145 150 149 137 163 141 C176 125 194 138 190 155 C187 169 170 181 164 185 C160 181 158 174 157 166 Z"
+              className={styles.heartShape}
+            />
+
+            <path
+              d="M146 245 C132 295 110 366 96 447"
+              className={`${styles.drainageCannula} ${bloodMoving ? styles.cannulaFlowMoving : ''}`}
+              markerEnd="url(#cardiohelp-venous-arrow)"
+            />
+            {isVa ? (
               <path
-                d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
-                className={styles.nativeEjectionPath}
+                d="M244 447 C226 411 207 379 197 335 C195 299 194 247 193 213"
+                className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
                 markerEnd="url(#cardiohelp-return-arrow)"
               />
-              <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
-              <path d="M196 207 V188 H278" className={styles.mixingLeader} />
-              <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
-                MIXING REGION VARIES
-              </text>
-              <circle cx="258" cy="223" r="23" className={styles.rightArmMonitor} />
-              <text x="258" y="219" textAnchor="middle" className={styles.rightArmMonitorLabel}>
-                R ARM
-              </text>
-              <text x="258" y="231" textAnchor="middle" className={styles.rightArmMonitorValue}>
-                {state.patient.rightRadialSpo2.toFixed(0)}%
-              </text>
-              <path d="M244 447 C255 462 263 476 266 493" className={styles.distalPerfusionCue} />
-              <text x="288" y="493" textAnchor="end" className={styles.distalPerfusionLabel}>
-                DISTAL LIMB CHECK
-              </text>
-              <text x="42" y="109" className={styles.vaCueLabel}>
-                NATIVE EJECTION → UPPER BODY
-              </text>
-            </g>
-          ) : null}
-          <circle cx="96" cy="447" r="8" className={styles.drainageInsertionSite} />
-          <circle cx={returnPortX} cy="447" r="8" className={styles.returnInsertionSite} />
-          <text x="34" y="500" className={styles.cannulaLabel}>
-            Femoral vein drainage
-          </text>
-          <text x="158" y="519" className={styles.cannulaLabel}>
-            {isVa ? 'Femoral artery return' : 'Femoral vein return'}
-          </text>
-          <text x="38" y="329" className={styles.anatomyVesselLabel}>
-            VENOUS
-          </text>
-          <text x="210" y="329" className={styles.anatomyVesselLabel}>
-            ARTERIAL
-          </text>
+            ) : (
+              <path
+                d="M214 447 C199 384 181 291 170 185"
+                className={`${styles.returnCannula} ${bloodMoving ? styles.cannulaReturnFlowMoving : ''}`}
+                markerEnd="url(#cardiohelp-return-arrow)"
+              />
+            )}
+            {isVa ? (
+              <g aria-label="VA native ejection, mixing, and monitoring cues">
+                <path
+                  d="M165 151 C189 140 214 136 238 151 C250 166 253 193 252 220"
+                  className={styles.nativeEjectionPath}
+                  markerEnd="url(#cardiohelp-return-arrow)"
+                />
+                <circle cx="196" cy="218" r="11" className={styles.mixingPoint} />
+                <path d="M196 207 V188 H278" className={styles.mixingLeader} />
+                <text x="278" y="184" textAnchor="end" className={styles.vaCueLabel}>
+                  MIXING REGION VARIES
+                </text>
+                <circle cx="258" cy="223" r="23" className={styles.rightArmMonitor} />
+                <text x="258" y="219" textAnchor="middle" className={styles.rightArmMonitorLabel}>
+                  R ARM
+                </text>
+                <text x="258" y="231" textAnchor="middle" className={styles.rightArmMonitorValue}>
+                  {state.patient.rightRadialSpo2.toFixed(0)}%
+                </text>
+                <path d="M244 447 C255 462 263 476 266 493" className={styles.distalPerfusionCue} />
+                <text x="288" y="493" textAnchor="end" className={styles.distalPerfusionLabel}>
+                  DISTAL LIMB CHECK
+                </text>
+                <text x="42" y="109" className={styles.vaCueLabel}>
+                  NATIVE EJECTION → UPPER BODY
+                </text>
+              </g>
+            ) : null}
+            <circle cx="96" cy="447" r="8" className={styles.drainageInsertionSite} />
+            <circle cx={returnPortX} cy="447" r="8" className={styles.returnInsertionSite} />
+            <text x="34" y="500" className={styles.cannulaLabel}>
+              Femoral vein drainage
+            </text>
+            <text x="158" y="519" className={styles.cannulaLabel}>
+              {isVa ? 'Femoral artery return' : 'Femoral vein return'}
+            </text>
+            <text x="38" y="329" className={styles.anatomyVesselLabel}>
+              VENOUS
+            </text>
+            <text x="210" y="329" className={styles.anatomyVesselLabel}>
+              ARTERIAL
+            </text>
 
-          <rect
-            x="330"
-            y="22"
-            width="772"
-            height="500"
-            rx="30"
-            className={styles.circuitBackdrop}
-          />
-          <text x="354" y="55" className={styles.svgSectionLabel}>
-            EXTRACORPOREAL CIRCUIT
-          </text>
-          <text x="354" y="76" className={styles.svgSectionSubLabel}>
-            Follow the arrows from drainage to return
-          </text>
-
-          <g className={state.circuit.drainageChatter ? styles.chatteringTube : undefined}>
-            <path
-              d="M96 447 C215 467 293 385 405 385"
-              className={`${styles.circuitLimb} ${styles.drainageLimb}`}
+            <rect
+              x="330"
+              y="22"
+              width="772"
+              height="500"
+              rx="30"
+              className={styles.circuitBackdrop}
             />
+            <text x="354" y="55" className={styles.svgSectionLabel}>
+              EXTRACORPOREAL CIRCUIT
+            </text>
+            <text x="354" y="76" className={styles.svgSectionSubLabel}>
+              Follow the arrows from drainage to return
+            </text>
+
+            <g className={state.circuit.drainageChatter ? styles.chatteringTube : undefined}>
+              <path
+                d="M96 447 C215 467 293 385 405 385"
+                className={`${styles.circuitLimb} ${styles.drainageLimb}`}
+              />
+              <path
+                d="M96 447 C215 467 293 385 405 385"
+                className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
+                markerEnd="url(#cardiohelp-flow-arrow)"
+              />
+            </g>
+            <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
+              DRAINAGE LIMB · NEGATIVE PRESSURE
+            </text>
+
+            <path d={postPumpPath} className={`${styles.circuitLimb} ${styles.postPumpLimb}`} />
             <path
-              d="M96 447 C215 467 293 385 405 385"
+              d={postPumpPath}
               className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
               markerEnd="url(#cardiohelp-flow-arrow)"
             />
-          </g>
-          <text x="286" y="361" textAnchor="middle" className={styles.limbLabel}>
-            DRAINAGE LIMB · NEGATIVE PRESSURE
-          </text>
+            <text x="601" y="361" textAnchor="middle" className={styles.limbLabel}>
+              PUMP OUTFLOW
+            </text>
 
-          <path d={postPumpPath} className={`${styles.circuitLimb} ${styles.postPumpLimb}`} />
-          <path
-            d={postPumpPath}
-            className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-            markerEnd="url(#cardiohelp-flow-arrow)"
-          />
-          <text x="601" y="361" textAnchor="middle" className={styles.limbLabel}>
-            PUMP OUTFLOW
-          </text>
-
-          <path d={returnLimbPath} className={`${styles.circuitLimb} ${styles.returnLimb}`} />
-          <path
-            d={returnLimbPath}
-            className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-            markerEnd="url(#cardiohelp-flow-arrow)"
-          />
-          <text x="692" y="568" textAnchor="middle" className={styles.returnLimbLabel}>
-            RETURN LIMB · POSITIVE PRESSURE · TO {returnVesselLabel.toUpperCase()}
-          </text>
-
-          <g transform="translate(455 385)">
-            <circle r="53" className={styles.pumpBody} />
-            <circle r="40" className={styles.pumpInnerRing} />
+            <path d={returnLimbPath} className={`${styles.circuitLimb} ${styles.returnLimb}`} />
             <path
-              d="M-25 -6 C-10 -34 31 -25 35 5 C24 34 -17 35 -35 7 C-25 2 -16 -2 -25 -6 Z"
-              className={`${styles.pumpRotor} ${state.device.pumpRunning ? styles.pumpRotorRunning : ''}`}
-            />
-            <path
-              d="M-48 0 H-8 C10 0 24 -11 31 -29"
-              className={styles.pumpMechanismPath}
+              d={returnLimbPath}
+              className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
               markerEnd="url(#cardiohelp-flow-arrow)"
             />
-            <circle r="8" className={styles.pumpHub} />
-            <text y="78" textAnchor="middle" className={styles.componentLabel}>
-              CENTRIFUGAL PUMP
+            <text x="692" y="568" textAnchor="middle" className={styles.returnLimbLabel}>
+              RETURN LIMB · POSITIVE PRESSURE · TO {returnVesselLabel.toUpperCase()}
             </text>
-            <text y="93" textAnchor="middle" className={styles.componentSubLabel}>
-              CENTER INLET → TANGENTIAL OUTFLOW
-            </text>
-          </g>
 
-          <rect
-            x="700"
-            y="292"
-            width="125"
-            height="186"
-            rx="22"
-            className={styles.oxygenatorBody}
-          />
-          {Array.from({ length: 7 }, (_, index) => (
-            <line
-              key={index}
-              x1={720 + index * 14}
-              x2={720 + index * 14}
-              y1="315"
-              y2="454"
-              className={styles.oxygenatorFiber}
+            <g transform="translate(455 385)">
+              <circle r="53" className={styles.pumpBody} />
+              <circle r="40" className={styles.pumpInnerRing} />
+              <path
+                d="M-25 -6 C-10 -34 31 -25 35 5 C24 34 -17 35 -35 7 C-25 2 -16 -2 -25 -6 Z"
+                className={`${styles.pumpRotor} ${state.device.pumpRunning ? styles.pumpRotorRunning : ''}`}
+              />
+              <path
+                d="M-48 0 H-8 C10 0 24 -11 31 -29"
+                className={styles.pumpMechanismPath}
+                markerEnd="url(#cardiohelp-flow-arrow)"
+              />
+              <circle r="8" className={styles.pumpHub} />
+              <text y="78" textAnchor="middle" className={styles.componentLabel}>
+                CENTRIFUGAL PUMP
+              </text>
+              <text y="93" textAnchor="middle" className={styles.componentSubLabel}>
+                CENTER INLET → TANGENTIAL OUTFLOW
+              </text>
+            </g>
+
+            <rect
+              x="700"
+              y="292"
+              width="125"
+              height="186"
+              rx="22"
+              className={styles.oxygenatorBody}
             />
-          ))}
-          <path d="M700 385 H825" className={styles.oxygenatorBloodPath} />
-          <path
-            d="M700 385 H825"
-            className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
-            markerEnd="url(#cardiohelp-flow-arrow)"
-          />
-          <path
-            d="M762 462 V310"
-            className={`${styles.oxygenatorGasPath} ${gasMoving ? styles.oxygenatorGasMoving : ''}`}
-            markerEnd="url(#cardiohelp-gas-arrow)"
-          />
-          <text x="762" y="272" textAnchor="middle" className={styles.componentLabel}>
-            MEMBRANE OXYGENATOR
-          </text>
-          <text x="762" y="500" textAnchor="middle" className={styles.componentSubLabel}>
-            BLOOD AROUND FIBERS · GAS THROUGH FIBERS
-          </text>
-          <text x="832" y="319" className={styles.oxygenatorGasLabel}>
-            GAS EXHAUST
-          </text>
-          <text x="832" y="459" className={styles.oxygenatorGasLabel}>
-            SWEEP GAS IN
-          </text>
+            {Array.from({ length: 7 }, (_, index) => (
+              <line
+                key={index}
+                x1={720 + index * 14}
+                x2={720 + index * 14}
+                y1="315"
+                y2="454"
+                className={styles.oxygenatorFiber}
+              />
+            ))}
+            <path d="M700 385 H825" className={styles.oxygenatorBloodPath} />
+            <path
+              d="M700 385 H825"
+              className={`${styles.circuitFlowTrace} ${bloodMoving ? styles.circuitFlowMoving : ''}`}
+              markerEnd="url(#cardiohelp-flow-arrow)"
+            />
+            <path
+              d="M762 462 V310"
+              className={`${styles.oxygenatorGasPath} ${gasMoving ? styles.oxygenatorGasMoving : ''}`}
+              markerEnd="url(#cardiohelp-gas-arrow)"
+            />
+            <text x="762" y="272" textAnchor="middle" className={styles.componentLabel}>
+              MEMBRANE OXYGENATOR
+            </text>
+            <text x="762" y="500" textAnchor="middle" className={styles.componentSubLabel}>
+              BLOOD AROUND FIBERS · GAS THROUGH FIBERS
+            </text>
+            <text x="832" y="319" className={styles.oxygenatorGasLabel}>
+              GAS EXHAUST
+            </text>
+            <text x="832" y="459" className={styles.oxygenatorGasLabel}>
+              SWEEP GAS IN
+            </text>
 
-          <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
-          <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
-            Δp TREND = pInt − pArt · {state.circuit.deltaP} mmHg
-          </text>
+            <path d="M584 259 V240 H884 V259" className={styles.deltaBracket} />
+            <text x="734" y="226" textAnchor="middle" className={styles.deltaLabel}>
+              Δp TREND = pInt − pArt · {state.circuit.deltaP} mmHg
+            </text>
 
-          <g transform="translate(340 321)" className={styles.sensorFlag}>
-            <rect x="-34" y="-20" width="68" height="40" rx="10" />
-            <text y="5" textAnchor="middle">
-              pVen
+            <g transform="translate(340 321)" className={styles.sensorFlag}>
+              <rect x="-34" y="-20" width="68" height="40" rx="10" />
+              <text y="5" textAnchor="middle">
+                pVen
+              </text>
+              <path d="M0 20 V57" className={styles.sensorLeader} />
+            </g>
+            <g transform="translate(584 295)" className={styles.sensorFlag}>
+              <rect x="-34" y="-20" width="68" height="40" rx="10" />
+              <text y="5" textAnchor="middle">
+                pInt
+              </text>
+              <path d="M0 20 V83" className={styles.sensorLeader} />
+            </g>
+            <g transform="translate(884 295)" className={styles.sensorFlag}>
+              <rect x="-34" y="-20" width="68" height="40" rx="10" />
+              <text y="5" textAnchor="middle">
+                pArt
+              </text>
+              <path d="M0 20 V83" className={styles.sensorLeader} />
+            </g>
+            <g transform="translate(963 314)" className={styles.sensorFlag}>
+              <rect x="-52" y="-24" width="104" height="48" rx="11" />
+              <text y="-2" textAnchor="middle">
+                FLOW +
+              </text>
+              <text y="13" textAnchor="middle">
+                BUBBLE SENSOR
+              </text>
+              <path d="M0 24 V64" className={styles.sensorLeader} />
+            </g>
+            <circle cx="650" cy="385" r="10" className={styles.accessPoint} />
+            <path d="M650 375 V333" className={styles.accessLeader} />
+            <text x="650" y="320" textAnchor="middle" className={styles.accessLabel}>
+              PRE-OXYGENATOR ACCESS
             </text>
-            <path d="M0 20 V57" className={styles.sensorLeader} />
-          </g>
-          <g transform="translate(584 295)" className={styles.sensorFlag}>
-            <rect x="-34" y="-20" width="68" height="40" rx="10" />
-            <text y="5" textAnchor="middle">
-              pInt
-            </text>
-            <path d="M0 20 V83" className={styles.sensorLeader} />
-          </g>
-          <g transform="translate(884 295)" className={styles.sensorFlag}>
-            <rect x="-34" y="-20" width="68" height="40" rx="10" />
-            <text y="5" textAnchor="middle">
-              pArt
-            </text>
-            <path d="M0 20 V83" className={styles.sensorLeader} />
-          </g>
-          <g transform="translate(963 314)" className={styles.sensorFlag}>
-            <rect x="-52" y="-24" width="104" height="48" rx="11" />
-            <text y="-2" textAnchor="middle">
-              FLOW +
-            </text>
-            <text y="13" textAnchor="middle">
-              BUBBLE SENSOR
-            </text>
-            <path d="M0 24 V64" className={styles.sensorLeader} />
-          </g>
-          <circle cx="650" cy="385" r="10" className={styles.accessPoint} />
-          <path d="M650 375 V333" className={styles.accessLeader} />
-          <text x="650" y="320" textAnchor="middle" className={styles.accessLabel}>
-            PRE-OXYGENATOR ACCESS
-          </text>
 
-          <path
-            d="M236 428 H298"
-            className={styles.staticDirectionArrow}
-            markerEnd="url(#cardiohelp-venous-arrow)"
-          />
-          <path
-            d="M526 414 H614"
-            className={styles.staticDirectionArrow}
-            markerEnd="url(#cardiohelp-flow-arrow)"
-          />
-          <path
-            d="M987 420 V478"
-            className={styles.staticDirectionArrow}
-            markerEnd="url(#cardiohelp-return-arrow)"
-          />
-          <path
-            d="M688 540 H594"
-            className={styles.staticDirectionArrow}
-            markerEnd="url(#cardiohelp-return-arrow)"
-          />
-          <path
-            d={`M${returnPortX} 505 V470`}
-            className={styles.staticDirectionArrow}
-            markerEnd="url(#cardiohelp-return-arrow)"
-          />
-        </svg>
+            <path
+              d="M236 428 H298"
+              className={styles.staticDirectionArrow}
+              markerEnd="url(#cardiohelp-venous-arrow)"
+            />
+            <path
+              d="M526 414 H614"
+              className={styles.staticDirectionArrow}
+              markerEnd="url(#cardiohelp-flow-arrow)"
+            />
+            <path
+              d="M987 420 V478"
+              className={styles.staticDirectionArrow}
+              markerEnd="url(#cardiohelp-return-arrow)"
+            />
+            <path
+              d="M688 540 H594"
+              className={styles.staticDirectionArrow}
+              markerEnd="url(#cardiohelp-return-arrow)"
+            />
+            <path
+              d={`M${returnPortX} 505 V470`}
+              className={styles.staticDirectionArrow}
+              markerEnd="url(#cardiohelp-return-arrow)"
+            />
+          </svg>
+        </div>
+        <p className={styles.circuitPanHint}>
+          On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
+          the full circuit.
+        </p>
+
+        <ul className={styles.circuitLegend} aria-label="Circuit schematic legend">
+          <li>
+            <i data-kind="drainage" aria-hidden="true" />
+            <span>Venous drainage limb</span>
+          </li>
+          <li>
+            <i data-kind="post-pump" aria-hidden="true" />
+            <span>Post-pump / membrane path</span>
+          </li>
+          <li>
+            <i data-kind="return" aria-hidden="true" />
+            <span>{supportModeLabel} return limb</span>
+          </li>
+          <li>
+            <i data-kind="gas" aria-hidden="true" />
+            <span>Sweep-gas path through simplified hollow fibers</span>
+          </li>
+          <li>
+            <i data-kind="sensor" aria-hidden="true" />
+            <span>Pressure or flow sensor</span>
+          </li>
+        </ul>
       </div>
-      <p className={styles.circuitPanHint}>
-        On a narrow screen, swipe the diagram or focus it and use horizontal arrow keys to inspect
-        the full circuit.
-      </p>
-
-      <ul className={styles.circuitLegend} aria-label="Circuit schematic legend">
-        <li>
-          <i data-kind="drainage" aria-hidden="true" />
-          <span>Venous drainage limb</span>
-        </li>
-        <li>
-          <i data-kind="post-pump" aria-hidden="true" />
-          <span>Post-pump / membrane path</span>
-        </li>
-        <li>
-          <i data-kind="return" aria-hidden="true" />
-          <span>{supportModeLabel} return limb</span>
-        </li>
-        <li>
-          <i data-kind="gas" aria-hidden="true" />
-          <span>Sweep-gas path through simplified hollow fibers</span>
-        </li>
-        <li>
-          <i data-kind="sensor" aria-hidden="true" />
-          <span>Pressure or flow sensor</span>
-        </li>
-      </ul>
 
       <div className={styles.circuitReadoutGrid}>
         <div>
@@ -511,6 +561,14 @@ function CircuitSchematic({
         <div>
           <span>Pre-oxygenator saturation</span>
           <strong>{state.circuit.preOxygenatorSaturation.toFixed(1)}%</strong>
+        </div>
+        <div data-alert={state.circuit.drainageClampClosed}>
+          <span>Drainage clamp</span>
+          <strong>{state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}</strong>
+        </div>
+        <div data-alert={state.circuit.returnClampClosed}>
+          <span>Return clamp</span>
+          <strong>{state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}</strong>
         </div>
       </div>
 

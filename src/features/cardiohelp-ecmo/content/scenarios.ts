@@ -96,6 +96,7 @@ const allActions: readonly SimulationAction['type'][] = [
   'RESET_TIMER',
   'ACK_ALARM',
   'RESET_BUBBLE',
+  'TOGGLE_CIRCUIT_CLAMP',
   'CORRECT_FAULT',
   'PERFORM_CHECK',
   'COMMIT_PREDICTION',

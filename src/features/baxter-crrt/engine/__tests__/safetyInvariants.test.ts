@@ -13,7 +13,7 @@ function withBagChanges(changes: (bags: readonly BagState[]) => readonly BagStat
 }
 
 describe('CRRT Phase 2 fail-closed safety invariants', () => {
-  it('routes scheduled starts through the same citrate/readiness gate as direct starts', () => {
+  it('keeps direction-only citrate education separate from scheduled treatment controls', () => {
     const startEvent: CrrtScheduledEventDefinition = {
       id: 'scheduled-start',
       atSeconds: 0,
@@ -22,15 +22,12 @@ describe('CRRT Phase 2 fail-closed safety invariants', () => {
       reviewStatus: 'pending',
       sourceIds: [TEST_SOURCE_ID],
     }
-    const base = createSyntheticFixture([startEvent])
-    const fixture = {
-      ...base,
-      prescription: { ...base.prescription, citrateRequestedButDisabled: true },
-    }
+    const fixture = createSyntheticFixture([startEvent])
     let state = createInitialCrrtSimulationState({ fixture })
-    expect(selectEngineReadiness(state).readyForDraftSimulation).toBe(false)
+    expect(selectEngineReadiness(state).readyForDraftSimulation).toBe(true)
+    expect(state.circuit.citrate.status).toBe('conceptual-direction-only')
     state = crrtSimulationReducer(state, { type: 'ADVANCE_TIME', seconds: 0 })
-    expect(state.device.deliveryState).toBe('idle')
+    expect(state.device.deliveryState).toBe('running')
     expect(state.deliveredTherapy.cumulativeActualEffluentMl).toBe(0)
   })
 

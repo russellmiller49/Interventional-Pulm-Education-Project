@@ -1,10 +1,11 @@
 import {
   initialBaxterCrrtDeviceId,
-  prismaflexDeferredDeviceProfile,
-  prismaxDraftDeviceProfile,
+  prismaflexDeviceProfile,
+  prismaxDeviceProfile,
 } from '../content/deviceProfiles'
-import { BAXTER_CRRT_PILOT_CONTENT_VERSION } from '../content/versions'
+import { BAXTER_CRRT_CONTENT_VERSION } from '../content/versions'
 import { getCrrtDeviceCalculationAdapter } from './deviceAdapters/calculations'
+import { getBaxterCrrtDeviceAdapter } from './deviceAdapters/registry'
 import { emptyExternalFluidRates, emptyFluidLedgerTotals } from './fluidModel'
 import { buildSeededEventQueue, deriveDeterministicSeed } from './seededRandom'
 import type {
@@ -20,11 +21,11 @@ import type {
   ScenarioState,
 } from './types'
 
-export const CRRT_ENGINE_VERSION = '0.4.0-phase7-review'
-export const CRRT_SCHEMA_VERSION = '1.1.0-phase7-draft'
-export const CRRT_CONTENT_VERSION = BAXTER_CRRT_PILOT_CONTENT_VERSION
-export const CRRT_PRISMAX_PROFILE_VERSION = prismaxDraftDeviceProfile.profileVersion
-export const CRRT_PRISMAFLEX_PROFILE_VERSION = prismaflexDeferredDeviceProfile.profileVersion
+export const CRRT_ENGINE_VERSION = '1.0.0'
+export const CRRT_SCHEMA_VERSION = '2.0.0'
+export const CRRT_CONTENT_VERSION = BAXTER_CRRT_CONTENT_VERSION
+export const CRRT_PRISMAX_PROFILE_VERSION = prismaxDeviceProfile.profileVersion
+export const CRRT_PRISMAFLEX_PROFILE_VERSION = prismaflexDeviceProfile.profileVersion
 
 export const zeroCrrtFlowRates: CrrtFlowRates = Object.freeze({
   bloodFlowMlMin: 0,
@@ -75,25 +76,27 @@ const emptyCircuit: CircuitState = Object.freeze({
     prismaxFilterPressureDropMmHg: null,
   },
   citrate: {
-    status: 'disabled-pending-local-protocol' as const,
-    protocolProfileId: null,
-    citrateDeliveryRate: null,
-    calciumReplacementRate: null,
-    postFilterIonizedCalcium: null,
+    status: 'conceptual-direction-only' as const,
+    linkedTrendDirections: {
+      systemicIonizedCalcium: 'unknown' as const,
+      totalCalciumRelationship: 'unknown' as const,
+      acidBase: 'unknown' as const,
+      circuitDelivery: 'unknown' as const,
+    },
+    safetyChecks: [
+      'verify-sampling-and-timing',
+      'verify-circuit-and-delivery-context',
+      'verify-authorized-local-protocol-context',
+    ] as const,
+    reassessmentRequired: true as const,
+    escalationBoundary: 'responsible-clinical-team-and-local-protocol' as const,
     reviewStatus: 'pending' as const,
-    sourceIds: ['PROTO-001'] as const,
+    sourceIds: ['REVIEW-CKRT-CORE-2025'] as const,
   },
 })
 
 function createEmptyDevice(deviceId: CrrtSimulationState['deviceId']): CrrtDeviceState {
-  return {
-    deliveryState: 'idle',
-    bloodPumpRunning: false,
-    fluidPumpsRunning: false,
-    patientConnected: false,
-    returnClampClosed: true,
-    adapterStatus: deviceId === 'prismax-aw8035-2xx' ? 'available-phase-3' : 'deferred',
-  }
+  return getBaxterCrrtDeviceAdapter(deviceId).createInitialDeviceState()
 }
 
 const emptyDowntime: Readonly<Record<DowntimeReason, number>> = Object.freeze({
@@ -236,10 +239,6 @@ export function createInitialCrrtSimulationState(
     throw new RangeError('Seed must be an unsigned 32-bit integer.')
   }
   const deviceId = options.deviceId ?? initialBaxterCrrtDeviceId
-  if (deviceId === 'prismaflex-g5036003-6xx' && options.fixture) {
-    throw new Error('Prismaflex runtime behavior is deferred until its separate adapter phase.')
-  }
-
   return {
     engineVersion: CRRT_ENGINE_VERSION,
     schemaVersion: CRRT_SCHEMA_VERSION,
@@ -284,7 +283,6 @@ export function createInitialCrrtSimulationState(
           modality: null,
           flows: zeroCrrtFlowRates,
           anticoagulation: 'none',
-          citrateRequestedButDisabled: false,
           reviewStatus: 'pending',
           sourceIds: [],
         },

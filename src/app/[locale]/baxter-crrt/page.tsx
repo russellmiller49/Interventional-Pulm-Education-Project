@@ -2,18 +2,18 @@ import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
 import BaxterCrrtLab from '@/features/baxter-crrt/components/BaxterCrrtLab'
-import { baxterCrrtPublicationStatus } from '@/features/baxter-crrt/content'
+import { baxterCrrtIsPublic, baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
+
+const isPublic = baxterCrrtIsPublic(baxterCrrtReleaseStage)
 
 export const metadata: Metadata = {
-  title: 'CRRT Learn & Practice Workspace',
+  title: 'CRRT Learn, Practice & Mastery Workspace',
   description:
-    baxterCrrtPublicationStatus === 'published'
-      ? 'Reviewed adult CRRT learning and case-practice workspace.'
-      : 'Authenticated PrisMax CRRT draft with a protected three-case pilot and fail-closed Phase 7 curriculum registry.',
+    'Adult CRRT educational workspace with 18 cases, seven drills, six tools, two device profiles, and PrisMax Mastery.',
   robots: {
-    index: false,
-    follow: false,
-    noarchive: true,
+    index: isPublic,
+    follow: isPublic,
+    noarchive: !isPublic,
   },
 }
 

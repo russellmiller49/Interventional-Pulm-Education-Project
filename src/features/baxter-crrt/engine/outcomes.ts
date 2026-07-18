@@ -1,4 +1,5 @@
 import type { RuntimeCrrtCase } from '../content/schema'
+import { BAXTER_CRRT_CONTENT_VERSION } from '../content/versions'
 import type { CrrtLearningSessionState, CrrtPredictionCommitment } from './learningSession'
 import {
   crrtSoluteIds,
@@ -11,13 +12,12 @@ import {
 export const CRRT_PRACTICE_HINT_PENALTY_POINTS = 5
 export const CRRT_MASTERY_MINIMUM_SCORE = 80
 
-interface ActivatedCrrtMasteryRuntime {
+interface CrrtMasteryRuntimeDefinition {
   readonly capstoneId: string
   readonly runtimeCaseId: RuntimeCrrtCase['id']
   readonly contentVersion: string
   readonly problemDomainIds: readonly string[]
-  readonly activationState: 'learner-active'
-  readonly reviewDisposition: 'approved'
+  readonly available: true
 }
 
 const masteryIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/
@@ -32,17 +32,27 @@ function isBoundedMasteryIdentifier(value: unknown): value is string {
 }
 
 /**
- * Intentionally empty while the Phase 7 Mastery manifest is locked and has no
- * runtime case. A future reviewed content-owned activation registry must be
- * wired here; each record is still revalidated at the engine boundary.
+ * Content-owned Mastery mapping. Review status is informational in the private
+ * SME build and does not block execution.
  */
-const activatedCrrtMasteryRuntimes: readonly ActivatedCrrtMasteryRuntime[] = Object.freeze([])
+const crrtMasteryRuntimeDefinitions: readonly CrrtMasteryRuntimeDefinition[] = Object.freeze([
+  Object.freeze({
+    capstoneId: 'MASTERY-PRISMAX-01',
+    runtimeCaseId: 'CRRT-16',
+    contentVersion: BAXTER_CRRT_CONTENT_VERSION,
+    problemDomainIds: Object.freeze([
+      'pressure-trend-localization',
+      'filter-delivery-history',
+      'patient-and-circuit-reassessment',
+    ]),
+    available: true as const,
+  }),
+])
 
-function isValidMasteryActivationRecord(record: ActivatedCrrtMasteryRuntime): boolean {
+function isValidMasteryRuntimeDefinition(record: CrrtMasteryRuntimeDefinition): boolean {
   const distinctProblemDomains = new Set(record.problemDomainIds)
   return (
-    record.activationState === 'learner-active' &&
-    record.reviewDisposition === 'approved' &&
+    record.available === true &&
     isBoundedMasteryIdentifier(record.capstoneId) &&
     isBoundedMasteryIdentifier(record.runtimeCaseId) &&
     isBoundedMasteryIdentifier(record.contentVersion) &&
@@ -51,7 +61,7 @@ function isValidMasteryActivationRecord(record: ActivatedCrrtMasteryRuntime): bo
   )
 }
 
-export function isCrrtMasteryRuntimeCaseActivated(
+export function isCrrtMasteryRuntimeCaseAvailable(
   caseDefinition: Pick<RuntimeCrrtCase, 'id' | 'contentVersion'>,
 ): boolean {
   return selectCrrtMasteryCapstoneId(caseDefinition) !== null
@@ -61,18 +71,18 @@ export function selectCrrtMasteryCapstoneId(
   caseDefinition: Pick<RuntimeCrrtCase, 'id' | 'contentVersion'>,
 ): string | null {
   return (
-    activatedCrrtMasteryRuntimes.find(
+    crrtMasteryRuntimeDefinitions.find(
       (record) =>
-        isValidMasteryActivationRecord(record) &&
+        isValidMasteryRuntimeDefinition(record) &&
         record.runtimeCaseId === caseDefinition.id &&
         record.contentVersion === caseDefinition.contentVersion,
     )?.capstoneId ?? null
   )
 }
 
-export function isCrrtMasteryCapstoneActivated(capstoneId: string): boolean {
-  return activatedCrrtMasteryRuntimes.some(
-    (record) => isValidMasteryActivationRecord(record) && record.capstoneId === capstoneId,
+export function isCrrtMasteryCapstoneAvailable(capstoneId: string): boolean {
+  return crrtMasteryRuntimeDefinitions.some(
+    (record) => isValidMasteryRuntimeDefinition(record) && record.capstoneId === capstoneId,
   )
 }
 
@@ -527,6 +537,7 @@ export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): Cr
       session.experience === 'mastery' &&
       score >= CRRT_MASTERY_MINIMUM_SCORE &&
       criticalErrorIds.length === 0 &&
+      session.usedHintIds.length === 0 &&
       reassessmentComplete,
     domains,
     hintPenalty,

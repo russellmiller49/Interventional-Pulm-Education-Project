@@ -1,14 +1,20 @@
-import { initialBaxterCrrtDeviceId, type BaxterCrrtDeviceId } from '../content/deviceProfiles'
+import {
+  BAXTER_CRRT_DEVICE_IDS,
+  initialBaxterCrrtDeviceId,
+  type BaxterCrrtDeviceId,
+} from '../content/deviceProfiles'
+import { isBaxterCrrtInstructionalToolId } from '../content/instructionalTools'
 import {
   isBaxterCrrtLearnerLessonId,
   isBaxterCrrtLearnerProgressCaseId,
 } from '../content/learnerRegistry'
+import { isBaxterCrrtRapidDrillId } from '../content/rapidDrills'
 import { CRRT_CONTENT_VERSION, CRRT_ENGINE_VERSION } from './initialState'
-import { isCrrtMasteryCapstoneActivated } from './outcomes'
+import { isCrrtMasteryCapstoneAvailable } from './outcomes'
 import { crrtRoleLenses, crrtStationIds, type CrrtRoleLens, type CrrtStationId } from './types'
 
-export const BAXTER_CRRT_PROGRESS_STORAGE_KEY = 'baxter-crrt-progress-v2'
-export const BAXTER_CRRT_PROGRESS_VERSION = 2 as const
+export const BAXTER_CRRT_PROGRESS_STORAGE_KEY = 'baxter-crrt-progress-v3'
+export const BAXTER_CRRT_PROGRESS_VERSION = 3 as const
 export const BAXTER_CRRT_ENGINE_VERSION = CRRT_ENGINE_VERSION
 export const BAXTER_CRRT_CONTENT_VERSION = CRRT_CONTENT_VERSION
 
@@ -24,13 +30,15 @@ export type BaxterCrrtRoleLens = CrrtRoleLens
 export type BaxterCrrtProgressStation = CrrtStationId
 export type BaxterCrrtProgressPathway = 'learn' | 'practice' | 'mastery'
 
-export interface BaxterCrrtProgressV2 {
-  readonly version: 2
+export interface BaxterCrrtProgressV3 {
+  readonly version: 3
   readonly lastDevice: BaxterCrrtDeviceId
   readonly lastRoleLens: BaxterCrrtRoleLens
   readonly completedLessonIds: readonly string[]
   readonly completedPracticeCaseIds: readonly string[]
   readonly completedMasteryCapstoneIds: readonly string[]
+  readonly completedRapidDrillIds: readonly string[]
+  readonly completedInstructionalToolIds: readonly string[]
   readonly attempts: Readonly<Record<string, number>>
   /** Best score from a non-critical attempt only; unsafe scores are never mixed in. */
   readonly bestSafeScores: Readonly<Record<string, number>>
@@ -46,7 +54,7 @@ export interface BaxterCrrtProgressStorage {
   setItem(key: string, value: string): void
 }
 
-const validDeviceIds = new Set<BaxterCrrtDeviceId>([initialBaxterCrrtDeviceId])
+const validDeviceIds = new Set<BaxterCrrtDeviceId>(BAXTER_CRRT_DEVICE_IDS)
 
 const validRoleLenses = new Set<BaxterCrrtRoleLens>(crrtRoleLenses)
 
@@ -54,7 +62,7 @@ const validStations = new Set<BaxterCrrtProgressStation>(crrtStationIds)
 const validProgressPathways = new Set<BaxterCrrtProgressPathway>(['learn', 'practice', 'mastery'])
 
 function isValidDeviceId(value: unknown): value is BaxterCrrtDeviceId {
-  return value === initialBaxterCrrtDeviceId
+  return BAXTER_CRRT_DEVICE_IDS.some((deviceId) => deviceId === value)
 }
 
 function isValidRoleLens(value: unknown): value is BaxterCrrtRoleLens {
@@ -117,7 +125,7 @@ function isAllowedProgressIdentifier(pathway: BaxterCrrtProgressPathway, id: str
   if (pathway === 'learn' || pathway === 'practice') {
     return isBaxterCrrtLearnerProgressCaseId(id)
   }
-  return isCrrtMasteryCapstoneActivated(id)
+  return isCrrtMasteryCapstoneAvailable(id)
 }
 
 function isAllowedProgressCompositeKey(value: unknown): value is string {
@@ -157,7 +165,7 @@ function browserStorage(): BaxterCrrtProgressStorage | null {
   }
 }
 
-export function createDefaultProgress(): BaxterCrrtProgressV2 {
+export function createDefaultProgress(): BaxterCrrtProgressV3 {
   return {
     version: BAXTER_CRRT_PROGRESS_VERSION,
     lastDevice: initialBaxterCrrtDeviceId,
@@ -165,6 +173,8 @@ export function createDefaultProgress(): BaxterCrrtProgressV2 {
     completedLessonIds: [],
     completedPracticeCaseIds: [],
     completedMasteryCapstoneIds: [],
+    completedRapidDrillIds: [],
+    completedInstructionalToolIds: [],
     attempts: {},
     bestSafeScores: {},
     criticalErrorAttempts: {},
@@ -179,7 +189,7 @@ export function createDefaultProgress(): BaxterCrrtProgressV2 {
  * Projects unknown data onto the complete, non-PHI progress allowlist.
  * Unknown properties are intentionally discarded and invalid required fields fail closed.
  */
-export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV2 | null {
+export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV3 | null {
   if (!isRecord(value) || value.version !== BAXTER_CRRT_PROGRESS_VERSION) return null
   if (!isValidDeviceId(value.lastDevice)) return null
   if (!isValidRoleLens(value.lastRoleLens)) return null
@@ -199,7 +209,12 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV2 | nul
   )
   const completedMasteryCapstoneIds = parseIdList(
     value.completedMasteryCapstoneIds,
-    isCrrtMasteryCapstoneActivated,
+    isCrrtMasteryCapstoneAvailable,
+  )
+  const completedRapidDrillIds = parseIdList(value.completedRapidDrillIds, isBaxterCrrtRapidDrillId)
+  const completedInstructionalToolIds = parseIdList(
+    value.completedInstructionalToolIds,
+    isBaxterCrrtInstructionalToolId,
   )
   const attempts = parseNumberRecord(value.attempts, BAXTER_CRRT_PROGRESS_MAX_COUNTER)
   const bestSafeScores = parseNumberRecord(value.bestSafeScores, 100)
@@ -213,6 +228,8 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV2 | nul
     !completedLessonIds ||
     !completedPracticeCaseIds ||
     !completedMasteryCapstoneIds ||
+    !completedRapidDrillIds ||
+    !completedInstructionalToolIds ||
     !attempts ||
     !bestSafeScores ||
     !criticalErrorAttempts ||
@@ -240,6 +257,8 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV2 | nul
     completedLessonIds,
     completedPracticeCaseIds,
     completedMasteryCapstoneIds,
+    completedRapidDrillIds,
+    completedInstructionalToolIds,
     attempts,
     bestSafeScores,
     criticalErrorAttempts,
@@ -250,7 +269,7 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV2 | nul
   }
 }
 
-export function parseProgress(serialized: string | null | undefined): BaxterCrrtProgressV2 | null {
+export function parseProgress(serialized: string | null | undefined): BaxterCrrtProgressV3 | null {
   if (!serialized) return null
   try {
     return canonicalizeProgress(JSON.parse(serialized) as unknown)
@@ -285,13 +304,13 @@ export function progressAttemptKey(
 }
 
 export function setProgressContext(
-  progress: BaxterCrrtProgressV2,
+  progress: BaxterCrrtProgressV3,
   context: {
     readonly device: BaxterCrrtDeviceId
     readonly roleLens: BaxterCrrtRoleLens
     readonly station: BaxterCrrtProgressStation
   },
-): BaxterCrrtProgressV2 {
+): BaxterCrrtProgressV3 {
   const canonical = canonicalizeProgress(progress)
   if (!canonical) throw new Error('Progress must use the current canonical version.')
   if (
@@ -310,13 +329,13 @@ export function setProgressContext(
 }
 
 export function recordLessonCompletion(
-  progress: BaxterCrrtProgressV2,
+  progress: BaxterCrrtProgressV3,
   lessonId: string,
-): BaxterCrrtProgressV2 {
+): BaxterCrrtProgressV3 {
   const canonical = canonicalizeProgress(progress)
   if (!canonical) throw new Error('Progress must use the current canonical version.')
   if (!isStableId(lessonId) || !isBaxterCrrtLearnerLessonId(lessonId)) {
-    throw new Error('Lesson progress is available only for an activated learner lesson.')
+    throw new Error('Lesson progress is available only for a registered learner lesson.')
   }
   const completedLessonIds = [...new Set([...canonical.completedLessonIds, lessonId])].sort()
   if (completedLessonIds.length > BAXTER_CRRT_PROGRESS_MAX_IDS) {
@@ -325,8 +344,38 @@ export function recordLessonCompletion(
   return { ...canonical, completedLessonIds }
 }
 
+export function recordRapidDrillCompletion(
+  progress: BaxterCrrtProgressV3,
+  drillId: string,
+): BaxterCrrtProgressV3 {
+  const canonical = canonicalizeProgress(progress)
+  if (!canonical) throw new Error('Progress must use the current canonical version.')
+  if (!isBaxterCrrtRapidDrillId(drillId)) throw new Error('Unknown CRRT rapid drill.')
+  return {
+    ...canonical,
+    completedRapidDrillIds: [...new Set([...canonical.completedRapidDrillIds, drillId])].sort(),
+  }
+}
+
+export function recordInstructionalToolCompletion(
+  progress: BaxterCrrtProgressV3,
+  toolId: string,
+): BaxterCrrtProgressV3 {
+  const canonical = canonicalizeProgress(progress)
+  if (!canonical) throw new Error('Progress must use the current canonical version.')
+  if (!isBaxterCrrtInstructionalToolId(toolId)) {
+    throw new Error('Unknown CRRT instructional tool.')
+  }
+  return {
+    ...canonical,
+    completedInstructionalToolIds: [
+      ...new Set([...canonical.completedInstructionalToolIds, toolId]),
+    ].sort(),
+  }
+}
+
 export function recordCaseResult(
-  progress: BaxterCrrtProgressV2,
+  progress: BaxterCrrtProgressV3,
   result: {
     readonly caseId: string
     readonly device: BaxterCrrtDeviceId
@@ -338,7 +387,7 @@ export function recordCaseResult(
     readonly reassessmentCompleted: boolean
     readonly masteryCompleted: boolean
   },
-): BaxterCrrtProgressV2 {
+): BaxterCrrtProgressV3 {
   const canonical = canonicalizeProgress(progress)
   if (!canonical) throw new Error('Progress must use the current canonical version.')
   if (!Number.isFinite(result.score)) throw new RangeError('Score must be finite.')
@@ -358,12 +407,10 @@ export function recordCaseResult(
     throw new Error('Practice results cannot complete Mastery.')
   }
   if (result.pathway === 'practice' && !isBaxterCrrtLearnerProgressCaseId(result.caseId)) {
-    throw new Error('Practice progress is available only for an activated learner runtime case.')
+    throw new Error('Practice progress is available only for a registered learner runtime case.')
   }
-  if (result.pathway === 'mastery' && !isCrrtMasteryCapstoneActivated(result.caseId)) {
-    throw new Error(
-      'CRRT Mastery progress is locked until the exact approved capstone is activated.',
-    )
+  if (result.pathway === 'mastery' && !isCrrtMasteryCapstoneAvailable(result.caseId)) {
+    throw new Error('CRRT Mastery progress is available only for the registered v1 capstone.')
   }
   const score = Math.round(Math.min(100, Math.max(0, result.score)))
   const meetsMasteryCriteria =
@@ -402,7 +449,7 @@ export function recordCaseResult(
     throw new Error('Completed progress identifier limit exceeded.')
   }
 
-  const updated: BaxterCrrtProgressV2 = {
+  const updated: BaxterCrrtProgressV3 = {
     ...canonical,
     lastDevice: result.device,
     lastRoleLens: result.roleLens,
@@ -428,7 +475,7 @@ export function recordCaseResult(
 
 export function readProgress(
   storage: BaxterCrrtProgressStorage | null = browserStorage(),
-): BaxterCrrtProgressV2 {
+): BaxterCrrtProgressV3 {
   if (!storage) return createDefaultProgress()
   try {
     return (
@@ -440,9 +487,11 @@ export function readProgress(
 }
 
 export function writeProgress(
-  progress: BaxterCrrtProgressV2,
+  progress: BaxterCrrtProgressV3,
   storage: BaxterCrrtProgressStorage | null = browserStorage(),
+  sessionMode: 'learner' | 'review-preview' = 'learner',
 ): boolean {
+  if (sessionMode === 'review-preview') return false
   const serialized = serializeProgress(progress)
   if (!storage || !serialized) return false
   try {

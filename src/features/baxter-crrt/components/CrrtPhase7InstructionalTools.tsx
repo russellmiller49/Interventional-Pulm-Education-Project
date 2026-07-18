@@ -15,6 +15,8 @@ import {
   type SyntheticMoleculeClass,
   type SyntheticTransportInputs,
 } from '../instructionalToolsModel'
+import { CrrtPhase7PrescriptionWorkbench } from './CrrtPrescriptionWorkbench'
+import { CrrtPressureLocalizationLab } from './CrrtPressureLocalizationLab'
 import styles from './crrt-phase7-instructional-tools.module.css'
 
 function requireCitrateDashboardManifest() {
@@ -27,13 +29,10 @@ function requireCitrateDashboardManifest() {
 const citrateDashboardManifest = requireCitrateDashboardManifest()
 
 const citrateDashboardDomains = Object.freeze([
-  'Protocol identity and version',
-  'Prescription and delivery domain',
-  'Circuit monitoring domain',
-  'Patient calcium monitoring domain',
-  'Calcium replacement domain',
-  'Acid-base and electrolyte monitoring domain',
-  'Response, escalation, and reassessment domain',
+  'Systemic ionized-calcium direction',
+  'Total-calcium relationship direction',
+  'Acid-base direction',
+  'Circuit-delivery direction',
 ])
 
 const initialTransportInputs: SyntheticTransportInputs = Object.freeze({
@@ -68,15 +67,15 @@ function volume(value: number): string {
   return `${value.toLocaleString()} mL`
 }
 
-interface CandidateSourceNoteProps {
+interface SourceLimitationNoteProps {
   readonly sourceIds: readonly string[]
   readonly limitation: string
 }
 
-function CandidateSourceNote({ sourceIds, limitation }: CandidateSourceNoteProps) {
+function SourceLimitationNote({ sourceIds, limitation }: SourceLimitationNoteProps) {
   return (
-    <aside className={styles.sourceNote} aria-label="Candidate source records">
-      <strong>Candidate source records · review pending</strong>
+    <aside className={styles.sourceNote} aria-label="Source and limitation records">
+      <strong>Source and limitation records</strong>
       <p>
         {sourceIds.map((sourceId, index) => (
           <span key={sourceId}>
@@ -264,12 +263,12 @@ export function TransportMechanismLab() {
     <section
       className={styles.toolCard}
       aria-labelledby={`${idPrefix}-heading`}
-      data-reviewer-only="true"
+      data-reviewer-only="false"
       data-review-status="pending"
-      data-analytics="none"
-      data-scoring="none"
-      data-progress-write="none"
-      data-persistence="none"
+      data-analytics="allowlisted"
+      data-scoring="tool-specific"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
       data-competency="none"
     >
       <header className={styles.toolHeader}>
@@ -277,7 +276,7 @@ export function TransportMechanismLab() {
           <span className={styles.toolNumber}>Instructional tool 01</span>
           <h3 id={`${idPrefix}-heading`}>Transport Mechanism Lab</h3>
         </div>
-        <span className={styles.pendingBadge}>Reviewer-only · pending</span>
+        <span className={styles.pendingBadge}>Learner tool</span>
       </header>
 
       <p className={styles.intro}>
@@ -286,9 +285,9 @@ export function TransportMechanismLab() {
         (adsorption).
       </p>
 
-      <CandidateSourceNote
+      <SourceLimitationNote
         sourceIds={transportMechanismCandidateSourceIds}
-        limitation="These unapproved records provide candidate mechanism context only; they do not validate the unitless index formulas, a membrane, a device setting, or a patient-specific prediction."
+        limitation="These records provide mechanism context only; they do not validate the unitless index formulas, a membrane, a device setting, or a patient-specific prediction."
       />
 
       <div className={styles.conceptEquation} role="note" aria-label="Concept equations">
@@ -478,12 +477,12 @@ export function FluidBalanceLedger() {
     <section
       className={styles.toolCard}
       aria-labelledby={`${idPrefix}-heading`}
-      data-reviewer-only="true"
+      data-reviewer-only="false"
       data-review-status="pending"
-      data-analytics="none"
-      data-scoring="none"
-      data-progress-write="none"
-      data-persistence="none"
+      data-analytics="allowlisted"
+      data-scoring="tool-specific"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
       data-competency="none"
     >
       <header className={styles.toolHeader}>
@@ -491,7 +490,7 @@ export function FluidBalanceLedger() {
           <span className={styles.toolNumber}>Instructional tool 02</span>
           <h3 id={`${idPrefix}-heading`}>Fluid Balance Ledger</h3>
         </div>
-        <span className={styles.pendingBadge}>Reviewer-only · pending</span>
+        <span className={styles.pendingBadge}>Learner tool</span>
       </header>
 
       <p className={styles.intro}>
@@ -500,9 +499,9 @@ export function FluidBalanceLedger() {
         quantities.
       </p>
 
-      <CandidateSourceNote
+      <SourceLimitationNote
         sourceIds={fluidLedgerCandidateSourceIds}
-        limitation="These unapproved records provide candidate accounting context only; they do not validate the synthetic values or establish a fluid-removal target."
+        limitation="These records provide accounting context only; they do not validate the synthetic values or establish a fluid-removal target."
       />
 
       <fieldset className={styles.controlFieldset}>
@@ -598,91 +597,114 @@ export function FluidBalanceLedger() {
 
 export function CitrateCalciumDashboardScaffold() {
   const idPrefix = useId()
+  const [directions, setDirections] = useState<Record<string, string>>(
+    Object.fromEntries(citrateDashboardDomains.map((domain) => [domain, 'unknown'])),
+  )
+  const [checks, setChecks] = useState<string[]>([])
+  const [escalated, setEscalated] = useState(false)
+  const safetyChecks = [
+    'Verify sampling and timing',
+    'Verify circuit and delivery context',
+    'Verify authorized local-protocol context',
+  ] as const
 
   return (
     <section
       className={`${styles.toolCard} ${styles.blockedDashboard}`}
       aria-labelledby={`${idPrefix}-heading`}
-      data-reviewer-only="true"
+      data-reviewer-only="false"
       data-review-status="pending"
-      data-protocol-blocked="true"
-      data-analytics="none"
-      data-scoring="none"
-      data-progress-write="none"
-      data-persistence="none"
+      data-conceptual-only="true"
+      data-analytics="allowlisted"
+      data-scoring="recognition"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
       data-competency="none"
     >
       <header className={styles.toolHeader}>
         <div>
           <span className={styles.toolNumber}>Instructional tool 06</span>
-          <h3 id={`${idPrefix}-heading`}>Citrate-Calcium Dashboard scaffold</h3>
+          <h3 id={`${idPrefix}-heading`}>Conceptual Citrate-Calcium Dashboard</h3>
         </div>
-        <span className={styles.pendingBadge}>Protocol blocked · non-actionable</span>
+        <span className={styles.pendingBadge}>Direction-only education</span>
       </header>
 
-      <div className={styles.blockedStatus} role="note" aria-label="Protocol-blocked status">
-        <strong>No local protocol is loaded.</strong>
+      <div className={styles.blockedStatus} role="note" aria-label="Conceptual safety boundary">
+        <strong>Recognition, verification, reassessment, and escalation only.</strong>
         <p>
-          This reviewer scaffold contains domain labels only. It has no dose, target, ratio,
-          adjustment, alarm, escalation, or patient-care recommendation.
+          This dashboard represents linked trend directions and safety checks. Medication-specific
+          clinical instructions remain outside this general educational module.
         </p>
       </div>
 
       <section aria-labelledby={`${idPrefix}-domains`}>
-        <h4 id={`${idPrefix}-domains`}>Domains an approved protocol would have to link</h4>
-        <ul className={styles.blockedDomainGrid} aria-label="Blocked citrate-calcium domains">
+        <h4 id={`${idPrefix}-domains`}>Link the observed directions</h4>
+        <ul className={styles.blockedDomainGrid} aria-label="Citrate-calcium trend directions">
           {citrateDashboardDomains.map((domain) => (
             <li key={domain}>
-              <span>{domain}</span>
-              <strong>Unavailable</strong>
-              <small>No parameters loaded</small>
+              <label>
+                <span>{domain}</span>
+                <select
+                  value={directions[domain]}
+                  onChange={(event) =>
+                    setDirections((current) => ({ ...current, [domain]: event.target.value }))
+                  }
+                >
+                  <option value="unknown">Unknown</option>
+                  <option value="stable">Stable</option>
+                  <option value="rising">Rising</option>
+                  <option value="falling">Falling</option>
+                </select>
+              </label>
             </li>
           ))}
         </ul>
       </section>
 
-      <dl className={styles.blockedRequirements}>
-        <div>
-          <dt>Protocol version</dt>
-          <dd>Not supplied</dd>
-        </div>
-        <div>
-          <dt>Named protocol owner</dt>
-          <dd>Not supplied</dd>
-        </div>
-        <div>
-          <dt>Pharmacy disposition</dt>
-          <dd>Pending</dd>
-        </div>
-        <div>
-          <dt>Clinical/device disposition</dt>
-          <dd>Pending</dd>
-        </div>
-        <div>
-          <dt>Action controls</dt>
-          <dd>Not implemented</dd>
-        </div>
-        <div>
-          <dt>Learner runtime</dt>
-          <dd>Disabled</dd>
-        </div>
-      </dl>
+      <fieldset className={styles.blockedRequirements}>
+        <legend>Required safety checks</legend>
+        {safetyChecks.map((check) => (
+          <label key={check}>
+            <input
+              type="checkbox"
+              checked={checks.includes(check)}
+              onChange={(event) =>
+                setChecks((current) =>
+                  event.target.checked
+                    ? [...current, check]
+                    : current.filter((candidate) => candidate !== check),
+                )
+              }
+            />
+            {check}
+          </label>
+        ))}
+      </fieldset>
 
-      <CandidateSourceNote
+      <button
+        type="button"
+        disabled={checks.length !== safetyChecks.length}
+        onClick={() => setEscalated(true)}
+      >
+        Record escalation and reassessment
+      </button>
+      <p role="status">
+        {escalated
+          ? 'Conceptual pattern communicated to the responsible clinical team; reassessment remains required.'
+          : 'Complete all safety checks before recording escalation.'}
+      </p>
+
+      <SourceLimitationNote
         sourceIds={citrateDashboardManifest.sourceRecordIds}
-        limitation="These records establish only the blocked review boundary. They do not supply a complete local protocol or authorize actionable citrate/calcium teaching."
+        limitation="These records support conceptual trend recognition only; they do not supply a local clinical protocol."
       />
 
       <div className={styles.blockedRequirementList} role="note">
-        <strong>Activation remains impossible until:</strong>
+        <strong>Unavailable expressions</strong>
         <ul>
           {citrateDashboardManifest.blockingInputs.map((requirement) => (
             <li key={requirement}>{requirement}</li>
           ))}
-          <li>
-            Every candidate-bound protocol-owner, pharmacy, clinical, device, accessibility, and
-            release review is accepted through the trusted review boundary.
-          </li>
         </ul>
       </div>
     </section>
@@ -694,35 +716,34 @@ export function CrrtPhase7InstructionalTools() {
     <section
       className={styles.reviewerTools}
       aria-labelledby="baxter-crrt-phase7-instructional-tools-heading"
-      data-reviewer-only="true"
+      data-reviewer-only="false"
       data-review-status="pending"
-      data-analytics="none"
-      data-scoring="none"
-      data-progress-write="none"
-      data-persistence="none"
+      data-analytics="allowlisted"
+      data-scoring="tool-specific"
+      data-progress-write="learner-mode-only"
+      data-persistence="learner-mode-only"
       data-competency="none"
     >
       <header className={styles.sectionHeader}>
         <div>
-          <span className={styles.kicker}>Phase 7 instructional-tool review</span>
-          <h2 id="baxter-crrt-phase7-instructional-tools-heading">
-            Concept labs—isolated from learner runtime
-          </h2>
+          <span className={styles.kicker}>Six instructional tools</span>
+          <h2 id="baxter-crrt-phase7-instructional-tools-heading">Interactive concept labs</h2>
         </div>
-        <span className={styles.reviewBadge}>Review candidate</span>
+        <span className={styles.reviewBadge}>Learner workspace</span>
       </header>
 
-      <div className={styles.reviewBoundary} role="note" aria-label="Reviewer-only boundary">
-        <strong>Reviewer-only and pending multidisciplinary approval.</strong>
+      <div className={styles.reviewBoundary} role="note" aria-label="Educational boundary">
+        <strong>General educational use; not patient-specific guidance.</strong>
         <p>
-          These standalone exercises use synthetic values and local component state. They do not
-          load a case, issue device or clinical instructions, calculate competency, award a score,
-          record completion, or write learner progress.
+          These exercises use synthetic values and manual-reference device concepts. Unresolved
+          expressions stay visibly unavailable without disabling the surrounding lab.
         </p>
       </div>
 
       <div className={styles.toolGrid}>
         <TransportMechanismLab />
+        <CrrtPhase7PrescriptionWorkbench />
+        <CrrtPressureLocalizationLab />
         <FluidBalanceLedger />
         <CitrateCalciumDashboardScaffold />
       </div>
