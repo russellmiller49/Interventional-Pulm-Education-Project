@@ -167,7 +167,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <strong>Practice</strong>
                 <p>
                   Scored clinical cases that apply each lesson: commit a plan, treat the patient and
-                  circuit, reassess, and debrief. Six cases per track.
+                  circuit, reassess, and debrief. Seven cases per track.
                 </p>
               </Link>
             </li>
@@ -257,7 +257,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                     count + unit.caseScenarioIds.filter((id) => completedCases.has(id)).length,
                   0,
                 )}
-              /6 cases
+              /7 cases
             </span>
           </div>
           <ol className={styles.hubUnitList}>

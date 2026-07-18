@@ -127,6 +127,11 @@ const predictionControls: readonly {
     label: 'Restore cannulated-limb perfusion',
     supportModes: ['va'],
   },
+  {
+    value: 'isolate-circuit',
+    label: 'Clamp to isolate the circuit and come off support',
+    supportModes: ['vv', 'va'],
+  },
 ]
 
 const predictionDirections: readonly { value: PredictionDirection; label: string }[] = [
@@ -674,6 +679,12 @@ function simulatorActionCurrentValue(
   if (action.control === 'gas-fio2') return `${Math.round(state.gas.fio2 * 100)}%`
   if (action.control === 'restore-gas') {
     return state.gas.sourceConnected ? 'Gas source connected' : 'Gas source disconnected'
+  }
+  if (action.control === 'clamp-drainage' || action.control === 'unclamp-drainage') {
+    return `Drainage clamp: ${state.circuit.drainageClampClosed ? 'CLOSED' : 'OPEN'}`
+  }
+  if (action.control === 'clamp-return' || action.control === 'unclamp-return') {
+    return `Return clamp: ${state.circuit.returnClampClosed ? 'CLOSED' : 'OPEN'}`
   }
   return state.device.powerSource === 'ac' ? 'AC connected' : 'Battery power'
 }

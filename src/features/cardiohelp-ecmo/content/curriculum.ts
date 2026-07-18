@@ -80,9 +80,9 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       supportMode: 'vv',
       title: 'Emergencies & transport',
       summary:
-        'Respond to an arterial bubble stop and to AC power loss during transport with the correct safety sequence.',
+        'Respond to an arterial bubble stop with clamp isolation, manage a full circuit-air emergency, and handle AC power loss during transport.',
       lessonScenarioIds: ['arterial-bubble-stop', 'transport-power-loss'],
-      caseScenarioIds: [],
+      caseScenarioIds: ['clinical-vv-circuit-air-embolism'],
     },
     {
       id: 'vv-7-capstone',
@@ -153,9 +153,9 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       supportMode: 'va',
       title: 'Complications, emergencies & transport',
       summary:
-        'Manage cannulated-limb ischemia, an arterial bubble stop, and AC power loss during transport.',
+        'Manage cannulated-limb ischemia, an arterial bubble stop with clamp isolation, a circuit-air emergency, and AC power loss during transport.',
       lessonScenarioIds: ['va-arterial-bubble-stop', 'va-transport-power-loss'],
-      caseScenarioIds: ['va-clinical-limb-ischemia'],
+      caseScenarioIds: ['va-clinical-limb-ischemia', 'va-clinical-circuit-air-embolism'],
     },
     {
       id: 'va-7-capstone',

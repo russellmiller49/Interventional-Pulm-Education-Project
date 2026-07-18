@@ -490,6 +490,130 @@ describe('CARDIOHELP ECMO simulation reducer', () => {
     expect(state.device.pumpRunning).toBe(true)
   })
 
+  it('treats targeted clamp actions as idempotent and blocks unsafe unclamping before de-air', () => {
+    let state = createInitialSimulationState('arterial-bubble-stop')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'prevent-air-return',
+      control: 'correct-cause',
+      direction: 'inspect',
+    })
+    state = ecmoSimulationReducer(state, { type: 'INJECT_FAULT', fault: 'arterial-bubble' })
+    expect(state.device.pumpRunning).toBe(false)
+
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: true,
+    })
+    // Re-dispatching the same target is a no-op rather than a toggle.
+    const afterRepeat = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: true,
+    })
+    expect(afterRepeat).toBe(state)
+    expect(state.circuit.returnClampClosed).toBe(true)
+
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+      closed: true,
+    })
+
+    // Opening a clamp while uncorrected circuit air is present is a critical error.
+    const unsafeOpen = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: false,
+    })
+    expect(unsafeOpen.scenario.criticalErrors).toContain('unsafe-unclamp-before-deair')
+
+    // The safe path: correct the source first, then unclamp in order.
+    state = ecmoSimulationReducer(state, { type: 'CORRECT_FAULT', fault: 'arterial-bubble' })
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+      closed: false,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: false,
+    })
+    expect(state.scenario.criticalErrors).not.toContain('unsafe-unclamp-before-deair')
+    // The bubble latch still holds the pump until the console reset.
+    expect(state.device.pumpRunning).toBe(false)
+    state = ecmoSimulationReducer(state, { type: 'RESET_BUBBLE' })
+    expect(state.device.pumpRunning).toBe(true)
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.circuit.bloodFlow).toBeGreaterThan(0)
+  })
+
+  it('drives the circuit-air case through prompted clamp interventions to auto-resumed support', () => {
+    let state = createInitialSimulationState('clinical-vv-circuit-air-embolism')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: 'prevent-air-return',
+      control: 'isolate-circuit',
+      direction: 'definitive',
+    })
+    expect(state.device.pumpRunning).toBe(false)
+
+    // Out-of-order clamp is not credited: drainage requires the return clamp first.
+    const outOfOrder = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+      closed: true,
+    })
+    expect(
+      outOfOrder.scenario.clinical?.appliedInterventions.some(
+        (record) => record.interventionId === 'air-clamp-drainage',
+      ),
+    ).toBe(false)
+
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: true,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+      closed: true,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'APPLY_CLINICAL_INTERVENTION',
+      interventionId: 'air-deair',
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'drainage',
+      closed: false,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'TOGGLE_CIRCUIT_CLAMP',
+      limb: 'return',
+      closed: false,
+    })
+
+    const appliedIds = state.scenario.clinical?.appliedInterventions.map(
+      (record) => record.interventionId,
+    )
+    expect(appliedIds).toEqual([
+      'air-clamp-return',
+      'air-clamp-drainage',
+      'air-deair',
+      'air-unclamp-drainage',
+      'air-unclamp-return',
+    ])
+    expect(state.scenario.correctedFaults).toContain('arterial-bubble')
+    expect(state.scenario.criticalErrors).toHaveLength(0)
+    expect(state.device.pumpRunning).toBe(true)
+    state = ecmoSimulationReducer(state, { type: 'STEP' })
+    expect(state.circuit.bloodFlow).toBeGreaterThan(0)
+  })
+
   it('does not let an unrelated inspection silently correct the scenario cause', () => {
     let state = createInitialSimulationState('startup-sensor-orientation')
     state = ecmoSimulationReducer(state, {

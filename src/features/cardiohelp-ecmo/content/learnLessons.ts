@@ -743,7 +743,8 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     title: 'Arterial bubble intervention and cause-before-reset',
     learningObjectives: [
       'Recognize the scenario-triggered bubble alarm and automatic pump stop.',
-      'Correct and clear the air source before deliberate reset.',
+      'Isolate the patient with near-patient clamps before de-airing the circuit.',
+      'Correct and clear the air source, then unclamp in order before deliberate reset.',
     ],
     observe: {
       target: 'console',
@@ -759,11 +760,35 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     },
     responseSteps: [
       {
+        id: 'isolate-return-clamp',
+        target: 'circuit',
+        title: 'Isolate the patient: clamp the return limb',
+        instruction:
+          'The device stopped the pump, but a stopped pump does not isolate the air column. Close the return-limb clamp near the patient first.',
+        rationale:
+          'The near-patient return clamp is what stops circuit air from reaching the patient.',
+        actionLabel: 'Close the return-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true }],
+        expectedResponse: ['Return clamp CLOSED', 'Patient isolated from the return limb'],
+      },
+      {
+        id: 'isolate-drainage-clamp',
+        target: 'circuit',
+        title: 'Complete isolation: clamp the drainage limb',
+        instruction:
+          'Close the drainage-limb clamp near the patient so the circuit is fully isolated before de-airing.',
+        rationale:
+          'With both limbs clamped, the circuit can be worked on without exposing the patient.',
+        actionLabel: 'Close the drainage-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true }],
+        expectedResponse: ['Drainage clamp CLOSED', 'Circuit isolated from the patient'],
+      },
+      {
         id: 'correct-bubble-source',
         target: 'circuit',
-        title: 'Correct and clear the air source first',
+        title: 'Correct and clear the air source',
         instruction:
-          'Inspect the patient and circuit, correct the source of air, and confirm the return path is bubble free.',
+          'With the circuit isolated, correct the source of air and confirm the return path is bubble free.',
         rationale:
           'Resetting before source correction risks returning air and is a critical shortcut in Practice.',
         actionLabel: 'Correct the source and clear the circuit',
@@ -775,16 +800,39 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         ],
       },
       {
+        id: 'resume-drainage-clamp',
+        target: 'circuit',
+        title: 'Resume: open the drainage limb first',
+        instruction:
+          'Open the drainage-limb clamp first so venous drainage is re-established before forward return.',
+        rationale:
+          'Restoring drainage before return avoids pressurizing the circuit against a closed limb.',
+        actionLabel: 'Open the drainage-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: false }],
+        expectedResponse: ['Drainage clamp OPEN', 'Pump remains stopped by the bubble latch'],
+      },
+      {
+        id: 'resume-return-clamp',
+        target: 'circuit',
+        title: 'Open the return limb',
+        instruction: 'Open the return-limb clamp to complete the flow path.',
+        rationale:
+          'With the source corrected and both clamps open, the circuit is ready for the deliberate reset.',
+        actionLabel: 'Open the return-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: false }],
+        expectedResponse: ['Return clamp OPEN', 'Flow path restored; reset still required'],
+      },
+      {
         id: 'reset-bubble-intervention',
         target: 'console',
-        title: 'Reset only after the circuit is clear',
+        title: 'Reset only after the circuit is clear and unclamped',
         instruction:
-          'Use the deliberate intervention reset after cause correction and confirmation that the circuit is clear.',
+          'Use the deliberate intervention reset after cause correction, de-airing, and unclamping in order.',
         rationale: 'Acknowledgement or reset does not substitute for eliminating the air source.',
         actionLabel: 'Reset the bubble intervention',
         actions: [{ type: 'RESET_BUBBLE' }],
         expectedResponse: [
-          'Pump can restart',
+          'Pump restarts',
           'Bubble latch clears',
           'No premature-reset penalty is created',
         ],
@@ -1180,7 +1228,8 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     title: 'VA arterial-return bubble and cause-before-reset',
     learningObjectives: [
       'Recognize the bubble intervention and loss of forward VA support.',
-      'Correct and clear the source before deliberate reset.',
+      'Isolate the arterial circulation with near-patient clamps before de-airing.',
+      'Correct and clear the source, then unclamp in order before deliberate reset.',
     ],
     observe: {
       target: 'console',
@@ -1197,9 +1246,32 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
     },
     responseSteps: [
       {
+        id: 'isolate-return-clamp',
+        target: 'circuit',
+        title: 'Isolate the patient: clamp the arterial return limb',
+        instruction:
+          'The device stopped the pump, but arterial air remains a direct embolic threat. Close the return-limb clamp near the patient first.',
+        rationale:
+          'On VA support the return limb feeds the arterial circulation; the near-patient clamp is the isolation step.',
+        actionLabel: 'Close the return-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: true }],
+        expectedResponse: ['Return clamp CLOSED', 'Arterial circulation isolated from circuit air'],
+      },
+      {
+        id: 'isolate-drainage-clamp',
+        target: 'circuit',
+        title: 'Complete isolation: clamp the drainage limb',
+        instruction: 'Close the drainage-limb clamp so the circuit is fully isolated.',
+        rationale:
+          'Full isolation lets the team manage the patient conventionally while the circuit is cleared.',
+        actionLabel: 'Close the drainage-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: true }],
+        expectedResponse: ['Drainage clamp CLOSED', 'Circuit isolated from the patient'],
+      },
+      {
         id: 'correct-bubble-source',
         target: 'circuit',
-        title: 'Correct and clear the air source first',
+        title: 'Correct and clear the air source',
         instruction:
           'Identify and correct the source of air and confirm the arterial return path is clear.',
         rationale: 'Premature reset risks arterial air return and is a critical Practice error.',
@@ -1208,15 +1280,36 @@ export const cardiohelpLearnLessons: readonly GuidedLessonDefinition[] = [
         expectedResponse: ['Air source corrected', 'Reset remains deliberate and separate'],
       },
       {
+        id: 'resume-drainage-clamp',
+        target: 'circuit',
+        title: 'Resume: open the drainage limb first',
+        instruction: 'Open the drainage-limb clamp to re-establish venous drainage.',
+        rationale: 'Drainage before return avoids pressurizing against a closed arterial limb.',
+        actionLabel: 'Open the drainage-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'drainage', closed: false }],
+        expectedResponse: ['Drainage clamp OPEN', 'Pump remains stopped by the bubble latch'],
+      },
+      {
+        id: 'resume-return-clamp',
+        target: 'circuit',
+        title: 'Open the arterial return limb',
+        instruction: 'Open the return-limb clamp to complete the flow path.',
+        rationale:
+          'With a clear circuit and both clamps open, VA support is ready for the deliberate reset.',
+        actionLabel: 'Open the return-limb clamp',
+        actions: [{ type: 'TOGGLE_CIRCUIT_CLAMP', limb: 'return', closed: false }],
+        expectedResponse: ['Return clamp OPEN', 'Flow path restored; reset still required'],
+      },
+      {
         id: 'reset-bubble',
         target: 'console',
-        title: 'Reset only after the return path is clear',
+        title: 'Reset only after the return path is clear and unclamped',
         instruction:
-          'Use the intervention reset after cause correction, then re-establish support.',
+          'Use the intervention reset after cause correction, de-airing, and ordered unclamping, then re-establish support.',
         rationale: 'Acknowledgement and reset do not substitute for eliminating the air source.',
         actionLabel: 'Reset the bubble intervention',
         actions: [{ type: 'RESET_BUBBLE' }],
-        expectedResponse: ['Pump can restart', 'Bubble latch clears', 'No premature-reset penalty'],
+        expectedResponse: ['Pump restarts', 'Bubble latch clears', 'No premature-reset penalty'],
       },
     ],
     reassessment: {
@@ -1361,6 +1454,34 @@ export function validateGuidedLessonRegistry(): string[] {
       const resetIndex = actions.findIndex((action) => action.type === 'RESET_BUBBLE')
       if (correctIndex < 0 || resetIndex < 0 || resetIndex < correctIndex) {
         errors.push(`${lesson.id}: bubble source correction must precede reset`)
+      }
+      const clampIndex = (limb: 'drainage' | 'return', closed: boolean) =>
+        actions.findIndex(
+          (action) =>
+            action.type === 'TOGGLE_CIRCUIT_CLAMP' &&
+            action.limb === limb &&
+            (action.closed ?? true) === closed,
+        )
+      const closeReturn = clampIndex('return', true)
+      const closeDrainage = clampIndex('drainage', true)
+      const openDrainage = clampIndex('drainage', false)
+      const openReturn = clampIndex('return', false)
+      if (
+        closeReturn < 0 ||
+        closeDrainage < 0 ||
+        closeReturn > correctIndex ||
+        closeDrainage > correctIndex
+      ) {
+        errors.push(`${lesson.id}: both clamps must close before the air source is corrected`)
+      }
+      if (
+        openDrainage < correctIndex ||
+        openReturn < correctIndex ||
+        openDrainage > resetIndex ||
+        openReturn > resetIndex ||
+        openReturn < openDrainage
+      ) {
+        errors.push(`${lesson.id}: unclamp drainage then return, after correction and before reset`)
       }
     }
   }

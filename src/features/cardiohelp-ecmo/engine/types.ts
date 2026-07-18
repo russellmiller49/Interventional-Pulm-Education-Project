@@ -45,6 +45,7 @@ export type PredictionControl =
   | 'exchange-oxygenator'
   | 'vasopressor'
   | 'restore-distal-perfusion'
+  | 'isolate-circuit'
 export type PredictionDirection =
   | 'increase'
   | 'decrease'
@@ -254,7 +255,16 @@ export interface ClinicalInterventionDefinition {
    * without advertising them as intervention cards.
    */
   simulatorAction?: {
-    control: 'rpm' | 'sweep' | 'gas-fio2' | 'restore-gas' | 'restore-power'
+    control:
+      | 'rpm'
+      | 'sweep'
+      | 'gas-fio2'
+      | 'restore-gas'
+      | 'restore-power'
+      | 'clamp-drainage'
+      | 'clamp-return'
+      | 'unclamp-drainage'
+      | 'unclamp-return'
     targetValue?: number
     tolerance?: number
     comparison?: 'within' | 'at-least' | 'at-most'
@@ -567,7 +577,7 @@ export type SimulationAction =
   | { type: 'RESET_TIMER'; timerIndex: number }
   | { type: 'ACK_ALARM'; alarmId?: string }
   | { type: 'RESET_BUBBLE' }
-  | { type: 'TOGGLE_CIRCUIT_CLAMP'; limb: 'drainage' | 'return' }
+  | { type: 'TOGGLE_CIRCUIT_CLAMP'; limb: 'drainage' | 'return'; closed?: boolean }
   | { type: 'CORRECT_FAULT'; fault: FaultId }
   | { type: 'PERFORM_CHECK'; checkId: string }
   | { type: 'APPLY_CLINICAL_INTERVENTION'; interventionId: string }
@@ -613,6 +623,8 @@ export type GuidedControlId =
   | 'cardiohelp-restore-gas-source'
   | 'cardiohelp-reset-bubble'
   | 'cardiohelp-restore-ac-power'
+  | 'cardiohelp-clamp-drainage'
+  | 'cardiohelp-clamp-return'
 
 export type GuidedStepPhase =
   | 'orient'

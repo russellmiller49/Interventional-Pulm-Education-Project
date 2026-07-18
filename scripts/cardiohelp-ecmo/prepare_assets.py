@@ -9,11 +9,22 @@ load every asset without a separate decoder dependency.
 Usage:
   blender --background --python scripts/cardiohelp-ecmo/prepare_assets.py -- \
     <source-directory> <output-directory>
+
+  # Regenerate only the procedural patient (no source assets required):
+  blender --background --python scripts/cardiohelp-ecmo/prepare_assets.py -- \
+    --patient-only <output-directory>
+
+Coordinate convention: the patient generator authors its volumes in the web
+runtime's frame (x right, y up, z toward the feet). `orient_for_runtime`
+rotates the finished mesh into Blender's Z-up frame so the glTF exporter's
+Y-up conversion lands it supine in three.js — the original export skipped
+this, which left the patient standing vertically in the app.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -205,11 +216,11 @@ def add_rounded_box(
 
 
 def create_patient_body(material: bpy.types.Material) -> bpy.types.Object:
-    """Create one continuous low-poly mannequin body from blended ellipsoids."""
+    """Create one continuous mannequin body from blended metaball volumes."""
 
     metaball = bpy.data.metaballs.new("patient_body_skin_volume")
-    metaball.resolution = 0.035
-    metaball.render_resolution = 0.03
+    metaball.resolution = 0.026
+    metaball.render_resolution = 0.024
     metaball.threshold = 0.62
     body = bpy.data.objects.new("patient_body_skin", metaball)
     bpy.context.collection.objects.link(body)
@@ -232,6 +243,12 @@ def create_patient_body(material: bpy.types.Material) -> bpy.types.Object:
     add_volume((0.0, 0.07, -0.37), (0.32, 0.13, 0.32))
     add_volume((0.0, 0.075, -0.07), (0.29, 0.12, 0.21))
     for side in (-1.0, 1.0):
+        # Shoulder caps blend the arm roots into the torso silhouette.
+        add_volume(
+            (side * 0.3, 0.075, -0.5),
+            (0.1, 0.09, 0.12),
+            (0.0, side * 0.05, 0.0),
+        )
         add_volume(
             (side * 0.355, 0.035, -0.34),
             (0.075, 0.07, 0.35),
@@ -242,14 +259,23 @@ def create_patient_body(material: bpy.types.Material) -> bpy.types.Object:
             (0.14, 0.11, 0.32),
             (0.0, -side * 0.035, 0.0),
         )
+        # Knee and ankle volumes keep the leg silhouette from reading as tubes.
+        add_volume(
+            (side * 0.165, 0.05, 0.46),
+            (0.1, 0.09, 0.12),
+        )
         add_volume(
             (side * 0.17, 0.035, 0.6),
             (0.11, 0.095, 0.27),
             (0.0, side * 0.025, 0.0),
         )
         add_volume(
-            (side * 0.17, 0.035, 0.88),
-            (0.11, 0.08, 0.17),
+            (side * 0.172, 0.03, 0.82),
+            (0.09, 0.07, 0.12),
+        )
+        add_volume(
+            (side * 0.17, 0.035, 0.92),
+            (0.1, 0.07, 0.14),
             (0.0, side * 0.035, 0.0),
         )
 
@@ -260,13 +286,106 @@ def create_patient_body(material: bpy.types.Material) -> bpy.types.Object:
     body.data.materials.append(material)
     for polygon in body.data.polygons:
         polygon.use_smooth = True
-    if len(body.data.polygons) > 18000:
+    if len(body.data.polygons) > 14000:
         modifier = body.modifiers.new(name="Patient web reduction", type="DECIMATE")
-        modifier.ratio = 18000 / len(body.data.polygons)
+        modifier.ratio = 14000 / len(body.data.polygons)
         modifier.use_collapse_triangulate = True
         bpy.context.view_layer.objects.active = body
         bpy.ops.object.modifier_apply(modifier=modifier.name)
     return body
+
+
+GROIN_SITES = (
+    ("left_vein", (-0.135, 0.09)),
+    ("right_vein", (0.135, 0.09)),
+    ("right_artery", (0.175, 0.055)),
+)
+
+
+def create_shrinkwrapped_drape(
+    body: bpy.types.Object, material: bpy.types.Material
+) -> bpy.types.Object:
+    """Drape a subdivided sheet over the body with real fold suggestion.
+
+    Deterministic (no cloth sim): shrinkwrap onto the body, boolean-cut the
+    groin windows, solidify, and displace with a fixed-seed clouds texture.
+    """
+
+    plane_height = 0.34
+    bpy.ops.mesh.primitive_grid_add(
+        x_subdivisions=44,
+        y_subdivisions=68,
+        size=1.0,
+        location=(0.0, plane_height, 0.16),
+        rotation=(math.radians(-90.0), 0.0, 0.0),
+    )
+    sheet = bpy.context.object
+    sheet.name = "sterile_drape_sheet"
+    sheet.scale = (0.46, 0.78, 1.0)
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+
+    # NEAREST_SURFACEPOINT gives a fitted cover over the torso and legs;
+    # projection-based draping leaves jagged walls between the limbs.
+    shrinkwrap = sheet.modifiers.new(name="Drape shrinkwrap", type="SHRINKWRAP")
+    shrinkwrap.target = body
+    shrinkwrap.wrap_method = "NEAREST_SURFACEPOINT"
+    shrinkwrap.offset = 0.016
+    bpy.context.view_layer.objects.active = sheet
+    bpy.ops.object.modifier_apply(modifier=shrinkwrap.name)
+
+    # Groin windows: cut cleanly through the flat-wrapped sheet before adding
+    # thickness, so the openings have crisp edges.
+    for name, (site_x, site_z) in GROIN_SITES:
+        bpy.ops.mesh.primitive_cylinder_add(
+            radius=0.088,
+            depth=0.6,
+            location=(site_x, 0.2, site_z),
+            rotation=(math.radians(90.0), 0.0, 0.0),
+        )
+        cutter = bpy.context.object
+        cutter.name = f"window_cutter_{name}"
+        boolean = sheet.modifiers.new(name=f"Cut {name}", type="BOOLEAN")
+        boolean.operation = "DIFFERENCE"
+        boolean.object = cutter
+        bpy.context.view_layer.objects.active = sheet
+        bpy.ops.object.modifier_apply(modifier=boolean.name)
+        bpy.data.objects.remove(cutter, do_unlink=True)
+
+    solidify = sheet.modifiers.new(name="Drape thickness", type="SOLIDIFY")
+    solidify.thickness = 0.006
+    bpy.context.view_layer.objects.active = sheet
+    bpy.ops.object.modifier_apply(modifier=solidify.name)
+
+    folds = bpy.data.textures.new("drape_folds", type="CLOUDS")
+    folds.noise_scale = 0.35
+    displace = sheet.modifiers.new(name="Drape folds", type="DISPLACE")
+    displace.texture = folds
+    displace.strength = 0.012
+    displace.mid_level = 0.5
+    bpy.ops.object.modifier_apply(modifier=displace.name)
+
+    if len(sheet.data.polygons) > 4000:
+        decimate = sheet.modifiers.new(name="Drape web reduction", type="DECIMATE")
+        decimate.ratio = 4000 / len(sheet.data.polygons)
+        decimate.use_collapse_triangulate = True
+        bpy.context.view_layer.objects.active = sheet
+        bpy.ops.object.modifier_apply(modifier=decimate.name)
+
+    sheet.data.materials.append(material)
+    for polygon in sheet.data.polygons:
+        polygon.use_smooth = True
+    return sheet
+
+
+def orient_for_runtime(obj: bpy.types.Object) -> None:
+    """Rotate an object authored in the runtime frame (y up, z toward feet)
+    into Blender's Z-up frame so the exporter's Y-up conversion is correct.
+
+    Transforms mesh data directly: bpy.ops.object.transform_apply silently
+    no-ops on some objects in Blender 5.1 background mode."""
+
+    obj.data.transform(Euler((math.radians(90.0), 0.0, 0.0)).to_matrix().to_4x4())
+    obj.data.update()
 
 
 def join_meshes(objects: list[bpy.types.Object], name: str) -> bpy.types.Object:
@@ -311,49 +430,55 @@ def generate_patient_asset(output_directory: Path) -> dict[str, object]:
         roughness=0.9,
     )
 
-    objects: list[bpy.types.Object] = [create_patient_body(skin)]
-    objects.append(add_rounded_box("pillow", (0.0, -0.07, -0.72), (0.43, 0.09, 0.34), linen, bevel=0.06))
-    objects.append(add_ellipsoid("hair", (0.0, 0.145, -0.755), (0.134, 0.105, 0.135), hair))
+    gauze = create_pbr_material(
+        "site_gauze",
+        (0.9, 0.93, 0.9, 1.0),
+        roughness=0.8,
+    )
 
-    # The upper-body drape gives the model a complete silhouette while leaving
-    # the inguinal access region visible for the two educational cannula sites.
+    body = create_patient_body(skin)
+    objects: list[bpy.types.Object] = [body]
     objects.append(
-        add_ellipsoid(
-            "upper_body_drape",
-            (0.0, 0.19, -0.31),
-            (0.38, 0.07, 0.32),
-            drape,
-        )
+        add_rounded_box("pillow", (0.0, -0.07, -0.72), (0.43, 0.09, 0.34), linen, bevel=0.06)
     )
-    objects.append(
-        add_ellipsoid(
-            "pelvic_drape",
-            (0.0, 0.205, 0.005),
-            (0.34, 0.065, 0.145),
-            drape,
-        )
-    )
-    objects.append(
-        add_ellipsoid(
-            "lower_body_drape",
-            (0.0, 0.16, 0.49),
-            (0.325, 0.075, 0.47),
-            drape,
-        )
-    )
-    for side in (-1.0, 1.0):
+    objects.append(add_ellipsoid("hair", (0.0, 0.145, -0.755), (0.134, 0.105, 0.135), hair))
+    # One shrinkwrapped drape with boolean-cut groin windows replaces the old
+    # trio of floating ellipsoids; the windows expose the access region for the
+    # bilateral venous sites plus the right femoral artery.
+    objects.append(create_shrinkwrapped_drape(body, drape))
+
+    for name, (site_x, site_z) in GROIN_SITES:
         objects.append(
             add_ellipsoid(
-                f"groin_window_{'left' if side < 0 else 'right'}",
-                (side * 0.135, 0.255, 0.09),
-                (0.075, 0.012, 0.085),
+                f"groin_window_{name}",
+                (site_x, 0.222, site_z),
+                (0.068, 0.01, 0.076),
                 skin,
                 segments=20,
                 rings=10,
             )
         )
+        objects.append(
+            add_rounded_box(
+                f"site_gauze_a_{name}",
+                (site_x - 0.06, 0.235, site_z),
+                (0.055, 0.012, 0.04),
+                gauze,
+                bevel=0.005,
+            )
+        )
+        objects.append(
+            add_rounded_box(
+                f"site_gauze_b_{name}",
+                (site_x + 0.06, 0.235, site_z),
+                (0.055, 0.012, 0.04),
+                gauze,
+                bevel=0.005,
+            )
+        )
 
     patient = join_meshes(objects, "patient_femoral_access")
+    orient_for_runtime(patient)
     output_path = output_directory / PATIENT_OUTPUT_NAME
     export_asset(patient, output_path)
     minimum, maximum = mesh_bounds(patient)
@@ -469,8 +594,16 @@ def prepare(recipe: AssetRecipe, source_directory: Path, output_directory: Path)
 
 def main() -> None:
     arguments = sys.argv[sys.argv.index("--") + 1 :]
+    if len(arguments) == 2 and arguments[0] == "--patient-only":
+        output_directory = Path(arguments[1]).expanduser().resolve()
+        output_directory.mkdir(parents=True, exist_ok=True)
+        report = [generate_patient_asset(output_directory)]
+        print("ECMO_PREPARE_REPORT=" + json.dumps(report, indent=2))
+        return
     if len(arguments) != 2:
-        raise SystemExit("Expected <source-directory> <output-directory>")
+        raise SystemExit(
+            "Expected <source-directory> <output-directory> or --patient-only <output-directory>"
+        )
     source_directory = Path(arguments[0]).expanduser().resolve()
     output_directory = Path(arguments[1]).expanduser().resolve()
     output_directory.mkdir(parents=True, exist_ok=True)

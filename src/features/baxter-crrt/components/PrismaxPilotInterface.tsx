@@ -3,8 +3,10 @@
 import Image from 'next/image'
 import {
   AlertTriangle,
+  ArrowRight,
   Check,
   CircleStop,
+  ClipboardCheck,
   FileClock,
   Gauge,
   HelpCircle,
@@ -16,6 +18,7 @@ import {
   RotateCcw,
   Settings,
   ShieldAlert,
+  SlidersHorizontal,
 } from 'lucide-react'
 import {
   useEffect,
@@ -31,6 +34,7 @@ import {
   prismaxSimulatorHotspots,
   type PrismaxSimulatorHotspotId,
 } from '../content/prismaxSimulator'
+import type { CrrtConsoleControlsModel } from '../engine/consoleControls'
 import {
   selectPrismaxPilotInterface,
   selectPrismaxPilotOperationsDisplay,
@@ -63,8 +67,12 @@ interface PrismaxPilotInterfaceProps {
   state: PrismaxPilotInterfaceState
   dispatch: Dispatch<PrismaxPilotInterfaceAction>
   controlsEnabled?: boolean
+  controlLockReason?: 'plan' | 'debrief'
+  consoleControls?: CrrtConsoleControlsModel
   operationsDisplay?: PrismaxPilotOperationsDisplay
   caseContext?: PrismaxPilotCaseContext
+  onPerformCaseAction?: (interventionId: string) => void
+  onRequestClinicalPlan?: () => void
   onReset?: () => void
 }
 
@@ -436,11 +444,15 @@ function OperationsScreen({
   dispatch,
   operations,
   caseContext,
+  consoleControls,
+  onPerformCaseAction,
 }: {
   state: PrismaxPilotInterfaceState
   dispatch: Dispatch<PrismaxPilotInterfaceAction>
   operations: PrismaxPilotOperationsDisplay
   caseContext?: PrismaxPilotCaseContext
+  consoleControls?: CrrtConsoleControlsModel
+  onPerformCaseAction?: (interventionId: string) => void
 }) {
   const pressures = [
     ['Access', operations.pressures.accessPressureMmHg],
@@ -564,6 +576,97 @@ function OperationsScreen({
           <strong>{formatFlow(operations.effluentPumpTargetMlHour, 'mL/h')}</strong>
         </div>
       </div>
+
+      {consoleControls && consoleControls.settingActions.length > 0 ? (
+        <section className={styles.caseSettingPanel} aria-labelledby="prismax-case-setting-heading">
+          <div className={styles.caseSettingHeading}>
+            <SlidersHorizontal aria-hidden="true" />
+            <div>
+              <span>Active case controls</span>
+              <h4 id="prismax-case-setting-heading">Adjust case-relevant machine settings</h4>
+            </div>
+          </div>
+          <p className={styles.caseSettingBoundary}>
+            Only choices written into this exercise are available. These simulated values are not
+            clinical targets, device limits, or unrestricted bedside controls.
+          </p>
+
+          {consoleControls.prerequisiteActions.some(({ performed }) => !performed) ? (
+            <div className={styles.consolePrerequisites}>
+              <strong>Required clinical step</strong>
+              {consoleControls.prerequisiteActions.map((action) => (
+                <article key={action.id} data-complete={action.performed}>
+                  <ClipboardCheck aria-hidden="true" />
+                  <div>
+                    <span>{action.category}</span>
+                    <h5>{action.label}</h5>
+                    <p>{action.description}</p>
+                    {action.missingPrerequisiteLabels.length > 0 ? (
+                      <small>Requires {action.missingPrerequisiteLabels.join(', ')}.</small>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={action.performed || !action.enabled || !onPerformCaseAction}
+                    aria-label={`Record clinical step: ${action.label}`}
+                    onClick={() => onPerformCaseAction?.(action.id)}
+                  >
+                    {action.performed ? (
+                      <Check aria-hidden="true" />
+                    ) : (
+                      <ArrowRight aria-hidden="true" />
+                    )}
+                    {action.performed ? 'Completed' : 'Record step'}
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : null}
+
+          <div className={styles.caseSettingGrid}>
+            {consoleControls.settingActions.map((action) => (
+              <article key={action.id} data-unsafe={action.unsafe} data-complete={action.performed}>
+                <div className={styles.caseSettingTitle}>
+                  <span>{action.unsafe ? 'Unsafe comparison path' : 'Case setting'}</span>
+                  <h5>{action.label}</h5>
+                  <p>{action.description}</p>
+                </div>
+                <dl>
+                  {action.changes.map((change) => (
+                    <div key={`${action.id}-${change.target}`}>
+                      <dt>{change.label}</dt>
+                      <dd>{change.instruction}</dd>
+                    </div>
+                  ))}
+                </dl>
+                {action.missingPrerequisiteLabels.length > 0 ? (
+                  <small>Requires {action.missingPrerequisiteLabels.join(', ')}.</small>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={!action.enabled || !onPerformCaseAction}
+                  aria-label={`Apply case setting: ${action.label}`}
+                  onClick={() => onPerformCaseAction?.(action.id)}
+                >
+                  {action.performed && !action.repeatable ? (
+                    <Check aria-hidden="true" />
+                  ) : (
+                    <SlidersHorizontal aria-hidden="true" />
+                  )}
+                  {action.performed && !action.repeatable
+                    ? 'Applied'
+                    : action.performed
+                      ? 'Apply again'
+                      : action.unsafe
+                        ? 'Choose unsafe path'
+                        : 'Apply setting change'}
+                </button>
+                {action.performed ? <p role="status">{action.response}</p> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className={styles.operationsBody}>
         <section aria-labelledby="phase3-pressure-heading">
@@ -800,8 +903,12 @@ export function PrismaxPilotInterface({
   state,
   dispatch,
   controlsEnabled = true,
+  controlLockReason = controlsEnabled ? undefined : 'plan',
+  consoleControls,
   operationsDisplay,
   caseContext,
+  onPerformCaseAction,
+  onRequestClinicalPlan,
   onReset,
 }: PrismaxPilotInterfaceProps) {
   const view = selectPrismaxPilotInterface(state)
@@ -812,10 +919,23 @@ export function PrismaxPilotInterface({
       {!controlsEnabled ? (
         <div className={styles.predictionLock} role="status">
           <LockKeyhole aria-hidden="true" />
-          <span>
-            <strong>Prediction commitment required</strong>
-            Complete and commit all five prediction fields to unlock treatment and machine actions.
-          </span>
+          <div>
+            <span>
+              <strong>
+                {controlLockReason === 'debrief'
+                  ? 'This case attempt is complete'
+                  : 'Complete the clinical plan to unlock controls'}
+              </strong>
+              {controlLockReason === 'debrief'
+                ? 'Start a clean attempt to make additional treatment or machine changes.'
+                : 'Return to the Case tab and submit the goal, mechanism, planned control, expected response, and reassessment plan.'}
+            </span>
+            {controlLockReason === 'plan' && onRequestClinicalPlan ? (
+              <button type="button" onClick={onRequestClinicalPlan}>
+                Complete clinical plan <ArrowRight aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -933,6 +1053,8 @@ export function PrismaxPilotInterface({
                   dispatch={dispatch}
                   operations={operations}
                   caseContext={caseContext}
+                  consoleControls={consoleControls}
+                  onPerformCaseAction={onPerformCaseAction}
                 />
               )}
             </div>

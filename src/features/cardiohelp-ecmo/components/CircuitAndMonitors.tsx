@@ -42,6 +42,16 @@ function CircuitSchematic({
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)
   const [circuitView, setCircuitView] = useState<'bedside' | 'diagnostic'>('bedside')
+  const clampGuidedHelpActive =
+    guidedControlId === 'cardiohelp-clamp-drainage' || guidedControlId === 'cardiohelp-clamp-return'
+
+  // Guided help / prompted checklist items that target a clamp must land on a
+  // visible control, so surface the bedside tab whenever a clamp becomes highlighted.
+  const [prevClampGuided, setPrevClampGuided] = useState(clampGuidedHelpActive)
+  if (clampGuidedHelpActive !== prevClampGuided) {
+    setPrevClampGuided(clampGuidedHelpActive)
+    if (clampGuidedHelpActive) setCircuitView('bedside')
+  }
   const lowFlow = state.circuit.bloodFlow < state.device.limits.flowLow
   const diagnosisRevealed = state.scenario.phase === 'complete'
   const isVa = state.supportMode === 'va'
@@ -142,7 +152,12 @@ function CircuitSchematic({
         aria-labelledby="cardiohelp-bedside-view-tab"
         hidden={circuitView !== 'bedside'}
       >
-        <EcmoCircuit3D state={state} dispatch={dispatch} controlsEnabled={controlsEnabled} />
+        <EcmoCircuit3D
+          state={state}
+          dispatch={dispatch}
+          controlsEnabled={controlsEnabled}
+          guidedControlId={guidedControlId}
+        />
       </div>
 
       <div

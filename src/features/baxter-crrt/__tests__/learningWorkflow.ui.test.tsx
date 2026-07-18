@@ -1,7 +1,33 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 import BaxterCrrtLab from '../components/BaxterCrrtLab'
-import { CRRT_CASE_ARTIFACT_IDS } from '../content'
+import { CRRT_CASE_ARTIFACT_IDS, getBaxterCrrtCase } from '../content'
+
+function submitCrrt01ClinicalPlan() {
+  const definition = getBaxterCrrtCase('CRRT-01')
+  const hidden = definition.hiddenMechanism
+  const plan = within(screen.getByRole('region', { name: 'Plan your approach before acting' }))
+  fireEvent.change(plan.getByRole('combobox', { name: '1 · Goal' }), {
+    target: { value: hidden.correctGoalOptionId },
+  })
+  fireEvent.change(plan.getByRole('combobox', { name: '2 · Mechanism' }), {
+    target: { value: hidden.correctMechanismOptionId },
+  })
+  for (const id of hidden.correctControlOptionIds) {
+    const option = definition.controlOptions.find((candidate) => candidate.id === id)
+    if (!option) throw new Error(`Missing CRRT-01 control option ${id}.`)
+    fireEvent.click(plan.getByRole('checkbox', { name: option.label }))
+  }
+  fireEvent.change(plan.getByRole('combobox', { name: '4 · Expected response' }), {
+    target: { value: hidden.correctResponseOptionId },
+  })
+  for (const id of hidden.correctReassessmentOptionIds) {
+    const option = definition.reassessmentOptions.find((candidate) => candidate.id === id)
+    if (!option) throw new Error(`Missing CRRT-01 reassessment option ${id}.`)
+    fireEvent.click(plan.getByRole('checkbox', { name: option.label }))
+  }
+  fireEvent.click(plan.getByRole('button', { name: 'Submit plan and prediction' }))
+}
 
 describe('Baxter CRRT v1 learner workspace', () => {
   beforeEach(() => window.localStorage.clear())
@@ -72,8 +98,15 @@ describe('Baxter CRRT v1 learner workspace', () => {
       }),
     ).toBeInTheDocument()
     expect(
-      within(machinePanel as HTMLElement).getByText('Prediction commitment required'),
+      within(machinePanel as HTMLElement).getByText(
+        'Complete the clinical plan to unlock controls',
+      ),
     ).toBeInTheDocument()
+    expect(
+      within(machinePanel as HTMLElement).getByRole('button', {
+        name: 'Complete clinical plan',
+      }),
+    ).toBeEnabled()
     expect(within(machinePanel as HTMLElement).getByRole('button', { name: 'Stop' })).toBeDisabled()
 
     fireEvent.click(
@@ -86,6 +119,47 @@ describe('Baxter CRRT v1 learner workspace', () => {
         /four pump positions provide spatial orientation to the circuit/i,
       ),
     ).toBeInTheDocument()
+
+    fireEvent.click(
+      within(machinePanel as HTMLElement).getByRole('button', {
+        name: 'Complete clinical plan',
+      }),
+    )
+    expect(within(surfaces).getByRole('tab', { name: 'Case' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+  })
+
+  it('applies an authored case setting directly from the unlocked console', () => {
+    render(<BaxterCrrtLab />)
+    submitCrrt01ClinicalPlan()
+
+    const surfaces = screen.getByRole('tablist', { name: 'CRRT mobile workspace surface' })
+    const machineTab = within(surfaces).getByRole('tab', { name: 'Machine' })
+    fireEvent.click(machineTab)
+    const machinePanel = document.getElementById(machineTab.getAttribute('aria-controls') ?? '')
+    const machine = within(machinePanel as HTMLElement)
+
+    expect(
+      machine.getByRole('heading', { name: 'Adjust case-relevant machine settings' }),
+    ).toBeInTheDocument()
+    const settingButton = machine.getByRole('button', {
+      name: 'Apply case setting: Adjust machine fluid removal after assessment',
+    })
+    expect(settingButton).toBeDisabled()
+
+    fireEvent.click(
+      machine.getByRole('button', {
+        name: 'Record clinical step: Complete the initial clinical assessment',
+      }),
+    )
+    expect(settingButton).toBeEnabled()
+    fireEvent.click(settingButton)
+
+    expect(machine.getByLabelText('Pilot flow displays')).toHaveTextContent('70 mL/h')
+    expect(settingButton).toHaveTextContent('Applied')
+    expect(settingButton).toBeDisabled()
   })
 
   it('runs the masked PrisMax Mastery experience without hints and shows the transfer capstone', () => {

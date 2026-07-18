@@ -456,6 +456,7 @@ export default function BaxterCrrtLab({
             mobileSurface={mobileSurface}
             onCaseChange={chooseCase}
             onRoleChange={setRoleLens}
+            onMobileSurfaceChange={setMobileSurface}
             onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
             onDebriefRevealed={recordDebrief}
             idNamespace={`${workspaceTab}-${effectiveDeviceId}`}

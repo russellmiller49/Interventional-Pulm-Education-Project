@@ -176,6 +176,15 @@ function applyClinicalInterventionAndResolve(
   return { state: next, result }
 }
 
+const clampSimulatorControls = {
+  'clamp-drainage': { limb: 'drainage', closed: true },
+  'clamp-return': { limb: 'return', closed: true },
+  'unclamp-drainage': { limb: 'drainage', closed: false },
+  'unclamp-return': { limb: 'return', closed: false },
+} as const
+
+type ClampSimulatorControl = keyof typeof clampSimulatorControls
+
 function simulatorTargetMatches(
   value: number,
   targetValue: number,
@@ -203,6 +212,16 @@ function findMatchingSimulatorIntervention(
       if (!requirement || appliedIds.has(intervention.id)) return false
       if (requirement.control === 'restore-gas') return action.type === 'RESTORE_GAS_SOURCE'
       if (requirement.control === 'restore-power') return action.type === 'RESTORE_AC_POWER'
+      if (requirement.control in clampSimulatorControls) {
+        if (action.type !== 'TOGGLE_CIRCUIT_CLAMP') return false
+        const spec = clampSimulatorControls[requirement.control as ClampSimulatorControl]
+        const currentlyClosed =
+          action.limb === 'drainage'
+            ? state.circuit.drainageClampClosed
+            : state.circuit.returnClampClosed
+        const intendedClosed = action.closed ?? !currentlyClosed
+        return action.limb === spec.limb && intendedClosed === spec.closed
+      }
 
       const actionValue =
         requirement.control === 'rpm' && action.type === 'SET_RPM'
@@ -829,7 +848,8 @@ export function ecmoSimulationReducer(
     }
     case 'TOGGLE_CIRCUIT_CLAMP': {
       const clampKey = action.limb === 'drainage' ? 'drainageClampClosed' : 'returnClampClosed'
-      const closing = !state.circuit[clampKey]
+      const closing = action.closed ?? !state.circuit[clampKey]
+      if (closing === state.circuit[clampKey]) return state
       const definition = getDefinition(state)
       const circuit = {
         ...state.circuit,
@@ -849,6 +869,20 @@ export function ecmoSimulationReducer(
       })
       if (closing && definition.assessmentPolicy?.preserveCircuitBloodFlow) {
         next = addCriticalError(next, 'capstone-flow-reduction', 50)
+      }
+      // Opening a clamp is unsafe while circuit air is neither corrected (drill
+      // CORRECT_FAULT path) nor cleared (clinical de-air patch clears the latch).
+      if (
+        !closing &&
+        hasFault(state, 'arterial-bubble') &&
+        !state.scenario.correctedFaults.includes('arterial-bubble') &&
+        state.circuit.bubbleResetRequired
+      ) {
+        next = addCriticalError(next, 'unsafe-unclamp-before-deair', 50)
+      }
+      const simulatorIntervention = findMatchingSimulatorIntervention(state, definition, action)
+      if (simulatorIntervention) {
+        next = applyClinicalInterventionAndResolve(next, definition, simulatorIntervention.id).state
       }
       return appendHistory(
         next,

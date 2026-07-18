@@ -52,6 +52,12 @@ const clinicalUnsafeActions: readonly UnsafeActionPenalty[] = [
     points: 20,
     critical: false,
   },
+  {
+    id: 'unsafe-unclamp-before-deair',
+    label: 'Opened a circuit clamp before the air source was corrected and cleared',
+    points: 50,
+    critical: true,
+  },
 ]
 
 const clinicalActions: readonly SimulationAction['type'][] = [
@@ -1009,6 +1015,186 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
     ],
   }),
   clinicalScenario({
+    id: 'clinical-vv-circuit-air-embolism',
+    family: 'clinical-complication',
+    stationId: 'troubleshooting',
+    supportMode: 'vv',
+    title: 'Air entrainment with emergency circuit isolation',
+    summary:
+      'Air is entrained into the circuit during a bedside line exchange; the bubble intervention stops the pump. Isolate, de-air, and resume support in order.',
+    clinicalPhase: 'maintenance',
+    clinicalCase: {
+      kind: 'complication',
+      sourceCase:
+        'New emergency case synthesized from the attached curriculum and ELSO circuit guidance',
+      setting: 'ECMO ICU · VV support, bedside central-line exchange',
+      patientLabel: 'VV patient with sudden circuit air and an automatic pump stop',
+      openingNarrative:
+        'During a central-line exchange, air is entrained into the drainage limb. The bubble intervention alarms, the pump stops, and visible air remains in the circuit.',
+      decisionPrompt:
+        'Isolate the patient from the circuit, correct and clear the air, then re-establish support in the correct order.',
+      learningObjectives: [
+        'Recognize a circuit-air emergency and treat the automatic pump stop as the start of isolation, not the endpoint.',
+        'Clamp near the patient to isolate the circuit before de-airing, and de-air before any resumption of flow.',
+        'Unclamp and resume support in a bounded, ordered sequence, then reassess device, circuit, and patient.',
+      ],
+      initialSupportStatus: 'on-ecmo',
+      initialTrajectory: 'critical',
+      data: [
+        { label: 'Pump', value: 'Stopped by bubble intervention', trend: 'critical' },
+        { label: 'Circuit air', value: 'Visible in the drainage limb', trend: 'critical' },
+        { label: 'SpO₂', value: '84% and falling off support', trend: 'critical' },
+        { label: 'Clamps', value: 'Both open', trend: 'warning' },
+      ],
+      interventions: [
+        intervention({
+          id: 'air-clamp-return',
+          label: 'Clamp the return limb near the patient',
+          category: 'circuit',
+          description:
+            'Isolate the patient side first so circuit air cannot reach the return cannula.',
+          effect: 'supportive',
+          response: 'The return limb is clamped; the patient is isolated from returning air.',
+          simulatorAction: {
+            control: 'clamp-return',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, close the return-limb clamp near the patient.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-return',
+          },
+        }),
+        intervention({
+          id: 'air-clamp-drainage',
+          label: 'Clamp the drainage limb near the patient',
+          category: 'circuit',
+          description: 'Complete circuit isolation so the team can de-air safely.',
+          effect: 'supportive',
+          response: 'The drainage limb is clamped; the circuit is fully isolated.',
+          prerequisites: ['air-clamp-return'],
+          simulatorAction: {
+            control: 'clamp-drainage',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, close the drainage-limb clamp near the patient.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-drainage',
+          },
+        }),
+        intervention({
+          id: 'air-support-patient',
+          label: 'Support the patient off circuit flow',
+          category: 'resuscitation',
+          description:
+            'Increase conventional ventilation and hemodynamic support while the circuit is isolated.',
+          effect: 'supportive',
+          response:
+            'The patient is temporarily supported conventionally while the circuit is cleared.',
+          patch: { patient: { spo2: 87 } },
+        }),
+        intervention({
+          id: 'air-deair',
+          label: 'De-air the circuit and correct the source',
+          category: 'procedure',
+          description:
+            'Correct the entrainment source, clear the lines through the reviewed local process, and confirm the circuit is bubble free.',
+          effect: 'definitive',
+          response: 'The air source is corrected and the circuit is confirmed clear.',
+          prerequisites: ['air-clamp-drainage'],
+          patch: { circuit: { arterialBubbleDetected: false, bubbleResetRequired: false } },
+        }),
+        intervention({
+          id: 'air-unclamp-drainage',
+          label: 'Open the drainage limb',
+          category: 'circuit',
+          description: 'Re-establish venous drainage first.',
+          effect: 'supportive',
+          response: 'Drainage is restored; the return limb remains isolated.',
+          prerequisites: ['air-deair'],
+          simulatorAction: {
+            control: 'unclamp-drainage',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, open the drainage-limb clamp.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-drainage',
+          },
+        }),
+        intervention({
+          id: 'air-unclamp-return',
+          label: 'Open the return limb and resume support',
+          category: 'circuit',
+          description: 'Complete the flow path with a confirmed-clear circuit.',
+          effect: 'definitive',
+          response: 'Both clamps are open with a clear circuit; forward flow re-establishes.',
+          prerequisites: ['air-unclamp-drainage'],
+          simulatorAction: {
+            control: 'unclamp-return',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, open the return-limb clamp.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-return',
+          },
+        }),
+        intervention({
+          id: 'air-resume-early',
+          label: 'Unclamp and restart before de-airing',
+          category: 'ecmo',
+          description: 'Reopen the circuit while air is still present.',
+          effect: 'harmful',
+          response: 'Air is driven toward the patient; this is a critical safety error.',
+          penalty: { id: 'unsafe-unclamp-before-deair', points: 50, critical: true },
+        }),
+      ],
+      requiredInterventionIds: [
+        'air-clamp-return',
+        'air-clamp-drainage',
+        'air-deair',
+        'air-unclamp-drainage',
+        'air-unclamp-return',
+      ],
+      completionResponse:
+        'The circuit is isolated, de-aired, and resumed in order; forward flow and oxygenation recover.',
+      deteriorationResponse:
+        'While air remains in an open circuit, the patient is at embolic risk and support stays interrupted.',
+    },
+    initialState: {
+      device: { pumpRunning: false },
+      circuit: { arterialBubbleDetected: true, bubbleResetRequired: true },
+      patient: { spo2: 84, respiratoryRate: 30, workOfBreathing: 'high' },
+      activeFaults: ['arterial-bubble'],
+    },
+    timedFaults: [],
+    expectation: {
+      goalId: 'prevent-air-return',
+      control: 'isolate-circuit',
+      direction: 'definitive',
+      correctiveFault: 'arterial-bubble',
+      acceptableReassessmentTerms: ['air', 'clamp', 'isolate', 'flow'],
+    },
+    assessmentPolicy: { minimumObservationSeconds: 3 },
+    debrief: {
+      diagnosis: 'Circuit air embolism managed by isolate, de-air, and ordered resumption',
+      causalChain: [
+        'Air entrainment triggers the bubble intervention and an automatic pump stop.',
+        'The pump stop does not isolate the patient; the near-patient clamps do.',
+        'Resuming flow before de-airing risks driving air to the patient.',
+      ],
+      correctWorkflow: [
+        'Clamp the return limb, then the drainage limb, near the patient and support the patient conventionally.',
+        'Correct the air source and confirm the circuit is clear.',
+        'Open the drainage limb, then the return limb, let flow re-establish, and reassess.',
+      ],
+      safetyNotes: [
+        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'This is recognition-and-sequence training, not a substitute for supervised circuit-emergency competency.',
+      ],
+    },
+    evidenceIds: [
+      'elso-circuit-2022',
+      'ifu-console-workflow',
+      'attached-ecmo-case-curriculum',
+      'bounded-educational-model',
+    ],
+  }),
+  clinicalScenario({
     id: 'va-clinical-initiation-shock',
     family: 'initiation',
     stationId: 'orientation',
@@ -1677,6 +1863,195 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Execute the reviewed exchange process and reassess MAP, flow, pressures, and oxygenation.',
       ],
       safetyNotes: ['No universal Δp exchange threshold is encoded.'],
+    },
+    evidenceIds: [
+      'elso-circuit-2022',
+      'elso-adult-va-2021',
+      'attached-ecmo-case-curriculum',
+      'bounded-educational-model',
+    ],
+  }),
+  clinicalScenario({
+    id: 'va-clinical-circuit-air-embolism',
+    family: 'clinical-complication',
+    stationId: 'troubleshooting',
+    supportMode: 'va',
+    title: 'VA circuit air with emergency arterial isolation',
+    summary:
+      'Air is entrained into the VA circuit; the bubble intervention stops the pump while the arterial return threatens direct embolism. Isolate, de-air, and resume in order.',
+    clinicalPhase: 'maintenance',
+    clinicalCase: {
+      kind: 'complication',
+      sourceCase:
+        'New emergency case synthesized from the attached curriculum and ELSO circuit guidance',
+      setting: 'Cardiac ICU · peripheral VA support, connector loosened during repositioning',
+      patientLabel: 'VA patient with circuit air, pump stop, and interrupted circulatory support',
+      openingNarrative:
+        'A drainage-limb connector loosens during repositioning and entrains air. The bubble intervention stops the pump, interrupting VA circulatory support with visible air in the circuit.',
+      decisionPrompt:
+        'Isolate the arterial circulation, support the patient conventionally, correct and clear the air, then re-establish VA support in the correct order.',
+      learningObjectives: [
+        'Recognize VA circuit air as a direct arterial embolic threat and an immediate loss of circulatory support.',
+        'Clamp the arterial return limb first to isolate the patient before de-airing the circuit.',
+        'Resume VA support with ordered unclamping and reassess perfusion, right-arm oxygenation, and the circuit.',
+      ],
+      initialSupportStatus: 'on-ecmo',
+      initialTrajectory: 'critical',
+      data: [
+        { label: 'Pump', value: 'Stopped by bubble intervention', trend: 'critical' },
+        { label: 'Circuit air', value: 'Visible near the drainage connector', trend: 'critical' },
+        { label: 'MAP', value: '48 mmHg off circuit flow', trend: 'critical' },
+        { label: 'Clamps', value: 'Both open', trend: 'warning' },
+      ],
+      interventions: [
+        intervention({
+          id: 'va-air-clamp-return',
+          label: 'Clamp the arterial return limb near the patient',
+          category: 'circuit',
+          description:
+            'Isolate the arterial circulation first; circuit air in the return limb is a direct embolic threat.',
+          effect: 'supportive',
+          response:
+            'The arterial return limb is clamped; the patient is isolated from circuit air.',
+          simulatorAction: {
+            control: 'clamp-return',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, close the return-limb clamp near the patient.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-return',
+          },
+        }),
+        intervention({
+          id: 'va-air-clamp-drainage',
+          label: 'Clamp the drainage limb near the patient',
+          category: 'circuit',
+          description: 'Complete circuit isolation before de-airing.',
+          effect: 'supportive',
+          response: 'The drainage limb is clamped; the circuit is fully isolated.',
+          prerequisites: ['va-air-clamp-return'],
+          simulatorAction: {
+            control: 'clamp-drainage',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, close the drainage-limb clamp near the patient.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-drainage',
+          },
+        }),
+        intervention({
+          id: 'va-air-support-patient',
+          label: 'Support the patient off circuit flow',
+          category: 'resuscitation',
+          description:
+            'Escalate conventional hemodynamic support and ventilation while VA support is interrupted.',
+          effect: 'supportive',
+          response: 'MAP is temporarily supported conventionally while the circuit is cleared.',
+          patch: { patient: { meanArterialPressure: 55 } },
+        }),
+        intervention({
+          id: 'va-air-deair',
+          label: 'De-air the circuit and correct the source',
+          category: 'procedure',
+          description:
+            'Secure the loosened connector, clear the lines through the reviewed local process, and confirm the circuit is bubble free.',
+          effect: 'definitive',
+          response:
+            'The connector is secured, the air source corrected, and the circuit confirmed clear.',
+          prerequisites: ['va-air-clamp-drainage'],
+          patch: { circuit: { arterialBubbleDetected: false, bubbleResetRequired: false } },
+        }),
+        intervention({
+          id: 'va-air-unclamp-drainage',
+          label: 'Open the drainage limb',
+          category: 'circuit',
+          description: 'Re-establish venous drainage first.',
+          effect: 'supportive',
+          response: 'Drainage is restored; the arterial limb remains isolated.',
+          prerequisites: ['va-air-deair'],
+          simulatorAction: {
+            control: 'unclamp-drainage',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, open the drainage-limb clamp.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-drainage',
+          },
+        }),
+        intervention({
+          id: 'va-air-unclamp-return',
+          label: 'Open the arterial return limb and resume support',
+          category: 'circuit',
+          description: 'Complete the flow path with a confirmed-clear circuit.',
+          effect: 'definitive',
+          response: 'Both clamps are open with a clear circuit; VA support re-establishes.',
+          prerequisites: ['va-air-unclamp-drainage'],
+          simulatorAction: {
+            control: 'unclamp-return',
+            visibility: 'prompted',
+            instruction: 'On the bedside circuit, open the return-limb clamp.',
+            target: 'circuit',
+            controlId: 'cardiohelp-clamp-return',
+          },
+        }),
+        intervention({
+          id: 'va-air-resume-early',
+          label: 'Unclamp and restart before de-airing',
+          category: 'ecmo',
+          description: 'Reopen the arterial circuit while air is still present.',
+          effect: 'harmful',
+          response:
+            'Air is driven toward the arterial circulation; this is a critical safety error.',
+          penalty: { id: 'unsafe-unclamp-before-deair', points: 50, critical: true },
+        }),
+      ],
+      requiredInterventionIds: [
+        'va-air-clamp-return',
+        'va-air-clamp-drainage',
+        'va-air-deair',
+        'va-air-unclamp-drainage',
+        'va-air-unclamp-return',
+      ],
+      completionResponse:
+        'The circuit is isolated, de-aired, and resumed in order; VA support, MAP, and perfusion recover.',
+      deteriorationResponse:
+        'While air remains in an open circuit, the patient faces arterial embolism and absent circulatory support.',
+    },
+    initialState: {
+      device: { pumpRunning: false },
+      circuit: { arterialBubbleDetected: true, bubbleResetRequired: true },
+      patient: {
+        meanArterialPressure: 48,
+        lactate: 4.4,
+        spo2: 88,
+        rightRadialSpo2: 88,
+        femoralArterialSpo2: 88,
+      },
+      activeFaults: ['arterial-bubble'],
+    },
+    timedFaults: [],
+    expectation: {
+      goalId: 'prevent-air-return',
+      control: 'isolate-circuit',
+      direction: 'definitive',
+      correctiveFault: 'arterial-bubble',
+      acceptableReassessmentTerms: ['air', 'clamp', 'isolate', 'flow', 'map'],
+    },
+    assessmentPolicy: { minimumObservationSeconds: 3 },
+    debrief: {
+      diagnosis:
+        'VA circuit air embolism managed by arterial isolation, de-airing, and ordered resumption',
+      causalChain: [
+        'A loosened drainage connector entrains air and triggers the bubble intervention with a pump stop.',
+        'On VA support, circuit air in the return limb threatens the arterial circulation directly.',
+        'Resuming flow before de-airing risks systemic arterial embolism.',
+      ],
+      correctWorkflow: [
+        'Clamp the arterial return limb, then the drainage limb, near the patient; support the patient conventionally.',
+        'Secure the connector, correct the air source, and confirm the circuit is clear.',
+        'Open the drainage limb, then the return limb, re-establish VA support, and reassess perfusion and right-arm oxygenation.',
+      ],
+      safetyNotes: [
+        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+        'This is recognition-and-sequence training, not a substitute for supervised circuit-emergency competency.',
+      ],
     },
     evidenceIds: [
       'elso-circuit-2022',

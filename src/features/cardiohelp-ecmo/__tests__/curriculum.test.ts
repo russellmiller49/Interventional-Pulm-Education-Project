@@ -27,10 +27,10 @@ describe('CARDIOHELP curriculum registry', () => {
   it('orders every lesson and case exactly once per track', () => {
     expect(orderedLessonScenarioIds('vv')).toHaveLength(10)
     expect(orderedLessonScenarioIds('va')).toHaveLength(10)
-    expect(orderedCaseScenarioIds('vv')).toHaveLength(6)
-    expect(orderedCaseScenarioIds('va')).toHaveLength(6)
+    expect(orderedCaseScenarioIds('vv')).toHaveLength(7)
+    expect(orderedCaseScenarioIds('va')).toHaveLength(7)
     expect(new Set(orderedLessonScenarioIds('vv')).size).toBe(10)
-    expect(new Set(orderedCaseScenarioIds('va')).size).toBe(6)
+    expect(new Set(orderedCaseScenarioIds('va')).size).toBe(7)
   })
 
   it('round-trips lesson and case pairings within a unit', () => {
@@ -39,7 +39,10 @@ describe('CARDIOHELP curriculum registry', () => {
     expect(pairedCaseIdsForLesson('va-differential-hypoxemia')).toEqual([
       'va-clinical-differential-hypoxemia',
     ])
-    expect(pairedCaseIdsForLesson('arterial-bubble-stop')).toHaveLength(0)
+    expect(pairedCaseIdsForLesson('arterial-bubble-stop')).toContain(
+      'clinical-vv-circuit-air-embolism',
+    )
+    expect(pairedCaseIdsForLesson('va-lv-loading')).toHaveLength(0)
   })
 
   it('unlocks the capstone through lessons, cases, or a mixture', () => {

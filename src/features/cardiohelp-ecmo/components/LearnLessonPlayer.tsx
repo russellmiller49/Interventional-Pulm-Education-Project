@@ -108,6 +108,13 @@ function guidedActionSatisfied(action: SimulationAction, state: EcmoSimulationSt
       return state.gas.sourceConnected
     case 'RESTORE_AC_POWER':
       return state.device.powerSource === 'ac'
+    case 'TOGGLE_CIRCUIT_CLAMP': {
+      // Guided clamp steps always declare an explicit target state.
+      const targetClosed = action.closed ?? true
+      return action.limb === 'drainage'
+        ? state.circuit.drainageClampClosed === targetClosed
+        : state.circuit.returnClampClosed === targetClosed
+    }
     case 'RESET_BUBBLE':
       return (
         !state.circuit.bubbleResetRequired &&
@@ -216,6 +223,15 @@ function resolveGuidedSimulatorTask(
         instruction: 'In the circuit panel, perform the tip-to-tip circuit and sensor check.',
         satisfied,
       }
+    case 'TOGGLE_CIRCUIT_CLAMP': {
+      const closing = action.closed ?? true
+      return {
+        controlId:
+          action.limb === 'drainage' ? 'cardiohelp-clamp-drainage' : 'cardiohelp-clamp-return',
+        instruction: `On the bedside circuit, ${closing ? 'close' : 'open'} the ${action.limb}-limb clamp near the patient.`,
+        satisfied,
+      }
+    }
     case 'RESTORE_GAS_SOURCE':
       return {
         controlId: 'cardiohelp-restore-gas-source',

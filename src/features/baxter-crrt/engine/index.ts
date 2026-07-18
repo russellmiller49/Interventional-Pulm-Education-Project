@@ -1,5 +1,6 @@
 export * from './alarms'
 export * from './clinicalMath'
+export * from './consoleControls'
 export * from './filterModel'
 export * from './fluidModel'
 export * from './initialState'

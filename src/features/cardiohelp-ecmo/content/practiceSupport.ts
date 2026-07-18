@@ -904,6 +904,166 @@ export const clinicalPracticeSupportByScenarioId: Readonly<
       },
     ],
   },
+  'clinical-vv-circuit-air-embolism': {
+    reassessment: {
+      instruction:
+        'Select the findings that demonstrate a safely isolated, cleared, and resumed circuit after the air emergency.',
+      device: {
+        prompt: 'Which console/device response is most appropriate?',
+        options: [
+          option(
+            'vv-air-device-correct',
+            'The pump resumes only after the circuit is de-aired and both clamps are reopened in order.',
+          ),
+          option(
+            'vv-air-device-early-restart',
+            'The pump is restarted as soon as the alarm is acknowledged, before de-airing.',
+          ),
+          option(
+            'vv-air-device-alarm-only',
+            'Silencing the bubble alarm confirms the circuit is safe to resume.',
+          ),
+        ],
+        correctOptionId: 'vv-air-device-correct',
+      },
+      circuit: {
+        prompt: 'Which circuit finding should be documented?',
+        options: [
+          option(
+            'vv-air-circuit-correct',
+            'Both near-patient clamps isolated the circuit while it was de-aired and confirmed clear.',
+          ),
+          option(
+            'vv-air-circuit-open',
+            'The circuit stayed unclamped throughout because the pump stop already protected the patient.',
+          ),
+          option(
+            'vv-air-circuit-partial',
+            'Only the drainage limb needed isolation; return-limb air poses no risk on VV support.',
+          ),
+        ],
+        correctOptionId: 'vv-air-circuit-correct',
+      },
+      patient: {
+        prompt: 'Which patient response best supports safe resumption?',
+        options: [
+          option(
+            'vv-air-patient-correct',
+            'Oxygenation recovers after ordered resumption with no embolic deterioration.',
+          ),
+          option(
+            'vv-air-patient-flow-only',
+            'Displayed circuit flow alone confirms the patient is safe.',
+          ),
+          option(
+            'vv-air-patient-ignore',
+            'No bedside reassessment is needed once the bubble latch clears.',
+          ),
+        ],
+        correctOptionId: 'vv-air-patient-correct',
+      },
+    },
+    hints: [
+      {
+        id: 'vv-air-pattern',
+        title: 'Clue 1 · The pump stop is not the endpoint',
+        text: 'The automatic bubble stop halts flow, but only the near-patient clamps isolate the air column from the patient. Isolate first, then work on the circuit.',
+        penalty: 5,
+        target: 'circuit',
+        controlId: 'cardiohelp-clamp-return',
+        focusId: 'cardiohelp-clamp-return',
+      },
+      {
+        id: 'vv-air-action',
+        title: 'Clue 2 · Isolate, de-air, resume in order',
+        text: 'Clamp the return limb, then the drainage limb. De-air and confirm the circuit is clear. Then open the drainage limb, then the return limb, and let flow re-establish.',
+        penalty: 10,
+        target: 'circuit',
+        controlId: 'cardiohelp-clamp-drainage',
+        focusId: 'cardiohelp-clamp-drainage',
+      },
+    ],
+  },
+  'va-clinical-circuit-air-embolism': {
+    reassessment: {
+      instruction:
+        'Select the findings that demonstrate a safely isolated, cleared, and resumed VA circuit after the air emergency.',
+      device: {
+        prompt: 'Which console/device response is most appropriate?',
+        options: [
+          option(
+            'va-air-device-correct',
+            'The pump resumes only after de-airing and ordered reopening of both clamps.',
+          ),
+          option(
+            'va-air-device-early-restart',
+            'The pump is restarted immediately to shorten the interruption, before de-airing.',
+          ),
+          option(
+            'va-air-device-alarm-only',
+            'Acknowledging the alarm is sufficient to declare the circuit safe.',
+          ),
+        ],
+        correctOptionId: 'va-air-device-correct',
+      },
+      circuit: {
+        prompt: 'Which circuit finding should be documented?',
+        options: [
+          option(
+            'va-air-circuit-correct',
+            'The arterial return limb was clamped first and the circuit isolated, de-aired, and confirmed clear.',
+          ),
+          option(
+            'va-air-circuit-open',
+            'No clamping was needed because the bubble intervention already stopped the pump.',
+          ),
+          option(
+            'va-air-circuit-reverse',
+            'The drainage limb alone was clamped; arterial-limb air is tolerated on VA support.',
+          ),
+        ],
+        correctOptionId: 'va-air-circuit-correct',
+      },
+      patient: {
+        prompt: 'Which patient response best supports safe resumption?',
+        options: [
+          option(
+            'va-air-patient-correct',
+            'MAP and perfusion recover after ordered resumption with no arterial embolic event.',
+          ),
+          option(
+            'va-air-patient-map-only',
+            'A single MAP value confirms full recovery without further reassessment.',
+          ),
+          option(
+            'va-air-patient-ignore',
+            'Right-arm oxygenation no longer needs monitoring after the emergency.',
+          ),
+        ],
+        correctOptionId: 'va-air-patient-correct',
+      },
+    },
+    hints: [
+      {
+        id: 'va-air-pattern',
+        title: 'Clue 1 · Arterial air is a direct embolic threat',
+        text: 'On VA support the return limb feeds the arterial circulation. The automatic pump stop is not isolation—clamp the arterial return limb near the patient first.',
+        penalty: 5,
+        target: 'circuit',
+        controlId: 'cardiohelp-clamp-return',
+        focusId: 'cardiohelp-clamp-return',
+      },
+      {
+        id: 'va-air-action',
+        title: 'Clue 2 · Isolate, de-air, resume in order',
+        text: 'Clamp return then drainage. Secure the connector, de-air, and confirm clear. Open drainage then return, and let VA support re-establish while you reassess perfusion.',
+        penalty: 10,
+        target: 'circuit',
+        controlId: 'cardiohelp-clamp-drainage',
+        focusId: 'cardiohelp-clamp-drainage',
+      },
+    ],
+  },
 }
 
 export function getClinicalPracticeSupport(

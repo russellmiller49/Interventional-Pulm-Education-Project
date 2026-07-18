@@ -314,12 +314,45 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     })
   })
 
-  it('progressively guides the cause-before-reset workflow into Interventions', async () => {
+  it('progressively guides isolate, de-air, ordered unclamp, and reset through the real controls', async () => {
     render(<LearnHarness initialScenarioId="arterial-bubble-stop" />)
 
     performAndAdvance(/Advance 4 simulated seconds to the event/i)
     performAndAdvance(/Commit the guided prediction/i)
+
+    // Isolate: the clamp steps auto-complete when the real clamp buttons reach
+    // the requested state, and guided help highlights the matching button.
+    fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
+    const returnClamp = screen.getByRole('button', { name: /Return clamp/i })
+    await waitFor(() => {
+      expect(returnClamp).toHaveAttribute('data-guided-help', 'true')
+    })
+    fireEvent.click(returnClamp)
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+
+    const drainageClamp = screen.getByRole('button', { name: /Drainage clamp/i })
+    fireEvent.click(drainageClamp)
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+
     performAndAdvance(/Correct the source and clear the circuit/i)
+
+    // Resume: drainage first, then return.
+    fireEvent.click(screen.getByRole('button', { name: /Drainage clamp/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Return clamp/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
 
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
     const interventionsTab = screen.getByRole('button', { name: 'Interventions' })

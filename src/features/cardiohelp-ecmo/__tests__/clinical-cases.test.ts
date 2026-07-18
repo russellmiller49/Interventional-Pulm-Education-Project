@@ -9,9 +9,9 @@ import { validateEvidenceIds } from '../content/evidence'
 describe('CARDIOHELP clinical Practice registry', () => {
   it('is internally valid and keeps complete VV and VA case sets isolated', () => {
     expect(validateClinicalPracticeRegistry()).toEqual([])
-    expect(clinicalPracticeScenarios).toHaveLength(12)
-    expect(clinicalPracticeScenariosBySupportMode.vv).toHaveLength(6)
-    expect(clinicalPracticeScenariosBySupportMode.va).toHaveLength(6)
+    expect(clinicalPracticeScenarios).toHaveLength(14)
+    expect(clinicalPracticeScenariosBySupportMode.vv).toHaveLength(7)
+    expect(clinicalPracticeScenariosBySupportMode.va).toHaveLength(7)
     expect(
       clinicalPracticeScenariosBySupportMode.vv.every((scenario) => scenario.supportMode === 'vv'),
     ).toBe(true)

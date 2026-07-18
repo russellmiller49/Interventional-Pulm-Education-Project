@@ -17,6 +17,7 @@ import { useEffect, useRef, useState, type Dispatch, type FormEvent } from 'reac
 
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import type { RuntimeCrrtCase } from '../content/schema'
+import { selectCrrtConsoleControls } from '../engine/consoleControls'
 import {
   selectCrrtDebriefProjection,
   selectCrrtLearningOutcome,
@@ -92,6 +93,7 @@ interface CrrtLearningWorkflowProps {
   readonly mobileSurface: CrrtMobileSurface
   readonly onCaseChange: (caseId: string) => void
   readonly onRoleChange: (roleLens: CrrtRoleLens) => void
+  readonly onMobileSurfaceChange?: (surface: CrrtMobileSurface) => void
   readonly onReset: () => void
   readonly onPredictionCommitted?: () => void
   readonly onHintUsed?: () => void
@@ -185,6 +187,7 @@ export function CrrtLearningWorkflow({
   mobileSurface,
   onCaseChange,
   onRoleChange,
+  onMobileSurfaceChange,
   onReset,
   onPredictionCommitted,
   onHintUsed,
@@ -210,6 +213,7 @@ export function CrrtLearningWorkflow({
       ? baxterCrrtMasteryManifest.learnerTitleBeforeDebrief
       : definition.title
   const machineControlsEnabled = session.prediction !== null && !session.debriefRevealed
+  const consoleControls = selectCrrtConsoleControls(session)
   const prismaxCaseContext: PrismaxPilotCaseContext =
     isMastery && !session.debriefRevealed
       ? {
@@ -1035,7 +1039,11 @@ export function CrrtLearningWorkflow({
                 <h4>PrisMax machine simulator</h4>
               </div>
               <strong data-unlocked={machineControlsEnabled}>
-                {machineControlsEnabled ? 'Machine actions available' : 'Plan required first'}
+                {machineControlsEnabled
+                  ? 'Machine actions available'
+                  : session.debriefRevealed
+                    ? 'Attempt complete'
+                    : 'Complete clinical plan'}
               </strong>
             </div>
             <p className={styles.machineSurfaceIntro}>
@@ -1047,11 +1055,17 @@ export function CrrtLearningWorkflow({
               state={session.interfaceState}
               dispatch={(action) => dispatch({ type: 'DEVICE_ACTION', action })}
               controlsEnabled={machineControlsEnabled}
+              controlLockReason={session.debriefRevealed ? 'debrief' : 'plan'}
+              consoleControls={consoleControls}
               operationsDisplay={selectPrismaxPilotCaseOperationsDisplay(
                 session.interfaceState,
                 session.simulation,
               )}
               caseContext={prismaxCaseContext}
+              onPerformCaseAction={performIntervention}
+              onRequestClinicalPlan={
+                onMobileSurfaceChange ? () => onMobileSurfaceChange('case') : undefined
+              }
               onReset={onReset}
             />
           </>

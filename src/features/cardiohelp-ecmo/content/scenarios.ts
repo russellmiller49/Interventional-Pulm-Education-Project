@@ -48,6 +48,12 @@ const standardUnsafeActions: readonly UnsafeActionPenalty[] = [
     critical: true,
   },
   {
+    id: 'unsafe-unclamp-before-deair',
+    label: 'Opened a circuit clamp before the air source was corrected and cleared',
+    points: 50,
+    critical: true,
+  },
+  {
     id: 'global-override',
     label: 'Used Global Override as routine troubleshooting',
     points: 50,
@@ -475,11 +481,14 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'Reset is appropriate only after the air source is corrected and the circuit is confirmed clear.',
       ],
       correctWorkflow: [
-        'Inspect the patient and circuit and correct the source of air.',
-        'Confirm the circuit is bubble free, then use Interventions > Bubble > Reset > Confirm.',
-        'Re-establish support and reassess.',
+        'Clamp the return limb, then the drainage limb, near the patient to isolate the circuit.',
+        'Correct the source of air and confirm the circuit is bubble free.',
+        'Open the drainage limb, then the return limb, then use Interventions > Bubble > Reset > Confirm and reassess.',
       ],
-      safetyNotes: ['Premature reset is a critical safety error.'],
+      safetyNotes: [
+        'Premature reset is a critical safety error.',
+        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
+      ],
     },
     evidenceIds: ['ifu-console-workflow', 'ifu-anomaly-boundary', 'elso-circuit-2022'],
   }),
@@ -944,11 +953,13 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
         'The enabled intervention stops the pump, interrupting VA circulatory support.',
       ],
       correctWorkflow: [
-        'Inspect the circuit and patient, identify and correct the air source, and confirm the return path is clear.',
-        'Reset deliberately only after cause correction, re-establish support, and reassess perfusion.',
+        'Clamp the arterial return limb, then the drainage limb, near the patient to isolate the circulation.',
+        'Identify and correct the air source and confirm the return path is clear.',
+        'Open the drainage limb, then the return limb, reset deliberately, re-establish support, and reassess perfusion.',
       ],
       safetyNotes: [
         'Premature reset and alarm acknowledgement without correction remain critical errors.',
+        'Clamp/unclamp order follows local protocol; this module teaches one bounded sequence for consistency.',
       ],
     },
     evidenceIds: [

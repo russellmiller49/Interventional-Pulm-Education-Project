@@ -269,6 +269,15 @@
   color: #f5bb65;
 }
 
+.predictionLock > div {
+  display: flex;
+  flex: 1;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
 .predictionLock span,
 .predictionLock strong {
   display: block;
@@ -277,6 +286,28 @@
 .predictionLock span {
   font-size: 0.72rem;
   line-height: 1.45;
+}
+
+.predictionLock button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.45rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #f5bb65;
+  border-radius: 0.55rem;
+  color: #281b0c;
+  font-size: 0.7rem;
+  font-weight: 850;
+  background: #f5bb65;
+  cursor: pointer;
+}
+
+.predictionLock button svg {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .controlFieldset:disabled .consoleShell {
@@ -862,6 +893,205 @@
   font-variant-numeric: tabular-nums;
 }
 
+.caseSettingPanel {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid #82a7a2;
+  border-radius: 0.55rem;
+  background: #eef7f4;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+}
+
+.caseSettingHeading {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.caseSettingHeading > svg {
+  width: 1rem;
+  height: 1rem;
+  color: #167c73;
+}
+
+.caseSettingHeading span,
+.caseSettingTitle > span,
+.consolePrerequisites article span {
+  color: #53716e;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.caseSettingHeading h4,
+.caseSettingTitle h5,
+.consolePrerequisites h5 {
+  margin: 0.12rem 0 0;
+}
+
+.caseSettingHeading h4 {
+  font-size: 0.8rem;
+}
+
+.caseSettingBoundary {
+  margin: 0;
+  color: #586f6d;
+  font-size: 0.6rem;
+  line-height: 1.5;
+}
+
+.consolePrerequisites {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  border: 1px solid #d6ad6f;
+  border-radius: 0.45rem;
+  background: #fff6e6;
+}
+
+.consolePrerequisites > strong {
+  color: #704a1c;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+}
+
+.consolePrerequisites article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.consolePrerequisites article > svg {
+  width: 1rem;
+  height: 1rem;
+  color: #9d691f;
+}
+
+.consolePrerequisites h5,
+.caseSettingTitle h5 {
+  font-size: 0.7rem;
+}
+
+.consolePrerequisites p,
+.caseSettingTitle p,
+.caseSettingGrid article > p[role='status'] {
+  margin: 0.2rem 0 0;
+  font-size: 0.57rem;
+  line-height: 1.45;
+}
+
+.consolePrerequisites small,
+.caseSettingGrid article > small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #7a572a;
+  font-size: 0.54rem;
+  font-weight: 750;
+}
+
+.consolePrerequisites button,
+.caseSettingGrid button {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #167c73;
+  border-radius: 0.4rem;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 850;
+  background: #167c73;
+  cursor: pointer;
+}
+
+.consolePrerequisites button:disabled,
+.caseSettingGrid button:disabled {
+  border-color: #9eaeac;
+  color: #667876;
+  background: #d8e1df;
+  cursor: not-allowed;
+}
+
+.consolePrerequisites button svg,
+.caseSettingGrid button svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.caseSettingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.55rem;
+}
+
+.caseSettingGrid > article {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid #b2c8c5;
+  border-radius: 0.45rem;
+  background: #fbfdfc;
+}
+
+.caseSettingGrid > article[data-unsafe='true'] {
+  border-color: #d49b94;
+  background: #fff4f2;
+}
+
+.caseSettingGrid > article[data-unsafe='true'] .caseSettingTitle > span {
+  color: #9f392f;
+}
+
+.caseSettingGrid > article[data-unsafe='true'] button:not(:disabled) {
+  border-color: #a43c33;
+  background: #a43c33;
+}
+
+.caseSettingGrid dl {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.caseSettingGrid dl > div {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.35rem 0.4rem;
+  border-radius: 0.3rem;
+  background: #e6f0ed;
+}
+
+.caseSettingGrid dt {
+  color: #526b68;
+  font-size: 0.55rem;
+  font-weight: 800;
+}
+
+.caseSettingGrid dd {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-align: right;
+}
+
+.caseSettingGrid article > p[role='status'] {
+  padding: 0.4rem;
+  border-radius: 0.3rem;
+  color: #215d55;
+  background: #e3f2ec;
+}
+
 .operationsBody {
   display: grid;
   grid-column: 1 / -1;
@@ -1226,6 +1456,38 @@
 }
 
 @media (max-width: 520px) {
+  .predictionLock,
+  .predictionLock > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .predictionLock button {
+    width: 100%;
+  }
+
+  .caseSettingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .consolePrerequisites article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .consolePrerequisites button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .caseSettingGrid dl > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .caseSettingGrid dd {
+    text-align: left;
+  }
+
   .hardwareKey {
     grid-template-columns: 1fr;
   }
