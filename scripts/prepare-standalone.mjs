@@ -18,6 +18,11 @@ const copiedBoardReviewHtmlDir = path.join(
 )
 const copiedBoardReviewTranslationsDir = path.join(standaloneDir, 'board_review_translations')
 
+// Most model assets are hosted by MODULE_ASSET_ORIGIN and intentionally omitted
+// from the Railway standalone bundle. CARDIOHELP ECMO's runtime models are shipped
+// with the app, so keep this directory (and its parent path) in the local bundle.
+const bundledAssetPrefixes = ['models/cardiohelp-ecmo']
+
 const remoteAssetPrefixes = [
   'airway-anatomy',
   'airway-stent-mechanics',
@@ -60,6 +65,17 @@ function shouldCopyPublicAsset(source) {
 
   if (relativePath.endsWith('.DS_Store')) {
     return false
+  }
+
+  if (
+    bundledAssetPrefixes.some(
+      (prefix) =>
+        relativePath === prefix ||
+        relativePath.startsWith(`${prefix}/`) ||
+        prefix.startsWith(`${relativePath}/`),
+    )
+  ) {
+    return true
   }
 
   if (remoteAssetFiles.has(relativePath)) {
