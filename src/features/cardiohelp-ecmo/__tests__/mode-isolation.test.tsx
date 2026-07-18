@@ -1,13 +1,41 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-import CardiohelpEcmoLab from '../components/CardiohelpEcmoLab'
+import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
 import { createInitialSimulationState } from '../engine'
 
+const mockRouterPush = jest.fn()
+
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string; query?: Record<string, string> }
+    children: ReactNode
+  }) => {
+    const resolved =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}?${new URLSearchParams(href.query ?? {}).toString()}`
+    return (
+      <a href={resolved} {...rest}>
+        {children}
+      </a>
+    )
+  },
+  useRouter: () => ({ push: mockRouterPush, replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/learn',
+}))
+
 describe('CARDIOHELP VV and VA pathway isolation', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.history.replaceState(null, '', '/')
+    mockRouterPush.mockReset()
     Object.defineProperty(global, 'fetch', {
       configurable: true,
       writable: true,
@@ -15,16 +43,18 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     })
   })
 
-  it('offers four isolated combinations: VV Learn, VV Practice, VA Learn, and VA Practice', () => {
-    render(<CardiohelpEcmoLab />)
+  it('keeps VV and VA Learn tracks isolated with keyboard-accessible switching', async () => {
+    render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+    })
 
-    const vvMode = screen.getByRole('radio', { name: /VV ECMO/i })
-    const vaMode = screen.getByRole('radio', { name: /Peripheral VA ECMO/i })
-    expect(vvMode).toHaveAttribute('aria-checked', 'true')
-    expect(vvMode).toHaveAttribute('tabindex', '0')
-    expect(vaMode).toHaveAttribute('tabindex', '-1')
-    expect(screen.getByRole('tab', { name: /VV Learn/i })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('progressbar', { name: /VV Learn progress/i })).toBeInTheDocument()
+    const vvTrack = screen.getByRole('radio', { name: /VV track/i })
+    const vaTrack = screen.getByRole('radio', { name: /VA track/i })
+    expect(vvTrack).toHaveAttribute('aria-checked', 'true')
+    expect(vvTrack).toHaveAttribute('tabindex', '0')
+    expect(vaTrack).toHaveAttribute('tabindex', '-1')
+    expect(screen.queryByRole('option', { name: /capstone/i })).not.toBeInTheDocument()
     expect(screen.getAllByRole('option')).toHaveLength(
       cardiohelpLearnLessonsBySupportMode.vv.length,
     )
@@ -33,10 +63,9 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
       screen.getByRole('img', { name: /VV ECMO femoral-femoral circuit schematic/i }),
     ).toBeInTheDocument()
 
-    fireEvent.keyDown(vvMode, { key: 'ArrowRight' })
-    expect(vaMode).toHaveAttribute('aria-checked', 'true')
-    expect(vaMode).toHaveAttribute('tabindex', '0')
-    expect(screen.getByRole('tab', { name: /VA Learn/i })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.keyDown(vvTrack, { key: 'ArrowRight' })
+    expect(vaTrack).toHaveAttribute('aria-checked', 'true')
+    expect(vaTrack).toHaveAttribute('tabindex', '0')
     expect(screen.getAllByRole('option')).toHaveLength(
       cardiohelpLearnLessonsBySupportMode.va.length,
     )
@@ -46,14 +75,25 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(screen.getByText('Femoral artery return')).toBeInTheDocument()
     expect(screen.getAllByText('Right-arm SpO₂').length).toBeGreaterThan(0)
 
-    fireEvent.keyDown(screen.getByRole('tab', { name: /VA Learn/i }), {
-      key: 'ArrowRight',
+    fireEvent.keyDown(vaTrack, { key: 'Home' })
+    expect(vvTrack).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('keeps Practice case options track-scoped when switching modes', async () => {
+    render(<CardiohelpWorkbench section="practice" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
     })
-    expect(screen.getByRole('tab', { name: /VA Practice/i })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    expect(screen.getByRole('progressbar', { name: /VA Practice progress/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
+    expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
+
+    const vvControl = screen.getByLabelText('First priority')
+    expect(
+      within(vvControl).queryByRole('option', { name: /right-arm oxygenation/i }),
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('radio', { name: /VA track/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     const vaControl = screen.getByLabelText('First priority')
     expect(
       within(vaControl).queryByRole('option', { name: /VV off-sweep trial/i }),
@@ -61,34 +101,57 @@ describe('CARDIOHELP VV and VA pathway isolation', () => {
     expect(
       within(vaControl).getByRole('option', { name: /right-arm oxygenation/i }),
     ).toBeInTheDocument()
-
-    fireEvent.keyDown(vaMode, { key: 'ArrowLeft' })
-    expect(screen.getByRole('tab', { name: /VV Practice/i })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    expect(
-      screen.getByRole('img', { name: /VV ECMO femoral-femoral circuit schematic/i }),
-    ).toBeInTheDocument()
-    fireEvent.keyDown(screen.getByRole('tab', { name: /VV Practice/i }), {
-      key: 'ArrowLeft',
-    })
-    expect(screen.getByRole('tab', { name: /VV Learn/i })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('option', { name: /Initiate VV ECMO/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /Initiate peripheral VA ECMO/i })).toBeInTheDocument()
   })
 
-  it('reloads a clean walkthrough when support mode changes', () => {
-    render(<CardiohelpEcmoLab />)
+  it('reloads a clean walkthrough when the track changes and never scores Learn', async () => {
+    render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /identify all four domains/i })).toBeInTheDocument()
+    })
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('radio', { name: /Peripheral VA ECMO/i }))
+    fireEvent.click(screen.getByRole('radio', { name: /VA track/i }))
     expect(screen.queryByText(/Step complete—now verify what changed/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('radio', { name: /VV ECMO/i }))
+    fireEvent.click(screen.getByRole('radio', { name: /VV track/i }))
     expect(screen.queryByText(/Step complete—now verify what changed/i)).not.toBeInTheDocument()
-    expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
+
+    const stored = JSON.parse(
+      window.localStorage.getItem('cardiohelp-ecmo-progress-v1') ?? '{}',
+    ) as { completedLearnLessonIds?: string[]; completedLabs?: string[] }
+    expect(stored.completedLearnLessonIds ?? []).toHaveLength(0)
+    expect(stored.completedLabs ?? []).toHaveLength(0)
+  })
+
+  it('hydrates persisted Learn completion from storage on load', async () => {
+    window.localStorage.setItem(
+      'cardiohelp-ecmo-progress-v1',
+      JSON.stringify({
+        version: 2,
+        lastStation: 'orientation',
+        completedLabs: [],
+        scenarioAttempts: {},
+        bestScores: {},
+        criticalErrorStatus: {},
+        mastery: false,
+        completedLearnLessonIds: ['acute-hypercapnia'],
+        lastLessonScenarioIdByMode: {},
+        lastCaseScenarioIdByMode: {},
+      }),
+    )
+
+    render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(screen.getByText('1/10 completed')).toBeInTheDocument()
+    })
+    expect(
+      screen.getByRole('option', { name: /Acute hypercapnic acidemia · completed/i }),
+    ).toBeInTheDocument()
   })
 
   it('renders mode-specific cannulation and supports keyboard panning of the schematic', () => {

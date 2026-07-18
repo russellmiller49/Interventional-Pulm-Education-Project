@@ -42,7 +42,9 @@ describe('runnable cause-first rapid drills', () => {
     )
 
     expect(wrongSolution?.predictionOptions[0]?.label).toMatch(/Stop.*verify.*escalate/i)
-    expect(wrongSolution?.correctionBoundary).toMatch(/never invent/i)
+    expect(wrongSolution?.correctionBoundary).toMatch(
+      /local mismatch procedure.*does not recommend a substitute/i,
+    )
     expect(bloodDisposition?.predictionOptions[0]?.label).toMatch(
       /device instructions and local policy/i,
     )

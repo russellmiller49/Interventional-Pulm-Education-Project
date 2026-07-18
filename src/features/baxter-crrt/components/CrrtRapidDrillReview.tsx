@@ -77,7 +77,7 @@ export function CrrtRapidDrillReview() {
 
       <div className={styles.boundary} role="note" aria-labelledby={REVIEW_BOUNDARY_ID}>
         <p>
-          <strong id={REVIEW_BOUNDARY_ID}>Educational cause-first practice.</strong> These synthetic
+          <strong id={REVIEW_BOUNDARY_ID}>Educational cause-first practice.</strong> These simulated
           drills teach assessment, inspection, verification, reassessment, and escalation. They do
           not supply local alarm thresholds, correction procedures, restart rules, or
           blood-disposition instructions. Device instructions, local policy, and clinical judgment
@@ -100,35 +100,8 @@ export function CrrtRapidDrillReview() {
         </select>
       </div>
 
-      <dl className={styles.metadata} aria-label="Current rapid-drill review metadata">
-        <div>
-          <dt>Drill</dt>
-          <dd>{drill.id}</dd>
-        </div>
-        <div>
-          <dt>Audience</dt>
-          <dd>Learner and SME preview</dd>
-        </div>
-        <div>
-          <dt>Disposition</dt>
-          <dd>{drill.reviewStatus}</dd>
-        </div>
-        <div>
-          <dt>Learner runtime</dt>
-          <dd>Runnable</dd>
-        </div>
-      </dl>
-
-      <div className={styles.sourceRecords}>
-        <strong>Source and limitation records</strong>
-        <p>{drill.sourceRecordIds.join(' · ')}</p>
-        <small>
-          Source linkage supports traceability; synthetic behavior is not a local operating policy.
-        </small>
-      </div>
-
       <fieldset className={styles.prediction} disabled={state.faultRevealed}>
-        <legend>Commit a prediction before the synthetic signal is revealed</legend>
+        <legend>Predict the likely cause before the case signal is revealed</legend>
         <p>{drill.predictionPrompt}</p>
         <div className={styles.options}>
           {drill.predictionOptions.map((option) => (
@@ -153,26 +126,26 @@ export function CrrtRapidDrillReview() {
           disabled={!draftPredictionOptionId || state.faultRevealed}
           onClick={commitPrediction}
         >
-          Commit prediction
+          Submit prediction
         </button>
       </fieldset>
 
       {!state.faultRevealed ? (
         <p className={styles.hiddenState} role="status">
-          Prediction not committed. The synthetic signal and response sequence remain hidden.
+          Submit a prediction to reveal the case signal and response sequence.
         </p>
       ) : (
         <>
-          <section className={styles.signal} aria-labelledby="baxter-crrt-synthetic-signal-heading">
-            <h3 id="baxter-crrt-synthetic-signal-heading">Synthetic signal</h3>
+          <section className={styles.signal} aria-labelledby="baxter-crrt-case-signal-heading">
+            <h3 id="baxter-crrt-case-signal-heading">Case signal</h3>
             <p>{drill.openingSignal}</p>
             <dl>
               <div>
-                <dt>Committed prediction</dt>
+                <dt>Your prediction</dt>
                 <dd>{selectedPrediction?.label}</dd>
               </div>
               <div>
-                <dt>Cause-first framing</dt>
+                <dt>Recommended first response</dt>
                 <dd>{candidatePrediction?.label}</dd>
               </div>
             </dl>

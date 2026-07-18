@@ -98,11 +98,11 @@ describe('learner instructional tools', () => {
       </>,
     )
     const concentration = screen.getByRole('slider', {
-      name: 'Concentration difference (synthetic level)',
+      name: 'Concentration difference (relative level)',
     })
     fireEvent.change(concentration, { target: { value: '20' } })
     expect(
-      screen.getByRole('img', { name: 'Diffusion index: 14.0 out of 100 synthetic index points' }),
+      screen.getByRole('img', { name: 'Diffusion index: 14.0 out of 100 relative scale points' }),
     ).toBeInTheDocument()
 
     fireEvent.change(screen.getByRole('spinbutton', { name: /All external inputs/i }), {

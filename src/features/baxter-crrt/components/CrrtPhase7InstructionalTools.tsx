@@ -74,16 +74,12 @@ interface SourceLimitationNoteProps {
 
 function SourceLimitationNote({ sourceIds, limitation }: SourceLimitationNoteProps) {
   return (
-    <aside className={styles.sourceNote} aria-label="Source and limitation records">
-      <strong>Source and limitation records</strong>
-      <p>
-        {sourceIds.map((sourceId, index) => (
-          <span key={sourceId}>
-            {index > 0 ? ', ' : null}
-            <code>{sourceId}</code>
-          </span>
-        ))}
-      </p>
+    <aside
+      className={styles.sourceNote}
+      aria-label="Evidence and scope"
+      data-source-ids={sourceIds.join(' ')}
+    >
+      <strong>Evidence and scope</strong>
       <small>{limitation}</small>
     </aside>
   )
@@ -105,7 +101,7 @@ function IndexBar({ label, value, variant }: IndexBarProps) {
       <div
         className={styles.indexTrack}
         role="img"
-        aria-label={`${label}: ${value.toFixed(1)} out of 100 synthetic index points`}
+        aria-label={`${label}: ${value.toFixed(1)} out of 100 relative scale points`}
       >
         <span style={{ '--index-width': `${value}%` } as CSSProperties} />
       </div>
@@ -276,7 +272,7 @@ export function TransportMechanismLab() {
           <span className={styles.toolNumber}>Instructional tool 01</span>
           <h3 id={`${idPrefix}-heading`}>Transport Mechanism Lab</h3>
         </div>
-        <span className={styles.pendingBadge}>Learner tool</span>
+        <span className={styles.pendingBadge}>Concept lab</span>
       </header>
 
       <p className={styles.intro}>
@@ -298,46 +294,46 @@ export function TransportMechanismLab() {
       </div>
 
       <fieldset className={styles.controlFieldset}>
-        <legend>Adjust synthetic concept levels</legend>
+        <legend>Adjust relative concept levels</legend>
         <div className={styles.controlGrid}>
           <SyntheticRange
             id={`${idPrefix}-concentration`}
-            label="Concentration difference (synthetic level)"
-            description="Changes only the diffusion side of this teaching model."
+            label="Concentration difference (relative level)"
+            description="Changes only the diffusion component of this comparison."
             value={inputs.concentrationDifferenceLevel}
             onChange={(value) => updateInput('concentrationDifferenceLevel', value)}
           />
           <SyntheticRange
             id={`${idPrefix}-diffusive-passage`}
-            label="Diffusive membrane passage (synthetic level)"
+            label="Diffusive membrane passage (relative level)"
             description="Represents a unitless membrane-passage concept, not a filter specification."
             value={inputs.diffusivePassageLevel}
             onChange={(value) => updateInput('diffusivePassageLevel', value)}
           />
           <SyntheticRange
             id={`${idPrefix}-water-movement`}
-            label="Pressure-driven water movement (synthetic level)"
+            label="Pressure-driven water movement (relative level)"
             description="Represents ultrafiltration and supplies the water-movement term for convection."
             value={inputs.waterMovementLevel}
             onChange={(value) => updateInput('waterMovementLevel', value)}
           />
           <SyntheticRange
             id={`${idPrefix}-convective-passage`}
-            label="Convective solute passage (synthetic level)"
+            label="Convective solute passage (relative level)"
             description="Represents a unitless passage concept, not a patient or device value."
             value={inputs.convectivePassageLevel}
             onChange={(value) => updateInput('convectivePassageLevel', value)}
           />
           <SyntheticRange
             id={`${idPrefix}-adsorptive-affinity`}
-            label="Membrane-binding affinity (synthetic level)"
+            label="Membrane-binding affinity (relative level)"
             description="A unitless solute-surface binding tendency, not a membrane specification."
             value={inputs.adsorptiveAffinityLevel}
             onChange={(value) => updateInput('adsorptiveAffinityLevel', value)}
           />
           <SyntheticRange
             id={`${idPrefix}-available-surface`}
-            label="Available binding surface (synthetic level)"
+            label="Available binding surface (relative level)"
             description="Lower levels represent fewer unoccupied conceptual binding sites."
             value={inputs.availableBindingSurfaceLevel}
             onChange={(value) => updateInput('availableBindingSurfaceLevel', value)}
@@ -374,7 +370,7 @@ export function TransportMechanismLab() {
       </fieldset>
 
       <div className={styles.resultPanel} aria-labelledby={`${idPrefix}-results-heading`}>
-        <h4 id={`${idPrefix}-results-heading`}>Synthetic mechanism comparison</h4>
+        <h4 id={`${idPrefix}-results-heading`}>Mechanism comparison</h4>
         <IndexBar label="Diffusion index" value={result.diffusionIndex} variant="diffusion" />
         <IndexBar label="Convection index" value={result.convectionIndex} variant="convection" />
         <IndexBar
@@ -408,8 +404,8 @@ export function TransportMechanismLab() {
       <QualitativeEffluentExplorer />
 
       <p className={styles.boundaryText}>
-        Unitless concept model only. It does not calculate clearance, effluent dose, membrane
-        capacity, a prescription, a device setting, or a patient-specific result.
+        Concept comparison only. It does not calculate clearance, effluent dose, membrane capacity,
+        a prescription, a device setting, or a patient-specific result.
       </p>
     </section>
   )
@@ -464,12 +460,12 @@ export function FluidBalanceLedger() {
 
   const balanceExplanation =
     result.direction === 'even'
-      ? 'Modeled inputs and combined modeled outputs are equal in this exercise.'
+      ? 'Entered inputs and combined outputs are equal in this exercise.'
       : result.direction === 'positive'
-        ? `Modeled inputs exceed combined modeled outputs by ${volume(
+        ? `Entered inputs exceed combined outputs by ${volume(
             Math.abs(result.wholePatientNetBalanceMl),
           )} in this exercise.`
-        : `Combined modeled outputs exceed modeled inputs by ${volume(
+        : `Combined outputs exceed entered inputs by ${volume(
             Math.abs(result.wholePatientNetBalanceMl),
           )} in this exercise.`
 
@@ -490,27 +486,27 @@ export function FluidBalanceLedger() {
           <span className={styles.toolNumber}>Instructional tool 02</span>
           <h3 id={`${idPrefix}-heading`}>Fluid Balance Ledger</h3>
         </div>
-        <span className={styles.pendingBadge}>Learner tool</span>
+        <span className={styles.pendingBadge}>Practice tool</span>
       </header>
 
       <p className={styles.intro}>
         Compare whole-patient accounting with the machine-removal term. The ledger keeps external
-        inputs, non-machine outputs, and modeled machine patient-fluid removal visible as separate
+        inputs, non-machine outputs, and machine patient-fluid removal visible as separate
         quantities.
       </p>
 
       <SourceLimitationNote
         sourceIds={fluidLedgerCandidateSourceIds}
-        limitation="These records provide accounting context only; they do not validate the synthetic values or establish a fluid-removal target."
+        limitation="The cited evidence supports the accounting concepts; the practice values do not establish a fluid-removal target."
       />
 
       <fieldset className={styles.controlFieldset}>
-        <legend>Enter synthetic ledger values</legend>
+        <legend>Enter practice ledger values</legend>
         <div className={styles.ledgerControls}>
           <LedgerNumberInput
             id={`${idPrefix}-duration`}
-            label="Modeled interval (hours)"
-            description="Synthetic exercise duration; not a treatment recommendation."
+            label="Observation interval (hours)"
+            description="Practice interval only; not a treatment recommendation."
             value={inputs.durationHours}
             step={0.5}
             onChange={(value) => updateInput('durationHours', value)}
@@ -518,20 +514,20 @@ export function FluidBalanceLedger() {
           <LedgerNumberInput
             id={`${idPrefix}-inputs`}
             label="All external inputs (mL/hour)"
-            description="A combined synthetic input term for this exercise."
+            description="A combined input term for this exercise."
             value={inputs.externalInputMlHour}
             onChange={(value) => updateInput('externalInputMlHour', value)}
           />
           <LedgerNumberInput
             id={`${idPrefix}-outputs`}
             label="All non-machine outputs (mL/hour)"
-            description="A combined synthetic non-machine output term."
+            description="A combined non-machine output term for this exercise."
             value={inputs.externalOutputMlHour}
             onChange={(value) => updateInput('externalOutputMlHour', value)}
           />
           <LedgerNumberInput
             id={`${idPrefix}-machine-removal`}
-            label="Modeled machine patient-fluid removal (mL/hour)"
+            label="Machine patient-fluid removal (mL/hour)"
             description="One ledger term only; not a prescribed setting or target."
             value={inputs.machinePatientFluidRemovalMlHour}
             onChange={(value) => updateInput('machinePatientFluidRemovalMlHour', value)}
@@ -542,11 +538,11 @@ export function FluidBalanceLedger() {
       <div
         className={styles.tableRegion}
         role="region"
-        aria-label="Synthetic fluid ledger; horizontally scrollable"
+        aria-label="Practice fluid ledger; horizontally scrollable"
         tabIndex={0}
       >
         <table className={styles.ledgerTable}>
-          <caption>Integrated volumes for the modeled interval</caption>
+          <caption>Integrated volumes over the entered interval</caption>
           <thead>
             <tr>
               <th scope="col">Ledger term</th>
@@ -566,7 +562,7 @@ export function FluidBalanceLedger() {
               <td>{volume(result.externalOutputMl)}</td>
             </tr>
             <tr>
-              <th scope="row">Modeled machine patient-fluid removal</th>
+              <th scope="row">Machine patient-fluid removal</th>
               <td>Out of patient ledger</td>
               <td>{volume(result.machinePatientFluidRemovalMl)}</td>
             </tr>
@@ -588,8 +584,8 @@ export function FluidBalanceLedger() {
       </output>
 
       <p className={styles.boundaryText}>
-        Conservation exercise only. The values are synthetic, omit local charting conventions, and
-        do not establish a fluid goal, prescription, treatment response, or device instruction.
+        Conservation exercise only. The practice values omit local charting conventions and do not
+        establish a fluid goal, prescription, treatment response, or device instruction.
       </p>
     </section>
   )
@@ -626,7 +622,7 @@ export function CitrateCalciumDashboardScaffold() {
           <span className={styles.toolNumber}>Instructional tool 06</span>
           <h3 id={`${idPrefix}-heading`}>Conceptual Citrate-Calcium Dashboard</h3>
         </div>
-        <span className={styles.pendingBadge}>Direction-only education</span>
+        <span className={styles.pendingBadge}>Trend-recognition practice</span>
       </header>
 
       <div className={styles.blockedStatus} role="note" aria-label="Conceptual safety boundary">
@@ -729,14 +725,14 @@ export function CrrtPhase7InstructionalTools() {
           <span className={styles.kicker}>Six instructional tools</span>
           <h2 id="baxter-crrt-phase7-instructional-tools-heading">Interactive concept labs</h2>
         </div>
-        <span className={styles.reviewBadge}>Learner workspace</span>
+        <span className={styles.reviewBadge}>Practice labs</span>
       </header>
 
       <div className={styles.reviewBoundary} role="note" aria-label="Educational boundary">
         <strong>General educational use; not patient-specific guidance.</strong>
         <p>
-          These exercises use synthetic values and manual-reference device concepts. Unresolved
-          expressions stay visibly unavailable without disabling the surrounding lab.
+          These exercises use simulated values and concepts drawn from device manuals. Calculations
+          that are not supported remain unavailable while the rest of each lab stays usable.
         </p>
       </div>
 

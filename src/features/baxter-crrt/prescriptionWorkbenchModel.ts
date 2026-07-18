@@ -119,7 +119,7 @@ const QUALITATIVE_PROXY_SOURCE_RECORD_IDS = Object.freeze([
 ] as const)
 
 const QUALITATIVE_PROXY_OMITTED_VARIABLE_CAVEAT =
-  'This authored split-only proxy does not model blood flow, hematocrit, PBP dilution, modality, membrane or solute behavior, anticoagulation, filter condition, device configuration, or patient physiology.'
+  'This split-only comparison does not model blood flow, hematocrit, PBP dilution, modality, membrane or solute behavior, anticoagulation, filter condition, device configuration, or patient physiology.'
 
 export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWorkbenchOutput[] =
   Object.freeze([
@@ -129,14 +129,15 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
       status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze(['MATH-PM-004', 'MATH-PM-006']),
       reason:
-        'No approved solute/filter/solution model is bound to this workbench, and disputed circuit-flow expressions cannot be substituted.',
+        'The available references do not support estimating effective clearance from these entries alone.',
     }),
     Object.freeze({
       id: 'total-circuit-ultrafiltration',
       label: 'Total-circuit ultrafiltration',
       status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze([PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.sourceRecordId]),
-      reason: `${PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.sourceRecordId} remains disabled: ${PRISMAX_POST_FILTER_ULTRAFILTRATION_GATE.reason}`,
+      reason:
+        'The available references do not support calculating total-circuit ultrafiltration from the entries shown.',
     }),
     Object.freeze({
       id: 'quantitative-ff',
@@ -146,7 +147,8 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
         'MATH-PM-003',
         PRISMAX_PRE_INFUSION_FLOW_GATE.sourceRecordId,
       ]),
-      reason: `${PRISMAX_PRE_INFUSION_FLOW_GATE.sourceRecordId} remains disabled, so the required pre-infusion term is not inferred: ${PRISMAX_PRE_INFUSION_FLOW_GATE.reason}`,
+      reason:
+        'A verified pre-infusion circuit-flow term is not available, so quantitative filtration fraction is not calculated.',
     }),
     Object.freeze({
       id: 'whole-patient-net-removal',
@@ -154,7 +156,7 @@ export const PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS: readonly UnavailableWor
       status: 'unavailable-source-limited',
       sourceRecordIds: Object.freeze(['FLUID-PM-001', 'FLUID-PM-002']),
       reason:
-        'External patient inputs and outputs, actual delivered machine removal, downtime, and unintended device gain or loss are not bound to this workbench.',
+        'Whole-patient balance also requires patient inputs, non-machine outputs, actual machine removal, and downtime, which are not entered in this workbench.',
     }),
   ])
 
@@ -265,7 +267,7 @@ export function calculateQualitativePrePostDilution(
       sourceRecordIds: QUALITATIVE_PROXY_SOURCE_RECORD_IDS,
       omittedVariableCaveat: QUALITATIVE_PROXY_OMITTED_VARIABLE_CAVEAT,
       comparisonText:
-        'The entered replacement flow is evenly split. The authored split-only proxies sit at their comparison midpoint.',
+        'The entered replacement flow is evenly split. The qualitative indicators sit at their comparison midpoint.',
     })
   }
 
@@ -283,8 +285,8 @@ export function calculateQualitativePrePostDilution(
     sourceRecordIds: QUALITATIVE_PROXY_SOURCE_RECORD_IDS,
     omittedVariableCaveat: QUALITATIVE_PROXY_OMITTED_VARIABLE_CAVEAT,
     comparisonText: preDominant
-      ? 'More replacement is entered before the filter: the authored split-only proxy assigns a lower inlet-concentration index and lower FF-burden, effective-clearance, and fouling proxy positions than the inverse split.'
-      : 'More replacement is entered after the filter: the authored split-only proxy assigns a higher inlet-concentration index and higher FF-burden, effective-clearance, and fouling proxy positions than the inverse split.',
+      ? 'More replacement is entered before the filter: the split-only comparison assigns lower inlet-concentration, FF-burden, effective-clearance, and fouling indicator positions than the inverse split.'
+      : 'More replacement is entered after the filter: the split-only comparison assigns higher inlet-concentration, FF-burden, effective-clearance, and fouling indicator positions than the inverse split.',
   })
 }
 

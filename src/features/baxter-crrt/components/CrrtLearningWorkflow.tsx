@@ -484,11 +484,9 @@ export function CrrtLearningWorkflow({
         <div className={styles.syntheticNotice} role="note">
           <ShieldAlert aria-hidden="true" />
           <p>
-            <strong>Synthetic educational case.</strong> Exact values, thresholds, scoring, and
-            critical-error rules are educational calibration—not clinical targets.
-            {isReviewer
-              ? ' This final-SME preview produces no analytics, progress writes, persistence, or competency record.'
-              : null}
+            <strong>Simulated clinical case.</strong> Patient values, treatment responses, and
+            scoring are for education only—not bedside targets or local protocols.
+            {isReviewer ? ' In this SME preview, progress and scores are not saved.' : null}
           </p>
         </div>
 
@@ -530,8 +528,8 @@ export function CrrtLearningWorkflow({
           <div className={styles.workflowHeading}>
             {session.prediction ? <Check aria-hidden="true" /> : <LockKeyhole aria-hidden="true" />}
             <div>
-              <span>Define · Select · Predict</span>
-              <h4 id={scopedId('crrt-prediction-heading')}>Commit before controls unlock</h4>
+              <span>Assess · Plan · Predict</span>
+              <h4 id={scopedId('crrt-prediction-heading')}>Plan your approach before acting</h4>
             </div>
           </div>
 
@@ -813,7 +811,7 @@ export function CrrtLearningWorkflow({
                 ))}
               </fieldset>
               <button type="submit" className={styles.commitButton}>
-                Commit prediction <ArrowRight aria-hidden="true" />
+                Submit plan and prediction <ArrowRight aria-hidden="true" />
               </button>
             </form>
           )}
@@ -826,19 +824,15 @@ export function CrrtLearningWorkflow({
           <div className={styles.workflowHeading}>
             <ArrowRight aria-hidden="true" />
             <div>
-              <span>Run</span>
-              <h4 id={scopedId('crrt-actions-heading')}>
-                {session.audience === 'reviewer'
-                  ? 'Intervene through the authored case actions'
-                  : 'Intervene through the case and machine'}
-              </h4>
+              <span>Act</span>
+              <h4 id={scopedId('crrt-actions-heading')}>Choose and sequence clinical actions</h4>
             </div>
           </div>
 
           {!session.prediction ? (
             <p className={styles.lockedCopy}>
-              <LockKeyhole aria-hidden="true" /> Controls remain locked until prediction is
-              committed.
+              <LockKeyhole aria-hidden="true" /> Submit your plan and prediction before taking
+              action.
             </p>
           ) : (
             <div className={styles.actionList}>
@@ -888,7 +882,7 @@ export function CrrtLearningWorkflow({
               <Clock3 aria-hidden="true" />
               <span>
                 <strong>{Math.round(session.simulation.simulationTimeSeconds / 60)} min</strong>
-                Separate immediate device response from delayed simulated response.
+                Observe immediate machine changes and later patient and treatment-delivery trends.
               </span>
             </div>
             {simulationTimeAdvanceOptions.map((option) => (
@@ -956,7 +950,7 @@ export function CrrtLearningWorkflow({
               <small>
                 {isReviewer
                   ? 'Each revealed hint subtracts 5 preview points; this result is not saved.'
-                  : 'Each revealed hint subtracts 5 points, capped by the scoring engine.'}
+                  : 'Each revealed hint subtracts 5 points, up to the maximum hint penalty.'}
               </small>
             ) : null}
           </section>
@@ -971,7 +965,7 @@ export function CrrtLearningWorkflow({
             <div>
               <span>Reassess</span>
               <h4 id={scopedId('crrt-reassess-heading')}>
-                Compare prediction with actual response
+                Compare your prediction with the observed response
               </h4>
             </div>
           </div>
@@ -1019,9 +1013,8 @@ export function CrrtLearningWorkflow({
           <div className={styles.criticalBanner} role="alert">
             <ShieldAlert aria-hidden="true" />
             <p>
-              <strong>Educational critical-error rule triggered</strong>{' '}
-              {outcome.criticalErrorIds.join(', ')}. This synthetic scoring rule is not a clinical
-              threshold or competency decision.
+              <strong>A required safety step was missed.</strong> Review the action sequence in the
+              debrief. This exercise feedback is not a clinical threshold or competency decision.
             </p>
           </div>
         ) : null}
@@ -1042,13 +1035,13 @@ export function CrrtLearningWorkflow({
                 <h4>PrisMax machine simulator</h4>
               </div>
               <strong data-unlocked={machineControlsEnabled}>
-                {machineControlsEnabled ? 'Machine actions unlocked' : 'Prediction gate locked'}
+                {machineControlsEnabled ? 'Machine actions available' : 'Plan required first'}
               </strong>
             </div>
             <p className={styles.machineSurfaceIntro}>
-              Explore the generated hardware map at any time. Commit the five-part prediction on the
-              Case surface to unlock setup and Operations controls; synthetic case state stays
-              synchronized with the shared CRRT engine.
+              Explore the machine layout at any time. Submit the five-part plan on the Case tab to
+              use setup and Operations controls. The machine, circuit, and patient views update
+              together as the case progresses.
             </p>
             <PrismaxPilotInterface
               state={session.interfaceState}
@@ -1085,7 +1078,7 @@ export function CrrtLearningWorkflow({
             </dl>
             <p>
               The generated physical-machine simulator is scoped to the PrisMax reference profile.
-              Return to Case for Prismaflex-authored interventions and its active device controls.
+              Return to Case for Prismaflex clinical actions and active device controls.
             </p>
           </>
         )}

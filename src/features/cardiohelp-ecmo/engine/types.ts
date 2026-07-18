@@ -287,6 +287,7 @@ export interface ClinicalCaseDefinition {
   patientLabel: string
   openingNarrative: string
   decisionPrompt: string
+  learningObjectives: readonly string[]
   initialSupportStatus: ClinicalSupportStatus
   initialTrajectory: ClinicalTrajectory
   data: readonly ClinicalCaseDataPoint[]
@@ -518,14 +519,28 @@ export interface EvidenceReference {
   limitations: string
 }
 
-export interface ProgressV1 {
-  version: 1
+export type ModuleSection = 'learn' | 'practice' | 'assess'
+
+export interface LastVisitedActivity {
+  section: ModuleSection
+  scenarioId: string
+  supportMode: SupportMode
+}
+
+export interface ProgressV2 {
+  version: 2
   lastStation: ScenarioDefinition['stationId']
   completedLabs: readonly string[]
   scenarioAttempts: Readonly<Record<string, number>>
   bestScores: Readonly<Record<string, number>>
   criticalErrorStatus: Readonly<Record<string, boolean>>
+  /** Legacy VV-only mastery flag retained from v1; per-track mastery is derived. */
   mastery: boolean
+  /** Drill scenario ids whose guided Learn lesson has been completed. */
+  completedLearnLessonIds: readonly string[]
+  lastLessonScenarioIdByMode: Readonly<Partial<Record<SupportMode, string>>>
+  lastCaseScenarioIdByMode: Readonly<Partial<Record<SupportMode, string>>>
+  lastVisited?: LastVisitedActivity
 }
 
 export type SimulationAction =

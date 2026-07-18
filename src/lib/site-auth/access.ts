@@ -26,6 +26,17 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/hamilton-c6-ventilation',
 ])
 
+// Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share
+// the parent's access and noindex treatment.
+const PUBLIC_UNLISTED_PATH_PREFIXES = ['/cardiohelp-ecmo'] as const
+
+function isPublicUnlistedMatch(normalizedPathname: string) {
+  return (
+    PUBLIC_UNLISTED_EXACT_PATHS.has(normalizedPathname) ||
+    PUBLIC_UNLISTED_PATH_PREFIXES.some((prefix) => normalizedPathname.startsWith(`${prefix}/`))
+  )
+}
+
 const PUBLIC_PREFIXES = [
   '/_next/',
   '/api/auth/callback',
@@ -137,10 +148,7 @@ export function isPublicPath(pathname: string) {
     return false
   }
 
-  if (
-    PUBLIC_EXACT_PATHS.has(normalizedPathname) ||
-    PUBLIC_UNLISTED_EXACT_PATHS.has(normalizedPathname)
-  ) {
+  if (PUBLIC_EXACT_PATHS.has(normalizedPathname) || isPublicUnlistedMatch(normalizedPathname)) {
     return true
   }
 
@@ -170,7 +178,7 @@ export function isPublicPath(pathname: string) {
 }
 
 export function isPublicUnlistedPath(pathname: string) {
-  return PUBLIC_UNLISTED_EXACT_PATHS.has(unlocalizedPathname(pathname))
+  return isPublicUnlistedMatch(unlocalizedPathname(pathname))
 }
 
 export function isAuthPath(pathname: string) {
@@ -308,10 +316,15 @@ export function resolveSiteModuleId(pathname: string) {
     return 'baxter-crrt'
   }
 
+  // Collapse subroutes (hub/learn/practice/assess) into one module id so
+  // page views and in-module analytics stay joined.
+  if (first === 'cardiohelp-ecmo') {
+    return 'cardiohelp-ecmo'
+  }
+
   if (
     first === 'pccm-intro-course' ||
     first === 'bronch-navigation-trainer' ||
-    first === 'cardiohelp-ecmo' ||
     first === 'fluoroview' ||
     first === 'intro-bronchoscopy' ||
     first === 'journal-club-podcasts' ||

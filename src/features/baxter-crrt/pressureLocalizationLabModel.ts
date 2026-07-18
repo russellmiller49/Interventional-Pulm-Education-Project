@@ -175,15 +175,15 @@ function obstructionSnapshot(site: PressureLocalizationSite): SyntheticPressureS
 function locationExplanation(site: PressureLocalizationSite): string {
   switch (site) {
     case 'access-catheter':
-      return 'The marker is at the access catheter. This generic model represents its authored resistance change with the shared access-side term while retaining the catheter as a distinct inspection location.'
+      return 'The obstruction is at the access catheter. Increased resistance before the blood pump makes access pressure more negative.'
     case 'access-line':
-      return 'The marker is on the extracorporeal access line. This generic model uses the same authored access-side resistance change as the catheter fixture, but the line remains a distinct teaching and inspection location.'
+      return 'The obstruction is on the extracorporeal access line. Increased resistance before the blood pump makes access pressure more negative.'
     case 'filter':
-      return 'The marker is within the filter. The synthetic fixture changes only its filter-resistance term before recalculating the displayed pressure relationships.'
+      return 'The obstruction is within the filter. Increased filter resistance changes filter pressure and the pressure drop across the filter.'
     case 'return-line':
-      return 'The marker is on the extracorporeal return line. The synthetic fixture applies an authored resistance change to the return side.'
+      return 'The obstruction is on the extracorporeal return line. Increased resistance after the filter raises return-side pressure.'
     case 'effluent-line':
-      return 'The marker is on the effluent line. The synthetic fixture changes only the authored effluent-pressure input before recalculating TMP.'
+      return 'The obstruction is on the effluent line. The resulting rise in effluent pressure changes the displayed TMP relationship.'
   }
 }
 
@@ -207,7 +207,7 @@ export function createSyntheticPressureLocalizationResult(
 ): SyntheticPressureLocalizationResult {
   if (!isPressureLocalizationCombinationSupported(fault, site)) {
     throw new Error(
-      `${labelForFault(fault)} at ${labelForSite(site)} is unavailable pending source and device review.`,
+      `${labelForFault(fault)} at ${labelForSite(site)} is not included in this exercise.`,
     )
   }
 
@@ -235,6 +235,6 @@ export function createSyntheticPressureLocalizationResult(
     signals: Object.freeze(signals),
     locationExplanation: locationExplanation(site),
     modelExplanation:
-      'The fixture changes one authored resistance or effluent input and recalculates the six signals. It does not invoke an alarm or device action.',
+      'Only the selected circuit location changes. Compare the direction of all six pressure signals; alarm behavior and automatic device actions are not part of this lab.',
   })
 }

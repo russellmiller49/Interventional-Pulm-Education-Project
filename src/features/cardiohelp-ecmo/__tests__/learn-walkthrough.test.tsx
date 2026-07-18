@@ -10,7 +10,7 @@ import {
 } from '../engine'
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
-import { LearnWorkflow, resolveGuidedLesson } from '../components/LearnWorkflow'
+import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLessonPlayer'
 
 function LearnHarness({
   initialScenarioId,
@@ -46,7 +46,7 @@ function LearnHarness({
       <output data-testid="rpm">{state.device.rpmSetpoint}</output>
       <output data-testid="gas-source">{String(state.gas.sourceConnected)}</output>
       <output data-testid="faults">{state.scenario.activeFaults.join(',')}</output>
-      <LearnWorkflow
+      <LearnLessonPlayer
         key={lesson.id}
         state={state}
         lesson={lesson}
@@ -243,6 +243,34 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
       expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
     })
     expect(screen.queryByRole('button', { name: /Increase sweep to 3.0/i })).not.toBeInTheDocument()
+  })
+
+  it('bridges a finished lesson to its paired clinical case in Practice', async () => {
+    const onTryPractice = jest.fn()
+    const onCompleteLesson = jest.fn()
+    render(
+      <LearnHarness
+        initialScenarioId="acute-hypercapnia"
+        onCompleteLesson={onCompleteLesson}
+        onTryPractice={onTryPractice}
+      />,
+    )
+
+    performAndAdvance(/Inspect the starting pattern/i)
+    performAndAdvance(/Commit the guided prediction/i)
+    fireEvent.change(screen.getByRole('slider', { name: 'Sweep flow control' }), {
+      target: { value: '3' },
+    })
+    await waitFor(() => {
+      expect(screen.getByText(/Step complete—now verify what changed/i)).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+    performAndAdvance(/Advance 1 second and inspect the response/i)
+    fireEvent.click(screen.getByRole('button', { name: /Finish walkthrough/i }))
+
+    expect(onCompleteLesson).toHaveBeenCalledWith('acute-hypercapnia')
+    fireEvent.click(screen.getByRole('button', { name: /Apply this in Practice/i }))
+    expect(onTryPractice).toHaveBeenCalledWith('clinical-vv-gas-disconnection')
   })
 
   it('guides restoration through the real gas-source control', async () => {

@@ -4711,3 +4711,692 @@
     animation: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Module frame: shared identity row + section nav used by the hub and the
+ * learn / practice / assess pages.
+ * ------------------------------------------------------------------------- */
+
+.frameHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1680px;
+  margin: 0 auto 0.9rem;
+}
+
+.frameIdentity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.frameBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-height: 30px;
+  padding: 0.28rem 0.65rem;
+  border: 1px solid rgba(113, 225, 229, 0.32);
+  border-radius: 999px;
+  color: var(--cyan-bright);
+  background: rgba(13, 43, 48, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.frameBadge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.moduleNav {
+  max-width: 1680px;
+  margin: 0 auto 1rem;
+}
+
+.moduleNav ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.55rem;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(8, 30, 35, 0.82);
+}
+
+.moduleNav a {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.6rem 0.7rem;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.moduleNav a > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--cyan-bright);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.moduleNav a strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.moduleNav a small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.moduleNav a:hover {
+  border-color: rgba(113, 225, 229, 0.4);
+  background: rgba(13, 43, 48, 0.6);
+}
+
+.moduleNav a[data-active='true'] {
+  border-color: var(--cyan);
+  background: linear-gradient(135deg, rgba(35, 89, 96, 0.85), rgba(13, 43, 48, 0.9));
+}
+
+.moduleNav a[data-active='true'] > span:first-child {
+  color: var(--navy);
+  background: var(--cyan-bright);
+  border-color: var(--cyan-bright);
+}
+
+.trackToggle {
+  display: inline-flex;
+  gap: 0.4rem;
+  padding: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(8, 30, 35, 0.82);
+}
+
+.trackToggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trackToggle button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.trackToggle button:hover {
+  color: var(--ink);
+}
+
+.trackToggle button[data-active='true'] {
+  color: var(--navy);
+  background: var(--cyan-bright);
+  border-color: var(--cyan-bright);
+}
+
+/* ---------------------------------------------------------------------------
+ * Hub: hero, how-it-works path, track picker, curriculum map.
+ * ------------------------------------------------------------------------- */
+
+.hubHero {
+  max-width: 1680px;
+  margin: 0 auto 1rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(23, 56, 62, 0.96), rgba(7, 28, 33, 0.98));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.36);
+}
+
+.hubHero h1 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  line-height: 1.15;
+}
+
+.hubHero > p {
+  max-width: 68ch;
+  margin: 0 0 1.1rem;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.hubContinue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 1.1rem;
+  color: var(--navy);
+  text-decoration: none;
+  border-radius: 14px;
+  background: var(--cyan-bright);
+  font-weight: 700;
+}
+
+.hubContinue svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hubContinue span {
+  display: grid;
+}
+
+.hubContinue small {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.hubHowItWorks,
+.hubTrackSection,
+.hubCurriculum {
+  max-width: 1680px;
+  margin: 0 auto 1rem;
+  padding: clamp(1.1rem, 2.5vw, 1.8rem);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(8, 30, 35, 0.82);
+}
+
+.hubHowItWorks h2,
+.hubTrackSection h2,
+.hubCurriculumHeading h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.hubTrackSection > p {
+  max-width: 76ch;
+  margin: 0 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.hubPathGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hubPathGrid a {
+  position: relative;
+  display: block;
+  height: 100%;
+  padding: 1rem 1rem 1rem 3.2rem;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(5, 24, 28, 0.72);
+}
+
+.hubPathGrid a:hover {
+  border-color: rgba(113, 225, 229, 0.45);
+}
+
+.hubPathGrid a > span {
+  position: absolute;
+  top: 1rem;
+  left: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--cyan-bright);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.hubPathGrid a > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--cyan-bright);
+  margin-bottom: 0.35rem;
+}
+
+.hubPathGrid strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 1rem;
+}
+
+.hubPathGrid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.hubCurriculumHeading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.hubCurriculumHeading > span {
+  color: var(--cyan-bright);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.hubUnitList {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hubUnitCard,
+.hubCapstoneCard {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(5, 24, 28, 0.72);
+}
+
+.hubUnitHeading {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: start;
+  margin-bottom: 0.55rem;
+}
+
+.hubUnitHeading > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--cyan-bright);
+  font-weight: 800;
+}
+
+.hubUnitHeading > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--cyan-bright);
+}
+
+.hubUnitHeading h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+}
+
+.hubUnitHeading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.hubChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.hubChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0.4rem 0.8rem;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(13, 43, 48, 0.72);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.hubChip svg {
+  width: 15px;
+  height: 15px;
+  color: var(--cyan-bright);
+}
+
+.hubChip:hover {
+  border-color: rgba(113, 225, 229, 0.5);
+}
+
+.hubChip[data-complete='true'] {
+  border-color: rgba(118, 214, 155, 0.55);
+  color: var(--green);
+}
+
+.hubChip[data-complete='true'] svg {
+  color: var(--green);
+}
+
+.hubChip[data-recommended='true'] {
+  border-color: var(--cyan-bright);
+  box-shadow: 0 0 0 1px rgba(113, 225, 229, 0.4);
+}
+
+.hubChip em {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(113, 225, 229, 0.16);
+  color: var(--cyan-bright);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hubCapstoneLocked {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Locked capstone panel on /assess */
+
+.capstoneLockedPanel {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(8, 30, 35, 0.82);
+}
+
+.capstoneLockedPanel > svg {
+  width: 34px;
+  height: 34px;
+  color: var(--amber);
+}
+
+.capstoneLockedPanel h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.2rem;
+}
+
+.capstoneLockedPanel p {
+  margin: 0 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.capstoneLockedPanel ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.capstoneLockedPanel ul a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(13, 43, 48, 0.72);
+  font-size: 0.85rem;
+}
+
+.capstoneLockedPanel ul a svg {
+  width: 15px;
+  height: 15px;
+  color: var(--cyan-bright);
+}
+
+.capstoneLockedPanel ul a:hover {
+  border-color: rgba(113, 225, 229, 0.5);
+}
+
+@media (max-width: 1020px) {
+  .moduleNav ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hubPathGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .moduleNav ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .frameHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hubUnitHeading {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  .hubUnitHeading > svg {
+    display: none;
+  }
+
+  .capstoneLockedPanel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Staged Practice presentation: hidden-panel gating, brief stage, stage rail
+ * variants, locked-console banner, and debrief next steps.
+ * ------------------------------------------------------------------------- */
+
+.moduleShell [hidden] {
+  display: none !important;
+}
+
+.workflowStepNav[data-stages='5'] {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.workflowStepNav button[data-expanded='true'] {
+  outline: 1px solid rgba(113, 225, 229, 0.55);
+}
+
+.caseBriefStage {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(8, 30, 35, 0.82);
+}
+
+.caseObjectives {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.caseObjectives li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.caseObjectives li svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 0.15rem;
+  color: var(--cyan-bright);
+}
+
+.caseObjectives[data-mastery='true'] li svg {
+  color: var(--green);
+}
+
+.caseObjectivesHidden {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.simulatorLockBanner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(255, 191, 98, 0.5);
+  border-radius: 12px;
+  color: var(--ink);
+  background: rgba(64, 44, 12, 0.55);
+  font-size: 0.85rem;
+}
+
+.simulatorLockBanner svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  color: var(--amber);
+}
+
+.simulatorLockBanner span {
+  flex: 1 1 220px;
+}
+
+.simulatorLockBanner button {
+  padding: 0.35rem 0.8rem;
+  color: var(--navy);
+  border: 0;
+  border-radius: 999px;
+  background: var(--amber);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.debriefNextSteps {
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.debriefLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.debriefLinks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(13, 43, 48, 0.72);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.debriefLinks a svg {
+  width: 15px;
+  height: 15px;
+  color: var(--cyan-bright);
+}
+
+.debriefLinks a:hover {
+  border-color: rgba(113, 225, 229, 0.5);
+}
+
+.hubMasteryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid rgba(118, 214, 155, 0.55);
+  border-radius: 999px;
+  color: var(--green);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+}
+
+.hubMasteryBadge svg {
+  width: 13px;
+  height: 13px;
+}
+
+.hubUnitCount {
+  align-self: start;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.guidedCompletion small {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+}

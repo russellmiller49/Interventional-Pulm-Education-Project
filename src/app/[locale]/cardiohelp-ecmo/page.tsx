@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import CardiohelpEcmoLab from '@/features/cardiohelp-ecmo/components/CardiohelpEcmoLab'
+import { CardiohelpHub } from '@/features/cardiohelp-ecmo/components/CardiohelpHub'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
@@ -30,5 +30,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CardiohelpEcmoPage({ params }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
-  return <CardiohelpEcmoLab locale={locale} />
+  return <CardiohelpHub locale={locale} />
 }

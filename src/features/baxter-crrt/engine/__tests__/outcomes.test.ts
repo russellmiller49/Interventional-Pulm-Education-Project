@@ -111,6 +111,6 @@ describe('CRRT v1 outcomes', () => {
     expect(first).toEqual(second)
     expect(first.outcome.resultIdentity.caseId).toBe('CRRT-04')
     expect(first.causalChain.length).toBeGreaterThan(0)
-    expect(first.machineNavigationPoint).toMatch(/device adapter/i)
+    expect(first.machineNavigationPoint).toMatch(/clinical reasoning.*screen order/i)
   })
 })

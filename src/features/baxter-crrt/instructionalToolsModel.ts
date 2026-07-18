@@ -259,25 +259,25 @@ export function calculateSyntheticTransport(
   const adsorptionIndex = rounded((adsorptiveAffinityLevel * availableBindingSurfaceLevel) / 100)
   const comparisonText =
     diffusionIndex === convectionIndex
-      ? 'The two synthetic indices are equal in this configuration.'
+      ? 'The two relative indices are equal in this configuration.'
       : diffusionIndex > convectionIndex
-        ? 'The diffusion index is higher in this synthetic configuration.'
-        : 'The convection index is higher in this synthetic configuration.'
+        ? 'The diffusion index is higher in this conceptual configuration.'
+        : 'The convection index is higher in this conceptual configuration.'
 
   const moleculeObservation =
     inputs.moleculeClass === 'small-analogue'
-      ? 'Within this authored analogue, the small-molecule label is paired with greater relative diffusive mobility; this is not a prediction for a named solute or membrane.'
-      : 'Within this authored analogue, the middle-molecule label is paired with less relative diffusive mobility; this is not a prediction for a named solute or membrane.'
+      ? 'In this conceptual analogue, the small-molecule label is paired with greater relative diffusive mobility; this is not a prediction for a named solute or membrane.'
+      : 'In this conceptual analogue, the middle-molecule label is paired with less relative diffusive mobility; this is not a prediction for a named solute or membrane.'
   const flowObservation =
     inputs.flowArrangement === 'countercurrent'
-      ? 'In this conceptual path, countercurrent blood and dialysate streams run in opposite directions and the authored concentration difference is sustained along more of the path; no device performance is predicted.'
-      : 'In this conceptual path, concurrent blood and dialysate streams run in the same direction and the authored concentration difference narrows along the path; no device performance is predicted.'
+      ? 'In this conceptual path, countercurrent blood and dialysate streams run in opposite directions and the concentration difference is sustained along more of the path; no device performance is predicted.'
+      : 'In this conceptual path, concurrent blood and dialysate streams run in the same direction and the concentration difference narrows along the path; no device performance is predicted.'
   const adsorptionObservation =
     availableBindingSurfaceLevel === 0 || adsorptiveAffinityLevel === 0
       ? 'The adsorption index is zero because affinity or available binding surface is zero in this configuration.'
       : availableBindingSurfaceLevel < 35
         ? 'The adsorption index is constrained by limited available binding surface in this configuration.'
-        : 'The adsorption index reflects both synthetic binding affinity and available membrane surface; it is not a clearance estimate.'
+        : 'The adsorption index reflects both relative binding affinity and available membrane surface; it is not a clearance estimate.'
 
   return {
     diffusionIndex,
@@ -298,7 +298,7 @@ export function calculateSyntheticTransport(
 export function calculateSyntheticFluidLedger(
   inputs: SyntheticFluidLedgerInputs,
 ): SyntheticFluidLedgerResult {
-  const durationHours = finiteNonnegative(inputs.durationHours, 'Modeled duration')
+  const durationHours = finiteNonnegative(inputs.durationHours, 'Observation interval')
   const externalInputMlHour = finiteNonnegative(inputs.externalInputMlHour, 'External-input rate')
   const externalOutputMlHour = finiteNonnegative(
     inputs.externalOutputMlHour,

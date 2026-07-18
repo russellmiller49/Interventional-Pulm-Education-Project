@@ -9,7 +9,30 @@ import {
 } from '../content/provenance'
 import styles from './baxter-crrt.module.css'
 
-export function SourcesPanel() {
+interface SourcesPanelProps {
+  readonly reviewPreview?: boolean
+}
+
+function learnerEvidenceText(value: string): string {
+  return value
+    .replace('draft educational profile', 'educational profile')
+    .replace('synthetic educational engine signals', 'simulated case values')
+    .replace(
+      'CRRT-04 connects a synthetic model after the gated sequence',
+      'CRRT-04 begins a simulated case after setup and prescription review',
+    )
+    .replace('deferred Prismaflex adapter', 'Prismaflex presentation')
+    .replace('Generic engine alerts', 'Generic training alerts')
+    .replace('the shared adapter', 'a device-specific case view')
+    .replace('by the adapter', 'in this exercise')
+    .replace('The adapter does not invent', 'This exercise does not infer')
+    .replace('an unmapped engine alarm', 'a generic training alert')
+    .replace('synthetic case', 'simulated case')
+    .replace('simulator recommendation', 'treatment recommendation')
+    .replace('Directional model context only', 'Pressure-direction context only')
+}
+
+export function SourcesPanel({ reviewPreview = false }: SourcesPanelProps) {
   const primarySource = baxterCrrtSourceDocuments.find((source) => source.role === 'primary')
   const inactiveSources = baxterCrrtSourceDocuments.filter((source) => source.role !== 'primary')
   const pilotContextSources = baxterCrrtPilotSourceReferences.filter(
@@ -25,32 +48,30 @@ export function SourcesPanel() {
     <section className={styles.sourcesSection} aria-labelledby="baxter-crrt-sources-heading">
       <div className={styles.sectionHeading}>
         <div>
-          <span className={styles.kicker}>Evidence, provenance &amp; limitations</span>
-          <h2 id="baxter-crrt-sources-heading">
-            What this educational module can—and cannot—claim
-          </h2>
+          <span className={styles.kicker}>Evidence &amp; limitations</span>
+          <h2 id="baxter-crrt-sources-heading">What supports this educational module</h2>
         </div>
-        <span className={styles.reviewBadge} data-status={baxterCrrtPublicationStatus}>
-          {baxterCrrtPublicationStatus === 'published'
-            ? 'PUBLISHED'
-            : `${baxterCrrtReleaseStage.toUpperCase()} · PRIVATE`}
-        </span>
+        {reviewPreview ? (
+          <span className={styles.reviewBadge} data-status={baxterCrrtPublicationStatus}>
+            {baxterCrrtPublicationStatus === 'published'
+              ? 'PUBLISHED'
+              : `${baxterCrrtReleaseStage.toUpperCase()} · SME PREVIEW`}
+          </span>
+        ) : null}
       </div>
 
       <div className={styles.scopeBoundary}>
         <FileWarning aria-hidden="true" />
         <div>
           <strong>
-            Device-manual claims, clinical context, and synthetic teaching calibration remain
-            visibly separate.
+            Device-manual facts, clinical evidence, and simulated case values serve different
+            purposes.
           </strong>
           <p>
-            The 18 cases, seven drills, six tools, and capstones are active in this private build.
-            Source and reviewer fields are informational provenance for the final SME pass; missing
-            review metadata does not disable private functionality. Exact case values, scoring,
-            condition bands, coefficients, and critical-error rules are synthetic educational
-            calibration—not patient-specific recommendations, clinical targets, verified device
-            limits, local operating policy, or proof of competency.
+            Device details come from the referenced manuals, and clinical concepts come from the
+            cited literature and guidance. Patient values, responses, scores, and safety flags are
+            simulated for practice; they are not treatment recommendations, verified device limits,
+            local policy, or proof of competency.
           </p>
         </div>
       </div>
@@ -73,63 +94,95 @@ export function SourcesPanel() {
           <dd>{prismaxDeviceProfile.marketConfiguration}</dd>
         </div>
         <div>
-          <dt>Review state</dt>
-          <dd>Final SME feedback open · runtime available</dd>
+          <dt>Educational scope</dt>
+          <dd>Adult ICU CRRT concepts and device-interface practice</dd>
         </div>
       </dl>
 
-      <div className={styles.sourceClaimGrid}>
-        {baxterCrrtSourceRecords.map((record) => (
-          <article key={record.id} className={styles.sourceClaim}>
-            <span>
-              <ShieldCheck aria-hidden="true" /> {record.evidenceClass.replaceAll('-', ' ')}
-            </span>
-            <h3>{record.sourceTitle}</h3>
-            <p className={styles.sourceIdentity}>{record.documentIdentity}</p>
-            <p>
-              <strong>Relevant section:</strong> {record.pageOrSection}
-            </p>
-            <p>{record.claim}</p>
-            <p className={styles.sourceLimitation}>
-              <strong>Boundary:</strong> {record.limitation}
-            </p>
-            <small>
-              Record {record.id} · review {record.reviewStatus}
-            </small>
-          </article>
-        ))}
-      </div>
+      <details className={styles.inactiveSources} open={reviewPreview || undefined}>
+        <summary>
+          <BookOpenCheck aria-hidden="true" /> Detailed evidence and source records
+        </summary>
+        <div className={styles.sourceClaimGrid}>
+          {baxterCrrtSourceRecords.map((record) => (
+            <article key={record.id} className={styles.sourceClaim}>
+              <span>
+                <ShieldCheck aria-hidden="true" /> {record.evidenceClass.replaceAll('-', ' ')}
+              </span>
+              <h3>{record.sourceTitle}</h3>
+              <p className={styles.sourceIdentity}>{record.documentIdentity}</p>
+              <p>
+                <strong>Relevant section:</strong> {record.pageOrSection}
+              </p>
+              <p>{reviewPreview ? record.claim : learnerEvidenceText(record.claim)}</p>
+              <p className={styles.sourceLimitation}>
+                <strong>Boundary:</strong>{' '}
+                {reviewPreview ? record.limitation : learnerEvidenceText(record.limitation)}
+              </p>
+              {reviewPreview ? (
+                <small>
+                  Record {record.id} · review {record.reviewStatus}
+                </small>
+              ) : null}
+            </article>
+          ))}
+        </div>
 
-      <div className={styles.sourceSubheading}>
-        <span className={styles.kicker}>Clinical context and calibration evidence</span>
-        <h3>Clinical context and synthetic calibration</h3>
-        <p>
-          Context sources support the teaching distinction being explored. They do not validate the
-          authored synthetic numbers or define success criteria.
-        </p>
-      </div>
+        <div className={styles.sourceSubheading}>
+          <span className={styles.kicker}>Clinical context and case-value evidence</span>
+          <h3>Clinical context and simulated case values</h3>
+          <p>
+            Context sources support the clinical concepts being taught. They do not turn the
+            simulated values into treatment thresholds or define success for a real patient.
+          </p>
+        </div>
 
-      <div className={styles.sourceClaimGrid}>
-        {pilotContextSources.map((source) => (
-          <article key={source.id} className={styles.sourceClaim}>
-            <span>
-              <ShieldCheck aria-hidden="true" /> {source.sourceType.replaceAll('-', ' ')}
-            </span>
-            <h3>{source.sourceTitle}</h3>
-            <p className={styles.sourceIdentity}>{source.documentVersion}</p>
-            <p>
-              <strong>Relevant section:</strong> {source.pageOrSection}
-            </p>
-            <p>{source.claim}</p>
-            <p className={styles.sourceLimitation}>
-              <strong>Boundary:</strong> {source.value}
-            </p>
-            <small>
-              Record {source.id} · review {source.reviewStatus} · {source.implementationLocation}
-            </small>
-          </article>
-        ))}
-      </div>
+        <div className={styles.sourceClaimGrid}>
+          {pilotContextSources.map((source) => (
+            <article key={source.id} className={styles.sourceClaim}>
+              <span>
+                <ShieldCheck aria-hidden="true" />{' '}
+                {source.sourceType === 'synthetic-calibration'
+                  ? 'simulated case values'
+                  : source.sourceType.replaceAll('-', ' ')}
+              </span>
+              <h3>
+                {!reviewPreview && source.sourceType === 'synthetic-calibration'
+                  ? 'Simulated case values'
+                  : source.sourceTitle}
+              </h3>
+              <p className={styles.sourceIdentity}>{source.documentVersion}</p>
+              <p>
+                <strong>Relevant section:</strong>{' '}
+                {!reviewPreview && source.sourceType === 'synthetic-calibration'
+                  ? `${source.id.replace('SYNTH-', '')} educational case values`
+                  : source.pageOrSection}
+              </p>
+              <p>
+                {!reviewPreview && source.sourceType === 'synthetic-calibration'
+                  ? 'Provides the simulated patient values, treatment settings, timing, and responses used in this exercise.'
+                  : reviewPreview
+                    ? source.claim
+                    : learnerEvidenceText(source.claim)}
+              </p>
+              <p className={styles.sourceLimitation}>
+                <strong>Boundary:</strong>{' '}
+                {!reviewPreview && source.sourceType === 'synthetic-calibration'
+                  ? 'These values are for education and are not clinical targets, alarm limits, device limits, or patient-specific recommendations.'
+                  : reviewPreview
+                    ? source.value
+                    : learnerEvidenceText(String(source.value ?? 'Not specified.'))}
+              </p>
+              {reviewPreview ? (
+                <small>
+                  Record {source.id} · review {source.reviewStatus} ·{' '}
+                  {source.implementationLocation}
+                </small>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      </details>
 
       <details className={styles.inactiveSources}>
         <summary>
@@ -154,18 +207,20 @@ export function SourcesPanel() {
         </div>
       </details>
 
-      <div className={styles.reviewStatusPanel}>
-        <h3>Informational final-SME feedback domains</h3>
-        <ul>
-          {baxterCrrtSmeReviewItems.map((review) => (
-            <li key={review.domain}>
-              <span aria-hidden="true">○</span>
-              <strong>{review.label}</strong>
-              <small>{review.reviewStatus}</small>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {reviewPreview ? (
+        <div className={styles.reviewStatusPanel}>
+          <h3>Final-SME feedback domains</h3>
+          <ul>
+            {baxterCrrtSmeReviewItems.map((review) => (
+              <li key={review.domain}>
+                <span aria-hidden="true">○</span>
+                <strong>{review.label}</strong>
+                <small>{review.reviewStatus}</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </section>
   )
 }

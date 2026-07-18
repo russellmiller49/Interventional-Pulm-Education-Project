@@ -1,3 +1,4 @@
+export const cardiohelpEcmoNavBase = '/cardiohelp-ecmo'
 export const malignantEffusionNavBase = '/pleural-procedures/malignant-effusion'
 export const pleuralFluidAnalysisNavBase = '/pleural-procedures/pleural-fluid-analysis'
 export const pleuralInfectionNavBase = '/pleural-procedures/pleural-infection'

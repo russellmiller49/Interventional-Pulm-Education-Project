@@ -5,7 +5,6 @@ import { useId, useState, type ChangeEvent } from 'react'
 import {
   createSyntheticPressureLocalizationResult,
   isPressureLocalizationCombinationSupported,
-  pressureLocalizationCandidateSourceIds,
   pressureLocalizationFaults,
   pressureLocalizationSignals,
   pressureLocalizationSites,
@@ -231,48 +230,38 @@ export function CrrtPressureLocalizationLab() {
     >
       <header className={styles.header}>
         <div>
-          <span className={styles.kicker}>Instructional tool · synthetic directional model</span>
+          <span className={styles.kicker}>Instructional tool · pressure-pattern reasoning</span>
           <h3 id={`${idPrefix}-heading`}>Pressure Localization Lab</h3>
         </div>
-        <span className={styles.pendingBadge}>Learner tool</span>
+        <span className={styles.pendingBadge}>Practice tool</span>
       </header>
 
       <div className={styles.reviewBoundary} role="note" aria-label="Educational boundary">
-        <strong>Learner-available synthetic localization exercise</strong>
+        <strong>Practice localizing a circuit problem from pressure direction</strong>
         <p>
-          This lab makes no competency claim. All values are arbitrary synthetic fixtures—not a
-          patient model, device operating range, clinical target, or alarm limit. Learner-mode
-          progress may record tool use; the final-SME preview writes nothing.
+          The values are simplified for education. They are not a patient model, device operating
+          range, clinical target, or alarm limit.
         </p>
       </div>
 
-      <aside className={styles.sourceNote} aria-label="Source and limitation records">
-        <strong>Source and limitation records</strong>
-        <p>
-          {pressureLocalizationCandidateSourceIds.map((sourceId, index) => (
-            <span key={sourceId}>
-              {index > 0 ? ', ' : null}
-              <code>{sourceId}</code>
-            </span>
-          ))}
-        </p>
+      <aside className={styles.sourceNote} aria-label="Lab scope">
+        <strong>Scope of this lab</strong>
         <small>
-          These records provide pressure and display-math context only. They do not establish a
-          clinical normal or validate a disconnection pattern. That unresolved expression remains
-          unavailable without blocking the surrounding exercise.
+          The exercise uses manufacturer-referenced pressure relationships to teach direction and
+          localization. It does not establish a clinical normal or validate a disconnection pattern.
         </small>
       </aside>
 
       <p className={styles.intro}>
-        Place one available authored obstruction, predict the direction of every pressure signal,
-        commit the pattern, and then reveal the deterministic synthetic result. Disconnection is
-        visible but unavailable because its source/device expression is unresolved. No alarm
-        priority, automatic device response, or correction sequence is modeled.
+        Choose an obstruction site, predict how each pressure will change, then reveal the pressure
+        pattern. Disconnection is unavailable because a supported disconnection pattern is not
+        included in this exercise. Alarm priority, automatic device response, and troubleshooting
+        steps are outside this lab.
       </p>
 
       <div className={styles.scenarioGrid}>
         <fieldset className={styles.choiceFieldset} disabled={committedPrediction !== null}>
-          <legend>1. Choose a modeled fault</legend>
+          <legend>1. Choose a circuit problem</legend>
           <div className={styles.segmentedChoices}>
             {pressureLocalizationFaults.map((candidate) => {
               const supported = pressureLocalizationSites.some((candidateSite) =>
@@ -293,9 +282,7 @@ export function CrrtPressureLocalizationLab() {
                   />
                   <span>{candidate.label}</span>
                   {!supported ? (
-                    <small id={unavailableId}>
-                      Pattern unavailable because the source/device expression is unresolved
-                    </small>
+                    <small id={unavailableId}>Pattern unavailable in this version of the lab</small>
                   ) : null}
                 </label>
               )
@@ -323,7 +310,7 @@ export function CrrtPressureLocalizationLab() {
                   />
                   <span>{candidate.label}</span>
                   {!supported ? (
-                    <small id={unavailableId}>Pending source and device review</small>
+                    <small id={unavailableId}>Unavailable in this version of the lab</small>
                   ) : null}
                 </label>
               )
@@ -337,7 +324,7 @@ export function CrrtPressureLocalizationLab() {
       <fieldset className={styles.predictionFieldset} disabled={committedPrediction !== null}>
         <legend>3. Predict each signal before reveal</legend>
         <p>
-          Choose a direction relative to the synthetic baseline. “Higher” and “lower” refer only to
+          Choose a direction relative to the starting values. “Higher” and “lower” refer only to
           numeric direction, including for negative values.
         </p>
         <div className={styles.predictionGrid}>
@@ -372,7 +359,7 @@ export function CrrtPressureLocalizationLab() {
           <>
             {!revealed ? (
               <button type="button" onClick={() => setRevealed(true)}>
-                Reveal synthetic pattern
+                Reveal pressure pattern
               </button>
             ) : null}
             <button type="button" className={styles.secondaryButton} onClick={revisePrediction}>
@@ -384,14 +371,14 @@ export function CrrtPressureLocalizationLab() {
 
       {committedPrediction !== null && !revealed ? (
         <p className={styles.commitStatus} role="status">
-          Prediction committed. The synthetic result is still hidden.
+          Prediction submitted. The pressure result is still hidden.
         </p>
       ) : null}
 
       {committedPrediction !== null && revealed ? (
         <section className={styles.resultPanel} aria-labelledby={`${idPrefix}-result-heading`}>
           <header>
-            <span>Synthetic result · no score</span>
+            <span>Practice result · no score</span>
             <h4 id={`${idPrefix}-result-heading`}>
               {result.faultLabel} at {result.siteLabel}
             </h4>
@@ -403,17 +390,17 @@ export function CrrtPressureLocalizationLab() {
           <div
             className={styles.tableRegion}
             role="region"
-            aria-label="Committed prediction and deterministic synthetic result; horizontally scrollable"
+            aria-label="Submitted prediction and pressure result; horizontally scrollable"
             tabIndex={0}
           >
             <table>
-              <caption>Pressure directions relative to the arbitrary synthetic baseline</caption>
+              <caption>Pressure directions relative to the starting values</caption>
               <thead>
                 <tr>
                   <th scope="col">Signal</th>
-                  <th scope="col">Committed prediction</th>
-                  <th scope="col">Synthetic result</th>
-                  <th scope="col">Synthetic trace</th>
+                  <th scope="col">Submitted prediction</th>
+                  <th scope="col">Observed direction</th>
+                  <th scope="col">Pressure trace</th>
                 </tr>
               </thead>
               <tbody>
@@ -433,8 +420,9 @@ export function CrrtPressureLocalizationLab() {
           </div>
 
           <p className={styles.resultBoundary}>
-            The trace demonstrates model directionality only. It provides no clinical normal,
-            threshold, device response, troubleshooting instruction, or patient-specific inference.
+            This trace demonstrates pressure direction only. It does not provide a clinical normal,
+            alarm limit, automatic device response, troubleshooting sequence, or patient-specific
+            conclusion.
           </p>
         </section>
       ) : null}

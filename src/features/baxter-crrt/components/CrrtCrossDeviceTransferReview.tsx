@@ -38,7 +38,7 @@ export function CrrtCrossDeviceTransferReview() {
       </p>
       <ol className={styles.domainList}>
         {baxterCrrtCrossDeviceTransferCapstone.domains.map((domain) => (
-          <li key={domain.id}>
+          <li key={domain.id} data-source-ids={domain.sourceRecordIds.join(' ')}>
             <h3>{domain.sharedClinicalGoal}</h3>
             <dl>
               <div>
@@ -70,7 +70,6 @@ export function CrrtCrossDeviceTransferReview() {
                 </label>
               ))}
             </fieldset>
-            <small>Sources: {domain.sourceRecordIds.join(' · ')}</small>
           </li>
         ))}
       </ol>

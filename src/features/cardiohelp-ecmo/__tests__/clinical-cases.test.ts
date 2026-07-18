@@ -88,6 +88,14 @@ describe('CARDIOHELP clinical Practice registry', () => {
     ).toBe(true)
   })
 
+  it('states exactly three learning objectives per case', () => {
+    for (const scenario of clinicalPracticeScenarios) {
+      const learningObjectives = scenario.clinicalCase?.learningObjectives ?? []
+      expect(learningObjectives).toHaveLength(3)
+      expect(learningObjectives.every((objective) => objective.trim().length > 0)).toBe(true)
+    }
+  })
+
   it('gives every case objective reassessment choices and scored clues', () => {
     for (const scenario of clinicalPracticeScenarios) {
       expect(scenario.reassessment).toBeDefined()

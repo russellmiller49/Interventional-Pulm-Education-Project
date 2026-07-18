@@ -37,7 +37,7 @@ export const prismaxSimulatorHotspots: readonly PrismaxSimulatorHotspot[] = Obje
     label: 'Touchscreen and workflow display',
     shortLabel: 'Touchscreen',
     description:
-      'The interactive screen below carries the manual-reference setup sequence and the synthetic Operations projection.',
+      'The interactive screen below presents the manufacturer-manual setup sequence and the simulated Operations display.',
     xPercent: 50,
     yPercent: 14,
     sourceRecordIds: Object.freeze(['DEV-PM-014'] as const),

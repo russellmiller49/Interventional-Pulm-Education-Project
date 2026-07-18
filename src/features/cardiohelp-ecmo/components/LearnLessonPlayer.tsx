@@ -17,11 +17,15 @@ import {
   Target,
 } from 'lucide-react'
 
+import { cardiohelpLearnLessons, cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import {
-  cardiohelpLearnLessons,
-  cardiohelpLearnLessonByScenarioId,
-  cardiohelpLearnLessonsBySupportMode,
-} from '../content/learnLessons'
+  cardiohelpCurriculum,
+  curriculumUnitById,
+  orderedLessonScenarioIds,
+  pairedCaseIdsForLesson,
+  unitIdByLessonScenarioId,
+} from '../content/curriculum'
+import { clinicalPracticeScenarioById } from '../content/clinicalCases'
 import type {
   ConsoleScreen,
   EcmoSimulationState,
@@ -33,7 +37,7 @@ import type {
 } from '../engine'
 import styles from './cardiohelp-ecmo.module.css'
 
-interface LearnWorkflowProps {
+interface LearnLessonPlayerProps {
   state: EcmoSimulationState
   lesson: GuidedLessonDefinition
   completedLessonIds: ReadonlySet<string>
@@ -251,7 +255,7 @@ export function resolveGuidedLesson(scenarioId: string): GuidedLessonDefinition 
   return cardiohelpLearnLessonByScenarioId.get(scenarioId) ?? cardiohelpLearnLessons[0]
 }
 
-export function LearnWorkflow({
+export function LearnLessonPlayer({
   state,
   lesson,
   completedLessonIds,
@@ -261,7 +265,7 @@ export function LearnWorkflow({
   onTryPractice,
   onTargetChange,
   onControlHelpChange,
-}: LearnWorkflowProps) {
+}: LearnLessonPlayerProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
   const [lessonFinished, setLessonFinished] = useState(false)
@@ -273,10 +277,41 @@ export function LearnWorkflow({
   const simulatorTaskSatisfied = simulatorTask?.satisfied ?? false
   const helpControlId = simulatorTask?.controlId ?? panelControlIds[activeStep.target]
   const helpRequested = helpRequestCount > 0
-  const modeLessons = cardiohelpLearnLessonsBySupportMode[state.supportMode]
+  const trackUnits = cardiohelpCurriculum[state.supportMode]
+  const lessonUnits = useMemo(
+    () => trackUnits.filter((unit) => unit.lessonScenarioIds.length > 0),
+    [trackUnits],
+  )
+  const modeLessons = useMemo(
+    () =>
+      orderedLessonScenarioIds(state.supportMode)
+        .map((scenarioId) => cardiohelpLearnLessonByScenarioId.get(scenarioId))
+        .filter((item): item is GuidedLessonDefinition => Boolean(item)),
+    [state.supportMode],
+  )
   const lessonIndex = modeLessons.findIndex((item) => item.id === lesson.id)
   const nextLesson = modeLessons[lessonIndex + 1]
   const previousLesson = modeLessons[lessonIndex - 1]
+  const activeUnitId = unitIdByLessonScenarioId.get(lesson.scenarioId)
+  const activeUnit = activeUnitId ? curriculumUnitById.get(activeUnitId) : undefined
+  const activeUnitNumber = activeUnit
+    ? trackUnits.findIndex((unit) => unit.id === activeUnit.id) + 1
+    : null
+  const unitCompletedCount = activeUnit
+    ? activeUnit.lessonScenarioIds.filter((scenarioId) => completedLessonIds.has(scenarioId)).length
+    : 0
+  const nextLessonUnitId = nextLesson
+    ? unitIdByLessonScenarioId.get(nextLesson.scenarioId)
+    : undefined
+  const nextLessonUnit =
+    nextLessonUnitId && nextLessonUnitId !== activeUnitId
+      ? curriculumUnitById.get(nextLessonUnitId)
+      : undefined
+  const nextLessonUnitNumber = nextLessonUnit
+    ? trackUnits.findIndex((unit) => unit.id === nextLessonUnit.id) + 1
+    : null
+  const pairedCaseId = pairedCaseIdsForLesson(lesson.scenarioId)[0]
+  const pairedCase = pairedCaseId ? clinicalPracticeScenarioById.get(pairedCaseId) : undefined
   const percentComplete = Math.round((completedStepIds.size / lesson.steps.length) * 100)
 
   const simulatorSnapshot = useMemo(
@@ -375,7 +410,7 @@ export function LearnWorkflow({
   return (
     <aside
       className={styles.learningColumn}
-      aria-label={`Guided CARDIOHELP ${state.supportMode.toUpperCase()} learning walkthrough`}
+      aria-label={`Guided CARDIOHELP ${state.supportMode.toUpperCase()} lesson player`}
     >
       <section className={styles.learnLessonNavigator} aria-labelledby="learn-lessons-heading">
         <div className={styles.learnNavigatorHeading}>
@@ -385,7 +420,7 @@ export function LearnWorkflow({
           </div>
           <span>
             {modeLessons.filter((item) => completedLessonIds.has(item.scenarioId)).length}/
-            {modeLessons.length} this session
+            {modeLessons.length} completed
           </span>
         </div>
         <label>
@@ -394,12 +429,26 @@ export function LearnWorkflow({
             value={lesson.scenarioId}
             onChange={(event) => onSelectLesson(event.target.value)}
           >
-            {modeLessons.map((item, index) => (
-              <option key={item.id} value={item.scenarioId}>
-                {index + 1}. {item.title}
-                {completedLessonIds.has(item.scenarioId) ? ' · reviewed' : ''}
-              </option>
-            ))}
+            {lessonUnits.map((unit) => {
+              const unitNumber = trackUnits.findIndex((item) => item.id === unit.id) + 1
+              return (
+                <optgroup key={unit.id} label={`Unit ${unitNumber} · ${unit.title}`}>
+                  {unit.lessonScenarioIds.map((scenarioId) => {
+                    const item = cardiohelpLearnLessonByScenarioId.get(scenarioId)
+                    if (!item) return null
+                    const globalIndex = modeLessons.findIndex(
+                      (candidate) => candidate.scenarioId === scenarioId,
+                    )
+                    return (
+                      <option key={item.id} value={item.scenarioId}>
+                        {globalIndex + 1}. {item.title}
+                        {completedLessonIds.has(item.scenarioId) ? ' · completed' : ''}
+                      </option>
+                    )
+                  })}
+                </optgroup>
+              )
+            })}
           </select>
         </label>
         <div className={styles.lessonNavActions}>
@@ -423,7 +472,10 @@ export function LearnWorkflow({
       <section className={styles.guidedLessonHeader}>
         <div className={styles.guidedLessonEyebrow}>
           <GraduationCap aria-hidden="true" />
-          Lesson {lessonIndex + 1} of {modeLessons.length} · unscored walkthrough
+          {activeUnit && activeUnitNumber
+            ? `Unit ${activeUnitNumber} · ${activeUnit.title} — `
+            : ''}
+          Lesson {lessonIndex + 1} of {modeLessons.length} · unscored
         </div>
         <h2>{lesson.title}</h2>
         <ul>
@@ -434,7 +486,7 @@ export function LearnWorkflow({
           ))}
         </ul>
         <div className={styles.learnProgress}>
-          <span>Walkthrough progress</span>
+          <span>Lesson progress</span>
           <strong>{percentComplete}%</strong>
           <div
             role="progressbar"
@@ -447,7 +499,7 @@ export function LearnWorkflow({
         </div>
       </section>
 
-      <nav className={styles.guidedStepper} aria-label="Walkthrough steps">
+      <nav className={styles.guidedStepper} aria-label="Lesson steps">
         <ol>
           {lesson.steps.map((item, index) => {
             const complete = completedStepIds.has(item.id)
@@ -614,7 +666,7 @@ export function LearnWorkflow({
             </button>
           ) : null}
           <button type="button" onClick={restartLesson}>
-            <RotateCcw aria-hidden="true" /> Restart walkthrough
+            <RotateCcw aria-hidden="true" /> Restart lesson
           </button>
         </div>
       </section>
@@ -623,18 +675,29 @@ export function LearnWorkflow({
         <section className={styles.guidedCompletion} role="status" aria-live="polite">
           <ListChecks aria-hidden="true" />
           <div>
-            <h3>Walkthrough complete</h3>
+            <h3>Lesson complete</h3>
             <p>
-              The reasoning sequence has been demonstrated. Practice reloads this round from a clean
-              state and removes the step-by-step answer cues.
+              {pairedCase
+                ? 'The reasoning sequence has been demonstrated. Apply it to the paired clinical case in Practice—scored, from a clean state, with no step-by-step cues.'
+                : 'The reasoning sequence has been demonstrated. Continue to the next lesson to keep building the track.'}
             </p>
+            {activeUnit ? (
+              <small>
+                Unit {activeUnitNumber} · {activeUnit.title}: {unitCompletedCount}/
+                {activeUnit.lessonScenarioIds.length} lessons complete
+              </small>
+            ) : null}
             <div>
-              <button type="button" onClick={() => onTryPractice(lesson.scenarioId)}>
-                Try this round in Practice <ArrowRight aria-hidden="true" />
-              </button>
+              {pairedCase ? (
+                <button type="button" onClick={() => onTryPractice(pairedCase.id)}>
+                  Apply this in Practice: {pairedCase.title} <ArrowRight aria-hidden="true" />
+                </button>
+              ) : null}
               {nextLesson ? (
                 <button type="button" onClick={() => onSelectLesson(nextLesson.scenarioId)}>
-                  Continue to next lesson
+                  {nextLessonUnit && nextLessonUnitNumber
+                    ? `Next: Unit ${nextLessonUnitNumber} · ${nextLessonUnit.title}`
+                    : 'Continue to next lesson'}
                 </button>
               ) : null}
             </div>

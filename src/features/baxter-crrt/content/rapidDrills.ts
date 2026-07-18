@@ -57,13 +57,13 @@ const seeds: readonly DrillSeed[] = [
     id: 'DRILL-AIR',
     title: 'Air detection',
     engineFaultIds: ['air-detected'],
-    openingSignal: 'A synthetic air-detection condition interrupts therapy.',
-    safeLabel: 'Assess the patient and inspect the return-path safety domain',
+    openingSignal: 'An air-detection signal interrupts the simulated treatment.',
+    safeLabel: 'Assess the patient and inspect the return line, detector, clamp, and circuit',
     alternativeLabel: 'Keep therapy stopped and escalate when the cause cannot be verified',
     unsafeLabel: 'Acknowledge the signal and continue without inspection',
     inspectionDomain: 'patient, return line, detector, clamp, and visible circuit',
     correctionBoundary:
-      'Verify correction or escalation without teaching an air-removal or restart procedure.',
+      'This drill does not teach air removal or restart. Use current device instructions and local policy.',
     reassessmentDomain: 'patient safety, circuit state, delivery, interruption, and recurrence',
     sourceRecordIds: ['DEV-PM-008', 'SYNTH-DRILL-AIR-001'],
   },
@@ -71,7 +71,7 @@ const seeds: readonly DrillSeed[] = [
     id: 'DRILL-BLOOD-LEAK',
     title: 'Blood-leak detection',
     engineFaultIds: ['blood-leak-detected'],
-    openingSignal: 'A synthetic blood-leak detection condition produces a safety stop.',
+    openingSignal: 'A blood-leak detection signal produces a safety stop.',
     safeLabel: 'Assess the patient and inspect the filter, effluent, detector, and circuit',
     alternativeLabel: 'Maintain the safety stop and escalate when the signal remains unresolved',
     unsafeLabel: 'Reset repeatedly until the message disappears',
@@ -86,12 +86,13 @@ const seeds: readonly DrillSeed[] = [
     title: 'Fluid gain or loss',
     engineFaultIds: ['fluid-gain-loss'],
     openingSignal:
-      'A synthetic device-fluid variance appears while whole-patient balance remains a separate ledger.',
+      'A device-fluid variance appears while whole-patient fluid balance remains a separate calculation.',
     safeLabel: 'Separate device variance from the complete patient fluid ledger',
     alternativeLabel: 'Pause delivery and escalate while preserving both ledgers',
     unsafeLabel: 'Treat the device signal as the whole-patient balance',
     inspectionDomain: 'pumps, scales, bags, lines, device variance, and patient inputs/outputs',
-    correctionBoundary: 'No override count, catch-up behavior, or local restart rule is supplied.',
+    correctionBoundary:
+      'Override limits, catch-up behavior, and restart steps depend on the device and local policy.',
     reassessmentDomain: 'device variance, patient balance, delivery, downtime, and recurrence',
     sourceRecordIds: ['DEV-PM-012', 'SYNTH-DRILL-GAIN-LOSS-001'],
   },
@@ -99,13 +100,14 @@ const seeds: readonly DrillSeed[] = [
     id: 'DRILL-BAG-SCALE',
     title: 'Bag or scale error',
     engineFaultIds: ['supply-bag-empty', 'effluent-bag-full', 'scale-open'],
-    openingSignal: 'A synthetic bag/scale topology condition interrupts fluid delivery.',
+    openingSignal: 'A bag or scale problem interrupts fluid delivery.',
     safeLabel: 'Verify bag identity, line path, scale position, connection, and measured state',
-    alternativeLabel: 'Keep the workflow paused and escalate an unavailable local expression',
+    alternativeLabel:
+      'Keep treatment paused and escalate when the correct bag or scale state cannot be verified',
     unsafeLabel: 'Swap any bag and restart without verification',
     inspectionDomain: 'selected bag, connected line, assigned scale, clamp, and neighboring bags',
     correctionBoundary:
-      'Use generic teaching labels; never invent a stocked solution, set, or local assignment.',
+      'Confirm the bag, line, and scale assignment using current device instructions and local policy before resuming.',
     reassessmentDomain: 'bag/scale topology, fluid delivery, variance, and recurrence',
     sourceRecordIds: ['DEV-PM-013', 'SYNTH-DRILL-BAG-SCALE-001'],
   },
@@ -113,9 +115,10 @@ const seeds: readonly DrillSeed[] = [
     id: 'DRILL-POWER',
     title: 'Power interruption',
     engineFaultIds: ['power-interruption'],
-    openingSignal: 'A synthetic power interruption pauses delivery.',
+    openingSignal: 'A power interruption pauses treatment delivery.',
     safeLabel: 'Assess patient, power, device state, circuit, downtime, and delivery',
-    alternativeLabel: 'Maintain the paused state and escalate incomplete recovery information',
+    alternativeLabel:
+      'Keep treatment paused and escalate if safe recovery steps cannot be verified',
     unsafeLabel: 'Resume immediately because power is visible',
     inspectionDomain: 'patient, power source, device state, circuit, downtime, and messages',
     correctionBoundary:
@@ -128,14 +131,14 @@ const seeds: readonly DrillSeed[] = [
     title: 'Wrong solution verification',
     engineFaultIds: [],
     openingSignal:
-      'An independent check finds that a solution label does not match the authored plan.',
+      'An independent check finds that a solution label does not match the treatment plan.',
     safeLabel: 'Stop, isolate the mismatch, verify the order and labels, and escalate',
     alternativeLabel: 'Keep therapy paused until an authorized local verification is available',
     unsafeLabel: 'Assume similar packaging means the solution is interchangeable',
     inspectionDomain:
       'order, bag label, line destination, set compatibility, and independent check',
     correctionBoundary:
-      'Never invent a commercial solution substitution or local mismatch procedure.',
+      'Follow the local mismatch procedure; this drill does not recommend a substitute solution.',
     reassessmentDomain:
       'patient, exposure history, verified configuration, communication, and follow-up',
     sourceRecordIds: ['DEV-PM-013', 'GUID-RRT-ICU-2026'],
@@ -145,7 +148,7 @@ const seeds: readonly DrillSeed[] = [
     title: 'Blood-disposition decision',
     engineFaultIds: [],
     openingSignal:
-      'A synthetic end-treatment state requires a blood-disposition decision with incomplete context.',
+      'An end-of-treatment scenario requires a blood-disposition decision with incomplete context.',
     safeLabel:
       'Stop, verify patient/circuit context, and escalate to device instructions and local policy',
     alternativeLabel:
@@ -184,7 +187,8 @@ function freezeDrill(seed: DrillSeed): CrrtRapidDrillDefinition {
         id: `${prefix}-unsafe`,
         disposition: 'unsafe' as const,
         label: seed.unsafeLabel,
-        description: 'Unsafe path retained for immediate feedback and causal debrief.',
+        description:
+          'Unsafe because it bypasses assessment or verification and may delay correction of the cause.',
       }),
     ]),
     candidateCauseOptionId: `${prefix}-safe`,
@@ -193,7 +197,7 @@ function freezeDrill(seed: DrillSeed): CrrtRapidDrillDefinition {
     criticalErrorCandidate:
       'Continuing or making a disposition decision without required patient assessment, verification, and escalation.',
     deviceResponseBoundary:
-      'Use the selected device adapter for vocabulary and display behavior; exact local actions remain governed by device instructions and local policy.',
+      'Device wording and screen presentation may differ. Follow current device instructions and local policy for exact actions.',
     sourceRecordIds: Object.freeze([...seed.sourceRecordIds]),
     engineFaultIds: Object.freeze([...seed.engineFaultIds]),
     reviewStatus: 'pending' as const,

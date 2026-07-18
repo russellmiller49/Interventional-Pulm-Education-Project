@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
 import { CrrtPressureLocalizationLab } from '../components/CrrtPressureLocalizationLab'
-import { pressureLocalizationCandidateSourceIds } from '../pressureLocalizationLabModel'
 
 function chooseEveryPrediction(direction: 'Lower' | 'Unchanged' | 'Higher') {
   for (const signal of [
@@ -33,18 +32,11 @@ describe('learner Pressure Localization Lab UI', () => {
     expect(lab).toHaveAttribute('data-progress-write', 'learner-mode-only')
     expect(lab).toHaveAttribute('data-persistence', 'learner-mode-only')
     expect(within(lab).getByRole('note', { name: 'Educational boundary' })).toHaveTextContent(
-      'Learner-available synthetic localization exercise',
+      'Practice localizing a circuit problem from pressure direction',
     )
-    expect(
-      within(lab).getByText(/no alarm priority, automatic device response/i),
-    ).toBeInTheDocument()
-    expect(within(lab).getByLabelText('Source and limitation records')).toHaveTextContent(
-      'Source and limitation records',
-    )
-    for (const sourceId of pressureLocalizationCandidateSourceIds) {
-      expect(within(lab).getByText(sourceId)).toBeVisible()
-    }
-    expect(within(lab).getByText(/unresolved expression remains unavailable/i)).toBeVisible()
+    expect(within(lab).getByText(/alarm priority, automatic device response/i)).toBeInTheDocument()
+    expect(within(lab).getByLabelText('Lab scope')).toHaveTextContent('Scope of this lab')
+    expect(within(lab).getByText(/does not establish a clinical normal/i)).toBeVisible()
     expect(lab.querySelector('form')).not.toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })
@@ -75,11 +67,9 @@ describe('learner Pressure Localization Lab UI', () => {
     const disconnection = screen.getByRole('radio', { name: /^Disconnection/i })
     expect(disconnection).toBeDisabled()
     expect(disconnection).toHaveAccessibleDescription(
-      'Pattern unavailable because the source/device expression is unresolved',
+      'Pattern unavailable in this version of the lab',
     )
-    expect(
-      screen.getByText('Pattern unavailable because the source/device expression is unresolved'),
-    ).toBeVisible()
+    expect(screen.getByText('Pattern unavailable in this version of the lab')).toBeVisible()
     expect(screen.getByRole('radio', { name: 'Access catheter' })).toBeEnabled()
     expect(screen.getByRole('radio', { name: 'Access line' })).toBeEnabled()
     expect(screen.getByRole('radio', { name: 'Filter' })).toBeEnabled()
@@ -99,32 +89,30 @@ describe('learner Pressure Localization Lab UI', () => {
     fireEvent.click(commitButton)
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Prediction committed. The synthetic result is still hidden.',
+      'Prediction submitted. The pressure result is still hidden.',
     )
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reveal synthetic pattern' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Reveal pressure pattern' })).toBeEnabled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reveal synthetic pattern' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal pressure pattern' }))
 
     const table = screen.getByRole('table', {
-      name: 'Pressure directions relative to the arbitrary synthetic baseline',
+      name: 'Pressure directions relative to the starting values',
     })
     expect(table).toBeInTheDocument()
     expect(within(table).getAllByRole('row')).toHaveLength(7)
     expect(
       within(table).getByRole('row', { name: /Access pressure Unchanged Lower/i }),
     ).toHaveTextContent('-15 mmHg → -35 mmHg')
-    expect(
-      screen.getByText(/provides no clinical normal, threshold, device response/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/does not provide a clinical normal, alarm limit/i)).toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
   })
 
-  it('hides the result again when the reviewer revises the prediction', () => {
+  it('hides the result again when the learner revises the prediction', () => {
     render(<CrrtPressureLocalizationLab />)
     chooseEveryPrediction('Higher')
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Reveal synthetic pattern' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal pressure pattern' }))
     expect(screen.getByRole('table')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Revise prediction' }))

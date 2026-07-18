@@ -128,6 +128,11 @@ const vvInitiationCase: ClinicalCaseDefinition = {
     'Despite optimized conventional support, oxygenation and ventilation are worsening. The multidisciplinary ECMO team has selected femoral-femoral VV support and supplied case-specific initiation orders.',
   decisionPrompt:
     'Complete readiness checks, configure the ordered console and gas settings, then initiate support and reassess gas exchange.',
+  learningObjectives: [
+    'Verify circuit, sensors, gas, power, and team readiness with a tip-to-tip check before connecting VV support.',
+    'Configure the ordered RPM, sweep, and gas FiO₂ before establishing forward flow.',
+    'Judge initiation success from patient oxygenation, PaCO₂/pH, and circuit behavior rather than displayed flow alone.',
+  ],
   initialSupportStatus: 'not-on-ecmo',
   initialTrajectory: 'critical',
   data: [
@@ -194,6 +199,11 @@ const vaInitiationCase: ClinicalCaseDefinition = {
     'MAP remains critically low despite conventional resuscitation, lactate is rising, and the shock team has selected peripheral femoral VA support with case-specific initiation orders.',
   decisionPrompt:
     'Complete readiness checks, configure the ordered support, start VA ECMO, and verify both perfusion and upper-body oxygenation.',
+  learningObjectives: [
+    'Complete VA readiness verification, including the distal-limb perfusion plan, before connecting support.',
+    'Establish the ordered VA flow and confirm restored perfusion with MAP, lactate, and urine output.',
+    'Reassess mode-specific risks after initiation: upper-body oxygenation, pulsatility, and the cannulated limb.',
+  ],
   initialSupportStatus: 'not-on-ecmo',
   initialTrajectory: 'critical',
   data: [
@@ -333,6 +343,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Flow falls despite increasing pump demand. pVen becomes progressively negative, the drainage line chatters, CVP is low, and hemoglobin has fallen from 9.4 to 6.8 g/dL.',
       decisionPrompt:
         'Stabilize drainage while finding and controlling the source of blood loss. A temporary response is not the same as definitive treatment.',
+      learningObjectives: [
+        'Recognize drainage insufficiency from falling flow, progressively negative pVen, and line chatter.',
+        'Distinguish hemorrhagic hypovolemia from circuit causes using CVP, the hemoglobin trend, and a structured bleeding search.',
+        'Sequence reduced pump demand and hemostatic resuscitation ahead of definitive source control instead of escalating RPM.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
       data: [
@@ -493,6 +508,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'The patient becomes hypotensive as flow falls and the drainage line chatters. CVP rises to 18 mmHg, peak airway pressure rises, and right-sided lung sliding is absent.',
       decisionPrompt:
         'Treat the obstructive patient-level cause rather than repeatedly manipulating the circuit.',
+      learningObjectives: [
+        'Recognize the obstructive pattern of high CVP with negative pVen, falling flow, and hypotension.',
+        'Integrate lung ultrasound and airway pressures to identify tension pneumothorax on VV support.',
+        'Prioritize immediate pleural decompression over volume, vasopressors, or circuit manipulation.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
       data: [
@@ -608,6 +628,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'SpO₂ falls from 90% to 78%. Flow remains 4.5 L/min and post-oxygenator oxygenation is excellent. Drainage blood appears brighter, and increasing RPM makes systemic saturation worse.',
       decisionPrompt:
         'Differentiate recirculation from membrane-lung failure and correct the cannula relationship.',
+      learningObjectives: [
+        'Differentiate recirculation from membrane-lung failure using patient, pre-, and post-oxygenator gases.',
+        'Explain why displayed flow overestimates effective support when the recirculated fraction rises.',
+        'Correct the cannula relationship under imaging guidance instead of escalating RPM, then reassess effective support.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
       data: [
@@ -731,6 +756,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'PaCO₂ rises from 42 to 88 mmHg and pH falls to 7.12 while RPM, flow, and circuit pressures remain unchanged. SpO₂ initially remains near baseline.',
       decisionPrompt:
         'Find the gas-side failure, restore gas transfer, and avoid confusing sweep with blood flow.',
+      learningObjectives: [
+        'Recognize rapid hypercapnia with unchanged flow and circuit pressures as a gas-side failure.',
+        'Trace the complete sweep pathway from source to oxygenator inlet before changing blood flow.',
+        'Restore and independently verify gas delivery, then trend PaCO₂ and pH through a controlled recovery.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
       data: [
@@ -867,6 +897,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'The pressure gradient rises, flow becomes constrained, visible fibrin appears, and post-oxygenator oxygenation falls while hemolysis markers increase.',
       decisionPrompt:
         'Confirm membrane-lung dysfunction, protect the patient, and prepare definitive component exchange.',
+      learningObjectives: [
+        'Recognize oxygenator thrombosis from the rising pressure gradient, visible fibrin, hemolysis markers, and failing post-oxygenator gas transfer.',
+        'Explain why RPM escalation against a resistant membrane lung adds hemolysis risk without restoring support.',
+        'Mobilize the exchange team early and execute the reviewed component-exchange pathway.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
       data: [
@@ -1049,6 +1084,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'Pulse pressure increases as native LV ejection recovers, but severe lung dysfunction persists. Femoral oxygenation is excellent while right-hand SpO₂ falls to 78%.',
       decisionPrompt:
         'Recognize mixed-circulation mismatch and protect cerebral and coronary oxygen delivery.',
+      learningObjectives: [
+        'Recognize differential hypoxemia when recovering LV ejection coexists with severe lung dysfunction on peripheral VA support.',
+        'Monitor upper-body oxygenation with right-radial and cerebral data instead of relying on femoral samples.',
+        'Optimize native-lung gas exchange and escalate the support configuration when upper-body hypoxemia persists.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
       data: [
@@ -1183,6 +1223,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'VA flow falls as pVen becomes negative. CVP rises, MAP falls, and mediastinal-drain output abruptly decreases despite ongoing bleeding concern.',
       decisionPrompt:
         'Recognize obstructive cardiac physiology and activate definitive decompression.',
+      learningObjectives: [
+        'Recognize postcardiotomy tamponade from low flow, negative pVen, high CVP, and abruptly decreased drain output.',
+        'Explain why volume and vasopressors only temporize a mechanical obstruction to cardiac filling.',
+        'Use focused echocardiography without delaying activation of the surgical decompression pathway.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
       data: [
@@ -1294,6 +1339,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'EF has recovered to about 45%, the aortic valve opens each beat, pulse pressure is 25 mmHg, and VA flow is 4.5 L/min. MAP remains 50–55 mmHg with warm extremities and rising lactate.',
       decisionPrompt:
         'Distinguish vasoplegia from inadequate ECMO flow and treat vascular tone and the underlying septic process.',
+      learningObjectives: [
+        'Distinguish persistent vasoplegia from inadequate circuit flow after native cardiac recovery.',
+        'Explain why RPM escalation can create drainage collapse without correcting distributive shock.',
+        'Treat vascular tone and the underlying septic process while trending MAP, lactate, and perfusion endpoints.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
       data: [
@@ -1424,6 +1474,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'MAP, flow, and oxygenator function are adequate, but the cannulated leg becomes cool and mottled and unilateral limb NIRS falls.',
       decisionPrompt:
         'Recognize a regional perfusion emergency and restore distal flow without changing a functioning circuit blindly.',
+      learningObjectives: [
+        'Recognize cannulated-limb ischemia despite adequate global VA flow, MAP, and oxygenator function.',
+        'Compare bilateral limb NIRS, examination, and Doppler signals and assess the distal-perfusion catheter.',
+        'Activate urgent vascular rescue to restore distal flow without blind changes to a functioning circuit.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'deteriorating',
       data: [
@@ -1533,6 +1588,11 @@ export const clinicalPracticeScenarios: readonly ScenarioDefinition[] = [
         'The oxygenator gradient rises, post-oxygenator performance falls, and flow becomes constrained at the same RPM while MAP and right-arm oxygenation decline.',
       decisionPrompt:
         'Confirm the failing component and execute the reviewed exchange pathway before systemic support collapses.',
+      learningObjectives: [
+        'Recognize failing membrane function on VA support as an immediate threat to systemic perfusion.',
+        'Prepare backup circulation and a primed replacement circuit before beginning the exchange.',
+        'Execute the reviewed exchange pathway and reassess MAP, flow, pressures, and oxygenation.',
+      ],
       initialSupportStatus: 'on-ecmo',
       initialTrajectory: 'critical',
       data: [
@@ -1690,6 +1750,13 @@ export function validateClinicalPracticeRegistry(): string[] {
     }
     if ((definition.hints?.length ?? 0) < 2) {
       errors.push(`${definition.id}: requires at least two scored clues`)
+    }
+    const learningObjectives = definition.clinicalCase?.learningObjectives ?? []
+    if (
+      learningObjectives.length !== 3 ||
+      learningObjectives.some((objective) => !objective.trim())
+    ) {
+      errors.push(`${definition.id}: requires exactly three learning objectives`)
     }
     for (const hint of definition.hints ?? []) {
       if (hint.penalty <= 0) errors.push(`${definition.id}: clue penalties must be positive`)

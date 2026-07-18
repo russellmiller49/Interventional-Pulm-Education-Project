@@ -51,16 +51,26 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/journal-club-podcasts')).toBe('journal-club-podcasts')
   })
 
-  it('keeps the CARDIOHELP ECMO lab public but unlisted and resolves aggregate analytics', () => {
+  it('keeps the CARDIOHELP ECMO module and its subroutes public but unlisted with one analytics id', () => {
     expect(isPublicPath('/cardiohelp-ecmo')).toBe(true)
     expect(isPublicPath('/es/cardiohelp-ecmo')).toBe(true)
     expect(isPublicPath('/zh-CN/cardiohelp-ecmo')).toBe(true)
+    expect(isPublicPath('/cardiohelp-ecmo/learn')).toBe(true)
+    expect(isPublicPath('/es/cardiohelp-ecmo/practice')).toBe(true)
     expect(isPublicUnlistedPath('/cardiohelp-ecmo')).toBe(true)
     expect(isPublicUnlistedPath('/es/cardiohelp-ecmo')).toBe(true)
-    expect(isPublicUnlistedPath('/cardiohelp-ecmo/extra')).toBe(false)
+    // Subroutes intentionally inherit the parent's public-unlisted treatment.
+    expect(isPublicUnlistedPath('/cardiohelp-ecmo/learn')).toBe(true)
+    expect(isPublicUnlistedPath('/cardiohelp-ecmo/assess')).toBe(true)
+    expect(isPublicUnlistedPath('/zh-CN/cardiohelp-ecmo/practice')).toBe(true)
+    // Other unlisted modules stay exact-match only.
+    expect(isPublicUnlistedPath('/mechanical-ventilation/extra')).toBe(false)
     expect(getRequiredEntitlement('/cardiohelp-ecmo', params())).toBeNull()
+    expect(getRequiredEntitlement('/cardiohelp-ecmo/learn', params())).toBeNull()
     expect(resolveSiteModuleId('/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
     expect(resolveSiteModuleId('/zh-CN/cardiohelp-ecmo')).toBe('cardiohelp-ecmo')
+    expect(resolveSiteModuleId('/cardiohelp-ecmo/learn')).toBe('cardiohelp-ecmo')
+    expect(resolveSiteModuleId('/es/cardiohelp-ecmo/practice')).toBe('cardiohelp-ecmo')
   })
 
   it('keeps the mechanical ventilation tester route public but unlisted and resolves both URLs to one module', () => {

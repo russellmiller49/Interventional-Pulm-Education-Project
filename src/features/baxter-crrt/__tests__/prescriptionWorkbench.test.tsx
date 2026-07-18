@@ -158,7 +158,7 @@ describe('learner prescription workbench UI', () => {
     expect(workbench).toHaveAttribute('data-competency', 'none')
     expect(
       within(workbench).getByRole('note', { name: 'Educational calculation boundary' }),
-    ).toHaveTextContent(/learner-available.*not for patient care/i)
+    ).toHaveTextContent(/calculation practice.*not for patient care/i)
     expect(window.localStorage).toHaveLength(0)
   })
 
@@ -173,16 +173,18 @@ describe('learner prescription workbench UI', () => {
     expect(within(anticoagulation).getByRole('option', { name: /Systemic/ })).toBeDisabled()
     expect(within(anticoagulation).getByRole('option', { name: /Regional citrate/ })).toBeDisabled()
 
-    const solution = screen.getByRole('combobox', { name: 'Versioned solution profile' })
+    const solution = screen.getByRole('combobox', { name: 'Locally verified solution profile' })
     expect(solution).toBeDisabled()
-    expect(solution).toHaveTextContent(/no local registry loaded/i)
+    expect(solution).toHaveTextContent(/no site profile loaded/i)
     expect(solution).toHaveAccessibleDescription(
       'No composition, bag assignment, compatibility, or local stock is inferred.',
     )
 
     expect(
       screen.getByRole('combobox', { name: 'Entered stream for division' }),
-    ).toHaveAccessibleDescription('Capacity ÷ selected entered rate only; no scale or alarm model.')
+    ).toHaveAccessibleDescription(
+      'Capacity ÷ selected entered rate only; this does not predict scale or alarm behavior.',
+    )
   })
 
   it('renders source-linked arithmetic while keeping disputed outputs visibly unavailable', () => {
@@ -192,10 +194,12 @@ describe('learner prescription workbench UI', () => {
     expect(screen.getByText('30 mL/kg/h')).toBeInTheDocument()
     expect(screen.getByText('4,200 mL/h')).toBeInTheDocument()
     expect(screen.getByText('48 L/day')).toBeInTheDocument()
-    expect(screen.getAllByText('Unavailable · source-limited')).toHaveLength(4)
-    expect(screen.getByText('Source records: MATH-PM-004')).toBeInTheDocument()
-    expect(screen.getByText(/Source records: MATH-PM-003 \+ MATH-PM-006/)).toBeInTheDocument()
-    expect(screen.getByText(/Source records: FLUID-PM-001 \+ FLUID-PM-002/)).toBeInTheDocument()
+    expect(screen.getAllByText('Unavailable in this workbench')).toHaveLength(4)
+    expect(screen.getByText(/do not support estimating effective clearance/i)).toBeInTheDocument()
+    expect(screen.getByText(/pre-infusion circuit-flow term is not available/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/whole-patient balance also requires patient inputs/i),
+    ).toBeInTheDocument()
     expect(screen.getByText(/No target range and no delivered-dose/i)).toBeInTheDocument()
     expect(screen.getByText('Aggregate source-pump/bag throughput')).toBeInTheDocument()
     expect(
@@ -236,21 +240,19 @@ describe('learner prescription workbench UI', () => {
   it('keeps invalid raw text and makes every calculated output visibly unavailable', () => {
     render(<CrrtPhase7PrescriptionWorkbench />)
 
-    const weight = screen.getByRole('spinbutton', { name: /^Simulated weight/ })
+    const weight = screen.getByRole('spinbutton', { name: /^Example weight/ })
     fireEvent.change(weight, { target: { value: '' } })
 
     expect(weight).toHaveValue(null)
     expect(weight).toHaveAttribute('aria-invalid', 'true')
-    expect(weight).toHaveAccessibleDescription(/simulated weight is required/i)
+    expect(weight).toHaveAccessibleDescription(/example weight is required/i)
     expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
     expect(screen.queryByText('2,100 mL/h')).not.toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent(
-      /all calculated outputs are unavailable.*simulated weight/i,
+      /all calculated outputs are unavailable.*example weight/i,
     )
     expect(
-      screen.getByText(
-        /correct every invalid entry before viewing the authored qualitative proxies/i,
-      ),
+      screen.getByText(/correct every invalid entry before viewing the qualitative comparison/i),
     ).toBeInTheDocument()
     expect(screen.getByText('Unavailable — correct every invalid entry.')).toBeInTheDocument()
 
@@ -264,14 +266,14 @@ describe('learner prescription workbench UI', () => {
   it('fails all calculated outputs closed for an invalid optional capacity', () => {
     render(<CrrtPhase7PrescriptionWorkbench />)
 
-    const capacity = screen.getByRole('spinbutton', { name: /^Synthetic reference capacity/ })
+    const capacity = screen.getByRole('spinbutton', { name: /^Practice bag capacity/ })
     fireEvent.change(capacity, { target: { value: '-1' } })
 
     expect(capacity).toHaveValue(-1)
     expect(capacity).toHaveAttribute('aria-invalid', 'true')
     expect(capacity).toHaveAccessibleDescription(/must be greater than zero/i)
     expect(screen.getAllByText('Unavailable — correct entries')).toHaveLength(6)
-    expect(screen.getByRole('status')).toHaveTextContent(/synthetic reference capacity/i)
+    expect(screen.getByRole('status')).toHaveTextContent(/practice bag capacity/i)
   })
 
   it('fails closed when individually finite entries overflow a derived calculation', () => {
@@ -286,13 +288,13 @@ describe('learner prescription workbench UI', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/exceeds a finite calculation boundary/i)
   })
 
-  it('withholds bag duration until a positive synthetic capacity is entered', () => {
+  it('withholds bag duration until a positive practice capacity is entered', () => {
     render(<CrrtPhase7PrescriptionWorkbench />)
 
     expect(
-      screen.getByText(/No result — enter an optional synthetic reference capacity/i),
+      screen.getByText(/No result — enter an optional practice bag capacity/i),
     ).toBeInTheDocument()
-    fireEvent.change(screen.getByRole('spinbutton', { name: /^Synthetic reference capacity/ }), {
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Practice bag capacity/ }), {
       target: { value: '5000' },
     })
 

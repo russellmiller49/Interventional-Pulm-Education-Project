@@ -7,7 +7,9 @@ describe('learning module route bases', () => {
   it('exports route strings for templated module overview pages', () => {
     for (const [key, route] of Object.entries(moduleRoutes)) {
       expect(key).toMatch(/NavBase$/)
-      expect(route).toMatch(/^\/(pleural-procedures|rigid-bronchoscopy|tracheostomy)/)
+      expect(route).toMatch(
+        /^\/(cardiohelp-ecmo|pleural-procedures|rigid-bronchoscopy|tracheostomy)/,
+      )
       expect(route).not.toContain('function')
     }
   })

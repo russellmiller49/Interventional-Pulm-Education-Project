@@ -79,7 +79,7 @@ const prescriptionFields = [
     field: 'dialysateFlowMlHour',
     label: 'Dialysate flow',
     unit: 'mL/h',
-    note: 'Pilot CVVHD control. No device/set range is encoded.',
+    note: 'CVVHD dialysate-flow entry. Confirm device- and set-specific limits before clinical use.',
   },
   {
     field: 'patientFluidRemovalMlHour',
@@ -205,10 +205,10 @@ function SetupStepContent({
       <div className={styles.procedureCard}>
         <div className={styles.screenCopy}>
           <span>Step 1 · Patient</span>
-          <h4>Confirm a synthetic checkout context</h4>
+          <h4>Confirm the simulated case</h4>
           <p>
             {caseContext
-              ? `${caseIdentifier(caseContext)} loads synthetic, review-pending physiology without collecting identifiers or patient-entered data.`
+              ? `${caseIdentifier(caseContext)} uses simulated physiology and does not collect patient identifiers or patient-entered data.`
               : 'Orientation does not collect identifiers or load patient physiology.'}
           </p>
         </div>
@@ -351,8 +351,8 @@ function SetupStepContent({
           <span>Step 7 · Review</span>
           <h4>Confirm the entered case values</h4>
           <p>
-            Values are synthetic learner entries. No target, normal range, or clinical approval is
-            implied.
+            These are simulated case entries. They do not establish a target, normal range, or
+            clinical approval.
           </p>
         </div>
         <dl className={styles.reviewGrid}>
@@ -392,8 +392,8 @@ function SetupStepContent({
           <h4>Confirm the simulated access and return path</h4>
           <p>
             {caseContext
-              ? 'This gate connects only the synthetic case model after the training setup and review sequence is complete.'
-              : 'No patient model is connected in Orientation. This gate confirms only that the case-free interface sequence reached its final setup step.'}
+              ? 'This step connects the simulated circuit only after setup and prescription review are complete.'
+              : 'No patient model is connected in Orientation. This step confirms that the equipment sequence reached its final setup check.'}
           </p>
         </div>
         <button
@@ -411,11 +411,11 @@ function SetupStepContent({
     <div className={styles.readyCard}>
       <Check aria-hidden="true" />
       <div>
-        <span>All eight setup gates complete</span>
+        <span>All eight setup checks complete</span>
         <h4>Ready for interface checkout</h4>
         <p>
           {caseContext
-            ? 'Starting opens Operations and runs the active synthetic case through the deterministic engine.'
+            ? 'Starting opens Operations and begins the simulated case.'
             : 'Starting opens Operations without loading a patient case or clinical model.'}
         </p>
       </div>
@@ -531,7 +531,7 @@ function OperationsScreen({
         <div>
           <span>
             Therapy Operations ·{' '}
-            {caseContext ? `${caseIdentifier(caseContext)} synthetic case` : 'CVVHD orientation'}
+            {caseContext ? `${caseIdentifier(caseContext)} simulated case` : 'CVVHD orientation'}
           </span>
           <strong>
             {running
@@ -571,12 +571,12 @@ function OperationsScreen({
             <Gauge aria-hidden="true" />
             <h4 id="phase3-pressure-heading">Pressure display</h4>
           </div>
-          <div className={styles.pressureGrid} role="list" aria-label="Synthetic pressure signals">
+          <div className={styles.pressureGrid} role="list" aria-label="Simulated pressure signals">
             {pressures.map(([label, value]) => (
               <div key={label} role="listitem">
                 <span>{label}</span>
                 <strong>{value === null ? '—' : `${value.toFixed(0)} mmHg`}</strong>
-                <small>{value === null ? 'No case signal' : 'Synthetic engine signal'}</small>
+                <small>{value === null ? 'No case signal' : 'Simulated case value'}</small>
               </div>
             ))}
           </div>
@@ -592,7 +592,7 @@ function OperationsScreen({
               <dt>Prescribed dose</dt>
               <dd>
                 {formatMetric(operations.effluentDoseMlKgHour, 'mL/kg/h')}{' '}
-                <small>{caseContext ? 'synthetic case value' : 'case weight required'}</small>
+                <small>{caseContext ? 'simulated case value' : 'case weight required'}</small>
               </dd>
             </div>
             <div>
@@ -633,8 +633,8 @@ function OperationsScreen({
         </div>
         <p>
           {operations.activeAlarmCodes.length > 0
-            ? 'Generic engine alarm shown. Device-specific name, priority, threshold, and reaction remain pending mapping. Correct the cause; acknowledgement alone does not resolve it.'
-            : 'Exact names, priorities, thresholds, pump/clamp reactions, and correction actions remain pending device mapping. Acknowledgement will never equal cause correction.'}
+            ? 'A generic training alert is shown. Assess the patient and circuit, identify the cause, and verify correction; acknowledgement alone does not resolve the problem.'
+            : 'This exercise does not reproduce exact alarm names, priorities, thresholds, pump or clamp reactions, or correction steps. Follow current device instructions and local policy.'}
         </p>
         <p className={styles.alarmPriority}>
           <strong>Priority status:</strong> not mapped — independent device review required.
@@ -651,7 +651,7 @@ function OperationsScreen({
           <strong>
             {running
               ? caseContext
-                ? `${caseIdentifier(caseContext)} deterministic simulation active`
+                ? `${caseIdentifier(caseContext)} case in progress`
                 : 'Case-free equipment checkout started'
               : ended
                 ? 'Interface run ended; reload outside the facsimile'
@@ -719,13 +719,13 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
     prismaxSimulatorHotspots[0]
   const stateLabel =
     state.treatmentState === 'running'
-      ? 'Synthetic run active'
+      ? 'Simulated treatment active'
       : state.treatmentState === 'ended'
         ? 'Run ended'
         : state.screen === 'operations'
           ? 'Operations paused'
           : state.screen === 'setup'
-            ? `Setup · ${state.completedStepIds.length} of 8 gates`
+            ? `Setup · ${state.completedStepIds.length} of 8 checks`
             : 'Ready for new attempt'
 
   return (
@@ -849,7 +849,7 @@ export function PrismaxPilotInterface({
             <div className={styles.touchscreen}>
               <nav className={styles.toolbar} aria-label="Educational device toolbar">
                 <span>
-                  <History aria-hidden="true" /> History <small>Pilot timeline</small>
+                  <History aria-hidden="true" /> History <small>Case timeline</small>
                 </span>
                 <span>
                   <Settings aria-hidden="true" /> Tools <small>Excluded</small>
@@ -867,8 +867,8 @@ export function PrismaxPilotInterface({
                   <div>
                     <span>
                       {caseContext
-                        ? 'Protected curriculum · synthetic case'
-                        : 'Orientation · manual-reference workflow'}
+                        ? 'Clinical curriculum · simulated case'
+                        : 'Orientation · manufacturer-manual workflow'}
                     </span>
                     <h3>
                       {caseContext
@@ -877,7 +877,7 @@ export function PrismaxPilotInterface({
                     </h3>
                     <p>
                       {caseContext
-                        ? 'No patient identifiers or patient-entered data are used. All physiology, pressure, alarm, and response values are synthetic educational calibration.'
+                        ? 'No patient identifiers or patient-entered data are used. All physiology, pressure, alert, and response values are simulated for education.'
                         : 'No patient identifiers, default prescription, physiology, pressure, alarm fault, or clinical target is loaded.'}
                     </p>
                   </div>
@@ -886,7 +886,7 @@ export function PrismaxPilotInterface({
                       <strong>New Patient</strong>
                       <span>
                         {caseContext
-                          ? 'Begin a clean synthetic attempt'
+                          ? 'Begin a new case attempt'
                           : 'Begin a blank educational setup'}
                       </span>
                     </button>
@@ -900,8 +900,8 @@ export function PrismaxPilotInterface({
                     </button>
                   </div>
                   <small id="same-patient-unavailable">
-                    Same Patient timing is intentionally unencoded because the supplied manual
-                    conflicts.
+                    Same Patient is unavailable because the reference documents do not provide one
+                    supported workflow for this exercise.
                   </small>
                 </div>
               ) : state.screen === 'setup' ? (

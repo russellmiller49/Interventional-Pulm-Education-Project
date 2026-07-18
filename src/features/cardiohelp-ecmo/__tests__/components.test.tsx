@@ -1,10 +1,12 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import type { AnchorHTMLAttributes, ReactNode } from 'react'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { cardiohelpScenarios } from '../content/scenarios'
 import { resolveScenarioReassessment } from '../content/practiceSupport'
 import { clinicalPracticeScenarios } from '../content/clinicalCases'
+import { cardiohelpCurriculum } from '../content/curriculum'
 import {
   createDefaultProgress,
   createInitialSimulationState,
@@ -12,13 +14,40 @@ import {
   selectScenarioOutcome,
 } from '../engine'
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
-import CardiohelpEcmoLab from '../components/CardiohelpEcmoLab'
+import { CardiohelpWorkbench } from '../components/CardiohelpWorkbench'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
-import { LearningWorkflow } from '../components/LearningWorkflow'
+import { PracticeCasePlayer } from '../components/PracticeCasePlayer'
+
+const mockRouterPush = jest.fn()
+
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string; query?: Record<string, string> }
+    children: ReactNode
+  }) => {
+    const resolved =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}?${new URLSearchParams(href.query ?? {}).toString()}`
+    return (
+      <a href={resolved} {...rest}>
+        {children}
+      </a>
+    )
+  },
+  useRouter: () => ({ push: mockRouterPush, replace: jest.fn(), refresh: jest.fn() }),
+  usePathname: () => '/cardiohelp-ecmo/practice',
+}))
 
 describe('CARDIOHELP ECMO learner interface', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.history.replaceState(null, '', '/')
+    mockRouterPush.mockReset()
     Object.defineProperty(global, 'fetch', {
       configurable: true,
       writable: true,
@@ -53,38 +82,58 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: 'ROTARY_DELTA', delta: 1 })
   })
 
-  it('defaults to an accessible Learn pathway and switches to a clean Practice attempt', () => {
-    render(<CardiohelpEcmoLab />)
-
-    const learnTab = screen.getByRole('tab', { name: /Learn.*one step at a time/i })
-    const practiceTab = screen.getByRole('tab', {
-      name: /Practice.*Start ECMO when indicated/i,
+  it('renders the Learn workbench with section navigation and no Practice scoring', async () => {
+    render(<CardiohelpWorkbench section="learn" />)
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
     })
-    expect(learnTab).toHaveAttribute('aria-selected', 'true')
-    expect(practiceTab).toHaveAttribute('aria-selected', 'false')
-    expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
+
+    const nav = screen.getByRole('navigation', { name: /CARDIOHELP module sections/i })
+    expect(within(nav).getByRole('link', { name: /Learn/i })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(nav).getByRole('link', { name: /Overview/i })).not.toHaveAttribute('aria-current')
     expect(screen.getByText(/Guided focus: circuit and sensors/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
+  })
 
-    fireEvent.click(practiceTab)
-    expect(practiceTab).toHaveAttribute('aria-selected', 'true')
+  it('opens each case on a brief stage and gates the workflow behind Begin case', async () => {
+    render(<CardiohelpWorkbench section="practice" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
+    })
+
     expect(screen.queryByRole('heading', { name: /Guided lessons/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Learning objectives/i })).toBeInTheDocument()
+    expect(
+      screen.getByText(/Verify circuit, sensors, gas, power, and team readiness/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Commit before action' })).not.toBeInTheDocument()
+    expect(screen.getByText(/Console locked/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Untimed practice' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Timed challenge' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Standard practice' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Hide diagnosis cues \(harder\)/i }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
-        name: /48-year-old with refractory hypoxemic and hypercapnic respiratory failure/i,
+        name: /Initiate VV ECMO for refractory severe ARDS/i,
       }),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Step complete—now verify what changed/i)).not.toBeInTheDocument()
   })
 
-  it('runs the VV initiation case from committed plan through readiness, settings, and support', () => {
-    render(<CardiohelpEcmoLab />)
-    fireEvent.click(screen.getByRole('tab', { name: /VV Practice/i }))
+  it('runs the VV initiation case from committed plan through readiness, settings, and support', async () => {
+    render(<CardiohelpWorkbench section="practice" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     fireEvent.change(screen.getByLabelText('Goal'), {
       target: { value: 'initiate-vv-support' },
     })
@@ -94,7 +143,9 @@ describe('CARDIOHELP ECMO learner interface', () => {
     fireEvent.change(screen.getByLabelText('Expected immediate effect'), {
       target: { value: 'gas-exchange' },
     })
+    expect(screen.getByText(/Console locked/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Commit before action' }))
+    expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
 
     const readinessButton = screen.getByRole('button', {
       name: /Complete VV readiness and tip-to-tip check/i,
@@ -157,6 +208,13 @@ describe('CARDIOHELP ECMO learner interface', () => {
 
     expect(screen.getByText(/Patient trajectory · improving/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Forward VV flow is established/i).length).toBeGreaterThan(0)
+
+    const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
+    expect(within(workflow).getByRole('button', { name: /Reassess/i })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
+    fireEvent.click(within(workflow).getByRole('button', { name: /Manage/i }))
     expect(screen.getByRole('button', { name: 'Start ECMO with current settings' })).toBeDisabled()
   })
 
@@ -167,7 +225,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     )!
     const dispatch = jest.fn()
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={scenario}
         progress={createDefaultProgress()}
@@ -178,6 +236,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       />,
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
     const commit = screen.getByRole('button', { name: 'Commit before action' })
     expect(commit).toBeDisabled()
     fireEvent.change(screen.getByLabelText('Goal'), {
@@ -224,7 +283,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const dispatch = jest.fn()
 
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={definition}
         progress={createDefaultProgress()}
@@ -258,10 +317,20 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const definition = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-tension-pneumothorax',
     )!
-    const state = createInitialSimulationState(definition.id, 'guided')
+    let state = createInitialSimulationState(definition.id, 'guided')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: definition.expectation.goalId,
+      control: definition.expectation.control,
+      direction: definition.expectation.direction,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'CORRECT_FAULT',
+      fault: definition.expectation.correctiveFault,
+    })
 
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={definition}
         progress={createDefaultProgress()}
@@ -272,30 +341,45 @@ describe('CARDIOHELP ECMO learner interface', () => {
       />,
     )
 
+    const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
+    expect(within(workflow).getByRole('button', { name: /Reassess/i })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
     const checklist = screen.getByLabelText(/Requirements to unlock Commit reassessment/i)
     expect(checklist).toHaveTextContent(/Initial clinical plan committed/i)
     expect(checklist).toHaveTextContent(/intervention or corrective action completed/i)
+    expect(checklist).toHaveTextContent(/Response observed for 0\/3 seconds/i)
     expect(checklist).toHaveTextContent(/Device\/console response selected/i)
     expect(checklist).toHaveTextContent(/Circuit\/gas response selected/i)
     expect(checklist).toHaveTextContent(/Patient response selected/i)
     expect(
       screen.getByRole('button', {
-        name: /Commit reassessment · commit the clinical plan first/i,
+        name: /Commit reassessment · observe 3s first/i,
       }),
     ).toBeDisabled()
-    expect(screen.getByRole('button', { name: /Go to clinical plan/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Return to treatment step/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Advance 3 seconds now/i })).toBeInTheDocument()
   })
 
   it('uses objective reassessment choices and exposes scored clues', () => {
     const definition = clinicalPracticeScenarios.find(
       (item) => item.id === 'clinical-vv-tension-pneumothorax',
     )!
-    const state = createInitialSimulationState(definition.id, 'guided')
+    let state = createInitialSimulationState(definition.id, 'guided')
+    state = ecmoSimulationReducer(state, {
+      type: 'COMMIT_PREDICTION',
+      goalId: definition.expectation.goalId,
+      control: definition.expectation.control,
+      direction: definition.expectation.direction,
+    })
+    state = ecmoSimulationReducer(state, {
+      type: 'CORRECT_FAULT',
+      fault: definition.expectation.correctiveFault,
+    })
     const dispatch = jest.fn()
 
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={definition}
         progress={createDefaultProgress()}
@@ -329,7 +413,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
 
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={definition}
         progress={createDefaultProgress()}
@@ -349,17 +433,50 @@ describe('CARDIOHELP ECMO learner interface', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('navigates the clinical Practice stations without mixing VV and VA rounds', () => {
+  it('asks for confirmation before discarding a committed case attempt', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<CardiohelpWorkbench section="practice" />)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Begin case/i })).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
+    fireEvent.change(screen.getByLabelText('Goal'), {
+      target: { value: 'initiate-vv-support' },
+    })
+    fireEvent.change(screen.getByLabelText('First priority'), {
+      target: { value: 'initiate-support' },
+    })
+    fireEvent.change(screen.getByLabelText('Expected immediate effect'), {
+      target: { value: 'gas-exchange' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Commit before action' }))
+
+    fireEvent.change(screen.getByLabelText('Case'), {
+      target: { value: 'clinical-vv-occult-hemorrhage' },
+    })
+    expect(confirmSpy).toHaveBeenCalled()
+    expect(
+      screen.getByRole('heading', { name: /Initiate VV ECMO for refractory severe ARDS/i }),
+    ).toBeInTheDocument()
+
+    confirmSpy.mockReturnValue(true)
+    fireEvent.change(screen.getByLabelText('Case'), {
+      target: { value: 'clinical-vv-occult-hemorrhage' },
+    })
+    expect(
+      screen.getByRole('heading', { name: /Occult hemorrhage with drainage insufficiency/i }),
+    ).toBeInTheDocument()
+    confirmSpy.mockRestore()
+  })
+
+  it('offers every track case grouped by curriculum unit without mixing VV and VA', () => {
     const state = createInitialSimulationState('clinical-vv-initiation-ards')
     const scenario = clinicalPracticeScenarios.find(
       (item) => item.id === state.scenario.scenarioId,
     )!
     const onLoadScenario = jest.fn()
-    const firstVvDeterioration = clinicalPracticeScenarios.find(
-      (item) => item.supportMode === 'vv' && item.stationId === 'flow-pressure',
-    )!
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={scenario}
         progress={createDefaultProgress()}
@@ -370,26 +487,27 @@ describe('CARDIOHELP ECMO learner interface', () => {
       />,
     )
 
-    const stationNavigation = screen.getByRole('navigation', {
-      name: /CARDIOHELP ECMO clinical practice stations/i,
-    })
-    expect(within(stationNavigation).getByRole('button', { name: /Start ECMO/i })).toHaveAttribute(
-      'aria-current',
-      'step',
+    const caseSelect = screen.getByLabelText('Case')
+    const vvCaseCount = cardiohelpCurriculum.vv.reduce(
+      (count, unit) => count + unit.caseScenarioIds.length,
+      0,
     )
+    expect(within(caseSelect).getAllByRole('option')).toHaveLength(vvCaseCount)
     expect(
-      within(stationNavigation).getByRole('button', { name: /Patient deterioration/i }),
-    ).toBeEnabled()
-    expect(within(stationNavigation).getByRole('button', { name: /Complications/i })).toBeEnabled()
-    expect(
-      screen.getByRole('option', { name: /Initiate VV ECMO for refractory severe ARDS/i }),
+      within(caseSelect).getByRole('group', { name: /Unit 2 · Drainage & preload/i }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('option', { name: /Initiate VA ECMO/i })).not.toBeInTheDocument()
+    expect(
+      within(caseSelect).getByRole('option', {
+        name: /Initiate VV ECMO for refractory severe ARDS/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      within(caseSelect).queryByRole('option', { name: /Initiate peripheral VA ECMO/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText(/Unit 1 · Foundations & console orientation/i)).toBeInTheDocument()
 
-    fireEvent.click(
-      within(stationNavigation).getByRole('button', { name: /Patient deterioration/i }),
-    )
-    expect(onLoadScenario).toHaveBeenCalledWith(firstVvDeterioration.id)
+    fireEvent.change(caseSelect, { target: { value: 'clinical-vv-occult-hemorrhage' } })
+    expect(onLoadScenario).toHaveBeenCalledWith('clinical-vv-occult-hemorrhage')
   })
 
   it('shows the VA capstone observation window and required reassessment domains', () => {
@@ -406,7 +524,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     })
     const scenario = cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)!
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={scenario}
         progress={createDefaultProgress()}
@@ -414,9 +532,12 @@ describe('CARDIOHELP ECMO learner interface', () => {
         dispatch={jest.fn()}
         onLoadScenario={jest.fn()}
         onReveal={jest.fn()}
+        section="assess"
       />,
     )
 
+    expect(screen.getByText('Capstone assessment')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Case')).not.toBeInTheDocument()
     expect(screen.getByText(/Advance 10 more simulated second/i)).toBeInTheDocument()
     expect(screen.getByRole('note')).toHaveTextContent(/right-arm oxygenation/i)
     expect(screen.getByRole('button', { name: /Commit reassessment/i })).toBeDisabled()
@@ -459,7 +580,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const onReveal = jest.fn()
 
     const view = render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={scenario}
         progress={createDefaultProgress()}
@@ -488,7 +609,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
 
     const revealedState = ecmoSimulationReducer(state, { type: 'REVEAL_DEBRIEF' })
     view.rerender(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={revealedState}
         scenario={scenario}
         progress={createDefaultProgress()}
@@ -501,6 +622,12 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getByRole('note', { name: /Reassessment scoring/i })).toHaveTextContent(
       /Reassessment credit not earned.*did not match the expected post-intervention evidence/i,
     )
+    expect(screen.getByRole('link', { name: /Review the paired lesson/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('lesson=va-differential-hypoxemia'),
+    )
+    expect(screen.getByRole('link', { name: /Next recommended/i })).toBeInTheDocument()
+    expect(screen.getByText(/Learning objectives/i)).toBeInTheDocument()
   })
 
   it('withholds injected pattern labels until reassessment and reveal', () => {
@@ -551,7 +678,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     const state = createInitialSimulationState('gas-source-interruption', 'challenge')
     const scenario = cardiohelpScenarios.find((item) => item.id === state.scenario.scenarioId)!
     render(
-      <LearningWorkflow
+      <PracticeCasePlayer
         state={state}
         scenario={scenario}
         progress={createDefaultProgress()}
@@ -636,9 +763,11 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(dispatch).toHaveBeenCalledTimes(2)
   })
 
-  it('shows an explicit reviewed-English fallback on non-English routes', () => {
-    render(<CardiohelpEcmoLab locale="es" />)
-    expect(screen.getByRole('note')).toHaveTextContent(/Reviewed English content fallback/i)
+  it('shows an explicit reviewed-English fallback on non-English routes', async () => {
+    render(<CardiohelpWorkbench section="learn" locale="es" />)
+    await waitFor(() => {
+      expect(screen.getByText(/Reviewed English content fallback/i)).toBeInTheDocument()
+    })
     expect(screen.getByRole('heading', { name: 'Gas blender' })).toBeInTheDocument()
     expect(screen.getByText(/not CARDIOHELP-i touchscreen controls/i)).toBeInTheDocument()
   })

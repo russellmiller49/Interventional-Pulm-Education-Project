@@ -153,4 +153,122 @@ describe('Baxter CRRT v1 case registry', () => {
       }
     },
   )
+
+  it('keeps learner-facing case copy clinical and free of implementation terminology', () => {
+    const learnerCopy = baxterCrrtLearnerCases.flatMap((definition) => [
+      definition.title,
+      definition.patientDescription,
+      ...definition.learningObjectives,
+      ...definition.visibleFindings,
+      ...definition.timedEvents.map(({ label }) => label),
+      ...definition.goalOptions.flatMap(({ label, description }) => [label, description]),
+      ...definition.mechanismOptions.flatMap(({ label, description }) => [label, description]),
+      ...definition.controlOptions.flatMap(({ label, description }) => [label, description]),
+      ...definition.responseOptions.flatMap(({ label, description }) => [label, description]),
+      ...definition.reassessmentOptions.flatMap(({ label, description }) => [label, description]),
+      ...definition.interventions.flatMap(({ label, description, response }) => [
+        label,
+        description,
+        response,
+      ]),
+      ...definition.acceptedAlternativePaths.flatMap(({ label, explanation }) => [
+        label,
+        explanation,
+      ]),
+      ...definition.unsafeActions.map(({ explanation }) => explanation),
+      ...definition.criticalErrors.flatMap(({ label, explanation }) => [label, explanation]),
+      ...definition.hintLadder.map(({ text }) => text),
+      definition.debrief.summary,
+      definition.debrief.statedGoalReview,
+      definition.debrief.predictionReview,
+      definition.debrief.actionTimelineReview,
+      ...definition.debrief.causalChain,
+      definition.debrief.trendReview,
+      definition.debrief.requiredActionsReview,
+      definition.debrief.criticalErrorsReview,
+      definition.debrief.acceptedAlternativesReview,
+      definition.debrief.machineNavigationPoint,
+      definition.debrief.transferQuestion,
+    ])
+
+    expect(learnerCopy.join('\n')).not.toMatch(
+      /\b(?:synthetic|authored|candidate|reviewer|private learning|assessment gate|deterministic|canonical|device adapter|engine fixture|calibration|projection|source-mapped|bounded|model-derived|engine|pending SME|informational provenance)\b/i,
+    )
+
+    const firstCaseActions = getBaxterCrrtCase('CRRT-01').interventions.map(({ label }) => label)
+    expect(firstCaseActions).toEqual(
+      expect.arrayContaining([
+        'Complete the initial clinical assessment',
+        'Adjust machine fluid removal after assessment',
+        'Communicate the plan and reassessment needs',
+      ]),
+    )
+  })
+
+  it('does not execute copied template physiology behind adapted clinical actions', () => {
+    for (const caseId of [
+      'CRRT-03',
+      'CRRT-08',
+      'CRRT-09',
+      'CRRT-12',
+      'CRRT-16',
+      'CRRT-17',
+      'CRRT-18',
+    ] as const) {
+      const definition = getBaxterCrrtCase(caseId)
+      expect(definition.interventions.flatMap(({ effects }) => effects)).toEqual([])
+      expect(
+        definition.successConditions.every(
+          ({ metric, comparator, value }) =>
+            metric === 'simulationTimeSeconds' && comparator === 'gte' && value === 0,
+        ),
+      ).toBe(true)
+    }
+  })
+
+  it('keeps the return-pressure case on the return path from fault through reassessment', () => {
+    const definition = getBaxterCrrtCase('CRRT-14')
+    const timedTargets = definition.timedEvents.flatMap(({ effects }) =>
+      effects.map(({ target }) => target),
+    )
+    const correction = definition.interventions.find(({ id }) => id.endsWith('reposition-access'))
+    const correctionTargets = correction?.effects.map(({ target }) => target) ?? []
+    const successMetrics = definition.successConditions.map(({ metric }) => metric)
+
+    expect(timedTargets).toEqual(
+      expect.arrayContaining([
+        'scenario.activeFaults.return-obstruction',
+        'access.returnResistanceMmHgPerMlMin',
+      ]),
+    )
+    expect(correctionTargets).toEqual(
+      expect.arrayContaining([
+        'scenario.activeFaults.return-obstruction',
+        'access.returnResistanceMmHgPerMlMin',
+      ]),
+    )
+    expect(successMetrics).toEqual(
+      expect.arrayContaining([
+        'access.returnResistanceMmHgPerMlMin',
+        'circuit.pressures.returnPressureMmHg',
+      ]),
+    )
+    expect([...timedTargets, ...correctionTargets, ...successMetrics].join(' ')).not.toMatch(
+      /access-obstruction|access\.accessResistance|accessPressure/,
+    )
+  })
+
+  it('treats low effective flow as a contributor to correct, not one to create', () => {
+    const definition = getBaxterCrrtCase('CRRT-15')
+    const correction = definition.interventions.find(({ id }) => id.endsWith('safe-candidate'))
+    const lowFlowEffect = correction?.effects.find(
+      ({ target }) => target === 'circuit.filter.lowEffectiveBloodFlowFraction',
+    )
+    const lowFlowCondition = definition.successConditions.find(
+      ({ metric }) => metric === 'circuit.filter.lowEffectiveBloodFlowFraction',
+    )
+
+    expect(lowFlowEffect).toMatchObject({ operation: 'set', valueType: 'number', value: 0.1 })
+    expect(lowFlowCondition).toMatchObject({ comparator: 'lte', value: 0.2 })
+  })
 })

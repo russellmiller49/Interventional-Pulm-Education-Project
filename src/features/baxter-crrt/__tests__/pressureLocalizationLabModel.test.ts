@@ -117,7 +117,7 @@ describe('reviewer-only pressure localization model', () => {
     ] as const) {
       expect(isPressureLocalizationCombinationSupported('disconnection', site)).toBe(false)
       expect(() => createSyntheticPressureLocalizationResult('disconnection', site)).toThrow(
-        /unavailable pending source and device review/i,
+        /not included in this exercise/i,
       )
     }
   })

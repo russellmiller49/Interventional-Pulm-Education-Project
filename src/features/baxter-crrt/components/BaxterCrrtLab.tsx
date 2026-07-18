@@ -52,7 +52,7 @@ const workspaceTabs: readonly {
   readonly icon: typeof BookOpen
 }[] = [
   { id: 'learn', label: 'Learn', summary: '18 guided cases', icon: BookOpen },
-  { id: 'practice', label: 'Practice', summary: 'Scored clean attempts', icon: ClipboardCheck },
+  { id: 'practice', label: 'Practice', summary: 'New scored attempts', icon: ClipboardCheck },
   { id: 'mastery', label: 'Mastery', summary: 'Masked PrisMax capstone', icon: BrainCircuit },
   { id: 'drills', label: 'Drills', summary: '7 cause-first drills', icon: ShieldAlert },
   { id: 'tools', label: 'Tools', summary: '6 instructional labs', icon: FlaskConical },
@@ -227,18 +227,20 @@ export default function BaxterCrrtLab({
     >
       <section className={styles.hero} aria-labelledby="baxter-crrt-heading">
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Adult ICU CRRT · private educational workspace</p>
+          <p className={styles.eyebrow}>Adult ICU CRRT · clinical simulation</p>
           <h1 id="baxter-crrt-heading">Baxter CRRT Learn, Practice &amp; Mastery</h1>
           <p className={styles.heroLead}>
-            Build causal reasoning across 18 cases, seven rapid drills, six instructional tools, two
-            manual-reference device profiles, and a masked PrisMax capstone.
+            Work through 18 clinical cases, seven rapid safety drills, six concept labs, two
+            manufacturer-manual-based device interfaces, and a masked PrisMax capstone.
           </p>
           <div className={styles.heroBadges}>
-            <span>{baxterCrrtReleaseStage}</span>
+            <span>18 clinical cases</span>
             <span>
-              {sessionMode === 'review-preview' ? 'SME preview · no writes' : 'progress v3'}
+              {sessionMode === 'review-preview'
+                ? 'SME preview · progress not saved'
+                : 'Progress saved on this device'}
             </span>
-            <span>English source content</span>
+            <span>English</span>
           </div>
         </div>
       </section>
@@ -248,9 +250,9 @@ export default function BaxterCrrtLab({
         <div>
           <strong>Education only—never patient-specific advice or a local operating policy.</strong>
           <p>
-            Synthetic scenario values are not treatment recommendations, clinical goals, alarm
-            limits, or proof of competency. Use current device instructions, authorized local
-            protocols, supervision, and clinical judgment for patient care.
+            Case values and responses are simulated for practice. They are not treatment targets,
+            alarm limits, or proof of competency. For patient care, use current device instructions,
+            authorized local protocols, supervision, and clinical judgment.
           </p>
         </div>
       </section>
@@ -267,7 +269,7 @@ export default function BaxterCrrtLab({
 
       <dl className={styles.profileStrip} aria-label="CRRT workspace controls">
         <div>
-          <dt>Device</dt>
+          <dt>Device interface</dt>
           <dd>
             <select
               aria-label="Device profile"
@@ -300,14 +302,16 @@ export default function BaxterCrrtLab({
           </dd>
         </div>
         <div>
-          <dt>Reference</dt>
+          <dt>Reference manual</dt>
           <dd>
             {profile.manualNumber} · {profile.manualRevision}
           </dd>
         </div>
         <div>
-          <dt>Configuration claim</dt>
-          <dd>None · optional local extension not loaded</dd>
+          <dt>Local configuration</dt>
+          <dd>
+            Not configured · confirm site-specific device, disposables, solutions, and protocols
+          </dd>
         </div>
       </dl>
 
@@ -460,7 +464,7 @@ export default function BaxterCrrtLab({
         </section>
       )}
 
-      <SourcesPanel />
+      <SourcesPanel reviewPreview={sessionMode === 'review-preview'} />
     </main>
   )
 }

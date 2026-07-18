@@ -440,7 +440,7 @@ export function CrrtPilotCircuit({
         <section className={styles.scalePanel} aria-labelledby={`${idPrefix}-scales-heading`}>
           <div className={styles.subheading}>
             <span>Device scales</span>
-            <h3 id={`${idPrefix}-scales-heading`}>Four source-mapped positions</h3>
+            <h3 id={`${idPrefix}-scales-heading`}>Four fluid-scale positions</h3>
           </div>
           <div className={styles.scaleGrid} role="list" aria-label="CRRT scale positions">
             {scales.map((scale) => (

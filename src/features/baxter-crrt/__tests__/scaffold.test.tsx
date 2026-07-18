@@ -16,13 +16,13 @@ describe('Baxter CRRT v1 workspace scaffold', () => {
       /never patient-specific advice or a local operating policy/i,
     )
     expect(screen.getAllByText('PrisMax educational reference profile').length).toBeGreaterThan(0)
-    expect(screen.getByText(/optional local extension not loaded/i)).toBeInTheDocument()
+    expect(screen.getByText(/not configured.*confirm site-specific/i)).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
-        name: 'What this educational module can—and cannot—claim',
+        name: 'What supports this educational module',
       }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/18 cases, seven drills, six tools/i)).toBeInTheDocument()
+    expect(screen.getByText(/18 clinical cases, seven rapid safety drills/i)).toBeInTheDocument()
   })
 
   it('uses reviewed English fallback on non-English routes', () => {

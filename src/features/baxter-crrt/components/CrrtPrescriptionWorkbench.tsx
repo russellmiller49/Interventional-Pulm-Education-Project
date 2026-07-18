@@ -55,8 +55,8 @@ const NUMERIC_INPUT_KEYS = Object.freeze([
 ] as const satisfies readonly NumericInputKey[])
 
 const NUMERIC_INPUT_SPECS: Readonly<Record<NumericInputKey, NumericInputSpec>> = Object.freeze({
-  simulatedWeightKg: Object.freeze({ label: 'Simulated weight', min: 0.1 }),
-  hematocritPercent: Object.freeze({ label: 'Synthetic hematocrit', min: 0, max: 99.9 }),
+  simulatedWeightKg: Object.freeze({ label: 'Example weight', min: 0.1 }),
+  hematocritPercent: Object.freeze({ label: 'Example hematocrit', min: 0, max: 99.9 }),
   bloodFlowMlPerMinute: Object.freeze({ label: 'Blood flow', min: 0 }),
   preBloodPumpMlPerHour: Object.freeze({ label: 'PBP flow', min: 0 }),
   dialysateMlPerHour: Object.freeze({ label: 'Dialysate flow', min: 0 }),
@@ -108,7 +108,7 @@ const SOURCE_NOTES = Object.freeze([
   }),
   Object.freeze({
     id: 'MATH-PM-004 / MATH-PM-006',
-    text: 'Disputed circuit-flow expressions; deliberately inactive pending authoritative disposition',
+    text: 'Some circuit-flow calculations remain unavailable because the references do not support one verified expression',
   }),
   Object.freeze({
     id: 'REVIEW-CKRT-CORE-2025',
@@ -120,11 +120,11 @@ const SOURCE_NOTES = Object.freeze([
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PRESCRIPTION-001',
-    text: 'Authored prescription-workbench values and arithmetic boundaries · synthetic calibration',
+    text: 'Practice values and arithmetic boundaries for the prescription workbench',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PREPOST-001',
-    text: 'Authored split-only qualitative proxy rules · synthetic calibration',
+    text: 'Qualitative comparison rules for the pre/post replacement-flow exercise',
   }),
 ])
 
@@ -247,15 +247,15 @@ function validateWorkbenchInputs(
   if (trimmedBagCapacity !== '') {
     const parsedBagCapacity = Number(trimmedBagCapacity)
     if (!Number.isFinite(parsedBagCapacity)) {
-      errors.syntheticBagCapacityMl = 'Synthetic reference capacity must be a finite number.'
+      errors.syntheticBagCapacityMl = 'Practice bag capacity must be a finite number.'
     } else if (parsedBagCapacity <= 0) {
-      errors.syntheticBagCapacityMl = 'Synthetic reference capacity must be greater than zero.'
+      errors.syntheticBagCapacityMl = 'Practice bag capacity must be greater than zero.'
     }
   }
 
   const invalidLabels = Object.keys(errors).map((key) =>
     key === 'syntheticBagCapacityMl'
-      ? 'Synthetic reference capacity'
+      ? 'Practice bag capacity'
       : NUMERIC_INPUT_SPECS[key as NumericInputKey].label,
   )
   if (invalidLabels.length > 0) {
@@ -341,7 +341,7 @@ export function QualitativePrePostDilutionExperiment({
           <span>Qualitative companion experiment</span>
           <h3 id={`${idPrefix}-heading`}>Pre- versus post-dilution split</h3>
         </div>
-        <span className={styles.pendingBadge}>Learner experiment</span>
+        <span className={styles.pendingBadge}>Concept lab</span>
       </header>
 
       <p className={styles.intro}>
@@ -352,13 +352,13 @@ export function QualitativePrePostDilutionExperiment({
 
       <p className={styles.conceptEquation} role="note">
         Split-position index = entered post-replacement flow ÷ entered total replacement flow. The
-        three authored proxy labels follow only whether the entered split is pre-dominant, equal, or
+        three qualitative labels follow only whether the entered split is pre-dominant, equal, or
         post-dominant; no physiologic coefficient or clinical target is invented.
       </p>
 
       {result === null ? (
         <p className={styles.inactiveNotice}>
-          Unavailable — correct every invalid entry before viewing the authored qualitative proxies.
+          Unavailable — correct every invalid entry before viewing the qualitative comparison.
         </p>
       ) : result.direction === 'not-active' ? (
         <p className={styles.inactiveNotice}>{result.comparisonText}</p>
@@ -386,24 +386,24 @@ export function QualitativePrePostDilutionExperiment({
               </dd>
             </div>
             <div>
-              <dt>Authored FF-burden proxy</dt>
+              <dt>Relative FF-burden indicator</dt>
               <dd>
                 <strong>{qualitativeLabel(result.filtrationFractionBurdenProxy)}</strong>
-                <small>Split-only proxy; quantitative FF is unavailable.</small>
+                <small>Split-only indicator; quantitative FF is unavailable.</small>
               </dd>
             </div>
             <div>
-              <dt>Authored effective-clearance proxy</dt>
+              <dt>Relative effective-clearance indicator</dt>
               <dd>
                 <strong>{qualitativeLabel(result.effectiveClearanceTendencyProxy)}</strong>
-                <small>Split-only proxy; effective clearance is not calculated.</small>
+                <small>Split-only indicator; effective clearance is not calculated.</small>
               </dd>
             </div>
             <div>
-              <dt>Authored fouling-burden proxy</dt>
+              <dt>Relative fouling-burden indicator</dt>
               <dd>
                 <strong>{qualitativeLabel(result.foulingTendencyProxy)}</strong>
-                <small>Split-only proxy; no clotting risk or filter-life prediction.</small>
+                <small>Split-only indicator; no clotting risk or filter-life prediction.</small>
               </dd>
             </div>
           </dl>
@@ -412,11 +412,10 @@ export function QualitativePrePostDilutionExperiment({
 
       {result ? <p className={styles.experimentSummary}>{result.comparisonText}</p> : null}
       <p className={styles.proxyCaveat} role="note">
-        <strong>Clinical-context and synthetic-calibration sources:</strong>{' '}
-        <span>REVIEW-CKRT-CORE-2025</span> · <span>GUID-RRT-ICU-2026</span> ·{' '}
-        <span>SYNTH-LAB-PREPOST-001</span>.{' '}
+        <strong>Evidence context:</strong> CKRT core-curriculum and multidisciplinary ICU RRT
+        guidance.{' '}
         {result?.omittedVariableCaveat ??
-          'The proxies remain unavailable while one or more entries are invalid.'}
+          'The comparison remains unavailable while one or more entries are invalid.'}
       </p>
       <p className={styles.noBestStatement} role="note">
         Neither connection position is declared universally best. The tradeoff remains dependent on
@@ -443,7 +442,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
   const unavailableOutputs =
     result?.unavailableOutputs ?? PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS
   const updateStatus = result
-    ? `Synthetic educational outputs updated. Effluent pump target display ${formatNumber(result.effluentPumpTargetMlPerHour)} milliliters per hour; dose-section display ${formatNumber(result.effluentDoseMlPerKgHour, 2)} milliliters per kilogram per hour; split proxy ${result.prePostExperiment.direction}; bag duration ${
+    ? `Practice outputs updated. Effluent pump target display ${formatNumber(result.effluentPumpTargetMlPerHour)} milliliters per hour; dose-section display ${formatNumber(result.effluentDoseMlPerKgHour, 2)} milliliters per kilogram per hour; split comparison ${result.prePostExperiment.direction}; bag duration ${
         result.syntheticBagDuration?.durationHours === null ||
         result.syntheticBagDuration?.durationHours === undefined
           ? 'unavailable'
@@ -473,7 +472,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
           <span className={styles.kicker}>Instructional tool · transparent arithmetic</span>
           <h2 id={`${idPrefix}-heading`}>Full Prescription Workbench</h2>
         </div>
-        <span className={styles.pendingBadge}>Learner tool</span>
+        <span className={styles.pendingBadge}>Practice tool</span>
       </header>
 
       <div
@@ -481,11 +480,10 @@ export function CrrtPhase7PrescriptionWorkbench() {
         role="note"
         aria-label="Educational calculation boundary"
       >
-        <strong>Learner-available calculation exercise—not for patient care.</strong>
+        <strong>Calculation practice—not for patient care.</strong>
         <p>
-          Synthetic editable values expose calculation boundaries. This surface makes no competency
-          claim and provides no clinical target or device-control behavior. Learner-mode progress
-          may record tool use; linked source fields are informational provenance.
+          Edit the practice values to see how the displayed calculations respond. The workbench does
+          not provide clinical targets, patient predictions, or device-control instructions.
         </p>
       </div>
 
@@ -498,14 +496,13 @@ export function CrrtPhase7PrescriptionWorkbench() {
           <fieldset className={styles.fieldset}>
             <legend>Patient and circuit entries</legend>
             <p className={styles.syntheticStartingNote}>
-              Starting values are synthetic arithmetic checks—not defaults, targets, or
-              recommendations.
+              Starting values are practice examples—not defaults, targets, or recommendations.
             </p>
             <div className={styles.controlGrid}>
               <NumberControl
                 id={`${idPrefix}-weight`}
-                label="Simulated weight"
-                description="Used only as the denominator of the source-linked effluent display calculation."
+                label="Example weight"
+                description="Used only as the denominator of the manual-based effluent display calculation."
                 unit="kg"
                 min={0.1}
                 step={0.1}
@@ -515,8 +512,8 @@ export function CrrtPhase7PrescriptionWorkbench() {
               />
               <NumberControl
                 id={`${idPrefix}-hematocrit`}
-                label="Synthetic hematocrit"
-                description="Used only in the source-linked plasma-flow relationship."
+                label="Example hematocrit"
+                description="Used only in the manual-based plasma-flow relationship."
                 unit="%"
                 min={0}
                 max={99.9}
@@ -539,7 +536,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
               <NumberControl
                 id={`${idPrefix}-pbp`}
                 label="PBP flow"
-                description="Entered source-expression term; no solution identity is assumed."
+                description="Entered calculation term; no solution identity is assumed."
                 unit="mL/h"
                 min={0}
                 step={10}
@@ -550,7 +547,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
               <NumberControl
                 id={`${idPrefix}-dialysate`}
                 label="Dialysate flow"
-                description="Entered source-expression term; no solution identity is assumed."
+                description="Entered calculation term; no solution identity is assumed."
                 unit="mL/h"
                 min={0}
                 step={10}
@@ -595,7 +592,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
           </fieldset>
 
           <fieldset className={styles.fieldset}>
-            <legend>Protocol and configuration gates</legend>
+            <legend>Protocol and configuration checks</legend>
             <div className={styles.gateGrid}>
               <div className={styles.selectControl}>
                 <label htmlFor={`${idPrefix}-anticoagulation`}>Anticoagulation concept</label>
@@ -617,14 +614,14 @@ export function CrrtPhase7PrescriptionWorkbench() {
                 </small>
               </div>
               <div className={styles.selectControl}>
-                <label htmlFor={`${idPrefix}-solution`}>Versioned solution profile</label>
+                <label htmlFor={`${idPrefix}-solution`}>Locally verified solution profile</label>
                 <select
                   id={`${idPrefix}-solution`}
                   disabled
                   defaultValue="unavailable"
                   aria-describedby={`${idPrefix}-solution-description`}
                 >
-                  <option value="unavailable">Unavailable — no local registry loaded</option>
+                  <option value="unavailable">Unavailable — no site profile loaded</option>
                 </select>
                 <small id={`${idPrefix}-solution-description`}>
                   No composition, bag assignment, compatibility, or local stock is inferred.
@@ -634,11 +631,11 @@ export function CrrtPhase7PrescriptionWorkbench() {
           </fieldset>
 
           <fieldset className={styles.fieldset}>
-            <legend>Optional synthetic bag-duration experiment</legend>
+            <legend>Optional practice bag-duration calculation</legend>
             <div className={styles.gateGrid}>
               <div className={styles.numberControl}>
                 <label htmlFor={`${idPrefix}-bag-capacity`}>
-                  <span>Synthetic reference capacity</span>
+                  <span>Practice bag capacity</span>
                   <small>mL</small>
                 </label>
                 <input
@@ -663,7 +660,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                   onChange={(event) => setSyntheticBagCapacity(event.currentTarget.value)}
                 />
                 <small id={`${idPrefix}-bag-capacity-description`}>
-                  No duration appears until you enter a positive, explicitly synthetic capacity.
+                  Enter a positive example capacity to calculate duration at the selected flow.
                 </small>
                 {validation.errors.syntheticBagCapacityMl ? (
                   <small id={`${idPrefix}-bag-capacity-error`} className={styles.inputError}>
@@ -688,7 +685,8 @@ export function CrrtPhase7PrescriptionWorkbench() {
                   ))}
                 </select>
                 <small id={`${idPrefix}-bag-stream-description`}>
-                  Capacity ÷ selected entered rate only; no scale or alarm model.
+                  Capacity ÷ selected entered rate only; this does not predict scale or alarm
+                  behavior.
                 </small>
               </div>
             </div>
@@ -698,7 +696,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
         <div className={styles.outputColumn}>
           <section className={styles.outputPanel} aria-labelledby={`${idPrefix}-outputs`}>
             <header>
-              <span>Source-linked arithmetic</span>
+              <span>Manufacturer-manual calculations</span>
               <h3 id={`${idPrefix}-outputs`}>Educational calculation outputs</h3>
             </header>
             <dl className={styles.outputGrid}>
@@ -709,7 +707,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.effluentPumpTargetMlPerHour)} mL/h`
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-001 · manual-reference expression"
+                source="PrisMax operator's manual calculation"
                 note="Sum of entered PFR, PBP, replacement, and dialysate terms; syringe/makeup held at zero."
               />
               <OutputMetric
@@ -719,7 +717,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.effluentDoseMlPerKgHour, 2)} mL/kg/h`
                     : 'Unavailable — correct entries'
                 }
-                source="DOSE-PM-001 · manual-reference expression"
+                source="PrisMax operator's manual calculation"
                 note="No target range and no delivered-dose or downtime claim."
               />
               <OutputMetric
@@ -729,7 +727,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.plasmaFlowMlPerHour)} mL/h`
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-005 · manual-reference expression"
+                source="PrisMax operator's manual calculation"
                 note="Blood-flow entry converted from mL/min before applying entered hematocrit."
               />
               <OutputMetric
@@ -739,7 +737,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.machinePatientFluidRemovalTermMlPerHour)} mL/h`
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-001 · separate term"
+                source="PrisMax operator's manual · separate term"
                 note="Not a whole-patient balance or tolerance recommendation."
               />
               <OutputMetric
@@ -749,7 +747,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? `${formatNumber(result.aggregateSourcePumpThroughputMlPerDay / 1_000, 2)} L/day`
                     : 'Unavailable — correct entries'
                 }
-                source="Entry-derived teaching summary"
+                source="Calculated from the entered values"
                 note="PBP + dialysate + replacement pump entries over 24 hours if unchanged. This is source-bag use: dialysate remains separate from blood-side/patient input, and PFR is excluded."
               />
               <OutputMetric
@@ -759,7 +757,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
                     ? formatPercentageFraction(result.totalPredilutionFraction)
                     : 'Unavailable — correct entries'
                 }
-                source="MATH-PM-003 · manual-reference expression"
+                source="PrisMax operator's manual calculation"
                 note="Dimensionless relationship only; not quantitative filtration fraction."
               />
             </dl>
@@ -767,7 +765,7 @@ export function CrrtPhase7PrescriptionWorkbench() {
 
           <section className={styles.unavailablePanel} aria-labelledby={`${idPrefix}-unavailable`}>
             <header>
-              <span>Fail-closed calculation boundary</span>
+              <span>Calculations not supported by the available evidence</span>
               <h3 id={`${idPrefix}-unavailable`}>Unavailable outputs</h3>
             </header>
             <ul>
@@ -775,21 +773,23 @@ export function CrrtPhase7PrescriptionWorkbench() {
                 <li key={output.id}>
                   <div>
                     <strong>{output.label}</strong>
-                    <span>Unavailable · source-limited</span>
+                    <span>Unavailable in this workbench</span>
                   </div>
                   <p>{output.reason}</p>
-                  <small>Source records: {output.sourceRecordIds.join(' + ')}</small>
+                  <small>
+                    Not shown because the available evidence does not support this calculation.
+                  </small>
                 </li>
               ))}
             </ul>
           </section>
 
           <section className={styles.bagResult} aria-labelledby={`${idPrefix}-bag-result`}>
-            <h3 id={`${idPrefix}-bag-result`}>Synthetic bag-duration result</h3>
+            <h3 id={`${idPrefix}-bag-result`}>Practice bag-duration result</h3>
             {result === null ? (
               <p>Unavailable — correct every invalid entry.</p>
             ) : result.syntheticBagDuration === null ? (
-              <p>No result — enter an optional synthetic reference capacity.</p>
+              <p>No result — enter an optional practice bag capacity.</p>
             ) : result.syntheticBagDuration.status === 'unavailable-zero-stream' ? (
               <p>
                 Unavailable — the selected {result.syntheticBagDuration.streamLabel} rate is zero.{' '}
@@ -798,8 +798,8 @@ export function CrrtPhase7PrescriptionWorkbench() {
             ) : (
               <p>
                 <strong>{formatNumber(result.syntheticBagDuration.durationHours ?? 0, 2)} h</strong>{' '}
-                for a synthetic {formatNumber(result.syntheticBagDuration.capacityMl, 0)} mL
-                capacity divided by the entered {result.syntheticBagDuration.streamLabel} rate of{' '}
+                for a practice {formatNumber(result.syntheticBagDuration.capacityMl, 0)} mL capacity
+                divided by the entered {result.syntheticBagDuration.streamLabel} rate of{' '}
                 {formatNumber(result.syntheticBagDuration.streamRateMlPerHour)} mL/h.{' '}
                 {result.syntheticBagDuration.limitation}
               </p>
@@ -810,8 +810,8 @@ export function CrrtPhase7PrescriptionWorkbench() {
 
       <QualitativePrePostDilutionExperiment result={result?.prePostExperiment ?? null} />
 
-      <section className={styles.sourcePanel} aria-labelledby={`${idPrefix}-sources`}>
-        <h3 id={`${idPrefix}-sources`}>Source and assumption record</h3>
+      <details className={styles.sourcePanel}>
+        <summary id={`${idPrefix}-sources`}>Evidence and calculation notes</summary>
         <div>
           <ul>
             {SOURCE_NOTES.map((source) => (
@@ -833,12 +833,12 @@ export function CrrtPhase7PrescriptionWorkbench() {
           </ul>
         </div>
         <p>
-          Educational review prototype only. Actual CRRT selection, prescription, solution use,
+          Educational calculation tool only. Actual CRRT selection, prescription, solution use,
           anticoagulation, device setup, and monitoring depend on the patient, the exact device and
           disposable set, approved institutional protocols, manufacturer instructions, and the
           treating team’s judgment.
         </p>
-      </section>
+      </details>
     </section>
   )
 }

@@ -86,7 +86,7 @@ export const baxterCrrtCrossDeviceTransferCapstone: CrrtCrossDeviceTransferCapst
         prismaxExpression: 'PrisMax pressure labels and manual-reference displayed calculations.',
         prismaflexExpression:
           'Prismaflex pressure labels and distinct hydrostatic display corrections.',
-        transferPrompt: 'What remains canonical?',
+        transferPrompt: 'What clinical reasoning stays the same?',
         options: [
           { id: 'pressure-reasoning', label: 'Causal localization and verification' },
           { id: 'pressure-number', label: 'One numeric display copied across devices' },

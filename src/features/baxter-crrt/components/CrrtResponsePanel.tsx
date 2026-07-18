@@ -42,7 +42,7 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
     <section className={styles.responsePanel} aria-labelledby="crrt-response-heading">
       <div className={styles.responseHeading}>
         <div>
-          <span>Simulated response · synthetic teaching data</span>
+          <span>Case response · simulated clinical data</span>
           <h3 id="crrt-response-heading">Patient, delivery, and reassessment</h3>
         </div>
         <strong>
@@ -84,8 +84,8 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
       <div className={styles.responseSummaries}>
         <p>{pressure.accessibleText}</p>
         <p>
-          The machine has removed {formatNumber(fluid.cumulativeMachinePfrMl, 0)} mL while all
-          simulated external inputs and outputs produce a whole-patient balance of{' '}
+          The machine has removed {formatNumber(fluid.cumulativeMachinePfrMl, 0)} mL while all other
+          recorded inputs and outputs produce a whole-patient balance of{' '}
           {formatNumber(fluid.cumulativeWholePatientBalanceMl, 0)} mL.
         </p>
       </div>
@@ -102,8 +102,8 @@ export function CrrtResponsePanel({ state }: CrrtResponsePanelProps) {
       >
         <table aria-describedby={trendSummaryId}>
           <caption>
-            Recent simulated trend samples. Values are synthetic teaching calibration and unsuitable
-            for patient care.
+            Recent case trends. Values are simulated for education and are not suitable for patient
+            care.
           </caption>
           <thead>
             <tr>
