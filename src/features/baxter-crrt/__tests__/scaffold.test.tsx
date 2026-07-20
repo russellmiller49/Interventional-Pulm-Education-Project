@@ -1,32 +1,53 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
+import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
-import BaxterCrrtLab from '../components/BaxterCrrtLab'
+import { BaxterCrrtHub } from '../components/BaxterCrrtHub'
 
-describe('Baxter CRRT v1 workspace scaffold', () => {
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string | { pathname: string; query?: Record<string, string> }
+    children: ReactNode
+  }) => {
+    const resolved =
+      typeof href === 'string'
+        ? href
+        : `${href.pathname}?${new URLSearchParams(href.query ?? {}).toString()}`
+    return (
+      <a href={resolved} {...rest}>
+        {children}
+      </a>
+    )
+  },
+}))
+
+describe('Baxter CRRT module scaffold', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('renders the private release, educational boundary, profiles, workspace, and evidence boundary', () => {
-    render(<BaxterCrrtLab />)
+  it('renders the protected release, safety boundary, four routes, curriculum, and evidence panel', () => {
+    render(<BaxterCrrtHub />)
 
     expect(screen.getByRole('main')).toHaveAttribute('data-release-stage', 'sme-review')
     expect(
-      screen.getByRole('heading', { name: 'Baxter CRRT Learn, Practice & Mastery' }),
+      screen.getByRole('heading', { name: 'High-yield CRRT reasoning on PrisMax' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('note', { name: 'Educational safety notice' })).toHaveTextContent(
       /never patient-specific advice or a local operating policy/i,
     )
-    expect(screen.getAllByText('PrisMax educational reference profile').length).toBeGreaterThan(0)
-    expect(screen.getByText(/not configured.*confirm site-specific/i)).toBeInTheDocument()
+    const moduleNav = screen.getByRole('navigation', { name: 'Baxter CRRT module sections' })
+    expect(within(moduleNav).getAllByRole('link')).toHaveLength(4)
+    expect(screen.getByRole('heading', { name: 'Curriculum map' })).toBeInTheDocument()
+    expect(screen.getAllByText(/ten core cases/i).length).toBeGreaterThan(0)
     expect(
-      screen.getByRole('heading', {
-        name: 'What supports this educational module',
-      }),
+      screen.getByRole('heading', { name: 'What supports this educational module' }),
     ).toBeInTheDocument()
-    expect(screen.getByText(/18 clinical cases, seven rapid safety drills/i)).toBeInTheDocument()
   })
 
   it('uses reviewed English fallback on non-English routes', () => {
-    render(<BaxterCrrtLab locale="es" />)
+    render(<BaxterCrrtHub locale="es" />)
 
     expect(screen.getByRole('main')).toHaveAttribute('data-no-handoff-translate', 'true')
     expect(screen.getByText('Reviewed-English fallback')).toBeInTheDocument()

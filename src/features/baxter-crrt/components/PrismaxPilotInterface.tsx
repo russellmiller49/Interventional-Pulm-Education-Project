@@ -50,7 +50,7 @@ interface RevealedPrismaxPilotCaseContext {
   readonly identityMasked?: false
   readonly caseId: string
   readonly title: string
-  readonly pathway: 'learn' | 'practice' | 'mastery'
+  readonly pathway: 'practice' | 'mastery'
 }
 
 interface MaskedPrismaxPilotCaseContext {

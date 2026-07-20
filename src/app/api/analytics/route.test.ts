@@ -44,6 +44,8 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
   it.each([
     ['missing summary payload', undefined],
     ['unknown key', { ...validCrrtCaseCompletion(), prediction: 'free text' }],
+    ['retired device identity', { ...validCrrtCaseCompletion(), device: 'prismax-aw8035-2xx' }],
+    ['retired pathway key', { ...validCrrtCaseCompletion(), pathway: 'practice' }],
     ['action history', { ...validCrrtCaseCompletion(), actionHistory: ['changed flow'] }],
     ['laboratory array', { ...validCrrtCaseCompletion(), laboratories: [{ potassium: 6.5 }] }],
     ['trend array', { ...validCrrtCaseCompletion(), trends: [1, 2, 3] }],
@@ -66,11 +68,8 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
   )
 
   it.each([
-    ['full learner case registry', { ...validCrrtCaseCompletion(), caseId: 'CRRT-01' }],
-    [
-      'operational Prismaflex identity',
-      { ...validCrrtCaseCompletion(), device: 'prismaflex-g5036003-6xx' },
-    ],
+    ['first core case', { ...validCrrtCaseCompletion(), caseId: 'CRRT-01' }],
+    ['last optional case', { ...validCrrtCaseCompletion(), caseId: 'CRRT-18' }],
   ])('accepts %s summary events', async (_, body) => {
     const database = authenticatedAnalyticsDatabase()
     supabaseServerMock.mockResolvedValue(database.client)
@@ -148,8 +147,7 @@ function validCrrtCaseCompletion() {
   return {
     interaction: 'case_completed',
     caseId: 'CRRT-04',
-    pathway: 'practice',
-    device: 'prismax-aw8035-2xx',
+    section: 'practice',
     role: 'operator',
     score: 86,
     criticalErrorCount: 0,

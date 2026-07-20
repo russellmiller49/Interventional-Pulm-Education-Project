@@ -44,7 +44,7 @@ function perform(state: CrrtLearningSessionState, actionId: string): CrrtLearnin
     : crrtLearningSessionReducer(state, { type: 'PERFORM_INTERVENTION', interventionId: actionId })
 }
 
-function completeCase(experience: 'learn' | 'practice' | 'mastery'): CrrtLearningSessionState {
+function completeCase(experience: 'practice' | 'mastery'): CrrtLearningSessionState {
   const definition = getBaxterCrrtCase(experience === 'mastery' ? 'CRRT-16' : 'CRRT-04')
   let state = createCrrtLearningSession({
     caseDefinition: definition,
@@ -71,13 +71,7 @@ describe('CRRT v1 outcomes', () => {
     expect(CRRT_MASTERY_MINIMUM_SCORE).toBe(80)
   })
 
-  it('keeps Learn unscored and Practice scored', () => {
-    expect(selectCrrtLearningOutcome(completeCase('learn'))).toMatchObject({
-      scored: false,
-      score: null,
-      mastery: false,
-      reassessmentComplete: true,
-    })
+  it('scores Practice without applying the Mastery designation', () => {
     const practice = selectCrrtLearningOutcome(completeCase('practice'))
     expect(practice.scored).toBe(true)
     expect(practice.score).not.toBeNull()

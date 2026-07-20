@@ -72,7 +72,7 @@ export function CrrtRapidDrillReview() {
           <span>Cause-first safety drills</span>
           <h2 id={REVIEW_HEADING_ID}>Rapid drills</h2>
         </div>
-        <strong>7 runnable drills</strong>
+        <strong>5 runnable drills</strong>
       </header>
 
       <div className={styles.boundary} role="note" aria-labelledby={REVIEW_BOUNDARY_ID}>

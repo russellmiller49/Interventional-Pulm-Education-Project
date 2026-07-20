@@ -25,10 +25,10 @@ import {
   type ExternalFluidRateKey,
 } from './types'
 
-export type CrrtLearningExperience = 'learn' | 'practice' | 'mastery'
-export type CrrtRuntimeSessionMode = 'learner' | 'review-preview'
-/** @deprecated Use CrrtRuntimeSessionMode. */
-export type CrrtRuntimeAudience = 'learner' | 'reviewer'
+export type CrrtLearningExperience = 'practice' | 'mastery'
+
+export const CRRT_PROGRESS_PERSISTENCE_ENABLED = true as const
+export const CRRT_TELEMETRY_ENABLED = true as const
 
 export type CrrtReasoningPhase =
   | 'read'
@@ -86,11 +86,8 @@ export interface CrrtLearningSessionState {
   readonly simulation: CrrtSimulationState
   readonly interfaceState: PrismaxPilotInterfaceState
   readonly experience: CrrtLearningExperience
-  readonly mode: CrrtRuntimeSessionMode
-  readonly persistenceEnabled: boolean
-  readonly telemetryEnabled: boolean
-  /** Compatibility projection for pre-v1 components. */
-  readonly audience: CrrtRuntimeAudience
+  readonly persistenceEnabled: typeof CRRT_PROGRESS_PERSISTENCE_ENABLED
+  readonly telemetryEnabled: typeof CRRT_TELEMETRY_ENABLED
   /** Approved capstone identity; null for every non-Mastery or locked session. */
   readonly masteryCapstoneId: string | null
   readonly roleLens: CrrtRoleLens
@@ -110,8 +107,6 @@ export interface CreateCrrtLearningSessionOptions {
   readonly experience: CrrtLearningExperience
   readonly roleLens: CrrtRoleLens
   readonly attempt: number
-  readonly audience?: CrrtRuntimeAudience
-  readonly mode?: CrrtRuntimeSessionMode
   readonly deviceId?: BaxterCrrtDeviceId
   readonly seed?: number
   /** A registry may cache the already validated normalization result. */
@@ -376,9 +371,7 @@ export function createCrrtLearningSession(
   if (!Number.isSafeInteger(options.attempt) || options.attempt < 1) {
     throw new RangeError('CRRT learning-session attempt must be a positive integer.')
   }
-  const mode = options.mode ?? (options.audience === 'reviewer' ? 'review-preview' : 'learner')
-  const audience: CrrtRuntimeAudience = mode === 'review-preview' ? 'reviewer' : 'learner'
-  if (mode === 'learner' && !isBaxterCrrtLearnerCaseDefinition(options.caseDefinition)) {
+  if (!isBaxterCrrtLearnerCaseDefinition(options.caseDefinition)) {
     throw new Error(
       `CRRT case ${options.caseDefinition.id} is not registered in the unified learner curriculum.`,
     )
@@ -416,10 +409,8 @@ export function createCrrtLearningSession(
     simulation,
     interfaceState,
     experience: options.experience,
-    mode,
-    persistenceEnabled: mode === 'learner',
-    telemetryEnabled: mode === 'learner',
-    audience,
+    persistenceEnabled: CRRT_PROGRESS_PERSISTENCE_ENABLED,
+    telemetryEnabled: CRRT_TELEMETRY_ENABLED,
     masteryCapstoneId,
     roleLens: options.roleLens,
     attempt: options.attempt,
@@ -742,8 +733,6 @@ export function crrtLearningSessionReducer(
         experience: action.experience ?? state.experience,
         roleLens: action.roleLens ?? state.roleLens,
         attempt: action.attempt ?? state.attempt,
-        audience: state.audience,
-        mode: state.mode,
         deviceId: state.simulation.deviceId,
       })
     case 'ENTER_PRECOMMIT_REASONING_PHASE': {

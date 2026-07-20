@@ -30,15 +30,6 @@ const tools: readonly Omit<
   | 'blockingInputs'
 >[] = [
   {
-    id: 'LAB-TRANSPORT',
-    title: 'Transport Mechanism Lab',
-    purpose:
-      'Explore diffusion, convection, ultrafiltration, adsorption, flow direction, molecule class, and qualitative modality relationships.',
-    sourceRecordIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026', 'SYNTH-LAB-TRANSPORT-001'],
-    unavailableExpressions: [],
-    scoringAvailable: true,
-  },
-  {
     id: 'LAB-PRESCRIPTION',
     title: 'Full Prescription Workbench',
     purpose:
@@ -60,23 +51,6 @@ const tools: readonly Omit<
     scoringAvailable: true,
   },
   {
-    id: 'LAB-PREPOST-DILUTION',
-    title: 'Pre- versus post-dilution experiment',
-    purpose:
-      'Explore qualitative dilution, clearance, filtration, and filter-burden tradeoffs without declaring a universal split.',
-    sourceRecordIds: [
-      'REVIEW-CKRT-CORE-2025',
-      'GUID-RRT-ICU-2026',
-      'MATH-PM-003',
-      'MATH-PM-004',
-      'MATH-PM-005',
-      'MATH-PM-006',
-      'SYNTH-LAB-PREPOST-001',
-    ],
-    unavailableExpressions: ['Disputed quantitative pre-infusion expressions are not calculated.'],
-    scoringAvailable: true,
-  },
-  {
     id: 'LAB-PRESSURE-LOCALIZATION',
     title: 'Pressure Localization Lab',
     purpose:
@@ -84,32 +58,6 @@ const tools: readonly Omit<
     sourceRecordIds: ['DEV-PM-009', 'DEV-PM-010', 'MATH-PM-002', 'SYNTH-LAB-PRESSURE-001'],
     unavailableExpressions: [
       'Exact local alarm thresholds and corrective procedures are not represented.',
-    ],
-    scoringAvailable: true,
-  },
-  {
-    id: 'LAB-FLUID-LEDGER',
-    title: 'Fluid Balance Ledger',
-    purpose:
-      'Reconcile external inputs, non-machine outputs, machine patient-fluid removal, and whole-patient balance.',
-    sourceRecordIds: [
-      'FLUID-PM-001',
-      'FLUID-PM-002',
-      'WHITE-2024',
-      'GONEUTRAL-2024',
-      'SYNTH-LAB-FLUID-001',
-    ],
-    unavailableExpressions: [],
-    scoringAvailable: true,
-  },
-  {
-    id: 'LAB-CITRATE-DASHBOARD',
-    title: 'Conceptual Citrate-Calcium Dashboard',
-    purpose:
-      'Recognize linked trend directions, verify safety context, reassess, and escalate without medication quantities or protocol instructions.',
-    sourceRecordIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
-    unavailableExpressions: [
-      'Actionable medication instructions are intentionally outside this educational tool.',
     ],
     scoringAvailable: true,
   },
@@ -136,7 +84,7 @@ if (
   baxterCrrtInstructionalToolManifest.map((tool) => tool.id).join('|') !==
   CRRT_INSTRUCTIONAL_TOOL_IDS.join('|')
 ) {
-  throw new Error('CRRT instructional-tool registry must contain all six tools exactly once.')
+  throw new Error('CRRT instructional-tool registry must contain both embedded labs exactly once.')
 }
 
 export function isBaxterCrrtInstructionalToolId(value: string): value is CrrtInstructionalToolId {

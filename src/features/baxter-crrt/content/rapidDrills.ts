@@ -112,21 +112,6 @@ const seeds: readonly DrillSeed[] = [
     sourceRecordIds: ['DEV-PM-013', 'SYNTH-DRILL-BAG-SCALE-001'],
   },
   {
-    id: 'DRILL-POWER',
-    title: 'Power interruption',
-    engineFaultIds: ['power-interruption'],
-    openingSignal: 'A power interruption pauses treatment delivery.',
-    safeLabel: 'Assess patient, power, device state, circuit, downtime, and delivery',
-    alternativeLabel:
-      'Keep treatment paused and escalate if safe recovery steps cannot be verified',
-    unsafeLabel: 'Resume immediately because power is visible',
-    inspectionDomain: 'patient, power source, device state, circuit, downtime, and messages',
-    correctionBoundary:
-      'Battery duration, recovery, and restart instructions remain device- and configuration-specific.',
-    reassessmentDomain: 'patient, device/circuit readiness, delivered therapy, and recurrence',
-    sourceRecordIds: ['DEV-PM-008', 'SYNTH-DRILL-POWER-001'],
-  },
-  {
     id: 'DRILL-WRONG-SOLUTION',
     title: 'Wrong solution verification',
     engineFaultIds: [],
@@ -142,25 +127,6 @@ const seeds: readonly DrillSeed[] = [
     reassessmentDomain:
       'patient, exposure history, verified configuration, communication, and follow-up',
     sourceRecordIds: ['DEV-PM-013', 'GUID-RRT-ICU-2026'],
-  },
-  {
-    id: 'DRILL-BLOOD-RETURN',
-    title: 'Blood-disposition decision',
-    engineFaultIds: [],
-    openingSignal:
-      'An end-of-treatment scenario requires a blood-disposition decision with incomplete context.',
-    safeLabel:
-      'Stop, verify patient/circuit context, and escalate to device instructions and local policy',
-    alternativeLabel:
-      'Maintain the safe stopped state until the responsible clinician resolves the decision',
-    unsafeLabel: 'Choose return or discard from the simulator alone',
-    inspectionDomain:
-      'patient status, circuit integrity, clot/air concerns, stop/end state, and policy',
-    correctionBoundary:
-      'The drill teaches verification and escalation, never a universal return/discard instruction.',
-    reassessmentDomain:
-      'patient, circuit disposition, treatment closure, documentation, and escalation',
-    sourceRecordIds: ['DEV-PM-014', 'GUID-RRT-ICU-2026'],
   },
 ]
 

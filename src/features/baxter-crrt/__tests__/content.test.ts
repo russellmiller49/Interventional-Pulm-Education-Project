@@ -1,22 +1,20 @@
 import {
   baxterCrrtDeviceProfileSchema,
   baxterCrrtDeviceProfiles,
+  baxterCrrtInstructionalToolManifest,
   baxterCrrtLearningArtifactRegistry,
   baxterCrrtOptionalLocalConfigurationSchema,
-  baxterCrrtPathways,
   baxterCrrtPublicationStatus,
   baxterCrrtReleaseStage,
   baxterCrrtSmeReviewItems,
   baxterCrrtSourceDocuments,
   baxterCrrtSourceRecords,
   initialBaxterCrrtDeviceId,
-  prismaflexDeviceProfile,
-  prismaflexSourceConflictRecords,
   prismaxDeviceProfile,
 } from '../content'
 
-describe('Baxter CRRT v1 content boundaries', () => {
-  it('uses one protected SME-review release state without publishing', () => {
+describe('Baxter CRRT rebuilt content boundaries', () => {
+  it('stays protected in SME review', () => {
     expect(baxterCrrtReleaseStage).toBe('sme-review')
     expect(baxterCrrtPublicationStatus).toBe('draft')
     expect(baxterCrrtSmeReviewItems).toHaveLength(4)
@@ -25,8 +23,8 @@ describe('Baxter CRRT v1 content boundaries', () => {
     )
   })
 
-  it('keeps every pending provenance record runnable in the unified private registry', () => {
-    expect(baxterCrrtLearningArtifactRegistry).toHaveLength(35)
+  it('curates the runtime artifacts to PrisMax, five drills, and two embedded labs', () => {
+    expect(baxterCrrtLearningArtifactRegistry).toHaveLength(27)
     expect(
       baxterCrrtLearningArtifactRegistry.reduce<Record<string, number>>((counts, artifact) => {
         counts[artifact.kind] = (counts[artifact.kind] ?? 0) + 1
@@ -34,43 +32,24 @@ describe('Baxter CRRT v1 content boundaries', () => {
       }, {}),
     ).toEqual({
       case: 18,
-      'rapid-drill': 7,
-      'instructional-tool': 6,
+      'rapid-drill': 5,
+      'instructional-tool': 2,
       mastery: 1,
-      'device-profile': 2,
-      'cross-device-transfer': 1,
+      'device-profile': 1,
     })
-    expect(
-      baxterCrrtLearningArtifactRegistry.every(
-        ({ reviewStatus, runtimeAvailable, releaseStage }) =>
-          reviewStatus === 'pending' && runtimeAvailable && releaseStage === 'sme-review',
-      ),
-    ).toBe(true)
+    expect(baxterCrrtInstructionalToolManifest.map(({ id }) => id)).toEqual([
+      'LAB-PRESCRIPTION',
+      'LAB-PRESSURE-LOCALIZATION',
+    ])
   })
 
-  it('exposes two immutable manual-reference learner profiles', () => {
+  it('exposes one immutable PrisMax learner profile', () => {
     expect(initialBaxterCrrtDeviceId).toBe('prismax-aw8035-2xx')
-    expect(baxterCrrtDeviceProfiles.map(({ id }) => id)).toEqual([
-      'prismax-aw8035-2xx',
-      'prismaflex-g5036003-6xx',
-    ])
-
-    for (const profile of baxterCrrtDeviceProfiles) {
-      expect(baxterCrrtDeviceProfileSchema.safeParse(profile).success).toBe(true)
-      expect(profile.profileKind).toBe('manual-reference')
-      expect(profile.localConfiguration).toBeNull()
-      expect(profile.availability).toBe('learner-runtime')
-      expect(profile.supportedModalities).toEqual(['SCUF', 'CVVH', 'CVVHD', 'CVVHDF'])
-      expect(profile.referenceMetadata.learnerRuntimeEnabled).toBe(true)
-      expect(profile.referenceMetadata.adapterRegistrationStatus).toBe('registered')
-      expect(profile.marketConfiguration).toMatch(/not .*local|not a local/i)
-      expect(Object.isFrozen(profile)).toBe(true)
-      expect(Object.isFrozen(profile.supportedModalities)).toBe(true)
-      expect(Object.isFrozen(profile.screenVocabulary)).toBe(true)
-    }
-
+    expect(baxterCrrtDeviceProfiles).toEqual([prismaxDeviceProfile])
+    expect(baxterCrrtDeviceProfileSchema.safeParse(prismaxDeviceProfile).success).toBe(true)
+    expect(prismaxDeviceProfile.supportedModalities).toEqual(['SCUF', 'CVVH', 'CVVHD', 'CVVHDF'])
     expect(prismaxDeviceProfile.unresolvedFormulaGates).toEqual(['CONFLICT-001', 'CONFLICT-002'])
-    expect(prismaflexDeviceProfile.contextualFormulaConflicts).toEqual(['CONFLICT-010'])
+    expect(Object.isFrozen(prismaxDeviceProfile)).toBe(true)
   })
 
   it('strictly validates optional local extensions without supplying one by default', () => {
@@ -87,28 +66,14 @@ describe('Baxter CRRT v1 content boundaries', () => {
     }
     expect(baxterCrrtOptionalLocalConfigurationSchema.safeParse(localExtension).success).toBe(true)
     expect(
-      baxterCrrtOptionalLocalConfigurationSchema.safeParse({
-        ...localExtension,
-        unknownField: true,
-      }).success,
+      baxterCrrtOptionalLocalConfigurationSchema.safeParse({ ...localExtension, unknown: true })
+        .success,
     ).toBe(false)
   })
 
-  it('keeps source identity, limitations, and known formula conflicts visible', () => {
+  it('retains complete provenance while limiting runtime behavior to PrisMax', () => {
     expect(baxterCrrtSourceDocuments.some(({ id }) => id === 'PRISMAX-AW8035-RB')).toBe(true)
     expect(baxterCrrtSourceDocuments.some(({ id }) => id === 'PRISMAFLEX-G5036003-R05')).toBe(true)
     expect(baxterCrrtSourceRecords.length).toBeGreaterThan(0)
-    expect(prismaflexSourceConflictRecords).toEqual([
-      expect.objectContaining({ id: 'CONFLICT-010', sourceRecordIds: ['DEV-PF-006'] }),
-    ])
-  })
-
-  it('retains the four progressive learning pathways', () => {
-    expect(baxterCrrtPathways.map(({ id }) => id)).toEqual([
-      'orientation',
-      'learn',
-      'practice',
-      'mastery',
-    ])
   })
 })

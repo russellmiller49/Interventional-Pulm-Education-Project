@@ -6,7 +6,7 @@ import { CRRT_CAUSE_FIRST_STEPS, CRRT_RAPID_DRILL_IDS, getCrrtReviewerRapidDrill
 describe('CRRT runnable rapid-drill interface', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('exposes all seven drills and holds the signal behind a prediction commitment', () => {
+  it('exposes all five drills and holds the signal behind a prediction commitment', () => {
     render(<CrrtRapidDrillReview />)
 
     const drillUi = screen.getByTestId('crrt-rapid-drill-review')
@@ -61,9 +61,9 @@ describe('CRRT runnable rapid-drill interface', () => {
     render(<CrrtRapidDrillReview />)
     const drillUi = screen.getByTestId('crrt-rapid-drill-review')
     fireEvent.change(within(drillUi).getByRole('combobox', { name: 'Rapid drill' }), {
-      target: { value: 'DRILL-BLOOD-RETURN' },
+      target: { value: 'DRILL-WRONG-SOLUTION' },
     })
-    const selected = getCrrtReviewerRapidDrill('DRILL-BLOOD-RETURN')
+    const selected = getCrrtReviewerRapidDrill('DRILL-WRONG-SOLUTION')
     fireEvent.click(
       within(drillUi).getByRole('radio', {
         name: new RegExp(selected.predictionOptions[0].label, 'i'),

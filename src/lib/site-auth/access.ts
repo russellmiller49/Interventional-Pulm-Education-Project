@@ -22,13 +22,19 @@ const PUBLIC_EXACT_PATHS = new Set([
 
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/cardiohelp-ecmo',
+  '/icu-hemodynamics',
+  '/mechanical-circulatory-support',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',
+  '/socrates-demo',
 ])
 
 // Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share
 // the parent's access and noindex treatment.
-const PUBLIC_UNLISTED_PATH_PREFIXES = ['/cardiohelp-ecmo'] as const
+const PUBLIC_UNLISTED_PATH_PREFIXES = [
+  '/cardiohelp-ecmo',
+  '/mechanical-circulatory-support',
+] as const
 
 function isPublicUnlistedMatch(normalizedPathname: string) {
   return (
@@ -312,8 +318,20 @@ export function resolveSiteModuleId(pathname: string) {
     return 'mechanical-ventilation'
   }
 
+  if (first === 'icu-hemodynamics') {
+    return 'icu-hemodynamics'
+  }
+
+  if (first === 'mechanical-circulatory-support') {
+    return 'mechanical-circulatory-support'
+  }
+
   if (first === 'baxter-crrt') {
     return 'baxter-crrt'
+  }
+
+  if (first === 'socrates-demo') {
+    return 'socrates-demo'
   }
 
   // Collapse subroutes (hub/learn/practice/assess) into one module id so

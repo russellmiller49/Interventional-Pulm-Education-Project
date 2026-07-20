@@ -12,7 +12,6 @@ import {
   PRISMAX_TMP_SOURCE_ID,
 } from '../pressureModel'
 import type { CrrtFlowRates } from '../types'
-import { prismaflexCalculationAdapter } from './prismaflexCalculations'
 
 export interface DeviceCalculationSourceMap {
   readonly effluentPumpTarget: readonly string[]
@@ -84,15 +83,12 @@ export const prismaxCalculationAdapter: CrrtDeviceCalculationAdapter = Object.fr
 })
 
 /**
- * Resolves the device-specific calculation surface. The two implementations
- * remain separate so ambiguous manual passages cannot silently fall back to
- * another device's arithmetic.
+ * Resolves the PrisMax calculation surface used by the learner runtime.
  */
 export function getCrrtDeviceCalculationAdapter(
   deviceId: BaxterCrrtDeviceId,
 ): CrrtDeviceCalculationAdapter {
   if (deviceId === 'prismax-aw8035-2xx') return prismaxCalculationAdapter
-  if (deviceId === 'prismaflex-g5036003-6xx') return prismaflexCalculationAdapter
   return assertNever(deviceId)
 }
 

@@ -50,6 +50,10 @@ public/fluoroview/cases
 public/models/*
 !public/models/cardiohelp-ecmo/
 !public/models/cardiohelp-ecmo/**
+!public/models/cardiac/
+!public/models/cardiac/**
+!public/models/cardiac-devices/
+!public/models/cardiac-devices/**
 !public/models/rigid-bronchoscopy/
 public/models/rigid-bronchoscopy/*
 !public/models/rigid-bronchoscopy/v2/

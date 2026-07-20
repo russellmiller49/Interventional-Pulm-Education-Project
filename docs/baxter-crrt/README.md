@@ -1,32 +1,32 @@
-# Baxter CRRT v1 documentation
+# Baxter CRRT module documentation
 
 Current release stage: `sme-review`
 
-Canonical route: `/[locale]/baxter-crrt`
-Protected final-SME preview: `/[locale]/baxter-crrt/review`
+Learner routes:
 
-This directory describes the completed private v1 educational module. The module contains 18
-learner cases, seven rapid drills, six instructional tools, one masked PrisMax Mastery capstone,
-two operational device adapters, and one cross-device transfer capstone.
+- `/[locale]/baxter-crrt` — overview, progress, and six-station curriculum map
+- `/[locale]/baxter-crrt/learn` — seven didactic lessons and two embedded labs
+- `/[locale]/baxter-crrt/practice` — ten core cases, seven optional cases, and five safety drills
+- `/[locale]/baxter-crrt/assess` — gated masked PrisMax capstone
 
-Review/source fields are informational provenance. They do not switch cases, tools, drills,
-adapters, or Mastery on or off. One code-owned release stage controls visibility:
+The former `/review` route and monolithic five-mode workspace have been deleted. The base layout is
+already draft/auth gated, unlisted, and noindexed while the release remains in `sme-review`.
 
-| Stage                 | Access and discovery                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------- |
-| `private-development` | Admin-only, unlisted, excluded from search/sitemap, `noindex`                         |
-| `sme-review`          | Admin-only, unlisted, excluded from search/sitemap, `noindex`; full protected preview |
-| `published`           | Public, listed, searchable, sitemap-included, indexable                               |
+The immutable content registry still contains `CRRT-01` through `CRRT-18`. Presentation is curated:
+`CRRT-16` is reserved for the masked capstone and is absent from every Practice picker. PrisMax is
+the only runtime device. Prismaflex remains archival provenance and appears only in an optional
+prior-platform note.
 
-The current build intentionally remains `sme-review`. Publication requires a later explicit
-user-directed change after feedback has been incorporated.
+Review/source fields are informational provenance. They do not switch cases, lessons, drills, labs,
+or assessment behavior on or off. Publication requires a later explicit release-stage change after
+clinical, editorial, accessibility, and privacy review.
 
-## Current documents
+## Documents
 
 - [Requirements](./requirements.md)
 - [Curriculum](./curriculum.md)
 - [Evidence and provenance](./evidence.md)
-- [Engine and device adapters](./engine.md)
+- [Engine and runtime](./engine.md)
 - [Risk register](./risk.md)
 - [Validation record](./validation.md)
 - [Accessibility requirements](./accessibility.md)
@@ -38,7 +38,3 @@ This is professional education, not a medical device, validated digital twin, ce
 program, patient-specific treatment guide, or substitute for the current operator manual, local
 policy, supervised training, or multidisciplinary judgment. The project is independent and is not
 manufactured, sponsored, validated, or endorsed by Baxter.
-
-Default device profiles are manual-reference educational profiles. They do not claim to represent
-any institution's installed hardware, software, disposables, solutions, workflows, or policies.
-The local manuals remain uncommitted source material.

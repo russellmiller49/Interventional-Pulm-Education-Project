@@ -37,26 +37,21 @@ describe('CRRT shared reducer and initial state', () => {
     expect(result).toBe(state)
   })
 
-  it('derives the clinical seed independently of device and reloads a clean fixture', () => {
+  it('derives a deterministic clinical seed and reloads a clean PrisMax fixture', () => {
     const fixture = createSyntheticFixture()
     const prismax = createInitialCrrtSimulationState({
       experience: 'practice',
       attempt: 2,
       deviceId: 'prismax-aw8035-2xx',
     })
-    const prismaflex = createInitialCrrtSimulationState({
-      experience: 'practice',
-      attempt: 2,
-      deviceId: 'prismaflex-g5036003-6xx',
-    })
-    expect(prismax.seed).toBe(prismaflex.seed)
-    expect(prismax.deviceProfileVersion).not.toBe(prismaflex.deviceProfileVersion)
-    expect(
+    expect(prismax.seed).toBe(
       createInitialCrrtSimulationState({
-        fixture,
-        deviceId: 'prismaflex-g5036003-6xx',
-      }).device.adapterStatus,
-    ).toBe('operational-v1')
+        experience: 'practice',
+        attempt: 2,
+        deviceId: 'prismax-aw8035-2xx',
+      }).seed,
+    )
+    expect(prismax.device.adapterStatus).toBe('operational-v1')
 
     let progressed = createInitialCrrtSimulationState({
       fixture,

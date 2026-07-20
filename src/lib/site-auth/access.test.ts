@@ -91,6 +91,44 @@ describe('main site auth access helpers', () => {
     expect(resolveSiteModuleId('/zh-CN/hamilton-c6-ventilation')).toBe('mechanical-ventilation')
   })
 
+  it('keeps the ICU hemodynamics preview public-unlisted with one localized analytics id', () => {
+    expect(isPublicPath('/icu-hemodynamics')).toBe(true)
+    expect(isPublicPath('/es/icu-hemodynamics')).toBe(true)
+    expect(isPublicUnlistedPath('/icu-hemodynamics')).toBe(true)
+    expect(isPublicUnlistedPath('/zh-CN/icu-hemodynamics')).toBe(true)
+    expect(isPublicUnlistedPath('/icu-hemodynamics/extra')).toBe(false)
+    expect(getRequiredEntitlement('/icu-hemodynamics', params())).toBeNull()
+    expect(resolveSiteModuleId('/icu-hemodynamics')).toBe('icu-hemodynamics')
+    expect(resolveSiteModuleId('/es/icu-hemodynamics')).toBe('icu-hemodynamics')
+  })
+
+  it('keeps the MCS lab and its subroutes public-unlisted with one analytics id', () => {
+    for (const path of [
+      '/mechanical-circulatory-support',
+      '/es/mechanical-circulatory-support',
+      '/mechanical-circulatory-support/learn',
+      '/zh-CN/mechanical-circulatory-support/practice',
+      '/mechanical-circulatory-support/assess',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('mechanical-circulatory-support')
+    }
+  })
+
+  it('keeps the localized SOCRATES demo public, unlisted, and exact-match only', () => {
+    for (const path of ['/socrates-demo', '/es/socrates-demo', '/zh-CN/socrates-demo']) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('socrates-demo')
+    }
+
+    expect(isPublicPath('/socrates-demo/extra')).toBe(false)
+    expect(isPublicUnlistedPath('/socrates-demo/extra')).toBe(false)
+  })
+
   it('keeps Baxter CRRT authenticated, non-public, and on one localized analytics ID', () => {
     for (const path of ['/baxter-crrt', '/es/baxter-crrt', '/zh-CN/baxter-crrt']) {
       expect(isPublicPath(path)).toBe(false)

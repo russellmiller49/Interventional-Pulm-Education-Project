@@ -3,6 +3,8 @@ import { stentExplorerPublicationStatus } from '@/features/airway-stent-mechanic
 import { baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
 import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ventilation/content/deviceProfiles'
+import { ICU_HEMODYNAMICS_RELEASE_STAGE } from '@/features/icu-hemodynamics/content'
+import { MCS_RELEASE_STAGE } from '@/features/mechanical-circulatory-support/content'
 
 const airwayStentDraftPathPrefixes =
   stentExplorerPublicationStatus === 'published'
@@ -16,13 +18,21 @@ const baxterCrrtDraftPathPrefixes =
   baxterCrrtReleaseStage === 'published' ? ([] as const) : (['/baxter-crrt'] as const)
 
 const baxterCrrtUnlistedPathPrefixes =
-  baxterCrrtReleaseStage === 'published'
-    ? (['/baxter-crrt/review'] as const)
-    : (['/baxter-crrt'] as const)
+  baxterCrrtReleaseStage === 'published' ? ([] as const) : (['/baxter-crrt'] as const)
 
 const mechanicalVentilationDraftPathPrefixes =
   mechanicalVentilationPublicationStatus === 'draft'
     ? (['/mechanical-ventilation', '/hamilton-c6-ventilation'] as const)
+    : ([] as const)
+
+const icuHemodynamicsUnlistedPathPrefixes =
+  ICU_HEMODYNAMICS_RELEASE_STAGE === 'unlisted-preview'
+    ? (['/icu-hemodynamics'] as const)
+    : ([] as const)
+
+const mechanicalCirculatorySupportUnlistedPathPrefixes =
+  MCS_RELEASE_STAGE === 'unlisted-preview'
+    ? (['/mechanical-circulatory-support'] as const)
     : ([] as const)
 
 const draftModulePathPrefixes = [
@@ -39,6 +49,8 @@ const draftModulePathPrefixes = [
 
 const unlistedModulePathPrefixes = [
   ...baxterCrrtUnlistedPathPrefixes,
+  ...icuHemodynamicsUnlistedPathPrefixes,
+  ...mechanicalCirculatorySupportUnlistedPathPrefixes,
   '/cardiohelp-ecmo',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',

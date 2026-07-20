@@ -1,31 +1,44 @@
-import { render, screen } from '@testing-library/react'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
-import BaxterCrrtLab from '../components/BaxterCrrtLab'
-
-describe('Baxter CRRT v1 private composition', () => {
-  it('mounts complete functionality in SME review without an activation registry', () => {
-    render(<BaxterCrrtLab sessionMode="review-preview" />)
-
-    expect(screen.getByRole('main')).toHaveAttribute('data-release-stage', 'sme-review')
-    expect(screen.getByRole('tab', { name: /^Mastery/ })).toBeEnabled()
-    expect(screen.getByRole('combobox', { name: 'Device profile' })).toHaveLength(2)
-    expect(screen.getByRole('combobox', { name: 'Station-grouped case' })).toHaveLength(18)
-  })
-
-  it('includes operational v1 artifacts while excluding retired authorization machinery', () => {
-    const entry = join(process.cwd(), 'src/features/baxter-crrt/components/BaxterCrrtLab.tsx')
-    const reachable = collectLocalTypeScriptDependencies(entry)
+describe('Baxter CRRT learner composition', () => {
+  it('connects the four learner surfaces to the curated content and PrisMax runtime', () => {
+    const componentDirectory = join(process.cwd(), 'src/features/baxter-crrt/components')
+    const entries = [
+      'BaxterCrrtHub.tsx',
+      'BaxterCrrtLearn.tsx',
+      'BaxterCrrtPractice.tsx',
+      'BaxterCrrtAssess.tsx',
+    ]
+    const reachable = new Set(
+      entries.flatMap((entry) => [
+        ...collectLocalTypeScriptDependencies(join(componentDirectory, entry)),
+      ]),
+    )
     const graph = [...reachable].join('\n')
 
-    expect(graph).toMatch(/deviceAdapters\/registry/)
-    expect(graph).toMatch(/deviceAdapters\/prismaflex/)
-    expect(graph).toMatch(/crossDeviceTransfer/)
-    expect(graph).toMatch(/instructionalTools/)
-    expect(graph).not.toMatch(
-      /content\/(activation|authorization|candidateIdentity|reviewAttestation|phase7Evidence|masteryReviewPlanner)|reviewBuildIdentity/,
-    )
+    expect(graph).toMatch(/content\/learnLessons/)
+    expect(graph).toMatch(/content\/curriculum/)
+    expect(graph).toMatch(/deviceAdapters\/prismax/)
+    expect(graph).toMatch(/CrrtPrescriptionWorkbench/)
+    expect(graph).toMatch(/CrrtPressureLocalizationLab/)
+    expect(graph).not.toMatch(/deviceAdapters\/prismaflex/)
+    expect(graph).not.toMatch(/crossDeviceTransfer/)
+    expect(graph).not.toMatch(/CrrtPhase7InstructionalTools/)
+  })
+
+  it('removes the retired monolithic and reviewer-only entry points', () => {
+    const root = process.cwd()
+    for (const relativePath of [
+      'src/features/baxter-crrt/components/BaxterCrrtLab.tsx',
+      'src/features/baxter-crrt/components/CrrtLearningWorkflow.tsx',
+      'src/features/baxter-crrt/components/CrrtCrossDeviceTransferReview.tsx',
+      'src/features/baxter-crrt/components/CrrtPhase7InstructionalTools.tsx',
+      'src/features/baxter-crrt/engine/deviceAdapters/prismaflex.ts',
+      'src/app/[locale]/baxter-crrt/review/page.tsx',
+    ]) {
+      expect(existsSync(join(root, relativePath))).toBe(false)
+    }
   })
 })
 

@@ -7,11 +7,11 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://upload.wikimedia.org https://*.supabase.co https://*.storage.supabase.co",
+  "img-src 'self' data: blob: https://cdn.ncbi.nlm.nih.gov https://pmc.ncbi.nlm.nih.gov https://upload.wikimedia.org https://www.invenio-cloud.com https://*.supabase.co https://*.storage.supabase.co",
   // blob: lets fetch()-based loaders (three-stdlib GLTFLoader's ImageBitmapLoader) read
   // page-minted blob URLs, e.g. GLB-embedded textures. Blob URLs are only creatable by
   // same-origin script, so this does not widen the origin surface.
-  "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net blob:",
+  "connect-src 'self' https://api.github.com https://www.invenio-cloud.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net blob:",
   "font-src 'self' https://cdn.scite.ai",
   "frame-src 'self' https://www.youtube-nocookie.com",
   "media-src 'self' https://*.supabase.co https://*.storage.supabase.co https://ebus2026.s3.us-east-1.amazonaws.com https://pccmintro.s3.us-east-1.amazonaws.com blob:",
@@ -56,7 +56,7 @@ const embeddedAppSecurityHeaders = securityHeaders.map((header) => {
         .replace(
           // Must stay byte-identical to the base connect-src directive above, or this
           // replace silently stops matching and embedded apps lose their data: source.
-          "connect-src 'self' https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net blob:",
+          "connect-src 'self' https://api.github.com https://www.invenio-cloud.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co https://cdn.jsdelivr.net blob:",
           "connect-src 'self' data: blob: https://api.github.com https://tqnhxlwvkkswuckszlee.supabase.co https://tqnhxlwvkkswuckszlee.storage.supabase.co https://*.supabase.co",
         )
         .replace(

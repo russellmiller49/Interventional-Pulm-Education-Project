@@ -1,66 +1,53 @@
-# Baxter CRRT v1 curriculum
+# Baxter CRRT curriculum
 
-The learner registry contains exactly 18 cases. All are runnable in Learn and Practice; `CRRT-16`
-also supplies the masked PrisMax Mastery fixture. Review metadata is visible to SMEs but does not
-affect availability.
+The source registry retains all 18 runnable cases. `curriculum.ts` is the presentation curation
+layer and does not delete or reorder source definitions.
 
-| Station                       | Case      | Focus                                                                         |
-| ----------------------------- | --------- | ----------------------------------------------------------------------------- |
-| Define the goal               | `CRRT-01` | Septic shock, AKI, and fluid-overload goal definition                         |
-| Define the goal               | `CRRT-02` | Hyperkalemia/acidemia with hemodynamic instability                            |
-| Define the goal               | `CRRT-03` | Controlled solute trajectory in acute brain or liver failure                  |
-| Build the prescription        | `CRRT-04` | CVVHD prescription for a defined solute/acid-base goal                        |
-| Build the prescription        | `CRRT-05` | CVVH pre- versus post-replacement tradeoffs                                   |
-| Build the prescription        | `CRRT-06` | CVVHDF prescribed-versus-delivered therapy                                    |
-| Set up and start              | `CRRT-07` | Incorrect weight or hematocrit entry                                          |
-| Set up and start              | `CRRT-08` | Set, bag, solution, line, prime, and review verification                      |
-| Set up and start              | `CRRT-09` | Anticoagulation protocol selection and verification; no dosing                |
-| Monitor dose and fluid        | `CRRT-10` | Machine removal versus whole-patient fluid balance                            |
-| Monitor dose and fluid        | `CRRT-11` | Hemodynamic intolerance of net removal                                        |
-| Monitor dose and fluid        | `CRRT-12` | Electrolyte, temperature, medication, and nutrition consequences              |
-| Pressures and troubleshooting | `CRRT-13` | Increasingly negative access-pressure pattern                                 |
-| Pressures and troubleshooting | `CRRT-14` | High return pressure versus return disconnection                              |
-| Pressures and troubleshooting | `CRRT-15` | Rising TMP/filter pressure drop from distinct causes                          |
-| Complications and liberation  | `CRRT-16` | Recurrent filter loss across access, filtration, downtime, and policy domains |
-| Complications and liberation  | `CRRT-17` | Conceptual citrate-calcium recognition and escalation                         |
-| Complications and liberation  | `CRRT-18` | Renal recovery, discontinuation, and transition                               |
+## Learn
 
-## Case contract
+1. CRRT indications and modality selection
+2. Solute and water transport
+3. Prescription and delivered dose — embeds the Prescription Workbench
+4. Circuit anatomy and pressure localization — embeds circuit/console figures and the Pressure Lab
+5. Anticoagulation and citrate safety
+6. Alarms and cause-first troubleshooting
+7. Fluid management and liberation
 
-Each case begins from a clean deterministic state. The learner reads the whole situation, defines a
-goal, selects a mechanism, commits a predicted control/response/reassessment bundle, acts, advances
-time, reassesses, and receives a causal debrief. Required paths and accepted alternatives are
-tested independently. Unsafe paths exist for feedback; critical-error rules are educational scoring
-rules rather than universal clinical thresholds.
+All lesson prose is marked `reviewStatus: pending` for owner clinical/editorial review. A collapsed
+advanced note addresses transfer from prior Prismaflex training without activating a second device.
 
-## Rapid drills
+## Practice curation
 
-The seven runnable cause-first drills are `DRILL-AIR`, `DRILL-BLOOD-LEAK`, `DRILL-GAIN-LOSS`,
-`DRILL-BAG-SCALE`, `DRILL-POWER`, `DRILL-WRONG-SOLUTION`, and `DRILL-BLOOD-RETURN`.
+| Station                                            | Core cases           | Optional cases       |
+| -------------------------------------------------- | -------------------- | -------------------- |
+| 1 · Define the goal                                | `CRRT-01`, `CRRT-02` | `CRRT-03`            |
+| 2 · Build the prescription                         | `CRRT-04`, `CRRT-05` | `CRRT-06`            |
+| 3 · Set up and start safely                        | `CRRT-08`            | `CRRT-07`, `CRRT-09` |
+| 4 · Monitor dose and fluid                         | `CRRT-11`            | `CRRT-10`, `CRRT-12` |
+| 5 · Read pressures and troubleshoot                | `CRRT-13`, `CRRT-15` | `CRRT-14`            |
+| 6 · Anticoagulation, complications, and liberation | `CRRT-17`, `CRRT-18` | —                    |
 
-The shared sequence is: acknowledge the signal, assess patient safety, inspect the relevant
-patient/circuit/device domain, verify cause and correction or maintain a safe stopped state, then
-reassess delivery and recurrence. Wrong-solution and blood-disposition drills stop and escalate to
-the current device instructions and local policy; they never invent a substitution or universal
-return/discard instruction.
+`CRRT-16` appears in neither list. It is loaded directly by the assessment manifest only.
 
-## Instructional tools
+## Case loop
 
-1. `LAB-TRANSPORT` — diffusion, convection, ultrafiltration, adsorption, and flow arrangement.
-2. `LAB-PRESCRIPTION` — transparent device calculations and explicitly unavailable expressions.
-3. `LAB-PREPOST-DILUTION` — qualitative split-only tradeoffs, with no universally best split.
-4. `LAB-PRESSURE-LOCALIZATION` — commit a directional prediction before revealing the pattern.
-5. `LAB-FLUID-LEDGER` — reconcile machine removal with all patient inputs and outputs.
-6. `LAB-CITRATE-DASHBOARD` — direction-only linked trends, safety checks, reassessment, escalation.
+Each Practice case starts clean. The learner reads and defines the problem, selects a mechanism and
+control, commits an expected response and reassessment plan, acts in the PrisMax simulation,
+observes time-dependent behavior, reassesses, and receives a causal debrief. Unsafe paths and
+critical errors are educational scoring rules, not universal treatment thresholds.
 
-An unresolved calculation disables only that expression. It does not block the rest of its lab.
+## Safety drills and labs
 
-## Mastery and transfer
+The five drills are `DRILL-AIR`, `DRILL-BLOOD-LEAK`, `DRILL-GAIN-LOSS`, `DRILL-BAG-SCALE`, and
+`DRILL-WRONG-SOLUTION`. Acknowledging a signal is separated from identifying and correcting its
+cause; every drill ends with delivery and patient reassessment.
 
-`MASTERY-PRISMAX-01` masks the `CRRT-16` identity until debrief, supplies no hints, starts clean,
-requires score ≥80, no critical error, and completed reassessment. It is an educational completion
-result, not certification.
+The only interactive concept labs are `LAB-PRESCRIPTION` and `LAB-PRESSURE-LOCALIZATION`, embedded
+inside Learn lessons 3 and 4. Transport, pre/post-dilution, fluid-ledger, and citrate teaching points
+were incorporated into lesson prose instead of separate tools.
 
-`TRANSFER-PRISMAX-PRISMAFLEX-01` tests translation of setup goals, calculation context, pressure
-localization, fluid accounting, and alarm/stop/end reasoning. It deliberately requires relearning
-device-specific controls and makes no claim that the devices are clinically interchangeable.
+## Assess
+
+`MASTERY-PRISMAX-01` masks the `CRRT-16` identity until debrief, offers no hints, starts clean, and
+requires score ≥80, no critical error, and completed reassessment. Completing optional cases or
+drills is not required to unlock it. The result is educational completion, not certification.

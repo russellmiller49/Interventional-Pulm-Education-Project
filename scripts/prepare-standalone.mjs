@@ -18,10 +18,13 @@ const copiedBoardReviewHtmlDir = path.join(
 )
 const copiedBoardReviewTranslationsDir = path.join(standaloneDir, 'board_review_translations')
 
-// Most model assets are hosted by MODULE_ASSET_ORIGIN and intentionally omitted
-// from the Railway standalone bundle. CARDIOHELP ECMO's runtime models are shipped
-// with the app, so keep this directory (and its parent path) in the local bundle.
-const bundledAssetPrefixes = ['models/cardiohelp-ecmo']
+// Most model assets are hosted by MODULE_ASSET_ORIGIN and intentionally omitted.
+// Compact ECMO and cardiac teaching assets ship with the standalone application.
+const bundledAssetPrefixes = [
+  'models/cardiohelp-ecmo',
+  'models/cardiac',
+  'models/cardiac-devices',
+]
 
 const remoteAssetPrefixes = [
   'airway-anatomy',

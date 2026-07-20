@@ -29,42 +29,23 @@ function commitCorrectPrediction(state: CrrtLearningSessionState): CrrtLearningS
   })
 }
 
-describe('CRRT v1 learning-session reducer', () => {
+describe('CRRT learning-session reducer', () => {
   it.each(baxterCrrtLearnerCases)(
-    'creates $id on both operational device adapters',
+    'creates $id on the PrisMax learner runtime',
     (caseDefinition) => {
-      for (const deviceId of ['prismax-aw8035-2xx', 'prismaflex-g5036003-6xx'] as const) {
-        const state = createCrrtLearningSession({
-          caseDefinition,
-          experience: 'learn',
-          roleLens: 'integrated',
-          attempt: 1,
-          deviceId,
-        })
-        expect(state.simulation.deviceId).toBe(deviceId)
-        expect(state.simulation.device.adapterStatus).toBe('operational-v1')
-        expect(state.persistenceEnabled).toBe(true)
-        expect(state.telemetryEnabled).toBe(true)
-      }
+      const state = createCrrtLearningSession({
+        caseDefinition,
+        experience: 'practice',
+        roleLens: 'integrated',
+        attempt: 1,
+        deviceId: 'prismax-aw8035-2xx',
+      })
+      expect(state.simulation.deviceId).toBe('prismax-aw8035-2xx')
+      expect(state.simulation.device.adapterStatus).toBe('operational-v1')
+      expect(state.persistenceEnabled).toBe(true)
+      expect(state.telemetryEnabled).toBe(true)
     },
   )
-
-  it('keeps review-preview fully functional while disabling persistence and telemetry', () => {
-    const state = createCrrtLearningSession({
-      caseDefinition: getBaxterCrrtCase('CRRT-01'),
-      experience: 'practice',
-      roleLens: 'integrated',
-      attempt: 1,
-      mode: 'review-preview',
-    })
-    expect(state).toMatchObject({
-      mode: 'review-preview',
-      audience: 'reviewer',
-      persistenceEnabled: false,
-      telemetryEnabled: false,
-    })
-    expect(commitCorrectPrediction(state).prediction).not.toBeNull()
-  })
 
   it('enforces prediction, intervention, time, reassessment, and debrief order', () => {
     let state = createCrrtLearningSession({
@@ -105,7 +86,7 @@ describe('CRRT v1 learning-session reducer', () => {
     expect(state.debriefRevealed).toBe(true)
   })
 
-  it('runs only the masked CRRT-16 Mastery mapping and ignores hint actions', () => {
+  it('runs only the masked CRRT-16 capstone mapping and ignores hint actions', () => {
     const mastery = createCrrtLearningSession({
       caseDefinition: getBaxterCrrtCase('CRRT-16'),
       experience: 'mastery',
@@ -124,10 +105,10 @@ describe('CRRT v1 learning-session reducer', () => {
     ).toThrow(/Mastery is locked/i)
   })
 
-  it('loads a clean case/device/mode state without carrying prior attempt data', () => {
+  it('loads a clean case and role state without carrying prior attempt data', () => {
     let state = createCrrtLearningSession({
       caseDefinition: getBaxterCrrtCase('CRRT-01'),
-      experience: 'learn',
+      experience: 'practice',
       roleLens: 'integrated',
       attempt: 1,
     })
@@ -138,8 +119,7 @@ describe('CRRT v1 learning-session reducer', () => {
       experience: 'practice',
       roleLens: 'operator',
       attempt: 2,
-      deviceId: 'prismaflex-g5036003-6xx',
-      mode: 'learner',
+      deviceId: 'prismax-aw8035-2xx',
     })
     expect(state).toMatchObject({
       experience: 'practice',
@@ -151,6 +131,6 @@ describe('CRRT v1 learning-session reducer', () => {
       debriefRevealed: false,
     })
     expect(state.caseDefinition.id).toBe('CRRT-18')
-    expect(state.simulation.deviceId).toBe('prismaflex-g5036003-6xx')
+    expect(state.simulation.deviceId).toBe('prismax-aw8035-2xx')
   })
 })

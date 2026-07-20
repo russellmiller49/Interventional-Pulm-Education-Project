@@ -30,7 +30,7 @@ describe('CRRT console controls', () => {
   it('exposes only authored machine-setting actions and preserves clinical prerequisites', () => {
     let state = createCrrtLearningSession({
       caseDefinition: getBaxterCrrtCase('CRRT-01'),
-      experience: 'learn',
+      experience: 'practice',
       roleLens: 'integrated',
       attempt: 1,
     })
@@ -90,7 +90,7 @@ describe('CRRT console controls', () => {
     const state = commitCorrectPrediction(
       createCrrtLearningSession({
         caseDefinition: getBaxterCrrtCase('CRRT-01'),
-        experience: 'learn',
+        experience: 'practice',
         roleLens: 'integrated',
         attempt: 1,
       }),

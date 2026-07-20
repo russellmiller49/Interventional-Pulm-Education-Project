@@ -10,16 +10,13 @@ import type { BaxterCrrtReviewStatus } from './reviewStatus'
 export { baxterCrrtPublicationStatus, baxterCrrtReleaseStage }
 export type { BaxterCrrtPublicationStatus, BaxterCrrtReviewStatus }
 
-export const BAXTER_CRRT_DEVICE_IDS = Object.freeze([
-  'prismax-aw8035-2xx',
-  'prismaflex-g5036003-6xx',
-] as const)
+export const BAXTER_CRRT_DEVICE_IDS = Object.freeze(['prismax-aw8035-2xx'] as const)
 
 export type BaxterCrrtDeviceId = (typeof BAXTER_CRRT_DEVICE_IDS)[number]
 export type BaxterCrrtModalityLabel = 'SCUF' | 'CVVH' | 'CVVHD' | 'CVVHDF'
 
 export type BaxterCrrtFormulaGateId = 'CONFLICT-001' | 'CONFLICT-002'
-export type BaxterCrrtFormulaConflictId = BaxterCrrtFormulaGateId | 'CONFLICT-010'
+export type BaxterCrrtFormulaConflictId = BaxterCrrtFormulaGateId
 
 export interface BaxterCrrtFlowRateIncrement {
   readonly controlId: string
@@ -187,7 +184,7 @@ export const baxterCrrtDeviceProfileSchema: z.ZodType<BaxterCrrtDeviceProfile> =
     pressureCalculationSourceIds: z.array(nonEmptyString).min(1),
     fluidCalculationSourceIds: z.array(nonEmptyString).min(1),
     unresolvedFormulaGates: z.array(z.enum(['CONFLICT-001', 'CONFLICT-002'])),
-    contextualFormulaConflicts: z.array(z.enum(['CONFLICT-001', 'CONFLICT-002', 'CONFLICT-010'])),
+    contextualFormulaConflicts: z.array(z.enum(['CONFLICT-001', 'CONFLICT-002'])),
     deviceReviewStatus: reviewStatusSchema,
     clinicalReviewStatus: reviewStatusSchema,
     sourceRecordIds: z.array(nonEmptyString).min(1),
@@ -360,110 +357,10 @@ export const prismaxDeviceProfile: Readonly<BaxterCrrtDeviceProfile> = deepFreez
   ]),
 })
 
-export const prismaflexDeviceProfile: Readonly<BaxterCrrtDeviceProfile> = deepFreezeProfile({
-  id: 'prismaflex-g5036003-6xx',
-  profileKind: 'manual-reference',
-  profileVersion: 'prismaflex-g5036003-r05-6xx-v1.0.0',
-  displayName: 'Prismaflex educational reference profile',
-  manufacturerDisclosure: 'Gambro Lundia AB',
-  manualNumber: 'G5036003',
-  manualRevision: 'Revision 05.2011',
-  manualSourceSha256: '6d311624ec075c86ff539d3a86f3ed77cd2ca467346168ee4985af09f0a9224b',
-  sourceProgramFamily: 'Manual for program 6.xx',
-  marketConfiguration:
-    'Multi-market manual-revision educational reference; not a local installed configuration',
-  localConfiguration: null,
-  availability: 'learner-runtime',
-  publicationStatus: baxterCrrtPublicationStatus,
-  referenceMetadata: referenceMetadata([
-    'Color touch-screen display',
-    'Context-dependent softkeys',
-    'Arrow controls for settings and history navigation',
-  ]),
-  supportedModalities: allModalities,
-  enabledTherapies: Object.freeze([
-    'SCUF educational workflow',
-    'CVVH educational workflow',
-    'CVVHD educational workflow',
-    'CVVHDF educational workflow',
-  ]),
-  enabledSetsAndAccessories: Object.freeze([
-    'Generic four-pump CRRT circuit representation',
-    'Generic four-scale teaching configuration',
-  ]),
-  pumpAndScaleInventory: Object.freeze({
-    status: 'manual-reference-educational',
-    items: Object.freeze([
-      'Four therapy-dependent peristaltic fluid pumps',
-      'Four therapy-dependent fluid and effluent scales',
-      'Blood pump and return-line safety clamp',
-    ]),
-  }),
-  flowRateRanges: Object.freeze({
-    status: 'case-authored-educational',
-    ranges: Object.freeze([
-      'Every scenario supplies an explicit synthetic range; no local device limit is inferred.',
-    ]),
-  }),
-  flowRateIncrements: Object.freeze({
-    status: 'case-authored-educational',
-    increments: Object.freeze([]),
-  }),
-  setupSequenceStatus: 'full-v1-reference-workflow',
-  screenVocabulary: Object.freeze([
-    'Choose Patient',
-    'Enter Patient Information',
-    'Choose Therapy',
-    'Choose Anticoagulation Method',
-    'Load Set',
-    'Prepare and Connect Solutions',
-    'Verify Setup',
-    'Prime',
-    'Prime Test',
-    'Enter Treatment Settings',
-    'Enter Flow Settings',
-    'Review Prescription',
-    'Connect Patient',
-    'Verify Patient Connection',
-    'Start Treatment',
-    'Status',
-    'History',
-    'Alarm help',
-    'Stop',
-    'Treatment Complete',
-  ]),
-  alarmBehaviorStatus: 'curriculum-mapped-reference',
-  pressureCalculationSourceIds: Object.freeze(['DEV-PF-004', 'DEV-PF-005', 'DEV-PF-006']),
-  fluidCalculationSourceIds: Object.freeze(['DEV-PF-006']),
-  unresolvedFormulaGates: Object.freeze([]),
-  contextualFormulaConflicts: Object.freeze(['CONFLICT-010']),
-  deviceReviewStatus: 'pending',
-  clinicalReviewStatus: 'pending',
-  sourceRecordIds: Object.freeze([
-    'DEV-PF-001',
-    'DEV-PF-002',
-    'DEV-PF-003',
-    'DEV-PF-004',
-    'DEV-PF-005',
-    'DEV-PF-006',
-    'DEV-PF-007',
-    'DEV-PF-008',
-  ]),
-  excludedSurfaceGroups: Object.freeze([
-    'HP, TPE, and other non-CRRT therapy workflows',
-    'Administrator, service, password, connectivity, and remote-control surfaces',
-    'Manufacturer branding, screenshots, copied figures, and proprietary trade dress',
-    'Local solution, set, alarm-limit, and protocol claims',
-    'Actionable citrate/calcium dosing',
-    'Certification or independent-operator competency claims',
-  ]),
-})
-
 baxterCrrtDeviceProfileSchema.parse(prismaxDeviceProfile)
-baxterCrrtDeviceProfileSchema.parse(prismaflexDeviceProfile)
 
 export const baxterCrrtDeviceProfiles: readonly Readonly<BaxterCrrtDeviceProfile>[] = Object.freeze(
-  [prismaxDeviceProfile, prismaflexDeviceProfile],
+  [prismaxDeviceProfile],
 )
 
 export const initialBaxterCrrtDeviceId: BaxterCrrtDeviceId = 'prismax-aw8035-2xx'
@@ -499,7 +396,7 @@ export const baxterCrrtSmeReviewItems: readonly BaxterCrrtSmeReviewItem[] = Obje
     domain: 'device-fidelity',
     label: 'Device workflow and terminology',
     reviewStatus: 'pending',
-    note: 'Review the manual-reference PrisMax and Prismaflex workflows and limitations.',
+    note: 'Review the manual-reference PrisMax workflow, calculations, alarms, and limitations.',
   }),
   Object.freeze({
     domain: 'accessibility',

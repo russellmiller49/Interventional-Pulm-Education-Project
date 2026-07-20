@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 
-import { CrrtPhase7PrescriptionWorkbench } from '../components/CrrtPrescriptionWorkbench'
+import { CrrtPrescriptionWorkbench } from '../components/CrrtPrescriptionWorkbench'
 import {
   calculatePrescriptionWorkbench,
   calculateQualitativePrePostDilution,
@@ -147,7 +147,7 @@ describe('learner prescription workbench UI', () => {
   beforeEach(() => window.localStorage.clear())
 
   it('is learner-available with informational provenance and no competency claim', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     const workbench = screen.getByRole('region', { name: 'Full Prescription Workbench' })
     expect(workbench).toHaveAttribute('data-reviewer-only', 'false')
@@ -163,7 +163,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('permits only no anticoagulation and leaves the solution registry unavailable', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     const anticoagulation = screen.getByRole('combobox', { name: 'Anticoagulation concept' })
     expect(anticoagulation).toHaveValue('none')
@@ -188,7 +188,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('renders source-linked arithmetic while keeping disputed outputs visibly unavailable', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     expect(screen.getByText('2,100 mL/h')).toBeInTheDocument()
     expect(screen.getByText('30 mL/kg/h')).toBeInTheDocument()
@@ -208,7 +208,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('updates the accessible qualitative experiment without presenting a best split', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     fireEvent.change(screen.getByRole('spinbutton', { name: /^Pre-replacement flow/ }), {
       target: { value: '700' },
@@ -238,7 +238,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('keeps invalid raw text and makes every calculated output visibly unavailable', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     const weight = screen.getByRole('spinbutton', { name: /^Example weight/ })
     fireEvent.change(weight, { target: { value: '' } })
@@ -264,7 +264,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('fails all calculated outputs closed for an invalid optional capacity', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     const capacity = screen.getByRole('spinbutton', { name: /^Practice bag capacity/ })
     fireEvent.change(capacity, { target: { value: '-1' } })
@@ -277,7 +277,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('fails closed when individually finite entries overflow a derived calculation', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     const bloodFlow = screen.getByRole('spinbutton', { name: /^Blood flow/ })
     fireEvent.change(bloodFlow, { target: { value: '1e308' } })
@@ -289,7 +289,7 @@ describe('learner prescription workbench UI', () => {
   })
 
   it('withholds bag duration until a positive practice capacity is entered', () => {
-    render(<CrrtPhase7PrescriptionWorkbench />)
+    render(<CrrtPrescriptionWorkbench />)
 
     expect(
       screen.getByText(/No result — enter an optional practice bag capacity/i),

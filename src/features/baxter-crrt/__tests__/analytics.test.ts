@@ -1,21 +1,12 @@
-import {
-  buildBaxterCrrtAnalyticsEvent,
-  buildBaxterCrrtAnalyticsEventForSession,
-  buildBaxterCrrtAnalyticsPayload,
-} from '../analytics'
+import { buildBaxterCrrtAnalyticsEvent, buildBaxterCrrtAnalyticsPayload } from '../analytics'
 import type { BaxterCrrtAnalyticsEventPayload } from '@/lib/baxter-crrt-analytics'
-
-const context = {
-  device: 'prismax-aw8035-2xx',
-  role: 'operator',
-} as const
 
 function completedCasePayload(): BaxterCrrtAnalyticsEventPayload {
   return {
     interaction: 'case_completed',
+    section: 'practice',
     caseId: 'CRRT-04',
-    pathway: 'practice',
-    ...context,
+    role: 'operator',
     score: 86,
     criticalErrorCount: 0,
     hintCount: 1,
@@ -27,7 +18,7 @@ function completedCasePayload(): BaxterCrrtAnalyticsEventPayload {
 }
 
 describe('Baxter CRRT analytics builders', () => {
-  it('builds a bounded case outcome without prediction, action, laboratory, or trend data', () => {
+  it('builds a bounded outcome without device, drill, tool, action, laboratory, or trend data', () => {
     const payload = buildBaxterCrrtAnalyticsPayload(completedCasePayload())
 
     expect(payload).toEqual(completedCasePayload())
@@ -36,26 +27,23 @@ describe('Baxter CRRT analytics builders', () => {
         'caseId',
         'completed',
         'criticalErrorCount',
-        'device',
         'elapsedSeconds',
         'hintCount',
         'interaction',
-        'pathway',
         'reassessmentCompleted',
         'role',
         'score',
+        'section',
         'timeToFirstSafeActionSeconds',
       ].sort(),
     )
-    expect(JSON.stringify(payload)).not.toMatch(/prediction|actionHistory|laborator|trend/i)
+    expect(JSON.stringify(payload)).not.toMatch(
+      /device|drill|tool|prediction|actionHistory|laborator|trend/i,
+    )
   })
 
   it('derives the generic event type and always fixes the module ID', () => {
-    expect(
-      buildBaxterCrrtAnalyticsEvent({
-        eventPayload: completedCasePayload(),
-      }),
-    ).toEqual({
+    expect(buildBaxterCrrtAnalyticsEvent({ eventPayload: completedCasePayload() })).toEqual({
       eventType: 'quiz_submitted',
       moduleId: 'baxter-crrt',
       eventPayload: completedCasePayload(),
@@ -65,58 +53,73 @@ describe('Baxter CRRT analytics builders', () => {
       buildBaxterCrrtAnalyticsEvent({
         eventPayload: {
           interaction: 'station_completed',
-          pathway: 'practice',
-          ...context,
+          section: 'practice',
           completed: true,
         },
       }).eventType,
     ).toBe('section_completed')
   })
 
-  it('accepts stable Learn lesson identifiers and requires clean pathway semantics', () => {
+  it('accepts the seven stable Learn lesson identifiers with clean section semantics', () => {
     expect(
       buildBaxterCrrtAnalyticsPayload({
         interaction: 'lesson_completed',
-        lessonId: 'crrt-04.learn',
-        pathway: 'learn',
-        ...context,
+        lessonId: 'crrt-circuit-pressures',
+        section: 'learn',
         completed: true,
         elapsedSeconds: 300,
       }),
-    ).toMatchObject({ lessonId: 'crrt-04.learn', pathway: 'learn' })
+    ).toMatchObject({ lessonId: 'crrt-circuit-pressures', section: 'learn' })
 
     expect(() =>
       buildBaxterCrrtAnalyticsPayload({
         interaction: 'lesson_opened',
-        lessonId: 'crrt-04.learn',
-        pathway: 'practice',
-        ...context,
+        lessonId: 'crrt-circuit-pressures',
+        section: 'practice',
       }),
     ).toThrow()
   })
 
-  it('rejects out-of-range metrics, unstable IDs, and unknown privacy-sensitive keys', () => {
-    expect(() =>
+  it('accepts curated Practice cases and the Assess capstone but rejects CRRT-16 as practice', () => {
+    expect(
+      buildBaxterCrrtAnalyticsPayload({ ...completedCasePayload(), caseId: 'CRRT-18' }),
+    ).toEqual({
+      ...completedCasePayload(),
+      caseId: 'CRRT-18',
+    })
+    expect(
       buildBaxterCrrtAnalyticsPayload({
-        ...completedCasePayload(),
-        score: 101,
+        interaction: 'capstone_completed',
+        section: 'assess',
+        masteryId: 'MASTERY-PRISMAX-01',
+        role: 'integrated',
+        score: 84,
+        criticalErrorCount: 0,
+        hintCount: 0,
+        completed: true,
+        reassessmentCompleted: true,
       }),
-    ).toThrow()
+    ).toMatchObject({ masteryId: 'MASTERY-PRISMAX-01', section: 'assess' })
     expect(() =>
       buildBaxterCrrtAnalyticsPayload({
         ...completedCasePayload(),
-        elapsedSeconds: 86_401,
-      }),
-    ).toThrow()
-    expect(() =>
-      buildBaxterCrrtAnalyticsPayload({
-        ...completedCasePayload(),
-        caseId: 'CRRT-99',
+        caseId: 'CRRT-16',
       } as unknown as BaxterCrrtAnalyticsEventPayload),
+    ).toThrow()
+  })
+
+  it('rejects out-of-range metrics, unstable IDs, and privacy-sensitive or retired keys', () => {
+    expect(() =>
+      buildBaxterCrrtAnalyticsPayload({ ...completedCasePayload(), score: 101 }),
+    ).toThrow()
+    expect(() =>
+      buildBaxterCrrtAnalyticsPayload({ ...completedCasePayload(), elapsedSeconds: 86_401 }),
     ).toThrow()
 
     const unsafe = {
       ...completedCasePayload(),
+      device: 'prismax-aw8035-2xx',
+      pathway: 'practice',
       prediction: 'Free-text clinical reasoning must never leave the browser.',
       actionHistory: [{ action: 'changed prescription' }],
       laboratories: [{ potassium: 6.5 }],
@@ -129,34 +132,8 @@ describe('Baxter CRRT analytics builders', () => {
     const unsafeEvent = {
       eventPayload: completedCasePayload(),
       percentComplete: 100,
-      section: 'Patient potassium remained high',
     } as unknown as Parameters<typeof buildBaxterCrrtAnalyticsEvent>[0]
 
     expect(() => buildBaxterCrrtAnalyticsEvent(unsafeEvent)).toThrow()
-  })
-
-  it('accepts the full case registry, Mastery, and both device identities', () => {
-    for (const validPayload of [
-      { ...completedCasePayload(), caseId: 'CRRT-01' },
-      { ...completedCasePayload(), pathway: 'mastery' },
-      { ...completedCasePayload(), device: 'prismaflex-g5036003-6xx' },
-    ]) {
-      expect(
-        buildBaxterCrrtAnalyticsPayload(validPayload as unknown as BaxterCrrtAnalyticsEventPayload),
-      ).toEqual(validPayload)
-    }
-  })
-
-  it('suppresses event creation in final-SME review-preview sessions', () => {
-    expect(
-      buildBaxterCrrtAnalyticsEventForSession('review-preview', {
-        eventPayload: completedCasePayload(),
-      }),
-    ).toBeNull()
-    expect(
-      buildBaxterCrrtAnalyticsEventForSession('learner', {
-        eventPayload: completedCasePayload(),
-      }),
-    ).toMatchObject({ moduleId: 'baxter-crrt' })
   })
 })

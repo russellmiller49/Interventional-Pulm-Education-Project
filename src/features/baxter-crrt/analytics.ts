@@ -36,11 +36,3 @@ export function buildBaxterCrrtAnalyticsEvent(input: {
     eventPayload: parsed.eventPayload,
   }
 }
-
-export function buildBaxterCrrtAnalyticsEventForSession(
-  sessionMode: 'learner' | 'review-preview',
-  input: { readonly eventPayload: BaxterCrrtAnalyticsEventPayload },
-): BaxterCrrtAnalyticsEvent | null {
-  if (sessionMode === 'review-preview') return null
-  return buildBaxterCrrtAnalyticsEvent(input)
-}

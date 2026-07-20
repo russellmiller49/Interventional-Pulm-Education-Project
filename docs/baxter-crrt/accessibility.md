@@ -1,38 +1,33 @@
-# Baxter CRRT v1 accessibility requirements
+# Baxter CRRT accessibility requirements
 
-Accessibility is part of the v1 implementation and private validation, not a staged activation
-gate.
+Accessibility is part of the implementation and SME review, not a runtime activation gate.
 
 ## Required behavior
 
-- All actions are native buttons, links, selects, radios, checkboxes, inputs, or equivalent semantic
-  controls with visible focus.
-- Learning-experience tabs and mobile surface tabs use correct tab/tabpanel relationships, roving
-  arrow-key navigation, Home/End behavior, and focus restoration.
-- Stop/end dialogs move focus in and return it to the invoking control.
-- Targets are at least 44 by 44 CSS pixels where the control is safety-relevant or touch-oriented.
-- Patient, machine, circuit, pressure, trend, fluid, and alarm visuals have text equivalents.
-- Global alarm state remains available when another mobile panel is active.
-- Status changes use appropriate live regions without repeated or competing announcements.
-- Color, motion, and sound are never the only carriers of meaning.
-- `prefers-reduced-motion` suppresses nonessential animation.
-- Content remains usable at 200% zoom, 320 CSS pixels, and tablet widths without two-dimensional
-  page scrolling; intentionally scrollable tables are labeled and keyboard reachable.
-- Reviewed-English fallback is explicit on non-English routes and clinical/device copy is excluded
+- Overview, Learn, Practice, and Assess are semantic links with the current page identified.
+- The case player's four tabs have correct tab/tabpanel relationships, roving arrow navigation,
+  Home/End behavior, linked IDs, and visible focus.
+- Actions use native buttons, links, selects, radios, checkboxes, inputs, or equivalent semantics.
+- Touch-oriented controls provide at least 44 CSS pixels of target height.
+- Patient, machine, circuit, pressure, trend, fluid, alarm, score, and debrief visuals have text
+  equivalents; status changes use appropriate live regions.
+- Color and motion are never the sole carriers of meaning, and `prefers-reduced-motion` suppresses
+  nonessential animation.
+- Content remains usable at 200% zoom, 320 CSS pixels, and tablet widths without document-level
+  two-dimensional scrolling.
+- Non-English routes show an explicit reviewed-English fallback and exclude clinical/device copy
   from automatic handoff translation.
 
 ## Verification checklist
 
-- [ ] Complete both protected routes with keyboard only.
-- [ ] Verify tab order, arrow navigation, focus visibility, and dialog focus return.
-- [ ] Inspect accessible names/descriptions for case, device, drill, tool, and citrate controls.
-- [ ] Read alarm, circuit, pressure, trend, fluid, score, and debrief summaries with a screen reader.
-- [ ] Confirm no hidden active alarm when switching the five mobile tabs.
-- [ ] Test 200% browser zoom and 320-pixel reflow.
-- [ ] Test representative tablet portrait and landscape widths.
-- [ ] Enable reduced motion and confirm no information is lost.
-- [ ] Confirm all critical/touch targets meet 44-pixel sizing.
-- [ ] Confirm preview mode remains fully operable while writing no progress or telemetry.
+- [ ] Traverse all four routes and complete a Practice case with keyboard only.
+- [ ] Verify module navigation, case-tab arrow navigation, focus visibility, and focus return.
+- [ ] Inspect accessible names for the role lens, core picker, optional cases, PrisMax controls,
+      drills, both labs, assessment gate, and debrief.
+- [ ] Read circuit, pressure, trend, fluid, alarm, score, and source summaries with a screen reader.
+- [ ] Test 200% browser zoom, 320-pixel reflow, and representative tablet widths.
+- [ ] Enable reduced motion and confirm that no information is lost.
+- [ ] Confirm safety-relevant and touch targets meet the 44-pixel requirement.
 
-Findings belong in the ordinary implementation backlog or final SME feedback. No signature,
-attestation, candidate hash, or activation authorization is required.
+Findings belong in the implementation backlog or final SME feedback. No signature, attestation,
+candidate hash, or activation authorization is required.

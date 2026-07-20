@@ -1,8 +1,4 @@
-import {
-  initialBaxterCrrtDeviceId,
-  prismaflexDeviceProfile,
-  prismaxDeviceProfile,
-} from '../content/deviceProfiles'
+import { initialBaxterCrrtDeviceId, prismaxDeviceProfile } from '../content/deviceProfiles'
 import { BAXTER_CRRT_CONTENT_VERSION } from '../content/versions'
 import { getCrrtDeviceCalculationAdapter } from './deviceAdapters/calculations'
 import { getBaxterCrrtDeviceAdapter } from './deviceAdapters/registry'
@@ -25,7 +21,6 @@ export const CRRT_ENGINE_VERSION = '1.0.0'
 export const CRRT_SCHEMA_VERSION = '2.0.0'
 export const CRRT_CONTENT_VERSION = BAXTER_CRRT_CONTENT_VERSION
 export const CRRT_PRISMAX_PROFILE_VERSION = prismaxDeviceProfile.profileVersion
-export const CRRT_PRISMAFLEX_PROFILE_VERSION = prismaflexDeviceProfile.profileVersion
 
 export const zeroCrrtFlowRates: CrrtFlowRates = Object.freeze({
   bloodFlowMlMin: 0,
@@ -243,10 +238,7 @@ export function createInitialCrrtSimulationState(
     engineVersion: CRRT_ENGINE_VERSION,
     schemaVersion: CRRT_SCHEMA_VERSION,
     contentVersion: CRRT_CONTENT_VERSION,
-    deviceProfileVersion:
-      deviceId === 'prismax-aw8035-2xx'
-        ? CRRT_PRISMAX_PROFILE_VERSION
-        : CRRT_PRISMAFLEX_PROFILE_VERSION,
+    deviceProfileVersion: CRRT_PRISMAX_PROFILE_VERSION,
     protocolProfileVersion: null,
     simulationTimeSeconds: 0,
     seed,

@@ -278,7 +278,7 @@ function rewriteLearnerFacingString(value: string): string {
       ],
       [
         'Translate the canonical state through the selected device adapter; screen order and vocabulary remain device-specific.',
-        'Apply the same clinical reasoning on either device while accounting for differences in screen order and terminology.',
+        'Apply the clinical reasoning through the PrisMax screen order and terminology; screens support rather than replace the reasoning.',
       ],
       [
         'Frames the whole synthetic scenario before choosing a device or clinical control.',
@@ -877,7 +877,7 @@ function promoteExistingCase(definition: RuntimeCrrtCase): MutableRuntimeCrrtCas
   promoted.contentVersion = BAXTER_CRRT_CONTENT_VERSION
   promoted.engineModelConfiguration.version = BAXTER_CRRT_CONTENT_VERSION
   promoted.debrief.machineNavigationPoint =
-    'Apply the same clinical reasoning on either device while accounting for differences in screen order and terminology.'
+    'Apply the clinical reasoning through the PrisMax screen order and terminology; screens support rather than replace the reasoning.'
   return promoted
 }
 
@@ -1133,7 +1133,7 @@ function buildAdaptedCase(narrative: CaseNarrative): MutableRuntimeCrrtCase {
   cloned.debrief.criticalErrorsReview = narrative.unsafeAction
   cloned.debrief.acceptedAlternativesReview = narrative.acceptedAlternative
   cloned.debrief.machineNavigationPoint =
-    'Apply the same clinical reasoning on either device while accounting for differences in screen order and terminology.'
+    'Apply the clinical reasoning through the PrisMax screen order and terminology; screens support rather than replace the reasoning.'
   cloned.debrief.transferQuestion = narrative.transferQuestion
   cloned.debrief.sourceIds = [...narrativeSourceIds]
 
@@ -1385,7 +1385,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Serial reassessment determines whether coordination remains appropriate.',
     ],
     transferQuestion:
-      'How would you preserve the same controlled-trajectory reasoning while locating delivery and history data on the other device?',
+      'How would an unexpected delivery interruption change the controlled trajectory and your reassessment plan?',
     clinicalSourceIds: ['GUID-NICE-NG148-2024', 'GUID-RRT-ICU-2026'],
   },
   {
@@ -1419,7 +1419,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Independent verification precedes simulated connection.',
     ],
     transferQuestion:
-      'Which screen sequence and bag/scale topology change on Prismaflex while the verification domains stay the same?',
+      'Which setup-verification domains must be repeated after any mismatch is corrected?',
     clinicalSourceIds: ['DEV-PM-005', 'DEV-PM-013'],
   },
   {
@@ -1454,7 +1454,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Missing verification leads to stopping and escalation.',
     ],
     transferQuestion:
-      'How would you verify the same protocol identity and responsibility boundaries on a device with different setup screens?',
+      'What must be reverified if the protocol version, patient applicability, or responsible team changes?',
     clinicalSourceIds: ['GUID-RRT-ICU-2026'],
   },
   {
@@ -1490,7 +1490,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Multidisciplinary reassessment distinguishes plausible contributors.',
     ],
     transferQuestion:
-      'Where would you find the device history and delivered-therapy context needed for the same multidisciplinary review on Prismaflex?',
+      'Which treatment-history and delivered-therapy findings belong in the multidisciplinary review?',
     clinicalSourceIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
   },
   {
@@ -1524,7 +1524,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Circuit inspection and reassessment verify the cause.',
     ],
     transferQuestion:
-      'How do Prismaflex alarm/help presentation and pressure labels differ while the return-path localization logic remains canonical?',
+      'Which patient, circuit, and pressure findings would distinguish obstruction from disconnection before resuming?',
     clinicalSourceIds: ['DEV-PM-009', 'DEV-PM-010'],
   },
   {
@@ -1559,7 +1559,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Unresolved protocol questions are escalated without invented instructions.',
     ],
     transferQuestion:
-      'Which history, pressure, and delivered-therapy views would you compare on each device before presenting the same causal summary?',
+      'Which history, pressure, and delivered-therapy views belong in a concise causal summary of recurrent filter loss?',
     clinicalSourceIds: ['DEV-PM-009', 'DEV-PM-010', 'REVIEW-CKRT-CORE-2025'],
   },
   {
@@ -1595,7 +1595,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'The responsible team receives a structured escalation and reassessment summary.',
     ],
     transferQuestion:
-      'How would you communicate the same conceptual trend and escalation boundary when device vocabulary changes?',
+      'How would you communicate the linked trend, missing context, and escalation boundary to the responsible team?',
     clinicalSourceIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
   },
   {
@@ -1630,7 +1630,7 @@ const authoredNarratives: readonly CaseNarrative[] = [
       'Post-transition monitoring and escalation close the loop.',
     ],
     transferQuestion:
-      'How do stop/end and disposition controls differ between PrisMax and Prismaflex while the clinical transition decision remains device-neutral?',
+      'How would you keep the clinical transition decision separate from PrisMax stop/end controls and the follow-up plan?',
     clinicalSourceIds: ['GUID-NICE-NG148-2024', 'GUID-RRT-ICU-2026'],
   },
 ]

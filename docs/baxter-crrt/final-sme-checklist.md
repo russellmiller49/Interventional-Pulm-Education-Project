@@ -1,36 +1,37 @@
-# Baxter CRRT v1 final SME feedback checklist
+# Baxter CRRT final SME feedback checklist
 
-Purpose: gather concrete feedback on the complete protected v1 before public release. This is a
-lightweight review aid, not an approval form, signed attestation, activation record, or competency
-decision. The entire module remains runnable during review.
+Purpose: gather concrete feedback on the protected Learn / Practice / Assess module before public
+release. This is a review aid, not an approval form, signed attestation, activation record, or
+competency decision.
 
-Build version: record the version displayed on `/[locale]/baxter-crrt/review`  
+Build/content version: record the version shown in source control or the protected module metadata.
 Reviewer perspective (optional): nephrology / critical care / CRRT nursing / device training /
 pharmacy / nutrition / education / accessibility / other
 
 ## Review prompts
 
-- [ ] The professional-education boundary and lack of institutional configuration claim are clear.
-- [ ] Patient, circuit, delivery, and device relationships are clinically coherent for education.
+- [ ] The education-only boundary and lack of institutional configuration claim are clear.
+- [ ] The seven lessons are accurate, concise, logically ordered, and sufficiently sourced.
+- [ ] The ten-case core path covers the six stations at the right depth; optional cases are
+      appropriately classified.
+- [ ] `CRRT-16` remains unseen until the gated assessment begins.
 - [ ] Each sampled case has a defensible safe path, accepted alternative, unsafe path, timed
       response, reassessment, and causal debrief.
 - [ ] Educational critical-error rules are proportionate and do not punish accepted alternatives.
-- [ ] PrisMax navigation, vocabulary, calculations, alarms, interruption, and stop/end framing are
-      faithful to the stated AW8035 Rev B manual-reference scope.
-- [ ] Prismaflex navigation, four-scale layout, calculation contexts, alarm/help behavior, and
-      stop/end framing are faithful to the stated G5036003 scope.
-- [ ] Cross-device content teaches translation without implying interchangeability.
-- [ ] Wrong-solution and blood-disposition drills stop at verification, escalation, device
-      instructions, and local policy.
-- [ ] Citrate-calcium content is recognition/checks/reassessment/escalation only, with no actionable
+- [ ] PrisMax navigation, vocabulary, calculations, alarms, interruption, and stop/end framing fit
+      the stated AW8035 Rev B manual-reference boundary.
+- [ ] Archival Prismaflex references cannot be mistaken for an active device option or equivalence
+      claim.
+- [ ] The five drills preserve a cause-first safety state and stop at device instructions/local
+      policy where required.
+- [ ] Prescription and Pressure labs teach concepts without becoming patient-specific calculators.
+- [ ] Citrate content is recognition/verification/reassessment/escalation only, with no actionable
       medication amount, target, or adjustment instruction.
 - [ ] Sources and limitations are understandable at the point of use.
-- [ ] The module makes no certification or independent competency claim.
+- [ ] Assessment rules are clear and do not imply certification or clinical competency.
 - [ ] Keyboard, screen-reader, zoom, reflow, motion, and mobile behavior are usable.
 
 ## Feedback format
-
-For each finding, record:
 
 ```text
 Location or artifact:

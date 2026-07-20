@@ -26,27 +26,17 @@ export const CRRT_RAPID_DRILL_ARTIFACT_IDS = Object.freeze([
   'DRILL-BLOOD-LEAK',
   'DRILL-GAIN-LOSS',
   'DRILL-BAG-SCALE',
-  'DRILL-POWER',
   'DRILL-WRONG-SOLUTION',
-  'DRILL-BLOOD-RETURN',
 ] as const)
 
 export const CRRT_INSTRUCTIONAL_TOOL_ARTIFACT_IDS = Object.freeze([
-  'LAB-TRANSPORT',
   'LAB-PRESCRIPTION',
-  'LAB-PREPOST-DILUTION',
   'LAB-PRESSURE-LOCALIZATION',
-  'LAB-FLUID-LEDGER',
-  'LAB-CITRATE-DASHBOARD',
 ] as const)
 
 export const CRRT_MASTERY_ARTIFACT_IDS = Object.freeze(['MASTERY-PRISMAX-01'] as const)
 export const CRRT_DEVICE_PROFILE_RELEASE_ARTIFACT_IDS = Object.freeze([
   'prismax-aw8035-2xx',
-  'prismaflex-g5036003-6xx',
-] as const)
-export const CRRT_CROSS_DEVICE_TRANSFER_ARTIFACT_IDS = Object.freeze([
-  'TRANSFER-PRISMAX-PRISMAFLEX-01',
 ] as const)
 
 export const CRRT_LEARNING_ARTIFACT_IDS = Object.freeze([
@@ -55,7 +45,6 @@ export const CRRT_LEARNING_ARTIFACT_IDS = Object.freeze([
   ...CRRT_INSTRUCTIONAL_TOOL_ARTIFACT_IDS,
   ...CRRT_MASTERY_ARTIFACT_IDS,
   ...CRRT_DEVICE_PROFILE_RELEASE_ARTIFACT_IDS,
-  ...CRRT_CROSS_DEVICE_TRANSFER_ARTIFACT_IDS,
 ] as const)
 
 export type CrrtCaseArtifactId = (typeof CRRT_CASE_ARTIFACT_IDS)[number]
@@ -64,8 +53,6 @@ export type CrrtInstructionalToolArtifactId = (typeof CRRT_INSTRUCTIONAL_TOOL_AR
 export type CrrtMasteryArtifactId = (typeof CRRT_MASTERY_ARTIFACT_IDS)[number]
 export type CrrtDeviceProfileReleaseArtifactId =
   (typeof CRRT_DEVICE_PROFILE_RELEASE_ARTIFACT_IDS)[number]
-export type CrrtCrossDeviceTransferArtifactId =
-  (typeof CRRT_CROSS_DEVICE_TRANSFER_ARTIFACT_IDS)[number]
 export type CrrtLearningArtifactId = (typeof CRRT_LEARNING_ARTIFACT_IDS)[number]
 
 export type CrrtLearningArtifactKind =
@@ -74,7 +61,6 @@ export type CrrtLearningArtifactKind =
   | 'instructional-tool'
   | 'mastery'
   | 'device-profile'
-  | 'cross-device-transfer'
 
 export interface CrrtLearningArtifact {
   readonly id: CrrtLearningArtifactId
@@ -95,7 +81,7 @@ function kindFor(id: CrrtLearningArtifactId): CrrtLearningArtifactKind {
   if ((CRRT_DEVICE_PROFILE_RELEASE_ARTIFACT_IDS as readonly string[]).includes(id)) {
     return 'device-profile'
   }
-  return 'cross-device-transfer'
+  throw new Error(`Unknown CRRT learning artifact kind: ${id}`)
 }
 
 export const baxterCrrtLearningArtifactRegistry: readonly CrrtLearningArtifact[] = Object.freeze(

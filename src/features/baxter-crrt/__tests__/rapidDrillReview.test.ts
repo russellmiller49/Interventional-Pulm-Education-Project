@@ -8,9 +8,9 @@ import {
 } from '../content'
 
 describe('runnable cause-first rapid drills', () => {
-  it('registers exactly seven runnable drills with every required decision path', () => {
+  it('registers exactly five runnable drills with every required decision path', () => {
     expect(baxterCrrtRapidDrillManifest.map((drill) => drill.id)).toEqual([...CRRT_RAPID_DRILL_IDS])
-    expect(baxterCrrtRapidDrillManifest).toHaveLength(7)
+    expect(baxterCrrtRapidDrillManifest).toHaveLength(5)
 
     for (const drill of baxterCrrtRapidDrillManifest) {
       expect(drill).toMatchObject({
@@ -33,22 +33,14 @@ describe('runnable cause-first rapid drills', () => {
     }
   })
 
-  it('keeps wrong-solution and blood-disposition content inside verification boundaries', () => {
+  it('keeps wrong-solution content inside a verification boundary', () => {
     const wrongSolution = baxterCrrtRapidDrillManifest.find(
       (drill) => drill.id === 'DRILL-WRONG-SOLUTION',
     )
-    const bloodDisposition = baxterCrrtRapidDrillManifest.find(
-      (drill) => drill.id === 'DRILL-BLOOD-RETURN',
-    )
-
     expect(wrongSolution?.predictionOptions[0]?.label).toMatch(/Stop.*verify.*escalate/i)
     expect(wrongSolution?.correctionBoundary).toMatch(
       /local mismatch procedure.*does not recommend a substitute/i,
     )
-    expect(bloodDisposition?.predictionOptions[0]?.label).toMatch(
-      /device instructions and local policy/i,
-    )
-    expect(bloodDisposition?.correctionBoundary).toMatch(/never a universal return\/discard/i)
   })
 
   it.each(baxterCrrtRapidDrillManifest)(

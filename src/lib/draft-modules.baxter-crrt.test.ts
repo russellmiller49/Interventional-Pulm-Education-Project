@@ -43,11 +43,14 @@ describe('Baxter CRRT release-stage routing', () => {
     },
   )
 
-  it('makes a future published learner route public and listed while the SME route remains unlisted', async () => {
+  it('makes every future published learner route public and listed', async () => {
     const policy = await loadPolicy('published')
     expect(policy.isDraftModulePath('/baxter-crrt')).toBe(false)
     expect(policy.isUnlistedModulePath('/baxter-crrt')).toBe(false)
     expect(policy.isVisibleModulePath('/baxter-crrt')).toBe(true)
-    expect(policy.isUnlistedModulePath('/baxter-crrt/review')).toBe(true)
+    expect(policy.isUnlistedModulePath('/baxter-crrt/review')).toBe(false)
+    expect(policy.isVisibleModulePath('/baxter-crrt/learn')).toBe(true)
+    expect(policy.isVisibleModulePath('/baxter-crrt/practice')).toBe(true)
+    expect(policy.isVisibleModulePath('/baxter-crrt/assess')).toBe(true)
   })
 })

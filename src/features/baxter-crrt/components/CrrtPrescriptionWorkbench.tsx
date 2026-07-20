@@ -425,7 +425,7 @@ export function QualitativePrePostDilutionExperiment({
   )
 }
 
-export function CrrtPhase7PrescriptionWorkbench() {
+export function CrrtPrescriptionWorkbench() {
   const idPrefix = useId()
   const [numericInputs, setNumericInputs] = useState(INITIAL_NUMERIC_INPUTS)
   const [syntheticBagStream, setSyntheticBagStream] = useState<SyntheticBagStream>('dialysate')

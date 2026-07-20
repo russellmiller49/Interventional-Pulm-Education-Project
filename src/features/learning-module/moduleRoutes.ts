@@ -1,4 +1,6 @@
+export const baxterCrrtNavBase = '/baxter-crrt'
 export const cardiohelpEcmoNavBase = '/cardiohelp-ecmo'
+export const mechanicalCirculatorySupportNavBase = '/mechanical-circulatory-support'
 export const malignantEffusionNavBase = '/pleural-procedures/malignant-effusion'
 export const pleuralFluidAnalysisNavBase = '/pleural-procedures/pleural-fluid-analysis'
 export const pleuralInfectionNavBase = '/pleural-procedures/pleural-infection'

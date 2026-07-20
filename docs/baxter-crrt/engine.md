@@ -1,63 +1,52 @@
-# Baxter CRRT v1 engine and adapter model
+# Baxter CRRT engine and runtime
 
 ## Architecture
 
 The deterministic engine owns canonical patient, access, circuit, fluid, solute, filter, delivery,
-event, and outcome state. It advances through a 60-second internal step, applies authored scheduled
-events, conserves bag/scale volume through one coupled feasible-delivery fraction, and emits bounded
-trend samples. UI components dispatch typed actions and render projections; they do not calculate
-clinical outcomes.
+event, and outcome state. It advances through bounded internal steps, applies authored scheduled
+events, conserves bag/scale volume, and emits bounded trends. UI components dispatch typed actions
+and render projections; they do not calculate clinical outcomes.
 
-Runtime content passes through strict schema parsing, semantic validation, and one normalization
-boundary. Missing event mappings, unresolved references, incompatible devices, duplicate bags,
+Runtime cases pass through strict schema parsing, semantic validation, and one normalization
+boundary. Missing mappings, unresolved references, incompatible runtime devices, duplicate bags,
 invalid units, nonfinite values, or unsupported state paths fail closed.
 
-## Device adapter contract
+## PrisMax runtime
 
-`CrrtDeviceAdapter` provides device identity, profile metadata, navigation, vocabulary, setup
-sequence, display calculations, alarm presentation, interruption behavior, stop/end behavior, and
-control dispatch over shared canonical state.
+`CrrtDeviceAdapter` and the calculation adapter resolve only `prismax-aw8035-2xx`. The runtime
+supports the source-described SCUF, CVVH, CVVHD, and CVVHDF educational contexts, procedure-oriented
+setup, Operations, history, bag/scale state, pressure displays, alarm presentation, interruption,
+and stop/end framing within the stated AW8035 Rev B boundary.
 
-### PrisMax
-
-- SCUF, CVVH, CVVHD, and CVVHDF.
-- Procedure-oriented setup through operations, history, bag/scale state, alarms, interruption,
-  stop/end, and disposition framing.
-- AW8035 Rev B source context.
-- Ambiguous post-filter and pre-infusion expressions remain unavailable.
-
-### Prismaflex
-
-- SCUF, CVVH, CVVHD, and CVVHDF.
-- Softkey navigation, separate setup workflow, four-scale layout, alarm/help categories,
-  interruption, and stop/end behavior.
-- G5036003 Revision 05.2011 source context.
-- Pump-target and dose-section `Qeff` are different typed display contexts and are never collapsed.
-
-Adapters translate presentation and controls, not patient truth. Equivalent canonical fixtures run
-to the declared numerical tolerance while device-specific projections remain visibly different.
-
-## Profiles
-
-Both defaults are `manual-reference` profiles with named manual revisions and
-`localConfiguration: null`. `BaxterCrrtOptionalLocalConfiguration` is a strict, validated extension
-point for later site-specific labels and enabled modalities. A local extension must identify its
-base profile and sources. It cannot silently alter the base record.
+The Prismaflex runtime adapter and calculation implementation were deleted. Historical Prismaflex
+records remain in provenance, and the schema enum remains intentionally broad enough to parse the
+unchanged case registry. Neither creates a learner-selectable runtime branch.
 
 ## Learning sessions and outcomes
 
-Session mode is `learner | review-preview`. Review preview runs every function but suppresses
-persistence and telemetry. Learn is unscored; Practice is scored with bounded hint penalties;
-Mastery is restricted to the content-owned masked capstone and requires ≥80, zero critical errors,
-zero hints, and reassessment.
+`CrrtLearningExperience` is `practice | mastery`. The engine retains its seven reasoning phases:
+Read, Define, Select, Predict, Run, Reassess, and Reflect. The four-stage ribbon is a presentation
+grouping only.
 
-Every outcome contains deterministic replay identity, path matching, satisfied conditions,
-critical errors, reassessment completion, domain scores when applicable, and a causal debrief.
-Progress deliberately excludes replay internals and detailed timelines.
+Practice is scored with bounded hint penalties. Mastery is restricted to the content-owned masked
+capstone and requires ≥80, zero critical errors, zero hints, and reassessment. Persistence and
+telemetry are learner-runtime constants; the deleted review mode no longer suppresses them.
+
+Every outcome contains deterministic replay identity, matched paths, satisfied conditions, critical
+errors, reassessment completion, domain scores, and a causal debrief. Progress deliberately excludes
+replay internals and detailed timelines.
+
+## Progress and analytics
+
+Progress preserves the V3 key and DTO while allowlisting the new seven lesson IDs, 17 Practice case
+IDs, five drills, two labs, and one capstone. A content-version mismatch fails closed to a fresh
+record.
+
+Analytics validates only bounded summary events by Overview/Learn/Practice/Assess section. It never
+accepts device identity, detailed actions, clinical free text, laboratory arrays, or trend arrays.
 
 ## Conceptual citrate state
 
-Citrate-calcium content is structurally separate from prescription state. Its values are qualitative
-directions and safety-check completion only. There is no field for a medication amount, infusion
-rate, target, target range, titration, adjustment, or protocol instruction. UI, analytics, progress,
-and schemas are tested for this boundary.
+Citrate-calcium content remains structurally separate from prescription state. It contains
+qualitative directions and safety checks only, with no medication amount, infusion rate, target,
+target range, titration, adjustment, or protocol instruction.

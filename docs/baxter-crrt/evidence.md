@@ -12,10 +12,13 @@ Every runtime claim is classified as one of:
 Reviewer and source-status fields are informational for the final SME pass. They do not activate or
 deactivate runtime content.
 
-## Primary sources
+## Primary and archival sources
 
-- PrisMax: official AW8035 Rev B operator manual, program 2.XX.
-- Prismaflex: supplied G5036003 Revision 05.2011 operator manual, program 6.xx.
+- PrisMax: official AW8035 Rev B operator manual, program 2.XX. This is the only device profile in
+  the learner runtime.
+- Prismaflex: supplied G5036003 Revision 05.2011 operator manual, program 6.xx. It remains archival
+  provenance and supports a brief prior-platform transfer note; it does not activate an adapter,
+  selector, calculation branch, or cross-device exercise.
 - [NICE NG148 recommendations](https://www.nice.org.uk/guidance/ng148/chapter/Recommendations).
 - [2026 multidisciplinary ICU RRT guideline](https://link.springer.com/article/10.1186/s13054-025-05817-6).
 - [2025 CKRT Core Curriculum](https://pubmed.ncbi.nlm.nih.gov/40072400/).
@@ -29,10 +32,9 @@ only after a final publication replaces its draft status.
 
 - Never generalize one manual revision to an institution's installed configuration.
 - Never infer a set, solution, accessory, stocked item, alarm reaction, or workflow not established
-  by the relevant manual-reference profile or a later validated local extension.
-- Keep PrisMax and Prismaflex navigation, display formulas, scale topology, alarms, and stop/end
-  behavior separate.
-- Keep Prismaflex pump-target `Qeff` and dose-section `Qeff` separately named.
+  by the PrisMax manual-reference profile or a later validated local extension.
+- The learner runtime is PrisMax-only. Historical Prismaflex material is provenance, not an
+  operational device option.
 - Preserve `CONFLICT-001` and `CONFLICT-002` as unavailable PrisMax expressions; do not repair
   punctuation, signs, parentheses, or missing terms by assumption.
 - Keep device removal/variance distinct from the complete patient fluid ledger.
@@ -47,13 +49,13 @@ The main evidence-to-runtime boundaries are implemented in:
 - `src/features/baxter-crrt/content/completeCases.ts`
 - `src/features/baxter-crrt/content/learnerRegistry.ts`
 - `src/features/baxter-crrt/content/curriculum.ts`
+- `src/features/baxter-crrt/content/learnLessons.ts`
 - `src/features/baxter-crrt/content/provenance.ts`
 - `src/features/baxter-crrt/content/phase7ReviewSources.ts`
 - `src/features/baxter-crrt/content/deviceProfiles.ts`
 - `src/features/baxter-crrt/content/rapidDrills.ts`
 - `src/features/baxter-crrt/content/instructionalTools.ts`
 - `src/features/baxter-crrt/content/mastery.ts`
-- `src/features/baxter-crrt/content/crossDeviceTransfer.ts`
 - `src/features/baxter-crrt/content/schema.ts`
 - `src/features/baxter-crrt/content/runtimeCaseNormalization.ts`
 - `src/features/baxter-crrt/engine/types.ts`
@@ -64,14 +66,17 @@ The main evidence-to-runtime boundaries are implemented in:
 - `src/features/baxter-crrt/engine/deviceAdapters/types.ts`
 - `src/features/baxter-crrt/engine/deviceAdapters/registry.ts`
 - `src/features/baxter-crrt/engine/deviceAdapters/prismax.ts`
-- `src/features/baxter-crrt/engine/deviceAdapters/prismaflex.ts`
 - `src/features/baxter-crrt/engine/deviceAdapters/calculations.ts`
-- `src/features/baxter-crrt/engine/deviceAdapters/prismaflexCalculations.ts`
-- `src/features/baxter-crrt/components/BaxterCrrtLab.tsx`
-- `src/features/baxter-crrt/components/CrrtLearningWorkflow.tsx`
-- `src/features/baxter-crrt/components/CrrtPhase7InstructionalTools.tsx`
+- `src/features/baxter-crrt/components/BaxterCrrtModuleFrame.tsx`
+- `src/features/baxter-crrt/components/BaxterCrrtModuleNav.tsx`
+- `src/features/baxter-crrt/components/BaxterCrrtHub.tsx`
+- `src/features/baxter-crrt/components/BaxterCrrtLearn.tsx`
+- `src/features/baxter-crrt/components/BaxterCrrtPractice.tsx`
+- `src/features/baxter-crrt/components/BaxterCrrtAssess.tsx`
+- `src/features/baxter-crrt/components/CrrtCasePlayer.tsx`
+- `src/features/baxter-crrt/components/CrrtPrescriptionWorkbench.tsx`
+- `src/features/baxter-crrt/components/CrrtPressureLocalizationLab.tsx`
 - `src/features/baxter-crrt/components/CrrtRapidDrillReview.tsx`
-- `src/features/baxter-crrt/components/CrrtCrossDeviceTransferReview.tsx`
 - `src/features/baxter-crrt/components/SourcesPanel.tsx`
 - `src/lib/baxter-crrt-analytics.ts`
 

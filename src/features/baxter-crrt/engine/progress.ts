@@ -4,10 +4,8 @@ import {
   type BaxterCrrtDeviceId,
 } from '../content/deviceProfiles'
 import { isBaxterCrrtInstructionalToolId } from '../content/instructionalTools'
-import {
-  isBaxterCrrtLearnerLessonId,
-  isBaxterCrrtLearnerProgressCaseId,
-} from '../content/learnerRegistry'
+import { isBaxterCrrtLearnerLessonId } from '../content/learnerRegistry'
+import { isBaxterCrrtPracticeCaseId } from '../content/curriculum'
 import { isBaxterCrrtRapidDrillId } from '../content/rapidDrills'
 import { CRRT_CONTENT_VERSION, CRRT_ENGINE_VERSION } from './initialState'
 import { isCrrtMasteryCapstoneAvailable } from './outcomes'
@@ -122,9 +120,8 @@ function parseIdList(value: unknown, isAllowedId: (id: string) => boolean): stri
 }
 
 function isAllowedProgressIdentifier(pathway: BaxterCrrtProgressPathway, id: string): boolean {
-  if (pathway === 'learn' || pathway === 'practice') {
-    return isBaxterCrrtLearnerProgressCaseId(id)
-  }
+  if (pathway === 'learn') return isBaxterCrrtLearnerLessonId(id)
+  if (pathway === 'practice') return isBaxterCrrtPracticeCaseId(id)
   return isCrrtMasteryCapstoneAvailable(id)
 }
 
@@ -205,7 +202,7 @@ export function canonicalizeProgress(value: unknown): BaxterCrrtProgressV3 | nul
   const completedLessonIds = parseIdList(value.completedLessonIds, isBaxterCrrtLearnerLessonId)
   const completedPracticeCaseIds = parseIdList(
     value.completedPracticeCaseIds,
-    isBaxterCrrtLearnerProgressCaseId,
+    isBaxterCrrtPracticeCaseId,
   )
   const completedMasteryCapstoneIds = parseIdList(
     value.completedMasteryCapstoneIds,
@@ -406,7 +403,7 @@ export function recordCaseResult(
   if (result.pathway === 'practice' && result.masteryCompleted) {
     throw new Error('Practice results cannot complete Mastery.')
   }
-  if (result.pathway === 'practice' && !isBaxterCrrtLearnerProgressCaseId(result.caseId)) {
+  if (result.pathway === 'practice' && !isBaxterCrrtPracticeCaseId(result.caseId)) {
     throw new Error('Practice progress is available only for a registered learner runtime case.')
   }
   if (result.pathway === 'mastery' && !isCrrtMasteryCapstoneAvailable(result.caseId)) {
@@ -489,9 +486,7 @@ export function readProgress(
 export function writeProgress(
   progress: BaxterCrrtProgressV3,
   storage: BaxterCrrtProgressStorage | null = browserStorage(),
-  sessionMode: 'learner' | 'review-preview' = 'learner',
 ): boolean {
-  if (sessionMode === 'review-preview') return false
   const serialized = serializeProgress(progress)
   if (!storage || !serialized) return false
   try {

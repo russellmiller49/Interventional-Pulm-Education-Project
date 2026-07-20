@@ -81,7 +81,7 @@ const candidateClinicalSources = [
     documentVersion: 'Am J Kidney Dis. 2025;85:767–786 · PMID 40072400',
     pageOrSection:
       'DOI 10.1053/j.ajkd.2024.09.015 · https://www.sciencedirect.com/science/article/pii/S027263862401120X · erratum DOI 10.1053/j.ajkd.2025.06.004',
-    implementationLocation: 'components/CrrtPhase7InstructionalTools.tsx · Transport Mechanism Lab',
+    implementationLocation: 'content/learnLessons.ts · Solute and water transport lesson',
     reviewer: null,
     reviewStatus: PENDING,
   },
@@ -206,14 +206,6 @@ const syntheticRapidDrillSources = [
       'Not an alarm name, priority, threshold, scale assignment, stocked solution or set, bag-change instruction, restart procedure, or patient recommendation.',
     pageOrSection: 'DRILL-BAG-SCALE v1 rapid drill',
   },
-  {
-    id: 'SYNTH-DRILL-POWER-001',
-    claim:
-      'The power-interruption signal, paused-delivery state, prediction choices, and cause-first review gates are generic synthetic reviewer content.',
-    value:
-      'Not an alarm name, priority, battery duration, recovery behavior, continuation instruction, escalation rule, restart procedure, or patient recommendation.',
-    pageOrSection: 'DRILL-POWER v1 rapid drill',
-  },
 ].map(
   (record) =>
     ({
@@ -221,7 +213,7 @@ const syntheticRapidDrillSources = [
       sourceTitle: 'Baxter CRRT v1 rapid-drill synthetic calibration record',
       sourceType: 'synthetic-calibration' as const,
       documentVersion: 'v1 SME-review build',
-      implementationLocation: 'content/rapidDrillReview.ts and components/CrrtRapidDrillReview.tsx',
+      implementationLocation: 'content/rapidDrills.ts and components/CrrtRapidDrillReview.tsx',
       reviewer: null,
       reviewStatus: PENDING,
     }) satisfies SourceReference,
@@ -231,30 +223,28 @@ const candidateToolCalibrationSources = [
   {
     id: 'SYNTH-LAB-TRANSPORT-001',
     claim:
-      'Every unitless coefficient, starting position, comparison band, and qualitative output in the Transport Mechanism Lab is an authored teaching abstraction.',
+      'Every qualitative comparison in the solute-transport lesson is an authored teaching abstraction.',
     value:
       'Not a clearance estimate, membrane performance specification, clinical target, device output, or patient prediction.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
     documentVersion: 'v1 SME-review build',
-    pageOrSection: 'LAB-TRANSPORT reviewer prototype',
-    implementationLocation:
-      'instructionalToolsModel.ts and components/CrrtPhase7InstructionalTools.tsx',
+    pageOrSection: 'Solute and water transport lesson',
+    implementationLocation: 'content/learnLessons.ts',
     reviewer: null,
     reviewStatus: PENDING,
   },
   {
     id: 'SYNTH-LAB-FLUID-001',
     claim:
-      'Every initial rate, duration, and editable example value in the Fluid Balance Ledger is synthetic teaching calibration.',
+      'Every fluid-ledger example described in the fluid-management lesson is synthetic teaching calibration.',
     value:
       'Not a prescribed removal rate, patient fluid goal, device accuracy claim, or recommendation.',
     sourceTitle: 'Baxter CRRT v1 instructional-tool synthetic calibration record',
     sourceType: 'synthetic-calibration' as const,
     documentVersion: 'v1 SME-review build',
-    pageOrSection: 'LAB-FLUID-LEDGER reviewer prototype',
-    implementationLocation:
-      'instructionalToolsModel.ts and components/CrrtPhase7InstructionalTools.tsx',
+    pageOrSection: 'Fluid management and liberation lesson',
+    implementationLocation: 'content/learnLessons.ts',
     reviewer: null,
     reviewStatus: PENDING,
   },

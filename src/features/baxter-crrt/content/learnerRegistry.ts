@@ -3,8 +3,8 @@ import { CRRT_ALL_CASE_IDS, validateCrrtCaseRegistry, type RuntimeCrrtCase } fro
 
 /**
  * The single immutable v1 learner registry. Informational review metadata is
- * deliberately not consulted here: private-development and SME-preview
- * runtimes execute the complete sourced curriculum.
+ * deliberately not consulted here: the protected learner runtime executes
+ * the complete sourced curriculum while the release remains in SME review.
  */
 export const baxterCrrtLearnerCases: readonly RuntimeCrrtCase[] = baxterCrrtCases
 
@@ -18,9 +18,19 @@ if (registryIssues.length > 0) {
 
 const learnerCaseIds = new Set(baxterCrrtLearnerCases.map(({ id }) => id))
 const learnerProgressCaseIds = new Set(baxterCrrtLearnerCases.map(({ id }) => id.toLowerCase()))
-const learnerLessonIds = new Set(
-  baxterCrrtLearnerCases.map(({ id }) => `${id.toLowerCase()}.learn`),
-)
+export const BAXTER_CRRT_LEARN_LESSON_IDS = Object.freeze([
+  'crrt-indications-modality',
+  'crrt-solute-transport',
+  'crrt-prescription-dosing',
+  'crrt-circuit-pressures',
+  'crrt-anticoagulation',
+  'crrt-alarms-troubleshooting',
+  'crrt-fluid-liberation',
+] as const)
+
+export type BaxterCrrtLearnLessonId = (typeof BAXTER_CRRT_LEARN_LESSON_IDS)[number]
+
+const learnerLessonIds = new Set<string>(BAXTER_CRRT_LEARN_LESSON_IDS)
 
 export function isBaxterCrrtLearnerCaseId(caseId: string): boolean {
   return learnerCaseIds.has(caseId)

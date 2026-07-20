@@ -81,9 +81,10 @@ export const baxterCrrtSourceDocuments: readonly BaxterCrrtSourceDocument[] = Ob
     title: "Prismaflex Operator's Manual",
     documentIdentity: 'G5036003 Revision 05.2011 · program 6.xx',
     role: 'supporting',
-    intendedUse: 'Primary source for the Prismaflex manual-reference educational adapter.',
+    intendedUse:
+      'Archived prior-platform reference for the optional Prismaflex-to-PrisMax transfer note.',
     limitation:
-      'This older, separate device generation is learner-active through its own adapter and must not be merged into the PrisMax profile.',
+      'This older, separate device generation has no learner runtime, adapter, selector, calculation branch, or cross-device exercise.',
     sourceSha256: '6d311624ec075c86ff539d3a86f3ed77cd2ca467346168ee4985af09f0a9224b',
     reviewStatus: 'pending',
   },
@@ -166,7 +167,7 @@ export const baxterCrrtSourceRecords: readonly BaxterCrrtSourceRecord[] = Object
     documentIdentity: 'AW8035 Rev B JUN2019 · program 2.XX',
     pageOrSection: 'Manual pages 93–100 · PDF pages 94–101',
     claim:
-      'PrisMax uses an alarm window and priority presentation distinct from the deferred Prismaflex adapter.',
+      'PrisMax uses an alarm window and priority presentation distinct from the historical Prismaflex presentation retained in archival provenance.',
     limitation:
       'Generic engine alerts may appear, but exact device alarm names, priorities, thresholds, reactions, and correction steps remain unmapped.',
     reviewStatus: 'pending',

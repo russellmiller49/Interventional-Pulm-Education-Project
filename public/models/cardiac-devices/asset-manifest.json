@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/cardiac-assets/build-runtime-assets.py",
+  "redistributionStatus": "pending-clinical-and-rights-review",
+  "assets": {
+    "heart-great-vessels.glb": {
+      "url": "/models/cardiac-devices/heart-great-vessels.glb",
+      "source": "Project-authored open-lumen great vessels",
+      "limits": {
+        "triangles": 50000,
+        "bytes": 2500000
+      },
+      "bytes": 35848,
+      "triangles": 15948,
+      "nodes": [
+        "Heart_Aorta_OpenLumen",
+        "Heart_AorticBranch_1",
+        "Heart_AorticBranch_2",
+        "Heart_AorticBranch_3",
+        "Heart_PulmonaryArtery_1",
+        "Heart_PulmonaryArtery_2",
+        "Heart_PulmonaryArtery_3",
+        "Landmark_AorticValve",
+        "Landmark_RightPAWedge"
+      ],
+      "dracoCompressed": true
+    },
+    "iabp-aorta-cutaway.glb": {
+      "url": "/models/cardiac-devices/iabp-aorta-cutaway.glb",
+      "source": "Project-authored open-lumen aorta",
+      "limits": {
+        "triangles": 50000,
+        "bytes": 2500000
+      },
+      "bytes": 38808,
+      "triangles": 17452,
+      "nodes": [
+        "IABP_Aorta_OpenLumen",
+        "IABP_ArchBranch_1",
+        "IABP_ArchBranch_2",
+        "IABP_ArchBranch_3",
+        "IABP_RenalArtery_1",
+        "IABP_RenalArtery_2",
+        "IABP_IliacArtery_1",
+        "IABP_IliacArtery_2",
+        "Landmark_LeftSubclavian",
+        "Landmark_RenalArteries",
+        "Landmark_RightFemoralAccess"
+      ],
+      "dracoCompressed": true
+    },
+    "iabp-balloon.glb": {
+      "url": "/models/cardiac-devices/iabp-balloon.glb",
+      "source": "Project-authored neutral IABP facsimile",
+      "limits": {
+        "triangles": 20000,
+        "bytes": 2000000
+      },
+      "bytes": 35560,
+      "triangles": 1764,
+      "nodes": [
+        "IABP_Balloon",
+        "IABP_CentralCatheter",
+        "IABP_CranialMarker",
+        "IABP_CaudalMarker",
+        "Anchor_IABP_CranialTip",
+        "Anchor_IABP_CaudalEnd"
+      ],
+      "dracoCompressed": true
+    },
+    "impella-cp.glb": {
+      "url": "/models/cardiac-devices/impella-cp.glb",
+      "source": "Derived from local authoring input: Impella CP.glb",
+      "limits": {
+        "triangles": 20000,
+        "bytes": 2000000
+      },
+      "bytes": 1698304,
+      "triangles": 11054,
+      "nodes": [
+        "Anchor_Impella_CP_Distal",
+        "Anchor_Impella_CP_Proximal",
+        "Impella_CP",
+        "Impella_CP_Root"
+      ],
+      "dracoCompressed": true
+    },
+    "impella-55.glb": {
+      "url": "/models/cardiac-devices/impella-55.glb",
+      "source": "Derived from local authoring input: Impella 5.5.glb",
+      "limits": {
+        "triangles": 20000,
+        "bytes": 2000000
+      },
+      "bytes": 1712616,
+      "triangles": 15675,
+      "nodes": [
+        "Anchor_Impella_55_Distal",
+        "Anchor_Impella_55_Proximal",
+        "Impella_55",
+        "Impella_55_Root"
+      ],
+      "dracoCompressed": true
+    },
+    "impella-rp.glb": {
+      "url": "/models/cardiac-devices/impella-rp.glb",
+      "source": "Derived from local authoring input: Impella RP.glb",
+      "limits": {
+        "triangles": 20000,
+        "bytes": 2000000
+      },
+      "bytes": 1696000,
+      "triangles": 10458,
+      "nodes": [
+        "Anchor_Impella_RP_Distal",
+        "Anchor_Impella_RP_Proximal",
+        "Impella_RP",
+        "Impella_RP_Root"
+      ],
+      "dracoCompressed": true
+    },
+    "lvad.glb": {
+      "url": "/models/cardiac-devices/lvad.glb",
+      "source": "Derived from local authoring input: LVAD.glb",
+      "limits": {
+        "triangles": 60000,
+        "bytes": 2500000
+      },
+      "bytes": 98760,
+      "triangles": 55998,
+      "nodes": [
+        "Anchor_LVAD_Inflow",
+        "Anchor_LVAD_Outflow",
+        "LVAD_InflowCannula",
+        "LVAD_PumpAndHousing",
+        "LVAD_Root"
+      ],
+      "dracoCompressed": true
+    }
+  }
+}

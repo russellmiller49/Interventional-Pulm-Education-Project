@@ -456,22 +456,6 @@ export function selectCrrtLearningOutcome(session: CrrtLearningSessionState): Cr
     .filter((condition) => evaluateCrrtMetricCondition(session.simulation, condition))
     .map((condition) => condition.id)
 
-  if (session.experience === 'learn') {
-    return {
-      resultIdentity,
-      scored: false,
-      score: null,
-      mastery: false,
-      domains: null,
-      hintPenalty: 0,
-      matchedRequiredPath,
-      matchedAcceptedPathIds,
-      satisfiedConditionIds,
-      criticalErrorIds,
-      reassessmentComplete,
-    }
-  }
-
   const activatedMasteryCapstoneId = selectCrrtMasteryCapstoneId(session.caseDefinition)
   if (
     session.experience === 'mastery' &&

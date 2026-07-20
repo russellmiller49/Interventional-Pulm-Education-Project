@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Animated Heart — three.js verification</title>
+    <style>
+      body {
+        margin: 0;
+        background: #202024;
+        overflow: hidden;
+        font-family: sans-serif;
+      }
+      #hud {
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        color: #ddd;
+        font-size: 13px;
+        background: #0008;
+        padding: 6px 10px;
+        border-radius: 6px;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">loading…</div>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from 'three'
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+      const hud = document.getElementById('hud')
+      const scene = new THREE.Scene()
+      scene.background = new THREE.Color(0x202024)
+      const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200)
+      const renderer = new THREE.WebGLRenderer({ antialias: true })
+      renderer.setSize(innerWidth, innerHeight)
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+      document.body.appendChild(renderer.domElement)
+      const controls = new OrbitControls(camera, renderer.domElement)
+      controls.enableDamping = true
+      scene.add(new THREE.AmbientLight(0xffffff, 0.75))
+      const d = new THREE.DirectionalLight(0xffffff, 1.7)
+      d.position.set(5, 10, 7)
+      scene.add(d)
+      const d2 = new THREE.DirectionalLight(0x88aaff, 0.5)
+      d2.position.set(-6, -4, -6)
+      scene.add(d2)
+      let mixer
+      const model = new URLSearchParams(location.search).get('model') || 'heart_animated.glb'
+      new GLTFLoader().load(
+        model,
+        (g) => {
+          scene.add(g.scene)
+          window.__gltf = g
+          window.__scene = scene
+          window.__camera = camera
+          window.__controls = controls
+          const box = new THREE.Box3().setFromObject(g.scene)
+          const c = box.getCenter(new THREE.Vector3()),
+            s = box.getSize(new THREE.Vector3())
+          controls.target.copy(c)
+          const md = Math.max(s.x, s.y, s.z)
+          camera.position.copy(c).add(new THREE.Vector3(md * 0.7, md * 0.35, md * 1.5))
+          camera.near = md / 100
+          camera.far = md * 20
+          camera.updateProjectionMatrix()
+          mixer = new THREE.AnimationMixer(g.scene)
+          g.animations.forEach((cl) => mixer.clipAction(cl).play())
+          window.__loaded = true
+          window.__info = {
+            anims: g.animations.map((a) => ({ n: a.name, dur: +a.duration.toFixed(2) })),
+            meshes: [
+              ...(function* () {
+                for (const o of walk(g.scene)) if (o.isMesh) yield o.name
+              })(),
+            ].length,
+          }
+          hud.textContent = 'loaded • anim: ' + g.animations.map((a) => a.name).join(', ')
+        },
+        (xhr) => {
+          hud.textContent =
+            'loading… ' +
+            (xhr.total ? Math.round((xhr.loaded / xhr.total) * 100) + '%' : xhr.loaded + 'b')
+        },
+        (err) => {
+          window.__err = String(err)
+          hud.textContent = 'ERROR: ' + err
+        },
+      )
+      function* walk(o) {
+        yield o
+        for (const c of o.children) yield* walk(c)
+      }
+      const clock = new THREE.Clock()
+      ;(function loop() {
+        requestAnimationFrame(loop)
+        const dt = clock.getDelta()
+        if (mixer) mixer.update(dt)
+        controls.update()
+        renderer.render(scene, camera)
+      })()
+      addEventListener('resize', () => {
+        camera.aspect = innerWidth / innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(innerWidth, innerHeight)
+      })
+    </script>
+  </body>
+</html>

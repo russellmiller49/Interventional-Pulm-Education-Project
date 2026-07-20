@@ -1,7 +1,38 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { useReducer } from 'react'
 
-import BaxterCrrtLab from '../components/BaxterCrrtLab'
-import { CRRT_CASE_ARTIFACT_IDS, getBaxterCrrtCase } from '../content'
+import { CrrtCasePlayer } from '../components/CrrtCasePlayer'
+import { getBaxterCrrtCase } from '../content'
+import {
+  createCrrtLearningSession,
+  crrtLearningSessionReducer,
+  type CrrtLearningExperience,
+} from '../engine'
+
+function CasePlayerHarness({ experience = 'practice' }: { experience?: CrrtLearningExperience }) {
+  const caseDefinition = getBaxterCrrtCase(experience === 'mastery' ? 'CRRT-16' : 'CRRT-01')
+  const [session, dispatch] = useReducer(
+    crrtLearningSessionReducer,
+    {
+      caseDefinition,
+      experience,
+      roleLens: 'integrated' as const,
+      attempt: 1,
+      deviceId: 'prismax-aw8035-2xx' as const,
+    },
+    createCrrtLearningSession,
+  )
+
+  return (
+    <CrrtCasePlayer
+      session={session}
+      dispatch={dispatch}
+      onRoleChange={(roleLens) => dispatch({ type: 'RESET', roleLens })}
+      onReset={() => dispatch({ type: 'RESET', attempt: session.attempt + 1 })}
+      idNamespace={`workflow-${experience}`}
+    />
+  )
+}
 
 function submitCrrt01ClinicalPlan() {
   const definition = getBaxterCrrtCase('CRRT-01')
@@ -29,163 +60,88 @@ function submitCrrt01ClinicalPlan() {
   fireEvent.click(plan.getByRole('button', { name: 'Submit plan and prediction' }))
 }
 
-describe('Baxter CRRT v1 learner workspace', () => {
-  beforeEach(() => window.localStorage.clear())
+describe('Baxter CRRT case player', () => {
+  it('shows the four-stage reasoning ribbon, compact role lens, and four workspace tabs', () => {
+    render(<CasePlayerHarness />)
 
-  it('offers Learn, Practice, Mastery, all 18 station-grouped cases, drills, and tools', () => {
-    render(<BaxterCrrtLab />)
-
-    const experiences = screen.getByRole('tablist', { name: 'CRRT learning experiences' })
-    for (const label of ['Learn', 'Practice', 'Mastery', 'Drills', 'Tools']) {
-      expect(within(experiences).getByRole('tab', { name: new RegExp(`^${label}`) })).toBeEnabled()
+    const ribbon = screen.getByRole('navigation', { name: 'CRRT case stages' })
+    for (const label of ['Brief', 'Plan', 'Run', 'Debrief']) {
+      expect(within(ribbon).getByText(label)).toBeInTheDocument()
     }
+    expect(within(ribbon).getByText('Read + Define')).toBeInTheDocument()
+    expect(within(ribbon).getByText('Select + Predict')).toBeInTheDocument()
+    expect(within(ribbon).getByText('Act + Observe')).toBeInTheDocument()
+    expect(within(ribbon).getByText('Reassess + Reflect')).toBeInTheDocument()
 
-    const caseSelect = screen.getByRole('combobox', { name: 'Station-grouped case' })
-    expect(
-      within(caseSelect)
-        .getAllByRole('option')
-        .map((option) => (option as HTMLOptionElement).value),
-    ).toEqual(CRRT_CASE_ARTIFACT_IDS)
-    expect(caseSelect.querySelectorAll('optgroup')).toHaveLength(6)
-
-    fireEvent.click(within(experiences).getByRole('tab', { name: /^Drills/ }))
-    expect(screen.getByRole('heading', { name: 'Rapid drills' })).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Rapid drill' })).toHaveLength(7)
-
-    fireEvent.click(within(experiences).getByRole('tab', { name: /^Tools/ }))
-    expect(screen.getByRole('heading', { name: 'Interactive concept labs' })).toBeInTheDocument()
-    expect(screen.getByText('Six instructional tools')).toBeInTheDocument()
-  })
-
-  it('switches between both operational manual-reference device profiles', async () => {
-    render(<BaxterCrrtLab />)
-
-    const device = screen.getByRole('combobox', { name: 'Device profile' })
-    expect(device).toHaveValue('prismax-aw8035-2xx')
-    expect(screen.getByText(/procedure workflow/i)).toBeInTheDocument()
-
-    fireEvent.change(device, { target: { value: 'prismaflex-g5036003-6xx' } })
-    expect(device).toHaveValue('prismaflex-g5036003-6xx')
-    expect(screen.getByText(/softkey workflow/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/G5036003/i).length).toBeGreaterThan(0)
-    await waitFor(() =>
-      expect(screen.getByTestId('crrt-case-workflow').id).toMatch(/prismaflex-g5036003-6xx/),
+    const roles = screen.getByRole('group', { name: 'View case through role lens' })
+    expect(within(roles).getByRole('button', { name: 'Integrated' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
     )
+    fireEvent.click(within(roles).getByRole('button', { name: 'Operator' }))
+    expect(
+      within(screen.getByRole('group', { name: 'View case through role lens' })).getByRole(
+        'button',
+        { name: 'Operator' },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('integrates the generated PrisMax machine simulator into the training surfaces', () => {
-    render(<BaxterCrrtLab />)
+  it('integrates the PrisMax simulator and circuit into one machine surface', () => {
+    render(<CasePlayerHarness />)
 
-    const surfaces = screen.getByRole('tablist', { name: 'CRRT mobile workspace surface' })
-    const machineTab = within(surfaces).getByRole('tab', { name: 'Machine' })
+    const tabs = screen.getByRole('tablist', { name: 'CRRT case surfaces' })
+    const machineTab = within(tabs).getByRole('tab', { name: 'Machine + circuit' })
     fireEvent.click(machineTab)
+    const panel = document.getElementById(machineTab.getAttribute('aria-controls') ?? '')
 
-    const machinePanel = document.getElementById(machineTab.getAttribute('aria-controls') ?? '')
-    expect(machinePanel).toHaveAttribute('data-mobile-active', 'true')
     expect(
-      within(machinePanel as HTMLElement).getByRole('heading', {
-        name: 'PrisMax machine simulator',
-      }),
+      within(panel as HTMLElement).getByRole('heading', { name: 'PrisMax machine and circuit' }),
     ).toBeInTheDocument()
     expect(
-      within(machinePanel as HTMLElement).getByRole('img', {
-        name: /original front-facing educational illustration of a CRRT machine/i,
-      }),
-    ).toBeInTheDocument()
-    expect(
-      within(machinePanel as HTMLElement).getByRole('region', {
+      within(panel as HTMLElement).getByRole('region', {
         name: 'Original PrisMax functional educational facsimile',
       }),
     ).toBeInTheDocument()
     expect(
-      within(machinePanel as HTMLElement).getByText(
-        'Complete the clinical plan to unlock controls',
-      ),
+      within(panel as HTMLElement).getByLabelText('Circuit and fluid state'),
     ).toBeInTheDocument()
-    expect(
-      within(machinePanel as HTMLElement).getByRole('button', {
-        name: 'Complete clinical plan',
-      }),
-    ).toBeEnabled()
-    expect(within(machinePanel as HTMLElement).getByRole('button', { name: 'Stop' })).toBeDisabled()
-
-    fireEvent.click(
-      within(machinePanel as HTMLElement).getByRole('button', {
-        name: 'Explore Solution pump deck',
-      }),
-    )
-    expect(
-      within(machinePanel as HTMLElement).getByText(
-        /four pump positions provide spatial orientation to the circuit/i,
-      ),
-    ).toBeInTheDocument()
-
-    fireEvent.click(
-      within(machinePanel as HTMLElement).getByRole('button', {
-        name: 'Complete clinical plan',
-      }),
-    )
-    expect(within(surfaces).getByRole('tab', { name: 'Case' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
+    expect(screen.queryByRole('combobox', { name: 'Device profile' })).not.toBeInTheDocument()
   })
 
-  it('applies an authored case setting directly from the unlocked console', () => {
-    render(<BaxterCrrtLab />)
+  it('unlocks authored machine controls only after the clinical plan is committed', () => {
+    render(<CasePlayerHarness />)
     submitCrrt01ClinicalPlan()
 
-    const surfaces = screen.getByRole('tablist', { name: 'CRRT mobile workspace surface' })
-    const machineTab = within(surfaces).getByRole('tab', { name: 'Machine' })
+    const tabs = screen.getByRole('tablist', { name: 'CRRT case surfaces' })
+    const machineTab = within(tabs).getByRole('tab', { name: 'Machine + circuit' })
     fireEvent.click(machineTab)
-    const machinePanel = document.getElementById(machineTab.getAttribute('aria-controls') ?? '')
-    const machine = within(machinePanel as HTMLElement)
-
-    expect(
-      machine.getByRole('heading', { name: 'Adjust case-relevant machine settings' }),
-    ).toBeInTheDocument()
-    const settingButton = machine.getByRole('button', {
+    const machine = within(
+      document.getElementById(machineTab.getAttribute('aria-controls') ?? '') as HTMLElement,
+    )
+    const setting = machine.getByRole('button', {
       name: 'Apply case setting: Adjust machine fluid removal after assessment',
     })
-    expect(settingButton).toBeDisabled()
-
+    expect(setting).toBeDisabled()
     fireEvent.click(
       machine.getByRole('button', {
         name: 'Record clinical step: Complete the initial clinical assessment',
       }),
     )
-    expect(settingButton).toBeEnabled()
-    fireEvent.click(settingButton)
-
+    expect(setting).toBeEnabled()
+    fireEvent.click(setting)
     expect(machine.getByLabelText('Pilot flow displays')).toHaveTextContent('70 mL/h')
-    expect(settingButton).toHaveTextContent('Applied')
-    expect(settingButton).toBeDisabled()
   })
 
-  it('runs the masked PrisMax Mastery experience without hints and shows the transfer capstone', () => {
-    render(<BaxterCrrtLab />)
+  it('runs the masked capstone without hints or a case/device picker', () => {
+    render(<CasePlayerHarness experience="mastery" />)
 
-    fireEvent.click(screen.getByRole('tab', { name: /^Mastery/ }))
-
-    expect(screen.getByRole('heading', { name: 'Unseen PrisMax capstone' })).toBeInTheDocument()
-    expect(screen.getByRole('note', { name: 'Mastery safeguards.' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /Reveal guidance/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Device profile' })).toBeDisabled()
-    expect(screen.getByRole('combobox', { name: 'Station-grouped case' })).toBeDisabled()
+    expect(screen.getByRole('note', { name: 'Capstone safeguards.' })).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { name: 'Cross-device workflow translation capstone' }),
+      screen.getByText(/Case identity remains masked until causal debrief/i),
     ).toBeInTheDocument()
-    expect(screen.getByText(/does not claim.*clinically interchangeable/i)).toBeInTheDocument()
-  })
-
-  it('keeps final-SME preview functionality on while suppressing persistence and telemetry', () => {
-    render(<BaxterCrrtLab sessionMode="review-preview" />)
-
-    const main = screen.getByRole('main')
-    expect(main).toHaveAttribute('data-session-mode', 'review-preview')
-    expect(main).toHaveAttribute('data-analytics', 'suppressed')
-    expect(main).toHaveAttribute('data-progress-write', 'suppressed')
-    expect(screen.getByRole('tab', { name: /^Mastery/ })).toBeEnabled()
-    expect(screen.getByRole('combobox', { name: 'Station-grouped case' })).toHaveLength(18)
+    expect(screen.queryByRole('heading', { name: /Reveal guidance/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /case/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: /device/i })).not.toBeInTheDocument()
   })
 })
