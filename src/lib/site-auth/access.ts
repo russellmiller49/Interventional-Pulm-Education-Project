@@ -6,6 +6,7 @@ export type SiteEntitlement =
   | 'pccm_intro_course_admin_loma_linda'
   | 'pccm_intro_course_admin_ucsd'
   | 'site_admin'
+  | 'socrates_editor'
   | 'socal_ebus_course'
 
 const PUBLIC_EXACT_PATHS = new Set([
@@ -250,6 +251,13 @@ export function getRequiredEntitlement(
     return 'pccm_intro_course'
   }
 
+  if (
+    normalizedPathname === '/socrates-builder' ||
+    normalizedPathname.startsWith('/socrates-builder/')
+  ) {
+    return 'socrates_editor'
+  }
+
   if (isAdminEbusPreviewEmbed(normalizedPathname, searchParams)) {
     return 'site_admin'
   }
@@ -332,6 +340,10 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'socrates-demo') {
     return 'socrates-demo'
+  }
+
+  if (first === 'socrates-builder') {
+    return 'socrates-builder'
   }
 
   // Collapse subroutes (hub/learn/practice/assess) into one module id so

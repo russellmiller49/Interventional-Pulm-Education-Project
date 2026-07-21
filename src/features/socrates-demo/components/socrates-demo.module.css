@@ -175,6 +175,11 @@
   outline: none;
 }
 
+.viewerCanvasDrawing {
+  cursor: crosshair;
+  touch-action: none;
+}
+
 .viewerCanvas:focus-visible {
   box-shadow: inset 0 0 0 3px #70e6d4;
 }
@@ -205,6 +210,13 @@
   transition:
     fill 140ms ease,
     stroke 140ms ease;
+}
+
+.annotationDraft {
+  fill: rgb(255 255 255 / 12%);
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-dasharray: 10 7;
 }
 
 .annotationDetail {

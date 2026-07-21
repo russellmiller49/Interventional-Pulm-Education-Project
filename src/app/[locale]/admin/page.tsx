@@ -48,6 +48,7 @@ const adminEntitlements = [
   'pccm_intro_course',
   'pccm_intro_course_admin_ucsd',
   'pccm_intro_course_admin_loma_linda',
+  'socrates_editor',
   'socal_ebus_course',
   'site_admin',
 ] as const
@@ -66,6 +67,8 @@ const permissionFilterOptions = [
   { value: 'pccm_intro_course_admin_ucsd_inactive', label: 'PCCM UCSD Admin off' },
   { value: 'pccm_intro_course_admin_loma_linda_active', label: 'PCCM Loma Linda Admin active' },
   { value: 'pccm_intro_course_admin_loma_linda_inactive', label: 'PCCM Loma Linda Admin off' },
+  { value: 'socrates_editor_active', label: 'SOCRATES Editor active' },
+  { value: 'socrates_editor_inactive', label: 'SOCRATES Editor off' },
   { value: 'socal_ebus_course_active', label: 'SoCal EBUS Course active' },
   { value: 'socal_ebus_course_inactive', label: 'SoCal EBUS Course off' },
   { value: 'site_admin_active', label: 'Site Admin active' },
@@ -329,6 +332,7 @@ const entitlementLabels: Record<AdminEntitlement, string> = {
   pccm_intro_course: 'PCCM Intro Course',
   pccm_intro_course_admin_loma_linda: 'PCCM Loma Linda Admin',
   pccm_intro_course_admin_ucsd: 'PCCM UCSD Admin',
+  socrates_editor: 'SOCRATES Editor',
   socal_ebus_course: 'SoCal EBUS Course',
   site_admin: 'Site Admin',
 }
@@ -360,6 +364,8 @@ const permissionFilterConfig: Record<
     active: false,
     entitlement: 'pccm_intro_course_admin_loma_linda',
   },
+  socrates_editor_active: { active: true, entitlement: 'socrates_editor' },
+  socrates_editor_inactive: { active: false, entitlement: 'socrates_editor' },
   socal_ebus_course_active: { active: true, entitlement: 'socal_ebus_course' },
   socal_ebus_course_inactive: {
     active: false,
@@ -1535,6 +1541,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href={'/socrates-builder' as Route}>SOCRATES builder</Link>
+              </Button>
               <Button asChild variant="outline">
                 <Link href={'/admin/pccm-intro-course' as Route}>All PCCM cohorts</Link>
               </Button>

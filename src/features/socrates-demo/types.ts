@@ -35,6 +35,7 @@ export interface DemoAnnotation {
   exitZoomRatio: number
   summary: string
   placeholderNote: string
+  sortOrder?: number
 }
 
 export interface DeepZoomViewerHandle {

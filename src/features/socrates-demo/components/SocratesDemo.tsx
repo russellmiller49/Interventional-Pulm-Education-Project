@@ -32,63 +32,72 @@ import type {
 import { DeepZoomViewer } from './DeepZoomViewer'
 import styles from './socrates-demo.module.css'
 
-const DEFAULT_SELECTED_ID = 'zone-1'
-
 function setsAreEqual(first: ReadonlySet<string>, second: ReadonlySet<string>) {
   if (first.size !== second.size) return false
   return [...first].every((value) => second.has(value))
 }
 
-export function SocratesDemo() {
+interface SocratesDemoProps {
+  slide?: typeof socratesDemoSlide
+  annotations?: readonly DemoAnnotation[]
+}
+
+export function SocratesDemo({
+  slide = socratesDemoSlide,
+  annotations = socratesDemoAnnotations,
+}: SocratesDemoProps) {
+  const defaultSelectedId =
+    annotations.find((annotation) => annotation.style === 'parent')?.id ?? annotations[0]?.id ?? ''
   const viewerRef = useRef<DeepZoomViewerHandle | null>(null)
-  const [selectedId, setSelectedId] = useState(DEFAULT_SELECTED_ID)
+  const [selectedId, setSelectedId] = useState(defaultSelectedId)
   const [previewedId, setPreviewedId] = useState<string | null>(null)
   const [annotationsVisible, setAnnotationsVisible] = useState(true)
   const [viewerStatus, setViewerStatus] = useState<DeepZoomViewerStatus>({ phase: 'loading' })
   const [viewport, setViewport] = useState<ViewportSnapshot>({
     zoomRatio: 1,
-    visibleImageBounds: socratesDemoSlide.initialImageRect,
+    visibleImageBounds: slide.initialImageRect,
   })
   const [visibleIds, setVisibleIds] = useState<Set<string>>(() =>
-    resolveVisibleAnnotationIds(socratesDemoAnnotations, 1, new Set()),
+    resolveVisibleAnnotationIds(annotations, 1, new Set()),
   )
 
   const annotationsById = useMemo(
-    () => new Map(socratesDemoAnnotations.map((annotation) => [annotation.id, annotation])),
-    [],
+    () => new Map(annotations.map((annotation) => [annotation.id, annotation])),
+    [annotations],
   )
   const selectedAnnotation =
-    annotationsById.get(selectedId) ?? annotationsById.get(DEFAULT_SELECTED_ID)!
-  const breadcrumbs = getAnnotationAncestry(selectedAnnotation.id, socratesDemoAnnotations)
+    annotationsById.get(selectedId) ?? annotationsById.get(defaultSelectedId) ?? annotations[0]!
+  const breadcrumbs = getAnnotationAncestry(selectedAnnotation.id, annotations)
   const currentViewAnnotations = annotationsInCurrentView(
-    socratesDemoAnnotations,
+    annotations,
     visibleIds,
     viewport.visibleImageBounds,
   )
   const overlayAnnotations = annotationsVisible
-    ? socratesDemoAnnotations.filter((annotation) => visibleIds.has(annotation.id))
+    ? annotations.filter((annotation) => visibleIds.has(annotation.id))
     : []
 
-  const handleViewportChange = useCallback((snapshot: ViewportSnapshot) => {
-    setViewport(snapshot)
-    setVisibleIds((previouslyVisibleIds) => {
-      const nextVisibleIds = resolveVisibleAnnotationIds(
-        socratesDemoAnnotations,
-        snapshot.zoomRatio,
-        previouslyVisibleIds,
-      )
-      return setsAreEqual(previouslyVisibleIds, nextVisibleIds)
-        ? previouslyVisibleIds
-        : nextVisibleIds
-    })
-  }, [])
+  const handleViewportChange = useCallback(
+    (snapshot: ViewportSnapshot) => {
+      setViewport(snapshot)
+      setVisibleIds((previouslyVisibleIds) => {
+        const nextVisibleIds = resolveVisibleAnnotationIds(
+          annotations,
+          snapshot.zoomRatio,
+          previouslyVisibleIds,
+        )
+        return setsAreEqual(previouslyVisibleIds, nextVisibleIds)
+          ? previouslyVisibleIds
+          : nextVisibleIds
+      })
+    },
+    [annotations],
+  )
 
   const regionAtPoint = useCallback(
     (point: ImagePoint) =>
-      annotationsVisible
-        ? findDeepestAnnotationAtPoint(socratesDemoAnnotations, visibleIds, point)
-        : null,
-    [annotationsVisible, visibleIds],
+      annotationsVisible ? findDeepestAnnotationAtPoint(annotations, visibleIds, point) : null,
+    [annotations, annotationsVisible, visibleIds],
   )
 
   const handleImageHover = useCallback(
@@ -123,11 +132,11 @@ export function SocratesDemo() {
   )
 
   const resetDemo = useCallback(() => {
-    setSelectedId(DEFAULT_SELECTED_ID)
+    setSelectedId(defaultSelectedId)
     setPreviewedId(null)
-    setVisibleIds(resolveVisibleAnnotationIds(socratesDemoAnnotations, 1, new Set()))
+    setVisibleIds(resolveVisibleAnnotationIds(annotations, 1, new Set()))
     viewerRef.current?.resetToInitialView()
-  }, [])
+  }, [annotations, defaultSelectedId])
 
   const toggleAnnotations = useCallback(() => {
     setAnnotationsVisible((areVisible) => !areVisible)
@@ -142,7 +151,7 @@ export function SocratesDemo() {
         <div className={styles.heroCopy}>
           <div className={styles.eyebrowRow}>
             <Badge variant="info">Unlisted functional demo</Badge>
-            <span className={styles.slideId}>Slide {socratesDemoSlide.id}</span>
+            <span className={styles.slideId}>Slide {slide.id}</span>
           </div>
           <h1 id="socrates-demo-title">SOCRATES deep-slide annotation demo</h1>
           <p>
@@ -154,7 +163,7 @@ export function SocratesDemo() {
         <div className={styles.placeholderBanner} role="note">
           <TriangleAlert aria-hidden="true" />
           <div>
-            <strong>{socratesDemoSlide.contentStatus}</strong>
+            <strong>{slide.contentStatus}</strong>
             <span>All region names, boundaries, and descriptions are illustrative.</span>
           </div>
         </div>
@@ -176,7 +185,7 @@ export function SocratesDemo() {
             <div className={styles.viewerStage}>
               <DeepZoomViewer
                 ref={viewerRef}
-                slide={socratesDemoSlide}
+                slide={slide}
                 annotations={overlayAnnotations}
                 selectedAnnotationId={selectedId}
                 previewedAnnotationId={previewedId}
@@ -363,8 +372,8 @@ export function SocratesDemo() {
               Slide imagery streams directly from the provider&apos;s public deep-zoom service. No
               tiles are copied or stored by this demo.
             </p>
-            <a href={socratesDemoSlide.attribution.href} target="_blank" rel="noreferrer">
-              {socratesDemoSlide.attribution.label}
+            <a href={slide.attribution.href} target="_blank" rel="noreferrer">
+              {slide.attribution.label}
             </a>
           </section>
         </aside>

@@ -147,6 +147,9 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/ip-registry', params())).toBe('ip_registry')
     expect(getRequiredEntitlement('/pccm-intro-course', params())).toBe('pccm_intro_course')
     expect(getRequiredEntitlement('/es/pccm-intro-course', params())).toBe('pccm_intro_course')
+    expect(getRequiredEntitlement('/socrates-builder', params())).toBe('socrates_editor')
+    expect(getRequiredEntitlement('/es/socrates-builder', params())).toBe('socrates_editor')
+    expect(getRequiredEntitlement('/socrates-builder/slides/new', params())).toBe('socrates_editor')
     expect(
       getRequiredEntitlement('/pccm-intro-course/assessments/bronchoscopy_pre', params()),
     ).toBe('pccm_intro_course')
@@ -154,6 +157,13 @@ describe('main site auth access helpers', () => {
     expect(getRequiredEntitlement('/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/es/ebus-training', params())).toBeNull()
     expect(getRequiredEntitlement('/tnm-9-staging', params())).toBeNull()
+  })
+
+  it('tracks the protected SOCRATES builder separately from the public demo', () => {
+    expect(isPublicPath('/socrates-builder')).toBe(false)
+    expect(isPublicUnlistedPath('/socrates-builder')).toBe(false)
+    expect(resolveSiteModuleId('/socrates-builder')).toBe('socrates-builder')
+    expect(resolveSiteModuleId('/zh-CN/socrates-builder')).toBe('socrates-builder')
   })
 
   it('recognizes the shared PCCM intro course module paths', () => {

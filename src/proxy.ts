@@ -147,6 +147,10 @@ export async function proxy(req: NextRequest) {
         Boolean(await getActivePccmIntroCourseEnrollment(user.id))
     }
 
+    if (!hasAccess && requiredEntitlement === 'socrates_editor') {
+      hasAccess = await hasActiveSiteEntitlement('site_admin', user.id)
+    }
+
     if (
       !hasAccess &&
       requiredEntitlement === 'site_admin' &&
@@ -205,12 +209,14 @@ export async function proxy(req: NextRequest) {
   return res
 
   async function hasActiveSiteEntitlement(entitlement: SiteEntitlement, userId: string) {
+    const now = new Date().toISOString()
     const { data: siteEntitlement } = await supabase
       .from('site_entitlements')
       .select('entitlement')
       .eq('entitlement', entitlement)
       .eq('user_id', userId)
       .eq('status', 'active')
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
       .maybeSingle()
 
     if (siteEntitlement) {
@@ -225,12 +231,14 @@ export async function proxy(req: NextRequest) {
       return false
     }
 
+    const now = new Date().toISOString()
     const { data: siteEntitlement } = await supabase
       .from('site_entitlements')
       .select('entitlement')
       .eq('user_id', userId)
       .eq('status', 'active')
       .in('entitlement', entitlements)
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
       .limit(1)
       .maybeSingle()
 

@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createRef } from 'react'
 
@@ -25,17 +25,25 @@ const mockClose = jest.fn()
 const mockFitBounds = jest.fn()
 const mockZoomBy = jest.fn()
 const mockApplyConstraints = jest.fn()
+const mockSetMouseNavEnabled = jest.fn()
 const mockOpenSeadragon = jest.fn()
 
 jest.mock('openseadragon', () => ({
   __esModule: true,
-  default: (options: unknown) => mockOpenSeadragon(options),
   Point: class MockPoint {
     constructor(
       public x: number,
       public y: number,
     ) {}
   },
+  default: Object.assign((options: unknown) => mockOpenSeadragon(options), {
+    Point: class MockPoint {
+      constructor(
+        public x: number,
+        public y: number,
+      ) {}
+    },
+  }),
 }))
 
 import { DeepZoomViewer } from '../components/DeepZoomViewer'
@@ -81,6 +89,7 @@ function configureMockViewer() {
       },
       close: mockClose,
       destroy: mockDestroy,
+      setMouseNavEnabled: mockSetMouseNavEnabled,
     }
   })
 }
@@ -88,6 +97,8 @@ function configureMockViewer() {
 function renderViewer(overrides?: {
   slide?: typeof socratesDemoSlide
   onStatusChange?: (status: DeepZoomViewerStatus) => void
+  interactionMode?: 'navigate' | 'draw-rectangle'
+  onDrawRectangle?: (rect: { x: number; y: number; width: number; height: number }) => void
 }) {
   const ref = createRef<DeepZoomViewerHandle>()
   const onImageHover = jest.fn<void, [ImagePoint | null]>()
@@ -105,6 +116,8 @@ function renderViewer(overrides?: {
       onImageSelect={onImageSelect}
       onViewportChange={onViewportChange}
       onStatusChange={onStatusChange}
+      interactionMode={overrides?.interactionMode}
+      onDrawRectangle={overrides?.onDrawRectangle}
     />,
   )
 
@@ -112,6 +125,15 @@ function renderViewer(overrides?: {
 }
 
 describe('DeepZoomViewer lifecycle and recovery', () => {
+  beforeAll(() => {
+    if (!window.PointerEvent) {
+      Object.defineProperty(window, 'PointerEvent', {
+        configurable: true,
+        value: MouseEvent,
+      })
+    }
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockHandlers = {}
@@ -182,5 +204,28 @@ describe('DeepZoomViewer lifecycle and recovery', () => {
 
     unmount()
     expect(mockDestroy).toHaveBeenCalledTimes(1)
+  })
+
+  it('disables navigation and emits source-pixel rectangles in drawing mode', async () => {
+    const onDrawRectangle = jest.fn()
+    renderViewer({ interactionMode: 'draw-rectangle', onDrawRectangle })
+    await waitFor(() => expect(mockOpenSeadragon).toHaveBeenCalledTimes(1))
+    act(() => mockHandlers.open({}))
+
+    expect(mockSetMouseNavEnabled).toHaveBeenLastCalledWith(false)
+    const viewerMount = screen.getByLabelText(
+      'Interactive pathology slide. Drag to pan, scroll or pinch to zoom.',
+    )
+    const canvas = viewerMount.firstElementChild as HTMLElement
+    fireEvent.pointerDown(canvas, { clientX: 100, clientY: 200, pointerId: 1 })
+    fireEvent.pointerMove(canvas, { clientX: 340, clientY: 460, pointerId: 1 })
+    fireEvent.pointerUp(canvas, { clientX: 340, clientY: 460, pointerId: 1 })
+
+    expect(onDrawRectangle).toHaveBeenCalledWith({
+      x: 100,
+      y: 200,
+      width: 240,
+      height: 260,
+    })
   })
 })

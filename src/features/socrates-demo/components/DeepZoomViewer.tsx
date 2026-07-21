@@ -13,7 +13,7 @@ import type {
   ImageRect,
   ViewportSnapshot,
 } from '../types'
-import { polygonBounds } from '../engine/geometry'
+import { polygonBounds, rectangleToPolygon } from '../engine/geometry'
 import styles from './socrates-demo.module.css'
 
 interface DeepZoomViewerProps {
@@ -25,6 +25,8 @@ interface DeepZoomViewerProps {
   onImageSelect: (point: ImagePoint) => void
   onViewportChange: (snapshot: ViewportSnapshot) => void
   onStatusChange?: (status: DeepZoomViewerStatus) => void
+  interactionMode?: 'navigate' | 'draw-rectangle'
+  onDrawRectangle?: (rect: ImageRect) => void
 }
 
 interface LabelPosition {
@@ -60,6 +62,8 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       onImageSelect,
       onViewportChange,
       onStatusChange,
+      interactionMode = 'navigate',
+      onDrawRectangle,
     },
     ref,
   ) {
@@ -72,13 +76,17 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       onImageSelect,
       onViewportChange,
       onStatusChange,
+      onDrawRectangle,
     })
+    const interactionModeRef = useRef(interactionMode)
+    const drawStartRef = useRef<ImagePoint | null>(null)
     const activeAnnotationRef = useRef<DemoAnnotation | null>(null)
     const [attempt, setAttempt] = useState(0)
     const [overlayElement, setOverlayElement] = useState<HTMLDivElement | null>(null)
     const [status, setStatus] = useState<DeepZoomViewerStatus>({ phase: 'loading' })
     const [tileWarning, setTileWarning] = useState(false)
     const [labelPosition, setLabelPosition] = useState<LabelPosition | null>(null)
+    const [draftRectangle, setDraftRectangle] = useState<ImageRect | null>(null)
 
     const activeAnnotation =
       annotations.find((annotation) => annotation.id === previewedAnnotationId) ??
@@ -91,8 +99,16 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         onImageSelect,
         onViewportChange,
         onStatusChange,
+        onDrawRectangle,
       }
-    }, [onImageHover, onImageSelect, onStatusChange, onViewportChange])
+    }, [onDrawRectangle, onImageHover, onImageSelect, onStatusChange, onViewportChange])
+
+    useEffect(() => {
+      interactionModeRef.current = interactionMode
+      drawStartRef.current = null
+      setDraftRectangle(null)
+      viewerRef.current?.setMouseNavEnabled(interactionMode === 'navigate')
+    }, [interactionMode])
 
     useEffect(() => {
       activeAnnotationRef.current = activeAnnotation
@@ -200,6 +216,9 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       let viewer: OpenSeadragonType.Viewer | null = null
       let pointerMoveHandler: ((event: PointerEvent) => void) | null = null
       let pointerLeaveHandler: (() => void) | null = null
+      let pointerDownHandler: ((event: PointerEvent) => void) | null = null
+      let pointerUpHandler: ((event: PointerEvent) => void) | null = null
+      let pointerCancelHandler: ((event: PointerEvent) => void) | null = null
 
       setOverlayElement(null)
       setTileWarning(false)
@@ -244,6 +263,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           })
 
           viewerRef.current = viewer
+          viewer.setMouseNavEnabled(interactionModeRef.current === 'navigate')
 
           viewer.addHandler('open', () => {
             if (disposed || !viewer) return
@@ -308,6 +328,7 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           })
 
           viewer.addHandler('canvas-click', (event) => {
+            if (interactionModeRef.current !== 'navigate') return
             if (!event.quick || !tiledImageRef.current) return
             const point = tiledImageRef.current.viewerElementToImageCoordinates(event.position)
             callbacksRef.current.onImageSelect({ x: point.x, y: point.y })
@@ -317,22 +338,84 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
           viewer.addHandler('animation-finish', emitViewportSnapshot)
           viewer.addHandler('resize', emitViewportSnapshot)
 
-          pointerMoveHandler = (event: PointerEvent) => {
+          const imagePointFromPointer = (event: PointerEvent) => {
             const activeTiledImage = tiledImageRef.current
-            if (!activeTiledImage || !viewer) return
+            if (!activeTiledImage || !viewer) return null
 
             const viewerBounds = viewer.element.getBoundingClientRect()
-            const point = activeTiledImage.viewerElementToImageCoordinates(
+            return activeTiledImage.viewerElementToImageCoordinates(
               new OpenSeadragon.Point(
                 event.clientX - viewerBounds.left,
                 event.clientY - viewerBounds.top,
               ),
             )
+          }
+
+          pointerMoveHandler = (event: PointerEvent) => {
+            const point = imagePointFromPointer(event)
+            if (!point) return
+
+            const drawStart = drawStartRef.current
+            if (interactionModeRef.current === 'draw-rectangle' && drawStart) {
+              event.preventDefault()
+              setDraftRectangle({
+                x: Math.min(drawStart.x, point.x),
+                y: Math.min(drawStart.y, point.y),
+                width: Math.abs(point.x - drawStart.x),
+                height: Math.abs(point.y - drawStart.y),
+              })
+              return
+            }
+
             callbacksRef.current.onImageHover({ x: point.x, y: point.y })
           }
-          pointerLeaveHandler = () => callbacksRef.current.onImageHover(null)
-          viewer.canvas.addEventListener('pointermove', pointerMoveHandler, { passive: true })
+          pointerLeaveHandler = () => {
+            if (!drawStartRef.current) callbacksRef.current.onImageHover(null)
+          }
+          pointerDownHandler = (event: PointerEvent) => {
+            if (interactionModeRef.current !== 'draw-rectangle') return
+            const point = imagePointFromPointer(event)
+            if (!point) return
+            event.preventDefault()
+            callbacksRef.current.onImageHover(null)
+            drawStartRef.current = { x: point.x, y: point.y }
+            setDraftRectangle(null)
+            viewer?.canvas.setPointerCapture?.(event.pointerId)
+          }
+          pointerUpHandler = (event: PointerEvent) => {
+            const drawStart = drawStartRef.current
+            if (interactionModeRef.current !== 'draw-rectangle' || !drawStart) return
+            const point = imagePointFromPointer(event)
+            event.preventDefault()
+            drawStartRef.current = null
+            viewer?.canvas.releasePointerCapture?.(event.pointerId)
+            if (!point) {
+              setDraftRectangle(null)
+              return
+            }
+
+            const rectangle = {
+              x: Math.min(drawStart.x, point.x),
+              y: Math.min(drawStart.y, point.y),
+              width: Math.abs(point.x - drawStart.x),
+              height: Math.abs(point.y - drawStart.y),
+            }
+            setDraftRectangle(null)
+            if (rectangle.width >= 2 && rectangle.height >= 2) {
+              callbacksRef.current.onDrawRectangle?.(rectangle)
+            }
+          }
+          pointerCancelHandler = (event: PointerEvent) => {
+            if (!drawStartRef.current) return
+            drawStartRef.current = null
+            setDraftRectangle(null)
+            viewer?.canvas.releasePointerCapture?.(event.pointerId)
+          }
+          viewer.canvas.addEventListener('pointermove', pointerMoveHandler, { passive: false })
           viewer.canvas.addEventListener('pointerleave', pointerLeaveHandler)
+          viewer.canvas.addEventListener('pointerdown', pointerDownHandler)
+          viewer.canvas.addEventListener('pointerup', pointerUpHandler)
+          viewer.canvas.addEventListener('pointercancel', pointerCancelHandler)
         } catch {
           if (!disposed) {
             publishStatus({
@@ -354,7 +437,17 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
         if (viewer && pointerLeaveHandler) {
           viewer.canvas.removeEventListener('pointerleave', pointerLeaveHandler)
         }
+        if (viewer && pointerDownHandler) {
+          viewer.canvas.removeEventListener('pointerdown', pointerDownHandler)
+        }
+        if (viewer && pointerUpHandler) {
+          viewer.canvas.removeEventListener('pointerup', pointerUpHandler)
+        }
+        if (viewer && pointerCancelHandler) {
+          viewer.canvas.removeEventListener('pointercancel', pointerCancelHandler)
+        }
         callbacksRef.current.onImageHover(null)
+        drawStartRef.current = null
         tiledImageRef.current = null
         viewerRef.current = null
         viewer?.destroy()
@@ -374,7 +467,9 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
       <div className={styles.viewerSurface} data-testid="deep-zoom-viewer">
         <div
           ref={viewerElementRef}
-          className={styles.viewerCanvas}
+          className={`${styles.viewerCanvas} ${
+            interactionMode === 'draw-rectangle' ? styles.viewerCanvasDrawing : ''
+          }`}
           aria-label="Interactive pathology slide. Drag to pan, scroll or pinch to zoom."
         />
 
@@ -408,6 +503,15 @@ export const DeepZoomViewer = forwardRef<DeepZoomViewerHandle, DeepZoomViewerPro
                     />
                   )
                 })}
+                {draftRectangle ? (
+                  <polygon
+                    points={rectangleToPolygon(draftRectangle)
+                      .map((point) => `${point.x},${point.y}`)
+                      .join(' ')}
+                    className={`${styles.annotationPolygon} ${styles.annotationDraft}`}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ) : null}
               </svg>,
               overlayElement,
             )

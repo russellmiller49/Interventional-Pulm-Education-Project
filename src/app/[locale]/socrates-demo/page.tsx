@@ -1,12 +1,16 @@
 import type { Metadata } from 'next'
 import { setRequestLocale } from 'next-intl/server'
 
-import { SocratesDemo } from '@/features/socrates-demo/components/SocratesDemo'
+import { SocratesDemoWorkspace } from '@/features/socrates-demo/components/SocratesDemoWorkspace'
+import {
+  loadPublishedSocratesDocument,
+  loadSocratesSandboxDocuments,
+} from '@/features/socrates-builder/server/data'
 
 export const metadata: Metadata = {
-  title: 'SOCRATES Deep-Slide Annotation Demo',
+  title: 'SOCRATES Deep-Slide Demo and Sandbox Builder',
   description:
-    'Unlisted functional demonstration of live deep-zoom pathology imagery with illustrative nested annotations.',
+    'Unlisted functional demonstration and disposable builder for live deep-zoom pathology imagery with illustrative annotations.',
   robots: {
     index: false,
     follow: false,
@@ -16,11 +20,22 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>
+  searchParams?: Promise<{ slide?: string }>
 }
 
-export default async function SocratesDemoPage({ params }: PageProps) {
+export default async function SocratesDemoPage({ params, searchParams }: PageProps) {
   const { locale } = await params
   setRequestLocale(locale)
+  const query = await searchParams
+  const [publishedDocument, sandboxDocuments] = await Promise.all([
+    loadPublishedSocratesDocument(query?.slide),
+    loadSocratesSandboxDocuments(),
+  ])
 
-  return <SocratesDemo />
+  return (
+    <SocratesDemoWorkspace
+      publishedDocument={publishedDocument}
+      sandboxDocuments={sandboxDocuments}
+    />
+  )
 }
