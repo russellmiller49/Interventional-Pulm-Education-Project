@@ -62,7 +62,7 @@ import {
   createBlankSocratesDocument,
   createStarterSocratesDocument,
 } from '../content/starter-document'
-import { loadInvenioDziDescriptor } from '../descriptor'
+import { loadInvenioDziDescriptor, resolveSocratesSlideSource } from '../descriptor'
 import {
   createSandboxEditKey,
   forgetSandboxEditKey,
@@ -127,19 +127,6 @@ function slugify(value: string) {
   )
 }
 
-function descriptorSlideKey(url: string) {
-  try {
-    return decodeURIComponent(
-      new URL(url).pathname
-        .split('/')
-        .pop()
-        ?.replace(/\.dzi$/i, '') ?? '',
-    )
-  } catch {
-    return ''
-  }
-}
-
 function clampRectangleToSlide(rect: ImageRect, width: number, height: number): ImageRect {
   const x = Math.max(0, Math.min(rect.x, width))
   const y = Math.max(0, Math.min(rect.y, height))
@@ -197,6 +184,7 @@ export function SocratesBuilder({
   const importInputRef = useRef<HTMLInputElement | null>(null)
   const [documents, setDocuments] = useState(() => initialDocuments.map(cloneDocument))
   const [document, setDocument] = useState<SocratesSlideDocument>(initialDocument)
+  const [descriptorInput, setDescriptorInput] = useState(initialDocument.slide.descriptorUrl)
   const [selectedId, setSelectedId] = useState(initialDocument.annotations[0]?.id ?? '')
   const [previewedId, setPreviewedId] = useState<string | null>(null)
   const [drawMode, setDrawMode] = useState<SocratesDrawMode>('navigate')
@@ -263,6 +251,7 @@ export function SocratesBuilder({
   const selectDocument = useCallback((nextDocument: SocratesSlideDocument) => {
     const clone = cloneDocument(nextDocument)
     setDocument(clone)
+    setDescriptorInput(clone.slide.descriptorUrl)
     setSelectedId(clone.annotations[0]?.id ?? '')
     setPreviewedId(null)
     setDrawMode('navigate')
@@ -454,33 +443,56 @@ export function SocratesBuilder({
     setLoadingDescriptor(true)
     setNotice(null)
     try {
-      const descriptor = await loadInvenioDziDescriptor(document.slide.descriptorUrl)
-      const slideKey = descriptorSlideKey(document.slide.descriptorUrl)
+      const source = resolveSocratesSlideSource(descriptorInput)
+      const descriptor = await loadInvenioDziDescriptor(source.descriptorUrl)
+      const slideKey = source.slideKey
       const fullView = { x: 0, y: 0, width: descriptor.width, height: descriptor.height }
       const currentInitialView = document.slide.initialImageRect
       const descriptorChanged = Boolean(slideKey && slideKey !== document.slide.id)
-      const initialImageRect =
-        !descriptorChanged && rectContainsRect(fullView, currentInitialView)
+
+      if (source.initialImageRect && !rectContainsRect(fullView, source.initialImageRect)) {
+        throw new Error('The Thinviewer starting crop lies outside the slide dimensions.')
+      }
+
+      const initialImageRect = source.initialImageRect
+        ? source.initialImageRect
+        : !descriptorChanged && rectContainsRect(fullView, currentInitialView)
           ? currentInitialView
           : fullView
       setDirtyDocument((current) => ({
         ...current,
         slug: current.recordId ? current.slug : slugify(slideKey || current.title),
         title:
-          current.recordId || current.title !== 'New Invenio slide'
+          current.recordId || (!descriptorChanged && current.title !== 'New Invenio slide')
             ? current.title
             : slideKey.replaceAll('_', ' '),
         slide: {
           ...current.slide,
           id: slideKey || current.slide.id,
+          descriptorUrl: source.descriptorUrl,
           expectedDimensions: { width: descriptor.width, height: descriptor.height },
           initialImageRect,
+          attribution: {
+            ...current.slide.attribution,
+            href:
+              source.attributionUrl ??
+              (descriptorChanged ? source.descriptorUrl : current.slide.attribution.href),
+          },
         },
+        annotations: descriptorChanged ? [] : current.annotations,
       }))
+      setDescriptorInput(source.descriptorUrl)
       setViewport({ zoomRatio: 1, visibleImageBounds: initialImageRect })
+      setPreviewedId(null)
+      if (descriptorChanged) {
+        setSelectedId('')
+        setDrawMode('navigate')
+        setAnnotationHistory([])
+        setAnnotationFuture([])
+      }
       setNotice({
         tone: 'success',
-        message: `Loaded ${descriptor.width} × ${descriptor.height} JPEG pyramid (${descriptor.tileSize}px tiles).`,
+        message: `${source.attributionUrl ? 'Thinviewer link resolved. ' : ''}Loaded ${descriptor.width} × ${descriptor.height} JPEG pyramid (${descriptor.tileSize}px tiles).${descriptorChanged ? ' Regions from the previous slide were cleared.' : ''}`,
       })
     } catch (error) {
       setNotice({
@@ -490,12 +502,7 @@ export function SocratesBuilder({
     } finally {
       setLoadingDescriptor(false)
     }
-  }, [
-    document.slide.descriptorUrl,
-    document.slide.id,
-    document.slide.initialImageRect,
-    setDirtyDocument,
-  ])
+  }, [descriptorInput, document.slide.id, document.slide.initialImageRect, setDirtyDocument])
 
   const saveDocument = useCallback(
     async (workflowStatus: 'draft' | 'review') => {
@@ -997,14 +1004,19 @@ export function SocratesBuilder({
               </Badge>
             </div>
 
-            <Field label="Invenio DZI URL" htmlFor="socrates-descriptor">
+            <Field label="Thinviewer or Invenio URL" htmlFor="socrates-descriptor">
               <div className={styles.inlineField}>
                 <input
                   id="socrates-descriptor"
                   type="url"
-                  value={document.slide.descriptorUrl}
-                  onChange={(event) => updateSlideField('descriptorUrl', event.target.value)}
+                  value={descriptorInput}
+                  aria-label="Thinviewer or Invenio URL"
+                  onChange={(event) => {
+                    setDescriptorInput(event.target.value)
+                    setNotice(null)
+                  }}
                   spellCheck={false}
+                  aria-describedby="socrates-descriptor-help"
                 />
                 <Button
                   type="button"
@@ -1020,6 +1032,10 @@ export function SocratesBuilder({
                   Load
                 </Button>
               </div>
+              <small id="socrates-descriptor-help" className={styles.fieldHint}>
+                Paste the normal NIO Thinviewer link or a raw Invenio DZI descriptor. Thinviewer
+                crop coordinates are applied automatically.
+              </small>
             </Field>
 
             <div className={styles.twoFields}>

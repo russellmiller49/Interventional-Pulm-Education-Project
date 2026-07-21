@@ -1,4 +1,8 @@
-import { loadInvenioDziDescriptor, parseDziDescriptorXml } from '../descriptor'
+import {
+  loadInvenioDziDescriptor,
+  parseDziDescriptorXml,
+  resolveSocratesSlideSource,
+} from '../descriptor'
 
 const descriptor = `<?xml version="1.0" encoding="UTF-8"?>
 <Image xmlns="http://schemas.microsoft.com/deepzoom/2008" Format="jpg" Overlap="1" TileSize="510">
@@ -66,5 +70,44 @@ describe('Invenio DZI descriptor loading', () => {
       /approved Invenio Cloud/i,
     )
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('SOCRATES slide URL resolution', () => {
+  it('keeps a raw Invenio DZI descriptor unchanged', () => {
+    const descriptorUrl = 'https://www.invenio-cloud.com/api/thinslides/PATH_IP31-AC0501-2_7.dzi'
+
+    expect(resolveSocratesSlideSource(descriptorUrl)).toEqual({
+      descriptorUrl,
+      slideKey: 'PATH_IP31-AC0501-2_7',
+    })
+  })
+
+  it('converts a NIO Thinviewer link and preserves its rectangular starting crop', () => {
+    const thinviewerUrl =
+      'https://www.nio-net.com/Thinviewer/PATH_IP31-AC0501-2_7.dzi?x1=65&y1=1738&x2=1590&y2=2987'
+
+    expect(resolveSocratesSlideSource(thinviewerUrl)).toEqual({
+      descriptorUrl: 'https://www.invenio-cloud.com/api/thinslides/PATH_IP31-AC0501-2_7.dzi',
+      slideKey: 'PATH_IP31-AC0501-2_7',
+      initialImageRect: { x: 65, y: 1738, width: 1525, height: 1249 },
+      attributionUrl: thinviewerUrl,
+    })
+  })
+
+  it.each([
+    [
+      'a partial Thinviewer crop',
+      'https://www.nio-net.com/Thinviewer/slide.dzi?x1=1&y1=2',
+      /include x1, y1, x2, and y2/i,
+    ],
+    [
+      'an inverted Thinviewer crop',
+      'https://www.nio-net.com/Thinviewer/slide.dzi?x1=10&y1=2&x2=5&y2=20',
+      /positive image rectangle/i,
+    ],
+    ['an unrelated host', 'https://example.com/slide.dzi', /NIO Thinviewer link/i],
+  ])('rejects %s', (_label, url, expectedMessage) => {
+    expect(() => resolveSocratesSlideSource(url)).toThrow(expectedMessage)
   })
 })

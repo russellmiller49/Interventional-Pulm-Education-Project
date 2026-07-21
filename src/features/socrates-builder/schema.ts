@@ -111,8 +111,7 @@ export function isApprovedInvenioDziUrl(value: string) {
   try {
     const url = new URL(value)
     return (
-      url.protocol === 'https:' &&
-      url.hostname === 'www.invenio-cloud.com' &&
+      url.origin === 'https://www.invenio-cloud.com' &&
       url.search === '' &&
       url.hash === '' &&
       /^\/api\/thinslides\/[A-Za-z0-9._-]+\.dzi$/.test(url.pathname)

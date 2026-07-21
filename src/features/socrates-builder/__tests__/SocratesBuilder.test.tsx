@@ -28,6 +28,7 @@ jest.mock('@/features/socrates-demo/components/DeepZoomViewer', () => {
       props: {
         annotations: Array<{ id: string; label: string }>
         slide: {
+          descriptorUrl: string
           initialImageRect: { x: number; y: number; width: number; height: number }
         }
         interactionMode: 'navigate' | 'draw-rectangle'
@@ -62,6 +63,7 @@ jest.mock('@/features/socrates-demo/components/DeepZoomViewer', () => {
           <output data-testid="builder-initial-rect">
             {JSON.stringify(props.slide.initialImageRect)}
           </output>
+          <output data-testid="builder-descriptor-url">{props.slide.descriptorUrl}</output>
           <button
             type="button"
             onClick={() => props.onDrawRectangle({ x: 1700, y: 1800, width: 200, height: 240 })}
@@ -115,7 +117,7 @@ describe('SOCRATES companion builder', () => {
 
     expect(screen.getByRole('heading', { name: 'SOCRATES slide builder' })).toBeVisible()
     expect(screen.getByText('Local preview')).toBeVisible()
-    expect(screen.getByLabelText('Invenio DZI URL')).toHaveValue(
+    expect(screen.getByLabelText('Thinviewer or Invenio URL')).toHaveValue(
       'https://www.invenio-cloud.com/api/thinslides/PATH_IP31-AC0501-2_7.dzi',
     )
     expect(screen.getByTestId('builder-overlay-labels')).toHaveTextContent('Zone 1')
@@ -164,10 +166,9 @@ describe('SOCRATES companion builder', () => {
     })
     render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
 
-    await user.click(screen.getByRole('button', { name: 'Add slide' }))
-    await user.clear(screen.getByLabelText('Invenio DZI URL'))
+    await user.clear(screen.getByLabelText('Thinviewer or Invenio URL'))
     await user.type(
-      screen.getByLabelText('Invenio DZI URL'),
+      screen.getByLabelText('Thinviewer or Invenio URL'),
       'https://www.invenio-cloud.com/api/thinslides/other-slide.dzi',
     )
     await user.click(screen.getByRole('button', { name: 'Load' }))
@@ -177,6 +178,34 @@ describe('SOCRATES companion builder', () => {
         '{"x":0,"y":0,"width":10000,"height":8000}',
       ),
     )
+    expect(screen.getByTestId('builder-overlay-labels')).toBeEmptyDOMElement()
+    expect(screen.getByText(/Regions from the previous slide were cleared/)).toBeVisible()
+  })
+
+  it('accepts a Thinviewer page URL without sending that page to OpenSeadragon', async () => {
+    const user = userEvent.setup()
+    const thinviewerUrl =
+      'https://www.nio-net.com/Thinviewer/PATH_IP31-AC0501-2_7.dzi?x1=65&y1=1738&x2=1590&y2=2987'
+    const descriptorUrl = 'https://www.invenio-cloud.com/api/thinslides/PATH_IP31-AC0501-2_7.dzi'
+    render(<SocratesBuilder access={localAccess} initialDocuments={[]} />)
+
+    const sourceInput = screen.getByLabelText('Thinviewer or Invenio URL')
+    await user.clear(sourceInput)
+    await user.type(sourceInput, thinviewerUrl)
+
+    expect(screen.getByTestId('builder-descriptor-url')).toHaveTextContent(descriptorUrl)
+    expect(mockLoadDescriptor).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Load' }))
+
+    await waitFor(() => expect(mockLoadDescriptor).toHaveBeenCalledWith(descriptorUrl))
+    expect(sourceInput).toHaveValue(descriptorUrl)
+    expect(screen.getByTestId('builder-initial-rect')).toHaveTextContent(
+      '{"x":65,"y":1738,"width":1525,"height":1249}',
+    )
+    expect(screen.getByLabelText('Attribution URL')).toHaveValue(thinviewerUrl)
+    expect(screen.getByText(/Thinviewer link resolved/)).toBeVisible()
+    expect(screen.getByTestId('builder-overlay-labels')).toHaveTextContent('Zone 1')
   })
 
   it('captures the current viewport as the published starting crop', async () => {

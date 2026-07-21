@@ -420,6 +420,12 @@
   text-transform: uppercase;
 }
 
+.fieldHint {
+  color: var(--builder-muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
 .field input,
 .field select,
 .field textarea {

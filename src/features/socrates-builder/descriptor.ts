@@ -1,11 +1,85 @@
 import { isApprovedInvenioDziUrl } from './schema'
 
+import type { ImageRect } from '@/features/socrates-demo/types'
+
 export interface DziDescriptorInfo {
   width: number
   height: number
   tileSize: number
   overlap: number
   format: 'jpg' | 'jpeg'
+}
+
+export interface ResolvedSocratesSlideSource {
+  descriptorUrl: string
+  slideKey: string
+  initialImageRect?: ImageRect
+  attributionUrl?: string
+}
+
+const INVENIO_DZI_ORIGIN = 'https://www.invenio-cloud.com'
+const NIO_THINVIEWER_ORIGIN = 'https://www.nio-net.com'
+const THINVIEWER_PATH = /^\/Thinviewer\/([A-Za-z0-9._-]+)\.dzi$/i
+
+function readThinviewerCrop(url: URL): ImageRect | undefined {
+  const names = ['x1', 'y1', 'x2', 'y2'] as const
+  const hasAnyCoordinate = names.some((name) => url.searchParams.has(name))
+  if (!hasAnyCoordinate) return undefined
+
+  if (!names.every((name) => url.searchParams.has(name))) {
+    throw new Error('A Thinviewer starting crop must include x1, y1, x2, and y2.')
+  }
+
+  const rawValues = names.map((name) => url.searchParams.get(name)?.trim() ?? '')
+  if (rawValues.some((value) => value === '')) {
+    throw new Error('Thinviewer crop coordinates must be numbers.')
+  }
+
+  const [x1, y1, x2, y2] = rawValues.map(Number)
+  if (![x1, y1, x2, y2].every(Number.isFinite)) {
+    throw new Error('Thinviewer crop coordinates must be numbers.')
+  }
+  if (x1 < 0 || y1 < 0 || x2 <= x1 || y2 <= y1) {
+    throw new Error('Thinviewer crop coordinates must describe a positive image rectangle.')
+  }
+
+  return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
+}
+
+/**
+ * Accepts either the raw Invenio descriptor used by OpenSeadragon or the
+ * user-facing NIO Thinviewer URL that Invenio users normally copy.
+ */
+export function resolveSocratesSlideSource(input: string): ResolvedSocratesSlideSource {
+  const value = input.trim()
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    throw new Error('Paste a complete HTTPS NIO Thinviewer or Invenio DZI URL.')
+  }
+
+  if (isApprovedInvenioDziUrl(value)) {
+    const slideKey =
+      url.pathname
+        .split('/')
+        .at(-1)
+        ?.replace(/\.dzi$/i, '') ?? ''
+    return { descriptorUrl: value, slideKey }
+  }
+
+  const thinviewerMatch = url.pathname.match(THINVIEWER_PATH)
+  if (url.origin === NIO_THINVIEWER_ORIGIN && url.hash === '' && thinviewerMatch?.[1]) {
+    const slideKey = thinviewerMatch[1]
+    return {
+      descriptorUrl: `${INVENIO_DZI_ORIGIN}/api/thinslides/${slideKey}.dzi`,
+      slideKey,
+      initialImageRect: readThinviewerCrop(url),
+      attributionUrl: url.toString(),
+    }
+  }
+
+  throw new Error('Paste an HTTPS NIO Thinviewer link or an Invenio Cloud DZI descriptor URL.')
 }
 
 function readAttribute(source: string, name: string) {
