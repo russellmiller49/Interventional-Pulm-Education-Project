@@ -84,6 +84,7 @@ export function stepEcmo(
   snapshot: IcuPatientSnapshot,
   _deltaSeconds: number,
 ): IcuTherapyStepResult<IcuEcmoState> {
+  void _deltaSeconds
   if (state.status !== 'running') {
     return { state, effects: [], alarms: [], telemetry: { status: state.status } }
   }

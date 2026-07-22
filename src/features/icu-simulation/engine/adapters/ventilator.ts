@@ -95,6 +95,7 @@ export function stepVentilator(
   snapshot: IcuPatientSnapshot,
   _deltaSeconds: number,
 ): IcuTherapyStepResult<IcuVentilatorState> {
+  void _deltaSeconds
   if (state.status !== 'running') {
     return { state, effects: [], alarms: [], telemetry: { status: state.status } }
   }

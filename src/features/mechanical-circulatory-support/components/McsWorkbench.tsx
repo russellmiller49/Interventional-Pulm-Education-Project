@@ -61,18 +61,31 @@ function scoreBand(score: number | null) {
 export function McsWorkbench({
   section,
   locale = 'en',
+  initialDevice,
 }: {
   section: McsModuleSection
   locale?: string
+  initialDevice?: McsDeviceKind
 }) {
+  const activeInitialDevice = initialDevice ?? 'iabp'
+  const initialLesson = initialDevice
+    ? (mcsLessons.find((candidate) => candidate.device === initialDevice) ?? mcsLessons[0])
+    : mcsLessons[0]
+  const initialCapstone = mcsCapstoneScenarios.find(
+    (candidate) => candidate.device === activeInitialDevice,
+  )
   const [state, dispatch] = useReducer(mcsReducer, undefined, () =>
-    createInitialMcsState(section, 'iabp'),
+    createInitialMcsState(section, activeInitialDevice),
   )
   const [progress, setProgress] = useState<McsProgressV1>(createDefaultMcsProgress)
   const [progressLoaded, setProgressLoaded] = useState(false)
-  const [selectedLessonId, setSelectedLessonId] = useState(mcsLessons[0].id)
+  const [selectedLessonId, setSelectedLessonId] = useState(initialLesson.id)
   const [selectedActivityId, setSelectedActivityId] = useState(
-    section === 'practice' ? 'studio' : section === 'learn' ? mcsLessons[0].id : 'CAP-IABP-01',
+    section === 'practice'
+      ? 'studio'
+      : section === 'learn'
+        ? initialLesson.id
+        : (initialCapstone?.id ?? 'CAP-IABP-01'),
   )
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('anatomy')
   const recordedCompletion = useRef<string | null>(null)

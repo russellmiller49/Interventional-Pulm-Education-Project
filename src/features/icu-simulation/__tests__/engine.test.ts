@@ -1,4 +1,6 @@
-import { getIcuScenario } from '../content'
+import { totalCirculatingVolumeMl } from '@/features/hemodynamics-core'
+
+import { getIcuScenario, icuScenarios } from '../content'
 import {
   advanceIcuSimulation,
   advanceIcuSlowPhysiology,
@@ -22,7 +24,38 @@ function command(
   return applyIcuCommand(state, scenario, value)
 }
 
+function slowSeconds(
+  patient: ReturnType<typeof createIcuSimulation>['patient'],
+  devices: ReturnType<typeof createIcuSimulation>['devices'],
+  effects: readonly IcuTherapyEffect[],
+  seconds: number,
+) {
+  let next = patient
+  for (let second = 0; second < seconds; second += 1)
+    next = advanceIcuSlowPhysiology(next, devices, effects, 1)
+  return next
+}
+
 describe('canonical ICU engine', () => {
+  it('preserves each authored shock baseline on the first tick', () => {
+    for (const scenario of icuScenarios) {
+      const initial = createIcuSimulation(scenario, { seed: 1 })
+      const advanced = advanceIcuSimulation(initial, scenario, 1)
+      expect(advanced.patient.hemodynamics.mapMmHg).toBeCloseTo(
+        scenario.initialPatient.hemodynamics.mapMmHg,
+        0,
+      )
+      expect(advanced.patient.hemodynamics.nativeCardiacOutputLMin).toBeCloseTo(
+        scenario.initialPatient.hemodynamics.nativeCardiacOutputLMin,
+        1,
+      )
+      expect(totalCirculatingVolumeMl(advanced.compartments)).toBeCloseTo(
+        advanced.patient.hemodynamics.circulatingVolumeMl,
+        6,
+      )
+    }
+  })
+
   it('steps deterministically and is equivalent across time partitions', () => {
     const scenario = getIcuScenario('septic-ards-aki')
     const initialA = createIcuSimulation(scenario, { seed: 42 })
@@ -35,6 +68,57 @@ describe('canonical ICU engine', () => {
     )
     expect(partitioned).toEqual(whole)
     expect(whole.trends).toHaveLength(3)
+  })
+
+  it('does not self-normalize untreated shock during the opening minute', () => {
+    for (const scenario of icuScenarios) {
+      const state = advanceIcuSimulation(createIcuSimulation(scenario, { seed: 2 }), scenario, 60)
+      expect(state.patient.hemodynamics.mapMmHg).toBeLessThanOrEqual(
+        scenario.initialPatient.hemodynamics.mapMmHg + 5,
+      )
+      expect(state.patient.hemodynamics.nativeCardiacOutputLMin).toBeLessThanOrEqual(
+        scenario.initialPatient.hemodynamics.nativeCardiacOutputLMin + 0.5,
+      )
+    }
+  })
+
+  it('accumulates slow bleeding, renal, infection, and CRRT changes without quantization', () => {
+    const hemorrhage = createIcuSimulation(getIcuScenario('hemorrhagic'), { seed: 3 })
+    const bled = slowSeconds(hemorrhage.patient, hemorrhage.devices, [], 3_600)
+    expect(bled.hematology.cumulativeBloodLossMl).toBeCloseTo(720, 6)
+    expect(bled.hematology.hemoglobinGdl).toBeLessThan(hemorrhage.patient.hematology.hemoglobinGdl)
+
+    const sepsis = createIcuSimulation(getIcuScenario('septic-ards-aki'), { seed: 4 })
+    const untreated = slowSeconds(sepsis.patient, sepsis.devices, [], 3_600)
+    const antimicrobial = slowSeconds(
+      { ...sepsis.patient, antimicrobialsAdministered: true },
+      sepsis.devices,
+      [],
+      3_600,
+    )
+    expect(untreated.renal.creatinineMgDl).not.toBe(sepsis.patient.renal.creatinineMgDl)
+    expect(antimicrobial.drivers.infectionBurden).toBeLessThan(untreated.drivers.infectionBurden)
+
+    const clearance: IcuTherapyEffect = {
+      kind: 'solute-clearance',
+      source: 'crrt',
+      clearanceMlMin: 30,
+    }
+    const cleared = slowSeconds(sepsis.patient, sepsis.devices, [clearance], 3_600)
+    expect(cleared.renal.creatinineMgDl).toBeLessThan(untreated.renal.creatinineMgDl)
+
+    for (const rateMlHour of [25, 50, 100, 200, 600]) {
+      const removed = slowSeconds(
+        sepsis.patient,
+        sepsis.devices,
+        [{ kind: 'volume-removal', source: 'crrt', rateMlHour }],
+        3_600,
+      )
+      expect(removed.renal.cumulativeCrrtRemovalMl).toBeCloseTo(rateMlHour, 6)
+      expect(
+        untreated.hemodynamics.circulatingVolumeMl - removed.hemodynamics.circulatingVolumeMl,
+      ).toBeCloseTo(rateMlHour, 6)
+    }
   })
 
   it('models higher PEEP as a preload burden', () => {
@@ -198,6 +282,76 @@ describe('canonical ICU engine', () => {
     expect(state.devices.mcs.status).toBe('running')
     expect(state.devices.ecmo.status).toBe('ready')
     expect(state.history.at(-1)?.code).toBe('therapy.start:rejected')
+  })
+
+  it('rejects off-device, malformed, and out-of-range device commands before credit', () => {
+    const scenario = getIcuScenario('septic-ards-aki')
+    let state = createIcuSimulation(scenario, { seed: 16 })
+    state = command(state, scenario, {
+      type: 'therapy.adjust',
+      therapy: 'ventilator',
+      control: 'peep-cmh2o',
+      value: 10,
+    })
+    expect(state.history.at(-1)?.code).toBe('therapy.adjust:rejected')
+    expect(state.performedActionIds).not.toContain('device:ventilator:peep-cmh2o')
+
+    state = command(state, scenario, {
+      type: 'therapy.prepare',
+      therapy: 'ventilator',
+      configuration: 'not-a-ventilator-mode',
+    })
+    expect(state.devices.ventilator.status).toBe('off')
+    state = command(state, scenario, {
+      type: 'therapy.prepare',
+      therapy: 'ventilator',
+      configuration: 'volume-control',
+    })
+    state = command(state, scenario, {
+      type: 'therapy.adjust',
+      therapy: 'ventilator',
+      control: 'peep-cmh2o',
+      value: 30,
+    })
+    expect(state.devices.ventilator.peepCmH2O).toBe(5)
+    expect(state.history.at(-1)?.code).toBe('therapy.adjust:rejected')
+
+    state = command(state, scenario, {
+      type: 'therapy.prepare',
+      therapy: 'crrt',
+      configuration: 'not-a-crrt-modality',
+    })
+    expect(state.devices.crrt.status).toBe('off')
+  })
+
+  it('applies only bounded disease-driver changes in Sandbox', () => {
+    const scenario = getIcuScenario('septic-ards-aki')
+    const initial = createIcuSimulation(scenario, { mode: 'sandbox', seed: 17 })
+    const adjusted = command(initial, scenario, {
+      type: 'sandbox.adjust',
+      driver: 'vasoplegiaSeverity',
+      value: 0.5,
+    })
+    expect(adjusted.patient.drivers.vasoplegiaSeverity).toBe(0.5)
+    expect(adjusted.history.at(-1)?.code).toBe('sandbox.adjust')
+
+    const outOfBounds = command(adjusted, scenario, {
+      type: 'sandbox.adjust',
+      driver: 'vasoplegiaSeverity',
+      value: 2,
+    })
+    expect(outOfBounds.patient.drivers.vasoplegiaSeverity).toBe(0.5)
+    expect(outOfBounds.history.at(-1)?.code).toBe('sandbox.adjust:rejected')
+
+    const practice = createIcuSimulation(scenario, { mode: 'practice', seed: 18 })
+    const rejectedOutsideSandbox = command(practice, scenario, {
+      type: 'sandbox.adjust',
+      driver: 'vasoplegiaSeverity',
+      value: 0.5,
+    })
+    expect(rejectedOutsideSandbox.patient.drivers.vasoplegiaSeverity).toBe(
+      practice.patient.drivers.vasoplegiaSeverity,
+    )
   })
 
   it('resets acknowledgement when a corrected alarm recurs', () => {

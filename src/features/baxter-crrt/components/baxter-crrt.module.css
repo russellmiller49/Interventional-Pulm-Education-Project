@@ -801,7 +801,7 @@
 
 .teachingFigures {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.7rem;
 }
 
@@ -1065,13 +1065,7 @@
   color: var(--crrt-teal-soft);
 }
 
-@media (max-width: 900px) {
-  .moduleNav ol,
-  .howGrid,
-  .teachingFigures {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
+@media (max-width: 1200px) {
   .learnLayout {
     grid-template-columns: 1fr;
   }
@@ -1081,6 +1075,13 @@
   }
 
   .lessonNav ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .moduleNav ol,
+  .howGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

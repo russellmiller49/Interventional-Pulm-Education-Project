@@ -36,6 +36,26 @@ const analyticsPayloadSchema = z.object({
   sessionId: z.string().uuid().optional(),
 })
 
+const analyticsTopLevelKeys = new Set([
+  'durationSeconds',
+  'eventPayload',
+  'eventType',
+  'moduleId',
+  'percentComplete',
+  'routePath',
+  'section',
+  'sessionId',
+])
+
+function hasUnknownTopLevelField(value: unknown): boolean {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.keys(value).some((key) => !analyticsTopLevelKeys.has(key))
+  )
+}
+
 export async function POST(request: Request) {
   const rawPayload = await request.json().catch(() => null)
   const payload = analyticsPayloadSchema.safeParse(rawPayload)
@@ -88,6 +108,7 @@ export async function POST(request: Request) {
       event.sessionId !== undefined
     if (
       !icuPayload.success ||
+      hasUnknownTopLevelField(rawPayload) ||
       hasGenericProgressOrSessionFields ||
       resolveSiteModuleId(event.routePath) !== ICU_SIMULATION_ANALYTICS_MODULE_ID ||
       (icuPayload.success &&

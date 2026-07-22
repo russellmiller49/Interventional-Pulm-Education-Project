@@ -5,8 +5,16 @@ jest.mock('@/features/mechanical-circulatory-support/components/McsHub', () => (
   McsHub: ({ locale }: { locale: string }) => <div data-testid="mcs-hub">{locale}</div>,
 }))
 jest.mock('@/features/mechanical-circulatory-support/components/McsWorkbench', () => ({
-  McsWorkbench: ({ section, locale }: { section: string; locale: string }) => (
-    <div data-testid="mcs-workbench" data-section={section}>
+  McsWorkbench: ({
+    section,
+    locale,
+    initialDevice,
+  }: {
+    section: string
+    locale: string
+    initialDevice?: string
+  }) => (
+    <div data-testid="mcs-workbench" data-section={section} data-device={initialDevice}>
       {locale}
     </div>
   ),
@@ -52,5 +60,28 @@ describe('mechanical circulatory support route family', () => {
   ] as const)('mounts the %s workbench', async (section, Page) => {
     render(await Page({ params: Promise.resolve({ locale: 'en' }) }))
     expect(screen.getByTestId('mcs-workbench')).toHaveAttribute('data-section', section)
+  })
+
+  it.each(['iabp', 'impella', 'lvad'] as const)(
+    'opens the requested %s learning track',
+    async (device) => {
+      render(
+        await LearnPage({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve({ device }),
+        }),
+      )
+      expect(screen.getByTestId('mcs-workbench')).toHaveAttribute('data-device', device)
+    },
+  )
+
+  it('falls back to the shared learning overview for an invalid track query', async () => {
+    render(
+      await LearnPage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ device: 'unknown' }),
+      }),
+    )
+    expect(screen.getByTestId('mcs-workbench')).not.toHaveAttribute('data-device')
   })
 })

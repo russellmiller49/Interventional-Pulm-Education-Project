@@ -14,6 +14,7 @@ import {
   advanceIcuHemodynamics,
   advanceIcuSlowPhysiology,
   createIcuCirculationCompartments,
+  createIcuPhysiologyCalibration,
   deriveIcuCirculationParameters,
   reconcileCompartmentVolume,
 } from './physiology'
@@ -165,7 +166,8 @@ export function createIcuSimulation(
   const seed = normalizeIcuSeed(options.seed ?? deriveIcuSeed(scenario.id, mode))
   const patient = clonePatient(scenario.initialPatient)
   const devices = createDevices(scenario)
-  const circulation = createIcuCirculationCompartments(patient, devices)
+  const calibration = createIcuPhysiologyCalibration(patient, devices)
+  const circulation = createIcuCirculationCompartments(patient, devices, calibration)
   const emptyOutcome = createEmptyIcuOutcome()
   const base: IcuSimulationState = {
     version: 1,
@@ -189,6 +191,7 @@ export function createIcuSimulation(
     patient,
     circulationParameters: circulation.parameters,
     compartments: circulation.compartments,
+    calibration,
     devices,
     diagnosis: {
       committed: false,
@@ -390,6 +393,7 @@ function advanceOneSecond(
     devices,
     state.compartments,
     effects,
+    state.calibration,
     state.clock.elapsedSeconds,
     1,
   )
@@ -453,8 +457,11 @@ export function advanceIcuSimulation(
   if (!Number.isSafeInteger(seconds) || seconds < 0 || seconds > 86_400)
     throw new RangeError('Advance duration must be a safe integer from 0 through 86400 seconds.')
   if (state.phase === 'debrief' || seconds === 0) return state
+  const remainingSeconds = Math.max(0, scenario.durationHours * 3_600 - state.clock.elapsedSeconds)
+  const boundedSeconds = Math.min(seconds, remainingSeconds)
+  if (boundedSeconds === 0) return state
   let next = state
-  for (let second = 0; second < seconds; second += 1) {
+  for (let second = 0; second < boundedSeconds; second += 1) {
     next = advanceOneSecond(next, scenario)
   }
   return next
@@ -541,6 +548,27 @@ function assessmentObservation(
 }
 
 function recordReplayCommand(state: IcuSimulationState, command: IcuCommand): IcuSimulationState {
+  const last = state.replay.commands.at(-1)
+  if (
+    command.type === 'time.advance' &&
+    last?.command.type === 'time.advance' &&
+    last.issuedAtSeconds + last.command.seconds === state.clock.elapsedSeconds &&
+    last.command.seconds + command.seconds <= 86_400
+  ) {
+    return {
+      ...state,
+      replay: {
+        ...state.replay,
+        commands: [
+          ...state.replay.commands.slice(0, -1),
+          {
+            ...last,
+            command: { type: 'time.advance', seconds: last.command.seconds + command.seconds },
+          },
+        ],
+      },
+    }
+  }
   if (state.replay.commands.length >= ICU_MAX_REPLAY_COMMANDS) {
     throw new Error('Replay command limit reached; complete or restart the synthetic session.')
   }
@@ -623,17 +651,35 @@ export function applyIcuCommand(
 ): IcuSimulationState {
   if (state.scenarioId !== scenario.id || state.scenarioVersion !== scenario.version)
     throw new Error('Scenario version does not match simulation state.')
+  if (
+    command.type === 'time.advance' &&
+    state.clock.elapsedSeconds >= scenario.durationHours * 3_600
+  )
+    return state
   const attemptedActionIds = actionIdsForIcuCommand(command, state)
   const permitted = commandPermitted(state, scenario, command)
+  const executableCommand: IcuCommand =
+    command.type === 'time.advance' && permitted
+      ? {
+          ...command,
+          seconds: Math.min(
+            command.seconds,
+            scenario.durationHours * 3_600 - state.clock.elapsedSeconds,
+          ),
+        }
+      : command
   const newCriticalErrors = scenario.criticalErrors
     .filter((error) => attemptedActionIds.includes(error.actionId))
     .map((error) => error.id)
-  let next = recordReplayCommand(state, command)
+  let next = recordReplayCommand(state, executableCommand)
   next = {
     ...next,
-    history: [...next.history, commandRecord(state, command, permitted)].slice(
-      -ICU_MAX_EVENT_HISTORY,
-    ),
+    history:
+      command.type === 'time.advance'
+        ? next.history
+        : [...next.history, commandRecord(state, executableCommand, permitted)].slice(
+            -ICU_MAX_EVENT_HISTORY,
+          ),
     outcome: {
       ...next.outcome,
       criticalErrorIds: uniqueSorted([...next.outcome.criticalErrorIds, ...newCriticalErrors]),
@@ -641,8 +687,8 @@ export function applyIcuCommand(
   }
   if (!permitted) return { ...next, outcome: scoreIcuSimulation(next, scenario) }
 
-  if (command.type === 'time.advance') {
-    return advanceIcuSimulation(next, scenario, command.seconds)
+  if (executableCommand.type === 'time.advance') {
+    return advanceIcuSimulation(next, scenario, executableCommand.seconds)
   }
 
   const snapshot = makeSnapshot(next)
@@ -707,7 +753,11 @@ export function applyIcuCommand(
     creditedActionIds = []
   if (command.type === 'therapy.start' && devices[command.therapy].status !== 'running')
     creditedActionIds = []
-  if (command.type === 'care.perform' && JSON.stringify(patient) === JSON.stringify(next.patient))
+  if (
+    command.type === 'care.perform' &&
+    command.interventionId !== 'communicate-plan' &&
+    JSON.stringify(patient) === JSON.stringify(next.patient)
+  )
     creditedActionIds = []
   let performedActionIds = uniqueSorted([...next.performedActionIds, ...creditedActionIds])
   let actionHistory = [
@@ -722,7 +772,7 @@ export function applyIcuCommand(
   let circulationParameters = next.circulationParameters
   if (command.type === 'care.perform' || command.type === 'sandbox.adjust') {
     compartments = reconcileCompartmentVolume(compartments, patient)
-    circulationParameters = deriveIcuCirculationParameters(patient, devices)
+    circulationParameters = deriveIcuCirculationParameters(patient, devices, next.calibration)
   }
   let phase = next.phase
   let completed = next.outcome.completed

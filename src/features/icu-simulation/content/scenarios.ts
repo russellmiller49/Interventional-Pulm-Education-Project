@@ -1,8 +1,13 @@
 import type {
   IcuPatientState,
+  IcuResponseBooleanMetric,
+  IcuResponseNumericMetric,
+  IcuResponsePredicate,
+  IcuResponseTarget,
   IcuScenarioDefinition,
   IcuScenarioInterventionDefinition,
   IcuScoreDomain,
+  IcuTherapyId,
 } from '../engine/types'
 import { parseIcuScenarioDefinition } from './schema'
 
@@ -117,6 +122,74 @@ function makePatient(syntheticPatientId: string, override: PatientOverrides): Ic
 
 const scenarioEvidence = ['ICU-SCENARIO-MODEL', 'ICU-HEMO-CORE'] as const
 
+const absoluteTarget = (value: number): IcuResponseTarget => ({ kind: 'absolute', value })
+const initialDeltaTarget = (delta: number): IcuResponseTarget => ({
+  kind: 'initial-delta',
+  delta,
+})
+const initialRatioTarget = (ratio: number): IcuResponseTarget => ({
+  kind: 'initial-ratio',
+  ratio,
+})
+
+function numericResponse(
+  id: string,
+  label: string,
+  metric: IcuResponseNumericMetric,
+  comparison: 'gte' | 'lte',
+  target: IcuResponseTarget,
+  evidenceIds: readonly string[] = scenarioEvidence,
+): IcuResponsePredicate {
+  return { id, label, kind: 'numeric', metric, comparison, target, evidenceIds }
+}
+
+function booleanResponse(
+  id: string,
+  label: string,
+  metric: IcuResponseBooleanMetric,
+  expected = true,
+  evidenceIds: readonly string[] = scenarioEvidence,
+): IcuResponsePredicate {
+  return { id, label, kind: 'boolean', metric, expected, evidenceIds }
+}
+
+function therapyRunningResponse(
+  id: string,
+  label: string,
+  therapy: IcuTherapyId,
+  expected: boolean,
+  evidenceIds: readonly string[] = scenarioEvidence,
+): IcuResponsePredicate {
+  return { id, label, kind: 'therapy-running', therapy, expected, evidenceIds }
+}
+
+function therapyNeverStartedResponse(
+  id: string,
+  label: string,
+  therapy: IcuTherapyId,
+  evidenceIds: readonly string[] = scenarioEvidence,
+): IcuResponsePredicate {
+  return { id, label, kind: 'therapy-never-started', therapy, evidenceIds }
+}
+
+function noActiveAlarmResponse(
+  id: string,
+  label: string,
+  subsystems: readonly (IcuTherapyId | 'patient')[],
+  evidenceIds: readonly string[] = scenarioEvidence,
+): IcuResponsePredicate {
+  return { id, label, kind: 'no-active-critical-alarm', subsystems, evidenceIds }
+}
+
+function noActiveDeviceLimitationResponse(
+  id: string,
+  label: string,
+  subsystems: readonly IcuTherapyId[],
+  evidenceIds: readonly string[] = scenarioEvidence,
+): IcuResponsePredicate {
+  return { id, label, kind: 'no-active-device-limitation', subsystems, evidenceIds }
+}
+
 function action(
   actionId: string,
   label: string,
@@ -151,6 +224,7 @@ const septicArdsAki = parseIcuScenarioDefinition({
   openingNarrative:
     'A synthetic adult with pneumonia has worsening vasodilatory shock, bilateral lung injury, oliguria, and rising lactate despite initial stabilization.',
   durationHours: 12,
+  minimumMasteryElapsedSeconds: 10_800,
   expectedClassification: 'distributive',
   allowedModes: allModes,
   initialPatient: makePatient('icu-sepsis-01', {
@@ -328,6 +402,91 @@ const septicArdsAki = parseIcuScenarioDefinition({
     reassessment: ['reassess:hemodynamics', 'reassess:respiratory', 'reassess:renal'],
     safety: ['care:communicate-plan'],
   },
+  masteryResponse: {
+    educationalModelOnly: true,
+    reviewStatus: 'pending',
+    required: [
+      booleanResponse(
+        'sepsis-antimicrobials',
+        'Antimicrobial milestone completed',
+        'antimicrobials-administered',
+        true,
+        ['ICU-SSC-2026'],
+      ),
+      booleanResponse(
+        'sepsis-source-control',
+        'Source-control milestone completed',
+        'source-control-completed',
+        true,
+        ['ICU-SSC-2026'],
+      ),
+      numericResponse(
+        'sepsis-infection-response',
+        'Modeled infection burden decreased',
+        'infection-burden',
+        'lte',
+        initialRatioTarget(0.5),
+        ['ICU-SSC-2026', 'ICU-SCENARIO-MODEL'],
+      ),
+      numericResponse(
+        'sepsis-map-response',
+        'Arterial pressure did not deteriorate from presentation',
+        'map-mm-hg',
+        'gte',
+        initialDeltaTarget(0),
+        ['ICU-ESICM-SHOCK', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'sepsis-oxygenation-floor',
+        'Modeled oxygen saturation reached the response floor',
+        'spo2-percent',
+        'gte',
+        absoluteTarget(90),
+        ['ICU-ATS-ARDS', 'ICU-MV-ENGINE'],
+      ),
+      numericResponse(
+        'sepsis-oxygenation-change',
+        'Modeled oxygen saturation improved from presentation',
+        'spo2-percent',
+        'gte',
+        initialDeltaTarget(5),
+        ['ICU-ATS-ARDS', 'ICU-MV-ENGINE'],
+      ),
+      numericResponse(
+        'sepsis-potassium-response',
+        'Modeled potassium improved during renal support',
+        'potassium-mmol-l',
+        'lte',
+        initialDeltaTarget(-0.2),
+        ['ICU-KDIGO-AKI', 'ICU-CRRT-ENGINE'],
+      ),
+      numericResponse(
+        'sepsis-lactate-response',
+        'Modeled lactate decreased from presentation',
+        'lactate-mmol-l',
+        'lte',
+        initialDeltaTarget(-1),
+        ['ICU-SSC-2026', 'ICU-ESICM-SHOCK'],
+      ),
+      therapyRunningResponse(
+        'sepsis-ventilation-delivered',
+        'Mechanical ventilation was delivering support',
+        'ventilator',
+        true,
+        ['ICU-ATS-ARDS', 'ICU-MV-ENGINE'],
+      ),
+      therapyRunningResponse('sepsis-crrt-delivered', 'CRRT was delivering support', 'crrt', true, [
+        'ICU-KDIGO-AKI',
+        'ICU-CRRT-ENGINE',
+      ]),
+      noActiveDeviceLimitationResponse(
+        'sepsis-device-alarm-free',
+        'No unresolved ventilator, CRRT, or ECMO limitation remained',
+        ['ventilator', 'crrt', 'ecmo'],
+        ['ICU-MV-ENGINE', 'ICU-CRRT-ENGINE', 'ICU-ECMO-ENGINE'],
+      ),
+    ],
+  },
   criticalErrors: [
     {
       id: 'unsafe-peep',
@@ -360,6 +519,7 @@ const lvCardiogenic = parseIcuScenarioDefinition({
   openingNarrative:
     'A synthetic adult after a large myocardial injury has hypotension, pulmonary edema, elevated filling pressures, and falling cardiac output.',
   durationHours: 6,
+  minimumMasteryElapsedSeconds: 3_600,
   expectedClassification: 'lv-cardiogenic',
   allowedModes: allModes,
   initialPatient: makePatient('icu-cardiogenic-01', {
@@ -472,9 +632,11 @@ const lvCardiogenic = parseIcuScenarioDefinition({
     },
     {
       id: 'cardiogenic-support',
-      label: 'Select and titrate circulatory support',
-      requiredActionIds: ['therapy:circulatory-support:start'],
-      acceptedAlternativeActionIdGroups: [['reassess:hemodynamics']],
+      label: 'Restore flow with medication or rescue support, then reassess',
+      requiredActionIds: ['reassess:hemodynamics'],
+      acceptedAlternativeActionIdGroups: [
+        ['therapy:circulatory-support:start', 'care:inotrope-up'],
+      ],
       evidenceIds: scenarioEvidence,
     },
   ],
@@ -485,6 +647,165 @@ const lvCardiogenic = parseIcuScenarioDefinition({
     device: ['device:circulatory-support:adjust'],
     reassessment: ['reassess:hemodynamics', 'reassess:respiratory'],
     safety: ['care:communicate-plan'],
+  },
+  masteryResponse: {
+    educationalModelOnly: true,
+    reviewStatus: 'pending',
+    required: [
+      numericResponse(
+        'lv-map-response',
+        'Modeled arterial pressure improved',
+        'map-mm-hg',
+        'gte',
+        initialDeltaTarget(10),
+        ['ICU-ACC-CARDIOGENIC', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'lv-lactate-response',
+        'Modeled lactate decreased',
+        'lactate-mmol-l',
+        'lte',
+        initialDeltaTarget(-1),
+        ['ICU-ACC-CARDIOGENIC', 'ICU-ESICM-SHOCK'],
+      ),
+      noActiveDeviceLimitationResponse(
+        'lv-ventilator-limitation-free',
+        'No unresolved ventilator limitation remained',
+        ['ventilator'],
+        ['ICU-MV-ENGINE'],
+      ),
+    ],
+    oneOf: [
+      {
+        id: 'lv-no-rescue-device',
+        label: 'Native-flow recovery without rescue hardware',
+        predicates: [
+          therapyRunningResponse('lv-no-rescue-ecmo-off', 'ECMO was not required', 'ecmo', false, [
+            'ICU-ACC-CARDIOGENIC',
+            'ICU-ELSO',
+          ]),
+          therapyNeverStartedResponse(
+            'lv-no-rescue-ecmo-never-started',
+            'ECMO was never started during the course',
+            'ecmo',
+            ['ICU-ACC-CARDIOGENIC', 'ICU-ELSO'],
+          ),
+          therapyRunningResponse(
+            'lv-no-rescue-mcs-off',
+            'Temporary MCS was not required',
+            'mcs',
+            false,
+            ['ICU-ACC-CARDIOGENIC', 'ICU-MCS-ENGINE'],
+          ),
+          therapyNeverStartedResponse(
+            'lv-no-rescue-mcs-never-started',
+            'Temporary MCS was never started during the course',
+            'mcs',
+            ['ICU-ACC-CARDIOGENIC', 'ICU-MCS-ENGINE'],
+          ),
+          numericResponse(
+            'lv-no-rescue-native-flow',
+            'Native cardiac output improved',
+            'native-cardiac-output-l-min',
+            'gte',
+            initialDeltaTarget(0.6),
+            ['ICU-ACC-CARDIOGENIC', 'ICU-HEMO-CORE'],
+          ),
+          numericResponse(
+            'lv-no-rescue-pawp',
+            'Modeled left-sided filling pressure decreased',
+            'pawp-mm-hg',
+            'lte',
+            initialDeltaTarget(-4),
+            ['ICU-ACC-CARDIOGENIC', 'ICU-HEMO-CORE'],
+          ),
+        ],
+        substitutesForActionIds: [
+          'therapy:circulatory-support:start',
+          'device:circulatory-support:adjust',
+        ],
+      },
+      {
+        id: 'lv-mcs-rescue',
+        label: 'MCS rescue with effective flow and unloading response',
+        predicates: [
+          therapyRunningResponse(
+            'lv-mcs-rescue-running',
+            'Temporary MCS was running',
+            'mcs',
+            true,
+            ['ICU-ACC-CARDIOGENIC', 'ICU-MCS-ENGINE'],
+          ),
+          therapyRunningResponse(
+            'lv-mcs-rescue-ecmo-off',
+            'Concurrent ECMO was avoided',
+            'ecmo',
+            false,
+            ['ICU-ELSO', 'ICU-MCS-ENGINE'],
+          ),
+          numericResponse(
+            'lv-mcs-rescue-flow',
+            'Effective systemic flow improved with MCS',
+            'effective-systemic-flow-l-min',
+            'gte',
+            initialDeltaTarget(1),
+            ['ICU-MCS-ENGINE', 'ICU-HEMO-CORE'],
+          ),
+          numericResponse(
+            'lv-mcs-rescue-pawp',
+            'Modeled left-sided filling pressure decreased',
+            'pawp-mm-hg',
+            'lte',
+            initialDeltaTarget(-3),
+            ['ICU-ACC-CARDIOGENIC', 'ICU-MCS-ENGINE'],
+          ),
+          noActiveDeviceLimitationResponse(
+            'lv-mcs-rescue-alarm-free',
+            'No unresolved MCS support limitation remained',
+            ['mcs'],
+            ['ICU-MCS-ENGINE'],
+          ),
+        ],
+        substitutesForActionIds: [],
+      },
+      {
+        id: 'lv-va-ecmo-rescue',
+        label: 'VA ECMO rescue with effective systemic-flow response',
+        predicates: [
+          therapyRunningResponse('lv-va-ecmo-running', 'VA ECMO was running', 'ecmo', true, [
+            'ICU-ELSO',
+            'ICU-ECMO-ENGINE',
+          ]),
+          therapyRunningResponse('lv-va-ecmo-mcs-off', 'Concurrent MCS was avoided', 'mcs', false, [
+            'ICU-ELSO',
+            'ICU-MCS-ENGINE',
+          ]),
+          numericResponse(
+            'lv-va-ecmo-flow',
+            'Effective systemic flow improved with VA ECMO',
+            'effective-systemic-flow-l-min',
+            'gte',
+            initialDeltaTarget(1.5),
+            ['ICU-ELSO', 'ICU-ECMO-ENGINE'],
+          ),
+          numericResponse(
+            'lv-va-ecmo-pawp',
+            'Modeled left-sided filling pressure did not markedly worsen',
+            'pawp-mm-hg',
+            'lte',
+            initialDeltaTarget(2),
+            ['ICU-ACC-CARDIOGENIC', 'ICU-ECMO-ENGINE'],
+          ),
+          noActiveDeviceLimitationResponse(
+            'lv-va-ecmo-alarm-free',
+            'No unresolved ECMO support limitation remained',
+            ['ecmo'],
+            ['ICU-ECMO-ENGINE'],
+          ),
+        ],
+        substitutesForActionIds: [],
+      },
+    ],
   },
   criticalErrors: [
     {
@@ -524,6 +845,7 @@ const massivePeRv = parseIcuScenarioDefinition({
   openingNarrative:
     'A synthetic adult has sudden hypoxemia, hypotension, severe RV dilation, and a high pulmonary vascular load with impending respiratory failure.',
   durationHours: 6,
+  minimumMasteryElapsedSeconds: 1_800,
   expectedClassification: 'rv-obstructive',
   allowedModes: allModes,
   initialPatient: makePatient('icu-pe-01', {
@@ -603,6 +925,13 @@ const massivePeRv = parseIcuScenarioDefinition({
       ['therapy'],
     ),
     action(
+      'care:inotrope-up',
+      'Support modeled RV contractile reserve while definitive therapy is mobilized',
+      'care',
+      ['therapy'],
+      ['ICU-ESC-PE', 'ICU-ESICM-SHOCK'],
+    ),
+    action(
       'therapy:ventilator:start',
       'Start ventilation after hemodynamic readiness review',
       'therapy',
@@ -669,10 +998,174 @@ const massivePeRv = parseIcuScenarioDefinition({
   scoring: {
     assessment: ['assessment:focused-echo', 'assessment:abg'],
     prioritization: ['diagnosis:correct', 'care:reperfusion'],
-    therapy: ['care:vasopressor-up', 'therapy:circulatory-support:start'],
+    therapy: ['care:vasopressor-up', 'care:inotrope-up', 'therapy:circulatory-support:start'],
     device: ['device:ventilator:peep-cmh2o', 'device:circulatory-support:adjust'],
     reassessment: ['reassess:hemodynamics', 'reassess:respiratory'],
     safety: ['care:communicate-plan'],
+  },
+  masteryResponse: {
+    educationalModelOnly: true,
+    reviewStatus: 'pending',
+    required: [
+      booleanResponse(
+        'pe-reperfusion-completed',
+        'Definitive reperfusion milestone completed',
+        'reperfusion-completed',
+        true,
+        ['ICU-ESC-PE'],
+      ),
+      numericResponse(
+        'pe-obstruction-response',
+        'Modeled pulmonary obstruction decreased',
+        'pulmonary-obstruction-severity',
+        'lte',
+        initialRatioTarget(0.3),
+        ['ICU-ESC-PE', 'ICU-SCENARIO-MODEL'],
+      ),
+      numericResponse(
+        'pe-pvr-response',
+        'Modeled pulmonary vascular resistance decreased',
+        'pvr-wu',
+        'lte',
+        initialRatioTarget(0.4),
+        ['ICU-ESC-PE', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'pe-map-response',
+        'Modeled arterial pressure improved',
+        'map-mm-hg',
+        'gte',
+        initialDeltaTarget(8),
+        ['ICU-ESC-PE', 'ICU-ESICM-SHOCK'],
+      ),
+      numericResponse(
+        'pe-rap-response',
+        'Modeled right atrial pressure decreased',
+        'rap-mm-hg',
+        'lte',
+        initialDeltaTarget(-3),
+        ['ICU-ESC-PE', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'pe-lactate-response',
+        'Modeled lactate decreased',
+        'lactate-mmol-l',
+        'lte',
+        initialDeltaTarget(-1),
+        ['ICU-ESC-PE', 'ICU-ESICM-SHOCK'],
+      ),
+      noActiveDeviceLimitationResponse(
+        'pe-ventilator-limitation-free',
+        'No unresolved ventilator limitation remained',
+        ['ventilator'],
+        ['ICU-MV-ENGINE'],
+      ),
+    ],
+    oneOf: [
+      {
+        id: 'pe-no-rescue-device',
+        label: 'Native-flow recovery without rescue hardware',
+        predicates: [
+          therapyRunningResponse('pe-no-rescue-ecmo-off', 'ECMO was not required', 'ecmo', false, [
+            'ICU-ESC-PE',
+            'ICU-ELSO',
+          ]),
+          therapyNeverStartedResponse(
+            'pe-no-rescue-ecmo-never-started',
+            'ECMO was never started during the course',
+            'ecmo',
+            ['ICU-ESC-PE', 'ICU-ELSO'],
+          ),
+          therapyRunningResponse(
+            'pe-no-rescue-mcs-off',
+            'Temporary right-sided MCS was not required',
+            'mcs',
+            false,
+            ['ICU-ESC-PE', 'ICU-MCS-ENGINE'],
+          ),
+          therapyNeverStartedResponse(
+            'pe-no-rescue-mcs-never-started',
+            'Temporary right-sided MCS was never started during the course',
+            'mcs',
+            ['ICU-ESC-PE', 'ICU-MCS-ENGINE'],
+          ),
+          numericResponse(
+            'pe-no-rescue-native-flow',
+            'Native cardiac output improved after reperfusion',
+            'native-cardiac-output-l-min',
+            'gte',
+            initialDeltaTarget(0.6),
+            ['ICU-ESC-PE', 'ICU-HEMO-CORE'],
+          ),
+        ],
+        substitutesForActionIds: [
+          'therapy:circulatory-support:start',
+          'device:circulatory-support:adjust',
+        ],
+      },
+      {
+        id: 'pe-rp-mcs-rescue',
+        label: 'Right-sided MCS rescue with effective-flow response',
+        predicates: [
+          therapyRunningResponse('pe-rp-mcs-running', 'Right-sided MCS was running', 'mcs', true, [
+            'ICU-ESC-PE',
+            'ICU-MCS-ENGINE',
+          ]),
+          therapyRunningResponse(
+            'pe-rp-mcs-ecmo-off',
+            'Concurrent ECMO was avoided',
+            'ecmo',
+            false,
+            ['ICU-ELSO', 'ICU-MCS-ENGINE'],
+          ),
+          numericResponse(
+            'pe-rp-mcs-flow',
+            'Effective systemic flow improved with right-sided support',
+            'effective-systemic-flow-l-min',
+            'gte',
+            initialDeltaTarget(1),
+            ['ICU-MCS-ENGINE', 'ICU-HEMO-CORE'],
+          ),
+          noActiveDeviceLimitationResponse(
+            'pe-rp-mcs-alarm-free',
+            'No unresolved MCS support limitation remained',
+            ['mcs'],
+            ['ICU-MCS-ENGINE'],
+          ),
+        ],
+        substitutesForActionIds: [],
+      },
+      {
+        id: 'pe-va-ecmo-rescue',
+        label: 'VA ECMO rescue with effective-flow response',
+        predicates: [
+          therapyRunningResponse('pe-va-ecmo-running', 'VA ECMO was running', 'ecmo', true, [
+            'ICU-ESC-PE',
+            'ICU-ELSO',
+            'ICU-ECMO-ENGINE',
+          ]),
+          therapyRunningResponse('pe-va-ecmo-mcs-off', 'Concurrent MCS was avoided', 'mcs', false, [
+            'ICU-ELSO',
+            'ICU-MCS-ENGINE',
+          ]),
+          numericResponse(
+            'pe-va-ecmo-flow',
+            'Effective systemic flow improved with VA ECMO',
+            'effective-systemic-flow-l-min',
+            'gte',
+            initialDeltaTarget(1),
+            ['ICU-ELSO', 'ICU-ECMO-ENGINE'],
+          ),
+          noActiveDeviceLimitationResponse(
+            'pe-va-ecmo-alarm-free',
+            'No unresolved ECMO support limitation remained',
+            ['ecmo'],
+            ['ICU-ECMO-ENGINE'],
+          ),
+        ],
+        substitutesForActionIds: [],
+      },
+    ],
   },
   criticalErrors: [
     {
@@ -706,6 +1199,7 @@ const hemorrhagic = parseIcuScenarioDefinition({
   openingNarrative:
     'A synthetic adult has persistent internal bleeding, falling hemoglobin, worsening tachycardia, and inadequate perfusion after an initial crystalloid bolus.',
   durationHours: 6,
+  minimumMasteryElapsedSeconds: 1_800,
   expectedClassification: 'hypovolemic-hemorrhagic',
   allowedModes: allModes,
   initialPatient: makePatient('icu-hemorrhage-01', {
@@ -837,6 +1331,63 @@ const hemorrhagic = parseIcuScenarioDefinition({
     reassessment: ['reassess:hemodynamics', 'reassess:perfusion'],
     safety: ['care:communicate-plan'],
   },
+  masteryResponse: {
+    educationalModelOnly: true,
+    reviewStatus: 'pending',
+    required: [
+      booleanResponse(
+        'hemorrhage-source-control',
+        'Hemorrhage source-control milestone completed',
+        'source-control-completed',
+        true,
+        ['ICU-TRAUMA-HEMORRHAGE'],
+      ),
+      numericResponse(
+        'hemorrhage-map-response',
+        'Modeled arterial pressure improved',
+        'map-mm-hg',
+        'gte',
+        initialDeltaTarget(6),
+        ['ICU-TRAUMA-HEMORRHAGE', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'hemorrhage-volume-response',
+        'Modeled circulating volume increased',
+        'circulating-volume-ml',
+        'gte',
+        initialDeltaTarget(500),
+        ['ICU-TRAUMA-HEMORRHAGE', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'hemorrhage-hemoglobin-response',
+        'Modeled hemoglobin increased',
+        'hemoglobin-g-dl',
+        'gte',
+        initialDeltaTarget(0.5),
+        ['ICU-TRAUMA-HEMORRHAGE', 'ICU-SCENARIO-MODEL'],
+      ),
+      numericResponse(
+        'hemorrhage-lactate-response',
+        'Modeled lactate decreased',
+        'lactate-mmol-l',
+        'lte',
+        initialDeltaTarget(-1),
+        ['ICU-TRAUMA-HEMORRHAGE', 'ICU-ESICM-SHOCK'],
+      ),
+      noActiveAlarmResponse(
+        'hemorrhage-patient-alarm-free',
+        'No active critical patient alarm remained',
+        ['patient'],
+        ['ICU-TRAUMA-HEMORRHAGE'],
+      ),
+      noActiveDeviceLimitationResponse(
+        'hemorrhage-ventilator-limitation-free',
+        'No unresolved ventilator limitation remained',
+        ['ventilator'],
+        ['ICU-MV-ENGINE'],
+      ),
+    ],
+  },
   criticalErrors: [
     {
       id: 'premature-ecmo',
@@ -886,6 +1437,7 @@ const tamponade = parseIcuScenarioDefinition({
   openingNarrative:
     'A synthetic adult after a cardiac procedure develops narrowing pulse pressure, rising venous pressure, tachycardia, and progressive pericardial constraint.',
   durationHours: 6,
+  minimumMasteryElapsedSeconds: 900,
   expectedClassification: 'tamponade-obstructive',
   allowedModes: allModes,
   initialPatient: makePatient('icu-tamponade-01', {
@@ -998,6 +1550,101 @@ const tamponade = parseIcuScenarioDefinition({
     reassessment: ['reassess:hemodynamics', 'reassess:perfusion'],
     safety: ['care:communicate-plan'],
   },
+  masteryResponse: {
+    educationalModelOnly: true,
+    reviewStatus: 'pending',
+    required: [
+      booleanResponse(
+        'tamponade-drainage-completed',
+        'Definitive drainage milestone completed',
+        'tamponade-drained',
+        true,
+        ['ICU-ESC-PERICARDIAL'],
+      ),
+      numericResponse(
+        'tamponade-pressure-relieved',
+        'Modeled pericardial pressure was relieved',
+        'pericardial-pressure-mm-hg',
+        'lte',
+        absoluteTarget(1),
+        ['ICU-ESC-PERICARDIAL', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'tamponade-map-response',
+        'Modeled arterial pressure improved after relief',
+        'map-mm-hg',
+        'gte',
+        initialDeltaTarget(8),
+        ['ICU-ESC-PERICARDIAL', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'tamponade-flow-response',
+        'Effective systemic flow improved after relief',
+        'effective-systemic-flow-l-min',
+        'gte',
+        initialDeltaTarget(1),
+        ['ICU-ESC-PERICARDIAL', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'tamponade-rap-response',
+        'Modeled right atrial pressure decreased after relief',
+        'rap-mm-hg',
+        'lte',
+        initialDeltaTarget(-3),
+        ['ICU-ESC-PERICARDIAL', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'tamponade-lactate-response',
+        'Modeled lactate decreased after relief',
+        'lactate-mmol-l',
+        'lte',
+        initialDeltaTarget(-0.5),
+        ['ICU-ESC-PERICARDIAL', 'ICU-ESICM-SHOCK'],
+      ),
+    ],
+    oneOf: [
+      {
+        id: 'tamponade-no-ventilation',
+        label: 'Definitive drainage without positive-pressure ventilation',
+        predicates: [
+          therapyRunningResponse(
+            'tamponade-no-ventilation-off',
+            'Positive-pressure ventilation was not required',
+            'ventilator',
+            false,
+            ['ICU-ESC-PERICARDIAL', 'ICU-MV-ENGINE'],
+          ),
+          therapyNeverStartedResponse(
+            'tamponade-no-ventilation-never-started',
+            'Positive-pressure ventilation was never started during the course',
+            'ventilator',
+            ['ICU-ESC-PERICARDIAL', 'ICU-MV-ENGINE'],
+          ),
+        ],
+        substitutesForActionIds: ['care:fluid-bolus', 'device:ventilator:peep-cmh2o'],
+      },
+      {
+        id: 'tamponade-ventilated',
+        label: 'Definitive drainage with monitored ventilation',
+        predicates: [
+          therapyRunningResponse(
+            'tamponade-ventilation-running',
+            'Mechanical ventilation was running',
+            'ventilator',
+            true,
+            ['ICU-ESC-PERICARDIAL', 'ICU-MV-ENGINE'],
+          ),
+          noActiveDeviceLimitationResponse(
+            'tamponade-ventilation-alarm-free',
+            'No unresolved ventilator limitation remained',
+            ['ventilator'],
+            ['ICU-MV-ENGINE'],
+          ),
+        ],
+        substitutesForActionIds: ['care:fluid-bolus'],
+      },
+    ],
+  },
   criticalErrors: [
     {
       id: 'device-before-drainage',
@@ -1030,6 +1677,7 @@ const mixedShock = parseIcuScenarioDefinition({
   openingNarrative:
     'A synthetic adult with severe infection and septic cardiomyopathy has both depressed contractility and low vascular tone, then remains hypotensive after VA ECMO restores flow.',
   durationHours: 12,
+  minimumMasteryElapsedSeconds: 7_200,
   expectedClassification: 'mixed-cardiogenic-vasodilatory',
   allowedModes: allModes,
   initialPatient: makePatient('icu-mixed-01', {
@@ -1188,6 +1836,95 @@ const mixedShock = parseIcuScenarioDefinition({
     device: ['device:circulatory-support:adjust', 'device:ventilator:peep-cmh2o'],
     reassessment: ['reassess:hemodynamics', 'reassess:perfusion', 'reassess:devices'],
     safety: ['care:communicate-plan'],
+  },
+  masteryResponse: {
+    educationalModelOnly: true,
+    reviewStatus: 'pending',
+    required: [
+      booleanResponse(
+        'mixed-antimicrobials',
+        'Antimicrobial milestone completed',
+        'antimicrobials-administered',
+        true,
+        ['ICU-SSC-2026'],
+      ),
+      booleanResponse(
+        'mixed-source-control',
+        'Source-control milestone completed',
+        'source-control-completed',
+        true,
+        ['ICU-SSC-2026'],
+      ),
+      numericResponse(
+        'mixed-infection-response',
+        'Modeled infection burden decreased',
+        'infection-burden',
+        'lte',
+        initialRatioTarget(0.5),
+        ['ICU-SSC-2026', 'ICU-SCENARIO-MODEL'],
+      ),
+      therapyRunningResponse(
+        'mixed-va-ecmo-running',
+        'VA ECMO was running in the authored refractory branch',
+        'ecmo',
+        true,
+        ['ICU-ELSO', 'ICU-ECMO-ENGINE'],
+      ),
+      numericResponse(
+        'mixed-map-response',
+        'Modeled arterial pressure improved',
+        'map-mm-hg',
+        'gte',
+        initialDeltaTarget(10),
+        ['ICU-SSC-2026', 'ICU-ESICM-SHOCK'],
+      ),
+      numericResponse(
+        'mixed-native-flow-response',
+        'Native cardiac output improved',
+        'native-cardiac-output-l-min',
+        'gte',
+        initialDeltaTarget(0.3),
+        ['ICU-ACC-CARDIOGENIC', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'mixed-effective-flow-response',
+        'Effective systemic flow improved with VA ECMO',
+        'effective-systemic-flow-l-min',
+        'gte',
+        initialDeltaTarget(1.5),
+        ['ICU-ELSO', 'ICU-ECMO-ENGINE'],
+      ),
+      numericResponse(
+        'mixed-svr-response',
+        'Modeled vascular tone improved after reclassification',
+        'svr-dyn-sec-cm5',
+        'gte',
+        initialDeltaTarget(100),
+        ['ICU-SSC-2026', 'ICU-HEMO-CORE'],
+      ),
+      numericResponse(
+        'mixed-lactate-response',
+        'Modeled lactate decreased',
+        'lactate-mmol-l',
+        'lte',
+        initialDeltaTarget(-1.5),
+        ['ICU-SSC-2026', 'ICU-ESICM-SHOCK'],
+      ),
+      numericResponse(
+        'mixed-pawp-response',
+        'Modeled left-sided filling pressure did not markedly worsen',
+        'pawp-mm-hg',
+        'lte',
+        initialDeltaTarget(2),
+        ['ICU-ACC-CARDIOGENIC', 'ICU-ECMO-ENGINE'],
+      ),
+      noActiveDeviceLimitationResponse(
+        'mixed-ecmo-alarm-free',
+        'No unresolved ECMO or ventilator limitation remained',
+        ['ecmo', 'ventilator'],
+        ['ICU-ECMO-ENGINE', 'ICU-MV-ENGINE'],
+      ),
+    ],
   },
   criticalErrors: [
     {

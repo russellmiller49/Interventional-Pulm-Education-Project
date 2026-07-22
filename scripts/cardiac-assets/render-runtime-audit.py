@@ -90,7 +90,7 @@ IMPELLA_VARIANTS = {
             "ProximalShaft",
         ),
         "cannulaRadius": 0.088,
-        "cannulaColor": (0.274, 0.398, 1.0, 1),
+        "cannulaColor": (0.0395, 0.1022, 0.2831, 1),
         "shaftRadius": 0.044,
         "tipDeployEnd": "tooProximal",
         "physicalReferenceMm": 205,
@@ -402,6 +402,93 @@ class RuntimeCurve:
         return (second - first).normalized()
 
 
+def runtime_route_segment(
+    points: Sequence[Sequence[float]], start_progress: float, end_progress: float
+) -> list[Vector]:
+    curve = RuntimeCurve(points)
+    sample_count = max(8, math.ceil(abs(end_progress - start_progress) * 200))
+    return [
+        curve.point_at(
+            start_progress
+            + (end_progress - start_progress) * index / sample_count
+        )
+        for index in range(sample_count + 1)
+    ]
+
+
+def smooth_impella_cannula_route(
+    points: Sequence[Sequence[float]],
+) -> list[Vector]:
+    """Mirror the length-preserving RP smoothing used by the Three.js runtime."""
+
+    source = [Vector(point) for point in points]
+    source_curve = RuntimeCurve(source)
+    target_length = source_curve.arc_lengths[-1]
+    anchor_progresses = (0, 0.14, 0.325, 0.5, 0.595, 0.76, 1)
+    envelope_curve = RuntimeCurve(
+        [source_curve.point_at(progress) for progress in anchor_progresses]
+    )
+    current = [
+        envelope_curve.point_at(index / (len(source) - 1))
+        for index in range(len(source))
+    ]
+
+    inlet = current[0]
+    outlet = current[-1]
+
+    def scaled_route(deviation_scale: float) -> list[Vector]:
+        result = []
+        for index, point in enumerate(current):
+            fraction = index / (len(current) - 1)
+            chord_point = inlet.copy().lerp(outlet, fraction)
+            result.append(
+                chord_point + (point - chord_point) * deviation_scale
+            )
+        return result
+
+    lower_scale = 1.0
+    upper_scale = 1.0
+    while (
+        RuntimeCurve(scaled_route(upper_scale)).arc_lengths[-1] < target_length
+        and upper_scale < 8
+    ):
+        upper_scale *= 1.25
+    for _iteration in range(32):
+        middle_scale = (lower_scale + upper_scale) / 2
+        if RuntimeCurve(scaled_route(middle_scale)).arc_lengths[-1] < target_length:
+            lower_scale = middle_scale
+        else:
+            upper_scale = middle_scale
+    return scaled_route((lower_scale + upper_scale) / 2)
+
+
+def cannula_helix_points(
+    points: Sequence[Sequence[float]], body_radius: float, turns: float
+) -> list[Vector]:
+    curve = RuntimeCurve(points)
+    samples = max(120, math.ceil(len(points) * 1.5))
+    tangent = curve.tangent_at(0)
+    reference = Vector((0, 1, 0)) if abs(tangent.y) < 0.86 else Vector((1, 0, 0))
+    normal = tangent.cross(reference).normalized()
+    previous_tangent = tangent.copy()
+    result = []
+    for index in range(samples + 1):
+        progress = index / samples
+        current_tangent = curve.tangent_at(progress)
+        if index > 0:
+            normal.rotate(previous_tangent.rotation_difference(current_tangent))
+            normal = (normal - current_tangent * normal.dot(current_tangent)).normalized()
+        binormal = current_tangent.cross(normal).normalized()
+        previous_tangent = current_tangent.copy()
+        angle = progress * turns * math.pi * 2
+        result.append(
+            curve.point_at(progress)
+            + normal * math.cos(angle) * body_radius
+            + binormal * math.sin(angle) * body_radius
+        )
+    return result
+
+
 def curve_material(
     name: str, color: tuple[float, float, float, float], metallic: float = 0.0
 ):
@@ -516,6 +603,77 @@ def add_marker(
         curve_material(f"{name} material", color, metallic=0.12)
     )
     return marker
+
+
+def add_impella_flow_audit(
+    points: Sequence[Sequence[float]], *, right_sided: bool
+) -> None:
+    """Add a deterministic frame of the runtime's converging inlet and divergent outlet flow."""
+
+    curve = RuntimeCurve(points)
+    inlet = curve.point_at(0)
+    outlet = curve.point_at(1)
+    inlet_tangent = curve.tangent_at(0)
+    outlet_tangent = curve.tangent_at(1)
+
+    def basis(tangent: Vector) -> tuple[Vector, Vector]:
+        reference = (
+            Vector((0, 1, 0)) if abs(tangent.y) < 0.86 else Vector((1, 0, 0))
+        )
+        normal = tangent.cross(reference).normalized()
+        return normal, tangent.cross(normal).normalized()
+
+    inlet_normal, inlet_binormal = basis(inlet_tangent)
+    outlet_normal, outlet_binormal = basis(outlet_tangent)
+    inlet_color = (0.42, 0.008, 0.035, 1) if right_sided else (0.68, 0.012, 0.02, 1)
+    transit_color = (0.72, 0.015, 0.045, 1) if right_sided else (1.0, 0.025, 0.03, 1)
+    outlet_color = (0.9, 0.03, 0.07, 1) if right_sided else (1.0, 0.13, 0.055, 1)
+
+    for lane in range(4):
+        angle = lane / 4 * math.pi * 2 + math.pi / 4
+        radial = inlet_normal * math.cos(angle) + inlet_binormal * math.sin(angle)
+        stream = RuntimeCurve(
+            (
+                inlet - inlet_tangent * 0.44 + radial * 0.2,
+                inlet - inlet_tangent * 0.16 + radial * 0.075,
+                inlet + inlet_tangent * 0.035,
+            )
+        )
+        for particle in range(5):
+            progress = ((particle + 0.35) / 5) ** 1.55
+            add_marker(
+                f"Impella_InletFlow_{lane}_{particle}",
+                stream.point_at(progress),
+                0.026 * (1.1 - progress * 0.38),
+                inlet_color,
+            )
+
+    for particle in range(14):
+        add_marker(
+            f"Impella_InternalFlow_{particle}",
+            curve.point_at((particle + 0.5) / 14),
+            0.019,
+            transit_color,
+        )
+
+    for lane in range(5):
+        angle = lane / 5 * math.pi * 2
+        radial = outlet_normal * math.cos(angle) + outlet_binormal * math.sin(angle)
+        stream = RuntimeCurve(
+            (
+                outlet - outlet_tangent * 0.035,
+                outlet + outlet_tangent * 0.2 + radial * 0.025,
+                outlet + outlet_tangent * 0.62 + radial * 0.12,
+            )
+        )
+        for particle in range(6):
+            progress = (particle + 0.25) / 6
+            add_marker(
+                f"Impella_OutletFlow_{lane}_{particle}",
+                stream.point_at(progress),
+                0.026 + progress * 0.008,
+                outlet_color,
+            )
 
 
 def assert_anchor_position(
@@ -925,14 +1083,39 @@ def render_route_following_impella(
             start_progress=head_progress,
             end_progress=min(1.0, head_progress + 0.022),
         )
-    add_runtime_path(
-        f"Impella_{variant}_BlueCannula",
-        route_points,
-        contract["cannulaRadius"],
-        contract["cannulaColor"],
-        start_progress=trailing_progress,
-        end_progress=head_progress,
-    )
+    if variant == "rp":
+        cannula_points = smooth_impella_cannula_route(
+            runtime_route_segment(route_points, trailing_progress, head_progress)
+        )
+        add_runtime_path(
+            "Impella_rp_SmoothedBlueCannula",
+            cannula_points,
+            contract["cannulaRadius"],
+            contract["cannulaColor"],
+        )
+        add_runtime_path(
+            "Impella_rp_ContinuousReinforcementHelix",
+            cannula_helix_points(
+                cannula_points, contract["cannulaRadius"] * 1.018, 22
+            ),
+            0.0048,
+            (0.292, 0.392, 0.485, 1),
+        )
+        flow_points = cannula_points
+    else:
+        add_runtime_path(
+            f"Impella_{variant}_BlueCannula",
+            route_points,
+            contract["cannulaRadius"],
+            contract["cannulaColor"],
+            start_progress=trailing_progress,
+            end_progress=head_progress,
+        )
+        flow_points = runtime_route_segment(
+            route_points, head_progress, trailing_progress
+        )
+    if head_progress_key == "correct":
+        add_impella_flow_audit(flow_points, right_sided=variant == "rp")
     add_marker(
         f"Impella_{variant}_RegisteredInlet",
         inlet_point,
@@ -1370,7 +1553,7 @@ def write_audit_manifest(scene_families: Sequence[str], frames: Sequence[str]) -
         "sceneFamilies": list(scene_families),
         "frames": list(frames),
         "impella": {
-            "inHeartRepresentation": "fixed-length split endpoint followers with a CT-spline cannula, route-following guidewire, and post-arrival pigtail deployment",
+            "inHeartRepresentation": "fixed-length split endpoint followers with a CT-spline cannula, length-preserving RP smoothing and continuous reinforcement helix, route-following guidewire, and post-arrival pigtail deployment",
             "spanPolicy": "head and trailing anchors retain the correct-placement inlet-to-outlet arc span in every placement state",
             "tipPolicy": "pigtails remain constrained during advancement and deploy only after the selected endpoint is reached",
             "contactLimitedCpTipScales": {

@@ -1020,12 +1020,12 @@ def build_impella_rp() -> None:
     shaft_radius = (11 / 3) * WEB_UNITS_PER_MM / 2
     cannula_controls = (
         (0, -0.15, 0),
-        (0.25, -0.7, 0.05),
-        (0.48, -1.45, 0.1),
-        (0.32, -2.2, 0.14),
-        (-0.3, -3.0, 0.12),
-        (-0.48, -3.8, 0.06),
-        (-0.25, -4.45, 0),
+        (0.12, -0.55, 0.025),
+        (0.35, -1.15, 0.06),
+        (0.58, -1.9, 0.09),
+        (0.62, -2.7, 0.09),
+        (0.49, -3.45, 0.06),
+        (0.25, -4.15, 0.025),
         (0, -4.78, 0),
     )
     pigtail_controls = (
@@ -1059,7 +1059,7 @@ def build_impella_rp() -> None:
             cannula_radius,
             materials["blue"],
             radial_segments=14,
-            samples_per_segment=6,
+            samples_per_segment=10,
         ),
         create_reinforcement_spiral(
             "Impella_RP_ReinforcementSpiral",

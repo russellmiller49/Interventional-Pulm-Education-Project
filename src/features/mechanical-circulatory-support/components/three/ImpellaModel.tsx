@@ -37,7 +37,8 @@ import type {
   ImpellaSide,
   McsSimulationState,
 } from '../../engine'
-import { FlowParticles } from './FlowParticles'
+import { ImpellaBloodFlow } from './ImpellaBloodFlow'
+import { createCannulaHelixPoints, smoothImpellaCannulaRoute } from './impellaFlowGeometry'
 import { impellaRpEndpointProgress } from './impellaPlacement'
 
 interface ImpellaVisualConfig {
@@ -58,6 +59,8 @@ interface ImpellaVisualConfig {
   cannulaRadius: number
   shaftRadius: number
   reinforcementRings: number
+  smoothCannula?: boolean
+  cannulaStartProgress?: number
   deploysPigtail?: boolean
   deployedTipScale?: number
   annulusOffsetProgress?: number
@@ -89,10 +92,12 @@ function visualConfig(
         IMPELLA_RP_ADVANCEMENT_PROGRESS.correct - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet,
       flowRoute: impellaRpFlowRouteForProgress(endpointProgress.head, endpointProgress.inlet),
       flowLMin: device.right.running ? state.metrics.rightDeviceFlowLMin : 0,
-      cannulaColor: '#8ea8ff',
+      cannulaColor: '#385a91',
       cannulaRadius: 0.088,
       shaftRadius: 0.044,
-      reinforcementRings: 14,
+      reinforcementRings: 0,
+      smoothCannula: true,
+      cannulaStartProgress: endpointProgress.inlet,
       deploysPigtail: true,
     }
   }
@@ -267,6 +272,17 @@ export default function ImpellaModel({
     [side, source.scene],
   )
   const fragmentsRef = useRef(fragments)
+  const smoothCannulaRoute = useMemo(
+    () => (config.smoothCannula ? smoothImpellaCannulaRoute(config.flowRoute) : null),
+    [config.flowRoute, config.smoothCannula],
+  )
+  const reinforcementHelixRoute = useMemo(
+    () =>
+      smoothCannulaRoute
+        ? createCannulaHelixPoints(smoothCannulaRoute, config.cannulaRadius * 1.018, 22)
+        : null,
+    [config.cannulaRadius, smoothCannulaRoute],
+  )
   const placementProgress = useTrajectoryPlayback({
     targetProgress: config.targetProgress,
     replayKey,
@@ -287,6 +303,9 @@ export default function ImpellaModel({
   )
   const reinforcementGroups = useRef<Array<THREE.Group | null>>([])
   const accessConduitProgress = useRef(config.accessConduitEndProgress ?? 0)
+  const originalCannulaEndProgress = useRef(0)
+  const smoothCannulaStartProgress = useRef(0)
+  const smoothCannulaEndProgress = useRef(0)
 
   useFrame((_, delta) => {
     trailingProgress.current = THREE.MathUtils.clamp(
@@ -301,6 +320,27 @@ export default function ImpellaModel({
       0,
       1,
     )
+    if (smoothCannulaRoute && config.cannulaStartProgress !== undefined) {
+      const smoothSpan = Math.max(0.0001, config.targetProgress - config.cannulaStartProgress)
+      originalCannulaEndProgress.current = Math.min(
+        placementProgress.current,
+        config.cannulaStartProgress,
+      )
+      smoothCannulaStartProgress.current = THREE.MathUtils.clamp(
+        (trailingProgress.current - config.cannulaStartProgress) / smoothSpan,
+        0,
+        1,
+      )
+      smoothCannulaEndProgress.current = THREE.MathUtils.clamp(
+        (placementProgress.current - config.cannulaStartProgress) / smoothSpan,
+        0,
+        1,
+      )
+    } else {
+      originalCannulaEndProgress.current = placementProgress.current
+      smoothCannulaStartProgress.current = 0
+      smoothCannulaEndProgress.current = 0
+    }
     const visibleRingCount = Math.floor(config.reinforcementRings * visibleFraction)
     reinforcementProgress.forEach((progress, index) => {
       const group = reinforcementGroups.current[index]
@@ -401,17 +441,57 @@ export default function ImpellaModel({
           renderOrder={9}
         />
       </group>
-      <ProgressiveSplineTube
-        points={config.route}
-        startProgress={trailingProgress}
-        progress={placementProgress}
-        radius={config.cannulaRadius}
-        color={config.cannulaColor}
-        depthTest
-        emissiveIntensity={0.12}
-        radialSegments={14}
-        renderOrder={8}
-      />
+      {smoothCannulaRoute ? (
+        <>
+          <ProgressiveSplineTube
+            points={config.route}
+            startProgress={trailingProgress}
+            progress={originalCannulaEndProgress}
+            radius={config.cannulaRadius}
+            color={config.cannulaColor}
+            depthTest
+            emissiveIntensity={0.08}
+            radialSegments={18}
+            renderOrder={8}
+          />
+          <ProgressiveSplineTube
+            points={smoothCannulaRoute}
+            startProgress={smoothCannulaStartProgress}
+            progress={smoothCannulaEndProgress}
+            radius={config.cannulaRadius}
+            color={config.cannulaColor}
+            depthTest
+            emissiveIntensity={0.08}
+            radialSegments={20}
+            renderOrder={8}
+          />
+          {reinforcementHelixRoute ? (
+            <ProgressiveSplineTube
+              points={reinforcementHelixRoute}
+              startProgress={smoothCannulaStartProgress}
+              progress={smoothCannulaEndProgress}
+              radius={0.0048}
+              color="#93a8b7"
+              depthTest
+              emissiveIntensity={0.04}
+              radialSegments={5}
+              renderOrder={9}
+            />
+          ) : null}
+        </>
+      ) : (
+        <ProgressiveSplineTube
+          points={config.route}
+          startProgress={trailingProgress}
+          progress={placementProgress}
+          radius={config.cannulaRadius}
+          color={config.cannulaColor}
+          depthTest
+          emissiveIntensity={0.12}
+          radialSegments={14}
+          renderOrder={8}
+        />
+      )}
 
       {config.accessConduitEndProgress !== undefined ? (
         <ProgressiveSplineTube
@@ -512,10 +592,10 @@ export default function ImpellaModel({
           </group>
         </group>
       </SplineFollower>
-      <FlowParticles
-        points={config.flowRoute}
+      <ImpellaBloodFlow
+        points={smoothCannulaRoute ?? config.flowRoute}
         flow={config.flowLMin}
-        color={side === 'right' ? '#d7b5ff' : '#baf7f2'}
+        side={side}
         paused={reducedMotion}
         revealProgress={placementProgress}
         revealAt={Math.max(0, config.targetProgress - 0.003)}

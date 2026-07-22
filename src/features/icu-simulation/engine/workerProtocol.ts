@@ -1,3 +1,4 @@
+import { resumeIcuSyntheticSession, type IcuSyntheticSessionV1 } from './persistence'
 import { applyIcuCommand, createIcuSimulation } from './simulation'
 import type {
   IcuCommand,
@@ -14,6 +15,7 @@ export type IcuWorkerRequest =
       mode: IcuSimulationMode
       seed: number
     }
+  | { requestId: string; type: 'restore'; session: IcuSyntheticSessionV1 }
   | { requestId: string; type: 'command'; command: IcuCommand }
   | { requestId: string; type: 'advance'; seconds: number }
 
@@ -37,6 +39,11 @@ export function createIcuWorkerRunner(
         if (request.type === 'init') {
           scenario = resolveScenario(request.scenarioId)
           state = createIcuSimulation(scenario, { mode: request.mode, seed: request.seed })
+          return { requestId: request.requestId, type: 'state', state }
+        }
+        if (request.type === 'restore') {
+          scenario = resolveScenario(request.session.replay.scenarioId)
+          state = resumeIcuSyntheticSession(request.session, scenario)
           return { requestId: request.requestId, type: 'state', state }
         }
         if (!scenario || !state) {
@@ -81,6 +88,7 @@ export interface IcuWorkerLike {
 
 export interface IcuWorkerClient {
   init(scenarioId: string, mode: IcuSimulationMode, seed: number): string
+  restore(session: IcuSyntheticSessionV1): string
   command(command: IcuCommand): string
   advance(seconds: number): string
   dispose(): void
@@ -88,6 +96,7 @@ export interface IcuWorkerClient {
 
 type IcuWorkerRequestWithoutId =
   | Omit<Extract<IcuWorkerRequest, { type: 'init' }>, 'requestId'>
+  | Omit<Extract<IcuWorkerRequest, { type: 'restore' }>, 'requestId'>
   | Omit<Extract<IcuWorkerRequest, { type: 'command' }>, 'requestId'>
   | Omit<Extract<IcuWorkerRequest, { type: 'advance' }>, 'requestId'>
 
@@ -107,6 +116,9 @@ export function createIcuWorkerClient(
   return {
     init(scenarioId, mode, seed) {
       return send({ type: 'init', scenarioId, mode, seed })
+    },
+    restore(session) {
+      return send({ type: 'restore', session })
     },
     command(command) {
       return send({ type: 'command', command })

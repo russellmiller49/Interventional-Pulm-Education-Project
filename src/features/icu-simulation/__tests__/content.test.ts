@@ -30,8 +30,14 @@ describe('ICU simulation content', () => {
         ...scenario.scheduledEvents.flatMap((event) => event.evidenceIds),
         ...scenario.interventions.flatMap((intervention) => intervention.evidenceIds),
         ...scenario.checkpoints.flatMap((checkpoint) => checkpoint.evidenceIds),
+        ...scenario.masteryResponse.required.flatMap((predicate) => predicate.evidenceIds),
+        ...(scenario.masteryResponse.oneOf ?? []).flatMap((path) =>
+          path.predicates.flatMap((predicate) => predicate.evidenceIds),
+        ),
       ]
       expect(evidenceIds.every((id) => ICU_EVIDENCE_BY_ID.has(id))).toBe(true)
+      expect(scenario.masteryResponse.educationalModelOnly).toBe(true)
+      expect(scenario.masteryResponse.reviewStatus).toBe('pending')
     }
     expect(ICU_EDUCATIONAL_BOUNDARIES.noRealPatientData).toBe(true)
     expect(ICU_EDUCATIONAL_BOUNDARIES.noMedicationDoses).toBe(true)
@@ -75,6 +81,45 @@ describe('ICU simulation content', () => {
       },
     }
     expect(safeParseIcuScenarioDefinition(unsupported).success).toBe(false)
+
+    const duplicateResponsePredicate = clone(icuScenarios[0])
+    duplicateResponsePredicate.masteryResponse.required = [
+      duplicateResponsePredicate.masteryResponse.required[0],
+      ...duplicateResponsePredicate.masteryResponse.required,
+    ]
+    expect(safeParseIcuScenarioDefinition(duplicateResponsePredicate).success).toBe(false)
+
+    const unknownResponseEvidence = clone(icuScenarios[0])
+    unknownResponseEvidence.masteryResponse.required[0].evidenceIds = ['ICU-NOT-A-SOURCE']
+    expect(safeParseIcuScenarioDefinition(unknownResponseEvidence).success).toBe(false)
+
+    const unknownResponseSubstitution = clone(icuScenarios[1])
+    unknownResponseSubstitution.masteryResponse.oneOf![0].substitutesForActionIds = [
+      'care:not-scored',
+    ]
+    expect(safeParseIcuScenarioDefinition(unknownResponseSubstitution).success).toBe(false)
+
+    const ineligibleResponseSubstitution = clone(icuScenarios[1])
+    ineligibleResponseSubstitution.masteryResponse.oneOf![0].substitutesForActionIds = [
+      'diagnosis:correct',
+    ]
+    expect(safeParseIcuScenarioDefinition(ineligibleResponseSubstitution).success).toBe(false)
+
+    const duplicateScoringAction = clone(icuScenarios[0])
+    duplicateScoringAction.scoring = {
+      ...duplicateScoringAction.scoring,
+      therapy: [
+        duplicateScoringAction.scoring.therapy[0],
+        ...duplicateScoringAction.scoring.therapy,
+      ],
+    }
+    expect(safeParseIcuScenarioDefinition(duplicateScoringAction).success).toBe(false)
+
+    const responseExtra = clone(icuScenarios[0]) as (typeof icuScenarios)[number] & {
+      masteryResponse: (typeof icuScenarios)[number]['masteryResponse'] & { hiddenTarget?: number }
+    }
+    responseExtra.masteryResponse.hiddenTarget = 65
+    expect(safeParseIcuScenarioDefinition(responseExtra).success).toBe(false)
   })
 
   it('remains private-development and unlisted', () => {

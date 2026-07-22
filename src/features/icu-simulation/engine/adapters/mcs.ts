@@ -145,6 +145,7 @@ export function stepMcs(
   snapshot: IcuPatientSnapshot,
   _deltaSeconds: number,
 ): IcuTherapyStepResult<IcuMcsState> {
+  void _deltaSeconds
   if (state.status !== 'running' || state.device === 'none') {
     return { state, effects: [], alarms: [], telemetry: { status: state.status } }
   }

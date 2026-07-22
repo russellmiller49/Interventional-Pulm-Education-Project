@@ -145,6 +145,12 @@ export interface IcuPatientState {
   antimicrobialsAdministered: boolean
 }
 
+export interface IcuPhysiologyCalibration {
+  initialDrivers: IcuDiseaseDrivers
+  initialHemodynamics: IcuHemodynamicState
+  initialPeepCmH2O: number
+}
+
 export type IcuVentilatorMode = 'volume-control' | 'pressure-control' | 'pressure-support'
 
 export interface IcuVentilatorState {
@@ -444,12 +450,128 @@ export interface IcuScoreBreakdown extends Record<IcuScoreDomain, number> {
   total: number
 }
 
+export const icuResponseNumericMetrics = [
+  'map-mm-hg',
+  'native-cardiac-output-l-min',
+  'effective-systemic-flow-l-min',
+  'rap-mm-hg',
+  'pawp-mm-hg',
+  'svr-dyn-sec-cm5',
+  'pvr-wu',
+  'pericardial-pressure-mm-hg',
+  'circulating-volume-ml',
+  'spo2-percent',
+  'potassium-mmol-l',
+  'hemoglobin-g-dl',
+  'lactate-mmol-l',
+  'infection-burden',
+  'pulmonary-obstruction-severity',
+] as const
+export type IcuResponseNumericMetric = (typeof icuResponseNumericMetrics)[number]
+
+export const icuResponseBooleanMetrics = [
+  'antimicrobials-administered',
+  'source-control-completed',
+  'reperfusion-completed',
+  'tamponade-drained',
+] as const
+export type IcuResponseBooleanMetric = (typeof icuResponseBooleanMetrics)[number]
+
+export type IcuResponseTarget =
+  | { kind: 'absolute'; value: number }
+  | { kind: 'initial-delta'; delta: number }
+  | { kind: 'initial-ratio'; ratio: number }
+
+export type IcuResponsePredicate =
+  | {
+      id: string
+      label: string
+      kind: 'numeric'
+      metric: IcuResponseNumericMetric
+      comparison: 'gte' | 'lte'
+      target: IcuResponseTarget
+      evidenceIds: readonly string[]
+    }
+  | {
+      id: string
+      label: string
+      kind: 'boolean'
+      metric: IcuResponseBooleanMetric
+      expected: boolean
+      evidenceIds: readonly string[]
+    }
+  | {
+      id: string
+      label: string
+      kind: 'therapy-running'
+      therapy: IcuTherapyId
+      expected: boolean
+      evidenceIds: readonly string[]
+    }
+  | {
+      id: string
+      label: string
+      kind: 'therapy-never-started'
+      therapy: IcuTherapyId
+      evidenceIds: readonly string[]
+    }
+  | {
+      id: string
+      label: string
+      /** Blocks mastery on unresolved device limitations without assigning alarm severity. */
+      kind: 'no-active-device-limitation'
+      subsystems: readonly IcuTherapyId[]
+      evidenceIds: readonly string[]
+    }
+  | {
+      id: string
+      label: string
+      kind: 'no-active-critical-alarm'
+      subsystems: readonly (IcuTherapyId | 'patient')[]
+      evidenceIds: readonly string[]
+    }
+
+export interface IcuResponsePathDefinition {
+  id: string
+  label: string
+  predicates: readonly IcuResponsePredicate[]
+  /** Domain-score substitution only. These IDs never enter action history or replay. */
+  substitutesForActionIds: readonly string[]
+}
+
+export interface IcuMasteryResponseDefinition {
+  educationalModelOnly: true
+  reviewStatus: IcuReviewStatus
+  required: readonly IcuResponsePredicate[]
+  /** When present, at least one complete authored path must pass. */
+  oneOf?: readonly IcuResponsePathDefinition[]
+}
+
+export interface IcuResponseCriterionEvaluation {
+  id: string
+  label: string
+  pathId: string | null
+  passed: boolean
+  actual: number | boolean | string
+  target: string
+  unit: string | null
+}
+
+export interface IcuResponseEvaluation {
+  evaluated: boolean
+  passed: boolean
+  passedPathIds: readonly string[]
+  substitutedActionIds: readonly string[]
+  criteria: readonly IcuResponseCriterionEvaluation[]
+}
+
 export interface IcuOutcomeState {
   completed: boolean
   score: IcuScoreBreakdown
   criticalErrorIds: readonly string[]
   mastery: boolean
   checkpointIdsCompleted: readonly string[]
+  response: IcuResponseEvaluation
 }
 
 export interface IcuDiagnosisState {
@@ -504,6 +626,7 @@ export interface IcuSimulationState {
   patient: IcuPatientState
   circulationParameters: CirculationParameters
   compartments: CirculationCompartmentState
+  calibration: IcuPhysiologyCalibration
   devices: IcuDeviceStates
   /** Learner commitment only; correctness is intentionally not exposed during a run. */
   diagnosis: IcuDiagnosisState
@@ -562,6 +685,7 @@ export interface IcuScenarioDefinition {
   summary: string
   openingNarrative: string
   durationHours: number
+  minimumMasteryElapsedSeconds: number
   expectedClassification: IcuShockClassification
   allowedModes: readonly IcuSimulationMode[]
   initialPatient: IcuPatientState
@@ -577,6 +701,7 @@ export interface IcuScenarioDefinition {
   interventions: readonly IcuScenarioInterventionDefinition[]
   checkpoints: readonly IcuScenarioCheckpointDefinition[]
   scoring: Readonly<Record<IcuScoreDomain, readonly string[]>>
+  masteryResponse: IcuMasteryResponseDefinition
   criticalErrors: readonly { id: string; actionId: string; message: string }[]
   learningObjectives: readonly string[]
   debrief: readonly string[]

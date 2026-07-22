@@ -8,68 +8,120 @@ import {
   type MechanicalSupportEffect,
 } from '@/features/hemodynamics-core'
 
-import { clamp, moveTowardExp, roundTo } from './math'
-import type { IcuDeviceStates, IcuPatientState, IcuTherapyEffect } from './types'
+import { clamp, moveTowardExp } from './math'
+import type {
+  IcuDeviceStates,
+  IcuPatientState,
+  IcuPhysiologyCalibration,
+  IcuTherapyEffect,
+} from './types'
 
 const REFERENCE_CIRCULATING_VOLUME_ML = 4_360
+const FIXED_CARDIAC_VOLUME_ML = 260
+const SCALABLE_VASCULAR_VOLUME_ML = REFERENCE_CIRCULATING_VOLUME_ML - FIXED_CARDIAC_VOLUME_ML
+
+function coreCirculatingVolumeFraction(volumeMl: number): number {
+  return clamp((volumeMl - FIXED_CARDIAC_VOLUME_ML) / SCALABLE_VASCULAR_VOLUME_ML, 0.2, 1.8)
+}
 
 function activePeep(devices: IcuDeviceStates): number {
   return devices.ventilator.status === 'running' ? devices.ventilator.peepCmH2O : 3
 }
 
+export function createIcuPhysiologyCalibration(
+  patient: IcuPatientState,
+  devices: IcuDeviceStates,
+): IcuPhysiologyCalibration {
+  return {
+    initialDrivers: { ...patient.drivers },
+    initialHemodynamics: { ...patient.hemodynamics },
+    initialPeepCmH2O: activePeep(devices),
+  }
+}
+
 export function deriveIcuCirculationParameters(
   patient: IcuPatientState,
   devices: IcuDeviceStates,
+  calibration: IcuPhysiologyCalibration = createIcuPhysiologyCalibration(patient, devices),
 ): CirculationParameters {
   const drivers = patient.drivers
+  const initialDrivers = calibration.initialDrivers
+  const initialHemodynamics = calibration.initialHemodynamics
   const medications = patient.medications
   const leftContractility = clamp(
-    1 - drivers.leftVentricularFailureSeverity * 0.78 + medications.inotropeTier * 0.14,
+    initialHemodynamics.leftVentricularContractility -
+      (drivers.leftVentricularFailureSeverity - initialDrivers.leftVentricularFailureSeverity) *
+        0.78 +
+      medications.inotropeTier * 0.14,
     0.18,
     1.55,
   )
   const rightContractility = clamp(
-    1 - drivers.rightVentricularFailureSeverity * 0.74 + medications.inotropeTier * 0.1,
+    initialHemodynamics.rightVentricularContractility -
+      (drivers.rightVentricularFailureSeverity - initialDrivers.rightVentricularFailureSeverity) *
+        0.74 +
+      medications.inotropeTier * 0.1,
     0.18,
     1.5,
   )
   const svr = clamp(
-    1_450 - drivers.vasoplegiaSeverity * 1_050 + medications.vasopressorTier * 260,
+    initialHemodynamics.systemicVascularResistanceDynSecCm5 -
+      (drivers.vasoplegiaSeverity - initialDrivers.vasoplegiaSeverity) * 1_050 +
+      medications.vasopressorTier * 260,
     320,
     2_600,
   )
   const pvr = clamp(
-    1.7 + drivers.pulmonaryVascularObstructionSeverity * 10 + drivers.lungInjurySeverity * 1.8,
+    initialHemodynamics.pulmonaryVascularResistanceWU +
+      (drivers.pulmonaryVascularObstructionSeverity -
+        initialDrivers.pulmonaryVascularObstructionSeverity) *
+        10 +
+      (drivers.lungInjurySeverity - initialDrivers.lungInjurySeverity) * 1.8,
     0.7,
     16,
   )
   const peep = activePeep(devices)
-  const circulatingVolumeFraction = clamp(
-    patient.hemodynamics.circulatingVolumeMl / REFERENCE_CIRCULATING_VOLUME_ML,
-    0.4,
-    1.55,
+  const circulatingVolumeFraction = coreCirculatingVolumeFraction(
+    patient.hemodynamics.circulatingVolumeMl,
   )
-  const preloadFactor = clamp((circulatingVolumeFraction - 0.35) / 0.65, 0.12, 1.35)
-  const peepFactor = clamp(1 - Math.max(0, peep - 5) * 0.025, 0.5, 1.05)
-  const tamponadeFactor = clamp(
+  const volumeRatio = clamp(
+    patient.hemodynamics.circulatingVolumeMl / Math.max(1, initialHemodynamics.circulatingVolumeMl),
+    0.35,
+    2,
+  )
+  const initialPeepFactor = clamp(
+    1 - Math.max(0, calibration.initialPeepCmH2O - 5) * 0.025,
+    0.5,
+    1.05,
+  )
+  const currentPeepFactor = clamp(1 - Math.max(0, peep - 5) * 0.025, 0.5, 1.05)
+  const initialTamponadeFactor = clamp(1 - initialDrivers.tamponadePressureMmHg * 0.035, 0.25, 1)
+  const currentTamponadeFactor = clamp(
     1 - (patient.tamponadeDrained ? 0 : drivers.tamponadePressureMmHg) * 0.035,
     0.25,
     1,
   )
-  const rvDelivery = clamp(
-    (rightContractility * preloadFactor * peepFactor) / (0.8 + pvr * 0.08),
-    0.12,
-    1.2,
+  const leftRatio =
+    leftContractility / Math.max(0.18, initialHemodynamics.leftVentricularContractility)
+  const rightDeliveryRatio =
+    (rightContractility / Math.max(0.18, initialHemodynamics.rightVentricularContractility)) *
+    ((0.8 + initialHemodynamics.pulmonaryVascularResistanceWU * 0.08) / (0.8 + pvr * 0.08))
+  const afterloadRatio = clamp(
+    initialHemodynamics.systemicVascularResistanceDynSecCm5 / Math.max(320, svr),
+    0.45,
+    2.2,
   )
-  const strokeVolumeMl =
-    76 *
-    preloadFactor ** 0.42 *
-    leftContractility ** 0.78 *
-    rvDelivery ** 0.52 *
-    clamp(1_200 / svr, 0.55, 1.45) ** 0.28 *
-    tamponadeFactor
+  const heartRateRatio =
+    patient.hemodynamics.heartRateBpm / Math.max(30, initialHemodynamics.heartRateBpm)
   const nativeCardiacOutput = clamp(
-    (strokeVolumeMl * patient.hemodynamics.heartRateBpm) / 1_000,
+    initialHemodynamics.nativeCardiacOutputLMin *
+      volumeRatio ** 0.42 *
+      clamp(leftRatio, 0.25, 2.2) ** 0.78 *
+      clamp(rightDeliveryRatio, 0.2, 2.2) ** 0.52 *
+      afterloadRatio ** 0.28 *
+      clamp(currentPeepFactor / initialPeepFactor, 0.45, 1.5) *
+      clamp(currentTamponadeFactor / initialTamponadeFactor, 0.2, 4) *
+      clamp(heartRateRatio, 0.4, 2),
     0.3,
     12,
   )
@@ -112,47 +164,63 @@ export function deriveIcuCirculationParameters(
 export function deriveIcuBaselineMeasurements(
   patient: IcuPatientState,
   parameters: CirculationParameters,
+  calibration: IcuPhysiologyCalibration,
 ): HemodynamicMeasurements {
+  const initial = calibration.initialHemodynamics
+  const initialVolumeFraction = coreCirculatingVolumeFraction(initial.circulatingVolumeMl)
   const volumeFraction = parameters.circulatingVolumeFraction
-  const peepPressure = parameters.peepCmH2O * 0.14
-  const tamponade = parameters.pericardialPressureMmHg
+  const peepDelta = (parameters.peepCmH2O - calibration.initialPeepCmH2O) * 0.14
+  const tamponadeDelta =
+    parameters.pericardialPressureMmHg - calibration.initialDrivers.tamponadePressureMmHg
   const rap = clamp(
-    5 +
-      (volumeFraction - 1) * 13 +
-      (1 - parameters.rightVentricularContractility) * 15 +
-      parameters.pulmonaryVascularResistanceWU * 0.5 +
-      peepPressure +
-      tamponade * 0.65,
+    initial.rapMmHg +
+      (volumeFraction - initialVolumeFraction) * 13 +
+      (initial.rightVentricularContractility - parameters.rightVentricularContractility) * 15 +
+      (parameters.pulmonaryVascularResistanceWU - initial.pulmonaryVascularResistanceWU) * 0.5 +
+      peepDelta +
+      tamponadeDelta * 0.65,
     -2,
     38,
   )
   const pawp = clamp(
-    8 +
-      (volumeFraction - 1) * 15 +
-      (1 - parameters.leftVentricularContractility) * 22 +
-      peepPressure +
-      tamponade * 0.55,
+    initial.pawpMmHg +
+      (volumeFraction - initialVolumeFraction) * 15 +
+      (initial.leftVentricularContractility - parameters.leftVentricularContractility) * 22 +
+      peepDelta +
+      tamponadeDelta * 0.55,
     1,
     45,
   )
   const cardiacOutput = parameters.referenceCardiacOutputLMin
-  const meanPap = clamp(pawp + parameters.pulmonaryVascularResistanceWU * cardiacOutput, 5, 90)
-  const map = clamp(
-    rap + (cardiacOutput * parameters.systemicVascularResistanceDynSecCm5) / 80,
-    20,
-    180,
-  )
-  const pulsePressure = clamp(
-    (cardiacOutput * 1_000) / Math.max(30, parameters.heartRateBpm) / 1.5,
+  const meanPap = clamp(
+    initial.meanPapMmHg +
+      (pawp - initial.pawpMmHg) +
+      (parameters.pulmonaryVascularResistanceWU * cardiacOutput -
+        initial.pulmonaryVascularResistanceWU * initial.nativeCardiacOutputLMin),
     5,
-    80,
+    90,
   )
+  const initialRawMap =
+    initial.rapMmHg +
+    (initial.nativeCardiacOutputLMin * initial.systemicVascularResistanceDynSecCm5) / 80
+  const currentRawMap = rap + (cardiacOutput * parameters.systemicVascularResistanceDynSecCm5) / 80
+  const map = clamp(initial.mapMmHg + currentRawMap - initialRawMap, 20, 180)
+  const pulseScale = clamp(
+    cardiacOutput /
+      Math.max(30, parameters.heartRateBpm) /
+      (initial.nativeCardiacOutputLMin / Math.max(30, initial.heartRateBpm)),
+    0.25,
+    2,
+  )
+  const systolic = map + (initial.systolicMmHg - initial.mapMmHg) * pulseScale
+  const diastolic = map - (initial.mapMmHg - initial.diastolicMmHg) * pulseScale
+  const pulsePressure = systolic - diastolic
   const papPulse = clamp(6 + parameters.rightVentricularContractility * 13, 4, 25)
   return {
     heartRateBpm: parameters.heartRateBpm,
     spo2Percent: patient.respiratory.spo2Percent,
-    artSystolicMmHg: map + pulsePressure * 0.62,
-    artDiastolicMmHg: map - pulsePressure * 0.38,
+    artSystolicMmHg: systolic,
+    artDiastolicMmHg: diastolic,
     mapMmHg: map,
     rapMmHg: rap,
     rvSystolicMmHg: meanPap + papPulse * 0.58,
@@ -172,12 +240,13 @@ export function deriveIcuBaselineMeasurements(
 export function createIcuCirculationCompartments(
   patient: IcuPatientState,
   devices: IcuDeviceStates,
+  calibration: IcuPhysiologyCalibration = createIcuPhysiologyCalibration(patient, devices),
 ): {
   parameters: CirculationParameters
   compartments: CirculationCompartmentState
 } {
-  const parameters = deriveIcuCirculationParameters(patient, devices)
-  const measurements = deriveIcuBaselineMeasurements(patient, parameters)
+  const parameters = deriveIcuCirculationParameters(patient, devices, calibration)
+  const measurements = deriveIcuBaselineMeasurements(patient, parameters, calibration)
   return {
     parameters,
     compartments: createInitialCirculationCompartments(parameters, measurements),
@@ -220,6 +289,7 @@ export function advanceIcuHemodynamics(
   devices: IcuDeviceStates,
   compartments: CirculationCompartmentState,
   effects: readonly IcuTherapyEffect[],
+  calibration: IcuPhysiologyCalibration,
   startTimeSeconds: number,
   durationSeconds: number,
 ): {
@@ -228,8 +298,8 @@ export function advanceIcuHemodynamics(
   compartments: CirculationCompartmentState
   support: MechanicalSupportEffect
 } {
-  const parameters = deriveIcuCirculationParameters(patient, devices)
-  const baseline = deriveIcuBaselineMeasurements(patient, parameters)
+  const parameters = deriveIcuCirculationParameters(patient, devices, calibration)
+  const baseline = deriveIcuBaselineMeasurements(patient, parameters, calibration)
   const support = aggregateMechanicalSupportEffects(effects, baseline.cardiacOutputLMin)
   let nextCompartments = compartments
   const fixedSteps = Math.max(0, Math.round(durationSeconds / 0.02))
@@ -245,26 +315,38 @@ export function advanceIcuHemodynamics(
   }
   const effectiveFlow = support.effectiveSystemicFlowLMin
   const rap = clamp(
-    baseline.rapMmHg * 0.72 + nextCompartments.systemicVenousPressureMmHg * 0.28,
+    baseline.rapMmHg * 0.98 + nextCompartments.systemicVenousPressureMmHg * 0.02,
     -2,
     40,
   )
   const pawp = clamp(
-    (baseline.pawpMmHg ?? 10) * 0.72 + nextCompartments.pulmonaryVenousPressureMmHg * 0.28,
+    (baseline.pawpMmHg ?? 10) * 0.98 + nextCompartments.pulmonaryVenousPressureMmHg * 0.02,
     1,
     50,
   )
-  const mapFromFlow = rap + (effectiveFlow * parameters.systemicVascularResistanceDynSecCm5) / 80
+  const initial = calibration.initialHemodynamics
+  const initialRawMap =
+    initial.rapMmHg +
+    (initial.nativeCardiacOutputLMin * initial.systemicVascularResistanceDynSecCm5) / 80
+  const mapFromFlow =
+    initial.mapMmHg +
+    rap +
+    (effectiveFlow * parameters.systemicVascularResistanceDynSecCm5) / 80 -
+    initialRawMap
   const map = clamp(
-    mapFromFlow * 0.76 + nextCompartments.systemicArterialPressureMmHg * 0.24,
+    mapFromFlow * 0.99 + nextCompartments.systemicArterialPressureMmHg * 0.01,
     15,
     220,
   )
-  const pulsePressure = clamp(
-    (effectiveFlow * 1_000) / Math.max(30, patient.hemodynamics.heartRateBpm) / 1.55,
-    4,
-    85,
+  const pulseScale = clamp(
+    effectiveFlow /
+      Math.max(30, patient.hemodynamics.heartRateBpm) /
+      (initial.nativeCardiacOutputLMin / Math.max(30, initial.heartRateBpm)),
+    0.2,
+    2.5,
   )
+  const systolic = map + (initial.systolicMmHg - initial.mapMmHg) * pulseScale
+  const diastolic = map - (initial.mapMmHg - initial.diastolicMmHg) * pulseScale
   const meanPap = clamp(
     pawp + parameters.pulmonaryVascularResistanceWU * Math.max(0.5, baseline.cardiacOutputLMin),
     5,
@@ -275,22 +357,19 @@ export function advanceIcuHemodynamics(
       ...patient,
       hemodynamics: {
         ...patient.hemodynamics,
-        mapMmHg: roundTo(map, 1),
-        systolicMmHg: roundTo(map + pulsePressure * 0.62, 1),
-        diastolicMmHg: roundTo(map - pulsePressure * 0.38, 1),
-        cardiacOutputLMin: roundTo(effectiveFlow, 2),
-        nativeCardiacOutputLMin: roundTo(baseline.cardiacOutputLMin, 2),
-        effectiveSystemicFlowLMin: roundTo(effectiveFlow, 2),
-        rapMmHg: roundTo(rap, 1),
-        pawpMmHg: roundTo(pawp, 1),
-        meanPapMmHg: roundTo(meanPap, 1),
-        systemicVascularResistanceDynSecCm5: roundTo(
-          parameters.systemicVascularResistanceDynSecCm5,
-          0,
-        ),
-        pulmonaryVascularResistanceWU: roundTo(parameters.pulmonaryVascularResistanceWU, 2),
-        leftVentricularContractility: roundTo(parameters.leftVentricularContractility, 3),
-        rightVentricularContractility: roundTo(parameters.rightVentricularContractility, 3),
+        mapMmHg: map,
+        systolicMmHg: systolic,
+        diastolicMmHg: diastolic,
+        cardiacOutputLMin: effectiveFlow,
+        nativeCardiacOutputLMin: baseline.cardiacOutputLMin,
+        effectiveSystemicFlowLMin: effectiveFlow,
+        rapMmHg: rap,
+        pawpMmHg: pawp,
+        meanPapMmHg: meanPap,
+        systemicVascularResistanceDynSecCm5: parameters.systemicVascularResistanceDynSecCm5,
+        pulmonaryVascularResistanceWU: parameters.pulmonaryVascularResistanceWU,
+        leftVentricularContractility: parameters.leftVentricularContractility,
+        rightVentricularContractility: parameters.rightVentricularContractility,
         pericardialPressureMmHg: parameters.pericardialPressureMmHg,
       },
     },
@@ -439,61 +518,52 @@ export function advanceIcuSlowPhysiology(
 
   return {
     ...patient,
-    drivers: { ...patient.drivers, infectionBurden: roundTo(infectionBurden, 6) },
+    drivers: { ...patient.drivers, infectionBurden },
     hemodynamics: {
       ...patient.hemodynamics,
-      circulatingVolumeMl: roundTo(nextVolume, 1),
+      circulatingVolumeMl: nextVolume,
     },
     respiratory: {
       ...patient.respiratory,
       intubated: devices.ventilator.status === 'running' || patient.respiratory.intubated,
-      paO2MmHg: roundTo(paO2, 1),
-      paCO2MmHg: roundTo(paCO2, 1),
-      bicarbonateMmolL: roundTo(bicarbonate, 1),
-      pH: roundTo(pH, 3),
-      spo2Percent: roundTo(spo2, 1),
+      paO2MmHg: paO2,
+      paCO2MmHg: paCO2,
+      bicarbonateMmolL: bicarbonate,
+      pH,
+      spo2Percent: spo2,
       meanAirwayPressureCmH2O:
         devices.ventilator.status === 'running'
-          ? roundTo(
-              devices.ventilator.peepCmH2O +
-                Math.max(
-                  0,
-                  devices.ventilator.plateauPressureCmH2O - devices.ventilator.peepCmH2O,
-                ) *
-                  0.36,
-              1,
-            )
+          ? devices.ventilator.peepCmH2O +
+            Math.max(0, devices.ventilator.plateauPressureCmH2O - devices.ventilator.peepCmH2O) *
+              0.36
           : 3,
       plateauPressureCmH2O: devices.ventilator.plateauPressureCmH2O,
-      minuteVentilationLMin: roundTo(
-        Math.max(spontaneousMinuteVentilation, ventilatorMinuteVentilation),
-        1,
-      ),
+      minuteVentilationLMin: Math.max(spontaneousMinuteVentilation, ventilatorMinuteVentilation),
     },
     renal: {
       ...patient.renal,
-      creatinineMgDl: roundTo(creatinine, 2),
-      bunMgDl: roundTo(bun, 1),
-      potassiumMmolL: roundTo(potassium, 2),
-      bicarbonateMmolL: roundTo(bicarbonate, 1),
-      urineOutputMlHour: roundTo(urineOutput, 1),
-      cumulativeUrineMl: roundTo(patient.renal.cumulativeUrineMl + urineMl, 1),
-      cumulativeCrrtRemovalMl: roundTo(patient.renal.cumulativeCrrtRemovalMl + crrtRemovalMl, 1),
+      creatinineMgDl: creatinine,
+      bunMgDl: bun,
+      potassiumMmolL: potassium,
+      bicarbonateMmolL: bicarbonate,
+      urineOutputMlHour: urineOutput,
+      cumulativeUrineMl: patient.renal.cumulativeUrineMl + urineMl,
+      cumulativeCrrtRemovalMl: patient.renal.cumulativeCrrtRemovalMl + crrtRemovalMl,
     },
     hematology: {
       ...patient.hematology,
-      hemoglobinGdl: roundTo(hemoglobin, 2),
-      hematocritPercent: roundTo(hemoglobin * 3, 1),
-      cumulativeBloodLossMl: roundTo(patient.hematology.cumulativeBloodLossMl + bloodLossMl, 1),
+      hemoglobinGdl: hemoglobin,
+      hematocritPercent: hemoglobin * 3,
+      cumulativeBloodLossMl: patient.hematology.cumulativeBloodLossMl + bloodLossMl,
     },
     perfusion: {
       ...patient.perfusion,
-      lactateMmolL: roundTo(lactate, 2),
-      temperatureC: roundTo(temperature, 2),
-      oxygenDeliveryMlMin: roundTo(oxygenDelivery, 0),
-      oxygenExtractionRatio: roundTo(extraction, 3),
-      capillaryRefillSeconds: roundTo(clamp(1.5 + Math.max(0, lactate - 2) * 0.7, 1, 12), 1),
-      mottlingScore: roundTo(clamp((lactate - 1.5) / 1.5, 0, 5), 0),
+      lactateMmolL: lactate,
+      temperatureC: temperature,
+      oxygenDeliveryMlMin: oxygenDelivery,
+      oxygenExtractionRatio: extraction,
+      capillaryRefillSeconds: clamp(1.5 + Math.max(0, lactate - 2) * 0.7, 1, 12),
+      mottlingScore: clamp((lactate - 1.5) / 1.5, 0, 5),
     },
   }
 }

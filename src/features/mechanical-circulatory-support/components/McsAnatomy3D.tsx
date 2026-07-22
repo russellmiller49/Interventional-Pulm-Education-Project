@@ -404,11 +404,17 @@ export function McsAnatomy3D({
           </span>
         ) : null}
         {state.device.kind === 'impella' ? (
-          <span>
-            Path provenance: imaged vessel segments are centerline-derived and peripheral access is
-            an explicit authored boundary. Only the aortic cusps have segmented valve morphology;
-            tricuspid and pulmonic points are route/orifice proxies.
-          </span>
+          <>
+            <span>
+              When a pump is running, red particles converge into its inlet, travel through the
+              cannula, and accelerate outward from its outlet.
+            </span>
+            <span>
+              Path provenance: imaged vessel segments are centerline-derived and peripheral access
+              is an explicit authored boundary. Only the aortic cusps have segmented valve
+              morphology; tricuspid and pulmonic points are route/orifice proxies.
+            </span>
+          </>
         ) : null}
       </div>
     </section>

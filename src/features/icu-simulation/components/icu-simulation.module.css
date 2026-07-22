@@ -776,6 +776,11 @@
   background: #fff;
 }
 
+.resumeActions button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
 .resumeActions svg {
   width: 0.9rem;
   height: 0.9rem;
@@ -1819,6 +1824,92 @@
   line-height: 1.45;
 }
 
+.neutralControlLock {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.9rem;
+  border: 1px solid #d9bd79;
+  border-radius: 0.75rem;
+  color: #674c1d;
+  background: linear-gradient(135deg, #fff8e9, #fffdf8);
+}
+
+.neutralControlLock > svg {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.05rem;
+}
+
+.neutralControlLock strong {
+  display: block;
+  font-size: 0.72rem;
+}
+
+.neutralControlLock p {
+  margin: 0.25rem 0 0;
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+.sandboxControlGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.sandboxControl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem 0.75rem;
+  align-items: end;
+  padding: 0.72rem;
+  border: 1px solid #d5e1df;
+  border-radius: 0.72rem;
+  background: #f8fbf9;
+}
+
+.sandboxControl > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.sandboxControl strong {
+  color: #31565c;
+  font-size: 0.68rem;
+}
+
+.sandboxControl small {
+  color: #75888c;
+  font-size: 0.55rem;
+  line-height: 1.35;
+}
+
+.sandboxControl output {
+  color: var(--icu-teal);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.61rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 760;
+}
+
+.sandboxControl input {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--icu-teal);
+}
+
+.sandboxBoundary {
+  padding: 0.65rem 0.72rem;
+  margin: 0;
+  border-left: 3px solid var(--icu-teal);
+  color: #5f7478;
+  background: var(--icu-teal-soft);
+  font-size: 0.6rem;
+  line-height: 1.5;
+}
+
 .careGrid button:disabled,
 .deviceActions button:disabled {
   cursor: not-allowed;
@@ -2385,6 +2476,76 @@
   color: #8a3342;
 }
 
+.responseGate {
+  grid-column: 1 / -1;
+}
+
+.responseGateStatus {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-bottom: 0.4rem !important;
+  color: #8a3342 !important;
+}
+
+.responseGateStatus[data-complete='true'] {
+  color: #176858 !important;
+}
+
+.responseGateStatus svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+}
+
+.responseCriteria {
+  padding-left: 0 !important;
+  margin: 0.5rem 0 !important;
+  list-style: none;
+}
+
+.responseCriteria li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.38rem;
+  align-items: start;
+  padding: 0.38rem;
+  border: 1px solid #ead3d7;
+  border-radius: 0.42rem;
+  color: #7a3542;
+  background: #fff8f8;
+}
+
+.responseCriteria li[data-complete='true'] {
+  border-color: #c7e1d6;
+  color: #275f54;
+  background: #f7fcfa;
+}
+
+.responseCriteria svg {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.08rem;
+}
+
+.responseCriteria span,
+.responseCriteria small {
+  display: block;
+}
+
+.responseCriteria small {
+  margin-top: 0.12rem;
+  color: #647a74;
+}
+
+.responseThresholdNote {
+  padding: 0.4rem;
+  margin-top: 0.5rem !important;
+  border-left: 3px solid #b9892f;
+  color: #694f20 !important;
+  background: #fff9e9;
+}
+
 /* Trends and event timeline */
 
 .trendGrid {
@@ -2697,6 +2858,18 @@
     gap: 0.6rem;
   }
 
+  .engineStatus {
+    grid-column: 1;
+  }
+
+  .resumeBanner {
+    display: grid;
+  }
+
+  .resumeActions {
+    justify-content: flex-start;
+  }
+
   .clockReadout {
     min-width: 0;
     padding-right: 0;
@@ -2800,6 +2973,10 @@
   .sourceNoteGrid {
     grid-template-columns: 1fr;
   }
+
+  .sandboxControlGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 560px) {
@@ -2870,6 +3047,12 @@
   .caseSelector > header > span {
     display: block;
     margin-top: 0.35rem;
+  }
+
+  .resumeActions,
+  .resumeActions button,
+  .resumeActions a {
+    width: 100%;
   }
 
   .mobileSurfaceNav {
@@ -2969,6 +3152,10 @@
   .checkpointTrack ol,
   .debriefPanel,
   .trendGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sandboxControlGrid {
     grid-template-columns: 1fr;
   }
 

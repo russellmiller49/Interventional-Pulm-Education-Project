@@ -100,6 +100,61 @@ const controlsByTherapy: Readonly<Record<string, ReadonlySet<string>>> = {
   ]),
 }
 
+function finiteNumberBetween(value: unknown, minimum: number, maximum: number): boolean {
+  return typeof value === 'number' && Number.isFinite(value) && value >= minimum && value <= maximum
+}
+
+function validTherapyAdjustment(
+  command: Extract<IcuCommand, { type: 'therapy.adjust' }>,
+  state: IcuSimulationState,
+  scenario: IcuScenarioDefinition,
+): boolean {
+  const { control, therapy, value } = command
+  if (therapy === 'ventilator') {
+    if (control === 'mode')
+      return (
+        value === 'volume-control' || value === 'pressure-control' || value === 'pressure-support'
+      )
+    if (control === 'tidal-volume-ml') return finiteNumberBetween(value, 200, 900)
+    if (control === 'rate-per-min') return finiteNumberBetween(value, 4, 40)
+    if (control === 'peep-cmh2o') return finiteNumberBetween(value, 0, 24)
+    if (control === 'fio2') return finiteNumberBetween(value, 0.21, 1)
+    if (control === 'inspiratory-pressure-cmh2o') return finiteNumberBetween(value, 4, 40)
+    if (control === 'pressure-support-cmh2o') return finiteNumberBetween(value, 0, 30)
+    return false
+  }
+  if (therapy === 'ecmo') {
+    if (control === 'mode')
+      return (
+        state.devices.ecmo.status !== 'running' &&
+        (value === 'vv' || value === 'va') &&
+        scenario.capabilities.ecmoModes.includes(value)
+      )
+    if (control === 'rpm') return finiteNumberBetween(value, 0, 5_000)
+    if (control === 'blood-flow-l-min') return finiteNumberBetween(value, 0, 7)
+    if (control === 'sweep-l-min') return finiteNumberBetween(value, 0, 12)
+    if (control === 'gas-fio2') return finiteNumberBetween(value, 0.21, 1)
+    return false
+  }
+  if (therapy === 'mcs') {
+    if (control === 'assist-ratio') return value === 1 || value === 2 || value === 3
+    if (control === 'performance-level')
+      return finiteNumberBetween(value, 0, 9) && Number.isInteger(value)
+    if (control === 'inflation-offset-ms' || control === 'deflation-offset-ms')
+      return finiteNumberBetween(value, -200, 200)
+    if (control === 'position')
+      return value === 'correct' || value === 'too-deep' || value === 'too-shallow'
+    if (control === 'purge-state')
+      return value === 'normal' || value === 'high-pressure' || value === 'low-pressure'
+    return false
+  }
+  if (control === 'blood-flow-ml-min') return finiteNumberBetween(value, 0, 450)
+  if (control === 'dialysate-ml-hour' || control === 'replacement-ml-hour')
+    return finiteNumberBetween(value, 0, 8_000)
+  if (control === 'patient-fluid-removal-ml-hour') return finiteNumberBetween(value, 0, 1_000)
+  return false
+}
+
 export function commandPermitted(
   state: IcuSimulationState,
   scenario: IcuScenarioDefinition,
@@ -124,6 +179,22 @@ export function commandPermitted(
     command.type === 'therapy.adjust'
   ) {
     if (!scenario.capabilities.therapies.includes(command.therapy)) return false
+    if (command.type === 'therapy.prepare' && command.therapy === 'ventilator') {
+      if (
+        command.configuration !== 'volume-control' &&
+        command.configuration !== 'pressure-control' &&
+        command.configuration !== 'pressure-support'
+      )
+        return false
+    }
+    if (command.type === 'therapy.prepare' && command.therapy === 'crrt') {
+      if (
+        command.configuration !== 'cvvhd' &&
+        command.configuration !== 'cvvh' &&
+        command.configuration !== 'cvvhdf'
+      )
+        return false
+    }
     if (command.type === 'therapy.prepare' && command.therapy === 'ecmo') {
       if (command.configuration !== 'vv' && command.configuration !== 'va') return false
       if (!scenario.capabilities.ecmoModes.includes(command.configuration)) return false
@@ -139,6 +210,8 @@ export function commandPermitted(
     }
     if (command.type === 'therapy.adjust') {
       if (!controlsByTherapy[command.therapy]?.has(command.control)) return false
+      if (state.devices[command.therapy].status === 'off') return false
+      if (!validTherapyAdjustment(command, state, scenario)) return false
     }
     if (command.type === 'therapy.start' && command.therapy === 'ecmo') {
       if (state.devices.ecmo.status !== 'ready') return false
@@ -160,7 +233,12 @@ export function commandPermitted(
       return state.devices.crrt.status === 'ready'
   }
   if (command.type === 'time.advance')
-    return Number.isSafeInteger(command.seconds) && command.seconds > 0 && command.seconds <= 86_400
+    return (
+      state.clock.elapsedSeconds < scenario.durationHours * 3_600 &&
+      Number.isSafeInteger(command.seconds) &&
+      command.seconds > 0 &&
+      command.seconds <= 86_400
+    )
   if (command.type === 'patient.reassess')
     return command.domains.length > 0 && new Set(command.domains).size === command.domains.length
   if (command.type === 'alarm.acknowledge')

@@ -1,4 +1,5 @@
 import { ICU_SCORE_WEIGHTS, icuScoreDomains } from './types'
+import { createEmptyIcuResponseEvaluation, evaluateIcuMasteryResponse } from './response'
 import type {
   IcuOutcomeState,
   IcuScenarioCheckpointDefinition,
@@ -28,19 +29,30 @@ function checkpointCompleted(
 export function scoreIcuSimulation(
   state: Pick<
     IcuSimulationState,
-    'performedActionIds' | 'actionHistory' | 'outcome' | 'clock' | 'mode'
+    | 'performedActionIds'
+    | 'actionHistory'
+    | 'outcome'
+    | 'clock'
+    | 'mode'
+    | 'patient'
+    | 'devices'
+    | 'alarms'
   >,
   scenario: IcuScenarioDefinition,
   completed = state.outcome.completed,
 ): IcuOutcomeState {
+  const response = completed
+    ? evaluateIcuMasteryResponse(state, scenario)
+    : createEmptyIcuResponseEvaluation()
   if (state.mode === 'sandbox') {
     return {
       ...createEmptyIcuOutcome(),
       completed,
       criticalErrorIds: [...state.outcome.criticalErrorIds],
+      response,
     }
   }
-  const actions = new Set(state.performedActionIds)
+  const actions = new Set([...state.performedActionIds, ...response.substitutedActionIds])
   const domainScores = Object.fromEntries(
     icuScoreDomains.map((domain) => {
       const required = scenario.scoring[domain]
@@ -57,6 +69,16 @@ export function scoreIcuSimulation(
   const checkpointIdsCompleted = scenario.checkpoints
     .filter((checkpoint) => checkpointCompleted(checkpoint, state))
     .map((checkpoint) => checkpoint.id)
+  const reassessmentTimes = [
+    ...new Set(
+      state.actionHistory
+        .filter((record) => record.actionId.startsWith('reassess:'))
+        .map((record) => record.elapsedSeconds),
+    ),
+  ].sort((left, right) => left - right)
+  const serialReassessment =
+    reassessmentTimes.length >= 2 &&
+    reassessmentTimes[reassessmentTimes.length - 1] - reassessmentTimes[0] >= 300
   return {
     completed,
     score,
@@ -65,9 +87,12 @@ export function scoreIcuSimulation(
       completed &&
       total >= 80 &&
       criticalErrorIds.length === 0 &&
-      state.clock.elapsedSeconds >= 60 &&
-      checkpointIdsCompleted.length === scenario.checkpoints.length,
+      state.clock.elapsedSeconds >= scenario.minimumMasteryElapsedSeconds &&
+      serialReassessment &&
+      checkpointIdsCompleted.length === scenario.checkpoints.length &&
+      response.passed,
     checkpointIdsCompleted,
+    response,
   }
 }
 
@@ -86,5 +111,6 @@ export function createEmptyIcuOutcome(): IcuOutcomeState {
     criticalErrorIds: [],
     mastery: false,
     checkpointIdsCompleted: [],
+    response: createEmptyIcuResponseEvaluation(),
   }
 }

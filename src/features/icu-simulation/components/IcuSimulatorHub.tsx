@@ -103,7 +103,7 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
   }, [])
 
   return (
-    <main className={styles.hubShell}>
+    <div className={styles.hubShell}>
       <header className={styles.hubHero}>
         <div className={styles.hubHeroCopy}>
           <div className={styles.heroBadges} aria-label="Module status">
@@ -235,6 +235,6 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
         <span aria-hidden="true">·</span>
         <span>VR-ready architecture; no XR experience in this release</span>
       </footer>
-    </main>
+    </div>
   )
 }
