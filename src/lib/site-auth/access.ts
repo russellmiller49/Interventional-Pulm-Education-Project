@@ -23,6 +23,7 @@ const PUBLIC_EXACT_PATHS = new Set([
 
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
   '/cardiohelp-ecmo',
+  '/critical-care',
   '/icu-hemodynamics',
   '/mechanical-circulatory-support',
   '/mechanical-ventilation',
@@ -312,6 +313,14 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'pleural-procedures') {
     return segments[1] ? `pleural-procedures:${segments[1]}` : 'pleural-procedures'
+  }
+
+  if (first === 'critical-care') {
+    return 'critical-care'
+  }
+
+  if (first === 'icu-simulation') {
+    return 'icu-simulation'
   }
 
   if (first === 'learn' && segments[1] === 'anatomy') {

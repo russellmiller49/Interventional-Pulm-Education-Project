@@ -6,6 +6,11 @@ import {
   expectedBaxterCrrtAnalyticsEventType,
   validateBaxterCrrtAnalyticsEventPayload,
 } from '@/lib/baxter-crrt-analytics'
+import {
+  expectedIcuSimulationAnalyticsEventType,
+  ICU_SIMULATION_ANALYTICS_MODULE_ID,
+  validateIcuSimulationAnalyticsEventPayload,
+} from '@/lib/icu-simulation-analytics'
 import { resolveSiteModuleId } from '@/lib/site-auth/access'
 import { supabaseServer } from '@/lib/supabase/server'
 
@@ -42,6 +47,7 @@ export async function POST(request: Request) {
   const event = payload.data
   let validatedEventPayload = event.eventPayload
   const isBaxterCrrtEvent = event.moduleId === BAXTER_CRRT_ANALYTICS_MODULE_ID
+  const isIcuSimulationEvent = event.moduleId === ICU_SIMULATION_ANALYTICS_MODULE_ID
   if (isBaxterCrrtEvent) {
     if (event.eventPayload === undefined) {
       return NextResponse.json({ error: 'Invalid Baxter CRRT analytics payload.' }, { status: 400 })
@@ -66,6 +72,36 @@ export async function POST(request: Request) {
     validatedEventPayload = crrtPayload.data
   }
 
+  if (isIcuSimulationEvent) {
+    if (event.eventPayload === undefined) {
+      return NextResponse.json(
+        { error: 'Invalid ICU Simulator analytics payload.' },
+        { status: 400 },
+      )
+    }
+
+    const icuPayload = validateIcuSimulationAnalyticsEventPayload(event.eventPayload)
+    const hasGenericProgressOrSessionFields =
+      event.durationSeconds !== undefined ||
+      event.percentComplete !== undefined ||
+      event.section !== undefined ||
+      event.sessionId !== undefined
+    if (
+      !icuPayload.success ||
+      hasGenericProgressOrSessionFields ||
+      resolveSiteModuleId(event.routePath) !== ICU_SIMULATION_ANALYTICS_MODULE_ID ||
+      (icuPayload.success &&
+        event.eventType !== expectedIcuSimulationAnalyticsEventType(icuPayload.data.interaction))
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid ICU Simulator analytics payload.' },
+        { status: 400 },
+      )
+    }
+
+    validatedEventPayload = icuPayload.data
+  }
+
   const supabase = await supabaseServer()
   const {
     data: { user },
@@ -84,7 +120,7 @@ export async function POST(request: Request) {
   // CRRT maintains its protected learner progress locally. During the Phase 7 review boundary,
   // the server records only allowlisted learner interaction summaries and never derives generic
   // session time, section completion, module percentage, or completion from them.
-  if (isBaxterCrrtEvent) {
+  if (isBaxterCrrtEvent || isIcuSimulationEvent) {
     await recordModuleEvent(event.eventType)
     return NextResponse.json({ status: 'ok' })
   }

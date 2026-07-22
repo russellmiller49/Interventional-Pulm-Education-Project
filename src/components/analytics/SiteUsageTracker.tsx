@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { postSiteAnalytics, resolveSiteModuleId } from '@/lib/analytics'
 
 const HEARTBEAT_INTERVAL_MS = 30_000
-const GENERIC_LIFECYCLE_EXCLUDED_MODULE_IDS = new Set(['baxter-crrt'])
+const GENERIC_LIFECYCLE_EXCLUDED_MODULE_IDS = new Set(['baxter-crrt', 'icu-simulation'])
 
 function makeSessionId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {

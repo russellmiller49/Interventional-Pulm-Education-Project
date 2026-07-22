@@ -31,6 +31,34 @@ describe('main site auth access helpers', () => {
     expect(isPublicPath('/api/scope-calibration')).toBe(true)
   })
 
+  it('keeps the critical care parent public, unlisted, and on one localized analytics id', () => {
+    for (const path of ['/critical-care', '/es/critical-care', '/zh-CN/critical-care']) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('critical-care')
+    }
+
+    expect(isPublicPath('/critical-care/extra')).toBe(false)
+    expect(isPublicUnlistedPath('/critical-care/extra')).toBe(false)
+  })
+
+  it('keeps every localized ICU Simulator route private with one stable analytics id', () => {
+    for (const path of [
+      '/icu-simulation',
+      '/es/icu-simulation',
+      '/zh-CN/icu-simulation/learn',
+      '/icu-simulation/practice',
+      '/es/icu-simulation/assess',
+      '/zh-CN/icu-simulation/sandbox',
+    ]) {
+      expect(isPublicPath(path)).toBe(false)
+      expect(isPublicUnlistedPath(path)).toBe(false)
+      expect(getRequiredEntitlement(path, params())).toBeNull()
+      expect(resolveSiteModuleId(path)).toBe('icu-simulation')
+    }
+  })
+
   it('does not treat POCUS as a protected website module', () => {
     expect(isPublicPath('/pocus/auth/callback')).toBe(true)
     expect(resolveSiteModuleId('/pocus/cases')).toBeNull()

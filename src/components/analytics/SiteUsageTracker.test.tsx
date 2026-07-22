@@ -36,6 +36,17 @@ describe('SiteUsageTracker review-boundary exclusions', () => {
     expect(postSiteAnalytics).not.toHaveBeenCalled()
   })
 
+  it('does not create generic lifecycle telemetry for the ICU Simulator review route', () => {
+    mockPathname = '/en/icu-simulation/practice'
+    jest.mocked(resolveSiteModuleId).mockReturnValue('icu-simulation')
+
+    const { unmount } = render(<SiteUsageTracker />)
+
+    expect(postSiteAnalytics).not.toHaveBeenCalled()
+    unmount()
+    expect(postSiteAnalytics).not.toHaveBeenCalled()
+  })
+
   it('preserves generic lifecycle tracking for other modules', () => {
     mockPathname = '/en/cardiohelp-ecmo'
     jest.mocked(resolveSiteModuleId).mockReturnValue('cardiohelp-ecmo')

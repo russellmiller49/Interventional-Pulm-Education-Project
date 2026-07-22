@@ -4,6 +4,7 @@ import { baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
 import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/content/deviceProfile'
 import { mechanicalVentilationPublicationStatus } from '@/features/mechanical-ventilation/content/deviceProfiles'
 import { ICU_HEMODYNAMICS_RELEASE_STAGE } from '@/features/icu-hemodynamics/content'
+import { ICU_SIMULATION_RELEASE_STAGE } from '@/features/icu-simulation/content'
 import { MCS_RELEASE_STAGE } from '@/features/mechanical-circulatory-support/content'
 
 const airwayStentDraftPathPrefixes =
@@ -35,11 +36,18 @@ const mechanicalCirculatorySupportUnlistedPathPrefixes =
     ? (['/mechanical-circulatory-support'] as const)
     : ([] as const)
 
+const icuSimulationDraftPathPrefixes =
+  ICU_SIMULATION_RELEASE_STAGE === 'published' ? ([] as const) : (['/icu-simulation'] as const)
+
+const icuSimulationUnlistedPathPrefixes =
+  ICU_SIMULATION_RELEASE_STAGE === 'published' ? ([] as const) : (['/icu-simulation'] as const)
+
 const draftModulePathPrefixes = [
   ...airwayStentDraftPathPrefixes,
   ...baxterCrrtDraftPathPrefixes,
   ...cardiohelpEcmoDraftPathPrefixes,
   ...mechanicalVentilationDraftPathPrefixes,
+  ...icuSimulationDraftPathPrefixes,
   '/education/chest-drainage',
   '/intro-bronchoscopy',
   '/learn/anatomy/airway',
@@ -50,7 +58,9 @@ const draftModulePathPrefixes = [
 const unlistedModulePathPrefixes = [
   ...baxterCrrtUnlistedPathPrefixes,
   ...icuHemodynamicsUnlistedPathPrefixes,
+  ...icuSimulationUnlistedPathPrefixes,
   ...mechanicalCirculatorySupportUnlistedPathPrefixes,
+  '/critical-care',
   '/cardiohelp-ecmo',
   '/mechanical-ventilation',
   '/hamilton-c6-ventilation',
