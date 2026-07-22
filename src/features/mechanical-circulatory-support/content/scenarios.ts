@@ -30,10 +30,22 @@ export const defaultIabpDevice: IabpDeviceState = {
 
 export const defaultImpellaDevice: ImpellaDeviceState = {
   kind: 'impella',
-  running: true,
-  performanceLevel: 5,
-  position: 'correct',
-  purgeState: 'normal',
+  left: {
+    enabled: true,
+    variant: 'cp',
+    running: true,
+    performanceLevel: 5,
+    position: 'correct',
+    purgeState: 'normal',
+  },
+  right: {
+    enabled: false,
+    variant: 'rp',
+    running: true,
+    performanceLevel: 5,
+    position: 'correct',
+    purgeState: 'normal',
+  },
 }
 
 export const defaultLvadDevice: LvadDeviceState = {
@@ -48,6 +60,17 @@ export const defaultLvadDevice: LvadDeviceState = {
 
 function patient(overrides: Partial<McsPatientState>): McsPatientState {
   return { ...defaultMcsPatient, ...overrides }
+}
+
+function impella(
+  left: Partial<ImpellaDeviceState['left']> = {},
+  right: Partial<ImpellaDeviceState['right']> = {},
+): ImpellaDeviceState {
+  return {
+    kind: 'impella',
+    left: { ...defaultImpellaDevice.left, ...left },
+    right: { ...defaultImpellaDevice.right, ...right },
+  }
 }
 
 const commonSources = [
@@ -243,15 +266,15 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       rightVentricularContractility: 0.42,
       pulmonaryVascularResistanceWU: 5.5,
     }),
-    initialDevice: { ...defaultImpellaDevice, performanceLevel: 8 },
-    hiddenFaultIds: ['rv-limited-lv-filling', 'impella-suction'],
+    initialDevice: impella({ performanceLevel: 8 }),
+    hiddenFaultIds: ['rv-limited-lv-filling', 'impella-left-suction'],
     permittedActionIds: [
       'inspect:arterial',
       'inspect:preload',
       'inspect:device',
-      'impella:set-level',
-      'impella:set-position',
-      'impella:set-purge',
+      'impella:left:set-level',
+      'impella:left:set-position',
+      'impella:left:set-purge',
       'patient:adjust',
       'patient:set-preload',
       'patient:set-rv',
@@ -266,7 +289,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       { id: 'vasoplegia', label: 'Low afterload is the main limit' },
     ],
     correctPredictionId: 'rv-preload',
-    requiredActionIds: ['inspect:preload', 'impella:set-level', 'patient:set-preload'],
+    requiredActionIds: ['inspect:preload', 'impella:left:set-level', 'patient:set-preload'],
     successCriteria: [
       { metric: 'rapMmHg', operator: 'at-most', value: 18, label: 'RAP not progressively rising' },
       {
@@ -299,15 +322,15 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Correct the simulated position before escalating flow.',
     ],
     initialPatient: patient({ preloadPercent: 105 }),
-    initialDevice: { ...defaultImpellaDevice, position: 'too-deep', performanceLevel: 7 },
+    initialDevice: impella({ position: 'too-deep', performanceLevel: 7 }),
     hiddenFaultIds: ['impella-too-deep', 'hemolysis-risk'],
     permittedActionIds: [
       'inspect:arterial',
       'inspect:preload',
       'inspect:device',
-      'impella:set-level',
-      'impella:set-position',
-      'impella:set-purge',
+      'impella:left:set-level',
+      'impella:left:set-position',
+      'impella:left:set-purge',
       'patient:adjust',
       'team:escalate',
     ],
@@ -319,7 +342,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       { id: 'normal', label: 'This is expected at high support' },
     ],
     correctPredictionId: 'malposition',
-    requiredActionIds: ['inspect:device', 'impella:set-position'],
+    requiredActionIds: ['inspect:device', 'impella:left:set-position'],
     successCriteria: [
       {
         metric: 'deviceFlowLMin',
@@ -350,15 +373,15 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       'Separate patient afterload from a purge-system warning.',
     ],
     initialPatient: patient({ systemicVascularResistanceDynSecCm5: 1900 }),
-    initialDevice: { ...defaultImpellaDevice, performanceLevel: 6, purgeState: 'high-pressure' },
+    initialDevice: impella({ performanceLevel: 6, purgeState: 'high-pressure' }),
     hiddenFaultIds: ['high-systemic-afterload', 'purge-high-pressure'],
     permittedActionIds: [
       'inspect:arterial',
       'inspect:preload',
       'inspect:device',
-      'impella:set-level',
-      'impella:set-position',
-      'impella:set-purge',
+      'impella:left:set-level',
+      'impella:left:set-position',
+      'impella:left:set-purge',
       'patient:adjust',
       'patient:set-svr',
       'team:escalate',
@@ -374,7 +397,7 @@ export const mcsPracticeScenarios: readonly McsScenarioDefinition[] = [
       { id: 'normal', label: 'No action is needed' },
     ],
     correctPredictionId: 'afterload-purge',
-    requiredActionIds: ['inspect:device', 'patient:set-svr', 'impella:set-purge'],
+    requiredActionIds: ['inspect:device', 'patient:set-svr', 'impella:left:set-purge'],
     successCriteria: [
       { metric: 'mapMmHg', operator: 'at-most', value: 100, label: 'Excess afterload reduced' },
       { metric: 'deviceFlowLMin', operator: 'at-least', value: 2.5, label: 'Pump flow improves' },
@@ -645,7 +668,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
       systemicVascularResistanceDynSecCm5: 1750,
       aorticInsufficiencySeverity: 0.65,
     }),
-    initialDevice: { ...defaultImpellaDevice, performanceLevel: 6, position: 'too-shallow' },
+    initialDevice: impella({ performanceLevel: 6, position: 'too-shallow' }),
     hiddenFaultIds: [
       'impella-too-shallow',
       'high-systemic-afterload',
@@ -655,8 +678,8 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
       'inspect:arterial',
       'inspect:preload',
       'inspect:device',
-      'impella:set-level',
-      'impella:set-position',
+      'impella:left:set-level',
+      'impella:left:set-position',
       'patient:adjust',
       'patient:set-svr',
       'team:escalate',
@@ -675,7 +698,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     requiredActionIds: [
       'inspect:arterial',
       'inspect:device',
-      'impella:set-position',
+      'impella:left:set-position',
       'patient:set-svr',
       'patient:adjust',
       'team:escalate',

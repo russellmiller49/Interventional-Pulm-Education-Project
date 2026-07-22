@@ -94,15 +94,15 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     intendedUse: 'Foundational catheter technique, waveform interpretation, and limitations.',
   },
   {
-    id: 'edwards-swan-ganz-ifu-2025',
-    version: 'DOC-0552124A',
-    title: 'Swan-Ganz pulmonary artery catheter instructions for use',
-    citation: 'Edwards Lifesciences. Swan-Ganz Catheters IFU, document DOC-0552124A.',
-    year: 2025,
+    id: 'edwards-swan-ganz-ifu-2023',
+    version: 'DOC-0222632A',
+    title: 'Swan-Ganz IQ pulmonary artery catheter instructions for use',
+    citation: 'Edwards Lifesciences. Swan-Ganz IQ Catheter IFU, document DOC-0222632A. 2023.',
+    year: 2023,
     sourceType: 'manufacturer-labeling',
-    url: 'https://eifu.edwards.com/eifu/5970f1b346e0fb00015e5f4d/DOC-0552124A.pdf',
+    url: 'https://eifu.edwards.com/eifu/5970f1b346e0fb00015e5f4d/DOC-0222632A.pdf',
     intendedUse:
-      'Visual route and advancement states through the right heart into the pulmonary artery and distal wedge position.',
+      'Manufacturer-labeled transient balloon occlusion for pulmonary artery occlusion-pressure measurement, with balloon-inflation and placement safeguards.',
     limitation:
       'The module is state-driven education and does not teach bedside insertion or replace the current IFU.',
   },

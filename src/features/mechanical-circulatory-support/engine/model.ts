@@ -106,8 +106,18 @@ export function nextIabpBalloonMorph(
 
 export function createDefaultMcsDevice(kind: McsDeviceKind): McsDeviceState {
   if (kind === 'iabp') return { ...defaultIabpDevice }
-  if (kind === 'impella') return { ...defaultImpellaDevice }
+  if (kind === 'impella')
+    return {
+      ...defaultImpellaDevice,
+      left: { ...defaultImpellaDevice.left },
+      right: { ...defaultImpellaDevice.right },
+    }
   return { ...defaultLvadDevice }
+}
+
+function cloneMcsDevice(device: McsDeviceState): McsDeviceState {
+  if (device.kind !== 'impella') return { ...device }
+  return { ...device, left: { ...device.left }, right: { ...device.right } }
 }
 
 export function patientToCirculationParameters(patient: McsPatientState): CirculationParameters {
@@ -228,10 +238,13 @@ export function deriveBaselineMeasurements(patient: McsPatientState): Hemodynami
 interface SupportComputation {
   effect: MechanicalSupportEffect
   nativeFlowLMin: number
+  leftDeviceFlowLMin: number
+  rightDeviceFlowLMin: number
   deviceFlowLMin: number
   effectiveSystemicFlowLMin: number
   recirculatingFlowLMin: number
-  unloadingMagnitude: number
+  leftUnloadingMagnitude: number
+  rightUnloadingMagnitude: number
   timingQualityPercent: number | null
   pumpPowerW: number | null
   pulsatilityIndex: number | null
@@ -375,10 +388,13 @@ function computeIabpSupport(
       alarms: alarms.map(({ id, active, priority }) => ({ id, active, priority })),
     },
     nativeFlowLMin: nativeFlow,
+    leftDeviceFlowLMin: 0,
+    rightDeviceFlowLMin: 0,
     deviceFlowLMin: 0,
     effectiveSystemicFlowLMin: nativeFlow,
     recirculatingFlowLMin: 0,
-    unloadingMagnitude: efficacy * 0.65,
+    leftUnloadingMagnitude: efficacy * 0.65,
+    rightUnloadingMagnitude: 0,
     timingQualityPercent: roundTo(timingQuality * 100, 0),
     pumpPowerW: null,
     pulsatilityIndex: null,
@@ -392,112 +408,241 @@ function computeImpellaSupport(
   compartments: CirculationCompartmentState,
   baseline: HemodynamicMeasurements,
 ): SupportComputation {
-  const running = device.running && device.performanceLevel > 0
-  const targetFlow = running ? 0.35 + device.performanceLevel * 0.5 : 0
-  const rvDelivery = clamp(
+  const left = device.left
+  const right = device.right
+  const leftRunning = left.enabled && left.running && left.performanceLevel > 0
+  const rightRunning = right.enabled && right.running && right.performanceLevel > 0
+  const nativeRvDelivery = clamp(
     (patient.rightVentricularContractility * (patient.preloadPercent / 100)) /
       (0.7 + patient.pulmonaryVascularResistanceWU * 0.07),
     0.25,
     1.15,
   )
+  const rightVenousFilling = Math.min(
+    clamp(patient.preloadPercent / 90, 0.25, 1.15),
+    clamp((compartments.systemicVenousVolumeMl - 700) / 1800, 0.2, 1.15),
+    clamp((compartments.systemicVenousPressureMmHg + 2) / 10, 0.22, 1.15),
+  )
+  const rightPressureGradientMmHg = clamp(
+    compartments.pulmonaryArterialPressureMmHg - compartments.systemicVenousPressureMmHg,
+    4,
+    90,
+  )
+  const rightAfterloadFactor = Math.min(
+    clamp(1 - Math.max(0, rightPressureGradientMmHg - 18) * 0.013, 0.34, 1.08),
+    clamp(1 - Math.max(0, patient.pulmonaryVascularResistanceWU - 2) * 0.075, 0.35, 1.08),
+  )
+  const rightPositionFactor =
+    right.position === 'correct'
+      ? 1
+      : right.position === 'inlet-too-high'
+        ? 0.42
+        : right.position === 'outlet-too-proximal'
+          ? 0.5
+          : 0.55
+  const rightTargetFlow = rightRunning ? 4 * (clamp(right.performanceLevel, 0, 9) / 9) ** 0.86 : 0
+  const rightSuction = rightRunning && right.performanceLevel >= 5 && rightVenousFilling < 0.54
+  const rightSuctionFactor = rightSuction ? clamp(rightVenousFilling / 0.54, 0.2, 0.9) : 1
+  const rightDeviceFlow = clamp(
+    rightTargetFlow *
+      rightVenousFilling *
+      rightAfterloadFactor *
+      rightPositionFactor *
+      rightSuctionFactor,
+    0,
+    4,
+  )
+
+  // RP flow bypasses the RV and can restore pulmonary delivery to the LV, but it is not
+  // additional systemic pump flow. The serial coupling is also carried by the compartment
+  // transfer below, so subsequent fixed steps respond to the changed PA/PV/LV volumes.
+  const rpDeliveryGain = (rightDeviceFlow / 4) * clamp(1 - nativeRvDelivery, 0, 0.75) * 0.78
+  const rvDeliveryToLeftHeart = clamp(nativeRvDelivery + rpDeliveryGain, 0.25, 1.2)
   const lvFilling = clamp((compartments.leftVentricularVolumeMl - 25) / 85, 0.18, 1.2)
-  const preloadFactor = Math.min(
-    rvDelivery,
+  const leftPreloadFactor = Math.min(
+    rvDeliveryToLeftHeart,
     lvFilling,
     clamp(patient.preloadPercent / 90, 0.25, 1.15),
   )
-  const pressureGradientMmHg = clamp(
+  const leftPressureGradientMmHg = clamp(
     compartments.systemicArterialPressureMmHg - compartments.pulmonaryVenousPressureMmHg,
     20,
     180,
   )
-  const pressureGradientFactor = clamp(
-    1 - Math.max(0, pressureGradientMmHg - 65) * 0.0045,
+  const leftPressureGradientFactor = clamp(
+    1 - Math.max(0, leftPressureGradientMmHg - 65) * 0.0045,
     0.46,
     1.08,
   )
-  const afterloadFactor = Math.min(
+  const leftAfterloadFactor = Math.min(
     clamp(1 - Math.max(0, baseline.mapMmHg - 75) * 0.005, 0.46, 1.08),
-    pressureGradientFactor,
+    leftPressureGradientFactor,
   )
-  const positionFactor =
-    device.position === 'correct' ? 1 : device.position === 'too-deep' ? 0.48 : 0.36
-  const suction = running && device.performanceLevel >= 5 && preloadFactor < 0.58
-  const suctionFactor = suction ? clamp(preloadFactor / 0.58, 0.2, 0.9) : 1
-  const deviceFlow = clamp(
-    targetFlow * preloadFactor * afterloadFactor * positionFactor * suctionFactor,
+  const leftPositionFactor =
+    left.position === 'correct' ? 1 : left.position === 'too-deep' ? 0.48 : 0.36
+  const leftMaximumFlow = left.variant === '55' ? 5.5 : 4.3
+  const leftTargetFlow = leftRunning
+    ? leftMaximumFlow * (clamp(left.performanceLevel, 0, 9) / 9) ** 0.86
+    : 0
+  const leftSuction = leftRunning && left.performanceLevel >= 5 && leftPreloadFactor < 0.58
+  const leftSuctionFactor = leftSuction ? clamp(leftPreloadFactor / 0.58, 0.2, 0.9) : 1
+  const leftDeviceFlow = clamp(
+    leftTargetFlow *
+      leftPreloadFactor *
+      leftAfterloadFactor *
+      leftPositionFactor *
+      leftSuctionFactor,
     0,
-    5,
+    leftMaximumFlow,
   )
-  const recirculatingFlow = deviceFlow * clamp(patient.aorticInsufficiencySeverity, 0, 1) * 0.42
+  const recirculatingFlow = leftDeviceFlow * clamp(patient.aorticInsufficiencySeverity, 0, 1) * 0.42
+  const rightBridgeGain = rightDeviceFlow * clamp(1 - nativeRvDelivery, 0, 0.75) * 0.1
   const nativeFlow = clamp(
-    baseline.cardiacOutputLMin * (1 - Math.min(0.48, deviceFlow * 0.075)),
+    baseline.cardiacOutputLMin *
+      (1 + rightBridgeGain) *
+      (1 - Math.min(0.48, leftDeviceFlow * 0.075)),
     0.25,
     10,
   )
-  const effectiveFlow = clamp(nativeFlow + deviceFlow - recirculatingFlow, 0.25, 12)
+  const effectiveFlow = clamp(nativeFlow + leftDeviceFlow - recirculatingFlow, 0.25, 12)
   const effect: MechanicalSupportEffect = {
-    transfers: running
-      ? [{ from: 'left-ventricular', to: 'systemic-arterial', flowLMin: deviceFlow }]
-      : [],
-    leftOutflowResistanceMultiplier: 1 + Math.min(0.35, deviceFlow * 0.05),
-    deviceFlowLMin: deviceFlow,
+    transfers: [
+      ...(leftRunning
+        ? [
+            {
+              from: 'left-ventricular' as const,
+              to: 'systemic-arterial' as const,
+              flowLMin: leftDeviceFlow,
+            },
+          ]
+        : []),
+      ...(rightRunning
+        ? [
+            {
+              from: 'systemic-venous' as const,
+              to: 'pulmonary-arterial' as const,
+              flowLMin: rightDeviceFlow,
+            },
+          ]
+        : []),
+    ],
+    leftOutflowResistanceMultiplier: 1 + Math.min(0.35, leftDeviceFlow * 0.05),
+    deviceFlowLMin: leftDeviceFlow,
     recirculatingFlowLMin: recirculatingFlow,
     effectiveSystemicFlowLMin: effectiveFlow,
   }
   const alarms: McsAlarm[] = []
-  if (suction)
+  if (leftSuction)
     alarms.push(
       alarm(
-        'impella-suction',
-        'Suction detected',
+        'impella-left-suction',
+        'Left Impella suction detected',
         'critical',
         'Available LV blood volume is inadequate or restricted for the selected support.',
       ),
     )
-  if (device.position !== 'correct')
+  if (left.enabled && left.position !== 'correct')
     alarms.push(
       alarm(
-        'impella-position',
-        'Position signal abnormal',
+        'impella-left-position',
+        'Left Impella position signal abnormal',
         'critical',
         'The educational placement state reduces effective flow and raises blood-trauma risk.',
       ),
     )
-  if (device.purgeState === 'high-pressure')
+  if (left.enabled && left.purgeState === 'high-pressure')
     alarms.push(
       alarm(
-        'impella-purge-high',
-        'Purge pressure high',
+        'impella-left-purge-high',
+        'Left Impella purge pressure high',
         'warning',
         'Evaluate for a purge-path obstruction or other current-IFU cause.',
       ),
     )
-  if (device.purgeState === 'low-pressure')
+  if (left.enabled && left.purgeState === 'low-pressure')
     alarms.push(
       alarm(
-        'impella-purge-low',
-        'Purge pressure low',
+        'impella-left-purge-low',
+        'Left Impella purge pressure low',
         'warning',
         'Evaluate for a leak or purge-system failure using current instructions.',
       ),
     )
-  if (running && deviceFlow < 1.5)
+  if (leftRunning && leftDeviceFlow < 1.5)
     alarms.push(
       alarm(
-        'impella-low-flow',
-        'Device flow below expectation',
+        'impella-left-low-flow',
+        'Left Impella flow below expectation',
         'warning',
         'Reconcile preload, RV function, position, and afterload before escalating support.',
       ),
     )
-  if (suction || device.position !== 'correct')
+  if (left.enabled && (leftSuction || left.position !== 'correct'))
     alarms.push(
       alarm(
-        'impella-hemolysis-risk',
-        'Hemolysis risk pattern',
+        'impella-left-hemolysis-risk',
+        'Left Impella hemolysis-risk pattern',
         'warning',
         'Suction or malposition increases the modeled blood-trauma risk.',
+      ),
+    )
+  if (rightSuction)
+    alarms.push(
+      alarm(
+        'impella-right-suction',
+        'RP inflow suction detected',
+        'critical',
+        'Available caval/atrial blood volume is inadequate for the selected right-sided support.',
+      ),
+    )
+  if (right.enabled && right.position !== 'correct')
+    alarms.push(
+      alarm(
+        'impella-right-position',
+        'RP position signal abnormal',
+        'critical',
+        'The modeled IVC inflow or pulmonary-artery outflow relationship is not in its teaching target.',
+      ),
+    )
+  if (right.enabled && right.purgeState === 'high-pressure')
+    alarms.push(
+      alarm(
+        'impella-right-purge-high',
+        'RP purge pressure high',
+        'warning',
+        'Evaluate the RP purge path using the current device instructions.',
+      ),
+    )
+  if (right.enabled && right.purgeState === 'low-pressure')
+    alarms.push(
+      alarm(
+        'impella-right-purge-low',
+        'RP purge pressure low',
+        'warning',
+        'Evaluate for a leak or purge-system failure using current instructions.',
+      ),
+    )
+  if (rightRunning && rightDeviceFlow < 1.2)
+    alarms.push(
+      alarm(
+        'impella-right-low-flow',
+        'RP flow below expectation',
+        'warning',
+        'Reconcile venous filling, PVR, pulmonary pressure, and position before escalating support.',
+      ),
+    )
+  const pumpBalance = rightDeviceFlow - leftDeviceFlow
+  if (
+    rightRunning &&
+    pumpBalance > 1.2 &&
+    (patient.leftVentricularContractility < 0.65 || (baseline.pawpMmHg ?? 10) >= 16)
+  )
+    alarms.push(
+      alarm(
+        'impella-right-flow-imbalance',
+        'Right-to-left pump imbalance',
+        'warning',
+        'Modeled RP delivery exceeds left-heart handling; reconcile PA pressure, PCWP, LV filling, and both pump flows.',
       ),
     )
   return {
@@ -505,19 +650,30 @@ function computeImpellaSupport(
       ...effect,
       nativeFlowLMin: nativeFlow,
       displaySignals: {
-        performanceLevel: device.performanceLevel,
-        placementState: device.position,
-        purgeState: device.purgeState,
-        pressureGradientMmHg: roundTo(pressureGradientMmHg, 0),
-        suction,
+        leftVariant: left.variant,
+        leftPerformanceLevel: left.performanceLevel,
+        leftPlacementState: left.position,
+        leftPurgeState: left.purgeState,
+        leftPressureGradientMmHg: roundTo(leftPressureGradientMmHg, 0),
+        pressureGradientMmHg: roundTo(leftPressureGradientMmHg, 0),
+        leftSuction,
+        rightPerformanceLevel: right.performanceLevel,
+        rightPlacementState: right.position,
+        rightPurgeState: right.purgeState,
+        rightPressureGradientMmHg: roundTo(rightPressureGradientMmHg, 0),
+        rightSuction,
+        rightDeviceFlowLMin: roundTo(rightDeviceFlow, 2),
       },
       alarms: alarms.map(({ id, active, priority }) => ({ id, active, priority })),
     },
     nativeFlowLMin: nativeFlow,
-    deviceFlowLMin: deviceFlow,
+    leftDeviceFlowLMin: leftDeviceFlow,
+    rightDeviceFlowLMin: rightDeviceFlow,
+    deviceFlowLMin: leftDeviceFlow,
     effectiveSystemicFlowLMin: effectiveFlow,
     recirculatingFlowLMin: recirculatingFlow,
-    unloadingMagnitude: deviceFlow * 0.72,
+    leftUnloadingMagnitude: leftDeviceFlow * 0.72,
+    rightUnloadingMagnitude: rightDeviceFlow * 0.66,
     timingQualityPercent: null,
     pumpPowerW: null,
     pulsatilityIndex: null,
@@ -664,10 +820,13 @@ function computeLvadSupport(
       alarms: alarms.map(({ id, active, priority }) => ({ id, active, priority })),
     },
     nativeFlowLMin: nativeFlow,
+    leftDeviceFlowLMin: deviceFlow,
+    rightDeviceFlowLMin: 0,
     deviceFlowLMin: deviceFlow,
     effectiveSystemicFlowLMin: effectiveFlow,
     recirculatingFlowLMin: recirculatingFlow,
-    unloadingMagnitude: deviceFlow * 0.62,
+    leftUnloadingMagnitude: deviceFlow * 0.62,
+    rightUnloadingMagnitude: 0,
     timingQualityPercent: null,
     pumpPowerW: roundTo(pumpPower, 1),
     pulsatilityIndex: roundTo(pi, 1),
@@ -706,7 +865,8 @@ export function deriveMcsMetrics(
       (patient.preloadPercent - 100) * 0.55 +
       (1 - patient.leftVentricularContractility) * 45 +
       patient.aorticInsufficiencySeverity * 28 -
-      support.unloadingMagnitude * 11 -
+      support.leftUnloadingMagnitude * 11 +
+      Math.max(0, support.rightDeviceFlowLMin - support.leftDeviceFlowLMin) * 2.4 -
       (patient.tamponade ? 15 : 0) -
       Math.max(0, patient.peepCmH2O - 5) * 0.7 +
       clamp((compartments.leftVentricularVolumeMl - 120) * 0.1, -10, 14),
@@ -715,11 +875,16 @@ export function deriveMcsMetrics(
   )
   const volumeRapDelta = (compartments.rightVentricularVolumeMl - 140) * 0.018
   const volumePcwpDelta = (modeledLvedv - 120) * 0.055
-  const rap = clamp(baseline.rapMmHg + volumeRapDelta, 1, 35)
+  const rap = clamp(
+    baseline.rapMmHg + volumeRapDelta - support.rightUnloadingMagnitude * 1.25,
+    1,
+    35,
+  )
   const pcwp = clamp(
     (baseline.pawpMmHg ?? 10) +
       volumePcwpDelta -
-      support.unloadingMagnitude * 1.1 +
+      support.leftUnloadingMagnitude * 1.1 +
+      Math.max(0, support.rightDeviceFlowLMin - support.leftDeviceFlowLMin) * 0.72 +
       support.recirculatingFlowLMin * 1.2,
     2,
     42,
@@ -733,8 +898,12 @@ export function deriveMcsMetrics(
     3,
     80,
   )
+  const modeledPulmonaryThroughput = Math.max(
+    support.nativeFlowLMin,
+    support.nativeFlowLMin * 0.72 + support.rightDeviceFlowLMin,
+  )
   const papMean = clamp(
-    pcwp + patient.pulmonaryVascularResistanceWU * support.effectiveSystemicFlowLMin,
+    pcwp + patient.pulmonaryVascularResistanceWU * modeledPulmonaryThroughput,
     8,
     75,
   )
@@ -745,6 +914,9 @@ export function deriveMcsMetrics(
   const svo2 = clamp(43 + support.effectiveSystemicFlowLMin * 4.1, 38, 82)
   return {
     nativeFlowLMin: roundTo(support.nativeFlowLMin, 2),
+    leftDeviceFlowLMin: roundTo(support.leftDeviceFlowLMin, 2),
+    rightDeviceFlowLMin: roundTo(support.rightDeviceFlowLMin, 2),
+    pumpBalanceLMin: roundTo(support.rightDeviceFlowLMin - support.leftDeviceFlowLMin, 2),
     deviceFlowLMin: roundTo(support.deviceFlowLMin, 2),
     effectiveSystemicFlowLMin: roundTo(support.effectiveSystemicFlowLMin, 2),
     recirculatingFlowLMin: roundTo(support.recirculatingFlowLMin, 2),
@@ -835,7 +1007,13 @@ function explainState(
     return `Counterpulsation is ${metrics.timingQualityPercent ?? 0}% synchronized. It changes diastolic augmentation and effective LV afterload but adds no continuous pump flow.`
   }
   if (device.kind === 'impella') {
-    return `The pump moves ${metrics.deviceFlowLMin.toFixed(1)} L/min from LV to aorta; ${metrics.recirculatingFlowLMin.toFixed(1)} L/min is modeled as ineffective recirculation. RV delivery and afterload constrain the result.`
+    const leftLabel = device.left.enabled
+      ? `${device.left.variant === '55' ? 'Impella 5.5' : 'Impella CP'} moves ${metrics.leftDeviceFlowLMin.toFixed(1)} L/min from LV to aorta`
+      : 'left-sided Impella support is off'
+    const rightLabel = device.right.enabled
+      ? `RP moves ${metrics.rightDeviceFlowLMin.toFixed(1)} L/min from systemic venous blood to the pulmonary artery`
+      : 'right-sided Impella support is off'
+    return `${leftLabel}; ${rightLabel}. RP flow is not added directly to systemic output; ventricular filling, afterload, and pump balance constrain the result.`
   }
   const authorization = device.speedChangeAuthorized
     ? 'authorized simulation enabled'
@@ -849,6 +1027,8 @@ function trendFromMetrics(time: number, metrics: McsDerivedMetrics): McsTrendSam
     mapMmHg: metrics.mapMmHg,
     effectiveFlowLMin: metrics.effectiveSystemicFlowLMin,
     deviceFlowLMin: metrics.deviceFlowLMin,
+    leftDeviceFlowLMin: metrics.leftDeviceFlowLMin,
+    rightDeviceFlowLMin: metrics.rightDeviceFlowLMin,
     pcwpMmHg: metrics.pcwpMmHg,
     rapMmHg: metrics.rapMmHg,
   }
@@ -862,7 +1042,7 @@ export function createInitialMcsState(
 ): McsSimulationState {
   const patient = scenario ? { ...scenario.initialPatient } : { ...defaultMcsPatient }
   const device = scenario
-    ? ({ ...scenario.initialDevice } as McsDeviceState)
+    ? cloneMcsDevice(scenario.initialDevice)
     : createDefaultMcsDevice(deviceKind)
   const parameters = patientToCirculationParameters(patient)
   const baseline = deriveBaselineMeasurements(patient)

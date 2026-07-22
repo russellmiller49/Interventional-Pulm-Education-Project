@@ -4,6 +4,8 @@ import type { Dispatch } from 'react'
 
 import {
   isMcsActionIdPermitted,
+  type ImpellaDeviceState,
+  type ImpellaSide,
   type McsAction,
   type McsPatientControl,
   type McsSimulationState,
@@ -104,6 +106,118 @@ function RangeControl({
   )
 }
 
+function ImpellaPumpControls({
+  side,
+  device,
+  disabled,
+  dispatch,
+}: {
+  side: ImpellaSide
+  device: ImpellaDeviceState
+  disabled: (actionId: string) => boolean
+  dispatch: Dispatch<McsAction>
+}) {
+  const pump = device[side]
+  const sideLabel =
+    side === 'left' ? (device.left.variant === '55' ? 'Impella 5.5' : 'Impella CP') : 'Impella RP'
+  const actionId = (control: 'running' | 'performanceLevel' | 'position' | 'purgeState') =>
+    `impella:${side}:set-${
+      control === 'performanceLevel' ? 'level' : control === 'purgeState' ? 'purge' : control
+    }`
+  const positionOptions =
+    side === 'left'
+      ? [
+          ['correct', 'Correct'],
+          ['too-deep', 'Too deep'],
+          ['too-shallow', 'Too shallow'],
+        ]
+      : [
+          ['correct', 'Correct IVC-to-PA relationship'],
+          ['inlet-too-high', 'Inlet too high'],
+          ['outlet-too-proximal', 'Outlet too proximal'],
+          ['too-distal', 'Outlet too distal'],
+        ]
+
+  return (
+    <fieldset className={styles.impellaPumpControls}>
+      <legend>{sideLabel}</legend>
+      <div className={styles.controlGrid}>
+        <label className={styles.checkControl}>
+          <input
+            type="checkbox"
+            checked={pump.running}
+            disabled={disabled(actionId('running'))}
+            onChange={(event) =>
+              dispatch({
+                type: 'SET_IMPELLA_CONTROL',
+                side,
+                control: 'running',
+                value: event.target.checked,
+              })
+            }
+          />
+          <span>
+            <strong>Pump support</strong>
+            <small>{pump.running ? 'Running' : 'Paused'}</small>
+          </span>
+        </label>
+        <RangeControl
+          label="Performance level"
+          value={pump.performanceLevel}
+          minimum={0}
+          maximum={9}
+          step={1}
+          unit="P-level"
+          disabled={disabled(actionId('performanceLevel'))}
+          onChange={(value) =>
+            dispatch({ type: 'SET_IMPELLA_CONTROL', side, control: 'performanceLevel', value })
+          }
+        />
+        <label className={styles.selectControl}>
+          <span>Placement state</span>
+          <select
+            value={pump.position}
+            disabled={disabled(actionId('position'))}
+            onChange={(event) =>
+              dispatch({
+                type: 'SET_IMPELLA_CONTROL',
+                side,
+                control: 'position',
+                value: event.target.value,
+              })
+            }
+          >
+            {positionOptions.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.selectControl}>
+          <span>Purge-system state</span>
+          <select
+            value={pump.purgeState}
+            disabled={disabled(actionId('purgeState'))}
+            onChange={(event) =>
+              dispatch({
+                type: 'SET_IMPELLA_CONTROL',
+                side,
+                control: 'purgeState',
+                value: event.target.value,
+              })
+            }
+          >
+            <option value="normal">Normal</option>
+            <option value="high-pressure">High pressure</option>
+            <option value="low-pressure">Low pressure</option>
+          </select>
+        </label>
+      </div>
+    </fieldset>
+  )
+}
+
 export function McsControls({
   state,
   dispatch,
@@ -193,7 +307,7 @@ export function McsControls({
           {state.deviceKind === 'iabp'
             ? 'IABP counterpulsation'
             : state.deviceKind === 'impella'
-              ? 'Impella CP-family support'
+              ? 'Impella left, right, or biventricular support'
               : 'Durable continuous-flow LVAD'}
         </summary>
         {state.device.kind === 'iabp' ? (
@@ -278,73 +392,77 @@ export function McsControls({
             />
           </div>
         ) : state.device.kind === 'impella' ? (
-          <div className={styles.controlGrid}>
-            <label className={styles.checkControl}>
-              <input
-                type="checkbox"
-                checked={state.device.running}
-                disabled={unavailable('impella:set-running')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_IMPELLA_CONTROL',
-                    control: 'running',
-                    value: event.target.checked,
-                  })
-                }
+          <div className={styles.impellaControlStack}>
+            <div className={styles.impellaConfiguration}>
+              <label className={styles.selectControl}>
+                <span>Left-sided support</span>
+                <select
+                  aria-label="Left-sided Impella configuration"
+                  value={state.device.left.enabled ? state.device.left.variant : 'off'}
+                  disabled={
+                    unavailable('impella:enable-left') && unavailable('impella:set-left-variant')
+                  }
+                  onChange={(event) => {
+                    if (event.target.value === 'off') {
+                      dispatch({
+                        type: 'SET_IMPELLA_CONFIGURATION',
+                        control: 'leftEnabled',
+                        value: false,
+                      })
+                      return
+                    }
+                    dispatch({
+                      type: 'SET_IMPELLA_CONFIGURATION',
+                      control: 'leftVariant',
+                      value: event.target.value as 'cp' | '55',
+                    })
+                  }}
+                >
+                  <option value="off">Off</option>
+                  <option value="cp">Impella CP</option>
+                  <option value="55">Impella 5.5</option>
+                </select>
+              </label>
+              <label className={styles.selectControl}>
+                <span>Right-sided support</span>
+                <select
+                  aria-label="Right-sided Impella configuration"
+                  value={state.device.right.enabled ? 'rp' : 'off'}
+                  disabled={unavailable('impella:enable-right')}
+                  onChange={(event) =>
+                    dispatch({
+                      type: 'SET_IMPELLA_CONFIGURATION',
+                      control: 'rightEnabled',
+                      value: event.target.value === 'rp',
+                    })
+                  }
+                >
+                  <option value="off">Off</option>
+                  <option value="rp">Impella RP</option>
+                </select>
+              </label>
+            </div>
+            <p className={styles.impellaBalanceNote}>
+              Left flow unloads the LV and contributes to systemic output. RP flow bypasses the RV
+              into the pulmonary artery and is displayed separately—it is never added directly to
+              systemic flow.
+            </p>
+            {state.device.left.enabled ? (
+              <ImpellaPumpControls
+                side="left"
+                device={state.device}
+                disabled={unavailable}
+                dispatch={dispatch}
               />
-              <span>
-                <strong>Pump support</strong>
-                <small>{state.device.running ? 'Running' : 'Paused'}</small>
-              </span>
-            </label>
-            <RangeControl
-              label="Performance level"
-              value={state.device.performanceLevel}
-              minimum={0}
-              maximum={9}
-              step={1}
-              unit="P-level"
-              disabled={unavailable('impella:set-level')}
-              onChange={(value) =>
-                dispatch({ type: 'SET_IMPELLA_CONTROL', control: 'performanceLevel', value })
-              }
-            />
-            <label className={styles.selectControl}>
-              <span>Placement state</span>
-              <select
-                value={state.device.position}
-                disabled={unavailable('impella:set-position')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_IMPELLA_CONTROL',
-                    control: 'position',
-                    value: event.target.value,
-                  })
-                }
-              >
-                <option value="correct">Correct</option>
-                <option value="too-deep">Too deep</option>
-                <option value="too-shallow">Too shallow</option>
-              </select>
-            </label>
-            <label className={styles.selectControl}>
-              <span>Purge-system state</span>
-              <select
-                value={state.device.purgeState}
-                disabled={unavailable('impella:set-purge')}
-                onChange={(event) =>
-                  dispatch({
-                    type: 'SET_IMPELLA_CONTROL',
-                    control: 'purgeState',
-                    value: event.target.value,
-                  })
-                }
-              >
-                <option value="normal">Normal</option>
-                <option value="high-pressure">High pressure</option>
-                <option value="low-pressure">Low pressure</option>
-              </select>
-            </label>
+            ) : null}
+            {state.device.right.enabled ? (
+              <ImpellaPumpControls
+                side="right"
+                device={state.device}
+                disabled={unavailable}
+                dispatch={dispatch}
+              />
+            ) : null}
           </div>
         ) : (
           <div className={styles.controlGrid}>

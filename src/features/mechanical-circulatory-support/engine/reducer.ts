@@ -8,6 +8,7 @@ import type {
   McsMetricCriterion,
   McsScoreBreakdown,
   McsSimulationState,
+  ImpellaSide,
 } from './types'
 
 function unique(values: readonly string[], value: string): readonly string[] {
@@ -105,11 +106,17 @@ function iabpActionId(control: string): string {
   return 'iabp:set-running'
 }
 
-function impellaActionId(control: string): string {
-  if (control === 'performanceLevel') return 'impella:set-level'
-  if (control === 'position') return 'impella:set-position'
-  if (control === 'purgeState') return 'impella:set-purge'
-  return 'impella:set-running'
+function impellaActionId(side: ImpellaSide, control: string): string {
+  if (control === 'performanceLevel') return `impella:${side}:set-level`
+  if (control === 'position') return `impella:${side}:set-position`
+  if (control === 'purgeState') return `impella:${side}:set-purge`
+  return `impella:${side}:set-running`
+}
+
+function impellaConfigurationActionId(control: string): string {
+  if (control === 'leftVariant') return 'impella:set-left-variant'
+  if (control === 'rightEnabled') return 'impella:enable-right'
+  return 'impella:enable-left'
 }
 
 function lvadActionId(control: string): string {
@@ -162,7 +169,9 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
             ? `ART: MAP ${state.metrics.mapMmHg} mm Hg · pulse pressure ${state.metrics.pulsePressureMmHg} mm Hg.`
             : id === 'inspect:preload'
               ? `Filling: RAP ${state.metrics.rapMmHg}, PCWP ${state.metrics.pcwpMmHg} mm Hg · PAPi ${state.metrics.papi}.`
-              : `Device: ${state.metrics.deviceFlowLMin.toFixed(1)} L/min device flow · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective flow.`,
+              : state.device.kind === 'impella'
+                ? `Device: left pump ${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min · RP ${state.metrics.rightDeviceFlowLMin.toFixed(1)} L/min · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective systemic flow.`
+                : `Device: ${state.metrics.deviceFlowLMin.toFixed(1)} L/min device flow · ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective flow.`,
       }
     }
     case 'SELECT_PREDICTION':
@@ -255,23 +264,58 @@ export function mcsReducer(state: McsSimulationState, action: McsAction): McsSim
     case 'SET_IMPELLA_CONTROL': {
       if (state.device.kind !== 'impella') return state
       if (controlsLocked(state)) return lockedResponse(state)
-      if (!isMcsActionIdPermitted(state, impellaActionId(action.control)))
-        return actionNotPermitted(state)
+      const side = action.side ?? 'left'
+      const actionId = impellaActionId(side, action.control)
+      if (!isMcsActionIdPermitted(state, actionId)) return actionNotPermitted(state)
+      const currentPump = state.device[side]
       let criticalErrors = state.criticalErrors
       if (
         state.scenario &&
         action.control === 'performanceLevel' &&
         typeof action.value === 'number' &&
-        action.value > state.device.performanceLevel &&
-        state.alarms.some((candidate) => candidate.id === 'impella-suction')
+        action.value > currentPump.performanceLevel &&
+        state.alarms.some((candidate) => candidate.id === `impella-${side}-suction`)
       ) {
         criticalErrors = unique(criticalErrors, 'impella-escalated-through-suction')
       }
-      const device = { ...state.device, [action.control]: action.value } as ImpellaDeviceState
+      const device = {
+        ...state.device,
+        [side]: { ...currentPump, [action.control]: action.value },
+      } as ImpellaDeviceState
       return refresh({
-        ...addActionIds(state, impellaActionId(action.control)),
+        ...addActionIds(state, actionId),
         device,
         criticalErrors,
+        scenarioPhase: state.scenario ? 'observe' : state.scenarioPhase,
+      })
+    }
+    case 'SET_IMPELLA_CONFIGURATION': {
+      if (state.device.kind !== 'impella') return state
+      if (controlsLocked(state)) return lockedResponse(state)
+      const actionId = impellaConfigurationActionId(action.control)
+      if (!isMcsActionIdPermitted(state, actionId)) return actionNotPermitted(state)
+      const device: ImpellaDeviceState =
+        action.control === 'leftVariant'
+          ? {
+              ...state.device,
+              left: {
+                ...state.device.left,
+                enabled: true,
+                variant: action.value as ImpellaDeviceState['left']['variant'],
+              },
+            }
+          : action.control === 'leftEnabled'
+            ? {
+                ...state.device,
+                left: { ...state.device.left, enabled: Boolean(action.value) },
+              }
+            : {
+                ...state.device,
+                right: { ...state.device.right, enabled: Boolean(action.value) },
+              }
+      return refresh({
+        ...addActionIds(state, actionId),
+        device,
         scenarioPhase: state.scenario ? 'observe' : state.scenarioPhase,
       })
     }

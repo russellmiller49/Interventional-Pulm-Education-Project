@@ -928,10 +928,20 @@
 }
 .simulationGrid {
   display: grid;
-  grid-template-columns: minmax(360px, 0.75fr) minmax(640px, 1.25fr);
+  grid-template-columns: minmax(290px, 0.58fr) minmax(540px, 1.08fr) minmax(320px, 0.68fr);
   gap: 0.9rem;
   align-items: start;
   margin-top: 1rem;
+}
+.liveControlsRail {
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 6.5rem);
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.liveControlsRail .controlsCard {
+  box-shadow: 0 18px 40px rgba(9, 37, 44, 0.12);
 }
 .anatomyCard,
 .monitorCard,
@@ -1212,6 +1222,12 @@
 .metricGrid > div[data-color='device'] strong {
   color: #f3c766;
 }
+.metricGrid > div[data-color='left-device'] strong {
+  color: #f3c766;
+}
+.metricGrid > div[data-color='right-device'] strong {
+  color: #bd9bff;
+}
 .metricGrid > div[data-color='effective'] strong {
   color: #6ee7f2;
 }
@@ -1269,6 +1285,12 @@
 .trendFigure i[data-color='device'] {
   background: #f4c66e;
 }
+.trendFigure i[data-color='left-device'] {
+  background: #f4c66e;
+}
+.trendFigure i[data-color='right-device'] {
+  background: #b788ff;
+}
 .causalCallout {
   padding: 0.75rem 1rem;
   margin: 0;
@@ -1296,7 +1318,7 @@
 
 .taskGrid {
   display: grid;
-  grid-template-columns: minmax(340px, 0.75fr) minmax(540px, 1.25fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
   align-items: start;
   margin-top: 0.9rem;
@@ -1644,6 +1666,41 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 0.55rem;
   padding: 0 0.7rem 0.7rem;
+}
+.impellaControlStack {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0 0.7rem 0.7rem;
+}
+.impellaConfiguration {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.impellaPumpControls {
+  min-width: 0;
+  padding: 0.7rem 0 0;
+  border: 1px solid #d6e3df;
+  border-radius: 0.55rem;
+  background: #f4f8f7;
+}
+.impellaPumpControls legend {
+  padding: 0 0.35rem;
+  color: var(--navy);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+.impellaPumpControls .controlGrid {
+  padding-top: 0.1rem;
+}
+.impellaBalanceNote {
+  padding: 0.6rem 0.7rem;
+  margin: 0;
+  border-left: 0.2rem solid #8b68d8;
+  color: #4f6569;
+  background: #f2effb;
+  font-size: 0.65rem;
+  line-height: 1.45;
 }
 .rangeControl,
 .selectControl,
@@ -1996,7 +2053,7 @@
   }
   .mobileSurfaceTabs {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.3rem;
     padding: 0.3rem;
     margin: 1rem 0 0.5rem;
@@ -2027,6 +2084,11 @@
   }
   .simulationGrid > div[data-mobile-visible='true'] {
     display: block;
+  }
+  .liveControlsRail {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
   .taskGrid {
     display: none;
@@ -2061,6 +2123,9 @@
     display: none;
   }
   .controlGrid {
+    grid-template-columns: 1fr;
+  }
+  .impellaConfiguration {
     grid-template-columns: 1fr;
   }
   .inspectButtons,
@@ -2100,5 +2165,315 @@
   }
   .monitorGridLine {
     stroke: #4e6a70;
+  }
+}
+
+.ecmoCannulationPreview {
+  padding: clamp(2.5rem, 6vw, 5rem) 0 1rem;
+}
+
+.ecmoCannulationGrid {
+  display: grid;
+  grid-template-columns: minmax(290px, 0.68fr) minmax(500px, 1.32fr);
+  gap: 1rem;
+  margin-top: 1.35rem;
+}
+
+.ecmoCannulationControls {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 15px 35px rgba(18, 53, 58, 0.07);
+}
+
+.ecmoCannulationTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.ecmoCannulationTabs button {
+  min-height: 44px;
+  padding: 0.62rem 0.55rem;
+  border: 1px solid #cbdad8;
+  border-radius: 0.55rem;
+  color: #49656a;
+  background: #f5f9f7;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ecmoCannulationTabs button[aria-pressed='true'] {
+  border-color: #168b88;
+  color: #fff;
+  background: #0d5a5c;
+  box-shadow: 0 7px 18px rgba(13, 90, 92, 0.18);
+}
+
+.ecmoCannulationExplanation > span {
+  color: var(--teal);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+}
+
+.ecmoCannulationExplanation h3 {
+  margin: 0.45rem 0;
+  color: var(--navy);
+  font-size: 1.18rem;
+  letter-spacing: -0.02em;
+}
+
+.ecmoCannulationExplanation p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.58;
+}
+
+.ecmoCannulationExplanation dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1rem 0 0;
+}
+
+.ecmoCannulationExplanation dl div {
+  padding-top: 0.7rem;
+  border-top: 1px solid #e1eae8;
+}
+
+.ecmoCannulationExplanation dt {
+  color: #35666a;
+  font-size: 0.64rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.ecmoCannulationExplanation dd {
+  margin: 0.25rem 0 0;
+  color: #5c7377;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.ecmoCannulationReplay {
+  display: inline-flex;
+  gap: 0.42rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.7rem 0.85rem;
+  border: 0;
+  border-radius: 0.55rem;
+  color: #fff;
+  background: var(--navy-2);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.ecmoCannulationReplay:hover {
+  background: #14515b;
+}
+
+.ecmoCannulationReplay svg {
+  width: 0.92rem;
+  height: 0.92rem;
+}
+
+.ecmoCannulationMotionNote {
+  padding: 0.65rem 0.7rem;
+  margin: 0;
+  border-left: 0.22rem solid var(--teal);
+  color: #41676a;
+  background: #edf7f4;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.ecmoCannulationViewport {
+  position: relative;
+  min-height: 540px;
+  overflow: hidden;
+  border: 1px solid #173f49;
+  border-radius: 1rem;
+  background: radial-gradient(circle at 50% 44%, #24444b, #071b23 72%);
+}
+
+.ecmoCannulationViewport canvas {
+  touch-action: none;
+}
+
+.ecmoCannulationFallback {
+  display: grid;
+  gap: 0.55rem;
+  height: 100%;
+  min-height: 540px;
+  place-content: center;
+  justify-items: center;
+  padding: 2rem;
+  color: #c8dcda;
+  text-align: center;
+}
+
+.ecmoCannulationFallback strong {
+  color: #fff;
+}
+
+.ecmoCannulationFallback span {
+  max-width: 470px;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.ecmoCannulationFallback button {
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #6ed8cb;
+  border-radius: 0.45rem;
+  color: #9aebe2;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ecmoCannulationOrientation {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.ecmoCannulationOrientation span {
+  padding: 0.34rem 0.5rem;
+  border: 1px solid rgba(194, 225, 220, 0.25);
+  border-radius: 999px;
+  color: #c7dedb;
+  background: rgba(4, 22, 28, 0.76);
+  backdrop-filter: blur(8px);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ecmoCannulationLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.1rem;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  margin-top: 0.75rem;
+  border: 1px solid #d5e3e0;
+  border-radius: 0.7rem;
+  color: #45656a;
+  background: #f6faf8;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.ecmoCannulationLegend span {
+  display: inline-flex;
+  gap: 0.42rem;
+  align-items: center;
+}
+
+.ecmoCannulationLegend i {
+  display: inline-block;
+  width: 1.65rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #6f9cff;
+  box-shadow: inset 0 0 0 1px rgba(5, 25, 31, 0.18);
+}
+
+.ecmoCannulationLegend i[data-route='vv-return'] {
+  height: 0.27rem;
+  background: #2badac;
+}
+
+.ecmoCannulationLegend i[data-route='va-return'] {
+  height: 0.29rem;
+  background: #dc6657;
+}
+
+.ecmoCannulationLegend i[data-route='va-flow'] {
+  height: 0.18rem;
+  background: repeating-linear-gradient(90deg, #ff8b78 0 0.28rem, transparent 0.28rem 0.45rem);
+}
+
+.ecmoCannulationCoverageNote {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  padding: 0.85rem 0.95rem;
+  margin-top: 0.75rem;
+  border: 1px solid #e1bd73;
+  border-radius: 0.7rem;
+  color: #72551e;
+  background: #fff7e7;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.ecmoCannulationCoverageNote strong {
+  color: #563e12;
+  white-space: nowrap;
+}
+
+.ecmoCannulationTextEquivalent {
+  padding: 0.8rem 0.95rem;
+  margin: 0.75rem 0 0;
+  border-left: 0.25rem solid var(--teal);
+  color: #49666a;
+  background: #edf6f3;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.ecmoCannulationTextEquivalent strong {
+  color: #185f5d;
+}
+
+@media (max-width: 900px) {
+  .ecmoCannulationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ecmoCannulationViewport,
+  .ecmoCannulationFallback {
+    min-height: 480px;
+  }
+}
+
+@media (max-width: 560px) {
+  .ecmoCannulationViewport,
+  .ecmoCannulationFallback {
+    min-height: 410px;
+  }
+
+  .ecmoCannulationOrientation {
+    right: 0.55rem;
+    left: 0.55rem;
+  }
+
+  .ecmoCannulationCoverageNote {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .ecmoCannulationCoverageNote strong {
+    white-space: normal;
   }
 }

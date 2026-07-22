@@ -24,6 +24,7 @@ import { recordSiteModuleEvent } from '@/lib/analytics'
 import { BedsideMonitor } from './BedsideMonitor'
 import { CaseWorkflow } from './CaseWorkflow'
 import { FormulaDrawer } from './FormulaDrawer'
+import { PacActionDock } from './PacActionDock'
 import { PacSkillsLab } from './PacSkillsLab'
 import { PhysiologyPanel } from './PhysiologyPanel'
 import { SourcesPanel } from './SourcesPanel'
@@ -40,9 +41,13 @@ function percentMastered(progress: IcuHemodynamicsProgressV2): number {
 }
 
 export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLabProps) {
-  const [state, dispatch] = useReducer(icuHemodynamicsReducer, undefined, () =>
-    createInitialHemodynamicState(hemodynamicCases[0], 'learn'),
-  )
+  const [state, dispatch] = useReducer(icuHemodynamicsReducer, undefined, () => {
+    const initial = createInitialHemodynamicState(hemodynamicCases[0], 'learn')
+    return icuHemodynamicsReducer(initial, {
+      type: 'SET_CATHETER_POSITION',
+      position: 'introducer',
+    })
+  })
   const [progress, setProgress] = useState(createDefaultIcuHemodynamicsProgress)
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('monitor')
   const [progressLoaded, setProgressLoaded] = useState(false)
@@ -328,33 +333,37 @@ export default function IcuHemodynamicsLab({ locale = 'en' }: IcuHemodynamicsLab
         ))}
       </div>
 
-      <section className={styles.liveWorkspace} aria-label="Synchronized monitor and physiology">
-        <div data-mobile-visible={mobileSurface === 'monitor'}>
+      <section
+        className={styles.liveWorkspace}
+        aria-label="Synchronized monitor, anatomy, and PAC controls"
+      >
+        <div className={styles.monitorPane} data-mobile-visible={mobileSurface === 'monitor'}>
           <BedsideMonitor
             state={state}
             dispatch={dispatch}
             onOpenCardiacOutput={openCardiacOutput}
           />
         </div>
-        <div data-mobile-visible={mobileSurface === 'physiology'}>
+        <div className={styles.physiologyPane} data-mobile-visible={mobileSurface === 'physiology'}>
           <PhysiologyPanel state={state} dispatch={dispatch} />
         </div>
-      </section>
+        <PacActionDock state={state} dispatch={dispatch} />
 
-      <div data-mobile-visible={mobileSurface === 'tasks'}>
-        {state.workspace === 'pac-skills' ? (
-          <PacSkillsLab state={state} dispatch={dispatch} />
-        ) : (
-          <>
-            <CaseWorkflow state={state} dispatch={dispatch} />
-            <details className={styles.embeddedMeasurementLab} id="case-measurement-lab">
-              <summary>Open the reusable PAC measurement lab for this case</summary>
-              <PacSkillsLab state={state} dispatch={dispatch} />
-            </details>
-          </>
-        )}
-        <FormulaDrawer state={state} dispatch={dispatch} />
-      </div>
+        <div className={styles.taskPane} data-mobile-visible={mobileSurface === 'tasks'}>
+          {state.workspace === 'pac-skills' ? (
+            <PacSkillsLab state={state} dispatch={dispatch} />
+          ) : (
+            <>
+              <CaseWorkflow state={state} dispatch={dispatch} />
+              <details className={styles.embeddedMeasurementLab} id="case-measurement-lab">
+                <summary>Open the reusable PAC measurement lab for this case</summary>
+                <PacSkillsLab state={state} dispatch={dispatch} />
+              </details>
+            </>
+          )}
+          <FormulaDrawer state={state} dispatch={dispatch} />
+        </div>
+      </section>
 
       <section className={styles.reviewGate}>
         <span>Preview review gate</span>

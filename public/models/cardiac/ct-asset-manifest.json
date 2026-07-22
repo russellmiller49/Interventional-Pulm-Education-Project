@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "generatedBy": "scripts/cardiac-assets/build-ct-heart.py",
+  "asset": {
+    "url": "/models/cardiac/heart-ct-animated-v1.glb",
+    "compatibilityAliases": ["/models/cardiac/heart-ct-animated.glb"],
+    "source": "3D assets/Slicer Cardiac_model/Heart_final.gltf",
+    "detailedValveSource": "3D assets/Slicer Cardiac_model/extraction/Heart_final.seg.nrrd",
+    "aorticCuspSegments": ["right_coronary_cusp", "non_coronary_cusp", "left_coronary_cusp"],
+    "bytes": 1564200,
+    "triangles": 117802,
+    "nodes": [
+      "Heart_final_Models",
+      "Anchor_AorticValve",
+      "Anchor_ImpellaInlet35mm",
+      "Anchor_IVC_RA",
+      "Anchor_PulmonicOrifice",
+      "Anchor_SVC_RA",
+      "Anchor_TricuspidOrifice",
+      "CT_Aorta",
+      "CT_Aorta_Brachiocephalic",
+      "CT_Aorta_LeftCarotid",
+      "CT_Aorta_LeftSubclavian",
+      "CT_IVC",
+      "CT_LA_Cavity",
+      "CT_LeftPulmonaryVeins",
+      "CT_LV_Cavity",
+      "CT_LV_Myocardium",
+      "CT_LVOT",
+      "CT_PulmonaryArteries",
+      "CT_RA_Cavity",
+      "CT_RightPulmonaryVeins",
+      "CT_RV_Cavity",
+      "CT_SVC",
+      "CT_Valve_Aortic_LCC",
+      "CT_Valve_Aortic_NCC",
+      "CT_Valve_Aortic_RCC",
+      "CT_Heart_Root"
+    ],
+    "animations": ["CardiacCycle"],
+    "dracoCompressed": true,
+    "limits": {
+      "bytes": 4000000,
+      "triangles": 125000
+    }
+  }
+}

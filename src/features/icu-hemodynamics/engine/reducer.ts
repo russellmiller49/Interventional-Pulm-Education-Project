@@ -1,6 +1,7 @@
 import { clamp, measurementMeetsCriterion, roundTo } from './calculations'
 import {
   advanceHemodynamicSimulation,
+  catheterTransitionDurationSeconds,
   catheterPositionDepth,
   createInitialHemodynamicState,
   deriveHemodynamicMeasurements,
@@ -126,41 +127,110 @@ export function icuHemodynamicsReducer(
         catheter: {
           ...state.catheter,
           position: action.position,
+          targetPosition: null,
+          movementStartedAt: null,
+          movementCompletesAt: null,
           insertionDepthCm: catheterPositionDepth(action.position),
+          floatBalloonInflated: false,
           balloonInflated: false,
           wedgeStartedAt: null,
           wedgeCaptureReady: false,
+          wedgeCursorTime: null,
+          storedWedgeMmHg: null,
+          storedAtEndExpiration: false,
+          forcedSafetyRecovery: false,
         },
       }
     case 'ADVANCE_CATHETER': {
+      if (state.catheter.targetPosition !== null) {
+        return {
+          ...state,
+          responseMessage:
+            'Catheter movement is already in progress; confirm the next waveform on arrival.',
+        }
+      }
       const currentIndex = catheterSequence.indexOf(state.catheter.position)
       const nextPosition = catheterSequence[Math.min(catheterSequence.length - 1, currentIndex + 1)]
+      if (nextPosition === state.catheter.position) return state
+      const floatBalloonInflated =
+        state.catheter.position === 'ra' || state.catheter.position === 'rv'
+      if (action.instant) {
+        return {
+          ...state,
+          catheter: {
+            ...state.catheter,
+            position: nextPosition,
+            targetPosition: null,
+            movementStartedAt: null,
+            movementCompletesAt: null,
+            insertionDepthCm: catheterPositionDepth(nextPosition),
+            floatBalloonInflated: nextPosition === 'rv',
+            forcedSafetyRecovery: false,
+          },
+          responseMessage: `Catheter advanced to ${nextPosition.toUpperCase()}. Confirm the waveform before advancing again.`,
+        }
+      }
       return {
         ...state,
         catheter: {
           ...state.catheter,
-          position: nextPosition,
-          insertionDepthCm: catheterPositionDepth(nextPosition),
+          targetPosition: nextPosition,
+          movementStartedAt: state.timeSeconds,
+          movementCompletesAt:
+            state.timeSeconds +
+            catheterTransitionDurationSeconds(state.catheter.position, nextPosition),
+          floatBalloonInflated,
           forcedSafetyRecovery: false,
         },
-        responseMessage: `Catheter advanced to ${nextPosition.toUpperCase()}. Confirm the waveform before advancing again.`,
+        responseMessage: `Catheter advancing toward ${nextPosition.toUpperCase()}; the monitor retains the confirmed ${state.catheter.position.toUpperCase()} waveform until arrival.`,
       }
     }
     case 'RETRACT_CATHETER': {
+      if (state.catheter.targetPosition !== null) {
+        return {
+          ...state,
+          responseMessage:
+            'Catheter movement is already in progress; wait for the current transition.',
+        }
+      }
       const normalizedPosition =
         state.catheter.position === 'wedge' ? 'pa' : state.catheter.position
       const currentIndex = catheterSequence.indexOf(normalizedPosition)
       const nextPosition = catheterSequence[Math.max(0, currentIndex - 1)]
+      if (nextPosition === normalizedPosition) return state
+      if (action.instant) {
+        return {
+          ...state,
+          catheter: {
+            ...state.catheter,
+            position: nextPosition,
+            targetPosition: null,
+            movementStartedAt: null,
+            movementCompletesAt: null,
+            insertionDepthCm: catheterPositionDepth(nextPosition),
+            floatBalloonInflated: false,
+            balloonInflated: false,
+            wedgeStartedAt: null,
+            wedgeCaptureReady: false,
+          },
+        }
+      }
       return {
         ...state,
         catheter: {
           ...state.catheter,
-          position: nextPosition,
-          insertionDepthCm: catheterPositionDepth(nextPosition),
+          targetPosition: nextPosition,
+          movementStartedAt: state.timeSeconds,
+          movementCompletesAt:
+            state.timeSeconds + catheterTransitionDurationSeconds(normalizedPosition, nextPosition),
+          floatBalloonInflated: false,
           balloonInflated: false,
           wedgeStartedAt: null,
           wedgeCaptureReady: false,
+          wedgeCursorTime: null,
+          storedAtEndExpiration: state.catheter.storedWedgeMmHg !== null,
         },
+        responseMessage: `Catheter retracting toward ${nextPosition.toUpperCase()}; the monitor retains the confirmed ${normalizedPosition.toUpperCase()} waveform until arrival.`,
       }
     }
     case 'SET_TRANSDUCER_LEVEL':
@@ -227,7 +297,11 @@ export function icuHemodynamicsReducer(
         signalValidationChecks: [...new Set([...state.signalValidationChecks, action.check])],
       }
     case 'START_WEDGE': {
-      if (state.catheter.position !== 'pa' || state.catheter.balloonInflated) {
+      if (
+        state.catheter.targetPosition !== null ||
+        state.catheter.position !== 'pa' ||
+        state.catheter.balloonInflated
+      ) {
         const errorId = state.catheter.balloonInflated
           ? 'overwedge-balloon-reinflation'
           : 'balloon-inflated-before-pa'
@@ -242,16 +316,21 @@ export function icuHemodynamicsReducer(
         catheter: {
           ...state.catheter,
           position: 'wedge',
+          targetPosition: null,
+          movementStartedAt: null,
+          movementCompletesAt: null,
           insertionDepthCm: catheterPositionDepth('wedge'),
+          floatBalloonInflated: false,
           balloonInflated: true,
           wedgeStartedAt: state.timeSeconds,
           wedgeCaptureReady: false,
           wedgeCursorTime: null,
+          storedWedgeMmHg: null,
           storedAtEndExpiration: false,
           forcedSafetyRecovery: false,
         },
         responseMessage:
-          'Balloon inflated. A 12-second wedge capture is running; deflate promptly after storage.',
+          'Balloon inflated at the existing PA depth. Sample about one respiratory cycle, capture at end expiration, then deflate promptly.',
       }
     }
     case 'PLACE_WEDGE_CURSOR':
@@ -283,10 +362,16 @@ export function icuHemodynamicsReducer(
         catheter: {
           ...state.catheter,
           position: 'pa',
+          targetPosition: null,
+          movementStartedAt: null,
+          movementCompletesAt: null,
           insertionDepthCm: catheterPositionDepth('pa'),
+          floatBalloonInflated: false,
           balloonInflated: false,
           wedgeStartedAt: null,
           wedgeCaptureReady: false,
+          wedgeCursorTime: null,
+          storedAtEndExpiration: state.catheter.storedWedgeMmHg !== null,
         },
         responseMessage: 'Balloon deflated; PA waveform restored.',
       }
@@ -363,10 +448,18 @@ export function icuHemodynamicsReducer(
           ? {
               ...state.catheter,
               position: 'pa' as const,
+              targetPosition: null,
+              movementStartedAt: null,
+              movementCompletesAt: null,
               insertionDepthCm: catheterPositionDepth('pa'),
+              floatBalloonInflated: false,
               balloonInflated: false,
               wedgeStartedAt: null,
               wedgeCaptureReady: false,
+              wedgeCursorTime: null,
+              storedWedgeMmHg: null,
+              storedAtEndExpiration: false,
+              forcedSafetyRecovery: false,
             }
           : state.catheter
       const nextState: HemodynamicSimulationState = {

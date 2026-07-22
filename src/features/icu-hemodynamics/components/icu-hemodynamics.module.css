@@ -355,13 +355,29 @@
 
 .liveWorkspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(370px, 0.8fr);
+  grid-template-areas:
+    'monitor physiology controls'
+    'tasks tasks tasks';
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.74fr) minmax(260px, 0.48fr);
   gap: 1rem;
   align-items: stretch;
   margin-bottom: 1rem;
 }
 
 .liveWorkspace > div {
+  min-width: 0;
+}
+
+.monitorPane {
+  grid-area: monitor;
+}
+
+.physiologyPane {
+  grid-area: physiology;
+}
+
+.taskPane {
+  grid-area: tasks;
   min-width: 0;
 }
 
@@ -619,6 +635,7 @@
 }
 
 .physiologyPanel,
+.pacActionDock,
 .skillsLab,
 .caseWorkflow,
 .sourcesPanel {
@@ -633,6 +650,213 @@
   flex-direction: column;
   min-height: 690px;
   padding: 1rem;
+}
+
+.pacActionDock {
+  grid-area: controls;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 690px;
+  padding: 0.9rem;
+}
+
+.pacDockHeader {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.pacDockHeader > div > span {
+  color: var(--teal);
+  font-size: 0.64rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pacDockHeader h2 {
+  margin: 0.25rem 0 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.pacDockTip {
+  justify-self: start;
+  padding: 0.38rem 0.58rem;
+  border: 1px solid #b8d3cf;
+  border-radius: 999px;
+  color: #145f5d;
+  background: #eaf7f3;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+}
+
+.pacDockBody {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  margin-top: 0.8rem;
+}
+
+.pacDockFieldset {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0.72rem;
+  margin: 0;
+  border: 1px solid #d6e3e0;
+  border-radius: 0.72rem;
+  background: #fbfcfa;
+}
+
+.pacDockFieldset legend {
+  max-width: 100%;
+  padding: 0 0.3rem;
+  color: var(--navy);
+  font-size: 0.7rem;
+  font-weight: 820;
+  line-height: 1.25;
+}
+
+.pacDockPositionTrack {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.16rem;
+  padding: 0;
+  margin: 0.55rem 0;
+  list-style: none;
+}
+
+.pacDockPositionTrack li {
+  display: grid;
+  min-height: 2rem;
+  place-items: center;
+  padding: 0.25rem 0.08rem;
+  text-align: center;
+  border: 1px solid #d4e0dd;
+  color: #819194;
+  background: #fff;
+  font-size: 0.56rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.pacDockPositionTrack li[aria-current='step'] {
+  z-index: 1;
+  border-color: #d49a2f;
+  color: #62430a;
+  background: #fff2ce;
+  box-shadow: 0 0 0 2px rgba(212, 154, 47, 0.15);
+}
+
+.pacDockPositionTrack li[data-target='true'] {
+  z-index: 1;
+  border-color: #3eaaa3;
+  border-style: dashed;
+  color: #145f5d;
+  background: #eaf7f3;
+  box-shadow: 0 0 0 2px rgba(62, 170, 163, 0.12);
+}
+
+.pacDockCue,
+.pacDockBoundaryNote {
+  color: #61777a;
+  font-size: 0.62rem;
+  line-height: 1.4;
+}
+
+.pacDockCue {
+  min-height: 2.65rem;
+  margin: 0.45rem 0 0;
+}
+
+.pacDockActionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  margin-top: auto;
+}
+
+.pacDockActionGrid button {
+  min-height: 2.75rem;
+  padding: 0.48rem 0.38rem;
+  border: 1px solid #a9cbc6;
+  border-radius: 0.5rem;
+  color: #145f5d;
+  background: #eaf7f3;
+  cursor: pointer;
+  font-size: 0.63rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.pacDockActionGrid button[data-safety-action='true'] {
+  border-color: #bd3e50;
+  color: #fff;
+  background: #bd3e50;
+  box-shadow: 0 0 0 3px rgba(189, 62, 80, 0.12);
+}
+
+.pacDockActionGrid button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.pacDockWedgeTimer {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem;
+  border: 1px solid #dbe5e2;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.pacDockWedgeTimer > span:first-child {
+  color: var(--navy);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.pacDockWedgeTimer > div {
+  height: 0.42rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dce8e5;
+}
+
+.pacDockWedgeTimer i {
+  display: block;
+  height: 100%;
+  background: var(--teal);
+  transition: width 80ms linear;
+}
+
+.pacDockWedgeTimer[data-danger='true'] i {
+  background: #d44758;
+}
+
+.pacDockWedgeTimer > span:last-child {
+  min-height: 2.5rem;
+  color: #65797c;
+  font-size: 0.61rem;
+  line-height: 1.35;
+}
+
+.pacDockBoundaryNote {
+  padding: 0.55rem 0.62rem;
+  margin: auto 0 0;
+  border-left: 3px solid #d9a459;
+  border-radius: 0.42rem;
+  background: #f8f3e9;
+}
+
+.pacActionDock > .criticalFeedback {
+  margin: 0.55rem 0 0;
 }
 
 .sectionHeader,
@@ -789,6 +1013,21 @@
   background: transparent;
   cursor: pointer;
   font-size: 0.7rem;
+}
+
+.anatomyMorphologyNote {
+  padding: 0.58rem 0.68rem;
+  margin: -0.2rem 0 0.75rem;
+  border-left: 3px solid #d9a459;
+  border-radius: 0.45rem;
+  color: #536a6e;
+  background: #f8f3e9;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.anatomyMorphologyNote strong {
+  color: var(--navy);
 }
 
 .anatomyMetricGrid {
@@ -984,6 +1223,10 @@
   border: 1px solid #dce6e3;
   border-radius: 0.9rem;
   background: #fbfcfa;
+}
+
+.pressureSystemCard {
+  grid-column: 1 / -1;
 }
 
 .thermodilutionCard {
@@ -1890,12 +2133,73 @@
   font-size: 0.58rem;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
+  .experienceBar {
+    position: static;
+  }
+  .mobileSurfaceTabs {
+    position: sticky;
+    z-index: 40;
+    top: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    padding: 0.45rem;
+    margin-bottom: 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 0.8rem;
+    background: rgba(250, 252, 250, 0.95);
+    backdrop-filter: blur(10px);
+  }
+  .labShell [data-mobile-visible='false'] {
+    display: none;
+  }
   .liveWorkspace {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+  .pacActionDock {
+    position: sticky;
+    z-index: 30;
+    top: 4.35rem;
+    order: -1;
+    min-height: 0;
+    padding: 0.8rem;
+    box-shadow: 0 18px 45px rgba(27, 58, 62, 0.14);
+  }
+  .pacDockHeader {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pacDockHeader h2 {
+    font-size: 0.95rem;
+  }
+  .pacDockTip {
+    flex: 0 0 auto;
+  }
+  .pacDockBody {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+  }
+  .pacDockFieldset {
+    padding: 0.6rem;
+  }
+  .pacDockCue,
+  .pacDockWedgeTimer > span {
+    min-height: 0;
+  }
+  .pacDockBoundaryNote {
+    margin: 0.55rem 0 0;
+  }
+  .monitor,
+  .physiologyPanel {
+    min-height: 620px;
   }
   .physiologyPanel {
-    min-height: auto;
+    min-height: 620px;
   }
   .physiologyViewport {
     height: 520px;
@@ -1932,7 +2236,6 @@
     display: none;
   }
   .experienceBar {
-    position: static;
     grid-template-columns: 1fr;
   }
   .experienceBar > div[role='tablist'] {
@@ -1941,26 +2244,6 @@
   }
   .masterySummary {
     display: none;
-  }
-  .mobileSurfaceTabs {
-    display: grid;
-    position: sticky;
-    z-index: 14;
-    top: 0.5rem;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.4rem;
-    padding: 0.45rem;
-    margin-bottom: 0.7rem;
-    border: 1px solid var(--line);
-    border-radius: 0.8rem;
-    background: rgba(250, 252, 250, 0.95);
-    backdrop-filter: blur(10px);
-  }
-  .labShell [data-mobile-visible='false'] {
-    display: none;
-  }
-  .liveWorkspace {
-    display: block;
   }
   .physiologyViewport {
     height: 430px;
@@ -2028,6 +2311,78 @@
 }
 
 @media (max-width: 520px) {
+  .mobileSurfaceTabs button {
+    min-height: 2.75rem;
+    padding-inline: 0.45rem;
+    text-transform: capitalize;
+  }
+  .pacActionDock {
+    top: 4.45rem;
+    padding: 0.55rem;
+    border-radius: 0.85rem;
+  }
+  .pacDockHeader {
+    gap: 0.45rem;
+  }
+  .pacDockHeader > div > span {
+    font-size: 0.58rem;
+  }
+  .pacDockHeader h2 {
+    font-size: 0.85rem;
+  }
+  .pacDockTip {
+    padding: 0.3rem 0.42rem;
+    font-size: 0.62rem;
+  }
+  .pacDockBody {
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+  }
+  .pacDockFieldset {
+    padding: 0.38rem;
+  }
+  .pacDockFieldset legend {
+    font-size: 0.62rem;
+  }
+  .pacDockPositionTrack {
+    gap: 0.08rem;
+    margin: 0.3rem 0;
+  }
+  .pacDockPositionTrack li {
+    min-height: 1.65rem;
+    padding-inline: 0.02rem;
+    font-size: 0.58rem;
+  }
+  .pacDockCue {
+    margin-top: 0.25rem;
+    font-size: 0.6rem;
+    line-height: 1.25;
+  }
+  .pacDockActionGrid {
+    gap: 0.24rem;
+    padding-top: 0.35rem;
+  }
+  .pacDockActionGrid button {
+    padding-inline: 0.2rem;
+    font-size: 0.62rem;
+  }
+  .pacDockWedgeTimer {
+    gap: 0.22rem;
+    padding: 0.35rem;
+  }
+  .pacDockWedgeTimer > span:first-child {
+    font-size: 0.9rem;
+  }
+  .pacDockWedgeTimer > span:last-child {
+    font-size: 0.6rem;
+    line-height: 1.25;
+  }
+  .pacDockBoundaryNote {
+    padding: 0.35rem 0.45rem;
+    margin-top: 0.35rem;
+    font-size: 0.6rem;
+    line-height: 1.25;
+  }
   .hero h1 {
     font-size: 2.45rem;
   }

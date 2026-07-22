@@ -1,14 +1,14 @@
 {
-  "version": 1,
+  "version": 2,
   "assetBaseUrl": "/models/cardiac-devices",
   "assets": {
-    "heart": "/models/cardiac/heart-realistic.glb",
+    "heart": "/models/cardiac/heart-ct-animated-v1.glb",
     "heartGreatVessels": "/models/cardiac-devices/heart-great-vessels.glb",
     "iabpAorta": "/models/cardiac-devices/iabp-aorta-cutaway.glb",
     "iabpBalloon": "/models/cardiac-devices/iabp-balloon.glb",
-    "impellaCp": "/models/cardiac-devices/impella-cp.glb",
-    "impella55": "/models/cardiac-devices/impella-55.glb",
-    "impellaRp": "/models/cardiac-devices/impella-rp.glb",
+    "impellaCp": "/models/cardiac-devices/impella-cp-v1.glb",
+    "impella55": "/models/cardiac-devices/impella-55-v1.glb",
+    "impellaRp": "/models/cardiac-devices/impella-rp-v1.glb",
     "lvad": "/models/cardiac-devices/lvad.glb"
   },
   "cameras": {
@@ -110,10 +110,10 @@
       "pa": 10,
       "wedge": 13
     },
-    "radius": 0.021,
+    "radius": 0.032,
     "balloonRadius": {
-      "deflated": 0.032,
-      "inflated": 0.072
+      "deflated": 0.04,
+      "inflated": 0.156
     }
   },
   "iabp": {
@@ -248,8 +248,8 @@
     ]
   },
   "transducer": {
-    "phlebostaticAxisY": 0.52,
-    "x": 1.45,
+    "phlebostaticAxisY": -0.38,
+    "x": 2.05,
     "worldUnitsPerCm": 0.045
   }
 }

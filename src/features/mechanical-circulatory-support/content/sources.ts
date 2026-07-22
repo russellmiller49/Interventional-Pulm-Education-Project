@@ -68,6 +68,79 @@ export const mcsSources: readonly McsSource[] = [
       'Exact software behavior must be rechecked against the current local device revision.',
   },
   {
+    id: 'impella-cp-smartassist-insertion',
+    title: 'Impella CP with SmartAssist insertion overview',
+    citation: 'Abiomed HeartRecovery. Impella CP with SmartAssist insertion quick-skills video.',
+    sourceType: 'manufacturer',
+    year: 2021,
+    url: 'https://www.heartrecovery.com/en-us/education/education-library/qsv-impella-cp-with-smartassist-insertion',
+    intendedUse:
+      'Retrograde aortic route, aortic-valve crossing, placement-wire sequence, and final inlet/outlet relationship.',
+    limitation:
+      'The animation is anatomy education only and does not reproduce access, wire exchange, imaging, or operating instructions.',
+  },
+  {
+    id: 'jnj-impella-cp-current',
+    title: 'Impella CP with SmartAssist product information',
+    citation: 'J&J MedTech. Impella CP with SmartAssist US product information.',
+    sourceType: 'manufacturer',
+    year: 2026,
+    url: 'https://www.jnjmedtech.com/en-US/products/cardiovascular/impella-heart-pumps/impella-cp-with-smartassist/',
+    intendedUse:
+      'CP left-sided pathway, arterial access framing, and the 4.3 L/min peak-flow boundary.',
+    limitation:
+      'Peak flow is not guaranteed patient flow; the educational model applies preload, position, and afterload constraints.',
+  },
+  {
+    id: 'fda-impella-55-labeling',
+    title: 'Impella 5.5 with SmartAssist Information for Use',
+    citation: 'FDA-hosted Impella 5.5 with SmartAssist Information for Use.',
+    sourceType: 'fda-labeling',
+    year: 2020,
+    url: 'https://www.fda.gov/media/140766/download',
+    intendedUse:
+      'Impella 5.5 device parameters and LV-to-aorta mechanism; 5.5 L/min is used as a product-reported mean-flow reference, not a guaranteed patient-flow maximum.',
+    limitation:
+      'The module does not reproduce surgical insertion, imaging, console operation, or current local instructions.',
+  },
+  {
+    id: 'jnj-impella-55-current',
+    title: 'Impella 5.5 with SmartAssist product information',
+    citation: 'J&J MedTech. Impella 5.5 with SmartAssist US product information.',
+    sourceType: 'manufacturer',
+    year: 2026,
+    url: 'https://www.jnjmedtech.com/en-US/products/cardiovascular/impella-heart-pumps/impella-55-with-smartassist/',
+    intendedUse:
+      'Surgical axillary-cut-down/direct-aortic access distinction and active LV-support framing.',
+    limitation:
+      'The authored peripheral access segment is not patient-specific and is not operative guidance.',
+  },
+  {
+    id: 'elso-vv-ecmo-guideline',
+    title: 'ELSO guideline for adult VV ECMO',
+    citation: 'ELSO. Management of Adult Patients Supported with Venovenous ECMO.',
+    sourceType: 'guideline',
+    year: 2021,
+    url: 'https://www.elso.org/Portals/0/files/pdf/Management_of_Adult_Patients_Supported_with.1.pdf',
+    intendedUse:
+      'Dual-site single-lumen VV drainage/return anatomy and separation of drainage and return openings.',
+    limitation:
+      'This preview shows central route relationships, not cannulation technique or patient-specific positioning.',
+  },
+  {
+    id: 'elso-va-ecmo-guideline',
+    title: 'ELSO interim guideline for adult VA ECMO',
+    citation:
+      'ELSO. Interim Guidelines for Venoarterial Extracorporeal Membrane Oxygenation in Adult Cardiac Patients.',
+    sourceType: 'guideline',
+    year: 2021,
+    url: 'https://www.elso.org/Portals/0/files/pdf/ELSO_Interim_Guidelines_for_Venoarterial.2.pdf',
+    intendedUse:
+      'Femoro-femoral drainage/return relationships and the distinction between a peripheral arterial cannula and retrograde aortic flow.',
+    limitation:
+      'Iliac and femoral anatomy lies outside the supplied CT field; the lower arterial approach is an explicitly schematic boundary extension.',
+  },
+  {
     id: 'fda-impella-rp-labeling',
     title: 'Impella RP System Instructions for Use',
     citation: 'FDA-approved Impella RP labeling and current PMA supplement materials.',
@@ -75,9 +148,33 @@ export const mcsSources: readonly McsSource[] = [
     year: 2026,
     url: 'https://www.fda.gov/media/138463/download',
     intendedUse:
-      'Anatomy-only confirmation of venous inflow and pulmonary-artery outflow for the RP comparison model.',
+      'RP venous insertion pathway, IVC inflow, pulmonary-artery outflow, controls, and RV-support physiology boundaries.',
     limitation:
-      'The module does not model RP controls, insertion, sizing, or RV-support physiology.',
+      'The module models directional physiology only and does not reproduce insertion, sizing, imaging, or console instructions.',
+  },
+  {
+    id: 'jnj-impella-rp-current',
+    title: 'Impella RP Flex with SmartAssist product information',
+    citation: 'J&J MedTech. Impella RP Flex with SmartAssist US product information.',
+    sourceType: 'manufacturer',
+    year: 2026,
+    url: 'https://www.jnjmedtech.com/en-US/products/cardiovascular/impella-heart-pumps/impella-rp-flex-with-smartassist/',
+    intendedUse:
+      'Caval-to-pulmonary flow, product-framed flow up to 4.0 L/min, and pairing with left-sided support.',
+    limitation:
+      'The rendered asset is an educational RP-family facsimile; product variants and current local labeling must be distinguished clinically.',
+  },
+  {
+    id: 'fda-impella-rp-2026-recall',
+    title: 'Impella RP differential-pressure sensor recall',
+    citation: 'FDA Class I recall Z-1471-2026, posted February 27, 2026.',
+    sourceType: 'fda-safety-notice',
+    year: 2026,
+    url: 'https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=218099',
+    intendedUse:
+      'Flags current RP pressure-sensor drift risk for prepublication labeling and safety review.',
+    limitation:
+      'The educational model does not reproduce the affected sensor or clinical mitigation workflow.',
   },
   {
     id: 'fda-impella-cp-2026-recall',

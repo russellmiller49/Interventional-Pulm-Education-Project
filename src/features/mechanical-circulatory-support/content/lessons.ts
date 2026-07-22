@@ -165,10 +165,20 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     title: 'Impella unloading and placement signals',
     summary: 'Relate performance level and transvalvular position to flow and unloading.',
     objectives: [
+      'Compare CP and 5.5 at the same modeled loading and performance level.',
       'Distinguish device flow from effective systemic flow.',
       'Recognize directional placement-signal patterns.',
     ],
     steps: [
+      {
+        id: 'impella-left-variant',
+        title: 'Compare CP with 5.5',
+        instruction:
+          'Select CP and then 5.5 at the same performance level and loading; compare left-pump flow, LVEDV, PCWP, and the distinct access descriptions.',
+        rationale:
+          'The two left-sided pumps share an LV-to-aorta mechanism but have different access pathways and modeled flow references.',
+        targetActionId: 'impella:set-left-variant',
+      },
       {
         id: 'impella-level',
         title: 'Increase support deliberately',
@@ -176,14 +186,14 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
           'Advance the performance level while tracking LVEDV, PCWP, MAP, and native pulsatility.',
         rationale:
           'More pump flow can improve unloading but also reduce native aortic-valve opening.',
-        targetActionId: 'impella:set-level',
+        targetActionId: 'impella:left:set-level',
       },
       {
         id: 'impella-position',
         title: 'Disturb placement',
         instruction: 'Compare correct, too-deep, and too-shallow states.',
         rationale: 'Malposition lowers effective support and can increase hemolysis risk.',
-        targetActionId: 'impella:set-position',
+        targetActionId: 'impella:left:set-position',
       },
       {
         id: 'impella-flow',
@@ -194,7 +204,12 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         targetActionId: 'patient:adjust',
       },
     ],
-    sourceIds: ['master-hemodynamics-reference', 'fda-impella-cp-labeling'],
+    sourceIds: [
+      'master-hemodynamics-reference',
+      'fda-impella-cp-labeling',
+      'fda-impella-55-labeling',
+      'jnj-impella-55-current',
+    ],
   },
   {
     id: 'impella-suction-purge-rv',
@@ -206,8 +221,18 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
     objectives: [
       'Recognize suction from underfilling or RV failure.',
       'Separate placement, purge, and hemolysis signals.',
+      'Reconcile RP pulmonary delivery with left-pump flow during BiPella support.',
     ],
     steps: [
+      {
+        id: 'impella-rp-bipella',
+        title: 'Build RP and BiPella support',
+        instruction:
+          'Enable RP alone, then pair it with CP or 5.5; compare RAP, PCWP, RP flow, left-pump flow, pump balance, and effective systemic flow.',
+        rationale:
+          'RP bypasses the RV into the pulmonary artery. In BiPella, serial right and left pump flows must be reconciled rather than summed.',
+        targetActionId: 'impella:enable-right',
+      },
       {
         id: 'impella-suction',
         title: 'Create a preload-limited state',
@@ -221,7 +246,7 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         instruction:
           'Reduce support temporarily, reassess preload/RV delivery, and correct the cause.',
         rationale: 'Escalating through active suction can worsen blood trauma and instability.',
-        targetActionId: 'impella:set-level',
+        targetActionId: 'impella:left:set-level',
       },
       {
         id: 'impella-purge',
@@ -229,13 +254,17 @@ export const mcsLessons: readonly McsLessonDefinition[] = [
         instruction: 'Compare normal, high-pressure, and low-pressure purge states.',
         rationale:
           'Purge abnormalities require device-specific troubleshooting and expert support.',
-        targetActionId: 'impella:set-purge',
+        targetActionId: 'impella:left:set-purge',
       },
     ],
     sourceIds: [
       'master-hemodynamics-reference',
       'ishlt-hfsa-acute-mcs-2023',
       'fda-impella-cp-labeling',
+      'fda-impella-55-labeling',
+      'jnj-impella-55-current',
+      'fda-impella-rp-labeling',
+      'jnj-impella-rp-current',
     ],
   },
   {

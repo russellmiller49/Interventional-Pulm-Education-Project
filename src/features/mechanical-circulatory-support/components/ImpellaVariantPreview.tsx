@@ -63,13 +63,14 @@ export function ImpellaVariantPreview() {
   return (
     <section className={styles.impellaPreview} aria-labelledby="impella-anatomy-preview-heading">
       <div className={styles.sectionHeading}>
-        <span className={styles.kicker}>ANATOMY-ONLY COMPARISON</span>
+        <span className={styles.kicker}>DEVICE PATHWAY COMPARISON</span>
         <h2 id="impella-anatomy-preview-heading">
           Recognize the pump pathway before comparing support
         </h2>
         <p>
-          CP is the active LV-support simulation. The 5.5 and RP models are provided only to compare
-          device shape and source-to-return anatomy.
+          CP and 5.5 provide left-sided support; RP provides right-sided support. The Mechanism
+          Studio can run either side alone or both pumps together while keeping their flows
+          separate.
         </p>
       </div>
       <div className={styles.impellaPreviewGrid}>
@@ -94,6 +95,21 @@ export function ImpellaVariantPreview() {
             <div>
               <dt>Pathway</dt>
               <dd>{selected.pathway}</dd>
+            </div>
+            <div>
+              <dt>Access model</dt>
+              <dd>{selected.access}</dd>
+            </div>
+            <div>
+              <dt>Flow framing</dt>
+              <dd>{selected.productFlowFraming}</dd>
+            </div>
+            <div>
+              <dt>Model reference ceiling</dt>
+              <dd>
+                {selected.modeledReferenceFlowLMin.toFixed(1)} L/min before loading, pressure,
+                position, and suction effects
+              </dd>
             </div>
             <div>
               <dt>Scope</dt>

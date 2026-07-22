@@ -20,6 +20,9 @@ function clamp(value: number, minimum: number, maximum: number) {
 export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
   const { parameters, measurements, catheter, measurementSystem } = state
   const anatomy = PAC_POSITION_ANATOMY[catheter.position]
+  const targetAnatomy = catheter.targetPosition
+    ? PAC_POSITION_ANATOMY[catheter.targetPosition]
+    : null
   const rvLoopHeight = 20 + clamp(measurements.rvSystolicMmHg / 80, 0.2, 1) * 58
   const lvLoopWidth = 34 + clamp(measurements.cardiacOutputLMin / 8, 0.2, 1) * 58
   const levelDescription =
@@ -27,7 +30,9 @@ export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
       ? 'at the phlebostatic axis'
       : `${Math.abs(measurementSystem.transducerLevelCm).toFixed(0)} centimeters ${measurementSystem.transducerLevelCm > 0 ? 'above' : 'below'} the phlebostatic axis`
   const summary = [
-    `Catheter tip is in ${catheter.position.toUpperCase()} at ${catheter.insertionDepthCm} centimeters.`,
+    targetAnatomy
+      ? `Catheter is advancing from ${catheter.position.toUpperCase()} toward ${catheter.targetPosition?.toUpperCase()}; the monitor remains on the confirmed ${catheter.position.toUpperCase()} waveform until arrival.`
+      : `Catheter tip is in ${catheter.position.toUpperCase()} at ${catheter.insertionDepthCm} centimeters.`,
     anatomy.landmark,
     anatomy.waveform,
     `The pressure transducer is ${levelDescription} and is ${measurementSystem.zeroed ? 'zeroed' : 'not yet zeroed'}.`,
@@ -54,6 +59,11 @@ export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
       </header>
 
       <HemodynamicHeart3D state={state} />
+
+      <p className={styles.anatomyMorphologyNote}>
+        <strong>Valve morphology:</strong> Aortic cusps are segmented. Mitral, tricuspid, and
+        pulmonic anatomy are route/orifice proxies only; do not assess leaflets or chordae here.
+      </p>
 
       <dl
         className={styles.anatomyMetricGrid}
@@ -129,9 +139,10 @@ export function PhysiologyPanel({ state, dispatch }: PhysiologyPanelProps) {
       ) : null}
 
       <p className={styles.visualTextEquivalent}>
-        <strong>Visual text equivalent:</strong> {summary} The realistic cutaway is an anatomical
-        teaching surface; the catheter route and transducer are educational overlays, not procedural
-        placement guidance.
+        <strong>Visual text equivalent:</strong> {summary} The transparent CT-derived anatomy is a
+        teaching surface. The flow-directed balloon is shown inflated only for modeled RA/RV-to-PA
+        advancement and deflated on PA arrival. The catheter route and transducer are educational
+        overlays, not procedural placement guidance.
       </p>
     </section>
   )

@@ -10,16 +10,20 @@ import { REALISTIC_HEART_MODEL_URL, REALISTIC_HEART_TRANSFORM } from '../content
 
 interface CardiacHeartModelProps {
   heartRateBpm: number
+  aorticValveOpening?: boolean
+  deviceEmphasis?: boolean
   paused?: boolean
   reducedMotion?: boolean
 }
 
 export function CardiacHeartModel({
   heartRateBpm,
+  aorticValveOpening = true,
+  deviceEmphasis = false,
   paused = false,
   reducedMotion = false,
 }: CardiacHeartModelProps) {
-  const source = useGLTF(REALISTIC_HEART_MODEL_URL)
+  const source = useGLTF(REALISTIC_HEART_MODEL_URL, '/draco/')
   const root = useMemo(() => {
     const clone = SkeletonUtils.clone(source.scene) as THREE.Group
     clone.traverse((object) => {
@@ -27,12 +31,31 @@ export function CardiacHeartModel({
       object.castShadow = true
       object.receiveShadow = true
       object.frustumCulled = false
+      const isChamber = object.name.includes('_Cavity')
+      const isAorticValve = object.name.includes('Valve_Aortic')
+      const isVessel =
+        object.name.includes('Aorta') ||
+        object.name.includes('Pulmonary') ||
+        object.name === 'CT_SVC' ||
+        object.name === 'CT_IVC'
+      object.renderOrder = isAorticValve ? 6 : isVessel ? 5 : isChamber ? 4 : 3
       const cloneMaterial = (material: THREE.Material) => {
         const next = material.clone()
         if (next instanceof THREE.MeshStandardMaterial) {
           next.metalness = 0
           next.roughness = Math.max(0.48, next.roughness)
-          next.emissiveIntensity = 0.62
+          next.emissiveIntensity = 0.04
+          if (deviceEmphasis && isAorticValve) {
+            next.opacity = Math.min(next.opacity, 0.55)
+            next.transparent = true
+            next.depthWrite = false
+            next.side = THREE.DoubleSide
+          }
+          if (next.opacity < 1) {
+            next.transparent = true
+            next.depthWrite = false
+            next.side = THREE.DoubleSide
+          }
         }
         return next
       }
@@ -41,23 +64,43 @@ export function CardiacHeartModel({
         : cloneMaterial(object.material)
     })
     return clone
-  }, [source.scene])
+  }, [deviceEmphasis, source.scene])
   const mixer = useMemo(() => new THREE.AnimationMixer(root), [root])
-  const clip = source.animations[0]
+  const clip = source.animations.find((animation) => animation.name === 'CardiacCycle')
+  const playableClip = useMemo(() => {
+    if (!clip || aorticValveOpening) return clip
+    return new THREE.AnimationClip(
+      `${clip.name}_ClosedAorticValve`,
+      clip.duration,
+      clip.tracks.filter((track) => !track.name.includes('CT_Valve_Aortic_')),
+    )
+  }, [aorticValveOpening, clip])
 
   useEffect(() => {
-    if (!clip) return
-    const action = mixer.clipAction(clip, root)
+    if (!playableClip) return
+    if (!aorticValveOpening) {
+      root.traverse((object) => {
+        if (
+          !(object instanceof THREE.Mesh) ||
+          !object.name.includes('CT_Valve_Aortic_') ||
+          !object.morphTargetInfluences
+        ) {
+          return
+        }
+        object.morphTargetInfluences.fill(0)
+      })
+    }
+    const action = mixer.clipAction(playableClip, root)
     action.reset().play()
     if (reducedMotion) {
       action.paused = true
-      mixer.setTime(clip.duration * 0.12)
+      mixer.setTime(playableClip.duration * 0.12)
     }
     return () => {
       action.stop()
-      mixer.uncacheAction(clip, root)
+      mixer.uncacheAction(playableClip, root)
     }
-  }, [clip, mixer, reducedMotion, root])
+  }, [aorticValveOpening, mixer, playableClip, reducedMotion, root])
 
   useEffect(
     () => () => {
@@ -73,9 +116,9 @@ export function CardiacHeartModel({
   )
 
   useFrame((_, delta) => {
-    if (!clip || paused || reducedMotion) return
+    if (!playableClip || paused || reducedMotion) return
     const cyclesPerSecond = THREE.MathUtils.clamp(heartRateBpm, 25, 220) / 60
-    mixer.update(delta * clip.duration * cyclesPerSecond)
+    mixer.update(delta * playableClip.duration * cyclesPerSecond)
   })
 
   return (
@@ -88,3 +131,5 @@ export function CardiacHeartModel({
     </group>
   )
 }
+
+useGLTF.preload(REALISTIC_HEART_MODEL_URL, '/draco/')

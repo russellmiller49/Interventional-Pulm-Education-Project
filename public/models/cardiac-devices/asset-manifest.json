@@ -1,7 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "generatedBy": "scripts/cardiac-assets/build-runtime-assets.py",
   "redistributionStatus": "pending-clinical-and-rights-review",
+  "valveMorphologyBoundary": "Only the aortic cusps are complete segmented valve morphology; mitral, tricuspid, and pulmonic locations are route/orifice proxies only.",
   "assets": {
     "heart-great-vessels.glb": {
       "url": "/models/cardiac-devices/heart-great-vessels.glb",
@@ -68,56 +69,166 @@
       ],
       "dracoCompressed": true
     },
-    "impella-cp.glb": {
-      "url": "/models/cardiac-devices/impella-cp.glb",
-      "source": "Derived from local authoring input: Impella CP.glb",
+    "impella-cp-v1.glb": {
+      "url": "/models/cardiac-devices/impella-cp-v1.glb",
+      "source": "Project-authored physical-scale procedural teaching facsimile informed by supplied reference artwork and FDA/IFU dimensional labels",
       "limits": {
         "triangles": 20000,
         "bytes": 2000000
       },
-      "bytes": 1698304,
-      "triangles": 11054,
+      "bytes": 19400,
+      "triangles": 5104,
       "nodes": [
+        "Anchor_Impella_CP_AorticAnnulus",
         "Anchor_Impella_CP_Distal",
+        "Anchor_Impella_CP_DistalPigtailTip",
+        "Anchor_Impella_CP_Inlet",
+        "Anchor_Impella_CP_InletCenter",
+        "Anchor_Impella_CP_Outlet",
+        "Anchor_Impella_CP_OutletCenter",
         "Anchor_Impella_CP_Proximal",
+        "Anchor_Impella_CP_ProximalShaftExit",
+        "Impella_CP_AorticAnnulusMarker",
+        "Impella_CP_DistalPigtail",
+        "Impella_CP_InletCage",
+        "Impella_CP_MotorHousing",
+        "Impella_CP_OpenPressureArea",
+        "Impella_CP_OutletCage",
+        "Impella_CP_ProximalShaft",
+        "Impella_CP_ReinforcedCannula",
+        "Impella_CP_ReinforcementSpiral",
         "Impella_CP",
         "Impella_CP_Root"
       ],
-      "dracoCompressed": true
+      "dracoCompressed": true,
+      "compatibilityAliases": ["/models/cardiac-devices/impella-cp.glb"],
+      "physicalScale": {
+        "webUnitsPerMm": 0.024,
+        "nominalInvasiveLengthMm": 151,
+        "diametersMm": {
+          "pigtail": 2.0,
+          "shaft": 3.0,
+          "pump": 4.666666666666667
+        }
+      },
+      "anchorConvention": {
+        "localForwardAxis": "+Y",
+        "rootRole": "left-ventricular inlet center",
+        "anchors": {
+          "Anchor_Impella_CP_InletCenter": [0, 0, 0],
+          "Anchor_Impella_CP_AorticAnnulus": [0, -0.84, 0],
+          "Anchor_Impella_CP_OutletCenter": [0, -1.1280000000000001, 0],
+          "Anchor_Impella_CP_DistalPigtailTip": [0.12, 0.72, 0],
+          "Anchor_Impella_CP_ProximalShaftExit": [0, -2.544, 0]
+        }
+      },
+      "valveMorphologyBoundary": "Only the aortic cusps are complete segmented valve morphology; mitral, tricuspid, and pulmonic locations are route/orifice proxies only."
     },
-    "impella-55.glb": {
-      "url": "/models/cardiac-devices/impella-55.glb",
-      "source": "Derived from local authoring input: Impella 5.5.glb",
+    "impella-55-v1.glb": {
+      "url": "/models/cardiac-devices/impella-55-v1.glb",
+      "source": "Project-authored physical-scale procedural teaching facsimile informed by supplied reference artwork and FDA/IFU dimensional labels",
       "limits": {
         "triangles": 20000,
         "bytes": 2000000
       },
-      "bytes": 1712616,
-      "triangles": 15675,
+      "bytes": 18560,
+      "triangles": 4216,
       "nodes": [
+        "Anchor_Impella_55_AorticAnnulus",
         "Anchor_Impella_55_Distal",
+        "Anchor_Impella_55_DistalTip",
+        "Anchor_Impella_55_InletCenter",
+        "Anchor_Impella_55_OutletCenter",
         "Anchor_Impella_55_Proximal",
+        "Anchor_Impella_55_ProximalShaftExit",
+        "Impella_55_AorticAnnulusMarker",
+        "Impella_55_DistalTip",
+        "Impella_55_FiberOpticSensor",
+        "Impella_55_InletCage",
+        "Impella_55_MotorHousing",
+        "Impella_55_OutletCage",
+        "Impella_55_ProximalShaft",
+        "Impella_55_ReinforcedCannula",
+        "Impella_55_ReinforcementSpiral",
         "Impella_55",
         "Impella_55_Root"
       ],
-      "dracoCompressed": true
+      "dracoCompressed": true,
+      "compatibilityAliases": ["/models/cardiac-devices/impella-55.glb"],
+      "physicalScale": {
+        "webUnitsPerMm": 0.024,
+        "nominalInvasiveLengthMm": 114,
+        "diametersMm": {
+          "shaft": 3.0,
+          "motor": 6.3,
+          "cannula": 7.0
+        }
+      },
+      "anchorConvention": {
+        "localForwardAxis": "+Y",
+        "rootRole": "left-ventricular inlet center",
+        "anchors": {
+          "Anchor_Impella_55_InletCenter": [0, 0, 0],
+          "Anchor_Impella_55_AorticAnnulus": [0, -1.2, 0],
+          "Anchor_Impella_55_OutletCenter": [0, -1.56, 0],
+          "Anchor_Impella_55_DistalTip": [0, 0.12, 0],
+          "Anchor_Impella_55_ProximalShaftExit": [0, -2.616, 0]
+        }
+      },
+      "valveMorphologyBoundary": "Only the aortic cusps are complete segmented valve morphology; mitral, tricuspid, and pulmonic locations are route/orifice proxies only."
     },
-    "impella-rp.glb": {
-      "url": "/models/cardiac-devices/impella-rp.glb",
-      "source": "Derived from local authoring input: Impella RP.glb",
+    "impella-rp-v1.glb": {
+      "url": "/models/cardiac-devices/impella-rp-v1.glb",
+      "source": "Project-authored physical-scale procedural teaching facsimile informed by supplied reference artwork and FDA/IFU dimensional labels",
       "limits": {
         "triangles": 20000,
         "bytes": 2000000
       },
-      "bytes": 1696000,
-      "triangles": 10458,
+      "bytes": 18224,
+      "triangles": 5248,
       "nodes": [
         "Anchor_Impella_RP_Distal",
+        "Anchor_Impella_RP_DistalPigtailTip",
+        "Anchor_Impella_RP_InletCenter",
+        "Anchor_Impella_RP_MotorCenter",
+        "Anchor_Impella_RP_OutletCenter",
         "Anchor_Impella_RP_Proximal",
+        "Anchor_Impella_RP_ProximalShaftExit",
+        "Impella_RP_DifferentialPressureSensor",
+        "Impella_RP_DistalPigtail",
+        "Impella_RP_InletCage",
+        "Impella_RP_MotorHousing",
+        "Impella_RP_OutletCage",
+        "Impella_RP_ProximalShaft",
+        "Impella_RP_ReinforcedCannula",
+        "Impella_RP_ReinforcementSpiral",
         "Impella_RP",
         "Impella_RP_Root"
       ],
-      "dracoCompressed": true
+      "dracoCompressed": true,
+      "compatibilityAliases": ["/models/cardiac-devices/impella-rp.glb"],
+      "physicalScale": {
+        "webUnitsPerMm": 0.024,
+        "nominalInvasiveLengthMm": 238,
+        "diametersMm": {
+          "pigtail": 2.0,
+          "shaft": 3.6666666666666665,
+          "motor": 7.0,
+          "cannula": 7.333333333333333
+        }
+      },
+      "anchorConvention": {
+        "localForwardAxis": "+Y",
+        "rootRole": "pulmonary-artery outlet center",
+        "anchors": {
+          "Anchor_Impella_RP_OutletCenter": [0, 0, 0],
+          "Anchor_Impella_RP_InletCenter": [0, -4.92, 0],
+          "Anchor_Impella_RP_MotorCenter": [0, -5.112, 0],
+          "Anchor_Impella_RP_DistalPigtailTip": [0.08, 0.24, 0],
+          "Anchor_Impella_RP_ProximalShaftExit": [0, -5.3119999920000005, 0]
+        }
+      },
+      "valveMorphologyBoundary": "Only the aortic cusps are complete segmented valve morphology; mitral, tricuspid, and pulmonic locations are route/orifice proxies only."
     },
     "lvad.glb": {
       "url": "/models/cardiac-devices/lvad.glb",

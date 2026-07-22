@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Activity, ArrowRight, HeartPulse, ShieldCheck } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
@@ -19,6 +19,11 @@ import { McsSourcesPanel } from './McsSourcesPanel'
 import styles from './mechanical-circulatory-support.module.css'
 
 const deviceAccent = { iabp: 'amber', impella: 'cyan', lvad: 'rose' } as const
+const EcmoCannulationPreview = lazy(() =>
+  import('./EcmoCannulationPreview').then((module) => ({
+    default: module.EcmoCannulationPreview,
+  })),
+)
 
 export function McsHub({ locale = 'en' }: { locale?: string }) {
   const [progress, setProgress] = useState<McsProgressV1>(createDefaultMcsProgress)
@@ -161,6 +166,12 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
           </article>
         </div>
       </section>
+
+      <Suspense
+        fallback={<div className={styles.ecmoCannulationFallback}>Loading 3D preview…</div>}
+      >
+        <EcmoCannulationPreview />
+      </Suspense>
 
       <ImpellaVariantPreview />
 

@@ -142,8 +142,15 @@ function TrendPlot({ state }: { state: McsSimulationState }) {
     20,
     150,
   )
-  const devicePath = linePath(
-    recent.map((sample) => ({ x: sample.time, y: sample.deviceFlowLMin * 16 })),
+  const leftDevicePath = linePath(
+    recent.map((sample) => ({ x: sample.time, y: sample.leftDeviceFlowLMin * 16 })),
+    640,
+    150,
+    20,
+    150,
+  )
+  const rightDevicePath = linePath(
+    recent.map((sample) => ({ x: sample.time, y: sample.rightDeviceFlowLMin * 16 })),
     640,
     150,
     20,
@@ -155,18 +162,31 @@ function TrendPlot({ state }: { state: McsSimulationState }) {
         <strong>Response trend</strong>
         <span>
           <i data-color="map" /> MAP <i data-color="effective" /> effective flow ×16{' '}
-          <i data-color="device" /> device flow ×16
+          <i data-color="left-device" /> LV pump ×16 <i data-color="right-device" /> RP pump ×16
         </span>
       </figcaption>
       <svg
         viewBox="0 0 640 150"
         role="img"
-        aria-label="Trend of MAP, effective systemic flow, and device flow"
+        aria-label="Trend of MAP, effective systemic flow, left pump flow, and right pump flow"
       >
         <path d="M0 30 H640 M0 75 H640 M0 120 H640" className={styles.monitorGridLine} />
         <path d={mapPath} fill="none" stroke="#ff7185" strokeWidth="2.5" />
         <path d={flowPath} fill="none" stroke="#6ee7f2" strokeWidth="2.5" />
-        <path d={devicePath} fill="none" stroke="#f4c66e" strokeWidth="2" strokeDasharray="6 5" />
+        <path
+          d={leftDevicePath}
+          fill="none"
+          stroke="#f4c66e"
+          strokeWidth="2"
+          strokeDasharray="6 5"
+        />
+        <path
+          d={rightDevicePath}
+          fill="none"
+          stroke="#b788ff"
+          strokeWidth="2"
+          strokeDasharray="3 4"
+        />
       </svg>
     </figure>
   )
@@ -185,6 +205,16 @@ export function McsMonitor({
 }) {
   const metrics = state.metrics
   const activeAlarms = state.alarms.filter((alarm) => alarm.active)
+  const impellaMode =
+    state.device.kind === 'impella'
+      ? state.device.left.enabled && state.device.right.enabled
+        ? `${state.device.left.variant === '55' ? '5.5' : 'CP'} + RP · BIVENTRICULAR`
+        : state.device.left.enabled
+          ? `IMPELLA ${state.device.left.variant === '55' ? '5.5' : 'CP'} · LV SUPPORT`
+          : state.device.right.enabled
+            ? 'IMPELLA RP · RV SUPPORT'
+            : 'IMPELLA · SUPPORT OFF'
+      : state.deviceKind.toUpperCase()
   return (
     <section
       className={styles.monitorCard}
@@ -193,7 +223,7 @@ export function McsMonitor({
       <header className={styles.monitorHeader}>
         <div>
           <span className={styles.monitorLabel}>MCS // EDU</span>
-          <strong>{state.deviceKind.toUpperCase()} · 50 Hz deterministic model</strong>
+          <strong>{impellaMode} · 50 Hz deterministic model</strong>
         </div>
         <time>{state.timeSeconds.toFixed(1)} s</time>
       </header>
@@ -253,11 +283,31 @@ export function McsMonitor({
             <strong>{metric(metrics.nativeFlowLMin, 1)}</strong>
             <small>L/min</small>
           </div>
-          <div data-color="device">
-            <span>DEVICE FLOW</span>
-            <strong>{metric(metrics.deviceFlowLMin, 1)}</strong>
-            <small>L/min</small>
-          </div>
+          {state.device.kind === 'impella' ? (
+            <>
+              <div data-color="left-device">
+                <span>LV PUMP FLOW</span>
+                <strong>{metric(metrics.leftDeviceFlowLMin, 1)}</strong>
+                <small>L/min · systemic assist</small>
+              </div>
+              <div data-color="right-device">
+                <span>RP PUMP FLOW</span>
+                <strong>{metric(metrics.rightDeviceFlowLMin, 1)}</strong>
+                <small>L/min · pulmonary delivery</small>
+              </div>
+              <div>
+                <span>RP − LEFT PUMP</span>
+                <strong>{metric(metrics.pumpBalanceLMin, 1)}</strong>
+                <small>L/min · reconcile with filling</small>
+              </div>
+            </>
+          ) : (
+            <div data-color="device">
+              <span>DEVICE FLOW</span>
+              <strong>{metric(metrics.deviceFlowLMin, 1)}</strong>
+              <small>L/min</small>
+            </div>
+          )}
           <div data-color="effective">
             <span>EFFECTIVE FLOW</span>
             <strong>{metric(metrics.effectiveSystemicFlowLMin, 1)}</strong>

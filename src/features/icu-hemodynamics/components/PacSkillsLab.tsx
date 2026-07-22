@@ -41,10 +41,6 @@ export function PacSkillsLab({ state, dispatch }: PacSkillsLabProps) {
   const ignoreClick = useRef(false)
   const latestTrial = state.thermodilutionTrials.at(-1)
   const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
-  const wedgeElapsed =
-    state.catheter.wedgeStartedAt === null
-      ? 0
-      : Math.max(0, state.timeSeconds - state.catheter.wedgeStartedAt)
 
   function generate(injectionDurationSeconds = durationSeconds) {
     dispatch({
@@ -100,9 +96,6 @@ export function PacSkillsLab({ state, dispatch }: PacSkillsLabProps) {
           <span>Reusable skills station</span>
           <h2 id="skills-heading">PAC setup, advancement, wedge, and cardiac output</h2>
         </div>
-        <span className={styles.stationChip}>
-          Tip: {state.catheter.position.toUpperCase()} · {state.catheter.insertionDepthCm} cm
-        </span>
       </header>
 
       <ol className={styles.skillSequence} aria-label="PAC skills sequence">
@@ -124,7 +117,7 @@ export function PacSkillsLab({ state, dispatch }: PacSkillsLabProps) {
       </ol>
 
       <div className={styles.skillsGrid}>
-        <article className={styles.skillCard}>
+        <article className={`${styles.skillCard} ${styles.pressureSystemCard}`}>
           <div className={styles.cardHeading}>
             <span>01</span>
             <div>
@@ -183,117 +176,6 @@ export function PacSkillsLab({ state, dispatch }: PacSkillsLabProps) {
               <option value="false-wedge">False wedge</option>
             </select>
           </label>
-        </article>
-
-        <article className={styles.skillCard}>
-          <div className={styles.cardHeading}>
-            <span>02</span>
-            <div>
-              <h3>Advance by morphology</h3>
-              <p>
-                Confirm the waveform at every transition; depth is a contextual cue, not the
-                endpoint.
-              </p>
-            </div>
-          </div>
-          <div className={styles.positionTrack} aria-label="PAC position sequence">
-            {(['introducer', 'ra', 'rv', 'pa', 'wedge'] as const).map((position) => (
-              <span key={position} data-active={state.catheter.position === position}>
-                {position.toUpperCase()}
-              </span>
-            ))}
-          </div>
-          <div className={styles.buttonRow}>
-            <button type="button" onClick={() => dispatch({ type: 'RETRACT_CATHETER' })}>
-              Retract
-            </button>
-            <button
-              type="button"
-              disabled={state.catheter.position === 'pa' || state.catheter.position === 'wedge'}
-              onClick={() => dispatch({ type: 'ADVANCE_CATHETER' })}
-            >
-              Advance
-            </button>
-          </div>
-          <dl className={styles.compactFacts}>
-            <div>
-              <dt>RA</dt>
-              <dd>a/c/v waves; low pressure</dd>
-            </div>
-            <div>
-              <dt>RV</dt>
-              <dd>sharp systolic rise; low diastolic pressure</dd>
-            </div>
-            <div>
-              <dt>PA</dt>
-              <dd>diastolic step-up + pulmonic closure notch</dd>
-            </div>
-            <div>
-              <dt>PAWP</dt>
-              <dd>atrial morphology; obtain only with brief balloon inflation</dd>
-            </div>
-          </dl>
-        </article>
-
-        <article className={styles.skillCard}>
-          <div className={styles.cardHeading}>
-            <span>03</span>
-            <div>
-              <h3>12-second wedge capture</h3>
-              <p>Capture, place an end-expiratory cursor, store, then deflate promptly.</p>
-            </div>
-          </div>
-          <div className={styles.wedgeTimer} data-danger={wedgeElapsed >= 12}>
-            <span>{Math.min(15, wedgeElapsed).toFixed(1)} s</span>
-            <div>
-              <i style={{ width: `${Math.min(100, (wedgeElapsed / 15) * 100)}%` }} />
-            </div>
-            <small>
-              {state.catheter.wedgeCaptureReady
-                ? 'Capture complete · place cursor and store'
-                : state.catheter.balloonInflated
-                  ? 'Capturing…'
-                  : 'Balloon deflated'}
-            </small>
-          </div>
-          <div className={styles.buttonRow}>
-            <button
-              type="button"
-              disabled={state.catheter.position !== 'pa'}
-              onClick={() => dispatch({ type: 'START_WEDGE' })}
-            >
-              Inflate + capture
-            </button>
-            <button
-              type="button"
-              disabled={!state.catheter.wedgeCaptureReady}
-              onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR' })}
-            >
-              End-exp cursor
-            </button>
-            <button
-              type="button"
-              disabled={
-                state.catheter.wedgeCursorTime === null || state.catheter.storedWedgeMmHg !== null
-              }
-              onClick={() => dispatch({ type: 'STORE_WEDGE' })}
-            >
-              Store PAWP
-            </button>
-            <button
-              type="button"
-              disabled={!state.catheter.balloonInflated}
-              onClick={() => dispatch({ type: 'DEFLATE_WEDGE' })}
-            >
-              Deflate now
-            </button>
-          </div>
-          {state.catheter.forcedSafetyRecovery && (
-            <p className={styles.criticalFeedback} role="alert">
-              Safety recovery: prolonged inflation was auto-terminated and recorded as a critical
-              error.
-            </p>
-          )}
         </article>
 
         <article

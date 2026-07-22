@@ -37,7 +37,11 @@ import styles from './mechanical-circulatory-support.module.css'
 
 const deviceLabels: Record<McsDeviceKind, { short: string; title: string; mechanism: string }> = {
   iabp: { short: 'IABP', title: 'Intra-aortic balloon pump', mechanism: 'Counterpulsation' },
-  impella: { short: 'Impella', title: 'Impella CP family', mechanism: 'LV-to-aorta unloading' },
+  impella: {
+    short: 'Impella',
+    title: 'Impella CP / 5.5 / RP',
+    mechanism: 'LV, RV, or biventricular support',
+  },
   lvad: {
     short: 'LVAD',
     title: 'Durable continuous-flow LVAD',
@@ -45,7 +49,7 @@ const deviceLabels: Record<McsDeviceKind, { short: string; title: string; mechan
   },
 }
 
-type MobileSurface = 'anatomy' | 'monitor' | 'controls'
+type MobileSurface = 'anatomy' | 'monitor' | 'controls' | 'workflow'
 
 function scoreBand(score: number | null) {
   if (score === null) return 'not-scored'
@@ -358,7 +362,7 @@ export function McsWorkbench({
         role="group"
         aria-label="Choose mobile workspace surface"
       >
-        {(['anatomy', 'monitor', 'controls'] as const).map((surface) => (
+        {(['anatomy', 'monitor', 'controls', 'workflow'] as const).map((surface) => (
           <button
             type="button"
             key={surface}
@@ -376,10 +380,12 @@ export function McsWorkbench({
         <div data-mobile-visible={mobileSurface === 'monitor'}>
           <McsMonitor state={state} revealCausality={revealCausality} />
         </div>
+        <div className={styles.liveControlsRail} data-mobile-visible={mobileSurface === 'controls'}>
+          <McsControls state={state} dispatch={dispatch} />
+        </div>
       </section>
-      <section className={styles.taskGrid} data-mobile-visible={mobileSurface === 'controls'}>
+      <section className={styles.taskGrid} data-mobile-visible={mobileSurface === 'workflow'}>
         <McsCaseWorkflow state={state} dispatch={dispatch} />
-        <McsControls state={state} dispatch={dispatch} />
       </section>
 
       <section className={styles.privacyNote}>

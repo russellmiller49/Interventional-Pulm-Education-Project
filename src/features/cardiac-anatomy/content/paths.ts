@@ -13,25 +13,34 @@ export const IMPELLA_55_MODEL_URL = CARDIAC_RIG.assets.impella55
 export const IMPELLA_RP_MODEL_URL = CARDIAC_RIG.assets.impellaRp
 export const LVAD_MODEL_URL = CARDIAC_RIG.assets.lvad
 
-/**
- * The supplied GLB is authored at a small scene scale with its apex near y=0.
- * This transform centers the anterior cutaway around the shared device-overlay origin.
- */
+/** CT LPS millimetres are baked into the normalized shared web frame during asset generation. */
 export const REALISTIC_HEART_TRANSFORM = {
-  position: [0, -1.42, -0.08] as CardiacPoint3,
+  position: [0, 0, 0] as CardiacPoint3,
   rotation: [0, 0, 0] as CardiacPoint3,
-  scale: 1.05,
+  scale: 1,
 } as const
 
 /**
- * Right-IJ/SVC PAC route on the visible anterior cutaway:
- * SVC → RA → tricuspid valve → RV → RVOT → pulmonic valve → right PA.
+ * Right-IJ/SVC PAC route on the transparent anterior CT heart:
+ * SVC → RA → tricuspid-location gate → RV → RVOT → pulmonic-location gate → right PA.
  * Coordinates are educational landmarks, not insertion-depth or fluoroscopic guidance.
  */
 export const PAC_ROUTE = CARDIAC_RIG.pac.route
 
-export const PAC_ROUTE_ENDPOINT_INDEX: Record<PacAnatomyPosition, number> =
-  CARDIAC_RIG.pac.endpointIndex
+export const PAC_ROUTE_PROGRESS: Record<PacAnatomyPosition, number> = {
+  introducer: CARDIAC_RIG.pac.endpointProgress.introducer,
+  ra: CARDIAC_RIG.pac.endpointProgress.ra,
+  rv: CARDIAC_RIG.pac.endpointProgress.rv,
+  pa: CARDIAC_RIG.pac.endpointProgress.pa,
+  wedge: CARDIAC_RIG.pac.endpointProgress.wedge,
+}
+
+export const PAC_ROUTE_ENDPOINT_INDEX: Record<PacAnatomyPosition, number> = Object.fromEntries(
+  Object.entries(PAC_ROUTE_PROGRESS).map(([position, progress]) => [
+    position,
+    Math.round(progress * (PAC_ROUTE.length - 1)),
+  ]),
+) as Record<PacAnatomyPosition, number>
 
 export const PAC_POSITION_ANATOMY: Record<
   PacAnatomyPosition,
@@ -59,7 +68,8 @@ export const PAC_POSITION_ANATOMY: Record<
   },
   wedge: {
     shortLabel: 'Balloon-occluded PA branch',
-    landmark: 'The inflated balloon briefly occludes a distal pulmonary artery branch.',
+    landmark:
+      'At the same PA depth, the inflated balloon briefly occludes the pulmonary artery branch.',
     waveform:
       'Atrial morphology is sampled through the static distal blood column; deflate promptly.',
   },
@@ -77,9 +87,74 @@ export const IABP_CATHETER_ROUTE = CARDIAC_RIG.iabp.catheterRoute
 
 export const IABP_BALLOON_CENTER = CARDIAC_RIG.iabp.balloonCenter
 
-export const IMPELLA_FLOW_ROUTE = CARDIAC_RIG.impella.flowRoute
+export const IMPELLA_ADVANCEMENT_ROUTE = CARDIAC_RIG.impella.advancement.points
 
-export const IMPELLA_SHAFT_ROUTE = CARDIAC_RIG.impella.shaftRoute
+export const IMPELLA_ADVANCEMENT_PROGRESS = CARDIAC_RIG.impella.advancement.progress
+
+export const IMPELLA_DEVICE_REGISTRATION = CARDIAC_RIG.impella.deviceRegistration
+
+/** Axillary/direct-aortic teaching route into the LV for the surgically placed 5.5 facsimile. */
+export const IMPELLA_55_ADVANCEMENT_ROUTE = CARDIAC_RIG.impella55.advancement.points
+export const IMPELLA_55_ADVANCEMENT_PROGRESS = CARDIAC_RIG.impella55.advancement.progress
+export const IMPELLA_55_DEVICE_REGISTRATION = CARDIAC_RIG.impella55.deviceRegistration
+
+/** Femoral venous IVC → RA → RV → PA route for the right-sided RP facsimile. */
+export const IMPELLA_RP_ADVANCEMENT_ROUTE = CARDIAC_RIG.impellaRp.advancement.points
+export const IMPELLA_RP_ADVANCEMENT_PROGRESS = CARDIAC_RIG.impellaRp.advancement.progress
+export const IMPELLA_RP_DEVICE_REGISTRATION = CARDIAC_RIG.impellaRp.deviceRegistration
+
+const IMPELLA_FLOW_OUTLET_INDEX = Math.round(
+  IMPELLA_ADVANCEMENT_PROGRESS.aorticRoot * (IMPELLA_ADVANCEMENT_ROUTE.length - 1),
+)
+
+/** Physiologic pump flow is device inlet to ascending-aortic outlet, opposite insertion direction. */
+export function impellaFlowRouteForProgress(inletProgress: number): readonly CardiacPoint3[] {
+  const inletIndex = Math.max(
+    IMPELLA_FLOW_OUTLET_INDEX + 1,
+    Math.round(inletProgress * (IMPELLA_ADVANCEMENT_ROUTE.length - 1)),
+  )
+  return IMPELLA_ADVANCEMENT_ROUTE.slice(IMPELLA_FLOW_OUTLET_INDEX, inletIndex + 1).reverse()
+}
+
+const IMPELLA_55_FLOW_OUTLET_INDEX = Math.round(
+  IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot * (IMPELLA_55_ADVANCEMENT_ROUTE.length - 1),
+)
+
+export function impella55FlowRouteForProgress(inletProgress: number): readonly CardiacPoint3[] {
+  const inletIndex = Math.max(
+    IMPELLA_55_FLOW_OUTLET_INDEX + 1,
+    Math.round(inletProgress * (IMPELLA_55_ADVANCEMENT_ROUTE.length - 1)),
+  )
+  return IMPELLA_55_ADVANCEMENT_ROUTE.slice(IMPELLA_55_FLOW_OUTLET_INDEX, inletIndex + 1).reverse()
+}
+
+const IMPELLA_RP_FLOW_INLET_INDEX = Math.round(
+  IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet * (IMPELLA_RP_ADVANCEMENT_ROUTE.length - 1),
+)
+
+/** RP physiologic flow follows IVC inlet → PA outlet, the same direction as advancement. */
+export function impellaRpFlowRouteForProgress(outletProgress: number): readonly CardiacPoint3[] {
+  const outletIndex = Math.max(
+    IMPELLA_RP_FLOW_INLET_INDEX + 1,
+    Math.round(outletProgress * (IMPELLA_RP_ADVANCEMENT_ROUTE.length - 1)),
+  )
+  return IMPELLA_RP_ADVANCEMENT_ROUTE.slice(IMPELLA_RP_FLOW_INLET_INDEX, outletIndex + 1)
+}
+
+export const IMPELLA_FLOW_ROUTE = impellaFlowRouteForProgress(IMPELLA_ADVANCEMENT_PROGRESS.correct)
+
+export const IMPELLA_55_FLOW_ROUTE = impella55FlowRouteForProgress(
+  IMPELLA_55_ADVANCEMENT_PROGRESS.correct,
+)
+export const IMPELLA_RP_FLOW_ROUTE = impellaRpFlowRouteForProgress(
+  IMPELLA_RP_ADVANCEMENT_PROGRESS.correct,
+)
+
+export const IMPELLA_SHAFT_ROUTE = IMPELLA_ADVANCEMENT_ROUTE
+
+export const CT_CARDIAC_PROVENANCE = CARDIAC_RIG.ctProvenance
+
+export const ECMO_CANNULATION_ROUTES = CARDIAC_RIG.ecmo
 
 export const LVAD_INFLOW_ROUTE = CARDIAC_RIG.lvad.inflowRoute
 

@@ -177,7 +177,7 @@ describe('MCS deterministic circulation and device adapters', () => {
 
     let underfilled = createInitialMcsState('practice', 'impella', mcsPracticeScenarios[3])
     underfilled = advanceMcsSimulation(underfilled, 0.5)
-    expect(underfilled.alarms.some((item) => item.id === 'impella-suction')).toBe(true)
+    expect(underfilled.alarms.some((item) => item.id === 'impella-left-suction')).toBe(true)
   })
 
   it('unloads the LV with higher Impella support and remains RV/preload dependent', () => {
@@ -220,7 +220,189 @@ describe('MCS deterministic circulation and device adapters', () => {
       value: 8,
     })
     expect(rvLimited.metrics.deviceFlowLMin).toBeLessThan(highSupport.metrics.deviceFlowLMin)
-    expect(rvLimited.alarms.some((item) => item.id === 'impella-suction')).toBe(true)
+    expect(rvLimited.alarms.some((item) => item.id === 'impella-left-suction')).toBe(true)
+  })
+
+  it('keeps CP and 5.5 as distinct left-pump variants with loading-dependent flow bounds', () => {
+    let cp = createInitialMcsState('learn', 'impella')
+    cp = mcsReducer(cp, {
+      type: 'SET_IMPELLA_CONTROL',
+      side: 'left',
+      control: 'performanceLevel',
+      value: 9,
+    })
+    let fiveFive = createInitialMcsState('learn', 'impella')
+    fiveFive = mcsReducer(fiveFive, {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'leftVariant',
+      value: '55',
+    })
+    fiveFive = mcsReducer(fiveFive, {
+      type: 'SET_IMPELLA_CONTROL',
+      side: 'left',
+      control: 'performanceLevel',
+      value: 9,
+    })
+
+    expect(cp.device.kind === 'impella' && cp.device.left.variant).toBe('cp')
+    expect(fiveFive.device.kind === 'impella' && fiveFive.device.left.variant).toBe('55')
+    expect(fiveFive.metrics.leftDeviceFlowLMin).toBeGreaterThan(cp.metrics.leftDeviceFlowLMin)
+    expect(cp.metrics.leftDeviceFlowLMin).toBeLessThanOrEqual(4.3)
+    expect(fiveFive.metrics.leftDeviceFlowLMin).toBeLessThanOrEqual(5.5)
+    expect(fiveFive.metrics.deviceFlowLMin).toBe(fiveFive.metrics.leftDeviceFlowLMin)
+    expect(fiveFive.metrics.rightDeviceFlowLMin).toBe(0)
+  })
+
+  it('models RP as a caval-to-pulmonary pump without adding RP flow directly to systemic output', () => {
+    let rpOnly = createInitialMcsState('learn', 'impella')
+    rpOnly = mcsReducer(rpOnly, {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'leftEnabled',
+      value: false,
+    })
+    rpOnly = mcsReducer(rpOnly, {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'rightEnabled',
+      value: true,
+    })
+    rpOnly = mcsReducer(rpOnly, {
+      type: 'SET_IMPELLA_CONTROL',
+      side: 'right',
+      control: 'performanceLevel',
+      value: 9,
+    })
+
+    expect(rpOnly.metrics.leftDeviceFlowLMin).toBe(0)
+    expect(rpOnly.metrics.deviceFlowLMin).toBe(0)
+    expect(rpOnly.metrics.rightDeviceFlowLMin).toBeGreaterThan(0)
+    expect(rpOnly.metrics.rightDeviceFlowLMin).toBeLessThanOrEqual(4)
+    expect(rpOnly.alarms.some((item) => item.id === 'impella-right-flow-imbalance')).toBe(true)
+    expect(rpOnly.metrics.effectiveSystemicFlowLMin).toBe(rpOnly.metrics.nativeFlowLMin)
+    expect(rpOnly.metrics.effectiveSystemicFlowLMin).not.toBeCloseTo(
+      rpOnly.metrics.nativeFlowLMin + rpOnly.metrics.rightDeviceFlowLMin,
+      1,
+    )
+    expect(rpOnly.supportEffect.transfers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ from: 'systemic-venous', to: 'pulmonary-arterial' }),
+      ]),
+    )
+    const inspected = mcsReducer(rpOnly, { type: 'INSPECT', id: 'device' })
+    expect(inspected.responseMessage).toMatch(/left pump 0\.0 L\/min · RP [1-9]/i)
+
+    if (rpOnly.device.kind !== 'impella') throw new Error('Expected Impella state')
+    const underfilledSupport = computeMechanicalSupport(
+      { ...rpOnly.patient, preloadPercent: 50 },
+      rpOnly.device,
+      {
+        ...rpOnly.compartments,
+        systemicVenousVolumeMl: 850,
+        systemicVenousPressureMmHg: 2,
+      },
+      deriveBaselineMeasurements({ ...rpOnly.patient, preloadPercent: 50 }),
+      0,
+    )
+    expect(underfilledSupport.rightDeviceFlowLMin).toBeLessThan(rpOnly.metrics.rightDeviceFlowLMin)
+    expect(underfilledSupport.alarms.some((item) => item.id === 'impella-right-suction')).toBe(true)
+
+    const highPvrPatient = { ...rpOnly.patient, pulmonaryVascularResistanceWU: 9 }
+    const highPvrSupport = computeMechanicalSupport(
+      highPvrPatient,
+      rpOnly.device,
+      rpOnly.compartments,
+      deriveBaselineMeasurements(highPvrPatient),
+      0,
+    )
+    expect(highPvrSupport.rightDeviceFlowLMin).toBeLessThan(rpOnly.metrics.rightDeviceFlowLMin)
+  })
+
+  it('runs left and right pumps simultaneously while conserving volume and exposing pump balance', () => {
+    const leftOnly = advanceMcsSimulation(createInitialMcsState('learn', 'impella'), 1)
+    let biPella = createInitialMcsState('learn', 'impella')
+    biPella = mcsReducer(biPella, {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'leftVariant',
+      value: '55',
+    })
+    biPella = mcsReducer(biPella, {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'rightEnabled',
+      value: true,
+    })
+    const beforeVolume = totalMcsCirculatingVolume(biPella)
+    biPella = advanceMcsSimulation(biPella, 1)
+
+    expect(biPella.metrics.leftDeviceFlowLMin).toBeGreaterThan(0)
+    expect(biPella.metrics.rightDeviceFlowLMin).toBeGreaterThan(0)
+    expect(biPella.metrics.deviceFlowLMin).toBe(biPella.metrics.leftDeviceFlowLMin)
+    expect(biPella.metrics.pumpBalanceLMin).toBeCloseTo(
+      biPella.metrics.rightDeviceFlowLMin - biPella.metrics.leftDeviceFlowLMin,
+      2,
+    )
+    expect(biPella.metrics.effectiveSystemicFlowLMin).toBeCloseTo(
+      biPella.metrics.nativeFlowLMin +
+        biPella.metrics.leftDeviceFlowLMin -
+        biPella.metrics.recirculatingFlowLMin,
+      1,
+    )
+    expect(biPella.metrics.effectiveSystemicFlowLMin).not.toBeCloseTo(
+      biPella.metrics.nativeFlowLMin +
+        biPella.metrics.leftDeviceFlowLMin +
+        biPella.metrics.rightDeviceFlowLMin,
+      1,
+    )
+    expect(biPella.supportEffect.transfers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ from: 'left-ventricular', to: 'systemic-arterial' }),
+        expect.objectContaining({ from: 'systemic-venous', to: 'pulmonary-arterial' }),
+      ]),
+    )
+    expect(biPella.metrics.rapMmHg).toBeLessThan(leftOnly.metrics.rapMmHg)
+    expect(totalMcsCirculatingVolume(biPella)).toBeCloseTo(beforeVolume, 3)
+  })
+
+  it('applies Impella controls and position alarms to the selected pump side only', () => {
+    let state = createInitialMcsState('learn', 'impella')
+    state = mcsReducer(state, {
+      type: 'SET_IMPELLA_CONFIGURATION',
+      control: 'rightEnabled',
+      value: true,
+    })
+    if (state.device.kind !== 'impella') throw new Error('Expected Impella state')
+    const originalLeft = { ...state.device.left }
+    state = mcsReducer(state, {
+      type: 'SET_IMPELLA_CONTROL',
+      side: 'right',
+      control: 'position',
+      value: 'too-distal',
+    })
+    state = mcsReducer(state, {
+      type: 'SET_IMPELLA_CONTROL',
+      side: 'right',
+      control: 'performanceLevel',
+      value: 8,
+    })
+    state = mcsReducer(state, {
+      type: 'SET_IMPELLA_CONTROL',
+      side: 'right',
+      control: 'purgeState',
+      value: 'high-pressure',
+    })
+
+    expect(state.device.kind === 'impella' && state.device.left).toEqual(originalLeft)
+    expect(state.device.kind === 'impella' && state.device.right.position).toBe('too-distal')
+    expect(state.device.kind === 'impella' && state.device.right.performanceLevel).toBe(8)
+    expect(state.actionIds).toEqual(
+      expect.arrayContaining([
+        'impella:right:set-position',
+        'impella:right:set-level',
+        'impella:right:set-purge',
+      ]),
+    )
+    expect(state.alarms.some((item) => item.id === 'impella-right-position')).toBe(true)
+    expect(state.alarms.some((item) => item.id === 'impella-right-purge-high')).toBe(true)
+    expect(state.alarms.some((item) => item.id === 'impella-left-position')).toBe(false)
+    expect(state.alarms.some((item) => item.id === 'impella-left-purge-high')).toBe(false)
   })
 
   it('makes LVAD flow afterload-sensitive and separates recirculation from effective flow', () => {

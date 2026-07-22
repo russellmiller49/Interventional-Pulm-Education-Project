@@ -4,6 +4,7 @@ import {
   createInitialCirculationCompartments,
   HEMODYNAMIC_FIXED_STEP_SECONDS,
 } from '@/features/hemodynamics-core'
+import { PAC_ROUTE_PROGRESS } from '@/features/cardiac-anatomy/content/paths'
 export {
   advanceWindkesselCompartments,
   createInitialCirculationCompartments,
@@ -27,6 +28,8 @@ import type {
 } from './types'
 
 const MAX_WAVEFORM_SECONDS = 12
+export const WEDGE_AUTO_DEFLATION_SECONDS = 10
+const WEDGE_CAPTURE_SAFETY_MARGIN_SECONDS = 2
 
 export const defaultMeasurementSystem: MeasurementSystemState = {
   zeroed: false,
@@ -44,7 +47,31 @@ const catheterDepth: Record<CatheterPosition, number> = {
   ra: 25,
   rv: 35,
   pa: 45,
-  wedge: 50,
+  wedge: 45,
+}
+
+/** Matches the full-route duration used by the R3F spline playback. */
+export const PAC_CATHETER_FULL_ROUTE_DURATION_SECONDS = 7.5
+
+export function catheterTransitionDurationSeconds(
+  from: CatheterPosition,
+  to: CatheterPosition,
+): number {
+  const fromKey = from === 'wedge' ? 'pa' : from
+  const toKey = to === 'wedge' ? 'pa' : to
+  return Math.max(
+    0.24,
+    PAC_CATHETER_FULL_ROUTE_DURATION_SECONDS *
+      Math.abs(PAC_ROUTE_PROGRESS[toKey] - PAC_ROUTE_PROGRESS[fromKey]),
+  )
+}
+
+export function wedgeCaptureDelaySeconds(respiratoryRateBpm: number): number {
+  const respiratoryCycleSeconds = 60 / clamp(respiratoryRateBpm, 4, 45)
+  return Math.min(
+    WEDGE_AUTO_DEFLATION_SECONDS - WEDGE_CAPTURE_SAFETY_MARGIN_SECONDS,
+    respiratoryCycleSeconds,
+  )
 }
 
 function gaussian(value: number, center: number, width: number): number {
@@ -431,7 +458,11 @@ export function createInitialHemodynamicState(
     measurementSystem,
     catheter: {
       position,
+      targetPosition: null,
+      movementStartedAt: null,
+      movementCompletesAt: null,
       insertionDepthCm: catheterDepth[position],
+      floatBalloonInflated: false,
       balloonInflated: false,
       wedgeStartedAt: null,
       wedgeCaptureReady: false,
@@ -476,20 +507,49 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
   )
   let catheter = state.catheter
   let criticalErrors = state.criticalErrors
+  let responseMessage = state.responseMessage
+  if (
+    catheter.targetPosition !== null &&
+    catheter.movementCompletesAt !== null &&
+    nextTime >= catheter.movementCompletesAt
+  ) {
+    const arrived = catheter.targetPosition
+    catheter = {
+      ...catheter,
+      position: arrived,
+      targetPosition: null,
+      movementStartedAt: null,
+      movementCompletesAt: null,
+      insertionDepthCm: catheterDepth[arrived],
+      floatBalloonInflated: arrived === 'pa' ? false : catheter.floatBalloonInflated,
+    }
+    responseMessage = `Catheter reached ${arrived.toUpperCase()}. Confirm the destination waveform before advancing again.`
+  }
   if (catheter.balloonInflated && catheter.wedgeStartedAt !== null) {
     const wedgeElapsed = nextTime - catheter.wedgeStartedAt
-    if (wedgeElapsed >= 15) {
+    if (wedgeElapsed >= WEDGE_AUTO_DEFLATION_SECONDS) {
       catheter = {
         ...catheter,
         position: 'pa',
+        targetPosition: null,
+        movementStartedAt: null,
+        movementCompletesAt: null,
         insertionDepthCm: catheterDepth.pa,
+        floatBalloonInflated: false,
         balloonInflated: false,
         wedgeStartedAt: null,
         wedgeCaptureReady: false,
+        wedgeCursorTime: null,
+        storedAtEndExpiration: catheter.storedWedgeMmHg !== null,
         forcedSafetyRecovery: true,
       }
       criticalErrors = [...new Set([...criticalErrors, 'wedge-prolonged-inflation'])]
-    } else if (wedgeElapsed >= 12 && !catheter.wedgeCaptureReady) {
+      responseMessage =
+        'Safety recovery: the 10-second inflation limit was reached, so the balloon was auto-deflated and the PA waveform was restored.'
+    } else if (
+      wedgeElapsed >= wedgeCaptureDelaySeconds(parameters.respiratoryRateBpm) &&
+      !catheter.wedgeCaptureReady
+    ) {
       catheter = { ...catheter, wedgeCaptureReady: true }
     }
   }
@@ -515,6 +575,7 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
     criticalErrors,
     waveforms,
     alarms: alarmsFor(measurements, catheter.balloonInflated, catheter.forcedSafetyRecovery),
+    responseMessage,
   }
 }
 

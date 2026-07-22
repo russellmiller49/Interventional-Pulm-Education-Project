@@ -1,4 +1,5 @@
 import rawRig from './cardiac-rig.json'
+import rawCtRig from './cardiac-ct-rig.json'
 
 export type CardiacPoint3 = readonly [number, number, number]
 export type CardiacSceneId = 'heart' | 'iabp' | 'preview'
@@ -41,6 +42,26 @@ function toCamera(scene: CardiacSceneId): CardiacCameraPreset {
   }
 }
 
+function toProgressMap<T extends Record<string, number>>(values: T, label: string): T {
+  for (const [name, value] of Object.entries(values)) {
+    if (!Number.isFinite(value) || value < 0 || value > 1) {
+      throw new Error(`Invalid cardiac rig progress: ${label}.${name}`)
+    }
+  }
+  return values
+}
+
+function toCtRoute<T extends Record<string, number>>(
+  route: { points: readonly (readonly number[])[]; progress: T; lengthWebUnits: number },
+  label: string,
+) {
+  return {
+    points: toPoints(route.points, `${label}.points`),
+    progress: toProgressMap(route.progress, `${label}.progress`),
+    lengthWebUnits: route.lengthWebUnits,
+  }
+}
+
 export const CARDIAC_RIG = {
   version: rawRig.version,
   assets: rawRig.assets,
@@ -58,8 +79,8 @@ export const CARDIAC_RIG = {
     ),
   },
   pac: {
-    route: toPoints(rawRig.pac.route, 'pac.route'),
-    endpointIndex: rawRig.pac.endpointIndex,
+    route: toPoints(rawCtRig.pac.points, 'pac.route'),
+    endpointProgress: toProgressMap(rawCtRig.pac.progress, 'pac.endpointProgress'),
     radius: rawRig.pac.radius,
     balloonRadius: rawRig.pac.balloonRadius,
   },
@@ -95,6 +116,56 @@ export const CARDIAC_RIG = {
     },
     shaftRoute: toPoints(rawRig.impella.shaftRoute, 'impella.shaftRoute'),
     flowRoute: toPoints(rawRig.impella.flowRoute, 'impella.flowRoute'),
+    advancement: toCtRoute(rawCtRig.impella, 'impella.advancement'),
+    deviceRegistration: {
+      modelUrl: rawCtRig.impella.deviceRegistration.modelUrl,
+      localForwardAxis: rawCtRig.impella.deviceRegistration.localForwardAxis,
+      inletLocal: toPoint(
+        rawCtRig.impella.deviceRegistration.inletLocal,
+        'impella.deviceRegistration.inletLocal',
+      ),
+      outletLocal: toPoint(
+        rawCtRig.impella.deviceRegistration.outletLocal,
+        'impella.deviceRegistration.outletLocal',
+      ),
+      modelScale: rawCtRig.impella.deviceRegistration.modelScale,
+      correctInletDistanceBelowAnnulusMm:
+        rawCtRig.impella.deviceRegistration.correctInletDistanceBelowAnnulusMm,
+    },
+  },
+  impella55: {
+    advancement: toCtRoute(rawCtRig.impella55, 'impella55.advancement'),
+    deviceRegistration: {
+      modelUrl: rawCtRig.impella55.deviceRegistration.modelUrl,
+      localForwardAxis: rawCtRig.impella55.deviceRegistration.localForwardAxis,
+      inletLocal: toPoint(
+        rawCtRig.impella55.deviceRegistration.inletLocal,
+        'impella55.deviceRegistration.inletLocal',
+      ),
+      outletLocal: toPoint(
+        rawCtRig.impella55.deviceRegistration.outletLocal,
+        'impella55.deviceRegistration.outletLocal',
+      ),
+      modelScale: rawCtRig.impella55.deviceRegistration.modelScale,
+      correctInletDistanceBelowAnnulusMm:
+        rawCtRig.impella55.deviceRegistration.correctInletDistanceBelowAnnulusMm,
+    },
+  },
+  impellaRp: {
+    advancement: toCtRoute(rawCtRig.impellaRp, 'impellaRp.advancement'),
+    deviceRegistration: {
+      modelUrl: rawCtRig.impellaRp.deviceRegistration.modelUrl,
+      localForwardAxis: rawCtRig.impellaRp.deviceRegistration.localForwardAxis,
+      inletLocal: toPoint(
+        rawCtRig.impellaRp.deviceRegistration.inletLocal,
+        'impellaRp.deviceRegistration.inletLocal',
+      ),
+      outletLocal: toPoint(
+        rawCtRig.impellaRp.deviceRegistration.outletLocal,
+        'impellaRp.deviceRegistration.outletLocal',
+      ),
+      modelScale: rawCtRig.impellaRp.deviceRegistration.modelScale,
+    },
   },
   lvad: {
     modelTransform: {
@@ -106,6 +177,33 @@ export const CARDIAC_RIG = {
     outflowRoute: toPoints(rawRig.lvad.outflowRoute, 'lvad.outflowRoute'),
   },
   transducer: rawRig.transducer,
+  ecmo: {
+    vv: {
+      femoralVenousDrainage: toCtRoute(
+        rawCtRig.ecmo.vv.femoralVenousDrainage,
+        'ecmo.vv.femoralVenousDrainage',
+      ),
+      jugularVenousReturn: toCtRoute(
+        rawCtRig.ecmo.vv.jugularVenousReturn,
+        'ecmo.vv.jugularVenousReturn',
+      ),
+    },
+    va: {
+      femoralVenousDrainage: toCtRoute(
+        rawCtRig.ecmo.va.femoralVenousDrainage,
+        'ecmo.va.femoralVenousDrainage',
+      ),
+      femoralArterialReturn: toCtRoute(
+        rawCtRig.ecmo.va.femoralArterialReturn,
+        'ecmo.va.femoralArterialReturn',
+      ),
+      retrogradeAorticFlow: toCtRoute(
+        rawCtRig.ecmo.va.retrogradeAorticFlow,
+        'ecmo.va.retrogradeAorticFlow',
+      ),
+    },
+  },
+  ctProvenance: rawCtRig.provenance,
 } as const
 
 export function cardiacAssetUrl(asset: CardiacAssetId): string {

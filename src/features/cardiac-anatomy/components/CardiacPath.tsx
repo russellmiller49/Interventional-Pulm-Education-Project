@@ -47,11 +47,15 @@ export function CardiacPath({
 
   useEffect(() => () => geometry.dispose(), [geometry])
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const target = THREE.MathUtils.clamp(visibleFraction, 0, 1)
     renderedFraction.current = reducedMotion
       ? target
-      : THREE.MathUtils.lerp(renderedFraction.current, target, 0.16)
+      : THREE.MathUtils.lerp(
+          renderedFraction.current,
+          target,
+          1 - Math.exp(-11 * Math.min(delta, 0.1)),
+        )
     const indexCount = geometry.index?.count ?? 0
     const visibleIndexCount = Math.floor((indexCount * renderedFraction.current) / 3) * 3
     geometry.setDrawRange(0, visibleIndexCount)

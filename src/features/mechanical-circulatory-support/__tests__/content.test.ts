@@ -4,6 +4,7 @@ import {
   mcsDeviceProfiles,
   mcsLessons,
   mcsPracticeScenarios,
+  impellaAnatomyVariants,
   isMcsPublicationReady,
   mcsReleaseGates,
   mcsSourceById,
@@ -36,10 +37,14 @@ describe('MCS curriculum and evidence registry', () => {
       for (const sourceId of scenario.sourceIds) expect(mcsSourceById.has(sourceId)).toBe(true)
     }
     for (const profile of mcsDeviceProfiles) {
-      expect(profile.educationalModelVersion).toMatch(/^1\./)
+      expect(profile.educationalModelVersion).toMatch(/^\d+\.\d+\.\d+(?:-[\w.]+)?$/)
       expect(profile.controlBounds.length).toBeGreaterThan(0)
       expect(profile.alarmDefinitions.length).toBeGreaterThan(0)
       for (const sourceId of profile.sourceIds) expect(mcsSourceById.has(sourceId)).toBe(true)
+    }
+    for (const variant of impellaAnatomyVariants) {
+      expect(variant.sourceIds.length).toBeGreaterThan(0)
+      for (const sourceId of variant.sourceIds) expect(mcsSourceById.has(sourceId)).toBe(true)
     }
   })
 
@@ -59,8 +64,9 @@ describe('MCS curriculum and evidence registry', () => {
 
   it('records current FDA safety notices without treating the recall sweep as complete', () => {
     const notices = mcsSources.filter((source) => source.sourceType === 'fda-safety-notice')
-    expect(notices).toHaveLength(4)
+    expect(notices.length).toBeGreaterThanOrEqual(5)
     expect(notices.some((source) => source.id === 'fda-impella-cp-2026-recall')).toBe(true)
+    expect(notices.some((source) => source.id === 'fda-impella-rp-2026-recall')).toBe(true)
     expect(notices.some((source) => source.id === 'fda-heartmate-mpu-2025-recall')).toBe(true)
     expect(mcsReleaseGates.find((gate) => gate.id === 'recall-check-content-freeze')).toMatchObject(
       {
@@ -76,5 +82,30 @@ describe('MCS curriculum and evidence registry', () => {
       ).toBe(false)
       expect(capstone.title).toMatch(/Unseen/i)
     }
+  })
+
+  it('teaches CP versus 5.5 and RP/BiPella with variant-specific evidence', () => {
+    const leftVariantLesson = mcsLessons.find(
+      (lesson) => lesson.id === 'impella-unloading-placement',
+    )
+    const rightSupportLesson = mcsLessons.find((lesson) => lesson.id === 'impella-suction-purge-rv')
+
+    expect(leftVariantLesson?.steps.some((step) => step.id === 'impella-left-variant')).toBe(true)
+    expect(leftVariantLesson?.sourceIds).toEqual(
+      expect.arrayContaining(['fda-impella-55-labeling', 'jnj-impella-55-current']),
+    )
+    expect(rightSupportLesson?.steps.some((step) => step.id === 'impella-rp-bipella')).toBe(true)
+    expect(rightSupportLesson?.sourceIds).toEqual(
+      expect.arrayContaining([
+        'fda-impella-55-labeling',
+        'jnj-impella-55-current',
+        'fda-impella-rp-labeling',
+        'jnj-impella-rp-current',
+      ]),
+    )
+
+    const rpVariant = impellaAnatomyVariants.find((variant) => variant.id === 'rp')
+    expect(rpVariant?.productFlowFraming).toMatch(/up to 4\.0 L\/min/i)
+    expect(rpVariant?.productFlowFraming).not.toMatch(/above|>\s*4\.0/i)
   })
 })

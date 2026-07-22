@@ -229,13 +229,6 @@ export function BedsideMonitor({ state, dispatch, onOpenCardiacOutput }: Bedside
         <button type="button" onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}>
           Zero pressures
         </button>
-        <button
-          type="button"
-          disabled={state.catheter.position !== 'pa'}
-          onClick={() => dispatch({ type: 'START_WEDGE' })}
-        >
-          Wedge
-        </button>
         <button type="button" onClick={onOpenCardiacOutput}>
           Cardiac output
         </button>

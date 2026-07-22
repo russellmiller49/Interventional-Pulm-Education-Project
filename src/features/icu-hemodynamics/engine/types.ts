@@ -53,7 +53,13 @@ export interface MeasurementSystemState {
 
 export interface CatheterState {
   position: CatheterPosition
+  /** Confirmed pressure-sampling position. The monitor stays on this waveform during travel. */
+  targetPosition: CatheterPosition | null
+  movementStartedAt: number | null
+  movementCompletesAt: number | null
   insertionDepthCm: number
+  /** Flow-directed balloon state used only while floating RA/RV → PA, not for PAWP sampling. */
+  floatBalloonInflated: boolean
   balloonInflated: boolean
   wedgeStartedAt: number | null
   wedgeCaptureReady: boolean
@@ -277,8 +283,8 @@ export type HemodynamicAction =
   | { type: 'SELECT_PRIORITY'; id: string }
   | { type: 'COMMIT_PREDICTION' }
   | { type: 'SET_CATHETER_POSITION'; position: CatheterPosition }
-  | { type: 'ADVANCE_CATHETER' }
-  | { type: 'RETRACT_CATHETER' }
+  | { type: 'ADVANCE_CATHETER'; instant?: boolean }
+  | { type: 'RETRACT_CATHETER'; instant?: boolean }
   | { type: 'SET_TRANSDUCER_LEVEL'; levelCm: number }
   | { type: 'ZERO_TRANSDUCER' }
   | { type: 'SET_DAMPING'; dampingRatio: number }

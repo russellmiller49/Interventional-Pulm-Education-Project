@@ -47,7 +47,7 @@ export const mcsReleaseGates: readonly McsReleaseGate[] = [
     owner: 'Content lead',
     complete: false,
     evidence:
-      'Current FDA Impella CP/controller and HeartMate power-system notices are recorded; a formal all-device content-freeze sweep remains required.',
+      'Current FDA Impella CP, Impella RP sensor, Impella controller, and HeartMate power-system notices are recorded; a formal all-device content-freeze sweep remains required.',
   },
   {
     id: 'recall-check-prepublication',

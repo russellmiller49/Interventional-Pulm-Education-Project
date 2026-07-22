@@ -1,15 +1,19 @@
 'use client'
 
-import { Suspense, useMemo, useRef, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import { Line, OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame, type RootState } from '@react-three/fiber'
 import { RotateCcw } from 'lucide-react'
 import * as THREE from 'three'
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 import { CanvasErrorBoundary } from '@/components/airway-anatomy-lesson/CanvasErrorBoundary'
 import { CardiacHeartModel } from '@/features/cardiac-anatomy/components/CardiacHeartModel'
-import { CardiacPath } from '@/features/cardiac-anatomy/components/CardiacPath'
-import { HeartGreatVesselsModel } from '@/features/cardiac-anatomy/components/CardiacVesselModels'
+import {
+  ProgressiveSplineTube,
+  SplineFollower,
+  useTrajectoryPlayback,
+} from '@/features/cardiac-anatomy/components/CardiacTrajectory'
 import {
   useReducedMotionPreference,
   useWebGLSupport,
@@ -17,14 +21,17 @@ import {
 import {
   PAC_POSITION_ANATOMY,
   PAC_ROUTE,
-  PAC_ROUTE_ENDPOINT_INDEX,
+  PAC_ROUTE_PROGRESS,
   PHLEBOSTATIC_AXIS_Y,
   TRANSDUCER_LEVEL_WORLD_UNITS_PER_CM,
   TRANSDUCER_X,
   CARDIAC_RIG,
 } from '@/features/cardiac-anatomy/content/paths'
 
-import type { HemodynamicSimulationState } from '../engine'
+import {
+  PAC_CATHETER_FULL_ROUTE_DURATION_SECONDS,
+  type HemodynamicSimulationState,
+} from '../engine'
 import styles from './icu-hemodynamics.module.css'
 
 function setupRenderer({ gl, scene }: RootState, onLost: () => void) {
@@ -64,8 +71,8 @@ function Transducer({
     <group>
       <Line
         points={[
-          [-1.25, PHLEBOSTATIC_AXIS_Y, 0.69],
-          [1.32, PHLEBOSTATIC_AXIS_Y, 0.69],
+          [-1.75, PHLEBOSTATIC_AXIS_Y, 1.64],
+          [1.82, PHLEBOSTATIC_AXIS_Y, 1.64],
         ]}
         color="#7edbd2"
         dashScale={16}
@@ -77,17 +84,13 @@ function Transducer({
         transparent
       />
       <Line
-        points={[
-          [PAC_ROUTE[0][0], PAC_ROUTE[0][1], 0.64],
-          [1.12, 1.78, 0.68],
-          [TRANSDUCER_X, y, 0.7],
-        ]}
+        points={[PAC_ROUTE[0], [1.64, 1.78, 1.2], [TRANSDUCER_X, y, 1.68]]}
         color="#c7dde0"
         lineWidth={1.5}
         opacity={0.82}
         transparent
       />
-      <group ref={marker} position={[TRANSDUCER_X, y, 0.72]}>
+      <group ref={marker} position={[TRANSDUCER_X, y, 1.72]}>
         <mesh>
           <boxGeometry args={[0.25, 0.16, 0.12]} />
           <meshStandardMaterial
@@ -107,6 +110,76 @@ function Transducer({
   )
 }
 
+const BALLOON_DEFLATED_COLOR = new THREE.Color('#d6d4c5')
+const BALLOON_INFLATED_COLOR = new THREE.Color('#e9d7a1')
+
+function PacBalloonVisual({
+  balloonInflated,
+  reducedMotion,
+}: {
+  balloonInflated: boolean
+  reducedMotion: boolean
+}) {
+  const balloon = useRef<THREE.Mesh>(null)
+  const material = useRef<THREE.MeshPhysicalMaterial>(null)
+
+  useFrame((_, delta) => {
+    if (!balloon.current || !material.current) return
+    const radius = balloonInflated
+      ? CARDIAC_RIG.pac.balloonRadius.inflated
+      : CARDIAC_RIG.pac.balloonRadius.deflated
+    const nextScale: [number, number, number] = balloonInflated
+      ? [radius * 0.9, radius * 1.15, radius * 0.9]
+      : [radius * 0.78, radius * 1.5, radius * 0.78]
+    if (reducedMotion) {
+      balloon.current.scale.set(...nextScale)
+      material.current.color.copy(balloonInflated ? BALLOON_INFLATED_COLOR : BALLOON_DEFLATED_COLOR)
+      material.current.opacity = balloonInflated ? 0.58 : 0.9
+      return
+    }
+    const damping = 18
+
+    balloon.current.scale.set(
+      THREE.MathUtils.damp(balloon.current.scale.x, nextScale[0], damping, delta),
+      THREE.MathUtils.damp(balloon.current.scale.y, nextScale[1], damping, delta),
+      THREE.MathUtils.damp(balloon.current.scale.z, nextScale[2], damping, delta),
+    )
+    material.current.color.lerp(
+      balloonInflated ? BALLOON_INFLATED_COLOR : BALLOON_DEFLATED_COLOR,
+      1 - Math.exp(-damping * Math.min(delta, 0.1)),
+    )
+    material.current.opacity = THREE.MathUtils.damp(
+      material.current.opacity,
+      balloonInflated ? 0.58 : 0.9,
+      damping,
+      delta,
+    )
+  })
+
+  const deflatedRadius = CARDIAC_RIG.pac.balloonRadius.deflated
+
+  return (
+    <mesh
+      ref={balloon}
+      scale={[deflatedRadius * 0.78, deflatedRadius * 1.5, deflatedRadius * 0.78]}
+    >
+      <sphereGeometry args={[1, 22, 16]} />
+      <meshPhysicalMaterial
+        ref={material}
+        color="#d6d4c5"
+        depthTest={false}
+        depthWrite={false}
+        emissive="#d8b75a"
+        emissiveIntensity={0.08}
+        opacity={0.9}
+        roughness={0.22}
+        thickness={0.12}
+        transparent
+      />
+    </mesh>
+  )
+}
+
 function PacCatheterOverlay({
   state,
   reducedMotion,
@@ -114,69 +187,58 @@ function PacCatheterOverlay({
   state: HemodynamicSimulationState
   reducedMotion: boolean
 }) {
-  const tip = useRef<THREE.Group>(null)
-  const targetFraction =
-    PAC_ROUTE_ENDPOINT_INDEX[state.catheter.position] / Math.max(1, PAC_ROUTE.length - 1)
-  const renderedFraction = useRef(targetFraction)
-  const curve = useMemo(
-    () =>
-      new THREE.CatmullRomCurve3(
-        PAC_ROUTE.map((point) => new THREE.Vector3(...point)),
-        false,
-        'centripetal',
-      ),
-    [],
-  )
+  const confirmedPosition = state.catheter.position === 'wedge' ? 'pa' : state.catheter.position
+  const requestedPosition = state.catheter.targetPosition ?? confirmedPosition
+  const routePosition = requestedPosition === 'wedge' ? 'pa' : requestedPosition
+  const targetFraction = PAC_ROUTE_PROGRESS[routePosition]
+  const trajectoryReducedMotion = reducedMotion && state.catheter.targetPosition === null
+  const renderedFraction = useTrajectoryPlayback({
+    targetProgress: targetFraction,
+    replayKey: 0,
+    durationSeconds: PAC_CATHETER_FULL_ROUTE_DURATION_SECONDS,
+    reducedMotion: trajectoryReducedMotion,
+    paused: state.paused,
+    initialProgress: PAC_ROUTE_PROGRESS[confirmedPosition],
+    snapToTarget: state.catheter.targetPosition === null,
+  })
   const fastFlushActive =
     state.measurementSystem.fastFlushActiveUntil !== null &&
     state.measurementSystem.fastFlushActiveUntil > state.timeSeconds
 
-  useFrame(() => {
-    renderedFraction.current = reducedMotion
-      ? targetFraction
-      : THREE.MathUtils.lerp(renderedFraction.current, targetFraction, 0.15)
-    tip.current?.position.copy(
-      curve.getPoint(THREE.MathUtils.clamp(renderedFraction.current, 0, 1)),
-    )
-  })
-
   return (
     <group>
-      <CardiacPath
+      <ProgressiveSplineTube
         points={PAC_ROUTE}
+        progress={renderedFraction}
         radius={CARDIAC_RIG.pac.radius}
         color="#e8bd4d"
+        depthTest={false}
         emissiveIntensity={0.08}
         radialSegments={12}
-        visibleFraction={targetFraction}
-        reducedMotion={reducedMotion}
+        renderOrder={31}
       />
-      <group ref={tip}>
-        <mesh>
-          <sphereGeometry
-            args={[
-              state.catheter.balloonInflated
-                ? CARDIAC_RIG.pac.balloonRadius.inflated
-                : CARDIAC_RIG.pac.balloonRadius.deflated,
-              18,
-              14,
-            ]}
-          />
-          <meshPhysicalMaterial
-            color={state.catheter.balloonInflated ? '#e9d7a1' : '#d6d4c5'}
-            emissive="#d8b75a"
-            emissiveIntensity={0.08}
-            opacity={state.catheter.balloonInflated ? 0.58 : 0.9}
-            roughness={0.22}
-            thickness={0.12}
-            transparent
+      <SplineFollower
+        points={PAC_ROUTE}
+        progress={renderedFraction}
+        lateralMotion={targetFraction >= PAC_ROUTE_PROGRESS.ra ? 0.012 : 0.004}
+        reducedMotion={reducedMotion}
+        renderOrder={32}
+      >
+        <PacBalloonVisual
+          balloonInflated={state.catheter.balloonInflated || state.catheter.floatBalloonInflated}
+          reducedMotion={reducedMotion}
+        />
+        <mesh position={[0, -0.075, 0]} renderOrder={32}>
+          <cylinderGeometry args={[0.025, 0.025, 0.12, 12]} />
+          <meshStandardMaterial
+            color="#d6d8d3"
+            depthTest={false}
+            depthWrite={false}
+            metalness={0.25}
+            roughness={0.3}
           />
         </mesh>
-        <mesh position={[0.035, -0.02, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.025, 0.025, 0.075, 12]} />
-          <meshStandardMaterial color="#d6d8d3" metalness={0.25} roughness={0.3} />
-        </mesh>
-      </group>
+      </SplineFollower>
       <Transducer
         levelCm={state.measurementSystem.transducerLevelCm}
         zeroed={state.measurementSystem.zeroed}
@@ -192,9 +254,12 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
   const reducedMotion = useReducedMotionPreference()
   const [contextLost, setContextLost] = useState(false)
   const [epoch, setEpoch] = useState(0)
-  const [viewEpoch, setViewEpoch] = useState(0)
+  const controlsRef = useRef<OrbitControlsImpl>(null)
   const camera = CARDIAC_RIG.cameras.heart
-  const anatomy = PAC_POSITION_ANATOMY[state.catheter.position]
+  const confirmedAnatomy = PAC_POSITION_ANATOMY[state.catheter.position]
+  const targetAnatomy = state.catheter.targetPosition
+    ? PAC_POSITION_ANATOMY[state.catheter.targetPosition]
+    : null
   const level = state.measurementSystem.transducerLevelCm
   const levelLabel =
     level === 0
@@ -233,7 +298,7 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
           }
         >
           <Canvas
-            key={`${epoch}-${viewEpoch}`}
+            key={epoch}
             dpr={[1, 1.5]}
             shadows
             camera={{ position: camera.position, fov: camera.fov, near: 0.1, far: 50 }}
@@ -250,10 +315,10 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
                 paused={state.paused}
                 reducedMotion={reducedMotion}
               />
-              <HeartGreatVesselsModel />
               <PacCatheterOverlay state={state} reducedMotion={reducedMotion} />
             </Suspense>
             <OrbitControls
+              ref={controlsRef}
               enablePan={false}
               maxDistance={camera.maxDistance}
               minDistance={camera.minDistance}
@@ -268,13 +333,19 @@ export function HemodynamicHeart3D({ state }: { state: HemodynamicSimulationStat
         <button
           type="button"
           aria-label="Reset 3D hemodynamic anatomy view"
-          onClick={() => setViewEpoch((value) => value + 1)}
+          onClick={() => controlsRef.current?.reset()}
         >
           <RotateCcw aria-hidden="true" /> Reset view
         </button>
       </div>
       <div className={styles.physiologyAnatomyHud}>
-        <strong>TIP · {anatomy.shortLabel}</strong>
+        <strong>
+          TIP · {confirmedAnatomy.shortLabel}
+          {targetAnatomy ? ` → ${targetAnatomy.shortLabel}` : ''}
+        </strong>
+        {targetAnatomy ? (
+          <span>Advancing · waveform remains {confirmedAnatomy.shortLabel}</span>
+        ) : null}
         <span>Pressure transducer · {levelLabel}</span>
         <span>Yellow = PAC course · dashed teal = phlebostatic reference</span>
       </div>

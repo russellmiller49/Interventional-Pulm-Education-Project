@@ -32,12 +32,38 @@ export interface IabpDeviceState {
   deflationOffsetMs: number
 }
 
-export interface ImpellaDeviceState {
-  kind: 'impella'
+export type ImpellaSide = 'left' | 'right'
+export type ImpellaLeftVariant = 'cp' | '55'
+export type ImpellaPurgeState = 'normal' | 'high-pressure' | 'low-pressure'
+export type ImpellaLeftPosition = 'correct' | 'too-deep' | 'too-shallow'
+export type ImpellaRightPosition =
+  | 'correct'
+  | 'inlet-too-high'
+  | 'outlet-too-proximal'
+  | 'too-distal'
+
+export interface ImpellaLeftPumpState {
+  enabled: boolean
+  variant: ImpellaLeftVariant
   running: boolean
   performanceLevel: number
-  position: 'correct' | 'too-deep' | 'too-shallow'
-  purgeState: 'normal' | 'high-pressure' | 'low-pressure'
+  position: ImpellaLeftPosition
+  purgeState: ImpellaPurgeState
+}
+
+export interface ImpellaRightPumpState {
+  enabled: boolean
+  variant: 'rp'
+  running: boolean
+  performanceLevel: number
+  position: ImpellaRightPosition
+  purgeState: ImpellaPurgeState
+}
+
+export interface ImpellaDeviceState {
+  kind: 'impella'
+  left: ImpellaLeftPumpState
+  right: ImpellaRightPumpState
 }
 
 export interface LvadDeviceState {
@@ -62,6 +88,13 @@ export interface McsAlarm {
 
 export interface McsDerivedMetrics {
   nativeFlowLMin: number
+  leftDeviceFlowLMin: number
+  rightDeviceFlowLMin: number
+  pumpBalanceLMin: number
+  /**
+   * Backward-compatible systemic pump-flow signal. For Impella this is left-pump flow only;
+   * right-pump flow is deliberately not added to systemic output.
+   */
   deviceFlowLMin: number
   effectiveSystemicFlowLMin: number
   recirculatingFlowLMin: number
@@ -100,6 +133,8 @@ export interface McsTrendSample {
   mapMmHg: number
   effectiveFlowLMin: number
   deviceFlowLMin: number
+  leftDeviceFlowLMin: number
+  rightDeviceFlowLMin: number
   pcwpMmHg: number
   rapMmHg: number
 }
@@ -285,8 +320,14 @@ export type McsAction =
     }
   | {
       type: 'SET_IMPELLA_CONTROL'
+      side?: ImpellaSide
       control: 'running' | 'performanceLevel' | 'position' | 'purgeState'
       value: boolean | number | string
+    }
+  | {
+      type: 'SET_IMPELLA_CONFIGURATION'
+      control: 'leftEnabled' | 'leftVariant' | 'rightEnabled'
+      value: boolean | ImpellaLeftVariant
     }
   | {
       type: 'SET_LVAD_CONTROL'

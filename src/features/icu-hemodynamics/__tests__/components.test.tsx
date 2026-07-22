@@ -1,6 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 
+import { hemodynamicCases } from '../content'
 import IcuHemodynamicsLab from '../components/IcuHemodynamicsLab'
+import { PacActionDock } from '../components/PacActionDock'
+import { createInitialHemodynamicState, icuHemodynamicsReducer } from '../engine'
 
 describe('ICU Hemodynamics Lab learner interface', () => {
   beforeEach(() => {
@@ -13,7 +16,7 @@ describe('ICU Hemodynamics Lab learner interface', () => {
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       value: jest.fn().mockReturnValue({
-        matches: false,
+        matches: true,
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
       }),
@@ -38,20 +41,100 @@ describe('ICU Hemodynamics Lab learner interface', () => {
     expect(screen.getByText(/Visual text equivalent:/i)).toBeInTheDocument()
     expect(await screen.findByText(/Tip: INTRODUCER · 12 cm/i)).toBeInTheDocument()
     expect(screen.getByText(/superior vena cava entry/i)).toBeInTheDocument()
+    expect(screen.getByText(/Aortic cusps are segmented/i)).toBeInTheDocument()
+    expect(screen.getByText(/route\/orifice proxies only/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'Advance by waveform and route gate' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Tricuspid and pulmonic gates orient the CT-derived route/i),
+    ).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Advance' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Inflate briefly' })).toHaveLength(1)
   })
 
   it('advances the PAC by waveform and exposes wedge and keyboard-capable thermodilution controls', async () => {
     render(<IcuHemodynamicsLab />)
     expect(await screen.findByText(/Tip: INTRODUCER · 12 cm/i)).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Introducer / SVC' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: RA · 25 cm/i)).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { name: 'Right atrium' })).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
     expect(screen.getByText(/tip is in the right atrium/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: RV · 35 cm/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: PA · 45 cm/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Inflate + capture' })).toBeEnabled()
+    expect(
+      screen.getByRole('group', { name: 'Brief end-expiratory PAWP capture' }),
+    ).toBeInTheDocument()
+    const inflate = screen.getByRole('button', { name: 'Inflate briefly' })
+    expect(inflate).toBeEnabled()
+    fireEvent.click(inflate)
+    expect(screen.getByText(/Tip: WEDGE · 45 cm/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retract' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Deflate now' })).toBeEnabled()
     expect(screen.getByRole('button', { name: /Hold to inject · Space is timed/i })).toBeEnabled()
+  })
+
+  it('keeps one canonical PAC dock available while switching compact workspace surfaces', async () => {
+    render(<IcuHemodynamicsLab />)
+    expect(await screen.findByText(/Tip: INTRODUCER · 12 cm/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'physiology' }))
+    expect(screen.getByRole('button', { name: 'physiology' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
+    expect(screen.getByText(/Tip: RA · 25 cm/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'tasks' }))
+    expect(screen.getByRole('button', { name: 'tasks' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getAllByRole('button', { name: 'Advance' })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: 'Inflate briefly' })).toHaveLength(1)
+  })
+
+  it('progresses wedge guidance from sampling through cursor, storage, and deflation', () => {
+    const initial = icuHemodynamicsReducer(
+      createInitialHemodynamicState(hemodynamicCases[0], 'learn', 8),
+      { type: 'SET_CATHETER_POSITION', position: 'pa' },
+    )
+    const sampling = icuHemodynamicsReducer(initial, { type: 'START_WEDGE' })
+    const dispatch = jest.fn()
+    const { rerender } = render(<PacActionDock state={sampling} dispatch={dispatch} />)
+    const wedgeStatus = () =>
+      within(screen.getByRole('group', { name: 'Brief end-expiratory PAWP capture' })).getByRole(
+        'status',
+      )
+
+    expect(wedgeStatus()).toHaveTextContent(/Sampling the respiratory cycle/i)
+
+    const ready = {
+      ...sampling,
+      catheter: { ...sampling.catheter, wedgeCaptureReady: true },
+    }
+    rerender(<PacActionDock state={ready} dispatch={dispatch} />)
+    expect(wedgeStatus()).toHaveTextContent(/Place the end-expiratory cursor/i)
+
+    const cursor = icuHemodynamicsReducer(ready, { type: 'PLACE_WEDGE_CURSOR' })
+    rerender(<PacActionDock state={cursor} dispatch={dispatch} />)
+    expect(wedgeStatus()).toHaveTextContent(/Store PAWP, then deflate/i)
+    expect(screen.getByRole('button', { name: 'End-exp cursor' })).toBeDisabled()
+
+    const stored = icuHemodynamicsReducer(cursor, { type: 'STORE_WEDGE' })
+    rerender(<PacActionDock state={stored} dispatch={dispatch} />)
+    expect(wedgeStatus()).toHaveTextContent(/PAWP stored. Deflate now/i)
+
+    const deflated = icuHemodynamicsReducer(stored, { type: 'DEFLATE_WEDGE' })
+    rerender(<PacActionDock state={deflated} dispatch={dispatch} />)
+    expect(wedgeStatus()).toHaveTextContent(/Balloon deflated and PA waveform restored/i)
   })
 
   it('requires commit-before-intervention in Practice and reveals scored workflow only after selection', async () => {

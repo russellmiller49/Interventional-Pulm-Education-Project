@@ -35,13 +35,11 @@ describe('Mechanical Circulatory Support learner interface', () => {
     })
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
-      value: jest
-        .fn()
-        .mockReturnValue({
-          matches: false,
-          addEventListener: jest.fn(),
-          removeEventListener: jest.fn(),
-        }),
+      value: jest.fn().mockReturnValue({
+        matches: false,
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }),
     })
   })
 
@@ -69,6 +67,26 @@ describe('Mechanical Circulatory Support learner interface', () => {
     ]) {
       expect(within(metrics).getByText(label)).toBeInTheDocument()
     }
+  })
+
+  it('configures and displays independent 5.5 and RP pumps in the biventricular workspace', () => {
+    render(<McsWorkbench section="practice" />)
+    fireEvent.click(screen.getByRole('button', { name: /Impella CP \/ 5\.5 \/ RP/i }))
+
+    fireEvent.change(screen.getByRole('combobox', { name: /Left-sided Impella configuration/i }), {
+      target: { value: '55' },
+    })
+    fireEvent.change(screen.getByRole('combobox', { name: /Right-sided Impella configuration/i }), {
+      target: { value: 'rp' },
+    })
+
+    expect(screen.getByRole('group', { name: 'Impella 5.5' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Impella RP' })).toBeInTheDocument()
+    expect(screen.getByText('LV PUMP FLOW')).toBeInTheDocument()
+    expect(screen.getByText('RP PUMP FLOW')).toBeInTheDocument()
+    expect(screen.getByText('RP − LEFT PUMP')).toBeInTheDocument()
+    expect(screen.getByText(/5\.5 \+ RP · BIVENTRICULAR/i)).toBeInTheDocument()
+    expect(screen.getByText(/never added directly to systemic flow/i)).toBeInTheDocument()
   })
 
   it('enforces inspect then predict then commit before adjustment', async () => {

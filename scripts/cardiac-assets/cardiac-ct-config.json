@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "sourceCoordinateSystem": "LPS",
+  "sourceUnits": "mm",
+  "centerLpsMm": [-4.25, -167, -180.2],
+  "webUnitsPerMm": 0.024,
+  "webAxes": {
+    "x": "+L (patient left)",
+    "y": "+S (superior)",
+    "z": "-P (anterior)"
+  },
+  "sourceModel": "3D assets/Slicer Cardiac_model/Heart_final.gltf",
+  "sourceDetailedSegmentation": "3D assets/Slicer Cardiac_model/extraction/Heart_final.seg.nrrd",
+  "sourceCenterlines": "3D assets/Slicer Cardiac_model/extraction"
+}
