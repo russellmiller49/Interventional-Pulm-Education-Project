@@ -141,6 +141,66 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
       }),
     )
   })
+
+  it('accepts and stores only a validated ICU Simulator outcome summary', async () => {
+    const database = authenticatedAnalyticsDatabase()
+    supabaseServerMock.mockResolvedValue(database.client)
+    const eventPayload = validIcuScenarioCompletion()
+
+    const response = await POST(
+      analyticsRequest('icu-simulation', eventPayload, {
+        eventType: 'quiz_submitted',
+        routePath: '/en/icu-simulation/practice',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(database.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_payload: eventPayload,
+        event_type: 'quiz_submitted',
+        module_id: 'icu-simulation',
+        route_path: '/en/icu-simulation/practice',
+      }),
+    )
+    expect(database.from).not.toHaveBeenCalledWith('site_module_progress')
+    expect(database.from).not.toHaveBeenCalledWith('site_module_sessions')
+  })
+
+  it.each([
+    ['missing payload', undefined],
+    ['physiology', { ...validIcuScenarioCompletion(), mapMmHg: 62 }],
+    ['device setting', { ...validIcuScenarioCompletion(), rpm: 3_500 }],
+    ['action history', { ...validIcuScenarioCompletion(), commands: ['start-va-ecmo'] }],
+    ['free text', { ...validIcuScenarioCompletion(), note: 'patient-specific text' }],
+    ['unknown case', { ...validIcuScenarioCompletion(), scenarioId: 'patient-42' }],
+  ])('rejects ICU Simulator %s before authentication or storage', async (_, body) => {
+    const response = await POST(
+      analyticsRequest('icu-simulation', body, {
+        eventType: 'quiz_submitted',
+        routePath: '/en/icu-simulation/practice',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: 'Invalid ICU Simulator analytics payload.',
+    })
+    expect(supabaseServerMock).not.toHaveBeenCalled()
+  })
+
+  it('rejects generic ICU Simulator lifecycle telemetry during private review', async () => {
+    const response = await POST(
+      analyticsRequest('icu-simulation', undefined, {
+        eventType: 'session_start',
+        routePath: '/en/icu-simulation',
+        sessionId: '3cf4a73a-d143-4ed4-874a-e494e5d2e729',
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    expect(supabaseServerMock).not.toHaveBeenCalled()
+  })
 })
 
 function validCrrtCaseCompletion() {
@@ -156,6 +216,19 @@ function validCrrtCaseCompletion() {
     timeToFirstSafeActionSeconds: 45,
     completed: true,
     reassessmentCompleted: true,
+  }
+}
+
+function validIcuScenarioCompletion() {
+  return {
+    interaction: 'scenario_completed',
+    section: 'practice',
+    scenarioId: 'septic-ards-aki',
+    scoreBand: 'mastery',
+    elapsedBand: '31-to-60-minutes',
+    criticalErrorCount: 0,
+    completed: true,
+    mastered: true,
   }
 }
 
