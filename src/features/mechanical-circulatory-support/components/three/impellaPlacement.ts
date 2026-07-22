@@ -11,20 +11,21 @@ const RP_PHYSICAL_SPAN_PROGRESS =
   IMPELLA_RP_ADVANCEMENT_PROGRESS.correct - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet
 
 /**
- * Separates RP outlet and inlet teaching faults without inventing valve morphology.
- * The inlet-too-high target lies within the reviewed RA route segment between the CT-derived
- * IVC inlet and the tricuspid-location gate; it is a non-target malposition, not a leaflet target.
+ * Keeps the fixed 205 mm inlet-to-outlet span invariant in every RP teaching state.
+ * An inlet that has migrated into the RA necessarily displaces the distal assembly farther into
+ * the PA in this centerline model; shortening the cannula to hold the outlet fixed is not physical.
  */
 export function impellaRpEndpointProgress(
   position: ImpellaRightPosition,
 ): ImpellaRpEndpointProgress {
   if (position === 'inlet-too-high') {
+    const inlet =
+      IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet +
+      (IMPELLA_RP_ADVANCEMENT_PROGRESS.tricuspidGate - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet) *
+        0.55
     return {
-      head: IMPELLA_RP_ADVANCEMENT_PROGRESS.correct,
-      inlet:
-        IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet +
-        (IMPELLA_RP_ADVANCEMENT_PROGRESS.tricuspidGate - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet) *
-          0.55,
+      head: Math.min(1, inlet + RP_PHYSICAL_SPAN_PROGRESS),
+      inlet,
     }
   }
 

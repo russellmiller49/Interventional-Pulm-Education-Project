@@ -109,6 +109,17 @@ const proceduralImpellaMaterials = [
   'Impella dark proximal shaft',
 ]
 
+const lvadContract = {
+  root: 'LVAD_Root',
+  anchors: {
+    Anchor_LVAD_Inflow: [-0.17, -0.55, 0.02],
+    Anchor_LVAD_ApicalCuff: [-0.17, -0.43, 0.02],
+    Anchor_LVAD_Outflow: [0.01777, 0.13045, 0.00231],
+    Anchor_LVAD_PumpOutlet: [0.01777, 0.13045, 0.00231],
+    Anchor_LVAD_PumpCenter: [0.0939, 0.26912, -0.03838],
+  },
+}
+
 const requiredNodes = {
   'heart-great-vessels.glb': [
     'Heart_Aorta_OpenLumen',
@@ -135,11 +146,11 @@ const requiredNodes = {
       [contract.root, contract.assembly, ...Object.keys(contract.anchors), ...contract.components],
     ]),
   ),
-  'lvad.glb': [
+  'lvad-v2.glb': [
+    lvadContract.root,
     'LVAD_InflowCannula',
     'LVAD_PumpAndHousing',
-    'Anchor_LVAD_Inflow',
-    'Anchor_LVAD_Outflow',
+    ...Object.keys(lvadContract.anchors),
   ],
 }
 
@@ -336,6 +347,26 @@ for (const [filename, entry] of Object.entries(runtimeManifest.assets)) {
     }
     if (entry.valveMorphologyBoundary !== valveMorphologyBoundary) {
       errors.push(`${filename}: manifest is missing the aortic-only morphology boundary`)
+    }
+  }
+  if (filename === 'lvad-v2.glb') {
+    const rootNode = document.nodes?.find((node) => node.name === lvadContract.root)
+    if (rootNode?.translation || rootNode?.rotation || rootNode?.scale) {
+      errors.push(`${filename}: ${lvadContract.root} must have an identity transform`)
+    }
+    for (const [nodeName, expected] of Object.entries(lvadContract.anchors)) {
+      const node = document.nodes?.find((candidate) => candidate.name === nodeName)
+      const translation = node?.translation ?? [0, 0, 0]
+      if (expected.some((coordinate, index) => Math.abs(coordinate - translation[index]) > 1e-5)) {
+        errors.push(`${filename}: ${nodeName} is not exported at ${expected.join(', ')}`)
+      }
+    }
+    if (
+      entry.anchorConvention?.localForwardAxis !==
+        '+Y from LV inflow toward the extracardiac pump' ||
+      !anchorMapsMatch(entry.anchorConvention?.anchors, lvadContract.anchors, 1e-5)
+    ) {
+      errors.push(`${filename}: manifest anchor contract does not match the shipped nodes`)
     }
   }
 }
@@ -539,6 +570,12 @@ if (!ctRig.provenance?.authoredInterfaceLandmarks?.includes('reviewed authored L
 if (!ctRig.provenance?.authoredImpella55Access?.includes('axillary-graft access boundary')) {
   errors.push(`cardiac-ct-rig.json: missing authored Impella 5.5 access provenance`)
 }
+if (
+  !ctRig.provenance?.authoredImpella55Access?.includes('visibly synthetic 10 mm') ||
+  Math.abs(ctRig.impella55?.progress?.surgicalAccessEnd - 0.26895) > 1e-5
+) {
+  errors.push(`cardiac-ct-rig.json: missing the bounded visible 5.5 surgical-access conduit`)
+}
 if (!ctRig.provenance?.impellaRpValveGates?.includes('route/orifice gates only')) {
   errors.push(`cardiac-ct-rig.json: missing Impella RP proxy-valve gate provenance`)
 }
@@ -687,6 +724,92 @@ if (Math.abs(impellaRpInletToOutletMm - 205) > 0.1) {
 if (Math.abs(impellaRpTooProximalMm - 190) > 0.1) {
   errors.push(
     `cardiac-ct-rig.impellaRp: rendered too-proximal span is ${impellaRpTooProximalMm.toFixed(3)} mm, expected 190±0.1 mm`,
+  )
+}
+
+const lvad = rig.lvad
+const lvadRegistration = lvad?.ctRegistration
+const samePoint = (left, right, tolerance = 1e-5) =>
+  Array.isArray(left) &&
+  Array.isArray(right) &&
+  left.length === 3 &&
+  right.length === 3 &&
+  left.every((coordinate, index) => Math.abs(coordinate - right[index]) <= tolerance)
+if (
+  !samePoint(lvad?.modelRegistration?.apicalCuffWorld, lvadRegistration?.epicardialApex) ||
+  !samePoint(lvad?.inflowRoute?.[0], lvadRegistration?.inflowTip) ||
+  !samePoint(lvad?.outflowRoute?.at(-2), lvadRegistration?.aorticSurfaceAnastomosis) ||
+  !samePoint(lvad?.outflowRoute?.at(-1), lvadRegistration?.aorticLumenEndpoint) ||
+  !lvadRegistration?.clearanceReview?.includes('clears the supplied CT LV, RV, RA') ||
+  !lvadRegistration?.provenance?.includes('supplied CT segmentation')
+) {
+  errors.push(`cardiac-rig.json: LVAD endpoints are not tied to the CT apical/aortic registration`)
+}
+const pumpCenter = new THREE.Vector3(...(lvadRegistration?.pumpCenter ?? [0, 0, 0]))
+const epicardialApex = new THREE.Vector3(...(lvadRegistration?.epicardialApex ?? [0, 0, 0]))
+const outwardAxis = new THREE.Vector3(...(lvad?.modelRegistration?.outwardAxis ?? [0, 0, 0]))
+const extracardiacDistance = pumpCenter.clone().sub(epicardialApex).dot(outwardAxis.normalize())
+if (extracardiacDistance < 0.45) {
+  errors.push(
+    `cardiac-rig.json: LVAD pump center is only ${extracardiacDistance.toFixed(3)} web units beyond the epicardium`,
+  )
+}
+const lvadLocalAxis = new THREE.Vector3(
+  ...(lvad?.modelRegistration?.modelOutwardAxisLocal ?? [0, 0, 0]),
+)
+const lvadWorldAxis = new THREE.Vector3(...(lvad?.modelRegistration?.outwardAxis ?? [0, 0, 0]))
+const lvadLocalAnchor = new THREE.Vector3(
+  ...(lvad?.modelRegistration?.modelAnchorLocal ?? [0, 0, 0]),
+)
+const lvadWorldAnchor = new THREE.Vector3(
+  ...(lvad?.modelRegistration?.apicalCuffWorld ?? [0, 0, 0]),
+)
+const lvadScale = lvad?.modelRegistration?.scale
+if (
+  lvadLocalAxis.lengthSq() < 0.99 ||
+  lvadWorldAxis.lengthSq() < 0.99 ||
+  !Number.isFinite(lvadScale) ||
+  lvadScale <= 0
+) {
+  errors.push(`cardiac-rig.json: LVAD model registration has an invalid axis or scale`)
+} else {
+  const lvadRotation = new THREE.Quaternion().setFromUnitVectors(
+    lvadLocalAxis.normalize(),
+    lvadWorldAxis.normalize(),
+  )
+  const transformLvadAnchor = (localPoint) =>
+    new THREE.Vector3(...localPoint)
+      .sub(lvadLocalAnchor)
+      .multiplyScalar(lvadScale)
+      .applyQuaternion(lvadRotation)
+      .add(lvadWorldAnchor)
+  const registeredPumpCenter = transformLvadAnchor(lvadContract.anchors.Anchor_LVAD_PumpCenter)
+  const registeredPumpOutlet = transformLvadAnchor(lvadContract.anchors.Anchor_LVAD_PumpOutlet)
+  if (registeredPumpCenter.distanceTo(pumpCenter) > 1e-4) {
+    errors.push(`cardiac-rig.json: LVAD pump-center anchor does not match the CT registration`)
+  }
+  if (registeredPumpOutlet.distanceTo(new THREE.Vector3(...lvad.outflowRoute[0])) > 1e-4) {
+    errors.push(`cardiac-rig.json: LVAD outflow route is disconnected from the pump outlet`)
+  }
+}
+const aorticCenterline = new THREE.CatmullRomCurve3(
+  ctRig.impella.points.map((point) => new THREE.Vector3(...point)),
+  false,
+  'centripetal',
+)
+const lvadLumenEndpoint = new THREE.Vector3(
+  ...(lvadRegistration?.aorticLumenEndpoint ?? [99, 99, 99]),
+)
+let minimumAorticCenterlineDistance = Number.POSITIVE_INFINITY
+for (let index = 0; index <= 2000; index += 1) {
+  minimumAorticCenterlineDistance = Math.min(
+    minimumAorticCenterlineDistance,
+    lvadLumenEndpoint.distanceTo(aorticCenterline.getPointAt(index / 2000)),
+  )
+}
+if (minimumAorticCenterlineDistance > 0.003) {
+  errors.push(
+    `cardiac-rig.json: LVAD flow continuation misses the CT aortic centerline by ${minimumAorticCenterlineDistance.toFixed(4)} web units`,
   )
 }
 

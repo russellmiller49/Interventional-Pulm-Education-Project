@@ -9,7 +9,7 @@
     "impellaCp": "/models/cardiac-devices/impella-cp-v1.glb",
     "impella55": "/models/cardiac-devices/impella-55-v1.glb",
     "impellaRp": "/models/cardiac-devices/impella-rp-v1.glb",
-    "lvad": "/models/cardiac-devices/lvad.glb"
+    "lvad": "/models/cardiac-devices/lvad-v2.glb"
   },
   "cameras": {
     "heart": {
@@ -229,23 +229,38 @@
     ]
   },
   "lvad": {
-    "modelTransform": {
-      "position": [0.76, -1.08, 0.68],
-      "rotation": [0, 0, 3.141592653589793],
+    "modelRegistration": {
+      "apicalCuffWorld": [1.0307, -2.1369, 1.4382],
+      "modelAnchorLocal": [-0.17, -0.43, 0.02],
+      "modelOutwardAxisLocal": [0.3520794781, 0.932723777, -0.0778870782],
+      "outwardAxis": [0.30728, -0.75377, 0.58087],
       "scale": 0.92
     },
     "inflowRoute": [
-      [0.4, -0.78, 0.66],
-      [0.58, -0.94, 0.67],
-      [0.78, -1.08, 0.68]
+      [0.9235, -1.8739, 1.2355],
+      [0.9972, -2.0548, 1.3749],
+      [1.0307, -2.1369, 1.4382],
+      [1.2426, -2.65669, 1.83876],
+      [1.17442, -2.53835, 1.77605]
     ],
     "outflowRoute": [
-      [0.78, -1.08, 0.68],
-      [1.12, -0.58, 0.65],
-      [1.04, 0.18, 0.62],
-      [0.68, 0.96, 0.61],
-      [0.24, 1.38, 0.61]
-    ]
+      [1.17442, -2.53835, 1.77605],
+      [1.55, -1.4, 2.02],
+      [0.8, 0.55, 1.55],
+      [-0.473, 0.71875, 1.073],
+      [-0.3228, 0.7187, 0.5957],
+      [-0.21407, 0.71866, 0.25007]
+    ],
+    "ctRegistration": {
+      "inflowTip": [0.9235, -1.8739, 1.2355],
+      "endocardialApex": [0.9972, -2.0548, 1.3749],
+      "epicardialApex": [1.0307, -2.1369, 1.4382],
+      "pumpCenter": [1.2426, -2.65669, 1.83876],
+      "aorticSurfaceAnastomosis": [-0.3228, 0.7187, 0.5957],
+      "aorticLumenEndpoint": [-0.21407, 0.71866, 0.25007],
+      "clearanceReview": "The 8.75 mm-OD authored graft sweep clears the supplied CT LV, RV, RA, and pulmonary-artery surfaces outside its apical and aortic connection zones.",
+      "provenance": "LV apical points and the right-anterior ascending-aortic surface were measured against the supplied CT segmentation; the extracardiac graft curve is an authored teaching route between those registered endpoints."
+    }
   },
   "transducer": {
     "phlebostaticAxisY": -0.38,

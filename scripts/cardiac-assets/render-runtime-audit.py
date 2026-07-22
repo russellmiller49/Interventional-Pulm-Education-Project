@@ -13,6 +13,7 @@ from typing import Sequence
 
 import bpy
 from mathutils import Euler, Matrix, Vector
+from mathutils.bvhtree import BVHTree
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,6 +36,7 @@ CT_RIG = json.loads(
 
 RUNTIME_SCENES = ("impella", "iabp", "lvad", "pac", "ecmo")
 IMPELLA_POSES = {
+    "aortic-entry": "aorticRoot",
     "correct": "correct",
     "too-deep": "deep",
     "too-shallow": "tooShallow",
@@ -42,6 +44,7 @@ IMPELLA_POSES = {
 IMPELLA_ANCHOR_TOLERANCE_MM = 0.1
 IMPELLA_ANCHOR_ERRORS: dict[str, dict[str, float]] = {}
 IMPELLA_ROUTE_MEASUREMENTS: dict[str, dict[str, float]] = {}
+LVAD_GRAFT_CLEARANCE_MM: dict[str, float] = {}
 IMPELLA_VARIANTS = {
     "cp": {
         "route": "impella",
@@ -51,8 +54,9 @@ IMPELLA_VARIANTS = {
         "headNodes": ("DistalPigtail", "InletCage"),
         "trailingNodes": ("OutletCage", "MotorHousing", "OpenPressureArea"),
         "cannulaRadius": 0.056,
-        "cannulaColor": (0.132868, 0.215861, 0.502886, 1),
-        "shaftRadius": 0.022,
+        "cannulaColor": (0.223, 0.402, 1.0, 1),
+        "shaftRadius": 0.036,
+        "tipDeployEnd": "tooShallow",
         "physicalReferenceMm": 47,
         "physicalReferenceKind": "registered inlet-to-outlet anchor span",
         "inletAnchor": "Anchor_Impella_CP_InletCenter",
@@ -66,8 +70,8 @@ IMPELLA_VARIANTS = {
         "headNodes": ("DistalTip", "InletCage"),
         "trailingNodes": ("OutletCage", "MotorHousing", "FiberOpticSensor"),
         "cannulaRadius": 0.084,
-        "cannulaColor": (0.132868, 0.212231, 0.514918, 1),
-        "shaftRadius": 0.022,
+        "cannulaColor": (0.239, 0.425, 1.0, 1),
+        "shaftRadius": 0.036,
         "physicalReferenceMm": 65,
         "physicalReferenceKind": "registered inlet-to-outlet anchor span",
         "inletAnchor": "Anchor_Impella_55_InletCenter",
@@ -86,8 +90,9 @@ IMPELLA_VARIANTS = {
             "ProximalShaft",
         ),
         "cannulaRadius": 0.088,
-        "cannulaColor": (0.088656, 0.184475, 0.520996, 1),
-        "shaftRadius": 0.025,
+        "cannulaColor": (0.274, 0.398, 1.0, 1),
+        "shaftRadius": 0.044,
+        "tipDeployEnd": "tooProximal",
         "physicalReferenceMm": 205,
         "physicalReferenceKind": "registered inlet-to-outlet anchor span",
         "inletAnchor": "Anchor_Impella_RP_InletCenter",
@@ -653,11 +658,11 @@ def render(filename: str) -> None:
     bpy.ops.render.render(write_still=True)
 
 
-def add_shared_heart(*, xray: bool = False) -> None:
+def add_shared_heart(*, xray: bool = False) -> list[bpy.types.Object]:
     heart_objects = import_asset(RIG["assets"]["heart"])
     parent_with_transform(heart_objects, "HeartTransform", (0, 0, 0), (0, 0, 0), 1)
     if not xray:
-        return
+        return heart_objects
     materials = {
         material
         for object_ in heart_objects
@@ -689,6 +694,64 @@ def add_shared_heart(*, xray: bool = False) -> None:
         principled.inputs["Alpha"].default_value = min(
             principled.inputs["Alpha"].default_value, 0.11
         )
+    return heart_objects
+
+
+def world_bvh(object_: bpy.types.Object) -> BVHTree:
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    evaluated = object_.evaluated_get(depsgraph)
+    mesh = evaluated.to_mesh()
+    try:
+        vertices = [evaluated.matrix_world @ vertex.co for vertex in mesh.vertices]
+        polygons = [tuple(polygon.vertices) for polygon in mesh.polygons]
+        return BVHTree.FromPolygons(vertices, polygons, all_triangles=False)
+    finally:
+        evaluated.to_mesh_clear()
+
+
+def assert_lvad_graft_clearance(
+    heart_objects: Sequence[bpy.types.Object],
+    route_points: Sequence[Sequence[float]],
+    radius: float,
+) -> dict[str, float]:
+    """Numerically keep the visible graft outside the CT chambers and pulmonary artery."""
+
+    structures = {
+        "LV myocardium": "CT_LV_Myocardium",
+        "RV": "CT_RV_Cavity",
+        "RA": "CT_RA_Cavity",
+        "pulmonary artery": "CT_PulmonaryArteries",
+    }
+    bpy.context.view_layer.update()
+    route = RuntimeCurve(route_points)
+    web_units_per_mm = CT_RIG["provenance"]["webUnitsPerMm"]
+    minimum_edge_clearance_mm: dict[str, float] = {}
+    for label, name_fragment in structures.items():
+        meshes = [
+            object_
+            for object_ in heart_objects
+            if object_.type == "MESH" and name_fragment in object_.name
+        ]
+        if not meshes:
+            raise RuntimeError(f"LVAD clearance audit cannot find {name_fragment}")
+        trees = [world_bvh(object_) for object_ in meshes]
+        minimum_centerline_distance = math.inf
+        for index in range(501):
+            point = desired_to_blender(route.point_at(index / 500))
+            for tree in trees:
+                nearest = tree.find_nearest(point)
+                if nearest is not None:
+                    minimum_centerline_distance = min(
+                        minimum_centerline_distance, nearest[3]
+                    )
+        edge_clearance = minimum_centerline_distance - radius
+        edge_clearance_mm = edge_clearance / web_units_per_mm
+        minimum_edge_clearance_mm[label] = edge_clearance_mm
+        if edge_clearance_mm < 0.4:
+            raise RuntimeError(
+                f"LVAD graft approaches {label} within {edge_clearance_mm:.2f} mm"
+            )
+    return minimum_edge_clearance_mm
 
 
 def place_impella_endpoint(
@@ -739,6 +802,12 @@ def render_route_following_impella(
     add_shared_heart(xray=True)
 
     route = RuntimeCurve(route_points)
+    head_nodes = contract["headNodes"]
+    tip_deploy_end = contract.get("tipDeployEnd")
+    if tip_deploy_end and head_progress < route_progress[tip_deploy_end]:
+        head_nodes = tuple(
+            node for node in head_nodes if node != "DistalPigtail"
+        )
     head_objects, head_point = place_impella_endpoint(
         variant=variant,
         label="HeadFollower",
@@ -746,8 +815,16 @@ def render_route_following_impella(
         progress=head_progress,
         registration=registration,
         local_anchor_name=contract["headAnchor"],
-        visible_nodes=contract["headNodes"],
+        visible_nodes=head_nodes,
     )
+    cp_tip_scale = {
+        "correct": 0.95,
+        "deep": 0.8,
+    }.get(head_progress_key, 1.0)
+    if variant == "cp" and cp_tip_scale < 1.0:
+        for object_ in head_objects:
+            if "DistalPigtail" in object_.name:
+                object_.scale *= cp_tip_scale
     trailing_objects, trailing_point = place_impella_endpoint(
         variant=variant,
         label="TrailingFollower",
@@ -831,6 +908,23 @@ def render_route_following_impella(
             (0.0185, 0.042311, 0.074214, 1),
             end_progress=trailing_progress,
         )
+    if variant == "55":
+        add_runtime_path(
+            "Impella_55_SyntheticSurgicalAccessConduit",
+            route_points,
+            0.13,
+            (0.58, 0.33, 0.23, 0.34),
+            end_progress=route_progress["surgicalAccessEnd"],
+        )
+    if head_progress_key == "aorticRoot":
+        add_runtime_path(
+            f"Impella_{variant}_Guidewire",
+            route_points,
+            0.012,
+            (0.82, 0.9, 0.87, 1),
+            start_progress=head_progress,
+            end_progress=min(1.0, head_progress + 0.022),
+        )
     add_runtime_path(
         f"Impella_{variant}_BlueCannula",
         route_points,
@@ -881,19 +975,60 @@ def render_lvad() -> None:
     clear_scene()
     configure_render()
     add_lighting()
-    add_camera(RIG["cameras"]["heart"])
-    add_shared_heart()
-    transform = RIG["lvad"]["modelTransform"]
-    device = import_asset(RIG["assets"]["lvad"])
-    parent_with_transform(
-        device,
-        "LVADPlacement",
-        transform["position"],
-        transform["rotation"],
-        transform["scale"],
+    base_camera = RIG["cameras"]["heart"]
+    camera_target = Vector(base_camera["target"]) + Vector((0, -0.95, 0))
+    camera_offset = Vector(base_camera["position"]) - Vector(base_camera["target"])
+    lvad_camera = {
+        **base_camera,
+        "target": tuple(camera_target),
+        "position": tuple(camera_target + camera_offset * 1.35),
+    }
+    add_camera(lvad_camera)
+    heart_objects = add_shared_heart(xray=True)
+    LVAD_GRAFT_CLEARANCE_MM.clear()
+    LVAD_GRAFT_CLEARANCE_MM.update(
+        assert_lvad_graft_clearance(
+            heart_objects,
+            RIG["lvad"]["outflowRoute"][:-1],
+            0.105,
+        )
     )
-    add_path("LVADInflow", RIG["lvad"]["inflowRoute"], 0.05, (0.65, 0.7, 0.7, 1))
-    add_path("LVADOutflow", RIG["lvad"]["outflowRoute"], 0.045, (0.65, 0.7, 0.7, 1))
+    registration = RIG["lvad"]["modelRegistration"]
+    outward_axis = Vector(registration["outwardAxis"]).normalized()
+    model_outward_axis = Vector(registration["modelOutwardAxisLocal"]).normalized()
+    rotation = model_outward_axis.rotation_difference(outward_axis).to_matrix().to_4x4()
+    scale = registration["scale"]
+    local_anchor = Vector(registration["modelAnchorLocal"])
+    model_origin = Vector(registration["apicalCuffWorld"]) - (
+        rotation.to_3x3() @ local_anchor
+    ) * scale
+    desired_matrix = Matrix.Translation(model_origin) @ rotation @ Matrix.Scale(scale, 4)
+    device = import_asset(RIG["assets"]["lvad"])
+    parent_with_desired_matrix(device, "LVADPlacement", desired_matrix)
+    assert_anchor_position(
+        device,
+        "Anchor_LVAD_ApicalCuff",
+        registration["apicalCuffWorld"],
+        tolerance=0.002,
+    )
+    assert_anchor_position(
+        device,
+        "Anchor_LVAD_PumpOutlet",
+        RIG["lvad"]["outflowRoute"][0],
+        tolerance=0.004,
+    )
+    add_runtime_path(
+        "LVADOutflow",
+        RIG["lvad"]["outflowRoute"][:-1],
+        0.105,
+        (0.46, 0.52, 0.51, 1),
+    )
+    add_marker(
+        "LVADAorticAnastomosis",
+        RIG["lvad"]["ctRegistration"]["aorticSurfaceAnastomosis"],
+        0.12,
+        (0.72, 0.76, 0.73, 1),
+    )
     render("lvad.png")
 
 
@@ -1235,8 +1370,13 @@ def write_audit_manifest(scene_families: Sequence[str], frames: Sequence[str]) -
         "sceneFamilies": list(scene_families),
         "frames": list(frames),
         "impella": {
-            "inHeartRepresentation": "split endpoint followers with a CT-spline flexible cannula",
-            "spanPolicy": "trailingProgress = max(0, headProgress - (correctProgress - anatomicalSpanStartProgress))",
+            "inHeartRepresentation": "fixed-length split endpoint followers with a CT-spline cannula, route-following guidewire, and post-arrival pigtail deployment",
+            "spanPolicy": "head and trailing anchors retain the correct-placement inlet-to-outlet arc span in every placement state",
+            "tipPolicy": "pigtails remain constrained during advancement and deploy only after the selected endpoint is reached",
+            "contactLimitedCpTipScales": {
+                "correct": 0.95,
+                "deep": 0.8,
+            },
             "rpOutletRegistration": CT_RIG["provenance"][
                 "impellaRpOutletRegistration"
             ],
@@ -1270,6 +1410,11 @@ def write_audit_manifest(scene_families: Sequence[str], frames: Sequence[str]) -
             "impellaRpOutletRegistration": CT_RIG["provenance"][
                 "impellaRpOutletRegistration"
             ],
+        },
+        "lvad": {
+            "visibleGraftStopsAtAorticSurface": True,
+            "graftRadiusWebUnits": 0.105,
+            "minimumTubeEdgeClearanceMm": LVAD_GRAFT_CLEARANCE_MM,
         },
         "ecmoProvenance": {
             "authoredPeripheralExtension": CT_RIG["provenance"][

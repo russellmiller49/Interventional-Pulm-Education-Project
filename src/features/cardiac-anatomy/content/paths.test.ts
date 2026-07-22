@@ -14,11 +14,18 @@ import {
   IMPELLA_RP_ADVANCEMENT_ROUTE,
   IMPELLA_RP_MODEL_URL,
   IMPELLA_DEVICE_REGISTRATION,
+  LVAD_MODEL_URL,
+  LVAD_INFLOW_ROUTE,
+  LVAD_OUTFLOW_ROUTE,
   PAC_POSITION_ANATOMY,
   PAC_ROUTE,
   PAC_ROUTE_ENDPOINT_INDEX,
   REALISTIC_HEART_MODEL_URL,
+  impella55FlowRouteForProgress,
+  impellaFlowRouteForProgress,
+  impellaRpFlowRouteForProgress,
   pacRouteForPosition,
+  type CardiacPoint3,
   type PacAnatomyPosition,
 } from './paths'
 
@@ -44,12 +51,20 @@ function runtimeCurveLengthMm(
   return lengthWebUnits / CT_CARDIAC_PROVENANCE.webUnitsPerMm
 }
 
+function expectPointClose(
+  actual: readonly [number, number, number],
+  expected: THREE.Vector3,
+): void {
+  expect(new THREE.Vector3(...actual).distanceTo(expected)).toBeLessThan(1e-6)
+}
+
 describe('shared cardiac anatomy landmarks', () => {
   it('uses cache-safe versioned URLs for the CT heart and procedural Impella assets', () => {
     expect(REALISTIC_HEART_MODEL_URL).toBe('/models/cardiac/heart-ct-animated-v1.glb')
     expect(IMPELLA_CP_MODEL_URL).toBe('/models/cardiac-devices/impella-cp-v1.glb')
     expect(IMPELLA_55_MODEL_URL).toBe('/models/cardiac-devices/impella-55-v1.glb')
     expect(IMPELLA_RP_MODEL_URL).toBe('/models/cardiac-devices/impella-rp-v1.glb')
+    expect(LVAD_MODEL_URL).toBe('/models/cardiac-devices/lvad-v2.glb')
     expect(CARDIAC_RIG.impella.deviceRegistration.modelUrl).toBe(IMPELLA_CP_MODEL_URL)
     expect(CARDIAC_RIG.impella55.deviceRegistration.modelUrl).toBe(IMPELLA_55_MODEL_URL)
     expect(CARDIAC_RIG.impellaRp.deviceRegistration.modelUrl).toBe(IMPELLA_RP_MODEL_URL)
@@ -107,6 +122,76 @@ describe('shared cardiac anatomy landmarks', () => {
     expect(IMPELLA_DEVICE_REGISTRATION.outletLocal).toEqual([0, -1.128, 0])
   })
 
+  it('anchors flow particles to both fixed-length Impella ports in every placement state', () => {
+    const assertLeftFlowEndpoints = (
+      points: readonly (readonly [number, number, number])[],
+      heads: readonly number[],
+      span: number,
+      routeForProgress: (head: number, trailing: number) => readonly CardiacPoint3[],
+    ) => {
+      const curve = new THREE.CatmullRomCurve3(
+        points.map((point) => new THREE.Vector3(...point)),
+        false,
+        'centripetal',
+      )
+      heads.forEach((head) => {
+        const trailing = Math.max(0, head - span)
+        const flowRoute = routeForProgress(head, trailing)
+        expectPointClose(flowRoute[0], curve.getPointAt(head))
+        expectPointClose(flowRoute.at(-1)!, curve.getPointAt(trailing))
+      })
+    }
+
+    assertLeftFlowEndpoints(
+      IMPELLA_ADVANCEMENT_ROUTE,
+      [
+        IMPELLA_ADVANCEMENT_PROGRESS.tooShallow,
+        IMPELLA_ADVANCEMENT_PROGRESS.correct,
+        IMPELLA_ADVANCEMENT_PROGRESS.deep,
+      ],
+      IMPELLA_ADVANCEMENT_PROGRESS.correct - IMPELLA_ADVANCEMENT_PROGRESS.aorticRoot,
+      impellaFlowRouteForProgress,
+    )
+    assertLeftFlowEndpoints(
+      IMPELLA_55_ADVANCEMENT_ROUTE,
+      [
+        IMPELLA_55_ADVANCEMENT_PROGRESS.tooShallow,
+        IMPELLA_55_ADVANCEMENT_PROGRESS.correct,
+        IMPELLA_55_ADVANCEMENT_PROGRESS.deep,
+      ],
+      IMPELLA_55_ADVANCEMENT_PROGRESS.correct - IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot,
+      impella55FlowRouteForProgress,
+    )
+
+    const rpCurve = new THREE.CatmullRomCurve3(
+      IMPELLA_RP_ADVANCEMENT_ROUTE.map((point) => new THREE.Vector3(...point)),
+      false,
+      'centripetal',
+    )
+    const rpSpan =
+      IMPELLA_RP_ADVANCEMENT_PROGRESS.correct - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet
+    const inletTooHigh =
+      IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet +
+      (IMPELLA_RP_ADVANCEMENT_PROGRESS.tricuspidGate - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet) *
+        0.55
+    const rpEndpoints = [
+      {
+        head: Math.min(1, inletTooHigh + rpSpan),
+        inlet: inletTooHigh,
+      },
+      ...[
+        IMPELLA_RP_ADVANCEMENT_PROGRESS.tooProximal,
+        IMPELLA_RP_ADVANCEMENT_PROGRESS.correct,
+        IMPELLA_RP_ADVANCEMENT_PROGRESS.tooDistal,
+      ].map((head) => ({ head, inlet: Math.max(0, head - rpSpan) })),
+    ]
+    rpEndpoints.forEach(({ head, inlet }) => {
+      const flowRoute = impellaRpFlowRouteForProgress(head, inlet)
+      expectPointClose(flowRoute[0], rpCurve.getPointAt(inlet))
+      expectPointClose(flowRoute.at(-1)!, rpCurve.getPointAt(head))
+    })
+  })
+
   it('keeps the Impella route retrograde through the CT aorta before entering the LV', () => {
     const first = IMPELLA_ADVANCEMENT_ROUTE[0]
     const aorticRootIndex = Math.round(
@@ -141,7 +226,40 @@ describe('shared cardiac anatomy landmarks', () => {
     expect(inletDepthMm).toBeGreaterThanOrEqual(46)
     expect(inletDepthMm).toBeLessThanOrEqual(54)
     expect(IMPELLA_55_ADVANCEMENT_ROUTE[0][0]).toBeLessThan(-1)
+    expect(IMPELLA_55_ADVANCEMENT_PROGRESS.surgicalAccessEnd).toBeGreaterThan(
+      IMPELLA_55_ADVANCEMENT_PROGRESS.access,
+    )
+    expect(IMPELLA_55_ADVANCEMENT_PROGRESS.surgicalAccessEnd).toBeLessThan(
+      IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot,
+    )
     expect(CT_CARDIAC_PROVENANCE.authoredImpella55Access).toMatch(/no axillary/i)
+    expect(CT_CARDIAC_PROVENANCE.authoredImpella55Access).toMatch(/synthetic 10 mm/i)
+  })
+
+  it('registers the LVAD across the CT apex with an extracardiac pump and intraluminal return', () => {
+    const registration = CARDIAC_RIG.lvad.ctRegistration
+    expect(CARDIAC_RIG.lvad.modelRegistration.apicalCuffWorld).toEqual(registration.epicardialApex)
+    expect(LVAD_INFLOW_ROUTE[0]).toEqual(registration.inflowTip)
+    expect(LVAD_OUTFLOW_ROUTE.at(-2)).toEqual(registration.aorticSurfaceAnastomosis)
+    expect(LVAD_OUTFLOW_ROUTE.at(-1)).toEqual(registration.aorticLumenEndpoint)
+
+    const epicardialApex = new THREE.Vector3(...registration.epicardialApex)
+    const pumpCenter = new THREE.Vector3(...registration.pumpCenter)
+    const outwardAxis = new THREE.Vector3(...CARDIAC_RIG.lvad.modelRegistration.outwardAxis)
+    expect(pumpCenter.sub(epicardialApex).dot(outwardAxis.normalize())).toBeGreaterThan(0.45)
+
+    const aorticCenterline = new THREE.CatmullRomCurve3(
+      IMPELLA_ADVANCEMENT_ROUTE.map((point) => new THREE.Vector3(...point)),
+      false,
+      'centripetal',
+    )
+    expect(
+      new THREE.Vector3(...registration.aorticLumenEndpoint).distanceTo(
+        aorticCenterline.getPointAt(0.75),
+      ),
+    ).toBeLessThan(0.001)
+    expect(registration.provenance).toMatch(/supplied CT segmentation/i)
+    expect(registration.clearanceReview).toMatch(/clears.*LV.*RV.*RA.*pulmonary-artery/i)
   })
 
   it('orders the RP route from femoral/IVC access through proxy gates to a PA outlet', () => {

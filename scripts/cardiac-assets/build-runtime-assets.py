@@ -97,7 +97,7 @@ IMPELLA_COMPATIBILITY_ALIASES = {
 }
 
 DEVICE_SOURCES = {
-    "lvad.glb": ("LVAD.glb", "LVAD", 60_000, 2_500_000),
+    "lvad-v2.glb": ("LVAD.glb", "LVAD", 60_000, 2_500_000),
 }
 
 
@@ -1321,8 +1321,15 @@ def prepare_lvad(source: Path, output_name: str, root_name: str) -> None:
     root = normalize_imported_scene(
         f"{root_name}_Root", reference_longest=reference_longest
     )
-    add_landmark("Anchor_LVAD_Inflow", (0, -0.82, 0))
-    add_landmark("Anchor_LVAD_Outflow", (0, 0.82, 0))
+    # Keep the normalized authoring geometry in an identity root.  Without this bake,
+    # parenting landmarks below the translated/scaled root silently moves them several
+    # web units away from the actual pump (the previous runtime asset did exactly that).
+    bake_root_transform(root)
+    add_landmark("Anchor_LVAD_Inflow", (-0.17, -0.55, 0.02))
+    add_landmark("Anchor_LVAD_ApicalCuff", (-0.17, -0.43, 0.02))
+    add_landmark("Anchor_LVAD_Outflow", (0.01777, 0.13045, 0.00231))
+    add_landmark("Anchor_LVAD_PumpOutlet", (0.01777, 0.13045, 0.00231))
+    add_landmark("Anchor_LVAD_PumpCenter", (0.0939, 0.26912, -0.03838))
     for landmark in [
         object_
         for object_ in bpy.context.scene.objects
@@ -1468,6 +1475,17 @@ def write_runtime_manifest() -> None:
             assets[filename]["valveMorphologyBoundary"] = (
                 VALVE_MORPHOLOGY_BOUNDARY
             )
+        elif filename == "lvad-v2.glb":
+            assets[filename]["anchorConvention"] = {
+                "localForwardAxis": "+Y from LV inflow toward the extracardiac pump",
+                "anchors": {
+                    "Anchor_LVAD_Inflow": [-0.17, -0.55, 0.02],
+                    "Anchor_LVAD_ApicalCuff": [-0.17, -0.43, 0.02],
+                    "Anchor_LVAD_Outflow": [0.01777, 0.13045, 0.00231],
+                    "Anchor_LVAD_PumpOutlet": [0.01777, 0.13045, 0.00231],
+                    "Anchor_LVAD_PumpCenter": [0.0939, 0.26912, -0.03838],
+                },
+            }
     manifest = {
         "schemaVersion": 2,
         "generatedBy": "scripts/cardiac-assets/build-runtime-assets.py",

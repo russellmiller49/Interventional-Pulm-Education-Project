@@ -394,8 +394,16 @@ impella55
 impella55.add([[14.297, -178.828, -205.5]]).mark('shallow')
 impella55.add([[19.922, -186.328, -219.5]]).mark('correct')
 impella55.add([[25.2, -192.4, -233.2]]).mark('deep')
+const impella55Finished = impella55.finish()
 const impella55Route = {
-  ...impella55.finish(),
+  ...impella55Finished,
+  progress: {
+    ...impella55Finished.progress,
+    // First sampled intersection with the supplied CT aortic surface.  The runtime renders
+    // the preceding non-imaged axillary/subclavian portion inside an explicitly synthetic
+    // surgical-access conduit instead of presenting a catheter floating in free space.
+    surgicalAccessEnd: 0.26895,
+  },
   deviceRegistration: {
     modelUrl: '/models/cardiac-devices/impella-55-v1.glb',
     localForwardAxis: '+Y',
@@ -528,7 +536,7 @@ const result = {
     authoredBridge:
       'Impella aortic-valve-to-LV segment uses reviewed authored LPS landmarks placed against the supplied aortic-valve, LVOT, and LV segmentation surfaces because no LV centerline was supplied.',
     authoredImpella55Access:
-      'The Impella 5.5 route begins at an explicit axillary-graft access boundary joined to the supplied aortic centerline because no axillary, subclavian, or graft centerline was supplied.',
+      'The Impella 5.5 route begins at an explicit axillary-graft access boundary joined to the supplied aortic centerline because no axillary, subclavian, or graft centerline was supplied. Runtime progress 0 through surgicalAccessEnd is enclosed by a visibly synthetic 10 mm surgical-access conduit and is not claimed as patient-specific CT anatomy.',
     impellaRpValveGates:
       'The Impella RP route follows supplied IVC, RA, RV, and PA curves; the tricuspid and pulmonic points are reviewed route/orifice gates only and do not represent segmented leaflet morphology.',
     impellaRpOutletRegistration: {

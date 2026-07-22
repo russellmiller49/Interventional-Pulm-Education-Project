@@ -24,8 +24,18 @@ export interface FittedCardiacCameraPreset extends CardiacCameraPreset {
 export const MCS_HEART_CAMERA_FIT: CameraFitExtent = {
   width: 3.48,
   height: 4.29,
-  padding: 1.35,
+  padding: 1.08,
 }
+
+/** Includes the CT-registered extracardiac pump and inferior outflow-graft sweep. */
+export const MCS_LVAD_CAMERA_FIT: CameraFitExtent = {
+  width: 3.65,
+  height: 5.4,
+  padding: 1.12,
+}
+
+/** Re-centers the view on the union of the CT heart and the inferior extracardiac pump. */
+export const MCS_LVAD_CAMERA_Y_SHIFT = -0.95
 
 export function fitCardiacCameraToViewport(
   preset: CardiacCameraPreset,

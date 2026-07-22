@@ -11,7 +11,7 @@ import { REALISTIC_HEART_MODEL_URL, REALISTIC_HEART_TRANSFORM } from '../content
 interface CardiacHeartModelProps {
   heartRateBpm: number
   aorticValveOpening?: boolean
-  deviceEmphasis?: boolean
+  deviceEmphasis?: boolean | 'lvad'
   paused?: boolean
   reducedMotion?: boolean
 }
@@ -23,6 +23,8 @@ export function CardiacHeartModel({
   paused = false,
   reducedMotion = false,
 }: CardiacHeartModelProps) {
+  const emphasisEnabled = Boolean(deviceEmphasis)
+  const lvadEmphasis = deviceEmphasis === 'lvad'
   const source = useGLTF(REALISTIC_HEART_MODEL_URL, '/draco/')
   const root = useMemo(() => {
     const clone = SkeletonUtils.clone(source.scene) as THREE.Group
@@ -33,20 +35,55 @@ export function CardiacHeartModel({
       object.frustumCulled = false
       const isChamber = object.name.includes('_Cavity')
       const isAorticValve = object.name.includes('Valve_Aortic')
+      const isMyocardium = object.name.includes('Myocardium')
+      const isOutflowTract = object.name.includes('LVOT')
       const isVessel =
         object.name.includes('Aorta') ||
         object.name.includes('Pulmonary') ||
         object.name === 'CT_SVC' ||
         object.name === 'CT_IVC'
-      object.renderOrder = isAorticValve ? 6 : isVessel ? 5 : isChamber ? 4 : 3
+      object.renderOrder = emphasisEnabled
+        ? isAorticValve
+          ? 14
+          : isVessel
+            ? 13
+            : isChamber || isMyocardium || isOutflowTract
+              ? 12
+              : 11
+        : isAorticValve
+          ? 6
+          : isVessel
+            ? 5
+            : isChamber
+              ? 4
+              : 3
       const cloneMaterial = (material: THREE.Material) => {
         const next = material.clone()
         if (next instanceof THREE.MeshStandardMaterial) {
           next.metalness = 0
           next.roughness = Math.max(0.48, next.roughness)
-          next.emissiveIntensity = 0.04
-          if (deviceEmphasis && isAorticValve) {
-            next.opacity = Math.min(next.opacity, 0.55)
+          next.emissiveIntensity = emphasisEnabled ? 0.025 : 0.04
+          if (emphasisEnabled) {
+            const windowOpacity = lvadEmphasis
+              ? isAorticValve
+                ? 0.5
+                : isVessel
+                  ? 0.32
+                  : isMyocardium || isOutflowTract
+                    ? 0.23
+                    : isChamber
+                      ? 0.18
+                      : 0.25
+              : isAorticValve
+                ? 0.34
+                : isVessel
+                  ? 0.22
+                  : isMyocardium || isOutflowTract
+                    ? 0.16
+                    : isChamber
+                      ? 0.13
+                      : 0.18
+            next.opacity = Math.min(next.opacity, windowOpacity)
             next.transparent = true
             next.depthWrite = false
             next.side = THREE.DoubleSide
@@ -64,7 +101,7 @@ export function CardiacHeartModel({
         : cloneMaterial(object.material)
     })
     return clone
-  }, [deviceEmphasis, source.scene])
+  }, [emphasisEnabled, lvadEmphasis, source.scene])
   const mixer = useMemo(() => new THREE.AnimationMixer(root), [root])
   const clip = source.animations.find((animation) => animation.name === 'CardiacCycle')
   const playableClip = useMemo(() => {

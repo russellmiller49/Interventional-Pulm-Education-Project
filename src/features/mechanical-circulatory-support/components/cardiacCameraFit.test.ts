@@ -1,6 +1,10 @@
 import { CARDIAC_RIG } from '@/features/cardiac-anatomy/content/paths'
 
-import { fitCardiacCameraToViewport, MCS_HEART_CAMERA_FIT } from './cardiacCameraFit'
+import {
+  fitCardiacCameraToViewport,
+  MCS_HEART_CAMERA_FIT,
+  MCS_LVAD_CAMERA_FIT,
+} from './cardiacCameraFit'
 
 function cameraDistance(position: readonly number[], target: readonly number[]) {
   return Math.hypot(position[0] - target[0], position[1] - target[1], position[2] - target[2])
@@ -32,7 +36,7 @@ describe('MCS cardiac camera fitting', () => {
 
     expect(portraitDistance).toBeGreaterThan(squareDistance)
     expect(squareDistance).toBeCloseTo(landscapeDistance, 5)
-    expect(portraitDistance).toBeGreaterThan(12)
+    expect(portraitDistance).toBeGreaterThan(cameraDistance(preset.position, preset.target) * 1.3)
     expect(portrait.maxDistance).toBeGreaterThan(portraitDistance)
   })
 
@@ -58,6 +62,16 @@ describe('MCS cardiac camera fitting', () => {
     expect((fitted.position[2] - fitted.target[2]) / fittedDistance).toBeCloseTo(
       (preset.position[2] - preset.target[2]) / presetDistance,
       8,
+    )
+  })
+
+  it('reserves additional inferior framing for the extracardiac LVAD pump', () => {
+    const viewport = { width: 610, height: 610 }
+    const heart = fitCardiacCameraToViewport(preset, viewport, MCS_HEART_CAMERA_FIT)
+    const lvad = fitCardiacCameraToViewport(preset, viewport, MCS_LVAD_CAMERA_FIT)
+
+    expect(cameraDistance(lvad.position, lvad.target)).toBeGreaterThan(
+      cameraDistance(heart.position, heart.target),
     )
   })
 })

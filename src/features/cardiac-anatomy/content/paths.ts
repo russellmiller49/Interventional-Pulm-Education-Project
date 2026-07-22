@@ -1,3 +1,5 @@
+import * as THREE from 'three'
+
 import { CARDIAC_RIG, type CardiacPoint3 } from './rig'
 
 export { CARDIAC_RIG, type CardiacCameraPreset, type CardiacPoint3 } from './rig'
@@ -103,51 +105,79 @@ export const IMPELLA_RP_ADVANCEMENT_ROUTE = CARDIAC_RIG.impellaRp.advancement.po
 export const IMPELLA_RP_ADVANCEMENT_PROGRESS = CARDIAC_RIG.impellaRp.advancement.progress
 export const IMPELLA_RP_DEVICE_REGISTRATION = CARDIAC_RIG.impellaRp.deviceRegistration
 
-const IMPELLA_FLOW_OUTLET_INDEX = Math.round(
-  IMPELLA_ADVANCEMENT_PROGRESS.aorticRoot * (IMPELLA_ADVANCEMENT_ROUTE.length - 1),
-)
+const cardiacRouteSegmentCache = new WeakMap<
+  readonly CardiacPoint3[],
+  Map<string, readonly CardiacPoint3[]>
+>()
+
+function cardiacRouteSegment(
+  points: readonly CardiacPoint3[],
+  startProgress: number,
+  endProgress: number,
+  reverse = false,
+): readonly CardiacPoint3[] {
+  const start = THREE.MathUtils.clamp(Math.min(startProgress, endProgress), 0, 1)
+  const end = THREE.MathUtils.clamp(Math.max(startProgress, endProgress), 0, 1)
+  const cacheKey = `${start}:${end}:${reverse}`
+  const cached = cardiacRouteSegmentCache.get(points)?.get(cacheKey)
+  if (cached) return cached
+
+  const curve = new THREE.CatmullRomCurve3(
+    points.map((point) => new THREE.Vector3(...point)),
+    false,
+    'centripetal',
+  )
+  const sampleCount = Math.max(8, Math.ceil((end - start) * 200))
+  const segment = Array.from({ length: sampleCount + 1 }, (_, index) => {
+    const progress = start + ((end - start) * index) / sampleCount
+    const point = curve.getPointAt(progress)
+    return [point.x, point.y, point.z] as CardiacPoint3
+  })
+  const result = reverse ? segment.reverse() : segment
+  let routeCache = cardiacRouteSegmentCache.get(points)
+  if (!routeCache) {
+    routeCache = new Map()
+    cardiacRouteSegmentCache.set(points, routeCache)
+  }
+  routeCache.set(cacheKey, result)
+  return result
+}
 
 /** Physiologic pump flow is device inlet to ascending-aortic outlet, opposite insertion direction. */
-export function impellaFlowRouteForProgress(inletProgress: number): readonly CardiacPoint3[] {
-  const inletIndex = Math.max(
-    IMPELLA_FLOW_OUTLET_INDEX + 1,
-    Math.round(inletProgress * (IMPELLA_ADVANCEMENT_ROUTE.length - 1)),
-  )
-  return IMPELLA_ADVANCEMENT_ROUTE.slice(IMPELLA_FLOW_OUTLET_INDEX, inletIndex + 1).reverse()
+export function impellaFlowRouteForProgress(
+  inletProgress: number,
+  outletProgress: number,
+): readonly CardiacPoint3[] {
+  return cardiacRouteSegment(IMPELLA_ADVANCEMENT_ROUTE, outletProgress, inletProgress, true)
 }
 
-const IMPELLA_55_FLOW_OUTLET_INDEX = Math.round(
-  IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot * (IMPELLA_55_ADVANCEMENT_ROUTE.length - 1),
-)
-
-export function impella55FlowRouteForProgress(inletProgress: number): readonly CardiacPoint3[] {
-  const inletIndex = Math.max(
-    IMPELLA_55_FLOW_OUTLET_INDEX + 1,
-    Math.round(inletProgress * (IMPELLA_55_ADVANCEMENT_ROUTE.length - 1)),
-  )
-  return IMPELLA_55_ADVANCEMENT_ROUTE.slice(IMPELLA_55_FLOW_OUTLET_INDEX, inletIndex + 1).reverse()
+export function impella55FlowRouteForProgress(
+  inletProgress: number,
+  outletProgress: number,
+): readonly CardiacPoint3[] {
+  return cardiacRouteSegment(IMPELLA_55_ADVANCEMENT_ROUTE, outletProgress, inletProgress, true)
 }
-
-const IMPELLA_RP_FLOW_INLET_INDEX = Math.round(
-  IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet * (IMPELLA_RP_ADVANCEMENT_ROUTE.length - 1),
-)
 
 /** RP physiologic flow follows IVC inlet → PA outlet, the same direction as advancement. */
-export function impellaRpFlowRouteForProgress(outletProgress: number): readonly CardiacPoint3[] {
-  const outletIndex = Math.max(
-    IMPELLA_RP_FLOW_INLET_INDEX + 1,
-    Math.round(outletProgress * (IMPELLA_RP_ADVANCEMENT_ROUTE.length - 1)),
-  )
-  return IMPELLA_RP_ADVANCEMENT_ROUTE.slice(IMPELLA_RP_FLOW_INLET_INDEX, outletIndex + 1)
+export function impellaRpFlowRouteForProgress(
+  outletProgress: number,
+  inletProgress: number,
+): readonly CardiacPoint3[] {
+  return cardiacRouteSegment(IMPELLA_RP_ADVANCEMENT_ROUTE, inletProgress, outletProgress)
 }
 
-export const IMPELLA_FLOW_ROUTE = impellaFlowRouteForProgress(IMPELLA_ADVANCEMENT_PROGRESS.correct)
+export const IMPELLA_FLOW_ROUTE = impellaFlowRouteForProgress(
+  IMPELLA_ADVANCEMENT_PROGRESS.correct,
+  IMPELLA_ADVANCEMENT_PROGRESS.aorticRoot,
+)
 
 export const IMPELLA_55_FLOW_ROUTE = impella55FlowRouteForProgress(
   IMPELLA_55_ADVANCEMENT_PROGRESS.correct,
+  IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot,
 )
 export const IMPELLA_RP_FLOW_ROUTE = impellaRpFlowRouteForProgress(
   IMPELLA_RP_ADVANCEMENT_PROGRESS.correct,
+  IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet,
 )
 
 export const IMPELLA_SHAFT_ROUTE = IMPELLA_ADVANCEMENT_ROUTE

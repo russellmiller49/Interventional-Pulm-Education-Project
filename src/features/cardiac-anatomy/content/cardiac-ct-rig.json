@@ -17,7 +17,7 @@
       "Aorta curve (0).mrk.json"
     ],
     "authoredBridge": "Impella aortic-valve-to-LV segment uses reviewed authored LPS landmarks placed against the supplied aortic-valve, LVOT, and LV segmentation surfaces because no LV centerline was supplied.",
-    "authoredImpella55Access": "The Impella 5.5 route begins at an explicit axillary-graft access boundary joined to the supplied aortic centerline because no axillary, subclavian, or graft centerline was supplied.",
+    "authoredImpella55Access": "The Impella 5.5 route begins at an explicit axillary-graft access boundary joined to the supplied aortic centerline because no axillary, subclavian, or graft centerline was supplied. Runtime progress 0 through surgicalAccessEnd is enclosed by a visibly synthetic 10 mm surgical-access conduit and is not claimed as patient-specific CT anatomy.",
     "impellaRpValveGates": "The Impella RP route follows supplied IVC, RA, RV, and PA curves; the tricuspid and pulmonic points are reviewed route/orifice gates only and do not represent segmented leaflet morphology.",
     "impellaRpOutletRegistration": {
       "inletSource": "endpoint of Inferior Vena Cava (0).mrk.json",
@@ -492,7 +492,8 @@
       "tooShallow": 0.83254,
       "shallow": 0.89046,
       "correct": 0.94684,
-      "deep": 1
+      "deep": 1,
+      "surgicalAccessEnd": 0.26895
     },
     "lengthWebUnits": 7.1728,
     "deviceRegistration": {

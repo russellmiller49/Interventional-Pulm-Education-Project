@@ -168,13 +168,49 @@ export const CARDIAC_RIG = {
     },
   },
   lvad: {
-    modelTransform: {
-      position: toPoint(rawRig.lvad.modelTransform.position, 'lvad.modelTransform.position'),
-      rotation: toPoint(rawRig.lvad.modelTransform.rotation, 'lvad.modelTransform.rotation'),
-      scale: rawRig.lvad.modelTransform.scale,
+    modelRegistration: {
+      apicalCuffWorld: toPoint(
+        rawRig.lvad.modelRegistration.apicalCuffWorld,
+        'lvad.modelRegistration.apicalCuffWorld',
+      ),
+      modelAnchorLocal: toPoint(
+        rawRig.lvad.modelRegistration.modelAnchorLocal,
+        'lvad.modelRegistration.modelAnchorLocal',
+      ),
+      modelOutwardAxisLocal: toPoint(
+        rawRig.lvad.modelRegistration.modelOutwardAxisLocal,
+        'lvad.modelRegistration.modelOutwardAxisLocal',
+      ),
+      outwardAxis: toPoint(
+        rawRig.lvad.modelRegistration.outwardAxis,
+        'lvad.modelRegistration.outwardAxis',
+      ),
+      scale: rawRig.lvad.modelRegistration.scale,
     },
     inflowRoute: toPoints(rawRig.lvad.inflowRoute, 'lvad.inflowRoute'),
     outflowRoute: toPoints(rawRig.lvad.outflowRoute, 'lvad.outflowRoute'),
+    ctRegistration: {
+      inflowTip: toPoint(rawRig.lvad.ctRegistration.inflowTip, 'lvad.ctRegistration.inflowTip'),
+      endocardialApex: toPoint(
+        rawRig.lvad.ctRegistration.endocardialApex,
+        'lvad.ctRegistration.endocardialApex',
+      ),
+      epicardialApex: toPoint(
+        rawRig.lvad.ctRegistration.epicardialApex,
+        'lvad.ctRegistration.epicardialApex',
+      ),
+      pumpCenter: toPoint(rawRig.lvad.ctRegistration.pumpCenter, 'lvad.ctRegistration.pumpCenter'),
+      aorticSurfaceAnastomosis: toPoint(
+        rawRig.lvad.ctRegistration.aorticSurfaceAnastomosis,
+        'lvad.ctRegistration.aorticSurfaceAnastomosis',
+      ),
+      aorticLumenEndpoint: toPoint(
+        rawRig.lvad.ctRegistration.aorticLumenEndpoint,
+        'lvad.ctRegistration.aorticLumenEndpoint',
+      ),
+      clearanceReview: rawRig.lvad.ctRegistration.clearanceReview,
+      provenance: rawRig.lvad.ctRegistration.provenance,
+    },
   },
   transducer: rawRig.transducer,
   ecmo: {

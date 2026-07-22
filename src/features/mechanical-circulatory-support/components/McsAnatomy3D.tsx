@@ -30,7 +30,13 @@ import {
 } from '@/features/cardiac-anatomy/content/paths'
 
 import type { McsSimulationState } from '../engine'
-import { fitCardiacCameraToViewport, MCS_HEART_CAMERA_FIT } from './cardiacCameraFit'
+import {
+  fitCardiacCameraToViewport,
+  MCS_HEART_CAMERA_FIT,
+  MCS_LVAD_CAMERA_FIT,
+  MCS_LVAD_CAMERA_Y_SHIFT,
+  type CameraFitExtent,
+} from './cardiacCameraFit'
 import styles from './mechanical-circulatory-support.module.css'
 
 const IabpModel = lazy(() => import('./three/IabpModel'))
@@ -62,14 +68,14 @@ function setupRenderer({ gl, scene }: RootState, onLost: () => void) {
 
 function ManagedOrbitControls({
   cameraPreset,
-  fitHeartToViewport,
+  fitExtent,
   resetKey,
   onCameraChange,
   onInteractionEnd,
   onInteractionStart,
 }: {
   cameraPreset: CardiacCameraPreset
-  fitHeartToViewport: boolean
+  fitExtent?: CameraFitExtent
   resetKey: number
   onCameraChange: (position: readonly number[]) => void
   onInteractionEnd: () => void
@@ -82,14 +88,14 @@ function ManagedOrbitControls({
   const viewportHeight = useThree((root) => root.size.height)
   const fittedCameraPreset = useMemo(
     () =>
-      fitHeartToViewport
+      fitExtent
         ? fitCardiacCameraToViewport(
             cameraPreset,
             { width: viewportWidth, height: viewportHeight },
-            MCS_HEART_CAMERA_FIT,
+            fitExtent,
           )
         : cameraPreset,
-    [cameraPreset, fitHeartToViewport, viewportHeight, viewportWidth],
+    [cameraPreset, fitExtent, viewportHeight, viewportWidth],
   )
 
   useLayoutEffect(() => {
@@ -157,7 +163,25 @@ export function McsAnatomy3D({
   const interactionHintId = useId()
   const anatomy = MCS_DEVICE_ANATOMY[state.deviceKind]
   const sceneId = state.deviceKind === 'iabp' ? 'iabp' : 'heart'
-  const camera = CARDIAC_RIG.cameras[sceneId]
+  const camera = useMemo<CardiacCameraPreset>(() => {
+    const preset = CARDIAC_RIG.cameras[sceneId]
+    if (state.deviceKind !== 'lvad') return preset
+    return {
+      ...preset,
+      position: [
+        preset.position[0],
+        preset.position[1] + MCS_LVAD_CAMERA_Y_SHIFT,
+        preset.position[2],
+      ],
+      target: [preset.target[0], preset.target[1] + MCS_LVAD_CAMERA_Y_SHIFT, preset.target[2]],
+    }
+  }, [sceneId, state.deviceKind])
+  const cameraFitExtent =
+    state.deviceKind === 'lvad'
+      ? MCS_LVAD_CAMERA_FIT
+      : sceneId === 'heart'
+        ? MCS_HEART_CAMERA_FIT
+        : undefined
   const impella = state.device.kind === 'impella' ? state.device : null
   const impellaTitle = impella
     ? impella.left.enabled && impella.right.enabled
@@ -312,7 +336,7 @@ export function McsAnatomy3D({
                     <CardiacHeartModel
                       heartRateBpm={state.patient.heartRateBpm}
                       aorticValveOpening={state.metrics.aorticValveOpening}
-                      deviceEmphasis={state.device.kind === 'impella'}
+                      deviceEmphasis={state.device.kind === 'lvad' ? 'lvad' : true}
                       reducedMotion={reducedMotion}
                     />
                     {state.device.kind === 'impella' ? (
@@ -342,7 +366,7 @@ export function McsAnatomy3D({
               </Suspense>
               <ManagedOrbitControls
                 cameraPreset={camera}
-                fitHeartToViewport={sceneId === 'heart'}
+                fitExtent={cameraFitExtent}
                 resetKey={viewEpoch}
                 onCameraChange={publishCameraPosition}
                 onInteractionEnd={handleOrbitEnd}

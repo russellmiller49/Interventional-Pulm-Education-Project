@@ -52,11 +52,16 @@ interface ImpellaVisualConfig {
   anchorLocal: CardiacPoint3
   trailingAnchorLocal: CardiacPoint3
   physicalSpanProgress: number
-  trailingBiasProgress: number
   flowRoute: readonly CardiacPoint3[]
   flowLMin: number
   cannulaColor: string
   cannulaRadius: number
+  shaftRadius: number
+  reinforcementRings: number
+  deploysPigtail?: boolean
+  deployedTipScale?: number
+  annulusOffsetProgress?: number
+  accessConduitEndProgress?: number
 }
 
 function leftProgress(position: ImpellaLeftPosition, variant: 'cp' | '55'): number {
@@ -73,31 +78,30 @@ function visualConfig(
 ): ImpellaVisualConfig {
   if (side === 'right') {
     const endpointProgress = impellaRpEndpointProgress(device.right.position)
-    const targetProgress = endpointProgress.head
-    const physicalSpanProgress =
-      IMPELLA_RP_ADVANCEMENT_PROGRESS.correct - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet
     return {
       modelUrl: IMPELLA_RP_MODEL_URL,
       route: IMPELLA_RP_ADVANCEMENT_ROUTE,
-      targetProgress,
+      targetProgress: endpointProgress.head,
       registration: IMPELLA_RP_DEVICE_REGISTRATION,
       anchorLocal: IMPELLA_RP_DEVICE_REGISTRATION.outletLocal,
       trailingAnchorLocal: IMPELLA_RP_DEVICE_REGISTRATION.inletLocal,
-      physicalSpanProgress,
-      trailingBiasProgress: Math.max(
-        0,
-        endpointProgress.inlet - Math.max(0, targetProgress - physicalSpanProgress),
-      ),
-      flowRoute: impellaRpFlowRouteForProgress(targetProgress),
+      physicalSpanProgress:
+        IMPELLA_RP_ADVANCEMENT_PROGRESS.correct - IMPELLA_RP_ADVANCEMENT_PROGRESS.ivcInlet,
+      flowRoute: impellaRpFlowRouteForProgress(endpointProgress.head, endpointProgress.inlet),
       flowLMin: device.right.running ? state.metrics.rightDeviceFlowLMin : 0,
-      cannulaColor: '#5477bf',
+      cannulaColor: '#8ea8ff',
       cannulaRadius: 0.088,
+      shaftRadius: 0.044,
+      reinforcementRings: 14,
+      deploysPigtail: true,
     }
   }
 
   const variant = device.left.variant
   const targetProgress = leftProgress(device.left.position, variant)
   if (variant === '55') {
+    const physicalSpanProgress =
+      IMPELLA_55_ADVANCEMENT_PROGRESS.correct - IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot
     return {
       modelUrl: IMPELLA_55_MODEL_URL,
       route: IMPELLA_55_ADVANCEMENT_ROUTE,
@@ -105,16 +109,24 @@ function visualConfig(
       registration: IMPELLA_55_DEVICE_REGISTRATION,
       anchorLocal: IMPELLA_55_DEVICE_REGISTRATION.inletLocal,
       trailingAnchorLocal: IMPELLA_55_DEVICE_REGISTRATION.outletLocal,
-      physicalSpanProgress:
-        IMPELLA_55_ADVANCEMENT_PROGRESS.correct - IMPELLA_55_ADVANCEMENT_PROGRESS.aorticRoot,
-      trailingBiasProgress: 0,
-      flowRoute: impella55FlowRouteForProgress(targetProgress),
+      physicalSpanProgress,
+      flowRoute: impella55FlowRouteForProgress(
+        targetProgress,
+        Math.max(0, targetProgress - physicalSpanProgress),
+      ),
       flowLMin: device.left.running ? state.metrics.leftDeviceFlowLMin : 0,
-      cannulaColor: '#667fbe',
+      cannulaColor: '#86a8ff',
       cannulaRadius: 0.084,
+      shaftRadius: 0.036,
+      reinforcementRings: 10,
+      annulusOffsetProgress:
+        IMPELLA_55_ADVANCEMENT_PROGRESS.correct - IMPELLA_55_ADVANCEMENT_PROGRESS.aorticValve,
+      accessConduitEndProgress: IMPELLA_55_ADVANCEMENT_PROGRESS.surgicalAccessEnd,
     }
   }
 
+  const physicalSpanProgress =
+    IMPELLA_ADVANCEMENT_PROGRESS.correct - IMPELLA_ADVANCEMENT_PROGRESS.aorticRoot
   return {
     modelUrl: IMPELLA_CP_MODEL_URL,
     route: IMPELLA_ADVANCEMENT_ROUTE,
@@ -122,17 +134,35 @@ function visualConfig(
     registration: IMPELLA_DEVICE_REGISTRATION,
     anchorLocal: IMPELLA_DEVICE_REGISTRATION.inletLocal,
     trailingAnchorLocal: IMPELLA_DEVICE_REGISTRATION.outletLocal,
-    physicalSpanProgress:
-      IMPELLA_ADVANCEMENT_PROGRESS.correct - IMPELLA_ADVANCEMENT_PROGRESS.aorticRoot,
-    trailingBiasProgress: 0,
-    flowRoute: impellaFlowRouteForProgress(targetProgress),
+    physicalSpanProgress,
+    flowRoute: impellaFlowRouteForProgress(
+      targetProgress,
+      Math.max(0, targetProgress - physicalSpanProgress),
+    ),
     flowLMin: device.left.running ? state.metrics.leftDeviceFlowLMin : 0,
-    cannulaColor: '#6680bc',
+    cannulaColor: '#82aaff',
     cannulaRadius: 0.056,
+    shaftRadius: 0.036,
+    reinforcementRings: 8,
+    deploysPigtail: true,
+    deployedTipScale:
+      device.left.position === 'too-deep' ? 0.8 : device.left.position === 'correct' ? 0.95 : 1,
+    annulusOffsetProgress:
+      IMPELLA_ADVANCEMENT_PROGRESS.correct - IMPELLA_ADVANCEMENT_PROGRESS.aorticValve,
   }
 }
 
 type ImpellaFragment = 'left-distal' | 'left-proximal' | 'right-distal' | 'right-proximal'
+
+interface DeployableMesh {
+  mesh: THREE.Mesh
+  baseScale: THREE.Vector3
+}
+
+interface FragmentClone {
+  root: THREE.Group
+  deployableMeshes: DeployableMesh[]
+}
 
 function fragmentIncludesMesh(fragment: ImpellaFragment, name: string): boolean {
   if (fragment === 'left-distal') {
@@ -159,29 +189,33 @@ function fragmentIncludesMesh(fragment: ImpellaFragment, name: string): boolean 
   )
 }
 
-function cloneFragment(source: THREE.Group, fragment: ImpellaFragment): THREE.Group {
-  const clone = SkeletonUtils.clone(source) as THREE.Group
+function cloneFragment(source: THREE.Group, fragment: ImpellaFragment): FragmentClone {
+  const root = SkeletonUtils.clone(source) as THREE.Group
   const excludedMeshes: THREE.Mesh[] = []
-  clone.traverse((object) => {
+  const deployableMeshes: DeployableMesh[] = []
+  root.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return
     if (!fragmentIncludesMesh(fragment, object.name)) {
       excludedMeshes.push(object)
       return
     }
+    const isDeployablePigtail = object.name.includes('DistalPigtail')
     object.castShadow = true
     object.receiveShadow = false
     object.frustumCulled = false
-    object.renderOrder = 40
+    object.renderOrder = 8
     const cloneMaterial = (material: THREE.Material) => {
       const next = material.clone()
-      // Educational x-ray treatment: keep the endpoint hardware readable through the
-      // translucent chambers while the centerline tube supplies the flexible cannula.
-      next.depthTest = false
-      next.depthWrite = false
+      next.depthTest = true
+      next.depthWrite = !isDeployablePigtail
+      next.transparent = isDeployablePigtail
       if (next instanceof THREE.MeshStandardMaterial) {
+        if (object.name.includes('Cage')) next.color.set('#ff6569')
+        else if (object.name.includes('Distal')) next.color.set('#77adff')
+        else if (object.name.includes('Motor')) next.color.set('#d6dfdc')
         next.emissive.copy(next.color)
-        next.emissiveIntensity = 0.12
-        next.metalness = Math.min(0.42, Math.max(0.12, next.metalness))
+        next.emissiveIntensity = 0.11
+        next.metalness = Math.min(0.5, Math.max(0.14, next.metalness))
         next.roughness = Math.max(0.28, next.roughness)
       }
       return next
@@ -189,17 +223,26 @@ function cloneFragment(source: THREE.Group, fragment: ImpellaFragment): THREE.Gr
     object.material = Array.isArray(object.material)
       ? object.material.map(cloneMaterial)
       : cloneMaterial(object.material)
+    if (isDeployablePigtail) {
+      object.visible = false
+      deployableMeshes.push({ mesh: object, baseScale: object.scale.clone() })
+    }
   })
   excludedMeshes.forEach((mesh) => mesh.removeFromParent())
-  return clone
+  return { root, deployableMeshes }
 }
 
-function disposeFragment(fragment: THREE.Group) {
-  fragment.traverse((object) => {
+function disposeFragment(fragment: FragmentClone) {
+  fragment.root.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return
     const materials = Array.isArray(object.material) ? object.material : [object.material]
     materials.forEach((material) => material.dispose())
   })
+}
+
+function smootherStep(value: number): number {
+  const t = THREE.MathUtils.clamp(value, 0, 1)
+  return t * t * t * (t * (t * 6 - 15) + 10)
 }
 
 export default function ImpellaModel({
@@ -223,6 +266,7 @@ export default function ImpellaModel({
     }),
     [side, source.scene],
   )
+  const fragmentsRef = useRef(fragments)
   const placementProgress = useTrajectoryPlayback({
     targetProgress: config.targetProgress,
     replayKey,
@@ -230,25 +274,89 @@ export default function ImpellaModel({
     reducedMotion,
   })
   const trailingProgress = useRef(0)
-  const trailingBiasProgress = useTrajectoryPlayback({
-    targetProgress: config.trailingBiasProgress,
-    replayKey,
-    durationSeconds: 2.4,
-    reducedMotion,
-  })
+  const annulusProgress = useRef(0)
+  const annulusMarker = useRef<THREE.Group>(null)
+  const guidewire = useRef<THREE.Group>(null)
+  const guidewireExtension = useRef<THREE.Mesh>(null)
+  const guidewireEndProgress = useRef(0)
+  const tipDeployment = useRef(reducedMotion ? 1 : 0)
+  const previousReplayKey = useRef(replayKey)
+  const reinforcementProgress = useMemo(
+    () => Array.from({ length: config.reinforcementRings }, () => ({ current: 0 })),
+    [config.reinforcementRings],
+  )
+  const reinforcementGroups = useRef<Array<THREE.Group | null>>([])
+  const accessConduitProgress = useRef(config.accessConduitEndProgress ?? 0)
 
-  useFrame(() => {
-    const insertionFraction = THREE.MathUtils.clamp(
-      placementProgress.current / Math.max(0.001, config.targetProgress),
-      0,
-      1,
-    )
+  useFrame((_, delta) => {
     trailingProgress.current = THREE.MathUtils.clamp(
-      Math.max(0, placementProgress.current - config.physicalSpanProgress) +
-        trailingBiasProgress.current * insertionFraction,
+      placementProgress.current - config.physicalSpanProgress,
       0,
       placementProgress.current,
     )
+
+    const visibleSpan = placementProgress.current - trailingProgress.current
+    const visibleFraction = THREE.MathUtils.clamp(
+      visibleSpan / Math.max(0.001, config.physicalSpanProgress),
+      0,
+      1,
+    )
+    const visibleRingCount = Math.floor(config.reinforcementRings * visibleFraction)
+    reinforcementProgress.forEach((progress, index) => {
+      const group = reinforcementGroups.current[index]
+      if (group) group.visible = index < visibleRingCount
+      progress.current =
+        trailingProgress.current + visibleSpan * ((index + 1) / Math.max(1, visibleRingCount + 1))
+    })
+
+    if (config.annulusOffsetProgress !== undefined) {
+      const offset = config.annulusOffsetProgress
+      annulusProgress.current = Math.max(0, placementProgress.current - offset)
+      if (annulusMarker.current) annulusMarker.current.visible = placementProgress.current > offset
+    } else if (annulusMarker.current) {
+      annulusMarker.current.visible = false
+    }
+
+    const replayRestarted = previousReplayKey.current !== replayKey
+    previousReplayKey.current = replayKey
+    if (replayRestarted) tipDeployment.current = 0
+
+    const mutableFragments = fragmentsRef.current
+    const hasDeployableTip =
+      config.deploysPigtail === true && mutableFragments.distal.deployableMeshes.length > 0
+    const arrived =
+      !replayRestarted && Math.abs(placementProgress.current - config.targetProgress) < 0.0005
+    if (hasDeployableTip) {
+      if (reducedMotion) tipDeployment.current = 1
+      else if (!arrived) tipDeployment.current = 0
+      else tipDeployment.current = Math.min(1, tipDeployment.current + Math.min(delta, 0.1) / 0.65)
+    } else {
+      tipDeployment.current = 1
+    }
+    const deployment = smootherStep(tipDeployment.current)
+    const deployedTipScale = config.deployedTipScale ?? 1
+    for (const { mesh, baseScale } of mutableFragments.distal.deployableMeshes) {
+      mesh.visible = deployment > 0.01
+      mesh.scale.copy(baseScale).multiplyScalar((0.24 + deployment * 0.76) * deployedTipScale)
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      materials.forEach((material) => {
+        material.opacity = deployment
+      })
+    }
+    guidewireEndProgress.current = Math.min(1, placementProgress.current + 0.022)
+    if (guidewire.current) {
+      guidewire.current.visible = !arrived
+    }
+    if (guidewireExtension.current) {
+      const extensionFraction = THREE.MathUtils.clamp(
+        (placementProgress.current + 0.022 - 1) / 0.022,
+        0,
+        1,
+      )
+      guidewireExtension.current.visible = !arrived && extensionFraction > 0.001
+      guidewireExtension.current.scale.y = extensionFraction
+      guidewireExtension.current.position.y = 0.11 * extensionFraction
+    }
   })
 
   useEffect(
@@ -259,40 +367,130 @@ export default function ImpellaModel({
     [fragments],
   )
 
+  useEffect(() => {
+    fragmentsRef.current = fragments
+  }, [fragments])
+
+  useEffect(() => {
+    accessConduitProgress.current = config.accessConduitEndProgress ?? 0
+  }, [config.accessConduitEndProgress])
+
   return (
     <group>
       <ProgressiveSplineTube
         points={config.route}
         progress={trailingProgress}
-        radius={side === 'right' ? 0.025 : 0.022}
-        color="#253a4d"
-        depthTest={false}
-        emissiveIntensity={0.04}
+        radius={config.shaftRadius}
+        color="#24364a"
+        depthTest
+        emissiveIntensity={0.035}
         radialSegments={10}
-        renderOrder={37}
+        renderOrder={8}
       />
+
+      <group ref={guidewire}>
+        <ProgressiveSplineTube
+          points={config.route}
+          startProgress={placementProgress}
+          progress={guidewireEndProgress}
+          radius={0.012}
+          color="#edf3ef"
+          depthTest
+          emissiveIntensity={0.09}
+          radialSegments={7}
+          renderOrder={9}
+        />
+      </group>
       <ProgressiveSplineTube
         points={config.route}
         startProgress={trailingProgress}
         progress={placementProgress}
         radius={config.cannulaRadius}
         color={config.cannulaColor}
-        depthTest={false}
-        emissiveIntensity={0.08}
-        radialSegments={12}
-        renderOrder={38}
+        depthTest
+        emissiveIntensity={0.12}
+        radialSegments={14}
+        renderOrder={8}
       />
+
+      {config.accessConduitEndProgress !== undefined ? (
+        <ProgressiveSplineTube
+          points={config.route}
+          progress={accessConduitProgress}
+          radius={0.13}
+          color="#c79b82"
+          opacity={0.32}
+          depthTest
+          emissiveIntensity={0.025}
+          radialSegments={18}
+          renderOrder={12}
+        />
+      ) : null}
+
+      {reinforcementProgress.map((progress, index) => (
+        <group
+          key={index}
+          visible={false}
+          ref={(node) => {
+            reinforcementGroups.current[index] = node
+          }}
+        >
+          <SplineFollower points={config.route} progress={progress} reducedMotion renderOrder={9}>
+            <mesh rotation={[Math.PI / 2, 0, 0]} castShadow renderOrder={9}>
+              <torusGeometry args={[config.cannulaRadius * 1.025, 0.007, 7, 16]} />
+              <meshStandardMaterial
+                color="#d7ddd9"
+                emissive="#5f6a68"
+                emissiveIntensity={0.08}
+                metalness={0.58}
+                roughness={0.28}
+              />
+            </mesh>
+          </SplineFollower>
+        </group>
+      ))}
+
+      <group ref={annulusMarker} visible={false}>
+        <SplineFollower
+          points={config.route}
+          progress={annulusProgress}
+          reducedMotion
+          renderOrder={9}
+        >
+          <mesh rotation={[Math.PI / 2, 0, 0]} castShadow renderOrder={9}>
+            <torusGeometry args={[config.cannulaRadius * 1.13, 0.012, 8, 20]} />
+            <meshStandardMaterial
+              color="#ffd36f"
+              emissive="#ffc34e"
+              emissiveIntensity={0.22}
+              metalness={0.64}
+              roughness={0.22}
+            />
+          </mesh>
+        </SplineFollower>
+      </group>
+
       <SplineFollower
         points={config.route}
         progress={placementProgress}
         reducedMotion={reducedMotion}
-        renderOrder={40}
+        renderOrder={9}
       >
+        <mesh ref={guidewireExtension} visible={false} castShadow renderOrder={9}>
+          <cylinderGeometry args={[0.012, 0.012, 0.22, 7]} />
+          <meshStandardMaterial
+            color="#edf3ef"
+            emissive="#8d9894"
+            emissiveIntensity={0.09}
+            metalness={0.4}
+            roughness={0.32}
+          />
+        </mesh>
         <group scale={config.registration.modelScale}>
           <group
             position={[-config.anchorLocal[0], -config.anchorLocal[1], -config.anchorLocal[2]]}
           >
-            <primitive object={fragments.distal} dispose={null} />
+            <primitive object={fragments.distal.root} dispose={null} />
           </group>
         </group>
       </SplineFollower>
@@ -300,7 +498,7 @@ export default function ImpellaModel({
         points={config.route}
         progress={trailingProgress}
         reducedMotion={reducedMotion}
-        renderOrder={40}
+        renderOrder={9}
       >
         <group scale={config.registration.modelScale}>
           <group
@@ -310,14 +508,14 @@ export default function ImpellaModel({
               -config.trailingAnchorLocal[2],
             ]}
           >
-            <primitive object={fragments.proximal} dispose={null} />
+            <primitive object={fragments.proximal.root} dispose={null} />
           </group>
         </group>
       </SplineFollower>
       <FlowParticles
         points={config.flowRoute}
         flow={config.flowLMin}
-        color={side === 'right' ? '#b99aff' : '#b6eef0'}
+        color={side === 'right' ? '#d7b5ff' : '#baf7f2'}
         paused={reducedMotion}
         revealProgress={placementProgress}
         revealAt={Math.max(0, config.targetProgress - 0.003)}
