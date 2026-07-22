@@ -10,6 +10,7 @@ export const ICU_FIXED_STEP_SECONDS = 0.02 as const
 export const ICU_MAX_TREND_SAMPLES = 1_440 as const
 export const ICU_MAX_EVENT_HISTORY = 512 as const
 export const ICU_MAX_REPLAY_COMMANDS = 2_048 as const
+export const ICU_MAX_DIAGNOSIS_COMMITMENTS = 24 as const
 
 export const icuSimulationModes = ['learn', 'practice', 'assess', 'sandbox'] as const
 export type IcuSimulationMode = (typeof icuSimulationModes)[number]
@@ -28,6 +29,15 @@ export type IcuSimulationPhase = 'orientation' | 'active' | 'debrief'
 export type IcuTherapyId = 'ventilator' | 'ecmo' | 'mcs' | 'crrt'
 export type IcuAlarmPriority = 'advisory' | 'warning' | 'critical'
 export type IcuReviewStatus = 'pending' | 'reviewed' | 'approved'
+export const icuShockClassifications = [
+  'distributive',
+  'lv-cardiogenic',
+  'rv-obstructive',
+  'hypovolemic-hemorrhagic',
+  'tamponade-obstructive',
+  'mixed-cardiogenic-vasodilatory',
+] as const
+export type IcuShockClassification = (typeof icuShockClassifications)[number]
 
 export interface IcuDiseaseDrivers {
   vasoplegiaSeverity: number
@@ -157,6 +167,7 @@ export interface IcuEcmoState {
   status: 'off' | 'ready' | 'running'
   mode: IcuEcmoMode
   rpm: number
+  targetBloodFlowLMin: number
   bloodFlowLMin: number
   sweepLMin: number
   gasFio2: number
@@ -341,6 +352,7 @@ export type IcuControlValue = number | string | boolean
 /** Semantic learner intent only. No command can patch patient truth directly. */
 export type IcuCommand =
   | { type: 'assessment.order'; assessmentId: IcuAssessmentId }
+  | { type: 'diagnosis.commit'; classification: IcuShockClassification }
   | { type: 'therapy.prepare'; therapy: IcuTherapyId; configuration?: string }
   | { type: 'therapy.start'; therapy: IcuTherapyId }
   | { type: 'therapy.stop'; therapy: IcuTherapyId }
@@ -353,6 +365,11 @@ export type IcuCommand =
   | { type: 'care.perform'; interventionId: IcuCareInterventionId }
   | { type: 'alarm.acknowledge'; alarmId: string }
   | { type: 'patient.reassess'; domains: readonly IcuReassessmentDomain[] }
+  | {
+      type: 'sandbox.adjust'
+      driver: keyof IcuDiseaseDrivers
+      value: number
+    }
   | { type: 'time.advance'; seconds: number }
   | { type: 'session.complete' }
 
@@ -398,6 +415,12 @@ export interface IcuEventRecord {
   label: string
 }
 
+export interface IcuPerformedActionRecord {
+  actionId: string
+  sequence: number
+  elapsedSeconds: number
+}
+
 export const icuScoreDomains = [
   'assessment',
   'prioritization',
@@ -427,6 +450,17 @@ export interface IcuOutcomeState {
   criticalErrorIds: readonly string[]
   mastery: boolean
   checkpointIdsCompleted: readonly string[]
+}
+
+export interface IcuDiagnosisState {
+  committed: boolean
+  classification: IcuShockClassification | null
+  committedAtSeconds: number | null
+  commitments: readonly {
+    sequence: number
+    classification: IcuShockClassification
+    committedAtSeconds: number
+  }[]
 }
 
 export interface IcuClockState {
@@ -471,11 +505,14 @@ export interface IcuSimulationState {
   circulationParameters: CirculationParameters
   compartments: CirculationCompartmentState
   devices: IcuDeviceStates
+  /** Learner commitment only; correctness is intentionally not exposed during a run. */
+  diagnosis: IcuDiagnosisState
   observations: readonly IcuObservation[]
   alarms: readonly IcuDeviceAlarm[]
   trends: readonly IcuTrendSample[]
   history: readonly IcuEventRecord[]
   performedActionIds: readonly string[]
+  actionHistory: readonly IcuPerformedActionRecord[]
   completedScheduledEventIds: readonly string[]
   reassessedDomains: readonly IcuReassessmentDomain[]
   outcome: IcuOutcomeState
@@ -513,6 +550,7 @@ export interface IcuScenarioCheckpointDefinition {
   label: string
   requiredActionIds: readonly string[]
   acceptedAlternativeActionIdGroups: readonly (readonly string[])[]
+  evidenceIds: readonly string[]
 }
 
 export interface IcuScenarioDefinition {
@@ -524,6 +562,7 @@ export interface IcuScenarioDefinition {
   summary: string
   openingNarrative: string
   durationHours: number
+  expectedClassification: IcuShockClassification
   allowedModes: readonly IcuSimulationMode[]
   initialPatient: IcuPatientState
   capabilities: {

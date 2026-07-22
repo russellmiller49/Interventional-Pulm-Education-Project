@@ -34,9 +34,8 @@ describe('CriticalCareHub', () => {
     expect(screen.getAllByRole('link')).toHaveLength(criticalCareModules.length)
   })
 
-  it('makes the existing Baxter sign-in boundary visible before launch', () => {
+  it('does not show a sign-in requirement for Baxter CRRT', () => {
     render(<CriticalCareHub />)
-    expect(screen.getByText('Sign-in required')).toBeInTheDocument()
-    expect(screen.getAllByText('Sign-in required')).toHaveLength(1)
+    expect(screen.queryByText('Sign-in required')).not.toBeInTheDocument()
   })
 })

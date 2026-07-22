@@ -38,10 +38,14 @@ Completed 2026-07-19 with release stage `sme-review`.
   warnings were the Mermaid/Langium dynamic dependency and global `metadataBase` notices.
 - Scoped Prettier, stale-reference scans, and `git diff --check`: passed.
 
+## Access update
+
+On 2026-07-22, the release moved to `unlisted-preview`. Overview, Learn, Practice, and Assess are
+publicly accessible by direct link, remain excluded from discovery, and retain noindex metadata.
+
 ## Browser and SME acceptance
 
-The routes are draft/auth gated, so automated Jest/RTL coverage is the reliable implementation
-gate. Before publication, perform an authenticated desktop, tablet, and 320-pixel walkthrough of all
+Before publication, perform a desktop, tablet, and 320-pixel walkthrough of all
 four routes. Exercise keyboard-only navigation, both embedded labs, a full Practice/debrief loop,
 all five drills, locked and unlocked Assess states, 200% zoom, reduced motion, and the
 reviewed-English fallback.

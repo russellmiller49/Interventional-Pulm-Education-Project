@@ -17,13 +17,13 @@ by an explicit release-stage change.
 | R-10 | Time stepping or bag depletion violates conservation                  | Fixed internal step, coupled delivery fraction, equivalence/depletion invariants                           |
 | R-11 | CRRT-16 leaks before the capstone                                     | Exclude it from all curated Practice lists, analytics IDs, and progress case IDs                           |
 | R-12 | Progress or analytics stores sensitive/free-text data                 | Strict V3 DTO and bounded telemetry allowlist; rejection tests                                             |
-| R-13 | Protected content becomes discoverable                                | Release-derived guards, robots, navigation, search, and sitemap tests                                      |
+| R-13 | Unlisted preview becomes broadly discoverable                         | Public-unlisted access, robots, navigation, search, and sitemap tests                                      |
 | R-14 | Dense responsive UI hides state                                       | Four semantic case tabs, merged machine/circuit surface, focus and reflow tests                            |
 | R-15 | Non-English routes imply unreviewed translation                       | Reviewed-English fallback and no automatic handoff translation                                             |
 | R-16 | Accessibility barriers block controls or summaries                    | Keyboard, focus, text alternatives, 44px targets, reduced motion, zoom/reflow checks                       |
 | R-17 | Review metadata becomes a runtime switch                              | Unified runtime registry; metadata stays informational                                                     |
-| R-18 | Publication occurs before lesson/content review                       | Release remains `sme-review`; publication is a separate explicit task                                      |
+| R-18 | Publication occurs before lesson/content review                       | Release remains `unlisted-preview`; publication is a separate explicit task                                |
 
 Before a later `published` change, resolve material SME findings, verify evidence and device limits,
-repeat automated and authenticated browser checks, and review the public disclaimer and discovery
-metadata. These are release-quality checks, not prerequisites for running the protected build.
+repeat automated and direct-link browser checks, and review the public disclaimer and discovery
+metadata. These are release-quality checks, not prerequisites for running the unlisted preview.

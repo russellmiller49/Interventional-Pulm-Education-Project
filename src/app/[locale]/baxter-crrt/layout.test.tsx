@@ -6,12 +6,12 @@ jest.mock('@/lib/draft-module-guard', () => ({
 
 import BaxterCrrtLayout from './layout'
 
-describe('Baxter CRRT draft layout', () => {
+describe('Baxter CRRT unlisted public layout', () => {
   beforeEach(() => assertDraftModulesEnabledMock.mockClear())
 
-  it('fails closed through the shared draft guard', async () => {
-    const result = await BaxterCrrtLayout({ children: <div>Draft child</div> })
-    expect(assertDraftModulesEnabledMock).toHaveBeenCalledTimes(1)
-    expect(result).toEqual(<div>Draft child</div>)
+  it('does not invoke the authenticated draft guard', async () => {
+    const result = await BaxterCrrtLayout({ children: <div>Preview child</div> })
+    expect(assertDraftModulesEnabledMock).not.toHaveBeenCalled()
+    expect(result).toEqual(<div>Preview child</div>)
   })
 })

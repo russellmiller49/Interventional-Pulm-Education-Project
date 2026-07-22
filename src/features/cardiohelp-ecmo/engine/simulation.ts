@@ -508,6 +508,17 @@ function reconcileAlarms(
   return { alarms: nextAlarms, alarmHistory: history }
 }
 
+/**
+ * Source-module nominal pump curve for adapter reuse. This deliberately omits
+ * circuit faults and safety stops, which remain the responsibility of the
+ * caller's device-local state.
+ */
+export function calculateNominalCardiohelpBloodFlowLMin(rpm: number): number {
+  if (!Number.isFinite(rpm) || rpm <= 0) return 0
+  if (rpm < 200) return -0.2
+  return round(clamp(rpm / 790, 0, 9.9), 2)
+}
+
 function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
   if (
     !state.device.pumpRunning ||
@@ -517,9 +528,7 @@ function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
     rpm <= 0
   )
     return 0
-  if (rpm < 200) return -0.2
-
-  let flow = clamp(rpm / 790, 0, 9.9)
+  let flow = calculateNominalCardiohelpBloodFlowLMin(rpm)
   if (hasFault(state, 'preload-limited') || hasFault(state, 'hemorrhagic-hypovolemia')) {
     const oscillation = state.simulationTime % 4 < 2 ? -0.3 : 0.12
     flow = flow * 0.68 + oscillation

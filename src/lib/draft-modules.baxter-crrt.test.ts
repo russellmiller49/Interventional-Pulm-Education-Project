@@ -1,4 +1,8 @@
-type BaxterCrrtReleaseStage = 'private-development' | 'sme-review' | 'published'
+type BaxterCrrtReleaseStage =
+  | 'private-development'
+  | 'sme-review'
+  | 'unlisted-preview'
+  | 'published'
 
 export {}
 
@@ -31,8 +35,8 @@ describe('Baxter CRRT release-stage routing', () => {
     jest.resetModules()
   })
 
-  it.each(['private-development', 'sme-review'] as const)(
-    'keeps %s admin-only, unlisted, and absent from visible navigation',
+  it.each(['private-development', 'sme-review', 'unlisted-preview'] as const)(
+    'keeps %s unlisted and absent from visible navigation',
     async (stage) => {
       const policy = await loadPolicy(stage)
       for (const path of ['/baxter-crrt', '/es/baxter-crrt', '/zh-CN/baxter-crrt']) {

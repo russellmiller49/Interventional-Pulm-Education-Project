@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { OrbitControls, RoundedBox } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Eye, EyeOff, RotateCcw } from 'lucide-react'
@@ -174,20 +174,21 @@ function sceneSummary(state: IcuSimulationState): string {
 export function IcuBedsideScene({ state }: { state: IcuSimulationState }) {
   const [showVisual, setShowVisual] = useState(true)
   const [sceneKey, setSceneKey] = useState(0)
-  const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null)
-  const [reducedMotion, setReducedMotion] = useState(false)
-  const summary = useMemo(() => sceneSummary(state), [state])
-
-  useEffect(() => {
-    const media = window.matchMedia?.('(prefers-reduced-motion: reduce)')
-    setReducedMotion(media?.matches ?? false)
+  const [webglAvailable] = useState<boolean | null>(() => {
+    if (typeof document === 'undefined') return null
     try {
       const canvas = document.createElement('canvas')
-      setWebglAvailable(Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl')))
+      return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'))
     } catch {
-      setWebglAvailable(false)
+      return false
     }
-  }, [])
+  })
+  const [reducedMotion] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false),
+  )
+  const summary = useMemo(() => sceneSummary(state), [state])
 
   return (
     <section className={styles.bedsideScene} aria-labelledby="bedside-scene-title">
@@ -209,8 +210,10 @@ export function IcuBedsideScene({ state }: { state: IcuSimulationState }) {
       <p className={styles.sceneTextEquivalent}>{summary}</p>
 
       {showVisual && webglAvailable ? (
-        <div className={styles.sceneViewport} aria-hidden="true">
+        <div className={styles.sceneViewport}>
           <Canvas
+            aria-hidden="true"
+            tabIndex={-1}
             key={sceneKey}
             dpr={[1, 1.5]}
             shadows

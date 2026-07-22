@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
 
-import { baxterCrrtIsPublic, baxterCrrtReleaseStage } from '@/features/baxter-crrt/content'
+import {
+  baxterCrrtIsDirectLinkPublic,
+  baxterCrrtReleaseStage,
+} from '@/features/baxter-crrt/content'
 import { assertDraftModulesEnabled } from '@/lib/draft-module-guard'
 
 export default async function BaxterCrrtLayout({ children }: { children: ReactNode }) {
-  if (!baxterCrrtIsPublic(baxterCrrtReleaseStage)) {
+  if (!baxterCrrtIsDirectLinkPublic(baxterCrrtReleaseStage)) {
     await assertDraftModulesEnabled()
   }
 

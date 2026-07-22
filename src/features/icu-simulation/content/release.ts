@@ -15,3 +15,5 @@ export type IcuSimulationReleaseStage =
   | 'sme-review'
   | 'tester-preview'
   | 'published'
+
+export const ICU_SIMULATION_RELEASE_STAGE: IcuSimulationReleaseStage = ICU_SIMULATION_RELEASE.stage
