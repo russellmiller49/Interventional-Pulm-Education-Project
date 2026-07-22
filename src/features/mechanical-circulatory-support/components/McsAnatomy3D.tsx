@@ -1,6 +1,15 @@
 'use client'
 
-import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, type RootState, useThree } from '@react-three/fiber'
 import { RotateCcw } from 'lucide-react'
@@ -21,11 +30,23 @@ import {
 } from '@/features/cardiac-anatomy/content/paths'
 
 import type { McsSimulationState } from '../engine'
+import { fitCardiacCameraToViewport, MCS_HEART_CAMERA_FIT } from './cardiacCameraFit'
 import styles from './mechanical-circulatory-support.module.css'
 
 const IabpModel = lazy(() => import('./three/IabpModel'))
 const ImpellaModel = lazy(() => import('./three/ImpellaModel'))
 const LvadModel = lazy(() => import('./three/LvadModel'))
+
+const ORBIT_MOUSE_BUTTONS = {
+  LEFT: THREE.MOUSE.ROTATE,
+  MIDDLE: THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.ROTATE,
+} as const
+
+const ORBIT_TOUCHES = {
+  ONE: THREE.TOUCH.ROTATE,
+  TWO: THREE.TOUCH.DOLLY_ROTATE,
+} as const
 
 function setupRenderer({ gl, scene }: RootState, onLost: () => void) {
   scene.background = new THREE.Color('#07171e')
@@ -41,19 +62,41 @@ function setupRenderer({ gl, scene }: RootState, onLost: () => void) {
 
 function ManagedOrbitControls({
   cameraPreset,
+  fitHeartToViewport,
   resetKey,
+  onCameraChange,
+  onInteractionEnd,
+  onInteractionStart,
 }: {
   cameraPreset: CardiacCameraPreset
+  fitHeartToViewport: boolean
   resetKey: number
+  onCameraChange: (position: readonly number[]) => void
+  onInteractionEnd: () => void
+  onInteractionStart: () => void
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null)
   const getThree = useThree((root) => root.get)
+  const rendererElement = useThree((root) => root.gl.domElement)
+  const viewportWidth = useThree((root) => root.size.width)
+  const viewportHeight = useThree((root) => root.size.height)
+  const fittedCameraPreset = useMemo(
+    () =>
+      fitHeartToViewport
+        ? fitCardiacCameraToViewport(
+            cameraPreset,
+            { width: viewportWidth, height: viewportHeight },
+            MCS_HEART_CAMERA_FIT,
+          )
+        : cameraPreset,
+    [cameraPreset, fitHeartToViewport, viewportHeight, viewportWidth],
+  )
 
   useLayoutEffect(() => {
     const threeCamera = getThree().camera
-    threeCamera.position.set(...cameraPreset.position)
+    threeCamera.position.set(...fittedCameraPreset.position)
     if (threeCamera instanceof THREE.PerspectiveCamera) {
-      threeCamera.fov = cameraPreset.fov
+      threeCamera.fov = fittedCameraPreset.fov
       threeCamera.near = 0.1
       threeCamera.far = 50
       threeCamera.updateProjectionMatrix()
@@ -61,23 +104,36 @@ function ManagedOrbitControls({
 
     const controls = controlsRef.current
     if (controls) {
-      controls.target.set(...cameraPreset.target)
-      controls.minDistance = cameraPreset.minDistance
-      controls.maxDistance = cameraPreset.maxDistance
+      controls.target.set(...fittedCameraPreset.target)
+      controls.minDistance = fittedCameraPreset.minDistance
+      controls.maxDistance = fittedCameraPreset.maxDistance
       controls.update()
       controls.saveState()
     } else {
-      threeCamera.lookAt(...cameraPreset.target)
+      threeCamera.lookAt(...fittedCameraPreset.target)
     }
-  }, [cameraPreset, getThree, resetKey])
+    onCameraChange(threeCamera.position.toArray())
+  }, [fittedCameraPreset, getThree, onCameraChange, resetKey])
 
   return (
     <OrbitControls
       ref={controlsRef}
+      domElement={rendererElement}
+      enableDamping
       enablePan={false}
-      minDistance={cameraPreset.minDistance}
-      maxDistance={cameraPreset.maxDistance}
-      target={cameraPreset.target}
+      enableRotate
+      enableZoom
+      dampingFactor={0.08}
+      minDistance={fittedCameraPreset.minDistance}
+      maxDistance={fittedCameraPreset.maxDistance}
+      mouseButtons={ORBIT_MOUSE_BUTTONS}
+      rotateSpeed={0.85}
+      target={fittedCameraPreset.target}
+      touches={ORBIT_TOUCHES}
+      zoomSpeed={0.8}
+      onChange={() => onCameraChange(getThree().camera.position.toArray())}
+      onEnd={onInteractionEnd}
+      onStart={onInteractionStart}
     />
   )
 }
@@ -95,6 +151,10 @@ export function McsAnatomy3D({
   const [epoch, setEpoch] = useState(0)
   const [viewEpoch, setViewEpoch] = useState(0)
   const [placementReplayKey, setPlacementReplayKey] = useState(0)
+  const [isOrbiting, setIsOrbiting] = useState(false)
+  const [hasInteracted, setHasInteracted] = useState(false)
+  const viewportRef = useRef<HTMLDivElement>(null)
+  const interactionHintId = useId()
   const anatomy = MCS_DEVICE_ANATOMY[state.deviceKind]
   const sceneId = state.deviceKind === 'iabp' ? 'iabp' : 'heart'
   const camera = CARDIAC_RIG.cameras[sceneId]
@@ -120,12 +180,28 @@ export function McsAnatomy3D({
         .filter(Boolean)
         .join(' ')
     : anatomy.location
-  const flowLabel =
+  const placementSummary =
     state.deviceKind === 'iabp'
-      ? 'Counterpulsation changes timing and impedance; net device flow is zero.'
+      ? 'IABP · descending thoracic aorta'
       : impella
-        ? `${state.metrics.leftDeviceFlowLMin.toFixed(1)} L/min left pump · ${state.metrics.rightDeviceFlowLMin.toFixed(1)} L/min RP. RP flow is not added directly to systemic output.`
-        : `${state.metrics.deviceFlowLMin.toFixed(1)} L/min LV-to-aorta device flow.`
+        ? impella.left.enabled && impella.right.enabled
+          ? `${impella.left.variant === '55' ? '5.5' : 'CP'} + RP · LV→aorta and IVC→PA`
+          : impella.left.enabled
+            ? `${impella.left.variant === '55' ? '5.5' : 'CP'} · LV inlet → ascending aorta`
+            : impella.right.enabled
+              ? 'RP · IVC inlet → pulmonary artery'
+              : 'Impella support off'
+        : 'LVAD · apical inflow → ascending-aortic outflow'
+  const publishCameraPosition = useCallback((position: readonly number[]) => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    viewport.dataset.cameraPosition = position.map((coordinate) => coordinate.toFixed(4)).join(',')
+  }, [])
+  const handleOrbitStart = useCallback(() => setIsOrbiting(true), [])
+  const handleOrbitEnd = useCallback(() => {
+    setIsOrbiting(false)
+    setHasInteracted(true)
+  }, [])
 
   return (
     <section className={styles.anatomyCard} aria-label="Animated mechanical-support anatomy">
@@ -133,7 +209,57 @@ export function McsAnatomy3D({
         <span className={styles.monitorLabel}>3D ANATOMY + MECHANISM</span>
         <strong>{impellaTitle}</strong>
       </header>
-      <div className={styles.anatomyViewport}>
+      <div className={styles.anatomyToolbar}>
+        <div className={styles.anatomyOrientation}>
+          <span>
+            {sceneId === 'iabp' ? 'Open anterior aorta' : 'Transparent anterior CT heart'}
+          </span>
+          <span>
+            {sceneId === 'iabp' ? 'Subclavian-to-renal window' : 'Patient right is viewer left'}
+          </span>
+        </div>
+        <div className={styles.anatomyToolRow}>
+          <span id={interactionHintId} className={styles.anatomyInteractionHint}>
+            {isOrbiting
+              ? 'Rotating view…'
+              : hasInteracted
+                ? 'View rotated · drag again or reset'
+                : 'Drag to rotate · scroll or pinch to zoom'}
+          </span>
+          <div className={styles.anatomyActions}>
+            <button
+              type="button"
+              aria-label="Reset 3D anatomy view"
+              onClick={() => {
+                setHasInteracted(false)
+                setViewEpoch((value) => value + 1)
+              }}
+            >
+              <RotateCcw aria-hidden="true" /> Reset view
+            </button>
+            {state.device.kind === 'impella' &&
+            (state.device.left.enabled || state.device.right.enabled) ? (
+              <button
+                type="button"
+                aria-label="Replay active Impella advancement trajectories"
+                onClick={() => setPlacementReplayKey((value) => value + 1)}
+              >
+                Replay placement
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+      <div
+        ref={viewportRef}
+        className={styles.anatomyViewport}
+        role="group"
+        aria-label="Interactive 3D mechanical-support anatomy"
+        aria-describedby={interactionHintId}
+        data-testid="mcs-anatomy-viewport"
+        data-orbit-interacted={hasInteracted}
+        data-orbiting={isOrbiting}
+      >
         {!webglReady || contextLost ? (
           <div className={styles.webglFallback}>
             <strong>
@@ -214,52 +340,20 @@ export function McsAnatomy3D({
                   </>
                 )}
               </Suspense>
-              <ManagedOrbitControls cameraPreset={camera} resetKey={viewEpoch} />
+              <ManagedOrbitControls
+                cameraPreset={camera}
+                fitHeartToViewport={sceneId === 'heart'}
+                resetKey={viewEpoch}
+                onCameraChange={publishCameraPosition}
+                onInteractionEnd={handleOrbitEnd}
+                onInteractionStart={handleOrbitStart}
+              />
             </Canvas>
           </CanvasErrorBoundary>
         )}
-        <div className={styles.anatomyOrientation}>
-          <span>
-            {sceneId === 'iabp' ? 'Open anterior aorta' : 'Transparent anterior CT heart'}
-          </span>
-          <span>
-            {sceneId === 'iabp' ? 'Subclavian-to-renal window' : 'Patient right is viewer left'}
-          </span>
-          <button
-            type="button"
-            aria-label="Reset 3D anatomy view"
-            onClick={() => setViewEpoch((value) => value + 1)}
-          >
-            <RotateCcw aria-hidden="true" /> Reset view
-          </button>
-          {state.device.kind === 'impella' &&
-          (state.device.left.enabled || state.device.right.enabled) ? (
-            <button
-              type="button"
-              aria-label="Replay active Impella advancement trajectories"
-              onClick={() => setPlacementReplayKey((value) => value + 1)}
-            >
-              Replay placement
-            </button>
-          ) : null}
-        </div>
-        <div className={styles.anatomyHud}>
+        <div className={styles.anatomyFlowChip}>
           <strong>{state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min effective</strong>
-          <span>{impellaLocation}</span>
-          <span>{flowLabel}</span>
-          {sceneId === 'heart' ? (
-            <span>
-              CT morphology: aortic cusps segmented; other valve locations are proxies—mitral
-              chordal clearance cannot be assessed.
-            </span>
-          ) : null}
-          {state.device.kind === 'impella' ? (
-            <span>
-              Path boundary: peripheral access is outside this CT. CP/5.5 use the CT aortic
-              centerline and segmented aortic cusps; RP uses CT IVC, RA, RV, and PA centerlines with
-              reviewed tricuspid/pulmonic route gates only.
-            </span>
-          ) : null}
+          <span>{placementSummary}</span>
         </div>
       </div>
       <div className={styles.anatomyTextEquivalent} role="status">

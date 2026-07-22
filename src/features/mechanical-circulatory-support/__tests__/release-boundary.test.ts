@@ -45,5 +45,14 @@ describe('MCS unlisted release and 3D asset boundary', () => {
     expect(source).toContain('webglcontextlost')
     expect(source).toContain('Reload 3D view')
     expect(source).toContain('Text equivalent')
+    expect(source).toContain('Drag to rotate · scroll or pinch to zoom')
+
+    const viewportSource = source.slice(
+      source.indexOf('data-testid="mcs-anatomy-viewport"'),
+      source.indexOf('className={styles.anatomyTextEquivalent}'),
+    )
+    expect(viewportSource).toContain('className={styles.anatomyFlowChip}')
+    expect(viewportSource).not.toContain('CT morphology:')
+    expect(viewportSource).not.toContain('Path provenance:')
   })
 })
