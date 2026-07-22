@@ -117,8 +117,8 @@ export function stepCrrt(
       alarm(
         'HIGH_PATIENT_REMOVAL',
         'Patient fluid-removal setting may exceed current tolerance',
-        'warning',
-        'reviewed',
+        null,
+        'pending',
       ),
     )
   return {

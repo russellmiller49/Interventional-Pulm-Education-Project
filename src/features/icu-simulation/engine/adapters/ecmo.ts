@@ -1,3 +1,5 @@
+import { calculateNominalCardiohelpBloodFlowLMin } from '@/features/cardiohelp-ecmo/engine/simulation'
+
 import { clamp, roundTo } from '../math'
 import type {
   IcuCommand,
@@ -14,6 +16,7 @@ export function createInitialIcuEcmoState(): IcuEcmoState {
     status: 'off',
     mode: 'vv',
     rpm: 0,
+    targetBloodFlowLMin: 0,
     bloodFlowLMin: 0,
     sweepLMin: 0,
     gasFio2: 1,
@@ -53,7 +56,8 @@ export function reduceEcmoCommand(state: IcuEcmoState, command: IcuCommand): Icu
   }
   if (value === null) return state
   if (command.control === 'rpm') return { ...state, rpm: clamp(value, 0, 5_000) }
-  if (command.control === 'blood-flow-l-min') return { ...state, bloodFlowLMin: clamp(value, 0, 7) }
+  if (command.control === 'blood-flow-l-min')
+    return { ...state, targetBloodFlowLMin: clamp(value, 0, 7) }
   if (command.control === 'sweep-l-min') return { ...state, sweepLMin: clamp(value, 0, 12) }
   if (command.control === 'gas-fio2') return { ...state, gasFio2: clamp(value, 0.21, 1) }
   return state
@@ -62,7 +66,7 @@ export function reduceEcmoCommand(state: IcuEcmoState, command: IcuCommand): Icu
 function alarm(
   code: string,
   message: string,
-  priority: NonNullable<IcuDeviceAlarm['priority']>,
+  priority: IcuDeviceAlarm['priority'] = null,
 ): Omit<IcuDeviceAlarm, 'startedAtSeconds' | 'acknowledgedAtSeconds' | 'correctedAtSeconds'> {
   return {
     id: `ecmo:${code}`,
@@ -70,7 +74,7 @@ function alarm(
     code,
     message,
     priority,
-    mappingReviewStatus: 'reviewed',
+    mappingReviewStatus: 'pending',
     active: true,
   }
 }
@@ -86,8 +90,10 @@ export function stepEcmo(
   const patient = snapshot.patient
   const volumeFraction = patient.hemodynamics.circulatingVolumeMl / 4_360
   const preloadFactor = clamp((volumeFraction - 0.55) / 0.45, 0.1, 1.08)
-  const rpmTargetFlow = clamp((state.rpm - 900) / 650, 0, 7)
-  const requestedFlow = state.bloodFlowLMin > 0 ? state.bloodFlowLMin : rpmTargetFlow
+  const rpmTargetFlow = clamp(calculateNominalCardiohelpBloodFlowLMin(state.rpm), 0, 7)
+  // The target is distinct from delivered telemetry so a drainage limitation
+  // is never re-applied to an already-limited value on the next step.
+  const requestedFlow = state.targetBloodFlowLMin > 0 ? state.targetBloodFlowLMin : rpmTargetFlow
   const drainageLimited = requestedFlow > rpmTargetFlow * preloadFactor + 0.35
   const bloodFlow = clamp(Math.min(requestedFlow, rpmTargetFlow) * preloadFactor, 0, 7)
   const drainagePressure = -15 - (bloodFlow * 23) / Math.max(0.25, preloadFactor)
@@ -131,13 +137,11 @@ export function stepEcmo(
   }
   const alarms: ReturnType<typeof alarm>[] = []
   if (drainagePressure < -150 || drainageLimited)
-    alarms.push(alarm('DRAINAGE_LIMITED', 'ECMO drainage is preload limited', 'critical'))
-  if (pressureDrop > 190)
-    alarms.push(alarm('OXYGENATOR_RESISTANCE', 'Oxygenator pressure drop is elevated', 'warning'))
+    alarms.push(alarm('DRAINAGE_LIMITED', 'ECMO drainage is preload limited'))
   if (!state.gasConnected && (state.sweepLMin > 0 || state.gasFio2 > 0.21))
-    alarms.push(alarm('GAS_SOURCE', 'Sweep-gas source is disconnected', 'critical'))
+    alarms.push(alarm('GAS_SOURCE', 'Sweep-gas source is disconnected'))
   if (state.mode === 'vv' && recirculation > 0.35)
-    alarms.push(alarm('RECIRCULATION', 'VV recirculation is reducing effective support', 'warning'))
+    alarms.push(alarm('RECIRCULATION', 'VV recirculation is reducing effective support'))
   const gasAvailable = state.gasConnected ? 1 : 0
   return {
     state: next,

@@ -13,11 +13,12 @@ and case endpoints are synthetic educational calibration.
 
 ## Release and information architecture
 
-- Release stages remain `private-development | sme-review | published`.
-- The current `sme-review` stage is admin-only, unlisted, noindex, and excluded from discovery.
+- Release stages remain `private-development | sme-review | unlisted-preview | published`.
+- The current `unlisted-preview` stage is public by direct link, unlisted, noindex, and excluded
+  from discovery.
 - The learner information architecture is Overview / Learn / Practice / Assess.
 - `/review` and `review-preview` do not exist; progress and allowlisted telemetry use the same
-  protected learner runtime.
+  learner runtime.
 - Non-English routes show a reviewed-English fallback and do not imply localized clinical review.
 
 ## Required learning inventory

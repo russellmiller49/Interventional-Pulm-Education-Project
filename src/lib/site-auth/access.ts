@@ -22,6 +22,7 @@ const PUBLIC_EXACT_PATHS = new Set([
 ])
 
 const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
+  '/baxter-crrt',
   '/cardiohelp-ecmo',
   '/critical-care',
   '/icu-hemodynamics',
@@ -34,6 +35,7 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
 // Public-unlisted modules whose subroutes (e.g. /cardiohelp-ecmo/learn) share
 // the parent's access and noindex treatment.
 const PUBLIC_UNLISTED_PATH_PREFIXES = [
+  '/baxter-crrt',
   '/cardiohelp-ecmo',
   '/mechanical-circulatory-support',
 ] as const

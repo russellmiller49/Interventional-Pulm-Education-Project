@@ -19,6 +19,16 @@ function latestContinuousObservation(state: IcuSimulationState): IcuObservation 
     )
 }
 
+function latestPacObservation(state: IcuSimulationState): IcuObservation | undefined {
+  return [...state.observations]
+    .reverse()
+    .find(
+      (observation) =>
+        observation.assessmentId === 'pac' &&
+        observation.availableAtSeconds <= state.clock.elapsedSeconds,
+    )
+}
+
 function observationNumber(
   observation: IcuObservation | undefined,
   keys: readonly string[],
@@ -79,8 +89,15 @@ function Waveform({
   )
 }
 
-export function IcuPatientMonitor({ state }: { state: IcuSimulationState }) {
+export function IcuPatientMonitor({
+  state,
+  concealSyntheticId = false,
+}: {
+  state: IcuSimulationState
+  concealSyntheticId?: boolean
+}) {
   const observed = latestContinuousObservation(state)
+  const pacObserved = latestPacObservation(state)
   const hemodynamics = state.patient.hemodynamics
   const respiratory = state.patient.respiratory
   const perfusion = state.patient.perfusion
@@ -105,13 +122,13 @@ export function IcuPatientMonitor({ state }: { state: IcuSimulationState }) {
       respiratory.spontaneousRatePerMin,
     ),
     cardiacOutput: observationNumber(
-      observed,
+      pacObserved,
       ['cardiacOutputLMin', 'cardiacOutput'],
-      hemodynamics.cardiacOutputLMin,
+      Number.NaN,
     ),
     temperature: observationNumber(observed, ['temperatureC'], perfusion.temperatureC),
-    meanPap: observationNumber(observed, ['meanPapMmHg', 'meanPap'], hemodynamics.meanPapMmHg),
-    rap: observationNumber(observed, ['rapMmHg', 'cvpMmHg', 'cvp'], hemodynamics.rapMmHg),
+    meanPap: observationNumber(pacObserved, ['meanPapMmHg', 'meanPap'], Number.NaN),
+    rap: observationNumber(pacObserved, ['rapMmHg', 'cvpMmHg', 'cvp'], Number.NaN),
   }
 
   return (
@@ -208,10 +225,13 @@ export function IcuPatientMonitor({ state }: { state: IcuSimulationState }) {
 
       <footer className={styles.monitorFooter}>
         <span>
-          Synthetic patient {state.patient.syntheticPatientId} · Adult{' '}
+          Synthetic patient{' '}
+          {concealSyntheticId ? 'assessment variant' : state.patient.syntheticPatientId} · Adult{' '}
           {finite(state.patient.adultAgeYears, 0)} y · {finite(state.patient.weightKg, 0)} kg
         </span>
-        <span>Displayed values are simulated observations</span>
+        <span>
+          Displayed values are simulated observations · CO and filling pressures require PAC data
+        </span>
       </footer>
     </section>
   )

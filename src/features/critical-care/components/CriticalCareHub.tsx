@@ -84,11 +84,6 @@ export function CriticalCareHub() {
                       <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                         <Icon aria-hidden="true" className="size-5" />
                       </span>
-                      {module.access === 'site-sign-in' ? (
-                        <Badge variant="outline" className="rounded-full">
-                          Sign-in required
-                        </Badge>
-                      ) : null}
                     </div>
                     <div className="space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">

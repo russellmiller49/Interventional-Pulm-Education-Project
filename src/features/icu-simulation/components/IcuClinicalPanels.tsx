@@ -1,6 +1,6 @@
 'use client'
 
-import type { Dispatch, ReactNode } from 'react'
+import { useState, type Dispatch } from 'react'
 import type { Route } from 'next'
 import {
   AlertTriangle,
@@ -23,13 +23,18 @@ import {
 
 import { Link } from '@/i18n/navigation'
 
+import { ICU_EVIDENCE_BY_ID } from '../content'
+import { ICU_SCORE_WEIGHTS, icuScoreDomains } from '../engine'
 import type {
   IcuAssessmentId,
   IcuCareInterventionId,
   IcuCommand,
+  IcuDiseaseDrivers,
   IcuObservation,
   IcuReassessmentDomain,
   IcuScenarioDefinition,
+  IcuScenarioFamily,
+  IcuShockClassification,
   IcuSimulationMode,
   IcuSimulationState,
   IcuTrendSample,
@@ -179,6 +184,132 @@ const reassessmentCopy: Readonly<Record<IcuReassessmentDomain, string>> = {
   devices: 'Devices',
 }
 
+const classificationCopy: Readonly<Record<IcuShockClassification, string>> = {
+  distributive: 'Distributive / vasodilatory shock',
+  'lv-cardiogenic': 'Predominantly LV cardiogenic shock',
+  'rv-obstructive': 'RV-predominant obstructive shock',
+  'hypovolemic-hemorrhagic': 'Hemorrhagic hypovolemic shock',
+  'tamponade-obstructive': 'Tamponade physiology',
+  'mixed-cardiogenic-vasodilatory': 'Mixed cardiogenic–vasodilatory shock',
+}
+
+const expectedClassificationByFamily: Readonly<Record<IcuScenarioFamily, IcuShockClassification>> =
+  {
+    'septic-ards-aki': 'distributive',
+    'lv-cardiogenic': 'lv-cardiogenic',
+    'massive-pe-rv': 'rv-obstructive',
+    hemorrhagic: 'hypovolemic-hemorrhagic',
+    tamponade: 'tamponade-obstructive',
+    'mixed-cardiogenic-vasodilatory': 'mixed-cardiogenic-vasodilatory',
+  }
+
+const maskedAssessmentNarratives: Readonly<Record<string, string>> = {
+  'septic-ards-aki':
+    'A synthetic adult transferred from the emergency department has worsening hypotension, bilateral lung injury, oliguria, and rising lactate despite initial stabilization.',
+  'lv-cardiogenic':
+    'A synthetic adult arrives after acute chest discomfort with pulmonary edema, cool extremities, hypotension, and falling urine output.',
+  'massive-pe-rv':
+    'A synthetic adult develops abrupt dyspnea, syncope, hypoxemia, elevated right-sided pressures, and hypotension.',
+  hemorrhagic:
+    'A synthetic adult after an abdominal procedure develops falling arterial pressure, tachycardia, cool skin, and a declining hemoglobin.',
+  tamponade:
+    'A synthetic adult after an invasive cardiac procedure develops progressive hypotension, tachycardia, elevated venous pressure, and a narrowing pulse pressure.',
+  'mixed-cardiogenic-vasodilatory':
+    'A synthetic adult with infection develops hypotension, cool extremities, pulmonary congestion, and rising lactate despite initial treatment.',
+}
+
+const sandboxDriverCopy: readonly {
+  driver: keyof IcuDiseaseDrivers
+  label: string
+  detail: string
+  minimum: number
+  maximum: number
+  step: number
+  unit: string
+}[] = [
+  {
+    driver: 'vasoplegiaSeverity',
+    label: 'Vasoplegia',
+    detail: 'Relative loss of systemic vascular tone',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+  {
+    driver: 'leftVentricularFailureSeverity',
+    label: 'LV failure',
+    detail: 'Relative left-ventricular contractile impairment',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+  {
+    driver: 'rightVentricularFailureSeverity',
+    label: 'RV failure',
+    detail: 'Relative right-ventricular contractile impairment',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+  {
+    driver: 'pulmonaryVascularObstructionSeverity',
+    label: 'Pulmonary vascular obstruction',
+    detail: 'Relative RV afterload from obstructive physiology',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+  {
+    driver: 'tamponadePressureMmHg',
+    label: 'Pericardial constraint',
+    detail: 'Modeled external cardiac pressure',
+    minimum: 0,
+    maximum: 25,
+    step: 1,
+    unit: 'mmHg',
+  },
+  {
+    driver: 'lungInjurySeverity',
+    label: 'Lung injury',
+    detail: 'Relative shunt and compliance burden',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+  {
+    driver: 'acuteKidneyInjurySeverity',
+    label: 'Kidney injury',
+    detail: 'Relative renal filtration impairment',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+  {
+    driver: 'bleedingRateMlHour',
+    label: 'Bleeding rate',
+    detail: 'Synthetic ongoing blood-loss driver',
+    minimum: 0,
+    maximum: 1_500,
+    step: 50,
+    unit: 'mL/h',
+  },
+  {
+    driver: 'infectionBurden',
+    label: 'Infection burden',
+    detail: 'Relative inflammatory and infectious burden',
+    minimum: 0,
+    maximum: 1,
+    step: 0.05,
+    unit: 'severity',
+  },
+]
+
 function formatTime(seconds: number): string {
   const safe = Math.max(0, Math.floor(seconds))
   const hours = Math.floor(safe / 3_600)
@@ -281,17 +412,97 @@ export function IcuCaseGuide({
 }) {
   const completedCheckpoints = state.outcome.checkpointIdsCompleted
   const coachingVisible = mode === 'learn' || mode === 'practice' || state.phase === 'debrief'
+  const sessionKey = `${state.scenarioId}:${state.seed}`
+  const [classificationDraft, setClassificationDraft] = useState<{
+    sessionKey: string
+    value: IcuShockClassification
+  }>(() => ({
+    sessionKey,
+    value: state.diagnosis.classification ?? 'distributive',
+  }))
+  const classification =
+    classificationDraft.sessionKey === sessionKey
+      ? classificationDraft.value
+      : (state.diagnosis.classification ?? 'distributive')
+  const expectedClassification = expectedClassificationByFamily[state.scenarioFamily]
+  const activeCriticalErrors = scenario.criticalErrors.filter((error) =>
+    state.outcome.criticalErrorIds.includes(error.id),
+  )
+  const achievedCheckpoints = scenario.checkpoints.filter((checkpoint) =>
+    completedCheckpoints.includes(checkpoint.id),
+  )
+  const missedCheckpoints = scenario.checkpoints.filter(
+    (checkpoint) => !completedCheckpoints.includes(checkpoint.id),
+  )
+  const achievedActions = scenario.interventions.filter((intervention) =>
+    state.performedActionIds.includes(intervention.actionId),
+  )
+  const missedActions = scenario.interventions.filter(
+    (intervention) => !state.performedActionIds.includes(intervention.actionId),
+  )
 
   return (
     <section className={styles.caseGuide} aria-labelledby="case-guide-title">
       <header>
         <div>
           <span className={styles.panelKicker}>{mode} pathway</span>
-          <h2 id="case-guide-title">{scenario.title}</h2>
+          <h2 id="case-guide-title">
+            {mode === 'assess' && state.phase !== 'debrief'
+              ? 'Unclassified ICU patient'
+              : scenario.title}
+          </h2>
         </div>
         <span className={styles.phaseBadge}>{state.phase}</span>
       </header>
-      <p className={styles.caseNarrative}>{scenario.openingNarrative}</p>
+      <p className={styles.caseNarrative}>
+        {mode === 'assess' && state.phase !== 'debrief'
+          ? (maskedAssessmentNarratives[scenario.id] ??
+            'An evolving synthetic adult ICU patient requires assessment, shock classification, and serial reassessment.')
+          : scenario.openingNarrative}
+      </p>
+
+      <div className={styles.classificationCommit}>
+        <div>
+          <span className={styles.panelKicker}>Classify before escalating</span>
+          <h3>Working shock mechanism</h3>
+          <p>
+            Commit to the dominant mechanism using the evidence available now.{' '}
+            {mode === 'assess'
+              ? 'The first commitment counts for assessment scoring; later reclassification is documented but does not replace it.'
+              : 'You may reassess the patient later; correctness remains hidden until debrief.'}
+          </p>
+        </div>
+        <label>
+          <span>Classification</span>
+          <select
+            value={classification}
+            onChange={(event) =>
+              setClassificationDraft({
+                sessionKey,
+                value: event.target.value as IcuShockClassification,
+              })
+            }
+          >
+            {(Object.keys(classificationCopy) as IcuShockClassification[]).map((value) => (
+              <option value={value} key={value}>
+                {classificationCopy[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'diagnosis.commit', classification })}
+        >
+          {state.diagnosis.committed ? (
+            <>
+              <Check aria-hidden="true" /> Commit reclassification
+            </>
+          ) : (
+            'Commit working diagnosis'
+          )}
+        </button>
+      </div>
 
       {mode === 'assess' && state.phase !== 'debrief' ? (
         <div className={styles.coachingWithheld}>
@@ -340,18 +551,129 @@ export function IcuCaseGuide({
 
       {state.phase === 'debrief' ? (
         <div className={styles.debriefPanel}>
-          <div>
+          <div className={styles.debriefOutcome}>
             <span>Outcome</span>
-            <strong>{mode === 'sandbox' ? 'Unscored' : `${state.outcome.score.total}%`}</strong>
+            <strong>
+              {mode === 'sandbox' || mode === 'learn'
+                ? 'Unscored'
+                : `${state.outcome.score.total}%`}
+            </strong>
             <small>
-              {state.outcome.mastery ? 'Mastery achieved' : 'Review the causal debrief'}
+              {mode === 'sandbox' || mode === 'learn'
+                ? 'No mastery record in this mode'
+                : state.outcome.mastery
+                  ? 'Mastery achieved'
+                  : 'Review the causal debrief'}
             </small>
           </div>
-          <ul>
-            {scenario.debrief.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
+          <div className={styles.debriefContent}>
+            <section aria-labelledby="domain-score-title">
+              <h3 id="domain-score-title">Six-domain score</h3>
+              {mode === 'sandbox' || mode === 'learn' ? (
+                <p>Domain scoring is shown only in Practice and Assess.</p>
+              ) : (
+                <dl className={styles.scoreBreakdown}>
+                  {icuScoreDomains.map((domain) => (
+                    <div key={domain}>
+                      <dt>{humanizeKey(domain)}</dt>
+                      <dd>
+                        {state.outcome.score[domain]}/{ICU_SCORE_WEIGHTS[domain]}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </section>
+
+            <section aria-labelledby="diagnosis-review-title">
+              <h3 id="diagnosis-review-title">Classification review</h3>
+              <dl className={styles.diagnosisReview}>
+                <div>
+                  <dt>Latest commitment</dt>
+                  <dd>
+                    {state.diagnosis.classification
+                      ? classificationCopy[state.diagnosis.classification]
+                      : 'No classification committed'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Expected mechanism</dt>
+                  <dd>{classificationCopy[expectedClassification]}</dd>
+                </div>
+                <div>
+                  <dt>Serial commitments</dt>
+                  <dd>{state.diagnosis.commitments.length}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section aria-labelledby="checkpoint-review-title">
+              <h3 id="checkpoint-review-title">Checkpoint review</h3>
+              <div className={styles.debriefColumns}>
+                <div>
+                  <strong>Achieved ({achievedCheckpoints.length})</strong>
+                  <ul>
+                    {achievedCheckpoints.length > 0 ? (
+                      achievedCheckpoints.map((checkpoint) => (
+                        <li key={checkpoint.id}>{checkpoint.label}</li>
+                      ))
+                    ) : (
+                      <li>No authored checkpoints completed.</li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <strong>Missed ({missedCheckpoints.length})</strong>
+                  <ul>
+                    {missedCheckpoints.length > 0 ? (
+                      missedCheckpoints.map((checkpoint) => (
+                        <li key={checkpoint.id}>{checkpoint.label}</li>
+                      ))
+                    ) : (
+                      <li>No checkpoints missed.</li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section aria-labelledby="action-review-title">
+              <h3 id="action-review-title">Key action review</h3>
+              <p>
+                {achievedActions.length} authored action{achievedActions.length === 1 ? '' : 's'}{' '}
+                achieved · {missedActions.length} not demonstrated.
+              </p>
+              {missedActions.length > 0 ? (
+                <ul>
+                  {missedActions.slice(0, 6).map((intervention) => (
+                    <li key={intervention.actionId}>Consider: {intervention.label}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+
+            <section aria-labelledby="safety-review-title">
+              <h3 id="safety-review-title">Safety-critical review</h3>
+              {activeCriticalErrors.length > 0 ? (
+                <ul className={styles.criticalErrorList}>
+                  {activeCriticalErrors.map((error) => (
+                    <li key={error.id}>{error.message}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No authored critical safety error was triggered.</p>
+              )}
+            </section>
+
+            <section aria-labelledby="causal-debrief-title">
+              <h3 id="causal-debrief-title">Causal debrief</h3>
+              <ul>
+                {scenario.debrief.map((point) => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+            </section>
+          </div>
         </div>
       ) : (
         <button
@@ -469,14 +791,76 @@ export function IcuDiagnosticsPanel({
   )
 }
 
+export function IcuSandboxControls({
+  state,
+  dispatch,
+}: {
+  state: IcuSimulationState
+  dispatch: Dispatch<IcuCommand>
+}) {
+  return (
+    <section className={styles.clinicalPanel} aria-labelledby="sandbox-controls-title">
+      <header className={styles.panelIntro}>
+        <div>
+          <span className={styles.panelKicker}>Synthetic disease controls</span>
+          <h2 id="sandbox-controls-title">Build a bounded mixed-shock state</h2>
+        </div>
+        <p>
+          Change one modeled driver, advance time, and observe the coupled patient and device
+          response. These values are educational abstractions, not clinical targets.
+        </p>
+      </header>
+      <div className={styles.sandboxControlGrid}>
+        {sandboxDriverCopy.map(({ driver, label, detail, minimum, maximum, step, unit }) => {
+          const value = state.patient.drivers[driver]
+          return (
+            <label className={styles.sandboxControl} key={driver}>
+              <span>
+                <strong>{label}</strong>
+                <small>{detail}</small>
+              </span>
+              <output>
+                {step < 1 ? value.toFixed(2) : value.toFixed(0)} {unit}
+              </output>
+              <input
+                type="range"
+                min={minimum}
+                max={maximum}
+                step={step}
+                value={value}
+                aria-label={`${label}, ${value} ${unit}`}
+                onChange={(event) =>
+                  dispatch({
+                    type: 'sandbox.adjust',
+                    driver,
+                    value: Number(event.target.value),
+                  })
+                }
+              />
+            </label>
+          )
+        })}
+      </div>
+      <p className={styles.sandboxBoundary} role="note">
+        Synthetic preset only. The engine enforces reviewed bounds and records semantic driver
+        changes in the replay; it never accepts a direct patient-state patch.
+      </p>
+    </section>
+  )
+}
+
 export function IcuCarePanel({
   state,
   scenario,
   dispatch,
+  controlsLocked = false,
+  neutralLocked = false,
 }: {
   state: IcuSimulationState
   scenario: IcuScenarioDefinition
   dispatch: Dispatch<IcuCommand>
+  controlsLocked?: boolean
+  neutralLocked?: boolean
 }) {
   const domains = Object.keys(reassessmentCopy) as IcuReassessmentDomain[]
   return (
@@ -489,48 +873,74 @@ export function IcuCarePanel({
         <p>Medication choices use relative tiers. No drug doses or local protocol are modeled.</p>
       </header>
 
-      <div className={styles.careGrid}>
-        {scenario.capabilities.interventions.map((interventionId) => {
-          const copy = careCopy[interventionId]
-          const Icon = copy.Icon
-          const completed = state.performedActionIds.includes(interventionId)
-          return (
-            <button
-              type="button"
-              key={interventionId}
-              data-complete={completed || undefined}
-              onClick={() => dispatch({ type: 'care.perform', interventionId })}
-            >
-              <Icon aria-hidden="true" />
-              <span>
-                <small>{copy.group}</small>
-                <strong>{copy.label}</strong>
-                <em>{copy.detail}</em>
-              </span>
-              {completed ? <Check aria-label="Performed" /> : null}
-            </button>
-          )
-        })}
-      </div>
-
-      <div className={styles.reassessmentBox}>
-        <div>
-          <span className={styles.panelKicker}>Close the loop</span>
-          <h3>Document a full reassessment</h3>
-          <p>Confirm the patient—not just the device—responded to your intervention.</p>
+      {neutralLocked ? (
+        <div className={styles.neutralControlLock} role="status">
+          <ShieldAlert aria-hidden="true" />
+          <div>
+            <strong>Treatment formulary locked</strong>
+            <p>
+              Commit the first working shock classification in the Course panel. Case-specific
+              intervention names remain concealed until that scored commitment is recorded.
+            </p>
+          </div>
         </div>
-        <ul>
-          {domains.map((domain) => (
-            <li key={domain} data-complete={state.reassessedDomains.includes(domain) || undefined}>
-              {state.reassessedDomains.includes(domain) ? <Check aria-hidden="true" /> : <span />}
-              {reassessmentCopy[domain]}
-            </li>
-          ))}
-        </ul>
-        <button type="button" onClick={() => dispatch({ type: 'patient.reassess', domains })}>
-          Reassess all domains
-        </button>
-      </div>
+      ) : controlsLocked ? (
+        <p className={styles.controlLockNote} role="status">
+          Commit a working shock classification in the Course panel before initiating treatment.
+          Diagnostic orders remain available.
+        </p>
+      ) : null}
+
+      {!neutralLocked ? (
+        <div className={styles.careGrid}>
+          {scenario.capabilities.interventions.map((interventionId) => {
+            const copy = careCopy[interventionId]
+            const Icon = copy.Icon
+            const completed = state.performedActionIds.includes(`care:${interventionId}`)
+            return (
+              <button
+                type="button"
+                key={interventionId}
+                disabled={controlsLocked}
+                data-complete={completed || undefined}
+                onClick={() => dispatch({ type: 'care.perform', interventionId })}
+              >
+                <Icon aria-hidden="true" />
+                <span>
+                  <small>{copy.group}</small>
+                  <strong>{copy.label}</strong>
+                  <em>{copy.detail}</em>
+                </span>
+                {completed ? <Check aria-label="Performed" /> : null}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+
+      {!neutralLocked ? (
+        <div className={styles.reassessmentBox}>
+          <div>
+            <span className={styles.panelKicker}>Close the loop</span>
+            <h3>Document a full reassessment</h3>
+            <p>Confirm the patient—not just the device—responded to your intervention.</p>
+          </div>
+          <ul>
+            {domains.map((domain) => (
+              <li
+                key={domain}
+                data-complete={state.reassessedDomains.includes(domain) || undefined}
+              >
+                {state.reassessedDomains.includes(domain) ? <Check aria-hidden="true" /> : <span />}
+                {reassessmentCopy[domain]}
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={() => dispatch({ type: 'patient.reassess', domains })}>
+            Reassess all domains
+          </button>
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -609,7 +1019,13 @@ function TrendCard({
   )
 }
 
-export function IcuTimelinePanel({ state }: { state: IcuSimulationState }) {
+export function IcuTimelinePanel({
+  state,
+  maskScenarioEvents = false,
+}: {
+  state: IcuSimulationState
+  maskScenarioEvents?: boolean
+}) {
   const samples = state.trends.slice(-120)
   return (
     <section className={styles.clinicalPanel} aria-labelledby="trends-title">
@@ -638,7 +1054,11 @@ export function IcuTimelinePanel({ state }: { state: IcuSimulationState }) {
                 <li key={event.id} data-kind={event.kind}>
                   <time>{formatTime(event.elapsedSeconds)}</time>
                   <span>{event.kind}</span>
-                  <strong>{event.label}</strong>
+                  <strong>
+                    {maskScenarioEvents && event.kind === 'scenario'
+                      ? 'Patient condition changed—repeat focused assessment.'
+                      : event.label}
+                  </strong>
                 </li>
               ))}
           </ol>
@@ -658,7 +1078,18 @@ const sourceModules = [
   ['Baxter CRRT', '/baxter-crrt'],
 ] as const
 
-export function IcuSourceNotes({ scenario }: { scenario: IcuScenarioDefinition }) {
+export function IcuSourceNotes({
+  scenario,
+  masked = false,
+}: {
+  scenario: IcuScenarioDefinition
+  masked?: boolean
+}) {
+  const evidenceSources = scenario.evidenceIds.map((evidenceId) => ({
+    evidenceId,
+    source: ICU_EVIDENCE_BY_ID.get(evidenceId),
+  }))
+
   return (
     <section className={styles.sourceNotes} aria-labelledby="source-notes-title">
       <header>
@@ -681,16 +1112,51 @@ export function IcuSourceNotes({ scenario }: { scenario: IcuScenarioDefinition }
           </ul>
         </div>
         <div>
-          <h3>Scenario evidence record</h3>
-          <p>
-            Scenario version {scenario.version} · review status {scenario.reviewStatus}. Evidence
-            identifiers remain attached to authored events, interventions, and checkpoints.
-          </p>
-          <ul className={styles.evidenceList}>
-            {scenario.evidenceIds.map((evidenceId) => (
-              <li key={evidenceId}>{evidenceId}</li>
-            ))}
-          </ul>
+          <h3>{masked ? 'Assessment evidence boundary' : 'Scenario evidence record'}</h3>
+          {masked ? (
+            <p>
+              Scenario-specific titles and links are withheld during a masked assessment because
+              they could reveal the intended diagnosis. The complete evidence record appears in the
+              debrief.
+            </p>
+          ) : (
+            <>
+              <p>
+                Scenario version {scenario.version} · review status {scenario.reviewStatus}.
+                Evidence identifiers remain attached to authored events, interventions, and
+                checkpoints.
+              </p>
+              <ul className={styles.evidenceCards}>
+                {evidenceSources.map(({ evidenceId, source }) => (
+                  <li key={evidenceId}>
+                    {source ? (
+                      <>
+                        {source.url.startsWith('/') ? (
+                          <Link href={source.url as Route}>{source.title}</Link>
+                        ) : (
+                          <a href={source.url} target="_blank" rel="noreferrer">
+                            {source.title}
+                          </a>
+                        )}
+                        <span>
+                          {source.organization} · {source.year} ·{' '}
+                          {source.sourceType.replace('-', ' ')}
+                        </span>
+                        <small>
+                          Review: {source.reviewStatus}. {source.limitation}
+                        </small>
+                      </>
+                    ) : (
+                      <>
+                        <strong>{evidenceId}</strong>
+                        <small>Evidence registry entry pending.</small>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
         <div>
           <h3>Interpretation boundary</h3>

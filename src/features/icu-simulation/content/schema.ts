@@ -5,9 +5,11 @@ import {
   icuCareInterventionIds,
   icuScenarioFamilies,
   icuScoreDomains,
+  icuShockClassifications,
   icuSimulationModes,
   type IcuScenarioDefinition,
 } from '../engine/types'
+import { ICU_EVIDENCE_BY_ID } from './evidence'
 
 const finite = z.number().finite()
 const nonnegative = finite.nonnegative()
@@ -166,6 +168,7 @@ const ecmoSchema = z
     status: z.enum(['off', 'ready', 'running']),
     mode: z.enum(['vv', 'va']),
     rpm: finite,
+    targetBloodFlowLMin: finite,
     bloodFlowLMin: finite,
     sweepLMin: finite,
     gasFio2: finite,
@@ -267,6 +270,7 @@ const checkpointSchema = z
     label: z.string().min(1).max(180),
     requiredActionIds: z.array(stableId),
     acceptedAlternativeActionIdGroups: z.array(z.array(stableId).min(1)),
+    evidenceIds: z.array(evidenceId).min(1),
   })
   .strict()
 
@@ -288,6 +292,7 @@ export const icuScenarioDefinitionSchema = z
     summary: z.string().min(1).max(400),
     openingNarrative: z.string().min(1).max(600),
     durationHours: finite.min(1).max(24),
+    expectedClassification: z.enum(icuShockClassifications),
     allowedModes: z.array(z.enum(icuSimulationModes)).min(1),
     initialPatient: icuPatientSchema,
     capabilities: z
@@ -328,17 +333,39 @@ export const icuScenarioDefinitionSchema = z
         message: 'Scenario id and family must match.',
       })
     }
-    const interventionIds = new Set(scenario.interventions.map((item) => item.actionId))
+    const interventionIdList = scenario.interventions.map((item) => item.actionId)
+    const interventionIds = new Set(interventionIdList)
+    const criticalIdList = scenario.criticalErrors.map((item) => item.id)
     const criticalIds = new Set(scenario.criticalErrors.map((item) => item.id))
     const duplicate = (values: readonly string[]) => new Set(values).size !== values.length
-    if (duplicate([...interventionIds])) {
+    if (duplicate(interventionIdList)) {
       context.addIssue({ code: z.ZodIssueCode.custom, message: 'Intervention IDs must be unique.' })
+    }
+    if (duplicate(criticalIdList)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Critical-error IDs must be unique.',
+      })
     }
     if (duplicate(scenario.scheduledEvents.map((item) => item.id))) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: 'Scheduled event IDs must be unique.',
       })
+    }
+    if (duplicate(scenario.checkpoints.map((item) => item.id))) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Checkpoint IDs must be unique.' })
+    }
+    if (duplicate(scenario.allowedModes)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: 'Allowed modes must be unique.' })
+    }
+    for (const values of Object.values(scenario.capabilities)) {
+      if (duplicate(values)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Capability identifiers must be unique within each capability list.',
+        })
+      }
     }
     for (const domain of icuScoreDomains) {
       if (scenario.scoring[domain].length === 0) {
@@ -363,6 +390,91 @@ export const icuScenarioDefinitionSchema = z
           message: `Unknown critical error ${intervention.criticalErrorId}.`,
         })
       }
+    }
+    for (const error of scenario.criticalErrors) {
+      if (!interventionIds.has(error.actionId)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Critical-error action ${error.actionId} has no intervention definition.`,
+        })
+      }
+    }
+    for (const checkpoint of scenario.checkpoints) {
+      const references = [
+        ...checkpoint.requiredActionIds,
+        ...checkpoint.acceptedAlternativeActionIdGroups.flat(),
+      ]
+      for (const id of references) {
+        if (!interventionIds.has(id)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Checkpoint action ${id} has no intervention definition.`,
+          })
+        }
+      }
+    }
+    const durationSeconds = scenario.durationHours * 3_600
+    for (const event of scenario.scheduledEvents) {
+      const earliest = event.atSeconds + (event.jitterSeconds?.minimum ?? 0)
+      const latest = event.atSeconds + (event.jitterSeconds?.maximum ?? 0)
+      if (earliest < 0 || latest > durationSeconds) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Scheduled event ${event.id} must remain within scenario duration.`,
+        })
+      }
+    }
+    const evidenceIds = [
+      ...scenario.evidenceIds,
+      ...scenario.scheduledEvents.flatMap((event) => event.evidenceIds),
+      ...scenario.interventions.flatMap((intervention) => intervention.evidenceIds),
+      ...scenario.checkpoints.flatMap((checkpoint) => checkpoint.evidenceIds),
+    ]
+    for (const id of evidenceIds) {
+      if (!ICU_EVIDENCE_BY_ID.has(id)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, message: `Unknown evidence ID ${id}.` })
+      }
+    }
+    const initial = scenario.initialDevices
+    const configuredTherapies = [
+      initial?.ventilator && initial.ventilator.status !== 'off' ? 'ventilator' : null,
+      initial?.ecmo && initial.ecmo.status !== 'off' ? 'ecmo' : null,
+      initial?.mcs && initial.mcs.status !== 'off' ? 'mcs' : null,
+      initial?.crrt && initial.crrt.status !== 'off' ? 'crrt' : null,
+    ].filter((therapy): therapy is 'ventilator' | 'ecmo' | 'mcs' | 'crrt' => therapy !== null)
+    if (configuredTherapies.some((therapy) => !scenario.capabilities.therapies.includes(therapy))) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Initial devices must be authorized by scenario therapy capabilities.',
+      })
+    }
+    if (initial?.ecmo && !scenario.capabilities.ecmoModes.includes(initial.ecmo.mode)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Initial ECMO mode is not authorized.',
+      })
+    }
+    if (
+      initial?.mcs &&
+      initial.mcs.device !== 'none' &&
+      !scenario.capabilities.mcsDevices.includes(initial.mcs.device)
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Initial MCS device is not authorized.',
+      })
+    }
+    if (initial?.mcs && initial.mcs.status !== 'off' && initial.mcs.device === 'none') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Configured MCS requires a device.',
+      })
+    }
+    if (initial?.ecmo?.status === 'running' && initial?.mcs?.status === 'running') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Concurrent initial ECMO and MCS are unsupported in v1.',
+      })
     }
   })
 

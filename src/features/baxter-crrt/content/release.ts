@@ -5,14 +5,18 @@
  * decides whether private-development content can run. Only this explicit,
  * code-owned state controls public visibility.
  */
-export type BaxterCrrtReleaseStage = 'private-development' | 'sme-review' | 'published'
+export type BaxterCrrtReleaseStage =
+  | 'private-development'
+  | 'sme-review'
+  | 'unlisted-preview'
+  | 'published'
 
 /**
- * The completed v1 is intentionally held in the protected SME-review state.
- * Moving to `published` is a separate, user-directed release change after
- * feedback has been incorporated.
+ * The completed v1 is available by direct link while remaining excluded from
+ * navigation, search, and the sitemap. Moving to `published` remains a
+ * separate editorial decision after review feedback has been incorporated.
  */
-export const baxterCrrtReleaseStage: BaxterCrrtReleaseStage = 'sme-review'
+export const baxterCrrtReleaseStage: BaxterCrrtReleaseStage = 'unlisted-preview'
 
 export type BaxterCrrtPublicationStatus = 'draft' | 'published'
 
@@ -26,6 +30,8 @@ export const baxterCrrtPublicationStatus: BaxterCrrtPublicationStatus =
   publicationStatusForBaxterCrrtStage(baxterCrrtReleaseStage)
 
 export const baxterCrrtIsPublic = (stage: BaxterCrrtReleaseStage): boolean => stage === 'published'
+export const baxterCrrtIsDirectLinkPublic = (stage: BaxterCrrtReleaseStage): boolean =>
+  stage === 'unlisted-preview' || stage === 'published'
 export const baxterCrrtIsSmeReview = (stage: BaxterCrrtReleaseStage): boolean =>
   stage === 'sme-review'
 
@@ -33,5 +39,6 @@ export const baxterCrrtReleaseLabel: Readonly<Record<BaxterCrrtReleaseStage, str
   Object.freeze({
     'private-development': 'Private development',
     'sme-review': 'Protected SME review',
+    'unlisted-preview': 'Unlisted public preview',
     published: 'Published',
   })

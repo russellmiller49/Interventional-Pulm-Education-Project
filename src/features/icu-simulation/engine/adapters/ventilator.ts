@@ -77,7 +77,7 @@ export function reduceVentilatorCommand(
 function alarm(
   code: string,
   message: string,
-  priority: NonNullable<IcuDeviceAlarm['priority']>,
+  priority: IcuDeviceAlarm['priority'] = null,
 ): Omit<IcuDeviceAlarm, 'startedAtSeconds' | 'acknowledgedAtSeconds' | 'correctedAtSeconds'> {
   return {
     id: `ventilator:${code}`,
@@ -85,7 +85,7 @@ function alarm(
     code,
     message,
     priority,
-    mappingReviewStatus: 'reviewed',
+    mappingReviewStatus: 'pending',
     active: true,
   }
 }
@@ -136,12 +136,9 @@ export function stepVentilator(
     minuteVentilationLMin: roundTo(minuteVentilation, 1),
   }
   const alarms: ReturnType<typeof alarm>[] = []
-  if (peakPressure > 40)
-    alarms.push(alarm('HIGH_PRESSURE', 'Airway pressure above limit', 'critical'))
-  else if (plateauPressure > 30)
-    alarms.push(alarm('HIGH_PLATEAU', 'Plateau pressure is elevated', 'warning'))
-  if (minuteVentilation < 3.5)
-    alarms.push(alarm('LOW_MINUTE_VOLUME', 'Minute ventilation is low', 'critical'))
+  if (peakPressure > 40) alarms.push(alarm('HIGH_PRESSURE', 'Airway pressure above limit'))
+  else if (plateauPressure > 30) alarms.push(alarm('HIGH_PLATEAU', 'Plateau pressure is elevated'))
+  if (minuteVentilation < 3.5) alarms.push(alarm('LOW_MINUTE_VOLUME', 'Minute ventilation is low'))
 
   const meanAirwayPressure = state.peepCmH2O + Math.max(0, plateauPressure - state.peepCmH2O) * 0.36
   return {

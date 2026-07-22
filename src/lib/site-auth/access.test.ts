@@ -157,10 +157,17 @@ describe('main site auth access helpers', () => {
     expect(isPublicUnlistedPath('/socrates-demo/extra')).toBe(false)
   })
 
-  it('keeps Baxter CRRT authenticated, non-public, and on one localized analytics ID', () => {
-    for (const path of ['/baxter-crrt', '/es/baxter-crrt', '/zh-CN/baxter-crrt']) {
-      expect(isPublicPath(path)).toBe(false)
-      expect(isPublicUnlistedPath(path)).toBe(false)
+  it('keeps Baxter CRRT and its learner routes public-unlisted with one analytics ID', () => {
+    for (const path of [
+      '/baxter-crrt',
+      '/es/baxter-crrt',
+      '/zh-CN/baxter-crrt',
+      '/baxter-crrt/learn',
+      '/es/baxter-crrt/practice',
+      '/zh-CN/baxter-crrt/assess',
+    ]) {
+      expect(isPublicPath(path)).toBe(true)
+      expect(isPublicUnlistedPath(path)).toBe(true)
       expect(getRequiredEntitlement(path, params())).toBeNull()
       expect(resolveSiteModuleId(path)).toBe('baxter-crrt')
     }

@@ -27,10 +27,10 @@ jest.mock('@/i18n/navigation', () => ({
 describe('Baxter CRRT module scaffold', () => {
   beforeEach(() => window.localStorage.clear())
 
-  it('renders the protected release, safety boundary, four routes, curriculum, and evidence panel', () => {
+  it('renders the unlisted preview, safety boundary, four routes, curriculum, and evidence panel', () => {
     render(<BaxterCrrtHub />)
 
-    expect(screen.getByRole('main')).toHaveAttribute('data-release-stage', 'sme-review')
+    expect(screen.getByRole('main')).toHaveAttribute('data-release-stage', 'unlisted-preview')
     expect(
       screen.getByRole('heading', { name: 'High-yield CRRT reasoning on PrisMax' }),
     ).toBeInTheDocument()

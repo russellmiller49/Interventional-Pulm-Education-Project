@@ -1,6 +1,6 @@
 # Baxter CRRT module documentation
 
-Current release stage: `sme-review`
+Current release stage: `unlisted-preview`
 
 Learner routes:
 
@@ -10,7 +10,8 @@ Learner routes:
 - `/[locale]/baxter-crrt/assess` — gated masked PrisMax capstone
 
 The former `/review` route and monolithic five-mode workspace have been deleted. The base layout is
-already draft/auth gated, unlisted, and noindexed while the release remains in `sme-review`.
+publicly accessible by direct link while remaining unlisted and noindexed during the
+`unlisted-preview` stage.
 
 The immutable content registry still contains `CRRT-01` through `CRRT-18`. Presentation is curated:
 `CRRT-16` is reserved for the masked capstone and is absent from every Practice picker. PrisMax is

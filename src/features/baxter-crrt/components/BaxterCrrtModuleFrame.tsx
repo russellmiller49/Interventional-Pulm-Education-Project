@@ -37,7 +37,7 @@ export function BaxterCrrtModuleFrame({
           </div>
           <span className={styles.frameBadge}>
             <EyeOff aria-hidden="true" />
-            {baxterCrrtReleaseStage === 'published' ? 'Reviewed release' : 'SME review'}
+            {baxterCrrtReleaseStage === 'published' ? 'Reviewed release' : 'Unlisted preview'}
           </span>
         </header>
 

@@ -2,6 +2,8 @@ import {
   baxterCrrtDeviceProfileSchema,
   baxterCrrtDeviceProfiles,
   baxterCrrtInstructionalToolManifest,
+  baxterCrrtIsDirectLinkPublic,
+  baxterCrrtIsPublic,
   baxterCrrtLearningArtifactRegistry,
   baxterCrrtOptionalLocalConfigurationSchema,
   baxterCrrtPublicationStatus,
@@ -14,9 +16,11 @@ import {
 } from '../content'
 
 describe('Baxter CRRT rebuilt content boundaries', () => {
-  it('stays protected in SME review', () => {
-    expect(baxterCrrtReleaseStage).toBe('sme-review')
+  it('is public by direct link while remaining an unpublished preview', () => {
+    expect(baxterCrrtReleaseStage).toBe('unlisted-preview')
     expect(baxterCrrtPublicationStatus).toBe('draft')
+    expect(baxterCrrtIsDirectLinkPublic(baxterCrrtReleaseStage)).toBe(true)
+    expect(baxterCrrtIsPublic(baxterCrrtReleaseStage)).toBe(false)
     expect(baxterCrrtSmeReviewItems).toHaveLength(4)
     expect(baxterCrrtSmeReviewItems.every(({ reviewStatus }) => reviewStatus === 'pending')).toBe(
       true,

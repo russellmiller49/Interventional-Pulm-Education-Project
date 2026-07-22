@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
 import type { Route } from 'next'
 import {
   Activity,
@@ -14,6 +17,12 @@ import {
 } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
+import { recordSiteModuleEvent } from '@/lib/analytics'
+import {
+  ICU_SIMULATION_ANALYTICS_MODULE_ID,
+  expectedIcuSimulationAnalyticsEventType,
+  validateIcuSimulationAnalyticsEventPayload,
+} from '@/lib/icu-simulation-analytics'
 
 import styles from './icu-simulation.module.css'
 
@@ -76,6 +85,23 @@ const integratedSystems = [
 ] as const
 
 export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
+  const opened = useRef(false)
+
+  useEffect(() => {
+    if (opened.current) return
+    opened.current = true
+    const parsed = validateIcuSimulationAnalyticsEventPayload({
+      interaction: 'section_opened',
+      section: 'overview',
+    })
+    if (!parsed.success) return
+    recordSiteModuleEvent({
+      eventType: expectedIcuSimulationAnalyticsEventType(parsed.data.interaction),
+      moduleId: ICU_SIMULATION_ANALYTICS_MODULE_ID,
+      eventPayload: parsed.data,
+    })
+  }, [])
+
   return (
     <main className={styles.hubShell}>
       <header className={styles.hubHero}>
