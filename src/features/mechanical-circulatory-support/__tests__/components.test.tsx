@@ -19,7 +19,14 @@ jest.mock('../components/McsAnatomy3D', () => ({
     </section>
   ),
 }))
+jest.mock('../components/EcmoCannulationPreview', () => ({
+  EcmoCannulationPreview: () => <div>ECMO preview</div>,
+}))
+jest.mock('../components/ImpellaVariantPreview', () => ({
+  ImpellaVariantPreview: () => <div>Impella preview</div>,
+}))
 
+import { McsHub } from '../components/McsHub'
 import { McsWorkbench } from '../components/McsWorkbench'
 
 const progressKey = 'interventionalpulm:mcs-progress:v1'
@@ -44,6 +51,45 @@ describe('Mechanical Circulatory Support learner interface', () => {
   })
 
   afterEach(() => jest.useRealTimers())
+
+  it('links each home-page card to its matching learning track', async () => {
+    await act(async () => {
+      render(<McsHub />)
+    })
+    const tracks = screen
+      .getByRole('heading', { name: /See what the device moves/i })
+      .closest('section')
+    expect(tracks).not.toBeNull()
+
+    for (const [heading, device] of [
+      ['Intra-aortic balloon pump', 'iabp'],
+      ['Impella CP, 5.5, and RP support', 'impella'],
+      ['Durable continuous-flow LVAD', 'lvad'],
+    ] as const) {
+      const card = within(tracks!).getByRole('heading', { name: heading }).closest('article')
+      expect(card).not.toBeNull()
+      expect(within(card!).getByRole('link', { name: /Enter track/i })).toHaveAttribute(
+        'href',
+        `/mechanical-circulatory-support/learn?device=${device}`,
+      )
+    }
+  })
+
+  it.each([
+    ['impella', /Impella CP \/ 5\.5 \/ RP/i, /Impella unloading and placement signals/i],
+    ['lvad', /Durable continuous-flow LVAD/i, /Durable LVAD parameters and ICU assessment/i],
+  ] as const)(
+    'initializes the %s track and its first device lesson',
+    (device, tabName, lessonName) => {
+      render(<McsWorkbench section="learn" initialDevice={device} />)
+
+      expect(screen.getByRole('button', { name: tabName })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByRole('button', { name: lessonName })).toHaveAttribute(
+        'aria-current',
+        'true',
+      )
+    },
+  )
 
   it('renders the safety boundary, synchronized accessible traces, and required hemodynamics', () => {
     render(<McsWorkbench section="practice" />)

@@ -342,6 +342,13 @@ function humanizeKey(key: string): string {
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
+function formatResponseActual(actual: number | boolean | string, unit: string | null): string {
+  if (typeof actual === 'boolean') return actual ? 'Completed' : 'Not completed'
+  if (typeof actual === 'string') return humanizeKey(actual)
+  const value = Math.abs(actual) >= 100 ? actual.toFixed(0) : actual.toFixed(2)
+  return `${Number(value)}${unit ? ` ${unit}` : ''}`
+}
+
 export function IcuAlarmCenter({
   state,
   dispatch,
@@ -440,6 +447,19 @@ export function IcuCaseGuide({
   const missedActions = scenario.interventions.filter(
     (intervention) => !state.performedActionIds.includes(intervention.actionId),
   )
+  const response = state.outcome.response
+  const passedResponsePaths = (scenario.masteryResponse.oneOf ?? []).filter((path) =>
+    response.passedPathIds.includes(path.id),
+  )
+  const visibleResponseCriteria = response.criteria.filter(
+    (criterion) =>
+      criterion.pathId === null ||
+      response.passedPathIds.length === 0 ||
+      response.passedPathIds.includes(criterion.pathId),
+  )
+  const substitutedActions = response.substitutedActionIds
+    .map((actionId) => scenario.interventions.find((item) => item.actionId === actionId)?.label)
+    .filter((label): label is string => Boolean(label))
 
   return (
     <section className={styles.caseGuide} aria-labelledby="case-guide-title">
@@ -583,6 +603,55 @@ export function IcuCaseGuide({
                   ))}
                 </dl>
               )}
+            </section>
+
+            <section aria-labelledby="response-gate-title" className={styles.responseGate}>
+              <h3 id="response-gate-title">Physiologic response gate</h3>
+              <p className={styles.responseGateStatus} data-complete={response.passed || undefined}>
+                {response.passed ? (
+                  <CheckCircle2 aria-hidden="true" />
+                ) : (
+                  <AlertTriangle aria-hidden="true" />
+                )}
+                <strong>
+                  {response.passed ? 'Response demonstrated' : 'Response not demonstrated'}
+                </strong>
+              </p>
+              {passedResponsePaths.length > 0 ? (
+                <p>Authored pathway: {passedResponsePaths.map((path) => path.label).join(' · ')}</p>
+              ) : scenario.masteryResponse.oneOf ? (
+                <p>No complete response pathway was demonstrated.</p>
+              ) : null}
+              <ul className={styles.responseCriteria}>
+                {visibleResponseCriteria.map((criterion) => (
+                  <li key={criterion.id} data-complete={criterion.passed || undefined}>
+                    {criterion.passed ? (
+                      <CheckCircle2 aria-label="Met" />
+                    ) : (
+                      <AlertTriangle aria-label="Not met" />
+                    )}
+                    <span>
+                      <strong>{criterion.label}</strong>
+                      <small>
+                        Actual {formatResponseActual(criterion.actual, criterion.unit)} · modeled
+                        threshold {criterion.target}
+                        {criterion.unit ? ` ${criterion.unit}` : ''}
+                      </small>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {substitutedActions.length > 0 ? (
+                <p>
+                  The demonstrated alternative pathway supplied score credit for:{' '}
+                  {substitutedActions.join('; ')}. These credits did not alter the learner action
+                  history.
+                </p>
+              ) : null}
+              <p className={styles.responseThresholdNote} role="note">
+                These thresholds are pending-review educational simulator calibration—not bedside
+                treatment targets, clinical device guidance, or patient-specific recommendations.
+              </p>
             </section>
 
             <section aria-labelledby="diagnosis-review-title">

@@ -117,11 +117,7 @@ export const icuCommandSchema = z.discriminatedUnion('type', [
 const replayCommandSchema = z
   .object({
     sequence: z.number().int().nonnegative(),
-    issuedAtSeconds: z
-      .number()
-      .int()
-      .nonnegative()
-      .max(86_400 * 30),
+    issuedAtSeconds: z.number().int().nonnegative().max(86_400),
     command: icuCommandSchema,
   })
   .strict()

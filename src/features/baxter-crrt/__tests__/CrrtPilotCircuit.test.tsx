@@ -150,4 +150,20 @@ describe('CRRT educational circuit', () => {
     expect(css).toContain('animation: none !important')
     expect(css).toContain('min-height: 44px')
   })
+
+  it('responds to its own embedded width instead of compressing signal cards', () => {
+    const css = readFileSync(
+      join(process.cwd(), 'src/features/baxter-crrt/components/crrt-pilot-circuit.module.css'),
+      'utf8',
+    )
+
+    expect(css).toContain('container-type: inline-size')
+    expect(css).toContain('@container crrt-circuit (max-width: 900px)')
+    expect(css).toMatch(
+      /@container crrt-circuit \(max-width: 900px\)[\s\S]*?\.dataGrid\s*\{[\s\S]*?grid-template-columns: 1fr/,
+    )
+    expect(css).toMatch(
+      /@container crrt-circuit \(max-width: 600px\)[\s\S]*?\.pressureGrid\s*\{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/,
+    )
+  })
 })

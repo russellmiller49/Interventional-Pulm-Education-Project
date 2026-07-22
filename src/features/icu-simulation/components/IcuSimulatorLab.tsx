@@ -200,6 +200,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
     [initialScenarioId, mode],
   )
   const [state, setState] = useState<IcuSimulationState>(() => createSession(initialScenario, mode))
+  const [assessmentCatalogSeed] = useState(() => state.seed)
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('monitor')
   const [running, setRunning] = useState(false)
   const [speed, setSpeed] = useState<SimulationSpeed>(1)
@@ -207,6 +208,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const [savedSession, setSavedSession] = useState<IcuSyntheticSessionV1 | null>(null)
   const [storageReady, setStorageReady] = useState(false)
   const [workerActive, setWorkerActive] = useState(false)
+  const [restoringSession, setRestoringSession] = useState(false)
   const [engineNotice, setEngineNotice] = useState<string | null>(null)
   const openedSection = useRef<IcuSimulationMode | null>(null)
   const openedScenario = useRef<string | null>(null)
@@ -215,9 +217,11 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const completionRecorded = useRef<string | null>(null)
   const progressRecorded = useRef<string | null>(null)
   const moduleCompletionRecorded = useRef(false)
+  const previousModuleMastery = useRef<boolean | null>(null)
   const workerClient = useRef<IcuWorkerClient | null>(null)
   const workerInstance = useRef<Worker | null>(null)
   const latestWorkerRequest = useRef<string | null>(null)
+  const restoreWorkerRequest = useRef<string | null>(null)
   const latestWorkerState = useRef<IcuSimulationState>(state)
   const initialWorkerSession = useRef(state)
   const scenario = getIcuScenario(state.scenarioId)
@@ -226,15 +230,18 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
       mode === 'assess'
         ? [...availableScenarios].sort(
             (left, right) =>
-              maskedOrderValue(left.id, state.seed) - maskedOrderValue(right.id, state.seed),
+              maskedOrderValue(left.id, assessmentCatalogSeed) -
+              maskedOrderValue(right.id, assessmentCatalogSeed),
           )
         : availableScenarios,
-    [availableScenarios, mode, state.seed],
+    [assessmentCatalogSeed, availableScenarios, mode],
   )
   const copy = modeCopy[mode]
   const ModeIcon = copy.Icon
   const assessmentDiagnosisHidden = mode === 'assess' && state.phase !== 'debrief'
   const assessmentAwaitingDiagnosis = mode === 'assess' && !state.diagnosis.committed
+  const courseWindowReached = state.clock.elapsedSeconds >= scenario.durationHours * 3_600
+  const simulationRunning = running && !courseWindowReached && state.phase !== 'debrief'
   const interventionControlsLocked =
     (mode === 'practice' || mode === 'assess') && !state.diagnosis.committed
   const dispatch = useCallback<Dispatch<IcuCommand>>((command) => {
@@ -290,15 +297,30 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
           window.setTimeout(() => {
             setState(latestWorkerState.current)
             setWorkerActive(false)
+            setRestoringSession(false)
             setEngineNotice(
-              'The background simulation worker stopped. The last verified state was preserved and the safe main-thread fallback is active.',
+              restoreWorkerRequest.current
+                ? 'The saved session could not be restored in the background worker. Its replay remains available; choose Resume again to use the safe fallback.'
+                : 'The background simulation worker stopped. The last verified state was preserved and the safe main-thread fallback is active.',
             )
+            restoreWorkerRequest.current = null
           }, 0)
           return
         }
 
         latestWorkerState.current = response.state
-        if (response.requestId === latestWorkerRequest.current) setState(response.state)
+        if (response.requestId === latestWorkerRequest.current) {
+          setState(response.state)
+          if (response.requestId === restoreWorkerRequest.current) {
+            restoreWorkerRequest.current = null
+            setSavedSession(null)
+            setRestoringSession(false)
+            setMobileSurface('monitor')
+            setEngineNotice(
+              'Saved synthetic session resumed from its validated semantic command replay.',
+            )
+          }
+        }
       })
       workerInstance.current = instance
       workerClient.current = client
@@ -334,7 +356,15 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
 
       if (candidate) {
         const candidateScenario = getIcuScenario(candidate.replay.scenarioId)
-        if (candidate.replay.scenarioVersion === candidateScenario.version) {
+        const alreadyCompleted = candidate.replay.commands.some(
+          (record) => record.command.type === 'session.complete',
+        )
+        if (alreadyCompleted) {
+          clearIcuSyntheticSession(window.localStorage)
+          setEngineNotice(
+            'The prior synthetic course was already complete, so its replay was cleared instead of being offered as a new attempt.',
+          )
+        } else if (candidate.replay.scenarioVersion === candidateScenario.version) {
           setSavedSession(candidate)
         } else {
           clearIcuSyntheticSession(window.localStorage)
@@ -353,6 +383,10 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
 
   useEffect(() => {
     if (!storageReady || savedSession) return
+    if (state.outcome.completed) {
+      clearIcuSyntheticSession(window.localStorage)
+      return
+    }
     const timer = window.setTimeout(() => {
       writeIcuSyntheticSession(window.localStorage, state)
     }, 250)
@@ -360,7 +394,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   }, [savedSession, state, storageReady])
 
   useEffect(() => {
-    if (!running || state.phase === 'debrief') return
+    if (!simulationRunning) return
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const intervalMs = reducedMotion ? 1_500 : 1_000
     const timer = window.setInterval(
@@ -368,7 +402,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
       intervalMs,
     )
     return () => window.clearInterval(timer)
-  }, [dispatch, running, speed, state.phase])
+  }, [dispatch, simulationRunning, speed])
 
   useEffect(() => {
     if (openedSection.current === mode) return
@@ -459,31 +493,44 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   }, [mode, state, storageReady])
 
   useEffect(() => {
+    if (!storageReady || mode !== 'assess') return
+    const moduleMastered = availableScenarios.every((candidate) =>
+      progress.masteredScenarioIds.some((scenarioId) => scenarioId === candidate.id),
+    )
     if (
-      !storageReady ||
-      mode !== 'assess' ||
-      moduleCompletionRecorded.current ||
-      availableScenarios.some(
-        (candidate) => !progress.masteredScenarioIds.some((id) => id === candidate.id),
-      )
+      previousModuleMastery.current === false &&
+      moduleMastered &&
+      !moduleCompletionRecorded.current
     ) {
-      return
+      moduleCompletionRecorded.current = true
+      recordBoundedAnalytics({
+        interaction: 'module_completed',
+        section: 'assess',
+        completed: true,
+      })
     }
-    moduleCompletionRecorded.current = true
-    recordBoundedAnalytics({
-      interaction: 'module_completed',
-      section: 'assess',
-      completed: true,
-    })
+    previousModuleMastery.current = moduleMastered
   }, [availableScenarios, mode, progress.masteredScenarioIds, storageReady])
 
   const discardSavedSession = useCallback(() => {
     clearIcuSyntheticSession(window.localStorage)
+    restoreWorkerRequest.current = null
+    setRestoringSession(false)
     setSavedSession(null)
   }, [])
 
   const resumeSavedSession = useCallback(() => {
     if (!savedSession || savedSession.replay.mode !== mode) return
+    const client = workerClient.current
+    if (client) {
+      setRunning(false)
+      setRestoringSession(true)
+      setEngineNotice('Validating and restoring the saved command replay in the background worker…')
+      const requestId = client.restore(savedSession)
+      restoreWorkerRequest.current = requestId
+      latestWorkerRequest.current = requestId
+      return
+    }
     try {
       const resumed = resumeIcuSyntheticSession(
         savedSession,
@@ -519,7 +566,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const activeAlarmCount = state.alarms.filter((alarm) => alarm.active).length
 
   return (
-    <main className={styles.labShell} data-mode={mode}>
+    <div className={styles.labShell} data-mode={mode}>
       <header className={styles.labHero}>
         <div className={styles.labHeroCopy}>
           <Link href={'/icu-simulation' as Route} className={styles.backLink}>
@@ -631,8 +678,9 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
           </div>
           <div className={styles.resumeActions}>
             {savedSession.replay.mode === mode ? (
-              <button type="button" onClick={resumeSavedSession}>
-                <Play aria-hidden="true" /> Resume saved session
+              <button type="button" disabled={restoringSession} onClick={resumeSavedSession}>
+                <Play aria-hidden="true" />
+                {restoringSession ? 'Restoring saved session…' : 'Resume saved session'}
               </button>
             ) : (
               <Link href={modeHref(savedSession.replay.mode)}>
@@ -642,6 +690,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
             <button
               type="button"
               data-secondary="true"
+              disabled={restoringSession}
               onClick={() => {
                 discardSavedSession()
                 initializeSession(createSession(initialScenario, mode, state.seed + 1))
@@ -702,12 +751,12 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
             <div className={styles.transportControls}>
               <button
                 type="button"
-                aria-pressed={running}
-                disabled={state.phase === 'debrief'}
+                aria-pressed={simulationRunning}
+                disabled={state.phase === 'debrief' || courseWindowReached}
                 onClick={() => setRunning((value) => !value)}
               >
-                {running ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-                {running ? 'Pause' : 'Run'}
+                {simulationRunning ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+                {simulationRunning ? 'Pause' : 'Run'}
               </button>
               <label>
                 <span>Speed</span>
@@ -722,14 +771,14 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
               </label>
               <button
                 type="button"
-                disabled={state.phase === 'debrief'}
+                disabled={state.phase === 'debrief' || courseWindowReached}
                 onClick={() => dispatch({ type: 'time.advance', seconds: 60 })}
               >
                 +1 min
               </button>
               <button
                 type="button"
-                disabled={state.phase === 'debrief'}
+                disabled={state.phase === 'debrief' || courseWindowReached}
                 onClick={() => dispatch({ type: 'time.advance', seconds: 900 })}
               >
                 +15 min
@@ -742,6 +791,11 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
               <i aria-hidden="true" data-active={workerActive || undefined} />
               {workerActive ? 'Background worker active' : 'Main-thread fallback active'}
             </span>
+            {courseWindowReached && state.phase !== 'debrief' ? (
+              <span className={styles.engineStatus} role="status">
+                Authored course window reached · complete the course to open the debrief
+              </span>
+            ) : null}
             <p className={styles.srOnly} aria-live="polite">
               {lastEvent
                 ? `${formatClock(lastEvent.elapsedSeconds)}: ${lastEvent.label}`
@@ -829,6 +883,6 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
           {assessmentDiagnosisHidden ? null : <IcuSourceNotes scenario={scenario} />}
         </>
       )}
-    </main>
+    </div>
   )
 }

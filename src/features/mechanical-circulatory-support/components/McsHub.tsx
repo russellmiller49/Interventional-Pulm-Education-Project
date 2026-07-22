@@ -117,7 +117,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
                   <dd>1 unseen capstone</dd>
                 </div>
               </dl>
-              <Link href={`${mechanicalCirculatorySupportNavBase}/learn`}>
+              <Link href={`${mechanicalCirculatorySupportNavBase}/learn?device=${profile.kind}`}>
                 Enter track <ArrowRight aria-hidden="true" />
               </Link>
             </article>

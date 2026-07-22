@@ -38,10 +38,37 @@ waveform window.
 - `IcuTherapyEffect`: typed physiologic contribution with source identity.
 - `IcuScenarioDefinition`: strict content definition with evidence and review metadata.
 - `IcuReplayRecord`: engine version, content version, seed, and timestamped semantic commands.
-- `IcuOutcome`: fixed 100-point domain score, mastery, critical errors, and causal debrief.
+- `IcuOutcome`: fixed 100-point domain score, mastery, critical errors, modeled-response evaluation,
+  and causal debrief.
 
 The synchronous pure engine is authoritative for tests and replay. A browser worker may host it for
 interactive use, but worker messages must contain the same commands and serializable state.
+
+## Mastery and response contract
+
+Practice and Assess retain the fixed 15/15/20/20/20/10 domain weights. Mastery additionally requires
+the authored minimum time, serial reassessment separated by at least five simulated minutes, every
+checkpoint, no critical error, and a passing modeled-response evaluation. Numeric response
+predicates may use absolute, initial-delta, or initial-ratio targets; milestone, therapy-state,
+therapy-never-started, unresolved-device-limitation, and active-critical-alarm predicates are also
+supported. Every predicate carries evidence IDs and pending/reviewed status through its scenario.
+
+An authored alternative response path may substitute specified care, therapy, or device actions for
+domain-score calculation. Substitution does not mutate performed actions, action history, replay, or
+checkpoint completion. A no-device or no-ventilation path must also prove the therapy was never
+started, so stopping a device before debrief cannot earn alternative-path credit. Any active device
+alarm blocks a device-limitation predicate without assigning a clinical priority to an unmapped
+alarm; patient-alarm gates continue to use reviewed critical priority only.
+
+## Local persistence
+
+Only versioned, in-progress semantic-command replays are offered for resume. Completing a course
+clears its resumable session before progress is recorded, preventing a reload from counting the same
+attempt twice. Progress contains bounded scenario IDs, attempt counts, safe best scores, and Assess
+mastery only; it never contains patient truth, waveforms, notes, or free text.
+
+The worker, replay, and semantic command boundaries are presentation-independent. A future spatial
+or VR bedside should consume those same boundaries rather than fork the clinical engine.
 
 ## Supported V1 combinations
 

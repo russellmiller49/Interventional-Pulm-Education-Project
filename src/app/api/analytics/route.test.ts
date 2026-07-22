@@ -189,6 +189,26 @@ describe('site analytics API Baxter CRRT privacy boundary', () => {
     expect(supabaseServerMock).not.toHaveBeenCalled()
   })
 
+  it.each([
+    ['top-level physiology', { mapMmHg: 62 }],
+    ['top-level free text', { note: 'patient-specific text' }],
+    ['top-level trend data', { trends: [1, 2, 3] }],
+  ])('rejects ICU Simulator %s outside the summary envelope', async (_, extra) => {
+    const response = await POST(
+      analyticsRequest('icu-simulation', validIcuScenarioCompletion(), {
+        eventType: 'quiz_submitted',
+        routePath: '/en/icu-simulation/practice',
+        ...extra,
+      }),
+    )
+
+    expect(response.status).toBe(400)
+    await expect(response.json()).resolves.toEqual({
+      error: 'Invalid ICU Simulator analytics payload.',
+    })
+    expect(supabaseServerMock).not.toHaveBeenCalled()
+  })
+
   it('rejects generic ICU Simulator lifecycle telemetry during private review', async () => {
     const response = await POST(
       analyticsRequest('icu-simulation', undefined, {

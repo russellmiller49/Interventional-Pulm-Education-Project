@@ -54,6 +54,11 @@ function runMastery(mode: 'practice' | 'assess'): IcuSimulationState {
       type: 'patient.reassess',
       domains: ['hemodynamics', 'respiratory', 'renal'],
     },
+    { type: 'time.advance', seconds: 10_740 },
+    {
+      type: 'patient.reassess',
+      domains: ['hemodynamics', 'respiratory', 'renal'],
+    },
     { type: 'session.complete' },
   ]
   for (const value of commands) state = applyIcuCommand(state, scenario, value)
@@ -108,10 +113,14 @@ describe('ICU scoring, replay, progress, and worker protocol', () => {
     const unsafe = JSON.stringify({ ...session, freeText: 'real patient note', waveforms: [1, 2] })
     expect(parseIcuSyntheticSession(unsafe)).toBeNull()
 
-    const wrongTime = JSON.parse(JSON.stringify(session)) as typeof session
-    wrongTime.replay.commands[1] = {
-      ...wrongTime.replay.commands[1],
-      issuedAtSeconds: 999,
+    const wrongTime: typeof session = {
+      ...session,
+      replay: {
+        ...session.replay,
+        commands: session.replay.commands.map((record, index) =>
+          index === 1 ? { ...record, issuedAtSeconds: 999 } : record,
+        ),
+      },
     }
     expect(() => resumeIcuSyntheticSession(wrongTime, scenario)).toThrow()
   })
@@ -165,5 +174,50 @@ describe('ICU scoring, replay, progress, and worker protocol', () => {
     const advanced = runner.handle({ requestId: '2', type: 'advance', seconds: 60 })
     expect(advanced.type).toBe('state')
     if (advanced.type === 'state') expect(advanced.state.clock.elapsedSeconds).toBe(60)
+  })
+
+  it('restores strict synthetic sessions inside the worker runner', () => {
+    const scenario = getIcuScenario('septic-ards-aki')
+    let state = createIcuSimulation(scenario, { mode: 'practice', seed: 78 })
+    state = applyIcuCommand(state, scenario, { type: 'time.advance', seconds: 120 })
+    const session = createIcuSyntheticSession(state)
+    const runner = createIcuWorkerRunner(getIcuScenario)
+    const restored = runner.handle({ requestId: 'restore-1', type: 'restore', session })
+    expect(restored.type).toBe('state')
+    if (restored.type === 'state') expect(restored.state).toEqual(state)
+
+    const incompatible: typeof session = {
+      ...session,
+      replay: { ...session.replay, scenarioVersion: '9.9.9' },
+    }
+    expect(
+      runner.handle({ requestId: 'restore-2', type: 'restore', session: incompatible }).type,
+    ).toBe('error')
+  })
+
+  it('coalesces contiguous clock ticks and replays a long course exactly', () => {
+    const scenario = getIcuScenario('septic-ards-aki')
+    let state = createIcuSimulation(scenario, { mode: 'practice', seed: 79 })
+    for (let second = 0; second < 3_000; second += 1)
+      state = applyIcuCommand(state, scenario, { type: 'time.advance', seconds: 1 })
+    expect(state.replay.commands).toHaveLength(1)
+    expect(state.replay.commands[0]?.command).toEqual({ type: 'time.advance', seconds: 3_000 })
+    expect(resumeIcuSyntheticSession(createIcuSyntheticSession(state), scenario)).toEqual(state)
+  })
+
+  it('stops at the authored course boundary without growing replay afterward', () => {
+    const source = getIcuScenario('septic-ards-aki')
+    const scenario = { ...source, durationHours: 1 }
+    let state = createIcuSimulation(scenario, { mode: 'practice', seed: 80 })
+    state = applyIcuCommand(state, scenario, { type: 'time.advance', seconds: 3_590 })
+    state = applyIcuCommand(state, scenario, { type: 'time.advance', seconds: 900 })
+    expect(state.clock.elapsedSeconds).toBe(3_600)
+    expect(state.replay.commands).toHaveLength(1)
+    expect(state.replay.commands[0]?.command).toEqual({ type: 'time.advance', seconds: 3_600 })
+    const commandCount = state.replay.commands.length
+    state = applyIcuCommand(state, scenario, { type: 'time.advance', seconds: 900 })
+    expect(state.clock.elapsedSeconds).toBe(3_600)
+    expect(state.replay.commands).toHaveLength(commandCount)
+    expect(resumeIcuSyntheticSession(createIcuSyntheticSession(state), scenario)).toEqual(state)
   })
 })

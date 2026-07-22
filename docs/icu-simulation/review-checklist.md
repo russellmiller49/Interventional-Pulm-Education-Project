@@ -13,6 +13,8 @@ Initial status: private development. Publication is a separate explicit change.
 - [ ] Fixed-step, fast-forward, replay, conservation, finite-output, and 24-hour equivalence tests
       pass.
 - [ ] Unsupported combinations fail closed before the learner can activate them.
+- [ ] Modeled-response, no-device, and rescue-path thresholds are clinically reviewed; active device
+      limitations cannot earn mastery even when source priority mapping remains pending.
 
 ## Scenario review
 
@@ -29,6 +31,8 @@ Initial status: private development. Publication is a separate explicit change.
       restored.
 - [ ] Every scenario has accepted alternatives, unsafe paths, critical-error rules, checkpoint
       transitions, causal debriefs, evidence IDs, and a safe masterable run.
+- [ ] Safe, untreated, late-treatment, start-then-stop, and extreme-device trajectories verify that
+      score credit cannot replace the required patient and device response.
 
 ## Device and clinical review
 
@@ -46,6 +50,8 @@ Initial status: private development. Publication is a separate explicit change.
 - [ ] Deployment is an abstract team/readiness workflow and contains no invasive technique.
 - [ ] Medication actions contain no numeric dose or titration protocol.
 - [ ] Local progress and resume data contain synthetic bounded state only and fail closed by version.
+- [ ] Only in-progress replays are resumable; completed sessions are cleared and cannot increment an
+      attempt or emit completion analytics again after reload.
 - [ ] Server analytics accept summary allowlist fields only and reject detailed state/free text.
 - [ ] Keyboard, screen reader, non-color alarm, reduced-motion, 200% zoom, mobile reflow, focus, and
       WebGL fallback checks pass.

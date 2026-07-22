@@ -528,6 +528,10 @@ function calculateBloodFlow(state: EcmoSimulationState, rpm: number): number {
     rpm <= 0
   )
     return 0
+  // Preserve the source simulator's low-RPM backflow branch. Returning here is
+  // clinically meaningful to its six-second protection timer; fault modifiers
+  // must not attenuate this sentinel flow.
+  if (rpm < 200) return calculateNominalCardiohelpBloodFlowLMin(rpm)
   let flow = calculateNominalCardiohelpBloodFlowLMin(rpm)
   if (hasFault(state, 'preload-limited') || hasFault(state, 'hemorrhagic-hypovolemia')) {
     const oscillation = state.simulationTime % 4 < 2 ? -0.3 : 0.12

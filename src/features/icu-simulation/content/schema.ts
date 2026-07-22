@@ -3,11 +3,14 @@ import { z } from 'zod'
 import {
   icuAssessmentIds,
   icuCareInterventionIds,
+  icuResponseBooleanMetrics,
+  icuResponseNumericMetrics,
   icuScenarioFamilies,
   icuScoreDomains,
   icuShockClassifications,
   icuSimulationModes,
   type IcuScenarioDefinition,
+  type IcuTherapyId,
 } from '../engine/types'
 import { ICU_EVIDENCE_BY_ID } from './evidence'
 
@@ -282,6 +285,91 @@ const criticalErrorSchema = z
   })
   .strict()
 
+const responseTargetSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('absolute'), value: finite }).strict(),
+  z.object({ kind: z.literal('initial-delta'), delta: finite }).strict(),
+  z.object({ kind: z.literal('initial-ratio'), ratio: finite.positive().max(4) }).strict(),
+])
+
+const responsePredicateSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      id: stableId,
+      label: z.string().min(1).max(180),
+      kind: z.literal('numeric'),
+      metric: z.enum(icuResponseNumericMetrics),
+      comparison: z.enum(['gte', 'lte']),
+      target: responseTargetSchema,
+      evidenceIds: z.array(evidenceId).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      id: stableId,
+      label: z.string().min(1).max(180),
+      kind: z.literal('boolean'),
+      metric: z.enum(icuResponseBooleanMetrics),
+      expected: z.boolean(),
+      evidenceIds: z.array(evidenceId).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      id: stableId,
+      label: z.string().min(1).max(180),
+      kind: z.literal('therapy-running'),
+      therapy: z.enum(['ventilator', 'ecmo', 'mcs', 'crrt']),
+      expected: z.boolean(),
+      evidenceIds: z.array(evidenceId).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      id: stableId,
+      label: z.string().min(1).max(180),
+      kind: z.literal('therapy-never-started'),
+      therapy: z.enum(['ventilator', 'ecmo', 'mcs', 'crrt']),
+      evidenceIds: z.array(evidenceId).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      id: stableId,
+      label: z.string().min(1).max(180),
+      kind: z.literal('no-active-device-limitation'),
+      subsystems: z.array(z.enum(['ventilator', 'ecmo', 'mcs', 'crrt'])).min(1),
+      evidenceIds: z.array(evidenceId).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      id: stableId,
+      label: z.string().min(1).max(180),
+      kind: z.literal('no-active-critical-alarm'),
+      subsystems: z.array(z.enum(['ventilator', 'ecmo', 'mcs', 'crrt', 'patient'])).min(1),
+      evidenceIds: z.array(evidenceId).min(1),
+    })
+    .strict(),
+])
+
+const responsePathSchema = z
+  .object({
+    id: stableId,
+    label: z.string().min(1).max(180),
+    predicates: z.array(responsePredicateSchema).min(1),
+    substitutesForActionIds: z.array(stableId),
+  })
+  .strict()
+
+const masteryResponseSchema = z
+  .object({
+    educationalModelOnly: z.literal(true),
+    reviewStatus: z.enum(['pending', 'reviewed', 'approved']),
+    required: z.array(responsePredicateSchema).min(1),
+    oneOf: z.array(responsePathSchema).min(1).optional(),
+  })
+  .strict()
+
 export const icuScenarioDefinitionSchema = z
   .object({
     id: z.enum(icuScenarioFamilies),
@@ -292,6 +380,7 @@ export const icuScenarioDefinitionSchema = z
     summary: z.string().min(1).max(400),
     openingNarrative: z.string().min(1).max(600),
     durationHours: finite.min(1).max(24),
+    minimumMasteryElapsedSeconds: finite.int().min(60),
     expectedClassification: z.enum(icuShockClassifications),
     allowedModes: z.array(z.enum(icuSimulationModes)).min(1),
     initialPatient: icuPatientSchema,
@@ -318,6 +407,7 @@ export const icuScenarioDefinitionSchema = z
         safety: z.array(stableId),
       })
       .strict(),
+    masteryResponse: masteryResponseSchema,
     criticalErrors: z.array(criticalErrorSchema),
     learningObjectives: z.array(z.string().min(1).max(240)).min(1),
     debrief: z.array(z.string().min(1).max(400)).min(1),
@@ -368,6 +458,12 @@ export const icuScenarioDefinitionSchema = z
       }
     }
     for (const domain of icuScoreDomains) {
+      if (duplicate(scenario.scoring[domain])) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Scoring domain ${domain} must not contain duplicate action IDs.`,
+        })
+      }
       if (scenario.scoring[domain].length === 0) {
         context.addIssue({
           code: z.ZodIssueCode.custom,
@@ -379,6 +475,86 @@ export const icuScenarioDefinitionSchema = z
           context.addIssue({
             code: z.ZodIssueCode.custom,
             message: `Scoring action ${id} has no intervention definition.`,
+          })
+        }
+      }
+    }
+    const responsePaths = scenario.masteryResponse.oneOf ?? []
+    const responsePredicateIds = [
+      ...scenario.masteryResponse.required.map((predicate) => predicate.id),
+      ...responsePaths.flatMap((path) => path.predicates.map((predicate) => predicate.id)),
+    ]
+    if (duplicate(responsePredicateIds)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Mastery-response predicate IDs must be unique.',
+      })
+    }
+    if (duplicate(responsePaths.map((path) => path.id))) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Mastery-response path IDs must be unique.',
+      })
+    }
+    const responsePredicates = [
+      ...scenario.masteryResponse.required,
+      ...responsePaths.flatMap((path) => path.predicates),
+    ]
+    for (const predicate of responsePredicates) {
+      const referencedTherapies: IcuTherapyId[] = []
+      if (predicate.kind === 'therapy-running' || predicate.kind === 'therapy-never-started') {
+        referencedTherapies.push(predicate.therapy)
+      } else if (predicate.kind === 'no-active-device-limitation') {
+        referencedTherapies.push(...predicate.subsystems)
+      } else if (predicate.kind === 'no-active-critical-alarm') {
+        referencedTherapies.push(
+          ...predicate.subsystems.filter(
+            (subsystem): subsystem is IcuTherapyId => subsystem !== 'patient',
+          ),
+        )
+      }
+      for (const therapy of referencedTherapies) {
+        if (!scenario.capabilities.therapies.includes(therapy)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Mastery-response predicate ${predicate.id} references unavailable therapy ${therapy}.`,
+          })
+        }
+      }
+    }
+    const scoredActionIds = new Set(Object.values(scenario.scoring).flat())
+    const interventionById = new Map(
+      scenario.interventions.map((intervention) => [intervention.actionId, intervention]),
+    )
+    for (const path of responsePaths) {
+      if (duplicate(path.substitutesForActionIds)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Mastery-response path ${path.id} has duplicate score substitutions.`,
+        })
+      }
+      for (const actionId of path.substitutesForActionIds) {
+        if (!scoredActionIds.has(actionId)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Mastery-response substitution ${actionId} is not a scored action.`,
+          })
+        }
+        const intervention = interventionById.get(actionId)
+        const scoredDomains = icuScoreDomains.filter((domain) =>
+          scenario.scoring[domain].includes(actionId),
+        )
+        const eligibleKind =
+          intervention?.kind === 'therapy' ||
+          intervention?.kind === 'device' ||
+          intervention?.kind === 'care'
+        if (
+          !eligibleKind ||
+          scoredDomains.some((domain) => domain !== 'therapy' && domain !== 'device')
+        ) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Mastery-response substitution ${actionId} must be an eligible therapy/device-domain action.`,
           })
         }
       }
@@ -414,6 +590,12 @@ export const icuScenarioDefinitionSchema = z
       }
     }
     const durationSeconds = scenario.durationHours * 3_600
+    if (scenario.minimumMasteryElapsedSeconds > durationSeconds) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Minimum mastery time must not exceed scenario duration.',
+      })
+    }
     for (const event of scenario.scheduledEvents) {
       const earliest = event.atSeconds + (event.jitterSeconds?.minimum ?? 0)
       const latest = event.atSeconds + (event.jitterSeconds?.maximum ?? 0)
@@ -429,6 +611,10 @@ export const icuScenarioDefinitionSchema = z
       ...scenario.scheduledEvents.flatMap((event) => event.evidenceIds),
       ...scenario.interventions.flatMap((intervention) => intervention.evidenceIds),
       ...scenario.checkpoints.flatMap((checkpoint) => checkpoint.evidenceIds),
+      ...scenario.masteryResponse.required.flatMap((predicate) => predicate.evidenceIds),
+      ...(scenario.masteryResponse.oneOf ?? []).flatMap((path) =>
+        path.predicates.flatMap((predicate) => predicate.evidenceIds),
+      ),
     ]
     for (const id of evidenceIds) {
       if (!ICU_EVIDENCE_BY_ID.has(id)) {
