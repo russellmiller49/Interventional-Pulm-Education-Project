@@ -67,3 +67,98 @@ export const criticalCareModules = [
     topics: ['CRRT concepts', 'Device workflow', 'Safety drills'],
   },
 ] as const satisfies readonly CriticalCareModuleDefinition[]
+
+/**
+ * The five-card launcher above is a compatibility surface. The catalog below
+ * adds the integrated ICU Simulator without changing that launcher or its
+ * long-standing order.
+ */
+export const criticalCareCatalogModuleIds = [
+  'icu-hemodynamics',
+  'mechanical-ventilation',
+  'mechanical-circulatory-support',
+  'cardiohelp-ecmo',
+  'baxter-crrt',
+  'icu-simulation',
+] as const
+
+export type CriticalCareCatalogModuleId = (typeof criticalCareCatalogModuleIds)[number]
+
+export const criticalCareActivityIdPrefixes = [
+  'hemodynamics',
+  'ventilation',
+  'mcs',
+  'ecmo',
+  'crrt',
+  'icu',
+] as const
+
+export type CriticalCareActivityIdPrefix = (typeof criticalCareActivityIdPrefixes)[number]
+
+export interface CriticalCareCatalogModuleDefinition {
+  readonly id: CriticalCareCatalogModuleId
+  readonly activityIdPrefix: CriticalCareActivityIdPrefix
+  readonly title: string
+  readonly subtitle?: string
+  readonly href: string
+  readonly integrated: boolean
+  readonly sections: readonly ('overview' | 'learn' | 'practice' | 'assess' | 'sandbox')[]
+}
+
+export const criticalCareModuleCatalog = [
+  {
+    id: 'icu-hemodynamics',
+    activityIdPrefix: 'hemodynamics',
+    title: 'ICU Hemodynamics Lab',
+    href: '/icu-hemodynamics',
+    integrated: false,
+    sections: ['overview', 'learn', 'practice', 'assess'],
+  },
+  {
+    id: 'mechanical-ventilation',
+    activityIdPrefix: 'ventilation',
+    title: 'Mechanical Ventilation',
+    href: '/mechanical-ventilation',
+    integrated: false,
+    sections: ['overview', 'learn', 'practice', 'assess'],
+  },
+  {
+    id: 'mechanical-circulatory-support',
+    activityIdPrefix: 'mcs',
+    title: 'Mechanical Circulatory Support',
+    href: '/mechanical-circulatory-support',
+    integrated: false,
+    sections: ['overview', 'learn', 'practice', 'assess'],
+  },
+  {
+    id: 'cardiohelp-ecmo',
+    activityIdPrefix: 'ecmo',
+    title: 'ECMO Management',
+    subtitle: 'CARDIOHELP console lab',
+    href: '/cardiohelp-ecmo',
+    integrated: false,
+    sections: ['overview', 'learn', 'practice', 'assess'],
+  },
+  {
+    id: 'baxter-crrt',
+    activityIdPrefix: 'crrt',
+    title: 'CRRT',
+    subtitle: 'PrisMax console lab',
+    href: '/baxter-crrt',
+    integrated: false,
+    sections: ['overview', 'learn', 'practice', 'assess'],
+  },
+  {
+    id: 'icu-simulation',
+    activityIdPrefix: 'icu',
+    title: 'Integrated ICU Simulator',
+    href: '/icu-simulation',
+    integrated: true,
+    sections: ['overview', 'learn', 'practice', 'assess', 'sandbox'],
+  },
+] as const satisfies readonly CriticalCareCatalogModuleDefinition[]
+
+export const criticalCareModuleById: ReadonlyMap<
+  CriticalCareCatalogModuleId,
+  CriticalCareCatalogModuleDefinition
+> = new Map(criticalCareModuleCatalog.map((module) => [module.id, module]))

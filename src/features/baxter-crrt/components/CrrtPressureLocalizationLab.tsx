@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useState, type ChangeEvent } from 'react'
 
 import {
   createSyntheticPressureLocalizationResult,
@@ -162,7 +162,15 @@ function CircuitPlacementDiagram({ idPrefix, fault, site }: CircuitPlacementDiag
   )
 }
 
-export function CrrtPressureLocalizationLab() {
+export interface CrrtPressureLocalizationLabProps {
+  readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe' | 'explain') => void
+  readonly onPredictionCommitted?: () => void
+}
+
+export function CrrtPressureLocalizationLab({
+  onPhaseChange,
+  onPredictionCommitted,
+}: CrrtPressureLocalizationLabProps = {}) {
   const idPrefix = `crrt-pressure-lab-${useId().replaceAll(':', '')}`
   const [fault, setFault] = useState<PressureLocalizationFault>('obstruction')
   const [site, setSite] = useState<PressureLocalizationSite>('access-catheter')
@@ -209,12 +217,23 @@ export function CrrtPressureLocalizationLab() {
     if (!hasCompletePrediction(prediction)) return
     setCommittedPrediction({ ...prediction })
     setRevealed(false)
+    onPredictionCommitted?.()
+    onPhaseChange?.('act')
+  }
+
+  function revealResult() {
+    setRevealed(true)
+    onPhaseChange?.('observe')
   }
 
   function revisePrediction() {
     setCommittedPrediction(null)
     setRevealed(false)
   }
+
+  useEffect(() => {
+    if (revealed) onPhaseChange?.('explain')
+  }, [onPhaseChange, revealed])
 
   return (
     <section
@@ -227,6 +246,7 @@ export function CrrtPressureLocalizationLab() {
       data-progress-write="learner-mode-only"
       data-persistence="learner-mode-only"
       data-competency="none"
+      onFocusCapture={() => onPhaseChange?.('predict')}
     >
       <header className={styles.header}>
         <div>
@@ -358,7 +378,7 @@ export function CrrtPressureLocalizationLab() {
         ) : (
           <>
             {!revealed ? (
-              <button type="button" onClick={() => setRevealed(true)}>
+              <button type="button" onClick={revealResult}>
                 Reveal pressure pattern
               </button>
             ) : null}

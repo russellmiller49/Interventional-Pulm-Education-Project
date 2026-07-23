@@ -24,6 +24,7 @@ import {
   validateIcuSimulationAnalyticsEventPayload,
 } from '@/lib/icu-simulation-analytics'
 
+import { IcuSimulatorModuleNav } from './IcuSimulatorModuleNav'
 import styles from './icu-simulation.module.css'
 
 const learningModes = [
@@ -104,6 +105,7 @@ export function IcuSimulatorHub({ locale = 'en' }: { locale?: string }) {
 
   return (
     <div className={styles.hubShell}>
+      <IcuSimulatorModuleNav activeSection="overview" />
       <header className={styles.hubHero}>
         <div className={styles.hubHeroCopy}>
           <div className={styles.heroBadges} aria-label="Module status">

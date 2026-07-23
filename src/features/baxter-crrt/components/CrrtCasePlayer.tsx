@@ -22,6 +22,9 @@ import {
   type KeyboardEvent,
 } from 'react'
 
+import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+import { ActivityStepper } from '@/features/learning-module/components/ActivityStepper'
+
 import { baxterCrrtMasteryManifest } from '../content/mastery'
 import type { RuntimeCrrtCase } from '../content/schema'
 import { selectCrrtConsoleControls } from '../engine/consoleControls'
@@ -59,6 +62,16 @@ const reasoningStages = [
   readonly detail: string
   readonly phases: readonly CrrtReasoningPhase[]
 }[]
+
+const semanticPhaseByCrrtPhase: Readonly<Record<CrrtReasoningPhase, CriticalCareActivityPhase>> = {
+  read: 'recognize',
+  define: 'recognize',
+  select: 'predict',
+  predict: 'predict',
+  run: 'act',
+  reassess: 'observe',
+  reflect: 'explain',
+}
 
 const roleLabels: Readonly<Record<CrrtRoleLens, string>> = {
   integrated: 'Integrated',
@@ -112,6 +125,8 @@ interface CrrtCasePlayerProps {
   readonly onDebriefRevealed?: (outcome: CrrtLearningOutcome) => void
   /** Prefixes every authored DOM ID so multiple workflow instances can coexist. */
   readonly idNamespace?: string
+  /** Standalone players retain the shared phase display; shell wrappers render it in ActivityShell. */
+  readonly showSharedStepper?: boolean
 }
 
 export function CrrtReasoningRibbon({ session }: { session: CrrtLearningSessionState }) {
@@ -217,6 +232,7 @@ function CrrtCasePlayerContent({
   onReassessmentCommitted,
   onDebriefRevealed,
   idNamespace,
+  showSharedStepper = true,
 }: CrrtCasePlayerProps) {
   const definition = session.caseDefinition
   const isMastery = session.experience === 'mastery'
@@ -447,6 +463,16 @@ function CrrtCasePlayerContent({
   return (
     <div className={styles.learningWorkflow}>
       <CrrtReasoningRibbon session={session} />
+      {showSharedStepper ? (
+        <ActivityStepper
+          currentPhase={
+            session.reasoningPhase === 'reflect' && session.debriefRevealed
+              ? 'transfer'
+              : semanticPhaseByCrrtPhase[session.reasoningPhase]
+          }
+          ariaLabel="CRRT shared activity phases"
+        />
+      ) : null}
       <div className={styles.mobileSurfaceTabs} role="tablist" aria-label="CRRT case surfaces">
         {mobileSurfaces.map((surface) => (
           <button

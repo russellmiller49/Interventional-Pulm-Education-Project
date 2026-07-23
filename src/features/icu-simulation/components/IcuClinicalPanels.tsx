@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
+import { getCriticalCareIcuScenarioReadiness } from '@/features/critical-care/progress/integrated'
 
 import { ICU_EVIDENCE_BY_ID } from '../content'
 import { ICU_SCORE_WEIGHTS, icuScoreDomains } from '../engine'
@@ -39,6 +40,7 @@ import type {
   IcuSimulationState,
   IcuTrendSample,
 } from '../engine'
+import { IcuRemediationLinks } from './IcuRemediationLinks'
 import styles from './icu-simulation.module.css'
 
 const assessmentCopy: Readonly<
@@ -460,6 +462,11 @@ export function IcuCaseGuide({
   const substitutedActions = response.substitutedActionIds
     .map((actionId) => scenario.interventions.find((item) => item.actionId === actionId)?.label)
     .filter((label): label is string => Boolean(label))
+  const remediationReadiness = getCriticalCareIcuScenarioReadiness(state.scenarioFamily, {
+    version: 1,
+    activities: [],
+    updatedAt: '1970-01-01T00:00:00.000Z',
+  })
 
   return (
     <section className={styles.caseGuide} aria-labelledby="case-guide-title">
@@ -741,6 +748,14 @@ export function IcuCaseGuide({
                   <li key={point}>{point}</li>
                 ))}
               </ul>
+            </section>
+
+            <section aria-label="Focused remediation links">
+              <IcuRemediationLinks
+                readiness={remediationReadiness}
+                heading="Focused remediation"
+                showCompletion={false}
+              />
             </section>
           </div>
         </div>

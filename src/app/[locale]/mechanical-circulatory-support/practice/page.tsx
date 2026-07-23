@@ -12,13 +12,26 @@ const pageMetadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>
+  searchParams?: Promise<{ case?: string | string[] }>
 }
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params
   return localizeHandoffServerValue(locale, pageMetadata)
 }
-export default async function MechanicalCirculatorySupportPracticePage({ params }: PageProps) {
+export default async function MechanicalCirculatorySupportPracticePage({
+  params,
+  searchParams,
+}: PageProps) {
   const { locale } = await params
+  const caseId = (await searchParams)?.case
+  const initialActivityId = typeof caseId === 'string' ? caseId : undefined
   setRequestLocale(locale)
-  return <McsWorkbench section="practice" locale={locale} />
+  return (
+    <McsWorkbench
+      key={initialActivityId ?? 'practice'}
+      section="practice"
+      locale={locale}
+      initialActivityId={initialActivityId}
+    />
+  )
 }

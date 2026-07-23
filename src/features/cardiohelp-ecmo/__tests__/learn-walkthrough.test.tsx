@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useReducer, useState } from 'react'
+import { useReducer, useState, type AnchorHTMLAttributes, type ReactNode } from 'react'
 
 import { cardiohelpLearnLessonsBySupportMode } from '../content/learnLessons'
 import {
@@ -11,6 +11,18 @@ import {
 import { CardiohelpConsole } from '../components/CardiohelpConsole'
 import { CircuitAndMonitors } from '../components/CircuitAndMonitors'
 import { LearnLessonPlayer, resolveGuidedLesson } from '../components/LearnLessonPlayer'
+
+jest.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string; children: ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}))
 
 function LearnHarness({
   initialScenarioId,
@@ -323,7 +335,7 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     // Isolate: the clamp steps auto-complete when the real clamp buttons reach
     // the requested state, and guided help highlights the matching button.
     fireEvent.click(screen.getByRole('button', { name: /Show me where/i }))
-    const returnClamp = screen.getByRole('button', { name: /Return clamp/i })
+    const returnClamp = await screen.findByRole('button', { name: /Return clamp/i })
     await waitFor(() => {
       expect(returnClamp).toHaveAttribute('data-guided-help', 'true')
     })

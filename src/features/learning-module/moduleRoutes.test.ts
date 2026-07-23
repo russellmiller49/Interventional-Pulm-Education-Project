@@ -8,7 +8,7 @@ describe('learning module route bases', () => {
     for (const [key, route] of Object.entries(moduleRoutes)) {
       expect(key).toMatch(/NavBase$/)
       expect(route).toMatch(
-        /^\/(baxter-crrt|cardiohelp-ecmo|mechanical-circulatory-support|pleural-procedures|rigid-bronchoscopy|tracheostomy)/,
+        /^\/(baxter-crrt|cardiohelp-ecmo|icu-hemodynamics|mechanical-circulatory-support|mechanical-ventilation|pleural-procedures|rigid-bronchoscopy|tracheostomy)/,
       )
       expect(route).not.toContain('function')
     }

@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic'
 import type { Route } from 'next'
 import type { LucideIcon } from 'lucide-react'
 import {
-  ArrowLeft,
   BookOpenCheck,
   Boxes,
   ChevronRight,
@@ -16,12 +15,23 @@ import {
   Pause,
   Play,
   RotateCcw,
-  ShieldAlert,
   Stethoscope,
 } from 'lucide-react'
 
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { recordSiteModuleEvent } from '@/lib/analytics'
+import { recordCriticalCareIcuOutcome } from '@/features/critical-care/progress/integrated'
+import {
+  useCriticalCareActivityAnalytics,
+  type CriticalCareActivityMode,
+  type CriticalCareActivityPhase,
+} from '@/features/learning-module/activity'
+import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
+import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
+import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
+import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
+import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
   ICU_SIMULATION_ANALYTICS_MODULE_ID,
   expectedIcuSimulationAnalyticsEventType,
@@ -31,7 +41,13 @@ import {
   type IcuSimulationAnalyticsEventPayload,
 } from '@/lib/icu-simulation-analytics'
 
-import { ICU_SIMULATION_RELEASE, getIcuScenario, icuScenarios } from '../content'
+import {
+  ICU_EDUCATIONAL_BOUNDARIES,
+  ICU_EVIDENCE_BY_ID,
+  ICU_SIMULATION_RELEASE,
+  getIcuScenario,
+  icuScenarios,
+} from '../content'
 import {
   applyIcuCommand,
   clearIcuSyntheticSession,
@@ -64,6 +80,7 @@ import {
 } from './IcuClinicalPanels'
 import { IcuDevicePanels } from './IcuDevicePanels'
 import { IcuPatientMonitor } from './IcuPatientMonitor'
+import { IcuSimulatorModuleNav } from './IcuSimulatorModuleNav'
 import styles from './icu-simulation.module.css'
 
 const IcuBedsideScene = dynamic(
@@ -82,6 +99,10 @@ export interface IcuSimulatorLabProps {
   mode: IcuSimulationMode
   locale?: string
   initialScenarioId?: string
+  /** Optional catalog-only allowlist used by the Assess preparation gate. */
+  availableScenarioIds?: readonly string[]
+  /** Keeps the shell inside a parent route-level gate instead of fixing it to the viewport. */
+  embedded?: boolean
 }
 
 type MobileSurface = 'monitor' | 'clinical' | 'devices' | 'course'
@@ -190,15 +211,36 @@ function recordBoundedAnalytics(payload: IcuSimulationAnalyticsEventPayload) {
   })
 }
 
-export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuSimulatorLabProps) {
+export function IcuSimulatorLab({
+  mode,
+  locale = 'en',
+  initialScenarioId,
+  availableScenarioIds,
+  embedded = false,
+}: IcuSimulatorLabProps) {
+  const router = useRouter()
+  const availableScenarioKey = availableScenarioIds?.join('|')
+  const eligibleScenarioIds = useMemo(
+    () =>
+      availableScenarioKey === undefined
+        ? undefined
+        : new Set(availableScenarioKey ? availableScenarioKey.split('|') : []),
+    [availableScenarioKey],
+  )
   const availableScenarios = useMemo(
-    () => icuScenarios.filter((scenario) => scenario.allowedModes.includes(mode)),
-    [mode],
+    () =>
+      icuScenarios.filter(
+        (scenario) =>
+          scenario.allowedModes.includes(mode) &&
+          (!eligibleScenarioIds || eligibleScenarioIds.has(scenario.id)),
+      ),
+    [eligibleScenarioIds, mode],
   )
-  const initialScenario = useMemo(
-    () => chooseInitialScenario(mode, initialScenarioId),
-    [initialScenarioId, mode],
-  )
+  const initialScenario = useMemo(() => {
+    const requested = chooseInitialScenario(mode, initialScenarioId)
+    if (!eligibleScenarioIds || eligibleScenarioIds.has(requested.id)) return requested
+    return availableScenarios[0] ?? requested
+  }, [availableScenarios, eligibleScenarioIds, initialScenarioId, mode])
   const [state, setState] = useState<IcuSimulationState>(() => createSession(initialScenario, mode))
   const [assessmentCatalogSeed] = useState(() => state.seed)
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('monitor')
@@ -210,6 +252,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const [workerActive, setWorkerActive] = useState(false)
   const [restoringSession, setRestoringSession] = useState(false)
   const [engineNotice, setEngineNotice] = useState<string | null>(null)
+  const [helpVisible, setHelpVisible] = useState(false)
   const openedSection = useRef<IcuSimulationMode | null>(null)
   const openedScenario = useRef<string | null>(null)
   const predictionRecorded = useRef<string | null>(null)
@@ -218,6 +261,14 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const progressRecorded = useRef<string | null>(null)
   const moduleCompletionRecorded = useRef(false)
   const previousModuleMastery = useRef<boolean | null>(null)
+  const lifecycleSafetyEvents = useRef<{ key: string; ids: Set<string> }>({
+    key: '',
+    ids: new Set(),
+  })
+  const lifecycleGoalEvents = useRef<{ key: string; ids: Set<string> }>({
+    key: '',
+    ids: new Set(),
+  })
   const workerClient = useRef<IcuWorkerClient | null>(null)
   const workerInstance = useRef<Worker | null>(null)
   const latestWorkerRequest = useRef<string | null>(null)
@@ -244,6 +295,35 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const simulationRunning = running && !courseWindowReached && state.phase !== 'debrief'
   const interventionControlsLocked =
     (mode === 'practice' || mode === 'assess') && !state.diagnosis.committed
+  const lifecycleMode: CriticalCareActivityMode =
+    mode === 'learn' ? 'guided' : mode === 'assess' ? 'challenge' : 'practice'
+  const lifecyclePhase: CriticalCareActivityPhase = state.outcome.completed
+    ? 'explain'
+    : state.diagnosis.committed &&
+        (state.reassessedDomains.length > 0 ||
+          (state.diagnosis.committedAtSeconds !== null &&
+            state.clock.elapsedSeconds > state.diagnosis.committedAtSeconds))
+      ? 'observe'
+      : state.diagnosis.committed
+        ? 'act'
+        : state.observations.length > 1
+          ? 'predict'
+          : 'recognize'
+  const lifecycleActivityId = `icu:${mode}:${state.scenarioFamily}`
+  const {
+    recordPredictionSubmitted: recordLifecyclePrediction,
+    recordHintUsed: recordLifecycleHint,
+    recordSafetyEvent: recordLifecycleSafetyEvent,
+    recordGoalMet: recordLifecycleGoalMet,
+    recordDebriefViewed: recordLifecycleDebrief,
+    recordActivityCompleted: recordLifecycleCompletion,
+  } = useCriticalCareActivityAnalytics({
+    moduleId: 'icu-simulation',
+    activityId: lifecycleActivityId,
+    mode: lifecycleMode,
+    phase: lifecyclePhase,
+    enabled: mode !== 'sandbox',
+  })
   const dispatch = useCallback<Dispatch<IcuCommand>>((command) => {
     const client = workerClient.current
     if (client) {
@@ -356,6 +436,10 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
 
       if (candidate) {
         const candidateScenario = getIcuScenario(candidate.replay.scenarioId)
+        const assessScenarioIsEligible =
+          candidate.replay.mode !== 'assess' ||
+          !eligibleScenarioIds ||
+          eligibleScenarioIds.has(candidate.replay.scenarioId)
         const alreadyCompleted = candidate.replay.commands.some(
           (record) => record.command.type === 'session.complete',
         )
@@ -363,6 +447,11 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
           clearIcuSyntheticSession(window.localStorage)
           setEngineNotice(
             'The prior synthetic course was already complete, so its replay was cleared instead of being offered as a new attempt.',
+          )
+        } else if (!assessScenarioIsEligible) {
+          clearIcuSyntheticSession(window.localStorage)
+          setEngineNotice(
+            'A saved assessment no longer met the current preparation requirements and was safely discarded.',
           )
         } else if (candidate.replay.scenarioVersion === candidateScenario.version) {
           setSavedSession(candidate)
@@ -379,7 +468,7 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
       setStorageReady(true)
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [])
+  }, [eligibleScenarioIds])
 
   useEffect(() => {
     if (!storageReady || savedSession) return
@@ -434,7 +523,44 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
       section: mode,
       scenarioId: state.scenarioId as IcuSimulationAnalyticsEventPayload['scenarioId'],
     })
-  }, [mode, state.diagnosis.committed, state.scenarioId, state.seed])
+    recordLifecyclePrediction()
+  }, [mode, recordLifecyclePrediction, state.diagnosis.committed, state.scenarioId, state.seed])
+
+  useEffect(() => {
+    const key = `${mode}:${state.scenarioId}:${state.seed}`
+    if (lifecycleSafetyEvents.current.key !== key) {
+      lifecycleSafetyEvents.current = { key, ids: new Set() }
+    }
+    for (const id of state.outcome.criticalErrorIds) {
+      if (lifecycleSafetyEvents.current.ids.has(id)) continue
+      lifecycleSafetyEvents.current.ids.add(id)
+      recordLifecycleSafetyEvent()
+    }
+  }, [
+    mode,
+    recordLifecycleSafetyEvent,
+    state.outcome.criticalErrorIds,
+    state.scenarioId,
+    state.seed,
+  ])
+
+  useEffect(() => {
+    const key = `${mode}:${state.scenarioId}:${state.seed}`
+    if (lifecycleGoalEvents.current.key !== key) {
+      lifecycleGoalEvents.current = { key, ids: new Set() }
+    }
+    for (const id of state.outcome.checkpointIdsCompleted) {
+      if (lifecycleGoalEvents.current.ids.has(id)) continue
+      lifecycleGoalEvents.current.ids.add(id)
+      recordLifecycleGoalMet()
+    }
+  }, [
+    mode,
+    recordLifecycleGoalMet,
+    state.outcome.checkpointIdsCompleted,
+    state.scenarioId,
+    state.seed,
+  ])
 
   useEffect(() => {
     if (state.reassessedDomains.length < 5) return
@@ -466,8 +592,12 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
       completed: true,
       mastered: mode === 'sandbox' || mode === 'learn' ? false : state.outcome.mastery,
     })
+    recordLifecycleDebrief()
+    recordLifecycleCompletion(mode !== 'sandbox' && mode !== 'learn' && state.outcome.mastery)
   }, [
     mode,
+    recordLifecycleCompletion,
+    recordLifecycleDebrief,
     state.clock.elapsedSeconds,
     state.outcome.completed,
     state.outcome.criticalErrorIds.length,
@@ -486,6 +616,15 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
       setProgress((current) => {
         const next = recordIcuScenarioResult(current, state)
         writeIcuProgress(window.localStorage, next)
+        if (mode === 'practice' || mode === 'assess') {
+          recordCriticalCareIcuOutcome(window.localStorage, {
+            scenarioId: state.scenarioFamily,
+            mode,
+            score: state.outcome.score.total,
+            mastered: state.outcome.mastery,
+            attempts: next.attempts[state.scenarioFamily] ?? 1,
+          })
+        }
         return next
       })
     }, 0)
@@ -521,6 +660,17 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
 
   const resumeSavedSession = useCallback(() => {
     if (!savedSession || savedSession.replay.mode !== mode) return
+    if (
+      mode === 'assess' &&
+      eligibleScenarioIds &&
+      !eligibleScenarioIds.has(savedSession.replay.scenarioId)
+    ) {
+      discardSavedSession()
+      setEngineNotice(
+        'A saved assessment no longer met the current preparation requirements and was safely discarded.',
+      )
+      return
+    }
     const client = workerClient.current
     if (client) {
       setRunning(false)
@@ -546,13 +696,14 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
         'The saved simulation was incompatible with this content version and was safely discarded.',
       )
     }
-  }, [discardSavedSession, initializeSession, mode, savedSession])
+  }, [discardSavedSession, eligibleScenarioIds, initializeSession, mode, savedSession])
 
   const selectScenario = useCallback(
     (nextScenario: IcuScenarioDefinition) => {
       discardSavedSession()
       initializeSession(createSession(nextScenario, mode, state.seed + 1))
       setMobileSurface('monitor')
+      setHelpVisible(false)
     },
     [discardSavedSession, initializeSession, mode, state.seed],
   )
@@ -560,329 +711,503 @@ export function IcuSimulatorLab({ mode, locale = 'en', initialScenarioId }: IcuS
   const resetSession = useCallback(() => {
     discardSavedSession()
     initializeSession(createSession(scenario, mode, state.seed + 1))
+    setHelpVisible(false)
   }, [discardSavedSession, initializeSession, mode, scenario, state.seed])
 
   const lastEvent = state.history.at(-1)
   const activeAlarmCount = state.alarms.filter((alarm) => alarm.active).length
+  const completedCheckpointCount = state.outcome.checkpointIdsCompleted.length
+  const activityTitle = copy.title
+  const progressLabel = assessmentDiagnosisHidden
+    ? `${formatClock(state.clock.elapsedSeconds)} · ${activeAlarmCount} active alarms · assessment progress masked`
+    : `${formatClock(state.clock.elapsedSeconds)} · ${completedCheckpointCount}/${scenario.checkpoints.length} checkpoints · ${activeAlarmCount} active alarms`
+  const currentObjective = assessmentDiagnosisHidden
+    ? 'Complete the current reasoning phase using only observable patient, device, and timeline data.'
+    : (scenario.learningObjectives[0] ?? copy.description)
+  const requiredActionByPhase: Readonly<Record<CriticalCareActivityPhase, string>> = {
+    recognize: 'Inspect the monitor, bedside, available diagnostics, and course guide.',
+    predict: 'Commit a working shock classification in the Course panel.',
+    act: 'Use the available clinical and device controls to carry out the current plan.',
+    observe: 'Advance the shared clock and complete serial reassessment.',
+    explain: 'Review the causal debrief, response gate, and performance domains.',
+    transfer: 'Use the focused remediation links to choose the next learning context.',
+  }
+  const referenceEntries = assessmentDiagnosisHidden
+    ? [
+        {
+          id: 'icu-assessment-reference-boundary',
+          title: 'Assessment reference boundary',
+          summary:
+            'Scenario-specific coaching and references remain withheld until the causal debrief.',
+          meta: 'Masked assessment',
+        },
+      ]
+    : [
+        {
+          id: scenario.id,
+          title: scenario.title,
+          summary: scenario.summary,
+          meta: `${scenario.durationHours}-hour synthetic course · ${scenario.reviewStatus} review`,
+        },
+        {
+          id: 'icu-educational-boundary',
+          title: ICU_EDUCATIONAL_BOUNDARIES.title,
+          summary: ICU_EDUCATIONAL_BOUNDARIES.disclaimer,
+          meta: 'Applies to every integrated ICU activity',
+        },
+      ]
+  const evidenceEntries = assessmentDiagnosisHidden
+    ? [
+        {
+          id: 'icu-assessment-evidence-boundary',
+          title: 'Assessment evidence boundary',
+          sourceLabel: 'Scenario-specific evidence is available after debrief.',
+          limitation:
+            'Use current source documents, manufacturer instructions, local policy, and supervised clinical judgment.',
+        },
+      ]
+    : scenario.evidenceIds.flatMap((evidenceId) => {
+        const evidence = ICU_EVIDENCE_BY_ID.get(evidenceId)
+        return evidence
+          ? [
+              {
+                id: evidence.id,
+                title: evidence.title,
+                sourceLabel: `${evidence.organization} · ${evidence.year} · ${evidence.sourceType} · ${evidence.reviewStatus}`,
+                limitation: evidence.limitation,
+              },
+            ]
+          : []
+      })
 
-  return (
-    <div className={styles.labShell} data-mode={mode}>
-      <header className={styles.labHero}>
-        <div className={styles.labHeroCopy}>
-          <Link href={'/icu-simulation' as Route} className={styles.backLink}>
-            <ArrowLeft aria-hidden="true" /> ICU Simulator home
-          </Link>
-          <div className={styles.heroBadges}>
-            <span>
-              <ModeIcon aria-hidden="true" /> {mode}
-            </span>
-            <span data-preview="true">{ICU_SIMULATION_RELEASE.stage.replaceAll('-', ' ')}</span>
-            <span>Adult synthetic patients</span>
-          </div>
-          <p className={styles.eyebrow}>{copy.eyebrow}</p>
-          <h1>{copy.title}</h1>
-          <p>{copy.description}</p>
-        </div>
-        <aside className={styles.sessionSummary} aria-labelledby="session-summary-title">
-          <span className={styles.panelKicker}>Current session</span>
-          <h2 id="session-summary-title">
-            {assessmentDiagnosisHidden ? 'Unclassified shock course' : scenario.shortTitle}
-          </h2>
-          <p>
-            {assessmentDiagnosisHidden
-              ? 'Assess an evolving synthetic adult ICU patient. Commit to the shock mechanism before using advanced support.'
-              : scenario.summary}
-          </p>
-          <dl>
-            <div>
-              <dt>Course window</dt>
-              <dd>{assessmentDiagnosisHidden ? 'Withheld' : `${scenario.durationHours} h`}</dd>
-            </div>
-            <div>
-              <dt>Active alarms</dt>
-              <dd>{activeAlarmCount}</dd>
-            </div>
-            <div>
-              <dt>Checkpoints</dt>
-              <dd>
-                {assessmentDiagnosisHidden
-                  ? 'Withheld'
-                  : `${state.outcome.checkpointIdsCompleted.length}/${scenario.checkpoints.length}`}
-              </dd>
-            </div>
-          </dl>
-          <span className={styles.sessionModeNote}>{copy.status}</span>
-        </aside>
-      </header>
+  const showHelp = useCallback(() => {
+    if (!helpVisible && mode !== 'assess') recordLifecycleHint()
+    setHelpVisible(true)
+  }, [helpVisible, mode, recordLifecycleHint])
 
-      <section className={styles.safetyBanner} role="note" aria-label="Educational safety boundary">
-        <ShieldAlert aria-hidden="true" />
-        <p>
-          <strong>Educational simulation—not a clinical device, dosing guide, or protocol.</strong>{' '}
-          All patients are synthetic and interventions are simplified. Real care requires current
-          evidence, patient-specific assessment, institutional protocols, manufacturer instructions,
-          multidisciplinary expertise, and clinical judgment.
-        </p>
-      </section>
+  const saveAndExit = useCallback(() => {
+    setRunning(false)
+    const sessionToSave = workerClient.current ? latestWorkerState.current : state
+    if (sessionToSave.outcome.completed) clearIcuSyntheticSession(window.localStorage)
+    else writeIcuSyntheticSession(window.localStorage, sessionToSave)
+    router.push('/icu-simulation' as Route)
+  }, [router, state])
 
-      {locale !== 'en' ? (
-        <p className={styles.languageFallback} role="status">
-          Reviewed-English fallback: this private preview remains English-first while localized
-          clinical review is pending.
-        </p>
-      ) : null}
+  const focusCourseAndDebrief = useCallback(() => {
+    setMobileSurface('course')
+    window.requestAnimationFrame(() => {
+      document.getElementById('icu-course-surface')?.focus({ preventScroll: false })
+    })
+  }, [])
 
-      <nav className={styles.modeNav} aria-label="ICU Simulator learning mode">
-        <div>
-          {(Object.keys(modeCopy) as IcuSimulationMode[]).map((candidate) => (
-            <Link
-              href={modeHref(candidate)}
-              key={candidate}
-              aria-current={candidate === mode ? 'page' : undefined}
-            >
-              {candidate}
-            </Link>
-          ))}
-        </div>
-        <span>{copy.status}</span>
-      </nav>
-
-      {engineNotice ? (
-        <p className={styles.engineNotice} role="status">
-          {engineNotice}
-        </p>
-      ) : null}
-
-      {!storageReady ? (
-        <section className={styles.resumeBanner} aria-live="polite">
-          <div>
-            <span className={styles.panelKicker}>Local session check</span>
-            <h2>Checking for a resumable synthetic session…</h2>
-            <p>Only the versioned command replay and bounded progress record are stored locally.</p>
-          </div>
-        </section>
-      ) : savedSession ? (
-        <section className={styles.resumeBanner} aria-labelledby="resume-session-title">
-          <div>
-            <span className={styles.panelKicker}>Saved synthetic session</span>
-            <h2 id="resume-session-title">
-              {savedSession.replay.mode === 'assess'
-                ? 'Unclassified assessment course'
-                : getIcuScenario(savedSession.replay.scenarioId).shortTitle}
-            </h2>
-            <p>
-              A validated {savedSession.replay.mode} session is available on this device. Resume its
-              semantic command replay or start a fresh course. No patient truth, waveform arrays,
-              notes, or free text are stored.
+  const activityShell = (
+    <ActivityShell
+      breadcrumb={<IcuSimulatorModuleNav activeSection={mode} compact />}
+      activityTitle={activityTitle}
+      phase={lifecyclePhase}
+      mode={lifecycleMode}
+      progressLabel={progressLabel}
+      stepperAriaLabel="Integrated ICU shared activity phases"
+      theme="dark"
+      maskedAssessment={assessmentDiagnosisHidden}
+      patientContext={
+        <PatientContextBar
+          title="Persistent patient context"
+          items={[
+            {
+              label: 'Course',
+              value: assessmentDiagnosisHidden ? 'Masked assessment' : scenario.shortTitle,
+            },
+            { label: 'Simulation time', value: formatClock(state.clock.elapsedSeconds) },
+            { label: 'MAP', value: `${Math.round(state.patient.hemodynamics.mapMmHg)} mm Hg` },
+            { label: 'SpO₂', value: `${Math.round(state.patient.respiratory.spo2Percent)}%` },
+            { label: 'Active alarms', value: `${activeAlarmCount}` },
+          ]}
+          immediateGoal={currentObjective}
+          safetyConstraints={ICU_EDUCATIONAL_BOUNDARIES.constraints.slice(0, 2)}
+        />
+      }
+      currentTask={
+        <TaskPanel
+          objective={currentObjective}
+          requiredAction={requiredActionByPhase[lifecyclePhase]}
+          targets={
+            assessmentDiagnosisHidden
+              ? []
+              : scenario.checkpoints
+                  .filter(
+                    (checkpoint) => !state.outcome.checkpointIdsCompleted.includes(checkpoint.id),
+                  )
+                  .slice(0, 3)
+                  .map((checkpoint) => checkpoint.label)
+          }
+          hint={mode === 'assess' ? undefined : copy.description}
+          mode={lifecycleMode}
+          hintVisible={helpVisible}
+          onHintRequested={showHelp}
+        >
+          <p role="note">{copy.status}</p>
+          {helpVisible ? (
+            <p role="status">
+              Use Reference and Evidence for the educational boundary, source scope, and model
+              limits.
+              {mode === 'assess'
+                ? ' Assessment help does not reveal the diagnosis or scenario-specific targets.'
+                : ' Return to the current task when ready.'}
             </p>
-          </div>
-          <div className={styles.resumeActions}>
-            {savedSession.replay.mode === mode ? (
-              <button type="button" disabled={restoringSession} onClick={resumeSavedSession}>
-                <Play aria-hidden="true" />
-                {restoringSession ? 'Restoring saved session…' : 'Resume saved session'}
-              </button>
-            ) : (
-              <Link href={modeHref(savedSession.replay.mode)}>
-                Open {savedSession.replay.mode} to resume
-              </Link>
-            )}
-            <button
-              type="button"
-              data-secondary="true"
-              disabled={restoringSession}
-              onClick={() => {
-                discardSavedSession()
-                initializeSession(createSession(initialScenario, mode, state.seed + 1))
-              }}
-            >
-              Start new session
-            </button>
-          </div>
-        </section>
-      ) : (
+          ) : null}
+        </TaskPanel>
+      }
+      onHelp={showHelp}
+      onReset={resetSession}
+      onSaveAndExit={saveAndExit}
+      bottomContent={`${progressLabel} · ${ICU_SIMULATION_RELEASE.stage.replaceAll('-', ' ')}`}
+      secondaryActions={
         <>
-          <section className={styles.caseSelector} aria-labelledby="case-selector-title">
-            <header>
+          <ReferenceDrawer
+            entries={referenceEntries}
+            trigger={<button type="button">Reference</button>}
+          />
+          <EvidenceDrawer
+            entries={evidenceEntries}
+            trigger={<button type="button">Evidence</button>}
+          />
+          <button type="button" onClick={focusCourseAndDebrief}>
+            {state.phase === 'debrief' ? 'Open debrief' : 'Course & debrief'}
+          </button>
+        </>
+      }
+      viewport={
+        <div
+          id="icu-activity-viewport"
+          className={styles.activityViewport}
+          tabIndex={-1}
+          data-icu-internal-scroll
+        >
+          <div className={styles.labShell} data-mode={mode}>
+            <header className={styles.activityStatusBanner}>
+              <ModeIcon aria-hidden="true" />
               <div>
-                <span className={styles.panelKicker}>Patient census</span>
-                <h2 id="case-selector-title">Choose a shock course</h2>
+                <span>
+                  {copy.eyebrow} · {ICU_SIMULATION_RELEASE.stage.replaceAll('-', ' ')}
+                </span>
+                <h2>
+                  {assessmentDiagnosisHidden ? 'Unclassified shock course' : scenario.shortTitle}
+                </h2>
+                <p>
+                  {assessmentDiagnosisHidden
+                    ? 'Assess an evolving synthetic adult ICU patient. Coaching remains withheld until debrief.'
+                    : copy.description}
+                </p>
               </div>
-              <span>
-                {availableScenarios.length} scenario families ·{' '}
-                {progress.completedScenarioIds.length} completed ·{' '}
-                {progress.masteredScenarioIds.length} mastered
-              </span>
             </header>
-            <div className={styles.caseRail}>
-              {displayedScenarios.map((candidate, index) => {
-                const selected = candidate.id === state.scenarioId
-                const concealed = mode === 'assess'
-                return (
+
+            <section
+              className={styles.safetyBanner}
+              role="note"
+              aria-label="Educational safety boundary"
+            >
+              <p>
+                <strong>{ICU_EDUCATIONAL_BOUNDARIES.title}.</strong>{' '}
+                {ICU_EDUCATIONAL_BOUNDARIES.disclaimer}
+              </p>
+            </section>
+
+            {locale !== 'en' ? (
+              <p className={styles.languageFallback} role="status">
+                Reviewed-English fallback: this private preview remains English-first while
+                localized clinical review is pending.
+              </p>
+            ) : null}
+
+            {engineNotice ? (
+              <p className={styles.engineNotice} role="status">
+                {engineNotice}
+              </p>
+            ) : null}
+
+            {!storageReady ? (
+              <section className={styles.resumeBanner} aria-live="polite">
+                <div>
+                  <span className={styles.panelKicker}>Local session check</span>
+                  <h2>Checking for a resumable synthetic session…</h2>
+                  <p>
+                    Only the versioned command replay and bounded progress record are stored
+                    locally.
+                  </p>
+                </div>
+              </section>
+            ) : savedSession ? (
+              <section className={styles.resumeBanner} aria-labelledby="resume-session-title">
+                <div>
+                  <span className={styles.panelKicker}>Saved synthetic session</span>
+                  <h2 id="resume-session-title">
+                    {savedSession.replay.mode === 'assess'
+                      ? 'Unclassified assessment course'
+                      : getIcuScenario(savedSession.replay.scenarioId).shortTitle}
+                  </h2>
+                  <p>
+                    A validated {savedSession.replay.mode} session is available on this device.
+                    Resume its semantic command replay or start a fresh course. No patient truth,
+                    waveform arrays, notes, or free text are stored.
+                  </p>
+                </div>
+                <div className={styles.resumeActions}>
+                  {savedSession.replay.mode === mode ? (
+                    <button type="button" disabled={restoringSession} onClick={resumeSavedSession}>
+                      <Play aria-hidden="true" />
+                      {restoringSession ? 'Restoring saved session…' : 'Resume saved session'}
+                    </button>
+                  ) : (
+                    <Link href={modeHref(savedSession.replay.mode)}>
+                      Open {savedSession.replay.mode} to resume
+                    </Link>
+                  )}
                   <button
                     type="button"
-                    key={candidate.id}
-                    aria-current={selected ? 'true' : undefined}
-                    onClick={() => selectScenario(candidate)}
+                    data-secondary="true"
+                    disabled={restoringSession}
+                    onClick={() => {
+                      discardSavedSession()
+                      initializeSession(createSession(initialScenario, mode, state.seed + 1))
+                      setHelpVisible(false)
+                    }}
                   >
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <strong>
-                      {concealed
-                        ? `Assessment case ${String(index + 1).padStart(2, '0')}`
-                        : candidate.shortTitle}
-                    </strong>
-                    <small>
-                      {concealed
-                        ? 'Timed course · classification withheld'
-                        : `${candidate.durationHours} h · ${candidate.family.replaceAll('-', ' ')}`}
-                    </small>
-                    <ChevronRight aria-hidden="true" />
+                    Start new session
                   </button>
-                )
-              })}
-            </div>
-          </section>
+                </div>
+              </section>
+            ) : (
+              <>
+                <section className={styles.caseSelector} aria-labelledby="case-selector-title">
+                  <header>
+                    <div>
+                      <span className={styles.panelKicker}>Patient census</span>
+                      <h2 id="case-selector-title">Choose a shock course</h2>
+                    </div>
+                    <span>
+                      {availableScenarios.length} scenario families ·{' '}
+                      {progress.completedScenarioIds.length} completed ·{' '}
+                      {progress.masteredScenarioIds.length} mastered
+                    </span>
+                  </header>
+                  <div className={styles.caseRail}>
+                    {displayedScenarios.map((candidate, index) => {
+                      const selected = candidate.id === state.scenarioId
+                      const concealed = mode === 'assess'
+                      return (
+                        <button
+                          type="button"
+                          key={candidate.id}
+                          aria-current={selected ? 'true' : undefined}
+                          onClick={() => selectScenario(candidate)}
+                        >
+                          <span>{String(index + 1).padStart(2, '0')}</span>
+                          <strong>
+                            {concealed
+                              ? `Assessment case ${String(index + 1).padStart(2, '0')}`
+                              : candidate.shortTitle}
+                          </strong>
+                          <small>
+                            {concealed
+                              ? 'Timed course · classification withheld'
+                              : `${candidate.durationHours} h · ${candidate.family.replaceAll('-', ' ')}`}
+                          </small>
+                          <ChevronRight aria-hidden="true" />
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
 
-          <section className={styles.timeDock} aria-label="Shared simulation clock">
-            <div className={styles.clockReadout}>
-              <span>SIMULATION TIME</span>
-              <time>{formatClock(state.clock.elapsedSeconds)}</time>
-            </div>
-            <div className={styles.transportControls}>
-              <button
-                type="button"
-                aria-pressed={simulationRunning}
-                disabled={state.phase === 'debrief' || courseWindowReached}
-                onClick={() => setRunning((value) => !value)}
-              >
-                {simulationRunning ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-                {simulationRunning ? 'Pause' : 'Run'}
-              </button>
-              <label>
-                <span>Speed</span>
-                <select
-                  value={speed}
-                  onChange={(event) => setSpeed(Number(event.target.value) as SimulationSpeed)}
-                >
-                  <option value={1}>1×</option>
-                  <option value={5}>5×</option>
-                  <option value={30}>30×</option>
-                </select>
-              </label>
-              <button
-                type="button"
-                disabled={state.phase === 'debrief' || courseWindowReached}
-                onClick={() => dispatch({ type: 'time.advance', seconds: 60 })}
-              >
-                +1 min
-              </button>
-              <button
-                type="button"
-                disabled={state.phase === 'debrief' || courseWindowReached}
-                onClick={() => dispatch({ type: 'time.advance', seconds: 900 })}
-              >
-                +15 min
-              </button>
-              <button type="button" onClick={resetSession}>
-                <RotateCcw aria-hidden="true" /> Reset
-              </button>
-            </div>
-            <span className={styles.engineStatus}>
-              <i aria-hidden="true" data-active={workerActive || undefined} />
-              {workerActive ? 'Background worker active' : 'Main-thread fallback active'}
-            </span>
-            {courseWindowReached && state.phase !== 'debrief' ? (
-              <span className={styles.engineStatus} role="status">
-                Authored course window reached · complete the course to open the debrief
-              </span>
-            ) : null}
-            <p className={styles.srOnly} aria-live="polite">
-              {lastEvent
-                ? `${formatClock(lastEvent.elapsedSeconds)}: ${lastEvent.label}`
-                : 'Session ready'}
-            </p>
-          </section>
-
-          <IcuAlarmCenter state={state} dispatch={dispatch} />
-
-          <nav className={styles.mobileSurfaceNav} aria-label="Choose bedside workspace">
-            {(Object.keys(surfaceCopy) as MobileSurface[]).map((surface) => {
-              const item = surfaceCopy[surface]
-              const Icon = item.Icon
-              return (
-                <button
-                  type="button"
-                  key={surface}
-                  aria-pressed={mobileSurface === surface}
-                  onClick={() => setMobileSurface(surface)}
-                >
-                  <Icon aria-hidden="true" />
-                  <span>
-                    <strong>{item.label}</strong>
-                    <small>{item.detail}</small>
+                <section className={styles.timeDock} aria-label="Shared simulation clock">
+                  <div className={styles.clockReadout}>
+                    <span>SIMULATION TIME</span>
+                    <time>{formatClock(state.clock.elapsedSeconds)}</time>
+                  </div>
+                  <div className={styles.transportControls}>
+                    <button
+                      type="button"
+                      aria-pressed={simulationRunning}
+                      disabled={state.phase === 'debrief' || courseWindowReached}
+                      onClick={() => setRunning((value) => !value)}
+                    >
+                      {simulationRunning ? (
+                        <Pause aria-hidden="true" />
+                      ) : (
+                        <Play aria-hidden="true" />
+                      )}
+                      {simulationRunning ? 'Pause' : 'Run'}
+                    </button>
+                    <label>
+                      <span>Speed</span>
+                      <select
+                        value={speed}
+                        onChange={(event) =>
+                          setSpeed(Number(event.target.value) as SimulationSpeed)
+                        }
+                      >
+                        <option value={1}>1×</option>
+                        <option value={5}>5×</option>
+                        <option value={30}>30×</option>
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      disabled={state.phase === 'debrief' || courseWindowReached}
+                      onClick={() => dispatch({ type: 'time.advance', seconds: 60 })}
+                    >
+                      +1 min
+                    </button>
+                    <button
+                      type="button"
+                      disabled={state.phase === 'debrief' || courseWindowReached}
+                      onClick={() => dispatch({ type: 'time.advance', seconds: 900 })}
+                    >
+                      +15 min
+                    </button>
+                    <button type="button" onClick={resetSession}>
+                      <RotateCcw aria-hidden="true" /> Reset
+                    </button>
+                  </div>
+                  <span className={styles.engineStatus}>
+                    <i aria-hidden="true" data-active={workerActive || undefined} />
+                    {workerActive ? 'Background worker active' : 'Main-thread fallback active'}
                   </span>
-                </button>
-              )
-            })}
-          </nav>
+                  {courseWindowReached && state.phase !== 'debrief' ? (
+                    <span className={styles.engineStatus} role="status">
+                      Authored course window reached · complete the course to open the debrief
+                    </span>
+                  ) : null}
+                  <p className={styles.srOnly} aria-live="polite">
+                    {lastEvent
+                      ? `${formatClock(lastEvent.elapsedSeconds)}: ${lastEvent.label}`
+                      : 'Session ready'}
+                  </p>
+                </section>
 
-          <div className={styles.workspace}>
-            <section
-              className={styles.workspaceSurface}
-              data-surface="monitor"
-              data-mobile-visible={mobileSurface === 'monitor'}
-              aria-label="Patient monitor and bedside overview"
-            >
-              <IcuPatientMonitor state={state} concealSyntheticId={assessmentDiagnosisHidden} />
-              <IcuBedsideScene state={state} />
-            </section>
+                <IcuAlarmCenter state={state} dispatch={dispatch} />
 
-            <section
-              className={styles.workspaceSurface}
-              data-surface="clinical"
-              data-mobile-visible={mobileSurface === 'clinical'}
-              aria-label="Diagnostic and care actions"
-            >
-              <IcuDiagnosticsPanel state={state} scenario={scenario} dispatch={dispatch} />
-              {mode === 'sandbox' ? <IcuSandboxControls state={state} dispatch={dispatch} /> : null}
-              <IcuCarePanel
-                state={state}
-                scenario={scenario}
-                dispatch={dispatch}
-                controlsLocked={interventionControlsLocked}
-                neutralLocked={assessmentAwaitingDiagnosis}
-              />
-            </section>
+                <nav className={styles.mobileSurfaceNav} aria-label="Choose bedside workspace">
+                  {(Object.keys(surfaceCopy) as MobileSurface[]).map((surface) => {
+                    const item = surfaceCopy[surface]
+                    const Icon = item.Icon
+                    return (
+                      <button
+                        type="button"
+                        key={surface}
+                        aria-pressed={mobileSurface === surface}
+                        onClick={() => setMobileSurface(surface)}
+                      >
+                        <Icon aria-hidden="true" />
+                        <span>
+                          <strong>{item.label}</strong>
+                          <small>{item.detail}</small>
+                        </span>
+                      </button>
+                    )
+                  })}
+                </nav>
 
-            <section
-              className={styles.workspaceSurface}
-              data-surface="devices"
-              data-mobile-visible={mobileSurface === 'devices'}
-              aria-label="Device controls"
-            >
-              <IcuDevicePanels
-                state={state}
-                scenario={scenario}
-                dispatch={dispatch}
-                controlsLocked={interventionControlsLocked}
-                neutralLocked={assessmentAwaitingDiagnosis}
-              />
-            </section>
+                <div className={styles.workspace}>
+                  <section
+                    className={styles.workspaceSurface}
+                    data-surface="monitor"
+                    data-mobile-visible={mobileSurface === 'monitor'}
+                    aria-label="Patient monitor and bedside overview"
+                  >
+                    <IcuPatientMonitor
+                      state={state}
+                      concealSyntheticId={assessmentDiagnosisHidden}
+                    />
+                    <IcuBedsideScene state={state} />
+                  </section>
 
-            <section
-              className={styles.workspaceSurface}
-              data-surface="course"
-              data-mobile-visible={mobileSurface === 'course'}
-              aria-label="Course guide and trends"
-            >
-              <IcuCaseGuide state={state} scenario={scenario} mode={mode} dispatch={dispatch} />
-              <IcuTimelinePanel state={state} maskScenarioEvents={assessmentDiagnosisHidden} />
-            </section>
+                  <section
+                    className={styles.workspaceSurface}
+                    data-surface="clinical"
+                    data-mobile-visible={mobileSurface === 'clinical'}
+                    aria-label="Diagnostic and care actions"
+                  >
+                    <IcuDiagnosticsPanel state={state} scenario={scenario} dispatch={dispatch} />
+                    {mode === 'sandbox' ? (
+                      <IcuSandboxControls state={state} dispatch={dispatch} />
+                    ) : null}
+                    <IcuCarePanel
+                      state={state}
+                      scenario={scenario}
+                      dispatch={dispatch}
+                      controlsLocked={interventionControlsLocked}
+                      neutralLocked={assessmentAwaitingDiagnosis}
+                    />
+                  </section>
+
+                  <section
+                    className={styles.workspaceSurface}
+                    data-surface="devices"
+                    data-mobile-visible={mobileSurface === 'devices'}
+                    aria-label="Device controls"
+                  >
+                    <IcuDevicePanels
+                      state={state}
+                      scenario={scenario}
+                      dispatch={dispatch}
+                      controlsLocked={interventionControlsLocked}
+                      neutralLocked={assessmentAwaitingDiagnosis}
+                    />
+                  </section>
+
+                  <section
+                    id="icu-course-surface"
+                    className={styles.workspaceSurface}
+                    data-surface="course"
+                    data-mobile-visible={mobileSurface === 'course'}
+                    aria-label="Course guide and trends"
+                    tabIndex={-1}
+                  >
+                    <IcuCaseGuide
+                      state={state}
+                      scenario={scenario}
+                      mode={mode}
+                      dispatch={dispatch}
+                    />
+                    <IcuTimelinePanel
+                      state={state}
+                      maskScenarioEvents={assessmentDiagnosisHidden}
+                    />
+                  </section>
+                </div>
+
+                {assessmentDiagnosisHidden ? null : <IcuSourceNotes scenario={scenario} />}
+              </>
+            )}
           </div>
+        </div>
+      }
+    />
+  )
 
-          {assessmentDiagnosisHidden ? null : <IcuSourceNotes scenario={scenario} />}
-        </>
-      )}
+  if (embedded) {
+    return (
+      <div className={styles.embeddedActivity} data-icu-activity-route="embedded">
+        {activityShell}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.icuActivityRoute} data-icu-activity-route="fixed">
+      <SimulationLaunchGate
+        activityTitle="Integrated ICU bedside simulator"
+        minimumViewport="desktop"
+        bandwidthClass="heavy"
+        estimatedSizeLabel="Interactive bedside, device, and monitor assets"
+        lightweightAlternativeHref="/icu-simulation"
+        onSaveForLater={() => router.push('/critical-care' as Route)}
+        theme="dark"
+      >
+        {activityShell}
+      </SimulationLaunchGate>
     </div>
   )
 }

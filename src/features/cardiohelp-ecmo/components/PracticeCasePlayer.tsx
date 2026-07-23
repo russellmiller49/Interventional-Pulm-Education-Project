@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 
 import { Link } from '@/i18n/navigation'
+import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
 
 import { cardiohelpScenarioById, predictionGoals, TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
@@ -62,6 +63,7 @@ interface PracticeCasePlayerProps {
   onReveal: () => void
   /** 'assess' renders a capstone: no case picker, capstone context line. */
   section?: 'practice' | 'assess'
+  onPhaseChange?: (phase: CriticalCareActivityPhase) => void
 }
 
 const predictionControls: readonly {
@@ -241,6 +243,15 @@ function advanceSimulation(dispatch: PracticeCasePlayerProps['dispatch'], second
 }
 
 type CaseStage = 'brief' | 'plan' | 'manage' | 'reassess' | 'debrief'
+
+const semanticPhaseByCaseStage: Readonly<
+  Record<Exclude<CaseStage, 'debrief'>, CriticalCareActivityPhase>
+> = {
+  brief: 'recognize',
+  plan: 'predict',
+  manage: 'act',
+  reassess: 'observe',
+}
 
 const stagePanelIds: Record<CaseStage, string> = {
   brief: 'practice-brief',
@@ -624,7 +635,10 @@ function SimulationControls({
   scenario,
   dispatch,
   onLoadScenario,
-}: Pick<PracticeCasePlayerProps, 'state' | 'scenario' | 'dispatch' | 'onLoadScenario'>) {
+  section,
+}: Pick<PracticeCasePlayerProps, 'state' | 'scenario' | 'dispatch' | 'onLoadScenario'> & {
+  section: 'practice' | 'assess'
+}) {
   return (
     <section className={styles.simulationControls} aria-label="Simulation clock and mode">
       <div>
@@ -634,22 +648,26 @@ function SimulationControls({
           <small>{state.paused ? 'Paused · use Run clock or Step' : 'Running automatically'}</small>
         </span>
       </div>
-      <div className={styles.segmentedButtons}>
-        <button
-          type="button"
-          data-active={state.simulationMode === 'guided'}
-          onClick={() => onLoadScenario(scenario.id, 'guided')}
-        >
-          Standard practice
-        </button>
-        <button
-          type="button"
-          data-active={state.simulationMode === 'challenge'}
-          onClick={() => onLoadScenario(scenario.id, 'challenge')}
-        >
-          Hide diagnosis cues (harder)
-        </button>
-      </div>
+      {section === 'practice' ? (
+        <div className={styles.segmentedButtons}>
+          <button
+            type="button"
+            data-active={state.simulationMode === 'guided'}
+            onClick={() => onLoadScenario(scenario.id, 'guided')}
+          >
+            Standard practice
+          </button>
+          <button
+            type="button"
+            data-active={state.simulationMode === 'challenge'}
+            onClick={() => onLoadScenario(scenario.id, 'challenge')}
+          >
+            Hide diagnosis cues (harder)
+          </button>
+        </div>
+      ) : (
+        <p role="note">Challenge mode is locked for this masked assessment.</p>
+      )}
       <button type="button" onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}>
         {state.paused ? <CirclePlay aria-hidden="true" /> : <CirclePause aria-hidden="true" />}
         {state.paused ? 'Run clock' : 'Pause clock'}
@@ -657,12 +675,18 @@ function SimulationControls({
       <button type="button" onClick={() => dispatch({ type: 'STEP' })}>
         <StepForward aria-hidden="true" /> Step 1 second
       </button>
-      <button type="button" onClick={() => onLoadScenario(scenario.id, state.simulationMode)}>
+      <button
+        type="button"
+        onClick={() =>
+          onLoadScenario(scenario.id, section === 'assess' ? 'challenge' : state.simulationMode)
+        }
+      >
         <RotateCcw aria-hidden="true" /> Reset case
       </button>
       <small className={styles.simulationResetNote}>
-        Hiding cues masks the case title, summary, and diagnosis hints until debrief; scoring is
-        unchanged. Changing mode or resetting starts this case over.
+        {section === 'practice'
+          ? 'Hiding cues masks the case title, summary, and diagnosis hints until debrief; scoring is unchanged. Changing mode or resetting starts this case over.'
+          : 'Resetting starts a new masked challenge attempt; assessment mode cannot be changed.'}
       </small>
     </section>
   )
@@ -1461,10 +1485,12 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
     dispatch,
     onLoadScenario,
     onReveal,
+    onPhaseChange,
     section = 'practice',
   } = props
   const challengePromptHidden =
-    state.simulationMode === 'challenge' && state.scenario.phase !== 'complete'
+    (section === 'assess' || state.simulationMode === 'challenge') &&
+    state.scenario.phase !== 'complete'
   const supportMode = scenario.supportMode
   const trackUnits = cardiohelpCurriculum[supportMode]
   const caseUnits = useMemo(
@@ -1512,6 +1538,10 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
         : 'manage'
   const currentStage: CaseStage =
     hasBrief && !briefAcknowledged && !planComplete ? 'brief' : workflowStage
+
+  useEffect(() => {
+    onPhaseChange?.(currentStage === 'debrief' ? 'explain' : semanticPhaseByCaseStage[currentStage])
+  }, [currentStage, onPhaseChange])
 
   const activeStage: CaseStage =
     expanded && expanded.attemptKey === attemptKey && expanded.whenCurrent === currentStage
@@ -1771,9 +1801,11 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
               onCommitted={() => navigateToWorkflowSection('practice-treatment')}
             />
           </div>
-          <div hidden={activeStage !== 'manage' && activeStage !== 'reassess'}>
-            <HintPanel state={state} scenario={scenario} dispatch={dispatch} />
-          </div>
+          {section === 'practice' ? (
+            <div hidden={activeStage !== 'manage' && activeStage !== 'reassess'}>
+              <HintPanel state={state} scenario={scenario} dispatch={dispatch} />
+            </div>
+          ) : null}
           <div hidden={activeStage !== 'manage'}>
             <ActionPanel
               state={state}
@@ -1802,6 +1834,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
         scenario={scenario}
         dispatch={dispatch}
         onLoadScenario={onLoadScenario}
+        section={section}
       />
     </aside>
   )

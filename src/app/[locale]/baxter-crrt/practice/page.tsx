@@ -5,7 +5,7 @@ import { BaxterCrrtPractice } from '@/features/baxter-crrt/components/BaxterCrrt
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Practice · Baxter CRRT',
+  title: 'Practice · CRRT · PrisMax console lab',
   description:
     'Scored PrisMax CRRT cases and cause-first safety drills across six high-yield curriculum stations.',
   robots: { index: false, follow: false, noarchive: true },

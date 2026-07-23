@@ -83,18 +83,26 @@ describe('CARDIOHELP ECMO learner interface', () => {
   })
 
   it('renders the Learn workbench with section navigation and no Practice scoring', async () => {
-    render(<CardiohelpWorkbench section="learn" />)
+    const { container } = render(<CardiohelpWorkbench section="learn" />)
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /Guided lessons/i })).toBeInTheDocument()
     })
 
-    const nav = screen.getByRole('navigation', { name: /CARDIOHELP module sections/i })
+    const nav = screen.getByRole('navigation', { name: /ECMO Management module sections/i })
     expect(within(nav).getByRole('link', { name: /Learn/i })).toHaveAttribute(
       'aria-current',
       'page',
     )
     expect(within(nav).getByRole('link', { name: /Overview/i })).not.toHaveAttribute('aria-current')
     expect(screen.getByText(/Guided focus: circuit and sensors/i)).toBeInTheDocument()
+    expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
+    const sharedPhases = screen.getByRole('group', { name: 'ECMO shared activity phases' })
+    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
+      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
+    }
+    for (const legacyLabel of ['Orient', 'Interpret', 'Respond', 'Reassess']) {
+      expect(screen.queryByText(legacyLabel, { selector: 'strong' })).not.toBeInTheDocument()
+    }
 
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
@@ -146,6 +154,16 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getByText(/Console locked/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Commit before action' }))
     expect(screen.queryByText(/Console locked/i)).not.toBeInTheDocument()
+    expect(
+      (global.fetch as jest.Mock).mock.calls
+        .map(([, request]) => JSON.parse(request.body as string))
+        .some(
+          (payload) =>
+            payload.moduleId === 'critical-care' &&
+            payload.eventPayload?.interaction === 'critical_care_prediction_submitted' &&
+            payload.eventPayload?.moduleId === 'cardiohelp-ecmo',
+        ),
+    ).toBe(true)
 
     const readinessButton = screen.getByRole('button', {
       name: /Complete VV readiness and tip-to-tip check/i,
@@ -210,6 +228,10 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getAllByText(/Forward VV flow is established/i).length).toBeGreaterThan(0)
 
     const workflow = screen.getByRole('navigation', { name: /Practice workflow steps/i })
+    const sharedPhases = screen.getByRole('group', { name: 'ECMO shared activity phases' })
+    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
+      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
+    }
     expect(within(workflow).getByRole('button', { name: /Reassess/i })).toHaveAttribute(
       'aria-current',
       'step',
@@ -539,8 +561,49 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getByText('Capstone assessment')).toBeInTheDocument()
     expect(screen.queryByLabelText('Case')).not.toBeInTheDocument()
     expect(screen.getByText(/Advance 10 more simulated second/i)).toBeInTheDocument()
-    expect(screen.getByRole('note')).toHaveTextContent(/right-arm oxygenation/i)
+    expect(
+      screen.getByText('Required assessment domains').closest('[role="note"]'),
+    ).toHaveTextContent(/right-arm oxygenation/i)
     expect(screen.getByRole('button', { name: /Commit reassessment/i })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Hide diagnosis cues/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/Challenge mode is locked/i)).toHaveAttribute('role', 'note')
+    expect(screen.queryByText(scenario.objectives[0].label)).not.toBeInTheDocument()
+  })
+
+  it('keeps authored initiation orders available while Assess coaching controls stay hidden', () => {
+    const state = createInitialSimulationState('clinical-vv-initiation-ards')
+    const scenario = clinicalPracticeScenarios.find(
+      (item) => item.id === 'clinical-vv-initiation-ards',
+    )!
+    render(
+      <>
+        <PracticeCasePlayer
+          state={state}
+          scenario={scenario}
+          progress={createDefaultProgress()}
+          outcome={selectScenarioOutcome(state)}
+          dispatch={jest.fn()}
+          onLoadScenario={jest.fn()}
+          onReveal={jest.fn()}
+          section="assess"
+        />
+        <CardiohelpConsole
+          state={state}
+          dispatch={jest.fn()}
+          controlsEnabled={false}
+          initiationTargets={scenario.clinicalCase?.initiationTargets ?? null}
+        />
+      </>,
+    )
+
+    expect(screen.getByText('Simulated case order')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Standard practice' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Give me a clue/i })).not.toBeInTheDocument()
+    for (const objective of scenario.clinicalCase?.learningObjectives ?? []) {
+      expect(screen.queryByText(objective)).not.toBeInTheDocument()
+    }
   })
 
   it('makes the debrief action explicit after a reassessment is submitted', () => {
@@ -578,6 +641,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
       (item) => item.id === state.scenario.scenarioId,
     )!
     const onReveal = jest.fn()
+    const onPhaseChange = jest.fn()
 
     const view = render(
       <PracticeCasePlayer
@@ -588,6 +652,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
         dispatch={jest.fn()}
         onLoadScenario={jest.fn()}
         onReveal={onReveal}
+        onPhaseChange={onPhaseChange}
       />,
     )
 
@@ -617,8 +682,11 @@ describe('CARDIOHELP ECMO learner interface', () => {
         dispatch={jest.fn()}
         onLoadScenario={jest.fn()}
         onReveal={onReveal}
+        onPhaseChange={onPhaseChange}
       />,
     )
+    expect(onPhaseChange).toHaveBeenLastCalledWith('explain')
+    expect(onPhaseChange).not.toHaveBeenCalledWith('transfer')
     expect(screen.getByRole('note', { name: /Reassessment scoring/i })).toHaveTextContent(
       /Reassessment credit not earned.*did not match the expected post-intervention evidence/i,
     )
@@ -643,7 +711,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(screen.getByText(/Sweep-gas path through simplified hollow fibers/i)).toBeInTheDocument()
   })
 
-  it('provides accessible circuit-view switching and independent clamp controls', () => {
+  it('provides accessible circuit-view switching and independent clamp controls', async () => {
     const state = ecmoSimulationReducer(createInitialSimulationState('acute-hypercapnia'), {
       type: 'COMMIT_PREDICTION',
       goalId: 'improve-acidemia',
@@ -662,7 +730,7 @@ describe('CARDIOHELP ECMO learner interface', () => {
     expect(diagnosticTab).toHaveAttribute('aria-selected', 'true')
 
     fireEvent.click(screen.getByRole('tab', { name: 'Bedside 3D circuit' }))
-    fireEvent.click(screen.getByRole('button', { name: /Drainage clamp.*Open/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Drainage clamp.*Open/i }))
     expect(dispatch).toHaveBeenCalledWith({
       type: 'TOGGLE_CIRCUIT_CLAMP',
       limb: 'drainage',

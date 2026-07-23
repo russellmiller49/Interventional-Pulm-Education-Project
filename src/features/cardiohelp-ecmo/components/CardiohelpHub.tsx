@@ -115,11 +115,11 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
     <CardiohelpModuleFrame locale={locale} activeHref={cardiohelpEcmoNavBase}>
       <div data-hydrated={hydrated}>
         <header className={styles.hubHero}>
-          <h1>CARDIOHELP-i Console & Troubleshooting Lab</h1>
+          <h1>ECMO Management</h1>
           <p>
-            A curriculum of paired lessons and clinical cases for adult VV and peripheral VA ECMO on
-            the CARDIOHELP-i: learn each reasoning sequence step by step, apply it to an evolving
-            scored case, then prove it in an unseen capstone.
+            The CARDIOHELP console lab pairs lessons and clinical cases for adult VV and peripheral
+            VA ECMO: learn each reasoning sequence step by step, apply it to an evolving scored
+            case, then prove it in an unseen capstone.
           </p>
           {resume && started ? (
             <Link

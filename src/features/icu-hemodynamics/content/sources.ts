@@ -94,6 +94,20 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     intendedUse: 'Foundational catheter technique, waveform interpretation, and limitations.',
   },
   {
+    id: 'arterial-pressure-five-step-2020',
+    version: '2020.1',
+    title: 'How to measure blood pressure using an arterial catheter',
+    citation:
+      'Saugel B, et al. How to measure blood pressure using an arterial catheter: a systematic 5-step approach. Crit Care. 2020;24:172.',
+    year: 2020,
+    sourceType: 'review',
+    url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7183114/',
+    intendedUse:
+      'Leveling and zeroing, hydrostatic pressure error, waveform-quality assessment, and qualitative fast-flush response patterns.',
+    limitation:
+      'The module uses original schematic traces for qualitative education; they are not copied figures, calibrated device output, or a substitute for current monitor instructions.',
+  },
+  {
     id: 'edwards-swan-ganz-ifu-2023',
     version: 'DOC-0222632A',
     title: 'Swan-Ganz IQ pulmonary artery catheter instructions for use',

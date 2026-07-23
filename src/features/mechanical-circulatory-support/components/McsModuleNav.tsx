@@ -1,11 +1,10 @@
 'use client'
 
-import { Link } from '@/i18n/navigation'
+import { ModuleNavV2 } from '@/features/learning-module/components/ModuleNavV2'
 import { mechanicalCirculatorySupportNavBase } from '@/features/learning-module/moduleRoutes'
+import type { ModuleNavItem } from '@/features/learning-module/types'
 
-import styles from './mechanical-circulatory-support.module.css'
-
-export const mcsModuleNavItems = [
+export const mcsModuleNavItems: readonly ModuleNavItem[] = [
   {
     href: mechanicalCirculatorySupportNavBase,
     title: 'Overview',
@@ -30,24 +29,10 @@ export const mcsModuleNavItems = [
 
 export function McsModuleNav({ activeHref }: { activeHref: string }) {
   return (
-    <nav className={styles.moduleNav} aria-label="Mechanical circulatory support module sections">
-      <ol>
-        {mcsModuleNavItems.map((item, index) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              aria-current={activeHref === item.href ? 'page' : undefined}
-              data-active={activeHref === item.href}
-            >
-              <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-              <span>
-                <strong>{item.title}</strong>
-                <small>{item.description}</small>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ol>
-    </nav>
+    <ModuleNavV2
+      items={mcsModuleNavItems}
+      activeHref={activeHref}
+      ariaLabel="Mechanical circulatory support module sections"
+    />
   )
 }

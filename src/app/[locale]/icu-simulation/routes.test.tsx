@@ -10,6 +10,19 @@ jest.mock('@/features/icu-simulation/components', () => ({
       {locale}
     </div>
   ),
+  IcuCapstoneEntry: ({
+    mode,
+    locale,
+    requestedScenarioId,
+  }: {
+    mode: string
+    locale: string
+    requestedScenarioId?: string
+  }) => (
+    <div data-testid="icu-capstone-entry" data-mode={mode} data-scenario={requestedScenarioId}>
+      {locale}
+    </div>
+  ),
 }))
 
 import IcuSimulationPage from './page'
@@ -32,8 +45,6 @@ describe('ICU Simulator route family', () => {
 
   it.each([
     ['learn', IcuSimulationLearnPage],
-    ['practice', IcuSimulationPracticePage],
-    ['assess', IcuSimulationAssessPage],
     ['sandbox', IcuSimulationSandboxPage],
   ] as const)('mounts the %s lab', async (mode, Page) => {
     render(await Page({ params: Promise.resolve({ locale: 'es' }) }))
@@ -41,5 +52,22 @@ describe('ICU Simulator route family', () => {
     expect(localeMock).toHaveBeenCalledWith('es')
     expect(screen.getByTestId('icu-simulator-lab')).toHaveAttribute('data-mode', mode)
     expect(screen.getByTestId('icu-simulator-lab')).toHaveTextContent('es')
+  })
+
+  it.each([
+    ['practice', IcuSimulationPracticePage],
+    ['assess', IcuSimulationAssessPage],
+  ] as const)('mounts the %s capstone entry and forwards its case query', async (mode, Page) => {
+    render(
+      await Page({
+        params: Promise.resolve({ locale: 'es' }),
+        searchParams: Promise.resolve({ case: ['tamponade', 'ignored'] }),
+      }),
+    )
+
+    expect(localeMock).toHaveBeenCalledWith('es')
+    expect(screen.getByTestId('icu-capstone-entry')).toHaveAttribute('data-mode', mode)
+    expect(screen.getByTestId('icu-capstone-entry')).toHaveAttribute('data-scenario', 'tamponade')
+    expect(screen.getByTestId('icu-capstone-entry')).toHaveTextContent('es')
   })
 })

@@ -17,6 +17,8 @@ import {
   Target,
 } from 'lucide-react'
 
+import type { CriticalCareActivityPhase } from '@/features/learning-module/activity'
+
 import { cardiohelpLearnLessons, cardiohelpLearnLessonByScenarioId } from '../content/learnLessons'
 import {
   cardiohelpCurriculum,
@@ -47,6 +49,7 @@ interface LearnLessonPlayerProps {
   onTryPractice: (scenarioId: string) => void
   onTargetChange: (target: GuidedTarget) => void
   onControlHelpChange: (controlId: GuidedControlId | null) => void
+  onPhaseChange?: (phase: CriticalCareActivityPhase) => void
 }
 
 const targetLabels: Record<GuidedTarget, string> = {
@@ -58,13 +61,25 @@ const targetLabels: Record<GuidedTarget, string> = {
 }
 
 const phaseLabels = {
-  orient: 'Orient',
-  observe: 'Observe',
-  interpret: 'Interpret',
-  respond: 'Respond',
-  reassess: 'Reassess',
-  transfer: 'Transfer',
+  orient: 'Recognize',
+  observe: 'Recognize',
+  interpret: 'Predict',
+  respond: 'Act',
+  reassess: 'Observe',
+  transfer: 'Explain',
 } as const
+
+function semanticPhaseForGuidedStep(
+  phase: GuidedWalkthroughStep['phase'],
+  lessonFinished: boolean,
+): CriticalCareActivityPhase {
+  if (lessonFinished) return 'transfer'
+  if (phase === 'orient' || phase === 'observe') return 'recognize'
+  if (phase === 'interpret') return 'predict'
+  if (phase === 'respond') return 'act'
+  if (phase === 'reassess') return 'observe'
+  return 'explain'
+}
 
 const panelControlIds: Record<GuidedTarget, GuidedControlId> = {
   console: 'cardiohelp-console',
@@ -281,6 +296,7 @@ export function LearnLessonPlayer({
   onTryPractice,
   onTargetChange,
   onControlHelpChange,
+  onPhaseChange,
 }: LearnLessonPlayerProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
@@ -351,6 +367,10 @@ export function LearnLessonPlayer({
     onControlHelpChange(null)
     window.requestAnimationFrame(() => activePanelRef.current?.focus({ preventScroll: true }))
   }, [activeStep.id, activeStep.target, onControlHelpChange, onTargetChange])
+
+  useEffect(() => {
+    onPhaseChange?.(semanticPhaseForGuidedStep(activeStep.phase, lessonFinished))
+  }, [activeStep.phase, lessonFinished, onPhaseChange])
 
   useEffect(
     () => () => {

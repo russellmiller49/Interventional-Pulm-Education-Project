@@ -16,6 +16,7 @@ import styles from './icu-hemodynamics.module.css'
 interface PacActionDockProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
+  focus?: 'advancement' | 'wedge'
 }
 
 const positions = ['introducer', 'ra', 'rv', 'pa', 'wedge'] as const
@@ -27,7 +28,7 @@ const positionLabels: Record<(typeof positions)[number], string> = {
   wedge: 'PAWP',
 }
 
-export function PacActionDock({ state, dispatch }: PacActionDockProps) {
+export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
   const { catheter } = state
   const reducedMotion = useReducedMotionPreference()
   const moving = catheter.targetPosition !== null
@@ -66,91 +67,95 @@ export function PacActionDock({ state, dispatch }: PacActionDockProps) {
       </header>
 
       <div className={styles.pacDockBody}>
-        <fieldset className={styles.pacDockFieldset}>
-          <legend>Catheter advancement</legend>
-          <ol className={styles.pacDockPositionTrack} aria-label="PAC position sequence">
-            {positions.map((position) => (
-              <li
-                key={position}
-                aria-label={PAC_POSITION_ANATOMY[position].shortLabel}
-                aria-current={catheter.position === position ? 'step' : undefined}
-                data-target={catheter.targetPosition === position || undefined}
+        {focus !== 'wedge' ? (
+          <fieldset className={styles.pacDockFieldset}>
+            <legend>Catheter advancement</legend>
+            <ol className={styles.pacDockPositionTrack} aria-label="PAC position sequence">
+              {positions.map((position) => (
+                <li
+                  key={position}
+                  aria-label={PAC_POSITION_ANATOMY[position].shortLabel}
+                  aria-current={catheter.position === position ? 'step' : undefined}
+                  data-target={catheter.targetPosition === position || undefined}
+                >
+                  {positionLabels[position]}
+                </li>
+              ))}
+            </ol>
+            <p className={styles.pacDockCue}>{anatomy.waveform}</p>
+            <div className={styles.pacDockActionGrid}>
+              <button
+                type="button"
+                disabled={moving || catheter.position === 'introducer' || catheter.balloonInflated}
+                onClick={() => dispatch({ type: 'RETRACT_CATHETER', instant: reducedMotion })}
               >
-                {positionLabels[position]}
-              </li>
-            ))}
-          </ol>
-          <p className={styles.pacDockCue}>{anatomy.waveform}</p>
-          <div className={styles.pacDockActionGrid}>
-            <button
-              type="button"
-              disabled={moving || catheter.position === 'introducer' || catheter.balloonInflated}
-              onClick={() => dispatch({ type: 'RETRACT_CATHETER', instant: reducedMotion })}
-            >
-              Retract
-            </button>
-            <button
-              type="button"
-              disabled={moving || catheter.position === 'pa' || catheter.position === 'wedge'}
-              onClick={() => dispatch({ type: 'ADVANCE_CATHETER', instant: reducedMotion })}
-            >
-              Advance
-            </button>
-          </div>
-        </fieldset>
-
-        <fieldset className={styles.pacDockFieldset}>
-          <legend>Brief end-expiratory PAWP capture</legend>
-          <div
-            className={styles.pacDockWedgeTimer}
-            data-danger={wedgeElapsed >= WEDGE_AUTO_DEFLATION_SECONDS - 2}
-          >
-            <span aria-live="off" aria-label="Balloon inflation elapsed time">
-              {Math.min(WEDGE_AUTO_DEFLATION_SECONDS, wedgeElapsed).toFixed(1)} s
-            </span>
-            <div aria-hidden="true">
-              <i
-                style={{
-                  width: `${Math.min(100, (wedgeElapsed / WEDGE_AUTO_DEFLATION_SECONDS) * 100)}%`,
-                }}
-              />
+                Retract
+              </button>
+              <button
+                type="button"
+                disabled={moving || catheter.position === 'pa' || catheter.position === 'wedge'}
+                onClick={() => dispatch({ type: 'ADVANCE_CATHETER', instant: reducedMotion })}
+              >
+                Advance
+              </button>
             </div>
-            <span role="status" aria-live="polite" aria-atomic="true">
-              {wedgeStatus}
-            </span>
-          </div>
-          <div className={styles.pacDockActionGrid}>
-            <button
-              type="button"
-              disabled={moving || catheter.position !== 'pa'}
-              onClick={() => dispatch({ type: 'START_WEDGE' })}
+          </fieldset>
+        ) : null}
+
+        {focus !== 'advancement' ? (
+          <fieldset className={styles.pacDockFieldset}>
+            <legend>Brief end-expiratory PAWP capture</legend>
+            <div
+              className={styles.pacDockWedgeTimer}
+              data-danger={wedgeElapsed >= WEDGE_AUTO_DEFLATION_SECONDS - 2}
             >
-              Inflate briefly
-            </button>
-            <button
-              type="button"
-              disabled={!catheter.wedgeCaptureReady || catheter.wedgeCursorTime !== null}
-              onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR' })}
-            >
-              End-exp cursor
-            </button>
-            <button
-              type="button"
-              disabled={catheter.wedgeCursorTime === null || catheter.storedWedgeMmHg !== null}
-              onClick={() => dispatch({ type: 'STORE_WEDGE' })}
-            >
-              Store PAWP
-            </button>
-            <button
-              type="button"
-              data-safety-action={catheter.balloonInflated || undefined}
-              disabled={!catheter.balloonInflated}
-              onClick={() => dispatch({ type: 'DEFLATE_WEDGE' })}
-            >
-              Deflate now
-            </button>
-          </div>
-        </fieldset>
+              <span aria-live="off" aria-label="Balloon inflation elapsed time">
+                {Math.min(WEDGE_AUTO_DEFLATION_SECONDS, wedgeElapsed).toFixed(1)} s
+              </span>
+              <div aria-hidden="true">
+                <i
+                  style={{
+                    width: `${Math.min(100, (wedgeElapsed / WEDGE_AUTO_DEFLATION_SECONDS) * 100)}%`,
+                  }}
+                />
+              </div>
+              <span role="status" aria-live="polite" aria-atomic="true">
+                {wedgeStatus}
+              </span>
+            </div>
+            <div className={styles.pacDockActionGrid}>
+              <button
+                type="button"
+                disabled={moving || catheter.position !== 'pa'}
+                onClick={() => dispatch({ type: 'START_WEDGE' })}
+              >
+                Inflate briefly
+              </button>
+              <button
+                type="button"
+                disabled={!catheter.wedgeCaptureReady || catheter.wedgeCursorTime !== null}
+                onClick={() => dispatch({ type: 'PLACE_WEDGE_CURSOR' })}
+              >
+                End-exp cursor
+              </button>
+              <button
+                type="button"
+                disabled={catheter.wedgeCursorTime === null || catheter.storedWedgeMmHg !== null}
+                onClick={() => dispatch({ type: 'STORE_WEDGE' })}
+              >
+                Store PAWP
+              </button>
+              <button
+                type="button"
+                data-safety-action={catheter.balloonInflated || undefined}
+                disabled={!catheter.balloonInflated}
+                onClick={() => dispatch({ type: 'DEFLATE_WEDGE' })}
+              >
+                Deflate now
+              </button>
+            </div>
+          </fieldset>
+        ) : null}
       </div>
 
       <p className={styles.pacDockBoundaryNote}>

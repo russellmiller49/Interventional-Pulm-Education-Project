@@ -1,6 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { AnchorHTMLAttributes, ReactNode } from 'react'
 
+import { getCriticalCareResumeTarget } from '@/features/critical-care/progress'
+import { mcsCapstoneScenarios, mcsSources } from '../content'
+
+const mockRouterPush = jest.fn()
+
 jest.mock('@/i18n/navigation', () => ({
   Link: ({
     href,
@@ -11,6 +16,7 @@ jest.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
+  useRouter: () => ({ push: mockRouterPush }),
 }))
 jest.mock('../components/McsAnatomy3D', () => ({
   McsAnatomy3D: ({ revealCausality }: { revealCausality: boolean }) => (
@@ -33,6 +39,7 @@ const progressKey = 'interventionalpulm:mcs-progress:v1'
 
 describe('Mechanical Circulatory Support learner interface', () => {
   beforeEach(() => {
+    mockRouterPush.mockReset()
     window.localStorage.clear()
     window.history.replaceState(null, '', '/mechanical-circulatory-support/practice')
     Object.defineProperty(global, 'fetch', {
@@ -90,6 +97,45 @@ describe('Mechanical Circulatory Support learner interface', () => {
       )
     },
   )
+
+  it('opens an exact practice deep link and exposes it through global Continue', async () => {
+    const { container } = render(<McsWorkbench section="practice" initialActivityId="IMP-02" />)
+
+    expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
+    const sharedPhases = screen.getByRole('group', { name: 'MCS shared activity phases' })
+    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
+      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
+    }
+    expect(screen.getByRole('button', { name: /Impella CP \/ 5\.5 \/ RP/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: /Placement signal/i })).toHaveAttribute(
+      'aria-current',
+      'true',
+    )
+    await waitFor(() =>
+      expect(getCriticalCareResumeTarget(window.localStorage)?.href).toBe(
+        '/mechanical-circulatory-support/practice?case=IMP-02',
+      ),
+    )
+  })
+
+  it('selects an exact assessment track without bypassing its prerequisite gate', async () => {
+    render(<McsWorkbench section="assess" initialActivityId="CAP-IMP-01" />)
+
+    expect(screen.getByRole('button', { name: /Impella CP \/ 5\.5 \/ RP/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByText('Impella capstone assessment')).toBeInTheDocument()
+    expect(screen.queryByText('CAP-IMP-01')).not.toBeInTheDocument()
+    expect(screen.queryByText(/effective-flow capstone/i)).not.toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Start capstone/i })).toBeDisabled(),
+    )
+    expect(getCriticalCareResumeTarget(window.localStorage)).toBeNull()
+  })
 
   it('renders the safety boundary, synchronized accessible traces, and required hemodynamics', () => {
     render(<McsWorkbench section="practice" />)
@@ -152,6 +198,48 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(screen.getByRole('slider', { name: /Deflation vs systole/i })).toBeEnabled()
     expect(screen.getByRole('slider', { name: /Preload/i })).toBeDisabled()
     expect(screen.getByText(/Prediction locked. Adjust the model/i)).toBeInTheDocument()
+    const lifecyclePayloads = (global.fetch as jest.Mock).mock.calls.map(([, request]) =>
+      JSON.parse(request.body as string),
+    )
+    expect(lifecyclePayloads).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          moduleId: 'critical-care',
+          eventPayload: expect.objectContaining({
+            interaction: 'critical_care_prediction_submitted',
+            moduleId: 'mechanical-circulatory-support',
+          }),
+        }),
+      ]),
+    )
+  })
+
+  it('keeps a revealed case debrief at Explain without emitting transfer completion', async () => {
+    render(<McsWorkbench section="practice" />)
+    fireEvent.click(screen.getByRole('button', { name: /Late deflation/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Arterial waveform/i }))
+    fireEvent.click(
+      screen.getByRole('radio', { name: /Late deflation raises effective LV afterload/i }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Commit prediction/i }))
+    fireEvent.change(screen.getByRole('slider', { name: /Deflation vs systole/i }), {
+      target: { value: '0' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Reassess response' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Open debrief & score' }))
+
+    expect(await screen.findByRole('heading', { name: /Causal debrief/i })).toBeInTheDocument()
+    const phases = screen.getByRole('group', { name: 'MCS shared activity phases' })
+    expect(within(phases).getByText('Explain').closest('li')).toHaveAttribute(
+      'aria-current',
+      'step',
+    )
+    expect(within(phases).getByText('Transfer').closest('li')).not.toHaveAttribute('aria-current')
+
+    const lifecycleInteractions = (global.fetch as jest.Mock).mock.calls
+      .map(([, request]) => JSON.parse(request.body as string))
+      .map((payload) => payload.eventPayload?.interaction)
+    expect(lifecycleInteractions).not.toContain('critical_care_transfer_completed')
   })
 
   it('persists lesson completion locally and exposes all eight lessons', async () => {
@@ -202,9 +290,28 @@ describe('Mechanical Circulatory Support learner interface', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /Start capstone/i })).toBeEnabled(),
     )
+    const capstone = mcsCapstoneScenarios.find((item) => item.device === 'iabp')!
+    expect(screen.queryByText(capstone.id)).not.toBeInTheDocument()
+    expect(screen.queryByText(capstone.title)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Start capstone/i }))
     expect(screen.getByText(/coaching withheld/i)).toBeInTheDocument()
     expect(screen.getByText(/Causal coaching is withheld/i)).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { name: 'Masked MCS capstone' })).not.toHaveLength(0)
+    expect(screen.queryByText(capstone.id)).not.toBeInTheDocument()
+    expect(screen.queryByText(capstone.title)).not.toBeInTheDocument()
+    for (const objective of capstone.learningObjectives) {
+      expect(screen.queryByText(objective)).not.toBeInTheDocument()
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: 'Evidence' }))
+    const evidenceDrawer = await screen.findByRole('dialog')
+    expect(within(evidenceDrawer).getByText('Assessment evidence boundary')).toBeInTheDocument()
+    const caseOnlySource = mcsSources.find((source) =>
+      capstone.evidenceSourceIds.includes(source.id),
+    )
+    if (caseOnlySource) {
+      expect(within(evidenceDrawer).queryByText(caseOnlySource.title)).not.toBeInTheDocument()
+    }
   })
 
   it('sends only the allowlisted aggregate analytics payload', async () => {

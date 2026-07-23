@@ -72,6 +72,10 @@ describe('Baxter CRRT case player', () => {
     expect(within(ribbon).getByText('Select + Predict')).toBeInTheDocument()
     expect(within(ribbon).getByText('Act + Observe')).toBeInTheDocument()
     expect(within(ribbon).getByText('Reassess + Reflect')).toBeInTheDocument()
+    const sharedPhases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
+    for (const label of ['Recognize', 'Predict', 'Act', 'Observe', 'Explain', 'Transfer']) {
+      expect(within(sharedPhases).getByText(label)).toBeInTheDocument()
+    }
 
     const roles = screen.getByRole('group', { name: 'View case through role lens' })
     expect(within(roles).getByRole('button', { name: 'Integrated' })).toHaveAttribute(

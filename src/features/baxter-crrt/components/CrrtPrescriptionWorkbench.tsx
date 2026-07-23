@@ -321,6 +321,10 @@ export interface QualitativePrePostDilutionExperimentProps {
   readonly result: QualitativePrePostDilutionResult | null
 }
 
+export interface CrrtPrescriptionWorkbenchProps {
+  readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe') => void
+}
+
 export function QualitativePrePostDilutionExperiment({
   result,
 }: QualitativePrePostDilutionExperimentProps) {
@@ -425,7 +429,7 @@ export function QualitativePrePostDilutionExperiment({
   )
 }
 
-export function CrrtPrescriptionWorkbench() {
+export function CrrtPrescriptionWorkbench({ onPhaseChange }: CrrtPrescriptionWorkbenchProps = {}) {
   const idPrefix = useId()
   const [numericInputs, setNumericInputs] = useState(INITIAL_NUMERIC_INPUTS)
   const [syntheticBagStream, setSyntheticBagStream] = useState<SyntheticBagStream>('dialysate')
@@ -466,6 +470,8 @@ export function CrrtPrescriptionWorkbench() {
       data-persistence="learner-mode-only"
       data-scoring="tool-specific"
       data-competency="none"
+      onFocusCapture={() => onPhaseChange?.('predict')}
+      onChangeCapture={() => onPhaseChange?.('act')}
     >
       <header className={styles.header}>
         <div>
@@ -694,7 +700,12 @@ export function CrrtPrescriptionWorkbench() {
         </div>
 
         <div className={styles.outputColumn}>
-          <section className={styles.outputPanel} aria-labelledby={`${idPrefix}-outputs`}>
+          <section
+            className={styles.outputPanel}
+            aria-labelledby={`${idPrefix}-outputs`}
+            tabIndex={0}
+            onFocus={() => onPhaseChange?.('observe')}
+          >
             <header>
               <span>Manufacturer-manual calculations</span>
               <h3 id={`${idPrefix}-outputs`}>Educational calculation outputs</h3>

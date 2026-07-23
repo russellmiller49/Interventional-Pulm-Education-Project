@@ -14,7 +14,7 @@ const pageMetadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>
-  searchParams?: Promise<{ device?: string | string[] }>
+  searchParams?: Promise<{ device?: string | string[]; lesson?: string | string[] }>
 }
 
 function requestedDevice(value: string | string[] | undefined): McsDeviceKind | undefined {
@@ -32,13 +32,15 @@ export default async function MechanicalCirculatorySupportLearnPage({
   const { locale } = await params
   const query = searchParams ? await searchParams : undefined
   const initialDevice = requestedDevice(query?.device)
+  const initialActivityId = typeof query?.lesson === 'string' ? query.lesson : undefined
   setRequestLocale(locale)
   return (
     <McsWorkbench
-      key={initialDevice ?? 'overview'}
+      key={initialActivityId ?? initialDevice ?? 'overview'}
       section="learn"
       locale={locale}
       initialDevice={initialDevice}
+      initialActivityId={initialActivityId}
     />
   )
 }

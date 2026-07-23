@@ -5,7 +5,7 @@ import { CardiohelpWorkbench } from '@/features/cardiohelp-ecmo/components/Cardi
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Learn · CARDIOHELP-i Adult VV & VA ECMO Lab',
+  title: 'Learn · ECMO Management · CARDIOHELP console lab',
   description:
     'Guided, unscored CARDIOHELP-i lessons: step-by-step console, circuit, gas, and patient reasoning for adult VV and peripheral VA ECMO.',
   robots: {

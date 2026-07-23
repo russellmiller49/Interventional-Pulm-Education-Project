@@ -1,5 +1,6 @@
 export * from './deviceProfiles'
 export * from './evidence'
+export * from './lessons'
 export * from './provenance'
 export * from './runtimeCases'
 export * from './schema'

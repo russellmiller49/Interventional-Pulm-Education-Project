@@ -5,7 +5,7 @@ import { BaxterCrrtAssess } from '@/features/baxter-crrt/components/BaxterCrrtAs
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Assess · Baxter CRRT',
+  title: 'Assess · CRRT · PrisMax console lab',
   description:
     'A masked, unassisted PrisMax CRRT capstone unlocked after completion of the ten-case core path.',
   robots: { index: false, follow: false, noarchive: true },

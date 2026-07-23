@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { setRequestLocale } from 'next-intl/server'
 
+import { criticalCareActivities } from '@/features/critical-care/content/activities'
+
 jest.mock('@/features/mechanical-circulatory-support/components/McsHub', () => ({
   McsHub: ({ locale }: { locale: string }) => <div data-testid="mcs-hub">{locale}</div>,
 }))
@@ -9,12 +11,19 @@ jest.mock('@/features/mechanical-circulatory-support/components/McsWorkbench', (
     section,
     locale,
     initialDevice,
+    initialActivityId,
   }: {
     section: string
     locale: string
     initialDevice?: string
+    initialActivityId?: string
   }) => (
-    <div data-testid="mcs-workbench" data-section={section} data-device={initialDevice}>
+    <div
+      data-testid="mcs-workbench"
+      data-section={section}
+      data-device={initialDevice}
+      data-activity={initialActivityId}
+    >
       {locale}
     </div>
   ),
@@ -83,5 +92,38 @@ describe('mechanical circulatory support route family', () => {
       }),
     )
     expect(screen.getByTestId('mcs-workbench')).not.toHaveAttribute('data-device')
+  })
+
+  it('maps every MCS catalog query to its exact Learn, Practice, or Assess selection', async () => {
+    const activities = criticalCareActivities.filter(
+      (activity) => activity.moduleId === 'mechanical-circulatory-support',
+    )
+
+    for (const activity of activities) {
+      const section = activity.id.split(':')[1]
+      const Page =
+        section === 'learn' ? LearnPage : section === 'practice' ? PracticePage : AssessPage
+      const result = render(
+        await Page({
+          params: Promise.resolve({ locale: 'en' }),
+          searchParams: Promise.resolve(activity.query ?? {}),
+        }),
+      )
+      expect(screen.getByTestId('mcs-workbench')).toHaveAttribute(
+        'data-activity',
+        activity.id.split(':').slice(2).join(':'),
+      )
+      result.unmount()
+    }
+  })
+
+  it('ignores array-valued activity queries instead of guessing a target', async () => {
+    render(
+      await PracticePage({
+        params: Promise.resolve({ locale: 'en' }),
+        searchParams: Promise.resolve({ case: ['IABP-01', 'IMP-01'] }),
+      }),
+    )
+    expect(screen.getByTestId('mcs-workbench')).not.toHaveAttribute('data-activity')
   })
 })

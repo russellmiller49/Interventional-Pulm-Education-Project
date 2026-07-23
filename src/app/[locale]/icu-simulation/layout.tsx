@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
+import { CriticalCareRestrictedAccountSync } from '@/features/critical-care/components/CriticalCareRestrictedAccountSync'
 import { ICU_SIMULATION_RELEASE_STAGE } from '@/features/icu-simulation/content'
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 import { assertDraftModulesEnabled } from '@/lib/draft-module-guard'
@@ -33,5 +34,10 @@ export default async function IcuSimulationLayout({ children }: LayoutProps) {
     await assertDraftModulesEnabled()
   }
 
-  return children
+  return (
+    <>
+      {children}
+      <CriticalCareRestrictedAccountSync />
+    </>
+  )
 }

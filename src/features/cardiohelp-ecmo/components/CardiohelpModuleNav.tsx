@@ -1,14 +1,9 @@
 'use client'
 
-import { Link } from '@/i18n/navigation'
-import type { ModuleNavItem } from '@/features/learning-module/types'
+import { ModuleNavV2 } from '@/features/learning-module/components/ModuleNavV2'
 import { cardiohelpEcmoNavBase } from '@/features/learning-module/moduleRoutes'
+import type { ModuleNavItem } from '@/features/learning-module/types'
 
-import styles from './cardiohelp-ecmo.module.css'
-
-// Same IA contract as the shared learning-module ModuleNav, restyled with the
-// module's own dark design system (the Tailwind spine nav would render as a
-// light strip inside .moduleShell).
 export const cardiohelpModuleNavItems: readonly ModuleNavItem[] = [
   {
     href: cardiohelpEcmoNavBase,
@@ -38,27 +33,10 @@ interface CardiohelpModuleNavProps {
 
 export function CardiohelpModuleNav({ activeHref }: CardiohelpModuleNavProps) {
   return (
-    <nav className={styles.moduleNav} aria-label="CARDIOHELP module sections">
-      <ol>
-        {cardiohelpModuleNavItems.map((item, index) => {
-          const isActive = item.href === activeHref
-          return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                data-active={isActive}
-              >
-                <span aria-hidden="true">{index + 1}</span>
-                <span>
-                  <strong>{item.title}</strong>
-                  <small>{item.description}</small>
-                </span>
-              </Link>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
+    <ModuleNavV2
+      items={cardiohelpModuleNavItems}
+      activeHref={activeHref}
+      ariaLabel="ECMO Management module sections"
+    />
   )
 }

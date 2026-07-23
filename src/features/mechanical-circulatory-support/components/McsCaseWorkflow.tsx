@@ -47,14 +47,17 @@ export function McsCaseWorkflow({
 
   const currentPhaseIndex = phases.indexOf(state.scenarioPhase)
   const mastery = state.completed && hasMcsMastery(state)
+  const assessmentMasked = state.section === 'assess' && !state.completed
   return (
     <section className={styles.workflowCard} aria-labelledby="case-workflow-heading">
       <header>
         <div>
           <span className={styles.kicker}>
-            {state.section.toUpperCase()} · {scenario.id}
+            {state.section.toUpperCase()} · {assessmentMasked ? 'MASKED CAPSTONE' : scenario.id}
           </span>
-          <h2 id="case-workflow-heading">{scenario.title}</h2>
+          <h2 id="case-workflow-heading">
+            {assessmentMasked ? 'Masked MCS capstone' : scenario.title}
+          </h2>
         </div>
         <button
           type="button"

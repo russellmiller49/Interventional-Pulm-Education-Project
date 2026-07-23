@@ -8,7 +8,7 @@ import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 const isPublic = baxterCrrtIsPublic(baxterCrrtReleaseStage)
 
 const handoffMetadata: Metadata = {
-  title: 'Baxter CRRT Learn, Practice & Assess',
+  title: 'CRRT · PrisMax console lab',
   description:
     'A high-yield PrisMax CRRT curriculum with seven lessons, a ten-case core path, five safety drills, two concept labs, and a masked capstone.',
   robots: {

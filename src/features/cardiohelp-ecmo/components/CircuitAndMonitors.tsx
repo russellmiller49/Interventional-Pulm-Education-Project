@@ -21,6 +21,7 @@ import type {
   TrendParameter,
 } from '../engine'
 import { TIP_TO_TIP_CHECK_ID } from '../content/scenarios'
+import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import styles from './cardiohelp-ecmo.module.css'
 import { EcmoCircuit3D } from './EcmoCircuit3D'
 
@@ -31,6 +32,7 @@ interface SimulationPanelProps {
   guidedTarget?: GuidedTarget | null
   guidedControlId?: GuidedControlId | null
   initiationTargets?: ClinicalInitiationTargets | null
+  onSaveForLater?: () => void
 }
 
 function CircuitSchematic({
@@ -39,6 +41,7 @@ function CircuitSchematic({
   controlsEnabled,
   guidedTarget,
   guidedControlId,
+  onSaveForLater,
 }: SimulationPanelProps) {
   const diagramScrollRef = useRef<HTMLDivElement>(null)
   const [circuitView, setCircuitView] = useState<'bedside' | 'diagnostic'>('bedside')
@@ -152,12 +155,22 @@ function CircuitSchematic({
         aria-labelledby="cardiohelp-bedside-view-tab"
         hidden={circuitView !== 'bedside'}
       >
-        <EcmoCircuit3D
-          state={state}
-          dispatch={dispatch}
-          controlsEnabled={controlsEnabled}
-          guidedControlId={guidedControlId}
-        />
+        <SimulationLaunchGate
+          activityTitle="CARDIOHELP bedside circuit model"
+          minimumViewport="desktop"
+          bandwidthClass="heavy"
+          estimatedSizeLabel="Interactive ECMO circuit model"
+          lightweightAlternativeHref="/critical-care/reference?item=ecmo-circuit-text-summary"
+          onSaveForLater={onSaveForLater}
+          theme="dark"
+        >
+          <EcmoCircuit3D
+            state={state}
+            dispatch={dispatch}
+            controlsEnabled={controlsEnabled}
+            guidedControlId={guidedControlId}
+          />
+        </SimulationLaunchGate>
       </div>
 
       <div

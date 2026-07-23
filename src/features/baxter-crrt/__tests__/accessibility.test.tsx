@@ -57,7 +57,7 @@ describe('Baxter CRRT accessibility contract', () => {
   it('exposes four clear module destinations with the active page identified', () => {
     render(<BaxterCrrtModuleNav activeHref="/baxter-crrt/learn" />)
 
-    const nav = screen.getByRole('navigation', { name: 'Baxter CRRT module sections' })
+    const nav = screen.getByRole('navigation', { name: 'CRRT module sections' })
     const links = within(nav).getAllByRole('link')
     expect(links).toHaveLength(4)
     expect(links.map((link) => link.textContent)).toEqual(

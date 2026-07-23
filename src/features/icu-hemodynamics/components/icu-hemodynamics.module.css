@@ -1183,6 +1183,21 @@
   margin-top: 1rem;
 }
 
+.skillsLab {
+  --ink: #15323a;
+  --muted: #62767b;
+  --line: #d9e4e3;
+  --paper: #f6f8f5;
+  --navy: #092934;
+  --navy-2: #0e3b46;
+  --teal: #147d7b;
+  --teal-soft: #e4f3f0;
+  --amber: #b9781d;
+  --amber-soft: #fff4db;
+  --red: #b64152;
+  color: var(--ink);
+}
+
 .skillSequence {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -1227,6 +1242,477 @@
 
 .pressureSystemCard {
   grid-column: 1 / -1;
+}
+
+.pressureSystemTeaching {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.levelingTeachingCard,
+.fastFlushTeachingCard {
+  padding: 0.85rem;
+  border: 1px solid #cfe0dc;
+  border-radius: 0.8rem;
+  background: #f4f9f7;
+}
+
+.levelingTeachingCard > header,
+.fastFlushTeachingCard > header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.levelingTeachingCard > header span,
+.fastFlushTeachingCard > header span,
+.dynamicResponseAtlas > header span {
+  color: #367870;
+  font-size: 0.61rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.levelingTeachingCard h4,
+.fastFlushTeachingCard h4,
+.dynamicResponseAtlas h5 {
+  margin: 0.16rem 0 0;
+  color: var(--navy);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.levelingTeachingCard > header > strong {
+  flex: 0 0 auto;
+  padding: 0.38rem 0.5rem;
+  border: 1px solid #9fcfc4;
+  border-radius: 999px;
+  color: #17655d;
+  background: #e1f4ee;
+  font-size: 0.72rem;
+}
+
+.levelingTeachingCard > header > strong[data-offset='high'] {
+  border-color: #d9ab64;
+  color: #7a4a08;
+  background: #fff2d8;
+}
+
+.levelingTeachingCard > header > strong[data-offset='low'] {
+  border-color: #9ebbdc;
+  color: #275784;
+  background: #e8f1fb;
+}
+
+.levelingVisualGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 0.75rem;
+  align-items: stretch;
+  margin-top: 0.7rem;
+}
+
+.levelingPatientDiagram,
+.levelingPressureComparison {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d6e4e1;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.levelingPatientDiagram {
+  display: block;
+  min-height: 155px;
+}
+
+.levelingBed {
+  fill: #cad8d5;
+}
+
+.levelingPatient {
+  fill: #dbe9e6;
+  stroke: #789691;
+  stroke-width: 2;
+}
+
+.levelingAxis {
+  stroke: #168f83;
+  stroke-width: 2;
+  stroke-dasharray: 7 5;
+}
+
+.levelingAxisPoint {
+  fill: #168f83;
+  stroke: #fff;
+  stroke-width: 3;
+}
+
+.levelingAxisLabel,
+.levelingDeltaLabel,
+.transducerLabel {
+  fill: #2d5e5b;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.levelingMeasure {
+  stroke: #c9821f;
+  stroke-width: 3;
+}
+
+.levelingMeasureCap {
+  stroke: #c9821f;
+  stroke-width: 2;
+}
+
+.transducerBody {
+  fill: #e4f5f0;
+  stroke: #188d82;
+  stroke-width: 2;
+}
+
+.transducerPort {
+  fill: #188d82;
+}
+
+.transducerLabel {
+  font-size: 9px;
+}
+
+.levelingDeltaLabel {
+  fill: #8b570f;
+  text-anchor: end;
+}
+
+.levelingPressureComparison {
+  display: grid;
+  align-content: start;
+  padding: 0.65rem;
+}
+
+.levelingPressureComparison > svg {
+  display: block;
+  width: 100%;
+  min-height: 82px;
+  overflow: visible;
+}
+
+.levelingLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 0.25rem;
+  color: #506c6d;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.levelingLegend span {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.levelingLegend span::before {
+  width: 1.5rem;
+  border-top: 2px solid #168f83;
+  content: '';
+}
+
+.levelingLegend span[data-line='reference']::before {
+  border-top-color: #758986;
+  border-top-style: dashed;
+}
+
+.pressureGrid {
+  fill: none;
+  stroke: #dce8e5;
+  stroke-width: 1;
+}
+
+.levelingReferenceTrace,
+.levelingCurrentTrace {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.levelingReferenceTrace {
+  stroke: #758986;
+  stroke-width: 1.8;
+  stroke-dasharray: 6 4;
+}
+
+.levelingCurrentTrace {
+  stroke: #168f83;
+  stroke-width: 2.4;
+}
+
+.levelingPressureComparison dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.3rem 0 0;
+}
+
+.levelingPressureComparison dl > div {
+  padding: 0.45rem;
+  border-radius: 0.45rem;
+  background: #eef5f3;
+}
+
+.levelingPressureComparison dt {
+  color: #607878;
+  font-size: 0.56rem;
+  line-height: 1.3;
+}
+
+.levelingPressureComparison dd {
+  margin: 0.16rem 0 0;
+  color: #143f3d;
+  font-size: 0.68rem;
+  font-weight: 850;
+  line-height: 1.25;
+  text-transform: capitalize;
+}
+
+.levelingBoundary,
+.pressureVisualBoundary {
+  margin: 0.65rem 0 0;
+  color: #5f7374;
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.fastFlushTeachingCard > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8.5rem, 0.38fr);
+}
+
+.fastFlushTeachingCard > header p {
+  margin: 0.24rem 0 0;
+  color: #5f7475;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.fastFlushTeachingCard > header label {
+  margin: 0;
+}
+
+.fastFlushTeachingCard select {
+  margin-top: 0.3rem;
+}
+
+.fastFlushButton,
+.checkResponseButton {
+  width: 100%;
+  min-height: 2.55rem;
+  margin-top: 0.7rem;
+  border: 1px solid #158b80;
+  border-radius: 0.55rem;
+  color: #fff;
+  background: #147f76;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 820;
+}
+
+.checkResponseButton {
+  color: #145f5d;
+  background: #e5f5f0;
+}
+
+.checkResponseButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.fastFlushPlaceholder {
+  display: grid;
+  min-height: 7rem;
+  margin-top: 0.7rem;
+  place-items: center;
+  border: 1px dashed #b9cfca;
+  border-radius: 0.65rem;
+  color: #6a8080;
+  background: #fff;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.fastFlushTrace {
+  margin: 0.7rem 0 0;
+  overflow: hidden;
+  border: 1px solid #cfdedb;
+  border-radius: 0.65rem;
+  background: #092323;
+}
+
+.fastFlushTrace figcaption {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.45rem 0.55rem;
+  color: #d9f6f0;
+  background: #103332;
+  font-size: 0.61rem;
+}
+
+.fastFlushTrace figcaption span {
+  color: #9fc5be;
+  text-align: right;
+}
+
+.fastFlushTrace svg {
+  display: block;
+  width: 100%;
+  min-height: 108px;
+}
+
+.fastFlushTrace text {
+  fill: #82aaa3;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fastFlushTrace .pressureGrid {
+  stroke: rgba(137, 199, 188, 0.13);
+}
+
+.flushTrace {
+  fill: none;
+  stroke: #63e6cf;
+  stroke-width: 2.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.flushMarker {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.dynamicResponsePrediction {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0;
+  margin: 0.7rem 0 0;
+  border: 0;
+}
+
+.dynamicResponsePrediction legend {
+  grid-column: 1 / -1;
+  margin-bottom: 0.25rem;
+  color: #355c59;
+  font-size: 0.7rem;
+  font-weight: 820;
+}
+
+.dynamicResponsePrediction label {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  min-height: 4.6rem;
+  padding: 0.55rem;
+  margin: 0;
+  border: 1px solid #cddedb;
+  border-radius: 0.55rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.dynamicResponsePrediction label:has(input:checked) {
+  border-color: #168f83;
+  box-shadow: 0 0 0 2px rgba(22, 143, 131, 0.14);
+}
+
+.dynamicResponsePrediction input {
+  margin-top: 0.12rem;
+  accent-color: #168f83;
+}
+
+.dynamicResponsePrediction span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.dynamicResponsePrediction strong {
+  color: #163f3d;
+  font-size: 0.68rem;
+}
+
+.dynamicResponsePrediction small {
+  color: #657a7b;
+  font-size: 0.59rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.dynamicResponseFeedback {
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  border-left: 3px solid #bd7621;
+  border-radius: 0.45rem;
+  color: #68430f;
+  background: #fff2dc;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.dynamicResponseFeedback[data-correct='true'] {
+  border-left-color: #168f83;
+  color: #205f58;
+  background: #e7f5f0;
+}
+
+.dynamicResponseAtlas {
+  margin-top: 0.8rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #d3e2df;
+}
+
+.dynamicResponseAtlas h5 {
+  font-size: 0.76rem;
+}
+
+.dynamicResponseAtlas > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.dynamicResponseAtlas article {
+  min-width: 0;
+}
+
+.dynamicResponseAtlas article p {
+  margin: 0.35rem 0 0;
+  color: #5c7373;
+  font-size: 0.58rem;
+  line-height: 1.4;
+}
+
+.fastFlushTrace[data-compact='true'] figcaption {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 3.1rem;
+}
+
+.fastFlushTrace[data-compact='true'] figcaption span {
+  font-size: 0.55rem;
+  text-align: left;
+}
+
+.fastFlushTrace[data-compact='true'] svg {
+  min-height: 76px;
 }
 
 .thermodilutionCard {
@@ -2272,6 +2758,17 @@
   .caseColumns,
   .sourcesPanel {
     grid-template-columns: 1fr;
+  }
+  .levelingVisualGrid,
+  .fastFlushTeachingCard > header {
+    grid-template-columns: 1fr;
+  }
+  .dynamicResponsePrediction,
+  .dynamicResponseAtlas > div {
+    grid-template-columns: 1fr;
+  }
+  .levelingPressureComparison dl {
+    grid-template-columns: 1fr 1fr;
   }
   .skillSequence {
     grid-template-columns: 1fr;

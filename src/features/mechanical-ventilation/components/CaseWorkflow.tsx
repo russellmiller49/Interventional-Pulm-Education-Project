@@ -87,11 +87,13 @@ export function CaseWorkflow({
   definition,
   dispatch,
   onResult,
+  maskedAssessment = false,
 }: {
   state: VentilationSimulationState
   definition: VentilationCaseDefinition
   dispatch: Dispatch<VentilationAction>
   onResult: (outcome: CaseOutcome) => void
+  maskedAssessment?: boolean
 }) {
   const [mechanismId, setMechanismId] = useState('')
   const [priorityId, setPriorityId] = useState('')
@@ -134,10 +136,14 @@ export function CaseWorkflow({
         <div>
           <span>{state.experience === 'learn' ? 'Guided case' : 'Independent attempt'}</span>
           <h2 id="workflow-heading">
-            {definition.id} · {definition.title}
+            {maskedAssessment && state.phase !== 'debrief'
+              ? 'Masked respiratory failure case'
+              : `${definition.id} · ${definition.title}`}
           </h2>
         </div>
-        <span className={styles.difficultyBadge}>{definition.difficulty}</span>
+        <span className={styles.difficultyBadge}>
+          {maskedAssessment && state.phase !== 'debrief' ? 'Challenge' : definition.difficulty}
+        </span>
       </div>
 
       <ol className={styles.workflowStepper} aria-label="Case workflow">

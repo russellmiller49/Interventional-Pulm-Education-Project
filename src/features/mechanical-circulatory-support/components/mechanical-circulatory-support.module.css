@@ -17,6 +17,24 @@
   font-family: var(--font-sans, Arial, sans-serif);
 }
 
+@media (min-width: 1024px) and (min-height: 700px) {
+  .moduleShell[data-activity-mode='true'] {
+    width: 100%;
+    max-width: none;
+    height: calc(100dvh - 4rem);
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+}
+
+.activityViewport {
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+  scrollbar-gutter: stable;
+}
+
 .moduleShell *,
 .moduleShell *::before,
 .moduleShell *::after {

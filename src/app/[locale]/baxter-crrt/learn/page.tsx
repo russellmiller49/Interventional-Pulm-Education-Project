@@ -5,7 +5,7 @@ import { BaxterCrrtLearn } from '@/features/baxter-crrt/components/BaxterCrrtLea
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'Learn · Baxter CRRT',
+  title: 'Learn · CRRT · PrisMax console lab',
   description:
     'Seven focused CRRT lessons covering modality selection, transport, prescription, circuit pressures, anticoagulation, alarms, fluid management, and liberation.',
   robots: { index: false, follow: false, noarchive: true },

@@ -37,7 +37,10 @@ const PUBLIC_UNLISTED_EXACT_PATHS = new Set([
 const PUBLIC_UNLISTED_PATH_PREFIXES = [
   '/baxter-crrt',
   '/cardiohelp-ecmo',
+  '/critical-care',
+  '/icu-hemodynamics',
   '/mechanical-circulatory-support',
+  '/mechanical-ventilation',
 ] as const
 
 function isPublicUnlistedMatch(normalizedPathname: string) {

@@ -6,7 +6,7 @@ import { cardiohelpEcmoPublicationStatus } from '@/features/cardiohelp-ecmo/cont
 import { localizeHandoffServerValue } from '@/i18n/handoff-server'
 
 const handoffMetadata: Metadata = {
-  title: 'CARDIOHELP-i Adult VV & VA ECMO Learn & Practice Lab',
+  title: 'ECMO Management · CARDIOHELP console lab',
   description:
     cardiohelpEcmoPublicationStatus === 'published'
       ? 'Reviewed step-by-step learning and independent adult VV and peripheral VA ECMO console, circuit, sweep, pressure-reasoning, and troubleshooting practice.'

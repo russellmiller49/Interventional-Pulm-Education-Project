@@ -1,0 +1,76 @@
+.caseViewport {
+  display: grid;
+  min-height: 100%;
+  grid-template-rows: auto minmax(32rem, 1fr);
+  gap: 0.75rem;
+  overflow: auto;
+  padding: 0.75rem;
+  background: hsl(var(--background));
+}
+
+.patientSurface,
+.consoleSurface,
+.workflowSurface {
+  min-width: 0;
+}
+
+.patientSurface > *,
+.consoleSurface > * {
+  margin: 0;
+}
+
+.workflowSurface {
+  height: 100%;
+  overflow: auto;
+}
+
+.workflowSurface > * {
+  min-height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.bottomStatus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.replayWarning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: hsl(var(--destructive));
+  font-weight: 700;
+}
+
+.bottomUtility,
+.bottomPrimary {
+  min-height: 2.5rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.bottomPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+@media (max-width: 1023px), (max-height: 699px) {
+  .caseViewport {
+    grid-template-rows: auto auto;
+  }
+
+  .workflowSurface {
+    max-height: none;
+  }
+}

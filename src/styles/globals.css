@@ -416,3 +416,49 @@ a.skip-link {
     animation: none !important;
   }
 }
+
+/* Keep portaled dialogs and the surrounding layout on the same palette as a dark V2 module. */
+body:has([data-learning-module-v2-theme-root][data-theme='dark']) {
+  --background: 211 61% 7%;
+  --foreground: 205 100% 97%;
+  --muted: 210 51% 15%;
+  --muted-foreground: 207 35% 77%;
+  --popover: 211 53% 11%;
+  --popover-foreground: 205 100% 97%;
+  --card: 211 53% 11%;
+  --card-foreground: 205 100% 97%;
+  --border: 209 38% 25%;
+  --input: 209 38% 25%;
+  --primary: 173 61% 59%;
+  --primary-foreground: 173 69% 4%;
+  --secondary: 173 61% 59%;
+  --secondary-foreground: 173 69% 4%;
+  --ring: 173 61% 59%;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:has([data-learning-module-v2-theme-root]) > [data-state] {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Active desktop simulations are application workspaces. At accessible reflow widths/heights the
+   normal document flow is restored by the component's responsive styles. */
+@media (min-width: 1024px) and (min-height: 700px) {
+  body:has(#main-content [data-critical-care-activity-shell]) {
+    overflow: hidden;
+  }
+
+  body:has(#main-content [data-critical-care-activity-shell])
+    footer:not([data-critical-care-activity-shell] footer) {
+    display: none;
+  }
+
+  body:has(#main-content [data-critical-care-activity-shell]) #main-content {
+    min-height: 0;
+    overflow: hidden;
+  }
+}

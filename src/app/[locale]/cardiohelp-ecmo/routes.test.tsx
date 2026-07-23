@@ -37,7 +37,9 @@ describe('CARDIOHELP ECMO routes', () => {
       const metadata = await generateMetadata({ params })
       expect(metadata.robots).toEqual({ index: false, follow: false, noarchive: true })
     }
-    expect((await hubMetadata({ params })).title).toMatch(/CARDIOHELP-i/i)
+    expect((await hubMetadata({ params })).title).toMatch(
+      /ECMO Management · CARDIOHELP console lab/i,
+    )
     expect((await learnMetadata({ params })).title).toMatch(/^Learn ·/)
     expect((await practiceMetadata({ params })).title).toMatch(/^Practice ·/)
     expect((await assessMetadata({ params })).title).toMatch(/^Assess ·/)
