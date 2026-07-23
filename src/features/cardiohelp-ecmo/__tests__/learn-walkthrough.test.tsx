@@ -278,9 +278,13 @@ describe('CARDIOHELP ECMO Learn walkthrough', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
     performAndAdvance(/Advance 1 second and inspect the response/i)
-    fireEvent.click(screen.getByRole('button', { name: /Finish walkthrough/i }))
+    expect(
+      screen.getByRole('heading', { name: /Transfer: Compensated hypercapnia/i }),
+    ).toBeInTheDocument()
+    expect(onCompleteLesson).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Blood parameters' }))
 
-    expect(onCompleteLesson).toHaveBeenCalledWith('acute-hypercapnia')
+    await waitFor(() => expect(onCompleteLesson).toHaveBeenCalledWith('acute-hypercapnia'))
     fireEvent.click(screen.getByRole('button', { name: /Apply this in Practice/i }))
     expect(onTryPractice).toHaveBeenCalledWith('clinical-vv-gas-disconnection')
   })

@@ -58,7 +58,7 @@ describe('ActivityShell V2', () => {
 
     expect(
       screen.getByRole('region', { name: 'PAC signal validation simulation workspace' }),
-    ).toHaveAttribute('data-mode', 'guided')
+    ).toHaveAttribute('data-layout', 'guided-lab')
     expect(screen.getByRole('heading', { name: 'PAC signal validation' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Patient context' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Simulation viewport' })).toHaveTextContent(
@@ -75,6 +75,76 @@ describe('ActivityShell V2', () => {
     expect(helpButton).toHaveFocus()
     await user.keyboard('{Enter}')
     expect(onHelp).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['native-workbench', 'guided-lab', 'didactic-lesson', 'case-workspace'] as const)(
+    'renders the %s compatibility layout',
+    (layout) => {
+      render(
+        <ActivityShell
+          layout={layout}
+          breadcrumb="Critical care"
+          activityTitle={`Layout ${layout}`}
+          phase="recognize"
+          mode="guided"
+          progressLabel="Phase 1"
+          onHelp={jest.fn()}
+          onReset={jest.fn()}
+          onSaveAndExit={jest.fn()}
+          patientContext={
+            <PatientContextBar
+              items={[{ label: 'Setting', value: 'Synthetic ICU' }]}
+              immediateGoal="Orient safely"
+            />
+          }
+          viewport={<div>Principal native visual</div>}
+          currentTask={
+            <TaskPanel mode="guided" objective="Inspect" requiredAction="Review the visual" />
+          }
+        />,
+      )
+
+      const shell = screen.getByRole('region', {
+        name: `Layout ${layout} simulation workspace`,
+      })
+      expect(shell).toHaveAttribute('data-layout', layout)
+      expect(screen.getByRole('region', { name: 'Simulation viewport' })).toHaveTextContent(
+        'Principal native visual',
+      )
+      expect(screen.getByRole('region', { name: 'Clinical context' })).toBeInTheDocument()
+    },
+  )
+
+  it('keeps the native task guidance in a keyboard-operable overlay', async () => {
+    const user = userEvent.setup()
+    render(
+      <ActivityShell
+        layout="native-workbench"
+        breadcrumb="Critical care"
+        activityTitle="Native workbench"
+        phase="act"
+        mode="practice"
+        progressLabel="Active"
+        onHelp={jest.fn()}
+        onReset={jest.fn()}
+        onSaveAndExit={jest.fn()}
+        patientContext={
+          <PatientContextBar
+            items={[{ label: 'Support', value: 'ECMO' }]}
+            immediateGoal="Protect the principal visual"
+          />
+        }
+        viewport={<div>Full circuit and console</div>}
+        currentTask={
+          <TaskPanel mode="practice" objective="Inspect" requiredAction="Trace the circuit" />
+        }
+      />,
+    )
+
+    const trigger = screen.getByText('Current task', { selector: 'summary' })
+    expect(screen.queryByRole('complementary', { name: 'Current task' })).not.toBeVisible()
+    await user.click(trigger)
+    expect(screen.getByRole('complementary', { name: 'Current task' })).toBeVisible()
   })
 
   it('communicates completed phases and the current phase without color', () => {

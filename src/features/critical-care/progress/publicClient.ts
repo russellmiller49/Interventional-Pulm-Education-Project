@@ -19,13 +19,18 @@ import { readHemodynamicsLegacyProgress } from './adapters/hemodynamics'
 import { readMcsLegacyProgress } from './adapters/mcs'
 import { readVentilationLegacyProgress } from './adapters/ventilation'
 import {
+  CRITICAL_CARE_INTEGRATED_OUTCOMES_MAX_COURSES,
+  CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY,
+  CRITICAL_CARE_INTEGRATED_OUTCOMES_VERSION,
   LEGACY_PROGRESS_EPOCH,
   type CriticalCareLegacyProgressResult,
+  type CriticalCareIntegratedCaseOutcomeSummary,
   type CriticalCareProgressReadResult,
   type CriticalCareProgressSourceReport,
   type CriticalCareReadableStorage,
 } from './types'
 import {
+  enforceProgressCollectionAuthority,
   isRecord,
   mergeProjectedActivities,
   parseStoredJson,
@@ -37,6 +42,66 @@ import {
 interface ParsedNormalizedSource {
   readonly report: CriticalCareProgressSourceReport
   readonly envelope?: CriticalCareProgressEnvelope
+}
+
+interface ParsedIntegratedOutcomeSource {
+  readonly report: CriticalCareProgressSourceReport
+  readonly summary?: CriticalCareIntegratedCaseOutcomeSummary
+}
+
+function readIntegratedOutcomeSource(
+  storage: CriticalCareReadableStorage | null,
+): ParsedIntegratedOutcomeSource {
+  const read = readStoredValue(
+    storage,
+    'critical-care-outcomes',
+    CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY,
+  )
+  if (read.report.status !== 'valid' || read.raw === null) return { report: read.report }
+  const json = parseStoredJson(read.raw)
+  if (!json.ok) return { report: sourceReport(read, 'corrupt', { issue: json.issue }) }
+  if (!isRecord(json.value)) {
+    return { report: sourceReport(read, 'corrupt', { issue: 'invalid-shape' }) }
+  }
+  const detectedVersion = versionLabel(json.value.version)
+  if (json.value.version !== CRITICAL_CARE_INTEGRATED_OUTCOMES_VERSION) {
+    return {
+      report: sourceReport(read, detectedVersion ? 'incompatible' : 'corrupt', {
+        issue: detectedVersion ? 'unsupported-version' : 'invalid-shape',
+        ...(detectedVersion ? { detectedVersion } : {}),
+      }),
+    }
+  }
+  const allowedKeys = new Set(['version', 'completedCourseCount', 'latestCompletedAt'])
+  const completedCourseCount = json.value.completedCourseCount
+  const latestCompletedAt = json.value.latestCompletedAt
+  if (
+    Object.keys(json.value).some((key) => !allowedKeys.has(key)) ||
+    typeof completedCourseCount !== 'number' ||
+    !Number.isInteger(completedCourseCount) ||
+    completedCourseCount < 0 ||
+    completedCourseCount > CRITICAL_CARE_INTEGRATED_OUTCOMES_MAX_COURSES ||
+    (latestCompletedAt !== undefined &&
+      (typeof latestCompletedAt !== 'string' || !Number.isFinite(Date.parse(latestCompletedAt))))
+  ) {
+    return {
+      report: sourceReport(read, 'corrupt', {
+        issue: 'invalid-shape',
+        ...(detectedVersion ? { detectedVersion } : {}),
+      }),
+    }
+  }
+  return {
+    report: sourceReport(read, 'valid', { detectedVersion }),
+    ...(completedCourseCount > 0
+      ? {
+          summary: {
+            completedCourseCount,
+            ...(typeof latestCompletedAt === 'string' ? { latestCompletedAt } : {}),
+          },
+        }
+      : {}),
+  }
 }
 
 function browserStorage(): CriticalCareReadableStorage | null {
@@ -98,8 +163,11 @@ function mergePublicProgress(
     publicActivityIds.has(activity.activityId),
   )
   const mergedByStrength = mergeProjectedActivities([
-    ...legacy.flatMap((result) => result.activities),
-    ...normalizedActivities,
+    ...enforceProgressCollectionAuthority(
+      activities,
+      legacy.flatMap((result) => result.activities),
+    ),
+    ...enforceProgressCollectionAuthority(activities, normalizedActivities),
   ])
   const activityOrder = [
     ...normalizedActivities.map((activity) => activity.activityId),
@@ -136,8 +204,13 @@ export function readPublicCriticalCareProgress(
   storage: CriticalCareReadableStorage | null = browserStorage(),
 ): CriticalCareProgressReadResult {
   const normalized = readNormalizedSource(storage)
+  const integratedOutcomes = readIntegratedOutcomeSource(storage)
   const legacySources = readPublicLegacyProgress(storage, activities)
-  const reports = [normalized.report, ...legacySources.flatMap((source) => source.sources)]
+  const reports = [
+    normalized.report,
+    integratedOutcomes.report,
+    ...legacySources.flatMap((source) => source.sources),
+  ]
   const normalizedResumeNotice =
     normalized.envelope?.resume &&
     !resolveCriticalCareResumePointer(normalized.envelope.resume, activities)
@@ -157,5 +230,6 @@ export function readPublicCriticalCareProgress(
       ),
       ...(normalizedResumeNotice ? [normalizedResumeNotice] : []),
     ],
+    ...(integratedOutcomes.summary ? { integratedCaseOutcomes: integratedOutcomes.summary } : {}),
   }
 }

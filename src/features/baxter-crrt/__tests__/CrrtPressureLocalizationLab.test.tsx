@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 import { CrrtPressureLocalizationLab } from '../components/CrrtPressureLocalizationLab'
 
@@ -106,6 +106,18 @@ describe('learner Pressure Localization Lab UI', () => {
     ).toHaveTextContent('-15 mmHg → -35 mmHg')
     expect(screen.getByText(/does not provide a clinical normal, alarm limit/i)).toBeInTheDocument()
     expect(window.localStorage).toHaveLength(0)
+  })
+
+  it('emits completion evidence only after prediction commit and result reveal', async () => {
+    const onCompletionEvidence = jest.fn()
+    render(<CrrtPressureLocalizationLab onCompletionEvidence={onCompletionEvidence} />)
+
+    chooseEveryPrediction('Unchanged')
+    fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal pressure pattern' }))
+    await waitFor(() => expect(onCompletionEvidence).toHaveBeenCalledTimes(1))
   })
 
   it('hides the result again when the learner revises the prediction', () => {

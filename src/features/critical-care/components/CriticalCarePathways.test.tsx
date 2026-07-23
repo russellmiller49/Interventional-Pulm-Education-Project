@@ -49,6 +49,7 @@ describe('critical-care clinical pathways', () => {
     ).toBeInTheDocument()
     expect(await screen.findAllByText(/0 of \d+ module milestones complete/)).toHaveLength(5)
     expect(screen.getAllByRole('link', { name: /^Explore / })).toHaveLength(5)
+    expect(screen.getAllByText('Preview')).toHaveLength(5)
   })
 
   it('shows module milestones, reviewed recommendation, competencies, and explainable Assess gates', async () => {
@@ -72,5 +73,8 @@ describe('critical-care clinical pathways', () => {
     expect(
       screen.getByRole('heading', { name: 'Explicit assessment prerequisites' }),
     ).toBeInTheDocument()
+    expect(screen.getByText('Preview pathway')).toBeInTheDocument()
+    expect(screen.getAllByText(/do not create a hard Assess lock/).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('link', { name: 'Open full lab' }).length).toBeGreaterThan(0)
   })
 })

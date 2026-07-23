@@ -26,12 +26,11 @@ import {
   type CriticalCareActivityMode,
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
-import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
+import { ActivityChrome } from '@/features/learning-module/components/ActivityChrome'
+import { ClinicalContextStrip } from '@/features/learning-module/components/ClinicalContextStrip'
 import { EvidenceDrawer } from '@/features/learning-module/components/EvidenceDrawer'
-import { PatientContextBar } from '@/features/learning-module/components/PatientContextBar'
 import { ReferenceDrawer } from '@/features/learning-module/components/ReferenceDrawer'
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
-import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
   ICU_SIMULATION_ANALYTICS_MODULE_ID,
   expectedIcuSimulationAnalyticsEventType,
@@ -724,14 +723,6 @@ export function IcuSimulatorLab({
   const currentObjective = assessmentDiagnosisHidden
     ? 'Complete the current reasoning phase using only observable patient, device, and timeline data.'
     : (scenario.learningObjectives[0] ?? copy.description)
-  const requiredActionByPhase: Readonly<Record<CriticalCareActivityPhase, string>> = {
-    recognize: 'Inspect the monitor, bedside, available diagnostics, and course guide.',
-    predict: 'Commit a working shock classification in the Course panel.',
-    act: 'Use the available clinical and device controls to carry out the current plan.',
-    observe: 'Advance the shared clock and complete serial reassessment.',
-    explain: 'Review the causal debrief, response gate, and performance domains.',
-    transfer: 'Use the focused remediation links to choose the next learning context.',
-  }
   const referenceEntries = assessmentDiagnosisHidden
     ? [
         {
@@ -800,64 +791,17 @@ export function IcuSimulatorLab({
     })
   }, [])
 
-  const activityShell = (
-    <ActivityShell
+  const activityChrome = (
+    <ActivityChrome
+      layout="native-workbench"
       breadcrumb={<IcuSimulatorModuleNav activeSection={mode} compact />}
       activityTitle={activityTitle}
       phase={lifecyclePhase}
       mode={lifecycleMode}
       progressLabel={progressLabel}
-      stepperAriaLabel="Integrated ICU shared activity phases"
+      showProgressStepper={false}
       theme="dark"
       maskedAssessment={assessmentDiagnosisHidden}
-      patientContext={
-        <PatientContextBar
-          title="Persistent patient context"
-          items={[
-            {
-              label: 'Course',
-              value: assessmentDiagnosisHidden ? 'Masked assessment' : scenario.shortTitle,
-            },
-            { label: 'Simulation time', value: formatClock(state.clock.elapsedSeconds) },
-            { label: 'MAP', value: `${Math.round(state.patient.hemodynamics.mapMmHg)} mm Hg` },
-            { label: 'SpO₂', value: `${Math.round(state.patient.respiratory.spo2Percent)}%` },
-            { label: 'Active alarms', value: `${activeAlarmCount}` },
-          ]}
-          immediateGoal={currentObjective}
-          safetyConstraints={ICU_EDUCATIONAL_BOUNDARIES.constraints.slice(0, 2)}
-        />
-      }
-      currentTask={
-        <TaskPanel
-          objective={currentObjective}
-          requiredAction={requiredActionByPhase[lifecyclePhase]}
-          targets={
-            assessmentDiagnosisHidden
-              ? []
-              : scenario.checkpoints
-                  .filter(
-                    (checkpoint) => !state.outcome.checkpointIdsCompleted.includes(checkpoint.id),
-                  )
-                  .slice(0, 3)
-                  .map((checkpoint) => checkpoint.label)
-          }
-          hint={mode === 'assess' ? undefined : copy.description}
-          mode={lifecycleMode}
-          hintVisible={helpVisible}
-          onHintRequested={showHelp}
-        >
-          <p role="note">{copy.status}</p>
-          {helpVisible ? (
-            <p role="status">
-              Use Reference and Evidence for the educational boundary, source scope, and model
-              limits.
-              {mode === 'assess'
-                ? ' Assessment help does not reveal the diagnosis or scenario-specific targets.'
-                : ' Return to the current task when ready.'}
-            </p>
-          ) : null}
-        </TaskPanel>
-      }
       onHelp={showHelp}
       onReset={resetSession}
       onSaveAndExit={saveAndExit}
@@ -877,7 +821,50 @@ export function IcuSimulatorLab({
           </button>
         </>
       }
-      viewport={
+    >
+      <div className={styles.icuNativeActivityFrame}>
+        <ClinicalContextStrip>
+          <section
+            className={styles.compactPatientStrip}
+            aria-labelledby="icu-persistent-context-title"
+          >
+            <ModeIcon aria-hidden="true" />
+            <div className={styles.compactPatientIdentity}>
+              <span>
+                {copy.eyebrow} · {ICU_SIMULATION_RELEASE.stage.replaceAll('-', ' ')}
+              </span>
+              <h2 id="icu-persistent-context-title">
+                {assessmentDiagnosisHidden ? 'Unclassified shock course' : scenario.shortTitle}
+              </h2>
+            </div>
+            <dl className={styles.compactPatientMetrics}>
+              <div>
+                <dt>Time</dt>
+                <dd>{formatClock(state.clock.elapsedSeconds)}</dd>
+              </div>
+              <div>
+                <dt>MAP</dt>
+                <dd>{Math.round(state.patient.hemodynamics.mapMmHg)} mm Hg</dd>
+              </div>
+              <div>
+                <dt>SpO₂</dt>
+                <dd>{Math.round(state.patient.respiratory.spo2Percent)}%</dd>
+              </div>
+              <div>
+                <dt>Alarms</dt>
+                <dd>{activeAlarmCount}</dd>
+              </div>
+            </dl>
+            <div className={styles.compactPatientGoal}>
+              <span>Current objective</span>
+              <strong>{currentObjective}</strong>
+            </div>
+            <div className={styles.compactPatientProgress}>
+              <span>{copy.status}</span>
+              <strong>{progressLabel}</strong>
+            </div>
+          </section>
+        </ClinicalContextStrip>
         <div
           id="icu-activity-viewport"
           className={styles.activityViewport}
@@ -885,23 +872,6 @@ export function IcuSimulatorLab({
           data-icu-internal-scroll
         >
           <div className={styles.labShell} data-mode={mode}>
-            <header className={styles.activityStatusBanner}>
-              <ModeIcon aria-hidden="true" />
-              <div>
-                <span>
-                  {copy.eyebrow} · {ICU_SIMULATION_RELEASE.stage.replaceAll('-', ' ')}
-                </span>
-                <h2>
-                  {assessmentDiagnosisHidden ? 'Unclassified shock course' : scenario.shortTitle}
-                </h2>
-                <p>
-                  {assessmentDiagnosisHidden
-                    ? 'Assess an evolving synthetic adult ICU patient. Coaching remains withheld until debrief.'
-                    : copy.description}
-                </p>
-              </div>
-            </header>
-
             <section
               className={styles.safetyBanner}
               role="note"
@@ -918,6 +888,19 @@ export function IcuSimulatorLab({
                 Reviewed-English fallback: this private preview remains English-first while
                 localized clinical review is pending.
               </p>
+            ) : null}
+
+            {helpVisible ? (
+              <section className={styles.helpNotice} role="status" aria-label="Simulation help">
+                <strong>Use the native Course surface for the current task.</strong>
+                <p>
+                  Reference and Evidence describe the educational boundary, source scope, and model
+                  limits.
+                  {mode === 'assess'
+                    ? ' Assessment help does not reveal the diagnosis, scenario-specific targets, or answer key.'
+                    : ` ${copy.description}`}
+                </p>
+              </section>
             ) : null}
 
             {engineNotice ? (
@@ -979,46 +962,48 @@ export function IcuSimulatorLab({
               </section>
             ) : (
               <>
-                <section className={styles.caseSelector} aria-labelledby="case-selector-title">
-                  <header>
-                    <div>
-                      <span className={styles.panelKicker}>Patient census</span>
-                      <h2 id="case-selector-title">Choose a shock course</h2>
+                {embedded ? null : (
+                  <section className={styles.caseSelector} aria-labelledby="case-selector-title">
+                    <header>
+                      <div>
+                        <span className={styles.panelKicker}>Patient census</span>
+                        <h2 id="case-selector-title">Choose a shock course</h2>
+                      </div>
+                      <span>
+                        {availableScenarios.length} scenario families ·{' '}
+                        {progress.completedScenarioIds.length} completed ·{' '}
+                        {progress.masteredScenarioIds.length} mastered
+                      </span>
+                    </header>
+                    <div className={styles.caseRail}>
+                      {displayedScenarios.map((candidate, index) => {
+                        const selected = candidate.id === state.scenarioId
+                        const concealed = mode === 'assess'
+                        return (
+                          <button
+                            type="button"
+                            key={candidate.id}
+                            aria-current={selected ? 'true' : undefined}
+                            onClick={() => selectScenario(candidate)}
+                          >
+                            <span>{String(index + 1).padStart(2, '0')}</span>
+                            <strong>
+                              {concealed
+                                ? `Assessment case ${String(index + 1).padStart(2, '0')}`
+                                : candidate.shortTitle}
+                            </strong>
+                            <small>
+                              {concealed
+                                ? 'Timed course · classification withheld'
+                                : `${candidate.durationHours} h · ${candidate.family.replaceAll('-', ' ')}`}
+                            </small>
+                            <ChevronRight aria-hidden="true" />
+                          </button>
+                        )
+                      })}
                     </div>
-                    <span>
-                      {availableScenarios.length} scenario families ·{' '}
-                      {progress.completedScenarioIds.length} completed ·{' '}
-                      {progress.masteredScenarioIds.length} mastered
-                    </span>
-                  </header>
-                  <div className={styles.caseRail}>
-                    {displayedScenarios.map((candidate, index) => {
-                      const selected = candidate.id === state.scenarioId
-                      const concealed = mode === 'assess'
-                      return (
-                        <button
-                          type="button"
-                          key={candidate.id}
-                          aria-current={selected ? 'true' : undefined}
-                          onClick={() => selectScenario(candidate)}
-                        >
-                          <span>{String(index + 1).padStart(2, '0')}</span>
-                          <strong>
-                            {concealed
-                              ? `Assessment case ${String(index + 1).padStart(2, '0')}`
-                              : candidate.shortTitle}
-                          </strong>
-                          <small>
-                            {concealed
-                              ? 'Timed course · classification withheld'
-                              : `${candidate.durationHours} h · ${candidate.family.replaceAll('-', ' ')}`}
-                          </small>
-                          <ChevronRight aria-hidden="true" />
-                        </button>
-                      )
-                    })}
-                  </div>
-                </section>
+                  </section>
+                )}
 
                 <section className={styles.timeDock} aria-label="Shared simulation clock">
                   <div className={styles.clockReadout}>
@@ -1183,14 +1168,14 @@ export function IcuSimulatorLab({
             )}
           </div>
         </div>
-      }
-    />
+      </div>
+    </ActivityChrome>
   )
 
   if (embedded) {
     return (
       <div className={styles.embeddedActivity} data-icu-activity-route="embedded">
-        {activityShell}
+        {activityChrome}
       </div>
     )
   }
@@ -1206,7 +1191,7 @@ export function IcuSimulatorLab({
         onSaveForLater={() => router.push('/critical-care' as Route)}
         theme="dark"
       >
-        {activityShell}
+        {activityChrome}
       </SimulationLaunchGate>
     </div>
   )

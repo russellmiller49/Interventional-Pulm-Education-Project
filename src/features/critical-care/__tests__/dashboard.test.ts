@@ -112,6 +112,34 @@ describe('critical-care dashboard derivation', () => {
     ).toMatchObject({ state: 'in-progress', completedActivities: 1, startedActivities: 1 })
   })
 
+  it('recalculates recommendations and summaries from authoritative evidence', () => {
+    const invalidCompletion = progress('hemodynamics:learn:pressure-system', {
+      status: 'mastered',
+      competencyEvidenceIds: ['signal-validation', 'critical-care-safety'],
+    })
+    const dashboard = deriveCriticalCareDashboard(
+      readResult({
+        version: 1,
+        activities: [invalidCompletion],
+        updatedAt: invalidCompletion.updatedAt,
+      }),
+    )
+
+    expect(dashboard.recommendation).toMatchObject({
+      activity: { id: 'hemodynamics:learn:pressure-system' },
+      progress: { status: 'in-progress', competencyEvidenceIds: [] },
+    })
+    expect(dashboard.recent[0]?.progress).toMatchObject({
+      status: 'in-progress',
+      competencyEvidenceIds: [],
+    })
+    expect(dashboard.modules.find((item) => item.module.id === 'icu-hemodynamics')).toMatchObject({
+      state: 'in-progress',
+      completedActivities: 0,
+      startedActivities: 1,
+    })
+  })
+
   it('surfaces an incompatible-only state without treating it as learner progress', () => {
     const dashboard = deriveCriticalCareDashboard(
       readResult({ version: 1, activities: [], updatedAt: '1970-01-01T00:00:00.000Z' }, [

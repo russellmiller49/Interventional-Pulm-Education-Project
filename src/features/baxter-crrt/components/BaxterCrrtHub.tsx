@@ -45,7 +45,7 @@ function activityLink(activity: BaxterCrrtRecommendedActivity) {
   }
   return {
     href: `${baxterCrrtNavBase}/assess`,
-    label: 'Unseen PrisMax capstone',
+    label: 'Masked PrisMax capstone',
   }
 }
 
@@ -78,7 +78,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
           <h1>High-yield CRRT reasoning on PrisMax</h1>
           <p>
             Build the concepts in seven focused lessons, apply them in a ten-case core path,
-            rehearse five cause-first safety drills, then complete an unseen capstone.
+            rehearse five cause-first safety drills, then complete a masked capstone.
           </p>
           {resume ? (
             <Link className={styles.hubContinue} href={resume.href}>
@@ -205,7 +205,7 @@ export function BaxterCrrtHub({ locale = 'en' }: { readonly locale?: string }) {
             {capstoneUnlocked ? <LockOpen aria-hidden="true" /> : <Lock aria-hidden="true" />}
             <div>
               <span>Final assessment</span>
-              <h3>Unseen PrisMax capstone</h3>
+              <h3>Masked PrisMax capstone</h3>
               <p>
                 {capstoneUnlocked
                   ? 'Unlocked. The case identity stays masked until the causal debrief.'

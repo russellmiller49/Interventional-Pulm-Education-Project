@@ -24,6 +24,13 @@ const guidedActivities = [
     description: 'Progress through RA, RV, and PA while confirming each authored waveform.',
   },
   {
+    id: 'waveform-interpretation',
+    title: 'Interpret normal and abnormal waveforms',
+    minutes: 18,
+    description:
+      'Identify each chamber by its diastolic contour, then read the wave components that carry a diagnosis — blunted y descents, tall c-v waves, and giant wedge v waves.',
+  },
+  {
     id: 'pawp-capture',
     title: 'Brief end-expiratory PAWP capture',
     minutes: 15,

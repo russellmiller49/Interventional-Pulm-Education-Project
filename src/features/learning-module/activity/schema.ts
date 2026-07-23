@@ -5,6 +5,8 @@ import {
   criticalCareActivityModes,
   criticalCareActivityPhases,
   criticalCareActivityStatuses,
+  criticalCareCompletionEvidenceAuthorities,
+  criticalCareCreditPolicies,
   criticalCareDifficulties,
   criticalCareReviewStatuses,
   type CriticalCareActivityDefinition,
@@ -54,6 +56,9 @@ export const criticalCareActivityDefinitionSchema = z
     assetIds: z.array(stableIdSchema).max(30),
     reviewStatus: z.enum(criticalCareReviewStatuses),
     evidenceIds: z.array(stableIdSchema).max(50),
+    contentVersion: stableIdSchema,
+    creditPolicy: z.enum(criticalCareCreditPolicies),
+    completionEvidenceAuthority: z.enum(criticalCareCompletionEvidenceAuthorities),
   })
   .strict()
   .superRefine((activity, context) => {
@@ -69,6 +74,23 @@ export const criticalCareActivityDefinitionSchema = z
         code: z.ZodIssueCode.custom,
         path: ['evidenceIds'],
         message: 'Released activities require evidence.',
+      })
+    }
+    if (
+      activity.creditPolicy === 'competency-eligible' &&
+      activity.completionEvidenceAuthority === 'none'
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['completionEvidenceAuthority'],
+        message: 'Competency-eligible activities require an authoritative evidence source.',
+      })
+    }
+    if (activity.reviewStatus === 'draft' && activity.creditPolicy === 'competency-eligible') {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['creditPolicy'],
+        message: 'Draft activities cannot award competency evidence.',
       })
     }
   })

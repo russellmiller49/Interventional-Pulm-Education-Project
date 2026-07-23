@@ -490,7 +490,7 @@
 
 .workbench {
   display: grid;
-  grid-template-columns: minmax(330px, 410px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   max-width: 1680px;
   margin: 0 auto;
@@ -505,12 +505,18 @@
 }
 
 .learningColumn {
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
-  padding-right: 0.2rem;
+  position: static;
+  max-height: none;
+  overflow: visible;
   scrollbar-color: var(--panel-3) transparent;
+}
+
+.simulatorColumn {
+  grid-row: 1;
+}
+
+.learningColumn {
+  grid-row: 2;
 }
 
 .stationNavigator,

@@ -9,7 +9,7 @@ import { BaxterCrrtLearn } from '../components/BaxterCrrtLearn'
 import { BaxterCrrtPractice } from '../components/BaxterCrrtPractice'
 import { baxterCrrtCoreCaseIds, getBaxterCrrtCase } from '../content'
 import { createCrrtLearningSession } from '../engine'
-import { createDefaultProgress, writeProgress } from '../engine/progress'
+import { createDefaultProgress, readProgress, writeProgress } from '../engine/progress'
 
 const mockRecordLifecycleEvent = jest.fn()
 
@@ -101,15 +101,31 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
     ).toEqual(expect.arrayContaining(['recognize', 'predict', 'act', 'observe']))
   })
 
-  it('keeps generic Learn completion at Explain without emitting transfer completion', async () => {
+  it('records Learn completion only from supported patient-application evidence', async () => {
     render(<BaxterCrrtLearn initialLessonId="crrt-core-concepts" />)
     const phases = screen.getByRole('group', { name: 'CRRT shared activity phases' })
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Mark lesson complete' })).toBeEnabled(),
+
+    expect(screen.queryByRole('button', { name: 'Mark lesson complete' })).not.toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: /choose the modality with the most transport mechanisms/i,
+      }),
     )
+    fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
+    expect(screen.getByText('Reassess the mechanism')).toBeInTheDocument()
+    expect(screen.getByText('Evidence in progress')).toBeInTheDocument()
+    expect(readProgress().completedLessonIds).not.toContain('crrt-indications-modality')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mark lesson complete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Revise answer' }))
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: /define the patient-specific solute, acid–base, and volume goals/i,
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
 
+    await waitFor(() => expect(screen.getByText('Lesson evidence recorded')).toBeInTheDocument())
+    expect(readProgress().completedLessonIds).toContain('crrt-indications-modality')
     expect(within(phases).getByText('Explain').closest('li')).toHaveAttribute(
       'aria-current',
       'step',
@@ -120,6 +136,27 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
         ([event]) => (event as { interaction: string }).interaction,
       ),
     ).not.toContain('critical_care_transfer_completed')
+  })
+
+  it('requires both the prescription lab interaction and the patient application', async () => {
+    render(<BaxterCrrtLearn initialLessonId="crrt-prescription-dosing" />)
+
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: /reconcile elapsed treatment time and downtime/i,
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Check clinical reasoning' }))
+    expect(screen.getByText('Evidence in progress')).toBeInTheDocument()
+    expect(readProgress().completedLessonIds).not.toContain('crrt-prescription-dosing')
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Dialysate flow/ }), {
+      target: { value: '1200' },
+    })
+    fireEvent.focus(screen.getByRole('region', { name: 'Educational calculation outputs' }))
+
+    await waitFor(() => expect(screen.getByText('Lesson evidence recorded')).toBeInTheDocument())
+    expect(readProgress().completedLessonIds).toContain('crrt-prescription-dosing')
   })
 
   it('keeps a revealed case debrief at Explain without emitting transfer completion', async () => {
@@ -169,7 +206,7 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
     ).not.toContain('critical_care_transfer_completed')
   })
 
-  it('shows ten station-grouped core cases, collapses seven extras, and hides CRRT-16', () => {
+  it('opens the full case workspace first, with ten core cases and seven collapsed extras', () => {
     const { container } = render(<BaxterCrrtPractice />)
 
     expect(container.querySelector('[data-critical-care-activity-shell]')).toBeInTheDocument()
@@ -185,6 +222,51 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
     expect(values).not.toContain('CRRT-16')
     expect(selector.querySelectorAll('optgroup')).toHaveLength(6)
     expect(screen.getByText(/Additional cases \(7\)/)).toBeInTheDocument()
+    expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
+    expect(screen.getByText('Relevant labs')).toBeInTheDocument()
+    expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
+    expect(screen.queryByText('prismax-aw8035-2xx')).not.toBeInTheDocument()
+
+    const viewport = container.querySelector('#crrt-activity-viewport')
+    expect(viewport?.firstElementChild).toContainElement(screen.getByTestId('crrt-case-workflow'))
+  })
+
+  it('keeps outer task guidance synchronized with the case reasoning phase', () => {
+    const definition = getBaxterCrrtCase('CRRT-01')
+    const initialSession = createCrrtLearningSession({
+      caseDefinition: definition,
+      experience: 'practice',
+      roleLens: 'integrated',
+      attempt: 1,
+      deviceId: 'prismax-aw8035-2xx',
+    })
+    const workspaceProps = {
+      mode: 'practice' as const,
+      progressLabel: 'Case in progress',
+      onReset: jest.fn(),
+      onSaveAndExit: jest.fn(),
+    }
+    const { rerender } = render(
+      <CrrtActivityWorkspace session={initialSession} {...workspaceProps}>
+        <div>Case workspace</div>
+      </CrrtActivityWorkspace>,
+    )
+
+    expect(
+      screen.getByText(/Review the patient, access, circuit, current prescription/i),
+    ).toBeInTheDocument()
+
+    rerender(
+      <CrrtActivityWorkspace
+        session={{ ...initialSession, reasoningPhase: 'run' }}
+        {...workspaceProps}
+      >
+        <div>Case workspace</div>
+      </CrrtActivityWorkspace>,
+    )
+    expect(
+      screen.getByText(/Sequence the clinical and equipment actions, then advance simulated time/i),
+    ).toBeInTheDocument()
   })
 
   it('persists exact Learn and Practice deep-link selections for global Continue', async () => {
@@ -230,11 +312,14 @@ describe('Baxter CRRT Practice curation and Assess gating', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole('heading', { name: 'Unseen PrisMax capstone', level: 2 }),
+        screen.getByRole('heading', { name: 'Masked PrisMax capstone', level: 2 }),
       ).toBeInTheDocument(),
     )
     expect(screen.queryByText('Capstone locked')).not.toBeInTheDocument()
     expect(screen.getByRole('note', { name: 'Capstone safeguards.' })).toBeInTheDocument()
+    expect(screen.getByText('Live patient, prescription, and circuit')).toBeInTheDocument()
+    expect(screen.getByText('Relevant labs')).toBeInTheDocument()
+    expect(screen.getByText('Pressure pattern')).toBeInTheDocument()
     const capstone = getBaxterCrrtCase('CRRT-16')
     expect(screen.queryByText('CRRT-16')).not.toBeInTheDocument()
     for (const objective of capstone.learningObjectives) {

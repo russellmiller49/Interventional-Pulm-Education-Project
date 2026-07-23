@@ -193,6 +193,62 @@ export function BaxterCrrtPractice({
           writeProgress(progress)
           router.push(baxterCrrtNavBase)
         }}
+        currentTaskExtras={
+          <div className={styles.workspaceCasePicker} data-hydrated={hydrated}>
+            <label>
+              <span>Practice case</span>
+              <select
+                aria-label="Station-grouped core case"
+                value={selectedCaseId}
+                onChange={(event) => chooseCase(event.target.value as CrrtCaseId)}
+              >
+                {selectedIsAdditional ? (
+                  <option value={selectedCaseId}>Optional · {selectedCatalogEntry.title}</option>
+                ) : null}
+                {baxterCrrtCurriculum.map((unit) => (
+                  <optgroup key={unit.id} label={`${unit.station}. ${unit.title}`}>
+                    {unit.coreCaseIds.map((caseId) => {
+                      const entry = getBaxterCrrtCaseCatalogEntry(caseId)
+                      const complete = progress.completedPracticeCaseIds.includes(
+                        caseId.toLowerCase(),
+                      )
+                      return (
+                        <option key={caseId} value={caseId}>
+                          {complete ? '✓ ' : ''}
+                          {entry.title}
+                        </option>
+                      )
+                    })}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <details className={styles.additionalCases}>
+              <summary>
+                <BookOpenCheck aria-hidden="true" /> Additional cases (
+                {baxterCrrtAdditionalCaseIds.length})
+              </summary>
+              <div>
+                {baxterCrrtCurriculum.flatMap((unit) =>
+                  unit.additionalCaseIds.map((caseId) => {
+                    const entry = getBaxterCrrtCaseCatalogEntry(caseId)
+                    return (
+                      <button key={caseId} type="button" onClick={() => chooseCase(caseId)}>
+                        <span>
+                          <strong>{entry.title}</strong>
+                          <small>
+                            Station {unit.station} · {entry.focus}
+                          </small>
+                        </span>
+                        <ChevronRight aria-hidden="true" />
+                      </button>
+                    )
+                  }),
+                )}
+              </div>
+            </details>
+          </div>
+        }
         nextRecommendation={
           nextRecommendedCase ? (
             <Link
@@ -201,87 +257,11 @@ export function BaxterCrrtPractice({
                 query: { case: nextRecommendedCase },
               }}
             >
-              Next recommended · {nextRecommendedCase}
+              Next recommended · {getBaxterCrrtCaseCatalogEntry(nextRecommendedCase).title}
             </Link>
           ) : null
         }
       >
-        <header className={styles.sectionHero}>
-          <span className={styles.kicker}>Practice · scored simulation</span>
-          <h1>Commit a plan, run the case, reassess, and debrief</h1>
-          <p>
-            The ten-case core path covers all six stations. Seven additional cases stay available
-            for deeper practice; the unseen CRRT-16 capstone is excluded from every picker.
-          </p>
-        </header>
-
-        <section
-          className={styles.practicePicker}
-          aria-labelledby="practice-picker-heading"
-          data-hydrated={hydrated}
-        >
-          <div>
-            <span className={styles.kicker}>Core path</span>
-            <h2 id="practice-picker-heading">Choose a station-grouped case</h2>
-          </div>
-          <label>
-            <span>Core case</span>
-            <select
-              aria-label="Station-grouped core case"
-              value={selectedCaseId}
-              onChange={(event) => chooseCase(event.target.value as CrrtCaseId)}
-            >
-              {selectedIsAdditional ? (
-                <option value={selectedCaseId}>
-                  Optional · {selectedCaseId} · {selectedCatalogEntry.title}
-                </option>
-              ) : null}
-              {baxterCrrtCurriculum.map((unit) => (
-                <optgroup key={unit.id} label={`${unit.station}. ${unit.title}`}>
-                  {unit.coreCaseIds.map((caseId) => {
-                    const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                    const complete = progress.completedPracticeCaseIds.includes(
-                      caseId.toLowerCase(),
-                    )
-                    return (
-                      <option key={caseId} value={caseId}>
-                        {complete ? '✓ ' : ''}
-                        {caseId} · {entry.title}
-                      </option>
-                    )
-                  })}
-                </optgroup>
-              ))}
-            </select>
-          </label>
-          <details className={styles.additionalCases}>
-            <summary>
-              <BookOpenCheck aria-hidden="true" /> Additional cases (
-              {baxterCrrtAdditionalCaseIds.length})
-            </summary>
-            <div>
-              {baxterCrrtCurriculum.flatMap((unit) =>
-                unit.additionalCaseIds.map((caseId) => {
-                  const entry = getBaxterCrrtCaseCatalogEntry(caseId)
-                  return (
-                    <button key={caseId} type="button" onClick={() => chooseCase(caseId)}>
-                      <span>
-                        <strong>
-                          {caseId} · {entry.title}
-                        </strong>
-                        <small>
-                          Station {unit.station} · {entry.focus}
-                        </small>
-                      </span>
-                      <ChevronRight aria-hidden="true" />
-                    </button>
-                  )
-                }),
-              )}
-            </div>
-          </details>
-        </section>
-
         <section className={styles.casePlayerSection} aria-labelledby="practice-case-heading">
           <div className={styles.casePlayerHeading}>
             <ClipboardCheck aria-hidden="true" />

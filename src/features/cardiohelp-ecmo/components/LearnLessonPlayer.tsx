@@ -50,6 +50,7 @@ interface LearnLessonPlayerProps {
   onTargetChange: (target: GuidedTarget) => void
   onControlHelpChange: (controlId: GuidedControlId | null) => void
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
+  onActiveStepChange?: (step: GuidedWalkthroughStep) => void
 }
 
 const targetLabels: Record<GuidedTarget, string> = {
@@ -66,7 +67,7 @@ const phaseLabels = {
   interpret: 'Predict',
   respond: 'Act',
   reassess: 'Observe',
-  transfer: 'Explain',
+  transfer: 'Transfer',
 } as const
 
 function semanticPhaseForGuidedStep(
@@ -78,6 +79,7 @@ function semanticPhaseForGuidedStep(
   if (phase === 'interpret') return 'predict'
   if (phase === 'respond') return 'act'
   if (phase === 'reassess') return 'observe'
+  if (phase === 'transfer') return 'transfer'
   return 'explain'
 }
 
@@ -297,6 +299,7 @@ export function LearnLessonPlayer({
   onTargetChange,
   onControlHelpChange,
   onPhaseChange,
+  onActiveStepChange,
 }: LearnLessonPlayerProps) {
   const [activeStepIndex, setActiveStepIndex] = useState(0)
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set())
@@ -372,6 +375,10 @@ export function LearnLessonPlayer({
     onPhaseChange?.(semanticPhaseForGuidedStep(activeStep.phase, lessonFinished))
   }, [activeStep.phase, lessonFinished, onPhaseChange])
 
+  useEffect(() => {
+    onActiveStepChange?.(activeStep)
+  }, [activeStep, onActiveStepChange])
+
   useEffect(
     () => () => {
       onControlHelpChange(null)
@@ -430,6 +437,17 @@ export function LearnLessonPlayer({
     if (index > activeStepIndex && !stepPerformed) return
     setHelpRequestCount(0)
     onControlHelpChange(null)
+    const nextStep = lesson.steps[index]
+    if (nextStep.transferScenarioId) {
+      dispatch({
+        type: 'LOAD_SCENARIO',
+        scenarioId: nextStep.transferScenarioId,
+        mode: 'guided',
+      })
+      for (const action of nextStep.transferSetupActions ?? []) dispatch(action)
+    } else if (activeStep.transferScenarioId) {
+      dispatch({ type: 'LOAD_SCENARIO', scenarioId: lesson.scenarioId, mode: 'guided' })
+    }
     setActiveStepIndex(index)
     setLessonFinished(false)
   }

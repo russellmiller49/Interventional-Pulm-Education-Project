@@ -109,7 +109,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       ],
       correctChoiceId: 'integrated-assessment',
       explanation:
-        'The integrated assessment distinguishes mechanisms before a simulator action changes the signal.',
+        'The integrated assessment distinguishes mechanisms before an intervention changes the signal.',
     },
     transfer: {
       prompt:
@@ -133,7 +133,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       {
         title: 'Model boundary',
         summary:
-          'The browser model is deterministic and bounded; it is not a validated patient digital twin.',
+          'Synthetic responses are bounded teaching approximations, not patient-specific predictions.',
       },
     ],
   }),
@@ -142,7 +142,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     title: 'Modes: trigger, target, cycle, and expiration',
     domain: 'Modes',
     summary:
-      'Translate device-native labels into the breath variables that the preserved engine actually simulates.',
+      'Translate device-native labels into trigger, controlled variable, cycling, and expiration.',
     relatedCaseIds: ['MV-01', 'MV-02', 'MV-09', 'MV-12'],
     phases: {
       recognize: {
@@ -158,28 +158,26 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
           'A mode name alone does not describe the patient interaction or the resulting measurements.',
       },
       act: {
-        objective: 'Map a device-native mode to the canonical engine mode.',
+        objective: 'Map a device-native mode to its breath-delivery variables.',
         requiredAction: 'Review the selected console profile before confirming the mode.',
         teachingPoint:
-          'The reducer validates mode availability within the selected device profile.',
+          'Available modes and confirmation steps depend on the selected training console.',
       },
       observe: {
         objective: 'Observe the next breath boundary.',
         requiredAction: 'Compare the controlled variable and measured response.',
-        teachingPoint: 'The engine applies confirmed mode changes at a modeled breath boundary.',
+        teachingPoint: 'A confirmed mode change takes effect at the next breath boundary.',
       },
       explain: {
         objective: 'Explain why labels and behavior must both be checked.',
-        requiredAction: 'Name the canonical behavior and the device-native label.',
+        requiredAction: 'Name the breath-delivery behavior and the device-native label.',
         teachingPoint:
           'The training facsimile teaches navigation without claiming full proprietary-device fidelity.',
       },
       transfer: {
-        objective: 'Transfer the variable framework to another console.',
-        requiredAction:
-          'Choose the comparison that does not assume identical controls or workflows.',
-        teachingPoint:
-          'Changing consoles requires a clean case reset and a fresh orientation step.',
+        objective: 'Transfer the variable framework to pressure-support cycling.',
+        requiredAction: 'Localize which breath variable is mismatched before choosing a new mode.',
+        teachingPoint: 'A different mode label does not replace assessment of the measured breath.',
       },
     },
     prediction: {
@@ -193,19 +191,20 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         'The variable framework is shared; labels and control workflows remain profile-specific.',
     },
     transfer: {
-      prompt: 'You want to change to a different training console during a case. What happens?',
+      prompt:
+        'A pressure-support breath ends while patient inspiratory effort continues. Which variable should be localized?',
       choices: [
-        { id: 'reset', label: 'Return to setup and restart the case from a clean baseline' },
-        { id: 'hot-swap', label: 'Hot-swap consoles while retaining the altered case state' },
+        { id: 'reset', label: 'The criterion that cycles inspiration to expiration' },
+        { id: 'trigger-only', label: 'Only the criterion that triggers inspiration' },
       ],
       correctChoiceId: 'reset',
       explanation:
-        'The console is fixed within a case. A device change deliberately starts a clean attempt.',
+        'The mismatch occurs at breath termination, so the cycling rule is the discriminating variable.',
     },
     references: [
       {
-        title: 'Canonical modes',
-        summary: 'The engine preserves volume A/C, pressure A/C, and pressure-support foundations.',
+        title: 'Breath-delivery foundations',
+        summary: 'Compare volume A/C, pressure A/C, and pressure support by breath variables.',
       },
       {
         title: 'Profile-specific modes',
@@ -237,7 +236,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       act: {
         objective: 'Use the waveform tools without changing therapy.',
         requiredAction: 'Freeze or follow several breaths, then compare all traces.',
-        teachingPoint: 'Reviewing the signal is an assessment action in the case engine.',
+        teachingPoint: 'Documented signal review is an assessment action in the case record.',
       },
       observe: {
         objective: 'Observe consistency and exceptions.',
@@ -289,8 +288,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     references: [
       {
         title: 'Waveform buffer',
-        summary:
-          'The engine uses bounded deterministic pressure, flow, volume, and effort samples.',
+        summary: 'The display provides synchronized pressure, flow, volume, and effort samples.',
       },
       {
         title: 'Text equivalent',
@@ -326,7 +324,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         objective: 'Observe delay, missed effort, or cycling direction.',
         requiredAction: 'Compare several breaths after the action.',
         teachingPoint:
-          'The engine exposes trigger delay and ineffective or autotrigger fractions as measurements.',
+          'Trigger delay and the fractions of ineffective or false triggers remain visible measurements.',
       },
       explain: {
         objective: 'Explain the transition and response.',
@@ -366,7 +364,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     references: [
       {
         title: 'Trigger measurement',
-        summary: 'Trigger delay and ineffective-effort fraction are exposed by the engine.',
+        summary: 'Compare trigger delay, ineffective efforts, and false breaths.',
       },
       {
         title: 'Cycling measurement',
@@ -385,7 +383,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         objective: 'Recognize a mismatch without assuming agitation is the cause.',
         requiredAction: 'Review effort, ventilator timing, load, comfort, and sedation together.',
         teachingPoint:
-          'The engine keeps patient drive and ventilator mechanics as separate state domains.',
+          'Patient drive and ventilator breath delivery must be evaluated as separate contributors.',
       },
       predict: {
         objective: 'Predict the dominant mismatch mechanism.',
@@ -465,7 +463,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         objective: 'Recognize oxygenation failure in the whole patient context.',
         requiredAction: 'Review saturation, modeled gas exchange, pressures, and blood pressure.',
         teachingPoint:
-          'The engine separates oxygenation measurements from mechanics and hemodynamics.',
+          'Oxygenation, respiratory mechanics, and hemodynamics can change in different directions.',
       },
       predict: {
         objective: 'Predict both benefit and a safety consequence.',
@@ -549,13 +547,13 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         objective: 'Predict immediate and delayed response separately.',
         requiredAction: 'Commit to a waveform/mechanics direction and a gas-exchange direction.',
         teachingPoint:
-          'The engine intentionally uses different time constants for different response domains.',
+          'Delivered breath measurements change before the full gas-exchange response is available.',
       },
       act: {
         objective: 'Apply a mechanism-specific change.',
         requiredAction: 'Change one ventilator or patient factor tied to effective ventilation.',
         teachingPoint:
-          'The reducer bounds every supported control before recalculating measurements.',
+          'Make one bounded change so its effect can be attributed during reassessment.',
       },
       observe: {
         objective: 'Observe delivery before interpreting delayed gas exchange.',
@@ -602,7 +600,7 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
     references: [
       {
         title: 'Immediate response',
-        summary: 'Waveforms and mechanics change on the engine time step.',
+        summary: 'Waveforms and mechanics change before the delayed gas response.',
       },
       {
         title: 'Delayed response',
@@ -646,13 +644,13 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
         teachingPoint: 'Communication and comfort remain a scored domain in the preserved rubric.',
       },
       transfer: {
-        objective: 'Transfer to a new deterioration without carrying altered state forward.',
-        requiredAction: 'Start a clean case and repeat the recognition sequence.',
-        teachingPoint: 'Changing case or device creates a clean deterministic attempt.',
+        objective: 'Transfer to a new high-pressure deterioration.',
+        requiredAction: 'Repeat patient, airway, circuit, and pressure-component assessment.',
+        teachingPoint: 'A new patient requires fresh mechanism localization.',
       },
     },
     prediction: {
-      prompt: 'What does acknowledging a ventilator alarm accomplish in the simulator?',
+      prompt: 'What does acknowledging a ventilator alarm accomplish?',
       choices: [
         {
           id: 'signal-only',
@@ -662,21 +660,23 @@ export const mechanicalVentilationLessons: readonly VentilationLessonDefinition[
       ],
       correctChoiceId: 'signal-only',
       explanation:
-        'Alarm acknowledgment and cause correction are deliberately separate engine actions.',
+        'Alarm acknowledgment changes alert handling; it does not correct the active cause.',
     },
     transfer: {
       prompt:
-        'A different patient deteriorates after you completed a prior case. What state should be reused?',
+        'A different patient develops a high-pressure alarm. What assessment should be repeated?',
       choices: [
-        { id: 'clean-case', label: 'Use a clean case and re-establish patient-specific context' },
+        {
+          id: 'clean-case',
+          label: 'Patient examination, airway/circuit inspection, and peak-to-plateau comparison',
+        },
         {
           id: 'altered-state',
-          label: 'Carry the prior patient’s altered settings and interventions forward',
+          label: 'Alarm acknowledgment alone without examining the patient or circuit',
         },
       ],
       correctChoiceId: 'clean-case',
-      explanation:
-        'The training workflow resets case state while preserving only progress and preferred console.',
+      explanation: 'The new event requires patient-specific assessment and mechanism localization.',
     },
     references: [
       {

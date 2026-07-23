@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type ChangeEvent, type CSSProperties } from 'react'
+import { useId, useRef, useState, type ChangeEvent, type CSSProperties } from 'react'
 
 import {
   PRESCRIPTION_WORKBENCH_UNAVAILABLE_OUTPUTS,
@@ -92,38 +92,47 @@ const BAG_STREAM_OPTIONS: readonly {
 const SOURCE_NOTES = Object.freeze([
   Object.freeze({
     id: 'MATH-PM-001',
+    label: 'Effluent-pump arithmetic',
     text: 'PrisMax effluent-pump target expression · AW8035 manual p217 / PDF p218',
   }),
   Object.freeze({
     id: 'DOSE-PM-001',
+    label: 'Weight-normalized display',
     text: 'Weight-normalized effluent display · AW8035 manual pp219–220 / PDF pp220–221',
   }),
   Object.freeze({
     id: 'MATH-PM-003',
+    label: 'Predilution relationship',
     text: 'Printed total-predilution relationship · AW8035 manual p218 / PDF p219',
   }),
   Object.freeze({
     id: 'MATH-PM-005',
+    label: 'Plasma-flow relationship',
     text: 'Plasma-flow relationship · AW8035 manual pp218–219 / PDF pp219–220',
   }),
   Object.freeze({
     id: 'MATH-PM-004 / MATH-PM-006',
+    label: 'Unavailable calculations',
     text: 'Some circuit-flow calculations remain unavailable because the references do not support one verified expression',
   }),
   Object.freeze({
     id: 'REVIEW-CKRT-CORE-2025',
+    label: 'Clinical context',
     text: '2025 CKRT Core Curriculum · clinical context source',
   }),
   Object.freeze({
     id: 'GUID-RRT-ICU-2026',
+    label: 'Critical-care guidance',
     text: '2026 multidisciplinary ICU RRT guideline · clinical context source',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PRESCRIPTION-001',
+    label: 'Practice-value boundary',
     text: 'Practice values and arithmetic boundaries for the prescription workbench',
   }),
   Object.freeze({
     id: 'SYNTH-LAB-PREPOST-001',
+    label: 'Comparison boundary',
     text: 'Qualitative comparison rules for the pre/post replacement-flow exercise',
   }),
 ])
@@ -323,6 +332,7 @@ export interface QualitativePrePostDilutionExperimentProps {
 
 export interface CrrtPrescriptionWorkbenchProps {
   readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe') => void
+  readonly onCompletionEvidence?: () => void
 }
 
 export function QualitativePrePostDilutionExperiment({
@@ -429,8 +439,13 @@ export function QualitativePrePostDilutionExperiment({
   )
 }
 
-export function CrrtPrescriptionWorkbench({ onPhaseChange }: CrrtPrescriptionWorkbenchProps = {}) {
+export function CrrtPrescriptionWorkbench({
+  onPhaseChange,
+  onCompletionEvidence,
+}: CrrtPrescriptionWorkbenchProps = {}) {
   const idPrefix = useId()
+  const inputChanged = useRef(false)
+  const completionReported = useRef(false)
   const [numericInputs, setNumericInputs] = useState(INITIAL_NUMERIC_INPUTS)
   const [syntheticBagStream, setSyntheticBagStream] = useState<SyntheticBagStream>('dialysate')
   const [syntheticBagCapacity, setSyntheticBagCapacity] = useState('')
@@ -459,6 +474,18 @@ export function CrrtPrescriptionWorkbench({ onPhaseChange }: CrrtPrescriptionWor
     setNumericInputs((current) => ({ ...current, [key]: value }))
   }
 
+  function recordChangedInput() {
+    inputChanged.current = true
+    onPhaseChange?.('act')
+  }
+
+  function inspectUpdatedOutputs() {
+    onPhaseChange?.('observe')
+    if (!inputChanged.current || completionReported.current) return
+    completionReported.current = true
+    onCompletionEvidence?.()
+  }
+
   return (
     <section
       className={styles.workbench}
@@ -471,7 +498,7 @@ export function CrrtPrescriptionWorkbench({ onPhaseChange }: CrrtPrescriptionWor
       data-scoring="tool-specific"
       data-competency="none"
       onFocusCapture={() => onPhaseChange?.('predict')}
-      onChangeCapture={() => onPhaseChange?.('act')}
+      onChangeCapture={recordChangedInput}
     >
       <header className={styles.header}>
         <div>
@@ -704,7 +731,7 @@ export function CrrtPrescriptionWorkbench({ onPhaseChange }: CrrtPrescriptionWor
             className={styles.outputPanel}
             aria-labelledby={`${idPrefix}-outputs`}
             tabIndex={0}
-            onFocus={() => onPhaseChange?.('observe')}
+            onFocus={inspectUpdatedOutputs}
           >
             <header>
               <span>Manufacturer-manual calculations</span>
@@ -827,7 +854,7 @@ export function CrrtPrescriptionWorkbench({ onPhaseChange }: CrrtPrescriptionWor
           <ul>
             {SOURCE_NOTES.map((source) => (
               <li key={source.id}>
-                <strong>{source.id}</strong>
+                <strong>{source.label}</strong>
                 <span>{source.text}</span>
               </li>
             ))}

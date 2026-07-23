@@ -8,9 +8,12 @@ import { useReducedMotionPreference } from '@/features/cardiac-anatomy/component
 import {
   WEDGE_AUTO_DEFLATION_SECONDS,
   catheterPositionDepth,
+  type CatheterPosition,
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
+import { WaveformAtlasPanel } from './WaveformAtlasPanel'
+import { WedgeValidityPanel } from './WedgeValidityPanel'
 import styles from './icu-hemodynamics.module.css'
 
 interface PacActionDockProps {
@@ -28,11 +31,23 @@ const positionLabels: Record<(typeof positions)[number], string> = {
   wedge: 'PAWP',
 }
 
+/** Atlas entry that matches each catheter position, so the reference follows the catheter. */
+const atlasEntryForPosition: Record<CatheterPosition, string> = {
+  introducer: 'ra-normal',
+  ra: 'ra-normal',
+  rv: 'rv-normal',
+  pa: 'pa-normal',
+  wedge: 'wedge-normal',
+}
+
 export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
   const { catheter } = state
   const reducedMotion = useReducedMotionPreference()
   const moving = catheter.targetPosition !== null
   const anatomy = PAC_POSITION_ANATOMY[catheter.position]
+  const currentWaveformConfirmed = state.signalValidationChecks.includes(
+    `waveform-confirmed-${catheter.position}`,
+  )
   const wedgeElapsed =
     catheter.wedgeStartedAt === null ? 0 : Math.max(0, state.timeSeconds - catheter.wedgeStartedAt)
   const wedgeStatus = catheter.floatBalloonInflated
@@ -83,6 +98,24 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
               ))}
             </ol>
             <p className={styles.pacDockCue}>{anatomy.waveform}</p>
+            {catheter.position !== 'introducer' && catheter.position !== 'wedge' ? (
+              <button
+                type="button"
+                className={styles.pacDockConfirmButton}
+                aria-pressed={currentWaveformConfirmed}
+                disabled={moving}
+                onClick={() =>
+                  dispatch({
+                    type: 'VALIDATE_SIGNAL',
+                    check: `waveform-confirmed-${catheter.position}`,
+                  })
+                }
+              >
+                {currentWaveformConfirmed
+                  ? `${catheter.position.toUpperCase()} waveform confirmed`
+                  : `Confirm ${catheter.position.toUpperCase()} waveform`}
+              </button>
+            ) : null}
             <div className={styles.pacDockActionGrid}>
               <button
                 type="button"
@@ -93,7 +126,12 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
               </button>
               <button
                 type="button"
-                disabled={moving || catheter.position === 'pa' || catheter.position === 'wedge'}
+                disabled={
+                  moving ||
+                  catheter.position === 'pa' ||
+                  catheter.position === 'wedge' ||
+                  (catheter.position !== 'introducer' && !currentWaveformConfirmed)
+                }
                 onClick={() => dispatch({ type: 'ADVANCE_CATHETER', instant: reducedMotion })}
               >
                 Advance
@@ -157,6 +195,26 @@ export function PacActionDock({ state, dispatch, focus }: PacActionDockProps) {
           </fieldset>
         ) : null}
       </div>
+
+      {focus !== 'wedge' ? (
+        <WaveformAtlasPanel
+          key={`advance-${catheter.position}`}
+          initialEntryId={atlasEntryForPosition[catheter.position]}
+          onlyCategories={['insertion']}
+          heading="What each position looks like"
+        />
+      ) : null}
+
+      {focus === 'wedge' ? (
+        <>
+          <WaveformAtlasPanel
+            initialEntryId="wedge-normal"
+            onlyCategories={['artifact']}
+            heading="True wedge versus false wedge"
+          />
+          <WedgeValidityPanel />
+        </>
+      ) : null}
 
       <p className={styles.pacDockBoundaryNote}>
         Tricuspid and pulmonic gates orient the CT-derived route; their leaflet morphology is not

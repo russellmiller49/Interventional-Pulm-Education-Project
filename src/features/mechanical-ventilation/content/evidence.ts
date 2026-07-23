@@ -57,6 +57,94 @@ export const ventilationEvidence: readonly VentilationEvidenceReference[] = [
     limitations:
       'Curriculum source rather than independent validation. Device-specific settings are normalized through bounded educational profiles and remain draft pending review.',
   },
+  {
+    id: 'tobin-3e-setting-ventilator',
+    sourceClass: 'clinical-reference',
+    title: 'Principles and Practice of Mechanical Ventilation: Setting the Ventilator',
+    citation:
+      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 5.',
+    pages: 'Supplied chapter PDF, 30 pages',
+    supports: [
+      'Breath-variable reasoning for ventilator settings',
+      'Linking delivered ventilation to mechanics and gas-exchange reassessment',
+    ],
+    limitations:
+      'Textbook chapter supplied by the course author. It supports clinical concepts, not the fidelity of any training-console workflow.',
+  },
+  {
+    id: 'tobin-3e-peep',
+    sourceClass: 'clinical-reference',
+    title: 'Principles and Practice of Mechanical Ventilation: Positive End-Expiratory Pressure',
+    citation:
+      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 10.',
+    pages: 'Supplied chapter PDF, 75 pages',
+    supports: [
+      'PEEP effects on recruitment and oxygenation',
+      'Concurrent pressure and hemodynamic reassessment after a PEEP change',
+    ],
+    limitations:
+      'Textbook chapter supplied by the course author. The lesson uses bounded responses and does not prescribe patient-specific PEEP.',
+  },
+  {
+    id: 'tobin-3e-copd',
+    sourceClass: 'clinical-reference',
+    title: 'Principles and Practice of Mechanical Ventilation: Mechanical Ventilation in COPD',
+    citation:
+      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 31.',
+    pages: 'Supplied chapter PDF, 33 pages',
+    supports: [
+      'Expiratory flow limitation, dynamic hyperinflation, and intrinsic PEEP',
+      'Hemodynamic consequences of excessive end-inspiratory lung volume',
+      'Cycling assessment in pressure support for obstructive physiology',
+    ],
+    limitations:
+      'Textbook chapter supplied by the course author. Quantitative patient response remains an educational approximation.',
+  },
+  {
+    id: 'tobin-3e-monitoring',
+    sourceClass: 'clinical-reference',
+    title: 'Principles and Practice of Mechanical Ventilation: Monitoring',
+    citation:
+      'Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 48.',
+    pages: 'Supplied chapter PDF, 36 pages',
+    supports: [
+      'Measurement validation and interpretation of airway pressure and flow',
+      'Inspiratory and expiratory occlusion measurements',
+      'Limitations introduced by timing and signal error',
+    ],
+    limitations:
+      'Textbook chapter supplied by the course author. Monitoring examples do not validate the generated waveform morphology.',
+  },
+  {
+    id: 'tobin-3e-fighting-ventilator',
+    sourceClass: 'clinical-reference',
+    title: 'Principles and Practice of Mechanical Ventilation: Fighting the Ventilator',
+    citation:
+      'Tobin MJ, Jubran A, Laghi F. Fighting the Ventilator. In: Tobin MJ, ed. Principles and Practice of Mechanical Ventilation. 3rd ed. McGraw-Hill; 2013. Chapter 53.',
+    pages: 'Supplied chapter PDF, 37 pages',
+    supports: [
+      'Concurrent stabilization and mechanism localization during acute deterioration',
+      'Peak-to-plateau pressure comparison for resistive versus elastic load',
+      'Pressure and flow waveform clues for unmet demand, intrinsic PEEP, and secretions',
+    ],
+    limitations:
+      'Textbook chapter supplied by the course author. Emergency actions remain recognition-and-priority exercises governed by local protocols.',
+  },
+  {
+    id: 'antonogiannaki-dyssynchrony-2017',
+    sourceClass: 'clinical-reference',
+    title: 'Patient–Ventilator Dyssynchrony',
+    citation:
+      'Antonogiannaki E-M, Georgopoulos D, Akoumianaki E. Patient–Ventilator Dyssynchrony. Korean J Crit Care Med. 2017;32(4):307-322. doi:10.4266/kjccm.2017.00535.',
+    pages: '307-322; supplied article PDF',
+    supports: [
+      'Trigger, cycling, and assist-magnitude definitions of dyssynchrony',
+      'Joint assessment of patient comfort and pressure/flow waveforms',
+      'Mechanism-specific setting changes followed by reassessment',
+    ],
+    limitations:
+      'Narrative review. It supports bedside recognition concepts but does not validate automated scoring or synthetic patient response.',
+  },
   ...mechanicalVentilationSource.sources.map((source) => ({
     id: `casebook-source-${source.id}`,
     sourceClass:

@@ -753,6 +753,58 @@
   background: rgba(8, 32, 37, 0.82);
 }
 
+.lessonDocument {
+  display: grid;
+  width: min(100%, 1120px);
+  gap: 0.8rem;
+  margin-inline: auto;
+}
+
+.lessonSwitcher {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--crrt-line);
+  border-radius: 0.9rem;
+  background: rgba(8, 32, 37, 0.9);
+}
+
+.lessonSwitcher label {
+  display: grid;
+  flex: 1 1 30rem;
+  gap: 0.35rem;
+  max-width: 48rem;
+}
+
+.lessonSwitcher label > span {
+  color: var(--crrt-teal);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.lessonSwitcher select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(148, 196, 191, 0.38);
+  border-radius: 0.6rem;
+  color: var(--crrt-ink);
+  background: #0a252a;
+}
+
+.lessonSwitcher p {
+  max-width: 28rem;
+  margin: 0;
+  color: var(--crrt-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: right;
+}
+
 .lessonArticle > header span,
 .embeddedLabHeading span,
 .casePlayerHeading span,
@@ -779,6 +831,62 @@
 .lessonArticle > ul {
   display: grid;
   gap: 0.45rem;
+}
+
+.clinicalAnchor {
+  margin: 1.2rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(87, 208, 193, 0.4);
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at 96% 10%, rgba(87, 208, 193, 0.16), transparent 16rem),
+    rgba(3, 21, 24, 0.72);
+}
+
+.clinicalAnchor > span,
+.clinicalApplication > header span {
+  color: var(--crrt-amber);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.clinicalAnchor h3,
+.clinicalApplication h3 {
+  margin: 0.3rem 0 0.8rem;
+}
+
+.clinicalAnchor dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.clinicalAnchor dl > div {
+  padding: 0.65rem;
+  border: 1px solid var(--crrt-line);
+  border-radius: 0.65rem;
+  background: rgba(8, 32, 37, 0.72);
+}
+
+.clinicalAnchor dt {
+  color: var(--crrt-muted);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.clinicalAnchor dd {
+  margin: 0.2rem 0 0;
+  line-height: 1.45;
+}
+
+.clinicalAnchor > p {
+  margin: 0.8rem 0 0;
+  color: #d0dfdd;
+  line-height: 1.6;
 }
 
 .embeddedLab,
@@ -903,6 +1011,88 @@
   line-height: 1.6;
 }
 
+.clinicalApplication {
+  margin-top: 1.3rem;
+  padding: 1rem;
+  border: 1px solid rgba(245, 187, 101, 0.36);
+  border-radius: 0.9rem;
+  background: rgba(75, 51, 18, 0.25);
+}
+
+.clinicalApplication fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.clinicalApplication legend {
+  margin-bottom: 0.8rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.clinicalApplication fieldset > div {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.clinicalApplication label {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 0.7rem;
+  border: 1px solid var(--crrt-line);
+  border-radius: 0.7rem;
+  background: rgba(3, 21, 24, 0.68);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.clinicalApplication label[data-selected='true'] {
+  border-color: var(--crrt-teal);
+}
+
+.clinicalApplication input {
+  margin-top: 0.25rem;
+}
+
+.applicationSubmit,
+.applicationFeedback button {
+  margin-top: 0.8rem;
+  padding: 0.65rem 0.85rem;
+  border: 0;
+  border-radius: 0.65rem;
+  color: var(--crrt-deep);
+  background: var(--crrt-amber);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.applicationSubmit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.applicationFeedback {
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  border: 1px solid rgba(241, 141, 121, 0.4);
+  border-radius: 0.7rem;
+  background: rgba(92, 37, 29, 0.28);
+}
+
+.applicationFeedback[data-correct='true'] {
+  border-color: rgba(87, 208, 193, 0.5);
+  background: rgba(22, 78, 70, 0.3);
+}
+
+.applicationFeedback p {
+  margin: 0.4rem 0 0;
+  color: #dbe7e5;
+  line-height: 1.55;
+}
+
 .lessonFooter {
   display: flex;
   gap: 1rem;
@@ -942,6 +1132,29 @@
   cursor: pointer;
 }
 
+.lessonCompletion {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(245, 187, 101, 0.4);
+  border-radius: 0.65rem;
+  color: var(--crrt-amber);
+  background: rgba(75, 51, 18, 0.3);
+}
+
+.lessonCompletion[data-complete='true'] {
+  border-color: rgba(87, 208, 193, 0.45);
+  color: var(--crrt-teal-soft);
+  background: rgba(22, 78, 70, 0.3);
+}
+
+.lessonCompletion svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .practicePicker {
   display: grid;
   grid-template-columns: minmax(14rem, 0.65fr) minmax(18rem, 1fr);
@@ -970,6 +1183,36 @@
 }
 
 .practicePicker select {
+  min-height: 44px;
+  padding: 0.55rem;
+  border: 1px solid rgba(148, 196, 191, 0.38);
+  border-radius: 0.55rem;
+  color: var(--crrt-ink);
+  background: #0a252a;
+}
+
+.workspaceCasePicker {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--crrt-line);
+}
+
+.workspaceCasePicker > label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.workspaceCasePicker > label > span {
+  color: var(--crrt-teal-soft);
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.workspaceCasePicker select {
+  width: 100%;
   min-height: 44px;
   padding: 0.55rem;
   border: 1px solid rgba(148, 196, 191, 0.38);
@@ -1031,8 +1274,31 @@
   background: rgba(5, 24, 28, 0.72);
 }
 
+.activityViewport > .casePlayerSection {
+  width: 100%;
+  margin-top: 0;
+}
+
 .drillStrip > .sectionHeading > svg {
   color: var(--crrt-coral);
+}
+
+.assessmentTaskRules {
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--crrt-line);
+}
+
+.assessmentTaskRules ul {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+.assessmentTaskRules small {
+  color: var(--crrt-muted);
+  line-height: 1.5;
 }
 
 .assessmentRules,
@@ -1114,9 +1380,19 @@
   .howGrid,
   .lessonNav ol,
   .teachingFigures,
+  .clinicalAnchor dl,
   .additionalCases > div,
   .practicePicker {
     grid-template-columns: 1fr;
+  }
+
+  .lessonSwitcher {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lessonSwitcher p {
+    text-align: left;
   }
 
   .curriculumChips {

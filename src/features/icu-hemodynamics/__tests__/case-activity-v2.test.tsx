@@ -35,10 +35,6 @@ jest.mock('../components/BedsideMonitor', () => ({
   ),
 }))
 
-jest.mock('../components/PacSkillsLab', () => ({
-  PacSkillsLab: () => <div>Mock thermodilution lab</div>,
-}))
-
 jest.mock('../components/FormulaDrawer', () => ({
   FormulaDrawer: () => <div>Mock derived values</div>,
 }))
@@ -81,9 +77,8 @@ describe('focused hemodynamic case activity', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Commit mechanism and priority' }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Level + zero' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Position' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
     for (const intervention of requiredInterventions) {
       fireEvent.click(
         screen.getByRole('button', {
@@ -96,12 +91,20 @@ describe('focused hemodynamic case activity', () => {
 
     expect(await screen.findByRole('heading', { name: 'Causal debrief' })).toBeInTheDocument()
     expect(screen.getByText(/Total/)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Continue to transfer check' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Open a new signal-transfer variant' }))
     fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Validate, predict, act, and reassess in the next case',
-      }),
+      screen.getByLabelText(
+        'An off-level, overdamped measurement chain that requires revalidation',
+      ),
     )
+    fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
+      target: { value: '0' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Complete validated transfer' }))
 
     const normalized = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
@@ -162,7 +165,7 @@ describe('focused hemodynamic case activity', () => {
     expect(screen.queryByText('Cardiac tamponade')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Help' }))
-    expect(screen.getByRole('status')).toHaveTextContent(/diagnosis cues remain hidden/i)
+    expect(screen.getByText(/diagnosis cues remain hidden/i)).toBeInTheDocument()
   })
 
   it('labels the authored restart checkpoint as Recognize rather than exact Predict resume', async () => {

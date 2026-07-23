@@ -1,4 +1,7 @@
 export * from './analytics'
+export * from './clinicalContext'
+export * from './clinicalLearningItem'
+export * from './evidence'
 export * from './progress'
 export * from './resume'
 export * from './schema'

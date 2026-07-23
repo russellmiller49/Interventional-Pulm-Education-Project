@@ -6,6 +6,7 @@ export interface PublicCriticalCarePathwayDefinition {
   readonly id: string
   readonly title: string
   readonly description: string
+  readonly stage: 'preview' | 'released'
   readonly moduleIds: readonly string[]
   readonly competencyIds: readonly string[]
 }

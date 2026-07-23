@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 
+import { Badge } from '@/components/ui/badge'
+
 import type { CriticalCarePublicClientCatalog } from '../content/publicCatalogTypes'
 import {
   derivePublicCriticalCareDashboard,
@@ -124,7 +126,12 @@ export function CriticalCareProgressView({
             <ol className="mt-4 grid gap-4 md:grid-cols-2">
               {progress.model.pathways.map((summary) => (
                 <li key={summary.pathway.id} className="rounded-2xl border bg-card p-5">
-                  <h3 className="font-bold">{summary.pathway.title}</h3>
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-bold">{summary.pathway.title}</h3>
+                    {summary.pathway.stage === 'preview' ? (
+                      <Badge variant="outline">Preview</Badge>
+                    ) : null}
+                  </div>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {summary.completedMilestones} of {summary.totalMilestones} module milestones ·{' '}
                     {summary.completedActivities} of {summary.totalActivities} activities

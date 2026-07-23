@@ -51,11 +51,19 @@ export function IcuRemediationLinks({
             ) : null}
             <div>
               <strong>{requirement.label}</strong>
+              <span className={styles.remediationGateStatus}>
+                {requirement.countsForAssessGate
+                  ? 'Released Assess prerequisite'
+                  : 'Preview preparation · advisory while clinical review is pending'}
+              </span>
               <p>{requirement.rationale}</p>
               <div className={styles.remediationActions}>
                 {requirement.refreshers.map((refresher) => (
                   <Link key={refresher.activity.id} href={refresher.href as Route}>
                     {refresher.activity.title}
+                    {refresher.approvedForAssessGate ? null : (
+                      <small aria-label="Preview activity">Preview</small>
+                    )}
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 ))}

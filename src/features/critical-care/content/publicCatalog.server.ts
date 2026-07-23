@@ -111,6 +111,8 @@ export function buildCriticalCarePublicClientCatalog(): CriticalCarePublicClient
           id: pathway.id,
           title: pathway.title,
           description: publicPathwayDescriptionOverrides[pathway.id] ?? pathway.description,
+          stage:
+            publicModuleIds.length === pathway.moduleIds.length ? 'released' : ('preview' as const),
           moduleIds: publicModuleIds,
           competencyIds: pathway.competencyIds.filter((competencyId) =>
             competencyIds.has(competencyId),

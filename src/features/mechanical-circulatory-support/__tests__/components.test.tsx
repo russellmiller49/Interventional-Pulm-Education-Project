@@ -242,14 +242,100 @@ describe('Mechanical Circulatory Support learner interface', () => {
     expect(lifecycleInteractions).not.toContain('critical_care_transfer_completed')
   })
 
-  it('persists lesson completion locally and exposes all eight lessons', async () => {
+  it('requires authored interactions and a transfer decision before lesson completion', async () => {
     render(<McsWorkbench section="learn" />)
     const rail = screen.getByRole('region', { name: /Eight guided lessons/i })
     expect(within(rail).getAllByRole('button')).toHaveLength(8)
-    fireEvent.click(screen.getByRole('button', { name: /Mark lesson complete/i }))
-    const saved = JSON.parse(window.localStorage.getItem(progressKey) ?? '{}')
-    expect(saved.completedLessonIds).toContain('mcs-foundations-signals')
-    expect(screen.getByRole('button', { name: /Lesson complete/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Mark lesson complete/i })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect arterial waveform' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
+    expect(screen.getByRole('heading', { name: 'Read both ventricles' })).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Inspect filling pressures and RV delivery' }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect device and effective flow' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Load transfer patient' }))
+
+    expect(
+      screen.getByRole('heading', {
+        name: /Transfer after transport: plausible pressure, falling perfusion/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      JSON.parse(window.localStorage.getItem(progressKey) ?? '{}').completedLessonIds ?? [],
+    ).toEqual([])
+
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect arterial waveform' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Inspect filling pressures and RV delivery' }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect device and effective flow' }))
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: /Reassess the patient, validate the pressure signal/i,
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Check transfer decision' }))
+
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem(progressKey) ?? '{}')
+      expect(saved.completedLessonIds).toContain('mcs-foundations-signals')
+    })
+    expect(screen.getByText('Evidence complete')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: /Continue to next lesson Unloading, augmentation, and total flow/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /Recheck transfer evidence/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('continues from completed Impella transfer evidence to the next Impella lesson', async () => {
+    render(<McsWorkbench section="learn" initialDevice="impella" />)
+
+    fireEvent.change(screen.getByRole('combobox', { name: /Left-sided Impella configuration/i }), {
+      target: { value: '55' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
+    fireEvent.change(screen.getByRole('slider', { name: 'Performance level' }), {
+      target: { value: '6' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
+    fireEvent.change(screen.getByRole('combobox', { name: 'Placement state' }), {
+      target: { value: 'too-deep' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to next step' }))
+    fireEvent.change(screen.getByRole('slider', { name: 'SVR' }), {
+      target: { value: '1950' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Load transfer patient' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect device and effective flow' }))
+    fireEvent.click(
+      screen.getByRole('radio', {
+        name: /The pump is pressure-gradient dependent/i,
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Check transfer decision' }))
+
+    const continueButton = await screen.findByRole('button', {
+      name: /Continue to next lesson Impella suction, purge, hemolysis, and RV delivery/i,
+    })
+    expect(screen.getByRole('region', { name: 'Lesson complete' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Recheck transfer evidence/i })).toBeNull()
+
+    fireEvent.click(continueButton)
+    expect(
+      screen.getByRole('heading', {
+        name: 'Impella suction, purge, hemolysis, and RV delivery',
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Build RP and BiPella support' }),
+    ).toBeInTheDocument()
   })
 
   it('keeps capstones locked until foundations, device lessons, and three mastered cases are present', async () => {

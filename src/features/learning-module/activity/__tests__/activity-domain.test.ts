@@ -39,6 +39,9 @@ const activity: CriticalCareActivityDefinition = {
   assetIds: ['hemodynamics-bedside-waveforms'],
   reviewStatus: 'sme-review',
   evidenceIds: ['pac-waveforms-part-1-2021'],
+  contentVersion: '2026.07',
+  creditPolicy: 'competency-eligible',
+  completionEvidenceAuthority: 'reviewed-engine-score',
 }
 
 function makeProgress(

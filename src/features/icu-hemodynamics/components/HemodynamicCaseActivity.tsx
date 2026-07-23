@@ -13,6 +13,8 @@ import { ReferenceDrawer } from '@/features/learning-module/components/Reference
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
+  authoritativeCriticalCareCompetencyEvidence,
+  authoritativeCriticalCareStatus,
   readCriticalCareProgress,
   upsertCriticalCareActivityProgress,
   useCriticalCareActivityAnalytics,
@@ -35,12 +37,9 @@ import {
   writeIcuHemodynamicsProgress,
   type HemodynamicAction,
 } from '../engine'
-import { BedsideMonitor } from './BedsideMonitor'
-import { FormulaDrawer } from './FormulaDrawer'
-import { PacSkillsLab } from './PacSkillsLab'
+import { HemodynamicNativeWorkspace } from './HemodynamicNativeWorkspace'
 
 type CaseMode = 'practice' | 'challenge'
-type WorkspaceSurface = 'monitor' | 'thermodilution' | 'derived'
 
 const phaseOrder: readonly CriticalCareActivityPhase[] = [
   'recognize',
@@ -50,6 +49,12 @@ const phaseOrder: readonly CriticalCareActivityPhase[] = [
   'explain',
   'transfer',
 ]
+
+const hd08ProcedureMilestoneIds = new Set([
+  'correct-measurement-system',
+  'reposition-catheter',
+  'repeat-valid-thermodilution',
+])
 
 function seededCaseNumber(caseId: string, mode: CaseMode): number {
   const base = [...caseId].reduce((total, character) => total + character.charCodeAt(0), 0)
@@ -91,9 +96,9 @@ export function HemodynamicCaseActivity({
     createInitialHemodynamicState(definition, 'practice', seededCaseNumber(caseId, mode)),
   )
   const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
-  const [surface, setSurface] = useState<WorkspaceSurface>('monitor')
   const [hintVisible, setHintVisible] = useState(false)
   const [transferComplete, setTransferComplete] = useState(false)
+  const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const attempt = useRef(1)
   const legacyRecorded = useRef(false)
@@ -238,18 +243,22 @@ export function HemodynamicCaseActivity({
     const now = new Date().toISOString()
     const envelope = readCriticalCareProgress(window.localStorage)
     const existing = envelope.activities.find((item) => item.activityId === activityId)
-    const done = status === 'completed' || status === 'mastered'
+    const authoritativeStatus = authoritativeCriticalCareStatus(activity, status)
+    const done = authoritativeStatus === 'completed' || authoritativeStatus === 'mastered'
     let updated = upsertCriticalCareActivityProgress(
       envelope,
       {
         activityId,
-        status,
+        status: authoritativeStatus,
         currentPhase: phaseForProgress,
         mode: mode satisfies CriticalCareActivityMode,
         ...(state.score ? { bestScore: state.score.total } : {}),
         attempts: Math.max(attempt.current, existing?.attempts ?? 0),
         hintCount: (existing?.hintCount ?? 0) + (addHint ? 1 : 0),
-        competencyEvidenceIds: done ? activity.competencyIds : [],
+        competencyEvidenceIds: authoritativeCriticalCareCompetencyEvidence(
+          activity,
+          done ? activity.competencyIds : [],
+        ),
         updatedAt: now,
       },
       done
@@ -274,7 +283,7 @@ export function HemodynamicCaseActivity({
     setMessage(
       saved
         ? done
-          ? `${status === 'mastered' ? 'Mastery' : 'Completion'} saved on this device.`
+          ? `${authoritativeStatus === 'mastered' ? 'Mastery' : 'Completion'} saved on this device.`
           : 'Safe pre-prediction checkpoint saved on this device.'
         : 'Progress could not be stored on this device.',
     )
@@ -308,8 +317,48 @@ export function HemodynamicCaseActivity({
     checkpoint('explain')
   }
 
+  function beginTransfer() {
+    setState((current) => {
+      const leveledVariant = icuHemodynamicsReducer(current, {
+        type: 'SET_TRANSDUCER_LEVEL',
+        levelCm: -5,
+      })
+      const dampedVariant = icuHemodynamicsReducer(leveledVariant, {
+        type: 'SET_DAMPING',
+        dampingRatio: 1.15,
+      })
+      return {
+        ...icuHemodynamicsReducer(dampedVariant, {
+          type: 'SET_ARTIFACT',
+          artifact: 'overdamped',
+        }),
+        signalValidationChecks: current.signalValidationChecks.filter(
+          (check) =>
+            check !== 'fast-flush' &&
+            check !== 'dynamic-response-classified' &&
+            check !== 'dynamic-response-corrected',
+        ),
+      }
+    })
+    setTransferChoiceId(null)
+    checkpoint('transfer')
+  }
+
   function completeTransfer() {
     if (!state.score) return
+    const transferInteractionComplete =
+      transferChoiceId === 'overdamped-after-position-change' &&
+      Math.abs(state.measurementSystem.transducerLevelCm) <= 1 &&
+      state.signalValidationChecks.includes('fast-flush') &&
+      state.signalValidationChecks.includes('dynamic-response-classified') &&
+      state.signalValidationChecks.includes('dynamic-response-corrected') &&
+      state.measurementSystem.artifact === 'none'
+    if (!transferInteractionComplete) {
+      setMessage(
+        'Interpret the new release trace, re-level the transducer, and correct the dynamic response in the workspace.',
+      )
+      return
+    }
     const mastered = hasHemodynamicMastery(state)
     setTransferComplete(true)
     writeNormalizedProgress(mastered ? 'mastered' : 'completed', 'transfer')
@@ -320,9 +369,9 @@ export function HemodynamicCaseActivity({
   function reset() {
     setState(createInitialHemodynamicState(definition, 'practice', seededCaseNumber(caseId, mode)))
     setPhase('recognize')
-    setSurface('monitor')
     setHintVisible(false)
     setTransferComplete(false)
+    setTransferChoiceId(null)
     legacyRecorded.current = false
     setMessage('Case reset with the same deterministic seed.')
   }
@@ -350,7 +399,14 @@ export function HemodynamicCaseActivity({
     state.completedInterventionIds.includes(id),
   ).length
   const average = thermodilutionAcceptedAverage(state.thermodilutionTrials)
-  const canObserve = state.predictionCommitted && state.completedInterventionIds.length > 0
+  const canObserve =
+    state.predictionCommitted &&
+    (definition.id === 'HD-08'
+      ? requiredCompleted === definition.requiredInterventionIds.length
+      : state.completedInterventionIds.length > 0)
+  const visibleInterventions = definition.interventions.filter(
+    (intervention) => definition.id !== 'HD-08' || !hd08ProcedureMilestoneIds.has(intervention.id),
+  )
   const modeLabel: CriticalCareActivityMode = mode
 
   let taskControls = null
@@ -410,34 +466,34 @@ export function HemodynamicCaseActivity({
   } else if (phase === 'act') {
     taskControls = (
       <div className="grid gap-3">
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            className="min-h-11 rounded-xl border p-2 text-xs"
+        <div className="grid gap-2 text-xs" aria-label="Signal-validation state">
+          <p
+            className="rounded-lg border p-2"
+            data-complete={Math.abs(state.measurementSystem.transducerLevelCm) <= 1 || undefined}
+          >
+            Level: {state.measurementSystem.transducerLevelCm.toFixed(0)} cm from reference
+          </p>
+          <p
+            className="rounded-lg border p-2"
             data-complete={state.measurementSystem.zeroed || undefined}
-            onClick={() => dispatch({ type: 'ZERO_TRANSDUCER' })}
           >
-            Level + zero
-          </button>
-          <button
-            type="button"
-            className="min-h-11 rounded-xl border p-2 text-xs"
-            data-complete={state.signalValidationChecks.includes('fast-flush') || undefined}
-            onClick={() => dispatch({ type: 'FAST_FLUSH' })}
+            Atmospheric zero: {state.measurementSystem.zeroed ? 'complete' : 'required'}
+          </p>
+          <p
+            className="rounded-lg border p-2"
+            data-complete={
+              state.signalValidationChecks.includes('dynamic-response-classified') || undefined
+            }
           >
-            Fast flush
-          </button>
-          <button
-            type="button"
-            className="min-h-11 rounded-xl border p-2 text-xs"
-            data-complete={state.signalValidationChecks.includes('waveform-valid') || undefined}
-            onClick={() => dispatch({ type: 'VALIDATE_SIGNAL', check: 'waveform-valid' })}
-          >
-            Position
-          </button>
+            Dynamic response:{' '}
+            {state.signalValidationChecks.includes('dynamic-response-classified')
+              ? 'classified'
+              : 'not classified'}
+          </p>
+          <p className="rounded-lg border p-2">Catheter: {state.catheter.position.toUpperCase()}</p>
         </div>
         <div className="grid gap-2" aria-label="Bounded simulated interventions">
-          {definition.interventions.map((item) => (
+          {visibleInterventions.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -504,31 +560,64 @@ export function HemodynamicCaseActivity({
       <button
         type="button"
         className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={() => checkpoint('transfer')}
+        onClick={beginTransfer}
       >
-        Continue to transfer check
+        Open a new signal-transfer variant
       </button>
     )
   } else {
+    const transferInteractionComplete =
+      transferChoiceId === 'overdamped-after-position-change' &&
+      Math.abs(state.measurementSystem.transducerLevelCm) <= 1 &&
+      state.signalValidationChecks.includes('dynamic-response-classified') &&
+      state.signalValidationChecks.includes('dynamic-response-corrected') &&
+      state.measurementSystem.artifact === 'none'
     taskControls = (
       <div className="grid gap-2">
+        <fieldset className="grid gap-2">
+          <legend className="text-sm font-semibold">
+            After a patient-position change, the release trace returns slowly with little
+            oscillation and pulse pressure narrows. What best explains the new signal?
+          </legend>
+          {[
+            [
+              'overdamped-after-position-change',
+              'An off-level, overdamped measurement chain that requires revalidation',
+            ],
+            [
+              'true-afterload-change',
+              'A true acute rise in afterload; the pressure signal itself is already valid',
+            ],
+            [
+              'respiratory-change',
+              'Respiratory variation alone, despite the abnormal fast-flush release',
+            ],
+          ].map(([value, label]) => (
+            <label
+              key={value}
+              className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm"
+            >
+              <input
+                type="radio"
+                name="case-transfer-interpretation"
+                checked={transferChoiceId === value}
+                onChange={() => setTransferChoiceId(value)}
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
+        <p className="rounded-xl bg-muted p-3 text-xs leading-5">
+          Re-level, run and classify the live fast-flush trace, then correct the response in the
+          pressure-system workspace. The answer choice alone does not complete transfer.
+        </p>
         <button
           type="button"
-          disabled={transferComplete}
-          className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-50"
+          disabled={transferComplete || !transferInteractionComplete}
+          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           onClick={completeTransfer}
         >
-          Validate, predict, act, and reassess in the next case
-        </button>
-        <button
-          type="button"
-          disabled={transferComplete}
-          className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-50"
-          onClick={() =>
-            setMessage('Transfer requires the full reasoning loop, not one isolated target.')
-          }
-        >
-          Carry forward only the final target number
+          Complete validated transfer
         </button>
       </div>
     )
@@ -564,22 +653,14 @@ export function HemodynamicCaseActivity({
           }
         />
       </div>
-    ) : surface === 'thermodilution' ? (
-      <div className="h-full overflow-auto p-3">
-        <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
-      </div>
-    ) : surface === 'derived' ? (
-      <div className="h-full overflow-auto p-3">
-        <FormulaDrawer state={state} dispatch={dispatch} />
-      </div>
     ) : (
-      <div className="h-full overflow-auto p-2">
-        <BedsideMonitor
-          state={state}
-          dispatch={dispatch}
-          onOpenCardiacOutput={() => setSurface('thermodilution')}
-        />
-      </div>
+      <HemodynamicNativeWorkspace
+        state={state}
+        dispatch={dispatch}
+        pressureChallengeMode={
+          definition.id === 'HD-08' || phase === 'transfer' ? 'current-state' : 'selectable'
+        }
+      />
     )
 
   return (
@@ -596,6 +677,7 @@ export function HemodynamicCaseActivity({
         <p className="sr-only">Reviewed English fallback; localized clinical review is pending.</p>
       ) : null}
       <ActivityShell
+        layout="case-workspace"
         breadcrumb={
           <span>
             <Link href={'/icu-hemodynamics' as Route}>ICU Hemodynamics</Link> /{' '}
@@ -623,16 +705,31 @@ export function HemodynamicCaseActivity({
               { label: 'Setting', value: 'Adult ICU · simulated' },
               {
                 label: 'Presentation',
-                value: assessmentMasked
-                  ? 'Information revealed in the task'
-                  : definition.shortTitle,
+                value: definition.presentation,
               },
+              { label: 'HR', value: `${state.parameters.heartRateBpm.toFixed(0)} /min` },
+              { label: 'MAP', value: `${state.measurements.mapMmHg.toFixed(0)} mmHg` },
+              {
+                label: 'Cardiac index',
+                value: `${state.measurements.cardiacIndexLMinM2.toFixed(1)} L/min/m²`,
+              },
+              {
+                label: 'PA / PAWP',
+                value: `${state.measurements.papSystolicMmHg}/${state.measurements.papDiastolicMmHg} · ${state.measurements.pawpMmHg ?? '—'} mmHg`,
+              },
+              {
+                label: 'Support',
+                value: `PEEP ${state.parameters.peepCmH2O.toFixed(0)} cm H₂O`,
+              },
+              { label: 'PAC position', value: state.catheter.position.toUpperCase() },
               { label: 'Model time', value: `${state.timeSeconds.toFixed(1)} s` },
             ]}
             immediateGoal={
               phase === 'recognize'
                 ? definition.presentation
-                : 'Build a mechanism, act in bounded tiers, and reassess.'
+                : phase === 'transfer'
+                  ? 'Revalidate the altered measurement chain before carrying the case interpretation forward.'
+                  : 'Build a mechanism, act in bounded tiers, and reassess the whole patient.'
             }
             safetyConstraints={[
               'Educational model—not a clinical device.',
@@ -654,7 +751,7 @@ export function HemodynamicCaseActivity({
                       ? 'Observe the response and complete a whole-patient reassessment.'
                       : phase === 'explain'
                         ? 'Review the existing score and causal debrief.'
-                        : 'Transfer the reasoning sequence to a new phenotype.'
+                        : 'Apply signal validation to an altered level and dynamic-response variant.'
             }
             requiredAction={
               phase === 'recognize'
@@ -685,30 +782,6 @@ export function HemodynamicCaseActivity({
         }
         secondaryActions={
           <>
-            <button
-              type="button"
-              className="min-h-10 rounded-lg border px-3 text-xs font-semibold"
-              aria-pressed={surface === 'monitor'}
-              onClick={() => setSurface('monitor')}
-            >
-              Monitor
-            </button>
-            <button
-              type="button"
-              className="min-h-10 rounded-lg border px-3 text-xs font-semibold"
-              aria-pressed={surface === 'thermodilution'}
-              onClick={() => setSurface('thermodilution')}
-            >
-              CO lab
-            </button>
-            <button
-              type="button"
-              className="min-h-10 rounded-lg border px-3 text-xs font-semibold"
-              aria-pressed={surface === 'derived'}
-              onClick={() => setSurface('derived')}
-            >
-              Derived
-            </button>
             <ReferenceDrawer
               entries={referenceEntries}
               trigger={

@@ -2,6 +2,18 @@ import type { McsSource } from '../engine/types'
 
 export const mcsSources: readonly McsSource[] = [
   {
+    id: 'mcs-bedside-reference-supplied',
+    title: 'Bedside Mechanical Circulatory Support Reference',
+    citation: 'User-supplied critical-care bedside reference, reviewed July 2026.',
+    sourceType: 'reference-package',
+    year: 2026,
+    suppliedFilename: 'Bedside_Mechanical_Circulatory_Support_Reference.docx',
+    intendedUse:
+      'Whole-patient assessment, supported-chamber and circuit-path checks, loading-condition troubleshooting, device-flow interpretation, and escalation boundaries.',
+    limitation:
+      'Educational bedside framework only; current manufacturer instructions, imaging, local policy, and the responsible shock or MCS team remain authoritative.',
+  },
+  {
     id: 'master-hemodynamics-reference',
     title: 'Master Hemodynamics and Hemodynamic Monitoring Reference',
     citation: 'User-supplied educational reference package, pp. 39–41.',

@@ -21,6 +21,8 @@ import {
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 import {
+  authoritativeCriticalCareCompetencyEvidence,
+  authoritativeCriticalCareStatus,
   readCriticalCareProgress,
   upsertCriticalCareActivityProgress,
   useCriticalCareActivityAnalytics,
@@ -35,10 +37,11 @@ import { hemodynamicCaseById, hemodynamicsSourceById } from '../content'
 import {
   createInitialHemodynamicState,
   icuHemodynamicsReducer,
+  thermodilutionAcceptedAverage,
   type HemodynamicAction,
   type HemodynamicSimulationState,
 } from '../engine'
-import { BedsideMonitor } from './BedsideMonitor'
+import { HemodynamicNativeWorkspace } from './HemodynamicNativeWorkspace'
 
 const ACTIVITY_ID = 'hemodynamics:learn:pac-signal-validation'
 const PAYLOAD_VERSION = 'pac-signal-validation-v1'
@@ -140,21 +143,49 @@ function reduceSimulation(
   return actions.reduce(icuHemodynamicsReducer, state)
 }
 
-function intervention(id: string) {
-  const found = caseDefinition.interventions.find((candidate) => candidate.id === id)
-  if (!found) throw new Error(`Missing HD-08 intervention: ${id}`)
-  return found
-}
-
 function correctedSimulation(state: HemodynamicSimulationState): HemodynamicSimulationState {
-  return reduceSimulation(
+  let corrected = reduceSimulation(
     state,
     { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
     { type: 'ZERO_TRANSDUCER' },
-    { type: 'APPLY_INTERVENTION', intervention: intervention('correct-measurement-system') },
-    { type: 'FAST_FLUSH' },
-    { type: 'APPLY_INTERVENTION', intervention: intervention('reposition-catheter') },
-    { type: 'APPLY_INTERVENTION', intervention: intervention('repeat-valid-thermodilution') },
+    { type: 'FAST_FLUSH', lineType: 'systemic-arterial' },
+    { type: 'VALIDATE_SIGNAL', check: 'dynamic-response-classified' },
+    { type: 'SET_DAMPING', dampingRatio: 0.65 },
+    { type: 'SET_ARTIFACT', artifact: 'none' },
+    { type: 'VALIDATE_SIGNAL', check: 'dynamic-response-corrected' },
+    { type: 'RETRACT_CATHETER', instant: true },
+  )
+  for (let index = 0; index < 3; index += 1) {
+    corrected = icuHemodynamicsReducer(corrected, {
+      type: 'GENERATE_THERMODILUTION_TRIAL',
+      technique: {
+        injectateVolumeMl: caseDefinition.thermodilution.injectateVolumeMl,
+        injectateTemperatureC: caseDefinition.thermodilution.injectateTemperatureC,
+        injectionDurationSeconds: 2.5,
+        respiratoryPhase: 'end-expiration',
+        smoothness: 0.95,
+      },
+    })
+    const trial = corrected.thermodilutionTrials.at(-1)
+    if (trial) {
+      corrected = icuHemodynamicsReducer(corrected, {
+        type: 'SET_THERMODILUTION_ACCEPTED',
+        trialId: trial.id,
+        accepted: true,
+      })
+    }
+  }
+  return corrected
+}
+
+function transferSimulation(): HemodynamicSimulationState {
+  return reduceSimulation(
+    freshSimulation(),
+    { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 },
+    { type: 'ZERO_TRANSDUCER' },
+    { type: 'SET_CATHETER_POSITION', position: 'pa' },
+    { type: 'SET_DAMPING', dampingRatio: 1.15 },
+    { type: 'SET_ARTIFACT', artifact: 'overdamped' },
   )
 }
 
@@ -168,11 +199,7 @@ function rebuildAtCheckpoint(checkpointId: string): HemodynamicSimulationState {
     state = icuHemodynamicsReducer(state, { type: 'REASSESS' })
   }
   if (phase === 'transfer') {
-    state = reduceSimulation(
-      state,
-      { type: 'SET_DAMPING', dampingRatio: 1.15 },
-      { type: 'SET_ARTIFACT', artifact: 'overdamped' },
-    )
+    state = transferSimulation()
   }
   return state
 }
@@ -204,6 +231,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
   const [predictionRestored, setPredictionRestored] = useState(false)
   const [hintVisible, setHintVisible] = useState(false)
   const [transferFeedback, setTransferFeedback] = useState<string | null>(null)
+  const [transferInterpretation, setTransferInterpretation] = useState<string | null>(null)
   const [completed, setCompleted] = useState(false)
   const [storageMessage, setStorageMessage] = useState<string | null>(null)
   const [resumePrompt, setResumePrompt] = useState<ResumePrompt | null>({
@@ -329,6 +357,11 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     const now = new Date().toISOString()
     const envelope = readCriticalCareProgress(window.localStorage)
     const existing = envelope.activities.find((activity) => activity.activityId === ACTIVITY_ID)
+    const authoritativeStatus = authoritativeCriticalCareStatus(
+      activityDefinition,
+      options.completed ? 'completed' : 'in-progress',
+    )
+    const done = authoritativeStatus === 'completed' || authoritativeStatus === 'mastered'
     const pointer: CriticalCareResumePointer = {
       activityId: ACTIVITY_ID,
       pathname: ACTIVITY_PATHNAME,
@@ -344,23 +377,28 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
       envelope,
       {
         activityId: ACTIVITY_ID,
-        status: options.completed ? 'completed' : 'in-progress',
+        status: authoritativeStatus,
         currentPhase: nextPhase,
         mode: 'guided',
         attempts: Math.max(attemptNumber.current, existing?.attempts ?? 0),
         hintCount: (existing?.hintCount ?? 0) + (options.addHint ? 1 : 0),
-        competencyEvidenceIds: options.completed ? activityDefinition.competencyIds : [],
+        competencyEvidenceIds: authoritativeCriticalCareCompetencyEvidence(
+          activityDefinition,
+          done ? activityDefinition.competencyIds : [],
+        ),
         updatedAt: now,
       },
-      options.completed ? undefined : pointer,
+      done ? undefined : pointer,
     )
-    if (options.completed) updated = withoutCriticalCareResumePointer(updated, ACTIVITY_ID)
+    if (done) updated = withoutCriticalCareResumePointer(updated, ACTIVITY_ID)
     const saved = writeCriticalCareProgress(window.localStorage, updated)
     setStorageMessage(
       saved
-        ? options.completed
-          ? 'Activity completion saved on this device.'
-          : 'Safe checkpoint saved on this device.'
+        ? options.completed && !done
+          ? 'Draft review saved as in progress; no completion or competency credit was awarded.'
+          : options.completed
+            ? 'Activity completion saved on this device.'
+            : 'Safe checkpoint saved on this device.'
         : 'Progress could not be stored on this device. You can continue this session.',
     )
   }
@@ -398,19 +436,6 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     advanceTo('act')
   }
 
-  function correctPressureSystem() {
-    apply({ type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
-    apply({ type: 'ZERO_TRANSDUCER' })
-    apply({
-      type: 'APPLY_INTERVENTION',
-      intervention: intervention('correct-measurement-system'),
-    })
-  }
-
-  function applyRequiredIntervention(id: string) {
-    apply({ type: 'APPLY_INTERVENTION', intervention: intervention(id) })
-  }
-
   function reassessCorrectedSignal() {
     apply({ type: 'TICK', seconds: 2 })
     apply({ type: 'REASSESS' })
@@ -424,32 +449,43 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
   }
 
   function enterTransfer() {
-    setSimulation((current) =>
-      reduceSimulation(
-        current,
-        { type: 'SET_DAMPING', dampingRatio: 1.15 },
-        { type: 'SET_ARTIFACT', artifact: 'overdamped' },
-      ),
-    )
+    setSimulation(transferSimulation())
+    setTransferInterpretation(null)
+    setTransferFeedback(null)
     advanceTo('transfer')
   }
 
-  function answerTransfer(correct: boolean) {
-    if (!correct) {
+  function answerTransfer(choice: string) {
+    setTransferInterpretation(choice)
+    if (choice !== 'overdamped-system') {
       setTransferFeedback(
-        'That treats the patient before validating the new signal. Characterize the dynamic response first.',
+        choice === 'low-stroke-volume'
+          ? 'A true stroke-volume change may narrow pulse pressure, but it does not explain the sluggish fast-flush release. Localize the measurement-system behavior first.'
+          : 'Respiratory variation changes the pressure baseline across breaths; it does not produce this release response.',
       )
       return
     }
-    apply({ type: 'FAST_FLUSH' })
-    apply({ type: 'COMPLETE_CASE' })
     setTransferFeedback(
-      'Correct. Repeat the fast-flush assessment and validate the measurement chain before acting on the displayed pressure.',
+      'Best interpretation. The sluggish release with little oscillation indicates an overdamped measurement system. Correct and revalidate that system in the workspace.',
     )
+  }
+
+  function completeTransfer() {
+    const transferInteractionComplete =
+      transferInterpretation === 'overdamped-system' &&
+      simulation.signalValidationChecks.includes('dynamic-response-classified') &&
+      simulation.signalValidationChecks.includes('dynamic-response-corrected') &&
+      simulation.measurementSystem.artifact === 'none'
+    if (!transferInteractionComplete) {
+      setTransferFeedback(
+        'Interpret the observed release response, then use the pressure-system lab to classify and correct it.',
+      )
+      return
+    }
+    apply({ type: 'COMPLETE_CASE' })
     setCompleted(true)
     persistCheckpoint('transfer', checkpoints.transfer, { completed: true })
     lifecycleAnalytics.recordTransferCompleted()
-    lifecycleAnalytics.recordActivityCompleted()
   }
 
   function resetActivity() {
@@ -459,6 +495,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     setPredictionRestored(false)
     setHintVisible(false)
     setTransferFeedback(null)
+    setTransferInterpretation(null)
     setCompleted(false)
     const envelope = readCriticalCareProgress(window.localStorage)
     writeCriticalCareProgress(
@@ -512,8 +549,13 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
   }
 
   const completedInterventions = new Set(simulation.completedInterventionIds)
+  const transducerLeveled = Math.abs(simulation.measurementSystem.transducerLevelCm) <= 1
+  const atmosphericZeroed = simulation.measurementSystem.zeroed
   const pressureSystemCorrected = completedInterventions.has('correct-measurement-system')
   const dynamicResponseChecked = simulation.signalValidationChecks.includes('fast-flush')
+  const dynamicResponseClassified = simulation.signalValidationChecks.includes(
+    'dynamic-response-classified',
+  )
   const catheterRepositioned = completedInterventions.has('reposition-catheter')
   const thermodilutionRepeated = completedInterventions.has('repeat-valid-thermodilution')
   const actionsComplete =
@@ -577,42 +619,35 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
   } else if (phase === 'act') {
     taskControls = (
       <div className="grid gap-2">
-        <button
-          type="button"
-          className="min-h-11 rounded-xl border p-3 text-left text-sm"
-          onClick={correctPressureSystem}
-        >
-          <ActionStatus complete={pressureSystemCorrected}>
-            Level, zero, and correct the pressure system
+        <div className="rounded-xl border p-3 text-sm">
+          <ActionStatus complete={transducerLeveled}>
+            Level the transducer at the phlebostatic axis
           </ActionStatus>
-        </button>
-        <button
-          type="button"
-          className="min-h-11 rounded-xl border p-3 text-left text-sm"
-          onClick={() => apply({ type: 'FAST_FLUSH' })}
-        >
-          <ActionStatus complete={dynamicResponseChecked}>
-            Perform a fast-flush assessment
+        </div>
+        <div className="rounded-xl border p-3 text-sm">
+          <ActionStatus complete={atmosphericZeroed}>
+            Open to air and establish atmospheric zero
           </ActionStatus>
-        </button>
-        <button
-          type="button"
-          className="min-h-11 rounded-xl border p-3 text-left text-sm"
-          onClick={() => applyRequiredIntervention('reposition-catheter')}
-        >
+        </div>
+        <div className="rounded-xl border p-3 text-sm">
+          <ActionStatus
+            complete={
+              pressureSystemCorrected && dynamicResponseChecked && dynamicResponseClassified
+            }
+          >
+            Run, classify, and correct the actual fast-flush release trace
+          </ActionStatus>
+        </div>
+        <div className="rounded-xl border p-3 text-sm">
           <ActionStatus complete={catheterRepositioned}>
-            Return the catheter to a confirmed PA position
+            Retract from false wedge and confirm return of the PA waveform
           </ActionStatus>
-        </button>
-        <button
-          type="button"
-          className="min-h-11 rounded-xl border p-3 text-left text-sm"
-          onClick={() => applyRequiredIntervention('repeat-valid-thermodilution')}
-        >
+        </div>
+        <div className="rounded-xl border p-3 text-sm">
           <ActionStatus complete={thermodilutionRepeated}>
-            Repeat thermodilution with valid technique
+            Generate, inspect, and accept a valid thermodilution series
           </ActionStatus>
-        </button>
+        </div>
         <button
           type="button"
           disabled={!actionsComplete}
@@ -644,37 +679,52 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
       </button>
     )
   } else {
+    const transferReady =
+      transferInterpretation === 'overdamped-system' &&
+      simulation.signalValidationChecks.includes('dynamic-response-classified') &&
+      simulation.signalValidationChecks.includes('dynamic-response-corrected') &&
+      simulation.measurementSystem.artifact === 'none'
     taskControls = (
       <div className="grid gap-2">
-        <button
-          type="button"
-          disabled={completed}
-          className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-60"
-          onClick={() => answerTransfer(true)}
-        >
-          Repeat the fast-flush assessment before treatment
-        </button>
-        <button
-          type="button"
-          disabled={completed}
-          className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-60"
-          onClick={() => answerTransfer(false)}
-        >
-          Give fluid for the displayed pressure
-        </button>
-        <button
-          type="button"
-          disabled={completed}
-          className="min-h-11 rounded-xl border p-3 text-left text-sm disabled:opacity-60"
-          onClick={() => answerTransfer(false)}
-        >
-          Increase vasopressor support from this waveform alone
-        </button>
+        <fieldset className="grid gap-2">
+          <legend className="text-sm font-semibold">
+            The release trace returns slowly with little oscillation. What best explains it?
+          </legend>
+          {[
+            [
+              'overdamped-system',
+              'An overdamped measurement system attenuating rapid pressure change',
+            ],
+            ['low-stroke-volume', 'A true fall in stroke volume causing the narrow pulse pressure'],
+            ['respiratory-variation', 'Normal respiratory pressure variation across the breath'],
+          ].map(([value, label]) => (
+            <label
+              key={value}
+              className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm"
+            >
+              <input
+                type="radio"
+                name="transfer-interpretation"
+                checked={transferInterpretation === value}
+                onChange={() => answerTransfer(value)}
+              />
+              {label}
+            </label>
+          ))}
+        </fieldset>
         {transferFeedback ? (
           <p className="rounded-xl bg-muted p-3 text-sm leading-6" role="status">
             {transferFeedback}
           </p>
         ) : null}
+        <button
+          type="button"
+          disabled={completed || !transferReady}
+          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          onClick={completeTransfer}
+        >
+          Complete after interpreting and correcting the new trace
+        </button>
       </div>
     )
   }
@@ -711,13 +761,13 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
         />
       </div>
     ) : (
-      <div className="h-full overflow-auto p-2">
-        <BedsideMonitor
-          state={simulation}
-          dispatch={apply}
-          onOpenCardiacOutput={() => showHint()}
-        />
-      </div>
+      <HemodynamicNativeWorkspace
+        state={simulation}
+        dispatch={apply}
+        pressureChallengeMode="current-state"
+        showDerived={phase !== 'transfer'}
+        showThermodilution={phase !== 'transfer'}
+      />
     )
 
   const shellProps: ActivityShellProps = {
@@ -737,7 +787,18 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
       <PatientContextBar
         items={[
           { label: 'Setting', value: 'Adult ICU · simulated' },
-          { label: 'Bedside perfusion', value: 'Unchanged' },
+          { label: 'Bedside perfusion', value: 'Unchanged from baseline' },
+          {
+            label: 'Displayed MAP',
+            value: `${simulation.measurements.mapMmHg.toFixed(0)} mmHg`,
+          },
+          {
+            label: 'Displayed CO',
+            value:
+              thermodilutionAcceptedAverage(simulation.thermodilutionTrials) === null
+                ? 'Erratic / not accepted'
+                : `${thermodilutionAcceptedAverage(simulation.thermodilutionTrials)?.toFixed(1)} L/min`,
+          },
           {
             label: 'Pressure zero',
             value: simulation.measurementSystem.zeroed ? 'Complete' : 'Required',
@@ -748,7 +809,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
           },
           { label: 'PAC position', value: simulation.catheter.position.toUpperCase() },
         ]}
-        immediateGoal="Determine whether the signal is valid before changing management."
+        immediateGoal={`${caseDefinition.presentation} Determine whether the signal is valid before changing management.`}
         safetyConstraints={[
           'Do not act on one displayed number without validating the measurement chain.',
           'This simulation is educational and cannot guide patient care.',
@@ -795,6 +856,7 @@ export function PacSignalValidationActivity({ locale = 'en' }: { readonly locale
     onHelp: showHint,
     onReset: resetActivity,
     theme: 'dark',
+    layout: 'native-workbench',
   }
 
   if (resumePrompt) {

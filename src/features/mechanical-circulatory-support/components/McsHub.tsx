@@ -114,7 +114,7 @@ export function McsHub({ locale = 'en' }: { locale?: string }) {
                 </div>
                 <div>
                   <dt>Assess</dt>
-                  <dd>1 unseen capstone</dd>
+                  <dd>1 masked capstone</dd>
                 </div>
               </dl>
               <Link href={`${mechanicalCirculatorySupportNavBase}/learn?device=${profile.kind}`}>

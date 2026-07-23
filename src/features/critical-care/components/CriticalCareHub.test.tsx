@@ -64,12 +64,13 @@ describe('CriticalCareHub', () => {
     ).toBeInTheDocument()
 
     for (const moduleDefinition of catalog.launcherModules) {
-      expect(screen.getByRole('link', { name: `Open ${moduleDefinition.title}` })).toHaveAttribute(
-        'href',
-        moduleDefinition.href,
-      )
+      expect(
+        screen.getByRole('link', { name: `Open full lab: ${moduleDefinition.title}` }),
+      ).toHaveAttribute('href', moduleDefinition.href)
     }
-    expect(screen.queryByRole('link', { name: 'Open CARDIOHELP ECMO' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: 'Open full lab: CARDIOHELP ECMO' }),
+    ).not.toBeInTheDocument()
 
     expect(await screen.findByRole('link', { name: 'Start here' })).toHaveAttribute(
       'href',
@@ -87,12 +88,40 @@ describe('CriticalCareHub', () => {
     expect(
       screen.getByRole('heading', { name: 'Learn across support systems' }),
     ).toBeInTheDocument()
+    expect(screen.getAllByText('Preview').length).toBeGreaterThanOrEqual(5)
+    expect(screen.getByText('Preview · clinical review')).toBeInTheDocument()
   })
 
   it('does not show a sign-in requirement for Baxter CRRT', async () => {
     render(<CriticalCareHub catalog={catalog} />)
     await screen.findByRole('link', { name: 'Start here' })
     expect(screen.queryByText('Sign-in required')).not.toBeInTheDocument()
+  })
+
+  it('shows coarse integrated outcomes without exposing private case identity', async () => {
+    mockReadMergedCriticalCareProgress.mockReturnValue({
+      envelope: {
+        version: 1,
+        activities: [],
+        updatedAt: '2026-07-22T12:00:00.000Z',
+      },
+      normalizedSource: {
+        moduleId: 'critical-care',
+        storageKey: 'critical-care-activity-progress-v1',
+        status: 'valid',
+      },
+      legacySources: [],
+      notices: [],
+      integratedCaseOutcomes: {
+        completedCourseCount: 2,
+        latestCompletedAt: '2026-07-22T12:00:00.000Z',
+      },
+    })
+
+    render(<CriticalCareHub catalog={catalog} />)
+    const outcomes = await screen.findByRole('status', { name: 'Integrated case outcomes' })
+    expect(outcomes).toHaveTextContent('2 integrated longitudinal courses completed')
+    expect(outcomes).toHaveTextContent(/case identity, patient state, commands, and replay remain/)
   })
 
   it('resumes the exact normalized activity and emits bounded resume analytics', async () => {
@@ -117,6 +146,7 @@ describe('CriticalCareHub', () => {
           mode: 'guided',
           phase: 'act',
           checkpointId: 'measurement-chain-checked',
+          deviceId: 'impella',
           payloadVersion: 'pac-signal-validation-v1',
           updatedAt: '2026-07-22T12:00:00.000Z',
         },
@@ -135,6 +165,7 @@ describe('CriticalCareHub', () => {
     const resume = await screen.findByRole('link', { name: 'Resume activity' })
     expect(resume).toHaveAttribute('href', '/icu-hemodynamics/learn?activity=pac-signal-validation')
     expect(screen.getByText(/Safe checkpoint · Act phase/)).toBeInTheDocument()
+    expect(screen.getByText(/Device Impella CP-family support/)).toBeInTheDocument()
 
     fireEvent.click(resume)
     expect(mockRecordCriticalCareDashboardEvent).toHaveBeenCalledWith({

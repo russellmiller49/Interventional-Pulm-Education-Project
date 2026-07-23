@@ -2,7 +2,7 @@
 
 import type { Route } from 'next'
 import { useEffect, useReducer, useRef, useState } from 'react'
-import { Check, LockKeyhole } from 'lucide-react'
+import { ArrowRight, Check, LockKeyhole } from 'lucide-react'
 
 import { recordSiteModuleEvent } from '@/lib/analytics'
 import { recordCriticalCareActivitySelection } from '@/features/critical-care/progress/selection'
@@ -25,6 +25,7 @@ import {
   MCS_ANALYTICS_MODULE_ID,
   isMcsCapstoneUnlocked,
   mcsCapstoneScenarios,
+  mcsLessonTransferByLessonId,
   mcsLessons,
   mcsPracticeScenarios,
   mcsSources,
@@ -43,6 +44,7 @@ import {
   type McsDeviceKind,
   type McsModuleSection,
   type McsProgressV1,
+  type McsSimulationState,
 } from '../engine'
 import { McsAnatomy3D } from './McsAnatomy3D'
 import { McsCaseWorkflow } from './McsCaseWorkflow'
@@ -84,6 +86,77 @@ function scoreBand(score: number | null) {
   if (score >= 80) return '80-100'
   if (score >= 60) return '60-79'
   return 'below-60'
+}
+
+function rhythmLabel(state: McsSimulationState): string {
+  if (state.patient.rhythm === 'atrial-fibrillation') return 'Atrial fibrillation'
+  if (state.patient.rhythm === 'paced') return 'Paced'
+  return 'Sinus rhythm'
+}
+
+function shockPhenotype(state: McsSimulationState, masked: boolean): string {
+  if (masked) return 'Undifferentiated hemodynamic instability'
+  if (state.patient.tamponade) return 'Obstructive / tamponade pattern'
+  const lvLimited =
+    state.patient.leftVentricularContractility < 0.55 || state.metrics.pcwpMmHg >= 20
+  const rvLimited =
+    state.patient.rightVentricularContractility < 0.55 ||
+    state.metrics.papi < 1.5 ||
+    state.metrics.rapMmHg >= 14
+  if (lvLimited && rvLimited) return 'Biventricular / mixed shock'
+  if (rvLimited) return 'RV-dominant shock'
+  if (lvLimited) return 'LV-dominant shock'
+  return 'Supported low-output physiology'
+}
+
+function deviceSetting(state: McsSimulationState): string {
+  if (state.device.kind === 'iabp') {
+    return `1:${state.device.assistRatio} · ${state.device.triggerSource.toUpperCase()} trigger`
+  }
+  if (state.device.kind === 'impella') {
+    const left = state.device.left.enabled
+      ? `${state.device.left.variant === '55' ? '5.5' : 'CP'} P${state.device.left.performanceLevel}`
+      : 'left pump off'
+    const right = state.device.right.enabled
+      ? `RP P${state.device.right.performanceLevel}`
+      : 'RP off'
+    return `${left} · ${right}`
+  }
+  return `${state.device.speedRpm} RPM · ${state.device.powerConnected ? 'power verified' : 'power lost'}`
+}
+
+function guidedSurfaceForActionId(
+  actionId: string | undefined,
+): 'anatomy' | 'monitor' | 'controls' | 'workflow' {
+  if (!actionId) return 'anatomy'
+  if (actionId.startsWith('device:select:')) return 'anatomy'
+  if (actionId.startsWith('inspect:')) return 'monitor'
+  if (actionId === 'team:escalate') return 'workflow'
+  return 'controls'
+}
+
+function learnPhaseForAction(
+  actionId: string | undefined,
+  performed: boolean,
+  transferActive: boolean,
+): CriticalCareActivityPhase {
+  if (transferActive) return 'transfer'
+  if (performed) return 'observe'
+  if (!actionId || actionId.startsWith('inspect:') || actionId.startsWith('device:select:')) {
+    return 'recognize'
+  }
+  return 'act'
+}
+
+function guidedActionLabel(actionId: string): string | null {
+  if (actionId === 'inspect:arterial') return 'Inspect arterial waveform'
+  if (actionId === 'inspect:preload') return 'Inspect filling pressures and RV delivery'
+  if (actionId === 'inspect:device') return 'Inspect device and effective flow'
+  if (actionId === 'team:escalate') return 'Escalate to shock/MCS team'
+  if (actionId === 'device:select:iabp') return 'Select the IABP mechanism'
+  if (actionId === 'device:select:impella') return 'Select the Impella mechanism'
+  if (actionId === 'device:select:lvad') return 'Select the LVAD mechanism'
+  return null
 }
 
 export function McsWorkbench({
@@ -141,10 +214,31 @@ export function McsWorkbench({
   )
   const [mobileSurface, setMobileSurface] = useState<MobileSurface>('anatomy')
   const [helpVisible, setHelpVisible] = useState(false)
+  const [activeLessonStepIndex, setActiveLessonStepIndex] = useState(0)
+  const [lessonTransferActive, setLessonTransferActive] = useState(false)
+  const [transferChoiceId, setTransferChoiceId] = useState<string | null>(null)
+  const [transferFeedback, setTransferFeedback] = useState<string | null>(null)
   const recordedCompletion = useRef<string | null>(null)
   const recordedSafetyEvents = useRef(new Set<string>())
   const activeHref = `${mechanicalCirculatorySupportNavBase}/${section}`
   const lesson = mcsLessons.find((candidate) => candidate.id === selectedLessonId) ?? mcsLessons[0]
+  const lessonTransfer = mcsLessonTransferByLessonId.get(lesson.id)
+  const activeLessonStep =
+    lesson.steps[activeLessonStepIndex] ?? lesson.steps[lesson.steps.length - 1]
+  const activeLessonStepPerformed = activeLessonStep.targetActionId
+    ? state.actionIds.includes(activeLessonStep.targetActionId)
+    : false
+  const transferActionsMet =
+    lessonTransfer?.requiredActionIds.every((id) => state.actionIds.includes(id)) ?? false
+  const guidedSurface =
+    section === 'learn'
+      ? guidedSurfaceForActionId(
+          lessonTransferActive
+            ? (lessonTransfer?.requiredActionIds.find((id) => !state.actionIds.includes(id)) ??
+                lessonTransfer?.requiredActionIds[0])
+            : activeLessonStep.targetActionId,
+        )
+      : 'workflow'
   const assessmentMasked = section === 'assess' && !state.completed
   const revealCausality = !assessmentMasked
   const activityMode =
@@ -160,9 +254,15 @@ export function McsWorkbench({
         ? `mcs:practice:${state.scenario?.id ?? `studio-${state.deviceKind}`}`
         : `mcs:assess:${state.scenario?.id ?? selectedActivityId}`
   const lifecyclePhase =
-    section === 'learn' || !state.scenario
-      ? ('recognize' as const)
-      : semanticPhaseByMcsPhase[state.scenarioPhase]
+    section === 'learn'
+      ? learnPhaseForAction(
+          activeLessonStep.targetActionId,
+          activeLessonStepPerformed,
+          lessonTransferActive,
+        )
+      : !state.scenario
+        ? ('recognize' as const)
+        : semanticPhaseByMcsPhase[state.scenarioPhase]
   const lifecycleAnalytics = useCriticalCareActivityAnalytics({
     moduleId: 'mechanical-circulatory-support',
     activityId: lifecycleActivityId,
@@ -278,6 +378,13 @@ export function McsWorkbench({
     dispatch({ type: 'OPEN_STUDIO', device })
   }
 
+  function resetLessonRuntime() {
+    setActiveLessonStepIndex(0)
+    setLessonTransferActive(false)
+    setTransferChoiceId(null)
+    setTransferFeedback(null)
+  }
+
   function selectDevice(device: McsDeviceKind) {
     if (section === 'practice') return openStudio(device)
     if (section === 'assess') {
@@ -293,6 +400,7 @@ export function McsWorkbench({
     const deviceLesson = mcsLessons.find((candidate) => candidate.device === device)
     if (deviceLesson) {
       setHelpVisible(false)
+      resetLessonRuntime()
       setSelectedLessonId(deviceLesson.id)
       setSelectedActivityId(deviceLesson.id)
       recordCriticalCareActivitySelection(window.localStorage, {
@@ -309,9 +417,13 @@ export function McsWorkbench({
     const next = mcsLessons.find((candidate) => candidate.id === id)
     if (!next) return
     setHelpVisible(false)
+    resetLessonRuntime()
     setSelectedLessonId(id)
     setSelectedActivityId(id)
-    if (next.device !== 'shared') dispatch({ type: 'OPEN_STUDIO', device: next.device })
+    dispatch({
+      type: 'OPEN_STUDIO',
+      device: next.device === 'shared' ? state.deviceKind : next.device,
+    })
     recordCriticalCareActivitySelection(window.localStorage, {
       activityId: `mcs:learn:${next.id}`,
       mode: 'guided',
@@ -320,15 +432,73 @@ export function McsWorkbench({
     })
   }
 
-  function completeLesson() {
+  function completeLessonFromEvidence() {
+    if (!lessonTransfer || !transferChoiceId || !transferActionsMet) return
+    if (!lessonTransfer.item.correctChoiceIds.includes(transferChoiceId)) return
     const device = lesson.device === 'shared' ? state.deviceKind : lesson.device
     setProgress((current) => {
+      if (current.completedLessonIds.includes(lesson.id)) return current
       const next = recordMcsLessonComplete(current, lesson.id, device)
       writeMcsProgress(next)
       return next
     })
     lifecycleAnalytics.recordGoalMet()
     lifecycleAnalytics.recordActivityCompleted()
+  }
+
+  function dispatchGuidedAction(actionId: string) {
+    if (actionId === 'inspect:arterial') dispatch({ type: 'INSPECT', id: 'arterial' })
+    else if (actionId === 'inspect:preload') dispatch({ type: 'INSPECT', id: 'preload' })
+    else if (actionId === 'inspect:device') dispatch({ type: 'INSPECT', id: 'device' })
+    else if (actionId === 'team:escalate') dispatch({ type: 'ESCALATE' })
+    else if (actionId.startsWith('device:select:')) {
+      const device = actionId.replace('device:select:', '') as McsDeviceKind
+      dispatch({ type: 'SELECT_DEVICE', device })
+    }
+  }
+
+  function beginLessonTransfer() {
+    if (!lessonTransfer || !activeLessonStepPerformed) return
+    setLessonTransferActive(true)
+    setTransferChoiceId(null)
+    setTransferFeedback(null)
+    dispatch({ type: 'OPEN_STUDIO', device: lessonTransfer.setupDevice })
+    for (const action of lessonTransfer.setupActions) dispatch(action)
+  }
+
+  function advanceLessonStep() {
+    if (!activeLessonStepPerformed) return
+    if (activeLessonStepIndex >= lesson.steps.length - 1) {
+      beginLessonTransfer()
+      return
+    }
+    setActiveLessonStepIndex((index) => index + 1)
+    setHelpVisible(false)
+  }
+
+  function checkTransferDecision() {
+    if (!lessonTransfer || !transferChoiceId) {
+      setTransferFeedback('Choose the best response before checking the transfer case.')
+      return
+    }
+    const correct = lessonTransfer.item.correctChoiceIds.includes(transferChoiceId)
+    const choice = lessonTransfer.item.choices.find(
+      (candidate) => candidate.id === transferChoiceId,
+    )
+    if (!correct) {
+      setTransferFeedback(
+        `${choice?.rationale ?? 'That response does not fit the modeled mechanism.'} Reassess the patient, loading condition, and support pathway.`,
+      )
+      return
+    }
+    if (!transferActionsMet) {
+      setTransferFeedback(
+        `${choice?.rationale ?? lessonTransfer.item.explanation} Now complete the required simulator action and check again.`,
+      )
+      return
+    }
+    setTransferFeedback(lessonTransfer.item.explanation)
+    completeLessonFromEvidence()
   }
 
   function choosePractice(id: string) {
@@ -373,21 +543,30 @@ export function McsWorkbench({
               : 'Review the completed attempt.'
   const currentObjective = assessmentMasked
     ? 'Complete the full reasoning loop using only observable case and device data.'
-    : (state.scenario?.learningObjectives[0] ??
-      lesson.objectives[0] ??
-      'Compare device support with the synchronized patient and circuit response.')
+    : section === 'learn'
+      ? lessonTransferActive
+        ? (lessonTransfer?.title ?? 'Apply the mechanism to a new loading condition.')
+        : activeLessonStep.title
+      : (state.scenario?.learningObjectives[0] ??
+        'Compare device support with the synchronized patient and circuit response.')
   const requiredAction = assessmentMasked
     ? maskedRequiredAction
-    : state.scenario
-      ? state.scenarioPhase === 'predict'
-        ? state.scenario.predictionPrompt
-        : state.scenario.guidedPrompt
-      : (lesson.steps[0]?.instruction ?? lesson.summary)
+    : section === 'learn'
+      ? lessonTransferActive
+        ? (lessonTransfer?.requiredActionLabel ?? 'Complete the transfer interaction.')
+        : activeLessonStep.instruction
+      : state.scenario
+        ? state.scenarioPhase === 'predict'
+          ? state.scenario.predictionPrompt
+          : state.scenario.guidedPrompt
+        : 'Change one bounded variable and reconcile the patient, monitor, and device response.'
   const activeSourceIds = assessmentMasked
     ? []
-    : state.scenario
-      ? [...state.scenario.sourceIds, ...state.scenario.evidenceSourceIds]
-      : lesson.sourceIds
+    : section === 'learn' && lessonTransferActive && lessonTransfer
+      ? [...lesson.sourceIds, ...lessonTransfer.item.evidenceIds]
+      : state.scenario
+        ? [...state.scenario.sourceIds, ...state.scenario.evidenceSourceIds]
+        : lesson.sourceIds
   const evidenceEntries = assessmentMasked
     ? [
         {
@@ -415,6 +594,11 @@ export function McsWorkbench({
             candidate.id !== lesson.id && !progress.completedLessonIds.includes(candidate.id),
         ) ?? null)
       : null
+  const followingLesson =
+    section === 'learn'
+      ? (mcsLessons[mcsLessons.findIndex((candidate) => candidate.id === lesson.id) + 1] ?? null)
+      : null
+  const lessonComplete = progress.completedLessonIds.includes(lesson.id)
   const nextPractice =
     section === 'practice'
       ? (devicePractice.find(
@@ -429,6 +613,12 @@ export function McsWorkbench({
     router.push(mechanicalCirculatorySupportNavBase as Route)
   }
 
+  function resetActivity() {
+    setHelpVisible(false)
+    if (section === 'learn') resetLessonRuntime()
+    dispatch({ type: 'RESET' })
+  }
+
   function focusRestoredActivity() {
     document.getElementById('mcs-activity-viewport')?.focus({ preventScroll: true })
   }
@@ -441,6 +631,7 @@ export function McsWorkbench({
   return (
     <McsModuleFrame locale={locale} activeHref={activeHref} activityMode>
       <ActivityShell
+        layout="native-workbench"
         breadcrumb={
           <>
             <Link href={mechanicalCirculatorySupportNavBase}>Mechanical Circulatory Support</Link>
@@ -449,7 +640,7 @@ export function McsWorkbench({
           </>
         }
         activityTitle={activeTitle}
-        phase={semanticPhaseByMcsPhase[state.scenarioPhase]}
+        phase={lifecyclePhase}
         mode={activityMode}
         progressLabel={progressLabel}
         stepperAriaLabel="MCS shared activity phases"
@@ -459,11 +650,35 @@ export function McsWorkbench({
           <>
             <PatientContextBar
               items={[
-                { label: 'Device track', value: deviceLabels[state.deviceKind].short },
-                { label: 'Workspace', value: section },
                 {
-                  label: 'Activity',
-                  value: assessmentMasked ? 'Masked assessment' : (state.scenario?.id ?? lesson.id),
+                  label: 'Support',
+                  value: `${deviceLabels[state.deviceKind].short} · ${deviceSetting(state)}`,
+                },
+                { label: 'Shock phenotype', value: shockPhenotype(state, assessmentMasked) },
+                {
+                  label: 'Rhythm',
+                  value: `${rhythmLabel(state)} · ${state.patient.heartRateBpm} bpm`,
+                },
+                {
+                  label: 'MAP / pulse pressure',
+                  value: `${state.metrics.mapMmHg} / ${state.metrics.pulsePressureMmHg} mm Hg`,
+                },
+                {
+                  label: 'RAP / PCWP / PAPi',
+                  value: `${state.metrics.rapMmHg} / ${state.metrics.pcwpMmHg} mm Hg · ${state.metrics.papi}`,
+                },
+                {
+                  label: 'Native / device / effective flow',
+                  value: `${state.metrics.nativeFlowLMin.toFixed(1)} / ${state.metrics.deviceFlowLMin.toFixed(1)} / ${state.metrics.effectiveSystemicFlowLMin.toFixed(1)} L/min`,
+                },
+                {
+                  label: 'Perfusion',
+                  value: `SvO₂ ${state.metrics.svo2Percent}% · CPO ${state.metrics.cardiacPowerOutputW.toFixed(2)} W`,
+                },
+                {
+                  label: 'Active alarm / limitation',
+                  value:
+                    state.alarms.find((alarm) => alarm.active)?.label ?? 'No active modeled alarm',
                 },
               ]}
               immediateGoal={currentObjective}
@@ -475,13 +690,14 @@ export function McsWorkbench({
             {initialActivityId ? (
               <ResumeBanner
                 state="ready"
-                title="Exact activity restored"
+                title={section === 'learn' ? 'Return to saved lesson' : 'Return to saved case'}
                 description={
                   assessmentMasked
-                    ? 'The saved masked assessment is open with its device and route context.'
-                    : `${initialActivityId} is open with its saved device and route context.`
+                    ? 'The saved assessment route and device selection are open. Prior simulation state was not replayed.'
+                    : `${activeTitle} is open with its saved route and device selection. Prior controls and answers were not replayed.`
                 }
                 onResume={focusRestoredActivity}
+                resumeActionLabel={section === 'learn' ? 'Return to lesson' : 'Return to case'}
               />
             ) : null}
           </>
@@ -491,25 +707,129 @@ export function McsWorkbench({
             objective={currentObjective}
             requiredAction={requiredAction}
             targets={
-              assessmentMasked ? [] : (state.scenario?.learningObjectives ?? lesson.objectives)
+              assessmentMasked
+                ? []
+                : section === 'learn'
+                  ? lessonTransferActive
+                    ? [lessonTransfer?.item.stem ?? requiredAction]
+                    : [activeLessonStep.title]
+                  : (state.scenario?.learningObjectives ?? [])
             }
             hint={
               assessmentMasked
                 ? undefined
-                : (state.scenario?.guidedPrompt ?? lesson.steps[0]?.rationale)
+                : section === 'learn'
+                  ? lessonTransferActive
+                    ? lessonTransfer?.item.explanation
+                    : activeLessonStep.rationale
+                  : state.scenario?.guidedPrompt
             }
             mode={activityMode}
             hintVisible={helpVisible}
             onHintRequested={showHelp}
           >
-            <strong>Current selection</strong>
-            <span>
-              {assessmentMasked ? 'Masked capstone' : (state.scenario?.shortTitle ?? lesson.title)}
-            </span>
+            <div className={styles.taskSelectors}>
+              <strong>Device track</strong>
+              <nav className={styles.taskDeviceTabs} aria-label="Choose device track">
+                {(Object.keys(deviceLabels) as McsDeviceKind[]).map((device) => (
+                  <button
+                    key={device}
+                    type="button"
+                    aria-pressed={state.deviceKind === device}
+                    onClick={() => selectDevice(device)}
+                  >
+                    <span>{deviceLabels[device].short}</span>
+                    <small>{deviceLabels[device].title}</small>
+                  </button>
+                ))}
+              </nav>
+              {section === 'learn' ? (
+                <section className={styles.taskActivityRail} aria-label="Eight guided lessons">
+                  {mcsLessons.map((candidate, index) => (
+                    <button
+                      type="button"
+                      key={candidate.id}
+                      aria-current={selectedLessonId === candidate.id ? 'true' : undefined}
+                      data-complete={progress.completedLessonIds.includes(candidate.id)}
+                      onClick={() => chooseLesson(candidate.id)}
+                    >
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <strong>{candidate.title}</strong>
+                    </button>
+                  ))}
+                </section>
+              ) : section === 'practice' ? (
+                <section
+                  className={styles.taskActivityRail}
+                  aria-label="Mechanism Studio and device cases"
+                >
+                  <button
+                    type="button"
+                    aria-current={selectedActivityId === 'studio' ? 'true' : undefined}
+                    onClick={() => choosePractice('studio')}
+                  >
+                    <span>00</span>
+                    <strong>Mechanism Studio</strong>
+                  </button>
+                  {devicePractice.map((candidate, index) => (
+                    <button
+                      type="button"
+                      key={candidate.id}
+                      aria-current={selectedActivityId === candidate.id ? 'true' : undefined}
+                      data-complete={progress.masteredCaseIds.includes(candidate.id)}
+                      onClick={() => choosePractice(candidate.id)}
+                    >
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <strong>{candidate.shortTitle}</strong>
+                    </button>
+                  ))}
+                </section>
+              ) : (
+                <section className={styles.taskCapstoneGate} data-unlocked={capstoneUnlocked}>
+                  <div>
+                    {capstoneUnlocked ? (
+                      <Check aria-hidden="true" />
+                    ) : (
+                      <LockKeyhole aria-hidden="true" />
+                    )}
+                    <strong>
+                      {assessmentMasked
+                        ? `${deviceLabels[state.deviceKind].short} capstone assessment`
+                        : (capstone?.title ?? 'MCS capstone')}
+                    </strong>
+                  </div>
+                  <p>
+                    {capstoneUnlocked
+                      ? 'Capstone unlocked. Coaching remains hidden until debrief.'
+                      : `${remaining.length} requirement${remaining.length === 1 ? '' : 's'} remain.`}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={!capstoneUnlocked || !capstone}
+                    onClick={() => {
+                      if (!capstone) return
+                      setHelpVisible(false)
+                      setSelectedActivityId(capstone.id)
+                      dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
+                      recordCriticalCareActivitySelection(window.localStorage, {
+                        activityId: `mcs:assess:${capstone.id}`,
+                        mode: 'challenge',
+                        query: { case: capstone.id },
+                        scenarioId: capstone.id,
+                        deviceId: capstone.device,
+                        payloadVersion: 'mcs-selection-v1',
+                      })
+                    }}
+                  >
+                    Start capstone
+                  </button>
+                </section>
+              )}
+            </div>
           </TaskPanel>
         }
         onHelp={showHelp}
-        onReset={() => dispatch({ type: 'RESET' })}
+        onReset={resetActivity}
         onSaveAndExit={saveAndExit}
         bottomContent={progressLabel}
         secondaryActions={
@@ -524,7 +844,12 @@ export function McsWorkbench({
                   summary: assessmentMasked
                     ? 'Scenario-specific coaching and references remain hidden until debrief.'
                     : (state.scenario?.presentation ?? lesson.summary),
-                  meta: assessmentMasked ? 'Masked assessment' : activeSourceIds.join(' · '),
+                  meta: assessmentMasked
+                    ? 'Masked assessment'
+                    : mcsSources
+                        .filter((source) => activeSourceIds.includes(source.id))
+                        .map((source) => source.title)
+                        .join(' · '),
                 },
               ]}
               trigger={<button type="button">Reference</button>}
@@ -556,195 +881,205 @@ export function McsWorkbench({
         }
         viewport={
           <div id="mcs-activity-viewport" className={styles.activityViewport} tabIndex={-1}>
-            <section className={styles.workbenchHero}>
-              <div>
-                <span className={styles.kicker}>{section.toUpperCase()} WORKSPACE</span>
-                <h1>
-                  {section === 'learn'
-                    ? 'Build the mechanism'
-                    : section === 'practice'
-                      ? 'Explain, change, and reassess'
-                      : 'Demonstrate safe transfer'}
-                </h1>
-                <p>
-                  {section === 'learn'
-                    ? 'Guided, unscored lessons keep causal feedback visible.'
-                    : section === 'practice'
-                      ? 'Nine scored cases reveal causal coaching after you commit.'
-                      : 'One unseen capstone per device with hints withheld. Mastery requires ≥80% and no critical safety error.'}
-                </p>
-              </div>
-              <aside>
-                <strong>{mcsProgressPercent(progress)}%</strong>
-                <span>saved module progress</span>
-                <small>
-                  {progress.completedLessonIds.length}/8 lessons · {progress.masteredCaseIds.length}
-                  /9 cases mastered
-                </small>
-              </aside>
-            </section>
-
-            <nav className={styles.deviceTabs} aria-label="Choose device track">
-              {(Object.keys(deviceLabels) as McsDeviceKind[]).map((device) => (
-                <button
-                  key={device}
-                  type="button"
-                  aria-pressed={state.deviceKind === device}
-                  onClick={() => selectDevice(device)}
-                >
-                  <span>{deviceLabels[device].short}</span>
-                  <strong>{deviceLabels[device].title}</strong>
-                  <small>{deviceLabels[device].mechanism}</small>
-                </button>
-              ))}
-            </nav>
-
             {section === 'learn' ? (
-              <section className={styles.activityRail} aria-label="Eight guided lessons">
-                {mcsLessons.map((candidate, index) => (
-                  <button
-                    type="button"
-                    key={candidate.id}
-                    aria-current={selectedLessonId === candidate.id ? 'true' : undefined}
-                    data-complete={progress.completedLessonIds.includes(candidate.id)}
-                    onClick={() => chooseLesson(candidate.id)}
-                  >
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <strong>{candidate.title}</strong>
-                    <small>
-                      {candidate.device === 'shared'
-                        ? 'Shared foundation'
-                        : deviceLabels[candidate.device].short}
-                      {progress.completedLessonIds.includes(candidate.id) ? ' · complete' : ''}
-                    </small>
-                  </button>
-                ))}
-              </section>
-            ) : section === 'practice' ? (
-              <section
-                className={styles.activityRail}
-                aria-label="Mechanism Studio and device cases"
-              >
-                <button
-                  type="button"
-                  aria-current={selectedActivityId === 'studio' ? 'true' : undefined}
-                  onClick={() => choosePractice('studio')}
-                >
-                  <span>00</span>
-                  <strong>Mechanism Studio</strong>
-                  <small>Open · unscored</small>
-                </button>
-                {devicePractice.map((scenario, index) => (
-                  <button
-                    type="button"
-                    key={scenario.id}
-                    aria-current={selectedActivityId === scenario.id ? 'true' : undefined}
-                    data-complete={progress.masteredCaseIds.includes(scenario.id)}
-                    onClick={() => choosePractice(scenario.id)}
-                  >
-                    <span>{String(index + 1).padStart(2, '0')}</span>
-                    <strong>{scenario.shortTitle}</strong>
-                    <small>
-                      {progress.masteredCaseIds.includes(scenario.id)
-                        ? `Mastered · ${progress.bestScores[scenario.id]}%`
-                        : progress.completedCaseIds.includes(scenario.id)
-                          ? `Best ${progress.bestScores[scenario.id]}%`
-                          : 'Practice case'}
-                    </small>
-                  </button>
-                ))}
-              </section>
-            ) : (
-              <section className={styles.capstoneGate} data-unlocked={capstoneUnlocked}>
-                <div>
-                  {capstoneUnlocked ? (
-                    <Check aria-hidden="true" />
-                  ) : (
-                    <LockKeyhole aria-hidden="true" />
-                  )}
-                </div>
-                <div>
-                  <span className={styles.kicker}>
-                    {assessmentMasked ? 'MASKED CAPSTONE' : capstone?.id}
+              <section className={styles.lessonRuntime} aria-label="Active guided MCS lesson">
+                <header>
+                  <div>
+                    <span className={styles.kicker}>
+                      {lessonTransferActive
+                        ? 'AUTHORED TRANSFER'
+                        : `STEP ${activeLessonStepIndex + 1} OF ${lesson.steps.length}`}
+                    </span>
+                    <h2>
+                      {lessonTransferActive
+                        ? (lessonTransfer?.title ?? 'Transfer case')
+                        : activeLessonStep.title}
+                    </h2>
+                  </div>
+                  <span className={styles.lessonEvidenceBadge} data-complete={lessonComplete}>
+                    {lessonComplete
+                      ? 'Evidence complete'
+                      : lessonTransferActive
+                        ? 'Transfer evidence required'
+                        : activeLessonStepPerformed
+                          ? 'Interaction observed'
+                          : 'Interaction pending'}
                   </span>
-                  <h2>
-                    {assessmentMasked
-                      ? `${deviceLabels[state.deviceKind].short} capstone assessment`
-                      : capstone?.title}
-                  </h2>
-                  <p>
-                    {capstoneUnlocked
-                      ? 'Capstone unlocked. Coaching remains hidden until your debrief.'
-                      : `Complete the two shared foundations, this device’s two lessons, and all three practice cases. ${remaining.length} requirement${remaining.length === 1 ? '' : 's'} remain.`}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={!capstoneUnlocked || !capstone}
-                  onClick={() => {
-                    if (capstone) {
-                      setHelpVisible(false)
-                      setSelectedActivityId(capstone.id)
-                      dispatch({ type: 'LOAD_SCENARIO', scenario: capstone })
-                      recordCriticalCareActivitySelection(window.localStorage, {
-                        activityId: `mcs:assess:${capstone.id}`,
-                        mode: 'challenge',
-                        query: { case: capstone.id },
-                        scenarioId: capstone.id,
-                        deviceId: capstone.device,
-                        payloadVersion: 'mcs-selection-v1',
-                      })
-                    }
-                  }}
-                >
-                  Start capstone
-                </button>
-              </section>
-            )}
+                </header>
 
-            {section === 'learn' ? (
-              <section className={styles.lessonCard}>
-                <div>
-                  <span className={styles.kicker}>
-                    {lesson.device === 'shared'
-                      ? 'SHARED FOUNDATION'
-                      : deviceLabels[lesson.device].title}
-                  </span>
-                  <h2>{lesson.title}</h2>
-                  <p>{lesson.summary}</p>
-                  <ul>
-                    {lesson.objectives.map((objective) => (
-                      <li key={objective}>{objective}</li>
-                    ))}
-                  </ul>
-                </div>
-                <ol>
-                  {lesson.steps.map((step, index) => (
-                    <li key={step.id}>
-                      <span>{index + 1}</span>
+                {!lessonTransferActive ? (
+                  <>
+                    <nav className={styles.lessonStepRail} aria-label="Lesson interaction steps">
+                      {lesson.steps.map((step, index) => {
+                        const completed = step.targetActionId
+                          ? state.actionIds.includes(step.targetActionId)
+                          : false
+                        return (
+                          <button
+                            type="button"
+                            key={step.id}
+                            aria-current={index === activeLessonStepIndex ? 'step' : undefined}
+                            data-complete={completed}
+                            disabled={index > activeLessonStepIndex && !completed}
+                            onClick={() => setActiveLessonStepIndex(index)}
+                          >
+                            <span>{completed ? <Check aria-hidden="true" /> : index + 1}</span>
+                            <small>{step.title}</small>
+                          </button>
+                        )
+                      })}
+                    </nav>
+                    <div className={styles.lessonRuntimeBody}>
                       <div>
-                        <h3>{step.title}</h3>
-                        <p>{step.instruction}</p>
+                        <strong>Do this in the live workbench</strong>
+                        <p>{activeLessonStep.instruction}</p>
                         <small>
-                          <strong>Why:</strong> {step.rationale}
+                          <strong>Why:</strong> {activeLessonStep.rationale}
                         </small>
                       </div>
-                    </li>
-                  ))}
-                </ol>
-                <button
-                  type="button"
-                  data-complete={progress.completedLessonIds.includes(lesson.id)}
-                  onClick={completeLesson}
-                >
-                  {progress.completedLessonIds.includes(lesson.id) ? (
-                    <>
-                      <Check aria-hidden="true" /> Lesson complete
-                    </>
-                  ) : (
-                    'Mark lesson complete'
-                  )}
-                </button>
+                      <div className={styles.lessonRuntimeActions}>
+                        {activeLessonStep.targetActionId &&
+                        guidedActionLabel(activeLessonStep.targetActionId) ? (
+                          <button
+                            type="button"
+                            disabled={activeLessonStepPerformed}
+                            onClick={() =>
+                              dispatchGuidedAction(activeLessonStep.targetActionId ?? '')
+                            }
+                          >
+                            {activeLessonStepPerformed ? (
+                              <>
+                                <Check aria-hidden="true" /> Interaction observed
+                              </>
+                            ) : (
+                              guidedActionLabel(activeLessonStep.targetActionId)
+                            )}
+                          </button>
+                        ) : (
+                          <p className={styles.guidedControlPrompt}>
+                            Use the highlighted {guidedSurface} surface. This step advances only
+                            after the authored control action appears in the simulation record.
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          disabled={!activeLessonStepPerformed}
+                          onClick={advanceLessonStep}
+                        >
+                          {activeLessonStepIndex === lesson.steps.length - 1
+                            ? 'Load transfer patient'
+                            : 'Continue to next step'}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : lessonTransfer ? (
+                  <div className={styles.transferWorkspace}>
+                    <div className={styles.transferContext}>
+                      {lessonTransfer.contextItems.map((item) => (
+                        <span key={item.label}>
+                          <small>{item.label}</small>
+                          <strong>{item.value}</strong>
+                        </span>
+                      ))}
+                    </div>
+                    <div className={styles.transferGrid}>
+                      <fieldset disabled={lessonComplete}>
+                        <legend>{lessonTransfer.item.stem}</legend>
+                        {lessonTransfer.item.choices.map((choice) => (
+                          <label key={choice.id}>
+                            <input
+                              type="radio"
+                              name={`transfer-${lesson.id}`}
+                              value={choice.id}
+                              checked={transferChoiceId === choice.id}
+                              onChange={() => {
+                                setTransferChoiceId(choice.id)
+                                setTransferFeedback(null)
+                              }}
+                            />
+                            <span>{choice.label}</span>
+                          </label>
+                        ))}
+                      </fieldset>
+                      <div className={styles.transferAction}>
+                        <strong>Required simulator evidence</strong>
+                        <p>{lessonTransfer.requiredActionLabel}</p>
+                        <div>
+                          {lessonTransfer.requiredActionIds
+                            .filter((id) => guidedActionLabel(id))
+                            .map((id) => (
+                              <button
+                                type="button"
+                                key={id}
+                                disabled={state.actionIds.includes(id)}
+                                onClick={() => dispatchGuidedAction(id)}
+                              >
+                                {state.actionIds.includes(id) ? (
+                                  <>
+                                    <Check aria-hidden="true" /> {guidedActionLabel(id)}
+                                  </>
+                                ) : (
+                                  guidedActionLabel(id)
+                                )}
+                              </button>
+                            ))}
+                        </div>
+                        {lessonTransfer.requiredActionIds.every((id) => !guidedActionLabel(id)) ? (
+                          <p className={styles.guidedControlPrompt}>
+                            Use the highlighted {guidedSurface} controls, then return here to check
+                            the transfer decision.
+                          </p>
+                        ) : null}
+                        {!lessonComplete ? (
+                          <button type="button" onClick={checkTransferDecision}>
+                            Check transfer decision
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                    {transferFeedback ? (
+                      <div
+                        className={styles.transferFeedback}
+                        data-complete={lessonComplete}
+                        role="status"
+                      >
+                        {lessonComplete ? <Check aria-hidden="true" /> : null}
+                        <span>{transferFeedback}</span>
+                      </div>
+                    ) : null}
+                    {lessonComplete ? (
+                      <section className={styles.lessonCompletion} aria-label="Lesson complete">
+                        <div aria-live="polite">
+                          <Check aria-hidden="true" />
+                          <span>
+                            <strong>Lesson complete</strong>
+                            <small>
+                              Your transfer evidence is saved. Continue when you are ready.
+                            </small>
+                          </span>
+                        </div>
+                        {followingLesson ? (
+                          <button type="button" onClick={() => chooseLesson(followingLesson.id)}>
+                            <span>
+                              Continue to next lesson
+                              <small>{followingLesson.title}</small>
+                            </span>
+                            <ArrowRight aria-hidden="true" />
+                          </button>
+                        ) : (
+                          <Link href={`${mechanicalCirculatorySupportNavBase}/practice`}>
+                            <span>
+                              Continue to practice
+                              <small>Apply the completed lessons in coached cases</small>
+                            </span>
+                            <ArrowRight aria-hidden="true" />
+                          </Link>
+                        )}
+                      </section>
+                    ) : null}
+                  </div>
+                ) : null}
               </section>
             ) : null}
 
@@ -765,7 +1100,10 @@ export function McsWorkbench({
               ))}
             </div>
             <section className={styles.simulationGrid} aria-label="Synchronized support simulation">
-              <div data-mobile-visible={mobileSurface === 'anatomy'}>
+              <div
+                data-mobile-visible={mobileSurface === 'anatomy'}
+                data-guided-focus={section === 'learn' && guidedSurface === 'anatomy'}
+              >
                 <SimulationLaunchGate
                   activityTitle="Mechanical circulatory support 3D anatomy"
                   minimumViewport="desktop"
@@ -777,17 +1115,25 @@ export function McsWorkbench({
                   <McsAnatomy3D state={state} revealCausality={revealCausality} />
                 </SimulationLaunchGate>
               </div>
-              <div data-mobile-visible={mobileSurface === 'monitor'}>
+              <div
+                data-mobile-visible={mobileSurface === 'monitor'}
+                data-guided-focus={section === 'learn' && guidedSurface === 'monitor'}
+              >
                 <McsMonitor state={state} revealCausality={revealCausality} />
               </div>
               <div
                 className={styles.liveControlsRail}
                 data-mobile-visible={mobileSurface === 'controls'}
+                data-guided-focus={section === 'learn' && guidedSurface === 'controls'}
               >
                 <McsControls state={state} dispatch={dispatch} />
               </div>
             </section>
-            <section className={styles.taskGrid} data-mobile-visible={mobileSurface === 'workflow'}>
+            <section
+              className={styles.taskGrid}
+              data-mobile-visible={mobileSurface === 'workflow'}
+              data-guided-focus={section === 'learn' && guidedSurface === 'workflow'}
+            >
               <McsCaseWorkflow state={state} dispatch={dispatch} />
             </section>
 

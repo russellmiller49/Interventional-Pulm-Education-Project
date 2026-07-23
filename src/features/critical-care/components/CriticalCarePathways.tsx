@@ -111,6 +111,10 @@ function EducationBoundary() {
   )
 }
 
+function isPathwayPreview(pathway: PublicCriticalCarePathwayDefinition): boolean {
+  return pathway.stage === 'preview'
+}
+
 export function CriticalCarePathwaysIndex({
   catalog,
 }: {
@@ -163,10 +167,18 @@ export function CriticalCarePathwaysIndex({
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {catalog.pathways.map((pathway) => {
               const summary = summaries.find((item) => item.pathway.id === pathway.id)
+              const preview = isPathwayPreview(pathway)
               return (
                 <Card key={pathway.id} className="h-full">
                   <CardHeader className="gap-3 border-b-0 pb-2">
-                    <RouteIcon aria-hidden="true" className="size-6 text-primary" />
+                    <div className="flex items-start justify-between gap-3">
+                      <RouteIcon aria-hidden="true" className="size-6 text-primary" />
+                      {preview ? (
+                        <Badge variant="outline" className="rounded-full">
+                          Preview
+                        </Badge>
+                      ) : null}
+                    </div>
                     <CardTitle>{pathway.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
@@ -239,6 +251,7 @@ export function CriticalCarePathwayDetail({
         href: publicCriticalCareActivityHref(recommendation.activity),
       }
     : null
+  const pathwayPreview = isPathwayPreview(pathway)
 
   return (
     <main className="py-12 md:py-16">
@@ -252,7 +265,7 @@ export function CriticalCarePathwayDetail({
             All clinical pathways
           </Link>
           <Badge variant="info" className="w-fit rounded-full">
-            Clinical pathway
+            {pathwayPreview ? 'Preview pathway' : 'Clinical pathway'}
           </Badge>
           <div className="space-y-3">
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl">{pathway.title}</h1>
@@ -269,6 +282,11 @@ export function CriticalCarePathwayDetail({
           </h2>
           <Card className="max-w-3xl border-primary/25 bg-primary/[0.03]">
             <CardHeader className="border-b-0 pb-2">
+              {recommendation?.activity.reviewStatus === 'released' ? null : (
+                <Badge variant="outline" className="w-fit rounded-full">
+                  Preview · clinical review
+                </Badge>
+              )}
               <CardTitle>
                 {recommendationPresentation?.title ??
                   (readResult
@@ -334,7 +352,7 @@ export function CriticalCarePathwayDetail({
                       href={milestone.module.href as Route}
                       className="inline-flex min-h-10 items-center gap-2 rounded-full text-sm font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      Open lab
+                      Open full lab
                       <ArrowRight aria-hidden="true" className="size-4" />
                     </Link>
                   </CardFooter>
@@ -404,8 +422,18 @@ export function CriticalCarePathwayDetail({
             </div>
             <ul className="space-y-3">
               {prerequisiteAssessments.map((assessment) => {
-                const completed = assessment.prerequisiteActivityIds.filter((id) => {
-                  const status = progressById.get(id)?.status
+                const prerequisites = assessment.prerequisiteActivityIds.flatMap((activityId) => {
+                  const activity = catalog.activities.find((item) => item.id === activityId)
+                  return activity ? [activity] : []
+                })
+                const approvedPrerequisites = prerequisites.filter(
+                  (activity) =>
+                    activity.reviewStatus === 'released' &&
+                    activity.creditPolicy === 'competency-eligible' &&
+                    activity.completionEvidenceAuthority !== 'none',
+                )
+                const completed = approvedPrerequisites.filter((activity) => {
+                  const status = progressById.get(activity.id)?.status
                   return status === 'completed' || status === 'mastered'
                 }).length
                 return (
@@ -415,8 +443,9 @@ export function CriticalCarePathwayDetail({
                   >
                     <p className="font-medium">{assessment.title}</p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {completed} of {assessment.prerequisiteActivityIds.length} required learning
-                      activities complete. This gate applies to Assess only, not Practice.
+                      {approvedPrerequisites.length > 0
+                        ? `${completed} of ${approvedPrerequisites.length} released prerequisite activities complete. Only these approved activities can gate Assess; Practice stays open.`
+                        : 'Preview: the authored preparation activities are still in clinical review, so they remain advisory and do not create a hard Assess lock.'}
                     </p>
                     <details className="mt-3 text-sm">
                       <summary className="cursor-pointer font-medium text-primary">
@@ -429,6 +458,10 @@ export function CriticalCarePathwayDetail({
                           )
                           const status = progressById.get(activityId)?.status
                           const complete = status === 'completed' || status === 'mastered'
+                          const approved =
+                            prerequisite?.reviewStatus === 'released' &&
+                            prerequisite.creditPolicy === 'competency-eligible' &&
+                            prerequisite.completionEvidenceAuthority !== 'none'
                           return (
                             <li key={activityId} className="flex items-start gap-2">
                               {complete ? (
@@ -444,6 +477,7 @@ export function CriticalCarePathwayDetail({
                                   {complete ? 'Complete' : 'Not complete'}:{' '}
                                 </span>
                                 {prerequisite?.title ?? 'Reviewed prerequisite'}
+                                {approved ? '' : ' · Preview'}
                               </span>
                             </li>
                           )

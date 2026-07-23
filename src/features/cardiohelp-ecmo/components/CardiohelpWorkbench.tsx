@@ -53,6 +53,7 @@ import {
   type EcmoSimulationState,
   type GuidedControlId,
   type GuidedTarget,
+  type GuidedWalkthroughStep,
   type ModuleSection,
   type ProgressV2,
   type SupportMode,
@@ -60,7 +61,11 @@ import {
 import { CardiohelpConsole } from './CardiohelpConsole'
 import { CircuitAndMonitors } from './CircuitAndMonitors'
 import { LearnLessonPlayer, resolveGuidedLesson } from './LearnLessonPlayer'
-import { PracticeCasePlayer, resolveScenarioDefinition } from './PracticeCasePlayer'
+import {
+  PracticeCasePlayer,
+  resolveScenarioDefinition,
+  type EcmoPracticeStage,
+} from './PracticeCasePlayer'
 import { CardiohelpModuleFrame } from './CardiohelpModuleFrame'
 import styles from './cardiohelp-ecmo.module.css'
 
@@ -100,6 +105,10 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     section === 'learn' ? 'circuit' : null,
   )
   const [guidedControlId, setGuidedControlId] = useState<GuidedControlId | null>(null)
+  const [activeLearnStep, setActiveLearnStep] = useState<GuidedWalkthroughStep>(
+    () => resolveGuidedLesson(orderedLessonScenarioIds('vv')[0]).steps[0],
+  )
+  const [activePracticeStage, setActivePracticeStage] = useState<EcmoPracticeStage>('brief')
   const [semanticPhase, setSemanticPhase] = useState<CriticalCareActivityPhase>('recognize')
   const [helpVisible, setHelpVisible] = useState(false)
   const [hydrated, setHydrated] = useState(false)
@@ -150,6 +159,12 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
   const handleGuidedControlHelpChange = useCallback((controlId: GuidedControlId | null) => {
     setGuidedControlId(controlId)
   }, [])
+  const handleActiveLearnStepChange = useCallback((step: GuidedWalkthroughStep) => {
+    setActiveLearnStep(step)
+  }, [])
+  const handleActivePracticeStageChange = useCallback((stage: EcmoPracticeStage) => {
+    setActivePracticeStage(stage)
+  }, [])
 
   const syncUrl = useCallback((query: Record<string, string>) => {
     if (typeof window === 'undefined') return
@@ -174,6 +189,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
       setHelpVisible(false)
       setGuidedTarget(lesson.steps[0]?.target ?? 'console')
       setGuidedControlId(null)
+      if (lesson.steps[0]) setActiveLearnStep(lesson.steps[0])
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: lesson.scenarioId, mode: 'guided' })
       persistProgress((current) =>
         setLastVisited(setLastLessonForMode(current, lesson.supportMode, lesson.scenarioId), {
@@ -215,6 +231,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
       const definition = resolveScenarioDefinition(scenarioId)
       setHelpVisible(false)
       setGuidedControlId(null)
+      setActivePracticeStage(definition.clinicalCase ? 'brief' : 'plan')
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: definition.id, mode: resolvedMode })
       const isCapstone = definition.hiddenUntilAssessment === true
       persistProgress((current) => {
@@ -350,6 +367,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
       setLearnScenarioId(initialLesson)
       const lesson = cardiohelpLearnLessonByScenarioId.get(initialLesson)
       setGuidedTarget(lesson?.steps[0]?.target ?? 'circuit')
+      if (lesson?.steps[0]) setActiveLearnStep(lesson.steps[0])
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: initialLesson, mode: 'guided' })
       syncUrl({ lesson: initialLesson, track })
     } else if (section === 'practice') {
@@ -371,6 +389,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
             ? storedCase
             : validCases[0]
       dispatch({ type: 'LOAD_SCENARIO', scenarioId: initialCase, mode: 'guided' })
+      setActivePracticeStage(resolveScenarioDefinition(initialCase).clinicalCase ? 'brief' : 'plan')
       syncUrl({ case: initialCase, track })
     } else {
       const track = trackParam ?? stored.lastVisited?.supportMode ?? 'vv'
@@ -381,6 +400,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
           scenarioId: capstoneScenarioIdForMode(track),
           mode: 'challenge',
         })
+        setActivePracticeStage('plan')
       }
       syncUrl({ track })
     }
@@ -633,19 +653,63 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
     section === 'learn'
       ? learnLesson.title
       : assessmentMasked
-        ? `${supportMode.toUpperCase()} unseen capstone`
+        ? `${supportMode.toUpperCase()} masked capstone`
         : scenario.title
   const workspaceTitle = `${supportMode.toUpperCase()} ${section} workspace`
-  const currentObjective = assessmentMasked
-    ? 'Complete the full reasoning loop without diagnosis cues.'
-    : section === 'learn'
-      ? learnLesson.learningObjectives[0]
-      : (scenario.clinicalCase?.decisionPrompt ?? scenario.objectives[0]?.label ?? scenario.summary)
+  const practiceTask = (() => {
+    if (activePracticeStage === 'brief') {
+      return {
+        objective:
+          'Review the observable patient, indication, support configuration, and baseline.',
+        requiredAction:
+          'Open the case brief, then begin when the patient and circuit context are clear.',
+      }
+    }
+    if (activePracticeStage === 'plan') {
+      return {
+        objective: assessmentMasked
+          ? 'Commit a plan from the observable case data.'
+          : (scenario.clinicalCase?.decisionPrompt ?? 'Commit the immediate ECMO goal.'),
+        requiredAction:
+          'Choose the immediate goal, the control or bedside action, and the expected direction before acting.',
+      }
+    }
+    if (activePracticeStage === 'manage') {
+      return {
+        objective: assessmentMasked
+          ? 'Stabilize the patient and circuit without diagnosis cues.'
+          : (scenario.clinicalCase?.decisionPrompt ?? scenario.summary),
+        requiredAction: assessmentMasked
+          ? 'Apply the safest available action, then observe device, circuit, and patient response.'
+          : (scenario.debrief.correctWorkflow[0] ?? 'Correct the modeled cause safely.'),
+      }
+    }
+    if (activePracticeStage === 'reassess') {
+      return {
+        objective: 'Reconcile the response across device, circuit or gas path, and patient.',
+        requiredAction:
+          'Submit a device, circuit/gas, and patient reassessment before opening the debrief.',
+      }
+    }
+    return {
+      objective: 'Explain the causal chain and identify the next transfer target.',
+      requiredAction: 'Review the score, safety result, causal debrief, and recommended next case.',
+    }
+  })()
+  const currentObjective = section === 'learn' ? activeLearnStep.title : practiceTask.objective
   const currentTargets = assessmentMasked
-    ? ['Complete the masked capstone reasoning loop']
+    ? [practiceTask.objective]
     : section === 'learn'
-      ? learnLesson.learningObjectives
-      : scenario.objectives.map((objective) => objective.label)
+      ? [activeLearnStep.actionLabel]
+      : [practiceTask.requiredAction]
+  const currentRequiredAction =
+    section === 'learn' ? activeLearnStep.instruction : practiceTask.requiredAction
+  const currentHint =
+    activityMode === 'challenge'
+      ? undefined
+      : section === 'learn'
+        ? activeLearnStep.rationale
+        : (latestPracticeHint?.text ?? scenario.hints?.[0]?.text)
   const visibleEvidenceIds = assessmentMasked
     ? ['ifu-us-2025-scope', 'ifu-console-workflow']
     : scenario.evidenceIds
@@ -696,8 +760,8 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
             <div>
               <h2>{supportMode.toUpperCase()} capstone is locked</h2>
               <p>
-                The capstone is an unseen scored scenario. Complete every{' '}
-                {supportMode.toUpperCase()} lesson to unlock it—{remainingPrerequisites.length}{' '}
+                The capstone is a masked scored scenario. Complete every {supportMode.toUpperCase()}{' '}
+                lesson to unlock it—{remainingPrerequisites.length}{' '}
                 {remainingPrerequisites.length === 1 ? 'lesson remains' : 'lessons remain'}.
               </p>
               <ul>
@@ -719,6 +783,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
         </section>
       ) : (
         <ActivityShell
+          layout="native-workbench"
           breadcrumb={
             <>
               <Link href={cardiohelpEcmoNavBase}>ECMO Management</Link>
@@ -737,18 +802,56 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
             <>
               <PatientContextBar
                 items={[
-                  { label: 'Support mode', value: supportMode.toUpperCase() },
                   {
-                    label: 'Patient',
-                    value: assessmentMasked
-                      ? 'Masked assessment'
-                      : (scenario.clinicalCase?.patientLabel ?? 'Simulated adult'),
+                    label: 'Mode / indication',
+                    value: `${supportMode.toUpperCase()} · ${
+                      assessmentMasked
+                        ? 'Adult ECMO assessment'
+                        : (scenario.clinicalCase?.setting ?? `${scenario.clinicalPhase} support`)
+                    }`,
                   },
                   {
-                    label: 'Clinical phase',
-                    value: assessmentMasked ? 'Masked assessment' : scenario.clinicalPhase,
+                    label: 'Cannulation / configuration',
+                    value:
+                      supportMode === 'vv'
+                        ? 'Venous drainage → oxygenator → venous return'
+                        : 'Venous drainage → oxygenator → arterial return',
                   },
-                  { label: 'Simulation time', value: `${state.simulationTime}s` },
+                  {
+                    label: 'Flow / RPM',
+                    value: `${state.circuit.bloodFlow.toFixed(2)} L/min · ${state.device.rpmSetpoint} RPM`,
+                  },
+                  {
+                    label: 'Drainage / pre-oxygenator / return',
+                    value: `${state.circuit.pVen} / ${state.circuit.pInt} / ${state.circuit.pArt} mm Hg`,
+                  },
+                  {
+                    label: 'Oxygenator ΔP',
+                    value: `${state.circuit.deltaP} mm Hg`,
+                  },
+                  {
+                    label: 'Sweep / circuit FdO₂',
+                    value: `${state.gas.sweepLpm.toFixed(1)} L/min · ${Math.round(state.gas.fio2 * 100)}%`,
+                  },
+                  {
+                    label: supportMode === 'va' ? 'Right arm / femoral SpO₂' : 'Patient SpO₂',
+                    value:
+                      supportMode === 'va'
+                        ? `${state.patient.rightRadialSpo2.toFixed(1)}% / ${state.patient.femoralArterialSpo2.toFixed(1)}%`
+                        : `${state.patient.spo2.toFixed(1)}%`,
+                  },
+                  {
+                    label: 'ABG / MAP',
+                    value: `pH ${state.patient.pH.toFixed(2)} · PaCO₂ ${state.patient.paCO2.toFixed(0)} · MAP ${state.patient.meanArterialPressure.toFixed(0)}`,
+                  },
+                  {
+                    label: 'Active alarm / limitation',
+                    value:
+                      state.alarms.find((alarm) => alarm.active)?.message ??
+                      (state.gas.sourceConnected
+                        ? 'No active modeled alarm'
+                        : 'Sweep-gas source disconnected'),
+                  },
                 ]}
                 immediateGoal={currentObjective}
                 safetyConstraints={[
@@ -759,13 +862,14 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
               {hydrated && progress.lastVisited ? (
                 <ResumeBanner
                   state="ready"
-                  title="Exact activity restored"
+                  title={section === 'learn' ? 'Return to saved lesson' : 'Return to saved case'}
                   description={
                     assessmentMasked
-                      ? `The saved ${progress.lastVisited.supportMode.toUpperCase()} assessment is open.`
-                      : `${progress.lastVisited.scenarioId} is open in the saved ${progress.lastVisited.supportMode.toUpperCase()} track.`
+                      ? `The saved ${progress.lastVisited.supportMode.toUpperCase()} assessment route is open; prior console and circuit state was not replayed.`
+                      : `${activityTitle} is open in the saved ${progress.lastVisited.supportMode.toUpperCase()} track; prior controls and answers were not replayed.`
                   }
                   onResume={focusRestoredActivity}
+                  resumeActionLabel={section === 'learn' ? 'Return to lesson' : 'Return to case'}
                 />
               ) : null}
             </>
@@ -773,17 +877,9 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
           currentTask={
             <TaskPanel
               objective={currentObjective}
-              requiredAction={
-                section === 'learn'
-                  ? (learnLesson.steps[0]?.instruction ?? currentObjective)
-                  : assessmentMasked
-                    ? 'Complete the current phase using only the observable case data.'
-                    : (scenario.clinicalCase?.decisionPrompt ?? scenario.summary)
-              }
+              requiredAction={currentRequiredAction}
               targets={currentTargets}
-              hint={
-                section === 'learn' ? learnLesson.steps[0]?.rationale : scenario.hints?.[0]?.text
-              }
+              hint={currentHint}
               mode={activityMode}
               hintVisible={helpVisible}
               onHintRequested={showHelp}
@@ -849,6 +945,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                       onTargetChange={handleGuidedTargetChange}
                       onControlHelpChange={handleGuidedControlHelpChange}
                       onPhaseChange={setSemanticPhase}
+                      onActiveStepChange={handleActiveLearnStepChange}
                     />
                   ) : (
                     <PracticeCasePlayer
@@ -861,6 +958,7 @@ export function CardiohelpWorkbench({ section, locale = 'en' }: CardiohelpWorkbe
                       onReveal={revealDebrief}
                       section={section === 'assess' ? 'assess' : 'practice'}
                       onPhaseChange={setSemanticPhase}
+                      onActiveStageChange={handleActivePracticeStageChange}
                     />
                   )}
                   <div className={styles.simulatorColumn}>

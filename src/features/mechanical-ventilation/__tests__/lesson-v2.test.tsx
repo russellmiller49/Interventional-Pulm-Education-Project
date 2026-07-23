@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity'
 
 import { MechanicalVentilationLessonActivity } from '../components/MechanicalVentilationLessonActivity'
-import { mechanicalVentilationLessons } from '../content'
+import { mechanicalVentilationLessonItems, mechanicalVentilationLessons } from '../content'
 
 const push = jest.fn()
 
@@ -37,31 +37,65 @@ describe('focused mechanical ventilation lesson', () => {
     })
   })
 
-  it('records completion only after the explicit transfer check', async () => {
+  it('requires real primary and transfer interactions while keeping the lesson non-credit', async () => {
     const lesson = mechanicalVentilationLessons[0]
+    const items = mechanicalVentilationLessonItems['mechanics-load-and-pressure']
     render(<MechanicalVentilationLessonActivity lesson={lesson} />)
 
     expect(await screen.findByRole('heading', { name: lesson.title })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: 'HAMILTON-C6 functional training facsimile' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Paw waveform/ })).toBeInTheDocument()
     expect(window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY)).toBeNull()
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'I have reviewed the signal and patient context' }),
-    )
-    fireEvent.click(screen.getByLabelText(lesson.prediction.choices[0].label))
+    const continueButton = screen.getByRole('button', { name: 'Continue to prediction' })
+    expect(continueButton).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: /^Record bedside assessment/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Document multitrace review/ }))
+    expect(continueButton).toBeEnabled()
+    fireEvent.click(continueButton)
+
+    fireEvent.click(screen.getByLabelText(items.prediction.choices[0].label))
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Apply the bounded teaching action' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Reassess the predicted response' }))
+
+    const responseButton = screen.getByRole('button', {
+      name: 'Run the response and reassess',
+    })
+    expect(responseButton).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: /^Perform an inspiratory hold/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Document multitrace review/ }))
+    expect(responseButton).toBeEnabled()
+    fireEvent.click(responseButton)
+
+    const debriefButton = screen.getByRole('button', { name: 'Open the causal debrief' })
+    expect(debriefButton).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: /^Document multitrace review/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Advance one breath/ }))
+    expect(debriefButton).toBeEnabled()
+    fireEvent.click(debriefButton)
+
     expect(screen.getByRole('heading', { name: 'Causal debrief' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Apply the reasoning to a variant' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Load the transfer patient' }))
+    expect(screen.getByText(/Transfer patient · MV-14/)).toBeInTheDocument()
 
     const beforeTransfer = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
     )
     expect(beforeTransfer.activities[0].status).toBe('in-progress')
 
-    fireEvent.click(screen.getByLabelText(lesson.transfer.choices[0].label))
-    fireEvent.click(screen.getByRole('button', { name: 'Complete transfer check' }))
-    expect(screen.getByText('Completed')).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText(items.transfer.choices[0].label))
+    fireEvent.click(screen.getByRole('button', { name: 'Review draft transfer' }))
+    expect(
+      screen.getByText(/Transfer evidence is 1 of 2: the interpretation is correct/),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Draft reviewed · non-credit')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /^Record bedside assessment/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Document multitrace review/ }))
+    expect(screen.getByText(/Transfer evidence: 2 of 2/)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Review draft transfer' }))
+    expect(screen.getByText('Draft reviewed · non-credit')).toBeInTheDocument()
 
     const saved = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
@@ -70,11 +104,12 @@ describe('focused mechanical ventilation lesson', () => {
       expect.arrayContaining([
         expect.objectContaining({
           activityId: `ventilation:learn:${lesson.id}`,
-          status: 'completed',
+          status: 'in-progress',
           currentPhase: 'transfer',
+          competencyEvidenceIds: [],
         }),
       ]),
     )
-    expect(saved.resume).toBeUndefined()
+    expect(saved.resume).toBeDefined()
   })
 })

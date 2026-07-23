@@ -104,6 +104,29 @@ describe('normalized critical-care progress merge', () => {
     expect(storage.setItem).not.toHaveBeenCalled()
   })
 
+  it('sanitizes historical completion and competency claims against the current activity contract', () => {
+    const activityId = 'ventilation:learn:mechanics-load-and-pressure'
+    const result = mergeCriticalCareProgress(
+      normalizedEnvelope([
+        normalizedActivity(activityId, {
+          status: 'mastered',
+          competencyEvidenceIds: [
+            'ventilation-mechanics',
+            'ventilation-mode-selection',
+            'unrelated-competency',
+          ],
+        }),
+      ]),
+      [],
+      criticalCareActivities,
+    )
+
+    expect(result.activities.find((item) => item.activityId === activityId)).toMatchObject({
+      status: 'in-progress',
+      competencyEvidenceIds: [],
+    })
+  })
+
   it('reports corrupt and incompatible normalized envelopes while safely retaining legacy data', () => {
     const corrupt = readMergedCriticalCareProgress(
       new ReadOnlyFixtureStorage({
@@ -240,6 +263,34 @@ describe('deterministic critical-care recommendations', () => {
       activity: { id: 'ventilation:practice:MV-06' },
       reason: 'continue',
     })
+  })
+
+  it('downgrades unsupported completion before ranking or prerequisite checks', () => {
+    const nonCreditLesson = catalogActivity('hemodynamics:learn:pressure-system')
+    const invalidCompletion = normalizedEnvelope([
+      normalizedActivity(nonCreditLesson.id, {
+        status: 'mastered',
+        competencyEvidenceIds: ['signal-validation', 'critical-care-safety'],
+      }),
+    ])
+
+    expect(getCriticalCareRecommendation([nonCreditLesson], invalidCompletion)).toMatchObject({
+      activity: { id: nonCreditLesson.id },
+      reason: 'continue',
+      progress: { status: 'in-progress', competencyEvidenceIds: [] },
+    })
+
+    const capstone = catalogActivity('mcs:assess:CAP-IMP-01')
+    const unsupportedPrerequisites = normalizedEnvelope(
+      capstone.prerequisiteActivityIds.map((activityId) =>
+        normalizedActivity(activityId, { status: 'completed' }),
+      ),
+    )
+    expect(
+      getCriticalCareRecommendations(criticalCareActivities, unsupportedPrerequisites, {
+        limit: 100,
+      }).some((recommendation) => recommendation.activity.id === capstone.id),
+    ).toBe(false)
   })
 
   it('respects prerequisites and deterministically applies learner preferences', () => {

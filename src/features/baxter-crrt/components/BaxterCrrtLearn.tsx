@@ -1,12 +1,13 @@
 'use client'
 
 import { BookOpenCheck, Check, FlaskConical, Gauge, Layers3 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { recordCriticalCareActivitySelection } from '@/features/critical-care/progress/selection'
 import {
   criticalCareActivityPhases,
   useCriticalCareActivityAnalytics,
+  type ClinicalLearningItem,
   type CriticalCareActivityPhase,
 } from '@/features/learning-module/activity'
 import { ActivityShell } from '@/features/learning-module/components/ActivityShell'
@@ -19,6 +20,8 @@ import { baxterCrrtNavBase } from '@/features/learning-module/moduleRoutes'
 import { Link, useRouter } from '@/i18n/navigation'
 
 import { baxterCrrtCurriculum } from '../content/curriculum'
+import { getBaxterCrrtDeviceProfile } from '../content/deviceProfiles'
+import { baxterCrrtLessonClinicalAnchors } from '../content/lessonClinicalAnchors'
 import {
   baxterCrrtLearnLessonById,
   baxterCrrtLearnLessons,
@@ -50,6 +53,8 @@ const stationIdByNumber: Readonly<Record<number, BaxterCrrtProgressStation>> = {
   5: 'pressures-troubleshooting',
   6: 'anticoagulation-complications-liberation',
 }
+
+const prismaxReferenceProfile = getBaxterCrrtDeviceProfile('prismax-aw8035-2xx')
 
 const crrtSourceById = new Map(
   [...baxterCrrtPilotSourceReferences, ...baxterCrrtSupplementalSourceReferences].map((source) => [
@@ -134,6 +139,71 @@ function ReadOnlyConsoleFigure() {
   )
 }
 
+function ClinicalApplicationCheck({
+  item,
+  selectedChoiceId,
+  submittedChoiceId,
+  onSelect,
+  onSubmit,
+  onRevise,
+}: {
+  readonly item: ClinicalLearningItem
+  readonly selectedChoiceId: string | null
+  readonly submittedChoiceId: string | null
+  readonly onSelect: (choiceId: string) => void
+  readonly onSubmit: () => void
+  readonly onRevise: () => void
+}) {
+  const submittedChoice = item.choices.find((choice) => choice.id === submittedChoiceId)
+  const correct = submittedChoiceId !== null && item.correctChoiceIds.includes(submittedChoiceId)
+
+  return (
+    <section className={styles.clinicalApplication} aria-labelledby="crrt-application-heading">
+      <header>
+        <span>Clinical application · unscored</span>
+        <h3 id="crrt-application-heading">Apply the lesson to this patient</h3>
+      </header>
+      <fieldset disabled={submittedChoiceId !== null}>
+        <legend>{item.stem}</legend>
+        <div>
+          {item.choices.map((choice) => (
+            <label key={choice.id} data-selected={selectedChoiceId === choice.id}>
+              <input
+                type="radio"
+                name={item.id}
+                checked={selectedChoiceId === choice.id}
+                onChange={() => onSelect(choice.id)}
+              />
+              <span>{choice.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      {submittedChoice ? (
+        <div className={styles.applicationFeedback} data-correct={correct} role="status">
+          <strong>{correct ? 'Reasoning supported' : 'Reassess the mechanism'}</strong>
+          <p>{submittedChoice.rationale}</p>
+          <p>{item.explanation}</p>
+          {!correct ? (
+            <button type="button" onClick={onRevise}>
+              Revise answer
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={styles.applicationSubmit}
+          disabled={selectedChoiceId === null}
+          onClick={onSubmit}
+        >
+          Check clinical reasoning
+        </button>
+      )}
+    </section>
+  )
+}
+
 export function BaxterCrrtLearn({
   locale = 'en',
   initialLessonId,
@@ -149,6 +219,10 @@ export function BaxterCrrtLearn({
   const [lessonAttempt, setLessonAttempt] = useState(1)
   const [helpVisible, setHelpVisible] = useState(false)
   const [lessonPhase, setLessonPhase] = useState<CriticalCareActivityPhase>('recognize')
+  const [selectedChoiceId, setSelectedChoiceId] = useState<string | null>(null)
+  const [submittedChoiceId, setSubmittedChoiceId] = useState<string | null>(null)
+  const [labEvidenceMet, setLabEvidenceMet] = useState(false)
+  const completionRecorded = useRef(new Set<BaxterCrrtLearnLessonId>())
 
   useEffect(() => {
     const hydrationTimer = window.setTimeout(() => {
@@ -167,6 +241,7 @@ export function BaxterCrrtLearn({
   }, [initialId, initialLessonId])
 
   const selectedLesson = requireLesson(selectedLessonId)
+  const clinicalAnchor = baxterCrrtLessonClinicalAnchors[selectedLesson.id]
   const complete = progress.completedLessonIds.includes(selectedLesson.id)
   const evidenceEntries = selectedLesson.sourceRecordIds.flatMap((sourceId) => {
     const source = crrtSourceById.get(sourceId)
@@ -183,6 +258,12 @@ export function BaxterCrrtLearn({
         ]
       : []
   })
+  const sourceTitles = [...new Set(evidenceEntries.map((entry) => entry.title))]
+  const applicationCorrect =
+    submittedChoiceId !== null &&
+    clinicalAnchor.applicationItem.correctChoiceIds.includes(submittedChoiceId)
+  const completionEvidenceMet =
+    applicationCorrect && (selectedLesson.embeddedLabId === undefined || labEvidenceMet)
   const nextLesson =
     baxterCrrtLearnLessons.find(
       (lesson) =>
@@ -197,6 +278,43 @@ export function BaxterCrrtLearn({
     enabled: hydrated,
   })
 
+  function advanceLessonPhase(nextPhase: CriticalCareActivityPhase) {
+    setLessonPhase((current) =>
+      criticalCareActivityPhases.indexOf(nextPhase) > criticalCareActivityPhases.indexOf(current)
+        ? nextPhase
+        : current,
+    )
+  }
+
+  function recordCompletionIfReady(nextApplicationCorrect: boolean, nextLabEvidenceMet: boolean) {
+    if (
+      !nextApplicationCorrect ||
+      (selectedLesson.embeddedLabId !== undefined && !nextLabEvidenceMet) ||
+      completionRecorded.current.has(selectedLesson.id)
+    ) {
+      return
+    }
+
+    const currentProgress = readProgress()
+    if (currentProgress.completedLessonIds.includes(selectedLesson.id)) {
+      setProgress(currentProgress)
+      return
+    }
+
+    completionRecorded.current.add(selectedLesson.id)
+    const withContext = setProgressContext(currentProgress, {
+      device: 'prismax-aw8035-2xx',
+      roleLens: currentProgress.lastRoleLens,
+      station: stationForLesson(selectedLesson.id),
+    })
+    const next = recordLessonCompletion(withContext, selectedLesson.id)
+    setProgress(next)
+    writeProgress(next)
+    advanceLessonPhase('explain')
+    lifecycleAnalytics.recordGoalMet()
+    lifecycleAnalytics.recordActivityCompleted()
+  }
+
   function persist(next: BaxterCrrtProgressV3) {
     setProgress(next)
     if (hydrated) writeProgress(next)
@@ -205,6 +323,9 @@ export function BaxterCrrtLearn({
   function selectLesson(lessonId: BaxterCrrtLearnLessonId) {
     setHelpVisible(false)
     setLessonPhase('recognize')
+    setSelectedChoiceId(null)
+    setSubmittedChoiceId(null)
+    setLabEvidenceMet(false)
     setSelectedLessonId(lessonId)
     recordCriticalCareActivitySelection(window.localStorage, {
       activityId: `crrt:learn:${lessonId}`,
@@ -222,34 +343,44 @@ export function BaxterCrrtLearn({
     )
   }
 
-  function completeLesson() {
-    const withContext = setProgressContext(progress, {
-      device: 'prismax-aw8035-2xx',
-      roleLens: progress.lastRoleLens,
-      station: stationForLesson(selectedLesson.id),
-    })
-    persist(recordLessonCompletion(withContext, selectedLesson.id))
-    advanceLessonPhase('explain')
-    lifecycleAnalytics.recordGoalMet()
-    lifecycleAnalytics.recordActivityCompleted()
-  }
-
   function showHelp() {
     if (!helpVisible) lifecycleAnalytics.recordHintUsed()
     setHelpVisible(true)
   }
 
-  function advanceLessonPhase(nextPhase: CriticalCareActivityPhase) {
-    setLessonPhase((current) =>
-      criticalCareActivityPhases.indexOf(nextPhase) > criticalCareActivityPhases.indexOf(current)
-        ? nextPhase
-        : current,
+  function selectApplicationChoice(choiceId: string) {
+    setSelectedChoiceId(choiceId)
+    advanceLessonPhase('predict')
+  }
+
+  function submitApplication() {
+    if (selectedChoiceId === null || submittedChoiceId !== null) return
+    setSubmittedChoiceId(selectedChoiceId)
+    advanceLessonPhase('observe')
+    lifecycleAnalytics.recordPredictionSubmitted()
+    recordCompletionIfReady(
+      clinicalAnchor.applicationItem.correctChoiceIds.includes(selectedChoiceId),
+      labEvidenceMet,
     )
+  }
+
+  function recordLabCompletionEvidence() {
+    setLabEvidenceMet(true)
+    recordCompletionIfReady(applicationCorrect, true)
+  }
+
+  function resetLessonWork() {
+    setLessonAttempt((attempt) => attempt + 1)
+    setLessonPhase('recognize')
+    setSelectedChoiceId(null)
+    setSubmittedChoiceId(null)
+    setLabEvidenceMet(false)
   }
 
   return (
     <BaxterCrrtModuleFrame locale={locale} activeHref={`${baxterCrrtNavBase}/learn`} activityMode>
       <ActivityShell
+        layout="didactic-lesson"
         breadcrumb={
           <>
             <Link href={baxterCrrtNavBase}>CRRT</Link>
@@ -265,16 +396,12 @@ export function BaxterCrrtLearn({
         patientContext={
           <>
             <PatientContextBar
-              title="Lesson context"
+              title={clinicalAnchor.title}
               items={[
-                {
-                  label: 'Lesson',
-                  value: `${selectedLesson.ordinal} of ${baxterCrrtLearnLessons.length}`,
-                },
-                { label: 'Device', value: 'prismax-aw8035-2xx' },
-                { label: 'Review status', value: selectedLesson.reviewStatus },
+                { label: 'Device', value: prismaxReferenceProfile.displayName },
+                ...clinicalAnchor.contextItems,
               ]}
-              immediateGoal={selectedLesson.summary}
+              immediateGoal={clinicalAnchor.immediateGoal}
               safetyConstraints={[
                 'Educational model only; verify current manufacturer instructions and local policy.',
                 'Displayed values and device responses are synthetic teaching examples.',
@@ -283,8 +410,8 @@ export function BaxterCrrtLearn({
             {validLessonId(initialLessonId) ? (
               <ResumeBanner
                 state="ready"
-                title="Exact lesson restored"
-                description={`${selectedLesson.id} is open from its stable lesson route.`}
+                title="Lesson selection restored"
+                description={`${selectedLesson.title} is open. Prior answers and embedded-lab state were not replayed.`}
                 onResume={() =>
                   document.getElementById('crrt-learn-viewport')?.focus({ preventScroll: true })
                 }
@@ -294,9 +421,13 @@ export function BaxterCrrtLearn({
         }
         currentTask={
           <TaskPanel
-            objective={selectedLesson.summary}
-            requiredAction="Read the lesson, complete any embedded concept lab, then mark the lesson complete."
-            targets={selectedLesson.bullets ?? []}
+            objective={clinicalAnchor.immediateGoal}
+            requiredAction={
+              clinicalAnchor.labEvidenceLabel
+                ? `${clinicalAnchor.labEvidenceLabel} Then answer the patient application check. Completion records automatically when both are observed.`
+                : 'Answer the patient application check. Completion records automatically when the supported reasoning is observed.'
+            }
+            targets={selectedLesson.bullets?.slice(0, 4) ?? []}
             hint={selectedLesson.paragraphs?.[0]}
             mode="guided"
             hintVisible={helpVisible}
@@ -304,10 +435,7 @@ export function BaxterCrrtLearn({
           />
         }
         onHelp={showHelp}
-        onReset={() => {
-          setLessonAttempt((attempt) => attempt + 1)
-          setLessonPhase('recognize')
-        }}
+        onReset={resetLessonWork}
         onSaveAndExit={() => {
           writeProgress(progress)
           router.push(baxterCrrtNavBase)
@@ -321,7 +449,7 @@ export function BaxterCrrtLearn({
                   id: selectedLesson.id,
                   title: selectedLesson.title,
                   summary: selectedLesson.summary,
-                  meta: selectedLesson.sourceRecordIds.join(' · '),
+                  meta: sourceTitles.join(' · '),
                 },
               ]}
               trigger={<button type="button">Reference</button>}
@@ -349,41 +477,32 @@ export function BaxterCrrtLearn({
             className={styles.activityViewport}
             tabIndex={-1}
           >
-            <header className={styles.sectionHero}>
-              <span className={styles.kicker}>Learn · unscored didactics</span>
-              <h1>Build the CRRT mental model before opening a case</h1>
-              <p>
-                Seven concise lessons connect treatment goals, transport, prescription, circuit
-                pressures, anticoagulation, alarms, fluid management, and liberation.
-              </p>
-            </header>
-
-            <div className={styles.learnLayout} data-hydrated={hydrated}>
-              <nav className={styles.lessonNav} aria-label="CRRT Learn lessons">
-                <ol>
-                  {baxterCrrtLearnLessons.map((lesson) => {
-                    const lessonComplete = progress.completedLessonIds.includes(lesson.id)
-                    return (
-                      <li key={lesson.id}>
-                        <button
-                          type="button"
-                          aria-current={lesson.id === selectedLesson.id ? 'step' : undefined}
-                          data-active={lesson.id === selectedLesson.id}
-                          data-complete={lessonComplete}
-                          onClick={() => selectLesson(lesson.id)}
-                        >
-                          <span>
-                            {lessonComplete ? <Check aria-hidden="true" /> : lesson.ordinal}
-                          </span>
-                          <span>
-                            <strong>{lesson.title}</strong>
-                            <small>{lesson.summary}</small>
-                          </span>
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ol>
+            <div className={styles.lessonDocument} data-hydrated={hydrated}>
+              <nav className={styles.lessonSwitcher} aria-label="CRRT Learn lessons">
+                <label>
+                  <span>Lesson</span>
+                  <select
+                    aria-label="Choose CRRT lesson"
+                    value={selectedLesson.id}
+                    onChange={(event) =>
+                      selectLesson(event.currentTarget.value as BaxterCrrtLearnLessonId)
+                    }
+                  >
+                    {baxterCrrtLearnLessons.map((lesson) => {
+                      const lessonComplete = progress.completedLessonIds.includes(lesson.id)
+                      return (
+                        <option key={lesson.id} value={lesson.id}>
+                          {lessonComplete ? '✓ ' : ''}
+                          {lesson.ordinal}. {lesson.title}
+                        </option>
+                      )
+                    })}
+                  </select>
+                </label>
+                <p>
+                  Seven lessons · patient anchor, didactic explanation, and observed application
+                  evidence
+                </p>
               </nav>
 
               <article className={styles.lessonArticle} aria-labelledby="crrt-lesson-title">
@@ -394,6 +513,25 @@ export function BaxterCrrtLearn({
                   <h2 id="crrt-lesson-title">{selectedLesson.title}</h2>
                   <p>{selectedLesson.summary}</p>
                 </header>
+
+                <section
+                  className={styles.clinicalAnchor}
+                  aria-labelledby="clinical-anchor-heading"
+                >
+                  <span>Clinical anchor</span>
+                  <h3 id="clinical-anchor-heading">{clinicalAnchor.title}</h3>
+                  <dl>
+                    {clinicalAnchor.contextItems.map((item) => (
+                      <div key={item.label}>
+                        <dt>{item.label}</dt>
+                        <dd>{item.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p>
+                    <strong>Immediate goal:</strong> {clinicalAnchor.immediateGoal}
+                  </p>
+                </section>
 
                 {selectedLesson.paragraphs?.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
@@ -418,7 +556,10 @@ export function BaxterCrrtLearn({
                         <h3 id="prescription-lab-heading">Prescription Workbench</h3>
                       </div>
                     </div>
-                    <CrrtPrescriptionWorkbench onPhaseChange={advanceLessonPhase} />
+                    <CrrtPrescriptionWorkbench
+                      onPhaseChange={advanceLessonPhase}
+                      onCompletionEvidence={recordLabCompletionEvidence}
+                    />
                   </section>
                 ) : null}
 
@@ -450,10 +591,23 @@ export function BaxterCrrtLearn({
                       <CrrtPressureLocalizationLab
                         onPhaseChange={advanceLessonPhase}
                         onPredictionCommitted={lifecycleAnalytics.recordPredictionSubmitted}
+                        onCompletionEvidence={recordLabCompletionEvidence}
                       />
                     </section>
                   </>
                 ) : null}
+
+                <ClinicalApplicationCheck
+                  item={clinicalAnchor.applicationItem}
+                  selectedChoiceId={selectedChoiceId}
+                  submittedChoiceId={submittedChoiceId}
+                  onSelect={selectApplicationChoice}
+                  onSubmit={submitApplication}
+                  onRevise={() => {
+                    setSubmittedChoiceId(null)
+                    setSelectedChoiceId(null)
+                  }}
+                />
 
                 <details className={styles.advancedBlock}>
                   <summary>{baxterCrrtPriorPlatformAdvancedBlock.title}</summary>
@@ -466,14 +620,30 @@ export function BaxterCrrtLearn({
                   <div>
                     <BookOpenCheck aria-hidden="true" />
                     <span>
-                      <strong>Draft evidence links</strong>
-                      <small>{selectedLesson.sourceRecordIds.join(' · ')}</small>
+                      <strong>Evidence basis</strong>
+                      <small>{sourceTitles.join(' · ')}</small>
                     </span>
                   </div>
-                  <button type="button" disabled={complete} onClick={completeLesson}>
+                  <div className={styles.lessonCompletion} data-complete={complete}>
                     {complete ? <Check aria-hidden="true" /> : <BookOpenCheck aria-hidden="true" />}
-                    {complete ? 'Lesson complete' : 'Mark lesson complete'}
-                  </button>
+                    <span>
+                      <strong>
+                        {complete
+                          ? completionEvidenceMet
+                            ? 'Lesson evidence recorded'
+                            : 'Prior completion retained'
+                          : 'Evidence in progress'}
+                      </strong>
+                      <small>
+                        Application {applicationCorrect ? 'complete' : 'required this session'}
+                        {selectedLesson.embeddedLabId
+                          ? ` · embedded lab ${
+                              labEvidenceMet ? 'complete' : 'required this session'
+                            }`
+                          : ''}
+                      </small>
+                    </span>
+                  </div>
                 </footer>
               </article>
             </div>

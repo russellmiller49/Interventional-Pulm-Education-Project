@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react'
 
 import {
   createSyntheticPressureLocalizationResult,
@@ -165,13 +165,16 @@ function CircuitPlacementDiagram({ idPrefix, fault, site }: CircuitPlacementDiag
 export interface CrrtPressureLocalizationLabProps {
   readonly onPhaseChange?: (phase: 'predict' | 'act' | 'observe' | 'explain') => void
   readonly onPredictionCommitted?: () => void
+  readonly onCompletionEvidence?: () => void
 }
 
 export function CrrtPressureLocalizationLab({
   onPhaseChange,
   onPredictionCommitted,
+  onCompletionEvidence,
 }: CrrtPressureLocalizationLabProps = {}) {
   const idPrefix = `crrt-pressure-lab-${useId().replaceAll(':', '')}`
+  const completionReported = useRef(false)
   const [fault, setFault] = useState<PressureLocalizationFault>('obstruction')
   const [site, setSite] = useState<PressureLocalizationSite>('access-catheter')
   const [prediction, setPrediction] = useState<DraftPrediction>(emptyPrediction)
@@ -183,6 +186,7 @@ export function CrrtPressureLocalizationLab({
   const predictionComplete = hasCompletePrediction(prediction)
 
   function clearCommit(nextPrediction: DraftPrediction = emptyPrediction()) {
+    completionReported.current = false
     setPrediction(nextPrediction)
     setCommittedPrediction(null)
     setRevealed(false)
@@ -227,13 +231,18 @@ export function CrrtPressureLocalizationLab({
   }
 
   function revisePrediction() {
+    completionReported.current = false
     setCommittedPrediction(null)
     setRevealed(false)
   }
 
   useEffect(() => {
-    if (revealed) onPhaseChange?.('explain')
-  }, [onPhaseChange, revealed])
+    if (!revealed || committedPrediction === null) return
+    onPhaseChange?.('explain')
+    if (completionReported.current) return
+    completionReported.current = true
+    onCompletionEvidence?.()
+  }, [committedPrediction, onCompletionEvidence, onPhaseChange, revealed])
 
   return (
     <section

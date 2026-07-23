@@ -1,3 +1,4 @@
+import { enforceCriticalCareProgressAuthority } from '@/features/learning-module/activity/evidence'
 import type {
   CriticalCareActivityDefinition,
   CriticalCareActivityMode,
@@ -5,7 +6,7 @@ import type {
   CriticalCareActivityProgress,
   CriticalCareActivityStatus,
   CriticalCareResumePointer,
-} from '@/features/learning-module/activity'
+} from '@/features/learning-module/activity/types'
 
 import {
   LEGACY_PROGRESS_EPOCH,
@@ -134,7 +135,7 @@ export function projectActivityProgress(
   },
 ): CriticalCareActivityProgress | null {
   if (!activity) return null
-  return {
+  return enforceCriticalCareProgressAuthority(activity, {
     activityId: activity.id,
     status: input.status,
     ...(input.currentPhase ? { currentPhase: input.currentPhase } : {}),
@@ -146,7 +147,18 @@ export function projectActivityProgress(
     ...(input.hintCount !== undefined ? { hintCount: boundedCounter(input.hintCount) } : {}),
     competencyEvidenceIds: [...new Set(input.competencyEvidenceIds ?? [])].slice(0, 100),
     updatedAt: LEGACY_PROGRESS_EPOCH,
-  }
+  })
+}
+
+export function enforceProgressCollectionAuthority(
+  activities: readonly CriticalCareActivityDefinition[],
+  progressItems: readonly CriticalCareActivityProgress[],
+): readonly CriticalCareActivityProgress[] {
+  const activityById = new Map(activities.map((activity) => [activity.id, activity]))
+  return progressItems.map((progress) => {
+    const activity = activityById.get(progress.activityId)
+    return activity ? enforceCriticalCareProgressAuthority(activity, progress) : progress
+  })
 }
 
 export function makeLegacyResumePointer(

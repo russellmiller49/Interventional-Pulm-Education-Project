@@ -162,6 +162,26 @@ describe('learner prescription workbench UI', () => {
     expect(window.localStorage).toHaveLength(0)
   })
 
+  it('emits completion evidence only after an input change is followed by output inspection', () => {
+    const onCompletionEvidence = jest.fn()
+    render(<CrrtPrescriptionWorkbench onCompletionEvidence={onCompletionEvidence} />)
+
+    const outputs = screen.getByRole('region', { name: 'Educational calculation outputs' })
+    fireEvent.focus(outputs)
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+
+    fireEvent.blur(outputs)
+    fireEvent.change(screen.getByRole('spinbutton', { name: /^Dialysate flow/ }), {
+      target: { value: '1200' },
+    })
+    expect(onCompletionEvidence).not.toHaveBeenCalled()
+
+    fireEvent.focus(outputs)
+    expect(onCompletionEvidence).toHaveBeenCalledTimes(1)
+    fireEvent.focus(outputs)
+    expect(onCompletionEvidence).toHaveBeenCalledTimes(1)
+  })
+
   it('permits only no anticoagulation and leaves the solution registry unavailable', () => {
     render(<CrrtPrescriptionWorkbench />)
 
@@ -228,10 +248,12 @@ describe('learner prescription workbench UI', () => {
       screen.getByText(/Neither connection position is declared universally best/i),
     ).toBeInTheDocument()
     expect(screen.getByText(/quantitative FF is unavailable/i)).toBeInTheDocument()
-    expect(screen.getAllByText('REVIEW-CKRT-CORE-2025')).not.toHaveLength(0)
-    expect(screen.getAllByText('GUID-RRT-ICU-2026')).not.toHaveLength(0)
-    expect(screen.getAllByText('SYNTH-LAB-PREPOST-001')).not.toHaveLength(0)
-    expect(screen.getByText('SYNTH-LAB-PRESCRIPTION-001')).toBeInTheDocument()
+    expect(screen.getByText('Clinical context')).toBeInTheDocument()
+    expect(screen.getByText('Critical-care guidance')).toBeInTheDocument()
+    expect(screen.getByText('Comparison boundary')).toBeInTheDocument()
+    expect(screen.getByText('Practice-value boundary')).toBeInTheDocument()
+    expect(screen.queryByText('REVIEW-CKRT-CORE-2025')).not.toBeInTheDocument()
+    expect(screen.queryByText('SYNTH-LAB-PRESCRIPTION-001')).not.toBeInTheDocument()
     expect(
       screen.getByText(/does not model blood flow.*PBP dilution.*anticoagulation/i),
     ).toBeInTheDocument()

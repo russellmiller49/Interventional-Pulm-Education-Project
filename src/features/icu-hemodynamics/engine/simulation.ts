@@ -1,5 +1,25 @@
 import { clamp, roundTo } from './calculations'
 import {
+  applyFastFlushEvent,
+  applyPressureArtifact,
+  isOverdamped,
+  isUnderdamped,
+  pulsatileGainFor,
+} from './waveformArtifacts'
+import {
+  ecgShapeMv,
+  PULMONARY_ARTERY_MEAN_FRACTION,
+  pulsatilePressureShape,
+  PULMONARY_ARTERY_SHAPE,
+  rightAtrialAmplitudesFor,
+  rightAtrialDeviationMmHg,
+  SYSTEMIC_ARTERIAL_MEAN_FRACTION,
+  SYSTEMIC_ARTERIAL_SHAPE,
+  ventricularPressureShape,
+  wedgeAmplitudesFor,
+  wedgeDeviationMmHg,
+} from './waveformMorphology'
+import {
   advanceWindkesselCompartments,
   createInitialCirculationCompartments,
   HEMODYNAMIC_FIXED_STEP_SECONDS,
@@ -15,7 +35,6 @@ export {
 } from '@/features/hemodynamics-core'
 import type {
   CatheterPosition,
-  CirculationCompartmentState,
   CirculationParameters,
   HemodynamicAlarm,
   HemodynamicCaseDefinition,
@@ -23,6 +42,7 @@ import type {
   HemodynamicMeasurements,
   HemodynamicSimulationState,
   HemodynamicWaveformSample,
+  FastFlushLineType,
   MeasurementSystemState,
   ParameterEffect,
 } from './types'
@@ -38,7 +58,9 @@ export const defaultMeasurementSystem: MeasurementSystemState = {
   naturalFrequencyHz: 18,
   noiseAmplitudeMmHg: 0.12,
   artifact: 'none',
+  fastFlushStartedAt: null,
   fastFlushActiveUntil: null,
+  fastFlushLineType: null,
   lastFastFlushFinding: null,
 }
 
@@ -74,9 +96,52 @@ export function wedgeCaptureDelaySeconds(respiratoryRateBpm: number): number {
   )
 }
 
-function gaussian(value: number, center: number, width: number): number {
-  const normalized = (value - center) / width
-  return Math.exp(-0.5 * normalized * normalized)
+/** Fraction of the respiratory cycle spent in inspiration, an I:E ratio of roughly 1:1.5. */
+const INSPIRATORY_FRACTION = 0.4
+
+/**
+ * Respiratory phase at which intrathoracic pressure most closely approximates atmospheric
+ * pressure. Intravascular pressures are read here, and nowhere else, because this is the only
+ * point in the cycle where the displayed pressure approximates the transmural pressure.
+ */
+export const END_EXPIRATION_PHASE = 0
+
+/** Tolerance around end expiration within which a wedge sample counts as end-expiratory. */
+export const END_EXPIRATION_TOLERANCE_PHASE = 0.12
+
+export function respiratoryPhaseAt(timeSeconds: number, respiratoryRateBpm: number): number {
+  const cycleSeconds = 60 / clamp(respiratoryRateBpm, 4, 45)
+  return (((timeSeconds % cycleSeconds) + cycleSeconds) % cycleSeconds) / cycleSeconds
+}
+
+export function isEndExpiration(respiratoryPhase: number): boolean {
+  return (
+    respiratoryPhase <= END_EXPIRATION_TOLERANCE_PHASE ||
+    respiratoryPhase >= 1 - END_EXPIRATION_TOLERANCE_PHASE
+  )
+}
+
+/**
+ * Normalized respiratory excursion: zero at end expiration, rising through inspiration, and
+ * returning smoothly to zero through expiration. The excursion does not reverse direction:
+ * positive-pressure ventilation stays above its end-expiratory reference, while spontaneous
+ * inspiration stays below it.
+ */
+function respiratoryExcursion(respiratoryPhase: number): number {
+  if (respiratoryPhase < INSPIRATORY_FRACTION) {
+    return Math.sin((respiratoryPhase / INSPIRATORY_FRACTION) * (Math.PI / 2))
+  }
+  const expiratoryProgress = (respiratoryPhase - INSPIRATORY_FRACTION) / (1 - INSPIRATORY_FRACTION)
+  return Math.cos(expiratoryProgress * (Math.PI / 2))
+}
+
+/**
+ * Sign of the respiratory pressure swing. Spontaneous inspiration lowers intrathoracic pressure
+ * and pulls displayed intravascular pressures down; positive-pressure inspiration pushes them up.
+ * Either way the pressures converge at end expiration, which is why that is the phase to read.
+ */
+function respiratoryDirection(parameters: CirculationParameters): number {
+  return 1 - 2 * clamp(parameters.spontaneousBreathingFraction, 0, 1)
 }
 
 function deterministicNoise(seed: number, index: number, salt: number): number {
@@ -185,28 +250,24 @@ export function deriveHemodynamicMeasurements(
     100,
   )
   const paPulsePressure = clamp(strokeVolume / parameters.pulmonaryArterialComplianceMlMmHg, 5, 65)
-  let artSystolic = mapTrue + artPulsePressure * 0.67
-  let artDiastolic = mapTrue - artPulsePressure * 0.33
-  let papSystolic = meanPapTrue + paPulsePressure * 0.67
-  let papDiastolic = meanPapTrue - paPulsePressure * 0.33
+  let artSystolic = mapTrue + artPulsePressure * (1 - SYSTEMIC_ARTERIAL_MEAN_FRACTION)
+  let artDiastolic = mapTrue - artPulsePressure * SYSTEMIC_ARTERIAL_MEAN_FRACTION
+  let papSystolic = meanPapTrue + paPulsePressure * (1 - PULMONARY_ARTERY_MEAN_FRACTION)
+  let papDiastolic = meanPapTrue - paPulsePressure * PULMONARY_ARTERY_MEAN_FRACTION
 
-  if (measurementSystem.artifact === 'overdamped' || measurementSystem.dampingRatio > 0.95) {
-    artSystolic = mapTrue + (artSystolic - mapTrue) * 0.55
-    artDiastolic = mapTrue + (artDiastolic - mapTrue) * 0.55
-    papSystolic = meanPapTrue + (papSystolic - meanPapTrue) * 0.6
-    papDiastolic = meanPapTrue + (papDiastolic - meanPapTrue) * 0.6
-  } else if (measurementSystem.artifact === 'underdamped' || measurementSystem.dampingRatio < 0.4) {
-    artSystolic = mapTrue + (artSystolic - mapTrue) * 1.35
-    artDiastolic = mapTrue + (artDiastolic - mapTrue) * 1.2
-    papSystolic = meanPapTrue + (papSystolic - meanPapTrue) * 1.25
-    papDiastolic = meanPapTrue + (papDiastolic - meanPapTrue) * 1.15
-  }
+  // Dynamic-response artifacts widen or narrow pulse pressure around the preserved mean.
+  // The live trace receives the same gain exactly once; see pressureTransfer below.
+  const pulsatileGain = pulsatileGainFor(measurementSystem)
+  artSystolic = mapTrue + (artSystolic - mapTrue) * pulsatileGain
+  artDiastolic = mapTrue + (artDiastolic - mapTrue) * pulsatileGain
+  papSystolic = meanPapTrue + (papSystolic - meanPapTrue) * pulsatileGain
+  papDiastolic = meanPapTrue + (papDiastolic - meanPapTrue) * pulsatileGain
 
   const hydrostaticOffset = -measurementSystem.transducerLevelCm * 0.74
   const zeroOffset = measurementSystem.zeroed ? 0 : 5
   const offset = hydrostaticOffset + zeroOffset
   const displayedPawp =
-    measurementSystem.artifact === 'false-wedge' ? meanPapTrue + 2 : pawpTrue + offset
+    measurementSystem.artifact === 'false-wedge' ? meanPapTrue + 2 + offset : pawpTrue + offset
   const pulseVariation = clamp(
     4 + parameters.fluidResponsiveness * 13 + Math.abs(parameters.pleuralPressureSwingMmHg) * 0.7,
     2,
@@ -220,8 +281,11 @@ export function deriveHemodynamicMeasurements(
     artDiastolicMmHg: roundTo(artDiastolic + offset, 0),
     mapMmHg: roundTo(mapTrue + offset, 0),
     rapMmHg: roundTo(rapTrue + offset, 0),
-    rvSystolicMmHg: roundTo(papSystolic + 3 + offset, 0),
-    rvDiastolicMmHg: roundTo(Math.max(0, rapTrue - 2) + offset, 0),
+    // No systolic pressure difference exists between the right ventricle and the pulmonary
+    // artery unless there is pulmonic valvular or pulmonary artery stenosis.
+    rvSystolicMmHg: roundTo(papSystolic + offset, 0),
+    // Right ventricular end-diastolic pressure sits within a few mmHg of right atrial pressure.
+    rvDiastolicMmHg: roundTo(Math.max(0, rapTrue - 1) + offset, 0),
     papSystolicMmHg: roundTo(papSystolic + offset, 0),
     papDiastolicMmHg: roundTo(papDiastolic + offset, 0),
     meanPapMmHg: roundTo(meanPapTrue + offset, 0),
@@ -238,11 +302,7 @@ export function deriveHemodynamicMeasurements(
 }
 
 function arterialShape(phase: number): number {
-  if (phase < 0.16) return Math.sin((phase / 0.16) * (Math.PI / 2))
-  if (phase < 0.4) return 1 - ((phase - 0.16) / 0.24) * 0.34
-  const tail = 0.66 * Math.exp(-3.1 * (phase - 0.4))
-  const notch = gaussian(phase, 0.46, 0.018) * 0.11
-  return Math.max(0.06, tail - notch)
+  return pulsatilePressureShape(phase, SYSTEMIC_ARTERIAL_SHAPE)
 }
 
 function pressureTransfer(
@@ -252,102 +312,162 @@ function pressureTransfer(
   time: number,
   channelSalt: number,
   seed: number,
+  options: {
+    readonly cardiacPhase: number
+    readonly pulsePressureMmHg: number
+    readonly gainAlreadyApplied?: boolean
+    readonly catheterSpecificArtifacts?: boolean
+    readonly fastFlushLineType?: FastFlushLineType
+  },
 ): number {
-  if (
-    measurementSystem.fastFlushActiveUntil !== null &&
-    time <= measurementSystem.fastFlushActiveUntil
-  ) {
-    return 280
-  }
   const hydrostaticOffset = -measurementSystem.transducerLevelCm * 0.74
   const zeroOffset = measurementSystem.zeroed ? 0 : 5
-  let gain = 1
-  if (measurementSystem.artifact === 'overdamped' || measurementSystem.dampingRatio > 0.95)
-    gain = 0.55
-  if (measurementSystem.artifact === 'underdamped' || measurementSystem.dampingRatio < 0.4)
-    gain = 1.35
-  let result = mean + (value - mean) * gain + hydrostaticOffset + zeroOffset
-  if (measurementSystem.artifact === 'underdamped' || measurementSystem.dampingRatio < 0.4) {
-    result += Math.sin(time * Math.PI * 2 * measurementSystem.naturalFrequencyHz) * 2.4
-  }
-  if (measurementSystem.artifact === 'catheter-whip') {
-    result += gaussian((time * 1.7) % 1, 0.18, 0.025) * 12
-  }
-  if (measurementSystem.artifact === 'wall-contact') result = mean + hydrostaticOffset + zeroOffset
+  const catheterOnlyArtifact =
+    measurementSystem.artifact === 'catheter-whip' ||
+    measurementSystem.artifact === 'wall-contact' ||
+    measurementSystem.artifact === 'false-wedge'
+  const transferSystem =
+    catheterOnlyArtifact && !options.catheterSpecificArtifacts
+      ? { ...measurementSystem, artifact: 'none' as const }
+      : measurementSystem
+  const distorted = applyPressureArtifact({
+    value,
+    mean,
+    state: transferSystem,
+    timeSeconds: time,
+    cardiacPhase: options.cardiacPhase,
+    pulsePressureMmHg: options.pulsePressureMmHg,
+    gainAlreadyApplied: options.gainAlreadyApplied,
+  })
   const index = Math.round(time / HEMODYNAMIC_FIXED_STEP_SECONDS)
-  result += deterministicNoise(seed, index, channelSalt) * measurementSystem.noiseAmplitudeMmHg
-  return result
+  const displayedBaseline =
+    distorted +
+    hydrostaticOffset +
+    zeroOffset +
+    deterministicNoise(seed, index, channelSalt) * measurementSystem.noiseAmplitudeMmHg
+  const fastFlushMatchesChannel =
+    measurementSystem.fastFlushStartedAt !== null &&
+    measurementSystem.fastFlushActiveUntil !== null &&
+    time <= measurementSystem.fastFlushActiveUntil &&
+    measurementSystem.fastFlushLineType === options.fastFlushLineType
+
+  if (!fastFlushMatchesChannel || !options.fastFlushLineType) return displayedBaseline
+
+  const response = isOverdamped(measurementSystem)
+    ? 'overdamped'
+    : isUnderdamped(measurementSystem)
+      ? 'underdamped'
+      : 'acceptable'
+  return applyFastFlushEvent({
+    baselinePressureMmHg: displayedBaseline,
+    lineType: options.fastFlushLineType,
+    response,
+    elapsedSeconds: time - measurementSystem.fastFlushStartedAt!,
+  })
 }
 
 function generateWaveformSample(
   time: number,
   measurements: HemodynamicMeasurements,
   parameters: CirculationParameters,
-  compartments: CirculationCompartmentState,
   measurementSystem: MeasurementSystemState,
   seed: number,
 ): HemodynamicWaveformSample {
   const cycleSeconds = 60 / parameters.heartRateBpm
   const cardiacPhase = (((time % cycleSeconds) + cycleSeconds) % cycleSeconds) / cycleSeconds
-  const respiratoryCycle = 60 / parameters.respiratoryRateBpm
-  const respiratoryPhase =
-    (((time % respiratoryCycle) + respiratoryCycle) % respiratoryCycle) / respiratoryCycle
+  const respiratoryPhase = respiratoryPhaseAt(time, parameters.respiratoryRateBpm)
   const pulseShape = arterialShape(cardiacPhase)
+  const respiratorySwing = respiratoryExcursion(respiratoryPhase) * respiratoryDirection(parameters)
   const displayedOffset =
     -measurementSystem.transducerLevelCm * 0.74 + (measurementSystem.zeroed ? 0 : 5)
   const artMean = measurements.mapMmHg - displayedOffset
-  const analyticArt =
-    measurements.artDiastolicMmHg -
-    displayedOffset +
-    (measurements.artSystolicMmHg - measurements.artDiastolicMmHg) * pulseShape
-  const artTrue =
-    analyticArt * 0.78 + (compartments.systemicArterialPressureMmHg - displayedOffset) * 0.22
+  const artDiastolic = measurements.artDiastolicMmHg - displayedOffset
+  const artPulsePressure = measurements.artSystolicMmHg - measurements.artDiastolicMmHg
+  const roundedArtShapeMean = artDiastolic + artPulsePressure * SYSTEMIC_ARTERIAL_MEAN_FRACTION
+  const analyticArt = artDiastolic + artPulsePressure * pulseShape + (artMean - roundedArtShapeMean)
+  const artTrue = analyticArt + respiratorySwing * parameters.pleuralPressureSwingMmHg * 0.5
+
+  // Right atrium: a, c, and v waves with x and y descents, timed to the ECG.
   const rapTrue = measurements.rapMmHg - displayedOffset
   const cvpTrue =
     rapTrue +
-    gaussian(cardiacPhase, 0.06, 0.045) * 2.1 -
-    gaussian(cardiacPhase, 0.25, 0.08) * 1.5 +
-    gaussian(cardiacPhase, 0.72, 0.11) * 2.5 -
-    gaussian(cardiacPhase, 0.9, 0.07) * 1.7 +
-    Math.sin(respiratoryPhase * Math.PI * 2) * parameters.pleuralPressureSwingMmHg * 0.35
-  const rvPulse =
-    cardiacPhase > 0.05 && cardiacPhase < 0.48
-      ? Math.sin(((cardiacPhase - 0.05) / 0.43) * Math.PI)
-      : 0
+    rightAtrialDeviationMmHg(
+      cardiacPhase,
+      rightAtrialAmplitudesFor({
+        ventricularCompliance: parameters.rightVentricularCompliance,
+        pericardialPressureMmHg: parameters.pericardialPressureMmHg,
+        tricuspidRegurgitationSeverity: parameters.tricuspidRegurgitationSeverity,
+      }),
+    ) +
+    respiratorySwing * parameters.pleuralPressureSwingMmHg
+
+  // Right ventricle: rapid rise, rapid relaxation, and a diastolic phase that starts low and
+  // gradually rises. That up-sloping diastole is what separates RV from the PA tracing.
+  const rvSystolic = measurements.rvSystolicMmHg - displayedOffset
+  const rvEndDiastolic = measurements.rvDiastolicMmHg - displayedOffset
+  const rvShapeOptions = {
+    aWaveFraction: Math.min(
+      0.18,
+      Math.max(0, 1 / Math.max(0.25, parameters.rightVentricularCompliance) - 1) * 0.14,
+    ),
+    endDiastolicFraction: 0.16,
+  }
+  const rvNadir =
+    (rvEndDiastolic - rvSystolic * rvShapeOptions.endDiastolicFraction) /
+    (1 - rvShapeOptions.endDiastolicFraction)
   const rvTrue =
-    (measurements.rvDiastolicMmHg -
-      displayedOffset +
-      (measurements.rvSystolicMmHg - measurements.rvDiastolicMmHg) * rvPulse ** 1.3) *
-      0.72 +
-    compartments.rightVentricularPressureMmHg * 0.28
+    rvNadir +
+    (rvSystolic - rvNadir) * ventricularPressureShape(cardiacPhase, rvShapeOptions) +
+    respiratorySwing * parameters.pleuralPressureSwingMmHg * 0.8
+
+  // Pulmonary artery: same anatomy as the arterial trace but a later, rounder peak, a later
+  // dicrotic notch from pulmonic valve closure, and a diastole that continues to fall.
+  const papMean = measurements.meanPapMmHg - displayedOffset
+  const papDiastolic = measurements.papDiastolicMmHg - displayedOffset
+  const papPulsePressure = measurements.papSystolicMmHg - measurements.papDiastolicMmHg
+  const roundedPapShapeMean = papDiastolic + papPulsePressure * PULMONARY_ARTERY_MEAN_FRACTION
   const analyticPap =
-    measurements.papDiastolicMmHg -
-    displayedOffset +
-    (measurements.papSystolicMmHg - measurements.papDiastolicMmHg) *
-      Math.max(0.08, pulseShape - gaussian(cardiacPhase, 0.48, 0.02) * 0.08)
-  const papTrue =
-    analyticPap * 0.78 + (compartments.pulmonaryArterialPressureMmHg - displayedOffset) * 0.22
+    papDiastolic +
+    papPulsePressure * pulsatilePressureShape(cardiacPhase, PULMONARY_ARTERY_SHAPE) +
+    (papMean - roundedPapShapeMean)
+  const papTrue = analyticPap + respiratorySwing * parameters.pleuralPressureSwingMmHg
+
+  // Wedge: the same wave family as the atrial trace, delayed by transmission back through the
+  // pulmonary bed and damped enough that no c wave survives.
   const wedgeMean = (measurements.pawpMmHg ?? measurements.papDiastolicMmHg) - displayedOffset
   const wedgeTrue =
     wedgeMean +
-    gaussian(cardiacPhase, 0.1, 0.075) * 1.3 +
-    gaussian(cardiacPhase, 0.77, 0.13) * 2.3 -
-    gaussian(cardiacPhase, 0.92, 0.06) * 1.2 +
-    Math.sin(respiratoryPhase * Math.PI * 2) * parameters.pleuralPressureSwingMmHg * 0.45
-  const qrs = gaussian(cardiacPhase, 0.04, 0.012) * 1.25
-  const pWave = gaussian(cardiacPhase, 0.86, 0.035) * 0.18
-  const tWave = gaussian(cardiacPhase, 0.34, 0.075) * 0.34
-  const ecg = qrs + pWave + tWave - gaussian(cardiacPhase, 0.02, 0.008) * 0.35
-  const respiration =
-    Math.sin(respiratoryPhase * Math.PI * 2) * parameters.pleuralPressureSwingMmHg -
-    parameters.peepCmH2O * 0.08
-  const pleth = clamp(pulseShape * 0.88 + Math.sin(respiratoryPhase * Math.PI * 2) * 0.06, 0, 1.2)
+    wedgeDeviationMmHg(
+      cardiacPhase,
+      wedgeAmplitudesFor({
+        leftVentricularCompliance: parameters.leftVentricularCompliance,
+        pericardialPressureMmHg: parameters.pericardialPressureMmHg,
+      }),
+    ) +
+    respiratorySwing * parameters.pleuralPressureSwingMmHg
+
+  const ecg = ecgShapeMv(cardiacPhase)
+  const respiration = respiratorySwing * parameters.pleuralPressureSwingMmHg * 2
+  const pleth = clamp(pulseShape * 0.88 + respiratorySwing * 0.06, 0, 1.2)
+  const cvpPulsePressure = Math.max(2, 5 / Math.max(0.4, parameters.rightVentricularCompliance))
+  const rvPulsePressure = measurements.rvSystolicMmHg - measurements.rvDiastolicMmHg
+  const wedgePulsePressure = Math.max(2, 5 / Math.max(0.4, parameters.leftVentricularCompliance))
+  const falseWedgeMean = (measurements.pawpMmHg ?? measurements.meanPapMmHg) - displayedOffset
+  const falseWedgeTrue = papTrue + (falseWedgeMean - papMean)
 
   return {
     time,
     ecgMv: ecg,
-    artMmHg: pressureTransfer(artTrue, artMean, measurementSystem, time, 3, seed),
-    cvpMmHg: pressureTransfer(cvpTrue, rapTrue, measurementSystem, time, 7, seed),
+    artMmHg: pressureTransfer(artTrue, artMean, measurementSystem, time, 3, seed, {
+      cardiacPhase,
+      pulsePressureMmHg: artPulsePressure,
+      gainAlreadyApplied: true,
+      fastFlushLineType: 'systemic-arterial',
+    }),
+    cvpMmHg: pressureTransfer(cvpTrue, rapTrue, measurementSystem, time, 7, seed, {
+      cardiacPhase,
+      pulsePressureMmHg: cvpPulsePressure,
+    }),
     rvMmHg: pressureTransfer(
       rvTrue,
       (measurements.rvSystolicMmHg + measurements.rvDiastolicMmHg) / 2 - displayedOffset,
@@ -355,6 +475,12 @@ function generateWaveformSample(
       time,
       11,
       seed,
+      {
+        cardiacPhase,
+        pulsePressureMmHg: rvPulsePressure,
+        gainAlreadyApplied: true,
+        catheterSpecificArtifacts: true,
+      },
     ),
     papMmHg: pressureTransfer(
       papTrue,
@@ -363,18 +489,27 @@ function generateWaveformSample(
       time,
       13,
       seed,
+      {
+        cardiacPhase,
+        pulsePressureMmHg: papPulsePressure,
+        gainAlreadyApplied: true,
+        catheterSpecificArtifacts: true,
+        fastFlushLineType: 'pulmonary-artery',
+      },
     ),
     pcwpMmHg:
       measurementSystem.artifact === 'false-wedge'
-        ? pressureTransfer(
-            papTrue,
-            measurements.meanPapMmHg - displayedOffset,
-            measurementSystem,
-            time,
-            17,
-            seed,
-          )
-        : pressureTransfer(wedgeTrue, wedgeMean, measurementSystem, time, 17, seed),
+        ? pressureTransfer(falseWedgeTrue, falseWedgeMean, measurementSystem, time, 17, seed, {
+            cardiacPhase,
+            pulsePressureMmHg: papPulsePressure,
+            gainAlreadyApplied: true,
+            catheterSpecificArtifacts: true,
+          })
+        : pressureTransfer(wedgeTrue, wedgeMean, measurementSystem, time, 17, seed, {
+            cardiacPhase,
+            pulsePressureMmHg: wedgePulsePressure,
+            catheterSpecificArtifacts: true,
+          }),
     pleth,
     respiration,
   }
@@ -433,9 +568,7 @@ export function createInitialHemodynamicState(
   const waveforms: HemodynamicWaveformSample[] = []
   for (let time = 0; time <= initialTime; time += HEMODYNAMIC_FIXED_STEP_SECONDS) {
     compartments = advanceWindkesselCompartments(compartments, parameters, measurements, time)
-    waveforms.push(
-      generateWaveformSample(time, measurements, parameters, compartments, measurementSystem, seed),
-    )
+    waveforms.push(generateWaveformSample(time, measurements, parameters, measurementSystem, seed))
   }
   const position = definition.initialCatheterPosition ?? 'pa'
   return {
@@ -557,7 +690,6 @@ function advanceOneStep(state: HemodynamicSimulationState): HemodynamicSimulatio
     nextTime,
     measurements,
     parameters,
-    compartments,
     state.measurementSystem,
     state.seed,
   )

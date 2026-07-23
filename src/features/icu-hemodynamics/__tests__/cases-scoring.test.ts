@@ -19,12 +19,30 @@ function completeSafePath(caseIndex: number): HemodynamicSimulationState {
     id: definition.correctPriorityId,
   })
   state = icuHemodynamicsReducer(state, { type: 'COMMIT_PREDICTION' })
+  state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
   state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
   state = icuHemodynamicsReducer(state, { type: 'FAST_FLUSH' })
   state = icuHemodynamicsReducer(state, { type: 'VALIDATE_SIGNAL', check: 'waveform-valid' })
   state = icuHemodynamicsReducer(state, { type: 'VALIDATE_SIGNAL', check: 'derived-reviewed' })
+  if (definition.id === 'HD-08') {
+    state = icuHemodynamicsReducer(state, {
+      type: 'VALIDATE_SIGNAL',
+      check: 'dynamic-response-classified',
+    })
+    state = icuHemodynamicsReducer(state, { type: 'SET_DAMPING', dampingRatio: 0.65 })
+    state = icuHemodynamicsReducer(state, { type: 'SET_ARTIFACT', artifact: 'none' })
+    state = icuHemodynamicsReducer(state, { type: 'RETRACT_CATHETER', instant: true })
+  }
 
   for (const interventionId of definition.requiredInterventionIds) {
+    if (
+      definition.id === 'HD-08' &&
+      ['correct-measurement-system', 'reposition-catheter', 'repeat-valid-thermodilution'].includes(
+        interventionId,
+      )
+    ) {
+      continue
+    }
     const intervention = definition.interventions.find(
       (candidate) => candidate.id === interventionId,
     )

@@ -41,7 +41,7 @@ export function CriticalCareLabsLibrary({
               href={module.href as Route}
               className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
             >
-              Open lab <ArrowRight className="size-4" aria-hidden="true" />
+              Open full lab <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </li>
         ))}

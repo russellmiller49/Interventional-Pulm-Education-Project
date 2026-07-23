@@ -26,6 +26,7 @@ import {
   type CriticalCareReadableStorage,
 } from './types'
 import {
+  enforceProgressCollectionAuthority,
   isRecord,
   mergeProjectedActivities,
   parseStoredJson,
@@ -111,8 +112,11 @@ export function mergeCriticalCareProgress(
   // its newer phase/mode metadata without allowing a page-open write to
   // downgrade an older completed or mastered result.
   const mergedByStrength = mergeProjectedActivities([
-    ...legacy.flatMap((result) => result.activities),
-    ...(normalized?.activities ?? []),
+    ...enforceProgressCollectionAuthority(
+      activities,
+      legacy.flatMap((result) => result.activities),
+    ),
+    ...enforceProgressCollectionAuthority(activities, normalized?.activities ?? []),
   ])
   const activityOrder = [
     ...(normalized?.activities.map((activity) => activity.activityId) ?? []),

@@ -1,9 +1,10 @@
+import { enforceCriticalCareProgressAuthority } from '@/features/learning-module/activity/evidence'
 import type {
   CriticalCareActivityDefinition,
   CriticalCareActivityProgress,
   CriticalCareProgressEnvelope,
   CriticalCareReviewStatus,
-} from '@/features/learning-module/activity'
+} from '@/features/learning-module/activity/types'
 
 export type CriticalCareRecommendationReason = 'continue' | 'next-unblocked' | 'retry-for-mastery'
 
@@ -22,9 +23,18 @@ export interface CriticalCareActivityRecommendation {
 }
 
 function progressByActivityId(
+  activities: readonly CriticalCareActivityDefinition[],
   envelope: CriticalCareProgressEnvelope,
 ): ReadonlyMap<string, CriticalCareActivityProgress> {
-  return new Map(envelope.activities.map((progress) => [progress.activityId, progress]))
+  const activityById = new Map(activities.map((activity) => [activity.id, activity]))
+  return new Map(
+    envelope.activities.flatMap((progress) => {
+      const activity = activityById.get(progress.activityId)
+      return activity
+        ? [[progress.activityId, enforceCriticalCareProgressAuthority(activity, progress)] as const]
+        : []
+    }),
+  )
 }
 
 function hasCompleted(
@@ -57,7 +67,7 @@ export function getCriticalCareRecommendations(
   envelope: CriticalCareProgressEnvelope,
   options: CriticalCareRecommendationOptions = {},
 ): readonly CriticalCareActivityRecommendation[] {
-  const progress = progressByActivityId(envelope)
+  const progress = progressByActivityId(activities, envelope)
   const preferredModules = new Set(options.preferredModuleIds ?? [])
   const preferredPathways = new Set(options.preferredPathwayIds ?? [])
   const missedCompetencies = new Set(options.missedCompetencyIds ?? [])

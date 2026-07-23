@@ -1,4 +1,7 @@
-.moduleRoot {
+.moduleRoot,
+.bedsidePanel,
+.workflowPanel,
+.consoleShell {
   --ink: #13252a;
   --muted: #5d6e72;
   --surface: #ffffff;
@@ -24,6 +27,9 @@
   --wave: #65efb1;
   --wave-two: #62c8ff;
   --pmus: #f2c969;
+}
+
+.moduleRoot {
   box-sizing: border-box;
   width: min(100%, 1720px);
   margin: 0 auto;

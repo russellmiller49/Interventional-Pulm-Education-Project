@@ -86,12 +86,41 @@ export const hemodynamicsSources: readonly HemodynamicsSource[] = [
     version: '2014.1',
     title: 'Pulmonary artery catheter review',
     citation:
-      'Gilbert-Kawai E, et al. Pulmonary artery catheterization. Best Pract Res Clin Anaesthesiol. 2014.',
+      'Whitener S, Konoske R, Mark JB. Pulmonary artery catheter. Best Pract Res Clin Anaesthesiol. 2014;28(4):323-335.',
     year: 2014,
     sourceType: 'review',
     url: 'https://doi.org/10.1016/j.bpa.2014.08.003',
     suppliedFilename: 'Pulmonary artery catheter.pdf',
-    intendedUse: 'Foundational catheter technique, waveform interpretation, and limitations.',
+    intendedUse:
+      'Chamber-by-chamber waveform recognition during advancement, insertion-depth landmarks, normal intracardiac pressures, and abnormal a/c/v patterns.',
+  },
+  {
+    id: 'emcrit-rhc-supplied-2026',
+    version: 'supplied-2026-07-23',
+    title: 'Right heart catheterization (RHC)',
+    citation: 'EMCrit Project. Right heart catheterization (RHC). User-supplied PDF capture.',
+    year: 2026,
+    sourceType: 'reference-package',
+    url: 'https://emcrit.org/ibcc/rhc/',
+    suppliedFilename: 'Right heart catheterization (RHC) - EMCrit Project.pdf',
+    intendedUse:
+      'Conceptual cross-check for PA-versus-RV morphology, PA-to-wedge transition, rough catheter-depth context, and pressure leveling.',
+    limitation:
+      'Used as a clinical and visual reference only. The module uses original explanatory text and original deterministic SVG traces.',
+  },
+  {
+    id: 'clinical-hemodynamics-waveforms',
+    version: 'ch2-supplied',
+    title: 'Normal waveforms, artifacts, and pitfalls',
+    citation:
+      'Ragosta M, Kennedy JLW. Normal waveforms, artifacts, and pitfalls. In: Textbook of Clinical Hemodynamics. Elsevier.',
+    year: 2026,
+    sourceType: 'reference-package',
+    suppliedFilename: 'Normal physiology and waveforms.pdf',
+    intendedUse:
+      'Wave-by-wave morphology and ECG timing for the RA, RV, PA, wedge, LV, and aortic tracings; West zones; and the catalogue of measurement artifacts.',
+    limitation:
+      'Catheterization-laboratory reference. Bedside ICU monitors damp and filter differently, so morphology is taught qualitatively rather than as a calibrated device trace.',
   },
   {
     id: 'arterial-pressure-five-step-2020',

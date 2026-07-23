@@ -31,22 +31,19 @@
   min-height: 0;
 }
 
+.moduleFrame[data-activity-frame='true'] > .moduleHeader,
+.moduleFrame[data-activity-frame='true'] > .moduleNav,
+.moduleFrame[data-activity-frame='true'] > .safetyNotice {
+  display: none;
+}
+
 @media (min-width: 1024px) and (min-height: 700px) {
   .moduleFrame[data-activity-frame='true'] {
     display: grid;
     height: 100%;
     min-height: 0;
-    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     overflow: hidden;
-  }
-
-  .moduleFrame[data-activity-frame='true'] .moduleHeader {
-    padding-block: 0.55rem;
-  }
-
-  .moduleFrame[data-activity-frame='true'] .safetyNotice {
-    margin-top: 0.5rem;
-    padding-block: 0.55rem;
   }
 
   .activityFrameBody {
@@ -201,6 +198,7 @@
   --lm-v2-accent-contrast: #f8fafc;
   display: grid;
   min-height: calc(100dvh - 4rem);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   background: var(--lm-v2-surface);
@@ -357,38 +355,218 @@
   white-space: nowrap;
 }
 
-.workspace {
+.nativeWorkbenchFrame,
+.guidedLabFrame,
+.caseWorkspaceFrame {
+  position: relative;
   display: grid;
-  min-height: 0;
-  grid-template-columns: minmax(14rem, 0.82fr) minmax(24rem, 1.8fr) minmax(17rem, 1fr);
-}
-
-.contextPanel,
-.taskPanel,
-.viewport {
   min-width: 0;
   min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
 }
 
-.contextPanel,
-.taskPanel {
+.contextStrip {
+  display: flex;
+  min-width: 0;
+  max-height: 8.5rem;
+  align-items: stretch;
+  gap: 0.65rem;
   overflow: auto;
+  border-bottom: 1px solid var(--lm-v2-border);
   background: var(--lm-v2-panel);
   scrollbar-gutter: stable;
 }
 
-.contextPanel {
+.contextStrip > .panelSection {
+  display: flex;
+  min-width: max-content;
+  flex: 1;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 1rem;
+}
+
+.contextStrip > .panelSection > .panelHeading:first-child {
+  max-width: 7.5rem;
+}
+
+.contextStrip .contextList {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.contextStrip .contextItem {
+  width: min(14rem, 22vw);
+  min-width: 8.5rem;
+  grid-template-columns: 1fr;
+  gap: 0.1rem;
+  border: 0;
   border-right: 1px solid var(--lm-v2-border);
+  padding: 0 0.65rem 0 0;
 }
 
-.taskPanel {
-  border-left: 1px solid var(--lm-v2-border);
+.contextStrip .contextItem dd {
+  max-width: 13rem;
+  text-align: left;
+  line-height: 1.3;
+  white-space: normal;
 }
 
-.viewport {
+.contextStrip .goalCard {
+  width: min(24rem, 30vw);
+  min-width: 15rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.contextStrip .safetyList {
+  width: min(28rem, 35vw);
+  min-width: 18rem;
+  grid-template-columns: repeat(2, minmax(9rem, 1fr));
+  padding-right: 1rem;
+}
+
+.contextStrip > .resumeBanner {
+  min-width: min(32rem, 70vw);
+  margin: 0.45rem 0.55rem 0.45rem 0;
+}
+
+.nativeViewport,
+.guidedViewport,
+.caseViewport,
+.didacticViewport {
   position: relative;
-  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
   background: color-mix(in srgb, var(--lm-v2-surface) 82%, black);
+}
+
+.nativeViewport,
+.guidedViewport,
+.caseViewport {
+  overflow: hidden;
+}
+
+.taskDrawer {
+  position: absolute;
+  z-index: 30;
+  top: 0.65rem;
+  right: 0.75rem;
+  max-width: calc(100% - 1.5rem);
+}
+
+.taskDrawerTrigger {
+  width: fit-content;
+  min-height: 2.5rem;
+  margin-left: auto;
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid color-mix(in srgb, var(--lm-v2-accent) 55%, var(--lm-v2-border));
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--lm-v2-panel) 94%, transparent);
+  padding: 0.55rem 0.8rem;
+  color: var(--lm-v2-text);
+  box-shadow: 0 0.45rem 1.4rem rgb(2 6 23 / 0.18);
+  font-size: 0.76rem;
+  font-weight: 760;
+}
+
+.taskDrawerTrigger::-webkit-details-marker {
+  display: none;
+}
+
+.taskDrawerTrigger::before {
+  margin-right: 0.45rem;
+  content: '▸';
+  color: var(--lm-v2-accent);
+}
+
+.taskDrawer[open] .taskDrawerTrigger::before {
+  content: '▾';
+}
+
+.taskDrawerTrigger:focus-visible {
+  outline: 3px solid var(--lm-v2-accent);
+  outline-offset: 2px;
+}
+
+.taskDrawerPanel {
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: min(38rem, calc(100dvh - 13rem));
+  margin-top: 0.4rem;
+  overflow: auto;
+  border: 1px solid var(--lm-v2-border);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--lm-v2-panel) 97%, transparent);
+  box-shadow: 0 1.2rem 3rem rgb(2 6 23 / 0.28);
+  scrollbar-gutter: stable;
+}
+
+.guidedLabBody,
+.caseWorkspaceBody {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+
+.guidedLabBody {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 23rem);
+}
+
+.caseWorkspaceBody {
+  grid-template-columns: minmax(0, 2.35fr) minmax(18rem, 0.85fr);
+}
+
+.guidedTaskPanel,
+.caseTaskPanel,
+.didacticTaskPanel {
+  min-width: 0;
+  overflow: auto;
+  border-left: 1px solid var(--lm-v2-border);
+  background: var(--lm-v2-panel);
+  scrollbar-gutter: stable;
+}
+
+.didacticLessonFrame {
+  display: grid;
+  width: min(100%, 100rem);
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  align-items: start;
+  justify-self: center;
+}
+
+.didacticLessonFrame > .contextStrip {
+  position: sticky;
+  z-index: 5;
+  top: 0;
+  grid-column: 1 / -1;
+}
+
+.didacticViewport {
+  grid-column: 1;
+  grid-row: 2;
+  overflow: visible;
+}
+
+.didacticTaskPanel {
+  position: sticky;
+  top: 0;
+  grid-column: 2;
+  grid-row: 2;
+  max-height: calc(100dvh - 10rem);
+}
+
+.activityShell[data-layout='didactic-lesson'] {
+  height: auto;
+  min-height: calc(100dvh - 4rem);
+  overflow: visible;
+}
+
+.activityShell[data-layout='didactic-lesson'] > .bottomBar {
+  position: sticky;
+  z-index: 10;
+  bottom: 0;
 }
 
 .panelSection {
@@ -622,23 +800,53 @@
   }
 }
 
-@media (max-width: 1023px), (max-height: 699px) {
+@media (max-width: 1199px), (max-height: 699px) {
   .activityShell {
     min-height: auto;
     overflow: visible;
   }
 
-  .workspace {
-    grid-template-columns: 1fr;
+  .nativeWorkbenchFrame,
+  .guidedLabFrame,
+  .caseWorkspaceFrame {
+    min-height: 34rem;
+    overflow: visible;
   }
 
-  .contextPanel,
-  .taskPanel,
-  .viewport {
-    min-height: 18rem;
+  .guidedLabBody,
+  .caseWorkspaceBody,
+  .didacticLessonFrame {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guidedViewport,
+  .caseViewport,
+  .nativeViewport {
+    min-height: 30rem;
+    overflow: hidden;
+    border-bottom: 1px solid var(--lm-v2-border);
+  }
+
+  .guidedTaskPanel,
+  .caseTaskPanel,
+  .didacticTaskPanel {
+    position: static;
+    grid-column: 1;
+    grid-row: auto;
+    max-height: none;
     overflow: visible;
     border: 0;
     border-bottom: 1px solid var(--lm-v2-border);
+    border-left: 0;
+  }
+
+  .didacticViewport {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .didacticLessonFrame > .contextStrip {
+    position: static;
   }
 
   .stepperList {
@@ -659,9 +867,12 @@
 }
 
 @media (max-width: 639px) {
-  .moduleHeader,
-  .activityHeader {
+  .moduleHeader {
     grid-template-columns: 1fr;
+  }
+
+  .activityHeader {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .moduleHeader {
@@ -680,6 +891,18 @@
   .activityTitleRow {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .contextStrip {
+    max-height: 10.5rem;
+  }
+
+  .contextStrip .contextItem {
+    width: 11rem;
+  }
+
+  .taskDrawer {
+    right: 0.5rem;
   }
 
   .debriefGrid {

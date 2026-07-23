@@ -41,6 +41,9 @@ const activities: readonly CriticalCareActivityDefinition[] = [
     assetIds: ['hemodynamics-bedside-waveforms'],
     reviewStatus: 'sme-review',
     evidenceIds: ['reviewed-source'],
+    contentVersion: '2026.07',
+    creditPolicy: 'competency-eligible',
+    completionEvidenceAuthority: 'reviewed-engine-score',
   },
 ]
 

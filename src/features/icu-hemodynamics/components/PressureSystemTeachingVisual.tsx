@@ -5,14 +5,19 @@ import { useMemo, useState, type Dispatch } from 'react'
 import {
   dynamicResponseChallenges,
   dynamicResponseDefinitions,
-  fastFlushTracePath,
+  FAST_FLUSH_RELEASE_SECONDS,
+  FAST_FLUSH_START_SECONDS,
+  fastFlushLineDefinitions,
   formatSignedPressure,
+  generateFastFlushWaveform,
   getDynamicResponseChallenge,
   getDynamicResponseDefinition,
   hydrostaticPressureOffsetMmHg,
   levelingPressureTracePath,
+  classifyDynamicResponse,
   type DynamicResponseChallengeId,
   type DynamicResponseKind,
+  type FastFlushLineType,
 } from '../content/pressureSystemVisuals'
 import {
   deriveHemodynamicMeasurements,
@@ -24,41 +29,142 @@ import styles from './icu-hemodynamics.module.css'
 interface PressureSystemTeachingVisualProps {
   readonly state: HemodynamicSimulationState
   readonly dispatch: Dispatch<HemodynamicAction>
+  /**
+   * Uses the actual case measurement system instead of a selectable teaching
+   * specimen. This is required in scored or contextual signal-validation work.
+   */
+  readonly challengeMode?: 'selectable' | 'current-state'
 }
 
 function FastFlushTrace({
   response,
+  lineType,
   revealLabel,
   compact = false,
 }: {
   readonly response: DynamicResponseKind
+  readonly lineType: FastFlushLineType
   readonly revealLabel: boolean
   readonly compact?: boolean
 }) {
   const definition = getDynamicResponseDefinition(response)
+  const waveform = useMemo(
+    () => generateFastFlushWaveform(lineType, response),
+    [lineType, response],
+  )
+  const width = 720
+  const height = 248
+  const plot = { left: 48, right: 14, top: 28, bottom: 34 } as const
+  const xForTime = (timeSeconds: number) =>
+    plot.left + (timeSeconds / waveform.durationSeconds) * (width - plot.left - plot.right)
+  const yForPressure = (pressureMmHg: number) => {
+    const bounded = Math.max(
+      waveform.line.scaleMinimumMmHg,
+      Math.min(waveform.line.scaleMaximumMmHg, pressureMmHg),
+    )
+    const fraction =
+      (bounded - waveform.line.scaleMinimumMmHg) /
+      (waveform.line.scaleMaximumMmHg - waveform.line.scaleMinimumMmHg)
+    return plot.top + (1 - fraction) * (height - plot.top - plot.bottom)
+  }
+  const path = waveform.samples
+    .map(
+      (sample, index) =>
+        `${index === 0 ? 'M' : 'L'} ${xForTime(sample.timeSeconds).toFixed(2)} ${yForPressure(sample.pressureMmHg).toFixed(2)}`,
+    )
+    .join(' ')
+  const yTicks =
+    lineType === 'pulmonary-artery' ? ([0, 10, 20, 30, 40] as const) : ([40, 80, 120, 160] as const)
   const accessibleSummary = revealLabel
-    ? `${definition.label}. ${definition.observation} ${definition.pressureEffect}`
-    : `Observed fast-flush release response. ${definition.observation} Classification is withheld until the learner submits an interpretation.`
+    ? `${waveform.line.label}. ${definition.label}. A pulsatile baseline precedes a 300 mmHg off-scale flush plateau. The valve releases between beats, independently of cardiac phase. ${definition.observation} The tracing then resumes the ${waveform.line.shortLabel} waveform at its continuously advancing cardiac phase. ${definition.pressureEffect}`
+    : `${waveform.line.label} observed fast-flush release response. A pulsatile baseline precedes an off-scale flush plateau. The valve releases between beats, independently of cardiac phase, and the tracing resumes the same continuously advancing pressure-wave family. ${definition.observation} Classification is withheld until the learner submits an interpretation.`
 
   return (
-    <figure className={styles.fastFlushTrace} data-compact={compact || undefined}>
+    <figure
+      className={styles.fastFlushTrace}
+      data-compact={compact || undefined}
+      data-line-type={lineType}
+    >
       <figcaption>
-        <strong>{revealLabel ? definition.shortLabel : 'Observed response'}</strong>
-        <span>{revealLabel ? definition.observation : 'Classification withheld'}</span>
+        <strong>
+          {waveform.line.shortLabel} · {revealLabel ? definition.shortLabel : 'Observed response'}
+        </strong>
+        <span>
+          {revealLabel
+            ? `${waveform.line.systolicMmHg}/${waveform.line.diastolicMmHg} mmHg baseline · ${definition.observation}`
+            : 'Classification withheld'}
+        </span>
       </figcaption>
-      <svg viewBox="0 0 300 112" role="img" aria-label={accessibleSummary}>
-        <path
-          className={styles.pressureGrid}
-          d="M 0 18 H 300 M 0 43 H 300 M 0 68 H 300 M 0 93 H 300"
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={accessibleSummary}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <rect
+          className={styles.fastFlushPlotBackground}
+          x={plot.left}
+          y={plot.top}
+          width={width - plot.left - plot.right}
+          height={height - plot.top - plot.bottom}
         />
-        <path className={styles.flushTrace} d={fastFlushTracePath(response)} />
-        <line className={styles.flushMarker} x1="38" x2="38" y1="7" y2="104" />
-        <line className={styles.flushMarker} x1="126" x2="126" y1="7" y2="104" />
-        <text x="42" y="12">
+        {yTicks.map((tick) => {
+          const y = yForPressure(tick)
+          return (
+            <g className={styles.fastFlushAxis} key={tick}>
+              <line x1={plot.left} x2={width - plot.right} y1={y} y2={y} />
+              <text x={plot.left - 8} y={y + 3} textAnchor="end">
+                {tick}
+              </text>
+            </g>
+          )
+        })}
+        <text
+          className={styles.fastFlushAxisTitle}
+          transform={`translate(13 ${height / 2}) rotate(-90)`}
+          textAnchor="middle"
+        >
+          pressure (mmHg)
+        </text>
+        {Array.from({ length: 6 }, (_, second) => {
+          const x = xForTime(second)
+          return (
+            <g className={styles.fastFlushTimeMarker} key={second}>
+              <line x1={x} x2={x} y1={plot.top} y2={height - plot.bottom} />
+              <text x={x} y={height - 10} textAnchor="middle">
+                {second} s
+              </text>
+            </g>
+          )
+        })}
+        <path className={styles.flushTrace} d={path} />
+        <line
+          className={styles.flushMarker}
+          x1={xForTime(FAST_FLUSH_START_SECONDS)}
+          x2={xForTime(FAST_FLUSH_START_SECONDS)}
+          y1={plot.top}
+          y2={height - plot.bottom}
+        />
+        <line
+          className={styles.flushMarker}
+          x1={xForTime(FAST_FLUSH_RELEASE_SECONDS)}
+          x2={xForTime(FAST_FLUSH_RELEASE_SECONDS)}
+          y1={plot.top}
+          y2={height - plot.bottom}
+        />
+        <text x={xForTime(FAST_FLUSH_START_SECONDS) + 5} y={height - plot.bottom + 14}>
           flush
         </text>
-        <text x="130" y="12">
+        <text x={xForTime(FAST_FLUSH_RELEASE_SECONDS) + 5} y={height - plot.bottom + 14}>
           release
+        </text>
+        <text
+          className={styles.flushOffScaleLabel}
+          x={(xForTime(FAST_FLUSH_START_SECONDS) + xForTime(FAST_FLUSH_RELEASE_SECONDS)) / 2}
+          y={plot.top + 12}
+          textAnchor="middle"
+        >
+          flush pressure off scale ≈300 mmHg
         </text>
       </svg>
     </figure>
@@ -82,9 +188,10 @@ function LevelingVisual({ state }: { readonly state: HemodynamicSimulationState 
       : `${Math.abs(levelCm).toFixed(0)} centimeters ${levelCm > 0 ? 'above' : 'below'} the phlebostatic axis`
   const direction =
     offsetMmHg === 0 ? 'no leveling offset' : offsetMmHg > 0 ? 'reads high' : 'reads low'
+  const directionSentence = offsetMmHg === 0 ? 'has no leveling offset' : direction
   const transducerY = Math.max(39, Math.min(181, 110 - levelCm * 4.2))
   const traceShift = Math.max(-22, Math.min(22, -offsetMmHg * 1.8))
-  const visualSummary = `The pressure transducer is ${levelPosition}. The modeled leveling contribution is ${formatSignedPressure(offsetMmHg)}, so the displayed pressure ${direction}. Waveform morphology and pulse pressure are unchanged by leveling alone.`
+  const visualSummary = `The pressure transducer is ${levelPosition}. The modeled leveling contribution is ${formatSignedPressure(offsetMmHg)}, so the displayed pressure ${directionSentence}. Waveform morphology and pulse pressure are unchanged by leveling alone.`
 
   return (
     <section className={styles.levelingTeachingCard} aria-labelledby="leveling-visual-title">
@@ -185,19 +292,39 @@ function LevelingVisual({ state }: { readonly state: HemodynamicSimulationState 
 export function PressureSystemTeachingVisual({
   state,
   dispatch,
+  challengeMode = 'selectable',
 }: PressureSystemTeachingVisualProps) {
   const [challengeId, setChallengeId] = useState<DynamicResponseChallengeId>('response-b')
   const [hasRunFlush, setHasRunFlush] = useState(false)
+  const [observedResponse, setObservedResponse] = useState<DynamicResponseKind | null>(null)
   const [classification, setClassification] = useState<DynamicResponseKind | null>(null)
   const [revealed, setRevealed] = useState(false)
-  const challenge = getDynamicResponseChallenge(challengeId)
-  const responseDefinition = getDynamicResponseDefinition(challenge.response)
-  const classificationCorrect = revealed && classification === challenge.response
+  const [lineType, setLineType] = useState<FastFlushLineType>(() =>
+    state.catheter.position === 'wedge' || state.catheter.balloonInflated
+      ? 'systemic-arterial'
+      : 'pulmonary-artery',
+  )
+  const selectableChallenge = getDynamicResponseChallenge(challengeId)
+  const currentResponse = classifyDynamicResponse(state.measurementSystem)
+  const response =
+    observedResponse ??
+    (challengeMode === 'current-state' ? currentResponse : selectableChallenge.response)
+  const responseDefinition = getDynamicResponseDefinition(response)
+  const classificationCorrect = revealed && classification === response
+  const correctionComplete =
+    state.signalValidationChecks.includes('dynamic-response-corrected') ||
+    (state.measurementSystem.artifact === 'none' &&
+      state.measurementSystem.dampingRatio >= 0.4 &&
+      state.measurementSystem.dampingRatio <= 0.95)
+  const paFlushUnsafe =
+    lineType === 'pulmonary-artery' &&
+    (state.catheter.position === 'wedge' || state.catheter.balloonInflated)
 
   function chooseChallenge(nextChallengeId: DynamicResponseChallengeId) {
     const nextChallenge = getDynamicResponseChallenge(nextChallengeId)
     setChallengeId(nextChallengeId)
     setHasRunFlush(false)
+    setObservedResponse(null)
     setClassification(null)
     setRevealed(false)
     dispatch({
@@ -207,8 +334,22 @@ export function PressureSystemTeachingVisual({
   }
 
   function runFastFlush() {
-    dispatch({ type: 'FAST_FLUSH' })
+    if (paFlushUnsafe) return
+    dispatch({ type: 'FAST_FLUSH', lineType })
+    setObservedResponse(
+      challengeMode === 'current-state'
+        ? classifyDynamicResponse(state.measurementSystem)
+        : selectableChallenge.response,
+    )
     setHasRunFlush(true)
+    setClassification(null)
+    setRevealed(false)
+  }
+
+  function chooseLineType(nextLineType: FastFlushLineType) {
+    setLineType(nextLineType)
+    setHasRunFlush(false)
+    setObservedResponse(null)
     setClassification(null)
     setRevealed(false)
   }
@@ -216,9 +357,15 @@ export function PressureSystemTeachingVisual({
   function checkClassification() {
     if (!classification) return
     setRevealed(true)
-    if (classification === challenge.response) {
+    if (classification === response) {
       dispatch({ type: 'VALIDATE_SIGNAL', check: 'dynamic-response-classified' })
     }
+  }
+
+  function correctDynamicResponse() {
+    dispatch({ type: 'SET_DAMPING', dampingRatio: 0.65 })
+    dispatch({ type: 'SET_ARTIFACT', artifact: 'none' })
+    dispatch({ type: 'VALIDATE_SIGNAL', check: 'dynamic-response-corrected' })
   }
 
   return (
@@ -234,30 +381,76 @@ export function PressureSystemTeachingVisual({
               Run the test, inspect the release trace, then classify it before feedback appears.
             </p>
           </div>
-          <label>
-            Concealed test
-            <select
-              value={challengeId}
-              onChange={(event) =>
-                chooseChallenge(event.target.value as DynamicResponseChallengeId)
-              }
-            >
-              {dynamicResponseChallenges.map((candidate) => (
-                <option value={candidate.id} key={candidate.id}>
-                  {candidate.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          {challengeMode === 'selectable' ? (
+            <label>
+              Concealed test
+              <select
+                value={challengeId}
+                onChange={(event) =>
+                  chooseChallenge(event.target.value as DynamicResponseChallengeId)
+                }
+              >
+                {dynamicResponseChallenges.map((candidate) => (
+                  <option value={candidate.id} key={candidate.id}>
+                    {candidate.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <span className={styles.currentSignalBadge}>Current patient signal</span>
+          )}
         </header>
 
-        <button type="button" className={styles.fastFlushButton} onClick={runFastFlush}>
-          Fast flush test
+        <fieldset className={styles.fastFlushLineToggle}>
+          <legend>Line type</legend>
+          {(
+            Object.values(
+              fastFlushLineDefinitions,
+            ) as readonly (typeof fastFlushLineDefinitions)[FastFlushLineType][]
+          ).map((line) => (
+            <label key={line.id}>
+              <input
+                type="radio"
+                name="fast-flush-line-type"
+                value={line.id}
+                checked={lineType === line.id}
+                onChange={() => chooseLineType(line.id)}
+              />
+              <span>
+                <strong>{line.label}</strong>
+                <small>
+                  {line.systolicMmHg}/{line.diastolicMmHg} mmHg · fixed {line.scaleMinimumMmHg}–
+                  {line.scaleMaximumMmHg} mmHg scale
+                </small>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+
+        {lineType === 'pulmonary-artery' ? (
+          <p className={styles.paFlushSafetyBanner} role={paFlushUnsafe ? 'alert' : 'note'}>
+            <strong>PA safety.</strong> Confirm a pulmonary-artery waveform and a fully deflated
+            balloon before performing a fast-flush test. Never fast-flush a wedged or spontaneously
+            wedged catheter.
+            {paFlushUnsafe
+              ? ' The current simulated catheter state does not meet this prerequisite.'
+              : ''}
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          className={styles.fastFlushButton}
+          disabled={paFlushUnsafe}
+          onClick={runFastFlush}
+        >
+          Run {lineType === 'pulmonary-artery' ? 'PA-catheter' : 'arterial-line'} fast-flush test
         </button>
 
         {hasRunFlush ? (
           <>
-            <FastFlushTrace response={challenge.response} revealLabel={revealed} />
+            <FastFlushTrace response={response} lineType={lineType} revealLabel={revealed} />
             <fieldset className={styles.dynamicResponsePrediction}>
               <legend>Classify the observed release response</legend>
               {dynamicResponseDefinitions.map((definition) => (
@@ -290,7 +483,8 @@ export function PressureSystemTeachingVisual({
           </>
         ) : (
           <div className={styles.fastFlushPlaceholder} role="status">
-            The release trace will appear after the fast-flush test.
+            The selected line&apos;s release trace will appear after the fast-flush test. Other
+            pressure channels will continue normally.
           </div>
         )}
 
@@ -307,6 +501,19 @@ export function PressureSystemTeachingVisual({
           </div>
         ) : null}
 
+        {challengeMode === 'current-state' && classificationCorrect && response !== 'acceptable' ? (
+          <button
+            type="button"
+            className={styles.checkResponseButton}
+            disabled={correctionComplete}
+            onClick={correctDynamicResponse}
+          >
+            {correctionComplete
+              ? 'Dynamic response corrected'
+              : 'Correct the pressure-system response'}
+          </button>
+        ) : null}
+
         {revealed ? (
           <div className={styles.dynamicResponseAtlas} aria-labelledby="response-atlas-title">
             <header>
@@ -316,7 +523,12 @@ export function PressureSystemTeachingVisual({
             <div>
               {dynamicResponseDefinitions.map((definition) => (
                 <article key={definition.id}>
-                  <FastFlushTrace response={definition.id} revealLabel compact />
+                  <FastFlushTrace
+                    response={definition.id}
+                    lineType={lineType}
+                    revealLabel
+                    compact
+                  />
                   <p>{definition.pressureEffect}</p>
                 </article>
               ))}

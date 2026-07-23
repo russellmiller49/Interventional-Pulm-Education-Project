@@ -113,7 +113,7 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
   const assessmentHeader = (
     <header className={styles.sectionHero}>
       <span className={styles.kicker}>Assess · masked capstone</span>
-      <h1>Prove the full reasoning loop in an unseen case</h1>
+      <h1>Prove the full reasoning loop in a masked case</h1>
       <p>
         The assessment unlocks after all ten core Practice cases. It uses PrisMax, provides no
         hints, and keeps the case identity masked until debrief.
@@ -142,6 +142,17 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
       ) : null}
     </section>
   )
+  const assessmentTaskRules = (
+    <div className={styles.assessmentTaskRules}>
+      <strong>Passing rules</strong>
+      <ul>
+        <li>Score at least {baxterCrrtMasteryManifest.minimumScore}/100</li>
+        <li>No hints or critical error</li>
+        <li>Complete the required reassessment</li>
+      </ul>
+      <small>Educational completion only—not certification or proof of clinical competency.</small>
+    </div>
+  )
 
   return (
     <BaxterCrrtModuleFrame
@@ -159,14 +170,13 @@ export function BaxterCrrtAssess({ locale = 'en' }: { readonly locale?: string }
             writeProgress(progress)
             router.push(baxterCrrtNavBase)
           }}
+          currentTaskExtras={assessmentTaskRules}
           nextRecommendation={
             session.debriefRevealed ? (
               <Link href={baxterCrrtNavBase}>Next recommended · Review CRRT progress</Link>
             ) : null
           }
         >
-          {assessmentHeader}
-          {assessmentRules}
           <section className={styles.casePlayerSection} aria-labelledby="capstone-heading">
             <div className={styles.casePlayerHeading}>
               <GraduationCap aria-hidden="true" />

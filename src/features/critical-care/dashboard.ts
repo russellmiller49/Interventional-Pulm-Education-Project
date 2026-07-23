@@ -19,8 +19,12 @@ import {
   sanitizeCriticalCareActivityForPublicCatalog,
 } from '@/features/critical-care/content/publicVisibility'
 import { getCriticalCareRecommendations } from '@/features/critical-care/progress/recommendation'
-import type { CriticalCareProgressReadResult } from '@/features/critical-care/progress/types'
+import type {
+  CriticalCareIntegratedCaseOutcomeSummary,
+  CriticalCareProgressReadResult,
+} from '@/features/critical-care/progress/types'
 import {
+  enforceCriticalCareProgressAuthority,
   resolveCriticalCareResumePointer,
   type CriticalCareActivityDefinition,
   type CriticalCareActivityProgress,
@@ -84,10 +88,26 @@ export interface CriticalCareDashboardModel {
   readonly modules: readonly CriticalCareModuleProgressSummary[]
   readonly pathways: readonly CriticalCarePathwayProgressSummary[]
   readonly issueCount: number
+  readonly integratedCaseOutcomes?: CriticalCareIntegratedCaseOutcomeSummary
 }
 
 function isComplete(progress: CriticalCareActivityProgress | undefined): boolean {
   return progress?.status === 'completed' || progress?.status === 'mastered'
+}
+
+function authoritativeProgressMap(
+  activities: readonly CriticalCareActivityDefinition[],
+  progress: readonly CriticalCareActivityProgress[],
+): ReadonlyMap<string, CriticalCareActivityProgress> {
+  const activityById = new Map(activities.map((activity) => [activity.id, activity]))
+  return new Map(
+    progress.flatMap((item) => {
+      const activity = activityById.get(item.activityId)
+      return activity
+        ? [[item.activityId, enforceCriticalCareProgressAuthority(activity, item)] as const]
+        : []
+    }),
+  )
 }
 
 function progressState(
@@ -121,7 +141,7 @@ export function criticalCareActivityHref(activity: CriticalCareActivityDefinitio
 export function summarizeCriticalCareModules(
   progress: readonly CriticalCareActivityProgress[],
 ): readonly CriticalCareModuleProgressSummary[] {
-  const progressById = new Map(progress.map((item) => [item.activityId, item]))
+  const progressById = authoritativeProgressMap(publicCatalogActivities, progress)
   return publicCatalogModules.map((module) => {
     const activities = publicCatalogActivities.filter((activity) => activity.moduleId === module.id)
     const startedActivities = activities.filter((activity) => progressById.has(activity.id)).length
@@ -143,7 +163,7 @@ export function summarizeCriticalCareModules(
 export function summarizeCriticalCarePathways(
   progress: readonly CriticalCareActivityProgress[],
 ): readonly CriticalCarePathwayProgressSummary[] {
-  const progressById = new Map(progress.map((item) => [item.activityId, item]))
+  const progressById = authoritativeProgressMap(publicCatalogActivities, progress)
   return criticalCarePathways.map((pathway) => {
     const activities = publicCatalogActivities.filter((activity) =>
       activity.pathwayIds.includes(pathway.id),
@@ -199,12 +219,13 @@ function recentActivities(
       const activity = criticalCareActivityById.get(item.activityId)
       if (!activity || !isCriticalCareActivityPubliclyCataloged(activity)) return []
       const presentation = presentCriticalCareActivityPublicly(activity)
+      const authoritativeProgress = enforceCriticalCareProgressAuthority(activity, item)
       return activity
         ? [
             {
               activity: sanitizeCriticalCareActivityForPublicCatalog(activity),
               href: presentation.href,
-              progress: item,
+              progress: authoritativeProgress,
             },
           ]
         : []
@@ -272,6 +293,9 @@ export function deriveCriticalCareDashboard(
     modules: summarizeCriticalCareModules(readResult.envelope.activities),
     pathways: summarizeCriticalCarePathways(readResult.envelope.activities),
     issueCount: readResult.notices.length,
+    ...(readResult.integratedCaseOutcomes
+      ? { integratedCaseOutcomes: readResult.integratedCaseOutcomes }
+      : {}),
   }
 }
 

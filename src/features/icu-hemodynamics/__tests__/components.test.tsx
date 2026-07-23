@@ -67,10 +67,13 @@ describe('ICU Hemodynamics Lab learner interface', () => {
       'step',
     )
     expect(screen.getByText(/tip is in the right atrium/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm RA waveform' }))
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: RV · 35 cm/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm RV waveform' }))
     fireEvent.click(screen.getByRole('button', { name: 'Advance' }))
     expect(screen.getByText(/Tip: PA · 45 cm/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm PA waveform' }))
     expect(
       screen.getByRole('group', { name: 'Brief end-expiratory PAWP capture' }),
     ).toBeInTheDocument()

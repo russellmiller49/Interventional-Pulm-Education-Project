@@ -36,7 +36,7 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     })
   })
 
-  it('unlocks the unseen capstone only after every prerequisite scenario', () => {
+  it('unlocks the masked capstone only after every prerequisite scenario', () => {
     expect(isCardiohelpCapstoneUnlocked([])).toBe(false)
     expect(isCardiohelpCapstoneUnlocked(cardiohelpCapstonePrerequisiteIds)).toBe(true)
     expect(
@@ -107,6 +107,26 @@ describe('CARDIOHELP ECMO scenario and evidence registries', () => {
     for (const lesson of cardiohelpLearnLessons) {
       const scenario = cardiohelpScenarios.find((item) => item.id === lesson.scenarioId)
       expect(lesson.supportMode).toBe(scenario?.supportMode)
+    }
+  })
+
+  it('uses a distinct authored scenario and observable action for every transfer phase', () => {
+    const transfers = cardiohelpLearnLessons.map((lesson) => ({
+      lesson,
+      transfer: lesson.steps.find((step) => step.phase === 'transfer'),
+    }))
+    expect(transfers).toHaveLength(20)
+    expect(new Set(transfers.map(({ transfer }) => transfer?.transferVariantId)).size).toBe(20)
+
+    for (const { lesson, transfer } of transfers) {
+      expect(transfer?.transferScenarioId).toBeTruthy()
+      expect(transfer?.transferScenarioId).not.toBe(lesson.scenarioId)
+      expect(transfer?.actions).toHaveLength(1)
+      expect(transfer?.actionLabel).not.toMatch(/finish|mark complete|acknowledge completion/i)
+      const variantScenario = cardiohelpScenarios.find(
+        (scenario) => scenario.id === transfer?.transferScenarioId,
+      )
+      expect(variantScenario?.supportMode).toBe(lesson.supportMode)
     }
   })
 

@@ -531,7 +531,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     id: 'vv-off-sweep-capstone',
     family: 'capstone',
     stationId: 'assessment',
-    title: 'Unseen capstone: VV off-sweep trial',
+    title: 'Masked capstone: VV off-sweep trial',
     summary: 'Demonstrate the correct separation sequence without reducing circuit blood flow.',
     clinicalPhase: 'weaning',
     hiddenUntilAssessment: true,
@@ -1015,7 +1015,7 @@ export const cardiohelpScenarios: readonly ScenarioDefinition[] = [
     supportMode: 'va',
     family: 'capstone',
     stationId: 'assessment',
-    title: 'Unseen capstone: VA mixed-circulation mismatch',
+    title: 'Masked capstone: VA mixed-circulation mismatch',
     summary:
       'Integrate circuit, right-arm, lower-body, pulsatility, lung, and perfusion observations without applying a VV off-sweep sequence.',
     clinicalPhase: 'maintenance',
@@ -1147,7 +1147,7 @@ export const cardiohelpStations = [
   {
     id: 'assessment',
     label: 'Assessment & sources',
-    description: 'Mode-specific unseen capstone, score, and evidence',
+    description: 'Mode-specific masked capstone, score, and evidence',
   },
 ] as const
 

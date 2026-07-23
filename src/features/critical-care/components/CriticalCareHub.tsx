@@ -206,6 +206,28 @@ function formatPhase(phase: string) {
   return `${phase.charAt(0).toUpperCase()}${phase.slice(1)}`
 }
 
+const deviceLabels: Readonly<Record<string, string>> = {
+  iabp: 'intra-aortic balloon pump',
+  impella: 'Impella CP-family support',
+  lvad: 'durable continuous-flow LVAD',
+  'hamilton-c6': 'Hamilton C6 ventilator',
+  'drager-evita-v800-v600': 'Dräger Evita V800/V600 ventilator',
+  'puritan-bennett-980': 'Puritan Bennett 980 ventilator',
+  'carefusion-avea': 'CareFusion AVEA ventilator',
+  'prismax-aw8035-2xx': 'Baxter PrisMax CRRT platform',
+}
+
+function humanDeviceLabel(deviceId: string): string {
+  return (
+    deviceLabels[deviceId] ??
+    deviceId
+      .split('-')
+      .filter(Boolean)
+      .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+      .join(' ')
+  )
+}
+
 export function CriticalCareHub({
   catalog,
 }: {
@@ -319,7 +341,7 @@ export function CriticalCareHub({
                         ? ` · Case ${model.resume.pointer.scenarioId}`
                         : ''}
                       {model.resume.pointer.deviceId
-                        ? ` · Device ${model.resume.pointer.deviceId}`
+                        ? ` · Device ${humanDeviceLabel(model.resume.pointer.deviceId)}`
                         : ''}
                     </p>
                   </div>
@@ -381,6 +403,11 @@ export function CriticalCareHub({
                     <Badge variant="outline" className="rounded-full capitalize">
                       {model.recommendation.activity.difficulty}
                     </Badge>
+                    {model.recommendation.activity.reviewStatus === 'released' ? null : (
+                      <Badge variant="outline" className="rounded-full">
+                        Preview · clinical review
+                      </Badge>
+                    )}
                   </div>
                 ) : null}
               </CardContent>
@@ -470,12 +497,20 @@ export function CriticalCareHub({
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {catalog.pathways.map((pathway) => {
               const summary = model?.pathways.find((item) => item.pathway.id === pathway.id)
+              const preview = pathway.stage === 'preview'
               return (
                 <Card key={pathway.id} className="h-full">
                   <CardHeader className="gap-3 border-b-0 pb-2">
-                    <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <RouteIcon aria-hidden="true" className="size-5" />
-                    </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="inline-flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                        <RouteIcon aria-hidden="true" className="size-5" />
+                      </span>
+                      {preview ? (
+                        <Badge variant="outline" className="rounded-full">
+                          Preview
+                        </Badge>
+                      ) : null}
+                    </div>
                     <CardTitle>{pathway.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
@@ -635,9 +670,9 @@ export function CriticalCareHub({
                         recordSelection('critical_care_lab_selected', 'lab', module.slug)
                       }
                       className="inline-flex min-h-10 items-center gap-2 rounded-full text-sm font-semibold text-primary outline-none transition-colors hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      aria-label={`Open ${module.title}`}
+                      aria-label={`Open full lab: ${module.title}`}
                     >
-                      Open module
+                      Open full lab
                       <ArrowRight aria-hidden="true" className="size-4" />
                     </Link>
                   </CardFooter>
@@ -716,6 +751,31 @@ export function CriticalCareHub({
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
+                {model?.integratedCaseOutcomes ? (
+                  <div
+                    className="mb-4 rounded-xl border border-sky-500/30 bg-sky-500/5 p-3"
+                    role="status"
+                    aria-label="Integrated case outcomes"
+                  >
+                    <p className="text-sm font-medium">
+                      {model.integratedCaseOutcomes.completedCourseCount} integrated longitudinal{' '}
+                      {model.integratedCaseOutcomes.completedCourseCount === 1
+                        ? 'course'
+                        : 'courses'}{' '}
+                      completed
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      Coarse completion only; case identity, patient state, commands, and replay
+                      remain inside the simulator.
+                      {model.integratedCaseOutcomes.latestCompletedAt
+                        ? ` Latest recorded ${new Intl.DateTimeFormat(undefined, {
+                            day: 'numeric',
+                            month: 'short',
+                          }).format(new Date(model.integratedCaseOutcomes.latestCompletedAt))}.`
+                        : ''}
+                    </p>
+                  </div>
+                ) : null}
                 {model?.recent.length ? (
                   <ol className="divide-y divide-border/70">
                     {model.recent.map(({ activity, href, progress }) => (

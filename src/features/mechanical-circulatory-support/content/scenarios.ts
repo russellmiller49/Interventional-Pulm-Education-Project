@@ -583,7 +583,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     version: '1.0.0',
     kind: 'capstone',
     device: 'iabp',
-    title: 'Unseen IABP counterpulsation capstone',
+    title: 'Masked IABP counterpulsation capstone',
     shortTitle: 'IABP capstone',
     presentation:
       'During rapid atrial fibrillation, assisted beats are intermittent, diastolic augmentation is delayed and truncated, and the next systolic pressure is not reduced.',
@@ -655,7 +655,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     version: '1.0.0',
     kind: 'capstone',
     device: 'impella',
-    title: 'Unseen Impella effective-flow capstone',
+    title: 'Masked Impella effective-flow capstone',
     shortTitle: 'Impella capstone',
     presentation:
       'Displayed pump activity persists, but effective flow is disproportionately low with a position warning, hypertension, and a widened gap between gross and effective flow.',
@@ -730,7 +730,7 @@ export const mcsCapstoneScenarios: readonly McsScenarioDefinition[] = [
     version: '1.0.0',
     kind: 'capstone',
     device: 'lvad',
-    title: 'Unseen durable-LVAD constrained-filling capstone',
+    title: 'Masked durable-LVAD constrained-filling capstone',
     shortTitle: 'LVAD capstone',
     presentation:
       'A continuous-flow LVAD patient develops low flow with rising and converging filling pressures after a bedside procedure; speed and power are unchanged.',

@@ -92,11 +92,31 @@ describe('critical-care catalogs', () => {
     }
   })
 
+  it('keeps draft ventilation lessons non-credit and competency-specific during recovery', () => {
+    const lessons = criticalCareActivities.filter(
+      (activity) =>
+        activity.moduleId === 'mechanical-ventilation' && activity.id.includes(':learn:'),
+    )
+
+    expect(lessons).toHaveLength(mechanicalVentilationLessonIds.length)
+    expect(
+      lessons.every(
+        (activity) =>
+          activity.reviewStatus === 'draft' &&
+          activity.creditPolicy === 'non-credit' &&
+          activity.completionEvidenceAuthority === 'none',
+      ),
+    ).toBe(true)
+    expect(new Set(lessons.flatMap((activity) => activity.competencyIds)).size).toBeGreaterThan(2)
+    expect(lessons.every((activity) => activity.competencyIds.length < 5)).toBe(true)
+  })
+
   it('covers every requested source registry without importing those registries in production', () => {
     expect(sourceIds('icu-hemodynamics', 'learn')).toEqual([
       'pac-signal-validation',
       'pressure-system',
       'catheter-advancement',
+      'waveform-interpretation',
       'pawp-capture',
       'thermodilution-series',
       'derived-hemodynamics',

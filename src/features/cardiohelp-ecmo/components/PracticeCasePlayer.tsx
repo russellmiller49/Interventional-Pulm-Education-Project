@@ -64,6 +64,7 @@ interface PracticeCasePlayerProps {
   /** 'assess' renders a capstone: no case picker, capstone context line. */
   section?: 'practice' | 'assess'
   onPhaseChange?: (phase: CriticalCareActivityPhase) => void
+  onActiveStageChange?: (stage: EcmoPracticeStage) => void
 }
 
 const predictionControls: readonly {
@@ -242,7 +243,8 @@ function advanceSimulation(dispatch: PracticeCasePlayerProps['dispatch'], second
   }
 }
 
-type CaseStage = 'brief' | 'plan' | 'manage' | 'reassess' | 'debrief'
+export type EcmoPracticeStage = 'brief' | 'plan' | 'manage' | 'reassess' | 'debrief'
+type CaseStage = EcmoPracticeStage
 
 const semanticPhaseByCaseStage: Readonly<
   Record<Exclude<CaseStage, 'debrief'>, CriticalCareActivityPhase>
@@ -1486,6 +1488,7 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
     onLoadScenario,
     onReveal,
     onPhaseChange,
+    onActiveStageChange,
     section = 'practice',
   } = props
   const challengePromptHidden =
@@ -1541,7 +1544,8 @@ export function PracticeCasePlayer(props: PracticeCasePlayerProps) {
 
   useEffect(() => {
     onPhaseChange?.(currentStage === 'debrief' ? 'explain' : semanticPhaseByCaseStage[currentStage])
-  }, [currentStage, onPhaseChange])
+    onActiveStageChange?.(currentStage)
+  }, [currentStage, onActiveStageChange, onPhaseChange])
 
   const activeStage: CaseStage =
     expanded && expanded.attemptKey === attemptKey && expanded.whenCurrent === currentStage

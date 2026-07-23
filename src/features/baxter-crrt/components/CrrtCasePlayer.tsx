@@ -541,7 +541,7 @@ function CrrtCasePlayerContent({
         <header className={styles.caseHeader}>
           <div>
             <span>
-              {isMastery ? 'Masked case' : definition.id} · {experienceLabel}
+              {isMastery ? 'Masked case' : 'Clinical case'} · {experienceLabel}
             </span>
             <h3>{visibleCaseTitle}</h3>
           </div>

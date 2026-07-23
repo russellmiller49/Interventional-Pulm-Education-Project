@@ -89,7 +89,7 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       supportMode: 'vv',
       title: 'VV capstone assessment',
       summary:
-        'An unseen scored scenario that combines drainage, sweep, and safety reasoning. Unlocks after every VV lesson is complete.',
+        'A masked scored scenario that combines drainage, sweep, and safety reasoning. Unlocks after every VV lesson is complete.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'vv-off-sweep-capstone',
@@ -162,7 +162,7 @@ export const cardiohelpCurriculum: Readonly<Record<SupportMode, readonly Curricu
       supportMode: 'va',
       title: 'VA capstone assessment',
       summary:
-        'An unseen scored scenario that combines mixed-circulation and safety reasoning. Unlocks after every VA lesson is complete.',
+        'A masked scored scenario that combines mixed-circulation and safety reasoning. Unlocks after every VA lesson is complete.',
       lessonScenarioIds: [],
       caseScenarioIds: [],
       capstoneScenarioId: 'va-mixed-circulation-capstone',

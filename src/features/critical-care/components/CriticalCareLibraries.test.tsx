@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { buildCriticalCarePublicClientCatalog } from '../content/publicCatalog.server'
 import { CriticalCareCasesLibrary } from './CriticalCareCasesLibrary'
 import { CriticalCareLabsLibrary } from './CriticalCareLabsLibrary'
+import { CriticalCareProgressView } from './CriticalCareProgressView'
 
 const catalog = buildCriticalCarePublicClientCatalog()
 
@@ -42,7 +43,7 @@ describe('critical-care global libraries', () => {
 
   it('lists only reviewed labs and withholds draft/private identities and links', () => {
     render(<CriticalCareLabsLibrary catalog={catalog} />)
-    expect(screen.getAllByRole('link', { name: 'Open lab' })).toHaveLength(4)
+    expect(screen.getAllByRole('link', { name: 'Open full lab' })).toHaveLength(4)
     expect(
       screen.queryByRole('heading', { name: 'Integrated ICU Simulator' }),
     ).not.toBeInTheDocument()
@@ -69,5 +70,13 @@ describe('critical-care global libraries', () => {
     expect(
       screen.queryByText(/Pressure equalization with a falling pulse pressure/),
     ).not.toBeInTheDocument()
+  })
+
+  it('labels every incomplete public pathway as Preview in progress', async () => {
+    render(<CriticalCareProgressView catalog={catalog} />)
+
+    const previewPathways = catalog.pathways.filter((pathway) => pathway.stage === 'preview')
+    expect(previewPathways.length).toBeGreaterThan(0)
+    expect(await screen.findAllByText('Preview')).toHaveLength(previewPathways.length)
   })
 })

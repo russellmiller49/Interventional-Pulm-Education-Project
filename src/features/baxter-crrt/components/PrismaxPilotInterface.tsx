@@ -117,7 +117,7 @@ function formatStepLabel(stepId: PrismaxSetupStepId) {
 }
 
 function caseIdentifier(caseContext: PrismaxPilotCaseContext): string {
-  return caseContext.identityMasked ? 'Masked case' : caseContext.caseId
+  return caseContext.identityMasked ? 'Masked case' : 'Selected clinical case'
 }
 
 function caseTitle(caseContext: PrismaxPilotCaseContext): string {
@@ -874,7 +874,7 @@ function PrismaxHardwareOrientation({ state }: { state: PrismaxPilotInterfaceSta
         <div>
           <h4>{selectedHotspot.label}</h4>
           <p>{selectedHotspot.description}</p>
-          <small>Manual-reference orientation · {selectedHotspot.sourceRecordIds.join(', ')}</small>
+          <small>PrisMax Operator&apos;s Manual · cited hardware-orientation section</small>
         </div>
       </div>
 

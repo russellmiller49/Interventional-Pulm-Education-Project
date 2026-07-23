@@ -44,6 +44,9 @@ function definition(
     assetIds: [],
     reviewStatus: 'sme-review',
     evidenceIds: [],
+    contentVersion: '2026.07',
+    creditPolicy: 'competency-eligible',
+    completionEvidenceAuthority: 'reviewed-engine-score',
     ...overrides,
   }
 }

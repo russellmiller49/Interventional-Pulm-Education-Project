@@ -1,8 +1,11 @@
+import { clinicalLearningItemSchema } from '@/features/learning-module/activity'
+
 import {
   allMcsScenarios,
   mcsCapstoneScenarios,
   mcsDeviceProfiles,
   mcsLessons,
+  mcsLessonTransfers,
   mcsPracticeScenarios,
   impellaAnatomyVariants,
   isMcsPublicationReady,
@@ -48,6 +51,29 @@ describe('MCS curriculum and evidence registry', () => {
     }
   })
 
+  it('provides one reviewed, distinct, simulator-backed transfer variant per lesson', () => {
+    expect(mcsLessonTransfers).toHaveLength(mcsLessons.length)
+    expect(new Set(mcsLessonTransfers.map((transfer) => transfer.lessonId))).toEqual(
+      new Set(mcsLessons.map((lesson) => lesson.id)),
+    )
+    expect(
+      new Set(mcsLessonTransfers.map((transfer) => transfer.item.transferVariantId)).size,
+    ).toBe(mcsLessons.length)
+
+    for (const transfer of mcsLessonTransfers) {
+      expect(clinicalLearningItemSchema.safeParse(transfer.item).success).toBe(true)
+      expect(transfer.item.phase).toBe('transfer')
+      expect(transfer.item.itemType).toBe('transfer-case')
+      expect(transfer.contextItems.length).toBeGreaterThanOrEqual(4)
+      expect(transfer.setupActions.length).toBeGreaterThan(0)
+      expect(transfer.requiredActionIds.length).toBeGreaterThan(0)
+      expect(transfer.requiredActionLabel).toBeTruthy()
+      for (const evidenceId of transfer.item.evidenceIds) {
+        expect(mcsSourceById.has(evidenceId)).toBe(true)
+      }
+    }
+  })
+
   it('keeps publication blocked until every multidisciplinary release gate has evidence', () => {
     expect(mcsReleaseGates.some((gate) => !gate.complete)).toBe(true)
     expect(isMcsPublicationReady()).toBe(false)
@@ -80,7 +106,7 @@ describe('MCS curriculum and evidence registry', () => {
       expect(
         mcsPracticeScenarios.some((practice) => practice.presentation === capstone.presentation),
       ).toBe(false)
-      expect(capstone.title).toMatch(/Unseen/i)
+      expect(capstone.title).toMatch(/Masked/i)
     }
   })
 

@@ -69,7 +69,7 @@ function ProgressLoading({ mode }: { readonly mode: 'practice' | 'assess' }) {
         <p>
           {mode === 'practice'
             ? 'Practice remains open while compatible local progress is checked.'
-            : 'Assessment prerequisites must be verified before a masked course can start.'}
+            : 'Released prerequisites are verified before they can gate a masked course; pending-review preparation remains advisory.'}
         </p>
       </section>
     </main>
@@ -115,7 +115,11 @@ function PracticeEntry({
           </div>
           <div className={styles.readinessMeter}>
             <strong>{readiness.percentReady}%</strong>
-            <span>preparation complete</span>
+            <span>
+              {readiness.gateStatus === 'preview-open'
+                ? 'advisory preparation'
+                : 'released preparation'}
+            </span>
           </div>
         </div>
 
@@ -126,6 +130,13 @@ function PracticeEntry({
             advisory; start the synthetic course now or use a direct refresher first.
           </p>
         </div>
+
+        {readiness.gateStatus === 'preview-open' ? (
+          <p className={styles.previewAccessNote} role="note">
+            Preview access: these preparation groups are still in clinical review, so they inform
+            the recommendation but do not hard-lock Practice or Assess.
+          </p>
+        ) : null}
 
         {loadFailed ? (
           <p className={styles.progressWarning} role="note">
@@ -174,6 +185,10 @@ function AssessmentGate({
   const requestedReadiness = requested
     ? getCriticalCareIcuScenarioReadiness(requested, envelope)
     : null
+  const hasAnyApprovedGate = icuScenarioFamilies.some(
+    (scenarioId) =>
+      getCriticalCareIcuScenarioReadiness(scenarioId, envelope).approvedGateRequirementCount > 0,
+  )
 
   return (
     <main className={styles.capstoneGate}>
@@ -184,8 +199,9 @@ function AssessmentGate({
         <span className={styles.panelKicker}>Verified capstone entry</span>
         <h1>Assessment preparation</h1>
         <p>
-          Each masked course lists the focused preparation used by its longitudinal decisions.
-          Complete one activity in every listed group to unlock that course.
+          Each masked course lists focused preparation used by its longitudinal decisions. Only
+          released, competency-eligible activities can create a hard prerequisite; preparation still
+          in clinical review is labeled Preview and remains advisory.
         </p>
       </header>
 
@@ -199,8 +215,10 @@ function AssessmentGate({
 
       {loadFailed ? (
         <p className={styles.progressWarning} role="alert">
-          Compatible local progress could not be verified, so Assess is safely locked. Your saved
-          data was not overwritten. Practice remains available.
+          Compatible local progress could not be verified. Your saved data was not overwritten.
+          {hasAnyApprovedGate
+            ? ' Courses with released prerequisites remain locked; Preview courses and Practice remain available.'
+            : ' No released preparation gate is active, so Preview courses and Practice remain available.'}
         </p>
       ) : requestedReadiness && !requestedReadiness.eligibleForAssess ? (
         <section className={styles.selectedAssessmentGate} aria-labelledby="selected-gate-title">
@@ -210,9 +228,9 @@ function AssessmentGate({
               {assessmentCaseLabel(requestedReadiness.scenarioId)} needs more preparation
             </h2>
             <p>
-              {requestedReadiness.completedRequirementCount} of{' '}
-              {requestedReadiness.totalRequirementCount} prerequisite groups complete. The missing
-              groups and direct refreshers are shown below.
+              {requestedReadiness.satisfiedApprovedGateRequirementCount} of{' '}
+              {requestedReadiness.approvedGateRequirementCount} released prerequisite groups
+              complete. The missing groups and direct refreshers are shown below.
             </p>
             <IcuRemediationLinks readiness={requestedReadiness} onlyIncomplete />
           </div>
@@ -231,8 +249,9 @@ function AssessmentGate({
                   <div>
                     <span>{label}</span>
                     <strong>
-                      {readiness.completedRequirementCount}/{readiness.totalRequirementCount}{' '}
-                      prerequisite groups complete
+                      {readiness.gateStatus === 'preview-open'
+                        ? `${readiness.completedRequirementCount}/${readiness.totalRequirementCount} advisory preparation groups complete · Preview`
+                        : `${readiness.satisfiedApprovedGateRequirementCount}/${readiness.approvedGateRequirementCount} released prerequisite groups complete`}
                     </strong>
                   </div>
                   {readiness.eligibleForAssess ? (
@@ -300,6 +319,9 @@ export function IcuCapstoneEntry({
     [progressState.envelope],
   )
   const requested = isIcuScenarioFamily(requestedScenarioId) ? requestedScenarioId : undefined
+  const requestedReadiness = requested
+    ? getCriticalCareIcuScenarioReadiness(requested, progressState.envelope)
+    : null
 
   if (progressState.status === 'loading') return <ProgressLoading mode={mode} />
 
@@ -320,9 +342,16 @@ export function IcuCapstoneEntry({
         <section className={styles.assessmentVerified} role="status">
           <CheckCircle2 aria-hidden="true" />
           <p>
-            <strong>{assessmentCaseLabel(requested)} unlocked.</strong> Only assessment courses with
-            verified prerequisites are available in this session; coaching remains withheld until
-            debrief.
+            <strong>
+              {assessmentCaseLabel(requested)}{' '}
+              {requestedReadiness?.gateStatus === 'preview-open'
+                ? 'opened in Preview.'
+                : 'unlocked.'}
+            </strong>{' '}
+            {requestedReadiness?.gateStatus === 'preview-open'
+              ? 'Preparation activities are still under clinical review and are advisory, not a hard lock.'
+              : 'Released prerequisites were verified for this session.'}{' '}
+            Coaching remains withheld until debrief.
           </p>
         </section>
         <div className={styles.capstoneActivityStage}>
@@ -331,7 +360,7 @@ export function IcuCapstoneEntry({
               mode="assess"
               locale={locale}
               initialScenarioId={requested}
-              availableScenarioIds={eligibleAssessmentScenarioIds}
+              availableScenarioIds={[requested]}
               embedded
             />
           </IntegratedSimulatorLaunchGate>

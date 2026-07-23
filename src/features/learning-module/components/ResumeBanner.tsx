@@ -12,12 +12,14 @@ export function ResumeBanner({
   description,
   onResume,
   onStartSafe,
+  resumeActionLabel = 'Resume activity',
 }: {
   readonly state: ResumeBannerState
   readonly title: string
   readonly description: string
   readonly onResume?: () => void
   readonly onStartSafe?: () => void
+  readonly resumeActionLabel?: string
 }) {
   const headingId = useId()
 
@@ -34,7 +36,7 @@ export function ResumeBanner({
       </div>
       {state === 'ready' && onResume ? (
         <button type="button" className={styles.primaryButton} onClick={onResume}>
-          Resume activity
+          {resumeActionLabel}
         </button>
       ) : null}
       {(state === 'incompatible' || state === 'error') && onStartSafe ? (

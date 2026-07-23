@@ -1,17 +1,21 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type Dispatch } from 'react'
 import type { Route } from 'next'
-import { CheckCircle2, Circle, Wind } from 'lucide-react'
+import { CheckCircle2, Circle, Languages } from 'lucide-react'
 
 import { Link, useRouter } from '@/i18n/navigation'
+import { criticalCareActivityById } from '@/features/critical-care/content/activities'
 import {
+  authoritativeCriticalCareCompetencyEvidence,
+  authoritativeCriticalCareStatus,
   criticalCareActivityPhases,
   readCriticalCareProgress,
   upsertCriticalCareActivityProgress,
   useCriticalCareActivityAnalytics,
   withoutCriticalCareResumePointer,
   writeCriticalCareProgress,
+  type ClinicalLearningItem,
   type CriticalCareActivityPhase,
   type CriticalCareResumePointer,
 } from '@/features/learning-module/activity'
@@ -24,17 +28,35 @@ import { ResumeBanner } from '@/features/learning-module/components/ResumeBanner
 import { SimulationLaunchGate } from '@/features/learning-module/components/SimulationLaunchGate'
 import { TaskPanel } from '@/features/learning-module/components/TaskPanel'
 
-import { ventilationEvidenceById, type VentilationLessonDefinition } from '../content'
+import {
+  getVentilatorDeviceProfile,
+  hasVentilationLessonEvidence,
+  mechanicalVentilationCaseById,
+  mechanicalVentilationLessonItems,
+  ventilationEvidenceById,
+  ventilationLessonActionEvidence,
+  ventilationLessonObservationActions,
+  ventilationLessonObservationEvidence,
+  ventilationLessonRecognitionActions,
+  ventilationLessonRecognitionEvidence,
+  ventilationLessonRuntimeById,
+  type MechanicalVentilationLessonId,
+  type VentilationLessonDefinition,
+  type VentilationLessonGuidedAction,
+  type VentilationLessonRuntimeDefinition,
+  type VentilationLessonVariant,
+} from '../content'
+import {
+  createInitialSimulationState,
+  ventilationSimulationReducer,
+  type VentilationAction,
+  type VentilationSimulationState,
+} from '../engine'
+import { BedsidePanel } from './BedsidePanel'
+import { MechanicalVentilatorConsole } from './MechanicalVentilatorConsole'
 
 const PATHNAME = '/mechanical-ventilation/learn'
-const PAYLOAD_VERSION = 'ventilation-lesson-v1'
-const COMPETENCY_IDS = [
-  'ventilator-setup',
-  'ventilator-mechanics',
-  'ventilator-waveform-interpretation',
-  'ventilator-troubleshooting',
-  'ventilator-safety',
-] as const
+const PAYLOAD_VERSION = 'ventilation-lesson-v2'
 
 interface ResumePrompt {
   readonly state: 'loading' | 'ready' | 'incompatible'
@@ -42,6 +64,22 @@ interface ResumePrompt {
   readonly description: string
   readonly pointer?: CriticalCareResumePointer
 }
+
+interface LessonSimulationSession {
+  readonly simulation: VentilationSimulationState
+  readonly evidence: readonly string[]
+  readonly variant: VentilationLessonVariant
+}
+
+type LessonSimulationSessionAction =
+  | { readonly type: 'DISPATCH'; readonly action: VentilationAction }
+  | {
+      readonly type: 'LOAD_VARIANT'
+      readonly runtime: VentilationLessonRuntimeDefinition
+      readonly variant: VentilationLessonVariant
+      readonly attempt: number
+    }
+  | { readonly type: 'CLEAR_EVIDENCE' }
 
 function lessonActivityId(lessonId: string): string {
   return `ventilation:learn:${lessonId}`
@@ -59,40 +97,169 @@ function phaseFromCheckpoint(checkpointId: string | undefined): CriticalCareActi
     : null
 }
 
-function BreathSequenceVisual({ phase }: { readonly phase: CriticalCareActivityPhase }) {
-  const currentIndex = criticalCareActivityPhases.indexOf(phase)
+function runtimeForLesson(lessonId: string): VentilationLessonRuntimeDefinition {
+  const runtime = ventilationLessonRuntimeById.get(lessonId)
+  if (!runtime) throw new Error(`Missing mechanical-ventilation lesson runtime: ${lessonId}`)
+  return runtime
+}
+
+function itemsForLesson(lessonId: string): {
+  prediction: ClinicalLearningItem
+  transfer: ClinicalLearningItem
+} {
+  const items = mechanicalVentilationLessonItems[lessonId as MechanicalVentilationLessonId]
+  if (!items) throw new Error(`Missing mechanical-ventilation learning items: ${lessonId}`)
+  return items
+}
+
+function createLessonSession(
+  runtime: VentilationLessonRuntimeDefinition,
+  variant: VentilationLessonVariant,
+  attempt: number,
+): LessonSimulationSession {
+  const definition = runtime[variant]
+  return {
+    simulation: createInitialSimulationState(definition.caseId, 'learn', attempt, 'hamilton-c6'),
+    evidence: [],
+    variant,
+  }
+}
+
+function lessonSessionReducer(
+  session: LessonSimulationSession,
+  action: LessonSimulationSessionAction,
+): LessonSimulationSession {
+  if (action.type === 'LOAD_VARIANT') {
+    return createLessonSession(action.runtime, action.variant, action.attempt)
+  }
+  if (action.type === 'CLEAR_EVIDENCE') {
+    return { ...session, evidence: [] }
+  }
+  const simulation = ventilationSimulationReducer(session.simulation, action.action)
+  const evidence = ventilationLessonActionEvidence(action.action, session.simulation, simulation)
+  return {
+    ...session,
+    simulation,
+    evidence: evidence ? [...session.evidence, evidence] : session.evidence,
+  }
+}
+
+function evidenceLabel(evidence: string): string {
+  const labels: Readonly<Record<string, string>> = {
+    'intervention:assess-patient': 'Bedside assessment recorded',
+    'intervention:review-waveforms': 'Pressure, flow, volume, and effort reviewed',
+    'intervention:inspect-circuit': 'Airway and circuit inspected',
+    'intervention:disconnect-bag': 'Trapped gas release and supported ventilation performed',
+    'intervention:communication-board': 'Communication method established',
+    'intervention:treat-pain': 'Reversible pain addressed',
+    'intervention:communicate-plan': 'Plan and reassessment closed loop',
+    'hold:inspiratory': 'Inspiratory hold completed',
+    'hold:expiratory': 'Expiratory hold completed',
+    'mode:confirmed': 'Comparison mode confirmed',
+    'waveforms:frozen': 'Multitrace display frozen',
+    'control:triggerThreshold': 'Trigger threshold changed',
+    'control:etsPercent': 'Cycling threshold changed',
+    'control:ratePerMin': 'Mandatory breath timing changed',
+    'control:pRampMs': 'Pressurization rise time changed',
+    'control:peepCmH2O': 'PEEP changed',
+    'breath:stepped': 'Post-action breath generated',
+  }
+  return labels[evidence] ?? 'Required case action completed'
+}
+
+function LearningItemChoices({
+  item,
+  selected,
+  disabled,
+  name,
+  onSelect,
+}: {
+  readonly item: ClinicalLearningItem
+  readonly selected: string | null
+  readonly disabled?: boolean
+  readonly name: string
+  readonly onSelect: (choiceId: string) => void
+}) {
   return (
-    <div className="grid h-full content-center gap-6 overflow-auto p-6">
-      <div className="mx-auto flex size-20 items-center justify-center rounded-full border bg-card shadow-sm">
-        <Wind className="size-9 text-primary" aria-hidden="true" />
+    <fieldset className="grid gap-3">
+      <legend className="text-sm font-semibold leading-6">{item.stem}</legend>
+      {item.choices.map((choice) => (
+        <label
+          key={choice.id}
+          className="flex min-h-11 items-start gap-3 rounded-xl border p-3 text-sm leading-5"
+        >
+          <input
+            type="radio"
+            className="mt-1"
+            name={name}
+            checked={selected === choice.id}
+            disabled={disabled}
+            onChange={() => onSelect(choice.id)}
+          />
+          <span>{choice.label}</span>
+        </label>
+      ))}
+    </fieldset>
+  )
+}
+
+function GuidedActions({
+  actions,
+  state,
+  evidence,
+  requirements,
+  disabled,
+  onAction,
+}: {
+  readonly actions: readonly VentilationLessonGuidedAction[]
+  readonly state: VentilationSimulationState
+  readonly evidence: readonly string[]
+  readonly requirements: readonly string[]
+  readonly disabled?: boolean
+  readonly onAction: (action: VentilationLessonGuidedAction) => void
+}) {
+  return (
+    <div className="grid gap-3">
+      <div className="grid gap-2">
+        {actions.map((action) => (
+          <button
+            key={action.id}
+            type="button"
+            disabled={disabled}
+            className="min-h-11 rounded-xl border bg-background px-3 py-2.5 text-left text-sm font-semibold disabled:opacity-50"
+            onClick={() => onAction(action)}
+          >
+            <span className="block">{action.label}</span>
+            <span className="mt-1 block text-xs font-normal leading-5 text-muted-foreground">
+              {action.description}
+            </span>
+          </button>
+        ))}
       </div>
-      <div>
-        <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-primary">
-          Stable reasoning sequence
-        </p>
-        <ol className="mx-auto mt-4 grid max-w-2xl gap-3 sm:grid-cols-3">
-          {criticalCareActivityPhases.map((item, index) => (
+      <ul className="grid gap-1.5" aria-label="Required interaction evidence">
+        {requirements.map((requirement) => {
+          const met = evidence.includes(requirement)
+          return (
             <li
-              key={item}
-              className="flex items-center gap-2 rounded-xl border bg-card p-3 text-sm capitalize"
-              aria-current={item === phase ? 'step' : undefined}
+              key={requirement}
+              className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"
             >
-              {index < currentIndex ? (
-                <CheckCircle2 className="size-4 shrink-0 text-emerald-600" aria-hidden="true" />
-              ) : (
-                <Circle
-                  className={`size-4 shrink-0 ${index === currentIndex ? 'text-primary' : 'text-muted-foreground'}`}
+              {met ? (
+                <CheckCircle2
+                  className="mt-0.5 size-4 shrink-0 text-emerald-600"
                   aria-hidden="true"
                 />
+              ) : (
+                <Circle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               )}
-              {item}
+              {evidenceLabel(requirement)}
             </li>
-          ))}
-        </ol>
-      </div>
-      <p className="mx-auto max-w-2xl text-center text-sm leading-6 text-muted-foreground">
-        Text equivalent: the current phase is {phase}. The sequence advances only after an explicit
-        learner action.
+          )
+        })}
+      </ul>
+      <p className="sr-only" aria-live="polite">
+        {requirements.filter((requirement) => evidence.includes(requirement)).length} of{' '}
+        {requirements.length} required interactions complete for case {state.caseId}.
       </p>
     </div>
   )
@@ -106,6 +273,8 @@ export function MechanicalVentilationLessonActivity({
   readonly locale?: string
 }) {
   const router = useRouter()
+  const runtime = runtimeForLesson(lesson.id)
+  const learningItems = itemsForLesson(lesson.id)
   const activityId = lessonActivityId(lesson.id)
   const query = useMemo(() => ({ activity: lesson.id }), [lesson.id])
   const [phase, setPhase] = useState<CriticalCareActivityPhase>('recognize')
@@ -122,12 +291,20 @@ export function MechanicalVentilationLessonActivity({
     description: 'Validating the saved lesson checkpoint.',
   })
   const attemptNumber = useRef(1)
+  const [session, dispatchSession] = useReducer(lessonSessionReducer, undefined, () =>
+    createLessonSession(runtime, 'primary', 1),
+  )
   const lifecycleAnalytics = useCriticalCareActivityAnalytics({
     moduleId: 'mechanical-ventilation',
     activityId,
     mode: 'guided',
     phase,
   })
+
+  const dispatchSimulation = useCallback<Dispatch<VentilationAction>>(
+    (action) => dispatchSession({ type: 'DISPATCH', action }),
+    [],
+  )
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -152,7 +329,7 @@ export function MechanicalVentilationLessonActivity({
               state: 'ready',
               title: `Resume ${lesson.title} at ${pointer.phase}`,
               description:
-                'The authored phase checkpoint is compatible. Prior answer choices were intentionally not stored.',
+                'The authored phase is compatible. The patient starts from that phase’s clean preset; prior answers and case actions were not stored.',
               pointer,
             }
           : {
@@ -166,23 +343,32 @@ export function MechanicalVentilationLessonActivity({
     return () => window.clearTimeout(timer)
   }, [activityId, lesson.id, lesson.title])
 
-  const evidenceEntries = useMemo(
-    () =>
-      lesson.evidenceIds.flatMap((id) => {
-        const evidence = ventilationEvidenceById.get(id)
-        return evidence
-          ? [
-              {
-                id: evidence.id,
-                title: evidence.title,
-                sourceLabel: evidence.citation,
-                limitation: evidence.limitations,
-              },
-            ]
-          : []
-      }),
-    [lesson.evidenceIds],
-  )
+  const evidenceEntries = useMemo(() => {
+    const ids = new Set([
+      ...lesson.evidenceIds,
+      ...learningItems.prediction.evidenceIds,
+      ...learningItems.transfer.evidenceIds,
+    ])
+    return [...ids].flatMap((id) => {
+      const evidence = ventilationEvidenceById.get(id)
+      return evidence
+        ? [
+            {
+              id: evidence.id,
+              title: evidence.title,
+              sourceLabel: evidence.citation,
+              limitation: evidence.limitations,
+            },
+          ]
+        : []
+    })
+  }, [learningItems.prediction.evidenceIds, learningItems.transfer.evidenceIds, lesson.evidenceIds])
+
+  const simulation = session.simulation
+  const definition = mechanicalVentilationCaseById.get(simulation.caseId)
+  if (!definition) throw new Error(`Missing lesson case definition: ${simulation.caseId}`)
+  const profile = getVentilatorDeviceProfile(simulation.deviceId)
+  const activeRuntime = runtime[session.variant]
 
   function persistCheckpoint(
     nextPhase: CriticalCareActivityPhase,
@@ -191,6 +377,10 @@ export function MechanicalVentilationLessonActivity({
     const now = new Date().toISOString()
     const envelope = readCriticalCareProgress(window.localStorage)
     const existing = envelope.activities.find((activity) => activity.activityId === activityId)
+    const activityDefinition = criticalCareActivityById.get(activityId)
+    if (!activityDefinition) return
+    const requestedStatus = options.completed ? 'completed' : 'in-progress'
+    const authoritativeStatus = authoritativeCriticalCareStatus(activityDefinition, requestedStatus)
     const pointer: CriticalCareResumePointer = {
       activityId,
       pathname: PATHNAME,
@@ -205,23 +395,32 @@ export function MechanicalVentilationLessonActivity({
       envelope,
       {
         activityId,
-        status: options.completed ? 'completed' : 'in-progress',
+        status: authoritativeStatus,
         currentPhase: nextPhase,
         mode: 'guided',
         attempts: Math.max(attemptNumber.current, existing?.attempts ?? 0),
         hintCount: (existing?.hintCount ?? 0) + (options.addHint ? 1 : 0),
-        competencyEvidenceIds: options.completed ? COMPETENCY_IDS : [],
+        competencyEvidenceIds: authoritativeCriticalCareCompetencyEvidence(
+          activityDefinition,
+          options.completed ? activityDefinition.competencyIds : [],
+        ),
         updatedAt: now,
       },
-      options.completed ? undefined : pointer,
+      authoritativeStatus === 'completed' || authoritativeStatus === 'mastered'
+        ? undefined
+        : pointer,
     )
-    if (options.completed) next = withoutCriticalCareResumePointer(next, activityId)
+    if (authoritativeStatus === 'completed' || authoritativeStatus === 'mastered') {
+      next = withoutCriticalCareResumePointer(next, activityId)
+    }
     const stored = writeCriticalCareProgress(window.localStorage, next)
     setStorageMessage(
       stored
-        ? options.completed
-          ? 'Lesson completion saved on this device.'
-          : 'Lesson checkpoint saved on this device.'
+        ? options.completed && authoritativeStatus === 'in-progress'
+          ? 'Draft review saved as in progress. This activity grants no completion or competency credit.'
+          : options.completed
+            ? 'Lesson completion saved on this device.'
+            : 'Lesson checkpoint saved on this device.'
         : 'Progress could not be stored on this device. You can continue this session.',
     )
   }
@@ -241,12 +440,18 @@ export function MechanicalVentilationLessonActivity({
     setFeedback(null)
     setHintVisible(false)
     setCompleted(false)
+    dispatchSession({
+      type: 'LOAD_VARIANT',
+      runtime,
+      variant: 'primary',
+      attempt: attemptNumber.current,
+    })
     const envelope = readCriticalCareProgress(window.localStorage)
     writeCriticalCareProgress(
       window.localStorage,
       withoutCriticalCareResumePointer(envelope, activityId),
     )
-    setStorageMessage('Lesson reset to its authored starting checkpoint.')
+    setStorageMessage('Lesson reset to the clean primary patient preset.')
   }
 
   function saveAndExit() {
@@ -257,10 +462,19 @@ export function MechanicalVentilationLessonActivity({
   function restore(pointer: CriticalCareResumePointer) {
     const restoredPhase = phaseFromCheckpoint(pointer.checkpointId)
     if (!restoredPhase) return
+    const variant = restoredPhase === 'transfer' ? 'transfer' : 'primary'
+    dispatchSession({
+      type: 'LOAD_VARIANT',
+      runtime,
+      variant,
+      attempt: attemptNumber.current,
+    })
     setPhase(restoredPhase)
     setPredictionCommitted(restoredPhase !== 'recognize' && restoredPhase !== 'predict')
     setResumePrompt(null)
-    setStorageMessage('Authored phase checkpoint restored. Prior choices were not retained.')
+    setStorageMessage(
+      'Authored phase restored with a clean patient preset. Prior choices and actions were not retained.',
+    )
   }
 
   function startSafe() {
@@ -269,6 +483,12 @@ export function MechanicalVentilationLessonActivity({
       window.localStorage,
       withoutCriticalCareResumePointer(envelope, activityId),
     )
+    dispatchSession({
+      type: 'LOAD_VARIANT',
+      runtime,
+      variant: 'primary',
+      attempt: attemptNumber.current,
+    })
     setPhase('recognize')
     setResumePrompt(null)
   }
@@ -281,65 +501,138 @@ export function MechanicalVentilationLessonActivity({
     setHintVisible(true)
   }
 
+  function performGuidedAction(action: VentilationLessonGuidedAction) {
+    dispatchSimulation(action.resolve(simulation))
+  }
+
+  function runResponse(seconds: number) {
+    dispatchSimulation({ type: 'SET_PAUSED', paused: false })
+    dispatchSimulation({ type: 'TICK', seconds })
+    dispatchSimulation({ type: 'SET_PAUSED', paused: true })
+  }
+
   function commitPrediction() {
     if (!predictionChoice) return
+    const correct = learningItems.prediction.correctChoiceIds.includes(predictionChoice)
     setPredictionCommitted(true)
     lifecycleAnalytics.recordPredictionSubmitted()
+    dispatchSession({ type: 'CLEAR_EVIDENCE' })
     advance('act')
     setFeedback(
-      predictionChoice === lesson.prediction.correctChoiceId
-        ? lesson.prediction.explanation
-        : `Compare your choice with the teaching point: ${lesson.prediction.explanation}`,
+      correct
+        ? learningItems.prediction.explanation
+        : `Compare your choice with the multitrace findings. ${learningItems.prediction.explanation}`,
     )
   }
 
-  function completeTransfer() {
-    if (!transferChoice) return
-    if (transferChoice !== lesson.transfer.correctChoiceId) {
-      setFeedback(`Reconsider the transfer: ${lesson.transfer.explanation}`)
+  function finishPrimaryAction() {
+    if (!hasVentilationLessonEvidence(session.evidence, runtime.primary.requiredEvidence)) {
       return
     }
-    setFeedback(lesson.transfer.explanation)
-    setCompleted(true)
-    persistCheckpoint('transfer', { completed: true })
-    lifecycleAnalytics.recordTransferCompleted()
-    lifecycleAnalytics.recordActivityCompleted()
-  }
-
-  function applyTeachingAction() {
+    runResponse(runtime.primary.responseSeconds)
+    dispatchSession({ type: 'CLEAR_EVIDENCE' })
     lifecycleAnalytics.recordGoalMet()
     advance('observe')
   }
 
+  function openDebrief() {
+    if (!hasVentilationLessonEvidence(session.evidence, ventilationLessonObservationEvidence)) {
+      return
+    }
+    lifecycleAnalytics.recordDebriefViewed()
+    advance('explain')
+  }
+
+  function beginTransfer() {
+    dispatchSession({
+      type: 'LOAD_VARIANT',
+      runtime,
+      variant: 'transfer',
+      attempt: attemptNumber.current + 1,
+    })
+    setTransferChoice(null)
+    advance('transfer')
+  }
+
+  function completeTransfer() {
+    if (!transferChoice) return
+    const interpretationCorrect = learningItems.transfer.correctChoiceIds.includes(transferChoice)
+    const actionsComplete = hasVentilationLessonEvidence(
+      session.evidence,
+      runtime.transfer.requiredEvidence,
+    )
+    const score = Number(interpretationCorrect) + Number(actionsComplete)
+    if (score < 2) {
+      setFeedback(
+        interpretationCorrect
+          ? 'Transfer evidence is 1 of 2: the interpretation is correct, but the required actions have not all been performed in the transfer patient.'
+          : `Transfer evidence is ${Number(actionsComplete)} of 2. Reconsider the mechanism. ${learningItems.transfer.explanation}`,
+      )
+      return
+    }
+    runResponse(runtime.transfer.responseSeconds)
+    setFeedback(
+      `Transfer evidence is 2 of 2: interpretation and performed actions are complete. ${learningItems.transfer.explanation}`,
+    )
+    setCompleted(true)
+    persistCheckpoint('transfer', { completed: true })
+    lifecycleAnalytics.recordTransferCompleted()
+  }
+
+  const recognitionComplete = hasVentilationLessonEvidence(
+    session.evidence,
+    ventilationLessonRecognitionEvidence,
+  )
+  const primaryActionComplete = hasVentilationLessonEvidence(
+    session.evidence,
+    runtime.primary.requiredEvidence,
+  )
+  const observationComplete = hasVentilationLessonEvidence(
+    session.evidence,
+    ventilationLessonObservationEvidence,
+  )
+  const transferActionsComplete = hasVentilationLessonEvidence(
+    session.evidence,
+    runtime.transfer.requiredEvidence,
+  )
+  const transferInterpretationCorrect = Boolean(
+    transferChoice && learningItems.transfer.correctChoiceIds.includes(transferChoice),
+  )
+  const transferScore = Number(transferInterpretationCorrect) + Number(transferActionsComplete)
+
   let controls = null
   if (phase === 'recognize') {
     controls = (
-      <button
-        type="button"
-        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={() => advance('predict')}
-      >
-        I have reviewed the signal and patient context
-      </button>
+      <div className="grid gap-3">
+        <GuidedActions
+          actions={ventilationLessonRecognitionActions}
+          state={simulation}
+          evidence={session.evidence}
+          requirements={ventilationLessonRecognitionEvidence}
+          onAction={performGuidedAction}
+        />
+        <button
+          type="button"
+          disabled={!recognitionComplete}
+          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          onClick={() => {
+            dispatchSession({ type: 'CLEAR_EVIDENCE' })
+            advance('predict')
+          }}
+        >
+          Continue to prediction
+        </button>
+      </div>
     )
   } else if (phase === 'predict') {
     controls = (
-      <fieldset className="grid gap-3">
-        <legend className="text-sm font-semibold">{lesson.prediction.prompt}</legend>
-        {lesson.prediction.choices.map((choice) => (
-          <label
-            key={choice.id}
-            className="flex min-h-11 items-center gap-3 rounded-xl border p-3 text-sm"
-          >
-            <input
-              type="radio"
-              name={`${lesson.id}-prediction`}
-              checked={predictionChoice === choice.id}
-              onChange={() => setPredictionChoice(choice.id)}
-            />
-            {choice.label}
-          </label>
-        ))}
+      <div className="grid gap-3">
+        <LearningItemChoices
+          item={learningItems.prediction}
+          selected={predictionChoice}
+          name={`${lesson.id}-prediction`}
+          onSelect={setPredictionChoice}
+        />
         <button
           type="button"
           disabled={!predictionChoice}
@@ -348,69 +641,88 @@ export function MechanicalVentilationLessonActivity({
         >
           Commit prediction
         </button>
-      </fieldset>
+      </div>
     )
   } else if (phase === 'act') {
     controls = (
-      <button
-        type="button"
-        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={applyTeachingAction}
-      >
-        Apply the bounded teaching action
-      </button>
+      <div className="grid gap-3">
+        <GuidedActions
+          actions={runtime.primary.actions}
+          state={simulation}
+          evidence={session.evidence}
+          requirements={runtime.primary.requiredEvidence}
+          onAction={performGuidedAction}
+        />
+        <button
+          type="button"
+          disabled={!primaryActionComplete}
+          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          onClick={finishPrimaryAction}
+        >
+          Run the response and reassess
+        </button>
+      </div>
     )
   } else if (phase === 'observe') {
     controls = (
-      <button
-        type="button"
-        className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={() => {
-          lifecycleAnalytics.recordDebriefViewed()
-          advance('explain')
-        }}
-      >
-        Reassess the predicted response
-      </button>
+      <div className="grid gap-3">
+        <GuidedActions
+          actions={ventilationLessonObservationActions}
+          state={simulation}
+          evidence={session.evidence}
+          requirements={ventilationLessonObservationEvidence}
+          onAction={performGuidedAction}
+        />
+        <button
+          type="button"
+          disabled={!observationComplete}
+          className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          onClick={openDebrief}
+        >
+          Open the causal debrief
+        </button>
+      </div>
     )
   } else if (phase === 'explain') {
     controls = (
       <button
         type="button"
         className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
-        onClick={() => advance('transfer')}
+        onClick={beginTransfer}
       >
-        Apply the reasoning to a variant
+        Load the transfer patient
       </button>
     )
   } else {
     controls = (
-      <fieldset className="grid gap-3">
-        <legend className="text-sm font-semibold">{lesson.transfer.prompt}</legend>
-        {lesson.transfer.choices.map((choice) => (
-          <label
-            key={choice.id}
-            className="flex min-h-11 items-center gap-3 rounded-xl border p-3 text-sm"
-          >
-            <input
-              type="radio"
-              name={`${lesson.id}-transfer`}
-              checked={transferChoice === choice.id}
-              disabled={completed}
-              onChange={() => setTransferChoice(choice.id)}
-            />
-            {choice.label}
-          </label>
-        ))}
+      <div className="grid gap-4">
+        <LearningItemChoices
+          item={learningItems.transfer}
+          selected={transferChoice}
+          disabled={completed}
+          name={`${lesson.id}-transfer`}
+          onSelect={setTransferChoice}
+        />
+        <GuidedActions
+          actions={runtime.transfer.actions}
+          state={simulation}
+          evidence={session.evidence}
+          requirements={runtime.transfer.requiredEvidence}
+          disabled={completed}
+          onAction={performGuidedAction}
+        />
+        <p className="rounded-xl bg-muted p-3 text-sm" aria-live="polite">
+          Transfer evidence: {transferScore} of 2 · interpretation plus performed case actions
+        </p>
         <button
           type="button"
           disabled={!transferChoice || completed}
           className="min-h-11 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           onClick={completeTransfer}
         >
-          Complete transfer check
+          Review draft transfer
         </button>
-      </fieldset>
+      </div>
     )
   }
 
@@ -429,43 +741,102 @@ export function MechanicalVentilationLessonActivity({
   }
 
   const phaseCopy = lesson.phases[phase]
-  const viewport =
-    phase === 'explain' ? (
-      <div className="h-full overflow-auto p-4">
+  const viewport = (
+    <div className="grid h-full min-h-0 content-start gap-3 overflow-auto bg-background p-3">
+      <section
+        className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-3"
+        aria-label="Active lesson patient"
+      >
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+            {session.variant === 'primary' ? 'Primary patient' : 'Transfer patient'} ·{' '}
+            {definition.id}
+          </p>
+          <h2 className="mt-1 text-base font-semibold">{definition.title}</h2>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
+            {definition.patientDescription}
+          </p>
+        </div>
+        <p className="max-w-md rounded-lg bg-muted px-3 py-2 text-xs leading-5">
+          <strong>Immediate goal:</strong> {activeRuntime.goal}
+        </p>
+      </section>
+
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[minmax(18rem,0.42fr)_minmax(44rem,1fr)]">
+        <div className="min-w-0 [&>*]:m-0">
+          <BedsidePanel state={simulation} definition={definition} compact />
+        </div>
+        <div className="min-w-0 [&>*]:m-0">
+          <MechanicalVentilatorConsole
+            key={`${simulation.caseId}:${simulation.ventilator.settings.deviceMode}`}
+            state={simulation}
+            dispatch={dispatchSimulation}
+            controlsEnabled
+          />
+        </div>
+      </div>
+
+      <dl
+        className="grid grid-cols-2 gap-2 rounded-xl border bg-card p-3 text-sm sm:grid-cols-4 xl:grid-cols-7"
+        aria-label="Current lesson measurements"
+      >
+        {[
+          ['Ppeak', `${simulation.measurements.peakPressureCmH2O.toFixed(0)} cmH₂O`],
+          ['Pplat', `${simulation.measurements.plateauPressureCmH2O.toFixed(0)} cmH₂O`],
+          ['VTE', `${simulation.measurements.exhaledVtMl.toFixed(0)} mL`],
+          ['Intrinsic PEEP', `${simulation.measurements.intrinsicPeepCmH2O.toFixed(1)} cmH₂O`],
+          ['SpO₂', `${simulation.patient.gasExchange.spo2Percent.toFixed(0)}%`],
+          ['PaCO₂', `${simulation.patient.gasExchange.paCO2MmHg.toFixed(0)} mm Hg`],
+          ['MAP', `${simulation.patient.hemodynamics.mapMmHg.toFixed(0)} mm Hg`],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-lg bg-muted p-2">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="mt-0.5 font-semibold tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {phase === 'explain' ? (
         <DebriefPanel
           clinicalModel={
             predictionCommitted
-              ? 'A mechanism and expected response were committed before the teaching action.'
-              : 'The prior prediction checkpoint was restored without retaining the answer choice.'
+              ? learningItems.prediction.explanation
+              : 'The prediction checkpoint was restored without retaining the prior answer.'
           }
-          actions={[lesson.phases.act.requiredAction]}
-          consequences={[lesson.phases.observe.teachingPoint]}
+          actions={[runtime.primary.goal]}
+          consequences={[
+            simulation.lastResponse ??
+              'Compare the post-action patient and multitrace measurements with baseline.',
+          ]}
           performanceDomains={[
             { label: 'Recognition', result: lesson.phases.recognize.teachingPoint },
-            { label: 'Mechanism', result: lesson.prediction.explanation },
+            { label: 'Mechanism', result: learningItems.prediction.explanation },
             { label: 'Reassessment', result: lesson.phases.observe.requiredAction },
           ]}
-          transfer={<p>{lesson.transfer.prompt}</p>}
+          transfer={<p>{learningItems.transfer.stem}</p>}
         />
-      </div>
-    ) : (
-      <BreathSequenceVisual phase={phase} />
-    )
+      ) : null}
+    </div>
+  )
 
   return (
     <SimulationLaunchGate
       activityTitle={lesson.title}
       minimumViewport="tablet"
       bandwidthClass="standard"
-      estimatedSizeLabel="Lightweight text and SVG lesson"
+      estimatedSizeLabel="Interactive patient, ventilator console, and synchronized waveforms"
       lightweightAlternativeHref="/mechanical-ventilation/learn"
       onSaveForLater={saveAndExit}
       theme="dark"
     >
       {locale !== 'en' ? (
-        <p className="sr-only">Reviewed-English fallback: localized clinical review is pending.</p>
+        <div className="sr-only" role="status">
+          <Languages aria-hidden="true" /> Reviewed-English fallback: localized clinical review is
+          pending.
+        </div>
       ) : null}
       <ActivityShell
+        layout="native-workbench"
         breadcrumb={
           <span>
             <Link href={'/mechanical-ventilation' as Route}>Mechanical Ventilation</Link> /{' '}
@@ -477,21 +848,23 @@ export function MechanicalVentilationLessonActivity({
         mode="guided"
         progressLabel={
           completed
-            ? 'Completed'
+            ? 'Draft reviewed · non-credit'
             : `${criticalCareActivityPhases.indexOf(phase) + 1} of 6 · ${phase}`
         }
         patientContext={
           <PatientContextBar
-            title="Learning context"
+            title={`${session.variant === 'primary' ? 'Primary' : 'Transfer'} clinical context`}
             items={[
-              { label: 'Domain', value: lesson.domain },
-              { label: 'Related cases', value: lesson.relatedCaseIds.join(' · ') },
-              { label: 'Engine', value: 'Preserved deterministic model' },
+              { label: 'Patient', value: definition.patientDescription },
+              { label: 'Console', value: profile.displayName },
+              { label: 'Mode', value: simulation.ventilator.settings.deviceMode },
+              { label: 'Case', value: definition.id },
+              { label: 'Review status', value: 'SME review · non-credit' },
             ]}
-            immediateGoal={phaseCopy.objective}
+            immediateGoal={activeRuntime.goal}
             safetyConstraints={[
-              'Reason from the patient and signals before changing the training console.',
-              'Synthetic outputs cannot guide care for a real patient.',
+              'Reason from the patient and synchronized signals before changing support.',
+              'Synthetic responses are educational approximations and cannot guide care.',
             ]}
           />
         }
@@ -508,13 +881,17 @@ export function MechanicalVentilationLessonActivity({
           >
             {controls}
             {feedback ? (
-              <p className="mt-3 rounded-xl bg-muted p-3 text-sm" role="status">
+              <p className="mt-3 rounded-xl bg-muted p-3 text-sm leading-6" role="status">
                 {feedback}
               </p>
             ) : null}
           </TaskPanel>
         }
-        bottomContent={storageMessage ?? `Checkpoint: ${lessonCheckpoint(phase)}`}
+        bottomContent={
+          storageMessage ??
+          simulation.lastResponse ??
+          `Checkpoint: ${lessonCheckpoint(phase)} · ${definition.id}`
+        }
         secondaryActions={
           <>
             <ReferenceDrawer

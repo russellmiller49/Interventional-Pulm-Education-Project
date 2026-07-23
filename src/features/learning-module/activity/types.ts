@@ -42,6 +42,25 @@ export const criticalCareReviewStatuses = ['draft', 'sme-review', 'released'] as
 
 export type CriticalCareReviewStatus = (typeof criticalCareReviewStatuses)[number]
 
+export const criticalCareCreditPolicies = [
+  'non-credit',
+  'completion-only',
+  'competency-eligible',
+] as const
+
+export type CriticalCareCreditPolicy = (typeof criticalCareCreditPolicies)[number]
+
+export const criticalCareCompletionEvidenceAuthorities = [
+  'none',
+  'validated-interaction',
+  'reviewed-engine-score',
+  'reviewed-item-set',
+  'authored-performance-predicate',
+] as const
+
+export type CriticalCareCompletionEvidenceAuthority =
+  (typeof criticalCareCompletionEvidenceAuthorities)[number]
+
 export interface CriticalCareActivityDefinition {
   readonly id: string
   readonly moduleId: string
@@ -61,6 +80,9 @@ export interface CriticalCareActivityDefinition {
   readonly assetIds: readonly string[]
   readonly reviewStatus: CriticalCareReviewStatus
   readonly evidenceIds: readonly string[]
+  readonly contentVersion: string
+  readonly creditPolicy: CriticalCareCreditPolicy
+  readonly completionEvidenceAuthority: CriticalCareCompletionEvidenceAuthority
 }
 
 export interface CriticalCareActivityProgress {

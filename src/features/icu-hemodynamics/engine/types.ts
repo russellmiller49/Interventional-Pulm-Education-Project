@@ -29,6 +29,8 @@ export type PressureArtifact =
   | 'catheter-whip'
   | 'wall-contact'
   | 'false-wedge'
+export type DynamicResponseKind = 'acceptable' | 'overdamped' | 'underdamped'
+export type FastFlushLineType = 'pulmonary-artery' | 'systemic-arterial'
 
 export type HemodynamicSignal =
   | 'ecg'
@@ -47,7 +49,9 @@ export interface MeasurementSystemState {
   naturalFrequencyHz: number
   noiseAmplitudeMmHg: number
   artifact: PressureArtifact
+  fastFlushStartedAt: number | null
   fastFlushActiveUntil: number | null
+  fastFlushLineType: FastFlushLineType | null
   lastFastFlushFinding: string | null
 }
 
@@ -289,7 +293,7 @@ export type HemodynamicAction =
   | { type: 'ZERO_TRANSDUCER' }
   | { type: 'SET_DAMPING'; dampingRatio: number }
   | { type: 'SET_ARTIFACT'; artifact: PressureArtifact }
-  | { type: 'FAST_FLUSH' }
+  | { type: 'FAST_FLUSH'; lineType: FastFlushLineType }
   | { type: 'VALIDATE_SIGNAL'; check: string }
   | { type: 'START_WEDGE' }
   | { type: 'PLACE_WEDGE_CURSOR' }

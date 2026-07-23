@@ -119,7 +119,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
           <p>
             The CARDIOHELP console lab pairs lessons and clinical cases for adult VV and peripheral
             VA ECMO: learn each reasoning sequence step by step, apply it to an evolving scored
-            case, then prove it in an unseen capstone.
+            case, then prove it in a masked capstone.
           </p>
           {resume && started ? (
             <Link
@@ -177,7 +177,7 @@ export function CardiohelpHub({ locale = 'en' }: CardiohelpHubProps) {
                 <BadgeCheck aria-hidden="true" />
                 <strong>Assess</strong>
                 <p>
-                  An unseen capstone scenario per track, unlocked by completing every lesson.
+                  A masked capstone scenario per track, unlocked by completing every lesson.
                   Mastery: ≥80% with no critical safety error.
                 </p>
               </Link>

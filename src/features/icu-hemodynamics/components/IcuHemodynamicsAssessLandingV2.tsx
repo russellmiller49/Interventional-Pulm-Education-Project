@@ -10,8 +10,8 @@ export function IcuHemodynamicsAssessLandingV2() {
       <h1 className="mt-2 text-3xl font-bold tracking-tight">Case-based capstone</h1>
       <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
         The hemodynamics assessment is a masked simulation, not a page-visit or quiz completion. It
-        uses a deterministic unseen seed and records mastery only when the preserved score is at
-        least 80% with no critical safety error.
+        currently uses the fixed HD-07 pressure-equalization case and records mastery only when the
+        preserved score is at least 80% with no critical safety error.
       </p>
       <section
         className="mt-8 rounded-3xl border bg-card p-6 shadow-sm"
@@ -24,9 +24,10 @@ export function IcuHemodynamicsAssessLandingV2() {
           <div>
             <h2 className="text-lg font-bold">Masked capstone boundary</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Masked feedback, the existing 80% mastery rule, and the no-critical-error requirement
-              are retained. Opening the route never awards completion, and detailed simulation state
-              remains local.
+              Diagnosis and coaching are masked until debrief. Observable patient and pressure data,
+              the existing 80% mastery rule, and the no-critical-error requirement are retained.
+              Opening the route never awards completion, and detailed simulation state remains
+              local.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
               <Link

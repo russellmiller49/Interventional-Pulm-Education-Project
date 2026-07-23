@@ -7,6 +7,7 @@ import {
 } from '@/features/learning-module/activity'
 
 import MechanicalVentilationCaseActivityV2 from '../components/MechanicalVentilationCaseActivityV2'
+import { mechanicalVentilationCaseById, selectVentilationTransferCaseId } from '../content'
 import {
   MECHANICAL_VENTILATION_SESSION_STORAGE_KEY,
   readProgress,
@@ -56,6 +57,9 @@ jest.mock('../components/CaseWorkflow', () => ({
     mode?: CriticalCareActivityMode
   }) => (
     <div data-testid="mock-workflow">
+      <button type="button" onClick={() => dispatch({ type: 'STEP_BREATH' })}>
+        Observe mock breath
+      </button>
       <button
         type="button"
         onClick={() =>
@@ -149,7 +153,7 @@ describe('mechanical ventilation V2 case activity', () => {
     ).not.toBeInTheDocument()
     expect(window.localStorage.getItem(MECHANICAL_VENTILATION_SESSION_STORAGE_KEY)).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: /Baseline reviewed/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Observe mock breath' }))
     fireEvent.click(screen.getByRole('button', { name: 'Commit mock prediction' }))
     fireEvent.click(screen.getByRole('button', { name: 'Finish mock case' }))
 
@@ -159,11 +163,30 @@ describe('mechanical ventilation V2 case activity', () => {
     expect(beforeTransfer.activities[0].status).toBe('in-progress')
     expect(readProgress().bestScores['MV-01']).toBe(90)
 
-    fireEvent.click(screen.getByRole('button', { name: /Begin transfer check/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Load contrasting transfer patient/i }))
+    const transferCaseId = selectVentilationTransferCaseId('MV-01')
+    const transferDefinition = mechanicalVentilationCaseById.get(transferCaseId ?? '')
+    expect(transferDefinition).toBeDefined()
+    const incorrectMechanism = transferDefinition!.mechanismOptions.find(
+      (option) => option.id !== transferDefinition!.correctMechanismId,
+    )
+    const correctMechanism = transferDefinition!.mechanismOptions.find(
+      (option) => option.id === transferDefinition!.correctMechanismId,
+    )
+    expect(incorrectMechanism).toBeDefined()
+    expect(correctMechanism).toBeDefined()
+
+    fireEvent.click(screen.getByLabelText(incorrectMechanism!.label))
+    fireEvent.click(screen.getByRole('button', { name: 'Record bedside assessment' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Document multitrace review' }))
     const transferButton = screen.getByRole('button', {
-      name: /I named the signal and bedside finding I would recheck/i,
+      name: /Submit scored transfer/i,
     })
     fireEvent.click(transferButton)
+    expect(screen.getByText(/Follow-up score: 2\/3/)).toBeInTheDocument()
+    expect(screen.queryByText(/^Completed$/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText(correctMechanism!.label))
     fireEvent.click(transferButton)
 
     const completed = JSON.parse(
@@ -221,5 +244,67 @@ describe('mechanical ventilation V2 case activity', () => {
       ([event]) => (event as { eventPayload?: { interaction?: string } }).eventPayload?.interaction,
     )
     expect(interactions).not.toContain('critical_care_goal_met')
+  })
+
+  it('keeps assessment identity masked while preserving observable patient context', async () => {
+    render(
+      <MechanicalVentilationCaseActivityV2
+        caseId="MV-01"
+        deviceId="hamilton-c6"
+        mode="challenge"
+        section="assess"
+        seedToken="assessment-mask-test"
+      />,
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Masked ventilation challenge' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/A 62-year-old woman with pneumonia-associated moderate-to-severe ARDS/),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reference' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/seed \d+/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('mock-bedside')).toBeInTheDocument()
+    expect(screen.getByTestId('mock-console')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finish mock case' }))
+    fireEvent.click(screen.getByRole('button', { name: /Load contrasting transfer patient/i }))
+
+    expect(screen.getByRole('heading', { name: 'Masked transfer challenge' })).toBeInTheDocument()
+    expect(screen.getByText(/A 50-year-old man with ARDS on moderate PEEP/)).toBeInTheDocument()
+    expect(screen.queryByText(/Transfer · MV-14/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reference' })).not.toBeInTheDocument()
+  })
+
+  it('restores the scored primary case exactly and restarts partial transfer work clean', async () => {
+    const props = {
+      caseId: 'MV-01',
+      deviceId: 'hamilton-c6' as const,
+      mode: 'practice' as const,
+      section: 'practice' as const,
+    }
+    const first = render(<MechanicalVentilationCaseActivityV2 {...props} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Finish mock case' }))
+    fireEvent.click(screen.getByRole('button', { name: /Load contrasting transfer patient/i }))
+
+    const saved = JSON.parse(
+      window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
+    )
+    expect(saved.resume).toEqual(
+      expect.objectContaining({
+        phase: 'transfer',
+        checkpointId: 'transfer-clean-variant',
+        payloadVersion: 'ventilation-transfer-safe-v1',
+      }),
+    )
+
+    first.unmount()
+    render(<MechanicalVentilationCaseActivityV2 {...props} />)
+
+    expect(await screen.findByRole('heading', { name: /Transfer · MV-14/i })).toBeInTheDocument()
+    expect(screen.getByText(/scored primary case was reconstructed exactly/i)).toBeInTheDocument()
+    expect(screen.getByText(/Follow-up evidence: 0 of 3 recorded/)).toBeInTheDocument()
   })
 })

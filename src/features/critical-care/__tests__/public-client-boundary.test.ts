@@ -2,8 +2,12 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, extname, join, normalize, resolve } from 'node:path'
 import ts from 'typescript'
 
+import { CRITICAL_CARE_PROGRESS_STORAGE_KEY } from '@/features/learning-module/activity'
+
 import { buildCriticalCarePublicClientCatalog } from '../content/publicCatalog.server'
 import { mergeCriticalCareSubsetProgress } from '../progress/publicAccountSync'
+import { readPublicCriticalCareProgress } from '../progress/publicClient'
+import { CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY } from '../progress/types'
 
 const sourceRoot = join(process.cwd(), 'src')
 const publicClientEntries = [
@@ -227,6 +231,102 @@ describe('critical-care public client data boundary', () => {
       ]),
     )
     expect(reconciled.resume).toEqual(fullEnvelope.resume)
+  })
+
+  it('reports only a coarse integrated-case outcome aggregate to the public dashboard', () => {
+    const catalog = buildCriticalCarePublicClientCatalog()
+    const stored = JSON.stringify({
+      version: 1,
+      activities: [
+        {
+          activityId: 'icu:practice:septic-ards-aki',
+          status: 'completed',
+          attempts: 1,
+          competencyEvidenceIds: [],
+          updatedAt: '2026-07-22T12:00:00.000Z',
+        },
+      ],
+      updatedAt: '2026-07-22T12:00:00.000Z',
+    })
+    const storage = {
+      getItem: (key: string) => {
+        if (key === CRITICAL_CARE_PROGRESS_STORAGE_KEY) return stored
+        if (key === CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY) {
+          return JSON.stringify({
+            version: 1,
+            completedCourseCount: 1,
+            latestCompletedAt: '2026-07-22T12:00:00.000Z',
+          })
+        }
+        return null
+      },
+    }
+
+    const result = readPublicCriticalCareProgress(catalog.activities, storage)
+
+    expect(result.integratedCaseOutcomes).toEqual({
+      completedCourseCount: 1,
+      latestCompletedAt: '2026-07-22T12:00:00.000Z',
+    })
+    expect(result.envelope.activities).toEqual([])
+    expect(JSON.stringify(result.integratedCaseOutcomes)).not.toMatch(
+      /septic|ards|patient|command|replay|scenario/i,
+    )
+  })
+
+  it('does not infer an integrated outcome from an unknown normalized activity ID', () => {
+    const catalog = buildCriticalCarePublicClientCatalog()
+    const storage = {
+      getItem: (key: string) =>
+        key === CRITICAL_CARE_PROGRESS_STORAGE_KEY
+          ? JSON.stringify({
+              version: 1,
+              activities: [
+                {
+                  activityId: 'icu:assess:not-a-catalog-course',
+                  status: 'mastered',
+                  attempts: 1,
+                  competencyEvidenceIds: ['invented-evidence'],
+                  updatedAt: '2026-07-22T12:00:00.000Z',
+                },
+              ],
+              updatedAt: '2026-07-22T12:00:00.000Z',
+            })
+          : null,
+    }
+
+    const result = readPublicCriticalCareProgress(catalog.activities, storage)
+
+    expect(result.integratedCaseOutcomes).toBeUndefined()
+    expect(result.envelope.activities).toEqual([])
+  })
+
+  it('rejects an aggregate that includes private outcome identity', () => {
+    const catalog = buildCriticalCarePublicClientCatalog()
+    const storage = {
+      getItem: (key: string) =>
+        key === CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY
+          ? JSON.stringify({
+              version: 1,
+              completedCourseCount: 1,
+              latestCompletedAt: '2026-07-22T12:00:00.000Z',
+              scenarioId: 'restricted-course',
+            })
+          : null,
+    }
+
+    const result = readPublicCriticalCareProgress(catalog.activities, storage)
+
+    expect(result.integratedCaseOutcomes).toBeUndefined()
+    expect(result.notices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          storageKey: CRITICAL_CARE_INTEGRATED_OUTCOMES_STORAGE_KEY,
+          status: 'corrupt',
+          issue: 'invalid-shape',
+        }),
+      ]),
+    )
   })
 
   it('keeps restricted labels and descriptions out of public route source and metadata', () => {

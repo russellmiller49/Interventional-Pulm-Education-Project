@@ -70,16 +70,21 @@ describe('PAC signal-validation vertical slice', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
     expect(screen.getByText('Act').closest('li')).toHaveAttribute('aria-current', 'step')
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /Level, zero, and correct the pressure system/i }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: /Perform a fast-flush assessment/i }))
-    fireEvent.click(
-      screen.getByRole('button', { name: /Return the catheter to a confirmed PA position/i }),
-    )
-    fireEvent.click(
-      screen.getByRole('button', { name: /Repeat thermodilution with valid technique/i }),
-    )
+    fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
+      target: { value: '0' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('radio', { name: /Underdamped.*Several oscillations/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Retract' }))
+
+    for (let trial = 0; trial < 3; trial += 1) {
+      fireEvent.click(screen.getByRole('button', { name: /Hold to inject/i }))
+      const acceptButtons = screen.getAllByRole('button', { name: 'Accept' })
+      fireEvent.click(acceptButtons[acceptButtons.length - 1])
+    }
     const observe = screen.getByRole('button', { name: 'Observe the corrected signal' })
     expect(observe).toBeEnabled()
     fireEvent.click(observe)
@@ -100,7 +105,16 @@ describe('PAC signal-validation vertical slice', () => {
     expect(beforeTransfer.activities[0].status).toBe('in-progress')
 
     fireEvent.click(
-      screen.getByRole('button', { name: 'Repeat the fast-flush assessment before treatment' }),
+      screen.getByLabelText('An overdamped measurement system attenuating rapid pressure change'),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Complete after interpreting and correcting the new trace',
+      }),
     )
     expect(screen.getByText('Completed')).toBeInTheDocument()
 
@@ -162,14 +176,16 @@ describe('PAC signal-validation vertical slice', () => {
     expect(screen.getByText('Position wedge')).toBeInTheDocument()
   })
 
-  it('maps a preserved PAC skill station into the same six-phase completion contract', async () => {
+  it('requires an authored pressure variant interaction and keeps SME-review work non-credit', async () => {
     render(<PacGuidedSkillActivity skillId="pressure-system" />)
     expect(
       await screen.findByRole('heading', { name: 'Level, zero, and dynamic response' }),
     ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Orient to this skill station' }))
     fireEvent.click(
-      screen.getByLabelText('Validate the signal and technique before interpretation'),
+      screen.getByLabelText(
+        'The system is off level, not zeroed, and underdamped; correct and verify each problem separately.',
+      ),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
 
@@ -177,16 +193,14 @@ describe('PAC signal-validation vertical slice', () => {
       screen.getByRole('heading', { name: 'Leveling changes the number, not the waveform' }),
     ).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
-      target: { value: '10' },
+      target: { value: '0' },
     })
-    expect(screen.getByText('-7.4 mmHg')).toBeInTheDocument()
-    expect(screen.getByText('reads low')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
     fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
     expect(
       screen.getByRole('img', {
-        name: /observed fast-flush release response.*small number of rapidly settling oscillations/i,
+        name: /observed fast-flush release response.*several oscillations persist/i,
       }),
     ).toBeInTheDocument()
     expect(
@@ -196,23 +210,39 @@ describe('PAC signal-validation vertical slice', () => {
       screen.queryByRole('heading', { name: 'Three qualitative release patterns' }),
     ).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('radio', { name: /Acceptable.*Prompt return/i }))
+    fireEvent.click(screen.getByRole('radio', { name: /Underdamped.*Several oscillations/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
     expect(screen.getByRole('status', { name: 'Dynamic response feedback' })).toHaveTextContent(
-      /Correct.*acceptable dynamic response/i,
+      /Correct.*underdamped response/i,
     )
     expect(
       screen.getByRole('heading', { name: 'Three qualitative release patterns' }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Continue after completing the objective' }),
+    ).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
     fireEvent.click(screen.getByRole('button', { name: 'Continue after completing the objective' }))
     fireEvent.click(screen.getByRole('button', { name: 'Observe and explain the result' }))
     expect(screen.getByRole('heading', { name: 'Causal debrief' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Open transfer check' }))
+
     fireEvent.click(
-      screen.getByRole('button', {
-        name: 'Carry the validation sequence into the new context',
-      }),
+      screen.getByLabelText(
+        'Re-level the transducer and correct the overdamped measurement response.',
+      ),
     )
+    const completeTransfer = screen.getByRole('button', { name: 'Complete validated transfer' })
+    expect(completeTransfer).toBeDisabled()
+    fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
+      target: { value: '0' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
+    expect(completeTransfer).toBeEnabled()
+    fireEvent.click(completeTransfer)
 
     const envelope = JSON.parse(
       window.localStorage.getItem(CRITICAL_CARE_PROGRESS_STORAGE_KEY) ?? '{}',
@@ -221,24 +251,29 @@ describe('PAC signal-validation vertical slice', () => {
       expect.arrayContaining([
         expect.objectContaining({
           activityId: 'hemodynamics:learn:pressure-system',
-          status: 'completed',
+          status: 'in-progress',
           currentPhase: 'transfer',
+          competencyEvidenceIds: [],
         }),
       ]),
     )
+    expect(envelope.resume).toBeDefined()
+    expect(screen.getByText('Draft reviewed · non-credit')).toBeInTheDocument()
   })
 
   it('withholds the fast-flush classification until submission and requires correction', async () => {
     render(<PacGuidedSkillActivity skillId="pressure-system" />)
     fireEvent.click(await screen.findByRole('button', { name: 'Orient to this skill station' }))
     fireEvent.click(
-      screen.getByLabelText('Validate the signal and technique before interpretation'),
+      screen.getByLabelText(
+        'The system is off level, not zeroed, and underdamped; correct and verify each problem separately.',
+      ),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Commit prediction' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
-    fireEvent.change(screen.getByLabelText('Concealed test'), {
-      target: { value: 'response-a' },
+    fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
+      target: { value: '0' },
     })
+    fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
     fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
 
     expect(screen.getByText('Classification withheld')).toBeInTheDocument()
@@ -257,6 +292,10 @@ describe('PAC signal-validation vertical slice', () => {
     expect(screen.getByRole('status', { name: 'Dynamic response feedback' })).toHaveTextContent(
       /Correct.*underdamped response/i,
     )
+    expect(
+      screen.getByRole('button', { name: 'Continue after completing the objective' }),
+    ).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
     expect(
       screen.getByRole('button', { name: 'Continue after completing the objective' }),
     ).toBeEnabled()

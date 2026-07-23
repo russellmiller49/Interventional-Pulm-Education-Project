@@ -46,7 +46,13 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'CVVHDF combines diffusive and convective transport.',
       'No modality is universally best; selection depends on the treatment goal, patient context, device configuration, and local practice.',
     ],
-    sourceRecordIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026', 'GUID-NICE-NG148-2024'],
+    sourceRecordIds: [
+      'TEXT-CRRT-NEYRA-2026',
+      'REVIEW-CRRT-PRINCIPLES-2021',
+      'REVIEW-CKRT-CORE-2025',
+      'GUID-RRT-ICU-2026',
+      'GUID-NICE-NG148-2024',
+    ],
   }),
   lesson({
     id: 'crrt-solute-transport',
@@ -63,7 +69,13 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Ask which mechanism is intended before predicting a response to a flow change.',
       'Displayed flows are inputs to a model, not proof that the intended clearance reached the patient.',
     ],
-    sourceRecordIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026', 'SYNTH-LAB-TRANSPORT-001'],
+    sourceRecordIds: [
+      'REVIEW-CRRT-PRINCIPLES-2021',
+      'TEXT-RRT-HOSTE-2024',
+      'REVIEW-CKRT-CORE-2025',
+      'GUID-RRT-ICU-2026',
+      'SYNTH-LAB-TRANSPORT-001',
+    ],
   }),
   lesson({
     id: 'crrt-prescription-dosing',
@@ -88,6 +100,8 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'MATH-PM-005',
       'DOSE-PM-001',
       'FLUID-PM-002',
+      'TEXT-CRRT-NEYRA-2026',
+      'REVIEW-CRRT-PRINCIPLES-2021',
       'REVIEW-CKRT-CORE-2025',
       'SYNTH-LAB-PRESCRIPTION-001',
       'SYNTH-LAB-PREPOST-001',
@@ -110,7 +124,14 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Use current PrisMax instructions and local policy for exact alarm and restart actions.',
     ],
     embeddedLabId: 'LAB-PRESSURE-LOCALIZATION',
-    sourceRecordIds: ['DEV-PM-009', 'DEV-PM-010', 'MATH-PM-002', 'SYNTH-LAB-PRESSURE-001'],
+    sourceRecordIds: [
+      'DEV-PM-009',
+      'DEV-PM-010',
+      'MATH-PM-002',
+      'TEXT-RRT-HOSTE-2024',
+      'REVIEW-CRRT-PRINCIPLES-2021',
+      'SYNTH-LAB-PRESSURE-001',
+    ],
   }),
   lesson({
     id: 'crrt-anticoagulation',
@@ -128,7 +149,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Treat verification, communication, and reassessment as safety actions.',
       'Follow the current local citrate/calcium protocol and responsible clinical team.',
     ],
-    sourceRecordIds: ['REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
+    sourceRecordIds: ['TEXT-CRRT-NEYRA-2026', 'REVIEW-CKRT-CORE-2025', 'GUID-RRT-ICU-2026'],
   }),
   lesson({
     id: 'crrt-alarms-troubleshooting',
@@ -147,7 +168,14 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
       'Verify correction before any continuation decision.',
       'Reassess delivery, downtime, recurrence, and the patient.',
     ],
-    sourceRecordIds: ['DEV-PM-008', 'DEV-PM-012', 'DEV-PM-013', 'DEV-PM-014', 'GUID-RRT-ICU-2026'],
+    sourceRecordIds: [
+      'DEV-PM-008',
+      'DEV-PM-012',
+      'DEV-PM-013',
+      'DEV-PM-014',
+      'TEXT-RRT-HOSTE-2024',
+      'GUID-RRT-ICU-2026',
+    ],
   }),
   lesson({
     id: 'crrt-fluid-liberation',
@@ -167,6 +195,7 @@ export const baxterCrrtLearnLessons: readonly BaxterCrrtLearnLesson[] = Object.f
     sourceRecordIds: [
       'FLUID-PM-001',
       'FLUID-PM-002',
+      'TEXT-CRRT-NEYRA-2026',
       'WHITE-2024',
       'GONEUTRAL-2024',
       'SYNTH-LAB-FLUID-001',

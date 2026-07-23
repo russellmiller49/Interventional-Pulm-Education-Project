@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { NextIntlClientProvider } from 'next-intl'
 
 import { ActivityShell } from './ActivityShell'
+import type { ActivityLayout } from './ActivityChrome'
 import { EvidenceDrawer } from './EvidenceDrawer'
 import { PatientContextBar } from './PatientContextBar'
 import { ReferenceDrawer } from './ReferenceDrawer'
@@ -49,13 +50,16 @@ function ExampleShell({
   mode = 'guided',
   theme = 'light',
   masked = false,
+  layout = 'guided-lab',
 }: {
   mode?: 'guided' | 'practice' | 'challenge'
   theme?: 'light' | 'dark'
   masked?: boolean
+  layout?: ActivityLayout
 }) {
   return (
     <ActivityShell
+      layout={layout}
       breadcrumb="Critical care / Hemodynamics / PAC signal validation"
       activityTitle="PAC signal validation"
       phase="predict"
@@ -131,15 +135,24 @@ function ExampleShell({
 }
 
 export const GuidedDesktop: Story = {
-  render: () => <ExampleShell />,
+  render: () => <ExampleShell layout="guided-lab" />,
 }
 
-export const PracticeDesktop: Story = {
-  render: () => <ExampleShell mode="practice" />,
+export const NativeWorkbench: Story = {
+  render: () => <ExampleShell mode="practice" theme="dark" layout="native-workbench" />,
+  parameters: { backgrounds: { default: 'dark' } },
+}
+
+export const CaseWorkspace: Story = {
+  render: () => <ExampleShell mode="practice" layout="case-workspace" />,
+}
+
+export const DidacticLesson: Story = {
+  render: () => <ExampleShell layout="didactic-lesson" />,
 }
 
 export const ChallengeDesktop: Story = {
-  render: () => <ExampleShell mode="challenge" />,
+  render: () => <ExampleShell mode="challenge" layout="case-workspace" />,
 }
 
 export const DarkDeviceTheme: Story = {

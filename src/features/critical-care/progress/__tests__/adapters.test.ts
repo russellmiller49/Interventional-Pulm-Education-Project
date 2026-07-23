@@ -235,7 +235,10 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(partial, 'mcs:learn:mcs-foundations-signals')?.status).toBe('completed')
+    expect(activity(partial, 'mcs:learn:mcs-foundations-signals')).toMatchObject({
+      status: 'in-progress',
+      competencyEvidenceIds: [],
+    })
     expect(activity(partial, 'mcs:practice:IMP-01')).toMatchObject({
       status: 'in-progress',
       attempts: 0,
@@ -267,7 +270,10 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(partial, 'ecmo:learn:startup-sensor-orientation')?.status).toBe('completed')
+    expect(activity(partial, 'ecmo:learn:startup-sensor-orientation')).toMatchObject({
+      status: 'in-progress',
+      competencyEvidenceIds: [],
+    })
     expect(activity(partial, 'ecmo:practice:clinical-vv-initiation-ards')).toMatchObject({
       status: 'in-progress',
       attempts: 1,
@@ -285,7 +291,7 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(mastered, 'ecmo:assess:vv-off-sweep-capstone')?.status).toBe('mastered')
+    expect(activity(mastered, 'ecmo:assess:vv-off-sweep-capstone')?.status).toBe('completed')
 
     const migratedV1 = readEcmoLegacyProgress(
       new ReadOnlyFixtureStorage({
@@ -294,7 +300,7 @@ describe('critical-care legacy progress adapters', () => {
       criticalCareActivities,
     )
     expect(activity(migratedV1, 'ecmo:practice:clinical-vv-initiation-ards')).toMatchObject({
-      status: 'mastered',
+      status: 'completed',
       attempts: 1,
       bestScore: 84,
     })
@@ -309,7 +315,10 @@ describe('critical-care legacy progress adapters', () => {
       }),
       criticalCareActivities,
     )
-    expect(activity(completed, 'crrt:learn:crrt-indications-modality')?.status).toBe('completed')
+    expect(activity(completed, 'crrt:learn:crrt-indications-modality')).toMatchObject({
+      status: 'in-progress',
+      competencyEvidenceIds: [],
+    })
     expect(activity(completed, 'crrt:practice:CRRT-01')).toMatchObject({
       status: 'completed',
       attempts: 2,
@@ -374,16 +383,11 @@ describe('critical-care legacy progress adapters', () => {
       criticalCareActivities,
     )
     expect(activity(result, 'icu:assess:septic-ards-aki')).toMatchObject({
-      status: 'mastered',
+      status: 'completed',
       attempts: 2,
       bestScore: 88,
       currentPhase: 'recognize',
-      competencyEvidenceIds: [
-        'multiorgan-prioritization',
-        'cross-system-reassessment',
-        'integrated-device-management',
-        'critical-care-safety',
-      ],
+      competencyEvidenceIds: [],
     })
     expect(result.resume).toMatchObject({
       activityId: 'icu:assess:septic-ards-aki',

@@ -2,6 +2,8 @@ import {
   criticalCareActivityDefinitionSchema,
   type CriticalCareActivityDefinition,
   type CriticalCareActivityMode,
+  type CriticalCareCompletionEvidenceAuthority,
+  type CriticalCareCreditPolicy,
   type CriticalCareDifficulty,
   type CriticalCareReviewStatus,
 } from '@/features/learning-module/activity'
@@ -30,6 +32,9 @@ interface ActivitySeed {
   readonly estimatedMinutes?: number
   readonly difficulty?: CriticalCareDifficulty
   readonly track?: EcmoTrack
+  readonly reviewStatus?: CriticalCareReviewStatus
+  readonly creditPolicy?: CriticalCareCreditPolicy
+  readonly completionEvidenceAuthority?: CriticalCareCompletionEvidenceAuthority
 }
 
 const reviewStatusByModule: Readonly<
@@ -41,6 +46,46 @@ const reviewStatusByModule: Readonly<
   'cardiohelp-ecmo': 'draft',
   'baxter-crrt': 'sme-review',
   'icu-simulation': 'draft',
+}
+
+const contentVersionByModule: Readonly<Record<CriticalCareCatalogModuleId, string>> = {
+  'icu-hemodynamics': 'hemodynamics-recovery.1',
+  'mechanical-ventilation': 'ventilation-recovery.1',
+  'mechanical-circulatory-support': 'mcs-recovery.1',
+  'cardiohelp-ecmo': 'ecmo-recovery.1',
+  'baxter-crrt': 'crrt-recovery.1',
+  'icu-simulation': 'icu-recovery.1',
+}
+
+function activityGovernance(
+  moduleId: CriticalCareCatalogModuleId,
+  section: ActivitySection,
+  seed: ActivitySeed,
+): {
+  readonly reviewStatus: CriticalCareReviewStatus
+  readonly creditPolicy: CriticalCareCreditPolicy
+  readonly completionEvidenceAuthority: CriticalCareCompletionEvidenceAuthority
+} {
+  const reviewStatus = seed.reviewStatus ?? reviewStatusByModule[moduleId]
+  if (seed.creditPolicy && seed.completionEvidenceAuthority) {
+    return {
+      reviewStatus,
+      creditPolicy: seed.creditPolicy,
+      completionEvidenceAuthority: seed.completionEvidenceAuthority,
+    }
+  }
+  if (section === 'learn') {
+    return {
+      reviewStatus,
+      creditPolicy: 'non-credit',
+      completionEvidenceAuthority: 'none',
+    }
+  }
+  return {
+    reviewStatus,
+    creditPolicy: reviewStatus === 'draft' ? 'completion-only' : 'competency-eligible',
+    completionEvidenceAuthority: 'reviewed-engine-score',
+  }
 }
 
 const assetsByModule: Readonly<Record<CriticalCareCatalogModuleId, readonly string[]>> = {
@@ -101,6 +146,7 @@ function defineActivities(
 
   return seeds.map((seed) => {
     const id = `${moduleDefinition.activityIdPrefix}:${section}:${seed.sourceId}`
+    const governance = activityGovernance(moduleId, section, seed)
     return criticalCareActivityDefinitionSchema.parse({
       id,
       moduleId,
@@ -135,8 +181,11 @@ function defineActivities(
         moduleId === 'mechanical-circulatory-support' && section === 'assess'
           ? ['mcs-cardiac-text-summary']
           : assetsByModule[moduleId],
-      reviewStatus: reviewStatusByModule[moduleId],
+      reviewStatus: governance.reviewStatus,
       evidenceIds: seed.evidenceIds,
+      contentVersion: contentVersionByModule[moduleId],
+      creditPolicy: governance.creditPolicy,
+      completionEvidenceAuthority: governance.completionEvidenceAuthority,
     }) as CriticalCareActivityDefinition
   })
 }
@@ -162,6 +211,8 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
       'arterial-pressure-five-step-2020',
     ],
     estimatedMinutes: 15,
+    creditPolicy: 'competency-eligible',
+    completionEvidenceAuthority: 'validated-interaction',
   },
   {
     sourceId: 'pressure-system',
@@ -183,6 +234,15 @@ const hemodynamicsLearnSeeds: readonly ActivitySeed[] = [
     prerequisiteActivityIds: ['hemodynamics:learn:pressure-system'],
     evidenceIds: [...hemodynamicsEvidence, 'monitor-workflow-supplied'],
     estimatedMinutes: 15,
+  },
+  {
+    sourceId: 'waveform-interpretation',
+    title: 'Interpret normal and abnormal waveforms',
+    competencyIds: ['signal-validation', 'hemodynamic-reassessment'],
+    pathwayIds: ['shock-and-perfusion', 'cardiogenic-and-rv-shock'],
+    prerequisiteActivityIds: ['hemodynamics:learn:catheter-advancement'],
+    evidenceIds: [...hemodynamicsEvidence, 'clinical-hemodynamics-waveforms'],
+    estimatedMinutes: 18,
   },
   {
     sourceId: 'pawp-capture',
@@ -260,9 +320,9 @@ const hemodynamicsCaseSeeds: readonly ActivitySeed[] = [
 const hemodynamicsAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'masked-seeded',
-    title: 'Masked hemodynamics capstone',
+    title: 'Masked HD-07 hemodynamics capstone',
     description:
-      'Complete a seeded, masked hemodynamic case while retaining the existing 80% and no-critical-error mastery rule.',
+      'Complete the fixed, masked HD-07 hemodynamic case while retaining the existing 80% and no-critical-error mastery rule.',
     competencyIds: [
       'signal-validation',
       'shock-mechanism',
@@ -282,57 +342,148 @@ const hemodynamicsAssessSeeds: readonly ActivitySeed[] = [
 ]
 
 const ventilationCaseSeeds: readonly ActivitySeed[] = [
-  ['MV-01', 'ARDS hypoxemia: recruitment versus overdistension'],
-  ['MV-02', 'Volume-control flow starvation during high respiratory drive'],
-  ['MV-03', 'Double triggering and breath stacking in ARDS'],
-  ['MV-04', 'Reverse triggering in a deeply sedated patient'],
-  ['MV-05', 'COPD: dynamic hyperinflation with ineffective efforts'],
-  ['MV-06', 'Severe asthma: auto-PEEP with obstructive shock'],
-  ['MV-07', 'Neuromuscular weakness with trigger delay and missed efforts'],
-  ['MV-08', 'Autotriggering from condensate or circuit leak'],
-  ['MV-09', 'Premature cycling on pressure support'],
-  ['MV-10', 'Delayed cycling on pressure support in COPD'],
-  ['MV-11', 'Rise-time mismatch: too slow, then too fast'],
-  ['MV-12', 'Over-assistance with low drive and periodic breathing'],
-  ['MV-13', 'High airway pressure: secretions, tube obstruction, or bronchospasm'],
-  ['MV-14', 'Sudden loss of compliance: tension pneumothorax'],
-  ['MV-15', 'Air hunger, anxiety, pain, and delirium in an awake ventilated patient'],
-].map(([sourceId, title]) => ({
-  sourceId,
-  title,
-  competencyIds: [
-    'ventilator-setup',
-    'ventilator-mechanics',
-    'ventilator-waveform-interpretation',
-    'ventilator-troubleshooting',
-    'ventilator-safety',
+  [
+    'MV-01',
+    'ARDS hypoxemia: recruitment versus overdistension',
+    ['ventilator-setup', 'ventilator-mechanics', 'ventilator-safety'],
   ],
+  [
+    'MV-02',
+    'Volume-control flow starvation during high respiratory drive',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-03',
+    'Double triggering and breath stacking in ARDS',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-04',
+    'Reverse triggering in a deeply sedated patient',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-05',
+    'COPD: dynamic hyperinflation with ineffective efforts',
+    [
+      'ventilator-mechanics',
+      'ventilator-waveform-interpretation',
+      'ventilator-troubleshooting',
+      'ventilator-safety',
+    ],
+  ],
+  [
+    'MV-06',
+    'Severe asthma: auto-PEEP with obstructive shock',
+    [
+      'ventilator-mechanics',
+      'ventilator-waveform-interpretation',
+      'ventilator-troubleshooting',
+      'ventilator-safety',
+    ],
+  ],
+  [
+    'MV-07',
+    'Neuromuscular weakness with trigger delay and missed efforts',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-08',
+    'Autotriggering from condensate or circuit leak',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-09',
+    'Premature cycling on pressure support',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
+  ],
+  [
+    'MV-10',
+    'Delayed cycling on pressure support in COPD',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
+  ],
+  [
+    'MV-11',
+    'Rise-time mismatch: too slow, then too fast',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
+  ],
+  [
+    'MV-12',
+    'Over-assistance with low drive and periodic breathing',
+    ['ventilator-waveform-interpretation', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-13',
+    'High airway pressure: secretions, tube obstruction, or bronchospasm',
+    ['ventilator-mechanics', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-14',
+    'Sudden loss of compliance: tension pneumothorax',
+    ['ventilator-mechanics', 'ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+  [
+    'MV-15',
+    'Air hunger, anxiety, pain, and delirium in an awake ventilated patient',
+    ['ventilator-troubleshooting', 'ventilator-safety'],
+  ],
+].map(([sourceId, title, competencyIds]) => ({
+  sourceId: sourceId as string,
+  title: title as string,
+  competencyIds: competencyIds as readonly string[],
   pathwayIds: ['acute-respiratory-failure'],
   evidenceIds: ['mechanical-ventilation-source-boundary'],
 }))
 
 const ventilationLearnSeeds: readonly ActivitySeed[] = [
-  ['mechanics-load-and-pressure', 'Mechanics: load, pressure, and volume'],
-  ['modes-and-breath-delivery', 'Modes: trigger, target, cycle, and expiration'],
-  ['waveform-reading-sequence', 'Waveforms: a repeatable reading sequence'],
-  ['triggering-and-cycling', 'Triggering and cycling'],
-  ['dyssynchrony-mechanisms', 'Dyssynchrony: mechanism before label'],
-  ['oxygenation-response', 'Oxygenation: action and consequence'],
-  ['ventilation-and-co2', 'Ventilation: measured response over time'],
-  ['safety-reassessment-and-human-factors', 'Safety, reassessment, and the whole patient'],
-].map(([sourceId, title]) => ({
-  sourceId,
-  title,
-  competencyIds: [
-    'ventilator-setup',
-    'ventilator-mechanics',
-    'ventilator-waveform-interpretation',
-    'ventilator-troubleshooting',
-    'ventilator-safety',
-  ],
+  {
+    sourceId: 'mechanics-load-and-pressure',
+    title: 'Mechanics: load, pressure, and volume',
+    competencyIds: ['ventilator-mechanics'],
+  },
+  {
+    sourceId: 'modes-and-breath-delivery',
+    title: 'Modes: trigger, target, cycle, and expiration',
+    competencyIds: ['ventilator-setup'],
+  },
+  {
+    sourceId: 'waveform-reading-sequence',
+    title: 'Waveforms: a repeatable reading sequence',
+    competencyIds: ['ventilator-waveform-interpretation'],
+  },
+  {
+    sourceId: 'triggering-and-cycling',
+    title: 'Triggering and cycling',
+    competencyIds: ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
+  },
+  {
+    sourceId: 'dyssynchrony-mechanisms',
+    title: 'Dyssynchrony: mechanism before label',
+    competencyIds: ['ventilator-waveform-interpretation', 'ventilator-troubleshooting'],
+  },
+  {
+    sourceId: 'oxygenation-response',
+    title: 'Oxygenation: action and consequence',
+    competencyIds: ['ventilator-setup', 'ventilator-safety'],
+  },
+  {
+    sourceId: 'ventilation-and-co2',
+    title: 'Ventilation: measured response over time',
+    competencyIds: ['ventilator-mechanics', 'ventilator-safety'],
+  },
+  {
+    sourceId: 'safety-reassessment-and-human-factors',
+    title: 'Safety, reassessment, and the whole patient',
+    competencyIds: ['ventilator-troubleshooting', 'ventilator-safety'],
+  },
+].map((seed) => ({
+  ...seed,
   pathwayIds: ['acute-respiratory-failure'],
   evidenceIds: ['mechanical-ventilation-source-boundary'],
   estimatedMinutes: 8,
+  reviewStatus: 'draft' as const,
+  creditPolicy: 'non-credit' as const,
+  completionEvidenceAuthority: 'none' as const,
 }))
 
 const ventilationAssessSeeds: readonly ActivitySeed[] = [
@@ -617,7 +768,7 @@ const crrtCoreCaseIds = [
 const crrtAssessSeeds: readonly ActivitySeed[] = [
   {
     sourceId: 'MASTERY-PRISMAX-01',
-    title: 'Unseen PrisMax capstone',
+    title: 'Masked PrisMax capstone',
     competencyIds: [
       'crrt-device-management',
       'crrt-pressure-localization',

@@ -3,8 +3,11 @@
 import type { ReactNode } from 'react'
 
 import type { CriticalCareActivityMode, CriticalCareActivityPhase } from '../activity'
-import { ActivityStepper } from './ActivityStepper'
-import styles from './learning-module-v2.module.css'
+import { ActivityChrome, type ActivityLayout } from './ActivityChrome'
+import { CaseWorkspaceFrame } from './CaseWorkspaceFrame'
+import { DidacticLessonFrame } from './DidacticLessonFrame'
+import { GuidedLabFrame } from './GuidedLabFrame'
+import { NativeWorkbenchFrame } from './NativeWorkbenchFrame'
 
 export interface ActivityShellProps {
   readonly breadcrumb: ReactNode
@@ -23,6 +26,7 @@ export interface ActivityShellProps {
   readonly onReset: () => void
   readonly theme?: 'light' | 'dark'
   readonly maskedAssessment?: boolean
+  readonly layout?: ActivityLayout
 }
 
 export function ActivityShell({
@@ -42,56 +46,53 @@ export function ActivityShell({
   onReset,
   theme = 'light',
   maskedAssessment = false,
+  layout = 'guided-lab',
 }: ActivityShellProps) {
+  const frame =
+    layout === 'native-workbench' ? (
+      <NativeWorkbenchFrame
+        patientContext={patientContext}
+        viewport={viewport}
+        currentTask={currentTask}
+      />
+    ) : layout === 'didactic-lesson' ? (
+      <DidacticLessonFrame
+        patientContext={patientContext}
+        viewport={viewport}
+        currentTask={currentTask}
+      />
+    ) : layout === 'case-workspace' ? (
+      <CaseWorkspaceFrame
+        patientContext={patientContext}
+        viewport={viewport}
+        currentTask={currentTask}
+      />
+    ) : (
+      <GuidedLabFrame
+        patientContext={patientContext}
+        viewport={viewport}
+        currentTask={currentTask}
+      />
+    )
+
   return (
-    <section
-      className={styles.activityShell}
-      data-critical-care-activity-shell
-      data-learning-module-v2-theme-root
-      data-theme={theme}
-      data-mode={mode}
-      data-masked-assessment={maskedAssessment || undefined}
-      aria-label={`${activityTitle} simulation workspace`}
+    <ActivityChrome
+      breadcrumb={breadcrumb}
+      activityTitle={activityTitle}
+      phase={phase}
+      mode={mode}
+      progressLabel={progressLabel}
+      stepperAriaLabel={stepperAriaLabel}
+      bottomContent={bottomContent}
+      secondaryActions={secondaryActions}
+      onSaveAndExit={onSaveAndExit}
+      onHelp={onHelp}
+      onReset={onReset}
+      layout={layout}
+      theme={theme}
+      maskedAssessment={maskedAssessment}
     >
-      <header className={styles.activityHeader}>
-        <div className={styles.activityOrientation}>
-          <div className={styles.breadcrumb}>{breadcrumb}</div>
-          <div className={styles.activityTitleRow}>
-            <h1>{activityTitle}</h1>
-            <span className={styles.modeBadge}>{mode}</span>
-            <span className="sr-only">{progressLabel}</span>
-          </div>
-        </div>
-        <div className={styles.activityActions}>
-          <button type="button" className={styles.utilityButton} onClick={onHelp}>
-            Help
-          </button>
-          <button type="button" className={styles.utilityButton} onClick={onReset}>
-            Reset
-          </button>
-          <button type="button" className={styles.primaryButton} onClick={onSaveAndExit}>
-            Save &amp; exit
-          </button>
-        </div>
-        <ActivityStepper currentPhase={phase} ariaLabel={stepperAriaLabel} />
-      </header>
-      <div className={styles.workspace}>
-        <aside className={styles.contextPanel} aria-label="Patient context">
-          {patientContext}
-        </aside>
-        <section className={styles.viewport} aria-label="Simulation viewport">
-          {viewport}
-        </section>
-        <aside className={styles.taskPanel} aria-label="Current task">
-          {currentTask}
-        </aside>
-      </div>
-      <footer className={styles.bottomBar}>
-        <div className={styles.bottomContent} aria-live="polite">
-          {bottomContent ?? progressLabel}
-        </div>
-        {secondaryActions ? <div className={styles.bottomActions}>{secondaryActions}</div> : null}
-      </footer>
-    </section>
+      {frame}
+    </ActivityChrome>
   )
 }

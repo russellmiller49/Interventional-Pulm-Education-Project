@@ -10,12 +10,14 @@ import {
   type ThermodilutionTrial,
 } from '../engine'
 import { PressureSystemTeachingVisual } from './PressureSystemTeachingVisual'
+import { TroubleshootingPanel } from './TroubleshootingPanel'
 import styles from './icu-hemodynamics.module.css'
 
 interface PacSkillsLabProps {
   state: HemodynamicSimulationState
   dispatch: Dispatch<HemodynamicAction>
   focus?: 'pressure-system' | 'thermodilution'
+  pressureChallengeMode?: 'selectable' | 'current-state'
 }
 
 function curvePoints(trial: ThermodilutionTrial): string {
@@ -31,7 +33,12 @@ function curvePoints(trial: ThermodilutionTrial): string {
     .join(' ')
 }
 
-export function PacSkillsLab({ state, dispatch, focus }: PacSkillsLabProps) {
+export function PacSkillsLab({
+  state,
+  dispatch,
+  focus,
+  pressureChallengeMode = 'selectable',
+}: PacSkillsLabProps) {
   const configuration = state.caseDefinition.thermodilution
   const [volumeMl, setVolumeMl] = useState(configuration.injectateVolumeMl)
   const [temperatureC, setTemperatureC] = useState(configuration.injectateTemperatureC)
@@ -102,22 +109,25 @@ export function PacSkillsLab({ state, dispatch, focus }: PacSkillsLabProps) {
 
       {!focus ? (
         <ol className={styles.skillSequence} aria-label="PAC skills sequence">
-          <li data-complete={state.measurementSystem.zeroed}>
-            1 <span>Level + zero</span>
+          <li data-complete={Math.abs(state.measurementSystem.transducerLevelCm) <= 1}>
+            1 <span>Level transducer</span>
           </li>
-          <li data-complete={state.signalValidationChecks.includes('fast-flush')}>
-            2 <span>Dynamic response</span>
+          <li data-complete={state.measurementSystem.zeroed}>
+            2 <span>Atmospheric zero</span>
+          </li>
+          <li data-complete={state.signalValidationChecks.includes('dynamic-response-classified')}>
+            3 <span>Dynamic response</span>
           </li>
           <li
             data-complete={state.catheter.position === 'pa' || state.catheter.position === 'wedge'}
           >
-            3 <span>Advance by waveform</span>
+            4 <span>Advance by waveform</span>
           </li>
           <li data-complete={state.catheter.storedWedgeMmHg !== null}>
-            4 <span>Capture PAWP</span>
+            5 <span>Capture PAWP</span>
           </li>
           <li data-complete={average !== null}>
-            5 <span>Thermodilution series</span>
+            6 <span>Thermodilution series</span>
           </li>
         </ol>
       ) : null}
@@ -158,13 +168,23 @@ export function PacSkillsLab({ state, dispatch, focus }: PacSkillsLabProps) {
                 Open to air + zero
               </button>
               {focus !== 'pressure-system' ? (
-                <button type="button" onClick={() => dispatch({ type: 'FAST_FLUSH' })}>
-                  Fast flush test
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: 'FAST_FLUSH', lineType: 'pulmonary-artery' })}
+                >
+                  PA-catheter fast-flush test
                 </button>
               ) : null}
             </div>
             {focus === 'pressure-system' ? (
-              <PressureSystemTeachingVisual state={state} dispatch={dispatch} />
+              <>
+                <PressureSystemTeachingVisual
+                  state={state}
+                  dispatch={dispatch}
+                  challengeMode={pressureChallengeMode}
+                />
+                <TroubleshootingPanel state={state} dispatch={dispatch} />
+              </>
             ) : (
               <>
                 {state.measurementSystem.lastFastFlushFinding ? (

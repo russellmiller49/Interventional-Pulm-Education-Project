@@ -144,24 +144,30 @@ describe('integrated ICU capstone entry', () => {
     expect(screen.getByText('Focused preparation complete.', { exact: false })).toBeInTheDocument()
   })
 
-  it('explains an unmet Assess gate without mounting the simulation', async () => {
+  it('does not hard-lock Assess when every authored prerequisite is still under review', async () => {
     render(<IcuCapstoneEntry mode="assess" locale="en" requestedScenarioId="lv-cardiogenic" />)
 
-    expect(
-      await screen.findByRole('heading', {
-        name: 'Assessment case 02 needs more preparation',
-      }),
-    ).toBeInTheDocument()
-    expect(screen.queryByTestId('icu-simulator-lab')).not.toBeInTheDocument()
-    expect(screen.getAllByText(/Complete one focused MCS case/).length).toBeGreaterThan(0)
-    expect(screen.queryByText('LV cardiogenic shock with pulmonary edema')).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Open unrestricted Practice/ })).toHaveAttribute(
-      'href',
-      '/icu-simulation/practice',
+    expect(await screen.findByTestId('icu-simulator-lab')).toHaveAttribute(
+      'data-scenario',
+      'lv-cardiogenic',
     )
+    expect(screen.getByText(/Assessment case 02 opened in Preview/)).toBeInTheDocument()
+    expect(screen.getByText(/advisory, not a hard lock/)).toBeInTheDocument()
+    expect(screen.queryByText('LV cardiogenic shock with pulmonary edema')).not.toBeInTheDocument()
   })
 
-  it('mounts only verified Assess cases and passes no focused raw state', async () => {
+  it('labels pending-review preparation as Preview on the Assess course chooser', async () => {
+    render(<IcuCapstoneEntry mode="assess" locale="en" />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Masked assessment courses' }),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/advisory preparation groups complete · Preview/)).toHaveLength(6)
+    expect(screen.getAllByRole('link', { name: /Start Assessment case/ })).toHaveLength(6)
+    expect(screen.queryByLabelText('Assessment locked')).not.toBeInTheDocument()
+  })
+
+  it('mounts only the selected Assess case and passes no focused raw state', async () => {
     mockReadMergedCriticalCareProgress.mockReturnValue(
       progressResult(['hemodynamics:practice:HD-03', 'mcs:practice:IMP-03']),
     )

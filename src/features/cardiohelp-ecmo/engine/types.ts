@@ -644,6 +644,12 @@ export interface GuidedWalkthroughStep {
   actionLabel: string
   actions: readonly SimulationAction[]
   expectedResponse: readonly string[]
+  /** A distinct authored scenario loaded when this transfer step becomes active. */
+  transferScenarioId?: string
+  /** Stable identifier used to audit that this is a real transfer variant. */
+  transferVariantId?: string
+  /** Scenario setup applied before the learner performs the transfer action. */
+  transferSetupActions?: readonly SimulationAction[]
 }
 
 export interface GuidedLessonDefinition {

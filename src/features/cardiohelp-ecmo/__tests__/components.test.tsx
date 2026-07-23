@@ -104,7 +104,14 @@ describe('CARDIOHELP ECMO learner interface', () => {
       expect(screen.queryByText(legacyLabel, { selector: 'strong' })).not.toBeInTheDocument()
     }
 
+    const currentTask = screen.getByRole('complementary', { name: 'Current task' })
+    expect(within(currentTask).getByText('Start with four information domains')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /identify all four domains/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Next step/i }))
+    expect(within(currentTask).getByText('Open the parameter list')).toBeInTheDocument()
+    expect(
+      within(currentTask).getByText(/Open Parameter list and locate pVen, pInt, pArt/i),
+    ).toBeInTheDocument()
     expect(window.localStorage.getItem('cardiohelp-ecmo-progress-v1')).toBeNull()
   })
 
@@ -121,8 +128,16 @@ describe('CARDIOHELP ECMO learner interface', () => {
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Commit before action' })).not.toBeInTheDocument()
     expect(screen.getByText(/Console locked/i)).toBeInTheDocument()
+    const currentTask = screen.getByRole('complementary', { name: 'Current task' })
+    expect(
+      within(currentTask).getByText(/Review the observable patient, indication/i),
+    ).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Begin case/i }))
+    expect(within(currentTask).getByText(/Complete readiness checks/i)).toBeInTheDocument()
+    expect(
+      within(currentTask).getAllByText(/Choose the immediate goal, the control or bedside action/i),
+    ).not.toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Commit before action' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Standard practice' })).toBeInTheDocument()
     expect(

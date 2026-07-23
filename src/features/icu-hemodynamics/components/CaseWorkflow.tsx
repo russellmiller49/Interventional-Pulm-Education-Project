@@ -137,10 +137,10 @@ export function CaseWorkflow({ state, dispatch }: CaseWorkflowProps) {
             <button
               type="button"
               data-complete={state.signalValidationChecks.includes('fast-flush')}
-              onClick={() => dispatch({ type: 'FAST_FLUSH' })}
+              onClick={() => dispatch({ type: 'FAST_FLUSH', lineType: 'pulmonary-artery' })}
             >
               <span>{state.signalValidationChecks.includes('fast-flush') ? '✓' : '2'}</span>
-              Fast-flush test
+              PA fast-flush test
             </button>
             <button
               type="button"
