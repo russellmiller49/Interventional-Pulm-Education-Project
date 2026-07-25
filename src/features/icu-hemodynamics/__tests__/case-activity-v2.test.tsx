@@ -78,7 +78,7 @@ describe('focused hemodynamic case activity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit mechanism and priority' }))
 
     fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
     for (const intervention of requiredInterventions) {
       fireEvent.click(
         screen.getByRole('button', {
@@ -100,7 +100,7 @@ describe('focused hemodynamic case activity', () => {
     fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
       target: { value: '0' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
     fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
     fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))

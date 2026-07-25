@@ -18,9 +18,8 @@ interface HemodynamicNativeWorkspaceProps {
 }
 
 /**
- * Restores the original synchronized PAC workspace inside routed activities.
- * The monitor, CT-derived heart, catheter controls, and measurement labs remain
- * available together instead of replacing one another with a surface toggle.
+ * Keeps the bedside monitor visible while the anatomy, catheter controls, and measurement labs
+ * scroll in their own pane. Both sides remain synchronized to the same deterministic state.
  */
 export function HemodynamicNativeWorkspace({
   state,
@@ -44,35 +43,44 @@ export function HemodynamicNativeWorkspace({
       <div className={styles.hemodynamicNativeMonitor}>
         <BedsideMonitor state={state} dispatch={dispatch} onOpenCardiacOutput={openCardiacOutput} />
       </div>
-      <div className={styles.hemodynamicNativePhysiology}>
-        <PhysiologyPanel state={state} dispatch={dispatch} />
-      </div>
-      <PacActionDock state={state} dispatch={dispatch} />
+      <div
+        className={styles.hemodynamicNativeLearningPane}
+        role="region"
+        aria-label="Scrollable anatomy, catheter controls, and measurement labs"
+        tabIndex={0}
+      >
+        <div className={styles.hemodynamicNativeTop}>
+          <div className={styles.hemodynamicNativePhysiology}>
+            <PhysiologyPanel state={state} dispatch={dispatch} />
+          </div>
+          <PacActionDock state={state} dispatch={dispatch} />
+        </div>
 
-      <div className={styles.hemodynamicNativeLabs}>
-        {showPressureSystem ? (
-          <details open>
-            <summary>Pressure-system validation · level, zero, and dynamic response</summary>
-            <PacSkillsLab
-              state={state}
-              dispatch={dispatch}
-              focus="pressure-system"
-              pressureChallengeMode={pressureChallengeMode}
-            />
-          </details>
-        ) : null}
-        {showThermodilution ? (
-          <details id="hemodynamic-native-thermodilution" open>
-            <summary>Thermodilution technique and accepted-curve series</summary>
-            <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
-          </details>
-        ) : null}
-        {showDerived ? (
-          <details>
-            <summary>Derived hemodynamics and input-validity review</summary>
-            <FormulaDrawer state={state} dispatch={dispatch} />
-          </details>
-        ) : null}
+        <div className={styles.hemodynamicNativeLabs}>
+          {showPressureSystem ? (
+            <details open>
+              <summary>Pressure-system validation · level, zero, and dynamic response</summary>
+              <PacSkillsLab
+                state={state}
+                dispatch={dispatch}
+                focus="pressure-system"
+                pressureChallengeMode={pressureChallengeMode}
+              />
+            </details>
+          ) : null}
+          {showThermodilution ? (
+            <details id="hemodynamic-native-thermodilution" open>
+              <summary>Thermodilution technique and accepted-curve series</summary>
+              <PacSkillsLab state={state} dispatch={dispatch} focus="thermodilution" />
+            </details>
+          ) : null}
+          {showDerived ? (
+            <details>
+              <summary>Derived hemodynamics and input-validity review</summary>
+              <FormulaDrawer state={state} dispatch={dispatch} />
+            </details>
+          ) : null}
+        </div>
       </div>
     </section>
   )

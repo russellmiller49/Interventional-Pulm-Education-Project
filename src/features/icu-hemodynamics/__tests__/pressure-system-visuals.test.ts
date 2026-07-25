@@ -113,6 +113,52 @@ describe('pressure-system teaching visual model', () => {
     }
   })
 
+  it('releases between beats and gives an acceptable system one to two rapid settling bounces', () => {
+    const releasePhase = (FAST_FLUSH_RELEASE_SECONDS % (60 / 75)) / (60 / 75)
+    expect(releasePhase).toBeGreaterThan(0.2)
+    expect(releasePhase).toBeLessThan(0.85)
+
+    for (const lineType of lineTypes) {
+      const waveform = generateFastFlushWaveform(lineType, 'acceptable')
+      const significantFloor = lineType === 'pulmonary-artery' ? 0.25 : 0.75
+      const residuals = waveform.samples
+        .filter(
+          (sample) =>
+            sample.timeSeconds >= FAST_FLUSH_RELEASE_SECONDS &&
+            sample.timeSeconds <= FAST_FLUSH_RELEASE_SECONDS + 0.36,
+        )
+        .map(
+          (sample) =>
+            sample.pressureMmHg -
+            fastFlushBaselinePressureMmHg(lineType, 'acceptable', sample.cardiacPhase),
+        )
+        .filter((residual) => Math.abs(residual) >= significantFloor)
+
+      expect(residuals[0]).toBeLessThan(0)
+      const signChanges = residuals
+        .slice(1)
+        .filter((residual, index) => Math.sign(residual) !== Math.sign(residuals[index])).length
+      expect(signChanges).toBeGreaterThanOrEqual(3)
+      expect(signChanges).toBeLessThanOrEqual(5)
+      expect(Math.abs(residuals.at(-1)!)).toBeLessThan(Math.abs(residuals[0]) * 0.12)
+    }
+  })
+
+  it('keeps the overdamped native waveform asymmetric instead of replacing it with a sine wave', () => {
+    for (const lineType of lineTypes) {
+      const values = Array.from({ length: 500 }, (_, index) =>
+        fastFlushBaselinePressureMmHg(lineType, 'overdamped', index / 500),
+      )
+      const slopes = values.slice(1).map((value, index) => value - values[index])
+      const fastestRise = Math.max(...slopes)
+      const fastestFall = Math.abs(Math.min(...slopes))
+
+      expect(
+        Math.max(fastestRise, fastestFall) / Math.min(fastestRise, fastestFall),
+      ).toBeGreaterThan(1.3)
+    }
+  })
+
   it('gives overdamped release a monotonic rounded tail without prolonged oscillation', () => {
     for (const lineType of lineTypes) {
       const waveform = generateFastFlushWaveform(lineType, 'overdamped')

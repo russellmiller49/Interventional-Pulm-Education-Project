@@ -378,7 +378,9 @@ export function PressureSystemTeachingVisual({
             <span>Dynamic response</span>
             <h4 id="fast-flush-visual-title">Fast-flush release response</h4>
             <p>
-              Run the test, inspect the release trace, then classify it before feedback appears.
+              The valve releases between beats: ringing begins immediately while the underlying
+              cardiac cycle continues. Run the selected line, inspect the release trace, then
+              classify it before feedback appears.
             </p>
           </div>
           {challengeMode === 'selectable' ? (

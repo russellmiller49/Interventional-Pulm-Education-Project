@@ -205,14 +205,14 @@ export function fastFlushReleaseShape(
   /** Time after release, normalized so that 1 is the full displayed release window. */
   elapsed: number,
 ): number {
-  if (elapsed <= 0) return 1
+  if (elapsed < 0) return 1
   if (response === 'overdamped') {
     // Sluggish, non-oscillatory return to baseline.
     return Math.exp(-3.1 * elapsed)
   }
   const decay = response === 'acceptable' ? 7.4 : 1.75
   const cycles = response === 'acceptable' ? 2.4 : 6
-  return Math.exp(-decay * elapsed) * Math.cos(elapsed * Math.PI * 2 * cycles)
+  return -Math.exp(-decay * elapsed) * Math.cos(elapsed * Math.PI * 2 * cycles)
 }
 
 export const FAST_FLUSH_RISE_DURATION_SECONDS = 0.045

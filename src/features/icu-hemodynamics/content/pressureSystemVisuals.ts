@@ -278,7 +278,6 @@ export function generateFastFlushWaveform(
         segment: 'flush-plateau',
       }
     }
-    const elapsedSeconds = timeSeconds - FAST_FLUSH_RELEASE_SECONDS
     return {
       timeSeconds,
       cardiacPhase,

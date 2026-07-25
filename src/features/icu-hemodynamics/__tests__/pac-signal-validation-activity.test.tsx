@@ -74,7 +74,7 @@ describe('PAC signal-validation vertical slice', () => {
       target: { value: '0' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
     fireEvent.click(screen.getByRole('radio', { name: /Underdamped.*Several oscillations/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
     fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
@@ -107,7 +107,7 @@ describe('PAC signal-validation vertical slice', () => {
     fireEvent.click(
       screen.getByLabelText('An overdamped measurement system attenuating rapid pressure change'),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
     fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
     fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
@@ -197,7 +197,7 @@ describe('PAC signal-validation vertical slice', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
     expect(
       screen.getByRole('img', {
         name: /observed fast-flush release response.*several oscillations persist/i,
@@ -237,7 +237,7 @@ describe('PAC signal-validation vertical slice', () => {
     fireEvent.change(screen.getByLabelText(/Transducer relative to phlebostatic axis/i), {
       target: { value: '0' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
     fireEvent.click(screen.getByRole('radio', { name: /Overdamped.*Sluggish return/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Check classification' }))
     fireEvent.click(screen.getByRole('button', { name: 'Correct the pressure-system response' }))
@@ -274,7 +274,7 @@ describe('PAC signal-validation vertical slice', () => {
       target: { value: '0' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Open to air + zero' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Fast flush test' }))
+    fireEvent.click(screen.getByRole('button', { name: /fast-flush test/i }))
 
     expect(screen.getByText('Classification withheld')).toBeInTheDocument()
     expect(screen.queryByText(/This is an underdamped response/i)).not.toBeInTheDocument()

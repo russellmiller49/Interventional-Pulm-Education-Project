@@ -29,6 +29,33 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
     expect(once.waveforms.at(-1)).toEqual(split.waveforms.at(-1))
   })
 
+  it('applies a fast flush only to the selected pressure line', () => {
+    const initial = createInitialHemodynamicState(definition, 'learn', 313)
+    const arterialFlush = advanceHemodynamicSimulation(
+      icuHemodynamicsReducer(initial, {
+        type: 'FAST_FLUSH',
+        lineType: 'systemic-arterial',
+      }),
+      0.2,
+    )
+    const arterialSample = arterialFlush.waveforms.at(-1)!
+    expect(arterialSample.artMmHg).toBe(300)
+    expect(arterialSample.papMmHg).toBeLessThan(80)
+    expect(arterialSample.cvpMmHg).toBeLessThan(50)
+
+    const paFlush = advanceHemodynamicSimulation(
+      icuHemodynamicsReducer(initial, {
+        type: 'FAST_FLUSH',
+        lineType: 'pulmonary-artery',
+      }),
+      0.2,
+    )
+    const paSample = paFlush.waveforms.at(-1)!
+    expect(paSample.papMmHg).toBe(300)
+    expect(paSample.artMmHg).toBeLessThan(220)
+    expect(paSample.cvpMmHg).toBeLessThan(50)
+  })
+
   it('uses time-varying ventricular elastance and volume-conserving Windkessel compartments', () => {
     const initial = createInitialHemodynamicState(definition, 'learn', 22)
     const cycle = 60 / initial.parameters.heartRateBpm
@@ -65,7 +92,9 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       naturalFrequencyHz: 18,
       noiseAmplitudeMmHg: 0,
       artifact: 'none',
+      fastFlushStartedAt: null,
       fastFlushActiveUntil: null,
+      fastFlushLineType: null,
       lastFastFlushFinding: null,
     })
     const elevated = deriveHemodynamicMeasurements(zeroed, {
@@ -75,7 +104,9 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       naturalFrequencyHz: 18,
       noiseAmplitudeMmHg: 0,
       artifact: 'none',
+      fastFlushStartedAt: null,
       fastFlushActiveUntil: null,
+      fastFlushLineType: null,
       lastFastFlushFinding: null,
     })
     expect(normal.mapMmHg - elevated.mapMmHg).toBeGreaterThanOrEqual(7)
@@ -88,7 +119,9 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
       naturalFrequencyHz: 18,
       noiseAmplitudeMmHg: 0,
       artifact: 'overdamped',
+      fastFlushStartedAt: null,
       fastFlushActiveUntil: null,
+      fastFlushLineType: null,
       lastFastFlushFinding: null,
     })
     expect(overdamped.artSystolicMmHg - overdamped.artDiastolicMmHg).toBeLessThan(
@@ -172,7 +205,10 @@ describe('50 Hz circulation, waveforms, and measurement system', () => {
 
     state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
     state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
-    state = icuHemodynamicsReducer(state, { type: 'FAST_FLUSH' })
+    state = icuHemodynamicsReducer(state, {
+      type: 'FAST_FLUSH',
+      lineType: 'pulmonary-artery',
+    })
     state = icuHemodynamicsReducer(state, {
       type: 'VALIDATE_SIGNAL',
       check: 'dynamic-response-classified',

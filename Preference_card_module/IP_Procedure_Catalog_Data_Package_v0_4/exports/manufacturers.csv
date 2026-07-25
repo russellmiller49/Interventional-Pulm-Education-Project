@@ -1,0 +1,24 @@
+﻿manufacturer_id,manufacturer,default_distributor,website,notes
+MFR-C84E13E4FD,Ambu,,,
+MFR-E3F284CAE2,BD,,,
+MFR-42F5245630,Boston Scientific,,,
+MFR-90D85DB52E,Cardinal Health,,,
+MFR-2760A3270C,Cook Medical,,cookmedical.com,
+MFR-32A7012B17,EFER,,,
+MFR-5ED32955F4,ERBE,,erbe-med.com,New exact records from uploaded ERBE catalogs are non-U.S. reference records and hidden by default.
+MFR-BC7F6D9790,Ethicon,,,
+MFR-12BAB1E48C,Karl Storz,,karlstorz.com,v0.3 adds exact legacy U.S. catalog records; current availability must be reverified.
+MFR-68565E2FD2,Medtronic,,,
+MFR-80D24820DF,Merit Medical,,merit.com,
+MFR-797F07B3AC,Micro-Tech / Thoracent,,,
+MFR-52C1D02F96,Micro-Tech Endoscopy,Thoracent for selected U.S. airway stents,micro-tech-medical.com,
+MFR-6208838930,Novatech,Boston Medical Products,,
+MFR-954E57FBB9,Olympus,,medical.olympusamerica.com,
+MFR-233A56DF24,Pulmonx,,,
+MFR-27E7CF849C,Richard Wolf,,richard-wolf.com,Exact records from global VI25 catalog; hide until current U.S. availability is verified.
+MFR-C37FF1F1D1,Rocket Medical,,rocketmedical.com,
+MFR-31D4851787,Teleflex,,,
+MFR-FEE2053E6E,Thoracent,Thoracent,thoracent.com,
+MFR-CC1ABBE64F,Thoracent / M.I.Tech,,,
+MFR-6C37CDDB39,TRACOE,,,
+MFR-122B7208FA,VisionAir Solutions,,,

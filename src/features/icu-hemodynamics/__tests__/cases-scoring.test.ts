@@ -21,7 +21,10 @@ function completeSafePath(caseIndex: number): HemodynamicSimulationState {
   state = icuHemodynamicsReducer(state, { type: 'COMMIT_PREDICTION' })
   state = icuHemodynamicsReducer(state, { type: 'SET_TRANSDUCER_LEVEL', levelCm: 0 })
   state = icuHemodynamicsReducer(state, { type: 'ZERO_TRANSDUCER' })
-  state = icuHemodynamicsReducer(state, { type: 'FAST_FLUSH' })
+  state = icuHemodynamicsReducer(state, {
+    type: 'FAST_FLUSH',
+    lineType: 'pulmonary-artery',
+  })
   state = icuHemodynamicsReducer(state, { type: 'VALIDATE_SIGNAL', check: 'waveform-valid' })
   state = icuHemodynamicsReducer(state, { type: 'VALIDATE_SIGNAL', check: 'derived-reviewed' })
   if (definition.id === 'HD-08') {

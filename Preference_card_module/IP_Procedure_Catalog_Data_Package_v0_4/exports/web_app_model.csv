@@ -1,0 +1,14 @@
+﻿table_name,purpose,primary_key,key_fields,ui_use,notes
+manufacturers,Canonical manufacturer/distributor directory,manufacturer_id,"name, distributor, website",Admin/catalog filters,
+sources,Provenance and verification evidence,source_id,"source_type, as_of_date, reliability_tier",Audit panel,Never overwrite source history.
+products,One row per exact SKU/model/variant,product_id,"manufacturer_id, catalog_number, global_part_number, reference_part_number, gtin, dimensions, verification_status",Product dropdown/results,Do not store comma-delimited multiple SKUs. Preserve manufacturer-specific GPN/RPN fields separately when published.
+product_sources,Many-to-many product provenance,product_id + source_id + location,"claim_type, verification_status",Evidence drawer,
+roles,Generic item roles independent of manufacturer,role_code,"category, selection guidance",Procedure slot definition,
+product_roles,Maps exact products to one or more generic roles,product_id + role_code,role_fit,Dropdown filtering,
+procedures,Versioned procedure templates,procedure_code + template_version,"status, clinical_owner",Procedure picker,Publish only approved versions.
+procedure_slots,Ordered generic equipment/disposable requirements,slot_id,"procedure_code, role_code, requiredness, qty",Case-card form,
+compatibility_rules,Structured device/platform constraints,rule_id,"source, relationship, target, verification",Filter and warnings,Prefer machine-readable dimensions plus explicit rules.
+hospital_formulary,Hospital-specific stocked/preferred products and local item numbers,hospital_id + product_id,"stocked, preferred, par_level, location",Restricts dropdown to local inventory,
+case_cards,Saved hospital/user procedure cards,case_card_id,"hospital_id, procedure_code, version, owner",Card list/versioning,
+case_card_items,Selected product/quantity for each slot,case_card_item_id,"case_card_id, slot_id, product_id, qty, local notes",Printable setup card,
+verification_events,Append-only validation history,verification_event_id,"entity_type, entity_id, verifier, date, evidence",Admin audit and expiration reminders,Use automatic re-verification reminders.

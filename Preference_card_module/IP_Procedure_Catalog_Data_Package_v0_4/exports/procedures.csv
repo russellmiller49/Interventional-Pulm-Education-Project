@@ -1,0 +1,14 @@
+﻿procedure_code,procedure_name,template_version,scope,status,clinical_owner,notes
+ICU_BRONCH,ICU / bedside bronchoscopy,0.3,Adult draft,Draft - clinician review required,,Inventory and setup-card template; not a clinical checklist. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+TB_RULEOUT,TB rule-out bronchoscopy,0.3,Adult draft,Draft - infection control and lab review required,,Local airborne isolation and microbiology workflows must control. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+FLEX_DIAGNOSTIC,Diagnostic flexible bronchoscopy,0.3,Adult draft,Draft - clinician review required,,Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+EBUS_TBNA,EBUS-TBNA / EBUS-FNB,0.3,Adult draft,Draft - clinician/pathology review required,,Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+THERAPEUTIC_BRONCH,Therapeutic flexible bronchoscopy,0.3,Adult draft,Draft - clinician review required,,Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+RIGID_BRONCH,Rigid bronchoscopy,0.3,Adult draft,Draft - clinician/anesthesia review required,,Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+PERC_TRACH,Percutaneous dilational tracheostomy,0.1,Adult draft,Draft - ICU/surgery review required,,
+MED_THORACOSCOPY,Medical thoracoscopy / pleuroscopy,0.3,Adult draft,Draft - clinician review required,,Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+WLL,Whole lung lavage,0.3,Adult draft,Draft - anesthesia/OR review required,,Institution-specific circuit and safety checks are essential. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+EBV,Endobronchial valve placement,0.2,Adult draft,Draft - valve-program review required,,Updated with manufacturer-specific accessory slots in v0.2.
+THORACENTESIS,Thoracentesis,0.2,Adult draft,Draft - clinician review required,,Updated with manufacturer-specific accessory slots in v0.2.
+CHEST_TUBE,Chest tube insertion,0.3,Adult draft,Draft - clinician review required,,Updated with manufacturer-specific accessory slots in v0.2. Updated in v0.3 with additional manufacturer-specific platform and accessory roles.
+IPC_PLACEMENT,Tunneled indwelling pleural catheter placement,0.3,Adult draft,Draft - clinician/homecare/supply-chain review required,,Inventory and setup-card template; exact catheter system and home-drainage workflow must be institutionally approved.

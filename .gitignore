@@ -223,6 +223,7 @@ Thumbs.db
 
 # Raw 3D and medical-imaging authoring inputs. Derived learner-facing assets
 # under public/ remain tracked and/or are delivered through MODULE_ASSET_ORIGIN.
+/3D assets/
 /3D assets/Slicer Cardiac_model/
 /3D assets/**/*.glb
 /anatomy_assets/**/*.glb
@@ -232,6 +233,7 @@ Thumbs.db
 /Pleural_effusion_simulation/**/*.h5
 /Pleural_effusion_simulation/**/*.nii
 /Pleural_effusion_simulation/**/*.nrrd
+/Critical_Care_Reference/
 /updated_fistual_5_25_26/**/*.glb
 /Imports/**/*.glb
 /Imports/**/*.vtk
