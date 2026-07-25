@@ -5,6 +5,7 @@ export type SiteEntitlement =
   | 'pccm_intro_course'
   | 'pccm_intro_course_admin_loma_linda'
   | 'pccm_intro_course_admin_ucsd'
+  | 'preference_cards_builder'
   | 'site_admin'
   | 'socrates_editor'
   | 'socal_ebus_course'
@@ -358,6 +359,10 @@ export function resolveSiteModuleId(pathname: string) {
 
   if (first === 'socrates-builder') {
     return 'socrates-builder'
+  }
+
+  if (first === 'preference-cards') {
+    return 'preference-cards'
   }
 
   // Collapse subroutes (hub/learn/practice/assess) into one module id so

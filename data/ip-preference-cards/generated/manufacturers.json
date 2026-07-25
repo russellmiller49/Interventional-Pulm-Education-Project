@@ -1,0 +1,198 @@
+[
+  {
+    "manufacturer_id": "MFR-122B7208FA",
+    "manufacturer": "VisionAir Solutions",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-12BAB1E48C",
+    "manufacturer": "Karl Storz",
+    "default_distributor": null,
+    "website": "karlstorz.com",
+    "notes": "v0.3 adds exact legacy U.S. catalog records; current availability must be reverified."
+  },
+  {
+    "manufacturer_id": "MFR-233A56DF24",
+    "manufacturer": "Pulmonx",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-2760A3270C",
+    "manufacturer": "Cook Medical",
+    "default_distributor": null,
+    "website": "cookmedical.com",
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-27E7CF849C",
+    "manufacturer": "Richard Wolf",
+    "default_distributor": null,
+    "website": "richard-wolf.com",
+    "notes": "Exact records from global VI25 catalog; hide until current U.S. availability is verified."
+  },
+  {
+    "manufacturer_id": "MFR-31D4851787",
+    "manufacturer": "Teleflex",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-32A7012B17",
+    "manufacturer": "EFER",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-42F5245630",
+    "manufacturer": "Boston Scientific",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-52C1D02F96",
+    "manufacturer": "Micro-Tech Endoscopy",
+    "default_distributor": "Thoracent for selected U.S. airway stents",
+    "website": "micro-tech-medical.com",
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-5ED32955F4",
+    "manufacturer": "ERBE",
+    "default_distributor": null,
+    "website": "erbe-med.com",
+    "notes": "New exact records from uploaded ERBE catalogs are non-U.S. reference records and hidden by default."
+  },
+  {
+    "manufacturer_id": "MFR-6208838930",
+    "manufacturer": "Novatech",
+    "default_distributor": "Boston Medical Products",
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-64E3FE0D95",
+    "manufacturer": "Scivita Medical Technology",
+    "default_distributor": "Boston Scientific",
+    "website": null,
+    "notes": "Scivita single-use bronchoscope products appear in the 2026 Boston Scientific U.S. pulmonary catalog."
+  },
+  {
+    "manufacturer_id": "MFR-662CB7215B",
+    "manufacturer": "Verathon",
+    "default_distributor": null,
+    "website": "verathon.com",
+    "notes": "BFlex 2 records are transcribed from the uploaded 2023 manufacturer brochure; commercial item numbers were not printed."
+  },
+  {
+    "manufacturer_id": "MFR-68565E2FD2",
+    "manufacturer": "Medtronic",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-6C37CDDB39",
+    "manufacturer": "TRACOE",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-760E4EA0D7",
+    "manufacturer": "Butterfly Network",
+    "default_distributor": null,
+    "website": "butterflynetwork.com",
+    "notes": "Butterfly iQ3 system and accessory identifiers are sourced from the 2025 user manual."
+  },
+  {
+    "manufacturer_id": "MFR-797F07B3AC",
+    "manufacturer": "Micro-Tech / Thoracent",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-80D24820DF",
+    "manufacturer": "Merit Medical",
+    "default_distributor": null,
+    "website": "merit.com",
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-90D85DB52E",
+    "manufacturer": "Cardinal Health",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-954E57FBB9",
+    "manufacturer": "Olympus",
+    "default_distributor": null,
+    "website": "medical.olympusamerica.com",
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-9D5C8BA4C5",
+    "manufacturer": "Intuitive Surgical",
+    "default_distributor": null,
+    "website": "intuitive.com",
+    "notes": "Ion records are from an uploaded 2019 U.S. manufacturer brochure and are hidden pending current configuration and orderability verification."
+  },
+  {
+    "manufacturer_id": "MFR-9E9F24E6A8",
+    "manufacturer": "FUJIFILM SonoSite",
+    "default_distributor": null,
+    "website": "sonosite.com",
+    "notes": "SonoSite LX/PX systems and transducer models are represented as source-backed model records; exact orderable configurations require verification."
+  },
+  {
+    "manufacturer_id": "MFR-BC7F6D9790",
+    "manufacturer": "Ethicon",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-C37FF1F1D1",
+    "manufacturer": "Rocket Medical",
+    "default_distributor": null,
+    "website": "rocketmedical.com",
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-C84E13E4FD",
+    "manufacturer": "Ambu",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-CC1ABBE64F",
+    "manufacturer": "Thoracent / M.I.Tech",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-E3F284CAE2",
+    "manufacturer": "BD",
+    "default_distributor": null,
+    "website": null,
+    "notes": null
+  },
+  {
+    "manufacturer_id": "MFR-FEE2053E6E",
+    "manufacturer": "Thoracent",
+    "default_distributor": "Thoracent",
+    "website": "thoracent.com",
+    "notes": null
+  }
+]

@@ -63,6 +63,67 @@ a.skip-link {
   @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground;
 }
 
+body:has(.ip-card-print) > a.skip-link,
+body:has(.ip-card-print) > div > header,
+body:has(.ip-card-print) > div > footer {
+  display: none;
+}
+
+body:has(.ip-card-print) > div,
+body:has(.ip-card-print) > div > main {
+  min-height: 0;
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 0.55in;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111827 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .no-print,
+  body:has(.ip-card-print) > a.skip-link,
+  body:has(.ip-card-print) > div > header,
+  body:has(.ip-card-print) > div > footer {
+    display: none !important;
+  }
+
+  .ip-card-print {
+    color: #111827;
+    font-size: 10pt;
+  }
+
+  .ip-card-print article,
+  .ip-card-print section,
+  .ip-card-print details,
+  .ip-card-print dl {
+    break-inside: avoid;
+  }
+
+  .ip-card-print details {
+    display: block;
+  }
+
+  .ip-card-print details > summary {
+    list-style: none;
+  }
+
+  .ip-card-print details > summary::after {
+    content: '';
+  }
+
+  .ip-card-print [class*='shadow'] {
+    box-shadow: none !important;
+  }
+}
+
 @layer components {
   .board-review-html {
     color: #1e293b;

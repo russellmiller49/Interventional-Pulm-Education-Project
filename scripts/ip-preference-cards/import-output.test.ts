@@ -1,0 +1,69 @@
+import coverageReport from '../../data/ip-preference-cards/generated/coverage-report.json'
+import importReport from '../../data/ip-preference-cards/generated/import-report.json'
+import products from '../../data/ip-preference-cards/generated/catalog-products.json'
+import procedureSlots from '../../data/ip-preference-cards/generated/procedure-slots.json'
+
+describe('generated IP preference-card import contract', () => {
+  it('records workbook provenance, row offsets, counts, and a stable hash', () => {
+    expect(importReport).toMatchObject({
+      header_row: 4,
+      data_start_row: 5,
+      workbook_sha256: 'fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf',
+      counts: {
+        Products: 1221,
+        Roles: 98,
+        Procedures: 13,
+        Procedure_Slots: 174,
+        Slot_Product_Options: 2080,
+        Compatibility: 179,
+      },
+    })
+  })
+
+  it('reports no duplicate identifiers or strict foreign-key failures', () => {
+    expect(importReport.duplicate_ids).toEqual({})
+    expect(importReport.foreign_key_errors).toEqual([])
+  })
+
+  it('normalizes booleans, numeric dimensions, blanks, and spec JSON', () => {
+    const product = products.find((candidate) => candidate.product_id === 'PRD-00C13A59AA')
+    expect(product).toMatchObject({
+      implantable: false,
+      diameter_mm: 19.3,
+      gtin: null,
+      spec_json: {
+        inner_diameter_mm: 17.1,
+        outer_diameter_mm: 19.3,
+        working_length_mm: 330,
+      },
+    })
+    expect(importReport.malformed_spec_json).toEqual([])
+  })
+
+  it('normalizes every procedure selection mode to the closed vocabulary', () => {
+    expect(new Set(procedureSlots.map((slot) => slot.selection_mode))).toEqual(
+      new Set(['single', 'multiple']),
+    )
+  })
+
+  it('reports restrictive visibility conflicts without making them selectable', () => {
+    expect(importReport.visibility_conflicts).toHaveLength(2)
+    for (const conflict of importReport.visibility_conflicts) {
+      expect(conflict.product_visibility).toBe('hidden')
+    }
+  })
+
+  it('names every required zero-selectable slot in the coverage report', () => {
+    const procedures = coverageReport.procedures
+    const namedRequiredGaps = procedures.flatMap((procedure) =>
+      procedure.slot_coverage.filter((slot) => slot.required_with_zero_selectable),
+    )
+    expect(namedRequiredGaps).toHaveLength(
+      procedures.reduce(
+        (sum, procedure) => sum + procedure.required_slots_with_zero_selectable_products,
+        0,
+      ),
+    )
+    expect(namedRequiredGaps.every((slot) => Boolean(slot.slot_id && slot.role_code))).toBe(true)
+  })
+})

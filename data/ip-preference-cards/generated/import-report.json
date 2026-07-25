@@ -1,0 +1,60 @@
+{
+  "format_version": 1,
+  "source_file": "Preference_card_module/IP_Procedure_Equipment_Catalog_v0_5_with_GUDID_Verification_Backlog.xlsx",
+  "workbook_sha256": "fb25b24e4abb1a5225e76d0499f870f680c9cb07633491f1f63e63e2394b5abf",
+  "header_row": 4,
+  "data_start_row": 5,
+  "counts": {
+    "Products": 1221,
+    "Product_Roles": 1268,
+    "Procedures": 13,
+    "Procedure_Slots": 174,
+    "Slot_Product_Options": 2080,
+    "Roles": 98,
+    "Compatibility": 179,
+    "Manufacturers": 28,
+    "Sources": 46,
+    "Product_Sources": 1366,
+    "Hospital_Formulary": 1221,
+    "Modifier_Catalog": 30,
+    "Product_Verification_Backlog": 1221
+  },
+  "count_warnings": [],
+  "duplicate_ids": {},
+  "foreign_key_errors": [],
+  "vocabulary_warnings": [],
+  "gtin": {
+    "non_null": 80,
+    "padded_from_13_digits": 0,
+    "valid_14_digits": 80,
+    "invalid": []
+  },
+  "compatibility_resolution": {
+    "source": {
+      "product": 35,
+      "role": 11,
+      "unresolved": 133
+    },
+    "target": {
+      "product": 0,
+      "role": 28,
+      "unresolved": 151
+    }
+  },
+  "visibility_conflicts": [
+    {
+      "slot_id": "SLOT-1AF4BEFE3B",
+      "product_id": "PRD-0D6E4DB711",
+      "slot_visible_by_default": true,
+      "product_visibility": "hidden"
+    },
+    {
+      "slot_id": "SLOT-B83EBD2FBB",
+      "product_id": "PRD-0D6E4DB711",
+      "slot_visible_by_default": true,
+      "product_visibility": "hidden"
+    }
+  ],
+  "malformed_spec_json": [],
+  "warnings": []
+}

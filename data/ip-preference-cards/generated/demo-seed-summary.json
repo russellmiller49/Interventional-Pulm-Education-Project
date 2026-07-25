@@ -1,0 +1,36 @@
+{
+  "format_version": 1,
+  "demo_profile": {
+    "organization": "Demo IP Program",
+    "site": "Demo Hospital",
+    "location": "Bronchoscopy Suite 1"
+  },
+  "demo_only_stand_ins": 31,
+  "explicitly_resolved_zero_selectable_required_roles": 8,
+  "scenarios": [
+    {
+      "id": "ebus-rose-molecular",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "f739cacc033943445b3e7a2ec0f6841b01762772a33e573a1b750dd76a2ccf25",
+      "item_count": 17,
+      "suppressed_item_count": 0,
+      "blocking_codes": []
+    },
+    {
+      "id": "central-airway-obstruction",
+      "readiness_state": "blocked",
+      "snapshot_hash": "0eb8a8f52a794e3211129a82a4a63ad4774785d856180257efe7e78ca7ed9299",
+      "item_count": 50,
+      "suppressed_item_count": 0,
+      "blocking_codes": ["compatibility_failed"]
+    },
+    {
+      "id": "chest-tube",
+      "readiness_state": "complete_with_warnings",
+      "snapshot_hash": "a5d7fc30e3da8504b4d264d181b9c9d47d20cd6250f206a78a3df48334e81181",
+      "item_count": 11,
+      "suppressed_item_count": 1,
+      "blocking_codes": []
+    }
+  ]
+}
